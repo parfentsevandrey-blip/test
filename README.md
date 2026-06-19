@@ -42,15 +42,33 @@ Any static server works (`npx serve`, VS Code Live Server, etc.).
 > everything else still works. (Google Fonts are still loaded from a CDN and
 > fall back to system serif/sans if blocked.)
 
+## Single-file download
+
+`zenith-residence.html` is a **fully self-contained build** — CSS, JS and the
+entire Three.js library are inlined into one file. You can download it and
+**open it directly by double-clicking** (no web server, no internet); the 3D
+hero still renders. It's regenerated from the source files with:
+
+```bash
+node build-standalone.js
+```
+
+The 3D code uses ES modules, which browsers normally refuse to load from
+`file://`. The build sidesteps this by embedding Three.js + the scene module as
+text and loading them through runtime **Blob URLs**, which are same-origin and
+import cleanly even from disk.
+
 ## Structure
 
 ```
-index.html         Markup & content (all copy lives here)
-css/styles.css     Design system, layout, animations, responsive rules
-js/scene.js        Three.js hero scene (procedural tower, skyline, particles)
-js/main.js         UI: preloader, reveals, counters, nav, cursor, form
-js/vendor/three/   Vendored Three.js r160 + RoomEnvironment addon
-docs/preview.svg   Static preview used in this README
+index.html             Markup & content (all copy lives here)
+css/styles.css         Design system, layout, animations, responsive rules
+js/scene.js            Three.js hero scene (procedural tower, skyline, particles)
+js/main.js             UI: preloader, reveals, counters, nav, cursor, form
+js/vendor/three/       Vendored Three.js r160 + RoomEnvironment addon
+build-standalone.js    Bundles everything into the single-file build
+zenith-residence.html  Self-contained single-file build (downloadable)
+docs/preview.svg       Static preview used in this README
 ```
 
 ## Customising the listing
