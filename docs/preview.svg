@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="Georgia, 'Cormorant Garamond', serif">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#05070f"/>
+      <stop offset="0.55" stop-color="#0b1322"/>
+      <stop offset="1" stop-color="#1a1410"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.72" cy="0.3" r="0.5">
+      <stop offset="0" stop-color="#c9a35e" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#c9a35e" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="tower" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#121a2b"/>
+      <stop offset="0.5" stop-color="#1d2b46"/>
+      <stop offset="1" stop-color="#0a1120"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e7c98a"/>
+      <stop offset="1" stop-color="#9c7a3e"/>
+    </linearGradient>
+    <linearGradient id="fade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#06080d" stop-opacity="0"/>
+      <stop offset="1" stop-color="#06080d" stop-opacity="0.95"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#sky)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+
+  <!-- distant skyline -->
+  <g fill="#0a111e" opacity="0.85">
+    <rect x="60" y="360" width="70" height="270"/>
+    <rect x="150" y="300" width="55" height="330"/>
+    <rect x="980" y="330" width="80" height="300"/>
+    <rect x="1080" y="380" width="60" height="250"/>
+    <rect x="900" y="400" width="50" height="230"/>
+  </g>
+
+  <!-- hero tower -->
+  <g>
+    <rect x="520" y="250" width="160" height="380" fill="url(#tower)"/>
+    <rect x="545" y="170" width="110" height="90" fill="url(#tower)"/>
+    <rect x="565" y="120" width="70" height="55" fill="url(#tower)"/>
+    <!-- cornices -->
+    <rect x="516" y="248" width="168" height="5" fill="url(#gold)"/>
+    <rect x="543" y="168" width="114" height="4" fill="url(#gold)"/>
+    <!-- spire + orb -->
+    <rect x="598" y="70" width="4" height="52" fill="url(#gold)"/>
+    <circle cx="600" cy="70" r="7" fill="#ffe9c2"/>
+    <!-- windows -->
+    <g fill="#ffe6b0" opacity="0.85">
+      <rect x="534" y="276" width="10" height="14"/><rect x="556" y="276" width="10" height="14"/>
+      <rect x="600" y="276" width="10" height="14"/><rect x="644" y="276" width="10" height="14"/>
+      <rect x="534" y="320" width="10" height="14"/><rect x="622" y="320" width="10" height="14"/>
+      <rect x="578" y="350" width="10" height="14"/><rect x="644" y="350" width="10" height="14"/>
+      <rect x="534" y="400" width="10" height="14"/><rect x="600" y="400" width="10" height="14"/>
+      <rect x="556" y="450" width="10" height="14"/><rect x="622" y="450" width="10" height="14"/>
+      <rect x="578" y="500" width="10" height="14"/><rect x="534" y="540" width="10" height="14"/>
+    </g>
+    <g fill="#bcd2ff" opacity="0.6">
+      <rect x="578" y="276" width="10" height="14"/><rect x="556" y="360" width="10" height="14"/>
+      <rect x="644" y="420" width="10" height="14"/><rect x="600" y="490" width="10" height="14"/>
+    </g>
+  </g>
+
+  <rect width="1200" height="630" fill="url(#fade)"/>
+
+  <!-- copy -->
+  <text x="80" y="300" fill="#c9a35e" font-family="Manrope, sans-serif" font-size="16" letter-spacing="7">МОSCOW-CITY · PRESNENSKAYA EMB.</text>
+  <text x="76" y="380" fill="#eef0f4" font-size="78" letter-spacing="-1">Above the City.</text>
+  <text x="76" y="455" fill="#eef0f4" font-size="78" letter-spacing="-1">Beyond Compare.</text>
+  <text x="80" y="510" fill="#9aa1b1" font-family="Manrope, sans-serif" font-size="20">A 320 m² sky residence on the 78th floor.</text>
+
+  <!-- brand -->
+  <text x="80" y="70" fill="#eef0f4" font-size="30" letter-spacing="10">ZENITH</text>
+  <text x="82" y="92" fill="#c9a35e" font-family="Manrope, sans-serif" font-size="11" letter-spacing="6">MOSCOW-CITY RESIDENCES</text>
+
+  <!-- price -->
+  <text x="1120" y="540" fill="#5c6271" font-family="Manrope, sans-serif" font-size="12" letter-spacing="4" text-anchor="end">GUIDE PRICE</text>
+  <text x="1120" y="575" fill="#e7c98a" font-size="30" text-anchor="end">₽ 680 000 000</text>
+</svg>
