@@ -36,18 +36,21 @@ python3 -m http.server 8000
 
 Any static server works (`npx serve`, VS Code Live Server, etc.).
 
-> The Three.js library loads from a CDN (unpkg) via the import map in
-> `index.html`. An internet connection is required for the 3D hero; without it,
-> the page falls back to a styled gradient sky and everything else still works.
+> Three.js (r160) is **vendored locally** under `js/vendor/three/`, so the 3D
+> hero works fully offline — no CDN or build step. If WebGL is unavailable for
+> any reason, the page degrades gracefully to a styled gradient sky and
+> everything else still works. (Google Fonts are still loaded from a CDN and
+> fall back to system serif/sans if blocked.)
 
 ## Structure
 
 ```
-index.html        Markup & content (all copy lives here)
-css/styles.css    Design system, layout, animations, responsive rules
-js/scene.js       Three.js hero scene (procedural tower, skyline, particles)
-js/main.js        UI: preloader, reveals, counters, nav, cursor, form
-docs/preview.svg  Static preview used in this README
+index.html         Markup & content (all copy lives here)
+css/styles.css     Design system, layout, animations, responsive rules
+js/scene.js        Three.js hero scene (procedural tower, skyline, particles)
+js/main.js         UI: preloader, reveals, counters, nav, cursor, form
+js/vendor/three/   Vendored Three.js r160 + RoomEnvironment addon
+docs/preview.svg   Static preview used in this README
 ```
 
 ## Customising the listing

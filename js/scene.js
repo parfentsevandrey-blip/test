@@ -196,22 +196,25 @@ function makeFacadeTexture({ cols = 14, rows = 40, lit = 0.42, warm = true } = {
 function makeTower() {
   const group = new THREE.Group();
 
-  const facade = makeFacadeTexture({ cols: 16, rows: 60, lit: 0.4 });
+  const COLS = 18, ROWS = 48;
+  const facade = makeFacadeTexture({ cols: COLS, rows: ROWS, lit: 0.42 });
 
-  const glass = (repeatX, repeatY, color = 0x0a0e15) => {
+  // Map the facade so windows are a constant ~0.6 units regardless of tier
+  // size, and the repeat stays <= ~1 to avoid sub-pixel moiré.
+  const glass = (w, h, color = 0x0a0e15) => {
     const map = facade.clone();
     map.needsUpdate = true;
-    map.repeat.set(repeatX, repeatY);
+    map.repeat.set((w * 1.7) / COLS, (h * 2.2) / ROWS);
     return new THREE.MeshPhysicalMaterial({
       color,
-      metalness: 0.35,
-      roughness: 0.16,
-      envMapIntensity: 1.5,
+      metalness: 0.2,
+      roughness: 0.34,
+      envMapIntensity: 0.4,
       emissive: 0xffffff,
       emissiveMap: map,
-      emissiveIntensity: 1.0,
-      clearcoat: 0.6,
-      clearcoatRoughness: 0.25,
+      emissiveIntensity: 1.7,
+      clearcoat: 0.35,
+      clearcoatRoughness: 0.35,
     });
   };
 
@@ -223,8 +226,7 @@ function makeTower() {
   ];
   tiers.forEach((t) => {
     const geo = new THREE.BoxGeometry(t.w, t.h, t.d);
-    const repeatY = Math.round(t.h * 1.6);
-    const mesh = new THREE.Mesh(geo, glass(Math.round(t.w * 1.6), repeatY));
+    const mesh = new THREE.Mesh(geo, glass(t.w, t.h));
     mesh.position.y = t.y;
     group.add(mesh);
 
