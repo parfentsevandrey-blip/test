@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#05070b" />
+  <title>Кутузовский 12 · Клубный двор — живой кадр</title>
+  <meta name="description" content="Фотография внутреннего двора «Кутузовский 12», оживлённая в реальном времени средствами WebGL и Three.js — кинематографический «видеокадр» без видеофайла." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- Three.js r160, vendored locally (no CDN / works fully offline) -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./js/vendor/three/three.module.js"
+    }
+  }
+  </script>
+
+  <style>
+    :root {
+      --gold: #c8a96a;
+      --serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+      --sans: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; background: #05070b; overflow: hidden; }
+    body { font-family: var(--sans); color: #f3ede1; }
+
+    /* WebGL canvas fills the viewport */
+    #cg-canvas {
+      position: fixed; inset: 0;
+      width: 100vw; height: 100vh;
+      display: block;
+      touch-action: none;
+    }
+
+    /* Plain-image fallback (shown only if WebGL/texture fails) */
+    #cg-src {
+      position: fixed; inset: 0;
+      width: 100vw; height: 100vh;
+      object-fit: cover;
+      opacity: 0; pointer-events: none; z-index: -1;
+    }
+    body.cg-nowebgl #cg-src { opacity: 1; z-index: 0; }
+    body.cg-nowebgl #cg-canvas { display: none; }
+
+    /* Black cover for the intro fade */
+    .cover {
+      position: fixed; inset: 0; z-index: 30;
+      background: #05070b;
+      display: grid; place-items: center;
+      transition: opacity 1.2s ease 0.2s;
+    }
+    body.cg-ready .cover { opacity: 0; pointer-events: none; }
+    .cover__mark {
+      font-family: var(--serif);
+      letter-spacing: 0.42em;
+      font-size: clamp(13px, 2.4vw, 20px);
+      text-transform: uppercase;
+      color: var(--gold);
+      opacity: 0.85;
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:.35} 50%{opacity:.9} }
+
+    /* Cinematic frame overlay */
+    .ui { position: fixed; inset: 0; z-index: 20; pointer-events: none; }
+    .ui::before, .ui::after {
+      content: ""; position: absolute; left: 0; right: 0; height: 7.5vh;
+      background: linear-gradient(var(--dir), rgba(5,7,11,.55), transparent);
+      opacity: 0; transition: opacity 1.4s ease 0.6s;
+    }
+    .ui::before { top: 0; --dir: to bottom; }
+    .ui::after  { bottom: 0; --dir: to top; }
+    body.cg-ready .ui::before, body.cg-ready .ui::after { opacity: 1; }
+
+    /* top bar: live badge + timecode */
+    .topbar {
+      position: absolute; top: clamp(16px, 3.2vh, 32px);
+      left: clamp(18px, 3.4vw, 46px); right: clamp(18px, 3.4vw, 46px);
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 11px; letter-spacing: 0.26em; text-transform: uppercase;
+      opacity: 0; transform: translateY(-6px);
+      transition: opacity 1.2s ease 0.9s, transform 1.2s ease 0.9s;
+    }
+    body.cg-ready .topbar { opacity: .9; transform: none; }
+    .live { display: flex; align-items: center; gap: 9px; color: #f3ede1; }
+    .live i {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #e5544b; box-shadow: 0 0 10px #e5544b;
+      animation: blink 1.6s steps(1) infinite;
+    }
+    @keyframes blink { 0%,60%{opacity:1} 61%,100%{opacity:.25} }
+    #cg-timecode {
+      font-variant-numeric: tabular-nums; font-weight: 500;
+      color: var(--gold); letter-spacing: 0.18em;
+    }
+
+    /* lower third: title card */
+    .lower {
+      position: absolute; left: clamp(20px, 4vw, 64px);
+      bottom: clamp(28px, 6vh, 64px); max-width: 60ch;
+      opacity: 0; transform: translateY(14px);
+      transition: opacity 1.4s ease 1.2s, transform 1.4s ease 1.2s;
+    }
+    body.cg-ready .lower { opacity: 1; transform: none; }
+    .lower .kicker {
+      font-size: 11px; letter-spacing: 0.34em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 10px;
+    }
+    .lower h1 {
+      font-family: var(--serif); font-weight: 500;
+      font-size: clamp(30px, 6vw, 68px); line-height: 0.98;
+      letter-spacing: 0.01em;
+      text-shadow: 0 2px 30px rgba(0,0,0,.5);
+    }
+    .lower .sub {
+      margin-top: 12px; font-weight: 300;
+      font-size: clamp(13px, 1.7vw, 16px); color: #d9d0bf;
+      max-width: 46ch; line-height: 1.5;
+    }
+    .rule {
+      width: 0; height: 1px; margin: 16px 0 0;
+      background: linear-gradient(90deg, var(--gold), transparent);
+      transition: width 1.6s ease 1.7s;
+    }
+    body.cg-ready .rule { width: min(280px, 40vw); }
+
+    /* parallax hint */
+    .hint {
+      position: absolute; bottom: clamp(28px, 6vh, 64px);
+      right: clamp(20px, 4vw, 64px);
+      font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+      color: #cfc6b5; opacity: 0;
+      animation: hintIn 1s ease 2.4s forwards, hintOut 1s ease 8s forwards;
+    }
+    .hint span { color: var(--gold); }
+    @keyframes hintIn { to { opacity: .8; } }
+    @keyframes hintOut { to { opacity: 0; } }
+
+    @media (prefers-reduced-motion: reduce) {
+      .cover__mark, .live i { animation: none; }
+      .hint { animation: hintIn 1s ease 2.4s forwards; }
+    }
+    @media (max-width: 620px) {
+      .lower .sub { display: none; }
+      .hint { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <!-- The live render target -->
+  <canvas id="cg-canvas"></canvas>
+
+  <!-- Source photo: used as the GPU texture; also the no-WebGL fallback.
+       The build step rewrites this src to an inlined data URI. -->
+  <img id="cg-src" src="img/k12-courtyard.jpg" alt="Внутренний двор клубного дома «Кутузовский 12»" />
+
+  <!-- Cinematic overlay -->
+  <div class="ui" aria-hidden="true">
+    <div class="topbar">
+      <div class="live"><i></i> Real-time · WebGL</div>
+      <div id="cg-timecode">00:00:00:00</div>
+    </div>
+    <div class="lower">
+      <div class="kicker">Кутузовский 12 · Клубный двор</div>
+      <h1>Живой кадр</h1>
+      <div class="sub">
+        Одна фотография, оживлённая в реальном времени: глубина, ветер в кронах,
+        тёплый свет колоннады и парящая пыль — кадр генерируется на видеокарте,
+        без единого видеофайла.
+      </div>
+      <div class="rule"></div>
+    </div>
+    <div class="hint">Двигайте курсор — <span>загляните вглубь двора</span></div>
+  </div>
+
+  <!-- Intro cover -->
+  <div class="cover"><div class="cover__mark">Кутузовский 12</div></div>
+
+  <script type="module" src="js/cinemagraph.js"></script>
+</body>
+</html>

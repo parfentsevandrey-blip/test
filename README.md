@@ -97,8 +97,40 @@ build-standalone.js    Bundles the module graph + images into one HTML file
 kutuzovsky-12.html  Self-contained single-file build (downloadable)
 build-text-video.js    Generates the "video-as-text" experiment
 text-video.html        Plays footage with no <video>/<img> — pure colored text
+courtyard.html         "Living photo": the courtyard still, animated live in WebGL
+js/cinemagraph.js      The cinemagraph scene (depth parallax, wind, light, dust)
+build-cinemagraph.js   Bundles courtyard.html + Three.js + photo → one file
+courtyard-cinemagraph.html  Self-contained single-file build (downloadable)
 docs/preview.svg       Static preview (earlier concept)
 ```
+
+## Living photo: a video generated from one still (WebGL)
+
+`courtyard.html` turns the single courtyard photograph (`img/k12-courtyard.jpg`)
+into a looping, cinematic **"video" with no video file** — every frame is
+synthesised in real time on the GPU with **Three.js**. The photo is treated as a
+shallow 2.5D scene: a **procedural depth map** (built from the composition plus
+on-the-fly foliage detection) drives a slow breathing camera dolly, depth
+parallax, and mouse "look-around". On top of that the shader adds **wind that
+sways only the trees**, a **flickering golden-hour glow** on the lit colonnade,
+a slow sun-warmth cycle, a moving light shaft, drifting haze, and a final film
+grade (contrast, vignette, chromatic aberration, grain). A field of glowing
+**dust motes** (a `THREE.Points` system) adds air, and a cinematic overlay gives
+it a running timecode and title card. It loops forever and respects
+`prefers-reduced-motion`; if WebGL is unavailable it falls back to the plain
+photo.
+
+```bash
+# served (ES modules need HTTP), like index.html:
+python3 -m http.server 8000     # then open http://localhost:8000/courtyard.html
+
+# or build the self-contained, double-click-openable single file:
+node build-cinemagraph.js       # writes courtyard-cinemagraph.html
+```
+
+Like the standalone site build, `courtyard-cinemagraph.html` inlines the entire
+Three.js module graph (rebuilt at runtime via Blob URLs) and the photo (as a
+data URI) into one file, so it renders when opened directly from disk.
 
 ## Experiment: video without a video player
 
