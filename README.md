@@ -88,8 +88,19 @@ js/vendor/three/       Vendored Three.js r160 + post-processing addons
 img/                   Real photographs of Кутузовский 12 (gallery)
 build-standalone.js    Bundles the module graph + images into one HTML file
 kutuzovsky-12.html  Self-contained single-file build (downloadable)
+build-text-video.js    Generates the "video-as-text" experiment
+text-video.html        Plays footage with no <video>/<img> — pure colored text
 docs/preview.svg       Static preview (earlier concept)
 ```
+
+## Experiment: video without a video player
+
+`text-video.html` (built by `node build-text-video.js`) plays the building
+footage with **no `<video>` and no visible `<img>`** — every frame is rebuilt as
+colored text characters in a `<pre>`. Real photos are animated (Ken-Burns +
+crossfade), sampled to a grid, and each cell becomes a glyph chosen by luminance
+and coloured by the pixel. It looks like video; technically it's text you can
+select. A small "reveal" toggle enlarges the glyphs to show what it really is.
 
 ## Customising the listing
 
