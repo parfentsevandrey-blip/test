@@ -23,10 +23,9 @@
   </script>
 </head>
 <body>
-  <!-- The 3D model is rendered small (hidden canvas) and replayed as colored
-       text characters in #asciiBg — "video from text", driven by the live model. -->
+  <!-- The 3D model, rendered then converted to colored character glyphs on the
+       GPU (dense enough to read like a photo) — "running text" as the medium. -->
   <canvas id="scene" class="bg-canvas"></canvas>
-  <pre id="asciiBg" class="ascii-bg" aria-hidden="true"></pre>
   <div class="scene-veil" id="veil" aria-hidden="true"></div>
   <div class="scroll-rail" aria-hidden="true"><span id="railDot"></span></div>
 

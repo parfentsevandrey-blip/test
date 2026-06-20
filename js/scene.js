@@ -15,6 +15,7 @@ import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 
 const ENV_URL = "img/env_dusk.hdr"; // real HDRI for image-based lighting
 
@@ -41,12 +42,13 @@ try {
 function init() {
   const isSmall = window.innerWidth < 760;
 
-  // The scene is rendered small and then redrawn as colored text characters
-  // for the page background, so antialiasing/high-res are unnecessary here.
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, preserveDrawingBuffer: true, powerPreference: "high-performance" });
-  renderer.setPixelRatio(1);
+  // Full-res render — a GPU shader turns the final image into colored glyphs,
+  // so the "running text" can be dense enough to read like a photo.
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "high-performance" });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
+  renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.95;
+  renderer.toneMappingExposure = 1.12;
   renderer.shadowMap.enabled = !isSmall;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -123,62 +125,31 @@ function init() {
     particles.material.uniforms.uTime.value = t;
   });
 
-  /* ---------- Post-processing (kept minimal — output becomes text) ---------- */
+  /* ---------- Post-processing + GPU ASCII ---------- */
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  const bloom = new UnrealBloomPass(new THREE.Vector2(2, 2), 0.5, 0.5, 0.75);
+  const bloom = new UnrealBloomPass(new THREE.Vector2(2, 2), 0.35, 0.5, 0.8);
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
 
-  /* ---------- Render the 3D scene as a colored-text "video" background ----------
-     The WebGL canvas is rendered at low resolution and redrawn every frame as a
-     grid of colored characters into #asciiBg — "video from text", driven by the
-     live 3D model. */
-  const asciiEl = document.getElementById("asciiBg");
-  const samp = document.createElement("canvas");
-  const sctx = samp.getContext("2d", { willReadFrequently: true });
-  const RAMP = " .'\`:,-~+=*coaehx%#WM@";
-  let aCols = 150, aRows = 60;
+  // Turn the rendered image into colored character glyphs on the GPU. Dense
+  // enough to read like a photograph, fast enough for 60fps.
+  const glyph = buildGlyphAtlas();
+  const ascii = new ShaderPass(asciiShader(glyph.texture, glyph.count));
+  composer.addPass(ascii);
+
+  function syncAsciiSize() {
+    const dpr = renderer.getPixelRatio();
+    ascii.uniforms.uResolution.value.set(window.innerWidth * dpr, window.innerHeight * dpr);
+    ascii.uniforms.uCell.value = (isSmall ? 6 : 7) * dpr;   // ~6–7 CSS px characters
+  }
+  syncAsciiSize();
 
   function setRenderSize() {
-    const vw = window.innerWidth, vh = window.innerHeight, aspect = vw / vh;
-    const h = isSmall ? 130 : 170, w = Math.round(h * aspect);
-    renderer.setSize(w, h, false);             // low-res source; don't touch CSS size
-    camera.aspect = aspect; camera.updateProjectionMatrix();
-    composer.setSize(w, h); bloom.setSize(w, h);
-    // character grid that fills the viewport (monospace cell ~0.6 wide)
-    aCols = vw < 760 ? 82 : 156;
-    const f = vw / aCols / 0.6;
-    aRows = Math.max(20, Math.ceil(vh / f) + 1);
-    samp.width = aCols; samp.height = aRows;
-    if (asciiEl) { asciiEl.style.fontSize = f.toFixed(2) + "px"; asciiEl.style.lineHeight = f.toFixed(2) + "px"; }
-  }
-
-  function renderAscii() {
-    if (!asciiEl) return;
-    try {
-      sctx.drawImage(renderer.domElement, 0, 0, aCols, aRows);
-      const data = sctx.getImageData(0, 0, aCols, aRows).data;
-      let out = "", run = "", cr = -1, cg = -1, cb = -1;
-      for (let y = 0; y < aRows; y++) {
-        for (let x = 0; x < aCols; x++) {
-          const o = (y * aCols + x) * 4;
-          let r = data[o], g = data[o + 1], b = data[o + 2];
-          const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-          const ch = RAMP[Math.min(RAMP.length - 1, (Math.pow(lum, 0.85) * RAMP.length) | 0)];
-          r = Math.min(255, r * 1.15 + 8) | 0; g = Math.min(255, g * 1.15 + 8) | 0; b = Math.min(255, b * 1.15 + 8) | 0;
-          const qr = r & 0xF0, qg = g & 0xF0, qb = b & 0xF0;
-          if (qr !== cr || qg !== cg || qb !== cb) {
-            if (run) out += '<span style="color:rgb(' + cr + ',' + cg + ',' + cb + ')">' + run + "</span>";
-            run = ""; cr = qr; cg = qg; cb = qb;
-          }
-          run += ch === "<" ? "&lt;" : ch;
-        }
-        run += "\n";
-      }
-      if (run) out += '<span style="color:rgb(' + cr + ',' + cg + ',' + cb + ')">' + run + "</span>";
-      asciiEl.innerHTML = out;
-    } catch (e) { /* drawing buffer not ready */ }
+    const w = window.innerWidth, h = window.innerHeight;
+    camera.aspect = w / h; camera.updateProjectionMatrix();
+    renderer.setSize(w, h); composer.setSize(w, h); bloom.setSize(w, h);
+    syncAsciiSize();
   }
 
   /* ---------- Cinematic camera (frames the building) ---------- */
@@ -222,15 +193,11 @@ function init() {
   window.addEventListener("resize", setRenderSize);
 
   const clock = new THREE.Clock();
-  let first = true, acc = 0;
-  const STEP = 1 / 30;   // the text "video" runs at ~30fps
+  let first = true;
 
   function tick() {
     requestAnimationFrame(tick);
     const dt = Math.min(clock.getDelta(), 0.05);
-    acc += dt;
-    if (acc < STEP) return;
-    acc = 0;
     const t = clock.elapsedTime;
     const introT = reduceMotion ? 1 : clamp01(t / introDur);
     const e = smooth(introT);
@@ -256,7 +223,6 @@ function init() {
 
     for (let i = 0; i < updaters.length; i++) updaters[i](dt, t);
     composer.render();
-    renderAscii();   // redraw the frame as colored text
 
     if (first) { first = false; window.dispatchEvent(new Event("scene:ready")); }
   }
@@ -622,6 +588,61 @@ function graniteTexture() {
 /* =========================================================
    Sky, particles
    ========================================================= */
+
+/* A horizontal atlas of glyphs ordered from least to most ink (dark -> light). */
+function buildGlyphAtlas() {
+  const chars = " .:-=+*oxsOX#%@".split("");
+  const count = chars.length;
+  const cell = 32;
+  const c = document.createElement("canvas");
+  c.width = cell * count; c.height = cell;
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = "#000"; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.fillStyle = "#fff";
+  ctx.font = "bold 26px ui-monospace, Menlo, Consolas, monospace";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  for (let i = 0; i < count; i++) ctx.fillText(chars[i], i * cell + cell / 2, cell / 2 + 1);
+  const tex = new THREE.CanvasTexture(c);
+  tex.minFilter = THREE.LinearFilter; tex.magFilter = THREE.LinearFilter;
+  tex.generateMipmaps = false;
+  tex.colorSpace = THREE.NoColorSpace; // it's an ink mask, not colour
+  return { texture: tex, count };
+}
+
+/* Full-screen pass: every cell becomes a glyph (by luminance) tinted by the
+   cell colour — dense enough to read like a photo, on the GPU at 60fps. */
+function asciiShader(glyphTex, count) {
+  return {
+    uniforms: {
+      tDiffuse: { value: null },
+      uGlyph: { value: glyphTex },
+      uCount: { value: count },
+      uResolution: { value: new THREE.Vector2(1, 1) },
+      uCell: { value: 7 },
+    },
+    vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+    fragmentShader: `
+      precision highp float;
+      uniform sampler2D tDiffuse, uGlyph;
+      uniform float uCount, uCell;
+      uniform vec2 uResolution;
+      varying vec2 vUv;
+      void main(){
+        vec2 frag = vUv * uResolution;
+        vec2 cellId = floor(frag / uCell);
+        vec2 center = (cellId + 0.5) * uCell / uResolution;
+        vec3 col = texture2D(tDiffuse, center).rgb;
+        float lum = clamp(pow(dot(col, vec3(0.299, 0.587, 0.114)), 0.82), 0.0, 1.0);
+        float idx = floor(lum * (uCount - 1.0) + 0.5);
+        vec2 local = fract(frag / uCell);
+        vec2 gUV = vec2((idx + local.x) / uCount, local.y);
+        float ink = texture2D(uGlyph, gUV).r;
+        // colour carries the picture (photo-like); the glyph is a tint texture
+        vec3 outc = col * (0.5 + 0.55 * ink) * 1.28;
+        gl_FragColor = vec4(outc, 1.0);
+      }`,
+  };
+}
 
 function makeSky() {
   const geo = new THREE.SphereGeometry(900, 32, 16);

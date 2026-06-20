@@ -243,29 +243,15 @@ button { font: inherit; color: inherit; cursor: pointer; background: none; borde
   padding: 0 var(--pad) clamp(3rem, 9vh, 7rem);
   overflow: hidden;
 }
-/* The WebGL canvas is just the (hidden) low-res source for the text background */
+/* Full-screen GPU-ASCII stage (the canvas shows the 3D model as colored glyphs) */
 .bg-canvas {
   position: fixed;
-  top: 0; left: 0;
-  width: 6px; height: 6px;
-  opacity: 0;
-  pointer-events: none;
-  z-index: -5;
-}
-
-/* The 3D model, replayed as a full-screen grid of colored text characters */
-.ascii-bg {
-  position: fixed;
   inset: 0;
-  margin: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100svh;
+  display: block;
   z-index: -2;
-  overflow: hidden;
-  white-space: pre;
-  font-family: "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
-  letter-spacing: 0;
-  pointer-events: none;
-  user-select: none;
-  color: #cdd6e0;
   /* Fallback gradient shown until the first frame / if WebGL is unavailable */
   background:
     radial-gradient(80% 60% at 70% 18%, rgba(201, 163, 94, 0.10), transparent 60%),

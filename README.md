@@ -27,12 +27,13 @@ building.
   glazing, a setback penthouse, a 9-metre warm-lit lobby, and a granite
   courtyard — set against Moscow-City towers, low Stalin-era neighbours, the
   river and trees.
-- **The background IS "video from text".** The 3D model is rendered to a hidden,
-  low-resolution WebGL canvas and **redrawn every frame as a full-screen grid of
-  colored text characters** (`#asciiBg`). There's no `<video>` — the moving
-  backdrop is live 3D disguised as text. Real **HDRI image-based lighting** (a
-  dusk sky) still drives the reflections and a low warm sun the shadows, so the
-  source frames look right before they become glyphs.
+- **The background IS "running text".** The 3D model is rendered, then a **GPU
+  shader turns every cell into a colored character glyph** (by luminance, tinted
+  by the cell colour) — dense enough (~7px cells) to read like a *photograph made
+  of characters*, at 60fps. There's no `<video>`; the moving backdrop is live 3D
+  disguised as text. Real **HDRI image-based lighting** (a dusk sky) drives the
+  reflections and a low warm sun the shadows, so the source looks right before it
+  becomes glyphs.
 - **Cinematic camera** — a timed intro fly-in, then a scroll-driven journey that
   tracks the colonnade, rises to the penthouse and pulls back over the river,
   with idle drift and mouse parallax.
