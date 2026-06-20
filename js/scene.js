@@ -15,8 +15,6 @@ import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
-import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
-import { SMAAPass } from "three/addons/postprocessing/SMAAPass.js";
 
 const ENV_URL = "img/env_dusk.hdr"; // real HDRI for image-based lighting
 
@@ -43,11 +41,12 @@ try {
 function init() {
   const isSmall = window.innerWidth < 760;
 
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, isSmall ? 2 : 1.6));
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  // The scene is rendered small and then redrawn as colored text characters
+  // for the page background, so antialiasing/high-res are unnecessary here.
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, preserveDrawingBuffer: true, powerPreference: "high-performance" });
+  renderer.setPixelRatio(1);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.85;
+  renderer.toneMappingExposure = 0.95;
   renderer.shadowMap.enabled = !isSmall;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -86,7 +85,7 @@ function init() {
   sun.position.set(64, 40, 30);
   if (!isSmall) {
     sun.castShadow = true;
-    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.mapSize.set(1024, 1024);
     sun.shadow.camera.near = 10;
     sun.shadow.camera.far = 240;
     const s = 58;
@@ -124,23 +123,63 @@ function init() {
     particles.material.uniforms.uTime.value = t;
   });
 
-  /* ---------- Post-processing ---------- */
+  /* ---------- Post-processing (kept minimal — output becomes text) ---------- */
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-
-  const bloom = new UnrealBloomPass(
-    new THREE.Vector2(window.innerWidth, window.innerHeight),
-    0.35, 0.5, 0.85
-  );
+  const bloom = new UnrealBloomPass(new THREE.Vector2(2, 2), 0.5, 0.5, 0.75);
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
 
-  // photographic grade: chromatic aberration, filmic contrast, vignette, grain
-  const grade = new ShaderPass(gradeShader());
-  composer.addPass(grade);
-  updaters.push((_, t) => { grade.uniforms.uTime.value = t; });
+  /* ---------- Render the 3D scene as a colored-text "video" background ----------
+     The WebGL canvas is rendered at low resolution and redrawn every frame as a
+     grid of colored characters into #asciiBg — "video from text", driven by the
+     live 3D model. */
+  const asciiEl = document.getElementById("asciiBg");
+  const samp = document.createElement("canvas");
+  const sctx = samp.getContext("2d", { willReadFrequently: true });
+  const RAMP = " .'\`:,-~+=*coaehx%#WM@";
+  let aCols = 150, aRows = 60;
 
-  if (!isSmall) composer.addPass(new SMAAPass(window.innerWidth, window.innerHeight));
+  function setRenderSize() {
+    const vw = window.innerWidth, vh = window.innerHeight, aspect = vw / vh;
+    const h = isSmall ? 130 : 170, w = Math.round(h * aspect);
+    renderer.setSize(w, h, false);             // low-res source; don't touch CSS size
+    camera.aspect = aspect; camera.updateProjectionMatrix();
+    composer.setSize(w, h); bloom.setSize(w, h);
+    // character grid that fills the viewport (monospace cell ~0.6 wide)
+    aCols = vw < 760 ? 82 : 156;
+    const f = vw / aCols / 0.6;
+    aRows = Math.max(20, Math.ceil(vh / f) + 1);
+    samp.width = aCols; samp.height = aRows;
+    if (asciiEl) { asciiEl.style.fontSize = f.toFixed(2) + "px"; asciiEl.style.lineHeight = f.toFixed(2) + "px"; }
+  }
+
+  function renderAscii() {
+    if (!asciiEl) return;
+    try {
+      sctx.drawImage(renderer.domElement, 0, 0, aCols, aRows);
+      const data = sctx.getImageData(0, 0, aCols, aRows).data;
+      let out = "", run = "", cr = -1, cg = -1, cb = -1;
+      for (let y = 0; y < aRows; y++) {
+        for (let x = 0; x < aCols; x++) {
+          const o = (y * aCols + x) * 4;
+          let r = data[o], g = data[o + 1], b = data[o + 2];
+          const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+          const ch = RAMP[Math.min(RAMP.length - 1, (Math.pow(lum, 0.85) * RAMP.length) | 0)];
+          r = Math.min(255, r * 1.15 + 8) | 0; g = Math.min(255, g * 1.15 + 8) | 0; b = Math.min(255, b * 1.15 + 8) | 0;
+          const qr = r & 0xF0, qg = g & 0xF0, qb = b & 0xF0;
+          if (qr !== cr || qg !== cg || qb !== cb) {
+            if (run) out += '<span style="color:rgb(' + cr + ',' + cg + ',' + cb + ')">' + run + "</span>";
+            run = ""; cr = qr; cg = qg; cb = qb;
+          }
+          run += ch === "<" ? "&lt;" : ch;
+        }
+        run += "\n";
+      }
+      if (run) out += '<span style="color:rgb(' + cr + ',' + cg + ',' + cb + ')">' + run + "</span>";
+      asciiEl.innerHTML = out;
+    } catch (e) { /* drawing buffer not ready */ }
+  }
 
   /* ---------- Cinematic camera (frames the building) ---------- */
   const keys = [
@@ -179,17 +218,19 @@ function init() {
 
   const introDur = 4.5;
 
-  window.addEventListener("resize", () => {
-    const w = window.innerWidth, h = window.innerHeight;
-    camera.aspect = w / h; camera.updateProjectionMatrix();
-    renderer.setSize(w, h); composer.setSize(w, h); bloom.setSize(w, h);
-  });
+  setRenderSize();
+  window.addEventListener("resize", setRenderSize);
 
   const clock = new THREE.Clock();
-  let first = true;
+  let first = true, acc = 0;
+  const STEP = 1 / 30;   // the text "video" runs at ~30fps
 
   function tick() {
+    requestAnimationFrame(tick);
     const dt = Math.min(clock.getDelta(), 0.05);
+    acc += dt;
+    if (acc < STEP) return;
+    acc = 0;
     const t = clock.elapsedTime;
     const introT = reduceMotion ? 1 : clamp01(t / introDur);
     const e = smooth(introT);
@@ -215,9 +256,9 @@ function init() {
 
     for (let i = 0; i < updaters.length; i++) updaters[i](dt, t);
     composer.render();
+    renderAscii();   // redraw the frame as colored text
 
     if (first) { first = false; window.dispatchEvent(new Event("scene:ready")); }
-    requestAnimationFrame(tick);
   }
   tick();
 
@@ -581,36 +622,6 @@ function graniteTexture() {
 /* =========================================================
    Sky, particles
    ========================================================= */
-
-function gradeShader() {
-  return {
-    uniforms: { tDiffuse: { value: null }, uTime: { value: 0 } },
-    vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
-    fragmentShader: `
-      uniform sampler2D tDiffuse; uniform float uTime; varying vec2 vUv;
-      float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7)))*43758.5453); }
-      void main(){
-        vec2 uv = vUv;
-        vec2 d = uv - 0.5;
-        float r2 = dot(d, d);
-        // subtle lens chromatic aberration toward the edges
-        float ca = 0.0018 * r2;
-        vec3 col;
-        col.r = texture2D(tDiffuse, uv + d * ca).r;
-        col.g = texture2D(tDiffuse, uv).g;
-        col.b = texture2D(tDiffuse, uv - d * ca).b;
-        // gentle filmic S-curve
-        col = mix(col, col * col * (3.0 - 2.0 * col), 0.12);
-        // vignette
-        float vig = smoothstep(1.05, 0.25, r2 * 2.4);
-        col *= mix(0.84, 1.0, vig);
-        // fine film grain
-        float g = hash(uv * vec2(1280.0, 720.0) + fract(uTime));
-        col += (g - 0.5) * 0.022;
-        gl_FragColor = vec4(col, 1.0);
-      }`,
-  };
-}
 
 function makeSky() {
   const geo = new THREE.SphereGeometry(900, 32, 16);

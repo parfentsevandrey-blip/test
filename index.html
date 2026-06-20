@@ -23,8 +23,10 @@
   </script>
 </head>
 <body>
-  <!-- Full-screen cinematic 3D stage (fixed background) -->
+  <!-- The 3D model is rendered small (hidden canvas) and replayed as colored
+       text characters in #asciiBg — "video from text", driven by the live model. -->
   <canvas id="scene" class="bg-canvas"></canvas>
+  <pre id="asciiBg" class="ascii-bg" aria-hidden="true"></pre>
   <div class="scene-veil" id="veil" aria-hidden="true"></div>
   <div class="scroll-rail" aria-hidden="true"><span id="railDot"></span></div>
 
@@ -49,7 +51,6 @@
     <nav class="nav" id="nav">
       <a href="#residence" data-hover>Резиденция</a>
       <a href="#views" data-hover>Галерея</a>
-      <a href="#textvid" data-hover>Видео</a>
       <a href="#amenities" data-hover>Сервис</a>
       <a href="#plan" data-hover>Планировки</a>
       <a href="#location" data-hover>Расположение</a>
@@ -188,26 +189,6 @@
           <span class="gallery__meta">Вид на Москва-Сити</span>
         </figcaption>
       </figure>
-    </div>
-  </section>
-
-  <!-- Video-from-text experiment -->
-  <section class="section textvid" id="textvid">
-    <div class="section__head">
-      <p class="eyebrow reveal" data-reveal>Эксперимент</p>
-      <h2 class="section__title reveal" data-reveal data-delay="80">Видео из текста.</h2>
-      <p class="textvid__lead reveal" data-reveal data-delay="160">
-        На экране нет ни <code>&lt;video&gt;</code>, ни <code>&lt;img&gt;</code> — только
-        цветные символы, которые JavaScript перерисовывает каждый кадр из реальных
-        фотографий дома. Выглядит как видео, но это текст.
-      </p>
-    </div>
-    <div class="textvid__stage reveal" data-reveal>
-      <pre id="txtVideo" class="textvid__screen" aria-label="Видео, собранное из текстовых символов"></pre>
-      <div class="textvid__cap">
-        <span>Выделите «кадр» мышью — это настоящий текст.</span>
-        <button id="txtReveal" class="btn btn--line" data-hover>Показать символы</button>
-      </div>
     </div>
   </section>
 

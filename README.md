@@ -27,16 +27,16 @@ building.
   glazing, a setback penthouse, a 9-metre warm-lit lobby, and a granite
   courtyard — set against Moscow-City towers, low Stalin-era neighbours, the
   river and trees.
-- **HDRI lighting + photographic post** — real **HDRI image-based lighting** (an
-  actual dusk sky) drives reflections on the brushed-steel colonnade and the
-  glazed windows (bronze frames, mullions, sky reflection); a low warm sun casts
-  **soft 4K shadows**; **SMAA** antialiasing plus a grade pass (subtle chromatic
-  aberration, filmic contrast, vignette, film grain) and restrained bloom finish
-  the frame. Falls back to a procedural sky env if the HDRI can't load.
+- **The background IS "video from text".** The 3D model is rendered to a hidden,
+  low-resolution WebGL canvas and **redrawn every frame as a full-screen grid of
+  colored text characters** (`#asciiBg`). There's no `<video>` — the moving
+  backdrop is live 3D disguised as text. Real **HDRI image-based lighting** (a
+  dusk sky) still drives the reflections and a low warm sun the shadows, so the
+  source frames look right before they become glyphs.
 - **Cinematic camera** — a timed intro fly-in, then a scroll-driven journey that
   tracks the colonnade, rises to the penthouse and pulls back over the river,
   with idle drift and mouse parallax.
-- **Full-bleed 3D + real imagery** — the canvas is a fixed full-viewport stage;
+- **Full-bleed + real imagery** — the text background is fixed full-viewport;
   content floats over it on translucent glass with a scroll-driven veil, and the
   gallery shows real photographs of the building.
 - **Premium art direction** — dark editorial palette with brass accents,
