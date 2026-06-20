@@ -1,14 +1,15 @@
 /* =========================================================
-   ZENITH — Cinematic WebGL hero
-   A full-screen, post-processed Moscow-City night scene:
-   bloom, a scripted intro fly-in, a scroll-driven camera
-   journey, planar reflections, searchlights, beacons,
-   traffic light-trails, drifting clouds, stars and a moon.
-   Built entirely from Three.js primitives — no 3D assets.
+   КУТУЗОВСКИЙ 12 — realistic WebGL stage
+   A faithful, procedurally-modelled reconstruction of the
+   real club house at Кутузовский проспект, 12 (arch. bureau
+   Tsimailo, Lyashenko & Partners): an 11-storey limestone
+   palazzo whose signature is full-height clusters of polished
+   glass/steel fluted columns banded with brass, set against
+   Moscow-City and the Moskva River at twilight.
+   Built entirely from Three.js — no external 3D assets.
    ========================================================= */
 
 import * as THREE from "three";
-import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
@@ -20,10 +21,17 @@ const lerp = (a, b, t) => a + (b - a) * t;
 const smooth = (t) => t * t * (3 - 2 * t);
 const clamp01 = (t) => Math.min(1, Math.max(0, t));
 
+// Building dimensions (metres)
+const W = 58, D = 22, H = 46, FLOORS = 11;
+const FH = H / FLOORS;            // floor height
+const FRONT = D / 2;              // +z front face
+const NBAYS = 13;
+const BAYW = W / NBAYS;
+
 try {
   init();
 } catch (err) {
-  console.warn("ZENITH cinematic scene disabled (gradient fallback):", err);
+  console.warn("КУТУЗОВСКИЙ 12 scene disabled (gradient fallback):", err);
   window.dispatchEvent(new Event("scene:ready"));
 }
 
@@ -34,129 +42,129 @@ function init() {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, isSmall ? 2 : 1.6));
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.1;
+  renderer.toneMappingExposure = 0.92;
+  renderer.shadowMap.enabled = !isSmall;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   const scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x070a14, 0.011);
+  scene.fog = new THREE.FogExp2(0x1a2236, 0.0042);
 
-  const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 1200);
-  camera.position.set(0, 80, 120);
+  const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.5, 2000);
+  camera.position.set(40, 40, 95);
+
+  /* ---------- Twilight sky + environment ---------- */
+  const sky = makeSky();
+  scene.add(sky);
 
   const pmrem = new THREE.PMREMGenerator(renderer);
-  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.03).texture;
+  const envScene = new THREE.Scene();
+  envScene.add(makeSky());
+  scene.environment = pmrem.fromScene(envScene, 0.04).texture;
 
-  /* ---------- World ---------- */
-  scene.add(makeSky());
-  scene.add(makeStars(isSmall ? 800 : 1600));
-  const moon = makeMoon();
-  scene.add(moon);
+  /* ---------- Lighting ---------- */
+  scene.add(new THREE.HemisphereLight(0x3c4f86, 0x241d16, 0.55));
 
-  // lights
-  scene.add(new THREE.HemisphereLight(0x33406e, 0x05060a, 0.6));
-  const key = new THREE.DirectionalLight(0xbcd0ff, 0.9);
-  key.position.set(-40, 60, 30);
-  scene.add(key);
-  const warm = new THREE.PointLight(0xffcaa0, 120, 120, 2);
-  warm.position.set(0, 30, 8);
-  scene.add(warm);
+  const sun = new THREE.DirectionalLight(0xffb068, 1.7);
+  sun.position.set(64, 40, 30);
+  if (!isSmall) {
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.near = 10;
+    sun.shadow.camera.far = 260;
+    const s = 70;
+    sun.shadow.camera.left = -s; sun.shadow.camera.right = s;
+    sun.shadow.camera.top = s; sun.shadow.camera.bottom = -s;
+    sun.shadow.bias = -0.0004;
+    sun.shadow.normalBias = 0.6;
+  }
+  scene.add(sun);
+
+  const bounce = new THREE.DirectionalLight(0x4a6bd6, 0.5);
+  bounce.position.set(-50, 20, -30);
+  scene.add(bounce);
 
   const updaters = [];
   const reflectables = [];
 
-  const city = new THREE.Group();
+  /* ---------- World ---------- */
+  const building = buildResidence(reflectables, updaters);
+  scene.add(building);
+
+  const city = makeMoscowCity(reflectables);
   scene.add(city);
 
-  const tower = makeTower(reflectables, updaters);
-  city.add(tower);
-  city.add(makeSkyline(isSmall ? 30 : 48, reflectables, updaters));
+  scene.add(makeContextBlocks(reflectables));
+  scene.add(makePlaza());
+  scene.add(makeReflection(reflectables));
+  scene.add(makeWater(updaters));
+  scene.add(makeTrees(isSmall ? 14 : 26));
 
-  makeSearchlights(city, updaters, isSmall ? 2 : 3);
-  makeTraffic(city, updaters);
-  city.add(makeClouds(updaters, isSmall ? 5 : 9));
-
-  // planar reflection: a mirrored, dimmed copy of the emissive city
-  city.add(makeReflection(reflectables));
-  city.add(makeFloor());
-
-  const particles = makeParticles(isSmall ? 700 : 1500);
+  const particles = makeParticles(isSmall ? 500 : 1100);
   scene.add(particles);
-  updaters.push((dt) => {
+  updaters.push((dt, t) => {
     if (reduceMotion) return;
-    particles.rotation.y += dt * 0.01;
-    particles.material.uniforms.uTime.value += dt;
+    particles.material.uniforms.uTime.value = t;
   });
 
-  /* ---------- Post-processing ---------- */
+  /* ---------- Post-processing (subtle, for realism) ---------- */
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
   const bloom = new UnrealBloomPass(
     new THREE.Vector2(window.innerWidth, window.innerHeight),
-    0.7,  // strength
-    0.5,  // radius
-    0.2   // threshold — only bright emissive (windows, lights, moon) bloom
+    0.55, 0.5, 0.55
   );
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
 
-  /* ---------- Cinematic camera ---------- */
-  // Scroll keyframes: { stop, position, target, fov }
-  // Every shot keeps the glowing city framed (never empty sky)
+  /* ---------- Cinematic camera (frames the building) ---------- */
   const keys = [
-    { s: 0.0,  p: [24, 9, 38],   t: [0, 15, 0],  f: 42 },
-    { s: 0.26, p: [-30, 16, 28], t: [0, 22, 0],  f: 46 },
-    { s: 0.5,  p: [22, 31, 31],  t: [0, 24, 0],  f: 43 },
-    { s: 0.74, p: [-27, 22, -30],t: [0, 22, 0],  f: 50 },
-    { s: 1.0,  p: [0, 46, 64],   t: [0, 18, 0],  f: 40 },
+    { s: 0.0,  p: [44, 13, 68],  t: [-2, 18, 0],  f: 40 }, // three-quarter colonnade
+    { s: 0.26, p: [-34, 9, 46],  t: [8, 14, 2],   f: 40 }, // track the other way
+    { s: 0.5,  p: [10, 30, 30],  t: [0, 33, -4],  f: 36 }, // rise to the crown / penthouse
+    { s: 0.74, p: [54, 24, 66],  t: [-6, 18, -8],  f: 42 }, // pull back: house + City + river
+    { s: 1.0,  p: [0, 17, 62],   t: [0, 21, 0],   f: 40 }, // frontal elevation
   ];
   const sPos = new THREE.Vector3(), sTar = new THREE.Vector3();
   const k0Pos = new THREE.Vector3(), k0Tar = new THREE.Vector3();
   const introPos = new THREE.Vector3(), introTar = new THREE.Vector3();
   const finalPos = new THREE.Vector3(), finalTar = new THREE.Vector3();
-  const introFrom = new THREE.Vector3(12, 64, 132);
-  const introFromTar = new THREE.Vector3(0, 18, 0);
+  const introFrom = new THREE.Vector3(46, 44, 104);
+  const introFromTar = new THREE.Vector3(-2, 16, -6);
 
   function sampleCam(prog, outP, outT) {
     let i = 0;
     while (i < keys.length - 1 && prog > keys[i + 1].s) i++;
     const a = keys[i], b = keys[Math.min(i + 1, keys.length - 1)];
-    const span = (b.s - a.s) || 1;
-    const k = smooth(clamp01((prog - a.s) / span));
+    const k = smooth(clamp01((prog - a.s) / ((b.s - a.s) || 1)));
     outP.set(lerp(a.p[0], b.p[0], k), lerp(a.p[1], b.p[1], k), lerp(a.p[2], b.p[2], k));
     outT.set(lerp(a.t[0], b.t[0], k), lerp(a.t[1], b.t[1], k), lerp(a.t[2], b.t[2], k));
     return lerp(a.f, b.f, k);
   }
-  function scrollProgress() {
+  const scrollProgress = () => {
     const max = document.documentElement.scrollHeight - window.innerHeight;
     return max > 0 ? clamp01(window.scrollY / max) : 0;
-  }
+  };
 
-  // pointer parallax
   const ptr = { x: 0, y: 0, tx: 0, ty: 0 };
   window.addEventListener("pointermove", (e) => {
     ptr.tx = e.clientX / window.innerWidth - 0.5;
     ptr.ty = e.clientY / window.innerHeight - 0.5;
   });
 
-  const introDur = 4.5; // seconds — wall-clock based, independent of frame rate
+  const introDur = 4.5;
 
-  /* ---------- Resize ---------- */
   window.addEventListener("resize", () => {
     const w = window.innerWidth, h = window.innerHeight;
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-    renderer.setSize(w, h);
-    composer.setSize(w, h);
-    bloom.setSize(w, h);
+    camera.aspect = w / h; camera.updateProjectionMatrix();
+    renderer.setSize(w, h); composer.setSize(w, h); bloom.setSize(w, h);
   });
 
-  /* ---------- Loop ---------- */
   const clock = new THREE.Clock();
   let first = true;
 
   function tick() {
     const dt = Math.min(clock.getDelta(), 0.05);
     const t = clock.elapsedTime;
-
     const introT = reduceMotion ? 1 : clamp01(t / introDur);
     const e = smooth(introT);
 
@@ -166,24 +174,20 @@ function init() {
     introTar.lerpVectors(introFromTar, k0Tar, e);
     finalPos.lerpVectors(introPos, sPos, e);
     finalTar.lerpVectors(introTar, sTar, e);
-    const fov = lerp(lerp(introFrom.fov || 28, fov0, e), fovS, e);
+    const fov = lerp(lerp(34, fov0, e), fovS, e);
 
     ptr.x += (ptr.tx - ptr.x) * 0.04;
     ptr.y += (ptr.ty - ptr.y) * 0.04;
-
     if (!reduceMotion) {
-      finalPos.x += Math.sin(t * 0.23) * 0.7 + ptr.x * 6;
-      finalPos.y += Math.sin(t * 0.31) * 0.5 - ptr.y * 3;
+      finalPos.x += Math.sin(t * 0.19) * 0.5 + ptr.x * 7;
+      finalPos.y += Math.sin(t * 0.27) * 0.35 - ptr.y * 3.5;
     }
     camera.position.copy(finalPos);
     camera.lookAt(finalTar);
-    if (!reduceMotion) camera.rotateZ(Math.sin(t * 0.18) * 0.006);
     camera.fov = fov;
     camera.updateProjectionMatrix();
 
-    warm.intensity = 100 + Math.sin(t * 1.4) * 25;
     for (let i = 0; i < updaters.length; i++) updaters[i](dt, t);
-
     composer.render();
 
     if (first) { first = false; window.dispatchEvent(new Event("scene:ready")); }
@@ -195,249 +199,249 @@ function init() {
 }
 
 /* =========================================================
-   Builders
+   The building
    ========================================================= */
 
-function makeFacadeTexture({ cols = 16, rows = 44, lit = 0.4 } = {}) {
-  const cell = 16;
-  const c = document.createElement("canvas");
-  c.width = cols * cell; c.height = rows * cell;
-  const ctx = c.getContext("2d");
-  ctx.fillStyle = "#05070b";
-  ctx.fillRect(0, 0, c.width, c.height);
-  for (let y = 0; y < rows; y++) {
-    for (let x = 0; x < cols; x++) {
-      const isLit = Math.random() < lit;
-      const px = x * cell + 3, py = y * cell + 3, w = cell - 6, h = cell - 6;
-      if (isLit) {
-        const g = ctx.createLinearGradient(px, py, px, py + h);
-        if (Math.random() > 0.22) { g.addColorStop(0, "#ffe6b0"); g.addColorStop(1, "#d59a4e"); }
-        else { g.addColorStop(0, "#cfe2ff"); g.addColorStop(1, "#7f97c4"); }
-        ctx.fillStyle = g;
-      } else ctx.fillStyle = "#0a0f18";
-      ctx.fillRect(px, py, w, h);
+function buildResidence(reflectables, updaters) {
+  const g = new THREE.Group();
+
+  const stone = new THREE.MeshStandardMaterial({ map: limestoneTexture(), color: 0xcabfa6, roughness: 0.82, metalness: 0.0, envMapIntensity: 0.7 });
+  const stonePale = new THREE.MeshStandardMaterial({ color: 0xd8cfb8, roughness: 0.7, metalness: 0.0, envMapIntensity: 0.7 });
+  const brass = new THREE.MeshStandardMaterial({ color: 0xcf9a44, roughness: 0.3, metalness: 1.0, envMapIntensity: 1.4, emissive: 0x3a2207, emissiveIntensity: 0.55 });
+  // polished glass/steel columns: reflective and cool, to contrast the warm stone
+  const colMat = new THREE.MeshStandardMaterial({ color: 0xe8eef4, roughness: 0.09, metalness: 0.96, envMapIntensity: 2.0, emissive: 0xffd9a0, emissiveIntensity: 0.12 });
+  const railing = new THREE.MeshStandardMaterial({ color: 0x2a2c30, roughness: 0.4, metalness: 0.9 });
+
+  // ---- solid mass (cast/receive shadows) ----
+  const mass = new THREE.Mesh(new THREE.BoxGeometry(W, H, D), stone);
+  mass.position.y = H / 2;
+  mass.castShadow = true; mass.receiveShadow = true;
+  g.add(mass);
+  reflectables.push(mass);
+
+  // top cornice + base plinth
+  const cornice = new THREE.Mesh(new THREE.BoxGeometry(W + 1.2, 1.2, D + 1.2), stonePale);
+  cornice.position.y = H + 0.2; cornice.castShadow = true;
+  g.add(cornice); reflectables.push(cornice);
+  const plinth = new THREE.Mesh(new THREE.BoxGeometry(W + 1.4, 1.6, D + 1.4), stonePale);
+  plinth.position.y = 0.8;
+  g.add(plinth);
+
+  // floor string-courses across the front
+  for (let f = 1; f < FLOORS; f++) {
+    const band = new THREE.Mesh(new THREE.BoxGeometry(W + 0.2, 0.22, 0.3), stonePale);
+    band.position.set(0, f * FH + 1.6, FRONT + 0.18);
+    g.add(band);
+  }
+
+  // ---- windows (front + right side) as instanced dark glass ----
+  const winFront = [];
+  for (let b = 0; b < NBAYS; b++) {
+    const x = -W / 2 + BAYW * (b + 0.5);
+    for (let f = 0; f < FLOORS; f++) {
+      const groundFloor = f === 0;
+      const y = f * FH + (groundFloor ? FH * 0.55 : FH * 0.5 + 1.6);
+      winFront.push({ x, y, w: BAYW * 0.6, h: (groundFloor ? FH * 0.82 : FH * 0.62) });
     }
   }
-  const tex = new THREE.CanvasTexture(c);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.anisotropy = 4;
-  return tex;
-}
+  addWindows(g, winFront, FRONT + 0.06);
 
-function makeTower(reflectables, updaters) {
-  const group = new THREE.Group();
-  const COLS = 18, ROWS = 50;
-  const facade = makeFacadeTexture({ cols: COLS, rows: ROWS, lit: 0.42 });
+  // right side windows
+  const NDEPTH = 5, DBAY = D / NDEPTH;
+  const winSide = [];
+  for (let b = 0; b < NDEPTH; b++) {
+    const z = -D / 2 + DBAY * (b + 0.5);
+    for (let f = 0; f < FLOORS; f++) {
+      winSide.push({ z, y: f * FH + FH * 0.5 + 1.6, w: DBAY * 0.55, h: FH * 0.6 });
+    }
+  }
+  addWindowsSide(g, winSide, W / 2 + 0.06);
 
-  const glass = (w, h) => {
-    const map = facade.clone(); map.needsUpdate = true;
-    map.repeat.set((w * 1.7) / COLS, (h * 2.2) / ROWS);
-    return new THREE.MeshPhysicalMaterial({
-      color: 0x0a0e15, metalness: 0.2, roughness: 0.32, envMapIntensity: 0.5,
-      emissive: 0xffffff, emissiveMap: map, emissiveIntensity: 1.8,
-      clearcoat: 0.4, clearcoatRoughness: 0.3,
-    });
+  // ---- signature columns: clusters of fluted rods banded with brass ----
+  // rods
+  const RODS = 6, rodR = 0.16, clusterR = 0.72;
+  const rodGeo = new THREE.CylinderGeometry(rodR, rodR, H - 1, 8);
+  const colXs = [];
+  for (let c = 0; c <= NBAYS; c++) colXs.push(-W / 2 + BAYW * c);
+  const sideZs = [];
+  for (let c = 1; c < NDEPTH; c++) sideZs.push(-D / 2 + DBAY * c);
+
+  const rodCount = (colXs.length + sideZs.length) * RODS;
+  const rods = new THREE.InstancedMesh(rodGeo, colMat, rodCount);
+  rods.castShadow = true;
+  const dummy = new THREE.Object3D();
+  let ri = 0;
+  const placeCluster = (cx, cz, faceZ) => {
+    for (let r = 0; r < RODS; r++) {
+      const a = (r / (RODS - 1) - 0.5) * Math.PI * 0.9;
+      let ox = Math.sin(a) * clusterR, oz = Math.cos(a) * clusterR * 0.5 + 0.45;
+      if (faceZ) dummy.position.set(cx + ox, H / 2, FRONT + oz);
+      else dummy.position.set(W / 2 + oz, H / 2, cz + ox);
+      dummy.rotation.set(0, 0, 0);
+      dummy.scale.set(1, 1, 1);
+      dummy.updateMatrix();
+      rods.setMatrixAt(ri++, dummy.matrix);
+    }
   };
+  colXs.forEach((x) => placeCluster(x, 0, true));
+  sideZs.forEach((z) => placeCluster(0, z, false));
+  rods.instanceMatrix.needsUpdate = true;
+  g.add(rods);
+  reflectables.push(rods);
 
-  const tiers = [
-    { w: 9, d: 9, h: 22, y: 11 },
-    { w: 7.4, d: 7.4, h: 12, y: 28 },
-    { w: 5.8, d: 5.8, h: 9, y: 38.5 },
-  ];
-  tiers.forEach((tt) => {
-    const mesh = new THREE.Mesh(new THREE.BoxGeometry(tt.w, tt.h, tt.d), glass(tt.w, tt.h));
-    mesh.position.y = tt.y;
-    group.add(mesh);
-    reflectables.push(mesh);
-    const cap = new THREE.Mesh(
-      new THREE.BoxGeometry(tt.w + 0.3, 0.4, tt.d + 0.3),
-      new THREE.MeshStandardMaterial({ color: 0xc9a35e, metalness: 1, roughness: 0.35, envMapIntensity: 1.4 })
-    );
-    cap.position.y = tt.y + tt.h / 2;
-    group.add(cap);
-    reflectables.push(cap);
-  });
+  // brass bands wrapping each cluster at every floor line
+  const ringGeo = new THREE.CylinderGeometry(clusterR + 0.12, clusterR + 0.12, 0.3, 16, 1, true);
+  const rings = new THREE.InstancedMesh(ringGeo, brass, (colXs.length + sideZs.length) * (FLOORS + 1));
+  const ringState = { i: 0 };
+  colXs.forEach((x) => placeRingsTo(rings, ringState, dummy, x, 0, true));
+  sideZs.forEach((z) => placeRingsTo(rings, ringState, dummy, 0, z, false));
+  rings.instanceMatrix.needsUpdate = true;
+  rings.castShadow = true;
+  g.add(rings);
+  reflectables.push(rings);
 
-  // spire + glowing crown
-  const spire = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.08, 0.32, 8, 12),
-    new THREE.MeshStandardMaterial({ color: 0xc9a35e, metalness: 1, roughness: 0.3 })
+  // ---- warm lobby glow at the base ----
+  const lobby = new THREE.Mesh(
+    new THREE.PlaneGeometry(W - 2, FH * 0.9),
+    new THREE.MeshBasicMaterial({ color: 0xffd9a0, transparent: true, opacity: 0.9 })
   );
-  spire.position.y = 47; group.add(spire); reflectables.push(spire);
+  lobby.position.set(0, FH * 0.5, FRONT + 0.02);
+  g.add(lobby);
 
-  const orb = new THREE.Mesh(
-    new THREE.SphereGeometry(0.6, 24, 24),
-    new THREE.MeshStandardMaterial({ color: 0xffe9c2, emissive: 0xe7c98a, emissiveIntensity: 4 })
+  // ---- penthouse setback + roof ----
+  const ph = new THREE.Mesh(new THREE.BoxGeometry(W * 0.74, FH * 1.3, D * 0.7), stone);
+  ph.position.y = H + 0.8 + FH * 0.65; ph.castShadow = true;
+  g.add(ph); reflectables.push(ph);
+  const phGlass = new THREE.Mesh(
+    new THREE.PlaneGeometry(W * 0.7, FH * 0.9),
+    new THREE.MeshStandardMaterial({ color: 0x10151c, roughness: 0.08, metalness: 0.2, envMapIntensity: 1.4, emissive: 0x40340f, emissiveIntensity: 0.4 })
   );
-  orb.position.y = 51.4; group.add(orb); reflectables.push(orb);
-  const orbLight = new THREE.PointLight(0xe7c98a, 40, 60, 2);
-  orbLight.position.y = 51.4; group.add(orbLight);
+  phGlass.position.set(0, H + 0.8 + FH * 0.6, D * 0.35 + 0.05);
+  g.add(phGlass);
+  // roof terrace railing
+  for (let i = 0; i <= 16; i++) {
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.06, 1, 0.06), railing);
+    post.position.set(-W / 2 + (W / 16) * i, H + 1.2, FRONT - 0.4);
+    g.add(post);
+  }
+  const rail = new THREE.Mesh(new THREE.BoxGeometry(W, 0.06, 0.06), railing);
+  rail.position.set(0, H + 1.7, FRONT - 0.4);
+  g.add(rail);
 
-  // aircraft beacon on the crown (with a real light)
-  const beacon = makeBeacon(0, 52.4, 0, updaters, true);
-  group.add(beacon);
-  reflectables.push(beacon.children[0]);
+  // subtle twilight shimmer on the columns
+  updaters.push((_, t) => { colMat.emissiveIntensity = 0.12 + Math.sin(t * 0.7) * 0.05; });
 
-  return group;
+  return g;
 }
 
-function makeBeacon(x, y, z, updaters, withLight) {
+function placeRingsTo(mesh, state, dummy, cx, cz, faceZ) {
+  for (let f = 0; f <= FLOORS; f++) {
+    const y = Math.min(H - 0.6, f * FH + 0.9);
+    if (faceZ) dummy.position.set(cx, y, FRONT + 0.6);
+    else dummy.position.set(W / 2 + 0.6, y, cz);
+    dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix();
+    mesh.setMatrixAt(state.i++, dummy.matrix);
+  }
+}
+
+function addWindows(group, list, z) {
+  const dark = new THREE.MeshStandardMaterial({ color: 0x0c1014, roughness: 0.06, metalness: 0.2, envMapIntensity: 1.5 });
+  const geo = new THREE.PlaneGeometry(1, 1);
+  const d = new THREE.Object3D();
+
+  const mesh = new THREE.InstancedMesh(geo, dark, list.length);
+  list.forEach((w, i) => {
+    d.position.set(w.x, w.y, z); d.rotation.set(0, 0, 0); d.scale.set(w.w, w.h, 1); d.updateMatrix();
+    mesh.setMatrixAt(i, d.matrix);
+  });
+  mesh.instanceMatrix.needsUpdate = true;
+  group.add(mesh);
+
+  // a fraction of windows glow warm
+  const litList = list.filter(() => Math.random() < 0.36);
+  const litMat = new THREE.MeshBasicMaterial({ color: 0xffcc92, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false });
+  const litMesh = new THREE.InstancedMesh(geo, litMat, litList.length);
+  litList.forEach((w, i) => {
+    d.position.set(w.x, w.y, z + 0.03); d.rotation.set(0, 0, 0); d.scale.set(w.w * 0.92, w.h * 0.9, 1); d.updateMatrix();
+    litMesh.setMatrixAt(i, d.matrix);
+  });
+  litMesh.instanceMatrix.needsUpdate = true;
+  group.add(litMesh);
+}
+
+function addWindowsSide(group, list, x) {
+  const dark = new THREE.MeshStandardMaterial({ color: 0x0c1014, roughness: 0.06, metalness: 0.2, envMapIntensity: 1.4 });
+  const geo = new THREE.PlaneGeometry(1, 1);
+  const mesh = new THREE.InstancedMesh(geo, dark, list.length);
+  const d = new THREE.Object3D();
+  list.forEach((w, i) => {
+    d.position.set(x, w.y, w.z); d.rotation.y = Math.PI / 2; d.scale.set(w.w, w.h, 1); d.updateMatrix();
+    mesh.setMatrixAt(i, d.matrix); d.rotation.y = 0;
+  });
+  mesh.instanceMatrix.needsUpdate = true;
+  group.add(mesh);
+}
+
+/* =========================================================
+   Context: Moscow-City, neighbours, plaza, water, trees
+   ========================================================= */
+
+function makeMoscowCity(reflectables) {
   const g = new THREE.Group();
-  const bulb = new THREE.Mesh(
-    new THREE.SphereGeometry(0.28, 12, 12),
-    new THREE.MeshStandardMaterial({ color: 0xff5544, emissive: 0xff2218, emissiveIntensity: 5 })
-  );
-  bulb.position.set(x, y, z);
-  g.add(bulb);
-  const light = withLight ? new THREE.PointLight(0xff3322, 0, 30, 2) : null;
-  if (light) { light.position.set(x, y, z); g.add(light); }
-  let ph = Math.random() * Math.PI * 2;
-  updaters.push((dt) => {
-    ph += dt * 2.2;
-    const b = Math.max(0, Math.sin(ph));
-    bulb.material.emissiveIntensity = 1.5 + b * 7;
-    if (light) light.intensity = b * 8;
+  const glass = new THREE.MeshStandardMaterial({ color: 0x2b3850, roughness: 0.12, metalness: 0.7, envMapIntensity: 1.6, emissive: 0x101626, emissiveIntensity: 0.5 });
+  const towers = [
+    { x: -120, z: -150, w: 26, d: 26, h: 240 },
+    { x: -150, z: -170, w: 22, d: 22, h: 300 },
+    { x: -95, z: -175, w: 20, d: 20, h: 200 },
+    { x: -176, z: -150, w: 18, d: 18, h: 170 },
+    { x: -70, z: -185, w: 24, d: 16, h: 150 },
+    { x: -200, z: -165, w: 20, d: 20, h: 210 },
+  ];
+  towers.forEach((t) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(t.w, t.h, t.d), glass);
+    m.position.set(t.x, t.h / 2, t.z);
+    m.rotation.y = Math.random() * 0.6;
+    g.add(m);
+    reflectables.push(m);
   });
   return g;
 }
 
-function makeSkyline(count, reflectables, updaters) {
-  const group = new THREE.Group();
-  const facade = makeFacadeTexture({ cols: 12, rows: 34, lit: 0.34 });
-  const geo = new THREE.BoxGeometry(1, 1, 1);
-  const map = facade.clone(); map.needsUpdate = true;
-  const mat = new THREE.MeshStandardMaterial({
-    color: 0x070b12, metalness: 0.3, roughness: 0.42,
-    emissive: 0xffffff, emissiveMap: map, emissiveIntensity: 1.0, envMapIntensity: 0.8,
-  });
-  const mesh = new THREE.InstancedMesh(geo, mat, count);
-  const dummy = new THREE.Object3D();
-  const tall = [];
-  for (let i = 0; i < count; i++) {
-    const ang = (i / count) * Math.PI * 2 + Math.random() * 0.25;
-    const dist = 26 + Math.random() * 46;
-    const w = 3 + Math.random() * 5, h = 10 + Math.random() * 44, d = 3 + Math.random() * 5;
-    const x = Math.cos(ang) * dist, z = Math.sin(ang) * dist;
-    dummy.position.set(x, h / 2, z);
-    dummy.scale.set(w, h, d);
-    dummy.rotation.y = Math.random() * Math.PI;
-    dummy.updateMatrix();
-    mesh.setMatrixAt(i, dummy.matrix);
-    if (h > 40) tall.push([x, h, z]);
-  }
-  mesh.instanceMatrix.needsUpdate = true;
-  group.add(mesh);
-  reflectables.push(mesh);
-
-  // gentle window flicker
-  updaters.push((_, t) => { mat.emissiveIntensity = 1.0 + Math.sin(t * 0.8) * 0.06; });
-
-  // beacons on the tallest neighbours (emissive only — bloom makes them glow)
-  tall.slice(0, 5).forEach(([x, h, z]) => group.add(makeBeacon(x, h + 1, z, updaters, false)));
-  return group;
-}
-
-function makeSearchlights(parent, updaters, n) {
-  for (let i = 0; i < n; i++) {
-    const ang = (i / n) * Math.PI * 2;
-    const r = 30 + i * 6;
-    const base = new THREE.Vector3(Math.cos(ang) * r, 1, Math.sin(ang) * r);
-    const color = 0xbfd4ff;
-    const spot = new THREE.SpotLight(color, 600, 200, Math.PI / 9, 0.4, 1.4);
-    spot.position.copy(base);
-    const target = new THREE.Object3D();
-    target.position.set(base.x * 0.4, 60, base.z * 0.4);
-    parent.add(target);
-    spot.target = target;
-    parent.add(spot);
-
-    // visible additive beam cone
-    const cone = new THREE.Mesh(
-      new THREE.ConeGeometry(7, 70, 24, 1, true),
-      new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.05, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false })
-    );
-    cone.position.set(base.x, 35, base.z);
-    parent.add(cone);
-
-    let ph = Math.random() * Math.PI * 2;
-    const speed = 0.12 + Math.random() * 0.1;
-    updaters.push((dt, t) => {
-      ph += dt * speed;
-      const tx = Math.cos(ph) * 22, tz = Math.sin(ph * 0.7) * 22;
-      target.position.set(tx, 64, tz);
-      cone.lookAt(tx, 64, tz);
-      cone.rotateX(Math.PI / 2);
-    });
-  }
-}
-
-function makeTraffic(parent, updaters) {
-  // long-exposure light-trails: additive planes with scrolling dash textures
-  const tex = (() => {
-    const c = document.createElement("canvas"); c.width = 256; c.height = 16;
-    const ctx = c.getContext("2d");
-    ctx.fillStyle = "#000"; ctx.fillRect(0, 0, 256, 16);
-    for (let x = 0; x < 256; x += 18) {
-      const g = ctx.createLinearGradient(x, 0, x + 12, 0);
-      g.addColorStop(0, "rgba(255,210,140,0)");
-      g.addColorStop(0.5, "rgba(255,225,170,0.9)");
-      g.addColorStop(1, "rgba(255,210,140,0)");
-      ctx.fillStyle = g; ctx.fillRect(x, 4, 12, 3);
-      const g2 = ctx.createLinearGradient(x + 6, 0, x + 18, 0);
-      g2.addColorStop(0, "rgba(255,80,70,0)");
-      g2.addColorStop(0.5, "rgba(255,90,80,0.8)");
-      g2.addColorStop(1, "rgba(255,80,70,0)");
-      ctx.fillStyle = g2; ctx.fillRect(x + 6, 9, 12, 3);
-    }
-    const t = new THREE.CanvasTexture(c);
-    t.wrapS = t.wrapT = THREE.RepeatWrapping;
-    t.colorSpace = THREE.SRGBColorSpace;
-    return t;
-  })();
-
-  const roads = [
-    { x: 0, z: 14, len: 120, rot: 0 },
-    { x: 16, z: 0, len: 120, rot: Math.PI / 2 },
-    { x: -18, z: -6, len: 110, rot: Math.PI / 3 },
-    { x: 6, z: -20, len: 130, rot: -Math.PI / 5 },
+function makeContextBlocks(reflectables) {
+  // low Stalin-era neighbours around the plot
+  const g = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({ color: 0x6d6354, roughness: 0.9, metalness: 0, envMapIntensity: 0.5 });
+  const blocks = [
+    { x: -70, z: 10, w: 40, d: 22, h: 26 },
+    { x: 78, z: -6, w: 44, d: 22, h: 28 },
+    { x: 60, z: 40, w: 30, d: 20, h: 22 },
+    { x: -64, z: 46, w: 34, d: 20, h: 24 },
   ];
-  roads.forEach((rd, i) => {
-    const m = tex.clone(); m.needsUpdate = true; m.repeat.set(rd.len / 10, 1);
-    const mat = new THREE.MeshBasicMaterial({ map: m, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
-    const plane = new THREE.Mesh(new THREE.PlaneGeometry(rd.len, 2.4), mat);
-    plane.rotation.x = -Math.PI / 2;
-    plane.rotation.z = rd.rot;
-    plane.position.set(rd.x, 0.25, rd.z);
-    parent.add(plane);
-    const dir = i % 2 ? -1 : 1;
-    updaters.push((dt) => { m.offset.x += dt * 0.6 * dir; });
+  blocks.forEach((b) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(b.w, b.h, b.d), mat);
+    m.position.set(b.x, b.h / 2, b.z);
+    m.castShadow = true; m.receiveShadow = true;
+    g.add(m); reflectables.push(m);
   });
+  return g;
 }
 
-function makeClouds(updaters, n) {
-  const group = new THREE.Group();
-  const c = document.createElement("canvas"); c.width = c.height = 128;
-  const ctx = c.getContext("2d");
-  const g = ctx.createRadialGradient(64, 64, 4, 64, 64, 64);
-  g.addColorStop(0, "rgba(120,140,180,0.5)");
-  g.addColorStop(1, "rgba(120,140,180,0)");
-  ctx.fillStyle = g; ctx.fillRect(0, 0, 128, 128);
-  const tex = new THREE.CanvasTexture(c);
-  for (let i = 0; i < n; i++) {
-    const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.16, depthWrite: false, blending: THREE.AdditiveBlending });
-    const s = 40 + Math.random() * 60;
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(s, s * 0.6), mat);
-    m.position.set((Math.random() - 0.5) * 160, 60 + Math.random() * 50, (Math.random() - 0.5) * 160);
-    m.rotation.x = -Math.PI / 2.3;
-    group.add(m);
-    const drift = 0.4 + Math.random() * 0.5;
-    updaters.push((dt) => {
-      m.position.x += dt * drift;
-      if (m.position.x > 110) m.position.x = -110;
-    });
-  }
-  return group;
+function makePlaza() {
+  const tex = graniteTexture();
+  const mat = new THREE.MeshStandardMaterial({ map: tex, color: 0x8d8a86, roughness: 0.55, metalness: 0.1, envMapIntensity: 0.6 });
+  const plane = new THREE.Mesh(new THREE.PlaneGeometry(260, 120), mat);
+  plane.rotation.x = -Math.PI / 2;
+  plane.position.set(0, 0.02, FRONT + 40);
+  plane.receiveShadow = true;
+  return plane;
+}
+
+function makeWater(updaters) {
+  const mat = new THREE.MeshStandardMaterial({ color: 0x0c1622, roughness: 0.08, metalness: 0.6, envMapIntensity: 1.1, transparent: true, opacity: 0.92 });
+  const plane = new THREE.Mesh(new THREE.PlaneGeometry(600, 300, 1, 1), mat);
+  plane.rotation.x = -Math.PI / 2;
+  plane.position.set(-40, -0.05, -120);
+  return plane;
 }
 
 function makeReflection(reflectables) {
@@ -445,19 +449,14 @@ function makeReflection(reflectables) {
   reflectables.forEach((src) => {
     let clone;
     if (src.isInstancedMesh) {
-      clone = new THREE.InstancedMesh(src.geometry, src.material.clone(), src.count);
+      clone = new THREE.InstancedMesh(src.geometry, src.material, src.count);
       clone.instanceMatrix.copy(src.instanceMatrix);
       clone.instanceMatrix.needsUpdate = true;
     } else {
-      clone = new THREE.Mesh(src.geometry, src.material.clone());
+      clone = new THREE.Mesh(src.geometry, src.material);
       clone.position.copy(src.position);
       clone.rotation.copy(src.rotation);
       clone.scale.copy(src.scale);
-    }
-    if (clone.material) {
-      if ("emissiveIntensity" in clone.material) clone.material.emissiveIntensity *= 0.5;
-      clone.material.transparent = true;
-      clone.material.opacity = 0.5;
     }
     group.add(clone);
   });
@@ -466,66 +465,111 @@ function makeReflection(reflectables) {
   return group;
 }
 
-function makeFloor() {
-  const mat = new THREE.MeshPhysicalMaterial({
-    color: 0x05080e, metalness: 0.4, roughness: 0.18,
-    transparent: true, opacity: 0.62, envMapIntensity: 0.8, depthWrite: false,
-  });
-  const plane = new THREE.Mesh(new THREE.PlaneGeometry(700, 700), mat);
-  plane.rotation.x = -Math.PI / 2;
-  return plane;
-}
-
-function makeStars(count) {
-  const pos = new Float32Array(count * 3);
-  for (let i = 0; i < count; i++) {
-    const r = 300 + Math.random() * 200;
-    const th = Math.random() * Math.PI * 2;
-    const ph = Math.acos(Math.random() * 0.7 + 0.1);
-    pos[i * 3] = r * Math.sin(ph) * Math.cos(th);
-    pos[i * 3 + 1] = r * Math.cos(ph) + 60;
-    pos[i * 3 + 2] = r * Math.sin(ph) * Math.sin(th);
-  }
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-  const mat = new THREE.PointsMaterial({ color: 0xcfd8ff, size: 1.1, sizeAttenuation: false, transparent: true, opacity: 0.9 });
-  return new THREE.Points(geo, mat);
-}
-
-function makeMoon() {
+function makeTrees(n) {
   const g = new THREE.Group();
-  const moon = new THREE.Mesh(
-    new THREE.SphereGeometry(7, 32, 32),
-    new THREE.MeshStandardMaterial({ color: 0xfff4e0, emissive: 0xead9b6, emissiveIntensity: 2.2 })
-  );
-  const halo = new THREE.Mesh(
-    new THREE.PlaneGeometry(46, 46),
-    new THREE.MeshBasicMaterial({ map: radialSprite(), transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false })
-  );
-  g.add(moon); g.add(halo);
-  g.position.set(-150, 120, -180);
-  halo.lookAt(0, 0, 0);
+  const trunkMat = new THREE.MeshStandardMaterial({ color: 0x3a2c20, roughness: 0.9 });
+  const leafMat = new THREE.MeshStandardMaterial({ color: 0x35502f, roughness: 0.9 });
+  for (let i = 0; i < n; i++) {
+    const tree = new THREE.Group();
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.26, 3, 6), trunkMat);
+    trunk.position.y = 1.5;
+    const crown = new THREE.Mesh(new THREE.IcosahedronGeometry(1.7 + Math.random(), 1), leafMat);
+    crown.position.y = 4; crown.castShadow = true;
+    tree.add(trunk); tree.add(crown);
+    const side = Math.random() > 0.5 ? 1 : -1;
+    tree.position.set((Math.random() - 0.5) * 120, 0, FRONT + 16 + Math.random() * 40);
+    tree.scale.setScalar(0.8 + Math.random() * 0.7);
+    g.add(tree);
+  }
   return g;
 }
 
-function radialSprite() {
-  const c = document.createElement("canvas"); c.width = c.height = 128;
+/* =========================================================
+   Procedural textures
+   ========================================================= */
+
+function limestoneTexture() {
+  const c = document.createElement("canvas"); c.width = 256; c.height = 256;
   const ctx = c.getContext("2d");
-  const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
-  g.addColorStop(0, "rgba(255,244,224,0.9)");
-  g.addColorStop(0.3, "rgba(255,240,210,0.35)");
-  g.addColorStop(1, "rgba(255,240,210,0)");
-  ctx.fillStyle = g; ctx.fillRect(0, 0, 128, 128);
-  return new THREE.CanvasTexture(c);
+  ctx.fillStyle = "#cabfa6"; ctx.fillRect(0, 0, 256, 256);
+  for (let i = 0; i < 4000; i++) {
+    const v = 200 + Math.random() * 40;
+    ctx.fillStyle = `rgba(${v},${v - 8},${v - 26},0.05)`;
+    ctx.fillRect(Math.random() * 256, Math.random() * 256, 2, 2);
+  }
+  // faint vertical fluting + horizontal courses
+  ctx.strokeStyle = "rgba(120,110,92,0.18)"; ctx.lineWidth = 1;
+  for (let x = 8; x < 256; x += 16) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 256); ctx.stroke(); }
+  ctx.strokeStyle = "rgba(120,110,92,0.12)";
+  for (let y = 0; y < 256; y += 64) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(256, y); ctx.stroke(); }
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(W / 6, H / 6);
+  return tex;
+}
+
+function graniteTexture() {
+  const c = document.createElement("canvas"); c.width = 256; c.height = 256;
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = "#83807c"; ctx.fillRect(0, 0, 256, 256);
+  for (let i = 0; i < 6000; i++) {
+    const v = 110 + Math.random() * 60;
+    ctx.fillStyle = `rgba(${v},${v},${v},0.06)`;
+    ctx.fillRect(Math.random() * 256, Math.random() * 256, 2, 2);
+  }
+  // chevron seams
+  ctx.strokeStyle = "rgba(40,40,40,0.25)"; ctx.lineWidth = 1;
+  for (let i = -256; i < 256; i += 22) {
+    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + 128, 256); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(i + 128, 0); ctx.lineTo(i, 256); ctx.stroke();
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(20, 10);
+  return tex;
+}
+
+/* =========================================================
+   Sky, particles
+   ========================================================= */
+
+function makeSky() {
+  const geo = new THREE.SphereGeometry(900, 32, 16);
+  const mat = new THREE.ShaderMaterial({
+    side: THREE.BackSide, depthWrite: false,
+    uniforms: {
+      uZenith: { value: new THREE.Color(0x0a1430) },
+      uMid:    { value: new THREE.Color(0x33406e) },
+      uHorizon:{ value: new THREE.Color(0xe08a4a) },
+      uGlow:   { value: new THREE.Color(0xffb56a) },
+    },
+    vertexShader: `varying vec3 vP; void main(){ vP = position; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+    fragmentShader: `
+      varying vec3 vP; uniform vec3 uZenith,uMid,uHorizon,uGlow;
+      void main(){
+        vec3 d = normalize(vP);
+        float h = d.y;
+        vec3 col = mix(uMid, uZenith, smoothstep(0.15, 0.75, h));
+        col = mix(uHorizon, col, smoothstep(-0.05, 0.22, h));
+        // warm sun glow low on the horizon
+        float sun = max(0.0, dot(d, normalize(vec3(0.8, 0.06, 0.5))));
+        col += uGlow * pow(sun, 22.0) * 0.5;
+        col = mix(col, uHorizon*0.6, smoothstep(0.0,-0.4,h));
+        gl_FragColor = vec4(col,1.0);
+      }`,
+  });
+  return new THREE.Mesh(geo, mat);
 }
 
 function makeParticles(count) {
   const positions = new Float32Array(count * 3);
   const seeds = new Float32Array(count);
   for (let i = 0; i < count; i++) {
-    positions[i * 3] = (Math.random() - 0.5) * 140;
-    positions[i * 3 + 1] = Math.random() * 80;
-    positions[i * 3 + 2] = (Math.random() - 0.5) * 140;
+    positions[i * 3] = (Math.random() - 0.5) * 160;
+    positions[i * 3 + 1] = Math.random() * 70;
+    positions[i * 3 + 2] = (Math.random() - 0.5) * 160 + 20;
     seeds[i] = Math.random() * Math.PI * 2;
   }
   const geo = new THREE.BufferGeometry();
@@ -538,41 +582,19 @@ function makeParticles(count) {
       uniform float uTime; attribute float aSeed; varying float vA;
       void main(){
         vec3 p = position;
-        p.y += sin(uTime*0.3 + aSeed)*1.6;
-        p.x += cos(uTime*0.2 + aSeed)*1.3;
+        p.y += sin(uTime*0.25 + aSeed)*1.4;
+        p.x += cos(uTime*0.18 + aSeed)*1.1;
         vec4 mv = modelViewMatrix * vec4(p,1.0);
         gl_Position = projectionMatrix * mv;
-        gl_PointSize = (30.0 / -mv.z) * (0.6 + 0.4*sin(aSeed));
-        vA = 0.35 + 0.65*abs(sin(uTime*0.6 + aSeed));
+        gl_PointSize = (26.0 / -mv.z) * (0.6 + 0.4*sin(aSeed));
+        vA = 0.25 + 0.5*abs(sin(uTime*0.5 + aSeed));
       }`,
     fragmentShader: `
       varying float vA;
       void main(){
         float d = smoothstep(0.5, 0.0, length(gl_PointCoord - 0.5));
-        gl_FragColor = vec4(0.85, 0.68, 0.4, d*vA);
+        gl_FragColor = vec4(0.95, 0.82, 0.6, d*vA);
       }`,
   });
   return new THREE.Points(geo, mat);
-}
-
-function makeSky() {
-  const geo = new THREE.SphereGeometry(560, 32, 16);
-  const mat = new THREE.ShaderMaterial({
-    side: THREE.BackSide, depthWrite: false,
-    uniforms: {
-      uTop: { value: new THREE.Color(0x04060f) },
-      uMid: { value: new THREE.Color(0x0a1325) },
-      uBot: { value: new THREE.Color(0x1c1612) },
-    },
-    vertexShader: `varying vec3 vP; void main(){ vP = position; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
-    fragmentShader: `
-      varying vec3 vP; uniform vec3 uTop,uMid,uBot;
-      void main(){
-        float h = normalize(vP).y;
-        vec3 col = mix(uMid, uTop, smoothstep(0.0,0.7,h));
-        col = mix(uBot, col, smoothstep(-0.3,0.1,h));
-        gl_FragColor = vec4(col,1.0);
-      }`,
-  });
-  return new THREE.Mesh(geo, mat);
 }

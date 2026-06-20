@@ -139,12 +139,20 @@ html = html.replace(
   () => loader
 );
 
+// inline local images (gallery photos) as data URIs
+html = html.replace(/src="(img\/[^"]+)"/g, (_m, p) => {
+  const buf = fs.readFileSync(path.join(root, p));
+  const ext = path.extname(p).slice(1).toLowerCase();
+  const mime = ext === "jpg" ? "jpeg" : ext;
+  return `src="data:image/${mime};base64,${buf.toString("base64")}"`;
+});
+
 // sanity: nothing left pointing at external app files
 ["href=\"css/styles.css\"", "src=\"js/scene.js\"", "src=\"js/main.js\"", "type=\"importmap\""].forEach((s) => {
   if (html.includes(s)) throw new Error("Build incomplete; not inlined: " + s);
 });
 
-const out = "zenith-residence.html";
+const out = "kutuzovsky-12.html";
 fs.writeFileSync(path.join(root, out), html, "utf8");
 const kb = (n) => (n / 1024).toFixed(0) + " KB";
 console.log(`Wrote ${out} (${kb(Buffer.byteLength(html))}) — inlined ${order.length} JS modules + CSS + UI script.`);

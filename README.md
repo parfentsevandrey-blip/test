@@ -1,34 +1,42 @@
-# ZENITH · Sky Residence — Moscow-City
+# Кутузовский 12 — Club House landing (concept)
 
-A premium, single-page **3D landing site** for the sale of a luxury penthouse
-in Moscow-City. A full-screen, post-processed **Three.js** cityscape is the
-stage for the whole page — no external 3D assets, images, or build step
-required.
+A premium, single-page site for the real **«Кутузовский 12»** deluxe club house
+on Kutuzovsky Prospekt, Moscow (architecture by Tsimailo, Lyashenko & Partners).
+The hero is a full-screen **Three.js** reconstruction of the actual building —
+an 11-storey limestone palazzo with its signature full-height glass/steel
+colonnade banded in brass — rendered at twilight against Moscow-City and the
+Moskva River. Copy is in Russian; the gallery uses real photography of the
+building.
 
-![Concept landing page for the ZENITH sky residence](docs/preview.svg)
+![Кутузовский 12 against Moscow-City](img/k12-aerial-sunset.jpg)
+
+> Modelled from reference photos of the completed building. This is a
+> conceptual presentation, not affiliated with the developer.
 
 ## Highlights
 
-- **Cinematic, full-screen WebGL stage** — a fixed, full-viewport Moscow-City
-  at night sits behind the entire page. Content floats over the living scene on
-  translucent glass, dimmed just enough to stay legible.
-- **Bloom post-processing** — an `EffectComposer` pipeline (RenderPass →
-  `UnrealBloomPass` → `OutputPass`) makes every lit window, beacon and the gold
-  crown glow. This is what turns the scene from "nice" into cinematic.
-- **Scripted camera** — a timed intro fly-in on load, then a scroll-driven
-  camera journey that orbits and rises around the tower, with idle drift and
-  mouse parallax.
-- **A living city** — a procedural glass tower, a surrounding skyline, blinking
-  aircraft beacons, sweeping searchlights, long-exposure traffic light-trails,
-  planar reflections (a mirrored city under a glass floor, so the reflection
-  blooms too), drifting clouds, stars and a hazy moon.
-- **Premium art direction** — dark editorial palette with bronze/gold accents,
-  Cormorant Garamond + Manrope typography, film-grain, custom cursor, a
-  cinematic scroll-rail, preloader, scroll reveals, animated counters and a
-  working (front-end only) enquiry form.
-- **Robust & accessible** — graceful CSS gradient fallback if WebGL is
-  unavailable, full `prefers-reduced-motion` support (intro/parallax disabled),
-  per-device quality scaling, keyboard-friendly forms, responsive to mobile.
+- **Faithful 3D model** — the building is rebuilt procedurally from the real
+  design: a beige-limestone mass with floor string-courses, a regular bay
+  rhythm of **clustered fluted columns wrapped in brass rings**, dark bronze
+  glazing, a setback penthouse, a 9-metre warm-lit lobby, and a granite
+  courtyard — set against Moscow-City towers, low Stalin-era neighbours, the
+  river and trees.
+- **Realistic twilight lighting** — a low warm sun with **soft PCF shadows**, a
+  cool sky-fill, a procedural dusk sky + sun glow, a PMREM environment so the
+  glass/steel columns reflect the real sky, and subtle `UnrealBloom` for the lit
+  windows and column shimmer.
+- **Cinematic camera** — a timed intro fly-in, then a scroll-driven journey that
+  tracks the colonnade, rises to the penthouse and pulls back over the river,
+  with idle drift and mouse parallax.
+- **Full-bleed 3D + real imagery** — the canvas is a fixed full-viewport stage;
+  content floats over it on translucent glass with a scroll-driven veil, and the
+  gallery shows real photographs of the building.
+- **Premium art direction** — dark editorial palette with brass accents,
+  Cormorant Garamond + Manrope, custom cursor, scroll-rail, preloader, scroll
+  reveals, animated counters and a working (front-end only) viewing-request form.
+- **Robust & accessible** — graceful CSS fallback if WebGL is unavailable, full
+  `prefers-reduced-motion` support, per-device quality scaling (shadows off on
+  small screens), keyboard-friendly forms, responsive to mobile.
 
 ## Run it
 
@@ -51,7 +59,7 @@ Any static server works (`npx serve`, VS Code Live Server, etc.).
 
 ## Single-file download
 
-`zenith-residence.html` is a **fully self-contained build** — CSS, the UI
+`kutuzovsky-12.html` is a **fully self-contained build** — CSS, the UI
 script, and the entire Three.js module graph (core + post-processing addons +
 the scene) are inlined into one file. You can download it and **open it
 directly by double-clicking** (no web server, no internet); the full cinematic
@@ -70,14 +78,15 @@ Blob URLs are same-origin, so the graph imports cleanly even from disk.
 ## Structure
 
 ```
-index.html             Markup & content (all copy lives here)
+index.html             Markup & content (Russian copy lives here)
 css/styles.css         Design system, layout, animations, responsive rules
-js/scene.js            Cinematic WebGL scene (city, bloom, camera, effects)
+js/scene.js            WebGL scene: the building model, lighting, camera, bloom
 js/main.js             UI: preloader, reveals, counters, nav, veil, cursor, form
 js/vendor/three/       Vendored Three.js r160 + post-processing addons
-build-standalone.js    Bundles the module graph into the single-file build
-zenith-residence.html  Self-contained single-file build (downloadable)
-docs/preview.svg       Static preview used in this README
+img/                   Real photographs of Кутузовский 12 (gallery)
+build-standalone.js    Bundles the module graph + images into one HTML file
+kutuzovsky-12.html  Self-contained single-file build (downloadable)
+docs/preview.svg       Static preview (earlier concept)
 ```
 
 ## Customising the listing
