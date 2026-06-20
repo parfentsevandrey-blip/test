@@ -196,6 +196,101 @@
     });
   }
 
+  /* ---------- Video-from-text (no <video>, no visible <img>) ---------- */
+  (function textVideo() {
+    const screenEl = document.getElementById("txtVideo");
+    if (!screenEl) return;
+    const galleryImgs = Array.from(document.querySelectorAll(".gallery__item img"));
+    if (!galleryImgs.length) return;
+    // decode our own copies so sampling never depends on lazy-loaded DOM images
+    const frames = galleryImgs.map((i) => { const im = new Image(); im.src = i.getAttribute("src") || i.src; return im; });
+
+    const RAMP = " .'`:,-~+=*coaehx%#WM@";
+    const sample = document.createElement("canvas");
+    const sctx = sample.getContext("2d", { willReadFrequently: true });
+    let COLS = 140, ROWS = 50, running = false, t0 = 0;
+    const PERIOD = 6000, FADE = 1200;
+
+    const setSize = () => {
+      COLS = window.innerWidth < 760 ? 92 : 144;
+      const im = frames[0];
+      const a = (im.naturalHeight || 9) / (im.naturalWidth || 16);
+      ROWS = Math.max(18, Math.round(COLS * a * 0.52));
+      sample.width = COLS; sample.height = ROWS;
+    };
+    const kb = (img, p, alpha) => {
+      const z = 1.12 - 0.12 * p;
+      const sw = img.naturalWidth / z, sh = img.naturalHeight / z;
+      const sx = (img.naturalWidth - sw) * (0.3 + 0.4 * p);
+      const sy = (img.naturalHeight - sh) * (0.6 - 0.3 * p);
+      sctx.globalAlpha = alpha;
+      sctx.drawImage(img, sx, sy, sw, sh, 0, 0, COLS, ROWS);
+    };
+    const renderAt = (now) => {
+      const cycle = frames.length * PERIOD;
+      const tt = (now - t0) % cycle;
+      const idx = Math.floor(tt / PERIOD), local = tt - idx * PERIOD, p = local / PERIOD;
+      sctx.globalAlpha = 1; sctx.clearRect(0, 0, COLS, ROWS);
+      try {
+        kb(frames[idx], p, 1);
+        if (local > PERIOD - FADE) kb(frames[(idx + 1) % frames.length], 0, (local - (PERIOD - FADE)) / FADE);
+        const data = sctx.getImageData(0, 0, COLS, ROWS).data;
+        let out = "", run = "", cr = -1, cg = -1, cb = -1;
+        for (let y = 0; y < ROWS; y++) {
+          for (let x = 0; x < COLS; x++) {
+            const o = (y * COLS + x) * 4;
+            let r = data[o], g = data[o + 1], b = data[o + 2];
+            const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            const ch = RAMP[Math.min(RAMP.length - 1, (Math.pow(lum, 0.78) * RAMP.length) | 0)];
+            const s = 0.42, add = 10;
+            r = (255 * Math.pow(Math.min(1, (r + (r - lum * 255) * s + add) / 255), 0.8)) | 0;
+            g = (255 * Math.pow(Math.min(1, (g + (g - lum * 255) * s + add) / 255), 0.8)) | 0;
+            b = (255 * Math.pow(Math.min(1, (b + (b - lum * 255) * s + add) / 255), 0.8)) | 0;
+            const qr = r & 0xF0, qg = g & 0xF0, qb = b & 0xF0;
+            if (qr !== cr || qg !== cg || qb !== cb) {
+              if (run) out += '<span style="color:rgb(' + cr + ',' + cg + ',' + cb + ')">' + run + "</span>";
+              run = ""; cr = qr; cg = qg; cb = qb;
+            }
+            run += ch === "<" ? "&lt;" : ch;
+          }
+          run += "\n";
+        }
+        if (run) out += '<span style="color:rgb(' + cr + ',' + cg + ',' + cb + ')">' + run + "</span>";
+        screenEl.innerHTML = out;
+      } catch (e) { /* image not decodable yet */ }
+    };
+    const loop = (now) => {
+      if (!running) return;
+      renderAt(now);
+      requestAnimationFrame(loop);
+    };
+
+    const ready = () => Promise.all(frames.map((i) => (i.complete && i.naturalWidth) ? 0 : new Promise((r) => { i.onload = r; i.onerror = r; })));
+    const start = () => {
+      if (running) return;
+      ready().then(() => {
+        setSize();
+        t0 = performance.now();
+        renderAt(t0);                 // paint one frame immediately (no wait for rAF)
+        if (!reduceMotion) { running = true; requestAnimationFrame(loop); }
+      });
+    };
+    const stop = () => { running = false; };
+
+    if ("IntersectionObserver" in window) {
+      const io = new IntersectionObserver((es) => es.forEach((e) => (e.isIntersecting ? start() : stop())), { threshold: 0.12 });
+      io.observe(screenEl.closest("section") || screenEl);
+    } else { start(); }
+
+    window.addEventListener("resize", () => { if (running || reduceMotion) setSize(); });
+
+    const rev = document.getElementById("txtReveal");
+    if (rev) rev.addEventListener("click", () => {
+      const on = screenEl.classList.toggle("is-reveal");
+      rev.textContent = on ? "Свернуть" : "Показать символы";
+    });
+  })();
+
   /* ---------- Footer year ---------- */
   const year = document.getElementById("year");
   if (year) year.textContent = new Date().getFullYear();

@@ -8,6 +8,12 @@ colonnade banded in brass — rendered at twilight against Moscow-City and the
 Moskva River. Copy is in Russian; the gallery uses real photography of the
 building.
 
+> **Just want to see it? Open `kutuzovsky-12.html` — double-click, no server, no
+> internet.** It's the whole site (3D building + the "video-from-text" section +
+> gallery) in one self-contained file. `index.html` is the multi-file source and
+> **must be served over HTTP** (ES modules can't load from `file://`), e.g.
+> `python3 -m http.server` — opening `index.html` directly will look blank.
+
 ![Кутузовский 12 against Moscow-City](img/k12-aerial-sunset.jpg)
 
 > Modelled from reference photos of the completed building. This is a

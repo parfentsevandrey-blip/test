@@ -86,7 +86,7 @@ function init() {
   sun.position.set(64, 40, 30);
   if (!isSmall) {
     sun.castShadow = true;
-    sun.shadow.mapSize.set(4096, 4096);
+    sun.shadow.mapSize.set(2048, 2048);
     sun.shadow.camera.near = 10;
     sun.shadow.camera.far = 240;
     const s = 58;
