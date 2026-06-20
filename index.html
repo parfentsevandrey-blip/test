@@ -23,6 +23,11 @@
   </script>
 </head>
 <body>
+  <!-- Full-screen cinematic 3D stage (fixed background) -->
+  <canvas id="scene" class="bg-canvas"></canvas>
+  <div class="scene-veil" id="veil" aria-hidden="true"></div>
+  <div class="scroll-rail" aria-hidden="true"><span id="railDot"></span></div>
+
   <!-- Preloader -->
   <div class="preloader" id="preloader">
     <div class="preloader__inner">
@@ -56,7 +61,6 @@
 
   <!-- Hero with 3D scene -->
   <section class="hero" id="hero">
-    <canvas class="hero__canvas" id="scene"></canvas>
     <div class="hero__vignette" aria-hidden="true"></div>
 
     <div class="hero__content">

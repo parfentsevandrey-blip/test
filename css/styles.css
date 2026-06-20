@@ -242,18 +242,59 @@ button { font: inherit; color: inherit; cursor: pointer; background: none; borde
   padding: 0 var(--pad) clamp(3rem, 9vh, 7rem);
   overflow: hidden;
 }
-.hero__canvas {
-  position: absolute;
+/* Full-screen cinematic stage, fixed behind all content */
+.bg-canvas {
+  position: fixed;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100svh;
+  display: block;
+  z-index: -2;
   /* Fallback gradient sky shown until/if 3D is unavailable */
   background:
     radial-gradient(80% 60% at 70% 18%, rgba(201, 163, 94, 0.10), transparent 60%),
     radial-gradient(120% 90% at 50% 110%, rgba(36, 52, 84, 0.5), transparent 55%),
     linear-gradient(180deg, #070a12 0%, #0a0e18 45%, #05070d 100%);
 }
+
+/* Scroll-driven darkening so content stays legible over the moving 3D */
+.scene-veil {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(120% 80% at 50% 50%, rgba(4, 6, 11, 0.55), transparent 75%),
+    linear-gradient(180deg, rgba(6, 8, 13, 0.7), rgba(5, 7, 11, 0.9));
+  will-change: opacity;
+}
+
+/* Slim cinematic scroll indicator */
+.scroll-rail {
+  position: fixed;
+  top: 50%;
+  right: 26px;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 120px;
+  background: var(--line-soft);
+  z-index: 900;
+  pointer-events: none;
+}
+.scroll-rail span {
+  position: absolute;
+  left: -2px;
+  top: 0;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--gold-2);
+  box-shadow: 0 0 10px 2px rgba(201, 163, 94, 0.6);
+  transition: top 0.15s linear;
+}
+@media (max-width: 720px) { .scroll-rail { display: none; } }
 .hero__vignette {
   position: absolute;
   inset: 0;
@@ -337,7 +378,7 @@ button { font: inherit; color: inherit; cursor: pointer; background: none; borde
 .stats {
   border-top: 1px solid var(--line-soft);
   border-bottom: 1px solid var(--line-soft);
-  background: linear-gradient(180deg, var(--bg-2), var(--bg));
+  background: rgba(8, 11, 18, 0.52);
 }
 .stats__grid {
   max-width: var(--maxw);
@@ -366,6 +407,13 @@ button { font: inherit; color: inherit; cursor: pointer; background: none; borde
   text-transform: uppercase;
   color: var(--ink-faint);
 }
+
+/* Legibility for content floating over the live 3D scene */
+.hero__content,
+.section,
+.stats__grid,
+.footer__top,
+.footer__bottom { text-shadow: 0 2px 18px rgba(3, 5, 9, 0.55); }
 
 /* ---------- Generic section ---------- */
 .section { padding: clamp(4.5rem, 11vh, 9rem) var(--pad); max-width: var(--maxw); margin: 0 auto; }
@@ -473,7 +521,7 @@ button { font: inherit; color: inherit; cursor: pointer; background: none; borde
 }
 
 /* ---------- Amenities ---------- */
-.amenities { background: linear-gradient(180deg, var(--bg), var(--bg-2), var(--bg)); }
+.amenities { background: transparent; }
 .amenities__grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -482,11 +530,11 @@ button { font: inherit; color: inherit; cursor: pointer; background: none; borde
   border: 1px solid var(--line-soft);
 }
 .amenity {
-  background: var(--bg);
+  background: rgba(11, 15, 23, 0.62);
   padding: clamp(1.8rem, 3vw, 2.8rem);
   transition: background 0.5s var(--ease), transform 0.5s var(--ease);
 }
-.amenity:hover { background: var(--panel); }
+.amenity:hover { background: rgba(16, 21, 32, 0.8); }
 .amenity h3 {
   font-family: var(--serif);
   font-weight: 500;
@@ -523,7 +571,9 @@ button { font: inherit; color: inherit; cursor: pointer; background: none; borde
   border-radius: 4px;
   background:
     radial-gradient(90% 90% at 50% 0%, rgba(201, 163, 94, 0.06), transparent 60%),
-    var(--panel);
+    rgba(13, 17, 26, 0.55);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
 }
 .plan__svg rect, .plan__svg line { fill: none; stroke: var(--gold); }
 .plan__svg > rect:first-of-type { stroke-width: 1.4; opacity: 0.9; }
@@ -584,7 +634,9 @@ button { font: inherit; color: inherit; cursor: pointer; background: none; borde
   border-radius: 6px;
   background:
     radial-gradient(120% 90% at 100% 0%, rgba(201, 163, 94, 0.08), transparent 55%),
-    var(--panel);
+    rgba(13, 17, 26, 0.62);
+  backdrop-filter: blur(11px);
+  -webkit-backdrop-filter: blur(11px);
 }
 .contact__text { color: var(--ink-soft); font-weight: 300; margin-top: 1.4rem; max-width: 32em; }
 .contact__direct { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 2rem; }
@@ -625,7 +677,7 @@ button { font: inherit; color: inherit; cursor: pointer; background: none; borde
 .form.is-invalid .field textarea:invalid { border-color: rgba(201, 110, 90, 0.6); }
 
 /* ---------- Footer ---------- */
-.footer { border-top: 1px solid var(--line-soft); padding: clamp(3rem, 7vw, 5rem) var(--pad) 2rem; background: var(--bg-2); }
+.footer { border-top: 1px solid var(--line-soft); padding: clamp(3rem, 7vw, 5rem) var(--pad) 2rem; background: rgba(8, 10, 16, 0.78); }
 .footer__top {
   max-width: var(--maxw);
   margin: 0 auto;

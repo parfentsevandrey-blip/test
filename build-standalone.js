@@ -1,15 +1,17 @@
 #!/usr/bin/env node
 /* =========================================================
    build-standalone.js
-   Bundles the ZENITH site into a single, self-contained HTML
-   file (zenith-residence.html) with CSS, JS and the full
-   Three.js library inlined.
+   Bundles the ZENITH site into a single self-contained HTML
+   file (zenith-residence.html): CSS, JS, and the full
+   Three.js module graph (core + post-processing addons) are
+   all inlined.
 
-   The 3D code uses ES modules, so Three.js + the scene module
-   are embedded as raw text and loaded at runtime via Blob URLs.
-   That approach works even when the file is opened directly
-   from disk (file://), where external module scripts would be
-   blocked by the browser's module CORS rules.
+   The 3D code is an ES-module graph. Browsers won't load ES
+   modules from file://, so every module is embedded as text
+   and the graph is reconstructed at runtime with Blob URLs:
+   each module's import specifiers are rewritten to the Blob
+   URLs of its dependencies, created in dependency order. The
+   result imports cleanly even when opened directly from disk.
 
    Usage:  node build-standalone.js
    ========================================================= */
@@ -17,72 +19,119 @@
 
 const fs = require("fs");
 const path = require("path");
-
 const root = __dirname;
 const read = (p) => fs.readFileSync(path.join(root, p), "utf8");
 
-const css = read("css/styles.css");
-const mainJs = read("js/main.js");
-const sceneJs = read("js/scene.js");
-const threeJs = read("js/vendor/three/three.module.js");
-const roomJs = read("js/vendor/three/addons/environments/RoomEnvironment.js");
-
-// Guard: a literal </script> inside an embedded block would close the host
-// <script> early. None expected (checked at build time), but fail loudly.
-const guard = (name, src) => {
-  if (/<\/script/i.test(src)) {
-    throw new Error(`Refusing to inline ${name}: contains a </script sequence.`);
-  }
+/* ---------- module graph ---------- */
+// Canonical ids: "three", "scene", or "addons/<path under js/vendor/three/addons>"
+const fileForId = (id) => {
+  if (id === "three") return "js/vendor/three/three.module.js";
+  if (id === "scene") return "js/scene.js";
+  if (id.startsWith("addons/")) return "js/vendor/three/" + id;
+  throw new Error("unknown module id: " + id);
 };
-[["main.js", mainJs], ["scene.js", sceneJs], ["three.module.js", threeJs], ["RoomEnvironment.js", roomJs]].forEach(
-  ([n, s]) => guard(n, s)
-);
-if (/<\/style/i.test(css)) throw new Error("styles.css contains a </style sequence.");
+const resolveSpec = (spec, fromId) => {
+  if (spec === "three") return "three";
+  if (spec.startsWith("three/addons/")) return "addons/" + spec.slice("three/addons/".length);
+  if (spec.startsWith(".")) {
+    if (!fromId.startsWith("addons/")) throw new Error(`relative import "${spec}" from ${fromId}`);
+    const fromRel = fromId.slice("addons/".length);
+    const rel = path.posix.normalize(path.posix.join(path.posix.dirname(fromRel), spec));
+    return "addons/" + rel;
+  }
+  return null; // any other bare specifier is ignored (none expected in this graph)
+};
 
+const modules = new Map();
+const crawl = (id) => {
+  if (modules.has(id)) return;
+  const code = read(fileForId(id));
+  const deps = [];
+  // three.module.js is a self-contained leaf — don't scan 1.2MB for false matches
+  if (id !== "three") {
+    const specs = new Set(
+      [...code.matchAll(/(?:from|import)\s*\(?\s*['"]([^'"]+)['"]/g)].map((m) => m[1])
+    );
+    for (const spec of specs) {
+      const depId = resolveSpec(spec, id);
+      if (depId) deps.push({ spec, id: depId });
+    }
+  }
+  modules.set(id, { id, code, deps });
+  for (const d of deps) crawl(d.id);
+};
+crawl("scene");
+
+// topological order (dependencies before dependents)
+const order = [];
+const seen = new Set();
+const visit = (id) => {
+  if (seen.has(id)) return;
+  seen.add(id);
+  for (const d of modules.get(id).deps) visit(d.id);
+  order.push(id);
+};
+visit("scene");
+
+/* ---------- safety guards ---------- */
+const guard = (name, src) => {
+  if (/<\/script/i.test(src)) throw new Error(`Cannot inline ${name}: contains </script`);
+  if (/<!--/.test(src)) throw new Error(`Cannot inline ${name}: contains <!--`);
+};
+for (const id of order) guard(id, modules.get(id).code);
+const css = read("css/styles.css");
+if (/<\/style/i.test(css)) throw new Error("styles.css contains </style");
+const mainJs = read("js/main.js");
+guard("main.js", mainJs);
+
+/* ---------- manifest + dom ids ---------- */
+const domId = new Map();
+order.forEach((id, i) => domId.set(id, "zm" + i));
+const manifest = {
+  entry: domId.get("scene"),
+  order: order.map((id) => ({
+    domId: domId.get(id),
+    deps: Object.fromEntries(modules.get(id).deps.map((d) => [d.spec, domId.get(d.id)])),
+  })),
+};
+
+/* ---------- runtime bootstrap (stringified into the page) ---------- */
+function bootstrapFn() {
+  var reg = JSON.parse(document.getElementById("zen-manifest").textContent);
+  var esc = function (s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); };
+  var url = {};
+  reg.order.forEach(function (m) {
+    var code = document.getElementById(m.domId).textContent;
+    Object.keys(m.deps).forEach(function (spec) {
+      var b = url[m.deps[spec]];
+      var e = esc(spec);
+      code = code.replace(new RegExp("(from\\s*)(['\"])" + e + "\\2", "g"), "$1$2" + b + "$2");
+      code = code.replace(new RegExp("(import\\s*)(['\"])" + e + "\\2", "g"), "$1$2" + b + "$2");
+      code = code.replace(new RegExp("(import\\s*\\(\\s*)(['\"])" + e + "\\2", "g"), "$1$2" + b + "$2");
+    });
+    url[m.domId] = URL.createObjectURL(new Blob([code], { type: "text/javascript" }));
+  });
+  import(url[reg.entry]).catch(function (err) {
+    console.warn("ZENITH scene failed to load:", err);
+    window.dispatchEvent(new Event("scene:ready"));
+  });
+}
+
+/* ---------- assemble the page ---------- */
+// (function replacements so `$` sequences in inlined source are inserted verbatim)
 let html = read("index.html");
+html = html.replace('  <link rel="stylesheet" href="css/styles.css" />', () => `  <style>\n${css}\n  </style>`);
+html = html.replace(/  <!-- Three\.js[\s\S]*?<\/script>\n/, () => "  <!-- Three.js + scene embedded below; loaded via Blob URLs -->\n");
 
-// 1) Google Fonts: keep as an online enhancement, but make it non-blocking and
-//    harmless offline (the CSS already declares system serif/sans fallbacks).
-//    Nothing to change — the <link> degrades gracefully when offline.
+const blocks = order
+  .map((id) => `  <script type="text/plain" id="${domId.get(id)}">${modules.get(id).code}</script>`)
+  .join("\n");
 
-// NOTE: replacements use a *function* so that `$` sequences in the inlined
-// source (e.g. Three.js contains the string '$', and `$'`/`$&`/`$1` are
-// special replacement patterns) are inserted literally rather than expanded.
-
-// 2) Inline the stylesheet.
-html = html.replace(
-  '  <link rel="stylesheet" href="css/styles.css" />',
-  () => `  <style>\n${css}\n  </style>`
-);
-
-// 3) Drop the import map — the standalone build resolves Three.js via Blob URLs.
-html = html.replace(
-  /  <!-- Three\.js r160[\s\S]*?<\/script>\n/,
-  () => "  <!-- Three.js + scene are embedded below and loaded via Blob URLs -->\n"
-);
-
-// 4) Replace the two bottom script tags with the embedded, self-contained
-//    loader. scene.js is kept byte-for-byte; only its dynamic-import
-//    specifiers are rewritten to the runtime Blob URLs.
-const loader = `  <!-- ===== Embedded application (self-contained) ===== -->
-  <script type="text/plain" id="zen-three">${threeJs}</script>
-  <script type="text/plain" id="zen-room">${roomJs}</script>
-  <script type="text/plain" id="zen-scene">${sceneJs}</script>
-
-  <script type="module">
-    // Build Blob URLs for the embedded modules so they import cleanly,
-    // including from file:// where external module scripts are blocked.
-    const mk = (txt) => URL.createObjectURL(new Blob([txt], { type: "text/javascript" }));
-    const txt = (id) => document.getElementById(id).textContent;
-
-    const threeURL = mk(txt("zen-three"));
-    const roomURL = mk(txt("zen-room").replace(/from\\s*["']three["']/g, \`from "\${threeURL}"\`));
-    const sceneSrc = txt("zen-scene")
-      .replace(/await import\\(\\s*["']three["']\\s*\\)/, \`await import("\${threeURL}")\`)
-      .replace(/await import\\(\\s*["']three\\/addons\\/environments\\/RoomEnvironment\\.js["']\\s*\\)/, \`await import("\${roomURL}")\`);
-    await import(mk(sceneSrc));
-  </script>
-
+const loader =
+`  <!-- ===== Embedded application (self-contained) ===== -->
+${blocks}
+  <script type="application/json" id="zen-manifest">${JSON.stringify(manifest)}</script>
+  <script type="module">(${bootstrapFn.toString()})();</script>
   <script>\n${mainJs}\n  </script>`;
 
 html = html.replace(
@@ -90,16 +139,12 @@ html = html.replace(
   () => loader
 );
 
-// Sanity: ensure all placeholders were actually replaced.
-const mustBeGone = ['href="css/styles.css"', 'src="js/scene.js"', 'src="js/main.js"', 'type="importmap"'];
-const leftovers = mustBeGone.filter((s) => html.includes(s));
-if (leftovers.length) {
-  throw new Error("Build incomplete; these references were not inlined:\n  " + leftovers.join("\n  "));
-}
+// sanity: nothing left pointing at external app files
+["href=\"css/styles.css\"", "src=\"js/scene.js\"", "src=\"js/main.js\"", "type=\"importmap\""].forEach((s) => {
+  if (html.includes(s)) throw new Error("Build incomplete; not inlined: " + s);
+});
 
 const out = "zenith-residence.html";
 fs.writeFileSync(path.join(root, out), html, "utf8");
-
 const kb = (n) => (n / 1024).toFixed(0) + " KB";
-console.log(`Wrote ${out} (${kb(Buffer.byteLength(html))})`);
-console.log(`  inlined: styles.css, main.js, scene.js, three.module.js (${kb(Buffer.byteLength(threeJs))}), RoomEnvironment.js`);
+console.log(`Wrote ${out} (${kb(Buffer.byteLength(html))}) — inlined ${order.length} JS modules + CSS + UI script.`);

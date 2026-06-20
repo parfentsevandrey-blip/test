@@ -20,14 +20,34 @@
   window.addEventListener("load", () => setTimeout(hidePreloader, 1200));
   setTimeout(hidePreloader, 3000);
 
-  /* ---------- Header scroll state ---------- */
+  /* ---------- Header / veil / scroll-rail on scroll ---------- */
   const header = document.getElementById("header");
+  const veil = document.getElementById("veil");
+  const railDot = document.getElementById("railDot");
+  const clamp01 = (n) => Math.min(1, Math.max(0, n));
+
   const onScroll = () => {
-    if (window.scrollY > 40) header.classList.add("is-scrolled");
-    else header.classList.remove("is-scrolled");
+    const y = window.scrollY;
+    const vh = window.innerHeight;
+    header.classList.toggle("is-scrolled", y > 40);
+
+    // Fade the darkening veil in as we leave the hero so text stays legible,
+    // but keep the living city visible behind the content (full-3D feel).
+    if (veil) {
+      const o = clamp01((y - vh * 0.6) / (vh * 0.9)) * 0.55;
+      veil.style.opacity = o.toFixed(3);
+    }
+
+    // Move the cinematic scroll-rail dot with overall progress
+    if (railDot) {
+      const max = document.documentElement.scrollHeight - vh;
+      const p = max > 0 ? clamp01(y / max) : 0;
+      railDot.style.top = (p * 115).toFixed(1) + "px";
+    }
   };
   onScroll();
   window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", onScroll, { passive: true });
 
   /* ---------- Mobile nav ---------- */
   const burger = document.getElementById("burger");
