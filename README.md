@@ -21,10 +21,12 @@ building.
   glazing, a setback penthouse, a 9-metre warm-lit lobby, and a granite
   courtyard — set against Moscow-City towers, low Stalin-era neighbours, the
   river and trees.
-- **Realistic twilight lighting** — a low warm sun with **soft PCF shadows**, a
-  cool sky-fill, a procedural dusk sky + sun glow, a PMREM environment so the
-  glass/steel columns reflect the real sky, and subtle `UnrealBloom` for the lit
-  windows and column shimmer.
+- **HDRI lighting + photographic post** — real **HDRI image-based lighting** (an
+  actual dusk sky) drives reflections on the brushed-steel colonnade and the
+  glazed windows (bronze frames, mullions, sky reflection); a low warm sun casts
+  **soft 4K shadows**; **SMAA** antialiasing plus a grade pass (subtle chromatic
+  aberration, filmic contrast, vignette, film grain) and restrained bloom finish
+  the frame. Falls back to a procedural sky env if the HDRI can't load.
 - **Cinematic camera** — a timed intro fly-in, then a scroll-driven journey that
   tracks the colonnade, rises to the penthouse and pulls back over the river,
   with idle drift and mouse parallax.

@@ -10,10 +10,15 @@
    ========================================================= */
 
 import * as THREE from "three";
+import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
+import { SMAAPass } from "three/addons/postprocessing/SMAAPass.js";
+
+const ENV_URL = "img/env_dusk.hdr"; // real HDRI for image-based lighting
 
 const canvas = document.getElementById("scene");
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -42,7 +47,7 @@ function init() {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, isSmall ? 2 : 1.6));
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.92;
+  renderer.toneMappingExposure = 0.85;
   renderer.shadowMap.enabled = !isSmall;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -59,27 +64,40 @@ function init() {
   const pmrem = new THREE.PMREMGenerator(renderer);
   const envScene = new THREE.Scene();
   envScene.add(makeSky());
-  scene.environment = pmrem.fromScene(envScene, 0.04).texture;
+  scene.environment = pmrem.fromScene(envScene, 0.04).texture; // instant fallback
+
+  // Real HDRI image-based lighting — authentic sky reflections on glass & metal
+  new RGBELoader().load(
+    ENV_URL,
+    (hdr) => {
+      hdr.mapping = THREE.EquirectangularReflectionMapping;
+      const env = pmrem.fromEquirectangular(hdr).texture;
+      scene.environment = env;
+      hdr.dispose();
+    },
+    undefined,
+    () => { /* keep procedural env on failure */ }
+  );
 
   /* ---------- Lighting ---------- */
-  scene.add(new THREE.HemisphereLight(0x3c4f86, 0x241d16, 0.55));
+  scene.add(new THREE.HemisphereLight(0x4a5e92, 0x2a2018, 0.6));
 
-  const sun = new THREE.DirectionalLight(0xffb068, 1.7);
+  const sun = new THREE.DirectionalLight(0xffc188, 1.5);
   sun.position.set(64, 40, 30);
   if (!isSmall) {
     sun.castShadow = true;
-    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.mapSize.set(4096, 4096);
     sun.shadow.camera.near = 10;
-    sun.shadow.camera.far = 260;
-    const s = 70;
+    sun.shadow.camera.far = 240;
+    const s = 58;
     sun.shadow.camera.left = -s; sun.shadow.camera.right = s;
     sun.shadow.camera.top = s; sun.shadow.camera.bottom = -s;
-    sun.shadow.bias = -0.0004;
-    sun.shadow.normalBias = 0.6;
+    sun.shadow.bias = -0.00025;
+    sun.shadow.normalBias = 0.5;
   }
   scene.add(sun);
 
-  const bounce = new THREE.DirectionalLight(0x4a6bd6, 0.5);
+  const bounce = new THREE.DirectionalLight(0x6a86d6, 0.7);
   bounce.position.set(-50, 20, -30);
   scene.add(bounce);
 
@@ -106,19 +124,27 @@ function init() {
     particles.material.uniforms.uTime.value = t;
   });
 
-  /* ---------- Post-processing (subtle, for realism) ---------- */
+  /* ---------- Post-processing ---------- */
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
+
   const bloom = new UnrealBloomPass(
     new THREE.Vector2(window.innerWidth, window.innerHeight),
-    0.55, 0.5, 0.55
+    0.35, 0.5, 0.85
   );
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
 
+  // photographic grade: chromatic aberration, filmic contrast, vignette, grain
+  const grade = new ShaderPass(gradeShader());
+  composer.addPass(grade);
+  updaters.push((_, t) => { grade.uniforms.uTime.value = t; });
+
+  if (!isSmall) composer.addPass(new SMAAPass(window.innerWidth, window.innerHeight));
+
   /* ---------- Cinematic camera (frames the building) ---------- */
   const keys = [
-    { s: 0.0,  p: [44, 13, 68],  t: [-2, 18, 0],  f: 40 }, // three-quarter colonnade
+    { s: 0.0,  p: [40, 12, 60],  t: [-2, 18, 0],  f: 40 }, // three-quarter colonnade
     { s: 0.26, p: [-34, 9, 46],  t: [8, 14, 2],   f: 40 }, // track the other way
     { s: 0.5,  p: [10, 30, 30],  t: [0, 33, -4],  f: 36 }, // rise to the crown / penthouse
     { s: 0.74, p: [54, 24, 66],  t: [-6, 18, -8],  f: 42 }, // pull back: house + City + river
@@ -208,9 +234,11 @@ function buildResidence(reflectables, updaters) {
   const stone = new THREE.MeshStandardMaterial({ map: limestoneTexture(), color: 0xcabfa6, roughness: 0.82, metalness: 0.0, envMapIntensity: 0.7 });
   const stonePale = new THREE.MeshStandardMaterial({ color: 0xd8cfb8, roughness: 0.7, metalness: 0.0, envMapIntensity: 0.7 });
   const brass = new THREE.MeshStandardMaterial({ color: 0xcf9a44, roughness: 0.3, metalness: 1.0, envMapIntensity: 1.4, emissive: 0x3a2207, emissiveIntensity: 0.55 });
-  // polished glass/steel columns: reflective and cool, to contrast the warm stone
-  const colMat = new THREE.MeshStandardMaterial({ color: 0xe8eef4, roughness: 0.09, metalness: 0.96, envMapIntensity: 2.0, emissive: 0xffd9a0, emissiveIntensity: 0.12 });
+  // brushed glass/steel columns: reflective but not a blown-out mirror
+  const colMat = new THREE.MeshStandardMaterial({ color: 0xccd6e0, roughness: 0.17, metalness: 0.95, envMapIntensity: 1.3, emissive: 0xffd9a0, emissiveIntensity: 0.05 });
   const railing = new THREE.MeshStandardMaterial({ color: 0x2a2c30, roughness: 0.4, metalness: 0.9 });
+  // realistic glazing: bronze frame + mullions + sky-reflection, with clearcoat
+  const glassMat = new THREE.MeshPhysicalMaterial({ map: windowTexture(), roughness: 0.14, metalness: 0.0, clearcoat: 0.6, clearcoatRoughness: 0.18, envMapIntensity: 1.7 });
 
   // ---- solid mass (cast/receive shadows) ----
   const mass = new THREE.Mesh(new THREE.BoxGeometry(W, H, D), stone);
@@ -244,7 +272,7 @@ function buildResidence(reflectables, updaters) {
       winFront.push({ x, y, w: BAYW * 0.6, h: (groundFloor ? FH * 0.82 : FH * 0.62) });
     }
   }
-  addWindows(g, winFront, FRONT + 0.06);
+  addWindows(g, winFront, FRONT + 0.06, glassMat);
 
   // right side windows
   const NDEPTH = 5, DBAY = D / NDEPTH;
@@ -255,7 +283,7 @@ function buildResidence(reflectables, updaters) {
       winSide.push({ z, y: f * FH + FH * 0.5 + 1.6, w: DBAY * 0.55, h: FH * 0.6 });
     }
   }
-  addWindowsSide(g, winSide, W / 2 + 0.06);
+  addWindowsSide(g, winSide, W / 2 + 0.06, glassMat);
 
   // ---- signature columns: clusters of fluted rods banded with brass ----
   // rods
@@ -329,7 +357,7 @@ function buildResidence(reflectables, updaters) {
   g.add(rail);
 
   // subtle twilight shimmer on the columns
-  updaters.push((_, t) => { colMat.emissiveIntensity = 0.12 + Math.sin(t * 0.7) * 0.05; });
+  updaters.push((_, t) => { colMat.emissiveIntensity = 0.05 + Math.sin(t * 0.7) * 0.03; });
 
   return g;
 }
@@ -344,12 +372,11 @@ function placeRingsTo(mesh, state, dummy, cx, cz, faceZ) {
   }
 }
 
-function addWindows(group, list, z) {
-  const dark = new THREE.MeshStandardMaterial({ color: 0x0c1014, roughness: 0.06, metalness: 0.2, envMapIntensity: 1.5 });
+function addWindows(group, list, z, mat) {
   const geo = new THREE.PlaneGeometry(1, 1);
   const d = new THREE.Object3D();
 
-  const mesh = new THREE.InstancedMesh(geo, dark, list.length);
+  const mesh = new THREE.InstancedMesh(geo, mat, list.length);
   list.forEach((w, i) => {
     d.position.set(w.x, w.y, z); d.rotation.set(0, 0, 0); d.scale.set(w.w, w.h, 1); d.updateMatrix();
     mesh.setMatrixAt(i, d.matrix);
@@ -369,10 +396,9 @@ function addWindows(group, list, z) {
   group.add(litMesh);
 }
 
-function addWindowsSide(group, list, x) {
-  const dark = new THREE.MeshStandardMaterial({ color: 0x0c1014, roughness: 0.06, metalness: 0.2, envMapIntensity: 1.4 });
+function addWindowsSide(group, list, x, mat) {
   const geo = new THREE.PlaneGeometry(1, 1);
-  const mesh = new THREE.InstancedMesh(geo, dark, list.length);
+  const mesh = new THREE.InstancedMesh(geo, mat, list.length);
   const d = new THREE.Object3D();
   list.forEach((w, i) => {
     d.position.set(x, w.y, w.z); d.rotation.y = Math.PI / 2; d.scale.set(w.w, w.h, 1); d.updateMatrix();
@@ -509,6 +535,27 @@ function limestoneTexture() {
   return tex;
 }
 
+function windowTexture() {
+  const c = document.createElement("canvas"); c.width = 96; c.height = 128;
+  const ctx = c.getContext("2d");
+  // dark glass with a vertical sky-reflection gradient
+  const g = ctx.createLinearGradient(0, 0, 0, 128);
+  g.addColorStop(0, "#3a5676"); g.addColorStop(0.5, "#1a2a3c"); g.addColorStop(1, "#0a1018");
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 96, 128);
+  // soft diagonal sky streak
+  ctx.globalAlpha = 0.16; ctx.fillStyle = "#cfe2f7";
+  ctx.beginPath(); ctx.moveTo(0, 28); ctx.lineTo(96, 66); ctx.lineTo(96, 84); ctx.lineTo(0, 46); ctx.closePath(); ctx.fill();
+  ctx.globalAlpha = 1;
+  // bronze frame, vertical mullion, transom
+  ctx.strokeStyle = "#101418"; ctx.lineWidth = 10; ctx.strokeRect(0, 0, 96, 128);
+  ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(48, 0); ctx.lineTo(48, 128); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, 50); ctx.lineTo(96, 50); ctx.stroke();
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
 function graniteTexture() {
   const c = document.createElement("canvas"); c.width = 256; c.height = 256;
   const ctx = c.getContext("2d");
@@ -534,6 +581,36 @@ function graniteTexture() {
 /* =========================================================
    Sky, particles
    ========================================================= */
+
+function gradeShader() {
+  return {
+    uniforms: { tDiffuse: { value: null }, uTime: { value: 0 } },
+    vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+    fragmentShader: `
+      uniform sampler2D tDiffuse; uniform float uTime; varying vec2 vUv;
+      float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7)))*43758.5453); }
+      void main(){
+        vec2 uv = vUv;
+        vec2 d = uv - 0.5;
+        float r2 = dot(d, d);
+        // subtle lens chromatic aberration toward the edges
+        float ca = 0.0018 * r2;
+        vec3 col;
+        col.r = texture2D(tDiffuse, uv + d * ca).r;
+        col.g = texture2D(tDiffuse, uv).g;
+        col.b = texture2D(tDiffuse, uv - d * ca).b;
+        // gentle filmic S-curve
+        col = mix(col, col * col * (3.0 - 2.0 * col), 0.12);
+        // vignette
+        float vig = smoothstep(1.05, 0.25, r2 * 2.4);
+        col *= mix(0.84, 1.0, vig);
+        // fine film grain
+        float g = hash(uv * vec2(1280.0, 720.0) + fract(uTime));
+        col += (g - 0.5) * 0.022;
+        gl_FragColor = vec4(col, 1.0);
+      }`,
+  };
+}
 
 function makeSky() {
   const geo = new THREE.SphereGeometry(900, 32, 16);

@@ -147,6 +147,16 @@ html = html.replace(/src="(img\/[^"]+)"/g, (_m, p) => {
   return `src="data:image/${mime};base64,${buf.toString("base64")}"`;
 });
 
+// inline the HDRI environment (referenced by string in scene.js) as a data URI
+{
+  const hdr = "img/env_dusk.hdr";
+  if (html.includes(hdr)) {
+    const buf = fs.readFileSync(path.join(root, hdr));
+    const uri = `data:application/octet-stream;base64,${buf.toString("base64")}`;
+    html = html.replace(new RegExp(hdr.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"), () => uri);
+  }
+}
+
 // sanity: nothing left pointing at external app files
 ["href=\"css/styles.css\"", "src=\"js/scene.js\"", "src=\"js/main.js\"", "type=\"importmap\""].forEach((s) => {
   if (html.includes(s)) throw new Error("Build incomplete; not inlined: " + s);
