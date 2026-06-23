@@ -8,7 +8,7 @@
       "district": "3513 AC • Район Pijlsweerd-Zuid • Utrecht-Noordwest",
       "lat": 52.0973393, "lon": 5.1060931, "map_zoom": 13,
       "source_url": "https://www.fundainbusiness.nl/en/winkel/utrecht/object-80865043-amsterdamsestraatweg-109/",
-      "photos": "glob:assets_utrecht/utr1_p*.jpg",
+      "photos": "glob:assets_utrecht/obj1_p*.jpg",
       "specs": [
         ["Цена", "€ 674.500 k.k."],
         ["Общая площадь", "≈ 114 м² (торговая зона ≈ 74 м² + жильё)"],
@@ -77,7 +77,7 @@
       "district": "3551 CM • Район 2e Daalsebuurt en omgeving • Utrecht-Noordwest",
       "lat": 52.0988223, "lon": 5.1029673, "map_zoom": 13,
       "source_url": "https://www.fundainbusiness.nl/en/winkel/utrecht/object-44499087-amsterdamsestraatweg-180/",
-      "photos": "glob:assets_utrecht/utr2_p*.jpg",
+      "photos": "glob:assets_utrecht/obj2_p*.jpg",
       "specs": [
         ["Цена", "€ 565.000 k.k."],
         ["Общая площадь", "≈ 117 м² (юниты от 48 м²)"],
@@ -147,7 +147,7 @@
       "district": "3533 JP • Район Welgelegen / Den Hommel • Utrecht-West",
       "lat": 52.0844634, "lon": 5.0953096, "map_zoom": 13,
       "source_url": "https://www.fundainbusiness.nl/en/kantoor/utrecht/object-44499208-ravellaan-70-88/",
-      "photos": "glob:assets_utrecht/utr3_p*.jpg",
+      "photos": "glob:assets_utrecht/obj3_p*.jpg",
       "specs": [
         ["Цена", "€ 250.000 k.k."],
         ["Общая площадь", "≈ 100 м² BVO"],

@@ -152,6 +152,38 @@ def osm_static_map(lat: float, lon: float, zoom: int, w: int, h: int) -> Image.I
     return canvas
 
 
+def google_tiles_map(lat: float, lon: float, zoom: int, w: int, h: int,
+                     layer: str = "m") -> Image.Image:
+    """Real Google map WITHOUT an API key, by stitching Google's own tile servers.
+
+    Reverse-engineered: Google serves map tiles from mt{0-3}.google.com/vt with
+    the same Web-Mercator x/y/z scheme as OSM. layer 'm' = roadmap, 's' =
+    satellite, 'y' = hybrid, 'p' = terrain. No key, no Static Maps billing.
+    """
+    cx, cy = lonlat_to_global_px(lat, lon, zoom)
+    left, top = cx - w / 2, cy - h / 2
+    x0 = int(math.floor(left / TILE)); y0 = int(math.floor(top / TILE))
+    x1 = int(math.floor((left + w) / TILE)); y1 = int(math.floor((top + h) / TILE))
+    canvas = Image.new("RGB", (w, h), (232, 230, 226))
+    n = 2 ** zoom
+    srv = 0
+    for tx in range(x0, x1 + 1):
+        for ty in range(y0, y1 + 1):
+            if not (0 <= ty < n):
+                continue
+            wrap_x = tx % n
+            url = f"https://mt{srv % 4}.google.com/vt/lyrs={layer}&x={wrap_x}&y={ty}&z={zoom}"
+            srv += 1
+            try:
+                tile = Image.open(io.BytesIO(http_get(url).content)).convert("RGB")
+            except Exception:
+                tile = Image.new("RGB", (TILE, TILE), (235, 235, 235))
+            canvas.paste(tile, (int(tx * TILE - left), int(ty * TILE - top)))
+    draw_marker(canvas, w // 2, h // 2)
+    _attribution(canvas, "Google")
+    return canvas
+
+
 def google_static_map(lat: float, lon: float, zoom: int, w: int, h: int, key: str) -> Image.Image:
     """Google Static Maps (needs API key). Town labels are crisper than OSM."""
     # Google caps free static size at 640x640 (1280 with scale=2).

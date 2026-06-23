@@ -54,11 +54,20 @@ FIELD_PATTERNS = {
 }
 
 
-def fetch_markdown(url: str, tries: int = 3) -> str:
+def jina_fetch(url: str, as_html: bool = False, tries: int = 3) -> str:
+    """Fetch a Funda URL through the r.jina.ai reader (clears DataDome).
+
+    as_html=False -> clean Markdown (best for spec parsing).
+    as_html=True  -> rendered HTML (contains the FULL photo gallery, not just
+                     the few images the Markdown view captures).
+    """
+    headers = {"User-Agent": UA}
+    if as_html:
+        headers["X-Return-Format"] = "html"
     last = None
     for i in range(tries):
         try:
-            r = requests.get(JINA + url, headers={"User-Agent": UA}, timeout=90)
+            r = requests.get(JINA + url, headers=headers, timeout=120)
             if r.status_code == 200 and "Je bent bijna" not in r.text:
                 return r.text
             last = RuntimeError(f"HTTP {r.status_code} / blocked")
@@ -66,6 +75,32 @@ def fetch_markdown(url: str, tries: int = 3) -> str:
             last = e
         time.sleep(2 ** i)
     raise last or RuntimeError("jina fetch failed")
+
+
+def fetch_markdown(url: str) -> str:  # back-compat alias
+    return jina_fetch(url, as_html=False)
+
+
+def gallery_from_html(html: str) -> list:
+    """Extract the full object gallery from rendered HTML.
+
+    Funda media live at cloud.funda.nl/valentina_media/<a>/<b>/<id>_<size>.jpg.
+    The listing's own photos all share one <a>/<b> folder; "similar listings"
+    use other folders. So we pick the folder with the most distinct IDs and
+    return its photos (ordered) at full 1440x960 size.
+    """
+    refs = re.findall(r"valentina_media/(\d+)/(\d+)/(\d+)", html)
+    if not refs:
+        return []
+    from collections import Counter, OrderedDict
+    folders = Counter((a, b) for a, b, _ in refs)
+    main = folders.most_common(1)[0][0]
+    ids = OrderedDict()
+    for a, b, i in refs:
+        if (a, b) == main:
+            ids[i] = True
+    a, b = main
+    return [f"https://cloud.funda.nl/valentina_media/{a}/{b}/{i}_1440x960.jpg" for i in ids]
 
 
 def parse(md: str, url: str) -> dict:
@@ -107,15 +142,6 @@ def parse(md: str, url: str) -> dict:
     if m:
         out["description_nl"] = re.sub(r"\s+", " ", m.group(1)).strip()
 
-    # gallery photos: full-size images only (similar-listings use _360x240)
-    imgs = re.findall(r"https?://cloud\.funda\.nl/[^\s)\"']+_1440x960\.jpg", md)
-    # dedupe keep order
-    seen, gallery = set(), []
-    for u in imgs:
-        if u not in seen:
-            seen.add(u)
-            gallery.append(u)
-    out["photos_remote"] = gallery
     return out
 
 
@@ -145,10 +171,10 @@ def main() -> int:
     results = []
     for n, url in enumerate(args.urls, 1):
         print(f"[{n}/{len(args.urls)}] {url}")
-        md = fetch_markdown(url)
-        data = parse(md, url)
+        data = parse(jina_fetch(url, as_html=False), url)   # specs from Markdown
+        gallery = gallery_from_html(jina_fetch(url, as_html=True))  # full photo set
         prefix = f"obj{n}"
-        data["photos"] = download_photos(data.pop("photos_remote", []), args.out_dir, prefix)
+        data["photos"] = download_photos(gallery, args.out_dir, prefix)
         print(f"    {data.get('address','?')} | {data.get('price_label','?')} | "
               f"{len(data['photos'])} photos | year {data['features'].get('year','?')} "
               f"energy {data['features'].get('energy','?')}")
