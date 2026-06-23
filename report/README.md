@@ -4,12 +4,21 @@
 заголовки, золотые линейки, серая таблица характеристик) из структурированного
 JSON. На вход — данные по объектам, на выход — единый PDF.
 
+Есть два рендерера с **одинаковым JSON-форматом**:
+
 ```bash
-pip install Pillow requests          # как и funda_a4
-python3 build_report.py content_example.json -o report.pdf
+pip install Pillow requests reportlab
+
+# Векторный PDF (рекомендуется): выделяемый/искомый текст, чёткий при зуме,
+# шрифты и отступы подогнаны под образец.
+python3 build_report_pdf.py content_example.json -o report.pdf
+
+# Растровый PDF (страницы-картинки, без текстового слоя) — запасной вариант.
+python3 build_report.py content_example.json -o report_raster.pdf
 ```
 
-Пример `report_demo.pdf` (3 объекта, 26 страниц) лежит рядом.
+Примеры рядом: `report_vector.pdf` (ReportLab, 29 стр.) и `report_demo.pdf` (растровый).
+В векторном PDF текст выделяется и ищется; растром остаются только карты и фото.
 
 ## Структура отчёта
 
