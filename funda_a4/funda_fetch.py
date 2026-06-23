@@ -145,8 +145,12 @@ def parse(md: str, url: str) -> dict:
     return out
 
 
-def download_photos(urls, out_dir: str, prefix: str) -> list:
+def download_photos(urls, out_dir: str, prefix: str, max_photos: int = 0) -> list:
     os.makedirs(out_dir, exist_ok=True)
+    if max_photos and len(urls) > max_photos:
+        # keep the first (facade) + an evenly spaced sample across the gallery
+        idx = sorted({0} | {round(i * (len(urls) - 1) / (max_photos - 1)) for i in range(max_photos)})
+        urls = [urls[i] for i in idx][:max_photos]
     paths = []
     for i, u in enumerate(urls, 1):
         dest = os.path.join(out_dir, f"{prefix}_p{i:02d}.jpg")
@@ -166,6 +170,8 @@ def main() -> int:
     ap.add_argument("urls", nargs="+")
     ap.add_argument("--out-dir", default="assets")
     ap.add_argument("--json", default="facts.json")
+    ap.add_argument("--max-photos", type=int, default=0,
+                    help="Cap downloaded photos per object (0 = all); samples evenly across the gallery.")
     args = ap.parse_args()
 
     results = []
@@ -174,7 +180,7 @@ def main() -> int:
         data = parse(jina_fetch(url, as_html=False), url)   # specs from Markdown
         gallery = gallery_from_html(jina_fetch(url, as_html=True))  # full photo set
         prefix = f"obj{n}"
-        data["photos"] = download_photos(gallery, args.out_dir, prefix)
+        data["photos"] = download_photos(gallery, args.out_dir, prefix, args.max_photos)
         print(f"    {data.get('address','?')} | {data.get('price_label','?')} | "
               f"{len(data['photos'])} photos | year {data['features'].get('year','?')} "
               f"energy {data['features'].get('energy','?')}")
