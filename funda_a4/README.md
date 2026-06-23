@@ -9,6 +9,26 @@
 
 Результат — `prinsestraat118.pdf` / `.png`, см. пример в этой папке.
 
+## Обход анти-бот стены Funda — `funda_fetch.py`
+
+Funda отдаёт DataDome-капчу («Je bent bijna op de pagina die je zoekt») для curl,
+WebFetch, headless-браузера и даже серверного фетча Google Translate. **Рабочий
+обход:** reader-прокси `r.jina.ai` — он рендерит страницу через браузерную ферму,
+проходит проверку и возвращает чистый Markdown с таблицей характеристик и URL
+фото `cloud.funda.nl`. Сами фото скачиваются напрямую с `cloud.funda.nl` при
+передаче заголовка `Referer: https://www.fundainbusiness.nl/`.
+
+```bash
+python3 funda_fetch.py \
+  "https://www.fundainbusiness.nl/en/winkel/utrecht/object-80865043-amsterdamsestraatweg-109/" \
+  --out-dir assets --json facts.json
+```
+
+Скрипт парсит адрес, индекс, район, цену, год, энергокласс, площади, аренду и
+скачивает фото галереи (полноразмерные `*_1440x960`, «похожие» листинги
+отсеиваются). Описательную прозу пишет ассистент отдельно — `funda_fetch.py`
+автоматизирует только сбор фактов и фото.
+
 ## Запуск
 
 ```bash
