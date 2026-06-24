@@ -60,10 +60,18 @@ RSS_SOURCES = [
 #  Источники: Telegram (публичный веб-превью t.me/s/<channel>, без ключей)     #
 # --------------------------------------------------------------------------- #
 TELEGRAM_CHANNELS = [
+    # Облавы / репрессии / бусификация
     {"id": "tg_ostorozhno", "name": "Осторожно, новости", "channel": "ostorozhno_novosti", "stream": "raids",    "source_weight": 0.7},
     {"id": "tg_astra",      "name": "ASTRA",              "channel": "astrapress",          "stream": "raids",    "source_weight": 0.7},
     {"id": "tg_sota",       "name": "SOTA",               "channel": "sotaproject",         "stream": "raids",    "source_weight": 0.6},
+    {"id": "tg_sirena",     "name": "Сирена",             "channel": "news_sirena",         "stream": "raids",    "source_weight": 0.7},
+    {"id": "tg_idelreal",   "name": "Idel.Реалии",        "channel": "idelreal",            "stream": "raids",    "source_weight": 0.6},
+    # Аналитика и соцсети
     {"id": "tg_mozhem",     "name": "Можем объяснить",    "channel": "mozhemobyasnit",      "stream": "analysts", "source_weight": 0.6},
+    {"id": "tg_faridaily",  "name": "Фаридейли",          "channel": "faridaily",           "stream": "analysts", "source_weight": 0.8},
+    {"id": "tg_thebell",    "name": "The Bell",           "channel": "thebell_io",          "stream": "analysts", "source_weight": 0.7},
+    # Независимые СМИ (расследования)
+    {"id": "tg_istories",   "name": "Важные истории",     "channel": "istories_media",      "stream": "media",    "source_weight": 0.9},
 ]
 
 # --------------------------------------------------------------------------- #
