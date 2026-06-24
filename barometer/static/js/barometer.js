@@ -202,7 +202,7 @@ function render(state) {
   $("kv-vel").textContent = (r.velocity == null) ? "—" : (r.velocity > 0 ? "+" : "") + r.velocity.toFixed(2) + "/дн";
   $("kv-rel").textContent = r.components.relevant_items;
   $("kv-rule").textContent = r.barometer.toFixed(0);
-  $("kv-llm").textContent = (r.llm_barometer == null) ? "выкл." : r.llm_barometer.toFixed(0);
+  $("kv-llm").textContent = (r.llm_barometer == null) ? "—" : r.llm_barometer.toFixed(0);
   const llm = r.llm;
   $("llm-rationale").textContent = (llm && llm.rationale) ? "Claude: " + llm.rationale : "";
 

@@ -22,7 +22,30 @@ import time
 
 # Корень проекта (каталог этого файла) — в sys.path, чтобы работали
 # абсолютные импорты `import config` и `from core import ...`.
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+_HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, _HERE)
+
+
+def _load_dotenv(path: str) -> None:
+    """Минимальный загрузчик .env без зависимостей.
+
+    Читает строки KEY=VALUE и кладёт их в окружение (не перетирая уже заданные).
+    Вызывается ДО `import config`, т.к. config читает переменные при импорте.
+    Файл .env в .gitignore — секреты не попадают в репозиторий.
+    """
+    try:
+        with open(path, encoding="utf-8") as f:
+            for raw in f:
+                line = raw.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, val = line.split("=", 1)
+                os.environ.setdefault(key.strip(), val.strip().strip('"').strip("'"))
+    except FileNotFoundError:
+        pass
+
+
+_load_dotenv(os.path.join(_HERE, ".env"))
 
 from flask import Flask, jsonify, render_template, request  # noqa: E402
 

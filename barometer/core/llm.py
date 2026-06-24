@@ -36,6 +36,24 @@ def is_enabled() -> bool:
     return bool(os.environ.get("ANTHROPIC_API_KEY"))
 
 
+def _http_client():
+    """Возвращает httpx-клиент с нужным CA, если в окружении задан bundle.
+
+    В обычной среде CA-переменные не заданы → возвращаем None (SDK сам выберет
+    certifi). В среде с перехватом TLS (корпоративный прокси) httpx по умолчанию
+    игнорирует SSL_CERT_FILE, поэтому передаём verify явно.
+    """
+    ca = os.environ.get("SSL_CERT_FILE") or os.environ.get("REQUESTS_CA_BUNDLE")
+    if ca and os.path.exists(ca):
+        try:
+            import httpx
+
+            return httpx.Client(verify=ca, trust_env=True)
+        except Exception:
+            return None
+    return None
+
+
 def analyze_with_claude(items: list[dict], max_items: int = 40) -> dict | None:
     if not is_enabled():
         return None
@@ -58,7 +76,7 @@ def analyze_with_claude(items: list[dict], max_items: int = 40) -> dict | None:
     prompt = _PROMPT + "\n".join(lines)
 
     try:
-        client = anthropic.Anthropic()
+        client = anthropic.Anthropic(http_client=_http_client())
         msg = client.messages.create(
             model=DEFAULT_MODEL,
             max_tokens=600,
