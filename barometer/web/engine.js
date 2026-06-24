@@ -112,7 +112,7 @@ function deepstateNorm(snap) {
 /* ----------------------------- скоринг ---------------------------------- */
 function sigmoid(z) { if (z < -60) return 0; if (z > 60) return 1; return 1 / (1 + Math.exp(-z)); }
 
-function computeReading(items, deepstateSnap, history, sourcesOkRatio) {
+function computeReading(items, deepstateSnap, history, sourcesOkRatio, llm) {
   const P = CONFIG.params, CATS = CONFIG.categories, SL = CONFIG.streamLabels;
   const now = Date.now();
   const windowStart = now - P.windowDays * 86400000;
@@ -154,6 +154,10 @@ function computeReading(items, deepstateSnap, history, sourcesOkRatio) {
   let composite = 0; for (const c in CATS) composite += CATS[c].weight * norm[c];
   const barometer = Math.round(1000 * sigmoid(P.K * composite + P.B)) / 10;
 
+  // Смешиваем с оценкой ИИ (Gemini), если она есть: 65% правила + 35% ИИ.
+  let llmScore = null, final = barometer;
+  if (llm && typeof llm.score === "number") { llmScore = llm.score; final = Math.round((0.65 * barometer + 0.35 * llmScore) * 10) / 10; }
+
   const categories = Object.keys(CATS).map((c) => ({
     key: c, label: CATS[c].label, weight: CATS[c].weight,
     norm: Math.round(norm[c] * 1000) / 1000, signed: Math.round(norm[c] * 1000) / 10,
@@ -165,15 +169,15 @@ function computeReading(items, deepstateSnap, history, sourcesOkRatio) {
   const maxAbs = dl.length ? Math.max(...dl.map((d) => d.abs)) : 1;
   const driversOut = dl.map((d) => ({ category_label: d.category_label, term: d.term, polarity: d.polarity, count: d.count, strength: Math.round(1000 * d.abs / maxAbs) / 10, example: d.example }));
 
-  const velocity = computeVelocity(history, now, barometer);
-  const forecast = computeForecast(barometer, velocity);
+  const velocity = computeVelocity(history, now, final);
+  const forecast = computeForecast(final, velocity);
   const volConf = Math.min(1, nRel / 60), histConf = Math.min(1, history.length / 14);
   const confidence = Math.round((0.5 * volConf + 0.3 * histConf + 0.2 * (sourcesOkRatio == null ? 1 : sourcesOkRatio)) * 100) / 100;
 
   return {
-    taken_at: nowStr(), barometer, final_barometer: barometer, llm_barometer: null,
+    taken_at: nowStr(), barometer, final_barometer: final, llm_barometer: llmScore, llm: llm || null,
     velocity: velocity == null ? null : Math.round(velocity * 1000) / 1000,
-    predicted_date: forecast.date, confidence, zone: zoneFor(barometer).label,
+    predicted_date: forecast.date, confidence, zone: zoneFor(final).label,
     components: { categories, composite: Math.round(composite * 1000) / 1000, deepstate: ds.info, relevant_items: nRel },
     streams, drivers: driversOut, forecast,
   };
@@ -233,6 +237,47 @@ async function proxiedText(url) {
   } catch (e) {}
   try { return await getText(PROXY.cors(url)); } catch (e) {}
   throw new Error("all proxies failed for " + url);
+}
+
+/* ------------------- ИИ-аналитика: Gemini Flash (бесплатно) ------------- */
+const GEMINI_MODEL = "gemini-2.5-flash";
+const GEM_PROMPT =
+  "Ты — аналитик OSINT. По подборке заголовков новостей из независимых российских СМИ, " +
+  "Telegram и западных военных аналитиков оцени вероятность объявления НОВОЙ волны " +
+  "мобилизации в России в ближайшие месяцы.\n" +
+  "Верни СТРОГО JSON: {\"score\": <целое 0-100, 0 — мобилизации не будет, 100 — объявлена/идёт>, " +
+  "\"expected_window\": \"<срок, напр. '1–3 месяца' или 'не просматривается'>\", " +
+  "\"rationale\": \"<2-3 предложения по-русски: ключевые сигналы за и против>\"}.\n\nНовости:\n";
+
+function gemKey() { return (lsGet("baro_gemini_key", "") || "").trim(); }
+function gemOn() { return !!gemKey() && lsGet("baro_gemini_on", true); }
+
+async function geminiAnalyze(items) {
+  const key = gemKey();
+  if (!key) return null;
+  const picked = items.filter((i) => i.relevant).slice(0, 40);
+  if (!picked.length) return null;
+  const lines = picked.map((it) => `- [${(it.published || "").slice(0, 10)}] (${it.source_name}) ${it.title}`).join("\n");
+  const body = {
+    contents: [{ parts: [{ text: GEM_PROMPT + lines }] }],
+    generationConfig: { temperature: 0.2, maxOutputTokens: 700, responseMimeType: "application/json" },
+  };
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(key)}`;
+  const data = await withTimeout(async (signal) => {
+    const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal });
+    if (!res.ok) { const t = await res.text().catch(() => ""); throw new Error("HTTP " + res.status + " " + t.slice(0, 140)); }
+    return res.json();
+  }, 30000);
+  const text = (((data.candidates || [])[0] || {}).content || {}).parts ? data.candidates[0].content.parts.map((p) => p.text || "").join("") : "";
+  let obj = null;
+  try { obj = JSON.parse(text); } catch (e) { const m = /\{[\s\S]*\}/.exec(text); if (m) try { obj = JSON.parse(m[0]); } catch (e2) {} }
+  if (!obj || typeof obj.score === "undefined") return null;
+  return {
+    score: Math.max(0, Math.min(100, Math.round(+obj.score))),
+    expected_window: String(obj.expected_window || "").slice(0, 120),
+    rationale: String(obj.rationale || "").slice(0, 600),
+    model: GEMINI_MODEL, at: nowStr(),
+  };
 }
 
 /* ------------------------- парсинг лент --------------------------------- */
@@ -426,8 +471,9 @@ function render(reading, items, sources, history, note) {
   $("kv-vel").textContent = reading.velocity == null ? "—" : (reading.velocity > 0 ? "+" : "") + reading.velocity.toFixed(2) + "/дн";
   $("kv-rel").textContent = reading.components.relevant_items;
   $("kv-rule").textContent = reading.barometer.toFixed(0);
-  $("kv-llm").textContent = "—";
-  $("llm-rationale").textContent = "";
+  $("kv-llm").textContent = (reading.llm_barometer == null) ? "—" : reading.llm_barometer.toFixed(0);
+  const llm = reading.llm;
+  $("llm-rationale").textContent = (llm && llm.rationale) ? "Gemini: " + llm.rationale : "";
   renderStreams(reading.streams || [], sources || []);
   renderCategories(reading.components.categories || []);
   const ds = reading.components.deepstate || {};
@@ -439,16 +485,18 @@ function render(reading, items, sources, history, note) {
   renderDrivers(reading.drivers || []);
   renderFeed(buildFeed(items || []));
   $("chip-updated").innerHTML = `Обновлено: <b>${relTime(reading.taken_at)}</b>${note ? " · " + note : ""}`;
+  updateGemChip();
   $("srclist").innerHTML = (sources || []).map((s) => `<span class="s"><span class="dot ${s.mode}"></span>${esc(s.name)} · ${s.items_count}</span>`).join("");
   $("skeleton").classList.add("hidden"); $("app").classList.remove("hidden");
 }
 
 /* ---------------------------- управление -------------------------------- */
 let CURRENT = { items: [], sources: [] };
+let LLM = lsGet("baro_llm", null);   // последняя оценка Gemini
 function computeAndRender(items, sources, note) {
   items.forEach(analyzeItem);
   let ds = lsGet("baro_ds_last", null);
-  const reading = computeReading(items, ds, lsGet(LS.hist, []), sources ? okRatio(sources) : 1);
+  const reading = computeReading(items, ds, lsGet(LS.hist, []), sources ? okRatio(sources) : 1, LLM);
   const hist = pushHistory(reading.final_barometer);
   render(reading, items, sources || seedSources(items), hist, note);
   CURRENT = { items, sources: sources || CURRENT.sources };
@@ -483,16 +531,55 @@ async function refresh(initial) {
   })();
   await Promise.allSettled([dsP, newsP]);
   reRender();
+  // 3) ИИ-аналитика Gemini (если включена) — поверх свежих новостей
+  if (gemOn()) {
+    try { const res = await geminiAnalyze(currentItems()); if (res) { LLM = res; lsSet("baro_llm", LLM); } } catch (e) {}
+    reRender();
+  }
   if (btn) { btn.classList.remove("loading"); btn.disabled = false; btn.querySelector(".lbl").textContent = "Обновить"; }
 }
 function liveNote(statuses) { const ok = statuses.filter((s) => s.mode === "live").length; return `источников онлайн: ${ok}/${statuses.length}`; }
 function currentItems() { const cached = lsGet(LS.items, []); return mergeItems(cached, SEED); }
 
+function updateGemChip() {
+  const c = $("chip-gem"); if (!c) return;
+  const on = gemOn();
+  c.classList.toggle("on", on);
+  c.innerHTML = `<span class="dot"></span>Gemini: <b>${on ? "вкл" : "выкл"}</b>`;
+}
+
+function setupSettings() {
+  const modal = $("settings"); if (!modal) return;
+  const open = () => { $("gem-key").value = gemKey(); $("gem-on").checked = lsGet("baro_gemini_on", true); $("gem-status").textContent = ""; modal.classList.remove("hidden"); };
+  const close = () => modal.classList.add("hidden");
+  const recompute = () => computeAndRender(currentItems(), CURRENT.sources && CURRENT.sources.length ? CURRENT.sources : null);
+  if ($("settings-btn")) $("settings-btn").addEventListener("click", open);
+  if ($("gem-cancel")) $("gem-cancel").addEventListener("click", close);
+  modal.addEventListener("click", (e) => { if (e.target === modal) close(); });
+  if ($("gem-save")) $("gem-save").addEventListener("click", async () => {
+    const k = $("gem-key").value.trim();
+    lsSet("baro_gemini_key", k); lsSet("baro_gemini_on", $("gem-on").checked);
+    updateGemChip();
+    if (k && $("gem-on").checked) {
+      $("gem-status").textContent = "Проверяю ключ…";
+      try {
+        const r = await geminiAnalyze(currentItems());
+        if (r) { LLM = r; lsSet("baro_llm", LLM); recompute(); $("gem-status").textContent = `✓ Готово: оценка ИИ ${r.score}/100`; }
+        else { $("gem-status").textContent = "Не удалось получить ответ — проверьте ключ."; }
+      } catch (e) { $("gem-status").textContent = "Ошибка: " + String(e.message || e).slice(0, 150); }
+    } else {
+      LLM = null; lsSet("baro_llm", null); recompute(); close();
+    }
+  });
+  updateGemChip();
+}
+
 function boot() {
   // 1) мгновенно показываем барометр на стартовых+сохранённых данных
   const items = currentItems();
   computeAndRender(items, null, "стартовые данные, обновляю…");
-  // 2) тянем живые данные в фоне
+  // 2) настройки ИИ + живые данные в фоне
+  setupSettings();
   if ($("refresh")) $("refresh").addEventListener("click", () => refresh(false));
   refresh(true);
 }

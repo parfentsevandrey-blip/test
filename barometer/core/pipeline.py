@@ -43,7 +43,7 @@ def run_pipeline(use_llm: bool = True) -> dict:
         window_items = store.recent_items(config.WINDOW_DAYS, only_relevant=True, limit=4000)
         history = store.reading_history(limit=365)
 
-        llm_result = llm.analyze_with_claude(window_items) if use_llm else None
+        llm_result = llm.analyze(window_items) if use_llm else None
 
         reading = scoring.compute_reading(
             window_items, ds_snap, history, llm=llm_result, sources_ok_ratio=ratio
@@ -130,6 +130,7 @@ def get_state(extra: dict | None = None) -> dict:
             "window_days": config.WINDOW_DAYS,
             "refresh_minutes": config.REFRESH_MINUTES,
             "llm_enabled": llm.is_enabled(),
+            "llm_provider": llm.provider(),
             "x_live": bool(config.X_BEARER_TOKEN),
         },
     }
