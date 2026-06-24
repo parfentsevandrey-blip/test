@@ -249,6 +249,12 @@ const AI_PROVIDERS = {
   gemini:     { label: "Google Gemini",                  base: "", model: "gemini-2.5-flash", signup: "https://aistudio.google.com/apikey", kind: "gemini", hint: "ключ AIza…" },
 };
 const DEFAULT_PROVIDER = "openrouter";
+// Запасные бесплатные модели: при 429/перегрузке пробуем следующую.
+const AI_FALLBACKS = {
+  openrouter: ["meta-llama/llama-3.3-70b-instruct:free", "openai/gpt-oss-120b:free", "qwen/qwen3-next-80b-a3b-instruct:free", "openai/gpt-oss-20b:free"],
+  groq: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"],
+  mistral: ["mistral-small-latest"],
+};
 const AI_PROMPT =
   "Ты — аналитик OSINT. По подборке заголовков новостей из независимых российских СМИ, " +
   "Telegram и западных военных аналитиков оцени вероятность объявления НОВОЙ волны " +
@@ -276,19 +282,37 @@ function _parseScore(text) {
 
 async function aiAnalyze(items) {
   const key = aiKey(); if (!key) return null;
-  const pcfg = AI_PROVIDERS[aiProvider()]; if (!pcfg) return null;
+  const prov = aiProvider();
+  const pcfg = AI_PROVIDERS[prov]; if (!pcfg) return null;
   const picked = items.filter((i) => i.relevant).slice(0, 40); if (!picked.length) return null;
   const prompt = AI_PROMPT + _aiLines(picked);
-  const model = aiModel();
-  const res = pcfg.kind === "gemini" ? await _geminiCall(key, model, prompt) : await _openaiCall(pcfg.base, key, model, prompt);
-  return res ? { ...res, model, provider: aiProvider(), at: nowStr() } : null;
+
+  if (pcfg.kind === "gemini") {
+    const res = await _geminiCall(key, aiModel(), prompt);
+    return res ? { ...res, model: aiModel(), provider: prov, at: nowStr() } : null;
+  }
+  // OpenAI-совместимые: перебираем выбранную модель + запасные при 429/перегрузке.
+  const chosen = aiModel();
+  const cands = [chosen, ...((AI_FALLBACKS[prov] || []).filter((m) => m !== chosen))];
+  let lastErr = null;
+  for (const m of cands) {
+    try {
+      const res = await _openaiCall(pcfg.base, key, m, prompt);
+      if (res) return { ...res, model: m, provider: prov, at: nowStr() };
+    } catch (e) {
+      lastErr = e;
+      if (e.status === 401 || e.status === 403) break;  // авторизация — перебор бесполезен
+    }
+  }
+  if (lastErr) throw lastErr;
+  return null;
 }
 
 async function _openaiCall(base, key, model, prompt) {
   const body = { model, messages: [{ role: "user", content: prompt }], temperature: 0.2 };
   const data = await withTimeout(async (signal) => {
     const r = await fetch(base + "/chat/completions", { method: "POST", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + key }, body: JSON.stringify(body), signal });
-    if (!r.ok) { const t = await r.text().catch(() => ""); throw new Error("HTTP " + r.status + " " + t.slice(0, 160)); }
+    if (!r.ok) { const t = await r.text().catch(() => ""); const e = new Error("HTTP " + r.status + " " + t.slice(0, 160)); e.status = r.status; throw e; }
     return r.json();
   }, 30000);
   let text = ((((data.choices || [])[0] || {}).message) || {}).content || "";
@@ -615,7 +639,9 @@ function setupSettings() {
         else { $("ai-status").textContent = "Не удалось получить ответ — проверьте ключ/модель."; }
       } catch (e) {
         let m = String(e.message || e);
-        if (/model/i.test(m)) m = "неверная модель. Очистите поле «Модель» (возьмётся по умолчанию) или впишите :free-модель с openrouter.ai/models";
+        if (e.status === 429 || /429|rate.?limit/i.test(m)) m = "все бесплатные модели сейчас перегружены (rate limit). Попробуйте через минуту или выберите провайдера Groq — там свободный лимит надёжнее.";
+        else if (e.status === 401 || e.status === 403 || /invalid|unauthor|api key/i.test(m)) m = "ключ не принят — проверьте, что скопировали его полностью.";
+        else if (/model/i.test(m)) m = "неверная модель. Очистите поле «Модель» (возьмётся по умолчанию) или впишите :free-модель с openrouter.ai/models";
         $("ai-status").textContent = "Ошибка: " + m.slice(0, 200);
       }
     } else {
@@ -641,4 +667,4 @@ if (typeof document !== "undefined") {
 }
 
 /* экспорт для node-тестов */
-if (typeof module !== "undefined") module.exports = { normalize, analyzeItem, computeReading, parseRSS, parseRSSRegex, parseTelegram, deepstateFromGeoJSON, deepstateNorm, stripHtml };
+if (typeof module !== "undefined") module.exports = { normalize, analyzeItem, computeReading, parseRSS, parseRSSRegex, parseTelegram, deepstateFromGeoJSON, deepstateNorm, stripHtml, aiAnalyze };
