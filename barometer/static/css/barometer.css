@@ -86,9 +86,11 @@ a:hover { text-decoration: underline; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ------------------------------- grid ----------------------------------- */
-.grid { display: grid; grid-template-columns: 1.12fr 1fr; gap: var(--gap); align-items: stretch; }
+/* minmax(0,…) — иначе колонка с длинным неразрывным текстом (ссылки в драйверах)
+   раздувается по min-content и выталкивает соседнюю колонку за экран. */
+.grid { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr); gap: var(--gap); align-items: stretch; }
 .grid .full { grid-column: 1 / -1; }
-@media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { .grid { grid-template-columns: minmax(0, 1fr); } }
 
 .card {
   background: linear-gradient(180deg, var(--panel), #10172480);
@@ -96,6 +98,7 @@ a:hover { text-decoration: underline; }
   border-radius: var(--radius);
   padding: 20px 22px;
   box-shadow: 0 14px 34px rgba(0,0,0,.35);
+  min-width: 0;       /* разрешаем карточке сжиматься в грид-колонке */
 }
 .card h2 {
   font-size: 12px; text-transform: uppercase; letter-spacing: 1.3px;
@@ -178,7 +181,7 @@ a:hover { text-decoration: underline; }
 .driver .cnt { font-family: var(--mono); color: var(--muted-2); font-size: 12px; width: 30px; text-align:right; flex:none; }
 
 /* ----------------------------- feed ------------------------------------- */
-.feed { display: flex; flex-direction: column; max-height: 560px; overflow-y: auto; padding-right: 6px; margin-right: -6px; }
+.feed { display: flex; flex-direction: column; max-height: 560px; overflow-y: auto; overflow-x: hidden; padding-right: 4px; }
 .feed::-webkit-scrollbar { width: 8px; }
 .feed::-webkit-scrollbar-thumb { background: var(--line); border-radius: 8px; }
 .fitem { padding: 12px 0; border-bottom: 1px solid var(--line-soft); }
