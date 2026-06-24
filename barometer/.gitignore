@@ -3,8 +3,6 @@ data/*.db
 data/*.db-wal
 data/*.db-shm
 
-# Сгенерированный статичный снимок дашборда (содержит данные на момент сборки)
-barometer-preview.html
 
 # Python
 __pycache__/

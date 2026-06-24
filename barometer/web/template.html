@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Барометр мобилизации</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+/*__CSS__*/
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <div class="mark">📊</div>
+      <div>
+        <h1>Барометр мобилизации</h1>
+        <div class="sub">Автомониторинг независимых СМИ, DeepState, военных аналитиков и облав · оценка 0–100 · работает в браузере, без сервера</div>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <div class="chips" id="chips">
+      <span class="chip" id="chip-updated">Загрузка…</span>
+    </div>
+    <button class="btn" id="refresh"><span class="spin"></span><span class="lbl">Обновить</span></button>
+  </header>
+
+  <div id="skeleton" class="skeleton">Запуск движка…</div>
+
+  <main id="app" class="hidden">
+    <section class="grid">
+      <div class="card gauge-card">
+        <h2>Барометр риска мобилизации</h2>
+        <svg class="gauge" id="gauge" viewBox="0 0 420 240" aria-label="Шкала барометра"></svg>
+        <div class="gauge-readout">
+          <div class="gauge-value" id="gval">—<small>/100</small></div>
+          <div class="gauge-zone" id="gzone">—</div>
+        </div>
+        <div class="gauge-ends"><span>0 · мобилизации не будет</span><span>мобилизация началась · 100</span></div>
+      </div>
+      <div class="card">
+        <h2>Прогноз и достоверность</h2>
+        <div class="forecast">
+          <div>
+            <div class="big" id="fc-label">—</div>
+            <div class="date" id="fc-date"></div>
+            <div class="basis" id="fc-basis"></div>
+          </div>
+          <div>
+            <div class="cat"><div class="row"><span class="lbl">Достоверность оценки</span><span class="val" id="conf-val">—</span></div>
+              <div class="meter"><span id="conf-bar" style="width:0%"></span></div></div>
+          </div>
+          <div class="kvs">
+            <div class="kv"><div class="k">Скорость тренда</div><div class="v" id="kv-vel">—</div></div>
+            <div class="kv"><div class="k">Релевантных новостей</div><div class="v" id="kv-rel">—</div></div>
+            <div class="kv"><div class="k">Счёт по правилам</div><div class="v" id="kv-rule">—</div></div>
+            <div class="kv"><div class="k">Оценка Claude</div><div class="v" id="kv-llm">—</div></div>
+          </div>
+          <div class="basis" id="llm-rationale"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card full" style="margin-top:18px">
+      <h2>Четыре опоры мониторинга</h2>
+      <div class="streams" id="streams"></div>
+    </section>
+
+    <section class="grid" style="margin-top:18px">
+      <div class="card">
+        <h2>Вклад категорий сигналов</h2>
+        <div id="cats"></div>
+        <div class="hint" style="margin-top:8px">Вправо (красное) — сигналы к мобилизации, влево (зелёное) — против. В скобках — вес категории.</div>
+      </div>
+      <div class="card">
+        <h2>DeepState · карта фронта</h2>
+        <div class="kvs">
+          <div class="kv"><div class="k">Оккупировано (оценка)</div><div class="v" id="ds-occ">—</div></div>
+          <div class="kv"><div class="k">Δ за период</div><div class="v" id="ds-delta">—</div></div>
+        </div>
+        <div class="basis" id="ds-trend" style="margin-top:10px"></div>
+        <h2 style="margin-top:18px">История барометра</h2>
+        <svg class="chart" id="chart" viewBox="0 0 560 180" preserveAspectRatio="none"></svg>
+        <div class="chart-empty hidden" id="chart-empty">График появится после нескольких замеров (история хранится в браузере).</div>
+      </div>
+    </section>
+
+    <section class="grid" style="margin-top:18px">
+      <div class="card"><h2>Что влияет на барометр</h2><div id="drivers"></div></div>
+      <div class="card"><h2>Лента релевантных новостей</h2><div class="feed" id="feed"></div></div>
+    </section>
+
+    <footer class="foot">
+      <div class="disc">
+        ⚠️ Экспериментальный аналитический индикатор на основе открытых источников (OSINT).
+        Барометр и прогнозируемая дата — эвристическая оценка тональности и интенсивности
+        публичных новостей, а не предсказание с гарантией. Весь расчёт идёт прямо в вашем
+        браузере; история хранится локально. Живой сбор RSS/Telegram использует бесплатный
+        CORS-прокси и может иногда не срабатывать — тогда показываются последние сохранённые
+        данные (нажмите «Обновить»).
+      </div>
+      <div style="margin-bottom:8px">Источники (статус последнего сбора):</div>
+      <div class="srclist" id="srclist"></div>
+    </footer>
+  </main>
+</div>
+
+<script>
+/*__DATA__*/
+</script>
+<script>
+/*__ENGINE__*/
+</script>
+</body>
+</html>
