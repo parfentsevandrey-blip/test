@@ -61,7 +61,17 @@ def _parse_date(text: str | None) -> str:
     try:
         return _to_utc_iso(datetime.fromisoformat(text.replace("Z", "+00:00")))
     except Exception:
+        pass
+    # Twitter/X формат: "Tue Jun 23 22:31:02 +0000 2026"
+    try:
+        return _to_utc_iso(datetime.strptime(text, "%a %b %d %H:%M:%S %z %Y"))
+    except Exception:
         return _now_iso()
+
+
+# Браузерный UA для эндпоинтов, которые отвергают «бота» (X/syndication).
+BROWSER_UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+              "(KHTML, like Gecko) Chrome/124.0 Safari/537.36")
 
 
 _TAG_RE = re.compile(r"<[^>]+>")
@@ -324,8 +334,78 @@ def _twitter_sample() -> tuple[list[dict], dict]:
 
 
 def fetch_twitter() -> tuple[list[dict], dict]:
-    if not config.X_BEARER_TOKEN:
-        return _twitter_sample()
+    """Реальные твиты аналитиков через реверс-инжиниринг публичного веб-эндпоинта.
+
+    Используем внутренний JSON веб-виджета X (syndication timeline-profile):
+    он отдаёт ~28 последних твитов аккаунта в блоке __NEXT_DATA__ без ключа и
+    без авторизации. Это разбор публично доступной информации (как делают
+    OSINT-инструменты), низкая частота запросов. При неудаче — официальный API
+    (если задан токен) или сэмпл.
+    """
+    items: list[dict] = []
+    errors: list[str] = []
+    for sn in config.X_ACCOUNTS:
+        try:
+            items += _x_syndication(sn)
+        except Exception as e:  # noqa: BLE001
+            errors.append(f"{sn}:{type(e).__name__}")
+    if items:
+        status = {
+            "source_id": "x_analysts", "name": "X / военные аналитики", "stream": "analysts",
+            "mode": "live", "last_ok": _now_iso(),
+            "last_error": ("; ".join(errors)[:200] or None), "items_count": len(items),
+        }
+        return items, status
+    if config.X_BEARER_TOKEN:
+        return _twitter_official()
+    items, st = _twitter_sample()
+    st["last_error"] = "RE failed → sample: " + ("; ".join(errors)[:200])
+    return items, st
+
+
+def _x_syndication(screen_name: str, limit: int = 25) -> list[dict]:
+    url = (f"https://syndication.twitter.com/srv/timeline-profile/screen-name/"
+           f"{screen_name}?showReplies=false")
+    r = _http_get(url, headers={"User-Agent": BROWSER_UA, "Accept": "text/html"})
+    return _x_parse(r.text, screen_name, limit)
+
+
+def _x_parse(text: str, screen_name: str, limit: int = 25) -> list[dict]:
+    m = re.search(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', text, re.DOTALL)
+    if not m:
+        raise ValueError("no __NEXT_DATA__")
+    data = json.loads(m.group(1))
+    entries = (((data.get("props") or {}).get("pageProps") or {}).get("timeline") or {}).get("entries") or []
+    out: list[dict] = []
+    for e in entries:
+        t = (e.get("content") or {}).get("tweet") or {}
+        text = t.get("full_text")
+        if not text:
+            continue
+        sn = (t.get("user") or {}).get("screen_name", screen_name)
+        ids = t.get("id_str", "")
+        perma = t.get("permalink") or ""
+        if perma.startswith("/"):
+            perma = "https://twitter.com" + perma
+        out.append({
+            "id": _mk_id("x", ids or text[:40]),
+            "source_id": "x_analysts",
+            "source_name": f"X · @{sn}",
+            "stream": "analysts",
+            "lang": t.get("lang", "en"),
+            "title": text[:140],
+            "summary": text[:600],
+            "url": perma or f"https://twitter.com/{sn}/status/{ids}",
+            "published": _parse_date(t.get("created_at")),
+            "fetched_at": _now_iso(),
+            "relevant": 0, "signals": [], "source_weight": 0.7,
+        })
+        if len(out) >= limit:
+            break
+    return out
+
+
+def _twitter_official() -> tuple[list[dict], dict]:
     status = {
         "source_id": "x_analysts",
         "name": "X / военные аналитики",
