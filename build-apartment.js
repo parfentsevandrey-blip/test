@@ -96,20 +96,9 @@ canvas.ascii{ position:absolute; inset:0; width:100%; height:100%; display:block
 .statement .bgwrap canvas.ascii{ opacity:.9; }
 `, "", "dead ascii css");
 
-// 3a2 — remove the unused .statement section styles (no such element in this layout)
-template = replaceOnce(template,
-`/* statement (centered) */
-.statement{ position:relative; overflow:hidden; }
-.statement .bgwrap{ position:absolute; inset:0; z-index:0; }
-.statement .bgwrap img{ width:100%; height:100%; object-fit:cover; filter:var(--photo-filter) blur(3px) brightness(.5); transform:scale(1.05); }
-.statement .scrim{ position:absolute; inset:0; z-index:1; background:radial-gradient(120% 120% at 50% 50%, rgba(5,6,10,.4), rgba(5,6,10,.72)); }
-.statement .inner{ position:relative; z-index:2; text-align:center; max-width:1000px; margin:0 auto; color:#f3f5f8; }
-.statement .eyebrow{ justify-content:center; color:var(--gold-soft); }
-.statement .eyebrow::before,.statement .eyebrow::after{ background:var(--gold-soft); }
-.statement .big{ margin-top:24px; font-family:var(--serif); font-size:clamp(30px,4.4vw,64px); font-weight:600; line-height:1.12; color:#fff; }
-.statement .big em{ color:var(--gold-soft); }
-.statement .note{ margin:26px auto 0; max-width:820px; font-size:clamp(15.5px,1.2vw,19px); line-height:1.6; font-weight:300; color:rgba(243,245,248,.78); }`,
-"/* (unused statement-section styles removed) */", "dead statement css");
+// NOTE: .statement styles are NOT dead — the "15 — Уникальность" section uses
+// <section class="sec statement">, so those rules must stay. (Earlier removal
+// here was a regression that collapsed that section.)
 
 // 3a3 — remove unused CSS custom properties (0 references anywhere)
 template = replaceOnce(template, "  --ease-grace:cubic-bezier(.16,1,.3,1);   /* smooth deceleration — no snap */\n", "", "unused --ease-grace");
@@ -199,8 +188,8 @@ const NEW_CSS = `
 `;
 template = replaceOnce(template, "\n</style>", NEW_CSS + "</style>", "</style> close");
 
-// 3c — contiguous section numbering (the source skipped 15)
-template = replaceOnce(template, "16 — Документация", "15 — Документация", "doc section number");
+// (NOTE: section numbering is already correct — 15 = Уникальность, 16 = Документация.
+//  An earlier "16 → 15" renumber here was a regression that created a duplicate 15.)
 
 // 3d — wire the new scripts in dependency order (after three.js)
 const OLD_SCRIPTS =

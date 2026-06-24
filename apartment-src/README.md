@@ -42,8 +42,13 @@ reference (not bundled):
 
 ## Dead code removed
 
-`canvas.ascii` (old text-video leftover), the unused `.statement` section styles,
-and the unreferenced `--ease-grace` / `--scrim` CSS custom properties.
+`canvas.ascii` (old text-video leftover) and the unreferenced `--ease-grace` /
+`--scrim` CSS custom properties (the `.scrim` *class* is used; the `--scrim`
+*variable* was not).
+
+> Note: `.statement` styles are **kept** — the `15 — Уникальность` section is
+> `<section class="sec statement">`. (An earlier round wrongly removed them and
+> renumbered Документация to 15; both regressions are reverted.)
 
 `page.html` is the decoded template (markup + CSS). `site.js` / `depth3d.js` are
 the original, unchanged engines (kept for reference).

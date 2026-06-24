@@ -79,7 +79,7 @@ ok(idx(engine) >= 0, "engine3d present");
 
 // 4) template edits applied
 ok(!resolved.includes("canvas.ascii"), "dead ascii css removed");
-ok(!resolved.includes(".statement"), "dead .statement css removed");
+ok(resolved.includes(".statement{"), ".statement styles present (used by «Уникальность» section)");
 ok(!resolved.includes("--ease-grace"), "unused --ease-grace var removed");
 ok(!resolved.includes("--scrim"), "unused --scrim var removed");
 ok(!resolved.includes(".hero-gl"), "hero stays reverted (no hero-gl)");
@@ -93,7 +93,10 @@ ok(resolved.includes('class="kx-shaft"'), "drifting light shaft present");
 ok(resolved.includes("kx-grade") && resolved.includes("kx-spot"), "section grade + reading spot present");
 ok(resolved.includes("kx-aperture") && resolved.includes("kx-focus"), "aperture + focus-pull reveal css present");
 ok(resolved.includes(".snd-switch"), "ambient-sound toggle css present");
-ok(resolved.includes("15 — Документация") && !resolved.includes("16 — Документация"), "section renumbered 16→15");
+ok(resolved.includes("15 — Уникальность"), "section 15 = Уникальность intact");
+ok(resolved.includes("16 — Документация"), "section 16 = Документация intact");
+ok(!resolved.includes("15 — Документация"), "no duplicate section 15");
+ok((resolved.match(/15 —/g)||[]).length === 1, "exactly one section 15");
 
 // 5) structural sanity of the unpacked document
 const balanced = (a, b) => (resolved.split(a).length - 1) === (resolved.split(b).length - 1);
