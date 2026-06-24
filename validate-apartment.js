@@ -96,8 +96,8 @@ ok(resolved.includes(".snd-switch"), "ambient-sound toggle css present");
 // liquid glass
 ok(resolved.includes('id="kx-liquid"') && resolved.includes("feDisplacementMap"), "liquid-glass refraction filter present");
 ok((resolved.match(/feDisplacementMap/g)||[]).length >= 3 && resolved.includes("feComposite"), "chromatic dispersion (RGB split) present");
-ok(resolved.includes("--lg-iris") && resolved.includes("conic-gradient"), "iridescent (mother-of-pearl) rim present");
-ok(resolved.includes("@keyframes kxIris") && resolved.includes("kxSheen"), "living shimmer (hue-cycle + drift) present");
+ok(resolved.includes("conic-gradient(from var(--kx-ang)") && resolved.includes("@property --kx-ang"), "iridescent rotating rim present");
+ok(resolved.includes("@keyframes kxIris") && resolved.includes("@keyframes kxSpin") && resolved.includes("kxSheen"), "living shimmer (spin + hue-cycle + drift) present");
 ok(resolved.includes("url(#kx-liquid)"), "refraction wired into backdrop-filter");
 ok(resolved.includes("15 — Уникальность"), "section 15 = Уникальность intact");
 ok(resolved.includes("16 — Документация"), "section 16 = Документация intact");

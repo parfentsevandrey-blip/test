@@ -193,15 +193,14 @@ const NEW_CSS = `
    ============================================================ */
 .kx-liquid-defs{ position:absolute; width:0; height:0; overflow:hidden; pointer-events:none; }
 :root{ --lg-hi:rgba(255,255,255,.95); --lg-hi-soft:rgba(255,255,255,.55);
-  --lg-glow:rgba(255,244,222,.28); --lg-blur:blur(18px) saturate(205%) brightness(1.12);
-  --lg-iris:conic-gradient(from 130deg,
-    rgba(255,255,255,.92), rgba(244,217,160,.85), rgba(240,184,208,.82), rgba(186,228,240,.85),
-    rgba(214,198,242,.82), rgba(206,238,222,.85), rgba(255,255,255,.92)); }
+  --lg-glow:rgba(255,244,222,.32); --lg-blur:blur(18px) saturate(205%) brightness(1.12); }
+@property --kx-ang{ syntax:"<angle>"; initial-value:0deg; inherits:false; }
 [data-theme="evening"]{ --lg-hi:rgba(255,252,245,.9); --lg-hi-soft:rgba(255,250,240,.5); --lg-glow:rgba(255,238,206,.24); }
 [data-theme="dark"]{ --lg-hi:rgba(255,255,255,.72); --lg-hi-soft:rgba(255,255,255,.34);
   --lg-glow:rgba(180,205,255,.26); --lg-blur:blur(20px) saturate(215%) brightness(1.16); }
 
 @keyframes kxIris{ to{ filter:hue-rotate(360deg); } }
+@keyframes kxSpin{ to{ --kx-ang:360deg; } }
 @keyframes kxSheen{ 0%,100%{ background-position:-30% 0, 0% 50%; } 50%{ background-position:130% 0, 100% 50%; } }
 
 /* big surfaces — full liquid glass (header + glass cards incl. contact card) */
@@ -225,19 +224,20 @@ const NEW_CSS = `
 /* ::before — drifting white glint + iridescent oil-slick film (the "переливание") */
 .bar::before, .glass::before{ content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none; z-index:0;
   background:
-    linear-gradient(115deg, transparent 24%, rgba(255,255,255,.6) 44%, transparent 60%),
-    linear-gradient(60deg, rgba(244,217,160,.20), rgba(240,184,208,.18) 28%, rgba(186,228,240,.18) 52%, rgba(214,198,242,.18) 74%, rgba(206,238,222,.20));
+    linear-gradient(115deg, transparent 22%, rgba(255,255,255,.78) 44%, transparent 60%),
+    linear-gradient(60deg, rgba(232,184,74,.30), rgba(234,143,184,.28) 28%, rgba(108,200,232,.28) 52%, rgba(180,143,240,.28) 74%, rgba(127,220,176,.30));
   background-size:220% 100%, 240% 200%; background-position:-30% 0, 0% 50%;
-  opacity:.6; mix-blend-mode:screen; animation:kxSheen 9s ease-in-out infinite, kxIris 14s linear infinite; }
+  opacity:.7; mix-blend-mode:screen; animation:kxSheen 8s ease-in-out infinite, kxIris 13s linear infinite; }
 
 /* ::after — iridescent (dichroic) mother-of-pearl lens rim */
 .bar::after, .glass::after,
 .theme-switch::after, .mat-switch::after, .snd-switch::after, .cta::after, .stat::after{
-  content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none; padding:1.4px;
-  background:var(--lg-iris);
+  content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none; padding:2px;
+  background:conic-gradient(from var(--kx-ang),
+    #f0c659, #ef8fb9, #6cc8ea, #b48ff0, #7fddb2, #f0d27a, #f0c659);
   -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite:xor; mask-composite:exclude; opacity:.55; }
-.bar::after, .glass::after{ opacity:.9; animation:kxIris 10s linear infinite; }
+  -webkit-mask-composite:xor; mask-composite:exclude; opacity:.6; }
+.bar::after, .glass::after{ opacity:.8; animation:kxSpin 12s linear infinite, kxIris 16s linear infinite; }
 .bar > *, .glass > *{ position:relative; z-index:1; }
 .theme-switch, .mat-switch, .snd-switch{ position:relative; }
 
@@ -305,9 +305,9 @@ template = replaceOnce(template,
   '<filter id="kx-liquid" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">' +
   '<feTurbulence type="fractalNoise" baseFrequency="0.004 0.007" numOctaves="2" seed="11" result="n"/>' +
   '<feGaussianBlur in="n" stdDeviation="2.2" result="nb"/>' +
-  '<feDisplacementMap in="SourceGraphic" in2="nb" scale="26" xChannelSelector="R" yChannelSelector="G" result="dR"/>' +
-  '<feDisplacementMap in="SourceGraphic" in2="nb" scale="18" xChannelSelector="R" yChannelSelector="G" result="dG"/>' +
-  '<feDisplacementMap in="SourceGraphic" in2="nb" scale="10" xChannelSelector="R" yChannelSelector="G" result="dB"/>' +
+  '<feDisplacementMap in="SourceGraphic" in2="nb" scale="34" xChannelSelector="R" yChannelSelector="G" result="dR"/>' +
+  '<feDisplacementMap in="SourceGraphic" in2="nb" scale="22" xChannelSelector="R" yChannelSelector="G" result="dG"/>' +
+  '<feDisplacementMap in="SourceGraphic" in2="nb" scale="12" xChannelSelector="R" yChannelSelector="G" result="dB"/>' +
   '<feColorMatrix in="dR" type="matrix" values="1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0" result="cR"/>' +
   '<feColorMatrix in="dG" type="matrix" values="0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0" result="cG"/>' +
   '<feColorMatrix in="dB" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0" result="cB"/>' +
