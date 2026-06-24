@@ -26,6 +26,22 @@ Pure-CSS pieces added by the build: the floor-plan sweep, the richer filmic
 vignette, the **drifting light shaft** (`.kx-shaft`), the per-section **grade**
 (`.kx-grade`) + **reading spot** (`.kx-spot`). All honour `reduced-motion`.
 
+### Liquid glass
+
+A site-wide **Liquid Glass** material (CSS + one SVG filter, no JS) on the
+chrome — header, glass cards, switches, CTAs, marquee, stat cards, photo edges:
+
+- **Refraction** — an SVG `feTurbulence`+`feDisplacementMap` (`#kx-liquid`) warps
+  the backdrop through `backdrop-filter: url(#kx-liquid)` (Chromium; `@supports`
+  fallback to frosted blur elsewhere).
+- **Specular + rim** — top-edge highlight, a crisp gradient **lens rim**
+  (mask-composite border), layered depth shadows; a slow living **sheen**
+  (`lgSheen`) drifts across the big surfaces.
+- **Theme-aware** highlights (`--lg-*`), brighter on dark; the cursor glare is a
+  soft **screen-blend specular**. Backdrop-filter is kept off the 18 opaque
+  photos and the many stat cards (they get the look via gradient + highlight) to
+  stay light. Honours `reduced-motion`.
+
 ## Calmer by request
 
 Earlier motion was unwelcome, so it was removed and kept in `disabled/` for
