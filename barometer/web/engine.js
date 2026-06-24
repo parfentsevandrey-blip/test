@@ -588,8 +588,8 @@ function setupSettings() {
     if (sel) sel.value = p;
     $("ai-key").value = aiKey();
     $("ai-key").placeholder = "API-ключ — " + (pc.hint || "");
-    $("ai-model").value = (lsGet("baro_ai_model", "") || "");
-    $("ai-model").placeholder = "модель (по умолчанию " + (pc.model || "") + ")";
+    $("ai-model").value = (lsGet("baro_ai_model", "") || pc.model);  // показываем реальную модель по умолчанию
+    $("ai-model").placeholder = pc.model || "";
     $("ai-on").checked = lsGet("baro_ai_on", true);
     if ($("ai-signup")) $("ai-signup").href = pc.signup || "#";
     $("ai-status").textContent = "";
@@ -613,7 +613,11 @@ function setupSettings() {
         const r = await aiAnalyze(currentItems());
         if (r) { LLM = r; lsSet("baro_llm", LLM); recompute(); $("ai-status").textContent = `✓ Готово: оценка ИИ ${r.score}/100`; }
         else { $("ai-status").textContent = "Не удалось получить ответ — проверьте ключ/модель."; }
-      } catch (e) { $("ai-status").textContent = "Ошибка: " + String(e.message || e).slice(0, 160); }
+      } catch (e) {
+        let m = String(e.message || e);
+        if (/model/i.test(m)) m = "неверная модель. Очистите поле «Модель» (возьмётся по умолчанию) или впишите :free-модель с openrouter.ai/models";
+        $("ai-status").textContent = "Ошибка: " + m.slice(0, 200);
+      }
     } else {
       LLM = null; lsSet("baro_llm", null); recompute(); close();
     }
