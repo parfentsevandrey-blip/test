@@ -44,7 +44,7 @@ for(const uuid of Object.keys(manifest)){
   } else if(e.mime.startsWith("image")) imgCount++;
   else if(e.mime.startsWith("font")) fontCount++;
 }
-ok(jsCount === 5, `JS assets = ${jsCount} (expect 5)`);
+ok(jsCount === 9, `JS assets = ${jsCount} (expect 9)`);
 ok(imgCount === 18, `image assets = ${imgCount} (expect 18)`);
 ok(fontCount === 20, `font assets = ${fontCount} (expect 20)`);
 
@@ -70,11 +70,12 @@ function uuidOfModule(snippet){
 }
 const THREE   = uuidOfModule('THREE.REVISION') || uuidOfModule('Three.js Authors') || "";
 const engine  = uuidOfModule('cinematic atmosphere');
-const polish  = uuidOfModule('polish.js');
-ok(order.length === 5, `script tags in template = ${order.length} (expect 5)`);
+ok(order.length === 9, `script tags in template = ${order.length} (expect 9)`);
 ok(THREE && idx(THREE) < idx(engine), "three.js loads before engine3d");
 ok(idx(engine) >= 0, "engine3d present");
-ok(idx(polish) >= 0, "polish present");
+[["polish",'polish.js'], ["intro",'"the open"'], ["reveal-fx",'cinematic reveals'],
+ ["lightstory",'the light follows you'], ["audio",'generative ambient sound']
+].forEach(([n,snip])=> ok(idx(uuidOfModule(snip)) >= 0, n+" present & wired"));
 
 // 4) template edits applied
 ok(!resolved.includes("canvas.ascii"), "dead ascii css removed");
@@ -86,6 +87,12 @@ ok(!resolved.includes(".mat-preview"), "no material popover");
 ok(!resolved.includes(".gl-depth"), "no gallery overlay");
 ok(resolved.includes("planSweep"), "css plan sweep present");
 ok(resolved.includes(".cine-vignette"), "vignette present");
+// new cinematic layer present
+ok(resolved.includes('id="kx-intro"') && resolved.includes("kx-intro-word"), "intro title card present");
+ok(resolved.includes('class="kx-shaft"'), "drifting light shaft present");
+ok(resolved.includes("kx-grade") && resolved.includes("kx-spot"), "section grade + reading spot present");
+ok(resolved.includes("kx-aperture") && resolved.includes("kx-focus"), "aperture + focus-pull reveal css present");
+ok(resolved.includes(".snd-switch"), "ambient-sound toggle css present");
 ok(resolved.includes("15 — Документация") && !resolved.includes("16 — Документация"), "section renumbered 16→15");
 
 // 5) structural sanity of the unpacked document

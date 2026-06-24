@@ -61,6 +61,8 @@ function makeWindow(THREE){
     THREE, document, innerWidth:1200, innerHeight:800, devicePixelRatio:2, scrollY:0, pageYOffset:0,
     matchMedia: mm, getComputedStyle: () => ({ getPropertyValue:()=>"#caa14e", color:"rgb(200,160,80)", backgroundColor:"rgb(11,10,9)", position:"static" }),
     requestAnimationFrame:(cb)=>{ rafQ.push(cb); return rafQ.length; }, cancelAnimationFrame(){},
+    setTimeout:()=>0, clearTimeout(){}, setInterval:()=>0, clearInterval(){},
+    AudioContext: undefined, webkitAudioContext: undefined,   // audio.js must bail gracefully
     addEventListener(type, cb){ listeners.push({type, cb}); }, removeEventListener(){},
     performance:{ now:()=>16 }, localStorage:{ getItem:()=>null, setItem(){} },
     MutationObserver: class { observe(){} disconnect(){} },
@@ -78,7 +80,8 @@ function runModule(file, THREE){
   // expose bare globals the modules use unqualified
   ["document","matchMedia","getComputedStyle","requestAnimationFrame","cancelAnimationFrame",
    "performance","MutationObserver","IntersectionObserver","innerWidth","innerHeight",
-   "devicePixelRatio","URL","console","window"].forEach(k => { ctx[k] = w[k]; });
+   "devicePixelRatio","URL","console","window",
+   "setTimeout","clearTimeout","setInterval","clearInterval"].forEach(k => { ctx[k] = w[k]; });
   vm.runInContext(code, ctx, { filename:file });
   return w;
 }
@@ -97,8 +100,8 @@ const ctx = vm.createContext(win);
 // THREE on the window so `window.THREE` and bare `THREE`(via window) resolve
 ctx.THREE = THREE; win.THREE = THREE;
 
-// shipped modules only (glshared/plan3d replaced by CSS; others reverted)
-const MODULES = ["engine3d.js","polish.js"];
+// shipped modules (WebGL ambient + tiny no-deps cinematic touches)
+const MODULES = ["engine3d.js","polish.js","intro.js","reveal-fx.js","lightstory.js","audio.js"];
 for(const f of MODULES){
   try{
     const code = fs.readFileSync(path.join(SRC, f), "utf8");
@@ -121,7 +124,7 @@ ok(true, `drove ${ticks} rAF callback(s) without throwing`);
 const ev = { clientX:600, clientY:400, target:{ closest:()=>null, matches:()=>false } };
 let fired = 0;
 for(const {type, cb} of listeners.slice()){
-  if(["pointermove","scroll","resize","pointerenter","pointerleave","pointerover","pointerout","visibilitychange","load","click"].includes(type)){
+  if(["pointermove","scroll","resize","pointerenter","pointerleave","pointerover","pointerout","visibilitychange","load","click","wheel","keydown","pointerdown","touchstart"].includes(type)){
     try{ cb(ev); fired++; }catch(err){ ok(false, `event "${type}" handler threw → ${err.message}`); }
   }
 }

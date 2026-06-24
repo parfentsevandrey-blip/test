@@ -70,7 +70,11 @@ manifest[ENGINE3D_UUID] = jsAsset(readSrc("engine3d.js"));
 // shared renderer (glshared) and plan3d's extra WebGL context were dropped.
 // hero3d / gallery3d / materials3d / postfx remain reverted (see disabled/).
 const NEW_MODULES = [
-  { token: "__POLISH__", file: "polish.js" },
+  { token: "__POLISH__",     file: "polish.js"     },
+  { token: "__INTRO__",      file: "intro.js"      },
+  { token: "__REVEALFX__",   file: "reveal-fx.js"  },
+  { token: "__LIGHTSTORY__", file: "lightstory.js" },
+  { token: "__AUDIO__",      file: "audio.js"      },
 ];
 for(const mod of NEW_MODULES){
   mod.uuid = crypto.randomUUID();
@@ -137,6 +141,61 @@ const NEW_CSS = `
   18%{ opacity:1; } 82%{ opacity:1; }
   100%{ transform:translateX(120%); opacity:0; } }
 @media (prefers-reduced-motion:reduce){ .frame.plan::after{ animation:none !important; opacity:0 !important; } }
+
+/* ---------- cinematic intro ("the open") ---------- */
+#kx-intro{ position:fixed; inset:0; z-index:9000; display:grid; place-items:center; overflow:hidden;
+  background:var(--page); animation:kxIntroFailsafe .6s linear 2.8s forwards; }
+#kx-intro::before{ content:""; position:absolute; inset:0; mix-blend-mode:screen; opacity:0;
+  background:radial-gradient(60% 50% at 50% 46%, color-mix(in oklch, var(--gold) 16%, transparent), transparent 70%);
+  animation:kxGlow 2.4s var(--ease) forwards; }
+.kx-intro-inner{ position:relative; text-align:center; padding:0 24px; }
+.kx-intro-eyebrow{ font-family:var(--mono); font-size:11px; letter-spacing:.32em; text-transform:uppercase;
+  color:var(--label); opacity:0; transform:translateY(8px); animation:kxRise .9s var(--ease) .2s forwards; }
+.kx-intro-word{ font-family:var(--serif); font-weight:600; color:var(--ink); font-size:clamp(34px,7vw,84px);
+  line-height:1; margin-top:14px; letter-spacing:.05em; opacity:0; transform:translateY(14px); filter:blur(7px);
+  animation:kxWord 1.3s var(--ease) .35s forwards; }
+.kx-intro-word em{ font-style:italic; color:var(--gold); }
+.kx-intro-rule{ height:1px; width:0; margin:22px auto 0; background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  animation:kxRule 1.1s var(--ease) .7s forwards; }
+#kx-intro.kx-intro-leaving{ animation:kxIntroOut .9s var(--ease) forwards; }
+@keyframes kxGlow{ to{ opacity:1; } }
+@keyframes kxRise{ to{ opacity:1; transform:none; } }
+@keyframes kxWord{ to{ opacity:1; transform:none; filter:blur(0); } }
+@keyframes kxRule{ to{ width:min(280px,52vw); } }
+@keyframes kxIntroOut{ to{ opacity:0; transform:scale(1.05); visibility:hidden; } }
+@keyframes kxIntroFailsafe{ to{ opacity:0; visibility:hidden; pointer-events:none; } }
+@media (prefers-reduced-motion:reduce){ #kx-intro{ display:none !important; } }
+
+/* ---------- background light story (drifting shaft · per-section grade · reading spot) ---------- */
+.kx-shaft{ position:fixed; inset:-25%; z-index:0; pointer-events:none; mix-blend-mode:screen; opacity:.5;
+  background:linear-gradient(118deg, transparent 42%, color-mix(in oklch, var(--gold) 13%, transparent) 50%, transparent 58%);
+  animation:kxShaft 54s ease-in-out infinite; will-change:transform; }
+@keyframes kxShaft{ 0%{ transform:translateX(-12%) rotate(0deg); } 50%{ transform:translateX(12%) rotate(2deg); } 100%{ transform:translateX(-12%) rotate(0deg); } }
+.kx-grade{ z-index:2; mix-blend-mode:soft-light; opacity:.08; background-color:rgb(248,246,243);
+  transition:background-color 1.2s var(--ease); }
+.kx-spot{ z-index:2; mix-blend-mode:screen; opacity:.05;
+  background:radial-gradient(58% 44% at 50% 46%, rgba(255,246,228,1), transparent 72%); }
+@media (prefers-reduced-motion:reduce){ .kx-shaft{ animation:none; } }
+
+/* ---------- cinematic reveals (focus-pull headings · aperture photos) ---------- */
+.kx-focus{ letter-spacing:.06em; transition:letter-spacing 1.1s var(--ease); }
+.kx-focus.kx-focus-in{ letter-spacing:var(--tr-display); }
+.kx-aperture{ clip-path:inset(0 38% 0 38%); transition:clip-path 1s var(--ease); }
+.kx-aperture.open{ clip-path:inset(0 0 0 0); }
+.frame.kx-aperture::after{ content:""; position:absolute; top:0; bottom:0; left:50%; width:2px; transform:translateX(-50%);
+  background:linear-gradient(transparent, var(--gold), transparent); opacity:.85; z-index:4; pointer-events:none;
+  mix-blend-mode:screen; transition:opacity .9s var(--ease); }
+.frame.kx-aperture.open::after{ opacity:0; }
+@media (prefers-reduced-motion:reduce){ .kx-focus,.kx-aperture{ transition:none; } .kx-aperture{ clip-path:none; } .frame.kx-aperture::after{ display:none; } }
+
+/* ---------- ambient-sound toggle (mirrors the theme switch) ---------- */
+.snd-switch{ display:flex; padding:3px; border-radius:var(--r); background:var(--chip-bg); border:1px solid var(--glass-line); }
+.snd-switch button{ appearance:none; border:0; cursor:pointer; background:transparent; width:32px; height:28px;
+  border-radius:calc(var(--r) - 4px); display:grid; place-items:center; color:var(--gold-deep); transition:.3s var(--ease); }
+.snd-switch button:hover{ transform:translateY(-1px); }
+.snd-switch button.active{ background:var(--gold); color:#fff; box-shadow:0 3px 10px -2px var(--gold); }
+[data-theme="dark"] .snd-switch button.active{ color:#0a0c11; }
+.snd-switch button svg{ width:17px; height:17px; }
 `;
 template = replaceOnce(template, "\n</style>", NEW_CSS + "</style>", "</style> close");
 
@@ -155,8 +214,28 @@ const NEW_SCRIPTS =
 <script src="5723f42c-f567-4a59-af5c-e62155241a86"></script>
 <script src="19c5fe55-e4de-479c-b288-c9aa02c10a48"></script>
 <script src="${ENGINE3D_UUID}"></script>
-<script src="${tok.__POLISH__}"></script>`;
+<script src="${tok.__POLISH__}"></script>
+<script src="${tok.__INTRO__}"></script>
+<script src="${tok.__REVEALFX__}"></script>
+<script src="${tok.__LIGHTSTORY__}"></script>
+<script src="${tok.__AUDIO__}"></script>`;
 template = replaceOnce(template, OLD_SCRIPTS, NEW_SCRIPTS, "script tags");
+
+// 3e — inject the cinematic overlays into the body markup
+template = replaceOnce(template,
+  '<canvas id="ambient"></canvas>',
+  '<canvas id="ambient"></canvas>\n<div class="kx-shaft" aria-hidden="true"></div>',
+  "ambient canvas (shaft inject)");
+template = replaceOnce(template,
+  '<div class="cine cine-grain" aria-hidden="true"></div>',
+  '<div class="cine cine-grain" aria-hidden="true"></div>\n' +
+  '<div class="cine kx-grade" aria-hidden="true"></div>\n' +
+  '<div class="cine kx-spot" aria-hidden="true"></div>\n' +
+  '<div id="kx-intro" aria-hidden="true"><div class="kx-intro-inner">' +
+  '<div class="kx-intro-eyebrow">Эксклюзивное предложение</div>' +
+  '<div class="kx-intro-word">Кутузовский <em>XII</em></div>' +
+  '<div class="kx-intro-rule"></div></div></div>',
+  "cine overlays (grade/spot/intro inject)");
 
 /* ---------- 4. reassemble the bundle ---------- */
 // The template/manifest live inside <script type="__bundler/*"> blocks, so any

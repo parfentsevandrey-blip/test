@@ -11,15 +11,20 @@ particle backdrop, reveal/hover/depth engines and theme/accent switches).
 
 ## Currently shipped
 
-Just **one** WebGL context now (the ambient field) plus a tiny no-deps module.
+**One** WebGL context (the ambient field) + small dependency-free modules.
 
 | Module | Role |
 |---|---|
-| `engine3d.js` | **Cinematic atmosphere (v3)** — two layers (fine dust + soft out-of-focus *bokeh*), per-mote warm/cool colour grading, organic curl-noise drift, a slow **automatic "breathing" camera** (the scene moves on its own), only a *whisper* of pointer parallax (no mote-attraction), scroll-flow + converge-at-contact. Pauses off-screen; DPR-capped. Replaces `engine3d.orig.js`. |
-| `polish.js` | Dependency-free. Triggers the floor-plan **CSS** light-table sweep on reveal (hover re-plays via CSS). |
+| `engine3d.js` | **Cinematic atmosphere (v3)** — two layers (fine dust + soft out-of-focus *bokeh*), per-mote warm/cool colour grading, organic curl-noise drift, a slow **automatic "breathing" camera**, only a *whisper* of pointer parallax. Pauses off-screen; DPR-capped. Replaces `engine3d.orig.js`. |
+| `intro.js` | **"The open"** — one-time cinematic title card (wordmark focus-pulls in over the dust, holds, dissolves to the page). Overlay lives in the markup and is opaque, with a CSS no-JS dismiss failsafe; any scroll/key/pointer skips it. |
+| `reveal-fx.js` | **Cinematic reveals** — section titles *focus-pull* (letter-spacing settle) and framed photos open from a centre *aperture* (clip-path) with a gold light seam. Layered on the existing reveal engine without fighting it (only touches letter-spacing + clip-path); failsafe opens everything after load. |
+| `lightstory.js` | **Colour story** — a full-scene soft-light grade eases toward a per-section mood as you scroll (warm→cool→…). Automatic; updates only while converging. |
+| `audio.js` | **Generative ambient sound (opt-in)** — header toggle builds a synthesized warm pad + room tone on first click (WebAudio, zero payload); breathes, swells with scroll, re-tints with theme. Off by default, remembered. |
+| `polish.js` | Triggers the floor-plan **CSS** light-table sweep on reveal (hover re-plays via CSS). |
 
-The floor-plan gold sweep and the richer filmic vignette are **pure CSS** (added
-by the build), so no extra renderer is needed.
+Pure-CSS pieces added by the build: the floor-plan sweep, the richer filmic
+vignette, the **drifting light shaft** (`.kx-shaft`), the per-section **grade**
+(`.kx-grade`) + **reading spot** (`.kx-spot`). All honour `reduced-motion`.
 
 ## Calmer by request
 
