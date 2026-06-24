@@ -1,12 +1,17 @@
 """
 Опциональный ИИ-анализ новостей (движок аналитики).
 
-Поддерживает двух провайдеров; выбор автоматический (или через
-BAROMETER_LLM_PROVIDER = gemini | anthropic):
+Поддерживает несколько провайдеров; выбор автоматический по наличию ключа
+(или принудительно через BAROMETER_LLM_PROVIDER):
 
-  * Gemini   — бесплатный тариф Google, ключ GEMINI_API_KEY (или GOOGLE_API_KEY).
-               Модель BAROMETER_GEMINI_MODEL (по умолчанию gemini-2.5-flash).
-  * Claude   — ключ ANTHROPIC_API_KEY, модель BAROMETER_LLM_MODEL.
+  * OpenRouter — OPENROUTER_API_KEY (бесплатные модели :free).
+  * Groq       — GROQ_API_KEY (бесплатно, быстро).
+  * Mistral    — MISTRAL_API_KEY (бесплатный тариф).
+  * Gemini     — GEMINI_API_KEY / GOOGLE_API_KEY (в РФ обычно недоступен).
+  * Claude     — ANTHROPIC_API_KEY (платный).
+
+Приоритет при автовыборе: OpenRouter → Groq → Mistral → Gemini → Claude.
+Модели настраиваются через BAROMETER_<PROVIDER>_MODEL.
 
 На вход — самые релевантные свежие новости; на выход — JSON-оценка
 вероятности мобилизации (0–100), обоснование и ожидаемое окно. Итог
@@ -28,6 +33,17 @@ import config
 
 CLAUDE_MODEL = os.environ.get("BAROMETER_LLM_MODEL", "claude-sonnet-4-6")
 GEMINI_MODEL = os.environ.get("BAROMETER_GEMINI_MODEL", "gemini-2.5-flash")
+
+# OpenAI-совместимые бесплатные провайдеры (один формат запроса).
+_OPENAI_PROVIDERS = {
+    "openrouter": {"env": "OPENROUTER_API_KEY", "base": "https://openrouter.ai/api/v1",
+                   "model": os.environ.get("BAROMETER_OPENROUTER_MODEL", "meta-llama/llama-3.3-70b-instruct:free")},
+    "groq": {"env": "GROQ_API_KEY", "base": "https://api.groq.com/openai/v1",
+             "model": os.environ.get("BAROMETER_GROQ_MODEL", "llama-3.3-70b-versatile")},
+    "mistral": {"env": "MISTRAL_API_KEY", "base": "https://api.mistral.ai/v1",
+                "model": os.environ.get("BAROMETER_MISTRAL_MODEL", "mistral-small-latest")},
+}
+_PROVIDER_ORDER = ["openrouter", "groq", "mistral", "gemini", "anthropic"]
 
 _PROMPT = """Ты — аналитик OSINT. На основе подборки заголовков и фрагментов новостей
 из независимых российских СМИ, Telegram и западных военных аналитиков оцени
@@ -51,18 +67,23 @@ def _gemini_key() -> str:
     return (os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or "").strip()
 
 
+def _available() -> set[str]:
+    av = {name for name, cfg in _OPENAI_PROVIDERS.items() if os.environ.get(cfg["env"])}
+    if _gemini_key():
+        av.add("gemini")
+    if os.environ.get("ANTHROPIC_API_KEY"):
+        av.add("anthropic")
+    return av
+
+
 def provider() -> str | None:
     forced = os.environ.get("BAROMETER_LLM_PROVIDER", "").strip().lower()
-    has_gem = bool(_gemini_key())
-    has_claude = bool(os.environ.get("ANTHROPIC_API_KEY"))
-    if forced == "gemini":
-        return "gemini" if has_gem else None
-    if forced == "anthropic":
-        return "anthropic" if has_claude else None
-    if has_gem:
-        return "gemini"
-    if has_claude:
-        return "anthropic"
+    av = _available()
+    if forced:
+        return forced if forced in av else None
+    for name in _PROVIDER_ORDER:
+        if name in av:
+            return name
     return None
 
 
@@ -73,11 +94,43 @@ def is_enabled() -> bool:
 def analyze(items: list[dict], max_items: int = 40) -> dict | None:
     """Единая точка входа: диспетчеризует к выбранному провайдеру."""
     p = provider()
+    if p in _OPENAI_PROVIDERS:
+        return _analyze_openai(p, items, max_items)
     if p == "gemini":
         return analyze_with_gemini(items, max_items)
     if p == "anthropic":
         return analyze_with_claude(items, max_items)
     return None
+
+
+def _analyze_openai(name: str, items: list[dict], max_items: int = 40) -> dict | None:
+    cfg = _OPENAI_PROVIDERS[name]
+    key = os.environ.get(cfg["env"])
+    if not key:
+        return None
+    picked = _pick(items, max_items)
+    if not picked:
+        return None
+    body = {"model": cfg["model"], "temperature": 0.2,
+            "messages": [{"role": "user", "content": _PROMPT + _lines(picked)}]}
+    try:
+        r = requests.post(cfg["base"] + "/chat/completions", json=body, timeout=30,
+                          headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"})
+        r.raise_for_status()
+        text = r.json()["choices"][0]["message"]["content"]
+        if isinstance(text, list):
+            text = "".join(p.get("text", "") for p in text if isinstance(p, dict))
+        d = _extract_json(text)
+        if not d:
+            return None
+        return {
+            "score": max(0, min(100, int(round(float(d.get("score", 0)))))),
+            "expected_window": str(d.get("expected_window", ""))[:120],
+            "rationale": str(d.get("rationale", ""))[:600],
+            "model": cfg["model"],
+        }
+    except Exception:
+        return None
 
 
 def _pick(items: list[dict], max_items: int) -> list[dict]:

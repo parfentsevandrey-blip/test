@@ -239,45 +239,73 @@ async function proxiedText(url) {
   throw new Error("all proxies failed for " + url);
 }
 
-/* ------------------- ИИ-аналитика: Gemini Flash (бесплатно) ------------- */
-const GEMINI_MODEL = "gemini-2.5-flash";
-const GEM_PROMPT =
+/* ------------------- ИИ-аналитика: бесплатные провайдеры ---------------- */
+// Все, кроме Gemini, — OpenAI-совместимые (один и тот же формат запроса).
+// CORS у всех разрешён, поэтому работают прямо из браузера.
+const AI_PROVIDERS = {
+  openrouter: { label: "OpenRouter (бесплатные модели)", base: "https://openrouter.ai/api/v1", model: "meta-llama/llama-3.3-70b-instruct:free", signup: "https://openrouter.ai/keys", kind: "openai", hint: "ключ sk-or-…" },
+  groq:       { label: "Groq (быстро, бесплатно)",       base: "https://api.groq.com/openai/v1", model: "llama-3.3-70b-versatile", signup: "https://console.groq.com/keys", kind: "openai", hint: "ключ gsk_…" },
+  mistral:    { label: "Mistral (бесплатно)",            base: "https://api.mistral.ai/v1", model: "mistral-small-latest", signup: "https://console.mistral.ai/api-keys", kind: "openai", hint: "ключ Mistral" },
+  gemini:     { label: "Google Gemini",                  base: "", model: "gemini-2.5-flash", signup: "https://aistudio.google.com/apikey", kind: "gemini", hint: "ключ AIza…" },
+};
+const DEFAULT_PROVIDER = "openrouter";
+const AI_PROMPT =
   "Ты — аналитик OSINT. По подборке заголовков новостей из независимых российских СМИ, " +
   "Telegram и западных военных аналитиков оцени вероятность объявления НОВОЙ волны " +
   "мобилизации в России в ближайшие месяцы.\n" +
-  "Верни СТРОГО JSON: {\"score\": <целое 0-100, 0 — мобилизации не будет, 100 — объявлена/идёт>, " +
+  "Верни СТРОГО JSON и больше ничего: {\"score\": <целое 0-100, 0 — мобилизации не будет, 100 — объявлена/идёт>, " +
   "\"expected_window\": \"<срок, напр. '1–3 месяца' или 'не просматривается'>\", " +
   "\"rationale\": \"<2-3 предложения по-русски: ключевые сигналы за и против>\"}.\n\nНовости:\n";
 
-function gemKey() { return (lsGet("baro_gemini_key", "") || "").trim(); }
-function gemOn() { return !!gemKey() && lsGet("baro_gemini_on", true); }
+function aiProvider() { return lsGet("baro_ai_provider", DEFAULT_PROVIDER); }
+function aiKey() { return (lsGet("baro_ai_key", "") || "").trim(); }
+function aiModel() { const p = AI_PROVIDERS[aiProvider()] || {}; return (lsGet("baro_ai_model", "") || "").trim() || p.model; }
+function aiOn() { return !!aiKey() && lsGet("baro_ai_on", true); }
 
-async function geminiAnalyze(items) {
-  const key = gemKey();
-  if (!key) return null;
-  const picked = items.filter((i) => i.relevant).slice(0, 40);
-  if (!picked.length) return null;
-  const lines = picked.map((it) => `- [${(it.published || "").slice(0, 10)}] (${it.source_name}) ${it.title}`).join("\n");
-  const body = {
-    contents: [{ parts: [{ text: GEM_PROMPT + lines }] }],
-    generationConfig: { temperature: 0.2, maxOutputTokens: 700, responseMimeType: "application/json" },
-  };
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(key)}`;
-  const data = await withTimeout(async (signal) => {
-    const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal });
-    if (!res.ok) { const t = await res.text().catch(() => ""); throw new Error("HTTP " + res.status + " " + t.slice(0, 140)); }
-    return res.json();
-  }, 30000);
-  const text = (((data.candidates || [])[0] || {}).content || {}).parts ? data.candidates[0].content.parts.map((p) => p.text || "").join("") : "";
-  let obj = null;
-  try { obj = JSON.parse(text); } catch (e) { const m = /\{[\s\S]*\}/.exec(text); if (m) try { obj = JSON.parse(m[0]); } catch (e2) {} }
-  if (!obj || typeof obj.score === "undefined") return null;
+function _aiLines(items) { return items.map((it) => `- [${(it.published || "").slice(0, 10)}] (${it.source_name}) ${it.title}`).join("\n"); }
+function _parseScore(text) {
+  let o = null;
+  try { o = JSON.parse(text); } catch (e) { const m = /\{[\s\S]*\}/.exec(text || ""); if (m) try { o = JSON.parse(m[0]); } catch (e2) {} }
+  if (!o || typeof o.score === "undefined") return null;
   return {
-    score: Math.max(0, Math.min(100, Math.round(+obj.score))),
-    expected_window: String(obj.expected_window || "").slice(0, 120),
-    rationale: String(obj.rationale || "").slice(0, 600),
-    model: GEMINI_MODEL, at: nowStr(),
+    score: Math.max(0, Math.min(100, Math.round(+o.score))),
+    expected_window: String(o.expected_window || "").slice(0, 120),
+    rationale: String(o.rationale || "").slice(0, 600),
   };
+}
+
+async function aiAnalyze(items) {
+  const key = aiKey(); if (!key) return null;
+  const pcfg = AI_PROVIDERS[aiProvider()]; if (!pcfg) return null;
+  const picked = items.filter((i) => i.relevant).slice(0, 40); if (!picked.length) return null;
+  const prompt = AI_PROMPT + _aiLines(picked);
+  const model = aiModel();
+  const res = pcfg.kind === "gemini" ? await _geminiCall(key, model, prompt) : await _openaiCall(pcfg.base, key, model, prompt);
+  return res ? { ...res, model, provider: aiProvider(), at: nowStr() } : null;
+}
+
+async function _openaiCall(base, key, model, prompt) {
+  const body = { model, messages: [{ role: "user", content: prompt }], temperature: 0.2 };
+  const data = await withTimeout(async (signal) => {
+    const r = await fetch(base + "/chat/completions", { method: "POST", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + key }, body: JSON.stringify(body), signal });
+    if (!r.ok) { const t = await r.text().catch(() => ""); throw new Error("HTTP " + r.status + " " + t.slice(0, 160)); }
+    return r.json();
+  }, 30000);
+  let text = ((((data.choices || [])[0] || {}).message) || {}).content || "";
+  if (Array.isArray(text)) text = text.map((p) => (p && p.text) || "").join("");
+  return _parseScore(text);
+}
+
+async function _geminiCall(key, model, prompt) {
+  const body = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.2, maxOutputTokens: 700, responseMimeType: "application/json" } };
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
+  const data = await withTimeout(async (signal) => {
+    const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal });
+    if (!r.ok) { const t = await r.text().catch(() => ""); throw new Error("HTTP " + r.status + " " + t.slice(0, 160)); }
+    return r.json();
+  }, 30000);
+  const parts = (((data.candidates || [])[0] || {}).content || {}).parts || [];
+  return _parseScore(parts.map((p) => p.text || "").join(""));
 }
 
 /* ------------------------- парсинг лент --------------------------------- */
@@ -473,7 +501,7 @@ function render(reading, items, sources, history, note) {
   $("kv-rule").textContent = reading.barometer.toFixed(0);
   $("kv-llm").textContent = (reading.llm_barometer == null) ? "—" : reading.llm_barometer.toFixed(0);
   const llm = reading.llm;
-  $("llm-rationale").textContent = (llm && llm.rationale) ? "Gemini: " + llm.rationale : "";
+  $("llm-rationale").textContent = (llm && llm.rationale) ? "ИИ: " + llm.rationale : "";
   renderStreams(reading.streams || [], sources || []);
   renderCategories(reading.components.categories || []);
   const ds = reading.components.deepstate || {};
@@ -485,7 +513,7 @@ function render(reading, items, sources, history, note) {
   renderDrivers(reading.drivers || []);
   renderFeed(buildFeed(items || []));
   $("chip-updated").innerHTML = `Обновлено: <b>${relTime(reading.taken_at)}</b>${note ? " · " + note : ""}`;
-  updateGemChip();
+  updateAiChip();
   $("srclist").innerHTML = (sources || []).map((s) => `<span class="s"><span class="dot ${s.mode}"></span>${esc(s.name)} · ${s.items_count}</span>`).join("");
   $("skeleton").classList.add("hidden"); $("app").classList.remove("hidden");
 }
@@ -531,9 +559,9 @@ async function refresh(initial) {
   })();
   await Promise.allSettled([dsP, newsP]);
   reRender();
-  // 3) ИИ-аналитика Gemini (если включена) — поверх свежих новостей
-  if (gemOn()) {
-    try { const res = await geminiAnalyze(currentItems()); if (res) { LLM = res; lsSet("baro_llm", LLM); } } catch (e) {}
+  // 3) ИИ-аналитика (если включена) — поверх свежих новостей
+  if (aiOn()) {
+    try { const res = await aiAnalyze(currentItems()); if (res) { LLM = res; lsSet("baro_llm", LLM); } } catch (e) {}
     reRender();
   }
   if (btn) { btn.classList.remove("loading"); btn.disabled = false; btn.querySelector(".lbl").textContent = "Обновить"; }
@@ -541,37 +569,56 @@ async function refresh(initial) {
 function liveNote(statuses) { const ok = statuses.filter((s) => s.mode === "live").length; return `источников онлайн: ${ok}/${statuses.length}`; }
 function currentItems() { const cached = lsGet(LS.items, []); return mergeItems(cached, SEED); }
 
-function updateGemChip() {
-  const c = $("chip-gem"); if (!c) return;
-  const on = gemOn();
+function updateAiChip() {
+  const c = $("chip-ai"); if (!c) return;
+  const on = aiOn();
   c.classList.toggle("on", on);
-  c.innerHTML = `<span class="dot"></span>Gemini: <b>${on ? "вкл" : "выкл"}</b>`;
+  c.innerHTML = `<span class="dot"></span>ИИ: <b>${on ? "вкл" : "выкл"}</b>`;
 }
 
 function setupSettings() {
   const modal = $("settings"); if (!modal) return;
-  const open = () => { $("gem-key").value = gemKey(); $("gem-on").checked = lsGet("baro_gemini_on", true); $("gem-status").textContent = ""; modal.classList.remove("hidden"); };
+  const sel = $("ai-provider");
+  // наполняем список провайдеров
+  if (sel && !sel.options.length) {
+    for (const k in AI_PROVIDERS) { const o = document.createElement("option"); o.value = k; o.textContent = AI_PROVIDERS[k].label; sel.appendChild(o); }
+  }
+  const fill = () => {
+    const p = aiProvider(); const pc = AI_PROVIDERS[p] || {};
+    if (sel) sel.value = p;
+    $("ai-key").value = aiKey();
+    $("ai-key").placeholder = "API-ключ — " + (pc.hint || "");
+    $("ai-model").value = (lsGet("baro_ai_model", "") || "");
+    $("ai-model").placeholder = "модель (по умолчанию " + (pc.model || "") + ")";
+    $("ai-on").checked = lsGet("baro_ai_on", true);
+    if ($("ai-signup")) $("ai-signup").href = pc.signup || "#";
+    $("ai-status").textContent = "";
+  };
+  const open = () => { fill(); modal.classList.remove("hidden"); };
   const close = () => modal.classList.add("hidden");
   const recompute = () => computeAndRender(currentItems(), CURRENT.sources && CURRENT.sources.length ? CURRENT.sources : null);
   if ($("settings-btn")) $("settings-btn").addEventListener("click", open);
-  if ($("gem-cancel")) $("gem-cancel").addEventListener("click", close);
+  if ($("ai-cancel")) $("ai-cancel").addEventListener("click", close);
   modal.addEventListener("click", (e) => { if (e.target === modal) close(); });
-  if ($("gem-save")) $("gem-save").addEventListener("click", async () => {
-    const k = $("gem-key").value.trim();
-    lsSet("baro_gemini_key", k); lsSet("baro_gemini_on", $("gem-on").checked);
-    updateGemChip();
-    if (k && $("gem-on").checked) {
-      $("gem-status").textContent = "Проверяю ключ…";
+  if (sel) sel.addEventListener("change", () => { lsSet("baro_ai_provider", sel.value); lsSet("baro_ai_model", ""); fill(); });
+  if ($("ai-save")) $("ai-save").addEventListener("click", async () => {
+    lsSet("baro_ai_provider", sel ? sel.value : aiProvider());
+    lsSet("baro_ai_key", $("ai-key").value.trim());
+    lsSet("baro_ai_model", $("ai-model").value.trim());
+    lsSet("baro_ai_on", $("ai-on").checked);
+    updateAiChip();
+    if (aiKey() && aiOn()) {
+      $("ai-status").textContent = "Проверяю ключ…";
       try {
-        const r = await geminiAnalyze(currentItems());
-        if (r) { LLM = r; lsSet("baro_llm", LLM); recompute(); $("gem-status").textContent = `✓ Готово: оценка ИИ ${r.score}/100`; }
-        else { $("gem-status").textContent = "Не удалось получить ответ — проверьте ключ."; }
-      } catch (e) { $("gem-status").textContent = "Ошибка: " + String(e.message || e).slice(0, 150); }
+        const r = await aiAnalyze(currentItems());
+        if (r) { LLM = r; lsSet("baro_llm", LLM); recompute(); $("ai-status").textContent = `✓ Готово: оценка ИИ ${r.score}/100`; }
+        else { $("ai-status").textContent = "Не удалось получить ответ — проверьте ключ/модель."; }
+      } catch (e) { $("ai-status").textContent = "Ошибка: " + String(e.message || e).slice(0, 160); }
     } else {
       LLM = null; lsSet("baro_llm", null); recompute(); close();
     }
   });
-  updateGemChip();
+  updateAiChip();
 }
 
 function boot() {

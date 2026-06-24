@@ -215,8 +215,10 @@ a:hover { text-decoration: underline; }
 .modal-box { background: linear-gradient(180deg, var(--panel-2), var(--panel)); border: 1px solid var(--line); border-radius: 16px; padding: 22px 24px; max-width: 460px; width: 100%; box-shadow: 0 24px 60px rgba(0,0,0,.5); }
 .modal-box h3 { margin: 0 0 8px; font-size: 17px; font-weight: 700; }
 .mhint { color: var(--muted); font-size: 12.5px; line-height: 1.5; margin: 0 0 14px; }
-.modal-box input[type=password] { width: 100%; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 11px 13px; color: var(--text); font-family: var(--mono); font-size: 13px; }
-.modal-box input[type=password]:focus { outline: none; border-color: var(--accent); }
+.mlabel { display: block; font-size: 11px; color: var(--muted-2); text-transform: uppercase; letter-spacing: .5px; margin: 12px 0 5px; }
+.modal-box input[type=password], .modal-box input[type=text], .modal-box select { width: 100%; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 11px 13px; color: var(--text); font-family: var(--mono); font-size: 13px; }
+.modal-box select { font-family: var(--sans); cursor: pointer; }
+.modal-box input:focus, .modal-box select:focus { outline: none; border-color: var(--accent); }
 .mrow { display: flex; align-items: flex-start; gap: 9px; color: var(--muted); font-size: 13px; margin: 13px 0; line-height: 1.4; cursor: pointer; }
 .mrow input { margin-top: 2px; flex: none; }
 .mstatus { font-size: 12.5px; color: var(--muted); min-height: 18px; margin-bottom: 12px; }

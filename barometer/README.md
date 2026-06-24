@@ -62,27 +62,36 @@ python3 app.py
 Откройте **http://127.0.0.1:5000**. При первом запуске идёт сбор источников
 (до минуты), дальше данные обновляются фоном раз в час и по кнопке «Обновить».
 
-### Движок ИИ-аналитики (бесплатно, Gemini Flash)
+### Движок ИИ-аналитики (бесплатно)
 
 Можно подключить **бесплатный** ИИ-анализ: LLM оценивает вероятность мобилизации
 (0–100) и даёт обоснование, которое подмешивается к правиловому барометру
 (65% правила + 35% ИИ). Оба числа показываются отдельно для прозрачности.
 
-- **В браузерной версии (`barometer.html`)** — нажмите **«⚙ ИИ»**, вставьте
-  бесплатный ключ Gemini ([aistudio.google.com/apikey](https://aistudio.google.com/apikey)).
-  Ключ хранится только в вашем браузере и шлётся напрямую в Google.
-- **В серверной версии** — задайте `GEMINI_API_KEY` (см. таблицу ниже).
+Поддерживается несколько бесплатных провайдеров (все работают прямо из браузера):
+
+| Провайдер | Бесплатный ключ | Заметки |
+|---|---|---|
+| **OpenRouter** | [openrouter.ai/keys](https://openrouter.ai/keys) | модели `:free`, один ключ ко многим моделям — **рекомендуется** |
+| **Groq** | [console.groq.com/keys](https://console.groq.com/keys) | очень быстро, Llama 3.3 70B |
+| **Mistral** | [console.mistral.ai/api-keys](https://console.mistral.ai/api-keys) | бесплатный тариф |
+| **Gemini** | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) | в РФ обычно недоступен |
+
+- **В браузерной версии (`barometer.html`)** — нажмите **«⚙ ИИ»**, выберите
+  провайдера и вставьте ключ. Ключ хранится только в вашем браузере (localStorage)
+  и шлётся напрямую провайдеру.
+- **В серверной версии** — задайте соответствующую переменную окружения (ниже).
 
 ### Опциональные переменные окружения (серверная версия)
 
 | Переменная | Назначение |
 |---|---|
-| `GEMINI_API_KEY` | Включает **бесплатный анализ Gemini**. Модель — `BAROMETER_GEMINI_MODEL` (по умолчанию `gemini-2.5-flash`). |
-| `ANTHROPIC_API_KEY` | Альтернатива — анализ Claude (платный). Модель — `BAROMETER_LLM_MODEL`. |
-| `BAROMETER_LLM_PROVIDER` | Принудительно `gemini` или `anthropic` (по умолчанию — авто: Gemini, если есть его ключ). |
-| `X_BEARER_TOKEN` | Включает **реальную** выгрузку из X/Twitter API v2 (иначе `data/samples/twitter.json`). |
-| `BAROMETER_REFRESH_MINUTES` | Период автообновления (по умолчанию 60). |
-| `BAROMETER_WINDOW_DAYS` | Окно учёта новостей (по умолчанию 10). |
+| `OPENROUTER_API_KEY` / `GROQ_API_KEY` / `MISTRAL_API_KEY` | Бесплатный ИИ-анализ. Модель — `BAROMETER_OPENROUTER_MODEL` / `BAROMETER_GROQ_MODEL` / `BAROMETER_MISTRAL_MODEL`. |
+| `GEMINI_API_KEY` | Анализ Gemini (модель `BAROMETER_GEMINI_MODEL`). |
+| `ANTHROPIC_API_KEY` | Анализ Claude, платный (модель `BAROMETER_LLM_MODEL`). |
+| `BAROMETER_LLM_PROVIDER` | Принудительно `openrouter`/`groq`/`mistral`/`gemini`/`anthropic` (по умолчанию — авто по наличию ключа). |
+| `X_BEARER_TOKEN` | Реальная выгрузка из X/Twitter API v2 (иначе `data/samples/twitter.json`). |
+| `BAROMETER_REFRESH_MINUTES` / `BAROMETER_WINDOW_DAYS` | Период автообновления (60) и окно новостей (10). |
 
 ## Архитектура
 
