@@ -545,12 +545,22 @@ function applyReading(reading, sources, history, note) {
 function render(reading, items, sources, history, note) {
   applyReading(reading, sources, history, note);
   renderFeed(buildFeed(items || []));
+  renderContext([]);  // контекст приходит только из серверного data.json
 }
 
 // Серверный рендер: готовый state.json из data.json (надёжный канал, без прокси).
 function renderServerState(state) {
   applyReading(state.reading, state.sources || [], state.history || [], "данные сервера");
   renderFeed(state.feed || []);
+  renderContext(state.context || []);
+}
+
+function renderContext(refs) {
+  const card = $("context-card"); if (!card) return;
+  if (!refs || !refs.length) { card.classList.add("hidden"); return; }
+  card.classList.remove("hidden");
+  $("context").innerHTML = refs.map((r) =>
+    `<a class="ref" href="${esc(r.url)}" target="_blank" rel="noopener">📖 ${esc(r.title)}</a>`).join("");
 }
 
 /* ---------------------------- управление -------------------------------- */

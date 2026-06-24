@@ -200,6 +200,15 @@ a:hover { text-decoration: underline; }
 .tag.neg { background: rgba(47,208,138,.14); color: var(--neg); border:1px solid rgba(47,208,138,.32);}
 .streamtag { font-size:10px; text-transform:uppercase; letter-spacing:.5px; padding:2px 7px; border-radius:6px; background: var(--panel-3); color: var(--muted);}
 
+/* --------------------------- контекст (PixelRAG) ------------------------ */
+.refs { display: flex; flex-wrap: wrap; gap: 10px; }
+.ref {
+  font-size: 13px; color: var(--text); text-decoration: none;
+  background: var(--panel-2); border: 1px solid var(--line);
+  border-radius: 999px; padding: 8px 14px; transition: border-color .15s, background .15s;
+}
+.ref:hover { border-color: var(--accent); background: var(--panel-3); text-decoration: none; }
+
 /* ----------------------------- footer ----------------------------------- */
 .foot { margin-top: 24px; color: var(--muted-2); font-size: 12.5px; }
 .foot .disc {

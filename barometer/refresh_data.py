@@ -23,7 +23,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 import config  # noqa: E402
-from core import analyze, llm, scoring, sources  # noqa: E402
+from core import analyze, llm, pixelrag, scoring, sources  # noqa: E402
 
 DATA_PATH = os.path.join(HERE, "web", "data.json")
 
@@ -65,6 +65,11 @@ def main() -> None:
 
     new_hist = (prev_hist + [{"t": reading["taken_at"], "v": reading["final_barometer"]}])[-500:]
 
+    # Контекст-справка через hosted API PixelRAG (visual RAG по Wikipedia, без GPU).
+    top_terms = " ".join(d.get("term", "") for d in reading.get("drivers", [])[:4])
+    context = pixelrag.fetch_context(
+        "Russian mobilization conscription war Ukraine partial mobilization " + top_terms)
+
     feed = []
     for it in sorted(window_items, key=lambda x: x.get("published", ""), reverse=True)[:60]:
         seen, terms = set(), []
@@ -86,6 +91,7 @@ def main() -> None:
                      "items_count": s.get("items_count", 0)} for s in statuses],
         "history": new_hist,
         "feed": feed,
+        "context": context,
         "config": {"window_days": config.WINDOW_DAYS, "llm_provider": llm.provider()},
     }
 
