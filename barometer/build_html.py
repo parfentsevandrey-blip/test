@@ -59,6 +59,7 @@ def _config_blob() -> dict:
         "telegramChannels": config.TELEGRAM_CHANNELS,
         "deepstateUrl": config.DEEPSTATE_LAST_URL,
         "streamLabels": scoring.STREAM_LABELS,
+        "dataUrl": config.DATA_URL,
     }
 
 

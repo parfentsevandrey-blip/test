@@ -83,6 +83,12 @@ X_ACCOUNTS = [  # ведущие военные аналитики / OSINT (дл
 # --------------------------------------------------------------------------- #
 #  Источник: DeepState (карта фронта)                                         #
 # --------------------------------------------------------------------------- #
+# Куда фронтенд ходит за готовым state.json (его обновляет GitHub Action,
+# на raw.githubusercontent есть CORS — поэтому это надёжный канал без прокси).
+GITHUB_REPO = os.environ.get("BAROMETER_GH_REPO", "parfentsevandrey-blip/test")
+GITHUB_BRANCH = os.environ.get("BAROMETER_GH_BRANCH", "claude/zealous-tesla-rtntpc")
+DATA_URL = f"https://raw.githubusercontent.com/{GITHUB_REPO}/{GITHUB_BRANCH}/barometer/web/data.json"
+
 DEEPSTATE_LAST_URL = "https://deepstatemap.live/api/history/last"
 # Масштаб для нормировки суточного изменения площади (км²/день).
 DEEPSTATE_SCALE_KM2 = 120.0

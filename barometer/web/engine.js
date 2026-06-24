@@ -511,7 +511,7 @@ function buildFeed(items) {
   });
 }
 
-function render(reading, items, sources, history, note) {
+function applyReading(reading, sources, history, note) {
   renderGauge(reading.final_barometer);
   const z = zoneFor(reading.final_barometer);
   $("gzone").textContent = z.label; $("gzone").style.color = z.hex;
@@ -535,11 +535,22 @@ function render(reading, items, sources, history, note) {
   $("ds-trend").textContent = ds.trend || "";
   renderHistory(history || []);
   renderDrivers(reading.drivers || []);
-  renderFeed(buildFeed(items || []));
   $("chip-updated").innerHTML = `Обновлено: <b>${relTime(reading.taken_at)}</b>${note ? " · " + note : ""}`;
   updateAiChip();
   $("srclist").innerHTML = (sources || []).map((s) => `<span class="s"><span class="dot ${s.mode}"></span>${esc(s.name)} · ${s.items_count}</span>`).join("");
   $("skeleton").classList.add("hidden"); $("app").classList.remove("hidden");
+}
+
+// Клиентский рендер (seed/прокси): строим ленту из items.
+function render(reading, items, sources, history, note) {
+  applyReading(reading, sources, history, note);
+  renderFeed(buildFeed(items || []));
+}
+
+// Серверный рендер: готовый state.json из data.json (надёжный канал, без прокси).
+function renderServerState(state) {
+  applyReading(state.reading, state.sources || [], state.history || [], "данные сервера");
+  renderFeed(state.feed || []);
 }
 
 /* ---------------------------- управление -------------------------------- */
@@ -651,14 +662,33 @@ function setupSettings() {
   updateAiChip();
 }
 
+// Надёжный канал: готовый data.json с raw.githubusercontent (там CORS).
+async function tryLoadServer() {
+  const url = CONFIG.dataUrl; if (!url) return null;
+  const bust = url + (url.includes("?") ? "&" : "?") + "t=" + Date.now();
+  try {
+    const r = await withTimeout((signal) => fetch(bust, { cache: "no-store", signal }), 12000);
+    if (!r.ok) return null;
+    const s = await r.json();
+    return (s && s.reading) ? s : null;
+  } catch (e) { return null; }
+}
+
+let SERVER_MODE = false;
+async function loadLive(initial) {
+  const s = await tryLoadServer();
+  if (s) { SERVER_MODE = true; renderServerState(s); }
+  else { SERVER_MODE = false; await refresh(initial); }  // фолбэк: клиентский сбор через прокси
+}
+
 function boot() {
-  // 1) мгновенно показываем барометр на стартовых+сохранённых данных
-  const items = currentItems();
-  computeAndRender(items, null, "стартовые данные, обновляю…");
-  // 2) настройки ИИ + живые данные в фоне
+  // 1) мгновенно показываем барометр на стартовых данных
+  computeAndRender(currentItems(), null, "загрузка…");
   setupSettings();
-  if ($("refresh")) $("refresh").addEventListener("click", () => refresh(false));
-  refresh(true);
+  // 2) основной источник — серверный data.json, иначе клиентский сбор
+  if ($("refresh")) $("refresh").addEventListener("click", () => loadLive(false));
+  loadLive(true);
+  setInterval(() => loadLive(false), 5 * 60 * 1000);  // тихое обновление
 }
 
 if (typeof document !== "undefined") {
