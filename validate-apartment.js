@@ -44,7 +44,7 @@ for(const uuid of Object.keys(manifest)){
   } else if(e.mime.startsWith("image")) imgCount++;
   else if(e.mime.startsWith("font")) fontCount++;
 }
-ok(jsCount === 10, `JS assets = ${jsCount} (expect 10)`);
+ok(jsCount === 6, `JS assets = ${jsCount} (expect 6)`);
 ok(imgCount === 18, `image assets = ${imgCount} (expect 18)`);
 ok(fontCount === 20, `font assets = ${fontCount} (expect 20)`);
 
@@ -70,24 +70,18 @@ function uuidOfModule(snippet){
 }
 const THREE   = uuidOfModule('THREE.REVISION') || uuidOfModule('Three.js Authors') || "";
 const engine  = uuidOfModule('living atmosphere');
-const postfx  = uuidOfModule('KXPostFX');
 const glshare = uuidOfModule('window.KXGL =');
-const hero    = uuidOfModule('cinematic centrepiece');
-const gallery = uuidOfModule('2.5D photographs');
-const mats    = uuidOfModule('real materials');
 const plan    = uuidOfModule('light-table sweep');
-ok(order.length >= 10, `script tags in template = ${order.length}`);
-ok(THREE && idx(THREE) < idx(postfx), "three.js loads before postfx");
-ok(idx(postfx) < idx(hero), "postfx before hero3d");
-ok(idx(glshare) < idx(gallery) && idx(glshare) < idx(mats) && idx(glshare) < idx(plan), "glshared before gallery/materials/plan");
-ok(idx(engine) >= 0 && idx(engine) > idx(glshare), "engine3d wired after glshared");
-ok(idx(hero) > idx(engine), "hero3d after engine3d");
+ok(order.length === 6, `script tags in template = ${order.length} (expect 6)`);
+ok(THREE && idx(THREE) < idx(glshare), "three.js loads before glshared");
+ok(idx(glshare) >= 0 && idx(engine) > idx(glshare), "engine3d wired after glshared");
+ok(idx(plan) > idx(engine), "plan3d after engine3d");
 
 // 4) template edits applied
 ok(!resolved.includes("canvas.ascii"), "dead ascii css removed");
-ok(resolved.includes(".hero-gl{"), "hero-gl css present");
-ok(resolved.includes(".mat-preview{"), "material-preview css present");
-ok(resolved.includes(".gl-depth"), "gallery overlay css present");
+ok(!resolved.includes(".hero-gl"), "hero-gl css removed (hero reverted)");
+ok(!resolved.includes(".mat-preview"), "material-preview css removed");
+ok(!resolved.includes(".gl-depth"), "gallery overlay css removed");
 ok(resolved.includes(".gl-sweep"), "plan sweep css present");
 ok(resolved.includes("15 — Документация") && !resolved.includes("16 — Документация"), "section renumbered 16→15");
 

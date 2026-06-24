@@ -97,7 +97,8 @@ const ctx = vm.createContext(win);
 // THREE on the window so `window.THREE` and bare `THREE`(via window) resolve
 ctx.THREE = THREE; win.THREE = THREE;
 
-const MODULES = ["postfx.js","glshared.js","engine3d.js","hero3d.js","gallery3d.js","materials3d.js","plan3d.js"];
+// shipped modules only (hero3d/gallery3d/materials3d/postfx reverted per user request)
+const MODULES = ["glshared.js","engine3d.js","plan3d.js"];
 for(const f of MODULES){
   try{
     const code = fs.readFileSync(path.join(SRC, f), "utf8");
@@ -106,7 +107,6 @@ for(const f of MODULES){
   }catch(err){ ok(false, `loaded ${f} → ${err.stack.split("\n").slice(0,3).join(" | ")}`); }
 }
 
-ok(typeof win.KXPostFX === "object" && typeof win.KXPostFX.create === "function", "window.KXPostFX.create exists");
 ok("KXGL" in win, "window.KXGL defined (object or null)");
 
 // drive the animation loops a handful of times (catches loop-body errors)

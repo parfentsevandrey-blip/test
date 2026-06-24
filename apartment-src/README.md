@@ -9,17 +9,29 @@ particle backdrop, reveal/hover/depth engines and theme/accent switches).
 > as a self-unpacking bundle (gzip+base64 assets in `__bundler/*` script tags);
 > these are its decoded + enhanced modules.
 
-## What was added
+## Currently shipped
 
 | Module | Tier | Role |
 |---|---|---|
 | `engine3d.js` | 4 | **Ambient field, upgraded** — curl-noise flow, cursor attraction, scroll-velocity energy, converge-at-contact, IntersectionObserver pause, no runtime `preserveDrawingBuffer`. (Replaces the original `engine3d.orig.js`.) |
-| `postfx.js` | 2 | Self-contained post-processing on r128 core — bloom, radial god-rays, ACES-style grade, split-tone, vignette, film grain, chromatic aberration. No addon files (nothing to version-match). |
-| `hero3d.js` | 1 | The hero becomes a live WebGL plate: 2.5D depth parallax of the façade, slow dolly, **coalesce/develop-in intro**, sun + god-rays, graded through `postfx`. Falls back to the photo on any failure. |
-| `glshared.js` | — | **One** shared renderer + procedural PMREM environment for every on-demand widget below, so the page never nears the WebGL-context limit. |
-| `gallery3d.js` | 3 | Hover gives prominent interior photos real **2.5D depth parallax** (procedural depth). |
-| `materials3d.js` | 5a | Hovering an accent swatch floats a live **PBR sphere** (metal / stone / glass / lacquered wood) lit by the env map. |
+| `glshared.js` | — | **One** shared renderer + procedural PMREM environment, so the page never nears the WebGL-context limit. |
 | `plan3d.js` | 5b | Floor-plan **light-table gold scan-sweep** on reveal + hover (raster plans can't be reliably extruded, so we light it instead). |
+
+## Reverted at user request → `disabled/` (kept for reference, not bundled)
+
+These were removed because the motion was unwelcome: the hero was to return to
+the original photo, the photo-hover depth-warp felt nauseating, and the material
+popover was unwanted.
+
+| Module | Tier | Was |
+|---|---|---|
+| `disabled/hero3d.js` | 1 | Hero as a WebGL plate (depth parallax, dolly, coalesce intro, god-rays). |
+| `disabled/gallery3d.js` | 3 | Hover 2.5D depth parallax on interior photos. |
+| `disabled/materials3d.js` | 5a | Live PBR sphere preview + name on swatch hover. |
+| `disabled/postfx.js` | 2 | Post-processing (bloom/grade/god-rays) — only fed `hero3d`. |
+
+To re-enable one, move it back into `apartment-src/` and add it (plus `postfx.js`
+for the hero) back to `NEW_MODULES` and the `<script>` wiring in `build-apartment.js`.
 
 `page.html` is the decoded template (markup + CSS). `site.js` / `depth3d.js` are
 the original, unchanged engines (kept for reference).

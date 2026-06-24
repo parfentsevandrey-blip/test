@@ -65,13 +65,12 @@ if(!manifest[ENGINE3D_UUID]) die("engine3d asset uuid not in manifest");
 /* ---------- 2. swap engine3d, add new modules ---------- */
 manifest[ENGINE3D_UUID] = jsAsset(readSrc("engine3d.js"));
 
+// hero3d / gallery3d / materials3d / postfx were reverted per user request
+// (hero back to the original photo; the photo-hover depth-warp and the material
+// popover removed). The enhanced ambient field + the floor-plan sweep stay.
 const NEW_MODULES = [
-  { token: "__POSTFX__",      file: "postfx.js"      },
-  { token: "__GLSHARED__",    file: "glshared.js"    },
-  { token: "__HERO3D__",      file: "hero3d.js"      },
-  { token: "__GALLERY3D__",   file: "gallery3d.js"   },
-  { token: "__MATERIALS3D__", file: "materials3d.js" },
-  { token: "__PLAN3D__",      file: "plan3d.js"      },
+  { token: "__GLSHARED__", file: "glshared.js" },
+  { token: "__PLAN3D__",   file: "plan3d.js"   },
 ];
 for(const mod of NEW_MODULES){
   mod.uuid = crypto.randomUUID();
@@ -96,28 +95,10 @@ canvas.ascii{ position:absolute; inset:0; width:100%; height:100%; display:block
 // 3b — inject the WebGL-layer CSS just before </style>
 const NEW_CSS = `
 /* ============================================================
-   WEBGL CINEMATIC LAYERS — hero plate · 2.5D photos · materials · plan
+   WEBGL CINEMATIC LAYER — floor-plan light-table sweep
    ============================================================ */
-.hero-gl{ position:absolute; inset:0; width:100%; height:100%; display:block; z-index:1;
-  opacity:0; transition:opacity 1.1s var(--ease); }
-.hero.gl-on .hero-gl{ opacity:1; }
-.hero.gl-on .bgwrap img{ opacity:0; transition:opacity .8s var(--ease); }
-
-.frame .gl-depth{ position:absolute; inset:0; width:100%; height:100%; display:block;
-  z-index:3; opacity:0; pointer-events:none; border-radius:inherit; transition:opacity .12s linear; }
-
 .frame.plan .gl-sweep{ position:absolute; inset:0; width:100%; height:100%; display:block;
   z-index:3; pointer-events:none; mix-blend-mode:screen; border-radius:inherit; }
-
-.mat-preview{ position:fixed; z-index:80; transform:translate(-50%,0) scale(.9); transform-origin:top center;
-  opacity:0; visibility:hidden; pointer-events:none; display:flex; flex-direction:column; align-items:center; gap:7px;
-  padding:11px; border-radius:16px; background:var(--glass-2);
-  -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);
-  border:1px solid var(--glass-line); box-shadow:var(--shadow-lg); }
-.mat-preview canvas{ width:150px; height:150px; display:block; border-radius:11px; }
-.mat-preview-cap{ font-family:var(--mono); font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-soft); }
-@media (prefers-reduced-motion:reduce){ .hero-gl,.hero.gl-on .bgwrap img{ transition:none; } }
-@media (max-width:760px){ .mat-preview{ display:none; } }
 `;
 template = replaceOnce(template, "\n</style>", NEW_CSS + "</style>", "</style> close");
 
@@ -135,12 +116,8 @@ const NEW_SCRIPTS =
 `<script src="5fc6a928-83e4-4a1d-b43f-98fed7e93241"></script>
 <script src="5723f42c-f567-4a59-af5c-e62155241a86"></script>
 <script src="19c5fe55-e4de-479c-b288-c9aa02c10a48"></script>
-<script src="${tok.__POSTFX__}"></script>
 <script src="${tok.__GLSHARED__}"></script>
 <script src="${ENGINE3D_UUID}"></script>
-<script src="${tok.__HERO3D__}"></script>
-<script src="${tok.__GALLERY3D__}"></script>
-<script src="${tok.__MATERIALS3D__}"></script>
 <script src="${tok.__PLAN3D__}"></script>`;
 template = replaceOnce(template, OLD_SCRIPTS, NEW_SCRIPTS, "script tags");
 
