@@ -1,0 +1,11 @@
+# Локальная БД с собранными данными (создаётся автоматически)
+data/*.db
+data/*.db-wal
+data/*.db-shm
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
