@@ -44,7 +44,7 @@ for(const uuid of Object.keys(manifest)){
   } else if(e.mime.startsWith("image")) imgCount++;
   else if(e.mime.startsWith("font")) fontCount++;
 }
-ok(jsCount === 6, `JS assets = ${jsCount} (expect 6)`);
+ok(jsCount === 5, `JS assets = ${jsCount} (expect 5)`);
 ok(imgCount === 18, `image assets = ${imgCount} (expect 18)`);
 ok(fontCount === 20, `font assets = ${fontCount} (expect 20)`);
 
@@ -69,20 +69,23 @@ function uuidOfModule(snippet){
   return null;
 }
 const THREE   = uuidOfModule('THREE.REVISION') || uuidOfModule('Three.js Authors') || "";
-const engine  = uuidOfModule('living atmosphere');
-const glshare = uuidOfModule('window.KXGL =');
-const plan    = uuidOfModule('light-table sweep');
-ok(order.length === 6, `script tags in template = ${order.length} (expect 6)`);
-ok(THREE && idx(THREE) < idx(glshare), "three.js loads before glshared");
-ok(idx(glshare) >= 0 && idx(engine) > idx(glshare), "engine3d wired after glshared");
-ok(idx(plan) > idx(engine), "plan3d after engine3d");
+const engine  = uuidOfModule('cinematic atmosphere');
+const polish  = uuidOfModule('polish.js');
+ok(order.length === 5, `script tags in template = ${order.length} (expect 5)`);
+ok(THREE && idx(THREE) < idx(engine), "three.js loads before engine3d");
+ok(idx(engine) >= 0, "engine3d present");
+ok(idx(polish) >= 0, "polish present");
 
 // 4) template edits applied
 ok(!resolved.includes("canvas.ascii"), "dead ascii css removed");
-ok(!resolved.includes(".hero-gl"), "hero-gl css removed (hero reverted)");
-ok(!resolved.includes(".mat-preview"), "material-preview css removed");
-ok(!resolved.includes(".gl-depth"), "gallery overlay css removed");
-ok(resolved.includes(".gl-sweep"), "plan sweep css present");
+ok(!resolved.includes(".statement"), "dead .statement css removed");
+ok(!resolved.includes("--ease-grace"), "unused --ease-grace var removed");
+ok(!resolved.includes("--scrim"), "unused --scrim var removed");
+ok(!resolved.includes(".hero-gl"), "hero stays reverted (no hero-gl)");
+ok(!resolved.includes(".mat-preview"), "no material popover");
+ok(!resolved.includes(".gl-depth"), "no gallery overlay");
+ok(resolved.includes("planSweep"), "css plan sweep present");
+ok(resolved.includes(".cine-vignette"), "vignette present");
 ok(resolved.includes("15 — Документация") && !resolved.includes("16 — Документация"), "section renumbered 16→15");
 
 // 5) structural sanity of the unpacked document

@@ -11,27 +11,34 @@ particle backdrop, reveal/hover/depth engines and theme/accent switches).
 
 ## Currently shipped
 
-| Module | Tier | Role |
-|---|---|---|
-| `engine3d.js` | 4 | **Ambient field, upgraded** — curl-noise flow, cursor attraction, scroll-velocity energy, converge-at-contact, IntersectionObserver pause, no runtime `preserveDrawingBuffer`. (Replaces the original `engine3d.orig.js`.) |
-| `glshared.js` | — | **One** shared renderer + procedural PMREM environment, so the page never nears the WebGL-context limit. |
-| `plan3d.js` | 5b | Floor-plan **light-table gold scan-sweep** on reveal + hover (raster plans can't be reliably extruded, so we light it instead). |
+Just **one** WebGL context now (the ambient field) plus a tiny no-deps module.
 
-## Reverted at user request → `disabled/` (kept for reference, not bundled)
+| Module | Role |
+|---|---|
+| `engine3d.js` | **Cinematic atmosphere (v3)** — two layers (fine dust + soft out-of-focus *bokeh*), per-mote warm/cool colour grading, organic curl-noise drift, a slow **automatic "breathing" camera** (the scene moves on its own), only a *whisper* of pointer parallax (no mote-attraction), scroll-flow + converge-at-contact. Pauses off-screen; DPR-capped. Replaces `engine3d.orig.js`. |
+| `polish.js` | Dependency-free. Triggers the floor-plan **CSS** light-table sweep on reveal (hover re-plays via CSS). |
 
-These were removed because the motion was unwelcome: the hero was to return to
-the original photo, the photo-hover depth-warp felt nauseating, and the material
-popover was unwanted.
+The floor-plan gold sweep and the richer filmic vignette are **pure CSS** (added
+by the build), so no extra renderer is needed.
 
-| Module | Tier | Was |
-|---|---|---|
-| `disabled/hero3d.js` | 1 | Hero as a WebGL plate (depth parallax, dolly, coalesce intro, god-rays). |
-| `disabled/gallery3d.js` | 3 | Hover 2.5D depth parallax on interior photos. |
-| `disabled/materials3d.js` | 5a | Live PBR sphere preview + name on swatch hover. |
-| `disabled/postfx.js` | 2 | Post-processing (bloom/grade/god-rays) — only fed `hero3d`. |
+## Calmer by request
 
-To re-enable one, move it back into `apartment-src/` and add it (plus `postfx.js`
-for the hero) back to `NEW_MODULES` and the `<script>` wiring in `build-apartment.js`.
+Earlier motion was unwelcome, so it was removed and kept in `disabled/` for
+reference (not bundled):
+
+| Module | Was |
+|---|---|
+| `disabled/hero3d.js` | Hero as a WebGL plate (parallax, dolly, coalesce intro, god-rays) → **hero reverted to the original photo**. |
+| `disabled/gallery3d.js` | Hover depth-warp on photos → removed (felt nauseating). |
+| `disabled/materials3d.js` | PBR sphere + name popover on swatch hover → removed. |
+| `disabled/postfx.js` | Post-processing (only fed the hero). |
+| `disabled/glshared.js` | Shared renderer + PMREM env → no longer needed (plan sweep is CSS). |
+| `disabled/plan3d.js` | WebGL plan sweep → replaced by the lighter CSS version. |
+
+## Dead code removed
+
+`canvas.ascii` (old text-video leftover), the unused `.statement` section styles,
+and the unreferenced `--ease-grace` / `--scrim` CSS custom properties.
 
 `page.html` is the decoded template (markup + CSS). `site.js` / `depth3d.js` are
 the original, unchanged engines (kept for reference).

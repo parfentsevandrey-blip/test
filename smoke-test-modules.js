@@ -97,8 +97,8 @@ const ctx = vm.createContext(win);
 // THREE on the window so `window.THREE` and bare `THREE`(via window) resolve
 ctx.THREE = THREE; win.THREE = THREE;
 
-// shipped modules only (hero3d/gallery3d/materials3d/postfx reverted per user request)
-const MODULES = ["glshared.js","engine3d.js","plan3d.js"];
+// shipped modules only (glshared/plan3d replaced by CSS; others reverted)
+const MODULES = ["engine3d.js","polish.js"];
 for(const f of MODULES){
   try{
     const code = fs.readFileSync(path.join(SRC, f), "utf8");
@@ -107,7 +107,7 @@ for(const f of MODULES){
   }catch(err){ ok(false, `loaded ${f} → ${err.stack.split("\n").slice(0,3).join(" | ")}`); }
 }
 
-ok("KXGL" in win, "window.KXGL defined (object or null)");
+ok("KX3D" in win, "engine3d initialised (window.KX3D present)");
 
 // drive the animation loops a handful of times (catches loop-body errors)
 let ticks = 0;

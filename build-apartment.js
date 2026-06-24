@@ -65,12 +65,12 @@ if(!manifest[ENGINE3D_UUID]) die("engine3d asset uuid not in manifest");
 /* ---------- 2. swap engine3d, add new modules ---------- */
 manifest[ENGINE3D_UUID] = jsAsset(readSrc("engine3d.js"));
 
-// hero3d / gallery3d / materials3d / postfx were reverted per user request
-// (hero back to the original photo; the photo-hover depth-warp and the material
-// popover removed). The enhanced ambient field + the floor-plan sweep stay.
+// Lean cinematic layer: the enhanced ambient field (WebGL) + a tiny
+// dependency-free polish module. The floor-plan sweep is now pure CSS, so the
+// shared renderer (glshared) and plan3d's extra WebGL context were dropped.
+// hero3d / gallery3d / materials3d / postfx remain reverted (see disabled/).
 const NEW_MODULES = [
-  { token: "__GLSHARED__", file: "glshared.js" },
-  { token: "__PLAN3D__",   file: "plan3d.js"   },
+  { token: "__POLISH__", file: "polish.js" },
 ];
 for(const mod of NEW_MODULES){
   mod.uuid = crypto.randomUUID();
@@ -92,13 +92,51 @@ canvas.ascii{ position:absolute; inset:0; width:100%; height:100%; display:block
 .statement .bgwrap canvas.ascii{ opacity:.9; }
 `, "", "dead ascii css");
 
+// 3a2 — remove the unused .statement section styles (no such element in this layout)
+template = replaceOnce(template,
+`/* statement (centered) */
+.statement{ position:relative; overflow:hidden; }
+.statement .bgwrap{ position:absolute; inset:0; z-index:0; }
+.statement .bgwrap img{ width:100%; height:100%; object-fit:cover; filter:var(--photo-filter) blur(3px) brightness(.5); transform:scale(1.05); }
+.statement .scrim{ position:absolute; inset:0; z-index:1; background:radial-gradient(120% 120% at 50% 50%, rgba(5,6,10,.4), rgba(5,6,10,.72)); }
+.statement .inner{ position:relative; z-index:2; text-align:center; max-width:1000px; margin:0 auto; color:#f3f5f8; }
+.statement .eyebrow{ justify-content:center; color:var(--gold-soft); }
+.statement .eyebrow::before,.statement .eyebrow::after{ background:var(--gold-soft); }
+.statement .big{ margin-top:24px; font-family:var(--serif); font-size:clamp(30px,4.4vw,64px); font-weight:600; line-height:1.12; color:#fff; }
+.statement .big em{ color:var(--gold-soft); }
+.statement .note{ margin:26px auto 0; max-width:820px; font-size:clamp(15.5px,1.2vw,19px); line-height:1.6; font-weight:300; color:rgba(243,245,248,.78); }`,
+"/* (unused statement-section styles removed) */", "dead statement css");
+
+// 3a3 — remove unused CSS custom properties (0 references anywhere)
+template = replaceOnce(template, "  --ease-grace:cubic-bezier(.16,1,.3,1);   /* smooth deceleration — no snap */\n", "", "unused --ease-grace");
+template = replaceOnce(template, "  --scrim:linear-gradient(to top, rgba(40,32,18,.34), rgba(40,32,18,0) 46%);\n", "", "unused --scrim (light)");
+template = replaceOnce(template, "  --scrim:linear-gradient(to top, rgba(58,40,16,.4), rgba(58,40,16,0) 48%);\n", "", "unused --scrim (evening)");
+template = replaceOnce(template, "  --scrim:linear-gradient(to top, rgba(5,6,10,.86), rgba(5,6,10,.2) 54%);\n", "", "unused --scrim (dark)");
+
 // 3b — inject the WebGL-layer CSS just before </style>
 const NEW_CSS = `
 /* ============================================================
-   WEBGL CINEMATIC LAYER — floor-plan light-table sweep
+   CINEMATIC POLISH — richer vignette · floor-plan light-table sweep
    ============================================================ */
-.frame.plan .gl-sweep{ position:absolute; inset:0; width:100%; height:100%; display:block;
-  z-index:3; pointer-events:none; mix-blend-mode:screen; border-radius:inherit; }
+/* richer filmic vignette (overrides the base .cine-vignette) */
+.cine-vignette{ background:
+  radial-gradient(135% 105% at 50% 34%, transparent 46%, rgba(8,6,2,.12) 74%, rgba(8,6,2,.34) 100%),
+  linear-gradient(to bottom, rgba(8,6,2,.10), transparent 13%, transparent 87%, rgba(8,6,2,.16)); }
+[data-theme="dark"] .cine-vignette{ background:
+  radial-gradient(135% 105% at 50% 34%, transparent 40%, rgba(0,0,0,.40) 78%, rgba(0,0,0,.66) 100%),
+  linear-gradient(to bottom, rgba(0,0,0,.22), transparent 15%, transparent 85%, rgba(0,0,0,.30)); }
+
+/* floor-plan gold "light-table" sweep — pure CSS, plays on reveal + hover */
+.frame.plan::after{ content:""; position:absolute; inset:0; pointer-events:none; z-index:3;
+  border-radius:inherit; opacity:0; mix-blend-mode:screen; transform:translateX(-120%);
+  background:linear-gradient(115deg, transparent 42%,
+    color-mix(in oklch, var(--gold) 60%, transparent) 50%, transparent 58%); }
+.frame.plan.sweeping::after, .frame.plan:hover::after{ animation:planSweep 2.6s var(--ease); }
+@keyframes planSweep{
+  0%{ transform:translateX(-120%); opacity:0; }
+  18%{ opacity:1; } 82%{ opacity:1; }
+  100%{ transform:translateX(120%); opacity:0; } }
+@media (prefers-reduced-motion:reduce){ .frame.plan::after{ animation:none !important; opacity:0 !important; } }
 `;
 template = replaceOnce(template, "\n</style>", NEW_CSS + "</style>", "</style> close");
 
@@ -116,9 +154,8 @@ const NEW_SCRIPTS =
 `<script src="5fc6a928-83e4-4a1d-b43f-98fed7e93241"></script>
 <script src="5723f42c-f567-4a59-af5c-e62155241a86"></script>
 <script src="19c5fe55-e4de-479c-b288-c9aa02c10a48"></script>
-<script src="${tok.__GLSHARED__}"></script>
 <script src="${ENGINE3D_UUID}"></script>
-<script src="${tok.__PLAN3D__}"></script>`;
+<script src="${tok.__POLISH__}"></script>`;
 template = replaceOnce(template, OLD_SCRIPTS, NEW_SCRIPTS, "script tags");
 
 /* ---------- 4. reassemble the bundle ---------- */

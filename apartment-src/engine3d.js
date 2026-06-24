@@ -1,28 +1,28 @@
 /* ============================================================
-   Кутузовский XII — engine3d.js  ·  v2 "living atmosphere"
+   Кутузовский XII — engine3d.js  ·  v3 "cinematic atmosphere"
    ------------------------------------------------------------
    A 3D particle atmosphere (Three.js / WebGL) on the fixed
    #ambient canvas, BEHIND the readable content.
 
-   v2 upgrades over the original dust field:
-     · CURL-NOISE FLOW — motes ride a divergence-free curl-noise
-       field, so the drift swirls organically instead of looping
-       on a sine. Driven on the GPU; free at this count.
-     · CURSOR ATTRACTION — a soft world-space pull toward the
-       pointer, with falloff, so the field gently gathers where
-       you look — like warm air moving past a hand.
-     · SCROLL-VELOCITY LIFE — fast scrolling briefly brightens
-       and energises the field (more twinkle, longer streak),
-       then it settles. The page feels like it has air in it.
-     · GATHER AT THE CLOSE — approaching the contact section the
-       motes converge toward the centre line, a quiet visual
-       resolution as the story ends.
-     · PERF — rAF pauses when the tab is hidden OR the canvas is
-       scrolled out of view (IntersectionObserver); no
-       preserveDrawingBuffer at runtime (re-enabled only for the
-       offline capture hook). DPR capped.
-     · Theme / accent reactive as before (palette resampled live
-       from CSS and eased between themes).
+   v3 is calmer and richer than v2 — composed like a film plate,
+   not an interactive toy:
+
+     · TWO LAYERS — fine luminous dust + a sparse layer of large,
+       soft, out-of-focus BOKEH, giving real depth-of-field.
+     · COLOUR DEPTH — each mote is graded between a warm (gold)
+       and a cool (pearl) tint, so the field reads like lit air
+       rather than one flat colour.
+     · CURL-NOISE DRIFT — organic, divergence-free motion, plus a
+       slow automatic "breathing" camera drift. The scene moves on
+       its own; it does not chase the cursor.
+     · WHISPER OF PARALLAX — only the gentlest pointer parallax
+       remains (no mote-attraction), so nothing lurches.
+     · SCROLL FLOW — scrolling still streams you up through the
+       volume (depth parallax) and adds a touch of twinkle energy;
+       motes converge to centre as the contact section arrives.
+     · PERF — rAF pauses when hidden / off-screen; DPR capped; no
+       runtime preserveDrawingBuffer (re-enabled only for capture).
+     · Theme / accent reactive (palette resampled live from CSS).
    ============================================================ */
 (function(){
   const THREE = window.THREE;
@@ -32,12 +32,9 @@
   const reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
   const mobile = matchMedia('(max-width:760px)').matches;
   const root   = document.documentElement;
-  // the offline snapshot tool sets this before capture so the buffer survives toDataURL
   const CAPTURE = !!window.__KX_CAPTURE;
 
-  /* ============================================================
-     COLOUR — resolve the live CSS palette to real sRGB
-     ============================================================ */
+  /* ---------- resolve the live CSS palette to real sRGB ---------- */
   const probe = document.createElement('span');
   probe.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:0;height:0;';
   document.body.appendChild(probe);
@@ -63,21 +60,20 @@
   function buildPalette(){
     const bg   = pageColor();
     const gold = resolveVar('--gold', '#c79a3f');
-    const mote = gold.clone().lerp(new THREE.Color('#ffffff'), 0.44);
-    return { fog: bg, mote };
+    const warm = gold.clone().lerp(new THREE.Color('#ffffff'), 0.46);   // warm motes
+    const cool = gold.clone().lerp(new THREE.Color('#bcd2ec'), 0.70);   // cool pearl motes
+    return { fog: bg, warm, cool };
   }
   let pal = buildPalette();
 
-  /* ============================================================
-     RENDERER / SCENE / CAMERA
-     ============================================================ */
+  /* ---------- renderer / scene / camera ---------- */
   let renderer;
   try{
     renderer = new THREE.WebGLRenderer({
       canvas, antialias:true, alpha:true, premultipliedAlpha:false,
       preserveDrawingBuffer: CAPTURE, powerPreference:'high-performance'
     });
-  }catch(e){ return; }                       // no WebGL → leave the page as-is
+  }catch(e){ return; }
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.7));
   renderer.setClearColor(0x000000, 0);
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -86,44 +82,49 @@
   const camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 1, 600);
   camera.position.set(0, 0, 60);
 
-  /* ============================================================
-     THE PARTICLE FIELD
-     ============================================================ */
-  const COUNT = reduce ? 200 : (mobile ? 340 : 560);
-  const SPAN_X = 220, RANGE_Y = 160, SPAN_Z = 240, Z0 = 40;
+  /* ---------- the particle field (dust + bokeh in one buffer) ---------- */
+  const COUNT = reduce ? 210 : (mobile ? 360 : 600);
+  const RANGE_Y = 160, SPAN_X = 220, SPAN_Z = 240, Z0 = 40;
 
   const pos    = new Float32Array(COUNT * 3);
   const aScale = new Float32Array(COUNT);
   const aSpeed = new Float32Array(COUNT);
   const aPhase = new Float32Array(COUNT);
+  const aType  = new Float32Array(COUNT);   // 0 = dust, 1 = soft bokeh
+  const aTemp  = new Float32Array(COUNT);   // 0 = cool, 1 = warm
   for(let i = 0; i < COUNT; i++){
+    const bokeh = Math.random() < 0.13;     // ~13% soft out-of-focus orbs
     pos[i*3]   = (Math.random() * 2 - 1) * SPAN_X;
     pos[i*3+1] = (Math.random() * 2 - 1) * RANGE_Y;
     pos[i*3+2] = Z0 - Math.random() * SPAN_Z;
-    aScale[i]  = 0.30 + Math.pow(Math.random(), 2.0) * 1.05;
-    aSpeed[i]  = 0.4 + Math.random() * 1.3;
+    aScale[i]  = bokeh ? (2.6 + Math.random() * 2.6)
+                       : (0.30 + Math.pow(Math.random(), 2.0) * 1.05);
+    aSpeed[i]  = (bokeh ? 0.25 : 0.4) + Math.random() * (bokeh ? 0.5 : 1.3);
     aPhase[i]  = Math.random() * 6.2831;
+    aType[i]   = bokeh ? 1 : 0;
+    aTemp[i]   = Math.pow(Math.random(), 0.8);   // skew warm, keep some cool
   }
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
   geo.setAttribute('aScale',   new THREE.BufferAttribute(aScale, 1));
   geo.setAttribute('aSpeed',   new THREE.BufferAttribute(aSpeed, 1));
   geo.setAttribute('aPhase',   new THREE.BufferAttribute(aPhase, 1));
+  geo.setAttribute('aType',    new THREE.BufferAttribute(aType, 1));
+  geo.setAttribute('aTemp',    new THREE.BufferAttribute(aTemp, 1));
 
   const U = {
     uTime:    { value: 0 },
     uScroll:  { value: 0 },
-    uVel:     { value: 0 },                    // 0..1 scroll energy
-    uGather:  { value: 0 },                    // 0..1 converge-to-centre at the close
+    uVel:     { value: 0 },
+    uGather:  { value: 0 },
     uMouse:   { value: new THREE.Vector2(0, 0) },
-    uMouseW:  { value: new THREE.Vector3(0, 0, 0) },   // pointer in world space (attraction target)
     uSize:    { value: mobile ? 15 : 20 },
     uPix:     { value: renderer.getPixelRatio() },
-    uColor:   { value: pal.mote.clone() },
+    uWarm:    { value: pal.warm.clone() },
+    uCool:    { value: pal.cool.clone() },
     uFog:     { value: pal.fog.clone() },
     uFogDens: { value: 0.0050 },
     uRangeY:  { value: RANGE_Y },
-    uSpanX:   { value: SPAN_X },
     uOpacity: { value: 0.0 }
   };
 
@@ -181,61 +182,70 @@
     blending: THREE.AdditiveBlending,
     uniforms: U,
     vertexShader: NOISE_GLSL + `
-      attribute float aScale, aSpeed, aPhase;
-      uniform float uTime, uScroll, uVel, uGather, uSize, uPix, uRangeY, uSpanX, uFogDens;
+      attribute float aScale, aSpeed, aPhase, aType, aTemp;
+      uniform float uTime, uScroll, uVel, uGather, uSize, uPix, uRangeY, uFogDens;
       uniform vec2  uMouse;
-      uniform vec3  uMouseW;
       varying float vTw;
       varying float vFog;
+      varying float vType;
+      varying float vTemp;
       void main(){
         vec3 p = position;
+        float depth = clamp((p.z + 200.0) / 240.0, 0.0, 1.0);   // 0 far … 1 near
 
-        // depth 0 (far) … 1 (near)
-        float depth = clamp((p.z + 200.0) / 240.0, 0.0, 1.0);
-
-        // vertical flow through the volume — scroll pulls you upward through it,
-        // nearer motes streaming faster (parallax). Wrapped so it never empties.
+        // vertical flow — scroll streams you up through the volume (wrapped)
         float flow = uTime * aSpeed * 2.0 + uScroll * (32.0 + depth * 130.0);
         p.y = mod(p.y + flow + uRangeY, uRangeY * 2.0) - uRangeY;
 
-        // curl-noise advection — organic, divergence-free swirl (energised by scroll)
+        // organic curl drift (a little livelier while scrolling)
         vec3 c = curl(p * 0.012 + vec3(0.0, uTime * 0.05, aPhase));
-        float swirl = 4.0 + uVel * 7.0;
-        p += c * swirl * (0.5 + depth);
+        p += c * (3.5 + uVel * 5.0) * (0.5 + depth);
 
-        // soft cursor attraction in world space, with falloff
-        vec3 toM = uMouseW - p;
-        float d2 = dot(toM, toM);
-        p += normalize(toM + 1e-4) * (14.0 + depth*22.0) / (1.0 + d2 * 0.012);
+        // a whisper of pointer parallax (no attraction — nothing lurches)
+        p.x += uMouse.x * (3.0 + depth * 12.0);
+        p.y += uMouse.y * (2.0 + depth * 8.0);
 
-        // camera-parallax nudge (kept from v1) + converge-to-centre at the close
-        p.x += uMouse.x * (8.0 + depth * 34.0);
-        p.y += uMouse.y * (5.0 + depth * 24.0);
+        // converge to centre as the contact section arrives
         p.x = mix(p.x, p.x * 0.18, uGather);
 
         vec4 mv = modelViewMatrix * vec4(p, 1.0);
         gl_Position = projectionMatrix * mv;
-        gl_PointSize = min(aScale * uSize * uPix * (180.0 / -mv.z), 34.0 * uPix);
+
+        float sizeMul = (aType > 0.5) ? uSize * 2.6 : uSize;     // bokeh much larger
+        float cap     = (aType > 0.5) ? 120.0 : 34.0;
+        gl_PointSize = min(aScale * sizeMul * uPix * (180.0 / -mv.z), cap * uPix);
 
         float dist = -mv.z;
-        vFog = clamp(1.0 - exp(-uFogDens * uFogDens * dist * dist), 0.0, 1.0);
-        // twinkle gains a touch of life with scroll energy
-        vTw  = (0.62 + 0.38 * sin(uTime * aSpeed * 0.8 + aPhase)) * (1.0 + uVel * 0.5);
+        vFog  = clamp(1.0 - exp(-uFogDens * uFogDens * dist * dist), 0.0, 1.0);
+        vTw   = (0.62 + 0.38 * sin(uTime * aSpeed * 0.8 + aPhase)) * (1.0 + uVel * 0.4);
+        vType = aType;
+        vTemp = aTemp;
       }`,
     fragmentShader: `
       precision highp float;
-      uniform vec3  uColor;
+      uniform vec3  uWarm, uCool;
       uniform float uOpacity;
       varying float vTw;
       varying float vFog;
+      varying float vType;
+      varying float vTemp;
       void main(){
         vec2 q = gl_PointCoord - 0.5;
         float r = length(q);
-        float a = smoothstep(0.5, 0.0, r);
-        a *= a;
-        if(a < 0.003) discard;
-        vec3 col = uColor + vec3(1.0) * pow(a, 3.0) * 0.30;
-        gl_FragColor = vec4(col, a * vTw * uOpacity * (1.0 - vFog));
+        vec3 base = mix(uCool, uWarm, vTemp);          // per-mote colour temperature
+        if(vType > 0.5){
+          // soft out-of-focus bokeh: gentle disc, faint, slightly brighter rim
+          float a = smoothstep(0.5, 0.04, r);
+          float rim = smoothstep(0.5, 0.42, r) * 0.5;
+          if(a < 0.003) discard;
+          gl_FragColor = vec4(base + rim, (a * 0.34 + rim * 0.2) * vTw * uOpacity * (1.0 - vFog));
+        } else {
+          // crisp luminous dust with a bright core
+          float a = smoothstep(0.5, 0.0, r); a *= a;
+          if(a < 0.003) discard;
+          vec3 col = base + vec3(1.0) * pow(a, 3.0) * 0.30;
+          gl_FragColor = vec4(col, a * vTw * uOpacity * (1.0 - vFog));
+        }
       }`
   });
 
@@ -243,16 +253,12 @@
   points.frustumCulled = false;
   scene.add(points);
 
-  /* ============================================================
-     THEME / ACCENT REACTIVITY
-     ============================================================ */
-  let tgt = { mote: pal.mote.clone(), fog: pal.fog.clone() };
-  function applyPalette(){ pal = buildPalette(); tgt.mote.copy(pal.mote); tgt.fog.copy(pal.fog); }
+  /* ---------- theme / accent reactivity ---------- */
+  let tgt = { warm: pal.warm.clone(), cool: pal.cool.clone(), fog: pal.fog.clone() };
+  function applyPalette(){ pal = buildPalette(); tgt.warm.copy(pal.warm); tgt.cool.copy(pal.cool); tgt.fog.copy(pal.fog); }
   new MutationObserver(applyPalette).observe(root, { attributes:true, attributeFilter:['data-theme','data-accent'] });
 
-  /* ============================================================
-     INPUT — pointer (parallax + attraction) + scroll (flow + energy)
-     ============================================================ */
+  /* ---------- input: gentle pointer + scroll ---------- */
   const m = { tx:0, ty:0, x:0, y:0 };
   window.addEventListener('pointermove', e=>{
     m.tx = (e.clientX / window.innerWidth)  * 2 - 1;
@@ -266,15 +272,13 @@
     const sy = window.scrollY || 0;
     const mx = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
     scrollT = sy / mx;
-    velRaw  = Math.min(1, Math.abs(sy - lastSy) / 60);     // instantaneous scroll energy
+    velRaw  = Math.min(1, Math.abs(sy - lastSy) / 60);
     lastSy = sy;
-    // converge near the contact section (last ~1.2 viewports)
     if(contact){
       const top = contact.getBoundingClientRect().top;
       gatherT = Math.max(0, Math.min(1, 1 - top / (window.innerHeight * 1.2)));
     }
-    // hero photo parallax only survives if the GL hero isn't driving it
-    if(heroImg && !reduce && !document.querySelector('.hero.gl-on')){
+    if(heroImg && !reduce){
       heroImg.style.transform = 'scale(1.08) translateY(' + (sy * 0.10).toFixed(1) + 'px)';
     }
   }
@@ -286,29 +290,15 @@
     U.uPix.value = renderer.getPixelRatio();
   });
 
-  /* ============================================================
-     RUN STATE — pause when hidden or off-screen
-     ============================================================ */
+  /* ---------- run only while visible & on-screen ---------- */
   let onScreen = true, running = false, rafId = 0;
   if('IntersectionObserver' in window){
-    new IntersectionObserver(es=>{ onScreen = es[0].isIntersecting; pump(); },
-      { threshold:0 }).observe(canvas);
+    new IntersectionObserver(es=>{ onScreen = es[0].isIntersecting; pump(); }, { threshold:0 }).observe(canvas);
   }
   document.addEventListener('visibilitychange', pump);
 
-  /* ============================================================
-     RENDER LOOP
-     ============================================================ */
+  /* ---------- render loop ---------- */
   const clock = new THREE.Clock();
-  // unproject a screen-space pointer onto the z≈0 plane for world-space attraction
-  const _ray = new THREE.Vector3();
-  function pointerWorld(nx, ny){
-    _ray.set(nx, ny, 0.5).unproject(camera);
-    const dir = _ray.sub(camera.position).normalize();
-    const t = (0 - camera.position.z) / dir.z;
-    return camera.position.clone().add(dir.multiplyScalar(t));
-  }
-
   function tick(){
     if(!running) return;
     rafId = requestAnimationFrame(tick);
@@ -317,31 +307,35 @@
 
     if(!reduce) U.uTime.value += dt;
 
-    U.uColor.value.lerp(tgt.mote, k);
+    U.uWarm.value.lerp(tgt.warm, k);
+    U.uCool.value.lerp(tgt.cool, k);
     U.uFog.value.lerp(tgt.fog, k);
 
     const dark = root.getAttribute('data-theme') === 'dark';
-    const tgtOp = dark ? (mobile ? 0.48 : 0.54) : (mobile ? 0.28 : 0.36);
+    const tgtOp = dark ? (mobile ? 0.50 : 0.56) : (mobile ? 0.30 : 0.38);
     U.uOpacity.value += (tgtOp - U.uOpacity.value) * Math.min(1, dt * 1.4);
 
-    m.x += (m.tx - m.x) * Math.min(1, dt * 2.6);
-    m.y += (m.ty - m.y) * Math.min(1, dt * 2.6);
+    m.x += (m.tx - m.x) * Math.min(1, dt * 2.2);
+    m.y += (m.ty - m.y) * Math.min(1, dt * 2.2);
     U.uMouse.value.set(m.x, m.y);
-    const w = pointerWorld(m.x, m.y); U.uMouseW.value.copy(w);
 
     U.uScroll.value += (scrollT - U.uScroll.value) * Math.min(1, dt * 3.0);
     U.uGather.value += (gatherT - U.uGather.value) * Math.min(1, dt * 2.2);
-    velRaw *= Math.pow(0.06, dt);                       // decay scroll energy
+    velRaw *= Math.pow(0.06, dt);
     U.uVel.value += (velRaw - U.uVel.value) * Math.min(1, dt * 6.0);
 
-    const par = reduce ? 0 : 1;
-    camera.position.x += (m.x * 5 * par - camera.position.x) * Math.min(1, dt * 1.8);
-    camera.position.y += (m.y * 3.5 * par - camera.position.y) * Math.min(1, dt * 1.8);
+    // automatic cinematic "breathing": a slow self-driven camera drift,
+    // plus the gentlest pointer lean. The scene moves on its own.
+    const t = U.uTime.value, par = reduce ? 0 : 1;
+    const driftX = Math.sin(t * 0.05) * 2.4 + m.x * 2.2 * par;
+    const driftY = Math.cos(t * 0.04) * 1.6 + m.y * 1.5 * par;
+    camera.position.x += (driftX - camera.position.x) * Math.min(1, dt * 1.2);
+    camera.position.y += (driftY - camera.position.y) * Math.min(1, dt * 1.2);
     camera.position.z  = 60 - U.uScroll.value * 16;
-    camera.lookAt(-m.x * 2 * par, -m.y * 1.4 * par, camera.position.z - 60);
+    camera.lookAt(-driftX * 0.3, -driftY * 0.3, camera.position.z - 60);
 
     try{ renderer.render(scene, camera); }
-    catch(err){ running = false; cancelAnimationFrame(rafId); }   // shader/context failure → leave page as-is
+    catch(err){ running = false; cancelAnimationFrame(rafId); }
   }
   function pump(){
     const should = onScreen && !document.hidden;
@@ -350,10 +344,10 @@
   }
   pump();
 
-  // offline snapshot hook (rAF is paused while the doc is backgrounded for capture)
+  // offline snapshot hook
   window.KX3D = {
     U, renderer, scene, camera,
     render(){ renderer.render(scene, camera); },
-    snap(){ U.uColor.value.copy(tgt.mote); U.uFog.value.copy(tgt.fog); }
+    snap(){ U.uWarm.value.copy(tgt.warm); U.uCool.value.copy(tgt.cool); U.uFog.value.copy(tgt.fog); }
   };
 })();
