@@ -95,8 +95,10 @@ ok(resolved.includes("kx-aperture") && resolved.includes("kx-focus"), "aperture 
 ok(resolved.includes(".snd-switch"), "ambient-sound toggle css present");
 // liquid glass
 ok(resolved.includes('id="kx-liquid"') && resolved.includes("feDisplacementMap"), "liquid-glass refraction filter present");
-ok(resolved.includes("--lg-hi") && resolved.includes("lgSheen"), "liquid-glass material + sheen present");
-ok(resolved.includes("backdrop-filter:url(#kx-liquid)") || resolved.includes("url(#kx-liquid)"), "refraction wired into backdrop-filter");
+ok((resolved.match(/feDisplacementMap/g)||[]).length >= 3 && resolved.includes("feComposite"), "chromatic dispersion (RGB split) present");
+ok(resolved.includes("--lg-iris") && resolved.includes("conic-gradient"), "iridescent (mother-of-pearl) rim present");
+ok(resolved.includes("@keyframes kxIris") && resolved.includes("kxSheen"), "living shimmer (hue-cycle + drift) present");
+ok(resolved.includes("url(#kx-liquid)"), "refraction wired into backdrop-filter");
 ok(resolved.includes("15 — Уникальность"), "section 15 = Уникальность intact");
 ok(resolved.includes("16 — Документация"), "section 16 = Документация intact");
 ok(!resolved.includes("15 — Документация"), "no duplicate section 15");

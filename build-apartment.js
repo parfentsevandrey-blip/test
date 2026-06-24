@@ -187,14 +187,22 @@ const NEW_CSS = `
 .snd-switch button svg{ width:17px; height:17px; }
 
 /* ============================================================
-   LIQUID GLASS — refractive, specular, living glass surfaces
+   LIQUID GLASS — refractive, IRIDESCENT, living glass
+   chromatic dispersion (SVG) + mother-of-pearl rim + oil-slick
+   film that drifts and shifts hue ("переливание")
    ============================================================ */
 .kx-liquid-defs{ position:absolute; width:0; height:0; overflow:hidden; pointer-events:none; }
-:root{ --lg-hi:rgba(255,255,255,.95); --lg-hi-soft:rgba(255,255,255,.55); --lg-edge:rgba(255,255,255,.85);
-  --lg-glow:rgba(255,244,222,.28); --lg-blur:blur(18px) saturate(205%) brightness(1.12); }
-[data-theme="evening"]{ --lg-hi:rgba(255,252,245,.9); --lg-hi-soft:rgba(255,250,240,.5); --lg-edge:rgba(255,250,240,.78); --lg-glow:rgba(255,238,206,.24); }
-[data-theme="dark"]{ --lg-hi:rgba(255,255,255,.72); --lg-hi-soft:rgba(255,255,255,.34); --lg-edge:rgba(255,255,255,.52);
-  --lg-glow:rgba(180,205,255,.24); --lg-blur:blur(20px) saturate(215%) brightness(1.16); }
+:root{ --lg-hi:rgba(255,255,255,.95); --lg-hi-soft:rgba(255,255,255,.55);
+  --lg-glow:rgba(255,244,222,.28); --lg-blur:blur(18px) saturate(205%) brightness(1.12);
+  --lg-iris:conic-gradient(from 130deg,
+    rgba(255,255,255,.92), rgba(244,217,160,.85), rgba(240,184,208,.82), rgba(186,228,240,.85),
+    rgba(214,198,242,.82), rgba(206,238,222,.85), rgba(255,255,255,.92)); }
+[data-theme="evening"]{ --lg-hi:rgba(255,252,245,.9); --lg-hi-soft:rgba(255,250,240,.5); --lg-glow:rgba(255,238,206,.24); }
+[data-theme="dark"]{ --lg-hi:rgba(255,255,255,.72); --lg-hi-soft:rgba(255,255,255,.34);
+  --lg-glow:rgba(180,205,255,.26); --lg-blur:blur(20px) saturate(215%) brightness(1.16); }
+
+@keyframes kxIris{ to{ filter:hue-rotate(360deg); } }
+@keyframes kxSheen{ 0%,100%{ background-position:-30% 0, 0% 50%; } 50%{ background-position:130% 0, 100% 50%; } }
 
 /* big surfaces — full liquid glass (header + glass cards incl. contact card) */
 .bar, .glass{ border-radius:24px;
@@ -211,19 +219,27 @@ const NEW_CSS = `
 .glass{ background:linear-gradient(135deg, rgba(255,255,255,.20), rgba(255,255,255,.04) 45%, transparent 72%), var(--glass); }
 .bar{ background:linear-gradient(135deg, rgba(255,255,255,.18), rgba(255,255,255,.03) 45%, transparent 72%), var(--bar); }
 @supports (backdrop-filter:url(#kx-liquid)) or (-webkit-backdrop-filter:url(#kx-liquid)){
-  .bar, .glass{ -webkit-backdrop-filter:blur(14px) saturate(205%) brightness(1.12) url(#kx-liquid);
-                        backdrop-filter:blur(14px) saturate(205%) brightness(1.12) url(#kx-liquid); } }
-/* living specular sheen — a visible glint that drifts across */
+  .bar, .glass{ -webkit-backdrop-filter:blur(13px) saturate(200%) brightness(1.12) url(#kx-liquid);
+                        backdrop-filter:blur(13px) saturate(200%) brightness(1.12) url(#kx-liquid); } }
+
+/* ::before — drifting white glint + iridescent oil-slick film (the "переливание") */
 .bar::before, .glass::before{ content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none; z-index:0;
-  background:linear-gradient(115deg, transparent 26%, var(--lg-hi) 47%, transparent 66%);
-  opacity:.4; mix-blend-mode:screen; transform:translateX(-38%); animation:lgSheen 9s ease-in-out infinite; }
-@keyframes lgSheen{ 0%,100%{ transform:translateX(-38%); } 50%{ transform:translateX(38%); } }
-/* crisp lens rim (gradient border via mask) */
-.bar::after, .glass::after{ content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none; padding:1.4px;
-  background:linear-gradient(135deg, var(--lg-edge), rgba(255,255,255,.06) 40%, rgba(255,255,255,.06) 60%, var(--lg-edge));
+  background:
+    linear-gradient(115deg, transparent 24%, rgba(255,255,255,.6) 44%, transparent 60%),
+    linear-gradient(60deg, rgba(244,217,160,.20), rgba(240,184,208,.18) 28%, rgba(186,228,240,.18) 52%, rgba(214,198,242,.18) 74%, rgba(206,238,222,.20));
+  background-size:220% 100%, 240% 200%; background-position:-30% 0, 0% 50%;
+  opacity:.6; mix-blend-mode:screen; animation:kxSheen 9s ease-in-out infinite, kxIris 14s linear infinite; }
+
+/* ::after — iridescent (dichroic) mother-of-pearl lens rim */
+.bar::after, .glass::after,
+.theme-switch::after, .mat-switch::after, .snd-switch::after, .cta::after, .stat::after{
+  content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none; padding:1.4px;
+  background:var(--lg-iris);
   -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite:xor; mask-composite:exclude; opacity:1; }
+  -webkit-mask-composite:xor; mask-composite:exclude; opacity:.55; }
+.bar::after, .glass::after{ opacity:.9; animation:kxIris 10s linear infinite; }
 .bar > *, .glass > *{ position:relative; z-index:1; }
+.theme-switch, .mat-switch, .snd-switch{ position:relative; }
 
 /* UI chips & buttons — glass material + bright specular edge */
 .theme-switch, .mat-switch, .snd-switch{ border-radius:16px;
@@ -243,15 +259,19 @@ const NEW_CSS = `
   background:linear-gradient(180deg, rgba(255,255,255,.14), transparent);
   box-shadow:inset 0 1.5px 0 var(--lg-hi-soft), inset 0 -1px 0 rgba(0,0,0,.12); }
 
-/* photos under glass — a bright specular top edge (no backdrop; photo is opaque) */
+/* photos under glass — bright specular top edge + faint iridescent sheen */
 .frame{ box-shadow:var(--shadow-lg), inset 0 2px 0 rgba(255,255,255,.32), inset 0 0 0 1px rgba(255,255,255,.10), 0 0 26px -10px var(--lg-glow); }
 .frame::before{ content:""; position:absolute; inset:0; z-index:2; pointer-events:none; border-radius:inherit;
-  background:linear-gradient(180deg, rgba(255,255,255,.34), transparent 11%); mix-blend-mode:screen; opacity:.6; }
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.34), transparent 11%),
+    linear-gradient(60deg, rgba(244,217,160,.10), rgba(186,228,240,.08) 50%, rgba(214,198,242,.10));
+  mix-blend-mode:screen; opacity:.6; }
 
 /* cursor specular — bright, soft (liquid highlight that tracks the pointer) */
 .hover-glare{ mix-blend-mode:screen; filter:blur(2px); }
 
-@media (prefers-reduced-motion:reduce){ .bar::before, .glass::before{ animation:none; } }
+@media (prefers-reduced-motion:reduce){
+  .bar::before, .glass::before, .bar::after, .glass::after{ animation:none; } }
 `;
 template = replaceOnce(template, "\n</style>", NEW_CSS + "</style>", "</style> close");
 
@@ -284,8 +304,15 @@ template = replaceOnce(template,
   '<svg class="kx-liquid-defs" aria-hidden="true" width="0" height="0">' +
   '<filter id="kx-liquid" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">' +
   '<feTurbulence type="fractalNoise" baseFrequency="0.004 0.007" numOctaves="2" seed="11" result="n"/>' +
-  '<feGaussianBlur in="n" stdDeviation="2.4" result="nb"/>' +
-  '<feDisplacementMap in="SourceGraphic" in2="nb" scale="18" xChannelSelector="R" yChannelSelector="G"/>' +
+  '<feGaussianBlur in="n" stdDeviation="2.2" result="nb"/>' +
+  '<feDisplacementMap in="SourceGraphic" in2="nb" scale="26" xChannelSelector="R" yChannelSelector="G" result="dR"/>' +
+  '<feDisplacementMap in="SourceGraphic" in2="nb" scale="18" xChannelSelector="R" yChannelSelector="G" result="dG"/>' +
+  '<feDisplacementMap in="SourceGraphic" in2="nb" scale="10" xChannelSelector="R" yChannelSelector="G" result="dB"/>' +
+  '<feColorMatrix in="dR" type="matrix" values="1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0" result="cR"/>' +
+  '<feColorMatrix in="dG" type="matrix" values="0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0" result="cG"/>' +
+  '<feColorMatrix in="dB" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0" result="cB"/>' +
+  '<feComposite in="cR" in2="cG" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="cRG"/>' +
+  '<feComposite in="cRG" in2="cB" operator="arithmetic" k1="0" k2="1" k3="1" k4="0"/>' +
   '</filter></svg>',
   "ambient canvas (shaft + liquid filter inject)");
 template = replaceOnce(template,
