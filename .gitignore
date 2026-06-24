@@ -1,3 +1,5 @@
 node_modules/
 package.json
 package-lock.json
+# transient delivery copies (identical to kutuzovsky-xii-cinematic.html)
+kutuzovsky-xii-LIQUID-GLASS*.html
