@@ -22,6 +22,7 @@ from docx.text.paragraph import Paragraph
 from PIL import Image
 
 SRC, OUT, ASSETS = sys.argv[1], sys.argv[2], sys.argv[3]
+DO_ZONES = len(sys.argv) > 4 and sys.argv[4] == "zones"   # default: leave Part 3 untouched
 MAX_W = 17.4
 PH_ANCHOR = "Вставьте фотографии объекта ниже"
 ZONE_ANCHOR = "Объекты реестра в этой зоне"
@@ -63,7 +64,9 @@ def main():
         anchor._p.getparent().remove(anchor._p)
         print(f"obj{i}: map={'+' if os.path.exists(mp) else '-'} photo={'+' if os.path.exists(ph) else '-'}")
 
-    # ---- 2) zone pages ----
+    # ---- 2) zone pages (optional; off by default — Part 3 left as original) ----
+    if not DO_ZONES:
+        doc.save(OUT); print("saved", OUT, "(no zone media)"); return
     # zone headings ("N. Name" followed by a "City, провинция/регион ..." line)
     headings = []
     for idx in range(len(paras) - 1):
