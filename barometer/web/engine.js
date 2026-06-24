@@ -220,7 +220,7 @@ async function withTimeout(p, ms) {
   try { return await p(ctrl.signal); } finally { clearTimeout(id); }
 }
 async function getText(url) {
-  return withTimeout(async (signal) => { const r = await fetch(url, { signal }); if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); }, 18000);
+  return withTimeout(async (signal) => { const r = await fetch(url, { signal }); if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); }, 12000);
 }
 function b64utf8(b64) { const bin = atob(b64); const a = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i); return new TextDecoder("utf-8").decode(a); }
 async function proxiedText(url) {
@@ -299,24 +299,29 @@ async function fetchTelegram(ch) {
 }
 async function fetchDeepState() {
   let data;
-  try { data = await (await fetch(CONFIG.deepstateUrl)).json(); }   // прямой запрос (CORS разрешён)
-  catch (e) { data = JSON.parse(await proxiedText(CONFIG.deepstateUrl)); }
+  try {  // прямой запрос (CORS разрешён), с таймаутом чтобы не зависнуть
+    data = await withTimeout(async (signal) => { const r = await fetch(CONFIG.deepstateUrl, { signal }); if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); }, 12000);
+  } catch (e) {
+    data = JSON.parse(await proxiedText(CONFIG.deepstateUrl));
+  }
   return deepstateFromGeoJSON(data);
 }
 
-async function collectAll(onProgress) {
+async function collectNews() {  // только RSS + Telegram (DeepState грузится отдельно и быстро)
   const tasks = [], statuses = [];
   const run = async (label, stream, fn) => {
-    try { const items = await fn(); statuses.push({ name: label, stream, mode: "live", items_count: items.length }); onProgress && onProgress(); return items; }
-    catch (e) { statuses.push({ name: label, stream, mode: "error", items_count: 0, last_error: String(e).slice(0, 120) }); onProgress && onProgress(); return []; }
+    try { const items = await fn(); statuses.push({ name: label, stream, mode: "live", items_count: items.length }); return items; }
+    catch (e) { statuses.push({ name: label, stream, mode: "error", items_count: 0, last_error: String(e).slice(0, 120) }); return []; }
   };
   for (const s of CONFIG.rssSources) tasks.push(run(s.name, s.stream, () => fetchRSS(s)));
   for (const c of CONFIG.telegramChannels) tasks.push(run(c.name, c.stream, () => fetchTelegram(c)));
-  const dsTask = (async () => { try { const d = await fetchDeepState(); statuses.push({ name: "DeepStateMAP (карта фронта)", stream: "deepstate", mode: "live", items_count: d.occupied_polys }); return d; } catch (e) { statuses.push({ name: "DeepStateMAP", stream: "deepstate", mode: "error", items_count: 0, last_error: String(e).slice(0, 120) }); return { status: "error" }; } })();
   const lists = await Promise.all(tasks);
-  const deepstate = await dsTask;
-  const items = [].concat(...lists);
-  return { items, statuses, deepstate };
+  return { items: [].concat(...lists), statuses };
+}
+function dsStatusOf(ds) {
+  return ds && ds.status === "ok"
+    ? { name: "DeepStateMAP (карта фронта)", stream: "deepstate", mode: "live", items_count: ds.occupied_polys }
+    : { name: "DeepStateMAP (карта фронта)", stream: "deepstate", mode: "error", items_count: 0 };
 }
 
 /* ----------------------------- хранилище -------------------------------- */
@@ -358,13 +363,19 @@ function relTime(iso) { if (!iso) return "—"; const s = Math.floor((Date.now()
 function polar(cx, cy, r, v) { const a = Math.PI * (1 - v / 100); return { x: cx + r * Math.cos(a), y: cy - r * Math.sin(a) }; }
 function arcPath(cx, cy, r, v0, v1) { const a = polar(cx, cy, r, v0), b = polar(cx, cy, r, v1); return `M ${a.x.toFixed(1)} ${a.y.toFixed(1)} A ${r} ${r} 0 0 1 ${b.x.toFixed(1)} ${b.y.toFixed(1)}`; }
 function renderGauge(value) {
-  const cx = 210, cy = 212, r = 176, w = 26;
-  const segs = [[0, 25, "#2ec78a"], [25, 45, "#8bd34f"], [45, 70, "#f2c14e"], [70, 92, "#f08a3c"], [92, 100, "#e8514a"]];
-  let s = `<path d="${arcPath(cx, cy, r, 0, 100)}" fill="none" stroke="#1a2436" stroke-width="${w + 6}" stroke-linecap="round"/>`;
-  for (const [a, b, c] of segs) s += `<path d="${arcPath(cx, cy, r, a, b)}" fill="none" stroke="${c}" stroke-width="${w}" opacity="0.92"/>`;
-  for (const t of [0, 25, 50, 75, 100]) { const p1 = polar(cx, cy, r - w / 2 - 4, t), p2 = polar(cx, cy, r + w / 2 + 4, t), l = polar(cx, cy, r + w / 2 + 20, t); s += `<line x1="${p1.x.toFixed(1)}" y1="${p1.y.toFixed(1)}" x2="${p2.x.toFixed(1)}" y2="${p2.y.toFixed(1)}" stroke="#3a4d6b" stroke-width="2"/><text x="${l.x.toFixed(1)}" y="${l.y.toFixed(1)}" fill="#5d6e89" font-size="12" font-family="monospace" text-anchor="middle" dominant-baseline="middle">${t}</text>`; }
-  const z = zoneFor(value), tip = polar(cx, cy, r - w - 6, value), le = polar(cx, cy, 10, value - 50), ri = polar(cx, cy, 10, value + 50);
-  s += `<polygon points="${tip.x.toFixed(1)},${tip.y.toFixed(1)} ${le.x.toFixed(1)},${le.y.toFixed(1)} ${ri.x.toFixed(1)},${ri.y.toFixed(1)}" fill="${z.hex}"/><circle cx="${cx}" cy="${cy}" r="13" fill="#0e1420" stroke="${z.hex}" stroke-width="3"/><circle cx="${tip.x.toFixed(1)}" cy="${tip.y.toFixed(1)}" r="5" fill="${z.hex}"/>`;
+  const cx = 220, cy = 200, r = 160, w = 26;
+  const segs = [[0, 25, "#2fd08a"], [25, 45, "#8fd24b"], [45, 70, "#f4c945"], [70, 92, "#f59042"], [92, 100, "#ef5350"]];
+  let s = `<path d="${arcPath(cx, cy, r, 0, 100)}" fill="none" stroke="#1f2a40" stroke-width="${w + 8}" stroke-linecap="round"/>`;
+  for (const [a, b, c] of segs) s += `<path d="${arcPath(cx, cy, r, a, b)}" fill="none" stroke="${c}" stroke-width="${w}"/>`;
+  for (const t of [0, 25, 50, 75, 100]) { const l = polar(cx, cy, r + w / 2 + 15, t); s += `<text x="${l.x.toFixed(1)}" y="${l.y.toFixed(1)}" fill="#6f8099" font-size="13" font-family="monospace" text-anchor="middle" dominant-baseline="middle">${t}</text>`; }
+  const z = zoneFor(value);
+  // маркер-указатель на дуге (вместо длинной стрелки — чтобы не перекрывать число)
+  const mt = polar(cx, cy, r - w / 2 - 2, value);
+  const m1 = polar(cx, cy, r - w / 2 - 20, value - 3.2);
+  const m2 = polar(cx, cy, r - w / 2 - 20, value + 3.2);
+  s += `<polygon points="${mt.x.toFixed(1)},${mt.y.toFixed(1)} ${m1.x.toFixed(1)},${m1.y.toFixed(1)} ${m2.x.toFixed(1)},${m2.y.toFixed(1)}" fill="${z.hex}" stroke="#0b0f1a" stroke-width="1.5"/>`;
+  s += `<text x="${cx}" y="158" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="68" font-weight="700" fill="${z.hex}">${Math.round(value)}</text>`;
+  s += `<text x="${cx}" y="182" text-anchor="middle" font-size="12.5" fill="#6f8099">пунктов из 100</text>`;
   $("gauge").innerHTML = s;
 }
 function renderCategories(cats) {
@@ -406,7 +417,6 @@ function buildFeed(items) {
 function render(reading, items, sources, history, note) {
   renderGauge(reading.final_barometer);
   const z = zoneFor(reading.final_barometer);
-  $("gval").innerHTML = `${reading.final_barometer.toFixed(0)}<small>/100</small>`; $("gval").style.color = z.hex;
   $("gzone").textContent = z.label; $("gzone").style.color = z.hex;
   const fc = reading.forecast || {};
   $("fc-label").textContent = fc.label || "—";
@@ -453,18 +463,27 @@ function seedSources(items) {
 
 async function refresh(initial) {
   const btn = $("refresh"); if (btn) { btn.classList.add("loading"); btn.disabled = true; btn.querySelector(".lbl").textContent = "Обновление…"; }
-  try {
-    const got = await collectAll();
-    const cached = lsGet(LS.items, []);
-    const merged = mergeItems(cached.concat(SEED), got.items);
-    lsSet(LS.items, merged);
-    let ds = got.deepstate; if (ds && ds.status === "ok") { ds = deepstateDelta(ds); lsSet("baro_ds_last", ds); }
-    computeAndRender(merged, got.statuses, liveNote(got.statuses));
-  } catch (e) {
-    computeAndRender(currentItems(), CURRENT.sources, "обновить не удалось — показаны сохранённые данные");
-  } finally {
-    if (btn) { btn.classList.remove("loading"); btn.disabled = false; btn.querySelector(".lbl").textContent = "Обновить"; }
-  }
+  // DeepState и новости тянем ПАРАЛЛЕЛЬНО и рисуем по мере готовности —
+  // медленный/недоступный источник не блокирует остальные.
+  let dsStatus = null, newsStatuses = [], dsDone = false, newsDone = false;
+  const reRender = () => {
+    const statuses = newsStatuses.concat(dsStatus ? [dsStatus] : []);
+    const note = newsDone ? liveNote(statuses) : "обновляю…";
+    computeAndRender(currentItems(), statuses.length ? statuses : null, note);
+  };
+  const dsP = (async () => {
+    try { let ds = await fetchDeepState(); if (ds.status === "ok") { ds = deepstateDelta(ds); lsSet("baro_ds_last", ds); } dsStatus = dsStatusOf(ds); }
+    catch (e) { dsStatus = dsStatusOf(null); }
+    dsDone = true; reRender();
+  })();
+  const newsP = (async () => {
+    try { const news = await collectNews(); newsStatuses = news.statuses; lsSet(LS.items, mergeItems(lsGet(LS.items, []).concat(SEED), news.items)); }
+    catch (e) {}
+    newsDone = true; reRender();
+  })();
+  await Promise.allSettled([dsP, newsP]);
+  reRender();
+  if (btn) { btn.classList.remove("loading"); btn.disabled = false; btn.querySelector(".lbl").textContent = "Обновить"; }
 }
 function liveNote(statuses) { const ok = statuses.filter((s) => s.mode === "live").length; return `источников онлайн: ${ok}/${statuses.length}`; }
 function currentItems() { const cached = lsGet(LS.items, []); return mergeItems(cached, SEED); }

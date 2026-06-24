@@ -38,13 +38,14 @@
     <!-- ─────────────── строка 1: барометр + прогноз ─────────────── -->
     <section class="grid">
       <div class="card gauge-card">
-        <h2>Барометр риска мобилизации</h2>
-        <svg class="gauge" id="gauge" viewBox="0 0 420 240" aria-label="Шкала барометра"></svg>
-        <div class="gauge-readout">
-          <div class="gauge-value" id="gval">—<small>/100</small></div>
-          <div class="gauge-zone" id="gzone">—</div>
+        <h2>Барометр риска</h2>
+        <div class="sub2">Вероятность новой волны мобилизации в России</div>
+        <svg class="gauge" id="gauge" viewBox="0 0 440 224" aria-label="Шкала барометра"></svg>
+        <div class="gauge-zone" id="gzone">—</div>
+        <div class="legend">
+          <span><i style="background:var(--z-low)"></i>0 — мобилизации не будет</span>
+          <span><i style="background:var(--z-crit)"></i>началась — 100</span>
         </div>
-        <div class="gauge-ends"><span>0 · мобилизации не будет</span><span>мобилизация началась · 100</span></div>
       </div>
 
       <div class="card">
