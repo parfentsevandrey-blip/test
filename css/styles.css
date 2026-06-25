@@ -802,3 +802,56 @@ button { font: inherit; color: inherit; cursor: pointer; background: none; borde
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
   .reveal { opacity: 1; transform: none; }
 }
+
+/* =========================================================
+   Cinematic layer — Motion-driven choreography + the
+   design-engineering polish from the UI/UX skills.
+   (Appended last so these refinements win on ties.)
+   ========================================================= */
+
+/* When the Motion module is live it owns the reveals — silence the CSS
+   transition so the two never double-animate. No-JS / reduced-motion keep
+   the original CSS reveal path untouched. */
+html.motion .reveal { transition: none; }
+
+/* Internal-parallax plane for the gallery imagery: an overscanned wrapper the
+   Motion scroll-glide drives, leaving each <img>'s own hover-zoom free. */
+.par3d { position: absolute; inset: 0; z-index: -1; overflow: visible; will-change: transform; }
+.par3d img { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+/* Typography: balanced headings (no orphan last word), pretty body wrapping. */
+.hero__title, .section__title, .preloader__mark,
+.gallery__name, .amenity h3, .footer__brand .brand__mark { text-wrap: balance; }
+.hero__lead, .residence__lead p, .plan__text, .location__lead,
+.contact__text, .amenity p, .footer__brand p, .footer__cols p { text-wrap: pretty; }
+
+/* Tabular figures so animated counters and aligned numbers never jitter. */
+.stat__num, .hero__price-value, .location__list strong,
+.plan__specs dd, [data-count] { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
+
+/* Depth through soft, layered shadows (not just hairline borders) so the
+   cards read as planes lifted above the living 3D backdrop. */
+.gallery__item { border-radius: 12px; box-shadow: 0 18px 44px -26px rgba(0, 0, 0, 0.9); }
+.gallery__item:hover { box-shadow: 0 34px 80px -30px rgba(0, 0, 0, 0.92); }
+.contact__panel { border-radius: 18px; box-shadow: 0 50px 130px -54px rgba(0, 0, 0, 0.88); }
+.plan__diagram { border-radius: 14px; box-shadow: 0 40px 110px -52px rgba(0, 0, 0, 0.85); }
+.stats { box-shadow: 0 40px 90px -64px rgba(0, 0, 0, 0.8); }
+.textvid__screen { border-radius: 10px; }
+
+/* Concentric radii: fields nested inside the rounded contact panel, softer CTAs. */
+.field input, .field textarea { border-radius: 9px; }
+.btn { border-radius: 6px; }
+
+/* Visible keyboard focus everywhere (a11y) without touching mouse styling. */
+:where(a, button, input, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Comfortable touch/click hit area for the mobile menu button (≈44px). */
+.burger { width: 44px; height: 44px; align-items: center; justify-content: center; }
+.burger span { width: 26px; }
+
+/* Anchored nav lands the section below the fixed header, not under it. */
+section[id] { scroll-margin-top: 96px; }
