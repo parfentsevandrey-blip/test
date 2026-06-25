@@ -61,10 +61,39 @@ python3 -m http.server 8000
 Any static server works (`npx serve`, VS Code Live Server, etc.).
 
 > Three.js (r160) and its post-processing addons are **vendored locally** under
-> `js/vendor/three/`, so the scene works fully offline — no CDN. If WebGL is
-> unavailable for any reason, the page degrades gracefully to a styled gradient
-> sky and everything else still works. (Google Fonts are still loaded from a CDN
-> and fall back to system serif/sans if blocked.)
+> `js/vendor/three/`, and **Motion** (the framework-free animation engine from
+> [motion.dev](https://motion.dev), v12) under `js/vendor/motion/` — both wired
+> through the page's import map, so the scene and the UI animation work fully
+> offline with no CDN. If WebGL is unavailable for any reason, the page degrades
+> gracefully to a styled gradient sky and everything else still works. (Google
+> Fonts are still loaded from a CDN and fall back to system serif/sans if
+> blocked.)
+
+## Motion (UI animation)
+
+Beyond the 3D scene, light UI micro-interactions are powered by
+**[Motion](https://motion.dev)** — its *vanilla*, framework-free DOM API (no
+React). The build is bundled into a single self-contained ES module and vendored
+at `js/vendor/motion/motion.module.js`, then exposed through the import map:
+
+```html
+<script type="importmap">
+{ "imports": { "motion": "./js/vendor/motion/motion.module.js" } }
+</script>
+```
+
+so any ES module can use it directly:
+
+```js
+import { animate, inView, scroll, stagger, spring } from "motion";
+```
+
+`js/motion-fx.js` is the entry that does this today — currently a tasteful
+*magnetic* spring on the primary call-to-action buttons. It's a separate
+`type="module"` script (so it can `import`, unlike the classic `main.js`), and
+it's fully gated behind `prefers-reduced-motion` and a fine pointer, so the page
+is unchanged when Motion is absent or the visitor prefers reduced motion. Add
+more interactions there.
 
 ## Single-file download
 
@@ -91,7 +120,9 @@ index.html             Markup & content (Russian copy lives here)
 css/styles.css         Design system, layout, animations, responsive rules
 js/scene.js            WebGL scene: the building model, lighting, camera, bloom
 js/main.js             UI: preloader, reveals, counters, nav, veil, cursor, form
+js/motion-fx.js        Motion-powered UI micro-interactions (magnetic CTAs)
 js/vendor/three/       Vendored Three.js r160 + post-processing addons
+js/vendor/motion/      Vendored Motion (framework-free DOM API, bundled ESM)
 img/                   Real photographs of Кутузовский 12 (gallery)
 build-standalone.js    Bundles the module graph + images into one HTML file
 kutuzovsky-12.html  Self-contained single-file build (downloadable)

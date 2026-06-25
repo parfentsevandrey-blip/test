@@ -23,15 +23,19 @@ const root = __dirname;
 const read = (p) => fs.readFileSync(path.join(root, p), "utf8");
 
 /* ---------- module graph ---------- */
-// Canonical ids: "three", "scene", or "addons/<path under js/vendor/three/addons>"
+// Canonical ids: "three", "motion", "scene", "motion-fx", or
+// "addons/<path under js/vendor/three/addons>"
 const fileForId = (id) => {
   if (id === "three") return "js/vendor/three/three.module.js";
+  if (id === "motion") return "js/vendor/motion/motion.module.js";
   if (id === "scene") return "js/scene.js";
+  if (id === "motion-fx") return "js/motion-fx.js";
   if (id.startsWith("addons/")) return "js/vendor/three/" + id;
   throw new Error("unknown module id: " + id);
 };
 const resolveSpec = (spec, fromId) => {
   if (spec === "three") return "three";
+  if (spec === "motion") return "motion";
   if (spec.startsWith("three/addons/")) return "addons/" + spec.slice("three/addons/".length);
   if (spec.startsWith(".")) {
     if (!fromId.startsWith("addons/")) throw new Error(`relative import "${spec}" from ${fromId}`);
@@ -47,8 +51,9 @@ const crawl = (id) => {
   if (modules.has(id)) return;
   const code = read(fileForId(id));
   const deps = [];
-  // three.module.js is a self-contained leaf — don't scan 1.2MB for false matches
-  if (id !== "three") {
+  // three.module.js / motion.module.js are self-contained leaves (bundled with
+  // no bare imports) — don't scan them for false matches
+  if (id !== "three" && id !== "motion") {
     const specs = new Set(
       [...code.matchAll(/(?:from|import)\s*\(?\s*['"]([^'"]+)['"]/g)].map((m) => m[1])
     );
@@ -60,7 +65,9 @@ const crawl = (id) => {
   modules.set(id, { id, code, deps });
   for (const d of deps) crawl(d.id);
 };
-crawl("scene");
+// Entry modules loaded at runtime (each `<script type="module">` in index.html)
+const ENTRIES = ["scene", "motion-fx"];
+ENTRIES.forEach(crawl);
 
 // topological order (dependencies before dependents)
 const order = [];
@@ -71,7 +78,7 @@ const visit = (id) => {
   for (const d of modules.get(id).deps) visit(d.id);
   order.push(id);
 };
-visit("scene");
+ENTRIES.forEach(visit);
 
 /* ---------- safety guards ---------- */
 const guard = (name, src) => {
@@ -88,7 +95,7 @@ guard("main.js", mainJs);
 const domId = new Map();
 order.forEach((id, i) => domId.set(id, "zm" + i));
 const manifest = {
-  entry: domId.get("scene"),
+  entries: ENTRIES.map((id) => domId.get(id)),
   order: order.map((id) => ({
     domId: domId.get(id),
     deps: Object.fromEntries(modules.get(id).deps.map((d) => [d.spec, domId.get(d.id)])),
@@ -111,9 +118,12 @@ function bootstrapFn() {
     });
     url[m.domId] = URL.createObjectURL(new Blob([code], { type: "text/javascript" }));
   });
-  import(url[reg.entry]).catch(function (err) {
-    console.warn("ZENITH scene failed to load:", err);
-    window.dispatchEvent(new Event("scene:ready"));
+  reg.entries.forEach(function (id, i) {
+    import(url[id]).catch(function (err) {
+      console.warn("ZENITH module failed to load:", err);
+      // The scene is entry 0 — if it fails, still release the preloader.
+      if (i === 0) window.dispatchEvent(new Event("scene:ready"));
+    });
   });
 }
 
@@ -135,7 +145,7 @@ ${blocks}
   <script>\n${mainJs}\n  </script>`;
 
 html = html.replace(
-  /  <script type="module" src="js\/scene\.js"><\/script>\n  <script src="js\/main\.js" defer><\/script>/,
+  /  <script type="module" src="js\/scene\.js"><\/script>\n  <script type="module" src="js\/motion-fx\.js"><\/script>\n  <script src="js\/main\.js" defer><\/script>/,
   () => loader
 );
 
@@ -158,7 +168,7 @@ html = html.replace(/src="(img\/[^"]+)"/g, (_m, p) => {
 }
 
 // sanity: nothing left pointing at external app files
-["href=\"css/styles.css\"", "src=\"js/scene.js\"", "src=\"js/main.js\"", "type=\"importmap\""].forEach((s) => {
+["href=\"css/styles.css\"", "src=\"js/scene.js\"", "src=\"js/motion-fx.js\"", "src=\"js/main.js\"", "type=\"importmap\""].forEach((s) => {
   if (html.includes(s)) throw new Error("Build incomplete; not inlined: " + s);
 });
 
