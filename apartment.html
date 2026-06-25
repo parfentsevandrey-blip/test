@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Кутузовский XII — трёхкомнатная квартира 93,4 м² в клубном доме делюкс-класса на Кутузовском проспекте. Три комнаты, две зоны, отделка «под ключ»." />
+  <meta name="theme-color" content="#f4f1ea" />
+  <title>Кутузовский XII — трёхкомнатная квартира 93,4 м²</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <!-- Manrope / Playfair Display / JetBrains Mono — the families this page uses
+       (Cyrillic subsets are served automatically). System fonts fall back if blocked. -->
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/apartment.css" />
+</head>
+<body>
+<canvas id="ambient" width="1440" height="900" style="width: 1440px; height: 900px;"></canvas>
+<div class="cine cine-vignette" aria-hidden="true"></div>
+<div class="cine cine-grain" aria-hidden="true"></div>
+
+<!-- ============ FLOAT HEADER ============ -->
+<header class="bar">
+  <a class="brand" href="#" aria-label="Кутузовский XII — наверх">Кутузовский&nbsp;<em>XII</em></a>
+  <nav class="nav-links">
+    <a href="#about">О квартире</a>
+    <a href="#location">Локация</a>
+    <a href="#plan">Планировка</a>
+    <a href="#interior">Интерьер</a>
+    <a href="#tech">Инженерия</a>
+    <a href="#contact">Контакты</a>
+  </nav>
+  <div class="bar-right">
+    <div class="mat-switch" role="group" aria-label="Материал и фон">
+      <button data-accent="bronze" title="Бронза" aria-label="Бронза" class="active" aria-pressed="true"><span class="sw sw-bronze"></span></button>
+      <button data-accent="marble" title="Мрамор" aria-label="Мрамор" aria-pressed="false"><span class="sw sw-marble"></span></button>
+      <button data-accent="crystal" title="Хрусталь" aria-label="Хрусталь" aria-pressed="false"><span class="sw sw-crystal"></span></button>
+      <button data-accent="veneer" title="Шпон" aria-label="Шпон" aria-pressed="false"><span class="sw sw-veneer"></span></button>
+    </div>
+    <div class="theme-switch" role="group" aria-label="Тема оформления">
+      <button data-theme="light" title="Светлая" aria-label="Светлая тема" class="active" aria-pressed="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"></circle><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5 5l1.4 1.4M17.6 17.6L19 19M19 5l-1.4 1.4M6.4 17.6L5 19"></path></svg>
+      </button>
+      <button data-theme="evening" title="Вечерняя" aria-label="Вечерняя тема" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18h18M5.5 18a6.5 6.5 0 0 1 13 0"></path><path d="M12 4.5v2M4 9l1.4 1.4M20 9l-1.4 1.4M2.5 18h1M20.5 18h1"></path></svg>
+      </button>
+      <button data-theme="dark" title="Тёмная" aria-label="Тёмная тема" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.3 6.3 0 0 0 10.5 10.5z"></path></svg>
+      </button>
+    </div>
+    <a href="#contact" class="cta">Показ</a>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" id="top">
+    <div class="bgwrap"><img src="img/apartment/apt-00.webp" alt="Фасад ЖК Кутузовский XII" style="transform: scale(1.08) translateY(0px);"></div>
+    <div class="scrim"></div>
+    <div class="inner">
+      <div class="eyebrow">Эксклюзивное предложение</div>
+      <h1>Кутузовский <em>XII</em></h1>
+      <p class="sub">Трёхкомнатная квартира 93,4&nbsp;м² с дизайнерской отделкой «под ключ». В шаге от станции «Киевская», набережных и Москва-Сити.</p>
+      <div class="meta">
+        <div class="m"><div class="ml">Площадь</div><div class="mv">93,4 <span class="u">м²</span></div></div>
+        <div class="m"><div class="ml">Комнаты</div><div class="mv">3</div></div>
+        <div class="m"><div class="ml">Этаж</div><div class="mv">6</div></div>
+        <div class="m price"><div class="ml">Стоимость</div><div class="mv">172,5 <span class="u">млн ₽</span></div></div>
+      </div>
+    </div>
+    <div class="scroll-hint"><span>Листайте</span><span class="ln"></span></div>
+  </section>
+
+  <!-- ============ MARQUEE ============ -->
+  <div class="marquee" aria-hidden="true">
+    <div class="mq-track">
+      <span>Кутузовский XII</span><span class="d">✦</span><span>93,4 м²</span><span class="d">✦</span><span>3 комнаты</span><span class="d">✦</span><span>Дорогомилово</span><span class="d">✦</span><span>Отделка под ключ</span><span class="d">✦</span><span>Машино-место 14,7 м²</span><span class="d">✦</span><span>м. Киевская</span><span class="d">✦</span>
+      <span>Кутузовский XII</span><span class="d">✦</span><span>93,4 м²</span><span class="d">✦</span><span>3 комнаты</span><span class="d">✦</span><span>Дорогомилово</span><span class="d">✦</span><span>Отделка под ключ</span><span class="d">✦</span><span>Машино-место 14,7 м²</span><span class="d">✦</span><span>м. Киевская</span><span class="d">✦</span>
+    </div>
+  </div>
+
+  <!-- ============ ABOUT ============ -->
+  <section class="sec" id="about">
+    <div class="wrap split">
+      <div class="col-media" data-px="media" style="transform: perspective(1400px) translate3d(0px, 0px, 0px) rotateX(0deg) rotateY(0deg);"><div class="frame ph tilt reveal r-img" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);"><div class="par3d" style="transform: scale(1.24) translate3d(0px, -55.5px, 0px);"><img src="img/apartment/apt-01.webp" alt="Гостиная"></div></div></div>
+      <div class="col-body" data-px="text" style="transform: translate3d(0px, 19.1px, 0px);">
+        <div class="sec-head left">
+          <div class="eyebrow reveal" data-d="0" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">01 — О квартире</div>
+          <h2 class="reveal" data-d="1" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">Сбалансированное пространство</h2>
+          <p class="lead reveal" data-d="2" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">Просторная кухня-гостиная с обеденной зоной, две изолированные спальни, два санузла и функциональный холл с системами хранения. Приватная зона отделена от общей.</p>
+        </div>
+        <div class="info stats reveal" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">
+          <div class="stat"><div class="v">93,4<span class="u"> м²</span></div><div class="l">Общая площадь</div></div>
+          <div class="stat"><div class="v">3</div><div class="l">Комнаты</div></div>
+          <div class="stat"><div class="v">2</div><div class="l">Санузла</div></div>
+          <div class="stat"><div class="v txt">Киевская</div><div class="l">Метро · 7 мин</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ LOCATION ============ -->
+  <section class="sec" id="location">
+    <div class="wrap split flip">
+      <div class="col-media" data-px="media"><div class="frame ph tilt reveal r-img" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);"><div class="par3d"><img src="img/apartment/apt-00.webp" alt="Район Дорогомилово" style="object-position:60% center"></div></div></div>
+      <div class="col-body" data-px="text">
+        <div class="sec-head left">
+          <div class="eyebrow reveal" data-d="0" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">02 — Локация</div>
+          <h2 class="reveal" data-d="1" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">Дорогомилово, Кутузовский проспект</h2>
+          <p class="lead reveal" data-d="2" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">Деловой и культурный центр Москвы в пешей доступности. Прямой выезд в сторону Сити, тихий зелёный квартал у набережных.</p>
+        </div>
+        <div class="info deflist reveal" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">
+          <div class="di"><span class="a"><i>01</i>Станция «Киевская»</span><span class="b">7–8 мин пешком</span></div>
+          <div class="di"><span class="a"><i>02</i>Садовое кольцо</span><span class="b">2 минуты</span></div>
+          <div class="di"><span class="a"><i>03</i>Третье кольцо</span><span class="b">5 минут</span></div>
+          <div class="di"><span class="a"><i>04</i>Москва-Сити, набережные</span><span class="b">рядом</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ LOBBY ============ -->
+  <section class="sec">
+    <div class="wrap split">
+      <div class="col-media" data-px="media"><div class="frame ph tilt reveal r-img" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);"><div class="par3d"><img src="img/apartment/apt-02.webp" alt="Лобби"></div></div></div>
+      <div class="col-body" data-px="text">
+        <div class="sec-head left">
+          <div class="eyebrow reveal" data-d="0" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">03 — Входная группа</div>
+          <h2 class="reveal" data-d="1" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">Лобби клубного формата</h2>
+          <p class="lead reveal" data-d="2" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">Двусветное пространство и премиальная отделка. Два лифта с выходом в подземный паркинг. Закрытая охраняемая территория.</p>
+        </div>
+        <div class="info tags reveal" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">
+          <span class="tagp">2 лифта</span><span class="tagp">Подземный паркинг</span><span class="tagp">Closed area</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PLAN ============ -->
+  <section class="sec" id="plan">
+    <div class="wrap showcase">
+      <div class="sec-head">
+        <div class="eyebrow reveal" data-d="0" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">04 — Планировка</div>
+        <h2 class="reveal" data-d="1" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">Три комнаты, две зоны</h2>
+        <p class="lead reveal" data-d="2" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">Сбалансированная планировка с приватной и общей зонами и продуманным хранением.</p>
+      </div>
+      <div class="frame plan reveal r-img" data-px="media" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);"><img src="img/apartment/apt-03.webp" alt="Планировка квартиры" style="will-change: transform;"></div>
+      <div class="info deflist reveal" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">
+        <div class="di"><span class="a"><i>01</i>Кухня-гостиная</span><span class="b">26,70 м²</span></div>
+        <div class="di"><span class="a"><i>02</i>Спальня</span><span class="b">19,04 м²</span></div>
+        <div class="di"><span class="a"><i>03</i>Спальня</span><span class="b">16,25 м²</span></div>
+        <div class="di"><span class="a"><i>04</i>Холл с хранением</span><span class="b">11,14 м²</span></div>
+        <div class="di"><span class="a"><i>05</i>Санузел с ванной</span><span class="b">8,05 м²</span></div>
+        <div class="di"><span class="a"><i>06</i>Гардероб · коридор</span><span class="b">6,05 м²</span></div>
+        <div class="di"><span class="a"><i>07</i>Санузел</span><span class="b">3,31 м²</span></div>
+        <div class="di"><span class="a"><i>—</i>Общая площадь</span><span class="b" style="color:var(--gold)">93,4 м²</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ LIVING / KITCHEN ============ -->
+  <section class="sec" id="interior">
+    <div class="wrap split flip">
+      <div class="col-media" data-px="media"><div class="frame ph tilt reveal r-img" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);"><div class="par3d"><img src="img/apartment/apt-04.webp" alt="Кухня-гостиная"></div></div></div>
+      <div class="col-body" data-px="text">
+        <div class="sec-head left">
+          <div class="eyebrow reveal" data-d="0" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">05 — Кухня-гостиная · 26,7 м²</div>
+          <h2 class="reveal" data-d="1" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">Сердце квартиры</h2>
+          <p class="lead reveal" data-d="2" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">Единое светлое пространство для жизни и встреч: кухня, гостиная и обеденная зона под потолочной инсталляцией и освещением из алебастра.</p>
+        </div>
+        <div class="info tags reveal" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">
+          <span class="tagp">26,7 м²</span><span class="tagp">Обеденная зона</span><span class="tagp">Световая инсталляция</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ LIVING DETAIL ============ -->
+  <section class="sec">
+    <div class="wrap split">
+      <div class="col-media" data-px="media"><div class="frame ph tilt reveal r-img" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);"><div class="par3d"><img src="img/apartment/apt-05.webp" alt="Зона гостиной"></div></div></div>
+      <div class="col-body" data-px="text">
+        <div class="sec-head left">
+          <div class="eyebrow reveal" data-d="0" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">06 — Гостиная и столовая</div>
+          <h2 class="reveal" data-d="1" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">Свет, мрамор и тёплое дерево</h2>
+          <p class="lead reveal" data-d="2" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">Спокойная палитра с акцентами на дерево и камень. Мягкая зона отдыха, мраморный обеденный стол и парящая потолочная инсталляция.</p>
+        </div>
+        <div class="info deflist reveal" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">
+          <div class="di"><span class="a">Декоративные панели</span><span class="b">скрытая подсветка</span></div>
+          <div class="di"><span class="a">Светильники</span><span class="b">алебастр · латунь</span></div>
+          <div class="di"><span class="a">Полы</span><span class="b">инженерный паркет</span></div>
+          <div class="di"><span class="a">Комфорт</span><span class="b">тёплый пол</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ KITCHEN ============ -->
+  <section class="sec">
+    <div class="wrap split flip">
+      <div class="col-media" data-px="media"><div class="frame ph tilt reveal r-img" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);"><div class="par3d"><img src="img/apartment/apt-06.webp" alt="Кухня — деталь"></div></div></div>
+      <div class="col-body" data-px="text">
+        <div class="sec-head left">
+          <div class="eyebrow reveal" data-d="0" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">07 — Кухня</div>
+          <h2 class="reveal" data-d="1" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">Камень, латунь и техника Bosch</h2>
+          <p class="lead reveal" data-d="2" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">Кухня с фасадами «под ключ», каменными столешницей и фартуком, латунной мойкой. Интегрированная техника скрыта за гладкими фасадами.</p>
+        </div>
+        <div class="info deflist reveal" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">
+          <div class="di"><span class="a">Варочная панель · духовой шкаф</span><span class="b">Bosch</span></div>
+          <div class="di"><span class="a">Холодильник</span><span class="b">Liebherr</span></div>
+          <div class="di"><span class="a">Посудомоечная машина</span><span class="b">встроенная</span></div>
+          <div class="di"><span class="a">Мойка · смеситель</span><span class="b">золото</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ MASTER BEDROOM ============ -->
+  <section class="sec">
+    <div class="wrap split">
+      <div class="col-media" data-px="media"><div class="frame ph tilt reveal r-img" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);"><div class="par3d"><img src="img/apartment/apt-07.webp" alt="Спальня"></div></div></div>
+      <div class="col-body" data-px="text">
+        <div class="sec-head left">
+          <div class="eyebrow reveal" data-d="0" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">08 — Спальня · 19,04 м²</div>
+          <h2 class="reveal" data-d="1" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">Главная спальня</h2>
+          <p class="lead reveal" data-d="2" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">Тёплая палитра, мягкое изголовье, рабочая зона у панорамного окна и хрустальная люстра-кольца. Вид во двор.</p>
+        </div>
+        <div class="info tags reveal" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">
+          <span class="tagp">19,04 м²</span><span class="tagp">Рабочая зона</span><span class="tagp">Вид во двор</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SECOND BEDROOM ============ -->
+  <section class="sec">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow reveal" data-d="0" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">09 — Вторая спальня · 16,25 м²</div>
+        <h2 class="reveal" data-d="1" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">Приватная зона с местом для работы</h2>
+      </div>
+      <div class="grid g2" style="margin-top:clamp(34px,5vh,58px)">
+        <div class="cell reveal r-img" data-d="0" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);"><img src="img/apartment/apt-08.webp" alt="Вторая спальня"><div class="gscr"></div><div class="tag"><div class="k">Спальня · 16,25 м²</div><b>Тишина и приватность</b></div></div>
+        <div class="cell reveal r-img" data-d="1" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);"><img src="img/apartment/apt-09.webp" alt="Рабочая зона"><div class="gscr"></div><div class="tag"><div class="k">Рабочая зона</div><b>Кабинет у окна</b></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ BATHROOMS ============ -->
+  <section class="sec">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow reveal" data-d="0" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">10 — Санузлы</div>
+        <h2 class="reveal" data-d="1" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">Два санузла с премиальной отделкой</h2>
+      </div>
+      <div class="grid g3" style="margin-top:clamp(34px,5vh,58px)">
+        <div class="cell reveal r-img" data-d="0" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);"><img src="img/apartment/apt-10.webp" alt="Ванная"><div class="gscr"></div><div class="tag"><div class="k">Санузел · 8,05 м²</div><b>Ванная зона</b></div></div>
+        <div class="cell reveal r-img" data-d="1" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);"><img src="img/apartment/apt-11.webp" alt="Душевая"><div class="gscr"></div><div class="tag"><div class="k">Оникс &amp; латунь</div><b>Душевая</b></div></div>
+        <div class="cell reveal r-img" data-d="2" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);"><img src="img/apartment/apt-12.webp" alt="Умывальник"><div class="gscr"></div><div class="tag"><div class="k">Второй санузел</div><b>Каменная раковина</b></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STORAGE ============ -->
+  <section class="sec">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow reveal" data-d="0" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">11 — Хранение</div>
+        <h2 class="reveal" data-d="1" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">Продуманное хранение</h2>
+      </div>
+      <div class="grid g3" style="margin-top:clamp(34px,5vh,58px)">
+        <div class="cell reveal r-img" data-d="0" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);"><img src="img/apartment/apt-13.webp" alt="Гардеробная"><div class="gscr"></div><div class="tag"><div class="k">Гардеробная</div><b>Свет и дерево</b></div></div>
+        <div class="cell reveal r-img" data-d="1" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);"><img src="img/apartment/apt-14.webp" alt="Холл с хранением"><div class="gscr"></div><div class="tag"><div class="k">Холл · 11,14 м²</div><b>Системы хранения</b></div></div>
+        <div class="cell reveal r-img" data-d="2" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);"><img src="img/apartment/apt-15.webp" alt="Шкаф"><div class="gscr"></div><div class="tag"><div class="k">У спальни</div><b>Бронзовое стекло</b></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DESIGN ============ -->
+  <section class="sec">
+    <div class="wrap split flip">
+      <div class="col-media" data-px="media"><div class="frame ph tilt reveal r-img" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);"><div class="par3d"><img src="img/apartment/apt-16.webp" alt="Холл"></div></div></div>
+      <div class="col-body" data-px="text">
+        <div class="sec-head left">
+          <div class="eyebrow reveal" data-d="0" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">12 — Дизайн и отделка</div>
+          <h2 class="reveal" data-d="1" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">Отделка по индивидуальному проекту</h2>
+          <p class="lead reveal" data-d="2" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">Современный стиль с элементами роскоши: натуральный мрамор, оникс и шпон дерева, декоративные панели и дизайнерское освещение.</p>
+        </div>
+        <div class="info deflist reveal" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">
+          <div class="di"><span class="a">Сантехника</span><span class="b">Ceramicanova Metropol</span></div>
+          <div class="di"><span class="a">Смесители</span><span class="b">Grocenberg</span></div>
+          <div class="di"><span class="a">Материалы</span><span class="b">мрамор · оникс · шпон</span></div>
+          <div class="di"><span class="a">Освещение</span><span class="b">потолочные инсталляции</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TECH ============ -->
+  <section class="sec" id="tech">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow reveal" data-d="0" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">13 — Техника и инженерия</div>
+        <h2 class="reveal" data-d="1" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">Всё уже работает</h2>
+        <p class="lead reveal" data-d="2" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">Квартира оснащена техникой и инженерией премиум-класса — въезжайте и живите.</p>
+      </div>
+      <div class="specs" style="margin-top:clamp(34px,5vh,58px)">
+        <div class="spec reveal" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);"><div class="sh"><span class="num">01</span> Кухонная техника</div><div class="sb">Варочная панель и духовой шкаф <b>Bosch</b>, посудомоечная машина, холодильник <b>Liebherr</b></div></div>
+        <div class="spec reveal" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);"><div class="sh"><span class="num">02</span> Бытовая техника</div><div class="sb">Стиральная и сушильная машины <b>Weissgauff</b>, телевизоры <b>Samsung</b> и <b>LG</b></div></div>
+        <div class="spec reveal" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);"><div class="sh"><span class="num">03</span> Климат</div><div class="sb">VRV-кондиционирование <b>LG</b> с рекуперацией, приточно-вытяжная вентиляция</div></div>
+        <div class="spec reveal" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);"><div class="sh"><span class="num">04</span> Свет · связь</div><div class="sb">Встроенный свет, оптоволокно, контроль доступа с видеодомофоном</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ INFRASTRUCTURE ============ -->
+  <section class="sec">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow reveal" data-d="0" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">14 — Инфраструктура</div>
+        <h2 class="reveal" data-d="1" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">Город под рукой</h2>
+      </div>
+      <div class="specs two" style="margin-top:clamp(34px,5vh,58px)">
+        <div class="spec reveal" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);"><div class="sh"><span class="num">01</span> Образование</div><div class="sb">Детские сады и школы, гимназия с углублённым изучением английского языка</div></div>
+        <div class="spec reveal" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);"><div class="sh"><span class="num">02</span> Шопинг и сервис</div><div class="sb">ТЦ «Европейский» и «Афимолл Сити», супермаркеты, рестораны и кафе</div></div>
+        <div class="spec reveal" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);"><div class="sh"><span class="num">03</span> Прогулки и спорт</div><div class="sb">Набережная Тараса Шевченко, скверы и близость Парка Победы</div></div>
+        <div class="spec reveal" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);"><div class="sh"><span class="num">04</span> Деловой центр</div><div class="sb">Москва-Сити и набережные — в минутах прямого выезда</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STATEMENT ============ -->
+  <section class="sec statement">
+    <div class="bgwrap" data-px="bg"><img src="img/apartment/apt-05.webp" alt=""></div>
+    <div class="scrim"></div>
+    <div class="wrap inner">
+      <div class="eyebrow reveal" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">15 — Уникальность</div>
+      <div class="big reveal" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">Единственное предложение подобного формата во всём <em>Дорогомилово</em></div>
+      <p class="note reveal" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">Дизайнерская отделка «под ключ», полная стоимость в договоре, без обременений и оперативный выход на сделку. Квартира продаётся с машино-местом 14,7&nbsp;м².</p>
+    </div>
+  </section>
+
+  <!-- ============ DOCUMENTS ============ -->
+  <section class="sec">
+    <div class="wrap split">
+      <div class="col-media" data-px="media"><div class="frame ph tilt reveal r-img" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);"><div class="par3d"><img src="img/apartment/apt-17.webp" alt="Интерьер прихожей"></div></div></div>
+      <div class="col-body" data-px="text">
+        <div class="sec-head left">
+          <div class="eyebrow reveal" data-d="0" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">16 — Документация</div>
+          <h2 class="reveal" data-d="1" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">Чистая сделка и полный пакет</h2>
+          <p class="lead reveal" data-d="2" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">Передаём покупателю полный комплект документов на квартиру и выполненные работы.</p>
+        </div>
+        <div class="info deflist reveal" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">
+          <div class="di"><span class="a"><i>01</i>Дизайн-проект</span><span class="b">+ кондиционирование</span></div>
+          <div class="di"><span class="a"><i>02</i>Акты скрытых работ</span><span class="b">полный комплект</span></div>
+          <div class="di"><span class="a"><i>03</i>Опрессовки систем</span><span class="b">отопление · вода</span></div>
+          <div class="di"><span class="a"><i>04</i>Акты гидроизоляции</span><span class="b">санузлы</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CONTACT ============ -->
+  <section class="sec" id="contact">
+    <div class="wrap">
+      <div class="glass contact-card reveal" style="opacity: 0; transform: translate3d(0px, 36px, 0px) scale(0.96); filter: blur(5px);">
+        <div class="brack tl"></div><div class="brack tr"></div><div class="brack bl"></div><div class="brack br"></div>
+        <div class="eyebrow">ЖК «Кутузовский XII» · Москва</div>
+        <h2>Квартира с отделкой <em>«под ключ»</em></h2>
+        <div class="price">172 500 000 ₽<span class="note">с машино-местом 14,7 м²</span></div>
+        <div class="details">
+          <div><div class="cl">Менеджер</div><div class="cv">Ирина</div></div>
+          <div><div class="cl">Телефон</div><div class="cv">+7 903 234-57-10</div></div>
+          <div><div class="cl">Показ</div><div class="cv">По договорённости</div></div>
+        </div>
+        <div class="actions">
+          <a href="tel:+79032345710" class="cta solid">Позвонить</a>
+          <a href="#top" class="cta">Наверх</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <span>Кутузовский XII · Дорогомилово</span>
+    <span>55.7448° N · 37.5680° E</span>
+  </footer>
+
+</main>
+
+
+
+
+
+
+
+
+
+<span style="position: fixed; left: -9999px; top: -9999px; width: 0px; height: 0px; color: var(--gold);"></span>
+
+  <!-- Three.js r131 (UMD → window.THREE), then the cinematic engines.
+       Classic scripts in order, so this page also opens straight from disk. -->
+  <script src="js/apartment/three.min.js" defer></script>
+  <script src="js/apartment/engine3d.js" defer></script>
+  <script src="js/apartment/depth3d.js" defer></script>
+  <script src="js/apartment/site.js" defer></script>
+</body>
+</html>

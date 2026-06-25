@@ -88,12 +88,14 @@ so any ES module can use it directly:
 import { animate, inView, scroll, stagger, spring } from "motion";
 ```
 
-`js/motion-fx.js` is the entry that does this today — currently a tasteful
-*magnetic* spring on the primary call-to-action buttons. It's a separate
-`type="module"` script (so it can `import`, unlike the classic `main.js`), and
-it's fully gated behind `prefers-reduced-motion` and a fine pointer, so the page
-is unchanged when Motion is absent or the visitor prefers reduced motion. Add
-more interactions there.
+`js/motion-fx.js` is the entry that does this — a small cinematic layer: spring
+**entrance reveals** with a short stagger and a 6px→0 de-blur, a **hero
+camera-push** (rise + fade + scale on scroll), **internal parallax** on the
+gallery imagery (each photo glides inside its frame on an overscanned plane),
+and **magnetic** primary CTAs. It's a separate `type="module"` script (so it can
+`import`, unlike the classic `main.js`), and it's fully gated behind
+`prefers-reduced-motion`; when Motion is absent the CSS `.reveal` + `main.js`
+fallback still show everything. Add more interactions there.
 
 ## Single-file download
 
@@ -129,7 +131,38 @@ kutuzovsky-12.html  Self-contained single-file build (downloadable)
 build-text-video.js    Generates the "video-as-text" experiment
 text-video.html        Plays footage with no <video>/<img> — pure colored text
 docs/preview.svg       Static preview (earlier concept)
+
+apartment.html         Apartment detail page (3-room, 93,4 m²) — editable source
+css/apartment.css      Its design system (3 themes · 4 material accents)
+js/apartment/three.min.js  Three.js r131 (UMD → window.THREE) for that page
+js/apartment/engine3d.js   3D particle "atmosphere" on the #ambient canvas
+js/apartment/depth3d.js    Scroll/pointer depth parallax for the readable layer
+js/apartment/site.js       Theme + material switch, reveals, count-up, magnetic
+img/apartment/         Interior/exterior photography for the apartment page
 ```
+
+## Apartment detail page
+
+`apartment.html` is a second, standalone page — the cinematic detail page for a
+specific **three-room residence (93,4 m²)** inside Кутузовский XII. It's its own
+self-contained world (separate design system, fonts and 3D engine from the
+landing), provided here as clean, editable source:
+
+- **A real 3D atmosphere** — `js/apartment/engine3d.js` renders a deep volume of
+  warm motes on a fixed `#ambient` WebGL canvas behind the text: perspective
+  depth, scroll flow-through, cursor parallax and themed fog (Three.js r131).
+- **Depth parallax** — `js/apartment/depth3d.js` glides each framed photo inside
+  its own overflow, drifts copy on slower planes, and tilts layers toward the
+  cursor like a diorama.
+- **Theme + material switch** — `js/apartment/site.js` toggles three light/dark
+  themes and four material accents (bronze · marble · crystal · veneer), plus
+  one-shot reveals, count-ups and magnetic buttons.
+- **Fonts** — Playfair Display · Manrope · JetBrains Mono from Google Fonts
+  (system fallback if blocked).
+
+These are **classic scripts on `window.THREE`** (not ES modules), so unlike the
+landing the page opens straight from `file://` — just keep `css/`, `js/apartment/`
+and `img/apartment/` alongside it. Open it directly or serve it like the rest.
 
 ## Experiment: video without a video player
 
