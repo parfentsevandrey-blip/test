@@ -66,14 +66,15 @@ class WeatherWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val config = WeatherStore(context).config()
         val now = System.currentTimeMillis()
-        val data = if (config.isConfigured) {
-            WeatherRepository.cached(context) ?: WeatherRepository.refresh(context, now)
-        } else {
-            null
-        }
+        // Render-only: never fetch on the Glance update path (that could add tens
+        // of seconds of latency on a cold/slow network). Read the cache; if it's
+        // empty or stale, let the background worker fetch and re-render.
+        val data = if (config.isConfigured) WeatherRepository.cached(context) else null
         val ageMs = if (data != null) now - data.updatedAt else 0L
         val isStale = data != null && ageMs > STALE_AFTER_MS
-        if (isStale) WeatherWorker.enqueueExpedited(context) // self-heal on the home screen
+        if (config.isConfigured && (data == null || isStale)) {
+            WeatherWorker.enqueueExpedited(context) // self-heal on the home screen
+        }
 
         val g = WeatherCodes.gradient(data?.code ?: 0, data?.isDay ?: true)
         val gradient = WidgetGradient.vertical(g[0], g[1], g[2])

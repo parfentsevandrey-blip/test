@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Circular "today" marker. Tinted to the accent at render time. An oval shape
+     is a real circle on every API, unlike cornerRadius which only clips on 31+. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+    <solid android:color="#FFFFFFFF" />
+</shape>

@@ -25,11 +25,14 @@ class WeatherWorker(
 
     override suspend fun doWork(): Result {
         return try {
-            WeatherRepository.refresh(applicationContext, System.currentTimeMillis())
-            WeatherWidget().updateAll(applicationContext)
+            // Only re-render when the fetch actually advanced the cache. A soft
+            // failure (offline) must NOT trigger updateAll → provideGlance →
+            // re-enqueue, which would spin the stale/cold self-heal loop.
+            val fresh = WeatherRepository.refresh(applicationContext, System.currentTimeMillis())
+            if (fresh != null) WeatherWidget().updateAll(applicationContext)
             Result.success()
         } catch (t: Throwable) {
-            if (runAttemptCount < 3) Result.retry() else Result.failure()
+            if (runAttemptCount < 2) Result.retry() else Result.success()
         }
     }
 

@@ -252,13 +252,15 @@ class CalendarWidget : GlanceAppWidget() {
     @Composable
     private fun DayNumber(cell: DayCell, tier: Tier) {
         if (cell.isToday) {
-            Box(
-                modifier = GlanceModifier
-                    .size(tier.disc.dp)
-                    .cornerRadius((tier.disc / 2).dp)
-                    .background(GlanceTheme.colors.primary),
-                contentAlignment = Alignment.Center,
-            ) {
+            Box(modifier = GlanceModifier.size(tier.disc.dp), contentAlignment = Alignment.Center) {
+                // Oval drawable → a real circle on every API (cornerRadius only
+                // clips on 31+); tinted to the live accent.
+                Image(
+                    provider = ImageProvider(R.drawable.today_disc),
+                    contentDescription = null,
+                    colorFilter = ColorFilter.tint(GlanceTheme.colors.primary),
+                    modifier = GlanceModifier.size(tier.disc.dp),
+                )
                 Text(
                     text = cell.day.toString(),
                     style = TextStyle(color = GlanceTheme.colors.onPrimary, fontSize = tier.day.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center),

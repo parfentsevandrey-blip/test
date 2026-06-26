@@ -10,11 +10,11 @@ import androidx.glance.material3.ColorProviders as GlanceColorProviders
 /**
  * Resolves the [Accent] setting to a Glance [ColorProviders].
  *
- * [Accent.DYNAMIC] returns Glance's [DynamicThemeColorProviders] — a singleton
- * whose roles are backed by `@android:color/system_*` resources. Because those
- * are *resource references*, the launcher re-resolves them at draw time, so the
- * widget tracks the live Android system colour theme (Material You) instantly,
- * with no re-render needed. Baseline fallbacks make it safe on API < 31.
+ * [Accent.DYNAMIC] returns Glance's [DynamicThemeColorProviders] singleton. On
+ * API 31+ each role resolves to an `@android:color/system_*` resource that the
+ * launcher re-resolves at draw time, so the widget tracks the live Material You
+ * system theme with no re-render needed. On API < 31 there is no Material You:
+ * the same roles fall back to Glance's static baseline palette.
  *
  * The fixed accents are intentionally static [GlanceColorProviders] built from
  * hand-tuned light/dark [androidx.compose.material3.ColorScheme]s.
