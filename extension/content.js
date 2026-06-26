@@ -9,7 +9,7 @@
   if (window.__cianExcelMounted) return;
   window.__cianExcelMounted = true;
 
-  const CONFIG = { region: 1, delayMin: 350, delayMax: 800, maxPages: 28, pageSize: 28 };
+  const CONFIG = { region: 1, delayMin: 350, delayMax: 800, maxPages: 28, pageSize: 28, maxPasses: 6 };
   const API = "https://api.cian.ru/search-offers/v2/search-offers-desktop/";
   const ROOMS = [9, 7, 1, 2, 3, 4, 5, 6];
 
@@ -196,33 +196,50 @@
     return { offers, total: parseInt(total, 10) || offers.length };
   }
 
+  // Порядки сортировки для многопроходного сбора. Меняя порядок, Циан показывает
+  // другой срез выдачи — так добираем лоты, «спрятанные» ротацией/кэшем.
+  const SORTS = [null, "price_object_order", "price_square_order", "creation_date_desc", "price_object_order_desc", "creation_date_asc"];
+
   async function collectAll(base, onProgress) {
     const byId = new Map();
     let totalInJk = 0;
     const add = (offers) => offers.forEach((o) => { const id = o.cianId || o.id; if (id != null) byId.set(id, o); });
 
-    // Этап 1 — основной проход. Останавливаемся, когда СОБРАЛИ ВСЁ (>= total)
-    // или страница ПУСТАЯ — НЕ по «короткой» странице (Циан отдаёт страницы
-    // неравномерно, особенно на полигон-поиске, и короткая ≠ последняя).
-    let page = 1, emptyStreak = 0, stalls = 0;
-    while (page <= CONFIG.maxPages) {
-      onProgress(`Загружаю страницу ${page}…`, byId.size, totalInJk);
-      let res; try { res = await fetchPage(base, null, page); } catch (e) { if (page === 1) throw e; break; }
-      if (page === 1) totalInJk = res.total;
-      if (!res.offers.length) { if (++emptyStreak >= 2) break; page++; await pause(); continue; }
-      emptyStreak = 0;
-      const before = byId.size; add(res.offers);
-      onProgress(`Собрано ${byId.size}${totalInJk ? " из " + totalInJk : ""}…`, byId.size, totalInJk);
-      if (totalInJk && byId.size >= totalInJk) break;            // собрали всё
-      if (byId.size === before) { if (++stalls >= 3) break; } else stalls = 0; // защита от ротации-без-нового
-      const bound = totalInJk ? Math.ceil(totalInJk / CONFIG.pageSize) + 3 : CONFIG.maxPages;
-      if (page >= bound) break;
-      page++;
-      await pause();
+    // один проход (пагинация одного порядка): стоп по «собрано>=всего» / пустой
+    // странице, НЕ по короткой странице.
+    async function onePass(b, label) {
+      let page = 1, emptyStreak = 0, stalls = 0;
+      while (page <= CONFIG.maxPages) {
+        onProgress(`${label}страница ${page}…`, byId.size, totalInJk);
+        let res; try { res = await fetchPage(b, null, page); } catch (e) { if (page === 1 && !totalInJk) throw e; break; }
+        if (!totalInJk) totalInJk = res.total;
+        if (!res.offers.length) { if (++emptyStreak >= 2) break; page++; await pause(); continue; }
+        emptyStreak = 0;
+        const before = byId.size; add(res.offers);
+        onProgress(`Собрано ${byId.size}${totalInJk ? " из " + totalInJk : ""}…`, byId.size, totalInJk);
+        if (totalInJk && byId.size >= totalInJk) break;
+        if (byId.size === before) { if (++stalls >= 3) break; } else stalls = 0;
+        const bound = totalInJk ? Math.ceil(totalInJk / CONFIG.pageSize) + 3 : CONFIG.maxPages;
+        if (page >= bound) break;
+        page++; await pause();
+      }
     }
 
-    // Этап 2 — добор по комнатности ТОЛЬКО если упёрлись в лимит (>~780 лотов)
-    // и пользователь сам не фильтровал по комнатам (иначе сломаем его фильтр).
+    // Несколько проходов с разной сортировкой — добираем «спрятанные» ротацией.
+    let dry = 0;
+    for (let pass = 0; pass < CONFIG.maxPasses && dry < 2; pass++) {
+      const before = byId.size;
+      const b = JSON.parse(JSON.stringify(base));
+      const so = SORTS[pass % SORTS.length];
+      if (so) b.sort = { type: "term", value: so }; else delete b.sort;
+      await onePass(b, pass === 0 ? "" : `проход ${pass + 1}: `);
+      console.log(`[cian-excel] проход ${pass + 1} (sort=${so || "default"}): собрано ${byId.size}/${totalInJk}`);
+      if (totalInJk && byId.size >= totalInJk) break;
+      dry = (byId.size === before) ? dry + 1 : 0;   // 2 прохода без новизны -> хватит
+      if (pass < CONFIG.maxPasses - 1) await pause();
+    }
+
+    // Добор по комнатности (если пользователь сам не фильтровал и всё ещё мало).
     let totalsByRoom = null;
     if (totalInJk && byId.size < totalInJk && !base.room) {
       totalsByRoom = {};
@@ -237,12 +254,13 @@
             if (!res.offers.length) break;
             add(res.offers);
             onProgress(`Собрано ${byId.size}/${totalInJk}…`, byId.size, totalInJk);
-            if (res.offers.length < CONFIG.pageSize) break;
+            if (byId.size >= totalInJk) break;
           }
         }
         await pause();
       }
     }
+    console.log(`[cian-excel] ИТОГО собрано ${byId.size} из ${totalInJk}`);
     return { offers: [...byId.values()], totalsByRoom, totalInJk };
   }
 
