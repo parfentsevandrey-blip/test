@@ -28,19 +28,40 @@
         ((/zhiloy-kompleks|kupit-|newobject/.test(href) && (href.match(/(\d{6,})/) || [])[1]) || null);
       if (id) break;
     }
-    if (!id) {
-      // запасной путь — из встроенных данных страницы
-      try {
-        const blob = window.__NEXT_DATA__ ? JSON.stringify(window.__NEXT_DATA__)
-          : document.documentElement.innerHTML.slice(0, 500000);
-        id = (blob.match(/"newobjectId"\s*:\s*(\d+)/) ||
-              blob.match(/"jkId"\s*:\s*(\d+)/) ||
-              blob.match(/zhiloy-kompleks-[a-z0-9-]*?-(\d{5,})/i) || [])[1] || null;
-      } catch (e) { /* ignore */ }
-    }
+    if (!id) id = scanForId();
     let name = ((document.querySelector("h1") || {}).textContent || "").trim() ||
       (document.title.split(/[—|·|]/)[0] || "").trim() || (id ? "ЖК " + id : "");
     return { id: id ? parseInt(id, 10) : null, name: name.replace(/\s+/g, " ").slice(0, 60) };
+  }
+
+  // Настойчивый поиск ID ЖК на странице (нужно для промо-сайтов застройщика
+  // zhk-*.cian.ru, где ID нет в адресе): ссылки на основной листинг + данные.
+  function scanForId() {
+    const RX = [
+      /zhiloy-kompleks-[a-z0-9-]*?-(\d{5,})(?:\/|\?|#|$)/i,
+      /newobject(?:%5B0%5D|\[0\])?=(\d+)/i,
+      /\/(?:kupit|snyat)[^"'\s]*?-(\d{6,})\//i,
+    ];
+    const tryAll = (s) => { for (const rx of RX) { const m = s && s.match(rx); if (m) return m[1]; } return null; };
+    // 1) все ссылки на странице (часто есть «Смотреть на Циан»/«Квартиры»)
+    for (const a of document.querySelectorAll('a[href]')) {
+      const id = tryAll(a.href || a.getAttribute("href"));
+      if (id) return id;
+    }
+    // 2) встроенные данные Next.js
+    try { const id = tryAll(JSON.stringify(window.__NEXT_DATA__ || {})) ||
+      (JSON.stringify(window.__NEXT_DATA__ || {}).match(/"(?:newobjectId|jkId)"\s*:\s*"?(\d{5,})/) || [])[1];
+      if (id) return id; } catch (e) { /* ignore */ }
+    // 3) сырой HTML (ссылки/скрипты), в т.ч. URL-энкод
+    try {
+      const html = document.documentElement.innerHTML;
+      const id = tryAll(html) ||
+        (html.match(/"newobjectId"\s*:\s*(\d+)/) ||
+         html.match(/newobject%5B0%5D=(\d+)/) ||
+         html.match(/cian\.ru[^"'\s]*?-(\d{6,})\//i) || [])[1];
+      if (id) return id;
+    } catch (e) { /* ignore */ }
+    return null;
   }
 
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -217,9 +238,19 @@
   // ---------- кнопка на странице ----------
   function setStatus(btn, text, busy) { btn.textContent = text; btn.style.opacity = busy ? "0.7" : "1"; btn.style.pointerEvents = busy ? "none" : "auto"; }
 
+  const onMainSite = () => /(^|\.)cian\.ru$/.test(location.hostname) && location.hostname.startsWith("www.");
+
   async function run(btn) {
     const jk = detectJk();
-    if (!jk.id) { jk.id = parseInt(prompt("Не нашёл ID ЖК в адресе. Введите его (число из URL Циан):"), 10); if (!jk.id) return; jk.name = jk.name || ("ЖК " + jk.id); }
+    console.log("[cian-excel] определён ЖК:", jk);
+    if (!jk.id) {
+      const hint = onMainSite()
+        ? "Введите ID ЖК (число из адреса страницы Циан):"
+        : "Это промо-сайт застройщика — ID ЖК тут не в адресе.\nЛучше открыть основную страницу ЖК на www.cian.ru (раздел «Квартиры») и нажать кнопку там.\n\nИли введите ID ЖК вручную (число из ссылки www.cian.ru/...-XXXXXXX/):";
+      jk.id = parseInt(prompt(hint), 10);
+      if (!jk.id) { setStatus(btn, "📊 Выгрузить в Excel", false); return; }
+      jk.name = jk.name || ("ЖК " + jk.id);
+    }
     setStatus(btn, "Собираю…", true);
     try {
       const { offers, totalsByRoom, totalInJk } = await collectAll(jk.id, (t) => setStatus(btn, t, true));
@@ -230,7 +261,9 @@
       setTimeout(() => setStatus(btn, "📊 Выгрузить в Excel", false), 5000);
     } catch (e) {
       console.error(e); setStatus(btn, "📊 Выгрузить в Excel", false);
-      alert("Ошибка: " + e.message + "\nОбновите страницу, войдите в аккаунт, пройдите капчу и попробуйте снова.");
+      const extra = onMainSite() ? ""
+        : "\n\nВы на промо-сайте застройщика (" + location.hostname + "). Откройте основную страницу ЖК на www.cian.ru (раздел «Квартиры») — там выгрузка работает.";
+      alert("Ошибка: " + e.message + "\nОбновите страницу, войдите в аккаунт, пройдите капчу и попробуйте снова." + extra);
     }
   }
 

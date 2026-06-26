@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Циан → Excel: выгрузка ЖК",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Кнопка на странице ЖК на cian.ru: собирает все активные лоты и скачивает готовый Excel (Сводка + по комнатности + Все_лоты).",
   "icons": { "128": "icon.png" },
   "host_permissions": ["*://*.cian.ru/*"],
