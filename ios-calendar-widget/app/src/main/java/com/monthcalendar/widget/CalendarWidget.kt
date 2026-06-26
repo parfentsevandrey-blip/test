@@ -126,10 +126,14 @@ class CalendarWidget : GlanceAppWidget() {
         hasPerm: Boolean,
     ) {
         val size = androidx.glance.LocalSize.current
+        // Circle diameters are kept well below the per-row height budget for the
+        // *bucket* size (6 rows + chrome must fit the bucket; the real widget is
+        // always ≥ bucket, so it never clips). Dots/agenda are only enabled when
+        // there is vertical room for them.
         val layout = when {
-            size.height < 200.dp -> Layout(0, 16, 9, 12, 22, 4, 1, 14, showNav = size.width >= 230.dp, showAgenda = false)
-            size.height < 290.dp -> Layout(1, 19, 10, 13, 26, 5, 3, 16, showNav = true, showAgenda = false)
-            else -> Layout(2, 22, 11, 15, 30, 5, 3, 18, showNav = true, showAgenda = true)
+            size.height < 200.dp -> Layout(0, 15, 9, 10, 14, 4, 0, 12, showNav = size.width >= 240.dp, showAgenda = false)
+            size.height < 290.dp -> Layout(1, 18, 10, 11, 16, 4, 3, 14, showNav = true, showAgenda = false)
+            else -> Layout(2, 20, 10, 11, 16, 4, 3, 16, showNav = true, showAgenda = true)
         }
 
         Column(
@@ -140,7 +144,7 @@ class CalendarWidget : GlanceAppWidget() {
                 .padding(layout.pad.dp),
         ) {
             Header(month, layout)
-            Spacer(GlanceModifier.height(if (layout.tier == 0) 6.dp else 10.dp))
+            Spacer(GlanceModifier.height(if (layout.tier == 0) 6.dp else 8.dp))
             WeekdayRow(month, layout)
             Spacer(GlanceModifier.height(4.dp))
             Grid(month, eventsByDay, layout)
@@ -169,7 +173,7 @@ class CalendarWidget : GlanceAppWidget() {
                 ),
             )
             if (layout.showNav) {
-                val btn = if (layout.tier == 2) 34 else 30
+                val btn = 28
                 NavButton(R.drawable.ic_chevron_left, "Предыдущий месяц", actionRunCallback<ShiftMonthAction>(shiftParams(-1)), btn)
                 Spacer(GlanceModifier.width(6.dp))
                 NavButton(R.drawable.ic_today, "Текущий месяц", actionRunCallback<ResetMonthAction>(), btn, accent = true)
@@ -276,7 +280,7 @@ class CalendarWidget : GlanceAppWidget() {
                         ),
                     )
                 }
-                if (events.isNotEmpty()) {
+                if (events.isNotEmpty() && layout.maxDots > 0) {
                     Spacer(GlanceModifier.height(2.dp))
                     DotRow(events, layout)
                 }
@@ -318,46 +322,46 @@ class CalendarWidget : GlanceAppWidget() {
             return
         }
         Column(modifier = GlanceModifier.fillMaxWidth()) {
-            agenda.take(4).forEachIndexed { i, e ->
-                if (i > 0) Spacer(GlanceModifier.height(6.dp))
+            agenda.take(3).forEachIndexed { i, e ->
+                if (i > 0) Spacer(GlanceModifier.height(5.dp))
                 AgendaItem(e, today)
             }
         }
     }
 
+    /** Compact single-line chip: colour dot · time · title — keeps the grid roomy. */
     @Composable
     private fun AgendaItem(e: EventLite, today: LocalDate) {
         Row(
             modifier = GlanceModifier
                 .fillMaxWidth()
-                .cornerRadius(16.dp)
+                .cornerRadius(14.dp)
                 .background(GlanceTheme.colors.secondaryContainer)
-                .padding(horizontal = 10.dp, vertical = 8.dp),
+                .padding(horizontal = 10.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
                 modifier = GlanceModifier
-                    .width(4.dp)
-                    .height(28.dp)
-                    .cornerRadius(2.dp)
+                    .size(8.dp)
+                    .cornerRadius(4.dp)
                     .background(dotColor(e)),
             ) {}
-            Spacer(GlanceModifier.width(10.dp))
-            Column(modifier = GlanceModifier.defaultWeight()) {
-                Text(
-                    text = e.title,
-                    maxLines = 1,
-                    style = TextStyle(
-                        color = GlanceTheme.colors.onSecondaryContainer,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Medium,
-                    ),
-                )
-                Text(
-                    text = agendaWhen(e, today),
-                    style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 11.sp),
-                )
-            }
+            Spacer(GlanceModifier.width(8.dp))
+            Text(
+                text = agendaWhen(e, today),
+                style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 11.sp),
+            )
+            Spacer(GlanceModifier.width(8.dp))
+            Text(
+                text = e.title,
+                maxLines = 1,
+                modifier = GlanceModifier.defaultWeight(),
+                style = TextStyle(
+                    color = GlanceTheme.colors.onSecondaryContainer,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                ),
+            )
         }
     }
 
