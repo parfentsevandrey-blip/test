@@ -96,9 +96,22 @@
       if (id) break;
     }
     if (!id) id = scanForId();
-    let name = ((document.querySelector("h1") || {}).textContent || "").trim() ||
-      (document.title.split(/[—|·|]/)[0] || "").trim() || (id ? "ЖК " + id : "");
-    return { id: id ? parseInt(id, 10) : null, name: name.replace(/\s+/g, " ").slice(0, 60) };
+    const raw = ((document.querySelector("h1") || {}).textContent || "").trim() ||
+      (document.title.split(/[—|·|]/)[0] || "").trim();
+    return { id: id ? parseInt(id, 10) : null, name: cleanName(raw) };
+  }
+
+  // Чистое имя ЖК для заголовка/файла (в h1 Циан склеиваются тексты).
+  function cleanName(raw) {
+    raw = (raw || "").replace(/\s+/g, " ").trim();
+    const q = raw.match(/«([^»]+)»/);              // «Симфония 34» -> берём из кавычек
+    if (q) return "«" + q[1].trim() + "»";
+    raw = raw
+      .replace(/^(?:купить|снять)\s+квартир\S*\s+в\s+/i, "")
+      .replace(/^квартир\S*\s+в\s+/i, "")
+      .replace(/^(?:жилом комплексе|жилой комплекс|жк)\s+/i, "")
+      .trim();
+    return raw.slice(0, 60);
   }
 
   // Настойчивый поиск ID ЖК на странице (нужно для промо-сайтов застройщика
@@ -357,7 +370,7 @@
     console.log("[cian-excel] страница:", location.href, "| ЖК:", jk, "| фильтр:", base);
     if (!base) { alert("Не удалось получить фильтр ЖК со страницы.\n\n" + OPEN_LIST_MSG); return; }
     if (!jk.id) jk.id = (JSON.stringify(base).match(/(\d{6,})/) || [])[1] || "";
-    jk.name = jk.name || (jk.id ? "ЖК " + jk.id : "ЖК");
+    jk.name = jk.name || (jk.id ? String(jk.id) : "ЖК");   // заголовки сами добавят «ЖК »
 
     setStatus(btn, "⏳ Собираю…", true);
     const onProg = (text, got, total) => { setStatus(btn, "⏳ Собираю…", true); showStatus(text, total ? got / total : null); };
