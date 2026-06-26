@@ -68,16 +68,42 @@
     return null;
   }
 
-  // Оставляем только фильтр по ЖК + структурные ключи, выкидываем сужающие
-  // (room/price/floor и т.п.), чтобы собрать ВСЕ квартиры комплекса.
+  // Используем ПОЛНЫЙ запрос страницы со ВСЕМИ фильтрами пользователя (цена,
+  // комнаты, год, полигон/карта и т.п.) — выгружаем ровно то, что он видит.
+  // Для пагинации в bodyFrom() переопределяется только page.
   function cleanBaseQuery(base) {
-    const keep = {
-      _type: base._type || "flatsale",
-      engine_version: base.engine_version || { type: "term", value: 2 },
-    };
-    ["region", "geo", "newobject", "from_developer", "building_status", "jk", "sort"]
-      .forEach((k) => { if (base[k] != null) keep[k] = base[k]; });
-    return keep;
+    const b = JSON.parse(JSON.stringify(base));
+    delete b.page;                 // страницу задаём сами при пагинации
+    if (!b._type) b._type = "flatsale";
+    if (!b.engine_version) b.engine_version = { type: "term", value: 2 };
+    return b;
+  }
+
+  // Тема выгрузки: ЖК (по id/имени) либо произвольная выборка по фильтрам/карте.
+  function detectSubject() {
+    // ЖК только если URL реально про ЖК (иначе на cat.php/карте подхватили бы
+    // случайный cianId объявления).
+    const isJkUrl = /zhiloy-kompleks|newobject(?:%5B0%5D|\[0\])?=/i.test(location.href);
+    if (isJkUrl) {
+      const jk = detectJk();
+      if (jk.id) return { id: jk.id, isJk: true, title: "ЖК " + (jk.name || jk.id), slug: slug(jk.name || ("jk-" + jk.id)) };
+    }
+    // выборка по фильтрам / области на карте
+    let nm = "";
+    const pn = location.href.match(/polygon_name(?:%5B0%5D|\[0\])?=([^&]+)/);
+    if (pn) { try { nm = decodeURIComponent(pn[1].replace(/\+/g, " ")).trim(); } catch (e) { /* ignore */ } }
+    if (!nm) { const h = (document.querySelector("h1") || {}).textContent || ""; nm = h.replace(/\s+/g, " ").trim().slice(0, 50); }
+    return { id: null, isJk: false, title: nm ? ("Выборка Циан · " + nm) : "Выборка Циан (по фильтрам)", slug: slug(nm || "vyborka") };
+  }
+
+  // Сколько объявлений показывает сама страница (для сверки/охвата).
+  function pageResultCount() {
+    try {
+      const t = document.body ? (document.body.innerText || "") : "";
+      const m = t.match(/Найдено\s+([\d  ]+)\s+объявлен/i) || t.match(/([\d  ]+)\s+объявлени[йяе]\b/i);
+      if (m) return parseInt(m[1].replace(/[\s ]/g, ""), 10) || null;
+    } catch (e) { /* ignore */ }
+    return null;
   }
 
   // ---------- определить ID и имя ЖК ----------
@@ -151,7 +177,9 @@
   function bodyFrom(base, page, room) {
     const q = JSON.parse(JSON.stringify(base));
     q.page = { type: "term", value: page };
-    if (room != null) q.room = { type: "terms", value: [room] }; else delete q.room;
+    // room задаётся ТОЛЬКО при доборе по комнатности; иначе сохраняем фильтры
+    // пользователя как есть (в т.ч. его room/price/полигон).
+    if (room != null) q.room = { type: "terms", value: [room] };
     return { jsonQuery: q };
   }
   async function fetchPage(base, room, page) {
@@ -185,9 +213,10 @@
       await pause();
     }
 
-    // Этап 2 — добор по комнатности ТОЛЬКО если упёрлись в лимит (>~780 лотов).
+    // Этап 2 — добор по комнатности ТОЛЬКО если упёрлись в лимит (>~780 лотов)
+    // и пользователь сам не фильтровал по комнатам (иначе сломаем его фильтр).
     let totalsByRoom = null;
-    if (totalInJk && byId.size < totalInJk) {
+    if (totalInJk && byId.size < totalInJk && !base.room) {
       totalsByRoom = {};
       for (const room of ROOMS) {
         onProgress(`Добираю по комнатам… (${byId.size}/${totalInJk})`, byId.size, totalInJk);
@@ -237,6 +266,7 @@
   const offerUrl = (o) => o.fullUrl || ((o.cianId || o.id) ? `https://www.cian.ru/sale/flat/${o.cianId || o.id}/` : null);
   function normalize(o) {
     const area = areaOf(o), price = priceOf(o), pub = pubDate(o);
+    const addedTs = pub ? Math.floor(pub.getTime() / 1000) : null;   // сырой unix для анализа экспозиции
     return {
       cianId: o.cianId || o.id || null, url: offerUrl(o), category: categoryOf(o),
       area, floor: o.floorNumber != null ? o.floorNumber : null,
@@ -244,8 +274,65 @@
       seller_type: sellerType(o), seller_name: sellerName(o), decoration: decorationOf(o),
       price, ppm: price && area ? Math.round(price / area) : null,
       published: pub ? fmtDate(pub) : "", exposure: pub ? Math.floor((Date.now() - pub.getTime()) / 86400000) : "",
-      updated: updDate(o) ? fmtDate(updDate(o)) : "",
+      updated: updDate(o) ? fmtDate(updDate(o)) : "", addedTs,
     };
+  }
+
+  // ===== Реальный срок экспозиции (учёт сбросов даты Циан) ===================
+  // Циан сбрасывает дату подачи при переподаче. Чтобы узнать РЕАЛЬНЫЙ срок:
+  //  (1) дубли в текущей выдаче (одна квартира у нескольких продавцов) — берём
+  //      самую раннюю дату из группы;
+  //  (2) история между запусками — храним минимальную дату, когда-либо виденную;
+  //      сдвиг даты вперёд её не уменьшает.
+  const HKEY = "cianExcelHistory_v1";
+  function loadHistory() {
+    try { const s = localStorage.getItem(HKEY); const h = s ? JSON.parse(s) : null; return h && h.flats ? h : { flats: {} }; }
+    catch (e) { return { flats: {} }; }
+  }
+  function saveHistory(h) {
+    try {
+      const cut = Math.floor(Date.now() / 1000) - 400 * 86400;  // чистим квартиры, не виденные >400 дней
+      for (const k in h.flats) if ((h.flats[k].lastSeen || 0) < cut) delete h.flats[k];
+      localStorage.setItem(HKEY, JSON.stringify(h));
+    } catch (e) { /* ignore */ }
+  }
+  // отпечаток физической квартиры (переживает переподачу/смену cianId)
+  function fpOf(r, jkId) {
+    const b = (r.building || "").toString().toLowerCase().replace(/[«»"'`.,\s]/g, "");
+    const a = r.area != null ? Number(r.area).toFixed(1) : "?";
+    return [jkId || "?", b, r.floor != null ? r.floor : "?", a, r.category || "?"].join("|");
+  }
+  function enrichExposure(rows, jkId) {
+    const now = Math.floor(Date.now() / 1000), day = 86400;
+    // (1) минимум по дублям в текущей выгрузке
+    const gmin = {}, gcnt = {};
+    rows.forEach((r) => {
+      const fp = fpOf(r, jkId); gcnt[fp] = (gcnt[fp] || 0) + 1;
+      if (r.addedTs) gmin[fp] = gmin[fp] ? Math.min(gmin[fp], r.addedTs) : r.addedTs;
+    });
+    // (2) история
+    const hist = loadHistory();
+    rows.forEach((r) => {
+      const fp = fpOf(r, jkId);
+      let h = hist.flats[fp]; if (!h) h = hist.flats[fp] = { firstSeen: now, minAdded: null, addeds: [], cianIds: [] };
+      if (r.addedTs) { h.minAdded = h.minAdded ? Math.min(h.minAdded, r.addedTs) : r.addedTs; if (h.addeds.indexOf(r.addedTs) < 0) h.addeds.push(r.addedTs); }
+      if (r.cianId && h.cianIds.indexOf(r.cianId) < 0) h.cianIds.push(r.cianId);
+      h.lastSeen = now;
+    });
+    // расчёт
+    rows.forEach((r) => {
+      const fp = fpOf(r, jkId), h = hist.flats[fp];
+      const cand = [now]; if (r.addedTs) cand.push(r.addedTs);
+      if (gmin[fp]) cand.push(gmin[fp]); if (h.minAdded) cand.push(h.minAdded); if (h.firstSeen) cand.push(h.firstSeen);
+      const origin = Math.min.apply(null, cand);
+      r.realExposure = Math.max(0, Math.floor((now - origin) / day));
+      r.firstDate = fmtDate(new Date(origin * 1000));
+      r.republish = Math.max(0, (h.addeds.length || 1) - 1);   // сколько разных дат подачи видели
+      r.dupNow = gcnt[fp] || 1;                                 // дублей в текущей выдаче
+      r.reset = !!(r.addedTs && (r.addedTs - origin > 21 * day)); // дата Циан сильно «свежее» реальной
+    });
+    saveHistory(hist);
+    return { resets: rows.filter((r) => r.reset).length, withHistory: Object.keys(hist.flats).length };
   }
 
   // ---------- генерация Excel (SpreadsheetML 2003) ----------
@@ -261,8 +348,8 @@
     const opt = freeze ? `<WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel"><FreezePanes/><FrozenNoSplit/><SplitHorizontal>4</SplitHorizontal><TopRowBottomPane>4</TopRowBottomPane><ActivePane>2</ActivePane></WorksheetOptions>` : "";
     return `<Worksheet ss:Name="${esc(name)}"><Table>${colsXml}${rowsXml}</Table>${opt}</Worksheet>`;
   }
-  const HEADERS = ["№", "ID объявления", "Категория", "Площадь, м²", "Этаж", "Этаж-ность", "Корпус / секция", "Тип продавца", "Продавец", "Отделка", "Цена, ₽", "Цена за м², ₽", "Дата публикации", "Срок эксп., дн", "Дата обновления", "Ссылка"];
-  const COLW = [34, 90, 80, 74, 44, 60, 110, 90, 150, 100, 105, 95, 95, 80, 95, 70];
+  const HEADERS = ["№", "ID объявления", "Категория", "Площадь, м²", "Этаж", "Этаж-ность", "Корпус / секция", "Тип продавца", "Продавец", "Отделка", "Цена, ₽", "Цена за м², ₽", "Дата подачи (Циан)", "Срок Циан, дн", "Реальный срок, дн", "Переподач", "Дублей", "Первая дата (оценка)", "Ссылка"];
+  const COLW = [34, 90, 78, 72, 42, 58, 105, 88, 140, 95, 105, 92, 100, 80, 95, 72, 60, 110, 68];
   function dataSheet(name, title, sub, rows) {
     let xml = rowXml([{ v: title, s: "title", merge: HEADERS.length - 1 }]) + rowXml([{ v: sub, s: "sub", merge: HEADERS.length - 1 }]) + rowXml([{}]) + rowXml(HEADERS.map((h) => ({ v: h, s: "hdr" })));
     rows.forEach((r, i) => {
@@ -271,7 +358,9 @@
         { v: r.area, t: r.area != null ? "Number" : "String", s: "area" }, { v: r.floor, t: r.floor != null ? "Number" : "String" },
         { v: r.floors, t: r.floors != null ? "Number" : "String" }, { v: r.building }, { v: r.seller_type }, { v: r.seller_name }, { v: r.decoration },
         { v: r.price, t: r.price != null ? "Number" : "String", s: "num" }, { v: r.ppm, t: r.ppm != null ? "Number" : "String", s: "num" },
-        { v: r.published }, { v: r.exposure, t: r.exposure !== "" ? "Number" : "String" }, { v: r.updated },
+        { v: r.published }, { v: r.exposure, t: r.exposure !== "" ? "Number" : "String" },
+        { v: r.realExposure, t: r.realExposure != null ? "Number" : "String", s: r.reset ? "warn" : null },
+        { v: r.republish, t: "Number" }, { v: r.dupNow, t: "Number" }, { v: r.firstDate },
         r.url ? { v: "Циан →", href: r.url, s: "link" } : {},
       ]);
     });
@@ -281,9 +370,9 @@
   const ROOM_OF_CAT = { "Студия": [9], "Своб. планировка": [7], "1": [1], "2": [2], "3": [3], "4+": [4, 5, 6] };
   const avg = (a) => a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : null;
   const num = (v) => (v == null ? { v: "—" } : { v, t: "Number", s: "num" });
-  function summarySheet(jk, rows, totalsByRoom, totalInJk) {
+  function summarySheet(subj, rows, totalsByRoom, totalInJk) {
     const present = CATS.filter((c) => rows.some((r) => r.category === c)), today = fmtDate(new Date());
-    let xml = rowXml([{ v: `ЖК ${jk.name} (ID ${jk.id}) — сводка`, s: "title", merge: 5 }]) +
+    let xml = rowXml([{ v: `${subj.title}${subj.id ? " (ID " + subj.id + ")" : ""} — сводка`, s: "title", merge: 5 }]) +
       rowXml([{ v: `Данные Циан на ${today}. Собрано ${rows.length} лотов. «Частник» = собственник/агентство.`, s: "sub", merge: 5 }]) + rowXml([{}]);
     xml += rowXml([{ v: "ОХВАТ ВЫГРУЗКИ", s: "bold" }]) + rowXml(["Категория", "Собрано", "Всего на Циан", "% выдачи"].map((h) => ({ v: h, s: "hdr" })));
     let sumC = 0, sumT = 0;
@@ -295,7 +384,7 @@
       xml += rowXml([{ v: c }, { v: got, t: "Number" }, num(tot), { v: tot ? Math.round((got / tot) * 100) + "%" : "—" }]);
     });
     xml += rowXml([{ v: "ИТОГО (категории)", s: "bold" }, { v: sumC, t: "Number", s: "bold" }, num(sumT || null), { v: sumT ? Math.round((sumC / sumT) * 100) + "%" : "—" }]);
-    if (totalInJk) xml += rowXml([{ v: "Всего квартир в ЖК (Циан)", s: "bold" }, { v: rows.length, t: "Number" }, { v: totalInJk, t: "Number" }, { v: Math.round((rows.length / totalInJk) * 100) + "%" }]);
+    if (totalInJk) xml += rowXml([{ v: subj.isJk ? "Всего квартир в ЖК (Циан)" : "Всего по фильтру (Циан)", s: "bold" }, { v: rows.length, t: "Number" }, { v: totalInJk, t: "Number" }, { v: Math.round((rows.length / totalInJk) * 100) + "%" }]);
     xml += rowXml([{}]) + rowXml([{ v: "СРЕДНЯЯ ЦЕНА ЗА м², ₽", s: "bold" }]) + rowXml(["Категория", "Частник", "Застройщик", "Все"].map((h) => ({ v: h, s: "hdr" })));
     const ppmBy = (s) => s.map((r) => r.ppm).filter((x) => x != null);
     present.concat(["ИТОГО по ЖК"]).forEach((c) => {
@@ -307,15 +396,26 @@
       const sub = rows.filter((r) => r.category === c), pr = sub.map((r) => r.price).filter((x) => x != null), pm = sub.map((r) => r.ppm).filter((x) => x != null);
       xml += rowXml([{ v: c }, num(pr.length ? Math.min(...pr) : null), num(avg(pr)), num(pr.length ? Math.max(...pr) : null), num(pm.length ? Math.min(...pm) : null), num(pm.length ? Math.max(...pm) : null)]);
     });
-    return worksheet("Сводка", [156, 96, 96, 96, 84, 84], xml, false);
+    // экспозиция
+    const real = rows.map((r) => r.realExposure).filter((x) => x != null);
+    const cian = rows.map((r) => r.exposure).filter((x) => x !== "" && x != null);
+    const resets = rows.filter((r) => r.reset).length;
+    xml += rowXml([{}]) + rowXml([{ v: "СРОК ЭКСПОЗИЦИИ", s: "bold" }]);
+    xml += rowXml([{ v: "Реальный срок (медиана/среднее), дн" }, num(real.length ? real.slice().sort((a, b) => a - b)[Math.floor(real.length / 2)] : null), num(avg(real))]);
+    xml += rowXml([{ v: "По счётчику Циан (среднее), дн" }, { v: "" }, num(avg(cian))]);
+    xml += rowXml([{ v: "Найдено сбросов даты (переподач)" }, { v: "" }, { v: resets, t: "Number", s: resets ? "warn" : null }]);
+    xml += rowXml([{}]) + rowXml([{ v: "МЕТОДИКА: «Реальный срок» = сегодня − самая ранняя дата подачи среди дублей одной квартиры", s: "sub" }]);
+    xml += rowXml([{ v: "и за всю историю наблюдений; сброс/переподача даты Циан его не уменьшает. Чем чаще выгружать — тем точнее.", s: "sub" }]);
+    return worksheet("Сводка", [220, 96, 96, 96, 84, 84], xml, false);
   }
-  function buildWorkbook(jk, rows, totalsByRoom, totalInJk) {
+  function buildWorkbook(subj, rows, totalsByRoom, totalInJk) {
     rows = rows.slice().sort((a, b) => (a.ppm == null) - (b.ppm == null) || (a.ppm || 0) - (b.ppm || 0));
-    const today = fmtDate(new Date()), sheets = [summarySheet(jk, rows, totalsByRoom, totalInJk)];
-    sheets.push(dataSheet("Все_лоты", `ЖК ${jk.name} — все лоты`, `Источник: Циан (ID ${jk.id}), ${today}. Сортировка по ₽/м². Срок экспозиции — дни с последней подачи.`, rows));
+    const today = fmtDate(new Date()), sheets = [summarySheet(subj, rows, totalsByRoom, totalInJk)];
+    const src = `Источник: Циан${subj.id ? " (ID " + subj.id + ")" : ""}, ${today}. Сортировка по ₽/м². «Реальный срок» учитывает переподачи (см. методику).`;
+    sheets.push(dataSheet("Все_лоты", `${subj.title} — все лоты`, src, rows));
     const sn = { "Студия": "Студия", "Своб. планировка": "Своб_планировка", "1": "1-комн", "2": "2-комн", "3": "3-комн", "4+": "4-комн" };
-    CATS.forEach((c) => { const sub = rows.filter((r) => r.category === c); if (sub.length) sheets.push(dataSheet(sn[c], `ЖК ${jk.name} — ${c}`, `Собрано ${sub.length}. Сортировка по ₽/м².`, sub)); });
-    const styles = `<Styles><Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Vertical="Center"/><Font ss:FontName="Calibri" ss:Size="11"/></Style><Style ss:ID="hdr"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#1F2A44" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/></Style><Style ss:ID="title"><Font ss:Bold="1" ss:Size="13"/></Style><Style ss:ID="sub"><Font ss:Italic="1" ss:Color="#555555" ss:Size="9"/></Style><Style ss:ID="bold"><Font ss:Bold="1"/></Style><Style ss:ID="num"><NumberFormat ss:Format="#,##0"/></Style><Style ss:ID="area"><NumberFormat ss:Format="0.0"/></Style><Style ss:ID="link"><Font ss:Color="#1155CC" ss:Underline="Single"/></Style></Styles>`;
+    CATS.forEach((c) => { const sub = rows.filter((r) => r.category === c); if (sub.length) sheets.push(dataSheet(sn[c], `${subj.title} — ${c}`, `Собрано ${sub.length}. Сортировка по ₽/м².`, sub)); });
+    const styles = `<Styles><Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Vertical="Center"/><Font ss:FontName="Calibri" ss:Size="11"/></Style><Style ss:ID="hdr"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#1F2A44" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/></Style><Style ss:ID="title"><Font ss:Bold="1" ss:Size="13"/></Style><Style ss:ID="sub"><Font ss:Italic="1" ss:Color="#555555" ss:Size="9"/></Style><Style ss:ID="bold"><Font ss:Bold="1"/></Style><Style ss:ID="num"><NumberFormat ss:Format="#,##0"/></Style><Style ss:ID="area"><NumberFormat ss:Format="0.0"/></Style><Style ss:ID="link"><Font ss:Color="#1155CC" ss:Underline="Single"/></Style><Style ss:ID="warn"><Font ss:Bold="1" ss:Color="#C25400"/></Style></Styles>`;
     return `<?xml version="1.0" encoding="UTF-8"?>\n<?mso-application progid="Excel.Sheet"?>\n<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" xmlns:html="http://www.w3.org/TR/REC-html40">${styles}${sheets.join("")}</Workbook>`;
   }
   const slug = (s) => s.toLowerCase().replace(/\s+/g, "-").replace(/[^0-9a-zа-яё_\-]/g, "") || "jk";
@@ -332,9 +432,10 @@
 
   const fmt = (n) => (n == null ? "—" : Number(n).toLocaleString("ru-RU"));
 
-  function computeStats(rows, totalInJk) {
+  function computeStats(rows, totalInJk, expInfo) {
     const ppm = rows.map((r) => r.ppm).filter((x) => x != null);
     const exp = rows.map((r) => r.exposure).filter((x) => x !== "" && x != null);
+    const real = rows.map((r) => r.realExposure).filter((x) => x != null);
     const avg = (a) => (a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : null);
     const byCat = CATS.map((c) => ({ c, n: rows.filter((r) => r.category === c).length })).filter((x) => x.n);
     return {
@@ -343,7 +444,7 @@
       coverage: totalInJk ? Math.round((rows.length / totalInJk) * 100) : 100,
       ppmMin: ppm.length ? Math.min(...ppm) : null,
       ppmAvg: avg(ppm), ppmMax: ppm.length ? Math.max(...ppm) : null,
-      expAvg: avg(exp), byCat,
+      expAvg: avg(exp), realAvg: avg(real), resets: (expInfo && expInfo.resets) || 0, byCat,
     };
   }
 
@@ -447,18 +548,22 @@
     console.log("[cian-excel] панель добавлена");
   }
 
-  // обновить шапку: имя ЖК + готовность страницы
+  // обновить шапку: тема выгрузки (ЖК или выборка) + готовность страницы
   function refreshHeader() {
     if (!ui.mounted) return;
-    const jk = detectJk();
+    const subj = detectSubject();
     const base = pageJsonQuery();
-    ui._jk = jk; ui._base = base ? cleanBaseQuery(base) : null;
-    ui.el.jk.textContent = jk.name ? ("ЖК " + jk.name) : "ЖК не определён";
-    ui.el.sub.textContent = jk.id ? ("ID " + jk.id + " · cian.ru") : "откройте страницу ЖК с квартирами";
+    const cnt = pageResultCount();
+    ui._subj = subj; ui._base = base ? cleanBaseQuery(base) : null;
+    ui.el.jk.textContent = subj.title || "Откройте выдачу Циан";
+    ui.el.sub.textContent = subj.id ? ("ID " + subj.id + " · cian.ru")
+      : (cnt != null ? ("на странице " + cnt + " объявл.") : "выборка по фильтрам / карте");
     const ready = !!ui._base;
     ui.el.pg.className = "pg " + (ready ? "ok" : "warn");
     ui.el.pgi.textContent = ready ? "✓" : "⚠";
-    ui.el.pgt.textContent = ready ? "Готово к выгрузке — список квартир загружен" : "Откройте страницу ЖК со списком квартир и дождитесь загрузки";
+    ui.el.pgt.textContent = ready
+      ? ("Готово к выгрузке" + (cnt != null ? " — на странице " + cnt + " объявл." : " — список загружен"))
+      : "Откройте страницу со списком объявлений (ЖК или поиск по фильтрам) и дождитесь загрузки";
     if (!ui._busy) { ui.el.go.disabled = !ready; }
   }
 
@@ -494,34 +599,38 @@
 
   async function run() {
     if (ui._busy) return;
-    const jk = ui._jk || detectJk();
+    const subj = ui._subj || detectSubject();
     let base = ui._base || (pageJsonQuery() && cleanBaseQuery(pageJsonQuery()));
-    console.log("[cian-excel] страница:", location.href, "| ЖК:", jk, "| фильтр:", base);
-    if (!base) { alert("Не удалось получить фильтр ЖК со страницы.\n\n" + OPEN_LIST_MSG); refreshHeader(); return; }
-    if (!jk.id) jk.id = (JSON.stringify(base).match(/(\d{6,})/) || [])[1] || "";
-    jk.name = jk.name || (jk.id ? String(jk.id) : "ЖК");
+    const pageCnt = pageResultCount();
+    console.log("[cian-excel] страница:", location.href, "| тема:", subj, "| на странице:", pageCnt, "| запрос:", base);
+    if (!base) { alert("Не удалось получить запрос со страницы.\n\n" + OPEN_LIST_MSG); refreshHeader(); return; }
 
     ui._busy = true; ui.el.go.disabled = true; ui.el.go.textContent = "⏳ Собираю…";
     showProgress("Подключаюсь…", null);
     try {
-      const { offers, totalsByRoom, totalInJk } = await collectAll(base, (text, got, total) => showProgress(text, total ? got / total : null));
-      if (totalInJk > 4000) {
-        ui._busy = false; ui.el.go.disabled = false; ui.el.go.textContent = "📊 Выгрузить в Excel";
-        ui.el.prog.style.display = "none";
-        alert("Фильтр по ЖК не применился: Циан вернул " + totalInJk + " объявлений — это вся выдача, а не один ЖК.\n\n" + OPEN_LIST_MSG);
-        return;
+      // Узнаём, сколько вернёт запрос (offerCount), и сверяем со страницей.
+      const probe = await fetchPage(base, null, 1);
+      const totalQ = probe.total;
+      // Сверка: запрос должен соответствовать тому, что показывает страница.
+      if (pageCnt != null && totalQ > pageCnt * 2 + 25) {
+        const ok = confirm("На странице показано ~" + pageCnt + " объявлений, а запрос вернёт " + totalQ +
+          ".\nВозможно, фильтры не совпали (открыта не та вкладка результатов).\n\nВсё равно выгрузить " + totalQ + "?");
+        if (!ok) { ui._busy = false; ui.el.go.disabled = false; ui.el.go.textContent = "📊 Выгрузить в Excel"; ui.el.prog.style.display = "none"; return; }
       }
+
+      const { offers, totalsByRoom, totalInJk } = await collectAll(base, (text, got, total) => showProgress(text, total ? got / total : null));
       if (!offers.length) { throw new Error("не собрано ни одного лота (войдите в аккаунт и пройдите капчу)"); }
       const rows = offers.map(normalize).sort((a, b) => (a.ppm == null) - (b.ppm == null) || (a.ppm || 0) - (b.ppm || 0));
+      const expInfo = enrichExposure(rows, subj.id);   // реальный срок экспозиции (учёт сбросов)
       showProgress("Готовлю Excel…", 1);
-      const filename = `cian_${slug(jk.name)}_${new Date().toISOString().slice(0, 10)}.xls`;
-      download(buildWorkbook(jk, rows, totalsByRoom, totalInJk), filename);
-      showResults(computeStats(rows, totalInJk), filename);
+      const filename = `cian_${subj.slug}_${new Date().toISOString().slice(0, 10)}.xls`;
+      download(buildWorkbook(subj, rows, totalsByRoom, totalInJk), filename);
+      showResults(computeStats(rows, totalInJk, expInfo), filename);
       ui.el.go.textContent = "📊 Выгрузить снова";
     } catch (e) {
       console.error(e); ui.el.prog.style.display = "none";
       ui.el.go.textContent = "📊 Выгрузить в Excel";
-      alert("Ошибка: " + e.message + "\nОбновите страницу ЖК, дождитесь загрузки списка квартир и попробуйте снова.");
+      alert("Ошибка: " + e.message + "\nОбновите страницу, дождитесь загрузки списка объявлений и попробуйте снова.");
     } finally {
       ui._busy = false; refreshHeader();
     }
