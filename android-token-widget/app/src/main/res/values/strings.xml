@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Claude Token Widget</string>
+    <string name="widget_label">Claude Tokens</string>
+    <string name="widget_description">Расход токенов Claude: текущая сессия и недельные лимиты.</string>
+</resources>
