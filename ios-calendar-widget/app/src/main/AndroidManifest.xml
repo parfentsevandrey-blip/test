@@ -4,6 +4,10 @@
     <!-- Read the device calendar to show event dots + an upcoming agenda. -->
     <uses-permission android:name="android.permission.READ_CALENDAR" />
 
+    <!-- Live wallpaper reads the accelerometer; both are optional. -->
+    <uses-feature android:name="android.software.live_wallpaper" />
+    <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="false" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -38,6 +42,20 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/calendar_widget_info" />
         </receiver>
+
+        <!-- Pixel-fire live wallpaper (accelerometer-driven, 3D parallax). -->
+        <service
+            android:name=".wallpaper.PixelFireWallpaperService"
+            android:exported="true"
+            android:label="@string/wallpaper_label"
+            android:permission="android.permission.BIND_WALLPAPER">
+            <intent-filter>
+                <action android:name="android.service.wallpaper.WallpaperService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.wallpaper"
+                android:resource="@xml/pixel_fire_wallpaper" />
+        </service>
 
     </application>
 

@@ -259,12 +259,6 @@ class CalendarWidget : GlanceAppWidget() {
         events: List<EventLite>,
         layout: Layout,
     ) {
-        val textColor = when {
-            cell.isToday -> GlanceTheme.colors.onPrimary
-            !cell.inCurrentMonth -> GlanceTheme.colors.onSurfaceVariant
-            cell.isWeekend -> GlanceTheme.colors.tertiary
-            else -> GlanceTheme.colors.onSurface
-        }
         Box(
             modifier = GlanceModifier
                 .defaultWeight()
@@ -273,28 +267,61 @@ class CalendarWidget : GlanceAppWidget() {
             contentAlignment = Alignment.Center,
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                val circleMod = if (cell.isToday) {
-                    GlanceModifier.size(layout.circle.dp).cornerRadius((layout.circle / 2).dp)
-                        .background(GlanceTheme.colors.primary)
-                } else {
-                    GlanceModifier.size(layout.circle.dp)
-                }
-                Box(modifier = circleMod, contentAlignment = Alignment.Center) {
-                    Text(
-                        text = cell.day.toString(),
-                        style = TextStyle(
-                            color = textColor,
-                            fontSize = layout.daySize.sp,
-                            fontWeight = if (cell.isToday) FontWeight.Bold else FontWeight.Normal,
-                            textAlign = TextAlign.Center,
-                        ),
-                    )
-                }
+                DayNumber(cell, layout)
                 if (events.isNotEmpty() && layout.maxDots > 0) {
                     Spacer(GlanceModifier.height(2.dp))
                     DotRow(events, layout)
                 }
             }
+        }
+    }
+
+    /**
+     * The day number. The glyph is NEVER wrapped in a fixed-size box, so it can
+     * never be clipped. Today gets a disc/pill that *sizes itself to the text*
+     * through padding (so it always contains the digits); at the smallest tier
+     * it is just emphasised with colour + weight, with no enclosing shape — which
+     * is what was eating the digits on small widgets.
+     */
+    @Composable
+    private fun DayNumber(cell: DayCell, layout: Layout) {
+        val baseColor = when {
+            !cell.inCurrentMonth -> GlanceTheme.colors.onSurfaceVariant
+            cell.isWeekend -> GlanceTheme.colors.tertiary
+            else -> GlanceTheme.colors.onSurface
+        }
+        when {
+            cell.isToday && layout.tier == 0 -> Text(
+                text = cell.day.toString(),
+                style = TextStyle(
+                    color = GlanceTheme.colors.primary,
+                    fontSize = layout.daySize.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                ),
+            )
+            cell.isToday -> Text(
+                text = cell.day.toString(),
+                modifier = GlanceModifier
+                    .background(GlanceTheme.colors.primary)
+                    .cornerRadius(layout.circle.dp)
+                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                style = TextStyle(
+                    color = GlanceTheme.colors.onPrimary,
+                    fontSize = layout.daySize.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                ),
+            )
+            else -> Text(
+                text = cell.day.toString(),
+                style = TextStyle(
+                    color = baseColor,
+                    fontSize = layout.daySize.sp,
+                    fontWeight = FontWeight.Normal,
+                    textAlign = TextAlign.Center,
+                ),
+            )
         }
     }
 
