@@ -992,6 +992,143 @@ def playwright_fallback(args):
 
 
 # ----------------------------------------------------------------------------- #
+#  BROWSER MODE: сбор через РЕАЛЬНЫЙ браузер (как человек)                       #
+#  Запросы к API идут изнутри страницы cian.ru (fetch с credentials), поэтому    #
+#  несут cookie с уже пройденным антибот-челленджем и тот же fingerprint, что у  #
+#  живого пользователя. Возвращает полноценные офферы (offersSerialized).        #
+# ----------------------------------------------------------------------------- #
+
+# fetch выполняется в origin www.cian.ru -> same-origin, с cookie сессии
+_JS_INPAGE_FETCH = """
+async ({url, body}) => {
+  try {
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'Accept': '*/*'},
+      body: JSON.stringify(body),
+      credentials: 'include',
+    });
+    const text = await r.text();
+    try { return JSON.parse(text); }
+    catch (e) { return {__status: r.status, __text: text.slice(0, 300)}; }
+  } catch (e) { return {__error: String(e)}; }
+}
+"""
+
+# мини-стелс: убрать очевидные признаки автоматизации до загрузки страницы
+_JS_STEALTH = """
+Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+Object.defineProperty(navigator, 'languages', {get: () => ['ru-RU', 'ru', 'en-US', 'en']});
+Object.defineProperty(navigator, 'plugins', {get: () => [1, 2, 3, 4, 5]});
+window.chrome = window.chrome || {runtime: {}};
+"""
+
+
+def _cookies_for_playwright(cookie_str, domain=".cian.ru"):
+    return [{"name": k, "value": v, "domain": domain, "path": "/"}
+            for k, v in _parse_cookie_string(cookie_str or "").items()]
+
+
+class BrowserFetcher:
+    """
+    Тот же интерфейс, что у Fetcher (post/build_body/pause), но запрос уходит
+    через page.evaluate -> in-page fetch. Благодаря этому collect_all() даёт
+    room-split, price-split, дедуп и контроль охвата без изменений.
+    """
+    def __init__(self, args, page):
+        self.args = args
+        self.page = page
+        self.api_url = API_URL
+        self.template = None
+
+    def build_body(self, page, room=None, price_min=None, price_max=None):
+        return default_json_query(
+            self.args.jk_id, self.args.region, page, self.args.engine_version,
+            room, price_min, price_max, sort=getattr(self.args, "sort", None))
+
+    def post(self, body):
+        delay = self.args.backoff_base
+        last = None
+        for attempt in range(1, max(1, self.args.retries) + 1):
+            res = self.page.evaluate(_JS_INPAGE_FETCH, {"url": self.api_url, "body": body})
+            if isinstance(res, dict) and not res.get("__status") \
+                    and not res.get("__error") and not res.get("__text"):
+                return res
+            last = res
+            status = (res or {}).get("__status") or (res or {}).get("__error")
+            log.warning("  браузер: ответ не JSON/блок (%s), попытка %d — пауза %.1fs",
+                        status, attempt, delay)
+            self.page.wait_for_timeout(int(delay * 1000))
+            delay *= 2
+        raise RuntimeError(f"Браузерный запрос не дал JSON: {str(last)[:200]}")
+
+    def pause(self):
+        self.page.wait_for_timeout(int(random.uniform(self.args.delay_min, self.args.delay_max) * 1000))
+
+
+def browser_collect(args):
+    """
+    Открывает страницу ЖК в РЕАЛЬНОМ браузере (как человек), при необходимости
+    подставляет ваши cookie, затем собирает все лоты через in-page API-fetch.
+    Первый запуск часто требует --headful: пройти капчу руками один раз
+    (потом cookie сессии валиден). Возвращает (raw_offers, totals_by_room).
+    """
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        log.error("Playwright не установлен: pip install playwright && playwright install chromium")
+        return [], None, None
+
+    import tempfile
+    profile_dir = args.browser_profile or tempfile.mkdtemp(prefix="cian_browser_")
+    jk_url = args.referer or f"https://www.cian.ru/zhiloy-kompleks-{args.jk_id}/"
+    ua = args.user_agent or DEFAULT_HEADERS["User-Agent"]
+    launch_kwargs = dict(
+        user_data_dir=profile_dir,                        # переиспользуем профиль/сессию
+        headless=not args.headful,
+        user_agent=ua,
+        locale="ru-RU",
+        timezone_id="Europe/Moscow",
+        viewport={"width": 1920, "height": 1080},
+        args=["--disable-blink-features=AutomationControlled"],
+    )
+    if args.browser_exec:
+        launch_kwargs["executable_path"] = args.browser_exec
+    if args.proxy:
+        launch_kwargs["proxy"] = {"server": args.proxy}
+    with sync_playwright() as p:
+        ctx = p.chromium.launch_persistent_context(**launch_kwargs)
+        ctx.add_init_script(_JS_STEALTH)
+        if args.cookie:
+            try:
+                ctx.add_cookies(_cookies_for_playwright(args.cookie))
+            except Exception as e:
+                log.warning("Не удалось добавить cookie в браузер: %s", e)
+
+        page = ctx.pages[0] if ctx.pages else ctx.new_page()
+        log.info("Браузер: открываю %s (как человек)...", jk_url)
+        page.goto(jk_url, wait_until="domcontentloaded", timeout=args.timeout * 1000)
+
+        # человеческое поведение: скролл/паузы; дать время на анти-бот/капчу
+        for _ in range(3):
+            page.mouse.wheel(0, int(random.uniform(1500, 4000)))
+            page.wait_for_timeout(int(random.uniform(800, 2000)))
+        if args.headful:
+            log.info("Если показана капча — пройдите её в окне; жду %d сек...", args.captcha_wait)
+            page.wait_for_timeout(args.captcha_wait * 1000)
+
+        fetcher = BrowserFetcher(args, page)
+        try:
+            total_in_jk = probe_total(fetcher)
+            if total_in_jk:
+                log.info("Браузер: всего активных лотов в ЖК по Циан: %d", total_in_jk)
+            raw, totals = collect_all(fetcher)
+        finally:
+            ctx.close()
+    return raw, totals, total_in_jk
+
+
+# ----------------------------------------------------------------------------- #
 #  SELF-TEST (офлайн): прогон parse→calc→Excel на мок-данных                     #
 # ----------------------------------------------------------------------------- #
 
@@ -1180,8 +1317,21 @@ def build_argparser():
     p.add_argument("--timeout", type=float, default=30.0, help="Таймаут запроса, сек.")
 
     # fallback / служебное
-    p.add_argument("--playwright", action="store_true", help="Сразу использовать Playwright-fallback вместо API.")
-    p.add_argument("--headful", action="store_true", help="Playwright с видимым окном (отладка).")
+    p.add_argument("--browser", action="store_true",
+                   help="Сбор через РЕАЛЬНЫЙ браузер (как человек): API-запросы идут изнутри "
+                        "страницы cian.ru с вашей сессией — проходит антибот с незаблокированного IP.")
+    p.add_argument("--browser-profile", default=None,
+                   help="Папка профиля браузера (хранит cookie/сессию между запусками). "
+                        "По умолчанию — временный профиль.")
+    p.add_argument("--browser-exec", default=None,
+                   help="Путь к chromium (если не установлен через `playwright install`, "
+                        "напр. в готовом окружении).")
+    p.add_argument("--proxy", default=None,
+                   help="Прокси для браузера, напр. http://host:port (обычно не нужен).")
+    p.add_argument("--captcha-wait", type=int, default=40,
+                   help="С --browser --headful: сколько секунд ждать ручного прохождения капчи.")
+    p.add_argument("--playwright", action="store_true", help="Простой DOM-fallback (парсинг карточек) вместо API.")
+    p.add_argument("--headful", action="store_true", help="Видимое окно браузера (нужно для прохождения капчи).")
     p.add_argument("--scrolls", type=int, default=15, help="Число прокруток страницы в Playwright-fallback.")
     p.add_argument("--dump-json", help="Сохранить сырой ответ первой страницы в файл (для сверки полей).")
     p.add_argument("--self-test", action="store_true", help="Офлайн-прогон на мок-данных (без сети).")
@@ -1213,7 +1363,14 @@ def main(argv=None):
     # Источник данных -> всегда СЫРЫЕ офферы (raw); нормализация единым проходом ниже.
     total_in_jk = None
     totals_by_room = None
-    if args.playwright:
+    if args.browser:
+        try:
+            raw, totals_by_room, total_in_jk = browser_collect(args)
+        except RuntimeError as e:
+            log.error("Браузерный сбор не удался (%s). Откройте с --headful и пройдите капчу, "
+                      "или передайте --cookie/--curl-file.", e)
+            raw = []
+    elif args.playwright:
         raw = playwright_fallback(args)
     else:
         curl = None
