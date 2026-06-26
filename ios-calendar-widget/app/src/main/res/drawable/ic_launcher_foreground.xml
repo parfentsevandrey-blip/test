@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Simple calendar glyph: red header band + grid dots, centred in the safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- card -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:strokeColor="#E5E5EA"
+        android:strokeWidth="2"
+        android:pathData="M34,36 h40 a4,4 0 0 1 4,4 v32 a4,4 0 0 1 -4,4 h-40 a4,4 0 0 1 -4,-4 v-32 a4,4 0 0 1 4,-4 z" />
+    <!-- red header -->
+    <path
+        android:fillColor="#FF3B30"
+        android:pathData="M34,36 h40 a4,4 0 0 1 4,4 v6 h-48 v-6 a4,4 0 0 1 4,-4 z" />
+    <!-- grid dots -->
+    <path android:fillColor="#C7C7CC" android:pathData="M40,54 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
+    <path android:fillColor="#C7C7CC" android:pathData="M52,54 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
+    <path android:fillColor="#C7C7CC" android:pathData="M64,54 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
+    <path android:fillColor="#FF3B30" android:pathData="M40,64 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
+    <path android:fillColor="#C7C7CC" android:pathData="M52,64 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
+    <path android:fillColor="#C7C7CC" android:pathData="M64,64 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
+</vector>

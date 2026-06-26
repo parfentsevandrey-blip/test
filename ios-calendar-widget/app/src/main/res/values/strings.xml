@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Calendar Widget</string>
+    <string name="widget_label">Календарь</string>
+    <string name="widget_description">Календарь на месяц в стиле iOS. Изменяемый размер.</string>
+</resources>

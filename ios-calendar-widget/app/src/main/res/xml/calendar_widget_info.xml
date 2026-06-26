@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Resizable in both directions. Glance reshapes the month grid responsively via
+  SizeMode.Responsive (see CalendarWidget.kt). iOS calendar widgets come in
+  ~2x2, 4x2 and 4x4 footprints — we mirror that range.
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="140dp"
+    android:minHeight="140dp"
+    android:minResizeWidth="140dp"
+    android:minResizeHeight="110dp"
+    android:maxResizeWidth="360dp"
+    android:maxResizeHeight="360dp"
+    android:targetCellWidth="4"
+    android:targetCellHeight="3"
+    android:resizeMode="horizontal|vertical"
+    android:widgetCategory="home_screen"
+    android:description="@string/widget_description"
+    android:previewLayout="@layout/widget_preview"
+    android:initialLayout="@layout/widget_preview"
+    android:updatePeriodMillis="0" />

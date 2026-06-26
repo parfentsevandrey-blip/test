@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- iOS light palette -->
+    <color name="ios_red">#FF3B30</color>
+    <color name="cal_bg">#FFFFFF</color>
+    <color name="cal_text">#000000</color>
+    <color name="cal_text_secondary">#8E8E93</color>
+    <color name="cal_text_faded">#C7C7CC</color>
+
+    <!-- used by the static picker preview -->
+    <color name="widget_bg_light">#FFFFFF</color>
+</resources>

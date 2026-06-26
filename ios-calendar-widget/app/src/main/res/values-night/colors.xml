@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- iOS dark palette -->
+    <color name="ios_red">#FF453A</color>
+    <color name="cal_bg">#1C1C1E</color>
+    <color name="cal_text">#FFFFFF</color>
+    <color name="cal_text_secondary">#8E8E93</color>
+    <color name="cal_text_faded">#48484A</color>
+</resources>
