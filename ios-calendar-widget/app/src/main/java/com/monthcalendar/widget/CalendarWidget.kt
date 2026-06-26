@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -114,9 +115,23 @@ class CalendarWidget : GlanceAppWidget() {
             AccentSchemes.providersFor(settings.accent)
         }
 
+        // Subtle premium depth: a gentle surfaceVariant → surface gradient, with
+        // a hint of the accent mixed in at the top. Built from concrete theme
+        // colours (null on pre-12 dynamic → flat background fallback).
+        val gradient = colors?.let {
+            val surface = it.surface.getColor(context).toArgb()
+            val variant = it.surfaceVariant.getColor(context).toArgb()
+            val accent = it.primaryContainer.getColor(context).toArgb()
+            WidgetGradient.vertical(
+                WidgetGradient.blend(variant, accent, 0.30f),
+                WidgetGradient.blend(variant, surface, 0.5f),
+                surface,
+            )
+        }
+
         provideContent {
             val content: @Composable () -> Unit = {
-                Content(month, today, settings, eventsByDay, agenda, hasPerm)
+                Content(month, today, settings, eventsByDay, agenda, hasPerm, gradient)
             }
             if (colors != null) {
                 GlanceTheme(colors = colors, content = content)
@@ -134,6 +149,7 @@ class CalendarWidget : GlanceAppWidget() {
         eventsByDay: Map<LocalDate, List<EventLite>>,
         agenda: List<EventLite>,
         hasPerm: Boolean,
+        gradient: androidx.glance.ImageProvider?,
     ) {
         val size = androidx.glance.LocalSize.current
         // Circle diameters are kept well below the per-row height budget for the
@@ -149,7 +165,10 @@ class CalendarWidget : GlanceAppWidget() {
         Column(
             modifier = GlanceModifier
                 .fillMaxSize()
-                .background(GlanceTheme.colors.widgetBackground)
+                .then(
+                    if (gradient != null) GlanceModifier.background(gradient)
+                    else GlanceModifier.background(GlanceTheme.colors.widgetBackground),
+                )
                 .cornerRadius(28.dp)
                 .padding(layout.pad.dp),
         ) {

@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -37,6 +39,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -207,7 +210,11 @@ private fun PreviewCard(data: WeatherData) {
             )
             Spacer(Modifier.height(8.dp))
             Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                Text(WeatherCodes.emoji(data.code), fontSize = 40.sp)
+                Image(
+                    painter = painterResource(WeatherCodes.iconRes(data.code, data.isDay)),
+                    contentDescription = WeatherCodes.label(data.code),
+                    modifier = Modifier.size(56.dp),
+                )
                 Spacer(Modifier.width(12.dp))
                 Column {
                     Text(
@@ -224,7 +231,11 @@ private fun PreviewCard(data: WeatherData) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                     Text(if (d.date == today) "Сегодня" else d.date.toString().takeLast(5))
                     Spacer(Modifier.width(10.dp))
-                    Text(WeatherCodes.emoji(d.code))
+                    Image(
+                        painter = painterResource(WeatherCodes.iconRes(d.code, true)),
+                        contentDescription = null,
+                        modifier = Modifier.size(22.dp),
+                    )
                     Spacer(Modifier.weight(1f))
                     Text("${d.max.roundToInt()}°", fontWeight = FontWeight.Bold)
                     Spacer(Modifier.width(6.dp))
