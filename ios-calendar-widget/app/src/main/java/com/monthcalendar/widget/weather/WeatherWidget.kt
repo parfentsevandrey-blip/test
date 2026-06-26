@@ -3,10 +3,8 @@ package com.monthcalendar.widget.weather
 import android.content.Context
 import android.content.Intent
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
@@ -34,21 +32,20 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
-import androidx.glance.unit.ColorProvider
 import com.monthcalendar.widget.WidgetGradient
+import com.monthcalendar.widget.design.D
+import com.monthcalendar.widget.design.Eyebrow
+import com.monthcalendar.widget.design.MetricTile
+import com.monthcalendar.widget.design.WPalette
+import com.monthcalendar.widget.design.WPalettes
+import com.monthcalendar.widget.design.glass
 import java.time.LocalDate
 import kotlin.math.roundToInt
 
-private val White = ColorProvider(Color.White)
-private val White80 = ColorProvider(Color(0xCCFFFFFF))
-private val White65 = ColorProvider(Color(0xA6FFFFFF))
-private val Chip = ColorProvider(Color(0x2BFFFFFF))
-private val ChipStrong = ColorProvider(Color(0x3DFFFFFF))
-
 /**
- * Premium Material-Expressive weather widget. A weather-and-time-of-day mood
- * gradient hero, hand-drawn vector icons, an hourly strip, a multi-day forecast
- * with precipitation, plus sunrise/sunset and key stats. Data: Open-Meteo.
+ * Weather widget, built on the shared design system ([D]/[WPalette]). A
+ * weather-and-time-of-day mood gradient hero, vector icons, an hourly strip,
+ * a multi-day forecast and a stat strip. Data: Open-Meteo (free, key-less).
  */
 class WeatherWidget : GlanceAppWidget() {
 
@@ -59,17 +56,24 @@ class WeatherWidget : GlanceAppWidget() {
     override val sizeMode = SizeMode.Responsive(setOf(small, medium, large))
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val data = WeatherRepository.cached(context)
-            ?: WeatherRepository.refresh(context, System.currentTimeMillis())
-        val g = if (data != null) WeatherCodes.gradient(data.code, data.isDay)
-        else WeatherCodes.gradient(0, true)
+        // Read the chosen location separately from the cached forecast so that a
+        // configured-but-not-yet-fetched widget shows the city + a loading state
+        // instead of falling back to the "pick a city" prompt.
+        val config = WeatherStore(context).config()
+        val data = if (config.isConfigured) {
+            WeatherRepository.cached(context) ?: WeatherRepository.refresh(context, System.currentTimeMillis())
+        } else {
+            null
+        }
+        val g = WeatherCodes.gradient(data?.code ?: 0, data?.isDay ?: true)
         val gradient = WidgetGradient.vertical(g[0], g[1], g[2])
 
-        provideContent { Content(data, gradient) }
+        provideContent { Content(config, data, gradient) }
     }
 
     @Composable
-    private fun Content(data: WeatherData?, gradient: ImageProvider) {
+    private fun Content(config: WeatherConfig, data: WeatherData?, gradient: ImageProvider) {
+        val p = WPalettes.onGradient()
         val size = LocalSize.current
         val tier = when {
             size.height < 150.dp -> 0
@@ -80,104 +84,93 @@ class WeatherWidget : GlanceAppWidget() {
             modifier = GlanceModifier
                 .fillMaxSize()
                 .background(gradient)
-                .cornerRadius(28.dp)
-                .padding(if (tier == 0) 14.dp else 16.dp)
+                .cornerRadius(D.rXl)
+                .padding(if (tier == 0) D.s7 else D.s8)
                 .clickable(actionStartActivity(weatherActivityIntent())),
         ) {
-            if (data == null) NotConfigured() else Body(data, tier)
+            when {
+                !config.isConfigured -> NotConfigured(p)
+                data == null -> Loading(config.locationName, p)
+                else -> Body(data, tier, p)
+            }
         }
     }
 
     @Composable
-    private fun Body(data: WeatherData, tier: Int) {
+    private fun Body(data: WeatherData, tier: Int, p: WPalette) {
         Column(modifier = GlanceModifier.fillMaxSize()) {
-            // Header: location + updated
+            // Header
             Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = data.locationName.ifBlank { "Погода" },
                     maxLines = 1,
                     modifier = GlanceModifier.defaultWeight(),
-                    style = TextStyle(color = White, fontSize = if (tier == 0) 13.sp else 15.sp, fontWeight = FontWeight.Medium),
+                    style = TextStyle(color = p.textPrimary, fontSize = D.titleSm, fontWeight = FontWeight.Bold),
                 )
                 if (tier >= 1) {
-                    Text(text = updatedLabel(data.updatedAt), style = TextStyle(color = White65, fontSize = 11.sp))
+                    Text(updatedLabel(data.updatedAt), style = TextStyle(color = p.textFaint, fontSize = D.eyebrow))
                 }
             }
-            Spacer(GlanceModifier.height(if (tier == 0) 2.dp else 6.dp))
+            Spacer(GlanceModifier.height(if (tier == 0) D.s1 else D.s4))
 
-            // Hero
+            // Hero: icon + temperature + condition + hi/lo
             Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Image(
                     provider = ImageProvider(WeatherCodes.iconRes(data.code, data.isDay)),
                     contentDescription = WeatherCodes.label(data.code),
-                    modifier = GlanceModifier.size(if (tier == 0) 44.dp else 58.dp),
+                    modifier = GlanceModifier.size(if (tier == 0) 46.dp else 60.dp),
                 )
-                Spacer(GlanceModifier.width(8.dp))
+                Spacer(GlanceModifier.width(D.s4))
                 Column(modifier = GlanceModifier.defaultWeight()) {
                     Text(
                         text = "${data.temp.roundToInt()}${data.tempUnit}",
-                        style = TextStyle(color = White, fontSize = if (tier == 0) 30.sp else 40.sp, fontWeight = FontWeight.Bold),
+                        style = TextStyle(color = p.textPrimary, fontSize = if (tier == 0) D.display2 else D.display, fontWeight = FontWeight.Bold),
                     )
                     if (tier >= 1) {
-                        Text(text = WeatherCodes.label(data.code), maxLines = 1, style = TextStyle(color = White80, fontSize = 12.sp))
+                        Text(WeatherCodes.label(data.code), maxLines = 1, style = TextStyle(color = p.textSecondary, fontSize = D.label))
                     }
                 }
                 data.today?.let { t ->
                     Column(horizontalAlignment = Alignment.End) {
-                        Text("↑ ${t.max.roundToInt()}°", style = TextStyle(color = White, fontSize = 13.sp, fontWeight = FontWeight.Medium))
-                        Spacer(GlanceModifier.height(2.dp))
-                        Text("↓ ${t.min.roundToInt()}°", style = TextStyle(color = White65, fontSize = 13.sp))
+                        Text("↑ ${t.max.roundToInt()}°", style = TextStyle(color = p.textPrimary, fontSize = D.body, fontWeight = FontWeight.Medium))
+                        Spacer(GlanceModifier.height(D.s1))
+                        Text("↓ ${t.min.roundToInt()}°", style = TextStyle(color = p.textFaint, fontSize = D.body))
                     }
                 }
             }
 
             if (tier >= 1 && data.hourly.isNotEmpty()) {
-                Spacer(GlanceModifier.height(10.dp))
-                HourlyStrip(data)
+                Spacer(GlanceModifier.height(D.s5))
+                HourlyStrip(data, p)
             }
 
             if (tier >= 2) {
                 if (data.daily.size > 1) {
-                    Spacer(GlanceModifier.height(10.dp))
-                    DailyList(data)
+                    Spacer(GlanceModifier.height(D.s5))
+                    DailyList(data, p)
                 }
-                Spacer(GlanceModifier.height(10.dp))
-                StatsFooter(data)
+                Spacer(GlanceModifier.height(D.s5))
+                StatStrip(data, p)
             }
         }
     }
 
     @Composable
-    private fun HourlyStrip(data: WeatherData) {
-        Row(
-            modifier = GlanceModifier
-                .fillMaxWidth()
-                .cornerRadius(18.dp)
-                .background(Chip)
-                .padding(vertical = 8.dp, horizontal = 4.dp),
-        ) {
-            data.hourly.take(6).forEachIndexed { i, h ->
-                Column(
-                    modifier = GlanceModifier.defaultWeight(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text(
-                        text = if (i == 0) "сейчас" else "%02d".format(h.time.hour),
-                        style = TextStyle(color = White65, fontSize = 10.sp),
-                    )
-                    Spacer(GlanceModifier.height(3.dp))
-                    Image(
-                        provider = ImageProvider(WeatherCodes.iconRes(h.code, h.isDay)),
-                        contentDescription = null,
-                        modifier = GlanceModifier.size(22.dp),
-                    )
-                    Spacer(GlanceModifier.height(3.dp))
-                    Text(
-                        text = "${h.temp.roundToInt()}°",
-                        style = TextStyle(color = White, fontSize = 12.sp, fontWeight = FontWeight.Medium),
-                    )
-                    if (h.precipProb >= 20) {
-                        Text(text = "${h.precipProb}%", style = TextStyle(color = ColorProvider(Color(0xCC8FD3FF)), fontSize = 9.sp))
+    private fun HourlyStrip(data: WeatherData, p: WPalette) {
+        Column(modifier = glass(p).fillMaxWidth().padding(D.s4)) {
+            Eyebrow("почасово", p)
+            Spacer(GlanceModifier.height(D.s3))
+            Row(modifier = GlanceModifier.fillMaxWidth()) {
+                data.hourly.take(6).forEachIndexed { i, h ->
+                    Column(modifier = GlanceModifier.defaultWeight(), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(if (i == 0) "сейчас" else "%02d".format(h.time.hour), style = TextStyle(color = p.textFaint, fontSize = D.eyebrow))
+                        Spacer(GlanceModifier.height(D.s2))
+                        Image(provider = ImageProvider(WeatherCodes.iconRes(h.code, h.isDay)), contentDescription = null, modifier = GlanceModifier.size(22.dp))
+                        Spacer(GlanceModifier.height(D.s2))
+                        Text("${h.temp.roundToInt()}°", style = TextStyle(color = p.textPrimary, fontSize = D.label, fontWeight = FontWeight.Medium))
+                        if (h.precipProb >= 20) {
+                            Text("${h.precipProb}%", style = TextStyle(color = p.info, fontSize = D.eyebrow))
+                        }
                     }
                 }
             }
@@ -185,70 +178,59 @@ class WeatherWidget : GlanceAppWidget() {
     }
 
     @Composable
-    private fun DailyList(data: WeatherData) {
-        Column(modifier = GlanceModifier.fillMaxWidth()) {
+    private fun DailyList(data: WeatherData, p: WPalette) {
+        Column(modifier = glass(p).fillMaxWidth().padding(horizontal = D.s5, vertical = D.s4)) {
+            Eyebrow("на неделю", p)
+            Spacer(GlanceModifier.height(D.s3))
             data.daily.drop(1).take(4).forEachIndexed { i, d ->
-                if (i > 0) Spacer(GlanceModifier.height(5.dp))
+                if (i > 0) Spacer(GlanceModifier.height(D.s4))
                 Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = dowShort(d.date),
-                        style = TextStyle(color = White, fontSize = 13.sp, fontWeight = FontWeight.Medium),
-                    )
-                    Spacer(GlanceModifier.width(8.dp))
-                    Image(
-                        provider = ImageProvider(WeatherCodes.iconRes(d.code, true)),
-                        contentDescription = null,
-                        modifier = GlanceModifier.size(20.dp),
-                    )
+                    Text(dowShort(d.date), style = TextStyle(color = p.textPrimary, fontSize = D.body, fontWeight = FontWeight.Medium))
+                    Spacer(GlanceModifier.width(D.s4))
+                    Image(provider = ImageProvider(WeatherCodes.iconRes(d.code, true)), contentDescription = null, modifier = GlanceModifier.size(20.dp))
                     if (d.precipProb >= 20) {
-                        Spacer(GlanceModifier.width(6.dp))
-                        Text(text = "${d.precipProb}%", style = TextStyle(color = ColorProvider(Color(0xCC8FD3FF)), fontSize = 11.sp))
+                        Spacer(GlanceModifier.width(D.s3))
+                        Text("${d.precipProb}%", style = TextStyle(color = p.info, fontSize = D.label))
                     }
                     Spacer(GlanceModifier.defaultWeight())
-                    Text(text = "${d.min.roundToInt()}°", style = TextStyle(color = White65, fontSize = 13.sp))
-                    Spacer(GlanceModifier.width(8.dp))
-                    Text(text = "${d.max.roundToInt()}°", style = TextStyle(color = White, fontSize = 13.sp, fontWeight = FontWeight.Bold))
+                    Text("${d.min.roundToInt()}°", style = TextStyle(color = p.textFaint, fontSize = D.body))
+                    Spacer(GlanceModifier.width(D.s4))
+                    Text("${d.max.roundToInt()}°", style = TextStyle(color = p.textPrimary, fontSize = D.body, fontWeight = FontWeight.Bold))
                 }
             }
         }
     }
 
     @Composable
-    private fun StatsFooter(data: WeatherData) {
+    private fun StatStrip(data: WeatherData, p: WPalette) {
         Row(modifier = GlanceModifier.fillMaxWidth()) {
-            StatChip("Восход", data.today?.sunrise?.let { "%02d:%02d".format(it.hour, it.minute) } ?: "—")
-            Spacer(GlanceModifier.width(6.dp))
-            StatChip("Закат", data.today?.sunset?.let { "%02d:%02d".format(it.hour, it.minute) } ?: "—")
-            Spacer(GlanceModifier.width(6.dp))
-            StatChip("Ветер", "${data.windMax.roundToInt()}")
-            Spacer(GlanceModifier.width(6.dp))
-            StatChip("УФ", "${data.uvMax.roundToInt()}")
+            MetricTile(glass(p, strong = true).defaultWeight(), data.today?.sunrise?.let { "%02d:%02d".format(it.hour, it.minute) } ?: "—", "восход", p)
+            Spacer(GlanceModifier.width(D.s3))
+            MetricTile(glass(p, strong = true).defaultWeight(), data.today?.sunset?.let { "%02d:%02d".format(it.hour, it.minute) } ?: "—", "закат", p)
+            Spacer(GlanceModifier.width(D.s3))
+            MetricTile(glass(p, strong = true).defaultWeight(), "${data.windMax.roundToInt()}", "ветер", p)
+            Spacer(GlanceModifier.width(D.s3))
+            MetricTile(glass(p, strong = true).defaultWeight(), "${data.uvMax.roundToInt()}", "уф", p)
         }
     }
 
     @Composable
-    private fun androidx.glance.layout.RowScope.StatChip(label: String, value: String) {
-        Column(
-            modifier = GlanceModifier
-                .defaultWeight()
-                .cornerRadius(14.dp)
-                .background(ChipStrong)
-                .padding(vertical = 6.dp, horizontal = 4.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(text = value, style = TextStyle(color = White, fontSize = 13.sp, fontWeight = FontWeight.Bold))
-            Text(text = label, style = TextStyle(color = White65, fontSize = 9.sp))
+    private fun Loading(location: String, p: WPalette) {
+        Column(modifier = GlanceModifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
+            Text(location.ifBlank { "Погода" }, maxLines = 1, style = TextStyle(color = p.textPrimary, fontSize = D.title, fontWeight = FontWeight.Bold))
+            Spacer(GlanceModifier.height(D.s3))
+            Text("Обновление…", style = TextStyle(color = p.textSecondary, fontSize = D.label))
         }
     }
 
     @Composable
-    private fun NotConfigured() {
+    private fun NotConfigured(p: WPalette) {
         Column(modifier = GlanceModifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically, horizontalAlignment = Alignment.CenterHorizontally) {
-            Image(provider = ImageProvider(WeatherCodes.iconRes(2, true)), contentDescription = null, modifier = GlanceModifier.size(44.dp))
-            Spacer(GlanceModifier.height(6.dp))
-            Text(text = "Погода", style = TextStyle(color = White, fontSize = 18.sp, fontWeight = FontWeight.Bold))
-            Spacer(GlanceModifier.height(4.dp))
-            Text(text = "Нажмите, чтобы выбрать город", style = TextStyle(color = White80, fontSize = 12.sp, textAlign = TextAlign.Center))
+            Image(provider = ImageProvider(WeatherCodes.iconRes(2, true)), contentDescription = null, modifier = GlanceModifier.size(46.dp))
+            Spacer(GlanceModifier.height(D.s4))
+            Text("Погода", style = TextStyle(color = p.textPrimary, fontSize = D.title, fontWeight = FontWeight.Bold))
+            Spacer(GlanceModifier.height(D.s2))
+            Text("Нажмите, чтобы выбрать город", style = TextStyle(color = p.textSecondary, fontSize = D.label, textAlign = TextAlign.Center))
         }
     }
 
@@ -267,7 +249,7 @@ private fun updatedLabel(epoch: Long): String {
     val mins = ((System.currentTimeMillis() - epoch) / 60000L).toInt()
     return when {
         mins <= 1 -> "только что"
-        mins < 60 -> "$mins мин назад"
-        else -> "${mins / 60} ч назад"
+        mins < 60 -> "$mins мин"
+        else -> "${mins / 60} ч"
     }
 }

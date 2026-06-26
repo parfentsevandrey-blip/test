@@ -1,5 +1,6 @@
 package com.monthcalendar.widget
 
+import android.app.Activity
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -52,7 +53,10 @@ import com.monthcalendar.widget.weather.WeatherData
 import com.monthcalendar.widget.weather.WeatherRepository
 import com.monthcalendar.widget.weather.WeatherStore
 import com.monthcalendar.widget.weather.WeatherWidget
+import com.monthcalendar.widget.weather.WeatherWorker
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import kotlin.math.roundToInt
 
@@ -79,6 +83,8 @@ private fun WeatherSettingsScreen() {
     var preview by remember { mutableStateOf<WeatherData?>(null) }
     var status by remember { mutableStateOf("") }
 
+    val activity = context as? Activity
+
     LaunchedEffect(Unit) {
         val cfg = store.config()
         metric = cfg.metric
@@ -86,12 +92,31 @@ private fun WeatherSettingsScreen() {
         preview = WeatherRepository.cached(context)
     }
 
-    suspend fun applyAndRefresh(cfg: WeatherConfig) {
-        store.saveConfig(cfg)
-        status = "Обновление…"
-        preview = WeatherRepository.refresh(context, System.currentTimeMillis()) ?: preview
-        WeatherWidget().updateAll(context)
-        status = if (preview != null) "Готово" else "Не удалось получить данные"
+    // City selection: persist in a NonCancellable block (so a quick exit can't
+    // drop the write), push an instant widget update with the new city, kick a
+    // background fetch, then close — the widget reloads itself on the home screen.
+    fun selectCity(r: GeoResult) {
+        val cfg = WeatherConfig(r.latitude, r.longitude, r.display, metric)
+        scope.launch {
+            withContext(NonCancellable) {
+                store.saveConfig(cfg)
+                WeatherWidget().updateAll(context)
+            }
+            WeatherWorker.enqueueOnce(context)
+            activity?.finish()
+        }
+    }
+
+    fun changeUnits(m: Boolean) {
+        metric = m
+        scope.launch {
+            withContext(NonCancellable) {
+                store.saveConfig(store.config().copy(metric = m))
+                WeatherRepository.refresh(context, System.currentTimeMillis())?.let { preview = it }
+                WeatherWidget().updateAll(context)
+            }
+            WeatherWorker.enqueueOnce(context)
+        }
     }
 
     Scaffold(topBar = { TopAppBar(title = { Text("Погода · виджет") }) }) { inner ->
@@ -135,20 +160,7 @@ private fun WeatherSettingsScreen() {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable {
-                            scope.launch {
-                                locationName = r.display
-                                applyAndRefresh(
-                                    WeatherConfig(
-                                        latitude = r.latitude,
-                                        longitude = r.longitude,
-                                        locationName = r.display,
-                                        metric = metric,
-                                    ),
-                                )
-                                results.clear()
-                            }
-                        },
+                        .clickable { selectCity(r) },
                 ) {
                     Text(r.display, modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.bodyLarge)
                 }
@@ -160,18 +172,12 @@ private fun WeatherSettingsScreen() {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(
                     selected = metric,
-                    onClick = {
-                        metric = true
-                        scope.launch { applyAndRefresh(currentConfig(store, true)) }
-                    },
+                    onClick = { changeUnits(true) },
                     label = { Text("°C, км/ч") },
                 )
                 FilterChip(
                     selected = !metric,
-                    onClick = {
-                        metric = false
-                        scope.launch { applyAndRefresh(currentConfig(store, false)) }
-                    },
+                    onClick = { changeUnits(false) },
                     label = { Text("°F, mph") },
                 )
             }
@@ -190,11 +196,6 @@ private fun WeatherSettingsScreen() {
             )
         }
     }
-}
-
-private suspend fun currentConfig(store: WeatherStore, metric: Boolean): WeatherConfig {
-    val c = store.config()
-    return c.copy(metric = metric)
 }
 
 @Composable

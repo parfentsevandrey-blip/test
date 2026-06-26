@@ -159,7 +159,7 @@ class CalendarWidget : GlanceAppWidget() {
         val layout = when {
             size.height < 200.dp -> Layout(0, 15, 9, 10, 15, 4, 0, 12, showNav = size.width >= 240.dp, showAgenda = false)
             size.height < 290.dp -> Layout(1, 18, 10, 11, 16, 4, 3, 14, showNav = true, showAgenda = false)
-            else -> Layout(2, 20, 10, 11, 16, 4, 3, 16, showNav = true, showAgenda = true)
+            else -> Layout(2, 20, 10, 11, 15, 4, 3, 16, showNav = true, showAgenda = true)
         }
 
         Column(
@@ -372,6 +372,11 @@ class CalendarWidget : GlanceAppWidget() {
             return
         }
         Column(modifier = GlanceModifier.fillMaxWidth()) {
+            Text(
+                text = "БЛИЖАЙШИЕ",
+                style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 9.sp, fontWeight = FontWeight.Medium),
+            )
+            Spacer(GlanceModifier.height(6.dp))
             agenda.take(3).forEachIndexed { i, e ->
                 if (i > 0) Spacer(GlanceModifier.height(4.dp))
                 AgendaItem(e, today)
@@ -385,9 +390,9 @@ class CalendarWidget : GlanceAppWidget() {
         Row(
             modifier = GlanceModifier
                 .fillMaxWidth()
-                .cornerRadius(14.dp)
+                .cornerRadius(18.dp)
                 .background(GlanceTheme.colors.secondaryContainer)
-                .padding(horizontal = 10.dp, vertical = 5.dp),
+                .padding(horizontal = 12.dp, vertical = 7.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
