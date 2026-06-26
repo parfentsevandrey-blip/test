@@ -9,7 +9,7 @@
   if (window.__cianExcelMounted) return;
   window.__cianExcelMounted = true;
 
-  const CONFIG = { region: 1, delayMin: 1100, delayMax: 2400, maxPages: 28, pageSize: 28 };
+  const CONFIG = { region: 1, delayMin: 350, delayMax: 800, maxPages: 28, pageSize: 28 };
   const API = "https://api.cian.ru/search-offers/v2/search-offers-desktop/";
   const ROOMS = [9, 7, 1, 2, 3, 4, 5, 6];
 
@@ -91,32 +91,42 @@
   }
 
   async function collectAll(jkid, onProgress) {
-    const byId = new Map(), totalsByRoom = {};
+    const byId = new Map();
     let totalInJk = 0;
     const add = (offers) => offers.forEach((o) => { const id = o.cianId || o.id; if (id != null) byId.set(id, o); });
+
+    // Этап 1 — основной проход (для ЖК до ~780 лотов собирает ВСЁ).
     for (let page = 1; page <= CONFIG.maxPages; page++) {
+      onProgress(`Загружаю страницу ${page}…`, byId.size, totalInJk);
       let res; try { res = await fetchPage(jkid, null, page); } catch (e) { if (page === 1) throw e; break; }
       if (page === 1) totalInJk = res.total;
       if (!res.offers.length) break;
       add(res.offers);
-      onProgress(`Собрано ${byId.size}${totalInJk ? "/" + totalInJk : ""}…`);
+      onProgress(`Собрано ${byId.size}${totalInJk ? " из " + totalInJk : ""}…`, byId.size, totalInJk);
       if (res.offers.length < CONFIG.pageSize) break;
       await pause();
     }
-    for (const room of ROOMS) {
-      let first; try { first = await fetchPage(jkid, room, 1); } catch (e) { continue; }
-      totalsByRoom[room] = first.total; add(first.offers);
-      if (first.total > CONFIG.pageSize) {
-        for (let page = 2; page <= CONFIG.maxPages; page++) {
-          await pause();
-          let res; try { res = await fetchPage(jkid, room, page); } catch (e) { break; }
-          if (!res.offers.length) break;
-          add(res.offers);
-          onProgress(`Собрано ${byId.size}${totalInJk ? "/" + totalInJk : ""}…`);
-          if (res.offers.length < CONFIG.pageSize) break;
+
+    // Этап 2 — добор по комнатности ТОЛЬКО если упёрлись в лимит (>~780 лотов).
+    let totalsByRoom = null;
+    if (totalInJk && byId.size < totalInJk) {
+      totalsByRoom = {};
+      for (const room of ROOMS) {
+        onProgress(`Добираю по комнатам… (${byId.size}/${totalInJk})`, byId.size, totalInJk);
+        let first; try { first = await fetchPage(jkid, room, 1); } catch (e) { continue; }
+        totalsByRoom[room] = first.total; add(first.offers);
+        if (first.total > CONFIG.pageSize) {
+          for (let page = 2; page <= CONFIG.maxPages; page++) {
+            await pause();
+            let res; try { res = await fetchPage(jkid, room, page); } catch (e) { break; }
+            if (!res.offers.length) break;
+            add(res.offers);
+            onProgress(`Собрано ${byId.size}/${totalInJk}…`, byId.size, totalInJk);
+            if (res.offers.length < CONFIG.pageSize) break;
+          }
         }
+        await pause();
       }
-      await pause();
     }
     return { offers: [...byId.values()], totalsByRoom, totalInJk };
   }
@@ -200,7 +210,9 @@
     xml += rowXml([{ v: "ОХВАТ ВЫГРУЗКИ", s: "bold" }]) + rowXml(["Категория", "Собрано", "Всего на Циан", "% выдачи"].map((h) => ({ v: h, s: "hdr" })));
     let sumC = 0, sumT = 0;
     present.forEach((c) => {
-      const got = rows.filter((r) => r.category === c).length, tot = ROOM_OF_CAT[c].reduce((s, rm) => s + (totalsByRoom[rm] || 0), 0) || null;
+      const got = rows.filter((r) => r.category === c).length;
+      // totalsByRoom есть только если был добор (>лимита); иначе собрано = всё на Циан
+      const tot = totalsByRoom ? (ROOM_OF_CAT[c].reduce((s, rm) => s + (totalsByRoom[rm] || 0), 0) || null) : got;
       sumC += got; if (tot) sumT += tot;
       xml += rowXml([{ v: c }, { v: got, t: "Number" }, num(tot), { v: tot ? Math.round((got / tot) * 100) + "%" : "—" }]);
     });
@@ -235,8 +247,37 @@
     document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
   }
 
-  // ---------- кнопка на странице ----------
+  // ---------- кнопка и статус-бар на странице ----------
   function setStatus(btn, text, busy) { btn.textContent = text; btn.style.opacity = busy ? "0.7" : "1"; btn.style.pointerEvents = busy ? "none" : "auto"; }
+
+  function statusEl() {
+    let el = document.getElementById("cian-excel-status");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "cian-excel-status";
+      Object.assign(el.style, {
+        position: "fixed", right: "20px", bottom: "68px", zIndex: 2147483647,
+        background: "#fff", color: "#1F2A44", padding: "10px 14px", borderRadius: "10px",
+        fontSize: "13px", fontFamily: "Arial, sans-serif", boxShadow: "0 4px 16px rgba(0,0,0,.22)",
+        minWidth: "210px", display: "none",
+      });
+      el.innerHTML =
+        '<div id="cex-txt" style="font-weight:600;margin-bottom:6px">…</div>' +
+        '<div style="height:8px;background:#e6e8ee;border-radius:5px;overflow:hidden">' +
+        '<div id="cex-bar" style="height:100%;width:0%;background:#4CAF50;transition:width .25s"></div></div>';
+      document.body.appendChild(el);
+    }
+    return el;
+  }
+  function showStatus(text, frac) {
+    const el = statusEl(); el.style.display = "block";
+    el.querySelector("#cex-txt").textContent = text;
+    const bar = el.querySelector("#cex-bar");
+    if (frac != null && isFinite(frac)) { bar.style.width = Math.min(100, Math.round(frac * 100)) + "%"; }
+    else { bar.style.width = "100%"; bar.style.opacity = "0.4"; } // неопределённый прогресс
+  }
+  function doneStatus(text) { const el = statusEl(); el.style.display = "block"; el.querySelector("#cex-txt").textContent = text; const b = el.querySelector("#cex-bar"); b.style.opacity = "1"; b.style.width = "100%"; }
+  function hideStatus() { const el = document.getElementById("cian-excel-status"); if (el) el.style.display = "none"; }
 
   const onMainSite = () => /(^|\.)cian\.ru$/.test(location.hostname) && location.hostname.startsWith("www.");
 
@@ -251,16 +292,18 @@
       if (!jk.id) { setStatus(btn, "📊 Выгрузить в Excel", false); return; }
       jk.name = jk.name || ("ЖК " + jk.id);
     }
-    setStatus(btn, "Собираю…", true);
+    setStatus(btn, "⏳ Собираю…", true);
+    const onProg = (text, got, total) => { setStatus(btn, "⏳ Собираю…", true); showStatus(text, total ? got / total : null); };
     try {
-      const { offers, totalsByRoom, totalInJk } = await collectAll(jk.id, (t) => setStatus(btn, t, true));
-      if (!offers.length) { setStatus(btn, "📊 Выгрузить в Excel", false); alert("Не собрано ни одного лота. Войдите в аккаунт, пройдите капчу и попробуйте снова. Если ЖК не в Москве — поменяйте region в расширении."); return; }
+      const { offers, totalsByRoom, totalInJk } = await collectAll(jk.id, onProg);
+      if (!offers.length) { setStatus(btn, "📊 Выгрузить в Excel", false); hideStatus(); alert("Не собрано ни одного лота. Войдите в аккаунт, пройдите капчу и попробуйте снова. Если ЖК не в Москве — поменяйте region в расширении."); return; }
       const rows = offers.map(normalize);
+      doneStatus(`Готово: ${rows.length} лотов — скачиваю Excel…`);
       download(buildWorkbook(jk, rows, totalsByRoom, totalInJk), `cian_${slug(jk.name)}_${new Date().toISOString().slice(0, 10)}.xls`);
       setStatus(btn, `✓ Готово: ${rows.length} лотов`, false);
-      setTimeout(() => setStatus(btn, "📊 Выгрузить в Excel", false), 5000);
+      setTimeout(() => { setStatus(btn, "📊 Выгрузить в Excel", false); hideStatus(); }, 6000);
     } catch (e) {
-      console.error(e); setStatus(btn, "📊 Выгрузить в Excel", false);
+      console.error(e); setStatus(btn, "📊 Выгрузить в Excel", false); hideStatus();
       const extra = onMainSite() ? ""
         : "\n\nВы на промо-сайте застройщика (" + location.hostname + "). Откройте основную страницу ЖК на www.cian.ru (раздел «Квартиры») — там выгрузка работает.";
       alert("Ошибка: " + e.message + "\nОбновите страницу, войдите в аккаунт, пройдите капчу и попробуйте снова." + extra);
