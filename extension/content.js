@@ -13,6 +13,73 @@
   const API = "https://api.cian.ru/search-offers/v2/search-offers-desktop/";
   const ROOMS = [9, 7, 1, 2, 3, 4, 5, 6];
 
+  // === Перехват настоящего запроса страницы =================================
+  // Циан сам шлёт search-offers с ПРАВИЛЬНЫМ фильтром по этому ЖК. Перехватываем
+  // тело (jsonQuery), чтобы не угадывать структуру фильтра. Ставится на
+  // document_start (см. manifest), до скриптов страницы.
+  function rememberQuery(body) {
+    try {
+      const b = typeof body === "string" ? JSON.parse(body) : body;
+      if (b && b.jsonQuery && b.jsonQuery._type) window.__cianCapturedQuery = b.jsonQuery;
+    } catch (e) { /* ignore */ }
+  }
+  try {
+    const of = window.fetch;
+    window.fetch = function (input, init) {
+      try {
+        const url = typeof input === "string" ? input : (input && input.url);
+        if (url && /search-offers/.test(url) && init && init.body) rememberQuery(init.body);
+      } catch (e) { /* ignore */ }
+      return of.apply(this, arguments);
+    };
+    const xo = XMLHttpRequest.prototype.open, xs = XMLHttpRequest.prototype.send;
+    XMLHttpRequest.prototype.open = function (m, u) { this.__cu = u; return xo.apply(this, arguments); };
+    XMLHttpRequest.prototype.send = function (body) {
+      try { if (this.__cu && /search-offers/.test(this.__cu) && body) rememberQuery(body); } catch (e) { /* ignore */ }
+      return xs.apply(this, arguments);
+    };
+  } catch (e) { /* ignore */ }
+
+  // Найти объект "jsonQuery":{...} в произвольной строке (баланс скобок), с _type.
+  function findJsonQuery(s) {
+    let idx = 0;
+    while ((idx = s.indexOf('"jsonQuery"', idx)) !== -1) {
+      const start = s.indexOf("{", idx);
+      if (start === -1) break;
+      let depth = 0, end = -1;
+      for (let i = start; i < s.length && i < start + 20000; i++) {
+        const ch = s[i];
+        if (ch === "{") depth++;
+        else if (ch === "}") { if (--depth === 0) { end = i; break; } }
+      }
+      if (end !== -1) {
+        try { const o = JSON.parse(s.slice(start, end + 1)); if (o && o._type) return o; } catch (e) { /* ignore */ }
+      }
+      idx += 11;
+    }
+    return null;
+  }
+
+  // Запрос страницы: перехваченный -> __NEXT_DATA__ -> сырой HTML.
+  function pageJsonQuery() {
+    if (window.__cianCapturedQuery) return window.__cianCapturedQuery;
+    try { if (window.__NEXT_DATA__) { const q = findJsonQuery(JSON.stringify(window.__NEXT_DATA__)); if (q) return q; } } catch (e) { /* ignore */ }
+    try { const q = findJsonQuery(document.documentElement.innerHTML); if (q) return q; } catch (e) { /* ignore */ }
+    return null;
+  }
+
+  // Оставляем только фильтр по ЖК + структурные ключи, выкидываем сужающие
+  // (room/price/floor и т.п.), чтобы собрать ВСЕ квартиры комплекса.
+  function cleanBaseQuery(base) {
+    const keep = {
+      _type: base._type || "flatsale",
+      engine_version: base.engine_version || { type: "term", value: 2 },
+    };
+    ["region", "geo", "newobject", "from_developer", "building_status", "jk", "sort"]
+      .forEach((k) => { if (base[k] != null) keep[k] = base[k]; });
+    return keep;
+  }
+
   // ---------- определить ID и имя ЖК ----------
   function detectJk() {
     const cands = [location.href];
@@ -68,18 +135,16 @@
   const pause = () => sleep(CONFIG.delayMin + Math.random() * (CONFIG.delayMax - CONFIG.delayMin));
   const dig = (o, p) => p.split(".").reduce((a, k) => (a == null ? a : a[k]), o);
 
-  async function fetchPage(jkid, room, page) {
-    const q = {
-      _type: "flatsale", engine_version: { type: "term", value: 2 },
-      region: { type: "terms", value: [CONFIG.region] },
-      newobject: { type: "terms", value: [jkid] },
-      page: { type: "term", value: page },
-      sort: { type: "term", value: "creation_date_desc" },
-    };
-    if (room != null) q.room = { type: "terms", value: [room] };
+  function bodyFrom(base, page, room) {
+    const q = JSON.parse(JSON.stringify(base));
+    q.page = { type: "term", value: page };
+    if (room != null) q.room = { type: "terms", value: [room] }; else delete q.room;
+    return { jsonQuery: q };
+  }
+  async function fetchPage(base, room, page) {
     const r = await fetch(API, {
       method: "POST", headers: { "Content-Type": "application/json", Accept: "*/*" },
-      body: JSON.stringify({ jsonQuery: q }), credentials: "include",
+      body: JSON.stringify(bodyFrom(base, page, room)), credentials: "include",
     });
     if (!r.ok) throw new Error("HTTP " + r.status);
     const d = await r.json();
@@ -90,15 +155,15 @@
     return { offers, total: parseInt(total, 10) || offers.length };
   }
 
-  async function collectAll(jkid, onProgress) {
+  async function collectAll(base, onProgress) {
     const byId = new Map();
     let totalInJk = 0;
     const add = (offers) => offers.forEach((o) => { const id = o.cianId || o.id; if (id != null) byId.set(id, o); });
 
-    // Этап 1 — основной проход (для ЖК до ~780 лотов собирает ВСЁ).
+    // Этап 1 — основной проход по фильтру ЖК (до ~780 лотов собирает ВСЁ).
     for (let page = 1; page <= CONFIG.maxPages; page++) {
       onProgress(`Загружаю страницу ${page}…`, byId.size, totalInJk);
-      let res; try { res = await fetchPage(jkid, null, page); } catch (e) { if (page === 1) throw e; break; }
+      let res; try { res = await fetchPage(base, null, page); } catch (e) { if (page === 1) throw e; break; }
       if (page === 1) totalInJk = res.total;
       if (!res.offers.length) break;
       add(res.offers);
@@ -113,12 +178,12 @@
       totalsByRoom = {};
       for (const room of ROOMS) {
         onProgress(`Добираю по комнатам… (${byId.size}/${totalInJk})`, byId.size, totalInJk);
-        let first; try { first = await fetchPage(jkid, room, 1); } catch (e) { continue; }
+        let first; try { first = await fetchPage(base, room, 1); } catch (e) { continue; }
         totalsByRoom[room] = first.total; add(first.offers);
         if (first.total > CONFIG.pageSize) {
           for (let page = 2; page <= CONFIG.maxPages; page++) {
             await pause();
-            let res; try { res = await fetchPage(jkid, room, page); } catch (e) { break; }
+            let res; try { res = await fetchPage(base, room, page); } catch (e) { break; }
             if (!res.offers.length) break;
             add(res.offers);
             onProgress(`Собрано ${byId.size}/${totalInJk}…`, byId.size, totalInJk);
@@ -279,24 +344,32 @@
   function doneStatus(text) { const el = statusEl(); el.style.display = "block"; el.querySelector("#cex-txt").textContent = text; const b = el.querySelector("#cex-bar"); b.style.opacity = "1"; b.style.width = "100%"; }
   function hideStatus() { const el = document.getElementById("cian-excel-status"); if (el) el.style.display = "none"; }
 
-  const onMainSite = () => /(^|\.)cian\.ru$/.test(location.hostname) && location.hostname.startsWith("www.");
+  const OPEN_LIST_MSG =
+    "Откройте ОСНОВНУЮ страницу ЖК со списком квартир на www.cian.ru (раздел «Квартиры»), " +
+    "дождитесь, пока загрузятся объявления, и нажмите кнопку снова.\n\n" +
+    "На промо-сайте застройщика (zhk-*.cian.ru) и на странице без списка квартир выгрузка не работает.";
 
   async function run(btn) {
     const jk = detectJk();
-    console.log("[cian-excel] определён ЖК:", jk);
-    if (!jk.id) {
-      const hint = onMainSite()
-        ? "Введите ID ЖК (число из адреса страницы Циан):"
-        : "Это промо-сайт застройщика — ID ЖК тут не в адресе.\nЛучше открыть основную страницу ЖК на www.cian.ru (раздел «Квартиры») и нажать кнопку там.\n\nИли введите ID ЖК вручную (число из ссылки www.cian.ru/...-XXXXXXX/):";
-      jk.id = parseInt(prompt(hint), 10);
-      if (!jk.id) { setStatus(btn, "📊 Выгрузить в Excel", false); return; }
-      jk.name = jk.name || ("ЖК " + jk.id);
-    }
+    // Берём ПРАВИЛЬНЫЙ фильтр ЖК из настоящего запроса страницы, не угадываем.
+    let base = pageJsonQuery();
+    if (base) base = cleanBaseQuery(base);
+    console.log("[cian-excel] страница:", location.href, "| ЖК:", jk, "| фильтр:", base);
+    if (!base) { alert("Не удалось получить фильтр ЖК со страницы.\n\n" + OPEN_LIST_MSG); return; }
+    if (!jk.id) jk.id = (JSON.stringify(base).match(/(\d{6,})/) || [])[1] || "";
+    jk.name = jk.name || (jk.id ? "ЖК " + jk.id : "ЖК");
+
     setStatus(btn, "⏳ Собираю…", true);
     const onProg = (text, got, total) => { setStatus(btn, "⏳ Собираю…", true); showStatus(text, total ? got / total : null); };
     try {
-      const { offers, totalsByRoom, totalInJk } = await collectAll(jk.id, onProg);
-      if (!offers.length) { setStatus(btn, "📊 Выгрузить в Excel", false); hideStatus(); alert("Не собрано ни одного лота. Войдите в аккаунт, пройдите капчу и попробуйте снова. Если ЖК не в Москве — поменяйте region в расширении."); return; }
+      const { offers, totalsByRoom, totalInJk } = await collectAll(base, onProg);
+      // Защита от «не тех данных»: для одного ЖК столько объявлений не бывает.
+      if (totalInJk > 4000) {
+        setStatus(btn, "📊 Выгрузить в Excel", false); hideStatus();
+        alert("Фильтр по ЖК не применился: Циан вернул " + totalInJk + " объявлений — это вся выдача, а не один ЖК.\n\n" + OPEN_LIST_MSG);
+        return;
+      }
+      if (!offers.length) { setStatus(btn, "📊 Выгрузить в Excel", false); hideStatus(); alert("Не собрано ни одного лота. Войдите в аккаунт, пройдите капчу и попробуйте снова."); return; }
       const rows = offers.map(normalize);
       doneStatus(`Готово: ${rows.length} лотов — скачиваю Excel…`);
       download(buildWorkbook(jk, rows, totalsByRoom, totalInJk), `cian_${slug(jk.name)}_${new Date().toISOString().slice(0, 10)}.xls`);
@@ -304,9 +377,7 @@
       setTimeout(() => { setStatus(btn, "📊 Выгрузить в Excel", false); hideStatus(); }, 6000);
     } catch (e) {
       console.error(e); setStatus(btn, "📊 Выгрузить в Excel", false); hideStatus();
-      const extra = onMainSite() ? ""
-        : "\n\nВы на промо-сайте застройщика (" + location.hostname + "). Откройте основную страницу ЖК на www.cian.ru (раздел «Квартиры») — там выгрузка работает.";
-      alert("Ошибка: " + e.message + "\nОбновите страницу, войдите в аккаунт, пройдите капчу и попробуйте снова." + extra);
+      alert("Ошибка: " + e.message + "\nОбновите страницу ЖК, дождитесь загрузки списка квартир и попробуйте снова.");
     }
   }
 
