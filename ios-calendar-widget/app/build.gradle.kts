@@ -58,4 +58,6 @@ dependencies {
 
     // Daily re-render so "today" stays current.
     implementation(libs.androidx.work.runtime.ktx)
+    // Per-app settings (week start, accent, toggles).
+    implementation(libs.androidx.datastore.preferences)
 }

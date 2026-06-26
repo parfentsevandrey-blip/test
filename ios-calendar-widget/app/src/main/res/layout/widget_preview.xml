@@ -10,15 +10,15 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Июнь"
-        android:textColor="@color/ios_red"
+        android:text="Июнь 2026"
+        android:textColor="#4A52CC"
         android:textStyle="bold"
-        android:textSize="15sp" />
+        android:textSize="16sp" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
+        android:layout_marginTop="8dp"
         android:text="Пн Вт Ср Чт Пт Сб Вс"
         android:textColor="#8E8E93"
         android:textSize="11sp" />
@@ -28,7 +28,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="1  2  3  4  5  6  7"
-        android:textColor="#000000"
+        android:textColor="#1B1B1F"
         android:textSize="13sp" />
 
     <TextView
@@ -36,6 +36,6 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
         android:text="8  9  10 11 12 13 14"
-        android:textColor="#000000"
+        android:textColor="#1B1B1F"
         android:textSize="13sp" />
 </LinearLayout>

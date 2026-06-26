@@ -2,162 +2,216 @@ package com.monthcalendar.widget
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.datastore.preferences.core.Preferences
+import androidx.glance.ColorFilter
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
+import androidx.glance.GlanceTheme
+import androidx.glance.Image
 import androidx.glance.ImageProvider
-import androidx.glance.LocalContext
-import androidx.glance.LocalSize
+import androidx.glance.action.Action
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.SizeMode
+import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
+import androidx.glance.appwidget.state.getAppWidgetState
 import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
+import androidx.glance.layout.fillMaxHeight
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
 import androidx.glance.layout.size
+import androidx.glance.layout.width
+import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+import java.time.Instant
 import java.time.LocalDate
+import java.time.YearMonth
+import java.time.ZoneId
 
 /**
- * An iOS-style month-view calendar widget.
+ * Material 3 Expressive month-view calendar widget.
  *
- * Resizing is handled by [SizeMode.Responsive]: the launcher renders the
- * variant that best fits the user's chosen cell span, and Glance swaps between
- * three [Layout] presets (compact / medium / large), scaling typography and the
- * "today" circle. The look mirrors the iOS Calendar widget: a white (dark in
- * dark mode) rounded card, a red month title, gray Monday-first weekday
- * initials, faded spillover days and a red disc on today.
+ * Features beyond a plain month grid:
+ *  - Real device events (READ_CALENDAR) — coloured dots per day + an agenda of
+ *    upcoming events on the large size.
+ *  - Month navigation (‹ today ›) with per-widget state, so two widgets can show
+ *    different months.
+ *  - Material You dynamic colour (or a fixed accent), tonal containers, large
+ *    rounded surfaces, a filled-primary "today" chip.
+ *  - Adaptive size via [SizeMode.Responsive]: compact / medium / large.
  */
 class CalendarWidget : GlanceAppWidget() {
 
-    private val small = DpSize(150.dp, 150.dp)
-    private val medium = DpSize(250.dp, 190.dp)
-    private val large = DpSize(300.dp, 300.dp)
+    override val stateDefinition = PreferencesGlanceStateDefinition
+
+    private val small = DpSize(170.dp, 170.dp)
+    private val medium = DpSize(260.dp, 220.dp)
+    private val large = DpSize(300.dp, 340.dp)
 
     override val sizeMode = SizeMode.Responsive(setOf(small, medium, large))
 
     private data class Layout(
-        val showTitle: Boolean,
+        val tier: Int,            // 0 = small, 1 = medium, 2 = large
         val titleSize: Int,
         val headerSize: Int,
         val daySize: Int,
         val circle: Int,
+        val dot: Int,
+        val maxDots: Int,
         val pad: Int,
+        val showNav: Boolean,
+        val showAgenda: Boolean,
     )
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        // Read "today" inside provideGlance so a re-render always reflects the
-        // current date (the receiver re-renders on DATE_CHANGED + daily worker).
-        val month = CalendarModel.monthFor(LocalDate.now())
+        val settings = CalendarSettingsStore(context).get()
+        val state: Preferences = getAppWidgetState(context, PreferencesGlanceStateDefinition, id)
+        val offset = state[MONTH_OFFSET] ?: 0
+
+        val today = LocalDate.now()
+        val anchor = YearMonth.now().plusMonths(offset.toLong())
+        val month = CalendarModel.monthFor(anchor, today, settings.mondayFirst)
+
+        val hasPerm = CalendarRepository.hasPermission(context)
+        val eventsByDay = if (settings.showEvents && hasPerm) {
+            CalendarRepository.eventsByDay(context, month.gridStart, month.gridEnd)
+        } else {
+            emptyMap()
+        }
+        val agenda = if (settings.showEvents && hasPerm) {
+            CalendarRepository.upcoming(context, today)
+        } else {
+            emptyList()
+        }
+
         provideContent {
-            Content(month)
+            val content: @Composable () -> Unit = {
+                Content(month, today, settings, eventsByDay, agenda, hasPerm)
+            }
+            if (settings.accent == Accent.DYNAMIC) {
+                GlanceTheme(content = content)
+            } else {
+                GlanceTheme(colors = AccentSchemes.providersFor(settings.accent), content = content)
+            }
         }
     }
 
     @Composable
-    private fun Content(month: MonthData) {
-        val size = LocalSize.current
+    private fun Content(
+        month: MonthData,
+        today: LocalDate,
+        settings: CalendarSettings,
+        eventsByDay: Map<LocalDate, List<EventLite>>,
+        agenda: List<EventLite>,
+        hasPerm: Boolean,
+    ) {
+        val size = androidx.glance.LocalSize.current
         val layout = when {
-            size.height < 175.dp -> Layout(showTitle = size.width >= 200.dp, titleSize = 13, headerSize = 9, daySize = 11, circle = 18, pad = 12)
-            size.height < 250.dp -> Layout(showTitle = true, titleSize = 15, headerSize = 10, daySize = 13, circle = 22, pad = 14)
-            else -> Layout(showTitle = true, titleSize = 17, headerSize = 11, daySize = 15, circle = 28, pad = 16)
+            size.height < 200.dp -> Layout(0, 16, 9, 12, 22, 4, 1, 14, showNav = size.width >= 230.dp, showAgenda = false)
+            size.height < 290.dp -> Layout(1, 19, 10, 13, 26, 5, 3, 16, showNav = true, showAgenda = false)
+            else -> Layout(2, 22, 11, 15, 30, 5, 3, 18, showNav = true, showAgenda = true)
         }
 
         Column(
             modifier = GlanceModifier
                 .fillMaxSize()
-                .background(ColorProvider(R.color.cal_bg))
-                .cornerRadius(24.dp)
-                .padding(layout.pad.dp)
-                .clickable(actionStartActivity(calendarIntent())),
+                .background(GlanceTheme.colors.widgetBackground)
+                .cornerRadius(28.dp)
+                .padding(layout.pad.dp),
         ) {
-            if (layout.showTitle) {
-                Text(
-                    text = month.title,
-                    style = TextStyle(
-                        color = ColorProvider(R.color.ios_red),
-                        fontSize = layout.titleSize.sp,
-                        fontWeight = FontWeight.Bold,
-                    ),
-                )
-                Spacer(GlanceModifier.height(6.dp))
-            }
-
-            // Weekday header row
-            Row(modifier = GlanceModifier.fillMaxWidth()) {
-                month.weekdayHeaders.forEachIndexed { i, label ->
-                    Text(
-                        text = label,
-                        modifier = GlanceModifier.defaultWeight(),
-                        style = TextStyle(
-                            color = ColorProvider(R.color.cal_text_secondary),
-                            fontSize = layout.headerSize.sp,
-                            fontWeight = FontWeight.Medium,
-                            textAlign = TextAlign.Center,
-                        ),
-                    )
-                }
-            }
+            Header(month, layout)
+            Spacer(GlanceModifier.height(if (layout.tier == 0) 6.dp else 10.dp))
+            WeekdayRow(month, layout)
             Spacer(GlanceModifier.height(4.dp))
+            Grid(month, eventsByDay, layout)
 
-            // Six week rows, each filling the remaining height equally.
-            month.weeks.forEach { week ->
-                Row(
-                    modifier = GlanceModifier.fillMaxWidth().defaultWeight(),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    week.forEach { cell ->
-                        DayCellView(cell, layout)
-                    }
-                }
+            if (layout.showAgenda) {
+                Spacer(GlanceModifier.height(10.dp))
+                Agenda(agenda, today, hasPerm && settings.showEvents)
+            } else if (settings.showEvents && !hasPerm) {
+                Spacer(GlanceModifier.height(6.dp))
+                PermissionHint()
             }
         }
     }
 
     @Composable
-    private fun androidx.glance.layout.RowScope.DayCellView(cell: DayCell, layout: Layout) {
-        val color = when {
-            cell.isToday -> ColorProvider(Color.White)
-            !cell.inCurrentMonth -> ColorProvider(R.color.cal_text_faded)
-            cell.isWeekend -> ColorProvider(R.color.cal_text_secondary)
-            else -> ColorProvider(R.color.cal_text)
+    private fun Header(month: MonthData, layout: Layout) {
+        Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = month.title,
+                modifier = GlanceModifier.defaultWeight(),
+                style = TextStyle(
+                    color = GlanceTheme.colors.onSurface,
+                    fontSize = layout.titleSize.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = if (layout.showNav) TextAlign.Start else TextAlign.Center,
+                ),
+            )
+            if (layout.showNav) {
+                val btn = if (layout.tier == 2) 34 else 30
+                NavButton(R.drawable.ic_chevron_left, "Предыдущий месяц", actionRunCallback<ShiftMonthAction>(shiftParams(-1)), btn)
+                Spacer(GlanceModifier.width(6.dp))
+                NavButton(R.drawable.ic_today, "Текущий месяц", actionRunCallback<ResetMonthAction>(), btn, accent = true)
+                Spacer(GlanceModifier.width(6.dp))
+                NavButton(R.drawable.ic_chevron_right, "Следующий месяц", actionRunCallback<ShiftMonthAction>(shiftParams(1)), btn)
+            }
         }
+    }
+
+    @Composable
+    private fun NavButton(icon: Int, desc: String, onClick: Action, sizeDp: Int, accent: Boolean = false) {
+        val bg = if (accent) GlanceTheme.colors.primaryContainer else GlanceTheme.colors.secondaryContainer
+        val fg = if (accent) GlanceTheme.colors.onPrimaryContainer else GlanceTheme.colors.onSecondaryContainer
         Box(
-            modifier = GlanceModifier.defaultWeight(),
+            modifier = GlanceModifier
+                .size(sizeDp.dp)
+                .cornerRadius((sizeDp / 2).dp)
+                .background(bg)
+                .clickable(onClick),
             contentAlignment = Alignment.Center,
         ) {
-            val circleMod = if (cell.isToday) {
-                GlanceModifier
-                    .size(layout.circle.dp)
-                    .background(ImageProvider(R.drawable.today_circle))
-            } else {
-                GlanceModifier.size(layout.circle.dp)
-            }
-            Box(modifier = circleMod, contentAlignment = Alignment.Center) {
+            Image(
+                provider = ImageProvider(icon),
+                contentDescription = desc,
+                colorFilter = ColorFilter.tint(fg),
+                modifier = GlanceModifier.size((sizeDp * 0.58).toInt().dp),
+            )
+        }
+    }
+
+    @Composable
+    private fun WeekdayRow(month: MonthData, layout: Layout) {
+        Row(modifier = GlanceModifier.fillMaxWidth()) {
+            month.weekdayHeaders.forEachIndexed { i, label ->
+                val weekend = (month.weekdayHeaders[i] == "Сб" || month.weekdayHeaders[i] == "Вс")
                 Text(
-                    text = cell.day.toString(),
+                    text = label,
+                    modifier = GlanceModifier.defaultWeight(),
                     style = TextStyle(
-                        color = color,
-                        fontSize = layout.daySize.sp,
-                        fontWeight = if (cell.isToday) FontWeight.Bold else FontWeight.Normal,
+                        color = if (weekend) GlanceTheme.colors.tertiary else GlanceTheme.colors.onSurfaceVariant,
+                        fontSize = layout.headerSize.sp,
+                        fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center,
                     ),
                 )
@@ -165,10 +219,188 @@ class CalendarWidget : GlanceAppWidget() {
         }
     }
 
-    /** Open the device's default Calendar app when the widget is tapped. */
-    private fun calendarIntent(): Intent =
-        Intent(Intent.ACTION_MAIN).apply {
-            addCategory(Intent.CATEGORY_APP_CALENDAR)
+    @Composable
+    private fun androidx.glance.layout.ColumnScope.Grid(
+        month: MonthData,
+        eventsByDay: Map<LocalDate, List<EventLite>>,
+        layout: Layout,
+    ) {
+        Column(modifier = GlanceModifier.fillMaxWidth().defaultWeight()) {
+            month.weeks.forEach { week ->
+                Row(
+                    modifier = GlanceModifier.fillMaxWidth().defaultWeight(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    week.forEach { cell ->
+                        DayCellView(cell, eventsByDay[cell.date].orEmpty(), layout)
+                    }
+                }
+            }
+        }
+    }
+
+    @Composable
+    private fun androidx.glance.layout.RowScope.DayCellView(
+        cell: DayCell,
+        events: List<EventLite>,
+        layout: Layout,
+    ) {
+        val textColor = when {
+            cell.isToday -> GlanceTheme.colors.onPrimary
+            !cell.inCurrentMonth -> GlanceTheme.colors.onSurfaceVariant
+            cell.isWeekend -> GlanceTheme.colors.tertiary
+            else -> GlanceTheme.colors.onSurface
+        }
+        Box(
+            modifier = GlanceModifier
+                .defaultWeight()
+                .fillMaxHeight()
+                .clickable(actionStartActivity(dayIntent(cell.date))),
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                val circleMod = if (cell.isToday) {
+                    GlanceModifier.size(layout.circle.dp).cornerRadius((layout.circle / 2).dp)
+                        .background(GlanceTheme.colors.primary)
+                } else {
+                    GlanceModifier.size(layout.circle.dp)
+                }
+                Box(modifier = circleMod, contentAlignment = Alignment.Center) {
+                    Text(
+                        text = cell.day.toString(),
+                        style = TextStyle(
+                            color = textColor,
+                            fontSize = layout.daySize.sp,
+                            fontWeight = if (cell.isToday) FontWeight.Bold else FontWeight.Normal,
+                            textAlign = TextAlign.Center,
+                        ),
+                    )
+                }
+                if (events.isNotEmpty()) {
+                    Spacer(GlanceModifier.height(2.dp))
+                    DotRow(events, layout)
+                }
+            }
+        }
+    }
+
+    @Composable
+    private fun DotRow(events: List<EventLite>, layout: Layout) {
+        val colors = events.map { dotColor(it) }.distinct().take(layout.maxDots)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            colors.forEachIndexed { i, c ->
+                if (i > 0) Spacer(GlanceModifier.width(2.dp))
+                Box(
+                    modifier = GlanceModifier
+                        .size(layout.dot.dp)
+                        .cornerRadius((layout.dot / 2).dp)
+                        .background(c),
+                ) {}
+            }
+        }
+    }
+
+    @Composable
+    private fun dotColor(e: EventLite): ColorProvider =
+        if (e.color != 0) ColorProvider(Color(e.color)) else GlanceTheme.colors.primary
+
+    @Composable
+    private fun Agenda(agenda: List<EventLite>, today: LocalDate, enabled: Boolean) {
+        if (!enabled) {
+            PermissionHint()
+            return
+        }
+        if (agenda.isEmpty()) {
+            Text(
+                text = "Нет ближайших событий",
+                style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 12.sp),
+            )
+            return
+        }
+        Column(modifier = GlanceModifier.fillMaxWidth()) {
+            agenda.take(4).forEachIndexed { i, e ->
+                if (i > 0) Spacer(GlanceModifier.height(6.dp))
+                AgendaItem(e, today)
+            }
+        }
+    }
+
+    @Composable
+    private fun AgendaItem(e: EventLite, today: LocalDate) {
+        Row(
+            modifier = GlanceModifier
+                .fillMaxWidth()
+                .cornerRadius(16.dp)
+                .background(GlanceTheme.colors.secondaryContainer)
+                .padding(horizontal = 10.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = GlanceModifier
+                    .width(4.dp)
+                    .height(28.dp)
+                    .cornerRadius(2.dp)
+                    .background(dotColor(e)),
+            ) {}
+            Spacer(GlanceModifier.width(10.dp))
+            Column(modifier = GlanceModifier.defaultWeight()) {
+                Text(
+                    text = e.title,
+                    maxLines = 1,
+                    style = TextStyle(
+                        color = GlanceTheme.colors.onSecondaryContainer,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium,
+                    ),
+                )
+                Text(
+                    text = agendaWhen(e, today),
+                    style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 11.sp),
+                )
+            }
+        }
+    }
+
+    @Composable
+    private fun PermissionHint() {
+        Box(
+            modifier = GlanceModifier
+                .fillMaxWidth()
+                .cornerRadius(16.dp)
+                .background(GlanceTheme.colors.secondaryContainer)
+                .padding(horizontal = 12.dp, vertical = 10.dp)
+                .clickable(actionStartActivity(appIntent())),
+        ) {
+            Text(
+                text = "Нажмите, чтобы показать события календаря",
+                style = TextStyle(color = GlanceTheme.colors.onSecondaryContainer, fontSize = 12.sp),
+            )
+        }
+    }
+
+    private fun dayIntent(date: LocalDate): Intent {
+        val ms = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        return Intent(Intent.ACTION_VIEW).apply {
+            data = Uri.parse("content://com.android.calendar/time/$ms")
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
+    }
+
+    private fun appIntent(): Intent =
+        Intent(Intent.ACTION_MAIN).setClassName(
+            "com.monthcalendar.widget", "com.monthcalendar.widget.MainActivity",
+        ).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK }
+}
+
+private fun agendaWhen(e: EventLite, today: LocalDate): String {
+    val d = e.date
+    val dayLabel = when (d) {
+        today -> "Сегодня"
+        today.plusDays(1) -> "Завтра"
+        else -> "${d.dayOfMonth} ${CalendarModel.monthName(d.monthValue).take(3).lowercase()}"
+    }
+    if (e.allDay) return "$dayLabel · весь день"
+    val t = Instant.ofEpochMilli(e.begin).atZone(ZoneId.systemDefault())
+    val time = "%02d:%02d".format(t.hour, t.minute)
+    return "$dayLabel · $time"
 }
