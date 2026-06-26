@@ -1,6 +1,10 @@
 package com.monthcalendar.widget
 
+import android.content.Context
+import android.os.Build
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 import androidx.glance.color.ColorProviders
@@ -13,6 +17,20 @@ import androidx.glance.material3.ColorProviders as GlanceColorProviders
  * is enough to retint the whole Expressive widget.
  */
 object AccentSchemes {
+
+    /**
+     * Material You colours derived from the current Android system palette
+     * (wallpaper-based). Both the widget background and every accent track the
+     * system colour. Returns null below Android 12, where dynamic colour does
+     * not exist — the caller then uses the baseline Material 3 theme.
+     */
+    fun dynamic(context: Context): ColorProviders? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return null
+        return GlanceColorProviders(
+            light = dynamicLightColorScheme(context),
+            dark = dynamicDarkColorScheme(context),
+        )
+    }
 
     fun providersFor(accent: Accent): ColorProviders = when (accent) {
         Accent.INDIGO -> indigo

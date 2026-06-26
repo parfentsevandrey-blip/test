@@ -104,14 +104,24 @@ class CalendarWidget : GlanceAppWidget() {
             emptyList()
         }
 
+        // Resolve the colour scheme up front (context is available here):
+        //  - DYNAMIC  → Material You from the live system palette (Android 12+),
+        //    or null on older devices to fall back to baseline Material 3.
+        //  - fixed    → the chosen accent scheme.
+        val colors = if (settings.accent == Accent.DYNAMIC) {
+            AccentSchemes.dynamic(context)
+        } else {
+            AccentSchemes.providersFor(settings.accent)
+        }
+
         provideContent {
             val content: @Composable () -> Unit = {
                 Content(month, today, settings, eventsByDay, agenda, hasPerm)
             }
-            if (settings.accent == Accent.DYNAMIC) {
-                GlanceTheme(content = content)
+            if (colors != null) {
+                GlanceTheme(colors = colors, content = content)
             } else {
-                GlanceTheme(colors = AccentSchemes.providersFor(settings.accent), content = content)
+                GlanceTheme(content = content)
             }
         }
     }
