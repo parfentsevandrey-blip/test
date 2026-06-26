@@ -201,15 +201,23 @@
     let totalInJk = 0;
     const add = (offers) => offers.forEach((o) => { const id = o.cianId || o.id; if (id != null) byId.set(id, o); });
 
-    // Этап 1 — основной проход по фильтру ЖК (до ~780 лотов собирает ВСЁ).
-    for (let page = 1; page <= CONFIG.maxPages; page++) {
+    // Этап 1 — основной проход. Останавливаемся, когда СОБРАЛИ ВСЁ (>= total)
+    // или страница ПУСТАЯ — НЕ по «короткой» странице (Циан отдаёт страницы
+    // неравномерно, особенно на полигон-поиске, и короткая ≠ последняя).
+    let page = 1, emptyStreak = 0, stalls = 0;
+    while (page <= CONFIG.maxPages) {
       onProgress(`Загружаю страницу ${page}…`, byId.size, totalInJk);
       let res; try { res = await fetchPage(base, null, page); } catch (e) { if (page === 1) throw e; break; }
       if (page === 1) totalInJk = res.total;
-      if (!res.offers.length) break;
-      add(res.offers);
+      if (!res.offers.length) { if (++emptyStreak >= 2) break; page++; await pause(); continue; }
+      emptyStreak = 0;
+      const before = byId.size; add(res.offers);
       onProgress(`Собрано ${byId.size}${totalInJk ? " из " + totalInJk : ""}…`, byId.size, totalInJk);
-      if (res.offers.length < CONFIG.pageSize) break;
+      if (totalInJk && byId.size >= totalInJk) break;            // собрали всё
+      if (byId.size === before) { if (++stalls >= 3) break; } else stalls = 0; // защита от ротации-без-нового
+      const bound = totalInJk ? Math.ceil(totalInJk / CONFIG.pageSize) + 3 : CONFIG.maxPages;
+      if (page >= bound) break;
+      page++;
       await pause();
     }
 
