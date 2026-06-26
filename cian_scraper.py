@@ -209,8 +209,13 @@ def _parse_cookie_string(s):
 # ----------------------------------------------------------------------------- #
 
 def default_json_query(newobject_id, region_id, page, engine_version,
-                       room=None, price_min=None, price_max=None):
-    """Шаблон jsonQuery по устоявшейся схеме search-offers-desktop."""
+                       room=None, price_min=None, price_max=None, sort=None):
+    """Шаблон jsonQuery по устоявшейся схеме search-offers-desktop.
+
+    Структура подтверждена по реальным запросам (см. README): region/terms,
+    _type=flatsale, engine_version/term, room/terms с кодами 1..6,9(студия),7(своб.),
+    price/range {gte,lte}, page/term, sort/term. newobject/terms — фильтр по ЖК.
+    """
     q = {
         "_type": "flatsale",
         "engine_version": {"type": "term", "value": engine_version},
@@ -218,6 +223,9 @@ def default_json_query(newobject_id, region_id, page, engine_version,
         "newobject": {"type": "terms", "value": [newobject_id]},
         "page": {"type": "term", "value": page},
     }
+    if sort:
+        # стабильная сортировка — чтобы границы страниц не «плавали» при пагинации
+        q["sort"] = {"type": "term", "value": sort}
     if room is not None:
         q["room"] = {"type": "terms", "value": [room]}
     if price_min is not None or price_max is not None:
@@ -299,7 +307,7 @@ class Fetcher:
                 self.args.engine_version, room, price_min, price_max)
         return default_json_query(
             self.args.jk_id, self.args.region, page, self.args.engine_version,
-            room, price_min, price_max)
+            room, price_min, price_max, sort=getattr(self.args, "sort", None))
 
     def post(self, body):
         """Один POST с экспоненциальным бэк-оффом на 429/403/5xx и сетевых сбоях."""
@@ -339,8 +347,8 @@ class Fetcher:
 def get_offers_and_count(resp):
     """
     Возвращает (offers_list, total_count). Схема ответа защищена:
-    offers ищем в data.offersSerialized | data.offers | offers; count — в
-    data.offerCount | data.aggregatedOffers... | len(offers).
+    offers — data.offersSerialized | data.offers | data.items[].offer;
+    count  — data.offerCount | offersCount | totalCount | len(offers).
     """
     if not isinstance(resp, dict):
         return [], 0
@@ -348,9 +356,13 @@ def get_offers_and_count(resp):
     offers = (data.get("offersSerialized")
               or data.get("offers")
               or resp.get("offers")
+              or data.get("items")        # альтернативный формат items[].offer
               or [])
+    # формат items[].offer -> развернуть до плоских офферов
+    offers = [it.get("offer", it) if isinstance(it, dict) else it for it in offers]
     count = (data.get("offerCount")
              or data.get("offersCount")
+             or data.get("totalCount")
              or resp.get("offerCount")
              or len(offers))
     try:
@@ -534,7 +546,7 @@ _DECORATION_MAP = {
 
 
 def decoration_of(o):
-    dec = o.get("decoration")
+    dec = o.get("decoration") or o.get("repairType")   # в списке часто отсутствует
     if isinstance(dec, dict):
         dec = dec.get("type") or dec.get("value")
     if not dec:
@@ -583,6 +595,7 @@ def building_of(o):
 def price_of(o):
     p = (dig(o, "bargainTerms.priceRur")
          or dig(o, "bargainTerms.price")
+         or dig(o, "bargainTerms.prices.rur")
          or o.get("price"))
     try:
         return float(p) if p is not None else None
@@ -1068,6 +1081,38 @@ def print_console_stats(rows):
     print("===========================")
 
 
+# поля, которые НЕ всегда есть в ответе search-offers-desktop (нормально, что пустые)
+_OPTIONAL_FIELDS = {"decoration", "updated", "building", "seller_name"}
+# критичные поля — если пустые, скорее всего схема ответа изменилась
+_CRITICAL_FIELDS = {"cianId", "url", "area", "price", "category"}
+
+
+def log_field_coverage(rows):
+    """
+    Диагностика заполненности колонок: сразу видно, если маппинг полей сломался
+    (например, Циан переименовал поле и колонка молча опустела).
+    """
+    n = len(rows)
+    if not n:
+        return
+    keys = ["cianId", "url", "category", "area", "floor", "floors", "building",
+            "seller_type", "seller_name", "decoration", "price", "published",
+            "updated", "exposure_days"]
+    log.info("Заполненность полей (по %d лотам):", n)
+    for k in keys:
+        filled = sum(1 for r in rows if r.get(k) is not None)
+        pct = 100 * filled / n
+        flag = ""
+        if filled == 0:
+            flag = "  ← ПУСТО (опционально, нет в этом эндпоинте)" if k in _OPTIONAL_FIELDS \
+                else "  ← ПУСТО! проверьте схему/--dump-json"
+        elif k in _CRITICAL_FIELDS and pct < 90:
+            flag = "  ← мало для критичного поля"
+        log.info("    %-14s %3d/%-3d (%3.0f%%)%s", k, filled, n, pct, flag)
+    direct = sum(1 for r in rows if r.get("url") and "/sale/flat/" in r["url"])
+    log.info("    прямых ссылок /sale/flat/: %d/%d (%.0f%%)", direct, n, 100 * direct / n)
+
+
 def slugify(text):
     if not text:
         return "jk"
@@ -1103,6 +1148,10 @@ def build_argparser():
     p.add_argument("--jk-name", help="Имя ЖК для заголовков/имени файла (если не задано — берётся из данных).")
     p.add_argument("--region", type=int, default=1, help="ID региона Циан (Москва=1).")
     p.add_argument("--engine-version", type=int, default=2, help="engine_version в jsonQuery.")
+    p.add_argument("--sort", default="creation_date_desc",
+                   help="Стабильная сортировка выдачи (для надёжной пагинации). "
+                        "Напр. creation_date_desc | price_object_order | price_object_order_desc. "
+                        "При --curl-file сортировка из вашего запроса сохраняется.")
     p.add_argument("--curl-file", help="Файл с «Copy as cURL» реального запроса (headers/cookies/тело).")
     p.add_argument("--cookie", help="Строка Cookie из браузера ('k=v; k2=v2') — быстрый способ передать сессию без cURL.")
     p.add_argument("--user-agent", help="Переопределить User-Agent (полезно подставить ваш из браузера).")
@@ -1211,6 +1260,9 @@ def main(argv=None):
     jk_name = jk_name or f"JK {args.jk_id}"
 
     rows = sort_rows(rows)
+
+    # диагностика заполненности колонок (видно сразу, если маппинг сломан)
+    log_field_coverage(rows)
 
     # контроль охвата: собрали ли мы все лоты ЖК
     direct = sum(1 for r in rows if r.get("url") and "/sale/flat/" in r["url"])
