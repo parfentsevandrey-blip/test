@@ -7,6 +7,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -41,7 +43,9 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.appwidget.updateAll
@@ -84,6 +88,17 @@ private fun WeatherSettingsScreen() {
     var status by remember { mutableStateOf("") }
 
     val activity = context as? Activity
+    val searchingLabel = stringResource(R.string.wa_searching)
+    val notFoundLabel = stringResource(R.string.wa_not_found)
+
+    fun doSearch() {
+        scope.launch {
+            status = searchingLabel
+            val found = WeatherRepository.geocode(query)
+            results.clear(); results.addAll(found)
+            status = if (found.isEmpty()) notFoundLabel else ""
+        }
+    }
 
     LaunchedEffect(Unit) {
         val cfg = store.config()
@@ -98,11 +113,15 @@ private fun WeatherSettingsScreen() {
     fun selectCity(r: GeoResult) {
         val cfg = WeatherConfig(r.latitude, r.longitude, r.display, metric)
         scope.launch {
+            // Persist + clear the previous city's cache so the widget shows the
+            // new city in a clean "loading" state (never the old data or the
+            // pick-a-city prompt). NonCancellable survives the activity closing.
             withContext(NonCancellable) {
                 store.saveConfig(cfg)
+                store.clearCache()
                 WeatherWidget().updateAll(context)
             }
-            WeatherWorker.enqueueOnce(context)
+            WeatherWorker.enqueueExpedited(context)
             activity?.finish()
         }
     }
@@ -112,14 +131,15 @@ private fun WeatherSettingsScreen() {
         scope.launch {
             withContext(NonCancellable) {
                 store.saveConfig(store.config().copy(metric = m))
-                WeatherRepository.refresh(context, System.currentTimeMillis())?.let { preview = it }
+                store.clearCache() // cached data is in the old units; refetch
                 WeatherWidget().updateAll(context)
             }
-            WeatherWorker.enqueueOnce(context)
+            WeatherRepository.refresh(context, System.currentTimeMillis())?.let { preview = it }
+            WeatherWidget().updateAll(context)
         }
     }
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Погода · виджет") }) }) { inner ->
+    Scaffold(topBar = { TopAppBar(title = { Text(stringResource(R.string.wa_title)) }) }) { inner ->
         Column(
             modifier = Modifier
                 .padding(inner)
@@ -130,29 +150,24 @@ private fun WeatherSettingsScreen() {
             preview?.let { PreviewCard(it) }
             if (locationName.isNotBlank()) {
                 Spacer(Modifier.height(8.dp))
-                Text("Текущий город: $locationName", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.wa_current_city, locationName), style = MaterialTheme.typography.bodyMedium)
             }
 
             Spacer(Modifier.height(20.dp))
-            Text("Город", style = MaterialTheme.typography.titleMedium)
-            Spacer(Modifier.height(8.dp))
             Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                 OutlinedTextField(
                     value = query,
                     onValueChange = { query = it },
-                    label = { Text("Поиск города") },
+                    label = { Text(stringResource(R.string.wa_search_hint)) },
                     singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = { doSearch() }),
                     modifier = Modifier.weight(1f),
                 )
                 Spacer(Modifier.width(8.dp))
-                OutlinedButton(onClick = {
-                    scope.launch {
-                        status = "Поиск…"
-                        val found = WeatherRepository.geocode(query)
-                        results.clear(); results.addAll(found)
-                        status = if (found.isEmpty()) "Ничего не найдено" else ""
-                    }
-                }) { Text("Найти") }
+                OutlinedButton(onClick = { doSearch() }) {
+                    Text(stringResource(R.string.wa_search))
+                }
             }
 
             results.forEach { r ->
@@ -167,19 +182,11 @@ private fun WeatherSettingsScreen() {
             }
 
             Spacer(Modifier.height(20.dp))
-            Text("Единицы", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.wa_units), style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(
-                    selected = metric,
-                    onClick = { changeUnits(true) },
-                    label = { Text("°C, км/ч") },
-                )
-                FilterChip(
-                    selected = !metric,
-                    onClick = { changeUnits(false) },
-                    label = { Text("°F, mph") },
-                )
+                FilterChip(selected = metric, onClick = { changeUnits(true) }, label = { Text(stringResource(R.string.wa_metric)) })
+                FilterChip(selected = !metric, onClick = { changeUnits(false) }, label = { Text(stringResource(R.string.wa_imperial)) })
             }
 
             if (status.isNotEmpty()) {
@@ -189,8 +196,7 @@ private fun WeatherSettingsScreen() {
 
             Spacer(Modifier.height(20.dp))
             Text(
-                "Данные предоставлены Open-Meteo (бесплатно, без API-ключа). " +
-                    "Добавьте виджет «Погода» на рабочий стол; обновляется раз в час.",
+                stringResource(R.string.wa_footer),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -200,20 +206,22 @@ private fun WeatherSettingsScreen() {
 
 @Composable
 private fun PreviewCard(data: WeatherData) {
+    val label = stringResource(WeatherCodes.labelRes(data.code))
+    val todayLabel = stringResource(R.string.cal_today)
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
     ) {
         Column(Modifier.padding(20.dp)) {
             Text(
-                data.locationName.ifBlank { "Погода" },
+                data.locationName.ifBlank { stringResource(R.string.w_title) },
                 style = MaterialTheme.typography.titleMedium,
             )
             Spacer(Modifier.height(8.dp))
             Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                 Image(
                     painter = painterResource(WeatherCodes.iconRes(data.code, data.isDay)),
-                    contentDescription = WeatherCodes.label(data.code),
+                    contentDescription = label,
                     modifier = Modifier.size(56.dp),
                 )
                 Spacer(Modifier.width(12.dp))
@@ -223,14 +231,14 @@ private fun PreviewCard(data: WeatherData) {
                         fontSize = 40.sp,
                         fontWeight = FontWeight.Bold,
                     )
-                    Text(WeatherCodes.label(data.code), style = MaterialTheme.typography.bodyMedium)
+                    Text(label, style = MaterialTheme.typography.bodyMedium)
                 }
             }
             val today = LocalDate.now()
             data.daily.take(5).forEach { d ->
                 Spacer(Modifier.height(8.dp))
                 Row(Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                    Text(if (d.date == today) "Сегодня" else d.date.toString().takeLast(5))
+                    Text(if (d.date == today) todayLabel else d.date.toString().takeLast(5))
                     Spacer(Modifier.width(10.dp))
                     Image(
                         painter = painterResource(WeatherCodes.iconRes(d.code, true)),

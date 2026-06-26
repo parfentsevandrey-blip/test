@@ -9,6 +9,7 @@ import java.net.URL
 import java.net.URLEncoder
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.Locale
 
 data class GeoResult(
     val name: String,
@@ -30,15 +31,15 @@ object WeatherRepository {
     private const val FORECAST = "https://api.open-meteo.com/v1/forecast"
     private const val GEOCODE = "https://geocoding-api.open-meteo.com/v1/search"
 
-    /** Read the cached snapshot (no network). */
+    /** Read the cached snapshot (no network), labelled with the units it was fetched in. */
     suspend fun cached(context: Context): WeatherData? {
         val store = WeatherStore(context)
         val cfg = store.config()
         val cache = store.cachedJson() ?: return null
-        return runCatching { parse(cache.first, cfg, cache.second) }.getOrNull()
+        return runCatching { parse(cache.first, cfg.locationName, cache.third, cache.second) }.getOrNull()
     }
 
-    /** Fetch a fresh snapshot from Open-Meteo and cache it. */
+    /** Fetch a fresh snapshot from Open-Meteo and cache it. Returns null on failure. */
     suspend fun refresh(context: Context, nowMillis: Long): WeatherData? = withContext(Dispatchers.IO) {
         val store = WeatherStore(context)
         val cfg = store.config()
@@ -54,15 +55,16 @@ object WeatherRepository {
             "&temperature_unit=$tempUnit&wind_speed_unit=$windUnit"
 
         val body = httpGet(url) ?: return@withContext null
-        store.saveCache(body, nowMillis)
-        runCatching { parse(body, cfg, nowMillis) }.getOrNull()
+        store.saveCache(body, nowMillis, cfg.metric)
+        runCatching { parse(body, cfg.locationName, cfg.metric, nowMillis) }.getOrNull()
     }
 
-    /** Free-text city search (Open-Meteo geocoding). */
+    /** Free-text city search (Open-Meteo geocoding), de-duplicated. */
     suspend fun geocode(query: String): List<GeoResult> = withContext(Dispatchers.IO) {
         if (query.isBlank()) return@withContext emptyList()
         val q = URLEncoder.encode(query.trim(), "UTF-8")
-        val url = "$GEOCODE?name=$q&count=6&language=ru&format=json"
+        val lang = Locale.getDefault().language.ifBlank { "en" }
+        val url = "$GEOCODE?name=$q&count=8&language=$lang&format=json"
         val body = httpGet(url) ?: return@withContext emptyList()
         runCatching {
             val arr = JSONObject(body).optJSONArray("results") ?: return@runCatching emptyList<GeoResult>()
@@ -75,11 +77,11 @@ object WeatherRepository {
                     latitude = o.getDouble("latitude"),
                     longitude = o.getDouble("longitude"),
                 )
-            }
+            }.distinctBy { it.display.lowercase() }
         }.getOrDefault(emptyList())
     }
 
-    private fun parse(body: String, cfg: WeatherConfig, time: Long): WeatherData {
+    private fun parse(body: String, locationName: String, metric: Boolean, time: Long): WeatherData {
         val root = JSONObject(body)
         val current = root.getJSONObject("current")
         val daily = root.getJSONObject("daily")
@@ -92,7 +94,9 @@ object WeatherRepository {
         val dSunset = daily.optJSONArray("sunset")
         val dPrecip = daily.optJSONArray("precipitation_probability_max")
         val dUv = daily.optJSONArray("uv_index_max")
-        val forecast = (0 until dTime.length()).map { i ->
+        // Guard against any array being shorter than `time` (malformed response).
+        val dCount = minOf(dTime.length(), dCode.length(), dMax.length(), dMin.length())
+        val forecast = (0 until dCount).map { i ->
             DailyForecast(
                 date = LocalDate.parse(dTime.getString(i)),
                 code = dCode.getInt(i),
@@ -129,7 +133,7 @@ object WeatherRepository {
         }
 
         return WeatherData(
-            locationName = cfg.locationName,
+            locationName = locationName,
             temp = current.getDouble("temperature_2m"),
             apparentTemp = current.optDouble("apparent_temperature", current.getDouble("temperature_2m")),
             code = current.getInt("weather_code"),
@@ -138,25 +142,65 @@ object WeatherRepository {
             windSpeed = current.optDouble("wind_speed_10m", 0.0),
             windMax = daily.optJSONArray("wind_speed_10m_max")?.optDouble(0, 0.0) ?: 0.0,
             uvMax = forecast.firstOrNull()?.uvMax ?: 0.0,
-            metric = cfg.metric,
+            metric = metric,
             hourly = hourly,
             daily = forecast,
             updatedAt = time,
         )
     }
 
-    private fun httpGet(urlStr: String): String? = runCatching {
-        val conn = (URL(urlStr).openConnection() as HttpURLConnection).apply {
-            requestMethod = "GET"
-            connectTimeout = 10_000
-            readTimeout = 10_000
-            setRequestProperty("Accept", "application/json")
+    /**
+     * Resilient GET: a real product fails soft, not on the first hiccup. Sets a
+     * User-Agent, retries on IOException / 5xx / 429 with exponential backoff
+     * (honouring Retry-After), reads the error stream so a 4xx isn't a silent
+     * null. Returns null only after exhausting attempts.
+     */
+    private fun httpGet(urlStr: String, maxAttempts: Int = 3): String? {
+        var attempt = 0
+        while (attempt < maxAttempts) {
+            attempt++
+            var conn: HttpURLConnection? = null
+            try {
+                conn = (URL(urlStr).openConnection() as HttpURLConnection).apply {
+                    requestMethod = "GET"
+                    connectTimeout = 10_000
+                    readTimeout = 10_000
+                    setRequestProperty("Accept", "application/json")
+                    setRequestProperty("User-Agent", USER_AGENT)
+                }
+                val code = conn.responseCode
+                when {
+                    code in 200..299 ->
+                        return conn.inputStream.bufferedReader().use { it.readText() }
+                    (code == 429 || code in 500..599) && attempt < maxAttempts -> {
+                        conn.errorStream?.close()
+                        val retryAfter = conn.getHeaderField("Retry-After")?.toLongOrNull()
+                        backoff(attempt, retryAfter)
+                    }
+                    else -> {
+                        conn.errorStream?.close()
+                        return null
+                    }
+                }
+            } catch (io: java.io.IOException) {
+                if (attempt >= maxAttempts) return null
+                backoff(attempt, null)
+            } finally {
+                conn?.disconnect()
+            }
         }
+        return null
+    }
+
+    private fun backoff(attempt: Int, retryAfterSec: Long?) {
+        val base = retryAfterSec?.let { it * 1000 } ?: (300L * (1 shl (attempt - 1)))
+        val jitter = (attempt * 70L) % 250L
         try {
-            if (conn.responseCode !in 200..299) return null
-            conn.inputStream.bufferedReader().use { it.readText() }
-        } finally {
-            conn.disconnect()
+            Thread.sleep((base + jitter).coerceAtMost(8_000L))
+        } catch (_: InterruptedException) {
+            Thread.currentThread().interrupt()
         }
-    }.getOrNull()
+    }
+
+    private const val USER_AGENT = "CalendarWeatherWidget/1.0 (Android; Open-Meteo client)"
 }

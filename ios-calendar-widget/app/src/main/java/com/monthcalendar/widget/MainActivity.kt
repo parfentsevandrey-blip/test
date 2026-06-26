@@ -47,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -101,7 +102,7 @@ private fun SettingsScreen() {
         }
     }
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Календарь · виджет") }) }) { inner ->
+    Scaffold(topBar = { TopAppBar(title = { Text(stringResource(R.string.ma_title)) }) }) { inner ->
         Column(
             modifier = Modifier
                 .padding(inner)
@@ -119,19 +120,19 @@ private fun SettingsScreen() {
                 ) {
                     Column(Modifier.padding(16.dp)) {
                         Text(
-                            "Показывать события календаря",
+                            stringResource(R.string.ma_grant_title),
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
                         )
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            "Разрешите доступ к календарю, чтобы виджет показывал точки событий и список ближайших дел.",
+                            stringResource(R.string.ma_grant_sub),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
                         )
                         Spacer(Modifier.height(12.dp))
                         Button(onClick = { permLauncher.launch(Manifest.permission.READ_CALENDAR) }) {
-                            Text("Разрешить доступ")
+                            Text(stringResource(R.string.ma_grant_btn))
                         }
                     }
                 }
@@ -140,28 +141,28 @@ private fun SettingsScreen() {
 
             SettingsCard {
                 ToggleRow(
-                    title = "События календаря",
-                    subtitle = "Точки на датах и список ближайших событий",
+                    title = stringResource(R.string.ma_events),
+                    subtitle = stringResource(R.string.ma_events_sub),
                     checked = settings.showEvents,
                     onChange = { apply(settings.copy(showEvents = it)) },
                 )
                 ToggleRow(
-                    title = "Неделя с понедельника",
-                    subtitle = if (settings.mondayFirst) "Пн … Вс" else "Вс … Сб",
+                    title = stringResource(R.string.ma_week_start),
+                    subtitle = stringResource(if (settings.mondayFirst) R.string.ma_week_mon else R.string.ma_week_sun),
                     checked = settings.mondayFirst,
                     onChange = { apply(settings.copy(mondayFirst = it)) },
                 )
             }
 
             Spacer(Modifier.height(16.dp))
-            Text("Акцент", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.ma_accent), style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Accent.entries.forEach { accent ->
                     FilterChip(
                         selected = settings.accent == accent,
                         onClick = { apply(settings.copy(accent = accent)) },
-                        label = { Text(accentLabel(accent)) },
+                        label = { Text(stringResource(accentLabelRes(accent))) },
                     )
                 }
             }
@@ -173,28 +174,26 @@ private fun SettingsScreen() {
             ) {
                 Column(Modifier.padding(16.dp)) {
                     Text(
-                        "Виджет погоды",
+                        stringResource(R.string.ma_weather_card),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        "Отдельный виджет погоды в том же стиле. Данные — Open-Meteo " +
-                            "(бесплатно, без ключа). Настройте город и единицы.",
+                        stringResource(R.string.ma_weather_card_sub),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                     )
                     Spacer(Modifier.height(12.dp))
                     Button(onClick = { context.startActivity(Intent(context, WeatherActivity::class.java)) }) {
-                        Text("Настройки погоды")
+                        Text(stringResource(R.string.ma_weather_btn))
                     }
                 }
             }
 
             Spacer(Modifier.height(20.dp))
             Text(
-                "Долгое нажатие на рабочий стол → Виджеты → «Календарь» / «Погода». " +
-                    "Потяните за края, чтобы изменить размер; стрелками ‹ › листайте месяцы.",
+                stringResource(R.string.ma_hint),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -223,12 +222,12 @@ private fun ToggleRow(title: String, subtitle: String, checked: Boolean, onChang
     }
 }
 
-private fun accentLabel(a: Accent): String = when (a) {
-    Accent.DYNAMIC -> "Обои"
-    Accent.INDIGO -> "Индиго"
-    Accent.GREEN -> "Зелёный"
-    Accent.ROSE -> "Розовый"
-    Accent.AMBER -> "Янтарь"
+private fun accentLabelRes(a: Accent): Int = when (a) {
+    Accent.DYNAMIC -> R.string.ma_accent_dynamic
+    Accent.INDIGO -> R.string.ma_accent_indigo
+    Accent.GREEN -> R.string.ma_accent_green
+    Accent.ROSE -> R.string.ma_accent_rose
+    Accent.AMBER -> R.string.ma_accent_amber
 }
 
 private fun accentColor(a: Accent, fallback: Color): Color = when (a) {

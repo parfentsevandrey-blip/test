@@ -1,8 +1,99 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Календарь · виджет</string>
-    <string name="widget_label">Календарь</string>
-    <string name="widget_description">Календарь на месяц в стиле Material 3 Expressive: события, навигация, изменяемый размер.</string>
-    <string name="weather_widget_label">Погода</string>
-    <string name="weather_widget_description">Погода в стиле Material 3 Expressive: текущая, по часам и на неделю. Данные Open-Meteo.</string>
+    <string name="app_name">Calendar &amp; Weather</string>
+
+    <!-- Calendar widget -->
+    <string name="widget_label">Calendar</string>
+    <string name="widget_description">Material 3 month calendar: events, navigation, resizable.</string>
+    <string name="cal_upcoming">Upcoming</string>
+    <string name="cal_no_events">No upcoming events</string>
+    <string name="cal_today">Today</string>
+    <string name="cal_tomorrow">Tomorrow</string>
+    <string name="cal_all_day">All day</string>
+    <string name="cal_grant_events">Tap to show calendar events</string>
+    <string name="cal_untitled_event">Untitled</string>
+    <string name="cal_prev_month">Previous month</string>
+    <string name="cal_this_month">This month</string>
+    <string name="cal_next_month">Next month</string>
+
+    <!-- Weather widget -->
+    <string name="weather_widget_label">Weather</string>
+    <string name="weather_widget_description">Material 3 weather: now, hourly and the week. Data by Open-Meteo.</string>
+    <string name="w_title">Weather</string>
+    <string name="w_pick_city">Tap to choose a city</string>
+    <string name="w_updating">Updating…</string>
+    <string name="w_now">Now</string>
+    <string name="w_hourly">Hourly</string>
+    <string name="w_this_week">This week</string>
+    <string name="w_sunrise">Sunrise</string>
+    <string name="w_sunset">Sunset</string>
+    <string name="w_wind">Wind</string>
+    <string name="w_uv">UV</string>
+    <string name="w_unit_kmh">km/h</string>
+    <string name="w_unit_mph">mph</string>
+    <string name="w_feels">Feels</string>
+    <string name="w_humidity">Humidity</string>
+    <string name="w_attribution">Open-Meteo</string>
+    <string name="w_offline_retry">Offline — tap to retry</string>
+    <string name="w_error_retry">Couldn\'t update — tap to retry</string>
+    <string name="w_stale">Outdated</string>
+    <string name="w_updated_now">now</string>
+    <string name="w_updated_min">%1$d min</string>
+    <string name="w_updated_hour">%1$d h</string>
+
+    <!-- Weather settings -->
+    <string name="wa_title">Weather</string>
+    <string name="wa_search_hint">Search city</string>
+    <string name="wa_search">Search</string>
+    <string name="wa_searching">Searching…</string>
+    <string name="wa_not_found">Nothing found</string>
+    <string name="wa_units">Units</string>
+    <string name="wa_metric">°C, km/h</string>
+    <string name="wa_imperial">°F, mph</string>
+    <string name="wa_current_city">Current city: %1$s</string>
+    <string name="wa_footer">Data by Open-Meteo (free, no API key). Add the “Weather” widget to your home screen; it refreshes hourly.</string>
+
+    <!-- Calendar settings -->
+    <string name="ma_title">Calendar</string>
+    <string name="ma_events">Calendar events</string>
+    <string name="ma_events_sub">Dots on dates and an upcoming list</string>
+    <string name="ma_week_start">Week starts on Monday</string>
+    <string name="ma_week_mon">Mon … Sun</string>
+    <string name="ma_week_sun">Sun … Sat</string>
+    <string name="ma_accent">Accent</string>
+    <string name="ma_accent_dynamic">Wallpaper</string>
+    <string name="ma_accent_indigo">Indigo</string>
+    <string name="ma_accent_green">Green</string>
+    <string name="ma_accent_rose">Rose</string>
+    <string name="ma_accent_amber">Amber</string>
+    <string name="ma_weather_card">Weather widget</string>
+    <string name="ma_weather_card_sub">A separate weather widget in the same style. Data by Open-Meteo (free, no key).</string>
+    <string name="ma_weather_btn">Weather settings</string>
+    <string name="ma_grant_title">Show calendar events</string>
+    <string name="ma_grant_sub">Allow calendar access so the widget can show event dots and your upcoming agenda.</string>
+    <string name="ma_grant_btn">Allow access</string>
+    <string name="ma_hint">Long-press the home screen → Widgets → “Calendar” / “Weather”. Drag the edges to resize; use the chevrons to flip months.</string>
+    <string name="ma_preview">Preview</string>
+
+    <!-- WMO weather-interpretation codes -->
+    <string name="wmo_clear">Clear</string>
+    <string name="wmo_mainly_clear">Mainly clear</string>
+    <string name="wmo_partly_cloudy">Partly cloudy</string>
+    <string name="wmo_overcast">Overcast</string>
+    <string name="wmo_fog">Fog</string>
+    <string name="wmo_drizzle">Drizzle</string>
+    <string name="wmo_freezing_drizzle">Freezing drizzle</string>
+    <string name="wmo_rain_light">Light rain</string>
+    <string name="wmo_rain">Rain</string>
+    <string name="wmo_rain_heavy">Heavy rain</string>
+    <string name="wmo_freezing_rain">Freezing rain</string>
+    <string name="wmo_snow_light">Light snow</string>
+    <string name="wmo_snow">Snow</string>
+    <string name="wmo_snow_heavy">Heavy snow</string>
+    <string name="wmo_snow_grains">Snow grains</string>
+    <string name="wmo_showers">Showers</string>
+    <string name="wmo_snow_showers">Snow showers</string>
+    <string name="wmo_thunder">Thunderstorm</string>
+    <string name="wmo_thunder_hail">Thunderstorm with hail</string>
+    <string name="wmo_unknown">—</string>
 </resources>

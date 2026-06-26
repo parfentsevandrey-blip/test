@@ -108,7 +108,8 @@ object CalendarRepository {
                     }
                     out += EventLite(
                         id = c.getLong(idIdx),
-                        title = c.getString(titleIdx)?.takeIf { it.isNotBlank() } ?: "(без названия)",
+                        title = c.getString(titleIdx)?.takeIf { it.isNotBlank() }
+                            ?: context.getString(R.string.cal_untitled_event),
                         begin = begin,
                         end = c.getLong(endIdx),
                         allDay = allDay,

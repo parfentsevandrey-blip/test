@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Monochrome layer for Android 13+ themed icons. Relief comes from real geometry,
+  not alpha. Holes cut with evenOdd. Mirrors the colour mark: a calendar plate
+  with a header slit + grid-dot field knocked out, and a solid filled "today"
+  disc as the hero. Centred on 54,54 inside the 66dp safe zone.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108"
+    android:tint="#FF000000">
+
+    <!-- Plate body with evenOdd knockouts: header slit + 6 grid-dot holes.
+         The today disc is drawn solid separately on top. -->
+    <path
+        android:fillColor="#FF000000"
+        android:fillType="evenOdd"
+        android:pathData="
+            M34,29 h40 a12,12 0 0 1 12,12 v40 a12,12 0 0 1 -12,12 h-40 a12,12 0 0 1 -12,-12 v-40 a12,12 0 0 1 12,-12 z
+            M28,45 h52 v2.6 h-52 z
+            M40,56 m-2.6,0 a2.6,2.6 0 1,0 5.2,0 a2.6,2.6 0 1,0 -5.2,0 z
+            M68,56 m-2.6,0 a2.6,2.6 0 1,0 5.2,0 a2.6,2.6 0 1,0 -5.2,0 z
+            M40,70 m-2.6,0 a2.6,2.6 0 1,0 5.2,0 a2.6,2.6 0 1,0 -5.2,0 z
+            M68,70 m-2.6,0 a2.6,2.6 0 1,0 5.2,0 a2.6,2.6 0 1,0 -5.2,0 z
+            M54,63 m-9,0 a9,9 0 1,0 18,0 a9,9 0 1,0 -18,0 z
+        " />
+
+    <!-- HERO today disc: solid, sitting in the knocked-out ring above -->
+    <path android:fillColor="#FF000000"
+        android:pathData="M54,63 m-6.2,0 a6.2,6.2 0 1,0 12.4,0 a6.2,6.2 0 1,0 -12.4,0 z" />
+
+    <!-- Two binding tabs above the header -->
+    <path android:fillColor="#FF000000"
+        android:pathData="M44,22 a3,3 0 0 1 3,3 v7 a3,3 0 0 1 -6,0 v-7 a3,3 0 0 1 3,-3 z" />
+    <path android:fillColor="#FF000000"
+        android:pathData="M64,22 a3,3 0 0 1 3,3 v7 a3,3 0 0 1 -6,0 v-7 a3,3 0 0 1 3,-3 z" />
+</vector>

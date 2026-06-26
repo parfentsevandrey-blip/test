@@ -1,25 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Simple calendar glyph: red header band + grid dots, centred in the safe zone. -->
+<!--
+  Premium foreground mark (108x108, content inside the 66dp safe zone centred on
+  54,54). Concept echoes the widget's hero: a minimal rounded "month frame" with
+  one emphasized "today" disc in the brand indigo/onPrimary white. No iOS-red, no
+  grey dots, no literal app cliche. Reads at 48dp.
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- card -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:strokeColor="#E5E5EA"
-        android:strokeWidth="2"
-        android:pathData="M34,36 h40 a4,4 0 0 1 4,4 v32 a4,4 0 0 1 -4,4 h-40 a4,4 0 0 1 -4,-4 v-32 a4,4 0 0 1 4,-4 z" />
-    <!-- red header -->
-    <path
-        android:fillColor="#FF3B30"
-        android:pathData="M34,36 h40 a4,4 0 0 1 4,4 v6 h-48 v-6 a4,4 0 0 1 4,-4 z" />
-    <!-- grid dots -->
-    <path android:fillColor="#C7C7CC" android:pathData="M40,54 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
-    <path android:fillColor="#C7C7CC" android:pathData="M52,54 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
-    <path android:fillColor="#C7C7CC" android:pathData="M64,54 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
-    <path android:fillColor="#FF3B30" android:pathData="M40,64 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
-    <path android:fillColor="#C7C7CC" android:pathData="M52,64 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
-    <path android:fillColor="#C7C7CC" android:pathData="M64,64 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
+
+    <!-- Soft month-frame plate: rounded square, white with a faint cool tint,
+         inside the safe zone (x,y ~ 28..80). Carries the calendar surface. -->
+    <path android:pathData="M34,28 h40 a12,12 0 0 1 12,12 v40 a12,12 0 0 1 -12,12 h-40 a12,12 0 0 1 -12,-12 v-40 a12,12 0 0 1 12,-12 z">
+        <aapt:attr name="android:fillColor" xmlns:aapt="http://schemas.android.com/aapt">
+            <gradient
+                android:startX="54" android:startY="28"
+                android:endX="54" android:endY="92"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FFFFFFFF" />
+                <item android:offset="1.0" android:color="#FFEDEFFB" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Header rail: brand indigo gradient, top of the plate only -->
+    <path android:pathData="M34,28 h40 a12,12 0 0 1 12,12 v6 h-64 v-6 a12,12 0 0 1 12,-12 z">
+        <aapt:attr name="android:fillColor" xmlns:aapt="http://schemas.android.com/aapt">
+            <gradient
+                android:startX="22" android:startY="28"
+                android:endX="86" android:endY="46"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FF5A62E4" />
+                <item android:offset="1.0" android:color="#FF3D43BE" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Two binding tabs above the header -->
+    <path android:fillColor="#FFFFFFFF" android:fillAlpha="0.92"
+        android:pathData="M44,23 a2.6,2.6 0 0 1 2.6,2.6 v6 a2.6,2.6 0 0 1 -5.2,0 v-6 a2.6,2.6 0 0 1 2.6,-2.6 z" />
+    <path android:fillColor="#FFFFFFFF" android:fillAlpha="0.92"
+        android:pathData="M64,23 a2.6,2.6 0 0 1 2.6,2.6 v6 a2.6,2.6 0 0 1 -5.2,0 v-6 a2.6,2.6 0 0 1 2.6,-2.6 z" />
+
+    <!-- Grid dots: a calm 3-col x 2-row field of small indigo-tinted marks -->
+    <path android:fillColor="#FFC7CBF2"
+        android:pathData="M40,56 m-2.6,0 a2.6,2.6 0 1,0 5.2,0 a2.6,2.6 0 1,0 -5.2,0 z" />
+    <path android:fillColor="#FFC7CBF2"
+        android:pathData="M68,56 m-2.6,0 a2.6,2.6 0 1,0 5.2,0 a2.6,2.6 0 1,0 -5.2,0 z" />
+    <path android:fillColor="#FFC7CBF2"
+        android:pathData="M40,70 m-2.6,0 a2.6,2.6 0 1,0 5.2,0 a2.6,2.6 0 1,0 -5.2,0 z" />
+    <path android:fillColor="#FFC7CBF2"
+        android:pathData="M68,70 m-2.6,0 a2.6,2.6 0 1,0 5.2,0 a2.6,2.6 0 1,0 -5.2,0 z" />
+
+    <!-- HERO "today" disc (the single accent moment): brand indigo, centred -->
+    <path android:pathData="M54,63 m-9,0 a9,9 0 1,0 18,0 a9,9 0 1,0 -18,0 z">
+        <aapt:attr name="android:fillColor" xmlns:aapt="http://schemas.android.com/aapt">
+            <gradient
+                android:startX="45" android:startY="54"
+                android:endX="63" android:endY="72"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FF5A62E4" />
+                <item android:offset="1.0" android:color="#FF3D43BE" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- onPrimary white center dot inside the today disc -->
+    <path android:fillColor="#FFFFFFFF"
+        android:pathData="M54,63 m-3.4,0 a3.4,3.4 0 1,0 6.8,0 a3.4,3.4 0 1,0 -6.8,0 z" />
+
+    <!-- Subtle top-edge highlight sweep on the plate -->
+    <path android:fillColor="#26FFFFFF"
+        android:pathData="M34,46 h52 v3 h-52 z" />
 </vector>

@@ -40,34 +40,35 @@ data class WeatherData(
     val updatedAt: Long,
 ) {
     val tempUnit: String get() = if (metric) "°C" else "°F"
-    val windUnit: String get() = if (metric) "км/ч" else "mph"
+    val windUnit: String get() = if (metric) "km/h" else "mph"
     val today: DailyForecast? get() = daily.firstOrNull()
 }
 
 /** WMO weather-interpretation codes → label / icon / mood gradient. */
 object WeatherCodes {
 
-    fun label(code: Int): String = when (code) {
-        0 -> "Ясно"
-        1 -> "Преимущественно ясно"
-        2 -> "Переменная облачность"
-        3 -> "Пасмурно"
-        45, 48 -> "Туман"
-        51, 53, 55 -> "Морось"
-        56, 57 -> "Ледяная морось"
-        61 -> "Небольшой дождь"
-        63 -> "Дождь"
-        65 -> "Сильный дождь"
-        66, 67 -> "Ледяной дождь"
-        71 -> "Небольшой снег"
-        73 -> "Снег"
-        75 -> "Сильный снег"
-        77 -> "Снежные зёрна"
-        80, 81, 82 -> "Ливни"
-        85, 86 -> "Снегопад"
-        95 -> "Гроза"
-        96, 99 -> "Гроза с градом"
-        else -> "—"
+    /** Localised condition label resource id (resolve with context.getString). */
+    fun labelRes(code: Int): Int = when (code) {
+        0 -> R.string.wmo_clear
+        1 -> R.string.wmo_mainly_clear
+        2 -> R.string.wmo_partly_cloudy
+        3 -> R.string.wmo_overcast
+        45, 48 -> R.string.wmo_fog
+        51, 53, 55 -> R.string.wmo_drizzle
+        56, 57 -> R.string.wmo_freezing_drizzle
+        61 -> R.string.wmo_rain_light
+        63 -> R.string.wmo_rain
+        65 -> R.string.wmo_rain_heavy
+        66, 67 -> R.string.wmo_freezing_rain
+        71 -> R.string.wmo_snow_light
+        73 -> R.string.wmo_snow
+        75 -> R.string.wmo_snow_heavy
+        77 -> R.string.wmo_snow_grains
+        80, 81, 82 -> R.string.wmo_showers
+        85, 86 -> R.string.wmo_snow_showers
+        95 -> R.string.wmo_thunder
+        96, 99 -> R.string.wmo_thunder_hail
+        else -> R.string.wmo_unknown
     }
 
     fun iconRes(code: Int, isDay: Boolean): Int = when (code) {

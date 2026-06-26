@@ -1,43 +1,32 @@
 package com.monthcalendar.widget
 
-import android.content.Context
-import android.os.Build
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 import androidx.glance.color.ColorProviders
+import androidx.glance.color.DynamicThemeColorProviders
 import androidx.glance.material3.ColorProviders as GlanceColorProviders
 
 /**
- * Material 3 colour schemes for the fixed accent options. DYNAMIC is handled
- * separately (it uses the platform Material You palette). Each accent shares a
- * neutral surface family and swaps the primary/secondary/tertiary tones, which
- * is enough to retint the whole Expressive widget.
+ * Resolves the [Accent] setting to a Glance [ColorProviders].
+ *
+ * [Accent.DYNAMIC] returns Glance's [DynamicThemeColorProviders] — a singleton
+ * whose roles are backed by `@android:color/system_*` resources. Because those
+ * are *resource references*, the launcher re-resolves them at draw time, so the
+ * widget tracks the live Android system colour theme (Material You) instantly,
+ * with no re-render needed. Baseline fallbacks make it safe on API < 31.
+ *
+ * The fixed accents are intentionally static [GlanceColorProviders] built from
+ * hand-tuned light/dark [androidx.compose.material3.ColorScheme]s.
  */
 object AccentSchemes {
 
-    /**
-     * Material You colours derived from the current Android system palette
-     * (wallpaper-based). Both the widget background and every accent track the
-     * system colour. Returns null below Android 12, where dynamic colour does
-     * not exist — the caller then uses the baseline Material 3 theme.
-     */
-    fun dynamic(context: Context): ColorProviders? {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return null
-        return GlanceColorProviders(
-            light = dynamicLightColorScheme(context),
-            dark = dynamicDarkColorScheme(context),
-        )
-    }
-
     fun providersFor(accent: Accent): ColorProviders = when (accent) {
+        Accent.DYNAMIC -> DynamicThemeColorProviders
         Accent.INDIGO -> indigo
         Accent.GREEN -> green
         Accent.ROSE -> rose
         Accent.AMBER -> amber
-        Accent.DYNAMIC -> indigo // fallback only; DYNAMIC short-circuits earlier
     }
 
     private fun build(

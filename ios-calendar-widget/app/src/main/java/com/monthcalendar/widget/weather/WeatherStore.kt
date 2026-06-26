@@ -37,6 +37,7 @@ class WeatherStore(private val context: Context) {
         val METRIC = booleanPreferencesKey("metric")
         val CACHE_JSON = stringPreferencesKey("cache_json")
         val CACHE_TIME = longPreferencesKey("cache_time")
+        val CACHE_METRIC = booleanPreferencesKey("cache_metric")
     }
 
     suspend fun config(): WeatherConfig {
@@ -58,16 +59,27 @@ class WeatherStore(private val context: Context) {
         }
     }
 
-    suspend fun cachedJson(): Pair<String, Long>? {
+    /** Cached raw response: (json, fetchedAtMillis, metricUnitsUsed). */
+    suspend fun cachedJson(): Triple<String, Long, Boolean>? {
         val p = context.weatherStore.data.first()
         val json = p[Keys.CACHE_JSON] ?: return null
-        return json to (p[Keys.CACHE_TIME] ?: 0L)
+        return Triple(json, p[Keys.CACHE_TIME] ?: 0L, p[Keys.CACHE_METRIC] ?: true)
     }
 
-    suspend fun saveCache(json: String, time: Long) {
+    suspend fun saveCache(json: String, time: Long, metric: Boolean) {
         context.weatherStore.edit { p ->
             p[Keys.CACHE_JSON] = json
             p[Keys.CACHE_TIME] = time
+            p[Keys.CACHE_METRIC] = metric
+        }
+    }
+
+    /** Drop the cached forecast (e.g. after the city changes). */
+    suspend fun clearCache() {
+        context.weatherStore.edit { p ->
+            p.remove(Keys.CACHE_JSON)
+            p.remove(Keys.CACHE_TIME)
+            p.remove(Keys.CACHE_METRIC)
         }
     }
 }

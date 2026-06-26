@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Календарь и погода</string>
+
+    <string name="widget_label">Календарь</string>
+    <string name="widget_description">Календарь месяца в стиле Material 3: события, навигация, изменяемый размер.</string>
+    <string name="cal_upcoming">Ближайшие</string>
+    <string name="cal_no_events">Нет ближайших событий</string>
+    <string name="cal_today">Сегодня</string>
+    <string name="cal_tomorrow">Завтра</string>
+    <string name="cal_all_day">Весь день</string>
+    <string name="cal_grant_events">Нажмите, чтобы показать события календаря</string>
+    <string name="cal_untitled_event">Без названия</string>
+    <string name="cal_prev_month">Предыдущий месяц</string>
+    <string name="cal_this_month">Текущий месяц</string>
+    <string name="cal_next_month">Следующий месяц</string>
+
+    <string name="weather_widget_label">Погода</string>
+    <string name="weather_widget_description">Погода в стиле Material 3: сейчас, по часам и на неделю. Данные Open-Meteo.</string>
+    <string name="w_title">Погода</string>
+    <string name="w_pick_city">Нажмите, чтобы выбрать город</string>
+    <string name="w_updating">Обновление…</string>
+    <string name="w_now">Сейчас</string>
+    <string name="w_hourly">Почасово</string>
+    <string name="w_this_week">На неделю</string>
+    <string name="w_sunrise">Восход</string>
+    <string name="w_sunset">Закат</string>
+    <string name="w_wind">Ветер</string>
+    <string name="w_uv">УФ</string>
+    <string name="w_unit_kmh">км/ч</string>
+    <string name="w_unit_mph">mph</string>
+    <string name="w_feels">Ощущается</string>
+    <string name="w_humidity">Влажность</string>
+    <string name="w_attribution">Open-Meteo</string>
+    <string name="w_offline_retry">Нет сети — нажмите для повтора</string>
+    <string name="w_error_retry">Не удалось обновить — нажмите для повтора</string>
+    <string name="w_stale">Устарело</string>
+    <string name="w_updated_now">только что</string>
+    <string name="w_updated_min">%1$d мин</string>
+    <string name="w_updated_hour">%1$d ч</string>
+
+    <string name="wa_title">Погода</string>
+    <string name="wa_search_hint">Поиск города</string>
+    <string name="wa_search">Найти</string>
+    <string name="wa_searching">Поиск…</string>
+    <string name="wa_not_found">Ничего не найдено</string>
+    <string name="wa_units">Единицы</string>
+    <string name="wa_metric">°C, км/ч</string>
+    <string name="wa_imperial">°F, mph</string>
+    <string name="wa_current_city">Текущий город: %1$s</string>
+    <string name="wa_footer">Данные Open-Meteo (бесплатно, без ключа). Добавьте виджет «Погода» на рабочий стол; обновляется раз в час.</string>
+
+    <string name="ma_title">Календарь</string>
+    <string name="ma_events">События календаря</string>
+    <string name="ma_events_sub">Точки на датах и список ближайших</string>
+    <string name="ma_week_start">Неделя с понедельника</string>
+    <string name="ma_week_mon">Пн … Вс</string>
+    <string name="ma_week_sun">Вс … Сб</string>
+    <string name="ma_accent">Акцент</string>
+    <string name="ma_accent_dynamic">Обои</string>
+    <string name="ma_accent_indigo">Индиго</string>
+    <string name="ma_accent_green">Зелёный</string>
+    <string name="ma_accent_rose">Розовый</string>
+    <string name="ma_accent_amber">Янтарь</string>
+    <string name="ma_weather_card">Виджет погоды</string>
+    <string name="ma_weather_card_sub">Отдельный виджет погоды в том же стиле. Данные Open-Meteo (бесплатно, без ключа).</string>
+    <string name="ma_weather_btn">Настройки погоды</string>
+    <string name="ma_grant_title">Показывать события календаря</string>
+    <string name="ma_grant_sub">Разрешите доступ к календарю, чтобы виджет показывал точки событий и список ближайших дел.</string>
+    <string name="ma_grant_btn">Разрешить доступ</string>
+    <string name="ma_hint">Долгое нажатие на рабочий стол → Виджеты → «Календарь» / «Погода». Тяните за края, чтобы изменить размер; стрелками листайте месяцы.</string>
+    <string name="ma_preview">Предпросмотр</string>
+
+    <string name="wmo_clear">Ясно</string>
+    <string name="wmo_mainly_clear">Преимущественно ясно</string>
+    <string name="wmo_partly_cloudy">Переменная облачность</string>
+    <string name="wmo_overcast">Пасмурно</string>
+    <string name="wmo_fog">Туман</string>
+    <string name="wmo_drizzle">Морось</string>
+    <string name="wmo_freezing_drizzle">Ледяная морось</string>
+    <string name="wmo_rain_light">Небольшой дождь</string>
+    <string name="wmo_rain">Дождь</string>
+    <string name="wmo_rain_heavy">Сильный дождь</string>
+    <string name="wmo_freezing_rain">Ледяной дождь</string>
+    <string name="wmo_snow_light">Небольшой снег</string>
+    <string name="wmo_snow">Снег</string>
+    <string name="wmo_snow_heavy">Сильный снег</string>
+    <string name="wmo_snow_grains">Снежные зёрна</string>
+    <string name="wmo_showers">Ливни</string>
+    <string name="wmo_snow_showers">Снегопад</string>
+    <string name="wmo_thunder">Гроза</string>
+    <string name="wmo_thunder_hail">Гроза с градом</string>
+    <string name="wmo_unknown">—</string>
+</resources>
