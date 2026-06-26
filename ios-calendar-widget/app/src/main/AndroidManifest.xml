@@ -4,9 +4,8 @@
     <!-- Read the device calendar to show event dots + an upcoming agenda. -->
     <uses-permission android:name="android.permission.READ_CALENDAR" />
 
-    <!-- Live wallpaper reads the accelerometer; both are optional. -->
-    <uses-feature android:name="android.software.live_wallpaper" />
-    <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="false" />
+    <!-- Weather widget fetches forecasts from Open-Meteo. -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -43,19 +42,23 @@
                 android:resource="@xml/calendar_widget_info" />
         </receiver>
 
-        <!-- Pixel-fire live wallpaper (accelerometer-driven, 3D parallax). -->
-        <service
-            android:name=".wallpaper.PixelFireWallpaperService"
+        <activity
+            android:name=".WeatherActivity"
+            android:exported="false"
+            android:label="@string/weather_widget_label"
+            android:theme="@style/Theme.CalendarWidget" />
+
+        <receiver
+            android:name=".weather.WeatherWidgetReceiver"
             android:exported="true"
-            android:label="@string/wallpaper_label"
-            android:permission="android.permission.BIND_WALLPAPER">
+            android:label="@string/weather_widget_label">
             <intent-filter>
-                <action android:name="android.service.wallpaper.WallpaperService" />
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
-                android:name="android.service.wallpaper"
-                android:resource="@xml/pixel_fire_wallpaper" />
-        </service>
+                android:name="android.appwidget.provider"
+                android:resource="@xml/weather_widget_info" />
+        </receiver>
 
     </application>
 

@@ -1,12 +1,8 @@
 package com.monthcalendar.widget
 
 import android.Manifest
-import android.app.WallpaperManager
-import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -177,27 +173,27 @@ private fun SettingsScreen() {
             ) {
                 Column(Modifier.padding(16.dp)) {
                     Text(
-                        "Живые обои «Пиксельный костёр»",
+                        "Виджет погоды",
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        "Анимированный пиксельный костёр на заднем фоне с 3D-параллаксом, " +
-                            "который реагирует на наклон устройства (акселерометр).",
+                        "Отдельный виджет погоды в том же стиле. Данные — Open-Meteo " +
+                            "(бесплатно, без ключа). Настройте город и единицы.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                     )
                     Spacer(Modifier.height(12.dp))
-                    Button(onClick = { launchFireWallpaper(context) }) {
-                        Text("Установить живые обои")
+                    Button(onClick = { context.startActivity(Intent(context, WeatherActivity::class.java)) }) {
+                        Text("Настройки погоды")
                     }
                 }
             }
 
             Spacer(Modifier.height(20.dp))
             Text(
-                "Долгое нажатие на рабочий стол → Виджеты → «Календарь». " +
+                "Долгое нажатие на рабочий стол → Виджеты → «Календарь» / «Погода». " +
                     "Потяните за края, чтобы изменить размер; стрелками ‹ › листайте месяцы.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -225,18 +221,6 @@ private fun ToggleRow(title: String, subtitle: String, checked: Boolean, onChang
         }
         Switch(checked = checked, onCheckedChange = onChange)
     }
-}
-
-/** Open the live-wallpaper preview for our pixel-fire service, with fallbacks. */
-private fun launchFireWallpaper(context: Context) {
-    val component = ComponentName(context, "com.monthcalendar.widget.wallpaper.PixelFireWallpaperService")
-    val direct = Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER)
-        .putExtra(WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT, component)
-    runCatching { context.startActivity(direct); return }
-    // Some launchers/OEMs don't honour the direct-preview intent — fall back to
-    // the generic live-wallpaper chooser.
-    runCatching { context.startActivity(Intent(WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER)); return }
-    Toast.makeText(context, "Не удалось открыть выбор живых обоев", Toast.LENGTH_SHORT).show()
 }
 
 private fun accentLabel(a: Accent): String = when (a) {

@@ -141,7 +141,7 @@ class CalendarWidget : GlanceAppWidget() {
         // always ≥ bucket, so it never clips). Dots/agenda are only enabled when
         // there is vertical room for them.
         val layout = when {
-            size.height < 200.dp -> Layout(0, 15, 9, 10, 14, 4, 0, 12, showNav = size.width >= 240.dp, showAgenda = false)
+            size.height < 200.dp -> Layout(0, 15, 9, 10, 15, 4, 0, 12, showNav = size.width >= 240.dp, showAgenda = false)
             size.height < 290.dp -> Layout(1, 18, 10, 11, 16, 4, 3, 14, showNav = true, showAgenda = false)
             else -> Layout(2, 20, 10, 11, 16, 4, 3, 16, showNav = true, showAgenda = true)
         }
@@ -269,7 +269,7 @@ class CalendarWidget : GlanceAppWidget() {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 DayNumber(cell, layout)
                 if (events.isNotEmpty() && layout.maxDots > 0) {
-                    Spacer(GlanceModifier.height(2.dp))
+                    Spacer(GlanceModifier.height(1.dp))
                     DotRow(events, layout)
                 }
             }
@@ -277,46 +277,40 @@ class CalendarWidget : GlanceAppWidget() {
     }
 
     /**
-     * The day number. The glyph is NEVER wrapped in a fixed-size box, so it can
-     * never be clipped. Today gets a disc/pill that *sizes itself to the text*
-     * through padding (so it always contains the digits); at the smallest tier
-     * it is just emphasised with colour + weight, with no enclosing shape — which
-     * is what was eating the digits on small widgets.
+     * The day number. Today is a neat filled-primary circle whose diameter is
+     * chosen per size tier to be larger than the glyph yet smaller than the row
+     * height — so it reads as a clean disc and never clips the digits.
      */
     @Composable
     private fun DayNumber(cell: DayCell, layout: Layout) {
-        val baseColor = when {
-            !cell.inCurrentMonth -> GlanceTheme.colors.onSurfaceVariant
-            cell.isWeekend -> GlanceTheme.colors.tertiary
-            else -> GlanceTheme.colors.onSurface
-        }
-        when {
-            cell.isToday && layout.tier == 0 -> Text(
-                text = cell.day.toString(),
-                style = TextStyle(
-                    color = GlanceTheme.colors.primary,
-                    fontSize = layout.daySize.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                ),
-            )
-            cell.isToday -> Text(
-                text = cell.day.toString(),
+        if (cell.isToday) {
+            Box(
                 modifier = GlanceModifier
-                    .background(GlanceTheme.colors.primary)
-                    .cornerRadius(layout.circle.dp)
-                    .padding(horizontal = 6.dp, vertical = 2.dp),
-                style = TextStyle(
-                    color = GlanceTheme.colors.onPrimary,
-                    fontSize = layout.daySize.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                ),
-            )
-            else -> Text(
+                    .size(layout.circle.dp)
+                    .cornerRadius((layout.circle / 2).dp)
+                    .background(GlanceTheme.colors.primary),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = cell.day.toString(),
+                    style = TextStyle(
+                        color = GlanceTheme.colors.onPrimary,
+                        fontSize = layout.daySize.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                    ),
+                )
+            }
+        } else {
+            val color = when {
+                !cell.inCurrentMonth -> GlanceTheme.colors.onSurfaceVariant
+                cell.isWeekend -> GlanceTheme.colors.tertiary
+                else -> GlanceTheme.colors.onSurface
+            }
+            Text(
                 text = cell.day.toString(),
                 style = TextStyle(
-                    color = baseColor,
+                    color = color,
                     fontSize = layout.daySize.sp,
                     fontWeight = FontWeight.Normal,
                     textAlign = TextAlign.Center,
@@ -360,7 +354,7 @@ class CalendarWidget : GlanceAppWidget() {
         }
         Column(modifier = GlanceModifier.fillMaxWidth()) {
             agenda.take(3).forEachIndexed { i, e ->
-                if (i > 0) Spacer(GlanceModifier.height(5.dp))
+                if (i > 0) Spacer(GlanceModifier.height(4.dp))
                 AgendaItem(e, today)
             }
         }
@@ -374,7 +368,7 @@ class CalendarWidget : GlanceAppWidget() {
                 .fillMaxWidth()
                 .cornerRadius(14.dp)
                 .background(GlanceTheme.colors.secondaryContainer)
-                .padding(horizontal = 10.dp, vertical = 6.dp),
+                .padding(horizontal = 10.dp, vertical = 5.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(

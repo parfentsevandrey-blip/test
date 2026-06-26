@@ -3,6 +3,6 @@
     <string name="app_name">Календарь · виджет</string>
     <string name="widget_label">Календарь</string>
     <string name="widget_description">Календарь на месяц в стиле Material 3 Expressive: события, навигация, изменяемый размер.</string>
-    <string name="wallpaper_label">Пиксельный костёр</string>
-    <string name="wallpaper_desc">Живой пиксельный костёр с 3D-параллаксом, реагирует на наклон устройства.</string>
+    <string name="weather_widget_label">Погода</string>
+    <string name="weather_widget_description">Погода в стиле Material 3 Expressive: текущая, по часам и на неделю. Данные Open-Meteo.</string>
 </resources>
