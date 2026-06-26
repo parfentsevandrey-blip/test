@@ -532,7 +532,7 @@
     const sh = host.attachShadow({ mode: "open" });
     sh.innerHTML =
       "<style>" + CSS + "</style>" +
-      '<div class="root" part="root">' +
+      '<div class="root min" part="root">' +   // по умолчанию свёрнуто (кружок)
         '<button class="fab" title="Циан → Excel">📊</button>' +
         '<div class="card">' +
           '<div class="head"><span class="ic">📊</span><span class="t">Циан → Excel</span>' +
