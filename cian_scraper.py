@@ -282,6 +282,12 @@ class Fetcher:
             if curl.get("url"):
                 self.api_url = curl["url"]
             self.template = curl.get("json")
+        # --cookie "k=v; k2=v2" — быстрый способ передать сессию без полного cURL
+        if getattr(args, "cookie", None):
+            self.session.cookies.update(_parse_cookie_string(args.cookie))
+        # --user-agent переопределение
+        if getattr(args, "user_agent", None):
+            headers["User-Agent"] = args.user_agent
         # Referer на страницу ЖК (антибан)
         headers.setdefault("Referer", args.referer or "https://www.cian.ru/")
         self.session.headers.update(headers)
@@ -408,12 +414,17 @@ def collect_room(fetcher, room):
     диапазон цены пополам и рекурсивно добирает. Дедуп по cianId.
     """
     by_id = {}
+    room_total = None        # offerCount по этой категории (для охвата в Сводке)
     # стек диапазонов (lo, hi); None => без границы
     stack = [(fetcher.args.price_min, fetcher.args.price_max)]
     min_span = fetcher.args.min_price_span
+    first_segment = True
     while stack:
         lo, hi = stack.pop()
         seg, total, hit_cap = collect_segment(fetcher, room, lo, hi)
+        if first_segment:
+            room_total = total   # первый сегмент — полный диапазон => общее число по категории
+            first_segment = False
         by_id.update(seg)
         collected = len(seg)
         need_split = (
@@ -434,25 +445,44 @@ def collect_room(fetcher, room):
             else:
                 log.warning("    диапазон [%s..%s] не дробится дальше (min-span=%s), "
                             "часть лотов может быть недобрана", nlo, nhi, min_span)
-    return by_id
+    return by_id, room_total
+
+
+def probe_total(fetcher):
+    """Один запрос (страница 1, без room-фильтра) — узнать offerCount по всему ЖК."""
+    try:
+        resp = fetcher.post(fetcher.build_body(1))
+        _, total = get_offers_and_count(resp)
+        return total
+    except Exception as e:
+        log.warning("Не удалось узнать общее число лотов в ЖК: %s", e)
+        return None
 
 
 def collect_all(fetcher):
-    """Главный сбор: по умолчанию обходим категории комнатности, затем дедуп."""
+    """
+    Главный сбор: по умолчанию обходим категории комнатности, затем дедуп.
+    Возвращает (offers, totals_by_room) — totals_by_room для охвата в Сводке.
+    """
     by_id = {}
+    totals_by_room = {}
     if fetcher.args.no_room_split:
         log.info("  Сбор без room-split (одним запросом по ЖК)...")
-        by_id.update(collect_room(fetcher, None))
+        res, _ = collect_room(fetcher, None)
+        by_id.update(res)
+        totals_by_room = None
     else:
         for room in ROOM_SPLIT_ORDER:
             log.info("  Категория room=%s ...", room)
-            res = collect_room(fetcher, room)
+            res, room_total = collect_room(fetcher, room)
             new = sum(1 for k in res if k not in by_id)
             by_id.update(res)
+            if room_total is not None:
+                totals_by_room[room] = room_total
             fetcher.pause()
-            log.info("  room=%s: уникальных в категории %d, новых для ЖК %d, итого %d",
-                     room, len(res), new, len(by_id))
-    return list(by_id.values())
+            log.info("  room=%s: собрано %d (всего на Циан ~%s), новых для ЖК %d, итого %d",
+                     room, len(res), room_total, new, len(by_id))
+    return list(by_id.values()), totals_by_room
 
 
 def _seg_label(room, pmin, pmax):
@@ -674,7 +704,7 @@ def _import_openpyxl():
     return openpyxl, Font, PatternFill, Alignment, Border, Side, get_column_letter
 
 
-def write_workbook(rows, jk_id, jk_name, totals_by_room, out_path):
+def write_workbook(rows, jk_id, jk_name, totals_by_room, out_path, total_in_jk=None):
     openpyxl, Font, PatternFill, Alignment, Border, Side, get_column_letter = _import_openpyxl()
 
     wb = openpyxl.Workbook()
@@ -770,7 +800,7 @@ def write_workbook(rows, jk_id, jk_name, totals_by_room, out_path):
     # ---- наполняем Сводку формулами по листу Все_лоты -------------------- #
     _fill_summary(summary, all_ws.title, last_all, jk_id, jk_name, today_str,
                   totals_by_room, present, col_letter,
-                  Font, Alignment)
+                  Font, Alignment, total_in_jk)
 
     # порядок листов: Сводка первым
     wb.move_sheet("Сводка", -(len(wb.sheetnames) - 1))
@@ -778,7 +808,8 @@ def write_workbook(rows, jk_id, jk_name, totals_by_room, out_path):
 
 
 def _fill_summary(ws, sheet, last_row, jk_id, jk_name, today_str,
-                  totals_by_room, present_cats, col_letter, Font, Alignment):
+                  totals_by_room, present_cats, col_letter, Font, Alignment,
+                  total_in_jk=None):
     """Сводка: охват + средняя ₽/м² (частник vs застройщик) + диапазоны цен."""
     title_font = Font(bold=True, size=13)
     sub_font = Font(italic=True, color="555555", size=9)
@@ -817,12 +848,21 @@ def _fill_summary(ws, sheet, last_row, jk_id, jk_name, today_str,
             ws.cell(r, 4).value = f"=IFERROR(B{r}/C{r},\"—\")"
             ws.cell(r, 4).number_format = "0%"
         r += 1
-    ws.cell(r, 1, "ИТОГО").font = h_font
+    ws.cell(r, 1, "ИТОГО (категории)").font = h_font
     ws.cell(r, 2).value = f"=SUM(B{first_data}:B{r-1})"
     ws.cell(r, 3).value = f"=SUM(C{first_data}:C{r-1})"
     ws.cell(r, 4).value = f"=IFERROR(B{r}/C{r},\"—\")"
     ws.cell(r, 4).number_format = "0%"
-    r += 2
+    r += 1
+    if total_in_jk:
+        # всего активных лотов в ЖК по offerCount API (контроль полноты выгрузки)
+        ws.cell(r, 1, "Всего квартир в ЖК (Циан)").font = h_font
+        ws.cell(r, 2).value = f"=COUNTIFS({R(calc_col)},1)"
+        ws.cell(r, 3, total_in_jk)
+        ws.cell(r, 4).value = f"=IFERROR(B{r}/C{r},\"—\")"
+        ws.cell(r, 4).number_format = "0%"
+        r += 1
+    r += 1
 
     # — средняя ₽/м²: частник vs застройщик —
     ws.cell(r, 1, "СРЕДНЯЯ ЦЕНА ЗА м² — ЧАСТНИК vs ЗАСТРОЙЩИК").font = h_font
@@ -1064,6 +1104,8 @@ def build_argparser():
     p.add_argument("--region", type=int, default=1, help="ID региона Циан (Москва=1).")
     p.add_argument("--engine-version", type=int, default=2, help="engine_version в jsonQuery.")
     p.add_argument("--curl-file", help="Файл с «Copy as cURL» реального запроса (headers/cookies/тело).")
+    p.add_argument("--cookie", help="Строка Cookie из браузера ('k=v; k2=v2') — быстрый способ передать сессию без cURL.")
+    p.add_argument("--user-agent", help="Переопределить User-Agent (полезно подставить ваш из браузера).")
     p.add_argument("--referer", help="Referer (страница ЖК). По умолчанию https://www.cian.ru/")
     p.add_argument("--output", "-o", help="Имя выходного xlsx (по умолчанию cian_<жк>_<дата>.xlsx).")
 
@@ -1120,6 +1162,8 @@ def main(argv=None):
     log.info("ЖК ID (newobject) = %s, регион = %s", args.jk_id, args.region)
 
     # Источник данных -> всегда СЫРЫЕ офферы (raw); нормализация единым проходом ниже.
+    total_in_jk = None
+    totals_by_room = None
     if args.playwright:
         raw = playwright_fallback(args)
     else:
@@ -1142,8 +1186,13 @@ def main(argv=None):
             except Exception as e:
                 log.error("Не удалось получить/сохранить ответ: %s", e)
 
+        # сколько всего лотов в ЖК (для контроля охвата)
+        total_in_jk = probe_total(fetcher)
+        if total_in_jk:
+            log.info("Всего активных лотов в ЖК по Циан: %d", total_in_jk)
+
         try:
-            raw = collect_all(fetcher)
+            raw, totals_by_room = collect_all(fetcher)
         except RuntimeError as e:
             log.error("API недоступен (%s). Пробую Playwright-fallback...", e)
             raw = playwright_fallback(args)
@@ -1151,7 +1200,7 @@ def main(argv=None):
     rows = [normalize(o, today) for o in raw]
 
     if not rows:
-        log.error("Не собрано ни одного лота. Проверьте --jk, cookie в --curl-file "
+        log.error("Не собрано ни одного лота. Проверьте --jk, cookie/--curl-file "
                   "или используйте --playwright.")
         return 1
 
@@ -1163,12 +1212,20 @@ def main(argv=None):
 
     rows = sort_rows(rows)
 
-    # totals_by_room для «Сводки» — оценим как число собранных по категориям
-    # (точные «всего на Циан» доступны только при сборе с offerCount; см. логи).
-    totals_by_room = None
+    # контроль охвата: собрали ли мы все лоты ЖК
+    direct = sum(1 for r in rows if r.get("url") and "/sale/flat/" in r["url"])
+    if total_in_jk:
+        cov = 100.0 * len(rows) / total_in_jk
+        log.info("Охват: собрано %d из %d (%.0f%%); прямых ссылок на лот: %d/%d",
+                 len(rows), total_in_jk, cov, direct, len(rows))
+        if len(rows) < total_in_jk:
+            log.warning("Собрано меньше, чем всего в ЖК. Попробуйте --split-price "
+                        "и/или увеличьте --max-pages; проверьте свежесть cookie.")
+    else:
+        log.info("Собрано %d лотов; прямых ссылок на лот: %d/%d", len(rows), direct, len(rows))
 
     out = args.output or f"cian_{slugify(jk_name)}_{today.isoformat()}.xlsx"
-    write_workbook(rows, args.jk_id, jk_name, totals_by_room, out)
+    write_workbook(rows, args.jk_id, jk_name, totals_by_room, out, total_in_jk=total_in_jk)
     log.info("Записан файл: %s", out)
 
     # консоль (значения могут быть None — в Playwright-fallback цена/площадь отсутствуют)
