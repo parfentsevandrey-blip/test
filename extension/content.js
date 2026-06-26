@@ -325,102 +325,218 @@
     document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
   }
 
-  // ---------- кнопка и статус-бар на странице ----------
-  function setStatus(btn, text, busy) { btn.textContent = text; btn.style.opacity = busy ? "0.7" : "1"; btn.style.pointerEvents = busy ? "none" : "auto"; }
-
-  function statusEl() {
-    let el = document.getElementById("cian-excel-status");
-    if (!el) {
-      el = document.createElement("div");
-      el.id = "cian-excel-status";
-      Object.assign(el.style, {
-        position: "fixed", right: "20px", bottom: "68px", zIndex: 2147483647,
-        background: "#fff", color: "#1F2A44", padding: "10px 14px", borderRadius: "10px",
-        fontSize: "13px", fontFamily: "Arial, sans-serif", boxShadow: "0 4px 16px rgba(0,0,0,.22)",
-        minWidth: "210px", display: "none",
-      });
-      el.innerHTML =
-        '<div id="cex-txt" style="font-weight:600;margin-bottom:6px">…</div>' +
-        '<div style="height:8px;background:#e6e8ee;border-radius:5px;overflow:hidden">' +
-        '<div id="cex-bar" style="height:100%;width:0%;background:#4CAF50;transition:width .25s"></div></div>';
-      document.body.appendChild(el);
-    }
-    return el;
-  }
-  function showStatus(text, frac) {
-    const el = statusEl(); el.style.display = "block";
-    el.querySelector("#cex-txt").textContent = text;
-    const bar = el.querySelector("#cex-bar");
-    if (frac != null && isFinite(frac)) { bar.style.width = Math.min(100, Math.round(frac * 100)) + "%"; }
-    else { bar.style.width = "100%"; bar.style.opacity = "0.4"; } // неопределённый прогресс
-  }
-  function doneStatus(text) { const el = statusEl(); el.style.display = "block"; el.querySelector("#cex-txt").textContent = text; const b = el.querySelector("#cex-bar"); b.style.opacity = "1"; b.style.width = "100%"; }
-  function hideStatus() { const el = document.getElementById("cian-excel-status"); if (el) el.style.display = "none"; }
-
   const OPEN_LIST_MSG =
     "Откройте ОСНОВНУЮ страницу ЖК со списком квартир на www.cian.ru (раздел «Квартиры»), " +
     "дождитесь, пока загрузятся объявления, и нажмите кнопку снова.\n\n" +
     "На промо-сайте застройщика (zhk-*.cian.ru) и на странице без списка квартир выгрузка не работает.";
 
-  async function run(btn) {
-    const jk = detectJk();
-    // Берём ПРАВИЛЬНЫЙ фильтр ЖК из настоящего запроса страницы, не угадываем.
-    let base = pageJsonQuery();
-    if (base) base = cleanBaseQuery(base);
-    console.log("[cian-excel] страница:", location.href, "| ЖК:", jk, "| фильтр:", base);
-    if (!base) { alert("Не удалось получить фильтр ЖК со страницы.\n\n" + OPEN_LIST_MSG); return; }
-    if (!jk.id) jk.id = (JSON.stringify(base).match(/(\d{6,})/) || [])[1] || "";
-    jk.name = jk.name || (jk.id ? String(jk.id) : "ЖК");   // заголовки сами добавят «ЖК »
+  const fmt = (n) => (n == null ? "—" : Number(n).toLocaleString("ru-RU"));
 
-    setStatus(btn, "⏳ Собираю…", true);
-    const onProg = (text, got, total) => { setStatus(btn, "⏳ Собираю…", true); showStatus(text, total ? got / total : null); };
+  function computeStats(rows, totalInJk) {
+    const ppm = rows.map((r) => r.ppm).filter((x) => x != null);
+    const exp = rows.map((r) => r.exposure).filter((x) => x !== "" && x != null);
+    const avg = (a) => (a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : null);
+    const byCat = CATS.map((c) => ({ c, n: rows.filter((r) => r.category === c).length })).filter((x) => x.n);
+    return {
+      count: rows.length,
+      total: totalInJk || rows.length,
+      coverage: totalInJk ? Math.round((rows.length / totalInJk) * 100) : 100,
+      ppmMin: ppm.length ? Math.min(...ppm) : null,
+      ppmAvg: avg(ppm), ppmMax: ppm.length ? Math.max(...ppm) : null,
+      expAvg: avg(exp), byCat,
+    };
+  }
+
+  // ---------- GUI: панель в Shadow DOM ----------
+  const CSS = `
+  *{box-sizing:border-box;margin:0;padding:0}
+  .root{position:fixed;right:22px;bottom:22px;z-index:2147483647;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+  .card{width:312px;background:#fff;border-radius:18px;overflow:hidden;
+    box-shadow:0 16px 48px rgba(16,24,49,.30);animation:in .25s ease}
+  @keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .root.min .card{display:none}
+  .fab{display:none}
+  .root.min .fab{display:flex;align-items:center;justify-content:center;width:58px;height:58px;
+    margin-left:auto;border:none;border-radius:50%;cursor:pointer;font-size:24px;color:#fff;
+    background:linear-gradient(135deg,#1F2A44,#3a4a7d);box-shadow:0 10px 26px rgba(16,24,49,.34)}
+  .head{display:flex;align-items:center;gap:9px;padding:15px 16px;color:#fff;
+    background:linear-gradient(135deg,#1F2A44 0%,#34416f 100%)}
+  .head .ic{font-size:18px}.head .t{font-weight:700;font-size:14.5px;flex:1;letter-spacing:.2px}
+  .min{background:rgba(255,255,255,.16);border:none;color:#fff;width:26px;height:26px;
+    border-radius:8px;cursor:pointer;font-size:16px;line-height:1}
+  .min:hover{background:rgba(255,255,255,.28)}
+  .body{padding:16px}
+  .jk{font-size:16.5px;font-weight:800;color:#16203a;line-height:1.25}
+  .sub{font-size:12px;color:#7a8398;margin-top:3px}
+  .pg{margin-top:12px;font-size:12.5px;display:flex;gap:7px;align-items:flex-start;
+    padding:9px 11px;border-radius:11px;line-height:1.35}
+  .pg.ok{background:#e8f7ee;color:#1d7a43}.pg.warn{background:#fff3e0;color:#a96714}
+  .btn{margin-top:14px;width:100%;padding:13px;border:none;border-radius:12px;color:#fff;
+    font-size:14.5px;font-weight:700;cursor:pointer;letter-spacing:.2px;
+    background:linear-gradient(135deg,#1f9d55,#27ae60);transition:filter .15s,transform .05s}
+  .btn:hover{filter:brightness(1.07)}.btn:active{transform:translateY(1px)}
+  .btn[disabled]{background:#cdd2de;cursor:default;filter:none}
+  .prog{margin-top:14px;display:none}
+  .prog .pt{font-size:12.5px;color:#444;font-weight:600;margin-bottom:7px;display:flex;justify-content:space-between}
+  .track{height:11px;background:#edeff5;border-radius:7px;overflow:hidden}
+  .bar{height:100%;width:0;border-radius:7px;background:linear-gradient(90deg,#27ae60,#1f9d55);
+    transition:width .3s ease}
+  .bar.indef{width:40%;animation:slide 1.1s infinite ease-in-out}
+  @keyframes slide{0%{margin-left:-40%}100%{margin-left:100%}}
+  .res{margin-top:14px;display:none}
+  .stats{display:flex;gap:8px}
+  .stat{flex:1;background:#f5f7fb;border-radius:12px;padding:10px 6px;text-align:center}
+  .stat .v{font-size:17px;font-weight:800;color:#16203a;line-height:1}
+  .stat .l{font-size:10px;color:#828ca3;margin-top:4px;text-transform:uppercase;letter-spacing:.3px}
+  .meta{margin-top:10px;font-size:11.5px;color:#69728a;line-height:1.5}
+  .cats{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+  .chip{font-size:11px;background:#eef1f8;color:#34406e;padding:4px 9px;border-radius:20px;font-weight:600}
+  .file{margin-top:12px;font-size:12px;color:#1d7a43;background:#e8f7ee;border-radius:10px;
+    padding:9px 11px;display:flex;gap:7px;align-items:center;word-break:break-all}
+  .foot{padding:11px 16px;border-top:1px solid #eef0f5;font-size:11px;color:#9aa2b4;line-height:1.45}
+  .lnk{color:#2c6ecb;cursor:pointer;text-decoration:underline}`;
+
+  const ui = { mounted: false };
+
+  function buildPanel() {
+    const host = document.createElement("div");
+    host.id = "cian-excel-host";
+    const sh = host.attachShadow({ mode: "open" });
+    sh.innerHTML =
+      "<style>" + CSS + "</style>" +
+      '<div class="root" part="root">' +
+        '<button class="fab" title="Циан → Excel">📊</button>' +
+        '<div class="card">' +
+          '<div class="head"><span class="ic">📊</span><span class="t">Циан → Excel</span>' +
+            '<button class="min" title="Свернуть">—</button></div>' +
+          '<div class="body">' +
+            '<div class="jk" id="jk">ЖК не определён</div>' +
+            '<div class="sub" id="sub">откройте страницу ЖК с квартирами</div>' +
+            '<div class="pg warn" id="pg"><span id="pgi">⚠</span><span id="pgt">Жду страницу со списком квартир…</span></div>' +
+            '<button class="btn" id="go" disabled>📊 Выгрузить в Excel</button>' +
+            '<div class="prog" id="prog"><div class="pt"><span id="pt">Собираю…</span><span id="pp"></span></div>' +
+              '<div class="track"><div class="bar indef" id="bar"></div></div></div>' +
+            '<div class="res" id="res">' +
+              '<div class="stats">' +
+                '<div class="stat"><div class="v" id="s-count">0</div><div class="l">лотов</div></div>' +
+                '<div class="stat"><div class="v" id="s-cov">0%</div><div class="l">охват</div></div>' +
+                '<div class="stat"><div class="v" id="s-ppm">—</div><div class="l">₽/м² ср.</div></div>' +
+              '</div>' +
+              '<div class="meta" id="s-meta"></div>' +
+              '<div class="cats" id="s-cats"></div>' +
+              '<div class="file" id="s-file"><span>✓</span><span id="s-fname"></span></div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="foot" id="foot">Открой страницу ЖК с квартирами на www.cian.ru и нажми кнопку. Данные берутся из твоей сессии.</div>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(host);
+    const $ = (s) => sh.querySelector(s);
+    ui.host = host; ui.sh = sh; ui.root = $(".root");
+    ui.el = {
+      jk: $("#jk"), sub: $("#sub"), pg: $("#pg"), pgi: $("#pgi"), pgt: $("#pgt"),
+      go: $("#go"), prog: $("#prog"), pt: $("#pt"), pp: $("#pp"), bar: $("#bar"),
+      res: $("#res"), count: $("#s-count"), cov: $("#s-cov"), ppm: $("#s-ppm"),
+      meta: $("#s-meta"), cats: $("#s-cats"), file: $("#s-file"), fname: $("#s-fname"), foot: $("#foot"),
+    };
+    $(".min").addEventListener("click", () => ui.root.classList.add("min"));
+    $(".fab").addEventListener("click", () => ui.root.classList.remove("min"));
+    ui.el.go.addEventListener("click", () => run());
+    ui.mounted = true;
+    console.log("[cian-excel] панель добавлена");
+  }
+
+  // обновить шапку: имя ЖК + готовность страницы
+  function refreshHeader() {
+    if (!ui.mounted) return;
+    const jk = detectJk();
+    const base = pageJsonQuery();
+    ui._jk = jk; ui._base = base ? cleanBaseQuery(base) : null;
+    ui.el.jk.textContent = jk.name ? ("ЖК " + jk.name) : "ЖК не определён";
+    ui.el.sub.textContent = jk.id ? ("ID " + jk.id + " · cian.ru") : "откройте страницу ЖК с квартирами";
+    const ready = !!ui._base;
+    ui.el.pg.className = "pg " + (ready ? "ok" : "warn");
+    ui.el.pgi.textContent = ready ? "✓" : "⚠";
+    ui.el.pgt.textContent = ready ? "Готово к выгрузке — список квартир загружен" : "Откройте страницу ЖК со списком квартир и дождитесь загрузки";
+    if (!ui._busy) { ui.el.go.disabled = !ready; }
+  }
+
+  function showProgress(text, frac) {
+    ui.el.res.style.display = "none";
+    ui.el.prog.style.display = "block";
+    ui.el.pt.textContent = text;
+    if (frac != null && isFinite(frac)) {
+      ui.el.bar.classList.remove("indef");
+      ui.el.bar.style.width = Math.min(100, Math.round(frac * 100)) + "%";
+      ui.el.pp.textContent = Math.min(100, Math.round(frac * 100)) + "%";
+    } else { ui.el.bar.classList.add("indef"); ui.el.bar.style.width = ""; ui.el.pp.textContent = ""; }
+  }
+
+  function showResults(stats, filename) {
+    ui.el.prog.style.display = "none";
+    ui.el.res.style.display = "block";
+    ui.el.count.textContent = fmt(stats.count);
+    ui.el.cov.textContent = (stats.coverage != null ? stats.coverage : 100) + "%";
+    ui.el.ppm.textContent = stats.ppmAvg ? fmt(stats.ppmAvg) : "—";
+    ui.el.meta.textContent =
+      "₽/м²: " + fmt(stats.ppmMin) + " – " + fmt(stats.ppmMax) +
+      (stats.expAvg != null ? " · экспозиция ~" + stats.expAvg + " дн" : "") +
+      (stats.total ? " · всего в ЖК " + stats.total : "");
+    ui.el.cats.innerHTML = "";
+    stats.byCat.forEach((x) => {
+      const c = document.createElement("span"); c.className = "chip";
+      c.textContent = (x.c === "Своб. планировка" ? "Своб." : x.c) + " " + x.n;
+      ui.el.cats.appendChild(c);
+    });
+    ui.el.fname.textContent = "Файл скачан: " + filename;
+  }
+
+  async function run() {
+    if (ui._busy) return;
+    const jk = ui._jk || detectJk();
+    let base = ui._base || (pageJsonQuery() && cleanBaseQuery(pageJsonQuery()));
+    console.log("[cian-excel] страница:", location.href, "| ЖК:", jk, "| фильтр:", base);
+    if (!base) { alert("Не удалось получить фильтр ЖК со страницы.\n\n" + OPEN_LIST_MSG); refreshHeader(); return; }
+    if (!jk.id) jk.id = (JSON.stringify(base).match(/(\d{6,})/) || [])[1] || "";
+    jk.name = jk.name || (jk.id ? String(jk.id) : "ЖК");
+
+    ui._busy = true; ui.el.go.disabled = true; ui.el.go.textContent = "⏳ Собираю…";
+    showProgress("Подключаюсь…", null);
     try {
-      const { offers, totalsByRoom, totalInJk } = await collectAll(base, onProg);
-      // Защита от «не тех данных»: для одного ЖК столько объявлений не бывает.
+      const { offers, totalsByRoom, totalInJk } = await collectAll(base, (text, got, total) => showProgress(text, total ? got / total : null));
       if (totalInJk > 4000) {
-        setStatus(btn, "📊 Выгрузить в Excel", false); hideStatus();
+        ui._busy = false; ui.el.go.disabled = false; ui.el.go.textContent = "📊 Выгрузить в Excel";
+        ui.el.prog.style.display = "none";
         alert("Фильтр по ЖК не применился: Циан вернул " + totalInJk + " объявлений — это вся выдача, а не один ЖК.\n\n" + OPEN_LIST_MSG);
         return;
       }
-      if (!offers.length) { setStatus(btn, "📊 Выгрузить в Excel", false); hideStatus(); alert("Не собрано ни одного лота. Войдите в аккаунт, пройдите капчу и попробуйте снова."); return; }
-      const rows = offers.map(normalize);
-      doneStatus(`Готово: ${rows.length} лотов — скачиваю Excel…`);
-      download(buildWorkbook(jk, rows, totalsByRoom, totalInJk), `cian_${slug(jk.name)}_${new Date().toISOString().slice(0, 10)}.xls`);
-      setStatus(btn, `✓ Готово: ${rows.length} лотов`, false);
-      setTimeout(() => { setStatus(btn, "📊 Выгрузить в Excel", false); hideStatus(); }, 6000);
+      if (!offers.length) { throw new Error("не собрано ни одного лота (войдите в аккаунт и пройдите капчу)"); }
+      const rows = offers.map(normalize).sort((a, b) => (a.ppm == null) - (b.ppm == null) || (a.ppm || 0) - (b.ppm || 0));
+      showProgress("Готовлю Excel…", 1);
+      const filename = `cian_${slug(jk.name)}_${new Date().toISOString().slice(0, 10)}.xls`;
+      download(buildWorkbook(jk, rows, totalsByRoom, totalInJk), filename);
+      showResults(computeStats(rows, totalInJk), filename);
+      ui.el.go.textContent = "📊 Выгрузить снова";
     } catch (e) {
-      console.error(e); setStatus(btn, "📊 Выгрузить в Excel", false); hideStatus();
+      console.error(e); ui.el.prog.style.display = "none";
+      ui.el.go.textContent = "📊 Выгрузить в Excel";
       alert("Ошибка: " + e.message + "\nОбновите страницу ЖК, дождитесь загрузки списка квартир и попробуйте снова.");
+    } finally {
+      ui._busy = false; refreshHeader();
     }
   }
 
-  function mount() {
-    if (!document.body) return;
-    if (document.getElementById("cian-excel-btn")) return;
-    // Кнопку показываем на всех страницах cian.ru — ЖК определяем при клике.
-    const btn = document.createElement("button");
-    btn.id = "cian-excel-btn";
-    btn.textContent = "📊 Выгрузить в Excel";
-    Object.assign(btn.style, {
-      position: "fixed", right: "20px", bottom: "20px", zIndex: 2147483647,
-      padding: "12px 18px", background: "#1F2A44", color: "#fff", border: "none",
-      borderRadius: "10px", fontSize: "14px", fontWeight: "600", cursor: "pointer",
-      boxShadow: "0 4px 14px rgba(0,0,0,.25)", fontFamily: "Arial, sans-serif",
-    });
-    btn.addEventListener("click", () => run(btn));
-    document.body.appendChild(btn);
-    console.log("[cian-excel] кнопка добавлена");
+  function ensure() {
+    try { if (!ui.mounted && document.body) buildPanel(); if (ui.mounted) refreshHeader(); }
+    catch (e) { console.warn("[cian-excel] ui:", e); }
   }
-
-  function ensure() { try { mount(); } catch (e) { console.warn("[cian-excel] mount:", e); } }
 
   console.log("[cian-excel] загружен на", location.href);
   ensure();
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", ensure);
-  // ретраи (страница Циан — SPA, рендерится не сразу)
   let tries = 0;
-  const iv = setInterval(() => { ensure(); if (++tries > 20) clearInterval(iv); }, 1000);
-  // на SPA-переходах Циан перемонтируем кнопку
+  const iv = setInterval(() => { ensure(); if (++tries > 30) clearInterval(iv); }, 1200);
   let last = location.href;
   setInterval(() => { if (location.href !== last) { last = location.href; setTimeout(ensure, 800); } }, 1500);
 })();
