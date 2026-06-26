@@ -1,0 +1,8 @@
+# Выгрузка квартир ЖК с cian.ru -> Excel
+requests>=2.31
+openpyxl>=3.1
+
+# Опционально — только для fallback на headless-браузер (--playwright):
+#   pip install playwright
+#   playwright install chromium
+# playwright>=1.40

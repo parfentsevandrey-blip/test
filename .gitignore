@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+cian_*.xlsx
+cian_selftest_*.xlsx
