@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</helmet>
+<div style="{{ rootStyle }}">
+  <sc-if value="{{ showHeader }}" hint-placeholder-val="{{ true }}">
+    <div style="{{ headerStyle }}">
+      <div style="{{ titleStyle }}">{{ title }}</div>
+      <sc-if value="{{ showNav }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex; gap:6px; align-items:center;">
+          <div onClick="{{ onPrev }}" style="{{ navBtnStyle }}">‹</div>
+          <div onClick="{{ onNext }}" style="{{ navBtnStyle }}">›</div>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+  <div style="{{ weekRowStyle }}">
+    <sc-for list="{{ weekdays }}" as="wd" hint-placeholder-count="7">
+      <div style="{{ wd.style }}">{{ wd.label }}</div>
+    </sc-for>
+  </div>
+  <div style="{{ gridStyle }}">
+    <sc-for list="{{ cells }}" as="c" hint-placeholder-count="35">
+      <div onClick="{{ c.onClick }}" style="{{ c.cellStyle }}">
+        <div style="{{ c.numStyle }}">{{ c.label }}</div>
+        <div style="{{ c.dotsRowStyle }}">
+          <sc-for list="{{ c.dots }}" as="d" hint-placeholder-count="0">
+            <div style="{{ d.style }}"></div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+  <sc-if value="{{ agenda }}" hint-placeholder-val="{{ false }}">
+    <div style="{{ agendaWrapStyle }}">
+      <div style="{{ agendaTitleStyle }}">{{ agendaTitle }}</div>
+      <sc-for list="{{ agendaItems }}" as="a" hint-placeholder-count="2">
+        <div style="{{ a.rowStyle }}">
+          <div style="{{ a.dotStyle }}"></div>
+          <div style="{{ a.titleStyle }}">{{ a.title }}</div>
+          <div style="{{ a.timeStyle }}">{{ a.time }}</div>
+        </div>
+      </sc-for>
+      <sc-if value="{{ agendaEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="{{ agendaEmptyStyle }}">{{ agendaEmptyText }}</div>
+      </sc-if>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:300,&quot;height&quot;:340}}">
+class Component extends DCLogic {
+  contrast(hex){
+    try{
+      let h=String(hex).replace('#','');
+      if(h.length===3) h=h.split('').map(c=>c+c).join('');
+      const r=parseInt(h.slice(0,2),16)/255, g=parseInt(h.slice(2,4),16)/255, b=parseInt(h.slice(4,6),16)/255;
+      const L=0.2126*r+0.7152*g+0.0722*b;
+      return L>0.62?'#0B0B0F':'#ffffff';
+    }catch(e){ return '#0B0B0F'; }
+  }
+  renderVals(){
+    const p=this.props||{};
+    const year=p.year, month=p.month;
+    const firstDay=p.firstDay||'mon';
+    const accent=p.accent||'#7C9CFF';
+    const theme=p.theme||'dark';
+    const dark=theme!=='light';
+    const fs=p.fontScale||1;
+    const radius=(p.radius==null?28:p.radius);
+    const bgOpacity=(p.bgOpacity==null?0.55:p.bgOpacity);
+    const events=p.events||{};
+    const today=(p.today==null?null:p.today);
+    const selected=(p.selectedDay==null?null:p.selectedDay);
+    const compact=!!p.compact;
+    const showHeader=p.showHeader!==false;
+    const showNav=!!p.showNav;
+    const agenda=!!p.agenda;
+
+    const text=dark?'#F1F1F6':'#1B1B23';
+    const muted=dark?'rgba(255,255,255,.42)':'rgba(22,22,30,.45)';
+    const outc=dark?'rgba(255,255,255,.18)':'rgba(22,22,30,.20)';
+    const hair=dark?'rgba(255,255,255,.10)':'rgba(20,20,40,.10)';
+    const cat={work:accent, personal:'#C9A6FF', health:'#FF8A6B', social:'#54E6C0'};
+    const contrast=this.contrast(accent);
+
+    const months=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+    const monthsShort=['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
+    const monthsGen=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+
+    const wdMon=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+    const wdSun=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+    const wdArr=firstDay==='mon'?wdMon:wdSun;
+    const weekdays=wdArr.map((w,i)=>{
+      const weekend= firstDay==='mon'?(i>=5):(i===0||i===6);
+      return {key:w+i, label:w, style:{textAlign:'center', fontSize:(compact?8.5:10)*fs+'px', fontWeight:600, letterSpacing:'.04em', color: weekend?(dark?'rgba(255,255,255,.30)':'rgba(22,22,30,.32)'):muted, textTransform:'uppercase'}};
+    });
+
+    const first=new Date(year,month,1);
+    const dow=first.getDay();
+    const offset=firstDay==='mon'?((dow+6)%7):dow;
+    const dim=new Date(year,month+1,0).getDate();
+    const rows=Math.ceil((offset+dim)/7);
+    const n=rows*7;
+    const bubble=compact?22:30;
+    const numFs=(compact?11:14.5)*fs;
+
+    const cells=[];
+    for(let i=0;i<n;i++){
+      const dnum=i-offset+1;
+      const inMonth= dnum>=1 && dnum<=dim;
+      const isToday= inMonth && today!=null && dnum===today;
+      const isSel= inMonth && selected!=null && dnum===selected;
+      const evs= inMonth?(events[dnum]||[]):[];
+      const col=i%7;
+      const weekendCol= firstDay==='mon'? (col>=5):(col===0||col===6);
+      let numColor= inMonth ? (weekendCol?(dark?'rgba(255,255,255,.60)':'rgba(22,22,30,.52)'):text) : outc;
+      let bg='transparent', border='1.6px solid transparent', fw=500;
+      if(isSel){ bg=accent; numColor=contrast; fw=700; }
+      else if(isToday){ border='1.6px solid '+accent; numColor=accent; fw=700; }
+      const numStyle={ width:bubble+'px', height:bubble+'px', borderRadius:compact?'30%':'34%', display:'flex', alignItems:'center', justifyContent:'center', background:bg, border:border, color:numColor, fontSize:numFs+'px', fontWeight:fw, fontVariantNumeric:'tabular-nums', boxShadow: isSel?('0 6px 16px -6px '+accent):'none', boxSizing:'border-box' };
+      const dots= evs.slice(0,3).map((e,idx)=>({key:idx, style:{width:(compact?3:4)+'px', height:(compact?3:4)+'px', borderRadius:'50%', background: isSel?'rgba(0,0,0,.42)':(cat[e.cat]||accent)}}));
+      const cellStyle={ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:(compact?1:2)+'px', height:'100%', cursor: inMonth?'pointer':'default', userSelect:'none' };
+      const onClick= (inMonth && p.onSelectDay) ? (function(d){return function(){ p.onSelectDay(d); };})(dnum) : function(){};
+      const dotsRowStyle={ display:'flex', gap:'3px', height:(compact?4:5)+'px', alignItems:'center', justifyContent:'center' };
+      cells.push({key:'c'+i, label: inMonth?String(dnum):'', numStyle, dots, cellStyle, onClick, dotsRowStyle});
+    }
+
+    const title=(compact? monthsShort[month] : months[month]) + (compact?'':(' '+year));
+    const rootStyle={ position:'relative', display:'flex', flexDirection:'column', width:'100%', height:'100%', boxSizing:'border-box', padding:(compact?'11px':'16px'), borderRadius:radius+'px', background: dark? ('rgba(20,20,28,'+bgOpacity+')') : ('rgba(255,255,255,'+Math.min(0.95,bgOpacity+0.32)+')'), backdropFilter:'blur(26px) saturate(150%)', WebkitBackdropFilter:'blur(26px) saturate(150%)', border: dark?'1px solid rgba(255,255,255,.10)':'1px solid rgba(255,255,255,.7)', boxShadow: dark? '0 24px 60px -24px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.07)' : '0 24px 60px -28px rgba(50,50,90,.38), inset 0 1px 0 rgba(255,255,255,.95)', color:text, fontFamily:'Manrope, sans-serif', overflow:'hidden', gap:(compact?'7px':'11px') };
+    const headerStyle={ display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 };
+    const titleStyle={ fontSize:(compact?13:17)*fs+'px', fontWeight:800, letterSpacing:'-.01em', color:text };
+    const navBtnStyle={ width:(compact?20:26)+'px', height:(compact?20:26)+'px', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontSize:(compact?15:18)+'px', color:muted, background: dark?'rgba(255,255,255,.06)':'rgba(20,20,40,.05)', cursor:'pointer', lineHeight:1 };
+    const weekRowStyle={ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:(compact?'2px':'4px'), flexShrink:0 };
+    const gridStyle={ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gridAutoRows:'1fr', gap:(compact?'1px':'3px'), flex:1, minHeight:0 };
+
+    const selEvs=(selected!=null? (events[selected]||[]) : []);
+    const agendaItems= selEvs.map((e,idx)=>({ key:idx, rowStyle:{display:'flex', alignItems:'center', gap:'9px'}, dotStyle:{width:'7px', height:'7px', borderRadius:'3px', background:(cat[e.cat]||accent), flexShrink:0}, title:e.t, titleStyle:{fontSize:12.5*fs+'px', fontWeight:600, color:text, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', flex:1}, time:e.time, timeStyle:{fontSize:11*fs+'px', fontWeight:600, color:muted, flexShrink:0, fontVariantNumeric:'tabular-nums'} }));
+    let agendaTitle='';
+    if(selected!=null){ agendaTitle= selected+' '+monthsGen[month]; if(today!=null && selected===today) agendaTitle+=' · Сегодня'; }
+    const agendaWrapStyle={ display:'flex', flexDirection:'column', gap:'9px', flexShrink:0, marginTop:'1px', paddingTop:'11px', borderTop:'1px solid '+hair };
+    const agendaTitleStyle={ fontSize:10*fs+'px', fontWeight:700, letterSpacing:'.07em', textTransform:'uppercase', color:muted };
+    const agendaEmpty= agenda && selEvs.length===0;
+    const agendaEmptyStyle={ fontSize:12*fs+'px', color:muted, fontWeight:500 };
+
+    return { rootStyle, showHeader, headerStyle, title, titleStyle, showNav, onPrev:p.onPrev||function(){}, onNext:p.onNext||function(){}, navBtnStyle, weekdays, weekRowStyle, gridStyle, cells, agenda, agendaWrapStyle, agendaTitle, agendaTitleStyle, agendaItems, agendaEmpty, agendaEmptyStyle, agendaEmptyText:'Свободный день' };
+  }
+}
+</script>
+</body>
+</html>

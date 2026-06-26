@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  input[type=range]{ -webkit-appearance:none; appearance:none; width:100%; height:5px; border-radius:5px; outline:none; cursor:pointer; }
+  input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; appearance:none; width:20px; height:20px; border-radius:50%; background:var(--c,#7C9CFF); cursor:pointer; box-shadow:0 3px 10px rgba(0,0,0,.45); border:3px solid #15151c; }
+  input[type=range]::-moz-range-thumb{ width:18px; height:18px; border-radius:50%; background:var(--c,#7C9CFF); cursor:pointer; border:3px solid #15151c; }
+</style>
+</helmet>
+
+<!-- ===================== SECTION 1 ===================== -->
+<div data-drags-parent="0" style="position:absolute; left:80px; top:24px; font:700 16px Manrope,sans-serif; color:#34343e; letter-spacing:-.01em;">01 — Виджет на рабочем столе · светлая и тёмная тема</div>
+
+<!-- Phone: dark home -->
+<div style="position:absolute; left:80px; top:62px; width:340px;">
+  <div data-drags-parent="1" style="position:absolute; top:-22px; font:600 12px Manrope,sans-serif; color:#5a5a66;">Тёмная · Material You</div>
+  <div style="position:relative; width:340px; height:716px; border-radius:46px; padding:11px; background:linear-gradient(160deg,#26262e,#0c0c10); box-shadow:0 50px 90px -36px rgba(0,0,0,.6), inset 0 0 0 1.5px rgba(255,255,255,.07);">
+    <div style="position:relative; width:100%; height:100%; border-radius:36px; overflow:hidden; background:radial-gradient(130% 90% at 25% 0%, #2c2945 0%, #16151f 46%, #09090d 100%); display:flex; flex-direction:column; font-family:Manrope,sans-serif;">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 24px 8px; color:#fff; font-size:14px; font-weight:700;">
+        <span>9:41</span>
+        <span style="display:flex; gap:7px; align-items:center; opacity:.92;">
+          <span style="display:flex; gap:2px; align-items:flex-end; height:11px;"><span style="width:3px;height:5px;background:#fff;border-radius:1px;"></span><span style="width:3px;height:8px;background:#fff;border-radius:1px;"></span><span style="width:3px;height:11px;background:#fff;border-radius:1px;"></span></span>
+          <span style="font-size:11px; font-weight:700;">5G</span>
+          <span style="width:24px;height:12px;border:1.5px solid rgba(255,255,255,.7);border-radius:3px;position:relative;display:inline-block;"><span style="position:absolute;inset:1.5px;width:75%;background:#fff;border-radius:1px;"></span></span>
+        </span>
+      </div>
+      <div style="padding:14px 16px 0; height:312px;">
+        <dc-import name="WidgetMonth" year="{{ year }}" month="{{ month }}" today="{{ todayNum }}" selected-day="{{ selectedDay }}" events="{{ eventsData }}" first-day="{{ firstDay }}" accent="{{ accent }}" radius="{{ radius }}" font-scale="{{ fontScale }}" bg-opacity="{{ bgOpacity }}" show-header="{{ true }}" show-nav="{{ true }}" agenda="{{ showEvents }}" theme="dark" on-select-day="{{ selectDay }}" on-prev="{{ prevMonth }}" on-next="{{ nextMonth }}" hint-size="100%,100%"></dc-import>
+      </div>
+      <div style="flex:1;"></div>
+      <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:22px; padding:0 30px;">
+        <sc-for list="{{ appIcons }}" as="ic" hint-placeholder-count="4">
+          <div style="{{ ic.style }}"></div>
+        </sc-for>
+      </div>
+      <div style="margin:22px 18px 20px; padding:14px 22px; border-radius:30px; background:rgba(255,255,255,.07); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,.09); display:grid; grid-template-columns:repeat(4,1fr); gap:22px;">
+        <sc-for list="{{ dockIcons }}" as="ic" hint-placeholder-count="4">
+          <div style="{{ ic.style }}"></div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="position:absolute; top:18px; left:50%; transform:translateX(-50%); width:96px; height:28px; border-radius:16px; background:#000;"></div>
+  </div>
+</div>
+
+<!-- Phone: light home -->
+<div style="position:absolute; left:462px; top:62px; width:340px;">
+  <div data-drags-parent="1" style="position:absolute; top:-22px; font:600 12px Manrope,sans-serif; color:#5a5a66;">Светлая · та же сетка</div>
+  <div style="position:relative; width:340px; height:716px; border-radius:46px; padding:11px; background:linear-gradient(160deg,#eceef4,#c9ccd8); box-shadow:0 50px 90px -36px rgba(60,60,90,.45), inset 0 0 0 1.5px rgba(255,255,255,.5);">
+    <div style="position:relative; width:100%; height:100%; border-radius:36px; overflow:hidden; background:radial-gradient(130% 90% at 75% 0%, #fdf4ee 0%, #eceef6 52%, #dfe3f0 100%); display:flex; flex-direction:column; font-family:Manrope,sans-serif;">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 24px 8px; color:#1b1b23; font-size:14px; font-weight:700;">
+        <span>9:41</span>
+        <span style="display:flex; gap:7px; align-items:center; opacity:.85;">
+          <span style="display:flex; gap:2px; align-items:flex-end; height:11px;"><span style="width:3px;height:5px;background:#1b1b23;border-radius:1px;"></span><span style="width:3px;height:8px;background:#1b1b23;border-radius:1px;"></span><span style="width:3px;height:11px;background:#1b1b23;border-radius:1px;"></span></span>
+          <span style="font-size:11px; font-weight:700;">5G</span>
+          <span style="width:24px;height:12px;border:1.5px solid rgba(27,27,35,.6);border-radius:3px;position:relative;display:inline-block;"><span style="position:absolute;inset:1.5px;width:75%;background:#1b1b23;border-radius:1px;"></span></span>
+        </span>
+      </div>
+      <div style="padding:14px 16px 0; height:312px;">
+        <dc-import name="WidgetMonth" year="{{ year }}" month="{{ month }}" today="{{ todayNum }}" selected-day="{{ selectedDay }}" events="{{ eventsData }}" first-day="{{ firstDay }}" accent="{{ accent }}" radius="{{ radius }}" font-scale="{{ fontScale }}" bg-opacity="{{ bgOpacity }}" show-header="{{ true }}" show-nav="{{ true }}" agenda="{{ showEvents }}" theme="light" on-select-day="{{ selectDay }}" on-prev="{{ prevMonth }}" on-next="{{ nextMonth }}" hint-size="100%,100%"></dc-import>
+      </div>
+      <div style="flex:1;"></div>
+      <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:22px; padding:0 30px;">
+        <sc-for list="{{ appIcons }}" as="ic" hint-placeholder-count="4">
+          <div style="{{ ic.style }}"></div>
+        </sc-for>
+      </div>
+      <div style="margin:22px 18px 20px; padding:14px 22px; border-radius:30px; background:rgba(255,255,255,.55); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,.7); box-shadow:0 8px 24px -10px rgba(60,60,90,.25); display:grid; grid-template-columns:repeat(4,1fr); gap:22px;">
+        <sc-for list="{{ dockIcons }}" as="ic" hint-placeholder-count="4">
+          <div style="{{ ic.style }}"></div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="position:absolute; top:18px; left:50%; transform:translateX(-50%); width:96px; height:28px; border-radius:16px; background:#000;"></div>
+  </div>
+</div>
+
+<!-- Post-it -->
+<div style="position:absolute; left:844px; top:78px; width:200px; background:#fef0a8; padding:15px 16px; font:500 12.5px/1.5 Manrope,sans-serif; color:#5b4b1f; box-shadow:0 10px 26px -10px rgba(0,0,0,.28); transform:rotate(-1.4deg); border-radius:3px;">Живой прототип ✦ Тапай дни, листай месяцы стрелками. Настройки справа меняют все виджеты сразу.</div>
+
+<!-- ===================== SECTION 2 ===================== -->
+<div data-drags-parent="0" style="position:absolute; left:1100px; top:24px; font:700 16px Manrope,sans-serif; color:#34343e; letter-spacing:-.01em;">02 — Приложение и живые настройки</div>
+
+<!-- Phone: app day detail -->
+<div style="position:absolute; left:1100px; top:62px; width:340px;">
+  <div data-drags-parent="1" style="position:absolute; top:-22px; font:600 12px Manrope,sans-serif; color:#5a5a66;">Экран дня</div>
+  <div style="position:relative; width:340px; height:716px; border-radius:46px; padding:11px; background:linear-gradient(160deg,#26262e,#0c0c10); box-shadow:0 50px 90px -36px rgba(0,0,0,.6), inset 0 0 0 1.5px rgba(255,255,255,.07);">
+    <div style="position:relative; width:100%; height:100%; border-radius:36px; overflow:hidden; background:linear-gradient(180deg,#14131b 0%,#0a0a0e 100%); display:flex; flex-direction:column; font-family:Manrope,sans-serif; color:#F1F1F6;">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 24px 8px; color:#fff; font-size:14px; font-weight:700;">
+        <span>9:41</span>
+        <span style="display:flex; gap:7px; align-items:center; opacity:.92;">
+          <span style="display:flex; gap:2px; align-items:flex-end; height:11px;"><span style="width:3px;height:5px;background:#fff;border-radius:1px;"></span><span style="width:3px;height:8px;background:#fff;border-radius:1px;"></span><span style="width:3px;height:11px;background:#fff;border-radius:1px;"></span></span>
+          <span style="font-size:11px; font-weight:700;">5G</span>
+          <span style="width:24px;height:12px;border:1.5px solid rgba(255,255,255,.7);border-radius:3px;position:relative;display:inline-block;"><span style="position:absolute;inset:1.5px;width:75%;background:#fff;border-radius:1px;"></span></span>
+        </span>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 22px 6px;">
+        <div onClick="{{ prevMonth }}" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:20px;color:rgba(255,255,255,.7);cursor:pointer;">‹</div>
+        <div style="font-size:17px; font-weight:800; letter-spacing:-.01em;">{{ monthTitle }}</div>
+        <div onClick="{{ nextMonth }}" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:20px;color:rgba(255,255,255,.7);cursor:pointer;">›</div>
+      </div>
+      <div style="display:flex; padding:10px 16px 16px; gap:2px;">
+        <sc-for list="{{ appWeek }}" as="w" hint-placeholder-count="7">
+          <div onClick="{{ w.onClick }}" style="{{ w.colStyle }}">
+            <div style="{{ w.wdStyle }}">{{ w.wd }}</div>
+            <div style="{{ w.numStyle }}">{{ w.num }}</div>
+            <div style="{{ w.dotStyle }}"></div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="padding:8px 24px 0;">
+        <div style="font-size:13px; font-weight:700; color:{{ accent }}; letter-spacing:.04em; text-transform:uppercase;">{{ bigBadge }}</div>
+        <div style="display:flex; align-items:baseline; gap:12px; margin-top:2px;">
+          <div style="font-size:60px; font-weight:800; line-height:1; letter-spacing:-.03em; font-variant-numeric:tabular-nums;">{{ bigNum }}</div>
+          <div style="display:flex; flex-direction:column;">
+            <div style="font-size:18px; font-weight:700;">{{ bigWeekday }}</div>
+            <div style="font-size:14px; font-weight:500; color:rgba(255,255,255,.45);">{{ bigMonth }}</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:20px 24px 10px;">
+        <div style="font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.4);">События</div>
+        <div style="font-size:11px; font-weight:700; color:{{ accent }};">{{ eventCount }}</div>
+      </div>
+      <div style="flex:1; overflow:hidden; padding:0 18px; display:flex; flex-direction:column; gap:10px;">
+        <sc-for list="{{ dayEvents }}" as="ev" hint-placeholder-count="2">
+          <div style="{{ ev.cardStyle }}">
+            <div style="{{ ev.barStyle }}"></div>
+            <div style="flex:1; min-width:0;">
+              <div style="{{ ev.timeStyle }}">{{ ev.time }}</div>
+              <div style="{{ ev.titleStyle }}">{{ ev.title }}</div>
+              <div style="{{ ev.catStyle }}">{{ ev.catName }}</div>
+            </div>
+            <div style="color:rgba(255,255,255,.25); font-size:20px;">›</div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ noEvents }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:30px 0; color:rgba(255,255,255,.4);">
+            <div style="width:46px;height:46px;border-radius:50%;border:1.5px dashed rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;font-size:22px;">+</div>
+            <div style="font-size:13.5px; font-weight:600;">Свободный день</div>
+          </div>
+        </sc-if>
+      </div>
+      <div style="position:absolute; right:22px; bottom:30px; width:58px; height:58px; border-radius:20px; background:{{ accent }}; box-shadow:0 14px 30px -8px {{ accent }}; display:flex; align-items:center; justify-content:center; font-size:30px; font-weight:400; color:{{ accentText }}; cursor:pointer;">+</div>
+    </div>
+    <div style="position:absolute; top:18px; left:50%; transform:translateX(-50%); width:96px; height:28px; border-radius:16px; background:#000;"></div>
+  </div>
+</div>
+
+<!-- Phone: settings -->
+<div style="position:absolute; left:1482px; top:62px; width:340px;">
+  <div data-drags-parent="1" style="position:absolute; top:-22px; font:600 12px Manrope,sans-serif; color:#5a5a66;">Настройка виджета · живая</div>
+  <div style="position:relative; width:340px; height:716px; border-radius:46px; padding:11px; background:linear-gradient(160deg,#26262e,#0c0c10); box-shadow:0 50px 90px -36px rgba(0,0,0,.6), inset 0 0 0 1.5px rgba(255,255,255,.07);">
+    <div style="position:relative; width:100%; height:100%; border-radius:36px; overflow:hidden; background:linear-gradient(180deg,#14131b 0%,#0a0a0e 100%); display:flex; flex-direction:column; font-family:Manrope,sans-serif; color:#F1F1F6;">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 24px 8px; color:#fff; font-size:14px; font-weight:700; flex-shrink:0;">
+        <span>9:41</span>
+        <span style="display:flex; gap:7px; align-items:center; opacity:.92;">
+          <span style="display:flex; gap:2px; align-items:flex-end; height:11px;"><span style="width:3px;height:5px;background:#fff;border-radius:1px;"></span><span style="width:3px;height:8px;background:#fff;border-radius:1px;"></span><span style="width:3px;height:11px;background:#fff;border-radius:1px;"></span></span>
+          <span style="font-size:11px; font-weight:700;">5G</span>
+          <span style="width:24px;height:12px;border:1.5px solid rgba(255,255,255,.7);border-radius:3px;position:relative;display:inline-block;"><span style="position:absolute;inset:1.5px;width:75%;background:#fff;border-radius:1px;"></span></span>
+        </span>
+      </div>
+      <div style="padding:8px 24px 4px; font-size:21px; font-weight:800; letter-spacing:-.02em; flex-shrink:0;">Настройки</div>
+      <div style="flex:1; overflow:hidden; display:flex; flex-direction:column; gap:13px; padding:10px 18px 18px;">
+        <div style="border-radius:24px; padding:16px; background:{{ previewWall }}; box-shadow:inset 0 0 0 1px rgba(255,255,255,.05); height:226px; flex-shrink:0; box-sizing:border-box;">
+          <dc-import name="WidgetMonth" year="{{ year }}" month="{{ month }}" today="{{ todayNum }}" selected-day="{{ selectedDay }}" events="{{ eventsData }}" first-day="{{ firstDay }}" accent="{{ accent }}" radius="{{ radius }}" font-scale="{{ fontScale }}" bg-opacity="{{ bgOpacity }}" show-header="{{ true }}" show-nav="{{ false }}" agenda="{{ showEvents }}" theme="{{ settingsTheme }}" on-select-day="{{ selectDay }}" hint-size="100%,100%"></dc-import>
+        </div>
+
+        <div style="{{ cardStyle }}">
+          <div style="{{ rowLabelStyle }}">Акцентный цвет</div>
+          <div style="display:flex; gap:12px; margin-top:13px; flex-wrap:wrap;">
+            <sc-for list="{{ accentSwatches }}" as="sw" hint-placeholder-count="6">
+              <div onClick="{{ sw.onClick }}" style="{{ sw.style }}"></div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="{{ cardStyle }}">
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div style="{{ rowLabelStyle }}">Прозрачность фона</div>
+            <div style="{{ rowValStyle }}">{{ opacityText }}</div>
+          </div>
+          <input type="range" min="0.15" max="0.9" step="0.05" value="{{ opacityVal }}" onChange="{{ onOpacity }}" style="{{ opacityStyle }}" />
+        </div>
+
+        <div style="{{ cardStyle }}">
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div style="{{ rowLabelStyle }}">Скругление углов</div>
+            <div style="{{ rowValStyle }}">{{ radiusText }}</div>
+          </div>
+          <input type="range" min="12" max="40" step="2" value="{{ radiusVal }}" onChange="{{ onRadius }}" style="{{ radiusStyle }}" />
+        </div>
+
+        <div style="{{ cardStyle }}">
+          <div style="{{ rowLabelStyle }}">Первый день недели</div>
+          <div style="{{ segWrapStyle }}">
+            <sc-for list="{{ firstOpts }}" as="o" hint-placeholder-count="2">
+              <div onClick="{{ o.onClick }}" style="{{ o.style }}">{{ o.label }}</div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="{{ cardStyle }}">
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div>
+              <div style="{{ rowLabelStyle }}">Список событий</div>
+              <div style="font-size:12px; font-weight:500; color:rgba(255,255,255,.4); margin-top:3px;">Показывать дела дня под сеткой</div>
+            </div>
+            <div onClick="{{ toggleEvents }}" style="{{ toggleTrack }}"><div style="{{ toggleKnob }}"></div></div>
+          </div>
+        </div>
+
+        <div style="{{ cardStyle }}">
+          <div style="{{ rowLabelStyle }}">Размер шрифта</div>
+          <div style="{{ segWrapStyle }}">
+            <sc-for list="{{ fontOpts }}" as="o" hint-placeholder-count="3">
+              <div onClick="{{ o.onClick }}" style="{{ o.style }}">{{ o.label }}</div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="{{ cardStyle }}">
+          <div style="{{ rowLabelStyle }}">Тема превью</div>
+          <div style="{{ segWrapStyle }}">
+            <sc-for list="{{ themeOpts }}" as="o" hint-placeholder-count="2">
+              <div onClick="{{ o.onClick }}" style="{{ o.style }}">{{ o.label }}</div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="position:absolute; top:18px; left:50%; transform:translateX(-50%); width:96px; height:28px; border-radius:16px; background:#000;"></div>
+  </div>
+</div>
+
+<!-- ===================== SECTION 3 ===================== -->
+<div data-drags-parent="0" style="position:absolute; left:80px; top:830px; font:700 16px Manrope,sans-serif; color:#34343e; letter-spacing:-.01em;">03 — Один виджет, любой размер · реагирует на ресайз</div>
+
+<div style="position:absolute; left:80px; top:874px; width:196px;">
+  <div data-drags-parent="1" style="position:absolute; top:-22px; font:600 12px Manrope,sans-serif; color:#5a5a66;">2 × 2</div>
+  <div style="border-radius:26px; padding:14px; height:196px; box-sizing:border-box; background:radial-gradient(130% 90% at 25% 0%, #2c2945 0%, #16151f 60%, #09090d 100%); box-shadow:0 30px 60px -28px rgba(0,0,0,.6);">
+    <dc-import name="WidgetMonth" year="{{ year }}" month="{{ month }}" today="{{ todayNum }}" selected-day="{{ selectedDay }}" events="{{ eventsData }}" first-day="{{ firstDay }}" accent="{{ accent }}" radius="{{ radius }}" font-scale="{{ fontScale }}" bg-opacity="{{ bgOpacity }}" show-header="{{ true }}" show-nav="{{ false }}" agenda="{{ false }}" compact="{{ true }}" theme="dark" on-select-day="{{ selectDay }}" hint-size="100%,100%"></dc-import>
+  </div>
+</div>
+
+<div style="position:absolute; left:316px; top:874px; width:430px;">
+  <div data-drags-parent="1" style="position:absolute; top:-22px; font:600 12px Manrope,sans-serif; color:#5a5a66;">4 × 2</div>
+  <div style="border-radius:26px; padding:16px; height:196px; box-sizing:border-box; background:radial-gradient(120% 120% at 20% 0%, #2c2945 0%, #16151f 58%, #09090d 100%); box-shadow:0 30px 60px -28px rgba(0,0,0,.6);">
+    <dc-import name="WidgetMonth" year="{{ year }}" month="{{ month }}" today="{{ todayNum }}" selected-day="{{ selectedDay }}" events="{{ eventsData }}" first-day="{{ firstDay }}" accent="{{ accent }}" radius="{{ radius }}" font-scale="{{ fontScale }}" bg-opacity="{{ bgOpacity }}" show-header="{{ true }}" show-nav="{{ true }}" agenda="{{ false }}" compact="{{ true }}" theme="dark" on-select-day="{{ selectDay }}" on-prev="{{ prevMonth }}" on-next="{{ nextMonth }}" hint-size="100%,100%"></dc-import>
+  </div>
+</div>
+
+<div style="position:absolute; left:786px; top:874px; width:330px;">
+  <div data-drags-parent="1" style="position:absolute; top:-22px; font:600 12px Manrope,sans-serif; color:#5a5a66;">4 × 4 · с лентой событий</div>
+  <div style="border-radius:30px; padding:18px; height:330px; box-sizing:border-box; background:radial-gradient(120% 100% at 30% 0%, #2c2945 0%, #16151f 55%, #09090d 100%); box-shadow:0 36px 70px -30px rgba(0,0,0,.6);">
+    <dc-import name="WidgetMonth" year="{{ year }}" month="{{ month }}" today="{{ todayNum }}" selected-day="{{ selectedDay }}" events="{{ eventsData }}" first-day="{{ firstDay }}" accent="{{ accent }}" radius="{{ radius }}" font-scale="{{ fontScale }}" bg-opacity="{{ bgOpacity }}" show-header="{{ true }}" show-nav="{{ true }}" agenda="{{ showEvents }}" theme="dark" on-select-day="{{ selectDay }}" on-prev="{{ prevMonth }}" on-next="{{ nextMonth }}" hint-size="100%,100%"></dc-import>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state={ year:2026, month:5, selectedDay:26, accent:'#7C9CFF', bgOpacity:0.55, radius:28, firstDay:'mon', showEvents:true, fontScale:1, theme:'dark' };
+
+  contrast(hex){
+    try{
+      let h=String(hex).replace('#','');
+      if(h.length===3) h=h.split('').map(c=>c+c).join('');
+      const r=parseInt(h.slice(0,2),16)/255, g=parseInt(h.slice(2,4),16)/255, b=parseInt(h.slice(4,6),16)/255;
+      const L=0.2126*r+0.7152*g+0.0722*b;
+      return L>0.62?'#0B0B0F':'#ffffff';
+    }catch(e){ return '#0B0B0F'; }
+  }
+
+  evData(){
+    return {
+      3:[{t:'Дейли команды',cat:'work',time:'09:30'}],
+      5:[{t:'Ревью дизайна',cat:'work',time:'14:00'},{t:'Тренировка',cat:'health',time:'19:00'}],
+      9:[{t:'Стоматолог',cat:'health',time:'11:15'}],
+      12:[{t:'Обед с Марой',cat:'social',time:'13:00'}],
+      14:[{t:'Релиз 2.0',cat:'work',time:'10:00'}],
+      18:[{t:'День рождения Алекса',cat:'personal',time:'весь день'}],
+      20:[{t:'Йога',cat:'health',time:'08:00'}],
+      23:[{t:'1:1 с лидом',cat:'work',time:'15:30'}],
+      26:[{t:'Demo Day',cat:'work',time:'17:00'},{t:'Позвонить маме',cat:'personal',time:'20:00'}],
+      28:[{t:'Поездка на побережье',cat:'personal',time:'весь день'}]
+    };
+  }
+
+  renderVals(){
+    const self=this;
+    const s=this.state;
+    const accent=s.accent;
+    const events=this.evData();
+    const today=(s.year===2026 && s.month===5)?26:null;
+    const cat={work:accent, personal:'#C9A6FF', health:'#FF8A6B', social:'#54E6C0'};
+    const catName={work:'Работа', personal:'Личное', health:'Здоровье', social:'Друзья'};
+    const months=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+    const monthsGen=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+    const wdFull=['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];
+
+    // home icons
+    const grads=['linear-gradient(135deg,#FF8A6B,#FF5E7E)','linear-gradient(135deg,#7C9CFF,#5E7BFF)','linear-gradient(135deg,#54E6C0,#2BB89A)','linear-gradient(135deg,#C9A6FF,#9B7BFF)'];
+    const appIcons=grads.map((g,i)=>({key:i, style:{width:'100%', aspectRatio:'1', borderRadius:'16px', background:g, boxShadow:'0 10px 22px -10px rgba(0,0,0,.5)'}}));
+    const dockGrads=['linear-gradient(135deg,#9AA7FF,#6E6EF7)','linear-gradient(135deg,#FFD27D,#FF9F45)','linear-gradient(135deg,#8AE0A0,#4FC777)','linear-gradient(135deg,#FF9FB2,#FF6F91)'];
+    const dockIcons=dockGrads.map((g,i)=>({key:i, style:{width:'100%', aspectRatio:'1', borderRadius:'15px', background:g, boxShadow:'0 8px 18px -8px rgba(0,0,0,.4)'}}));
+
+    // app week strip
+    const sel=new Date(s.year, s.month, s.selectedDay);
+    const dow=sel.getDay();
+    const off= s.firstDay==='mon'?((dow+6)%7):dow;
+    const wdShort= s.firstDay==='mon'?['Пн','Вт','Ср','Чт','Пт','Сб','Вс']:['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+    const appWeek=[];
+    for(let i=0;i<7;i++){
+      const d=new Date(s.year, s.month, s.selectedDay-off+i);
+      const inMonth= d.getMonth()===s.month;
+      const num=d.getDate();
+      const isSel= inMonth && num===s.selectedDay;
+      const isToday= inMonth && today!=null && num===today;
+      const has= inMonth && events[num] && events[num].length>0;
+      appWeek.push({
+        key:i, wd:wdShort[i], num:String(num),
+        wdStyle:{fontSize:'11px', fontWeight:600, color:'rgba(255,255,255,.4)', letterSpacing:'.03em'},
+        colStyle:{display:'flex', flexDirection:'column', alignItems:'center', gap:'9px', flex:1, cursor: inMonth?'pointer':'default'},
+        numStyle:{width:'38px', height:'38px', borderRadius:'14px', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'15px', fontWeight: isSel?800:600, fontVariantNumeric:'tabular-nums', background: isSel?accent:'transparent', color: isSel?this.contrast(accent):(inMonth?'#F1F1F6':'rgba(255,255,255,.25)'), border: (isToday&&!isSel)?('1.5px solid '+accent):'1.5px solid transparent', boxShadow: isSel?('0 8px 20px -6px '+accent):'none', boxSizing:'border-box'},
+        dotStyle:{width:'5px', height:'5px', borderRadius:'50%', background: has?(isSel?'rgba(0,0,0,.4)':accent):'transparent'},
+        onClick: inMonth ? (function(nn){return function(){ self.setState({selectedDay:nn}); };})(num) : function(){}
+      });
+    }
+
+    const bigWeekdayRaw=wdFull[sel.getDay()];
+    const bigWeekday=bigWeekdayRaw.charAt(0).toUpperCase()+bigWeekdayRaw.slice(1);
+    const bigMonth=monthsGen[s.month];
+    const bigBadge= (today!=null && s.selectedDay===today)?'Сегодня':'Выбрано';
+
+    const evs=events[s.selectedDay]||[];
+    const dayEvents=evs.map((e,i)=>{
+      const color=cat[e.cat]||accent;
+      return {
+        key:i, time:e.time, title:e.t, catName:catName[e.cat],
+        cardStyle:{display:'flex', alignItems:'center', gap:'13px', padding:'15px', borderRadius:'18px', background:'rgba(255,255,255,.045)', border:'1px solid rgba(255,255,255,.07)'},
+        barStyle:{width:'4px', height:'42px', borderRadius:'4px', background:color, flexShrink:0},
+        timeStyle:{fontSize:'12px', fontWeight:700, color:color, fontVariantNumeric:'tabular-nums', letterSpacing:'.02em'},
+        titleStyle:{fontSize:'15.5px', fontWeight:700, color:'#F1F1F6', marginTop:'3px', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis'},
+        catStyle:{fontSize:'12px', fontWeight:500, color:'rgba(255,255,255,.42)', marginTop:'2px'}
+      };
+    });
+    const noEvents=evs.length===0;
+    const eventCount= evs.length? (evs.length+' '+(evs.length===1?'событие':(evs.length<5?'события':'событий'))) : '';
+
+    // settings controls
+    const palette=['#7C9CFF','#54E6C0','#FF8A6B','#C9A6FF','#FFD27D','#8AE0A0'];
+    const accentSwatches=palette.map((c,i)=>{
+      const active=c===accent;
+      return {key:i, onClick:(function(cc){return function(){ self.setState({accent:cc}); };})(c), style:{width:'36px', height:'36px', borderRadius:'50%', background:c, cursor:'pointer', boxShadow: active?('0 0 0 3px #14131b, 0 0 0 5px '+c):'none', transform: active?'scale(1.06)':'scale(1)', transition:'transform .15s'}};
+    });
+
+    const cardStyle={borderRadius:'20px', padding:'16px', background:'rgba(255,255,255,.045)', border:'1px solid rgba(255,255,255,.07)'};
+    const rowLabelStyle={fontSize:'14.5px', fontWeight:700, color:'#F1F1F6'};
+    const rowValStyle={fontSize:'13px', fontWeight:700, color:accent, fontVariantNumeric:'tabular-nums'};
+
+    const opPct=Math.round((s.bgOpacity-0.15)/(0.9-0.15)*100);
+    const opacityStyle={'--c':accent, background:'linear-gradient(90deg, '+accent+' '+opPct+'%, rgba(255,255,255,.14) '+opPct+'%)', marginTop:'14px'};
+    const opacityText=Math.round(s.bgOpacity*100)+'%';
+    const raPct=Math.round((s.radius-12)/(40-12)*100);
+    const radiusStyle={'--c':accent, background:'linear-gradient(90deg, '+accent+' '+raPct+'%, rgba(255,255,255,.14) '+raPct+'%)', marginTop:'14px'};
+    const radiusText=s.radius+' px';
+
+    const segWrapStyle={display:'flex', gap:'5px', marginTop:'13px', padding:'4px', borderRadius:'14px', background:'rgba(0,0,0,.25)'};
+    function seg(active, fontSize){ return {flex:1, textAlign:'center', padding:'9px 0', borderRadius:'11px', fontSize:(fontSize||13)+'px', fontWeight:700, cursor:'pointer', background: active?accent:'transparent', color: active?self.contrast(accent):'rgba(255,255,255,.55)', transition:'all .15s', whiteSpace:'nowrap'}; }
+    const firstOpts=[
+      {key:'mon', label:'Понедельник', style:seg(s.firstDay==='mon'), onClick:function(){ self.setState({firstDay:'mon'}); }},
+      {key:'sun', label:'Воскресенье', style:seg(s.firstDay==='sun'), onClick:function(){ self.setState({firstDay:'sun'}); }}
+    ];
+    const fontOpts=[
+      {key:'s', label:'A', style:seg(s.fontScale===0.85,12), onClick:function(){ self.setState({fontScale:0.85}); }},
+      {key:'m', label:'A', style:seg(s.fontScale===1,15), onClick:function(){ self.setState({fontScale:1}); }},
+      {key:'l', label:'A', style:seg(s.fontScale===1.15,18), onClick:function(){ self.setState({fontScale:1.15}); }}
+    ];
+    const themeOpts=[
+      {key:'light', label:'Светлая', style:seg(s.theme==='light'), onClick:function(){ self.setState({theme:'light'}); }},
+      {key:'dark', label:'Тёмная', style:seg(s.theme==='dark'), onClick:function(){ self.setState({theme:'dark'}); }}
+    ];
+
+    const evOn=s.showEvents;
+    const toggleTrack={width:'48px', height:'28px', borderRadius:'14px', background: evOn?accent:'rgba(255,255,255,.14)', position:'relative', cursor:'pointer', transition:'background .2s', flexShrink:0};
+    const toggleKnob={position:'absolute', top:'3px', left:'3px', width:'22px', height:'22px', borderRadius:'50%', background:'#fff', transform: evOn?'translateX(20px)':'translateX(0)', transition:'transform .2s', boxShadow:'0 2px 6px rgba(0,0,0,.3)'};
+
+    const darkGrad='radial-gradient(130% 90% at 25% 0%, #2c2945 0%, #16151f 46%, #09090d 100%)';
+    const lightGrad='radial-gradient(130% 90% at 75% 0%, #fdf4ee 0%, #eceef6 52%, #dfe3f0 100%)';
+    const previewWall= s.theme==='light'?lightGrad:darkGrad;
+
+    return {
+      year:s.month!=null?s.year:2026, month:s.month, todayNum:today, selectedDay:s.selectedDay,
+      eventsData:events, firstDay:s.firstDay, accent:accent, accentText:this.contrast(accent),
+      radius:s.radius, fontScale:s.fontScale, bgOpacity:s.bgOpacity, showEvents:s.showEvents, settingsTheme:s.theme,
+      selectDay:function(d){ self.setState({selectedDay:d}); },
+      prevMonth:function(){ let m=s.month-1,y=s.year; if(m<0){m=11;y--;} self.setState({month:m,year:y}); },
+      nextMonth:function(){ let m=s.month+1,y=s.year; if(m>11){m=0;y++;} self.setState({month:m,year:y}); },
+      appIcons, dockIcons,
+      monthTitle: months[s.month]+' '+s.year,
+      appWeek, bigNum:String(s.selectedDay), bigWeekday, bigMonth, bigBadge,
+      dayEvents, noEvents, eventCount,
+      accentSwatches, cardStyle, rowLabelStyle, rowValStyle,
+      opacityStyle, opacityText, opacityVal:s.bgOpacity, onOpacity:function(e){ self.setState({bgOpacity:parseFloat(e.target.value)}); },
+      radiusStyle, radiusText, radiusVal:s.radius, onRadius:function(e){ self.setState({radius:parseInt(e.target.value,10)}); },
+      segWrapStyle, firstOpts, fontOpts, themeOpts,
+      toggleTrack, toggleKnob, toggleEvents:function(){ self.setState(p=>({showEvents:!p.showEvents})); },
+      previewWall
+    };
+  }
+}
+</script>
+</body>
+</html>
