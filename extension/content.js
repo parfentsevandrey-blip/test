@@ -15,13 +15,31 @@
 
   // ---------- определить ID и имя ЖК ----------
   function detectJk() {
-    const href = location.href;
-    const id =
-      (href.match(/-(\d+)\/(?:\?|$)/) || [])[1] ||
-      (href.match(/newobject(?:%5B0%5D|\[0\])?=(\d+)/) || [])[1] ||
-      ((/zhiloy-kompleks|kupit-/.test(href) && (href.match(/(\d{6,})/) || [])[1]) || null);
+    const cands = [location.href];
+    const canon = document.querySelector('link[rel="canonical"]');
+    if (canon && canon.href) cands.push(canon.href);
+    const og = document.querySelector('meta[property="og:url"]');
+    if (og && og.content) cands.push(og.content);
+    let id = null;
+    for (const href of cands) {
+      id =
+        (href.match(/-(\d+)\/(?:\?|#|$)/) || [])[1] ||
+        (href.match(/newobject(?:%5B0%5D|\[0\])?=(\d+)/) || [])[1] ||
+        ((/zhiloy-kompleks|kupit-|newobject/.test(href) && (href.match(/(\d{6,})/) || [])[1]) || null);
+      if (id) break;
+    }
+    if (!id) {
+      // запасной путь — из встроенных данных страницы
+      try {
+        const blob = window.__NEXT_DATA__ ? JSON.stringify(window.__NEXT_DATA__)
+          : document.documentElement.innerHTML.slice(0, 500000);
+        id = (blob.match(/"newobjectId"\s*:\s*(\d+)/) ||
+              blob.match(/"jkId"\s*:\s*(\d+)/) ||
+              blob.match(/zhiloy-kompleks-[a-z0-9-]*?-(\d{5,})/i) || [])[1] || null;
+      } catch (e) { /* ignore */ }
+    }
     let name = ((document.querySelector("h1") || {}).textContent || "").trim() ||
-      (document.title.split(/[—|·]/)[0] || "").trim() || (id ? "ЖК " + id : "");
+      (document.title.split(/[—|·|]/)[0] || "").trim() || (id ? "ЖК " + id : "");
     return { id: id ? parseInt(id, 10) : null, name: name.replace(/\s+/g, " ").slice(0, 60) };
   }
 
@@ -217,9 +235,9 @@
   }
 
   function mount() {
+    if (!document.body) return;
     if (document.getElementById("cian-excel-btn")) return;
-    const jk = detectJk();
-    if (!jk.id) return; // показываем кнопку только там, где есть ЖК
+    // Кнопку показываем на всех страницах cian.ru — ЖК определяем при клике.
     const btn = document.createElement("button");
     btn.id = "cian-excel-btn";
     btn.textContent = "📊 Выгрузить в Excel";
@@ -231,10 +249,18 @@
     });
     btn.addEventListener("click", () => run(btn));
     document.body.appendChild(btn);
+    console.log("[cian-excel] кнопка добавлена");
   }
 
-  mount();
+  function ensure() { try { mount(); } catch (e) { console.warn("[cian-excel] mount:", e); } }
+
+  console.log("[cian-excel] загружен на", location.href);
+  ensure();
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", ensure);
+  // ретраи (страница Циан — SPA, рендерится не сразу)
+  let tries = 0;
+  const iv = setInterval(() => { ensure(); if (++tries > 20) clearInterval(iv); }, 1000);
   // на SPA-переходах Циан перемонтируем кнопку
   let last = location.href;
-  setInterval(() => { if (location.href !== last) { last = location.href; setTimeout(mount, 800); } }, 1500);
+  setInterval(() => { if (location.href !== last) { last = location.href; setTimeout(ensure, 800); } }, 1500);
 })();
