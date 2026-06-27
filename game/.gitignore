@@ -1,0 +1,7 @@
+# Godot 4 import cache — regenerated on open/build, must not be committed
+.godot/
+# build output
+/build/
+*.apk
+# local export keystores (never commit secrets)
+*.keystore
