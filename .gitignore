@@ -1,0 +1,4 @@
+# Build output / artifacts (the APK is produced by CI or local export)
+/build/
+*.apk
+*.apk.idsig
