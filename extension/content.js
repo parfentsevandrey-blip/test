@@ -9,7 +9,13 @@
   if (window.__cianExcelMounted) return;
   window.__cianExcelMounted = true;
 
-  const CONFIG = { region: 1, delayMin: 350, delayMax: 800, maxPages: 28, pageSize: 28, maxPasses: 6 };
+  const CONFIG = {
+    region: 1, delayMin: 300, delayMax: 700,
+    maxPages: 54, pageSize: 28,          // реальный потолок Циан ~54 страницы (≈1512)
+    minPriceSpan: 200000, priceCeiling: 3000000000,  // дробление по цене
+    maxRetries: 4, backoffBase: 1500,    // ретраи на 429/5xx
+    reqBudget: 400,                      // защита от runaway-запросов
+  };
   const API = "https://api.cian.ru/search-offers/v2/search-offers-desktop/";
   const ROOMS = [9, 7, 1, 2, 3, 4, 5, 6];
 
@@ -40,16 +46,22 @@
     };
   } catch (e) { /* ignore */ }
 
-  // Найти объект "jsonQuery":{...} в произвольной строке (баланс скобок), с _type.
+  // Найти объект "jsonQuery":{...} в строке. Баланс скобок СТРОКО-АВАРЕ
+  // (скобки внутри кавычек и эскейпы не считаются), без жёсткого лимита длины.
   function findJsonQuery(s) {
     let idx = 0;
     while ((idx = s.indexOf('"jsonQuery"', idx)) !== -1) {
       const start = s.indexOf("{", idx);
       if (start === -1) break;
-      let depth = 0, end = -1;
-      for (let i = start; i < s.length && i < start + 20000; i++) {
+      let depth = 0, end = -1, inStr = false, esc = false;
+      for (let i = start; i < s.length; i++) {
         const ch = s[i];
-        if (ch === "{") depth++;
+        if (inStr) {
+          if (esc) esc = false; else if (ch === "\\") esc = true; else if (ch === '"') inStr = false;
+          continue;
+        }
+        if (ch === '"') inStr = true;
+        else if (ch === "{") depth++;
         else if (ch === "}") { if (--depth === 0) { end = i; break; } }
       }
       if (end !== -1) {
@@ -70,7 +82,7 @@
 
   // Используем ПОЛНЫЙ запрос страницы со ВСЕМИ фильтрами пользователя (цена,
   // комнаты, год, полигон/карта и т.п.) — выгружаем ровно то, что он видит.
-  // Для пагинации в bodyFrom() переопределяется только page.
+  // Для пагинации в withFilters() переопределяются только page/room/price.
   function cleanBaseQuery(base) {
     const b = JSON.parse(JSON.stringify(base));
     delete b.page;                 // страницу задаём сами при пагинации
@@ -174,94 +186,127 @@
   const pause = () => sleep(CONFIG.delayMin + Math.random() * (CONFIG.delayMax - CONFIG.delayMin));
   const dig = (o, p) => p.split(".").reduce((a, k) => (a == null ? a : a[k]), o);
 
-  function bodyFrom(base, page, room) {
+  // Запрос страницы с нашими параметрами поверх фильтров пользователя.
+  function withFilters(base, o) {
+    o = o || {};
     const q = JSON.parse(JSON.stringify(base));
-    q.page = { type: "term", value: page };
-    // room задаётся ТОЛЬКО при доборе по комнатности; иначе сохраняем фильтры
-    // пользователя как есть (в т.ч. его room/price/полигон).
-    if (room != null) q.room = { type: "terms", value: [room] };
+    if (o.page != null) q.page = { type: "term", value: o.page };
+    if (o.room != null) q.room = { type: "terms", value: [o.room] };
+    if (o.priceGte != null || o.priceLte != null) {
+      const v = {};
+      if (o.priceGte != null) v.gte = o.priceGte;
+      if (o.priceLte != null) v.lte = o.priceLte;
+      q.price = { type: "range", value: v };
+    }
+    if (o.sort) q.sort = { type: "term", value: o.sort };
     return { jsonQuery: q };
   }
-  async function fetchPage(base, room, page) {
-    const r = await fetch(API, {
-      method: "POST", headers: { "Content-Type": "application/json", Accept: "*/*" },
-      body: JSON.stringify(bodyFrom(base, page, room)), credentials: "include",
-    });
-    if (!r.ok) throw new Error("HTTP " + r.status);
-    const d = await r.json();
-    const data = d.data || d;
-    let offers = data.offersSerialized || data.offers || data.items || [];
-    offers = offers.map((it) => (it && it.offer ? it.offer : it));
-    const total = data.offerCount || data.offersCount || data.totalCount || offers.length;
-    return { offers, total: parseInt(total, 10) || offers.length };
+
+  // POST с ретраями и экспоненциальным бэк-оффом (429/503/5xx/сеть), уважает Retry-After.
+  async function apiFetch(body) {
+    let delay = CONFIG.backoffBase, lastErr = null;
+    for (let attempt = 1; attempt <= CONFIG.maxRetries; attempt++) {
+      try {
+        const r = await fetch(API, {
+          method: "POST", headers: { "Content-Type": "application/json", Accept: "*/*" },
+          body: JSON.stringify(body), credentials: "include",
+        });
+        if (r.status === 200) {
+          const d = await r.json(); const data = d.data || d;
+          let offers = data.offersSerialized || data.offers || data.items || [];
+          offers = offers.map((it) => (it && it.offer ? it.offer : it));
+          // aggregatedCount = всего по фильтру; offerCount иногда = размер страницы
+          const total = data.aggregatedCount || data.offerCount || data.offersCount || data.totalCount || offers.length;
+          return { offers, total: parseInt(total, 10) || offers.length };
+        }
+        if (r.status === 403) throw new Error("HTTP 403 — нужна авторизация/капча на cian.ru");
+        if (r.status === 429 || r.status >= 500) {
+          const ra = parseInt(r.headers && r.headers.get && r.headers.get("Retry-After"), 10);
+          const wait = (ra ? ra * 1000 : delay) + Math.random() * 400;
+          console.warn(`[cian-excel] HTTP ${r.status} — пауза ${Math.round(wait / 1000)}s (попытка ${attempt}/${CONFIG.maxRetries})`);
+          lastErr = "HTTP " + r.status; await sleep(wait); delay *= 2; continue;
+        }
+        throw new Error("HTTP " + r.status);
+      } catch (e) {
+        lastErr = (e && e.message) || String(e);
+        if (/403/.test(lastErr)) throw e;
+        if (attempt >= CONFIG.maxRetries) throw new Error(lastErr);
+        await sleep(delay + Math.random() * 400); delay *= 2;
+      }
+    }
+    throw new Error(lastErr || "запрос не удался");
   }
+  // совместимость: одиночная страница
+  const fetchPage = (base, room, page) => apiFetch(withFilters(base, { page, room }));
 
-  // Порядки сортировки для многопроходного сбора. Меняя порядок, Циан показывает
-  // другой срез выдачи — так добираем лоты, «спрятанные» ротацией/кэшем.
-  const SORTS = [null, "price_object_order", "price_square_order", "creation_date_desc", "price_object_order_desc", "creation_date_asc"];
-
+  // Детерминированный сбор 100% выдачи: прямой проход -> при недоборе разложить
+  // по комнатности (×8 ёмкости) и рекурсивно дробить по цене (обход лимита/ротации).
   async function collectAll(base, onProgress) {
     const byId = new Map();
-    let totalInJk = 0;
+    let grandTotal = 0, requests = 0;
     const add = (offers) => offers.forEach((o) => { const id = o.cianId || o.id; if (id != null) byId.set(id, o); });
 
-    // один проход (пагинация одного порядка): стоп по «собрано>=всего» / пустой
-    // странице, НЕ по короткой странице.
-    async function onePass(b, label) {
-      let page = 1, emptyStreak = 0, stalls = 0;
-      while (page <= CONFIG.maxPages) {
-        onProgress(`${label}страница ${page}…`, byId.size, totalInJk);
-        let res; try { res = await fetchPage(b, null, page); } catch (e) { if (page === 1 && !totalInJk) throw e; break; }
-        if (!totalInJk) totalInJk = res.total;
-        if (!res.offers.length) { if (++emptyStreak >= 2) break; page++; await pause(); continue; }
-        emptyStreak = 0;
-        const before = byId.size; add(res.offers);
-        onProgress(`Собрано ${byId.size}${totalInJk ? " из " + totalInJk : ""}…`, byId.size, totalInJk);
-        if (totalInJk && byId.size >= totalInJk) break;
-        if (byId.size === before) { if (++stalls >= 3) break; } else stalls = 0;
-        const bound = totalInJk ? Math.ceil(totalInJk / CONFIG.pageSize) + 3 : CONFIG.maxPages;
-        if (page >= bound) break;
+    // Пагинация одного сегмента; seen = сколько УНИКАЛЬНЫХ id вернул сам сегмент.
+    async function paginateSegment(filters, label) {
+      const seg = new Set();
+      let total = 0, page = 1, empty = 0;
+      while (page <= CONFIG.maxPages && requests < CONFIG.reqBudget) {
+        onProgress(`${label}стр.${page}…`, byId.size, grandTotal);
+        let res; try { res = await apiFetch(withFilters(base, Object.assign({}, filters, { page }))); requests++; }
+        catch (e) { if (page === 1) throw e; break; }
+        total = res.total;
+        if (!res.offers.length) { if (++empty >= 2) break; page++; await pause(); continue; }
+        empty = 0;
+        res.offers.forEach((o) => { const id = o.cianId || o.id; if (id != null) seg.add(id); });
+        add(res.offers);
+        onProgress(`Собрано ${byId.size}${grandTotal ? " из " + grandTotal : ""}…`, byId.size, grandTotal);
+        if (seg.size >= total) break;                                  // весь сегмент собран
+        if (page >= Math.ceil(total / CONFIG.pageSize) + 2) break;
         page++; await pause();
       }
+      return { total, seen: seg.size };
     }
 
-    // Несколько проходов с разной сортировкой — добираем «спрятанные» ротацией.
-    let dry = 0;
-    for (let pass = 0; pass < CONFIG.maxPasses && dry < 2; pass++) {
-      const before = byId.size;
-      const b = JSON.parse(JSON.stringify(base));
-      const so = SORTS[pass % SORTS.length];
-      if (so) b.sort = { type: "term", value: so }; else delete b.sort;
-      await onePass(b, pass === 0 ? "" : `проход ${pass + 1}: `);
-      console.log(`[cian-excel] проход ${pass + 1} (sort=${so || "default"}): собрано ${byId.size}/${totalInJk}`);
-      if (totalInJk && byId.size >= totalInJk) break;
-      dry = (byId.size === before) ? dry + 1 : 0;   // 2 прохода без новизны -> хватит
-      if (pass < CONFIG.maxPasses - 1) await pause();
-    }
-
-    // Добор по комнатности (если пользователь сам не фильтровал и всё ещё мало).
-    let totalsByRoom = null;
-    if (totalInJk && byId.size < totalInJk && !base.room) {
-      totalsByRoom = {};
-      for (const room of ROOMS) {
-        onProgress(`Добираю по комнатам… (${byId.size}/${totalInJk})`, byId.size, totalInJk);
-        let first; try { first = await fetchPage(base, room, 1); } catch (e) { continue; }
-        totalsByRoom[room] = first.total; add(first.offers);
-        if (first.total > CONFIG.pageSize) {
-          for (let page = 2; page <= CONFIG.maxPages; page++) {
-            await pause();
-            let res; try { res = await fetchPage(base, room, page); } catch (e) { break; }
-            if (!res.offers.length) break;
-            add(res.offers);
-            onProgress(`Собрано ${byId.size}/${totalInJk}…`, byId.size, totalInJk);
-            if (byId.size >= totalInJk) break;
-          }
+    // Рекурсивное дробление по цене (если сегмент отдал не всё — ротация/лимит).
+    async function priceSplit(filters, label) {
+      const p = (base.price && base.price.value) || {};
+      const lo0 = filters.priceGte != null ? filters.priceGte : (p.gte != null ? p.gte : 0);
+      const hi0 = filters.priceLte != null ? filters.priceLte : (p.lte != null ? p.lte : CONFIG.priceCeiling);
+      const stack = [[lo0, hi0]];
+      while (stack.length && requests < CONFIG.reqBudget) {
+        const [a, b] = stack.pop();
+        const { total, seen } = await paginateSegment(Object.assign({}, filters, { priceGte: a, priceLte: b }), label);
+        if (total > seen && (b - a) > CONFIG.minPriceSpan) {
+          const mid = Math.floor((a + b) / 2);
+          stack.push([a, mid]); stack.push([mid + 1, b]);
         }
-        await pause();
+        if (grandTotal && byId.size >= grandTotal) break;
       }
     }
-    console.log(`[cian-excel] ИТОГО собрано ${byId.size} из ${totalInJk}`);
-    return { offers: [...byId.values()], totalsByRoom, totalInJk };
+
+    // 1) прямой проход по запросу пользователя
+    const first = await paginateSegment({}, "");
+    grandTotal = first.total;
+
+    // 2) недобор -> детерминированная декомпозиция
+    let totalsByRoom = null;
+    if (grandTotal && byId.size < grandTotal && requests < CONFIG.reqBudget) {
+      if (!base.room) {
+        totalsByRoom = {};
+        for (const room of ROOMS) {
+          if (requests >= CONFIG.reqBudget || byId.size >= grandTotal) break;
+          onProgress(`Комнаты ${room}… (${byId.size}/${grandTotal})`, byId.size, grandTotal);
+          const pr = await paginateSegment({ room }, `room ${room}: `);
+          totalsByRoom[room] = pr.total;
+          if (pr.total > pr.seen) await priceSplit({ room }, `room ${room} ₽: `);
+          await pause();
+        }
+      } else {
+        await priceSplit({}, "₽: ");          // у пользователя уже фильтр по комнатам
+      }
+    }
+    console.log(`[cian-excel] ИТОГО ${byId.size}/${grandTotal} за ${requests} запросов`);
+    return { offers: [...byId.values()], totalsByRoom, totalInJk: grandTotal };
   }
 
   // ---------- нормализация (как в Python/консольной версии) ----------
@@ -290,13 +335,28 @@
   const updDate = (o) => { const s = o.editDate || o.updatedAt; if (!s) return null; const d = new Date(s); return isNaN(d) ? null : d; };
   const fmtDate = (d) => d ? `${String(d.getDate()).padStart(2, "0")}.${String(d.getMonth() + 1).padStart(2, "0")}.${d.getFullYear()}` : "";
   const offerUrl = (o) => o.fullUrl || ((o.cianId || o.id) ? `https://www.cian.ru/sale/flat/${o.cianId || o.id}/` : null);
+  const numOr = (v) => { const n = parseFloat(String(v).replace(",", ".")); return isNaN(n) ? null : n; };
+  const _MAT = { brick: "кирпич", monolith: "монолит", monolithBrick: "монолит-кирпич", panel: "панель", block: "блок", wood: "дерево", stalin: "сталинский", old: "старый фонд", boards: "щитовой" };
+  function metroOf(o) {
+    const u = dig(o, "geo.undergrounds");
+    if (Array.isArray(u) && u.length) {
+      const m = u[0];
+      return { name: m && m.name || null, time: m && (m.time != null ? m.time : null), foot: m && m.transportType === "walk" };
+    }
+    return { name: null, time: null };
+  }
   function normalize(o) {
     const area = areaOf(o), price = priceOf(o), pub = pubDate(o);
     const addedTs = pub ? Math.floor(pub.getTime() / 1000) : null;   // сырой unix для анализа экспозиции
+    const m = metroOf(o);
+    const mat = dig(o, "building.materialType");
     return {
       cianId: o.cianId || o.id || null, url: offerUrl(o), category: categoryOf(o),
       area, floor: o.floorNumber != null ? o.floorNumber : null,
       floors: dig(o, "building.floorsCount") || o.floorsCount || null, building: buildingOf(o),
+      livingArea: numOr(o.livingArea), kitchenArea: numOr(o.kitchenArea),
+      buildYear: dig(o, "building.buildYear") || null, material: mat ? (_MAT[mat] || mat) : null,
+      metro: m.name, metroTime: m.time, addr: dig(o, "geo.userInput") || null,
       seller_type: sellerType(o), seller_name: sellerName(o), decoration: decorationOf(o),
       price, ppm: price && area ? Math.round(price / area) : null,
       published: pub ? fmtDate(pub) : "", exposure: pub ? Math.floor((Date.now() - pub.getTime()) / 86400000) : "",
@@ -322,11 +382,12 @@
       localStorage.setItem(HKEY, JSON.stringify(h));
     } catch (e) { /* ignore */ }
   }
-  // отпечаток физической квартиры (переживает переподачу/смену cianId)
+  // отпечаток физической квартиры (переживает переподачу/смену cianId).
+  // Корпус ИЛИ адрес — чтобы на поиске по карте (без корпуса) не склеивать разные дома.
   function fpOf(r, jkId) {
-    const b = (r.building || "").toString().toLowerCase().replace(/[«»"'`.,\s]/g, "");
+    const loc = (r.building || r.addr || "").toString().toLowerCase().replace(/[«»"'`.,\s]/g, "");
     const a = r.area != null ? Number(r.area).toFixed(1) : "?";
-    return [jkId || "?", b, r.floor != null ? r.floor : "?", a, r.category || "?"].join("|");
+    return [jkId || "?", loc, r.floor != null ? r.floor : "?", a, r.category || "?"].join("|");
   }
   function enrichExposure(rows, jkId) {
     const now = Math.floor(Date.now() / 1000), day = 86400;
@@ -374,17 +435,20 @@
     const opt = freeze ? `<WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel"><FreezePanes/><FrozenNoSplit/><SplitHorizontal>4</SplitHorizontal><TopRowBottomPane>4</TopRowBottomPane><ActivePane>2</ActivePane></WorksheetOptions>` : "";
     return `<Worksheet ss:Name="${esc(name)}"><Table>${colsXml}${rowsXml}</Table>${opt}</Worksheet>`;
   }
-  const HEADERS = ["№", "ID объявления", "Категория", "Площадь, м²", "Этаж", "Этаж-ность", "Корпус / секция", "Тип продавца", "Продавец", "Отделка", "Цена, ₽", "Цена за м², ₽", "Дата подачи (Циан)", "Срок Циан, дн", "Реальный срок, дн", "Переподач", "Дублей", "Первая дата (оценка)", "Ссылка"];
-  const COLW = [34, 90, 78, 72, 42, 58, 105, 88, 140, 95, 105, 92, 100, 80, 95, 72, 60, 110, 68];
+  const HEADERS = ["№", "ID объявления", "Категория", "Площадь, м²", "Жилая, м²", "Кухня, м²", "Этаж", "Этаж-ность", "Корпус / секция", "Год дома", "Материал", "Метро", "До метро, мин", "Тип продавца", "Продавец", "Отделка", "Цена, ₽", "Цена за м², ₽", "Дата подачи (Циан)", "Срок Циан, дн", "Реальный срок, дн", "Переподач", "Дублей", "Первая дата (оценка)", "Ссылка"];
+  const COLW = [34, 90, 78, 72, 64, 64, 42, 58, 105, 62, 86, 110, 78, 88, 140, 95, 105, 92, 100, 80, 95, 72, 60, 110, 68];
   function dataSheet(name, title, sub, rows) {
     let xml = rowXml([{ v: title, s: "title", merge: HEADERS.length - 1 }]) + rowXml([{ v: sub, s: "sub", merge: HEADERS.length - 1 }]) + rowXml([{}]) + rowXml(HEADERS.map((h) => ({ v: h, s: "hdr" })));
+    const N = (v, s) => ({ v, t: v != null ? "Number" : "String", s });
     rows.forEach((r, i) => {
       xml += rowXml([
         { v: i + 1, t: "Number" }, { v: r.cianId, t: r.cianId ? "Number" : "String" }, { v: r.category },
-        { v: r.area, t: r.area != null ? "Number" : "String", s: "area" }, { v: r.floor, t: r.floor != null ? "Number" : "String" },
-        { v: r.floors, t: r.floors != null ? "Number" : "String" }, { v: r.building }, { v: r.seller_type }, { v: r.seller_name }, { v: r.decoration },
-        { v: r.price, t: r.price != null ? "Number" : "String", s: "num" }, { v: r.ppm, t: r.ppm != null ? "Number" : "String", s: "num" },
-        { v: r.published }, { v: r.exposure, t: r.exposure !== "" ? "Number" : "String" },
+        N(r.area, "area"), N(r.livingArea, "area"), N(r.kitchenArea, "area"),
+        N(r.floor), N(r.floors), { v: r.building }, N(r.buildYear), { v: r.material },
+        { v: r.metro }, N(r.metroTime),
+        { v: r.seller_type }, { v: r.seller_name }, { v: r.decoration },
+        N(r.price, "num"), N(r.ppm, "num"),
+        { v: r.published }, N(r.exposure),
         { v: r.realExposure, t: r.realExposure != null ? "Number" : "String", s: r.reset ? "warn" : null },
         { v: r.republish, t: "Number" }, { v: r.dupNow, t: "Number" }, { v: r.firstDate },
         r.url ? { v: "Циан →", href: r.url, s: "link" } : {},
@@ -634,17 +698,13 @@
     ui._busy = true; ui.el.go.disabled = true; ui.el.go.textContent = "⏳ Собираю…";
     showProgress("Подключаюсь…", null);
     try {
-      // Узнаём, сколько вернёт запрос (offerCount), и сверяем со страницей.
-      const probe = await fetchPage(base, null, 1);
-      const totalQ = probe.total;
-      // Сверка: запрос должен соответствовать тому, что показывает страница.
-      if (pageCnt != null && totalQ > pageCnt * 2 + 25) {
-        const ok = confirm("На странице показано ~" + pageCnt + " объявлений, а запрос вернёт " + totalQ +
-          ".\nВозможно, фильтры не совпали (открыта не та вкладка результатов).\n\nВсё равно выгрузить " + totalQ + "?");
+      const { offers, totalsByRoom, totalInJk } = await collectAll(base, (text, got, total) => showProgress(text, total ? got / total : null));
+      // Сверка с числом на странице — после сбора, чтобы не делать лишний запрос.
+      if (pageCnt != null && totalInJk > pageCnt * 2 + 25) {
+        const ok = confirm("На странице показано ~" + pageCnt + " объявлений, а запрос вернул " + totalInJk +
+          ".\nВозможно, открыта не та вкладка результатов (фильтры не совпали).\n\nВсё равно сохранить " + offers.length + " лотов?");
         if (!ok) { ui._busy = false; ui.el.go.disabled = false; ui.el.go.textContent = "📊 Выгрузить в Excel"; ui.el.prog.style.display = "none"; return; }
       }
-
-      const { offers, totalsByRoom, totalInJk } = await collectAll(base, (text, got, total) => showProgress(text, total ? got / total : null));
       if (!offers.length) { throw new Error("не собрано ни одного лота (войдите в аккаунт и пройдите капчу)"); }
       const rows = offers.map(normalize).sort((a, b) => (a.ppm == null) - (b.ppm == null) || (a.ppm || 0) - (b.ppm || 0));
       const expInfo = enrichExposure(rows, subj.id);   // реальный срок экспозиции (учёт сбросов)
