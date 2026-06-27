@@ -330,7 +330,56 @@
     return null;
   }
   const sellerName = (o) => dig(o, "user.agencyName") || dig(o, "user.companyName") || dig(o, "user.title") || dig(o, "user.name") || null;
-  function decorationOf(o) { let d = o.decoration || o.repairType; if (d && typeof d === "object") d = d.type || d.value; return d ? (DEC[d] || String(d)) : null; }
+
+  // ===== ОПРЕДЕЛЕНИЕ ОТДЕЛКИ/РЕМОНТА (definitive) ===========================
+  // Слои по убыванию надёжности: 1) поле Циан repairType/decoration (= значения
+  // фильтра «Ремонт и отделка»); 2) анализ текста описания; 3) нет данных.
+  // Канонические категории = категории фильтра Циан.
+  const FIN = {
+    none: "Без отделки", rough: "Черновая", prefine: "Предчистовая (white box)",
+    fine: "Чистовая", turnkey: "Под ключ / с мебелью",
+    norepair: "Без ремонта", cosmetic: "Косметический", euro: "Евроремонт",
+    designer: "Дизайнерский", some: "С ремонтом (тип не указан)",
+  };
+  // значение поля Циан -> категория
+  const FIELD_FIN = {
+    without: FIN.none, rough: FIN.rough, draft: FIN.rough,
+    prefine: FIN.prefine, preFine: FIN.prefine, whitebox: FIN.prefine,
+    fine: FIN.fine, clean: FIN.fine, finish: FIN.fine, chistovaya: FIN.fine,
+    turnkey: FIN.turnkey, withFurniture: FIN.turnkey,
+    cosmetic: FIN.cosmetic, euro: FIN.euro, good: FIN.euro, normal: FIN.cosmetic,
+    designer: FIN.designer, design: FIN.designer,
+  };
+  // классификатор по тексту описания (порядок = приоритет; качество ремонта/отделки
+  // важнее «меблировки»; явные категории раньше общих).
+  const FIN_RULES = [
+    [FIN.designer, /дизайнерск|дизайн[\s-]?проект|авторск\w*\s+(?:ремонт|отделк)|эксклюзивн\w*\s+(?:ремонт|отделк)/i],
+    [FIN.euro, /евро[\s-]?ремонт|евроремонт/i],
+    [FIN.prefine, /white\s?box|вайт[\s-]?бокс|предчистов|под\s?чистов\w*\s?отделк|подчистов/i],
+    [FIN.rough, /чернов(?:ая|ой)\s?отделк|чернов(?:ая|ой)/i],
+    [FIN.none, /без\s?отделк|нет\s?отделк/i],
+    [FIN.fine, /чистов(?:ая|ой)\s?отделк|готов(?:ая|ой)\s?отделк|отделк[аи]\s?от\s?застройщик|с\s?(?:полной\s?)?отделк|сдан\w*\s?с\s?отделк/i],
+    [FIN.norepair, /без\s?ремонт|требует\s?ремонт|под\s?ремонт|нужен\s?ремонт|убит\w*\s?(?:квартир|состоян)|в\s?строительн\w*\s?состоян/i],
+    [FIN.cosmetic, /косметическ\w*|космет\b|жило[емй]\s?состоян|хорош\w*\s?состоян|сделан\s?ремонт|после\s?ремонт|свеж\w*\s?ремонт/i],
+    [FIN.turnkey, /под\s?ключ|с\s?мебель|меблирован|с\s?(?:быт\w*\s?)?техник/i],
+    [FIN.some, /\bремонт\b|с\s?ремонт|ремонт\s?есть/i],
+  ];
+  function finishFromText(t) {
+    if (!t) return null;
+    const s = t.toLowerCase();
+    for (const [label, rx] of FIN_RULES) if (rx.test(s)) return label;
+    return null;
+  }
+  function finishOf(o) {
+    let rt = o.repairType; if (rt && typeof rt === "object") rt = rt.type || rt.value;
+    let dc = o.decoration; if (dc && typeof dc === "object") dc = dc.type || dc.value;
+    if (rt && FIELD_FIN[rt]) return { fin: FIELD_FIN[rt], src: "Циан-поле" };
+    if (dc && FIELD_FIN[dc]) return { fin: FIELD_FIN[dc], src: "Циан-поле" };
+    const ft = finishFromText(o.description);
+    if (ft) return { fin: ft, src: "из описания" };
+    if (rt || dc) return { fin: DEC[rt || dc] || String(rt || dc), src: "Циан-поле" };  // нестандартное значение
+    return { fin: null, src: "" };
+  }
   function pubDate(o) { const ts = o.addedTimestamp || o.creationTimestamp; if (ts) { const d = new Date(ts * 1000); if (!isNaN(d)) return d; } if (o.creationDate) { const d = new Date(o.creationDate); if (!isNaN(d)) return d; } return null; }
   const updDate = (o) => { const s = o.editDate || o.updatedAt; if (!s) return null; const d = new Date(s); return isNaN(d) ? null : d; };
   const fmtDate = (d) => d ? `${String(d.getDate()).padStart(2, "0")}.${String(d.getMonth() + 1).padStart(2, "0")}.${d.getFullYear()}` : "";
@@ -350,6 +399,8 @@
     const addedTs = pub ? Math.floor(pub.getTime() / 1000) : null;   // сырой unix для анализа экспозиции
     const m = metroOf(o);
     const mat = dig(o, "building.materialType");
+    const fo = finishOf(o);
+    const desc = (o.description || "").replace(/\s+/g, " ").trim();
     return {
       cianId: o.cianId || o.id || null, url: offerUrl(o), category: categoryOf(o),
       area, floor: o.floorNumber != null ? o.floorNumber : null,
@@ -357,7 +408,8 @@
       livingArea: numOr(o.livingArea), kitchenArea: numOr(o.kitchenArea),
       buildYear: dig(o, "building.buildYear") || null, material: mat ? (_MAT[mat] || mat) : null,
       metro: m.name, metroTime: m.time, addr: dig(o, "geo.userInput") || null,
-      seller_type: sellerType(o), seller_name: sellerName(o), decoration: decorationOf(o),
+      seller_type: sellerType(o), seller_name: sellerName(o),
+      decoration: fo.fin, finishSrc: fo.src, description: desc.slice(0, 600),
       price, ppm: price && area ? Math.round(price / area) : null,
       published: pub ? fmtDate(pub) : "", exposure: pub ? Math.floor((Date.now() - pub.getTime()) / 86400000) : "",
       updated: updDate(o) ? fmtDate(updDate(o)) : "", addedTs,
@@ -435,8 +487,8 @@
     const opt = freeze ? `<WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel"><FreezePanes/><FrozenNoSplit/><SplitHorizontal>4</SplitHorizontal><TopRowBottomPane>4</TopRowBottomPane><ActivePane>2</ActivePane></WorksheetOptions>` : "";
     return `<Worksheet ss:Name="${esc(name)}"><Table>${colsXml}${rowsXml}</Table>${opt}</Worksheet>`;
   }
-  const HEADERS = ["№", "ID объявления", "Категория", "Площадь, м²", "Жилая, м²", "Кухня, м²", "Этаж", "Этаж-ность", "Корпус / секция", "Год дома", "Материал", "Метро", "До метро, мин", "Тип продавца", "Продавец", "Отделка", "Цена, ₽", "Цена за м², ₽", "Дата подачи (Циан)", "Срок Циан, дн", "Реальный срок, дн", "Переподач", "Дублей", "Первая дата (оценка)", "Ссылка"];
-  const COLW = [34, 90, 78, 72, 64, 64, 42, 58, 105, 62, 86, 110, 78, 88, 140, 95, 105, 92, 100, 80, 95, 72, 60, 110, 68];
+  const HEADERS = ["№", "ID объявления", "Категория", "Площадь, м²", "Жилая, м²", "Кухня, м²", "Этаж", "Этаж-ность", "Корпус / секция", "Год дома", "Материал", "Метро", "До метро, мин", "Тип продавца", "Продавец", "Отделка/ремонт", "Источник отделки", "Цена, ₽", "Цена за м², ₽", "Дата подачи (Циан)", "Срок Циан, дн", "Реальный срок, дн", "Переподач", "Дублей", "Первая дата (оценка)", "Описание", "Ссылка"];
+  const COLW = [34, 90, 78, 72, 64, 64, 42, 58, 105, 62, 86, 110, 78, 88, 140, 130, 92, 105, 92, 100, 80, 95, 72, 60, 110, 320, 68];
   function dataSheet(name, title, sub, rows) {
     let xml = rowXml([{ v: title, s: "title", merge: HEADERS.length - 1 }]) + rowXml([{ v: sub, s: "sub", merge: HEADERS.length - 1 }]) + rowXml([{}]) + rowXml(HEADERS.map((h) => ({ v: h, s: "hdr" })));
     const N = (v, s) => ({ v, t: v != null ? "Number" : "String", s });
@@ -446,12 +498,12 @@
         N(r.area, "area"), N(r.livingArea, "area"), N(r.kitchenArea, "area"),
         N(r.floor), N(r.floors), { v: r.building }, N(r.buildYear), { v: r.material },
         { v: r.metro }, N(r.metroTime),
-        { v: r.seller_type }, { v: r.seller_name }, { v: r.decoration },
+        { v: r.seller_type }, { v: r.seller_name }, { v: r.decoration }, { v: r.finishSrc },
         N(r.price, "num"), N(r.ppm, "num"),
         { v: r.published }, N(r.exposure),
         { v: r.realExposure, t: r.realExposure != null ? "Number" : "String", s: r.reset ? "warn" : null },
         { v: r.republish, t: "Number" }, { v: r.dupNow, t: "Number" }, { v: r.firstDate },
-        r.url ? { v: "Циан →", href: r.url, s: "link" } : {},
+        { v: r.description }, r.url ? { v: "Циан →", href: r.url, s: "link" } : {},
       ]);
     });
     return worksheet(name, COLW, xml, true);
@@ -486,6 +538,20 @@
       const sub = rows.filter((r) => r.category === c), pr = sub.map((r) => r.price).filter((x) => x != null), pm = sub.map((r) => r.ppm).filter((x) => x != null);
       xml += rowXml([{ v: c }, num(pr.length ? Math.min(...pr) : null), num(avg(pr)), num(pr.length ? Math.max(...pr) : null), num(pm.length ? Math.min(...pm) : null), num(pm.length ? Math.max(...pm) : null)]);
     });
+    // отделка / ремонт
+    const FIN_ORDER = ["Без отделки", "Черновая", "Предчистовая (white box)", "Чистовая", "Под ключ / с мебелью", "Без ремонта", "Косметический", "Евроремонт", "Дизайнерский", "С ремонтом (тип не указан)"];
+    const finCount = {};
+    rows.forEach((r) => { if (r.decoration) finCount[r.decoration] = (finCount[r.decoration] || 0) + 1; });
+    const byField = rows.filter((r) => r.finishSrc === "Циан-поле").length;
+    const byText = rows.filter((r) => r.finishSrc === "из описания").length;
+    const noFin = rows.filter((r) => !r.decoration).length;
+    xml += rowXml([{}]) + rowXml([{ v: "ОТДЕЛКА / РЕМОНТ (определено)", s: "bold" }]) + rowXml(["Категория", "Лотов", "Доля"].map((h) => ({ v: h, s: "hdr" })));
+    FIN_ORDER.filter((k) => finCount[k]).forEach((k) => {
+      xml += rowXml([{ v: k }, { v: finCount[k], t: "Number" }, { v: Math.round(finCount[k] / rows.length * 100) + "%" }]);
+    });
+    if (noFin) xml += rowXml([{ v: "Не определена" }, { v: noFin, t: "Number" }, { v: Math.round(noFin / rows.length * 100) + "%" }]);
+    xml += rowXml([{ v: "Источник: поле Циан / описание / нет", s: "sub" }, { v: `${byField} / ${byText} / ${noFin}` }]);
+
     // экспозиция
     const real = rows.map((r) => r.realExposure).filter((x) => x != null);
     const cian = rows.map((r) => r.exposure).filter((x) => x !== "" && x != null);
@@ -539,6 +605,13 @@
     if (x.mt.length) f.push(`До метро в среднем ~${x.avg(x.mt)} мин.`);
     const top = rows.filter((r) => r.ppm != null).sort((a, b) => b.ppm - a.ppm)[0];
     if (top) f.push(`Самый дорогой метр — ${P(top.ppm)} ₽/м²${top.building ? " (" + top.building + ")" : ""}.`);
+    // отделка
+    const fin = {}; rows.forEach((r) => { if (r.decoration) fin[r.decoration] = (fin[r.decoration] || 0) + 1; });
+    const ftop = Object.entries(fin).sort((a, b) => b[1] - a[1])[0];
+    if (ftop && rows.length >= 5) f.push(`Чаще всего здесь «${ftop[0]}» — ${Math.round(ftop[1] / rows.length * 100)}% лотов.`);
+    const des = fin["Дизайнерский"] || 0; if (des) f.push(`${des} ${_plural(des, "лот", "лота", "лотов")} с дизайнерским ремонтом.`);
+    const noFin = rows.filter((r) => !r.decoration).length;
+    if (rows.length >= 5 && noFin / rows.length > 0.4) f.push(`У ${Math.round(noFin / rows.length * 100)}% лотов отделка не указана полем Циан — определена по тексту описания.`);
     return f.length ? f[Math.floor(Math.random() * f.length)] : null;
   }
   function computeStats(rows, totalInJk, expInfo) {
