@@ -522,20 +522,44 @@
 
   const fmt = (n) => (n == null ? "—" : Number(n).toLocaleString("ru-RU"));
 
+  const _plural = (n, one, few, many) => {
+    const m = Math.abs(n) % 100, m1 = m % 10;
+    if (m > 10 && m < 20) return many; if (m1 > 1 && m1 < 5) return few; if (m1 === 1) return one; return many;
+  };
+  function pickFact(rows, st, x) {
+    const f = [], P = (n) => Number(n).toLocaleString("ru-RU");
+    if (x.ppm.length) { const mn = Math.min(...x.ppm), mx = Math.max(...x.ppm), r = mx / mn; if (r >= 1.4) f.push(`Цена за м² здесь различается в ${r.toFixed(1)} раза: от ${P(mn)} до ${P(mx)} ₽.`); }
+    if (st.resets > 0) f.push(`У ${st.resets} ${_plural(st.resets, "лота", "лотов", "лотов")} Циан сбросил дату — реально они в продаже дольше, чем показывает счётчик.`);
+    if (x.real.length) { const longs = x.real.filter((v) => v >= 90).length; if (longs) f.push(`${Math.round(longs / x.real.length * 100)}% лотов висят в экспозиции дольше 90 дней.`); }
+    if (x.real.length) { const mxr = Math.max(...x.real); if (mxr >= 120) f.push(`Самый «застрявший» лот в продаже уже ~${mxr} дн.`); }
+    if (st.realMed != null) f.push(`Медианный реальный срок экспозиции — ${st.realMed} дн${st.expAvg != null ? ` (счётчик Циан в среднем ${st.expAvg})` : ""}.`);
+    if (st.devPct != null) f.push(`${st.devPct}% лотов — напрямую от застройщика, остальное частники и агентства.`);
+    if (x.dupFlats > 0) f.push(`${x.dupFlats} ${_plural(x.dupFlats, "объявление", "объявления", "объявлений")} — дубли одних квартир у разных продавцов.`);
+    if (x.areas.length) f.push(`Площади в выборке: от ${Math.min(...x.areas)} до ${Math.max(...x.areas)} м².`);
+    if (x.mt.length) f.push(`До метро в среднем ~${x.avg(x.mt)} мин.`);
+    const top = rows.filter((r) => r.ppm != null).sort((a, b) => b.ppm - a.ppm)[0];
+    if (top) f.push(`Самый дорогой метр — ${P(top.ppm)} ₽/м²${top.building ? " (" + top.building + ")" : ""}.`);
+    return f.length ? f[Math.floor(Math.random() * f.length)] : null;
+  }
   function computeStats(rows, totalInJk, expInfo) {
     const ppm = rows.map((r) => r.ppm).filter((x) => x != null);
     const exp = rows.map((r) => r.exposure).filter((x) => x !== "" && x != null);
     const real = rows.map((r) => r.realExposure).filter((x) => x != null);
+    const areas = rows.map((r) => r.area).filter((x) => x != null);
+    const mt = rows.map((r) => r.metroTime).filter((x) => x != null);
     const avg = (a) => (a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : null);
+    const med = (a) => (a.length ? a.slice().sort((x, y) => x - y)[Math.floor(a.length / 2)] : null);
     const byCat = CATS.map((c) => ({ c, n: rows.filter((r) => r.category === c).length })).filter((x) => x.n);
-    return {
-      count: rows.length,
-      total: totalInJk || rows.length,
+    const devN = rows.filter((r) => r.seller_type === "Застройщик").length;
+    const st = {
+      count: rows.length, total: totalInJk || rows.length,
       coverage: totalInJk ? Math.round((rows.length / totalInJk) * 100) : 100,
-      ppmMin: ppm.length ? Math.min(...ppm) : null,
-      ppmAvg: avg(ppm), ppmMax: ppm.length ? Math.max(...ppm) : null,
-      expAvg: avg(exp), realAvg: avg(real), resets: (expInfo && expInfo.resets) || 0, byCat,
+      ppmMin: ppm.length ? Math.min(...ppm) : null, ppmAvg: avg(ppm), ppmMax: ppm.length ? Math.max(...ppm) : null,
+      expAvg: avg(exp), realAvg: avg(real), realMed: med(real),
+      resets: (expInfo && expInfo.resets) || 0, devPct: rows.length ? Math.round(devN / rows.length * 100) : null, byCat,
     };
+    st.fact = pickFact(rows, st, { ppm, real, areas, mt, dupFlats: rows.filter((r) => r.dupNow > 1).length, avg });
+    return st;
   }
 
   // ---------- GUI: панель в Shadow DOM ----------
@@ -580,9 +604,14 @@
   .stat{flex:1;background:#f5f7fb;border-radius:12px;padding:10px 6px;text-align:center}
   .stat .v{font-size:17px;font-weight:800;color:#16203a;line-height:1}
   .stat .l{font-size:10px;color:#828ca3;margin-top:4px;text-transform:uppercase;letter-spacing:.3px}
+  .stat.full .v{color:#1f9d55}
   .meta{margin-top:10px;font-size:11.5px;color:#69728a;line-height:1.5}
   .cats{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
   .chip{font-size:11px;background:#eef1f8;color:#34406e;padding:4px 9px;border-radius:20px;font-weight:600}
+  .fact{margin-top:12px;display:none;background:linear-gradient(135deg,#fff8ea,#fff1d4);
+    border:1px solid #ffe2ad;color:#7a5a14;border-radius:12px;padding:11px 13px;font-size:12.5px;line-height:1.5;
+    animation:in .3s ease}
+  .fact .lab{font-weight:800;color:#b5781a;display:block;font-size:10.5px;letter-spacing:.4px;margin-bottom:3px;text-transform:uppercase}
   .file{margin-top:12px;font-size:12px;color:#1d7a43;background:#e8f7ee;border-radius:10px;
     padding:9px 11px;display:flex;gap:7px;align-items:center;word-break:break-all}
   .foot{padding:11px 16px;border-top:1px solid #eef0f5;font-size:11px;color:#9aa2b4;line-height:1.45}
@@ -616,6 +645,7 @@
               '</div>' +
               '<div class="meta" id="s-meta"></div>' +
               '<div class="cats" id="s-cats"></div>' +
+              '<div class="fact" id="s-fact"><span class="lab">💡 Любопытный факт</span><span id="s-facttext"></span></div>' +
               '<div class="file" id="s-file"><span>✓</span><span id="s-fname"></span></div>' +
             '</div>' +
           '</div>' +
@@ -629,7 +659,8 @@
       jk: $("#jk"), sub: $("#sub"), pg: $("#pg"), pgi: $("#pgi"), pgt: $("#pgt"),
       go: $("#go"), prog: $("#prog"), pt: $("#pt"), pp: $("#pp"), bar: $("#bar"),
       res: $("#res"), count: $("#s-count"), cov: $("#s-cov"), ppm: $("#s-ppm"),
-      meta: $("#s-meta"), cats: $("#s-cats"), file: $("#s-file"), fname: $("#s-fname"), foot: $("#foot"),
+      meta: $("#s-meta"), cats: $("#s-cats"), fact: $("#s-fact"), facttext: $("#s-facttext"),
+      file: $("#s-file"), fname: $("#s-fname"), foot: $("#foot"),
     };
     $(".min").addEventListener("click", () => ui.root.classList.add("min"));
     $(".fab").addEventListener("click", () => ui.root.classList.remove("min"));
@@ -672,18 +703,24 @@
     ui.el.prog.style.display = "none";
     ui.el.res.style.display = "block";
     ui.el.count.textContent = fmt(stats.count);
-    ui.el.cov.textContent = (stats.coverage != null ? stats.coverage : 100) + "%";
+    const cov = stats.coverage != null ? stats.coverage : 100;
+    ui.el.cov.textContent = cov + "%";
+    // охват красим: 100% зелёным
+    ui.el.cov.parentElement.classList.toggle("full", cov >= 100);
     ui.el.ppm.textContent = stats.ppmAvg ? fmt(stats.ppmAvg) : "—";
     ui.el.meta.textContent =
       "₽/м²: " + fmt(stats.ppmMin) + " – " + fmt(stats.ppmMax) +
-      (stats.expAvg != null ? " · экспозиция ~" + stats.expAvg + " дн" : "") +
-      (stats.total ? " · всего в ЖК " + stats.total : "");
+      (stats.realMed != null ? " · реальный срок ~" + stats.realMed + " дн" : (stats.expAvg != null ? " · экспозиция ~" + stats.expAvg + " дн" : "")) +
+      (stats.resets ? " · переподач " + stats.resets : "") +
+      (stats.total ? " · всего " + fmt(stats.total) : "");
     ui.el.cats.innerHTML = "";
     stats.byCat.forEach((x) => {
       const c = document.createElement("span"); c.className = "chip";
       c.textContent = (x.c === "Своб. планировка" ? "Своб." : x.c) + " " + x.n;
       ui.el.cats.appendChild(c);
     });
+    if (stats.fact) { ui.el.fact.style.display = "block"; ui.el.facttext.textContent = stats.fact; }
+    else { ui.el.fact.style.display = "none"; }
     ui.el.fname.textContent = "Файл скачан: " + filename;
   }
 
