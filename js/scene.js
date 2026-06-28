@@ -122,7 +122,7 @@ const BG_FRAG = /* glsl */ `
     float vig=smoothstep(1.25,0.30,length(uv-0.5)*1.6); col*=mix(0.55,1.0,vig);
     col+=accent*0.04*smoothstep(0.6,0.0,uv.y)*(1.0-uHeat*0.5); col+=iri*uVelocity*0.12*ribbon;
     float grain=fract(sin(dot(uv*uRes,vec2(12.9898,78.233)))*43758.5453); col+=(grain-0.5)*0.02;
-    col*=0.35; col=clamp(col,0.0,1.05);
+    col*=0.28; col=clamp(col,0.0,1.05);
     gl_FragColor=vec4(col,1.0);
   }`;
 
@@ -200,8 +200,8 @@ const PARTICLE_FRAG = /* glsl */ `
     float fres=pow(1.0-core,2.0); vec3 film=iridescence(fres*1.2+vSeed*0.3+uTime*0.02);
     vec3 hot=mix(MAGENTA,GOLD,clamp(fres+vSeed*0.4,0.0,1.0)); hot=mix(hot,film*GOLD*1.4,0.5);
     col=mix(col,hot,uHeat);
-    col=mix(col,STAR,glow*(0.18+0.5*uHeat)); col+=STAR*vCore*0.12*(0.4+0.6*uHeat);
-    float alpha=(halo*0.65+glow*0.45)*uOpacity; col*=(0.82+uHeat*0.7+vCore*0.3);
+    col=mix(col,STAR,glow*(0.18+0.3*uHeat)); col+=STAR*vCore*0.12*(0.4+0.5*uHeat);
+    float alpha=(halo*0.65+glow*0.45)*uOpacity; col*=(0.92+uHeat*0.25+vCore*0.3);
     gl_FragColor=vec4(col,alpha);
   }`;
 
@@ -244,7 +244,7 @@ const GRADE_FRAG = /* glsl */ `
     float g=grainNoise(uv,uTime); float gm=smoothstep(0.0,0.25,luma)*(1.0-smoothstep(0.7,1.0,luma));
     color+=g*uGrain*0.08*gm;
     float vig=smoothstep(0.95,0.25,length(toC)*1.41421356); vig=mix(1.0,vig,clamp(uVignette,0.0,1.0)); color*=vig;
-    float flash=uFlash*uFlash; color=mix(color,vec3(1.0,0.96,0.90),flash*0.55); color+=vec3(1.0,0.92,0.78)*flash*0.18;
+    float flash=uFlash*uFlash; color=mix(color,vec3(1.0,0.96,0.90),flash*0.32); color+=vec3(1.0,0.92,0.78)*flash*0.10;
     gl_FragColor=vec4(max(color,0.0),1.0);
   }`;
 
@@ -270,7 +270,7 @@ const CORE_VERT = "varying vec2 vUv; void main(){ vUv=uv; gl_Position=projection
 /* ============================================================================
    GEOMETRY — particle targets, glyph sampler, and procedural shape builders
    ========================================================================== */
-const TEXT_OPTS = { font: '900 230px "Times New Roman", Georgia, serif', fitWidth: 16, depth: 1.8, jitter: 1.0 };
+const TEXT_OPTS = { font: '900 240px "Times New Roman", Georgia, serif', fitWidth: 17, depth: 1.3, jitter: 0.9 };
 
 function sampleText(str, count, opts = {}) {
   const { font = TEXT_OPTS.font, fitWidth = 18, depth = 2.0, jitter = 1.0, canvasW = 2048, canvasH = 512 } = opts;
@@ -318,7 +318,7 @@ function sampleDNA(count) {
 }
 /* ---- Globe / planet shell with noise continents (index 4) ---- */
 function sampleGlobe(count) {
-  const radius = 7.0, relief = 0.9, freq = 1.35, shell = 0.13, out = new Float32Array(count * 3);
+  const radius = 7.0, relief = 0.45, freq = 1.35, shell = 0.05, out = new Float32Array(count * 3);
   const GA = Math.PI * (3.0 - Math.sqrt(5.0));
   for (let i = 0; i < count; i++) {
     const i3 = i * 3, tt = (i + 0.5) / count, y = 1.0 - 2.0 * tt, rr0 = Math.sqrt(Math.max(0, 1 - y * y)), phi = i * GA;
@@ -403,7 +403,7 @@ function buildParticles(count, opts = {}) {
     const i3 = i * 3; aSeed[i] = (i + 0.5) / count;
     const rx = Math.random() * 2 - 1, ry = Math.random() * 2 - 1, rz = Math.random() * 2 - 1;
     aRandom[i3] = rx; aRandom[i3 + 1] = ry; aRandom[i3 + 2] = rz;
-    { const t = (i + 0.5) / count, phi = Math.acos(1 - 2 * t), theta = TAU * GOLDEN * i, r = sphereR * (0.97 + 0.03 * Math.random());
+    { const t = (i + 0.5) / count, phi = Math.acos(1 - 2 * t), theta = TAU * GOLDEN * i, r = sphereR * (0.08 + 0.92 * Math.pow(Math.random(), 1.7));
       aTarget0[i3] = r * Math.sin(phi) * Math.cos(theta); aTarget0[i3 + 1] = r * Math.cos(phi); aTarget0[i3 + 2] = r * Math.sin(phi) * Math.sin(theta); }
     { const rad = Math.pow(Math.random(), 0.5) * galaxyR, arm = (i % ARMS) / ARMS * TAU, ang = arm + rad * SPIN;
       const sx = (Math.random() - 0.5) * SPREAD * (rad * 0.4 + 0.6), sy = (Math.random() - 0.5) * SPREAD * (rad * 0.4 + 0.6), thin = (Math.random() - 0.5) * 0.6 * (1 - rad / galaxyR * 0.7);
@@ -449,16 +449,16 @@ function makeStreakTexture() {
    ========================================================================== */
 // [s, x, y, z, rollDeg, fov]
 const CAM_KEYS = [
-  [0.00, 0.0, 0.0, 9.0, 0, 62], [0.08, 3.2, 1.3, 9.5, -5, 62], [0.18, -5.2, -1.0, 10.5, 7, 66],
-  [0.28, 4.8, 2.1, 10.0, -8, 62], [0.40, -2.4, 0.8, 9.3, 4, 58], [0.50, 0.0, 0.3, 9.8, 0, 56],
-  [0.58, 0.0, 0.0, 10.5, 0, 54], [0.66, 0.0, 0.0, 11.0, 0, 52], [0.72, 0.0, 0.0, 11.0, 0, 52],
-  [0.80, 0.0, 0.4, 6.5, 0, 50], [0.90, 0.0, 2.6, 16.0, 0, 64], [1.00, 0.0, 1.4, 19.0, 0, 66],
+  [0.00, 0.0, 0.0, 11.0, 0, 58], [0.08, 3.0, 1.2, 11.2, -5, 58], [0.18, -5.0, -1.0, 11.8, 7, 62],
+  [0.28, 4.6, 2.0, 11.4, -8, 58], [0.40, -2.4, 0.8, 11.6, 4, 55], [0.50, 0.0, 0.3, 11.8, 0, 54],
+  [0.58, 0.0, 0.0, 11.5, 0, 53], [0.66, 0.0, 0.0, 12.5, 0, 52], [0.72, 0.0, 0.0, 12.5, 0, 52],
+  [0.80, 0.0, 0.4, 7.5, 0, 50], [0.90, 0.0, 2.4, 15.0, 0, 62], [1.00, 0.0, 1.3, 18.0, 0, 64],
 ];
 const DRIFT_KEYS = [[0.00, 0.30], [0.10, 0.5], [0.16, 1.4], [0.22, 0.45], [0.27, 0.16], [0.32, 0.13], [0.41, 0.13], [0.50, 0.15], [0.55, 0.5], [0.60, 0.2], [0.66, 0.1], [0.80, 0.1], [0.86, 0.6], [1.0, 0.7]];
-const BSTR_KEYS = [[0.00, 0.55], [0.18, 0.78], [0.40, 0.70], [0.55, 0.85], [0.62, 0.90], [0.70, 0.95], [0.76, 1.05], [0.80, 0.95], [0.86, 0.80], [1.00, 0.78]];
-const BTHR_KEYS = [[0.00, 0.60], [0.10, 0.55], [0.40, 0.50], [0.55, 0.45], [0.66, 0.35], [0.74, 0.25], [0.80, 0.40], [1.00, 0.55]];
-const BRAD_KEYS = [[0.00, 0.55], [0.55, 0.70], [0.76, 0.85], [0.82, 0.70], [1.00, 0.64]];
-const SCALE_KEYS = [[0.00, 1.12], [0.08, 1.22], [0.30, 1.15], [0.50, 1.12], [0.58, 1.05], [0.66, 1.0], [0.80, 1.0], [0.86, 1.4], [1.00, 1.9]];
+const BSTR_KEYS = [[0.00, 0.50], [0.18, 0.70], [0.40, 0.60], [0.55, 0.66], [0.62, 0.62], [0.70, 0.58], [0.76, 0.56], [0.80, 0.58], [0.86, 0.60], [1.00, 0.66]];
+const BTHR_KEYS = [[0.00, 0.58], [0.10, 0.55], [0.40, 0.54], [0.55, 0.54], [0.66, 0.56], [0.74, 0.54], [0.80, 0.52], [1.00, 0.56]];
+const BRAD_KEYS = [[0.00, 0.50], [0.55, 0.60], [0.76, 0.62], [0.82, 0.58], [1.00, 0.60]];
+const SCALE_KEYS = [[0.00, 0.95], [0.08, 1.02], [0.30, 0.92], [0.41, 0.90], [0.50, 0.92], [0.58, 0.96], [0.66, 1.0], [0.80, 1.0], [0.86, 1.2], [1.00, 1.45]];
 const VIG_KEYS = [[0.00, 0.55], [0.72, 0.50], [0.77, 0.72], [0.85, 0.55], [1.00, 0.50]];
 const ABER_KEYS = [[0.00, 0.0], [0.46, 0.0], [0.54, 0.85], [0.62, 0.25], [0.66, 0.08], [0.74, 0.40], [0.80, 0.95], [0.85, 0.18], [1.00, 0.0]];
 const MOUSE_KEYS = [[0.00, 0.03], [0.80, 0.03], [0.86, 0.22], [1.00, 0.25]];
@@ -468,7 +468,7 @@ const MOUSE_KEYS = [[0.00, 0.03], [0.80, 0.03], [0.86, 0.22], [1.00, 0.25]];
 const MORPH_STOPS = [
   [0.00, 0, 0], [0.07, 0, 1], [0.13, 1, 1], [0.18, 1, 2], [0.23, 2, 2], [0.27, 2, 3],
   [0.32, 3, 3], [0.36, 3, 4], [0.41, 4, 4], [0.45, 4, 5], [0.50, 5, 5], [0.53, 5, 6],
-  [0.58, 6, 6], [0.60, 6, 8], [0.66, 8, 8], [0.80, 8, 7], [0.86, 7, 7], [0.90, 7, 1],
+  [0.58, 6, 6], [0.62, 6, 8], [0.68, 8, 8], [0.80, 8, 7], [0.86, 7, 7], [0.90, 7, 1],
   [1.0001, 1, 1],
 ];
 function morphFromScroll(s) {
@@ -617,7 +617,7 @@ function init() {
 
   /* --- render loop --- */
   const clock = new THREE.Clock();
-  const camPos = new THREE.Vector3(), camWord = new THREE.Vector3(0, 0.3, 12);
+  const camPos = new THREE.Vector3(), camWord = new THREE.Vector3(0, 0.3, 12.5);
   let running = true, ready = false, frames = 0, fpsAcc = 0, lowStreak = 0;
 
   function frame() {
@@ -650,6 +650,9 @@ function init() {
     pUniforms.uTargetA.value = A; pUniforms.uTargetB.value = B; pUniforms.uMorph.value = mix;
     pUniforms.uDrift.value = PF.reduceMotion ? 0.06 : sampleScalar(DRIFT_KEYS, s);
     pUniforms.uScale.value = wordView ? lerp(pUniforms.uScale.value, 1.0, 0.1) : sampleScalar(SCALE_KEYS, s);
+    // shrink points while the swarm is the WORD so dense glyph strokes read as crisp letters, not a blob
+    const wAmt = wordView ? 1 : clamp01(Math.min(smooth((s - 0.62) / 0.04), smooth((0.82 - s) / 0.04)));
+    pUniforms.uSize.value = (48 * (small ? 0.8 : 1)) * (1 - 0.18 * wAmt);
     pUniforms.uMouseStrength.value = sampleScalar(MOUSE_KEYS, s);
 
     // camera path + fov + roll + parallax
@@ -670,14 +673,14 @@ function init() {
 
     // energy core — billboard, pulses with velocity + ignition
     coreMesh.quaternion.copy(camera.quaternion);
-    const igniteAmt = Math.max(0, Math.min(smooth((s - 0.68) / 0.05), smooth((0.88 - s) / 0.06)));
+    const igniteAmt = Math.max(0, Math.min(smooth((s - 0.77) / 0.04), smooth((0.90 - s) / 0.05)));
     corePulse = lerp(corePulse, vel * 1.3 + pUniforms.uHeat.value * 0.9, 0.12);
     coreUniforms.uTime.value = pUniforms.uTime.value; coreUniforms.uPulse.value = corePulse; coreUniforms.uHeat.value = pUniforms.uHeat.value;
-    coreUniforms.uOpacity.value = (0.03 + 0.42 * igniteAmt) * (PF.reduceMotion ? 0.4 : 1.0);
+    coreUniforms.uOpacity.value = (0.02 + 0.24 * igniteAmt) * (PF.reduceMotion ? 0.4 : 1.0);
     coreMesh.scale.setScalar(1.0 + corePulse * 0.5 + igniteAmt * 0.4); coreMesh.visible = coreUniforms.uOpacity.value > 0.01;
 
     // light tunnel — flies through during the pipeline → slam window
-    const ringAmt = Math.max(0, Math.min(smooth((s - 0.48) / 0.05), smooth((0.70 - s) / 0.05)));
+    const ringAmt = Math.max(0, Math.min(smooth((s - 0.585) / 0.025), smooth((0.66 - s) / 0.025)));
     const tunOn = ringAmt > 0.002;
     ringMat.opacity = ringAmt * 0.9; streakMat.opacity = ringAmt * (0.25 + 0.75 * vel);
     rings.visible = tunOn; streaks.visible = tunOn;
@@ -700,7 +703,7 @@ function init() {
     }
 
     // bloom + grade per-frame
-    bloom.strength = sampleScalar(BSTR_KEYS, s) + (PF.reduceMotion ? 0 : vel * 0.25);
+    bloom.strength = sampleScalar(BSTR_KEYS, s) + (PF.reduceMotion ? 0 : vel * 0.15);
     bloom.threshold = sampleScalar(BTHR_KEYS, s); bloom.radius = sampleScalar(BRAD_KEYS, s);
     gradePass.uniforms.uVignette.value = sampleScalar(VIG_KEYS, s);
 
@@ -708,12 +711,12 @@ function init() {
     fx.shock = Math.max(0, fx.shock - dt / fx.shockHalf); fx.flash = Math.max(0, fx.flash - dt / fx.flashHalf);
     if (!PF.reduceMotion) {
       detectCrossings(s);
-      if (!_ignited && s >= 0.72) { fireWow(); _ignited = true; }
-      if (_ignited && s < 0.66) _ignited = false;
+      if (!_ignited && s >= 0.78) { fireWow(); _ignited = true; }
+      if (_ignited && s < 0.72) _ignited = false;
     }
-    const tunnelStreak = Math.max(0, Math.min(smooth((s - 0.48) / 0.05), smooth((0.70 - s) / 0.05)));
-    const igniteStreak = smooth((s - 0.70) / 0.05) * (1.0 - smooth((s - 0.84) / 0.06));
-    let streak = clamp01(Math.max(tunnelStreak * 0.35, igniteStreak * 0.4) + vel * 0.2);
+    const tunnelStreak = Math.max(0, Math.min(smooth((s - 0.585) / 0.025), smooth((0.66 - s) / 0.025)));
+    const igniteStreak = smooth((s - 0.77) / 0.04) * (1.0 - smooth((s - 0.88) / 0.05));
+    let streak = clamp01(Math.max(tunnelStreak * 0.22, igniteStreak * 0.18) + vel * 0.1);
     const fxOff = PF.reduceMotion ? 0 : 1;
     gradePass.uniforms.uShock.value = fx.shock * fxOff;
     gradePass.uniforms.uStreak.value = streak * fxOff;
