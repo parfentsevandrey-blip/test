@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 /* =========================================================
    build-standalone.js
-   Bundles the site into ONE self-contained HTML file that
-   opens by double-click (no server, no internet): CSS, the UI
-   script, and the entire Three.js module graph (core + post-
-   processing addons + the scene) are inlined.
+   Bundles the ZENITH site into a single self-contained HTML
+   file (zenith-residence.html): CSS, JS, and the full
+   Three.js module graph (core + post-processing addons) are
+   all inlined.
 
-   Browsers refuse to load an ES-module graph from file://, so
-   every module is embedded as text and the graph is rebuilt at
-   runtime with Blob URLs — each module's import specifiers are
-   rewritten to the Blob URLs of its dependencies, created in
-   dependency order. Same-origin Blob URLs import cleanly from
-   disk.
+   The 3D code is an ES-module graph. Browsers won't load ES
+   modules from file://, so every module is embedded as text
+   and the graph is reconstructed at runtime with Blob URLs:
+   each module's import specifiers are rewritten to the Blob
+   URLs of its dependencies, created in dependency order. The
+   result imports cleanly even when opened directly from disk.
 
    Usage:  node build-standalone.js
    ========================================================= */
@@ -22,17 +22,11 @@ const path = require("path");
 const root = __dirname;
 const read = (p) => fs.readFileSync(path.join(root, p), "utf8");
 
-const ENTRY_FILE = "js/scene.js";   // the ES-module entry (the WebGL scene)
-const UI_FILE = "js/ui.js";         // the plain (non-module) UI script
-const CSS_FILE = "css/app.css";
-const HTML_FILE = "index.html";
-const OUT_FILE = "synthflex.html";  // self-contained downloadable build
-
 /* ---------- module graph ---------- */
-// Canonical ids: "scene", "three", or "addons/<path under js/vendor/three/addons>"
+// Canonical ids: "three", "scene", or "addons/<path under js/vendor/three/addons>"
 const fileForId = (id) => {
-  if (id === "scene") return ENTRY_FILE;
   if (id === "three") return "js/vendor/three/three.module.js";
+  if (id === "scene") return "js/scene.js";
   if (id.startsWith("addons/")) return "js/vendor/three/" + id;
   throw new Error("unknown module id: " + id);
 };
@@ -45,7 +39,7 @@ const resolveSpec = (spec, fromId) => {
     const rel = path.posix.normalize(path.posix.join(path.posix.dirname(fromRel), spec));
     return "addons/" + rel;
   }
-  return null;
+  return null; // any other bare specifier is ignored (none expected in this graph)
 };
 
 const modules = new Map();
@@ -53,7 +47,8 @@ const crawl = (id) => {
   if (modules.has(id)) return;
   const code = read(fileForId(id));
   const deps = [];
-  if (id !== "three") { // three.module.js is a self-contained leaf
+  // three.module.js is a self-contained leaf — don't scan 1.2MB for false matches
+  if (id !== "three") {
     const specs = new Set(
       [...code.matchAll(/(?:from|import)\s*\(?\s*['"]([^'"]+)['"]/g)].map((m) => m[1])
     );
@@ -67,6 +62,7 @@ const crawl = (id) => {
 };
 crawl("scene");
 
+// topological order (dependencies before dependents)
 const order = [];
 const seen = new Set();
 const visit = (id) => {
@@ -83,14 +79,14 @@ const guard = (name, src) => {
   if (/<!--/.test(src)) throw new Error(`Cannot inline ${name}: contains <!--`);
 };
 for (const id of order) guard(id, modules.get(id).code);
-const css = read(CSS_FILE);
-if (/<\/style/i.test(css)) throw new Error("CSS contains </style");
-const uiJs = read(UI_FILE);
-guard("ui.js", uiJs);
+const css = read("css/styles.css");
+if (/<\/style/i.test(css)) throw new Error("styles.css contains </style");
+const mainJs = read("js/main.js");
+guard("main.js", mainJs);
 
 /* ---------- manifest + dom ids ---------- */
 const domId = new Map();
-order.forEach((id, i) => domId.set(id, "sm" + i));
+order.forEach((id, i) => domId.set(id, "zm" + i));
 const manifest = {
   entry: domId.get("scene"),
   order: order.map((id) => ({
@@ -101,7 +97,7 @@ const manifest = {
 
 /* ---------- runtime bootstrap (stringified into the page) ---------- */
 function bootstrapFn() {
-  var reg = JSON.parse(document.getElementById("sf-manifest").textContent);
+  var reg = JSON.parse(document.getElementById("zen-manifest").textContent);
   var esc = function (s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); };
   var url = {};
   reg.order.forEach(function (m) {
@@ -116,14 +112,15 @@ function bootstrapFn() {
     url[m.domId] = URL.createObjectURL(new Blob([code], { type: "text/javascript" }));
   });
   import(url[reg.entry]).catch(function (err) {
-    console.warn("scene failed to load:", err);
+    console.warn("ZENITH scene failed to load:", err);
     window.dispatchEvent(new Event("scene:ready"));
   });
 }
 
 /* ---------- assemble the page ---------- */
-let html = read(HTML_FILE);
-html = html.replace(`  <link rel="stylesheet" href="${CSS_FILE}" />`, () => `  <style>\n${css}\n  </style>`);
+// (function replacements so `$` sequences in inlined source are inserted verbatim)
+let html = read("index.html");
+html = html.replace('  <link rel="stylesheet" href="css/styles.css" />', () => `  <style>\n${css}\n  </style>`);
 html = html.replace(/  <!-- Three\.js[\s\S]*?<\/script>\n/, () => "  <!-- Three.js + scene embedded below; loaded via Blob URLs -->\n");
 
 const blocks = order
@@ -133,20 +130,39 @@ const blocks = order
 const loader =
 `  <!-- ===== Embedded application (self-contained) ===== -->
 ${blocks}
-  <script type="application/json" id="sf-manifest">${JSON.stringify(manifest)}</script>
+  <script type="application/json" id="zen-manifest">${JSON.stringify(manifest)}</script>
   <script type="module">(${bootstrapFn.toString()})();</script>
-  <script>\n${uiJs}\n  </script>`;
+  <script>\n${mainJs}\n  </script>`;
 
 html = html.replace(
-  new RegExp(`  <script type="module" src="${ENTRY_FILE.replace(/[.\/]/g, "\\$&")}"><\\/script>\\n  <script src="${UI_FILE.replace(/[.\/]/g, "\\$&")}" defer><\\/script>`),
+  /  <script type="module" src="js\/scene\.js"><\/script>\n  <script src="js\/main\.js" defer><\/script>/,
   () => loader
 );
 
+// inline local images (gallery photos) as data URIs
+html = html.replace(/src="(img\/[^"]+)"/g, (_m, p) => {
+  const buf = fs.readFileSync(path.join(root, p));
+  const ext = path.extname(p).slice(1).toLowerCase();
+  const mime = ext === "jpg" ? "jpeg" : ext;
+  return `src="data:image/${mime};base64,${buf.toString("base64")}"`;
+});
+
+// inline the HDRI environment (referenced by string in scene.js) as a data URI
+{
+  const hdr = "img/env_dusk.hdr";
+  if (html.includes(hdr)) {
+    const buf = fs.readFileSync(path.join(root, hdr));
+    const uri = `data:application/octet-stream;base64,${buf.toString("base64")}`;
+    html = html.replace(new RegExp(hdr.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"), () => uri);
+  }
+}
+
 // sanity: nothing left pointing at external app files
-[`href="${CSS_FILE}"`, `src="${ENTRY_FILE}"`, `src="${UI_FILE}"`, 'type="importmap"'].forEach((s) => {
+["href=\"css/styles.css\"", "src=\"js/scene.js\"", "src=\"js/main.js\"", "type=\"importmap\""].forEach((s) => {
   if (html.includes(s)) throw new Error("Build incomplete; not inlined: " + s);
 });
 
-fs.writeFileSync(path.join(root, OUT_FILE), html, "utf8");
+const out = "kutuzovsky-12.html";
+fs.writeFileSync(path.join(root, out), html, "utf8");
 const kb = (n) => (n / 1024).toFixed(0) + " KB";
-console.log(`Wrote ${OUT_FILE} (${kb(Buffer.byteLength(html))}) — inlined ${order.length} JS modules + CSS + UI script.`);
+console.log(`Wrote ${out} (${kb(Buffer.byteLength(html))}) — inlined ${order.length} JS modules + CSS + UI script.`);
