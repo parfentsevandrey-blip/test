@@ -268,11 +268,20 @@
     }
 
     // Рекурсивное дробление по цене (если сегмент отдал не всё — ротация/лимит).
-    async function priceSplit(filters, label) {
+    // knownTotal/knownSeen — итог уже выполненного вызывающим прохода по полному
+    // диапазону: если он недобрал, сразу делим пополам, не перезапрашивая весь
+    // диапазон заново (экономит до 54 запросов на сегмент).
+    async function priceSplit(filters, label, knownTotal, knownSeen) {
       const p = (base.price && base.price.value) || {};
       const lo0 = filters.priceGte != null ? filters.priceGte : (p.gte != null ? p.gte : 0);
       const hi0 = filters.priceLte != null ? filters.priceLte : (p.lte != null ? p.lte : CONFIG.priceCeiling);
-      const stack = [[lo0, hi0]];
+      const stack = [];
+      if (knownTotal == null) {
+        stack.push([lo0, hi0]);                                  // полный проход ещё не делался
+      } else if (knownTotal > (knownSeen || 0) && (hi0 - lo0) > CONFIG.minPriceSpan) {
+        const mid = Math.floor((lo0 + hi0) / 2);                 // вызывающий уже прошёл [lo0,hi0]
+        stack.push([lo0, mid]); stack.push([mid + 1, hi0]);
+      }
       while (stack.length && requests < CONFIG.reqBudget) {
         const [a, b] = stack.pop();
         const { total, seen } = await paginateSegment(Object.assign({}, filters, { priceGte: a, priceLte: b }), label);
@@ -298,11 +307,11 @@
           onProgress(`Комнаты ${room}… (${byId.size}/${grandTotal})`, byId.size, grandTotal);
           const pr = await paginateSegment({ room }, `room ${room}: `);
           totalsByRoom[room] = pr.total;
-          if (pr.total > pr.seen) await priceSplit({ room }, `room ${room} ₽: `);
+          if (pr.total > pr.seen) await priceSplit({ room }, `room ${room} ₽: `, pr.total, pr.seen);
           await pause();
         }
       } else {
-        await priceSplit({}, "₽: ");          // у пользователя уже фильтр по комнатам
+        await priceSplit({}, "₽: ", first.total, first.seen);   // у пользователя уже фильтр по комнатам
       }
     }
     console.log(`[cian-excel] ИТОГО ${byId.size}/${grandTotal} за ${requests} запросов`);
@@ -312,8 +321,9 @@
   // ---------- нормализация (как в Python/консольной версии) ----------
   const DEC = { without: "Без отделки", rough: "Черновая", fine: "Чистовая", preFine: "Предчистовая", prefine: "Предчистовая", designer: "Дизайнерская", clean: "Чистовая" };
   function categoryOf(o) {
-    if (o.isStudio || o.flatType === "studio") return "Студия";
-    if (["openPlan", "openplan", "freePlan"].includes(o.flatType)) return "Своб. планировка";
+    const ft = (o.flatType || "").toString().toLowerCase();
+    if (o.isStudio || ft.includes("studio")) return "Студия";
+    if (/open|free/.test(ft)) return "Своб. планировка";   // openPlan/freePlan/freeLayout/freeAppointment
     let rc = o.roomsCount; if (rc == null) rc = o.roomsForSaleCount; if (rc == null) return null;
     rc = parseInt(rc, 10); if (isNaN(rc)) return null;
     if (rc === 0) return "Студия"; if (rc >= 4) return "4+"; return String(rc);
@@ -389,7 +399,13 @@
   function metroOf(o) {
     const u = dig(o, "geo.undergrounds");
     if (Array.isArray(u) && u.length) {
-      const m = u[0];
+      // ближайшее метро: минимальное время в пути (при равенстве — пешком),
+      // т.к. порядок в массиве у Циан не всегда «ближайшее первым».
+      const m = u.slice().sort((a, b) => {
+        const ta = a && a.time != null ? a.time : 1e9, tb = b && b.time != null ? b.time : 1e9;
+        if (ta !== tb) return ta - tb;
+        return (b && b.transportType === "walk" ? 1 : 0) - (a && a.transportType === "walk" ? 1 : 0);
+      })[0];
       return { name: m && m.name || null, time: m && (m.time != null ? m.time : null), foot: m && m.transportType === "walk" };
     }
     return { name: null, time: null };
@@ -626,7 +642,7 @@
     const devN = rows.filter((r) => r.seller_type === "Застройщик").length;
     const st = {
       count: rows.length, total: totalInJk || rows.length,
-      coverage: totalInJk ? Math.round((rows.length / totalInJk) * 100) : 100,
+      coverage: totalInJk ? Math.min(100, Math.round((rows.length / totalInJk) * 100)) : 100,
       ppmMin: ppm.length ? Math.min(...ppm) : null, ppmAvg: avg(ppm), ppmMax: ppm.length ? Math.max(...ppm) : null,
       expAvg: avg(exp), realAvg: avg(real), realMed: med(real),
       resets: (expInfo && expInfo.resets) || 0, devPct: rows.length ? Math.round(devN / rows.length * 100) : null, byCat,
