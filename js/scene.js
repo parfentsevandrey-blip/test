@@ -499,7 +499,8 @@ function init() {
   if (small || dm <= 2) COUNT = 42000; else if (dm <= 4 || hc <= 4) COUNT = 75000;
   window.__particles = COUNT;
 
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "high-performance", alpha: false });
+  const probe = typeof location !== "undefined" && /[?&]probe/.test(location.search); // test-only: allows pixel readback
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "high-performance", alpha: false, preserveDrawingBuffer: probe });
   let dpr = Math.min(window.devicePixelRatio || 1, small ? 1.5 : 1.75);
   renderer.setPixelRatio(dpr); renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setClearColor(0x05060a, 1); renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
