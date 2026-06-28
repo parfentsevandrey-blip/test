@@ -26,7 +26,7 @@ const ENTRY_FILE = "js/scene.js";   // the ES-module entry (the WebGL scene)
 const UI_FILE = "js/ui.js";         // the plain (non-module) UI script
 const CSS_FILE = "css/app.css";
 const HTML_FILE = "index.html";
-const OUT_FILE = "synthflex.html";  // self-contained downloadable build
+const OUT_FILE = "promptfield.html";  // self-contained downloadable build
 
 /* ---------- module graph ---------- */
 // Canonical ids: "scene", "three", or "addons/<path under js/vendor/three/addons>"

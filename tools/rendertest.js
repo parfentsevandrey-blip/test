@@ -31,11 +31,15 @@ const stops = (process.argv[4] || "0,0.33,0.66,1").split(",").map(Number);
 
   const docH = await page.evaluate(() => Math.max(document.body.scrollHeight, document.documentElement.scrollHeight));
   const vh = 900;
+  void docH; void vh;
   for (let i = 0; i < stops.length; i++) {
     const t = Math.max(0, Math.min(1, stops[i]));
-    await page.evaluate((y) => window.scrollTo({ top: y, behavior: "instant" }), Math.round(t * (docH - vh)));
-    await page.waitForTimeout(1400);
+    // pin progress exactly so the cinematic state is deterministic under software GL
+    await page.evaluate((p) => { window.__pinProgress = p; }, t);
+    await page.waitForTimeout(1800); // let camera/morph lerp settle to the pinned target
+    const prog = await page.evaluate(() => (window.PF && window.PF.progress) || 0);
     await page.screenshot({ path: path.join(outDir, `shot_${String(Math.round(t * 100)).padStart(3, "0")}.png`) });
+    logs.push(`[stop] target=${t} -> PF.progress=${prog.toFixed(3)}`);
   }
 
   // sample a perf metric if the page exposes one
