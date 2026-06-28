@@ -38,9 +38,19 @@ const stops = (process.argv[4] || "0,0.33,0.66,1").split(",").map(Number);
     await page.evaluate((p) => { window.__pinProgress = p; }, t);
     await page.waitForTimeout(1800); // let camera/morph lerp settle to the pinned target
     const prog = await page.evaluate(() => (window.PF && window.PF.progress) || 0);
-    // small JPEGs keep the reviewer's context light
-    await page.screenshot({ path: path.join(outDir, `shot_${String(Math.round(t * 100)).padStart(3, "0")}.jpg`), type: "jpeg", quality: 42 });
-    logs.push(`[stop] target=${t} -> PF.progress=${prog.toFixed(3)}`);
+    // numeric brightness probe (no image needed): mean luminance + blown-white fraction
+    const stat = await page.evaluate(() => {
+      try {
+        const c = document.getElementById("stage");
+        const o = document.createElement("canvas"); o.width = 192; o.height = 120;
+        const x = o.getContext("2d"); x.drawImage(c, 0, 0, 192, 120);
+        const d = x.getImageData(0, 0, 192, 120).data; let sum = 0, white = 0, lit = 0, n = 192 * 120;
+        for (let i = 0; i < d.length; i += 4) { const l = (d[i] + d[i + 1] + d[i + 2]) / 3; sum += l; if (l > 232) white++; if (l > 28) lit++; }
+        return { meanLum: +(sum / n / 255).toFixed(3), whiteFrac: +(white / n).toFixed(3), litFrac: +(lit / n).toFixed(3) };
+      } catch (e) { return { err: String(e).slice(0, 60) }; }
+    });
+    await page.screenshot({ path: path.join(outDir, `shot_${String(Math.round(t * 100)).padStart(3, "0")}.jpg`), type: "jpeg", quality: 40 });
+    logs.push(`[stop] t=${t} prog=${prog.toFixed(2)} meanLum=${stat.meanLum} whiteFrac=${stat.whiteFrac} litFrac=${stat.litFrac}${stat.err ? " err=" + stat.err : ""}`);
   }
 
   // sample a perf metric if the page exposes one

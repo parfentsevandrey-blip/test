@@ -83,7 +83,7 @@
       if (r.mode === "first") o = 1 - smoothstep(0.82, 1.04, lt); // visible from the very top
       else if (r.mode === "early") o = fade(lt, 0.0, 0.10, 0.22, 0.40);
       else if (r.mode === "late") o = fade(lt, 0.04, 0.24, 1.3, 1.6);
-      else o = fade(lt, 0.0, 0.18, 0.80, 1.0);
+      else o = fade(lt, 0.0, 0.14, 0.44, 0.66); // clear the stage mid-section so the 3D is the star
       var shift = lerp(34, -34, clamp01(lt));
       var el = r.el;
       if (o < 0.01) {

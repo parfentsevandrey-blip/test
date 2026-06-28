@@ -201,8 +201,8 @@ body.is-ready .hud { opacity: 1; transform: none; }
   content: "";
   position: absolute;
   z-index: -1;
-  inset: -16% -10%;
-  background: radial-gradient(ellipse 58% 56% at 50% 47%, rgba(5,6,10,.66), rgba(5,6,10,.30) 46%, transparent 72%);
+  inset: -14% -8%;
+  background: radial-gradient(ellipse 56% 54% at 50% 47%, rgba(5,6,10,.46), rgba(5,6,10,.20) 48%, transparent 72%);
   pointer-events: none;
 }
 .kicker {
@@ -240,6 +240,14 @@ body.is-ready .hud { opacity: 1; transform: none; }
 #p4 { align-items: start; }
 #p4 .panel__inner { margin-top: 11vh; }
 #p4 .panel__inner::before { inset: -40% -20%; }
+
+/* mid sections (swarm / shapes / pipeline): copy to the top, smaller, so the
+   morphing 3D shape owns the centre of the frame */
+#p1, #p2, #p3 { align-items: start; }
+#p1 .panel__inner, #p2 .panel__inner, #p3 .panel__inner { margin-top: 7.5vh; }
+#p1 .title, #p2 .title, #p3 .title { font-size: clamp(2rem, 5.2vw, 4.2rem); margin-bottom: 1rem; }
+#p1 .body, #p2 .body, #p3 .body { font-size: clamp(.9rem, 1.05vw, 1.05rem); max-width: 48ch; color: rgba(234,240,255,.74); }
+#p1 .panel__inner::before, #p2 .panel__inner::before, #p3 .panel__inner::before { inset: -34% -14%; }
 .cue {
   margin-top: 2.4rem;
   font-size: .72rem;
