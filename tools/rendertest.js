@@ -38,7 +38,8 @@ const stops = (process.argv[4] || "0,0.33,0.66,1").split(",").map(Number);
     await page.evaluate((p) => { window.__pinProgress = p; }, t);
     await page.waitForTimeout(1800); // let camera/morph lerp settle to the pinned target
     const prog = await page.evaluate(() => (window.PF && window.PF.progress) || 0);
-    await page.screenshot({ path: path.join(outDir, `shot_${String(Math.round(t * 100)).padStart(3, "0")}.png`) });
+    // small JPEGs keep the reviewer's context light
+    await page.screenshot({ path: path.join(outDir, `shot_${String(Math.round(t * 100)).padStart(3, "0")}.jpg`), type: "jpeg", quality: 42 });
     logs.push(`[stop] target=${t} -> PF.progress=${prog.toFixed(3)}`);
   }
 

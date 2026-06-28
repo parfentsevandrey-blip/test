@@ -387,7 +387,7 @@ const DRIFT_KEYS = [[0.00, 0.25], [0.10, 0.30], [0.19, 1.25], [0.28, 0.55], [0.3
 const BSTR_KEYS = [[0.00, 0.52], [0.19, 0.72], [0.40, 0.66], [0.52, 0.82], [0.62, 0.82], [0.66, 0.95], [0.71, 1.15], [0.76, 0.92], [0.82, 0.7], [1.00, 0.66]];
 const BTHR_KEYS = [[0.00, 0.62], [0.10, 0.56], [0.40, 0.50], [0.52, 0.46], [0.62, 0.40], [0.66, 0.30], [0.71, 0.24], [0.76, 0.32], [0.80, 0.46], [1.00, 0.56]];
 const BRAD_KEYS = [[0.00, 0.55], [0.50, 0.68], [0.71, 0.82], [0.80, 0.68], [1.00, 0.64]];
-const SCALE_KEYS = [[0.00, 0.95], [0.05, 1.0], [0.80, 1.0], [0.86, 1.35], [1.00, 1.7]];
+const SCALE_KEYS = [[0.00, 1.10], [0.05, 1.18], [0.80, 1.18], [0.86, 1.6], [1.00, 2.1]];
 const VIG_KEYS = [[0.00, 0.55], [0.66, 0.5], [0.71, 0.72], [0.80, 0.55], [1.00, 0.5]];
 const ABER_KEYS = [[0.00, 0.0], [0.45, 0.0], [0.50, 0.6], [0.58, 0.2], [0.63, 0.05], [0.70, 0.25], [0.78, 0.65], [0.82, 0.12], [1.00, 0.0]];
 const MOUSE_KEYS = [[0.00, 0.03], [0.80, 0.03], [0.86, 0.22], [1.00, 0.25]];
@@ -453,7 +453,7 @@ function init() {
   const sprite = makeSprite();
   const pUniforms = {
     uTargetA: { value: 0 }, uTargetB: { value: 0 }, uMorph: { value: 0 },
-    uTime: { value: 0 }, uSize: { value: 26 * (small ? 0.85 : 1) }, uScale: { value: 1 }, uDrift: { value: 0.25 },
+    uTime: { value: 0 }, uSize: { value: 48 * (small ? 0.8 : 1) }, uScale: { value: 1 }, uDrift: { value: 0.25 },
     uProgress: { value: 0 }, uVelocity: { value: 0 }, uHeat: { value: 0 },
     uMouse: { value: new THREE.Vector2(0, 0) }, uMouseStrength: { value: 0.03 },
     uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }, uOpacity: { value: 1 },

@@ -75,7 +75,7 @@ body.no-webgl .stage { display: none; }
 @keyframes drift { from { filter: hue-rotate(0deg); } to { filter: hue-rotate(40deg); } }
 
 /* ---- scroll length spacer -------------------------------------------- */
-.scrolltrack { height: 640vh; width: 1px; pointer-events: none; }
+.scrolltrack { height: 460vh; width: 1px; pointer-events: none; }
 
 /* ============================================================================
    Header

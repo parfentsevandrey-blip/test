@@ -61,9 +61,9 @@
     }
     readScroll();
     // eased follow with momentum
-    prog += (raw - prog) * (PF.reduceMotion ? 0.5 : 0.09);
+    prog += (raw - prog) * (PF.reduceMotion ? 0.5 : 0.16);
     var inst = Math.abs(prog - lastProg) / Math.max(dt, 0.001);
-    var velTarget = clamp01(inst * 0.55);
+    var velTarget = clamp01(inst * 0.8);
     vel += (velTarget - vel) * 0.12;
     lastProg = prog;
 
