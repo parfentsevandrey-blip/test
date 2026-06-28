@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="PROMPTFIELD — a cinematic WebGL experience, 100% procedural and built with AI. 120,000 particles morph and ignite into living language. Type a world into being." />
+  <meta name="theme-color" content="#05060A" />
+  <meta property="og:title" content="PROMPTFIELD · Type a world into being" />
+  <meta property="og:description" content="A website that builds itself while you read it. 120k particles, zero assets, all math — what AI code can conjure in a browser today." />
+  <meta property="og:type" content="website" />
+  <title>PROMPTFIELD · Type a world into being</title>
+
+  <link rel="stylesheet" href="css/app.css" />
+
+  <!-- Three.js r160, vendored locally (no CDN / works fully offline) -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./js/vendor/three/three.module.js",
+      "three/addons/": "./js/vendor/three/addons/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <!-- The procedural WebGL stage: aurora backdrop + 120k-particle organism +
+       light tunnel, graded through bloom & a cinematic post chain. -->
+  <canvas id="stage" class="stage" aria-hidden="true"></canvas>
+
+  <!-- CSS-only cosmos shown if WebGL is unavailable; carries the same message. -->
+  <div class="fallback" id="fallback" aria-hidden="true"></div>
+
+  <!-- Empty spacer that gives the page its scroll length; the experience is
+       driven entirely by scroll progress, so the visuals stay pinned. -->
+  <div class="scrolltrack" aria-hidden="true"></div>
+
+  <!-- Preloader -->
+  <div class="preloader" id="preloader">
+    <div class="preloader__inner">
+      <div class="preloader__mark mono">PROMPTFIELD</div>
+      <div class="preloader__bar"><span id="preBar"></span></div>
+      <div class="preloader__sub mono" id="preMsg">compiling shaders · seeding 120,000 points</div>
+    </div>
+  </div>
+
+  <!-- Custom cursor (fine-pointer devices only) -->
+  <div class="cursor" id="cursor" aria-hidden="true"></div>
+
+  <!-- Header -->
+  <header class="hdr" id="hdr">
+    <a class="brand" href="#top" data-hover data-goto="0">
+      <span class="brand__dot" aria-hidden="true"></span>
+      <span class="brand__name mono">PROMPTFIELD</span>
+    </a>
+    <nav class="nav" id="nav" aria-label="Sections">
+      <a data-goto="0.00" data-hover>Prompt</a>
+      <a data-goto="0.13" data-hover>Swarm</a>
+      <a data-goto="0.34" data-hover>Shapes</a>
+      <a data-goto="0.53" data-hover>Pipeline</a>
+      <a data-goto="0.66" data-hover>Genesis</a>
+      <a data-goto="0.90" data-hover>Your&nbsp;turn</a>
+    </nav>
+    <span class="hdr__pill mono" title="Everything you see is generated live. No images, no 3D files.">100% procedural</span>
+  </header>
+
+  <!-- Live engine readout — quietly flexing that this is all real-time math -->
+  <aside class="hud mono" id="hud" aria-hidden="true">
+    <div class="hud__row"><span>fps</span><b id="hudFps">—</b></div>
+    <div class="hud__row"><span>particles</span><b id="hudParts">—</b></div>
+    <div class="hud__row"><span>draw calls</span><b id="hudDraws">—</b></div>
+    <div class="hud__row hud__row--accent"><span>assets loaded</span><b>0</b></div>
+  </aside>
+
+  <!-- Scroll progress rail -->
+  <div class="rail" aria-hidden="true"><span class="rail__fill" id="railFill"></span></div>
+
+  <!-- Scroll-driven copy overlays. All content lives here as real text, so the
+       message survives even with no canvas / reduced motion. -->
+  <main class="overlays" id="overlays">
+
+    <section class="panel" id="p0" data-start="0.00" data-end="0.10" data-fade="first">
+      <div class="panel__inner">
+        <p class="kicker mono">&gt;_ awaiting input</p>
+        <h1 class="title serif">THE PROMPT</h1>
+        <p class="body">No menu. No hero image. No stock photo of a smiling team. Just a cursor in the dark and one line of intent: <em>build me a world out of words.</em> Everything you are about to scroll through — every star, every letter, every photon — is math, generated live in your browser. Zero files loaded.</p>
+        <p class="cue mono" id="scrollCue">scroll to begin ↓</p>
+      </div>
+    </section>
+
+    <section class="panel" id="p1" data-start="0.10" data-end="0.28" data-fade="normal">
+      <div class="panel__inner">
+        <p class="kicker mono">// intent before structure</p>
+        <h2 class="title serif">THE SWARM</h2>
+        <p class="body">You don't place bricks anymore. You describe — and a hundred thousand small decisions self-organize into your meaning. This is what vibe-coding feels like from the inside: not typing every line, but steering a swarm. One organism of 120,000 minds, finding the shape you asked for. Scroll harder; watch it get excited.</p>
+      </div>
+    </section>
+
+    <section class="panel" id="p2" data-start="0.28" data-end="0.50" data-fade="normal">
+      <div class="panel__inner">
+        <p class="kicker mono">// every prompt has a target</p>
+        <h2 class="title serif">WORDS BECOME SHAPES</h2>
+        <p class="body">Vibe-coding isn't a slot machine — it converges. Say <em>sphere</em>, and it pours into a sphere. Say <em>torus</em>. Say <em>lattice</em>. The same swarm obeys each prompt in turn, snapping from chaos into clean, intentional geometry. You can scrub creation backward and forward like a timeline, because it was never random.</p>
+      </div>
+    </section>
+
+    <section class="panel" id="p3" data-start="0.50" data-end="0.58" data-fade="normal">
+      <div class="panel__inner">
+        <p class="kicker mono">prompt → product</p>
+        <h2 class="title serif">THE PIPELINE</h2>
+        <p class="body">Intent in, structure out, at the speed of thought. The loop that used to take a studio and a month now takes a sentence and a second. You're travelling through that pipeline right now — and the acceleration you feel is the one you're creating with your own scroll.</p>
+      </div>
+    </section>
+
+    <section class="panel" id="p4" data-start="0.58" data-end="0.80" data-fade="early">
+      <div class="panel__inner panel__inner--top">
+        <p class="kicker mono">the word made world · watch ↓</p>
+        <p class="body body--tight">The swarm slams out of the tunnel and locks into a legible, three-dimensional word — assembled from the opaque pixels of a glyph, then set on fire. No model. No asset. This is the proof, and the flex.</p>
+      </div>
+    </section>
+
+    <section class="panel panel--end" id="p5" data-start="0.80" data-end="1.001" data-fade="late">
+      <div class="panel__inner">
+        <p class="kicker mono">&gt; your prompt_</p>
+        <h2 class="title serif">YOUR TURN</h2>
+        <p class="body">The page ends where it began — a blinking cursor — but now the pen is yours. Type a word and the same engine that built everything above re-forms it live. Not a canned animation: a general machine, listening.</p>
+        <form class="prompt" id="promptForm" autocomplete="off">
+          <span class="prompt__caret mono" aria-hidden="true">&gt;</span>
+          <input class="prompt__input mono" id="promptInput" type="text" maxlength="14"
+                 placeholder="type a word…" aria-label="Type a word to forge from particles" />
+          <button class="prompt__go mono" type="submit">forge ⏎</button>
+        </form>
+        <div class="prompt__chips mono" id="promptChips" aria-hidden="true">
+          <button data-word="HELLO">HELLO</button>
+          <button data-word="FUTURE">FUTURE</button>
+          <button data-word="MADE BY AI">MADE&nbsp;BY&nbsp;AI</button>
+          <button data-word="∞">∞</button>
+        </div>
+        <p class="signoff mono">Three.js r160 · 100% procedural · 0 assets loaded · built with AI</p>
+      </div>
+    </section>
+
+  </main>
+
+  <noscript>
+    <div class="noscript">PROMPTFIELD is a real-time WebGL experience and needs JavaScript enabled.</div>
+  </noscript>
+
+  <script type="module" src="js/scene.js"></script>
+  <script src="js/ui.js" defer></script>
+</body>
+</html>

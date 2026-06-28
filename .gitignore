@@ -1,8 +1,4 @@
-# self-contained build artifact (regenerate with: node build-standalone.js)
-promptfield.html
-
-# headless render-test artifacts (screenshots)
-tools/shots/
-tools/shots_standalone/
-tools/shots_probe/
+# headless render-test artifacts
+tools/shots*/
 tools/qa_*/
+tools/org_*.png
