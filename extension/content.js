@@ -755,8 +755,13 @@
       meta: $("#s-meta"), cats: $("#s-cats"), fact: $("#s-fact"), facttext: $("#s-facttext"),
       file: $("#s-file"), fname: $("#s-fname"), foot: $("#foot"),
     };
-    $(".min").addEventListener("click", () => ui.root.classList.add("min"));
-    $(".fab").addEventListener("click", () => ui.root.classList.remove("min"));
+    const expand = (e) => { if (e) e.stopPropagation(); ui.root.classList.remove("min"); try { refreshHeader(); } catch (err) { /* ignore */ } };
+    const collapse = (e) => { if (e) e.stopPropagation(); ui.root.classList.add("min"); };
+    $(".min").addEventListener("click", collapse);
+    $(".fab").addEventListener("click", expand);
+    // надёжность: клик по ЛЮБОМУ месту свёрнутого кружка (а не только по кнопке
+    // внутри) раскрывает панель — чтобы промах по 1-2 px не «ломал» открытие.
+    ui.root.addEventListener("click", () => { if (ui.root.classList.contains("min")) expand(); });
     ui.el.go.addEventListener("click", () => run());
     ui.mounted = true;
     console.log("[cian-excel] панель добавлена");
