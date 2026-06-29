@@ -503,19 +503,49 @@
     const opt = freeze ? `<WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel"><FreezePanes/><FrozenNoSplit/><SplitHorizontal>4</SplitHorizontal><TopRowBottomPane>4</TopRowBottomPane><ActivePane>2</ActivePane></WorksheetOptions>` : "";
     return `<Worksheet ss:Name="${esc(name)}"><Table>${colsXml}${rowsXml}</Table>${opt}</Worksheet>`;
   }
-  const HEADERS = ["№", "ID объявления", "Категория", "Площадь, м²", "Жилая, м²", "Кухня, м²", "Этаж", "Этаж-ность", "Корпус / секция", "Год дома", "Материал", "Метро", "До метро, мин", "Тип продавца", "Продавец", "Отделка/ремонт", "Источник отделки", "Цена, ₽", "Цена за м², ₽", "Дата подачи (Циан)", "Срок Циан, дн", "Реальный срок, дн", "Переподач", "Дублей", "Первая дата (оценка)", "Описание", "Ссылка"];
-  const COLW = [34, 90, 78, 72, 64, 64, 42, 58, 105, 62, 86, 110, 78, 88, 140, 130, 92, 105, 92, 100, 80, 95, 72, 60, 110, 320, 68];
+  const HEADERS = ["№", "Категория", "Площадь, м²", "Этаж", "Корпус / секция", "Год дома", "Материал", "Метро", "До метро, мин", "Тип продавца", "Продавец", "Отделка/ремонт", "Источник отделки", "Цена, ₽", "Цена за м², ₽", "Откл. от средней", "Дата подачи (Циан)", "Срок Циан, дн", "Реальный срок, дн", "Переподач", "Дублей", "Первая дата (оценка)", "Описание", "Ссылка"];
+  const COLW = [34, 78, 72, 56, 105, 62, 86, 110, 78, 88, 140, 130, 92, 105, 92, 86, 100, 80, 95, 72, 60, 110, 320, 68];
+
+  // Тепловая карта ₽/м²: насколько лот ниже/выше средней цены за м² по его
+  // категории (зелёный = дешевле/недооценён, красный = дороже/переоценён). База —
+  // средняя ₽/м² по той же комнатности; если в категории <3 лотов, берём общую.
+  const HEAT = ["#63BE7B", "#86C97F", "#A9D585", "#CDE08B", "#FFEB84", "#FCC97F", "#F8A77B", "#F58368", "#F8696B"];
+  const HEAT_THRESH = [-0.20, -0.12, -0.06, -0.02, 0.02, 0.06, 0.12, 0.20];   // -> корзины 1..9
+  function computeHeat(rows) {
+    const byCat = {};
+    rows.forEach((r) => { if (r.ppm != null && r.category) (byCat[r.category] = byCat[r.category] || []).push(r.ppm); });
+    const meanOf = (a) => a.reduce((x, y) => x + y, 0) / a.length;
+    const catMean = {}; Object.keys(byCat).forEach((c) => { catMean[c] = meanOf(byCat[c]); });
+    const allPpm = rows.map((r) => r.ppm).filter((x) => x != null);
+    const overall = allPpm.length ? meanOf(allPpm) : null;
+    rows.forEach((r) => {
+      r._heat = null; r._dev = ""; r._devBase = null;
+      if (r.ppm == null) return;
+      const base = (r.category && byCat[r.category] && byCat[r.category].length >= 3) ? catMean[r.category] : overall;
+      if (!base) return;
+      const d = r.ppm / base - 1;
+      let b = 9; for (let i = 0; i < HEAT_THRESH.length; i++) { if (d < HEAT_THRESH[i]) { b = i + 1; break; } }
+      r._heat = "h" + b;
+      r._dev = (d >= 0 ? "+" : "−") + Math.round(Math.abs(d) * 100) + "%";
+      r._devBase = Math.round(base);
+    });
+  }
   function dataSheet(name, title, sub, rows) {
     let xml = rowXml([{ v: title, s: "title", merge: HEADERS.length - 1 }]) + rowXml([{ v: sub, s: "sub", merge: HEADERS.length - 1 }]) + rowXml([{}]) + rowXml(HEADERS.map((h) => ({ v: h, s: "hdr" })));
     const N = (v, s) => ({ v, t: v != null ? "Number" : "String", s });
     rows.forEach((r, i) => {
+      let floorVal = "";                                   // один столбец «этаж/этажность» -> «5/15»
+      if (r.floor != null && r.floors != null) floorVal = r.floor + "/" + r.floors;
+      else if (r.floor != null) floorVal = String(r.floor);
+      else if (r.floors != null) floorVal = "?/" + r.floors;
       xml += rowXml([
-        { v: i + 1, t: "Number" }, { v: r.cianId, t: r.cianId ? "Number" : "String" }, { v: r.category },
-        N(r.area, "area"), N(r.livingArea, "area"), N(r.kitchenArea, "area"),
-        N(r.floor), N(r.floors), { v: r.building }, N(r.buildYear), { v: r.material },
+        { v: i + 1, t: "Number" }, { v: r.category },
+        N(r.area, "area"), { v: floorVal }, { v: r.building }, N(r.buildYear), { v: r.material },
         { v: r.metro }, N(r.metroTime),
         { v: r.seller_type }, { v: r.seller_name }, { v: r.decoration }, { v: r.finishSrc },
-        N(r.price, "num"), N(r.ppm, "num"),
+        N(r.price, "num"),
+        { v: r.ppm, t: r.ppm != null ? "Number" : "String", s: r._heat || "num" },   // ₽/м² с подсветкой
+        { v: r._dev, s: r._heat || null },                                            // откл. от средней, тот же цвет
         { v: r.published }, N(r.exposure),
         { v: r.realExposure, t: r.realExposure != null ? "Number" : "String", s: r.reset ? "warn" : null },
         { v: r.republish, t: "Number" }, { v: r.dupNow, t: "Number" }, { v: r.firstDate },
@@ -554,6 +584,12 @@
       const sub = rows.filter((r) => r.category === c), pr = sub.map((r) => r.price).filter((x) => x != null), pm = sub.map((r) => r.ppm).filter((x) => x != null);
       xml += rowXml([{ v: c }, num(pr.length ? Math.min(...pr) : null), num(avg(pr)), num(pr.length ? Math.max(...pr) : null), num(pm.length ? Math.min(...pm) : null), num(pm.length ? Math.max(...pm) : null)]);
     });
+    // подсветка ₽/м² — легенда тепловой карты
+    xml += rowXml([{}]) + rowXml([{ v: "ПОДСВЕТКА ₽/м² (в листах с лотами)", s: "bold" }]);
+    xml += rowXml([{ v: "Зелёный — ниже средней по категории (дешевле/недооценён), красный — выше (дороже/переоценён).", s: "sub" }]);
+    xml += rowXml([{ v: "База — средняя ₽/м² по той же комнатности; при <3 лотах в категории берётся общая средняя.", s: "sub" }]);
+    xml += rowXml([{ v: "−20% и ниже", s: "h1" }, { v: "−10%", s: "h3" }, { v: "средняя", s: "h5" }, { v: "+10%", s: "h7" }, { v: "+20% и выше", s: "h9" }]);
+
     // отделка / ремонт
     const FIN_ORDER = ["Без отделки", "Черновая", "Предчистовая (white box)", "Чистовая", "Под ключ / с мебелью", "Без ремонта", "Косметический", "Евроремонт", "Дизайнерский", "С ремонтом (тип не указан)"];
     const finCount = {};
@@ -582,12 +618,14 @@
   }
   function buildWorkbook(subj, rows, totalsByRoom, totalInJk) {
     rows = rows.slice().sort((a, b) => (a.ppm == null) - (b.ppm == null) || (a.ppm || 0) - (b.ppm || 0));
+    computeHeat(rows);                                    // тепловая карта ₽/м² (зелёный↔красный)
     const today = fmtDate(new Date()), sheets = [summarySheet(subj, rows, totalsByRoom, totalInJk)];
-    const src = `Источник: Циан${subj.id ? " (ID " + subj.id + ")" : ""}, ${today}. Сортировка по ₽/м². «Реальный срок» учитывает переподачи (см. методику).`;
+    const src = `Источник: Циан${subj.id ? " (ID " + subj.id + ")" : ""}, ${today}. Сортировка по ₽/м². Подсветка ₽/м²: зелёный — дешевле средней по категории, красный — дороже. «Реальный срок» учитывает переподачи.`;
     sheets.push(dataSheet("Все_лоты", `${subj.title} — все лоты`, src, rows));
     const sn = { "Студия": "Студия", "Своб. планировка": "Своб_планировка", "1": "1-комн", "2": "2-комн", "3": "3-комн", "4+": "4-комн" };
     CATS.forEach((c) => { const sub = rows.filter((r) => r.category === c); if (sub.length) sheets.push(dataSheet(sn[c], `${subj.title} — ${c}`, `Собрано ${sub.length}. Сортировка по ₽/м².`, sub)); });
-    const styles = `<Styles><Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Vertical="Center"/><Font ss:FontName="Calibri" ss:Size="11"/></Style><Style ss:ID="hdr"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#1F2A44" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/></Style><Style ss:ID="title"><Font ss:Bold="1" ss:Size="13"/></Style><Style ss:ID="sub"><Font ss:Italic="1" ss:Color="#555555" ss:Size="9"/></Style><Style ss:ID="bold"><Font ss:Bold="1"/></Style><Style ss:ID="num"><NumberFormat ss:Format="#,##0"/></Style><Style ss:ID="area"><NumberFormat ss:Format="0.0"/></Style><Style ss:ID="link"><Font ss:Color="#1155CC" ss:Underline="Single"/></Style><Style ss:ID="warn"><Font ss:Bold="1" ss:Color="#C25400"/></Style></Styles>`;
+    const heatStyles = HEAT.map((c, i) => `<Style ss:ID="h${i + 1}"><NumberFormat ss:Format="#,##0"/><Interior ss:Color="${c}" ss:Pattern="Solid"/><Alignment ss:Horizontal="Right" ss:Vertical="Center"/></Style>`).join("");
+    const styles = `<Styles><Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Vertical="Center"/><Font ss:FontName="Calibri" ss:Size="11"/></Style><Style ss:ID="hdr"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#1F2A44" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/></Style><Style ss:ID="title"><Font ss:Bold="1" ss:Size="13"/></Style><Style ss:ID="sub"><Font ss:Italic="1" ss:Color="#555555" ss:Size="9"/></Style><Style ss:ID="bold"><Font ss:Bold="1"/></Style><Style ss:ID="num"><NumberFormat ss:Format="#,##0"/></Style><Style ss:ID="area"><NumberFormat ss:Format="0.0"/></Style><Style ss:ID="link"><Font ss:Color="#1155CC" ss:Underline="Single"/></Style><Style ss:ID="warn"><Font ss:Bold="1" ss:Color="#C25400"/></Style>${heatStyles}</Styles>`;
     return `<?xml version="1.0" encoding="UTF-8"?>\n<?mso-application progid="Excel.Sheet"?>\n<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" xmlns:html="http://www.w3.org/TR/REC-html40">${styles}${sheets.join("")}</Workbook>`;
   }
   const slug = (s) => s.toLowerCase().replace(/\s+/g, "-").replace(/[^0-9a-zа-яё_\-]/g, "") || "jk";
