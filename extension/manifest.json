@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Циан → Excel",
-  "version": "2.7.0",
+  "version": "2.7.1",
   "description": "На любой выдаче cian.ru (ЖК или поиск по фильтрам/карте): собирает все объявления и скачивает Excel с реальным сроком экспозиции.",
   "icons": {
     "16": "icon16.png",
@@ -15,12 +15,27 @@
       "32": "icon32.png",
       "48": "icon48.png"
     },
-    "default_title": "Циан → Excel — открой выдачу и нажми панель внизу справа"
+    "default_title": "Циан → Excel — нажми, чтобы открыть панель на странице выдачи"
   },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "activeTab"
+  ],
   "host_permissions": [
     "*://*.cian.ru/*"
   ],
   "content_scripts": [
+    {
+      "matches": [
+        "*://*.cian.ru/*"
+      ],
+      "js": [
+        "bridge.js"
+      ],
+      "run_at": "document_start"
+    },
     {
       "matches": [
         "*://*.cian.ru/*"

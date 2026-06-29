@@ -654,16 +654,20 @@
   // ---------- GUI: панель в Shadow DOM ----------
   const CSS = `
   *{box-sizing:border-box;margin:0;padding:0}
-  .root{position:fixed;right:22px;bottom:22px;z-index:2147483647;
+  .root{position:fixed;right:22px;bottom:88px;z-index:2147483647;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
   .card{width:312px;background:#fff;border-radius:18px;overflow:hidden;
     box-shadow:0 16px 48px rgba(16,24,49,.30);animation:in .25s ease}
   @keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
   .root.min .card{display:none}
   .fab{display:none}
-  .root.min .fab{display:flex;align-items:center;justify-content:center;width:58px;height:58px;
-    margin-left:auto;border:none;border-radius:50%;cursor:pointer;font-size:24px;color:#fff;
-    background:linear-gradient(135deg,#1F2A44,#3a4a7d);box-shadow:0 10px 26px rgba(16,24,49,.34)}
+  .root.min .fab{display:flex;align-items:center;justify-content:center;width:60px;height:60px;
+    margin-left:auto;border:none;border-radius:50%;cursor:pointer;font-size:25px;color:#fff;
+    background:linear-gradient(135deg,#1F2A44,#3a4a7d);box-shadow:0 10px 26px rgba(16,24,49,.34);
+    animation:fab-pulse 1.8s ease-in-out 4}
+  @keyframes fab-pulse{0%,100%{box-shadow:0 10px 26px rgba(16,24,49,.34)}
+    50%{box-shadow:0 0 0 12px rgba(39,174,96,.22),0 10px 26px rgba(16,24,49,.34)}}
+  .root.min .fab:hover{filter:brightness(1.08)}
   .head{display:flex;align-items:center;gap:9px;padding:15px 16px;color:#fff;
     background:linear-gradient(135deg,#1F2A44 0%,#34416f 100%)}
   .head .ic{font-size:18px}.head .t{font-weight:700;font-size:14.5px;flex:1;letter-spacing:.2px}
@@ -852,6 +856,16 @@
     try { if (!ui.mounted && document.body) buildPanel(); if (ui.mounted) refreshHeader(); }
     catch (e) { console.warn("[cian-excel] ui:", e); }
   }
+
+  // Клик по иконке расширения (service worker -> bridge.js -> DOM-событие):
+  // монтируем панель, если ещё нет, и разворачиваем её.
+  window.addEventListener("cian-excel-toggle", () => {
+    try {
+      if (!ui.mounted) ensure();
+      if (ui.root) ui.root.classList.remove("min");   // развернуть панель
+      refreshHeader();
+    } catch (e) { console.warn("[cian-excel] toggle:", e); }
+  });
 
   console.log("[cian-excel] загружен на", location.href);
   ensure();
