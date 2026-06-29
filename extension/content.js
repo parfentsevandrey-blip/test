@@ -603,32 +603,56 @@
     "На промо-сайте застройщика (zhk-*.cian.ru) и на странице без списка квартир выгрузка не работает.";
 
   const fmt = (n) => (n == null ? "—" : Number(n).toLocaleString("ru-RU"));
-
-  const _plural = (n, one, few, many) => {
-    const m = Math.abs(n) % 100, m1 = m % 10;
-    if (m > 10 && m < 20) return many; if (m1 > 1 && m1 < 5) return few; if (m1 === 1) return one; return many;
-  };
-  function pickFact(rows, st, x) {
-    const f = [], P = (n) => Number(n).toLocaleString("ru-RU");
-    if (x.ppm.length) { const mn = Math.min(...x.ppm), mx = Math.max(...x.ppm), r = mx / mn; if (r >= 1.4) f.push(`Цена за м² здесь различается в ${r.toFixed(1)} раза: от ${P(mn)} до ${P(mx)} ₽.`); }
-    if (st.resets > 0) f.push(`У ${st.resets} ${_plural(st.resets, "лота", "лотов", "лотов")} Циан сбросил дату — реально они в продаже дольше, чем показывает счётчик.`);
-    if (x.real.length) { const longs = x.real.filter((v) => v >= 90).length; if (longs) f.push(`${Math.round(longs / x.real.length * 100)}% лотов висят в экспозиции дольше 90 дней.`); }
-    if (x.real.length) { const mxr = Math.max(...x.real); if (mxr >= 120) f.push(`Самый «застрявший» лот в продаже уже ~${mxr} дн.`); }
-    if (st.realMed != null) f.push(`Медианный реальный срок экспозиции — ${st.realMed} дн${st.expAvg != null ? ` (счётчик Циан в среднем ${st.expAvg})` : ""}.`);
-    if (st.devPct != null) f.push(`${st.devPct}% лотов — напрямую от застройщика, остальное частники и агентства.`);
-    if (x.dupFlats > 0) f.push(`${x.dupFlats} ${_plural(x.dupFlats, "объявление", "объявления", "объявлений")} — дубли одних квартир у разных продавцов.`);
-    if (x.areas.length) f.push(`Площади в выборке: от ${Math.min(...x.areas)} до ${Math.max(...x.areas)} м².`);
-    if (x.mt.length) f.push(`До метро в среднем ~${x.avg(x.mt)} мин.`);
-    const top = rows.filter((r) => r.ppm != null).sort((a, b) => b.ppm - a.ppm)[0];
-    if (top) f.push(`Самый дорогой метр — ${P(top.ppm)} ₽/м²${top.building ? " (" + top.building + ")" : ""}.`);
-    // отделка
-    const fin = {}; rows.forEach((r) => { if (r.decoration) fin[r.decoration] = (fin[r.decoration] || 0) + 1; });
-    const ftop = Object.entries(fin).sort((a, b) => b[1] - a[1])[0];
-    if (ftop && rows.length >= 5) f.push(`Чаще всего здесь «${ftop[0]}» — ${Math.round(ftop[1] / rows.length * 100)}% лотов.`);
-    const des = fin["Дизайнерский"] || 0; if (des) f.push(`${des} ${_plural(des, "лот", "лота", "лотов")} с дизайнерским ремонтом.`);
-    const noFin = rows.filter((r) => !r.decoration).length;
-    if (rows.length >= 5 && noFin / rows.length > 0.4) f.push(`У ${Math.round(noFin / rows.length * 100)}% лотов отделка не указана полем Циан — определена по тексту описания.`);
-    return f.length ? f[Math.floor(Math.random() * f.length)] : null;
+  // Любопытные факты — НЕ про Циан/выборку, а из жизни, кода, природы и науки.
+  // Показываем случайный после каждой успешной выгрузки (без повтора подряд).
+  const FUN_FACTS = [
+    "🐙 У осьминога три сердца и голубая кровь, а кожа меняет цвет и фактуру за доли секунды.",
+    "🍯 Мёд не портится: в египетских гробницах находили мёд, пригодный в пищу спустя тысячи лет.",
+    "🐛 Первый «баг» был настоящим: в 1947-м в реле компьютера Mark II застрял мотылёк — его вклеили в журнал с подписью «first actual case of bug».",
+    "🐍 Язык Python назван не в честь змеи, а в честь шоу «Монти Пайтон».",
+    "☕ Первую в мире веб-камеру в 1991-м в Кембридже навели на кофейник — чтобы не ходить зря к пустому.",
+    "🦈 Акулы появились раньше деревьев — они старше примерно на 50 млн лет.",
+    "🪐 Сутки на Венере длиннее её года: оборот вокруг оси — 243 земных дня, вокруг Солнца — 225.",
+    "🃏 Способов перетасовать колоду из 52 карт больше, чем атомов на Земле (число из 68 цифр).",
+    "🦥 Ленивец задерживает дыхание дольше дельфина — до 40 минут, замедляя сердце.",
+    "💎 На Нептуне и Уране, по расчётам учёных, идут дожди из алмазов.",
+    "🧠 Мозг — это ~2% массы тела, но забирает ~20% всей его энергии.",
+    "👃 Промычать с зажатым носом невозможно — для гудения нужен выход воздуха через нос.",
+    "🦩 Стая фламинго называется «flamboyance» — «роскошь».",
+    "🌳 Java сначала называлась Oak («дуб») — по дереву за окном разработчика.",
+    "🗼 Эйфелева башня летом выше примерно на 15 см — металл расширяется от тепла.",
+    "🥄 Чайная ложка вещества нейтронной звезды весила бы миллиарды тонн.",
+    "🍌 У человека и банана около 60% общих генов.",
+    "⚔️ Самая короткая война в истории длилась ~38 минут (Британия против Занзибара, 1896).",
+    "📶 «Wi-Fi» ничего не расшифровывает — это просто звучное название, а не аббревиатура.",
+    "🫧 Пузырчатую плёнку (bubble wrap) в 1957-м придумали как… обои.",
+    "🎂 Достаточно 23 человек в комнате, чтобы с вероятностью >50% у двоих совпал день рождения.",
+    "🏛️ Оксфорд старше империи ацтеков: преподавать там начали уже около 1096 года.",
+    "🌑 Следы астронавтов на Луне сохранятся миллионы лет — там нет ветра и воды.",
+    "☀️ Свет от Солнца летит до Земли около 8 минут 20 секунд.",
+    "🔇 В космосе абсолютная тишина: звуку не в чем распространяться.",
+    "💾 Первый жёсткий диск (IBM, 1956) хранил 5 МБ и весил почти тонну.",
+    "🐄 У коров есть лучшие подруги, и в разлуке они нервничают.",
+    "🌐 Деревья «общаются» через подземную грибницу — учёные зовут это «wood wide web».",
+    "👩‍💻 Первым программистом считают Аду Лавлейс — она описала алгоритм ещё в 1840-х, до появления компьютеров.",
+    "❤️ Сердце делает около 100 000 ударов в день.",
+    "🔢 0,(9) — это ровно 1, а не «почти»: это одно и то же число.",
+    "🧊 Вомбаты какают кубиками — так помёт не скатывается и лучше метит территорию.",
+    "⌨️ По распространённой версии, раскладку QWERTY придумали, чтобы замедлить машинисток и не заклинивало рычажки.",
+    "🌕 Клеопатра жила ближе по времени к высадке на Луну, чем к постройке пирамид.",
+    "🐦 Колибри — единственные птицы, которые умеют летать назад.",
+    "🔟 Гугол — это единица со ста нулями; название Google появилось как опечатка от него.",
+    "🌲 Одна из старейших живых сосен (остистая) старше пирамид — ей около 4800 лет.",
+    "💡 Символ @ применяли в торговле («по цене за штуку») за века до электронной почты.",
+    "🐧 Самец пингвина Адели «дарит» самке самый гладкий камешек для гнезда.",
+    "🕰️ «Jiffy» — это реальная единица времени в физике и электронике.",
+  ];
+  let _lastFactIdx = -1;
+  function pickFact() {
+    if (FUN_FACTS.length < 2) return FUN_FACTS[0] || null;
+    let i; do { i = Math.floor(Math.random() * FUN_FACTS.length); } while (i === _lastFactIdx);
+    _lastFactIdx = i;
+    return FUN_FACTS[i];
   }
   function computeStats(rows, totalInJk, expInfo) {
     const ppm = rows.map((r) => r.ppm).filter((x) => x != null);
@@ -647,7 +671,7 @@
       expAvg: avg(exp), realAvg: avg(real), realMed: med(real),
       resets: (expInfo && expInfo.resets) || 0, devPct: rows.length ? Math.round(devN / rows.length * 100) : null, byCat,
     };
-    st.fact = pickFact(rows, st, { ppm, real, areas, mt, dupFlats: rows.filter((r) => r.dupNow > 1).length, avg });
+    st.fact = pickFact();   // случайный любопытный факт (из жизни/кода/природы), не про выборку
     return st;
   }
 
@@ -659,15 +683,15 @@
   .card{width:312px;background:#fff;border-radius:18px;overflow:hidden;
     box-shadow:0 16px 48px rgba(16,24,49,.30);animation:in .25s ease}
   @keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-  .root.min .card{display:none}
+  .root.collapsed .card{display:none}
   .fab{display:none}
-  .root.min .fab{display:flex;align-items:center;justify-content:center;width:60px;height:60px;
+  .root.collapsed .fab{display:flex;align-items:center;justify-content:center;width:60px;height:60px;
     margin-left:auto;border:none;border-radius:50%;cursor:pointer;font-size:25px;color:#fff;
     background:linear-gradient(135deg,#1F2A44,#3a4a7d);box-shadow:0 10px 26px rgba(16,24,49,.34);
     animation:fab-pulse 1.8s ease-in-out 4}
   @keyframes fab-pulse{0%,100%{box-shadow:0 10px 26px rgba(16,24,49,.34)}
     50%{box-shadow:0 0 0 12px rgba(39,174,96,.22),0 10px 26px rgba(16,24,49,.34)}}
-  .root.min .fab:hover{filter:brightness(1.08)}
+  .root.collapsed .fab:hover{filter:brightness(1.08)}
   .head{display:flex;align-items:center;gap:9px;padding:15px 16px;color:#fff;
     background:linear-gradient(135deg,#1F2A44 0%,#34416f 100%)}
   .head .ic{font-size:18px}.head .t{font-weight:700;font-size:14.5px;flex:1;letter-spacing:.2px}
@@ -718,7 +742,7 @@
     const sh = host.attachShadow({ mode: "open" });
     sh.innerHTML =
       "<style>" + CSS + "</style>" +
-      '<div class="root min" part="root">' +   // по умолчанию свёрнуто (кружок)
+      '<div class="root collapsed" part="root">' +   // по умолчанию свёрнуто (кружок)
         '<button class="fab" title="Циан → Excel">📊</button>' +
         '<div class="card">' +
           '<div class="head"><span class="ic">📊</span><span class="t">Циан → Excel</span>' +
@@ -755,13 +779,13 @@
       meta: $("#s-meta"), cats: $("#s-cats"), fact: $("#s-fact"), facttext: $("#s-facttext"),
       file: $("#s-file"), fname: $("#s-fname"), foot: $("#foot"),
     };
-    const expand = (e) => { if (e) e.stopPropagation(); ui.root.classList.remove("min"); try { refreshHeader(); } catch (err) { /* ignore */ } };
-    const collapse = (e) => { if (e) e.stopPropagation(); ui.root.classList.add("min"); };
-    $(".min").addEventListener("click", collapse);
+    const expand = (e) => { if (e) e.stopPropagation(); ui.root.classList.remove("collapsed"); try { refreshHeader(); } catch (err) { /* ignore */ } };
+    const collapse = (e) => { if (e) e.stopPropagation(); ui.root.classList.add("collapsed"); };
+    $(".min").addEventListener("click", collapse);   // .min теперь однозначно — кнопка «—»
     $(".fab").addEventListener("click", expand);
     // надёжность: клик по ЛЮБОМУ месту свёрнутого кружка (а не только по кнопке
     // внутри) раскрывает панель — чтобы промах по 1-2 px не «ломал» открытие.
-    ui.root.addEventListener("click", () => { if (ui.root.classList.contains("min")) expand(); });
+    ui.root.addEventListener("click", () => { if (ui.root.classList.contains("collapsed")) expand(); });
     ui.el.go.addEventListener("click", () => run());
     ui.mounted = true;
     console.log("[cian-excel] панель добавлена");
@@ -867,7 +891,7 @@
   window.addEventListener("cian-excel-toggle", () => {
     try {
       if (!ui.mounted) ensure();
-      if (ui.root) ui.root.classList.remove("min");   // развернуть панель
+      if (ui.root) ui.root.classList.remove("collapsed");   // развернуть панель
       refreshHeader();
     } catch (e) { console.warn("[cian-excel] toggle:", e); }
   });
