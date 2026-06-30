@@ -430,5 +430,181 @@
       "name": "Vastgoedjournaal — Wibra bedrijfspand Vaassen verkocht",
       "url": "https://vastgoedjournaal.nl/news/73504/bedrijfspand-in-vaassen-van-wibra-verkocht"
     }
+  ],
+  "charts": [
+    {
+      "id": "pulse",
+      "segment": "overview",
+      "type": "kpi",
+      "title": "Пульс недели: ключевые числа",
+      "caption": "Самые крупные числа недели одним взглядом.",
+      "unit": "",
+      "labels": [],
+      "series": [],
+      "kpi_items": [
+        {
+          "label": "Оферта Prologis за Segro",
+          "value": "€14,6 млрд",
+          "delta": "премия 24,6% (отклонено)",
+          "direction": "up"
+        },
+        {
+          "label": "Склад Panattoni в Эммене",
+          "value": "150 000 м²",
+          "delta": "спекулятивно, как 22 поля",
+          "direction": "neutral"
+        },
+        {
+          "label": "Заполняемость Retail Estates",
+          "value": "97,8%",
+          "delta": "22-й год роста дивиденда",
+          "direction": "up"
+        }
+      ],
+      "source": ""
+    },
+    {
+      "id": "vesteda",
+      "segment": "residential",
+      "type": "before_after",
+      "title": "Выкуп паёв Vesteda схлопнулся впятеро",
+      "caption": "Заявки на выход упали с 4,1 млрд до 765 млн € (−81%) — масштабной распродажи аренды не будет.",
+      "unit": "млрд €",
+      "labels": [
+        "Vesteda"
+      ],
+      "series": [
+        {
+          "name": "Было",
+          "values": [
+            4.1
+          ]
+        },
+        {
+          "name": "Стало",
+          "values": [
+            0.765
+          ]
+        }
+      ],
+      "kpi_items": [],
+      "source": "Vesteda / NOS"
+    },
+    {
+      "id": "bouwinvest",
+      "segment": "residential",
+      "type": "before_after",
+      "title": "Фонд Bouwinvest для жилья пожилых удвоился",
+      "caption": "Заявленный к вложению капитал вырос со 130 до 263,5 млн € — редкий приток денег в аренду.",
+      "unit": "млн €",
+      "labels": [
+        "Фонд Bouwinvest"
+      ],
+      "series": [
+        {
+          "name": "Было",
+          "values": [
+            130
+          ]
+        },
+        {
+          "name": "Стало",
+          "values": [
+            263.5
+          ]
+        }
+      ],
+      "kpi_items": [],
+      "source": "Bouwinvest"
+    },
+    {
+      "id": "heijmans_mix",
+      "segment": "residential",
+      "type": "stacked_bar",
+      "title": "Две трети проекта Heijmans — доступное жильё",
+      "caption": "Структура 563 жилищ в IJsselstein: 64% соц. и средняя аренда + доступная покупка.",
+      "unit": "%",
+      "labels": [
+        "Соц. аренда",
+        "Средняя/доступная",
+        "Дороже"
+      ],
+      "series": [
+        {
+          "name": "Доли",
+          "values": [
+            27,
+            37,
+            36
+          ]
+        }
+      ],
+      "kpi_items": [],
+      "source": "Heijmans"
+    },
+    {
+      "id": "retail_vac",
+      "segment": "commercial",
+      "type": "bar",
+      "title": "Ритейл-парки держат вакантность ниже рынка",
+      "caption": "Вакантность периферийных ритейл-парков 4,4% против 5,5% по торговой недвижимости.",
+      "unit": "%",
+      "labels": [
+        "Ритейл-парки",
+        "Рынок в целом"
+      ],
+      "series": [
+        {
+          "name": "Вакантность",
+          "values": [
+            4.4,
+            5.5
+          ]
+        }
+      ],
+      "kpi_items": [],
+      "highlight": 0,
+      "benchmark": {
+        "value": 5.5,
+        "label": "рынок 5,5%"
+      },
+      "source": "CBRE"
+    },
+    {
+      "id": "db_targets",
+      "segment": "industrial",
+      "type": "grouped_bar",
+      "title": "Deutsche Bank срезал цели по 4 логистическим REIT (но держит «покупать»)",
+      "caption": "Целевые цены снижены на 14–17%; рекомендация «покупать» сохранена — рынок ждёт стабилизации, а не падения.",
+      "unit": "€",
+      "labels": [
+        "CTP",
+        "WDP",
+        "Montea",
+        "VGP"
+      ],
+      "series": [
+        {
+          "name": "Было",
+          "values": [
+            22,
+            30,
+            85,
+            120
+          ]
+        },
+        {
+          "name": "Стало",
+          "values": [
+            19,
+            25,
+            73,
+            100
+          ]
+        }
+      ],
+      "kpi_items": [],
+      "source": "Deutsche Bank"
+    }
   ]
 }

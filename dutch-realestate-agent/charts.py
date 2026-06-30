@@ -124,15 +124,83 @@ def chart_bar(spec, out_path, horizontal=False):
                     _fmt(v), va="center", ha="left", fontsize=9, color=INK, fontweight="bold")
         ax.set_xlabel(spec.get("unit", ""), color=MUTED, fontsize=9)
     else:
-        bars = ax.bar(labels, vals, color=color, width=0.6)
+        hi = spec.get("highlight")
+        if isinstance(hi, int) and 0 <= hi < n:
+            cols = ["#C9D3DD"] * n
+            cols[hi] = color
+        else:
+            cols = [color] * n
+        bars = ax.bar(labels, vals, color=cols, width=0.6)
         _style_axes(ax)
         mx = max(vals) if vals else 1
         for b, v in zip(bars, vals):
             ax.text(b.get_x() + b.get_width() / 2, b.get_height() + mx * 0.02,
                     _fmt(v), ha="center", va="bottom", fontsize=9, color=INK, fontweight="bold")
+        bm = spec.get("benchmark")
+        if isinstance(bm, dict) and bm.get("value") is not None:
+            ax.axhline(bm["value"], ls="--", lw=1.2, color=MUTED)
+            ax.text(n - 0.5, bm["value"], " " + str(bm.get("label", "")),
+                    color=MUTED, fontsize=8, va="bottom", ha="right")
         ax.set_ylabel(spec.get("unit", ""), color=MUTED, fontsize=9)
         ax.margins(y=0.16)
         plt.setp(ax.get_xticklabels(), rotation=0)
+    _title(fig, ax, spec)
+    return _finish(fig, out_path)
+
+
+def chart_before_after(spec, out_path):
+    """Было→стало: серый столбец (было) + цветной (стало) + Δ% над парой."""
+    import numpy as np
+    labels = spec.get("labels") or []
+    series = spec.get("series") or []
+    before = spec.get("before") or (series[0].get("values") if len(series) > 0 else [])
+    after = spec.get("after") or (series[1].get("values") if len(series) > 1 else [])
+    n = min(len(labels), len(before), len(after))
+    labels, before, after = labels[:n], before[:n], after[:n]
+    color = SEGCLR.get(spec.get("segment"), NAVY)
+    fig, ax = plt.subplots(figsize=(FIG_W, 4.0))
+    x = np.arange(n)
+    w = 0.36
+    ax.bar(x - w / 2, before, width=w, color=MUTED, label="Было")
+    bars2 = ax.bar(x + w / 2, after, width=w, color=color, label="Стало")
+    allv = list(before) + list(after)
+    mx = max(allv) if allv else 1
+    for xi, b, a in zip(x, before, after):
+        ax.text(xi - w / 2, b + mx * 0.02, _fmt(b), ha="center", va="bottom", fontsize=8, color=MUTED)
+        ax.text(xi + w / 2, a + mx * 0.02, _fmt(a), ha="center", va="bottom", fontsize=8, color=INK, fontweight="bold")
+        if b:
+            d = (a - b) / b * 100
+            clr = DIRCLR["down"] if d < 0 else DIRCLR["up"]
+            ax.text(xi, max(b, a) + mx * 0.10, f"{d:+.0f}%", ha="center", va="bottom",
+                    fontsize=9.5, color=clr, fontweight="bold")
+    ax.set_xticks(x); ax.set_xticklabels(labels)
+    _style_axes(ax); ax.margins(y=0.20)
+    ax.set_ylabel(spec.get("unit", ""), color=MUTED, fontsize=9)
+    ax.legend(frameon=False, fontsize=9, loc="upper left")
+    _title(fig, ax, spec)
+    return _finish(fig, out_path)
+
+
+def chart_stacked_bar(spec, out_path):
+    """100%-стек одной полосой: композиция/доли с подписями процентов (замена донату)."""
+    labels = spec.get("labels") or []
+    vals = _series_vals(spec, 0)
+    n = min(len(labels), len(vals))
+    labels, vals = labels[:n], vals[:n]
+    total = sum(vals) or 1
+    parts = [v / total * 100 for v in vals]
+    colors = [MULTI[i % len(MULTI)] for i in range(n)]
+    fig, ax = plt.subplots(figsize=(FIG_W, 2.4))
+    left = 0
+    for i, (p, lab) in enumerate(zip(parts, labels)):
+        ax.barh([0], [p], left=left, color=colors[i], height=0.5, label=lab)
+        if p >= 6:
+            ax.text(left + p / 2, 0, f"{p:.0f}%", ha="center", va="center",
+                    color="white", fontsize=10, fontweight="bold")
+        left += p
+    ax.set_xlim(0, 100); ax.set_ylim(-0.5, 0.5)
+    ax.axis("off")
+    ax.legend(frameon=False, fontsize=9, ncol=min(n, 3), loc="upper center", bbox_to_anchor=(0.5, -0.05))
     _title(fig, ax, spec)
     return _finish(fig, out_path)
 
@@ -232,9 +300,13 @@ _DISPATCH = {
     "bar": lambda s, p: chart_bar(s, p, horizontal=False),
     "hbar": lambda s, p: chart_bar(s, p, horizontal=True),
     "grouped_bar": chart_grouped_bar,
+    "before_after": chart_before_after,
+    "stacked_bar": chart_stacked_bar,
     "line": chart_line,
     "donut": chart_donut,
     "kpi": chart_kpi,
+    "kpi_card": chart_kpi,   # синоним
+    "kpi_cards": chart_kpi,  # синоним
 }
 
 
