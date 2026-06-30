@@ -1,0 +1,49 @@
+{
+  "report_date": "2026-06-30",
+  "week_start": "2026-06-23",
+  "week_end": "2026-06-30",
+  "language": "ru",
+  "executive_summary": "3–4 фразы: главное за неделю по всем трём сегментам.",
+  "segments": [
+    {
+      "id": "residential",
+      "title": "Жилая недвижимость",
+      "icon": "🏠",
+      "subsections": {
+        "laws":   [{"text": "Суть изменения в законе/политике.", "source": "Rijksoverheid", "url": "https://...", "date": "2026-06-25"}],
+        "news":   [{"text": "Новость с конкретикой (компания, сумма, локация).", "source": "FD", "url": "https://...", "date": "2026-06-26"}],
+        "trends": [{"text": "Тренд: спрос/ставки/настроения с цифрой.", "source": "ABN AMRO", "url": "https://...", "date": "2026-06-24"}],
+        "stats":  [{"text": "Индекс цен на жильё (CBS)", "value": "+0,4% м/м", "source": "CBS", "url": "https://..."}]
+      },
+      "conclusion": "Что это значит на практике — 2–4 простые фразы."
+    },
+    {
+      "id": "commercial",
+      "title": "Коммерция (стрит-ритейл)",
+      "icon": "🏪",
+      "subsections": {
+        "laws":   [],
+        "news":   [],
+        "trends": [],
+        "stats":  []
+      },
+      "conclusion": "..."
+    },
+    {
+      "id": "industrial",
+      "title": "Индустриал (склады, промзоны)",
+      "icon": "🏭",
+      "subsections": {
+        "laws":   [],
+        "news":   [],
+        "trends": [],
+        "stats":  []
+      },
+      "conclusion": "..."
+    }
+  ],
+  "sources": [
+    {"name": "CBS", "url": "https://www.cbs.nl"},
+    {"name": "Vastgoedmarkt", "url": "https://www.vastgoedmarkt.nl"}
+  ]
+}
