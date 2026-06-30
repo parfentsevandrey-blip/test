@@ -223,7 +223,7 @@ def _approx_in(value, pool, rel=0.01, absrel=0.05):
 # --------------------------------------------------------------------------- #
 #  Проверка одного пункта (laws/news/trends)
 # --------------------------------------------------------------------------- #
-def _check_item(it, path, iss, win_start, win_end, is_stats=False):
+def _check_item(it, path, iss, win_start, win_end, is_stats=False, is_context=False):
     if not isinstance(it, dict):
         iss.err(path, "элемент подраздела должен быть объектом (dict)")
         return
@@ -299,12 +299,19 @@ def _check_item(it, path, iss, win_start, win_end, is_stats=False):
             iss.err(path + ".date",
                     f"date={date!r} не в строгом формате YYYY-MM-DD")
         elif win_start is not None and win_end is not None:
-            if d < win_start:
+            oow = d < win_start or d > win_end
+            if oow and is_context:
+                # trends/stats = институциональный контекст: данные периодические
+                # (индексы, yields, NTA) — допускаются вне окна с честным as_of.
+                iss.warn(path + ".date",
+                         f"date {date} вне окна — ОК для институционального контекста "
+                         f"(trends/stats); убедитесь, что в тексте есть as-of")
+            elif d < win_start:
                 iss.err(path + ".date",
-                        f"date {date} раньше начала окна {win_start.date()}")
+                        f"date {date} раньше начала окна {win_start.date()} (новости/законы — строго в окне)")
             elif d > win_end:
                 iss.err(path + ".date",
-                        f"date {date} позже конца окна {win_end.date()}")
+                        f"date {date} позже конца окна {win_end.date()} (новости/законы — строго в окне)")
 
     # эвристика «упоминание даты вне окна» в свободном тексте
     if _nonempty_str(text) and win_start is not None and win_end is not None:
@@ -705,9 +712,10 @@ def _check_subsections(seg, sp, iss, win_start, win_end):
             iss.warn(f"{sp}.subsections.{key}",
                      f"{len(items)} пунктов (> {MAX_ITEMS_PER_SUBSECTION}) — превышен мягкий лимит")
         is_stats = (key == "stats")
+        is_context = key in ("trends", "stats")  # институциональный контекст: даты с as-of допустимы
         for j, it in enumerate(items):
             _check_item(it, f"{sp}.subsections.{key}[{j}]", iss,
-                        win_start, win_end, is_stats=is_stats)
+                        win_start, win_end, is_stats=is_stats, is_context=is_context)
 
     # conclusion обещает выводы, но в данных пусто во всех подразделах
     if not any_content and _nonempty_str(seg.get("conclusion")):
