@@ -32,7 +32,7 @@
 ```
 dutch-realestate-agent/
 ├── agent_instructions.md     ← промпт агента: что искать, как, в каком формате
-├── sources.md                ← ИСТОЧНИКИ институц. уровня: ~190 шт. в 20 кат. (★/●/○)
+├── sources.md                ← ИСТОЧНИКИ институц. уровня: ~257 шт. в 20 кат. (★/●/○)
 ├── schema.example.json       ← образец входного JSON
 ├── generate_report.py        ← рендер Word из JSON (+ дедупликация, встраивание графиков)
 ├── charts.py                 ← графики/диаграммы/KPI (matplotlib): bar, hbar,

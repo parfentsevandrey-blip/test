@@ -1,5 +1,5 @@
 {
-  "count": 191,
+  "count": 257,
   "sources": [
     {
       "category": "1. Индексы доходности и бенчмарки (direct + listed + fund-level)",
@@ -199,6 +199,38 @@
     },
     {
       "category": "1. Индексы доходности и бенчмарки (direct + listed + fund-level)",
+      "name": "Altum AI",
+      "url": "https://altum.ai/vastgoeddata/",
+      "segments": [
+        "residential",
+        "macro"
+      ],
+      "provides": "API к >250 переменным по каждому жилому объекту (WOZ, год постройки, площади, энергометки, история сделок), AVM, данные на уровне района. Источники Kadaster, CBS.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "paid",
+      "region": "NL",
+      "cadence": "непрерывно",
+      "tier": "important"
+    },
+    {
+      "category": "1. Индексы доходности и бенчмарки (direct + listed + fund-level)",
+      "name": "Matrixian Group",
+      "url": "https://matrixian.com/en/smart-real-estate/",
+      "segments": [
+        "residential",
+        "macro"
+      ],
+      "provides": "База ~7,8 млн объектов с 200-300+ характеристиками, AVM, собственный House Price Index, Housing Analytics, Portfolio Sustainability, POI; API.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "paid",
+      "region": "NL",
+      "cadence": "непрерывно",
+      "tier": "important"
+    },
+    {
+      "category": "1. Индексы доходности и бенчмарки (direct + listed + fund-level)",
       "name": "NCREIF — Indices (NPI/ODCE) & Global Index",
       "url": "https://user.ncreif.org/data-products/global-index/",
       "segments": [
@@ -215,6 +247,21 @@
       "access": "freemium",
       "region": "global",
       "cadence": "ежеквартально",
+      "tier": "supplementary"
+    },
+    {
+      "category": "1. Индексы доходности и бенчмарки (direct + listed + fund-level)",
+      "name": "GeoPhy (ныне Apprise by Walker & Dunlop)",
+      "url": "https://www.walkerdunlop.com/news/walker-dunlop-acquires-geophy-to-accelerate-technology-driven-businesses",
+      "segments": [
+        "commercial"
+      ],
+      "provides": "ВНИМАНИЕ: GeoPhy (Делфт, ML-оценка CRE) куплен Walker & Dunlop в 2022; технология в платформе Apprise (multifamily US). Как независимого NL-провайдера больше нет.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "paid",
+      "region": "global",
+      "cadence": "нерегулярно",
       "tier": "supplementary"
     },
     {
@@ -2163,6 +2210,22 @@
     },
     {
       "category": "12. Институциональный капитал: asset owners и управляющие (NL)",
+      "name": "Altera (Altera Vastgoed) — News",
+      "url": "https://www.altera.nl/en/news/",
+      "segments": [
+        "residential",
+        "commercial"
+      ],
+      "provides": "Новости и отчёты фонда (~3,6 млрд евро): Residential Fund и Retail Fund. Доходности, переоценки, GRESB. Прокси по core-жилью и стрит-ритейлу.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "нерегулярно",
+      "tier": "important"
+    },
+    {
+      "category": "12. Институциональный капитал: asset owners и управляющие (NL)",
       "name": "DNB — Insurers dashboard",
       "url": "https://www.dnb.nl/en/statistics/dashboards/insurers/insurers-supervision/",
       "segments": [
@@ -2180,6 +2243,23 @@
       "access": "free",
       "region": "NL",
       "cadence": "ежеквартально",
+      "tier": "supplementary"
+    },
+    {
+      "category": "12. Институциональный капитал: asset owners и управляющие (NL)",
+      "name": "Achmea — Corporate Newsroom",
+      "url": "https://news.achmea.nl/",
+      "segments": [
+        "residential",
+        "commercial",
+        "macro"
+      ],
+      "provides": "Корпоративный newsroom: сделки Achmea Real Estate, реструктуризация, регуляторные события. Дополнительный контекст по группе.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "нерегулярно",
       "tier": "supplementary"
     },
     {
@@ -2604,6 +2684,22 @@
     },
     {
       "category": "14. Официальная статистика, реестры и первоисточники NL",
+      "name": "KNB — Koninklijke Notariële Beroepsorganisatie (Factsheets akteaantallen)",
+      "url": "https://www.knb.nl/overzicht-factsheets-vanaf-2014",
+      "segments": [
+        "residential",
+        "commercial"
+      ],
+      "provides": "Месячные/квартальные factsheets по числу нотариальных актов (сделки с недвижимостью, ипотеки) — независимый счётчик активности рынка.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "ежемесячно",
+      "tier": "important"
+    },
+    {
+      "category": "14. Официальная статистика, реестры и первоисточники NL",
       "name": "PDOK — Publieke Dienstverlening Op de Kaart",
       "url": "https://www.pdok.nl/datasets",
       "segments": [
@@ -2843,6 +2939,67 @@
     },
     {
       "category": "15. Госорганы, регуляторы и политика (NL)",
+      "name": "Eerste Kamer der Staten-Generaal (верхняя палата/Сенат)",
+      "url": "https://www.eerstekamer.nl/",
+      "segments": [
+        "all"
+      ],
+      "provides": "Статус и голосования по законам, досье по законопроектам (жильё, налоги, Omgevingswet), даты вступления в силу.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "непрерывно",
+      "tier": "important"
+    },
+    {
+      "category": "15. Госорганы, регуляторы и политика (NL)",
+      "name": "Gemeente Rotterdam — Woonvisie",
+      "url": "https://www.rotterdam.nl/woonvisie",
+      "segments": [
+        "residential"
+      ],
+      "provides": "Rotterdamse Woonvisie (до 2040): целевые 3500-4000 домов/год, доли доступного жилья (соц./средний сегмент), Woonzorgvisie.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "нерегулярно",
+      "tier": "important"
+    },
+    {
+      "category": "15. Госорганы, регуляторы и политика (NL)",
+      "name": "Gemeente Den Haag — Woonvisie 2040",
+      "url": "https://www.denhaag.nl/nl/verbouwen-en-wonen/maatregelen-problemen-woningmarkt/",
+      "segments": [
+        "residential"
+      ],
+      "provides": "Woonvisie 2040: 4000 домов/год, доли соц. и среднеценовой аренды (мин. 30%/20%), 7 вызовов рынка, доступность.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "нерегулярно",
+      "tier": "important"
+    },
+    {
+      "category": "15. Госорганы, регуляторы и политика (NL)",
+      "name": "Gemeente Amsterdam — Volg beleid: Wonen",
+      "url": "https://www.amsterdam.nl/bestuur-organisatie/volg-beleid/stedelijke-ontwikkeling/wonen/",
+      "segments": [
+        "residential",
+        "commercial"
+      ],
+      "provides": "Жилищная политика Амстердама: Woonagenda, правило 40-40-20, регулирование среднего сегмента аренды, программирование стройки по 22 районам.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "нерегулярно",
+      "tier": "important"
+    },
+    {
+      "category": "15. Госорганы, регуляторы и политика (NL)",
       "name": "Autoriteit woningcorporaties (Aw) — ILT",
       "url": "https://www.ilent.nl/onderwerpen/autoriteit-woningcorporaties",
       "segments": [
@@ -2858,6 +3015,21 @@
       "access": "free",
       "region": "NL",
       "cadence": "ежеквартально",
+      "tier": "supplementary"
+    },
+    {
+      "category": "15. Госорганы, регуляторы и политика (NL)",
+      "name": "Gemeente Utrecht — Woonbeleid (Omgevingsvisie)",
+      "url": "https://omgevingsvisie.utrecht.nl/thematisch-beleid/wonen/",
+      "segments": [
+        "residential"
+      ],
+      "provides": "Политика Утрехта 2025-2030: 3000 домов/год, 75% доступного жилья, пороги среднего сегмента и доступной покупки (WOZ до €405k).",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "нерегулярно",
       "tier": "supplementary"
     },
     {
@@ -3092,6 +3264,23 @@
     },
     {
       "category": "16. Консультанты, брокеры и оценщики (market data)",
+      "name": "Knight Frank — Netherlands",
+      "url": "https://www.knightfrank.com/netherlands",
+      "segments": [
+        "commercial",
+        "industrial",
+        "macro"
+      ],
+      "provides": "Dutch Office Market Report, European Logistics Dashboard (квартально, вкл. NL), валюации и консалтинг по CRE; глобальные индексы цен на жильё.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "global",
+      "cadence": "ежеквартально",
+      "tier": "important"
+    },
+    {
+      "category": "16. Консультанты, брокеры и оценщики (market data)",
       "name": "BNP Paribas Real Estate Netherlands — Research",
       "url": "https://www.realestate.bnpparibas.nl/research",
       "segments": [
@@ -3131,6 +3320,23 @@
       "access": "free",
       "region": "NL",
       "cadence": "нерегулярно",
+      "tier": "supplementary"
+    },
+    {
+      "category": "16. Консультанты, брокеры и оценщики (market data)",
+      "name": "Avison Young — Research & Insights (EMEA)",
+      "url": "https://www.avisonyoung.com/research-insights",
+      "segments": [
+        "commercial",
+        "industrial",
+        "macro"
+      ],
+      "provides": "Глобальные и EMEA research/Sightlines, квартальные market reports. Покрытие NL на уровне EMEA (нет отдельного NL-сайта).",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "global",
+      "cadence": "ежеквартально",
       "tier": "supplementary"
     },
     {
@@ -3241,6 +3447,22 @@
     },
     {
       "category": "17. Банковский макро- и отраслевой research",
+      "name": "ABN AMRO — Commercial Real Estate (Corporate Banking)",
+      "url": "https://www.abnamro.nl/en/commercialbanking/corporate-banking/sectors/commercial-real-estate.html",
+      "segments": [
+        "commercial",
+        "industrial"
+      ],
+      "provides": "Секторальный взгляд на CRE и логистику: переоценка активов, ставки, инвестобъёмы, спрос на prime-офисы и логистику класса A, ESG.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "нерегулярно",
+      "tier": "important"
+    },
+    {
+      "category": "17. Банковский макро- и отраслевой research",
       "name": "NIBC Bank — Commercial Real Estate",
       "url": "https://nibc.nl/en/business/commercial-real-estate",
       "segments": [
@@ -3258,6 +3480,22 @@
       "access": "free",
       "region": "NL",
       "cadence": "нерегулярно",
+      "tier": "supplementary"
+    },
+    {
+      "category": "17. Банковский макро- и отраслевой research",
+      "name": "BNG Bank — публичный сектор / жильё / муниципалитеты",
+      "url": "https://www.bngbank.nl/en",
+      "segments": [
+        "residential",
+        "macro"
+      ],
+      "provides": "Контекст финансирования жилищных корпораций, муниципалитетов, социальной/доступной аренды; ESG- и климатическая отчётность.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "ежегодно",
       "tier": "supplementary"
     },
     {
@@ -3444,6 +3682,175 @@
     },
     {
       "category": "18. Ассоциации, прогнозные институты и наука (NL)",
+      "name": "INretail (Koninklijke INretail)",
+      "url": "https://www.inretail.nl/",
+      "segments": [
+        "commercial"
+      ],
+      "provides": "Крупнейшая ассоциация non-food ритейла (>13 000 магазинов): рыночные цифры и тренды, обороты/трафик, лобби по аренде торговых площадей, vitaliteit винкельгебидов.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "ежеквартально",
+      "tier": "important"
+    },
+    {
+      "category": "18. Ассоциации, прогнозные институты и наука (NL)",
+      "name": "WoningBouwersNL (бывш. NVB-Bouw)",
+      "url": "https://woningbouwersnl.nl/",
+      "segments": [
+        "residential"
+      ],
+      "provides": "Ассоциация специалистов по жилищному строительству: данные по объёмам нового строительства, продажам новостроек, барьерам застройки.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "ежеквартально",
+      "tier": "important"
+    },
+    {
+      "category": "18. Ассоциации, прогнозные институты и наука (NL)",
+      "name": "RND (Raad Nederlandse Detailhandel)",
+      "url": "https://www.rndweb.nl/",
+      "segments": [
+        "commercial"
+      ],
+      "provides": "Зонтичная организация крупного non-food ритейла: позиции по аренде winkelvastgoed, Green Lease Retail. Фактический преемник Detailhandel Nederland.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "нерегулярно",
+      "tier": "important"
+    },
+    {
+      "category": "18. Ассоциации, прогнозные институты и наука (NL)",
+      "name": "evofenedex",
+      "url": "https://www.evofenedex.nl/",
+      "segments": [
+        "industrial"
+      ],
+      "provides": "Объединение ~10 000 компаний торговли и логистики: знания и позиции по складам, supply chain, инфраструктуре — спрос со стороны грузовладельцев.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "нерегулярно",
+      "tier": "important"
+    },
+    {
+      "category": "18. Ассоциации, прогнозные институты и наука (NL)",
+      "name": "TLN (Transport en Logistiek Nederland)",
+      "url": "https://www.tln.nl/",
+      "segments": [
+        "industrial",
+        "macro"
+      ],
+      "provides": "Организация автоперевозчиков (4 500 членов): лобби по инфраструктуре/азоту/CO2, мониторинг топлива, карты логистических хабов — индикаторы спроса на логнедвижимость.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "нерегулярно",
+      "tier": "important"
+    },
+    {
+      "category": "18. Ассоциации, прогнозные институты и наука (NL)",
+      "name": "VNG — Vereniging van Nederlandse Gemeenten (Bouwen en wonen)",
+      "url": "https://vng.nl/rubrieken/onderwerpen/bouwen-en-wonen",
+      "segments": [
+        "residential",
+        "commercial"
+      ],
+      "provides": "Позиция и данные всех муниципалитетов по строительству, землепользованию, региональным жилищным соглашениям.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "нерегулярно",
+      "tier": "important"
+    },
+    {
+      "category": "18. Ассоциации, прогнозные институты и наука (NL)",
+      "name": "IPO — Interprovinciaal Overleg (Wonen / Ruimte)",
+      "url": "https://www.ipo.nl/thema/ruimte-en-leefomgeving/wonen/",
+      "segments": [
+        "residential",
+        "commercial",
+        "industrial"
+      ],
+      "provides": "Позиция 12 провинций по строительству, азоту, сетям, планированию (Nota Ruimte), реализации жилищных программ — провинциальный слой.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "нерегулярно",
+      "tier": "important"
+    },
+    {
+      "category": "18. Ассоциации, прогнозные институты и наука (NL)",
+      "name": "TU Delft — Management in the Built Environment",
+      "url": "https://www.tudelft.nl/en/architecture-and-the-built-environment/research/research-at-bk-bouwkunde/management-in-the-built-environment",
+      "segments": [
+        "all"
+      ],
+      "provides": "Исследования по управлению недвижимостью, девелопменту территорий, жилью и циркулярному строительству; PhD-проекты, научные статьи.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "нерегулярно",
+      "tier": "important"
+    },
+    {
+      "category": "18. Ассоциации, прогнозные институты и наука (NL)",
+      "name": "SPRYG Real Estate Academy (Events / Congressen)",
+      "url": "https://spryg.com/nl/events",
+      "segments": [
+        "all"
+      ],
+      "provides": "80+ событий/год: Logistiek Vastgoed Nederland, Vastgoedfinanciering, ESG & Vastgoed, AI & Vastgoed, региональные конгрессы. Календарь специализированных событий.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "непрерывно",
+      "tier": "important"
+    },
+    {
+      "category": "18. Ассоциации, прогнозные институты и наука (NL)",
+      "name": "EXPO REAL (Munich)",
+      "url": "https://exporeal.net/en/",
+      "segments": [
+        "all"
+      ],
+      "provides": "Крупнейшая B2B-ярмарка недвижимости и инвестиций Европы (Messe München); все классы активов, голландские делегации. Международный контекст и сделки.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "global",
+      "cadence": "ежегодно",
+      "tier": "important"
+    },
+    {
+      "category": "18. Ассоциации, прогнозные институты и наука (NL)",
+      "name": "MIPIM (Cannes)",
+      "url": "https://www.mipim.com/en-gb.html",
+      "segments": [
+        "all"
+      ],
+      "provides": "Глобальная выставка профессионалов (Канны); голландский павильон 'Home of Holland' с девелоперами, инвесторами, властями, proptech. Международные инвестпотоки.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "global",
+      "cadence": "ежегодно",
+      "tier": "important"
+    },
+    {
+      "category": "18. Ассоциации, прогнозные институты и наука (NL)",
       "name": "Vereniging Eigen Huis (VEH)",
       "url": "https://www.eigenhuis.nl/",
       "segments": [
@@ -3479,6 +3886,111 @@
       "access": "free",
       "region": "NL",
       "cadence": "ежеквартально",
+      "tier": "supplementary"
+    },
+    {
+      "category": "18. Ассоциации, прогнозные институты и наука (NL)",
+      "name": "Woonbond (Nederlandse Woonbond)",
+      "url": "https://www.woonbond.nl/",
+      "segments": [
+        "residential"
+      ],
+      "provides": "Голос арендаторов (~1,7 млн): издания Huurpeil и Huurwijzer, данные по доступности аренды, позиции по защите квартиросъёмщиков.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "ежеквартально",
+      "tier": "supplementary"
+    },
+    {
+      "category": "18. Ассоциации, прогнозные институты и наука (NL)",
+      "name": "CBL (Centraal Bureau Levensmiddelenhandel)",
+      "url": "https://www.cbl.nl/",
+      "segments": [
+        "commercial"
+      ],
+      "provides": "Ассоциация супермаркетов и foodservice: данные по продуктовому ритейлу, обороту, ценам — релевантно food-anchored торговой недвижимости.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "нерегулярно",
+      "tier": "supplementary"
+    },
+    {
+      "category": "18. Ассоциации, прогнозные институты и наука (NL)",
+      "name": "VGM NL (Vastgoedmanagement Nederland)",
+      "url": "https://vgm.nl/",
+      "segments": [
+        "all"
+      ],
+      "provides": "Ассоциация управляющих недвижимостью и ВвЕ: годовые данные по арендному рынку, benchmark-инструменты, стандартные документы.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "ежегодно",
+      "tier": "supplementary"
+    },
+    {
+      "category": "18. Ассоциации, прогнозные институты и наука (NL)",
+      "name": "KHN — Koninklijke Horeca Nederland",
+      "url": "https://khn.nl/",
+      "segments": [
+        "commercial"
+      ],
+      "provides": "Данные и лоббизм по сектору HoReCa (>17 000 предприятий): обороты, занятость, тренды — контекст спроса на ритейл/гостиничную недвижимость.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "нерегулярно",
+      "tier": "supplementary"
+    },
+    {
+      "category": "18. Ассоциации, прогнозные институты и наука (NL)",
+      "name": "CBW-erkend (Centrale Branchevereniging Wonen)",
+      "url": "https://cbw-erkend.nl/",
+      "segments": [
+        "commercial"
+      ],
+      "provides": "Знак признания для розницы интерьера/мебели/кухонь (под INretail); списки банкротств в секторе wonen — индикатор товаров для дома (связка с жилищным циклом).",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "нерегулярно",
+      "tier": "supplementary"
+    },
+    {
+      "category": "18. Ассоциации, прогнозные институты и наука (NL)",
+      "name": "Detailhandel Nederland (упразднена)",
+      "url": "https://www.detailhandel.nl/",
+      "segments": [
+        "commercial"
+      ],
+      "provides": "ВНИМАНИЕ: зонтичное лобби ритейла прекратило деятельность ('Opgeheven'); функции перешли к RND/CBL/INretail. Для актуальных позиций используйте их.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "нерегулярно",
+      "tier": "supplementary"
+    },
+    {
+      "category": "18. Ассоциации, прогнозные институты и наука (NL)",
+      "name": "Tinbergen Institute (Discussion Papers)",
+      "url": "https://tinbergen.nl/home",
+      "segments": [
+        "macro"
+      ],
+      "provides": "Экономические/эконометрические discussion papers (EUR, UvA, VU); макроэкономика, финансы, причинно-следственный анализ. Методологический контекст.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "нерегулярно",
       "tier": "supplementary"
     },
     {
@@ -3817,6 +4329,173 @@
     },
     {
       "category": "19. Суб-секторные дески (логистика, ритейл, data centres, living-ниши, отели, life sciences)",
+      "name": "WoON / Woononderzoek Nederland (datawonen.nl)",
+      "url": "https://www.woononderzoek.nl/",
+      "segments": [
+        "residential"
+      ],
+      "provides": "Крупнейшее обследование жилищной ситуации (раз в 3 года, BZK/CBS): доходы, жилищные расходы, миграция, предпочтения. Основа жилищной политики.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "нерегулярно",
+      "tier": "important"
+    },
+    {
+      "category": "19. Суб-секторные дески (логистика, ритейл, data centres, living-ниши, отели, life sciences)",
+      "name": "Funda — Funda Index / persberichten",
+      "url": "https://pers.funda.nl/",
+      "segments": [
+        "residential"
+      ],
+      "provides": "Данные крупнейшего портала жилья: предложение, контактные запросы, индекс доверия/намерения покупки — ранний индикатор спроса.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "ежеквартально",
+      "tier": "important"
+    },
+    {
+      "category": "19. Суб-секторные дески (логистика, ритейл, data centres, living-ниши, отели, life sciences)",
+      "name": "De Hypotheekshop — Actuele hypotheekrente",
+      "url": "https://www.hypotheekshop.nl/actuelerente",
+      "segments": [
+        "residential"
+      ],
+      "provides": "Ежедневные актуальные ипотечные ставки 40+ кредиторов (NHG и по LTV), исторические графики, комментарии и прогнозы.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "непрерывно",
+      "tier": "important"
+    },
+    {
+      "category": "19. Суб-секторные дески (логистика, ритейл, data centres, living-ниши, отели, life sciences)",
+      "name": "Van Bruggen Adviesgroep — Hypotheekrente-overzicht",
+      "url": "https://www.vanbruggen.nl/hypotheekadvies/hypotheekrente-overzicht",
+      "segments": [
+        "residential"
+      ],
+      "provides": "Ежедневный обзор фиксированных/переменных ставок ~30 кредиторов с фильтрами (тип, энергоклассы, NHG), прогнозы.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "непрерывно",
+      "tier": "important"
+    },
+    {
+      "category": "19. Суб-секторные дески (логистика, ритейл, data centres, living-ниши, отели, life sciences)",
+      "name": "Q&A Retail (Research & Consultancy)",
+      "url": "https://www.qanda.nl/",
+      "segments": [
+        "commercial"
+      ],
+      "provides": "Ведущий ритейл-партнёр по research: ежегодный Retail Outlook, исследования потребителей/рынка, impact-анализы для Retailagenda.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "paid",
+      "region": "NL",
+      "cadence": "ежегодно",
+      "tier": "important"
+    },
+    {
+      "category": "19. Суб-секторные дески (логистика, ритейл, data centres, living-ниши, отели, life sciences)",
+      "name": "RetailTrends (вкл. RetailNews)",
+      "url": "https://retailtrends.nl/",
+      "segments": [
+        "commercial"
+      ],
+      "provides": "Главное проф. медиа по рознице и брендам: ежедневные новости, финпоказатели ритейлеров, банкротства/открытия, тренды, подкаст.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "непрерывно",
+      "tier": "important"
+    },
+    {
+      "category": "19. Суб-секторные дески (логистика, ритейл, data centres, living-ниши, отели, life sciences)",
+      "name": "Logistiek.nl",
+      "url": "https://www.logistiek.nl/",
+      "segments": [
+        "industrial"
+      ],
+      "provides": "Ежедневные новости логистики, складов, supply chain, тарифы, спецпроекты (Top 100 Logistiek Dienstverleners), аналитика.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "непрерывно",
+      "tier": "important"
+    },
+    {
+      "category": "19. Суб-секторные дески (логистика, ритейл, data centres, living-ниши, отели, life sciences)",
+      "name": "Nieuwsblad Transport (NT)",
+      "url": "https://www.nt.nl/",
+      "segments": [
+        "industrial",
+        "macro"
+      ],
+      "provides": "Новости по всем видам транспорта (порты, авто, ж/д, авиа, водный), логистике и цепочкам поставок; интервью и аналитика.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "непрерывно",
+      "tier": "important"
+    },
+    {
+      "category": "19. Суб-секторные дески (логистика, ритейл, data centres, living-ниши, отели, life sciences)",
+      "name": "BCI Global (ex-Buck Consultants International)",
+      "url": "https://www.bciglobal.com/",
+      "segments": [
+        "industrial",
+        "macro"
+      ],
+      "provides": "Стратегия цепочек поставок, выбор локаций, недвижимость и логистика; исследования (resilience, Transportation Monitor). HQ в Неймегене.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "global",
+      "cadence": "нерегулярно",
+      "tier": "important"
+    },
+    {
+      "category": "19. Суб-секторные дески (логистика, ритейл, data centres, living-ниши, отели, life sciences)",
+      "name": "Warehouse Totaal",
+      "url": "https://www.warehousetotaal.nl/",
+      "segments": [
+        "industrial"
+      ],
+      "provides": "Новости и кейсы по складам, автоматизации, материалопотокам, складской недвижимости, e-commerce-логистике; журнал и вебинары.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "непрерывно",
+      "tier": "important"
+    },
+    {
+      "category": "19. Суб-секторные дески (логистика, ритейл, data centres, living-ниши, отели, life sciences)",
+      "name": "Supply Chain Magazine (Supply Chain Media)",
+      "url": "https://www.supplychainmagazine.nl/",
+      "segments": [
+        "industrial"
+      ],
+      "provides": "Тренды цепочек поставок, планирование, видимость, устойчивость, ПО; отчёты, кейсы, whitepapers, вебинары.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "непрерывно",
+      "tier": "important"
+    },
+    {
+      "category": "19. Суб-секторные дески (логистика, ритейл, data centres, living-ниши, отели, life sciences)",
       "name": "Dutch Data Center Association — State of the Dutch Data Centers",
       "url": "https://www.dutchdatacenters.nl/en/nieuws/",
       "segments": [
@@ -3856,6 +4535,143 @@
       "access": "free",
       "region": "NL",
       "cadence": "ежегодно",
+      "tier": "supplementary"
+    },
+    {
+      "category": "19. Суб-секторные дески (логистика, ритейл, data centres, living-ниши, отели, life sciences)",
+      "name": "WSW — Waarborgfonds Sociale Woningbouw",
+      "url": "https://www.wsw.nl/",
+      "segments": [
+        "residential"
+      ],
+      "provides": "Гарантии заимствований жилкорпораций (AAA), стоимость фондирования, риск-данные по сектору соцжилья и доступности капитала для стройки.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "ежеквартально",
+      "tier": "supplementary"
+    },
+    {
+      "category": "19. Суб-секторные дески (логистика, ритейл, data centres, living-ниши, отели, life sciences)",
+      "name": "Platform31 — Kennisdossier Woningmarkt",
+      "url": "https://www.platform31.nl/wat-we-doen/kennisdossiers/kennisdossier-woningmarkt",
+      "segments": [
+        "residential",
+        "commercial"
+      ],
+      "provides": "Прикладные исследования по жилью, доступности, среднему сегменту, трансформации городов и зон — связь политики и практики.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "нерегулярно",
+      "tier": "supplementary"
+    },
+    {
+      "category": "19. Суб-секторные дески (логистика, ритейл, data centres, living-ниши, отели, life sciences)",
+      "name": "Twinkle / Twinkle100",
+      "url": "https://twinklemagazine.nl/",
+      "segments": [
+        "commercial"
+      ],
+      "provides": "Издание по digital commerce; Twinkle100 — ежегодный рейтинг крупнейших онлайн-ритейлеров NL, обзор топ-300 вебшопов по обороту.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "ежегодно",
+      "tier": "supplementary"
+    },
+    {
+      "category": "19. Суб-секторные дески (логистика, ритейл, data centres, living-ниши, отели, life sciences)",
+      "name": "Ecommerce News Nederland",
+      "url": "https://www.ecommercenews.nl/nieuws/",
+      "segments": [
+        "commercial"
+      ],
+      "provides": "Новости и обзоры e-commerce: число вебшопов (CBS/KvK), маркетплейсы (bol, Amazon), логистика/тарифы, бенчмарки.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "непрерывно",
+      "tier": "supplementary"
+    },
+    {
+      "category": "19. Суб-секторные дески (логистика, ритейл, data centres, living-ниши, отели, life sciences)",
+      "name": "Transport Online",
+      "url": "https://www.transport-online.nl/",
+      "segments": [
+        "industrial"
+      ],
+      "provides": "Ежедневные новости транспорта и логистики, склады, цены на топливо, ограничения движения, биржа грузов.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "непрерывно",
+      "tier": "supplementary"
+    },
+    {
+      "category": "19. Суб-секторные дески (логистика, ритейл, data centres, living-ниши, отели, life sciences)",
+      "name": "Intospace",
+      "url": "https://intospace.eu/news/",
+      "segments": [
+        "industrial"
+      ],
+      "provides": "Новости проектов и устойчивого складского девелопмента; первый B Corp логистический девелопер NL (Tilburg, Zoetermeer, Duiven).",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "нерегулярно",
+      "tier": "supplementary"
+    },
+    {
+      "category": "19. Суб-секторные дески (логистика, ритейл, data centres, living-ниши, отели, life sciences)",
+      "name": "DHG",
+      "url": "https://www.dhg.nl/",
+      "segments": [
+        "industrial",
+        "commercial"
+      ],
+      "provides": "DHG Nieuws: сделки аренды, распределительные центры/терминалы (Smartlogs), офисы; ~1,6 млн м² реализовано, 700 тыс. м² в разработке.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "нерегулярно",
+      "tier": "supplementary"
+    },
+    {
+      "category": "19. Суб-секторные дески (логистика, ритейл, data centres, living-ниши, отели, life sciences)",
+      "name": "Heylen Warehouses",
+      "url": "https://heylenwarehouses.com/en/home-en/",
+      "segments": [
+        "industrial"
+      ],
+      "provides": "Новости проектов; девелопмент и аренда логистической и light-industrial недвижимости в NL/BE/FR/ES (>1 млн м²), офис в Бреде.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "нерегулярно",
+      "tier": "supplementary"
+    },
+    {
+      "category": "19. Суб-секторные дески (логистика, ритейл, data centres, living-ниши, отели, life sciences)",
+      "name": "Dokvast",
+      "url": "https://www.dokvast.com/",
+      "segments": [
+        "industrial"
+      ],
+      "provides": "Проекты: распределительные центры (Rhenus, DB Schenker), XXL-DC и data-центры; ~350 тыс. м² с 2006, циркулярное строительство.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "нерегулярно",
       "tier": "supplementary"
     },
     {
@@ -4031,6 +4847,141 @@
     },
     {
       "category": "20. Энергосети, азот, физические барьеры стройки и СМИ (NL/EU)",
+      "name": "Vastgoedjournaal (VJ)",
+      "url": "https://vastgoedjournaal.nl/",
+      "segments": [
+        "residential",
+        "commercial",
+        "industrial"
+      ],
+      "provides": "Новости по сегментам (woningmarkt, kantoren, retail, logistiek, juridisch/fiscaal, transacties); Beleggersregister, каталог финансистов.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "непрерывно",
+      "tier": "important"
+    },
+    {
+      "category": "20. Энергосети, азот, физические барьеры стройки и СМИ (NL/EU)",
+      "name": "Cobouw",
+      "url": "https://www.cobouw.nl/",
+      "segments": [
+        "residential",
+        "commercial",
+        "industrial"
+      ],
+      "provides": "Независимая журналистика по строительству и девелопменту: проекты, инфраструктура, устойчивость, рынок, Cobouw50, правовые вопросы.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "непрерывно",
+      "tier": "important"
+    },
+    {
+      "category": "20. Энергосети, азот, физические барьеры стройки и СМИ (NL/EU)",
+      "name": "Stadszaken",
+      "url": "https://stadszaken.nl/",
+      "segments": [
+        "residential",
+        "commercial",
+        "macro"
+      ],
+      "provides": "Новости о городском развитии: жильё, экономика, климат/устойчивость, общественное пространство, мобильность, smart city.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "непрерывно",
+      "tier": "important"
+    },
+    {
+      "category": "20. Энергосети, азот, физические барьеры стройки и СМИ (NL/EU)",
+      "name": "Gebiedsontwikkeling.nu",
+      "url": "https://www.gebiedsontwikkeling.nu/",
+      "segments": [
+        "residential",
+        "commercial",
+        "macro"
+      ],
+      "provides": "Знания и дебаты о развитии территорий: кейсы, исследования, мнения, GO Projectenkaart. Инициатива SKG и TU Delft.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "непрерывно",
+      "tier": "important"
+    },
+    {
+      "category": "20. Энергосети, азот, физические барьеры стройки и СМИ (NL/EU)",
+      "name": "BNR Nieuwsradio",
+      "url": "https://www.bnr.nl/",
+      "segments": [
+        "macro",
+        "commercial",
+        "residential"
+      ],
+      "provides": "Деловое радио и подкасты по экономике, политике, недвижимости (FD Mediagroep); интервью с участниками рынка.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "непрерывно",
+      "tier": "important"
+    },
+    {
+      "category": "20. Энергосети, азот, физические барьеры стройки и СМИ (NL/EU)",
+      "name": "NOS Nieuws — Economie",
+      "url": "https://nos.nl/nieuws/economie",
+      "segments": [
+        "macro",
+        "residential"
+      ],
+      "provides": "Раздел Economie общественного вещателя: экономика, woningmarkt, регуляторные изменения, новости компаний. Нейтральный источник.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "непрерывно",
+      "tier": "important"
+    },
+    {
+      "category": "20. Энергосети, азот, физические барьеры стройки и СМИ (NL/EU)",
+      "name": "Stedin (региональный DSO — Randstad)",
+      "url": "https://www.stedin.net",
+      "segments": [
+        "residential",
+        "commercial",
+        "industrial"
+      ],
+      "provides": "'Vol stroomnet' и 'Netcapaciteit' (congestiemanagement, крупные подключения), листы ожидания. Покрывает Роттердам-Гаага-Утрехт.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "непрерывно",
+      "tier": "important"
+    },
+    {
+      "category": "20. Энергосети, азот, физические барьеры стройки и СМИ (NL/EU)",
+      "name": "Enexis Netbeheer (региональный DSO — юг и северо-восток)",
+      "url": "https://www.enexis.nl/nieuws",
+      "segments": [
+        "residential",
+        "commercial",
+        "industrial"
+      ],
+      "provides": "Проверка доступной мощности по адресу, перегруженные подстанции, листы ожидания, wijkgerichte aanpak. Покрывает логкоридоры юга (Brabant/Limburg).",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "непрерывно",
+      "tier": "important"
+    },
+    {
+      "category": "20. Энергосети, азот, физические барьеры стройки и СМИ (NL/EU)",
       "name": "PropertyEU (IPE Real Assets)",
       "url": "https://realassets.ipe.com/propertyeu",
       "segments": [
@@ -4108,6 +5059,89 @@
       "access": "free",
       "region": "NL",
       "cadence": "ежегодно",
+      "tier": "supplementary"
+    },
+    {
+      "category": "20. Энергосети, азот, физические барьеры стройки и СМИ (NL/EU)",
+      "name": "Binnenlands Bestuur — Ruimte en Milieu",
+      "url": "https://www.binnenlandsbestuur.nl/ruimte-en-milieu",
+      "segments": [
+        "residential",
+        "commercial",
+        "industrial"
+      ],
+      "provides": "Новости и анализ местного/регионального управления: жилполитика, землепользование, азот, региональные соглашения.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "непрерывно",
+      "tier": "supplementary"
+    },
+    {
+      "category": "20. Энергосети, азот, физические барьеры стройки и СМИ (NL/EU)",
+      "name": "Biind",
+      "url": "https://www.biind.nl/",
+      "segments": [
+        "residential",
+        "commercial",
+        "macro"
+      ],
+      "provides": "Платформа по интегральной gebiedsontwikkeling: статьи, блоги, whitepapers, журнал. Климатадаптация, мобильность, циркулярность.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "непрерывно",
+      "tier": "supplementary"
+    },
+    {
+      "category": "20. Энергосети, азот, физические барьеры стройки и СМИ (NL/EU)",
+      "name": "Vastgoed Insider",
+      "url": "https://vastgoedinsider.nl/",
+      "segments": [
+        "residential",
+        "commercial"
+      ],
+      "provides": "Сообщество частных инвесторов: новости, kennisbank, форум, события, ежедневный подкаст. Фокус на Box 3, финансирование, продажи арендного жилья частниками.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "непрерывно",
+      "tier": "supplementary"
+    },
+    {
+      "category": "20. Энергосети, азот, физические барьеры стройки и СМИ (NL/EU)",
+      "name": "NU.nl — Economie",
+      "url": "https://www.nu.nl/economie",
+      "segments": [
+        "macro",
+        "residential"
+      ],
+      "provides": "Экономический раздел крупнейшего новостного портала: оперативные новости по экономике и рынку жилья.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "непрерывно",
+      "tier": "supplementary"
+    },
+    {
+      "category": "20. Энергосети, азот, физические барьеры стройки и СМИ (NL/EU)",
+      "name": "Vastgoedwereld",
+      "url": "https://vastgoedwereld.nl/",
+      "segments": [
+        "residential",
+        "commercial",
+        "industrial"
+      ],
+      "provides": "Крупнейший нишевый агрегатор по вастгоеду: собирает PropertyNL, Vastgoedjournaal, Bouwformatie, Retailtrends и др.",
+      "analyst_use": "Оперативный/контекстный слой; для фактов поднимать к первоисточнику (Правило И-1).",
+      "metrics": [],
+      "access": "free",
+      "region": "NL",
+      "cadence": "непрерывно",
       "tier": "supplementary"
     }
   ]
