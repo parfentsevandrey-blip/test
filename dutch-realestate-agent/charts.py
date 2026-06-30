@@ -271,29 +271,46 @@ def chart_donut(spec, out_path):
 
 
 def chart_kpi(spec, out_path):
+    """KPI-карточки: каждая в своём subplot с переносом текста (без наложений)."""
+    import textwrap
+    from matplotlib.lines import Line2D
     items = spec.get("kpi_items") or []
     n = max(1, len(items))
-    fig, ax = plt.subplots(figsize=(FIG_W, 1.5 + 0.0 * n))
-    ax.axis("off")
+    # ширина символов на карточку — чтобы переносить подписи по её ширине
+    wrap_w = max(14, int(46 / n))
     arrows = {"up": "▲", "down": "▼", "neutral": "◆"}
-    for i, it in enumerate(items):
-        cx = (i + 0.5) / n
+    fig, axes = plt.subplots(1, n, figsize=(FIG_W, 2.05))
+    if n == 1:
+        axes = [axes]
+    fig.subplots_adjust(top=0.80, bottom=0.06, left=0.01, right=0.99, wspace=0.10)
+    for ax, it in zip(axes, items):
+        ax.axis("off")
         clr = DIRCLR.get(it.get("direction", "neutral"), MUTED)
-        ax.text(cx, 0.92, it.get("label", ""), ha="center", va="top",
-                fontsize=8.5, color=MUTED, transform=ax.transAxes, wrap=True)
-        ax.text(cx, 0.55, it.get("value", ""), ha="center", va="center",
-                fontsize=17, color=NAVY, fontweight="bold", transform=ax.transAxes)
-        d = it.get("delta", "")
+        label = "\n".join(textwrap.wrap(it.get("label", ""), wrap_w)) or " "
         arr = arrows.get(it.get("direction", "neutral"), "")
-        if d or arr:
-            ax.text(cx, 0.16, f"{arr} {d}".strip(), ha="center", va="center",
-                    fontsize=9.5, color=clr, fontweight="bold", transform=ax.transAxes)
-        if i > 0:
-            ax.axvline((i) / n, color=HAIR, linewidth=0.8, ymin=0.1, ymax=0.9)
-    if spec.get("title"):
-        ax.text(0.0, 1.18, spec["title"], ha="left", va="top", fontsize=12.5,
+        delta = f"{arr} {it.get('delta', '')}".strip()
+        delta = "\n".join(textwrap.wrap(delta, wrap_w + 2)) if delta else ""
+        ax.text(0.5, 0.92, label, ha="center", va="top", fontsize=8.5,
+                color=MUTED, transform=ax.transAxes)
+        ax.text(0.5, 0.50, it.get("value", ""), ha="center", va="center", fontsize=16,
                 color=NAVY, fontweight="bold", transform=ax.transAxes)
-    return _finish(fig, out_path)
+        if delta:
+            ax.text(0.5, 0.10, delta, ha="center", va="bottom", fontsize=8.5,
+                    color=clr, fontweight="bold", transform=ax.transAxes)
+    # тонкие разделители между карточками (в координатах фигуры)
+    for i in range(1, n):
+        x = 0.01 + (0.98) * i / n
+        fig.add_artist(Line2D([x, x], [0.12, 0.74], color=HAIR, lw=0.8,
+                              transform=fig.transFigure))
+    if spec.get("title"):
+        fig.text(0.012, 0.95, spec["title"], ha="left", va="top", fontsize=12.5,
+                 color=NAVY, fontweight="bold")
+    if spec.get("source"):
+        fig.text(0.012, 0.005, f"Источник: {spec['source']}", color=MUTED,
+                 fontsize=7.5, style="italic", ha="left", va="bottom")
+    fig.savefig(out_path, facecolor="white")
+    plt.close(fig)
+    return out_path
 
 
 _DISPATCH = {

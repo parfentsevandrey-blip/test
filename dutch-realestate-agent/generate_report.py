@@ -150,6 +150,19 @@ def _remove_table_borders(table):
     tblPr.append(borders)
 
 
+def _no_row_split(table):
+    """Запретить разрыв строк таблицы между страницами (боксы не рвутся)."""
+    for row in table.rows:
+        trPr = row._tr.get_or_add_trPr()
+        cantsplit = OxmlElement("w:cantSplit")
+        trPr.append(cantsplit)
+
+
+def _keep_with_next(paragraph):
+    """Держать абзац вместе со следующим (заголовок не висит внизу страницы)."""
+    paragraph.paragraph_format.keep_with_next = True
+
+
 def _full_width(table, width_cm=16.8):
     """Растянуть таблицу на ширину текста (полезно для цветных полос/боксов)."""
     table.autofit = False
@@ -268,12 +281,15 @@ def add_segment_bar(doc, title, color_hex, icon=""):
     label = f"{icon}  {title}" if icon else title
     run = p.add_run(label)
     _style_run(run, size=14, bold=True, color_rgb=RGBColor(0xFF, 0xFF, 0xFF))
+    _keep_with_next(p)
+    _no_row_split(table)
 
 
 def add_subsection_title(doc, text, color_rgb):
     p = _p(doc, space_before=10, space_after=3)
     run = p.add_run(text)
     _style_run(run, size=11.5, bold=True, color_rgb=color_rgb)
+    _keep_with_next(p)
     # тонкая нижняя линия
     pPr = p._p.get_or_add_pPr()
     pbdr = OxmlElement("w:pBdr")
@@ -384,6 +400,7 @@ def add_conclusion_box(doc, text):
     _set_cell_background(cell, CONCL_FILL)
     _set_cell_margins(cell, top=140, bottom=140, left=220, right=220)
     _set_cell_borders(cell, {"left": (36, CONCL_BAR)})  # толстая левая полоса
+    _no_row_split(table)
 
     p0 = cell.paragraphs[0]
     p0.paragraph_format.space_after = Pt(2)
@@ -407,6 +424,7 @@ def add_watch_box(doc, text):
     _set_cell_background(cell, WATCH_FILL)
     _set_cell_margins(cell, top=100, bottom=100, left=220, right=220)
     _set_cell_borders(cell, {"left": (30, WATCH_BAR)})
+    _no_row_split(table)
     p0 = cell.paragraphs[0]
     p0.paragraph_format.space_after = Pt(0)
     p0.paragraph_format.line_spacing = 1.1
@@ -427,6 +445,7 @@ def build_key_takeaways(doc, data):
     _full_width(table)
     cell = table.cell(0, 0)
     _set_cell_background(cell, KT_FILL)
+    _no_row_split(table)
     _set_cell_margins(cell, top=150, bottom=150, left=220, right=220)
     p0 = cell.paragraphs[0]
     p0.paragraph_format.space_after = Pt(4)
@@ -457,6 +476,7 @@ def build_outlook(doc, data):
     _full_width(table)
     cell = table.cell(0, 0)
     _set_cell_background(cell, OUTLOOK_FILL)
+    _no_row_split(table)
     _set_cell_margins(cell, top=140, bottom=140, left=200, right=200)
     cp = cell.paragraphs[0]
     cp.paragraph_format.space_after = Pt(0)
@@ -651,6 +671,8 @@ def add_chart_image(doc, png_path, caption=None):
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p.paragraph_format.space_before = Pt(6)
     p.paragraph_format.space_after = Pt(1)
+    if caption:
+        _keep_with_next(p)  # картинка держится со своей подписью
     if caption:
         cp = _p(doc, space_before=0, space_after=8, line=1.08, align=WD_ALIGN_PARAGRAPH.CENTER)
         r = cp.add_run(caption)
@@ -848,6 +870,7 @@ def build_report(data, out_path):
 
     doc = setup_document(data)
     build_cover(doc, data)
+    doc.add_page_break()           # обложка — отдельная страница
     build_key_takeaways(doc, data)
     build_overview_charts(doc, data, pngs)
     build_exec_summary(doc, data)
