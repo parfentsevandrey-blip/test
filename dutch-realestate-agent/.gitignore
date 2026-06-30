@@ -1,0 +1,3 @@
+reports/*.png
+__pycache__/
+*.pyc

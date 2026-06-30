@@ -1,0 +1,164 @@
+{
+  "report_date": "2026-06-30",
+  "week_start": "2026-06-22",
+  "week_end": "2026-06-28",
+  "language": "ru",
+  "executive_summary": "Жилая недвижимость продолжает дорожать: в мае цены выросли на 4,4% год к году и на 0,6% за месяц, при этом число сделок слегка снизилось. Главное событие недели — Сенат одобрил закон об усилении госуправления жильём, который вступает в силу с 1 июля. В коммерции (стрит-ритейл) фон спокойный: ABN AMRO чуть снизил прогноз по рознице из-за внешних рисков, но качественные торговые центры активно набирают новых арендаторов. В индустриале главная тема — дефицит электромощностей: очередь на подключение выросла до 15 000 компаний, с 1 июля ужесточаются правила netcongestie, а кабинет запустил пакет на 20 млрд евро для разблокировки стройки по азоту; девелопмент крупных складов идёт активно.",
+  "segments": [
+    {
+      "id": "residential",
+      "title": "Жилая недвижимость",
+      "icon": "🏠",
+      "subsections": {
+        "laws": [
+          {
+            "text": "Сенат (Eerste Kamer) 23 июня одобрил закон Wet versterking regie volkshuisvesting: государство, провинции и муниципалитеты получают инструменты управлять тем, сколько, где и для кого строить. Две трети нового жилья должны быть доступными, 30% — социальная аренда. Вступает в силу 1 июля 2026.",
+            "source": "Eerste Kamer",
+            "url": "https://www.eerstekamer.nl/nieuws/20260624/senaat_steunt_versterken_regie_op",
+            "date": "2026-06-24"
+          },
+          {
+            "text": "В рамках принятого закона ускоряются процедуры по стройке: для проектов от 12 жилья жалобы рассматривает сразу Raad van State (минуя нижестоящие суды) с решением в течение 6 месяцев, а тест Ladder voor duurzame verstedelijking отменяется для жилищной застройки. Эти изменения действуют с 1 января 2027.",
+            "source": "Arom",
+            "url": "https://www.arom.nl/wet-versterking-regie-volkshuisvesting-aangenomen-kortere-procedures-woningbouw/",
+            "date": "2026-06-25"
+          },
+          {
+            "text": "Верховный суд (Hoge Raad) постановил: владельцы активов, не подавшие вовремя возражение против налога box 3 за 2017–2020 годы, не получат компенсацию (rechtsherstel). Возврат переплаты возможен только для тех, кто оспорил начисления своевременно; процедура massaalbezwaarplus закрыта.",
+            "source": "Accountancy Vanmorgen",
+            "url": "https://www.accountancyvanmorgen.nl/2026/06/25/hoge-raad-geen-rechtsherstel-voor-niet-bezwaarmakers-in-box-3/",
+            "date": "2026-06-25"
+          }
+        ],
+        "news": [
+          {
+            "text": "Вторая палата (Tweede Kamer) приняла поправку D66 с просьбой к правительству после лета рассмотреть дополнительные крупные локации под жильё, включая Veenendaal-De Klomp и IJmeer; кабинет также одобрил модернизацию проектной поддержки жилищных корпораций.",
+            "source": "VTW",
+            "url": "https://vtw.nl/nieuws/politiek-nieuwsoverzicht-22-juni-2026",
+            "date": "2026-06-22"
+          }
+        ],
+        "trends": [],
+        "stats": [
+          {
+            "text": "Цены на существующее жильё в мае были на 4,4% выше, чем годом ранее (после +4,3% в апреле); к предыдущему пику (июль 2022) цены выше примерно на 16,6%.",
+            "value": "+4,4% г/г",
+            "source": "CBS",
+            "url": "https://www.cbs.nl/nl-nl/nieuws/2026/26/koopwoningen-in-mei-ruim-4-procent-duurder-dan-jaar-eerder",
+            "date": "2026-06-22"
+          },
+          {
+            "text": "За месяц, в мае, цены на существующие дома выросли на 0,6% по сравнению с апрелем; индекс цен CBS достиг 154,9 (2020 = 100).",
+            "value": "+0,6% м/м",
+            "source": "CBS",
+            "url": "https://www.cbs.nl/nl-nl/cijfers/detail/85773NED",
+            "date": "2026-06-22"
+          },
+          {
+            "text": "Средняя цена сделки по существующему дому в мае составила около 487 383 евро.",
+            "value": "≈ €487 383",
+            "source": "CBS",
+            "url": "https://www.cbs.nl/nl-nl/nieuws/2026/26/koopwoningen-in-mei-ruim-4-procent-duurder-dan-jaar-eerder",
+            "date": "2026-06-22"
+          },
+          {
+            "text": "Kadaster зарегистрировал 19 120 сделок с жильём в мае — на 2,5% меньше, чем годом ранее. За первые пять месяцев 2026 года продано 94 523 дома (+5% к 2025).",
+            "value": "19 120 сделок, −2,5% г/г",
+            "source": "Kadaster",
+            "url": "https://www.kadaster.nl/-/koopwoningen-in-mei-ruim-4-duurder-dan-jaar-eerder",
+            "date": "2026-06-22"
+          }
+        ]
+      },
+      "conclusion": "Цены продолжают расти, но темп умеренный, а число сделок чуть снизилось — рынок остаётся дорогим и плотным для покупателей. Новый закон даёт властям больше рычагов наращивать доступное жильё и ускорять стройку, но эффект проявится постепенно. Решение Hoge Raad по box 3 закрывает путь к компенсациям тем, кто не оспорил налог вовремя — сигнал владельцам активнее следить за налоговыми сроками."
+    },
+    {
+      "id": "commercial",
+      "title": "Коммерция (стрит-ритейл)",
+      "icon": "🏪",
+      "subsections": {
+        "laws": [],
+        "news": [
+          {
+            "text": "Wereldhave подписал договоры аренды с шестью новыми ритейлерами в ТЦ Cityplaza в Нивегейне (Siebel, Ernsting's family, Let's Go Shoes, EsthetiQ, Hair & Beauty Lavin, Sakura Cafe), усиливая блоки моды, обуви, общепита и beauty.",
+            "source": "Vastgoedjournaal",
+            "url": "https://vastgoedjournaal.nl/news/73468/nieuwe-huurders-voor-cityplaza-nieuwegein",
+            "date": "2026-06-23"
+          },
+          {
+            "text": "Wereldhave заключил договор аренды торговой площади с Van Uffelen Mode в ТЦ Middenwaard в Херхюговарде.",
+            "source": "Vastgoedjournaal",
+            "url": "https://vastgoedjournaal.nl/news/73484/van-uffelen-mode-naar-middenwaard-heerhugowaard",
+            "date": "2026-06-25"
+          },
+          {
+            "text": "Сеть обувных магазинов Scapino открыла два новых магазина — в Дедемсварте и Керкраде; в Керкраде дебютировал новый концепт Sport XL.",
+            "source": "Vastgoedjournaal",
+            "url": "https://vastgoedjournaal.nl/news/73511/scapino-opent-nieuwe-winkels-in-dedemsvaart-en-kerkrade",
+            "date": "2026-06-26"
+          }
+        ],
+        "trends": [
+          {
+            "text": "ABN AMRO слегка снизил прогноз по сектору розницы Нидерландов: потребительские расходы пока стабильны, но затяжные экономические последствия конфликта на Ближнем Востоке могут давить на ритейл-рынок.",
+            "source": "Vastgoedjournaal / ABN AMRO",
+            "url": "https://vastgoedjournaal.nl/news/73460/retailvooruitzichten-licht-omlaag-door-nasleep-midden-oostenconflict",
+            "date": "2026-06-23"
+          }
+        ],
+        "stats": []
+      },
+      "conclusion": "Спрос на торговые площади в качественных ТЦ остаётся живым — арендаторы активно занимают места и развивают новые концепты. При этом общий фон осторожный: внешние риски могут притормозить потребление, поэтому прогноз по рознице слегка понижен. Для собственников стрит-ритейла это значит ставку на сильные локации и устойчивых арендаторов."
+    },
+    {
+      "id": "industrial",
+      "title": "Индустриал (склады, промзоны)",
+      "icon": "🏭",
+      "subsections": {
+        "laws": [
+          {
+            "text": "С 1 июля 2026 в зонах netcongestie мелкие потребители (подключения до 3×80 А) теряют зарезервированную мощность и попадают в общую очередь — около 15 000 крупных потребителей уже в листах ожидания. Приоритет получают разгрузка сети (хранение/гибкое потребление), безопасность и экстренные службы, базовые нужды (жильё, образование, транспорт, теплоснабжение). Это бьёт по компаниям, которые хотят расширяться или электрифицироваться на bedrijventerreinen.",
+            "source": "VNO-NCW West",
+            "url": "https://www.vno-ncwwest.nl/nieuwe-regels-bij-netcongestie-vanaf-1-juli-2026-wat-betekent-dit-voor-ondernemers/",
+            "date": "2026-06-24"
+          },
+          {
+            "text": "Кабинет представил пакет мер по азоту (stikstof) на 20 млрд евро, чтобы снять блокировку разрешений на стройку и энергоинфраструктуру. Вводится расчётная нижняя граница выбросов: проекты ниже неё не требуют разрешения. Вокруг ~100 чувствительных природных зон устанавливаются буферы 500–1000 м.",
+            "source": "Rijksoverheid",
+            "url": "https://www.rijksoverheid.nl/actueel/nieuws/2026/06/26/kabinet-haalt-nederland-van-het-stikstofslot-met-stevig-pakket-weer-ruimte-voor-boer-natuur-en-bouw",
+            "date": "2026-06-26"
+          }
+        ],
+        "news": [
+          {
+            "text": "ID Logistics Benelux строит новый распределительный центр в Тиле площадью более 52 000 кв. м (подрядчик Heembouw). Идут свайные работы перед летним перерывом; объект включает офисы и Innovationbox для логистических инноваций.",
+            "source": "Warehouse Totaal",
+            "url": "https://www.warehousetotaal.nl/warehousing/logistiek-vastgoed/dit-wordt-het-nieuwe-distributiecentrum-van-id-logistics-in-nederland/144130/",
+            "date": "2026-06-24"
+          },
+          {
+            "text": "Van der Helm Logistics строит распределительный центр около 100 000 кв. м на Logistiek Park Moerdijk с прямыми связями по дороге, воде и ж/д. Ввод запланирован на конец 2026 года; параллельно компания развивает ещё один DC у Схипхола.",
+            "source": "Warehouse Totaal",
+            "url": "https://www.warehousetotaal.nl/warehousing/logistiek-vastgoed/bouw-100-000-m%C2%B2-groot-distributiecentrum-van-der-helm-logistics-vordert-gestaag-de-eerste-beelden/144110/",
+            "date": "2026-06-23"
+          }
+        ],
+        "trends": [],
+        "stats": []
+      },
+      "conclusion": "Главный фактор стоимости в индустриале сейчас — доступ к электромощности: с 1 июля правила ужесточаются, и объекты с готовым подключением будут заметно дороже остальных. Девелопмент крупных складов продолжается (ID Logistics, Van der Helm), но фокус смещается на площадки с готовой инфраструктурой. Пакет по азоту на 20 млрд евро может постепенно разблокировать стройку и энергосети — это позитив для сектора в среднесрочной перспективе."
+    }
+  ],
+  "sources": [
+    {"name": "CBS — Статбюро Нидерландов", "url": "https://www.cbs.nl"},
+    {"name": "Kadaster — кадастр", "url": "https://www.kadaster.nl"},
+    {"name": "Eerste Kamer — Сенат", "url": "https://www.eerstekamer.nl"},
+    {"name": "Rijksoverheid — правительство", "url": "https://www.rijksoverheid.nl"},
+    {"name": "Vastgoedjournaal", "url": "https://vastgoedjournaal.nl"},
+    {"name": "Warehouse Totaal", "url": "https://www.warehousetotaal.nl"},
+    {"name": "VNO-NCW West", "url": "https://www.vno-ncwwest.nl"},
+    {"name": "Accountancy Vanmorgen", "url": "https://www.accountancyvanmorgen.nl"},
+    {"name": "Arom (woningbouw)", "url": "https://www.arom.nl"},
+    {"name": "VTW", "url": "https://vtw.nl"}
+  ]
+}
