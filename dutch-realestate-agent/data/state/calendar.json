@@ -1,48 +1,39 @@
 {
   "events": [
     {
-      "date": "2026-07-22",
-      "what": "Дедлайн Prologis по Segro: подтвердить твёрдое намерение или отступить (put up or shut up)",
+      "date": "2026-07-01",
+      "what": "Вступают в силу новые правила netcongestie (электроподключения)",
       "segment": "industrial",
-      "source": "Warehouse Totaal / Bloomberg",
+      "source": "",
       "thread_id": "",
-      "impact": "",
+      "impact": "объекты без мощности теряют ценность",
       "added_week": "2026-06-30"
     },
     {
-      "date": "2027-06-26",
-      "what": "Следующий ежегодный цикл подачи заявок на выкуп паёв Vesteda (новые условия фонда)",
-      "segment": "residential",
-      "source": "Vesteda / NOS",
+      "date": "2026-07-22",
+      "what": "Дедлайн Prologis по Segro: подтвердить оферту или отступить",
+      "segment": "industrial",
+      "source": "",
       "thread_id": "",
-      "impact": "",
+      "impact": "переоценит весь логистический сектор",
+      "added_week": "2026-06-30"
+    },
+    {
+      "date": "2026-07-23",
+      "what": "Очередной релиз CBS по ценам на жильё (ориентировочно)",
+      "segment": "residential",
+      "source": "",
+      "thread_id": "",
+      "impact": "свежая динамика цен и сделок",
       "added_week": "2026-06-30"
     },
     {
       "date": "2028-01-01",
-      "what": "Намеченный старт режима 'Wet werkelijk rendement box 3' (налог с фактической доходности)",
+      "what": "Намеченный старт налога box 3 с реальной доходности",
       "segment": "residential",
-      "source": "Eerste Kamer (wetsvoorstel 36748)",
+      "source": "",
       "thread_id": "",
-      "impact": "",
-      "added_week": "2026-06-30"
-    },
-    {
-      "date": "2028-03-31",
-      "what": "Сдача Panattoni Park Emmen (~150 000 м²); проверка, найден ли арендатор",
-      "segment": "industrial",
-      "source": "PropertyNL",
-      "thread_id": "",
-      "impact": "",
-      "added_week": "2026-06-30"
-    },
-    {
-      "date": "2032-01-01",
-      "what": "Срок предложения ЕК по смягчению лимита вычета процентов (порог 3 млн €); IVBN просит ускорить",
-      "segment": "commercial",
-      "source": "Vastgoed Insider",
-      "thread_id": "",
-      "impact": "",
+      "impact": "смена правил для частных арендодателей",
       "added_week": "2026-06-30"
     }
   ]

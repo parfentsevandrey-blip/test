@@ -4,248 +4,157 @@
       "date": "2026-06-30",
       "segment": "residential",
       "subsection": "laws",
-      "title": "Сенат — верхняя палата парламента (Eerste Kamer) — 23 июня одобрил закон об усилении роли государства в жилищном строительстве (Wet versterking regie volkshuisv",
+      "title": "Сенат одобрил закон, который даёт государству, провинциям и муниципалитетам право решать, сколько, где и какое жильё строить (Wet versterking regie volkshuisves",
       "url": "https://www.eerstekamer.nl/nieuws/20260624/senaat_steunt_versterken_regie_op"
-    },
-    "u:https://www.arom.nl/wet-versterking-regie-volkshuisvesting-aangenomen-kortere-procedures-woningbouw": {
-      "date": "2026-06-30",
-      "segment": "residential",
-      "subsection": "laws",
-      "title": "По тому же закону ускоряются согласования стройки. Жалобы на проекты от 12 квартир сразу рассматривает высшая инстанция — Государственный совет (Raad van State)",
-      "url": "https://www.arom.nl/wet-versterking-regie-volkshuisvesting-aangenomen-kortere-procedures-woningbouw/"
-    },
-    "u:https://www.accountancyvanmorgen.nl/2026/06/25/hoge-raad-geen-rechtsherstel-voor-niet-bezwaarmakers-in-box-3": {
-      "date": "2026-06-30",
-      "segment": "residential",
-      "subsection": "laws",
-      "title": "Верховный суд Нидерландов (Hoge Raad) постановил: кто вовремя не подал возражение против налога на сбережения и инвестиции (box 3 — раздел подоходного налога, п",
-      "url": "https://www.accountancyvanmorgen.nl/2026/06/25/hoge-raad-geen-rechtsherstel-voor-niet-bezwaarmakers-in-box-3/"
-    },
-    "u:https://vtw.nl/nieuws/politiek-nieuwsoverzicht-22-juni-2026": {
-      "date": "2026-06-30",
-      "segment": "residential",
-      "subsection": "news",
-      "title": "Нижняя палата парламента (Tweede Kamer) приняла предложение партии D66 — попросить правительство после лета рассмотреть новые крупные площадки под жильё. Среди ",
-      "url": "https://vtw.nl/nieuws/politiek-nieuwsoverzicht-22-juni-2026"
-    },
-    "u:https://www.cbs.nl/nl-nl/nieuws/2026/26/koopwoningen-in-mei-ruim-4-procent-duurder-dan-jaar-eerder": {
-      "date": "2026-06-30",
-      "segment": "residential",
-      "subsection": "stats",
-      "title": "Цены на вторичное жильё в мае были на 4,4% выше, чем год назад. В апреле было +4,3% — значит, рост даже немного ускорился. От прошлого ценового пика (июль 2022)",
-      "url": "https://www.cbs.nl/nl-nl/nieuws/2026/26/koopwoningen-in-mei-ruim-4-procent-duurder-dan-jaar-eerder"
-    },
-    "u:https://www.cbs.nl/nl-nl/cijfers/detail/85773ned": {
-      "date": "2026-06-30",
-      "segment": "residential",
-      "subsection": "stats",
-      "title": "За один месяц (с апреля по май) вторичное жильё подорожало на 0,6% — умеренный темп. Индекс цен CBS достиг 154,9 пункта (за базу взят 2020 год = 100 пунктов).",
-      "url": "https://www.cbs.nl/nl-nl/cijfers/detail/85773NED"
-    },
-    "u:https://www.kadaster.nl/-/koopwoningen-in-mei-ruim-4-duurder-dan-jaar-eerder": {
-      "date": "2026-06-30",
-      "segment": "residential",
-      "subsection": "stats",
-      "title": "Кадастр (Kadaster — государственный реестр сделок с недвижимостью) зарегистрировал в мае 19 120 сделок с жильём — на 2,5% меньше, чем год назад. Но за первые пя",
-      "url": "https://www.kadaster.nl/-/koopwoningen-in-mei-ruim-4-duurder-dan-jaar-eerder"
-    },
-    "u:https://vastgoedjournaal.nl/news/73468/nieuwe-huurders-voor-cityplaza-nieuwegein": {
-      "date": "2026-06-30",
-      "segment": "commercial",
-      "subsection": "news",
-      "title": "Wereldhave (старейший биржевой инвестор в торговую недвижимость Нидерландов: владеет более чем 30 торговыми центрами в Нидерландах, Бельгии и Франции, входит в ",
-      "url": "https://vastgoedjournaal.nl/news/73468/nieuwe-huurders-voor-cityplaza-nieuwegein"
-    },
-    "u:https://vastgoedjournaal.nl/news/73484/van-uffelen-mode-naar-middenwaard-heerhugowaard": {
-      "date": "2026-06-30",
-      "segment": "commercial",
-      "subsection": "news",
-      "title": "Та же компания Wereldhave сдала крупную торговую площадь магазину модной одежды Van Uffelen Mode (региональный ритейлер одежды) в торговом центре Middenwaard в ",
-      "url": "https://vastgoedjournaal.nl/news/73484/van-uffelen-mode-naar-middenwaard-heerhugowaard"
-    },
-    "u:https://vastgoedjournaal.nl/news/73511/scapino-opent-nieuwe-winkels-in-dedemsvaart-en-kerkrade": {
-      "date": "2026-06-30",
-      "segment": "commercial",
-      "subsection": "news",
-      "title": "Сеть Scapino (нидерландский дисконт-ритейлер обуви, одежды и спорттоваров — «хорошее качество по низкой цене»; более 170 магазинов по стране, принадлежит семье ",
-      "url": "https://vastgoedjournaal.nl/news/73511/scapino-opent-nieuwe-winkels-in-dedemsvaart-en-kerkrade"
-    },
-    "u:https://vastgoedjournaal.nl/news/73460/retailvooruitzichten-licht-omlaag-door-nasleep-midden-oostenconflict": {
-      "date": "2026-06-30",
-      "segment": "commercial",
-      "subsection": "trends",
-      "title": "Банк ABN AMRO (один из трёх крупнейших банков Нидерландов) слегка понизил прогноз по рознице. Пока потребители тратят стабильно, но затяжные экономические после",
-      "url": "https://vastgoedjournaal.nl/news/73460/retailvooruitzichten-licht-omlaag-door-nasleep-midden-oostenconflict"
-    },
-    "u:https://www.vno-ncwwest.nl/nieuwe-regels-bij-netcongestie-vanaf-1-juli-2026-wat-betekent-dit-voor-ondernemers": {
-      "date": "2026-06-30",
-      "segment": "industrial",
-      "subsection": "laws",
-      "title": "С 1 июля 2026 меняются правила в зонах перегрузки электросети (netcongestie — это когда мощности сети физически не хватает на всех потребителей). Мелкие потреби",
-      "url": "https://www.vno-ncwwest.nl/nieuwe-regels-bij-netcongestie-vanaf-1-juli-2026-wat-betekent-dit-voor-ondernemers/"
-    },
-    "u:https://www.rijksoverheid.nl/actueel/nieuws/2026/06/26/kabinet-haalt-nederland-van-het-stikstofslot-met-stevig-pakket-weer-ruimte-voor-boer-natuur-en-bouw": {
-      "date": "2026-06-30",
-      "segment": "industrial",
-      "subsection": "laws",
-      "title": "Правительство (Rijksoverheid) представило пакет мер по азоту (stikstof) на 20 млрд евро. Суть проблемы: из-за строгих норм по выбросам соединений азота в Нидерл",
-      "url": "https://www.rijksoverheid.nl/actueel/nieuws/2026/06/26/kabinet-haalt-nederland-van-het-stikstofslot-met-stevig-pakket-weer-ruimte-voor-boer-natuur-en-bouw"
-    },
-    "u:https://www.warehousetotaal.nl/warehousing/logistiek-vastgoed/dit-wordt-het-nieuwe-distributiecentrum-van-id-logistics-in-nederland/144130": {
-      "date": "2026-06-30",
-      "segment": "industrial",
-      "subsection": "news",
-      "title": "ID Logistics (французская международная логистическая компания-подрядчик; так называемый 3PL — это значит, что она ведёт склады и доставку чужих товаров под зак",
-      "url": "https://www.warehousetotaal.nl/warehousing/logistiek-vastgoed/dit-wordt-het-nieuwe-distributiecentrum-van-id-logistics-in-nederland/144130/"
-    },
-    "u:https://www.warehousetotaal.nl/warehousing/logistiek-vastgoed/bouw-100-000-m%c2%b2-groot-distributiecentrum-van-der-helm-logistics-vordert-gestaag-de-eerste-beelden/144110": {
-      "date": "2026-06-30",
-      "segment": "industrial",
-      "subsection": "news",
-      "title": "Van der Helm Logistics (нидерландская семейная логистическая компания из региона Вестланд, основана в 1936 году, около 200 сотрудников) строит распределительный",
-      "url": "https://www.warehousetotaal.nl/warehousing/logistiek-vastgoed/bouw-100-000-m%C2%B2-groot-distributiecentrum-van-der-helm-logistics-vordert-gestaag-de-eerste-beelden/144110/"
     },
     "u:https://www.eerstekamer.nl/wetsvoorstel/36748_wet_werkelijk_rendement_box": {
       "date": "2026-06-30",
       "segment": "residential",
       "subsection": "laws",
-      "title": "Сенат (Eerste Kamer — верхняя палата парламента) 30 июня провёл пленарные дебаты по законопроекту 'Wet werkelijk rendement box 3' (закон о налогообложении факти",
+      "title": "Сенат начал дебаты по новому налогу для частных арендодателей (Wet werkelijk rendement box 3): вместо налога на выдуманный доход — налог на реальный арендный до",
       "url": "https://www.eerstekamer.nl/wetsvoorstel/36748_wet_werkelijk_rendement_box"
     },
-    "u:https://vastgoedjournaal.nl/news/73472/coalitieakkoord-utrecht-80-procent-betaalbare-nieuwbouw-en-doorbraakteam-netcongestie": {
+    "u:https://www.accountancyvanmorgen.nl/2026/06/25/hoge-raad-geen-rechtsherstel-voor-niet-bezwaarmakers-in-box-3": {
       "date": "2026-06-30",
       "segment": "residential",
       "subsection": "laws",
-      "title": "Утрехт (4-й город страны, ~370 тыс. жителей) представил коалиционное соглашение на 2026–2030 (партии PRO Utrecht и D66). По жилью: для всей новой застройки ввод",
-      "url": "https://vastgoedjournaal.nl/news/73472/coalitieakkoord-utrecht-80-procent-betaalbare-nieuwbouw-en-doorbraakteam-netcongestie"
-    },
-    "u:https://www.vastgoedmarkt.nl/209650/rotterdams-coalitieakkoord-volgt-braaf-de-regiewet-67-procent-betaalbare-woningen": {
-      "date": "2026-06-30",
-      "segment": "residential",
-      "subsection": "laws",
-      "title": "Роттердам (2-й город страны, ~670 тыс. жителей) представил коалиционное соглашение 2026–2030 'Vaart maken' (Набрать ход; коалиция PRO, D66, VVD, CDA, Volt). До ",
-      "url": "https://www.vastgoedmarkt.nl/209650/rotterdams-coalitieakkoord-volgt-braaf-de-regiewet-67-procent-betaalbare-woningen"
-    },
-    "u:https://regiopurmerend.nl/raad-van-state-zet-streep-door-besluiten-maar-woningbouw-koggenland-gaat-toch-door": {
-      "date": "2026-06-30",
-      "segment": "residential",
-      "subsection": "laws",
-      "title": "Государственный совет (Raad van State — высший административный суд) 24 июня аннулировал план застройки (bestemmingsplan) и экологическое разрешение для жилого ",
-      "url": "https://regiopurmerend.nl/raad-van-state-zet-streep-door-besluiten-maar-woningbouw-koggenland-gaat-toch-door/"
+      "title": "Верховный суд (Hoge Raad) поставил точку: кто не оспорил налог box 3 за 2017–2020 вовремя — компенсацию не получит, массовая процедура закрыта.",
+      "url": "https://www.accountancyvanmorgen.nl/2026/06/25/hoge-raad-geen-rechtsherstel-voor-niet-bezwaarmakers-in-box-3/"
     },
     "u:https://news.vesteda.com/vesteda-redemption-volume-set-at--765-million-and-fund-terms-amended": {
       "date": "2026-06-30",
       "segment": "residential",
       "subsection": "news",
-      "title": "На внеочередном собрании акционеров (BAVA) 26 июня фонд Vesteda — один из крупнейших в Нидерландах институциональных инвесторов в жильё (портфель ~10,8 млрд евр",
+      "title": "Крупнейший институциональный арендодатель жилья Vesteda (~10,8 млрд €, ~28 000 квартир) утихомирил волну выхода инвесторов: вместо заявок на выкуп паёв на 4,1 м",
       "url": "https://news.vesteda.com/vesteda-redemption-volume-set-at--765-million-and-fund-terms-amended/"
     },
     "u:https://vastgoedjournaal.nl/news/73539/twee-pensioenfondsen-stappen-in-ouderenfonds-bouwinvest": {
       "date": "2026-06-30",
       "segment": "residential",
       "subsection": "news",
-      "title": "Bouwinvest (один из крупнейших нидерландских управляющих недвижимостью для пенсионных фондов, входит в группу bpfBOUW, под управлением ~14 млрд евро) привлёк но",
+      "title": "Bouwinvest (управляет ~14 млрд € для пенсионных фондов) более чем удвоил фонд жилья для пожилых: заявленный капитал вырос со 130 до 263,5 млн €, инвесторов стал",
       "url": "https://vastgoedjournaal.nl/news/73539/twee-pensioenfondsen-stappen-in-ouderenfonds-bouwinvest"
     },
-    "u:https://vastgoedjournaal.nl/news/73515/oud-roba-metals-terrein-maakt-plaats-voor-563-woningen-van-heijmans": {
+    "u:https://www.vastgoedmarkt.nl/209650/rotterdams-coalitieakkoord-volgt-braaf-de-regiewet-67-procent-betaalbare-woningen": {
       "date": "2026-06-30",
       "segment": "residential",
       "subsection": "news",
-      "title": "Девелопер Heijmans (крупная биржевая нидерландская строительно-девелоперская компания, котируется на Euronext Amsterdam) и муниципалитет IJsselstein (под Утрехт",
-      "url": "https://vastgoedjournaal.nl/news/73515/oud-roba-metals-terrein-maakt-plaats-voor-563-woningen-van-heijmans"
+      "title": "Утрехт и Роттердам утвердили коалиционные соглашения с жёсткими планками доступного жилья: Утрехт требует 80% доступного во всей новостройке, Роттердам — ~67% (",
+      "url": "https://www.vastgoedmarkt.nl/209650/rotterdams-coalitieakkoord-volgt-braaf-de-regiewet-67-procent-betaalbare-woningen"
     },
     "u:https://vastgoedjournaal.nl/news/73469/harm-janssen-bpd-we-moeten-gewoon-beginnen-met-bouwen": {
       "date": "2026-06-30",
       "segment": "residential",
       "subsection": "news",
-      "title": "Harm Janssen, гендиректор BPD (Bouwfonds Property Development — один из крупнейших девелоперов жилья в Нидерландах и Германии, дочерняя структура Rabobank), в и",
+      "title": "Гендиректор BPD (один из крупнейших девелоперов жилья, структура Rabobank) Харм Янссен в интервью: «надо просто начинать строить» — дефицит инфраструктуры (~80 ",
       "url": "https://vastgoedjournaal.nl/news/73469/harm-janssen-bpd-we-moeten-gewoon-beginnen-met-bouwen"
     },
     "u:https://vastgoedinsider.nl/nederland-heft-ook-in-box-2-vaak-te-veel-belasting-op-vastgoed-europese-commissie-hanteert-lichtere-regels-voor-renteaftrekbeperking": {
       "date": "2026-06-30",
       "segment": "commercial",
       "subsection": "laws",
-      "title": "26 июня отраслевая ассоциация институциональных инвесторов в недвижимость IVBN призвала правительство не откладывать до 2032 года смягчение правила ограничения ",
+      "title": "Ассоциация институциональных инвесторов IVBN потребовала не тянуть до 2032 со смягчением лимита на вычет процентов (earningsstrippingmaatregel): нидерландский п",
       "url": "https://vastgoedinsider.nl/nederland-heft-ook-in-box-2-vaak-te-veel-belasting-op-vastgoed-europese-commissie-hanteert-lichtere-regels-voor-renteaftrekbeperking/"
     },
     "u:https://www.cbre.nl/press-releases/perifere-winkelgebieden-trotseren-retailcrisis-en-blijven-verrassend-populair": {
       "date": "2026-06-30",
       "segment": "commercial",
       "subsection": "news",
-      "title": "CBRE (крупнейший в мире консультант, оценщик и брокер коммерческой недвижимости; в Нидерландах один из ведущих игроков) выпустил отчёт о периферийных ритейл-пар",
+      "title": "CBRE (крупнейший в мире брокер коммерческой недвижимости) показал тихого чемпиона: периферийные ритейл-парки (крупноформатные магазины на окраинах — мебель, DIY",
       "url": "https://www.cbre.nl/press-releases/perifere-winkelgebieden-trotseren-retailcrisis-en-blijven-verrassend-populair"
     },
     "u:https://www.test-aankoop.be/invest/beleggen/vastgoed/gereglementeerde-vastgoedvennootschappen/artikels/2026/06/retail-estates-eerste-stap-frankrijk": {
       "date": "2026-06-30",
       "segment": "commercial",
       "subsection": "news",
-      "title": "Retail Estates (бельгийская биржевая компания недвижимости со статусом GVV/SIR — регулируемого фонда-REIT; специализируется на периферийных ритейл-парках в Бени",
+      "title": "Бельгийский REIT Retail Estates (специализируется на ритейл-парках Бенилюкса) подтвердил тезис цифрами: заполняемость 97,8%, чистый арендный доход +2,5%, дивиде",
       "url": "https://www.test-aankoop.be/invest/beleggen/vastgoed/gereglementeerde-vastgoedvennootschappen/artikels/2026/06/retail-estates-eerste-stap-frankrijk"
+    },
+    "u:https://vastgoedjournaal.nl/news/73468/nieuwe-huurders-voor-cityplaza-nieuwegein": {
+      "date": "2026-06-30",
+      "segment": "commercial",
+      "subsection": "news",
+      "title": "Wereldhave (старейший биржевой инвестор в торговую недвижимость, индекс AEX) сдал сразу шесть площадей в ТЦ Cityplaza в Нивегейне — мода, обувь, общепит, красот",
+      "url": "https://vastgoedjournaal.nl/news/73468/nieuwe-huurders-voor-cityplaza-nieuwegein"
+    },
+    "u:https://vastgoedjournaal.nl/news/73511/scapino-opent-nieuwe-winkels-in-dedemsvaart-en-kerkrade": {
+      "date": "2026-06-30",
+      "segment": "commercial",
+      "subsection": "news",
+      "title": "Дисконт-сеть Scapino (обувь/одежда/спорт, 170+ магазинов) открыла два новых магазина и запустила более крупный формат Sport XL.",
+      "url": "https://vastgoedjournaal.nl/news/73511/scapino-opent-nieuwe-winkels-in-dedemsvaart-en-kerkrade"
+    },
+    "u:https://vastgoedjournaal.nl/news/73460/retailvooruitzichten-licht-omlaag-door-nasleep-midden-oostenconflict": {
+      "date": "2026-06-30",
+      "segment": "commercial",
+      "subsection": "trends",
+      "title": "Банк ABN AMRO слегка понизил прогноз по рознице: потребители пока тратят стабильно, но затяжные последствия конфликта на Ближнем Востоке могут ударить по спросу",
+      "url": "https://vastgoedjournaal.nl/news/73460/retailvooruitzichten-licht-omlaag-door-nasleep-midden-oostenconflict"
     },
     "u:https://www.vakbladmannenmode.nl/koopbereidheid-maakt-sprong": {
       "date": "2026-06-30",
       "segment": "commercial",
       "subsection": "trends",
-      "title": "В отраслевой прессе ритейла (vakbladmannenmode.nl) вышел материал о резком скачке готовности потребителей к покупкам (koopbereidheid — субиндекс потребительског",
+      "title": "Готовность голландцев к крупным покупкам (koopbereidheid, субиндекс доверия CBS) совершила рекордный месячный скачок: с −28 до −22, общий индекс доверия — с −46",
       "url": "https://www.vakbladmannenmode.nl/koopbereidheid-maakt-sprong/"
     },
     "u:https://keukenendesign.nl/leegstand-retailparken-blijft-opvallend-laag": {
       "date": "2026-06-30",
       "segment": "commercial",
       "subsection": "stats",
-      "title": "Ключевая цифра из отчёта CBRE по нидерландским ритейл-паркам (retailparken — периферийные крупноформатные торговые парки): вакантность (leegstand — доля пустующ",
+      "title": "Вакантность ритейл-парков на начало 2026 — 4,4%, ниже фрикционного уровня и среднего по торговой недвижимости (5,5%).",
       "url": "https://keukenendesign.nl/leegstand-retailparken-blijft-opvallend-laag/"
+    },
+    "u:https://www.vno-ncwwest.nl/nieuwe-regels-bij-netcongestie-vanaf-1-juli-2026-wat-betekent-dit-voor-ondernemers": {
+      "date": "2026-06-30",
+      "segment": "industrial",
+      "subsection": "laws",
+      "title": "С 1 июля в зонах перегрузки электросети (netcongestie) мелкие потребители теряют зарезервированную мощность и встают в общую очередь — а там уже ~15 000 крупных",
+      "url": "https://www.vno-ncwwest.nl/nieuwe-regels-bij-netcongestie-vanaf-1-juli-2026-wat-betekent-dit-voor-ondernemers/"
+    },
+    "u:https://www.rijksoverheid.nl/actueel/nieuws/2026/06/26/kabinet-haalt-nederland-van-het-stikstofslot-met-stevig-pakket-weer-ruimte-voor-boer-natuur-en-bouw": {
+      "date": "2026-06-30",
+      "segment": "industrial",
+      "subsection": "laws",
+      "title": "Правительство выкатило пакет на 20 млрд € против «азотного замка» (stikstof): расчётный нижний порог выбросов (ниже него — без разрешения) и буферы 500–1000 м в",
+      "url": "https://www.rijksoverheid.nl/actueel/nieuws/2026/06/26/kabinet-haalt-nederland-van-het-stikstofslot-met-stevig-pakket-weer-ruimte-voor-boer-natuur-en-bouw"
     },
     "u:https://www.warehousetotaal.nl/warehousing/logistiek-vastgoed/prologis-doet-miljardenbod-op-segro-maar-logistieke-vastgoedreus-wijst-overname-af/144181": {
       "date": "2026-06-30",
       "segment": "industrial",
       "subsection": "news",
-      "title": "Американская Prologis (крупнейшая в мире публичная компания логистической недвижимости) сделала предложение о поглощении британской Segro примерно за 14,6 млрд ",
+      "title": "Крупнейшая в мире логистическая компания Prologis сделала предложение о поглощении британской Segro за ~14,6 млрд € (премия 24,6%), чтобы создать «крупнейшую в ",
       "url": "https://www.warehousetotaal.nl/warehousing/logistiek-vastgoed/prologis-doet-miljardenbod-op-segro-maar-logistieke-vastgoedreus-wijst-overname-af/144181/"
     },
     "u:https://www.deaandeelhouder.nl/nieuws/2026/06/25/beursblik-deutsche-bank-verlaagt-koersdoelen-voor-aanbieders-van-logistiek-vastgoed": {
       "date": "2026-06-30",
       "segment": "industrial",
       "subsection": "news",
-      "title": "25 июня Deutsche Bank (крупный немецкий инвестбанк) понизил целевые цены (koersdoel — ориентир справедливой цены акции) для четырёх ведущих европейских компаний",
+      "title": "Deutsche Bank срезал целевые цены четырёх ведущих логистических REIT, работающих и в NL (CTP 22→19, WDP 30→25, Montea 85→73, VGP 120→100 €), но рекомендацию «по",
       "url": "https://www.deaandeelhouder.nl/nieuws/2026/06/25/beursblik-deutsche-bank-verlaagt-koersdoelen-voor-aanbieders-van-logistiek-vastgoed/"
     },
     "u:https://propertynl.com/nieuws/panattoni-ontwikkelt-groots-multifunctioneel-bedrijvencomplex-in-emmen/d6e9ee42-b453-4e1e-aef7-4b5a3487fa0d": {
       "date": "2026-06-30",
       "segment": "industrial",
       "subsection": "news",
-      "title": "Девелопер Panattoni (один из крупнейших в мире игроков рынка логистической и промышленной недвижимости, активен в Нидерландах и Бельгии) начал спекулятивную зас",
+      "title": "Девелопер Panattoni начал спекулятивную застройку (без заранее найденного арендатора) комплекса ~150 000 м² (как 22 футбольных поля) в Эммене; собственные инвес",
       "url": "https://propertynl.com/Nieuws/Panattoni-ontwikkelt-groots-multifunctioneel-bedrijvencomplex-in-Emmen/d6e9ee42-b453-4e1e-aef7-4b5a3487fa0d"
     },
-    "u:https://propertynl.com/nieuws/humby-huurt-bijna-30-000-m-logistieke-ruimte-in-venlo/63cab933-adaa-4d81-b102-bcd555b1b790": {
+    "u:https://www.warehousetotaal.nl/warehousing/logistiek-vastgoed/bouw-100-000-m%c2%b2-groot-distributiecentrum-van-der-helm-logistics-vordert-gestaag-de-eerste-beelden/144110": {
       "date": "2026-06-30",
       "segment": "industrial",
       "subsection": "news",
-      "title": "Логистический оператор Humby (провайдер, уже имеющий более 25 000 м2 складов в регионе Венло) заключил долгосрочный договор аренды на 29 779 м2 по адресу Dirk H",
-      "url": "https://propertynl.com/Nieuws/Humby-huurt-bijna-30-000-m-logistieke-ruimte-in-Venlo/63cab933-adaa-4d81-b102-bcd555b1b790"
-    },
-    "u:https://vastgoedjournaal.nl/news/73504/bedrijfspand-in-vaassen-van-wibra-verkocht": {
-      "date": "2026-06-30",
-      "segment": "industrial",
-      "subsection": "news",
-      "title": "Компания Base Investments от имени международного инвестора Patron Capital купила бизнес- и офисное помещение по адресу Griftsemolenweg 38 в Ваассене у Wibra Ho",
-      "url": "https://vastgoedjournaal.nl/news/73504/bedrijfspand-in-vaassen-van-wibra-verkocht"
+      "title": "Семейный логист Van der Helm (с 1936, регион Вестланд) строит ~100 000 м² в логистическом парке Мурдейк с прямым выходом на дорогу, воду и железную дорогу; ввод",
+      "url": "https://www.warehousetotaal.nl/warehousing/logistiek-vastgoed/bouw-100-000-m%C2%B2-groot-distributiecentrum-van-der-helm-logistics-vordert-gestaag-de-eerste-beelden/144110/"
     }
   },
   "weeks": [
     {
       "report_date": "2026-06-30",
-      "week_start": "2026-06-22",
-      "week_end": "2026-06-28",
-      "items": 16,
-      "new_items": 15
-    },
-    {
-      "report_date": "2026-06-30",
       "week_start": "2026-06-23",
       "week_end": "2026-06-30",
-      "items": 18,
-      "new_items": 18
+      "items": 21,
+      "new_items": 21
     }
   ]
 }
