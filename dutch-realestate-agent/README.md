@@ -22,12 +22,17 @@
 ```
 dutch-realestate-agent/
 ├── agent_instructions.md     ← промпт агента: что искать, как, в каком формате
-├── sources.md                ← ключевые источники (банки, CBS, СМИ, консультанты)
+├── sources.md                ← ИСТОЧНИКИ: ~200 шт. в 19 категориях (★/●/○)
 ├── schema.example.json       ← образец входного JSON
 ├── generate_report.py        ← рендер Word из JSON (+ дедупликация)
+├── preview_html.py           ← HTML-превью отчёта (для браузера/телефона)
+├── build_email.py            ← сборка тела письма (HTML + текст)
+├── render_sources.py         ← рендер sources.md из таксономии
 ├── requirements.txt          ← зависимости (python-docx)
 ├── data/
 │   ├── history.json          ← реестр прошлых материалов (антиповтор)
+│   ├── sources.json          ← источники, машиночитаемо (для агента)
+│   ├── sources_taxonomy.json ← полная таксономия источников
 │   └── week_YYYY-MM-DD.json  ← данные конкретной недели
 └── reports/
     └── YYYY-MM-DD_dutch_realestate_RU.docx

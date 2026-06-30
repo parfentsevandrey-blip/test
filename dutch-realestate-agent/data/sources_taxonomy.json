@@ -1,0 +1,2498 @@
+{
+  "intro": "Это структурированная база источников для аналитики рынка недвижимости Нидерландов, сгруппированная по ТИПУ источника. Принцип использования: комбинируйте РАЗНЫЕ типы (официальная статистика и реестры + банковский research + брокеры + СМИ + ассоциации), всегда отдавая приоритет первоисточникам (CBS, Kadaster, DNB, законодательные вестники), а аналитику брокеров и банков используйте для интерпретации и прогноза. Внутри каждой категории источники отсортированы: сначала ключевые, затем важные, затем дополнительные.",
+  "categories": [
+    {
+      "title": "Официальная статистика и реестры (первоисточники)",
+      "description": "Национальная статистика, земельный кадастр, реестры адресов и оценок — фундамент любой аналитики рынка. Только здесь окончательные транзакционные данные.",
+      "sources": [
+        {
+          "name": "CBS — Dashboard Woningmarkt",
+          "url": "https://www.cbs.nl/nl-nl/visualisaties/dashboard-economie/woningmarkt",
+          "segments": [
+            "residential",
+            "macro"
+          ],
+          "provides": "Сводный дашборд рынка жилья: индекс цен PBK, число сделок помесячно, средние цены по муниципалитетам. Точка входа к ключевым показателям.",
+          "frequency": "ежемесячно",
+          "language": "NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "CBS StatLine — Bestaande koopwoningen; verkoopprijzen prijsindex (85773NED)",
+          "url": "https://www.cbs.nl/nl-nl/cijfers/detail/85773NED",
+          "segments": [
+            "residential"
+          ],
+          "provides": "Первоисточник цен на жильё: индекс PBK (2020=100), число проданных домов, средняя цена, общая стоимость сделок; ряд с 1995 г. на основе нотариальных актов Kadaster.",
+          "frequency": "ежемесячно",
+          "language": "NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Kadaster — Vastgoeddashboard",
+          "url": "https://www.kadaster.nl/zakelijk/vastgoedinformatie/vastgoedcijfers/vastgoeddashboard",
+          "segments": [
+            "residential",
+            "macro"
+          ],
+          "provides": "Первоисточник по сделкам: число проданных домов, средние цены, индекс PBK, ипотеки, возраст покупателей, цены на участки, принудительные торги. По стране и провинциям, экспорт Excel/PDF.",
+          "frequency": "ежемесячно",
+          "language": "NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Kadaster — Kwartaalbericht woningmarkt",
+          "url": "https://www.kadaster.nl/zakelijk/vastgoedinformatie/kwartaalberichten/kwartaalberichten-woningmarkt",
+          "segments": [
+            "residential"
+          ],
+          "provides": "Квартальный отчёт по сделкам из земельного регистра: число проданных домов, динамика цен, доля инвесторов.",
+          "frequency": "ежеквартально",
+          "language": "NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "CBS StatLine — Bouwvergunningen nieuwbouwwoningen (83668NED / 83673NED)",
+          "url": "https://www.cbs.nl/nl-nl/cijfers/detail/83668NED",
+          "segments": [
+            "residential",
+            "macro"
+          ],
+          "provides": "Выданные разрешения на строительство жилья (число, индекс 2012=100), число построенных домов, стройзатраты, объём, площадь. Ключ к пайплайну предложения.",
+          "frequency": "ежемесячно",
+          "language": "NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "CBS — Detailhandel (omzet/internetverkopen)",
+          "url": "https://www.cbs.nl/nl-nl/faq/specifiek/welke-cijfers-publiceert-het-cbs-over-de-detailhandel-",
+          "segments": [
+            "commercial",
+            "macro"
+          ],
+          "provides": "Официальная помесячная статистика оборота и объёма продаж розницы (food/non-food), online vs offline, разбивка по SBI и регионам.",
+          "frequency": "ежемесячно",
+          "language": "NL+EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Kadaster — Vastgoedcijfers (хаб данных и квартальные обзоры)",
+          "url": "https://www.kadaster.nl/zakelijk/vastgoedinformatie/vastgoedcijfers",
+          "segments": [
+            "residential",
+            "macro"
+          ],
+          "provides": "Хаб: квартальные обзоры рынка жилья (стартеры/инвесторы), рынок сельхозземли, методические пояснения к различиям цифр Kadaster и CBS.",
+          "frequency": "ежеквартально",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "Kadaster — BAG Viewer (адреса и здания)",
+          "url": "https://bagviewer.kadaster.nl/",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial"
+          ],
+          "provides": "Адресный реестр всех зданий NL: год постройки, площадь, назначение (gebruiksdoel), статус, координаты. Базовый слой идентификации объектов. Бесплатно.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "CBS StatLine — gemiddelde verkoopprijzen, regio (83625NED)",
+          "url": "https://opendata.cbs.nl/#/CBS/nl/dataset/83625NED/table",
+          "segments": [
+            "residential"
+          ],
+          "provides": "Средние цены продажи существующего жилья в региональном разрезе (провинции, муниципалитеты, типы жилья).",
+          "frequency": "ежеквартально",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "Waarderingskamer — WOZ-waardeloket",
+          "url": "https://www.waarderingskamer.nl/woz-wijzer/controleren-woz-waarde/woz-waardeloket",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial"
+          ],
+          "provides": "Публичный доступ к оценкам WOZ всех объектов (с 2014 г.), сравнение по местоположению; годовой рост оценок по муниципалитетам. Прокси стоимости.",
+          "frequency": "ежегодно",
+          "language": "NL+EN",
+          "priority": "важный"
+        },
+        {
+          "name": "KNB — Koninklijke Notariële Beroepsorganisatie (Factsheets akteaantallen)",
+          "url": "https://www.knb.nl/overzicht-factsheets-vanaf-2014",
+          "segments": [
+            "residential",
+            "commercial"
+          ],
+          "provides": "Месячные/квартальные factsheets по числу нотариальных актов (сделки с недвижимостью, ипотеки) — независимый счётчик активности рынка.",
+          "frequency": "ежемесячно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "CBS StatLine — Nieuwbouwwoningen; inputprijsindex bouwkosten (83887NED)",
+          "url": "https://www.cbs.nl/nl-nl/cijfers/detail/83887NED",
+          "segments": [
+            "residential"
+          ],
+          "provides": "Официальный индекс входных цен на строительство новостроек (материалы+труд) — первоисточник динамики себестоимости.",
+          "frequency": "ежеквартально",
+          "language": "NL",
+          "priority": "дополнительный"
+        },
+        {
+          "name": "PDOK — Publieke Dienstverlening Op de Kaart",
+          "url": "https://www.pdok.nl/datasets",
+          "segments": [
+            "all"
+          ],
+          "provides": "Центральная гео-платформа правительства: BAG, кадастровые участки, аэрофото, 200+ датасетов через API. Основа гео-аналитики.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "дополнительный"
+        }
+      ]
+    },
+    {
+      "title": "Госорганы, министерства и законодательство",
+      "description": "Профильные министерства, парламент, официальные вестники и налоговый орган — первоисточники политики, законов и фискальных правил.",
+      "sources": [
+        {
+          "name": "Rijksoverheid — Ministerie van Volkshuisvesting en Ruimtelijke Ordening (VRO), nieuws",
+          "url": "https://www.rijksoverheid.nl/ministeries/ministerie-van-volkshuisvesting-en-ruimtelijke-ordening/nieuws",
+          "segments": [
+            "residential",
+            "macro"
+          ],
+          "provides": "Официальные новости, пресс-релизы и решения профильного министерства по жилью и пространственному планированию.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Rijksoverheid — тема Volkshuisvesting",
+          "url": "https://www.rijksoverheid.nl/onderwerpen/volkshuisvesting",
+          "segments": [
+            "residential",
+            "macro"
+          ],
+          "provides": "Сводная госполитика по жилью: цели 900 000 домов, 100 000 в год, законы о доступной аренде, ключевые документы.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Volkshuisvesting Nederland (программа BZK/VRO)",
+          "url": "https://www.volkshuisvestingnederland.nl/",
+          "segments": [
+            "residential",
+            "macro"
+          ],
+          "provides": "Программа Woningbouw, дашборды и мониторинг стройки, Staat van de Volkshuisvesting, Wet betaalbare huur, Wet versterking regie volkshuisvesting.",
+          "frequency": "ежемесячно",
+          "language": "NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Tweede Kamer der Staten-Generaal (нижняя палата)",
+          "url": "https://www.tweedekamer.nl/",
+          "segments": [
+            "all"
+          ],
+          "provides": "Законопроекты, поправки, мотивы, дебаты и повестка по жилью, аренде, налогам, пространственной политике; Kamerstukken.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Belastingdienst — Overdrachtsbelasting",
+          "url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/woning/overdrachtsbelasting/overdrachtsbelasting",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial"
+          ],
+          "provides": "Официальные ставки и правила налога на передачу недвижимости (2% / 8% / 10,4%), льготы, база начисления.",
+          "frequency": "ежегодно",
+          "language": "NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Officiële bekendmakingen (Overheid.nl) — официальный вестник",
+          "url": "https://www.officielebekendmakingen.nl/",
+          "segments": [
+            "all"
+          ],
+          "provides": "Аутентичные публикации Staatsblad, Staatscourant, Tractatenblad, Kamerstukken, муниципальные/провинциальные bekendmakingen (bestemmingsplannen, omgevingsvergunningen).",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Eerste Kamer der Staten-Generaal (верхняя палата/Сенат)",
+          "url": "https://www.eerstekamer.nl/",
+          "segments": [
+            "all"
+          ],
+          "provides": "Статус и голосования по законам, досье по законопроектам (жильё, налоги, Omgevingswet), даты вступления в силу.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "Belastingdienst — Box 3 (overige onroerende zaken)",
+          "url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/vermogen_en_aanmerkelijk_belang/vermogen/wat_zijn_uw_bezittingen_en_schulden/uw_bezittingen/overige_onroerende_zaken/overige_onroerende_zaken",
+          "segments": [
+            "residential",
+            "commercial",
+            "macro"
+          ],
+          "provides": "Налогообложение недвижимости в Box 3 (WOZ-стоимость, новая система фактического дохода) — влияет на доходность арендного жилья.",
+          "frequency": "ежегодно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "Rijksoverheid — тема Omgevingswet",
+          "url": "https://www.rijksoverheid.nl/onderwerpen/omgevingswet",
+          "segments": [
+            "all"
+          ],
+          "provides": "Госверсия закона об окружающей среде (в силе с 01.01.2024): обзор, Omgevingsloket, документы.",
+          "frequency": "нерегулярно",
+          "language": "NL",
+          "priority": "важный"
+        }
+      ]
+    },
+    {
+      "title": "Суды, регуляторы и надзорные органы",
+      "description": "Высший адм. суд, регулятор Omgevingswet, надзор за оценкой и арендой, регулятор энергорынка — рамка пермитов, споров и тарифов.",
+      "sources": [
+        {
+          "name": "IPLO — Informatiepunt Leefomgeving: Omgevingswet",
+          "url": "https://iplo.nl/regelgeving/omgevingswet/",
+          "segments": [
+            "all"
+          ],
+          "provides": "Официальное толкование Omgevingswet и DSO/Omgevingsloket: omgevingsvisie, пермиты, планы, переходное право — основа девелопмента. Заменил aandeslagmetdeomgevingswet.nl с 01.07.2025.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "ACM — Autoriteit Consument & Markt (регулятор энергорынка)",
+          "url": "https://www.acm.nl/nl/energie/toezicht-op-de-energiemarkt",
+          "segments": [
+            "all",
+            "macro"
+          ],
+          "provides": "Надзор за сетями и поставщиками: methodebesluit, тарифные решения (nettarieven 2026), время-зависимые тарифы, правила приоритизации мощности. Первоисточник по стоимости подключения.",
+          "frequency": "непрерывно",
+          "language": "NL+EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Raad van State (Госсовет: совет по законодательству и высший адм. суд)",
+          "url": "https://www.raadvanstate.nl/",
+          "segments": [
+            "all"
+          ],
+          "provides": "Заключения по законопроектам и решения Afdeling bestuursrechtspraak по спорам в области планирования, пермитов, природоохраны (азот/PFAS), стройки.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "Huurcommissie (Rental Tribunal)",
+          "url": "https://www.huurcommissie.nl/",
+          "segments": [
+            "residential"
+          ],
+          "provides": "Орган разрешения споров по аренде: пунктовая система WWS, регулирование арендной платы, сервисные расходы. Прямое влияние на регулируемый и mid-rent сегмент.",
+          "frequency": "нерегулярно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "Autoriteit woningcorporaties (Aw) — ILT",
+          "url": "https://www.ilent.nl/onderwerpen/autoriteit-woningcorporaties",
+          "segments": [
+            "residential"
+          ],
+          "provides": "Финансовый и нормативный надзор за жилищными корпорациями: отчёты о состоянии сектора, риски, соблюдение Woningwet.",
+          "frequency": "ежеквартально",
+          "language": "NL",
+          "priority": "важный"
+        }
+      ]
+    },
+    {
+      "title": "Центробанки, макропрогнозы и финстабильность",
+      "description": "DNB, CPB, ECB — денежно-кредитная политика, ипотечный рынок, системные риски и макропрогнозы, определяющие стоимость фондирования и доходность недвижимости.",
+      "sources": [
+        {
+          "name": "DNB — Dashboard Woninghypotheken (ипотечный рынок и ставки)",
+          "url": "https://www.dnb.nl/statistieken/dashboards/woninghypotheken/",
+          "segments": [
+            "residential",
+            "macro"
+          ],
+          "provides": "Статистика ипотечного рынка: объём и распределение (~890 млрд евро долга), ставки банков, LTV/выдачи. Ключ к финансированию спроса на жильё.",
+          "frequency": "ежеквартально",
+          "language": "NL+EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "DNB — Housing market (current economic issues)",
+          "url": "https://www.dnb.nl/en/current-economic-issues/housing-market/",
+          "segments": [
+            "residential",
+            "macro"
+          ],
+          "provides": "Регуляторный/макропруденциальный взгляд: ипотечный долг домохозяйств, стандарты кредитования (LTV/LTI), риски финстабильности, мониторинг с AFM.",
+          "frequency": "ежеквартально",
+          "language": "EN+NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "CPB — Forecasts (CEP/MEV)",
+          "url": "https://www.cpb.nl/en/forecasts",
+          "segments": [
+            "macro",
+            "residential"
+          ],
+          "provides": "Официальные макропрогнозы: CEP (весна), MEV/cMEV (осень) — ВВП, инфляция, покупательная способность, доходы, ставки. База для расчёта максимальной ипотеки.",
+          "frequency": "ежеквартально",
+          "language": "EN+NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "ECB — Press / Monetary Policy Decisions",
+          "url": "https://www.ecb.europa.eu/press/pr/date/html/index.en.html",
+          "segments": [
+            "macro"
+          ],
+          "provides": "Решения по ключевым ставкам, пресс-конференции, проекции Eurosystem — первоисточник по стоимости фондирования, влияющей на ипотеку и доходности.",
+          "frequency": "нерегулярно",
+          "language": "EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "DNB — Financial Stability Report (FSR)",
+          "url": "https://www.dnb.nl/en/publications/publications-dnb/fsr/",
+          "segments": [
+            "residential",
+            "commercial",
+            "macro"
+          ],
+          "provides": "Полугодовой FSR: системные риски рынка жилья и CRE, ипотечный леверидж, переоценка CRE, чувствительность к ставкам.",
+          "frequency": "ежеквартально",
+          "language": "EN+NL",
+          "priority": "важный"
+        },
+        {
+          "name": "ECB Economic Bulletin",
+          "url": "https://www.ecb.europa.eu/press/economic-bulletin/html/index.en.html",
+          "segments": [
+            "macro"
+          ],
+          "provides": "Аналитический бюллетень (8 раз/год): инфляция, рост, финансовые условия, кредитование — макроконтекст для еврозоны и NL.",
+          "frequency": "нерегулярно",
+          "language": "EN",
+          "priority": "важный"
+        },
+        {
+          "name": "ECB Data Portal",
+          "url": "https://data.ecb.europa.eu/",
+          "segments": [
+            "macro"
+          ],
+          "provides": "Машиночитаемые ряды: ключевые ставки, Euribor, доходности гособлигаций, кредитные агрегаты — для регулярного пересчёта индикаторов.",
+          "frequency": "непрерывно",
+          "language": "EN",
+          "priority": "важный"
+        },
+        {
+          "name": "CPB — Housing Market Accessibility / housing publications",
+          "url": "https://www.cpb.nl/en/search?qry=housing+market",
+          "segments": [
+            "residential",
+            "macro"
+          ],
+          "provides": "Тематические исследования: доступность покупки для среднего дохода, эластичность предложения, налоговые льготы собственникам.",
+          "frequency": "нерегулярно",
+          "language": "EN+NL",
+          "priority": "дополнительный"
+        }
+      ]
+    },
+    {
+      "title": "Банки: макро- и отраслевой research",
+      "description": "Аналитика крупных нидерландских банков — квартальные прогнозы по жилью, коммерции и логистике, главный интерпретационный слой поверх официальной статистики.",
+      "sources": [
+        {
+          "name": "ABN AMRO — Housing Market Monitor",
+          "url": "https://www.abnamro.com/research/en/our-research/housing-market-monitor-will-2026-be-an-unexceptional-year",
+          "segments": [
+            "residential",
+            "macro"
+          ],
+          "provides": "Серия Housing Market Monitor: прогноз цен, объём сделок, ипотечные ставки, предложение, новостройки, продажи бывшего арендного фонда.",
+          "frequency": "ежеквартально",
+          "language": "EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "RaboResearch — Dutch housing market (Housing Market Quarterly)",
+          "url": "https://www.rabobank.com/knowledge/dutch-housing-market",
+          "segments": [
+            "residential",
+            "macro"
+          ],
+          "provides": "Ежеквартальный прогноз цен на жильё, объёмы сделок, аренда, новостройки, доступность, устойчивость. Один из главных первоисточников по жилью.",
+          "frequency": "ежеквартально",
+          "language": "EN+NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "ING Research / THINK — Real Estate sector",
+          "url": "https://think.ing.com/sector/real-estate/",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial",
+            "macro"
+          ],
+          "provides": "Статьи по жилью, коммерции и логистике NL и Европы: прогнозы цен и сделок, офисы/ритейл/логистика, строительство, демография, ставки.",
+          "frequency": "непрерывно",
+          "language": "EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "ABN AMRO Group Economics — Research",
+          "url": "https://www.abnamro.com/research/en/home",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial",
+            "macro"
+          ],
+          "provides": "Housing Market Monitor, отраслевые обзоры по CRE и логистике, макропрогнозы по экономике Нидерландов.",
+          "frequency": "ежеквартально",
+          "language": "EN+NL",
+          "priority": "важный"
+        },
+        {
+          "name": "RaboResearch — общий research-портал",
+          "url": "https://www.rabobank.com/knowledge",
+          "segments": [
+            "residential",
+            "commercial",
+            "macro"
+          ],
+          "provides": "Макропрогнозы по NL и Европе, отраслевые исследования (строительство, недвижимость), экономические бюллетени.",
+          "frequency": "непрерывно",
+          "language": "EN+NL",
+          "priority": "важный"
+        },
+        {
+          "name": "ING THINK — Dutch commercial real estate outlook",
+          "url": "https://think.ing.com/articles/dutch-commercial-real-estate-outlook-growth-ahead-but-with-limits/",
+          "segments": [
+            "commercial",
+            "industrial"
+          ],
+          "provides": "Годовой/полугодовой outlook по CRE: офисы, ритейл, логистика, стоимость финансирования, своп-ставки, инвестобъёмы, ESG.",
+          "frequency": "ежегодно",
+          "language": "EN",
+          "priority": "важный"
+        },
+        {
+          "name": "ABN AMRO — Commercial Real Estate (Corporate Banking)",
+          "url": "https://www.abnamro.nl/en/commercialbanking/corporate-banking/sectors/commercial-real-estate.html",
+          "segments": [
+            "commercial",
+            "industrial"
+          ],
+          "provides": "Секторальный взгляд на CRE и логистику: переоценка активов, ставки, инвестобъёмы, спрос на prime-офисы и логистику класса A, ESG.",
+          "frequency": "нерегулярно",
+          "language": "EN+NL",
+          "priority": "важный"
+        },
+        {
+          "name": "RaboResearch — Detail- en groothandel",
+          "url": "https://www.rabobank.nl/kennis/detail-en-groothandel",
+          "segments": [
+            "commercial",
+            "macro"
+          ],
+          "provides": "Sectorprognoses по рознице/опту: прогноз добавленной стоимости и оборота, тренды по подсекторам (мода, DIY, дрогери), макроконтекст потребления.",
+          "frequency": "ежеквартально",
+          "language": "NL+EN",
+          "priority": "важный"
+        },
+        {
+          "name": "Van Lanschot Kempen — European / Listed Real Estate research",
+          "url": "https://www.vanlanschotkempen.com/en-nl/investment-banking/equities/european-real-estate",
+          "segments": [
+            "commercial",
+            "industrial",
+            "residential"
+          ],
+          "provides": "Bottom-up equity research по 65+ листингованным компаниям недвижимости Европы (вкл. NL REIT, CTP, логистику): обзоры, daily newsletter, оценки, ESG.",
+          "frequency": "непрерывно",
+          "language": "EN",
+          "priority": "важный"
+        },
+        {
+          "name": "NIBC Bank — Commercial Real Estate",
+          "url": "https://nibc.nl/en/business/commercial-real-estate",
+          "segments": [
+            "commercial",
+            "industrial",
+            "residential"
+          ],
+          "provides": "Взгляд кредитора по сегментам: офисы, ритейл, логистика, light industrial, Living (BTR, студенты, co-living), отели; тренды LTV, маржи.",
+          "frequency": "нерегулярно",
+          "language": "EN",
+          "priority": "дополнительный"
+        },
+        {
+          "name": "BNG Bank — публичный сектор / жильё / муниципалитеты",
+          "url": "https://www.bngbank.nl/en",
+          "segments": [
+            "residential",
+            "macro"
+          ],
+          "provides": "Контекст финансирования жилищных корпораций, муниципалитетов, социальной/доступной аренды; ESG- и климатическая отчётность.",
+          "frequency": "ежегодно",
+          "language": "EN+NL",
+          "priority": "дополнительный"
+        }
+      ]
+    },
+    {
+      "title": "Консультанты, брокеры и оценщики",
+      "description": "Big-3/Big-5 и нидерландские research-бюро — квартальные данные по take-up, вакантности, доходностям и инвестобъёмам по всем сегментам.",
+      "sources": [
+        {
+          "name": "CBRE Netherlands — Insights & Research",
+          "url": "https://www.cbre.nl/en-gb/insights",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial",
+            "macro"
+          ],
+          "provides": "Netherlands Real Estate Market Outlook (годовой + Mid-Year), отчёты по investment volume, take-up, доходностям по living/retail/logistics/offices.",
+          "frequency": "ежеквартально",
+          "language": "NL+EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "JLL Netherlands — Insights / Research",
+          "url": "https://www.jll.com/nl-nl/insights",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial",
+            "macro"
+          ],
+          "provides": "Серия Market Dynamics (Living, Retail, Office, Industrial & Logistics) с квартальными данными по take-up, вакантности, доходностям; отчёты по регулированию аренды.",
+          "frequency": "ежеквартально",
+          "language": "NL+EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Savills Netherlands — Research",
+          "url": "https://en.savills.nl/insight-and-opinion/research.aspx",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial",
+            "macro"
+          ],
+          "provides": "Market in Minutes (квартально), Spotlight-отчёты, Savills Industrial Market Indicator (SIMI); take-up, вакантность, доходности, инвестиции.",
+          "frequency": "ежеквартально",
+          "language": "NL+EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Colliers Netherlands — Research",
+          "url": "https://www.colliers.com/en-nl/research",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial",
+            "macro"
+          ],
+          "provides": "Аналитика инвестиционного и пользовательского рынков, отчёты по офисам/ритейлу/логистике; экономика от Chief Economist, feasibility- и локационные исследования.",
+          "frequency": "ежеквартально",
+          "language": "NL+EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Cushman & Wakefield Netherlands — Insights / MarketBeat",
+          "url": "https://www.cushmanwakefield.com/en/netherlands/insights",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial",
+            "macro"
+          ],
+          "provides": "Квартальные MarketBeat по 5 сегментам, Netherlands Outlook, Special Industrial Report, Living City Report. Данные по take-up, supply, доходностям на уровне субрынков.",
+          "frequency": "ежеквартально",
+          "language": "NL+EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Stec Groep — Ruimtelijk advies- en onderzoeksbureau",
+          "url": "https://stec.nl/",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial",
+            "macro"
+          ],
+          "provides": "Независимые исследования по bedrijventerreinen, логистике, woningmarkt, kantoren, retail, grondmarkt; данные через StecStat. Сильнейший источник по индустриалу и землепользованию.",
+          "frequency": "нерегулярно",
+          "language": "NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Capital Value — Onderzoek / Research",
+          "url": "https://www.capitalvalue.nl/en/insights/",
+          "segments": [
+            "residential",
+            "macro"
+          ],
+          "provides": "Ежегодный отчёт «De woning(beleggings)markt in beeld» (с ABF Research): объёмы транзакций на жилом инвестрынке, демография, аренда vs покупка, новостройки. Ключевой по residential investment.",
+          "frequency": "ежегодно",
+          "language": "NL+EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Knight Frank — Netherlands",
+          "url": "https://www.knightfrank.com/netherlands",
+          "segments": [
+            "commercial",
+            "industrial",
+            "macro"
+          ],
+          "provides": "Dutch Office Market Report, European Logistics Dashboard (квартально, вкл. NL), валюации и консалтинг по CRE; глобальные индексы цен на жильё.",
+          "frequency": "ежеквартально",
+          "language": "EN",
+          "priority": "важный"
+        },
+        {
+          "name": "BNP Paribas Real Estate Netherlands — Research",
+          "url": "https://www.realestate.bnpparibas.nl/research",
+          "segments": [
+            "commercial",
+            "industrial",
+            "macro"
+          ],
+          "provides": "Pan-European и NL-аналитика по capital markets, офисам, логистике; рыночные обзоры, валюации, debt advisory.",
+          "frequency": "ежеквартально",
+          "language": "NL+EN",
+          "priority": "важный"
+        },
+        {
+          "name": "Dynamis — Research & Consultancy (Sprekende Cijfers)",
+          "url": "https://dynamis.nl/research-commercieel-vastgoed",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial"
+          ],
+          "provides": "«Sprekende Cijfers» по 5 рынкам (жильё, офисы, bedrijfsruimte, логистика, ритейл) с сильной региональной разбивкой; 55+ локальных researchers.",
+          "frequency": "ежеквартально",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "Capital Value Research — data-платформа",
+          "url": "https://research.capitalvalue.nl/en/",
+          "segments": [
+            "residential",
+            "macro"
+          ],
+          "provides": "Платформа детальных данных по жилому и зоровому рынку: демография, жилфонд, аренда/собственность, инвестрынок, новостройки, доходности.",
+          "frequency": "ежеквартально",
+          "language": "EN",
+          "priority": "важный"
+        },
+        {
+          "name": "Strabo — Marktonderzoek en vastgoedinformatie",
+          "url": "https://strabo.nl/",
+          "segments": [
+            "commercial"
+          ],
+          "provides": "Лидер по passantentellingen (подсчёт пешеходов) и winkelmarktonderzoek; реестр SWR почти всех ТЦ NL; профили посетителей. Незаменим для стрит-ритейла/ТЦ.",
+          "frequency": "нерегулярно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "Savills — Research (Europe / Industrial & Logistics)",
+          "url": "https://www.savills.com/insight-and-opinion/research.aspx",
+          "segments": [
+            "commercial",
+            "industrial",
+            "residential",
+            "macro"
+          ],
+          "provides": "European Logistics Census и Spotlight, офисные/ритейл/жилые обзоры core-рынков (вкл. NL): take-up, вакантность, аренда, инвестобъёмы.",
+          "frequency": "ежеквартально",
+          "language": "EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "CBRE — Insights & Research (European Real Estate Market Outlook)",
+          "url": "https://www.cbre.com/insights",
+          "segments": [
+            "all",
+            "macro"
+          ],
+          "provides": "European Real Estate Market Outlook, Investor Intentions Survey, прогнозы CBRE Econometric Advisors по office/industrial/living/retail/data centres.",
+          "frequency": "ежеквартально",
+          "language": "EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Avison Young — Research & Insights (EMEA)",
+          "url": "https://www.avisonyoung.com/research-insights",
+          "segments": [
+            "commercial",
+            "industrial",
+            "macro"
+          ],
+          "provides": "Глобальные и EMEA research/Sightlines, квартальные market reports. Покрытие NL на уровне EMEA (нет отдельного NL-сайта).",
+          "frequency": "ежеквартально",
+          "language": "EN",
+          "priority": "дополнительный"
+        },
+        {
+          "name": "MVGM — Vastgoedmanagement & Vastgoedtaxaties",
+          "url": "https://mvgm.com/nl/",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial"
+          ],
+          "provides": "Один из топ-3 оценщиков NL (RICS/NRVT); валюации офисов, жилья, ритейла, логистики, зорового жилья; research-отдел с национальной GIS-базой.",
+          "frequency": "нерегулярно",
+          "language": "NL+EN",
+          "priority": "дополнительный"
+        }
+      ]
+    },
+    {
+      "title": "Профильные и деловые СМИ",
+      "description": "Отраслевая пресса по недвижимости, строительству и градостроительству плюс деловые медиа — оперативный новостной поток, сделки и интервью.",
+      "sources": [
+        {
+          "name": "Vastgoedmarkt",
+          "url": "https://www.vastgoedmarkt.nl/nieuws",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial"
+          ],
+          "provides": "Ежедневные новости, аналитика, интервью и база сделок по всем сегментам. Ключевой первоисточник для рынка CRE NL.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "PropertyNL",
+          "url": "https://propertynl.com/",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial"
+          ],
+          "provides": "Ведущий журнал для профессионалов: новости, сделки, рейтинги (Who's Who, top investors/developers), собственные research-данные, события.",
+          "frequency": "непрерывно",
+          "language": "NL+EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Vastgoedjournaal (VJ)",
+          "url": "https://vastgoedjournaal.nl/",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial"
+          ],
+          "provides": "Новости по сегментам (woningmarkt, kantoren, retail, logistiek, juridisch/fiscaal, transacties); Beleggersregister, каталог финансистов.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Het Financieele Dagblad (FD)",
+          "url": "https://fd.nl/economie",
+          "segments": [
+            "macro",
+            "commercial",
+            "residential"
+          ],
+          "provides": "Главная деловая газета NL: макроэкономика, финансы, корпоративные новости, рынок недвижимости и фондов. Платный доступ.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Cobouw",
+          "url": "https://www.cobouw.nl/",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial"
+          ],
+          "provides": "Независимая журналистика по строительству и девелопменту: проекты, инфраструктура, устойчивость, рынок, Cobouw50, правовые вопросы.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "Stadszaken",
+          "url": "https://stadszaken.nl/",
+          "segments": [
+            "residential",
+            "commercial",
+            "macro"
+          ],
+          "provides": "Новости о городском развитии: жильё, экономика, климат/устойчивость, общественное пространство, мобильность, smart city.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "Gebiedsontwikkeling.nu",
+          "url": "https://www.gebiedsontwikkeling.nu/",
+          "segments": [
+            "residential",
+            "commercial",
+            "macro"
+          ],
+          "provides": "Знания и дебаты о развитии территорий: кейсы, исследования, мнения, GO Projectenkaart. Инициатива SKG и TU Delft.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "BNR Nieuwsradio",
+          "url": "https://www.bnr.nl/",
+          "segments": [
+            "macro",
+            "commercial",
+            "residential"
+          ],
+          "provides": "Деловое радио и подкасты по экономике, политике, недвижимости (FD Mediagroep); интервью с участниками рынка.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "NOS Nieuws — Economie",
+          "url": "https://nos.nl/nieuws/economie",
+          "segments": [
+            "macro",
+            "residential"
+          ],
+          "provides": "Раздел Economie общественного вещателя: экономика, woningmarkt, регуляторные изменения, новости компаний. Нейтральный источник.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "Binnenlands Bestuur — Ruimte en Milieu",
+          "url": "https://www.binnenlandsbestuur.nl/ruimte-en-milieu",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial"
+          ],
+          "provides": "Новости и анализ местного/регионального управления: жилполитика, землепользование, азот, региональные соглашения.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "дополнительный"
+        },
+        {
+          "name": "Biind",
+          "url": "https://www.biind.nl/",
+          "segments": [
+            "residential",
+            "commercial",
+            "macro"
+          ],
+          "provides": "Платформа по интегральной gebiedsontwikkeling: статьи, блоги, whitepapers, журнал. Климатадаптация, мобильность, циркулярность.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "дополнительный"
+        },
+        {
+          "name": "Vastgoed Insider",
+          "url": "https://vastgoedinsider.nl/",
+          "segments": [
+            "residential",
+            "commercial"
+          ],
+          "provides": "Сообщество частных инвесторов: новости, kennisbank, форум, события, ежедневный подкаст. Фокус на Box 3, финансирование, продажи арендного жилья частниками.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "дополнительный"
+        },
+        {
+          "name": "NU.nl — Economie",
+          "url": "https://www.nu.nl/economie",
+          "segments": [
+            "macro",
+            "residential"
+          ],
+          "provides": "Экономический раздел крупнейшего новостного портала: оперативные новости по экономике и рынку жилья.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "дополнительный"
+        },
+        {
+          "name": "Vastgoedwereld",
+          "url": "https://vastgoedwereld.nl/",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial"
+          ],
+          "provides": "Крупнейший нишевый агрегатор по вастгоеду: собирает PropertyNL, Vastgoedjournaal, Bouwformatie, Retailtrends и др.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "дополнительный"
+        },
+        {
+          "name": "Vastgoedmarkt — Podcast",
+          "url": "https://www.vastgoedmarkt.nl/podcast",
+          "segments": [
+            "commercial",
+            "residential",
+            "industrial"
+          ],
+          "provides": "Подкаст «Vastgoed in 5 minuten»: репортажи с PROVADA, девелопмент-проекты, интервью с топ-менеджерами.",
+          "frequency": "ежемесячно",
+          "language": "NL",
+          "priority": "дополнительный"
+        }
+      ]
+    },
+    {
+      "title": "Международные профильные СМИ и EU/глобальный контекст",
+      "description": "Панъевропейская пресса по недвижимости и кросс-страновые источники ЕС/ОЭСР для бенчмаркинга NL и отслеживания инвестпотоков.",
+      "sources": [
+        {
+          "name": "Eurostat — Housing Price Statistics (database, prc_hpi_q)",
+          "url": "https://ec.europa.eu/eurostat/web/housing-price-statistics/database",
+          "segments": [
+            "residential",
+            "macro"
+          ],
+          "provides": "Гармонизированный HPI по NL поквартально, сопоставимо с ЕС; разбивка новое/существующее, аренда. Набор prc_hpi_q.",
+          "frequency": "ежеквартально",
+          "language": "EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "RICS — Global & Europe Commercial Property Monitor",
+          "url": "https://www.rics.org/news-insights/market-surveys/global-commercial-property-monitors",
+          "segments": [
+            "commercial",
+            "industrial",
+            "residential"
+          ],
+          "provides": "Квартальный опросный индекс настроений (CPSI) по инвест- и арендным рынкам, опережающий количественные данные. Раннее чтение цикла CRE.",
+          "frequency": "ежеквартально",
+          "language": "EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "PropertyEU (IPE Real Assets)",
+          "url": "https://realassets.ipe.com/propertyeu",
+          "segments": [
+            "commercial",
+            "industrial",
+            "macro"
+          ],
+          "provides": "Панъевропейские новости и аналитика; еженедельный Weekly Data Sheet, журнал, рейтинги. Контекст инвестиций/капитала по Европе, вкл. NL.",
+          "frequency": "непрерывно",
+          "language": "EN",
+          "priority": "важный"
+        },
+        {
+          "name": "React News (Green Street News)",
+          "url": "https://reactnews.com/",
+          "segments": [
+            "commercial",
+            "industrial",
+            "macro"
+          ],
+          "provides": "Эксклюзивные новости по CRE Европы (Continental Europe); ежедневные AM/PM рассылки, сделки и тренды по asset-классам. Платный доступ.",
+          "frequency": "непрерывно",
+          "language": "EN",
+          "priority": "важный"
+        },
+        {
+          "name": "Eurostat — Housing Price Statistics (HPI/OOHPI/House Sales)",
+          "url": "https://ec.europa.eu/eurostat/web/housing-price-statistics",
+          "segments": [
+            "residential",
+            "macro"
+          ],
+          "provides": "House Price Index, Owner-Occupied Housing Price Index, объёмы сделок по странам ЕС вкл. NL. Сопоставимая официальная статистика.",
+          "frequency": "ежеквартально",
+          "language": "EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Eurostat — Short-Term Business Statistics (строительство)",
+          "url": "https://ec.europa.eu/eurostat/web/short-term-business-statistics/database",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial",
+            "macro"
+          ],
+          "provides": "Индексы цен производителей в строительстве, объёмы стройпроизводства, разрешения по ЕС/NL — опережающие индикаторы предложения.",
+          "frequency": "ежемесячно",
+          "language": "EN",
+          "priority": "важный"
+        },
+        {
+          "name": "OECD — Affordable Housing Database / Housing",
+          "url": "https://www.oecd.org/en/data/datasets/oecd-affordable-housing-database.html",
+          "segments": [
+            "residential",
+            "macro"
+          ],
+          "provides": "Кросс-страновые индикаторы: рынок жилья, доступность (цена/доход), жилищная политика — для бенчмаркинга NL против OECD/ЕС.",
+          "frequency": "ежегодно",
+          "language": "EN",
+          "priority": "важный"
+        },
+        {
+          "name": "ULI Europe / PwC — Emerging Trends in Real Estate Europe",
+          "url": "https://europe.uli.org/research/",
+          "segments": [
+            "all"
+          ],
+          "provides": "Ежегодный консенсус-прогноз лидеров отрасли по инвестициям, девелопменту, капиталу; рейтинги городов Европы (вкл. Amsterdam).",
+          "frequency": "ежегодно",
+          "language": "EN",
+          "priority": "важный"
+        },
+        {
+          "name": "Oxford Economics — Real Estate Economics Service",
+          "url": "https://www.oxfordeconomics.com/service-category/real-estate/",
+          "segments": [
+            "all",
+            "macro"
+          ],
+          "provides": "Прогнозы (total return, доходность, рост аренды, yields) по office/retail/industrial/residential/hotels, 142 рынка; независим от брокериджа.",
+          "frequency": "ежемесячно",
+          "language": "EN",
+          "priority": "важный"
+        },
+        {
+          "name": "European Commission — EPBD recast 2024/1275",
+          "url": "https://energy.ec.europa.eu/topics/energy-efficiency/energy-performance-buildings/energy-performance-buildings-directive_en",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial"
+          ],
+          "provides": "Директива ЕС: MEPS, ZEB, whole-life carbon, реновация худших зданий — драйвер энергоперехода и обесценения «коричневых» активов; транспозиция в NL до мая 2026.",
+          "frequency": "нерегулярно",
+          "language": "EN",
+          "priority": "важный"
+        },
+        {
+          "name": "EPRA — European Public Real Estate Association (Research)",
+          "url": "https://www.epra.com/research",
+          "segments": [
+            "all",
+            "macro"
+          ],
+          "provides": "Аналитика по публичному (listed) сектору Европы, индексы FTSE EPRA Nareit, дайджесты — индикатор оценки и доступа к капиталу для REIT.",
+          "frequency": "ежемесячно",
+          "language": "EN",
+          "priority": "дополнительный"
+        }
+      ]
+    },
+    {
+      "title": "Отраслевые ассоциации и лобби",
+      "description": "Маклеры, девелоперы, жилищные корпорации, арендаторы, ритейл, логистика и строители — позиции отрасли, бенчмарки и собственные рыночные данные.",
+      "sources": [
+        {
+          "name": "NVM (Coöperatieve Vereniging van Makelaars en Taxateurs)",
+          "url": "https://www.nvm.nl/",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial"
+          ],
+          "provides": "Квартальная статистика по сделкам, ценам и предложению жилья, а также по коммерческой и аграрной недвижимости; пресс-релизы по дефициту и арендным ставкам.",
+          "frequency": "ежеквартально",
+          "language": "NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Aedes (vereniging van woningcorporaties)",
+          "url": "https://aedes.nl/",
+          "segments": [
+            "residential"
+          ],
+          "provides": "Данные по соц. фонду (~2,4 млн квартир), benchmark корпораций, прогнозы строительства, позиции по доступности, Nationale Prestatieafspraken.",
+          "frequency": "ежеквартально",
+          "language": "NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "IVBN (Institutionele Beleggers in Vastgoed Nederland)",
+          "url": "https://ivbn.nl/",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial"
+          ],
+          "provides": "Позиции институциональных инвесторов (~50 млрд евро в NL): position papers, реакции на регулирование (Box 3, аренда, налоги), исследования по сегментам.",
+          "frequency": "нерегулярно",
+          "language": "NL+EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "INretail (Koninklijke INretail)",
+          "url": "https://www.inretail.nl/",
+          "segments": [
+            "commercial"
+          ],
+          "provides": "Крупнейшая ассоциация non-food ритейла (>13 000 магазинов): рыночные цифры и тренды, обороты/трафик, лобби по аренде торговых площадей, vitaliteit винкельгебидов.",
+          "frequency": "ежеквартально",
+          "language": "NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Vastgoed Belang (Particuliere Beleggers in Vastgoed)",
+          "url": "https://www.vastgoedbelang.nl/",
+          "segments": [
+            "residential",
+            "commercial"
+          ],
+          "provides": "Позиции частных арендодателей: статистика выхода инвесторов, реакции на Box 3 и регулирование аренды, Green Lease, модельные договоры.",
+          "frequency": "нерегулярно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "NEPROM (Vereniging van Nederlandse Projectontwikkeling Maatschappijen)",
+          "url": "https://www.neprom.nl/",
+          "segments": [
+            "residential",
+            "commercial"
+          ],
+          "provides": "Первоисточник по девелопменту: position papers (азот, жилполитика), Handboek Projectontwikkeling, Reiswijzer Gebiedsontwikkeling, Lente-akkoord, KAN.",
+          "frequency": "нерегулярно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "Vereniging Eigen Huis (VEH)",
+          "url": "https://www.eigenhuis.nl/",
+          "segments": [
+            "residential"
+          ],
+          "provides": "Крупнейшая организация собственников (~800 тыс.): Eigen Huis Marktindicator, мониторинг ипотечных ставок, данные по новостройкам, позиции по налогам.",
+          "frequency": "ежемесячно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "WoningBouwersNL (бывш. NVB-Bouw)",
+          "url": "https://woningbouwersnl.nl/",
+          "segments": [
+            "residential"
+          ],
+          "provides": "Ассоциация специалистов по жилищному строительству: данные по объёмам нового строительства, продажам новостроек, барьерам застройки.",
+          "frequency": "ежеквартально",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "Bouwend Nederland",
+          "url": "https://www.bouwendnederland.nl/",
+          "segments": [
+            "macro",
+            "residential",
+            "industrial"
+          ],
+          "provides": "Крупнейшая организация работодателей в строительстве (~4 600 компаний): конъюнктурные прогнозы, портфель заказов, цены и мощности.",
+          "frequency": "ежеквартально",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "RND (Raad Nederlandse Detailhandel)",
+          "url": "https://www.rndweb.nl/",
+          "segments": [
+            "commercial"
+          ],
+          "provides": "Зонтичная организация крупного non-food ритейла: позиции по аренде winkelvastgoed, Green Lease Retail. Фактический преемник Detailhandel Nederland.",
+          "frequency": "нерегулярно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "evofenedex",
+          "url": "https://www.evofenedex.nl/",
+          "segments": [
+            "industrial"
+          ],
+          "provides": "Объединение ~10 000 компаний торговли и логистики: знания и позиции по складам, supply chain, инфраструктуре — спрос со стороны грузовладельцев.",
+          "frequency": "нерегулярно",
+          "language": "NL+EN",
+          "priority": "важный"
+        },
+        {
+          "name": "TLN (Transport en Logistiek Nederland)",
+          "url": "https://www.tln.nl/",
+          "segments": [
+            "industrial",
+            "macro"
+          ],
+          "provides": "Организация автоперевозчиков (4 500 членов): лобби по инфраструктуре/азоту/CO2, мониторинг топлива, карты логистических хабов — индикаторы спроса на логнедвижимость.",
+          "frequency": "нерегулярно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "VNG — Vereniging van Nederlandse Gemeenten (Bouwen en wonen)",
+          "url": "https://vng.nl/rubrieken/onderwerpen/bouwen-en-wonen",
+          "segments": [
+            "residential",
+            "commercial"
+          ],
+          "provides": "Позиция и данные всех муниципалитетов по строительству, землепользованию, региональным жилищным соглашениям.",
+          "frequency": "нерегулярно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "IPO — Interprovinciaal Overleg (Wonen / Ruimte)",
+          "url": "https://www.ipo.nl/thema/ruimte-en-leefomgeving/wonen/",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial"
+          ],
+          "provides": "Позиция 12 провинций по строительству, азоту, сетям, планированию (Nota Ruimte), реализации жилищных программ — провинциальный слой.",
+          "frequency": "нерегулярно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "Woonbond (Nederlandse Woonbond)",
+          "url": "https://www.woonbond.nl/",
+          "segments": [
+            "residential"
+          ],
+          "provides": "Голос арендаторов (~1,7 млн): издания Huurpeil и Huurwijzer, данные по доступности аренды, позиции по защите квартиросъёмщиков.",
+          "frequency": "ежеквартально",
+          "language": "NL",
+          "priority": "дополнительный"
+        },
+        {
+          "name": "CBL (Centraal Bureau Levensmiddelenhandel)",
+          "url": "https://www.cbl.nl/",
+          "segments": [
+            "commercial"
+          ],
+          "provides": "Ассоциация супермаркетов и foodservice: данные по продуктовому ритейлу, обороту, ценам — релевантно food-anchored торговой недвижимости.",
+          "frequency": "нерегулярно",
+          "language": "NL",
+          "priority": "дополнительный"
+        },
+        {
+          "name": "VGM NL (Vastgoedmanagement Nederland)",
+          "url": "https://vgm.nl/",
+          "segments": [
+            "all"
+          ],
+          "provides": "Ассоциация управляющих недвижимостью и ВвЕ: годовые данные по арендному рынку, benchmark-инструменты, стандартные документы.",
+          "frequency": "ежегодно",
+          "language": "NL",
+          "priority": "дополнительный"
+        },
+        {
+          "name": "KHN — Koninklijke Horeca Nederland",
+          "url": "https://khn.nl/",
+          "segments": [
+            "commercial"
+          ],
+          "provides": "Данные и лоббизм по сектору HoReCa (>17 000 предприятий): обороты, занятость, тренды — контекст спроса на ритейл/гостиничную недвижимость.",
+          "frequency": "нерегулярно",
+          "language": "NL+EN",
+          "priority": "дополнительный"
+        },
+        {
+          "name": "CBW-erkend (Centrale Branchevereniging Wonen)",
+          "url": "https://cbw-erkend.nl/",
+          "segments": [
+            "commercial"
+          ],
+          "provides": "Знак признания для розницы интерьера/мебели/кухонь (под INretail); списки банкротств в секторе wonen — индикатор товаров для дома (связка с жилищным циклом).",
+          "frequency": "нерегулярно",
+          "language": "NL",
+          "priority": "дополнительный"
+        },
+        {
+          "name": "Detailhandel Nederland (упразднена)",
+          "url": "https://www.detailhandel.nl/",
+          "segments": [
+            "commercial"
+          ],
+          "provides": "ВНИМАНИЕ: зонтичное лобби ритейла прекратило деятельность ('Opgeheven'); функции перешли к RND/CBL/INretail. Для актуальных позиций используйте их.",
+          "frequency": "нерегулярно",
+          "language": "NL",
+          "priority": "дополнительный"
+        }
+      ]
+    },
+    {
+      "title": "Институциональные инвесторы и биржевые компании (IR)",
+      "description": "Фонды, пенсионные управляющие и листингованные REIT — пресс-релизы, годовые отчёты и market outlooks, отражающие доходности и потоки капитала по сегментам.",
+      "sources": [
+        {
+          "name": "Vesteda — Newsroom",
+          "url": "https://news.vesteda.com/",
+          "segments": [
+            "residential"
+          ],
+          "provides": "Пресс-релизы крупнейшего фонда арендного жилья (~28 000 квартир, ~10 млрд евро): сделки, ликвидность, отчёты, ESG/BREEAM. Барометр институционального жилья.",
+          "frequency": "непрерывно",
+          "language": "EN+NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Bouwinvest — News & Publications",
+          "url": "https://bouwinvest.com/news-publications",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial"
+          ],
+          "provides": "Пресс-релизы, годовые отчёты и Dutch Market Outlook управляющего ~12-13 млрд евро для пенсфондов; сделки в жилье, ритейле, логистике, healthcare.",
+          "frequency": "непрерывно",
+          "language": "EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Wereldhave — Investor Relations",
+          "url": "https://www.wereldhave.com/investor-relations",
+          "segments": [
+            "commercial"
+          ],
+          "provides": "IR-портал листингованного владельца Full Service Centers (NL, BE, FR): пресс-релизы, отчёты, презентации, trading updates. Первоисточник по ритейл-центрам.",
+          "frequency": "ежеквартально",
+          "language": "EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "NSI N.V. — Newsroom / Investor Relations",
+          "url": "https://nsi.nl/ir/",
+          "segments": [
+            "commercial"
+          ],
+          "provides": "IR единственного листингованного офисного REIT с фокусом на NL (~45 зданий, ~1 млрд евро, акцент Амстердам): trading updates, отчёты, девелопмент. Ключевой по офисам.",
+          "frequency": "ежеквартально",
+          "language": "EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "WDP (Warehouses De Pauw) — Press Releases / Reports",
+          "url": "https://wdp.eu/en/investors/reports-presentations-and-press-releases/press-releases",
+          "segments": [
+            "industrial"
+          ],
+          "provides": "Отчёты ведущего логистического REIT (6 регионов Европы, вкл. NL): EPRA EPS, новые аренды (550 000+ м²), green bonds, 2030-стратегия. Первоисточник по складам.",
+          "frequency": "ежеквартально",
+          "language": "EN+NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Vesteda — Investor Relations / годовой отчёт",
+          "url": "https://www.vesteda.com/en/corporate/investment",
+          "segments": [
+            "residential"
+          ],
+          "provides": "Раздел для инвесторов: факты по портфелю, equity/debt информация, годовой отчёт. Дополняет newsroom.",
+          "frequency": "ежеквартально",
+          "language": "EN",
+          "priority": "важный"
+        },
+        {
+          "name": "a.s.r. real assets — News & Publications",
+          "url": "https://asrrealassets.com/news-and-publications",
+          "segments": [
+            "residential",
+            "commercial",
+            "all"
+          ],
+          "provides": "Публикации управляющего (жильё/ASR DCRF, ритейл, офисы, сельхозземля, инфраструктура): сделки, привлечение капитала, area development (~13 000 домов в планах).",
+          "frequency": "нерегулярно",
+          "language": "EN+NL",
+          "priority": "важный"
+        },
+        {
+          "name": "Achmea Real Estate — News",
+          "url": "https://www.achmearealestate.nl/en/about-us/news",
+          "segments": [
+            "residential",
+            "commercial",
+            "all"
+          ],
+          "provides": "Новости управляющего ~13 млрд евро (жильё, ритейл, healthcare, офисы) для 30+ инвесторов; цель 25 млрд к 2030, Dutch Residential Impact Fund.",
+          "frequency": "нерегулярно",
+          "language": "EN+NL",
+          "priority": "важный"
+        },
+        {
+          "name": "Altera (Altera Vastgoed) — News",
+          "url": "https://www.altera.nl/en/news/",
+          "segments": [
+            "residential",
+            "commercial"
+          ],
+          "provides": "Новости и отчёты фонда (~3,6 млрд евро): Residential Fund и Retail Fund. Доходности, переоценки, GRESB. Прокси по core-жилью и стрит-ритейлу.",
+          "frequency": "нерегулярно",
+          "language": "EN+NL",
+          "priority": "важный"
+        },
+        {
+          "name": "CBRE Investment Management — Insights / Research",
+          "url": "https://www.cbreim.com/insights",
+          "segments": [
+            "all"
+          ],
+          "provides": "House Views (Macro House View квартально), европейские outlooks, секторные deep-dives, количественные модели. $150+ млрд AuM.",
+          "frequency": "ежеквартально",
+          "language": "EN",
+          "priority": "важный"
+        },
+        {
+          "name": "PGGM — Private Real Estate",
+          "url": "https://pggm.nl/en/asset-management/private-real-estate",
+          "segments": [
+            "all"
+          ],
+          "provides": "Страница private real estate (PPREF ~20 млрд евро, 102 инвестиции, GRESB 90); стратегия, тренды, доходности; соучредитель GRESB.",
+          "frequency": "нерегулярно",
+          "language": "EN",
+          "priority": "важный"
+        },
+        {
+          "name": "APG Asset Management — News & Insights",
+          "url": "https://assetmanagement.apg.nl/news-insights/",
+          "segments": [
+            "residential",
+            "all",
+            "macro"
+          ],
+          "provides": "Новости крупнейшего пенсионного инвестора (~540 млрд евро, для ABP): инвестиции в жильё, impact, климатические индексы недвижимости (CRREM).",
+          "frequency": "нерегулярно",
+          "language": "EN",
+          "priority": "важный"
+        },
+        {
+          "name": "Eurocommercial Properties — News / Press Releases",
+          "url": "https://www.eurocommercialproperties.com/news",
+          "segments": [
+            "commercial"
+          ],
+          "provides": "Новости листингованного инвестора в ТЦ (~4 млрд евро: BE, FR, IT, SE; HQ в NL): результаты, дивиденды, сделки, рефинансирование.",
+          "frequency": "ежеквартально",
+          "language": "EN",
+          "priority": "важный"
+        },
+        {
+          "name": "Montea — Press Releases",
+          "url": "https://montea.com/en/press",
+          "segments": [
+            "industrial"
+          ],
+          "provides": "Пресс-релизы логистического investor-developer (BE/NL/FR): результаты, like-for-like рост аренды, нидерландские лог-площадки, стратегия Track27.",
+          "frequency": "ежеквартально",
+          "language": "EN",
+          "priority": "важный"
+        },
+        {
+          "name": "CTP N.V. — Investors / Press Releases",
+          "url": "https://ctp.eu/investors/press-releases/",
+          "segments": [
+            "industrial"
+          ],
+          "provides": "Пресс-релизы крупнейшего по GLA владельца логистики Европы (CTPark Network, 10-11 стран, 13,8+ млн м²): результаты, lease-сделки, bonds. Регистрация — NL.",
+          "frequency": "ежеквартально",
+          "language": "EN",
+          "priority": "важный"
+        },
+        {
+          "name": "Achmea — Corporate Newsroom",
+          "url": "https://news.achmea.nl/",
+          "segments": [
+            "residential",
+            "commercial",
+            "macro"
+          ],
+          "provides": "Корпоративный newsroom: сделки Achmea Real Estate, реструктуризация, регуляторные события. Дополнительный контекст по группе.",
+          "frequency": "нерегулярно",
+          "language": "EN+NL",
+          "priority": "дополнительный"
+        },
+        {
+          "name": "CBRE Investment Management — QIR",
+          "url": "https://www.cbreim.com/insights/qir",
+          "segments": [
+            "all"
+          ],
+          "provides": "Количественные модели ранжирования секторов и рынков (Sector Ranking, Relative Value, RARE) — оценка относительной привлекательности сегментов.",
+          "frequency": "ежеквартально",
+          "language": "EN",
+          "priority": "дополнительный"
+        },
+        {
+          "name": "PGGM — News / пресс-релизы",
+          "url": "https://www.pggm.nl/en/overview-press-releases",
+          "segments": [
+            "macro",
+            "all"
+          ],
+          "provides": "Пресс-релизы: смена мандатов, sustainability-сдвиги, крупные сделки — сигналы по аллокациям институционального капитала.",
+          "frequency": "нерегулярно",
+          "language": "EN",
+          "priority": "дополнительный"
+        }
+      ]
+    },
+    {
+      "title": "Индексы доходности, бенчмарки и проптех-данные",
+      "description": "Индексы инвестиционной доходности, AVM/индексы цен и проптех-API — количественные бенчмарки и детальные данные по объектам.",
+      "sources": [
+        {
+          "name": "MSCI Real Estate (Netherlands Property Index, ex-IPD)",
+          "url": "https://www.msci.com/real-estate",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial",
+            "all"
+          ],
+          "provides": "Бенчмарки совокупной доходности прямых вложений по >30 странам, вкл. MSCI Netherlands Annual/Quarterly Property Index с разбивкой по секторам; база Real Capital Analytics.",
+          "frequency": "ежеквартально",
+          "language": "EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "INREV (Investors in Non-Listed Real Estate Vehicles)",
+          "url": "https://www.inrev.org/market-information/indices",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial",
+            "all"
+          ],
+          "provides": "Индексы доходности европейских непубличных фондов (Fund Index, ODCE, IRR, Living Fund Index, GREFI), опросы (Investment Intentions), стандарты. HQ в Амстердаме.",
+          "frequency": "ежеквартально",
+          "language": "EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Vastgoeddata Nederland",
+          "url": "https://www.vastgoeddata.nl/",
+          "segments": [
+            "commercial",
+            "industrial"
+          ],
+          "provides": "Наиболее полная база CRE (>400 000 объектов), 19+ категорий: офисы, ритейл, логистика, hospitality, healthcare, parking; сделки купли/аренды, алерты. Подписка.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Calcasa — WOX Kwartaalbericht (WOX-индекс)",
+          "url": "https://www.calcasa.nl/wox-kwartaalbericht",
+          "segments": [
+            "residential"
+          ],
+          "provides": "WOX-индекс стоимости жилья на основе транзакций; средняя стоимость по стране/провинциям/районам, квартальная и годовая динамика; WOX Monitor (>1000 переменных).",
+          "frequency": "ежеквартально",
+          "language": "NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "MSCI — Real Estate Performance & Capital Trends (Europe)",
+          "url": "https://www.msci.com/research-and-insights/real-estate-performance",
+          "segments": [
+            "commercial",
+            "industrial",
+            "residential",
+            "macro"
+          ],
+          "provides": "Индексы доходности частной недвижимости (30+ стран), Europe Capital Trends — объёмы сделок, ценовые тренды, yields, активность по сегментам и городам.",
+          "frequency": "ежеквартально",
+          "language": "EN",
+          "priority": "важный"
+        },
+        {
+          "name": "Realstats",
+          "url": "https://realstats.com/",
+          "segments": [
+            "residential",
+            "macro"
+          ],
+          "provides": "Эксклюзивный доступ к данным Pararius и Huurwoningen.nl: арендные транзакции, поведение, тренды; также сделки купли. Сильно для huurmarkt, слабо покрытого NVM.",
+          "frequency": "непрерывно",
+          "language": "NL+EN",
+          "priority": "важный"
+        },
+        {
+          "name": "Calcasa (WOX-индекс, onderzoek)",
+          "url": "https://calcasa.nl/onderzoek/",
+          "segments": [
+            "residential",
+            "macro"
+          ],
+          "provides": "WOX-индекс (база 1995=100), квартальный WOX Kwartaalbericht по регионам и типам, годовые обзоры. Член European AVM Alliance; в securitisation-отчётности.",
+          "frequency": "ежеквартально",
+          "language": "NL+EN",
+          "priority": "важный"
+        },
+        {
+          "name": "Altum AI",
+          "url": "https://altum.ai/vastgoeddata/",
+          "segments": [
+            "residential",
+            "macro"
+          ],
+          "provides": "API к >250 переменным по каждому жилому объекту (WOZ, год постройки, площади, энергометки, история сделок), AVM, данные на уровне района. Источники Kadaster, CBS.",
+          "frequency": "непрерывно",
+          "language": "NL+EN",
+          "priority": "важный"
+        },
+        {
+          "name": "Matrixian Group",
+          "url": "https://matrixian.com/en/smart-real-estate/",
+          "segments": [
+            "residential",
+            "macro"
+          ],
+          "provides": "База ~7,8 млн объектов с 200-300+ характеристиками, AVM, собственный House Price Index, Housing Analytics, Portfolio Sustainability, POI; API.",
+          "frequency": "непрерывно",
+          "language": "EN+NL",
+          "priority": "важный"
+        },
+        {
+          "name": "GeoPhy (ныне Apprise by Walker & Dunlop)",
+          "url": "https://www.walkerdunlop.com/news/walker-dunlop-acquires-geophy-to-accelerate-technology-driven-businesses",
+          "segments": [
+            "commercial"
+          ],
+          "provides": "ВНИМАНИЕ: GeoPhy (Делфт, ML-оценка CRE) куплен Walker & Dunlop в 2022; технология в платформе Apprise (multifamily US). Как независимого NL-провайдера больше нет.",
+          "frequency": "нерегулярно",
+          "language": "EN",
+          "priority": "дополнительный"
+        }
+      ]
+    },
+    {
+      "title": "Жильё: цены, аренда, ипотека и спрос",
+      "description": "Специализированные данные по жилому сегменту — индексы аренды, ипотечные заявки и ставки, гарантии, обследования и индикаторы спроса.",
+      "sources": [
+        {
+          "name": "HDN — Hypotheken Data Netwerk (marktcijfers)",
+          "url": "https://hdn.nl/marktcijfers/",
+          "segments": [
+            "residential"
+          ],
+          "provides": "Почти полная регистрация ипотечных заявок NL: месячные/недельные объёмы, средняя сумма и стоимость жилья, доли starters/doorstromers, сроки фиксации, HDN Index.",
+          "frequency": "ежемесячно",
+          "language": "NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "NVM — Marktinformatie Wonen",
+          "url": "https://www.nvm.nl/wonen/marktinformatie-wonen/",
+          "segments": [
+            "residential"
+          ],
+          "provides": "Квартальные пресс-релизы NVM по жилью: число сделок, средняя цена, предложение, krapte-indicator, региональная разбивка.",
+          "frequency": "ежеквартально",
+          "language": "NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Brainbay (совм. с NVM) — Research / vastgoedcijfers",
+          "url": "https://brainbay.nl/en/research/",
+          "segments": [
+            "residential",
+            "commercial"
+          ],
+          "provides": "Квартальные данные NVM: средняя цена, индекс AVM (до уровня района), объём предложения, индикаторы; также отчёты по коммерции и ритейлу. Самые свежие транзакционные данные.",
+          "frequency": "ежеквартально",
+          "language": "NL+EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Pararius Huurmonitor (Rental Price Index)",
+          "url": "https://www.pararius.com/news",
+          "segments": [
+            "residential"
+          ],
+          "provides": "Квартальный индекс аренды частного (нерегулируемого) сектора: средняя цена за м² по провинциям и городам, индексы PRI/PHI против CPI, динамика предложения.",
+          "frequency": "ежеквартально",
+          "language": "NL+EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "WoON / Woononderzoek Nederland (datawonen.nl)",
+          "url": "https://www.woononderzoek.nl/",
+          "segments": [
+            "residential"
+          ],
+          "provides": "Крупнейшее обследование жилищной ситуации (раз в 3 года, BZK/CBS): доходы, жилищные расходы, миграция, предпочтения. Основа жилищной политики.",
+          "frequency": "нерегулярно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "NHG — Nationale Hypotheek Garantie (kwartaalbericht)",
+          "url": "https://www.nhg.nl/nhg-actueel/",
+          "segments": [
+            "residential"
+          ],
+          "provides": "Квартальные отчёты по NHG-гарантиям, woonlasten- и woningmarktmonitor, ежегодная kostengrens — важный регуляторный параметр рынка.",
+          "frequency": "ежеквартально",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "Funda — Funda Index / persberichten",
+          "url": "https://pers.funda.nl/",
+          "segments": [
+            "residential"
+          ],
+          "provides": "Данные крупнейшего портала жилья: предложение, контактные запросы, индекс доверия/намерения покупки — ранний индикатор спроса.",
+          "frequency": "ежеквартально",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "De Hypotheekshop — Actuele hypotheekrente",
+          "url": "https://www.hypotheekshop.nl/actuelerente",
+          "segments": [
+            "residential"
+          ],
+          "provides": "Ежедневные актуальные ипотечные ставки 40+ кредиторов (NHG и по LTV), исторические графики, комментарии и прогнозы.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "Van Bruggen Adviesgroep — Hypotheekrente-overzicht",
+          "url": "https://www.vanbruggen.nl/hypotheekadvies/hypotheekrente-overzicht",
+          "segments": [
+            "residential"
+          ],
+          "provides": "Ежедневный обзор фиксированных/переменных ставок ~30 кредиторов с фильтрами (тип, энергоклассы, NHG), прогнозы.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "WSW — Waarborgfonds Sociale Woningbouw",
+          "url": "https://www.wsw.nl/",
+          "segments": [
+            "residential"
+          ],
+          "provides": "Гарантии заимствований жилкорпораций (AAA), стоимость фондирования, риск-данные по сектору соцжилья и доступности капитала для стройки.",
+          "frequency": "ежеквартально",
+          "language": "NL",
+          "priority": "дополнительный"
+        },
+        {
+          "name": "Platform31 — Kennisdossier Woningmarkt",
+          "url": "https://www.platform31.nl/wat-we-doen/kennisdossiers/kennisdossier-woningmarkt",
+          "segments": [
+            "residential",
+            "commercial"
+          ],
+          "provides": "Прикладные исследования по жилью, доступности, среднему сегменту, трансформации городов и зон — связь политики и практики.",
+          "frequency": "нерегулярно",
+          "language": "NL",
+          "priority": "дополнительный"
+        }
+      ]
+    },
+    {
+      "title": "Ритейл и e-commerce",
+      "description": "Локационные данные о магазинах, вакантности и проходимости плюс онлайн-расходы и ритейл-медиа — спрос на торговую недвижимость и канал online vs offline.",
+      "sources": [
+        {
+          "name": "Locatus",
+          "url": "https://locatus.com/",
+          "segments": [
+            "commercial"
+          ],
+          "provides": "Первоисточник по физическому ритейлу Бенилюкса: база 400 000+ магазинов/HoReCa, мониторинг winkelleegstand (~200 зон), Retail Risk Index, проходимость, Leegstandsrapport.",
+          "frequency": "непрерывно",
+          "language": "NL+EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Thuiswinkel.org (Thuiswinkel Markt Monitor)",
+          "url": "https://www.thuiswinkel.org/kennisbank/topics/onderzoek/",
+          "segments": [
+            "commercial"
+          ],
+          "provides": "Главный источник по онлайн-расходам: Thuiswinkel Markt Monitor (4 раза/год, объёмы и суммы онлайн-покупок), B2B Monitor, Duurzaamheid Monitor. Контекст online vs offline.",
+          "frequency": "ежеквартально",
+          "language": "NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Q&A Retail (Research & Consultancy)",
+          "url": "https://www.qanda.nl/",
+          "segments": [
+            "commercial"
+          ],
+          "provides": "Ведущий ритейл-партнёр по research: ежегодный Retail Outlook, исследования потребителей/рынка, impact-анализы для Retailagenda.",
+          "frequency": "ежегодно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "RetailTrends (вкл. RetailNews)",
+          "url": "https://retailtrends.nl/",
+          "segments": [
+            "commercial"
+          ],
+          "provides": "Главное проф. медиа по рознице и брендам: ежедневные новости, финпоказатели ритейлеров, банкротства/открытия, тренды, подкаст.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "Twinkle / Twinkle100",
+          "url": "https://twinklemagazine.nl/",
+          "segments": [
+            "commercial"
+          ],
+          "provides": "Издание по digital commerce; Twinkle100 — ежегодный рейтинг крупнейших онлайн-ритейлеров NL, обзор топ-300 вебшопов по обороту.",
+          "frequency": "ежегодно",
+          "language": "NL",
+          "priority": "дополнительный"
+        },
+        {
+          "name": "Ecommerce News Nederland",
+          "url": "https://www.ecommercenews.nl/nieuws/",
+          "segments": [
+            "commercial"
+          ],
+          "provides": "Новости и обзоры e-commerce: число вебшопов (CBS/KvK), маркетплейсы (bol, Amazon), логистика/тарифы, бенчмарки.",
+          "frequency": "непрерывно",
+          "language": "NL+EN",
+          "priority": "дополнительный"
+        }
+      ]
+    },
+    {
+      "title": "Индустриал, логистика и supply chain",
+      "description": "Отраслевые СМИ, исследования и девелоперы складов плюс данные по supply chain — спрос, абсорбция, аренда и пайплайн логистической недвижимости.",
+      "sources": [
+        {
+          "name": "Savills Netherlands — Industrial & Logistics Research",
+          "url": "https://en.savills.nl/sectors/industrial-and-logistics.aspx",
+          "segments": [
+            "industrial",
+            "commercial",
+            "macro"
+          ],
+          "provides": "Аналитика рынка логистики NL (Logistics Trend Report, Confidence Index, вакантность, доходности, предложение).",
+          "frequency": "ежеквартально",
+          "language": "NL+EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Prologis Research",
+          "url": "https://www.prologis.com/insights-news/research",
+          "segments": [
+            "industrial",
+            "macro"
+          ],
+          "provides": "White papers и аналитика по логнедвижимости: спрос/абсорбция, аренда, автоматизация, глобальные цепочки поставок (крупнейший мировой владелец складов).",
+          "frequency": "ежеквартально",
+          "language": "EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Logistiek.nl",
+          "url": "https://www.logistiek.nl/",
+          "segments": [
+            "industrial"
+          ],
+          "provides": "Ежедневные новости логистики, складов, supply chain, тарифы, спецпроекты (Top 100 Logistiek Dienstverleners), аналитика.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Nieuwsblad Transport (NT)",
+          "url": "https://www.nt.nl/",
+          "segments": [
+            "industrial",
+            "macro"
+          ],
+          "provides": "Новости по всем видам транспорта (порты, авто, ж/д, авиа, водный), логистике и цепочкам поставок; интервью и аналитика.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "BCI Global (ex-Buck Consultants International)",
+          "url": "https://www.bciglobal.com/",
+          "segments": [
+            "industrial",
+            "macro"
+          ],
+          "provides": "Стратегия цепочек поставок, выбор локаций, недвижимость и логистика; исследования (resilience, Transportation Monitor). HQ в Неймегене.",
+          "frequency": "нерегулярно",
+          "language": "EN+NL",
+          "priority": "важный"
+        },
+        {
+          "name": "Warehouse Totaal",
+          "url": "https://www.warehousetotaal.nl/",
+          "segments": [
+            "industrial"
+          ],
+          "provides": "Новости и кейсы по складам, автоматизации, материалопотокам, складской недвижимости, e-commerce-логистике; журнал и вебинары.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "Supply Chain Magazine (Supply Chain Media)",
+          "url": "https://www.supplychainmagazine.nl/",
+          "segments": [
+            "industrial"
+          ],
+          "provides": "Тренды цепочек поставок, планирование, видимость, устойчивость, ПО; отчёты, кейсы, whitepapers, вебинары.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "WDP",
+          "url": "https://www.wdp.eu/en/",
+          "segments": [
+            "industrial"
+          ],
+          "provides": "Пресс-релизы, инвесторская отчётность, Knowledge Hub; сделки, build-to-suit, sale-and-leaseback, brownfield по NL/BE/DE/FR/RO.",
+          "frequency": "нерегулярно",
+          "language": "EN+NL",
+          "priority": "важный"
+        },
+        {
+          "name": "CTP — News / Insights",
+          "url": "https://ctp.eu/news/",
+          "segments": [
+            "industrial"
+          ],
+          "provides": "Новости и CTP Insights; крупнейший листингованный индустриальный девелопер Европы, рынок NL (property finder, сделки, аренда).",
+          "frequency": "нерегулярно",
+          "language": "EN",
+          "priority": "важный"
+        },
+        {
+          "name": "Transport Online",
+          "url": "https://www.transport-online.nl/",
+          "segments": [
+            "industrial"
+          ],
+          "provides": "Ежедневные новости транспорта и логистики, склады, цены на топливо, ограничения движения, биржа грузов.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "дополнительный"
+        },
+        {
+          "name": "Intospace",
+          "url": "https://intospace.eu/news/",
+          "segments": [
+            "industrial"
+          ],
+          "provides": "Новости проектов и устойчивого складского девелопмента; первый B Corp логистический девелопер NL (Tilburg, Zoetermeer, Duiven).",
+          "frequency": "нерегулярно",
+          "language": "EN+NL",
+          "priority": "дополнительный"
+        },
+        {
+          "name": "DHG",
+          "url": "https://www.dhg.nl/",
+          "segments": [
+            "industrial",
+            "commercial"
+          ],
+          "provides": "DHG Nieuws: сделки аренды, распределительные центры/терминалы (Smartlogs), офисы; ~1,6 млн м² реализовано, 700 тыс. м² в разработке.",
+          "frequency": "нерегулярно",
+          "language": "NL",
+          "priority": "дополнительный"
+        },
+        {
+          "name": "Heylen Warehouses",
+          "url": "https://heylenwarehouses.com/en/home-en/",
+          "segments": [
+            "industrial"
+          ],
+          "provides": "Новости проектов; девелопмент и аренда логистической и light-industrial недвижимости в NL/BE/FR/ES (>1 млн м²), офис в Бреде.",
+          "frequency": "нерегулярно",
+          "language": "EN+NL",
+          "priority": "дополнительный"
+        },
+        {
+          "name": "Dokvast",
+          "url": "https://www.dokvast.com/",
+          "segments": [
+            "industrial"
+          ],
+          "provides": "Проекты: распределительные центры (Rhenus, DB Schenker), XXL-DC и data-центры; ~350 тыс. м² с 2006, циркулярное строительство.",
+          "frequency": "нерегулярно",
+          "language": "NL+EN",
+          "priority": "дополнительный"
+        }
+      ]
+    },
+    {
+      "title": "Энергосети, азот и ESG",
+      "description": "Сетевые операторы и congestie, государственная азотная политика и AERIUS, нормы энергоэффективности и ESG-сертификация — ключевые физические и регуляторные барьеры для стройки и индустриала.",
+      "sources": [
+        {
+          "name": "Netbeheer Nederland (vereniging netbeheerders)",
+          "url": "https://www.netbeheernederland.nl/artikelen/nieuws",
+          "segments": [
+            "all",
+            "industrial",
+            "macro"
+          ],
+          "provides": "Совокупная позиция операторов сетей: 'Stand van de Uitvoering', статистика по нетконгестии, листы ожидания, нетарифы 2026. Системная картина дефицита сетевых мощностей.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "TenneT — Netcongestie",
+          "url": "https://www.tennet.eu/nl/themas/netcongestie",
+          "segments": [
+            "industrial",
+            "commercial",
+            "macro"
+          ],
+          "provides": "Раздел по нетконгестии, инвестпланы (~65 млрд евро / 10 лет, ~1000 проектов; задержки в среднем 2,5 года). Критично для логистики/промзон на высоком напряжении.",
+          "frequency": "непрерывно",
+          "language": "NL+EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "BIJ12 — Stikstof / AERIUS",
+          "url": "https://www.bij12.nl/onderwerp/stikstof/",
+          "segments": [
+            "industrial",
+            "residential",
+            "commercial",
+            "macro"
+          ],
+          "provides": "Операционный первоисточник по азоту: AERIUS (Calculator/Register/Monitor) для расчёта депозиции на Natura 2000 — необходим для пермитов; Helpdesk Stikstof, habitatkaarten.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Rijksoverheid — Stikstof (азотная политика)",
+          "url": "https://www.rijksoverheid.nl/onderwerpen/stikstof",
+          "segments": [
+            "macro",
+            "industrial",
+            "residential"
+          ],
+          "provides": "Официальная политика по азоту (PSN 2022-2035, пакет 2026, цели по секторам, ускорение vergunningverlening, площадные подходы). Напрямую влияет на разблокировку стройки.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "ключевой"
+        },
+        {
+          "name": "RVO — Bouwen en wonen (устойчивость, субсидии, нормы)",
+          "url": "https://www.rvo.nl/onderwerpen/wetten-en-regels-gebouwen",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial"
+          ],
+          "provides": "Правила и субсидии по устойчивости: energielabel, обязательный label C для офисов >100 м², BENG, EPBD IV, субсидии (DEI+). Первоисточник по нормам энергоэффективности.",
+          "frequency": "непрерывно",
+          "language": "NL+EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "DGBC — Dutch Green Building Council (Paris Proof, BREEAM-NL)",
+          "url": "https://www.dgbc.nl",
+          "segments": [
+            "commercial",
+            "industrial",
+            "residential"
+          ],
+          "provides": "Держатель BREEAM-NL; тема Paris Proof (CO₂-нейтральная среда, kWh/m²). Знаниевый хаб (~400 партнёров). Первоисточник по рыночным ESG-стандартам, влияющим на оценку и арендуемость.",
+          "frequency": "непрерывно",
+          "language": "NL+EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "Liander (региональный DSO — Noord-Holland, Gelderland, Flevoland)",
+          "url": "https://www.liander.nl",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial"
+          ],
+          "provides": "Региональная доступность мощности: 'stroomnetchecker' (сроки и возможности подключения по адресу), раздел grootzakelijk, листы ожидания.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "Stedin (региональный DSO — Randstad)",
+          "url": "https://www.stedin.net",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial"
+          ],
+          "provides": "'Vol stroomnet' и 'Netcapaciteit' (congestiemanagement, крупные подключения), листы ожидания. Покрывает Роттердам-Гаага-Утрехт.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "Enexis Netbeheer (региональный DSO — юг и северо-восток)",
+          "url": "https://www.enexis.nl/nieuws",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial"
+          ],
+          "provides": "Проверка доступной мощности по адресу, перегруженные подстанции, листы ожидания, wijkgerichte aanpak. Покрывает логкоридоры юга (Brabant/Limburg).",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "GRESB — ESG benchmarking (Insights)",
+          "url": "https://www.gresb.com/nl-en/insights/",
+          "segments": [
+            "commercial",
+            "industrial",
+            "residential",
+            "macro"
+          ],
+          "provides": "Глобальный ESG-бенчмарк для real assets (>150 инвесторов): рейтинги фондов/активов, результаты ассессмента, insights. Ожидания инвесторов к ESG портфелей NL.",
+          "frequency": "ежегодно",
+          "language": "EN",
+          "priority": "важный"
+        },
+        {
+          "name": "RVO — BENG (Bijna Energieneutrale Gebouwen)",
+          "url": "https://www.rvo.nl/onderwerpen/beng",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial"
+          ],
+          "provides": "Требования BENG для всех заявок с 01.01.2021: макс. энергопотребность, макс. ископаемое топливо, мин. доля ВИЭ, TOjuli. Первоисточник для оценки новых проектов.",
+          "frequency": "нерегулярно",
+          "language": "NL",
+          "priority": "важный"
+        }
+      ]
+    },
+    {
+      "title": "Прогнозные институты, строительные затраты и наука",
+      "description": "Прогнозные модели спроса/предложения, индексы стройзатрат, планбюро и академические институты — фундаментальный и методологический контекст.",
+      "sources": [
+        {
+          "name": "PBL — Planbureau voor de Leefomgeving (Publicaties)",
+          "url": "https://www.pbl.nl/publicaties",
+          "segments": [
+            "residential",
+            "macro"
+          ],
+          "provides": "Стратегический анализ по жилью, пространственному планированию, климату и землепользованию; ~5600 публикаций, раздел 'Wonen en ruimte'. Есть английская версия.",
+          "frequency": "нерегулярно",
+          "language": "NL+EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "ASRE — Amsterdam School of Real Estate (Research)",
+          "url": "https://asre.nl/onderzoek/",
+          "segments": [
+            "all"
+          ],
+          "provides": "Академические исследования и paper series по недвижимости (финансы, жильё, устойчивость); research fellows, семинары, vastgoedbibliotheek.nl. Лучший NL-первоисточник по теории и эмпирике рынка.",
+          "frequency": "нерегулярно",
+          "language": "NL+EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "ABF Research — Primos / Socrates (woningmarktprognose)",
+          "url": "https://abfresearch.nl/wat-we-doen/specialisaties/prognoses/socrates-woningmarktprognose/",
+          "segments": [
+            "residential",
+            "macro"
+          ],
+          "provides": "Модели Primos (население, домохозяйства, жилфонд) и Socrates (спрос/предложение по 31 региону). Оценка дефицита жилья (~396 тыс. в 2025). Канонический прогноз для государства.",
+          "frequency": "ежегодно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "EIB — Economisch Instituut voor de Bouw",
+          "url": "https://www.eib.nl/eib-publicaties/",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial",
+            "macro"
+          ],
+          "provides": "Прогнозы стройпроизводства и занятости (ежегодно), тренды рынка труда, анализ по жилью/инфраструктуре/устойчивости. Ключ к предложению/пайплайну.",
+          "frequency": "ежегодно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "TU Delft — Management in the Built Environment",
+          "url": "https://www.tudelft.nl/en/architecture-and-the-built-environment/research/research-at-bk-bouwkunde/management-in-the-built-environment",
+          "segments": [
+            "all"
+          ],
+          "provides": "Исследования по управлению недвижимостью, девелопменту территорий, жилью и циркулярному строительству; PhD-проекты, научные статьи.",
+          "frequency": "нерегулярно",
+          "language": "EN",
+          "priority": "важный"
+        },
+        {
+          "name": "BDB — Bouw(kosten)data (bouwkostenindex)",
+          "url": "https://www.bdb.nl/bdb+producten/Indexcijfers/default.aspx",
+          "segments": [
+            "residential",
+            "commercial",
+            "industrial"
+          ],
+          "provides": "Независимый индекс строительных затрат (с 1914 г.) по жилью, бизнес-зданиям, офисам, инфраструктуре. Ключ к экономике девелопмента и feasibility.",
+          "frequency": "ежеквартально",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "Tinbergen Institute (Discussion Papers)",
+          "url": "https://tinbergen.nl/home",
+          "segments": [
+            "macro"
+          ],
+          "provides": "Экономические/эконометрические discussion papers (EUR, UvA, VU); макроэкономика, финансы, причинно-следственный анализ. Методологический контекст.",
+          "frequency": "нерегулярно",
+          "language": "EN",
+          "priority": "дополнительный"
+        }
+      ]
+    },
+    {
+      "title": "Нишевые сегменты (студенты, healthcare, дата-центры, отели)",
+      "description": "Специализированные источники по растущим институциональным под-сегментам, слабо покрытым общей статистикой.",
+      "sources": [
+        {
+          "name": "Kences — Landelijke Monitor Studentenhuisvesting (LMS)",
+          "url": "https://www.kences.nl/lms",
+          "segments": [
+            "residential"
+          ],
+          "provides": "Главный мониторинг студенческого жилья: спрос/предложение, дефицит комнат, прогнозы по студ-городам (исследование ABF по заказу Kences + Минжилья).",
+          "frequency": "ежегодно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "Dutch Data Center Association (DDA) — State of the Dutch Data Centers",
+          "url": "https://www.dutchdatacenters.nl/en/nieuws/",
+          "segments": [
+            "industrial",
+            "commercial"
+          ],
+          "provides": "Данные по дата-центрам: мощность (МВт), инвестиции, PUE, энергопотребление, регулирование размещения. Критично для индустриала и энергосетей.",
+          "frequency": "ежегодно",
+          "language": "EN+NL",
+          "priority": "важный"
+        },
+        {
+          "name": "Capital Value — Healthcare Real Estate (zorgvastgoed)",
+          "url": "https://www.capitalvalue.nl/en/healthcare-real-estate/",
+          "segments": [
+            "commercial",
+            "residential"
+          ],
+          "provides": "Данные и отчёты по медицинской/уход-недвижимости: объёмы инвестиций, спрос, разделение care/housing, дефицит. Растущий институциональный сегмент.",
+          "frequency": "ежегодно",
+          "language": "EN+NL",
+          "priority": "дополнительный"
+        },
+        {
+          "name": "Horwath HTL Netherlands — HOSTA / hotel market reports",
+          "url": "https://horwathhtl.com/netherlands/insights/",
+          "segments": [
+            "commercial"
+          ],
+          "provides": "Аналитика гостиничного рынка: Occ/ADR/RevPAR, HOSTA Benelux, Dutch City Hotel Index (с ABN AMRO). Единственный сегментный hospitality-источник.",
+          "frequency": "ежегодно",
+          "language": "EN+NL",
+          "priority": "дополнительный"
+        }
+      ]
+    },
+    {
+      "title": "Отраслевые события, выставки и нетворкинг",
+      "description": "Ключевые выставки и конгрессы NL и Европы — точки отслеживания трендов, сделок и позиционирования рынка.",
+      "sources": [
+        {
+          "name": "PROVADA",
+          "url": "https://www.provada.nl/",
+          "segments": [
+            "all"
+          ],
+          "provides": "Крупнейшая выставка недвижимости NL (RAI Amsterdam): девелоперы, инвесторы, муниципалитеты; 250+ knowledge sessions, 300+ спикеров. Главная точка нетворкинга и трендов.",
+          "frequency": "ежегодно",
+          "language": "NL+EN",
+          "priority": "ключевой"
+        },
+        {
+          "name": "SPRYG Real Estate Academy (Events / Congressen)",
+          "url": "https://spryg.com/nl/events",
+          "segments": [
+            "all"
+          ],
+          "provides": "80+ событий/год: Logistiek Vastgoed Nederland, Vastgoedfinanciering, ESG & Vastgoed, AI & Vastgoed, региональные конгрессы. Календарь специализированных событий.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "EXPO REAL (Munich)",
+          "url": "https://exporeal.net/en/",
+          "segments": [
+            "all"
+          ],
+          "provides": "Крупнейшая B2B-ярмарка недвижимости и инвестиций Европы (Messe München); все классы активов, голландские делегации. Международный контекст и сделки.",
+          "frequency": "ежегодно",
+          "language": "EN",
+          "priority": "важный"
+        },
+        {
+          "name": "MIPIM (Cannes)",
+          "url": "https://www.mipim.com/en-gb.html",
+          "segments": [
+            "all"
+          ],
+          "provides": "Глобальная выставка профессионалов (Канны); голландский павильон 'Home of Holland' с девелоперами, инвесторами, властями, proptech. Международные инвестпотоки.",
+          "frequency": "ежегодно",
+          "language": "EN",
+          "priority": "важный"
+        },
+        {
+          "name": "Vastgoedjournaal — Kalender (события)",
+          "url": "https://vastgoedjournaal.nl/kalender",
+          "segments": [
+            "commercial",
+            "residential",
+            "industrial"
+          ],
+          "provides": "Новости и календарь вастгод-событий/конгрессов NL; агрегатор для отслеживания конференций и анонсов.",
+          "frequency": "непрерывно",
+          "language": "NL",
+          "priority": "дополнительный"
+        }
+      ]
+    },
+    {
+      "title": "Муниципальная жилищная политика (крупные города)",
+      "description": "Woonvisies и жилищные программы ключевых городов — локальные целевые объёмы стройки, доли доступного жилья и регулирование среднего сегмента аренды.",
+      "sources": [
+        {
+          "name": "Gemeente Rotterdam — Woonvisie",
+          "url": "https://www.rotterdam.nl/woonvisie",
+          "segments": [
+            "residential"
+          ],
+          "provides": "Rotterdamse Woonvisie (до 2040): целевые 3500-4000 домов/год, доли доступного жилья (соц./средний сегмент), Woonzorgvisie.",
+          "frequency": "нерегулярно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "Gemeente Den Haag — Woonvisie 2040",
+          "url": "https://www.denhaag.nl/nl/verbouwen-en-wonen/maatregelen-problemen-woningmarkt/",
+          "segments": [
+            "residential"
+          ],
+          "provides": "Woonvisie 2040: 4000 домов/год, доли соц. и среднеценовой аренды (мин. 30%/20%), 7 вызовов рынка, доступность.",
+          "frequency": "нерегулярно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "Gemeente Amsterdam — Volg beleid: Wonen",
+          "url": "https://www.amsterdam.nl/bestuur-organisatie/volg-beleid/stedelijke-ontwikkeling/wonen/",
+          "segments": [
+            "residential",
+            "commercial"
+          ],
+          "provides": "Жилищная политика Амстердама: Woonagenda, правило 40-40-20, регулирование среднего сегмента аренды, программирование стройки по 22 районам.",
+          "frequency": "нерегулярно",
+          "language": "NL",
+          "priority": "важный"
+        },
+        {
+          "name": "Gemeente Utrecht — Woonbeleid (Omgevingsvisie)",
+          "url": "https://omgevingsvisie.utrecht.nl/thematisch-beleid/wonen/",
+          "segments": [
+            "residential"
+          ],
+          "provides": "Политика Утрехта 2025-2030: 3000 домов/год, 75% доступного жилья, пороги среднего сегмента и доступной покупки (WOZ до €405k).",
+          "frequency": "нерегулярно",
+          "language": "NL",
+          "priority": "дополнительный"
+        }
+      ]
+    }
+  ]
+}
