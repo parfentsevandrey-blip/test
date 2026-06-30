@@ -1,0 +1,24 @@
+{
+  "segments": [
+    "industrial",
+    "commercial"
+  ],
+  "regions": [
+    "Randstad",
+    "Venlo",
+    "Moerdijk",
+    "Emmen"
+  ],
+  "structure": "BV",
+  "holdings": [
+    "logistics warehouses",
+    "retail parks"
+  ],
+  "interests": [
+    "yields",
+    "take-up",
+    "netcongestie",
+    "retail vacancy"
+  ],
+  "avoid": []
+}

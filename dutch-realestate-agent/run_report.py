@@ -487,6 +487,21 @@ def main(argv=None):
         log.error("%s", e)
         return EXIT_FATAL
 
+    # ---- 1b. слой памяти и форсайта (тренды/сюжеты/календарь) ----------------
+    try:
+        import memory as _memory
+        if not args.no_history_update:
+            _memory.update_state(data)            # копим metrics/threads/calendar в data/state/
+        _st = _memory.load_state()
+        _trends = _memory.trend_chart_specs(_st.get("metrics", {}), data.get("week_end") or "", min_points=3)
+        if _trends:
+            data["charts"] = (data.get("charts") or []) + _trends
+            log.info("[1b] память: +%d трендовых графиков (неделя-к-неделе)", len(_trends))
+        else:
+            log.info("[1b] память: state ok; трендов пока нет (нужно ≥3 недель данных)")
+    except Exception as e:  # noqa: BLE001 — слой памяти не должен ронять отчёт
+        log.warning("[1b] слой памяти пропущен: %s", e)
+
     # история по умолчанию — data/history.json рядом с входным файлом
     history_path = args.history
     if history_path is None:

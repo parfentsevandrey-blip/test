@@ -18,6 +18,14 @@ DIR = {
   "down":    {"sym":"▼","bg":"#FBEAEA","fg":"#B03A3A"},
   "neutral": {"sym":"◆","bg":"#E8F0F7","fg":"#2C5F8A"},
 }
+TSTATUS = {
+  "new":        {"t":"НОВЫЙ","bg":"#E8F0F7","fg":"#2C5F8A"},
+  "developing": {"t":"В РАЗВИТИИ","bg":"#FBF1DF","fg":"#8A5510"},
+  "watch":      {"t":"ПОД НАБЛЮДЕНИЕМ","bg":"#FFF6E5","fg":"#B07A1C"},
+  "resolved":   {"t":"ЗАКРЫТ","bg":"#E7F4EE","fg":"#1E7A4D"},
+}
+KIND_ICON = {"deal_deadline":"⏳","cbs_release":"📈","vote":"🗳","reit_earnings":"📊","other":"•"}
+SEG_RU = {"residential":"жильё","commercial":"ритейл","industrial":"индустриал","overview":"все","macro":"макро"}
 
 def period(a,b):
     try:
@@ -97,6 +105,14 @@ def render(data, pngs=None):
  .watch b{{color:#8A5510}}
  .outlook{{background:#EEF2F6;padding:14px 16px;border-radius:4px;line-height:1.5;font-size:14.5px}}
  .empty{{color:#6B7785;font-style:italic;font-size:13.5px}}
+ .pbox{{background:#FBF1DF;border-left:5px solid #C0791C;border-radius:0 4px 4px 0;padding:12px 16px;margin:14px 0}}
+ .pbox .lbl{{color:#8A5510;font-weight:700;font-size:12px;letter-spacing:1px}} .pbox ul{{margin:6px 0 0;padding-left:20px}} .pbox li{{margin:5px 0;font-size:14px;line-height:1.4}}
+ .thread{{margin:10px 0;padding-bottom:8px;border-bottom:1px solid #eceff3}}
+ .chip{{display:inline-block;padding:1px 8px;border-radius:10px;font-size:10px;font-weight:700;letter-spacing:.5px;vertical-align:middle}}
+ .thread .tt{{font-weight:700;color:#1F3A5F;font-size:15px;margin-left:6px}}
+ .thread .nw{{font-size:13.5px;margin-top:3px}} .thread .nw b{{color:#6B7785}}
+ .thread .tr{{font-size:12.5px;color:#6B7785;margin-top:2px}} .thread .tr b{{color:#8A5510}}
+ .cal td:first-child{{font-weight:700;white-space:nowrap}} .cal .imp{{color:#6B7785;font-size:11px;font-style:italic}}
  .chart{{margin:14px 0}} .chart img{{width:100%;display:block;border:1px solid #eceff3;border-radius:4px}}
  .ccap{{color:#6B7785;font-style:italic;font-size:12px;text-align:center;margin-top:4px}}
  .gloss td:first-child{{font-weight:700;color:#1F3A5F;width:26%}}
@@ -117,6 +133,27 @@ def render(data, pngs=None):
         out.append('<div class="kt"><h2>ГЛАВНЫЕ ВЫВОДЫ НЕДЕЛИ</h2><ol>')
         for t in kt: out.append(f'<li>{esc(t)}</li>')
         out.append('</ol></div>')
+
+    pn=data.get("portfolio_notes") or []
+    if pn:
+        out.append('<div class="pbox"><div class="lbl">★ ВАЖНО ДЛЯ ВАШЕГО ПОРТФЕЛЯ</div><ul>')
+        for n in pn:
+            out.append(f'<li>{esc(n.get("text","") if isinstance(n,dict) else n)}</li>')
+        out.append('</ul></div>')
+
+    th=data.get("threads") or []
+    if th:
+        out.append('<div class="bar" style="background:#5D6D7E">🧵 Сюжеты в развитии</div>')
+        for t in th:
+            st=TSTATUS.get((t.get("status") or "").lower(),{"t":"—","bg":"#EEF2F6","fg":"#6B7785"})
+            out.append('<div class="thread">')
+            out.append(f'<span class="chip" style="background:{st["bg"]};color:{st["fg"]}">{st["t"]}</span><span class="tt">{esc(t.get("title",""))}</span>')
+            if t.get("update"): out.append(f'<div class="nw"><b>Что нового:</b> {esc(t["update"])}</div>')
+            nt=t.get("next_trigger") or {}
+            if nt.get("date") or nt.get("what"):
+                link=f' · <a href="{esc(t["url"])}">↗</a>' if t.get("url") else ''
+                out.append(f'<div class="tr"><b>Следующий триггер:</b> {esc((str(nt.get("date",""))+" — "+str(nt.get("what",""))).strip(" —"))}{link}</div>')
+            out.append('</div>')
 
     ov=[c for c in (data.get("charts") or []) if c.get("segment")=="overview"]
     if ov:
@@ -165,6 +202,19 @@ def render(data, pngs=None):
         out.append('<div class="bar" style="background:#1F3A5F">🧭 Картина недели и прогноз</div>')
         out.append(f'<div class="outlook">{esc(data["outlook"])}</div>')
 
+    cal=data.get("calendar") or []
+    if cal:
+        def _ck(c):
+            try: return (0,datetime.strptime(c.get("date",""),"%Y-%m-%d"))
+            except Exception: return (1,datetime.max)
+        out.append('<div class="bar" style="background:#C0791C">📅 Календарь: за чем следить</div>')
+        out.append('<table class="cal"><tr><th>Дата</th><th>Событие</th><th>Сегмент</th></tr>')
+        for c in sorted(cal,key=_ck):
+            icon=KIND_ICON.get(c.get("kind","other"),"•")
+            imp=f'<div class="imp">→ {esc(c["impact"])}</div>' if c.get("impact") else ''
+            out.append(f'<tr><td>{esc(c.get("date",""))}</td><td>{icon} {esc(c.get("what",""))}{imp}</td><td>{esc(SEG_RU.get(c.get("segment"),c.get("segment","")))}</td></tr>')
+        out.append('</table>')
+
     gl = data.get("glossary") or []
     if gl:
         out.append('<div class="bar" style="background:#5D6D7E">📖 Словарь терминов</div><table class="gloss">')
@@ -186,6 +236,7 @@ def main():
     ap.add_argument("--data",required=True); ap.add_argument("--out",required=True)
     a=ap.parse_args()
     data=json.load(open(a.data,encoding="utf-8"))
+    data["charts"]=(data.get("charts") or [])+(data.get("trend_chart_specs") or [])
     pngs={}
     charts_list=data.get("charts") or []
     if charts_list:

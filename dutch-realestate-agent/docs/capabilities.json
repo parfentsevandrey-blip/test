@@ -1,0 +1,351 @@
+{
+  "ideas": [
+    {
+      "lens": "test",
+      "capabilities": [
+        {
+          "name": "t",
+          "what": "t",
+          "why_original_task": "t",
+          "value": "high",
+          "effort": "low",
+          "files": [
+            "a"
+          ]
+        }
+      ]
+    },
+    {
+      "lens": "ИНЖЕНЕРНАЯ РЕАЛИЗУЕМОСТЬ. Оцениваю, что реализуемо чисто и additively на текущем стеке (Python stdlib + python-docx + matplotlib, JSON-стейт, опциональные поля схемы, новые секции рендера, шаг в run_report), не ломая обратную совместимость. Архитектура к этому готова: (1) все рендеры — чистые функции над dict data, пропускающие отсутствующие ключи (build_report/preview.render), так что новые top-level ключи добавляются с нулевым риском; (2) run_report имеет нумерованные шаги и soft-import — новый memory.py-шаг встаёт между загрузкой и валидацией тривиально; (3) state-фундамент частично есть: history.json уже хранит {items, weeks} и реестр weeks-ledger, но items несут только date/segment/subsection/title/url — нет value/direction/metric_trend/числовых рядов, и data/state/ ещё не создан; (4) chart_line уже есть и тянет многоточечные ряды — память трендов не требует нового типа графика, только продюсера данных; (5) validate.py жёстко сверяет числа графиков с value пунктов (_cross_check_chart_numbers/_extract_numbers) — любой числовой слой памяти обязан это уважать. Главный инженерный риск во всех умениях — не рендер (он дёшев), а ИЗВЛЕЧЕНИЕ/НОРМАЛИЗАЦИЯ числа и СОПОСТАВЛЕНИЕ сущности неделя-к-неделе (metric id, entity id) из свободного текста — это требует, чтобы мозг проставлял стабильные машинные ключи, иначе память шумит. Поэтому минимальная надёжная реализация каждого умения = опциональные явные поля-ключи в схеме (metric_key, story_id) + детерминированный state-writer + чистый additive-рендер. Ранжирую по соотношению ценность/усилие и обратной совместимости.",
+      "capabilities": [
+        {
+          "name": "Память трендов: KPI неделя-к-неделе + авто-линии динамики (metrics_state.json)",
+          "what": "Новый стейт data/state/metrics.json — словарь временных рядов {metric_key: {unit, label, segment, points:[{week_end, value, direction, source}]}}. Мозг проставляет в пунктах опциональный machine-ключ metric_key (например 'consumer.koopbereidheid', 'cbs.house_price_mom') и числовое значение value_num (число, не строка). Новый memory.py.update_metrics(data, state_path) детерминированно дописывает точку за текущую неделю (идемпотентно по week_end). Новый memory.py.build_trend_charts(state, data) автогенерирует line-чарты для рядов с >=3 точками и инжектит их в data['charts'] ПЕРЕД рендером (segment-цвет, нулевая ось для отрицательных индексов — уже поддержано chart_line/_style_axes). Дельта н/н ('было -28 -> стало -22') считается из стейта, а не из текста. Рендер: переиспользовать существующий chart_line + add_chart_image — нового типа графика НЕ нужно.",
+          "why_original_task": "Прямо реализует §2.4 'Трендовая память' (metric_trend: ускорение/разворот/продолжение/затухание), которая сейчас держится только на ручной памяти мозга и текстовой сноске '(см. выпуск от 16 июня)'. Витрина §4.5 (koopbereidheid -28->-22, второй месяц роста) становится автоматической и честной: число дельты берётся из стейта, а не выдумывается. Усиливает 'не голое число' (§2.2) и 'не повторяться, а продолжать' (§1.2).",
+          "value": "high",
+          "effort": "medium",
+          "files": [
+            "/home/user/test/dutch-realestate-agent/data/state/metrics.json",
+            "/home/user/test/dutch-realestate-agent/memory.py",
+            "/home/user/test/dutch-realestate-agent/schema.example.json",
+            "/home/user/test/dutch-realestate-agent/run_report.py",
+            "/home/user/test/dutch-realestate-agent/charts.py",
+            "/home/user/test/dutch-realestate-agent/validate.py",
+            "/home/user/test/dutch-realestate-agent/agent_instructions.md"
+          ]
+        },
+        {
+          "name": "Сюжеты в развитии: антиповтор -> умные продолжения со статусом (stories_state.json)",
+          "what": "Новый стейт data/state/stories.json: {story_id: {title, segment, status, first_seen, last_seen, beats:[{week_end, summary, direction}]}}. Мозг проставляет в пунктах опциональный story_id (стабильный слаг, напр. 'prologis_segro', 'box3_reform', 'vesteda_redemption') и story_status (new/developing/resolved/stalled). memory.py.update_stories(data, state) дописывает 'beat' за неделю. Рендер — новая additive-секция build_story_tracker(doc, data) в generate_report + зеркало в preview: компактный блок 'Сюжеты в развитии' со статус-чипом (переиспользовать _add_chip / DIRECTION-палитру) и одной строкой 'что нового на этой неделе vs прошлой'. Состав строки готовит memory.py из стейта (предыдущий beat того же story_id) и кладёт в data['story_tracker'] перед рендером. Если story_id нет ни у одного пункта — секция не появляется (back-compat).",
+          "why_original_task": "Превращает декларативное 'НЕ повторяться' (§1.2) в его более сильную формулировку из той же инструкции: 'если тема продолжается — бери новый поворот и ЯВНО свяжи с прошлым выпуском через нить продолжение'. Сейчас связь нити держится на ручной фразе в тексте; story_id + статус делают её машинной, проверяемой и видимой читателю-собственнику ('эта история длится 4 недели, статус: развивается'). Закрывает разрыв между антиповтором (есть) и форсайтом сюжета (нет).",
+          "value": "high",
+          "effort": "medium",
+          "files": [
+            "/home/user/test/dutch-realestate-agent/data/state/stories.json",
+            "/home/user/test/dutch-realestate-agent/memory.py",
+            "/home/user/test/dutch-realestate-agent/schema.example.json",
+            "/home/user/test/dutch-realestate-agent/generate_report.py",
+            "/home/user/test/dutch-realestate-agent/preview_html.py",
+            "/home/user/test/dutch-realestate-agent/run_report.py",
+            "/home/user/test/dutch-realestate-agent/agent_instructions.md"
+          ]
+        },
+        {
+          "name": "Форвард-календарь / вотчлист с переносом триггеров между выпусками (calendar_state.json)",
+          "what": "Структурировать то, что сейчас лежит прозой в outlook ('КАЛЕНДАРЬ И ТРИГГЕРЫ: 22 июля — Prologis...') в опциональный массив data['calendar'] = [{date, title, segment, scenario_if, scenario_then, story_id?}]. Новый стейт data/state/calendar.json копит будущие триггеры. memory.py.roll_calendar(data, state): (а) дописывает новые триггеры; (б) подсвечивает события, чья дата наступает на следующей неделе ('СКОРО'); (в) авто-закрывает прошедшие. Рендер — новая additive-секция build_calendar(doc, data) (таблица дата|событие|сценарий, переиспользовать add_stats_table-паттерн и WATCH-палитру) + зеркало в preview. Полностью additive: нет calendar — рендерится только текстовый outlook как раньше.",
+          "why_original_task": "Реализует §2.7 'Сценарии и форвард (календарь и триггеры в outlook)' и сегментные watch (§5.4) как переходящий из недели в неделю реестр, а не разовую прозу. Дедлайн Prologis 22 июля, голосование Сената по box3, релизы CBS — это именно 'ближайшие триггеры' из ведущей гипотезы. Сейчас они теряются между выпусками: structured calendar+state гарантирует, что обещанная дата всплывёт в нужную неделю с пометкой 'на этой неделе'.",
+          "value": "high",
+          "effort": "medium",
+          "files": [
+            "/home/user/test/dutch-realestate-agent/data/state/calendar.json",
+            "/home/user/test/dutch-realestate-agent/memory.py",
+            "/home/user/test/dutch-realestate-agent/schema.example.json",
+            "/home/user/test/dutch-realestate-agent/generate_report.py",
+            "/home/user/test/dutch-realestate-agent/preview_html.py",
+            "/home/user/test/dutch-realestate-agent/run_report.py",
+            "/home/user/test/dutch-realestate-agent/validate.py",
+            "/home/user/test/dutch-realestate-agent/agent_instructions.md"
+          ]
+        },
+        {
+          "name": "Профиль владельца: персональный слой релевантности (profile.json)",
+          "what": "Статичный конфиг data/profile.json (НЕ стейт, правит человек): {segments:[...], regions:[...], structure:'BV'|'private', holdings:['logistics','retail_parks'], interests:[...]}. memory.py.score_relevance(data, profile) проставляет каждому пункту опциональный _relevance (0-3) по совпадению segment/region/тегов и собирает короткий персональный дайджест data['for_you'] = ['3 события прямо про ваши склады в Венло', ...]. Рендер — компактная врезка 'Важно для вашего портфеля' вверху (после key_takeaways), переиспользовать KT-блок-стиль. Полностью опционально: нет profile.json — слой выключен, отчёт идентичен текущему.",
+          "why_original_task": "Усиливает центральный принцип §0 'Читатель — герой отчёта' и лесенку 'почему важно ИМЕННО МНЕ' (§2.1, ступень 3). Инструкция уже мыслит типами участников (winners/losers §2.5: 'частный арендодатель со структурой через BV', 'владелец ритейл-парков'); профиль делает этот разбор адресным. Это самый прямой ответ на 'персонализация под портфель владельца' из гипотезы.",
+          "value": "medium",
+          "effort": "medium",
+          "files": [
+            "/home/user/test/dutch-realestate-agent/data/profile.json",
+            "/home/user/test/dutch-realestate-agent/memory.py",
+            "/home/user/test/dutch-realestate-agent/generate_report.py",
+            "/home/user/test/dutch-realestate-agent/preview_html.py",
+            "/home/user/test/dutch-realestate-agent/run_report.py",
+            "/home/user/test/dutch-realestate-agent/agent_instructions.md"
+          ]
+        },
+        {
+          "name": "Единый memory.py + шаг 'память' в run_report (фундамент для всех четырёх умений)",
+          "what": "Один новый модуль memory.py со стабильным API: load_state(path)/save_state(path) (atomic write через temp+rename, как делает update_history), и по функции на умение (update_metrics, update_stories, roll_calendar, score_relevance, build_trend_charts). Все читают/пишут JSON в data/state/ и МУТИРУЮТ переданный data dict, инжектя производные ключи (story_tracker, calendar enrich, trend-charts, for_you) ПЕРЕД шагами charts/Word/preview. Новый шаг step_memory() в run_report между загрузкой(1) и валидацией(2), под флаг --no-memory; soft-import как у charts/validate, чтобы отсутствие модуля не ронял конвейер. Важно: build_trend_charts должен дописывать в data['charts'] ДО step_render_charts, а числа рядов брать из стейта так, чтобы пройти _cross_check_chart_numbers (либо пометить авто-чарты флагом, исключающим их из round-trip-проверки в validate.py).",
+          "why_original_task": "Это инженерный каркас, без которого остальные четыре умения расплывутся по кодовой базе и нарушат back-compat. Даёт единое место для атомарной записи стейта, идемпотентности по week_end (защита от двойного прогона одной недели — реальный риск, т.к. update_history уже слепо аппендит в weeks[]), и единую точку soft-fail. Реализует 'слой ПАМЯТИ И ФОРСАЙТА' как один слой, а не четыре несвязанных хака. Прямо отвечает на требование линзы: 'сигнатуры функций memory.py, структуры файлов-стейта, как рендерить'.",
+          "value": "high",
+          "effort": "low",
+          "files": [
+            "/home/user/test/dutch-realestate-agent/memory.py",
+            "/home/user/test/dutch-realestate-agent/run_report.py",
+            "/home/user/test/dutch-realestate-agent/data/state/",
+            "/home/user/test/dutch-realestate-agent/validate.py"
+          ]
+        },
+        {
+          "name": "Идемпотентность стейта по week_end (страховка существующего history + всей памяти)",
+          "what": "Малое, но обязательное умение: переписать update_history (и зеркально все memory.py-апдейтеры) так, чтобы запись за уже виденный week_end ОБНОВЛЯЛА запись, а не аппендила дубль. Сейчас generate_report.update_history безусловно делает weeks.append(...) — повторный прогон одной недели (типичная отладка/перезапуск) задваивает weeks[] и испортит любые ряды трендовой памяти, считающие 'сколько недель подряд'. Реализация: ключевать weeks/points по week_end, upsert вместо append; покрыть быстрым unit-тестом 'дважды прогнали — один ряд'.",
+          "why_original_task": "Без этого память трендов и 'сюжеты в развитии' дадут ложные '2-я неделя роста подряд' при банальном повторном запуске — прямое нарушение §2.4 (честность тренда) и принципа §5.6 'нельзя врать формой/числом'. Это дешёвая защита достоверности, на которой стоит весь слой памяти.",
+          "value": "medium",
+          "effort": "low",
+          "files": [
+            "/home/user/test/dutch-realestate-agent/generate_report.py",
+            "/home/user/test/dutch-realestate-agent/memory.py"
+          ]
+        },
+        {
+          "name": "Обогащение history.items числовыми полями (мост от дедупа к памяти)",
+          "what": "Расширить запись в update_history так, чтобы каждый item дополнительно нёс опциональные value/direction/priority/metric_key/story_id (сейчас только date/segment/subsection/title/url). Это превращает history.json из чисто дедуп-реестра в источник для ретроспективы без отдельного стейта на старте, и даёт validate.py/preview материал для подсветки 'эта метрика уже была N недель назад'. Чисто аддитивно: старые записи без новых полей читаются как раньше.",
+          "why_original_task": "Инструкция §2.4 прямо называет history.json 'не только дедуп, но и временной ряд'. Сейчас код этого не поддерживает (items без чисел). Это минимальный мост, позволяющий памяти трендов опереться на УЖЕ существующий и коммитящийся файл, снижая риск/усилие самого приоритетного умения.",
+          "value": "medium",
+          "effort": "low",
+          "files": [
+            "/home/user/test/dutch-realestate-agent/generate_report.py",
+            "/home/user/test/dutch-realestate-agent/data/history.json"
+          ]
+        }
+      ]
+    }
+  ],
+  "genspec": {
+    "sections": [
+      {
+        "name": "1. «Сюжеты в развитии» (threads) — память сюжетов со статус-бейджами",
+        "where": "Новый блок отчёта уровня report. Источник данных — новый необязательный ключ верхнего уровня `data.threads` (массив). Контракт элемента: `{ id, title, segment (residential|commercial|industrial|overview), status (new|developing|watch|resolved), whats_new (строка «что нового на этой неделе»), next_trigger (строка/дата), since (опц. «ведём с …»), value (опц.), url (опц.), source (опц.) }`. Backward-compatible: если `data.threads` пуст или отсутствует — блок не рисуется, отчёт собирается как раньше.\n\nПОРЯДОК РАЗМЕЩЕНИЯ. В Word — в `build_report()` (generate_report.py, ~строка 874) добавить вызов `build_threads(doc, data)` СРАЗУ ПОСЛЕ `build_key_takeaways(doc, data)` и ДО `build_overview_charts(...)`: сюжеты в развитии — это «куда смотреть» сразу после главных выводов. В HTML — в `render()` (preview_html.py) тот же порядок: после блока `.kt` (главные выводы, ~строка 119) и до overview-графиков (~строка 121).\n\nЛОГИКА СТАТУС-БЕЙДЖЕЙ (общая для Word и HTML). Завести словарь по образцу существующего `DIRECTION`:\nThREAD_STATUS = {\n  'new':        ('NEW',        '#E8F0F7' fill, '#2C5F8A' fg, 'новый сюжет'),\n  'developing': ('DEVELOPING', '#FBF1DF' fill, '#8A5510' fg, 'в развитии'),\n  'watch':      ('WATCH',      '#FFF6E5' fill, '#B07A1C' fg, 'под наблюдением'),\n  'resolved':   ('RESOLVED',   '#E7F4EE' fill, '#1E7A4D' fg, 'закрыт'),\n}\nЦвета намеренно переиспользуют палитру тегов влияния/боксов (E8F0F7/FBF1DF/FFF6E5/E7F4EE) — стиль единый. Неизвестный статус → серый дефолт ('#EEF2F6'/'#6B7785').",
+        "how_docx": "Добавить функцию `build_threads(doc, data)` рядом с `build_outlook`/`build_glossary`.\n\n1) Шапка секции — переиспользовать `add_segment_bar(doc, 'Сюжеты в развитии', '1F3A5F', '🧵')` (тот же helper, что у outlook/glossary; навигационно-синий NAVY).\n\n2) Каждый thread — отдельный бокс по образцу `add_conclusion_box`/`add_watch_box`: одноколоночная таблица на всю ширину, `_remove_table_borders` + `_full_width` + `_no_row_split` (бокс не рвётся между страницами), `_set_cell_margins(cell, top=120,bottom=120,left=220,right=220)`. Левую цветную полосу задать через `_set_cell_borders(cell, {'left': (30, BAR_HEX)})`, где BAR_HEX — fg-цвет статуса (как WATCH_BAR в add_watch_box).\n\n3) Внутри ячейки, первый абзац (`cell.paragraphs[0]`, space_after=Pt(3)):\n   - бейдж статуса через существующий `_add_chip(p0, 'NEW', fill_hex, color_rgb, size=8)` — это ровно то, для чего chip создан (фон+цветной текст на уровне run);\n   - затем заголовок сюжета: `_style_run(p0.add_run('  '+title), size=11, bold=True, color_rgb=NAVY_RGB)`;\n   - если есть `since` — мелкой подписью справа/следом: `_style_run(p0.add_run('   ведём с '+since), size=8.5, italic=True, color_rgb=MUTED_RGB)`.\n\n4) Второй абзац — «что нового»: `cell.add_paragraph()`, метка-ран 'Что нового:  ' (`_style_run(size=9, bold=True, color_rgb=<status fg RGB>)`) + текст `whats_new` (`size=10, color_rgb=INK_RGB`). Цвет метки = цвет статуса, чтобы взгляд цеплялся.\n\n5) Третий абзац — следующий триггер: метка '→ Следующий триггер:  ' (`size=9, bold=True, color_rgb=MUTED_RGB`) + `next_trigger` (`size=10, color_rgb=INK_RGB`). Это перекликается с врезкой «За чем следить», но привязано к конкретному сюжету.\n\n6) Если есть `source`/`url` — мелкая строка через тот же паттерн, что в `add_bullet`: `_style_run(size=8.5, italic, MUTED_RGB)` + `_add_hyperlink(p, url, 'ссылка ↗', size=8.5)`.\n\n7) После каждого бокса `_p(doc, space_after=6)` (как в conclusion/watch).\n\nСортировка для дисциплины внимания: developing → new → watch → resolved (resolved вниз, он информационный). Реализовать через `sorted(threads, key=lambda t: {'developing':0,'new':1,'watch':2,'resolved':3}.get(t.get('status'),4))`.",
+        "how_html": "Добавить рендер в `render()` (preview_html.py).\n\n1) CSS (в `<style>`): \n   .threads{margin:18px 0}\n   .thread{border-left:5px solid #6B7785;background:#F8FAFC;padding:10px 14px;margin:10px 0;border-radius:0 4px 4px 0}\n   .thread .head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}\n   .badge{font-size:10px;font-weight:700;letter-spacing:.5px;padding:2px 8px;border-radius:10px}\n   .thread .ttl{font-weight:700;color:#1F3A5F;font-size:15px}\n   .thread .since{color:#6B7785;font-size:11px;font-style:italic}\n   .thread .new{font-size:13.5px;line-height:1.4;margin:5px 0}\n   .thread .new b{font-weight:700}\n   .thread .trig{font-size:13px;color:#222B36;margin-top:3px}\n   .thread .trig b{color:#6B7785}\n   Левую полосу `.thread` и фон `.badge` задавать инлайн из статус-словаря (как уже делается для сегментов: `style=\"background:{color}\"`).\n\n2) Завести в шапке файла словарь по образцу `DIR`:\n   THSTATUS = {'new':{'lbl':'NEW','bg':'#E8F0F7','fg':'#2C5F8A'}, 'developing':{'lbl':'DEVELOPING','bg':'#FBF1DF','fg':'#8A5510'}, 'watch':{'lbl':'WATCH','bg':'#FFF6E5','fg':'#B07A1C'}, 'resolved':{'lbl':'RESOLVED','bg':'#E7F4EE','fg':'#1E7A4D'}}\n\n3) Функция-хелпер `threads_block(threads)`: если пусто — вернуть ''. Иначе:\n   - заголовок секции тем же приёмом, что overview/outlook: `<div class=\"bar\" style=\"background:#1F3A5F\">🧵 Сюжеты в развитии</div>`;\n   - открыть `<div class=\"threads\">`; для каждого (в том же порядке сортировки, что в Word) — \n     `<div class=\"thread\" style=\"border-left-color:{fg}\">`\n       `<div class=\"head\"><span class=\"badge\" style=\"background:{bg};color:{fg}\">{lbl}</span>`\n       `<span class=\"ttl\">{esc(title)}</span>` + (since → `<span class=\"since\">ведём с {esc(since)}</span>`)`</div>`\n       `<div class=\"new\"><b style=\"color:{fg}\">Что нового:</b> {esc(whats_new)}</div>`\n       `<div class=\"trig\"><b>→ Следующий триггер:</b> {esc(next_trigger)}</div>`\n       + (url/source → строка `.meta` тем же helper `meta(thread)`, он уже умеет date/source/url)\n     `</div>`.\n4) Вставить вызов между блоком `.kt` и overview-графиками (после строки ~119, до ~121). Использовать `esc()` для всех пользовательских строк (как везде в файле)."
+      },
+      {
+        "name": "2. «Календарь: за чем следить» — форвард-вотчлист таблицей дата/событие/сегмент",
+        "where": "Новый блок уровня report. Источник — новый необязательный ключ `data.calendar` (массив). Контракт элемента: `{ date (YYYY-MM-DD или строка типа «осень 2026»), event (строка), segment (residential|commercial|industrial|overview), kind (опц.: deal_deadline|cbs_release|vote|reit_earnings|other — для иконки), impact (опц. короткая «что изменит»), url (опц.) }`. Backward-compatible: нет `data.calendar` → блок не рисуется. Это машиночитаемая версия текстового «КАЛЕНДАРЬ И ТРИГГЕРЫ» из `outlook` (§2.7) — теперь отдельной таблицей, при этом старый текстовый календарь в outlook продолжает работать.\n\nПОРЯДОК. В Word — в `build_report()` вызвать `build_calendar(doc, data)` СРАЗУ ПОСЛЕ `build_outlook(doc, data)` (~строка 879): прогноз даёт картину, календарь — конкретные даты под ней. В HTML — после блока outlook (~строка 166), перед glossary.\n\nСОРТИРОВКА. По дате возрастанием: парсить `date` через `datetime.strptime(d,'%Y-%m-%d')`, нераспознанные строки (например «осень 2026») класть в конец, сохраняя исходный текст. Helper: `_cal_key(item)` → возвращает `(0, datetime)` для распознанных и `(1, 0)` для строковых, чтобы ближайшие конкретные даты шли первыми.\n\nЦВЕТ СЕГМЕНТА. Маленькая цветная точка/плашка сегмента берётся из существующего `SEG_COLORS` (Word) / `SEG` (HTML); overview → NAVY/'#1F3A5F'.\n\nИКОНКИ KIND (для обоих рендеров): {'deal_deadline':'⏳','cbs_release':'📈','vote':'🗳','reit_earnings':'📊','other':'•'}.",
+        "how_docx": "Добавить `build_calendar(doc, data)` рядом с `build_outlook`.\n\n1) Шапка — `add_segment_bar(doc, 'Календарь: за чем следить', 'C0791C', '🗓')`. Янтарный (WATCH_BAR/commercial-bar) намеренно: это форвард-вотчлист, тот же визуальный язык, что у врезки «За чем следить».\n\n2) Таблица 3 колонки по образцу `add_stats_table`: `doc.add_table(rows=1, cols=3)`, `_remove_table_borders`, `_full_width`. Шапка с заливкой NAVY и белым жирным текстом (как в add_stats_table): колонки «Дата», «Событие», «Сегмент». Ширины: `table.columns[0].width=Cm(3.0)`, `[1]=Cm(10.8)`, `[2]=Cm(3.0)`.\n\n3) Строки: `for idx,it in enumerate(sorted_items)`: `row=table.add_row().cells`; чередование фона `STAT_FILL if idx%2==0 else 'FFFFFF'` через `_set_cell_background`, `_set_cell_margins(cell)` для всех трёх ячеек; `paragraph_format.space_after=Pt(0)`.\n   - Кол.0 (дата): отформатировать `YYYY-MM-DD` человекочитаемо через существующий приём с `RU_MONTHS` (как в fmt_period — например «22 июля»); нераспознанное показать как есть. Жирно: `_style_run(size=9.5, bold=True, color_rgb=NAVY_RGB)`. Перед датой иконка kind.\n   - Кол.1 (событие): `event` (`size=9.5, INK_RGB`); если есть `impact` — вторым абзацем `'→ '+impact` (`size=8, italic, MUTED_RGB`), ровно как stats-таблица показывает impact. Если есть `url` — `_add_hyperlink(..., '  ↗', size=8)`.\n   - Кол.2 (сегмент): цветная плашка-chip через `_add_chip(p, seg_short, SEG_COLORS[seg]['soft'], SEG_COLORS[seg]['text_rgb'], size=8)`, где seg_short = {'residential':'Жильё','commercial':'Ритейл','industrial':'Индустриал','overview':'Все'}.\n\n4) Закрыть `_p(doc, space_after=6)`.\n\nЕсли все элементы без распознаваемых дат — таблица всё равно строится (порядок исходный). Если `data.calendar` пуст — return сразу.",
+        "how_html": "Добавить в `render()` блок календаря после outlook.\n\n1) CSS:\n   table.cal td:first-child{white-space:nowrap;font-weight:700;color:#1F3A5F}\n   .cal .pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;color:#fff}\n   .cal .imp{color:#6B7785;font-size:11.5px;font-style:italic;margin-top:2px}\n   (Базовые table/th/td стили уже есть и переиспользуются — как у stats и glossary.)\n\n2) Helper `calendar_block(items)`: пусто → ''. Иначе:\n   - `<div class=\"bar\" style=\"background:#C0791C\">🗓 Календарь: за чем следить</div>`;\n   - `<table class=\"cal\"><tr><th>Дата</th><th>Событие</th><th>Сегмент</th></tr>`;\n   - для каждого (после той же сортировки, что в Word): \n     `<tr><td>{icon} {human_date}</td>`\n     `<td>{esc(event)}` + (impact → `<div class=\"imp\">→ {esc(impact)}</div>`) + (url → ` <a href=\"{esc(url)}\">↗</a>`) + `</td>`\n     `<td><span class=\"pill\" style=\"background:{SEG.get(seg,'#1F3A5F')}\">{seg_short}</span></td></tr>`;\n   - `</table>`.\n   Дату форматировать тем же `period()`-стилем через RU_MONTHS (вынести мини-функцию `human_date(d)`), нераспознанное — `esc(d)` как есть.\n3) Вставить вызов после блока outlook (после строки ~166) и до glossary. Все строки — через `esc()`."
+      },
+      {
+        "name": "3. Авто-тренды — line-графики из trend_chart_specs в «Статистике в графиках»",
+        "where": "Расширение существующего механизма графиков, БЕЗ нового рендера. Источник — новый необязательный ключ `data.trend_chart_specs` (массив спецификаций графиков в ТОМ ЖЕ формате, что `data.charts`: id/segment/type/title/caption/unit/labels/series/source). Идея слоя памяти трендов (§2.4): агент собирает из `history.json` ряды KPI неделя-к-неделе (koopbereidheid, индекс доверия, индекс цен, prime yield) и кладёт их сюда как `type:\"line\"`. charts.py УЖЕ умеет `line` (chart_line) — новый код рендера НЕ нужен, только подключить эти спеки к пайплайну.\n\nКЛЮЧЕВОЙ ПРИНЦИП ОБРАТНОЙ СОВМЕСТИМОСТИ: не плодить второй канал рендера. Самый чистый путь — слить `trend_chart_specs` в общий список графиков на этапе, где уже всё рендерится. То есть трактовать их как обычные charts с `segment:\"overview\"` (или сегментным), чтобы они автоматически попали в блок «Статистика в графиках» (`build_overview_charts`) или после своего сегмента (`build_segment`) — оба уже фильтруют по `segment`.\n\nГДЕ ВСТАВИТЬ СЛИЯНИЕ.\n- generate_report.py, `build_report()` (~строка 863): сразу после `charts_list = data.get('charts') or []` добавить `charts_list = charts_list + (data.get('trend_chart_specs') or [])` и для согласованности `data` внутри (overview-фильтр в `build_overview_charts` читает `data.get('charts')`) — см. ниже про фильтр.\n- preview_html.py, `main()` (~строка 190) и `render()` (фильтры `c.get('segment')==...`): аналогично объединить списки.\n\nПОЧЕМУ ОТДЕЛЬНЫЙ КЛЮЧ, А НЕ ПРОСТО charts: семантическое разделение для агента (тренды из памяти vs визуалы текущей недели) и для лимита «6 визуалов» — трендовые линии считаются отдельной квотой памяти. Но технически они идут общим конвейером.\n\nBACKWARD-COMPAT: нет `trend_chart_specs` → поведение идентично текущему; нет matplotlib → как и сейчас, графики тихо пропускаются (`_charts is None`).",
+        "how_docx": "Минимальные точечные правки в generate_report.py (без новых рендер-функций, line уже есть в charts.py).\n\n1) В `build_report()` (строка ~863) заменить:\n   `charts_list = data.get('charts') or []`\n   на:\n   `charts_list = (data.get('charts') or []) + (data.get('trend_chart_specs') or [])`\n   Дальше всё работает: `render_charts(charts_list, assets_dir)` отрисует и line-тренды (chart_line); `build_segment` подберёт сегментные тренды по `c.get('segment')`.\n\n2) `build_overview_charts(doc, data, pngs)` (строка ~690) фильтрует `data.get('charts')` напрямую — он НЕ увидит trend-спеки. Исправить фильтр на объединённый источник:\n   `all_specs = (data.get('charts') or []) + (data.get('trend_chart_specs') or [])`\n   `ov = [c for c in all_specs if c.get('segment')=='overview']`\n   Так overview-тренды попадают в раздел «Статистика в графиках» (а это прямо целевое место по ТЗ). Аналогично `build_segment` (строка ~654) уже получает объединённый `charts_list` параметром — править не нужно.\n\n3) Никаких изменений в charts.py: `line` в `_DISPATCH`, `chart_line` строит ряд по labels (недели) и series (значения KPI), с нулевой осью для отрицательных индексов matplotlib делает автоматически. Чтобы соблюсти §5.6 (нулевая линия для koopbereidheid/доверия), агент задаёт ряд числами как есть; опционально можно (необязательная доработка) в chart_line добавить `ax.axhline(0,...)` если `min(values)<0` — но это уже улучшение honesty, не требуется для backward-compat.\n\n4) ВАЖНО про run_report.py: он берёт `data.get('charts')` в `step_render_charts` и `_count_items`/QA по своему. Чтобы оркестратор тоже рендерил тренды, в `step_render_charts` (строка ~245) заменить `charts_list = data.get('charts') or []` на объединённый список. Это единственная правка в run_report.py; кэш-патч `_cached` в `step_build_word` продолжит работать, т.к. сверяет по id.",
+        "how_html": "preview_html.py — те же два места объединить, line рендерится существующим chart_imgs.\n\n1) В `render()` overview-фильтр (строка ~121):\n   `all_specs = (data.get('charts') or []) + (data.get('trend_chart_specs') or [])`\n   `ov=[c for c in all_specs if c.get('segment')=='overview']`\n   и сегментный фильтр (строка ~157):\n   `sc=[c for c in all_specs if c.get('segment')==seg.get('id')]`\n   (вынести `all_specs` в начало `render()` один раз).\n\n2) В `main()` (строка ~190) при подготовке PNG:\n   `charts_list=(data.get('charts') or []) + (data.get('trend_chart_specs') or [])`\n   перед `_charts.render_charts(charts_list, ...)` — иначе для трендов не будет PNG и `chart_imgs` их пропустит (он берёт `pngs.get(id)`).\n\n3) `chart_imgs` и CSS `.chart/.ccap` уже подходят — line-PNG вставится как `<img>` с подписью-выводом из `caption`. Никакого нового CSS/HTML не требуется. Заголовок раздела «📊 Статистика в графиках» уже рисуется при непустом `ov` — трендовые overview-линии активируют его автоматически."
+      },
+      {
+        "name": "4. Врезка «Для вашего портфеля» — персонализация по profile.json",
+        "where": "Новый персонализирующий блок. Источник — ОТДЕЛЬНЫЙ файл `profile.json` (не часть data-JSON недели), плюс необязательный ключ `data.portfolio_notes` для готовых, уже отобранных агентом врезок. Два уровня, оба backward-compatible:\n\nУРОВЕНЬ A (рекомендуемый, простой и надёжный): агент при генерации сам отбирает релевантное под профиль и кладёт в `data.portfolio_notes` — массив строк ИЛИ массив `{ text, segment (опц.), priority (опц.) }`. Рендер просто выводит врезку. Профиль читается агентом, не кодом рендера. Контракт profile.json (читает агент): `{ segments:[...], regions:[...], structure:\"BV|private|fund\", interests:[...], avoid:[...] }`.\n\nУРОВЕНЬ B (опц. авто-фильтр в коде, если хотим персонализацию без участия агента): рендер принимает `profile` и сам помечает/фильтрует. Это сложнее и хрупко (нужно матчить сегменты/регионы по тексту) — оставить как необязательное расширение; ниже описываю A как основной.\n\nЗАГРУЗКА ПРОФИЛЯ (для уровня B и для подписи врезки). Добавить мягкий загрузчик в generate_report.py:\n`def load_profile(path='profile.json'):` — `if not path or not os.path.exists(path): return None; try: json.load else None`. По образцу `load_history`. Передать путь через новый CLI-флаг `--profile` (default ищет `profile.json` рядом с --data), как сделано с `--history`. В run_report.py — симметричный флаг `--profile` и дефолт рядом с data (как history_path на строке ~492).\n\nРАЗМЕЩЕНИЕ. Персонализация — это «что важно ИМЕННО ВАМ», поэтому ставится ВЫСОКО, сразу под «Главными выводами» и (если есть) «Сюжетами в развитии», до сегментов. В Word: в `build_report()` после `build_threads(...)`, до `build_overview_charts`. В HTML: тем же местом в `render()`. Backward-compat: нет `portfolio_notes` и нет profile.json → блок не рисуется.",
+        "how_docx": "Добавить `build_portfolio(doc, data, profile=None)` рядом с `build_key_takeaways`.\n\n1) Источник врезок: `notes = data.get('portfolio_notes') or []`. Если пусто → return (блок опционален).\n\n2) Шапка-бокс в стиле «Главных выводов», но в цвете персонализации. Использовать конструкцию как у `build_key_takeaways`/`add_conclusion_box`: одноколоночная таблица на всю ширину, `_remove_table_borders`+`_full_width`+`_no_row_split`, `_set_cell_margins(top=150,bottom=150,left=220,right=220)`. Фон — мягкий бирюзовый residential-soft 'E7F4F0' с левой полосой `_set_cell_borders(cell,{'left':(36,'16846F')})` (акцент «персонально для собственника»; тот же бирюзовый, что у блока ВЫВОД).\n\n3) Заголовок врезки внутри ячейки: `p0=cell.paragraphs[0]`; `_add_chip(p0,'ДЛЯ ВАШЕГО ПОРТФЕЛЯ','16846F'-soft? нет → используем fill='16846F', color=белый)` — либо проще ран: `_style_run(p0.add_run('🎯  ДЛЯ ВАШЕГО ПОРТФЕЛЯ'), size=11, bold=True, color_rgb=RGBColor(0x10,0x5A,0x4C))`. Если profile задан и есть `profile.get('label')`/регионы — добавить подзаголовок `_style_run(size=8.5, italic, MUTED_RGB)` вида «профиль: ритейл-парки · Лимбург · BV».\n\n4) Пункты: для каждого note (строка или dict с `text`) — `pp=cell.add_paragraph()`, маркер сегмента: если у note есть `segment`, цветная стрелка/символ в цвет `SEG_COLORS[segment]['text_rgb']`, иначе бирюзовый. Формат как в key_takeaways: `left_indent=Cm(0.55)`, `first_line_indent=Cm(-0.55)`, маркер '▸  ' (`size=10.5,bold,seg color`) + текст (`size=10.5, INK_RGB`). Если есть `priority=='high'` — можно добавить мини-chip 'важно' (`_add_chip` с DIRECTION['down'] цветами) для приоритезации.\n\n5) Закрыть `_p(doc, space_after=8)`.\n\n6) В `build_report()` загрузить профиль: `profile = load_profile(getattr(args,...))` — но build_report не видит args; чище передать profile параметром: расширить сигнатуру `build_report(data, out_path, profile=None)` (default None → 100% backward-compat для существующих вызовов, включая run_report, который вызывает `build_report(data, docx_path)`), и в `main()` прочитать `--profile` и передать. Вызов внутри: `build_portfolio(doc, data, profile)` после `build_threads`.\n\nУровень B (опц.): если `notes` пуст, но `profile` задан, можно авто-собрать врезку из conclusion/watch сегментов, попавших в `profile['segments']` — но это улучшение; по умолчанию блок просто пропускается.",
+        "how_html": "Добавить в `render(data, pngs=None, profile=None)` (расширить сигнатуру третьим необязательным аргументом — default None, backward-compat: run_report зовёт `preview_html.render(data, rel)`, что остаётся валидным).\n\n1) CSS:\n   .pf{background:#E7F4F0;border-left:5px solid #16846F;border-radius:0 6px 6px 0;padding:14px 18px;margin:16px 0}\n   .pf h2{color:#105A4C;font-size:14px;letter-spacing:.5px;margin:0 0 4px}\n   .pf .who{color:#6B7785;font-size:11.5px;font-style:italic;margin-bottom:8px}\n   .pf ul{margin:0;padding-left:20px}\n   .pf li{margin:5px 0;line-height:1.42;font-size:14px}\n   .pf li::marker{color:#16846F}\n   .pf .seg{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}\n\n2) Helper `portfolio_block(data, profile)`: `notes=data.get('portfolio_notes') or []`; пусто → ''. Иначе:\n   - `<div class=\"pf\"><h2>🎯 ДЛЯ ВАШЕГО ПОРТФЕЛЯ</h2>`;\n   - если profile: `<div class=\"who\">профиль: {esc(' · '.join(profile.get('segments',[])+profile.get('regions',[])))}</div>`;\n   - `<ul>`; для каждого note: если dict — взять `text`/`segment`; точка сегмента `<span class=\"seg\" style=\"background:{SEG.get(seg,'#16846F')}\"></span>` перед текстом; `<li>{dot}{esc(text)}</li>`; `</ul></div>`.\n\n3) Вставить вызов в `render()` ПОСЛЕ блока «Сюжеты в развитии» и ДО overview-графиков (т.е. рядом с key_takeaways/threads, высоко в документе).\n\n4) В `main()` (preview_html.py) загрузить профиль и прокинуть: добавить `--profile` (или дефолт `profile.json` рядом с --data), `profile=json.load(...) if exists else None`, затем `render(data, pngs, profile)`. В run_report.py `step_preview` вызов `preview_html.render(data, rel)` оставить совместимым — опционально расширить до `render(data, rel, profile)`, читая профиль в main() оркестратора по новому `--profile`."
+      }
+    ]
+  },
+  "schema": {
+    "additions": [
+      {
+        "field": "metrics",
+        "level": "report (top-level, optional array)",
+        "type": "array of objects",
+        "example": "\"metrics\": [{\"key\": \"koopbereidheid\", \"value\": -22, \"unit\": \"index\", \"label\": \"Готовность к покупкам (CBS)\", \"segment\": \"commercial\", \"source\": \"CBS\"}]",
+        "purpose": "Слой ПАМЯТИ ТРЕНДОВ (§2.4). Каждый объект — снимок KPI за текущую неделю; memory.update_state() дописывает его точкой во временной ряд data/state/metrics.json (идемпотентно по week_end). Когда у ключа накопилось >=3 точек, memory.trend_chart_specs() сам собирает chart-спеку type=\"line\" «динамика неделя-к-неделе», совместимую с charts.py/generate_report.py. Если блока нет — состояние не меняется, отчёт собирается как раньше (backward-compatible)."
+      },
+      {
+        "field": "metrics[].key",
+        "level": "metric item (required внутри metrics[])",
+        "type": "string",
+        "example": "\"koopbereidheid\"",
+        "purpose": "Стабильный идентификатор KPI — по нему точки склеиваются в один временной ряд между выпусками. memory.py принимает также синоним \"id\". Пустой/отсутствующий key → элемент тихо пропускается. Из него строится id графика trend_<slug(key)>."
+      },
+      {
+        "field": "metrics[].value",
+        "level": "metric item (required)",
+        "type": "number (или числовая строка)",
+        "example": "-22  (или -22.0; \"−22\" тоже распарсится)",
+        "purpose": "Значение KPI на этой неделе — точка ряда. memory._num() терпит строки с пробелами/запятой-десятичной, но контракт §5.6 требует числа числом. Нечисловое value → точка пропускается (None)."
+      },
+      {
+        "field": "metrics[].unit",
+        "level": "metric item (optional)",
+        "type": "string",
+        "example": "\"index\"  (или \"%\", \"€\", \"м²\")",
+        "purpose": "Единица оси для авто-линии; один unit на ряд (§5.6 «один unit на график»). Обновляется последним виденным значением, старые точки не теряются. По умолчанию пустая строка."
+      },
+      {
+        "field": "metrics[].label",
+        "level": "metric item (optional)",
+        "type": "string",
+        "example": "\"Готовность к покупкам (CBS)\"",
+        "purpose": "Человекочитаемое имя KPI — идёт в title/caption авто-графика и в имя series. Нет label → используется key. Обновляется последним виденным."
+      },
+      {
+        "field": "metrics[].segment",
+        "level": "metric item (optional)",
+        "type": "string enum: residential|commercial|industrial|overview",
+        "example": "\"commercial\"",
+        "purpose": "Задаёт цвет авто-линии (палитра синхронна с charts.py: жильё #16846F, ритейл #C0791C, индустриал #2C5F8A). Неизвестное значение нормализуется в \"overview\". По умолчанию \"overview\"."
+      },
+      {
+        "field": "metrics[].source",
+        "level": "metric item (optional)",
+        "type": "string",
+        "example": "\"CBS\"",
+        "purpose": "Источник точки (§3 приоритет первоисточникам). Сохраняется по-точечно; в caption авто-графика подставляется последний непустой source ряда. По умолчанию пустая строка."
+      },
+      {
+        "field": "threads",
+        "level": "report (top-level, optional array)",
+        "type": "array of objects",
+        "example": "\"threads\": [{\"id\": \"prologis_segro\", \"title\": \"Prologis торгуется за Segro\", \"segment\": \"industrial\", \"status\": \"developing\", \"update\": \"Совет Segro отклонил оферту как заниженную.\", \"next_trigger\": {\"date\": \"2026-07-22\", \"what\": \"дедлайн по оферте\"}}]",
+        "purpose": "Слой СЮЖЕТОВ В РАЗВИТИИ (§1.2/§2.8): превращает «без повторов» в умные ПРОДОЛЖЕНИЯ со статусом. memory.update_state() ведёт data/state/threads.json — first_seen/last_update/status/next_trigger + history[] по неделям (идемпотентно по week_end). memory.active_threads() отдаёт незавершённые сюжеты (свежие первыми) для связки «продолжение» в тексте/outlook. Нет блока — поведение прежнее."
+      },
+      {
+        "field": "threads[].id",
+        "level": "thread item (required)",
+        "type": "string",
+        "example": "\"prologis_segro\"",
+        "purpose": "Стабильный ключ сюжета между выпусками — по нему обновления склеиваются в одну ленту. Пустой id → элемент пропускается. На него ссылается calendar[].thread_id."
+      },
+      {
+        "field": "threads[].title",
+        "level": "thread item (optional, рекомендуется при первом появлении)",
+        "type": "string",
+        "example": "\"Prologis торгуется за Segro\"",
+        "purpose": "Заголовок-сюжет (§4.1 — обещание сюжета, не ярлык). Сохраняется в state и обновляется при повторе. В последующих выпусках можно не повторять — берётся из памяти."
+      },
+      {
+        "field": "threads[].segment",
+        "level": "thread item (optional)",
+        "type": "string enum: residential|commercial|industrial|overview",
+        "example": "\"industrial\"",
+        "purpose": "Привязка сюжета к сегменту (для группировки/цвета в выводах). По умолчанию \"overview\"."
+      },
+      {
+        "field": "threads[].status",
+        "level": "thread item (optional)",
+        "type": "string (свободный, но lower-cased)",
+        "example": "\"developing\"  (open|developing|resolved|closed|done|archived)",
+        "purpose": "Статус развития сюжета. Значения resolved/closed/done/archived считаются завершёнными (RESOLVED_STATUSES) и выпадают из active_threads(). Нет status → наследуется прошлый из памяти, при первом появлении \"open\". Нормализуется в lower-case."
+      },
+      {
+        "field": "threads[].update",
+        "level": "thread item (optional)",
+        "type": "string",
+        "example": "\"Совет Segro отклонил оферту как заниженную.\"",
+        "purpose": "Свежий поворот недели (§1.2 «новый поворот, а не пересказ»). Дописывается записью в history[] этого сюжета с привязкой к week_end (идемпотентно). Связывает текущий выпуск с прошлым."
+      },
+      {
+        "field": "threads[].next_trigger",
+        "level": "thread item (optional)",
+        "type": "object {date: string YYYY-MM-DD, what: string} | null",
+        "example": "{\"date\": \"2026-07-22\", \"what\": \"дедлайн по оферте\"}",
+        "purpose": "Ближайшая развилка сюжета (§2.7). Сохраняется как next_trigger в state и питает блок outlook/«За чем следить». Явно переданный пустой/false next_trigger сбрасывает прошлый. Дата — ISO."
+      },
+      {
+        "field": "calendar",
+        "level": "report (top-level, optional array)",
+        "type": "array of objects",
+        "example": "\"calendar\": [{\"date\": \"2026-07-22\", \"what\": \"Prologis: подтвердить намерение по Segro\", \"segment\": \"industrial\", \"source\": \"Takeover Panel\", \"thread_id\": \"prologis_segro\", \"impact\": \"репер для оценок логистики NL\"}]",
+        "purpose": "ФОРВАРД-КАЛЕНДАРЬ/ВОТЧЛИСТ (§2.7): дедлайны сделок, релизы CBS, голосования, отчётности REIT. memory.update_state() копит будущие события в data/state/calendar.json и автоматически выкидывает прошедшие относительно week_end (дедуп по date+what). memory.upcoming(from_date, horizon_days=42) отдаёт ближайшие события с производным days_until для блока outlook «Календарь и триггеры». Нет блока — поведение прежнее."
+      },
+      {
+        "field": "calendar[].date",
+        "level": "calendar item (required для попадания в upcoming)",
+        "type": "string YYYY-MM-DD",
+        "example": "\"2026-07-22\"",
+        "purpose": "Дата триггера. По ней событие отсеивается как прошедшее (< week_end) и попадает/не попадает в горизонт upcoming(). Событие без даты хранится, но не выводится на форвард-шкалу. Поддерживаются также форматы YYYY/MM/DD и DD.MM.YYYY."
+      },
+      {
+        "field": "calendar[].what",
+        "level": "calendar item (required)",
+        "type": "string",
+        "example": "\"Prologis: подтвердить намерение по Segro\"",
+        "purpose": "Суть триггера одной строкой (что произойдёт). Вместе с date образует ключ дедупликации события. Если пусты и date, и what — элемент пропускается."
+      },
+      {
+        "field": "calendar[].segment",
+        "level": "calendar item (optional)",
+        "type": "string enum: residential|commercial|industrial|overview",
+        "example": "\"industrial\"",
+        "purpose": "Сегмент события — для группировки/цвета в форвард-блоке и в персонализации под портфель. По умолчанию \"overview\"."
+      },
+      {
+        "field": "calendar[].source",
+        "level": "calendar item (optional)",
+        "type": "string",
+        "example": "\"Takeover Panel\"",
+        "purpose": "Откуда известна дата (§3). По умолчанию пустая строка."
+      },
+      {
+        "field": "calendar[].thread_id",
+        "level": "calendar item (optional)",
+        "type": "string (ссылка на threads[].id)",
+        "example": "\"prologis_segro\"",
+        "purpose": "Связывает событие календаря с сюжетом в развитии — даёт сквозную нить «сюжет → его ближайший триггер». По умолчанию пустая строка."
+      },
+      {
+        "field": "calendar[].impact",
+        "level": "calendar item (optional)",
+        "type": "string",
+        "example": "\"репер для оценок логистики NL\"",
+        "purpose": "Сценарий/что это изменит для собственника (§2.7 «если X → то Y»). Идёт в текст форвард-блока. По умолчанию пустая строка."
+      },
+      {
+        "field": "config/profile.json (новый файл, не блок в недельном JSON)",
+        "level": "репозиторий-конфиг (optional file)",
+        "type": "JSON object",
+        "example": "{\"owner\": \"Андрей\", \"segments\": [\"residential\", \"industrial\"], \"regions\": [\"Utrecht\", \"Venlo\", \"Rotterdam\"], \"holding_structure\": \"BV\", \"asset_types\": [\"arendное жильё\", \"склады\"], \"interests\": [\"box 3\", \"netcongestie\", \"prime yield\"], \"watch_tickers\": [\"WDP\", \"CTP\", \"Vesteda\"], \"horizon_days\": 42, \"email\": \"parfentsev.andrey@gmail.com\"}",
+        "purpose": "ПЕРСОНАЛИЗАЦИЯ ПОД ПОРТФЕЛЬ ВЛАДЕЛЬЦА: что важно именно для его сегментов/регионов. Отдельный файл, а НЕ блок недельного JSON, потому что профиль стабилен между выпусками и не должен попадать в дедуп/историю. Backward-compatible: файла нет → агент работает по всем трём сегментам как раньше. Профиль используется агентом на этапе мышления (приоритезация пунктов high/medium под segments/regions/interests, акцент в key_takeaways и outlook) и для фильтрации календаря/тредов под watch_tickers; код-пайплайн его не требует."
+      },
+      {
+        "field": "config/profile.json → segments",
+        "level": "profile field (optional)",
+        "type": "array of strings (enum residential|commercial|industrial)",
+        "example": "[\"residential\", \"industrial\"]",
+        "purpose": "Сегменты портфеля владельца — агент поднимает их пункты в приоритете и ведёт ими отчёт. Пусто/нет → все три сегмента равнозначны (прежнее поведение)."
+      },
+      {
+        "field": "config/profile.json → regions",
+        "level": "profile field (optional)",
+        "type": "array of strings",
+        "example": "[\"Utrecht\", \"Venlo\", \"Rotterdam\"]",
+        "purpose": "Регионы/города интереса — события в этих локациях помечаются как «это про вас», усиливая слой «что это значит для собственника» (§0). Пусто → без географического акцента."
+      },
+      {
+        "field": "config/profile.json → holding_structure",
+        "level": "profile field (optional)",
+        "type": "string",
+        "example": "\"BV\"  (BV|физлицо|fonds)",
+        "purpose": "Структура владения — позволяет агенту персонализировать налоговый разбор (box 3 для физлица vs earningsstripping/лимит вычета процентов для BV, §2.5 winners/losers). Нет → общий разбор по всем структурам."
+      },
+      {
+        "field": "config/profile.json → interests",
+        "level": "profile field (optional)",
+        "type": "array of strings",
+        "example": "[\"box 3\", \"netcongestie\", \"prime yield\"]",
+        "purpose": "Сквозные темы/метрики, за которыми владелец хочет следить особо — агент подсвечивает их в cross_themes/outlook и не режет при отборе. Пусто → темы выбираются по сигналу недели."
+      },
+      {
+        "field": "config/profile.json → watch_tickers",
+        "level": "profile field (optional)",
+        "type": "array of strings",
+        "example": "[\"WDP\", \"CTP\", \"Vesteda\"]",
+        "purpose": "Конкретные игроки/REIT в фокусе — используется для фильтрации форвард-календаря (отчётности/koersdoel) и тредов под портфель. Пусто → без фильтра по эмитентам."
+      },
+      {
+        "field": "config/profile.json → horizon_days",
+        "level": "profile field (optional)",
+        "type": "integer",
+        "example": "42",
+        "purpose": "Горизонт вотчлиста в днях — дефолт для memory.upcoming(horizon_days=...). Нет → 42 (значение по умолчанию в memory.py)."
+      }
+    ]
+  }
+}

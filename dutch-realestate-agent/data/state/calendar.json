@@ -1,0 +1,49 @@
+{
+  "events": [
+    {
+      "date": "2026-07-22",
+      "what": "Дедлайн Prologis по Segro: подтвердить твёрдое намерение или отступить (put up or shut up)",
+      "segment": "industrial",
+      "source": "Warehouse Totaal / Bloomberg",
+      "thread_id": "",
+      "impact": "",
+      "added_week": "2026-06-30"
+    },
+    {
+      "date": "2027-06-26",
+      "what": "Следующий ежегодный цикл подачи заявок на выкуп паёв Vesteda (новые условия фонда)",
+      "segment": "residential",
+      "source": "Vesteda / NOS",
+      "thread_id": "",
+      "impact": "",
+      "added_week": "2026-06-30"
+    },
+    {
+      "date": "2028-01-01",
+      "what": "Намеченный старт режима 'Wet werkelijk rendement box 3' (налог с фактической доходности)",
+      "segment": "residential",
+      "source": "Eerste Kamer (wetsvoorstel 36748)",
+      "thread_id": "",
+      "impact": "",
+      "added_week": "2026-06-30"
+    },
+    {
+      "date": "2028-03-31",
+      "what": "Сдача Panattoni Park Emmen (~150 000 м²); проверка, найден ли арендатор",
+      "segment": "industrial",
+      "source": "PropertyNL",
+      "thread_id": "",
+      "impact": "",
+      "added_week": "2026-06-30"
+    },
+    {
+      "date": "2032-01-01",
+      "what": "Срок предложения ЕК по смягчению лимита вычета процентов (порог 3 млн €); IVBN просит ускорить",
+      "segment": "commercial",
+      "source": "Vastgoed Insider",
+      "thread_id": "",
+      "impact": "",
+      "added_week": "2026-06-30"
+    }
+  ]
+}

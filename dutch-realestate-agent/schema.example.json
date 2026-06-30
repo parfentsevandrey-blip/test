@@ -16,10 +16,49 @@
       "title": "Жилая недвижимость",
       "icon": "🏠",
       "subsections": {
-        "laws":   [{"text": "Суть изменения простым языком.", "value": "", "impact": "Почему важно/что делать собственнику (1 фраза).", "direction": "neutral", "source": "Rijksoverheid", "url": "https://...", "date": "2026-06-25"}],
-        "news":   [{"text": "Новость с конкретикой (игрок, сумма, локация).", "value": "", "impact": "Эффект для рынка/денег.", "direction": "up", "source": "FD", "url": "https://...", "date": "2026-06-26"}],
-        "trends": [{"text": "Тренд с цифрой и контекстом.", "value": "", "impact": "Что это значит.", "direction": "down", "source": "ABN AMRO", "url": "https://...", "date": "2026-06-24"}],
-        "stats":  [{"text": "Индекс цен на жильё (CBS)", "value": "+0,4% м/м", "impact": "Умеренный рост vs прошлый месяц.", "direction": "up", "source": "CBS", "url": "https://..."}]
+        "laws": [
+          {
+            "text": "Суть изменения простым языком.",
+            "value": "",
+            "impact": "Почему важно/что делать собственнику (1 фраза).",
+            "direction": "neutral",
+            "source": "Rijksoverheid",
+            "url": "https://...",
+            "date": "2026-06-25"
+          }
+        ],
+        "news": [
+          {
+            "text": "Новость с конкретикой (игрок, сумма, локация).",
+            "value": "",
+            "impact": "Эффект для рынка/денег.",
+            "direction": "up",
+            "source": "FD",
+            "url": "https://...",
+            "date": "2026-06-26"
+          }
+        ],
+        "trends": [
+          {
+            "text": "Тренд с цифрой и контекстом.",
+            "value": "",
+            "impact": "Что это значит.",
+            "direction": "down",
+            "source": "ABN AMRO",
+            "url": "https://...",
+            "date": "2026-06-24"
+          }
+        ],
+        "stats": [
+          {
+            "text": "Индекс цен на жильё (CBS)",
+            "value": "+0,4% м/м",
+            "impact": "Умеренный рост vs прошлый месяц.",
+            "direction": "up",
+            "source": "CBS",
+            "url": "https://..."
+          }
+        ]
       },
       "conclusion": "Что это значит на практике — 2–4 простые фразы.",
       "watch": "За чем следить дальше по сегменту (1–2 фразы)."
@@ -28,7 +67,12 @@
       "id": "commercial",
       "title": "Коммерция (стрит-ритейл)",
       "icon": "🏪",
-      "subsections": {"laws": [], "news": [], "trends": [], "stats": []},
+      "subsections": {
+        "laws": [],
+        "news": [],
+        "trends": [],
+        "stats": []
+      },
       "conclusion": "...",
       "watch": "..."
     },
@@ -36,26 +80,152 @@
       "id": "industrial",
       "title": "Индустриал (склады, промзоны)",
       "icon": "🏭",
-      "subsections": {"laws": [], "news": [], "trends": [], "stats": []},
+      "subsections": {
+        "laws": [],
+        "news": [],
+        "trends": [],
+        "stats": []
+      },
       "conclusion": "...",
       "watch": "..."
     }
   ],
   "outlook": "Картина недели и прогноз: связки между сегментами, что это значит в целом (3–5 фраз).",
   "charts": [
-    {"id": "pulse", "segment": "overview", "type": "kpi", "title": "Пульс недели", "caption": "Ключевые числа недели.", "unit": "", "labels": [], "series": [],
-     "kpi_items": [{"label": "Подпись метрики", "value": "€14,6 млрд", "delta": "премия 24,6%", "direction": "up"}], "source": ""},
-    {"id": "vac", "segment": "commercial", "type": "bar", "title": "Заголовок-вывод графика", "caption": "Подпись-вывод под графиком.", "unit": "%", "labels": ["Ритейл-парки", "Рынок"],
-     "series": [{"name": "Вакантность", "values": [4.4, 5.5]}], "kpi_items": [], "highlight": 0, "benchmark": {"value": 5.5, "label": "рынок 5,5%"}, "source": "CBRE"},
-    {"id": "ba", "segment": "residential", "type": "before_after", "title": "Было → стало", "caption": "...", "unit": "млрд €", "labels": ["Vesteda"],
-     "series": [{"name": "Было", "values": [4.1]}, {"name": "Стало", "values": [0.765]}], "kpi_items": [], "source": "Vesteda"}
+    {
+      "id": "pulse",
+      "segment": "overview",
+      "type": "kpi",
+      "title": "Пульс недели",
+      "caption": "Ключевые числа недели.",
+      "unit": "",
+      "labels": [],
+      "series": [],
+      "kpi_items": [
+        {
+          "label": "Подпись метрики",
+          "value": "€14,6 млрд",
+          "delta": "премия 24,6%",
+          "direction": "up"
+        }
+      ],
+      "source": ""
+    },
+    {
+      "id": "vac",
+      "segment": "commercial",
+      "type": "bar",
+      "title": "Заголовок-вывод графика",
+      "caption": "Подпись-вывод под графиком.",
+      "unit": "%",
+      "labels": [
+        "Ритейл-парки",
+        "Рынок"
+      ],
+      "series": [
+        {
+          "name": "Вакантность",
+          "values": [
+            4.4,
+            5.5
+          ]
+        }
+      ],
+      "kpi_items": [],
+      "highlight": 0,
+      "benchmark": {
+        "value": 5.5,
+        "label": "рынок 5,5%"
+      },
+      "source": "CBRE"
+    },
+    {
+      "id": "ba",
+      "segment": "residential",
+      "type": "before_after",
+      "title": "Было → стало",
+      "caption": "...",
+      "unit": "млрд €",
+      "labels": [
+        "Vesteda"
+      ],
+      "series": [
+        {
+          "name": "Было",
+          "values": [
+            4.1
+          ]
+        },
+        {
+          "name": "Стало",
+          "values": [
+            0.765
+          ]
+        }
+      ],
+      "kpi_items": [],
+      "source": "Vesteda"
+    }
   ],
   "glossary": [
-    {"term": "netcongestie", "definition": "перегрузка электросети — мощностей не хватает на всех."},
-    {"term": "box 3", "definition": "налог на сбережения и инвестиции (в т.ч. недвижимость не для жизни)."}
+    {
+      "term": "netcongestie",
+      "definition": "перегрузка электросети — мощностей не хватает на всех."
+    },
+    {
+      "term": "box 3",
+      "definition": "налог на сбережения и инвестиции (в т.ч. недвижимость не для жизни)."
+    }
   ],
   "sources": [
-    {"name": "CBS", "url": "https://www.cbs.nl"},
-    {"name": "Vastgoedmarkt", "url": "https://www.vastgoedmarkt.nl"}
-  ]
+    {
+      "name": "CBS",
+      "url": "https://www.cbs.nl"
+    },
+    {
+      "name": "Vastgoedmarkt",
+      "url": "https://www.vastgoedmarkt.nl"
+    }
+  ],
+  "metrics": [
+    {
+      "key": "retail_park_vacancy",
+      "label": "Вакантность ритейл-парков",
+      "value": 4.4,
+      "unit": "%",
+      "segment": "commercial",
+      "source": "CBRE"
+    }
+  ],
+  "threads": [
+    {
+      "id": "prologis_segro",
+      "title": "Prologis торгуется за Segro",
+      "segment": "industrial",
+      "status": "developing",
+      "update": "Что нового на этой неделе (1 фраза).",
+      "next_trigger": {
+        "date": "2026-07-22",
+        "what": "Дедлайн подтвердить оферту"
+      },
+      "url": "https://..."
+    }
+  ],
+  "calendar": [
+    {
+      "date": "2026-07-22",
+      "what": "Дедлайн Prologis по Segro",
+      "segment": "industrial",
+      "kind": "deal_deadline",
+      "impact": "переоценит весь логистический сектор"
+    }
+  ],
+  "portfolio_notes": [
+    {
+      "text": "Персональная врезка под профиль владельца (profile.json).",
+      "segment": "industrial",
+      "priority": "high"
+    }
+  ],
+  "trend_chart_specs": "[авто] заполняется memory.py из data/state/metrics.json при ≥3 неделях; формат как у charts[] (type=line)"
 }

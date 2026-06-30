@@ -1,0 +1,374 @@
+{
+  "retail_park_vacancy": {
+    "unit": "%",
+    "label": "Вакантность периферийных ритейл-парков",
+    "segment": "commercial",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": 4.4,
+        "source": "CBRE"
+      }
+    ]
+  },
+  "retail_market_vacancy": {
+    "unit": "%",
+    "label": "Вакантность по торговой недвижимости (рынок)",
+    "segment": "commercial",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": 5.5,
+        "source": "CBRE"
+      }
+    ]
+  },
+  "retail_estates_occupancy": {
+    "unit": "%",
+    "label": "Заполняемость Retail Estates",
+    "segment": "commercial",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": 97.8,
+        "source": "Test-Aankoop (Invest)"
+      }
+    ]
+  },
+  "retail_estates_yield": {
+    "unit": "%",
+    "label": "Дивидендная доходность Retail Estates (брутто)",
+    "segment": "commercial",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": 7.5,
+        "source": "Test-Aankoop (Invest)"
+      }
+    ]
+  },
+  "retail_estates_dividend": {
+    "unit": "€",
+    "label": "Дивиденд Retail Estates на акцию (брутто)",
+    "segment": "commercial",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": 5.2,
+        "source": "Test-Aankoop (Invest)"
+      }
+    ]
+  },
+  "retail_estates_nl_share": {
+    "unit": "%",
+    "label": "Доля Нидерландов в портфеле Retail Estates",
+    "segment": "commercial",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": 38.0,
+        "source": "Test-Aankoop (Invest)"
+      }
+    ]
+  },
+  "retail_estates_net_rent_growth": {
+    "unit": "%",
+    "label": "Рост чистого арендного дохода Retail Estates",
+    "segment": "commercial",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": 2.5,
+        "source": "Test-Aankoop (Invest)"
+      }
+    ]
+  },
+  "koopbereidheid": {
+    "unit": "пункты",
+    "label": "Готовность к покупкам (koopbereidheid, CBS)",
+    "segment": "commercial",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": -22.0,
+        "source": "Vakblad Mannenmode (CBS)"
+      }
+    ]
+  },
+  "koopbereidheid_prev": {
+    "unit": "пункты",
+    "label": "Готовность к покупкам, май (koopbereidheid, CBS)",
+    "segment": "commercial",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": -28.0,
+        "source": "Vakblad Mannenmode (CBS)"
+      }
+    ]
+  },
+  "consumer_confidence": {
+    "unit": "пункты",
+    "label": "Индекс потребительского доверия (CBS)",
+    "segment": "commercial",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": -39.0,
+        "source": "Vakblad Mannenmode (CBS)"
+      }
+    ]
+  },
+  "earningsstripping_limit": {
+    "unit": "% EBITDA",
+    "label": "Лимит на вычет процентов (% EBITDA, текущий NL)",
+    "segment": "commercial",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": 24.5,
+        "source": "Vastgoed Insider"
+      }
+    ]
+  },
+  "vesteda_redemption": {
+    "unit": "млн €",
+    "label": "Итоговый объём выкупа паёв Vesteda",
+    "segment": "residential",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": 765.0,
+        "source": "Vesteda / NOS"
+      }
+    ]
+  },
+  "vesteda_redemption_initial": {
+    "unit": "млн €",
+    "label": "Первоначальные заявки на выкуп паёв Vesteda",
+    "segment": "residential",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": 4100.0,
+        "source": "Vesteda / NOS"
+      }
+    ]
+  },
+  "vesteda_fund_aum": {
+    "unit": "млн €",
+    "label": "Портфель фонда Vesteda",
+    "segment": "residential",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": 10800.0,
+        "source": "Vesteda / NOS"
+      }
+    ]
+  },
+  "vesteda_liquidity_rate": {
+    "unit": "% капитала/год",
+    "label": "Ежегодная ликвидность Vesteda (best-effort)",
+    "segment": "residential",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": 7.5,
+        "source": "Vesteda / NOS"
+      }
+    ]
+  },
+  "bouwinvest_committed": {
+    "unit": "млн €",
+    "label": "Committed capital фонда Bouwinvest для пожилых",
+    "segment": "residential",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": 263.5,
+        "source": "Vastgoedjournaal"
+      }
+    ]
+  },
+  "bouwinvest_committed_initial": {
+    "unit": "млн €",
+    "label": "Committed capital на первом закрытии (Bouwinvest)",
+    "segment": "residential",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": 130.0,
+        "source": "Vastgoedjournaal"
+      }
+    ]
+  },
+  "bouwinvest_investors": {
+    "unit": "инвесторов",
+    "label": "Число институциональных инвесторов фонда Bouwinvest",
+    "segment": "residential",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": 6.0,
+        "source": "Vastgoedjournaal"
+      }
+    ]
+  },
+  "utrecht_affordable_share": {
+    "unit": "%",
+    "label": "Обязательная доля доступного жилья в Утрехте",
+    "segment": "residential",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": 80.0,
+        "source": "Vastgoedjournaal"
+      }
+    ]
+  },
+  "rotterdam_affordable_share": {
+    "unit": "%",
+    "label": "Доля доступного жилья в Роттердаме",
+    "segment": "residential",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": 67.0,
+        "source": "Vastgoedmarkt"
+      }
+    ]
+  },
+  "rotterdam_homes_target": {
+    "unit": "жилищ",
+    "label": "План строительства жилищ в Роттердаме до 2030",
+    "segment": "residential",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": 15000.0,
+        "source": "Vastgoedmarkt"
+      }
+    ]
+  },
+  "heijmans_homes": {
+    "unit": "жилищ",
+    "label": "Жилищ в проекте Heijmans (IJsselstein)",
+    "segment": "residential",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": 563.0,
+        "source": "Vastgoedjournaal"
+      }
+    ]
+  },
+  "prologis_offer_segro": {
+    "unit": "млрд €",
+    "label": "Оферта Prologis за Segro",
+    "segment": "industrial",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": 14.6,
+        "source": "Warehouse Totaal / Bloomberg"
+      }
+    ]
+  },
+  "prologis_premium": {
+    "unit": "%",
+    "label": "Премия в оферте Prologis за Segro",
+    "segment": "industrial",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": 24.6,
+        "source": "Warehouse Totaal / Bloomberg"
+      }
+    ]
+  },
+  "prologis_price_per_share": {
+    "unit": "пенсов",
+    "label": "Цена за акцию Segro в оферте Prologis",
+    "segment": "industrial",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": 925.0,
+        "source": "Warehouse Totaal / Bloomberg"
+      }
+    ]
+  },
+  "db_target_ctp": {
+    "unit": "€",
+    "label": "Целевая цена CTP (Deutsche Bank)",
+    "segment": "industrial",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": 19.0,
+        "source": "Deutsche Bank"
+      }
+    ]
+  },
+  "db_target_wdp": {
+    "unit": "€",
+    "label": "Целевая цена WDP (Deutsche Bank)",
+    "segment": "industrial",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": 25.0,
+        "source": "Deutsche Bank"
+      }
+    ]
+  },
+  "db_target_montea": {
+    "unit": "€",
+    "label": "Целевая цена Montea (Deutsche Bank)",
+    "segment": "industrial",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": 73.0,
+        "source": "Deutsche Bank"
+      }
+    ]
+  },
+  "db_target_vgp": {
+    "unit": "€",
+    "label": "Целевая цена VGP (Deutsche Bank)",
+    "segment": "industrial",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": 100.0,
+        "source": "Deutsche Bank"
+      }
+    ]
+  },
+  "panattoni_emmen_area": {
+    "unit": "м²",
+    "label": "Площадь спекулятивной стройки Panattoni в Эммене",
+    "segment": "industrial",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": 150000.0,
+        "source": "PropertyNL"
+      }
+    ]
+  },
+  "humby_venlo_area": {
+    "unit": "м²",
+    "label": "Арендованная площадь Humby в Венло",
+    "segment": "industrial",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": 29779.0,
+        "source": "PropertyNL"
+      }
+    ]
+  }
+}

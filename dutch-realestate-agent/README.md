@@ -246,3 +246,27 @@ python3 run_report.py --data data/week_2026-06-30.json \
 - **Глубина/объём** — `agent_instructions.md`.
 
 См. также **[RUNBOOK.md](RUNBOOK.md)** — пошаговый чек-лист еженедельного запуска.
+
+---
+
+## 🧠 Память, форсайт и персонализация (слой «memory & foresight»)
+
+Поверх еженедельного отчёта агент ведёт состояние в `data/state/` и
+персонализирует выдачу:
+
+- **Память трендов** — `data/state/metrics.json`: числовые KPI неделя-к-неделе.
+  При ≥3 неделях `memory.py` авто-строит линии динамики (вставляются в «Статистику
+  в графиках»). В недельных данных — блок `metrics[] {key,value,unit,segment,source}`.
+- **Сюжеты в развитии** — `data/state/stories.json` + блок `threads[]`
+  ({id,title,segment,status: new/developing/watch/resolved, update, next_trigger}).
+  Превращает «не повторяться» в умные продолжения со статусом и след. триггером.
+  В отчёте — раздел «🧵 Сюжеты в развитии».
+- **Форвард-календарь** — `data/state/calendar.json` + блок `calendar[]`
+  ({date,what,segment,kind,impact}). Раздел «📅 Календарь: за чем следить».
+- **Персонализация** — `profile.json` (сегменты/регионы/интересы владельца) →
+  агент кладёт `portfolio_notes[]`, рендерится врезка «★ Важно для вашего портфеля».
+
+Модуль `memory.py`: `update_state(data)` (идемпотентно по `week_end`),
+`load_state()`, `trend_chart_specs()`, `upcoming()`, `active_threads()`.
+Подключён в `run_report.py` (шаг 1b) — мягко, без падения если данных нет.
+**Коммитьте `data/state/`** — иначе память «забудется» (окружение эфемерно).

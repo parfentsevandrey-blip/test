@@ -606,5 +606,419 @@
       "kpi_items": [],
       "source": "Deutsche Bank"
     }
+  ],
+  "threads": [
+    {
+      "id": "prologis_segro",
+      "title": "Prologis торгуется за Segro",
+      "segment": "industrial",
+      "status": "developing",
+      "update": "Prologis сделала предложение о поглощении Segro за ~14,6 млрд € (925 пенсов/акция, премия 24,6%); совет Segro единогласно отклонил оферту как заниженную. По британскому кодексу о поглощениях Prologis до 22 июля должна либо подтвердить твёрдое намерение, либо отступить. Сделка задаёт тон оценкам всего европейского и нидерландского логистического сектора.",
+      "next_trigger": {
+        "date": "2026-07-22",
+        "what": "Дедлайн Prologis: подтвердить твёрдое намерение по Segro или отказаться (правило put up or shut up)."
+      },
+      "url": "https://www.warehousetotaal.nl/warehousing/logistiek-vastgoed/prologis-doet-miljardenbod-op-segro-maar-logistieke-vastgoedreus-wijst-overname-af/144181/"
+    },
+    {
+      "id": "box3_werkelijk_rendement",
+      "title": "Box 3: переход на налог с фактической доходности",
+      "segment": "residential",
+      "status": "developing",
+      "update": "Сенат (Eerste Kamer) 30 июня провёл пленарные дебаты по законопроекту 'Wet werkelijk rendement box 3' (wetsvoorstel 36748): вместо фиктивной доходности — обложение реального арендного дохода ежегодно и прироста стоимости при продаже. Сенат разделён по вопросу обложения нереализованного прироста; голосование не раньше начала 2027, старт режима — 1 января 2028.",
+      "next_trigger": {
+        "date": "2028-01-01",
+        "what": "Намеченный старт нового режима box 3; голосование в Сенате ожидается не раньше начала 2027."
+      },
+      "url": "https://www.eerstekamer.nl/wetsvoorstel/36748_wet_werkelijk_rendement_box"
+    },
+    {
+      "id": "vesteda_redemption",
+      "title": "Vesteda гасит панику с выкупом паёв",
+      "segment": "residential",
+      "status": "resolved",
+      "update": "На внеочередном собрании акционеров 26 июня Vesteda установила итоговый объём выкупа паёв в 765 млн € вместо первоначальных 4,1 млрд € (−81%), предотвратив масштабную распродажу ~28 000 арендных квартир. Инвесторы теперь могут выходить ежегодно, фонд даёт ликвидность по мере возможности в размере 7,5% капитала в год.",
+      "next_trigger": {
+        "date": "2027-06-26",
+        "what": "Следующий ежегодный цикл подачи заявок на выкуп паёв (новые условия фонда)."
+      },
+      "url": "https://news.vesteda.com/vesteda-redemption-volume-set-at--765-million-and-fund-terms-amended/"
+    },
+    {
+      "id": "nitrogen_netcongestie",
+      "title": "Перегрузка электросетей тормозит стройку",
+      "segment": "residential",
+      "status": "watch",
+      "update": "Перегрузка электросети (netcongestie) проходит сквозной линией через неделю: Утрехт создаёт рабочую группу по борьбе с netcongestie, Heijmans закладывает в проект на 563 жилища автономную энергосистему (тепловой насос, солнечные панели, аккумуляторы) как обходной путь, а BPD называет дефицит инфраструктуры (~80 млрд €) и перегрузку сетей главным тормозом строительства, призывая 'просто начинать строить'.",
+      "next_trigger": {
+        "date": "2026-09-30",
+        "what": "Следить за результатами рабочей группы Утрехта по netcongestie и реакцией на лобби BPD за смягчение нормы доступности."
+      },
+      "url": "https://vastgoedjournaal.nl/news/73472/coalitieakkoord-utrecht-80-procent-betaalbare-nieuwbouw-en-doorbraakteam-netcongestie"
+    },
+    {
+      "id": "city_coalitions_affordability",
+      "title": "Города ужесточают долю доступного жилья",
+      "segment": "residential",
+      "status": "developing",
+      "update": "Утрехт утвердил коалиционное соглашение с обязательной долей 80% доступного жилья (12 млн €/год на территории), Роттердам держит планку 67% по Regiewet (15 000 жилищ до 2030, doorbouwfonds 111 млн €). Параллельно девелоперы (BPD) лоббируют смягчение требования, что две трети жилья должны навсегда оставаться доступными — ключевое напряжение сезона, определяющее маржу будущих проектов.",
+      "next_trigger": {
+        "date": "2026-09-30",
+        "what": "Следить, уступят ли города давлению девелоперов по снижению доли доступного жилья."
+      },
+      "url": "https://www.vastgoedmarkt.nl/209650/rotterdams-coalitieakkoord-volgt-braaf-de-regiewet-67-procent-betaalbare-woningen"
+    },
+    {
+      "id": "ivbn_renteaftrek",
+      "title": "IVBN бьётся за смягчение лимита на вычет процентов",
+      "segment": "commercial",
+      "status": "developing",
+      "update": "26 июня IVBN призвала правительство не откладывать до 2032 смягчение earningsstrippingmaatregel. Нынешний нидерландский лимит (24,5% EBITDA, порог 1 млн €) жёстче предложения Еврокомиссии от 24 июня (30% EBITDA, порог 3 млн € с 2032). Высокая налоговая нагрузка — одна из причин ухода капитала из нидерландской недвижимости.",
+      "next_trigger": {
+        "date": "2032-01-01",
+        "what": "Срок, к которому ЕК предлагает порог 3 млн €; следить за реакцией правительства на призыв IVBN ускорить смягчение."
+      },
+      "url": "https://vastgoedinsider.nl/nederland-heft-ook-in-box-2-vaak-te-veel-belasting-op-vastgoed-europese-commissie-hanteert-lichtere-regels-voor-renteaftrekbeperking/"
+    },
+    {
+      "id": "db_logistics_targets",
+      "title": "Deutsche Bank переоценивает логистические REIT",
+      "segment": "industrial",
+      "status": "watch",
+      "update": "25 июня Deutsche Bank понизил целевые цены четырёх логистических REIT (CTP 22→19 €, WDP 30→25 €, Montea 85→73 €, VGP 120→100 €), но сохранил по всем рекомендацию 'покупать': оценки привлекательны, апсайд выше риска снижения, поддержку даёт заявка Prologis на Segro. VGP — фаворит банка.",
+      "next_trigger": {
+        "date": "2026-07-22",
+        "what": "Развязка по Prologis/Segro переоценит весь сектор и эти целевые цены."
+      },
+      "url": "https://www.deaandeelhouder.nl/nieuws/2026/06/25/beursblik-deutsche-bank-verlaagt-koersdoelen-voor-aanbieders-van-logistiek-vastgoed/"
+    },
+    {
+      "id": "panattoni_emmen",
+      "title": "Panattoni рискует спекулятивной стройкой в Эммене",
+      "segment": "industrial",
+      "status": "developing",
+      "update": "Panattoni начала спекулятивную застройку Panattoni Park Emmen на ~150 000 м² (собственные инвестиции >100 млн €) без заранее найденного арендатора, делая ставку на спрос международных производителей на готовые помещения. Крупнейшее коммерческое здание на севере Нидерландов; сдача — март 2028.",
+      "next_trigger": {
+        "date": "2028-03-31",
+        "what": "Сдача объекта; следить, найдёт ли Panattoni арендатора на 150 000 м² до сдачи."
+      },
+      "url": "https://propertynl.com/Nieuws/Panattoni-ontwikkelt-groots-multifunctioneel-bedrijvencomplex-in-Emmen/d6e9ee42-b453-4e1e-aef7-4b5a3487fa0d"
+    },
+    {
+      "id": "bouwinvest_senior_fund",
+      "title": "Bouwinvest наращивает фонд жилья для пожилых",
+      "segment": "residential",
+      "status": "new",
+      "update": "Bouwinvest привлёк в Dutch Senior Living Impact Fund два новых пенсионных фонда (включая PME) — теперь шесть институциональных инвесторов. Committed capital вырос со 130 до 263,5 млн € (более чем удвоение) — редкий позитивный приток денег в арендное жильё для пожилых на фоне общего оттока капитала у институционалов.",
+      "next_trigger": {
+        "date": "2026-12-31",
+        "what": "Следить за дальнейшими закрытиями фонда и притоком капитала в сегмент жилья для пожилых."
+      },
+      "url": "https://vastgoedjournaal.nl/news/73539/twee-pensioenfondsen-stappen-in-ouderenfonds-bouwinvest"
+    }
+  ],
+  "calendar": [
+    {
+      "date": "2026-07-22",
+      "what": "Дедлайн Prologis по Segro: подтвердить твёрдое намерение или отступить (put up or shut up)",
+      "segment": "industrial",
+      "kind": "deal_deadline",
+      "source": "Warehouse Totaal / Bloomberg"
+    },
+    {
+      "date": "2027-06-26",
+      "what": "Следующий ежегодный цикл подачи заявок на выкуп паёв Vesteda (новые условия фонда)",
+      "segment": "residential",
+      "kind": "reit_earnings",
+      "source": "Vesteda / NOS"
+    },
+    {
+      "date": "2028-01-01",
+      "what": "Намеченный старт режима 'Wet werkelijk rendement box 3' (налог с фактической доходности)",
+      "segment": "residential",
+      "kind": "other",
+      "source": "Eerste Kamer (wetsvoorstel 36748)"
+    },
+    {
+      "date": "2028-03-31",
+      "what": "Сдача Panattoni Park Emmen (~150 000 м²); проверка, найден ли арендатор",
+      "segment": "industrial",
+      "kind": "deal_deadline",
+      "source": "PropertyNL"
+    },
+    {
+      "date": "2032-01-01",
+      "what": "Срок предложения ЕК по смягчению лимита вычета процентов (порог 3 млн €); IVBN просит ускорить",
+      "segment": "commercial",
+      "kind": "deal_deadline",
+      "source": "Vastgoed Insider"
+    }
+  ],
+  "metrics": [
+    {
+      "key": "retail_park_vacancy",
+      "label": "Вакантность периферийных ритейл-парков",
+      "value": 4.4,
+      "unit": "%",
+      "segment": "commercial",
+      "source": "CBRE"
+    },
+    {
+      "key": "retail_market_vacancy",
+      "label": "Вакантность по торговой недвижимости (рынок)",
+      "value": 5.5,
+      "unit": "%",
+      "segment": "commercial",
+      "source": "CBRE"
+    },
+    {
+      "key": "retail_estates_occupancy",
+      "label": "Заполняемость Retail Estates",
+      "value": 97.8,
+      "unit": "%",
+      "segment": "commercial",
+      "source": "Test-Aankoop (Invest)"
+    },
+    {
+      "key": "retail_estates_yield",
+      "label": "Дивидендная доходность Retail Estates (брутто)",
+      "value": 7.5,
+      "unit": "%",
+      "segment": "commercial",
+      "source": "Test-Aankoop (Invest)"
+    },
+    {
+      "key": "retail_estates_dividend",
+      "label": "Дивиденд Retail Estates на акцию (брутто)",
+      "value": 5.2,
+      "unit": "€",
+      "segment": "commercial",
+      "source": "Test-Aankoop (Invest)"
+    },
+    {
+      "key": "retail_estates_nl_share",
+      "label": "Доля Нидерландов в портфеле Retail Estates",
+      "value": 38,
+      "unit": "%",
+      "segment": "commercial",
+      "source": "Test-Aankoop (Invest)"
+    },
+    {
+      "key": "retail_estates_net_rent_growth",
+      "label": "Рост чистого арендного дохода Retail Estates",
+      "value": 2.5,
+      "unit": "%",
+      "segment": "commercial",
+      "source": "Test-Aankoop (Invest)"
+    },
+    {
+      "key": "koopbereidheid",
+      "label": "Готовность к покупкам (koopbereidheid, CBS)",
+      "value": -22,
+      "unit": "пункты",
+      "segment": "commercial",
+      "source": "Vakblad Mannenmode (CBS)"
+    },
+    {
+      "key": "koopbereidheid_prev",
+      "label": "Готовность к покупкам, май (koopbereidheid, CBS)",
+      "value": -28,
+      "unit": "пункты",
+      "segment": "commercial",
+      "source": "Vakblad Mannenmode (CBS)"
+    },
+    {
+      "key": "consumer_confidence",
+      "label": "Индекс потребительского доверия (CBS)",
+      "value": -39,
+      "unit": "пункты",
+      "segment": "commercial",
+      "source": "Vakblad Mannenmode (CBS)"
+    },
+    {
+      "key": "earningsstripping_limit",
+      "label": "Лимит на вычет процентов (% EBITDA, текущий NL)",
+      "value": 24.5,
+      "unit": "% EBITDA",
+      "segment": "commercial",
+      "source": "Vastgoed Insider"
+    },
+    {
+      "key": "vesteda_redemption",
+      "label": "Итоговый объём выкупа паёв Vesteda",
+      "value": 765,
+      "unit": "млн €",
+      "segment": "residential",
+      "source": "Vesteda / NOS"
+    },
+    {
+      "key": "vesteda_redemption_initial",
+      "label": "Первоначальные заявки на выкуп паёв Vesteda",
+      "value": 4100,
+      "unit": "млн €",
+      "segment": "residential",
+      "source": "Vesteda / NOS"
+    },
+    {
+      "key": "vesteda_fund_aum",
+      "label": "Портфель фонда Vesteda",
+      "value": 10800,
+      "unit": "млн €",
+      "segment": "residential",
+      "source": "Vesteda / NOS"
+    },
+    {
+      "key": "vesteda_liquidity_rate",
+      "label": "Ежегодная ликвидность Vesteda (best-effort)",
+      "value": 7.5,
+      "unit": "% капитала/год",
+      "segment": "residential",
+      "source": "Vesteda / NOS"
+    },
+    {
+      "key": "bouwinvest_committed",
+      "label": "Committed capital фонда Bouwinvest для пожилых",
+      "value": 263.5,
+      "unit": "млн €",
+      "segment": "residential",
+      "source": "Vastgoedjournaal"
+    },
+    {
+      "key": "bouwinvest_committed_initial",
+      "label": "Committed capital на первом закрытии (Bouwinvest)",
+      "value": 130,
+      "unit": "млн €",
+      "segment": "residential",
+      "source": "Vastgoedjournaal"
+    },
+    {
+      "key": "bouwinvest_investors",
+      "label": "Число институциональных инвесторов фонда Bouwinvest",
+      "value": 6,
+      "unit": "инвесторов",
+      "segment": "residential",
+      "source": "Vastgoedjournaal"
+    },
+    {
+      "key": "utrecht_affordable_share",
+      "label": "Обязательная доля доступного жилья в Утрехте",
+      "value": 80,
+      "unit": "%",
+      "segment": "residential",
+      "source": "Vastgoedjournaal"
+    },
+    {
+      "key": "rotterdam_affordable_share",
+      "label": "Доля доступного жилья в Роттердаме",
+      "value": 67,
+      "unit": "%",
+      "segment": "residential",
+      "source": "Vastgoedmarkt"
+    },
+    {
+      "key": "rotterdam_homes_target",
+      "label": "План строительства жилищ в Роттердаме до 2030",
+      "value": 15000,
+      "unit": "жилищ",
+      "segment": "residential",
+      "source": "Vastgoedmarkt"
+    },
+    {
+      "key": "heijmans_homes",
+      "label": "Жилищ в проекте Heijmans (IJsselstein)",
+      "value": 563,
+      "unit": "жилищ",
+      "segment": "residential",
+      "source": "Vastgoedjournaal"
+    },
+    {
+      "key": "prologis_offer_segro",
+      "label": "Оферта Prologis за Segro",
+      "value": 14.6,
+      "unit": "млрд €",
+      "segment": "industrial",
+      "source": "Warehouse Totaal / Bloomberg"
+    },
+    {
+      "key": "prologis_premium",
+      "label": "Премия в оферте Prologis за Segro",
+      "value": 24.6,
+      "unit": "%",
+      "segment": "industrial",
+      "source": "Warehouse Totaal / Bloomberg"
+    },
+    {
+      "key": "prologis_price_per_share",
+      "label": "Цена за акцию Segro в оферте Prologis",
+      "value": 925,
+      "unit": "пенсов",
+      "segment": "industrial",
+      "source": "Warehouse Totaal / Bloomberg"
+    },
+    {
+      "key": "db_target_ctp",
+      "label": "Целевая цена CTP (Deutsche Bank)",
+      "value": 19,
+      "unit": "€",
+      "segment": "industrial",
+      "source": "Deutsche Bank"
+    },
+    {
+      "key": "db_target_wdp",
+      "label": "Целевая цена WDP (Deutsche Bank)",
+      "value": 25,
+      "unit": "€",
+      "segment": "industrial",
+      "source": "Deutsche Bank"
+    },
+    {
+      "key": "db_target_montea",
+      "label": "Целевая цена Montea (Deutsche Bank)",
+      "value": 73,
+      "unit": "€",
+      "segment": "industrial",
+      "source": "Deutsche Bank"
+    },
+    {
+      "key": "db_target_vgp",
+      "label": "Целевая цена VGP (Deutsche Bank)",
+      "value": 100,
+      "unit": "€",
+      "segment": "industrial",
+      "source": "Deutsche Bank"
+    },
+    {
+      "key": "panattoni_emmen_area",
+      "label": "Площадь спекулятивной стройки Panattoni в Эммене",
+      "value": 150000,
+      "unit": "м²",
+      "segment": "industrial",
+      "source": "PropertyNL"
+    },
+    {
+      "key": "humby_venlo_area",
+      "label": "Арендованная площадь Humby в Венло",
+      "value": 29779,
+      "unit": "м²",
+      "segment": "industrial",
+      "source": "PropertyNL"
+    }
+  ],
+  "portfolio_notes": [
+    {
+      "text": "Ваш фокус — склады: оферта Prologis за Segro (€14,6 млрд) переоценивает весь европейский логистический сектор. Развязка 22 июля — следите.",
+      "segment": "industrial",
+      "priority": "high"
+    },
+    {
+      "text": "По вашим ритейл-паркам: вакантность 4,4% против 5,5% по рынку — сегмент держится крепче центров городов.",
+      "segment": "commercial",
+      "priority": "medium"
+    },
+    {
+      "text": "Индустриал, регион действия: с 1 июля ужесточаются правила netcongestie — проверьте запас электромощности на ваших площадках в Венло/Мурдейке.",
+      "segment": "industrial",
+      "priority": "high"
+    }
   ]
 }

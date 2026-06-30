@@ -79,6 +79,19 @@ DIRECTION = {
     "neutral": ("◆", "E8F0F7", RGBColor(0x2C, 0x5F, 0x8A), "структурный сдвиг"),
 }
 
+# Статусы сюжетов в развитии (память сюжетов «не повторяться → продолжать»)
+THREAD_STATUS = {
+    "new":        ("НОВЫЙ",            "E8F0F7", RGBColor(0x2C, 0x5F, 0x8A)),
+    "developing": ("В РАЗВИТИИ",       "FBF1DF", RGBColor(0x8A, 0x55, 0x10)),
+    "watch":      ("ПОД НАБЛЮДЕНИЕМ",  "FFF6E5", RGBColor(0xB0, 0x7A, 0x1C)),
+    "resolved":   ("ЗАКРЫТ",          "E7F4EE", RGBColor(0x1E, 0x7A, 0x4D)),
+}
+KIND_ICON = {"deal_deadline": "⏳", "cbs_release": "📈", "vote": "🗳",
+             "reit_earnings": "📊", "other": "•"}
+PORT_FILL = "FBF1DF"   # фон врезки «Важно для вашего портфеля»
+SEG_RU_SHORT = {"residential": "жильё", "commercial": "ритейл",
+                "industrial": "индустриал", "overview": "все", "macro": "макро"}
+
 BASE_FONT = "Calibri"
 
 RU_MONTHS = {
@@ -696,6 +709,120 @@ def build_overview_charts(doc, data, pngs):
     build_charts(doc, ov, pngs)
 
 
+def build_threads(doc, data):
+    """«Сюжеты в развитии» — память историй со статус-бейджами и след. триггером."""
+    threads = data.get("threads") or []
+    if not threads:
+        return
+    add_segment_bar(doc, "Сюжеты в развитии", "5D6D7E", "🧵")
+    _p(doc, space_after=2)
+    for t in threads:
+        st = THREAD_STATUS.get((t.get("status") or "").lower(), ("—", "EEF2F6", MUTED_RGB))
+        p = _p(doc, space_before=5, space_after=1, line=1.12)
+        _add_chip(p, st[0], st[1], st[2], size=8)
+        r = p.add_run("  " + t.get("title", ""))
+        _style_run(r, size=11, bold=True, color_rgb=NAVY_RGB)
+        _keep_with_next(p)
+        if t.get("update"):
+            up = _p(doc, space_before=0, space_after=1, line=1.1)
+            up.paragraph_format.left_indent = Cm(0.2)
+            r = up.add_run("Что нового: ")
+            _style_run(r, size=9.5, bold=True, color_rgb=MUTED_RGB)
+            r = up.add_run(t["update"])
+            _style_run(r, size=9.5, color_rgb=INK_RGB)
+        nt = t.get("next_trigger") or {}
+        if nt.get("date") or nt.get("what"):
+            tp = _p(doc, space_before=0, space_after=4, line=1.05)
+            tp.paragraph_format.left_indent = Cm(0.2)
+            r = tp.add_run("Следующий триггер: ")
+            _style_run(r, size=9, bold=True, color_rgb=RGBColor(0x8A, 0x55, 0x10))
+            trig = f"{nt.get('date', '')} — {nt.get('what', '')}".strip(" —")
+            r = tp.add_run(trig)
+            _style_run(r, size=9, italic=True, color_rgb=MUTED_RGB)
+            if t.get("url"):
+                _add_hyperlink(tp, t["url"], "  ↗", size=8.5)
+    _p(doc, space_after=4)
+
+
+def build_portfolio(doc, data):
+    """Врезка «Важно для вашего портфеля» — персонализация по profile.json."""
+    notes = data.get("portfolio_notes") or []
+    if not notes:
+        return
+    table = doc.add_table(rows=1, cols=1)
+    _remove_table_borders(table)
+    _full_width(table)
+    cell = table.cell(0, 0)
+    _set_cell_background(cell, PORT_FILL)
+    _no_row_split(table)
+    _set_cell_margins(cell, top=130, bottom=130, left=220, right=220)
+    _set_cell_borders(cell, {"left": (30, "C0791C")})
+    p0 = cell.paragraphs[0]
+    p0.paragraph_format.space_after = Pt(3)
+    lab = p0.add_run("★  ВАЖНО ДЛЯ ВАШЕГО ПОРТФЕЛЯ")
+    _style_run(lab, size=10, bold=True, color_rgb=RGBColor(0x8A, 0x55, 0x10))
+    for n in notes:
+        text = n.get("text", "") if isinstance(n, dict) else str(n)
+        pp = cell.add_paragraph()
+        pp.paragraph_format.space_before = Pt(2)
+        pp.paragraph_format.space_after = Pt(2)
+        pp.paragraph_format.line_spacing = 1.15
+        pp.paragraph_format.left_indent = Cm(0.5)
+        pp.paragraph_format.first_line_indent = Cm(-0.35)
+        b = pp.add_run("▪  ")
+        _style_run(b, size=10.5, bold=True, color_rgb=RGBColor(0x8A, 0x55, 0x10))
+        r = pp.add_run(text)
+        _style_run(r, size=10.5, color_rgb=INK_RGB)
+    _p(doc, space_after=6)
+
+
+def build_calendar(doc, data):
+    """«Календарь: за чем следить» — форвард-вотчлист ближайших триггеров."""
+    cal = data.get("calendar") or []
+    if not cal:
+        return
+
+    def _key(c):
+        try:
+            return (0, datetime.strptime(c.get("date", ""), "%Y-%m-%d"))
+        except Exception:
+            return (1, datetime.max)
+    cal = sorted(cal, key=_key)
+
+    add_segment_bar(doc, "Календарь: за чем следить", "C0791C", "📅")
+    _p(doc, space_after=2)
+    table = doc.add_table(rows=1, cols=3)
+    _remove_table_borders(table)
+    _full_width(table)
+    hdr = table.rows[0].cells
+    for i, h in enumerate(("Дата", "Событие", "Сегмент")):
+        _set_cell_background(hdr[i], NAVY)
+        _set_cell_margins(hdr[i])
+        r = hdr[i].paragraphs[0].add_run(h)
+        _style_run(r, size=9.5, bold=True, color_rgb=RGBColor(0xFF, 0xFF, 0xFF))
+    table.columns[0].width = Cm(2.7)
+    table.columns[1].width = Cm(11.3)
+    table.columns[2].width = Cm(2.8)
+    for idx, c in enumerate(cal):
+        row = table.add_row().cells
+        fill = STAT_FILL if idx % 2 == 0 else "FFFFFF"
+        icon = KIND_ICON.get(c.get("kind", "other"), "•")
+        cells = (c.get("date", ""), f"{icon}  {c.get('what', '')}", SEG_RU_SHORT.get(c.get("segment"), c.get("segment", "")))
+        for ci, txt in enumerate(cells):
+            _set_cell_background(row[ci], fill)
+            _set_cell_margins(row[ci])
+            cp = row[ci].paragraphs[0]
+            cp.paragraph_format.space_after = Pt(0)
+            r = cp.add_run(txt)
+            _style_run(r, size=9.5, bold=(ci == 0), color_rgb=INK_RGB)
+        if c.get("impact"):
+            mp = row[1].add_paragraph()
+            mp.paragraph_format.space_before = Pt(1); mp.paragraph_format.space_after = Pt(0)
+            r = mp.add_run("→ " + c["impact"])
+            _style_run(r, size=8, italic=True, color_rgb=MUTED_RGB)
+    _p(doc, space_after=6)
+
+
 def build_sources(doc, data):
     sources = data.get("sources") or []
     if not sources:
@@ -859,8 +986,9 @@ def check_duplicates(history_path, data):
 #  Сборка
 # --------------------------------------------------------------------------- #
 def build_report(data, out_path):
-    # заранее рендерим графики в PNG (если есть matplotlib и спецификации)
-    charts_list = data.get("charts") or []
+    # графики недели + авто-тренды из памяти (trend_chart_specs)
+    charts_list = (data.get("charts") or []) + (data.get("trend_chart_specs") or [])
+    data["charts"] = charts_list  # чтобы overview/segment-фильтры увидели и тренды
     pngs = {}
     if charts_list and _charts is not None:
         assets_dir = os.path.join(os.path.dirname(out_path) or ".", "assets")
@@ -872,11 +1000,14 @@ def build_report(data, out_path):
     build_cover(doc, data)
     doc.add_page_break()           # обложка — отдельная страница
     build_key_takeaways(doc, data)
+    build_portfolio(doc, data)     # «Важно для вашего портфеля» (персонализация)
+    build_threads(doc, data)       # «Сюжеты в развитии» (память историй)
     build_overview_charts(doc, data, pngs)
     build_exec_summary(doc, data)
     for seg in data.get("segments", []):
         build_segment(doc, seg, charts_list, pngs)
     build_outlook(doc, data)
+    build_calendar(doc, data)      # «Календарь: за чем следить» (форсайт)
     build_glossary(doc, data)
     build_sources(doc, data)
     build_footer_disclaimer(doc)
