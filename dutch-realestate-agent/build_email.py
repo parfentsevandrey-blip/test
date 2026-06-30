@@ -44,6 +44,17 @@ def build_html(data, file_link=None):
         P.append(f'<div style="background:#EEF2F6;padding:10px 14px;border-radius:4px;margin-bottom:14px;font-size:14px">'
                  f'📎 Файл Word: <a href="{esc(file_link)}" style="color:#1155CC">скачать отчёт (.docx)</a></div>')
 
+    if data.get("headline"):
+        P.append(f'<p style="font-size:16px;font-style:italic;font-weight:700;color:#105A4C;margin:0 0 12px">«{esc(data["headline"])}»</p>')
+
+    kt = data.get("key_takeaways") or []
+    if kt:
+        P.append('<div style="background:#1F3A5F;color:#ECF1F6;border-radius:6px;padding:14px 18px;margin:0 0 16px">'
+                 '<div style="font-size:13px;letter-spacing:1px;font-weight:700;color:#fff;margin-bottom:6px">ГЛАВНЫЕ ВЫВОДЫ НЕДЕЛИ</div><ol style="margin:0;padding-left:20px">')
+        for t in kt:
+            P.append(f'<li style="font-size:14px;line-height:1.4;margin:5px 0">{esc(t)}</li>')
+        P.append('</ol></div>')
+
     if data.get("executive_summary"):
         P.append(f'<p style="font-size:15px;line-height:1.5;margin:0 0 16px">{esc(data["executive_summary"])}</p>')
 
@@ -75,6 +86,14 @@ def build_html(data, file_link=None):
             P.append(f'<div style="background:#EAF3EE;border-left:4px solid #16846F;padding:10px 14px;margin:8px 0;border-radius:0 4px 4px 0">'
                      f'<span style="color:#105A4C;font-weight:700;font-size:11px;letter-spacing:1px">ВЫВОД</span>'
                      f'<div style="font-size:14px;line-height:1.45;margin-top:3px">{esc(seg["conclusion"])}</div></div>')
+        if seg.get("watch"):
+            P.append(f'<div style="background:#FFF6E5;border-left:4px solid #C0791C;padding:8px 14px;margin:6px 0;border-radius:0 4px 4px 0;font-size:13px;line-height:1.4">'
+                     f'<b style="color:#8A5510">За чем следить.</b> {esc(seg["watch"])}</div>')
+
+    if data.get("outlook"):
+        P.append('<div style="background:#EEF2F6;border-radius:6px;padding:14px 18px;margin:14px 0">'
+                 '<div style="font-size:13px;letter-spacing:1px;font-weight:700;color:#1F3A5F;margin-bottom:6px">КАРТИНА НЕДЕЛИ И ПРОГНОЗ</div>'
+                 f'<div style="font-size:14px;line-height:1.5">{esc(data["outlook"])}</div></div>')
 
     P.append('<div style="border-top:1px solid #E2E8EF;margin-top:18px;padding-top:8px;color:#6B7785;font-size:11px;line-height:1.4">'
              'Материал носит информационно-аналитический характер, подготовлен на основе открытых источников и не является инвестиционной рекомендацией. '

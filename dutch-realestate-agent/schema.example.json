@@ -3,44 +3,48 @@
   "week_start": "2026-06-23",
   "week_end": "2026-06-30",
   "language": "ru",
+  "headline": "Цепляющий заголовок недели — суть одной строкой",
   "executive_summary": "3–4 фразы: главное за неделю по всем трём сегментам.",
+  "key_takeaways": [
+    "Главный вывод 1 (коротко и по делу).",
+    "Главный вывод 2.",
+    "Главный вывод 3."
+  ],
   "segments": [
     {
       "id": "residential",
       "title": "Жилая недвижимость",
       "icon": "🏠",
       "subsections": {
-        "laws":   [{"text": "Суть изменения в законе/политике.", "source": "Rijksoverheid", "url": "https://...", "date": "2026-06-25"}],
-        "news":   [{"text": "Новость с конкретикой (компания, сумма, локация).", "source": "FD", "url": "https://...", "date": "2026-06-26"}],
-        "trends": [{"text": "Тренд: спрос/ставки/настроения с цифрой.", "source": "ABN AMRO", "url": "https://...", "date": "2026-06-24"}],
-        "stats":  [{"text": "Индекс цен на жильё (CBS)", "value": "+0,4% м/м", "source": "CBS", "url": "https://..."}]
+        "laws":   [{"text": "Суть изменения простым языком.", "value": "", "impact": "Почему важно/что делать собственнику (1 фраза).", "direction": "neutral", "source": "Rijksoverheid", "url": "https://...", "date": "2026-06-25"}],
+        "news":   [{"text": "Новость с конкретикой (игрок, сумма, локация).", "value": "", "impact": "Эффект для рынка/денег.", "direction": "up", "source": "FD", "url": "https://...", "date": "2026-06-26"}],
+        "trends": [{"text": "Тренд с цифрой и контекстом.", "value": "", "impact": "Что это значит.", "direction": "down", "source": "ABN AMRO", "url": "https://...", "date": "2026-06-24"}],
+        "stats":  [{"text": "Индекс цен на жильё (CBS)", "value": "+0,4% м/м", "impact": "Умеренный рост vs прошлый месяц.", "direction": "up", "source": "CBS", "url": "https://..."}]
       },
-      "conclusion": "Что это значит на практике — 2–4 простые фразы."
+      "conclusion": "Что это значит на практике — 2–4 простые фразы.",
+      "watch": "За чем следить дальше по сегменту (1–2 фразы)."
     },
     {
       "id": "commercial",
       "title": "Коммерция (стрит-ритейл)",
       "icon": "🏪",
-      "subsections": {
-        "laws":   [],
-        "news":   [],
-        "trends": [],
-        "stats":  []
-      },
-      "conclusion": "..."
+      "subsections": {"laws": [], "news": [], "trends": [], "stats": []},
+      "conclusion": "...",
+      "watch": "..."
     },
     {
       "id": "industrial",
       "title": "Индустриал (склады, промзоны)",
       "icon": "🏭",
-      "subsections": {
-        "laws":   [],
-        "news":   [],
-        "trends": [],
-        "stats":  []
-      },
-      "conclusion": "..."
+      "subsections": {"laws": [], "news": [], "trends": [], "stats": []},
+      "conclusion": "...",
+      "watch": "..."
     }
+  ],
+  "outlook": "Картина недели и прогноз: связки между сегментами, что это значит в целом (3–5 фраз).",
+  "glossary": [
+    {"term": "netcongestie", "definition": "перегрузка электросети — мощностей не хватает на всех."},
+    {"term": "box 3", "definition": "налог на сбережения и инвестиции (в т.ч. недвижимость не для жизни)."}
   ],
   "sources": [
     {"name": "CBS", "url": "https://www.cbs.nl"},
