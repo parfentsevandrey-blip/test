@@ -61,6 +61,19 @@ CONCL_FILL   = "EAF3EE"   # фон блока «Вывод»
 CONCL_BAR    = "16846F"   # акцентная полоса блока «Вывод»
 STAT_FILL    = "F4F6F8"   # фон таблицы статистики
 
+KT_FILL      = "1F3A5F"   # фон блока «Главные выводы» (тёмный)
+WATCH_FILL   = "FFF6E5"   # фон врезки «За чем следить»
+WATCH_BAR    = "C0791C"   # полоса врезки «За чем следить»
+OUTLOOK_FILL = "EEF2F6"   # фон блока «Картина и прогноз»
+GLOSS_FILL   = "F4F6F8"   # фон словаря терминов
+
+# Теги влияния: (символ, фон, цвет текста, подпись)
+DIRECTION = {
+    "up":      ("▲", "E7F4EE", RGBColor(0x1E, 0x7A, 0x4D), "возможность / рост"),
+    "down":    ("▼", "FBEAEA", RGBColor(0xB0, 0x3A, 0x3A), "риск / снижение"),
+    "neutral": ("◆", "E8F0F7", RGBColor(0x2C, 0x5F, 0x8A), "структурный сдвиг"),
+}
+
 BASE_FONT = "Calibri"
 
 RU_MONTHS = {
@@ -154,6 +167,17 @@ def _shade_paragraph(paragraph, fill_hex):
     shd.set(qn("w:color"), "auto")
     shd.set(qn("w:fill"), fill_hex)
     pPr.append(shd)
+
+
+def _add_chip(paragraph, text, fill_hex, color_rgb, size=8):
+    """Маленькая цветная «плашка» (chip) — фон + цветной текст на уровне run."""
+    run = paragraph.add_run(f" {text} ")
+    _style_run(run, size=size, bold=True, color_rgb=color_rgb)
+    rPr = run._element.get_or_add_rPr()
+    shd = OxmlElement("w:shd")
+    shd.set(qn("w:val"), "clear"); shd.set(qn("w:color"), "auto"); shd.set(qn("w:fill"), fill_hex)
+    rPr.append(shd)
+    return run
 
 
 def _add_hyperlink(paragraph, url, text, color=LINK, size=9, underline=True):
@@ -255,19 +279,31 @@ def add_subsection_title(doc, text, color_rgb):
     pPr.append(pbdr)
 
 
-def add_bullet(doc, text, source=None, url=None, date=None):
-    """Пункт-маркер с фактом и подписью-источником."""
-    p = _p(doc, space_before=2, space_after=2, line=1.1)
+def add_bullet(doc, text, source=None, url=None, date=None, impact=None, direction=None):
+    """Пункт-маркер: факт + (опц.) врезка «Почему важно» с тегом влияния + источник."""
+    sym, fill, drgb, _label = DIRECTION.get(direction or "", ("▪", None, MUTED_RGB, ""))
+    p = _p(doc, space_before=3, space_after=1, line=1.12)
     p.paragraph_format.left_indent = Cm(0.5)
     p.paragraph_format.first_line_indent = Cm(-0.35)
-    bullet = p.add_run("▪  ")
-    _style_run(bullet, size=10.5, bold=True, color_rgb=MUTED_RGB)
+    bullet = p.add_run(f"{sym}  ")
+    _style_run(bullet, size=10.5, bold=True, color_rgb=drgb)
     body = p.add_run(text)
     _style_run(body, size=10.5, color_rgb=INK_RGB)
 
+    # врезка «Почему важно» с цветом тега влияния
+    if impact:
+        ip = _p(doc, space_before=1, space_after=1, line=1.1)
+        ip.paragraph_format.left_indent = Cm(0.5)
+        if fill:
+            _shade_paragraph(ip, fill)
+        lab = ip.add_run("  Почему важно:  ")
+        _style_run(lab, size=9, bold=True, color_rgb=drgb)
+        r = ip.add_run(impact + "  ")
+        _style_run(r, size=9, color_rgb=INK_RGB)
+
     # подпись-источник под пунктом
     if source or url or date:
-        meta = _p(doc, space_before=0, space_after=4, line=1.0)
+        meta = _p(doc, space_before=0, space_after=5, line=1.0)
         meta.paragraph_format.left_indent = Cm(0.5)
         parts = []
         if date:
@@ -303,18 +339,29 @@ def add_stats_table(doc, items):
         fill = STAT_FILL if idx % 2 == 0 else "FFFFFF"
         metric = it.get("text") or it.get("metric") or ""
         value = it.get("value", "")
-        for ci, txt in enumerate((metric, value)):
+        sym, _f, drgb, _l = DIRECTION.get(it.get("direction") or "", ("", None, INK_RGB, ""))
+        for ci in (0, 1):
             _set_cell_background(row[ci], fill)
             _set_cell_margins(row[ci])
-            cp = row[ci].paragraphs[0]
-            cp.paragraph_format.space_after = Pt(0)
-            r = cp.add_run(txt)
-            _style_run(r, size=9.5, bold=(ci == 1), color_rgb=INK_RGB)
-        # источник мелкой строкой во второй колонке
+            row[ci].paragraphs[0].paragraph_format.space_after = Pt(0)
+        # колонка 1: показатель + (опц.) «почему важно»
+        r = row[0].paragraphs[0].add_run(metric)
+        _style_run(r, size=9.5, color_rgb=INK_RGB)
+        if it.get("impact"):
+            ip = row[0].add_paragraph()
+            ip.paragraph_format.space_before = Pt(1); ip.paragraph_format.space_after = Pt(0)
+            r = ip.add_run("→ " + it["impact"])
+            _style_run(r, size=8, italic=True, color_rgb=MUTED_RGB)
+        # колонка 2: стрелка тренда + значение
+        vp = row[1].paragraphs[0]
+        if sym:
+            ar = vp.add_run(sym + " ")
+            _style_run(ar, size=9.5, bold=True, color_rgb=drgb)
+        r = vp.add_run(value)
+        _style_run(r, size=9.5, bold=True, color_rgb=INK_RGB)
         if it.get("source") or it.get("url"):
             mp = row[1].add_paragraph()
-            mp.paragraph_format.space_before = Pt(1)
-            mp.paragraph_format.space_after = Pt(0)
+            mp.paragraph_format.space_before = Pt(1); mp.paragraph_format.space_after = Pt(0)
             if it.get("source"):
                 r = mp.add_run(it["source"])
                 _style_run(r, size=7.5, italic=True, color_rgb=MUTED_RGB)
@@ -343,6 +390,99 @@ def add_conclusion_box(doc, text):
     p1.paragraph_format.line_spacing = 1.12
     r = p1.add_run(text)
     _style_run(r, size=10.5, color_rgb=INK_RGB)
+    _p(doc, space_after=6)
+
+
+def add_watch_box(doc, text):
+    """Врезка «За чем следить» — компактный бокс с янтарной левой полосой."""
+    table = doc.add_table(rows=1, cols=1)
+    _remove_table_borders(table)
+    _full_width(table)
+    cell = table.cell(0, 0)
+    _set_cell_background(cell, WATCH_FILL)
+    _set_cell_margins(cell, top=100, bottom=100, left=220, right=220)
+    _set_cell_borders(cell, {"left": (30, WATCH_BAR)})
+    p0 = cell.paragraphs[0]
+    p0.paragraph_format.space_after = Pt(0)
+    p0.paragraph_format.line_spacing = 1.1
+    lab = p0.add_run("👁  ЗА ЧЕМ СЛЕДИТЬ.  ")
+    _style_run(lab, size=9, bold=True, color_rgb=RGBColor(0x8A, 0x55, 0x10))
+    r = p0.add_run(text)
+    _style_run(r, size=10, color_rgb=INK_RGB)
+    _p(doc, space_after=8)
+
+
+def build_key_takeaways(doc, data):
+    """Тёмный блок «Главные выводы недели» — нумерованные тезисы."""
+    kt = data.get("key_takeaways") or []
+    if not kt:
+        return
+    table = doc.add_table(rows=1, cols=1)
+    _remove_table_borders(table)
+    _full_width(table)
+    cell = table.cell(0, 0)
+    _set_cell_background(cell, KT_FILL)
+    _set_cell_margins(cell, top=150, bottom=150, left=220, right=220)
+    p0 = cell.paragraphs[0]
+    p0.paragraph_format.space_after = Pt(4)
+    hr = p0.add_run("ГЛАВНЫЕ ВЫВОДЫ НЕДЕЛИ")
+    _style_run(hr, size=11, bold=True, color_rgb=RGBColor(0xFF, 0xFF, 0xFF))
+    for i, t in enumerate(kt, 1):
+        pp = cell.add_paragraph()
+        pp.paragraph_format.space_before = Pt(2)
+        pp.paragraph_format.space_after = Pt(2)
+        pp.paragraph_format.line_spacing = 1.15
+        pp.paragraph_format.left_indent = Cm(0.55)
+        pp.paragraph_format.first_line_indent = Cm(-0.55)
+        num = pp.add_run(f"{i}.  ")
+        _style_run(num, size=10.5, bold=True, color_rgb=RGBColor(0xF0, 0xC4, 0x6A))
+        r = pp.add_run(t)
+        _style_run(r, size=10.5, color_rgb=RGBColor(0xEC, 0xF1, 0xF6))
+    _p(doc, space_after=8)
+
+
+def build_outlook(doc, data):
+    """Блок «Картина недели и прогноз»."""
+    outlook = data.get("outlook")
+    if not outlook:
+        return
+    add_segment_bar(doc, "Картина недели и прогноз", "1F3A5F", "🧭")
+    table = doc.add_table(rows=1, cols=1)
+    _remove_table_borders(table)
+    _full_width(table)
+    cell = table.cell(0, 0)
+    _set_cell_background(cell, OUTLOOK_FILL)
+    _set_cell_margins(cell, top=140, bottom=140, left=200, right=200)
+    cp = cell.paragraphs[0]
+    cp.paragraph_format.space_after = Pt(0)
+    cp.paragraph_format.line_spacing = 1.18
+    r = cp.add_run(outlook)
+    _style_run(r, size=10.5, color_rgb=INK_RGB)
+    _p(doc, space_after=6)
+
+
+def build_glossary(doc, data):
+    """Словарь терминов — двухколоночная таблица термин/определение."""
+    gl = data.get("glossary") or []
+    if not gl:
+        return
+    add_segment_bar(doc, "Словарь терминов", "5D6D7E", "📖")
+    table = doc.add_table(rows=0, cols=2)
+    _remove_table_borders(table)
+    _full_width(table)
+    table.columns[0].width = Cm(5.0)
+    table.columns[1].width = Cm(11.8)
+    for idx, g in enumerate(gl):
+        row = table.add_row().cells
+        fill = GLOSS_FILL if idx % 2 == 0 else "FFFFFF"
+        for ci in (0, 1):
+            _set_cell_background(row[ci], fill)
+            _set_cell_margins(row[ci], top=60, bottom=60)
+            row[ci].paragraphs[0].paragraph_format.space_after = Pt(0)
+        tr = row[0].paragraphs[0].add_run(g.get("term", ""))
+        _style_run(tr, size=9.5, bold=True, color_rgb=NAVY_RGB)
+        dr = row[1].paragraphs[0].add_run(g.get("definition", ""))
+        _style_run(dr, size=9.5, color_rgb=INK_RGB)
     _p(doc, space_after=6)
 
 
@@ -392,6 +532,13 @@ def build_cover(doc, data):
         table.cell(0, i).paragraphs[0].add_run(" ").font.size = Pt(3)
         table.cell(0, i).paragraphs[0].paragraph_format.space_after = Pt(0)
     _p(doc, space_after=8)
+
+    # заголовок недели (headline)
+    headline = data.get("headline")
+    if headline:
+        hp = _p(doc, space_before=2, space_after=10)
+        r = hp.add_run(f"«{headline}»")
+        _style_run(r, size=14, bold=True, italic=True, color_rgb=SEG_COLORS["residential"]["text_rgb"])
 
     # период
     p = _p(doc, space_after=2)
@@ -469,6 +616,8 @@ def build_segment(doc, seg):
                     source=it.get("source"),
                     url=it.get("url"),
                     date=it.get("date"),
+                    impact=it.get("impact"),
+                    direction=it.get("direction"),
                 )
 
     if not any_content:
@@ -479,6 +628,10 @@ def build_segment(doc, seg):
     concl = seg.get("conclusion")
     if concl:
         add_conclusion_box(doc, concl)
+
+    watch = seg.get("watch")
+    if watch:
+        add_watch_box(doc, watch)
 
 
 def build_sources(doc, data):
@@ -646,9 +799,12 @@ def check_duplicates(history_path, data):
 def build_report(data, out_path):
     doc = setup_document(data)
     build_cover(doc, data)
+    build_key_takeaways(doc, data)
     build_exec_summary(doc, data)
     for seg in data.get("segments", []):
         build_segment(doc, seg)
+    build_outlook(doc, data)
+    build_glossary(doc, data)
     build_sources(doc, data)
     build_footer_disclaimer(doc)
     os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
