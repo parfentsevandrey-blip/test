@@ -37,6 +37,11 @@ from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 from docx.opc.constants import RELATIONSHIP_TYPE as RT
 
+try:
+    import charts as _charts            # модуль графиков (matplotlib)
+except Exception:                       # noqa: BLE001 — рендер без графиков, если нет matplotlib
+    _charts = None
+
 # --------------------------------------------------------------------------- #
 #  Цветовая палитра (профессиональная, «финансово-аналитическая»)
 # --------------------------------------------------------------------------- #
@@ -585,7 +590,7 @@ def build_exec_summary(doc, data):
     _p(doc, space_after=6)
 
 
-def build_segment(doc, seg):
+def build_segment(doc, seg, charts_list=None, pngs=None):
     colors = SEG_COLORS.get(seg.get("id"), DEFAULT_SEG)
     add_segment_bar(doc, seg.get("title", ""), colors["bar"], seg.get("icon", ""))
 
@@ -625,6 +630,11 @@ def build_segment(doc, seg):
         r = p.add_run("За отчётную неделю значимых событий по этому сегменту не зафиксировано.")
         _style_run(r, size=10.5, italic=True, color_rgb=MUTED_RGB)
 
+    # графики этого сегмента
+    seg_charts = [c for c in (charts_list or []) if c.get("segment") == seg.get("id")]
+    if seg_charts:
+        build_charts(doc, seg_charts, pngs)
+
     concl = seg.get("conclusion")
     if concl:
         add_conclusion_box(doc, concl)
@@ -632,6 +642,36 @@ def build_segment(doc, seg):
     watch = seg.get("watch")
     if watch:
         add_watch_box(doc, watch)
+
+
+def add_chart_image(doc, png_path, caption=None):
+    """Встроить PNG-график по ширине текста + подпись-вывод под ним."""
+    doc.add_picture(png_path, width=Cm(16.4))
+    p = doc.paragraphs[-1]
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p.paragraph_format.space_before = Pt(6)
+    p.paragraph_format.space_after = Pt(1)
+    if caption:
+        cp = _p(doc, space_before=0, space_after=8, line=1.08, align=WD_ALIGN_PARAGRAPH.CENTER)
+        r = cp.add_run(caption)
+        _style_run(r, size=9, italic=True, color_rgb=MUTED_RGB)
+
+
+def build_charts(doc, specs, pngs):
+    """Отрисовать список графиков (по готовым PNG) с подписями."""
+    for spec in specs or []:
+        path = (pngs or {}).get(spec.get("id"))
+        if path:
+            add_chart_image(doc, path, spec.get("caption"))
+
+
+def build_overview_charts(doc, data, pngs):
+    ov = [c for c in (data.get("charts") or []) if c.get("segment") == "overview"]
+    if not ov:
+        return
+    add_segment_bar(doc, "Статистика в графиках", "1F3A5F", "📊")
+    _p(doc, space_after=2)
+    build_charts(doc, ov, pngs)
 
 
 def build_sources(doc, data):
@@ -797,12 +837,22 @@ def check_duplicates(history_path, data):
 #  Сборка
 # --------------------------------------------------------------------------- #
 def build_report(data, out_path):
+    # заранее рендерим графики в PNG (если есть matplotlib и спецификации)
+    charts_list = data.get("charts") or []
+    pngs = {}
+    if charts_list and _charts is not None:
+        assets_dir = os.path.join(os.path.dirname(out_path) or ".", "assets")
+        pngs = _charts.render_charts(charts_list, assets_dir)
+    elif charts_list and _charts is None:
+        print("⚠️  matplotlib не установлен — графики пропущены (pip install -r requirements.txt).")
+
     doc = setup_document(data)
     build_cover(doc, data)
     build_key_takeaways(doc, data)
+    build_overview_charts(doc, data, pngs)
     build_exec_summary(doc, data)
     for seg in data.get("segments", []):
-        build_segment(doc, seg)
+        build_segment(doc, seg, charts_list, pngs)
     build_outlook(doc, data)
     build_glossary(doc, data)
     build_sources(doc, data)

@@ -43,7 +43,17 @@ def impact_block(it):
     return (f'<div class="impact" style="background:{d["bg"]}">'
             f'<b style="color:{d["fg"]}">{d["sym"]} Почему важно:</b> {esc(it["impact"])}</div>')
 
-def render(data):
+def chart_imgs(specs, pngs):
+    out=[]
+    for s in specs or []:
+        src=(pngs or {}).get(s.get("id"))
+        if not src: continue
+        out.append(f'<div class="chart"><img src="{esc(src)}"/>')
+        if s.get("caption"): out.append(f'<div class="ccap">{esc(s["caption"])}</div>')
+        out.append('</div>')
+    return "".join(out)
+
+def render(data, pngs=None):
     gen=data.get("report_date","")
     try:
         gd=datetime.strptime(gen,"%Y-%m-%d"); gen_h=f"{gd.day} {RU_MONTHS[gd.month]} {gd.year} г."
@@ -87,6 +97,8 @@ def render(data):
  .watch b{{color:#8A5510}}
  .outlook{{background:#EEF2F6;padding:14px 16px;border-radius:4px;line-height:1.5;font-size:14.5px}}
  .empty{{color:#6B7785;font-style:italic;font-size:13.5px}}
+ .chart{{margin:14px 0}} .chart img{{width:100%;display:block;border:1px solid #eceff3;border-radius:4px}}
+ .ccap{{color:#6B7785;font-style:italic;font-size:12px;text-align:center;margin-top:4px}}
  .gloss td:first-child{{font-weight:700;color:#1F3A5F;width:26%}}
  .src-list{{font-size:13px;line-height:1.7}} .src-list a{{color:#1155CC;text-decoration:none}}
  .disc{{border-top:1px solid #D7DEE6;margin-top:22px;padding-top:8px;color:#6B7785;font-size:11px;font-style:italic}}
@@ -105,6 +117,11 @@ def render(data):
         out.append('<div class="kt"><h2>ГЛАВНЫЕ ВЫВОДЫ НЕДЕЛИ</h2><ol>')
         for t in kt: out.append(f'<li>{esc(t)}</li>')
         out.append('</ol></div>')
+
+    ov=[c for c in (data.get("charts") or []) if c.get("segment")=="overview"]
+    if ov:
+        out.append('<div class="bar" style="background:#1F3A5F">📊 Статистика в графиках</div>')
+        out.append(chart_imgs(ov,pngs))
 
     if data.get("executive_summary"):
         out.append('<h2 class="sub">Коротко о неделе</h2>')
@@ -137,6 +154,8 @@ def render(data):
                     out.append('</div>')
         if not had:
             out.append('<p class="empty">За отчётную неделю значимых событий по этому сегменту не зафиксировано.</p>')
+        sc=[c for c in (data.get("charts") or []) if c.get("segment")==seg.get("id")]
+        if sc: out.append(chart_imgs(sc,pngs))
         if seg.get("conclusion"):
             out.append(f'<div class="concl"><div class="lbl">ВЫВОД</div><p>{esc(seg["conclusion"])}</p></div>')
         if seg.get("watch"):
@@ -167,7 +186,17 @@ def main():
     ap.add_argument("--data",required=True); ap.add_argument("--out",required=True)
     a=ap.parse_args()
     data=json.load(open(a.data,encoding="utf-8"))
-    open(a.out,"w",encoding="utf-8").write(render(data))
+    pngs={}
+    charts_list=data.get("charts") or []
+    if charts_list:
+        try:
+            import os, charts as _charts
+            outdir=os.path.dirname(os.path.abspath(a.out)) or "."
+            rendered=_charts.render_charts(charts_list, os.path.join(outdir,"assets"))
+            pngs={cid:"assets/"+os.path.basename(p) for cid,p in rendered.items()}
+        except Exception as e:
+            print("⚠️ графики пропущены:",e)
+    open(a.out,"w",encoding="utf-8").write(render(data,pngs))
     print("✅ HTML-превью:",a.out)
 
 if __name__=="__main__": main()
