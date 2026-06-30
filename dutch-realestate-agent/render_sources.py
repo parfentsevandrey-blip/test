@@ -8,7 +8,12 @@ access (free/freemium/paid/terminal), analyst_use, metrics, region, cadence.
 
     python3 render_sources.py --taxonomy data/sources_taxonomy.json --out sources.md
 """
-import argparse, json
+import argparse, json, re
+
+
+def _clean_title(t):
+    """Убрать ведущую нумерацию из заголовка категории (рендерер нумерует сам)."""
+    return re.sub(r"^\s*\d+[.)]\s*", "", t or "")
 
 SEG_RU = {"residential": "жильё", "commercial": "ритейл",
           "industrial": "индустриал", "macro": "макро", "all": "все"}
@@ -46,11 +51,11 @@ def render(tax):
 
     L.append("## Содержание")
     for i, c in enumerate(cats, 1):
-        L.append(f"{i}. {c['title']} ({len(c.get('sources', []))})")
+        L.append(f"{i}. {_clean_title(c['title'])} ({len(c.get('sources', []))})")
     L.append("")
 
     for i, c in enumerate(cats, 1):
-        L.append(f"## {i}. {c['title']}")
+        L.append(f"## {i}. {_clean_title(c['title'])}")
         if c.get("description"):
             L.append(f"_{c['description'].strip()}_\n")
         for s in c.get("sources", []):

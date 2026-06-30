@@ -1,304 +1,876 @@
 # Источники по рынку недвижимости Нидерландов
 
-> Расширенная таксономия источников для серьёзного еженедельного отчёта.
+> База источников уровня **институционального аналитика**: индексы и бенчмарки, капитал/долг/ставки, рейтинги, первичные раскрытия эмитентов и консенсус, стандарты и опросы настроений, прогнозные дома, ESG/оценка, суб-секторные дески.
 
-Это структурированная база источников для аналитики рынка недвижимости Нидерландов, сгруппированная по ТИПУ источника. Принцип использования: комбинируйте РАЗНЫЕ типы (официальная статистика и реестры + банковский research + брокеры + СМИ + ассоциации), всегда отдавая приоритет первоисточникам (CBS, Kadaster, DNB, законодательные вестники), а аналитику брокеров и банков используйте для интерпретации и прогноза. Внутри каждой категории источники отсортированы: сначала ключевые, затем важные, затем дополнительные.
+Кураторская ИНСТИТУЦИОНАЛЬНАЯ таксономия источников для еженедельной аналитики рынка недвижимости Нидерландов (жильё, коммерция/ритейл, индустриал/логистика, макро/капитал) на уровне профессионального аналитика пенсионного фонда / REIT / управляющего активами / sell-side research. Источники сгруппированы по ТИПУ и упорядочены так, как их использует институциональный аналитик: сначала индексы и бенчмарки доходности, базы сделок и долговые/ставочные рынки, кредитные рейтинги, первичные раскрытия эмитентов и консенсус, отраслевые стандарты и опросы настроений, прогнозные дома и ESG/климат — затем суб-секторные дески и национальные первоисточники NL (CBS, Kadaster, DNB, CPB, регуляторы), консультанты, банки, ассоциации, специализированные данные и СМИ. Принцип работы: количественный каркас строится на индексах (MSCI/INREV/Green Street/EPRA), сделки и yields калибруются по транзакционным базам (MSCI RCA) и брокерам, стоимость капитала — по долговым/ставочным бенчмаркам (Bayes/CBRE Debt/Euribor/swaps/DSL), кредитное качество эмитентов — по рейтингам (S&P/Moody's/Fitch/Scope), а первичные данные REIT и консенсус сверяются напрямую (IR-сайты + MarketScreener/Investing). Всё это якорится на официальной статистике NL и интерпретируется через прогнозные дома, опросы настроений и ESG-стандарты. ~165 лучших источников в 20 категориях; внутри категории: core → important → supplementary.
 
-**Обозначения приоритета:** ★ ключевой · ● важный · ○ дополнительный.
+**Институциональный тир:** ★ core (опорный) · ● important · ○ supplementary.
+**Доступ:** Тиры ДОСТУПА: free — открыто и бесплатно (официальная статистика, регуляторы, большинство IR-раскрытий, многие климат/ESG-стандарты); freemium — базовый слой бесплатно, полные данные/история по подписке или членству (EPRA, индекс-фактшиты, агрегаторы консенсуса, Green Street CPPI, BIS частично); paid — только по платной подписке (MSCI, INREV/GREFI, Green Street Analytics, Capital Economics, Oxford Economics, CBRE-EA/PMA, Preqin, Locatus, STR, Strabo); terminal — профессиональный терминал данных (CoStar). Тиры ИНСТИТУЦИОНАЛЬНОЙ значимости: core — обязательный слой playbook'а (главные бенчмарки доходности, базы сделок, ключевые долговые/ставочные и рейтинговые источники, первичная статистика NL, ядро ESG и суб-секторов); important — сильный второй слой для триангуляции, атрибуции и суб-секторной глубины; supplementary — полезный контекст, нишевые/кросс-региональные сравнения и оперативный новостной поток, не несущие самостоятельной аналитической ценности на институциональном уровне.
 
-_Всего источников: 198 в 19 категориях._
+_Всего источников: 191 в 20 категориях._
 
 ## Содержание
-1. Официальная статистика и реестры (первоисточники) (13)
-2. Госорганы, министерства и законодательство (9)
-3. Суды, регуляторы и надзорные органы (5)
-4. Центробанки, макропрогнозы и финстабильность (8)
-5. Банки: макро- и отраслевой research (11)
-6. Консультанты, брокеры и оценщики (16)
-7. Профильные и деловые СМИ (15)
-8. Международные профильные СМИ и EU/глобальный контекст (11)
-9. Отраслевые ассоциации и лобби (20)
-10. Институциональные инвесторы и биржевые компании (IR) (18)
-11. Индексы доходности, бенчмарки и проптех-данные (10)
-12. Жильё: цены, аренда, ипотека и спрос (11)
-13. Ритейл и e-commerce (6)
-14. Индустриал, логистика и supply chain (14)
-15. Энергосети, азот и ESG (11)
-16. Прогнозные институты, строительные затраты и наука (7)
-17. Нишевые сегменты (студенты, healthcare, дата-центры, отели) (4)
-18. Отраслевые события, выставки и нетворкинг (5)
-19. Муниципальная жилищная политика (крупные города) (4)
+1. Индексы доходности и бенчмарки (direct + listed + fund-level) (10)
+2. Базы транзакций, сделочные comps и потоки капитала (6)
+3. Долговые рынки, ставки и стоимость фондирования (13)
+4. Кредитные рейтинги и кредитный research эмитентов (5)
+5. Первичные раскрытия листингованных эмитентов (IR) (12)
+6. Консенсус аналитиков и sell-side estimates (3)
+7. Стандарты оценки и отчётности (valuation & reporting) (5)
+8. Опросы настроений и намерений (sentiment & intentions) (6)
+9. Прогнозные дома (независимые house views & forecasts) (7)
+10. ESG, климат и стандарты декарбонизации (13)
+11. Центробанки, финстабильность и макропрогнозы (10)
+12. Институциональный капитал: asset owners и управляющие (NL) (9)
+13. Наднациональная статистика цен и доступности (7)
+14. Официальная статистика, реестры и первоисточники NL (14)
+15. Госорганы, регуляторы и политика (NL) (12)
+16. Консультанты, брокеры и оценщики (market data) (12)
+17. Банковский макро- и отраслевой research (6)
+18. Ассоциации, прогнозные институты и наука (NL) (11)
+19. Суб-секторные дески (логистика, ритейл, data centres, living-ниши, отели, life sciences) (18)
+20. Энергосети, азот, физические барьеры стройки и СМИ (NL/EU) (12)
 
-## 1. Официальная статистика и реестры (первоисточники)
-_Национальная статистика, земельный кадастр, реестры адресов и оценок — фундамент любой аналитики рынка. Только здесь окончательные транзакционные данные._
+## 1. Индексы доходности и бенчмарки (direct + listed + fund-level)
+_Эталоны совокупной доходности прямой недвижимости, нелистингованных фондов и публичного сектора — каркас для оценки относительной эффективности портфеля, attribution и построения долгосрочных рядов по сегментам._
 
-- ★ **[CBS — Dashboard Woningmarkt](https://www.cbs.nl/nl-nl/visualisaties/dashboard-economie/woningmarkt)** — Сводный дашборд рынка жилья: индекс цен PBK, число сделок помесячно, средние цены по муниципалитетам. Точка входа к ключевым показателям. _(жильё, макро · ежемесячно · NL)_
-- ★ **[CBS StatLine — Bestaande koopwoningen; verkoopprijzen prijsindex (85773NED)](https://www.cbs.nl/nl-nl/cijfers/detail/85773NED)** — Первоисточник цен на жильё: индекс PBK (2020=100), число проданных домов, средняя цена, общая стоимость сделок; ряд с 1995 г. на основе нотариальных актов Kadaster. _(жильё · ежемесячно · NL)_
-- ★ **[Kadaster — Vastgoeddashboard](https://www.kadaster.nl/zakelijk/vastgoedinformatie/vastgoedcijfers/vastgoeddashboard)** — Первоисточник по сделкам: число проданных домов, средние цены, индекс PBK, ипотеки, возраст покупателей, цены на участки, принудительные торги. По стране и провинциям, экспорт Excel/PDF. _(жильё, макро · ежемесячно · NL)_
-- ★ **[Kadaster — Kwartaalbericht woningmarkt](https://www.kadaster.nl/zakelijk/vastgoedinformatie/kwartaalberichten/kwartaalberichten-woningmarkt)** — Квартальный отчёт по сделкам из земельного регистра: число проданных домов, динамика цен, доля инвесторов. _(жильё · ежеквартально · NL)_
-- ★ **[CBS StatLine — Bouwvergunningen nieuwbouwwoningen (83668NED / 83673NED)](https://www.cbs.nl/nl-nl/cijfers/detail/83668NED)** — Выданные разрешения на строительство жилья (число, индекс 2012=100), число построенных домов, стройзатраты, объём, площадь. Ключ к пайплайну предложения. _(жильё, макро · ежемесячно · NL)_
-- ★ **[CBS — Detailhandel (omzet/internetverkopen)](https://www.cbs.nl/nl-nl/faq/specifiek/welke-cijfers-publiceert-het-cbs-over-de-detailhandel-)** — Официальная помесячная статистика оборота и объёма продаж розницы (food/non-food), online vs offline, разбивка по SBI и регионам. _(ритейл, макро · ежемесячно · NL+EN)_
-- ● **[Kadaster — Vastgoedcijfers (хаб данных и квартальные обзоры)](https://www.kadaster.nl/zakelijk/vastgoedinformatie/vastgoedcijfers)** — Хаб: квартальные обзоры рынка жилья (стартеры/инвесторы), рынок сельхозземли, методические пояснения к различиям цифр Kadaster и CBS. _(жильё, макро · ежеквартально · NL)_
-- ● **[Kadaster — BAG Viewer (адреса и здания)](https://bagviewer.kadaster.nl/)** — Адресный реестр всех зданий NL: год постройки, площадь, назначение (gebruiksdoel), статус, координаты. Базовый слой идентификации объектов. Бесплатно. _(жильё, ритейл, индустриал · непрерывно · NL)_
-- ● **[CBS StatLine — gemiddelde verkoopprijzen, regio (83625NED)](https://opendata.cbs.nl/#/CBS/nl/dataset/83625NED/table)** — Средние цены продажи существующего жилья в региональном разрезе (провинции, муниципалитеты, типы жилья). _(жильё · ежеквартально · NL)_
-- ● **[Waarderingskamer — WOZ-waardeloket](https://www.waarderingskamer.nl/woz-wijzer/controleren-woz-waarde/woz-waardeloket)** — Публичный доступ к оценкам WOZ всех объектов (с 2014 г.), сравнение по местоположению; годовой рост оценок по муниципалитетам. Прокси стоимости. _(жильё, ритейл, индустриал · ежегодно · NL+EN)_
-- ● **[KNB — Koninklijke Notariële Beroepsorganisatie (Factsheets akteaantallen)](https://www.knb.nl/overzicht-factsheets-vanaf-2014)** — Месячные/квартальные factsheets по числу нотариальных актов (сделки с недвижимостью, ипотеки) — независимый счётчик активности рынка. _(жильё, ритейл · ежемесячно · NL)_
-- ○ **[CBS StatLine — Nieuwbouwwoningen; inputprijsindex bouwkosten (83887NED)](https://www.cbs.nl/nl-nl/cijfers/detail/83887NED)** — Официальный индекс входных цен на строительство новостроек (материалы+труд) — первоисточник динамики себестоимости. _(жильё · ежеквартально · NL)_
-- ○ **[PDOK — Publieke Dienstverlening Op de Kaart](https://www.pdok.nl/datasets)** — Центральная гео-платформа правительства: BAG, кадастровые участки, аэрофото, 200+ датасетов через API. Основа гео-аналитики. _(все сегменты · непрерывно · NL)_
+- ★ **[MSCI Netherlands Annual / Quarterly Property Index (ex-ROZ/IPD)](https://www.msci.com/www/ipd-factsheets/ipd-netherlands-annual-property/0164834206)** `[платн. · NL · ежеквартально + ежегодно]`
+  - что даёт: Главный национальный appraisal-based бенчмарк совокупной доходности прямых вложений в недвижимость NL (с 1995, ex-ROZ/IPD): total return = income + capital growth, разбивка по секторам и регионам.
+  - аналитику: Эталон relative performance фонда против рынка NL (alpha vs benchmark), attribution income vs capital и сектор vs выбор объектов, долгосрочные ряды для IC-меморандумов.
+  - метрики: total return, income return, capital growth, appraisal-based valuations, sector/regional breakdown  ·  сегменты: все сегменты
+- ★ **[MSCI Real Estate (Global hub, Netherlands Property Index)](https://www.msci.com/real-estate)** `[платн. · global · ежеквартально]`
+  - что даёт: Глобальный хаб бенчмарков прямой недвижимости >30 стран, вкл. MSCI Netherlands Index с секторной разбивкой; методология измерения доходности.
+  - аналитику: Кросс-страновое сравнение доходности и спредов cap rate, доступ к методологии для калибровки расчёта total return по NL-портфелю.
+  - метрики: total return, income return, capital growth, cross-country indices  ·  сегменты: все сегменты
+- ★ **[INREV — Indices (Fund Index, ODCE, IRR, Living)](https://www.inrev.org/market-information/indices)** `[платн. · EU · ежеквартально + ежегодно]`
+  - что даёт: Индексы доходности европейских непубличных фондов на уровне фонда: INREV Fund Index, European ODCE, IRR Index, Living Fund Index. NAV performance, gross/net. HQ в Амстердаме.
+  - аналитику: Бенчмарк для инвестора в фонды: сравнение с peer-группой по стилю (core/value-add/opportunistic), оценка управляющих, ODCE как proxy ликвидного core-сегмента.
+  - метрики: fund-level total return (gross/net), NAV performance, since-inception IRR, peer group comparison, investment styles  ·  сегменты: все сегменты
+- ★ **[Green Street — Pan-European CPPI](https://eu.greenstreet.com/resources/pricing-index/)** `[freemium · EU · ежемесячно/ежеквартально]`
+  - что даёт: Value-weighted индекс текущих цен CRE по 30 ликвидным рынкам Европы, отражает цены сделок сегодня на основе оценок REIT, опережая appraisal-индексы на месяцы. Бесплатные месячные апдейты.
+  - аналитику: Самый своевременный сигнал разворота цикла цен CRE: раннее чтение mark-to-market до выхода MSCI, тайминг входа/выхода, проверка отставания официальных оценок.
+  - метрики: commercial property price index, sector-level pricing, implied cap rates, near-real-time price change  ·  сегменты: все сегменты
+- ★ **[EPRA — Indexes hub (FTSE EPRA Nareit) + Index Data](https://www.epra.com/indexes)** `[freemium · EU · ежемесячно + ежеквартально]`
+  - что даёт: Хаб FTSE EPRA Nareit Index Series (Global/Europe/Eurozone/Netherlands), доходности, дивидендная доходность; метрики EPRA NTA/NRV/NDV, премия/дисконт к NAV.
+  - аналитику: Бенчмарк total return листингованного сектора и динамики NL/Eurozone REIT; premium/discount к NTA как leading indicator для приватных оценок; REIT vs direct.
+  - метрики: listed RE total return index, EPRA NTA/NRV/NDV, premium/discount to NAV, sector/country sub-indices, dividend yield  ·  сегменты: все сегменты
+- ★ **[EPRA — Monthly Reports (NAV Bulletin / LTV Monitor)](https://www.epra.com/indexes/monthly-reports)** `[freemium · EU · ежемесячно]`
+  - что даёт: Ежемесячный пакет: NAV Bulletin (premium/discount по компаниям), LTV Monitor (леверидж и maturity wall по эмитентам Европы), Market Review, Statistical Bulletin.
+  - аналитику: Сводный экран листингованного сектора Европы: где NL-REIT торгуются к NAV, профиль долга и риск рефинансирования, относительная доходность по сегментам.
+  - метрики: premium/discount to NAV, LTV by company, debt maturity profile, index returns  ·  сегменты: все сегменты
+- ● **[GREFI — Global Real Estate Fund Index](https://www.inrev.org/data/global-refi)** `[платн. · global · ежеквартально]`
+  - что даёт: Единственный глобальный индекс доходности non-listed фондов (INREV/ANREV/NCREIF): total return на уровне фонда, core vs non-core, Global ODCE.
+  - аналитику: Глобальный peer-бенчмарк для мультирегионального портфеля: вклад европейской аллокации, core vs non-core спред как индикатор риск-аппетита.
+  - метрики: global fund-level total return, core vs non-core return, Global ODCE, regional contribution  ·  сегменты: все сегменты
+- ● **[FTSE Russell — FTSE EPRA Nareit Developed Europe (factsheet)](https://research.ftserussell.com/Analytics/Factsheets/Home/DownloadSingleIssue?issueName=EPRA&IsManual=false)** `[откр. · EU · ежемесячно]`
+  - что даёт: Официальный фактшит индекс-провайдера (LSEG/FTSE Russell): состав, страновые/секторные веса, доходности, волатильность, дивидендная доходность, топ-константы.
+  - аналитику: Первоисточник состава и доходности листингованного европейского RE-бенчмарка: проверка весов для атрибуции, отслеживание ребалансировок, расчёт бета NL-REIT.
+  - метрики: price/total return, dividend yield, country & sector weights, index constituents, volatility  ·  сегменты: все сегменты
+- ● **[Calcasa — WOX Kwartaalbericht (WOX-индекс)](https://www.calcasa.nl/wox-kwartaalbericht)** `[freemium · NL · ежеквартально]`
+  - что даёт: WOX-индекс стоимости жилья на основе транзакций (база 1995=100), средняя стоимость по стране/провинциям/районам, WOX Monitor. Член European AVM Alliance.
+  - аналитику: Независимый AVM-бенчмарк стоимости жилья рядом с CBS/Kadaster для квартального трекинга и валидации; используется в securitisation-отчётности.
+  - метрики: WOX house value index, regional average value, quarterly/annual change  ·  сегменты: жильё
+- ○ **[NCREIF — Indices (NPI/ODCE) & Global Index](https://user.ncreif.org/data-products/global-index/)** `[freemium · global · ежеквартально]`
+  - что даёт: Эталонные американские бенчмарки прямой недвижимости: NPI, ODCE, Global Index. Total return на уровне объекта/фонда, методологический стандарт.
+  - аналитику: Глобальный референс и стандарт методологии для США при сравнении доходности и спредов cap rate; калибровка расчёта total return по NL.
+  - метрики: US property total return (NPI), ODCE fund return, income vs appreciation, global index  ·  сегменты: все сегменты
 
-## 2. Госорганы, министерства и законодательство
-_Профильные министерства, парламент, официальные вестники и налоговый орган — первоисточники политики, законов и фискальных правил._
+## 2. Базы транзакций, сделочные comps и потоки капитала
+_Deal-level данные по фактическим ценам сделок, capital flows и ликвидности — основа калибровки yields, transaction comps и отслеживания, кто покупает/продаёт._
 
-- ★ **[Rijksoverheid — Ministerie van Volkshuisvesting en Ruimtelijke Ordening (VRO), nieuws](https://www.rijksoverheid.nl/ministeries/ministerie-van-volkshuisvesting-en-ruimtelijke-ordening/nieuws)** — Официальные новости, пресс-релизы и решения профильного министерства по жилью и пространственному планированию. _(жильё, макро · непрерывно · NL)_
-- ★ **[Rijksoverheid — тема Volkshuisvesting](https://www.rijksoverheid.nl/onderwerpen/volkshuisvesting)** — Сводная госполитика по жилью: цели 900 000 домов, 100 000 в год, законы о доступной аренде, ключевые документы. _(жильё, макро · непрерывно · NL)_
-- ★ **[Volkshuisvesting Nederland (программа BZK/VRO)](https://www.volkshuisvestingnederland.nl/)** — Программа Woningbouw, дашборды и мониторинг стройки, Staat van de Volkshuisvesting, Wet betaalbare huur, Wet versterking regie volkshuisvesting. _(жильё, макро · ежемесячно · NL)_
-- ★ **[Tweede Kamer der Staten-Generaal (нижняя палата)](https://www.tweedekamer.nl/)** — Законопроекты, поправки, мотивы, дебаты и повестка по жилью, аренде, налогам, пространственной политике; Kamerstukken. _(все сегменты · непрерывно · NL)_
-- ★ **[Belastingdienst — Overdrachtsbelasting](https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/woning/overdrachtsbelasting/overdrachtsbelasting)** — Официальные ставки и правила налога на передачу недвижимости (2% / 8% / 10,4%), льготы, база начисления. _(жильё, ритейл, индустриал · ежегодно · NL)_
-- ★ **[Officiële bekendmakingen (Overheid.nl) — официальный вестник](https://www.officielebekendmakingen.nl/)** — Аутентичные публикации Staatsblad, Staatscourant, Tractatenblad, Kamerstukken, муниципальные/провинциальные bekendmakingen (bestemmingsplannen, omgevingsvergunningen). _(все сегменты · непрерывно · NL)_
-- ● **[Eerste Kamer der Staten-Generaal (верхняя палата/Сенат)](https://www.eerstekamer.nl/)** — Статус и голосования по законам, досье по законопроектам (жильё, налоги, Omgevingswet), даты вступления в силу. _(все сегменты · непрерывно · NL)_
-- ● **[Belastingdienst — Box 3 (overige onroerende zaken)](https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/vermogen_en_aanmerkelijk_belang/vermogen/wat_zijn_uw_bezittingen_en_schulden/uw_bezittingen/overige_onroerende_zaken/overige_onroerende_zaken)** — Налогообложение недвижимости в Box 3 (WOZ-стоимость, новая система фактического дохода) — влияет на доходность арендного жилья. _(жильё, ритейл, макро · ежегодно · NL)_
-- ● **[Rijksoverheid — тема Omgevingswet](https://www.rijksoverheid.nl/onderwerpen/omgevingswet)** — Госверсия закона об окружающей среде (в силе с 01.01.2024): обзор, Omgevingsloket, документы. _(все сегменты · нерегулярно · NL)_
+- ★ **[MSCI Real Capital Analytics (RCA) — Transactions Database](https://www.msci.com/data-and-analytics/real-estate/real-capital-analytics)** `[платн. · global · непрерывно]`
+  - что даёт: Сделочная база >$20 трлн транзакций CRE, привязанных к 200 000+ инвесторов/кредиторов; deal-level comps, идентификация покупателей/продавцов, capital flows по NL/городам.
+  - аналитику: Источник transaction comps и фактических цен для калибровки yields, отслеживания cross-border потоков и бенчмаркинга собственных приобретений.
+  - метрики: transaction comps, deal volumes, pricing trends, capital flows, buyer/seller identity  ·  сегменты: все сегменты
+- ★ **[MSCI — Europe RCA Capital Trends Report](https://www.msci.com/data-and-analytics/real-estate/europe-rca-capital-trends-report)** `[freemium · EU · ежеквартально]`
+  - что даёт: Отчёт по инвестактивности в европейской CRE: объёмы сделок, RCA CPPI, ликвидность, поведение инвесторов, разбивка по секторам и странам (вкл. NL).
+  - аналитику: Квартальное чтение рынка капитала: куда движутся объёмы и цены, кто покупает, где разворот цикла — вход для allocation-решений.
+  - метрики: investment volume, RCA CPPI, liquidity, cross-border flows, sector splits  ·  сегменты: ритейл, индустриал, жильё, макро
+- ● **[CoStar — Market Analytics (Europe)](https://www.costar.com/products/market-analytics)** `[терминал · EU · непрерывно]`
+  - что даёт: Крупнейшая база CRE: инвентарь зданий, lease/sale comps, вакантность, asking/effective rents, supply pipeline, cap rates и прогнозы.
+  - аналитику: Bottom-up подбор comps для оценки актива, мониторинг вакантности и аренд на субрынках, проверка supply pipeline при андеррайтинге.
+  - метрики: lease & sale comps, asking/effective rents, vacancy, cap rates, supply pipeline  ·  сегменты: все сегменты
+- ● **[Vastgoeddata Nederland — CRE database](https://www.vastgoeddata.nl/)** `[платн. · NL · непрерывно]`
+  - что даёт: Наиболее полная NL-база CRE (>400 000 объектов, 19+ категорий): офисы, ритейл, логистика, hospitality, healthcare; сделки купли/аренды, алерты.
+  - аналитику: Локальный bottom-up слой по объектам и сделкам NL для подбора comps и мониторинга активности рынка купли/аренды.
+  - метрики: object inventory, sale/lease transactions, ownership data, alerts  ·  сегменты: ритейл, индустриал
+- ● **[Preqin — Real Estate (private capital, dry powder)](https://www.preqin.com/data/asset-class/real-estate)** `[платн. · global · непрерывно]`
+  - что даёт: Глобальная база частных RE-фондов: фандрейзинг, dry powder (Европа ~$80+ млрд), доходность (IRR/multiple), профили управляющих/инвесторов, deal-flow.
+  - аналитику: Оценка недеплоированного капитала и аппетита к Европе/NL, бенчмаркинг доходности фондов (IRR/TVPI), конкурентная среда по управляющим.
+  - метрики: fundraising volume, dry powder, fund IRR/multiple, manager profiles, investor commitments  ·  сегменты: все сегменты
+- ○ **[ECB Data Portal — Commercial Property Prices (RESC/CPP)](https://data.ecb.europa.eu/data/data-categories/prices-macroeconomic-and-sectoral-statistics/other-prices-and-costs/property-prices/commercial-property-prices)** `[откр. · EU · ежеквартально]`
+  - что даёт: Машиночитаемые ряды цен CRE еврозоны (на основе MSCI), transaction value и индексы; выпуск ~65 дней после квартала.
+  - аналитику: Сопоставимый кросс-страновой бенчмарк ценовой динамики CRE еврозоны (вкл. NL) для макропруденциального контекста и валидации брокерских данных через API.
+  - метрики: CRE price index, transaction value, euro-area comparison  ·  сегменты: ритейл, индустриал, макро
 
-## 3. Суды, регуляторы и надзорные органы
-_Высший адм. суд, регулятор Omgevingswet, надзор за оценкой и арендой, регулятор энергорынка — рамка пермитов, споров и тарифов._
+## 3. Долговые рынки, ставки и стоимость фондирования
+_Бенчмарки стоимости долга для CRE/жилья: all-in ставки и маржи, безрисковые кривые (DSL/swaps/Euribor), корпоративные RE-спреды и refinancing wall — основа расчёта debt service, yield spreads и доступности капитала._
 
-- ★ **[IPLO — Informatiepunt Leefomgeving: Omgevingswet](https://iplo.nl/regelgeving/omgevingswet/)** — Официальное толкование Omgevingswet и DSO/Omgevingsloket: omgevingsvisie, пермиты, планы, переходное право — основа девелопмента. Заменил aandeslagmetdeomgevingswet.nl с 01.07.2025. _(все сегменты · непрерывно · NL)_
-- ★ **[ACM — Autoriteit Consument & Markt (регулятор энергорынка)](https://www.acm.nl/nl/energie/toezicht-op-de-energiemarkt)** — Надзор за сетями и поставщиками: methodebesluit, тарифные решения (nettarieven 2026), время-зависимые тарифы, правила приоритизации мощности. Первоисточник по стоимости подключения. _(все сегменты · непрерывно · NL+EN)_
-- ● **[Raad van State (Госсовет: совет по законодательству и высший адм. суд)](https://www.raadvanstate.nl/)** — Заключения по законопроектам и решения Afdeling bestuursrechtspraak по спорам в области планирования, пермитов, природоохраны (азот/PFAS), стройки. _(все сегменты · непрерывно · NL)_
-- ● **[Huurcommissie (Rental Tribunal)](https://www.huurcommissie.nl/)** — Орган разрешения споров по аренде: пунктовая система WWS, регулирование арендной платы, сервисные расходы. Прямое влияние на регулируемый и mid-rent сегмент. _(жильё · нерегулярно · NL)_
-- ● **[Autoriteit woningcorporaties (Aw) — ILT](https://www.ilent.nl/onderwerpen/autoriteit-woningcorporaties)** — Финансовый и нормативный надзор за жилищными корпорациями: отчёты о состоянии сектора, риски, соблюдение Woningwet. _(жильё · ежеквартально · NL)_
+- ★ **[Bayes Business School — CRE Lending Report (European edition)](https://www.bayes.citystgeorges.ac.uk/faculties-and-research/centres/real-estate/bayes-cre-lending-report)** `[откр. · EU · раз в полгода]`
+  - что даёт: Канонический независимый survey CRE-кредитования Европы (д-р N. Lux): all-in ставки prime vs secondary, маржи (bps), LTV/LTC, объёмы выдач, погашения 2025-2027 по странам.
+  - аналитику: Эталонный бенчмарк фактической стоимости заёмного капитала и условий по прайму/вторичке; оценка системного refinancing risk и debt funding gap.
+  - метрики: all-in loan rates, lending margins (bps), LTV/LTC, origination volumes, debt maturity wall  ·  сегменты: ритейл, индустриал, жильё, макро
+- ★ **[DSTA — Yields on DSLs (доходности гособлигаций NL)](https://english.dsta.nl/latest/statistical-information/yields-on-dsls)** `[откр. · NL · ежемесячно]`
+  - что даёт: Официальная статистика доходностей Dutch State Loans (3-30 лет): исторические ряды с ежемесячным обновлением, отсылка к MTS European Bond Spreads.
+  - аналитику: 10Y DSL — национальная risk-free ставка дисконтирования и якорь prime property yields; спред prime yield к 10Y DSL и DSL к Bund — индикаторы привлекательности и суверенной премии.
+  - метрики: DSL yields 3-30y, 10Y benchmark yield, yield curve NL, auction results  ·  сегменты: макро
+- ★ **[ECB — Euro Area Bank Lending Survey (BLS)](https://www.ecb.europa.eu/stats/ecb_surveys/bank_lending_survey/html/index.en.html)** `[откр. · EU · ежеквартально]`
+  - что даёт: Ежеквартальный опрос ~150 банков о кредитных стандартах, условиях и спросе, с разбивкой по CRE и RRE. Публикуется янв/апр/июл/окт.
+  - аналитику: Опережающий индикатор доступности и стоимости долга: ужесточение/смягчение стандартов предсказывает повороты в инвестобъёмах и переоценке раньше транзакционных данных.
+  - метрики: credit standards (net %), loan demand, lending terms, CRE/RRE supply-demand, margins  ·  сегменты: ритейл, жильё, макро
+- ★ **[EMMI — Euribor & €STR-based term rate (Efterm)](https://www.emmi-benchmarks.eu/benchmarks/euribor/rate/)** `[freemium · EU · ежедневно]`
+  - что даёт: Единственный официальный администратор Euribor (1w-12m) по EU Benchmarks Regulation и Efterm (форвардный €STR-based term rate). Бесплатно с задержкой 24 ч.
+  - аналитику: Первоисточник базовых плавающих ставок для CRE-кредитов и части ипотек: 3M Euribor определяет стоимость плавающего фондирования; €STR/Efterm — база для свопов.
+  - метрики: Euribor 1w/1m/3m/6m/12m, €STR-based Efterm tenors, money-market reference rates  ·  сегменты: макро, ритейл, жильё
+- ★ **[ICE Swap Rate (ICE Benchmark Administration)](https://www.ice.com/iba/ice-swap-rate)** `[freemium · global · непрерывно]`
+  - что даёт: Официальный администрируемый бенчмарк EUR swap-ставок (по EURIBOR и €STR), тенор 1-30 лет — фиксированная нога процентных свопов (ex-ISDAFIX).
+  - аналитику: Базовая стоимость хеджированного фондирования для расчёта спреда property yield над свопом и оценки структуры с фикс-ставкой.
+  - метрики: EUR swap rates, fixed-leg rates, term structure 1-30y  ·  сегменты: все сегменты
+- ● **[CBRE — European Debt Map](https://www.cbre.co.uk/services/investors-and-developers/capital-advisors/european-debt-map)** `[откр. · EU · ежеквартально]`
+  - что даёт: Интерактивная карта условий CRE-кредитования по 20 странам Европы (вкл. NL): индикативные маржи, LTV, all-in ставки по типам активов и качеству.
+  - аналитику: Быстрый страновой/секторный бенчмарк debt pricing и leverage для расчёта стоимости капитала и структуры сделки в NL против соседних рынков.
+  - метрики: lending margins, LTV, all-in financing cost, country comparison  ·  сегменты: ритейл, индустриал, жильё, макро
+- ● **[MSCI — Real Estate Debt Intelligence](https://www.msci.com/data-and-analytics/real-estate/debt-intelligence)** `[платн. · global · непрерывно]`
+  - что даёт: Данные по >400 000 CRE-кредитов на основе RCA: условия финансирования, кредиторы, LTV, maturities, debt pricing.
+  - аналитику: Анализ долгового ценообразования, refinancing risk (wall of maturities), активных кредиторов; оценка стоимости и доступности заёмного капитала.
+  - метрики: loan terms, LTV, debt pricing, lender league tables, maturity profile  ·  сегменты: все сегменты
+- ● **[iBoxx EUR Benchmark Indices (S&P Global / IHS Markit)](https://www.spglobal.com/spdji/en/index-family/fixed-income/iboxx/iboxx-eur/)** `[freemium · EU · ежедневно]`
+  - что даёт: Семейство market-value-weighted индексов евро-облигаций IG, вкл. Real Estate подиндекс; бенчмарк-кривые, спреды, total return.
+  - аналитику: Бенчмарк стоимости корпоративного долга недвижимости: спреды iBoxx EUR Corporates Real Estate показывают, насколько дорого REIT рефинансироваться на бондовом рынке.
+  - метрики: IG corporate bond spreads, Real Estate sub-index, total return, yield-to-maturity  ·  сегменты: ритейл, макро
+- ● **[CBRE — European Lender Intentions Survey](https://www.cbre.com/insights/reports/european-lender-intentions-survey-2025)** `[откр. · EU · ежегодно]`
+  - что даёт: Годовой опрос намерений кредиторов CRE Европы: ожидания по объёмам, предпочтительные секторы, изменение условий (маржи, LTV), роль устойчивости.
+  - аналитику: Forward-looking сигнал доступности и условий долга, дополняющий фактические данные Bayes/Debt Map; оценка ликвидности финансирования.
+  - метрики: lender sentiment, expected lending volume, preferred sectors, margin/LTV trends, ESG underwriting  ·  сегменты: ритейл, индустриал, жильё, макро
+- ● **[Chatham Financial — Europe Market Rates](https://www.chathamfinancial.com/technology/european-market-rates)** `[откр. · EU · непрерывно]`
+  - что даёт: Бесплатный дашборд индикативных ставок: EURIBOR/€STR, EUR swap rates (почасово), forward curves со скачиванием.
+  - аналитику: Оперативный мониторинг стоимости долга и форвардных кривых для DCF/underwriting и оценки переменной vs фиксированной стоимости фондирования.
+  - метрики: EURIBOR, ESTR, EUR swap rates, forward curves  ·  сегменты: все сегменты
+- ● **[DNB — Interest rates dashboard](https://www.dnb.nl/en/statistics/dashboards/interest-rates/)** `[откр. · NL · ежемесячно]`
+  - что даёт: Дашборд ставок NL: по кредитам нефинансовым компаниям и домохозяйствам (вкл. ипотеку), депозитные и денежного рынка.
+  - аналитику: Национальный уровень стоимости долга: фактические ставки по бизнес-кредитам и ипотеке NL для оценки доступности финансирования и леверидж-чувствительности.
+  - метрики: bank lending rates, mortgage rates, deposit rates, money-market rates  ·  сегменты: макро, жильё, ритейл
+- ● **[DSTA — Dutch State Treasury Agency (issuance, Green DSLs)](https://english.dsta.nl/)** `[откр. · NL · непрерывно]`
+  - что даёт: Календарь выпусков, политика фондирования, объём госдолга, результаты аукционов; раздел Green DSLs с framework и allocation/impact reporting.
+  - аналитику: Мониторинг предложения суверенного долга и Green DSL как бенчмарка зелёного ценообразования (greenium) для REIT/девелоперских green bonds.
+  - метрики: issuance calendar, auction results, outstanding debt, Green DSL outstanding  ·  сегменты: макро
+- ○ **[ECB Data Portal — Bank Lending Survey dataset (SDMX/API)](https://data.ecb.europa.eu/methodology/bank-lending-survey-bls)** `[откр. · EU · ежеквартально/непрерывно]`
+  - что даёт: Машиночитаемые ряды BLS, вкл. серии кредитных стандартов для CRE и жилья; экспорт CSV/SDMX через API.
+  - аналитику: Автоматический pull рядов кредитных стандартов CRE/RRE и денежных агрегатов для регулярного пересчёта индикаторов без ручного снятия с PDF.
+  - метрики: BLS series keys, CRE credit standards net %, MFI lending rates, credit aggregates  ·  сегменты: ритейл, жильё, макро
 
-## 4. Центробанки, макропрогнозы и финстабильность
-_DNB, CPB, ECB — денежно-кредитная политика, ипотечный рынок, системные риски и макропрогнозы, определяющие стоимость фондирования и доходность недвижимости._
+## 4. Кредитные рейтинги и кредитный research эмитентов
+_Рейтинговые действия, методологии и секторальные outlooks по REIT/property-компаниям и CMBS — независимая оценка кредитного качества, leverage, ICR и refinancing risk._
 
-- ★ **[DNB — Dashboard Woninghypotheken (ипотечный рынок и ставки)](https://www.dnb.nl/statistieken/dashboards/woninghypotheken/)** — Статистика ипотечного рынка: объём и распределение (~890 млрд евро долга), ставки банков, LTV/выдачи. Ключ к финансированию спроса на жильё. _(жильё, макро · ежеквартально · NL+EN)_
-- ★ **[DNB — Housing market (current economic issues)](https://www.dnb.nl/en/current-economic-issues/housing-market/)** — Регуляторный/макропруденциальный взгляд: ипотечный долг домохозяйств, стандарты кредитования (LTV/LTI), риски финстабильности, мониторинг с AFM. _(жильё, макро · ежеквартально · EN+NL)_
-- ★ **[CPB — Forecasts (CEP/MEV)](https://www.cpb.nl/en/forecasts)** — Официальные макропрогнозы: CEP (весна), MEV/cMEV (осень) — ВВП, инфляция, покупательная способность, доходы, ставки. База для расчёта максимальной ипотеки. _(макро, жильё · ежеквартально · EN+NL)_
-- ★ **[ECB — Press / Monetary Policy Decisions](https://www.ecb.europa.eu/press/pr/date/html/index.en.html)** — Решения по ключевым ставкам, пресс-конференции, проекции Eurosystem — первоисточник по стоимости фондирования, влияющей на ипотеку и доходности. _(макро · нерегулярно · EN)_
-- ● **[DNB — Financial Stability Report (FSR)](https://www.dnb.nl/en/publications/publications-dnb/fsr/)** — Полугодовой FSR: системные риски рынка жилья и CRE, ипотечный леверидж, переоценка CRE, чувствительность к ставкам. _(жильё, ритейл, макро · ежеквартально · EN+NL)_
-- ● **[ECB Economic Bulletin](https://www.ecb.europa.eu/press/economic-bulletin/html/index.en.html)** — Аналитический бюллетень (8 раз/год): инфляция, рост, финансовые условия, кредитование — макроконтекст для еврозоны и NL. _(макро · нерегулярно · EN)_
-- ● **[ECB Data Portal](https://data.ecb.europa.eu/)** — Машиночитаемые ряды: ключевые ставки, Euribor, доходности гособлигаций, кредитные агрегаты — для регулярного пересчёта индикаторов. _(макро · непрерывно · EN)_
-- ○ **[CPB — Housing Market Accessibility / housing publications](https://www.cpb.nl/en/search?qry=housing+market)** — Тематические исследования: доступность покупки для среднего дохода, эластичность предложения, налоговые льготы собственникам. _(жильё, макро · нерегулярно · EN+NL)_
+- ★ **[S&P Global Ratings — Corporates: Real Estate](https://www.spglobal.com/ratings/en/sector/corporates/real-estate)** `[freemium · global · ежегодно + непрерывно]`
+  - что даёт: Секторальная страница: рейтинги эмитентов/REIT, Industry Credit Outlook, тематические статьи, тренды по подсекторам.
+  - аналитику: Консенсус крупнейшего агентства по кредитоспособности REIT, секторальный outlook и переоценка активов; бенчмарк рейтингов и спредов.
+  - метрики: credit rating, industry credit outlook, debt/EBITDA, EBITDA interest coverage, credit spreads  ·  сегменты: ритейл, индустриал, жильё
+- ★ **[Moody's Ratings — Real Estate / REIT-REOC](https://www.moodys.com/researchandratings/market-segment/corporates/real-estate/005000013)** `[freemium · global · непрерывно]`
+  - что даёт: Хаб рейтингов и отчётов по сектору и REIT/REOC: рейтинговые действия, секторальные outlook, методология.
+  - аналитику: Отслеживание рейтингов и watch/outlook по конкретным эмитентам (вкл. NL/европейские), сравнение профилей, драйверы рейтинга.
+  - метрики: credit rating, rating outlook/watch, Net Debt/EBITDA, secured debt ratio, liquidity  ·  сегменты: ритейл, индустриал, жильё
+- ★ **[Fitch Ratings — Real Estate / Homebuilding](https://www.fitchratings.com/real-estate-homebuilding)** `[freemium · EU · ежегодно + непрерывно]`
+  - что даёт: Хаб Fitch: рейтинги эмитентов, ежегодный European Real Estate Outlook, кредитные комментарии по EMEA REIT.
+  - аналитику: Третье независимое мнение по кредитному качеству EMEA-недвижимости, годовой outlook и оценка операционных фундаменталов.
+  - метрики: credit rating, sector outlook, Net Debt/EBITDA, occupancy/rental income, bond market access  ·  сегменты: ритейл, индустриал, жильё
+- ● **[Scope Ratings — Corporates & Real Estate](https://www.scoperatings.com/ratings-and-research/corporates/research)** `[freemium · EU · непрерывно]`
+  - что даёт: Рейтинги и research крупнейшего европейского CRA (мандат ЕС/EIB/ESM): рейтинги RE corporates/REIT, European RE Rating Methodology, аналитика CMBS, рейтинги открытых фондов.
+  - аналитику: Первичные кредитные оценки и методология для долгового профиля REIT (leverage, ICR, LTV); независимый европейский взгляд рядом с Moody's/S&P/Fitch.
+  - метрики: issuer credit ratings, rating methodology, CMBS refinancing risk, fund ratings  ·  сегменты: ритейл, жильё, индустриал, макро
+- ● **[Moody's — Commercial Real Estate Outlook & Insights](https://www.moodys.com/web/en/us/insights/commercial-properties.html)** `[откр. · global · ежегодно + ежеквартально]`
+  - что даёт: Ежегодный CRE/CMBS outlook и insights: динамика залоговой стоимости, delinquency rates (офисы), способность к рефинансированию, влияние ставок.
+  - аналитику: Системный взгляд на качество CRE-кредитов и секьюритизаций, уровни просрочки и refinancing risk по типам активов — ранний сигнал стресса.
+  - метрики: CRE delinquency rate, CMBS performance, collateral value change, refinancing risk  ·  сегменты: ритейл, индустриал
 
-## 5. Банки: макро- и отраслевой research
-_Аналитика крупных нидерландских банков — квартальные прогнозы по жилью, коммерции и логистике, главный интерпретационный слой поверх официальной статистики._
+## 5. Первичные раскрытия листингованных эмитентов (IR)
+_IR-сайты NL-релевантных REIT и property-компаний — первоисточник EPRA-метрик, guidance, like-for-like rent, valuation gains и cost of debt для моделей и сверки с консенсусом._
 
-- ★ **[ABN AMRO — Housing Market Monitor](https://www.abnamro.com/research/en/our-research/housing-market-monitor-will-2026-be-an-unexceptional-year)** — Серия Housing Market Monitor: прогноз цен, объём сделок, ипотечные ставки, предложение, новостройки, продажи бывшего арендного фонда. _(жильё, макро · ежеквартально · EN)_
-- ★ **[RaboResearch — Dutch housing market (Housing Market Quarterly)](https://www.rabobank.com/knowledge/dutch-housing-market)** — Ежеквартальный прогноз цен на жильё, объёмы сделок, аренда, новостройки, доступность, устойчивость. Один из главных первоисточников по жилью. _(жильё, макро · ежеквартально · EN+NL)_
-- ★ **[ING Research / THINK — Real Estate sector](https://think.ing.com/sector/real-estate/)** — Статьи по жилью, коммерции и логистике NL и Европы: прогнозы цен и сделок, офисы/ритейл/логистика, строительство, демография, ставки. _(жильё, ритейл, индустриал, макро · непрерывно · EN)_
-- ● **[ABN AMRO Group Economics — Research](https://www.abnamro.com/research/en/home)** — Housing Market Monitor, отраслевые обзоры по CRE и логистике, макропрогнозы по экономике Нидерландов. _(жильё, ритейл, индустриал, макро · ежеквартально · EN+NL)_
-- ● **[RaboResearch — общий research-портал](https://www.rabobank.com/knowledge)** — Макропрогнозы по NL и Европе, отраслевые исследования (строительство, недвижимость), экономические бюллетени. _(жильё, ритейл, макро · непрерывно · EN+NL)_
-- ● **[ING THINK — Dutch commercial real estate outlook](https://think.ing.com/articles/dutch-commercial-real-estate-outlook-growth-ahead-but-with-limits/)** — Годовой/полугодовой outlook по CRE: офисы, ритейл, логистика, стоимость финансирования, своп-ставки, инвестобъёмы, ESG. _(ритейл, индустриал · ежегодно · EN)_
-- ● **[ABN AMRO — Commercial Real Estate (Corporate Banking)](https://www.abnamro.nl/en/commercialbanking/corporate-banking/sectors/commercial-real-estate.html)** — Секторальный взгляд на CRE и логистику: переоценка активов, ставки, инвестобъёмы, спрос на prime-офисы и логистику класса A, ESG. _(ритейл, индустриал · нерегулярно · EN+NL)_
-- ● **[RaboResearch — Detail- en groothandel](https://www.rabobank.nl/kennis/detail-en-groothandel)** — Sectorprognoses по рознице/опту: прогноз добавленной стоимости и оборота, тренды по подсекторам (мода, DIY, дрогери), макроконтекст потребления. _(ритейл, макро · ежеквартально · NL+EN)_
-- ● **[Van Lanschot Kempen — European / Listed Real Estate research](https://www.vanlanschotkempen.com/en-nl/investment-banking/equities/european-real-estate)** — Bottom-up equity research по 65+ листингованным компаниям недвижимости Европы (вкл. NL REIT, CTP, логистику): обзоры, daily newsletter, оценки, ESG. _(ритейл, индустриал, жильё · непрерывно · EN)_
-- ○ **[NIBC Bank — Commercial Real Estate](https://nibc.nl/en/business/commercial-real-estate)** — Взгляд кредитора по сегментам: офисы, ритейл, логистика, light industrial, Living (BTR, студенты, co-living), отели; тренды LTV, маржи. _(ритейл, индустриал, жильё · нерегулярно · EN)_
-- ○ **[BNG Bank — публичный сектор / жильё / муниципалитеты](https://www.bngbank.nl/en)** — Контекст финансирования жилищных корпораций, муниципалитетов, социальной/доступной аренды; ESG- и климатическая отчётность. _(жильё, макро · ежегодно · EN+NL)_
+- ★ **[NSI N.V. — Newsroom / Investor Relations](https://nsi.nl/ir/)** `[откр. · NL · ежеквартально]`
+  - что даёт: IR единственного листингованного офисного REIT с фокусом на NL (~45 зданий, акцент Амстердам): trading updates, отчёты, девелопмент.
+  - аналитику: Чистый NL-офисный первоисточник: EPRA EPS/NTA, occupancy, like-for-like rent, redevelopment pipeline, LTV — ядро модели по офисам NL.
+  - метрики: EPRA EPS, EPRA NTA, occupancy (EPRA), LfL rental growth, LTV, net initial yield  ·  сегменты: ритейл
+- ★ **[Wereldhave — Financial Reports](https://www.wereldhave.com/investor-relations/financial-reports)** `[откр. · NL · ежеквартально]`
+  - что даёт: Отчёты Wereldhave (Full Service Centers, NL/BE/FR): годовые/полугодовые отчёты, пресс-релизы с EPRA NTA, direct result, GRI.
+  - аналитику: Первоисточник по NL-ритейлу/смешанным центрам: EPRA NTA, DRPS, GRI, cost ratio, like-for-like; сверка с консенсусом и трекинг переоценки.
+  - метрики: EPRA NTA per share, direct result per share, gross rental income, EPRA cost ratio, EPRA vacancy, net initial yield  ·  сегменты: ритейл
+- ★ **[WDP — Reports (annual/half-year/interim)](https://wdp.eu/en/investors/reports-presentations-and-press-releases/reports)** `[откр. · EU · ежеквартально]`
+  - что даёт: Отчёты ведущего логистического REIT (BE/NL/FR/DE/RO; Euronext Brussels/Amsterdam) с полной EPRA-секцией.
+  - аналитику: Модель по NL-складам: EPRA EPS/NTA, occupancy, like-for-like, BTS/sale-and-leaseback, green bonds, 2025/2030 guidance; сверка с консенсусом.
+  - метрики: EPRA EPS, EPRA NTA, occupancy rate, LfL rental growth, EPS guidance/DPS, LTV/cost of debt  ·  сегменты: индустриал
+- ★ **[CTP N.V. — Investors / Press Releases](https://ctp.eu/investors/press-releases/)** `[откр. · EU · ежеквартально]`
+  - что даёт: Раскрытия крупнейшего по GLA владельца логистики Европы (CTPark Network, 13,8+ млн м², регистрация NL): результаты, lease-сделки, bonds.
+  - аналитику: Ключевой пан-европейский логистический бенчмарк с NL-регистрацией: EPRA EPS/NTA, occupancy, GLA pipeline, cost of debt; сверка с широким консенсусом.
+  - метрики: EPRA EPS, EPRA NTA, occupancy, GLA/pipeline (sqm), gross rental income, LTV, cost of debt  ·  сегменты: индустриал
+- ● **[Eurocommercial Properties — Financial Reports](https://www.eurocommercialproperties.com/financial/financial-reports)** `[откр. · EU · ежеквартально]`
+  - что даёт: Отчёты ECP (24 ТЦ BE/FR/IT/SE, HQ в NL): годовые/полугодовые/9M с EPRA NTA, direct investment result, refinancing.
+  - аналитику: Первоисточник по prime-ТЦ: EPRA NTA, direct result per share, vacancy (~1%), retailer turnover, refinancing; бенчмарк для NL-ритейла и cost of debt.
+  - метрики: EPRA NTA per share, direct investment result per share, EPRA vacancy, retailer turnover, cost of debt/maturity, LTV  ·  сегменты: ритейл
+- ● **[Vesteda — Newsroom / Investor Relations](https://news.vesteda.com/)** `[откр. · NL · ежеквартально]`
+  - что даёт: Раскрытия крупнейшего фонда арендного жилья NL (~28 000 квартир, ~10 млрд €): сделки, ликвидность, отчёты, ESG/BREEAM.
+  - аналитику: Барометр институционального жилья NL: переоценки, доходности, like-for-like rent, доступ к капиталу; прокси для NL residential beleggingsmarkt.
+  - метрики: portfolio value, like-for-like rent, occupancy, valuation change, LTV, BREEAM/ESG  ·  сегменты: жильё
+- ● **[VGP NV — Investor Relations (Publications)](https://www.vgpparks.eu/en/investors/publications/)** `[откр. · EU · ежеквартально]`
+  - что даёт: IR логистического investor-developer (BE/NL/DE; Euronext Brussels): годовые/полугодовые отчёты, presentations, ESG/EPRA-раскрытия. Крупный NL-pipeline.
+  - аналитику: Модель по NL-логистике: committed annualised rent, EPRA NTA, like-for-like, valuation gains, JV-fee income, развитие парков; сверка с консенсусом.
+  - метрики: EPRA NTA per share, EPRA earnings, committed annualised rental income, occupancy, valuation gains/yields, LTV  ·  сегменты: индустриал
+- ● **[Montea — Financial Reports / Press Releases](https://montea.com/investor-relations/financial-reports)** `[откр. · EU · ежеквартально]`
+  - что даёт: Отчёты Montea (логистика BE/NL/FR): квартальные/годовые результаты с EPRA EPS, occupancy, guidance.
+  - аналитику: Модель по NL-логистике: EPRA EPS guidance, like-for-like rent, occupancy (~99%), re-letting uplift, lease renewals; сверка с консенсусом.
+  - метрики: EPRA EPS/guidance, occupancy, LfL rental growth, re-letting rent uplift, EPRA NTA, LTV  ·  сегменты: индустриал
+- ● **[Unibail-Rodamco-Westfield — Investor Relations](https://www.urw.com/en/investors)** `[откр. · EU · полугодовая]`
+  - что даёт: Крупнейший владелец prime-ТЦ Европы (Euronext Amsterdam/Paris): результаты, AREPS, EPRA NRV, URD. Прямое присутствие в NL (Mall of the Netherlands).
+  - аналитику: Первоисточник по prime retail: AREPS, tenant sales, footfall, MGR uplift, EPRA NRV, LTV, cost of debt; чтение здоровья prime-ТЦ и переоценки.
+  - метрики: AREPS, EPRA NRV/NTA, tenant sales, footfall, MGR uplift, LTV, cost of debt, net initial yield  ·  сегменты: ритейл
+- ● **[Vonovia SE — Results & Presentations](https://www.vonovia.com/en/investors/news-and-publications/results-presentations)** `[откр. · EU · ежеквартально]`
+  - что даёт: Крупнейший листингованный жилой landlord Европы (DAX): квартальные отчёты, презентации, транскрипты. Бенчмарк европейского rental residential.
+  - аналитику: Бенчмарк cap rates, like-for-like rent growth, vacancy и cost of debt для residential по Европе; цикл переоценки жилья как прокси для NL Living.
+  - метрики: EPRA NTA per share, adjusted EBITDA, rental growth (LfL), vacancy, fair value, LTV, cost of debt, FFO/AFFO  ·  сегменты: жильё
+- ● **[Klépierre — Finance / Investor Relations](https://www.klepierre.com/en/finance/accueil)** `[откр. · EU · полугодовая]`
+  - что даёт: Ведущий континентальный ТЦ-REIT (SIIC, Euronext Paris): годовые результаты, Q1/Q3 trading updates, URD. Пан-европейский ритейл-бенчмарк.
+  - аналитику: Сопоставление NL-ритейла с континентальным prime: net current cash flow per share, NRI growth, retailer sales, occupancy, LTV.
+  - метрики: net current cash flow per share, NRI growth, retailer sales, EPRA occupancy, EPRA NTA, LTV, net initial yield  ·  сегменты: ритейл
+- ○ **[Quartr — Listed RE IR aggregator (calls/transcripts)](https://quartr.com/companies/vonovia-se_3544)** `[freemium · global · ежеквартально]`
+  - что даёт: Агрегатор IR-материалов: записи и транскрипты earnings calls, презентации, отчёты, финкалендарь по NL-релевантным REIT.
+  - аналитику: Единая точка доступа к earnings calls/транскриптам нескольких REIT для разбора management commentary и guidance без обхода десятков IR-сайтов.
+  - метрики: earnings call transcripts, presentations, financial calendar, guidance commentary  ·  сегменты: все сегменты
 
-## 6. Консультанты, брокеры и оценщики
-_Big-3/Big-5 и нидерландские research-бюро — квартальные данные по take-up, вакантности, доходностям и инвестобъёмам по всем сегментам._
+## 6. Консенсус аналитиков и sell-side estimates
+_Агрегаторы целевых цен, рейтингов и прогнозов EPS/NAV по листингованным REIT — внешний консенсус для сверки с собственной моделью и отслеживания ревизий и earnings momentum._
 
-- ★ **[CBRE Netherlands — Insights & Research](https://www.cbre.nl/en-gb/insights)** — Netherlands Real Estate Market Outlook (годовой + Mid-Year), отчёты по investment volume, take-up, доходностям по living/retail/logistics/offices. _(жильё, ритейл, индустриал, макро · ежеквартально · NL+EN)_
-- ★ **[JLL Netherlands — Insights / Research](https://www.jll.com/nl-nl/insights)** — Серия Market Dynamics (Living, Retail, Office, Industrial & Logistics) с квартальными данными по take-up, вакантности, доходностям; отчёты по регулированию аренды. _(жильё, ритейл, индустриал, макро · ежеквартально · NL+EN)_
-- ★ **[Savills Netherlands — Research](https://en.savills.nl/insight-and-opinion/research.aspx)** — Market in Minutes (квартально), Spotlight-отчёты, Savills Industrial Market Indicator (SIMI); take-up, вакантность, доходности, инвестиции. _(жильё, ритейл, индустриал, макро · ежеквартально · NL+EN)_
-- ★ **[Colliers Netherlands — Research](https://www.colliers.com/en-nl/research)** — Аналитика инвестиционного и пользовательского рынков, отчёты по офисам/ритейлу/логистике; экономика от Chief Economist, feasibility- и локационные исследования. _(жильё, ритейл, индустриал, макро · ежеквартально · NL+EN)_
-- ★ **[Cushman & Wakefield Netherlands — Insights / MarketBeat](https://www.cushmanwakefield.com/en/netherlands/insights)** — Квартальные MarketBeat по 5 сегментам, Netherlands Outlook, Special Industrial Report, Living City Report. Данные по take-up, supply, доходностям на уровне субрынков. _(жильё, ритейл, индустриал, макро · ежеквартально · NL+EN)_
-- ★ **[Stec Groep — Ruimtelijk advies- en onderzoeksbureau](https://stec.nl/)** — Независимые исследования по bedrijventerreinen, логистике, woningmarkt, kantoren, retail, grondmarkt; данные через StecStat. Сильнейший источник по индустриалу и землепользованию. _(жильё, ритейл, индустриал, макро · нерегулярно · NL)_
-- ★ **[Capital Value — Onderzoek / Research](https://www.capitalvalue.nl/en/insights/)** — Ежегодный отчёт «De woning(beleggings)markt in beeld» (с ABF Research): объёмы транзакций на жилом инвестрынке, демография, аренда vs покупка, новостройки. Ключевой по residential investment. _(жильё, макро · ежегодно · NL+EN)_
-- ● **[Knight Frank — Netherlands](https://www.knightfrank.com/netherlands)** — Dutch Office Market Report, European Logistics Dashboard (квартально, вкл. NL), валюации и консалтинг по CRE; глобальные индексы цен на жильё. _(ритейл, индустриал, макро · ежеквартально · EN)_
-- ● **[BNP Paribas Real Estate Netherlands — Research](https://www.realestate.bnpparibas.nl/research)** — Pan-European и NL-аналитика по capital markets, офисам, логистике; рыночные обзоры, валюации, debt advisory. _(ритейл, индустриал, макро · ежеквартально · NL+EN)_
-- ● **[Dynamis — Research & Consultancy (Sprekende Cijfers)](https://dynamis.nl/research-commercieel-vastgoed)** — «Sprekende Cijfers» по 5 рынкам (жильё, офисы, bedrijfsruimte, логистика, ритейл) с сильной региональной разбивкой; 55+ локальных researchers. _(жильё, ритейл, индустриал · ежеквартально · NL)_
-- ● **[Capital Value Research — data-платформа](https://research.capitalvalue.nl/en/)** — Платформа детальных данных по жилому и зоровому рынку: демография, жилфонд, аренда/собственность, инвестрынок, новостройки, доходности. _(жильё, макро · ежеквартально · EN)_
-- ● **[Strabo — Marktonderzoek en vastgoedinformatie](https://strabo.nl/)** — Лидер по passantentellingen (подсчёт пешеходов) и winkelmarktonderzoek; реестр SWR почти всех ТЦ NL; профили посетителей. Незаменим для стрит-ритейла/ТЦ. _(ритейл · нерегулярно · NL)_
-- ★ **[Savills — Research (Europe / Industrial & Logistics)](https://www.savills.com/insight-and-opinion/research.aspx)** — European Logistics Census и Spotlight, офисные/ритейл/жилые обзоры core-рынков (вкл. NL): take-up, вакантность, аренда, инвестобъёмы. _(ритейл, индустриал, жильё, макро · ежеквартально · EN)_
-- ★ **[CBRE — Insights & Research (European Real Estate Market Outlook)](https://www.cbre.com/insights)** — European Real Estate Market Outlook, Investor Intentions Survey, прогнозы CBRE Econometric Advisors по office/industrial/living/retail/data centres. _(все сегменты · ежеквартально · EN)_
-- ○ **[Avison Young — Research & Insights (EMEA)](https://www.avisonyoung.com/research-insights)** — Глобальные и EMEA research/Sightlines, квартальные market reports. Покрытие NL на уровне EMEA (нет отдельного NL-сайта). _(ритейл, индустриал, макро · ежеквартально · EN)_
-- ○ **[MVGM — Vastgoedmanagement & Vastgoedtaxaties](https://mvgm.com/nl/)** — Один из топ-3 оценщиков NL (RICS/NRVT); валюации офисов, жилья, ритейла, логистики, зорового жилья; research-отдел с национальной GIS-базой. _(жильё, ритейл, индустриал · нерегулярно · NL+EN)_
+- ★ **[MarketScreener — Consensus (Target Price & Recommendations)](https://www.marketscreener.com/quote/stock/CTP-N-V-120380174/consensus/)** `[freemium · global · непрерывно]`
+  - что даёт: Страница консенсуса: средний/мин/макс target price, число аналитиков, распределение buy/hold/sell, прогнозы EPS/выручки/дивидендов.
+  - аналитику: Быстрый внешний консенсус по NL-релевантным REIT (CTP, WDP, Wereldhave, NSI, ECP, VGP) для сравнения с моделью и отслеживания ревизий target price.
+  - метрики: consensus target price, buy/hold/sell distribution, consensus EPS/NAV, implied upside, number of analysts  ·  сегменты: все сегменты
+- ● **[Investing.com — Consensus Estimates](https://www.investing.com/equities/ctp-nv-consensus-estimates)** `[freemium · global · непрерывно]`
+  - что даёт: Бесплатный консенсус: рейтинги, средний и разброс target prices, поимённые оценки фирм (Goldman, JPM, DB), даты, 52-нед. диапазон.
+  - аналитику: Кросс-проверка консенсуса (второй источник к MarketScreener), отслеживание свежих апгрейдов/даунгрейдов по NL-REIT.
+  - метрики: consensus rating, price target (avg/range), per-broker targets, implied upside, 52-week range  ·  сегменты: все сегменты
+- ● **[Van Lanschot Kempen — European / Listed RE research](https://www.vanlanschotkempen.com/en-nl/investment-banking/equities/european-real-estate)** `[freemium · EU · непрерывно]`
+  - что даёт: Bottom-up equity research по 65+ листингованным компаниям недвижимости Европы (вкл. NL REIT, CTP, логистику): обзоры, daily newsletter, оценки, ESG.
+  - аналитику: Sell-side взгляд с сильным европейским RE-покрытием для idea generation, сверки оценок и брокерского нарратива по NL-релевантным именам.
+  - метрики: target price, NAV estimate, earnings forecast, sector view, ESG assessment  ·  сегменты: ритейл, индустриал, жильё
 
-## 7. Профильные и деловые СМИ
-_Отраслевая пресса по недвижимости, строительству и градостроительству плюс деловые медиа — оперативный новостной поток, сделки и интервью._
+## 7. Стандарты оценки и отчётности (valuation & reporting)
+_Профессиональные стандарты, определяющие как формируются NAV/валюации и EPRA-метрики портфелей — каркас для проверки сопоставимости и достоверности переоценок и раскрытий._
 
-- ★ **[Vastgoedmarkt](https://www.vastgoedmarkt.nl/nieuws)** — Ежедневные новости, аналитика, интервью и база сделок по всем сегментам. Ключевой первоисточник для рынка CRE NL. _(жильё, ритейл, индустриал · непрерывно · NL)_
-- ★ **[PropertyNL](https://propertynl.com/)** — Ведущий журнал для профессионалов: новости, сделки, рейтинги (Who's Who, top investors/developers), собственные research-данные, события. _(жильё, ритейл, индустриал · непрерывно · NL+EN)_
-- ★ **[Vastgoedjournaal (VJ)](https://vastgoedjournaal.nl/)** — Новости по сегментам (woningmarkt, kantoren, retail, logistiek, juridisch/fiscaal, transacties); Beleggersregister, каталог финансистов. _(жильё, ритейл, индустриал · непрерывно · NL)_
-- ★ **[Het Financieele Dagblad (FD)](https://fd.nl/economie)** — Главная деловая газета NL: макроэкономика, финансы, корпоративные новости, рынок недвижимости и фондов. Платный доступ. _(макро, ритейл, жильё · непрерывно · NL)_
-- ● **[Cobouw](https://www.cobouw.nl/)** — Независимая журналистика по строительству и девелопменту: проекты, инфраструктура, устойчивость, рынок, Cobouw50, правовые вопросы. _(жильё, ритейл, индустриал · непрерывно · NL)_
-- ● **[Stadszaken](https://stadszaken.nl/)** — Новости о городском развитии: жильё, экономика, климат/устойчивость, общественное пространство, мобильность, smart city. _(жильё, ритейл, макро · непрерывно · NL)_
-- ● **[Gebiedsontwikkeling.nu](https://www.gebiedsontwikkeling.nu/)** — Знания и дебаты о развитии территорий: кейсы, исследования, мнения, GO Projectenkaart. Инициатива SKG и TU Delft. _(жильё, ритейл, макро · непрерывно · NL)_
-- ● **[BNR Nieuwsradio](https://www.bnr.nl/)** — Деловое радио и подкасты по экономике, политике, недвижимости (FD Mediagroep); интервью с участниками рынка. _(макро, ритейл, жильё · непрерывно · NL)_
-- ● **[NOS Nieuws — Economie](https://nos.nl/nieuws/economie)** — Раздел Economie общественного вещателя: экономика, woningmarkt, регуляторные изменения, новости компаний. Нейтральный источник. _(макро, жильё · непрерывно · NL)_
-- ○ **[Binnenlands Bestuur — Ruimte en Milieu](https://www.binnenlandsbestuur.nl/ruimte-en-milieu)** — Новости и анализ местного/регионального управления: жилполитика, землепользование, азот, региональные соглашения. _(жильё, ритейл, индустриал · непрерывно · NL)_
-- ○ **[Biind](https://www.biind.nl/)** — Платформа по интегральной gebiedsontwikkeling: статьи, блоги, whitepapers, журнал. Климатадаптация, мобильность, циркулярность. _(жильё, ритейл, макро · непрерывно · NL)_
-- ○ **[Vastgoed Insider](https://vastgoedinsider.nl/)** — Сообщество частных инвесторов: новости, kennisbank, форум, события, ежедневный подкаст. Фокус на Box 3, финансирование, продажи арендного жилья частниками. _(жильё, ритейл · непрерывно · NL)_
-- ○ **[NU.nl — Economie](https://www.nu.nl/economie)** — Экономический раздел крупнейшего новостного портала: оперативные новости по экономике и рынку жилья. _(макро, жильё · непрерывно · NL)_
-- ○ **[Vastgoedwereld](https://vastgoedwereld.nl/)** — Крупнейший нишевый агрегатор по вастгоеду: собирает PropertyNL, Vastgoedjournaal, Bouwformatie, Retailtrends и др. _(жильё, ритейл, индустриал · непрерывно · NL)_
-- ○ **[Vastgoedmarkt — Podcast](https://www.vastgoedmarkt.nl/podcast)** — Подкаст «Vastgoed in 5 minuten»: репортажи с PROVADA, девелопмент-проекты, интервью с топ-менеджерами. _(ритейл, жильё, индустриал · ежемесячно · NL)_
+- ★ **[EPRA — Financial Reporting / Best Practices (BPR)](https://www.epra.com/finance/financial-reporting)** `[откр. · EU · нерегулярно]`
+  - что даёт: Стандарт раскрытий листингованного сектора: EPRA Earnings, NAV-метрики (NRV/NTA/NDV), NIY, Vacancy Rate, Cost Ratios, LTV. BPR Database по 170+ компаниям.
+  - аналитику: Канонический словарь для чтения и сравнения отчётности REIT (NSI, Wereldhave, CTP, WDP, ECP); нормализация показателей между эмитентами; проверка EPRA-метрик.
+  - метрики: EPRA Earnings, EPRA NAV/NTA/NRV/NDV, EPRA NIY, EPRA Vacancy Rate, EPRA Cost Ratios, EPRA LTV  ·  сегменты: все сегменты
+- ● **[RICS — Valuation Global Standards (Red Book Global)](https://www.rics.org/profession-standards/rics-standards-and-guidance/sector-standards/valuation-standards/red-book/red-book-global)** `[freemium · global · нерегулярно]`
+  - что даёт: Глобальный стандарт оценки недвижимости (инкорпорирует IVS): market value, basis of value, due diligence, ESG-факторы в оценке.
+  - аналитику: Понимание как оценщики формируют NAV/валюации портфелей (Vesteda, Bouwinvest, MSCI-инпуты); проверка сопоставимости valuations в IR; рамка достоверности переоценок.
+  - метрики: market value, basis of value, valuation methodology, ESG in valuation, valuation uncertainty  ·  сегменты: все сегменты
+- ● **[IVSC — International Valuation Standards (IVS)](https://ivsc.org/)** `[freemium · global · нерегулярно]`
+  - что даёт: Глобальный установитель IVS: принципы оценки, фокус на ESG, данные и valuation modelling. Используется в 100+ странах.
+  - аналитику: Первоисточник принципов оценки в основе Red Book и валюаций фондов; оценка консистентности valuation-практик между странами при кросс-страновом бенчмаркинге.
+  - метрики: valuation principles, valuation approaches, ESG valuation guidance, valuation modelling  ·  сегменты: все сегменты
+- ● **[INREV — Sustainability & ESG standards (non-listed RE)](https://www.inrev.org/standards/sustainability)** `[freemium · EU · нерегулярно]`
+  - что даёт: ESG-стандарты non-listed RE: Sustainability Reporting Guidelines, SDDS (унифицированные KPI), Net Zero Carbon ресурсы, EU Taxonomy-материалы.
+  - аналитику: Сопоставление ESG-раскрытий нелистингованных фондов NL (Bouwinvest, Altera, CBRE IM) по единым KPI, бенчмаркинг net-zero прогресса для due-diligence.
+  - метрики: ESG KPIs (SDDS), net zero carbon, energy/GHG intensity, EU Taxonomy alignment  ·  сегменты: ритейл, индустриал, жильё
+- ○ **[CFA Institute — Research & Policy Center (Private Markets/RE)](https://rpc.cfainstitute.org/topics/private-market-investing)** `[freemium · global · непрерывно]`
+  - что даёт: Исследования и policy по private market и real estate: подходы к оценке (DCF/income/sales comparison), due diligence, риски иллликвидных активов, GIPS.
+  - аналитику: Методологическая база для построения и проверки моделей оценки; стандарты GIPS для корректного сравнения заявленной доходности фондов и управляющих.
+  - метрики: valuation methodology, GIPS performance standards, private RE risk frameworks, governance  ·  сегменты: все сегменты
 
-## 8. Международные профильные СМИ и EU/глобальный контекст
-_Панъевропейская пресса по недвижимости и кросс-страновые источники ЕС/ОЭСР для бенчмаркинга NL и отслеживания инвестпотоков._
+## 8. Опросы настроений и намерений (sentiment & intentions)
+_Опережающие индикаторы спроса на капитал и направления yields: куда пойдут деньги институционалов, какие секторы/города в фаворе и как меняются настроения инвесторов и кредиторов._
 
-- ★ **[Eurostat — Housing Price Statistics (database, prc_hpi_q)](https://ec.europa.eu/eurostat/web/housing-price-statistics/database)** — Гармонизированный HPI по NL поквартально, сопоставимо с ЕС; разбивка новое/существующее, аренда. Набор prc_hpi_q. _(жильё, макро · ежеквартально · EN)_
-- ★ **[RICS — Global & Europe Commercial Property Monitor](https://www.rics.org/news-insights/market-surveys/global-commercial-property-monitors)** — Квартальный опросный индекс настроений (CPSI) по инвест- и арендным рынкам, опережающий количественные данные. Раннее чтение цикла CRE. _(ритейл, индустриал, жильё · ежеквартально · EN)_
-- ● **[PropertyEU (IPE Real Assets)](https://realassets.ipe.com/propertyeu)** — Панъевропейские новости и аналитика; еженедельный Weekly Data Sheet, журнал, рейтинги. Контекст инвестиций/капитала по Европе, вкл. NL. _(ритейл, индустриал, макро · непрерывно · EN)_
-- ● **[React News (Green Street News)](https://reactnews.com/)** — Эксклюзивные новости по CRE Европы (Continental Europe); ежедневные AM/PM рассылки, сделки и тренды по asset-классам. Платный доступ. _(ритейл, индустриал, макро · непрерывно · EN)_
-- ★ **[Eurostat — Housing Price Statistics (HPI/OOHPI/House Sales)](https://ec.europa.eu/eurostat/web/housing-price-statistics)** — House Price Index, Owner-Occupied Housing Price Index, объёмы сделок по странам ЕС вкл. NL. Сопоставимая официальная статистика. _(жильё, макро · ежеквартально · EN)_
-- ● **[Eurostat — Short-Term Business Statistics (строительство)](https://ec.europa.eu/eurostat/web/short-term-business-statistics/database)** — Индексы цен производителей в строительстве, объёмы стройпроизводства, разрешения по ЕС/NL — опережающие индикаторы предложения. _(жильё, ритейл, индустриал, макро · ежемесячно · EN)_
-- ● **[OECD — Affordable Housing Database / Housing](https://www.oecd.org/en/data/datasets/oecd-affordable-housing-database.html)** — Кросс-страновые индикаторы: рынок жилья, доступность (цена/доход), жилищная политика — для бенчмаркинга NL против OECD/ЕС. _(жильё, макро · ежегодно · EN)_
-- ● **[ULI Europe / PwC — Emerging Trends in Real Estate Europe](https://europe.uli.org/research/)** — Ежегодный консенсус-прогноз лидеров отрасли по инвестициям, девелопменту, капиталу; рейтинги городов Европы (вкл. Amsterdam). _(все сегменты · ежегодно · EN)_
-- ● **[Oxford Economics — Real Estate Economics Service](https://www.oxfordeconomics.com/service-category/real-estate/)** — Прогнозы (total return, доходность, рост аренды, yields) по office/retail/industrial/residential/hotels, 142 рынка; независим от брокериджа. _(все сегменты · ежемесячно · EN)_
-- ● **[European Commission — EPBD recast 2024/1275](https://energy.ec.europa.eu/topics/energy-efficiency/energy-performance-buildings/energy-performance-buildings-directive_en)** — Директива ЕС: MEPS, ZEB, whole-life carbon, реновация худших зданий — драйвер энергоперехода и обесценения «коричневых» активов; транспозиция в NL до мая 2026. _(жильё, ритейл, индустриал · нерегулярно · EN)_
-- ○ **[EPRA — European Public Real Estate Association (Research)](https://www.epra.com/research)** — Аналитика по публичному (listed) сектору Европы, индексы FTSE EPRA Nareit, дайджесты — индикатор оценки и доступа к капиталу для REIT. _(все сегменты · ежемесячно · EN)_
+- ★ **[INREV — Investment Intentions Survey (INREV/ANREV/PREA)](https://www.inrev.org/research/investment-intentions-survey)** `[freemium · global · ежегодно (январь)]`
+  - что даёт: Ежегодный глобальный опрос институционалов о намерениях по аллокации: предпочтительные регионы/секторы/стили, current vs target allocation, ожидаемые потоки капитала.
+  - аналитику: Опережающий индикатор спроса на капитал: какие секторы в фаворе (logistics/living vs office/retail), over/underweight — для top-down позиционирования и оценки конкуренции за активы NL.
+  - метрики: target vs current allocation, preferred sectors/regions/styles, expected capital flows, investor sentiment  ·  сегменты: все сегменты
+- ★ **[CBRE — European Investor Intentions Survey](https://www.cbre.com/insights/reports/european-investor-intentions-survey-2026)** `[откр. · EU · ежегодно]`
+  - что даёт: Годовой опрос ~700 европейских инвесторов: намерения покупать/продавать, рейтинг привлекательности стран/городов (Amsterdam), предпочтительные секторы, ожидания по ценам.
+  - аналитику: Прямой sentiment-индикатор для NL: место Amsterdam в рейтинге, аппетит к Living/Logistics; опережающий сигнал по инвестобъёмам и направлению yields.
+  - метрики: buying/selling intentions, preferred markets/cities, preferred sectors, pricing expectations, strategy mix  ·  сегменты: все сегменты
+- ★ **[RICS — Global & Europe Commercial Property Monitor](https://www.rics.org/news-insights/market-surveys/global-commercial-property-monitors)** `[откр. · EU · ежеквартально]`
+  - что даёт: Квартальный опросный индекс настроений (CPSI) по инвест- и арендным рынкам, опережающий количественные данные.
+  - аналитику: Раннее чтение цикла CRE: разворот настроений по occupier/investor sentiment до выхода транзакционных данных; кросс-страновое сравнение момента цикла.
+  - метрики: commercial property sentiment index, occupier sentiment, investment sentiment, rent/capital value expectations  ·  сегменты: ритейл, индустриал, жильё
+- ● **[ULI Europe / PwC — Emerging Trends in Real Estate Europe](https://knowledge.uli.org/en/reports/emerging-trends)** `[freemium · EU · ежегодно]`
+  - что даёт: Ежегодный консенсус-прогноз лидеров отрасли: рейтинги городов по инвест/девелопмент-перспективам (Amsterdam в топе), ожидания по капиталу, секторам, ценам.
+  - аналитику: Качественный sentiment-слой: позиционирование Amsterdam/NL среди европейских рынков, темы года (debt, living, energy transition), best bets по секторам.
+  - метрики: city investment/development rankings, sector best bets, capital availability sentiment, pricing outlook  ·  сегменты: все сегменты
+- ● **[JLL — Global Real Estate Perspectives / Investor Sentiment](https://www.jll.com/en-sa/insights/market-perspectives/global)** `[откр. · global · ежеквартально]`
+  - что даёт: Регулярные обзоры рыночных перспектив и sentiment: доля инвесторов, увеличивающих exposure, предпочтения по asset-классам, оценка условий рынка и финансирования.
+  - аналитику: Кросс-проверка sentiment против CBRE/INREV; раннее чтение смены предпочтений по секторам (ротация в logistics/data centres), релевантной для NL.
+  - метрики: investor exposure intentions %, preferred asset classes, market conditions sentiment, lending conditions  ·  сегменты: все сегменты
+- ● **[IPF — Investment Property Forum (UK Consensus Forecasts)](https://www.ipf.org.uk/research.html)** `[freemium · global · ежеквартально]`
+  - что даёт: Research-программа и UK Consensus Forecasts (агрегированный консенсус прогнозных домов по total returns, rental growth, yields).
+  - аналитику: Методологический эталон построения консенсус-прогнозов; UK как опережающий бенчмарк для континентального (NL) цикла; шаблон агрегирования forecast houses.
+  - метрики: consensus total returns, rental growth forecasts, capital value forecasts, yields  ·  сегменты: ритейл, индустриал, жильё
 
-## 9. Отраслевые ассоциации и лобби
-_Маклеры, девелоперы, жилищные корпорации, арендаторы, ритейл, логистика и строители — позиции отрасли, бенчмарки и собственные рыночные данные._
+## 9. Прогнозные дома (независимые house views & forecasts)
+_Независимые от брокериджа прогнозные дома по доходностям, yields и rental growth + макрофорекастеры — нейтральный вход в total-return модели, сценарный анализ и устранение sell-side bias._
 
-- ★ **[NVM (Coöperatieve Vereniging van Makelaars en Taxateurs)](https://www.nvm.nl/)** — Квартальная статистика по сделкам, ценам и предложению жилья, а также по коммерческой и аграрной недвижимости; пресс-релизы по дефициту и арендным ставкам. _(жильё, ритейл, индустриал · ежеквартально · NL)_
-- ★ **[Aedes (vereniging van woningcorporaties)](https://aedes.nl/)** — Данные по соц. фонду (~2,4 млн квартир), benchmark корпораций, прогнозы строительства, позиции по доступности, Nationale Prestatieafspraken. _(жильё · ежеквартально · NL)_
-- ★ **[IVBN (Institutionele Beleggers in Vastgoed Nederland)](https://ivbn.nl/)** — Позиции институциональных инвесторов (~50 млрд евро в NL): position papers, реакции на регулирование (Box 3, аренда, налоги), исследования по сегментам. _(жильё, ритейл, индустриал · нерегулярно · NL+EN)_
-- ★ **[INretail (Koninklijke INretail)](https://www.inretail.nl/)** — Крупнейшая ассоциация non-food ритейла (>13 000 магазинов): рыночные цифры и тренды, обороты/трафик, лобби по аренде торговых площадей, vitaliteit винкельгебидов. _(ритейл · ежеквартально · NL)_
-- ● **[Vastgoed Belang (Particuliere Beleggers in Vastgoed)](https://www.vastgoedbelang.nl/)** — Позиции частных арендодателей: статистика выхода инвесторов, реакции на Box 3 и регулирование аренды, Green Lease, модельные договоры. _(жильё, ритейл · нерегулярно · NL)_
-- ● **[NEPROM (Vereniging van Nederlandse Projectontwikkeling Maatschappijen)](https://www.neprom.nl/)** — Первоисточник по девелопменту: position papers (азот, жилполитика), Handboek Projectontwikkeling, Reiswijzer Gebiedsontwikkeling, Lente-akkoord, KAN. _(жильё, ритейл · нерегулярно · NL)_
-- ● **[Vereniging Eigen Huis (VEH)](https://www.eigenhuis.nl/)** — Крупнейшая организация собственников (~800 тыс.): Eigen Huis Marktindicator, мониторинг ипотечных ставок, данные по новостройкам, позиции по налогам. _(жильё · ежемесячно · NL)_
-- ● **[WoningBouwersNL (бывш. NVB-Bouw)](https://woningbouwersnl.nl/)** — Ассоциация специалистов по жилищному строительству: данные по объёмам нового строительства, продажам новостроек, барьерам застройки. _(жильё · ежеквартально · NL)_
-- ● **[Bouwend Nederland](https://www.bouwendnederland.nl/)** — Крупнейшая организация работодателей в строительстве (~4 600 компаний): конъюнктурные прогнозы, портфель заказов, цены и мощности. _(макро, жильё, индустриал · ежеквартально · NL)_
-- ● **[RND (Raad Nederlandse Detailhandel)](https://www.rndweb.nl/)** — Зонтичная организация крупного non-food ритейла: позиции по аренде winkelvastgoed, Green Lease Retail. Фактический преемник Detailhandel Nederland. _(ритейл · нерегулярно · NL)_
-- ● **[evofenedex](https://www.evofenedex.nl/)** — Объединение ~10 000 компаний торговли и логистики: знания и позиции по складам, supply chain, инфраструктуре — спрос со стороны грузовладельцев. _(индустриал · нерегулярно · NL+EN)_
-- ● **[TLN (Transport en Logistiek Nederland)](https://www.tln.nl/)** — Организация автоперевозчиков (4 500 членов): лобби по инфраструктуре/азоту/CO2, мониторинг топлива, карты логистических хабов — индикаторы спроса на логнедвижимость. _(индустриал, макро · нерегулярно · NL)_
-- ● **[VNG — Vereniging van Nederlandse Gemeenten (Bouwen en wonen)](https://vng.nl/rubrieken/onderwerpen/bouwen-en-wonen)** — Позиция и данные всех муниципалитетов по строительству, землепользованию, региональным жилищным соглашениям. _(жильё, ритейл · нерегулярно · NL)_
-- ● **[IPO — Interprovinciaal Overleg (Wonen / Ruimte)](https://www.ipo.nl/thema/ruimte-en-leefomgeving/wonen/)** — Позиция 12 провинций по строительству, азоту, сетям, планированию (Nota Ruimte), реализации жилищных программ — провинциальный слой. _(жильё, ритейл, индустриал · нерегулярно · NL)_
-- ○ **[Woonbond (Nederlandse Woonbond)](https://www.woonbond.nl/)** — Голос арендаторов (~1,7 млн): издания Huurpeil и Huurwijzer, данные по доступности аренды, позиции по защите квартиросъёмщиков. _(жильё · ежеквартально · NL)_
-- ○ **[CBL (Centraal Bureau Levensmiddelenhandel)](https://www.cbl.nl/)** — Ассоциация супермаркетов и foodservice: данные по продуктовому ритейлу, обороту, ценам — релевантно food-anchored торговой недвижимости. _(ритейл · нерегулярно · NL)_
-- ○ **[VGM NL (Vastgoedmanagement Nederland)](https://vgm.nl/)** — Ассоциация управляющих недвижимостью и ВвЕ: годовые данные по арендному рынку, benchmark-инструменты, стандартные документы. _(все сегменты · ежегодно · NL)_
-- ○ **[KHN — Koninklijke Horeca Nederland](https://khn.nl/)** — Данные и лоббизм по сектору HoReCa (>17 000 предприятий): обороты, занятость, тренды — контекст спроса на ритейл/гостиничную недвижимость. _(ритейл · нерегулярно · NL+EN)_
-- ○ **[CBW-erkend (Centrale Branchevereniging Wonen)](https://cbw-erkend.nl/)** — Знак признания для розницы интерьера/мебели/кухонь (под INretail); списки банкротств в секторе wonen — индикатор товаров для дома (связка с жилищным циклом). _(ритейл · нерегулярно · NL)_
-- ○ **[Detailhandel Nederland (упразднена)](https://www.detailhandel.nl/)** — ВНИМАНИЕ: зонтичное лобби ритейла прекратило деятельность ('Opgeheven'); функции перешли к RND/CBL/INretail. Для актуальных позиций используйте их. _(ритейл · нерегулярно · NL)_
+- ★ **[Capital Economics — Europe Commercial Property](https://www.capitaleconomics.com/europe-commercial-property)** `[платн. · EU · еженедельно + Outlook]`
+  - что даёт: Независимый прогнозный сервис по CRE Европы: 5-летние прогнозы доходностей по офисам/ритейлу/индустриалу для 21 страны (вкл. NL) и городов; еженедельные апдейты.
+  - аналитику: Независимый прогнозный якорь для базового сценария доходностей и yields CRE NL, кросс-проверка CBRE/JLL/PMA и сценарный анализ; house view в IC.
+  - метрики: total returns, yields, capital values, rental growth, city-level CRE forecasts  ·  сегменты: ритейл, индустриал, макро
+- ★ **[Oxford Economics — Real Estate Economics Service](https://www.oxfordeconomics.com/service-category/real-estate/)** `[платн. · global · ежемесячно]`
+  - что даёт: Прогнозы (total return, yields, rental growth) по office/retail/industrial/residential/hotels, 142 рынка; независим от брокериджа.
+  - аналитику: Модельные ряды и сценарные прогнозы для андеррайтинга и house view; total-return прогнозы по сегментам NL как количественный вход в модель.
+  - метрики: total return, yields, rental growth, capital values, city-level forecasts  ·  сегменты: все сегменты
+- ★ **[Oxford Economics — Global Macro Service / Model](https://www.oxfordeconomics.com/service/subscription-services/macro/global-macro-service/)** `[платн. · global · дважды в месяц]`
+  - что даёт: Глобальная макро-модель (87 экономик, >70 000 переменных, прогнозы до 2060) и Global Macro Service по 200 странам: ВВП, инфляция, ставки, доходности, FX, сценарии.
+  - аналитику: Макродрайверы для дисконтирования, расчёта максимальной ипотеки, риск-сценариев и кросс-проверки CPB/DNB; central-bank-grade модель для сценарных прогонов.
+  - метрики: GDP, inflation (HICP), interest rates, bond yields, FX, scenario analysis  ·  сегменты: макро
+- ● **[CBRE Econometric Advisors (CBRE-EA)](https://www.cbre-ea.com/)** `[платн. · EU · ежеквартально]`
+  - что даёт: Эконометрическое прогнозное подразделение CBRE: квартальные прогнозы по NOI growth, cap rates, values, rents (repeat-rent), supply, total returns; сценарии Baseline/Downside/Upside.
+  - аналитику: Модельные ряды и сценарные прогнозы для андеррайтинга и house-view; cap-rate/NOI прогнозы как количественный вход в total-return модель.
+  - метрики: NOI growth forecast, cap rate forecast, total return forecast, effective rents, scenario analysis  ·  сегменты: все сегменты
+- ● **[PMA — Property Market Analysis (European forecasts)](https://www.pma.co.uk/home/our-services/europe-asia-pacific-us/)** `[платн. · EU · 2 раза в год]`
+  - что даёт: Независимый research-дом (с 1981): 5-летние city-level прогнозы rents/yields/capital values/total returns + fundamentals, base + stress; 200+ рынков, покрытие NL.
+  - аналитику: Независимая основа прогнозного блока: total-return/yield прогнозы по NL как консенсус-нейтральный вход, stress-сценарии для downside, сверка с брокерами.
+  - метрики: 5-year rent forecasts, yield forecasts, capital value & total return forecasts, stress scenarios  ·  сегменты: все сегменты
+- ● **[BMI — Country Risk & Real Estate (Fitch Solutions)](https://www.fitchsolutions.com/bmi)** `[платн. · global · квартально]`
+  - что даёт: Часть Fitch Group: Real Estate Industry Reports + Country Risk по 200+ рынкам, 10-летний горизонт; прогнозы строительства, спроса/предложения, аренды, увязанные со страновым риском.
+  - аналитику: Top-down country-risk слой: 10-летний прогноз стройотрасли и CRE NL, sovereign/operational risk-скоры, независимая кросс-проверка в единой методологии.
+  - метрики: construction industry forecasts, real estate demand/supply, country risk scores, 10-year forecasts  ·  сегменты: жильё, ритейл, индустриал, макро
+- ○ **[Moody's CRE (ex-REIS) — CRE Data & Analytics](https://www.moodyscre.com/)** `[платн. · global · ежеквартально]`
+  - что даёт: Платформа CRE: >500 000 рядов, space-market data и прогнозы по сабмаркетам, comparative market scores, rent measures, сценарные прогнозы.
+  - аналитику: Методология forward-looking rent/vacancy/cap-rate прогнозов и сценарного стресс-тестирования CRE как референс; понимание моделирования переоценки рейтинговым агентством.
+  - метрики: rents, vacancy, cap rates, NOI, CRE price forecasts, scenario forecasts  ·  сегменты: ритейл, индустриал, жильё
 
-## 10. Институциональные инвесторы и биржевые компании (IR)
-_Фонды, пенсионные управляющие и листингованные REIT — пресс-релизы, годовые отчёты и market outlooks, отражающие доходности и потоки капитала по сегментам._
+## 10. ESG, климат и стандарты декарбонизации
+_Регуляторные и отраслевые стандарты, определяющие stranding risk, green premium/brown discount, taxonomy-alignment и обязательные раскрытия — каркас для climate-VaR, retrofit-CapEx и ESG-due-diligence портфелей NL._
 
-- ★ **[Vesteda — Newsroom](https://news.vesteda.com/)** — Пресс-релизы крупнейшего фонда арендного жилья (~28 000 квартир, ~10 млрд евро): сделки, ликвидность, отчёты, ESG/BREEAM. Барометр институционального жилья. _(жильё · непрерывно · EN+NL)_
-- ★ **[Bouwinvest — News & Publications](https://bouwinvest.com/news-publications)** — Пресс-релизы, годовые отчёты и Dutch Market Outlook управляющего ~12-13 млрд евро для пенсфондов; сделки в жилье, ритейле, логистике, healthcare. _(жильё, ритейл, индустриал · непрерывно · EN)_
-- ★ **[Wereldhave — Investor Relations](https://www.wereldhave.com/investor-relations)** — IR-портал листингованного владельца Full Service Centers (NL, BE, FR): пресс-релизы, отчёты, презентации, trading updates. Первоисточник по ритейл-центрам. _(ритейл · ежеквартально · EN)_
-- ★ **[NSI N.V. — Newsroom / Investor Relations](https://nsi.nl/ir/)** — IR единственного листингованного офисного REIT с фокусом на NL (~45 зданий, ~1 млрд евро, акцент Амстердам): trading updates, отчёты, девелопмент. Ключевой по офисам. _(ритейл · ежеквартально · EN)_
-- ★ **[WDP (Warehouses De Pauw) — Press Releases / Reports](https://wdp.eu/en/investors/reports-presentations-and-press-releases/press-releases)** — Отчёты ведущего логистического REIT (6 регионов Европы, вкл. NL): EPRA EPS, новые аренды (550 000+ м²), green bonds, 2030-стратегия. Первоисточник по складам. _(индустриал · ежеквартально · EN+NL)_
-- ● **[Vesteda — Investor Relations / годовой отчёт](https://www.vesteda.com/en/corporate/investment)** — Раздел для инвесторов: факты по портфелю, equity/debt информация, годовой отчёт. Дополняет newsroom. _(жильё · ежеквартально · EN)_
-- ● **[a.s.r. real assets — News & Publications](https://asrrealassets.com/news-and-publications)** — Публикации управляющего (жильё/ASR DCRF, ритейл, офисы, сельхозземля, инфраструктура): сделки, привлечение капитала, area development (~13 000 домов в планах). _(все сегменты · нерегулярно · EN+NL)_
-- ● **[Achmea Real Estate — News](https://www.achmearealestate.nl/en/about-us/news)** — Новости управляющего ~13 млрд евро (жильё, ритейл, healthcare, офисы) для 30+ инвесторов; цель 25 млрд к 2030, Dutch Residential Impact Fund. _(все сегменты · нерегулярно · EN+NL)_
-- ● **[Altera (Altera Vastgoed) — News](https://www.altera.nl/en/news/)** — Новости и отчёты фонда (~3,6 млрд евро): Residential Fund и Retail Fund. Доходности, переоценки, GRESB. Прокси по core-жилью и стрит-ритейлу. _(жильё, ритейл · нерегулярно · EN+NL)_
-- ● **[CBRE Investment Management — Insights / Research](https://www.cbreim.com/insights)** — House Views (Macro House View квартально), европейские outlooks, секторные deep-dives, количественные модели. $150+ млрд AuM. _(все сегменты · ежеквартально · EN)_
-- ● **[PGGM — Private Real Estate](https://pggm.nl/en/asset-management/private-real-estate)** — Страница private real estate (PPREF ~20 млрд евро, 102 инвестиции, GRESB 90); стратегия, тренды, доходности; соучредитель GRESB. _(все сегменты · нерегулярно · EN)_
-- ● **[APG Asset Management — News & Insights](https://assetmanagement.apg.nl/news-insights/)** — Новости крупнейшего пенсионного инвестора (~540 млрд евро, для ABP): инвестиции в жильё, impact, климатические индексы недвижимости (CRREM). _(все сегменты · нерегулярно · EN)_
-- ● **[Eurocommercial Properties — News / Press Releases](https://www.eurocommercialproperties.com/news)** — Новости листингованного инвестора в ТЦ (~4 млрд евро: BE, FR, IT, SE; HQ в NL): результаты, дивиденды, сделки, рефинансирование. _(ритейл · ежеквартально · EN)_
-- ● **[Montea — Press Releases](https://montea.com/en/press)** — Пресс-релизы логистического investor-developer (BE/NL/FR): результаты, like-for-like рост аренды, нидерландские лог-площадки, стратегия Track27. _(индустриал · ежеквартально · EN)_
-- ● **[CTP N.V. — Investors / Press Releases](https://ctp.eu/investors/press-releases/)** — Пресс-релизы крупнейшего по GLA владельца логистики Европы (CTPark Network, 10-11 стран, 13,8+ млн м²): результаты, lease-сделки, bonds. Регистрация — NL. _(индустриал · ежеквартально · EN)_
-- ○ **[Achmea — Corporate Newsroom](https://news.achmea.nl/)** — Корпоративный newsroom: сделки Achmea Real Estate, реструктуризация, регуляторные события. Дополнительный контекст по группе. _(жильё, ритейл, макро · нерегулярно · EN+NL)_
-- ○ **[CBRE Investment Management — QIR](https://www.cbreim.com/insights/qir)** — Количественные модели ранжирования секторов и рынков (Sector Ranking, Relative Value, RARE) — оценка относительной привлекательности сегментов. _(все сегменты · ежеквартально · EN)_
-- ○ **[PGGM — News / пресс-релизы](https://www.pggm.nl/en/overview-press-releases)** — Пресс-релизы: смена мандатов, sustainability-сдвиги, крупные сделки — сигналы по аллокациям институционального капитала. _(все сегменты · нерегулярно · EN)_
+- ★ **[CRREM — Carbon Risk Real Estate Monitor](https://crrem.org/)** `[freemium · global · нерегулярно]`
+  - что даёт: Глобальный стандарт transition risk: 1000+ траекторий декарбонизации (kgCO2/m2, kWh/m2) до 2050, выровненных на 1.5/2C; Pathway Explorer и Misalignment Year. 44 страны вкл. NL.
+  - аналитику: Расчёт stranding risk портфеля и активов NL, год выпадения из climate-aligned траектории, приоритизация retrofit-CapEx, climate-скидка к оценке. Используется APG, PGGM.
+  - метрики: decarbonisation pathways, carbon intensity (kgCO2/m2), energy intensity (kWh/m2), stranding/misalignment year, stranded assets  ·  сегменты: ритейл, индустриал, жильё
+- ★ **[EU Taxonomy for sustainable activities (+ Navigator)](https://finance.ec.europa.eu/sustainable-finance/tools-and-standards/eu-taxonomy-sustainable-activities_en)** `[откр. · EU · обновления Delegated Acts]`
+  - что даёт: Классификация устойчивой деятельности ЕС и TSC для construction & real estate: substantial contribution, DNSH, EPC-пороги, Delegated Acts; интерактивный Navigator.
+  - аналитику: Определение taxonomy-eligibility/alignment активов и фондов NL, расчёт green CapEx/OpEx, обоснование green-bond финансирования, скрининг коричневых активов; ввод для SFDR/CSRD.
+  - метрики: taxonomy alignment %, EPC class thresholds, DNSH, green CapEx/OpEx, top-X% national stock  ·  сегменты: ритейл, индустриал, жильё, макро
+- ★ **[SFDR — Sustainable Finance Disclosure Regulation](https://finance.ec.europa.eu/sustainable-finance/disclosures/sustainability-related-disclosure-financial-services-sector_en)** `[откр. · EU · нерегулярно]`
+  - что даёт: Рамка раскрытия устойчивости: классификация продуктов (Art. 6/8/9), Principal Adverse Impacts, RTS-шаблоны; статус реформы SFDR 2.0.
+  - аналитику: Классификация RE-фондов NL (Art. 8/9), оценка PAI по портфелю, сопоставимость ESG-маркетинга управляющих и реальных метрик, риск переклассификации.
+  - метрики: Article 6/8/9 classification, principal adverse impacts (PAI), sustainable investment %, taxonomy-aligned %  ·  сегменты: ритейл, индустриал, жильё, макро
+- ★ **[RICS — ESG & sustainability in CRE valuation](https://www.rics.org/profession-standards/rics-standards-and-guidance/sector-standards/valuation-standards/esg-and-sustainability-in-commercial-property-valuation)** `[freemium · global · нерегулярно]`
+  - что даёт: Глобальный стандарт учёта ESG/sustainability в оценке CRE и связки с Red Book/IVS; примыкающий Whole Life Carbon Assessment.
+  - аналитику: Методологическая база для green premium/brown discount в оценках NL (валюации по Red Book), проверка учёта энергоэффективности и климатического риска оценщиком.
+  - метрики: green premium / brown discount, ESG valuation adjustment, whole life carbon, Red Book/IVS compliance  ·  сегменты: ритейл, индустриал, жильё
+- ★ **[DGBC — Dutch Green Building Council (Paris Proof, BREEAM-NL)](https://www.dgbc.nl)** `[откр. · NL · непрерывно]`
+  - что даёт: Держатель BREEAM-NL; тема Paris Proof (CO2-нейтральная среда, kWh/m2). Знаниевый хаб (~400 партнёров). Рыночные ESG-стандарты NL, влияющие на оценку и арендуемость.
+  - аналитику: Первоисточник по NL-специфичным ESG-порогам (Paris Proof, BREEAM-NL) для оценки green premium, требований LP к доле сертифицированного фонда и риска stranding.
+  - метрики: Paris Proof kWh/m2, BREEAM-NL certifications, CO2-neutral pathways, certified stock share  ·  сегменты: ритейл, индустриал, жильё
+- ★ **[GRESB — ESG benchmarking (Insights)](https://www.gresb.com/nl-en/insights/)** `[freemium · global · ежегодно]`
+  - что даёт: Глобальный ESG-бенчмарк для real assets (>150 инвесторов): рейтинги фондов/активов, результаты ассессмента, insights. Соучредители — PGGM/APG.
+  - аналитику: Бенчмарк ESG-перформанса фондов NL против глобальных peer'ов, ожидания LP к ESG-скорам, ввод для due-diligence и мониторинга прогресса управляющих.
+  - метрики: GRESB score/rating, peer benchmarking, energy/GHG performance, fund ESG ranking  ·  сегменты: ритейл, индустриал, жильё, макро
+- ● **[European Commission — EPBD recast 2024/1275](https://energy.ec.europa.eu/topics/energy-efficiency/energy-performance-buildings/energy-performance-buildings-directive_en)** `[откр. · EU · нерегулярно]`
+  - что даёт: Директива ЕС: MEPS, ZEB, whole-life carbon, реновация худших зданий — драйвер энергоперехода и обесценения коричневых активов; транспозиция в NL до мая 2026.
+  - аналитику: Оценка масштаба MEPS-driven retrofit-спроса и риска обесценения активов с низким EPC; регуляторный таймлайн для CapEx-планирования портфелей NL.
+  - метрики: MEPS thresholds, ZEB requirements, worst-performing buildings, renovation obligations  ·  сегменты: жильё, ритейл, индустриал
+- ● **[PRI — Principles for Responsible Investment](https://www.unpri.org/)** `[freemium · global · непрерывно]`
+  - что даёт: Глобальная сеть (5000+ подписантов): шесть принципов, отраслевые руководства и DDQ по real estate, исследования, отчётность подписантов.
+  - аналитику: Бенчмарк ожиданий LP (пенсфонды NL — подписанты) к ESG-процессам управляющих, шаблоны due-diligence (RI DDQ) при отборе RE-фондов.
+  - метрики: RI policy coverage, ESG integration, PRI assessment scores, responsible investment AUM  ·  сегменты: ритейл, индустриал, жильё, макро
+- ● **[IIGCC — Net Zero Investment Framework (Real Estate)](https://www.iigcc.org/resources)** `[откр. · EU · непрерывно]`
+  - что даёт: Европейская инвесторская климат-сеть (400+ членов): NZIF 2.0 с asset-level guidance по RE, Whole Life Carbon, Stewardship Guidance, декарбонизация CRE.
+  - аналитику: Постановка net-zero целей и transition plans по RE-портфелю NL, alignment активов с NZIF, методология whole-life carbon, согласование с CRREM для climate-VaR.
+  - метрики: net zero alignment (NZIF), asset-level targets, whole life carbon, transition plan coverage  ·  сегменты: ритейл, индустриал, жильё, макро
+- ● **[CSRD / ESRS — Corporate Sustainability Reporting](https://finance.ec.europa.eu/financial-markets/company-reporting-and-auditing/company-reporting/corporate-sustainability-reporting_en)** `[откр. · EU · нерегулярно]`
+  - что даёт: Директива и стандарты ESRS обязательной отчётности (double materiality, E1 климат, Scope 1-3, энергопотребление); статус Omnibus-упрощений.
+  - аналитику: Чтение первичных ESG-раскрытий листингованных RE-компаний и крупных управляющих NL, сопоставимость год-к-году, проверка climate-targets против отчётных данных.
+  - метрики: Scope 1/2/3 emissions, energy consumption/intensity, double materiality, climate transition plan, ESRS E1 datapoints  ·  сегменты: ритейл, индустриал, жильё, макро
+- ● **[Maastricht Center for Real Estate (Eichholtz/Kok)](https://maastrichtrealestate.com/)** `[откр. · global · нерегулярно]`
+  - что даёт: Академический хаб по энергоэффективности, health & climate risk недвижимости; работы соучредителей GRESB: greenness=performance, эффект энергокодов на цены, climate-exposed дефолты.
+  - аналитику: Эмпирическая база для калибровки green premium/brown discount и climate-риска в моделях NL (не маркетинг брокеров), научное обоснование ESG-CapEx.
+  - метрики: green premium (empirical), energy label price effect, climate risk pricing, retrofit returns  ·  сегменты: ритейл, жильё, макро
+- ○ **[BREEAM — BRE (international green building certification)](https://breeam.com/standards)** `[freemium · global · нерегулярно]`
+  - что даёт: Старейший мировой метод оценки устойчивости зданий, 600k+ сертификатов в 80+ странах; схемы, под которые лицензирован BREEAM-NL.
+  - аналитику: Методология международного BREEAM, под которую мапятся NL-сертификаты (арендуемость, premium, требования LP), кросс-страновое сравнение портфелей.
+  - метрики: BREEAM rating, certified floor area %, In-Use score, asset rating uplift  ·  сегменты: ритейл, индустриал, жильё
+- ○ **[WEii — Werkelijke Energie-intensiteit (DGBC/TVVL)](https://www.weii.nl/)** `[откр. · NL · непрерывно]`
+  - что даёт: NL-протокол измерения фактической энергоинтенсивности utility-зданий (kWh/m2 по реальному потреблению), классы и привязка к Paris Proof.
+  - аналитику: Объективная оценка энергоэффективности офисов/коммерции NL против Paris Proof и CRREM, отбор активов под stranding, сопоставление energielabel vs реальное потребление.
+  - метрики: actual energy intensity (kWh/m2), WEii class, Paris Proof alignment, gap vs energy label  ·  сегменты: ритейл, индустриал
 
-## 11. Индексы доходности, бенчмарки и проптех-данные
-_Индексы инвестиционной доходности, AVM/индексы цен и проптех-API — количественные бенчмарки и детальные данные по объектам._
+## 11. Центробанки, финстабильность и макропрогнозы
+_Денежно-кредитная политика, системные риски CRE/RRE и официальные макропрогнозы NL/еврозоны — стоимость фондирования, надзорные данные о качестве кредитов и якорные сценарии для дисконтирования._
 
-- ★ **[MSCI Real Estate (Netherlands Property Index, ex-IPD)](https://www.msci.com/real-estate)** — Бенчмарки совокупной доходности прямых вложений по >30 странам, вкл. MSCI Netherlands Annual/Quarterly Property Index с разбивкой по секторам; база Real Capital Analytics. _(все сегменты · ежеквартально · EN)_
-- ★ **[INREV (Investors in Non-Listed Real Estate Vehicles)](https://www.inrev.org/market-information/indices)** — Индексы доходности европейских непубличных фондов (Fund Index, ODCE, IRR, Living Fund Index, GREFI), опросы (Investment Intentions), стандарты. HQ в Амстердаме. _(все сегменты · ежеквартально · EN)_
-- ★ **[Vastgoeddata Nederland](https://www.vastgoeddata.nl/)** — Наиболее полная база CRE (>400 000 объектов), 19+ категорий: офисы, ритейл, логистика, hospitality, healthcare, parking; сделки купли/аренды, алерты. Подписка. _(ритейл, индустриал · непрерывно · NL)_
-- ★ **[Calcasa — WOX Kwartaalbericht (WOX-индекс)](https://www.calcasa.nl/wox-kwartaalbericht)** — WOX-индекс стоимости жилья на основе транзакций; средняя стоимость по стране/провинциям/районам, квартальная и годовая динамика; WOX Monitor (>1000 переменных). _(жильё · ежеквартально · NL)_
-- ● **[MSCI — Real Estate Performance & Capital Trends (Europe)](https://www.msci.com/research-and-insights/real-estate-performance)** — Индексы доходности частной недвижимости (30+ стран), Europe Capital Trends — объёмы сделок, ценовые тренды, yields, активность по сегментам и городам. _(ритейл, индустриал, жильё, макро · ежеквартально · EN)_
-- ● **[Realstats](https://realstats.com/)** — Эксклюзивный доступ к данным Pararius и Huurwoningen.nl: арендные транзакции, поведение, тренды; также сделки купли. Сильно для huurmarkt, слабо покрытого NVM. _(жильё, макро · непрерывно · NL+EN)_
-- ● **[Calcasa (WOX-индекс, onderzoek)](https://calcasa.nl/onderzoek/)** — WOX-индекс (база 1995=100), квартальный WOX Kwartaalbericht по регионам и типам, годовые обзоры. Член European AVM Alliance; в securitisation-отчётности. _(жильё, макро · ежеквартально · NL+EN)_
-- ● **[Altum AI](https://altum.ai/vastgoeddata/)** — API к >250 переменным по каждому жилому объекту (WOZ, год постройки, площади, энергометки, история сделок), AVM, данные на уровне района. Источники Kadaster, CBS. _(жильё, макро · непрерывно · NL+EN)_
-- ● **[Matrixian Group](https://matrixian.com/en/smart-real-estate/)** — База ~7,8 млн объектов с 200-300+ характеристиками, AVM, собственный House Price Index, Housing Analytics, Portfolio Sustainability, POI; API. _(жильё, макро · непрерывно · EN+NL)_
-- ○ **[GeoPhy (ныне Apprise by Walker & Dunlop)](https://www.walkerdunlop.com/news/walker-dunlop-acquires-geophy-to-accelerate-technology-driven-businesses)** — ВНИМАНИЕ: GeoPhy (Делфт, ML-оценка CRE) куплен Walker & Dunlop в 2022; технология в платформе Apprise (multifamily US). Как независимого NL-провайдера больше нет. _(ритейл · нерегулярно · EN)_
+- ★ **[DNB — Dashboard Woninghypotheken](https://www.dnb.nl/statistieken/dashboards/woninghypotheken/)** `[откр. · NL · ежеквартально]`
+  - что даёт: Статистика ипотечного рынка NL: объём и распределение долга (~890 млрд €), ставки банков, LTV/выдачи.
+  - аналитику: Первоисточник финансирования спроса на жильё: динамика ипотечного долга, ставок и LTV для оценки доступности и леверидж-чувствительности.
+  - метрики: mortgage debt outstanding, bank mortgage rates, LTV distribution, new originations  ·  сегменты: жильё, макро
+- ★ **[CPB — Forecasts (CEP/MEV)](https://www.cpb.nl/en/forecasts)** `[откр. · NL · ежеквартально]`
+  - что даёт: Официальные макропрогнозы NL: CEP (весна), MEV/cMEV (осень) — ВВП, инфляция, покупательная способность, доходы, ставки.
+  - аналитику: База для расчёта максимальной ипотеки и спроса; якорный официальный прогноз NL для дисконтирования и сценариев, сверяемый с DNB/ECB/EC.
+  - метрики: GDP forecast, inflation, purchasing power, household income, interest rates  ·  сегменты: макро, жильё
+- ★ **[DNB — Economic Developments and Outlook (EDO)](https://www.dnb.nl/en/publications/publications-dnb/edo/)** `[откр. · NL · 2 раза в год]`
+  - что даёт: Полугодовые макропроекции DNB по NL (Spring/December): ВВП, HICP, безработица, потребление, цены на жильё; часть проекций Евросистемы.
+  - аналитику: Официальный прогноз центробанка NL — второй якорь рядом с CPB: инфляция/ВВП/ставки, прогноз цен на жильё, расхождения DNB vs CPB vs ECB как индикатор неопределённости.
+  - метрики: GDP forecast, HICP inflation, unemployment, house price forecast, Eurosystem projections  ·  сегменты: макро, жильё
+- ★ **[ECB — Financial Stability Review (FSR)](https://www.ecb.europa.eu/press/financial-stability-publications/fsr/html/index.en.html)** `[откр. · EU · раз в полгода]`
+  - что даёт: Полугодовой обзор системных рисков: спецразделы по CRE и RRE, экспозиции банков (~€1.3 трлн CRE-кредитов), переоценка активов, риски небанковских инвесторов.
+  - аналитику: Макропруденциальный взгляд ECB на устойчивость CRE/RRE, банковскую уязвимость и системные каналы — контекст для стоимости и доступности фондирования NL.
+  - метрики: bank CRE exposure (EURtn), asset repricing, interest-rate sensitivity, NBFI/fund exposures, systemic risk  ·  сегменты: ритейл, жильё, макро
+- ★ **[DNB — Financial Stability Report (FSR)](https://www.dnb.nl/en/publications/publications-dnb/fsr/)** `[откр. · NL · раз в полгода]`
+  - что даёт: Полугодовой FSR NL: системные риски рынка жилья и CRE, ипотечный леверидж, переоценка CRE, чувствительность к ставкам.
+  - аналитику: Национальный макропруденциальный взгляд: позиция NL по рискам RRE/CRE, потенциальные ограничения кредитования (LTV/LTI), сигналы регуляторного давления на леверидж.
+  - метрики: RRE/CRE systemic risk, mortgage leverage, CRE repricing, rate sensitivity  ·  сегменты: жильё, ритейл, макро
+- ★ **[ECB — Monetary policy decisions hub](https://www.ecb.europa.eu/press/pr/date/html/index.en.html)** `[откр. · EU · нерегулярно]`
+  - что даёт: Решения по ключевым ставкам, пресс-конференции, проекции Eurosystem — первоисточник стоимости фондирования, влияющей на ипотеку и доходности.
+  - аналитику: Первоисточник по траектории политики ECB: уровень ставок и forward guidance как вход в стоимость капитала и расчёт yield spreads.
+  - метрики: key policy rates, monetary policy decisions, Eurosystem projections, forward guidance  ·  сегменты: макро
+- ● **[EBA — Risk Dashboard / Risk Assessment Report](https://www.eba.europa.eu/risk-and-data-analysis/risk-analysis/risk-dashboard)** `[откр. · EU · ежеквартально]`
+  - что даёт: Квартальный Risk Dashboard и полугодовой отчёт по банкам ЕС: NPL по CRE (~4%) и ипотекам, распределение CRE-кредитов по LTV, потоки NPL.
+  - аналитику: Фактические надзорные данные о качестве CRE/RRE-кредитов банков (NPL, Stage 2, LTV-бакеты) — прямой индикатор кредитного стресса и аппетита к недвижимости.
+  - метрики: CRE NPL ratio, mortgage NPL ratio, LTV distribution, Stage 2 loans, cost of risk  ·  сегменты: ритейл, жильё, макро
+- ● **[ESRB — CRE/RRE vulnerabilities (recommendations & reports)](https://www.esrb.europa.eu/mppa/recommendations/html/index.en.html)** `[откр. · EU · нерегулярно]`
+  - что даёт: Рекомендации и отчёты по системным рискам: ESRB/2022/9 о уязвимостях CRE, гармонизация LTV/LTC/DSCR/yield, manual по CRE-статистике.
+  - аналитику: Регуляторный взгляд на системные риски CRE-долга (refinancing wall, leverage) и стандартизацию метрик мониторинга, принимаемых DNB; основа оценки макропруденциального давления.
+  - метрики: CRE/RRE vulnerability assessment, harmonised LTV/LTC/DSCR/yield, systemic risk indicators, refinancing risk  ·  сегменты: ритейл, жильё, макро
+- ● **[European Commission (DG ECFIN) — Economic forecast NL](https://economy-finance.ec.europa.eu/economic-surveillance-eu-member-states/country-pages/netherlands/economic-forecast-netherlands_en)** `[откр. · EU · 3 раза в год]`
+  - что даёт: Официальные прогнозы ЕК по NL (Spring/Autumn/Winter): ВВП, HICP, госфинансы, занятость, инвестиции; сопоставимая методология по 27 странам.
+  - аналитику: Третий официальный независимый прогноз (наряду с CPB/DNB) для триангуляции базового сценария макро NL и сравнения с другими рынками ЕС.
+  - метрики: GDP forecast, HICP inflation, government balance/debt, employment, investment  ·  сегменты: макро
+- ○ **[ECB — Macroprudential Bulletin: system-wide CRE](https://www.ecb.europa.eu/press/financial-stability-publications/macroprudential-bulletin/html/ecb.mpbu202411_01~98f5aa8d45.en.html)** `[откр. · EU · нерегулярно]`
+  - что даёт: Аналитическая статья с system-wide разбором экспозиций к CRE (банки, фонды, страховщики) на данных AnaCredit.
+  - аналитику: Декомпозиция того, КТО держит риск CRE в еврозоне и как он перетекает; микроданные по дефолтности CRE-кредитов против ипотек.
+  - метрики: CRE exposure by sector, default rates (AnaCredit), interconnectedness, concentration  ·  сегменты: ритейл, индустриал
 
-## 12. Жильё: цены, аренда, ипотека и спрос
-_Специализированные данные по жилому сегменту — индексы аренды, ипотечные заявки и ставки, гарантии, обследования и индикаторы спроса._
+## 12. Институциональный капитал: asset owners и управляющие (NL)
+_Пенсионные управляющие, страховщики и фонды NL — их аллокации, house views и сделки показывают, куда движется крупнейший пул институционального капитала и как buy-side ранжирует суб-секторы._
 
-- ★ **[HDN — Hypotheken Data Netwerk (marktcijfers)](https://hdn.nl/marktcijfers/)** — Почти полная регистрация ипотечных заявок NL: месячные/недельные объёмы, средняя сумма и стоимость жилья, доли starters/doorstromers, сроки фиксации, HDN Index. _(жильё · ежемесячно · NL)_
-- ★ **[NVM — Marktinformatie Wonen](https://www.nvm.nl/wonen/marktinformatie-wonen/)** — Квартальные пресс-релизы NVM по жилью: число сделок, средняя цена, предложение, krapte-indicator, региональная разбивка. _(жильё · ежеквартально · NL)_
-- ★ **[Brainbay (совм. с NVM) — Research / vastgoedcijfers](https://brainbay.nl/en/research/)** — Квартальные данные NVM: средняя цена, индекс AVM (до уровня района), объём предложения, индикаторы; также отчёты по коммерции и ритейлу. Самые свежие транзакционные данные. _(жильё, ритейл · ежеквартально · NL+EN)_
-- ★ **[Pararius Huurmonitor (Rental Price Index)](https://www.pararius.com/news)** — Квартальный индекс аренды частного (нерегулируемого) сектора: средняя цена за м² по провинциям и городам, индексы PRI/PHI против CPI, динамика предложения. _(жильё · ежеквартально · NL+EN)_
-- ● **[WoON / Woononderzoek Nederland (datawonen.nl)](https://www.woononderzoek.nl/)** — Крупнейшее обследование жилищной ситуации (раз в 3 года, BZK/CBS): доходы, жилищные расходы, миграция, предпочтения. Основа жилищной политики. _(жильё · нерегулярно · NL)_
-- ● **[NHG — Nationale Hypotheek Garantie (kwartaalbericht)](https://www.nhg.nl/nhg-actueel/)** — Квартальные отчёты по NHG-гарантиям, woonlasten- и woningmarktmonitor, ежегодная kostengrens — важный регуляторный параметр рынка. _(жильё · ежеквартально · NL)_
-- ● **[Funda — Funda Index / persberichten](https://pers.funda.nl/)** — Данные крупнейшего портала жилья: предложение, контактные запросы, индекс доверия/намерения покупки — ранний индикатор спроса. _(жильё · ежеквартально · NL)_
-- ● **[De Hypotheekshop — Actuele hypotheekrente](https://www.hypotheekshop.nl/actuelerente)** — Ежедневные актуальные ипотечные ставки 40+ кредиторов (NHG и по LTV), исторические графики, комментарии и прогнозы. _(жильё · непрерывно · NL)_
-- ● **[Van Bruggen Adviesgroep — Hypotheekrente-overzicht](https://www.vanbruggen.nl/hypotheekadvies/hypotheekrente-overzicht)** — Ежедневный обзор фиксированных/переменных ставок ~30 кредиторов с фильтрами (тип, энергоклассы, NHG), прогнозы. _(жильё · непрерывно · NL)_
-- ○ **[WSW — Waarborgfonds Sociale Woningbouw](https://www.wsw.nl/)** — Гарантии заимствований жилкорпораций (AAA), стоимость фондирования, риск-данные по сектору соцжилья и доступности капитала для стройки. _(жильё · ежеквартально · NL)_
-- ○ **[Platform31 — Kennisdossier Woningmarkt](https://www.platform31.nl/wat-we-doen/kennisdossiers/kennisdossier-woningmarkt)** — Прикладные исследования по жилью, доступности, среднему сегменту, трансформации городов и зон — связь политики и практики. _(жильё, ритейл · нерегулярно · NL)_
+- ★ **[Bouwinvest — Market Outlook & Publications](https://bouwinvest.com/news-publications/bouwinvest-market-outlook-2026-2028/)** `[откр. · NL · ежегодно]`
+  - что даёт: Трёхлетний forward-looking outlook УК для пенсфондов (~13 млрд €) по 6 сегментам: residential, healthcare, retail, office (Grade A), hotels, PBSA. Акцент на качество дохода, ESG.
+  - аналитику: Эталон взгляда buy-side институционала по NL: сверка прогноза доходностей и аллокаций с тем, как реальный пенсионный управляющий ранжирует суб-секторы и тренды.
+  - метрики: expected total returns, income quality, rental growth, sector allocation, ESG/CRREM alignment  ·  сегменты: жильё, ритейл, индустриал
+- ★ **[DNB — Pension funds dashboard](https://www.dnb.nl/en/statistics/dashboards/pension-funds/)** `[откр. · NL · ежеквартально]`
+  - что даёт: Машиночитаемая статистика пенсионного сектора NL (~€1,5+ трлн): доля недвижимости (~9%), ипотечные кредиты на балансе (>€174 млрд), динамика аллокаций.
+  - аналитику: Первоисточник по аллокации крупнейшего пула институционального капитала NL в недвижимость и ипотеку; оценка потенциального спроса/предложения капитала и trend.
+  - метрики: RE allocation %, mortgage holdings, total assets, allocation trends  ·  сегменты: все сегменты
+- ● **[IVBN — Institutionele Beleggers in Vastgoed Nederland](https://ivbn.nl/)** `[откр. · NL · нерегулярно]`
+  - что даёт: Позиции институциональных инвесторов (~50 млрд € в NL): position papers, реакции на регулирование (Box 3, аренда, налоги), исследования по сегментам.
+  - аналитику: Голос институционального капитала NL: оценка регуляторного риска (Box 3, Wet betaalbare huur) для привлекательности Dutch living и аргументация позиций отрасли.
+  - метрики: institutional AuM NL, policy positions, sector studies, regulatory impact  ·  сегменты: жильё, ритейл, индустриал
+- ● **[CBRE Investment Management — Insights / House Views](https://www.cbreim.com/insights)** `[freemium · EU · ежеквартально]`
+  - что даёт: House Views (Macro House View квартально), европейские outlooks, секторные deep-dives, количественные модели. $150+ млрд AuM.
+  - аналитику: Buy-side house view с количественным ранжированием секторов и относительной стоимости для сверки собственного allocation-view по Европе/NL.
+  - метрики: macro house view, sector ranking, relative value, total return outlook  ·  сегменты: все сегменты
+- ● **[a.s.r. real assets — News & Publications](https://asrrealassets.com/news-and-publications)** `[откр. · NL · нерегулярно]`
+  - что даёт: Публикации управляющего (жильё/ASR DCRF, ритейл, офисы, сельхозземля): сделки, привлечение капитала, area development (~13 000 домов в планах).
+  - аналитику: Сигналы по аллокации и сделкам крупного NL-управляющего; индикатор спроса на жилые/ритейл активы и развития area development.
+  - метрики: transactions, capital raising, development pipeline, fund flows  ·  сегменты: все сегменты
+- ● **[Achmea Real Estate — News](https://www.achmearealestate.nl/en/about-us/news)** `[откр. · NL · нерегулярно]`
+  - что даёт: Новости управляющего ~13 млрд € (жильё, ритейл, healthcare, офисы) для 30+ инвесторов; цель 25 млрд к 2030, Dutch Residential Impact Fund.
+  - аналитику: Сигналы аллокации и сделок по NL; индикатор институционального спроса на residential/healthcare и impact-стратегии.
+  - метрики: transactions, fund AuM/targets, sector allocation, impact strategy  ·  сегменты: все сегменты
+- ● **[PGGM — Private Real Estate](https://pggm.nl/en/asset-management/private-real-estate)** `[откр. · NL · нерегулярно]`
+  - что даёт: Страница private real estate (PPREF ~20 млрд €, 102 инвестиции, GRESB 90); стратегия, тренды, доходности; соучредитель GRESB.
+  - аналитику: Взгляд крупнейшего пенсионного инвестора на private RE: стратегия, ESG-лидерство (CRREM/GRESB), сигналы по мандатам и аллокации.
+  - метрики: RE allocation, fund performance, GRESB score, strategy shifts  ·  сегменты: все сегменты
+- ● **[APG Asset Management — News & Insights](https://assetmanagement.apg.nl/news-insights/)** `[откр. · NL · нерегулярно]`
+  - что даёт: Новости крупнейшего пенсионного инвестора (~540 млрд €, для ABP): инвестиции в жильё, impact, климатические индексы недвижимости (CRREM).
+  - аналитику: Сигналы аллокации крупнейшего asset owner NL; индикатор глобальных институциональных потоков капитала и ESG-приоритетов.
+  - метрики: RE investments, allocation signals, climate index use, impact strategy  ·  сегменты: все сегменты
+- ○ **[DNB — Insurers dashboard](https://www.dnb.nl/en/statistics/dashboards/insurers/insurers-supervision/)** `[откр. · NL · ежеквартально]`
+  - что даёт: Надзорная статистика страховщиков NL: special investments вкл. недвижимость и ипотечные кредиты, структура портфеля.
+  - аналитику: Второй после пенсфондов класс asset-owners: оценка спроса на RE/ипотеку и финансовой устойчивости держателей активов.
+  - метрики: RE & mortgage exposure, portfolio composition, solvency context  ·  сегменты: все сегменты
 
-## 13. Ритейл и e-commerce
-_Локационные данные о магазинах, вакантности и проходимости плюс онлайн-расходы и ритейл-медиа — спрос на торговую недвижимость и канал online vs offline._
+## 13. Наднациональная статистика цен и доступности
+_Гармонизированные кросс-страновые индексы цен жилья и CRE + valuation-метрики (price-to-income/rent) для бенчмаркинга относительной переоценки NL против ЕС/мира в единой методологии._
 
-- ★ **[Locatus](https://locatus.com/)** — Первоисточник по физическому ритейлу Бенилюкса: база 400 000+ магазинов/HoReCa, мониторинг winkelleegstand (~200 зон), Retail Risk Index, проходимость, Leegstandsrapport. _(ритейл · непрерывно · NL+EN)_
-- ★ **[Thuiswinkel.org (Thuiswinkel Markt Monitor)](https://www.thuiswinkel.org/kennisbank/topics/onderzoek/)** — Главный источник по онлайн-расходам: Thuiswinkel Markt Monitor (4 раза/год, объёмы и суммы онлайн-покупок), B2B Monitor, Duurzaamheid Monitor. Контекст online vs offline. _(ритейл · ежеквартально · NL)_
-- ● **[Q&A Retail (Research & Consultancy)](https://www.qanda.nl/)** — Ведущий ритейл-партнёр по research: ежегодный Retail Outlook, исследования потребителей/рынка, impact-анализы для Retailagenda. _(ритейл · ежегодно · NL)_
-- ● **[RetailTrends (вкл. RetailNews)](https://retailtrends.nl/)** — Главное проф. медиа по рознице и брендам: ежедневные новости, финпоказатели ритейлеров, банкротства/открытия, тренды, подкаст. _(ритейл · непрерывно · NL)_
-- ○ **[Twinkle / Twinkle100](https://twinklemagazine.nl/)** — Издание по digital commerce; Twinkle100 — ежегодный рейтинг крупнейших онлайн-ритейлеров NL, обзор топ-300 вебшопов по обороту. _(ритейл · ежегодно · NL)_
-- ○ **[Ecommerce News Nederland](https://www.ecommercenews.nl/nieuws/)** — Новости и обзоры e-commerce: число вебшопов (CBS/KvK), маркетплейсы (bol, Amazon), логистика/тарифы, бенчмарки. _(ритейл · непрерывно · NL+EN)_
+- ★ **[Eurostat — Housing Price Statistics (prc_hpi_q)](https://ec.europa.eu/eurostat/web/housing-price-statistics)** `[откр. · EU · ежеквартально]`
+  - что даёт: Гармонизированный HPI/OOHPI по NL поквартально, сопоставимо с ЕС; разбивка новое/существующее, объёмы сделок.
+  - аналитику: Сопоставимый официальный бенчмарк цен жилья NL против ЕС в единой методологии для контекста относительной динамики и переоценки.
+  - метрики: HPI, OOHPI, house sales volumes, new vs existing  ·  сегменты: жильё, макро
+- ★ **[OECD — Housing prices (Analytical House Price Database)](https://www.oecd.org/en/data/indicators/housing-prices.html)** `[откр. · global · ежеквартально]`
+  - что даёт: Аналитическая база цен жилья OECD: номинальные/реальные индексы, индекс аренды, price-to-income и price-to-rent (база 2015=100), вкл. NL.
+  - аналитику: Канонические индикаторы over/undervaluation рынка жилья NL против OECD/ЕС: риск коррекции, бенчмарк доступности, тезисы о перегреве/нормализации.
+  - метрики: nominal/real house prices, price-to-income ratio, price-to-rent ratio, rent index, valuation gap  ·  сегменты: жильё, макро
+- ● **[BIS — Property Price Statistics (Commercial & Residential)](https://data.bis.org/topics/CPP)** `[откр. · global · ежемесячно/ежеквартально]`
+  - что даёт: Гармонизированные индексы цен: Commercial Property Prices (>20 стран) и Residential Property Prices (55 стран, selected-серия NL); следует G20 Data Gaps Initiative.
+  - аналитику: Сопоставимый кросс-страновой бенчмаркинг цен жилья и CRE NL против еврозоны/мира; нейтральный международный ориентир рядом с CBS/Kadaster.
+  - метрики: nominal/real residential prices, commercial property prices, cross-country indices  ·  сегменты: жильё, ритейл, макро
+- ● **[IMF — Global Housing Watch](https://www.imf.org/external/research/housing/index.htm)** `[откр. · global · ежеквартально]`
+  - что даёт: Глобальный мониторинг: Global House Price Index, price-to-income, price-to-rent поквартально по странам вкл. NL; аналитические заметки о рисках.
+  - аналитику: Глобальное позиционирование NL в цикле цен и сравнение valuation-метрик с десятками стран в методологии МВФ; раннее чтение системных рисков жилья.
+  - метрики: global house price index, price-to-income, price-to-rent, valuation metrics  ·  сегменты: жильё, макро
+- ● **[IMF — Netherlands (Article IV)](https://www.imf.org/en/countries/nld)** `[откр. · NL · ежегодно]`
+  - что даёт: Страновой хаб МВФ по NL: ежегодный Article IV с прогнозами ВВП/инфляции и оценкой рисков жилья, рынка труда, азота/энергосети.
+  - аналитику: Авторитетный независимый внешний прогноз и risk assessment NL: рост, структурные ограничения (housing/grid/nitrogen), финстабильность — макро-контекст и сценарии.
+  - метрики: GDP forecast, inflation forecast, financial stability risks, housing market assessment, structural bottlenecks  ·  сегменты: макро, жильё
+- ○ **[Eurostat — Short-Term Business Statistics (строительство)](https://ec.europa.eu/eurostat/web/short-term-business-statistics/database)** `[откр. · EU · ежемесячно]`
+  - что даёт: Индексы цен производителей в строительстве, объёмы стройпроизводства, разрешения по ЕС/NL — опережающие индикаторы предложения.
+  - аналитику: Сопоставимые опережающие индикаторы supply pipeline и стройзатрат NL против ЕС для прогноза предложения.
+  - метрики: construction producer prices, construction output, building permits  ·  сегменты: жильё, ритейл, индустриал, макро
+- ○ **[OECD — Affordable Housing Database](https://www.oecd.org/en/data/datasets/oecd-affordable-housing-database.html)** `[откр. · global · ежегодно]`
+  - что даёт: Кросс-страновые индикаторы: рынок жилья, доступность (цена/доход), жилищная политика — для бенчмаркинга NL против OECD/ЕС.
+  - аналитику: Сравнение политики и доступности жилья NL с peer-странами; контекст структурного дефицита и регуляторных мер.
+  - метрики: affordability ratios, housing policy indicators, tenure structure, social housing share  ·  сегменты: жильё, макро
 
-## 14. Индустриал, логистика и supply chain
-_Отраслевые СМИ, исследования и девелоперы складов плюс данные по supply chain — спрос, абсорбция, аренда и пайплайн логистической недвижимости._
+## 14. Официальная статистика, реестры и первоисточники NL
+_Национальная статистика, земельный кадастр, реестры адресов/оценок и ипотечные данные — фундамент любой аналитики и единственный источник окончательных транзакционных данных по NL._
 
-- ★ **[Savills Netherlands — Industrial & Logistics Research](https://en.savills.nl/sectors/industrial-and-logistics.aspx)** — Аналитика рынка логистики NL (Logistics Trend Report, Confidence Index, вакантность, доходности, предложение). _(индустриал, ритейл, макро · ежеквартально · NL+EN)_
-- ★ **[Prologis Research](https://www.prologis.com/insights-news/research)** — White papers и аналитика по логнедвижимости: спрос/абсорбция, аренда, автоматизация, глобальные цепочки поставок (крупнейший мировой владелец складов). _(индустриал, макро · ежеквартально · EN)_
-- ★ **[Logistiek.nl](https://www.logistiek.nl/)** — Ежедневные новости логистики, складов, supply chain, тарифы, спецпроекты (Top 100 Logistiek Dienstverleners), аналитика. _(индустриал · непрерывно · NL)_
-- ★ **[Nieuwsblad Transport (NT)](https://www.nt.nl/)** — Новости по всем видам транспорта (порты, авто, ж/д, авиа, водный), логистике и цепочкам поставок; интервью и аналитика. _(индустриал, макро · непрерывно · NL)_
-- ● **[BCI Global (ex-Buck Consultants International)](https://www.bciglobal.com/)** — Стратегия цепочек поставок, выбор локаций, недвижимость и логистика; исследования (resilience, Transportation Monitor). HQ в Неймегене. _(индустриал, макро · нерегулярно · EN+NL)_
-- ● **[Warehouse Totaal](https://www.warehousetotaal.nl/)** — Новости и кейсы по складам, автоматизации, материалопотокам, складской недвижимости, e-commerce-логистике; журнал и вебинары. _(индустриал · непрерывно · NL)_
-- ● **[Supply Chain Magazine (Supply Chain Media)](https://www.supplychainmagazine.nl/)** — Тренды цепочек поставок, планирование, видимость, устойчивость, ПО; отчёты, кейсы, whitepapers, вебинары. _(индустриал · непрерывно · NL)_
-- ● **[WDP](https://www.wdp.eu/en/)** — Пресс-релизы, инвесторская отчётность, Knowledge Hub; сделки, build-to-suit, sale-and-leaseback, brownfield по NL/BE/DE/FR/RO. _(индустриал · нерегулярно · EN+NL)_
-- ● **[CTP — News / Insights](https://ctp.eu/news/)** — Новости и CTP Insights; крупнейший листингованный индустриальный девелопер Европы, рынок NL (property finder, сделки, аренда). _(индустриал · нерегулярно · EN)_
-- ○ **[Transport Online](https://www.transport-online.nl/)** — Ежедневные новости транспорта и логистики, склады, цены на топливо, ограничения движения, биржа грузов. _(индустриал · непрерывно · NL)_
-- ○ **[Intospace](https://intospace.eu/news/)** — Новости проектов и устойчивого складского девелопмента; первый B Corp логистический девелопер NL (Tilburg, Zoetermeer, Duiven). _(индустриал · нерегулярно · EN+NL)_
-- ○ **[DHG](https://www.dhg.nl/)** — DHG Nieuws: сделки аренды, распределительные центры/терминалы (Smartlogs), офисы; ~1,6 млн м² реализовано, 700 тыс. м² в разработке. _(индустриал, ритейл · нерегулярно · NL)_
-- ○ **[Heylen Warehouses](https://heylenwarehouses.com/en/home-en/)** — Новости проектов; девелопмент и аренда логистической и light-industrial недвижимости в NL/BE/FR/ES (>1 млн м²), офис в Бреде. _(индустриал · нерегулярно · EN+NL)_
-- ○ **[Dokvast](https://www.dokvast.com/)** — Проекты: распределительные центры (Rhenus, DB Schenker), XXL-DC и data-центры; ~350 тыс. м² с 2006, циркулярное строительство. _(индустриал · нерегулярно · NL+EN)_
+- ★ **[CBS StatLine — verkoopprijzen prijsindex (85773NED)](https://www.cbs.nl/nl-nl/cijfers/detail/85773NED)** `[откр. · NL · ежемесячно]`
+  - что даёт: Первоисточник цен на жильё: индекс PBK (2020=100), число проданных домов, средняя цена, стоимость сделок; ряд с 1995 на основе нотариальных актов Kadaster.
+  - аналитику: Якорный официальный ряд цен жилья NL для построения долгосрочных трендов и проверки брокерских/AVM-данных.
+  - метрики: PBK price index, homes sold, average price, total transaction value  ·  сегменты: жильё
+- ★ **[Kadaster — Vastgoeddashboard](https://www.kadaster.nl/zakelijk/vastgoedinformatie/vastgoedcijfers/vastgoeddashboard)** `[откр. · NL · ежемесячно]`
+  - что даёт: Первоисточник по сделкам: число проданных домов, средние цены, индекс PBK, ипотеки, возраст покупателей, принудительные торги; по стране и провинциям.
+  - аналитику: Окончательные транзакционные данные из земельного регистра для трекинга объёмов, цен и доли инвесторов; основа сверки с CBS.
+  - метрики: homes sold, average price, PBK index, mortgages registered, forced sales  ·  сегменты: жильё, макро
+- ★ **[Kadaster — Kwartaalbericht woningmarkt](https://www.kadaster.nl/zakelijk/vastgoedinformatie/kwartaalberichten/kwartaalberichten-woningmarkt)** `[откр. · NL · ежеквартально]`
+  - что даёт: Квартальный отчёт по сделкам из земельного регистра: число продаж, динамика цен, доля инвесторов (стартеры/инвесторы).
+  - аналитику: Квартальный официальный срез активности рынка жилья и поведения инвесторов для трекинга цикла.
+  - метрики: transactions, price dynamics, investor share, starter share  ·  сегменты: жильё
+- ★ **[CBS — Dashboard Woningmarkt](https://www.cbs.nl/nl-nl/visualisaties/dashboard-economie/woningmarkt)** `[откр. · NL · ежемесячно]`
+  - что даёт: Сводный дашборд рынка жилья: индекс PBK, число сделок помесячно, средние цены по муниципалитетам.
+  - аналитику: Быстрая точка входа к ключевым официальным показателям жилья для еженедельного обзора.
+  - метрики: PBK index, monthly transactions, municipal average prices  ·  сегменты: жильё, макро
+- ★ **[CBS StatLine — Bouwvergunningen nieuwbouwwoningen (83668NED)](https://www.cbs.nl/nl-nl/cijfers/detail/83668NED)** `[откр. · NL · ежемесячно]`
+  - что даёт: Выданные разрешения на строительство жилья (число, индекс), построенные дома, стройзатраты, площадь. Ключ к пайплайну предложения.
+  - аналитику: Опережающий индикатор будущего предложения: разрешения предсказывают завершения через 1,5-2 года — основа прогноза дефицита.
+  - метрики: building permits, completions, construction costs, floor area  ·  сегменты: жильё, макро
+- ★ **[HDN — Hypotheken Data Netwerk (marktcijfers)](https://hdn.nl/marktcijfers/)** `[откр. · NL · ежемесячно]`
+  - что даёт: Почти полная регистрация ипотечных заявок NL: месячные/недельные объёмы, средняя сумма и стоимость жилья, доли starters/doorstromers, HDN Index.
+  - аналитику: Самый свежий опережающий индикатор спроса на жильё: объёмы ипотечных заявок предсказывают сделки на 1-2 месяца вперёд.
+  - метрики: mortgage applications, average loan/house value, starter/mover share, HDN Index  ·  сегменты: жильё
+- ★ **[Brainbay (NVM) — Research / vastgoedcijfers](https://brainbay.nl/en/research/)** `[откр. · NL · ежеквартально]`
+  - что даёт: Квартальные данные NVM: средняя цена, AVM-индекс (до района), объём предложения, индикаторы; также коммерция/ритейл. Самые свежие транзакционные данные.
+  - аналитику: Опережающий слой к CBS/Kadaster: свежие транзакционные данные NVM по ценам и предложению до публикации официальной статистики.
+  - метрики: average price, AVM index, supply volume, krapte-indicator  ·  сегменты: жильё, ритейл
+- ● **[CBS — Detailhandel (omzet/internetverkopen)](https://www.cbs.nl/nl-nl/faq/specifiek/welke-cijfers-publiceert-het-cbs-over-de-detailhandel-)** `[откр. · NL · ежемесячно]`
+  - что даёт: Официальная помесячная статистика оборота и объёма розницы (food/non-food), online vs offline, по SBI и регионам.
+  - аналитику: Спрос на торговую недвижимость: динамика розничного оборота и сдвиг online/offline как драйвер аренды и вакантности ритейла.
+  - метрики: retail turnover/volume, food/non-food split, online vs offline, regional breakdown  ·  сегменты: ритейл, макро
+- ● **[Kadaster — BAG Viewer (адреса и здания)](https://bagviewer.kadaster.nl/)** `[откр. · NL · непрерывно]`
+  - что даёт: Адресный реестр всех зданий NL: год постройки, площадь, gebruiksdoel, статус, координаты. Базовый слой идентификации объектов.
+  - аналитику: Идентификация и базовые характеристики любого объекта NL при андеррайтинге и построении выборок.
+  - метрики: building year, floor area, use type, status, coordinates  ·  сегменты: жильё, ритейл, индустриал
+- ● **[Waarderingskamer — WOZ-waardeloket](https://www.waarderingskamer.nl/woz-wijzer/controleren-woz-waarde/woz-waardeloket)** `[откр. · NL · ежегодно]`
+  - что даёт: Публичный доступ к оценкам WOZ всех объектов (с 2014), годовой рост оценок по муниципалитетам. Прокси стоимости.
+  - аналитику: Прокси стоимости объекта и база налогообложения (Box 3, overdrachtsbelasting); сравнение динамики WOZ по муниципалитетам.
+  - метрики: WOZ value, municipal WOZ growth, value comparison  ·  сегменты: жильё, ритейл, индустриал
+- ● **[NHG — Nationale Hypotheek Garantie (kwartaalbericht)](https://www.nhg.nl/nhg-actueel/)** `[откр. · NL · ежеквартально]`
+  - что даёт: Квартальные отчёты по NHG-гарантиям, woonlasten- и woningmarktmonitor, ежегодная kostengrens.
+  - аналитику: Регуляторный параметр доступности (kostengrens) и индикатор риска по гарантированным ипотекам.
+  - метрики: NHG guarantees, kostengrens, woonlasten monitor, loss claims  ·  сегменты: жильё
+- ● **[Pararius Huurmonitor (Rental Price Index)](https://www.pararius.com/news)** `[откр. · NL · ежеквартально]`
+  - что даёт: Квартальный индекс аренды частного (нерегулируемого) сектора: цена за м² по провинциям/городам, PRI/PHI против CPI, динамика предложения.
+  - аналитику: Главный индикатор частной аренды (слабо покрытой NVM): рост аренды и предложения как драйвер доходности жилых инвестиций и эффект регулирования.
+  - метрики: rent per m2, PRI/PHI index, rent vs CPI, supply dynamics  ·  сегменты: жильё
+- ● **[Realstats (Pararius/Huurwoningen data)](https://realstats.com/)** `[freemium · NL · непрерывно]`
+  - что даёт: Эксклюзивный доступ к данным Pararius и Huurwoningen.nl: арендные транзакции, поведение, тренды; также сделки купли.
+  - аналитику: Транзакционные данные huurmarkt, слабо покрытого NVM, для калибровки рыночной аренды и доходности при андеррайтинге жилья.
+  - метрики: rental transactions, rent levels, tenant behaviour, purchase transactions  ·  сегменты: жильё, макро
+- ○ **[PDOK — Publieke Dienstverlening Op de Kaart](https://www.pdok.nl/datasets)** `[откр. · NL · непрерывно]`
+  - что даёт: Центральная гео-платформа правительства: BAG, кадастровые участки, аэрофото, 200+ датасетов через API.
+  - аналитику: Основа гео-аналитики и пространственных выборок (локация, землепользование) для андеррайтинга и market sizing.
+  - метрики: BAG, cadastral parcels, geospatial datasets, aerial imagery  ·  сегменты: все сегменты
 
-## 15. Энергосети, азот и ESG
-_Сетевые операторы и congestie, государственная азотная политика и AERIUS, нормы энергоэффективности и ESG-сертификация — ключевые физические и регуляторные барьеры для стройки и индустриала._
+## 15. Госорганы, регуляторы и политика (NL)
+_Министерства, парламент, налоговый орган, суды и отраслевые регуляторы — первоисточники жилищной/фискальной политики, пермитов, регулирования аренды и тарифов, влияющих на доходность и стройку._
 
-- ★ **[Netbeheer Nederland (vereniging netbeheerders)](https://www.netbeheernederland.nl/artikelen/nieuws)** — Совокупная позиция операторов сетей: 'Stand van de Uitvoering', статистика по нетконгестии, листы ожидания, нетарифы 2026. Системная картина дефицита сетевых мощностей. _(все сегменты · непрерывно · NL)_
-- ★ **[TenneT — Netcongestie](https://www.tennet.eu/nl/themas/netcongestie)** — Раздел по нетконгестии, инвестпланы (~65 млрд евро / 10 лет, ~1000 проектов; задержки в среднем 2,5 года). Критично для логистики/промзон на высоком напряжении. _(индустриал, ритейл, макро · непрерывно · NL+EN)_
-- ★ **[BIJ12 — Stikstof / AERIUS](https://www.bij12.nl/onderwerp/stikstof/)** — Операционный первоисточник по азоту: AERIUS (Calculator/Register/Monitor) для расчёта депозиции на Natura 2000 — необходим для пермитов; Helpdesk Stikstof, habitatkaarten. _(индустриал, жильё, ритейл, макро · непрерывно · NL)_
-- ★ **[Rijksoverheid — Stikstof (азотная политика)](https://www.rijksoverheid.nl/onderwerpen/stikstof)** — Официальная политика по азоту (PSN 2022-2035, пакет 2026, цели по секторам, ускорение vergunningverlening, площадные подходы). Напрямую влияет на разблокировку стройки. _(макро, индустриал, жильё · непрерывно · NL)_
-- ★ **[RVO — Bouwen en wonen (устойчивость, субсидии, нормы)](https://www.rvo.nl/onderwerpen/wetten-en-regels-gebouwen)** — Правила и субсидии по устойчивости: energielabel, обязательный label C для офисов >100 м², BENG, EPBD IV, субсидии (DEI+). Первоисточник по нормам энергоэффективности. _(жильё, ритейл, индустриал · непрерывно · NL+EN)_
-- ★ **[DGBC — Dutch Green Building Council (Paris Proof, BREEAM-NL)](https://www.dgbc.nl)** — Держатель BREEAM-NL; тема Paris Proof (CO₂-нейтральная среда, kWh/m²). Знаниевый хаб (~400 партнёров). Первоисточник по рыночным ESG-стандартам, влияющим на оценку и арендуемость. _(ритейл, индустриал, жильё · непрерывно · NL+EN)_
-- ● **[Liander (региональный DSO — Noord-Holland, Gelderland, Flevoland)](https://www.liander.nl)** — Региональная доступность мощности: 'stroomnetchecker' (сроки и возможности подключения по адресу), раздел grootzakelijk, листы ожидания. _(жильё, ритейл, индустриал · непрерывно · NL)_
-- ● **[Stedin (региональный DSO — Randstad)](https://www.stedin.net)** — 'Vol stroomnet' и 'Netcapaciteit' (congestiemanagement, крупные подключения), листы ожидания. Покрывает Роттердам-Гаага-Утрехт. _(жильё, ритейл, индустриал · непрерывно · NL)_
-- ● **[Enexis Netbeheer (региональный DSO — юг и северо-восток)](https://www.enexis.nl/nieuws)** — Проверка доступной мощности по адресу, перегруженные подстанции, листы ожидания, wijkgerichte aanpak. Покрывает логкоридоры юга (Brabant/Limburg). _(жильё, ритейл, индустриал · непрерывно · NL)_
-- ● **[GRESB — ESG benchmarking (Insights)](https://www.gresb.com/nl-en/insights/)** — Глобальный ESG-бенчмарк для real assets (>150 инвесторов): рейтинги фондов/активов, результаты ассессмента, insights. Ожидания инвесторов к ESG портфелей NL. _(ритейл, индустриал, жильё, макро · ежегодно · EN)_
-- ● **[RVO — BENG (Bijna Energieneutrale Gebouwen)](https://www.rvo.nl/onderwerpen/beng)** — Требования BENG для всех заявок с 01.01.2021: макс. энергопотребность, макс. ископаемое топливо, мин. доля ВИЭ, TOjuli. Первоисточник для оценки новых проектов. _(жильё, ритейл, индустриал · нерегулярно · NL)_
+- ★ **[Volkshuisvesting Nederland (программа BZK/VRO)](https://www.volkshuisvestingnederland.nl/)** `[откр. · NL · ежемесячно]`
+  - что даёт: Программа Woningbouw, дашборды и мониторинг стройки, Staat van de Volkshuisvesting, Wet betaalbare huur, Wet versterking regie volkshuisvesting.
+  - аналитику: Первоисточник госцелей стройки (900 000 домов) и ключевого регулирования аренды, определяющего привлекательность mid-rent сегмента и pipeline.
+  - метрики: construction targets, building monitor, rent regulation laws, affordability policy  ·  сегменты: жильё, макро
+- ★ **[Rijksoverheid — тема Volkshuisvesting](https://www.rijksoverheid.nl/onderwerpen/volkshuisvesting)** `[откр. · NL · непрерывно]`
+  - что даёт: Сводная госполитика по жилью: цели 900 000 домов, 100 000/год, законы о доступной аренде, ключевые документы.
+  - аналитику: Официальная рамка жилищной политики и таймлайны законов для оценки регуляторного риска и направления рынка.
+  - метрики: housing targets, policy documents, affordability measures  ·  сегменты: жильё, макро
+- ★ **[Belastingdienst — Box 3 (overige onroerende zaken)](https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/vermogen_en_aanmerkelijk_belang/vermogen/wat_zijn_uw_bezittingen_en_schulden/uw_bezittingen/overige_onroerende_zaken/overige_onroerende_zaken)** `[откр. · NL · ежегодно]`
+  - что даёт: Налогообложение недвижимости в Box 3 (WOZ-стоимость, новая система фактического дохода) — влияет на доходность арендного жилья.
+  - аналитику: Ключевой фискальный драйвер net yield арендодателей; переход к фактическому доходу меняет привлекательность Dutch living.
+  - метрики: Box 3 tax base, effective return system, net yield impact  ·  сегменты: жильё, ритейл, макро
+- ● **[Belastingdienst — Overdrachtsbelasting](https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/woning/overdrachtsbelasting/overdrachtsbelasting)** `[откр. · NL · ежегодно]`
+  - что даёт: Официальные ставки налога на передачу недвижимости (2%/8%/10,4%), льготы, база начисления.
+  - аналитику: Прямой transaction cost при андеррайтинге сделок; дифференциация ставок влияет на инвестиционную активность по сегментам.
+  - метрики: transfer tax rates, exemptions, tax base  ·  сегменты: жильё, ритейл, индустриал
+- ● **[Huurcommissie (Rental Tribunal)](https://www.huurcommissie.nl/)** `[откр. · NL · нерегулярно]`
+  - что даёт: Орган споров по аренде: пунктовая система WWS, регулирование арендной платы, сервисные расходы.
+  - аналитику: Прямое влияние на регулируемый и mid-rent сегмент: WWS-баллы определяют максимальную аренду и net yield жилых инвестиций.
+  - метрики: WWS points system, max regulated rent, service charges  ·  сегменты: жильё
+- ● **[Tweede Kamer der Staten-Generaal](https://www.tweedekamer.nl/)** `[откр. · NL · непрерывно]`
+  - что даёт: Законопроекты, поправки, дебаты и повестка по жилью, аренде, налогам, пространственной политике; Kamerstukken.
+  - аналитику: Раннее отслеживание законодательных изменений (аренда, Box 3, налоги) до вступления в силу для оценки регуляторного риска.
+  - метрики: bills/amendments, debates, Kamerstukken, voting status  ·  сегменты: все сегменты
+- ● **[Officiële bekendmakingen (Overheid.nl)](https://www.officielebekendmakingen.nl/)** `[откр. · NL · непрерывно]`
+  - что даёт: Аутентичные публикации Staatsblad, Staatscourant, Kamerstukken, муниципальные/провинциальные bekendmakingen (bestemmingsplannen, omgevingsvergunningen).
+  - аналитику: Первоисточник вступивших в силу законов и локальных планов/пермитов для проверки регуляторного статуса проектов.
+  - метрики: Staatsblad/Staatscourant, local zoning plans, permits  ·  сегменты: все сегменты
+- ● **[IPLO — Informatiepunt Leefomgeving: Omgevingswet](https://iplo.nl/regelgeving/omgevingswet/)** `[откр. · NL · непрерывно]`
+  - что даёт: Официальное толкование Omgevingswet и DSO/Omgevingsloket: omgevingsvisie, пермиты, планы, переходное право.
+  - аналитику: Основа понимания пермит-процесса для девелопмента NL: сроки и требования Omgevingswet как барьер/таймлайн стройки.
+  - метрики: permit procedures, omgevingsvisie, transitional law  ·  сегменты: все сегменты
+- ● **[ACM — Autoriteit Consument & Markt (энергорынок)](https://www.acm.nl/nl/energie/toezicht-op-de-energiemarkt)** `[откр. · NL · непрерывно]`
+  - что даёт: Надзор за сетями: methodebesluit, тарифные решения (nettarieven 2026), время-зависимые тарифы, приоритизация мощности.
+  - аналитику: Первоисточник по стоимости сетевого подключения — растущий operating cost и барьер для логистики/индустриала на фоне congestie.
+  - метрики: network tariffs, methodebesluit, capacity prioritisation  ·  сегменты: все сегменты
+- ● **[AFM — Prospectus supervision](https://www.afm.nl/en/sector/effectenuitgevende-ondernemingen/prospectustoezicht)** `[откр. · NL · непрерывно]`
+  - что даёт: Надзор за проспектами эмитентов акций/облигаций (вкл. Euronext Amsterdam), публичный реестр одобренных проспектов, надзор за market abuse.
+  - аналитику: Первоисточник проспектов при выпусках акций/бондов NL-REIT (условия, financials, риски); реестр для проверки primary issuance.
+  - метрики: approved prospectuses register, issuer disclosures, securities admission  ·  сегменты: все сегменты
+- ● **[Raad van State (Госсовет / высший адм. суд)](https://www.raadvanstate.nl/)** `[откр. · NL · непрерывно]`
+  - что даёт: Заключения по законопроектам и решения по спорам в планировании, пермитах, природоохране (азот/PFAS), стройке.
+  - аналитику: Судебные решения по азоту/пермитам, способные блокировать или разблокировать крупные проекты — ключевой риск development-pipeline.
+  - метрики: court rulings, permit disputes, nitrogen/PFAS cases  ·  сегменты: все сегменты
+- ○ **[Autoriteit woningcorporaties (Aw) — ILT](https://www.ilent.nl/onderwerpen/autoriteit-woningcorporaties)** `[откр. · NL · ежеквартально]`
+  - что даёт: Финансовый и нормативный надзор за жилкорпорациями: отчёты о состоянии сектора, риски, соблюдение Woningwet.
+  - аналитику: Финансовая устойчивость соцсектора (~2,4 млн квартир) и его способность строить — контекст предложения доступного жилья.
+  - метрики: corporation financial health, sector risk, Woningwet compliance  ·  сегменты: жильё
 
-## 16. Прогнозные институты, строительные затраты и наука
-_Прогнозные модели спроса/предложения, индексы стройзатрат, планбюро и академические институты — фундаментальный и методологический контекст._
+## 16. Консультанты, брокеры и оценщики (market data)
+_Big-5 и нидерландские research-бюро — квартальные данные по take-up, вакантности, prime yields и инвестобъёмам по всем сегментам; интерпретационный слой и source of comps поверх официальной статистики._
 
-- ★ **[PBL — Planbureau voor de Leefomgeving (Publicaties)](https://www.pbl.nl/publicaties)** — Стратегический анализ по жилью, пространственному планированию, климату и землепользованию; ~5600 публикаций, раздел 'Wonen en ruimte'. Есть английская версия. _(жильё, макро · нерегулярно · NL+EN)_
-- ★ **[ASRE — Amsterdam School of Real Estate (Research)](https://asre.nl/onderzoek/)** — Академические исследования и paper series по недвижимости (финансы, жильё, устойчивость); research fellows, семинары, vastgoedbibliotheek.nl. Лучший NL-первоисточник по теории и эмпирике рынка. _(все сегменты · нерегулярно · NL+EN)_
-- ● **[ABF Research — Primos / Socrates (woningmarktprognose)](https://abfresearch.nl/wat-we-doen/specialisaties/prognoses/socrates-woningmarktprognose/)** — Модели Primos (население, домохозяйства, жилфонд) и Socrates (спрос/предложение по 31 региону). Оценка дефицита жилья (~396 тыс. в 2025). Канонический прогноз для государства. _(жильё, макро · ежегодно · NL)_
-- ● **[EIB — Economisch Instituut voor de Bouw](https://www.eib.nl/eib-publicaties/)** — Прогнозы стройпроизводства и занятости (ежегодно), тренды рынка труда, анализ по жилью/инфраструктуре/устойчивости. Ключ к предложению/пайплайну. _(жильё, ритейл, индустриал, макро · ежегодно · NL)_
-- ● **[TU Delft — Management in the Built Environment](https://www.tudelft.nl/en/architecture-and-the-built-environment/research/research-at-bk-bouwkunde/management-in-the-built-environment)** — Исследования по управлению недвижимостью, девелопменту территорий, жилью и циркулярному строительству; PhD-проекты, научные статьи. _(все сегменты · нерегулярно · EN)_
-- ● **[BDB — Bouw(kosten)data (bouwkostenindex)](https://www.bdb.nl/bdb+producten/Indexcijfers/default.aspx)** — Независимый индекс строительных затрат (с 1914 г.) по жилью, бизнес-зданиям, офисам, инфраструктуре. Ключ к экономике девелопмента и feasibility. _(жильё, ритейл, индустриал · ежеквартально · NL)_
-- ○ **[Tinbergen Institute (Discussion Papers)](https://tinbergen.nl/home)** — Экономические/эконометрические discussion papers (EUR, UvA, VU); макроэкономика, финансы, причинно-следственный анализ. Методологический контекст. _(макро · нерегулярно · EN)_
+- ★ **[CBRE Netherlands — Insights & Research](https://www.cbre.nl/en-gb/insights)** `[откр. · NL · ежеквартально]`
+  - что даёт: Netherlands Real Estate Market Outlook (годовой + Mid-Year), отчёты по investment volume, take-up, prime yields по living/retail/logistics/offices.
+  - аналитику: Ведущий брокерский слой по NL: prime yields, take-up, инвестобъёмы по сегментам для калибровки моделей и сверки с MSCI/официальной статистикой.
+  - метрики: prime yields, take-up, investment volume, vacancy, rental growth  ·  сегменты: жильё, ритейл, индустриал, макро
+- ★ **[JLL Netherlands — Insights / Research](https://www.jll.com/nl-nl/insights)** `[откр. · NL · ежеквартально]`
+  - что даёт: Серия Market Dynamics (Living, Retail, Office, Industrial & Logistics) с квартальными данными по take-up, вакантности, доходностям; отчёты по регулированию аренды.
+  - аналитику: Второй брокерский источник для триангуляции prime yields, take-up и вакантности по сегментам NL; чтение эффекта регулирования.
+  - метрики: prime yields, take-up, vacancy, rental growth, investment volume  ·  сегменты: жильё, ритейл, индустриал, макро
+- ★ **[Cushman & Wakefield Netherlands — MarketBeat](https://www.cushmanwakefield.com/en/netherlands/insights)** `[откр. · NL · ежеквартально]`
+  - что даёт: Квартальные MarketBeat по 5 сегментам, Netherlands Outlook, Special Industrial Report, Living City Report; данные на уровне субрынков.
+  - аналитику: Субрыночная гранулярность по take-up, supply, yields для bottom-up андеррайтинга и кросс-проверки CBRE/JLL.
+  - метрики: take-up, supply, prime yields, vacancy, investment volume  ·  сегменты: жильё, ритейл, индустриал, макро
+- ★ **[Savills Netherlands — Research](https://en.savills.nl/insight-and-opinion/research.aspx)** `[откр. · NL · ежеквартально]`
+  - что даёт: Market in Minutes (квартально), Spotlight, Savills Industrial Market Indicator (SIMI); take-up, вакантность, доходности, инвестиции.
+  - аналитику: Триангуляция yields/take-up по NL и сильный логистический слой (SIMI) для индустриального сегмента.
+  - метрики: prime yields, take-up, vacancy, SIMI, investment volume  ·  сегменты: жильё, ритейл, индустриал, макро
+- ★ **[Capital Value — Onderzoek / Research](https://www.capitalvalue.nl/en/insights/)** `[откр. · NL · ежегодно]`
+  - что даёт: Ежегодный De woning(beleggings)markt in beeld (с ABF): объёмы транзакций на жилом инвестрынке, демография, аренда vs покупка, новостройки.
+  - аналитику: Ключевой источник по residential investment NL: объёмы и структура жилого инвестрынка, дефицит, инвест-аппетит институционалов.
+  - метрики: residential investment volume, supply/demand, rent vs buy, new-build pipeline  ·  сегменты: жильё, макро
+- ● **[Colliers Netherlands — Research](https://www.colliers.com/en-nl/research)** `[откр. · NL · ежеквартально]`
+  - что даёт: Аналитика инвестиционного и пользовательского рынков, отчёты по офисам/ритейлу/логистике; экономика от Chief Economist, feasibility-исследования.
+  - аналитику: Дополнительная триангуляция рыночных данных и feasibility/локационный анализ для андеррайтинга NL.
+  - метрики: take-up, prime yields, vacancy, investment volume, feasibility  ·  сегменты: жильё, ритейл, индустриал, макро
+- ● **[Stec Groep — Ruimtelijk advies- en onderzoeksbureau](https://stec.nl/)** `[откр. · NL · нерегулярно]`
+  - что даёт: Независимые исследования по bedrijventerreinen, логистике, woningmarkt, kantoren, retail, grondmarkt; данные через StecStat.
+  - аналитику: Сильнейший независимый NL-источник по индустриалу/землепользованию и регионам — bottom-up слой для логистики и bedrijventerreinen.
+  - метрики: industrial land supply, logistics demand, grondmarkt, regional analysis  ·  сегменты: жильё, ритейл, индустриал, макро
+- ● **[Dynamis — Sprekende Cijfers](https://dynamis.nl/research-commercieel-vastgoed)** `[откр. · NL · ежеквартально]`
+  - что даёт: Sprekende Cijfers по 5 рынкам с сильной региональной разбивкой; 55+ локальных researchers.
+  - аналитику: Региональная гранулярность по всем сегментам для локального андеррайтинга вне Randstad.
+  - метрики: take-up, supply, rents, regional breakdown  ·  сегменты: жильё, ритейл, индустриал
+- ● **[CBRE — Insights & Research (European Outlook)](https://www.cbre.com/insights)** `[откр. · EU · ежеквартально]`
+  - что даёт: European Real Estate Market Outlook, Investor Intentions, прогнозы CBRE-EA по office/industrial/living/retail/data centres.
+  - аналитику: Пан-европейский контекст и прогнозы для позиционирования NL среди рынков ЕС; вход в сравнительный анализ.
+  - метрики: European outlook, sector forecasts, investor intentions, prime yields  ·  сегменты: все сегменты
+- ● **[Savills — Research (Europe / Industrial & Logistics)](https://www.savills.com/insight-and-opinion/research.aspx)** `[откр. · EU · ежеквартально]`
+  - что даёт: European Logistics Census и Spotlight, офисные/ритейл/жилые обзоры core-рынков (вкл. NL).
+  - аналитику: Европейский логистический и core-market контекст для бенчмаркинга NL prime rents/yields против континента.
+  - метрики: European logistics data, prime rents/yields, take-up, investment volume  ·  сегменты: ритейл, индустриал, жильё, макро
+- ○ **[BNP Paribas Real Estate Netherlands — Research](https://www.realestate.bnpparibas.nl/research)** `[откр. · EU · ежеквартально]`
+  - что даёт: Pan-European и NL-аналитика по capital markets, офисам, логистике; рыночные обзоры, валюации, debt advisory.
+  - аналитику: Дополнительный capital-markets и debt-advisory взгляд для триангуляции yields и финансирования NL.
+  - метрики: capital markets data, prime yields, take-up, debt advisory  ·  сегменты: ритейл, индустриал, макро
+- ○ **[MVGM — Vastgoedmanagement & Vastgoedtaxaties](https://mvgm.com/nl/)** `[откр. · NL · нерегулярно]`
+  - что даёт: Один из топ-3 оценщиков NL (RICS/NRVT); валюации офисов, жилья, ритейла, логистики, зорового жилья; research с GIS-базой.
+  - аналитику: Понимание valuation-практик ведущего NL-оценщика (по Red Book) для проверки достоверности переоценок портфелей.
+  - метрики: valuations, valuation trends, yield assumptions  ·  сегменты: жильё, ритейл, индустриал
 
-## 17. Нишевые сегменты (студенты, healthcare, дата-центры, отели)
-_Специализированные источники по растущим институциональным под-сегментам, слабо покрытым общей статистикой._
+## 17. Банковский макро- и отраслевой research
+_Аналитика крупных нидерландских/европейских банков — квартальные прогнозы по жилью, CRE и логистике и взгляд кредитора; главный интерпретационный слой поверх официальной статистики._
 
-- ● **[Kences — Landelijke Monitor Studentenhuisvesting (LMS)](https://www.kences.nl/lms)** — Главный мониторинг студенческого жилья: спрос/предложение, дефицит комнат, прогнозы по студ-городам (исследование ABF по заказу Kences + Минжилья). _(жильё · ежегодно · NL)_
-- ● **[Dutch Data Center Association (DDA) — State of the Dutch Data Centers](https://www.dutchdatacenters.nl/en/nieuws/)** — Данные по дата-центрам: мощность (МВт), инвестиции, PUE, энергопотребление, регулирование размещения. Критично для индустриала и энергосетей. _(индустриал, ритейл · ежегодно · EN+NL)_
-- ○ **[Capital Value — Healthcare Real Estate (zorgvastgoed)](https://www.capitalvalue.nl/en/healthcare-real-estate/)** — Данные и отчёты по медицинской/уход-недвижимости: объёмы инвестиций, спрос, разделение care/housing, дефицит. Растущий институциональный сегмент. _(ритейл, жильё · ежегодно · EN+NL)_
-- ○ **[Horwath HTL Netherlands — HOSTA / hotel market reports](https://horwathhtl.com/netherlands/insights/)** — Аналитика гостиничного рынка: Occ/ADR/RevPAR, HOSTA Benelux, Dutch City Hotel Index (с ABN AMRO). Единственный сегментный hospitality-источник. _(ритейл · ежегодно · EN+NL)_
+- ★ **[RaboResearch — Dutch housing market (Quarterly)](https://www.rabobank.com/knowledge/dutch-housing-market)** `[откр. · NL · ежеквартально]`
+  - что даёт: Ежеквартальный прогноз цен на жильё, объёмы сделок, аренда, новостройки, доступность, устойчивость.
+  - аналитику: Один из главных прогнозных первоисточников по жилью NL: прогноз цен и сделок для базового сценария и сверки с ABN/ING.
+  - метрики: house price forecast, transaction forecast, affordability, new-build  ·  сегменты: жильё, макро
+- ★ **[ABN AMRO — Housing Market Monitor](https://www.abnamro.com/research/en/our-research/housing-market-monitor-will-2026-be-an-unexceptional-year)** `[откр. · NL · ежеквартально]`
+  - что даёт: Серия Housing Market Monitor: прогноз цен, объём сделок, ипотечные ставки, предложение, продажи бывшего арендного фонда.
+  - аналитику: Второй прогнозный якорь по жилью NL для триангуляции с Rabo/ING; чтение оттока арендного фонда.
+  - метрики: house price forecast, transactions, mortgage rates, rental stock sell-off  ·  сегменты: жильё, макро
+- ● **[ING Research / THINK — Real Estate sector](https://think.ing.com/sector/real-estate/)** `[откр. · EU · непрерывно]`
+  - что даёт: Статьи по жилью, коммерции и логистике NL/Европы: прогнозы цен и сделок, офисы/ритейл/логистика, ставки.
+  - аналитику: Третий банковский взгляд с европейским охватом для CRE/жилья NL и контекста ставок.
+  - метрики: price/transaction forecasts, CRE outlook, logistics, rates impact  ·  сегменты: жильё, ритейл, индустриал, макро
+- ● **[ING THINK — Dutch commercial real estate outlook](https://think.ing.com/articles/dutch-commercial-real-estate-outlook-growth-ahead-but-with-limits/)** `[откр. · NL · ежегодно]`
+  - что даёт: Годовой/полугодовой outlook по CRE: офисы, ритейл, логистика, стоимость финансирования, своп-ставки, инвестобъёмы, ESG.
+  - аналитику: Сфокусированный CRE-прогноз NL с привязкой к swap-ставкам и стоимости финансирования для underwriting.
+  - метрики: CRE outlook, financing cost, swap rates, investment volume  ·  сегменты: ритейл, индустриал
+- ● **[RaboResearch — Detail- en groothandel](https://www.rabobank.nl/kennis/detail-en-groothandel)** `[откр. · NL · ежеквартально]`
+  - что даёт: Sectorprognoses по рознице/опту: прогноз добавленной стоимости и оборота, тренды по подсекторам, макроконтекст потребления.
+  - аналитику: Спрос на торговую недвижимость через прогноз оборота ритейла по подсекторам (мода, DIY, дрогери).
+  - метрики: retail turnover forecast, subsector trends, consumption  ·  сегменты: ритейл, макро
+- ○ **[NIBC Bank — Commercial Real Estate](https://nibc.nl/en/business/commercial-real-estate)** `[откр. · NL · нерегулярно]`
+  - что даёт: Взгляд кредитора по сегментам: офисы, ритейл, логистика, light industrial, Living (BTR, студенты, co-living), отели; тренды LTV, маржи.
+  - аналитику: Перспектива активного CRE-кредитора NL на LTV/маржи и аппетит по суб-сегментам — дополняет debt-бенчмарки.
+  - метрики: LTV trends, lending margins, sector lender view  ·  сегменты: ритейл, индустриал, жильё
 
-## 18. Отраслевые события, выставки и нетворкинг
-_Ключевые выставки и конгрессы NL и Европы — точки отслеживания трендов, сделок и позиционирования рынка._
+## 18. Ассоциации, прогнозные институты и наука (NL)
+_Отраслевые ассоциации, планбюро, прогнозные модели спроса/предложения и академические институты — позиции отрасли, канонические прогнозы дефицита жилья и методологический/фундаментальный контекст._
 
-- ★ **[PROVADA](https://www.provada.nl/)** — Крупнейшая выставка недвижимости NL (RAI Amsterdam): девелоперы, инвесторы, муниципалитеты; 250+ knowledge sessions, 300+ спикеров. Главная точка нетворкинга и трендов. _(все сегменты · ежегодно · NL+EN)_
-- ● **[SPRYG Real Estate Academy (Events / Congressen)](https://spryg.com/nl/events)** — 80+ событий/год: Logistiek Vastgoed Nederland, Vastgoedfinanciering, ESG & Vastgoed, AI & Vastgoed, региональные конгрессы. Календарь специализированных событий. _(все сегменты · непрерывно · NL)_
-- ● **[EXPO REAL (Munich)](https://exporeal.net/en/)** — Крупнейшая B2B-ярмарка недвижимости и инвестиций Европы (Messe München); все классы активов, голландские делегации. Международный контекст и сделки. _(все сегменты · ежегодно · EN)_
-- ● **[MIPIM (Cannes)](https://www.mipim.com/en-gb.html)** — Глобальная выставка профессионалов (Канны); голландский павильон 'Home of Holland' с девелоперами, инвесторами, властями, proptech. Международные инвестпотоки. _(все сегменты · ежегодно · EN)_
-- ○ **[Vastgoedjournaal — Kalender (события)](https://vastgoedjournaal.nl/kalender)** — Новости и календарь вастгод-событий/конгрессов NL; агрегатор для отслеживания конференций и анонсов. _(ритейл, жильё, индустриал · непрерывно · NL)_
+- ★ **[NVM (Makelaars en Taxateurs)](https://www.nvm.nl/)** `[откр. · NL · ежеквартально]`
+  - что даёт: Квартальная статистика по сделкам, ценам и предложению жилья, коммерции и аграрной недвижимости; пресс-релизы по дефициту и аренде.
+  - аналитику: Свежие данные сделок и krapte-indicator перед официальной статистикой; позиции крупнейшей ассоциации маклеров.
+  - метрики: transactions, prices, supply, krapte-indicator  ·  сегменты: жильё, ритейл, индустриал
+- ★ **[ABF Research — Primos / Socrates (woningmarktprognose)](https://abfresearch.nl/wat-we-doen/specialisaties/prognoses/socrates-woningmarktprognose/)** `[откр. · NL · ежегодно]`
+  - что даёт: Модели Primos (население, домохозяйства, жилфонд) и Socrates (спрос/предложение по 31 региону); оценка дефицита жилья (~396 тыс.).
+  - аналитику: Канонический государственный прогноз дефицита и структуры спроса/предложения жилья — основа долгосрочного residential-тезиса.
+  - метрики: housing shortage, household projections, supply/demand by region  ·  сегменты: жильё, макро
+- ● **[Aedes (vereniging van woningcorporaties)](https://aedes.nl/)** `[откр. · NL · ежеквартально]`
+  - что даёт: Данные по соцфонду (~2,4 млн квартир), benchmark корпораций, прогнозы строительства, Nationale Prestatieafspraken.
+  - аналитику: Предложение доступного жилья и строительная способность соцсектора — контекст структурного дефицита.
+  - метрики: social housing stock, construction forecast, corporation benchmark  ·  сегменты: жильё
+- ● **[EIB — Economisch Instituut voor de Bouw](https://www.eib.nl/eib-publicaties/)** `[откр. · NL · ежегодно]`
+  - что даёт: Прогнозы стройпроизводства и занятости, тренды рынка труда, анализ по жилью/инфраструктуре/устойчивости.
+  - аналитику: Ключ к пайплайну предложения: прогноз стройпроизводства и мощностей сектора для оценки реализуемости целей стройки.
+  - метрики: construction output forecast, labour capacity, production trends  ·  сегменты: жильё, ритейл, индустриал, макро
+- ● **[PBL — Planbureau voor de Leefomgeving](https://www.pbl.nl/publicaties)** `[откр. · NL · нерегулярно]`
+  - что даёт: Стратегический анализ по жилью, пространственному планированию, климату и землепользованию; раздел Wonen en ruimte.
+  - аналитику: Государственный стратегический контекст по пространственной/климатической политике, влияющей на землю и стройку.
+  - метрики: spatial policy analysis, housing/land studies, climate policy  ·  сегменты: жильё, макро
+- ● **[ASRE — Amsterdam School of Real Estate (Research)](https://asre.nl/onderzoek/)** `[откр. · NL · нерегулярно]`
+  - что даёт: Академические исследования и paper series по недвижимости (финансы, жильё, устойчивость); research fellows, семинары.
+  - аналитику: Лучший NL-первоисточник по теории и эмпирике рынка для методологической калибровки моделей и тезисов.
+  - метрики: academic papers, empirical studies, valuation/finance research  ·  сегменты: все сегменты
+- ● **[NEPROM (Projectontwikkeling Maatschappijen)](https://www.neprom.nl/)** `[откр. · NL · нерегулярно]`
+  - что даёт: Первоисточник по девелопменту: position papers (азот, жилполитика), Handboek Projectontwikkeling, Lente-akkoord.
+  - аналитику: Позиция девелоперов по барьерам стройки (азот, регулирование) и сигналы по объёмам новых проектов.
+  - метрики: development positions, pipeline barriers, policy reactions  ·  сегменты: жильё, ритейл
+- ● **[BDB — Bouw(kosten)data (bouwkostenindex)](https://www.bdb.nl/bdb+producten/Indexcijfers/default.aspx)** `[откр. · NL · ежеквартально]`
+  - что даёт: Независимый индекс строительных затрат (с 1914) по жилью, бизнес-зданиям, офисам, инфраструктуре.
+  - аналитику: Экономика девелопмента и feasibility: динамика стройзатрат как драйвер реализуемости и маржи проектов.
+  - метрики: construction cost index, cost by building type  ·  сегменты: жильё, ритейл, индустриал
+- ● **[Vastgoed Belang (Particuliere Beleggers)](https://www.vastgoedbelang.nl/)** `[откр. · NL · нерегулярно]`
+  - что даёт: Позиции частных арендодателей: статистика выхода инвесторов, реакции на Box 3 и регулирование аренды.
+  - аналитику: Индикатор оттока частного капитала из арендного жилья (uitpondmarkt) под давлением Box 3/регулирования — сдвиг предложения.
+  - метрики: investor exit data, Box 3 reactions, rental stock sell-off  ·  сегменты: жильё, ритейл
+- ○ **[Vereniging Eigen Huis (VEH)](https://www.eigenhuis.nl/)** `[откр. · NL · ежемесячно]`
+  - что даёт: Eigen Huis Marktindicator, мониторинг ипотечных ставок, данные по новостройкам, позиции по налогам.
+  - аналитику: Sentiment покупателей (Marktindicator) как опережающий индикатор спроса на жильё.
+  - метрики: buyer sentiment indicator, mortgage rate monitor  ·  сегменты: жильё
+- ○ **[Bouwend Nederland](https://www.bouwendnederland.nl/)** `[откр. · NL · ежеквартально]`
+  - что даёт: Крупнейшая организация работодателей в строительстве (~4 600 компаний): конъюнктурные прогнозы, портфель заказов, цены и мощности.
+  - аналитику: Состояние строительного сектора (заказы, мощности) как индикатор реализуемости предложения.
+  - метрики: construction sentiment, order book, capacity  ·  сегменты: макро, жильё, индустриал
 
-## 19. Муниципальная жилищная политика (крупные города)
-_Woonvisies и жилищные программы ключевых городов — локальные целевые объёмы стройки, доли доступного жилья и регулирование среднего сегмента аренды._
+## 19. Суб-секторные дески (логистика, ритейл, data centres, living-ниши, отели, life sciences)
+_Специализированные источники по растущим институциональным под-сегментам, слабо покрытым общей статистикой: pure-play логистика, физический ритейл/трафик, дата-центры, PBSA/student, healthcare/senior living, hospitality, life sciences._
 
-- ● **[Gemeente Rotterdam — Woonvisie](https://www.rotterdam.nl/woonvisie)** — Rotterdamse Woonvisie (до 2040): целевые 3500-4000 домов/год, доли доступного жилья (соц./средний сегмент), Woonzorgvisie. _(жильё · нерегулярно · NL)_
-- ● **[Gemeente Den Haag — Woonvisie 2040](https://www.denhaag.nl/nl/verbouwen-en-wonen/maatregelen-problemen-woningmarkt/)** — Woonvisie 2040: 4000 домов/год, доли соц. и среднеценовой аренды (мин. 30%/20%), 7 вызовов рынка, доступность. _(жильё · нерегулярно · NL)_
-- ● **[Gemeente Amsterdam — Volg beleid: Wonen](https://www.amsterdam.nl/bestuur-organisatie/volg-beleid/stedelijke-ontwikkeling/wonen/)** — Жилищная политика Амстердама: Woonagenda, правило 40-40-20, регулирование среднего сегмента аренды, программирование стройки по 22 районам. _(жильё, ритейл · нерегулярно · NL)_
-- ○ **[Gemeente Utrecht — Woonbeleid (Omgevingsvisie)](https://omgevingsvisie.utrecht.nl/thematisch-beleid/wonen/)** — Политика Утрехта 2025-2030: 3000 домов/год, 75% доступного жилья, пороги среднего сегмента и доступной покупки (WOZ до €405k). _(жильё · нерегулярно · NL)_
+- ★ **[Prologis Research — logistics insights](https://www.prologis.com/insights-news/research)** `[откр. · global · ежеквартально]`
+  - что даёт: White papers и индикаторы от крупнейшего владельца складов мира: чистая абсорбция, аренда, вакантность, IBI, Logistics Rent Index, near-shoring.
+  - аналитику: Top-down рамка логистического цикла с proprietary-датасетом: контекст для NL-абсорбции, ставок аренды и темы near-shoring; опережающие индикаторы спроса.
+  - метрики: net absorption, rent index, vacancy, demand drivers, supply chain reconfiguration  ·  сегменты: индустриал
+- ★ **[INDUSTRIAL Real Estate Partners — Dutch Logistics Market Report](https://industrial.nl/research/?lang=en)** `[откр. · NL · ежегодно]`
+  - что даёт: Ежегодный Logistics RE Dutch Market Report (с Bak Property Research): полная регистрация occupier/инвест-сделок NL-логистики — take-up, supply, инвестобъём, спекулятивная стройка.
+  - аналитику: Чистый логистический pure-play без офисного/ритейл-шума: проверка take-up и абсорбции NL-складов, мониторинг спекулятивного предложения по логкоридорам.
+  - метрики: take-up, supply, vacancy, investment volume, speculative development  ·  сегменты: индустриал
+- ★ **[Locatus — физический ритейл и проходимость](https://locatus.com/)** `[платн. · NL · непрерывно]`
+  - что даёт: Первоисточник по физическому ритейлу Бенилюкса: база 400 000+ магазинов/HoReCa, winkelleegstand (~200 зон), Retail Risk Index, passantentellingen.
+  - аналитику: Базовый слой ритейл-недвижимости: вакантность и витальность винкельгебидов, трафик, идентификация структурно слабых локаций при андеррайтинге.
+  - метрики: footfall, vacancy rate, store inventory, retail risk index, catchment  ·  сегменты: ритейл
+- ★ **[Cushman & Wakefield — Global Data Center Market Comparison](https://www.cushmanwakefield.com/en/insights/global-data-center-market-comparison)** `[откр. · global · ежегодно]`
+  - что даёт: Ежегодное сравнение 107 рынков ДЦ по 24 переменным (вкл. Amsterdam/FLAP-D): IT load, power availability, grid stability, pipeline, сроки подключения.
+  - аналитику: Ranking-инструмент для ДЦ: позиционирование Amsterdam в FLAP-D, узкие места по мощности/сети (NL-congestie/мораторий), сравнительная привлекательность.
+  - метрики: MW capacity, pipeline, power availability, grid connection times, preleasing  ·  сегменты: индустриал, ритейл
+- ★ **[BONARD — Netherlands Student Housing Report (PBSA)](https://www.bonard.com/insights/student-housing-market-in-focus-the-netherlands-data-trends)** `[freemium · NL · ежегодно]`
+  - что даёт: NL-фокусный PBSA-отчёт (~123 000 beds): спрос/предложение, provision rate, аренда, occupancy, пайплайн, влияние политики.
+  - аналитику: Главный независимый count-источник по студжилью: beds и provision rate по студ-городам, бенчмарк аренды/occupancy — основа андеррайтинга PBSA.
+  - метрики: beds, provision rate, occupancy, rents, pipeline, yields  ·  сегменты: жильё
+- ★ **[CBRE Netherlands — Living sector outlook (BTR)](https://www.cbre.com/insights/books/nl-real-estate-market-outlook-2026/living)** `[откр. · NL · годовой + mid-year]`
+  - что даёт: Глава Living в CBRE NL Outlook: инвестобъём в жильё (€5,2 млрд в 2025), доля new-build, отток арендного фонда, дефицит студжилья, BTR-пайплайн.
+  - аналитику: Ведущий брокерский источник по институциональному арендному жилью/BTR: калибровка yields и rental growth, эффект Wet betaalbare huur/Box 3 на иностранный капитал.
+  - метрики: investment volume, BTR pipeline, rental growth, yields, net stock change  ·  сегменты: жильё
+- ★ **[CBRE Netherlands — Healthcare / Zorgvastgoed outlook](https://www.cbre.com/insights/books/nl-real-estate-market-outlook-2025/zorg)** `[откр. · NL · годовой + mid-year]`
+  - что даёт: Глава Zorg в CBRE NL Outlook: инвестобъём в зорговую недвижимость (€620 млн в 2024), переход на индивидуальную аренду, +288 000 зорг-единиц.
+  - аналитику: Ведущий источник по institutional healthcare/senior living NL: глубина и доходность сегмента, cure/care, drivers старения и policy-зависимости.
+  - метрики: investment volume, care units pipeline, senior living demand, yields, lease structure  ·  сегменты: ритейл, жильё
+- ★ **[HVS — Amsterdam Hotel Valuation Index (HVI)](https://hvi.hvs.com/market/europe/Amsterdam)** `[freemium · EU · ежегодно]`
+  - что даёт: Индекс стоимости отелей Amsterdam в European HVI: value per room, годовое изменение (эффект VAT 9→21%), RevPAR/ADR/occupancy; ряд 2001-2026.
+  - аналитику: Эталон hospitality-валюаций: стоимость отелей Amsterdam, эффект VAT-шока и KPI на капитальную стоимость — основа hotel-андеррайтинга.
+  - метрики: value per room, YoY value change, RevPAR, ADR, occupancy  ·  сегменты: ритейл
+- ● **[STR (CoStar) — Hotel benchmarking](https://str.com/)** `[платн. · global · ежемесячно]`
+  - что даёт: Стандарт операционных KPI отелей (STAR-отчёты): occupancy, ADR, RevPAR, индексы MPI/ARI/RGI; пресс-релизы по Amsterdam.
+  - аналитику: Первоисточник операционного перформанса отелей для cash-flow моделей: фактические occupancy/ADR/RevPAR Amsterdam/NL — вход в DCF.
+  - метрики: occupancy, ADR, RevPAR, MPI/ARI/RGI indices  ·  сегменты: ритейл
+- ● **[CBRE — European Data Centres Outlook (FLAP-D)](https://www.cbre.com/insights/books/european-real-estate-market-outlook-2026/data-centres)** `[откр. · EU · годовой + mid-year]`
+  - что даёт: Глава Data Centres + European Overview: новая мощность (>750 МВт/год), доля FLAP-D в take-up (~85%), вакантность (~6,5%), AI-спрос.
+  - аналитику: Прогнозный взгляд на европейский цикл ДЦ с FLAP-D-фокусом: take-up/вакантность/цены на мощность, AI-драйверы — Amsterdam как ключевой рынок.
+  - метрики: MW capacity, take-up, vacancy rate, pricing per kW, AI demand  ·  сегменты: индустриал, ритейл
+- ● **[Cushman & Wakefield — European Student Accommodation](https://www.cushmanwakefield.com/en/insights/european-student-accommodation-demand)** `[откр. · EU · ежегодно]`
+  - что даёт: Европейский PBSA-обзор и Living Investor Survey: student-to-bed ratios, демография 18-25, рост аренды, инвестобъём, намерения.
+  - аналитику: Capital-markets взгляд на PBSA: привлекательность NL против UK/Германии/Испании, демографические риски спроса, инвест-аппетит.
+  - метрики: student-to-bed ratio, demographics 18-25, rent growth, investment volume, investor intentions  ·  сегменты: жильё
+- ● **[JLL — EMEA Life Sciences Cluster Report](https://www.jll.com/en-uk/insights/emea-life-sciences-industry-perspective-and-cluster-report)** `[откр. · EU · ежегодно]`
+  - что даёт: Анализ 43 европейских life-sciences кластеров (Amsterdam в advanced-листе): lab rents, премии lab vs office, supply/demand, R&D-драйверы.
+  - аналитику: Ведущий источник по life sciences как нарождающемуся классу: позиционирование Amsterdam, lab-rent премии и спрос на purpose-built лаборатории.
+  - метрики: lab rents, rental premium lab vs office, cluster ranking, supply/demand, R&D drivers  ·  сегменты: ритейл, индустриал
+- ● **[Kences — Landelijke Monitor Studentenhuisvesting (LMS)](https://www.kences.nl/lms)** `[откр. · NL · ежегодно]`
+  - что даёт: Главный NL-мониторинг студжилья: спрос/предложение, дефицит комнат, прогнозы по студ-городам (исследование ABF).
+  - аналитику: Официальный NL-count студжилья для валидации дефицита и спроса рядом с BONARD при андеррайтинге PBSA.
+  - метрики: student housing supply/demand, room shortage, city forecasts  ·  сегменты: жильё
+- ● **[PFM Intelligence — Footfall Trend Report](https://www.pfm-intelligence.com/insights/footfall-report-25-retail-enters-a-phase-of-mature-purpose-driven-growth)** `[freemium · EU · еженедельно/ежемесячно]`
+  - что даёт: Индексы проходимости по >2000 ритейл/лежер-локаций NL/UK/Европы: годовая динамика footfall, конверсия, разбивка по типам локаций, G4-города.
+  - аналитику: Кросс-страновой бенчмарк трафика: сравнение NL по типам локаций, сдвиг к convenience/neighbourhood — ключ к селекции retail-активов и прогнозу аренды.
+  - метрики: footfall index, passers-by, retail visits, conversion, destination-type split  ·  сегменты: ритейл
+- ● **[Strabo — passantentellingen / winkelmarktonderzoek](https://strabo.nl/)** `[платн. · NL · нерегулярно]`
+  - что даёт: Лидер по passantentellingen и winkelmarktonderzoek; реестр SWR почти всех ТЦ NL; профили посетителей.
+  - аналитику: Незаменим для стрит-ритейла/ТЦ: подсчёт трафика и профили посетителей по конкретным локациям при андеррайтинге retail.
+  - метрики: footfall counts, shopping centre register, visitor profiles  ·  сегменты: ритейл
+- ● **[Thuiswinkel.org (Thuiswinkel Markt Monitor)](https://www.thuiswinkel.org/kennisbank/topics/onderzoek/)** `[откр. · NL · ежеквартально]`
+  - что даёт: Главный источник по онлайн-расходам: Markt Monitor (4×/год, объёмы онлайн-покупок), B2B Monitor. Контекст online vs offline.
+  - аналитику: Сдвиг online/offline как структурный драйвер спроса на ритейл- и логистическую недвижимость.
+  - метрики: online spending, online transactions, channel shift  ·  сегменты: ритейл
+- ○ **[Dutch Data Center Association — State of the Dutch Data Centers](https://www.dutchdatacenters.nl/en/nieuws/)** `[откр. · NL · ежегодно]`
+  - что даёт: Данные по ДЦ NL: мощность (МВт), инвестиции, PUE, энергопотребление, регулирование размещения.
+  - аналитику: Локальный NL-слой по ДЦ: мощность, энергопотребление и регуляторные ограничения (мораторий) рядом с C&W/CBRE.
+  - метрики: MW capacity, investment, PUE, energy use, siting regulation  ·  сегменты: индустриал, ритейл
+- ○ **[Horwath HTL Netherlands — HOSTA / hotel reports](https://horwathhtl.com/netherlands/insights/)** `[откр. · NL · ежегодно]`
+  - что даёт: NL-hospitality-аналитика: HOSTA Benelux, Dutch City Hotel Index (с ABN AMRO), Occ/ADR/RevPAR, прибыльность.
+  - аналитику: Локальный hospitality-первоисточник: операционные результаты по городам и инвест-тренды — дополняет STR/HVS.
+  - метрики: occupancy, ADR, RevPAR, GOP/profitability, investment trends  ·  сегменты: ритейл
+
+## 20. Энергосети, азот, физические барьеры стройки и СМИ (NL/EU)
+_Критические физические и регуляторные барьеры (сети/congestie, азот/AERIUS, нормы энергоэффективности), определяющие реализуемость и таймлайны стройки/индустриала, плюс ключевой оперативный новостной поток._
+
+- ★ **[Netbeheer Nederland (vereniging netbeheerders)](https://www.netbeheernederland.nl/artikelen/nieuws)** `[откр. · NL · непрерывно]`
+  - что даёт: Совокупная позиция операторов сетей: Stand van de Uitvoering, статистика нетконгестии, листы ожидания, нетарифы 2026.
+  - аналитику: Системная картина дефицита сетевых мощностей — ключевой барьер для логистики/промзон и нового жилья; драйвер operating cost и таймлайнов.
+  - метрики: grid congestion, waiting lists, network tariffs  ·  сегменты: все сегменты
+- ★ **[TenneT — Netcongestie](https://www.tennet.eu/nl/themas/netcongestie)** `[откр. · NL · непрерывно]`
+  - что даёт: Раздел по нетконгестии, инвестпланы (~65 млрд €/10 лет, ~1000 проектов; задержки ~2,5 года).
+  - аналитику: Высоковольтная congestie — критична для логистики/промзон/ДЦ: где и когда появится мощность определяет доступность участков.
+  - метрики: high-voltage congestion, investment plan, connection delays  ·  сегменты: индустриал, ритейл, макро
+- ★ **[BIJ12 — Stikstof / AERIUS](https://www.bij12.nl/onderwerp/stikstof/)** `[откр. · NL · непрерывно]`
+  - что даёт: Операционный первоисточник по азоту: AERIUS (Calculator/Register/Monitor) для расчёта депозиции на Natura 2000 — необходим для пермитов.
+  - аналитику: Азот — главный блокатор пермитов на стройку NL: AERIUS-расчёты определяют реализуемость проектов рядом с природоохранными зонами.
+  - метрики: nitrogen deposition, AERIUS calculation, permit feasibility  ·  сегменты: индустриал, жильё, ритейл, макро
+- ● **[Rijksoverheid — Stikstof (азотная политика)](https://www.rijksoverheid.nl/onderwerpen/stikstof)** `[откр. · NL · непрерывно]`
+  - что даёт: Официальная политика по азоту (PSN, пакет 2026, цели по секторам, ускорение vergunningverlening).
+  - аналитику: Направление азотной политики напрямую влияет на разблокировку стройки — макро-драйвер pipeline предложения.
+  - метрики: nitrogen policy, sector targets, permit acceleration  ·  сегменты: макро, индустриал, жильё
+- ● **[RVO — Bouwen en wonen (нормы энергоэффективности)](https://www.rvo.nl/onderwerpen/wetten-en-regels-gebouwen)** `[откр. · NL · непрерывно]`
+  - что даёт: Правила и субсидии: energielabel, обязательный label C для офисов, BENG, EPBD-транспозиция, субсидии (DEI+).
+  - аналитику: Первоисточник по NL-нормам энергоэффективности (label C для офисов) — риск обесценения коричневых активов и CapEx-триггеры.
+  - метрики: energielabel rules, label C obligation, BENG, subsidies  ·  сегменты: жильё, ритейл, индустриал
+- ● **[Liander / Stedin / Enexis — региональные DSO (capacity checkers)](https://www.liander.nl)** `[откр. · NL · непрерывно]`
+  - что даёт: Региональная доступность мощности по адресу (stroomnetchecker, Vol stroomnet, netcapaciteit), листы ожидания. Liander (Noord-Holland/Gelderland), Stedin (Randstad), Enexis (юг/северо-восток).
+  - аналитику: Адресная проверка возможности и сроков подключения при андеррайтинге конкретного участка/объекта — прямой барьер для логистики и нового предложения.
+  - метрики: address-level capacity, connection timelines, congestion areas, waiting lists  ·  сегменты: жильё, ритейл, индустриал
+- ● **[PropertyNL](https://propertynl.com/)** `[freemium · NL · непрерывно]`
+  - что даёт: Ведущий проф. журнал NL: новости, сделки, рейтинги (top investors/developers), собственные research-данные.
+  - аналитику: Оперативный поток сделок и рейтинги игроков NL для отслеживания транзакций и капитала между официальными релизами.
+  - метрики: deal news, market rankings, transaction flow  ·  сегменты: жильё, ритейл, индустриал
+- ● **[Vastgoedmarkt](https://www.vastgoedmarkt.nl/nieuws)** `[freemium · NL · непрерывно]`
+  - что даёт: Ежедневные новости, аналитика, интервью и база сделок по всем сегментам CRE NL.
+  - аналитику: Первичный новостной поток по рынку CRE NL для еженедельного мониторинга сделок и событий.
+  - метрики: deal news, market analysis, interviews  ·  сегменты: жильё, ритейл, индустриал
+- ○ **[PropertyEU (IPE Real Assets)](https://realassets.ipe.com/propertyeu)** `[freemium · EU · непрерывно]`
+  - что даёт: Панъевропейские новости и аналитика; Weekly Data Sheet, рейтинги. Контекст инвестиций/капитала по Европе, вкл. NL.
+  - аналитику: Европейский новостной/капитальный контекст и weekly data для позиционирования NL в потоках институционального капитала.
+  - метрики: European deal flow, capital data, rankings  ·  сегменты: ритейл, индустриал, макро
+- ○ **[React News (Green Street News)](https://reactnews.com/)** `[платн. · EU · непрерывно]`
+  - что даёт: Эксклюзивные новости по CRE Continental Europe; ежедневные рассылки, сделки и тренды по asset-классам.
+  - аналитику: Раннее чтение крупных европейских/NL сделок и трендов до официальных раскрытий — deal intelligence.
+  - метрики: exclusive deal news, sector trends  ·  сегменты: ритейл, индустриал, макро
+- ○ **[Het Financieele Dagblad (FD)](https://fd.nl/economie)** `[платн. · NL · непрерывно]`
+  - что даёт: Главная деловая газета NL: макроэкономика, финансы, корпоративные новости, рынок недвижимости и фондов.
+  - аналитику: Деловой контекст и корпоративные новости NL (эмитенты, регулирование, макро) для еженедельника.
+  - метрики: macro news, corporate news, financial markets  ·  сегменты: макро, ритейл, жильё
+- ○ **[PROVADA](https://www.provada.nl/)** `[откр. · NL · ежегодно]`
+  - что даёт: Крупнейшая выставка недвижимости NL (RAI Amsterdam): девелоперы, инвесторы, муниципалитеты; 250+ knowledge sessions.
+  - аналитику: Главная точка нетворкинга и трендов NL; календарный маркер для захвата market sentiment и анонсов.
+  - метрики: industry sentiment, networking, announcements  ·  сегменты: все сегменты
