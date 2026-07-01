@@ -1,0 +1,26 @@
+# Copy to config.yaml and adjust; every key has a built-in default (see
+# mav/config.py), so you only need to list the values you want to change.
+
+market:
+  city: "Москва"
+  min_built_year: 2019     # only consider complexes built/handed over in this year or later
+  deal_type: "sale"
+  accommodation_type: "flat"
+
+comparables:
+  area_tolerance_pct: 20     # peers must be within +/- this % of the listing's area
+  min_comparables: 4         # minimum peers required to trust a verdict
+  target_comparables: 10     # peer count at which confidence saturates to 100%
+  floor_bucket: true         # compare ground/top floor listings separately from mid-rise floors
+  finish_type_strict: false  # if true, prefer peers with a matching finish level (shell/pre-finish/finished)
+
+scoring:
+  strong_undervalued_threshold: 15   # confidence-weighted discount %, >= this -> "Сильно недооценена"
+  undervalued_threshold: 8           # >= this -> "Недооценена"
+  overvalued_threshold: -8           # <= this -> "Переоценена"
+  max_plausible_discount_pct: 45     # beyond this, flag "Подозрительно дёшево" instead of a genuine deal
+  fresh_listing_days: 3              # listings newer than this get a "(новое)" tag in the report
+
+output:
+  top_n: 50
+  include_suspicious: true   # include the "check manually" tier in the report, clearly labeled

@@ -1,0 +1,107 @@
+[
+  {
+    "id": "simvol-101", "url": "https://www.cian.ru/sale/flat/simvol-101/", "city": "Москва",
+    "residential_complex": "Символ", "built_year": 2019, "address": "Москва, ул. Золоторожский Вал, 11",
+    "district": "Лефортово", "metro": "Римская",
+    "price": 12000000, "area_total": 40, "rooms": 1, "floor": 10, "floors_total": 25,
+    "finish_type_raw": "с отделкой", "seller_type": "owner", "listed_at": "2026-05-20"
+  },
+  {
+    "id": "simvol-102", "url": "https://www.cian.ru/sale/flat/simvol-102/", "city": "Москва",
+    "residential_complex": "Символ", "built_year": 2019, "address": "Москва, ул. Золоторожский Вал, 11",
+    "district": "Лефортово", "metro": "Римская",
+    "price": 11895000, "area_total": 39, "rooms": 1, "floor": 12, "floors_total": 25,
+    "finish_type_raw": "с отделкой", "seller_type": "agency", "listed_at": "2026-05-15"
+  },
+  {
+    "id": "simvol-103", "url": "https://www.cian.ru/sale/flat/simvol-103/", "city": "Москва",
+    "residential_complex": "Символ", "built_year": 2019, "address": "Москва, ул. Золоторожский Вал, 13",
+    "district": "Лефортово", "metro": "Римская",
+    "price": 12095000, "area_total": 41, "rooms": 1, "floor": 8, "floors_total": 25,
+    "finish_type_raw": "с отделкой", "seller_type": "owner", "listed_at": "2026-06-01"
+  },
+  {
+    "id": "simvol-104", "url": "https://www.cian.ru/sale/flat/simvol-104/", "city": "Москва",
+    "residential_complex": "Символ", "built_year": 2019, "address": "Москва, ул. Золоторожский Вал, 13",
+    "district": "Лефортово", "metro": "Римская",
+    "price": 12400000, "area_total": 40, "rooms": 1, "floor": 15, "floors_total": 25,
+    "finish_type_raw": "с отделкой", "seller_type": "agency", "listed_at": "2026-06-10"
+  },
+  {
+    "id": "simvol-105", "url": "https://www.cian.ru/sale/flat/simvol-105/", "city": "Москва",
+    "residential_complex": "Символ", "built_year": 2019, "address": "Москва, ул. Золоторожский Вал, 11",
+    "district": "Лефортово", "metro": "Римская",
+    "price": 12160000, "area_total": 38, "rooms": 1, "floor": 6, "floors_total": 25,
+    "finish_type_raw": "с отделкой", "seller_type": "owner", "listed_at": "2026-06-12"
+  },
+  {
+    "id": "simvol-106", "url": "https://www.cian.ru/sale/flat/simvol-106/", "city": "Москва",
+    "residential_complex": "Символ", "built_year": 2019, "address": "Москва, ул. Золоторожский Вал, 13",
+    "district": "Лефортово", "metro": "Римская",
+    "price": 12516000, "area_total": 42, "rooms": 1, "floor": 20, "floors_total": 25,
+    "finish_type_raw": "с отделкой", "seller_type": "agency", "listed_at": "2026-06-18"
+  },
+  {
+    "id": "simvol-107", "url": "https://www.cian.ru/sale/flat/simvol-107/", "city": "Москва",
+    "residential_complex": "Символ", "built_year": 2019, "address": "Москва, ул. Золоторожский Вал, 11",
+    "district": "Лефортово", "metro": "Римская",
+    "price": 12080000, "area_total": 40, "rooms": 1, "floor": 9, "floors_total": 25,
+    "finish_type_raw": "с отделкой", "seller_type": "owner", "listed_at": "2026-06-20"
+  },
+  {
+    "id": "simvol-108-cheap", "url": "https://www.cian.ru/sale/flat/simvol-108/", "city": "Москва",
+    "residential_complex": "Символ", "built_year": 2019, "address": "Москва, ул. Золоторожский Вал, 13",
+    "district": "Лефортово", "metro": "Римская",
+    "price": 9200000, "area_total": 40, "rooms": 1, "floor": 11, "floors_total": 25,
+    "finish_type_raw": "с отделкой", "seller_type": "owner", "listed_at": "2026-06-30"
+  },
+  {
+    "id": "simvol-109-toocheap", "url": "https://www.cian.ru/sale/flat/simvol-109/", "city": "Москва",
+    "residential_complex": "Символ", "built_year": 2019, "address": "Москва, ул. Золоторожский Вал, 11",
+    "district": "Лефортово", "metro": "Римская",
+    "price": 5600000, "area_total": 40, "rooms": 1, "floor": 13, "floors_total": 25,
+    "finish_type_raw": "с отделкой", "seller_type": "owner", "listed_at": "2026-05-01"
+  },
+  {
+    "id": "simvol-110-expensive", "url": "https://www.cian.ru/sale/flat/simvol-110/", "city": "Москва",
+    "residential_complex": "Символ", "built_year": 2019, "address": "Москва, ул. Золоторожский Вал, 13",
+    "district": "Лефортово", "metro": "Римская",
+    "price": 16000000, "area_total": 40, "rooms": 1, "floor": 14, "floors_total": 25,
+    "finish_type_raw": "с отделкой", "seller_type": "agency", "listed_at": "2026-06-25"
+  },
+  {
+    "id": "lp-201", "url": "https://www.cian.ru/sale/flat/lp-201/", "city": "Москва",
+    "residential_complex": "Люблинский парк", "built_year": 2021, "address": "Москва, Заречная ул., 5",
+    "district": "Люблино", "metro": "Люблино",
+    "price": 14500000, "area_total": 60, "rooms": 2, "floor": 5, "floors_total": 17,
+    "finish_type_raw": "чистовая", "seller_type": "owner", "listed_at": "2026-06-15"
+  },
+  {
+    "id": "lp-202-cheap", "url": "https://www.cian.ru/sale/flat/lp-202/", "city": "Москва",
+    "residential_complex": "Люблинский парк", "built_year": 2021, "address": "Москва, Заречная ул., 5",
+    "district": "Люблино", "metro": "Люблино",
+    "price": 11000000, "area_total": 60, "rooms": 2, "floor": 3, "floors_total": 17,
+    "finish_type_raw": "чистовая", "seller_type": "owner", "listed_at": "2026-06-28"
+  },
+  {
+    "id": "lp-203", "url": "https://www.cian.ru/sale/flat/lp-203/", "city": "Москва",
+    "residential_complex": "Люблинский парк", "built_year": 2021, "address": "Москва, Заречная ул., 7",
+    "district": "Люблино", "metro": "Люблино",
+    "price": 14800000, "area_total": 61, "rooms": 2, "floor": 9, "floors_total": 17,
+    "finish_type_raw": "чистовая", "seller_type": "agency", "listed_at": "2026-06-05"
+  },
+  {
+    "id": "oldjk-301", "url": "https://www.cian.ru/sale/flat/oldjk-301/", "city": "Москва",
+    "residential_complex": "Октябрьское поле", "built_year": 2010, "address": "Москва, Маршала Бирюзова ул., 22",
+    "district": "Октябрьское поле", "metro": "Октябрьское поле",
+    "price": 6000000, "area_total": 40, "rooms": 1, "floor": 3, "floors_total": 9,
+    "finish_type_raw": "без отделки", "seller_type": "owner", "listed_at": "2026-06-01"
+  },
+  {
+    "id": "spb-401", "url": "https://www.cian.ru/sale/flat/spb-401/", "city": "Санкт-Петербург",
+    "residential_complex": "Балтийская жемчужина", "built_year": 2020, "address": "Санкт-Петербург, Петергофское ш., 51",
+    "district": "Красносельский", "metro": "Проспект Ветеранов",
+    "price": 6500000, "area_total": 40, "rooms": 1, "floor": 4, "floors_total": 18,
+    "finish_type_raw": "с отделкой", "seller_type": "owner", "listed_at": "2026-06-10"
+  }
+]
