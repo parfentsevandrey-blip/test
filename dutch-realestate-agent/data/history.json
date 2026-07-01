@@ -1,165 +1,158 @@
 {
   "items": {
-    "u:https://www.eerstekamer.nl/wetsvoorstel/36748_wet_werkelijk_rendement_box": {
+    "u:https://financieel-management.nl/artikel/stroomnet-brabant-volledig-op-slot-voor-alle-bedrijven": {
+      "date": "2026-06-30",
+      "segment": "industrial",
+      "subsection": "laws",
+      "title": "Электросеть Брабанта с 1 июля фактически 'на замке' — и впервые в лист ожидания попадают не только бизнес, но и мелкие потребители (kleinverbruikers): новое жил",
+      "url": "https://financieel-management.nl/artikel/stroomnet-brabant-volledig-op-slot-voor-alle-bedrijven/"
+    },
+    "u:https://www.businesswire.com/news/home/20260623616061/en/ctp-n.v.-notice-of-h1-2026-results": {
+      "date": "2026-06-30",
+      "segment": "industrial",
+      "subsection": "news",
+      "title": "Крупнейший в Европе по площади логистический девелопер CTP (регистрация в NL) объявил дату полугодовых результатов — 30 июля, вебкаст 11:00 CET. За фасадом IR-у",
+      "url": "https://www.businesswire.com/news/home/20260623616061/en/CTP-N.V.-notice-of-H1-2026-results"
+    },
+    "u:https://www.vastgoeddata.nl/article/8d9d3c4f-6efd-11f1-b96f-464e1662e283/panattoni-ontwikkelt-grootste-bedrijvencomplex-noord-nederland-in-emmen": {
+      "date": "2026-06-30",
+      "segment": "industrial",
+      "subsection": "news",
+      "title": "Девелопер Panattoni анонсировал крупнейшее коммерческое здание Северных Нидерландов — Panattoni Park Emmen на ~150 000 м² (22 футбольных поля) у трассы A37 в Др",
+      "url": "https://www.vastgoeddata.nl/article/8d9d3c4f-6efd-11f1-b96f-464e1662e283/panattoni-ontwikkelt-grootste-bedrijvencomplex-noord-nederland-in-emmen"
+    },
+    "u:https://vastgoedjournaal.nl/news/73532/steeds-meer-vraag-naar-datacenters-maar-realisatie-wordt-steeds-lastiger": {
+      "date": "2026-06-30",
+      "segment": "industrial",
+      "subsection": "news",
+      "title": "Спрос на дата-центры в NL усиливается (драйвер — ИИ): цифровая экономика в Q1 2026 выросла на 2,8% до 10,7 млрд €, опередив экономику страны в целом. Но реализа",
+      "url": "https://vastgoedjournaal.nl/news/73532/steeds-meer-vraag-naar-datacenters-maar-realisatie-wordt-steeds-lastiger"
+    },
+    "u:https://www.vastgoedmarkt.nl/198511/wat-je-nu-moet-weten-over-logistiek": {
+      "date": "2026-06-30",
+      "segment": "industrial",
+      "subsection": "trends",
+      "title": "Обзор рынка логистики от Vastgoedmarkt рисует смену приоритета: вакантность ~4-5% ('пока не проблема') низка в хотспотах, но растёт на периферии, а инвесторы пе",
+      "url": "https://www.vastgoedmarkt.nl/198511/wat-je-nu-moet-weten-over-logistiek"
+    },
+    "u:https://www.cushmanwakefield.com/en/netherlands/news/2026/05/dutch-logistics-real-estate-market-remains-resilient": {
+      "date": "2026-06-30",
+      "segment": "industrial",
+      "subsection": "stats",
+      "title": "Разрыв недели, который важно понять: логистический take-up NL в Q1 2026 вырос на +10,5% г/г до ~833 000 м², а инвестобъём в сегмент рухнул на −60% г/г до ~265 м",
+      "url": "https://www.cushmanwakefield.com/en/netherlands/news/2026/05/dutch-logistics-real-estate-market-remains-resilient"
+    },
+    "u:https://www.cbre.nl/insights/reports/grotere-regionale-verschillen-sturen-rendementen-in-logistiek-vastgoed": {
+      "date": "2026-06-30",
+      "segment": "industrial",
+      "subsection": "stats",
+      "title": "Prime-доходность логистики NL держится стабильно на ~4,75% почти два года (CBRE; Savills подтверждает нормализацию с 3,15% в 2021-м). Cushman & Wakefield даёт 5",
+      "url": "https://www.cbre.nl/insights/reports/grotere-regionale-verschillen-sturen-rendementen-in-logistiek-vastgoed"
+    },
+    "u:https://www.investing.com/equities/ctp-nv-consensus-estimates": {
+      "date": "2026-06-30",
+      "segment": "industrial",
+      "subsection": "stats",
+      "title": "Публичный рынок оценивает NL-логистику дешевле баланса: CTP торгуется с дисконтом ~21,7% к EPRA NTA, при этом sell-side держит 'Strong Buy' (17 аналитиков: 15 B",
+      "url": "https://www.investing.com/equities/ctp-nv-consensus-estimates"
+    },
+    "u:https://www.nvm.nl/nieuws": {
+      "date": "2026-06-30",
+      "segment": "commercial",
+      "subsection": "news",
+      "title": "Крупнейшая ассоциация маклеров NVM Business (29 июня) потребовала от кабинета ускорить смягчение ограничения на вычет процентов (renteaftrekbeperking / earnings",
+      "url": "https://www.nvm.nl/nieuws/"
+    },
+    "u:https://www.globenewswire.com/news-release/2026/06/25/3317781/0/en/eurocommercial-properties-n-v-18-5-take-up-of-stock-dividend.html": {
+      "date": "2026-06-30",
+      "segment": "commercial",
+      "subsection": "news",
+      "title": "Инвестор в prime-ТЦ Eurocommercial Properties (HQ в NL, 24 центра в BE/FR/IT/SE) отчитался о 18,5% take-up по опции дивиденда акциями: акционеры на 18,5% капита",
+      "url": "https://www.globenewswire.com/news-release/2026/06/25/3317781/0/en/EUROCOMMERCIAL-PROPERTIES-N-V-18-5-TAKE-UP-OF-STOCK-DIVIDEND.html"
+    },
+    "u:https://europe.uli.org/research/emerging-trends": {
+      "date": "2026-06-30",
+      "segment": "commercial",
+      "subsection": "trends",
+      "title": "Амстердам держится в топ-5 европейских городов по инвест- и девелопмент-перспективам (ULI/PwC Emerging Trends 2026), но общий настрой сектора сместился с прошло",
+      "url": "https://europe.uli.org/research/emerging-trends/"
+    },
+    "u:https://www.wereldhave.com/investor-relations/credit-rating": {
+      "date": "2026-06-30",
+      "segment": "commercial",
+      "subsection": "trends",
+      "title": "Единственное агентство, публично покрывающее ритейл-инвестора Wereldhave (полносервисные ТЦ в NL/BE/FR, индекс AEX), — Fitch — подтвердило рейтинг на уровне 'BB",
+      "url": "https://www.wereldhave.com/investor-relations/credit-rating/"
+    },
+    "u:https://locatus.com/blog/nederlandse-winkelleegstand-2025": {
+      "date": "2026-06-30",
+      "segment": "commercial",
+      "subsection": "stats",
+      "title": "Вакантность физического ритейла NL подросла с 6,7% в начале 2025 до 7,0% к концу года (Locatus) — прирост меньше, чем в 2024, но десятый год подряд число ритейл",
+      "url": "https://locatus.com/blog/nederlandse-winkelleegstand-2025/"
+    },
+    "u:https://www.cbs.nl/nl-nl/maatwerk/2026/25/prijsindices-commercieel-vastgoed": {
+      "date": "2026-06-30",
+      "segment": "commercial",
+      "subsection": "stats",
+      "title": "Официальный индекс цен коммерческой недвижимости (CBS/Kadaster — офисы, индустриал, ритейл, аренда жилья) обновлён до Q1 2026 (публикация 16 июня). Конкретные з",
+      "url": "https://www.cbs.nl/nl-nl/maatwerk/2026/25/prijsindices-commercieel-vastgoed"
+    },
+    "u:https://www.eerstekamer.nl/wetsvoorstel/36512_wet_versterking_regie": {
       "date": "2026-06-30",
       "segment": "residential",
       "subsection": "laws",
-      "title": "30 июня Сенат (Eerste Kamer) провёл пленарные дебаты по «Закону о реальном доходе box 3» — ключевой развилке для частных арендодателей. Внесены четыре поправки,",
-      "url": "https://www.eerstekamer.nl/wetsvoorstel/36748_wet_werkelijk_rendement_box"
+      "title": "Сенат (Eerste Kamer) 23 июня одобрил поимённым голосованием 'Закон об усилении госрегулирования жилстроя' (Wet versterking regie volkshuisvesting): государство,",
+      "url": "https://www.eerstekamer.nl/wetsvoorstel/36512_wet_versterking_regie"
+    },
+    "u:https://www.eerstekamer.nl/nieuws/20260630/senaat_houdt_stemming_box_3_wet": {
+      "date": "2026-06-30",
+      "segment": "residential",
+      "subsection": "laws",
+      "title": "Сенат 30 июня отложил голосование по 'Закону о реальном доходе box 3' (переход от налога с фиктивной доходности к налогу на фактический доход, старт планово 202",
+      "url": "https://www.eerstekamer.nl/nieuws/20260630/senaat_houdt_stemming_box_3_wet"
+    },
+    "u:https://www.rijksoverheid.nl/actueel/nieuws/2026/06/26/kabinet-haalt-nederland-van-het-stikstofslot-met-stevig-pakket-weer-ruimte-voor-boer-natuur-en-bouw": {
+      "date": "2026-06-30",
+      "segment": "residential",
+      "subsection": "news",
+      "title": "Кабинет 26 июня выкатил азотный пакет на ~20 млрд €, чтобы снять Нидерланды со 'стикстоф-замка' и вернуть пространство под стройку. Ключевое для девелопмента: в",
+      "url": "https://www.rijksoverheid.nl/actueel/nieuws/2026/06/26/kabinet-haalt-nederland-van-het-stikstofslot-met-stevig-pakket-weer-ruimte-voor-boer-natuur-en-bouw"
     },
     "u:https://news.vesteda.com/vesteda-redemption-volume-set-at--765-million-and-fund-terms-amended": {
       "date": "2026-06-30",
       "segment": "residential",
       "subsection": "news",
-      "title": "Главный страх рынка — что институционалы бегут из арендного жилья — официально не подтвердился. Vesteda (крупнейший жилой фонд NL, ~28 000 квартир, ~10 млрд €) ",
+      "title": "Крупнейший фонд арендного жилья NL Vesteda (~28 000 квартир, ~10,8 млрд €) 26 июня остановил итоговый объём заявок на выкуп паёв на 765 млн € — впятеро меньше и",
       "url": "https://news.vesteda.com/vesteda-redemption-volume-set-at--765-million-and-fund-terms-amended/"
     },
-    "u:https://www.pararius.nl/nieuws/huurprijzen-stijgen-sterker-dan-koopprijzen": {
+    "u:https://www.eerstekamer.nl/wetsvoorstel/36780_initiatiefvoorstel_beckerman": {
       "date": "2026-06-30",
       "segment": "residential",
-      "subsection": "trends",
-      "title": "Аренда впервые обогнала и покупку, и инфляцию. По Pararius Huurmonitor (Q1 2026) ставки в свободном секторе выросли на 7,3% г/г за м² — против +5,1% по ценам по",
-      "url": "https://www.pararius.nl/nieuws/huurprijzen-stijgen-sterker-dan-koopprijzen"
+      "subsection": "news",
+      "title": "Инициативный закон депутата Beckerman (SP) о поддержке жилищных кооперативов Tweede Kamer приняла 30 июня практически единогласно (против — 1 голос). Вводятся д",
+      "url": "https://www.eerstekamer.nl/wetsvoorstel/36780_initiatiefvoorstel_beckerman"
     },
-    "u:https://www.globalpropertyguide.com/europe/netherlands/rental-yields": {
+    "u:https://www.rabobank.nl/kennis/d011529617-kwartaalbericht-woningmarkt-einde-van-de-prijsrally-huizenmarkt-koelt-af": {
       "date": "2026-06-30",
       "segment": "residential",
       "subsection": "trends",
-      "title": "Доходность арендного жилья NL держится высокой, но институционалы её уже сжали. Валовая доходность (bruto aanvangsrendement) в среднем ~6,28% по стране — Роттер",
-      "url": "https://www.globalpropertyguide.com/europe/netherlands/rental-yields"
+      "title": "Ценовое ралли жилья NL заканчивается — сходятся три независимых прогноза. Rabobank (9 июня): цены +2,8% (2026) и +2,0% (2027), сделки падают с 239 тыс. до 227 и",
+      "url": "https://www.rabobank.nl/kennis/d011529617-kwartaalbericht-woningmarkt-einde-van-de-prijsrally-huizenmarkt-koelt-af"
     },
     "u:https://www.cbs.nl/nl-nl/nieuws/2026/26/koopwoningen-in-mei-ruim-4-procent-duurder-dan-jaar-eerder": {
       "date": "2026-06-30",
       "segment": "residential",
       "subsection": "stats",
-      "title": "Рынок жилья охлаждается, но не падает. По CBS/Kadaster в мае цены на существующие дома были на 4,4% выше года назад и на 0,6% выше апреля. Это явное остывание: ",
+      "title": "Рынок жилья охлаждается, но не падает: цены на существующие дома в мае на +4,4% выше г/г (апрель +4,3%), +0,6% м/м, средняя цена сделки €487 383 (CBS/Kadaster, ",
       "url": "https://www.cbs.nl/nl-nl/nieuws/2026/26/koopwoningen-in-mei-ruim-4-procent-duurder-dan-jaar-eerder"
     },
-    "u:https://hdn.nl/marktcijfers": {
+    "u:https://www.cpb.nl/publicatie/toegankelijkheidsmonitor-koopwoningmarkt": {
       "date": "2026-06-30",
       "segment": "residential",
       "subsection": "stats",
-      "title": "Спрос на ипотеку держится, но ставки начали кусаться. По HDN (почти полная регистрация заявок NL) в мае подано ~47 750 заявок — на 3% меньше года назад, хотя ма",
-      "url": "https://hdn.nl/marktcijfers/"
-    },
-    "u:https://www.capitalvalue.nl/nieuws/transactievolume-woningbeleggingsmarkt-21-miljard-euro-in-eerste-kwartaal": {
-      "date": "2026-06-30",
-      "segment": "residential",
-      "subsection": "stats",
-      "title": "Приток капитала в арендное жильё — сильнейший первый квартал с 2020-го. По Capital Value транзакционный объём Q1 2026 — 2,1 млрд € (из них 1,1 млрд в новостройк",
-      "url": "https://www.capitalvalue.nl/nieuws/transactievolume-woningbeleggingsmarkt-21-miljard-euro-in-eerste-kwartaal/"
-    },
-    "u:https://www.wonen360.nl/article/9850302/aanhoudende-vraag-naar-woonwinkels-houdt-leegstand-op-retailparken-opvallend-laag": {
-      "date": "2026-06-30",
-      "segment": "commercial",
-      "subsection": "news",
-      "title": "Пока витрины в центрах гаснут, ритейл-парки на окраинах оказались тихим чемпионом ритейла. CBRE (международный брокер №1 по площадям в NL) в отчёте «Stabiliteit",
-      "url": "https://www.wonen360.nl/article/9850302/aanhoudende-vraag-naar-woonwinkels-houdt-leegstand-op-retailparken-opvallend-laag/"
-    },
-    "u:https://www.cbre.nl/insights/reports/stabiliteit-in-nederlandse-retailparken": {
-      "date": "2026-06-30",
-      "segment": "commercial",
-      "subsection": "news",
-      "title": "За цифрой «низкая вакантность» стоят живые деньги — и международные. По CBRE ритейл-парки притянули за 2024–2026 более 220 млн € капитала, интерес зарубежный, а",
-      "url": "https://www.cbre.nl/insights/reports/stabiliteit-in-nederlandse-retailparken"
-    },
-    "u:https://www.eurocommercialproperties.com/assets/uploads/important-documents/english/pr-2026-03-05-uk-heading.pdf": {
-      "date": "2026-06-30",
-      "segment": "commercial",
-      "subsection": "trends",
-      "title": "У рынка ритейла два свидетеля, и биржа показывает скидку. Eurocommercial Properties (биржевой владелец prime-ТЦ, штаб в NL, объекты BE/FR/IT/SE, активы ~4 млрд ",
-      "url": "https://www.eurocommercialproperties.com/assets/uploads/important-documents/english/PR-2026-03-05-UK-Heading.pdf"
-    },
-    "u:https://vastgoedjournaal.nl/news/72859/nederlandse-vastgoedmarkt-onttrekt-zich-aan-europese-daling-investeringsvolume": {
-      "date": "2026-06-30",
-      "segment": "commercial",
-      "subsection": "trends",
-      "title": "Нидерланды идут против европейского течения капитала. В I квартале 2026 инвестиционный объём в коммерческую недвижимость NL вырос на 77% г/г до 4,2 млрд €, тогд",
-      "url": "https://vastgoedjournaal.nl/news/72859/nederlandse-vastgoedmarkt-onttrekt-zich-aan-europese-daling-investeringsvolume"
-    },
-    "u:https://www.savills.com/research_articles/255800/382332-0": {
-      "date": "2026-06-30",
-      "segment": "commercial",
-      "subsection": "trends",
-      "title": "Prime-ритейл оценён почти как облигация. По Savills стартовая чистая доходность лучшего high-street ритейла держалась плоско ~3,75%, офисы ~4,40% (оценка брокер",
-      "url": "https://www.savills.com/research_articles/255800/382332-0"
-    },
-    "u:https://www.cbs.nl/nl-nl/nieuws/2026/26/consumenten-minder-negatief-in-juni": {
-      "date": "2026-06-30",
-      "segment": "commercial",
-      "subsection": "stats",
-      "title": "Потребитель чуть меньше боится — и для ритейла это первое за долгое время дыхание. Доверие потребителей в июне выросло с −46 (май) до −39, готовность покупать (",
-      "url": "https://www.cbs.nl/nl-nl/nieuws/2026/26/consumenten-minder-negatief-in-juni"
-    },
-    "u:https://www.cbs.nl/nl-nl/nieuws/2026/25/omzet-detailhandel-2-2-procent-hoger-in-eerste-kwartaal": {
-      "date": "2026-06-30",
-      "segment": "commercial",
-      "subsection": "stats",
-      "title": "Оборот розницы пока опережает страхи в опросах: в I квартале детайлхандель заработал на 2,2% больше год к году, онлайн-продажи прибавили 4,7%. Это фундамент под",
-      "url": "https://www.cbs.nl/nl-nl/nieuws/2026/25/omzet-detailhandel-2-2-procent-hoger-in-eerste-kwartaal"
-    },
-    "u:https://www.usnews.com/news/top-news/articles/2026-06-24/u-s-based-prologis-takes-16-6-billion-bid-for-uk-landlord-segro-public-after-rejection": {
-      "date": "2026-06-30",
-      "segment": "industrial",
-      "subsection": "news",
-      "title": "Крупнейший в мире владелец складов Prologis вынес на публику отвергнутую оферту на британскую Segro — и это новый ценник на каждый ваш квадратный метр логистики",
-      "url": "https://www.usnews.com/news/top-news/articles/2026-06-24/u-s-based-prologis-takes-16-6-billion-bid-for-uk-landlord-segro-public-after-rejection"
-    },
-    "u:https://www.deaandeelhouder.nl/nieuws/2026/06/25/beursblik-deutsche-bank-verlaagt-koersdoelen-voor-aanbieders-van-logistiek-vastgoed": {
-      "date": "2026-06-30",
-      "segment": "industrial",
-      "subsection": "news",
-      "title": "Deutsche Bank срезал целевые цены сразу по четырём листингованным логистическим игрокам, но рекомендацию «покупать» сохранил по всем. CTP (крупнейший по площади",
-      "url": "https://www.deaandeelhouder.nl/nieuws/2026/06/25/beursblik-deutsche-bank-verlaagt-koersdoelen-voor-aanbieders-van-logistiek-vastgoed/"
-    },
-    "u:https://propertynl.com/nieuws/humby-huurt-bijna-30-000-m-logistieke-ruimte-in-venlo/63cab933-adaa-4d81-b102-bcd555b1b790": {
-      "date": "2026-06-30",
-      "segment": "industrial",
-      "subsection": "news",
-      "title": "В prime-коридоре спрос держится. Логистический оператор Humby арендовал 29 779 м² на бизнес-парке Trade Port в Венло (Лимбург), на Dirk Hartogweg 8 — объект ран",
-      "url": "https://propertynl.com/Nieuws/Humby-huurt-bijna-30-000-m-logistieke-ruimte-in-Venlo/63cab933-adaa-4d81-b102-bcd555b1b790"
-    },
-    "u:https://www.investing.com/equities/ctp-nv": {
-      "date": "2026-06-30",
-      "segment": "industrial",
-      "subsection": "trends",
-      "title": "Дисконт листингованной логистики к балансу — второй свидетель против оценщиков. CTP (флагман нид. логистики, регистрация в NL, CTPark Network 13,8+ млн м²) торг",
-      "url": "https://www.investing.com/equities/ctp-nv"
-    },
-    "u:https://ctp.eu/news/ctp-announces-the-successful-placement-of-e500-million-green-bond-and-e216-million-tender-offer": {
-      "date": "2026-06-30",
-      "segment": "industrial",
-      "subsection": "trends",
-      "title": "Стоимость долга для нид. логистики — на конкретном ценнике. В январе CTP разместила зелёный бонд на 500 млн € на 4,5 года с купоном 3,375% при книге заявок свыш",
-      "url": "https://ctp.eu/news/ctp-announces-the-successful-placement-of-e500-million-green-bond-and-e216-million-tender-offer/"
-    },
-    "u:https://ctp.eu/investors/credit-ratings": {
-      "date": "2026-06-30",
-      "segment": "industrial",
-      "subsection": "trends",
-      "title": "Кредитное качество флагмана подтверждено тремя агентствами. CTP держит инвестиционный рейтинг: S&P — BBB (стабильный, 15.09.2025), Moody's — Baa2 (стабильный, с",
-      "url": "https://ctp.eu/investors/credit-ratings/"
-    },
-    "u:https://insights.savills.nl/logistics-trend-report-2026-nl": {
-      "date": "2026-06-30",
-      "segment": "industrial",
-      "subsection": "stats",
-      "title": "Доходность лучших складов нормализовалась — компрессия 2021-го отыграна назад. По Savills prime net initial yield по нид. логистике поднялась с пика 3,15% в 202",
-      "url": "https://insights.savills.nl/logistics-trend-report-2026-nl"
-    },
-    "u:https://propertynl.com/nieuws/savills-logistieke-markt-nederland-stabiliseert-in-2026/ae9d625d-2c41-4773-8f81-9c1bedfc6846": {
-      "date": "2026-06-30",
-      "segment": "industrial",
-      "subsection": "stats",
-      "title": "Вакантность логистики выросла, но рынок стабилизируется. По Savills вакантность нид. логистики поднялась до 6,3% к началу 2026-го — итог десятилетия бурной стро",
-      "url": "https://propertynl.com/Nieuws/Savills-logistieke-markt-Nederland-stabiliseert-in-2026/ae9d625d-2c41-4773-8f81-9c1bedfc6846"
-    },
-    "u:https://www.cbre.nl/press-releases/verwachtingen-voor-de-nederlandse-vastgoedmarkt-in-2026": {
-      "date": "2026-06-30",
-      "segment": "industrial",
-      "subsection": "stats",
-      "title": "Деньги осторожно возвращаются в логистику. Инвестиционные объёмы в нид. логистику в 2025 году составили ~2,9 млрд € — около −11% к 2024-му, рынок капитала всё е",
-      "url": "https://www.cbre.nl/press-releases/verwachtingen-voor-de-nederlandse-vastgoedmarkt-in-2026"
+      "title": "Структурный фон, объясняющий, почему цены не падают: дефицит жилья ~396 000 единиц (4,8% фонда, ABF Primos); доступность рухнула — под ипотеку среднему домохозя",
+      "url": "https://www.cpb.nl/publicatie/toegankelijkheidsmonitor-koopwoningmarkt"
     }
   },
   "weeks": [
@@ -167,8 +160,8 @@
       "report_date": "2026-06-30",
       "week_start": "2026-06-23",
       "week_end": "2026-06-30",
-      "items": 23,
-      "new_items": 23
+      "items": 22,
+      "new_items": 22
     }
   ]
 }

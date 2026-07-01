@@ -1,64 +1,4 @@
 {
-  "koopbereidheid": {
-    "unit": "пункты",
-    "label": "Готовность к покупкам (CBS)",
-    "segment": "commercial",
-    "points": [
-      {
-        "week_end": "2026-06-30",
-        "value": -22.0,
-        "source": "CBS, 22.06.2026"
-      }
-    ]
-  },
-  "consumer_confidence": {
-    "unit": "пункты",
-    "label": "Доверие потребителей (CBS)",
-    "segment": "commercial",
-    "points": [
-      {
-        "week_end": "2026-06-30",
-        "value": -39.0,
-        "source": "CBS, 22.06.2026"
-      }
-    ]
-  },
-  "retail_park_vacancy": {
-    "unit": "%",
-    "label": "Вакантность ритейл-парков",
-    "segment": "commercial",
-    "points": [
-      {
-        "week_end": "2026-06-30",
-        "value": 4.4,
-        "source": "CBRE, 24.06.2026"
-      }
-    ]
-  },
-  "retail_market_vacancy": {
-    "unit": "%",
-    "label": "Вакантность торговой недвижимости",
-    "segment": "commercial",
-    "points": [
-      {
-        "week_end": "2026-06-30",
-        "value": 5.5,
-        "source": "CBRE, 24.06.2026"
-      }
-    ]
-  },
-  "house_price_yoy": {
-    "unit": "%",
-    "label": "Цены на жильё, г/г (CBS/Kadaster)",
-    "segment": "residential",
-    "points": [
-      {
-        "week_end": "2026-06-30",
-        "value": 4.4,
-        "source": "CBS, 22.06.2026"
-      }
-    ]
-  },
   "logistics_prime_yield_nl": {
     "unit": "%",
     "label": "Prime-доходность логистики NL",
@@ -67,7 +7,7 @@
       {
         "week_end": "2026-06-30",
         "value": 4.75,
-        "source": "Savills, нач. 2026"
+        "source": "CBRE / Savills, нач. 2026"
       }
     ]
   },
@@ -79,7 +19,43 @@
       {
         "week_end": "2026-06-30",
         "value": 6.3,
-        "source": "Savills, нач. 2026"
+        "source": "Savills, кон. Q1 2026"
+      }
+    ]
+  },
+  "logistics_takeup_yoy": {
+    "unit": "%",
+    "label": "Take-up логистики, г/г",
+    "segment": "industrial",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": 10.5,
+        "source": "Cushman & Wakefield, Q1 2026"
+      }
+    ]
+  },
+  "ctp_nta_discount": {
+    "unit": "%",
+    "label": "Дисконт CTP к EPRA NTA",
+    "segment": "industrial",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": 21.7,
+        "source": "CTP IR / Investing, 30.06.2026"
+      }
+    ]
+  },
+  "retail_market_vacancy": {
+    "unit": "%",
+    "label": "Вакантность торговой недвижимости NL",
+    "segment": "commercial",
+    "points": [
+      {
+        "week_end": "2026-06-30",
+        "value": 7.0,
+        "source": "Locatus, кон. 2025"
       }
     ]
   },
@@ -95,15 +71,15 @@
       }
     ]
   },
-  "ctp_nta_discount": {
+  "house_price_yoy": {
     "unit": "%",
-    "label": "Дисконт CTP к EPRA NTA",
-    "segment": "industrial",
+    "label": "Цены на жильё, г/г (CBS/Kadaster)",
+    "segment": "residential",
     "points": [
       {
         "week_end": "2026-06-30",
-        "value": 21.7,
-        "source": "CTP IR / Investing, 30.06.2026"
+        "value": 4.4,
+        "source": "CBS, 22.06.2026"
       }
     ]
   },
@@ -121,25 +97,13 @@
   },
   "euribor_3m": {
     "unit": "%",
-    "label": "3-месячный Euribor",
+    "label": "Euribor 3M",
     "segment": "overview",
     "points": [
       {
         "week_end": "2026-06-30",
-        "value": 2.31,
-        "source": "Euribor-rates.eu, 22.06.2026"
-      }
-    ]
-  },
-  "cre_investment_nl_q1": {
-    "unit": "млрд €",
-    "label": "CRE-инвестиции NL, Q1",
-    "segment": "overview",
-    "points": [
-      {
-        "week_end": "2026-06-30",
-        "value": 4.1,
-        "source": "CBRE, Q1 2026"
+        "value": 2.317,
+        "source": "EMMI, 29.06.2026"
       }
     ]
   }
