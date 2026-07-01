@@ -5005,6 +5005,48 @@
           "region": "NL",
           "cadence": "непрерывно",
           "tier": "supplementary"
+        },
+        {
+          "name": "IamExpat — Housing & Real Estate News",
+          "url": "https://www.iamexpat.nl/dutch-news-articles?section=housing",
+          "segments": [
+            "residential"
+          ],
+          "provides": "Англоязычный новостной раздел для экспатов: цены на жильё, ипотека, аренда, жилищная политика, гайды по покупке/аренде для иностранцев.",
+          "analyst_use": "Быстрый англоязычный срез новостей о жилье и тем, важных для международной аудитории (иностранные покупатели, экспат-аренда, изменения регуляций); для фактов поднимать к первоисточнику.",
+          "metrics": [],
+          "access": "free",
+          "region": "NL",
+          "cadence": "непрерывно",
+          "tier": "supplementary"
+        },
+        {
+          "name": "DutchNews.nl — Housing",
+          "url": "https://www.dutchnews.nl/category/housing/",
+          "segments": [
+            "residential"
+          ],
+          "provides": "Раздел Housing ежедневного англоязычного издания: цены (со ссылкой на CBS/NVM), аренда, ипотека, жилищная политика.",
+          "analyst_use": "Надёжный англоязычный дайджест с опорой на официальную статистику — удобен для быстрой проверки фактов и понятного изложения на английском; для фактов поднимать к первоисточнику.",
+          "metrics": [],
+          "access": "free",
+          "region": "NL",
+          "cadence": "непрерывно",
+          "tier": "supplementary"
+        },
+        {
+          "name": "NL Times — Housing Market",
+          "url": "https://nltimes.nl/tags/housing-market",
+          "segments": [
+            "residential"
+          ],
+          "provides": "Тег housing market англоязычного новостного портала: сделки, статистика цен, жилищная политика, новое строительство.",
+          "analyst_use": "Дополнительный англоязычный новостной канал для оперативного мониторинга темы жилья; для фактов поднимать к первоисточнику.",
+          "metrics": [],
+          "access": "free",
+          "region": "NL",
+          "cadence": "непрерывно",
+          "tier": "supplementary"
         }
       ]
     }
