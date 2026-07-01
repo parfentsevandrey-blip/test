@@ -3,10 +3,13 @@
 Comparable selection is the core of the "is this lot underpriced" question:
 comparing a listing against the wrong peer group (different complex, wildly
 different area or a different fit-out level) produces a meaningless price
-signal. We only ever compare within the same residential complex (ЖК),
-which the task requires anyway (modern complexes built in 2019+), and
+signal. We only ever compare within the same residential complex (ЖК), and
 narrow further by room count, area band, floor position and finish level
 when there is enough data to do so without starving the sample.
+
+This module trusts that its caller has already scoped `pool` to the market
+of interest (city, deal type, built-year cutoff — see pipeline.filter_market);
+it does not re-check those fields itself.
 """
 
 from __future__ import annotations

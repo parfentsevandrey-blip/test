@@ -17,7 +17,7 @@ def _money(x: float) -> str:
 
 
 def _floor(offer) -> str:
-    if offer.floor and offer.floors_total:
+    if offer.floor is not None and offer.floors_total is not None:
         return f"{offer.floor}/{offer.floors_total}"
     return "—"
 
@@ -84,8 +84,8 @@ def to_csv(ranked: List[RankedOffer], as_of: Optional[date] = None) -> str:
             o.address or "",
             "студия" if o.is_studio else o.rooms,
             f"{o.area_total:.1f}",
-            o.floor or "",
-            o.floors_total or "",
+            o.floor if o.floor is not None else "",
+            o.floors_total if o.floors_total is not None else "",
             f"{o.price:.0f}",
             f"{o.price_per_sqm:.0f}",
             f"{v.median_comp_ppsqm:.0f}" if v.median_comp_ppsqm is not None else "",

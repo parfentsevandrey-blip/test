@@ -5,7 +5,7 @@ defaults so the tool runs out of the box.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, field, fields
 from pathlib import Path
 from typing import Any, Optional
 
@@ -28,6 +28,11 @@ class ComparablesConfig:
     floor_bucket: bool = True            # separate ground/top floor from middle floors when possible
     finish_type_strict: bool = False     # if true, prefer peers with the same finish category
 
+    def __post_init__(self):
+        # A verdict needs at least one peer to compute a median against; silently
+        # clamp instead of letting a user-editable 0 crash the scoring pass.
+        self.min_comparables = max(1, self.min_comparables)
+
 
 @dataclass
 class ScoringConfig:
@@ -46,16 +51,10 @@ class OutputConfig:
 
 @dataclass
 class Config:
-    market: MarketConfig = None
-    comparables: ComparablesConfig = None
-    scoring: ScoringConfig = None
-    output: OutputConfig = None
-
-    def __post_init__(self):
-        self.market = self.market or MarketConfig()
-        self.comparables = self.comparables or ComparablesConfig()
-        self.scoring = self.scoring or ScoringConfig()
-        self.output = self.output or OutputConfig()
+    market: MarketConfig = field(default_factory=MarketConfig)
+    comparables: ComparablesConfig = field(default_factory=ComparablesConfig)
+    scoring: ScoringConfig = field(default_factory=ScoringConfig)
+    output: OutputConfig = field(default_factory=OutputConfig)
 
 
 def _merge_dataclass(cls, data: Optional[dict]):

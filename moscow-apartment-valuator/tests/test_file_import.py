@@ -48,3 +48,20 @@ def test_unsupported_extension_raises(tmp_path):
     path.write_text("not real data", encoding="utf-8")
     with pytest.raises(ValueError, match="unsupported file extension"):
         FileImportProvider(str(path)).fetch()
+
+
+def test_a_raw_column_in_the_input_does_not_collide_with_the_raw_payload_field(tmp_path):
+    # Offer stores the original row under `raw`. If the input itself happens to
+    # have a column literally named "raw" (a plausible name for passthrough
+    # provider metadata), it must not crash the constructor.
+    path = tmp_path / "offers.json"
+    path.write_text(
+        """
+        [{"id": "a1", "url": "https://example.test/a1", "city": "Москва",
+          "price": 12000000, "area_total": 40, "rooms": 1, "raw": {"note": "from export"}}]
+        """,
+        encoding="utf-8",
+    )
+    offers = FileImportProvider(str(path)).fetch()
+    assert len(offers) == 1
+    assert offers[0].raw["id"] == "a1"

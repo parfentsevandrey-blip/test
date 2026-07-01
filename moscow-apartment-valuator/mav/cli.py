@@ -8,9 +8,10 @@ from __future__ import annotations
 
 import argparse
 import sys
-from datetime import date, datetime
+from datetime import date
 from pathlib import Path
 
+from ._coerce import to_date
 from .config import load_config
 from .pipeline import rank_offers
 from .providers.file_import import FileImportProvider
@@ -42,7 +43,7 @@ def main(argv=None) -> int:
     if args.top_n is not None:
         cfg.output.top_n = args.top_n
 
-    as_of = datetime.strptime(args.as_of, "%Y-%m-%d").date() if args.as_of else date.today()
+    as_of = to_date(args.as_of) if args.as_of else date.today()
 
     offers = FileImportProvider(args.input).fetch()
     ranked = rank_offers(offers, cfg, as_of=as_of)

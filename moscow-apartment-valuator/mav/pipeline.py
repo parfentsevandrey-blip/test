@@ -8,7 +8,7 @@ from typing import List, Optional
 
 from .config import Config
 from .models import Offer
-from .valuation.scoring import Verdict, evaluate
+from .valuation.scoring import LABELS, Verdict, evaluate
 
 
 @dataclass
@@ -20,8 +20,9 @@ class RankedOffer:
 # Confirmed deals outrank "suspicious" listings regardless of raw discount size:
 # a huge nominal discount is exactly what makes a listing suspicious (more likely
 # a data error, encumbrance or distressed sale than a real bargain), so it must
-# not out-sort genuine, trustworthy deals just because the number is bigger.
-_LABEL_SORT_RANK = {"strong_undervalued": 0, "undervalued": 1, "suspicious": 2}
+# not out-sort genuine, trustworthy deals just because the number is bigger. Rank
+# is derived from scoring.LABELS's order so the two never drift apart.
+_LABEL_SORT_RANK = {label: rank for rank, label in enumerate(LABELS)}
 
 
 def filter_market(offers: List[Offer], cfg: Config) -> List[Offer]:

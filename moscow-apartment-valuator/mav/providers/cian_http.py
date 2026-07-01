@@ -39,6 +39,7 @@ from typing import List, Optional
 import bs4
 import requests
 
+from .._coerce import to_float
 from ..models import Offer
 
 SEARCH_URL = "https://www.cian.ru/cat.php"
@@ -139,7 +140,7 @@ class CianHttpProvider:
         area_total = None
         area_match = re.search(r"([\d.,]+)\s*м²", title)
         if area_match:
-            area_total = float(area_match.group(1).replace(",", "."))
+            area_total = to_float(area_match.group(1))
 
         is_studio = "Студия" in title
         rooms = 1 if is_studio else None

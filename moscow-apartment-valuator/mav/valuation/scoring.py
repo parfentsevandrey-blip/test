@@ -29,13 +29,16 @@ from typing import List, Optional
 from ..models import Offer
 from .comparables import find_comparables
 
+# Order doubles as the canonical "most to least actionable/trustworthy" ranking
+# (see pipeline.py's shortlist sort, which is keyed off this same order) so a
+# new label only has to be added in one place to sort correctly everywhere.
 LABELS = {
-    "insufficient_data": "Недостаточно данных для сравнения",
-    "suspicious": "Подозрительно дёшево — проверить вручную",
     "strong_undervalued": "Сильно недооценена",
     "undervalued": "Недооценена",
     "fair": "Рыночная цена",
     "overvalued": "Переоценена",
+    "suspicious": "Подозрительно дёшево — проверить вручную",
+    "insufficient_data": "Недостаточно данных для сравнения",
 }
 
 

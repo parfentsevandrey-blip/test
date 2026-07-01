@@ -21,10 +21,10 @@ from __future__ import annotations
 
 import csv
 import json
-from datetime import date, datetime
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import List
 
+from .._coerce import to_bool, to_date, to_float, to_int
 from ..models import Offer
 
 REQUIRED_FIELDS = ("id", "url", "city", "price", "area_total", "rooms")
@@ -32,48 +32,23 @@ REQUIRED_FIELDS = ("id", "url", "city", "price", "area_total", "rooms")
 _OFFER_FIELD_NAMES = {f for f in Offer.__dataclass_fields__.keys()}
 
 
-def _to_float(v: Any) -> Optional[float]:
-    if v is None or v == "":
-        return None
-    return float(str(v).replace(" ", "").replace(",", "."))
-
-
-def _to_int(v: Any) -> Optional[int]:
-    f = _to_float(v)
-    return int(f) if f is not None else None
-
-
-def _to_bool(v: Any) -> bool:
-    if isinstance(v, bool):
-        return v
-    return str(v).strip().lower() in {"1", "true", "yes", "y", "да"}
-
-
-def _to_date(v: Any) -> Optional[date]:
-    if not v:
-        return None
-    if isinstance(v, date):
-        return v
-    return datetime.strptime(str(v)[:10], "%Y-%m-%d").date()
-
-
 def _row_to_offer(row: dict) -> Offer:
     missing = [f for f in REQUIRED_FIELDS if row.get(f) in (None, "")]
     if missing:
         raise ValueError(f"listing {row.get('id', '?')!r} is missing required field(s): {missing}")
 
-    kwargs = {k: v for k, v in row.items() if k in _OFFER_FIELD_NAMES}
-    kwargs["price"] = _to_float(kwargs["price"])
-    kwargs["area_total"] = _to_float(kwargs["area_total"])
-    kwargs["rooms"] = _to_int(kwargs["rooms"])
-    kwargs["is_studio"] = _to_bool(kwargs.get("is_studio", False))
-    kwargs["built_year"] = _to_int(kwargs.get("built_year"))
-    kwargs["floor"] = _to_int(kwargs.get("floor"))
-    kwargs["floors_total"] = _to_int(kwargs.get("floors_total"))
-    kwargs["area_living"] = _to_float(kwargs.get("area_living"))
-    kwargs["area_kitchen"] = _to_float(kwargs.get("area_kitchen"))
-    kwargs["listed_at"] = _to_date(kwargs.get("listed_at"))
-    kwargs["updated_at"] = _to_date(kwargs.get("updated_at"))
+    kwargs = {k: v for k, v in row.items() if k in _OFFER_FIELD_NAMES and k != "raw"}
+    kwargs["price"] = to_float(kwargs["price"])
+    kwargs["area_total"] = to_float(kwargs["area_total"])
+    kwargs["rooms"] = to_int(kwargs["rooms"])
+    kwargs["is_studio"] = to_bool(kwargs.get("is_studio", False))
+    kwargs["built_year"] = to_int(kwargs.get("built_year"))
+    kwargs["floor"] = to_int(kwargs.get("floor"))
+    kwargs["floors_total"] = to_int(kwargs.get("floors_total"))
+    kwargs["area_living"] = to_float(kwargs.get("area_living"))
+    kwargs["area_kitchen"] = to_float(kwargs.get("area_kitchen"))
+    kwargs["listed_at"] = to_date(kwargs.get("listed_at"))
+    kwargs["updated_at"] = to_date(kwargs.get("updated_at"))
     kwargs.setdefault("deal_type", "sale")
     kwargs.setdefault("accommodation_type", "flat")
 
