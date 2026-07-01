@@ -4,28 +4,23 @@
 HTML-превью отчёта из того же JSON, что и Word (обновлённый дизайн).
     python3 preview_html.py --data data/week_2026-06-30.json --out reports/preview.html
 """
-import argparse, json, html
+import argparse, json, html, os
 from datetime import datetime
 
-RU_MONTHS = {1:"января",2:"февраля",3:"марта",4:"апреля",5:"мая",6:"июня",
-             7:"июля",8:"августа",9:"сентября",10:"октября",11:"ноября",12:"декабря"}
-SEG = {"residential":"#16846F","commercial":"#C0791C","industrial":"#2C5F8A"}
-SUB_ORDER = ["laws","news","trends","stats"]
-SUB_TITLES = {"laws":"Изменения в законах и регулировании","news":"Новости",
-              "trends":"Тренды","stats":"Статистика"}
-DIR = {
-  "up":      {"sym":"▲","bg":"#E7F4EE","fg":"#1E7A4D"},
-  "down":    {"sym":"▼","bg":"#FBEAEA","fg":"#B03A3A"},
-  "neutral": {"sym":"◆","bg":"#E8F0F7","fg":"#2C5F8A"},
-}
-TSTATUS = {
-  "new":        {"t":"НОВЫЙ","bg":"#E8F0F7","fg":"#2C5F8A"},
-  "developing": {"t":"В РАЗВИТИИ","bg":"#FBF1DF","fg":"#8A5510"},
-  "watch":      {"t":"ПОД НАБЛЮДЕНИЕМ","bg":"#FFF6E5","fg":"#B07A1C"},
-  "resolved":   {"t":"ЗАКРЫТ","bg":"#E7F4EE","fg":"#1E7A4D"},
-}
-KIND_ICON = {"deal_deadline":"⏳","cbs_release":"📈","vote":"🗳","reit_earnings":"📊","other":"•"}
-SEG_RU = {"residential":"жильё","commercial":"ритейл","industrial":"индустриал","overview":"все","macro":"макро"}
+import constants as _const
+
+# Константы — единый источник в constants.py (см. также generate_report.py,
+# charts.py), чтобы палитры/словари не расходились между рендерерами.
+RU_MONTHS = _const.RU_MONTHS
+SEG = {k: "#" + v["bar"] for k, v in _const.SEG_COLORS_HEX.items()}
+SUB_ORDER = _const.SUBSECTION_ORDER
+SUB_TITLES = _const.SUBSECTION_TITLES
+DIR = {k: {"sym": v["sym"], "bg": "#" + v["bg"], "fg": "#" + v["fg"]}
+       for k, v in _const.DIRECTION_HEX.items()}
+TSTATUS = {k: {"t": v["label"], "bg": "#" + v["bg"], "fg": "#" + v["fg"]}
+           for k, v in _const.THREAD_STATUS_HEX.items()}
+KIND_ICON = _const.KIND_ICON
+SEG_RU = _const.SEG_RU_SHORT
 
 def period(a,b):
     try:
@@ -35,6 +30,33 @@ def period(a,b):
     except Exception: return f"{a} — {b}"
 
 def esc(s): return html.escape(str(s or ""))
+
+# Реальный файл живёт в корне проекта (profile.json); "config/profile.json" —
+# путь из agent_instructions.md §2.9.4, фактически не использовавшийся.
+# Проверяем оба, тем же порядком, что validate.py и generate_report.py.
+PROFILE_PATH_CANDIDATES = (os.path.join("config", "profile.json"), "profile.json")
+
+def _has_profile(paths=PROFILE_PATH_CANDIDATES):
+    """True, только если один из кандидатов существует и непуст.
+
+    Персонализация выключена по умолчанию (agent_instructions.md §2.9.4):
+    даже если в data-файле уже есть portfolio_notes, превью не должно
+    показывать врезку без явного подтверждающего profile.json — иначе
+    ложная персонализация («ваш склад» и т.п.) для читателя без профиля.
+    Логика продублирована из generate_report._has_profile, чтобы Word и
+    HTML-превью не расходились по контракту персонализации.
+    """
+    for path in ((paths,) if isinstance(paths, str) else paths):
+        if not path or not os.path.exists(path):
+            continue
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                profile = json.load(f)
+        except Exception:
+            continue
+        if profile:
+            return True
+    return False
 
 def meta(it):
     bits=[]
@@ -135,7 +157,7 @@ def render(data, pngs=None):
         out.append('</ol></div>')
 
     pn=data.get("portfolio_notes") or []
-    if pn:
+    if pn and _has_profile():
         out.append('<div class="pbox"><div class="lbl">★ ВАЖНО ДЛЯ ВАШЕГО ПОРТФЕЛЯ</div><ul>')
         for n in pn:
             out.append(f'<li>{esc(n.get("text","") if isinstance(n,dict) else n)}</li>')
@@ -167,12 +189,25 @@ def render(data, pngs=None):
     for seg in data.get("segments",[]):
         color=SEG.get(seg.get("id"),"#1F3A5F")
         out.append(f'<div class="bar" style="background:{color}">{esc(seg.get("icon",""))} {esc(seg.get("title",""))}</div>')
-        subs=seg.get("subsections",{}); had=False
+        subs=seg.get("subsections",{})
+
+        # subsections может быть dict (по ключам) или list — как в generate_report.py,
+        # чтобы preview_html и Word-рендер не расходились по поддерживаемому контракту.
+        def get_items(key, subs=subs):
+            if isinstance(subs, dict):
+                return subs.get(key) or []
+            for s in subs or []:
+                if s.get("id") == key or s.get("key") == key:
+                    return s.get("items") or []
+            return []
+
+        had=False
         for key in SUB_ORDER:
-            items=subs.get(key) or []
+            items=get_items(key)
             if not items: continue
             had=True
-            out.append(f'<h3 class="ssub" style="color:{color}">{SUB_TITLES[key]}</h3>')
+            title = SUB_TITLES.get(key, key)
+            out.append(f'<h3 class="ssub" style="color:{color}">{esc(title)}</h3>')
             if key=="stats":
                 out.append('<table><tr><th>Показатель</th><th>Значение / динамика</th></tr>')
                 for it in items:

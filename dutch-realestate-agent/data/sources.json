@@ -1,5 +1,5 @@
 {
-  "count": 260,
+  "count": 269,
   "sources": [
     {
       "category": "1. Индексы доходности и бенчмарки (direct + listed + fund-level)",
@@ -800,6 +800,50 @@
       "tier": "important"
     },
     {
+      "category": "4. Кредитные рейтинги и кредитный research эмитентов",
+      "name": "Sustainalytics — ESG Risk Ratings (Real Estate)",
+      "url": "https://www.sustainalytics.com/esg-ratings",
+      "segments": [
+        "commercial",
+        "industrial",
+        "residential"
+      ],
+      "provides": "ESG Risk Rating по листингованным REIT/property-компаниям: managed vs. unmanaged risk, controversies, экспозиция к transition-риску по портфелю недвижимости.",
+      "analyst_use": "Дополняет кредитные рейтинги оценкой transition-риска зелёных активов (связь ESG-профиля с рефинансированием и стоимостью капитала green bonds) для NL-REIT (CTP, WDP, Wereldhave, NSI).",
+      "metrics": [
+        "ESG risk score",
+        "controversy level",
+        "carbon risk exposure",
+        "management gap"
+      ],
+      "access": "freemium",
+      "region": "global",
+      "cadence": "непрерывно",
+      "tier": "supplementary"
+    },
+    {
+      "category": "4. Кредитные рейтинги и кредитный research эмитентов",
+      "name": "MSCI ESG Ratings — Real Estate Issuers",
+      "url": "https://www.msci.com/our-solutions/esg-investing/esg-ratings",
+      "segments": [
+        "commercial",
+        "industrial",
+        "residential"
+      ],
+      "provides": "ESG-рейтинг (AAA–CCC) по листингованным property-компаниям с разбивкой по key issues (climate change, resource use, governance); используется как ESG-прокси в credit-моделях инвесторов.",
+      "analyst_use": "Второй независимый ESG-взгляд рядом с Sustainalytics для оценки climate/transition risk NL-REIT, релевантен при анализе спреда green bonds и covenant-рисков.",
+      "metrics": [
+        "ESG rating (AAA-CCC)",
+        "key issue score",
+        "carbon intensity",
+        "governance score"
+      ],
+      "access": "paid",
+      "region": "global",
+      "cadence": "ежегодно + непрерывно",
+      "tier": "supplementary"
+    },
+    {
       "category": "5. Первичные раскрытия листингованных эмитентов (IR)",
       "name": "NSI N.V. — Newsroom / Investor Relations",
       "url": "https://nsi.nl/ir/",
@@ -1131,6 +1175,46 @@
       "region": "EU",
       "cadence": "непрерывно",
       "tier": "important"
+    },
+    {
+      "category": "6. Консенсус аналитиков и sell-side estimates",
+      "name": "TIKR — Analyst Estimates & Consensus",
+      "url": "https://www.tikr.com/",
+      "segments": [
+        "all"
+      ],
+      "provides": "Агрегатор консенсус-оценок (revenue, EPS, NAV/FFO) и истории ревизий по листингованным компаниям, включая европейские REIT (CTP, WDP, Wereldhave, NSI, Vastned).",
+      "analyst_use": "Кросс-проверка консенсуса и трекинг ревизий EPS/FFO по NL-REIT дополнительно к MarketScreener/Investing.com; удобная историческая динамика оценок аналитиков.",
+      "metrics": [
+        "consensus EPS/FFO",
+        "estimate revisions",
+        "consensus NAV",
+        "number of analysts"
+      ],
+      "access": "freemium",
+      "region": "global",
+      "cadence": "непрерывно",
+      "tier": "important"
+    },
+    {
+      "category": "6. Консенсус аналитиков и sell-side estimates",
+      "name": "Simply Wall St — Analyst Consensus & Fair Value",
+      "url": "https://simplywall.st/",
+      "segments": [
+        "all"
+      ],
+      "provides": "Консенсус-таргеты, распределение рейтингов и fair-value модель по листингованным REIT (CTP, WDP, Wereldhave, NSI, ECP), визуализация ревизий прогнозов.",
+      "analyst_use": "Быстрый третий независимый срез консенсуса и fair-value для триангуляции с MarketScreener/Investing.com/TIKR по NL-релевантным именам.",
+      "metrics": [
+        "consensus target price",
+        "fair value estimate",
+        "buy/hold/sell distribution",
+        "estimate revisions"
+      ],
+      "access": "freemium",
+      "region": "global",
+      "cadence": "непрерывно",
+      "tier": "supplementary"
     },
     {
       "category": "7. Стандарты оценки и отчётности (valuation & reporting)",
@@ -4672,6 +4756,82 @@
       "access": "free",
       "region": "NL",
       "cadence": "нерегулярно",
+      "tier": "supplementary"
+    },
+    {
+      "category": "19. Суб-секторные дески (логистика, ритейл, data centres, living-ниши, отели, life sciences)",
+      "name": "Supply Chain Dive — Warehousing & Logistics",
+      "url": "https://www.supplychaindive.com/topic/warehousing-distribution/",
+      "segments": [
+        "industrial"
+      ],
+      "provides": "Англоязычное отраслевое издание по логистике и цепочкам поставок: near-shoring, автоматизация складов, аренда DC, инвестиции 3PL/операторов, включая европейские/NL-сюжеты.",
+      "analyst_use": "Быстрый англоязычный срез новостей индустриального/логистического сегмента для иностранных инвесторов; контекст спроса occupier-рынка вне NL-язычных источников; для фактов поднимать к первоисточнику.",
+      "metrics": [],
+      "access": "free",
+      "region": "global",
+      "cadence": "непрерывно",
+      "tier": "supplementary"
+    },
+    {
+      "category": "19. Суб-секторные дески (логистика, ритейл, data centres, living-ниши, отели, life sciences)",
+      "name": "Logistics Manager — UK/European Warehousing News",
+      "url": "https://www.logisticsmanager.com/category/warehousing/",
+      "segments": [
+        "industrial"
+      ],
+      "provides": "Англоязычный журнал по складской логистике и цепочкам поставок, фокус на Великобританию с материалами по Европе: сделки по складам, автоматизация, девелопмент DC, рынок труда в логистике.",
+      "analyst_use": "Дополнительный англоязычный новостной канал по индустриальному сегменту (аналог IamExpat/DutchNews для residential) для мониторинга европейского логистического контекста NL-рынка; для фактов поднимать к первоисточнику.",
+      "metrics": [],
+      "access": "free",
+      "region": "EU",
+      "cadence": "непрерывно",
+      "tier": "supplementary"
+    },
+    {
+      "category": "19. Суб-секторные дески (логистика, ритейл, data centres, living-ниши, отели, life sciences)",
+      "name": "Retail Dive — Commercial Real Estate & Store Openings",
+      "url": "https://www.retaildive.com/topic/real-estate/",
+      "segments": [
+        "commercial"
+      ],
+      "provides": "Англоязычное отраслевое издание по ритейлу: открытия/закрытия магазинов, сделки по торговой недвижимости, e-commerce vs. физический ритейл, крупные ритейлеры в Европе.",
+      "analyst_use": "Англоязычный срез новостей ритейл-сегмента для иностранных инвесторов без доступа к NL-язычным Locatus/RetailTrends; контекст международных ритейл-трендов, влияющих на NL winkelvastgoed; для фактов поднимать к первоисточнику.",
+      "metrics": [],
+      "access": "free",
+      "region": "global",
+      "cadence": "непрерывно",
+      "tier": "supplementary"
+    },
+    {
+      "category": "19. Суб-секторные дески (логистика, ритейл, data centres, living-ниши, отели, life sciences)",
+      "name": "Retail Gazette — UK Retail Property News",
+      "url": "https://www.retailgazette.co.uk/",
+      "segments": [
+        "commercial"
+      ],
+      "provides": "Англоязычное издание по ритейлу с фокусом на Великобританию (крупнейшая аудитория в секторе UK retail), с отдельными материалами по континентальной Европе: сделки, банкротства/реструктуризации ритейлеров, торговые площади и аренда.",
+      "analyst_use": "Дополнительный англоязычный новостной канал по коммерческому/ритейл-сегменту (аналог NL Times для residential) для отслеживания панъевропейских ритейл-трендов, релевантных NL winkelcentra; для фактов поднимать к первоисточнику.",
+      "metrics": [],
+      "access": "free",
+      "region": "EU",
+      "cadence": "непрерывно",
+      "tier": "supplementary"
+    },
+    {
+      "category": "19. Суб-секторные дески (логистика, ритейл, data centres, living-ниши, отели, life sciences)",
+      "name": "CRE Herald — English-language CRE News",
+      "url": "https://www.creherald.com/",
+      "segments": [
+        "commercial",
+        "industrial"
+      ],
+      "provides": "Англоязычная новостная лента по коммерческой недвижимости континентальной Европы: инвестсделки, фонды, ритейл и логистика, включая NL-эмитентов (CTP, WDP, Wereldhave).",
+      "analyst_use": "Смешанный англоязычный CRE-новостной канал для иностранных инвесторов в NL commercial/industrial без доступа к платным терминалам; для фактов поднимать к первоисточнику.",
+      "metrics": [],
+      "access": "free",
+      "region": "EU",
+      "cadence": "непрерывно",
       "tier": "supplementary"
     },
     {

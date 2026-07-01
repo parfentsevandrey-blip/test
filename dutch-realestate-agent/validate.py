@@ -57,10 +57,23 @@ KT_MIN, KT_MAX = 3, 5
 MIN_TEXT_LEN = 20
 MAX_HEADLINE_LEN = 200
 MIN_EXEC_SUMMARY_LEN = 100
+MAX_CHART_TITLE_LEN = 150
 
 # Плейсхолдеры, которые выдают незаполненный шаблон:
 URL_PLACEHOLDERS = ("https://...", "http://...", "https://", "http://",
                     "http://example", "https://example", "todo", "...", "url")
+
+# Известные нерасшифрованные жаргонизмы, которые не должны «протекать» в сканируемые
+# поля без перевода/глоссария (agent_instructions §0, §2.9.2):
+JARGON_TOKENS = (
+    "EPRA NTA", "EPRA", "NTA", "Strong Buy", "Strong Sell",
+    "Baa2", "Baa3", "BBB+", "BBB-", "BBB",
+    "апсайд", "даунсайд", "H1", "H2", "Q1", "Q2", "Q3", "Q4",
+)
+
+# Местоимения второго лица — маркер ложной персонализации вне profile.json:
+_PERSONALIZATION_RE = re.compile(r"(?<![а-яё])(вы|ваш|ваши|ваша|вашего|вашей|вашим|"
+                                  r"вашими|вашем|вас|вам|вами)(?![а-яё])", re.IGNORECASE)
 
 _DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
@@ -366,6 +379,16 @@ def _check_chart(spec, path, iss, seen_ids):
     unit = spec.get("unit", "")
     series = _check_series_struct(spec, path, iss)
 
+    title = spec.get("title")
+    if not _nonempty_str(title):
+        iss.warn(path + ".title", "у графика нет непустого title")
+    elif len(title) > MAX_CHART_TITLE_LEN:
+        iss.warn(path + ".title",
+                 f"chart.title слишком длинный ({len(title)} симв. > {MAX_CHART_TITLE_LEN}) "
+                 f"— может ломать вёрстку графика")
+    if not _nonempty_str(spec.get("caption")):
+        iss.warn(path + ".caption", "у графика нет непустого caption")
+
     # --- KPI ---
     if ctype == "kpi":
         items = spec.get("kpi_items")
@@ -380,8 +403,13 @@ def _check_chart(spec, path, iss, seen_ids):
                     continue
                 if not _nonempty_str(k.get("label")):
                     iss.err(kp + ".label", "у kpi_item нет непустого label")
-                if not _nonempty_str(str(k.get("value", "")).strip()):
+                v = k.get("value", "")
+                if not _nonempty_str(str(v).strip()):
                     iss.err(kp + ".value", "у kpi_item нет непустого value")
+                elif isinstance(v, str) and _PERSONALIZATION_RE.search(v):
+                    iss.warn(kp + ".value",
+                             "kpi_item.value содержит местоимение второго лица "
+                             "(«вы/ваш») — проверьте, не ложная ли это персонализация")
                 d = k.get("direction")
                 if d is not None and (not _is_str(d) or d not in DIRECTIONS):
                     iss.warn(kp + ".direction",
@@ -526,6 +554,142 @@ def _iter_items(data):
 
 
 # --------------------------------------------------------------------------- #
+#  Эвристика: нерасшифрованный жаргон в видимых/сканируемых полях
+# --------------------------------------------------------------------------- #
+def _iter_scanned_fields(data):
+    """Отдаёт (path, text) для всех полей, где жаргон/персонализация не должны
+    протекать без перевода: value/text пунктов, headline, chart.title/caption,
+    thread.title/update, executive_summary, key_takeaways, conclusion/watch."""
+    for seg_i, seg in enumerate(data.get("segments", []) or []):
+        if not isinstance(seg, dict):
+            continue
+        sp = f"segments[{seg_i}]"
+        subs = seg.get("subsections")
+        if isinstance(subs, dict):
+            for key, items in subs.items():
+                if not isinstance(items, list):
+                    continue
+                for j, it in enumerate(items):
+                    if not isinstance(it, dict):
+                        continue
+                    ip = f"{sp}.subsections.{key}[{j}]"
+                    for fld in ("value", "text"):
+                        v = it.get(fld)
+                        if isinstance(v, str) and v:
+                            yield f"{ip}.{fld}", v
+        for fld in ("conclusion", "watch"):
+            v = seg.get(fld)
+            if isinstance(v, str) and v:
+                yield f"{sp}.{fld}", v
+
+    for i, ch in enumerate(data.get("charts", []) or []):
+        if not isinstance(ch, dict):
+            continue
+        for fld in ("title", "caption"):
+            v = ch.get(fld)
+            if isinstance(v, str) and v:
+                yield f"charts[{i}].{fld}", v
+
+    for i, th in enumerate(data.get("threads", []) or []):
+        if not isinstance(th, dict):
+            continue
+        for fld in ("title", "update"):
+            v = th.get(fld)
+            if isinstance(v, str) and v:
+                yield f"threads[{i}].{fld}", v
+
+    for fld in ("headline", "executive_summary", "outlook"):
+        v = data.get(fld)
+        if isinstance(v, str) and v:
+            yield fld, v
+
+    for i, t in enumerate(data.get("key_takeaways", []) or []):
+        if isinstance(t, str) and t:
+            yield f"key_takeaways[{i}]", t
+
+
+# Токены жаргона, отсортированные от самого длинного к самому короткому, чтобы
+# составные термины («EPRA NTA») находились раньше своих подстрок («EPRA», «NTA»).
+_JARGON_SORTED = sorted(set(JARGON_TOKENS), key=len, reverse=True)
+
+
+def _is_word_char(ch):
+    return ch is not None and (ch.isalnum() or ch in ("+", "-"))
+
+
+def _check_jargon_in_texts(data, iss):
+    """Эвристика: нерасшифрованный жаргон (EPRA NTA, Strong Buy, Baa2, апсайд,
+    H1/Q1 и т.п.) в сканируемых полях — WARNING, не блокирует рендер."""
+    for path, text in _iter_scanned_fields(data):
+        low = text.lower()
+        found = []
+        covered = set()
+        for token in _JARGON_SORTED:
+            tlow = token.lower()
+            start = 0
+            while True:
+                idx = low.find(tlow, start)
+                if idx == -1:
+                    break
+                end = idx + len(tlow)
+                # границы слова: не матчить «Q1» внутри «Q10», «BBB» внутри «BBB123»
+                before = low[idx - 1] if idx > 0 else None
+                after = low[end] if end < len(low) else None
+                if _is_word_char(before) or _is_word_char(after):
+                    start = idx + 1
+                    continue
+                span = range(idx, end)
+                if not any(p in covered for p in span):
+                    found.append(text[idx:end])
+                    covered.update(span)
+                start = end
+        for match in found:
+            iss.warn(path,
+                     f"содержит нерасшифрованный токен {match!r} — проверьте, "
+                     f"переведён ли в тексте или внесён в glossary")
+
+
+# --------------------------------------------------------------------------- #
+#  Эвристика: ложная персонализация («вы/ваш») вне profile.json
+# --------------------------------------------------------------------------- #
+def _load_profile_best_effort():
+    """Best-effort чтение profile.json (или config/profile.json) относительно cwd.
+    Никогда не бросает исключение; при отсутствии/ошибке возвращает {}.
+    Не меняет публичную сигнатуру validate() — читается отдельно от data/history."""
+    import os
+    for candidate in ("config/profile.json", "profile.json"):
+        try:
+            if os.path.isfile(candidate):
+                with open(candidate, "r", encoding="utf-8") as f:
+                    return json.load(f)
+        except (OSError, ValueError):
+            continue
+    return {}
+
+
+def _profile_is_empty(profile):
+    return not isinstance(profile, dict) or not profile
+
+
+def _check_personalization(data, profile, iss):
+    """Эвристика: местоимения второго лица «вы/ваш/...» в сканируемых полях —
+    допустимы только если существует непустой profile.json (см. §2.9.4);
+    по умолчанию профиль пуст/не загружен -> проверка выполняется полностью."""
+    if not _profile_is_empty(profile):
+        # Персонализация осознанно включена читателем через непустой профиль —
+        # адресное «вы/ваш» допустимо (portfolio_notes и т.п.), проверку пропускаем.
+        return
+    for path, text in _iter_scanned_fields(data):
+        for m in _PERSONALIZATION_RE.finditer(text):
+            word = m.group(0)
+            iss.warn(path,
+                     f"содержит ложную персонализацию: найдено слово {word!r} — "
+                     f"читатель — нейтральный наблюдатель, не владелец объекта, "
+                     f"пиши в третьем лице («для владельцев складов…»)")
+            break  # одно предупреждение на поле достаточно, не засорять отчёт
+
+
+# --------------------------------------------------------------------------- #
 #  Основная функция валидации
 # --------------------------------------------------------------------------- #
 def validate(data, history=None):
@@ -597,10 +761,13 @@ def _validate_impl(data, history, iss):
         iss.warn("language", f"language={lang!r} — ожидалось 'ru'")
 
     # --- headline ---
+    # §4.1 брейна: headline опционален — допустима пустая строка, если нет ясной
+    # короткой фразы (лучше пусто, чем заголовок-ребус на обложке). Обязателен
+    # только сам ключ и строковый тип; непустое значение проверяем на длину.
     headline = data.get("headline")
-    if not _nonempty_str(headline):
-        iss.err("headline", "обязательное непустое строковое поле headline отсутствует")
-    elif len(headline) > MAX_HEADLINE_LEN:
+    if headline is None or not isinstance(headline, str):
+        iss.err("headline", "поле headline должно присутствовать и быть строкой (пустая строка допустима, см. §4.1)")
+    elif headline and len(headline) > MAX_HEADLINE_LEN:
         iss.warn("headline",
                  f"headline длиной {len(headline)} симв. (> {MAX_HEADLINE_LEN}) — может ломать обложку")
 
@@ -683,6 +850,10 @@ def _validate_impl(data, history, iss):
 
     # --- внутринедельные дубли + сверка с историей ---
     _check_dedup(data, history, iss, d_ws, d_we)
+
+    # --- эвристики: нерасшифрованный жаргон и ложная персонализация ---
+    _check_jargon_in_texts(data, iss)
+    _check_personalization(data, _load_profile_best_effort(), iss)
 
 
 def _check_subsections(seg, sp, iss, win_start, win_end):
@@ -775,6 +946,18 @@ def _glossary_haystack(data):
     for t in (data.get("key_takeaways") or []):
         if isinstance(t, str):
             parts.append(t)
+    for ch in (data.get("charts") or []):
+        if isinstance(ch, dict):
+            for fld in ("title", "caption"):
+                v = ch.get(fld)
+                if isinstance(v, str):
+                    parts.append(v)
+    for th in (data.get("threads") or []):
+        if isinstance(th, dict):
+            for fld in ("title", "update"):
+                v = th.get(fld)
+                if isinstance(v, str):
+                    parts.append(v)
     return " ".join(parts).lower()
 
 

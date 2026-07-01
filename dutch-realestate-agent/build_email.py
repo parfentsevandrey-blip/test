@@ -11,7 +11,7 @@
 Печатает в stdout готовую тему письма (subject).
 Инлайн-стили — чтобы письмо корректно отображалось в почтовых клиентах.
 """
-import argparse, json, html
+import argparse, json, html, os, sys
 from datetime import datetime
 
 RU_MONTHS = {1:"января",2:"февраля",3:"марта",4:"апреля",5:"мая",6:"июня",
@@ -123,15 +123,51 @@ def build_text(data, file_link=None):
         L.append("")
     return "\n".join(L)
 
+def _load_data(path):
+    """Загрузить и распарсить входной JSON с понятными сообщениями об ошибках."""
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"файл данных не найден: {path}")
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except UnicodeDecodeError as e:
+        raise ValueError(f"файл не в UTF-8 ({path}): {e}") from e
+    except json.JSONDecodeError as e:
+        raise ValueError(
+            f"некорректный JSON в {path}: строка {e.lineno}, столбец {e.colno}: {e.msg}"
+        ) from e
+    if not isinstance(data, dict):
+        raise ValueError(f"корень JSON должен быть объектом, а не {type(data).__name__}: {path}")
+    return data
+
+
 def main():
     ap=argparse.ArgumentParser()
     ap.add_argument("--data",required=True)
     ap.add_argument("--out-html",required=True); ap.add_argument("--out-txt",required=True)
     ap.add_argument("--file-link",default=None)
     a=ap.parse_args()
-    data=json.load(open(a.data,encoding="utf-8"))
-    open(a.out_html,"w",encoding="utf-8").write(build_html(data,a.file_link))
-    open(a.out_txt,"w",encoding="utf-8").write(build_text(data,a.file_link))
+
+    try:
+        data = _load_data(a.data)
+    except (FileNotFoundError, ValueError) as e:
+        print(f"ошибка: {e}", file=sys.stderr)
+        sys.exit(2)
+
+    try:
+        for out_path, body in (
+            (a.out_html, build_html(data, a.file_link)),
+            (a.out_txt, build_text(data, a.file_link)),
+        ):
+            out_dir = os.path.dirname(out_path)
+            if out_dir:
+                os.makedirs(out_dir, exist_ok=True)
+            with open(out_path, "w", encoding="utf-8") as f:
+                f.write(body)
+    except OSError as e:
+        print(f"ошибка записи выходного файла: {e}", file=sys.stderr)
+        sys.exit(2)
+
     print(f"Аналитика рынка недвижимости NL · {period(data.get('week_start',''),data.get('week_end',''))}")
 
 if __name__=="__main__": main()

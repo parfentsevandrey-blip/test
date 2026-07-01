@@ -173,14 +173,21 @@ def _count_items(data):
 #  Шаги конвейера
 # --------------------------------------------------------------------------- #
 def step_validate(data, history_path, strict, skip):
-    """Вернуть (ok, blocking, n_errors, n_warnings). blocking → надо остановиться."""
+    """
+    Вернуть (ok, blocking, n_errors, n_warnings, skipped_reason).
+
+    blocking → надо остановиться. skipped_reason — None, если валидация реально
+    выполнялась, иначе строка-код причины пропуска: "flag" (--skip-validate) или
+    "no_module" (модуль validate недоступен) — используется QA-сводкой, чтобы не
+    путать «пропущено» с «пройдено без ошибок».
+    """
     if skip:
         log.info("[2/7] валидация пропущена (--skip-validate)")
-        return True, False, 0, 0
+        return True, False, 0, 0, "flag"
     if validate_mod is None or not hasattr(validate_mod, "validate"):
         log.warning("[2/7] модуль validate недоступен — шаг валидации пропущен "
                     "(%s)", _err_val if _err_val else "функция validate() не найдена")
-        return True, False, 0, 0
+        return True, False, 0, 0, "no_module"
 
     log.info("[2/7] валидация контракта данных…")
     try:
@@ -193,7 +200,7 @@ def step_validate(data, history_path, strict, skip):
     except Exception as e:  # noqa: BLE001 — валидатор не должен ронять прогон сам по себе
         log.error("валидатор завершился с ошибкой: %s", e)
         # Считаем это ошибкой валидации, чтобы не рендерить вслепую.
-        return False, True, 1, 0
+        return False, True, 1, 0, None
 
     errors, warnings = _read_validation_report(report)
     for msg in errors:
@@ -204,12 +211,12 @@ def step_validate(data, history_path, strict, skip):
     n_err, n_warn = len(errors), len(warnings)
     if n_err:
         log.error("[2/7] валидация: %d ошибок, %d предупреждений → стоп", n_err, n_warn)
-        return False, True, n_err, n_warn
+        return False, True, n_err, n_warn, None
     if strict and n_warn:
         log.error("[2/7] --strict: %d предупреждений считаются блокирующими → стоп", n_warn)
-        return False, True, n_err, n_warn
+        return False, True, n_err, n_warn, None
     log.info("[2/7] валидация пройдена (%d предупреждений)", n_warn)
-    return True, False, n_err, n_warn
+    return True, False, n_err, n_warn, None
 
 
 def _read_validation_report(report):
@@ -231,6 +238,11 @@ def _read_validation_report(report):
         return [], []
     if isinstance(report, dict):
         return _as_msgs(report.get("errors")), _as_msgs(report.get("warnings"))
+    if isinstance(report, (tuple, list)) and len(report) == 2:
+        # validate.validate(data, history=...) возвращает именно (errors, warnings) —
+        # это основной, а не запасной случай; раньше он не был обработан и любой
+        # результат валидации (ошибки И предупреждения) молча терялся здесь.
+        return _as_msgs(report[0]), _as_msgs(report[1])
     # объект с атрибутами
     return _as_msgs(getattr(report, "errors", None)), _as_msgs(getattr(report, "warnings", None))
 
@@ -401,9 +413,11 @@ def print_qa_summary(data, paths, item_counts, charts_info, dups, added, total,
     print(f"  Дата отчёта:      {data.get('report_date', '?')}")
     print(f"  Заголовок:        {(data.get('headline') or '').strip()[:70]}")
 
-    n_err, n_warn = val_info
-    if validate_mod is None:
-        print("  Валидация:        пропущена (модуль недоступен)")
+    n_err, n_warn, skipped_reason = val_info
+    if skipped_reason == "flag":
+        print("  Валидация:        ПРОПУЩЕНА (--skip-validate) — не выполнялась")
+    elif skipped_reason == "no_module":
+        print("  Валидация:        ПРОПУЩЕНА (модуль validate недоступен) — не выполнялась")
     else:
         print(f"  Валидация:        ошибок {n_err}, предупреждений {n_warn}")
 
@@ -434,10 +448,15 @@ def print_qa_summary(data, paths, item_counts, charts_info, dups, added, total,
     print("  Артефакты:")
     if artifacts:
         for label, p in artifacts:
+            # Печатаем абсолютный путь: --out по умолчанию относительный
+            # ("reports"), и разрешается относительно cwd процесса, а не
+            # относительно --data/корня проекта — при запуске не из корня
+            # (cron, systemd, обёртка) относительный путь вводит в заблуждение.
+            abs_p = os.path.abspath(p)
             exists = os.path.exists(p)
             size = _human_size(p) if exists else "НЕ СОЗДАН"
             mark = " " if exists else "!"
-            print(f"    {mark} {label:<10} {p}  [{size}]")
+            print(f"    {mark} {label:<10} {abs_p}  [{size}]")
     else:
         print("      (нет)")
     print(line)
@@ -479,6 +498,12 @@ def main(argv=None):
     level = logging.DEBUG if args.verbose else logging.WARNING if args.quiet else logging.INFO
     _setup_logging(level)
 
+    # --out по умолчанию ("reports") — относительный путь, разрешается от cwd
+    # процесса, а не от --data/корня проекта. Логируем явно, чтобы расхождение
+    # было видно сразу, а не через "файл не найден там, где ждали".
+    log.info("[0/7] рабочий каталог: %s", os.getcwd())
+    log.info("[0/7] --out (абсолютный путь): %s", os.path.abspath(args.out or "reports"))
+
     # ---- 1. загрузка данных --------------------------------------------------
     log.info("[1/7] загрузка данных: %s", args.data)
     try:
@@ -487,12 +512,20 @@ def main(argv=None):
         log.error("%s", e)
         return EXIT_FATAL
 
+    # история/состояние по умолчанию — рядом с входным файлом (не с cwd процесса),
+    # чтобы запуск не из корня проекта (cron, systemd, обёрточный скрипт) не
+    # разъезжался с реальным расположением данных.
+    history_path = args.history
+    if history_path is None:
+        history_path = os.path.join(os.path.dirname(os.path.abspath(args.data)), "history.json")
+    state_dir = os.path.join(os.path.dirname(os.path.abspath(args.data)), "state")
+
     # ---- 1b. слой памяти и форсайта (тренды/сюжеты/календарь) ----------------
     try:
         import memory as _memory
         if not args.no_history_update:
-            _memory.update_state(data)            # копим metrics/threads/calendar в data/state/
-        _st = _memory.load_state()
+            _memory.update_state(data, state_dir=state_dir)  # копим metrics/threads/calendar
+        _st = _memory.load_state(state_dir=state_dir)
         _trends = _memory.trend_chart_specs(_st.get("metrics", {}), data.get("week_end") or "", min_points=3)
         if _trends:
             data["charts"] = (data.get("charts") or []) + _trends
@@ -502,18 +535,14 @@ def main(argv=None):
     except Exception as e:  # noqa: BLE001 — слой памяти не должен ронять отчёт
         log.warning("[1b] слой памяти пропущен: %s", e)
 
-    # история по умолчанию — data/history.json рядом с входным файлом
-    history_path = args.history
-    if history_path is None:
-        history_path = os.path.join(os.path.dirname(os.path.abspath(args.data)), "history.json")
-
     paths = _derive_paths(args, data)
     item_counts = _count_items(data)
     exit_code = EXIT_OK
 
     # ---- 2. валидация --------------------------------------------------------
-    ok, blocking, n_err, n_warn = step_validate(data, history_path, args.strict, args.skip_validate)
-    val_info = (n_err, n_warn)
+    ok, blocking, n_err, n_warn, val_skipped = step_validate(
+        data, history_path, args.strict, args.skip_validate)
+    val_info = (n_err, n_warn, val_skipped)
     if blocking and not args.skip_validate:
         # печатаем краткую сводку даже при остановке — оператору полезно
         artifacts = []

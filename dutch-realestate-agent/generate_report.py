@@ -42,23 +42,29 @@ try:
 except Exception:                       # noqa: BLE001 — рендер без графиков, если нет matplotlib
     _charts = None
 
+import constants as _const
+
 # --------------------------------------------------------------------------- #
 #  Цветовая палитра (профессиональная, «финансово-аналитическая»)
+#  Единый источник значений — constants.py (см. также charts.py, preview_html.py)
 # --------------------------------------------------------------------------- #
-NAVY        = "1F3A5F"   # основной тёмно-синий (заголовки, обложка)
-NAVY_RGB    = RGBColor(0x1F, 0x3A, 0x5F)
-INK         = "222B36"   # основной цвет текста
-INK_RGB     = RGBColor(0x22, 0x2B, 0x36)
-MUTED       = "6B7785"   # серый для подписей/источников
-MUTED_RGB   = RGBColor(0x6B, 0x77, 0x85)
-LINK        = "1155CC"   # цвет ссылок
-HAIRLINE    = "D7DEE6"   # тонкие линии
+def _rgb(hex_str):
+    return RGBColor(int(hex_str[0:2], 16), int(hex_str[2:4], 16), int(hex_str[4:6], 16))
+
+
+NAVY        = _const.NAVY_HEX     # основной тёмно-синий (заголовки, обложка)
+NAVY_RGB    = _rgb(_const.NAVY_HEX)
+INK         = _const.INK_HEX      # основной цвет текста
+INK_RGB     = _rgb(_const.INK_HEX)
+MUTED       = _const.MUTED_HEX    # серый для подписей/источников
+MUTED_RGB   = _rgb(_const.MUTED_HEX)
+LINK        = _const.LINK_HEX     # цвет ссылок
+HAIRLINE    = _const.HAIRLINE_HEX  # тонкие линии
 
 # Акцентные цвета сегментов
 SEG_COLORS = {
-    "residential": {"bar": "16846F", "soft": "E7F4F0", "text_rgb": RGBColor(0x10, 0x5A, 0x4C)},  # тёмно-бирюзовый
-    "commercial":  {"bar": "C0791C", "soft": "FBF1DF", "text_rgb": RGBColor(0x8A, 0x55, 0x10)},  # янтарный
-    "industrial":  {"bar": "2C5F8A", "soft": "E8F0F7", "text_rgb": RGBColor(0x1E, 0x44, 0x66)},  # стальной синий
+    key: {"bar": v["bar"], "soft": v["soft"], "text_rgb": _rgb(v["text"])}
+    for key, v in _const.SEG_COLORS_HEX.items()
 }
 DEFAULT_SEG = {"bar": NAVY, "soft": "EEF2F6", "text_rgb": NAVY_RGB}
 
@@ -74,39 +80,26 @@ GLOSS_FILL   = "F4F6F8"   # фон словаря терминов
 
 # Теги влияния: (символ, фон, цвет текста, подпись)
 DIRECTION = {
-    "up":      ("▲", "E7F4EE", RGBColor(0x1E, 0x7A, 0x4D), "возможность / рост"),
-    "down":    ("▼", "FBEAEA", RGBColor(0xB0, 0x3A, 0x3A), "риск / снижение"),
-    "neutral": ("◆", "E8F0F7", RGBColor(0x2C, 0x5F, 0x8A), "структурный сдвиг"),
+    key: (v["sym"], v["bg"], _rgb(v["fg"]), v["label"])
+    for key, v in _const.DIRECTION_HEX.items()
 }
 
 # Статусы сюжетов в развитии (память сюжетов «не повторяться → продолжать»)
 THREAD_STATUS = {
-    "new":        ("НОВЫЙ",            "E8F0F7", RGBColor(0x2C, 0x5F, 0x8A)),
-    "developing": ("В РАЗВИТИИ",       "FBF1DF", RGBColor(0x8A, 0x55, 0x10)),
-    "watch":      ("ПОД НАБЛЮДЕНИЕМ",  "FFF6E5", RGBColor(0xB0, 0x7A, 0x1C)),
-    "resolved":   ("ЗАКРЫТ",          "E7F4EE", RGBColor(0x1E, 0x7A, 0x4D)),
+    key: (v["label"], v["bg"], _rgb(v["fg"]))
+    for key, v in _const.THREAD_STATUS_HEX.items()
 }
-KIND_ICON = {"deal_deadline": "⏳", "cbs_release": "📈", "vote": "🗳",
-             "reit_earnings": "📊", "other": "•"}
+KIND_ICON = _const.KIND_ICON
 PORT_FILL = "FBF1DF"   # фон врезки «Важно для вашего портфеля»
-SEG_RU_SHORT = {"residential": "жильё", "commercial": "ритейл",
-                "industrial": "индустриал", "overview": "все", "macro": "макро"}
+SEG_RU_SHORT = _const.SEG_RU_SHORT
 
 BASE_FONT = "Calibri"
 
-RU_MONTHS = {
-    1: "января", 2: "февраля", 3: "марта", 4: "апреля", 5: "мая", 6: "июня",
-    7: "июля", 8: "августа", 9: "сентября", 10: "октября", 11: "ноября", 12: "декабря",
-}
+RU_MONTHS = _const.RU_MONTHS
 
 # Порядок и человекочитаемые названия подразделов
-SUBSECTION_ORDER = ["laws", "news", "trends", "stats"]
-SUBSECTION_TITLES = {
-    "laws":   "Изменения в законах и регулировании",
-    "news":   "Новости",
-    "trends": "Тренды",
-    "stats":  "Статистика",
-}
+SUBSECTION_ORDER = _const.SUBSECTION_ORDER
+SUBSECTION_TITLES = _const.SUBSECTION_TITLES
 
 
 # --------------------------------------------------------------------------- #
@@ -648,6 +641,8 @@ def build_segment(doc, seg, charts_list=None, pngs=None):
             add_stats_table(doc, items)
         else:
             for it in items:
+                if not it.get("text", "").strip():
+                    continue
                 add_bullet(
                     doc,
                     it.get("text", ""),
@@ -679,6 +674,9 @@ def build_segment(doc, seg, charts_list=None, pngs=None):
 
 def add_chart_image(doc, png_path, caption=None):
     """Встроить PNG-график по ширине текста + подпись-вывод под ним."""
+    if not png_path or not os.path.exists(png_path):
+        print(f"⚠️  график пропущен: файл не найден ({png_path!r}).")
+        return
     doc.add_picture(png_path, width=Cm(16.4))
     p = doc.paragraphs[-1]
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -744,10 +742,44 @@ def build_threads(doc, data):
     _p(doc, space_after=4)
 
 
+# Реальный файл живёт в корне проекта (profile.json); "config/profile.json" —
+# путь, документированный в agent_instructions.md §2.9.4, но фактически никогда
+# не использовавшийся. Проверяем оба — тем же порядком, что validate.py
+# (_load_profile_best_effort), чтобы валидатор и рендерер не расходились в том,
+# что считается «профиль есть».
+PROFILE_PATH_CANDIDATES = (os.path.join("config", "profile.json"), "profile.json")
+
+
+def _has_profile(paths=PROFILE_PATH_CANDIDATES):
+    """True, только если один из кандидатов существует и непуст (не {} / [] / "").
+
+    Персонализация — «по умолчанию выключена» (см. agent_instructions.md §2.9.4):
+    даже если апстрим уже положил portfolio_notes в data-файл, рендерер не должен
+    показывать врезку без явного подтверждающего profile.json — иначе получаем
+    ложную персонализацию («ваш склад» и т.п. для читателя без профиля).
+    """
+    for path in ((paths,) if isinstance(paths, str) else paths):
+        if not path or not os.path.exists(path):
+            continue
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                profile = json.load(f)
+        except Exception:
+            continue
+        if profile:
+            return True
+    return False
+
+
 def build_portfolio(doc, data):
-    """Врезка «Важно для вашего портфеля» — персонализация по profile.json."""
+    """Врезка «Важно для вашего портфеля» — персонализация по profile.json.
+
+    Рендерится ТОЛЬКО если существует непустой config/profile.json — иначе,
+    даже при наличии portfolio_notes в данных, врезка пропускается (защита
+    от ложной персонализации, см. _has_profile()).
+    """
     notes = data.get("portfolio_notes") or []
-    if not notes:
+    if not notes or not _has_profile():
         return
     table = doc.add_table(rows=1, cols=1)
     _remove_table_borders(table)

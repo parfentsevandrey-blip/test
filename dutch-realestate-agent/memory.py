@@ -54,14 +54,26 @@ memory.py — слой ПАМЯТИ И ФОРСАЙТА агента (тольк
   load_state(state_dir='data/state') -> dict
   trend_chart_specs(metrics_store, current_week_end, min_points=3) -> [chart-spec]
   upcoming(calendar_store, from_date, horizon_days=42) -> [event]
-  active_threads(threads_store) -> [thread]
+  active_threads(threads_store, as_of=None, max_age_weeks=8) -> [thread]  # thread с
+      last_update старше max_age_weeks помечается "stale": True (не удаляется)
+
+  Примечание: update_state() / trend_chart_specs() подключены к пайплайну
+  run_report.py. active_threads()/upcoming() — публичный API модуля, но САМИ
+  ПО СЕБЕ пока не вызываются из run_report.py/generate_report.py (там сейчас
+  используется только trend_chart_specs); текущий консьюмер «сюжетов в
+  развитии» и «форвард-календаря» — это LLM, читающая state напрямую по
+  промпту agent_instructions.md. Это два независимых, вызываемых снаружи
+  среза одного и того же state, ждущих подключения к рендеру (§2.9 врезка
+  «СКОРО» / «сюжеты в развитии»).
 
 Зависимости: только стандартная библиотека. Даты — ISO (YYYY-MM-DD).
 Ничего не роняет: пустые/битые файлы и кривые поля деградируют мягко.
 """
 
 import json
+import logging
 import os
+import re
 from datetime import date, datetime, timedelta
 
 DEFAULT_STATE_DIR = "data/state"
@@ -69,6 +81,8 @@ DEFAULT_STATE_DIR = "data/state"
 METRICS_FILE = "metrics.json"
 THREADS_FILE = "threads.json"
 CALENDAR_FILE = "calendar.json"
+
+_log = logging.getLogger(__name__)
 
 # Палитра сегментов — синхронно с charts.py (цвет несёт смысл, не радугу).
 SEGMENT_COLOR = {
@@ -80,6 +94,55 @@ SEGMENT_COLOR = {
 
 # Статусы сюжетов, которые считаем «закрытыми» (в active_threads не попадают).
 RESOLVED_STATUSES = {"resolved", "closed", "done", "archived"}
+
+# Сколько недель thread может простоять без обновления, прежде чем считать его
+# «протухшим» (см. active_threads(..., max_age_weeks=...) и докстринг файла).
+DEFAULT_MAX_AGE_WEEKS = 8
+
+# --------------------------------------------------------------------------- #
+#  Гигиена полей threads/calendar (баг №1 «ложная персонализация», баг №2
+#  «утечка жаргона») — то же зеркало стоп-листов, что и §0/§2.9
+#  agent_instructions.md и validate.py, но применённое к состоянию памяти:
+#  threads.json/calendar.json НЕ проходят через validate.py (там сканируются
+#  только поля текущего выпуска), а их текст может быть прочитан как контекст
+#  в будущих неделях, так что жаргон/персонализация могут «утечь» обратно.
+# --------------------------------------------------------------------------- #
+JARGON_TOKENS = (
+    "EPRA NTA", "EPRA", "NTA", "Strong Buy", "Strong Sell",
+    "Baa2", "Baa3", "BBB+", "BBB-", "BBB",
+)
+_JARGON_SORTED = sorted(set(JARGON_TOKENS), key=len, reverse=True)
+_JARGON_RE = re.compile(
+    r"(?<![A-Za-z0-9+-])(" + "|".join(re.escape(t) for t in _JARGON_SORTED) + r")(?![A-Za-z0-9+-])"
+)
+
+# Местоимения второго лица / императивы прямого обращения — маркер ложной
+# персонализации (читатель — нейтральный наблюдатель, не владелец объекта).
+_PERSONALIZATION_RE = re.compile(
+    r"(?<![а-яё])(вы|ваш|ваши|ваша|вашего|вашей|вашим|вашими|вашем|вас|вам|вами|"
+    r"не продавайте|проверьте)(?![а-яё])",
+    re.IGNORECASE,
+)
+
+
+def _check_field_hygiene(text, where):
+    """Best-effort эвристика: пишет warning в лог, если text содержит маркеры
+    ложной персонализации («ваш/не продавайте/проверьте») или нерасшифрованный
+    жаргон (EPRA, NTA, Strong Buy, Baa2, ...). Ничего не блокирует и не бросает
+    исключений — это диагностика для лога, а не валидатор контракта."""
+    if not isinstance(text, str) or not text:
+        return
+    m = _PERSONALIZATION_RE.search(text)
+    if m:
+        _log.warning(
+            "memory: возможная ложная персонализация в %s: найдено %r в %r",
+            where, m.group(0), text,
+        )
+    for m in _JARGON_RE.finditer(text):
+        _log.warning(
+            "memory: возможный нерасшифрованный жаргон в %s: %r в %r",
+            where, m.group(0), text,
+        )
 
 
 # --------------------------------------------------------------------------- #
@@ -210,10 +273,17 @@ def update_state(data, state_dir=DEFAULT_STATE_DIR):
     _write_json(threads_path, threads_store)
     _write_json(calendar_path, calendar_store)
 
+    # active_threads_snapshot/upcoming_snapshot — готовые срезы для консьюмера
+    # (run_report.py/generate_report.py), который решит рендерить врезки
+    # «сюжеты в развитии» (§2.9.2) / «СКОРО» (§2.9.3). Это ДОПОЛНИТЕЛЬНЫЕ
+    # ключи поверх контракта "metrics"/"threads"/"calendar" — существующие
+    # вызовы update_state(data), которые их не читают, не затрагиваются.
     return {
         "metrics": metrics_store,
         "threads": threads_store,
         "calendar": calendar_store,
+        "active_threads_snapshot": active_threads(threads_store, as_of=week_end),
+        "upcoming_snapshot": upcoming(calendar_store, week_end),
     }
 
 
@@ -282,6 +352,7 @@ def _update_threads(store, items, week_end):
 
         if it.get("title"):
             thread["title"] = str(it["title"])
+            _check_field_hygiene(thread["title"], f"threads[{tid}].title")
         if it.get("segment"):
             thread["segment"] = str(it["segment"])
         status = str(it.get("status") or thread.get("status") or "open").strip().lower()
@@ -292,9 +363,11 @@ def _update_threads(store, items, week_end):
 
         nt = it.get("next_trigger")
         if isinstance(nt, dict) and (nt.get("date") or nt.get("what")):
+            what = str(nt.get("what") or "")
+            _check_field_hygiene(what, f"threads[{tid}].next_trigger.what")
             thread["next_trigger"] = {
                 "date": str(nt.get("date") or ""),
-                "what": str(nt.get("what") or ""),
+                "what": what,
             }
         elif "next_trigger" in it and not nt:
             # Явно переданный пустой триггер сбрасывает прошлый.
@@ -302,10 +375,12 @@ def _update_threads(store, items, week_end):
 
         if not isinstance(thread.get("history"), list):
             thread["history"] = []
+        update_text = str(it.get("update") or "")
+        _check_field_hygiene(update_text, f"threads[{tid}].history.update")
         record = {
             "week_end": week_end,
             "status": status,
-            "update": str(it.get("update") or ""),
+            "update": update_text,
         }
         hist = thread["history"]
         for i, h in enumerate(hist):
@@ -325,8 +400,13 @@ def _update_calendar(store, items, week_end):
         events = []
 
     # Индекс существующих по (date, what) — чтобы не плодить дубли при повторе.
+    # Дата нормализуется через _parse_date, чтобы разные форматы одной и той
+    # же календарной даты ('2026-07-22' и '2026/07/22') схлопывались в один
+    # ключ вместо дублирования события в состоянии.
     def _ekey(e):
-        return (str(e.get("date") or ""), (str(e.get("what") or "")).strip().lower())
+        d = _parse_date(e.get("date"))
+        dkey = d.isoformat() if d else str(e.get("date") or "")
+        return (dkey, (str(e.get("what") or "")).strip().lower())
 
     index = {_ekey(e): i for i, e in enumerate(events) if isinstance(e, dict)}
 
@@ -344,6 +424,8 @@ def _update_calendar(store, items, week_end):
         }
         if not (ev["date"] or ev["what"]):
             continue
+        _check_field_hygiene(ev["what"], f"calendar[{ev['date']}].what")
+        _check_field_hygiene(ev["impact"], f"calendar[{ev['date']}].impact")
         k = _ekey(ev)
         if k in index:
             events[index[k]] = ev  # обновить существующее
@@ -404,6 +486,7 @@ def trend_chart_specs(metrics_store, current_week_end, min_points=3):
     cur = _parse_date(current_week_end)
 
     specs = []
+    seen_ids = set()
     for key, entry in metrics_store.items():
         if not isinstance(entry, dict):
             continue
@@ -448,11 +531,23 @@ def trend_chart_specs(metrics_store, current_week_end, min_points=3):
         caption = (
             f"Динамика по неделям: {_fmt_ru(first_v)} → {_fmt_ru(last_v)}"
             + (f" {unit}".rstrip() if unit else "")
-            + " — следите за направлением."
         )
 
+        # Разные ключи метрик, различающиеся только разделителями
+        # ('logistics.prime_yield' vs 'logistics-prime_yield'), могут дать
+        # одинаковый _slug(key) — без дедупликации это привело бы к коллизии
+        # chart.id (перезапись PNG, потеря графика). При коллизии добавляем
+        # числовой суффикс, чтобы id гарантированно оставался уникальным.
+        cid = f"trend_{_slug(key)}"
+        if cid in seen_ids:
+            suffix = 2
+            while f"{cid}_{suffix}" in seen_ids:
+                suffix += 1
+            cid = f"{cid}_{suffix}"
+        seen_ids.add(cid)
+
         specs.append({
-            "id": f"trend_{_slug(key)}",
+            "id": cid,
             "segment": segment,
             "type": "line",
             "title": title,
@@ -538,13 +633,28 @@ def upcoming(calendar_store, from_date, horizon_days=42):
 # --------------------------------------------------------------------------- #
 #  active_threads — сюжеты в развитии
 # --------------------------------------------------------------------------- #
-def active_threads(threads_store):
+def active_threads(threads_store, as_of=None, max_age_weeks=DEFAULT_MAX_AGE_WEEKS):
     """
     Незавершённые сюжеты (status не в RESOLVED_STATUSES), отсортированные по
     дате последнего обновления (свежие — первыми). id вшивается в каждую запись.
+
+    ВНИМАНИЕ: модуль НЕ архивирует сюжеты автоматически по своей инициативе —
+    thread остаётся в threads.json с последним переданным status, пока LLM
+    явно не пришлёт resolved-статус. Единственная защита от «вечно активных»
+    сюжетов — это max_age_weeks здесь: если last_update старше max_age_weeks
+    недель относительно as_of (по умолчанию — сегодня), в возвращаемый item
+    добавляется "stale": True (сам thread из state не удаляется и не портится —
+    это влияет только на то, что видит вызывающий код через active_threads()).
     """
     if not isinstance(threads_store, dict):
         return []
+    today = _parse_date(as_of) or date.today()
+    try:
+        max_age_weeks = int(max_age_weeks)
+    except (TypeError, ValueError):
+        max_age_weeks = DEFAULT_MAX_AGE_WEEKS
+    max_age_days = max(0, max_age_weeks) * 7
+
     out = []
     for tid, thread in threads_store.items():
         if not isinstance(thread, dict):
@@ -555,6 +665,10 @@ def active_threads(threads_store):
         item = dict(thread)
         item["id"] = tid
         item["status"] = status
+        last_update = _parse_date(thread.get("last_update"))
+        item["stale"] = bool(
+            last_update is not None and (today - last_update).days > max_age_days
+        )
         out.append(item)
     out.sort(
         key=lambda t: (_parse_date(t.get("last_update")) or date.min, t.get("id", "")),

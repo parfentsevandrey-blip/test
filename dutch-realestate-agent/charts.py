@@ -27,20 +27,23 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib import font_manager  # noqa: F401
 
-# ---- палитра отчёта ----
-NAVY = "#1F3A5F"
-INK = "#222B36"
-MUTED = "#6B7785"
-HAIR = "#D7DEE6"
+import constants as _const
+
+# ---- палитра отчёта (единый источник — constants.py, см. также
+#      generate_report.py, preview_html.py) ----
+NAVY = "#" + _const.NAVY_HEX
+INK = "#" + _const.INK_HEX
+MUTED = "#" + _const.MUTED_HEX
+HAIR = "#" + _const.HAIRLINE_HEX
 SEGCLR = {
-    "residential": "#16846F",
-    "commercial":  "#C0791C",
-    "industrial":  "#2C5F8A",
-    "overview":    "#1F3A5F",
+    "residential": "#" + _const.SEG_COLORS_HEX["residential"]["bar"],
+    "commercial":  "#" + _const.SEG_COLORS_HEX["commercial"]["bar"],
+    "industrial":  "#" + _const.SEG_COLORS_HEX["industrial"]["bar"],
+    "overview":    "#" + _const.NAVY_HEX,
 }
-DIRCLR = {"up": "#1E7A4D", "down": "#B03A3A", "neutral": "#2C5F8A"}
+DIRCLR = {k: "#" + v["fg"] for k, v in _const.DIRECTION_HEX.items()}
 # мягкая многоцветная палитра для нескольких серий/долей
-MULTI = ["#1F3A5F", "#16846F", "#C0791C", "#2C5F8A", "#8E6FB3", "#B03A3A", "#5D6D7E", "#3FA796"]
+MULTI = ["#" + h for h in _const.MULTI_HEX]
 
 plt.rcParams.update({
     "font.family": "DejaVu Sans",   # поддерживает кириллицу, €, ²
@@ -335,7 +338,12 @@ def render_chart(spec, out_path):
     try:
         return fn(spec, out_path)
     except Exception as e:  # noqa: BLE001
-        print(f"⚠️  не удалось построить график {spec.get('id')}: {e}")
+        import traceback
+        print(
+            f"⚠️  не удалось построить график id={spec.get('id')!r} "
+            f"type={spec.get('type')!r} segment={spec.get('segment')!r}: {e!r}"
+        )
+        traceback.print_exc()
         return None
 
 
