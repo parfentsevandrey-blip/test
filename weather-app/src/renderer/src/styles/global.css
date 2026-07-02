@@ -116,12 +116,29 @@ input {
 /* ---------- Glass primitive ---------- */
 
 .glass-panel {
+  position: relative;
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   box-shadow: var(--glass-shadow);
+}
+
+/* A faint top-edge highlight to sell the "glass" read, like light catching an edge. */
+.glass-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 40%);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
 }
 
 /* ---------- Layout regions ---------- */
@@ -131,7 +148,7 @@ input {
   flex: 1;
   display: grid;
   grid-template-columns: minmax(260px, 340px) 1fr;
-  grid-template-rows: 1fr auto;
+  grid-template-rows: minmax(300px, 1fr) clamp(200px, 40vh, 420px);
   gap: 16px;
   padding: 8px 20px 20px;
   min-height: 0;
@@ -152,6 +169,7 @@ input {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-height: 0;
 }
 
 /* ---------- Search ---------- */
@@ -233,13 +251,15 @@ input {
 /* ---------- Current weather card ---------- */
 
 .current-card {
-  padding: 22px 24px;
+  padding: 20px 22px;
   display: flex;
   flex-direction: column;
   gap: 4px;
   flex: 1;
   min-height: 0;
   justify-content: center;
+  overflow: hidden;
+  background-image: radial-gradient(120% 90% at 15% 0%, rgba(255, 176, 87, 0.16), transparent 60%);
 }
 
 .current-location {
@@ -262,15 +282,15 @@ input {
 }
 
 .current-temp {
-  font-size: 74px;
+  font-size: 62px;
   font-weight: 200;
   line-height: 1;
   letter-spacing: -0.02em;
 }
 
 .current-icon {
-  width: 62px;
-  height: 62px;
+  width: 52px;
+  height: 52px;
   color: var(--accent);
   filter: drop-shadow(0 0 18px var(--accent-glow));
   flex-shrink: 0;
@@ -328,6 +348,7 @@ input {
 
 .hourly-forecast {
   padding: 14px 8px;
+  flex-shrink: 0;
 }
 
 .hourly-title {
@@ -392,6 +413,9 @@ input {
 
 .daily-forecast {
   padding: 6px 8px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .daily-row {

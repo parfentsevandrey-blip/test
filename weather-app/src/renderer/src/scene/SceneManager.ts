@@ -45,7 +45,7 @@ export class SceneManager {
 
   constructor(canvas: HTMLCanvasElement) {
     const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(52, 1, 0.1, 1200)
+    const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1200)
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' })
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 
@@ -112,18 +112,30 @@ export class SceneManager {
   }
 
   private updateCamera(_dt: number, elapsed: number, params: SceneParams): void {
-    const driftSpeed = 0.012 + params.windSpeed * 0.01
-    this.cameraAngle = elapsed * driftSpeed
     const radius = 26
-    const baseHeight = 9.5
-    const bob = Math.sin(elapsed * 0.18) * 0.6
+    const baseHeight = 11
+    const bob = Math.sin(elapsed * 0.18) * 0.5
+    const cameraHeight = baseHeight + bob
+
+    // Orbit around the sun/moon's current azimuth (with a slow oscillation
+    // for cinematic drift) instead of a fully independent sweep -- otherwise
+    // the sun frequently ends up entirely out of frame, leaving the sky
+    // looking flat and empty regardless of how good the lighting is.
+    const oscillation = Math.sin(elapsed * (0.05 + params.windSpeed * 0.015)) * 0.5
+    this.cameraAngle = params.sunAzimuthRad + Math.PI + oscillation
 
     this.ctx.camera.position.set(
-      Math.cos(this.cameraAngle) * radius,
-      baseHeight + bob,
-      Math.sin(this.cameraAngle) * radius
+      Math.sin(this.cameraAngle) * radius,
+      cameraHeight,
+      Math.cos(this.cameraAngle) * radius
     )
-    this.ctx.camera.lookAt(0, baseHeight * 0.35, 0)
+
+    // Tilt the look-at target upward, very mildly, as the sun climbs higher
+    // -- just enough bias to catch it more often across the day without
+    // losing the horizon/terrain, which stays in frame at all times.
+    const altitude01 = clamp01(params.sunAltitude * 0.5 + 0.5)
+    const lookAtY = lerp(cameraHeight * 0.55, cameraHeight * 1.15, altitude01)
+    this.ctx.camera.lookAt(0, lookAtY, 0)
   }
 
   private computeParams(): SceneParams {

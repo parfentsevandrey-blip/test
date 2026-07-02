@@ -20,17 +20,23 @@ export function formatPercent(fraction0to100: number): string {
   return `${Math.round(fraction0to100)}%`
 }
 
+// The rest of the UI (labels, units, city names) is hardcoded English, so
+// date/time formatting is pinned to 'en-US' too - using the system locale
+// here would mix e.g. Cyrillic weekday abbreviations into an otherwise
+// all-English interface.
+const LOCALE = 'en-US'
+
 export function formatHour(isoTime: string): string {
   const date = new Date(isoTime)
-  return date.toLocaleTimeString(undefined, { hour: 'numeric' })
+  return date.toLocaleTimeString(LOCALE, { hour: 'numeric' })
 }
 
 export function formatWeekday(isoDate: string): string {
   const date = new Date(`${isoDate}T12:00:00`)
-  return date.toLocaleDateString(undefined, { weekday: 'short' })
+  return date.toLocaleDateString(LOCALE, { weekday: 'short' })
 }
 
 export function formatClock(isoTime: string): string {
   const date = new Date(isoTime)
-  return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+  return date.toLocaleTimeString(LOCALE, { hour: 'numeric', minute: '2-digit' })
 }
