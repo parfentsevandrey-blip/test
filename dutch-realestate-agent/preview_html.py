@@ -95,16 +95,18 @@ def render(data, pngs=None):
  .page{{max-width:820px;margin:24px auto;background:#fff;padding:40px 48px 36px;box-shadow:0 2px 18px rgba(0,0,0,.12)}}
  .kicker{{color:#6B7785;font-weight:700;letter-spacing:3px;font-size:12px}}
  h1{{color:#1F3A5F;font-size:38px;line-height:1.05;margin:6px 0 14px}}
- .rule{{border-bottom:2px solid #1F3A5F;margin:0 0 14px}}
+ .rule{{display:flex;height:5px;margin:0 0 14px;border-radius:2px;overflow:hidden}}
+ .rule span{{flex:1}}
  .headline{{font-size:19px;font-style:italic;font-weight:700;color:#105A4C;margin:6px 0 12px}}
  .period{{font-size:16px}} .period b{{color:#1F3A5F}}
  .seglist{{color:#6B7785;font-size:13px;margin:4px 0}}
  .gen{{color:#6B7785;font-style:italic;font-size:12px;margin-top:6px}}
- .kt ol{{margin:4px 0 0;padding-left:22px}} .kt li{{margin:6px 0;line-height:1.45;font-size:14.5px}}
+ .kt{{background:#F4F6F8;border-radius:5px;padding:12px 18px;margin:6px 0 12px}}
+ .kt ol{{margin:0;padding-left:22px}} .kt li{{margin:6px 0;line-height:1.45;font-size:14.5px}}
  .kt li::marker{{color:#1F3A5F;font-weight:700}}
  h2.sub{{font-size:13px;font-weight:700;color:#1F3A5F;border-bottom:1px solid #D7DEE6;padding-bottom:3px;margin:22px 0 8px}}
- .summary{{line-height:1.5;font-size:15px;margin:4px 0 10px}}
- .bar{{color:#1F3A5F;font-weight:700;font-size:18px;border-bottom:1.5px solid #D7DEE6;padding:0 0 5px;margin:28px 0 8px}}
+ .summary{{background:#EEF2F6;border-radius:4px;padding:12px 16px;line-height:1.5;font-size:15px;margin:4px 0 10px}}
+ .bar{{color:#1F3A5F;font-weight:700;font-size:18px;border-bottom:2.5px solid #1F3A5F;padding:0 0 5px;margin:28px 0 8px}}
  .item{{margin:12px 0}}
  .fact{{font-size:14.5px;line-height:1.45}} .fact .sym{{color:#6B7785;margin-right:6px}}
  .impact{{font-size:13px;line-height:1.45;margin:4px 0 2px}}
@@ -115,9 +117,9 @@ def render(data, pngs=None):
  td{{padding:7px 10px;border-bottom:1px solid #eceff3;vertical-align:top}}
  tr:nth-child(even) td{{background:#F4F6F8}}
  td .src{{color:#6B7785;font-size:10.5px;font-style:italic}} td .imp{{color:#6B7785;font-size:11px;font-style:italic;margin-top:2px}}
- .concl{{margin:12px 0 4px;line-height:1.45;font-size:14px}} .concl b{{color:#1F3A5F}}
- .watch{{margin:4px 0 6px;font-size:13.5px;line-height:1.45}} .watch b{{color:#1F3A5F}}
- .outlook{{line-height:1.5;font-size:14.5px;margin:4px 0 10px}}
+ .concl{{background:#EAF3EE;border-left:3px solid #16846F;border-radius:0 4px 4px 0;padding:10px 14px;margin:12px 0 4px;line-height:1.45;font-size:14px}} .concl b{{color:#105A4C}}
+ .watch{{background:#FFF6E5;border-left:3px solid #C0791C;border-radius:0 4px 4px 0;padding:8px 14px;margin:4px 0 8px;font-size:13.5px;line-height:1.45}} .watch b{{color:#8A5510}}
+ .outlook{{background:#EEF2F6;border-radius:4px;padding:12px 16px;line-height:1.5;font-size:14.5px;margin:4px 0 10px}}
  .empty{{color:#6B7785;font-style:italic;font-size:13.5px}}
  .pbox{{background:#FBF1DF;border-left:5px solid #C0791C;border-radius:0 4px 4px 0;padding:12px 16px;margin:14px 0}}
  .pbox .lbl{{color:#8A5510;font-weight:700;font-size:12px;letter-spacing:1px}} .pbox ul{{margin:6px 0 0;padding-left:20px}} .pbox li{{margin:5px 0;font-size:14px;line-height:1.4}}
@@ -136,7 +138,7 @@ def render(data, pngs=None):
 </style></head><body><div class="page">""")
     out.append('<div class="kicker">ЕЖЕНЕДЕЛЬНАЯ АНАЛИТИКА</div>')
     out.append('<h1>Рынок недвижимости<br>Нидерландов</h1>')
-    out.append('<div class="rule"></div>')
+    out.append('<div class="rule">'+''.join(f'<span style="background:{SEG[k]}"></span>' for k in ["residential","commercial","industrial"])+'</div>')
     if data.get("headline"):
         out.append(f'<div class="headline">«{esc(data["headline"])}»</div>')
     out.append(f'<div class="period"><b>Период:</b> {esc(period(data.get("week_start",""),data.get("week_end","")))}</div>')
@@ -181,7 +183,7 @@ def render(data, pngs=None):
 
     for seg in data.get("segments",[]):
         color=SEG.get(seg.get("id"),"#1F3A5F")
-        out.append(f'<div class="bar">{esc(seg.get("title",""))}</div>')
+        out.append(f'<div class="bar" style="border-bottom-color:{color}">{esc(seg.get("title",""))}</div>')
         subs=seg.get("subsections",{})
 
         # subsections может быть dict (по ключам) или list — как в generate_report.py,

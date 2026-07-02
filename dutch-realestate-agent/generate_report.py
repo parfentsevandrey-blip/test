@@ -273,9 +273,10 @@ def _p(doc, space_before=0, space_after=4, line=1.12, align=WD_ALIGN_PARAGRAPH.L
 
 
 def add_segment_bar(doc, title, color_hex, icon=""):
-    """Заголовок раздела: строгая типографика — тёмный текст и тонкая линия
-    вместо цветной заливки; иконки/эмодзи не выводятся (формальный стиль)."""
-    del color_hex, icon  # оставлены в сигнатуре для совместимости вызовов
+    """Заголовок раздела: строгая типографика с дозированным акцентом —
+    тёмный текст и цветная подчёркивающая линия в тоне раздела;
+    иконки/эмодзи не выводятся, сплошных заливок нет."""
+    del icon  # оставлен в сигнатуре для совместимости вызовов
     p = _p(doc, space_before=14, space_after=4)
     run = p.add_run(title)
     _style_run(run, size=13.5, bold=True, color_rgb=NAVY_RGB)
@@ -283,8 +284,8 @@ def add_segment_bar(doc, title, color_hex, icon=""):
     pPr = p._p.get_or_add_pPr()
     pbdr = OxmlElement("w:pBdr")
     bottom = OxmlElement("w:bottom")
-    bottom.set(qn("w:val"), "single"); bottom.set(qn("w:sz"), "8")
-    bottom.set(qn("w:space"), "3"); bottom.set(qn("w:color"), HAIRLINE)
+    bottom.set(qn("w:val"), "single"); bottom.set(qn("w:sz"), "14")
+    bottom.set(qn("w:space"), "3"); bottom.set(qn("w:color"), color_hex or HAIRLINE)
     pbdr.append(bottom)
     pPr.append(pbdr)
 
@@ -395,31 +396,65 @@ def add_stats_table(doc, items):
 
 
 def add_conclusion_box(doc, text):
-    """Абзац «Вывод» — формальный стиль: жирная метка, без заливки и полос."""
-    p = _p(doc, space_before=6, space_after=2, line=1.15)
-    label = p.add_run("Вывод. ")
-    _style_run(label, size=10.5, bold=True, color_rgb=NAVY_RGB)
-    r = p.add_run(text)
+    """Абзац «Вывод»: лёгкая подложка и тонкая левая линия — акцент без пестроты."""
+    table = doc.add_table(rows=1, cols=1)
+    _remove_table_borders(table)
+    _full_width(table)
+    cell = table.cell(0, 0)
+    _set_cell_background(cell, CONCL_FILL)
+    _set_cell_margins(cell, top=100, bottom=100, left=200, right=200)
+    _set_cell_borders(cell, {"left": (18, CONCL_BAR)})  # тонкая левая линия
+    _no_row_split(table)
+    p0 = cell.paragraphs[0]
+    p0.paragraph_format.space_after = Pt(0)
+    p0.paragraph_format.line_spacing = 1.15
+    label = p0.add_run("Вывод. ")
+    _style_run(label, size=10.5, bold=True, color_rgb=RGBColor(0x10, 0x5A, 0x4C))
+    r = p0.add_run(text)
     _style_run(r, size=10.5, color_rgb=INK_RGB)
+    _p(doc, space_after=4)
 
 
 def add_watch_box(doc, text):
-    """Абзац «За чем следить» — формальный стиль, без заливки и пиктограмм."""
-    p = _p(doc, space_before=2, space_after=8, line=1.12)
-    lab = p.add_run("За чем следить. ")
-    _style_run(lab, size=10, bold=True, color_rgb=NAVY_RGB)
-    r = p.add_run(text)
+    """Абзац «За чем следить»: лёгкая янтарная подложка, тонкая левая линия."""
+    table = doc.add_table(rows=1, cols=1)
+    _remove_table_borders(table)
+    _full_width(table)
+    cell = table.cell(0, 0)
+    _set_cell_background(cell, WATCH_FILL)
+    _set_cell_margins(cell, top=80, bottom=80, left=200, right=200)
+    _set_cell_borders(cell, {"left": (18, WATCH_BAR)})
+    _no_row_split(table)
+    p0 = cell.paragraphs[0]
+    p0.paragraph_format.space_after = Pt(0)
+    p0.paragraph_format.line_spacing = 1.12
+    lab = p0.add_run("За чем следить. ")
+    _style_run(lab, size=10, bold=True, color_rgb=RGBColor(0x8A, 0x55, 0x10))
+    r = p0.add_run(text)
     _style_run(r, size=10, color_rgb=INK_RGB)
+    _p(doc, space_after=6)
 
 
 def build_key_takeaways(doc, data):
-    """«Главные выводы недели» — строгий нумерованный список без тёмной плашки."""
+    """«Главные выводы недели» — нумерованный список на лёгкой подложке."""
     kt = data.get("key_takeaways") or []
     if not kt:
         return
     add_segment_bar(doc, "Главные выводы недели", NAVY)
+    table = doc.add_table(rows=1, cols=1)
+    _remove_table_borders(table)
+    _full_width(table)
+    cell = table.cell(0, 0)
+    _set_cell_background(cell, "F4F6F8")
+    _set_cell_margins(cell, top=110, bottom=110, left=200, right=200)
+    _no_row_split(table)
+    first = True
     for i, t in enumerate(kt, 1):
-        pp = _p(doc, space_before=2, space_after=3, line=1.15)
+        pp = cell.paragraphs[0] if first else cell.add_paragraph()
+        first = False
+        pp.paragraph_format.space_before = Pt(2)
+        pp.paragraph_format.space_after = Pt(2)
+        pp.paragraph_format.line_spacing = 1.15
         pp.paragraph_format.left_indent = Cm(0.55)
         pp.paragraph_format.first_line_indent = Cm(-0.55)
         num = pp.add_run(f"{i}.  ")
@@ -494,15 +529,15 @@ def build_cover(doc, data):
     r = p.add_run("Нидерландов")
     _style_run(r, size=30, bold=True, color_rgb=NAVY_RGB)
 
-    # тонкая линия-разделитель (формальный стиль вместо цветной полосы)
-    sep = _p(doc, space_after=8)
-    pPr = sep._p.get_or_add_pPr()
-    pbdr = OxmlElement("w:pBdr")
-    bottom = OxmlElement("w:bottom")
-    bottom.set(qn("w:val"), "single"); bottom.set(qn("w:sz"), "10")
-    bottom.set(qn("w:space"), "1"); bottom.set(qn("w:color"), NAVY)
-    pbdr.append(bottom)
-    pPr.append(pbdr)
+    # тонкая трёхцветная линия-разделитель — фирменный акцент трёх сегментов
+    table = doc.add_table(rows=1, cols=3)
+    _remove_table_borders(table)
+    _full_width(table)
+    for i, key in enumerate(["residential", "commercial", "industrial"]):
+        _set_cell_background(table.cell(0, i), SEG_COLORS[key]["bar"])
+        table.cell(0, i).paragraphs[0].add_run(" ").font.size = Pt(2)
+        table.cell(0, i).paragraphs[0].paragraph_format.space_after = Pt(0)
+    _p(doc, space_after=8)
 
     # заголовок недели (headline)
     headline = data.get("headline")
@@ -542,9 +577,19 @@ def build_exec_summary(doc, data):
     if not summary:
         return
     add_subsection_title(doc, "Коротко о неделе", NAVY_RGB)
-    cp = _p(doc, space_before=2, space_after=6, line=1.15)
+    table = doc.add_table(rows=1, cols=1)
+    _remove_table_borders(table)
+    _full_width(table)
+    cell = table.cell(0, 0)
+    _set_cell_background(cell, "EEF2F6")
+    _set_cell_margins(cell, top=110, bottom=110, left=200, right=200)
+    _no_row_split(table)
+    cp = cell.paragraphs[0]
+    cp.paragraph_format.space_after = Pt(0)
+    cp.paragraph_format.line_spacing = 1.15
     r = cp.add_run(summary)
     _style_run(r, size=10.5, color_rgb=INK_RGB)
+    _p(doc, space_after=6)
 
 
 def build_segment(doc, seg, charts_list=None, pngs=None):
