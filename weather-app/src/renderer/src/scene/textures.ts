@@ -37,37 +37,6 @@ export function makeRadialTexture(
   return texture
 }
 
-/** Soft, slightly irregular puff texture for cloud billboards. */
-export function makeCloudTexture(size = 256): THREE.CanvasTexture {
-  const canvas = document.createElement('canvas')
-  canvas.width = size
-  canvas.height = size
-  const ctx = canvas.getContext('2d')
-  if (!ctx) throw new Error('2D canvas context unavailable')
-
-  ctx.clearRect(0, 0, size, size)
-  const blobs = 7
-  for (let i = 0; i < blobs; i++) {
-    const angle = (i / blobs) * Math.PI * 2
-    const dist = size * 0.14 * Math.sin(i * 2.3)
-    const cx = size / 2 + Math.cos(angle) * dist
-    const cy = size / 2 + Math.sin(angle) * dist * 0.6
-    const r = size * (0.28 + 0.1 * Math.cos(i * 1.7))
-    const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, r)
-    gradient.addColorStop(0, 'rgba(255,255,255,0.9)')
-    gradient.addColorStop(0.6, 'rgba(255,255,255,0.45)')
-    gradient.addColorStop(1, 'rgba(255,255,255,0)')
-    ctx.fillStyle = gradient
-    ctx.beginPath()
-    ctx.arc(cx, cy, r, 0, Math.PI * 2)
-    ctx.fill()
-  }
-
-  const texture = new THREE.CanvasTexture(canvas)
-  texture.needsUpdate = true
-  return texture
-}
-
 /** Elongated soft streak used for raindrops. */
 export function makeStreakTexture(size = 64): THREE.CanvasTexture {
   const canvas = document.createElement('canvas')

@@ -2,71 +2,89 @@ import * as THREE from 'three'
 import type { Quality, SceneContext, SceneEffect, SceneParams } from './contract'
 import { clamp, clamp01, lerp } from '../utils/math'
 
-/** Radius of the flat ground disc. Comfortably covers the camera's full orbit (radius 26). */
-const GROUND_RADIUS = 260
-/** Fan-triangle slice count for the ground disc, scaled a little by quality tier. */
-const GROUND_SEGMENTS_BY_QUALITY: Record<Quality, number> = { low: 48, medium: 64, high: 80 }
-/** World-space Y the ground disc sits at. */
-const GROUND_Y = 0
-
+/** Half-size of the terrain plane (world units) -- comfortably beyond the camera's whole flight envelope, with fog hiding the far edge. */
+const TERRAIN_HALF_SIZE = 340
+/** Grid segments per side, scaled by quality -- built once, so a denser grid only costs construction time, not per-frame cost. */
+const SEGMENTS_BY_QUALITY: Record<Quality, number> = { low: 110, medium: 160, high: 210 }
+/** Distance from the camera-flight center that stays essentially flat (where the camera actually flies over). */
+const FLAT_RADIUS = 42
+/** Distance at which the hill amplitude reaches its full height. */
+const HILL_RADIUS = 130
+/** Peak hill/mountain height in world units. */
+const MAX_HEIGHT = 62
 /** Smoothing rate (1/s) for color/roughness so weather-data refreshes never pop. */
 const SMOOTHING_RATE = 1.2
 
-// --- Ground palette -------------------------------------------------------
+// --- Palette ---------------------------------------------------------------
 
-/** Warm, earthy grass/soil tone for full daylight. */
-const GROUND_DAY_COLOR = new THREE.Color(0x5c6a3f)
-/** Cool, near-black ground tone once the sun is well below the horizon. */
-const GROUND_NIGHT_COLOR = new THREE.Color(0x0f141b)
-/** Golden-hour bleed mixed in near sunrise/sunset, echoing Sky/Clouds' horizon warmth. */
-const GROUND_SUNSET_COLOR = new THREE.Color(0x8a6a45)
-/** Dark, saturated tone the ground shifts toward when soaked by rain. */
-const GROUND_WET_COLOR = new THREE.Color(0x272c22)
-/** Pale, cool tone the ground shifts toward under snow cover. */
-const GROUND_SNOW_COLOR = new THREE.Color(0xe9f0f7)
+/** Warm, earthy tone for low ground in full daylight. */
+const LOW_DAY_COLOR = new THREE.Color(0x5c6a3f)
+/** Cooler, rockier tone for high peaks in daylight. */
+const HIGH_DAY_COLOR = new THREE.Color(0x8a8f86)
+const NIGHT_COLOR = new THREE.Color(0x0a0d13)
+const SUNSET_COLOR = new THREE.Color(0xd98a5f)
+const WET_COLOR = new THREE.Color(0x272c22)
+const SNOW_COLOR = new THREE.Color(0xeef3f8)
+const HAZE_COLOR = new THREE.Color(0xb9c4cf)
 
-const GROUND_ROUGHNESS_DRY = 0.92
-const GROUND_ROUGHNESS_WET = 0.28
-const GROUND_ROUGHNESS_SNOW = 0.96
-const GROUND_METALNESS_WET = 0.12
+const ROUGHNESS_DRY = 0.92
+const ROUGHNESS_WET = 0.3
+const ROUGHNESS_SNOW = 0.95
+const METALNESS_WET = 0.1
 
-// --- Horizon ridge palette --------------------------------------------------
+/** Fractal value-noise, computed once per vertex at construction time -- no runtime cost. */
+function hash2D(x: number, z: number): number {
+  const s = Math.sin(x * 127.1 + z * 311.7) * 43758.5453123
+  return s - Math.floor(s)
+}
 
-/** Distant, hazier ridge line -- cool slate by day. */
-const RIDGE_FAR_DAY = new THREE.Color(0x5f6b78)
-const RIDGE_FAR_NIGHT = new THREE.Color(0x080b12)
-/** Nearer, lower hill line -- reads more vegetated/earthy by day. */
-const RIDGE_NEAR_DAY = new THREE.Color(0x3c4a34)
-const RIDGE_NEAR_NIGHT = new THREE.Color(0x05070a)
-/** Shared warm bleed applied to both ridge layers near sunrise/sunset. */
-const RIDGE_SUNSET_COLOR = new THREE.Color(0xd98a5f)
-/** Pale haze tone ridges bleed toward as params.visibility drops. */
-const RIDGE_HAZE_COLOR = new THREE.Color(0xb9c4cf)
+function noise2D(x: number, z: number): number {
+  const xi = Math.floor(x)
+  const zi = Math.floor(z)
+  const xf = x - xi
+  const zf = z - zi
+  const u = xf * xf * (3 - 2 * xf)
+  const v = zf * zf * (3 - 2 * zf)
+  const a = hash2D(xi, zi)
+  const b = hash2D(xi + 1, zi)
+  const c = hash2D(xi, zi + 1)
+  const d = hash2D(xi + 1, zi + 1)
+  return lerp(lerp(a, b, u), lerp(c, d, u), v)
+}
 
-/** Baked per-vertex brightness multiplier for ridge peaks (sky-lit, brighter). */
-const RIDGE_PEAK_BRIGHTNESS = 1.25
-/** Baked per-vertex brightness multiplier for ridge bases (hazier, darker). */
-const RIDGE_BASE_BRIGHTNESS = 0.6
+function fbm2D(x: number, z: number, octaves: number): number {
+  let sum = 0
+  let amp = 0.5
+  let freq = 1
+  let max = 0
+  for (let i = 0; i < octaves; i++) {
+    sum += amp * noise2D(x * freq, z * freq)
+    max += amp
+    amp *= 0.48
+    freq *= 2.08
+  }
+  return sum / max
+}
 
-/** Segment count for both ridge rings, scaled a little by quality tier. */
-const RIDGE_SEGMENTS_BY_QUALITY: Record<Quality, number> = { low: 40, medium: 56, high: 72 }
-/** How far below the ground the ridge base sits, so it never shows a gap under the terrain. */
-const RIDGE_BASE_Y = -12
+/** Height field: flat near the camera's flight path, rising into rolling hills/mountains further out. */
+function terrainHeight(x: number, z: number): number {
+  const dist = Math.sqrt(x * x + z * z)
+  const hillT = clamp01((dist - FLAT_RADIUS) / (HILL_RADIUS - FLAT_RADIUS))
+  const eased = hillT * hillT * (3 - 2 * hillT)
 
-const RIDGE_FAR_RADIUS = 225
-const RIDGE_FAR_RADIUS_JITTER = 30
-const RIDGE_FAR_HEIGHT_MIN = 16
-const RIDGE_FAR_HEIGHT_MAX = 46
+  const macro = fbm2D(x * 0.0055, z * 0.0055, 5)
+  const detail = fbm2D(x * 0.028, z * 0.028, 3) * 0.2
+  const ridged = Math.pow(1 - Math.abs(macro * 2 - 1), 1.5)
 
-const RIDGE_NEAR_RADIUS = 140
-const RIDGE_NEAR_RADIUS_JITTER = 22
-const RIDGE_NEAR_HEIGHT_MIN = 6
-const RIDGE_NEAR_HEIGHT_MAX = 18
+  const nearRipple = fbm2D(x * 0.05, z * 0.05, 2) * 0.6
+
+  return lerp(nearRipple, (macro + detail + ridged * 0.4) * MAX_HEIGHT, eased)
+}
 
 /**
- * Draws a soft, mottled grayscale albedo for the ground disc (tileable blotches
- * + fine speckle grain) on an offscreen canvas -- gives the flat disc some
- * natural variation without any external image assets. Neutral gray so the
+ * Draws a soft, mottled grayscale albedo (tileable blotches + fine speckle
+ * grain) on an offscreen canvas -- gives the terrain surface natural
+ * variation without any external image assets. Neutral gray so the
  * per-frame material tint (day/night/condition) fully controls final color.
  */
 function makeGroundTexture(size = 256): THREE.CanvasTexture {
@@ -108,264 +126,141 @@ function makeGroundTexture(size = 256): THREE.CanvasTexture {
   texture.colorSpace = THREE.SRGBColorSpace
   texture.wrapS = THREE.RepeatWrapping
   texture.wrapT = THREE.RepeatWrapping
-  texture.repeat.set(20, 20)
+  texture.repeat.set(28, 28)
   return texture
 }
 
 /**
- * Builds one closed ring of jagged mountain/hill silhouette walls: a top
- * vertex ring (height varies per segment via a few layered sine harmonics
- * plus jitter, for a natural but stylized skyline) and a bottom ring sunk
- * well below the ground plane so no seam ever shows. Vertex colors bake a
- * static peak-bright/base-dark gradient; the live day/night/haze tint is
- * applied every frame purely via `material.color`, so nothing here needs to
- * be touched again after construction.
+ * Builds one continuous heightfield: flat where the camera actually flies,
+ * rising smoothly into rolling hills and mountains toward the horizon, with
+ * real per-vertex height (not a flat wall silhouette) so lighting genuinely
+ * reveals ridgelines, valleys and slopes as the sun moves. Vertex colors
+ * bake a static low/high gradient; live day/night/weather tint applies via
+ * `material.color` every frame.
  */
-function buildRidgeGeometry(
-  segments: number,
-  radiusBase: number,
-  radiusJitter: number,
-  heightMin: number,
-  heightMax: number,
-  baseY: number,
-  seed: number
-): THREE.BufferGeometry {
-  const vertCount = segments * 2
-  const positions = new Float32Array(vertCount * 3)
-  const colors = new Float32Array(vertCount * 3)
-  const indices: number[] = []
+function buildTerrainGeometry(segments: number): THREE.PlaneGeometry {
+  const geometry = new THREE.PlaneGeometry(TERRAIN_HALF_SIZE * 2, TERRAIN_HALF_SIZE * 2, segments, segments)
+  geometry.rotateX(-Math.PI / 2)
 
-  for (let i = 0; i < segments; i++) {
-    const angle = (i / segments) * Math.PI * 2
-    const n =
-      Math.sin(angle * 3 + seed) * 0.4 +
-      Math.sin(angle * 7 + seed * 1.7) * 0.25 +
-      Math.sin(angle * 13 + seed * 2.3) * 0.15 +
-      (Math.random() - 0.5) * 0.3
-    const heightT = clamp01(n * 0.5 + 0.5)
-    const height = lerp(heightMin, heightMax, heightT)
-    const radius = radiusBase + (Math.random() - 0.5) * radiusJitter
+  const position = geometry.attributes.position as THREE.BufferAttribute
+  const vertexCount = position.count
+  const colors = new Float32Array(vertexCount * 3)
+  const blendColor = new THREE.Color()
 
-    const x = Math.sin(angle) * radius
-    const z = Math.cos(angle) * radius
+  for (let i = 0; i < vertexCount; i++) {
+    const x = position.getX(i)
+    const z = position.getZ(i)
+    const height = terrainHeight(x, z)
+    position.setY(i, height)
 
-    const topIdx = i
-    const baseIdx = segments + i
+    // Bake a canonical low(earthy)->high(rocky) hue gradient directly as RGB,
+    // plus a permanent snow-cap tinge above a height threshold (real
+    // mountains keep snow caps regardless of the current local weather).
+    // The live day/night/weather shift then applies as a single uniform
+    // `material.color` multiplier in update() -- it can darken/warm/cool
+    // this baked gradient, just not re-hue low vs. high independently.
+    const highT = clamp01(height / MAX_HEIGHT)
+    blendColor.copy(LOW_DAY_COLOR).lerp(HIGH_DAY_COLOR, highT)
+    const snowCapT = clamp01((highT - 0.72) / 0.28)
+    blendColor.lerp(SNOW_COLOR, snowCapT * 0.75)
 
-    positions[topIdx * 3] = x
-    positions[topIdx * 3 + 1] = baseY + height
-    positions[topIdx * 3 + 2] = z
-
-    positions[baseIdx * 3] = x
-    positions[baseIdx * 3 + 1] = baseY
-    positions[baseIdx * 3 + 2] = z
-
-    colors[topIdx * 3] = RIDGE_PEAK_BRIGHTNESS
-    colors[topIdx * 3 + 1] = RIDGE_PEAK_BRIGHTNESS
-    colors[topIdx * 3 + 2] = RIDGE_PEAK_BRIGHTNESS
-
-    colors[baseIdx * 3] = RIDGE_BASE_BRIGHTNESS
-    colors[baseIdx * 3 + 1] = RIDGE_BASE_BRIGHTNESS
-    colors[baseIdx * 3 + 2] = RIDGE_BASE_BRIGHTNESS
+    colors[i * 3] = blendColor.r
+    colors[i * 3 + 1] = blendColor.g
+    colors[i * 3 + 2] = blendColor.b
   }
 
-  for (let i = 0; i < segments; i++) {
-    const next = (i + 1) % segments
-    const t0 = i
-    const t1 = next
-    const b0 = segments + i
-    const b1 = segments + next
-    indices.push(t0, b0, t1, t1, b0, b1)
-  }
-
-  const geometry = new THREE.BufferGeometry()
-  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
   geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
-  geometry.setIndex(indices)
   geometry.computeVertexNormals()
   return geometry
 }
 
-/**
- * Grounding backdrop: a large flat ground disc plus two concentric rings of
- * low-poly mountain/hill silhouettes around the horizon, so the scene reads
- * as a place instead of floating in empty sky. Everything here is static
- * geometry built once in the constructor -- `update()` only retints material
- * colors (and the ground's roughness/metalness) from the current params, so
- * it costs a handful of Color lerps per frame regardless of quality tier.
- */
 export class Terrain implements SceneEffect {
   private readonly scene: THREE.Scene
 
-  private readonly groundTexture: THREE.CanvasTexture
-  private readonly groundGeometry: THREE.CircleGeometry
-  private readonly groundMaterial: THREE.MeshStandardMaterial
-  private readonly groundMesh: THREE.Mesh
-
-  private readonly ridgeFarGeometry: THREE.BufferGeometry
-  private readonly ridgeFarMaterial: THREE.MeshLambertMaterial
-  private readonly ridgeFarMesh: THREE.Mesh
-
-  private readonly ridgeNearGeometry: THREE.BufferGeometry
-  private readonly ridgeNearMaterial: THREE.MeshLambertMaterial
-  private readonly ridgeNearMesh: THREE.Mesh
+  private readonly texture: THREE.CanvasTexture
+  private readonly geometry: THREE.PlaneGeometry
+  private readonly material: THREE.MeshStandardMaterial
+  private readonly mesh: THREE.Mesh
 
   // Scratch objects reused every frame -- never reallocated in update().
-  private readonly scratchA = new THREE.Color()
-  private readonly scratchB = new THREE.Color()
-  private readonly groundColorCurrent = new THREE.Color().copy(GROUND_NIGHT_COLOR)
-  private readonly ridgeFarColorCurrent = new THREE.Color().copy(RIDGE_FAR_NIGHT)
-  private readonly ridgeNearColorCurrent = new THREE.Color().copy(RIDGE_NEAR_NIGHT)
-  private smoothedRoughness = GROUND_ROUGHNESS_DRY
+  private readonly scratchTint = new THREE.Color()
+  private readonly tintCurrent = new THREE.Color(1, 1, 1)
+  private smoothedRoughness = ROUGHNESS_DRY
   private smoothedMetalness = 0
 
   constructor(ctx: SceneContext) {
     this.scene = ctx.scene
 
-    // --- Ground disc ------------------------------------------------------
-    this.groundTexture = makeGroundTexture(256)
-    const groundSegments = GROUND_SEGMENTS_BY_QUALITY[ctx.quality]
-    this.groundGeometry = new THREE.CircleGeometry(GROUND_RADIUS, groundSegments)
-    this.groundGeometry.rotateX(-Math.PI / 2)
+    this.texture = makeGroundTexture(256)
+    const segments = SEGMENTS_BY_QUALITY[ctx.quality]
+    this.geometry = buildTerrainGeometry(segments)
 
-    this.groundMaterial = new THREE.MeshStandardMaterial({
-      map: this.groundTexture,
-      color: this.groundColorCurrent,
-      roughness: GROUND_ROUGHNESS_DRY,
+    this.material = new THREE.MeshStandardMaterial({
+      map: this.texture,
+      vertexColors: true,
+      color: this.tintCurrent,
+      roughness: ROUGHNESS_DRY,
       metalness: 0,
       fog: true
     })
-    this.groundMesh = new THREE.Mesh(this.groundGeometry, this.groundMaterial)
-    this.groundMesh.position.y = GROUND_Y
-    this.groundMesh.matrixAutoUpdate = false
-    this.groundMesh.updateMatrix()
-    this.scene.add(this.groundMesh)
 
-    // --- Horizon ridges -----------------------------------------------------
-    const ridgeSegments = RIDGE_SEGMENTS_BY_QUALITY[ctx.quality]
-
-    this.ridgeFarGeometry = buildRidgeGeometry(
-      ridgeSegments,
-      RIDGE_FAR_RADIUS,
-      RIDGE_FAR_RADIUS_JITTER,
-      RIDGE_FAR_HEIGHT_MIN,
-      RIDGE_FAR_HEIGHT_MAX,
-      RIDGE_BASE_Y,
-      1.7
-    )
-    this.ridgeFarMaterial = new THREE.MeshLambertMaterial({
-      color: this.ridgeFarColorCurrent,
-      vertexColors: true,
-      flatShading: true,
-      side: THREE.DoubleSide,
-      fog: true
-    })
-    this.ridgeFarMesh = new THREE.Mesh(this.ridgeFarGeometry, this.ridgeFarMaterial)
-    this.ridgeFarMesh.matrixAutoUpdate = false
-    this.ridgeFarMesh.updateMatrix()
-    this.scene.add(this.ridgeFarMesh)
-
-    this.ridgeNearGeometry = buildRidgeGeometry(
-      ridgeSegments,
-      RIDGE_NEAR_RADIUS,
-      RIDGE_NEAR_RADIUS_JITTER,
-      RIDGE_NEAR_HEIGHT_MIN,
-      RIDGE_NEAR_HEIGHT_MAX,
-      RIDGE_BASE_Y,
-      5.2
-    )
-    this.ridgeNearMaterial = new THREE.MeshLambertMaterial({
-      color: this.ridgeNearColorCurrent,
-      vertexColors: true,
-      flatShading: true,
-      side: THREE.DoubleSide,
-      fog: true
-    })
-    this.ridgeNearMesh = new THREE.Mesh(this.ridgeNearGeometry, this.ridgeNearMaterial)
-    this.ridgeNearMesh.matrixAutoUpdate = false
-    this.ridgeNearMesh.updateMatrix()
-    this.scene.add(this.ridgeNearMesh)
+    this.mesh = new THREE.Mesh(this.geometry, this.material)
+    this.mesh.matrixAutoUpdate = false
+    this.mesh.updateMatrix()
+    this.scene.add(this.mesh)
   }
 
+  /**
+   * The terrain's per-vertex color already bakes the full low(earthy)-
+   * >high(rocky/snow-capped) gradient. This drives one uniform multiplier
+   * on top of that baked gradient for day/night, sunset warmth, overcast
+   * dimming, haze and wet/snow-covered darkening/paling -- it shifts the
+   * whole surface's brightness and color temperature together rather than
+   * re-hueing low ground and high peaks independently.
+   */
   update(dt: number, _elapsed: number, params: SceneParams): void {
     const k = 1 - Math.exp(-dt * SMOOTHING_RATE)
 
     const altitude = clamp(params.sunAltitude, -1, 1)
     const altitudeT = clamp01(altitude * 1.8 + 0.5)
-    // Continuous day/night ramp (mirrors Fog/Sky's family of curves); isDay
-    // gates it so the terminator ambiguity never leaves the ground reading
-    // "daytime" once night has actually fallen.
     const dayT = params.isDay ? altitudeT : altitudeT * 0.15
     const sunsetT = clamp01(1 - Math.abs(altitude) * 2.6) * altitudeT
+    const hazeT = clamp01(1 - params.visibility)
 
-    this.updateGround(k, dayT, sunsetT, params)
-    this.updateRidges(k, dayT, sunsetT, params)
-  }
+    this.scratchTint.set(0xffffff).lerp(NIGHT_COLOR, 1 - dayT)
+    this.scratchTint.lerp(SUNSET_COLOR, sunsetT * 0.3)
+    this.scratchTint.lerp(HAZE_COLOR, hazeT * 0.35)
 
-  dispose(): void {
-    this.scene.remove(this.groundMesh)
-    this.groundGeometry.dispose()
-    this.groundMaterial.dispose()
-    this.groundTexture.dispose()
-
-    this.scene.remove(this.ridgeFarMesh)
-    this.ridgeFarGeometry.dispose()
-    this.ridgeFarMaterial.dispose()
-
-    this.scene.remove(this.ridgeNearMesh)
-    this.ridgeNearGeometry.dispose()
-    this.ridgeNearMaterial.dispose()
-  }
-
-  /** Retints/reroughens the ground disc from day/night, cloud cover and condition. */
-  private updateGround(k: number, dayT: number, sunsetT: number, params: SceneParams): void {
-    this.scratchA.copy(GROUND_NIGHT_COLOR).lerp(GROUND_DAY_COLOR, dayT)
-    this.scratchA.lerp(GROUND_SUNSET_COLOR, sunsetT * 0.35)
-
-    // Overcast / stormy skies dim the ground a touch, same spirit as Sky's hemi dimming.
     const overcast = clamp01(Math.max(params.cloudCover, params.condition === 'thunderstorm' ? 0.7 : 0))
-    this.scratchA.multiplyScalar(lerp(1, 0.72, overcast))
+    this.scratchTint.multiplyScalar(lerp(1, 0.72, overcast))
 
-    let roughnessTarget = GROUND_ROUGHNESS_DRY
+    let roughnessTarget = ROUGHNESS_DRY
     let metalnessTarget = 0
 
     if (params.condition === 'rain' || params.condition === 'drizzle' || params.condition === 'thunderstorm') {
-      // Wet look: darker, more saturated ground with a lower roughness (sharper highlights)
-      // and a slight metalness bump standing in for a faint specular sheen.
       const wet = clamp01(params.precipitationIntensity)
-      this.scratchA.lerp(GROUND_WET_COLOR, wet * 0.8)
-      roughnessTarget = lerp(GROUND_ROUGHNESS_DRY, GROUND_ROUGHNESS_WET, wet)
-      metalnessTarget = lerp(0, GROUND_METALNESS_WET, wet)
+      this.scratchTint.lerp(WET_COLOR, wet * 0.55)
+      roughnessTarget = lerp(ROUGHNESS_DRY, ROUGHNESS_WET, wet)
+      metalnessTarget = lerp(0, METALNESS_WET, wet)
     } else if (params.condition === 'snow') {
-      // Snow cover: pale blue-white, matte (high roughness) -- always mostly covered,
-      // with fresh precipitation intensity pushing it toward fully blanketed.
-      const cover = lerp(0.6, 1, clamp01(params.precipitationIntensity))
-      this.scratchA.lerp(GROUND_SNOW_COLOR, cover)
-      roughnessTarget = GROUND_ROUGHNESS_SNOW
+      const cover = lerp(0.5, 0.9, clamp01(params.precipitationIntensity))
+      this.scratchTint.lerp(SNOW_COLOR, cover * 0.7)
+      roughnessTarget = ROUGHNESS_SNOW
     }
 
-    this.groundColorCurrent.lerp(this.scratchA, k)
-    this.groundMaterial.color.copy(this.groundColorCurrent)
+    this.tintCurrent.lerp(this.scratchTint, k)
+    this.material.color.copy(this.tintCurrent)
+
     this.smoothedRoughness += (roughnessTarget - this.smoothedRoughness) * k
     this.smoothedMetalness += (metalnessTarget - this.smoothedMetalness) * k
-    this.groundMaterial.roughness = this.smoothedRoughness
-    this.groundMaterial.metalness = this.smoothedMetalness
+    this.material.roughness = this.smoothedRoughness
+    this.material.metalness = this.smoothedMetalness
   }
 
-  /** Retints both horizon ridge rings from day/night and params.visibility haze. */
-  private updateRidges(k: number, dayT: number, sunsetT: number, params: SceneParams): void {
-    const hazeT = clamp01(1 - params.visibility)
-
-    this.scratchA.copy(RIDGE_FAR_NIGHT).lerp(RIDGE_FAR_DAY, dayT)
-    this.scratchA.lerp(RIDGE_SUNSET_COLOR, sunsetT * 0.4)
-    this.scratchA.lerp(RIDGE_HAZE_COLOR, hazeT * 0.65)
-    this.ridgeFarColorCurrent.lerp(this.scratchA, k)
-    this.ridgeFarMaterial.color.copy(this.ridgeFarColorCurrent)
-
-    this.scratchB.copy(RIDGE_NEAR_NIGHT).lerp(RIDGE_NEAR_DAY, dayT)
-    this.scratchB.lerp(RIDGE_SUNSET_COLOR, sunsetT * 0.22)
-    this.scratchB.lerp(RIDGE_HAZE_COLOR, hazeT * 0.3)
-    this.ridgeNearColorCurrent.lerp(this.scratchB, k)
-    this.ridgeNearMaterial.color.copy(this.ridgeNearColorCurrent)
+  dispose(): void {
+    this.scene.remove(this.mesh)
+    this.geometry.dispose()
+    this.material.dispose()
+    this.texture.dispose()
   }
 }

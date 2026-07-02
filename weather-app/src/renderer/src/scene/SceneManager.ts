@@ -6,7 +6,7 @@ import { computeSunPosition, getTimeOfDayFrac, toAbsoluteInstant } from '../util
 import { clamp01, degToRad, lerp } from '../utils/math'
 import { Sky } from './Sky'
 import { Stars } from './Stars'
-import { Clouds } from './Clouds'
+import { VolumetricClouds } from './VolumetricClouds'
 import { Precipitation } from './Precipitation'
 import { Lightning } from './Lightning'
 import { Fog } from './Fog'
@@ -59,7 +59,7 @@ export class SceneManager {
       new Sky(this.ctx),
       new Terrain(this.ctx),
       new Stars(this.ctx),
-      new Clouds(this.ctx),
+      new VolumetricClouds(this.ctx),
       new Fog(this.ctx),
       new Precipitation(this.ctx),
       new Lightning(this.ctx)
@@ -111,17 +111,26 @@ export class SceneManager {
     this.ctx.renderer.dispose()
   }
 
+  /**
+   * A genuine wandering flythrough, not a tripod with a wobble: radius and
+   * altitude both breathe across multiple independent slow periods (so the
+   * path never reads as a simple repeating circle), swept through a wide
+   * arc biased toward the sun/moon's azimuth, while the look-at target
+   * drifts independently too. The combination gives constant, real parallax
+   * between the near terrain, mid-distance clouds and the far sky/stars --
+   * which is what actually sells "three-dimensional" to the eye, far more
+   * than any single object's geometry does. Stays within Terrain's flat
+   * flight zone (radius < ~42) and well above ground level at all times.
+   */
   private updateCamera(_dt: number, elapsed: number, params: SceneParams): void {
-    const radius = 26
-    const baseHeight = 11
-    const bob = Math.sin(elapsed * 0.18) * 0.5
-    const cameraHeight = baseHeight + bob
+    const t = elapsed
 
-    // Orbit around the sun/moon's current azimuth (with a slow oscillation
-    // for cinematic drift) instead of a fully independent sweep -- otherwise
-    // the sun frequently ends up entirely out of frame, leaving the sky
-    // looking flat and empty regardless of how good the lighting is.
-    const oscillation = Math.sin(elapsed * (0.05 + params.windSpeed * 0.015)) * 0.5
+    // Full cycles land around 30-55s so movement is clearly visible within
+    // any short glance at the app, not just over several minutes.
+    const radius = 28 + Math.sin(t * 0.11) * 9 + Math.sin(t * 0.24 + 2.1) * 4
+    const cameraHeight = 15 + Math.sin(t * 0.14 + 0.8) * 7 + Math.sin(t * 0.31) * 2.5
+
+    const oscillation = Math.sin(t * 0.12) * 1.1 + Math.sin(t * 0.27 + 1.3) * 0.4
     this.cameraAngle = params.sunAzimuthRad + Math.PI + oscillation
 
     this.ctx.camera.position.set(
@@ -130,12 +139,12 @@ export class SceneManager {
       Math.cos(this.cameraAngle) * radius
     )
 
-    // Tilt the look-at target upward, very mildly, as the sun climbs higher
-    // -- just enough bias to catch it more often across the day without
-    // losing the horizon/terrain, which stays in frame at all times.
+    const lookX = Math.sin(t * 0.065) * 10
+    const lookZ = Math.cos(t * 0.05 + 1.0) * 10
     const altitude01 = clamp01(params.sunAltitude * 0.5 + 0.5)
-    const lookAtY = lerp(cameraHeight * 0.55, cameraHeight * 1.15, altitude01)
-    this.ctx.camera.lookAt(0, lookAtY, 0)
+    const lookAtY = lerp(cameraHeight * 0.5, cameraHeight * 1.2, altitude01)
+
+    this.ctx.camera.lookAt(lookX, lookAtY, lookZ)
   }
 
   private computeParams(): SceneParams {
