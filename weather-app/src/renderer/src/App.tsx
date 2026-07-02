@@ -5,6 +5,12 @@ import { SearchBar } from './components/SearchBar'
 import { CurrentWeatherCard } from './components/CurrentWeatherCard'
 import { HourlyForecast } from './components/HourlyForecast'
 import { DailyForecast } from './components/DailyForecast'
+import { WindCard } from './components/WindCard'
+import { HumidityCard } from './components/HumidityCard'
+import { UvIndexCard } from './components/UvIndexCard'
+import { VisibilityCard } from './components/VisibilityCard'
+import { SunCard } from './components/SunCard'
+import { PrecipitationCard } from './components/PrecipitationCard'
 import { UnitToggle } from './components/UnitToggle'
 import { LoadingOverlay } from './components/LoadingOverlay'
 
@@ -56,16 +62,7 @@ export function App(): JSX.Element {
       <canvas ref={canvasRef} className="scene-canvas" />
 
       <div className="ui-overlay">
-        <div className="content-grid">
-          <div className="top-left">
-            <SearchBar />
-            <CurrentWeatherCard />
-          </div>
-          <div className="bottom-bar">
-            <HourlyForecast />
-            <DailyForecast />
-          </div>
-        </div>
+        <SearchBar />
 
         <div className="controls-row">
           <UnitToggle />
@@ -76,6 +73,20 @@ export function App(): JSX.Element {
           >
             <RefreshIcon />
           </button>
+        </div>
+
+        <div className="bento-scroll">
+          <div className="bento-grid">
+            <CurrentWeatherCard />
+            <HourlyForecast />
+            <WindCard />
+            <HumidityCard />
+            <UvIndexCard />
+            <VisibilityCard />
+            <DailyForecast />
+            <SunCard />
+            <PrecipitationCard />
+          </div>
         </div>
       </div>
 

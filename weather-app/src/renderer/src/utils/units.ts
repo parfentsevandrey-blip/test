@@ -20,6 +20,18 @@ export function formatPercent(fraction0to100: number): string {
   return `${Math.round(fraction0to100)}%`
 }
 
+/** Maps the temperature unit preference to the matching speed/distance unit system. */
+export function speedUnitFor(unit: TemperatureUnit): SpeedUnit {
+  return unit === 'fahrenheit' ? 'mph' : 'kmh'
+}
+
+export function formatVisibility(meters: number | null, unit: TemperatureUnit): string {
+  if (meters === null) return '—'
+  return unit === 'fahrenheit'
+    ? `${(meters / 1609.34).toFixed(1)} mi`
+    : `${(meters / 1000).toFixed(1)} km`
+}
+
 // The rest of the UI (labels, units, city names) is hardcoded English, so
 // date/time formatting is pinned to 'en-US' too - using the system locale
 // here would mix e.g. Cyrillic weekday abbreviations into an otherwise

@@ -16,9 +16,14 @@ const CURRENT_VARS = [
   'wind_gusts_10m'
 ].join(',')
 
-const HOURLY_VARS = ['temperature_2m', 'precipitation_probability', 'weather_code', 'is_day', 'uv_index'].join(
-  ','
-)
+const HOURLY_VARS = [
+  'temperature_2m',
+  'precipitation_probability',
+  'weather_code',
+  'is_day',
+  'uv_index',
+  'visibility'
+].join(',')
 
 const DAILY_VARS = [
   'weather_code',
@@ -54,6 +59,7 @@ interface RawForecastResponse {
     weather_code: number[]
     is_day: number[]
     uv_index: number[]
+    visibility: number[]
   }
   daily: {
     time: string[]
@@ -68,14 +74,18 @@ interface RawForecastResponse {
   }
 }
 
-function findHourlyUvIndex(hourly: RawForecastResponse['hourly'], currentIsoTime: string): number | null {
+function findHourlyValue(
+  hourly: RawForecastResponse['hourly'],
+  series: number[],
+  currentIsoTime: string
+): number | null {
   const flooredHour = `${currentIsoTime.slice(0, 13)}:00`
   const index = hourly.time.indexOf(flooredHour)
-  return index >= 0 ? hourly.uv_index[index] : null
+  return index >= 0 ? series[index] : null
 }
 
 /**
- * Fetches current conditions, an hourly forecast and a 7-day daily forecast
+ * Fetches current conditions, an hourly forecast and a 10-day daily forecast
  * from Open-Meteo — a free, open weather API that requires no API key.
  * Requests one extra day in the past solely to derive yesterday's sunset,
  * which the cinematic scene needs for smooth pre-dawn sun/moon positioning.
@@ -91,7 +101,7 @@ export async function fetchWeatherData(location: GeoLocation, signal?: AbortSign
   url.searchParams.set('temperature_unit', 'celsius')
   url.searchParams.set('wind_speed_unit', 'ms')
   url.searchParams.set('past_days', '1')
-  url.searchParams.set('forecast_days', '7')
+  url.searchParams.set('forecast_days', '10')
 
   const response = await fetch(url, { signal })
   if (!response.ok) {
@@ -117,7 +127,8 @@ export async function fetchWeatherData(location: GeoLocation, signal?: AbortSign
       windSpeed: raw.current.wind_speed_10m,
       windDirection: raw.current.wind_direction_10m,
       windGusts: raw.current.wind_gusts_10m,
-      uvIndex: findHourlyUvIndex(raw.hourly, raw.current.time)
+      uvIndex: findHourlyValue(raw.hourly, raw.hourly.uv_index, raw.current.time),
+      visibility: findHourlyValue(raw.hourly, raw.hourly.visibility, raw.current.time)
     },
     hourly: raw.hourly.time.map((time, i) => ({
       time,

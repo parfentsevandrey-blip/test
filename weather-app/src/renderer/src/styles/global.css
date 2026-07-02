@@ -141,44 +141,135 @@ input {
   mask-composite: exclude;
 }
 
-/* ---------- Layout regions ---------- */
+/* ---------- Bento grid ---------- */
 
-.content-grid {
+.bento-scroll {
   position: relative;
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 66px 20px 20px;
+}
+
+.bento-grid {
   display: grid;
-  grid-template-columns: minmax(260px, 340px) 1fr;
-  grid-template-rows: minmax(300px, 1fr) clamp(200px, 40vh, 420px);
-  gap: 16px;
-  padding: 8px 20px 20px;
-  min-height: 0;
-}
-
-.top-left {
-  grid-column: 1;
-  grid-row: 1;
-  display: flex;
-  flex-direction: column;
+  grid-template-columns: repeat(12, 1fr);
+  grid-auto-rows: minmax(58px, auto);
+  grid-auto-flow: dense;
   gap: 14px;
-  min-height: 0;
 }
 
-.bottom-bar {
-  grid-column: 1 / -1;
-  grid-row: 2;
+.bento-hero {
+  grid-column: span 4;
+  grid-row: span 5;
+}
+
+.bento-hourly {
+  grid-column: span 8;
+  grid-row: span 3;
+}
+
+.bento-daily {
+  grid-column: span 4;
+  grid-row: span 7;
+}
+
+.bento-1 {
+  grid-column: span 2;
+  grid-row: span 3;
+}
+
+.bento-wide {
+  grid-column: span 4;
+  grid-row: span 4;
+}
+
+@media (max-width: 1180px) {
+  .bento-hero,
+  .bento-hourly,
+  .bento-daily,
+  .bento-wide {
+    grid-column: span 6;
+  }
+
+  .bento-1 {
+    grid-column: span 3;
+  }
+}
+
+/* ---------- Floating card shell (BentoCard) ---------- */
+
+.bento-card {
+  position: relative;
+  overflow: hidden;
+  animation: bento-float 7s ease-in-out infinite;
+  transition:
+    box-shadow 0.35s var(--ease-out),
+    border-color 0.35s var(--ease-out);
+}
+
+.bento-card:hover {
+  animation: none;
+  transform: translateY(-6px) scale(1.022);
+  transition:
+    transform 0.35s var(--ease-out),
+    box-shadow 0.35s var(--ease-out),
+    border-color 0.35s var(--ease-out);
+  border-color: rgba(255, 176, 87, 0.4);
+  box-shadow:
+    0 34px 70px -22px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(255, 176, 87, 0.14),
+    0 1px 0 0 rgba(255, 255, 255, 0.07) inset;
+  z-index: 3;
+}
+
+.bento-card-glow {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  border-radius: inherit;
+  transition: opacity 0.35s var(--ease-out);
+  background: radial-gradient(circle at var(--glow-x, 50%) var(--glow-y, 0%), rgba(255, 176, 87, 0.16), transparent 62%);
+  pointer-events: none;
+}
+
+.bento-card:hover .bento-card-glow {
+  opacity: 1;
+}
+
+.bento-card-content {
+  position: relative;
+  height: 100%;
+  padding: 16px 18px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  min-height: 0;
+}
+
+@keyframes bento-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bento-card {
+    animation: none;
+  }
 }
 
 /* ---------- Search ---------- */
 
 .search-bar {
-  position: relative;
+  position: absolute;
+  top: 16px;
+  left: 20px;
+  width: 320px;
   z-index: 25;
   padding: 4px;
-  flex-shrink: 0;
 }
 
 .search-input-row {
@@ -251,15 +342,11 @@ input {
 /* ---------- Current weather card ---------- */
 
 .current-card {
-  padding: 20px 22px;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  flex: 1;
-  min-height: 0;
+  height: 100%;
   justify-content: center;
-  overflow: hidden;
-  background-image: radial-gradient(120% 90% at 15% 0%, rgba(255, 176, 87, 0.16), transparent 60%);
 }
 
 .current-location {
@@ -307,13 +394,6 @@ input {
   margin-bottom: 10px;
 }
 
-.current-meta-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-  margin-top: 10px;
-}
-
 .meta-chip {
   display: flex;
   align-items: center;
@@ -344,11 +424,202 @@ input {
   font-weight: 600;
 }
 
+/* ---------- Small metric cards (wind, humidity, UV, visibility) ---------- */
+
+.metric-card {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.metric-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--text-tertiary);
+}
+
+.metric-header svg {
+  width: 14px;
+  height: 14px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.metric-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.metric-value {
+  font-size: 27px;
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  margin-top: 10px;
+}
+
+.metric-sub {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+.metric-visual {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  opacity: 0.9;
+}
+
+.metric-compass svg {
+  width: 42px;
+  height: 42px;
+  color: var(--text-tertiary);
+}
+
+.humidity-gauge {
+  width: 10px;
+  height: 52px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--glass-border-soft);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+}
+
+.humidity-gauge-fill {
+  width: 100%;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(180deg, #7ec8ff, #4f8fd6);
+  transition: height 0.6s var(--ease-out);
+}
+
+.uv-scale {
+  position: relative;
+  margin-top: auto;
+  padding-top: 14px;
+}
+
+.uv-scale-track {
+  height: 5px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, #6fd67e 0%, #f4e26b 30%, #f4a53e 55%, #ef6b5a 78%, #c96bea 100%);
+}
+
+.uv-scale-marker {
+  position: absolute;
+  top: 9px;
+  width: 9px;
+  height: 9px;
+  margin-left: -4.5px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(4, 6, 12, 0.7);
+  transition: left 0.6s var(--ease-out);
+}
+
+/* ---------- Sun card ---------- */
+
+.sun-card {
+  gap: 6px;
+}
+
+.sun-arc {
+  width: 100%;
+  height: auto;
+  margin-top: 6px;
+  overflow: visible;
+}
+
+.sun-arc-track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.12);
+  stroke-width: 2;
+}
+
+.sun-arc-progress {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.6s var(--ease-out);
+}
+
+.sun-arc-horizon {
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+
+.sun-arc-dot {
+  fill: var(--accent-strong);
+  filter: drop-shadow(0 0 6px var(--accent-glow));
+}
+
+.sun-times {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.sun-times .meta-chip {
+  flex: 1;
+}
+
+/* ---------- Precipitation card ---------- */
+
+.precip-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-top: auto;
+  height: 56px;
+}
+
+.precip-bar-col {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.precip-bar-track {
+  width: 100%;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+
+.precip-bar-fill {
+  width: 100%;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(180deg, #7ec8ff, #4f8fd6);
+  transition: height 0.6s var(--ease-out);
+}
+
+.precip-bar-label {
+  font-size: 9.5px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
 /* ---------- Hourly forecast ---------- */
 
 .hourly-forecast {
-  padding: 14px 8px;
-  flex-shrink: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .hourly-title {
@@ -357,14 +628,17 @@ input {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-tertiary);
-  padding: 0 12px 10px;
+  padding: 0 0 10px;
+  flex-shrink: 0;
 }
 
 .hourly-scroll {
   display: flex;
   gap: 4px;
   overflow-x: auto;
-  padding: 0 8px 2px;
+  overflow-y: hidden;
+  margin: 0 -18px;
+  padding: 0 18px 2px;
 }
 
 .hourly-item {
@@ -412,10 +686,22 @@ input {
 /* ---------- Daily forecast ---------- */
 
 .daily-forecast {
-  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.daily-forecast .hourly-title {
+  flex-shrink: 0;
+}
+
+.daily-rows {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  margin: 0 -8px;
+  padding: 0 8px;
 }
 
 .daily-row {
@@ -634,18 +920,3 @@ input {
   animation: fade-in 0.5s var(--ease-out);
 }
 
-@media (max-width: 760px) {
-  .content-grid {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto 1fr;
-  }
-
-  .top-left {
-    grid-column: 1;
-    grid-row: 1;
-  }
-
-  .bottom-bar {
-    grid-row: 3;
-  }
-}

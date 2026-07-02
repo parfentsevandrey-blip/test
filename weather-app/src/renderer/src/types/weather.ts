@@ -21,6 +21,8 @@ export interface CurrentWeather {
   windDirection: number
   windGusts: number
   uvIndex: number | null
+  /** Meters. Null if the hourly series didn't have a matching current-hour entry. */
+  visibility: number | null
 }
 
 export interface HourlyForecastPoint {
@@ -54,7 +56,7 @@ export interface WeatherData {
   location: GeoLocation
   current: CurrentWeather
   hourly: HourlyForecastPoint[]
-  /** Always exactly today + the next 6 days (yesterday, fetched only for sun-position math, is not included here). */
+  /** Always exactly today + the next 9 days (yesterday, fetched only for sun-position math, is not included here). */
   daily: DailyForecastPoint[]
   sunTimes: SunTimes
   /** The location's UTC offset in seconds at fetch time (includes DST). All time strings above are in this local time, with no offset suffix. */
