@@ -1,0 +1,131 @@
+import { create } from 'zustand'
+import type { GeoLocation, TemperatureUnit, WeatherData } from '../types/weather'
+import { fetchWeatherData } from '../api/openMeteo'
+import { FALLBACK_LOCATION, getBrowserLocation, searchLocations } from '../api/geocoding'
+
+export type WeatherStatus = 'idle' | 'locating' | 'loading' | 'ready' | 'error'
+
+const UNIT_STORAGE_KEY = 'cinematic-weather:unit'
+const LOCATION_STORAGE_KEY = 'cinematic-weather:last-location'
+const REFRESH_INTERVAL_MS = 10 * 60 * 1000
+
+function loadStoredUnit(): TemperatureUnit {
+  const stored = localStorage.getItem(UNIT_STORAGE_KEY)
+  return stored === 'fahrenheit' ? 'fahrenheit' : 'celsius'
+}
+
+function loadStoredLocation(): GeoLocation | null {
+  const stored = localStorage.getItem(LOCATION_STORAGE_KEY)
+  if (!stored) return null
+  try {
+    return JSON.parse(stored) as GeoLocation
+  } catch {
+    return null
+  }
+}
+
+interface WeatherStoreState {
+  location: GeoLocation | null
+  weather: WeatherData | null
+  unit: TemperatureUnit
+  status: WeatherStatus
+  error: string | null
+  searchQuery: string
+  searchResults: GeoLocation[]
+  isSearching: boolean
+
+  /** Called once on app start: restores the last location, otherwise tries geolocation, otherwise falls back to a default city. */
+  init: () => Promise<void>
+  selectLocation: (location: GeoLocation) => Promise<void>
+  search: (query: string) => Promise<void>
+  clearSearch: () => void
+  toggleUnit: () => void
+  refresh: () => Promise<void>
+}
+
+let searchAbortController: AbortController | null = null
+let refreshTimer: ReturnType<typeof setInterval> | null = null
+
+export const useWeatherStore = create<WeatherStoreState>((set, get) => ({
+  location: null,
+  weather: null,
+  unit: loadStoredUnit(),
+  status: 'idle',
+  error: null,
+  searchQuery: '',
+  searchResults: [],
+  isSearching: false,
+
+  init: async () => {
+    const stored = loadStoredLocation()
+    if (stored) {
+      await get().selectLocation(stored)
+      return
+    }
+
+    set({ status: 'locating' })
+    try {
+      const location = await getBrowserLocation()
+      await get().selectLocation(location)
+    } catch {
+      await get().selectLocation(FALLBACK_LOCATION)
+    }
+  },
+
+  selectLocation: async (location: GeoLocation) => {
+    set({ status: 'loading', error: null, location, searchResults: [], searchQuery: '' })
+    try {
+      const weather = await fetchWeatherData(location)
+      set({ weather, status: 'ready' })
+      localStorage.setItem(LOCATION_STORAGE_KEY, JSON.stringify(location))
+
+      if (refreshTimer) clearInterval(refreshTimer)
+      refreshTimer = setInterval(() => {
+        get().refresh()
+      }, REFRESH_INTERVAL_MS)
+    } catch (err) {
+      set({ status: 'error', error: err instanceof Error ? err.message : 'Failed to load weather' })
+    }
+  },
+
+  refresh: async () => {
+    const { location } = get()
+    if (!location) return
+    try {
+      const weather = await fetchWeatherData(location)
+      set({ weather, status: 'ready', error: null })
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : 'Failed to refresh weather' })
+    }
+  },
+
+  search: async (query: string) => {
+    set({ searchQuery: query })
+    if (query.trim().length < 2) {
+      set({ searchResults: [], isSearching: false })
+      return
+    }
+
+    searchAbortController?.abort()
+    searchAbortController = new AbortController()
+    set({ isSearching: true })
+    try {
+      const results = await searchLocations(query, searchAbortController.signal)
+      set({ searchResults: results, isSearching: false })
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') return
+      set({ isSearching: false })
+    }
+  },
+
+  clearSearch: () => {
+    searchAbortController?.abort()
+    set({ searchQuery: '', searchResults: [], isSearching: false })
+  },
+
+  toggleUnit: () => {
+    const next: TemperatureUnit = get().unit === 'celsius' ? 'fahrenheit' : 'celsius'
+    localStorage.setItem(UNIT_STORAGE_KEY, next)
+    set({ unit: next })
+  }
+}))

@@ -1,0 +1,32 @@
+appId: com.cinematicweather.app
+productName: Cinematic Weather
+directories:
+  buildResources: build
+  output: dist
+files:
+  - out/**/*
+  - package.json
+  - '!**/.vscode/*'
+  - '!src/*'
+  - '!electron.vite.config.{js,ts,mjs,cjs}'
+  - '!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
+asarUnpack:
+  - resources/**
+win:
+  executableName: cinematic-weather
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: portable
+      arch:
+        - x64
+  artifactName: ${productName}-${version}-${arch}-setup.${ext}
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  artifactName: ${productName}-${version}-${arch}-setup.${ext}
+portable:
+  artifactName: ${productName}-${version}-${arch}-portable.${ext}
