@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import type { WeatherData } from '../types/weather'
 import type { SceneContext, SceneEffect, SceneParams } from './contract'
 import { getBaseVisibility, getConditionInfo } from '../utils/weatherCondition'
-import { computeSunPosition, getTimeOfDayFrac } from '../utils/time'
+import { computeSunPosition, getTimeOfDayFrac, toAbsoluteInstant } from '../utils/time'
 import { clamp01, degToRad, lerp } from '../utils/math'
 import { Sky } from './Sky'
 import { Stars } from './Stars'
@@ -129,16 +129,16 @@ export class SceneManager {
   private computeParams(): SceneParams {
     if (!this.weather) return DEFAULT_PARAMS
 
-    const { current, sunTimes } = this.weather
+    const { current, sunTimes, utcOffsetSeconds } = this.weather
     const conditionInfo = getConditionInfo(current.weatherCode)
     const now = new Date()
 
     const sun = computeSunPosition(
       now,
-      new Date(sunTimes.sunriseToday),
-      new Date(sunTimes.sunsetToday),
-      new Date(sunTimes.sunsetYesterday),
-      new Date(sunTimes.sunriseTomorrow)
+      toAbsoluteInstant(sunTimes.sunriseToday, utcOffsetSeconds),
+      toAbsoluteInstant(sunTimes.sunsetToday, utcOffsetSeconds),
+      toAbsoluteInstant(sunTimes.sunsetYesterday, utcOffsetSeconds),
+      toAbsoluteInstant(sunTimes.sunriseTomorrow, utcOffsetSeconds)
     )
 
     const precipitationIntensity = clamp01(

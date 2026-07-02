@@ -1,5 +1,20 @@
 import { clamp01 } from './math'
 
+/**
+ * Open-Meteo (with timezone=auto) returns wall-clock time strings with no
+ * UTC offset suffix, e.g. "2026-07-02T05:29" — that is 5:29am in the
+ * *location's* timezone, not the machine running this code. Parsing it
+ * directly with `new Date(...)` would silently reinterpret it as 5:29am in
+ * whatever timezone this machine happens to be in, which is only correct
+ * when they match. This converts it into the true absolute instant using
+ * the location's UTC offset (seconds) from the same API response.
+ */
+export function toAbsoluteInstant(localTimeIso: string, utcOffsetSeconds: number): Date {
+  const withSeconds = localTimeIso.length === 16 ? `${localTimeIso}:00` : localTimeIso
+  const asIfUtc = Date.parse(`${withSeconds}Z`)
+  return new Date(asIfUtc - utcOffsetSeconds * 1000)
+}
+
 export interface SunPosition {
   /** sin(elevation). 1 = overhead, 0 = on the horizon, -1 = directly below. */
   altitude: number

@@ -222,6 +222,7 @@ input {
 
 .search-bar {
   position: relative;
+  z-index: 25;
   padding: 4px;
   flex-shrink: 0;
 }

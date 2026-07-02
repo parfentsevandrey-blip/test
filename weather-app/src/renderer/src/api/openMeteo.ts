@@ -32,6 +32,7 @@ const DAILY_VARS = [
 ].join(',')
 
 interface RawForecastResponse {
+  utc_offset_seconds: number
   current: {
     time: string
     temperature_2m: number
@@ -144,6 +145,7 @@ export async function fetchWeatherData(location: GeoLocation, signal?: AbortSign
       sunriseToday: raw.daily.sunrise[1],
       sunsetToday: raw.daily.sunset[1],
       sunriseTomorrow: raw.daily.sunrise[2]
-    }
+    },
+    utcOffsetSeconds: raw.utc_offset_seconds
   }
 }

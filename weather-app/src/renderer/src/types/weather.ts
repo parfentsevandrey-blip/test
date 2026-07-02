@@ -57,6 +57,8 @@ export interface WeatherData {
   /** Always exactly today + the next 6 days (yesterday, fetched only for sun-position math, is not included here). */
   daily: DailyForecastPoint[]
   sunTimes: SunTimes
+  /** The location's UTC offset in seconds at fetch time (includes DST). All time strings above are in this local time, with no offset suffix. */
+  utcOffsetSeconds: number
   fetchedAt: number
 }
 
