@@ -59,6 +59,7 @@ export function DailyForecast(): JSX.Element | null {
         <div className="df-rows" role="list" aria-label="Daily forecast for the next 10 days">
           {weather.daily.map((day, index) => {
             const isToday = index === 0
+            const condition = getConditionInfo(day.weatherCode)
             const pop = Math.round(day.precipitationProbabilityMax)
             const minPct = pct(day.tempMin)
             const maxPct = pct(day.tempMax)
@@ -75,23 +76,27 @@ export function DailyForecast(): JSX.Element | null {
 
             const label =
               `${isToday ? 'Today' : formatWeekdayLong(day.date)}, ${formatDateShort(day.date)}: ` +
-              `high ${formatTemperature(day.tempMax, unit)}, low ${formatTemperature(day.tempMin, unit)}` +
+              `${condition.label}, high ${formatTemperature(day.tempMax, unit)}, ` +
+              `low ${formatTemperature(day.tempMin, unit)}` +
               (pop > 0 ? `, ${pop}% chance of precipitation` : '')
 
             return (
-              <div className="df-row" role="listitem" aria-label={label} key={day.date}>
+              <div
+                className={`df-row${isToday ? ' is-today' : ''}`}
+                role="listitem"
+                aria-label={label}
+                title={condition.label}
+                key={day.date}
+              >
                 <div className="df-day-col">
                   <span className="df-day">{isToday ? 'Today' : formatWeekday(day.date)}</span>
                   <span className="df-date">{formatDateShort(day.date)}</span>
                 </div>
 
-                <WeatherIcon
-                  condition={getConditionInfo(day.weatherCode).condition}
-                  isDay={true}
-                  className="df-icon"
-                />
+                <WeatherIcon condition={condition.condition} isDay={true} className="df-icon" />
 
-                <span className="df-pop">{pop > 0 ? `${pop}%` : ''}</span>
+                {/* Always render for columnar rhythm; only meaningful chances (>=20%) earn the blue emphasis. */}
+                <span className={`df-pop${pop < 20 ? ' df-pop--low' : ''}`}>{`${pop}%`}</span>
 
                 <div className="df-range">
                   <span className="df-temp-min">{formatTemperature(day.tempMin, unit)}</span>

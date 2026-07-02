@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import './SunCard.css'
 import { useWeatherStore } from '../store/useWeatherStore'
 import { BentoCard } from './BentoCard'
@@ -15,6 +16,10 @@ const RADIUS = 34
 const NIGHT_DIP = 8
 const ARC_LENGTH = Math.PI * RADIUS
 const GRADIENT_ID = 'sun-path-arc-gradient'
+/** Golden hour ≈ the first hour after sunrise / the last hour before sunset. */
+const GOLDEN_HOUR_MS = 3_600_000
+/** Live tick cadence for the countdown hero line (also nudges the arc marker). */
+const TICK_MS = 30_000
 
 const ARC_PATH = `M ${CX - RADIUS} ${HORIZON_Y} A ${RADIUS} ${RADIUS} 0 0 1 ${CX + RADIUS} ${HORIZON_Y}`
 
@@ -25,23 +30,45 @@ function fracBetween(startMs: number, endMs: number, nowMs: number): number {
   return clamp01((nowMs - startMs) / span)
 }
 
+/** Point on the day arc for a daylight fraction (0 = sunrise end, 1 = sunset end). */
+function arcPoint(frac: number): { x: number; y: number } {
+  const angle = Math.PI - frac * Math.PI
+  return { x: CX + Math.cos(angle) * RADIUS, y: HORIZON_Y - Math.sin(angle) * RADIUS }
+}
+
+/** "5h 12m" / "42m" style duration for the countdown hero line. */
+function formatDelta(ms: number): string {
+  const totalMin = Math.max(0, Math.round(ms / 60000))
+  const h = Math.floor(totalMin / 60)
+  const m = totalMin % 60
+  if (h === 0) return `${m}m`
+  if (m === 0) return `${h}h`
+  return `${h}h ${m}m`
+}
+
 export function SunCard(): JSX.Element | null {
   const weather = useWeatherStore((s) => s.weather)
+  // Live clock: the countdown (and the sun marker with it) refreshes every 30s.
+  const [nowMs, setNowMs] = useState(() => Date.now())
+
+  useEffect(() => {
+    const id = setInterval(() => setNowMs(Date.now()), TICK_MS)
+    return () => clearInterval(id)
+  }, [])
 
   if (!weather) return null
 
   const { sunTimes, utcOffsetSeconds } = weather
   const sunrise = toAbsoluteInstant(sunTimes.sunriseToday, utcOffsetSeconds)
   const sunset = toAbsoluteInstant(sunTimes.sunsetToday, utcOffsetSeconds)
-  const nowMs = Date.now()
+  const sunriseMs = sunrise.getTime()
+  const sunsetMs = sunset.getTime()
 
-  const progress = fracBetween(sunrise.getTime(), sunset.getTime(), nowMs)
-  const isDaytime = nowMs >= sunrise.getTime() && nowMs <= sunset.getTime()
+  const progress = fracBetween(sunriseMs, sunsetMs, nowMs)
+  const isDaytime = nowMs >= sunriseMs && nowMs <= sunsetMs
 
   // Sun marker rides the day arc from the sunrise endpoint to the sunset one.
-  const sunAngle = Math.PI - progress * Math.PI
-  const sunX = CX + Math.cos(sunAngle) * RADIUS
-  const sunY = HORIZON_Y - Math.sin(sunAngle) * RADIUS
+  const { x: sunX, y: sunY } = arcPoint(progress)
 
   // At night, a small moon dot mirrors the journey just below the horizon
   // (same horizontal sweep, shallow vertical dip so it stays inside the card).
@@ -49,14 +76,14 @@ export function SunCard(): JSX.Element | null {
   let moonY = 0
   if (!isDaytime) {
     const nightProgress =
-      nowMs < sunrise.getTime()
+      nowMs < sunriseMs
         ? fracBetween(
             toAbsoluteInstant(sunTimes.sunsetYesterday, utcOffsetSeconds).getTime(),
-            sunrise.getTime(),
+            sunriseMs,
             nowMs
           )
         : fracBetween(
-            sunset.getTime(),
+            sunsetMs,
             toAbsoluteInstant(sunTimes.sunriseTomorrow, utcOffsetSeconds).getTime(),
             nowMs
           )
@@ -65,10 +92,39 @@ export function SunCard(): JSX.Element | null {
     moonY = HORIZON_Y + Math.sin(moonAngle) * NIGHT_DIP
   }
 
-  const daylightMinutes = Math.max(0, Math.round((sunset.getTime() - sunrise.getTime()) / 60000))
+  const daylightMinutes = Math.max(0, Math.round((sunsetMs - sunriseMs) / 60000))
   const daylight = `${Math.floor(daylightMinutes / 60)}h ${daylightMinutes % 60}m`
   const sunriseLabel = formatClock(sunTimes.sunriseToday)
   const sunsetLabel = formatClock(sunTimes.sunsetToday)
+
+  // Hero countdown to the next sun event (before dawn -> today's sunrise,
+  // during the day -> today's sunset, after dusk -> tomorrow's sunrise).
+  const nextEventName = isDaytime ? 'Sunset' : 'Sunrise'
+  const nextEventMs =
+    nowMs < sunriseMs
+      ? sunriseMs
+      : nowMs <= sunsetMs
+        ? sunsetMs
+        : toAbsoluteInstant(sunTimes.sunriseTomorrow, utcOffsetSeconds).getTime()
+  const countdown = formatDelta(nextEventMs - nowMs)
+
+  // Golden-hour ticks: ~1h after sunrise and ~1h before sunset, as fractions
+  // of the daylight span mapped onto the arc. Skipped for very short days
+  // where the two windows would overlap and the ticks would collide.
+  const daySpanMs = sunsetMs - sunriseMs
+  const showGolden = daySpanMs > GOLDEN_HOUR_MS * 2.5
+  const goldenTicks = showGolden
+    ? [
+        {
+          frac: GOLDEN_HOUR_MS / daySpanMs,
+          title: `Morning golden hour — the hour after sunrise (${sunriseLabel})`
+        },
+        {
+          frac: 1 - GOLDEN_HOUR_MS / daySpanMs,
+          title: `Evening golden hour — the hour before sunset (${sunsetLabel})`
+        }
+      ]
+    : []
 
   return (
     <BentoCard span="bento-wide" floatDelay={0.4}>
@@ -76,6 +132,11 @@ export function SunCard(): JSX.Element | null {
         <div className="metric-header">
           <SunriseIcon />
           <span className="metric-label">Sunrise &amp; Sunset</span>
+        </div>
+
+        <div className="sun-path-countdown" role="timer" aria-label={`${nextEventName} in ${countdown}`}>
+          <span className="sun-path-countdown-value">{countdown}</span>
+          <span className="sun-path-countdown-label">until {nextEventName.toLowerCase()}</span>
         </div>
 
         <svg
@@ -108,6 +169,22 @@ export function SunCard(): JSX.Element | null {
               strokeDasharray={`${progress * ARC_LENGTH} ${ARC_LENGTH}`}
             />
           )}
+
+          {goldenTicks.map((tick) => {
+            const { x, y } = arcPoint(tick.frac)
+            return (
+              <g key={tick.title} className="sun-path-golden">
+                <title>{tick.title}</title>
+                <rect
+                  x={x - 1.7}
+                  y={y - 1.7}
+                  width={3.4}
+                  height={3.4}
+                  transform={`rotate(45 ${x} ${y})`}
+                />
+              </g>
+            )
+          })}
 
           {isDaytime ? (
             <g>

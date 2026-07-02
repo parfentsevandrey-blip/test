@@ -8,6 +8,18 @@
    The card is a size container: the tiny date sub-label only
    appears when the card is tall enough for two comfortable
    text lines per row, so nothing ever overflows at 1040x680.
+
+   VERTICAL BUDGET @ 1040x680 (worst case):
+     grid height  = 680 - 58 header - 22 viewport pad ≈ 600px
+     grid row     = (600 - 11 gaps × 10.9px) / 12     ≈ 40px
+     this card    = span 7 → 7×40 + 6×10.9            ≈ 345px
+     − card padding (≈15px × 2) − title (≈22px)       ≈ 293px
+     → ≈29.3px per forecast row. Tallest row content is the
+       condition icon: clamp(20px, 3.5vh, 30px) = 23.8px @ 680
+       → ≥5px slack. The 30px icon max is only reached when
+       rows are ≥43px tall (≥900px viewports). The date
+       sub-label only switches on at container ≥340px, which
+       never happens at 680 viewport height.
    ============================================================ */
 
 .df-root {
@@ -17,6 +29,13 @@
   min-height: 0;
   container-type: size;
   container-name: df;
+  /* Local token: specular highlight for the range-bar hover sheen.
+     (A white glint, not a palette color — tuned per theme below.) */
+  --df-sheen: rgba(255, 255, 255, 0.75);
+}
+
+[data-theme='dark'] .df-root {
+  --df-sheen: rgba(255, 255, 255, 0.5);
 }
 
 .df-title {
@@ -41,7 +60,7 @@
   gap: clamp(7px, 0.9vw, 14px);
   padding: 0 clamp(6px, 0.8vw, 12px);
   border-radius: var(--radius-sm);
-  transition: background-color 0.15s var(--ease-out);
+  transition: background-color 0.2s var(--ease-out);
 }
 
 .df-row:hover {
@@ -61,18 +80,38 @@
   overflow: hidden;
   /* Slightly dimmed at rest; hover "strengthens" the weekday. */
   opacity: 0.82;
-  transition: opacity 0.15s var(--ease-out);
+  transition: opacity 0.25s var(--ease-out);
 }
 
-.df-row:hover .df-day-col {
+.df-row:hover .df-day-col,
+.df-row.is-today .df-day-col {
   opacity: 1;
 }
 
 .df-day {
+  font-family: var(--font-display);
   font-size: clamp(11.5px, 1.85vh, 14px);
   font-weight: 600;
+  letter-spacing: -0.01em;
   color: var(--text-primary);
   white-space: nowrap;
+}
+
+/* "Today" gets the accent treatment: tinted text + a tiny live dot. */
+.df-row.is-today .df-day {
+  color: var(--accent);
+}
+
+.df-row.is-today .df-day::before {
+  content: '';
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-right: 5px;
+  vertical-align: 0.14em;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent-glow);
 }
 
 .df-date {
@@ -95,8 +134,10 @@
 /* ---------- Condition icon ---------- */
 
 .df-icon {
-  width: clamp(19px, 3.1vh, 26px);
-  height: clamp(19px, 3.1vh, 26px);
+  /* Grows with the row (rows are ~43px at 900px viewports, ~29px at 680;
+     3.5vh stays comfortably inside both — see budget math above). */
+  width: clamp(20px, 3.5vh, 30px);
+  height: clamp(20px, 3.5vh, 30px);
   color: var(--text-secondary);
   flex-shrink: 0;
 }
@@ -127,10 +168,12 @@
 
 .df-temp-min,
 .df-temp-max {
-  width: clamp(26px, 2.4vw, 34px);
+  width: clamp(28px, 2.4vw, 34px);
   flex-shrink: 0;
   text-align: right;
+  font-family: var(--font-display);
   font-size: clamp(11.5px, 1.85vh, 14px);
+  line-height: 1;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
@@ -148,7 +191,8 @@
   position: relative;
   flex: 1;
   min-width: 40px;
-  height: clamp(4px, 0.75vh, 6px);
+  /* Reaches its full 6px weight from ~750px viewport height up. */
+  height: clamp(4px, 0.8vh, 6px);
   border-radius: var(--radius-pill);
   background: var(--track);
 }
@@ -165,6 +209,40 @@
   border-radius: var(--radius-pill);
   background-image: linear-gradient(90deg, var(--info), var(--accent));
   background-repeat: no-repeat;
+  overflow: hidden;
+}
+
+/* Hover sheen: a skewed glint sweeps once across the fill (600ms).
+   Invisible at rest (opacity 0), so it costs nothing until hovered. */
+.df-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 60%;
+  opacity: 0;
+  transform: translateX(-180%) skewX(-18deg);
+  background: linear-gradient(90deg, transparent, var(--df-sheen), transparent);
+  pointer-events: none;
+}
+
+.df-row:hover .df-fill::after {
+  animation: df-sheen-sweep 0.6s var(--ease-out) 1;
+}
+
+@keyframes df-sheen-sweep {
+  0% {
+    opacity: 0;
+    transform: translateX(-180%) skewX(-18deg);
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(290%) skewX(-18deg);
+  }
 }
 
 /* "Now" marker on today's row: current temp on the same scale. */
@@ -179,4 +257,85 @@
   box-shadow:
     0 0 0 2px var(--control-bg),
     0 0 5px var(--accent-glow);
+  transition: box-shadow 0.3s var(--ease-out);
+}
+
+/* The dot "wakes up" when its row is inspected. */
+.df-row:hover .df-now-dot {
+  box-shadow:
+    0 0 0 2px var(--control-bg),
+    0 0 10px 2px var(--accent-glow);
+}
+
+/* ============================================================
+   Windows 95 — rows behave like a classic list view: navy
+   selection bar with inverse text, no specular sheen, and a
+   black-dot/white-ring "now" marker that stays visible on
+   silver, on the navy fill, and on the selection bar alike
+   (the default ring is control-bg = silver-on-silver there).
+   ============================================================ */
+
+[data-theme='win95'] .df-row,
+[data-theme='win95'] .df-day-col,
+[data-theme='win95'] .df-now-dot {
+  transition: none;
+}
+
+[data-theme='win95'] .df-fill::after {
+  display: none;
+}
+
+[data-theme='win95'] .df-row:hover {
+  background: #000080;
+}
+
+[data-theme='win95'] .df-row:hover .df-day,
+[data-theme='win95'] .df-row:hover .df-date,
+[data-theme='win95'] .df-row:hover .df-pop,
+[data-theme='win95'] .df-row:hover .df-temp-min,
+[data-theme='win95'] .df-row:hover .df-temp-max,
+[data-theme='win95'] .df-row:hover .df-icon {
+  color: #ffffff;
+}
+
+/* The navy fill would vanish on the navy selection bar: invert it. */
+[data-theme='win95'] .df-row:hover .df-fill {
+  background-image: linear-gradient(90deg, #ffffff, #ffffff);
+}
+
+[data-theme='win95'] .df-now-dot,
+[data-theme='win95'] .df-row:hover .df-now-dot {
+  background: #000000;
+  box-shadow: 0 0 0 2px #ffffff;
+}
+
+/* Today's dot goes square (as all win95 "lights" do). */
+[data-theme='win95'] .df-row.is-today .df-day::before {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+[data-theme='win95'] .df-row.is-today:hover .df-day::before {
+  background: #ffffff;
+}
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .df-row,
+  .df-day-col,
+  .df-now-dot {
+    transition: none;
+  }
+
+  .df-row:hover .df-fill::after {
+    animation: none;
+  }
+}
+
+/* Low-probability days keep the column filled but recede: quiet by default,
+   blue emphasis is reserved for chances that should influence plans. */
+.df-pop--low {
+  color: var(--text-tertiary);
+  font-weight: 500;
 }

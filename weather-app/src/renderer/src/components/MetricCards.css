@@ -6,6 +6,51 @@
    they win regardless of stylesheet load order.
    ============================================================ */
 
+/* ---------- Shared numeral + unit typography ----------
+   Big display numeral with a small, muted, baseline-aligned unit beside it:
+   <div class="metric-value"><span class="mx-value">16</span><span class="mx-unit">km/h</span></div> */
+
+.metric-card .metric-value {
+  display: flex;
+  align-items: baseline;
+  gap: 0.26em;
+  line-height: 1.06;
+}
+
+.metric-card .mx-unit {
+  font-family: var(--font-ui);
+  font-size: 0.46em;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-tertiary);
+}
+
+.metric-card .metric-sub {
+  line-height: 1.35;
+}
+
+/* One-line instrument readout pinned under a card's visual
+   (Beaufort force under the compass, dew point under the ring). */
+.metric-card .mx-footline {
+  flex-shrink: 0;
+  padding-top: clamp(3px, 0.7vh, 7px);
+  font-size: clamp(9.5px, 1.55vh, 11.5px);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--text-tertiary);
+  text-align: center;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+}
+
+.metric-card .mx-footline b {
+  font-weight: 650;
+  color: var(--text-secondary);
+}
+
 /* ---------- Wind: compass ring with cardinals + smooth needle ---------- */
 
 /* Sits inside .metric-visual (already absolutely positioned), so it only
@@ -46,6 +91,39 @@
   will-change: transform;
 }
 
+/* Inner layer so the hover wiggle rotates AROUND the needle's live heading:
+   the wrapper keeps the inline data rotation, this element adds the settle. */
+.wind-needle-wiggle {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 50%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .bento-card:hover .wind-needle-wiggle {
+    animation: wind-needle-settle 1.1s var(--ease-out);
+  }
+}
+
+/* A gust nudges the needle ~5° then it damps back to true, like a real vane. */
+@keyframes wind-needle-settle {
+  0% {
+    transform: rotate(0deg);
+  }
+  28% {
+    transform: rotate(5deg);
+  }
+  58% {
+    transform: rotate(-3.2deg);
+  }
+  82% {
+    transform: rotate(1.4deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
 /* ---------- Humidity: SVG donut gauge with droplet glyph ---------- */
 
 .humidity-ring {
@@ -75,6 +153,21 @@
   color: var(--info);
 }
 
+/* Hover: the ring sweeps in again from 0. A from-only keyframe animates
+   toward the element's computed dasharray (the inline attribute), so it
+   always lands exactly on the live value and retriggers per hover entry. */
+@media (prefers-reduced-motion: no-preference) {
+  .bento-card:hover .humidity-ring-fill {
+    animation: humidity-ring-sweep 0.9s var(--ease-out);
+  }
+}
+
+@keyframes humidity-ring-sweep {
+  from {
+    stroke-dasharray: 0 999;
+  }
+}
+
 /* ---------- UV Index: boundary ticks + zone-colored descriptor ---------- */
 
 .uv-scale .uv-scale-track {
@@ -99,22 +192,112 @@
   transition: color 0.4s var(--ease-out);
 }
 
-/* ---------- Visibility: receding depth lines ---------- */
-
-.vis-depth {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: clamp(6px, 1.4vh, 11px);
-  width: min(100%, clamp(64px, 8vw, 110px));
-  padding: 0 2px 5px;
+/* Protection guidance floats between readout and scale: its auto margin
+   pairs with .uv-scale's, splitting the card's slack space evenly. */
+.metric-card .uv-hint {
+  padding-top: clamp(4px, 1vh, 10px);
+  font-size: clamp(9.5px, 1.55vh, 11.5px);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--text-tertiary);
 }
 
-.vis-depth-line {
-  height: 4px;
+/* Numeric end stops under the gradient track: reads as an instrument scale. */
+.uv-scale .uv-scale-labels {
+  display: flex;
+  justify-content: space-between;
+  padding-top: clamp(3px, 0.8vh, 7px);
+  font-size: clamp(8.5px, 1.4vh, 10px);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Hover: the marker pops once to draw the eye to today's reading.
+   `scale` composes with the marker's left/margin positioning untouched. */
+@media (prefers-reduced-motion: no-preference) {
+  .bento-card:hover .uv-scale-marker {
+    animation: uv-marker-pop 0.55s var(--ease-out);
+  }
+}
+
+@keyframes uv-marker-pop {
+  0%,
+  100% {
+    scale: 1;
+  }
+  40% {
+    scale: 1.45;
+  }
+}
+
+/* ---------- Visibility: horizontal distance gauge ---------- */
+
+/* Bottom-anchored like the UV scale and the wind/humidity footlines, so all
+   four small metric cards share one visual foot baseline across the row. */
+.metric-card .vis-gauge-wrap {
+  align-items: flex-end;
+  padding-bottom: 2px;
+}
+
+.vis-gauge {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, 0.9vh, 8px);
+}
+
+.vis-gauge-track {
+  position: relative;
+  height: 8px;
   border-radius: var(--radius-pill);
-  background: var(--text-secondary);
-  transition: opacity 0.7s var(--ease-out);
+  background: var(--track);
+  border: 1px solid var(--glass-border-soft);
+  overflow: hidden;
+}
+
+.vis-gauge-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--info) 40%, transparent), var(--info));
+  box-shadow: 0 0 8px color-mix(in srgb, var(--info) 45%, transparent);
+  transition: width 0.7s var(--ease-out);
+}
+
+/* Quarter-scale graduations; absolutely positioned so they paint over the fill. */
+.vis-gauge-tick {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  transform: translateX(-50%);
+  background: var(--text-primary);
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.vis-gauge-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: clamp(8.5px, 1.4vh, 10px);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Hover: the fill sweeps out from 0 to the live reading. */
+@media (prefers-reduced-motion: no-preference) {
+  .bento-card:hover .vis-gauge-fill {
+    animation: vis-gauge-sweep 0.8s var(--ease-out);
+  }
+}
+
+@keyframes vis-gauge-sweep {
+  from {
+    width: 0%;
+  }
 }
 
 /* ---------- Precipitation: refined bars, hover values, empty state ---------- */
@@ -144,12 +327,31 @@
    keeps its single job of marking "now / sun". */
 .precip-card .precip-bar-col.is-now .precip-bar-track {
   box-shadow: inset 0 0 0 1.5px var(--accent);
-  background: var(--accent-glow);
+  /* Track-weight tint only: --accent-glow at full strength read as a second
+     (stacked brown) data series over dark glass. */
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 .precip-card .precip-bar-col.is-now .precip-bar-label {
   color: var(--text-primary);
   font-weight: 600;
+}
+
+/* Hover anywhere on the card: bars re-grow from 0 with a 40ms cascade.
+   `backwards` holds each bar at 0 through its delay so the wave reads
+   left-to-right; the implicit `to` is the inline data height, so every
+   bar lands exactly on its live value and nothing moves after settle. */
+@media (prefers-reduced-motion: no-preference) {
+  .bento-card:hover .precip-card .precip-bar-fill {
+    animation: precip-bar-grow 0.55s var(--ease-out) backwards;
+    animation-delay: calc(var(--bar-i, 0) * 40ms);
+  }
+}
+
+@keyframes precip-bar-grow {
+  from {
+    height: 0%;
+  }
 }
 
 /* Probability chip revealed above a bar on hover. */
@@ -206,4 +408,28 @@
   height: clamp(15px, 2.6vh, 18px);
   color: var(--accent);
   flex-shrink: 0;
+}
+
+/* ---------- Windows 95: period-correct degradations ----------
+   The retro theme is motionless (global.css disables card motion), so the
+   hover micro-interactions go quiet here too. !important is deliberate:
+   the hover rules above carry higher specificity. */
+
+[data-theme='win95'] .wind-needle-wiggle,
+[data-theme='win95'] .humidity-ring-fill,
+[data-theme='win95'] .uv-scale-marker,
+[data-theme='win95'] .vis-gauge-fill,
+[data-theme='win95'] .precip-bar-fill {
+  animation: none !important;
+  transition: none;
+}
+
+/* Distance gauge reads as a classic navy progress bar: flat fill, no glow. */
+[data-theme='win95'] .vis-gauge-fill {
+  background: var(--accent);
+  box-shadow: none;
+}
+
+[data-theme='win95'] .vis-gauge-track {
+  border-color: var(--glass-border-soft);
 }

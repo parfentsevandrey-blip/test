@@ -1,7 +1,7 @@
 import { useWeatherStore } from '../store/useWeatherStore'
 import { BentoCard } from './BentoCard'
 import { DropletIcon } from './icons'
-import { formatPercent } from '../utils/units'
+import { formatTemperature } from '../utils/units'
 import { clamp01 } from '../utils/math'
 import './MetricCards.css'
 
@@ -15,14 +15,28 @@ function humidityDescriptor(pct: number): string {
   return 'Very humid'
 }
 
+/** Magnus-formula dew point (°C). Null when RH is 0 (log undefined). */
+function dewPointCelsius(tempC: number, rhPct: number): number | null {
+  if (rhPct <= 0) return null
+  const b = 17.62
+  const c = 243.12
+  const g = Math.log(rhPct / 100) + (b * tempC) / (c + tempC)
+  return (c * g) / (b - g)
+}
+
 export function HumidityCard(): JSX.Element | null {
   const weather = useWeatherStore((s) => s.weather)
+  const unit = useWeatherStore((s) => s.unit)
 
   if (!weather) return null
 
   const humidity = weather.current.humidity
   const filled = clamp01(humidity / 100) * RING_CIRCUMFERENCE
+  const dewPoint = dewPointCelsius(weather.current.temperature, humidity)
 
+  /* 680px-window vertical budget (content ≈ 162px): header 16 + value 40 +
+     sub 20 + dew-point footline 18 = 94 fixed → ~68px left for the flexed
+     ring slot; the ring scales down from its 92px max without clipping. */
   return (
     <BentoCard span="bento-1" floatDelay={0.6}>
       <div className="metric-card">
@@ -30,7 +44,10 @@ export function HumidityCard(): JSX.Element | null {
           <DropletIcon />
           <span className="metric-label">Humidity</span>
         </div>
-        <div className="metric-value">{formatPercent(humidity)}</div>
+        <div className="metric-value">
+          <span className="mx-value">{Math.round(humidity)}</span>
+          <span className="mx-unit">%</span>
+        </div>
         <div className="metric-sub">{humidityDescriptor(humidity)}</div>
         <div className="metric-visual humidity-ring" aria-hidden="true">
           <svg viewBox="0 0 44 44">
@@ -63,6 +80,11 @@ export function HumidityCard(): JSX.Element | null {
             </g>
           </svg>
         </div>
+        {dewPoint !== null && (
+          <div className="mx-footline">
+            Dew point <b>{formatTemperature(dewPoint, unit)}</b>
+          </div>
+        )}
       </div>
     </BentoCard>
   )

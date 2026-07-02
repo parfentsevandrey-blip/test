@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { useWeatherStore } from '../store/useWeatherStore'
 import { BentoCard } from './BentoCard'
 import { RainIcon, SunBurstIcon } from './icons'
@@ -24,7 +25,10 @@ export function PrecipitationCard(): JSX.Element | null {
           <RainIcon />
           <span className="metric-label">Chance of Rain</span>
         </div>
-        <div className="metric-value">{Math.round(todayMax)}%</div>
+        <div className="metric-value">
+          <span className="mx-value">{Math.round(todayMax)}</span>
+          <span className="mx-unit">%</span>
+        </div>
         <div className="metric-sub">Peak chance today</div>
 
         {allDry ? (
@@ -39,7 +43,8 @@ export function PrecipitationCard(): JSX.Element | null {
                 <div className="precip-bar-track">
                   <div
                     className="precip-bar-fill"
-                    style={{ height: `${Math.max(2, point.precipitationProbability)}%` }}
+                    /* --bar-i drives the 40ms stagger of the hover re-grow animation. */
+                    style={{ height: `${Math.max(2, point.precipitationProbability)}%`, '--bar-i': index } as CSSProperties}
                   />
                 </div>
                 <span className="precip-bar-value">{Math.round(point.precipitationProbability)}%</span>

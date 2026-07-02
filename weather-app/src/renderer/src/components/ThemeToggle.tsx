@@ -29,10 +29,22 @@ function MoonIcon(): JSX.Element {
   )
 }
 
-const OPTIONS: { value: ThemePreference; label: string; title: string }[] = [
-  { value: 'light', label: 'Light', title: 'Light theme' },
-  { value: 'dark', label: 'Dark', title: 'Dark theme' },
-  { value: 'auto', label: 'Auto', title: 'Follow day/night at the selected location' }
+/** A classic 9x-era window: title bar with close box, hard corners. */
+function RetroWindowIcon(): JSX.Element {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="square" aria-hidden="true">
+      <rect x={3.5} y={4.5} width={17} height={15} />
+      <line x1={3.5} y1={9} x2={20.5} y2={9} />
+      <rect x={16} y={6} width={2.4} height={1.6} fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
+const OPTIONS: { value: ThemePreference; title: string; icon: JSX.Element | string }[] = [
+  { value: 'light', title: 'Light theme', icon: <SunIcon /> },
+  { value: 'dark', title: 'Dark theme', icon: <MoonIcon /> },
+  { value: 'auto', title: 'Follow day/night at the selected location', icon: 'A' },
+  { value: 'win95', title: 'Windows 95 retro theme', icon: <RetroWindowIcon /> }
 ]
 
 export function ThemeToggle(): JSX.Element {
@@ -50,7 +62,7 @@ export function ThemeToggle(): JSX.Element {
           title={option.title}
           aria-label={option.title}
         >
-          {option.value === 'light' ? <SunIcon /> : option.value === 'dark' ? <MoonIcon /> : 'A'}
+          {option.icon}
         </button>
       ))}
     </div>

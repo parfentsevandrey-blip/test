@@ -26,6 +26,15 @@ function uvSeverity(uv: number): UvSeverity {
   return { label: 'Extreme', color: 'var(--uv-extreme)' }
 }
 
+/** WHO-style protection guidance, one calm line per severity band. */
+function uvHint(uv: number): string {
+  if (uv < 3) return 'No protection needed'
+  if (uv < 6) return 'Wear sunscreen'
+  if (uv < 8) return 'Sunscreen and hat advised'
+  if (uv < 11) return 'Avoid midday sun'
+  return 'Stay in shade midday'
+}
+
 export function UvIndexCard(): JSX.Element | null {
   const weather = useWeatherStore((s) => s.weather)
 
@@ -35,6 +44,10 @@ export function UvIndexCard(): JSX.Element | null {
   const rounded = uv !== null ? Math.round(uv) : null
   const severity = rounded !== null ? uvSeverity(rounded) : null
 
+  /* 680px-window vertical budget (content ≈ 162px): header 16 + value 40 +
+     sub 20 + hint ~17 + scale block ~33 (14 pad + 6 track + 13 end labels)
+     = 126 fixed; the ~36px surplus is split by the two auto margins so the
+     hint floats evenly between the readout and the instrument scale. */
   return (
     <BentoCard span="bento-1" floatDelay={1}>
       <div className="metric-card">
@@ -46,6 +59,7 @@ export function UvIndexCard(): JSX.Element | null {
         <div className="metric-sub uv-sub" style={severity !== null ? { color: severity.color } : undefined}>
           {severity !== null ? severity.label : 'Unavailable'}
         </div>
+        {rounded !== null && <div className="uv-hint">{uvHint(rounded)}</div>}
         <div className="uv-scale">
           <div className="uv-scale-track">
             {UV_TICKS.map((tick) => (
@@ -55,6 +69,10 @@ export function UvIndexCard(): JSX.Element | null {
           {rounded !== null && (
             <div className="uv-scale-marker" style={{ left: `${clamp01(rounded / UV_MAX) * 100}%` }} />
           )}
+          <div className="uv-scale-labels" aria-hidden="true">
+            <span>0</span>
+            <span>11+</span>
+          </div>
         </div>
       </div>
     </BentoCard>

@@ -1,11 +1,11 @@
-import { useId } from 'react'
+import { useId, useState } from 'react'
 import type { CSSProperties } from 'react'
 import './HourlyForecast.css'
 import { useWeatherStore } from '../store/useWeatherStore'
 import { BentoCard } from './BentoCard'
 import { WeatherIcon } from './WeatherIcon'
 import { getConditionInfo } from '../utils/weatherCondition'
-import { formatTemperature, formatHour } from '../utils/units'
+import { formatTemperature, formatHour, celsiusTo } from '../utils/units'
 
 /**
  * Fixed column width in CSS px. Hour cells, precip cells and the SVG curve
@@ -20,6 +20,8 @@ const BAND_PAD = 7
 const HOURS_SHOWN = 24
 /** Index of the "Now" column (the strip always starts at the current hour). */
 const NOW_INDEX = 0
+/** Columns whose centre is closer than this to a strip edge get an edge-aligned tooltip. */
+const TIP_EDGE_PX = 150
 
 interface CurvePoint {
   x: number
@@ -53,6 +55,9 @@ export function HourlyForecast(): JSX.Element | null {
   const weather = useWeatherStore((s) => s.weather)
   const unit = useWeatherStore((s) => s.unit)
   const reactId = useId()
+  // Hovered column index. Set from onMouseEnter per column (cheap, no
+  // mousemove math) and cleared when the pointer leaves the whole strip.
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
   if (!weather) return null
 
@@ -91,6 +96,27 @@ export function HourlyForecast(): JSX.Element | null {
     '--hf-col-w': `${COL_WIDTH}px`
   } as CSSProperties
 
+  // Guard against a stale index if the data window shrank under the cursor.
+  const hovered = hoveredIndex !== null && hoveredIndex < points.length ? hoveredIndex : null
+  const hoveredPoint = hovered === null ? null : points[hovered]
+
+  // Tooltip anchoring: centred over the column, except near the strip's
+  // ends where it left/right-aligns so it can never clip out of the card.
+  let tipLeft = 0
+  let tipAlign = ''
+  if (hovered !== null) {
+    const center = hovered * COL_WIDTH + COL_WIDTH / 2
+    if (center < TIP_EDGE_PX) {
+      tipAlign = ' is-left'
+      tipLeft = hovered * COL_WIDTH + 3
+    } else if (stripWidth - center < TIP_EDGE_PX) {
+      tipAlign = ' is-right'
+      tipLeft = hovered * COL_WIDTH + COL_WIDTH - 3
+    } else {
+      tipLeft = center
+    }
+  }
+
   return (
     <BentoCard span="bento-hourly">
       <div className="hourly-forecast">
@@ -101,10 +127,24 @@ export function HourlyForecast(): JSX.Element | null {
           aria-label="Hourly forecast for the next 24 hours, scroll horizontally for later hours"
           tabIndex={0}
         >
-          <div className="hf-strip" style={stripStyle}>
+          <div
+            className="hf-strip"
+            style={stripStyle}
+            onMouseLeave={() => setHoveredIndex(null)}
+          >
             <div
               className="hf-now-highlight"
               style={{ left: NOW_INDEX * COL_WIDTH + 2, width: COL_WIDTH - 4 }}
+              aria-hidden="true"
+            />
+            {/* Neutral hover pill: glides between columns, fades when idle. */}
+            <div
+              className="hf-hover-highlight"
+              style={{
+                left: (hovered ?? NOW_INDEX) * COL_WIDTH + 2,
+                width: COL_WIDTH - 4,
+                opacity: hovered !== null && hovered !== NOW_INDEX ? 1 : 0
+              }}
               aria-hidden="true"
             />
 
@@ -113,6 +153,7 @@ export function HourlyForecast(): JSX.Element | null {
                 <div
                   className={'hf-cell' + (index === NOW_INDEX ? ' is-now' : '')}
                   key={point.time}
+                  onMouseEnter={() => setHoveredIndex(index)}
                 >
                   <span className="hf-time">
                     {index === NOW_INDEX ? 'Now' : formatHour(point.time)}
@@ -122,40 +163,74 @@ export function HourlyForecast(): JSX.Element | null {
                     isDay={point.isDay}
                     className="hf-icon"
                   />
-                  <span className="hf-temp">{formatTemperature(point.temperature, unit)}</span>
+                  <span className="hf-temp">
+                    {Math.round(celsiusTo(unit, point.temperature))}
+                    <span className="hf-deg">°</span>
+                  </span>
                 </div>
               ))}
             </div>
 
-            <svg
-              className="hf-curve"
-              viewBox={`0 0 ${stripWidth} ${BAND_HEIGHT}`}
-              preserveAspectRatio="none"
-              aria-hidden="true"
-            >
-              <defs>
-                <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.18" />
-                  <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              <path d={areaPath} fill={`url(#${gradientId})`} stroke="none" />
-              <path className="hf-curve-line" d={linePath} />
-              <circle
-                className="hf-curve-dot"
-                cx={round2(nowPoint.x)}
-                cy={round2(nowPoint.y)}
-                r={3.2}
-              />
-            </svg>
+            {/* The curve band also hosts the hover tooltip so the chip always
+                stays inside the card (never clips at the card's top edge). */}
+            <div className="hf-curve-band">
+              <svg
+                className="hf-curve"
+                viewBox={`0 0 ${stripWidth} ${BAND_HEIGHT}`}
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                <defs>
+                  <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.18" />
+                    <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                <path d={areaPath} fill={`url(#${gradientId})`} stroke="none" />
+                <path className="hf-curve-line" d={linePath} />
+                <circle
+                  className="hf-curve-dot-ring"
+                  cx={round2(nowPoint.x)}
+                  cy={round2(nowPoint.y)}
+                  r={3.2}
+                />
+                <circle
+                  className="hf-curve-dot"
+                  cx={round2(nowPoint.x)}
+                  cy={round2(nowPoint.y)}
+                  r={3.2}
+                />
+              </svg>
+
+              {hoveredPoint && hovered !== null && (
+                <div
+                  className={`hf-tooltip${tipAlign}`}
+                  key={hovered}
+                  style={{ left: tipLeft }}
+                  aria-hidden="true"
+                >
+                  <span className="hf-tooltip-main">
+                    {hovered === NOW_INDEX ? 'Now' : formatHour(hoveredPoint.time)}
+                    {' · '}
+                    {formatTemperature(hoveredPoint.temperature, unit)}
+                    {' · '}
+                    {Math.round(hoveredPoint.precipitationProbability)}%
+                  </span>
+                  <span className="hf-tooltip-cond">
+                    {getConditionInfo(hoveredPoint.weatherCode).label}
+                  </span>
+                </div>
+              )}
+            </div>
 
             <div className="hf-pops">
-              {points.map((point) => (
+              {points.map((point, index) => (
                 <span
                   className={
                     'hf-pop' + (Math.round(point.precipitationProbability) >= 30 ? ' is-notable' : '')
                   }
                   key={point.time}
+                  onMouseEnter={() => setHoveredIndex(index)}
                 >
                   {Math.round(point.precipitationProbability)}%
                 </span>

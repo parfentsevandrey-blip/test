@@ -2,13 +2,36 @@ import { useRef } from 'react'
 import { useWeatherStore } from '../store/useWeatherStore'
 import { BentoCard } from './BentoCard'
 import { WindIcon } from './icons'
-import { formatSpeed, speedUnitFor } from '../utils/units'
+import { formatSpeed, msTo, speedUnitFor } from '../utils/units'
 import './MetricCards.css'
 
 const DIRECTIONS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
 
 function directionLabel(deg: number): string {
   return DIRECTIONS[Math.round(deg / 45) % 8]
+}
+
+/** Standard Beaufort scale: upper bounds in m/s (exclusive), force 0-12. */
+const BEAUFORT_BANDS: ReadonlyArray<{ readonly max: number; readonly label: string }> = [
+  { max: 0.5, label: 'Calm' },
+  { max: 1.6, label: 'Light air' },
+  { max: 3.4, label: 'Light breeze' },
+  { max: 5.5, label: 'Gentle breeze' },
+  { max: 8.0, label: 'Moderate breeze' },
+  { max: 10.8, label: 'Fresh breeze' },
+  { max: 13.9, label: 'Strong breeze' },
+  { max: 17.2, label: 'Near gale' },
+  { max: 20.8, label: 'Gale' },
+  { max: 24.5, label: 'Strong gale' },
+  { max: 28.5, label: 'Storm' },
+  { max: 32.7, label: 'Violent storm' },
+  { max: Infinity, label: 'Hurricane force' }
+]
+
+function beaufort(metersPerSecond: number): { force: number; label: string } {
+  const index = BEAUFORT_BANDS.findIndex((band) => metersPerSecond < band.max)
+  const force = index === -1 ? BEAUFORT_BANDS.length - 1 : index
+  return { force, label: BEAUFORT_BANDS[force].label }
 }
 
 /** Static compass face: ring + tiny cardinal letters. The needle is a separate layer. */
@@ -52,6 +75,7 @@ export function WindCard(): JSX.Element | null {
 
   const speedUnit = speedUnitFor(unit)
   const { windSpeed, windDirection, windGusts } = weather.current
+  const { force, label: beaufortLabel } = beaufort(windSpeed)
 
   if (spin.current === null) {
     spin.current = { lastDirection: windDirection, rotation: windDirection }
@@ -60,6 +84,9 @@ export function WindCard(): JSX.Element | null {
     spin.current = { lastDirection: windDirection, rotation: spin.current.rotation + delta }
   }
 
+  /* 680px-window vertical budget (content ≈ 162px): header 16 + value 40
+     (10.9 top margin + 29 line) + sub 20 + footline 18 = 94 fixed, leaving
+     ~68px for the flexed compass slot — comfortably above its useful minimum. */
   return (
     <BentoCard span="bento-1" floatDelay={0.2}>
       <div className="metric-card">
@@ -67,13 +94,22 @@ export function WindCard(): JSX.Element | null {
           <WindIcon />
           <span className="metric-label">Wind</span>
         </div>
-        <div className="metric-value">{formatSpeed(windSpeed, speedUnit)}</div>
+        <div className="metric-value">
+          <span className="mx-value">{Math.round(msTo(speedUnit, windSpeed))}</span>
+          <span className="mx-unit">{speedUnit === 'mph' ? 'mph' : 'km/h'}</span>
+        </div>
         <div className="metric-sub">{directionLabel(windDirection)} · Gusts {formatSpeed(windGusts, speedUnit)}</div>
         <div className="metric-visual wind-compass" aria-hidden="true">
           <CompassRing />
           <div className="wind-compass-needle" style={{ transform: `rotate(${spin.current.rotation}deg)` }}>
-            <CompassNeedle />
+            {/* Inner layer so the hover wiggle keyframes compose with the inline rotation. */}
+            <div className="wind-needle-wiggle">
+              <CompassNeedle />
+            </div>
           </div>
+        </div>
+        <div className="mx-footline">
+          Force {force} · <b>{beaufortLabel}</b>
         </div>
       </div>
     </BentoCard>

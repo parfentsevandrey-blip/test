@@ -57,9 +57,12 @@ export function App(): JSX.Element {
     void init()
   }, [init])
 
-  // Apply the resolved theme ('auto' follows day/night at the selected location).
+  // Apply the resolved theme ('auto' follows day/night at the selected
+  // location; 'win95' also switches the 3D scene into retro pixelation).
   useEffect(() => {
-    document.documentElement.dataset.theme = resolveTheme(theme, weather)
+    const resolved = resolveTheme(theme, weather)
+    document.documentElement.dataset.theme = resolved
+    sceneRef.current?.setRetro(resolved === 'win95')
   }, [theme, weather])
 
   // Ctrl/Cmd+K focuses the city search, like every commercial app.

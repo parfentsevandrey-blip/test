@@ -1,9 +1,23 @@
 /* ============================================================
    SunCard — sunrise/sunset day-arc tile (bento-wide, ~320x190
    at the 1040x680 minimum window). All sizes use clamp() with
-   vh so the title + arc + stats row always fit the fixed grid
-   area with zero overflow. Colors come exclusively from design
-   tokens so the card reads correctly in both light and dark.
+   vh so title + countdown hero + arc + stats always fit the
+   fixed grid area with zero overflow. Colors come exclusively
+   from design tokens so the card reads correctly in all themes.
+
+   Vertical budget at 1040x680 (content box ≈ 163px tall after
+   BentoCard padding of ~15px top/bottom on a ~193px card):
+     metric-header            ~15.5px  (10.5px font × 1.45 lh)
+     gap                        5.4px  (0.8vh)
+     countdown hero           ~23px    (3.2vh=21.8px value × 1.05 lh)
+     gap                        5.4px
+     arc (flex: 1)            ~64px    ← absorbs the remainder
+     gap                        5.4px
+     stats row                ~44px    (6.8 pad + 1 border +
+                                        13.8 label + 19.7 value + gap)
+   Total fixed ≈ 99px, arc gets ≈ 64px > its 0 min-height, so
+   nothing overflows; the arc simply renders a touch smaller
+   than before the hero line was added.
    ============================================================ */
 
 .sun-path-card {
@@ -13,6 +27,36 @@
   display: flex;
   flex-direction: column;
   gap: clamp(3px, 0.8vh, 8px);
+}
+
+/* ---------- Hero countdown to the next sun event ---------- */
+
+/* Value-first, matching the .metric-value hero pattern of the sibling
+   cards in this row (big display numeral, muted sub-line beneath). */
+.sun-path-countdown {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.sun-path-countdown-label {
+  font-size: clamp(11px, 1.8vh, 13.5px);
+  font-weight: 500;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.sun-path-countdown-value {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 4vh, 34px);
+  font-weight: 500;
+  line-height: 1.06;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 /* ---------- Day arc (SVG scales to whatever height is left) ---------- */
@@ -56,10 +100,36 @@
   stop-color: var(--accent-strong);
 }
 
+/* ---------- Golden-hour diamond ticks on the arc ---------- */
+
+.sun-path-golden rect {
+  fill: var(--accent-strong);
+  opacity: 0.5;
+}
+
 /* ---------- Sun / moon markers ---------- */
 
 .sun-path-sun-halo {
   fill: var(--accent-glow);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Hover micro-interaction: the sun's halo breathes while the card is hot. */
+.bento-card:hover .sun-path-sun-halo {
+  animation: sun-halo-breathe 2s ease-in-out infinite;
+}
+
+@keyframes sun-halo-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.55;
+  }
 }
 
 .sun-path-sun-core {
@@ -114,4 +184,21 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
+}
+
+/* ---------- Motion & theme degradations ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .bento-card:hover .sun-path-sun-halo {
+    animation: none;
+  }
+
+  .sun-path-progress {
+    transition: none;
+  }
+}
+
+/* Win95 kills all card motion elsewhere; the halo follows suit. */
+[data-theme='win95'] .bento-card:hover .sun-path-sun-halo {
+  animation: none;
 }

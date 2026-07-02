@@ -27,7 +27,15 @@ const VIGNETTE_STRENGTH_STORM_BOOST = 0.08
 const GRAIN_STRENGTH_BASE = 0.009
 const GRAIN_STRENGTH_STORM_BOOST = 0.015
 
-const VIGNETTE_GRAIN_VERTEX_SHADER = /* glsl */ `
+/** Win95 retro mode: chunky pixels, crushed VGA palette, faint scanlines. */
+const RETRO_PIXEL_SIZE = 4.0 // block edge, in device pixels (spec: ~3.5x-4.5x)
+const RETRO_POSTERIZE_STEPS = 4.0 // floor(c * 4 + 0.5) / 4 -> 5 levels per channel
+const RETRO_SATURATION = 1.12 // slight saturation lift for 16-bit-era punch
+const RETRO_SCANLINE_DARKEN = 0.05 // ~5% darkening, 2-device-pixel period
+const RETRO_BLOOM_STRENGTH = 0.25 // bloom eases down toward this while retro is on
+const RETRO_RAMP_SECONDS = 0.25 // quick on/off ramp so the toggle never pops
+
+const FULLSCREEN_VERTEX_SHADER = /* glsl */ `
   varying vec2 vUv;
 
   void main() {
@@ -61,9 +69,82 @@ const VIGNETTE_GRAIN_FRAGMENT_SHADER = /* glsl */ `
   }
 `
 
+const RETRO_FRAGMENT_SHADER = /* glsl */ `
+  uniform sampler2D tDiffuse;
+  uniform float uRetro;
+  uniform vec2 uResolution;
+  varying vec2 vUv;
+
+  // Classic 4x4 Bayer ordered-dither matrix, normalized to [0,1).
+  float bayer4(vec2 cell) {
+    vec2 c = mod(floor(cell), 4.0);
+    float index = c.x + c.y * 4.0;
+    // Row-major thresholds of the standard Bayer 4x4 pattern.
+    float threshold = 0.0;
+    if (index < 0.5) threshold = 0.0;
+    else if (index < 1.5) threshold = 8.0;
+    else if (index < 2.5) threshold = 2.0;
+    else if (index < 3.5) threshold = 10.0;
+    else if (index < 4.5) threshold = 12.0;
+    else if (index < 5.5) threshold = 4.0;
+    else if (index < 6.5) threshold = 14.0;
+    else if (index < 7.5) threshold = 6.0;
+    else if (index < 8.5) threshold = 3.0;
+    else if (index < 9.5) threshold = 11.0;
+    else if (index < 10.5) threshold = 1.0;
+    else if (index < 11.5) threshold = 9.0;
+    else if (index < 12.5) threshold = 15.0;
+    else if (index < 13.5) threshold = 7.0;
+    else if (index < 14.5) threshold = 13.0;
+    else threshold = 5.0;
+    return threshold / 16.0;
+  }
+
+  void main() {
+    vec4 texel = texture2D(tDiffuse, vUv);
+
+    // Cheap guard: while retro is off this pass is a pure passthrough.
+    if (uRetro < 0.001) {
+      gl_FragColor = texel;
+      return;
+    }
+
+    // (a) Pixelate: snap UVs to a grid of ${RETRO_PIXEL_SIZE.toFixed(1)}-device-pixel blocks,
+    // sampling each block at its center for clean, stable chunky pixels.
+    vec2 grid = uResolution / ${RETRO_PIXEL_SIZE.toFixed(1)};
+    vec2 snappedUv = (floor(vUv * grid) + 0.5) / grid;
+    vec3 retro = texture2D(tDiffuse, snappedUv).rgb;
+
+    // (b) VGA punch: slight saturation lift, then posterize to
+    // ${(RETRO_POSTERIZE_STEPS + 1).toFixed(0)} levels per channel. Quantization
+    // happens in gamma space (pow 1/2.2 -> quantize -> pow 2.2): in linear
+    // space the lowest bands are perceptually huge, so dark noisy regions
+    // (night terrain, rain) slam between wildly different saturated
+    // primaries and read as glitch garbage rather than a retro palette.
+    float luma = dot(retro, vec3(0.299, 0.587, 0.114));
+    retro = clamp(mix(vec3(luma), retro, ${RETRO_SATURATION.toFixed(2)}), 0.0, 1.0);
+    retro = pow(retro, vec3(1.0 / 2.2));
+    // Period-correct ordered dithering (per chunky pixel, not per fragment):
+    // breaks up posterization's hue banding on soft sky/haze gradients the
+    // same way every 256-color-era renderer did.
+    float dither = bayer4(floor(vUv * grid)) - 0.5;
+    retro += dither / ${RETRO_POSTERIZE_STEPS.toFixed(1)};
+    retro = floor(retro * ${RETRO_POSTERIZE_STEPS.toFixed(1)} + 0.5) / ${RETRO_POSTERIZE_STEPS.toFixed(1)};
+    retro = pow(clamp(retro, 0.0, 1.0), vec3(2.2));
+
+    // (c) Very subtle horizontal scanlines: 2-device-pixel period, ~5% darkening.
+    float scan = 1.0 - ${RETRO_SCANLINE_DARKEN.toFixed(2)} * step(1.0, mod(gl_FragCoord.y, 2.0));
+    retro *= scan;
+
+    // uRetro ramps 0 -> 1 over ~${RETRO_RAMP_SECONDS}s so the toggle never pops.
+    gl_FragColor = vec4(mix(texel.rgb, retro, uRetro), texel.a);
+  }
+`
+
 /**
  * Cinematic post-processing: ACES tone mapping + an EffectComposer chain of
- * RenderPass -> UnrealBloomPass (soft highlight glow) -> a subtle inline
+ * RenderPass -> UnrealBloomPass (soft highlight glow) -> Win95 retro pass
+ * (pixelate/posterize/scanlines, passthrough while off) -> a subtle inline
  * vignette/grain ShaderPass -> OutputPass (final color-space/tone-map
  * resolve). Owns the actual render call for the whole scene once present --
  * SceneManager calls `render(dt)` on this instead of rendering itself.
@@ -76,12 +157,17 @@ export class PostFX implements PostProcessor {
   private readonly composer: EffectComposer
   private readonly renderPass: RenderPass
   private readonly bloomPass: UnrealBloomPass
+  private readonly retroPass: ShaderPass
   private readonly vignettePass: ShaderPass
   private readonly outputPass: OutputPass
 
   private bloomStrength = BLOOM_STRENGTH_BASE
   private vignetteStrength = VIGNETTE_STRENGTH_BASE
   private grainStrength = GRAIN_STRENGTH_BASE
+
+  /** 0 = fully cinematic, 1 = fully retro; `retroAmount` ramps toward `retroTarget` in update(). */
+  private retroTarget = 0
+  private retroAmount = 0
 
   constructor(ctx: SceneContext) {
     this.ctx = ctx
@@ -100,6 +186,21 @@ export class PostFX implements PostProcessor {
     this.bloomPass = new UnrealBloomPass(size, BLOOM_STRENGTH_BASE, BLOOM_RADIUS, BLOOM_THRESHOLD)
     this.composer.addPass(this.bloomPass)
 
+    // Win95 retro pass sits immediately before the vignette pass. Disabled
+    // (skipped entirely by the composer) whenever the retro ramp is at zero.
+    const pixelRatio = ctx.renderer.getPixelRatio()
+    this.retroPass = new ShaderPass({
+      uniforms: {
+        tDiffuse: { value: null },
+        uRetro: { value: 0 },
+        uResolution: { value: new THREE.Vector2(size.x * pixelRatio, size.y * pixelRatio) }
+      },
+      vertexShader: FULLSCREEN_VERTEX_SHADER,
+      fragmentShader: RETRO_FRAGMENT_SHADER
+    })
+    this.retroPass.enabled = false
+    this.composer.addPass(this.retroPass)
+
     this.vignettePass = new ShaderPass({
       uniforms: {
         tDiffuse: { value: null },
@@ -108,7 +209,7 @@ export class PostFX implements PostProcessor {
         uVignetteSoftness: { value: VIGNETTE_SOFTNESS },
         uGrainStrength: { value: GRAIN_STRENGTH_BASE }
       },
-      vertexShader: VIGNETTE_GRAIN_VERTEX_SHADER,
+      vertexShader: FULLSCREEN_VERTEX_SHADER,
       fragmentShader: VIGNETTE_GRAIN_FRAGMENT_SHADER
     })
     this.composer.addPass(this.vignettePass)
@@ -132,11 +233,38 @@ export class PostFX implements PostProcessor {
     this.vignetteStrength = lerp(this.vignetteStrength, targetVignette, smoothT)
     this.grainStrength = lerp(this.grainStrength, targetGrain, smoothT)
 
-    this.bloomPass.strength = this.bloomStrength
+    // Quick linear ramp toward the retro target so toggling never pops.
+    if (this.retroAmount !== this.retroTarget) {
+      const rampStep = dt / RETRO_RAMP_SECONDS
+      this.retroAmount =
+        this.retroAmount < this.retroTarget
+          ? Math.min(this.retroTarget, this.retroAmount + rampStep)
+          : Math.max(this.retroTarget, this.retroAmount - rampStep)
+    }
+    const retro = this.retroAmount
+    this.retroPass.uniforms.uRetro.value = retro
+    // Skip the pass entirely once fully off -- zero cost while idle.
+    this.retroPass.enabled = retro > 0.0001
+
+    // Retro reads flat, not filmic: fade the vignette/grain modulation out
+    // and gently pull bloom down toward its retro level as the ramp rises.
+    // The smoothed cinematic values keep tracking underneath, so leaving
+    // retro restores them seamlessly.
+    this.bloomPass.strength = lerp(this.bloomStrength, RETRO_BLOOM_STRENGTH, retro)
     const uniforms = this.vignettePass.uniforms
-    uniforms.uVignetteStrength.value = this.vignetteStrength
-    uniforms.uGrainStrength.value = this.grainStrength
+    uniforms.uVignetteStrength.value = this.vignetteStrength * (1 - retro)
+    uniforms.uGrainStrength.value = this.grainStrength * (1 - retro)
     uniforms.uTime.value = elapsed
+  }
+
+  /**
+   * Win95 retro mode toggle: ramps the pixelate/posterize/scanline pass in
+   * or out over ~0.25s (driven by update()), flattens the vignette/grain
+   * modulation and eases bloom toward its retro strength while enabled.
+   */
+  setRetro(enabled: boolean): void {
+    this.retroTarget = enabled ? 1 : 0
+    if (enabled) this.retroPass.enabled = true
   }
 
   render(dt: number): void {
@@ -147,11 +275,19 @@ export class PostFX implements PostProcessor {
     this.ctx.renderer.setSize(width, height)
     this.composer.setSize(width, height)
     this.bloomPass.resolution.set(width, height)
+    // Retro pixel grid is specified in device pixels, matching the composer's
+    // actual render-target resolution (logical size * pixel ratio).
+    const pixelRatio = this.ctx.renderer.getPixelRatio()
+    ;(this.retroPass.uniforms.uResolution.value as THREE.Vector2).set(
+      width * pixelRatio,
+      height * pixelRatio
+    )
   }
 
   dispose(): void {
     this.renderPass.dispose()
     this.bloomPass.dispose()
+    this.retroPass.dispose()
     this.vignettePass.dispose()
     this.outputPass.dispose()
     this.composer.dispose()

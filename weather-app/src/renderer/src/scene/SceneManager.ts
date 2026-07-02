@@ -11,6 +11,10 @@ import { Precipitation } from './Precipitation'
 import { Lightning } from './Lightning'
 import { Fog } from './Fog'
 import { Terrain } from './Terrain'
+import { Birds } from './Birds'
+import { ShootingStars } from './ShootingStars'
+import { SunRays } from './SunRays'
+import { Rainbow } from './Rainbow'
 import { PostFX } from './PostFX'
 
 const DEFAULT_PARAMS: SceneParams = {
@@ -60,6 +64,10 @@ export class SceneManager {
       new Terrain(this.ctx),
       new Stars(this.ctx),
       new VolumetricClouds(this.ctx),
+      new SunRays(this.ctx),
+      new Rainbow(this.ctx),
+      new Birds(this.ctx),
+      new ShootingStars(this.ctx),
       new Fog(this.ctx),
       new Precipitation(this.ctx),
       new Lightning(this.ctx)
@@ -72,6 +80,11 @@ export class SceneManager {
 
   setWeatherData(weather: WeatherData | null): void {
     this.weather = weather
+  }
+
+  /** Toggles the Win95 retro look: the scene renders through a pixelation/posterize pass. */
+  setRetro(enabled: boolean): void {
+    this.postFX.setRetro(enabled)
   }
 
   resize(width: number, height: number): void {

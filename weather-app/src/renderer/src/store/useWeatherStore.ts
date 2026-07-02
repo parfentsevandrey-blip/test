@@ -4,7 +4,8 @@ import { fetchWeatherData } from '../api/openMeteo'
 import { FALLBACK_LOCATION, getBrowserLocation, searchLocations } from '../api/geocoding'
 
 export type WeatherStatus = 'idle' | 'locating' | 'loading' | 'ready' | 'error'
-export type ThemePreference = 'light' | 'dark' | 'auto'
+export type ThemePreference = 'light' | 'dark' | 'auto' | 'win95'
+export type ResolvedTheme = 'light' | 'dark' | 'win95'
 
 const UNIT_STORAGE_KEY = 'cinematic-weather:unit'
 const LOCATION_STORAGE_KEY = 'cinematic-weather:last-location'
@@ -29,7 +30,7 @@ function loadStoredLocation(): GeoLocation | null {
 
 function loadStoredTheme(): ThemePreference {
   const stored = localStorage.getItem(THEME_STORAGE_KEY)
-  return stored === 'dark' || stored === 'auto' ? stored : 'light'
+  return stored === 'dark' || stored === 'auto' || stored === 'win95' ? stored : 'light'
 }
 
 function loadStoredFavorites(): GeoLocation[] {
@@ -50,9 +51,10 @@ export function isSameLocation(a: GeoLocation, b: GeoLocation): boolean {
 
 /**
  * The theme that's actually applied to the document: 'auto' resolves to
- * light while the selected location is in daylight and dark at night.
+ * light while the selected location is in daylight and dark at night;
+ * 'win95' is its own fully-styled retro mode.
  */
-export function resolveTheme(preference: ThemePreference, weather: WeatherData | null): 'light' | 'dark' {
+export function resolveTheme(preference: ThemePreference, weather: WeatherData | null): ResolvedTheme {
   if (preference !== 'auto') return preference
   if (!weather) return 'light'
   return weather.current.isDay ? 'light' : 'dark'
