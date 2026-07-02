@@ -153,6 +153,62 @@
       "subsection": "stats",
       "title": "Структурный фон, объясняющий, почему цены не падают: дефицит жилья ~396 000 единиц (4,8% фонда, ABF Primos); доступность рухнула — под ипотеку среднему домохозя",
       "url": "https://www.cpb.nl/publicatie/toegankelijkheidsmonitor-koopwoningmarkt"
+    },
+    "u:https://www.usnews.com/news/top-news/articles/2026-06-24/u-s-based-prologis-takes-16-6-billion-bid-for-uk-landlord-segro-public-after-rejection": {
+      "date": "2026-06-30",
+      "segment": "industrial",
+      "subsection": "news",
+      "title": "Prologis, крупнейший в мире владелец складской недвижимости, сделал предложение о покупке британской компании Segro, которой принадлежит значительный портфель с",
+      "url": "https://www.usnews.com/news/top-news/articles/2026-06-24/u-s-based-prologis-takes-16-6-billion-bid-for-uk-landlord-segro-public-after-rejection"
+    },
+    "u:https://vastgoedjournaal.nl/news/73539/twee-pensioenfondsen-stappen-in-ouderenfonds-bouwinvest": {
+      "date": "2026-06-30",
+      "segment": "residential",
+      "subsection": "news",
+      "title": "Bouwinvest, нидерландская управляющая компания, инвестирующая средства пенсионных фондов в недвижимость, расширила фонд жилья для пожилых (объекты с уходом и со",
+      "url": "https://vastgoedjournaal.nl/news/73539/twee-pensioenfondsen-stappen-in-ouderenfonds-bouwinvest"
+    },
+    "u:https://www.rijksoverheid.nl/themas/klimaat-milieu-en-natuur/duurzame-energie/kabinet-neemt-maatregelen-tegen-vol-elektriciteitsnet-netcongestie": {
+      "date": "2026-07-02",
+      "segment": "industrial",
+      "subsection": "laws",
+      "title": "С 1 июля действует новый порядок распределения дефицитной мощности электросети — продолжение темы прошлой недели, теперь в виде работающего регламента. В перегр",
+      "url": "https://www.rijksoverheid.nl/themas/klimaat-milieu-en-natuur/duurzame-energie/kabinet-neemt-maatregelen-tegen-vol-elektriciteitsnet-netcongestie"
+    },
+    "u:https://www.jll.com/nl-nl/newsroom/dieselrecord-en-kilometerheffing-verschuiven-logistieke-kaart-ne": {
+      "date": "2026-07-02",
+      "segment": "industrial",
+      "subsection": "trends",
+      "title": "Логистическая карта Нидерландов меняется под действием двух новых сборов, введённых 1 июля: платы за километр для грузового транспорта и сбора ЕС в размере €3 н",
+      "url": "https://www.jll.com/nl-nl/newsroom/dieselrecord-en-kilometerheffing-verschuiven-logistieke-kaart-ne"
+    },
+    "u:https://www.huurcommissie.nl/actueel/nieuws/2026/04/03/huurverhoging-per-1-juli-2026": {
+      "date": "2026-07-02",
+      "segment": "residential",
+      "subsection": "laws",
+      "title": "С 1 июля действуют годовые потолки повышения арендной платы. Для социального жилья максимум составляет 4,1% (при аренде ниже €350 в месяц — не более €25 прибавк",
+      "url": "https://www.huurcommissie.nl/actueel/nieuws/2026/04/03/huurverhoging-per-1-juli-2026"
+    },
+    "u:https://www.eerstekamer.nl/wetsvoorstel/36748_wet_werkelijk_rendement_box": {
+      "date": "2026-07-02",
+      "segment": "residential",
+      "subsection": "laws",
+      "title": "Реформа налога box 3 получила новый график — и он длиннее ожидавшегося. После отложенного 30 июня голосования стало известно: кабинет взвесит варианты доработки",
+      "url": "https://www.eerstekamer.nl/wetsvoorstel/36748_wet_werkelijk_rendement_box"
+    },
+    "u:https://www.volkshuisvestingnederland.nl/actueel/nieuws/2026/07/01/prognose-100-000-woningen-binnen-bereik-in-2027": {
+      "date": "2026-07-02",
+      "segment": "residential",
+      "subsection": "news",
+      "title": "Ввод нового жилья в 2027 году впервые за годы приблизится к государственной цели в 100 000 домов: по опубликованному 1 июля прогнозу ABF Research (модель Primos",
+      "url": "https://www.volkshuisvestingnederland.nl/actueel/nieuws/2026/07/01/prognose-100-000-woningen-binnen-bereik-in-2027"
+    },
+    "u:https://www.abnamro.com/nl/nieuws/woningmarkt-koelt-verder-af-door-hogere-hypotheekrente-en-afnemende-vraag": {
+      "date": "2026-07-02",
+      "segment": "residential",
+      "subsection": "trends",
+      "title": "ABN AMRO во внеочередном обзоре констатирует охлаждение рынка жилья после сильного начала года: спрос сдерживают выросшие ипотечные ставки и снизившаяся готовно",
+      "url": "https://www.abnamro.com/nl/nieuws/woningmarkt-koelt-verder-af-door-hogere-hypotheekrente-en-afnemende-vraag"
     }
   },
   "weeks": [
@@ -162,6 +218,20 @@
       "week_end": "2026-06-30",
       "items": 22,
       "new_items": 22
+    },
+    {
+      "report_date": "2026-06-30",
+      "week_start": "2026-06-23",
+      "week_end": "2026-06-30",
+      "items": 11,
+      "new_items": 2
+    },
+    {
+      "report_date": "2026-07-02",
+      "week_start": "2026-06-30",
+      "week_end": "2026-07-02",
+      "items": 6,
+      "new_items": 6
     }
   ]
 }

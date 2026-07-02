@@ -1,7 +1,7 @@
 {
   "logistics_prime_yield_nl": {
     "unit": "%",
-    "label": "Prime-доходность логистики NL",
+    "label": "Доходность лучших складов NL",
     "segment": "industrial",
     "points": [
       {
@@ -25,13 +25,13 @@
   },
   "logistics_takeup_yoy": {
     "unit": "%",
-    "label": "Take-up логистики, г/г",
+    "label": "Аренда складов, за год",
     "segment": "industrial",
     "points": [
       {
         "week_end": "2026-06-30",
         "value": 10.5,
-        "source": "Cushman & Wakefield, Q1 2026"
+        "source": "Cushman & Wakefield, I кв. 2026"
       }
     ]
   },
@@ -61,7 +61,7 @@
   },
   "nl_10y_bond_yield": {
     "unit": "%",
-    "label": "Доходность 10Y госбонда NL",
+    "label": "Доходность 10-летних гособлигаций NL",
     "segment": "overview",
     "points": [
       {
@@ -73,7 +73,7 @@
   },
   "house_price_yoy": {
     "unit": "%",
-    "label": "Цены на жильё, г/г (CBS/Kadaster)",
+    "label": "Цены на жильё, за год",
     "segment": "residential",
     "points": [
       {
