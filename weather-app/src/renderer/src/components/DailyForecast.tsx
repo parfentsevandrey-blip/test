@@ -1,8 +1,24 @@
+import type { CSSProperties } from 'react'
+import './DailyForecast.css'
 import { useWeatherStore } from '../store/useWeatherStore'
 import { BentoCard } from './BentoCard'
 import { WeatherIcon } from './WeatherIcon'
 import { getConditionInfo } from '../utils/weatherCondition'
 import { formatTemperature, formatWeekday } from '../utils/units'
+
+/** Minimum visible fill width (% of track) so single-degree days don't vanish. */
+const MIN_FILL_PCT = 6
+
+const clampPct = (value: number): number => Math.min(100, Math.max(0, value))
+
+/** Noon avoids UTC-parse off-by-one-day issues (same trick as formatWeekday). */
+const atNoon = (isoDate: string): Date => new Date(`${isoDate}T12:00:00`)
+
+const formatDateShort = (isoDate: string): string =>
+  atNoon(isoDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+
+const formatWeekdayLong = (isoDate: string): string =>
+  atNoon(isoDate).toLocaleDateString('en-US', { weekday: 'long' })
 
 export function DailyForecast(): JSX.Element | null {
   const weather = useWeatherStore((s) => s.weather)
@@ -14,30 +30,82 @@ export function DailyForecast(): JSX.Element | null {
   const globalMax = Math.max(...weather.daily.map((day) => day.tempMax))
   const span = globalMax - globalMin
 
-  const pct = (temperature: number): number => (span === 0 ? 0 : ((temperature - globalMin) / span) * 100)
+  const pct = (temperature: number): number =>
+    span === 0 ? 50 : clampPct(((temperature - globalMin) / span) * 100)
+
+  const nowPct = pct(weather.current.temperature)
 
   return (
     <BentoCard span="bento-daily" floatDelay={0.3}>
-      <div className="daily-forecast">
-        <div className="hourly-title">10-Day Forecast</div>
-        <div className="daily-rows">
+      <div className="df-root">
+        <div className="card-title df-title">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.8}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <rect x="3.5" y="5" width="17" height="15.5" rx="3" />
+            <line x1="3.5" y1="9.5" x2="20.5" y2="9.5" />
+            <line x1="8.5" y1="3" x2="8.5" y2="6.5" />
+            <line x1="15.5" y1="3" x2="15.5" y2="6.5" />
+          </svg>
+          10-Day Forecast
+        </div>
+
+        <div className="df-rows" role="list" aria-label="Daily forecast for the next 10 days">
           {weather.daily.map((day, index) => {
+            const isToday = index === 0
+            const pop = Math.round(day.precipitationProbabilityMax)
             const minPct = pct(day.tempMin)
             const maxPct = pct(day.tempMax)
+
+            // Window into the full-scale gradient (see .df-fill in the CSS).
+            const width = Math.max(maxPct - minPct, MIN_FILL_PCT)
+            const left = Math.min(minPct, 100 - width)
+            const fillStyle: CSSProperties = {
+              left: `${left}%`,
+              width: `${width}%`,
+              backgroundSize: `${10000 / width}% 100%`,
+              backgroundPositionX: width >= 100 ? '0%' : `${(100 * left) / (100 - width)}%`
+            }
+
+            const label =
+              `${isToday ? 'Today' : formatWeekdayLong(day.date)}, ${formatDateShort(day.date)}: ` +
+              `high ${formatTemperature(day.tempMax, unit)}, low ${formatTemperature(day.tempMin, unit)}` +
+              (pop > 0 ? `, ${pop}% chance of precipitation` : '')
+
             return (
-              <div className="daily-row" key={day.date}>
-                <span className="daily-day">{index === 0 ? 'Today' : formatWeekday(day.date)}</span>
-                <WeatherIcon condition={getConditionInfo(day.weatherCode).condition} isDay={true} className="daily-icon" />
-                <span className="daily-pop">{day.precipitationProbabilityMax}%</span>
-                <div className="daily-range">
-                  <span className="daily-temp-min">{formatTemperature(day.tempMin, unit)}</span>
-                  <div className="daily-track">
-                    <div
-                      className="daily-track-fill"
-                      style={{ left: `${minPct}%`, width: `${maxPct - minPct}%` }}
-                    />
+              <div className="df-row" role="listitem" aria-label={label} key={day.date}>
+                <div className="df-day-col">
+                  <span className="df-day">{isToday ? 'Today' : formatWeekday(day.date)}</span>
+                  <span className="df-date">{formatDateShort(day.date)}</span>
+                </div>
+
+                <WeatherIcon
+                  condition={getConditionInfo(day.weatherCode).condition}
+                  isDay={true}
+                  className="df-icon"
+                />
+
+                <span className="df-pop">{pop > 0 ? `${pop}%` : ''}</span>
+
+                <div className="df-range">
+                  <span className="df-temp-min">{formatTemperature(day.tempMin, unit)}</span>
+                  <div className="df-track">
+                    <div className="df-fill" style={fillStyle} />
+                    {isToday && (
+                      <div
+                        className="df-now-dot"
+                        style={{ left: `${nowPct}%` }}
+                        aria-hidden="true"
+                      />
+                    )}
                   </div>
-                  <span className="daily-temp-max">{formatTemperature(day.tempMax, unit)}</span>
+                  <span className="df-temp-max">{formatTemperature(day.tempMax, unit)}</span>
                 </div>
               </div>
             )

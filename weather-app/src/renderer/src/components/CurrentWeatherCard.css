@@ -1,0 +1,160 @@
+/* ============================================================
+   CurrentWeatherCard — hero "current conditions" tile.
+   All sizes use clamp() with vh so content always fits the fixed
+   bento-hero grid area (~320x290 at the 1040x680 minimum window).
+   Colors come exclusively from design tokens so the card reads
+   correctly in both light and dark themes.
+   ============================================================ */
+
+.hero-current {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(2px, 0.7vh, 7px);
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+}
+
+/*
+ * Subtle accent-tinted wash so the hero reads slightly warmer than the
+ * other cards. Negative inset pushes it past the card padding; the card
+ * shell's overflow:hidden clips it to the rounded glass edge. z-index -1
+ * drops it behind the content within the .bento-card stacking context.
+ */
+.hero-current::before {
+  content: '';
+  position: absolute;
+  inset: -70px -50px;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(110% 80% at 14% 6%, var(--accent-glow), transparent 60%),
+    radial-gradient(90% 70% at 92% 96%, var(--accent-glow), transparent 55%);
+  opacity: 0.32;
+}
+
+/* ---------- Location ---------- */
+
+.hero-place {
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.hero-place-name {
+  font-family: var(--font-display);
+  font-size: clamp(15px, 2.3vh, 17px);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.25;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hero-place-sub {
+  font-size: clamp(11px, 1.7vh, 13px);
+  color: var(--text-tertiary);
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- Big numeral + icon ---------- */
+
+.hero-main {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 1.4vw, 18px);
+  margin-top: clamp(2px, 0.9vh, 8px);
+  min-width: 0;
+}
+
+.hero-temp {
+  font-family: var(--font-display);
+  font-size: clamp(46px, 10vh, 82px);
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.hero-icon {
+  width: clamp(42px, 7.6vh, 62px);
+  height: clamp(42px, 7.6vh, 62px);
+  color: var(--accent);
+  filter: drop-shadow(0 0 18px var(--accent-glow));
+  flex-shrink: 0;
+}
+
+/* ---------- Condition + feels like ---------- */
+
+.hero-condition {
+  font-size: clamp(14px, 2.3vh, 17.5px);
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hero-feels {
+  font-size: clamp(11.5px, 1.8vh, 14px);
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Bottom stat pills (high / low / pressure) ---------- */
+
+.hero-stats {
+  display: flex;
+  align-items: center;
+  gap: clamp(6px, 0.7vw, 10px);
+  margin-top: clamp(8px, 1.6vh, 16px);
+  padding-top: clamp(8px, 1.5vh, 14px);
+  border-top: 1px solid var(--glass-border-soft);
+  flex-shrink: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.hero-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: clamp(4px, 0.8vh, 6px) clamp(8px, 0.8vw, 12px);
+  border-radius: var(--radius-pill);
+  background: var(--control-bg);
+  border: 1px solid var(--glass-border-soft);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.hero-stat svg {
+  width: clamp(11px, 1.8vh, 13px);
+  height: clamp(11px, 1.8vh, 13px);
+  flex-shrink: 0;
+}
+
+.hero-stat--high svg {
+  color: var(--accent);
+}
+
+.hero-stat--low svg {
+  color: var(--info);
+}
+
+.hero-stat--pressure svg {
+  color: var(--text-tertiary);
+}
+
+.hero-stat-value {
+  font-size: clamp(11px, 1.8vh, 13px);
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}

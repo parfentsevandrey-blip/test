@@ -1,0 +1,182 @@
+/* ============================================================
+   DailyForecast — 10 fixed rows that flex to fill the card
+   (no internal scroll). Each row:
+
+     [ weekday       ] [icon] [pop%] [min  ▬▬▬▬▬▬  max]
+     [ date sub-label]
+
+   The card is a size container: the tiny date sub-label only
+   appears when the card is tall enough for two comfortable
+   text lines per row, so nothing ever overflows at 1040x680.
+   ============================================================ */
+
+.df-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  container-type: size;
+  container-name: df;
+}
+
+.df-title {
+  padding-bottom: clamp(5px, 1vh, 11px);
+}
+
+.df-rows {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ---------- Row ---------- */
+
+.df-row {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  gap: clamp(7px, 0.9vw, 14px);
+  padding: 0 clamp(6px, 0.8vw, 12px);
+  border-radius: var(--radius-sm);
+  transition: background-color 0.15s var(--ease-out);
+}
+
+.df-row:hover {
+  background: var(--control-active);
+}
+
+/* ---------- Weekday (+ optional date sub-label) ---------- */
+
+.df-day-col {
+  width: clamp(42px, 4.4vw, 58px);
+  flex-shrink: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.15;
+  overflow: hidden;
+  /* Slightly dimmed at rest; hover "strengthens" the weekday. */
+  opacity: 0.82;
+  transition: opacity 0.15s var(--ease-out);
+}
+
+.df-row:hover .df-day-col {
+  opacity: 1;
+}
+
+.df-day {
+  font-size: clamp(11.5px, 1.85vh, 14px);
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.df-date {
+  display: none;
+  font-size: clamp(8.5px, 1.35vh, 10.5px);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Two text lines fit once each row gets ~31px+ of height. */
+@container df (min-height: 340px) {
+  .df-date {
+    display: block;
+  }
+}
+
+/* ---------- Condition icon ---------- */
+
+.df-icon {
+  width: clamp(19px, 3.1vh, 26px);
+  height: clamp(19px, 3.1vh, 26px);
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+/* ---------- Precipitation probability ---------- */
+
+/* Fixed-width cell: dry days render it empty so columns stay aligned. */
+.df-pop {
+  width: clamp(30px, 2.6vw, 38px);
+  flex-shrink: 0;
+  text-align: right;
+  font-size: clamp(10px, 1.6vh, 12px);
+  font-weight: 600;
+  color: var(--info);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Temperature range bar ---------- */
+
+.df-range {
+  flex: 1;
+  min-width: 96px;
+  display: flex;
+  align-items: center;
+  gap: clamp(6px, 0.7vw, 10px);
+}
+
+.df-temp-min,
+.df-temp-max {
+  width: clamp(26px, 2.4vw, 34px);
+  flex-shrink: 0;
+  text-align: right;
+  font-size: clamp(11.5px, 1.85vh, 14px);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.df-temp-min {
+  color: var(--text-tertiary);
+}
+
+.df-temp-max {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.df-track {
+  position: relative;
+  flex: 1;
+  min-width: 40px;
+  height: clamp(4px, 0.75vh, 6px);
+  border-radius: var(--radius-pill);
+  background: var(--track);
+}
+
+/*
+ * The cold→warm gradient spans the whole global min..max scale; each
+ * day's fill is a window into it (background-size/position set inline),
+ * so cool days read blue and hot days orange.
+ */
+.df-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: var(--radius-pill);
+  background-image: linear-gradient(90deg, var(--info), var(--accent));
+  background-repeat: no-repeat;
+}
+
+/* "Now" marker on today's row: current temp on the same scale. */
+.df-now-dot {
+  position: absolute;
+  top: 50%;
+  translate: -50% -50%;
+  width: clamp(7px, 1.3vh, 10px);
+  height: clamp(7px, 1.3vh, 10px);
+  border-radius: 50%;
+  background: var(--text-primary);
+  box-shadow:
+    0 0 0 2px var(--control-bg),
+    0 0 5px var(--accent-glow);
+}

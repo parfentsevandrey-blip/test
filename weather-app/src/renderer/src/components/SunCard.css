@@ -1,0 +1,117 @@
+/* ============================================================
+   SunCard — sunrise/sunset day-arc tile (bento-wide, ~320x190
+   at the 1040x680 minimum window). All sizes use clamp() with
+   vh so the title + arc + stats row always fit the fixed grid
+   area with zero overflow. Colors come exclusively from design
+   tokens so the card reads correctly in both light and dark.
+   ============================================================ */
+
+.sun-path-card {
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(3px, 0.8vh, 8px);
+}
+
+/* ---------- Day arc (SVG scales to whatever height is left) ---------- */
+
+.sun-path-arc {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: block;
+  overflow: visible;
+}
+
+.sun-path-horizon {
+  stroke: var(--track);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+  stroke-linecap: round;
+}
+
+.sun-path-track {
+  fill: none;
+  stroke: var(--track);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.sun-path-progress {
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.6s var(--ease-out);
+}
+
+/* Warm sunrise-to-sunset gradient for the progress stroke. Stop colors
+   live here (not as attributes) so they track the active theme's tokens. */
+.sun-path-grad-from {
+  stop-color: var(--accent);
+}
+
+.sun-path-grad-to {
+  stop-color: var(--accent-strong);
+}
+
+/* ---------- Sun / moon markers ---------- */
+
+.sun-path-sun-halo {
+  fill: var(--accent-glow);
+}
+
+.sun-path-sun-core {
+  fill: var(--accent-strong);
+  filter: drop-shadow(0 0 4px var(--accent-glow));
+}
+
+.sun-path-moon {
+  fill: var(--info);
+  opacity: 0.85;
+}
+
+/* ---------- Compact three-up stats row under the arc ---------- */
+
+.sun-path-stats {
+  display: flex;
+  flex-shrink: 0;
+  border-top: 1px solid var(--glass-border-soft);
+  padding-top: clamp(5px, 1vh, 9px);
+}
+
+.sun-path-stat {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  text-align: center;
+}
+
+.sun-path-stat + .sun-path-stat {
+  border-left: 1px solid var(--glass-border-soft);
+}
+
+.sun-path-stat-label {
+  font-size: clamp(9px, 1.4vh, 10.5px);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.sun-path-stat-value {
+  font-family: var(--font-display);
+  font-size: clamp(12.5px, 2vh, 15.5px);
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}

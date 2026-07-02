@@ -36,13 +36,13 @@ const RAIN_FRAC_MAX = 1
 const DRIZZLE_FRAC_MAX = 0.32
 const SNOW_FRAC_MAX = 0.62
 
-const RAIN_OPACITY_MAX = 0.85
-const DRIZZLE_OPACITY_MAX = 0.5
-const SNOW_OPACITY_MAX = 0.92
+const RAIN_OPACITY_MAX = 0.92
+const DRIZZLE_OPACITY_MAX = 0.55
+const SNOW_OPACITY_MAX = 0.95
 
-const RAIN_SIZE = 13
-const DRIZZLE_SIZE = 9
-const SNOW_SIZE = 20
+const RAIN_SIZE = 15
+const DRIZZLE_SIZE = 10
+const SNOW_SIZE = 23
 
 const RAIN_TILT_SCALE = 1.1
 const DRIZZLE_TILT_SCALE = 0.6
@@ -314,10 +314,12 @@ export class Precipitation implements SceneEffect {
     this.geometry.attributes.position.needsUpdate = true
     this.geometry.attributes.aSwayPhase.needsUpdate = true
 
-    // Keep the whole volume rigidly centered on the camera in X/Z so it
-    // always surrounds the player regardless of camera drift/orbit.
+    // Keep the whole volume rigidly centered on the camera (X/Z, and
+    // vertically too) so it always surrounds the player regardless of how
+    // far the camera drifts or how high it flies.
     this.points.position.x = this.camera.position.x
     this.points.position.z = this.camera.position.z
+    this.points.position.y = this.camera.position.y - (FLOOR_Y + VOLUME_HEIGHT / 2)
 
     // ---- Active particle count & opacity scale smoothly with intensity;
     // the buffers themselves never change size.

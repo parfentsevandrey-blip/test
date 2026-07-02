@@ -1,0 +1,101 @@
+/* ============================================================
+   LoadingOverlay — branded sun-pulse loader.
+   The overlay scrim (.loading-overlay), status text (.loading-text)
+   and error card (.error-banner) keep their global.css styles; this
+   file only adds the loader visual. Accent tokens adapt to both the
+   light and dark themes automatically.
+   ============================================================ */
+
+.loading-sun {
+  position: relative;
+  width: clamp(64px, 12vh, 96px);
+  height: clamp(64px, 12vh, 96px);
+  flex-shrink: 0;
+}
+
+/* Pulsing sun disc */
+.loading-sun-core {
+  position: absolute;
+  inset: 28%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--accent-strong), var(--accent) 72%);
+  box-shadow:
+    0 0 16px 2px var(--accent-glow),
+    0 0 42px 12px var(--accent-glow);
+  animation: loading-sun-pulse 2.4s ease-in-out infinite;
+}
+
+/* Soft rings rippling outwards, evenly phased via negative delays */
+.loading-sun-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1.5px solid var(--accent);
+  opacity: 0;
+  transform: scale(0.48);
+  animation: loading-sun-ripple 2.4s cubic-bezier(0.22, 0.61, 0.36, 1) infinite;
+}
+
+.loading-sun-ring.ring-2 {
+  animation-delay: -0.8s;
+}
+
+.loading-sun-ring.ring-3 {
+  animation-delay: -1.6s;
+}
+
+.loading-overlay .loading-text {
+  animation: loading-text-breathe 2.4s ease-in-out infinite;
+}
+
+@keyframes loading-sun-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+@keyframes loading-sun-ripple {
+  0% {
+    transform: scale(0.48);
+    opacity: 0;
+  }
+  14% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.42);
+    opacity: 0;
+  }
+}
+
+@keyframes loading-text-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-sun-core,
+  .loading-sun-ring,
+  .loading-overlay .loading-text {
+    animation: none;
+  }
+
+  /* Static fallback: calm disc with one faint halo ring */
+  .loading-sun-ring {
+    opacity: 0;
+  }
+
+  .loading-sun-ring.ring-1 {
+    opacity: 0.35;
+    transform: scale(0.78);
+  }
+}

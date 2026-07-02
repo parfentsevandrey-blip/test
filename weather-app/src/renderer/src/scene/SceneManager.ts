@@ -139,10 +139,13 @@ export class SceneManager {
       Math.cos(this.cameraAngle) * radius
     )
 
+    // Gaze rides well above the horizon so the sky (and the weather
+    // happening in it) dominates the frame behind the floating cards, with
+    // the terrain reduced to a grounding band along the bottom edge.
     const lookX = Math.sin(t * 0.065) * 10
     const lookZ = Math.cos(t * 0.05 + 1.0) * 10
     const altitude01 = clamp01(params.sunAltitude * 0.5 + 0.5)
-    const lookAtY = lerp(cameraHeight * 0.5, cameraHeight * 1.2, altitude01)
+    const lookAtY = lerp(cameraHeight * 1.1, cameraHeight * 2.1, altitude01)
 
     this.ctx.camera.lookAt(lookX, lookAtY, lookZ)
   }

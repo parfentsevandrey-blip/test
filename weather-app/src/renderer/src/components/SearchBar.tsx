@@ -41,7 +41,7 @@ export function SearchBar(): JSX.Element {
   }
 
   return (
-    <div className="search-bar glass-panel" ref={rootRef}>
+    <div className="search-bar" ref={rootRef}>
       <div className="search-input-row">
         <SearchIcon />
         <input
@@ -51,9 +51,12 @@ export function SearchBar(): JSX.Element {
           placeholder="Search for a city..."
           aria-label="Search for a city"
         />
+        <span className="search-kbd" aria-hidden="true">
+          Ctrl K
+        </span>
       </div>
       {showResults && (
-        <div className="search-results glass-panel">
+        <div className="search-results">
           {isSearching && searchResults.length === 0 ? (
             <div className="search-empty">Searching...</div>
           ) : !isSearching && searchResults.length === 0 ? (

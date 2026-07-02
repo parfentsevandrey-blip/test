@@ -185,13 +185,15 @@ export class Sky implements SceneEffect {
     const nightT = clamp01(-altitude * 1.4 + 0.15)
 
     // ---- Sky dome colors -------------------------------------------------
-    this.zenithColor.set(0x1c5fd6).lerp(this.hex(0x2c3a6b), sunsetT * 0.6)
+    // Day tones lean soft/pastel rather than saturated, so the bright glass
+    // UI floats over an airy, commercial-feeling sky instead of a deep one.
+    this.zenithColor.set(0x4585dd).lerp(this.hex(0x2c3a6b), sunsetT * 0.6)
     this.zenithColor.lerp(this.hex(0x03050c), nightT)
 
-    this.midColor.set(0x5b9de0).lerp(this.hex(0xd98a5f), sunsetT)
+    this.midColor.set(0x8fbdec).lerp(this.hex(0xd98a5f), sunsetT)
     this.midColor.lerp(this.hex(0x060912), nightT)
 
-    this.horizonColor.set(0xdfe9f2).lerp(this.hex(0xffb37a), sunsetT)
+    this.horizonColor.set(0xeef4fa).lerp(this.hex(0xffb37a), sunsetT)
     this.horizonColor.lerp(this.hex(0x0b1220), nightT)
 
     this.groundColor.set(0x7a8a94).lerp(this.hex(0x020306), clamp01(nightT + 0.3))

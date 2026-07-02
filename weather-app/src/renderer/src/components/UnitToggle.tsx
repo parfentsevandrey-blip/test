@@ -5,10 +5,10 @@ export function UnitToggle(): JSX.Element {
   const toggleUnit = useWeatherStore((s) => s.toggleUnit)
 
   return (
-    <div className="unit-toggle glass-panel">
+    <div className="control-pill" role="group" aria-label="Temperature units">
       <button
         type="button"
-        className={'unit-toggle-btn' + (unit === 'celsius' ? ' active' : '')}
+        className={'seg' + (unit === 'celsius' ? ' active' : '')}
         onClick={() => unit !== 'celsius' && toggleUnit()}
         aria-label="Use Celsius"
       >
@@ -16,7 +16,7 @@ export function UnitToggle(): JSX.Element {
       </button>
       <button
         type="button"
-        className={'unit-toggle-btn' + (unit === 'fahrenheit' ? ' active' : '')}
+        className={'seg' + (unit === 'fahrenheit' ? ' active' : '')}
         onClick={() => unit !== 'fahrenheit' && toggleUnit()}
         aria-label="Use Fahrenheit"
       >

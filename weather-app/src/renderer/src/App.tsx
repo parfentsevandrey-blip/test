@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react'
-import { useWeatherStore } from './store/useWeatherStore'
+import { useEffect, useRef, useState } from 'react'
+import { resolveTheme, useWeatherStore } from './store/useWeatherStore'
 import { SceneManager } from './scene/SceneManager'
 import { SearchBar } from './components/SearchBar'
 import { CurrentWeatherCard } from './components/CurrentWeatherCard'
@@ -12,15 +12,33 @@ import { VisibilityCard } from './components/VisibilityCard'
 import { SunCard } from './components/SunCard'
 import { PrecipitationCard } from './components/PrecipitationCard'
 import { UnitToggle } from './components/UnitToggle'
+import { ThemeToggle } from './components/ThemeToggle'
+import { FavoritesMenu } from './components/FavoritesMenu'
 import { LoadingOverlay } from './components/LoadingOverlay'
 
 function RefreshIcon(): JSX.Element {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
       <path d="M20 11a8 8 0 1 0-2.34 5.66" />
       <path d="M20 5v6h-6" />
     </svg>
   )
+}
+
+/** "just now" / "5 min ago" — refreshed once a minute. */
+function useUpdatedAgo(fetchedAt: number | undefined): string {
+  const [, forceTick] = useState(0)
+
+  useEffect(() => {
+    const timer = setInterval(() => forceTick((n) => n + 1), 60_000)
+    return () => clearInterval(timer)
+  }, [])
+
+  if (!fetchedAt) return ''
+  const minutes = Math.floor((Date.now() - fetchedAt) / 60_000)
+  if (minutes < 1) return 'Updated just now'
+  if (minutes === 1) return 'Updated 1 min ago'
+  return `Updated ${minutes} min ago`
 }
 
 export function App(): JSX.Element {
@@ -31,10 +49,30 @@ export function App(): JSX.Element {
   const refresh = useWeatherStore((s) => s.refresh)
   const weather = useWeatherStore((s) => s.weather)
   const status = useWeatherStore((s) => s.status)
+  const theme = useWeatherStore((s) => s.theme)
+
+  const updatedAgo = useUpdatedAgo(weather?.fetchedAt)
 
   useEffect(() => {
     void init()
   }, [init])
+
+  // Apply the resolved theme ('auto' follows day/night at the selected location).
+  useEffect(() => {
+    document.documentElement.dataset.theme = resolveTheme(theme, weather)
+  }, [theme, weather])
+
+  // Ctrl/Cmd+K focuses the city search, like every commercial app.
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent): void {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        document.querySelector<HTMLInputElement>('.search-input')?.focus()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   useEffect(() => {
     if (!canvasRef.current) return
@@ -62,20 +100,33 @@ export function App(): JSX.Element {
       <canvas ref={canvasRef} className="scene-canvas" />
 
       <div className="ui-overlay">
-        <SearchBar />
+        <header className="app-header">
+          <div className="header-brand">
+            <span className="dot" />
+            Cinematic Weather
+          </div>
 
-        <div className="controls-row">
-          <UnitToggle />
-          <button
-            className={`icon-btn${status === 'loading' ? ' spinning' : ''}`}
-            onClick={() => void refresh()}
-            aria-label="Refresh weather"
-          >
-            <RefreshIcon />
-          </button>
-        </div>
+          <SearchBar />
 
-        <div className="bento-scroll">
+          <div className="header-spacer" />
+
+          <div className="header-controls">
+            {updatedAgo && <span className="header-status">{updatedAgo}</span>}
+            <FavoritesMenu />
+            <UnitToggle />
+            <ThemeToggle />
+            <button
+              className={`icon-btn${status === 'loading' ? ' spinning' : ''}`}
+              onClick={() => void refresh()}
+              aria-label="Refresh weather"
+              title="Refresh weather"
+            >
+              <RefreshIcon />
+            </button>
+          </div>
+        </header>
+
+        <div className="bento-viewport">
           <div className="bento-grid">
             <CurrentWeatherCard />
             <HourlyForecast />

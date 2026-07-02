@@ -10,44 +10,106 @@ const SVG_PROPS = {
   viewBox: '0 0 24 24',
   fill: 'none',
   stroke: 'currentColor',
-  strokeWidth: 1.5,
+  strokeWidth: 1.6,
   strokeLinecap: 'round' as const,
-  strokeLinejoin: 'round' as const
+  strokeLinejoin: 'round' as const,
+  'aria-hidden': true
 }
 
-function SunGlyph({ cx, cy, r }: { cx: number; cy: number; r: number }): JSX.Element {
-  const rayLength = r * 0.7
-  const rayGap = r * 0.35
-  const angles = [0, 45, 90, 135, 180, 225, 270, 315]
+/** Round path/attribute numbers so the emitted SVG stays tidy. */
+const rd = (n: number): number => Math.round(n * 100) / 100
+
+const FULL_SUN_RAYS = [0, 45, 90, 135, 180, 225, 270, 315] as const
+/** Rays fanned over the exposed top-right of the peeking sun only. */
+const PEEK_SUN_RAYS = [225, 270, 315, 0] as const
+
+/**
+ * Elegant crescent for clear nights: one outer arc plus a slightly smaller
+ * inner arc carving the light side — a single closed, seamless path.
+ */
+const CRESCENT_PATH = 'M20.46 12.74 A8.46 8.46 0 1 1 11.26 3.54 A6.58 6.58 0 0 0 20.46 12.74 Z'
+
+/** Small crescent tucked behind the cloud for partly-cloudy nights. */
+const MINI_CRESCENT_PATH = 'M19.33 7.78 A3.24 3.24 0 1 1 15.82 4.27 A2.52 2.52 0 0 0 19.33 7.78 Z'
+
+/**
+ * Sun disc for partly-cloudy days: an open arc (~277°) whose ends land
+ * exactly on the cloud outline, so the disc reads as tucked behind it.
+ */
+const PEEK_SUN_ARC = 'M12.82 7.83 A2.8 2.8 0 1 1 14.9 10.91'
+
+function Rays({
+  cx,
+  cy,
+  inner,
+  outer,
+  angles
+}: {
+  cx: number
+  cy: number
+  inner: number
+  outer: number
+  angles: readonly number[]
+}): JSX.Element {
   return (
     <>
-      <circle cx={cx} cy={cy} r={r} />
       {angles.map((angle) => {
         const rad = (angle * Math.PI) / 180
-        const x1 = cx + Math.cos(rad) * (r + rayGap)
-        const y1 = cy + Math.sin(rad) * (r + rayGap)
-        const x2 = cx + Math.cos(rad) * (r + rayGap + rayLength)
-        const y2 = cy + Math.sin(rad) * (r + rayGap + rayLength)
-        return <line key={angle} x1={x1} y1={y1} x2={x2} y2={y2} />
+        const cos = Math.cos(rad)
+        const sin = Math.sin(rad)
+        return (
+          <line
+            key={angle}
+            x1={rd(cx + cos * inner)}
+            y1={rd(cy + sin * inner)}
+            x2={rd(cx + cos * outer)}
+            y2={rd(cy + sin * outer)}
+          />
+        )
       })}
     </>
   )
 }
 
-function MoonGlyph({ cx, cy, r }: { cx: number; cy: number; r: number }): JSX.Element {
-  return <path d={`M ${cx + r * 0.5} ${cy - r} a ${r} ${r} 0 1 0 0 ${r * 2} a ${r * 0.8} ${r * 0.8} 0 1 1 0 ${-r * 2} z`} />
+/**
+ * Cloud silhouette as one smooth closed path (no stacked circles, no seams):
+ * a flat base, a half-circle right puff and a large arc sweeping the top and
+ * left. `cx`/`cy` place the centre of the base line; `scale` sizes it
+ * (bounding box is 22×16 units at scale 1).
+ */
+function CloudGlyph({ cx, cy, scale }: { cx: number; cy: number; scale: number }): JSX.Element {
+  const s = scale
+  const d = [
+    `M${rd(cx + 6 * s)} ${rd(cy - 10 * s)}`,
+    `h${rd(-1.26 * s)}`,
+    `a${rd(8 * s)} ${rd(8 * s)} 0 1 0 ${rd(-7.74 * s)} ${rd(10 * s)}`,
+    `h${rd(9 * s)}`,
+    `a${rd(5 * s)} ${rd(5 * s)} 0 0 0 0 ${rd(-10 * s)}`,
+    'Z'
+  ].join(' ')
+  return <path d={d} />
 }
 
-function CloudGlyph({ cx, cy, scale = 1 }: { cx: number; cy: number; scale?: number }): JSX.Element {
+/** Neat 6-point asterisk: three strokes through the centre at 60° steps. */
+function Snowflake({ cx, cy, r }: { cx: number; cy: number; r: number }): JSX.Element {
+  const axes = [90, 30, 150]
   return (
-    <path
-      d={`M ${cx - 6 * scale} ${cy + 3 * scale}
-          a ${3.2 * scale} ${3.2 * scale} 0 0 1 0 ${-6.4 * scale}
-          a ${4 * scale} ${4 * scale} 0 0 1 7.6 ${-1.4 * scale}
-          a ${3.4 * scale} ${3.4 * scale} 0 0 1 ${1.4 * scale} ${6.6 * scale}
-          a ${3 * scale} ${3 * scale} 0 0 1 ${-1 * scale} ${1.2 * scale}
-          z`}
-    />
+    <>
+      {axes.map((angle) => {
+        const rad = (angle * Math.PI) / 180
+        const dx = Math.cos(rad) * r
+        const dy = Math.sin(rad) * r
+        return (
+          <line
+            key={angle}
+            x1={rd(cx - dx)}
+            y1={rd(cy - dy)}
+            x2={rd(cx + dx)}
+            y2={rd(cy + dy)}
+          />
+        )
+      })}
+    </>
   )
 }
 
@@ -59,15 +121,14 @@ export function WeatherIcon({ condition, isDay, className }: WeatherIconProps): 
       if (isDay) {
         return (
           <svg {...props}>
-            <SunGlyph cx={12} cy={12} r={4.2} />
+            <circle cx={12} cy={12} r={3.8} fill="currentColor" fillOpacity={0.15} />
+            <Rays cx={12} cy={12} inner={5.7} outer={8} angles={FULL_SUN_RAYS} />
           </svg>
         )
       }
       return (
         <svg {...props}>
-          <MoonGlyph cx={11} cy={12} r={5} />
-          <path d="M18 6 L18.6 7.4 L20 8 L18.6 8.6 L18 10 L17.4 8.6 L16 8 L17.4 7.4 Z" fill="currentColor" stroke="none" />
-          <circle cx={20.5} cy={12.5} r={0.5} fill="currentColor" stroke="none" />
+          <path d={CRESCENT_PATH} />
         </svg>
       )
 
@@ -75,66 +136,65 @@ export function WeatherIcon({ condition, isDay, className }: WeatherIconProps): 
       if (isDay) {
         return (
           <svg {...props}>
-            <g transform="translate(3.5, -2.5)">
-              <SunGlyph cx={12} cy={9} r={2.8} />
-            </g>
-            <CloudGlyph cx={11.5} cy={15} scale={1.15} />
+            <path d={PEEK_SUN_ARC} />
+            <Rays cx={15.6} cy={8.2} inner={4.6} outer={6} angles={PEEK_SUN_RAYS} />
+            <CloudGlyph cx={11.2} cy={19.2} scale={0.8} />
           </svg>
         )
       }
       return (
         <svg {...props}>
-          <g transform="translate(2.5, -2.5)">
-            <MoonGlyph cx={10.5} cy={9} r={2.6} />
-          </g>
-          <CloudGlyph cx={11.5} cy={15} scale={1.15} />
+          <path d={MINI_CRESCENT_PATH} />
+          <CloudGlyph cx={11.2} cy={19.2} scale={0.8} />
         </svg>
       )
 
     case 'cloudy':
       return (
         <svg {...props}>
-          <CloudGlyph cx={12} cy={13} scale={1.5} />
+          <CloudGlyph cx={12} cy={19.4} scale={0.92} />
         </svg>
       )
 
     case 'fog':
       return (
         <svg {...props}>
-          <CloudGlyph cx={12} cy={9.5} scale={1.1} />
-          <line x1={4.5} y1={16} x2={19.5} y2={16} />
-          <line x1={6} y1={19} x2={18} y2={19} />
-          <line x1={4.5} y1={13} x2={13.5} y2={13} />
+          <CloudGlyph cx={12} cy={11.6} scale={0.6} />
+          <line x1={4.5} y1={15} x2={19.5} y2={15} />
+          <line x1={6.5} y1={18} x2={17.5} y2={18} />
+          <line x1={9} y1={21} x2={15} y2={21} />
         </svg>
       )
 
     case 'drizzle':
       return (
         <svg {...props}>
-          <CloudGlyph cx={12} cy={9.5} scale={1.1} />
-          <line x1={9} y1={16.5} x2={8.5} y2={18.5} />
-          <line x1={12.5} y1={17} x2={12} y2={19} />
-          <line x1={16} y1={16.5} x2={15.5} y2={18.5} />
+          <CloudGlyph cx={12} cy={13} scale={0.68} />
+          <line x1={8.6} y1={16} x2={8} y2={17.8} />
+          <line x1={12.6} y1={16} x2={12} y2={17.8} />
+          <line x1={16.6} y1={16} x2={16} y2={17.8} />
+          <line x1={10.6} y1={19.4} x2={10} y2={21.2} />
+          <line x1={14.6} y1={19.4} x2={14} y2={21.2} />
         </svg>
       )
 
     case 'rain':
       return (
         <svg {...props}>
-          <CloudGlyph cx={12} cy={9} scale={1.15} />
-          <line x1={8.5} y1={16} x2={7} y2={20.5} />
-          <line x1={12.5} y1={16} x2={11} y2={20.5} />
-          <line x1={16.5} y1={16} x2={15} y2={20.5} />
+          <CloudGlyph cx={12} cy={12.6} scale={0.68} />
+          <line x1={9.1} y1={15.4} x2={7.3} y2={20.8} />
+          <line x1={13.1} y1={15.4} x2={11.3} y2={20.8} />
+          <line x1={17.1} y1={15.4} x2={15.3} y2={20.8} />
         </svg>
       )
 
     case 'snow':
       return (
         <svg {...props}>
-          <CloudGlyph cx={12} cy={9} scale={1.15} />
-          <g strokeWidth={1.2}>
-            <path d="M8 17 L8 20.5 M6.5 17.7 L9.5 19.8 M9.5 17.7 L6.5 19.8" />
-            <path d="M16 17 L16 20.5 M14.5 17.7 L17.5 19.8 M17.5 17.7 L14.5 19.8" />
+          <CloudGlyph cx={12} cy={12.4} scale={0.68} />
+          <g strokeWidth={1.35}>
+            <Snowflake cx={9} cy={17.7} r={2.5} />
+            <Snowflake cx={15.4} cy={19.1} r={2.5} />
           </g>
         </svg>
       )
@@ -142,9 +202,9 @@ export function WeatherIcon({ condition, isDay, className }: WeatherIconProps): 
     case 'thunderstorm':
       return (
         <svg {...props}>
-          <CloudGlyph cx={12} cy={8.5} scale={1.15} />
+          <CloudGlyph cx={12} cy={12} scale={0.66} />
           <path
-            d="M12.5 14.5 L9.5 19.5 L11.8 19.5 L11 23 L14.5 17.5 L12.2 17.5 Z"
+            d="M13.7 12.4 L9.9 17.4 H12.3 L11.1 21.8 L15.3 15.6 H12.9 Z"
             fill="currentColor"
             stroke="currentColor"
             strokeWidth={1}
@@ -155,7 +215,7 @@ export function WeatherIcon({ condition, isDay, className }: WeatherIconProps): 
     default:
       return (
         <svg {...props}>
-          <CloudGlyph cx={12} cy={13} scale={1.5} />
+          <CloudGlyph cx={12} cy={19.4} scale={0.92} />
         </svg>
       )
   }

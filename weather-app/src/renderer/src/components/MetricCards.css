@@ -1,0 +1,209 @@
+/* ============================================================
+   MetricCards.css — shared refinements for the five metric
+   tiles (Wind, Humidity, UV Index, Visibility, Precipitation).
+   Extends the .metric-* scaffolding defined in global.css.
+   All overrides of global classes are scoped with 2+ classes so
+   they win regardless of stylesheet load order.
+   ============================================================ */
+
+/* ---------- Wind: compass ring with cardinals + smooth needle ---------- */
+
+/* Sits inside .metric-visual (already absolutely positioned), so it only
+   needs a size; the layers inside anchor to it. */
+/* Sized from the flexed visual slot's actual height (aspect-ratio keeps it
+   round), so it grows generously on tall windows but can never spill over
+   the value/sub text when the card is at its 680px-window minimum. */
+.wind-compass {
+  position: relative;
+  height: 100%;
+  max-height: 92px;
+  aspect-ratio: 1;
+  color: var(--text-tertiary);
+}
+
+.wind-compass svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.wind-compass-cardinals text {
+  font-family: var(--font-ui);
+  font-size: 5.4px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  fill: var(--text-tertiary);
+}
+
+/* The needle lives on its own layer so rotation is driven by a transitioned
+   style transform on the wrapper — not a re-rendered SVG attribute jump. */
+.wind-compass-needle {
+  position: absolute;
+  inset: 0;
+  transition: transform 0.9s var(--ease-out);
+  will-change: transform;
+}
+
+/* ---------- Humidity: SVG donut gauge with droplet glyph ---------- */
+
+.humidity-ring {
+  height: 100%;
+  max-height: 92px;
+  aspect-ratio: 1;
+}
+
+.humidity-ring svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.humidity-ring-track {
+  fill: none;
+  stroke: var(--track);
+}
+
+.humidity-ring-fill {
+  fill: none;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.7s var(--ease-out);
+}
+
+.humidity-ring-droplet {
+  color: var(--info);
+}
+
+/* ---------- UV Index: boundary ticks + zone-colored descriptor ---------- */
+
+.uv-scale .uv-scale-track {
+  position: relative;
+}
+
+/* Tiny 1px notches at the 3 / 6 / 8 / 11 severity boundaries. Uses
+   text-primary at low opacity so it reads on the gradient in both themes. */
+.uv-scale .uv-tick {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  transform: translateX(-50%);
+  background: var(--text-primary);
+  opacity: 0.32;
+  pointer-events: none;
+}
+
+.metric-card .metric-sub.uv-sub {
+  font-weight: 600;
+  transition: color 0.4s var(--ease-out);
+}
+
+/* ---------- Visibility: receding depth lines ---------- */
+
+.vis-depth {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(6px, 1.4vh, 11px);
+  width: min(100%, clamp(64px, 8vw, 110px));
+  padding: 0 2px 5px;
+}
+
+.vis-depth-line {
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--text-secondary);
+  transition: opacity 0.7s var(--ease-out);
+}
+
+/* ---------- Precipitation: refined bars, hover values, empty state ---------- */
+
+.precip-card {
+  container-type: inline-size;
+}
+
+.precip-card .precip-bar-col {
+  position: relative;
+}
+
+/* On a narrow card 12 hour labels collide -- keep every other one. */
+@container (max-width: 440px) {
+  .precip-card .precip-bar-col:nth-child(even) .precip-bar-label {
+    visibility: hidden;
+  }
+}
+
+/* Rounded tops only; the track's own rounding still clips the flat bottom. */
+.precip-card .precip-bar-fill {
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+/* "Now" marker follows the hourly-strip pattern: it tints the CONTAINER and
+   label, never the data channel itself -- all bars stay blue so the accent
+   keeps its single job of marking "now / sun". */
+.precip-card .precip-bar-col.is-now .precip-bar-track {
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+  background: var(--accent-glow);
+}
+
+.precip-card .precip-bar-col.is-now .precip-bar-label {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Probability chip revealed above a bar on hover. */
+.precip-card .precip-bar-value {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, calc(-100% - 5px)) scale(0.92);
+  opacity: 0;
+  pointer-events: none;
+  padding: 2px 7px;
+  font-size: 10.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--text-primary);
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border-soft);
+  border-radius: var(--radius-pill);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  transition:
+    opacity 0.18s var(--ease-out),
+    transform 0.18s var(--ease-out);
+  z-index: 2;
+}
+
+.precip-card .precip-bar-col:hover .precip-bar-value {
+  opacity: 1;
+  transform: translate(-50%, calc(-100% - 5px)) scale(1);
+}
+
+/* Friendly stand-in when every shown hour is at 0% probability;
+   mirrors the footprint of .precip-bars so the card layout is stable. */
+.precip-card .precip-empty {
+  flex: 1;
+  min-height: 0;
+  max-height: clamp(76px, 16vh, 140px);
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--glass-border-soft);
+  background: var(--control-bg);
+  color: var(--text-secondary);
+  font-size: clamp(11.5px, 1.8vh, 13.5px);
+  font-weight: 500;
+}
+
+.precip-card .precip-empty svg {
+  width: clamp(15px, 2.6vh, 18px);
+  height: clamp(15px, 2.6vh, 18px);
+  color: var(--accent);
+  flex-shrink: 0;
+}

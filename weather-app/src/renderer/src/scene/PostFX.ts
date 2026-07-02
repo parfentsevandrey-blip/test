@@ -19,13 +19,13 @@ const BLOOM_SMOOTH_RATE = 0.6
 
 /** Vignette: how far in (0 = screen center, ~1 = corner) the darkening starts, and how strong it gets. */
 const VIGNETTE_SOFTNESS = 0.32
-const VIGNETTE_STRENGTH_BASE = 0.26
+const VIGNETTE_STRENGTH_BASE = 0.15
 const VIGNETTE_STRENGTH_NIGHT_BOOST = 0.12
 const VIGNETTE_STRENGTH_STORM_BOOST = 0.08
 
 /** Film grain: kept deliberately faint so it reads as "premium" texture, not a noisy overlay. */
-const GRAIN_STRENGTH_BASE = 0.014
-const GRAIN_STRENGTH_STORM_BOOST = 0.018
+const GRAIN_STRENGTH_BASE = 0.009
+const GRAIN_STRENGTH_STORM_BOOST = 0.015
 
 const VIGNETTE_GRAIN_VERTEX_SHADER = /* glsl */ `
   varying vec2 vUv;
