@@ -273,22 +273,20 @@ def _p(doc, space_before=0, space_after=4, line=1.12, align=WD_ALIGN_PARAGRAPH.L
 
 
 def add_segment_bar(doc, title, color_hex, icon=""):
-    """Цветная полоса-заголовок сегмента на всю ширину."""
-    _p(doc, space_before=10, space_after=0)
-    table = doc.add_table(rows=1, cols=1)
-    _remove_table_borders(table)
-    _full_width(table)
-    cell = table.cell(0, 0)
-    _set_cell_background(cell, color_hex)
-    _set_cell_margins(cell, top=120, bottom=120, left=200, right=200)
-    cell.paragraphs[0].text = ""
-    p = cell.paragraphs[0]
-    p.paragraph_format.space_after = Pt(0)
-    label = f"{icon}  {title}" if icon else title
-    run = p.add_run(label)
-    _style_run(run, size=14, bold=True, color_rgb=RGBColor(0xFF, 0xFF, 0xFF))
+    """Заголовок раздела: строгая типографика — тёмный текст и тонкая линия
+    вместо цветной заливки; иконки/эмодзи не выводятся (формальный стиль)."""
+    del color_hex, icon  # оставлены в сигнатуре для совместимости вызовов
+    p = _p(doc, space_before=14, space_after=4)
+    run = p.add_run(title)
+    _style_run(run, size=13.5, bold=True, color_rgb=NAVY_RGB)
     _keep_with_next(p)
-    _no_row_split(table)
+    pPr = p._p.get_or_add_pPr()
+    pbdr = OxmlElement("w:pBdr")
+    bottom = OxmlElement("w:bottom")
+    bottom.set(qn("w:val"), "single"); bottom.set(qn("w:sz"), "8")
+    bottom.set(qn("w:space"), "3"); bottom.set(qn("w:color"), HAIRLINE)
+    pbdr.append(bottom)
+    pPr.append(pbdr)
 
 
 def add_subsection_title(doc, text, color_rgb):
@@ -307,37 +305,36 @@ def add_subsection_title(doc, text, color_rgb):
 
 
 def add_bullet(doc, text, source=None, url=None, date=None, impact=None, direction=None):
-    """Пункт-маркер: факт + (опц.) врезка «Почему важно» с тегом влияния + источник."""
-    sym, fill, drgb, _label = DIRECTION.get(direction or "", ("▪", None, MUTED_RGB, ""))
-    p = _p(doc, space_before=3, space_after=1, line=1.12)
+    """Пункт: факт + (опц.) абзац «Значение» + строка источника.
+    Формальный стиль: нейтральный маркер, без цветных плашек и символов направления."""
+    del direction  # поле остаётся в данных, но визуально не выводится
+    p = _p(doc, space_before=4, space_after=1, line=1.15)
     p.paragraph_format.left_indent = Cm(0.5)
     p.paragraph_format.first_line_indent = Cm(-0.35)
-    bullet = p.add_run(f"{sym}  ")
-    _style_run(bullet, size=10.5, bold=True, color_rgb=drgb)
+    bullet = p.add_run("—  ")
+    _style_run(bullet, size=10.5, color_rgb=MUTED_RGB)
     body = p.add_run(text)
     _style_run(body, size=10.5, color_rgb=INK_RGB)
 
-    # врезка «Почему важно» с цветом тега влияния
+    # абзац «Значение» — обычный текст с курсивной меткой, без заливки
     if impact:
-        ip = _p(doc, space_before=1, space_after=1, line=1.1)
+        ip = _p(doc, space_before=1, space_after=1, line=1.12)
         ip.paragraph_format.left_indent = Cm(0.5)
-        if fill:
-            _shade_paragraph(ip, fill)
-        lab = ip.add_run("  Почему важно:  ")
-        _style_run(lab, size=9, bold=True, color_rgb=drgb)
-        r = ip.add_run(impact + "  ")
-        _style_run(r, size=9, color_rgb=INK_RGB)
+        lab = ip.add_run("Значение. ")
+        _style_run(lab, size=9.5, bold=True, italic=True, color_rgb=MUTED_RGB)
+        r = ip.add_run(impact)
+        _style_run(r, size=9.5, color_rgb=INK_RGB)
 
     # подпись-источник под пунктом
     if source or url or date:
-        meta = _p(doc, space_before=0, space_after=5, line=1.0)
+        meta = _p(doc, space_before=0, space_after=6, line=1.0)
         meta.paragraph_format.left_indent = Cm(0.5)
         parts = []
         if date:
-            parts.append(f"📅 {date}")
+            parts.append(date)
         if source:
             parts.append(f"Источник: {source}")
-        prefix = "   " + "   •   ".join(parts) if parts else "   "
+        prefix = " · ".join(parts) if parts else ""
         r = meta.add_run(prefix)
         _style_run(r, size=8.5, italic=True, color_rgb=MUTED_RGB)
         if url:
@@ -398,77 +395,38 @@ def add_stats_table(doc, items):
 
 
 def add_conclusion_box(doc, text):
-    """Блок «Вывод» — заметный бокс с акцентной левой полосой."""
-    table = doc.add_table(rows=1, cols=1)
-    _remove_table_borders(table)
-    _full_width(table)
-    cell = table.cell(0, 0)
-    _set_cell_background(cell, CONCL_FILL)
-    _set_cell_margins(cell, top=140, bottom=140, left=220, right=220)
-    _set_cell_borders(cell, {"left": (36, CONCL_BAR)})  # толстая левая полоса
-    _no_row_split(table)
-
-    p0 = cell.paragraphs[0]
-    p0.paragraph_format.space_after = Pt(2)
-    label = p0.add_run("ВЫВОД")
-    _style_run(label, size=9, bold=True, color_rgb=RGBColor(0x10, 0x5A, 0x4C))
-
-    p1 = cell.add_paragraph()
-    p1.paragraph_format.space_after = Pt(0)
-    p1.paragraph_format.line_spacing = 1.12
-    r = p1.add_run(text)
+    """Абзац «Вывод» — формальный стиль: жирная метка, без заливки и полос."""
+    p = _p(doc, space_before=6, space_after=2, line=1.15)
+    label = p.add_run("Вывод. ")
+    _style_run(label, size=10.5, bold=True, color_rgb=NAVY_RGB)
+    r = p.add_run(text)
     _style_run(r, size=10.5, color_rgb=INK_RGB)
-    _p(doc, space_after=6)
 
 
 def add_watch_box(doc, text):
-    """Врезка «За чем следить» — компактный бокс с янтарной левой полосой."""
-    table = doc.add_table(rows=1, cols=1)
-    _remove_table_borders(table)
-    _full_width(table)
-    cell = table.cell(0, 0)
-    _set_cell_background(cell, WATCH_FILL)
-    _set_cell_margins(cell, top=100, bottom=100, left=220, right=220)
-    _set_cell_borders(cell, {"left": (30, WATCH_BAR)})
-    _no_row_split(table)
-    p0 = cell.paragraphs[0]
-    p0.paragraph_format.space_after = Pt(0)
-    p0.paragraph_format.line_spacing = 1.1
-    lab = p0.add_run("👁  ЗА ЧЕМ СЛЕДИТЬ.  ")
-    _style_run(lab, size=9, bold=True, color_rgb=RGBColor(0x8A, 0x55, 0x10))
-    r = p0.add_run(text)
+    """Абзац «За чем следить» — формальный стиль, без заливки и пиктограмм."""
+    p = _p(doc, space_before=2, space_after=8, line=1.12)
+    lab = p.add_run("За чем следить. ")
+    _style_run(lab, size=10, bold=True, color_rgb=NAVY_RGB)
+    r = p.add_run(text)
     _style_run(r, size=10, color_rgb=INK_RGB)
-    _p(doc, space_after=8)
 
 
 def build_key_takeaways(doc, data):
-    """Тёмный блок «Главные выводы недели» — нумерованные тезисы."""
+    """«Главные выводы недели» — строгий нумерованный список без тёмной плашки."""
     kt = data.get("key_takeaways") or []
     if not kt:
         return
-    table = doc.add_table(rows=1, cols=1)
-    _remove_table_borders(table)
-    _full_width(table)
-    cell = table.cell(0, 0)
-    _set_cell_background(cell, KT_FILL)
-    _no_row_split(table)
-    _set_cell_margins(cell, top=150, bottom=150, left=220, right=220)
-    p0 = cell.paragraphs[0]
-    p0.paragraph_format.space_after = Pt(4)
-    hr = p0.add_run("ГЛАВНЫЕ ВЫВОДЫ НЕДЕЛИ")
-    _style_run(hr, size=11, bold=True, color_rgb=RGBColor(0xFF, 0xFF, 0xFF))
+    add_segment_bar(doc, "Главные выводы недели", NAVY)
     for i, t in enumerate(kt, 1):
-        pp = cell.add_paragraph()
-        pp.paragraph_format.space_before = Pt(2)
-        pp.paragraph_format.space_after = Pt(2)
-        pp.paragraph_format.line_spacing = 1.15
+        pp = _p(doc, space_before=2, space_after=3, line=1.15)
         pp.paragraph_format.left_indent = Cm(0.55)
         pp.paragraph_format.first_line_indent = Cm(-0.55)
         num = pp.add_run(f"{i}.  ")
-        _style_run(num, size=10.5, bold=True, color_rgb=RGBColor(0xF0, 0xC4, 0x6A))
+        _style_run(num, size=10.5, bold=True, color_rgb=NAVY_RGB)
         r = pp.add_run(t)
-        _style_run(r, size=10.5, color_rgb=RGBColor(0xEC, 0xF1, 0xF6))
-    _p(doc, space_after=8)
+        _style_run(r, size=10.5, color_rgb=INK_RGB)
+    _p(doc, space_after=4)
 
 
 def build_outlook(doc, data):
@@ -476,20 +434,10 @@ def build_outlook(doc, data):
     outlook = data.get("outlook")
     if not outlook:
         return
-    add_segment_bar(doc, "Картина недели и прогноз", "1F3A5F", "🧭")
-    table = doc.add_table(rows=1, cols=1)
-    _remove_table_borders(table)
-    _full_width(table)
-    cell = table.cell(0, 0)
-    _set_cell_background(cell, OUTLOOK_FILL)
-    _no_row_split(table)
-    _set_cell_margins(cell, top=140, bottom=140, left=200, right=200)
-    cp = cell.paragraphs[0]
-    cp.paragraph_format.space_after = Pt(0)
-    cp.paragraph_format.line_spacing = 1.18
+    add_segment_bar(doc, "Картина недели и прогноз", NAVY)
+    cp = _p(doc, space_before=2, space_after=6, line=1.18)
     r = cp.add_run(outlook)
     _style_run(r, size=10.5, color_rgb=INK_RGB)
-    _p(doc, space_after=6)
 
 
 def build_glossary(doc, data):
@@ -497,22 +445,14 @@ def build_glossary(doc, data):
     gl = data.get("glossary") or []
     if not gl:
         return
-    add_segment_bar(doc, "Словарь терминов", "5D6D7E", "📖")
-    table = doc.add_table(rows=0, cols=2)
-    _remove_table_borders(table)
-    _full_width(table)
-    table.columns[0].width = Cm(5.0)
-    table.columns[1].width = Cm(11.8)
-    for idx, g in enumerate(gl):
-        row = table.add_row().cells
-        fill = GLOSS_FILL if idx % 2 == 0 else "FFFFFF"
-        for ci in (0, 1):
-            _set_cell_background(row[ci], fill)
-            _set_cell_margins(row[ci], top=60, bottom=60)
-            row[ci].paragraphs[0].paragraph_format.space_after = Pt(0)
-        tr = row[0].paragraphs[0].add_run(g.get("term", ""))
+    add_segment_bar(doc, "Словарь терминов", NAVY)
+    for g in gl:
+        p = _p(doc, space_before=2, space_after=2, line=1.12)
+        p.paragraph_format.left_indent = Cm(0.55)
+        p.paragraph_format.first_line_indent = Cm(-0.55)
+        tr = p.add_run(f"{g.get('term', '')} — ")
         _style_run(tr, size=9.5, bold=True, color_rgb=NAVY_RGB)
-        dr = row[1].paragraphs[0].add_run(g.get("definition", ""))
+        dr = p.add_run(g.get("definition", ""))
         _style_run(dr, size=9.5, color_rgb=INK_RGB)
     _p(doc, space_after=6)
 
@@ -554,15 +494,15 @@ def build_cover(doc, data):
     r = p.add_run("Нидерландов")
     _style_run(r, size=30, bold=True, color_rgb=NAVY_RGB)
 
-    # цветная полоса-разделитель
-    table = doc.add_table(rows=1, cols=3)
-    _remove_table_borders(table)
-    _full_width(table)
-    for i, key in enumerate(["residential", "commercial", "industrial"]):
-        _set_cell_background(table.cell(0, i), SEG_COLORS[key]["bar"])
-        table.cell(0, i).paragraphs[0].add_run(" ").font.size = Pt(3)
-        table.cell(0, i).paragraphs[0].paragraph_format.space_after = Pt(0)
-    _p(doc, space_after=8)
+    # тонкая линия-разделитель (формальный стиль вместо цветной полосы)
+    sep = _p(doc, space_after=8)
+    pPr = sep._p.get_or_add_pPr()
+    pbdr = OxmlElement("w:pBdr")
+    bottom = OxmlElement("w:bottom")
+    bottom.set(qn("w:val"), "single"); bottom.set(qn("w:sz"), "10")
+    bottom.set(qn("w:space"), "1"); bottom.set(qn("w:color"), NAVY)
+    pbdr.append(bottom)
+    pPr.append(pbdr)
 
     # заголовок недели (headline)
     headline = data.get("headline")
@@ -602,18 +542,9 @@ def build_exec_summary(doc, data):
     if not summary:
         return
     add_subsection_title(doc, "Коротко о неделе", NAVY_RGB)
-    table = doc.add_table(rows=1, cols=1)
-    _remove_table_borders(table)
-    _full_width(table)
-    cell = table.cell(0, 0)
-    _set_cell_background(cell, "EEF2F6")
-    _set_cell_margins(cell, top=140, bottom=140, left=200, right=200)
-    cp = cell.paragraphs[0]
-    cp.paragraph_format.space_after = Pt(0)
-    cp.paragraph_format.line_spacing = 1.15
+    cp = _p(doc, space_before=2, space_after=6, line=1.15)
     r = cp.add_run(summary)
     _style_run(r, size=10.5, color_rgb=INK_RGB)
-    _p(doc, space_after=6)
 
 
 def build_segment(doc, seg, charts_list=None, pngs=None):
@@ -630,28 +561,27 @@ def build_segment(doc, seg, charts_list=None, pngs=None):
                 return s.get("items") or []
         return []
 
+    # Формальный стиль: единый поток пунктов без подзаголовков «Новости/
+    # Статистика/…» и без отдельной таблицы статистики — меньше визуального
+    # шума, порядок подразделов (laws → news → trends → stats) сохранён.
     any_content = False
     for key in SUBSECTION_ORDER:
         items = get_items(key)
         if not items:
             continue
         any_content = True
-        add_subsection_title(doc, SUBSECTION_TITLES[key], colors["text_rgb"])
-        if key == "stats":
-            add_stats_table(doc, items)
-        else:
-            for it in items:
-                if not it.get("text", "").strip():
-                    continue
-                add_bullet(
-                    doc,
-                    it.get("text", ""),
-                    source=it.get("source"),
-                    url=it.get("url"),
-                    date=it.get("date"),
-                    impact=it.get("impact"),
-                    direction=it.get("direction"),
-                )
+        for it in items:
+            if not it.get("text", "").strip():
+                continue
+            add_bullet(
+                doc,
+                it.get("text", ""),
+                source=it.get("source"),
+                url=it.get("url"),
+                date=it.get("date"),
+                impact=it.get("impact"),
+                direction=it.get("direction"),
+            )
 
     if not any_content:
         p = _p(doc, space_after=4)
@@ -821,37 +751,25 @@ def build_calendar(doc, data):
             return (1, datetime.max)
     cal = sorted(cal, key=_key)
 
-    add_segment_bar(doc, "Календарь: за чем следить", "C0791C", "📅")
-    _p(doc, space_after=2)
-    table = doc.add_table(rows=1, cols=3)
-    _remove_table_borders(table)
-    _full_width(table)
-    hdr = table.rows[0].cells
-    for i, h in enumerate(("Дата", "Событие", "Сегмент")):
-        _set_cell_background(hdr[i], NAVY)
-        _set_cell_margins(hdr[i])
-        r = hdr[i].paragraphs[0].add_run(h)
-        _style_run(r, size=9.5, bold=True, color_rgb=RGBColor(0xFF, 0xFF, 0xFF))
-    table.columns[0].width = Cm(2.7)
-    table.columns[1].width = Cm(11.3)
-    table.columns[2].width = Cm(2.8)
-    for idx, c in enumerate(cal):
-        row = table.add_row().cells
-        fill = STAT_FILL if idx % 2 == 0 else "FFFFFF"
-        icon = KIND_ICON.get(c.get("kind", "other"), "•")
-        cells = (c.get("date", ""), f"{icon}  {c.get('what', '')}", SEG_RU_SHORT.get(c.get("segment"), c.get("segment", "")))
-        for ci, txt in enumerate(cells):
-            _set_cell_background(row[ci], fill)
-            _set_cell_margins(row[ci])
-            cp = row[ci].paragraphs[0]
-            cp.paragraph_format.space_after = Pt(0)
-            r = cp.add_run(txt)
-            _style_run(r, size=9.5, bold=(ci == 0), color_rgb=INK_RGB)
+    add_segment_bar(doc, "Календарь: за чем следить", NAVY)
+    # формальный список дат вместо таблицы с заливкой и пиктограммами
+    for c in cal:
+        p = _p(doc, space_before=3, space_after=0, line=1.12)
+        p.paragraph_format.left_indent = Cm(0.55)
+        p.paragraph_format.first_line_indent = Cm(-0.55)
+        dr = p.add_run(f"{c.get('date', '')} — ")
+        _style_run(dr, size=10, bold=True, color_rgb=NAVY_RGB)
+        wr = p.add_run(c.get("what", ""))
+        _style_run(wr, size=10, color_rgb=INK_RGB)
+        seg_ru = SEG_RU_SHORT.get(c.get("segment"), c.get("segment", ""))
+        if seg_ru:
+            sr = p.add_run(f"  ({seg_ru})")
+            _style_run(sr, size=9, italic=True, color_rgb=MUTED_RGB)
         if c.get("impact"):
-            mp = row[1].add_paragraph()
-            mp.paragraph_format.space_before = Pt(1); mp.paragraph_format.space_after = Pt(0)
-            r = mp.add_run("→ " + c["impact"])
-            _style_run(r, size=8, italic=True, color_rgb=MUTED_RGB)
+            mp = _p(doc, space_before=0, space_after=2, line=1.1)
+            mp.paragraph_format.left_indent = Cm(0.55)
+            r = mp.add_run(c["impact"])
+            _style_run(r, size=9, italic=True, color_rgb=MUTED_RGB)
     _p(doc, space_after=6)
 
 

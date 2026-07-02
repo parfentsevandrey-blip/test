@@ -60,18 +60,15 @@ def _has_profile(paths=PROFILE_PATH_CANDIDATES):
 
 def meta(it):
     bits=[]
-    if it.get("date"): bits.append(f"📅 {esc(it['date'])}")
+    if it.get("date"): bits.append(esc(it["date"]))
     if it.get("source"): bits.append(f"Источник: {esc(it['source'])}")
     line=" · ".join(bits)
     if it.get("url"): line+=f' · <a href="{esc(it["url"])}">ссылка ↗</a>'
     return f'<div class="meta">{line}</div>'
 
 def impact_block(it):
-    d = DIR.get(it.get("direction"))
     if not it.get("impact"): return ""
-    if not d: d = {"bg":"#EEF2F6","fg":"#6B7785","sym":"▪"}
-    return (f'<div class="impact" style="background:{d["bg"]}">'
-            f'<b style="color:{d["fg"]}">{d["sym"]} Почему важно:</b> {esc(it["impact"])}</div>')
+    return f'<div class="impact"><b>Значение.</b> {esc(it["impact"])}</div>' 
 
 def chart_imgs(specs, pngs):
     out=[]
@@ -98,34 +95,29 @@ def render(data, pngs=None):
  .page{{max-width:820px;margin:24px auto;background:#fff;padding:40px 48px 36px;box-shadow:0 2px 18px rgba(0,0,0,.12)}}
  .kicker{{color:#6B7785;font-weight:700;letter-spacing:3px;font-size:12px}}
  h1{{color:#1F3A5F;font-size:38px;line-height:1.05;margin:6px 0 14px}}
- .ribbon{{display:flex;height:8px;margin:0 0 14px;border-radius:2px;overflow:hidden}}
- .ribbon span{{flex:1}}
+ .rule{{border-bottom:2px solid #1F3A5F;margin:0 0 14px}}
  .headline{{font-size:19px;font-style:italic;font-weight:700;color:#105A4C;margin:6px 0 12px}}
  .period{{font-size:16px}} .period b{{color:#1F3A5F}}
  .seglist{{color:#6B7785;font-size:13px;margin:4px 0}}
  .gen{{color:#6B7785;font-style:italic;font-size:12px;margin-top:6px}}
- .kt{{background:#1F3A5F;color:#ECF1F6;border-radius:6px;padding:16px 20px;margin:18px 0}}
- .kt h2{{color:#fff;font-size:14px;letter-spacing:1px;margin:0 0 8px}}
- .kt ol{{margin:0;padding-left:22px}} .kt li{{margin:6px 0;line-height:1.4;font-size:14.5px}}
- .kt li::marker{{color:#F0C46A;font-weight:700}}
+ .kt ol{{margin:4px 0 0;padding-left:22px}} .kt li{{margin:6px 0;line-height:1.45;font-size:14.5px}}
+ .kt li::marker{{color:#1F3A5F;font-weight:700}}
  h2.sub{{font-size:13px;font-weight:700;color:#1F3A5F;border-bottom:1px solid #D7DEE6;padding-bottom:3px;margin:22px 0 8px}}
- .summary{{background:#EEF2F6;padding:14px 16px;border-radius:4px;line-height:1.5;font-size:15px}}
- .bar{{color:#fff;font-weight:700;font-size:18px;padding:11px 16px;border-radius:3px;margin:26px 0 4px}}
- h3.ssub{{font-size:15px;font-weight:700;border-bottom:1px solid #D7DEE6;padding-bottom:2px;margin:16px 0 6px}}
- .item{{margin:10px 0}}
- .fact{{font-size:14.5px;line-height:1.42}} .fact .sym{{font-weight:700;margin-right:6px}}
- .impact{{font-size:13px;line-height:1.4;padding:6px 10px;border-radius:4px;margin:4px 0}}
+ .summary{{line-height:1.5;font-size:15px;margin:4px 0 10px}}
+ .bar{{color:#1F3A5F;font-weight:700;font-size:18px;border-bottom:1.5px solid #D7DEE6;padding:0 0 5px;margin:28px 0 8px}}
+ .item{{margin:12px 0}}
+ .fact{{font-size:14.5px;line-height:1.45}} .fact .sym{{color:#6B7785;margin-right:6px}}
+ .impact{{font-size:13px;line-height:1.45;margin:4px 0 2px}}
+ .impact b{{color:#6B7785;font-style:italic}}
  .meta{{color:#6B7785;font-size:11.5px;font-style:italic;margin-top:2px}} .meta a{{color:#1155CC;text-decoration:none}}
  table{{border-collapse:collapse;width:100%;margin:6px 0;font-size:13.5px}}
  th{{background:#1F3A5F;color:#fff;text-align:left;padding:7px 10px}}
  td{{padding:7px 10px;border-bottom:1px solid #eceff3;vertical-align:top}}
  tr:nth-child(even) td{{background:#F4F6F8}}
  td .src{{color:#6B7785;font-size:10.5px;font-style:italic}} td .imp{{color:#6B7785;font-size:11px;font-style:italic;margin-top:2px}}
- .concl{{background:#EAF3EE;border-left:5px solid #16846F;padding:12px 16px;margin:10px 0 4px;border-radius:0 3px 3px 0}}
- .concl .lbl{{color:#105A4C;font-weight:700;font-size:11px;letter-spacing:1px}} .concl p{{margin:4px 0 0;line-height:1.45;font-size:14px}}
- .watch{{background:#FFF6E5;border-left:5px solid #C0791C;padding:10px 16px;margin:8px 0 4px;border-radius:0 3px 3px 0;font-size:13.5px;line-height:1.4}}
- .watch b{{color:#8A5510}}
- .outlook{{background:#EEF2F6;padding:14px 16px;border-radius:4px;line-height:1.5;font-size:14.5px}}
+ .concl{{margin:12px 0 4px;line-height:1.45;font-size:14px}} .concl b{{color:#1F3A5F}}
+ .watch{{margin:4px 0 6px;font-size:13.5px;line-height:1.45}} .watch b{{color:#1F3A5F}}
+ .outlook{{line-height:1.5;font-size:14.5px;margin:4px 0 10px}}
  .empty{{color:#6B7785;font-style:italic;font-size:13.5px}}
  .pbox{{background:#FBF1DF;border-left:5px solid #C0791C;border-radius:0 4px 4px 0;padding:12px 16px;margin:14px 0}}
  .pbox .lbl{{color:#8A5510;font-weight:700;font-size:12px;letter-spacing:1px}} .pbox ul{{margin:6px 0 0;padding-left:20px}} .pbox li{{margin:5px 0;font-size:14px;line-height:1.4}}
@@ -134,16 +126,17 @@ def render(data, pngs=None):
  .thread .tt{{font-weight:700;color:#1F3A5F;font-size:15px;margin-left:6px}}
  .thread .nw{{font-size:13.5px;margin-top:3px}} .thread .nw b{{color:#6B7785}}
  .thread .tr{{font-size:12.5px;color:#6B7785;margin-top:2px}} .thread .tr b{{color:#8A5510}}
- .cal td:first-child{{font-weight:700;white-space:nowrap}} .cal .imp{{color:#6B7785;font-size:11px;font-style:italic}}
+ .cal{{font-size:13.5px;line-height:1.5}} .cal .d{{color:#1F3A5F;font-weight:700}} .cal .imp{{color:#6B7785;font-size:12px;font-style:italic;margin:0 0 6px 16px}}
+ .cal p{{margin:4px 0 0 0}} .cal .segl{{color:#6B7785;font-style:italic;font-size:12px}}
  .chart{{margin:14px 0}} .chart img{{width:100%;display:block;border:1px solid #eceff3;border-radius:4px}}
  .ccap{{color:#6B7785;font-style:italic;font-size:12px;text-align:center;margin-top:4px}}
- .gloss td:first-child{{font-weight:700;color:#1F3A5F;width:26%}}
+ .gloss{{font-size:13px;line-height:1.55}} .gloss b{{color:#1F3A5F}} .gloss p{{margin:3px 0}}
  .src-list{{font-size:13px;line-height:1.7}} .src-list a{{color:#1155CC;text-decoration:none}}
  .disc{{border-top:1px solid #D7DEE6;margin-top:22px;padding-top:8px;color:#6B7785;font-size:11px;font-style:italic}}
 </style></head><body><div class="page">""")
     out.append('<div class="kicker">ЕЖЕНЕДЕЛЬНАЯ АНАЛИТИКА</div>')
     out.append('<h1>Рынок недвижимости<br>Нидерландов</h1>')
-    out.append('<div class="ribbon">'+''.join(f'<span style="background:{SEG[k]}"></span>' for k in ["residential","commercial","industrial"])+'</div>')
+    out.append('<div class="rule"></div>')
     if data.get("headline"):
         out.append(f'<div class="headline">«{esc(data["headline"])}»</div>')
     out.append(f'<div class="period"><b>Период:</b> {esc(period(data.get("week_start",""),data.get("week_end","")))}</div>')
@@ -152,7 +145,7 @@ def render(data, pngs=None):
 
     kt = data.get("key_takeaways") or []
     if kt:
-        out.append('<div class="kt"><h2>ГЛАВНЫЕ ВЫВОДЫ НЕДЕЛИ</h2><ol>')
+        out.append('<div class="bar">Главные выводы недели</div><div class="kt"><ol>')
         for t in kt: out.append(f'<li>{esc(t)}</li>')
         out.append('</ol></div>')
 
@@ -165,7 +158,7 @@ def render(data, pngs=None):
 
     th=data.get("threads") or []
     if th:
-        out.append('<div class="bar" style="background:#5D6D7E">🧵 Сюжеты в развитии</div>')
+        out.append('<div class="bar">Сюжеты в развитии</div>')
         for t in th:
             st=TSTATUS.get((t.get("status") or "").lower(),{"t":"—","bg":"#EEF2F6","fg":"#6B7785"})
             out.append('<div class="thread">')
@@ -179,7 +172,7 @@ def render(data, pngs=None):
 
     ov=[c for c in (data.get("charts") or []) if c.get("segment")=="overview"]
     if ov:
-        out.append('<div class="bar" style="background:#1F3A5F">📊 Статистика в графиках</div>')
+        out.append('<div class="bar">Статистика в графиках</div>')
         out.append(chart_imgs(ov,pngs))
 
     if data.get("executive_summary"):
@@ -188,7 +181,7 @@ def render(data, pngs=None):
 
     for seg in data.get("segments",[]):
         color=SEG.get(seg.get("id"),"#1F3A5F")
-        out.append(f'<div class="bar" style="background:{color}">{esc(seg.get("icon",""))} {esc(seg.get("title",""))}</div>')
+        out.append(f'<div class="bar">{esc(seg.get("title",""))}</div>')
         subs=seg.get("subsections",{})
 
         # subsections может быть dict (по ключам) или list — как в generate_report.py,
@@ -201,40 +194,30 @@ def render(data, pngs=None):
                     return s.get("items") or []
             return []
 
+        # формальный стиль: единый поток пунктов без подзаголовков и таблиц,
+        # порядок подразделов (laws → news → trends → stats) сохранён
         had=False
         for key in SUB_ORDER:
             items=get_items(key)
             if not items: continue
             had=True
-            title = SUB_TITLES.get(key, key)
-            out.append(f'<h3 class="ssub" style="color:{color}">{esc(title)}</h3>')
-            if key=="stats":
-                out.append('<table><tr><th>Показатель</th><th>Значение / динамика</th></tr>')
-                for it in items:
-                    d=DIR.get(it.get("direction")); arrow=f'<span style="color:{d["fg"]}">{d["sym"]} </span>' if d else ''
-                    imp=f'<div class="imp">→ {esc(it["impact"])}</div>' if it.get("impact") else ''
-                    src=f'<div class="src">{esc(it.get("source",""))}'+(f' · <a href="{esc(it["url"])}">↗</a>' if it.get("url") else '')+'</div>' if (it.get("source") or it.get("url")) else ''
-                    out.append(f'<tr><td>{esc(it.get("text",""))}{imp}</td><td>{arrow}<b>{esc(it.get("value",""))}</b>{src}</td></tr>')
-                out.append('</table>')
-            else:
-                for it in items:
-                    d=DIR.get(it.get("direction")); sym=d["sym"] if d else "▪"; col=d["fg"] if d else "#6B7785"
-                    out.append('<div class="item">')
-                    out.append(f'<div class="fact"><span class="sym" style="color:{col}">{sym}</span>{esc(it.get("text",""))}</div>')
-                    out.append(impact_block(it))
-                    out.append(meta(it))
-                    out.append('</div>')
+            for it in items:
+                out.append('<div class="item">')
+                out.append(f'<div class="fact"><span class="sym">—</span>{esc(it.get("text",""))}</div>')
+                out.append(impact_block(it))
+                out.append(meta(it))
+                out.append('</div>')
         if not had:
             out.append('<p class="empty">За отчётную неделю значимых событий по этому сегменту не зафиксировано.</p>')
         sc=[c for c in (data.get("charts") or []) if c.get("segment")==seg.get("id")]
         if sc: out.append(chart_imgs(sc,pngs))
         if seg.get("conclusion"):
-            out.append(f'<div class="concl"><div class="lbl">ВЫВОД</div><p>{esc(seg["conclusion"])}</p></div>')
+            out.append(f'<div class="concl"><b>Вывод.</b> {esc(seg["conclusion"])}</div>')
         if seg.get("watch"):
-            out.append(f'<div class="watch"><b>👁 За чем следить.</b> {esc(seg["watch"])}</div>')
+            out.append(f'<div class="watch"><b>За чем следить.</b> {esc(seg["watch"])}</div>')
 
     if data.get("outlook"):
-        out.append('<div class="bar" style="background:#1F3A5F">🧭 Картина недели и прогноз</div>')
+        out.append('<div class="bar">Картина недели и прогноз</div>')
         out.append(f'<div class="outlook">{esc(data["outlook"])}</div>')
 
     cal=data.get("calendar") or []
@@ -242,22 +225,24 @@ def render(data, pngs=None):
         def _ck(c):
             try: return (0,datetime.strptime(c.get("date",""),"%Y-%m-%d"))
             except Exception: return (1,datetime.max)
-        out.append('<div class="bar" style="background:#C0791C">📅 Календарь: за чем следить</div>')
-        out.append('<table class="cal"><tr><th>Дата</th><th>Событие</th><th>Сегмент</th></tr>')
+        out.append('<div class="bar">Календарь: за чем следить</div>')
+        out.append('<div class="cal">')
         for c in sorted(cal,key=_ck):
-            icon=KIND_ICON.get(c.get("kind","other"),"•")
-            imp=f'<div class="imp">→ {esc(c["impact"])}</div>' if c.get("impact") else ''
-            out.append(f'<tr><td>{esc(c.get("date",""))}</td><td>{icon} {esc(c.get("what",""))}{imp}</td><td>{esc(SEG_RU.get(c.get("segment"),c.get("segment","")))}</td></tr>')
-        out.append('</table>')
+            segl=esc(SEG_RU.get(c.get("segment"),c.get("segment","")))
+            out.append(f'<p><span class="d">{esc(c.get("date",""))}</span> — {esc(c.get("what",""))}'
+                       + (f' <span class="segl">({segl})</span>' if segl else '') + '</p>')
+            if c.get("impact"):
+                out.append(f'<div class="imp">{esc(c["impact"])}</div>')
+        out.append('</div>')
 
     gl = data.get("glossary") or []
     if gl:
-        out.append('<div class="bar" style="background:#5D6D7E">📖 Словарь терминов</div><table class="gloss">')
-        for g in gl: out.append(f'<tr><td>{esc(g.get("term",""))}</td><td>{esc(g.get("definition",""))}</td></tr>')
-        out.append('</table>')
+        out.append('<div class="bar">Словарь терминов</div><div class="gloss">')
+        for g in gl: out.append(f'<p><b>{esc(g.get("term",""))}</b> — {esc(g.get("definition",""))}</p>')
+        out.append('</div>')
 
     if data.get("sources"):
-        out.append('<div class="bar" style="background:#5D6D7E">🔗 Источники</div><div class="src-list">')
+        out.append('<div class="bar">Источники</div><div class="src-list">')
         for s in data["sources"]:
             out.append(f'• {esc(s.get("name",""))} <a href="{esc(s.get("url",""))}">{esc(s.get("url",""))}</a><br>')
         out.append('</div>')
