@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useWeatherStore } from './store/useWeatherStore'
 import { SceneManager } from './scene/SceneManager'
-import { TitleBar } from './components/TitleBar'
 import { SearchBar } from './components/SearchBar'
 import { CurrentWeatherCard } from './components/CurrentWeatherCard'
 import { HourlyForecast } from './components/HourlyForecast'
@@ -57,8 +56,6 @@ export function App(): JSX.Element {
       <canvas ref={canvasRef} className="scene-canvas" />
 
       <div className="ui-overlay">
-        <TitleBar />
-
         <div className="content-grid">
           <div className="top-left">
             <SearchBar />
