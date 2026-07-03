@@ -1,0 +1,504 @@
+/* ============================================================
+   Win95 fun accents — title-bar buttons, message boxes, the
+   office-assistant paperclip, status bar, boot splash, sounds'
+   visual counterparts. Everything here is gated on
+   [data-theme='win95'] or only mounted while that theme is on.
+   ============================================================ */
+
+/* ---------- Card title-bar buttons ( _ □ ✕ ) ---------- */
+
+.w95-titlebtns {
+  display: none;
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  gap: 2px;
+  z-index: 5;
+}
+
+[data-theme='win95'] .bento-card .w95-titlebtns {
+  display: flex;
+}
+
+.w95-titlebtn {
+  width: 18px;
+  height: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #c0c0c0;
+  border: none;
+  border-radius: 0;
+  box-shadow: var(--bevel-out);
+  color: #000000;
+  padding: 0;
+}
+
+.w95-titlebtn svg {
+  width: 8px;
+  height: 7px;
+  shape-rendering: crispEdges;
+}
+
+.w95-titlebtn:active {
+  box-shadow: var(--bevel-in);
+}
+
+.w95-titlebtn:active svg {
+  transform: translate(1px, 1px);
+}
+
+/* Chunky stepped minimize/maximize — smooth easing hadn't been invented yet. */
+
+[data-theme='win95'] .bento-card.w95-minimizing {
+  animation: w95-minimize 0.9s steps(7, end) both;
+}
+
+@keyframes w95-minimize {
+  0% {
+    transform: none;
+    opacity: 1;
+  }
+  45%,
+  60% {
+    transform: translateY(48vh) scale(0.04);
+    opacity: 0;
+  }
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+[data-theme='win95'] .bento-card.w95-maximizing {
+  animation: w95-maximize 0.45s steps(4, end) both;
+}
+
+@keyframes w95-maximize {
+  0%,
+  100% {
+    transform: none;
+  }
+  50% {
+    transform: scale(1.035);
+  }
+}
+
+/* ---------- Classic message box ---------- */
+
+.w95-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.w95-dialog {
+  width: min(380px, 90vw);
+  background: #c0c0c0;
+  box-shadow:
+    var(--bevel-out, inset -1px -1px 0 #000000, inset 1px 1px 0 #dfdfdf, inset -2px -2px 0 #808080, inset 2px 2px 0 #ffffff),
+    4px 4px 0 rgba(0, 0, 0, 0.35);
+  padding: 3px;
+  font-family: 'Tahoma', 'MS Sans Serif', 'Segoe UI', sans-serif;
+  color: #000000;
+  -webkit-font-smoothing: none;
+}
+
+.w95-dialog-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(90deg, #000080, #1084d0);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 3px 3px 7px;
+  user-select: none;
+}
+
+.w95-dialog-title.is-flashing {
+  animation: w95-titleflash 0.5s steps(1, end) 2;
+}
+
+@keyframes w95-titleflash {
+  0%,
+  100% {
+    background: linear-gradient(90deg, #000080, #1084d0);
+  }
+  50% {
+    background: #808080;
+  }
+}
+
+.w95-dialog-title-text {
+  flex: 1;
+}
+
+.w95-dialog-body {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 18px 16px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.w95-dialog-icon {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+}
+
+.w95-dialog-buttons {
+  display: flex;
+  justify-content: center;
+  padding: 0 18px 16px;
+}
+
+.w95-push-btn {
+  min-width: 80px;
+  height: 25px;
+  background: #c0c0c0;
+  border: none;
+  border-radius: 0;
+  box-shadow: var(--bevel-out);
+  font-family: inherit;
+  font-size: 12px;
+  color: #000000;
+}
+
+.w95-push-btn:focus-visible {
+  outline: 1px dotted #000000;
+  outline-offset: -5px;
+}
+
+.w95-push-btn:active {
+  box-shadow: var(--bevel-in);
+}
+
+/* ---------- The office-assistant paperclip ---------- */
+
+.w95-clippy {
+  position: fixed;
+  right: 18px;
+  bottom: 40px;
+  z-index: 60;
+  width: 64px;
+}
+
+.w95-clippy-body {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: block;
+}
+
+.w95-clippy-svg {
+  width: 58px;
+  height: 80px;
+  overflow: visible;
+  filter: drop-shadow(2px 3px 0 rgba(0, 0, 0, 0.25));
+  animation: w95-clippy-bob 3.4s ease-in-out infinite;
+}
+
+@keyframes w95-clippy-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.w95-clippy-eyes {
+  animation: w95-clippy-blink 5.5s infinite;
+  transform-origin: 32px 12px;
+}
+
+@keyframes w95-clippy-blink {
+  0%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+  94%,
+  97% {
+    transform: scaleY(0.08);
+  }
+}
+
+.w95-clippy-bubble {
+  position: absolute;
+  right: 56px;
+  bottom: 66px;
+  width: max-content;
+  max-width: 240px;
+  background: #ffffe1;
+  border: 1px solid #000000;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.25);
+  padding: 9px 24px 9px 11px;
+  font-family: 'Tahoma', 'MS Sans Serif', 'Segoe UI', sans-serif;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #000000;
+  -webkit-font-smoothing: none;
+}
+
+/* Bubble tail pointing at the clip: black border triangle + fill triangle. */
+.w95-clippy-bubble::after {
+  content: '';
+  position: absolute;
+  right: -9px;
+  bottom: 10px;
+  border: 9px solid transparent;
+  border-right-width: 0;
+  border-left-color: #000000;
+}
+
+.w95-clippy-bubble::before {
+  content: '';
+  position: absolute;
+  right: -7px;
+  bottom: 11px;
+  border: 8px solid transparent;
+  border-right-width: 0;
+  border-left-color: #ffffe1;
+  z-index: 1;
+}
+
+.w95-bubble-close {
+  position: absolute;
+  top: 1px;
+  right: 4px;
+  background: transparent;
+  border: none;
+  padding: 2px;
+  font-size: 12px;
+  line-height: 1;
+  color: #000000;
+  cursor: pointer;
+}
+
+/* ---------- Status bar ---------- */
+
+.w95-statusbar {
+  display: flex;
+  align-items: stretch;
+  gap: 3px;
+  height: 26px;
+  padding: 3px 4px 3px 3px;
+  flex-shrink: 0;
+  background: #c0c0c0;
+  box-shadow:
+    inset 0 1px 0 #dfdfdf,
+    inset 0 2px 0 #ffffff;
+  font-family: 'Tahoma', 'MS Sans Serif', 'Segoe UI', sans-serif;
+  font-size: 11px;
+  color: #000000;
+  -webkit-font-smoothing: none;
+}
+
+.w95-panel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  box-shadow: var(--bevel-in);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.w95-ready {
+  min-width: 76px;
+}
+
+.w95-ticker {
+  flex: 1;
+  overflow: hidden;
+  padding: 0;
+  position: relative;
+}
+
+.w95-ticker-inner {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+  display: inline-flex;
+  white-space: nowrap;
+  animation: w95-marquee 48s linear infinite;
+}
+
+@keyframes w95-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.w95-modem-light {
+  width: 6px;
+  height: 6px;
+  background: #00a000;
+  box-shadow: inset -1px -1px 0 #006000;
+}
+
+.w95-modem-light.is-busy {
+  animation: w95-modem-blink 0.4s steps(1, end) infinite;
+}
+
+@keyframes w95-modem-blink {
+  0%,
+  100% {
+    background: #00e000;
+  }
+  50% {
+    background: #004000;
+  }
+}
+
+.w95-clock {
+  min-width: 66px;
+  justify-content: center;
+}
+
+/* The resize grip that never resized anything, but had to be there. */
+.w95-grip {
+  width: 16px;
+  align-self: stretch;
+  background: repeating-linear-gradient(
+    135deg,
+    transparent 0 3px,
+    #ffffff 3px 4px,
+    #808080 4px 6px
+  );
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+}
+
+/* ---------- Boot splash ---------- */
+
+.w95-boot {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: #000000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  opacity: 1;
+  transition: opacity 0.35s ease-out;
+}
+
+.w95-boot.is-done {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.w95-boot-art {
+  position: relative;
+}
+
+.w95-boot-art span {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+}
+
+.w95-boot-title {
+  font-family: 'Tahoma', 'MS Sans Serif', 'Segoe UI', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.4px;
+  -webkit-font-smoothing: none;
+}
+
+.w95-boot-ver {
+  margin-left: 10px;
+  font-style: italic;
+  color: #ffd800;
+}
+
+.w95-boot-sub {
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  color: #b0b0b0;
+}
+
+.w95-boot-cursor {
+  animation: w95-cursor-blink 0.8s steps(1, end) infinite;
+}
+
+@keyframes w95-cursor-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+.w95-boot-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 16px;
+  background: repeating-linear-gradient(
+    90deg,
+    #0000a0 0 18px,
+    #0018c8 18px 32px,
+    #0038f0 32px 44px,
+    #0018c8 44px 54px
+  );
+  animation: w95-bootbar 0.7s linear infinite;
+}
+
+@keyframes w95-bootbar {
+  to {
+    background-position-x: 54px;
+  }
+}
+
+/* ---------- Small period details ---------- */
+
+[data-theme='win95'] ::selection {
+  background: #000080;
+  color: #ffffff;
+}
+
+/* Busy = hourglass. Every 90s app agreed on this. */
+[data-theme='win95'] .app-shell[data-loading] *,
+[data-theme='win95'] .app-shell[data-loading] {
+  cursor: wait !important;
+}
+
+/* The brand opens the About box in win95, so advertise clickability. */
+[data-theme='win95'] .header-brand {
+  cursor: pointer;
+}
+
+[data-theme='win95'] .header-brand:active {
+  translate: 1px 1px;
+}
+
+.w95-about-rows {
+  display: grid;
+  gap: 6px;
+}
+
+.w95-about-sep {
+  height: 2px;
+  box-shadow:
+    inset 0 1px 0 #808080,
+    inset 0 2px 0 #ffffff;
+  margin: 4px 0;
+}

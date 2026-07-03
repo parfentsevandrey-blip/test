@@ -1,4 +1,5 @@
 import type { CSSProperties, MouseEvent, ReactNode } from 'react'
+import { Win95TitleButtons } from './retro/Win95TitleButtons'
 
 interface BentoCardProps {
   /** Grid span/sizing class, e.g. "bento-hero", "bento-wide", "bento-1". */
@@ -49,6 +50,8 @@ export function BentoCard({ span, floatDelay = 0, children }: BentoCardProps): J
     >
       <div className="bento-card-glow" />
       <div className="bento-card-content">{children}</div>
+      {/* Hidden outside the win95 theme (display gated in retro.css). */}
+      <Win95TitleButtons />
     </div>
   )
 }

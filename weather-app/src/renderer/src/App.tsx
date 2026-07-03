@@ -15,6 +15,10 @@ import { UnitToggle } from './components/UnitToggle'
 import { ThemeToggle } from './components/ThemeToggle'
 import { FavoritesMenu } from './components/FavoritesMenu'
 import { LoadingOverlay } from './components/LoadingOverlay'
+import { Win95StatusBar } from './components/retro/Win95StatusBar'
+import { Win95Clippy } from './components/retro/Win95Clippy'
+import { Win95BootSplash } from './components/retro/Win95BootSplash'
+import { Win95Dialog } from './components/retro/Win95Dialog'
 
 function RefreshIcon(): JSX.Element {
   return (
@@ -53,6 +57,14 @@ export function App(): JSX.Element {
 
   const updatedAgo = useUpdatedAgo(weather?.fetchedAt)
 
+  const resolved = resolveTheme(theme, weather)
+  const [aboutOpen, setAboutOpen] = useState(false)
+  // Boot splash: plays on every power-on of the retro theme, including a
+  // persisted win95 preference on app start. keyed so re-entries restart it.
+  const [bootVisible, setBootVisible] = useState(() => resolved === 'win95')
+  const [bootKey, setBootKey] = useState(0)
+  const prevResolvedRef = useRef<string | null>(null)
+
   useEffect(() => {
     void init()
   }, [init])
@@ -60,10 +72,16 @@ export function App(): JSX.Element {
   // Apply the resolved theme ('auto' follows day/night at the selected
   // location; 'win95' also switches the 3D scene into retro pixelation).
   useEffect(() => {
-    const resolved = resolveTheme(theme, weather)
     document.documentElement.dataset.theme = resolved
     sceneRef.current?.setRetro(resolved === 'win95')
-  }, [theme, weather])
+
+    const prev = prevResolvedRef.current
+    prevResolvedRef.current = resolved
+    if (resolved === 'win95' && prev !== null && prev !== 'win95') {
+      setBootKey((k) => k + 1)
+      setBootVisible(true)
+    }
+  }, [resolved])
 
   // Ctrl/Cmd+K focuses the city search, like every commercial app.
   useEffect(() => {
@@ -98,15 +116,22 @@ export function App(): JSX.Element {
     sceneRef.current?.setWeatherData(weather)
   }, [weather])
 
+  const isWin95 = resolved === 'win95'
+  const busy = status === 'loading' || status === 'locating'
+
   return (
-    <div className="app-shell">
+    <div className="app-shell" data-loading={busy ? 'true' : undefined}>
       <canvas ref={canvasRef} className="scene-canvas" />
 
       <div className="ui-overlay">
         <header className="app-header">
-          <div className="header-brand">
+          <div
+            className="header-brand"
+            onClick={isWin95 ? () => setAboutOpen(true) : undefined}
+            title={isWin95 ? 'About Cinematic Weather 95' : undefined}
+          >
             <span className="dot" />
-            Cinematic Weather
+            {isWin95 ? 'Cinematic Weather 95' : 'Cinematic Weather'}
           </div>
 
           <SearchBar />
@@ -142,9 +167,29 @@ export function App(): JSX.Element {
             <PrecipitationCard />
           </div>
         </div>
+
+        {isWin95 && <Win95StatusBar />}
+        {isWin95 && <Win95Clippy />}
       </div>
 
       <LoadingOverlay />
+
+      {isWin95 && bootVisible && (
+        <Win95BootSplash key={bootKey} onDone={() => setBootVisible(false)} />
+      )}
+
+      {aboutOpen && (
+        <Win95Dialog title="About Cinematic Weather 95" icon="info" onClose={() => setAboutOpen(false)}>
+          <div className="w95-about-rows">
+            <strong>Cinematic Weather 95</strong>
+            <span>Version 4.00.950 B</span>
+            <span>Copyright © 1995–2026 Cinematic Softworks</span>
+            <div className="w95-about-sep" />
+            <span>Memory: 640K (that ought to be enough for anybody)</span>
+            <span>Weather data: open-meteo.com, via 56k modem</span>
+          </div>
+        </Win95Dialog>
+      )}
     </div>
   )
 }
