@@ -33,6 +33,15 @@ const DEFAULT_PARAMS: SceneParams = {
 }
 
 /**
+ * Frame-rate cap for the ambient scene. The flythrough is a slow, soft
+ * background behind the cards, so ~40fps is visually indistinguishable from
+ * 60/120/144Hz while doing a fraction of the (raymarched-cloud + bloom) GPU
+ * work — a big power/heat win, especially on high-refresh displays where an
+ * uncapped loop would otherwise render 120-240 frames a second for no benefit.
+ */
+const TARGET_FRAME_MS = 1000 / 40
+
+/**
  * Owns the Three.js scene/camera/renderer and drives every visual effect
  * from a single SceneParams snapshot computed each frame from the latest
  * WeatherData plus the real-time clock (so the sun/moon keep moving between
@@ -46,6 +55,10 @@ export class SceneManager {
   private weather: WeatherData | null = null
   private rafId: number | null = null
   private cameraAngle = 0
+  private running = false
+  /** Own elapsed accumulator (dt-summed) so pausing never resets the clock. */
+  private elapsedTime = 0
+  private lastRenderTs = 0
 
   constructor(canvas: HTMLCanvasElement) {
     const scene = new THREE.Scene()
@@ -96,12 +109,35 @@ export class SceneManager {
   }
 
   start(): void {
-    if (this.rafId !== null) return
+    if (this.running) return
+    this.running = true
     this.clock.start()
-    const tick = (): void => {
+    // Stop rendering entirely while the window is hidden/minimized (Electron
+    // background windows otherwise keep the rAF loop — and the GPU — running).
+    document.addEventListener('visibilitychange', this.onVisibilityChange)
+    if (!document.hidden) this.scheduleLoop()
+  }
+
+  stop(): void {
+    this.running = false
+    document.removeEventListener('visibilitychange', this.onVisibilityChange)
+    if (this.rafId !== null) cancelAnimationFrame(this.rafId)
+    this.rafId = null
+  }
+
+  private scheduleLoop(): void {
+    if (this.rafId !== null) return
+    this.lastRenderTs = 0
+    const tick = (ts: number): void => {
       this.rafId = requestAnimationFrame(tick)
+      // Frame-rate cap: skip frames that arrive sooner than the target period,
+      // so a 120/144Hz display doesn't render 2-4x more than the scene needs.
+      if (this.lastRenderTs !== 0 && ts - this.lastRenderTs < TARGET_FRAME_MS) return
+      this.lastRenderTs = ts
+
       const dt = Math.min(this.clock.getDelta(), 0.1)
-      const elapsed = this.clock.getElapsedTime()
+      this.elapsedTime += dt
+      const elapsed = this.elapsedTime
       const params = this.computeParams()
 
       this.updateCamera(dt, elapsed, params)
@@ -109,12 +145,20 @@ export class SceneManager {
       this.postFX.update(dt, elapsed, params)
       this.postFX.render(dt)
     }
-    tick()
+    this.rafId = requestAnimationFrame(tick)
   }
 
-  stop(): void {
-    if (this.rafId !== null) cancelAnimationFrame(this.rafId)
-    this.rafId = null
+  private readonly onVisibilityChange = (): void => {
+    if (!this.running) return
+    if (document.hidden) {
+      if (this.rafId !== null) cancelAnimationFrame(this.rafId)
+      this.rafId = null
+    } else {
+      // Consume the whole hidden-time delta so the scene resumes exactly where
+      // it paused instead of lurching forward by the time spent hidden.
+      this.clock.getDelta()
+      this.scheduleLoop()
+    }
   }
 
   dispose(): void {
