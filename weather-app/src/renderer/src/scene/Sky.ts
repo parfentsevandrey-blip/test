@@ -27,14 +27,21 @@ const skyFragmentShader = /* glsl */ `
   uniform vec3 uGroundColor;
   uniform float uSunAltitude;
   uniform float uFlatness;
+  uniform float uTime;
+  uniform vec2 uWind;
+  uniform float uHaze;
 
   void main() {
-    float h = normalize(vWorldPosition).y;
+    vec3 dir = normalize(vWorldPosition);
+    float h = dir.y;
 
     float upperT = pow(clamp(h, 0.0, 1.0), 0.55);
     vec3 upperColor = mix(uMidColor, uZenithColor, upperT);
 
-    float lowerT = pow(clamp(-h, 0.0, 1.0), 0.5);
+    // Gentler horizon->ground falloff (0.85 vs 0.5): with the terrain gone the
+    // lower hemisphere is visible along the frame bottom, so it must read as a
+    // soft ground-haze, never a hard band.
+    float lowerT = pow(clamp(-h, 0.0, 1.0), 0.85);
     vec3 lowerColor = mix(uMidColor, uGroundColor, lowerT);
 
     vec3 baseColor = h >= 0.0 ? upperColor : lowerColor;
@@ -44,6 +51,20 @@ const skyFragmentShader = /* glsl */ `
     float bandWidth = mix(6.0, 2.6, smoothstep(0.0, 0.35, abs(uSunAltitude)));
     float horizonBand = 1.0 - clamp(abs(h) * bandWidth, 0.0, 1.0);
     vec3 skyColor = mix(baseColor, uHorizonColor, horizonBand);
+
+    // Whisper-soft drifting atmospheric striations — a few gentle, near-
+    // horizontal bands that slowly wave and drift with the wind so a clear sky
+    // isn't dead flat. Deliberately NOT 2D noise blobs (that was the old
+    // volumetric-cloud look we're retiring); the mix factor stays a few
+    // percent so it reads as haze layering, not cloud.
+    float ang = atan(dir.z, dir.x);
+    float drift = uWind.x * uTime * 0.03 + uWind.y * uTime * 0.02;
+    float s1 = sin(h * 9.0 + sin(ang * 2.0 + drift) * 1.2 + drift * 0.5);
+    float s2 = sin(h * 16.0 - ang * 1.5 + drift * 0.8);
+    float haze = 0.5 + 0.28 * s1 + 0.14 * s2;
+    float band = smoothstep(0.04, 0.32, h) * (1.0 - smoothstep(0.5, 0.9, h));
+    vec3 hazeColor = mix(uHorizonColor, uZenithColor, 0.42);
+    skyColor = mix(skyColor, hazeColor, clamp(band * uHaze * haze, 0.0, 1.0) * 0.13);
 
     // Flatten contrast for overcast / foggy / stormy conditions.
     vec3 flatColor = mix(uHorizonColor, uZenithColor, 0.55);
@@ -102,7 +123,10 @@ export class Sky implements SceneEffect {
         uHorizonColor: { value: new THREE.Color(0xdfe9f2) },
         uGroundColor: { value: new THREE.Color(0x0a0e14) },
         uSunAltitude: { value: 0.5 },
-        uFlatness: { value: 0 }
+        uFlatness: { value: 0 },
+        uTime: { value: 0 },
+        uWind: { value: new THREE.Vector2(1, 0) },
+        uHaze: { value: 0.4 }
       },
       vertexShader: skyVertexShader,
       fragmentShader: skyFragmentShader,
@@ -154,7 +178,7 @@ export class Sky implements SceneEffect {
     this.scene.add(this.sunLight.target)
   }
 
-  update(_dt: number, _elapsed: number, params: SceneParams): void {
+  update(_dt: number, elapsed: number, params: SceneParams): void {
     const altitude = clamp(params.sunAltitude, -1, 1)
     const azimuth = params.sunAzimuthRad
 
@@ -196,7 +220,9 @@ export class Sky implements SceneEffect {
     this.horizonColor.set(0xeef4fa).lerp(this.hex(0xffb37a), sunsetT)
     this.horizonColor.lerp(this.hex(0x0b1220), nightT)
 
-    this.groundColor.set(0x7a8a94).lerp(this.hex(0x020306), clamp01(nightT + 0.3))
+    // Soft hazy stone that continues the horizon downward — not a dark
+    // silhouette band (the terrain that used to hide it is gone).
+    this.groundColor.set(0xb9c2cb).lerp(this.hex(0x10161f), clamp01(nightT * 0.9 + 0.12))
 
     // Desaturate/flatten the gradient for cloudy, foggy or stormy skies.
     const flatness = clamp01(overcast * 0.85 + (1 - params.visibility) * 0.3)
@@ -208,6 +234,14 @@ export class Sky implements SceneEffect {
     ;(u.uGroundColor.value as THREE.Color).copy(this.groundColor)
     u.uSunAltitude.value = altitude
     u.uFlatness.value = flatness
+    u.uTime.value = elapsed
+    ;(u.uWind.value as THREE.Vector2).set(
+      Math.sin(params.windDirectionRad),
+      Math.cos(params.windDirectionRad)
+    ).multiplyScalar(0.4 + params.windSpeed)
+    // Faint even under a clear sky, a touch more with cloud cover — but capped
+    // low so it never becomes a cloud.
+    u.uHaze.value = 0.35 + clamp01(params.cloudCover) * 0.45
 
     // ---- Sun / moon billboards -------------------------------------------
     this.sunSprite.position.copy(this.sunDir).multiplyScalar(CELESTIAL_RADIUS)

@@ -6,15 +6,9 @@ import { computeSunPosition, getTimeOfDayFrac, toAbsoluteInstant } from '../util
 import { clamp01, degToRad, lerp } from '../utils/math'
 import { Sky } from './Sky'
 import { Stars } from './Stars'
-import { VolumetricClouds } from './VolumetricClouds'
 import { Precipitation } from './Precipitation'
 import { Lightning } from './Lightning'
 import { Fog } from './Fog'
-import { Terrain } from './Terrain'
-import { Birds } from './Birds'
-import { ShootingStars } from './ShootingStars'
-import { SunRays } from './SunRays'
-import { Rainbow } from './Rainbow'
 import { PostFX } from './PostFX'
 
 const DEFAULT_PARAMS: SceneParams = {
@@ -54,7 +48,6 @@ export class SceneManager {
   private readonly clock = new THREE.Clock()
   private weather: WeatherData | null = null
   private rafId: number | null = null
-  private cameraAngle = 0
   private running = false
   /** Own elapsed accumulator (dt-summed) so pausing never resets the clock. */
   private elapsedTime = 0
@@ -72,15 +65,15 @@ export class SceneManager {
 
     this.ctx = { scene, camera, renderer, sunLight, hemiLight, quality: 'high' }
 
+    // Serene-sky composition: just the atmospheric gradient dome + sun/moon,
+    // subtle night stars, weather-gated fog haze, real precipitation and
+    // storm lightning. The old flythrough extras (terrain silhouette,
+    // volumetric cloud blobs, birds, shooting stars, rainbows, sun rays) are
+    // retired for a calm, premium desktop backdrop. Their source files stay on
+    // disk, dormant — nothing constructs them, so they cost nothing.
     this.effects = [
       new Sky(this.ctx),
-      new Terrain(this.ctx),
       new Stars(this.ctx),
-      new VolumetricClouds(this.ctx),
-      new SunRays(this.ctx),
-      new Rainbow(this.ctx),
-      new Birds(this.ctx),
-      new ShootingStars(this.ctx),
       new Fog(this.ctx),
       new Precipitation(this.ctx),
       new Lightning(this.ctx)
@@ -169,42 +162,40 @@ export class SceneManager {
   }
 
   /**
-   * A genuine wandering flythrough, not a tripod with a wobble: radius and
-   * altitude both breathe across multiple independent slow periods (so the
-   * path never reads as a simple repeating circle), swept through a wide
-   * arc biased toward the sun/moon's azimuth, while the look-at target
-   * drifts independently too. The combination gives constant, real parallax
-   * between the near terrain, mid-distance clouds and the far sky/stars --
-   * which is what actually sells "three-dimensional" to the eye, far more
-   * than any single object's geometry does. Stays within Terrain's flat
-   * flight zone (radius < ~42) and well above ground level at all times.
+   * A near-still, slowly-reorienting frame — an ambient window on the sky, not
+   * a flythrough. The sky dome is centered at the origin with matrixAutoUpdate
+   * off, so translating the camera barely changes what's on screen; only its
+   * orientation reads. So we hold a fixed low anchor with a 1-2 unit breathe
+   * and let the frame drift almost imperceptibly: yaw locks toward the sun's
+   * azimuth (keeping the horizon glow and disc in view) with a ~0.05 rad
+   * ultra-slow sway, and the gaze sits just above the horizon with a tiny bob.
+   * Life comes from the drifting haze band and the sun/moon's real-time arc,
+   * not from moving the camera around a scene that no longer has near geometry.
    */
   private updateCamera(_dt: number, elapsed: number, params: SceneParams): void {
     const t = elapsed
 
-    // Full cycles land around 30-55s so movement is clearly visible within
-    // any short glance at the app, not just over several minutes.
-    const radius = 28 + Math.sin(t * 0.11) * 9 + Math.sin(t * 0.24 + 2.1) * 4
-    const cameraHeight = 15 + Math.sin(t * 0.14 + 0.8) * 7 + Math.sin(t * 0.31) * 2.5
-
-    const oscillation = Math.sin(t * 0.12) * 1.1 + Math.sin(t * 0.27 + 1.3) * 0.4
-    this.cameraAngle = params.sunAzimuthRad + Math.PI + oscillation
-
     this.ctx.camera.position.set(
-      Math.sin(this.cameraAngle) * radius,
-      cameraHeight,
-      Math.cos(this.cameraAngle) * radius
+      Math.sin(t * 0.015) * 1.2,
+      7 + Math.sin(t * 0.02) * 0.5,
+      14
     )
 
-    // Gaze rides well above the horizon so the sky (and the weather
-    // happening in it) dominates the frame behind the floating cards, with
-    // the terrain reduced to a grounding band along the bottom edge.
-    const lookX = Math.sin(t * 0.065) * 10
-    const lookZ = Math.cos(t * 0.05 + 1.0) * 10
+    // Base yaw points away from the sun's azimuth so the lit horizon sits in
+    // frame; a whisper of oscillation keeps it from reading as a frozen still.
+    const yaw = params.sunAzimuthRad + Math.PI + Math.sin(t * 0.018) * 0.05
+    // Pitch a touch above the horizon (higher when the sun is high) so the
+    // softened below-horizon band stays low in the frame.
     const altitude01 = clamp01(params.sunAltitude * 0.5 + 0.5)
-    const lookAtY = lerp(cameraHeight * 1.1, cameraHeight * 2.1, altitude01)
+    const pitch = lerp(0.08, 0.16, altitude01) + Math.sin(t * 0.025) * 0.015
 
-    this.ctx.camera.lookAt(lookX, lookAtY, lookZ)
+    const cosP = Math.cos(pitch)
+    const dirX = Math.sin(yaw) * cosP
+    const dirY = Math.sin(pitch)
+    const dirZ = Math.cos(yaw) * cosP
+
+    const cam = this.ctx.camera.position
+    this.ctx.camera.lookAt(cam.x + dirX * 100, cam.y + dirY * 100, cam.z + dirZ * 100)
   }
 
   private computeParams(): SceneParams {

@@ -7,25 +7,28 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
 import type { PostProcessor, SceneContext, SceneParams } from './contract'
 import { clamp01, lerp } from '../utils/math'
 
-/** Baseline soft glow around bright highlights (sun disc, moon, lightning, sprite cores). */
-const BLOOM_STRENGTH_BASE = 0.62
-const BLOOM_STRENGTH_NIGHT_BOOST = 0.22
-const BLOOM_STRENGTH_STORM_BOOST = 0.1
-const BLOOM_RADIUS = 0.48
-const BLOOM_THRESHOLD = 0.86
+/** Restrained glow around bright highlights (sun disc, moon, lightning). Kept
+ *  low so the sky reads matte/editorial, not bloomy — but never zero, or the
+ *  sun disc goes flat. */
+const BLOOM_STRENGTH_BASE = 0.18
+const BLOOM_STRENGTH_NIGHT_BOOST = 0.08
+const BLOOM_STRENGTH_STORM_BOOST = 0.06
+const BLOOM_RADIUS = 0.4
+const BLOOM_THRESHOLD = 0.9
 
 /** How quickly modulated bloom strength chases its target, in "per second" smoothing terms. */
 const BLOOM_SMOOTH_RATE = 0.6
 
 /** Vignette: how far in (0 = screen center, ~1 = corner) the darkening starts, and how strong it gets. */
 const VIGNETTE_SOFTNESS = 0.32
-const VIGNETTE_STRENGTH_BASE = 0.15
-const VIGNETTE_STRENGTH_NIGHT_BOOST = 0.12
-const VIGNETTE_STRENGTH_STORM_BOOST = 0.08
+const VIGNETTE_STRENGTH_BASE = 0.08
+const VIGNETTE_STRENGTH_NIGHT_BOOST = 0.06
+const VIGNETTE_STRENGTH_STORM_BOOST = 0.05
 
-/** Film grain: kept deliberately faint so it reads as "premium" texture, not a noisy overlay. */
-const GRAIN_STRENGTH_BASE = 0.009
-const GRAIN_STRENGTH_STORM_BOOST = 0.015
+/** Film grain: kept deliberately faint so it reads as "premium" texture, not a
+ *  noisy overlay — and it quietly kills gradient banding on the matte sky. */
+const GRAIN_STRENGTH_BASE = 0.006
+const GRAIN_STRENGTH_STORM_BOOST = 0.01
 
 /** Win95 retro mode: chunky pixels, crushed VGA palette, faint scanlines. */
 const RETRO_PIXEL_SIZE = 4.0 // block edge, in device pixels (spec: ~3.5x-4.5x)
@@ -174,7 +177,7 @@ export class PostFX implements PostProcessor {
 
     ctx.renderer.outputColorSpace = THREE.SRGBColorSpace
     ctx.renderer.toneMapping = THREE.ACESFilmicToneMapping
-    ctx.renderer.toneMappingExposure = 1.08
+    ctx.renderer.toneMappingExposure = 1.0
 
     const size = ctx.renderer.getSize(new THREE.Vector2())
 
