@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Ravenmoor — A Dark Fantasy Village</title>
+  <style>
+    :root { --ink: #d8d2c4; --dim: #8a8474; --gold: #e8b45a; --blood: #a8322c; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #05060a; }
+    body { font-family: "Georgia", "Times New Roman", serif; color: var(--ink); cursor: default; }
+    #app { position: fixed; inset: 0; }
+    canvas { display: block; }
+
+    /* ---- Loading ---- */
+    #loader {
+      position: fixed; inset: 0; z-index: 40;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: radial-gradient(ellipse at 50% 40%, #0c0e16 0%, #04050a 70%);
+      transition: opacity 0.8s ease;
+    }
+    #loader .rune { font-size: 46px; letter-spacing: 10px; color: var(--gold); opacity: 0.9;
+      text-shadow: 0 0 24px rgba(232,180,90,0.5); animation: pulse 2.4s ease-in-out infinite; }
+    #loader .msg { margin-top: 18px; color: var(--dim); letter-spacing: 3px; font-size: 13px; text-transform: uppercase; }
+    @keyframes pulse { 0%,100% { opacity: 0.55; } 50% { opacity: 1; } }
+
+    /* ---- Menu overlay ---- */
+    #overlay {
+      position: fixed; inset: 0; z-index: 30;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 24px;
+      background: radial-gradient(ellipse at 50% 35%, rgba(14,16,26,0.72) 0%, rgba(3,4,8,0.94) 75%);
+      backdrop-filter: blur(2px); transition: opacity 0.6s ease;
+    }
+    #overlay.hidden { opacity: 0; pointer-events: none; }
+    #overlay h1 {
+      font-size: clamp(34px, 7vw, 74px); font-weight: normal; letter-spacing: 6px;
+      color: #efe7d6; text-shadow: 0 2px 40px rgba(0,0,0,0.9), 0 0 30px rgba(120,60,40,0.25);
+      margin-bottom: 6px;
+    }
+    #overlay h1 .sub-rune { color: var(--blood); }
+    #overlay .tagline { color: var(--dim); font-style: italic; letter-spacing: 2px;
+      font-size: clamp(13px, 2.4vw, 18px); margin-bottom: 40px; max-width: 640px; line-height: 1.6; }
+    #enterBtn {
+      font-family: inherit; font-size: 15px; letter-spacing: 4px; text-transform: uppercase;
+      color: #0a0a0a; background: linear-gradient(180deg, #e8b45a, #b9823a);
+      border: none; padding: 15px 44px; border-radius: 2px; cursor: pointer;
+      box-shadow: 0 0 40px rgba(232,180,90,0.35), inset 0 1px 0 rgba(255,255,255,0.3);
+      transition: transform 0.15s ease, box-shadow 0.2s ease;
+    }
+    #enterBtn:hover { transform: translateY(-2px); box-shadow: 0 0 60px rgba(232,180,90,0.55), inset 0 1px 0 rgba(255,255,255,0.4); }
+    #enterBtn:active { transform: translateY(0); }
+    .controls { margin-top: 44px; display: flex; gap: 26px; flex-wrap: wrap; justify-content: center; color: var(--dim); font-size: 13px; letter-spacing: 1px; }
+    .controls b { color: var(--ink); font-weight: normal; display: inline-block; min-width: 20px;
+      border: 1px solid rgba(200,190,170,0.28); border-radius: 4px; padding: 2px 8px; margin-right: 6px; font-size: 12px; }
+    .hint-resume { margin-top: 24px; color: var(--dim); font-style: italic; letter-spacing: 2px; opacity: 0; }
+    #overlay.paused .hint-resume { opacity: 1; }
+    #overlay.paused .tagline, #overlay.paused .controls { opacity: 0.5; }
+
+    /* ---- HUD ---- */
+    #hud { position: fixed; inset: 0; z-index: 10; pointer-events: none; }
+    #crosshair { position: absolute; top: 50%; left: 50%; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px;
+      border-radius: 50%; background: rgba(232,220,200,0.55); box-shadow: 0 0 4px rgba(0,0,0,0.9); opacity: 0; transition: opacity 0.5s; }
+    #objective { position: absolute; top: 26px; left: 0; right: 0; text-align: center;
+      color: rgba(216,210,196,0.8); letter-spacing: 3px; font-size: 14px; font-style: italic;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.95); opacity: 0; transition: opacity 1.2s; }
+    #vignette-frame { position: absolute; inset: 0; box-shadow: inset 0 0 200px 40px rgba(0,0,0,0.85); }
+    #hud .corner { position: absolute; bottom: 20px; color: var(--dim); font-size: 12px; letter-spacing: 2px; opacity: 0; transition: opacity 0.8s; }
+    #hud.active .corner, #hud.active #crosshair, #hud.active #objective { opacity: 1; }
+    #hud .corner.left { left: 24px; }
+    #hud .corner.right { right: 24px; text-align: right; }
+    #hud .corner.right span { color: var(--ink); }
+    #audioState { color: var(--ink); }
+  </style>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./vendor/three/build/three.module.js",
+      "three/addons/": "./vendor/three/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="app"></div>
+
+  <div id="hud">
+    <div id="vignette-frame"></div>
+    <div id="objective">Follow the torchlit road north… to the castle.</div>
+    <div id="crosshair"></div>
+    <div class="corner left">Ravenmoor</div>
+    <div class="corner right"><span id="clock">a moonless night</span> · sound <span id="audioState">on</span> [M]</div>
+  </div>
+
+  <div id="overlay">
+    <h1>RAVEN<span class="sub-rune">✦</span>MOOR</h1>
+    <p class="tagline">The village has kept its lamps burning against the dark, though no soul answers your call.
+      A castle broods upon the northern rise. Walk the road, and do not stray far from the fire.</p>
+    <button id="enterBtn">Enter the Village</button>
+    <div class="controls">
+      <div><b>W A S D</b> Walk</div>
+      <div><b>Mouse</b> Look</div>
+      <div><b>Shift</b> Run</div>
+      <div><b>M</b> Sound</div>
+      <div><b>Esc</b> Pause</div>
+    </div>
+    <p class="hint-resume">Click to return to the dark.</p>
+  </div>
+
+  <div id="loader">
+    <div class="rune">✦</div>
+    <div class="msg" id="loaderMsg">summoning the village…</div>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
