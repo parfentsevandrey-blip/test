@@ -10,18 +10,27 @@ Three.js is vendored under `vendor/`, so the game runs fully offline.
 
 ## Run it
 
-Because the game uses native ES modules, it must be served over HTTP (opening
-`index.html` from the filesystem will be blocked by the browser). From this folder:
+### Easiest — no terminal
+
+Just open **`Ravenmoor.html`** in any browser (double-click it, or drag it onto a
+browser window). It's a single self-contained file with Three.js and every module
+bundled in, so it works straight from `file://` — no server, no internet.
+
+### Modular version (for development)
+
+`index.html` loads the game as separate ES modules, which browsers only allow over
+HTTP. Serve the folder and open it:
 
 ```bash
-# Python (any 3.x)
-python3 -m http.server 8000
-
-# …or Node
-npx serve -l 8000 .
+python3 -m http.server 8000   # then open http://localhost:8000/
+# …or: npx serve -l 8000 .
 ```
 
-Then open **http://localhost:8000/** and click **Enter the Village**.
+Either way, click **Enter the Village** to begin.
+
+> `Ravenmoor.html` is generated from the modular sources. To rebuild it after editing
+> anything under `src/`, re-run the bundler (esbuild) that inlines `src/main.js` +
+> `vendor/three` into one file.
 
 ## Controls
 
