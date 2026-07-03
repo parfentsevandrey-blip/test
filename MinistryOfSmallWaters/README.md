@@ -44,7 +44,7 @@ ship**. The whole thing is a handful of small Python files.
 
 - **Left-click a creature** → poke it (it startles and darts off).
 - **Left-click open water** (or **right-click** anywhere) → drop a food pellet.
-- **Keyboard:** `F` feed the whole nation · `P` poke the Head of State · `Esc` hide the tank.
+- **Keyboard:** `F` feed the whole nation · `P` poke the Head of State · `Esc` hide the tank · `Ctrl`+`Q` quit.
 - **Tray menu** (right-click the crab seal): Open/Hide the Tank, *Feed the Nation*,
   *Poke the Head of State*, Always on Top, Launch at Windows Startup,
   About, and *Resign (Quit)*.

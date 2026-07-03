@@ -95,10 +95,12 @@ class Aquarium:
         self.canvas.bind("<Button-1>", self._on_left)
         self.canvas.bind("<Button-3>", self._on_right)
         self.root.bind("<Key>", self._on_key)
+        # a hard quit that always works, independent of whether a tray exists
+        self.root.bind("<Control-q>", lambda e: self.quit())
         self.root.protocol("WM_DELETE_WINDOW", self.hide)
 
-        self.root.after(FRAME_MS, self._tick)
-        self.root.after(30, self._pump)
+        self._tick_after = self.root.after(FRAME_MS, self._tick)
+        self._pump_after = self.root.after(30, self._pump)
 
     # ------------------------------------------------------------------ #
     # window
@@ -256,7 +258,7 @@ class Aquarium:
         self.world.step(dt)
         self._draw(dt)
 
-        self.root.after(FRAME_MS, self._tick)
+        self._tick_after = self.root.after(FRAME_MS, self._tick)
 
     def _draw(self, dt):
         w = self.world
@@ -389,7 +391,7 @@ class Aquarium:
         except queue.Empty:
             pass
         if self._alive:
-            self.root.after(30, self._pump)
+            self._pump_after = self.root.after(30, self._pump)
 
     def _do(self, fn):
         # safe to call from any thread: just enqueue for the Tk thread
@@ -424,6 +426,14 @@ class Aquarium:
     def quit(self):
         def _q():
             self._alive = False
+            # cancel pending animation/pump timers so nothing fires post-destroy
+            for aid in (getattr(self, "_tick_after", None),
+                        getattr(self, "_pump_after", None)):
+                if aid is not None:
+                    try:
+                        self.root.after_cancel(aid)
+                    except Exception:
+                        pass
             try:
                 self.root.destroy()
             except Exception:

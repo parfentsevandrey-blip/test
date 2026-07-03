@@ -105,6 +105,7 @@ def about_text():
         "A tiny pixel nation that lives in your system tray.\n"
         "  • Left-click a creature to POKE it (it startles).\n"
         "  • Left-click open water (or right-click) to DROP FOOD.\n"
+        "  • Keys: F feed the nation · P poke the crab · Esc hide · Ctrl+Q quit.\n"
         "  • The crab rules the seabed. Feed him and he may forgive you.\n\n"
         f"Issued by {AUTHOR}. No fish were employed in the making of this state."
     )

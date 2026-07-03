@@ -25,8 +25,22 @@ def main():
         from tray import Tray
         tray = Tray(app)
         app.on_status = tray.set_title
-        threading.Thread(target=tray.run, name="tray", daemon=True).start()
-    except Exception as exc:                     # pystray missing / no tray host
+
+        def _run_tray():
+            # pystray.Icon construction is inert; the OS tray registration only
+            # happens here in run(). If there is no tray host (headless/minimal
+            # Linux, a locked-down Windows session), this is where it fails --
+            # on the daemon thread, out of reach of the except below. So catch
+            # it here and restore a real quit path on the Tk thread.
+            try:
+                tray.run()
+            except Exception as exc:
+                print(f"[Ministry] tray backend failed ({exc}); "
+                      "closing the window now quits.", file=sys.stderr)
+                app._do(lambda: app.root.protocol("WM_DELETE_WINDOW", app.quit))
+
+        threading.Thread(target=_run_tray, name="tray", daemon=True).start()
+    except Exception as exc:                     # pystray missing / import error
         print(f"[Ministry] tray unavailable ({exc}); running windowed only.",
               file=sys.stderr)
         # without a tray, closing the window must actually quit

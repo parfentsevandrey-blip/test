@@ -38,6 +38,16 @@ def main():
           "| effects:", [e.kind for e in world.effects])
     print("canvas items:", len(app.canvas.find_all()))
 
+    if "quittest" in sys.argv:
+        # verify the Ctrl-Q hard-quit binding tears the app down
+        app.root.focus_force()
+        app.root.event_generate("<Control-q>")
+        app.root.update()          # dispatch the key -> quit() enqueues _q
+        app._pump()                # drain the command queue -> destroys root
+        assert app._alive is False, "Ctrl-Q did not quit the app"
+        print("QUIT TEST OK (Ctrl-Q tore down the app)")
+        return
+
     # screenshot via X11 grab
     shot = os.path.join(os.path.dirname(__file__),
                         "tank_shot_night.png" if night else "tank_shot.png")
