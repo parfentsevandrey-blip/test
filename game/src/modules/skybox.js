@@ -203,8 +203,22 @@ export function build(ctx) {
   const sizeAttr = new THREE.Float32BufferAttribute(new Float32Array(starCount), 1);
   for (let i = 0; i < starCount; i++) sizeAttr.array[i] = starBaseSize[i];
   starGeo.setAttribute('size', sizeAttr);
+  // Soft round sprite so points render as dots, not hard squares.
+  const dotTex = (() => {
+    const cnv = document.createElement('canvas'); cnv.width = 64; cnv.height = 64;
+    const g = cnv.getContext('2d');
+    const rad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    rad.addColorStop(0.0, 'rgba(255,255,255,1)');
+    rad.addColorStop(0.35, 'rgba(255,255,255,0.75)');
+    rad.addColorStop(1.0, 'rgba(255,255,255,0)');
+    g.fillStyle = rad; g.fillRect(0, 0, 64, 64);
+    const t = new THREE.CanvasTexture(cnv); t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  })();
   const starMat = new THREE.PointsMaterial({
     size: 2.4,
+    map: dotTex,
+    alphaMap: dotTex,
     vertexColors: true,
     transparent: true,
     opacity: 0.9,
@@ -237,6 +251,8 @@ export function build(ctx) {
   brightGeo.setAttribute('position', new THREE.Float32BufferAttribute(bPos, 3));
   const brightMat = new THREE.PointsMaterial({
     size: 6,
+    map: dotTex,
+    alphaMap: dotTex,
     color: 0xdfe9ff,
     transparent: true,
     opacity: 0.85,

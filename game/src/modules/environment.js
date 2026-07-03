@@ -209,8 +209,8 @@ export function build(ctx) {
     cnv.height = 256;
     const g = cnv.getContext('2d');
     const grad = g.createRadialGradient(128, 128, 0, 128, 128, 128);
-    grad.addColorStop(0.0, tint.replace('A', '0.9'));
-    grad.addColorStop(0.45, tint.replace('A', '0.4'));
+    grad.addColorStop(0.0, tint.replace('A', '0.6'));
+    grad.addColorStop(0.4, tint.replace('A', '0.28'));
     grad.addColorStop(1.0, tint.replace('A', '0.0'));
     g.fillStyle = grad;
     g.fillRect(0, 0, 256, 256);
@@ -232,18 +232,22 @@ export function build(ctx) {
     return tex;
   }
 
-  const fogTexPale = makeFogTexture('rgba(150,165,180,A)');
-  const fogTexCold = makeFogTexture('rgba(120,140,175,A)');
+  const fogTexPale = makeFogTexture('rgba(74,88,112,A)');
+  const fogTexCold = makeFogTexture('rgba(58,78,120,A)');
   const fogPlanes = [];
 
   function addFog(x, z, size, y, opacity, tex) {
+    // Keep mist hugging the ground (so the player looks OVER it rather than at a
+    // floating card) and additive so it only glows where torchlight catches it.
+    y = Math.min(y, 0.35);
+    opacity = opacity * 0.42;
     const mat = new THREE.MeshBasicMaterial({
       map: tex,
       transparent: true,
       depthWrite: false,
       side: THREE.DoubleSide,
       opacity,
-      blending: THREE.NormalBlending,
+      blending: THREE.AdditiveBlending,
       color: 0xffffff
     });
     const m = new THREE.Mesh(new THREE.PlaneGeometry(size, size), mat);

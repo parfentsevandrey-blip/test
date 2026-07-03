@@ -12,11 +12,13 @@ export function build(ctx) {
   // ---------------------------------------------------------------
   // Shared materials (reuse across many copies for perf)
   // ---------------------------------------------------------------
+  // Weathered daub — kept dark and dingy so walls read as grimy plaster in
+  // torchlight, not clean white blocks that blow out under fill light.
   const plasterMats = [
-    new THREE.MeshStandardMaterial({ color: 0x6b6258, roughness: 0.98, metalness: 0.0 }),
-    new THREE.MeshStandardMaterial({ color: 0x635b52, roughness: 0.98, metalness: 0.0 }),
-    new THREE.MeshStandardMaterial({ color: 0x5c564d, roughness: 1.0, metalness: 0.0 }),
-    new THREE.MeshStandardMaterial({ color: 0x726a5e, roughness: 0.96, metalness: 0.0 }),
+    new THREE.MeshStandardMaterial({ color: 0x453f36, roughness: 0.98, metalness: 0.0 }),
+    new THREE.MeshStandardMaterial({ color: 0x3d382f, roughness: 0.98, metalness: 0.0 }),
+    new THREE.MeshStandardMaterial({ color: 0x363029, roughness: 1.0, metalness: 0.0 }),
+    new THREE.MeshStandardMaterial({ color: 0x4a4034, roughness: 0.96, metalness: 0.0 }),
   ];
   const timberMat = new THREE.MeshStandardMaterial({ color: 0x2c2119, roughness: 0.95, metalness: 0.0 });
   const darkWoodMat = new THREE.MeshStandardMaterial({ color: 0x241a12, roughness: 0.95, metalness: 0.0 });
@@ -89,6 +91,19 @@ export function build(ctx) {
   // ---------------------------------------------------------------
   // SMOKE wisp above a chimney -> additive points, animated rising
   // ---------------------------------------------------------------
+  // Soft round puff sprite so smoke reads as wisps, not hard PointsMaterial squares.
+  const smokePuffTex = (() => {
+    const cnv = document.createElement('canvas'); cnv.width = 64; cnv.height = 64;
+    const g = cnv.getContext('2d');
+    const rad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    rad.addColorStop(0.0, 'rgba(255,255,255,0.5)');
+    rad.addColorStop(0.5, 'rgba(255,255,255,0.16)');
+    rad.addColorStop(1.0, 'rgba(255,255,255,0.0)');
+    g.fillStyle = rad; g.fillRect(0, 0, 64, 64);
+    const t = new THREE.CanvasTexture(cnv); t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  })();
+
   function makeSmoke(x, y, z) {
     const count = 14;
     const arr = new Float32Array(count * 3);
@@ -105,8 +120,8 @@ export function build(ctx) {
     // Float32BufferAttribute copies `arr`, so animate the buffer's own array.
     const posArr = geo.attributes.position.array;
     const mat = new THREE.PointsMaterial({
-      size: 0.9, color: 0x2a2a30, transparent: true, opacity: 0.28,
-      blending: THREE.NormalBlending, depthWrite: false,
+      size: 1.6, map: smokePuffTex, alphaMap: smokePuffTex, color: 0x23232a,
+      transparent: true, opacity: 0.14, blending: THREE.NormalBlending, depthWrite: false,
     });
     const pts = new THREE.Points(geo, mat);
     pts.frustumCulled = false;

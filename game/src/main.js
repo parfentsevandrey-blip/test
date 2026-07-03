@@ -37,16 +37,16 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.06;
+renderer.toneMappingExposure = 1.12;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 container.appendChild(renderer.domElement);
 
 // ------------------------------------------------------------------ scene
 const scene = new THREE.Scene();
-const FOG_COLOR = new THREE.Color(0x0a0c16);
+const FOG_COLOR = new THREE.Color(0x0b1020);
 scene.background = FOG_COLOR.clone();
-scene.fog = new THREE.FogExp2(FOG_COLOR.getHex(), 0.0072);
+scene.fog = new THREE.FogExp2(FOG_COLOR.getHex(), 0.0055);
 
 const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.1, 900);
 camera.position.set(0, 1.7, 58);
@@ -54,8 +54,8 @@ camera.position.set(0, 1.7, 58);
 // A very dim ambient bed so shadowed geometry never reads as pure black.
 // Hemisphere is kept low so the up-facing ground doesn't wash out; the moon
 // (directional) does the work of rim-lighting vertical stone into silhouette.
-scene.add(new THREE.HemisphereLight(0x1c2340, 0x05060a, 0.085));
-const ambient = new THREE.AmbientLight(0x0c1224, 0.13);
+scene.add(new THREE.HemisphereLight(0x28324f, 0x0a0c12, 0.32));
+const ambient = new THREE.AmbientLight(0x141a2e, 0.35);
 scene.add(ambient);
 
 // ------------------------------------------------------------------ build world
@@ -105,7 +105,7 @@ mountModule('props', buildProps, 0x77aa22);
 
 // Configure the moon as the single shadow-caster over the play area.
 if (moonLight) {
-  moonLight.intensity = 0.3; // a little more silhouette definition on the stone
+  moonLight.intensity = 0.62; // stronger cool rim so stone reads against the sky
   moonLight.castShadow = true;
   moonLight.shadow.mapSize.set(2048, 2048);
   const c = moonLight.shadow.camera;
@@ -120,12 +120,45 @@ if (moonLight) {
   scene.add(moonLight);
 }
 
+// A dim, cool "sky-bounce" fill from the south (the player's side) so the faces
+// the player actually looks at aren't crushed to pure black. Kept low and cool
+// so it reveals form (timber, stone, merlons) without flattening the night mood.
+const fill = new THREE.DirectionalLight(0x5c6a92, 0.16);
+fill.position.set(20, 45, 130);
+scene.add(fill);
+
 // World-boundary colliders so the player can't wander off the map into the void.
 const WB = 150;
 colliders.push({ minX: -WB - 4, maxX: -WB, minZ: -WB - 4, maxZ: WB + 4 });
 colliders.push({ minX: WB, maxX: WB + 4, minZ: -WB - 4, maxZ: WB + 4 });
 colliders.push({ minX: -WB - 4, maxX: WB + 4, minZ: -WB - 4, maxZ: -WB });
 colliders.push({ minX: -WB - 4, maxX: WB + 4, minZ: WB, maxZ: WB + 4 });
+
+// The modules author fire lights at "physically reasonable" intensities (~1-2)
+// with decay=2, which throws almost no usable light — the world reads as black
+// silhouettes, and any light mounted flush to a wall blows that wall to white.
+// Fix both at once: switch fire lights to decay=1 (a flat, torch-like falloff
+// with no point-blank hotspot) and give them broad reach so pools overlap into a
+// genuinely lit street. Flicker bases are scaled too, since the loop drives
+// light.intensity from f.base each frame.
+function tuneFireLight(light) {
+  light.decay = 1;                                   // flat falloff: no blown near-wall
+  light.distance = Math.max(28, (light.distance || 16) * 1.9); // broad soft pool
+}
+const LIGHT_BOOST = 4.2;
+const MAX_BASE = 13;
+const flickerLights = new Set(flickers.map((f) => f.light));
+for (const f of flickers) {
+  tuneFireLight(f.light);
+  f.base = Math.min(f.base * LIGHT_BOOST, MAX_BASE);
+  f.light.intensity = f.base;
+}
+scene.traverse((o) => {
+  if (o.isPointLight && !flickerLights.has(o) && o !== moonLight) {
+    tuneFireLight(o);
+    o.intensity = Math.min(o.intensity * LIGHT_BOOST, MAX_BASE);
+  }
+});
 
 // ------------------------------------------------------------------ controls & movement
 const controls = new PointerLockControls(camera, renderer.domElement);
@@ -221,8 +254,8 @@ const AtmosphereShader = {
   uniforms: {
     tDiffuse: { value: null },
     uTime: { value: 0 },
-    uVignette: { value: 1.12 },
-    uGrain: { value: 0.022 },
+    uVignette: { value: 1.05 },
+    uGrain: { value: 0.014 },
   },
   vertexShader: /* glsl */`
     varying vec2 vUv;
@@ -234,8 +267,8 @@ const AtmosphereShader = {
     void main() {
       vec4 c = texture2D(tDiffuse, vUv);
       vec2 d = vUv - 0.5;
-      float vig = smoothstep(0.88, 0.22, length(d) * uVignette);
-      c.rgb *= mix(0.32, 1.0, vig);
+      float vig = smoothstep(0.95, 0.28, length(d) * uVignette);
+      c.rgb *= mix(0.52, 1.0, vig);
       c.rgb = mix(c.rgb, c.rgb * vec3(0.88, 0.94, 1.12), 0.18); // cool the shadows
       float g = hash(vUv * vec2(1287.0, 731.0) + fract(uTime)) * 2.0 - 1.0;
       c.rgb += g * uGrain;
@@ -405,4 +438,4 @@ window.addEventListener('resize', () => {
 });
 
 // Expose a little state for debugging / verification.
-window.__ravenmoor = { scene, camera, renderer, colliders, flickers, get pos() { return camera.position.toArray(); } };
+window.__ravenmoor = { THREE, scene, camera, renderer, colliders, flickers, get pos() { return camera.position.toArray(); } };

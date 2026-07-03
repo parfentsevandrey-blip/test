@@ -216,10 +216,22 @@ export function build(ctx) {
       swaySpeed: rand(0.3, 0.9),
     });
   }
+  // Soft round sprite so motes render as dots, not hard PointsMaterial squares.
+  const dotTex = (() => {
+    const cnv = document.createElement('canvas'); cnv.width = 64; cnv.height = 64;
+    const g = cnv.getContext('2d');
+    const rad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    rad.addColorStop(0.0, 'rgba(255,255,255,1)');
+    rad.addColorStop(0.4, 'rgba(255,255,255,0.6)');
+    rad.addColorStop(1.0, 'rgba(255,255,255,0)');
+    g.fillStyle = rad; g.fillRect(0, 0, 64, 64);
+    const t = new THREE.CanvasTexture(cnv); t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  })();
   const emberGeo = new THREE.BufferGeometry();
   emberGeo.setAttribute('position', new THREE.Float32BufferAttribute(emberPos, 3));
   const emberMat = new THREE.PointsMaterial({
-    size: 0.15, color: 0xffb347, transparent: true,
+    size: 0.18, map: dotTex, alphaMap: dotTex, color: 0xffb347, transparent: true,
     blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.9,
   });
   const embers = new THREE.Points(emberGeo, emberMat);
@@ -250,8 +262,8 @@ export function build(ctx) {
   const mistGeo = new THREE.BufferGeometry();
   mistGeo.setAttribute('position', new THREE.Float32BufferAttribute(mistPos, 3));
   const mistMat = new THREE.PointsMaterial({
-    size: 0.55, color: 0x8a94a8, transparent: true,
-    blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.22,
+    size: 0.7, map: dotTex, alphaMap: dotTex, color: 0x7c86a0, transparent: true,
+    blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.16,
   });
   const mist = new THREE.Points(mistGeo, mistMat);
   mist.frustumCulled = false;
