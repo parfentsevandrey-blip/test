@@ -29,6 +29,17 @@ function MoonIcon(): JSX.Element {
   )
 }
 
+/** A lone cypress on a hill — the signature silhouette of the Tuscan countryside. */
+function CypressIcon(): JSX.Element {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 3.2 C13.9 6 14.4 10 14.1 14 C14 16 13.3 17.4 12 17.4 C10.7 17.4 10 16 9.9 14 C9.6 10 10.1 6 12 3.2 Z" fill="currentColor" stroke="none" />
+      <line x1={12} y1={17.4} x2={12} y2={20.2} />
+      <path d="M4 20.6 C7.5 19.6 16.5 19.6 20 20.6" />
+    </svg>
+  )
+}
+
 /** A classic 9x-era window: title bar with close box, hard corners. */
 function RetroWindowIcon(): JSX.Element {
   return (
@@ -44,6 +55,7 @@ const OPTIONS: { value: ThemePreference; title: string; icon: JSX.Element | stri
   { value: 'light', title: 'Light theme', icon: <SunIcon /> },
   { value: 'dark', title: 'Dark theme', icon: <MoonIcon /> },
   { value: 'auto', title: 'Follow day/night at the selected location', icon: 'A' },
+  { value: 'tuscany', title: 'Tuscany theme', icon: <CypressIcon /> },
   { value: 'win95', title: 'Windows 95 retro theme', icon: <RetroWindowIcon /> }
 ]
 

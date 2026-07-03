@@ -186,7 +186,6 @@
 .hf-curve-dot {
   fill: var(--accent-strong);
   stroke: none;
-  filter: drop-shadow(0 0 5px var(--accent-glow));
   transform-box: fill-box;
   transform-origin: center;
   animation: hf-dot-pulse 2.6s ease-in-out infinite;

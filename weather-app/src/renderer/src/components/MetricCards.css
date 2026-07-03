@@ -260,8 +260,7 @@
 .vis-gauge-fill {
   height: 100%;
   border-radius: var(--radius-pill);
-  background: linear-gradient(90deg, color-mix(in srgb, var(--info) 40%, transparent), var(--info));
-  box-shadow: 0 0 8px color-mix(in srgb, var(--info) 45%, transparent);
+  background: var(--info);
   transition: width 0.7s var(--ease-out);
 }
 

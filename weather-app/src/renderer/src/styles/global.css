@@ -5,48 +5,51 @@
 :root {
   color-scheme: light;
 
-  --bg-page: #e9f0f7;
+  /* Matte editorial: solid opaque panels on warm paper, hairline borders, one
+     quiet two-layer shadow (contact + soft ambient — never a glow), tight
+     radii. Surfaces sit ON the page, not floating in frosted fog. */
+  --bg-page: #eae6dd;
 
-  --glass-bg: rgba(255, 255, 255, 0.68);
-  --glass-bg-strong: rgba(255, 255, 255, 0.82);
-  --glass-border: rgba(255, 255, 255, 0.85);
-  --glass-border-soft: rgba(15, 26, 43, 0.08);
-  --glass-blur: blur(26px) saturate(1.35);
+  --glass-bg: #faf9f5;
+  --glass-bg-strong: #ffffff;
+  --glass-border: rgba(30, 27, 22, 0.11);
+  --glass-border-soft: rgba(30, 27, 22, 0.06);
+  --glass-blur: none;
   --glass-shadow:
-    0 24px 48px -20px rgba(30, 45, 80, 0.28),
-    0 4px 12px -6px rgba(30, 45, 80, 0.12),
-    0 1px 0 0 rgba(255, 255, 255, 0.9) inset;
+    0 1px 2px rgba(30, 27, 22, 0.04),
+    0 10px 24px -14px rgba(30, 27, 22, 0.18);
 
-  --text-primary: #0f1a2b;
-  --text-secondary: rgba(15, 26, 43, 0.82);
-  --text-tertiary: rgba(15, 26, 43, 0.72);
+  --text-primary: #1c1a16;
+  --text-secondary: rgba(28, 26, 22, 0.68);
+  --text-tertiary: rgba(28, 26, 22, 0.5);
 
-  --accent: #e8871e;
-  --accent-strong: #f9a825;
-  --accent-glow: rgba(240, 150, 40, 0.3);
-  --info: #14508f;
-  --danger: #d64545;
+  /* Earthy terracotta accent, used sparingly. --accent-glow is repurposed as a
+     low-alpha tint for the is-now wash / hover ring — too weak to bloom. */
+  --accent: #b4622c;
+  --accent-strong: #d98a3d;
+  --accent-glow: rgba(180, 98, 44, 0.13);
+  --info: #3f6b94;
+  --danger: #b4433b;
 
-  /* UV severity text colors -- darkened for light glass; the scale track keeps its vivid stops. */
-  --uv-low: #2f7a3f;
-  --uv-moderate: #7a6214;
-  --uv-high: #a85c10;
-  --uv-veryhigh: #c03a28;
-  --uv-extreme: #8b3fb5;
+  --uv-low: #4e7d3f;
+  --uv-moderate: #987a1e;
+  --uv-high: #b26a22;
+  --uv-veryhigh: #b4433b;
+  --uv-extreme: #7e4ca8;
 
-  --control-bg: rgba(255, 255, 255, 0.55);
-  --control-bg-hover: rgba(255, 255, 255, 0.85);
-  --control-active: rgba(15, 26, 43, 0.09);
-  --scrim: rgba(233, 240, 247, 0.6);
-  --track: rgba(15, 26, 43, 0.1);
+  --control-bg: #f4f1ea;
+  --control-bg-hover: #ffffff;
+  --control-active: rgba(28, 26, 22, 0.08);
+  --scrim: rgba(234, 230, 221, 0.72);
+  --track: rgba(28, 26, 22, 0.09);
 
-  --radius-sm: 10px;
-  --radius-md: 16px;
-  --radius-lg: 22px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
   --radius-pill: 999px;
 
   --font-ui: 'Inter Variable', 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
-  --font-display: 'Sora Variable', 'Inter Variable', 'Segoe UI', system-ui, sans-serif;
+  --font-display: 'Inter Variable', 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
 
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -54,40 +57,79 @@
 [data-theme='dark'] {
   color-scheme: dark;
 
-  --bg-page: #04060c;
+  /* Warm graphite, not pure black and never blue-glow: a lit interior at dusk,
+     matte and expensive. Panels separate by value + hairline, not by blur. */
+  --bg-page: #0f0e0c;
 
-  --glass-bg: rgba(18, 22, 34, 0.5);
-  --glass-bg-strong: rgba(14, 17, 28, 0.72);
-  --glass-border: rgba(255, 255, 255, 0.14);
-  --glass-border-soft: rgba(255, 255, 255, 0.08);
-  --glass-blur: blur(26px) saturate(1.1);
+  --glass-bg: #1a1917;
+  --glass-bg-strong: #211f1c;
+  --glass-border: rgba(255, 250, 242, 0.09);
+  --glass-border-soft: rgba(255, 250, 242, 0.05);
+  --glass-blur: none;
   --glass-shadow:
-    0 24px 55px -20px rgba(0, 0, 0, 0.65),
-    0 1px 0 0 rgba(255, 255, 255, 0.06) inset;
+    0 1px 2px rgba(0, 0, 0, 0.45),
+    0 12px 28px -16px rgba(0, 0, 0, 0.62);
 
-  --text-primary: rgba(255, 255, 255, 0.98);
-  --text-secondary: rgba(255, 255, 255, 0.78);
-  --text-tertiary: rgba(255, 255, 255, 0.7);
+  --text-primary: rgba(245, 243, 238, 0.95);
+  --text-secondary: rgba(245, 243, 238, 0.68);
+  --text-tertiary: rgba(245, 243, 238, 0.46);
 
-  --accent: #ffb057;
-  --accent-strong: #ffcf8a;
-  --accent-glow: rgba(255, 176, 87, 0.35);
-  --info: #7ec8ff;
-  --danger: #ff6b6b;
+  --accent: #d08a4e;
+  --accent-strong: #ebb077;
+  --accent-glow: rgba(208, 138, 78, 0.16);
+  --info: #6e9ac4;
+  --danger: #d8695f;
 
-  --uv-low: #58b96b;
-  --uv-moderate: #e8cf4d;
-  --uv-high: #ec9435;
-  --uv-veryhigh: #e05d4b;
-  --uv-extreme: #c98be0;
+  --uv-low: #6aae6e;
+  --uv-moderate: #d8c24e;
+  --uv-high: #db9440;
+  --uv-veryhigh: #db6552;
+  --uv-extreme: #b98bd8;
 
-  /* Dark glass (not white haze): header pills must stay legible even when
-     the live scene behind them is a bright cloud deck. */
-  --control-bg: rgba(14, 17, 28, 0.55);
-  --control-bg-hover: rgba(20, 26, 42, 0.7);
-  --control-active: rgba(255, 255, 255, 0.16);
-  --scrim: rgba(4, 6, 12, 0.6);
-  --track: rgba(255, 255, 255, 0.12);
+  --control-bg: #1c1b18;
+  --control-bg-hover: #262521;
+  --control-active: rgba(255, 250, 242, 0.1);
+  --scrim: rgba(15, 14, 12, 0.66);
+  --track: rgba(255, 250, 242, 0.1);
+}
+
+[data-theme='tuscany'] {
+  color-scheme: light;
+
+  /* Sun-warmed plaster: terracotta, sun-baked ochre and cypress olive on warm
+     cream stone — a curated Mediterranean villa, matte and quietly luxurious. */
+  --bg-page: #e7dcc6;
+
+  --glass-bg: #f3ebd9;
+  --glass-bg-strong: #f8f2e4;
+  --glass-border: rgba(94, 66, 41, 0.15);
+  --glass-border-soft: rgba(94, 66, 41, 0.08);
+  --glass-blur: none;
+  --glass-shadow:
+    0 1px 2px rgba(74, 52, 30, 0.05),
+    0 10px 24px -14px rgba(74, 52, 30, 0.2);
+
+  --text-primary: #3a2c1e;
+  --text-secondary: rgba(58, 44, 30, 0.7);
+  --text-tertiary: rgba(58, 44, 30, 0.5);
+
+  --accent: #b0512e;
+  --accent-strong: #c79a4a;
+  --accent-glow: rgba(176, 81, 46, 0.15);
+  --info: #4c6e52;
+  --danger: #a83e2e;
+
+  --uv-low: #5e7247;
+  --uv-moderate: #b08a2e;
+  --uv-high: #c06a2e;
+  --uv-veryhigh: #a83e2e;
+  --uv-extreme: #7a4b86;
+
+  --control-bg: #efe6d2;
+  --control-bg-hover: #f8f2e4;
+  --control-active: rgba(94, 66, 41, 0.1);
+  --scrim: rgba(231, 220, 198, 0.72);
+  --track: rgba(94, 66, 41, 0.12);
 }
 
 /* ============================================================
@@ -206,11 +248,10 @@ input {
 }
 
 .header-brand .dot {
-  width: 9px;
-  height: 9px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: var(--accent);
-  box-shadow: 0 0 10px 2px var(--accent-glow);
 }
 
 .header-spacer {
@@ -352,29 +393,12 @@ input {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
   box-shadow: var(--glass-shadow);
 }
 
-.glass-panel::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  pointer-events: none;
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0) 45%);
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-}
-
-[data-theme='dark'] .glass-panel::before {
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 40%);
-}
+/* The glossy top-edge sheen (.glass-panel::before) is retired — matte panels
+   separate by value + hairline border, not by a highlight. The win95 override
+   that hid it becomes a harmless no-op. */
 
 .bento-card {
   position: relative;
@@ -414,34 +438,23 @@ input {
  * running smoothly through hover with no snap.
  */
 .bento-card:hover {
-  scale: 1.025;
-  border-color: var(--accent-glow);
+  scale: 1.01;
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--glass-border));
   box-shadow:
-    0 34px 70px -22px rgba(30, 45, 80, 0.38),
-    0 0 0 1px var(--accent-glow),
-    0 1px 0 0 rgba(255, 255, 255, 0.9) inset;
+    0 2px 4px rgba(30, 27, 22, 0.06),
+    0 18px 36px -18px rgba(30, 27, 22, 0.26);
   z-index: 3;
 }
 
 [data-theme='dark'] .bento-card:hover {
   box-shadow:
-    0 34px 70px -22px rgba(0, 0, 0, 0.7),
-    0 0 0 1px var(--accent-glow),
-    0 1px 0 0 rgba(255, 255, 255, 0.07) inset;
+    0 2px 4px rgba(0, 0, 0, 0.5),
+    0 18px 40px -18px rgba(0, 0, 0, 0.68);
 }
 
+/* The cursor-following radial bloom is a screensaver tell — retired for matte. */
 .bento-card-glow {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  border-radius: inherit;
-  transition: opacity 0.35s var(--ease-out);
-  background: radial-gradient(circle at var(--glow-x, 50%) var(--glow-y, 0%), var(--accent-glow), transparent 62%);
-  pointer-events: none;
-}
-
-.bento-card:hover .bento-card-glow {
-  opacity: 0.55;
+  display: none;
 }
 
 .bento-card-content {
@@ -796,7 +809,6 @@ input {
   width: clamp(44px, 8vh, 64px);
   height: clamp(44px, 8vh, 64px);
   color: var(--accent);
-  filter: drop-shadow(0 0 18px var(--accent-glow));
   flex-shrink: 0;
 }
 
@@ -1019,7 +1031,6 @@ input {
 
 .sun-arc-dot {
   fill: var(--accent-strong);
-  filter: drop-shadow(0 0 6px var(--accent-glow));
 }
 
 .sun-times {
@@ -1071,7 +1082,9 @@ input {
 .precip-bar-fill {
   width: 100%;
   border-radius: var(--radius-sm);
-  background: linear-gradient(180deg, #6db4f5, #2273c4);
+  /* Flat, theme-inheriting fill (was a hardcoded sky-blue gradient that
+     clashed with the warm-paper and tuscany palettes). */
+  background: var(--info);
   transition: height 0.6s var(--ease-out);
 }
 

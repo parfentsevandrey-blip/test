@@ -111,7 +111,6 @@
   vertical-align: 0.14em;
   border-radius: 50%;
   background: var(--accent);
-  box-shadow: 0 0 6px var(--accent-glow);
 }
 
 .df-date {
@@ -227,8 +226,10 @@
   pointer-events: none;
 }
 
+/* Glossy shine-sweep on hover retired — reads as a gamified/AI micro-effect,
+   not matte-editorial. */
 .df-row:hover .df-fill::after {
-  animation: df-sheen-sweep 0.6s var(--ease-out) 1;
+  animation: none;
 }
 
 @keyframes df-sheen-sweep {
