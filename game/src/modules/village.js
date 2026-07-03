@@ -102,6 +102,8 @@ export function build(ctx) {
     }
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.Float32BufferAttribute(arr, 3));
+    // Float32BufferAttribute copies `arr`, so animate the buffer's own array.
+    const posArr = geo.attributes.position.array;
     const mat = new THREE.PointsMaterial({
       size: 0.9, color: 0x2a2a30, transparent: true, opacity: 0.28,
       blending: THREE.NormalBlending, depthWrite: false,
@@ -109,7 +111,7 @@ export function build(ctx) {
     const pts = new THREE.Points(geo, mat);
     pts.frustumCulled = false;
     group.add(pts);
-    smokes.push({ geo, arr, base, count, x, y, z, rise: 0.35 + rng() * 0.25 });
+    smokes.push({ geo, arr: posArr, base, count, x, y, z, rise: 0.35 + rng() * 0.25 });
   }
 
   // ---------------------------------------------------------------

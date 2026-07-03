@@ -37,7 +37,7 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.15;
+renderer.toneMappingExposure = 1.06;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 container.appendChild(renderer.domElement);
@@ -52,8 +52,10 @@ const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerH
 camera.position.set(0, 1.7, 58);
 
 // A very dim ambient bed so shadowed geometry never reads as pure black.
-scene.add(new THREE.HemisphereLight(0x2a3350, 0x05060a, 0.16));
-const ambient = new THREE.AmbientLight(0x0c1020, 0.22);
+// Hemisphere is kept low so the up-facing ground doesn't wash out; the moon
+// (directional) does the work of rim-lighting vertical stone into silhouette.
+scene.add(new THREE.HemisphereLight(0x1c2340, 0x05060a, 0.085));
+const ambient = new THREE.AmbientLight(0x0c1224, 0.13);
 scene.add(ambient);
 
 // ------------------------------------------------------------------ build world
@@ -103,6 +105,7 @@ mountModule('props', buildProps, 0x77aa22);
 
 // Configure the moon as the single shadow-caster over the play area.
 if (moonLight) {
+  moonLight.intensity = 0.3; // a little more silhouette definition on the stone
   moonLight.castShadow = true;
   moonLight.shadow.mapSize.set(2048, 2048);
   const c = moonLight.shadow.camera;
@@ -207,9 +210,9 @@ composer.addPass(new RenderPass(scene, camera));
 
 const bloom = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
-  0.85,   // strength
-  0.62,   // radius
-  0.14    // threshold — only bright emissive/fire blooms
+  0.68,   // strength
+  0.6,    // radius
+  0.17    // threshold — only bright emissive/fire blooms
 );
 composer.addPass(bloom);
 
@@ -219,7 +222,7 @@ const AtmosphereShader = {
     tDiffuse: { value: null },
     uTime: { value: 0 },
     uVignette: { value: 1.12 },
-    uGrain: { value: 0.045 },
+    uGrain: { value: 0.022 },
   },
   vertexShader: /* glsl */`
     varying vec2 vUv;
