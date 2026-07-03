@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# PyInstaller build output
+build/
+dist/
+*.spec
+
+# transient test screenshots
+tests/tank_shot*.png
+seal_preview.png

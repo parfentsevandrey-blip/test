@@ -1,0 +1,7 @@
+# Ministry of Small Waters — runtime dependencies
+#
+# tkinter is NOT listed: it ships with the standard python.org Windows
+# installer already. If you somehow don't have it, re-run the installer and
+# tick "tcl/tk and IDLE".
+Pillow>=9.0
+pystray>=0.19
