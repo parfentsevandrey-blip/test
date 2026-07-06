@@ -15,6 +15,43 @@ function getXlsx() {
 
 let mainWindow = null;
 
+// ---------------------------------------------------------------------------
+// Recent files (last 8, de-duped by path)
+// ---------------------------------------------------------------------------
+
+function recentFilePath() {
+  return path.join(app.getPath('userData'), 'recent.json');
+}
+
+function readRecent() {
+  try {
+    const text = fs.readFileSync(recentFilePath(), 'utf8');
+    const list = JSON.parse(text);
+    return Array.isArray(list) ? list : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function writeRecent(list) {
+  try {
+    fs.writeFileSync(recentFilePath(), JSON.stringify(list, null, 2), 'utf8');
+  } catch (e) {
+    // Non-fatal — recent files is a convenience feature.
+  }
+}
+
+function addRecent(filePath) {
+  let list = readRecent().filter((entry) => entry.path !== filePath);
+  list.unshift({ path: filePath, openedAt: Date.now() });
+  list = list.slice(0, 8);
+  writeRecent(list);
+  return list;
+}
+
+ipcMain.handle('recent:get', () => readRecent());
+ipcMain.handle('recent:add', (event, filePath) => addRecent(filePath));
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,

@@ -3,8 +3,10 @@
 // by New, Open, and window-close. All actual disk I/O happens in main.js;
 // this module only ever sends/receives strings over the preload bridge.
 
-import { getContentHTML, setContentHTML, getPlainText, onChange as onEditorChange } from './editor.js';
+import { getContentHTML, setContentHTML, getPlainText, focusPage, onChange as onEditorChange } from './editor.js';
 import { unsavedChangesDialog, alertDialog } from './dialogs.js';
+import { showToast } from './toast.js';
+import { showStartScreen, hideStartScreen } from './startscreen.js';
 
 let filePath = null;
 let dirty = false;
@@ -58,21 +60,18 @@ export async function newDocument() {
   setTitle('Untitled document');
   filePath = null;
   clearDirty();
+  await showStartScreen();
 }
 
-export async function openDocument() {
-  const proceed = await confirmProceedIfDirty();
-  if (!proceed) return;
-  const result = await window.lumen.openFile();
-  if (!result) return;
-  if (result.error) {
-    await alertDialog({ title: 'Could not open file', message: result.error });
-    return;
-  }
+/** Applies a result returned by openFile()/openPath() to the editor —
+ * shared by openDocument() and openDocumentAtPath(). */
+async function applyOpenedResult(result) {
   setContentHTML(result.contentHTML);
   setTitle(result.title);
   filePath = result.format === 'lwrite' ? result.filePath : null;
   clearDirty();
+  hideStartScreen();
+  showToast('Opened', { type: 'success' });
   if (result.warnings && result.warnings.length) {
     await alertDialog({
       title: 'Imported with formatting notes',
@@ -83,12 +82,54 @@ export async function openDocument() {
   }
 }
 
+export async function openDocument() {
+  const proceed = await confirmProceedIfDirty();
+  if (!proceed) return;
+  const result = await window.lumen.openFile();
+  if (!result) return;
+  if (result.error) {
+    showToast(result.error, { type: 'error' });
+    return;
+  }
+  await applyOpenedResult(result);
+}
+
+/** Opens a document at a known path — used by File ▸ Open Recent and
+ * drag-and-drop, both of which go through the same file:openPath IPC
+ * channel (and thus the same main-process loading code) as the regular
+ * Open dialog. */
+export async function openDocumentAtPath(path) {
+  const proceed = await confirmProceedIfDirty();
+  if (!proceed) return;
+  const result = await window.lumen.openPath(path);
+  if (!result || result.error) {
+    showToast((result && result.error) || 'Could not open file.', { type: 'error' });
+    return;
+  }
+  await applyOpenedResult(result);
+}
+
+/** Loads starter content from the start screen's template grid. */
+export function loadTemplateDocument(html, title) {
+  setContentHTML(html);
+  setTitle(title);
+  filePath = null;
+  clearDirty();
+  hideStartScreen();
+  focusPage();
+}
+
 export async function saveDocument() {
   const payload = { filePath, title: getTitle(), contentHTML: getContentHTML() };
   const result = await window.lumen.saveFile(payload);
   if (!result) return false;
+  if (result.error) {
+    showToast(result.error, { type: 'error' });
+    return false;
+  }
   filePath = result.filePath;
   clearDirty();
+  showToast('Saved', { type: 'success' });
   return true;
 }
 
@@ -96,30 +137,54 @@ export async function saveDocumentAs() {
   const payload = { title: getTitle(), contentHTML: getContentHTML() };
   const result = await window.lumen.saveFileAs(payload);
   if (!result) return false;
+  if (result.error) {
+    showToast(result.error, { type: 'error' });
+    return false;
+  }
   filePath = result.filePath;
   clearDirty();
+  showToast('Saved', { type: 'success' });
   return true;
 }
 
 export async function exportPdf() {
   const result = await window.lumen.exportPdf({ title: getTitle() });
-  if (result && result.error) {
-    await alertDialog({ title: 'Could not export PDF', message: result.error });
+  if (!result) return;
+  if (result.error) {
+    showToast(result.error, { type: 'error' });
+    return;
   }
+  showToast('Exported as PDF', { type: 'success' });
 }
 
 export async function exportDocx() {
   const result = await window.lumen.exportDocx({ title: getTitle(), contentHTML: getContentHTML() });
-  if (result && result.error) {
-    await alertDialog({ title: 'Could not export Word document', message: result.error });
+  if (!result) return;
+  if (result.error) {
+    showToast(result.error, { type: 'error' });
+    return;
   }
+  showToast('Exported as Word document', { type: 'success' });
+}
+
+export async function exportMarkdown() {
+  const result = await window.lumen.exportMarkdown({ title: getTitle(), contentHTML: getContentHTML() });
+  if (!result) return;
+  if (result.error) {
+    showToast(result.error, { type: 'error' });
+    return;
+  }
+  showToast('Exported as Markdown', { type: 'success' });
 }
 
 export async function exportTxt() {
   const result = await window.lumen.exportTxt({ title: getTitle(), text: getPlainText() });
-  if (result && result.error) {
-    await alertDialog({ title: 'Could not export text file', message: result.error });
+  if (!result) return;
+  if (result.error) {
+    showToast(result.error, { type: 'error' });
+    return;
   }
+  showToast('Exported as plain text', { type: 'success' });
 }
 
 export async function printDocument() {

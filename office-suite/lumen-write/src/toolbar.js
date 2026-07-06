@@ -4,6 +4,7 @@
 
 import { exec, wrapSelection, getSelectionState, restoreSelection, focusPage, insertHTML } from './editor.js';
 import { promptLinkDialog, promptTableDialog } from './dialogs.js';
+import { toggleSidebar } from './outline.js';
 
 const FONT_FAMILIES = [
   { label: 'Georgia (default)', value: 'Georgia, "Iowan Old Style", "Palatino Linotype", serif' },
@@ -23,6 +24,8 @@ const FORMAT_BLOCKS = [
   { label: 'Heading 1', value: 'h1' },
   { label: 'Heading 2', value: 'h2' },
   { label: 'Heading 3', value: 'h3' },
+  { label: 'Quote', value: 'blockquote' },
+  { label: 'Code', value: 'pre' },
 ];
 
 // Curated text-color swatches: theme ink/accent/semantic tokens, resolved
@@ -55,6 +58,11 @@ let activeButtons = {};
 export function initToolbar() {
   const toolbar = document.getElementById('toolbar');
   toolbar.innerHTML = '';
+
+  toolbar.appendChild(group([
+    iconButton('sidebar', 'Toggle outline', toggleSidebar),
+  ]));
+  toolbar.appendChild(sep());
 
   toolbar.appendChild(group([
     iconButton('undo', 'Undo (Ctrl+Z)', () => exec('undo')),
@@ -269,6 +277,7 @@ function colorSwatchButton(iconName, tooltip, styleProp, swatches) {
   btn.addEventListener('click', () => {
     const isOpen = !popover.hidden;
     closeAllPopovers();
+    if (!isOpen) positionPopover(btn, popover);
     popover.hidden = isOpen;
   });
 
@@ -279,6 +288,20 @@ function colorSwatchButton(iconName, tooltip, styleProp, swatches) {
 
 function closeAllPopovers() {
   document.querySelectorAll('.swatch-popover').forEach((p) => { p.hidden = true; });
+}
+
+// The popover is `position: fixed` (see theme app.css) so it can escape the
+// toolbar's `overflow-y: hidden` (needed for the toolbar's own horizontal
+// scrolling) instead of being clipped/invisible beneath it. Since fixed
+// positioning has no relationship to the trigger button, compute its
+// on-screen position here each time it opens.
+function positionPopover(btn, popover) {
+  const rect = btn.getBoundingClientRect();
+  const width = 168; // matches .swatch-popover width in app.css
+  let left = rect.left;
+  if (left + width > window.innerWidth - 8) left = Math.max(8, window.innerWidth - width - 8);
+  popover.style.top = `${rect.bottom + 6}px`;
+  popover.style.left = `${left}px`;
 }
 
 document.addEventListener('click', (e) => {

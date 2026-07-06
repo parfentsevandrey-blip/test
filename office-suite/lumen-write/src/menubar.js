@@ -6,14 +6,17 @@ import { exec } from './editor.js';
 import { insertLink, insertImage, insertTable } from './toolbar.js';
 import { openFindReplace } from './findreplace.js';
 import { zoomBy, zoomReset } from './statusbar.js';
-import { aboutDialog } from './dialogs.js';
+import { aboutDialog, shortcutsDialog } from './dialogs.js';
+import { toggleSidebar } from './outline.js';
 import {
   newDocument,
   openDocument,
+  openDocumentAtPath,
   saveDocument,
   saveDocumentAs,
   exportPdf,
   exportDocx,
+  exportMarkdown,
   exportTxt,
   printDocument,
 } from './fileio.js';
@@ -25,11 +28,13 @@ function menuDefs() {
       items: [
         { label: 'New', shortcut: 'Ctrl+N', action: newDocument },
         { label: 'Open…', shortcut: 'Ctrl+O', action: openDocument },
+        { label: 'Open Recent', submenu: 'recent' },
         { label: 'Save', shortcut: 'Ctrl+S', action: saveDocument },
         { label: 'Save As…', shortcut: 'Ctrl+Shift+S', action: saveDocumentAs },
         { sep: true },
         { label: 'Export as PDF…', action: exportPdf },
         { label: 'Export as Word (.docx)…', action: exportDocx },
+        { label: 'Export as Markdown (.md)…', action: exportMarkdown },
         { label: 'Export as Plain Text (.txt)…', action: exportTxt },
         { sep: true },
         { label: 'Print…', shortcut: 'Ctrl+P', action: printDocument },
@@ -57,6 +62,8 @@ function menuDefs() {
         { label: 'Zoom Out', shortcut: 'Ctrl+-', action: () => zoomBy(-10) },
         { label: 'Reset Zoom', action: zoomReset },
         { sep: true },
+        { label: 'Toggle Outline', action: toggleSidebar },
+        { sep: true },
         { label: 'Toggle Theme', action: () => document.getElementById('theme-toggle').click() },
       ],
     },
@@ -81,6 +88,8 @@ function menuDefs() {
         { label: 'Heading 1', action: () => exec('formatBlock', '<h1>') },
         { label: 'Heading 2', action: () => exec('formatBlock', '<h2>') },
         { label: 'Heading 3', action: () => exec('formatBlock', '<h3>') },
+        { label: 'Quote', action: () => exec('formatBlock', '<blockquote>') },
+        { label: 'Code', action: () => exec('formatBlock', '<pre>') },
         { sep: true },
         { label: 'Align Left', action: () => exec('justifyLeft') },
         { label: 'Align Center', action: () => exec('justifyCenter') },
@@ -95,7 +104,10 @@ function menuDefs() {
     },
     {
       label: 'Help',
-      items: [{ label: 'About Lumen Write', action: aboutDialog }],
+      items: [
+        { label: 'Keyboard Shortcuts', action: shortcutsDialog },
+        { label: 'About Lumen Write', action: aboutDialog },
+      ],
     },
   ];
 }
@@ -141,6 +153,66 @@ export function initMenubar() {
         const label = document.createElement('span');
         label.textContent = item.label;
         row.appendChild(label);
+
+        if (item.submenu === 'recent') {
+          row.classList.add('menu__item--has-submenu');
+          const caret = document.createElement('span');
+          caret.className = 'menu__submenu-caret';
+          caret.innerHTML = window.lumen.icons['chevron-down'] || '';
+          row.appendChild(caret);
+
+          let submenuEl = null;
+          const openSubmenu = async () => {
+            if (submenuEl) return;
+            submenuEl = document.createElement('div');
+            submenuEl.className = 'menu menu--submenu';
+            row.appendChild(submenuEl);
+
+            let recent = [];
+            try {
+              recent = (await window.lumen.getRecentFiles()) || [];
+            } catch (err) {
+              recent = [];
+            }
+            // The row's mouseleave handler (or a whole-menu close) may have
+            // already torn this submenu down while we were awaiting IPC.
+            if (!submenuEl || !submenuEl.isConnected) return;
+
+            if (!recent.length) {
+              const empty = document.createElement('div');
+              empty.className = 'menu__item';
+              empty.setAttribute('aria-disabled', 'true');
+              empty.textContent = 'No recent files';
+              submenuEl.appendChild(empty);
+              return;
+            }
+            for (const entry of recent) {
+              const recentRow = document.createElement('div');
+              recentRow.className = 'menu__item';
+              recentRow.textContent = entry.title || entry.path;
+              recentRow.addEventListener('click', (e) => {
+                e.stopPropagation();
+                closeMenu();
+                openDocumentAtPath(entry.path);
+              });
+              submenuEl.appendChild(recentRow);
+            }
+          };
+          const closeSubmenu = () => {
+            if (submenuEl) {
+              submenuEl.remove();
+              submenuEl = null;
+            }
+          };
+          row.addEventListener('mouseenter', openSubmenu);
+          row.addEventListener('mouseleave', (e) => {
+            if (submenuEl && e.relatedTarget && submenuEl.contains(e.relatedTarget)) return;
+            closeSubmenu();
+          });
+          menuEl.appendChild(row);
+          continue;
+        }
+
         if (item.shortcut) {
           const sc = document.createElement('span');
           sc.className = 'menu__shortcut';

@@ -194,6 +194,39 @@ export function alertDialog({ title, message }) {
   });
 }
 
+const SHORTCUTS = [
+  ['New document', 'Ctrl+N'],
+  ['Open…', 'Ctrl+O'],
+  ['Save', 'Ctrl+S'],
+  ['Save As…', 'Ctrl+Shift+S'],
+  ['Print…', 'Ctrl+P'],
+  ['Undo', 'Ctrl+Z'],
+  ['Redo', 'Ctrl+Y'],
+  ['Bold', 'Ctrl+B'],
+  ['Italic', 'Ctrl+I'],
+  ['Underline', 'Ctrl+U'],
+  ['Find & Replace', 'Ctrl+F'],
+  ['Cut', 'Ctrl+X'],
+  ['Copy', 'Ctrl+C'],
+  ['Paste', 'Ctrl+V'],
+  ['Zoom in', 'Ctrl+='],
+  ['Zoom out', 'Ctrl+-'],
+  ['Close dialog / menu', 'Esc'],
+];
+
+/** Help ▸ Keyboard Shortcuts — a two-column reference of every shortcut
+ * the app supports. */
+export function shortcutsDialog() {
+  openDialog('dialog--shortcuts', (box, close) => {
+    const rows = SHORTCUTS.map(
+      ([label, combo]) =>
+        `<span class="shortcuts-grid__label">${escapeHtml(label)}</span><span class="shortcuts-grid__combo">${escapeHtml(combo)}</span>`
+    ).join('');
+    box.innerHTML = `<h2>Keyboard Shortcuts</h2><div class="shortcuts-grid">${rows}</div>`;
+    buildActions(box, [{ label: 'Close', variant: 'primary', onClick: close }]);
+  });
+}
+
 export function aboutDialog() {
   openDialog('dialog--about', (box, close) => {
     box.innerHTML = `

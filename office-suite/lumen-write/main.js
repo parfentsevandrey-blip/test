@@ -76,6 +76,101 @@ function titleFromPath(filePath) {
   return path.basename(filePath, path.extname(filePath));
 }
 
+// ---------- Recent files ----------
+// A small JSON file in userData: an array of the last RECENT_LIMIT
+// {path, title, openedAt} entries, most-recent-first, de-duplicated by
+// path. Kept entirely in the main process; the renderer only ever reads
+// it through the recent:list IPC handler below.
+
+const RECENT_LIMIT = 8;
+const RECENT_PATH = path.join(app.getPath('userData'), 'recent.json');
+
+function loadRecent() {
+  try {
+    const raw = fs.readFileSync(RECENT_PATH, 'utf8');
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch (err) {
+    return [];
+  }
+}
+
+function saveRecentList(list) {
+  try {
+    fs.mkdirSync(path.dirname(RECENT_PATH), { recursive: true });
+    fs.writeFileSync(RECENT_PATH, JSON.stringify(list, null, 2), 'utf8');
+  } catch (err) {
+    console.error('Failed to write recent.json', err);
+  }
+}
+
+function addRecent(filePath, title) {
+  if (!filePath) return;
+  let list = loadRecent().filter((entry) => entry && entry.path !== filePath);
+  list.unshift({ path: filePath, title: title || titleFromPath(filePath), openedAt: new Date().toISOString() });
+  list = list.slice(0, RECENT_LIMIT);
+  saveRecentList(list);
+}
+
+function removeFromRecent(filePath) {
+  const list = loadRecent().filter((entry) => entry && entry.path !== filePath);
+  saveRecentList(list);
+}
+
+ipcMain.handle('recent:list', () => loadRecent());
+
+// ---------- Open (dialog-picked path or a known path) ----------
+
+/** Reads a document from an already-known path (used by the Open dialog,
+ * File ▸ Open Recent, and drag-and-drop) and records it in recent.json.
+ * Returns { error, missing? } if the file can't be read, in which case a
+ * missing recent entry is pruned automatically. */
+async function loadDocumentFromPath(filePath) {
+  if (!fs.existsSync(filePath)) {
+    removeFromRecent(filePath);
+    return { error: `"${titleFromPath(filePath)}" no longer exists at its saved location.`, missing: true };
+  }
+  const ext = path.extname(filePath).toLowerCase();
+  try {
+    let contentHTML;
+    let title = titleFromPath(filePath);
+    let format;
+    let warnings = [];
+
+    if (ext === '.lwrite') {
+      const loaded = readLwrite(filePath);
+      contentHTML = loaded.contentHTML;
+      title = loaded.title;
+      format = 'lwrite';
+    } else if (ext === '.html' || ext === '.htm') {
+      contentHTML = fs.readFileSync(filePath, 'utf8');
+      format = 'html';
+    } else if (ext === '.txt') {
+      const raw = fs.readFileSync(filePath, 'utf8');
+      const escape = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      contentHTML = raw
+        .split(/\r?\n/)
+        .map((line) => `<p>${escape(line) || '<br>'}</p>`)
+        .join('');
+      format = 'txt';
+    } else if (ext === '.docx') {
+      const mammoth = require('mammoth');
+      const out = await mammoth.convertToHtml({ path: filePath });
+      warnings = (out.messages || []).map((m) => m.message);
+      contentHTML = out.value;
+      format = 'docx';
+    } else {
+      contentHTML = fs.readFileSync(filePath, 'utf8');
+      format = 'html';
+    }
+
+    addRecent(filePath, title);
+    return { filePath: format === 'lwrite' ? filePath : null, title, contentHTML, format, warnings };
+  } catch (err) {
+    return { error: String(err && err.message ? err.message : err) };
+  }
+}
+
 ipcMain.handle('file:open', async () => {
   const result = await dialog.showOpenDialog(win, {
     title: 'Open document',
@@ -90,37 +185,13 @@ ipcMain.handle('file:open', async () => {
     ],
   });
   if (result.canceled || !result.filePaths.length) return null;
-  const filePath = result.filePaths[0];
-  const ext = path.extname(filePath).toLowerCase();
+  return loadDocumentFromPath(result.filePaths[0]);
+});
 
-  try {
-    if (ext === '.lwrite') {
-      const { contentHTML, title } = readLwrite(filePath);
-      return { filePath, title, contentHTML, format: 'lwrite', warnings: [] };
-    }
-    if (ext === '.html' || ext === '.htm') {
-      const contentHTML = fs.readFileSync(filePath, 'utf8');
-      return { filePath: null, title: titleFromPath(filePath), contentHTML, format: 'html', warnings: [] };
-    }
-    if (ext === '.txt') {
-      const raw = fs.readFileSync(filePath, 'utf8');
-      const escape = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      const contentHTML = raw
-        .split(/\r?\n/)
-        .map((line) => `<p>${escape(line) || '<br>'}</p>`)
-        .join('');
-      return { filePath: null, title: titleFromPath(filePath), contentHTML, format: 'txt', warnings: [] };
-    }
-    if (ext === '.docx') {
-      const mammoth = require('mammoth');
-      const out = await mammoth.convertToHtml({ path: filePath });
-      const warnings = (out.messages || []).map((m) => m.message);
-      return { filePath: null, title: titleFromPath(filePath), contentHTML: out.value, format: 'docx', warnings };
-    }
-    return { filePath: null, title: titleFromPath(filePath), contentHTML: fs.readFileSync(filePath, 'utf8'), format: 'html', warnings: [] };
-  } catch (err) {
-    return { error: String(err && err.message ? err.message : err) };
-  }
+// Used by File ▸ Open Recent and drag-and-drop — same loading code path as
+// the dialog-based Open above, just given a path directly.
+ipcMain.handle('file:openPath', async (event, filePath) => {
+  return loadDocumentFromPath(filePath);
 });
 
 ipcMain.handle('file:save', async (event, payload) => {
@@ -135,19 +206,24 @@ ipcMain.handle('file:save', async (event, payload) => {
     if (result.canceled || !result.filePath) return null;
     targetPath = result.filePath;
   }
-  const now = new Date().toISOString();
-  let createdAt = now;
   try {
-    if (fs.existsSync(targetPath)) {
-      const prev = JSON.parse(fs.readFileSync(targetPath, 'utf8'));
-      if (prev && prev.createdAt) createdAt = prev.createdAt;
+    const now = new Date().toISOString();
+    let createdAt = now;
+    try {
+      if (fs.existsSync(targetPath)) {
+        const prev = JSON.parse(fs.readFileSync(targetPath, 'utf8'));
+        if (prev && prev.createdAt) createdAt = prev.createdAt;
+      }
+    } catch (e) {
+      /* ignore malformed existing file, just overwrite */
     }
-  } catch (e) {
-    /* ignore malformed existing file, just overwrite */
+    const data = { version: 1, title: title || 'Untitled document', contentHTML: contentHTML || '', createdAt, modifiedAt: now };
+    fs.writeFileSync(targetPath, JSON.stringify(data, null, 2), 'utf8');
+    addRecent(targetPath, title || 'Untitled document');
+    return { filePath: targetPath };
+  } catch (err) {
+    return { error: String(err && err.message ? err.message : err) };
   }
-  const data = { version: 1, title: title || 'Untitled document', contentHTML: contentHTML || '', createdAt, modifiedAt: now };
-  fs.writeFileSync(targetPath, JSON.stringify(data, null, 2), 'utf8');
-  return { filePath: targetPath };
 });
 
 ipcMain.handle('file:saveAs', async (event, payload) => {
@@ -158,10 +234,15 @@ ipcMain.handle('file:saveAs', async (event, payload) => {
     filters: [{ name: 'Lumen Write document', extensions: ['lwrite'] }],
   });
   if (result.canceled || !result.filePath) return null;
-  const now = new Date().toISOString();
-  const data = { version: 1, title: title || 'Untitled document', contentHTML: contentHTML || '', createdAt: now, modifiedAt: now };
-  fs.writeFileSync(result.filePath, JSON.stringify(data, null, 2), 'utf8');
-  return { filePath: result.filePath };
+  try {
+    const now = new Date().toISOString();
+    const data = { version: 1, title: title || 'Untitled document', contentHTML: contentHTML || '', createdAt: now, modifiedAt: now };
+    fs.writeFileSync(result.filePath, JSON.stringify(data, null, 2), 'utf8');
+    addRecent(result.filePath, title || 'Untitled document');
+    return { filePath: result.filePath };
+  } catch (err) {
+    return { error: String(err && err.message ? err.message : err) };
+  }
 });
 
 ipcMain.handle('export:pdf', async (event, payload) => {
@@ -202,6 +283,25 @@ ipcMain.handle('export:docx', async (event, payload) => {
   }
 });
 
+ipcMain.handle('export:markdown', async (event, payload) => {
+  const { title, contentHTML } = payload;
+  try {
+    const TurndownService = require('turndown');
+    const turndownService = new TurndownService({ headingStyle: 'atx' });
+    const markdown = turndownService.turndown(contentHTML || '');
+    const result = await dialog.showSaveDialog(win, {
+      title: 'Export as Markdown',
+      defaultPath: `${title || 'Untitled document'}.md`,
+      filters: [{ name: 'Markdown document', extensions: ['md'] }],
+    });
+    if (result.canceled || !result.filePath) return null;
+    fs.writeFileSync(result.filePath, markdown, 'utf8');
+    return { filePath: result.filePath };
+  } catch (err) {
+    return { error: String(err && err.message ? err.message : err) };
+  }
+});
+
 ipcMain.handle('export:txt', async (event, payload) => {
   const { title, text } = payload;
   const result = await dialog.showSaveDialog(win, {
@@ -210,8 +310,12 @@ ipcMain.handle('export:txt', async (event, payload) => {
     filters: [{ name: 'Plain text', extensions: ['txt'] }],
   });
   if (result.canceled || !result.filePath) return null;
-  fs.writeFileSync(result.filePath, text || '', 'utf8');
-  return { filePath: result.filePath };
+  try {
+    fs.writeFileSync(result.filePath, text || '', 'utf8');
+    return { filePath: result.filePath };
+  } catch (err) {
+    return { error: String(err && err.message ? err.message : err) };
+  }
 });
 
 ipcMain.handle('app:print', async () => {

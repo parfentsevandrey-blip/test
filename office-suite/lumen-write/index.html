@@ -20,7 +20,7 @@
       <input id="doc-title" class="titlebar__title" value="Untitled document" spellcheck="false" />
       <span id="dirty-dot" class="dirty-dot" hidden title="Unsaved changes"></span>
     </div>
-    <button class="btn-icon" id="theme-toggle" data-tooltip="Toggle theme"></button>
+    <button class="btn-icon tooltip-right-align" id="theme-toggle" data-tooltip="Toggle theme"></button>
   </div>
 
   <!-- Menu bar -->
@@ -29,17 +29,25 @@
   <!-- Toolbar -->
   <div class="toolbar" id="toolbar"></div>
 
-  <!-- Document area -->
-  <main class="doc-area" id="doc-area">
-    <div class="page-wrapper" id="page-wrapper">
-      <div class="page" id="page" contenteditable="true" spellcheck="true"></div>
-    </div>
-  </main>
+  <!-- Editor body: outline sidebar + document area -->
+  <div class="editor-body">
+    <aside class="sidebar is-collapsed" id="outline-sidebar">
+      <div class="sidebar__inner" id="outline-sidebar-inner"></div>
+    </aside>
+
+    <main class="doc-area" id="doc-area">
+      <div class="start-screen" id="start-screen" hidden></div>
+      <div class="page-wrapper" id="page-wrapper">
+        <div class="page" id="page" contenteditable="true" spellcheck="true"></div>
+      </div>
+    </main>
+  </div>
 
   <!-- Status bar -->
   <div class="statusbar">
     <span id="word-count">0 words</span>
     <span id="char-count">0 characters</span>
+    <span id="reading-time">1 min read</span>
     <span class="statusbar__spacer"></span>
     <div class="statusbar__zoom">
       <span id="zoom-label">100%</span>

@@ -25,11 +25,14 @@ contextBridge.exposeInMainWorld('lumen', {
   icons,
 
   openFile: () => ipcRenderer.invoke('file:open'),
+  openPath: (filePath) => ipcRenderer.invoke('file:openPath', filePath),
   saveFile: (payload) => ipcRenderer.invoke('file:save', payload),
   saveFileAs: (payload) => ipcRenderer.invoke('file:saveAs', payload),
+  getRecentFiles: () => ipcRenderer.invoke('recent:list'),
 
   exportPdf: (payload) => ipcRenderer.invoke('export:pdf', payload),
   exportDocx: (payload) => ipcRenderer.invoke('export:docx', payload),
+  exportMarkdown: (payload) => ipcRenderer.invoke('export:markdown', payload),
   exportTxt: (payload) => ipcRenderer.invoke('export:txt', payload),
   print: () => ipcRenderer.invoke('app:print'),
 

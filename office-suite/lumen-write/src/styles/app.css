@@ -41,6 +41,32 @@
   margin-top: 4px;
 }
 
+/* File ▸ Open Recent — the only nested submenu in the app. */
+
+.menu__item--has-submenu {
+  position: relative;
+}
+
+.menu__submenu-caret {
+  display: inline-flex;
+  flex: none;
+  color: var(--ink-400);
+}
+
+.menu__submenu-caret svg {
+  width: 13px;
+  height: 13px;
+  transform: rotate(-90deg);
+}
+
+.menu--submenu {
+  top: -7px;
+  left: 100%;
+  margin-left: 2px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
 /* ---------- Toolbar ---------- */
 
 .toolbar__group {
@@ -79,10 +105,13 @@
 }
 
 .swatch-popover {
-  position: absolute;
-  top: 100%;
+  /* Fixed (not absolute) so it escapes the toolbar's `overflow-y: hidden`
+   * (needed for the toolbar's own horizontal scrolling) — otherwise the
+   * popover renders clipped/invisible below the toolbar. toolbar.js sets
+   * top/left in px (positionPopover()) each time it opens. */
+  position: fixed;
+  top: 0;
   left: 0;
-  margin-top: 6px;
   background: var(--surface-0);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
@@ -90,6 +119,8 @@
   padding: var(--space-3);
   z-index: 250;
   width: 168px;
+  animation: lumen-menu-in var(--dur-fast) var(--ease-out);
+  transition: background-color var(--dur-med) var(--ease-out), border-color var(--dur-med) var(--ease-out);
 }
 
 .swatch-grid {
@@ -105,7 +136,7 @@
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-subtle);
   cursor: default;
-  transition: transform var(--dur-fast) var(--ease-out);
+  transition: transform var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
 }
 
 .swatch:hover {
@@ -131,19 +162,65 @@
   padding: 0;
 }
 
+/* ---------- Editor body (outline sidebar + document area) ---------- */
+
+.editor-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}
+
+.sidebar__item--empty {
+  color: var(--ink-400);
+  cursor: default;
+}
+
+.sidebar__item--empty:hover {
+  background: none;
+  color: var(--ink-400);
+}
+
+/* Brief highlight flash when jumping to a heading from the outline. */
+@keyframes lumen-outline-flash {
+  from {
+    background-color: var(--accent-soft);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+.outline-flash {
+  animation: lumen-outline-flash 650ms var(--ease-out);
+}
+
 /* ---------- Document area ---------- */
 
 .doc-area {
+  position: relative;
   flex: 1;
   overflow: auto;
   background: var(--surface-1);
   padding: var(--space-7) 0;
+  transition: background-color var(--dur-med) var(--ease-out);
 }
 
 .page-wrapper {
   display: flex;
   justify-content: center;
   zoom: 1;
+}
+
+/* Both .start-screen and .page-wrapper set an explicit `display` (needed
+ * for their own layout), which — per the CSS cascade — would otherwise
+ * beat the user-agent `[hidden] { display: none }` rule since author
+ * styles always win over UA styles regardless of specificity. Restate it
+ * here so toggling the `hidden` IDL property (as startscreen.js does)
+ * actually hides these elements. */
+#start-screen[hidden],
+#page-wrapper[hidden] {
+  display: none;
 }
 
 .page {
@@ -158,6 +235,7 @@
   line-height: 1.6;
   color: var(--ink-900);
   outline: none;
+  transition: background-color var(--dur-med) var(--ease-out), color var(--dur-med) var(--ease-out), box-shadow var(--dur-med) var(--ease-out);
 }
 
 .page:focus {
@@ -208,6 +286,60 @@
   color: var(--accent-700);
 }
 
+.page blockquote {
+  margin: 0 0 1em;
+  padding: 2px 0 2px var(--space-4);
+  border-left: 3px solid var(--accent-500);
+  font-style: italic;
+  font-family: var(--font-doc);
+  color: var(--ink-700);
+}
+
+.page pre {
+  margin: 0 0 1em;
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
+}
+
+/* ---------- Start screen additions ---------- */
+
+.start-card__preview {
+  height: 90px;
+  padding: var(--space-3);
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 6px;
+}
+
+.start-card__preview-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.start-card__preview-icon svg {
+  width: 26px;
+  height: 26px;
+}
+
+.start-card__preview-line {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--ink-200);
+}
+
+.start-card__preview-line--title {
+  height: 8px;
+  background: var(--ink-400);
+}
+
 /* ---------- Dialog content helpers ---------- */
 
 .field {
@@ -232,6 +364,7 @@
   background: var(--surface-0);
   color: var(--ink-900);
   font-size: var(--text-base);
+  transition: border-color var(--dur-fast) var(--ease-out);
 }
 
 .field input:focus {
@@ -288,4 +421,34 @@
   color: var(--ink-400);
   margin-top: -8px;
   margin-bottom: var(--space-4);
+}
+
+.dialog--shortcuts {
+  width: 480px;
+}
+
+.shortcuts-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  row-gap: 2px;
+  column-gap: var(--space-4);
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.shortcuts-grid__label {
+  padding: 6px 0;
+  font-size: var(--text-base);
+  color: var(--ink-900);
+}
+
+.shortcuts-grid__combo {
+  padding: 5px var(--space-2);
+  justify-self: end;
+  align-self: center;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  color: var(--ink-600);
+  white-space: nowrap;
 }

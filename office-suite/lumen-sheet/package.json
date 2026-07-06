@@ -12,6 +12,7 @@
   "build": {
     "appId": "com.lumen.sheet",
     "productName": "Lumen Sheet",
+    "publish": null,
     "directories": {
       "output": "dist",
       "buildResources": "build"

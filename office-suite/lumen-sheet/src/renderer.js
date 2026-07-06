@@ -9,11 +9,21 @@ import {
   formatValue,
   isNumericValue,
   shiftFormulaRefsByOffset,
+  literalValue,
   DEFAULT_COL_WIDTH,
   DEFAULT_ROW_HEIGHT,
 } from './grid.js';
-import { colToLetter, cellKeyFromRC, shiftRefString } from './refUtils.js';
+import {
+  colToLetter,
+  letterToCol,
+  cellKeyFromRC,
+  parseCellRefStr,
+  parseRangeStr,
+  iterRangeKeys,
+  shiftRefString,
+} from './refUtils.js';
 import { isError } from './formulaEngine.js';
+import { showToast } from './toast.js';
 
 const ROW_HEADER_WIDTH = 46;
 
@@ -42,6 +52,17 @@ const FUNCTION_DOCS = [
   { name: 'TODAY', args: '()', desc: 'Current date serial.' },
   { name: 'NOW', args: '()', desc: 'Current date+time serial.' },
   { name: 'PI', args: '()', desc: 'The constant pi.' },
+  { name: 'VLOOKUP', args: '(value, range, colIndex, [rangeLookup])', desc: 'Looks up a value in the first column of a range.' },
+  { name: 'INDEX', args: '(range, row, [col])', desc: 'Returns the value at a row/column within a range.' },
+  { name: 'MATCH', args: '(value, range, [matchType])', desc: 'Position of a value within a range.' },
+  { name: 'SUMIF', args: '(range, criteria, [sumRange])', desc: 'Sums cells that meet a criteria.' },
+  { name: 'COUNTIF', args: '(range, criteria)', desc: 'Counts cells that meet a criteria.' },
+  { name: 'AVERAGEIF', args: '(range, criteria, [avgRange])', desc: 'Averages cells that meet a criteria.' },
+  { name: 'DATE', args: '(year, month, day)', desc: 'Builds a date serial from parts.' },
+  { name: 'YEAR', args: '(serial)', desc: 'Year of a date serial.' },
+  { name: 'MONTH', args: '(serial)', desc: 'Month of a date serial.' },
+  { name: 'DAY', args: '(serial)', desc: 'Day of a date serial.' },
+  { name: 'WEEKDAY', args: '(serial, [type])', desc: 'Day of week of a date serial.' },
 ];
 
 const SWATCHES = [
@@ -71,6 +92,26 @@ let clipboard = null; // { rows, width, height, sourceRange, cut }
 let undoStack = [];
 let redoStack = [];
 
+let recentCache = []; // [{ path, openedAt }], refreshed on boot and after every open/save
+let fillHandleState = null; // active fill-handle drag, see "Fill handle" section
+let openSubmenuEls = []; // tracked so closeAllMenus() can tear them down too
+
+// Declared here (rather than next to their feature sections further down)
+// because boot runs at the top of this module and calls functions that
+// reference them immediately — `let` bindings are in the temporal dead zone
+// until their declaration line executes, so these must come first.
+let startScreenEl = null; // Start screen (template gallery + recent files)
+let fillHandleEl = null; // Fill handle
+let lastFillPreviewCells = [];
+let chartElements = new Map(); // chart id -> { el, titleEl, bodyEl } (Charts)
+
+const TEMPLATES = {
+  blank: { label: 'Blank', build: () => buildBlankTemplate() },
+  budget: { label: 'Budget Tracker', build: () => buildBudgetTemplate() },
+  invoice: { label: 'Simple Invoice', build: () => buildInvoiceTemplate() },
+  todo: { label: 'To-Do List', build: () => buildTodoTemplate() },
+};
+
 let cellElements = new Map(); // key -> td
 let colElements = []; // <col> elements, index 0 = row-header col
 let lastHighlighted = [];
@@ -89,6 +130,10 @@ initTheme();
 switchSheet(0, true);
 setDirty(false);
 window.lumen.onBeforeClose(handleBeforeClose);
+refreshRecentCache().then(() => {
+  if (startScreenEl) renderStartScreenRecent();
+});
+showStartScreen();
 
 // ---------------------------------------------------------------------------
 // Shell construction
@@ -120,6 +165,7 @@ function buildShell() {
       <div class="menubar__item" data-menu="view">View</div>
       <div class="menubar__item" data-menu="insert">Insert</div>
       <div class="menubar__item" data-menu="format">Format</div>
+      <div class="menubar__item" data-menu="data">Data</div>
       <div class="menubar__item" data-menu="help">Help</div>
     </div>
 
@@ -167,17 +213,19 @@ function buildShell() {
       </div>
     </div>
 
-    <div class="formula-bar">
-      <span class="formula-bar__fx">fx</span>
-      <span class="formula-bar__ref" id="formula-ref">A1</span>
-      <input class="formula-bar__input" id="formula-input" spellcheck="false" autocomplete="off" />
-    </div>
+    <div class="sheet-area" id="sheet-area">
+      <div class="formula-bar">
+        <span class="formula-bar__fx">fx</span>
+        <span class="formula-bar__ref" id="formula-ref">A1</span>
+        <input class="formula-bar__input" id="formula-input" spellcheck="false" autocomplete="off" />
+      </div>
 
-    <div class="sheet-viewport" id="sheet-viewport">
-      <div class="sheet-canvas" id="sheet-canvas"></div>
-    </div>
+      <div class="sheet-viewport" id="sheet-viewport">
+        <div class="sheet-canvas" id="sheet-canvas"></div>
+      </div>
 
-    <div class="sheet-tabs" id="sheet-tabs"></div>
+      <div class="sheet-tabs" id="sheet-tabs"></div>
+    </div>
 
     <div class="statusbar">
       <span class="statusbar__stat" id="stat-sum">Sum: —</span>
@@ -197,6 +245,7 @@ function buildShell() {
   els.toolbar = document.getElementById('toolbar');
   els.formulaRef = document.getElementById('formula-ref');
   els.formulaInput = document.getElementById('formula-input');
+  els.sheetArea = document.getElementById('sheet-area');
   els.sheetViewport = document.getElementById('sheet-viewport');
   els.sheetCanvas = document.getElementById('sheet-canvas');
   els.sheetTabs = document.getElementById('sheet-tabs');
@@ -281,6 +330,8 @@ let openMenuEl = null;
 let openMenuAnchor = null;
 
 function closeAllMenus() {
+  for (const el of openSubmenuEls) el.remove();
+  openSubmenuEls = [];
   if (openMenuEl) {
     openMenuEl.remove();
     openMenuEl = null;
@@ -313,7 +364,47 @@ function buildMenuEl(items) {
       sc.textContent = item.shortcut;
       el.appendChild(sc);
     }
-    if (!item.disabled) {
+    if (item.submenu) {
+      el.classList.add('menu__item--submenu');
+      const chevron = document.createElement('span');
+      chevron.className = 'menu__chevron';
+      chevron.textContent = '▸';
+      el.appendChild(chevron);
+      let submenuEl = null;
+      let closeTimer = null;
+      const openSub = () => {
+        clearTimeout(closeTimer);
+        if (submenuEl) return;
+        submenuEl = buildMenuEl(item.submenu);
+        submenuEl.classList.add('menu--submenu');
+        document.body.appendChild(submenuEl);
+        openSubmenuEls.push(submenuEl);
+        const rect = el.getBoundingClientRect();
+        submenuEl.style.left = rect.right + 'px';
+        submenuEl.style.top = rect.top + 'px';
+        const subRect = submenuEl.getBoundingClientRect();
+        if (subRect.right > window.innerWidth) {
+          submenuEl.style.left = Math.max(4, rect.left - subRect.width) + 'px';
+        }
+        submenuEl.addEventListener('mouseenter', () => clearTimeout(closeTimer));
+        submenuEl.addEventListener('mouseleave', scheduleClose);
+      };
+      const scheduleClose = () => {
+        closeTimer = setTimeout(() => {
+          if (submenuEl) {
+            submenuEl.remove();
+            openSubmenuEls = openSubmenuEls.filter((s) => s !== submenuEl);
+            submenuEl = null;
+          }
+        }, 250);
+      };
+      el.addEventListener('mouseenter', openSub);
+      el.addEventListener('mouseleave', scheduleClose);
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openSub();
+      });
+    } else if (!item.disabled) {
       el.addEventListener('click', (e) => {
         e.stopPropagation();
         closeAllMenus();
@@ -358,7 +449,8 @@ function showContextMenu(x, y, items) {
 }
 
 document.addEventListener('mousedown', (e) => {
-  if (openMenuEl && !openMenuEl.contains(e.target) && !(openMenuAnchor && openMenuAnchor.contains(e.target))) {
+  const inSubmenu = openSubmenuEls.some((s) => s.contains(e.target));
+  if (openMenuEl && !openMenuEl.contains(e.target) && !(openMenuAnchor && openMenuAnchor.contains(e.target)) && !inSubmenu) {
     closeAllMenus();
   }
   if (openPopoverEl && !openPopoverEl.contains(e.target) && !(openPopoverAnchor && openPopoverAnchor.contains(e.target))) {
@@ -445,6 +537,7 @@ function menuItemsFor(name) {
       return [
         { label: 'New', shortcut: 'Ctrl+N', onClick: newWorkbook },
         { label: 'Open…', shortcut: 'Ctrl+O', onClick: openWorkbookFlow },
+        { label: 'Open Recent', submenu: recentOpenRecentSubmenu() },
         { label: 'Save', shortcut: 'Ctrl+S', onClick: saveWorkbook },
         { label: 'Save As…', shortcut: 'Ctrl+Shift+S', onClick: saveWorkbookAs },
         { type: 'sep' },
@@ -471,6 +564,20 @@ function menuItemsFor(name) {
         { label: 'Zoom Out', onClick: () => setZoom(zoom - 0.1) },
         { label: 'Reset Zoom', onClick: () => setZoom(1) },
         { type: 'sep' },
+        {
+          label: (workbook.activeSheet.freezeRow ? '✓ ' : '') + 'Freeze First Row',
+          onClick: () => toggleFreeze('row'),
+        },
+        {
+          label: (workbook.activeSheet.freezeCol ? '✓ ' : '') + 'Freeze First Column',
+          onClick: () => toggleFreeze('col'),
+        },
+        {
+          label: 'Unfreeze',
+          disabled: !workbook.activeSheet.freezeRow && !workbook.activeSheet.freezeCol,
+          onClick: unfreezePanes,
+        },
+        { type: 'sep' },
         { label: 'Toggle Theme', onClick: toggleTheme },
       ];
     case 'insert':
@@ -481,6 +588,7 @@ function menuItemsFor(name) {
         { label: 'Column Right', onClick: () => performStructuralChange((s) => s.insertCol(state.anchor.col + 1)) },
         { type: 'sep' },
         { label: 'Sheet', onClick: addSheet },
+        { label: 'Chart…', onClick: openInsertChartDialog },
         { type: 'sep' },
         { label: 'Function…', onClick: () => showPopover(els.toolbar.querySelector('#btn-function'), buildFunctionListEl()) },
       ];
@@ -496,9 +604,19 @@ function menuItemsFor(name) {
         { type: 'sep' },
         { label: 'Toggle Borders', onClick: toggleBorders },
         { label: 'Clear Formatting', onClick: clearFormatting },
+        { type: 'sep' },
+        { label: 'Conditional Formatting…', onClick: openConditionalFormattingDialog },
+      ];
+    case 'data':
+      return [
+        { label: 'Sort Selection Ascending', onClick: () => sortSelection('asc') },
+        { label: 'Sort Selection Descending', onClick: () => sortSelection('desc') },
       ];
     case 'help':
-      return [{ label: 'About Lumen Sheet', onClick: showAbout }];
+      return [
+        { label: 'Keyboard Shortcuts', onClick: showKeyboardShortcuts },
+        { label: 'About Lumen Sheet', onClick: showAbout },
+      ];
     default:
       return [];
   }
@@ -680,6 +798,239 @@ function setZoom(value) {
   document.documentElement.style.setProperty('--grid-zoom', zoom);
   els.zoomLabel.textContent = Math.round(zoom * 100) + '%';
   els.zoomRange.value = String(Math.round(zoom * 100));
+  updateFillHandlePosition();
+}
+
+// ---------------------------------------------------------------------------
+// Start screen (template gallery + recent files)
+// ---------------------------------------------------------------------------
+// (startScreenEl is declared with the other early state, near the top of
+// this file — see the comment there for why.)
+
+function tplSetCell(sheet, ref, raw, formatPatch) {
+  sheet.setRaw(ref, raw);
+  if (formatPatch) sheet.setFormat(ref, formatPatch);
+}
+
+const TPL_HEADER_FORMAT = { bold: true, bg: '#f3e9d6' };
+
+function buildBlankTemplate() {
+  return new Workbook();
+}
+
+function buildBudgetTemplate() {
+  const wb = new Workbook();
+  wb.title = 'Budget Tracker';
+  const sheet = wb.activeSheet;
+  sheet.name = 'Budget';
+  ['A1', 'B1', 'C1', 'D1'].forEach((ref, i) => {
+    tplSetCell(sheet, ref, ['Category', 'Budgeted', 'Actual', 'Difference'][i], TPL_HEADER_FORMAT);
+  });
+  const rows = [
+    ['Rent', 1200, 1200],
+    ['Groceries', 400, 375],
+    ['Utilities', 150, 162],
+    ['Entertainment', 100, 130],
+  ];
+  rows.forEach((row, i) => {
+    const r = i + 2;
+    tplSetCell(sheet, `A${r}`, row[0]);
+    tplSetCell(sheet, `B${r}`, String(row[1]), { numberFormat: 'currency' });
+    tplSetCell(sheet, `C${r}`, String(row[2]), { numberFormat: 'currency' });
+    tplSetCell(sheet, `D${r}`, `=B${r}-C${r}`, { numberFormat: 'currency' });
+  });
+  const total = rows.length + 2;
+  tplSetCell(sheet, `A${total}`, 'Total', { bold: true });
+  tplSetCell(sheet, `B${total}`, `=SUM(B2:B${total - 1})`, { bold: true, numberFormat: 'currency' });
+  tplSetCell(sheet, `C${total}`, `=SUM(C2:C${total - 1})`, { bold: true, numberFormat: 'currency' });
+  tplSetCell(sheet, `D${total}`, `=SUM(D2:D${total - 1})`, { bold: true, numberFormat: 'currency' });
+  return wb;
+}
+
+function buildInvoiceTemplate() {
+  const wb = new Workbook();
+  wb.title = 'Simple Invoice';
+  const sheet = wb.activeSheet;
+  sheet.name = 'Invoice';
+  tplSetCell(sheet, 'A1', 'Invoice #', { bold: true });
+  tplSetCell(sheet, 'B1', 'INV-1001');
+  tplSetCell(sheet, 'A2', 'Date', { bold: true });
+  tplSetCell(sheet, 'B2', '=TODAY()', { numberFormat: 'date' });
+  tplSetCell(sheet, 'A3', 'Bill To', { bold: true });
+  tplSetCell(sheet, 'B3', 'Acme Co.');
+  ['A5', 'B5', 'C5', 'D5'].forEach((ref, i) => {
+    tplSetCell(sheet, ref, ['Description', 'Qty', 'Unit Price', 'Total'][i], TPL_HEADER_FORMAT);
+  });
+  const items = [
+    ['Consulting hours', 6, 120],
+    ['Design review', 2, 150],
+  ];
+  items.forEach((item, i) => {
+    const r = i + 6;
+    tplSetCell(sheet, `A${r}`, item[0]);
+    tplSetCell(sheet, `B${r}`, String(item[1]));
+    tplSetCell(sheet, `C${r}`, String(item[2]), { numberFormat: 'currency' });
+    tplSetCell(sheet, `D${r}`, `=B${r}*C${r}`, { numberFormat: 'currency' });
+  });
+  const total = items.length + 6;
+  tplSetCell(sheet, `C${total}`, 'Grand Total', { bold: true });
+  tplSetCell(sheet, `D${total}`, `=SUM(D6:D${total - 1})`, { bold: true, numberFormat: 'currency' });
+  return wb;
+}
+
+function buildTodoTemplate() {
+  const wb = new Workbook();
+  wb.title = 'To-Do List';
+  const sheet = wb.activeSheet;
+  sheet.name = 'To-Do';
+  ['A1', 'B1', 'C1'].forEach((ref, i) => {
+    tplSetCell(sheet, ref, ['Task', 'Done', 'Priority'][i], TPL_HEADER_FORMAT);
+  });
+  const rows = [
+    ['Draft project outline', 'TRUE', 'High'],
+    ['Review budget numbers', 'FALSE', 'Medium'],
+    ['Schedule kickoff meeting', 'FALSE', 'High'],
+    ['Clean up shared drive', 'FALSE', 'Low'],
+  ];
+  rows.forEach((row, i) => {
+    const r = i + 2;
+    tplSetCell(sheet, `A${r}`, row[0]);
+    tplSetCell(sheet, `B${r}`, row[1], { align: 'center' });
+    tplSetCell(sheet, `C${r}`, row[2]);
+  });
+  return wb;
+}
+
+// (TEMPLATES is declared with the other early state, near the top of this
+// file, since showStartScreen() reads it during boot — function
+// declarations like buildBlankTemplate are hoisted, so referencing them
+// here from an earlier line is safe.)
+
+// Small abstract grid previews (a few colored rectangles suggesting a header
+// row + data) — not literal screenshots. Inline SVG, theme-token colored.
+function previewSVG(kind) {
+  const bodies = {
+    blank: `
+      <rect x="4" y="4" width="112" height="62" rx="3" fill="var(--surface-0)" stroke="var(--border-subtle)"/>
+      <line x1="4" y1="26" x2="116" y2="26" stroke="var(--border-subtle)"/>
+      <line x1="4" y1="48" x2="116" y2="48" stroke="var(--border-subtle)"/>
+      <line x1="42" y1="4" x2="42" y2="66" stroke="var(--border-subtle)"/>
+      <line x1="80" y1="4" x2="80" y2="66" stroke="var(--border-subtle)"/>`,
+    budget: `
+      <rect x="4" y="4" width="112" height="62" rx="3" fill="var(--surface-0)" stroke="var(--border-subtle)"/>
+      <rect x="4" y="4" width="112" height="12" fill="var(--accent-600)"/>
+      <rect x="8" y="22" width="40" height="7" fill="var(--ink-200)"/>
+      <rect x="56" y="22" width="22" height="7" fill="var(--accent-500)" opacity="0.55"/>
+      <rect x="84" y="22" width="22" height="7" fill="var(--accent-500)" opacity="0.3"/>
+      <rect x="8" y="34" width="40" height="7" fill="var(--ink-200)"/>
+      <rect x="56" y="34" width="22" height="7" fill="var(--accent-500)" opacity="0.55"/>
+      <rect x="84" y="34" width="22" height="7" fill="var(--accent-500)" opacity="0.3"/>
+      <rect x="8" y="46" width="40" height="7" fill="var(--ink-200)"/>
+      <rect x="56" y="46" width="22" height="7" fill="var(--accent-500)" opacity="0.55"/>
+      <rect x="84" y="46" width="22" height="7" fill="var(--accent-500)" opacity="0.3"/>
+      <rect x="8" y="58" width="98" height="6" fill="var(--ink-400)" opacity="0.6"/>`,
+    invoice: `
+      <rect x="4" y="4" width="112" height="62" rx="3" fill="var(--surface-0)" stroke="var(--border-subtle)"/>
+      <rect x="8" y="8" width="34" height="6" fill="var(--ink-200)"/>
+      <rect x="8" y="18" width="50" height="6" fill="var(--ink-200)"/>
+      <rect x="4" y="30" width="112" height="10" fill="var(--accent-600)"/>
+      <rect x="8" y="44" width="46" height="6" fill="var(--ink-200)"/>
+      <rect x="90" y="44" width="18" height="6" fill="var(--accent-500)" opacity="0.5"/>
+      <rect x="8" y="54" width="46" height="6" fill="var(--ink-200)"/>
+      <rect x="90" y="54" width="18" height="6" fill="var(--accent-500)" opacity="0.5"/>
+      <rect x="70" y="62" width="38" height="4" fill="var(--ink-400)" opacity="0.7"/>`,
+    todo: `
+      <rect x="4" y="4" width="112" height="62" rx="3" fill="var(--surface-0)" stroke="var(--border-subtle)"/>
+      <rect x="4" y="4" width="112" height="12" fill="var(--accent-600)"/>
+      <rect x="8" y="22" width="10" height="10" rx="2" fill="none" stroke="var(--ink-400)"/>
+      <rect x="24" y="25" width="60" height="6" fill="var(--ink-200)"/>
+      <rect x="8" y="38" width="10" height="10" rx="2" fill="var(--accent-500)" opacity="0.6"/>
+      <rect x="24" y="41" width="60" height="6" fill="var(--ink-200)"/>
+      <rect x="8" y="54" width="10" height="10" rx="2" fill="none" stroke="var(--ink-400)"/>
+      <rect x="24" y="57" width="44" height="6" fill="var(--ink-200)"/>`,
+  };
+  return `<svg viewBox="0 0 120 70" width="100%" height="64" xmlns="http://www.w3.org/2000/svg">${bodies[kind] || bodies.blank}</svg>`;
+}
+
+function showStartScreen() {
+  if (!startScreenEl) {
+    startScreenEl = document.createElement('div');
+    startScreenEl.className = 'start-screen';
+    startScreenEl.innerHTML = `
+      <div class="start-screen__title">Lumen Sheet</div>
+      <div class="start-screen__subtitle">Choose a template to get started, or open a recent workbook.</div>
+      <div class="start-screen__section-label">Templates</div>
+      <div class="start-screen__grid" id="start-template-grid"></div>
+      <div class="start-screen__section-label">Recent</div>
+      <div class="start-screen__recent" id="start-recent-list"></div>
+    `;
+    els.sheetArea.appendChild(startScreenEl);
+    const grid = startScreenEl.querySelector('#start-template-grid');
+    for (const key of Object.keys(TEMPLATES)) {
+      const tpl = TEMPLATES[key];
+      const card = document.createElement('div');
+      card.className = 'start-card';
+      card.innerHTML = `
+        <div class="start-card__preview">${previewSVG(key)}</div>
+        <div class="start-card__label">${escapeHtml(tpl.label)}</div>
+      `;
+      card.addEventListener('click', () => applyTemplate(key));
+      grid.appendChild(card);
+    }
+  }
+  startScreenEl.classList.remove('is-hidden');
+  renderStartScreenRecent();
+}
+
+function hideStartScreen() {
+  if (startScreenEl) startScreenEl.classList.add('is-hidden');
+}
+
+function renderStartScreenRecent() {
+  if (!startScreenEl) return;
+  const list = startScreenEl.querySelector('#start-recent-list');
+  list.innerHTML = '';
+  if (!recentCache.length) {
+    const empty = document.createElement('div');
+    empty.className = 'start-recent-item__meta';
+    empty.style.padding = '6px 12px';
+    empty.textContent = 'No recent files yet.';
+    list.appendChild(empty);
+    return;
+  }
+  for (const entry of recentCache) {
+    const item = document.createElement('div');
+    item.className = 'start-recent-item';
+    const icon = document.createElement('span');
+    icon.className = 'start-recent-item__icon';
+    icon.innerHTML = window.lumen.icons['folder-open'] || '';
+    const textWrap = document.createElement('div');
+    const name = document.createElement('div');
+    name.className = 'start-recent-item__name';
+    name.textContent = recentLabel(entry.path);
+    const meta = document.createElement('div');
+    meta.className = 'start-recent-item__meta';
+    meta.textContent = new Date(entry.openedAt).toLocaleString();
+    textWrap.appendChild(name);
+    textWrap.appendChild(meta);
+    item.appendChild(icon);
+    item.appendChild(textWrap);
+    item.addEventListener('click', () => openFileAtPath(entry.path));
+    list.appendChild(item);
+  }
+}
+
+function applyTemplate(key) {
+  const tpl = TEMPLATES[key];
+  if (!tpl) return;
+  workbook = tpl.build();
+  currentFilePath = null;
+  resetUndoRedo();
+  renderSheetTabs();
+  switchSheet(0, true);
+  setDirty(false);
+  hideStartScreen();
+  showToast(key === 'blank' ? 'New blank workbook' : `Created from "${tpl.label}" template`);
 }
 
 // ---------------------------------------------------------------------------
@@ -695,7 +1046,12 @@ function switchSheet(idx, full) {
 }
 
 function renderSheetTabs() {
-  els.sheetTabs.innerHTML = '';
+  // Keep the sliding active-tab indicator node across rebuilds — only the
+  // tab pills and the add button are torn down and recreated, so the
+  // indicator's left/width transition has a previous value to animate from
+  // instead of jumping in as a freshly created element would.
+  ensureSheetTabIndicator();
+  els.sheetTabs.querySelectorAll('.sheet-tab, .sheet-tabs__add').forEach((el) => el.remove());
   workbook.sheets.forEach((sheet, idx) => {
     const tab = document.createElement('div');
     tab.className = 'sheet-tab' + (idx === workbook.activeSheetIndex ? ' is-active' : '');
@@ -720,6 +1076,21 @@ function renderSheetTabs() {
   addBtn.addEventListener('click', addSheet);
   els.sheetTabs.appendChild(addBtn);
   applyIcons(els.sheetTabs);
+  updateSheetTabIndicator();
+}
+
+function ensureSheetTabIndicator() {
+  if (els.sheetTabIndicator && els.sheetTabIndicator.isConnected) return;
+  els.sheetTabIndicator = document.createElement('div');
+  els.sheetTabIndicator.className = 'sheet-tab-indicator';
+  els.sheetTabs.appendChild(els.sheetTabIndicator);
+}
+
+function updateSheetTabIndicator() {
+  const activeTab = els.sheetTabs.querySelector('.sheet-tab.is-active');
+  if (!activeTab) return;
+  els.sheetTabIndicator.style.width = activeTab.offsetWidth + 'px';
+  els.sheetTabIndicator.style.transform = `translateX(${activeTab.offsetLeft}px)`;
 }
 
 function addSheet() {
@@ -829,6 +1200,7 @@ function renderGrid() {
     rhInner.appendChild(rHandle);
     rh.appendChild(rhInner);
     rh.addEventListener('click', () => selectWholeRow(r));
+    if (sheet.freezeRow && r === 0) rh.classList.add('is-frozen-row');
     tr.appendChild(rh);
     for (let c = 0; c < sheet.colCount; c++) {
       const key = cellKeyFromRC(c, r);
@@ -837,6 +1209,8 @@ function renderGrid() {
       td.dataset.col = String(c);
       td.dataset.row = String(r);
       td.dataset.key = key;
+      if (sheet.freezeRow && r === 0) td.classList.add('is-frozen-row');
+      if (sheet.freezeCol && c === 0) td.classList.add('is-frozen-col');
       tr.appendChild(td);
       cellElements.set(key, td);
     }
@@ -846,6 +1220,8 @@ function renderGrid() {
 
   els.sheetCanvas.innerHTML = '';
   els.sheetCanvas.appendChild(table);
+  ensureFillHandleEl();
+  renderAllCharts();
 
   attachGridEvents(tbody, thead);
   renderAllCellContents();
@@ -984,12 +1360,13 @@ function attachRowResize(handle, row) {
 function renderAllCellContents() {
   const sheet = workbook.activeSheet;
   for (const [key, td] of cellElements) {
-    applyCellDisplay(td, sheet.getCell(key));
+    applyCellDisplay(td, sheet.getCell(key), key);
   }
   updateStatusBar();
+  refreshAllCharts();
 }
 
-function applyCellDisplay(td, cell) {
+function applyCellDisplay(td, cell, key) {
   const fmt = cell ? cell.format : defaultFormat();
   const value = cell ? cell.computed : '';
   const errored = isError(value);
@@ -1003,14 +1380,27 @@ function applyCellDisplay(td, cell) {
   td.classList.toggle('is-underline', !!fmt.underline);
   td.classList.toggle('is-error', errored);
   td.classList.toggle('has-border', !!fmt.border);
-  td.style.color = fmt.color || '';
-  td.style.background = fmt.bg || '';
+  // Conditional-formatting rules are a computed overlay: they never override
+  // the user's own manual fill color, only supply one when none is set.
+  const cfBg = key ? getCondFormatBackground(workbook.activeSheet, key) : null;
+  const bg = fmt.bg || cfBg || '';
+  td.style.background = bg;
+  if (!fmt.color && bg) {
+    // Any literal fill — a manual cell fill (including template header
+    // shading) or a CF overlay — is theme-independent, so pick readable ink
+    // for it by luminance rather than always using the theme's --ink-900
+    // (see relativeLuminance above), which is light in dark mode and goes
+    // nearly invisible on a light literal fill.
+    td.style.color = relativeLuminance(bg) > 0.5 ? '#1b1a17' : '#f3f1eb';
+  } else {
+    td.style.color = fmt.color || '';
+  }
 }
 
 function refreshCell(key) {
   const td = cellElements.get(key);
   if (!td) return;
-  applyCellDisplay(td, workbook.activeSheet.getCell(key));
+  applyCellDisplay(td, workbook.activeSheet.getCell(key), key);
 }
 
 // ---------------------------------------------------------------------------
@@ -1048,6 +1438,7 @@ function updateSelectionUI() {
   }
   if (!state.formulaEditing) updateFormulaBarFromActive();
   updateStatusBar();
+  updateFillHandlePosition();
 }
 
 function scrollActiveIntoView() {
@@ -1380,6 +1771,789 @@ function clearSelectionContents() {
 }
 
 // ---------------------------------------------------------------------------
+// Fill handle
+// ---------------------------------------------------------------------------
+// A small square handle at the bottom-right corner of the active
+// selection. Dragging it down or right previews an extended range; on
+// mouseup the whole fill is applied as a single undoable action:
+//   (a) formula source cells: relative refs shifted via shiftFormulaRefsByOffset
+//       (the same helper paste already uses in refUtils/grid.js).
+//   (b) 2+ non-formula source cells forming a recognized arithmetic or
+//       weekday/month sequence: the sequence continues (not cyclic repeat).
+//   (c) otherwise: the literal value/format is copied as-is (cyclically
+//       repeating the source block if it has more than one cell).
+// Only downward/rightward drags extend the selection — matching the common
+// simplified fill-handle behavior (documented scope cut in the README).
+
+// (fillHandleEl / lastFillPreviewCells are declared with the other early
+// state, near the top of this file.)
+
+const WEEKDAY_FULL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const WEEKDAY_ABBR = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MONTH_FULL = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+const MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function ensureFillHandleEl() {
+  fillHandleEl = document.createElement('div');
+  fillHandleEl.className = 'fill-handle';
+  els.sheetCanvas.appendChild(fillHandleEl);
+  fillHandleEl.addEventListener('mousedown', onFillHandleMousedown);
+}
+
+function updateFillHandlePosition() {
+  if (!fillHandleEl) return;
+  const range = normalizedSelection();
+  const td = cellElements.get(cellKeyFromRC(range.maxCol, range.maxRow));
+  if (!td) {
+    fillHandleEl.style.display = 'none';
+    return;
+  }
+  const canvasRect = els.sheetCanvas.getBoundingClientRect();
+  const tdRect = td.getBoundingClientRect();
+  fillHandleEl.style.display = '';
+  fillHandleEl.style.left = tdRect.right - canvasRect.left + 'px';
+  fillHandleEl.style.top = tdRect.bottom - canvasRect.top + 'px';
+}
+
+function onFillHandleMousedown(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const sourceRange = normalizedSelection();
+  fillHandleState = { sourceRange, previewRange: { ...sourceRange } };
+
+  function onMove(ev) {
+    const el = document.elementFromPoint(ev.clientX, ev.clientY);
+    const td = el && el.closest && el.closest('td.cell');
+    if (!td) return;
+    const col = parseInt(td.dataset.col, 10);
+    const row = parseInt(td.dataset.row, 10);
+    const dRow = row - sourceRange.maxRow;
+    const dCol = col - sourceRange.maxCol;
+    const target = { ...sourceRange };
+    if (dRow > 0 && dRow >= dCol) target.maxRow = row;
+    else if (dCol > 0) target.maxCol = col;
+    fillHandleState.previewRange = target;
+    renderFillPreview();
+  }
+
+  function onUp() {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    clearFillPreview();
+    const { sourceRange: sr, previewRange: pr } = fillHandleState;
+    fillHandleState = null;
+    if (pr.maxRow > sr.maxRow || pr.maxCol > sr.maxCol) performFill(sr, pr);
+  }
+
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+function renderFillPreview() {
+  clearFillPreview();
+  if (!fillHandleState) return;
+  const { sourceRange: sr, previewRange: pr } = fillHandleState;
+  for (let r = pr.minRow; r <= pr.maxRow; r++) {
+    for (let c = pr.minCol; c <= pr.maxCol; c++) {
+      const inSource = r >= sr.minRow && r <= sr.maxRow && c >= sr.minCol && c <= sr.maxCol;
+      if (inSource) continue;
+      const td = cellElements.get(cellKeyFromRC(c, r));
+      if (td) {
+        td.classList.add('is-fill-preview');
+        lastFillPreviewCells.push(td);
+      }
+    }
+  }
+}
+
+function clearFillPreview() {
+  for (const td of lastFillPreviewCells) td.classList.remove('is-fill-preview');
+  lastFillPreviewCells = [];
+}
+
+function detectSequenceForLine(lineCells) {
+  if (lineCells.some((c) => typeof c.raw === 'string' && c.raw.startsWith('='))) return null;
+  if (lineCells.length < 2) return null;
+  const raws = lineCells.map((c) => String(c.raw ?? '').trim());
+  const nums = lineCells.map((c) => literalValue(c.raw));
+  if (nums.every((v) => typeof v === 'number')) {
+    const step = nums[1] - nums[0];
+    let consistent = true;
+    for (let k = 1; k < nums.length; k++) {
+      if (Math.abs(nums[k] - nums[k - 1] - step) > 1e-9) {
+        consistent = false;
+        break;
+      }
+    }
+    if (consistent && step !== 0) return { rawAt: (idx) => String(nums[0] + step * idx) };
+  }
+  return detectNameSequence(raws, WEEKDAY_FULL, WEEKDAY_ABBR) || detectNameSequence(raws, MONTH_FULL, MONTH_ABBR);
+}
+
+function detectNameSequence(raws, fullNames, abbrNames) {
+  const tryList = (names) => {
+    const idxs = raws.map((r) => names.findIndex((n) => n.toLowerCase() === r.toLowerCase()));
+    if (idxs.some((i) => i === -1)) return null;
+    const period = names.length;
+    const baseStep = (((idxs[1] - idxs[0]) % period) + period) % period;
+    if (baseStep === 0) return null;
+    for (let k = 1; k < idxs.length; k++) {
+      const diff = (((idxs[k] - idxs[k - 1]) % period) + period) % period;
+      if (diff !== baseStep) return null;
+    }
+    return { rawAt: (absIdx) => names[(((idxs[0] + baseStep * absIdx) % period) + period) % period] };
+  };
+  return tryList(fullNames) || tryList(abbrNames);
+}
+
+function computeFillCell(lineCells, seq, i, offsetForIndex) {
+  const N = lineCells.length;
+  const srcIdx = (i - 1) % N;
+  const src = lineCells[srcIdx];
+  const hasFormula = typeof src.raw === 'string' && src.raw.startsWith('=');
+  if (hasFormula) {
+    const { colOffset, rowOffset } = offsetForIndex(srcIdx);
+    return { raw: shiftFormulaRefsByOffset(src.raw, colOffset, rowOffset), format: { ...src.format } };
+  }
+  if (seq) return { raw: seq.rawAt(N - 1 + i), format: { ...lineCells[0].format } };
+  return { raw: src.raw, format: { ...src.format } };
+}
+
+function performFill(sourceRange, targetRange) {
+  const sheet = workbook.activeSheet;
+  const rowExt = targetRange.maxRow > sourceRange.maxRow;
+  const colExt = targetRange.maxCol > sourceRange.maxCol;
+  const changes = [];
+  if (rowExt) {
+    const numNew = targetRange.maxRow - sourceRange.maxRow;
+    for (let c = sourceRange.minCol; c <= sourceRange.maxCol; c++) {
+      const lineCells = [];
+      for (let r = sourceRange.minRow; r <= sourceRange.maxRow; r++) lineCells.push(sheet.snapshotCell(cellKeyFromRC(c, r)));
+      const seq = detectSequenceForLine(lineCells);
+      for (let i = 1; i <= numNew; i++) {
+        const targetRow = sourceRange.maxRow + i;
+        const key = cellKeyFromRC(c, targetRow);
+        const before = sheet.snapshotCell(key);
+        const after = computeFillCell(lineCells, seq, i, (srcIdx) => ({
+          colOffset: 0,
+          rowOffset: targetRow - (sourceRange.minRow + srcIdx),
+        }));
+        changes.push({ key, before, after });
+      }
+    }
+  }
+  if (colExt) {
+    const numNew = targetRange.maxCol - sourceRange.maxCol;
+    for (let r = sourceRange.minRow; r <= sourceRange.maxRow; r++) {
+      const lineCells = [];
+      for (let c = sourceRange.minCol; c <= sourceRange.maxCol; c++) lineCells.push(sheet.snapshotCell(cellKeyFromRC(c, r)));
+      const seq = detectSequenceForLine(lineCells);
+      for (let i = 1; i <= numNew; i++) {
+        const targetCol = sourceRange.maxCol + i;
+        const key = cellKeyFromRC(targetCol, r);
+        const before = sheet.snapshotCell(key);
+        const after = computeFillCell(lineCells, seq, i, (srcIdx) => ({
+          colOffset: targetCol - (sourceRange.minCol + srcIdx),
+          rowOffset: 0,
+        }));
+        changes.push({ key, before, after });
+      }
+    }
+  }
+  if (changes.length) applyChanges(changes);
+}
+
+// ---------------------------------------------------------------------------
+// Freeze panes
+// ---------------------------------------------------------------------------
+// Simple toggles rather than an arbitrary boundary picker (documented scope
+// cut in the README): the first data row and/or first data column, in
+// addition to the always-sticky letter/number gutter.
+
+function toggleFreeze(kind) {
+  const sheet = workbook.activeSheet;
+  if (kind === 'row') sheet.freezeRow = !sheet.freezeRow;
+  else sheet.freezeCol = !sheet.freezeCol;
+  setDirty(true);
+  renderGrid();
+}
+
+function unfreezePanes() {
+  const sheet = workbook.activeSheet;
+  sheet.freezeRow = false;
+  sheet.freezeCol = false;
+  setDirty(true);
+  renderGrid();
+}
+
+// ---------------------------------------------------------------------------
+// Sort
+// ---------------------------------------------------------------------------
+// Sorts the selected rows by the computed value of the selection's first
+// column. Deliberate simplification (documented in the README): formulas do
+// not survive the reorder with re-pointed relative refs — they are replaced
+// by their last computed value, since a generic reorder can't preserve
+// relative-formula semantics the way a plain row/column insert/delete can.
+
+function sortSelection(direction) {
+  const sheet = workbook.activeSheet;
+  const range = normalizedSelection();
+  if (range.maxRow - range.minRow + 1 < 2) return;
+  const rows = [];
+  for (let r = range.minRow; r <= range.maxRow; r++) {
+    const rowCells = [];
+    for (let c = range.minCol; c <= range.maxCol; c++) {
+      const key = cellKeyFromRC(c, r);
+      const cell = sheet.getCell(key);
+      const snap = sheet.snapshotCell(key);
+      let raw = snap.raw;
+      if (typeof raw === 'string' && raw.startsWith('=')) {
+        const computed = cell ? cell.computed : '';
+        raw = isError(computed) ? '' : typeof computed === 'boolean' ? (computed ? 'TRUE' : 'FALSE') : String(computed ?? '');
+      }
+      rowCells.push({ raw, format: snap.format });
+    }
+    rows.push({ cells: rowCells, sortVal: literalValue(rowCells[0].raw) });
+  }
+  rows.sort((a, b) => {
+    const av = a.sortVal;
+    const bv = b.sortVal;
+    const aBlank = av === '' || av === undefined || av === null;
+    const bBlank = bv === '' || bv === undefined || bv === null;
+    if (aBlank && bBlank) return 0;
+    if (aBlank) return 1; // blanks always sort last
+    if (bBlank) return -1;
+    const cmp = typeof av === 'number' && typeof bv === 'number' ? av - bv : String(av).localeCompare(String(bv));
+    return direction === 'asc' ? cmp : -cmp;
+  });
+  const changes = [];
+  rows.forEach((row, i) => {
+    const r = range.minRow + i;
+    row.cells.forEach((cellData, ci) => {
+      const key = cellKeyFromRC(range.minCol + ci, r);
+      const before = sheet.snapshotCell(key);
+      changes.push({ key, before, after: { raw: cellData.raw, format: cellData.format } });
+    });
+  });
+  applyChanges(changes);
+  showToast('Sorted selection');
+}
+
+// ---------------------------------------------------------------------------
+// Conditional formatting
+// ---------------------------------------------------------------------------
+// Rules are stored per-sheet and applied as a read-only visual overlay at
+// render time (see applyCellDisplay) — they never overwrite the cell's own
+// manual formatting (bold/italic/text color/manual fill), only supply a
+// background color when the cell doesn't already have one of its own.
+
+function keyInRangeStr(key, rangeStr) {
+  const range = parseRangeStr(rangeStr);
+  if (!range) return false;
+  const p = parseCellRefStr(key);
+  if (!p) return false;
+  return p.col >= range.startCol && p.col <= range.endCol && p.row >= range.startRow && p.row <= range.endRow;
+}
+
+function hexToRgb(hex) {
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(String(hex || ''));
+  return m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : [255, 255, 255];
+}
+
+function rgbToHex([r, g, b]) {
+  return '#' + [r, g, b].map((v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
+}
+
+// Relative luminance (WCAG) of a hex color, used to pick a legible ink color
+// for conditional-formatting fills. Cell text otherwise always uses the
+// theme's --ink-900, which is light in dark mode — fine against the dark
+// canvas, but conditional-formatting fills are literal user-chosen colors
+// (independent of theme) and default to light pastels, so ink-900 text goes
+// nearly invisible on them in dark mode. Bug found during motion polish;
+// see applyCellDisplay.
+function relativeLuminance(hex) {
+  const [r, g, b] = hexToRgb(hex).map((v) => v / 255);
+  const lin = (c) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+}
+
+function lerpColor(hexA, hexB, t) {
+  const a = hexToRgb(hexA);
+  const b = hexToRgb(hexB);
+  return rgbToHex([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]);
+}
+
+function getCondFormatBackground(sheet, key) {
+  const cell = sheet.getCell(key);
+  const value = cell ? cell.computed : '';
+  let bg = null;
+  for (const rule of sheet.condFormats) {
+    if (!keyInRangeStr(key, rule.range)) continue;
+    if (typeof value !== 'number') continue;
+    if (rule.kind === 'highlight') {
+      const rv = typeof rule.value === 'number' ? rule.value : Number(rule.value);
+      if (Number.isNaN(rv)) continue;
+      let match = false;
+      if (rule.op === '>') match = value > rv;
+      else if (rule.op === '<') match = value < rv;
+      else match = value === rv;
+      if (match) bg = rule.color;
+    } else if (rule.kind === 'scale') {
+      const range = parseRangeStr(rule.range);
+      let min = Infinity;
+      let max = -Infinity;
+      for (const k of iterRangeKeys(range)) {
+        const c = sheet.getCell(k);
+        const v = c ? c.computed : '';
+        if (typeof v === 'number') {
+          if (v < min) min = v;
+          if (v > max) max = v;
+        }
+      }
+      if (min === Infinity || max === -Infinity || max === min) {
+        bg = rule.midColor;
+      } else {
+        const mid = (min + max) / 2;
+        bg = value <= mid
+          ? lerpColor(rule.minColor, rule.midColor, (value - min) / (mid - min || 1))
+          : lerpColor(rule.midColor, rule.maxColor, (value - mid) / (max - mid || 1));
+      }
+    }
+  }
+  return bg;
+}
+
+function openConditionalFormattingDialog() {
+  const range = normalizedSelection();
+  const rangeStr = `${cellKeyFromRC(range.minCol, range.minRow)}:${cellKeyFromRC(range.maxCol, range.maxRow)}`;
+  const sheet = workbook.activeSheet;
+  const existing = sheet.condFormats.filter((r) => r.range === rangeStr);
+
+  const { bodyEl } = showDialog({
+    title: 'Conditional Formatting',
+    bodyHTML: `
+      <label>Applies to</label>
+      <input type="text" value="${escapeHtml(rangeStr)}" disabled />
+      <label>Rule type</label>
+      <select id="cf-kind" class="select">
+        <option value="highlight">Highlight cells</option>
+        <option value="scale">Color scale</option>
+      </select>
+      <div id="cf-highlight-fields">
+        <label>Condition</label>
+        <select id="cf-op" class="select">
+          <option value=">">Greater than</option>
+          <option value="<">Less than</option>
+          <option value="=">Equal to</option>
+        </select>
+        <label>Value</label>
+        <input type="text" id="cf-value" placeholder="e.g. 100" />
+        <label>Color</label>
+        <input type="color" id="cf-color" value="#f0d8d2" />
+      </div>
+      <div id="cf-scale-fields" style="display:none;">
+        <label>Min color</label>
+        <input type="color" id="cf-min-color" value="#f0d8d2" />
+        <label>Mid color</label>
+        <input type="color" id="cf-mid-color" value="#faf9f7" />
+        <label>Max color</label>
+        <input type="color" id="cf-max-color" value="#dbe6dc" />
+      </div>
+      ${existing.length ? `<label style="margin-top:12px;">Existing rules on this range</label><div id="cf-existing"></div>` : ''}
+    `,
+    buttons: [{ label: 'Cancel' }, { label: 'Apply', variant: 'primary', onClick: () => applyRule() }],
+  });
+
+  const kindSel = bodyEl.querySelector('#cf-kind');
+  const highlightFields = bodyEl.querySelector('#cf-highlight-fields');
+  const scaleFields = bodyEl.querySelector('#cf-scale-fields');
+  kindSel.addEventListener('change', () => {
+    const isScale = kindSel.value === 'scale';
+    highlightFields.style.display = isScale ? 'none' : '';
+    scaleFields.style.display = isScale ? '' : 'none';
+  });
+
+  if (existing.length) {
+    const list = bodyEl.querySelector('#cf-existing');
+    for (const rule of existing) {
+      const row = document.createElement('div');
+      row.className = 'cf-existing-row';
+      const desc = document.createElement('span');
+      desc.textContent =
+        rule.kind === 'scale' ? 'Color scale' : `Highlight ${rule.op === '>' ? '>' : rule.op === '<' ? '<' : '='} ${rule.value}`;
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'btn-icon';
+      removeBtn.dataset.icon = 'x';
+      removeBtn.dataset.tooltip = 'Remove rule';
+      removeBtn.addEventListener('click', () => {
+        sheet.condFormats = sheet.condFormats.filter((r) => r.id !== rule.id);
+        setDirty(true);
+        renderAllCellContents();
+        row.remove();
+      });
+      row.appendChild(desc);
+      row.appendChild(removeBtn);
+      list.appendChild(row);
+      applyIcons(row);
+    }
+  }
+
+  function applyRule() {
+    const kind = kindSel.value;
+    let rule;
+    if (kind === 'highlight') {
+      const value = literalValue(bodyEl.querySelector('#cf-value').value);
+      rule = {
+        id: 'cf' + Date.now() + Math.random().toString(36).slice(2, 7),
+        range: rangeStr,
+        kind: 'highlight',
+        op: bodyEl.querySelector('#cf-op').value,
+        value,
+        color: bodyEl.querySelector('#cf-color').value,
+      };
+    } else {
+      rule = {
+        id: 'cf' + Date.now() + Math.random().toString(36).slice(2, 7),
+        range: rangeStr,
+        kind: 'scale',
+        minColor: bodyEl.querySelector('#cf-min-color').value,
+        midColor: bodyEl.querySelector('#cf-mid-color').value,
+        maxColor: bodyEl.querySelector('#cf-max-color').value,
+      };
+    }
+    sheet.condFormats.push(rule);
+    setDirty(true);
+    renderAllCellContents();
+    showToast('Conditional formatting rule added');
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Charts
+// ---------------------------------------------------------------------------
+// Hand-rolled inline SVG (no charting dependency, keeping the no-bundler
+// renderer architecture intact). Single data series only — the multi-series
+// case (2-D range with several data columns/rows) is a documented scope cut.
+// Label-orientation heuristic: if the first row is mostly text and the first
+// column is mostly numeric, the first row supplies category labels (one data
+// row is used as the single series); otherwise labels come down the first
+// column and values from the next column (skipping a text header row if the
+// range's top row looks like one).
+
+// (chartElements is declared with the other early state, near the top of
+// this file.)
+
+function extractChartData(sheet, rangeStr) {
+  const range = parseRangeStr(rangeStr);
+  if (!range) return null;
+  const getVal = (c, r) => {
+    const cell = sheet.getCell(cellKeyFromRC(c, r));
+    return cell ? cell.computed : '';
+  };
+  const isNumeric = (v) => typeof v === 'number';
+  const width = range.endCol - range.startCol + 1;
+
+  let rowTextCount = 0;
+  let rowTotal = 0;
+  for (let c = range.startCol; c <= range.endCol; c++) {
+    const v = getVal(c, range.startRow);
+    if (v === '' || v === undefined) continue;
+    rowTotal++;
+    if (!isNumeric(v)) rowTextCount++;
+  }
+  let colNumCount = 0;
+  let colTotal = 0;
+  for (let r = range.startRow; r <= range.endRow; r++) {
+    const v = getVal(range.startCol, r);
+    if (v === '' || v === undefined) continue;
+    colTotal++;
+    if (isNumeric(v)) colNumCount++;
+  }
+  const useRowHeaders =
+    width > 1 && rowTotal > 0 && rowTextCount / rowTotal > 0.5 && colTotal > 0 && colNumCount / colTotal > 0.5;
+
+  const labels = [];
+  const values = [];
+  if (useRowHeaders) {
+    const dataRow = Math.min(range.startRow + 1, range.endRow);
+    for (let c = range.startCol; c <= range.endCol; c++) {
+      labels.push(String(getVal(c, range.startRow)));
+      const v = getVal(c, dataRow);
+      values.push(isNumeric(v) ? v : 0);
+    }
+  } else {
+    const valueCol = width > 1 ? range.startCol + 1 : range.startCol;
+    let startRow = range.startRow;
+    const headerCandidate = getVal(valueCol, range.startRow);
+    if (width > 1 && headerCandidate !== '' && !isNumeric(headerCandidate)) startRow = range.startRow + 1;
+    for (let r = startRow; r <= range.endRow; r++) {
+      labels.push(String(getVal(range.startCol, r)));
+      const v = getVal(valueCol, r);
+      values.push(isNumeric(v) ? v : 0);
+    }
+  }
+  return { labels, values };
+}
+
+const PIE_HUES = ['var(--accent-600)', 'var(--accent-500)', '#8a8f3c', '#3c8f86', '#7a4a9c', '#c9622f'];
+
+function buildChartSVG(chart, data) {
+  const w = chart.w;
+  const h = chart.h - 34; // minus header height
+  const padding = { top: 10, right: 10, bottom: 22, left: 32 };
+  const plotW = Math.max(1, w - padding.left - padding.right);
+  const plotH = Math.max(1, h - padding.top - padding.bottom);
+  const values = data.values;
+  let inner = '';
+
+  if (chart.type === 'pie') {
+    const cx = padding.left + plotW / 2;
+    const cy = padding.top + plotH / 2;
+    const r = Math.max(4, Math.min(plotW, plotH) / 2 - 4);
+    const total = values.reduce((a, b) => a + Math.abs(b), 0) || 1;
+    let angleStart = -Math.PI / 2;
+    values.forEach((v, i) => {
+      const frac = Math.abs(v) / total;
+      const angleEnd = angleStart + frac * Math.PI * 2;
+      const x1 = cx + r * Math.cos(angleStart);
+      const y1 = cy + r * Math.sin(angleStart);
+      const x2 = cx + r * Math.cos(angleEnd);
+      const y2 = cy + r * Math.sin(angleEnd);
+      const largeArc = angleEnd - angleStart > Math.PI ? 1 : 0;
+      const color = PIE_HUES[i % PIE_HUES.length];
+      if (frac > 0) {
+        inner += `<path d="M ${cx} ${cy} L ${x1.toFixed(1)} ${y1.toFixed(1)} A ${r.toFixed(1)} ${r.toFixed(1)} 0 ${largeArc} 1 ${x2.toFixed(1)} ${y2.toFixed(1)} Z" fill="${color}" stroke="var(--surface-0)" stroke-width="1"/>`;
+      }
+      angleStart = angleEnd;
+    });
+    return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
+  }
+
+  const maxV = Math.max(0, ...values);
+  const minV = Math.min(0, ...values);
+  const spread = maxV - minV || 1;
+  const scaleY = (v) => padding.top + plotH - ((v - minV) / spread) * plotH;
+  inner += `<line x1="${padding.left}" y1="${padding.top}" x2="${padding.left}" y2="${(padding.top + plotH).toFixed(1)}" stroke="var(--ink-400)" stroke-width="1"/>`;
+  inner += `<line x1="${padding.left}" y1="${(padding.top + plotH).toFixed(1)}" x2="${(padding.left + plotW).toFixed(1)}" y2="${(padding.top + plotH).toFixed(1)}" stroke="var(--ink-400)" stroke-width="1"/>`;
+
+  const n = Math.max(values.length, 1);
+  const slot = plotW / n;
+  if (chart.type === 'line') {
+    const points = values.map((v, i) => `${(padding.left + i * slot + slot / 2).toFixed(1)},${scaleY(v).toFixed(1)}`).join(' ');
+    inner += `<polyline points="${points}" fill="none" stroke="var(--accent-600)" stroke-width="2"/>`;
+    values.forEach((v, i) => {
+      const x = padding.left + i * slot + slot / 2;
+      inner += `<circle cx="${x.toFixed(1)}" cy="${scaleY(v).toFixed(1)}" r="2.5" fill="var(--accent-600)"/>`;
+    });
+  } else {
+    const barW = slot * 0.6;
+    values.forEach((v, i) => {
+      const x = padding.left + i * slot + (slot - barW) / 2;
+      const y0 = scaleY(0);
+      const y1 = scaleY(v);
+      const barY = Math.min(y0, y1);
+      const barH = Math.max(Math.abs(y1 - y0), 0.5);
+      inner += `<rect x="${x.toFixed(1)}" y="${barY.toFixed(1)}" width="${barW.toFixed(1)}" height="${barH.toFixed(1)}" fill="var(--accent-600)" rx="2"/>`;
+    });
+  }
+  data.labels.forEach((label, i) => {
+    const x = padding.left + i * slot + slot / 2;
+    inner += `<text x="${x.toFixed(1)}" y="${h - 8}" font-size="9" fill="var(--ink-400)" text-anchor="middle">${escapeHtml(String(label).slice(0, 8))}</text>`;
+  });
+  return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
+}
+
+function chartTypeLabel(type) {
+  return type === 'bar' ? 'Bar chart' : type === 'line' ? 'Line chart' : 'Pie chart';
+}
+
+function redrawChart(chart, rec) {
+  const sheet = workbook.activeSheet;
+  const data = extractChartData(sheet, chart.range);
+  rec.titleEl.textContent = `${chartTypeLabel(chart.type)} — ${chart.range}`;
+  // Fade the body out, swap its content, then fade back in — so a refresh
+  // (or the initial draw) settles in rather than popping straight to the
+  // new SVG. Two rAFs: one to let the opacity:0 paint before the content
+  // swap, one to let the new content paint before transitioning back to 1.
+  rec.bodyEl.style.opacity = '0';
+  requestAnimationFrame(() => {
+    if (!data || !data.values.length) {
+      rec.bodyEl.innerHTML = `<div class="chart-box__empty">No data in range</div>`;
+    } else {
+      rec.bodyEl.innerHTML = buildChartSVG(chart, data);
+    }
+    requestAnimationFrame(() => {
+      rec.bodyEl.style.opacity = '1';
+    });
+  });
+}
+
+function createChartEl(chart, opts = {}) {
+  const box = document.createElement('div');
+  box.className = 'chart-box' + (opts.animate ? ' is-inserting' : '');
+  box.style.left = chart.x + 'px';
+  box.style.top = chart.y + 'px';
+  box.style.width = chart.w + 'px';
+  box.style.height = chart.h + 'px';
+  box.innerHTML = `
+    <div class="chart-box__header">
+      <span class="chart-box__title"></span>
+      <div class="chart-box__actions">
+        <button class="btn-icon chart-box__refresh" data-icon="redo" data-tooltip="Refresh chart"></button>
+        <button class="btn-icon chart-box__close" data-icon="x" data-tooltip="Remove chart"></button>
+      </div>
+    </div>
+    <div class="chart-box__body"></div>
+  `;
+  els.sheetCanvas.appendChild(box);
+  applyIcons(box);
+  const rec = { el: box, titleEl: box.querySelector('.chart-box__title'), bodyEl: box.querySelector('.chart-box__body') };
+  chartElements.set(chart.id, rec);
+  redrawChart(chart, rec);
+
+  box.addEventListener('mousedown', (e) => e.stopPropagation());
+  box.querySelector('.chart-box__refresh').addEventListener('click', () => redrawChart(chart, rec));
+  box.querySelector('.chart-box__close').addEventListener('click', () => {
+    const sheet = workbook.activeSheet;
+    sheet.charts = sheet.charts.filter((c) => c.id !== chart.id);
+    setDirty(true);
+    box.remove();
+    chartElements.delete(chart.id);
+  });
+
+  const header = box.querySelector('.chart-box__header');
+  header.addEventListener('mousedown', (e) => {
+    if (e.target.closest('button')) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startLeft = chart.x;
+    const startTop = chart.y;
+    const onMove = (ev) => {
+      chart.x = Math.max(0, startLeft + (ev.clientX - startX));
+      chart.y = Math.max(0, startTop + (ev.clientY - startY));
+      box.style.left = chart.x + 'px';
+      box.style.top = chart.y + 'px';
+    };
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      setDirty(true);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+}
+
+function renderAllCharts() {
+  chartElements.forEach((rec) => rec.el.remove());
+  chartElements = new Map();
+  for (const chart of workbook.activeSheet.charts) createChartEl(chart);
+}
+
+function refreshAllCharts() {
+  for (const chart of workbook.activeSheet.charts) {
+    const rec = chartElements.get(chart.id);
+    if (rec) redrawChart(chart, rec);
+  }
+}
+
+function openInsertChartDialog() {
+  const range = normalizedSelection();
+  const defaultRange = `${cellKeyFromRC(range.minCol, range.minRow)}:${cellKeyFromRC(range.maxCol, range.maxRow)}`;
+  const { bodyEl } = showDialog({
+    title: 'Insert Chart',
+    bodyHTML: `
+      <label>Source range</label>
+      <input type="text" id="chart-range" value="${escapeHtml(defaultRange)}" />
+      <label>Chart type</label>
+      <select id="chart-type" class="select">
+        <option value="bar">Bar</option>
+        <option value="line">Line</option>
+        <option value="pie">Pie</option>
+      </select>
+    `,
+    buttons: [{ label: 'Cancel' }, { label: 'Insert', variant: 'primary', onClick: () => insertChart() }],
+  });
+
+  function insertChart() {
+    const rangeStr = bodyEl.querySelector('#chart-range').value.trim().toUpperCase();
+    const type = bodyEl.querySelector('#chart-type').value;
+    if (!parseRangeStr(rangeStr)) {
+      showToast('Invalid range', { type: 'error' });
+      return;
+    }
+    const sheet = workbook.activeSheet;
+    const parsed = parseRangeStr(rangeStr);
+    const cascade = sheet.charts.length * 24;
+    let x = 40 + cascade;
+    let y = 40 + cascade;
+    // Default the chart next to (not on top of) the source range, so the data
+    // it was built from stays visible. Fall back to the top-left cascade above
+    // if the range's cells aren't currently in the rendered DOM.
+    const topRightTd = parsed && cellElements.get(cellKeyFromRC(parsed.endCol, parsed.startRow));
+    if (topRightTd) {
+      const canvasRect = els.sheetCanvas.getBoundingClientRect();
+      const tdRect = topRightTd.getBoundingClientRect();
+      x = tdRect.right - canvasRect.left + els.sheetCanvas.scrollLeft + 16 + cascade;
+      y = tdRect.top - canvasRect.top + els.sheetCanvas.scrollTop + cascade;
+    }
+    const chart = {
+      id: 'chart' + Date.now() + Math.random().toString(36).slice(2, 7),
+      type,
+      range: rangeStr,
+      x,
+      y,
+      w: 340,
+      h: 260,
+    };
+    sheet.charts.push(chart);
+    setDirty(true);
+    createChartEl(chart, { animate: true });
+    showToast('Chart inserted');
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Keyboard shortcuts dialog
+// ---------------------------------------------------------------------------
+
+function showKeyboardShortcuts() {
+  const rows = [
+    ['Ctrl+N / Ctrl+O / Ctrl+S / Ctrl+Shift+S', 'New / Open / Save / Save As'],
+    ['Ctrl+Z / Ctrl+Y (or Ctrl+Shift+Z)', 'Undo / Redo'],
+    ['Ctrl+C / Ctrl+X / Ctrl+V', 'Copy / Cut / Paste'],
+    ['Ctrl+B / Ctrl+I / Ctrl+U', 'Bold / Italic / Underline'],
+    ['Ctrl+F', 'Find'],
+    ['Arrow keys', 'Move active cell (Shift+Arrow extends selection)'],
+    ['Enter / Shift+Enter', 'Move down / up (or commit an edit and move)'],
+    ['Tab / Shift+Tab', 'Move right / left (or commit an edit and move)'],
+    ['F2 / double-click', 'Start editing the active cell'],
+    ['Delete / Backspace', "Clear selected cells' contents"],
+    ['Escape', 'Cancel an in-progress edit'],
+    ['Drag the fill handle', 'Fill / extend a series into adjacent cells'],
+  ];
+  const bodyHTML = `
+    <div class="shortcut-list">
+      ${rows
+        .map(
+          ([keys, desc]) => `
+        <div class="shortcut-list__row">
+          <span class="shortcut-list__keys">${escapeHtml(keys)}</span>
+          <span class="shortcut-list__desc">${escapeHtml(desc)}</span>
+        </div>`
+        )
+        .join('')}
+    </div>
+  `;
+  showDialog({ title: 'Keyboard Shortcuts', bodyHTML, buttons: [{ label: 'Close', variant: 'primary' }] });
+}
+
+// ---------------------------------------------------------------------------
 // Status bar
 // ---------------------------------------------------------------------------
 
@@ -1495,6 +2669,34 @@ function clearFindHighlights() {
 }
 
 // ---------------------------------------------------------------------------
+// Recent files
+// ---------------------------------------------------------------------------
+
+async function refreshRecentCache() {
+  recentCache = await window.lumen.recent.get();
+  return recentCache;
+}
+
+async function touchRecent(filePath) {
+  recentCache = await window.lumen.recent.add(filePath);
+}
+
+function recentLabel(filePath) {
+  return filePath
+    .split(/[\\/]/)
+    .pop()
+    .replace(/\.lsheet$/i, '');
+}
+
+function recentOpenRecentSubmenu() {
+  if (!recentCache.length) return [{ label: '(No recent files)', disabled: true }];
+  return recentCache.map((entry) => ({
+    label: recentLabel(entry.path),
+    onClick: () => openFileAtPath(entry.path),
+  }));
+}
+
+// ---------------------------------------------------------------------------
 // File I/O
 // ---------------------------------------------------------------------------
 
@@ -1532,15 +2734,18 @@ async function newWorkbook() {
       if (!ok) return;
     }
   }
-  workbook = new Workbook();
-  currentFilePath = null;
-  resetUndoRedo();
-  renderSheetTabs();
-  switchSheet(0, true);
-  setDirty(false);
+  // File > New opens the template gallery instead of jumping straight to a
+  // blank workbook — see "Start screen" section.
+  showStartScreen();
 }
 
 async function openWorkbookFlow() {
+  const filePath = await window.lumen.dialogs.openLsheet();
+  if (!filePath) return;
+  await openFileAtPath(filePath);
+}
+
+async function openFileAtPath(filePath) {
   if (workbook.dirty) {
     const choice = await confirmUnsaved();
     if (choice === 'cancel') return;
@@ -1549,10 +2754,9 @@ async function openWorkbookFlow() {
       if (!ok) return;
     }
   }
-  const filePath = await window.lumen.dialogs.openLsheet();
-  if (!filePath) return;
   const res = await window.lumen.file.readLsheet(filePath);
   if (!res.ok) {
+    showToast('Could not open file', { type: 'error' });
     showDialog({ title: 'Open failed', bodyHTML: `<p>${escapeHtml(res.error)}</p>` });
     return;
   }
@@ -1563,6 +2767,9 @@ async function openWorkbookFlow() {
   renderSheetTabs();
   switchSheet(workbook.activeSheetIndex, true);
   setDirty(false);
+  hideStartScreen();
+  showToast(`Opened "${workbook.title}"`);
+  await touchRecent(filePath);
 }
 
 async function saveWorkbook() {
@@ -1571,8 +2778,11 @@ async function saveWorkbook() {
   const res = await window.lumen.file.writeLsheet(currentFilePath, data);
   if (res.ok) {
     setDirty(false);
+    showToast('Saved');
+    await touchRecent(currentFilePath);
     return true;
   }
+  showToast('Save failed', { type: 'error' });
   showDialog({ title: 'Save failed', bodyHTML: `<p>${escapeHtml(res.error)}</p>` });
   return false;
 }
@@ -1591,8 +2801,11 @@ async function saveWorkbookAs() {
   const res = await window.lumen.file.writeLsheet(filePath, data);
   if (res.ok) {
     setDirty(false);
+    showToast('Saved');
+    await touchRecent(filePath);
     return true;
   }
+  showToast('Save failed', { type: 'error' });
   showDialog({ title: 'Save failed', bodyHTML: `<p>${escapeHtml(res.error)}</p>` });
   return false;
 }
@@ -1602,6 +2815,7 @@ async function importCsv() {
   if (!filePath) return;
   const res = await window.lumen.file.importCsv(filePath);
   if (!res.ok) {
+    showToast('Import failed', { type: 'error' });
     showDialog({ title: 'Import failed', bodyHTML: `<p>${escapeHtml(res.error)}</p>` });
     return;
   }
@@ -1623,6 +2837,8 @@ async function importCsv() {
   renderSheetTabs();
   switchSheet(0, true);
   setDirty(true);
+  hideStartScreen();
+  showToast('Imported CSV');
 }
 
 async function importXlsx() {
@@ -1630,6 +2846,7 @@ async function importXlsx() {
   if (!filePath) return;
   const res = await window.lumen.file.importXlsx(filePath);
   if (!res.ok) {
+    showToast('Import failed', { type: 'error' });
     showDialog({ title: 'Import failed', bodyHTML: `<p>${escapeHtml(res.error)}</p>` });
     return;
   }
@@ -1654,6 +2871,8 @@ async function importXlsx() {
   renderSheetTabs();
   switchSheet(0, true);
   setDirty(true);
+  hideStartScreen();
+  showToast('Imported Excel workbook');
 }
 
 async function exportCsv() {
@@ -1667,7 +2886,12 @@ async function exportCsv() {
     cells[key] = { raw: cell.raw, display: formatValue(cell.computed, cell.format.numberFormat) };
   }
   const res = await window.lumen.file.exportCsv(filePath, { cells, rowCount: sheet.rowCount, colCount: sheet.colCount });
-  if (!res.ok) showDialog({ title: 'Export failed', bodyHTML: `<p>${escapeHtml(res.error)}</p>` });
+  if (res.ok) {
+    showToast('Exported CSV');
+  } else {
+    showToast('Export failed', { type: 'error' });
+    showDialog({ title: 'Export failed', bodyHTML: `<p>${escapeHtml(res.error)}</p>` });
+  }
 }
 
 async function exportXlsx() {
@@ -1683,7 +2907,12 @@ async function exportXlsx() {
     return { name: sheet.name, cells, rowCount: sheet.rowCount, colCount: sheet.colCount };
   });
   const res = await window.lumen.file.exportXlsx(filePath, { sheets: sheetsData });
-  if (!res.ok) showDialog({ title: 'Export failed', bodyHTML: `<p>${escapeHtml(res.error)}</p>` });
+  if (res.ok) {
+    showToast('Exported Excel workbook');
+  } else {
+    showToast('Export failed', { type: 'error' });
+    showDialog({ title: 'Export failed', bodyHTML: `<p>${escapeHtml(res.error)}</p>` });
+  }
 }
 
 async function handleBeforeClose() {
@@ -1776,6 +3005,18 @@ document.addEventListener('keydown', (e) => {
     openFindDialog();
     return;
   }
+
+  // Bug fix (found during motion/focus-visibility polish): everything below
+  // this point is grid navigation (Tab/Enter/arrows/Delete/typing-to-edit)
+  // that assumes the sheet itself has "focus" — but the sheet has no real
+  // focusable element, so that's really just document.body. If keyboard
+  // focus is actually resting on a control (a toolbar button, menu item,
+  // dialog field, link — anything reachable by Tab), these were hijacking
+  // Tab/Enter/Space/typing away from that control instead of letting it
+  // move focus or activate natively. That made it impossible to Tab off a
+  // toolbar button, or to press Enter/Space to activate one.
+  if (ae && ae !== document.body && ae.closest('button, select, a, [tabindex]')) return;
+
   if (!mod && (e.key === 'Delete' || e.key === 'Backspace')) {
     e.preventDefault();
     clearSelectionContents();

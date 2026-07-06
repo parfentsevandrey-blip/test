@@ -70,6 +70,7 @@
   padding: 0 var(--space-3);
   background: var(--surface-1);
   border-bottom: 1px solid var(--border-subtle);
+  transition: background-color var(--dur-med) var(--ease-out), border-color var(--dur-med) var(--ease-out);
 }
 
 .formula-bar__fx {
@@ -105,6 +106,7 @@
   font-family: var(--font-mono);
   font-size: var(--text-base);
   color: var(--ink-900);
+  transition: border-color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
 }
 
 .formula-bar__input:hover {
@@ -117,6 +119,17 @@
   background: var(--surface-0);
 }
 
+/* ---------- Sheet area (formula bar + viewport + tabs) ---------- */
+
+.sheet-area {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
 /* ---------- Sheet canvas / grid ---------- */
 
 .sheet-viewport {
@@ -124,14 +137,17 @@
   overflow: auto;
   background: var(--surface-1);
   padding: var(--space-5);
+  transition: background-color var(--dur-med) var(--ease-out);
 }
 
 .sheet-canvas {
+  position: relative;
   display: inline-block;
   background: var(--surface-canvas);
   box-shadow: var(--shadow-canvas);
   border-radius: var(--radius-canvas);
   min-width: 100%;
+  transition: background-color var(--dur-med) var(--ease-out), box-shadow var(--dur-med) var(--ease-out);
 }
 
 .lumen-grid {
@@ -164,6 +180,7 @@
   text-align: center;
   user-select: none;
   cursor: default;
+  transition: background-color var(--dur-med) var(--ease-out), color var(--dur-med) var(--ease-out);
 }
 
 .lumen-grid thead th.corner-cell {
@@ -180,6 +197,7 @@
   font-size: var(--text-xs);
   text-align: center;
   user-select: none;
+  transition: background-color var(--dur-med) var(--ease-out), color var(--dur-med) var(--ease-out);
 }
 
 .lumen-grid .col-resize-handle {
@@ -223,6 +241,11 @@
   text-align: left;
   cursor: cell;
   vertical-align: middle;
+  /* Covers both theme-toggle cross-fade and conditional-formatting color
+   * changes (see applyCellDisplay in renderer.js) — either way the fill
+   * should ease in rather than flash. Fast duration keeps rapid re-renders
+   * (typing, recalculation) from feeling laggy. */
+  transition: background-color var(--dur-fast) var(--ease-out);
 }
 
 .cell.is-numeric {
@@ -274,11 +297,13 @@
   padding: 0 4px;
   outline: none;
   min-width: 60px;
+  transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
 }
 
 /* ---------- Sheet tabs ---------- */
 
 .sheet-tabs {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -289,6 +314,7 @@
   border-top: 1px solid var(--border-subtle);
   overflow-x: auto;
   overflow-y: hidden;
+  transition: background-color var(--dur-med) var(--ease-out), border-color var(--dur-med) var(--ease-out);
 }
 
 .sheet-tab {
@@ -300,10 +326,10 @@
   border-radius: 999px;
   font-size: var(--text-sm);
   color: var(--ink-600);
-  border-bottom: 2px solid transparent;
   flex: none;
   cursor: default;
   user-select: none;
+  transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
 }
 
 .sheet-tab:hover {
@@ -314,7 +340,22 @@
 .sheet-tab.is-active {
   color: var(--ink-900);
   font-weight: 600;
-  border-bottom-color: var(--accent-600);
+}
+
+/* Sliding active-sheet indicator: a single persistent element repositioned
+ * (via left/width, in renderer.js's updateSheetTabIndicator()) under the
+ * active tab, rather than each tab drawing its own border — a pill-shaped
+ * .sheet-tab with its own border-bottom renders as a curved arc, not a
+ * clean underline, and re-parenting a fresh border onto a newly rebuilt tab
+ * element can't transition anyway. This one node just slides/resizes. */
+.sheet-tab-indicator {
+  position: absolute;
+  bottom: 2px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--accent-600);
+  pointer-events: none;
+  transition: transform var(--dur-fast) var(--ease-out), width var(--dur-fast) var(--ease-out);
 }
 
 .sheet-tab__input {
@@ -355,6 +396,8 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   padding: var(--space-3);
+  animation: lumen-menu-in var(--dur-fast) var(--ease-out);
+  transition: background-color var(--dur-med) var(--ease-out), border-color var(--dur-med) var(--ease-out);
 }
 
 .swatch-grid {
@@ -370,11 +413,13 @@
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-subtle);
   cursor: default;
+  outline: 2px solid transparent;
+  outline-offset: 1px;
+  transition: outline-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
 }
 
 .swatch:hover {
-  outline: 2px solid var(--accent-500);
-  outline-offset: 1px;
+  outline-color: var(--accent-500);
 }
 
 .popover__custom-row {
@@ -396,6 +441,7 @@
 .popover__clear {
   font-size: var(--text-xs);
   color: var(--ink-600);
+  transition: color var(--dur-fast) var(--ease-out);
 }
 
 .popover__clear:hover {
@@ -414,6 +460,7 @@
   padding: 6px var(--space-3);
   border-radius: var(--radius-sm);
   font-size: var(--text-sm);
+  transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
 }
 
 .fn-list__item:hover {
@@ -456,6 +503,7 @@
   background: var(--surface-0);
   color: var(--ink-900);
   margin-bottom: var(--space-3);
+  transition: border-color var(--dur-fast) var(--ease-out);
 }
 
 .dialog input[type='text']:focus,
@@ -480,4 +528,233 @@
 
 .context-menu {
   position: fixed;
+}
+
+/* ---------- Menu submenus (e.g. File > Open Recent) ---------- */
+
+.menu__chevron {
+  color: var(--ink-400);
+  font-size: var(--text-xs);
+  margin-left: auto;
+}
+
+.menu--submenu {
+  position: fixed;
+}
+
+/* ---------- Start screen ---------- */
+
+.start-screen.is-hidden {
+  display: none;
+}
+
+.start-recent-item__icon {
+  display: flex;
+  align-items: center;
+  flex: none;
+}
+
+.start-recent-item__icon svg {
+  width: 16px;
+  height: 16px;
+  color: var(--ink-400);
+}
+
+/* ---------- Dialog <select> (chart type, conditional formatting) ---------- */
+
+.dialog select.select {
+  display: block;
+  width: 100%;
+  height: 32px;
+  border: 1px solid var(--border-subtle);
+  margin-bottom: var(--space-3);
+}
+
+/* ---------- Fill handle ---------- */
+
+.fill-handle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: var(--accent-600);
+  border: 1px solid var(--surface-0);
+  border-radius: 1px;
+  transform: translate(-50%, -50%);
+  cursor: crosshair;
+  z-index: 20;
+}
+
+.cell.is-fill-preview {
+  outline: 1px dashed var(--accent-600);
+  outline-offset: -1px;
+}
+
+/* ---------- Freeze panes ---------- */
+
+.cell.is-frozen-row {
+  position: sticky;
+  top: 26px;
+  z-index: 2;
+  background: var(--surface-canvas);
+  border-bottom: 2px solid var(--accent-600);
+  transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-med) var(--ease-out);
+}
+
+.cell.is-frozen-col {
+  position: sticky;
+  left: 46px;
+  z-index: 2;
+  background: var(--surface-canvas);
+  border-right: 2px solid var(--accent-600);
+  transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-med) var(--ease-out);
+}
+
+.cell.is-frozen-row.is-frozen-col {
+  z-index: 3;
+}
+
+.row-header.is-frozen-row {
+  top: 26px;
+  border-bottom: 2px solid var(--accent-600);
+  transition: border-color var(--dur-med) var(--ease-out);
+}
+
+/* ---------- Conditional formatting dialog ---------- */
+
+.cf-existing-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 4px var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  color: var(--ink-700);
+  background: var(--surface-2);
+  margin-bottom: 4px;
+}
+
+.cf-existing-row .btn-icon {
+  width: 22px;
+  height: 22px;
+}
+
+/* ---------- Charts ---------- */
+
+.chart-box {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-0);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  z-index: 30;
+  overflow: hidden;
+  transition: background-color var(--dur-med) var(--ease-out), border-color var(--dur-med) var(--ease-out);
+}
+
+/* Only played for a chart the user just inserted (see createChartEl's
+ * `animate` option in renderer.js) — grid rebuilds that re-create every
+ * chart-box element (sheet switch, freeze toggle, row/col insert, undo)
+ * skip it so existing charts don't re-pop on unrelated actions. */
+.chart-box.is-inserting {
+  animation: lumen-pop-in var(--dur-med) var(--ease-out);
+}
+
+.chart-box__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  height: 30px;
+  min-height: 30px;
+  padding: 0 6px 0 var(--space-3);
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border-subtle);
+  cursor: move;
+  user-select: none;
+  transition: background-color var(--dur-med) var(--ease-out), border-color var(--dur-med) var(--ease-out);
+}
+
+.chart-box__title {
+  font-size: var(--text-xs);
+  color: var(--ink-600);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chart-box__actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+}
+
+.chart-box__actions .btn-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.chart-box__actions .btn-icon svg {
+  width: 13px;
+  height: 13px;
+}
+
+.chart-box__body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.chart-box__body svg {
+  width: 100%;
+  height: 100%;
+}
+
+.chart-box__empty {
+  font-size: var(--text-xs);
+  color: var(--ink-400);
+}
+
+/* ---------- Keyboard shortcuts dialog ---------- */
+
+.shortcut-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.shortcut-list__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.shortcut-list__row:last-child {
+  border-bottom: none;
+}
+
+.shortcut-list__keys {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--ink-700);
+  background: var(--surface-2);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  flex: none;
+  white-space: nowrap;
+}
+
+.shortcut-list__desc {
+  font-size: var(--text-sm);
+  color: var(--ink-600);
+  text-align: right;
 }

@@ -3,9 +3,12 @@
 
 import { getWordCharCounts, onChange } from './editor.js';
 
+const WORDS_PER_MINUTE = 200;
+
 export function initStatusbar() {
   const wordCountEl = document.getElementById('word-count');
   const charCountEl = document.getElementById('char-count');
+  const readingTimeEl = document.getElementById('reading-time');
   const zoomSlider = document.getElementById('zoom-slider');
   const zoomLabel = document.getElementById('zoom-label');
   const pageWrapper = document.getElementById('page-wrapper');
@@ -14,6 +17,8 @@ export function initStatusbar() {
     const { words, chars } = getWordCharCounts();
     wordCountEl.textContent = `${words} word${words === 1 ? '' : 's'}`;
     charCountEl.textContent = `${chars} character${chars === 1 ? '' : 's'}`;
+    const minutes = Math.max(1, Math.ceil(words / WORDS_PER_MINUTE));
+    readingTimeEl.textContent = `${minutes} min read`;
   }
 
   onChange(updateCounts);

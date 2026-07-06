@@ -516,6 +516,41 @@ const FUNCTIONS = {
   TODAY: () => Math.floor(Date.now() / 86400000),
   NOW: () => Date.now() / 86400000,
   PI: () => Math.PI,
+  DATE: (args) => {
+    const y = toNumber(scalarOf(args[0]));
+    if (isError(y)) return y;
+    const mo = toNumber(scalarOf(args[1]));
+    if (isError(mo)) return mo;
+    const d = toNumber(scalarOf(args[2]));
+    if (isError(d)) return d;
+    // Same day-count-since-1970-01-01 epoch as TODAY()/NOW() (see README).
+    return Math.floor(Date.UTC(y, mo - 1, d) / 86400000);
+  },
+  YEAR: (args) => {
+    const n = toNumber(scalarOf(args[0]));
+    if (isError(n)) return n;
+    return new Date(Math.round(n) * 86400000).getUTCFullYear();
+  },
+  MONTH: (args) => {
+    const n = toNumber(scalarOf(args[0]));
+    if (isError(n)) return n;
+    return new Date(Math.round(n) * 86400000).getUTCMonth() + 1;
+  },
+  DAY: (args) => {
+    const n = toNumber(scalarOf(args[0]));
+    if (isError(n)) return n;
+    return new Date(Math.round(n) * 86400000).getUTCDate();
+  },
+  WEEKDAY: (args) => {
+    const n = toNumber(scalarOf(args[0]));
+    if (isError(n)) return n;
+    const type = args.length > 1 ? toNumber(scalarOf(args[1])) : 1;
+    if (isError(type)) return type;
+    const jsDay = new Date(Math.round(n) * 86400000).getUTCDay(); // 0=Sun..6=Sat
+    if (type === 2) return jsDay === 0 ? 7 : jsDay; // Mon=1..Sun=7
+    if (type === 3) return jsDay === 0 ? 6 : jsDay - 1; // Mon=0..Sun=6
+    return jsDay + 1; // default (type 1): Sun=1..Sat=7
+  },
 };
 FUNCTIONS.CONCATENATE = FUNCTIONS.CONCAT;
 
@@ -584,8 +619,176 @@ function evalBinary(node, ctx) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Range-shape helper for functions that need row/column structure (VLOOKUP,
+// INDEX, MATCH, SUMIF/COUNTIF/AVERAGEIF) rather than just a flat value list.
+// ---------------------------------------------------------------------------
+
+function getRangeShape(node, ctx) {
+  if (node.type === 'Range') {
+    const [a, b] = node.ref.split(':');
+    const pa = parseCellRefStr(a);
+    const pb = parseCellRefStr(b);
+    const width = pa && pb ? Math.abs(pb.col - pa.col) + 1 : 1;
+    const values = ctx.getRange(node.ref);
+    const height = width > 0 ? Math.ceil(values.length / width) : values.length;
+    return { values, width, height };
+  }
+  if (node.type === 'Cell') {
+    return { values: [ctx.getCellValue(node.ref)], width: 1, height: 1 };
+  }
+  const v = evaluate(node, ctx);
+  const arr = Array.isArray(v) ? v : [v];
+  return { values: arr, width: 1, height: arr.length };
+}
+
+// Parse a criteria value (">10", "<=5", "apple", 10, TRUE, ...) into a matcher.
+function parseCriteria(rawCriteria) {
+  const s = String(rawCriteria).trim();
+  const m = /^(<=|>=|<>|<|>|=)?(.*)$/.exec(s);
+  const op = m[1] || '=';
+  const rhs = m[2].trim();
+  const num = Number(rhs);
+  const isNum = rhs !== '' && !Number.isNaN(num);
+  return { op, rhs, isNum, num };
+}
+
+function testCriteria(value, criteria) {
+  const { op, rhs, isNum, num } = criteria;
+  let cmp;
+  if (isNum && typeof value === 'number') {
+    cmp = value < num ? -1 : value > num ? 1 : 0;
+  } else {
+    const vs = String(value).toLowerCase();
+    const rs = rhs.toLowerCase();
+    cmp = vs < rs ? -1 : vs > rs ? 1 : 0;
+  }
+  switch (op) {
+    case '=':
+      return cmp === 0;
+    case '<>':
+      return cmp !== 0;
+    case '<':
+      return cmp < 0;
+    case '>':
+      return cmp > 0;
+    case '<=':
+      return cmp <= 0;
+    case '>=':
+      return cmp >= 0;
+    default:
+      return false;
+  }
+}
+
 function evalCall(node, ctx) {
   const name = node.name.toUpperCase();
+  if (name === 'VLOOKUP') {
+    if (node.args.length < 3) return new FormulaError('#VALUE!');
+    const lookup = scalarOf(evaluate(node.args[0], ctx));
+    if (isError(lookup)) return lookup;
+    const shape = getRangeShape(node.args[1], ctx);
+    const colIndex = toNumber(scalarOf(evaluate(node.args[2], ctx)));
+    if (isError(colIndex)) return colIndex;
+    if (colIndex < 1 || colIndex > shape.width) return new FormulaError('#REF!');
+    const approximate = node.args.length > 3 ? toBool(scalarOf(evaluate(node.args[3], ctx))) : true;
+    if (isError(approximate)) return approximate;
+    let foundRow = -1;
+    if (approximate) {
+      // Assumes the first column is sorted ascending; finds the last row
+      // whose first-column value is <= lookup.
+      for (let r = 0; r < shape.height; r++) {
+        const cellVal = shape.values[r * shape.width];
+        if (typeof cellVal === 'number' && typeof lookup === 'number') {
+          if (cellVal <= lookup) foundRow = r;
+          else break;
+        } else if (String(cellVal) <= String(lookup)) {
+          foundRow = r;
+        } else break;
+      }
+    } else {
+      for (let r = 0; r < shape.height; r++) {
+        const cellVal = shape.values[r * shape.width];
+        if (cellVal === lookup || String(cellVal) === String(lookup)) {
+          foundRow = r;
+          break;
+        }
+      }
+    }
+    if (foundRow === -1) return new FormulaError('#N/A');
+    return shape.values[foundRow * shape.width + (colIndex - 1)];
+  }
+  if (name === 'INDEX') {
+    if (node.args.length < 2) return new FormulaError('#VALUE!');
+    const shape = getRangeShape(node.args[0], ctx);
+    const rowArg = toNumber(scalarOf(evaluate(node.args[1], ctx)));
+    if (isError(rowArg)) return rowArg;
+    let row = rowArg;
+    let col = node.args.length > 2 ? toNumber(scalarOf(evaluate(node.args[2], ctx))) : 1;
+    if (isError(col)) return col;
+    // A single-row range: INDEX(range, n) with no [col] addresses the nth
+    // item along that row (common one-dimensional usage).
+    if (node.args.length <= 2 && shape.height === 1 && shape.width > 1) {
+      col = row;
+      row = 1;
+    }
+    if (row < 1 || row > shape.height || col < 1 || col > shape.width) return new FormulaError('#REF!');
+    return shape.values[(row - 1) * shape.width + (col - 1)];
+  }
+  if (name === 'MATCH') {
+    if (node.args.length < 2) return new FormulaError('#VALUE!');
+    const lookup = scalarOf(evaluate(node.args[0], ctx));
+    if (isError(lookup)) return lookup;
+    const shape = getRangeShape(node.args[1], ctx);
+    const matchType = node.args.length > 2 ? toNumber(scalarOf(evaluate(node.args[2], ctx))) : 1;
+    if (isError(matchType)) return matchType;
+    const values = shape.values;
+    if (matchType === 0) {
+      for (let i = 0; i < values.length; i++) {
+        if (values[i] === lookup || String(values[i]) === String(lookup)) return i + 1;
+      }
+      return new FormulaError('#N/A');
+    }
+    if (matchType > 0) {
+      // Assumes ascending order; returns the position of the largest value <= lookup.
+      let pos = -1;
+      for (let i = 0; i < values.length; i++) {
+        const v = values[i];
+        const le = typeof v === 'number' && typeof lookup === 'number' ? v <= lookup : String(v) <= String(lookup);
+        if (le) pos = i;
+        else break;
+      }
+      return pos === -1 ? new FormulaError('#N/A') : pos + 1;
+    }
+    // matchType < 0: assumes descending order; smallest value >= lookup.
+    let pos = -1;
+    for (let i = 0; i < values.length; i++) {
+      const v = values[i];
+      const ge = typeof v === 'number' && typeof lookup === 'number' ? v >= lookup : String(v) >= String(lookup);
+      if (ge) pos = i;
+      else break;
+    }
+    return pos === -1 ? new FormulaError('#N/A') : pos + 1;
+  }
+  if (name === 'SUMIF' || name === 'COUNTIF' || name === 'AVERAGEIF') {
+    if (node.args.length < 2) return new FormulaError('#VALUE!');
+    const rangeShape = getRangeShape(node.args[0], ctx);
+    const criteriaVal = scalarOf(evaluate(node.args[1], ctx));
+    if (isError(criteriaVal)) return criteriaVal;
+    const criteria = parseCriteria(criteriaVal);
+    const sumShape = node.args.length > 2 ? getRangeShape(node.args[2], ctx) : rangeShape;
+    let sum = 0;
+    let count = 0;
+    for (let i = 0; i < rangeShape.values.length; i++) {
+      if (!testCriteria(rangeShape.values[i], criteria)) continue;
+      count++;
+      const n = numericCoerce(sumShape.values[i]);
+      if (n !== null) sum += n;
+    }
+    if (name === 'COUNTIF') return count;
+    if (name === 'AVERAGEIF') return count === 0 ? new FormulaError('#DIV/0!') : sum / count;
+    return sum;
+  }
   if (name === 'IF') {
     if (node.args.length < 2) return new FormulaError('#VALUE!');
     const condVal = scalarOf(evaluate(node.args[0], ctx));

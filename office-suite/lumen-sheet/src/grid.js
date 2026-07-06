@@ -58,6 +58,12 @@ export class Sheet {
     this.rowCount = DEFAULT_ROWS;
     this.colCount = DEFAULT_COLS;
     this.dependents = new Map(); // key -> Set<key> of formulas that read this key
+
+    // v1.1 additions — see README for full semantics of each.
+    this.freezeRow = false; // pin row 1 while scrolling
+    this.freezeCol = false; // pin column A while scrolling
+    this.charts = []; // [{ id, type, range, x, y, w, h, title }]
+    this.condFormats = []; // [{ id, range, kind, op, value, color, minColor, midColor, maxColor }]
   }
 
   getCell(key) {
@@ -338,6 +344,10 @@ export class Sheet {
       rowHeights: this.rowHeights,
       rowCount: this.rowCount,
       colCount: this.colCount,
+      freezeRow: this.freezeRow,
+      freezeCol: this.freezeCol,
+      charts: this.charts,
+      condFormats: this.condFormats,
     };
   }
 
@@ -347,6 +357,10 @@ export class Sheet {
     sheet.colCount = data.colCount || DEFAULT_COLS;
     sheet.colWidths = data.colWidths || {};
     sheet.rowHeights = data.rowHeights || {};
+    sheet.freezeRow = !!data.freezeRow;
+    sheet.freezeCol = !!data.freezeCol;
+    sheet.charts = Array.isArray(data.charts) ? data.charts.map((c) => ({ ...c })) : [];
+    sheet.condFormats = Array.isArray(data.condFormats) ? data.condFormats.map((r) => ({ ...r })) : [];
     const cells = data.cells || {};
     for (const key of Object.keys(cells)) {
       const c = cells[key];

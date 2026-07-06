@@ -41,4 +41,9 @@ contextBridge.exposeInMainWorld('lumen', {
     exportCsv: (filePath, sheetData) => ipcRenderer.invoke('file:export-csv', filePath, sheetData),
     importCsv: (filePath) => ipcRenderer.invoke('file:import-csv', filePath),
   },
+
+  recent: {
+    get: () => ipcRenderer.invoke('recent:get'),
+    add: (filePath) => ipcRenderer.invoke('recent:add', filePath),
+  },
 });
