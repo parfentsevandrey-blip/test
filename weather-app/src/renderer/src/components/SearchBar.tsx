@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type CSSProperties } from 'react'
 import { useWeatherStore } from '../store/useWeatherStore'
 import type { GeoLocation } from '../types/weather'
 
@@ -62,11 +62,12 @@ export function SearchBar(): JSX.Element {
           ) : !isSearching && searchResults.length === 0 ? (
             <div className="search-empty">No matches found</div>
           ) : (
-            searchResults.map((result) => (
+            searchResults.map((result, index) => (
               <button
                 type="button"
                 className="search-result-item"
                 key={`${result.name}-${result.latitude}-${result.longitude}`}
+                style={{ '--row-i': index } as CSSProperties}
                 onClick={() => handleSelect(result)}
               >
                 <span className="search-result-name">{result.name}</span>

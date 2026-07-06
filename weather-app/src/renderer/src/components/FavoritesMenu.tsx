@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { isSameLocation, useWeatherStore } from '../store/useWeatherStore'
 import './FavoritesMenu.css'
 
@@ -71,7 +71,7 @@ export function FavoritesMenu(): JSX.Element {
           {favorites.length === 0 ? (
             <div className="favorites-empty">No saved locations yet</div>
           ) : (
-            favorites.map((favorite) => (
+            favorites.map((favorite, index) => (
               <button
                 type="button"
                 className={
@@ -79,6 +79,7 @@ export function FavoritesMenu(): JSX.Element {
                   (location && isSameLocation(favorite, location) ? ' is-current' : '')
                 }
                 key={`${favorite.name}-${favorite.latitude}-${favorite.longitude}`}
+                style={{ '--row-i': index } as CSSProperties}
                 onClick={() => {
                   setOpen(false)
                   void selectLocation(favorite)

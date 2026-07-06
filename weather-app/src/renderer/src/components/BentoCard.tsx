@@ -16,9 +16,9 @@ const MAX_TILT_DEG = 2.6
  * Shared "floating" card shell used by every weather tile. Provides:
  * - a staggered cinematic entrance (rise + de-blur, cascading per card)
  * - a continuous idle float (starts after the entrance completes)
- * - hover: gentle 3D tilt toward the cursor + lift/scale + a cursor-following
- *   glow. Tilt/scale/float live on independent CSS properties (transform /
- *   scale / translate) so they compose without fighting.
+ * - hover: gentle 3D tilt toward the cursor + a springy lift/scale. Tilt /
+ *   scale / float live on independent CSS properties (transform / scale /
+ *   translate) so they compose without fighting.
  */
 export function BentoCard({ span, floatDelay = 0, children }: BentoCardProps): JSX.Element {
   const handleMouseMove = (event: MouseEvent<HTMLDivElement>): void => {
@@ -27,8 +27,6 @@ export function BentoCard({ span, floatDelay = 0, children }: BentoCardProps): J
     const fx = (event.clientX - rect.left) / rect.width
     const fy = (event.clientY - rect.top) / rect.height
 
-    el.style.setProperty('--glow-x', `${fx * 100}%`)
-    el.style.setProperty('--glow-y', `${fy * 100}%`)
     el.style.setProperty('--tilt-x', `${((0.5 - fy) * 2 * MAX_TILT_DEG).toFixed(2)}deg`)
     el.style.setProperty('--tilt-y', `${((fx - 0.5) * 2 * MAX_TILT_DEG).toFixed(2)}deg`)
   }
@@ -48,7 +46,6 @@ export function BentoCard({ span, floatDelay = 0, children }: BentoCardProps): J
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
-      <div className="bento-card-glow" />
       <div className="bento-card-content">{children}</div>
       {/* Hidden outside the win95 theme (display gated in retro.css). */}
       <Win95TitleButtons />

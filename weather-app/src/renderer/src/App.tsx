@@ -45,6 +45,15 @@ function useUpdatedAgo(fetchedAt: number | undefined): string {
   return `Updated ${minutes} min ago`
 }
 
+/** Not yet in every bundled lib.dom.d.ts; optional so this stays harmless either way. */
+type ViewTransitionDocument = Document & {
+  startViewTransition?: (callback: () => void | Promise<void>) => {
+    ready: Promise<void>
+    finished: Promise<void>
+    updateCallbackDone: Promise<void>
+  }
+}
+
 export function App(): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const sceneRef = useRef<SceneManager | null>(null)
@@ -71,11 +80,27 @@ export function App(): JSX.Element {
 
   // Apply the resolved theme ('auto' follows day/night at the selected
   // location; 'win95' also switches the 3D scene into retro pixelation).
+  // Crossfades through the View Transitions API when available so a theme
+  // click reads as one considered gesture instead of a hard color-snap; the
+  // very first application (nothing to crossfade from yet) and
+  // prefers-reduced-motion both fall straight through to a plain assignment.
   useEffect(() => {
-    document.documentElement.dataset.theme = resolved
-    sceneRef.current?.setRetro(resolved === 'win95')
-
     const prev = prevResolvedRef.current
+    const isFirstApplication = prev === null
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const doc = document as ViewTransitionDocument
+
+    const applyTheme = (): void => {
+      document.documentElement.dataset.theme = resolved
+      sceneRef.current?.setRetro(resolved === 'win95')
+    }
+
+    if (isFirstApplication || prefersReducedMotion || typeof doc.startViewTransition !== 'function') {
+      applyTheme()
+    } else {
+      doc.startViewTransition(applyTheme)
+    }
+
     prevResolvedRef.current = resolved
     if (resolved === 'win95' && prev !== null && prev !== 'win95') {
       setBootKey((k) => k + 1)

@@ -52,6 +52,16 @@
   --font-display: 'Inter Variable', 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
 
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  /* Motion system: press-physics, the segmented-control thumb, hover
+     liveliness and the theme crossfade all draw from this one shared set so
+     every interaction in the app moves with the same physical language. */
+  --ease-press: cubic-bezier(0.2, 0, 0, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-spring-soft: cubic-bezier(0.25, 1.1, 0.4, 1);
+  --ease-crossfade-exit: cubic-bezier(0.4, 0, 1, 1);
+  --dur-press: 100ms;
+  --dur-release: 320ms;
+  --dur-theme-crossfade: 420ms;
 }
 
 [data-theme='dark'] {
@@ -273,6 +283,7 @@ input {
 
 /* Shared pill/segment control style for everything in the header. */
 .control-pill {
+  position: relative;
   display: flex;
   align-items: center;
   padding: 3px;
@@ -285,6 +296,7 @@ input {
 }
 
 .control-pill .seg {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -296,11 +308,16 @@ input {
   font-weight: 600;
   border-radius: var(--radius-pill);
   color: var(--text-tertiary);
-  transition: all 0.2s var(--ease-out);
+  transition: all 0.2s var(--ease-out), scale var(--dur-release) var(--ease-spring);
 }
 
 .control-pill .seg:hover {
   color: var(--text-primary);
+}
+
+.control-pill .seg:active {
+  scale: 0.94;
+  transition: scale var(--dur-press) var(--ease-press);
 }
 
 .control-pill .seg.active {
@@ -311,6 +328,39 @@ input {
 .control-pill .seg svg {
   width: 15px;
   height: 15px;
+}
+
+/* Sliding highlight that tracks the active segment's measured box (segments
+   are auto-width and NOT equal, so this is driven by useSegThumb rather than
+   a CSS percentage trick). Transition is armed only once the pill carries
+   `seg-thumb-ready` — added after the hook's first real measurement — so
+   there is never a slide-in-from-(0,0) glitch on mount/theme-swap/resize. */
+.seg-thumb {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 0;
+  width: 0;
+  border-radius: var(--radius-pill);
+  background: var(--control-active);
+  pointer-events: none;
+}
+
+.control-pill.seg-thumb-ready .seg-thumb {
+  transition: left var(--dur-release) var(--ease-spring), width var(--dur-release) var(--ease-spring);
+}
+
+/* The theme pill's thumb arrives exactly as the page-wide view-transition
+   crossfade settles, so a theme click reads as one coordinated gesture. */
+.control-pill[data-control='theme'].seg-thumb-ready .seg-thumb {
+  transition-duration: var(--dur-theme-crossfade);
+}
+
+/* Once the thumb is live it is the ONLY highlight; the flat .active
+   background stays as the pre-measurement safety net. Win95 keeps its own
+   checkerboard-bevel .active look untouched (the thumb is display:none there). */
+:root:not([data-theme='win95']) .control-pill.seg-thumb-ready .seg.active {
+  background: transparent;
 }
 
 .icon-btn {
@@ -325,12 +375,17 @@ input {
   border: 1px solid var(--glass-border-soft);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
-  transition: all 0.2s var(--ease-out);
+  transition: all 0.2s var(--ease-out), scale var(--dur-release) var(--ease-spring);
 }
 
 .icon-btn:hover {
   color: var(--text-primary);
   background: var(--control-bg-hover);
+}
+
+.icon-btn:active {
+  scale: 0.9;
+  transition: scale var(--dur-press) var(--ease-press);
 }
 
 .icon-btn svg {
@@ -340,6 +395,47 @@ input {
 
 .icon-btn.spinning svg {
   animation: spin 1s linear infinite;
+}
+
+/* ---------- Theme-switch crossfade (View Transitions API) ----------
+   App.tsx wraps the theme dataset assignment in document.startViewTransition
+   when available; this replaces the UA-default flat crossfade with an
+   asymmetric pair (old theme steps out briskly, new theme settles in on the
+   app's own decelerate curve) so a theme click reads as one considered
+   gesture rather than a hard color-snap. Opacity only — no scale/blur on the
+   pseudo-elements, since a full-viewport raster snapshot risks visible edge
+   shimmer under scale, and blur would reintroduce the exact glass-tell the
+   matte redesign removed. */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-group(root) {
+    animation-duration: var(--dur-theme-crossfade);
+  }
+
+  ::view-transition-old(root) {
+    animation: theme-crossfade-out calc(var(--dur-theme-crossfade) * 0.62) var(--ease-crossfade-exit) both;
+  }
+
+  ::view-transition-new(root) {
+    animation: theme-crossfade-in var(--dur-theme-crossfade) var(--ease-out) both;
+  }
+}
+
+@keyframes theme-crossfade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes theme-crossfade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* ---------- One-page bento grid (no scroll) ---------- */
@@ -437,24 +533,29 @@ input {
  * drives only `scale` -- they compose independently, so the float keeps
  * running smoothly through hover with no snap.
  */
+/* Asymmetric hover: a springy quick ENTRY (declared on the :hover rule
+   itself, so it only governs the transition INTO hover) while the base
+   .bento-card transition above (0.6s ease-out) is left untouched and takes
+   back over the moment :hover stops matching, giving a calm decelerate EXIT.
+   `transform` (the JS-driven continuous tilt channel) is deliberately
+   excluded here so it never fights live mousemove updates. */
 .bento-card:hover {
-  scale: 1.01;
+  scale: 1.018;
   border-color: color-mix(in srgb, var(--accent) 40%, var(--glass-border));
   box-shadow:
     0 2px 4px rgba(30, 27, 22, 0.06),
     0 18px 36px -18px rgba(30, 27, 22, 0.26);
   z-index: 3;
+  transition:
+    scale 0.32s var(--ease-spring),
+    box-shadow 0.28s var(--ease-out),
+    border-color 0.28s var(--ease-out);
 }
 
 [data-theme='dark'] .bento-card:hover {
   box-shadow:
     0 2px 4px rgba(0, 0, 0, 0.5),
     0 18px 40px -18px rgba(0, 0, 0, 0.68);
-}
-
-/* The cursor-following radial bloom is a screensaver tell — retired for matte. */
-.bento-card-glow {
-  display: none;
 }
 
 .bento-card-content {
@@ -477,10 +578,17 @@ input {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bento-card {
+  .bento-card,
+  .bento-card:hover {
     animation: none;
     transform: none;
     transition: none;
+    scale: 1;
+  }
+
+  .bento-card:hover .card-title svg {
+    transition: none;
+    transform: none;
   }
 }
 
@@ -556,6 +664,9 @@ input {
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   box-shadow: var(--glass-shadow);
+  --menu-scale-from: 0.97;
+  transform-origin: top center;
+  animation: menu-in 0.3s var(--ease-spring) both;
 }
 
 .search-result-item {
@@ -566,12 +677,20 @@ input {
   text-align: left;
   padding: 9px 12px;
   border-radius: var(--radius-sm);
-  transition: background-color 0.15s var(--ease-out);
+  transition: background-color 0.15s var(--ease-out), scale 0.26s var(--ease-spring);
+  opacity: 0;
+  animation: menu-item-in 0.26s var(--ease-out) both;
+  animation-delay: calc(60ms + var(--row-i, 0) * 24ms);
 }
 
 .search-result-item:hover,
 .search-result-item:focus-visible {
   background: var(--control-active);
+}
+
+.search-result-item:active {
+  scale: 0.985;
+  transition: scale 0.08s var(--ease-press);
 }
 
 .search-result-name {
@@ -590,6 +709,34 @@ input {
   font-size: 13px;
   color: var(--text-tertiary);
   text-align: center;
+  opacity: 0;
+  animation: menu-item-in 0.24s var(--ease-out) both;
+  animation-delay: 60ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search-results,
+  .search-result-item,
+  .search-empty {
+    animation: none;
+    opacity: 1;
+    transform: none;
+    scale: 1;
+  }
+
+  .search-result-item:active {
+    transition: none;
+    scale: 1;
+  }
+}
+
+[data-theme='win95'] .search-results,
+[data-theme='win95'] .search-result-item,
+[data-theme='win95'] .search-empty {
+  animation: none;
+  opacity: 1;
+  transform: none;
+  scale: 1;
 }
 
 /* ============================================================
@@ -612,6 +759,15 @@ input {
   width: 15px;
   height: 15px;
   color: var(--accent);
+  transition: transform 0.22s var(--ease-out);
+}
+
+/* Shared micro-lift: every card header icon routes through this one
+   selector, so a single rule gives every card the same quick spring-entry
+   nudge the instant it's hovered. */
+.bento-card:hover .card-title svg {
+  transform: translateY(-1.5px) scale(1.06);
+  transition: transform 0.26s var(--ease-spring);
 }
 
 /* Back-compat alias used by earlier components; same look as .card-title. */
@@ -1156,6 +1312,31 @@ input {
   border-radius: var(--radius-pill);
   background: var(--accent);
   color: #fff;
+  transition:
+    filter 0.2s var(--ease-out),
+    transform var(--dur-release) var(--ease-spring),
+    scale var(--dur-release) var(--ease-spring);
+}
+
+.error-banner button:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.error-banner button:active {
+  scale: 0.95;
+  transform: translateY(0);
+  transition: transform var(--dur-press) var(--ease-press), scale var(--dur-press) var(--ease-press);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .error-banner button,
+  .error-banner button:hover,
+  .error-banner button:active {
+    transition: none;
+    transform: none;
+    scale: 1;
+  }
 }
 
 @keyframes spin {
@@ -1170,6 +1351,34 @@ input {
   }
   to {
     opacity: 1;
+  }
+}
+
+/* Shared dropdown/popover entrance pair. Parameterized via --menu-scale-from
+   / --menu-y-from so each menu's differing anchor geometry (corner-anchored
+   favorites dropdown vs. wide top-anchored search results) doesn't need a
+   duplicated keyframe body. */
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    scale: var(--menu-scale-from, 0.92);
+    transform: translateY(var(--menu-y-from, -6px));
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes menu-item-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -1274,10 +1483,6 @@ input {
   z-index: auto;
 }
 
-[data-theme='win95'] .bento-card-glow {
-  display: none;
-}
-
 /* ---------- Card headers become navy title bars ---------- */
 
 [data-theme='win95'] .metric-header,
@@ -1297,6 +1502,10 @@ input {
 [data-theme='win95'] .metric-header svg,
 [data-theme='win95'] .card-title svg {
   color: #ffffff;
+}
+
+[data-theme='win95'] .bento-card:hover .card-title svg {
+  transform: none;
 }
 
 [data-theme='win95'] .metric-header .metric-label {
@@ -1345,6 +1554,12 @@ input {
   -webkit-backdrop-filter: none;
   padding: 0;
   gap: 3px;
+}
+
+/* Win95 keeps its own checkerboard-bevel .active look (below) — the sliding
+   thumb is a light/dark/tuscany-only affordance. */
+[data-theme='win95'] .seg-thumb {
+  display: none;
 }
 
 [data-theme='win95'] .control-pill .seg,

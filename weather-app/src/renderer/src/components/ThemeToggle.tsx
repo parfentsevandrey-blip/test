@@ -1,4 +1,6 @@
+import { useRef } from 'react'
 import { useWeatherStore, type ThemePreference } from '../store/useWeatherStore'
+import { useSegThumb } from '../hooks/useSegThumb'
 
 function SunIcon(): JSX.Element {
   const rays = [0, 45, 90, 135, 180, 225, 270, 315]
@@ -62,9 +64,18 @@ const OPTIONS: { value: ThemePreference; title: string; icon: JSX.Element | stri
 export function ThemeToggle(): JSX.Element {
   const theme = useWeatherStore((s) => s.theme)
   const setTheme = useWeatherStore((s) => s.setTheme)
+  const pillRef = useRef<HTMLDivElement>(null)
+  const { left, width, ready } = useSegThumb(pillRef, theme)
 
   return (
-    <div className="control-pill" role="group" aria-label="Theme">
+    <div
+      className={'control-pill' + (ready ? ' seg-thumb-ready' : '')}
+      data-control="theme"
+      role="group"
+      aria-label="Theme"
+      ref={pillRef}
+    >
+      <span className="seg-thumb" style={{ left: `${left}px`, width: `${width}px` }} aria-hidden="true" />
       {OPTIONS.map((option) => (
         <button
           key={option.value}

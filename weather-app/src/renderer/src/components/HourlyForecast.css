@@ -189,6 +189,20 @@
   transform-box: fill-box;
   transform-origin: center;
   animation: hf-dot-pulse 2.6s ease-in-out infinite;
+  scale: 1;
+  transition: scale 0.35s var(--ease-spring-soft);
+}
+
+/* The whole strip "comes alive" on engagement — same idiom the metric-card
+   gauges already use for their own hover sweeps. */
+@media (prefers-reduced-motion: no-preference) {
+  .hf-strip:hover .hf-curve-dot {
+    scale: 1.16;
+  }
+}
+
+[data-theme='win95'] .hf-strip:hover .hf-curve-dot {
+  scale: 1;
 }
 
 /* Sonar ping behind the Now dot: expands and dissolves, base opacity 0 so
@@ -248,7 +262,7 @@
   pointer-events: none;
   z-index: 2;
   transform-origin: 50% 100%;
-  animation: hf-tip-in 0.18s var(--ease-out) both;
+  animation: hf-tip-in 0.24s var(--ease-spring-soft) both;
 }
 
 .hf-tooltip.is-left {
@@ -264,11 +278,16 @@
 @keyframes hf-tip-in {
   from {
     opacity: 0;
-    scale: 0.9;
+    scale: 0.86;
+    transform: translateY(4px);
+  }
+  60% {
+    opacity: 1;
   }
   to {
     opacity: 1;
     scale: 1;
+    transform: translateY(0);
   }
 }
 
@@ -311,6 +330,11 @@
   .hf-curve-dot-ring,
   .hf-tooltip {
     animation: none;
+  }
+
+  .hf-curve-dot {
+    transition: none;
+    scale: 1;
   }
 
   .hf-hover-highlight {
