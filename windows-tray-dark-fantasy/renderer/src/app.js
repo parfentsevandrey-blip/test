@@ -20,11 +20,11 @@
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PA.PALETTE.mortar);
-  scene.fog = new THREE.FogExp2(PA.PALETTE.mortar, 0.05);
+  scene.fog = new THREE.FogExp2(PA.PALETTE.mortar, 0.032);
 
-  const camera = new THREE.PerspectiveCamera(38, 560 / 366, 0.1, 100);
-  const CAM_TARGET = new THREE.Vector3(0, 2.4, -0.8);
-  const CAM_BASE = new THREE.Vector3(0, 3.0, 9.4);
+  const camera = new THREE.PerspectiveCamera(48, 560 / 366, 0.1, 100);
+  const CAM_TARGET = new THREE.Vector3(0, 1.6, -0.8);
+  const CAM_BASE = new THREE.Vector3(0, 5.6, 12);
   const CAM_RADIUS = CAM_BASE.distanceTo(CAM_TARGET);
   const CAM_BASE_ANGLE = Math.atan2(CAM_BASE.x - CAM_TARGET.x, CAM_BASE.z - CAM_TARGET.z);
   camera.position.copy(CAM_BASE);
@@ -72,10 +72,12 @@
     pickList = Array.from(pickMeshToEntry.keys());
   }
 
-  ['room', 'fireplace', 'characters', 'props', 'easterEggs'].forEach(registerModule);
-
   // ---------------------------------------------------------------------
-  // Cross-cutting helpers exposed to content modules
+  // Cross-cutting helpers exposed to content modules. These MUST exist
+  // before any module factory runs: modules are allowed to call
+  // window.DF.onKonami(...) synchronously during their own build step (see
+  // the module contract), so registerModule() below would otherwise call
+  // into an undefined window.DF.onKonami.
   // ---------------------------------------------------------------------
   window.DF.showBanner = function (html, ms) {
     bannerEl.innerHTML = html;
@@ -124,6 +126,8 @@
     }
     if (e.key === 'Escape' && window.dfHost) window.dfHost.hide();
   });
+
+  ['room', 'fireplace', 'characters', 'props', 'easterEggs'].forEach(registerModule);
 
   const closeBtn = document.getElementById('closeBtn');
   if (closeBtn) {
