@@ -87,6 +87,38 @@ replaces the native menu. Native `dialog.showOpenDialog` /
 `showSaveDialog` are still used for file pickers (invoked via IPC from the
 renderer through `preload.js`), since those are expected OS surfaces.
 
+## Motion & feedback patterns (v1.1 addition)
+
+`theme.css` now also defines shared keyframes and components for the
+interactive patterns below. Reuse these rather than inventing new ones —
+consistency of *feel* matters as much as consistency of color.
+
+- **Toasts** (`.toast-stack` / `.toast` / `.toast--success` / `.toast--error`):
+  a small floating notification, bottom-right, above the status bar. Use
+  for confirmations that don't need a modal — saved, exported, imported,
+  file errors. Auto-dismiss after ~3s (add `.is-leaving` for the exit
+  transition, then remove the node). Toasts use fixed dark colors
+  (`--scrim-dark`/`--scrim-dark-ink`) that don't flip with the theme —
+  they're a floating overlay, not part of the surface hierarchy.
+- **Dialogs & menus** now animate in (`lumen-pop-in` / `lumen-menu-in` /
+  `lumen-scrim-in`, already wired onto `.dialog` / `.dialog-overlay` /
+  `.menu`) — nothing extra to do for existing ones.
+- **Sidebar** (`.sidebar` / `.sidebar__inner` / `.sidebar__heading` /
+  `.sidebar__item`): a collapsible 240px left panel (e.g. Lumen Write's
+  document outline). Toggle the `.is-collapsed` class; width/opacity
+  transition over `--dur-slow`.
+- **Start screen** (`.start-screen` / `.start-screen__grid` / `.start-card`
+  / `.start-screen__recent` / `.start-recent-item`): a template gallery +
+  recent-files view shown in place of the canvas on a fresh launch (and
+  from File ▸ New). Cards lift slightly on hover; clicking one loads a
+  starter document/workbook and reveals the normal editor.
+- Motion stays restrained (principle 4): every new transition uses
+  `--ease-out` and one of the three duration tokens (`--dur-fast` for
+  hover/press, `--dur-med` for dialogs/menus/toasts, `--dur-slow` for
+  panel-sized things like the sidebar or start screen). No spring/bounce
+  easing, no looping/idle animation. `theme.css` already disables all of
+  this under `prefers-reduced-motion: reduce` — don't fight that.
+
 ## Brand
 
 - Suite name: **Lumen**. App names: **Lumen Write**, **Lumen Sheet**.
