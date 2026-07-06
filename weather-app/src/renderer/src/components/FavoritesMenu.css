@@ -2,6 +2,12 @@
   position: relative;
 }
 
+/* Only a programmatic focus anchor (see FavoritesMenu.tsx's remove-button
+   handler) — never reached by Tab, so it never needs a visible ring. */
+.favorites-menu:focus {
+  outline: none;
+}
+
 .favorites-menu .icon-btn.menu-open {
   color: var(--accent);
   background: var(--control-bg-hover);
@@ -75,21 +81,29 @@
   animation-delay: 90ms;
 }
 
-.favorites-item {
+.favorites-item-row {
   display: flex;
-  flex-direction: column;
-  gap: 1px;
-  width: 100%;
-  text-align: left;
-  padding: 9px 12px;
-  border-radius: var(--radius-sm);
-  transition: background-color 0.15s var(--ease-out), scale 0.26s var(--ease-spring);
+  align-items: center;
+  gap: 2px;
   opacity: 0;
   animation: menu-item-in 0.26s var(--ease-out) both;
   animation-delay: calc(90ms + var(--row-i, 0) * 26ms);
 }
 
-.favorites-item:hover {
+.favorites-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.15s var(--ease-out), scale 0.26s var(--ease-spring);
+}
+
+.favorites-item:hover,
+.favorites-item:focus-visible {
   background: var(--control-active);
 }
 
@@ -98,7 +112,7 @@
   transition: scale 0.08s var(--ease-press);
 }
 
-.favorites-item.is-current .favorites-item-name {
+.favorites-item-row.is-current .favorites-item-name {
   color: var(--accent);
 }
 
@@ -106,17 +120,65 @@
   font-size: 14px;
   font-weight: 500;
   color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .favorites-item-meta {
   font-size: 12px;
   color: var(--text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Hover-revealed inline delete — a sibling of .favorites-item, not nested
+   inside it (a <button> can't validly contain another <button>). */
+.favorites-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  margin-right: 3px;
+  border-radius: var(--radius-sm);
+  color: var(--text-tertiary);
+  opacity: 0;
+  transition: opacity 0.15s var(--ease-out), background-color 0.15s var(--ease-out), color 0.15s var(--ease-out), scale var(--dur-release) var(--ease-spring);
+}
+
+.favorites-remove svg {
+  width: 12px;
+  height: 12px;
+}
+
+.favorites-item-row:hover .favorites-remove,
+.favorites-item-row:focus-within .favorites-remove {
+  opacity: 1;
+}
+
+.favorites-remove:hover {
+  background: var(--control-active);
+  color: var(--danger);
+}
+
+.favorites-remove:active {
+  scale: 0.9;
+  transition: scale var(--dur-press) var(--ease-press);
+}
+
+.favorites-remove:focus-visible {
+  opacity: 1;
+  outline: 1.5px solid var(--accent);
+  outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .favorites-dropdown,
   .favorites-action,
-  .favorites-item,
+  .favorites-item-row,
   .favorites-empty {
     animation: none;
     opacity: 1;
@@ -125,7 +187,8 @@
   }
 
   .favorites-action:active,
-  .favorites-item:active {
+  .favorites-item:active,
+  .favorites-remove:active {
     transition: none;
     scale: 1;
   }
@@ -133,10 +196,24 @@
 
 [data-theme='win95'] .favorites-dropdown,
 [data-theme='win95'] .favorites-action,
-[data-theme='win95'] .favorites-item,
+[data-theme='win95'] .favorites-item-row,
 [data-theme='win95'] .favorites-empty {
   animation: none;
   opacity: 1;
   transform: none;
   scale: 1;
+}
+
+/* The mount-animation reset above doesn't touch the :active scale
+   transition, so a click still produced a smooth cubic-bezier micro-shrink
+   alien to win95's steps()-only retro motion language. */
+[data-theme='win95'] .favorites-action,
+[data-theme='win95'] .favorites-item,
+[data-theme='win95'] .favorites-remove {
+  transition: none;
+}
+
+[data-theme='win95'] .favorites-remove {
+  opacity: 1;
+  border-radius: 0;
 }

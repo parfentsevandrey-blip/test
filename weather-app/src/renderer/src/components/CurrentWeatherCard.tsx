@@ -1,59 +1,72 @@
 import './CurrentWeatherCard.css'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useWeatherStore } from '../store/useWeatherStore'
 import { BentoCard } from './BentoCard'
 import { WeatherIcon } from './WeatherIcon'
+import { LocationPinIcon } from './icons'
 import { getConditionInfo } from '../utils/weatherCondition'
 import { celsiusTo, formatHour, formatTemperature } from '../utils/units'
 import { toAbsoluteInstant } from '../utils/time'
+import { useCountUp } from '../hooks/useCountUp'
 import type { TemperatureUnit, WeatherData } from '../types/weather'
 
 const STAT_ICON_PROPS = {
   viewBox: '0 0 24 24',
   fill: 'none',
   stroke: 'currentColor',
-  strokeWidth: 2,
+  strokeWidth: 1.5,
   strokeLinecap: 'round' as const,
   strokeLinejoin: 'round' as const,
   'aria-hidden': true
 }
 
-const COUNT_UP_MS = 900
 const HOUR_MS = 3_600_000
 
+/** Stable-per-hour pick so phrasing varies across refreshes/days without flickering on every render. */
+function pick<T>(options: readonly T[], seed: number): T {
+  return options[Math.abs(seed) % options.length]
+}
+
+/** A signed temperature delta in the display unit, e.g. "3°" (no sign — callers add the word). */
+function formatTempDelta(celsiusDelta: number, unit: TemperatureUnit): string {
+  const converted = unit === 'fahrenheit' ? (celsiusDelta * 9) / 5 : celsiusDelta
+  return `${Math.round(Math.abs(converted))}°`
+}
+
 /**
- * Animates a displayed number toward `target` over ~0.9s with an ease-out
- * cubic, starting from whatever value is currently shown (0 on first mount,
- * so the initial load counts up too). Under prefers-reduced-motion the value
- * jumps instantly. The rAF loop is cancelled on retarget/unmount.
+ * Yesterday's temperature at the same local hour, if the hourly series (which
+ * includes one day back via past_days=1) has a matching entry within 30 min.
  */
-function useCountUp(target: number): number {
-  const [display, setDisplay] = useState(0)
-  const displayRef = useRef(0)
+function yesterdaySameHourTemp(weather: WeatherData, nowMs: number): number | null {
+  const targetMs = nowMs - 24 * HOUR_MS
+  let best: { diffMs: number; temperature: number } | null = null
+  for (const h of weather.hourly) {
+    const t = toAbsoluteInstant(h.time, weather.utcOffsetSeconds).getTime()
+    const diffMs = Math.abs(t - targetMs)
+    if (diffMs > 30 * 60 * 1000) continue
+    if (best === null || diffMs < best.diffMs) best = { diffMs, temperature: h.temperature }
+  }
+  return best?.temperature ?? null
+}
 
-  useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      displayRef.current = target
-      setDisplay(target)
-      return undefined
-    }
+type PressureTrend = 'rising' | 'falling' | 'steady'
 
-    const from = displayRef.current
-    if (from === target) return undefined
-
-    const start = performance.now()
-    let frame = requestAnimationFrame(function tick(now: number): void {
-      const t = Math.min(1, (now - start) / COUNT_UP_MS)
-      const eased = 1 - (1 - t) ** 3
-      const value = from + (target - from) * eased
-      displayRef.current = value
-      setDisplay(value)
-      if (t < 1) frame = requestAnimationFrame(tick)
-    })
-    return () => cancelAnimationFrame(frame)
-  }, [target])
-
-  return display
+/** Pressure change over the last 3 hours (>1 hPa either way = a real trend, not sensor noise). */
+function pressureTrend(weather: WeatherData, nowMs: number): PressureTrend | null {
+  const targetMs = nowMs - 3 * HOUR_MS
+  let best: { diffMs: number; pressure: number } | null = null
+  for (const h of weather.hourly) {
+    const t = toAbsoluteInstant(h.time, weather.utcOffsetSeconds).getTime()
+    if (t > nowMs) continue
+    const diffMs = Math.abs(t - targetMs)
+    if (diffMs > 90 * 60 * 1000) continue
+    if (best === null || diffMs < best.diffMs) best = { diffMs, pressure: h.pressure }
+  }
+  if (best === null) return null
+  const delta = weather.current.pressure - best.pressure
+  if (delta > 1) return 'rising'
+  if (delta < -1) return 'falling'
+  return 'steady'
 }
 
 /**
@@ -81,6 +94,7 @@ function useCityClock(utcOffsetSeconds: number): Date {
  */
 function buildInsight(weather: WeatherData, unit: TemperatureUnit): string {
   const nowMs = Date.now()
+  const hourSeed = Math.floor(nowMs / HOUR_MS)
   const next12 = weather.hourly
     .filter((h) => {
       const t = toAbsoluteInstant(h.time, weather.utcOffsetSeconds).getTime()
@@ -93,8 +107,15 @@ function buildInsight(weather: WeatherData, unit: TemperatureUnit): string {
   const wettest = next12.reduce((a, b) => (b.precipitationProbability > a.precipitationProbability ? b : a))
   if (wettest.precipitationProbability >= 45) {
     const { condition } = getConditionInfo(wettest.weatherCode)
-    const word = condition === 'snow' ? 'Snow' : condition === 'thunderstorm' ? 'Storms' : 'Rain'
-    return `${word} likely around ${formatHour(wettest.time)} — ${Math.round(wettest.precipitationProbability)}%`
+    const pct = Math.round(wettest.precipitationProbability)
+    const hour = formatHour(wettest.time)
+    if (condition === 'snow') {
+      return pick([`Snow likely around ${hour} — ${pct}%`, `Bundle up — snow moves in around ${hour}`], hourSeed)
+    }
+    if (condition === 'thunderstorm') {
+      return pick([`Storms likely around ${hour} — ${pct}%`, `Thunder rolling in around ${hour}`], hourSeed)
+    }
+    return pick([`Rain likely around ${hour} — ${pct}%`, `Grab an umbrella before ${hour}`], hourSeed)
   }
 
   const current = weather.current.temperature
@@ -103,10 +124,14 @@ function buildInsight(weather: WeatherData, unit: TemperatureUnit): string {
   const rise = hottest.temperature - current
   const drop = current - coldest.temperature
   if (rise >= 2 && rise >= drop) {
-    return `Warming to ${formatTemperature(hottest.temperature, unit)} by ${formatHour(hottest.time)}`
+    const hi = formatTemperature(hottest.temperature, unit)
+    const hour = formatHour(hottest.time)
+    return pick([`Warming to ${hi} by ${hour}`, `Warms up to ${hi} later, around ${hour}`], hourSeed)
   }
   if (drop >= 2) {
-    return `Cooling to ${formatTemperature(coldest.temperature, unit)} by ${formatHour(coldest.time)}`
+    const lo = formatTemperature(coldest.temperature, unit)
+    const hour = formatHour(coldest.time)
+    return pick([`Cooling to ${lo} by ${hour}`, `Temperatures dip to ${lo} by ${hour}`], hourSeed)
   }
 
   const clearish = next12.filter((h) => {
@@ -114,9 +139,24 @@ function buildInsight(weather: WeatherData, unit: TemperatureUnit): string {
     return c === 'clear' || c === 'partly-cloudy'
   })
   if (clearish.length >= next12.length * 0.7) {
-    return weather.current.isDay ? 'Clear evening ahead' : 'Clear night ahead'
+    return weather.current.isDay
+      ? pick(['Clear evening ahead', 'Clear skies through the evening'], hourSeed)
+      : pick(['Clear night ahead', 'Clear skies overnight'], hourSeed)
   }
-  return 'Steady conditions for the next few hours'
+
+  // Nothing dramatic ahead — this is the app's blandest fallback, so reach for
+  // yesterday's same-hour reading (already fetched via past_days=1, otherwise
+  // unused) before settling for a generic "steady" line.
+  const yesterday = yesterdaySameHourTemp(weather, nowMs)
+  if (yesterday !== null) {
+    const delta = current - yesterday
+    if (Math.abs(delta) >= 2) {
+      const word = delta > 0 ? 'warmer' : 'cooler'
+      return `${formatTempDelta(delta, unit)} ${word} than this time yesterday`
+    }
+  }
+
+  return pick(['Steady conditions for the next few hours', 'A quiet stretch of weather ahead'], hourSeed)
 }
 
 export function CurrentWeatherCard(): JSX.Element | null {
@@ -137,6 +177,7 @@ export function CurrentWeatherCard(): JSX.Element | null {
 
   const today = weather.daily.at(0)
   const pressure = `${Math.round(weather.current.pressure)} hPa`
+  const trend = pressureTrend(weather, Date.now())
 
   // City wall clock is encoded in the Date's UTC fields (see useCityClock).
   const clockDay = cityClock.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' })
@@ -157,18 +198,7 @@ export function CurrentWeatherCard(): JSX.Element | null {
     <BentoCard span="bento-hero">
       <div className="hero-current">
         <div className="card-title hero-title">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
-            <circle cx="12" cy="10" r="3" />
-          </svg>
+          <LocationPinIcon />
           Current Conditions
         </div>
 
@@ -243,13 +273,27 @@ export function CurrentWeatherCard(): JSX.Element | null {
             <span
               className="hero-stat hero-stat--pressure"
               role="img"
-              aria-label={`Pressure ${pressure}`}
+              aria-label={trend ? `Pressure ${pressure}, ${trend}` : `Pressure ${pressure}`}
             >
               <svg {...STAT_ICON_PROPS}>
                 <path d="m12 14 4-4" />
                 <path d="M3.34 19a10 10 0 1 1 17.32 0" />
               </svg>
               <span className="hero-stat-value">{pressure}</span>
+              {trend && (
+                <svg
+                  className={`hero-stat-trend hero-stat-trend--${trend}`}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2.6}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  {trend === 'steady' ? <path d="M5 12h14" /> : <path d="M6 15l6-6 6 6" />}
+                </svg>
+              )}
             </span>
           </div>
 

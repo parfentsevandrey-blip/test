@@ -22,7 +22,8 @@ const HOURLY_VARS = [
   'weather_code',
   'is_day',
   'uv_index',
-  'visibility'
+  'visibility',
+  'pressure_msl'
 ].join(',')
 
 const DAILY_VARS = [
@@ -60,6 +61,7 @@ interface RawForecastResponse {
     is_day: number[]
     uv_index: number[]
     visibility: number[]
+    pressure_msl: number[]
   }
   daily: {
     time: string[]
@@ -135,7 +137,8 @@ export async function fetchWeatherData(location: GeoLocation, signal?: AbortSign
       temperature: raw.hourly.temperature_2m[i],
       precipitationProbability: raw.hourly.precipitation_probability[i],
       weatherCode: raw.hourly.weather_code[i],
-      isDay: raw.hourly.is_day[i] === 1
+      isDay: raw.hourly.is_day[i] === 1,
+      pressure: raw.hourly.pressure_msl[i]
     })),
     daily: raw.daily.time.slice(upcomingStart).map((date, offset) => {
       const i = offset + upcomingStart

@@ -2,6 +2,7 @@ import { useWeatherStore } from '../store/useWeatherStore'
 import { BentoCard } from './BentoCard'
 import { SunBurstIcon } from './icons'
 import { clamp01 } from '../utils/math'
+import { useCountUp } from '../hooks/useCountUp'
 import './MetricCards.css'
 
 /** Severity boundaries marked with ticks on the scale track. */
@@ -38,11 +39,16 @@ function uvHint(uv: number): string {
 export function UvIndexCard(): JSX.Element | null {
   const weather = useWeatherStore((s) => s.weather)
 
+  // Hook runs unconditionally (before the null guard) to satisfy hook rules.
+  const targetUv = weather?.current.uvIndex != null ? Math.round(weather.current.uvIndex) : 0
+  const animatedUv = useCountUp(targetUv, 600)
+
   if (!weather) return null
 
   const uv = weather.current.uvIndex
   const rounded = uv !== null ? Math.round(uv) : null
   const severity = rounded !== null ? uvSeverity(rounded) : null
+  const shownUv = rounded !== null ? Math.round(animatedUv) : null
 
   /* 680px-window vertical budget (content ≈ 162px): header 16 + value 40 +
      sub 20 + hint ~17 + scale block ~33 (14 pad + 6 track + 13 end labels)
@@ -55,7 +61,7 @@ export function UvIndexCard(): JSX.Element | null {
           <SunBurstIcon />
           <span className="metric-label">UV Index</span>
         </div>
-        <div className="metric-value">{rounded ?? '—'}</div>
+        <div className="metric-value">{shownUv ?? '—'}</div>
         <div className="metric-sub uv-sub" style={severity !== null ? { color: severity.color } : undefined}>
           {severity !== null ? severity.label : 'Unavailable'}
         </div>

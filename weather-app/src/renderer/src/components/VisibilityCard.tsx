@@ -2,6 +2,7 @@ import { useWeatherStore } from '../store/useWeatherStore'
 import { BentoCard } from './BentoCard'
 import { EyeIcon } from './icons'
 import { clamp01 } from '../utils/math'
+import { useCountUp } from '../hooks/useCountUp'
 import './MetricCards.css'
 
 /** ~20 km reads as "unlimited" visibility; the gauge's full-scale end stop. */
@@ -34,12 +35,21 @@ export function VisibilityCard(): JSX.Element | null {
   const weather = useWeatherStore((s) => s.weather)
   const unit = useWeatherStore((s) => s.unit)
 
+  const imperial = unit === 'fahrenheit'
+  const targetDistance =
+    weather?.current.visibility != null
+      ? imperial
+        ? weather.current.visibility / METERS_PER_MILE
+        : weather.current.visibility / 1000
+      : 0
+  // Hook runs unconditionally (before the null guard) to satisfy hook rules.
+  const animatedDistance = useCountUp(targetDistance, 700)
+
   if (!weather) return null
 
   const visibility = weather.current.visibility
   const fraction = clamp01((visibility ?? 0) / FULL_VISIBILITY_METERS)
-  const imperial = unit === 'fahrenheit'
-  const distance = visibility === null ? null : imperial ? visibility / METERS_PER_MILE : visibility / 1000
+  const distance = visibility === null ? null : animatedDistance
   const fullScale = imperial
     ? `${Math.round(FULL_VISIBILITY_METERS / METERS_PER_MILE)} mi`
     : `${FULL_VISIBILITY_METERS / 1000} km`

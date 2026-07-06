@@ -3,6 +3,7 @@ import { useWeatherStore } from '../store/useWeatherStore'
 import { BentoCard } from './BentoCard'
 import { WindIcon } from './icons'
 import { formatSpeed, msTo, speedUnitFor } from '../utils/units'
+import { useCountUp } from '../hooks/useCountUp'
 import './MetricCards.css'
 
 const DIRECTIONS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
@@ -71,9 +72,13 @@ export function WindCard(): JSX.Element | null {
   // the shortest arc (e.g. 350° -> 10° turns +20°, never -340°).
   const spin = useRef<NeedleSpin | null>(null)
 
+  // Hooks run unconditionally (before the null guard) to satisfy hook rules.
+  const speedUnit = speedUnitFor(unit)
+  const targetSpeed = weather ? Math.round(msTo(speedUnit, weather.current.windSpeed)) : 0
+  const animatedSpeed = useCountUp(targetSpeed, 900)
+
   if (!weather) return null
 
-  const speedUnit = speedUnitFor(unit)
   const { windSpeed, windDirection, windGusts } = weather.current
   const { force, label: beaufortLabel } = beaufort(windSpeed)
 
@@ -95,7 +100,7 @@ export function WindCard(): JSX.Element | null {
           <span className="metric-label">Wind</span>
         </div>
         <div className="metric-value">
-          <span className="mx-value">{Math.round(msTo(speedUnit, windSpeed))}</span>
+          <span className="mx-value">{Math.round(animatedSpeed)}</span>
           <span className="mx-unit">{speedUnit === 'mph' ? 'mph' : 'km/h'}</span>
         </div>
         <div className="metric-sub">{directionLabel(windDirection)} · Gusts {formatSpeed(windGusts, speedUnit)}</div>

@@ -59,8 +59,13 @@ export function Win95StatusBar(): JSX.Element {
   const ticker = `${headlines.join('  ***  ')}  ***  `
 
   return (
-    <div className="w95-statusbar" role="status" aria-label="Status bar">
-      <div className="w95-panel w95-ready">{busy ? 'Working...' : 'Ready'}</div>
+    <div className="w95-statusbar" aria-label="Status bar">
+      {/* Only the ready/busy transition is worth announcing — the outer bar
+          used to carry role="status" too, which turned the once-a-second
+          clock tick into a screen-reader live-region re-announcement. */}
+      <div className="w95-panel w95-ready" role="status">
+        {busy ? 'Working...' : 'Ready'}
+      </div>
 
       <div className="w95-panel w95-ticker" aria-hidden="true">
         <div className="w95-ticker-inner">

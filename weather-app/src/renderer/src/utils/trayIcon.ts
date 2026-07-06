@@ -4,13 +4,17 @@
 const CANVAS_SIZE = 64
 
 /**
- * Renders the rounded integer temperature as a small flat badge (a rounded
- * square, navy fill, bold white numeral) and returns it as a PNG data URL for
- * use as the Windows tray icon. A solid high-contrast badge — rather than a
- * transparent glyph — is deliberate: it reads clearly whether the taskbar is
- * set to a light or dark system theme.
+ * Renders the rounded integer temperature as a small flat badge and returns
+ * it as a PNG data URL for use as the Windows tray icon. A solid
+ * high-contrast badge — rather than a transparent glyph — is deliberate: it
+ * reads clearly whether the taskbar is set to a light or dark system theme.
+ *
+ * When `isWin95` is set, the badge switches to a square (0-radius) navy tile
+ * in a period system font instead of the modern rounded Segoe-UI badge —
+ * every other win95-scoped surface zeroes radii and swaps fonts, and the
+ * tray sits in the taskbar the whole time that theme is active.
  */
-export function renderTrayIcon(roundedTemperature: number): string | null {
+export function renderTrayIcon(roundedTemperature: number, isWin95 = false): string | null {
   const canvas = document.createElement('canvas')
   canvas.width = CANVAS_SIZE
   canvas.height = CANVAS_SIZE
@@ -20,9 +24,13 @@ export function renderTrayIcon(roundedTemperature: number): string | null {
   const text = String(roundedTemperature)
 
   ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE)
-  ctx.fillStyle = '#14203a'
+  ctx.fillStyle = isWin95 ? '#000080' : '#14203a'
   ctx.beginPath()
-  ctx.roundRect(1, 1, CANVAS_SIZE - 2, CANVAS_SIZE - 2, CANVAS_SIZE * 0.22)
+  if (isWin95) {
+    ctx.rect(1, 1, CANVAS_SIZE - 2, CANVAS_SIZE - 2)
+  } else {
+    ctx.roundRect(1, 1, CANVAS_SIZE - 2, CANVAS_SIZE - 2, CANVAS_SIZE * 0.22)
+  }
   ctx.fill()
 
   // Three-character readings (e.g. "-12", "104") need a smaller face to
@@ -31,7 +39,7 @@ export function renderTrayIcon(roundedTemperature: number): string | null {
   ctx.fillStyle = '#ffffff'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  ctx.font = `700 ${fontSize}px "Segoe UI", Arial, sans-serif`
+  ctx.font = `700 ${fontSize}px ${isWin95 ? '"Tahoma", "MS Sans Serif", sans-serif' : '"Segoe UI", Arial, sans-serif'}`
   // Numerals optically sit a touch high in most fonts' em box; nudge down.
   ctx.fillText(text, CANVAS_SIZE / 2, CANVAS_SIZE / 2 + CANVAS_SIZE * 0.03)
 

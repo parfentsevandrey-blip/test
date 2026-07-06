@@ -60,12 +60,6 @@
   gap: clamp(7px, 0.9vw, 14px);
   padding: 0 clamp(6px, 0.8vw, 12px);
   border-radius: var(--radius-sm);
-  transition: background-color 0.2s var(--ease-out), transform 0.26s var(--ease-spring-soft);
-}
-
-.df-row:hover {
-  background: var(--control-active);
-  transform: translateY(-1px);
 }
 
 /* ---------- Weekday (+ optional date sub-label) ---------- */
@@ -79,20 +73,13 @@
   justify-content: center;
   line-height: 1.15;
   overflow: hidden;
-  /* Slightly dimmed at rest; hover "strengthens" the weekday. */
+  /* Slightly dimmed at rest; today's row alone "strengthens" the weekday —
+     rows have no click handler, so hover no longer implies interactivity. */
   opacity: 0.82;
-  scale: 1;
-  transform-origin: left center;
-  transition: opacity 0.25s var(--ease-out), scale 0.3s var(--ease-spring-soft);
 }
 
-.df-row:hover .df-day-col,
 .df-row.is-today .df-day-col {
   opacity: 1;
-}
-
-.df-row:hover .df-day-col {
-  scale: 1.045;
 }
 
 .df-day {
@@ -201,11 +188,6 @@
   height: clamp(4px, 0.8vh, 6px);
   border-radius: var(--radius-pill);
   background: var(--track);
-  transition: transform 0.3s var(--ease-spring-soft);
-}
-
-.df-row:hover .df-track {
-  transform: scaleY(1.3);
 }
 
 /*
@@ -221,6 +203,12 @@
   background-image: linear-gradient(90deg, var(--info), var(--accent));
   background-repeat: no-repeat;
   overflow: hidden;
+  /* Every sibling gauge in the app (humidity ring, UV marker, vis gauge,
+     wind needle) glides on data change; this bar used to hard-teleport. */
+  transition:
+    left 0.6s var(--ease-out),
+    width 0.6s var(--ease-out),
+    background-position-x 0.6s var(--ease-out);
 }
 
 /* Hover sheen: a skewed glint sweeps once across the fill (600ms).
@@ -270,16 +258,7 @@
   box-shadow:
     0 0 0 2px var(--control-bg),
     0 0 5px var(--accent-glow);
-  scale: 1;
-  transition: box-shadow 0.3s var(--ease-out), scale 0.4s var(--ease-spring);
-}
-
-/* The dot "wakes up" when its row is inspected. */
-.df-row:hover .df-now-dot {
-  box-shadow:
-    0 0 0 2px var(--control-bg),
-    0 0 10px 2px var(--accent-glow);
-  scale: 1.3;
+  transition: left 0.6s var(--ease-out);
 }
 
 /* ============================================================
@@ -293,16 +272,9 @@
 [data-theme='win95'] .df-row,
 [data-theme='win95'] .df-day-col,
 [data-theme='win95'] .df-track,
+[data-theme='win95'] .df-fill,
 [data-theme='win95'] .df-now-dot {
   transition: none;
-}
-
-[data-theme='win95'] .df-row:hover,
-[data-theme='win95'] .df-row:hover .df-day-col,
-[data-theme='win95'] .df-row:hover .df-track,
-[data-theme='win95'] .df-row:hover .df-now-dot {
-  transform: none;
-  scale: 1;
 }
 
 [data-theme='win95'] .df-fill::after {
@@ -349,20 +321,13 @@
   .df-row,
   .df-day-col,
   .df-track,
+  .df-fill,
   .df-now-dot {
     transition: none;
   }
 
   .df-row:hover .df-fill::after {
     animation: none;
-  }
-
-  .df-row:hover,
-  .df-row:hover .df-day-col,
-  .df-row:hover .df-track,
-  .df-row:hover .df-now-dot {
-    transform: none;
-    scale: 1;
   }
 }
 

@@ -3,6 +3,7 @@ import './DailyForecast.css'
 import { useWeatherStore } from '../store/useWeatherStore'
 import { BentoCard } from './BentoCard'
 import { WeatherIcon } from './WeatherIcon'
+import { CalendarIcon } from './icons'
 import { getConditionInfo } from '../utils/weatherCondition'
 import { formatTemperature, formatWeekday } from '../utils/units'
 
@@ -39,20 +40,7 @@ export function DailyForecast(): JSX.Element | null {
     <BentoCard span="bento-daily" floatDelay={0.3}>
       <div className="df-root">
         <div className="card-title df-title">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={1.8}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <rect x="3.5" y="5" width="17" height="15.5" rx="3" />
-            <line x1="3.5" y1="9.5" x2="20.5" y2="9.5" />
-            <line x1="8.5" y1="3" x2="8.5" y2="6.5" />
-            <line x1="15.5" y1="3" x2="15.5" y2="6.5" />
-          </svg>
+          <CalendarIcon />
           10-Day Forecast
         </div>
 

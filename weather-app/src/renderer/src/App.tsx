@@ -65,6 +65,7 @@ export function App(): JSX.Element {
   const refresh = useWeatherStore((s) => s.refresh)
   const weather = useWeatherStore((s) => s.weather)
   const status = useWeatherStore((s) => s.status)
+  const isRefreshing = useWeatherStore((s) => s.isRefreshing)
   const theme = useWeatherStore((s) => s.theme)
   const unit = useWeatherStore((s) => s.unit)
 
@@ -153,12 +154,12 @@ export function App(): JSX.Element {
   useEffect(() => {
     if (!weather) return
     const rounded = Math.round(celsiusTo(unit, weather.current.temperature))
-    const dataUrl = renderTrayIcon(rounded)
+    const dataUrl = renderTrayIcon(rounded, resolved === 'win95')
     if (!dataUrl) return
     const condition = getConditionInfo(weather.current.weatherCode).label
     const tooltip = `${weather.location.name} — ${formatTemperature(weather.current.temperature, unit)}, ${condition}`
     window.api?.updateTray?.(dataUrl, tooltip)
-  }, [weather, unit])
+  }, [weather, unit, resolved])
 
   const isWin95 = resolved === 'win95'
   const busy = status === 'loading' || status === 'locating'
@@ -188,7 +189,7 @@ export function App(): JSX.Element {
             <UnitToggle />
             <ThemeToggle />
             <button
-              className={`icon-btn${status === 'loading' ? ' spinning' : ''}`}
+              className={`icon-btn${status === 'loading' || isRefreshing ? ' spinning' : ''}`}
               onClick={() => void refresh()}
               aria-label="Refresh weather"
               title="Refresh weather"

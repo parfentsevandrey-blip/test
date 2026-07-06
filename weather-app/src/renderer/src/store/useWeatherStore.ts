@@ -70,9 +70,14 @@ interface WeatherStoreState {
   favorites: GeoLocation[]
   status: WeatherStatus
   error: string | null
+  /** True only for the duration of a background refresh() call — independent of `status`, which
+      only reflects the initial-load/city-switch lifecycle. Drives the header refresh button's spin. */
+  isRefreshing: boolean
   searchQuery: string
   searchResults: GeoLocation[]
   isSearching: boolean
+  /** Set when search() itself failed (network/geocoding outage) — distinct from a genuine zero-result search. */
+  searchError: string | null
 
   /** Called once on app start: restores the last location, otherwise tries geolocation, otherwise falls back to a default city. */
   init: () => Promise<void>
@@ -97,9 +102,11 @@ export const useWeatherStore = create<WeatherStoreState>((set, get) => ({
   favorites: loadStoredFavorites(),
   status: 'idle',
   error: null,
+  isRefreshing: false,
   searchQuery: '',
   searchResults: [],
   isSearching: false,
+  searchError: null,
 
   init: async () => {
     const stored = loadStoredLocation()
@@ -118,7 +125,7 @@ export const useWeatherStore = create<WeatherStoreState>((set, get) => ({
   },
 
   selectLocation: async (location: GeoLocation) => {
-    set({ status: 'loading', error: null, location, searchResults: [], searchQuery: '' })
+    set({ status: 'loading', error: null, location, searchResults: [], searchQuery: '', searchError: null })
     try {
       const weather = await fetchWeatherData(location)
       set({ weather, status: 'ready' })
@@ -136,16 +143,19 @@ export const useWeatherStore = create<WeatherStoreState>((set, get) => ({
   refresh: async () => {
     const { location } = get()
     if (!location) return
+    set({ isRefreshing: true })
     try {
       const weather = await fetchWeatherData(location)
       set({ weather, status: 'ready', error: null })
     } catch (err) {
       set({ error: err instanceof Error ? err.message : 'Failed to refresh weather' })
+    } finally {
+      set({ isRefreshing: false })
     }
   },
 
   search: async (query: string) => {
-    set({ searchQuery: query })
+    set({ searchQuery: query, searchError: null })
     if (query.trim().length < 2) {
       set({ searchResults: [], isSearching: false })
       return
@@ -159,13 +169,17 @@ export const useWeatherStore = create<WeatherStoreState>((set, get) => ({
       set({ searchResults: results, isSearching: false })
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') return
-      set({ isSearching: false })
+      set({
+        isSearching: false,
+        searchResults: [],
+        searchError: err instanceof Error ? err.message : 'Search unavailable'
+      })
     }
   },
 
   clearSearch: () => {
     searchAbortController?.abort()
-    set({ searchQuery: '', searchResults: [], isSearching: false })
+    set({ searchQuery: '', searchResults: [], isSearching: false, searchError: null })
   },
 
   toggleUnit: () => {

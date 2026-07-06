@@ -31,6 +31,7 @@ export interface HourlyForecastPoint {
   precipitationProbability: number
   weatherCode: number
   isDay: boolean
+  pressure: number
 }
 
 export interface DailyForecastPoint {

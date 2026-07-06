@@ -7,6 +7,9 @@ import './retro.css'
 
 /** How long the paperclip politely waits before offering unsolicited help. */
 const APPEAR_DELAY_MS = 3500
+/** The bubble sits over the last card's chart area, so it auto-hides instead
+    of permanently covering that data — still reopenable via the clip. */
+const AUTO_DISMISS_MS = 7000
 
 const GENERIC_TIPS = [
   'It looks like you are checking the weather. Would you like some help with that?',
@@ -75,6 +78,15 @@ export function Win95Clippy(): JSX.Element | null {
     const timer = setTimeout(() => setVisible(true), APPEAR_DELAY_MS)
     return () => clearTimeout(timer)
   }, [])
+
+  useEffect(() => {
+    // Gated on `visible` too — otherwise this timer (like the appear-delay
+    // one above) starts counting from mount, so the bubble could dismiss
+    // itself only a moment after actually appearing on screen.
+    if (!visible || !bubbleOpen) return undefined
+    const timer = setTimeout(() => setBubbleOpen(false), AUTO_DISMISS_MS)
+    return () => clearTimeout(timer)
+  }, [visible, bubbleOpen, tipIndex])
 
   if (!visible) return null
 

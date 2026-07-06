@@ -4,6 +4,7 @@ import './HourlyForecast.css'
 import { useWeatherStore } from '../store/useWeatherStore'
 import { BentoCard } from './BentoCard'
 import { WeatherIcon } from './WeatherIcon'
+import { ClockIcon } from './icons'
 import { getConditionInfo } from '../utils/weatherCondition'
 import { formatTemperature, formatHour, celsiusTo } from '../utils/units'
 
@@ -120,7 +121,10 @@ export function HourlyForecast(): JSX.Element | null {
   return (
     <BentoCard span="bento-hourly">
       <div className="hourly-forecast">
-        <div className="hourly-title">Next 24 Hours</div>
+        <div className="card-title hf-title">
+          <ClockIcon />
+          Next 24 Hours
+        </div>
         <div
           className="hf-scroll"
           role="region"
@@ -186,7 +190,7 @@ export function HourlyForecast(): JSX.Element | null {
                     <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
                   </linearGradient>
                 </defs>
-                <path d={areaPath} fill={`url(#${gradientId})`} stroke="none" />
+                <path className="hf-curve-area" d={areaPath} fill={`url(#${gradientId})`} stroke="none" />
                 <path className="hf-curve-line" d={linePath} />
                 <circle
                   className="hf-curve-dot-ring"

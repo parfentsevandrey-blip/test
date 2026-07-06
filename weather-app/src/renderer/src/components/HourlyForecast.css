@@ -181,6 +181,14 @@
   stroke-linecap: round;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
+  /* Point count is fixed at 24 every render, so the path interpolates cleanly
+     instead of hard-cutting on every refresh (the Now-dot beside it never stops
+     pulsing, so a static curve read as visibly out of sync). */
+  transition: d 0.6s var(--ease-out);
+}
+
+.hf-curve-area {
+  transition: d 0.6s var(--ease-out);
 }
 
 .hf-curve-dot {
@@ -337,6 +345,11 @@
     scale: 1;
   }
 
+  .hf-curve-line,
+  .hf-curve-area {
+    transition: none;
+  }
+
   .hf-hover-highlight {
     transition: none;
   }
@@ -348,6 +361,11 @@
 [data-theme='win95'] .hf-curve-dot-ring,
 [data-theme='win95'] .hf-tooltip {
   animation: none;
+}
+
+[data-theme='win95'] .hf-curve-line,
+[data-theme='win95'] .hf-curve-area {
+  transition: none;
 }
 
 [data-theme='win95'] .hf-hover-highlight {

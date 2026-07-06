@@ -264,6 +264,17 @@
   color: var(--text-tertiary);
 }
 
+.hero-stat-trend {
+  width: 9px;
+  height: 9px;
+  margin-left: 1px;
+  flex-shrink: 0;
+}
+
+.hero-stat-trend--falling {
+  transform: rotate(180deg);
+}
+
 .hero-stat-value {
   font-size: clamp(10.5px, 1.7vh, 13px);
   line-height: 1.25;

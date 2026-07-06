@@ -81,6 +81,35 @@ export function RainIcon(): JSX.Element {
   )
 }
 
+export function LocationPinIcon(): JSX.Element {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
+      <circle cx="12" cy="10" r="3" />
+    </svg>
+  )
+}
+
+export function CalendarIcon(): JSX.Element {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3.5" y="5" width="17" height="15.5" rx="3" />
+      <line x1="3.5" y1="9.5" x2="20.5" y2="9.5" />
+      <line x1="8.5" y1="3" x2="8.5" y2="6.5" />
+      <line x1="15.5" y1="3" x2="15.5" y2="6.5" />
+    </svg>
+  )
+}
+
+export function ClockIcon(): JSX.Element {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx={12} cy={12} r={9} />
+      <path d="M12 7v5l3.5 2" />
+    </svg>
+  )
+}
+
 export function CompassNeedleIcon({ rotation }: { rotation: number }): JSX.Element {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">

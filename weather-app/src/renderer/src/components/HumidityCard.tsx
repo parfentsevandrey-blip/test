@@ -3,6 +3,7 @@ import { BentoCard } from './BentoCard'
 import { DropletIcon } from './icons'
 import { formatTemperature } from '../utils/units'
 import { clamp01 } from '../utils/math'
+import { useCountUp } from '../hooks/useCountUp'
 import './MetricCards.css'
 
 const RING_RADIUS = 17.5
@@ -28,6 +29,10 @@ export function HumidityCard(): JSX.Element | null {
   const weather = useWeatherStore((s) => s.weather)
   const unit = useWeatherStore((s) => s.unit)
 
+  // Hook runs unconditionally (before the null guard) to satisfy hook rules.
+  const targetHumidity = weather ? Math.round(weather.current.humidity) : 0
+  const animatedHumidity = useCountUp(targetHumidity, 700)
+
   if (!weather) return null
 
   const humidity = weather.current.humidity
@@ -45,7 +50,7 @@ export function HumidityCard(): JSX.Element | null {
           <span className="metric-label">Humidity</span>
         </div>
         <div className="metric-value">
-          <span className="mx-value">{Math.round(humidity)}</span>
+          <span className="mx-value">{Math.round(animatedHumidity)}</span>
           <span className="mx-unit">%</span>
         </div>
         <div className="metric-sub">{humidityDescriptor(humidity)}</div>
