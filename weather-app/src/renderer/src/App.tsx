@@ -19,6 +19,9 @@ import { Win95StatusBar } from './components/retro/Win95StatusBar'
 import { Win95Clippy } from './components/retro/Win95Clippy'
 import { Win95BootSplash } from './components/retro/Win95BootSplash'
 import { Win95Dialog } from './components/retro/Win95Dialog'
+import { celsiusTo, formatTemperature } from './utils/units'
+import { getConditionInfo } from './utils/weatherCondition'
+import { renderTrayIcon } from './utils/trayIcon'
 
 function RefreshIcon(): JSX.Element {
   return (
@@ -63,6 +66,7 @@ export function App(): JSX.Element {
   const weather = useWeatherStore((s) => s.weather)
   const status = useWeatherStore((s) => s.status)
   const theme = useWeatherStore((s) => s.theme)
+  const unit = useWeatherStore((s) => s.unit)
 
   const updatedAgo = useUpdatedAgo(weather?.fetchedAt)
 
@@ -140,6 +144,21 @@ export function App(): JSX.Element {
   useEffect(() => {
     sceneRef.current?.setWeatherData(weather)
   }, [weather])
+
+  // Windows system-tray icon: shows the live temperature as a numeral instead
+  // of a static app glyph, so the reading is visible without opening the
+  // window. window.api is only present inside the Electron preload context
+  // (absent when this bundle is loaded in a plain browser), so this is a
+  // silent no-op anywhere else.
+  useEffect(() => {
+    if (!weather) return
+    const rounded = Math.round(celsiusTo(unit, weather.current.temperature))
+    const dataUrl = renderTrayIcon(rounded)
+    if (!dataUrl) return
+    const condition = getConditionInfo(weather.current.weatherCode).label
+    const tooltip = `${weather.location.name} — ${formatTemperature(weather.current.temperature, unit)}, ${condition}`
+    window.api?.updateTray?.(dataUrl, tooltip)
+  }, [weather, unit])
 
   const isWin95 = resolved === 'win95'
   const busy = status === 'loading' || status === 'locating'

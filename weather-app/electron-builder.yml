@@ -12,6 +12,11 @@ files:
   - '!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
 asarUnpack:
   - resources/**
+# Copied out of the asar so the main process can load it at runtime as the
+# tray icon's fallback image (nativeImage can't read from inside the archive).
+extraResources:
+  - from: build/icon.png
+    to: icon.png
 win:
   executableName: cinematic-weather
   target:

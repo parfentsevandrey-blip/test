@@ -1,7 +1,11 @@
-import { contextBridge } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
 
 const api = {
-  platform: process.platform
+  platform: process.platform,
+  /** Pushes a freshly-rendered tray icon (PNG data URL) + tooltip to the main process. */
+  updateTray: (dataUrl: string, tooltip: string): void => {
+    ipcRenderer.send('tray:update', dataUrl, tooltip)
+  }
 }
 
 try {
