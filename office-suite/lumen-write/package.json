@@ -1,0 +1,45 @@
+{
+  "name": "lumen-write",
+  "productName": "Lumen Write",
+  "version": "1.0.0",
+  "description": "A premium, minimalist word processor.",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "build:win": "ELECTRON_MIRROR=https://cdn.npmmirror.com/binaries/electron/ ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/ electron-builder --win --x64"
+  },
+  "build": {
+    "appId": "com.lumen.write",
+    "productName": "Lumen Write",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "src/**/*",
+      "package.json",
+      "!**/*.map"
+    ],
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] },
+        { "target": "portable", "arch": ["x64"] }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "portable": {
+      "artifactName": "LumenWrite-portable-${version}.${ext}"
+    }
+  }
+}
