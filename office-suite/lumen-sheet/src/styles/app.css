@@ -1,0 +1,483 @@
+/* app.css — Lumen Sheet component styles that theme.css does not already
+   provide: the document/grid surface, formula bar, cell editor, swatch
+   popovers, sheet tabs, and small dialog content helpers. Reuses theme.css
+   tokens exclusively — no new hardcoded colors/spacing. */
+
+#app {
+  overflow: hidden;
+}
+
+/* ---------- Titlebar extras ---------- */
+
+.brand-glyph {
+  width: 11px;
+  height: 11px;
+}
+
+.titlebar__title-input {
+  font: inherit;
+  font-weight: 600;
+}
+
+/* ---------- Menubar dropdown wrapper ---------- */
+
+.menubar__item {
+  position: relative;
+  -webkit-app-region: no-drag;
+  user-select: none;
+}
+
+/* ---------- Toolbar extras ---------- */
+
+.toolbar {
+  -webkit-app-region: no-drag;
+  position: relative;
+}
+
+.toolbar__group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.swatch-btn {
+  position: relative;
+}
+
+.swatch-btn__bar {
+  position: absolute;
+  left: 5px;
+  right: 5px;
+  bottom: 4px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--accent-600);
+  pointer-events: none;
+}
+
+.number-format-select {
+  min-width: 108px;
+}
+
+/* ---------- Formula bar ---------- */
+
+.formula-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 32px;
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.formula-bar__fx {
+  font-family: var(--font-doc);
+  font-style: italic;
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--accent-600);
+  width: 20px;
+  text-align: center;
+  flex: none;
+}
+
+.formula-bar__ref {
+  flex: none;
+  width: 64px;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--ink-600);
+  padding: 3px var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  text-align: center;
+}
+
+.formula-bar__input {
+  flex: 1;
+  height: 24px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  padding: 0 var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-base);
+  color: var(--ink-900);
+}
+
+.formula-bar__input:hover {
+  border-color: var(--border-subtle);
+}
+
+.formula-bar__input:focus {
+  outline: none;
+  border-color: var(--accent-500);
+  background: var(--surface-0);
+}
+
+/* ---------- Sheet canvas / grid ---------- */
+
+.sheet-viewport {
+  flex: 1;
+  overflow: auto;
+  background: var(--surface-1);
+  padding: var(--space-5);
+}
+
+.sheet-canvas {
+  display: inline-block;
+  background: var(--surface-canvas);
+  box-shadow: var(--shadow-canvas);
+  border-radius: var(--radius-canvas);
+  min-width: 100%;
+}
+
+.lumen-grid {
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  font-size: var(--text-base);
+  zoom: var(--grid-zoom, 1);
+}
+
+.lumen-grid th,
+.lumen-grid td {
+  border-right: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.lumen-grid thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  height: 26px;
+  background: var(--surface-2);
+  color: var(--ink-600);
+  font-weight: 500;
+  font-size: var(--text-xs);
+  text-align: center;
+  user-select: none;
+  cursor: default;
+}
+
+.lumen-grid thead th.corner-cell {
+  left: 0;
+  z-index: 5;
+}
+
+.lumen-grid .row-header {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--surface-2);
+  color: var(--ink-600);
+  font-size: var(--text-xs);
+  text-align: center;
+  user-select: none;
+}
+
+.lumen-grid .col-resize-handle {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 6;
+}
+
+.lumen-grid .row-resize-handle {
+  position: absolute;
+  left: 0;
+  bottom: -3px;
+  width: 100%;
+  height: 6px;
+  cursor: row-resize;
+  z-index: 6;
+}
+
+.lumen-grid thead th,
+.lumen-grid td.row-header {
+  position: sticky;
+}
+
+.lumen-grid .th-inner,
+.lumen-grid .rh-inner {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cell {
+  position: relative;
+  padding: 0 5px;
+  color: var(--ink-900);
+  text-align: left;
+  cursor: cell;
+  vertical-align: middle;
+}
+
+.cell.is-numeric {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.cell.align-left { text-align: left; }
+.cell.align-center { text-align: center; }
+.cell.align-right { text-align: right; }
+
+.cell.is-bold { font-weight: 700; }
+.cell.is-italic { font-style: italic; }
+.cell.is-underline { text-decoration: underline; }
+
+.cell.is-error {
+  color: var(--danger);
+  font-family: var(--font-mono);
+}
+
+.cell.has-border {
+  border: 1px solid var(--ink-200);
+}
+
+.cell.is-selected {
+  outline: 2px solid var(--accent-600);
+  outline-offset: -2px;
+  z-index: 1;
+}
+
+.cell.is-in-range {
+  background: var(--accent-soft);
+}
+
+.cell.is-find-match {
+  background: var(--accent-soft-strong);
+}
+
+.cell-editor {
+  position: fixed;
+  z-index: 100;
+  box-sizing: border-box;
+  border: 2px solid var(--accent-600);
+  background: var(--surface-0);
+  color: var(--ink-900);
+  font: inherit;
+  font-family: var(--font-mono);
+  padding: 0 4px;
+  outline: none;
+  min-width: 60px;
+}
+
+/* ---------- Sheet tabs ---------- */
+
+.sheet-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 34px;
+  min-height: 34px;
+  padding: 0 var(--space-3);
+  background: var(--surface-1);
+  border-top: 1px solid var(--border-subtle);
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.sheet-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 var(--space-3);
+  border-radius: 999px;
+  font-size: var(--text-sm);
+  color: var(--ink-600);
+  border-bottom: 2px solid transparent;
+  flex: none;
+  cursor: default;
+  user-select: none;
+}
+
+.sheet-tab:hover {
+  background: var(--surface-2);
+  color: var(--ink-900);
+}
+
+.sheet-tab.is-active {
+  color: var(--ink-900);
+  font-weight: 600;
+  border-bottom-color: var(--accent-600);
+}
+
+.sheet-tab__input {
+  width: 80px;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-weight: inherit;
+  color: inherit;
+}
+
+.sheet-tab__input:focus {
+  outline: none;
+}
+
+.sheet-tabs__add {
+  flex: none;
+}
+
+/* ---------- Status bar extras ---------- */
+
+.statusbar__stat {
+  white-space: nowrap;
+}
+
+.statusbar__stat b {
+  color: var(--ink-700);
+  font-weight: 600;
+}
+
+/* ---------- Swatch popover ---------- */
+
+.popover {
+  position: fixed;
+  z-index: 400;
+  background: var(--surface-0);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-3);
+}
+
+.swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 20px);
+  gap: 5px;
+  margin-bottom: var(--space-2);
+}
+
+.swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  cursor: default;
+}
+
+.swatch:hover {
+  outline: 2px solid var(--accent-500);
+  outline-offset: 1px;
+}
+
+.popover__custom-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.popover__custom-row input[type='color'] {
+  width: 28px;
+  height: 22px;
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+.popover__clear {
+  font-size: var(--text-xs);
+  color: var(--ink-600);
+}
+
+.popover__clear:hover {
+  color: var(--accent-700);
+}
+
+/* ---------- Function helper popover ---------- */
+
+.fn-list {
+  max-height: 260px;
+  overflow-y: auto;
+  width: 260px;
+}
+
+.fn-list__item {
+  padding: 6px var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+}
+
+.fn-list__item:hover {
+  background: var(--accent-soft);
+  color: var(--accent-700);
+}
+
+.fn-list__item b {
+  font-family: var(--font-mono);
+}
+
+.fn-list__item div {
+  font-size: var(--text-xs);
+  color: var(--ink-400);
+}
+
+/* ---------- Dialog content helpers ---------- */
+
+.dialog p {
+  color: var(--ink-600);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  margin: 0 0 var(--space-3);
+}
+
+.dialog label {
+  display: block;
+  font-size: var(--text-xs);
+  color: var(--ink-600);
+  margin-bottom: var(--space-1);
+}
+
+.dialog input[type='text'],
+.dialog input[type='search'] {
+  width: 100%;
+  height: 32px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0 var(--space-2);
+  background: var(--surface-0);
+  color: var(--ink-900);
+  margin-bottom: var(--space-3);
+}
+
+.dialog input[type='text']:focus,
+.dialog input[type='search']:focus {
+  outline: none;
+  border-color: var(--accent-500);
+}
+
+.dialog__about-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.dialog__find-results {
+  font-size: var(--text-xs);
+  color: var(--ink-400);
+  margin-top: -6px;
+  margin-bottom: var(--space-3);
+}
+
+.context-menu {
+  position: fixed;
+}

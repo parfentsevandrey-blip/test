@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self';" />
+<title>Lumen Write</title>
+<link rel="stylesheet" href="./src/styles/theme.css" />
+<link rel="stylesheet" href="./src/styles/app.css" />
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- Titlebar -->
+  <div class="titlebar">
+    <div class="titlebar__brand">
+      <span class="brand-mark">W</span>
+      <span>Lumen Write</span>
+    </div>
+    <div class="titlebar__title-wrap">
+      <input id="doc-title" class="titlebar__title" value="Untitled document" spellcheck="false" />
+      <span id="dirty-dot" class="dirty-dot" hidden title="Unsaved changes"></span>
+    </div>
+    <button class="btn-icon" id="theme-toggle" data-tooltip="Toggle theme"></button>
+  </div>
+
+  <!-- Menu bar -->
+  <div class="menubar" id="menubar"></div>
+
+  <!-- Toolbar -->
+  <div class="toolbar" id="toolbar"></div>
+
+  <!-- Document area -->
+  <main class="doc-area" id="doc-area">
+    <div class="page-wrapper" id="page-wrapper">
+      <div class="page" id="page" contenteditable="true" spellcheck="true"></div>
+    </div>
+  </main>
+
+  <!-- Status bar -->
+  <div class="statusbar">
+    <span id="word-count">0 words</span>
+    <span id="char-count">0 characters</span>
+    <span class="statusbar__spacer"></span>
+    <div class="statusbar__zoom">
+      <span id="zoom-label">100%</span>
+      <input type="range" id="zoom-slider" min="50" max="200" step="10" value="100" />
+    </div>
+  </div>
+
+  <!-- Dialog host -->
+  <div id="dialog-root"></div>
+</div>
+
+<script type="module" src="./src/renderer.js"></script>
+</body>
+</html>

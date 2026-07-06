@@ -1,0 +1,291 @@
+/*
+  Lumen Write — app-specific styles.
+  Loaded after theme.css. Only adds component styles theme.css doesn't
+  already cover — never redefine colors/spacing tokens here.
+*/
+
+/* ---------- Titlebar additions ---------- */
+
+.titlebar__title-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.titlebar__title-wrap .titlebar__title {
+  flex: none;
+  width: auto;
+  min-width: 120px;
+}
+
+.dirty-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-600);
+  flex: none;
+}
+
+/* ---------- Menu bar ---------- */
+
+.menubar__container {
+  position: relative;
+}
+
+.menubar__container > .menu {
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+}
+
+/* ---------- Toolbar ---------- */
+
+.toolbar__group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  position: relative;
+}
+
+.select--font-family {
+  min-width: 130px;
+}
+
+.select--font-size {
+  min-width: 58px;
+}
+
+.select--format-block {
+  min-width: 128px;
+}
+
+/* Color swatch trigger buttons: icon + tiny color chip beneath */
+
+.btn-swatch {
+  position: relative;
+}
+
+.btn-swatch__chip {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: 4px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--ink-900);
+}
+
+.swatch-popover {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 6px;
+  background: var(--surface-0);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-3);
+  z-index: 250;
+  width: 168px;
+}
+
+.swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin-bottom: var(--space-3);
+}
+
+.swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  cursor: default;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.swatch:hover {
+  transform: scale(1.1);
+  border-color: var(--border-strong);
+}
+
+.swatch-popover__custom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--ink-600);
+}
+
+.swatch-popover__custom input[type="color"] {
+  width: 32px;
+  height: 24px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: none;
+  padding: 0;
+}
+
+/* ---------- Document area ---------- */
+
+.doc-area {
+  flex: 1;
+  overflow: auto;
+  background: var(--surface-1);
+  padding: var(--space-7) 0;
+}
+
+.page-wrapper {
+  display: flex;
+  justify-content: center;
+  zoom: 1;
+}
+
+.page {
+  width: 816px;
+  min-height: 1056px;
+  background: var(--surface-canvas);
+  box-shadow: var(--shadow-canvas);
+  border-radius: var(--radius-canvas);
+  padding: 96px 88px;
+  font-family: var(--font-doc);
+  font-size: var(--text-md);
+  line-height: 1.6;
+  color: var(--ink-900);
+  outline: none;
+}
+
+.page:focus {
+  outline: none;
+}
+
+.page h1,
+.page h2,
+.page h3 {
+  font-family: var(--font-doc);
+  line-height: 1.25;
+  margin: 0.8em 0 0.4em;
+}
+
+.page h1 { font-size: 2em; }
+.page h2 { font-size: 1.5em; }
+.page h3 { font-size: 1.2em; }
+
+.page p {
+  margin: 0 0 1em;
+}
+
+.page img {
+  max-width: 100%;
+}
+
+.page table {
+  border-collapse: collapse;
+  margin: 1em 0;
+}
+
+.page table td,
+.page table th {
+  border: 1px solid var(--border-subtle);
+  padding: 6px 10px;
+  min-width: 80px;
+  min-height: 24px;
+  vertical-align: top;
+}
+
+.page hr {
+  border: none;
+  border-top: 1px solid var(--border-strong);
+  margin: 1.5em 0;
+}
+
+.page a {
+  color: var(--accent-700);
+}
+
+/* ---------- Dialog content helpers ---------- */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: var(--space-4);
+}
+
+.field label {
+  font-size: var(--text-xs);
+  color: var(--ink-600);
+}
+
+.field input[type="text"],
+.field input[type="number"],
+.field input[type="url"] {
+  height: 32px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-0);
+  color: var(--ink-900);
+  font-size: var(--text-base);
+}
+
+.field input:focus {
+  outline: none;
+  border-color: var(--accent-500);
+}
+
+.field-row {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.field-row .field {
+  flex: 1;
+}
+
+.dialog__body {
+  font-size: var(--text-base);
+  color: var(--ink-700);
+}
+
+.dialog--about {
+  text-align: center;
+}
+
+.dialog--about .brand-mark {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-lg);
+  font-size: 26px;
+  margin: 0 auto var(--space-4);
+}
+
+.dialog--about h2 {
+  margin-bottom: 4px;
+}
+
+.dialog--about .about-version {
+  color: var(--ink-400);
+  font-size: var(--text-xs);
+  margin-bottom: var(--space-4);
+}
+
+.dialog--about p {
+  margin: 0 0 var(--space-2);
+}
+
+.dialog--find .field-row {
+  align-items: flex-end;
+}
+
+.dialog__hint {
+  font-size: var(--text-xs);
+  color: var(--ink-400);
+  margin-top: -8px;
+  margin-bottom: var(--space-4);
+}
