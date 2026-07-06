@@ -1,0 +1,41 @@
+{
+  "name": "dark-fantasy-tray",
+  "productName": "Dark Fantasy Tray",
+  "version": "1.0.0",
+  "description": "Windows tray mini-app: click the tray icon to pop up an interactive 3D pixel-art dark-fantasy interior with animated inhabitants and easter eggs.",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "icons": "node build/make-icons.js",
+    "start": "npm run icons && electron .",
+    "dist": "npm run icons && electron-builder --win"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "dependencies": {
+    "three": "^0.160.0"
+  },
+  "build": {
+    "appId": "com.example.darkfantasytray",
+    "productName": "Dark Fantasy Tray",
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**/*",
+      "assets/**/*"
+    ],
+    "win": {
+      "target": [
+        { "target": "portable", "arch": ["x64"] },
+        { "target": "nsis", "arch": ["x64"] }
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

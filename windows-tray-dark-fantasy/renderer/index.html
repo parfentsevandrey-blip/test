@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none';" />
+<title>Забытая обитель</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div id="frame">
+  <div id="titlebar">
+    <span id="title">✦ Забытая обитель ✦</span>
+    <button id="closeBtn" title="Закрыть (Esc)" aria-label="Закрыть">×</button>
+  </div>
+  <div id="stage">
+    <canvas id="scene-canvas"></canvas>
+    <div id="hint"></div>
+    <div id="banner"></div>
+  </div>
+</div>
+
+<script src="vendor/three.min.js"></script>
+<script src="src/pixelArt.js"></script>
+<script src="src/room.js"></script>
+<script src="src/fireplace.js"></script>
+<script src="src/characters.js"></script>
+<script src="src/props.js"></script>
+<script src="src/easterEggs.js"></script>
+<script src="src/app.js"></script>
+</body>
+</html>

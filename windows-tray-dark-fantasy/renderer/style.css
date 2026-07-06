@@ -1,0 +1,148 @@
+* {
+  box-sizing: border-box;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+  font-family: "Consolas", "Courier New", monospace;
+  cursor: default;
+}
+
+#frame {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #1c1626;
+  box-shadow:
+    0 0 0 2px #000,
+    0 0 0 5px #55466e,
+    0 0 0 7px #000,
+    0 14px 34px rgba(0, 0, 0, 0.65);
+  overflow: hidden;
+}
+
+#titlebar {
+  -webkit-app-region: drag;
+  height: 32px;
+  flex: 0 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6px 0 12px;
+  background: linear-gradient(180deg, #3a2f4d 0%, #241d30 100%);
+  border-bottom: 3px solid #000;
+}
+
+#title {
+  color: #d8c9a3;
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-shadow: 1px 1px 0 #000, 0 0 8px rgba(212, 175, 55, 0.35);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#closeBtn {
+  -webkit-app-region: no-drag;
+  width: 22px;
+  height: 22px;
+  border: 2px solid #000;
+  background: #4c3e63;
+  color: #e8ddc7;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  box-shadow: inset -2px -2px 0 rgba(0, 0, 0, 0.4), inset 2px 2px 0 rgba(255, 255, 255, 0.08);
+}
+
+#closeBtn:hover {
+  background: #8c1c2b;
+  color: #fff;
+}
+
+#stage {
+  position: relative;
+  flex: 1 1 auto;
+  background: #000;
+  overflow: hidden;
+}
+
+#scene-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+#hint {
+  position: absolute;
+  left: 10px;
+  bottom: 8px;
+  color: #d8c9a3;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+  pointer-events: none;
+  min-height: 14px;
+  opacity: 0.9;
+}
+
+#banner {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(0.85);
+  padding: 10px 16px;
+  background: #1c1626;
+  color: #d4af37;
+  font-size: 12px;
+  text-align: center;
+  letter-spacing: 0.5px;
+  line-height: 1.6;
+  box-shadow:
+    0 0 0 2px #000,
+    0 0 0 4px #6a2c91,
+    0 0 0 6px #000,
+    0 10px 24px rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  max-width: 80%;
+}
+
+#banner.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.tint-flash {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tint-flash.go {
+  animation-name: df-tint-flash;
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
+}
+
+@keyframes df-tint-flash {
+  0% { opacity: 0; }
+  15% { opacity: 0.55; }
+  100% { opacity: 0; }
+}
