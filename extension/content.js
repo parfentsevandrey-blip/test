@@ -23,10 +23,37 @@
   // Циан сам шлёт search-offers с ПРАВИЛЬНЫМ фильтром по этому ЖК. Перехватываем
   // тело (jsonQuery), чтобы не угадывать структуру фильтра. Ставится на
   // document_start (см. manifest), до скриптов страницы.
+  //
+  // На странице ЖК, помимо основного списка квартир, search-offers-desktop могут
+  // дёргать и ПОБОЧНЫЕ виджеты («Похожие ЖК», «Рекомендуем», объявления другого
+  // комплекса того же застройщика) — их jsonQuery относится к ДРУГОМУ newobject.
+  // Наивный «запоминаем последний увиденный запрос» рискует подхватить именно
+  // такой виджет вместо актуального (в т.ч. отфильтрованного) списка. Поэтому,
+  // если знаем ID текущего ЖК из URL и запрос явно указывает на ЖК-ID через
+  // newobject/geo — сверяем и отбрасываем явные непопадания. Если запрос ни на
+  // какой ЖК явно не указывает (обычный поиск по фильтрам/карте) — проверка не
+  // применяется, поведение как раньше.
+  function currentJkIdFromUrl() {
+    const href = location.href;
+    const id = (href.match(/-(\d+)\/(?:\?|#|$)/) || [])[1] ||
+      (href.match(/newobject(?:%5B0%5D|\[0\])?=(\d+)/) || [])[1] || null;
+    return id ? parseInt(id, 10) : null;
+  }
+  function queryMismatchesJk(jq, jkId) {
+    const ids = [];
+    if (jq.newobject && Array.isArray(jq.newobject.value)) ids.push(...jq.newobject.value);
+    const geo = jq.geo && jq.geo.value;
+    if (Array.isArray(geo)) geo.forEach((g) => { if (g && (g.type === "newobject" || g.type === "jk") && g.id != null) ids.push(g.id); });
+    if (!ids.length) return false;                         // запрос не привязан к конкретному ЖК — не проверяем
+    return !ids.map(Number).includes(Number(jkId));
+  }
   function rememberQuery(body) {
     try {
       const b = typeof body === "string" ? JSON.parse(body) : body;
-      if (b && b.jsonQuery && b.jsonQuery._type) window.__cianCapturedQuery = b.jsonQuery;
+      if (!(b && b.jsonQuery && b.jsonQuery._type)) return;
+      const jkId = /zhiloy-kompleks|newobject(?:%5B0%5D|\[0\])?=/i.test(location.href) ? currentJkIdFromUrl() : null;
+      if (jkId && queryMismatchesJk(b.jsonQuery, jkId)) return;   // запрос про другой ЖК (виджет «похожие») — игнорируем
+      window.__cianCapturedQuery = b.jsonQuery;
     } catch (e) { /* ignore */ }
   }
   try {
