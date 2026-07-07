@@ -21,6 +21,7 @@
   // Диагностика качества сбора текущего run() — сбрасывается в начале
   // collectAll(), пишется из apiFetch()/paginateSegment(). null вне сбора.
   let health = null;
+  const isHealthWarn = (h) => !!(h && h.requests && ((h.retries / h.requests > 0.15) || h.totalDrift > 0));
 
   // === Перехват настоящего запроса страницы =================================
   // Циан сам шлёт search-offers с ПРАВИЛЬНЫМ фильтром по этому ЖК. Перехватываем
@@ -606,12 +607,65 @@
     return { hasPrev, appeared, vanished, cheaper, pricier };
   }
 
+  // ===== Экспорт/импорт бэкапа истории (реальный срок, цены) + снимков =======
+  // Единственная страховка от потери накопленных за недели/месяцы данных при
+  // переустановке расширения/смене машины — всё это живёт только в localStorage.
+  const BACKUP_VERSION = 1;
+  function exportBackupData() {
+    return { version: BACKUP_VERSION, exportedAt: new Date().toISOString(), history: loadHistory(), snapshots: loadSnapshots() };
+  }
+  // Честный field-level merge, а не перезапись: если запись есть и там, и там,
+  // берём самую раннюю firstSeen/minAdded, объединяем addeds/cianIds/priceLog —
+  // иначе импорт с другой машины мог бы затереть более точные локальные данные.
+  function mergeHistoryFlats(a, b) {
+    const out = {}, keys = new Set([...Object.keys(a.flats || {}), ...Object.keys(b.flats || {})]);
+    keys.forEach((k) => {
+      const x = (a.flats || {})[k], y = (b.flats || {})[k];
+      if (x && !y) { out[k] = x; return; }
+      if (y && !x) { out[k] = y; return; }
+      const addeds = Array.from(new Set([...(x.addeds || []), ...(y.addeds || [])])).sort((p, q) => p - q);
+      const cianIds = Array.from(new Set([...(x.cianIds || []), ...(y.cianIds || [])]));
+      const priceLog = [...(x.priceLog || []), ...(y.priceLog || [])]
+        .filter((e, i, arr) => arr.findIndex((e2) => e2.ts === e.ts) === i)
+        .sort((p, q) => p.ts - q.ts).slice(-12);
+      out[k] = {
+        firstSeen: Math.min(x.firstSeen || Infinity, y.firstSeen || Infinity),
+        minAdded: x.minAdded != null && y.minAdded != null ? Math.min(x.minAdded, y.minAdded) : (x.minAdded != null ? x.minAdded : y.minAdded),
+        lastSeen: Math.max(x.lastSeen || 0, y.lastSeen || 0),
+        addeds, cianIds, priceLog,
+      };
+    });
+    return { flats: out };
+  }
+  // Снимки — точка во времени; построчный мерж бессмысленен, берём более свежий по каждому ЖК/выборке.
+  function mergeSnapshots(a, b) {
+    const out = {}, keys = new Set([...Object.keys(a.subjects || {}), ...Object.keys(b.subjects || {})]);
+    keys.forEach((k) => {
+      const x = (a.subjects || {})[k], y = (b.subjects || {})[k];
+      out[k] = !x || (y && y.ts > x.ts) ? y : x;
+    });
+    return { subjects: out };
+  }
+  function importBackupData(text) {
+    let data;
+    // download() всегда добавляет BOM в начало файла (нужен для .xls) — свои же
+    // экспортированные бэкапы иначе не распарсились бы обратно.
+    try { data = JSON.parse(String(text).replace(/^﻿/, "")); } catch (e) { throw new Error("файл повреждён или это не JSON"); }
+    if (!data || typeof data !== "object" || !(data.history || data.snapshots)) throw new Error("не похоже на бэкап этого расширения (нет history/snapshots)");
+    const mergedHist = data.history && data.history.flats ? mergeHistoryFlats(loadHistory(), data.history) : loadHistory();
+    const mergedSnap = data.snapshots && data.snapshots.subjects ? mergeSnapshots(loadSnapshots(), data.snapshots) : loadSnapshots();
+    saveHistory(mergedHist); saveSnapshots(mergedSnap);
+    return { flats: Object.keys(mergedHist.flats || {}).length, subjects: Object.keys(mergedSnap.subjects || {}).length };
+  }
+
   // ---------- генерация Excel (SpreadsheetML 2003) ----------
   const esc = (s) => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   function cell(c) {
     if (c == null || c.v == null || c.v === "") return c && c.s ? `<Cell ss:StyleID="${c.s}"/>` : "<Cell/>";
     const a = []; if (c.s) a.push(`ss:StyleID="${c.s}"`); if (c.href) a.push(`ss:HRef="${esc(c.href)}"`); if (c.merge) a.push(`ss:MergeAcross="${c.merge}"`);
-    return `<Cell ${a.join(" ")}><Data ss:Type="${c.t || "String"}">${esc(c.v)}</Data></Cell>`;
+    // Data ДО Comment — таков порядок дочерних элементов Cell в SpreadsheetML 2003.
+    const comment = c.comment ? `<Comment ss:Author="Циан → Excel"><ss:Data xmlns="http://www.w3.org/TR/REC-html40">${esc(c.comment)}</ss:Data></Comment>` : "";
+    return `<Cell ${a.join(" ")}><Data ss:Type="${c.t || "String"}">${esc(c.v)}</Data>${comment}</Cell>`;
   }
   const rowXml = (cells) => "<Row>" + cells.map(cell).join("") + "</Row>";
   // opts: { freezeRows, freezeCols, autoFilterRows } — freezeCols дополняет
@@ -639,6 +693,14 @@
   }
   const HEADERS = ["№", "Категория", "Площадь, м²", "Этаж", "Корпус / секция", "Год дома", "Материал", "Метро", "До метро, мин", "Тип продавца", "Продавец", "Отделка/ремонт", "Источник отделки", "Цена, ₽", "Цена за м², ₽", "Откл. от средней", "Индекс привлекательности", "Δ цены с 1-й выгрузки, %", "Δ цены с прошлой, %", "Дата подачи (Циан)", "Срок Циан, дн", "Реальный срок, дн", "Переподач", "Дублей", "Первая дата (оценка)", "Описание", "Ссылка"];
   const COLW = [34, 78, 72, 56, 105, 62, 86, 110, 78, 88, 140, 130, 92, 105, 92, 86, 90, 92, 88, 100, 80, 95, 72, 60, 110, 320, 68];
+  // Пояснения к расчётным столбцам, у которых нет текстового объяснения на
+  // самом листе (в отличие от «Откл. от средней» — та объяснена подзаголовком
+  // листа и легендой в Сводке). Комментарий виден при наведении в Excel.
+  const HEADER_NOTES = {
+    "Индекс привлекательности": "Эвристика 0-100: ниже цена/м² к средней по комнатности + качество отделки + срок экспозиции. Не финансовая оценка.",
+    "Δ цены с 1-й выгрузки, %": "Изменение цены этой квартиры с САМОЙ ПЕРВОЙ выгрузки, которую видело расширение. Пусто, если раньше не встречалась.",
+    "Δ цены с прошлой, %": "Изменение цены с ПРЕДЫДУЩЕЙ выгрузки этого ЖК/выборки (см. лист «Изменения»). Пусто на первой выгрузке.",
+  };
 
   // Тепловая карта ₽/м²: насколько лот ниже/выше средней цены за м² по его
   // категории (зелёный = дешевле/недооценён, красный = дороже/переоценён). База —
@@ -683,7 +745,7 @@
     });
   }
   function dataSheet(name, title, sub, rows) {
-    let xml = rowXml([{ v: title, s: "title", merge: HEADERS.length - 1 }]) + rowXml([{ v: sub, s: "sub", merge: HEADERS.length - 1 }]) + rowXml([{}]) + rowXml(HEADERS.map((h) => ({ v: h, s: "hdr" })));
+    let xml = rowXml([{ v: title, s: "title", merge: HEADERS.length - 1 }]) + rowXml([{ v: sub, s: "sub", merge: HEADERS.length - 1 }]) + rowXml([{}]) + rowXml(HEADERS.map((h) => ({ v: h, s: "hdr", comment: HEADER_NOTES[h] })));
     const N = (v, s) => ({ v, t: v != null ? "Number" : "String", s });
     rows.forEach((r, i) => {
       let floorVal = "";                                   // один столбец «этаж/этажность» -> «5/15»
@@ -713,6 +775,20 @@
   const ROOM_OF_CAT = { "Студия": [9], "Своб. планировка": [7], "1": [1], "2": [2], "3": [3], "4+": [4, 5, 6] };
   const avg = (a) => a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : null;
   const num = (v) => (v == null ? { v: "—" } : { v, t: "Number", s: "num" });
+  // Юникод-спарклайн распределения (форма гистограммы одной строкой текста).
+  // При малой выборке уменьшаем число бакетов, иначе почти все пустые.
+  const SPARK_CHARS = "▁▂▃▄▅▆▇█";
+  function sparkline(values) {
+    const v = values.filter((x) => x != null);
+    if (v.length < 5) return null;
+    const n = v.length >= 40 ? 12 : v.length >= 15 ? 8 : 5;
+    const lo = Math.min(...v), hi = Math.max(...v);
+    if (hi <= lo) return SPARK_CHARS[4].repeat(n);   // все значения одинаковые
+    const buckets = new Array(n).fill(0);
+    v.forEach((x) => { const i = Math.min(n - 1, Math.floor((x - lo) / (hi - lo) * n)); buckets[i]++; });
+    const maxB = Math.max(...buckets);
+    return buckets.map((c) => SPARK_CHARS[Math.max(0, Math.round((c / maxB) * (SPARK_CHARS.length - 1)))]).join("");
+  }
   function summarySheet(subj, rows, totalsByRoom, totalInJk, health) {
     const present = CATS.filter((c) => rows.some((r) => r.category === c)), today = fmtDate(new Date());
     let xml = rowXml([{ v: `${subj.title}${subj.id ? " (ID " + subj.id + ")" : ""} — сводка`, s: "title", merge: 5 }]) +
@@ -739,6 +815,11 @@
       const sub = rows.filter((r) => r.category === c), pr = sub.map((r) => r.price).filter((x) => x != null), pm = sub.map((r) => r.ppm).filter((x) => x != null);
       xml += rowXml([{ v: c }, num(pr.length ? Math.min(...pr) : null), num(avg(pr)), num(pr.length ? Math.max(...pr) : null), num(pm.length ? Math.min(...pm) : null), num(pm.length ? Math.max(...pm) : null)]);
     });
+    // спарклайн распределения ₽/м² — форма гистограммы одной строкой (перекос/бимодальность видны сразу)
+    const allSpark = sparkline(rows.map((r) => r.ppm));
+    if (allSpark) {
+      xml += rowXml([{ v: "Распределение ₽/м² (весь набор)" }, { v: allSpark, s: "mono", merge: 4 }]);
+    }
     // бенчмарк по этажу: низкий/средний/высокий/последний — частый фактор
     // ценообразования в Москве; это СПРАВОЧНАЯ таблица, тепловую карту она не меняет.
     const withFloor = rows.filter((r) => r.floor != null && r.floors != null && r.ppm != null);
@@ -803,7 +884,7 @@
     xml += rowXml([{ v: "и за всю историю наблюдений; сброс/переподача даты Циан его не уменьшает. Чем чаще выгружать — тем точнее.", s: "sub" }]);
     // диагностика качества сбора — сохраняется в архивном файле, не только в эфемерной панели
     if (health && health.requests) {
-      const warn = (health.retries / health.requests > 0.15) || health.totalDrift > 0;
+      const warn = isHealthWarn(health);
       xml += rowXml([{}]) + rowXml([{ v: "ДИАГНОСТИКА СБОРА", s: "bold" }]);
       xml += rowXml([{ v: `Запросов: ${health.requests} · ретраев (429/5xx/сеть): ${health.retries} · дрейф total между страницами: ${health.totalDrift}`, s: warn ? "warn" : "sub" }]);
       if (warn) xml += rowXml([{ v: "Много ретраев/нестабильный total — Циан мог троттлить сбор; проверьте охват выше и по возможности выгрузите повторно.", s: "sub" }]);
@@ -976,12 +1057,12 @@
     const sellersXml = sellersSheet(subj, rows); if (sellersXml) sheets.push(sellersXml);
     const buildingsXml = buildingsSheet(subj, rows); if (buildingsXml) sheets.push(buildingsXml);
     const heatStyles = HEAT.map((c, i) => `<Style ss:ID="h${i + 1}"><NumberFormat ss:Format="#,##0"/><Interior ss:Color="${c}" ss:Pattern="Solid"/><Alignment ss:Horizontal="Right" ss:Vertical="Center"/></Style>`).join("");
-    const styles = `<Styles><Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Vertical="Center"/><Font ss:FontName="Calibri" ss:Size="11"/></Style><Style ss:ID="hdr"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#1F2A44" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/></Style><Style ss:ID="title"><Font ss:Bold="1" ss:Size="13"/></Style><Style ss:ID="sub"><Font ss:Italic="1" ss:Color="#555555" ss:Size="9"/></Style><Style ss:ID="bold"><Font ss:Bold="1"/></Style><Style ss:ID="num"><NumberFormat ss:Format="#,##0"/></Style><Style ss:ID="area"><NumberFormat ss:Format="0.0"/></Style><Style ss:ID="link"><Font ss:Color="#1155CC" ss:Underline="Single"/></Style><Style ss:ID="warn"><Font ss:Bold="1" ss:Color="#C25400"/></Style><Style ss:ID="scoreHi"><Font ss:Bold="1" ss:Color="#006100"/><Interior ss:Color="#C6EFCE" ss:Pattern="Solid"/></Style><Style ss:ID="scoreLo"><Font ss:Bold="1" ss:Color="#9C0006"/><Interior ss:Color="#FFC7CE" ss:Pattern="Solid"/></Style><Style ss:ID="pgood"><Font ss:Color="#1D7A43" ss:Bold="1"/></Style><Style ss:ID="pbad"><Font ss:Color="#C25400" ss:Bold="1"/></Style>${heatStyles}</Styles>`;
+    const styles = `<Styles><Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Vertical="Center"/><Font ss:FontName="Calibri" ss:Size="11"/></Style><Style ss:ID="hdr"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#1F2A44" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/></Style><Style ss:ID="title"><Font ss:Bold="1" ss:Size="13"/></Style><Style ss:ID="sub"><Font ss:Italic="1" ss:Color="#555555" ss:Size="9"/></Style><Style ss:ID="bold"><Font ss:Bold="1"/></Style><Style ss:ID="num"><NumberFormat ss:Format="#,##0"/></Style><Style ss:ID="area"><NumberFormat ss:Format="0.0"/></Style><Style ss:ID="link"><Font ss:Color="#1155CC" ss:Underline="Single"/></Style><Style ss:ID="warn"><Font ss:Bold="1" ss:Color="#C25400"/></Style><Style ss:ID="scoreHi"><Font ss:Bold="1" ss:Color="#006100"/><Interior ss:Color="#C6EFCE" ss:Pattern="Solid"/></Style><Style ss:ID="scoreLo"><Font ss:Bold="1" ss:Color="#9C0006"/><Interior ss:Color="#FFC7CE" ss:Pattern="Solid"/></Style><Style ss:ID="pgood"><Font ss:Color="#1D7A43" ss:Bold="1"/></Style><Style ss:ID="pbad"><Font ss:Color="#C25400" ss:Bold="1"/></Style><Style ss:ID="mono"><Font ss:FontName="Consolas" ss:Size="13" ss:Color="#1F2A44"/></Style>${heatStyles}</Styles>`;
     return `<?xml version="1.0" encoding="UTF-8"?>\n<?mso-application progid="Excel.Sheet"?>\n<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" xmlns:html="http://www.w3.org/TR/REC-html40">${styles}${sheets.join("")}</Workbook>`;
   }
   const slug = (s) => s.toLowerCase().replace(/\s+/g, "-").replace(/[^0-9a-zа-яё_\-]/g, "") || "jk";
-  function download(xml, name) {
-    const blob = new Blob(["﻿", xml], { type: "application/vnd.ms-excel;charset=utf-8" });
+  function download(content, name, mime) {
+    const blob = new Blob(["﻿", content], { type: (mime || "application/vnd.ms-excel") + ";charset=utf-8" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
     document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
   }
@@ -1063,7 +1144,7 @@
     // диагностика качества сбора: заметный % ретраев или нестабильный total — сигнал, что Циан троттлит/капчит
     if (health && health.requests) {
       st.retries = health.retries; st.totalDrift = health.totalDrift;
-      st.healthWarn = (health.retries / health.requests > 0.15) || health.totalDrift > 0;
+      st.healthWarn = isHealthWarn(health);
     }
     st.fact = pickFact();   // случайный любопытный факт (из жизни/кода/природы), не про выборку
     return st;
@@ -1148,8 +1229,12 @@
     font-size:12px;font-weight:700;padding:7px 12px;border-radius:9px;cursor:pointer}
   .err .retry:hover{background:var(--err-border)}
   .foot{padding:11px 16px;border-top:1px solid var(--border);font-size:11px;color:var(--text-2);line-height:1.45}
-  .lnk{color:#2c6ecb;cursor:pointer;text-decoration:underline}
-  .btn:focus-visible,.min:focus-visible,.fab:focus-visible,.err .retry:focus-visible{
+  .lnk{color:#2c6ecb;cursor:pointer;text-decoration:underline;background:none;border:none;font:inherit;padding:0}
+  .bk-row{margin-top:13px;display:flex;gap:14px;font-size:11.5px}
+  .bk{margin-top:8px;font-size:11.5px;border-radius:10px;padding:8px 10px;display:none;line-height:1.4}
+  .bk.ok{background:var(--ok-bg);color:var(--ok-text)}
+  .bk.bad{background:var(--err-bg);color:var(--err-text);border:1px solid var(--err-border)}
+  .btn:focus-visible,.min:focus-visible,.fab:focus-visible,.err .retry:focus-visible,.lnk:focus-visible{
     outline:2px solid #4c8dff;outline-offset:2px}`;
 
   const ui = { mounted: false };
@@ -1189,6 +1274,12 @@
               '<div class="file" id="s-file"><span>✓</span><span id="s-fname"></span></div>' +
             '</div>' +
             '<div class="err" id="err"><span class="et" id="err-text"></span><button class="retry" id="err-retry">↻ Повторить</button></div>' +
+            '<div class="bk-row">' +
+              '<button class="lnk" id="bk-export" title="Скачать историю (реальный срок, цены) и снимки в JSON">📦 Бэкап истории</button>' +
+              '<button class="lnk" id="bk-import" title="Восстановить/перенести историю из файла бэкапа">📥 Восстановить</button>' +
+            '</div>' +
+            '<input type="file" id="bk-file" accept="application/json,.json" style="display:none">' +
+            '<div class="bk" id="bk-status"></div>' +
           '</div>' +
           '<div class="foot" id="foot">Открой страницу ЖК с квартирами на www.cian.ru и нажми кнопку. Данные берутся из твоей сессии.</div>' +
         '</div>' +
@@ -1203,6 +1294,7 @@
       meta: $("#s-meta"), health: $("#s-health"), healthtext: $("#s-healthtext"), cats: $("#s-cats"), fact: $("#s-fact"), facttext: $("#s-facttext"),
       file: $("#s-file"), fname: $("#s-fname"), foot: $("#foot"),
       err: $("#err"), errText: $("#err-text"), errRetry: $("#err-retry"),
+      bkExport: $("#bk-export"), bkImport: $("#bk-import"), bkFile: $("#bk-file"), bkStatus: $("#bk-status"),
     };
     const expand = (e) => { if (e) e.stopPropagation(); ui.root.classList.remove("collapsed"); try { refreshHeader(); } catch (err) { /* ignore */ } };
     const collapse = (e) => { if (e) e.stopPropagation(); ui.root.classList.add("collapsed"); };
@@ -1213,6 +1305,28 @@
     ui.root.addEventListener("click", () => { if (ui.root.classList.contains("collapsed")) expand(); });
     ui.el.go.addEventListener("click", () => run());
     ui.el.errRetry.addEventListener("click", () => { ui.el.err.style.display = "none"; run(); });
+    ui.el.bkExport.addEventListener("click", () => {
+      try {
+        const data = exportBackupData(), n = Object.keys(data.history.flats || {}).length;
+        download(JSON.stringify(data), `cian-excel-backup_${new Date().toISOString().slice(0, 10)}.json`, "application/json");
+        showBkStatus(`Бэкап сохранён: ${n} записей в истории.`, true);
+      } catch (e) { showBkStatus("Не удалось создать бэкап: " + e.message, false); }
+    });
+    ui.el.bkImport.addEventListener("click", () => ui.el.bkFile.click());
+    ui.el.bkFile.addEventListener("change", () => {
+      const file = ui.el.bkFile.files && ui.el.bkFile.files[0];
+      ui.el.bkFile.value = "";   // разрешить повторный выбор того же файла
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const res = importBackupData(String(reader.result));
+          showBkStatus(`Импортировано: ${res.flats} в истории, ${res.subjects} снимков. Учтётся при следующей выгрузке.`, true);
+        } catch (e) { showBkStatus("Ошибка импорта: " + e.message, false); }
+      };
+      reader.onerror = () => showBkStatus("Не удалось прочитать файл.", false);
+      reader.readAsText(file);
+    });
     ui.mounted = true;
     console.log("[cian-excel] панель добавлена");
   }
@@ -1285,6 +1399,14 @@
     ui.el.errText.textContent = msg;
   }
 
+  // Статус экспорта/импорта бэкапа истории — отдельный от showError()/run(),
+  // т.к. кнопка «Повторить» в err-баннере жёстко привязана к повтору сбора.
+  function showBkStatus(msg, ok) {
+    ui.el.bkStatus.textContent = msg;
+    ui.el.bkStatus.className = "bk " + (ok ? "ok" : "bad");
+    ui.el.bkStatus.style.display = "block";
+  }
+
   async function run() {
     if (ui._busy) return;
     const subj = detectSubject();   // не из кэша: тема тоже могла смениться (напр. смена ЖК без перезагрузки)
@@ -1314,7 +1436,7 @@
       const rows = offers.map(normalize).sort((a, b) => (a.ppm == null) - (b.ppm == null) || (a.ppm || 0) - (b.ppm || 0));
       const expInfo = enrichExposure(rows, subj.id);   // реальный срок экспозиции (учёт сбросов)
       showProgress("Готовлю Excel…", 1);
-      const filename = `cian_${subj.slug}_${new Date().toISOString().slice(0, 10)}.xls`;
+      const filename = `cian_${subj.slug}_${new Date().toISOString().slice(0, 10)}_${rows.length}лотов${isHealthWarn(collectHealth) ? "_проверить" : ""}.xls`;
       download(buildWorkbook(subj, rows, totalsByRoom, totalInJk, collectHealth), filename);
       showResults(computeStats(rows, totalInJk, expInfo, collectHealth), filename);
       ui.el.go.textContent = "📊 Выгрузить снова";
