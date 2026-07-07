@@ -7,7 +7,6 @@ import {
   parseCellRefStr,
   cellKeyFromRC,
   parseRangeStr,
-  iterRangeKeys,
   colToLetter,
   shiftRefString,
 } from './refUtils.js';
@@ -60,10 +59,36 @@ export class Sheet {
     this.dependents = new Map(); // key -> Set<key> of formulas that read this key
 
     // v1.1 additions — see README for full semantics of each.
-    this.freezeRow = false; // pin row 1 while scrolling
-    this.freezeCol = false; // pin column A while scrolling
     this.charts = []; // [{ id, type, range, x, y, w, h, title }]
     this.condFormats = []; // [{ id, range, kind, op, value, color, minColor, midColor, maxColor }]
+
+    // v1.2 ("depth") additions — see README for full semantics of each.
+    // freezeRow/freezeCol are *counts* (0 = none): freezeRow=N pins the top N
+    // rows, freezeCol=M pins the left M columns — the general Freeze Panes
+    // mechanism. (Older .lsheet files stored these as booleans; fromJSON()
+    // below migrates true/false -> 1/0.)
+    this.freezeRow = 0;
+    this.freezeCol = 0;
+    this.merges = []; // ["B2:D4", ...] — top-left cell of each range is the visible anchor
+    this.dataValidations = []; // [{ id, range, values: ["Yes","No"] }]
+    this.pageSetup = { pageSize: 'letter', orientation: 'portrait', printArea: null }; // printArea: explicit range string, or null = use the used range
+  }
+
+  /** The merge (as a parsed range) containing (col,row) anywhere within it (anchor or hidden interior), or null. */
+  getMergeContainingCell(col, row) {
+    for (const m of this.merges) {
+      const r = parseRangeStr(m);
+      if (r && col >= r.startCol && col <= r.endCol && row >= r.startRow && row <= r.endRow) return r;
+    }
+    return null;
+  }
+
+  /** Resolve (col,row) to the cell key formulas should actually read: a merged
+   * region's top-left anchor if (col,row) falls inside one, else itself. */
+  _resolveMergeAnchorKey(col, row) {
+    const merge = this.getMergeContainingCell(col, row);
+    if (merge) return cellKeyFromRC(merge.startCol, merge.startRow);
+    return cellKeyFromRC(col, row);
   }
 
   getCell(key) {
@@ -221,10 +246,14 @@ export class Sheet {
     }
   }
 
+  // A ref/range that lands inside a merged region resolves to that region's
+  // top-left anchor cell — see README "Cell merge" section. This applies
+  // whether the merge's own non-anchor cells were already blanked out by the
+  // merge action or not, so formula semantics don't depend on that detail.
   _getCellValueForFormula(ref) {
     const parsed = parseCellRefStr(ref);
     if (!parsed) return new FormulaError('#REF!');
-    const key = cellKeyFromRC(parsed.col, parsed.row);
+    const key = this._resolveMergeAnchorKey(parsed.col, parsed.row);
     const cell = this.cells.get(key);
     if (!cell) return '';
     return cell.computed === undefined ? '' : cell.computed;
@@ -234,9 +263,12 @@ export class Sheet {
     const range = parseRangeStr(rangeRef);
     if (!range) return [];
     const out = [];
-    for (const key of iterRangeKeys(range)) {
-      const cell = this.cells.get(key);
-      out.push(cell && cell.computed !== undefined ? cell.computed : '');
+    for (let r = range.startRow; r <= range.endRow; r++) {
+      for (let c = range.startCol; c <= range.endCol; c++) {
+        const key = this._resolveMergeAnchorKey(c, r);
+        const cell = this.cells.get(key);
+        out.push(cell && cell.computed !== undefined ? cell.computed : '');
+      }
     }
     return out;
   }
@@ -348,6 +380,9 @@ export class Sheet {
       freezeCol: this.freezeCol,
       charts: this.charts,
       condFormats: this.condFormats,
+      merges: this.merges,
+      dataValidations: this.dataValidations,
+      pageSetup: this.pageSetup,
     };
   }
 
@@ -357,10 +392,23 @@ export class Sheet {
     sheet.colCount = data.colCount || DEFAULT_COLS;
     sheet.colWidths = data.colWidths || {};
     sheet.rowHeights = data.rowHeights || {};
-    sheet.freezeRow = !!data.freezeRow;
-    sheet.freezeCol = !!data.freezeCol;
+    // freezeRow/freezeCol used to be booleans (v1.1); migrate true/false -> 1/0
+    // so older .lsheet files still load under the new "how many rows/cols"
+    // Freeze Panes model.
+    sheet.freezeRow = typeof data.freezeRow === 'number' ? data.freezeRow : data.freezeRow ? 1 : 0;
+    sheet.freezeCol = typeof data.freezeCol === 'number' ? data.freezeCol : data.freezeCol ? 1 : 0;
     sheet.charts = Array.isArray(data.charts) ? data.charts.map((c) => ({ ...c })) : [];
     sheet.condFormats = Array.isArray(data.condFormats) ? data.condFormats.map((r) => ({ ...r })) : [];
+    sheet.merges = Array.isArray(data.merges) ? data.merges.slice() : [];
+    sheet.dataValidations = Array.isArray(data.dataValidations)
+      ? data.dataValidations.map((r) => ({ ...r, values: Array.isArray(r.values) ? r.values.slice() : [] }))
+      : [];
+    sheet.pageSetup = {
+      pageSize: 'letter',
+      orientation: 'portrait',
+      printArea: null,
+      ...(data.pageSetup || {}),
+    };
     const cells = data.cells || {};
     for (const key of Object.keys(cells)) {
       const c = cells[key];

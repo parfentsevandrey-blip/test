@@ -6,8 +6,10 @@ import { exec } from './editor.js';
 import { insertLink, insertImage, insertTable } from './toolbar.js';
 import { openFindReplace } from './findreplace.js';
 import { zoomBy, zoomReset } from './statusbar.js';
-import { aboutDialog, shortcutsDialog } from './dialogs.js';
+import { aboutDialog, shortcutsDialog, pageSetupDialog } from './dialogs.js';
 import { toggleSidebar } from './outline.js';
+import { getPageSetup, setPageSetup } from './pagination.js';
+import { insertTableOfContents } from './toc.js';
 import {
   newDocument,
   openDocument,
@@ -21,6 +23,11 @@ import {
   printDocument,
 } from './fileio.js';
 
+async function openPageSetup() {
+  const result = await pageSetupDialog(getPageSetup());
+  if (result) setPageSetup(result);
+}
+
 function menuDefs() {
   return [
     {
@@ -31,6 +38,8 @@ function menuDefs() {
         { label: 'Open Recent', submenu: 'recent' },
         { label: 'Save', shortcut: 'Ctrl+S', action: saveDocument },
         { label: 'Save As…', shortcut: 'Ctrl+Shift+S', action: saveDocumentAs },
+        { sep: true },
+        { label: 'Page Setup…', action: openPageSetup },
         { sep: true },
         { label: 'Export as PDF…', action: exportPdf },
         { label: 'Export as Word (.docx)…', action: exportDocx },
@@ -74,6 +83,8 @@ function menuDefs() {
         { label: 'Link…', action: insertLink },
         { label: 'Table…', action: insertTable },
         { label: 'Horizontal Rule', action: () => exec('insertHorizontalRule') },
+        { sep: true },
+        { label: 'Table of Contents', action: insertTableOfContents },
       ],
     },
     {

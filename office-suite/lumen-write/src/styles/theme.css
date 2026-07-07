@@ -71,7 +71,14 @@
   --shadow-sm: 0 1px 2px rgba(27, 26, 23, 0.05);
   --shadow-md: 0 4px 16px rgba(27, 26, 23, 0.07);
   --shadow-lg: 0 8px 30px rgba(27, 26, 23, 0.1);
-  --shadow-canvas: 0 2px 8px rgba(27, 26, 23, 0.06), 0 12px 36px rgba(27, 26, 23, 0.08);
+  /* The drop shadow alone reads as "card with a shadow," not paper. This
+   * adds one restrained inset highlight along the top edge — like the
+   * sheet is catching a hint of light from above — on top of the same
+   * two drop shadows. Barely perceptible on the already-white light-theme
+   * canvas (by design: principle 1 already makes the page the brightest
+   * surface in the window), it does real work in dark theme below, where
+   * the canvas itself is dark. */
+  --shadow-canvas: 0 2px 8px rgba(27, 26, 23, 0.06), 0 12px 36px rgba(27, 26, 23, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 
   /* Motion */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -123,7 +130,7 @@
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.32);
   --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.4);
-  --shadow-canvas: 0 2px 8px rgba(0, 0, 0, 0.3), 0 12px 36px rgba(0, 0, 0, 0.35);
+  --shadow-canvas: 0 2px 8px rgba(0, 0, 0, 0.3), 0 12px 36px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 
   --titlebar-bg: #171613;
   --titlebar-symbol: #f3f1eb;

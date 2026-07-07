@@ -36,10 +36,23 @@
     </aside>
 
     <main class="doc-area" id="doc-area">
-      <div class="start-screen" id="start-screen" hidden></div>
-      <div class="page-wrapper" id="page-wrapper">
-        <div class="page" id="page" contenteditable="true" spellcheck="true"></div>
+      <!-- Chrome, not canvas: the ruler lives in its own fixed row above the
+           scrollable page area (like Word/Docs), not inside the scrolling
+           flow itself — so it can never visually slice through a line of
+           body text mid-scroll the way a sticky-inside-scroll ruler would. -->
+      <div class="ruler-row" id="ruler-row">
+        <div class="ruler" id="ruler" aria-hidden="true"></div>
       </div>
+      <div class="doc-scroll" id="doc-scroll">
+        <div class="page-wrapper" id="page-wrapper">
+          <div class="page-stack" id="page-stack">
+            <div class="page-frames" id="page-frames"></div>
+            <div class="page" id="page" contenteditable="true" spellcheck="true"></div>
+            <div class="page-bands" id="page-bands"></div>
+          </div>
+        </div>
+      </div>
+      <div class="start-screen" id="start-screen" hidden></div>
     </main>
   </div>
 
@@ -48,6 +61,7 @@
     <span id="word-count">0 words</span>
     <span id="char-count">0 characters</span>
     <span id="reading-time">1 min read</span>
+    <span id="page-indicator">Page 1 of 1</span>
     <span class="statusbar__spacer"></span>
     <div class="statusbar__zoom">
       <span id="zoom-label">100%</span>

@@ -134,7 +134,11 @@ ipcMain.handle('dialog:open-import', async (event, kind) => {
 
 ipcMain.handle('dialog:save-export', async (event, kind, defaultName) => {
   const filters =
-    kind === 'csv' ? [{ name: 'CSV', extensions: ['csv'] }] : [{ name: 'Excel Workbook', extensions: ['xlsx'] }];
+    kind === 'csv'
+      ? [{ name: 'CSV', extensions: ['csv'] }]
+      : kind === 'pdf'
+        ? [{ name: 'PDF Document', extensions: ['pdf'] }]
+        : [{ name: 'Excel Workbook', extensions: ['xlsx'] }];
   const res = await dialog.showSaveDialog(mainWindow, {
     title: 'Export',
     defaultPath: defaultName,
@@ -294,6 +298,27 @@ ipcMain.handle('file:import-csv', async (event, filePath) => {
       rowCount: Math.max(100, range.e.r + 2),
       colCount: Math.max(26, range.e.c + 2),
     };
+  } catch (e) {
+    return { ok: false, error: String(e.message || e) };
+  }
+});
+
+// ---------------------------------------------------------------------------
+// PDF export (File > Page Setup + Export > PDF / File > Print)
+// ---------------------------------------------------------------------------
+// The renderer builds an off-screen "print-root" DOM node reproducing just
+// the print area (see src/renderer.js), scaled to fit one page, and a
+// dynamic `@page` CSS rule for the chosen size/orientation. We then render
+// *this already-loaded page* to PDF with `preferCSSPageSize: true` so
+// Chromium's print pipeline follows that `@page` rule instead of the
+// pageSize/landscape options — single-page scale-to-fit, not Excel's full
+// page-break-preview/tiling system (documented scope cut in the README).
+ipcMain.handle('file:export-pdf', async (event, filePath, options) => {
+  try {
+    if (!mainWindow) return { ok: false, error: 'No window' };
+    const data = await mainWindow.webContents.printToPDF({ printBackground: true, preferCSSPageSize: true, ...options });
+    fs.writeFileSync(filePath, data);
+    return { ok: true, filePath };
   } catch (e) {
     return { ok: false, error: String(e.message || e) };
   }

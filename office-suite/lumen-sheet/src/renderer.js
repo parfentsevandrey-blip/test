@@ -26,6 +26,7 @@ import { isError } from './formulaEngine.js';
 import { showToast } from './toast.js';
 
 const ROW_HEADER_WIDTH = 46;
+const HEADER_HEIGHT = 26; // matches `.lumen-grid thead th { height: 26px }` in app.css
 
 const FUNCTION_DOCS = [
   { name: 'SUM', args: '(number1, [number2, ...])', desc: 'Adds up numeric values.' },
@@ -104,6 +105,9 @@ let startScreenEl = null; // Start screen (template gallery + recent files)
 let fillHandleEl = null; // Fill handle
 let lastFillPreviewCells = [];
 let chartElements = new Map(); // chart id -> { el, titleEl, bodyEl } (Charts)
+let validationChevronEl = null; // Data validation dropdown affordance
+let validationChevronKey = null;
+let validationChevronRule = null;
 
 const TEMPLATES = {
   blank: { label: 'Blank', build: () => buildBlankTemplate() },
@@ -546,6 +550,10 @@ function menuItemsFor(name) {
         { type: 'sep' },
         { label: 'Export CSV…', onClick: exportCsv },
         { label: 'Export Excel (.xlsx)…', onClick: exportXlsx },
+        { label: 'Export PDF…', onClick: exportPdf },
+        { type: 'sep' },
+        { label: 'Page Setup…', onClick: openPageSetupDialog },
+        { label: 'Print…', shortcut: 'Ctrl+P', onClick: printSheet },
       ];
     case 'edit':
       return [
@@ -564,16 +572,11 @@ function menuItemsFor(name) {
         { label: 'Zoom Out', onClick: () => setZoom(zoom - 0.1) },
         { label: 'Reset Zoom', onClick: () => setZoom(1) },
         { type: 'sep' },
+        { label: 'Freeze Panes', onClick: freezePanesAtActive },
+        { label: 'Freeze Top Row', onClick: freezeTopRow },
+        { label: 'Freeze First Column', onClick: freezeFirstColumn },
         {
-          label: (workbook.activeSheet.freezeRow ? '✓ ' : '') + 'Freeze First Row',
-          onClick: () => toggleFreeze('row'),
-        },
-        {
-          label: (workbook.activeSheet.freezeCol ? '✓ ' : '') + 'Freeze First Column',
-          onClick: () => toggleFreeze('col'),
-        },
-        {
-          label: 'Unfreeze',
+          label: 'Unfreeze Panes',
           disabled: !workbook.activeSheet.freezeRow && !workbook.activeSheet.freezeCol,
           onClick: unfreezePanes,
         },
@@ -605,12 +608,17 @@ function menuItemsFor(name) {
         { label: 'Toggle Borders', onClick: toggleBorders },
         { label: 'Clear Formatting', onClick: clearFormatting },
         { type: 'sep' },
+        { label: 'Merge Cells', onClick: mergeSelection },
+        { label: 'Unmerge Cells', onClick: unmergeSelection },
+        { type: 'sep' },
         { label: 'Conditional Formatting…', onClick: openConditionalFormattingDialog },
       ];
     case 'data':
       return [
         { label: 'Sort Selection Ascending', onClick: () => sortSelection('asc') },
         { label: 'Sort Selection Descending', onClick: () => sortSelection('desc') },
+        { type: 'sep' },
+        { label: 'Data Validation…', onClick: openDataValidationDialog },
       ];
     case 'help':
       return [
@@ -799,6 +807,7 @@ function setZoom(value) {
   els.zoomLabel.textContent = Math.round(zoom * 100) + '%';
   els.zoomRange.value = String(Math.round(zoom * 100));
   updateFillHandlePosition();
+  updateValidationChevronPosition();
 }
 
 // ---------------------------------------------------------------------------
@@ -1140,10 +1149,33 @@ function deleteSheetTab(idx) {
 // Grid rendering
 // ---------------------------------------------------------------------------
 
+// Cumulative pixel offsets used to position the sticky frozen band (see
+// "Freeze panes" below) — colLefts[c] / rowTops[r] are the left/top a cell in
+// column c / row r would need for `position: sticky` to pin it exactly where
+// it already sits in normal flow. Column widths and row heights aren't
+// uniform, so these can't be computed from a single constant the way the
+// row-header gutter / column-header height can.
+function computeStickyOffsets(sheet) {
+  const colLefts = [];
+  let left = ROW_HEADER_WIDTH;
+  for (let c = 0; c < sheet.colCount; c++) {
+    colLefts.push(left);
+    left += sheet.colWidths[c] || DEFAULT_COL_WIDTH;
+  }
+  const rowTops = [];
+  let top = HEADER_HEIGHT;
+  for (let r = 0; r < sheet.rowCount; r++) {
+    rowTops.push(top);
+    top += sheet.rowHeights[r] || DEFAULT_ROW_HEIGHT;
+  }
+  return { colLefts, rowTops };
+}
+
 function renderGrid() {
   const sheet = workbook.activeSheet;
   cellElements = new Map();
   colElements = [];
+  const { colLefts, rowTops } = computeStickyOffsets(sheet);
 
   const table = document.createElement('table');
   table.className = 'lumen-grid';
@@ -1170,6 +1202,11 @@ function renderGrid() {
     const th = document.createElement('th');
     th.className = 'col-th';
     th.dataset.col = String(c);
+    if (c < sheet.freezeCol) {
+      th.classList.add('is-frozen-col');
+      th.style.left = colLefts[c] + 'px';
+      if (c === sheet.freezeCol - 1) th.classList.add('is-frozen-col-edge');
+    }
     const inner = document.createElement('div');
     inner.className = 'th-inner';
     inner.textContent = colToLetter(c);
@@ -1200,17 +1237,43 @@ function renderGrid() {
     rhInner.appendChild(rHandle);
     rh.appendChild(rhInner);
     rh.addEventListener('click', () => selectWholeRow(r));
-    if (sheet.freezeRow && r === 0) rh.classList.add('is-frozen-row');
+    if (r < sheet.freezeRow) {
+      rh.classList.add('is-frozen-row');
+      rh.style.top = rowTops[r] + 'px';
+      if (r === sheet.freezeRow - 1) rh.classList.add('is-frozen-row-edge');
+    }
     tr.appendChild(rh);
     for (let c = 0; c < sheet.colCount; c++) {
+      // A merged region renders as a single <td colspan rowspan> at its
+      // top-left anchor; every other cell inside it is skipped entirely —
+      // native table layout then makes that one <td> cover the whole visual
+      // area, so clicks/drags anywhere in it naturally hit the same element
+      // (see "Cell merge" in the README for why this is enough to satisfy
+      // "click anywhere in the region selects it as one cell").
+      const merge = sheet.getMergeContainingCell(c, r);
+      if (merge && (merge.startCol !== c || merge.startRow !== r)) continue;
+
       const key = cellKeyFromRC(c, r);
       const td = document.createElement('td');
       td.className = 'cell';
       td.dataset.col = String(c);
       td.dataset.row = String(r);
       td.dataset.key = key;
-      if (sheet.freezeRow && r === 0) td.classList.add('is-frozen-row');
-      if (sheet.freezeCol && c === 0) td.classList.add('is-frozen-col');
+      if (merge) {
+        td.colSpan = merge.endCol - merge.startCol + 1;
+        td.rowSpan = merge.endRow - merge.startRow + 1;
+        td.classList.add('is-merged');
+      }
+      if (r < sheet.freezeRow) {
+        td.classList.add('is-frozen-row');
+        td.style.top = rowTops[r] + 'px';
+        if (r === sheet.freezeRow - 1) td.classList.add('is-frozen-row-edge');
+      }
+      if (c < sheet.freezeCol) {
+        td.classList.add('is-frozen-col');
+        td.style.left = colLefts[c] + 'px';
+        if (c === sheet.freezeCol - 1) td.classList.add('is-frozen-col-edge');
+      }
       tr.appendChild(td);
       cellElements.set(key, td);
     }
@@ -1221,6 +1284,7 @@ function renderGrid() {
   els.sheetCanvas.innerHTML = '';
   els.sheetCanvas.appendChild(table);
   ensureFillHandleEl();
+  ensureValidationChevronEl();
   renderAllCharts();
 
   attachGridEvents(tbody, thead);
@@ -1294,16 +1358,23 @@ document.addEventListener('mouseup', () => {
   state.dragging = false;
 });
 
+// If (col,row) is the hidden (non-anchor) interior of a merged region, snap
+// to that region's top-left anchor — same rule arrow navigation follows.
+function snapToMergeAnchor(sheet, col, row) {
+  const merge = sheet.getMergeContainingCell(col, row);
+  return merge ? { col: merge.startCol, row: merge.startRow } : { col, row };
+}
+
 function selectWholeColumn(col) {
   const sheet = workbook.activeSheet;
-  state.anchor = { col, row: 0 };
+  state.anchor = snapToMergeAnchor(sheet, col, 0);
   state.focus = { col, row: sheet.rowCount - 1 };
   updateSelectionUI();
 }
 
 function selectWholeRow(row) {
   const sheet = workbook.activeSheet;
-  state.anchor = { col: 0, row };
+  state.anchor = snapToMergeAnchor(sheet, 0, row);
   state.focus = { col: sheet.colCount - 1, row };
   updateSelectionUI();
 }
@@ -1439,6 +1510,7 @@ function updateSelectionUI() {
   if (!state.formulaEditing) updateFormulaBarFromActive();
   updateStatusBar();
   updateFillHandlePosition();
+  updateValidationChevronPosition();
 }
 
 function scrollActiveIntoView() {
@@ -1450,10 +1522,28 @@ function moveActive(direction, extend) {
   const sheet = workbook.activeSheet;
   const base = extend ? state.focus : state.anchor;
   let { col, row } = base;
+  // If we're moving off a merged region's anchor, jump to its far edge first
+  // so the plain +/-1 step below clears the whole region in one press,
+  // skipping over its hidden interior cells rather than landing inside them.
+  const atMerge = sheet.getMergeContainingCell(col, row);
+  if (atMerge) {
+    if (direction === 'right') col = atMerge.endCol;
+    else if (direction === 'left') col = atMerge.startCol;
+    else if (direction === 'down') row = atMerge.endRow;
+    else if (direction === 'up') row = atMerge.startRow;
+  }
   if (direction === 'up') row = Math.max(0, row - 1);
   if (direction === 'down') row = Math.min(sheet.rowCount - 1, row + 1);
   if (direction === 'left') col = Math.max(0, col - 1);
   if (direction === 'right') col = Math.min(sheet.colCount - 1, col + 1);
+  // Landing inside another merged region (anchor or hidden interior) snaps
+  // to that region's top-left anchor — arrow navigation always treats a
+  // merged region as a single cell.
+  const landed = sheet.getMergeContainingCell(col, row);
+  if (landed) {
+    col = landed.startCol;
+    row = landed.startRow;
+  }
   if (extend) {
     state.focus = { col, row };
   } else {
@@ -1544,6 +1634,12 @@ function removeEditor() {
 
 function commitEdit(key, rawValue, { advance }) {
   const sheet = workbook.activeSheet;
+  if (!isValueAllowedForCell(sheet, key, rawValue)) {
+    // Reject and keep the editor open so the user can fix it — see "Data
+    // validation" below. Deliberately does not call removeEditor()/advance.
+    showToast(`"${rawValue}" is not an allowed value for this cell`, { type: 'error' });
+    return;
+  }
   removeEditor();
   const before = sheet.snapshotCell(key);
   if (before.raw !== rawValue) {
@@ -1822,6 +1918,10 @@ function onFillHandleMousedown(e) {
   e.preventDefault();
   e.stopPropagation();
   const sourceRange = normalizedSelection();
+  if (rangeIntersectsAnyMerge(workbook.activeSheet, sourceRange)) {
+    showToast("Can't fill: selection contains a merged cell", { type: 'error' });
+    return;
+  }
   fillHandleState = { sourceRange, previewRange: { ...sourceRange } };
 
   function onMove(ev) {
@@ -1924,6 +2024,10 @@ function computeFillCell(lineCells, seq, i, offsetForIndex) {
 
 function performFill(sourceRange, targetRange) {
   const sheet = workbook.activeSheet;
+  if (rangeIntersectsAnyMerge(sheet, targetRange)) {
+    showToast("Can't fill: target range contains a merged cell", { type: 'error' });
+    return;
+  }
   const rowExt = targetRange.maxRow > sourceRange.maxRow;
   const colExt = targetRange.maxCol > sourceRange.maxCol;
   const changes = [];
@@ -1967,26 +2071,136 @@ function performFill(sourceRange, targetRange) {
 }
 
 // ---------------------------------------------------------------------------
+// Cell merge
+// ---------------------------------------------------------------------------
+// Merged ranges are stored per-sheet as plain "A1:C3" strings (sheet.merges,
+// see grid.js) and persisted in the .lsheet file. Rendering (colspan/rowspan
+// on the anchor <td>, skipping the rest) lives in renderGrid(); formula
+// resolution to the top-left anchor lives in grid.js's
+// _resolveMergeAnchorKey(). This section owns the Merge/Unmerge actions
+// themselves.
+//
+// Deliberate scope cut (documented in the README): merging/unmerging is not
+// on the undo/redo stack, same precedent already established for
+// conditional-formatting rule changes and sheet add/rename/delete — Ctrl+Z
+// will skip right over a merge action to whatever came before it. Merging
+// clears every cell in the range except the top-left one (their content is
+// discarded immediately, matching the common "merge keeps only the anchor's
+// content" spreadsheet convention) — that clearing is therefore also not
+// undoable via Ctrl+Z. Unmerge only removes the merge boundary; it does not
+// resurrect any content that was cleared when the cells were merged.
+// Inserting/deleting rows or columns does not re-point existing merged
+// ranges either, the same cut already applied to charts and
+// conditional-formatting ranges.
+
+function rangeIntersectsAnyMerge(sheet, sel) {
+  return sheet.merges.some((m) => {
+    const mp = parseRangeStr(m);
+    return mp && mp.startCol <= sel.maxCol && mp.endCol >= sel.minCol && mp.startRow <= sel.maxRow && mp.endRow >= sel.minRow;
+  });
+}
+
+function mergeFullyContainedInSelection(mp, sel) {
+  return mp.startCol >= sel.minCol && mp.endCol <= sel.maxCol && mp.startRow >= sel.minRow && mp.endRow <= sel.maxRow;
+}
+
+function mergeSelection() {
+  const sheet = workbook.activeSheet;
+  const range = normalizedSelection();
+  if (range.minCol === range.maxCol && range.minRow === range.maxRow) {
+    showToast('Select more than one cell to merge', { type: 'error' });
+    return;
+  }
+  const existing = sheet.merges.map((m) => ({ str: m, parsed: parseRangeStr(m) }));
+  const overlaps = (parsed) =>
+    parsed.startCol <= range.maxCol && parsed.endCol >= range.minCol && parsed.startRow <= range.maxRow && parsed.endRow >= range.minRow;
+  const partialOverlap = existing.some(({ parsed }) => overlaps(parsed) && !mergeFullyContainedInSelection(parsed, range));
+  if (partialOverlap) {
+    showToast("Can't merge: overlaps an existing merged cell", { type: 'error' });
+    return;
+  }
+  // Any existing merge fully inside the new selection is absorbed into it.
+  sheet.merges = existing.filter(({ parsed }) => !mergeFullyContainedInSelection(parsed, range)).map(({ str }) => str);
+  const rangeStr = `${cellKeyFromRC(range.minCol, range.minRow)}:${cellKeyFromRC(range.maxCol, range.maxRow)}`;
+  sheet.merges.push(rangeStr);
+  // Only the top-left cell's content survives — see scope-cut note above.
+  for (let r = range.minRow; r <= range.maxRow; r++) {
+    for (let c = range.minCol; c <= range.maxCol; c++) {
+      if (c === range.minCol && r === range.minRow) continue;
+      const key = cellKeyFromRC(c, r);
+      const cell = sheet.getCell(key);
+      if (cell && cell.raw !== '') sheet.setRaw(key, '');
+    }
+  }
+  state.anchor = { col: range.minCol, row: range.minRow };
+  state.focus = { col: range.minCol, row: range.minRow };
+  setDirty(true);
+  renderGrid();
+  showToast('Cells merged');
+}
+
+function unmergeSelection() {
+  const sheet = workbook.activeSheet;
+  const range = normalizedSelection();
+  const before = sheet.merges.length;
+  sheet.merges = sheet.merges.filter((m) => {
+    const mp = parseRangeStr(m);
+    return !(mp && mp.startCol <= range.maxCol && mp.endCol >= range.minCol && mp.startRow <= range.maxRow && mp.endRow >= range.minRow);
+  });
+  if (sheet.merges.length === before) {
+    showToast('No merged cells in selection', { type: 'error' });
+    return;
+  }
+  setDirty(true);
+  renderGrid();
+  showToast('Cells unmerged');
+}
+
+// ---------------------------------------------------------------------------
 // Freeze panes
 // ---------------------------------------------------------------------------
-// Simple toggles rather than an arbitrary boundary picker (documented scope
-// cut in the README): the first data row and/or first data column, in
-// addition to the always-sticky letter/number gutter.
+// The real Excel mechanism: View ▸ Freeze Panes freezes every row above and
+// every column left of the active cell (both sticky, scrolling
+// independently — see the "is-frozen-row"/"is-frozen-col" cells in
+// renderGrid, positioned via computeStickyOffsets since column widths/row
+// heights aren't uniform). freezeRow/freezeCol on the Sheet are *counts* —
+// "how many rows/columns are frozen" — not booleans.
 
-function toggleFreeze(kind) {
+function applyFreezePanes(rowCount, colCount) {
   const sheet = workbook.activeSheet;
-  if (kind === 'row') sheet.freezeRow = !sheet.freezeRow;
-  else sheet.freezeCol = !sheet.freezeCol;
+  sheet.freezeRow = Math.max(0, rowCount);
+  sheet.freezeCol = Math.max(0, colCount);
   setDirty(true);
   renderGrid();
 }
 
+function freezePanesAtActive() {
+  const { col, row } = state.anchor;
+  if (col === 0 && row === 0) {
+    showToast('Select a cell other than A1 to freeze panes', { type: 'error' });
+    return;
+  }
+  applyFreezePanes(row, col);
+  showToast(`Froze ${row} row${row === 1 ? '' : 's'} and ${col} column${col === 1 ? '' : 's'}`);
+}
+
+// Thin wrappers over the general mechanism — Freeze Top Row is just
+// freezePanes(row=1, col=0), Freeze First Column is freezePanes(row=0,
+// col=1). Each replaces any existing freeze boundary rather than combining
+// with it, matching how a single "current freeze state" is stored.
+function freezeTopRow() {
+  applyFreezePanes(1, 0);
+  showToast('Froze top row');
+}
+
+function freezeFirstColumn() {
+  applyFreezePanes(0, 1);
+  showToast('Froze first column');
+}
+
 function unfreezePanes() {
-  const sheet = workbook.activeSheet;
-  sheet.freezeRow = false;
-  sheet.freezeCol = false;
-  setDirty(true);
-  renderGrid();
+  applyFreezePanes(0, 0);
+  showToast('Unfroze panes');
 }
 
 // ---------------------------------------------------------------------------
@@ -2002,6 +2216,10 @@ function sortSelection(direction) {
   const sheet = workbook.activeSheet;
   const range = normalizedSelection();
   if (range.maxRow - range.minRow + 1 < 2) return;
+  if (rangeIntersectsAnyMerge(sheet, range)) {
+    showToast("Can't sort: selection contains a merged cell", { type: 'error' });
+    return;
+  }
   const rows = [];
   for (let r = range.minRow; r <= range.maxRow; r++) {
     const rowCells = [];
@@ -2232,6 +2450,161 @@ function openConditionalFormattingDialog() {
 }
 
 // ---------------------------------------------------------------------------
+// Data validation
+// ---------------------------------------------------------------------------
+// Rules are stored per-sheet (sheet.dataValidations, see grid.js) using the
+// same "list of rules, applies-to range string" shape and dialog pattern as
+// conditional formatting above. A validated cell shows a small chevron
+// affordance (see ensureValidationChevronEl/updateValidationChevronPosition,
+// wired from updateSelectionUI) once it's the sole active cell; clicking it
+// offers the allowed values as a popover list. Typing a value outside the
+// list is rejected at commit time (see commitEdit) with a toast — chosen
+// over visually flagging so there's exactly one, consistent way invalid
+// entries are handled everywhere in the app (matches the toast-based error
+// pattern already used for invalid ranges, failed saves, etc).
+//
+// Deliberate scope cut (documented in the README): validation is enforced
+// only on direct typed entry (cell editor / formula bar). Paste, fill, and
+// formula results are not checked against the allowed list.
+
+function findValidationRuleForKey(sheet, key) {
+  let found = null;
+  for (const rule of sheet.dataValidations) {
+    if (keyInRangeStr(key, rule.range)) found = rule; // last match wins, same precedent as conditional formatting
+  }
+  return found;
+}
+
+function isValueAllowedForCell(sheet, key, rawValue) {
+  if (rawValue === '' || rawValue === undefined || rawValue === null) return true; // clearing is always allowed
+  if (typeof rawValue === 'string' && rawValue.startsWith('=')) return true; // formulas bypass validation (scope cut)
+  const rule = findValidationRuleForKey(sheet, key);
+  if (!rule) return true;
+  const needle = String(rawValue).trim().toLowerCase();
+  return rule.values.some((v) => v.toLowerCase() === needle);
+}
+
+function ensureValidationChevronEl() {
+  validationChevronEl = document.createElement('div');
+  validationChevronEl.className = 'dv-chevron';
+  validationChevronEl.innerHTML = window.lumen.icons['chevron-down'] || '';
+  validationChevronEl.style.display = 'none';
+  els.sheetCanvas.appendChild(validationChevronEl);
+  validationChevronEl.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  });
+  validationChevronEl.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (!validationChevronRule) return;
+    showPopover(validationChevronEl, buildValidationValuesEl(validationChevronKey, validationChevronRule));
+  });
+}
+
+function updateValidationChevronPosition() {
+  if (!validationChevronEl) return;
+  const range = normalizedSelection();
+  const isSingleCell = range.minCol === range.maxCol && range.minRow === range.maxRow;
+  const sheet = workbook.activeSheet;
+  const key = activeKey();
+  const rule = isSingleCell ? findValidationRuleForKey(sheet, key) : null;
+  validationChevronKey = key;
+  validationChevronRule = rule;
+  const td = cellElements.get(key);
+  if (!rule || !td) {
+    validationChevronEl.style.display = 'none';
+    return;
+  }
+  const canvasRect = els.sheetCanvas.getBoundingClientRect();
+  const tdRect = td.getBoundingClientRect();
+  validationChevronEl.style.display = '';
+  validationChevronEl.style.left = tdRect.right - canvasRect.left - 15 + 'px';
+  validationChevronEl.style.top = tdRect.top - canvasRect.top + (tdRect.height - 14) / 2 + 'px';
+}
+
+function buildValidationValuesEl(key, rule) {
+  const wrap = document.createElement('div');
+  wrap.className = 'dv-list';
+  for (const v of rule.values) {
+    const item = document.createElement('div');
+    item.className = 'dv-list__item';
+    item.textContent = v;
+    item.addEventListener('click', () => {
+      closePopover();
+      const sheet = workbook.activeSheet;
+      const before = sheet.snapshotCell(key);
+      if (before.raw === v) return;
+      applyChanges([{ key, before, after: { raw: v, format: before.format } }]);
+    });
+    wrap.appendChild(item);
+  }
+  return wrap;
+}
+
+function openDataValidationDialog() {
+  const range = normalizedSelection();
+  const rangeStr = `${cellKeyFromRC(range.minCol, range.minRow)}:${cellKeyFromRC(range.maxCol, range.maxRow)}`;
+  const sheet = workbook.activeSheet;
+  const existing = sheet.dataValidations.filter((r) => r.range === rangeStr);
+
+  const { bodyEl } = showDialog({
+    title: 'Data Validation',
+    bodyHTML: `
+      <label>Applies to</label>
+      <input type="text" value="${escapeHtml(rangeStr)}" disabled />
+      <label>Allowed values (comma-separated)</label>
+      <input type="text" id="dv-values" placeholder="e.g. Yes, No, Maybe" />
+      ${existing.length ? `<label style="margin-top:12px;">Existing rules on this range</label><div id="dv-existing"></div>` : ''}
+    `,
+    buttons: [{ label: 'Cancel' }, { label: 'Apply', variant: 'primary', onClick: () => applyRule() }],
+  });
+
+  if (existing.length) {
+    const list = bodyEl.querySelector('#dv-existing');
+    for (const rule of existing) {
+      const row = document.createElement('div');
+      row.className = 'cf-existing-row';
+      const desc = document.createElement('span');
+      desc.textContent = rule.values.join(', ');
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'btn-icon';
+      removeBtn.dataset.icon = 'x';
+      removeBtn.dataset.tooltip = 'Remove rule';
+      removeBtn.addEventListener('click', () => {
+        sheet.dataValidations = sheet.dataValidations.filter((r) => r.id !== rule.id);
+        setDirty(true);
+        updateValidationChevronPosition();
+        row.remove();
+      });
+      row.appendChild(desc);
+      row.appendChild(removeBtn);
+      list.appendChild(row);
+      applyIcons(row);
+    }
+  }
+
+  function applyRule() {
+    const values = bodyEl
+      .querySelector('#dv-values')
+      .value.split(',')
+      .map((v) => v.trim())
+      .filter((v) => v !== '');
+    if (!values.length) {
+      showToast('Enter at least one allowed value', { type: 'error' });
+      return;
+    }
+    sheet.dataValidations.push({
+      id: 'dv' + Date.now() + Math.random().toString(36).slice(2, 7),
+      range: rangeStr,
+      values,
+    });
+    setDirty(true);
+    updateValidationChevronPosition();
+    showToast('Data validation rule added');
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Charts
 // ---------------------------------------------------------------------------
 // Hand-rolled inline SVG (no charting dependency, keeping the no-bundler
@@ -2300,20 +2673,35 @@ function extractChartData(sheet, rangeStr) {
 
 const PIE_HUES = ['var(--accent-600)', 'var(--accent-500)', '#8a8f3c', '#3c8f86', '#7a4a9c', '#c9622f'];
 
+// Compact axis-tick formatting: integers print bare, large magnitudes
+// abbreviate to k/M so a $1,200 budget doesn't blow out the left margin.
+function formatAxisValue(v) {
+  const rounded = Math.round(v * 100) / 100;
+  if (rounded === 0) return '0';
+  const abs = Math.abs(rounded);
+  if (abs >= 1000000) return (Math.round((rounded / 1000000) * 10) / 10) + 'M';
+  if (abs >= 1000) return (Math.round((rounded / 1000) * 10) / 10) + 'k';
+  return String(rounded);
+}
+
 function buildChartSVG(chart, data) {
   const w = chart.w;
   const h = chart.h - 34; // minus header height
-  const padding = { top: 10, right: 10, bottom: 22, left: 32 };
-  const plotW = Math.max(1, w - padding.left - padding.right);
-  const plotH = Math.max(1, h - padding.top - padding.bottom);
   const values = data.values;
   let inner = '';
 
   if (chart.type === 'pie') {
-    const cx = padding.left + plotW / 2;
-    const cy = padding.top + plotH / 2;
-    const r = Math.max(4, Math.min(plotW, plotH) / 2 - 4);
     const total = values.reduce((a, b) => a + Math.abs(b), 0) || 1;
+    // Blank/zero rows are common when a selection over-reaches the real data
+    // (e.g. a range that includes trailing empty rows) — they'd otherwise
+    // pad the legend with a wall of meaningless "0%" entries.
+    const nonZero = values.map((v, i) => ({ v, label: data.labels[i], color: PIE_HUES[i % PIE_HUES.length] })).filter((d) => d.v !== 0);
+    const showLegend = nonZero.length > 1;
+    const legendW = showLegend ? Math.min(120, w * 0.4) : 0;
+    const plotW = w - legendW;
+    const cx = plotW / 2;
+    const cy = h / 2;
+    const r = Math.max(4, Math.min(plotW, h) / 2 - 10);
     let angleStart = -Math.PI / 2;
     values.forEach((v, i) => {
       const frac = Math.abs(v) / total;
@@ -2325,28 +2713,71 @@ function buildChartSVG(chart, data) {
       const largeArc = angleEnd - angleStart > Math.PI ? 1 : 0;
       const color = PIE_HUES[i % PIE_HUES.length];
       if (frac > 0) {
-        inner += `<path d="M ${cx} ${cy} L ${x1.toFixed(1)} ${y1.toFixed(1)} A ${r.toFixed(1)} ${r.toFixed(1)} 0 ${largeArc} 1 ${x2.toFixed(1)} ${y2.toFixed(1)} Z" fill="${color}" stroke="var(--surface-0)" stroke-width="1"/>`;
+        inner += `<path class="chart-pie-slice" d="M ${cx} ${cy} L ${x1.toFixed(1)} ${y1.toFixed(1)} A ${r.toFixed(1)} ${r.toFixed(1)} 0 ${largeArc} 1 ${x2.toFixed(1)} ${y2.toFixed(1)} Z" fill="${color}" stroke="var(--surface-0)" stroke-width="1.5"/>`;
+        // Percentage label directly on the wedge, but only when it's wide
+        // enough not to clutter a sliver slice.
+        if (frac >= 0.08) {
+          const midAngle = (angleStart + angleEnd) / 2;
+          const labelR = r * 0.62;
+          const lx = cx + labelR * Math.cos(midAngle);
+          const ly = cy + labelR * Math.sin(midAngle);
+          inner += `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" font-size="var(--text-xs)" font-weight="600" fill="#fff" text-anchor="middle" dominant-baseline="middle" pointer-events="none">${Math.round(frac * 100)}%</text>`;
+        }
       }
       angleStart = angleEnd;
     });
+    if (showLegend) {
+      const rowH = Math.min(20, (h - 12) / nonZero.length);
+      const startY = h / 2 - (nonZero.length * rowH) / 2 + rowH / 2;
+      nonZero.forEach((d, i) => {
+        const y = startY + i * rowH;
+        const pct = Math.round((Math.abs(d.v) / total) * 100);
+        inner += `<rect x="${(plotW + 10).toFixed(1)}" y="${(y - 5).toFixed(1)}" width="9" height="9" rx="2" fill="${d.color}"/>`;
+        inner += `<text x="${(plotW + 24).toFixed(1)}" y="${(y + 4).toFixed(1)}" font-size="var(--text-xs)" fill="var(--ink-600)">${escapeHtml(String(d.label).slice(0, 10))} <tspan fill="var(--ink-400)">${pct}%</tspan></text>`;
+      });
+    }
     return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
   }
 
   const maxV = Math.max(0, ...values);
   const minV = Math.min(0, ...values);
   const spread = maxV - minV || 1;
+
+  // Three evenly-spaced ticks (min / mid / max), deduped for flat data —
+  // drives both the gridlines and the left-axis value labels.
+  const tickValues = minV === maxV ? [maxV] : [minV, (minV + maxV) / 2, maxV];
+  const tickLabels = tickValues.map(formatAxisValue);
+  const maxTickLen = Math.max(...tickLabels.map((s) => s.length));
+  const padding = { top: 20, right: 12, bottom: 26, left: Math.max(28, 12 + maxTickLen * 6.5) };
+  const plotW = Math.max(1, w - padding.left - padding.right);
+  const plotH = Math.max(1, h - padding.top - padding.bottom);
   const scaleY = (v) => padding.top + plotH - ((v - minV) / spread) * plotH;
+
+  // Gridlines + axis value labels first, underneath the marks.
+  tickValues.forEach((tv, i) => {
+    const y = scaleY(tv);
+    inner += `<line x1="${padding.left}" y1="${y.toFixed(1)}" x2="${(padding.left + plotW).toFixed(1)}" y2="${y.toFixed(1)}" stroke="var(--ink-200)" stroke-width="1"/>`;
+    inner += `<text x="${(padding.left - 8).toFixed(1)}" y="${(y + 3.5).toFixed(1)}" font-size="var(--text-xs)" fill="var(--ink-400)" text-anchor="end">${escapeHtml(tickLabels[i])}</text>`;
+  });
   inner += `<line x1="${padding.left}" y1="${padding.top}" x2="${padding.left}" y2="${(padding.top + plotH).toFixed(1)}" stroke="var(--ink-400)" stroke-width="1"/>`;
-  inner += `<line x1="${padding.left}" y1="${(padding.top + plotH).toFixed(1)}" x2="${(padding.left + plotW).toFixed(1)}" y2="${(padding.top + plotH).toFixed(1)}" stroke="var(--ink-400)" stroke-width="1"/>`;
 
   const n = Math.max(values.length, 1);
   const slot = plotW / n;
+  const dense = n > 8; // beyond this, permanent value labels start to collide
+  const valueLabelClass = dense ? 'chart-mark__value chart-mark__value--on-hover' : 'chart-mark__value';
+
   if (chart.type === 'line') {
     const points = values.map((v, i) => `${(padding.left + i * slot + slot / 2).toFixed(1)},${scaleY(v).toFixed(1)}`).join(' ');
     inner += `<polyline points="${points}" fill="none" stroke="var(--accent-600)" stroke-width="2"/>`;
     values.forEach((v, i) => {
       const x = padding.left + i * slot + slot / 2;
-      inner += `<circle cx="${x.toFixed(1)}" cy="${scaleY(v).toFixed(1)}" r="2.5" fill="var(--accent-600)"/>`;
+      const y = scaleY(v);
+      const labelY = Math.max(10, y - 9);
+      inner += `<g class="chart-mark">`;
+      inner += `<circle class="chart-mark__point" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3"/>`;
+      inner += `<circle class="chart-mark__hit" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="8" fill="transparent"/>`;
+      inner += `<text class="${valueLabelClass}" x="${x.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle">${escapeHtml(formatAxisValue(v))}</text>`;
+      inner += `</g>`;
     });
   } else {
     const barW = slot * 0.6;
@@ -2356,12 +2787,16 @@ function buildChartSVG(chart, data) {
       const y1 = scaleY(v);
       const barY = Math.min(y0, y1);
       const barH = Math.max(Math.abs(y1 - y0), 0.5);
-      inner += `<rect x="${x.toFixed(1)}" y="${barY.toFixed(1)}" width="${barW.toFixed(1)}" height="${barH.toFixed(1)}" fill="var(--accent-600)" rx="2"/>`;
+      const labelY = v >= 0 ? Math.max(10, barY - 6) : Math.min(h - padding.bottom + 14, barY + barH + 12);
+      inner += `<g class="chart-mark">`;
+      inner += `<rect class="chart-mark__bar" x="${x.toFixed(1)}" y="${barY.toFixed(1)}" width="${barW.toFixed(1)}" height="${barH.toFixed(1)}" rx="2"/>`;
+      inner += `<text class="${valueLabelClass}" x="${(x + barW / 2).toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle">${escapeHtml(formatAxisValue(v))}</text>`;
+      inner += `</g>`;
     });
   }
   data.labels.forEach((label, i) => {
     const x = padding.left + i * slot + slot / 2;
-    inner += `<text x="${x.toFixed(1)}" y="${h - 8}" font-size="9" fill="var(--ink-400)" text-anchor="middle">${escapeHtml(String(label).slice(0, 8))}</text>`;
+    inner += `<text x="${x.toFixed(1)}" y="${h - 8}" font-size="var(--text-xs)" fill="var(--ink-400)" text-anchor="middle">${escapeHtml(String(label).slice(0, 8))}</text>`;
   });
   return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
 }
@@ -2529,7 +2964,8 @@ function showKeyboardShortcuts() {
     ['Ctrl+C / Ctrl+X / Ctrl+V', 'Copy / Cut / Paste'],
     ['Ctrl+B / Ctrl+I / Ctrl+U', 'Bold / Italic / Underline'],
     ['Ctrl+F', 'Find'],
-    ['Arrow keys', 'Move active cell (Shift+Arrow extends selection)'],
+    ['Ctrl+P', 'Print'],
+    ['Arrow keys', 'Move active cell (Shift+Arrow extends selection; skips over merged cells)'],
     ['Enter / Shift+Enter', 'Move down / up (or commit an edit and move)'],
     ['Tab / Shift+Tab', 'Move right / left (or commit an edit and move)'],
     ['F2 / double-click', 'Start editing the active cell'],
@@ -2915,6 +3351,195 @@ async function exportXlsx() {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Print / Page Setup
+// ---------------------------------------------------------------------------
+// File ▸ Page Setup stores { pageSize, orientation, printArea } per sheet
+// (sheet.pageSetup, see grid.js). File ▸ Print and Export ▸ PDF share one
+// code path: build an off-screen "print root" — a plain <table> reproducing
+// just the print area's computed values/formatting (merges included, clipped
+// to the area), scaled with a CSS transform to fit a single page of the
+// chosen size/orientation — inject a matching `@page` CSS rule, then either
+// call window.print() (Electron wires this to the native print dialog with
+// no IPC needed) or hand off to main.js's printToPDF (which honors that same
+// `@page` rule via `preferCSSPageSize`). Scope cut, documented in the
+// README: this is a single-page scale-to-fit, not Excel's full
+// page-break-preview/multi-page-tiling system.
+
+const PRINT_PAGE_SIZES_IN = { letter: [8.5, 11], a4: [8.27, 11.69], legal: [8.5, 14] };
+const PRINT_MARGIN_IN = 0.4;
+
+/** "A1:<last used cell>" — the default print area when none has been set explicitly. */
+function usedRangeString(sheet) {
+  let maxCol = -1;
+  let maxRow = -1;
+  for (const [key, cell] of sheet.cells) {
+    if (cell.raw === '' || cell.raw === undefined || cell.raw === null) continue;
+    const p = parseCellRefStr(key);
+    if (!p) continue;
+    if (p.col > maxCol) maxCol = p.col;
+    if (p.row > maxRow) maxRow = p.row;
+  }
+  if (maxCol < 0) return 'A1:A1';
+  return `A1:${cellKeyFromRC(maxCol, maxRow)}`;
+}
+
+function buildPrintTable(sheet, range) {
+  const table = document.createElement('table');
+  table.className = 'print-table';
+  const tbody = document.createElement('tbody');
+  for (let r = range.startRow; r <= range.endRow; r++) {
+    const tr = document.createElement('tr');
+    for (let c = range.startCol; c <= range.endCol; c++) {
+      const merge = sheet.getMergeContainingCell(c, r);
+      if (merge && (merge.startCol !== c || merge.startRow !== r)) continue;
+      const key = cellKeyFromRC(c, r);
+      const cell = sheet.getCell(key);
+      const fmt = cell ? cell.format : defaultFormat();
+      const value = cell ? cell.computed : '';
+      const td = document.createElement('td');
+      if (merge) {
+        // Clip the span to the print area in case the merge hangs off its edge.
+        td.colSpan = Math.min(merge.endCol, range.endCol) - c + 1;
+        td.rowSpan = Math.min(merge.endRow, range.endRow) - r + 1;
+      }
+      td.textContent = formatValue(value, fmt.numberFormat);
+      if (fmt.bold) td.style.fontWeight = '700';
+      if (fmt.italic) td.style.fontStyle = 'italic';
+      if (fmt.underline) td.style.textDecoration = 'underline';
+      td.style.textAlign = fmt.align || (isNumericValue(value) ? 'right' : 'left');
+      const bg = fmt.bg || getCondFormatBackground(sheet, key);
+      if (bg) td.style.background = bg;
+      if (fmt.color) td.style.color = fmt.color;
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
+  return table;
+}
+
+/** Build (and append to <body>) the off-screen print root for `sheet`. Returns { cleanup }. */
+function buildPrintRoot(sheet) {
+  const setup = sheet.pageSetup || { pageSize: 'letter', orientation: 'portrait', printArea: null };
+  const areaStr = setup.printArea && parseRangeStr(setup.printArea) ? setup.printArea : usedRangeString(sheet);
+  const range = parseRangeStr(areaStr) || parseRangeStr(usedRangeString(sheet));
+  const [baseW, baseH] = PRINT_PAGE_SIZES_IN[setup.pageSize] || PRINT_PAGE_SIZES_IN.letter;
+  const landscape = setup.orientation === 'landscape';
+  const pageWIn = landscape ? baseH : baseW;
+  const pageHIn = landscape ? baseW : baseH;
+
+  const style = document.createElement('style');
+  style.textContent = `@page { size: ${pageWIn}in ${pageHIn}in; margin: 0; }`;
+  document.head.appendChild(style);
+
+  const root = document.createElement('div');
+  root.id = 'print-root';
+
+  const page = document.createElement('div');
+  page.className = 'print-page';
+  page.style.width = pageWIn + 'in';
+  page.style.height = pageHIn + 'in';
+  page.style.padding = PRINT_MARGIN_IN + 'in';
+
+  const scaleWrap = document.createElement('div');
+  scaleWrap.className = 'print-scale';
+  const table = buildPrintTable(sheet, range);
+  scaleWrap.appendChild(table);
+  page.appendChild(scaleWrap);
+  root.appendChild(page);
+  document.body.appendChild(root);
+
+  // Measure the table's natural (unscaled) size, then shrink it to fit the
+  // page's printable area — see the scope-cut note above the section header.
+  const contentW = table.offsetWidth || 1;
+  const contentH = table.offsetHeight || 1;
+  const availW = (pageWIn - 2 * PRINT_MARGIN_IN) * 96;
+  const availH = (pageHIn - 2 * PRINT_MARGIN_IN) * 96;
+  const scale = Math.min(1, availW / contentW, availH / contentH);
+  scaleWrap.style.transform = `scale(${scale})`;
+
+  const cleanup = () => {
+    if (root.isConnected) root.remove();
+    if (style.isConnected) style.remove();
+  };
+  return { cleanup };
+}
+
+function printSheet() {
+  const { cleanup } = buildPrintRoot(workbook.activeSheet);
+  const onAfterPrint = () => {
+    cleanup();
+    window.removeEventListener('afterprint', onAfterPrint);
+  };
+  window.addEventListener('afterprint', onAfterPrint);
+  // Fallback in case 'afterprint' never fires — same defensive pattern as
+  // toast.js's transitionend fallback.
+  setTimeout(onAfterPrint, 20000);
+  window.print();
+}
+
+async function exportPdf() {
+  const sheet = workbook.activeSheet;
+  const defaultName = (workbook.title || 'workbook') + '.pdf';
+  const filePath = await window.lumen.dialogs.saveExport('pdf', defaultName);
+  if (!filePath) return;
+  const { cleanup } = buildPrintRoot(sheet);
+  try {
+    const res = await window.lumen.file.exportPdf(filePath, {});
+    if (res.ok) {
+      showToast('Exported PDF');
+    } else {
+      showToast('Export failed', { type: 'error' });
+      showDialog({ title: 'Export failed', bodyHTML: `<p>${escapeHtml(res.error)}</p>` });
+    }
+  } finally {
+    cleanup();
+  }
+}
+
+function openPageSetupDialog() {
+  const sheet = workbook.activeSheet;
+  const setup = sheet.pageSetup;
+  const defaultArea = setup.printArea || usedRangeString(sheet);
+  const { bodyEl } = showDialog({
+    title: 'Page Setup',
+    bodyHTML: `
+      <label>Page size</label>
+      <select id="ps-size" class="select">
+        <option value="letter">Letter (8.5 × 11 in)</option>
+        <option value="a4">A4 (210 × 297 mm)</option>
+        <option value="legal">Legal (8.5 × 14 in)</option>
+      </select>
+      <label>Orientation</label>
+      <select id="ps-orientation" class="select">
+        <option value="portrait">Portrait</option>
+        <option value="landscape">Landscape</option>
+      </select>
+      <label>Print area</label>
+      <input type="text" id="ps-area" value="${escapeHtml(defaultArea)}" />
+    `,
+    buttons: [{ label: 'Cancel' }, { label: 'Apply', variant: 'primary', onClick: () => applySetup() }],
+  });
+  bodyEl.querySelector('#ps-size').value = setup.pageSize;
+  bodyEl.querySelector('#ps-orientation').value = setup.orientation;
+
+  function applySetup() {
+    const areaRaw = bodyEl.querySelector('#ps-area').value.trim().toUpperCase();
+    if (!parseRangeStr(areaRaw)) {
+      showToast('Invalid print area range', { type: 'error' });
+      return;
+    }
+    sheet.pageSetup = {
+      pageSize: bodyEl.querySelector('#ps-size').value,
+      orientation: bodyEl.querySelector('#ps-orientation').value,
+      printArea: areaRaw,
+    };
+    setDirty(true);
+    showToast('Page setup updated');
+  }
+}
+
 async function handleBeforeClose() {
   if (workbook.dirty) {
     const choice = await confirmUnsaved();
@@ -3003,6 +3628,11 @@ document.addEventListener('keydown', (e) => {
   if (mod && !e.shiftKey && e.key.toLowerCase() === 'f') {
     e.preventDefault();
     openFindDialog();
+    return;
+  }
+  if (mod && !e.shiftKey && e.key.toLowerCase() === 'p') {
+    e.preventDefault();
+    printSheet();
     return;
   }
 

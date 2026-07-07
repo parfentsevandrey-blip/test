@@ -147,6 +147,20 @@
   box-shadow: var(--shadow-canvas);
   border-radius: var(--radius-canvas);
   min-width: 100%;
+  /* Without an explicit width, inline-block shrink-to-fit sizing caps this
+   * element at the viewport's available width whenever the grid is wider
+   * than the window (many/wide columns, narrow viewport). That squeezes the
+   * table-layout:fixed <table> — with its explicit per-column pixel widths —
+   * down to fit, rendering every column far narrower than declared instead
+   * of overflowing and scrolling. The garbled/overlapping column-header
+   * letters reported when scrolling a frozen-panes sheet at a narrow
+   * viewport are a symptom of this: cells only a few px wide can't contain
+   * even a single glyph without clipping into neighbors. `width: max-content`
+   * makes the canvas take its content's true (often much wider) size, so
+   * `.sheet-viewport`'s `overflow: auto` scrolls it properly instead of the
+   * browser silently compressing columns to fit.
+   */
+  width: max-content;
   transition: background-color var(--dur-med) var(--ease-out), box-shadow var(--dur-med) var(--ease-out);
 }
 
@@ -181,6 +195,14 @@
   user-select: none;
   cursor: default;
   transition: background-color var(--dur-med) var(--ease-out), color var(--dur-med) var(--ease-out);
+  /* Chromium has a known compositing/paint-invalidation bug where a row of
+   * independently `position: sticky` table cells (each with its own top/left
+   * offset) can show stale raster tiles — duplicated/missing/overlapping
+   * glyphs — after a perpendicular scroll (e.g. scrolling the grid
+   * horizontally past frozen columns while these headers are only sticky
+   * vertically). Promoting each header cell to its own compositing layer
+   * forces a correct repaint on every scroll and eliminates the ghosting. */
+  will-change: transform;
 }
 
 .lumen-grid thead th.corner-cell {
@@ -194,6 +216,7 @@
   z-index: 2;
   background: var(--surface-2);
   color: var(--ink-600);
+  will-change: transform;
   font-size: var(--text-xs);
   text-align: center;
   user-select: none;
@@ -512,6 +535,39 @@
   border-color: var(--accent-500);
 }
 
+/* Conditional formatting's color pickers were left as bare unstyled native
+ * <input type="color"> — a gray-bezelled browser control that matches
+ * nothing else in the app. Give it the same height/border/radius language
+ * as the text inputs right above it, the way .popover__custom-row already
+ * does for the fill-color popover. */
+.dialog input[type='color'] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 56px;
+  height: 32px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+  background: var(--surface-0);
+  cursor: default;
+  margin-bottom: var(--space-3);
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+
+.dialog input[type='color']:focus {
+  outline: none;
+  border-color: var(--accent-500);
+}
+
+.dialog input[type='color']::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.dialog input[type='color']::-webkit-color-swatch {
+  border: none;
+  border-radius: 2px;
+}
+
 .dialog__about-brand {
   display: flex;
   align-items: center;
@@ -589,34 +645,161 @@
   outline-offset: -1px;
 }
 
-/* ---------- Freeze panes ---------- */
+/* ---------- Freeze panes ----------
+ * The general "freeze all rows above / columns left of the active cell"
+ * mechanism (View > Freeze Panes) — top/left offsets are dynamic (column
+ * widths and row heights aren't uniform) and set inline per-cell by
+ * computeStickyOffsets()/renderGrid() in renderer.js; this stylesheet only
+ * owns position/z-index/background/the boundary-edge border. Layering, from
+ * top: .corner-cell (5) > frozen column headers / frozen-row row-headers (4)
+ * > cells frozen on both axes (3) > cells frozen on one axis (2) > normal
+ * cells (auto). */
 
-.cell.is-frozen-row {
+.cell.is-frozen-row,
+.cell.is-frozen-col,
+.row-header.is-frozen-row,
+.lumen-grid thead th.is-frozen-col {
   position: sticky;
-  top: 26px;
-  z-index: 2;
   background: var(--surface-canvas);
-  border-bottom: 2px solid var(--accent-600);
   transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-med) var(--ease-out);
+  /* See .lumen-grid thead th above — same Chromium sticky-in-table paint
+   * bug applies to frozen body cells/row-headers during freeze-panes
+   * scrolling; force their own compositing layer. */
+  will-change: transform;
 }
 
-.cell.is-frozen-col {
-  position: sticky;
-  left: 46px;
-  z-index: 2;
-  background: var(--surface-canvas);
+.cell.is-frozen-row { z-index: 2; }
+.cell.is-frozen-col { z-index: 2; }
+.cell.is-frozen-row.is-frozen-col { z-index: 3; }
+
+.row-header.is-frozen-row,
+.lumen-grid thead th.is-frozen-col {
+  z-index: 4;
+  background: var(--surface-2);
+}
+
+.cell.is-frozen-row-edge,
+.row-header.is-frozen-row-edge {
+  border-bottom: 2px solid var(--accent-600);
+}
+
+.cell.is-frozen-col-edge,
+.lumen-grid thead th.is-frozen-col-edge {
   border-right: 2px solid var(--accent-600);
-  transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-med) var(--ease-out);
 }
 
-.cell.is-frozen-row.is-frozen-col {
-  z-index: 3;
+/* ---------- Cell merge ---------- */
+
+.cell.is-merged {
+  text-overflow: ellipsis;
 }
 
-.row-header.is-frozen-row {
-  top: 26px;
-  border-bottom: 2px solid var(--accent-600);
-  transition: border-color var(--dur-med) var(--ease-out);
+/* ---------- Data validation dropdown affordance ---------- */
+
+.dv-chevron {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-400);
+  background: var(--surface-1);
+  border-radius: var(--radius-sm);
+  cursor: default;
+  z-index: 15;
+  transition: color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+}
+
+.dv-chevron svg {
+  width: 10px;
+  height: 10px;
+}
+
+.dv-chevron:hover {
+  color: var(--accent-700);
+  background: var(--accent-soft);
+}
+
+.dv-list {
+  max-height: 220px;
+  overflow-y: auto;
+  min-width: 140px;
+}
+
+.dv-list__item {
+  padding: 6px var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  color: var(--ink-900);
+  transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+
+.dv-list__item:hover {
+  background: var(--accent-soft);
+  color: var(--accent-700);
+}
+
+/* ---------- Print / Page Setup ----------
+ * #print-root is built and torn down on demand by buildPrintRoot() in
+ * renderer.js (File > Print / Export > PDF); it stays off-screen on screen
+ * and is the only thing shown when @media print takes over. Colors here are
+ * intentionally hardcoded rather than theme tokens — printed paper isn't
+ * "dark mode aware". */
+
+#print-root {
+  position: fixed;
+  left: -10000px;
+  top: 0;
+}
+
+.print-page {
+  box-sizing: border-box;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.print-scale {
+  display: inline-block;
+  transform-origin: top left;
+}
+
+.print-table {
+  border-collapse: collapse;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 11px;
+  color: #111111;
+  background: #ffffff;
+}
+
+.print-table td {
+  border: 1px solid #ccc;
+  padding: 3px 6px;
+  white-space: nowrap;
+}
+
+@media print {
+  #app,
+  .toast-stack,
+  .dialog-overlay,
+  .menu,
+  .context-menu,
+  .menu--submenu,
+  .popover,
+  .cell-editor {
+    display: none !important;
+  }
+  #print-root {
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+  }
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    background: #ffffff;
+  }
 }
 
 /* ---------- Conditional formatting dialog ---------- */
@@ -719,6 +902,51 @@
 .chart-box__empty {
   font-size: var(--text-xs);
   color: var(--ink-400);
+}
+
+/* Bar/line marks: fill uses the same --accent-600 / --accent-700 hover pair
+ * as every other primary control in the app (.btn--primary, .btn-icon.is-active)
+ * — a chart bar reacting on hover is the same feedback language, not a new one. */
+.chart-mark__bar {
+  fill: var(--accent-600);
+  transition: fill var(--dur-fast) var(--ease-out);
+}
+
+.chart-mark__point {
+  fill: var(--accent-600);
+  transition: fill var(--dur-fast) var(--ease-out), r var(--dur-fast) var(--ease-out);
+}
+
+.chart-mark:hover .chart-mark__bar,
+.chart-mark:hover .chart-mark__point {
+  fill: var(--accent-700);
+}
+
+.chart-mark:hover .chart-mark__point {
+  r: 4;
+}
+
+.chart-mark__value {
+  font-size: var(--text-xs);
+  fill: var(--ink-600);
+  pointer-events: none;
+}
+
+.chart-mark__value--on-hover {
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.chart-mark:hover .chart-mark__value--on-hover {
+  opacity: 1;
+}
+
+.chart-pie-slice {
+  transition: filter var(--dur-fast) var(--ease-out);
+}
+
+.chart-pie-slice:hover {
+  filter: brightness(1.1);
 }
 
 /* ---------- Keyboard shortcuts dialog ---------- */

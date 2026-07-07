@@ -68,9 +68,29 @@ function readLwrite(filePath) {
   const data = JSON.parse(raw);
   return {
     contentHTML: data.contentHTML || '',
+    headerHTML: data.headerHTML || '',
+    footerHTML: data.footerHTML || '',
+    pageSetup: data.pageSetup || null,
     title: data.title || path.basename(filePath, path.extname(filePath)),
   };
 }
+
+// Standard page sizes Electron's printToPDF/print() accept as a bare
+// string, keyed the same way as pagination.js's PAGE_SIZES so a document's
+// on-screen Page Setup (size + margins) translates 1:1 into print/PDF
+// output instead of the app silently exporting a different paper size.
+const PDF_PAGE_SIZE = { letter: 'Letter', a4: 'A4', legal: 'Legal' };
+const DEFAULT_MARGINS_IN = { top: 1, bottom: 1, left: 1, right: 1 };
+
+// Same page sizes in px @96dpi as pagination.js's PAGE_SIZES (duplicated,
+// not imported — main.js is CommonJS and src/pagination.js is a renderer
+// ES module; keep these two in sync if page sizes ever change). Used for
+// Word export's pageSize option below, which accepts a "<n>px" string.
+const DOCX_PAGE_SIZE_PX = {
+  letter: { w: 816, h: 1056 },
+  a4: { w: 794, h: 1123 },
+  legal: { w: 816, h: 1344 },
+};
 
 function titleFromPath(filePath) {
   return path.basename(filePath, path.extname(filePath));
@@ -133,6 +153,9 @@ async function loadDocumentFromPath(filePath) {
   const ext = path.extname(filePath).toLowerCase();
   try {
     let contentHTML;
+    let headerHTML = '';
+    let footerHTML = '';
+    let pageSetup = null;
     let title = titleFromPath(filePath);
     let format;
     let warnings = [];
@@ -140,6 +163,9 @@ async function loadDocumentFromPath(filePath) {
     if (ext === '.lwrite') {
       const loaded = readLwrite(filePath);
       contentHTML = loaded.contentHTML;
+      headerHTML = loaded.headerHTML;
+      footerHTML = loaded.footerHTML;
+      pageSetup = loaded.pageSetup;
       title = loaded.title;
       format = 'lwrite';
     } else if (ext === '.html' || ext === '.htm') {
@@ -165,7 +191,7 @@ async function loadDocumentFromPath(filePath) {
     }
 
     addRecent(filePath, title);
-    return { filePath: format === 'lwrite' ? filePath : null, title, contentHTML, format, warnings };
+    return { filePath: format === 'lwrite' ? filePath : null, title, contentHTML, headerHTML, footerHTML, pageSetup, format, warnings };
   } catch (err) {
     return { error: String(err && err.message ? err.message : err) };
   }
@@ -195,7 +221,7 @@ ipcMain.handle('file:openPath', async (event, filePath) => {
 });
 
 ipcMain.handle('file:save', async (event, payload) => {
-  const { filePath, title, contentHTML } = payload;
+  const { filePath, title, contentHTML, headerHTML, footerHTML, pageSetup } = payload;
   let targetPath = filePath;
   if (!targetPath) {
     const result = await dialog.showSaveDialog(win, {
@@ -217,7 +243,16 @@ ipcMain.handle('file:save', async (event, payload) => {
     } catch (e) {
       /* ignore malformed existing file, just overwrite */
     }
-    const data = { version: 1, title: title || 'Untitled document', contentHTML: contentHTML || '', createdAt, modifiedAt: now };
+    const data = {
+      version: 1,
+      title: title || 'Untitled document',
+      contentHTML: contentHTML || '',
+      headerHTML: headerHTML || '',
+      footerHTML: footerHTML || '',
+      pageSetup: pageSetup || null,
+      createdAt,
+      modifiedAt: now,
+    };
     fs.writeFileSync(targetPath, JSON.stringify(data, null, 2), 'utf8');
     addRecent(targetPath, title || 'Untitled document');
     return { filePath: targetPath };
@@ -227,7 +262,7 @@ ipcMain.handle('file:save', async (event, payload) => {
 });
 
 ipcMain.handle('file:saveAs', async (event, payload) => {
-  const { title, contentHTML } = payload;
+  const { title, contentHTML, headerHTML, footerHTML, pageSetup } = payload;
   const result = await dialog.showSaveDialog(win, {
     title: 'Save document as',
     defaultPath: `${title || 'Untitled document'}.lwrite`,
@@ -236,7 +271,16 @@ ipcMain.handle('file:saveAs', async (event, payload) => {
   if (result.canceled || !result.filePath) return null;
   try {
     const now = new Date().toISOString();
-    const data = { version: 1, title: title || 'Untitled document', contentHTML: contentHTML || '', createdAt: now, modifiedAt: now };
+    const data = {
+      version: 1,
+      title: title || 'Untitled document',
+      contentHTML: contentHTML || '',
+      headerHTML: headerHTML || '',
+      footerHTML: footerHTML || '',
+      pageSetup: pageSetup || null,
+      createdAt: now,
+      modifiedAt: now,
+    };
     fs.writeFileSync(result.filePath, JSON.stringify(data, null, 2), 'utf8');
     addRecent(result.filePath, title || 'Untitled document');
     return { filePath: result.filePath };
@@ -245,10 +289,50 @@ ipcMain.handle('file:saveAs', async (event, payload) => {
   }
 });
 
+// Chromium's header/footer templates support a few special classes that
+// get auto-populated (date/title/url/pageNumber/totalPages) — used here
+// to translate our `{n}`/`{pages}` tokens into the real thing so the
+// exported PDF's page numbers are correct per-page, not just a static
+// string baked in once.
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function buildHeaderFooterTemplate(raw) {
+  const escaped = escapeHtml(raw || '')
+    .replace(/\{n\}/g, '<span class="pageNumber"></span>')
+    .replace(/\{pages\}/g, '<span class="totalPages"></span>');
+  return `<div style="width:100%;font-size:9px;text-align:center;-webkit-print-color-adjust:exact;">${escaped}</div>`;
+}
+
 ipcMain.handle('export:pdf', async (event, payload) => {
-  const { title } = payload || {};
+  const { title, headerHTML, footerHTML, pageSetup } = payload || {};
   try {
-    const buffer = await win.webContents.printToPDF({});
+    const hasHeader = !!(headerHTML && headerHTML.trim());
+    const hasFooter = !!(footerHTML && footerHTML.trim());
+    // NB: despite Electron's own TypeScript comment saying "in pixels",
+    // printToPDF's margins are actually in inches at runtime (verified —
+    // passing pixel values throws "margins must be less than or equal to
+    // pageSize"). pageSetup.marginsIn already carries the document's real
+    // Page Setup margins in inches, so this now feeds the exact on-screen
+    // geometry (size + margins) into the exported PDF instead of the
+    // fixed Letter/~1in approximation this used to hardcode.
+    const sizeKey = (pageSetup && pageSetup.sizeKey) || 'letter';
+    const margins = (pageSetup && pageSetup.marginsIn) || DEFAULT_MARGINS_IN;
+    const printOptions = {
+      pageSize: PDF_PAGE_SIZE[sizeKey] || 'Letter',
+      printBackground: true,
+      margins: { marginType: 'custom', top: margins.top, bottom: margins.bottom, left: margins.left, right: margins.right },
+    };
+    if (hasHeader || hasFooter) {
+      printOptions.displayHeaderFooter = true;
+      printOptions.headerTemplate = hasHeader ? buildHeaderFooterTemplate(headerHTML) : '<div></div>';
+      printOptions.footerTemplate = hasFooter ? buildHeaderFooterTemplate(footerHTML) : '<div></div>';
+    }
+    const buffer = await win.webContents.printToPDF(printOptions);
     const result = await dialog.showSaveDialog(win, {
       title: 'Export as PDF',
       defaultPath: `${title || 'Untitled document'}.pdf`,
@@ -263,12 +347,25 @@ ipcMain.handle('export:pdf', async (event, payload) => {
 });
 
 ipcMain.handle('export:docx', async (event, payload) => {
-  const { title, contentHTML } = payload;
+  const { title, contentHTML, pageSetup } = payload;
   try {
     const htmlToDocx = require('html-to-docx');
+    const sizeKey = (pageSetup && pageSetup.sizeKey) || 'letter';
+    const size = DOCX_PAGE_SIZE_PX[sizeKey] || DOCX_PAGE_SIZE_PX.letter;
+    const margins = (pageSetup && pageSetup.marginsIn) || DEFAULT_MARGINS_IN;
     const buffer = await htmlToDocx(contentHTML || '', null, {
       title: title || 'Untitled document',
       font: 'Georgia',
+      // html-to-docx auto-detects the unit from a "<n>px"/"<n>in" string
+      // suffix (see its normalizeDocumentOptions), so the same pageSetup
+      // the screen/PDF/print paths use feeds Word export too.
+      pageSize: { width: `${size.w}px`, height: `${size.h}px` },
+      margins: {
+        top: `${margins.top}in`,
+        bottom: `${margins.bottom}in`,
+        left: `${margins.left}in`,
+        right: `${margins.right}in`,
+      },
     });
     const result = await dialog.showSaveDialog(win, {
       title: 'Export as Word document',
@@ -318,8 +415,9 @@ ipcMain.handle('export:txt', async (event, payload) => {
   }
 });
 
-ipcMain.handle('app:print', async () => {
-  win.webContents.print({});
+ipcMain.handle('app:print', async (event, payload) => {
+  const sizeKey = (payload && payload.pageSetup && payload.pageSetup.sizeKey) || 'letter';
+  win.webContents.print({ pageSize: PDF_PAGE_SIZE[sizeKey] || 'Letter' });
   return true;
 });
 

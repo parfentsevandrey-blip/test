@@ -2,6 +2,8 @@
 // handful of concrete dialogs built on top of it. Never uses Electron's
 // native dialog.showMessageBox for in-app UI.
 
+import { PAGE_SIZES, MARGIN_PRESETS, MARGIN_MIN_IN, MARGIN_MAX_IN } from './pagination.js';
+
 const root = () => document.getElementById('dialog-root');
 
 /**
@@ -130,6 +132,100 @@ export function promptTableDialog() {
       buildActions(box, [
         { label: 'Cancel', onClick: () => { close(); resolve(null); } },
         { label: 'Insert', variant: 'primary', onClick: submit },
+      ]);
+    });
+  });
+}
+
+/** File ▸ Page Setup — page size + margins. Resolves
+ * {sizeKey, marginKey, marginsIn} (already resolved to concrete inch
+ * values, including for a preset) or null if cancelled. `current` is the
+ * shape pagination.js's getPageSetup() returns, used to pre-select the
+ * dialog's controls. */
+export function pageSetupDialog(current) {
+  return new Promise((resolve) => {
+    openDialog('dialog--page-setup', (box, close) => {
+      const sizeOptions = Object.entries(PAGE_SIZES)
+        .map(([key, s]) => `<option value="${key}">${escapeHtml(s.label)}</option>`)
+        .join('');
+      const marginOptions =
+        Object.entries(MARGIN_PRESETS)
+          .map(([key, m]) => `<option value="${key}">${escapeHtml(m.label)}</option>`)
+          .join('') + '<option value="custom">Custom</option>';
+
+      box.innerHTML = `
+        <h2>Page Setup</h2>
+        <div class="field">
+          <label for="lw-page-size">Page size</label>
+          <select id="lw-page-size">${sizeOptions}</select>
+        </div>
+        <div class="field">
+          <label for="lw-margin-preset">Margins</label>
+          <select id="lw-margin-preset">${marginOptions}</select>
+        </div>
+        <div id="lw-margin-custom" hidden>
+          <div class="field-row">
+            <div class="field">
+              <label for="lw-margin-top">Top (in)</label>
+              <input type="number" id="lw-margin-top" min="${MARGIN_MIN_IN}" max="${MARGIN_MAX_IN}" step="0.05" />
+            </div>
+            <div class="field">
+              <label for="lw-margin-bottom">Bottom (in)</label>
+              <input type="number" id="lw-margin-bottom" min="${MARGIN_MIN_IN}" max="${MARGIN_MAX_IN}" step="0.05" />
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="lw-margin-left">Left (in)</label>
+              <input type="number" id="lw-margin-left" min="${MARGIN_MIN_IN}" max="${MARGIN_MAX_IN}" step="0.05" />
+            </div>
+            <div class="field">
+              <label for="lw-margin-right">Right (in)</label>
+              <input type="number" id="lw-margin-right" min="${MARGIN_MIN_IN}" max="${MARGIN_MAX_IN}" step="0.05" />
+            </div>
+          </div>
+        </div>`;
+
+      const sizeSelect = box.querySelector('#lw-page-size');
+      const marginSelect = box.querySelector('#lw-margin-preset');
+      const customWrap = box.querySelector('#lw-margin-custom');
+      const topInput = box.querySelector('#lw-margin-top');
+      const bottomInput = box.querySelector('#lw-margin-bottom');
+      const leftInput = box.querySelector('#lw-margin-left');
+      const rightInput = box.querySelector('#lw-margin-right');
+
+      sizeSelect.value = current.sizeKey;
+      marginSelect.value = current.marginKey;
+      topInput.value = current.marginsIn.top;
+      bottomInput.value = current.marginsIn.bottom;
+      leftInput.value = current.marginsIn.left;
+      rightInput.value = current.marginsIn.right;
+
+      function syncCustomVisibility() {
+        customWrap.hidden = marginSelect.value !== 'custom';
+      }
+      syncCustomVisibility();
+      marginSelect.addEventListener('change', syncCustomVisibility);
+
+      function submit() {
+        const sizeKey = sizeSelect.value;
+        const marginKey = marginSelect.value;
+        const marginsIn =
+          marginKey === 'custom'
+            ? {
+                top: clamp(parseFloat(topInput.value) || 1, MARGIN_MIN_IN, MARGIN_MAX_IN),
+                bottom: clamp(parseFloat(bottomInput.value) || 1, MARGIN_MIN_IN, MARGIN_MAX_IN),
+                left: clamp(parseFloat(leftInput.value) || 1, MARGIN_MIN_IN, MARGIN_MAX_IN),
+                right: clamp(parseFloat(rightInput.value) || 1, MARGIN_MIN_IN, MARGIN_MAX_IN),
+              }
+            : { ...MARGIN_PRESETS[marginKey].values };
+        close();
+        resolve({ sizeKey, marginKey, marginsIn });
+      }
+
+      buildActions(box, [
+        { label: 'Cancel', onClick: () => { close(); resolve(null); } },
+        { label: 'Apply', variant: 'primary', onClick: submit },
       ]);
     });
   });

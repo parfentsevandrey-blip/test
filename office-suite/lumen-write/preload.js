@@ -34,7 +34,7 @@ contextBridge.exposeInMainWorld('lumen', {
   exportDocx: (payload) => ipcRenderer.invoke('export:docx', payload),
   exportMarkdown: (payload) => ipcRenderer.invoke('export:markdown', payload),
   exportTxt: (payload) => ipcRenderer.invoke('export:txt', payload),
-  print: () => ipcRenderer.invoke('app:print'),
+  print: (payload) => ipcRenderer.invoke('app:print', payload),
 
   insertImage: () => ipcRenderer.invoke('dialog:insertImage'),
 

@@ -62,6 +62,7 @@ const PREVIEW_LINES = {
 
 let screenEl = null;
 let pageWrapperEl = null;
+let rulerRowEl = null;
 let handlers = { onTemplate: () => {}, onRecent: () => {} };
 
 function buildPreview(tpl) {
@@ -183,6 +184,7 @@ export function initStartScreen({ onTemplate, onRecent }) {
   };
   screenEl = document.getElementById('start-screen');
   pageWrapperEl = document.getElementById('page-wrapper');
+  rulerRowEl = document.getElementById('ruler-row');
 }
 
 export async function showStartScreen() {
@@ -190,6 +192,7 @@ export async function showStartScreen() {
   // Flip visibility first (synchronously) so there's no flash of the bare
   // editor page while the recent-files list round-trips over IPC below.
   if (pageWrapperEl) pageWrapperEl.hidden = true;
+  if (rulerRowEl) rulerRowEl.hidden = true;
   screenEl.hidden = false;
   await render();
 }
@@ -198,6 +201,7 @@ export function hideStartScreen() {
   if (!screenEl) return;
   screenEl.hidden = true;
   if (pageWrapperEl) pageWrapperEl.hidden = false;
+  if (rulerRowEl) rulerRowEl.hidden = false;
 }
 
 export function isStartScreenVisible() {

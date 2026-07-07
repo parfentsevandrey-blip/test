@@ -7,6 +7,7 @@ import { initToolbar } from './toolbar.js';
 import { initMenubar } from './menubar.js';
 import { initTheme } from './theme.js';
 import { initStatusbar } from './statusbar.js';
+import { initPagination } from './pagination.js';
 import {
   initFileIO,
   newDocument,
@@ -18,6 +19,7 @@ import {
 } from './fileio.js';
 import { openFindReplace } from './findreplace.js';
 import { initOutline } from './outline.js';
+import { initTOC } from './toc.js';
 import { initStartScreen, showStartScreen } from './startscreen.js';
 
 const page = document.getElementById('page');
@@ -28,8 +30,10 @@ initTheme();
 initToolbar();
 initMenubar();
 initStatusbar();
+initPagination();
 initFileIO();
 initOutline();
+initTOC();
 initStartScreen({
   onTemplate: (html, title) => loadTemplateDocument(html, title),
   onRecent: (path) => openDocumentAtPath(path),

@@ -7,6 +7,15 @@ import { getContentHTML, setContentHTML, getPlainText, focusPage, onChange as on
 import { unsavedChangesDialog, alertDialog } from './dialogs.js';
 import { showToast } from './toast.js';
 import { showStartScreen, hideStartScreen } from './startscreen.js';
+import {
+  getHeaderRaw,
+  getFooterRaw,
+  setHeaderFooterRaw,
+  onHeaderFooterChange,
+  getPageSetup,
+  restorePageSetup,
+  onPageSetupChange,
+} from './pagination.js';
 
 let filePath = null;
 let dirty = false;
@@ -57,6 +66,8 @@ export async function newDocument() {
   const proceed = await confirmProceedIfDirty();
   if (!proceed) return;
   setContentHTML('');
+  setHeaderFooterRaw('', '');
+  restorePageSetup(null);
   setTitle('Untitled document');
   filePath = null;
   clearDirty();
@@ -67,6 +78,8 @@ export async function newDocument() {
  * shared by openDocument() and openDocumentAtPath(). */
 async function applyOpenedResult(result) {
   setContentHTML(result.contentHTML);
+  setHeaderFooterRaw(result.headerHTML || '', result.footerHTML || '');
+  restorePageSetup(result.pageSetup || null);
   setTitle(result.title);
   filePath = result.format === 'lwrite' ? result.filePath : null;
   clearDirty();
@@ -112,6 +125,8 @@ export async function openDocumentAtPath(path) {
 /** Loads starter content from the start screen's template grid. */
 export function loadTemplateDocument(html, title) {
   setContentHTML(html);
+  setHeaderFooterRaw('', '');
+  restorePageSetup(null);
   setTitle(title);
   filePath = null;
   clearDirty();
@@ -120,7 +135,14 @@ export function loadTemplateDocument(html, title) {
 }
 
 export async function saveDocument() {
-  const payload = { filePath, title: getTitle(), contentHTML: getContentHTML() };
+  const payload = {
+    filePath,
+    title: getTitle(),
+    contentHTML: getContentHTML(),
+    headerHTML: getHeaderRaw(),
+    footerHTML: getFooterRaw(),
+    pageSetup: getPageSetup(),
+  };
   const result = await window.lumen.saveFile(payload);
   if (!result) return false;
   if (result.error) {
@@ -134,7 +156,13 @@ export async function saveDocument() {
 }
 
 export async function saveDocumentAs() {
-  const payload = { title: getTitle(), contentHTML: getContentHTML() };
+  const payload = {
+    title: getTitle(),
+    contentHTML: getContentHTML(),
+    headerHTML: getHeaderRaw(),
+    footerHTML: getFooterRaw(),
+    pageSetup: getPageSetup(),
+  };
   const result = await window.lumen.saveFileAs(payload);
   if (!result) return false;
   if (result.error) {
@@ -148,7 +176,12 @@ export async function saveDocumentAs() {
 }
 
 export async function exportPdf() {
-  const result = await window.lumen.exportPdf({ title: getTitle() });
+  const result = await window.lumen.exportPdf({
+    title: getTitle(),
+    headerHTML: getHeaderRaw(),
+    footerHTML: getFooterRaw(),
+    pageSetup: getPageSetup(),
+  });
   if (!result) return;
   if (result.error) {
     showToast(result.error, { type: 'error' });
@@ -158,7 +191,7 @@ export async function exportPdf() {
 }
 
 export async function exportDocx() {
-  const result = await window.lumen.exportDocx({ title: getTitle(), contentHTML: getContentHTML() });
+  const result = await window.lumen.exportDocx({ title: getTitle(), contentHTML: getContentHTML(), pageSetup: getPageSetup() });
   if (!result) return;
   if (result.error) {
     showToast(result.error, { type: 'error' });
@@ -188,12 +221,14 @@ export async function exportTxt() {
 }
 
 export async function printDocument() {
-  await window.lumen.print();
+  await window.lumen.print({ pageSetup: getPageSetup() });
 }
 
 export function initFileIO() {
   titleInput().addEventListener('input', markDirty);
   onEditorChange(markDirty);
+  onHeaderFooterChange(markDirty);
+  onPageSetupChange(markDirty);
 
   window.lumen.onRequestCloseCheck(async () => {
     const proceed = await confirmProceedIfDirty();
