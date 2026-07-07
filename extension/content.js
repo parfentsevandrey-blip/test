@@ -886,8 +886,14 @@
 
   async function run() {
     if (ui._busy) return;
-    const subj = ui._subj || detectSubject();
-    let base = ui._base || (pageJsonQuery() && cleanBaseQuery(pageJsonQuery()));
+    const subj = detectSubject();   // не из кэша: тема тоже могла смениться (напр. смена ЖК без перезагрузки)
+    // ВСЕГДА берём АКТУАЛЬНЫЙ запрос страницы на момент клика, а не ui._base из
+    // кэша refreshHeader(): если пользователь поменял фильтр (площадь/цена/...)
+    // после того как панель в последний раз обновлялась (авто-обновление идёт
+    // только ~36с после загрузки страницы, см. ensure()), ui._base оставался бы
+    // старым — и на экспорт уходили бы лоты без учёта фильтра.
+    const liveQ = pageJsonQuery();
+    let base = liveQ ? cleanBaseQuery(liveQ) : ui._base;
     const pageCnt = pageResultCount();
     console.log("[cian-excel] страница:", location.href, "| тема:", subj, "| на странице:", pageCnt, "| запрос:", base);
     if (!base) { alert("Не удалось получить запрос со страницы.\n\n" + OPEN_LIST_MSG); refreshHeader(); return; }
@@ -937,8 +943,16 @@
   console.log("[cian-excel] загружен на", location.href);
   ensure();
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", ensure);
+  // Первые ~36с — часто (пока догружается SPA-страница Циан), затем реже, но
+  // БЕССРОЧНО: пользователь может сменить фильтр (площадь/цена и т.п.) спустя
+  // много больше 36с после открытия страницы, и шапка панели (ЖК/статус/на
+  // странице N объявл.) должна оставаться живой. Сам экспорт (run()) в любом
+  // случае берёт запрос заново на момент клика — это лишь для UI-индикации.
   let tries = 0;
-  const iv = setInterval(() => { ensure(); if (++tries > 30) clearInterval(iv); }, 1200);
+  const ivFast = setInterval(() => {
+    ensure();
+    if (++tries > 30) { clearInterval(ivFast); setInterval(ensure, 4000); }
+  }, 1200);
   let last = location.href;
   setInterval(() => { if (location.href !== last) { last = location.href; setTimeout(ensure, 800); } }, 1500);
 })();
