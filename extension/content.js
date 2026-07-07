@@ -18,6 +18,9 @@
   };
   const API = "https://api.cian.ru/search-offers/v2/search-offers-desktop/";
   const ROOMS = [9, 7, 1, 2, 3, 4, 5, 6];
+  // Диагностика качества сбора текущего run() — сбрасывается в начале
+  // collectAll(), пишется из apiFetch()/paginateSegment(). null вне сбора.
+  let health = null;
 
   // === Перехват настоящего запроса страницы =================================
   // Циан сам шлёт search-offers с ПРАВИЛЬНЫМ фильтром по этому ЖК. Перехватываем
@@ -248,6 +251,7 @@
         }
         if (r.status === 403) throw new Error("HTTP 403 — нужна авторизация/капча на cian.ru");
         if (r.status === 429 || r.status >= 500) {
+          if (health) { health.retries++; health.retryStatuses[r.status] = (health.retryStatuses[r.status] || 0) + 1; }
           const ra = parseInt(r.headers && r.headers.get && r.headers.get("Retry-After"), 10);
           const wait = (ra ? ra * 1000 : delay) + Math.random() * 400;
           console.warn(`[cian-excel] HTTP ${r.status} — пауза ${Math.round(wait / 1000)}s (попытка ${attempt}/${CONFIG.maxRetries})`);
@@ -258,6 +262,7 @@
         lastErr = (e && e.message) || String(e);
         if (/403/.test(lastErr)) throw e;
         if (attempt >= CONFIG.maxRetries) throw new Error(lastErr);
+        if (health) { health.retries++; health.retryStatuses.network = (health.retryStatuses.network || 0) + 1; }
         await sleep(delay + Math.random() * 400); delay *= 2;
       }
     }
@@ -271,16 +276,21 @@
   async function collectAll(base, onProgress) {
     const byId = new Map();
     let grandTotal = 0, requests = 0;
+    health = { retries: 0, retryStatuses: {}, totalDrift: 0 };   // диагностика качества сбора этого run()
     const add = (offers) => offers.forEach((o) => { const id = o.cianId || o.id; if (id != null) byId.set(id, o); });
 
     // Пагинация одного сегмента; seen = сколько УНИКАЛЬНЫХ id вернул сам сегмент.
     async function paginateSegment(filters, label) {
       const seg = new Set();
-      let total = 0, page = 1, empty = 0;
+      let total = 0, firstTotal = null, page = 1, empty = 0;
       while (page <= CONFIG.maxPages && requests < CONFIG.reqBudget) {
         onProgress(`${label}стр.${page}…`, byId.size, grandTotal);
         let res; try { res = await apiFetch(withFilters(base, Object.assign({}, filters, { page }))); requests++; }
         catch (e) { if (page === 1) throw e; break; }
+        // Циан иногда отдаёт РАЗНЫЙ aggregatedCount на разных страницах ОДНОГО
+        // и того же сегмента (ротация/нестабильность выдачи) — фиксируем как
+        // диагностику качества сбора, не как ошибку (сама логика это переживает).
+        if (firstTotal == null) firstTotal = res.total; else if (res.total !== firstTotal) health.totalDrift++;
         total = res.total;
         if (!res.offers.length) { if (++empty >= 2) break; page++; await pause(); continue; }
         empty = 0;
@@ -341,8 +351,9 @@
         await priceSplit({}, "₽: ", first.total, first.seen);   // у пользователя уже фильтр по комнатам
       }
     }
-    console.log(`[cian-excel] ИТОГО ${byId.size}/${grandTotal} за ${requests} запросов`);
-    return { offers: [...byId.values()], totalsByRoom, totalInJk: grandTotal };
+    health.requests = requests;
+    console.log(`[cian-excel] ИТОГО ${byId.size}/${grandTotal} за ${requests} запросов (ретраев: ${health.retries}, дрейф total: ${health.totalDrift})`);
+    return { offers: [...byId.values()], totalsByRoom, totalInJk: grandTotal, health };
   }
 
   // ---------- нормализация (как в Python/консольной версии) ----------
@@ -537,8 +548,10 @@
         if (hi > lo) {
           r.dupSpreadAbs = hi - lo; r.dupMinPrice = lo; r.dupMaxPrice = hi;
           r.dupSpreadPct = Math.round((hi / lo - 1) * 1000) / 10;
-          const cheapest = grp.slice().sort((a, b) => a.price - b.price)[0];
+          const sorted = grp.slice().sort((a, b) => a.price - b.price);
+          const cheapest = sorted[0], pricier = sorted[sorted.length - 1];
           r.dupCheapestUrl = cheapest.url; r.dupCheapestSeller = cheapest.seller_name || cheapest.seller_type || "";
+          r.dupPricierSeller = pricier.seller_name || pricier.seller_type || "";
         }
       }
     });
@@ -601,10 +614,28 @@
     return `<Cell ${a.join(" ")}><Data ss:Type="${c.t || "String"}">${esc(c.v)}</Data></Cell>`;
   }
   const rowXml = (cells) => "<Row>" + cells.map(cell).join("") + "</Row>";
-  function worksheet(name, cols, rowsXml, freeze) {
+  // opts: { freezeRows, freezeCols, autoFilterRows } — freezeCols дополняет
+  // прежнюю заморозку только строк; autoFilterRows = число строк ДАННЫХ (без
+  // 4 строк шапки title/sub/пусто/заголовки) — включает автофильтр на шапке.
+  // Для обратной совместимости freeze===true эквивалентно {freezeRows:4}
+  // (старое поведение — заморозка только первых 4 строк, как было).
+  function worksheet(name, cols, rowsXml, opts) {
+    if (opts === true) opts = { freezeRows: 4 };
+    opts = opts || {};
     const colsXml = cols.map((w) => `<Column ss:Width="${w}"/>`).join("");
-    const opt = freeze ? `<WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel"><FreezePanes/><FrozenNoSplit/><SplitHorizontal>4</SplitHorizontal><TopRowBottomPane>4</TopRowBottomPane><ActivePane>2</ActivePane></WorksheetOptions>` : "";
-    return `<Worksheet ss:Name="${esc(name)}"><Table>${colsXml}${rowsXml}</Table>${opt}</Worksheet>`;
+    let panes = "";
+    if (opts.freezeRows && opts.freezeCols) {
+      panes = `<SplitHorizontal>${opts.freezeRows}</SplitHorizontal><TopRowBottomPane>${opts.freezeRows}</TopRowBottomPane><SplitVertical>${opts.freezeCols}</SplitVertical><LeftColumnRightPane>${opts.freezeCols}</LeftColumnRightPane><ActivePane>3</ActivePane>`;
+    } else if (opts.freezeRows) {
+      panes = `<SplitHorizontal>${opts.freezeRows}</SplitHorizontal><TopRowBottomPane>${opts.freezeRows}</TopRowBottomPane><ActivePane>2</ActivePane>`;
+    }
+    const wo = panes
+      ? `<WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel"><PageSetup><Layout x:Orientation="Landscape"/><PageMargins x:Bottom="0.5" x:Left="0.3" x:Right="0.3" x:Top="0.5"/></PageSetup><Print><FitWidth>1</FitWidth><FitHeight>0</FitHeight></Print><FreezePanes/><FrozenNoSplit/>${panes}</WorksheetOptions>`
+      : "";
+    const af = opts.autoFilterRows
+      ? `<AutoFilter x:Range="R4C1:R${4 + opts.autoFilterRows}C${cols.length}" xmlns="urn:schemas-microsoft-com:office:excel"></AutoFilter>`
+      : "";
+    return `<Worksheet ss:Name="${esc(name)}"><Table>${colsXml}${rowsXml}</Table>${af}${wo}</Worksheet>`;
   }
   const HEADERS = ["№", "Категория", "Площадь, м²", "Этаж", "Корпус / секция", "Год дома", "Материал", "Метро", "До метро, мин", "Тип продавца", "Продавец", "Отделка/ремонт", "Источник отделки", "Цена, ₽", "Цена за м², ₽", "Откл. от средней", "Индекс привлекательности", "Δ цены с 1-й выгрузки, %", "Δ цены с прошлой, %", "Дата подачи (Циан)", "Срок Циан, дн", "Реальный срок, дн", "Переподач", "Дублей", "Первая дата (оценка)", "Описание", "Ссылка"];
   const COLW = [34, 78, 72, 56, 105, 62, 86, 110, 78, 88, 140, 130, 92, 105, 92, 86, 90, 92, 88, 100, 80, 95, 72, 60, 110, 320, 68];
@@ -676,13 +707,13 @@
         { v: r.description }, r.url ? { v: "Циан →", href: r.url, s: "link" } : {},
       ]);
     });
-    return worksheet(name, COLW, xml, true);
+    return worksheet(name, COLW, xml, { freezeRows: 4, freezeCols: 2, autoFilterRows: rows.length });
   }
   const CATS = ["Студия", "Своб. планировка", "1", "2", "3", "4+"];
   const ROOM_OF_CAT = { "Студия": [9], "Своб. планировка": [7], "1": [1], "2": [2], "3": [3], "4+": [4, 5, 6] };
   const avg = (a) => a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : null;
   const num = (v) => (v == null ? { v: "—" } : { v, t: "Number", s: "num" });
-  function summarySheet(subj, rows, totalsByRoom, totalInJk) {
+  function summarySheet(subj, rows, totalsByRoom, totalInJk, health) {
     const present = CATS.filter((c) => rows.some((r) => r.category === c)), today = fmtDate(new Date());
     let xml = rowXml([{ v: `${subj.title}${subj.id ? " (ID " + subj.id + ")" : ""} — сводка`, s: "title", merge: 5 }]) +
       rowXml([{ v: `Данные Циан на ${today}. Собрано ${rows.length} лотов. «Частник» = собственник/агентство.`, s: "sub", merge: 5 }]) + rowXml([{}]);
@@ -770,6 +801,13 @@
     xml += rowXml([{ v: "Найдено сбросов даты (переподач)" }, { v: "" }, { v: resets, t: "Number", s: resets ? "warn" : null }]);
     xml += rowXml([{}]) + rowXml([{ v: "МЕТОДИКА: «Реальный срок» = сегодня − самая ранняя дата подачи среди дублей одной квартиры", s: "sub" }]);
     xml += rowXml([{ v: "и за всю историю наблюдений; сброс/переподача даты Циан его не уменьшает. Чем чаще выгружать — тем точнее.", s: "sub" }]);
+    // диагностика качества сбора — сохраняется в архивном файле, не только в эфемерной панели
+    if (health && health.requests) {
+      const warn = (health.retries / health.requests > 0.15) || health.totalDrift > 0;
+      xml += rowXml([{}]) + rowXml([{ v: "ДИАГНОСТИКА СБОРА", s: "bold" }]);
+      xml += rowXml([{ v: `Запросов: ${health.requests} · ретраев (429/5xx/сеть): ${health.retries} · дрейф total между страницами: ${health.totalDrift}`, s: warn ? "warn" : "sub" }]);
+      if (warn) xml += rowXml([{ v: "Много ретраев/нестабильный total — Циан мог троттлить сбор; проверьте охват выше и по возможности выгрузите повторно.", s: "sub" }]);
+    }
     return worksheet("Сводка", [220, 96, 96, 96, 84, 84], xml, false);
   }
 
@@ -808,7 +846,92 @@
         { v: r.dupCheapestSeller }, r.dupCheapestUrl ? { v: "Циан →", href: r.dupCheapestUrl, s: "link" } : {},
       ]);
     });
-    return worksheet("Дубли_разброс_цен", W, xml, true);
+    return worksheet("Дубли_разброс_цен", W, xml, { freezeRows: 4, freezeCols: 2, autoFilterRows: items.length });
+  }
+
+  // Агрегация по продавцам (агентство/застройщик/частник): у кого лоты обычно
+  // дешевле/дороже рынка, и кто чаще выигрывает/проигрывает по цене среди
+  // дублей одной квартиры (см. dupCheapestSeller/dupPricierSeller). Имена
+  // продавцов у Циан НЕ нормализованы (регистр/«ООО»/пробелы) — возможны
+  // почти-дубли бакетов, это ограничение метода, не баг.
+  function sellersSheet(subj, rows) {
+    const groups = {};
+    rows.forEach((r) => {
+      const key = r.seller_name ? r.seller_name.trim() : (r.seller_type === "Собственник" ? "Собственники (частные)" : (r.seller_type || "Не определено"));
+      (groups[key] = groups[key] || { list: [], type: r.seller_type }).list.push(r);
+    });
+    const keys = Object.keys(groups).filter((k) => groups[k].list.length >= 2);  // единичных продавцов сравнивать не с чем
+    if (keys.length < 2) return null;
+    const items = keys.map((k) => {
+      const g = groups[k].list;
+      const uniq = new Set(g.map((r) => fpOf(r, subj.id))).size;
+      const cheapN = g.filter((r) => r._heat === "h1" || r._heat === "h2" || r._heat === "h3").length;
+      const priceyN = g.filter((r) => r._heat === "h7" || r._heat === "h8" || r._heat === "h9").length;
+      return {
+        k, type: groups[k].type || "", n: g.length, uniq,
+        ppm: avg(g.map((r) => r.ppm).filter((x) => x != null)),
+        score: avg(g.map((r) => r._score).filter((x) => x != null)),
+        exp: avg(g.map((r) => r.realExposure).filter((x) => x != null)),
+        cheapPct: Math.round(cheapN / g.length * 100), priceyPct: Math.round(priceyN / g.length * 100),
+        wins: g.filter((r) => r.dupCheapestSeller === k).length,
+        losses: g.filter((r) => r.dupPricierSeller === k && r.dupCheapestSeller !== k).length,
+      };
+    }).sort((a, b) => b.n - a.n);
+    const HDR = ["Продавец", "Тип", "Лотов", "Уник. квартир", "Ø ₽/м²", "Ø индекс привлекательности", "Ø реальный срок, дн", "Дешевле рынка, %", "Дороже рынка, %", "Побед в дублях (дешевле)", "Проигрышей в дублях (дороже)"];
+    const W = [190, 100, 56, 90, 88, 96, 100, 92, 92, 112, 118];
+    let xml = rowXml([{ v: `${subj.title} — продавцы`, s: "title", merge: HDR.length - 1 }]) +
+      rowXml([{ v: "Группировка по имени продавца (не нормализовано). Показаны продавцы с 2+ лотами. «Побед/проигрышей в дублях» — среди квартир, выставленных несколькими продавцами.", s: "sub", merge: HDR.length - 1 }]) +
+      rowXml([{}]) + rowXml(HDR.map((h) => ({ v: h, s: "hdr" })));
+    items.forEach((it) => {
+      xml += rowXml([
+        { v: it.k }, { v: it.type }, { v: it.n, t: "Number" }, { v: it.uniq, t: "Number" },
+        { v: it.ppm, t: it.ppm != null ? "Number" : "String", s: "num" }, { v: it.score, t: it.score != null ? "Number" : "String" },
+        { v: it.exp, t: it.exp != null ? "Number" : "String" },
+        { v: it.cheapPct + "%", s: it.cheapPct >= 40 ? "pgood" : null }, { v: it.priceyPct + "%", s: it.priceyPct >= 40 ? "pbad" : null },
+        { v: it.wins, t: "Number" }, { v: it.losses, t: "Number" },
+      ]);
+    });
+    return worksheet("Продавцы", W, xml, { freezeRows: 4, freezeCols: 1, autoFilterRows: items.length });
+  }
+
+  // Агрегация по корпусам/секциям — только для ЖК (subj.isJk): на произвольных
+  // поисках по фильтрам/полигону сырые названия корпусов из РАЗНЫХ домов могут
+  // случайно совпасть текстом и смешаться в один бакет.
+  function buildingsSheet(subj, rows) {
+    if (!subj.isJk) return null;
+    const groups = {};
+    rows.forEach((r) => {
+      const raw = (r.building || "").toString().trim();
+      const key = raw ? raw.toLowerCase() : " none";
+      (groups[key] = groups[key] || { label: raw || "Без указания корпуса", list: [] }).list.push(r);
+    });
+    const keys = Object.keys(groups);
+    if (keys.length < 2) return null;   // один корпус — сравнивать не с чем
+    const overallPpm = avg(rows.map((r) => r.ppm).filter((x) => x != null));
+    const items = keys.map((key) => {
+      const g = groups[key].list;
+      const ppm = avg(g.map((r) => r.ppm).filter((x) => x != null));
+      const finOk = g.filter((r) => FIN_QUALITY_RANK[r.decoration] >= 4).length;
+      return {
+        label: groups[key].label, n: g.length, ppm,
+        dev: overallPpm && ppm ? (ppm >= overallPpm ? "+" : "−") + Math.round(Math.abs(ppm / overallPpm - 1) * 100) + "%" : "—",
+        exp: avg(g.map((r) => r.realExposure).filter((x) => x != null)),
+        finPct: g.length ? Math.round(finOk / g.length * 100) : 0,
+      };
+    }).sort((a, b) => b.n - a.n);
+    const HDR = ["Корпус / секция", "Лотов", "Ø ₽/м²", "Откл. от Ø по ЖК", "Ø реальный срок, дн", "Хорошая отделка+, %"];
+    const W = [150, 60, 92, 110, 110, 120];
+    let xml = rowXml([{ v: `${subj.title} — по корпусам`, s: "title", merge: HDR.length - 1 }]) +
+      rowXml([{ v: "Название корпуса берётся как есть из Циан (может отличаться написанием у разных лотов одного корпуса).", s: "sub", merge: HDR.length - 1 }]) +
+      rowXml([{}]) + rowXml(HDR.map((h) => ({ v: h, s: "hdr" })));
+    items.forEach((it) => {
+      xml += rowXml([
+        { v: it.label }, { v: it.n, t: "Number" },
+        { v: it.ppm, t: it.ppm != null ? "Number" : "String", s: "num" }, { v: it.dev },
+        { v: it.exp, t: it.exp != null ? "Number" : "String" }, { v: it.finPct + "%" },
+      ]);
+    });
+    return worksheet("По_корпусам", W, xml, { freezeRows: 4, freezeCols: 1, autoFilterRows: items.length });
   }
 
   // Динамика между запусками: что появилось/пропало/подешевело/подорожало с
@@ -833,15 +956,16 @@
     changes.pricier.forEach((c) => row("↑ Подорожал", c.r, c.r.price, c.from, c.pct, "pbad"));
     changes.appeared.forEach((r) => row("+ Новый", r, r.price, null, null, null));
     changes.vanished.forEach((r) => row("− Пропал (продан/снят?)", r, null, r.price, null, "warn"));
-    return worksheet("Изменения", W, xml, true);
+    const totalRows = changes.cheaper.length + changes.pricier.length + changes.appeared.length + changes.vanished.length;
+    return worksheet("Изменения", W, xml, { freezeRows: 4, freezeCols: 2, autoFilterRows: totalRows });
   }
 
-  function buildWorkbook(subj, rows, totalsByRoom, totalInJk) {
+  function buildWorkbook(subj, rows, totalsByRoom, totalInJk, health) {
     rows = rows.slice().sort((a, b) => (a.ppm == null) - (b.ppm == null) || (a.ppm || 0) - (b.ppm || 0));
     computeHeat(rows);                                    // тепловая карта ₽/м² (зелёный↔красный)
     computeScore(rows);                                   // индекс привлекательности лота
     const changes = computeChanges(subj, rows);            // динамика с прошлой выгрузки (+ сохраняет новый снимок)
-    const today = fmtDate(new Date()), sheets = [summarySheet(subj, rows, totalsByRoom, totalInJk)];
+    const today = fmtDate(new Date()), sheets = [summarySheet(subj, rows, totalsByRoom, totalInJk, health)];
     const changesXml = changesSheet(subj, changes); if (changesXml) sheets.push(changesXml);
     const topXml = topLotsSheet(subj, rows); if (topXml) sheets.push(topXml);
     const src = `Источник: Циан${subj.id ? " (ID " + subj.id + ")" : ""}, ${today}. Сортировка по ₽/м². Подсветка ₽/м²: зелёный — дешевле средней по категории, красный — дороже. «Реальный срок» учитывает переподачи.`;
@@ -849,6 +973,8 @@
     const sn = { "Студия": "Студия", "Своб. планировка": "Своб_планировка", "1": "1-комн", "2": "2-комн", "3": "3-комн", "4+": "4-комн" };
     CATS.forEach((c) => { const sub = rows.filter((r) => r.category === c); if (sub.length) sheets.push(dataSheet(sn[c], `${subj.title} — ${c}`, `Собрано ${sub.length}. Сортировка по ₽/м².`, sub)); });
     const dupXml = dupSpreadSheet(subj, rows); if (dupXml) sheets.push(dupXml);
+    const sellersXml = sellersSheet(subj, rows); if (sellersXml) sheets.push(sellersXml);
+    const buildingsXml = buildingsSheet(subj, rows); if (buildingsXml) sheets.push(buildingsXml);
     const heatStyles = HEAT.map((c, i) => `<Style ss:ID="h${i + 1}"><NumberFormat ss:Format="#,##0"/><Interior ss:Color="${c}" ss:Pattern="Solid"/><Alignment ss:Horizontal="Right" ss:Vertical="Center"/></Style>`).join("");
     const styles = `<Styles><Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Vertical="Center"/><Font ss:FontName="Calibri" ss:Size="11"/></Style><Style ss:ID="hdr"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#1F2A44" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/></Style><Style ss:ID="title"><Font ss:Bold="1" ss:Size="13"/></Style><Style ss:ID="sub"><Font ss:Italic="1" ss:Color="#555555" ss:Size="9"/></Style><Style ss:ID="bold"><Font ss:Bold="1"/></Style><Style ss:ID="num"><NumberFormat ss:Format="#,##0"/></Style><Style ss:ID="area"><NumberFormat ss:Format="0.0"/></Style><Style ss:ID="link"><Font ss:Color="#1155CC" ss:Underline="Single"/></Style><Style ss:ID="warn"><Font ss:Bold="1" ss:Color="#C25400"/></Style><Style ss:ID="scoreHi"><Font ss:Bold="1" ss:Color="#006100"/><Interior ss:Color="#C6EFCE" ss:Pattern="Solid"/></Style><Style ss:ID="scoreLo"><Font ss:Bold="1" ss:Color="#9C0006"/><Interior ss:Color="#FFC7CE" ss:Pattern="Solid"/></Style><Style ss:ID="pgood"><Font ss:Color="#1D7A43" ss:Bold="1"/></Style><Style ss:ID="pbad"><Font ss:Color="#C25400" ss:Bold="1"/></Style>${heatStyles}</Styles>`;
     return `<?xml version="1.0" encoding="UTF-8"?>\n<?mso-application progid="Excel.Sheet"?>\n<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" xmlns:html="http://www.w3.org/TR/REC-html40">${styles}${sheets.join("")}</Workbook>`;
@@ -917,7 +1043,7 @@
     _lastFactIdx = i;
     return FUN_FACTS[i];
   }
-  function computeStats(rows, totalInJk, expInfo) {
+  function computeStats(rows, totalInJk, expInfo, health) {
     const ppm = rows.map((r) => r.ppm).filter((x) => x != null);
     const exp = rows.map((r) => r.exposure).filter((x) => x !== "" && x != null);
     const real = rows.map((r) => r.realExposure).filter((x) => x != null);
@@ -934,6 +1060,11 @@
       expAvg: avg(exp), realAvg: avg(real), realMed: med(real),
       resets: (expInfo && expInfo.resets) || 0, devPct: rows.length ? Math.round(devN / rows.length * 100) : null, byCat,
     };
+    // диагностика качества сбора: заметный % ретраев или нестабильный total — сигнал, что Циан троттлит/капчит
+    if (health && health.requests) {
+      st.retries = health.retries; st.totalDrift = health.totalDrift;
+      st.healthWarn = (health.retries / health.requests > 0.15) || health.totalDrift > 0;
+    }
     st.fact = pickFact();   // случайный любопытный факт (из жизни/кода/природы), не про выборку
     return st;
   }
@@ -1052,6 +1183,7 @@
                 '<div class="stat"><div class="v" id="s-ppm">—</div><div class="l">₽/м² ср.</div></div>' +
               '</div>' +
               '<div class="meta" id="s-meta"></div>' +
+              '<div class="pg warn" id="s-health" style="display:none"><span>⚠</span><span id="s-healthtext"></span></div>' +
               '<div class="cats" id="s-cats"></div>' +
               '<div class="fact" id="s-fact"><span class="lab">💡 Любопытный факт</span><span id="s-facttext"></span></div>' +
               '<div class="file" id="s-file"><span>✓</span><span id="s-fname"></span></div>' +
@@ -1068,7 +1200,7 @@
       jk: $("#jk"), sub: $("#sub"), pg: $("#pg"), pgi: $("#pgi"), pgt: $("#pgt"),
       go: $("#go"), prog: $("#prog"), pt: $("#pt"), pp: $("#pp"), bar: $("#bar"),
       res: $("#res"), count: $("#s-count"), cov: $("#s-cov"), ppm: $("#s-ppm"),
-      meta: $("#s-meta"), cats: $("#s-cats"), fact: $("#s-fact"), facttext: $("#s-facttext"),
+      meta: $("#s-meta"), health: $("#s-health"), healthtext: $("#s-healthtext"), cats: $("#s-cats"), fact: $("#s-fact"), facttext: $("#s-facttext"),
       file: $("#s-file"), fname: $("#s-fname"), foot: $("#foot"),
       err: $("#err"), errText: $("#err-text"), errRetry: $("#err-retry"),
     };
@@ -1129,6 +1261,10 @@
       (stats.realMed != null ? " · реальный срок ~" + stats.realMed + " дн" : (stats.expAvg != null ? " · экспозиция ~" + stats.expAvg + " дн" : "")) +
       (stats.resets ? " · переподач " + stats.resets : "") +
       (stats.total ? " · всего " + fmt(stats.total) : "");
+    if (stats.healthWarn) {
+      ui.el.health.style.display = "flex";
+      ui.el.healthtext.textContent = `Циан отвечал нестабильно (ретраев: ${stats.retries}${stats.totalDrift ? ", дрейф total: " + stats.totalDrift : ""}) — сверьте охват, при сомнении выгрузите ещё раз.`;
+    } else { ui.el.health.style.display = "none"; }
     ui.el.cats.innerHTML = "";
     stats.byCat.forEach((x) => {
       const c = document.createElement("span"); c.className = "chip";
@@ -1167,7 +1303,7 @@
     ui.el.err.style.display = "none";
     showProgress("Подключаюсь…", null);
     try {
-      const { offers, totalsByRoom, totalInJk } = await collectAll(base, (text, got, total) => showProgress(text, total ? got / total : null));
+      const { offers, totalsByRoom, totalInJk, health: collectHealth } = await collectAll(base, (text, got, total) => showProgress(text, total ? got / total : null));
       // Сверка с числом на странице — после сбора, чтобы не делать лишний запрос.
       if (pageCnt != null && totalInJk > pageCnt * 2 + 25) {
         const ok = confirm("На странице показано ~" + pageCnt + " объявлений, а запрос вернул " + totalInJk +
@@ -1179,8 +1315,8 @@
       const expInfo = enrichExposure(rows, subj.id);   // реальный срок экспозиции (учёт сбросов)
       showProgress("Готовлю Excel…", 1);
       const filename = `cian_${subj.slug}_${new Date().toISOString().slice(0, 10)}.xls`;
-      download(buildWorkbook(subj, rows, totalsByRoom, totalInJk), filename);
-      showResults(computeStats(rows, totalInJk, expInfo), filename);
+      download(buildWorkbook(subj, rows, totalsByRoom, totalInJk, collectHealth), filename);
+      showResults(computeStats(rows, totalInJk, expInfo, collectHealth), filename);
       ui.el.go.textContent = "📊 Выгрузить снова";
     } catch (e) {
       console.error(e);
