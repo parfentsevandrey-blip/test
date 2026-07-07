@@ -33,7 +33,7 @@ export function showToast(message, options = {}) {
 
   const el = document.createElement('div');
   el.className = `toast toast--${type}`;
-  el.innerHTML = `${iconMarkup}<span class="toast__message"></span>`;
+  el.innerHTML = `<span class="toast__badge">${iconMarkup}</span><span class="toast__message"></span>`;
   el.querySelector('.toast__message').textContent = message == null ? '' : String(message);
 
   ensureStack().appendChild(el);

@@ -99,7 +99,12 @@ consistency of *feel* matters as much as consistency of color.
   file errors. Auto-dismiss after ~3s (add `.is-leaving` for the exit
   transition, then remove the node). Toasts use fixed dark colors
   (`--scrim-dark`/`--scrim-dark-ink`) that don't flip with the theme —
-  they're a floating overlay, not part of the surface hierarchy.
+  they're a floating overlay, not part of the surface hierarchy. Markup is
+  `<span class="toast__badge">{icon}</span><span class="toast__message">`
+  — the icon sits inside a small rounded-square badge (echoing
+  `.brand-mark`), not floating bare in the pill. This is deliberate: it's
+  the one place besides the titlebar/app icon where the brand mark motif
+  repeats, instead of a generic alert-icon-in-a-pill toast.
 - **Dialogs & menus** now animate in (`lumen-pop-in` / `lumen-menu-in` /
   `lumen-scrim-in`, already wired onto `.dialog` / `.dialog-overlay` /
   `.menu`) — nothing extra to do for existing ones.
@@ -118,6 +123,41 @@ consistency of *feel* matters as much as consistency of color.
   panel-sized things like the sidebar or start screen). No spring/bounce
   easing, no looping/idle animation. `theme.css` already disables all of
   this under `prefers-reduced-motion: reduce` — don't fight that.
+
+## Real pagination (v1.2 requirement, Lumen Write)
+
+v1/v1.1 shipped a single ever-growing `.page` div (`min-height: 1056px`)
+with no page-break logic — content just makes one div taller forever. This
+reads as "one long sheet" and is not acceptable for something positioned
+as a Word alternative; fix it for real, not with a cosmetic dashed line.
+
+Required behavior:
+
+- The document is a sequence of discrete page elements, each exactly
+  816×1056px (US Letter @ 96dpi, matching the existing `.page` size) with
+  1in margins, laid out top-to-bottom with a visible **inter-page gap**
+  (~40px, on the `--surface-1` backdrop, with a small centered "Page N"
+  label in the gap — the Google Docs/Word convention).
+- As the user types past a page's content area, overflowing content moves
+  to the next page automatically (reflow), and pages before it shrink back
+  down if content is removed — this has to be genuinely dynamic, not
+  computed once at load.
+- A **ruler** strip above the page area (~20px tall, `--surface-1`
+  background, `--border-subtle` bottom border) showing inch tick marks and
+  a highlighted margin zone, matching the page currently in view.
+- **Header and footer zones**: a shallow editable strip at the top and
+  bottom of every page (reuse the page's own margin band), supporting a
+  simple auto-updating page-number token (e.g. type `Page {n}` and `{n}`
+  resolves live) — content here is shared/repeated across all pages, like
+  a real word processor.
+- Status bar gains a page indicator ("Page 2 of 5") alongside the existing
+  word/character count.
+- PDF export must reflect the real pages (it already does via Chromium's
+  print engine, but re-verify against the new multi-page DOM).
+- This is a substantial rendering change — get the measurement/reflow
+  logic right before layering animation on top of it. A future edit
+  landing content past a page boundary should not visibly jank; a subtle
+  transition on the affected page's height is enough, nothing fancier.
 
 ## Brand
 

@@ -23,9 +23,13 @@ export function showToast(message, opts = {}) {
   const toast = document.createElement('div');
   toast.className = `toast toast--${type}`;
   const icon = window.lumen.icons[type === 'error' ? 'x' : 'check'] || '';
+  const badge = document.createElement('span');
+  badge.className = 'toast__badge';
+  badge.innerHTML = icon;
   const text = document.createElement('span');
+  text.className = 'toast__message';
   text.textContent = message;
-  toast.innerHTML = icon;
+  toast.appendChild(badge);
   toast.appendChild(text);
   stack.appendChild(toast);
 
