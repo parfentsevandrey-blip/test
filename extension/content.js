@@ -378,6 +378,16 @@
     norepair: "Без ремонта", cosmetic: "Косметический", euro: "Евроремонт",
     designer: "Дизайнерский", some: "С ремонтом (тип не указан)",
   };
+  // качество отделки для индекса привлекательности лота (НЕ порядок отображения
+  // в сводке — тут именно ранг «чем выше, тем лучше для проживания»).
+  const FIN_QUALITY_RANK = {
+    [FIN.none]: 1, [FIN.rough]: 1, [FIN.norepair]: 1,
+    [FIN.prefine]: 2,
+    [FIN.cosmetic]: 3, [FIN.some]: 3,
+    [FIN.fine]: 4,
+    [FIN.euro]: 5, [FIN.turnkey]: 5,
+    [FIN.designer]: 6,
+  };
   // значение поля Циан -> категория
   const FIELD_FIN = {
     without: FIN.none, rough: FIN.rough, draft: FIN.rough,
@@ -486,22 +496,31 @@
   }
   function enrichExposure(rows, jkId) {
     const now = Math.floor(Date.now() / 1000), day = 86400;
-    // (1) минимум по дублям в текущей выгрузке
-    const gmin = {}, gcnt = {};
+    // (1) минимум даты/цены по дублям в текущей выгрузке (для срока и разброса цен)
+    const gmin = {}, gcnt = {}, gPrices = {};
     rows.forEach((r) => {
       const fp = fpOf(r, jkId); gcnt[fp] = (gcnt[fp] || 0) + 1;
       if (r.addedTs) gmin[fp] = gmin[fp] ? Math.min(gmin[fp], r.addedTs) : r.addedTs;
+      if (r.price != null) (gPrices[fp] = gPrices[fp] || []).push({ price: r.price, seller_name: r.seller_name, seller_type: r.seller_type, url: r.url });
     });
-    // (2) история
+    // (2) история + динамика цены между выгрузками
     const hist = loadHistory();
     rows.forEach((r) => {
       const fp = fpOf(r, jkId);
-      let h = hist.flats[fp]; if (!h) h = hist.flats[fp] = { firstSeen: now, minAdded: null, addeds: [], cianIds: [] };
+      let h = hist.flats[fp]; if (!h) h = hist.flats[fp] = { firstSeen: now, minAdded: null, addeds: [], cianIds: [], priceLog: [] };
+      if (!h.priceLog) h.priceLog = [];   // обратная совместимость со старой историей (до v2.9)
       if (r.addedTs) { h.minAdded = h.minAdded ? Math.min(h.minAdded, r.addedTs) : r.addedTs; if (h.addeds.indexOf(r.addedTs) < 0) h.addeds.push(r.addedTs); }
       if (r.cianId && h.cianIds.indexOf(r.cianId) < 0) h.cianIds.push(r.cianId);
+      if (r.price != null) {
+        const first = h.priceLog[0], last = h.priceLog[h.priceLog.length - 1];
+        r.priceDeltaFirstPct = first && first.price ? Math.round((r.price / first.price - 1) * 1000) / 10 : null;
+        r.priceDeltaLastRunPct = last && last.price ? Math.round((r.price / last.price - 1) * 1000) / 10 : null;
+        h.priceLog.push({ ts: now, price: r.price, ppm: r.ppm });
+        if (h.priceLog.length > 12) h.priceLog.shift();       // не растим историю бесконечно
+      }
       h.lastSeen = now;
     });
-    // расчёт
+    // расчёт срока экспозиции + разброс цен между продавцами одной квартиры
     rows.forEach((r) => {
       const fp = fpOf(r, jkId), h = hist.flats[fp];
       const cand = [now]; if (r.addedTs) cand.push(r.addedTs);
@@ -512,9 +531,66 @@
       r.republish = Math.max(0, (h.addeds.length || 1) - 1);   // сколько разных дат подачи видели
       r.dupNow = gcnt[fp] || 1;                                 // дублей в текущей выдаче
       r.reset = !!(r.addedTs && (r.addedTs - origin > 21 * day)); // дата Циан сильно «свежее» реальной
+      const grp = gPrices[fp];
+      if (grp && grp.length > 1) {
+        const prices = grp.map((g) => g.price), lo = Math.min(...prices), hi = Math.max(...prices);
+        if (hi > lo) {
+          r.dupSpreadAbs = hi - lo; r.dupMinPrice = lo; r.dupMaxPrice = hi;
+          r.dupSpreadPct = Math.round((hi / lo - 1) * 1000) / 10;
+          const cheapest = grp.slice().sort((a, b) => a.price - b.price)[0];
+          r.dupCheapestUrl = cheapest.url; r.dupCheapestSeller = cheapest.seller_name || cheapest.seller_type || "";
+        }
+      }
     });
     saveHistory(hist);
     return { resets: rows.filter((r) => r.reset).length, withHistory: Object.keys(hist.flats).length };
+  }
+
+  // ===== Снимок между запусками: динамика лотов (новые/пропали/подешевели) ===
+  const SKEY = "cianExcelSnapshot_v1";
+  function loadSnapshots() {
+    try { const s = localStorage.getItem(SKEY); const d = s ? JSON.parse(s) : null; return d && d.subjects ? d : { subjects: {} }; }
+    catch (e) { return { subjects: {} }; }
+  }
+  function saveSnapshots(d) {
+    try {
+      const cut = Math.floor(Date.now() / 1000) - 400 * 86400;
+      for (const k in d.subjects) if ((d.subjects[k].ts || 0) < cut) delete d.subjects[k];
+      localStorage.setItem(SKEY, JSON.stringify(d));
+    } catch (e) { /* ignore */ }
+  }
+  // ключ снимка: для ЖК — стабильный ID; для выборки по фильтрам — по slug
+  // (менее надёжно при смене фильтра, но лучше, чем не сравнивать вовсе).
+  const subjSnapshotKey = (subj) => subj.id ? ("jk:" + subj.id) : ("f:" + subj.slug);
+  // Сравнивает текущий набор лотов с сохранённым снимком ПРОШЛОГО запуска по
+  // тому же ЖК/выборке: новые лоты, пропавшие (сняты с продажи/проданы), и
+  // заметно подешевевшие/подорожавшие. Обновляет снимок для следующего раза.
+  function computeChanges(subj, rows) {
+    const d = loadSnapshots(), key = subjSnapshotKey(subj), now = Math.floor(Date.now() / 1000);
+    const prev = d.subjects[key];
+    const curFps = new Map();
+    rows.forEach((r) => { curFps.set(fpOf(r, subj.id), r); });
+    let appeared = [], vanished = [], cheaper = [], pricier = [], hasPrev = false;
+    if (prev && prev.byFp) {
+      hasPrev = true;
+      curFps.forEach((r, fp) => {
+        if (!prev.byFp[fp]) appeared.push(r);
+        else {
+          const p0 = prev.byFp[fp].price;
+          if (p0 != null && r.price != null && p0 !== r.price) {
+            const pct = Math.round((r.price / p0 - 1) * 1000) / 10;
+            (pct < 0 ? cheaper : pricier).push({ r, pct, from: p0 });
+          }
+        }
+      });
+      Object.keys(prev.byFp).forEach((fp) => { if (!curFps.has(fp)) vanished.push(prev.byFp[fp]); });
+      cheaper.sort((a, b) => a.pct - b.pct); pricier.sort((a, b) => b.pct - a.pct);
+    }
+    const byFp = {};
+    curFps.forEach((r, fp) => { byFp[fp] = { price: r.price, ppm: r.ppm, category: r.category, building: r.building, url: r.url, floor: r.floor }; });
+    d.subjects[key] = { ts: now, byFp };
+    saveSnapshots(d);
+    return { hasPrev, appeared, vanished, cheaper, pricier };
   }
 
   // ---------- генерация Excel (SpreadsheetML 2003) ----------
@@ -530,8 +606,8 @@
     const opt = freeze ? `<WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel"><FreezePanes/><FrozenNoSplit/><SplitHorizontal>4</SplitHorizontal><TopRowBottomPane>4</TopRowBottomPane><ActivePane>2</ActivePane></WorksheetOptions>` : "";
     return `<Worksheet ss:Name="${esc(name)}"><Table>${colsXml}${rowsXml}</Table>${opt}</Worksheet>`;
   }
-  const HEADERS = ["№", "Категория", "Площадь, м²", "Этаж", "Корпус / секция", "Год дома", "Материал", "Метро", "До метро, мин", "Тип продавца", "Продавец", "Отделка/ремонт", "Источник отделки", "Цена, ₽", "Цена за м², ₽", "Откл. от средней", "Дата подачи (Циан)", "Срок Циан, дн", "Реальный срок, дн", "Переподач", "Дублей", "Первая дата (оценка)", "Описание", "Ссылка"];
-  const COLW = [34, 78, 72, 56, 105, 62, 86, 110, 78, 88, 140, 130, 92, 105, 92, 86, 100, 80, 95, 72, 60, 110, 320, 68];
+  const HEADERS = ["№", "Категория", "Площадь, м²", "Этаж", "Корпус / секция", "Год дома", "Материал", "Метро", "До метро, мин", "Тип продавца", "Продавец", "Отделка/ремонт", "Источник отделки", "Цена, ₽", "Цена за м², ₽", "Откл. от средней", "Индекс привлекательности", "Δ цены с 1-й выгрузки, %", "Δ цены с прошлой, %", "Дата подачи (Циан)", "Срок Циан, дн", "Реальный срок, дн", "Переподач", "Дублей", "Первая дата (оценка)", "Описание", "Ссылка"];
+  const COLW = [34, 78, 72, 56, 105, 62, 86, 110, 78, 88, 140, 130, 92, 105, 92, 86, 90, 92, 88, 100, 80, 95, 72, 60, 110, 320, 68];
 
   // Тепловая карта ₽/м²: насколько лот ниже/выше средней цены за м² по его
   // категории (зелёный = дешевле/недооценён, красный = дороже/переоценён). База —
@@ -546,7 +622,7 @@
     const allPpm = rows.map((r) => r.ppm).filter((x) => x != null);
     const overall = allPpm.length ? meanOf(allPpm) : null;
     rows.forEach((r) => {
-      r._heat = null; r._dev = ""; r._devBase = null;
+      r._heat = null; r._dev = ""; r._devBase = null; r._devNum = null;
       if (r.ppm == null) return;
       const base = (r.category && byCat[r.category] && byCat[r.category].length >= 3) ? catMean[r.category] : overall;
       if (!base) return;
@@ -555,6 +631,24 @@
       r._heat = "h" + b;
       r._dev = (d >= 0 ? "+" : "−") + Math.round(Math.abs(d) * 100) + "%";
       r._devBase = Math.round(base);
+      r._devNum = d;                                       // числовое отклонение — для индекса привлекательности
+    });
+  }
+
+  // ===== Индекс привлекательности лота (composite score, 0-100) ==============
+  // Эвристика для быстрой сортировки, НЕ финансовая оценка: половину веса даёт
+  // цена за м² относительно средней по комнатности (дешевле = выше балл),
+  // остальное — качество отделки и длительность экспозиции (потенциал для
+  // торга). Этаж/метро сюда сознательно не включены — см. отдельные таблицы
+  // «бенчмарки» в Сводке, чтобы не задваивать веса и не плодить домыслы.
+  function computeScore(rows) {
+    rows.forEach((r) => {
+      if (r._devNum == null) { r._score = null; return; }
+      const priceComp = -r._devNum * 120;
+      const finRank = FIN_QUALITY_RANK[r.decoration] || 3.5;   // 3.5 = нейтрально, если отделка не определена
+      const finComp = (finRank - 3.5) / 2.5 * 8;
+      const expComp = Math.min(r.realExposure || 0, 180) / 180 * 10;
+      r._score = Math.max(0, Math.min(100, Math.round(50 + priceComp + finComp + expComp)));
     });
   }
   function dataSheet(name, title, sub, rows) {
@@ -565,6 +659,7 @@
       if (r.floor != null && r.floors != null) floorVal = r.floor + "/" + r.floors;
       else if (r.floor != null) floorVal = String(r.floor);
       else if (r.floors != null) floorVal = "?/" + r.floors;
+      const pctCell = (v) => v == null ? {} : { v: (v > 0 ? "+" : "") + v + "%", t: "String", s: v < 0 ? "pgood" : (v > 0 ? "pbad" : null) };
       xml += rowXml([
         { v: i + 1, t: "Number" }, { v: r.category },
         N(r.area, "area"), { v: floorVal }, { v: r.building }, N(r.buildYear), { v: r.material },
@@ -573,6 +668,8 @@
         N(r.price, "num"),
         { v: r.ppm, t: r.ppm != null ? "Number" : "String", s: r._heat || "num" },   // ₽/м² с подсветкой
         { v: r._dev, s: r._heat || null },                                            // откл. от средней, тот же цвет
+        { v: r._score, t: r._score != null ? "Number" : "String", s: r._score == null ? null : (r._score >= 65 ? "scoreHi" : (r._score <= 35 ? "scoreLo" : null)) },
+        pctCell(r.priceDeltaFirstPct), pctCell(r.priceDeltaLastRunPct),
         { v: r.published }, N(r.exposure),
         { v: r.realExposure, t: r.realExposure != null ? "Number" : "String", s: r.reset ? "warn" : null },
         { v: r.republish, t: "Number" }, { v: r.dupNow, t: "Number" }, { v: r.firstDate },
@@ -611,6 +708,38 @@
       const sub = rows.filter((r) => r.category === c), pr = sub.map((r) => r.price).filter((x) => x != null), pm = sub.map((r) => r.ppm).filter((x) => x != null);
       xml += rowXml([{ v: c }, num(pr.length ? Math.min(...pr) : null), num(avg(pr)), num(pr.length ? Math.max(...pr) : null), num(pm.length ? Math.min(...pm) : null), num(pm.length ? Math.max(...pm) : null)]);
     });
+    // бенчмарк по этажу: низкий/средний/высокий/последний — частый фактор
+    // ценообразования в Москве; это СПРАВОЧНАЯ таблица, тепловую карту она не меняет.
+    const withFloor = rows.filter((r) => r.floor != null && r.floors != null && r.ppm != null);
+    if (withFloor.length >= 5) {
+      const floorTier = (r) => {
+        if (r.floor === 1) return "1-й этаж";
+        if (r.floor === r.floors) return "Последний";
+        const q = r.floor / r.floors;
+        return q <= 0.4 ? "Низкие (2 — 40%)" : q <= 0.75 ? "Средние (40-75%)" : "Высокие (75%+)";
+      };
+      const TIERS = ["1-й этаж", "Низкие (2 — 40%)", "Средние (40-75%)", "Высокие (75%+)", "Последний"];
+      xml += rowXml([{}]) + rowXml([{ v: "БЕНЧМАРК: ЦЕНА ПО ЭТАЖУ", s: "bold" }]) + rowXml(["Этаж", "Лотов", "Средняя ₽/м²", "Откл. от общей средней"].map((h) => ({ v: h, s: "hdr" })));
+      const overallPpm = avg(withFloor.map((r) => r.ppm));
+      TIERS.forEach((t) => {
+        const sub = withFloor.filter((r) => floorTier(r) === t); if (!sub.length) return;
+        const a = avg(sub.map((r) => r.ppm));
+        xml += rowXml([{ v: t }, { v: sub.length, t: "Number" }, num(a), { v: overallPpm && a ? (a >= overallPpm ? "+" : "−") + Math.round(Math.abs(a / overallPpm - 1) * 100) + "%" : "—" }]);
+      });
+    }
+    // бенчмарк по удалённости от метро
+    const withMetro = rows.filter((r) => r.metroTime != null && r.ppm != null);
+    if (withMetro.length >= 5) {
+      const METRO_BUCKETS = [[0, 5, "0-5 мин"], [6, 10, "6-10 мин"], [11, 15, "11-15 мин"], [16, 20, "16-20 мин"], [21, Infinity, "20+ мин"]];
+      xml += rowXml([{}]) + rowXml([{ v: "БЕНЧМАРК: ЦЕНА ПО УДАЛЁННОСТИ ОТ МЕТРО", s: "bold" }]) + rowXml(["До метро", "Лотов", "Средняя ₽/м²", "Откл. от общей средней"].map((h) => ({ v: h, s: "hdr" })));
+      const overallPpm2 = avg(withMetro.map((r) => r.ppm));
+      METRO_BUCKETS.forEach(([lo, hi, label]) => {
+        const sub = withMetro.filter((r) => r.metroTime >= lo && r.metroTime <= hi); if (!sub.length) return;
+        const a = avg(sub.map((r) => r.ppm));
+        xml += rowXml([{ v: label }, { v: sub.length, t: "Number" }, num(a), { v: overallPpm2 && a ? (a >= overallPpm2 ? "+" : "−") + Math.round(Math.abs(a / overallPpm2 - 1) * 100) + "%" : "—" }]);
+      });
+    }
+
     // подсветка ₽/м² — легенда тепловой карты
     xml += rowXml([{}]) + rowXml([{ v: "ПОДСВЕТКА ₽/м² (в листах с лотами)", s: "bold" }]);
     xml += rowXml([{ v: "Зелёный — ниже средней по категории (дешевле/недооценён), красный — выше (дороже/переоценён).", s: "sub" }]);
@@ -643,16 +772,85 @@
     xml += rowXml([{ v: "и за всю историю наблюдений; сброс/переподача даты Циан его не уменьшает. Чем чаще выгружать — тем точнее.", s: "sub" }]);
     return worksheet("Сводка", [220, 96, 96, 96, 84, 84], xml, false);
   }
+
+  // Топ-30 лотов по индексу привлекательности — та же таблица (dataSheet),
+  // просто отфильтрованная и отсортированная по _score.
+  function topLotsSheet(subj, rows) {
+    const scored = rows.filter((r) => r._score != null).sort((a, b) => b._score - a._score).slice(0, 30);
+    if (!scored.length) return null;
+    return dataSheet("Топ_лотов", `${subj.title} — топ ${scored.length} по индексу привлекательности`,
+      "Индекс — эвристика (цена/м² относительно средней + отделка + срок экспозиции), не финансовая оценка. Сортировка по индексу.", scored);
+  }
+
+  // Одна физическая квартира выставлена разными продавцами по разной цене —
+  // разброс может быть демпингом или устаревшей ценой у части объявлений.
+  function dupSpreadSheet(subj, rows) {
+    const seen = new Set(), items = [];
+    rows.forEach((r) => {
+      if (!(r.dupNow > 1 && r.dupSpreadAbs)) return;
+      const fp = fpOf(r, subj.id);
+      if (seen.has(fp)) return;
+      seen.add(fp); items.push(r);
+    });
+    if (!items.length) return null;
+    items.sort((a, b) => (b.dupSpreadAbs || 0) - (a.dupSpreadAbs || 0));
+    const HDR = ["Категория", "Площадь, м²", "Этаж", "Корпус / секция", "Объявлений", "Мин. цена, ₽", "Макс. цена, ₽", "Разброс, ₽", "Разброс, %", "Дешевле у", "Ссылка на дешёвый"];
+    const W = [78, 72, 56, 105, 76, 100, 100, 92, 76, 150, 68];
+    let xml = rowXml([{ v: `${subj.title} — дубли: разброс цены между продавцами`, s: "title", merge: HDR.length - 1 }]) +
+      rowXml([{ v: "Одна и та же квартира выставлена несколькими продавцами по разной цене. Сортировка по разбросу, ₽.", s: "sub", merge: HDR.length - 1 }]) +
+      rowXml([{}]) + rowXml(HDR.map((h) => ({ v: h, s: "hdr" })));
+    items.forEach((r) => {
+      const floorVal = r.floor != null && r.floors != null ? r.floor + "/" + r.floors : (r.floor != null ? String(r.floor) : "");
+      xml += rowXml([
+        { v: r.category }, { v: r.area, t: r.area != null ? "Number" : "String", s: "area" }, { v: floorVal }, { v: r.building },
+        { v: r.dupNow, t: "Number" }, { v: r.dupMinPrice, t: "Number", s: "num" }, { v: r.dupMaxPrice, t: "Number", s: "num" },
+        { v: r.dupSpreadAbs, t: "Number", s: "num" }, { v: r.dupSpreadPct != null ? r.dupSpreadPct + "%" : "" },
+        { v: r.dupCheapestSeller }, r.dupCheapestUrl ? { v: "Циан →", href: r.dupCheapestUrl, s: "link" } : {},
+      ]);
+    });
+    return worksheet("Дубли_разброс_цен", W, xml, true);
+  }
+
+  // Динамика между запусками: что появилось/пропало/подешевело/подорожало с
+  // прошлой выгрузки этого же ЖК/выборки (сравнение по локальному снимку).
+  function changesSheet(subj, changes) {
+    if (!changes.hasPrev) return null;
+    const HDR = ["Тип", "Категория", "Корпус", "Этаж", "Цена, ₽", "Было, ₽", "Δ, %", "Ссылка"];
+    const W = [90, 78, 105, 56, 100, 100, 76, 68];
+    let xml = rowXml([{ v: `${subj.title} — изменения с прошлой выгрузки`, s: "title", merge: HDR.length - 1 }]) +
+      rowXml([{ v: `Новых: ${changes.appeared.length} · Пропало: ${changes.vanished.length} · Подешевело: ${changes.cheaper.length} · Подорожало: ${changes.pricier.length}`, s: "sub", merge: HDR.length - 1 }]) +
+      rowXml([{}]) + rowXml(HDR.map((h) => ({ v: h, s: "hdr" })));
+    const row = (type, r, price, from, pct, styleId) => {
+      const floorVal = r.floor != null ? String(r.floor) : "";
+      xml += rowXml([
+        { v: type, s: styleId || "bold" }, { v: r.category }, { v: r.building }, { v: floorVal },
+        { v: price, t: price != null ? "Number" : "String", s: "num" }, { v: from, t: from != null ? "Number" : "String", s: "num" },
+        { v: pct != null ? (pct > 0 ? "+" : "") + pct + "%" : "", s: pct == null ? null : (pct < 0 ? "pgood" : "pbad") },
+        r.url ? { v: "Циан →", href: r.url, s: "link" } : {},
+      ]);
+    };
+    changes.cheaper.forEach((c) => row("↓ Подешевел", c.r, c.r.price, c.from, c.pct, "pgood"));
+    changes.pricier.forEach((c) => row("↑ Подорожал", c.r, c.r.price, c.from, c.pct, "pbad"));
+    changes.appeared.forEach((r) => row("+ Новый", r, r.price, null, null, null));
+    changes.vanished.forEach((r) => row("− Пропал (продан/снят?)", r, null, r.price, null, "warn"));
+    return worksheet("Изменения", W, xml, true);
+  }
+
   function buildWorkbook(subj, rows, totalsByRoom, totalInJk) {
     rows = rows.slice().sort((a, b) => (a.ppm == null) - (b.ppm == null) || (a.ppm || 0) - (b.ppm || 0));
     computeHeat(rows);                                    // тепловая карта ₽/м² (зелёный↔красный)
+    computeScore(rows);                                   // индекс привлекательности лота
+    const changes = computeChanges(subj, rows);            // динамика с прошлой выгрузки (+ сохраняет новый снимок)
     const today = fmtDate(new Date()), sheets = [summarySheet(subj, rows, totalsByRoom, totalInJk)];
+    const changesXml = changesSheet(subj, changes); if (changesXml) sheets.push(changesXml);
+    const topXml = topLotsSheet(subj, rows); if (topXml) sheets.push(topXml);
     const src = `Источник: Циан${subj.id ? " (ID " + subj.id + ")" : ""}, ${today}. Сортировка по ₽/м². Подсветка ₽/м²: зелёный — дешевле средней по категории, красный — дороже. «Реальный срок» учитывает переподачи.`;
     sheets.push(dataSheet("Все_лоты", `${subj.title} — все лоты`, src, rows));
     const sn = { "Студия": "Студия", "Своб. планировка": "Своб_планировка", "1": "1-комн", "2": "2-комн", "3": "3-комн", "4+": "4-комн" };
     CATS.forEach((c) => { const sub = rows.filter((r) => r.category === c); if (sub.length) sheets.push(dataSheet(sn[c], `${subj.title} — ${c}`, `Собрано ${sub.length}. Сортировка по ₽/м².`, sub)); });
+    const dupXml = dupSpreadSheet(subj, rows); if (dupXml) sheets.push(dupXml);
     const heatStyles = HEAT.map((c, i) => `<Style ss:ID="h${i + 1}"><NumberFormat ss:Format="#,##0"/><Interior ss:Color="${c}" ss:Pattern="Solid"/><Alignment ss:Horizontal="Right" ss:Vertical="Center"/></Style>`).join("");
-    const styles = `<Styles><Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Vertical="Center"/><Font ss:FontName="Calibri" ss:Size="11"/></Style><Style ss:ID="hdr"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#1F2A44" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/></Style><Style ss:ID="title"><Font ss:Bold="1" ss:Size="13"/></Style><Style ss:ID="sub"><Font ss:Italic="1" ss:Color="#555555" ss:Size="9"/></Style><Style ss:ID="bold"><Font ss:Bold="1"/></Style><Style ss:ID="num"><NumberFormat ss:Format="#,##0"/></Style><Style ss:ID="area"><NumberFormat ss:Format="0.0"/></Style><Style ss:ID="link"><Font ss:Color="#1155CC" ss:Underline="Single"/></Style><Style ss:ID="warn"><Font ss:Bold="1" ss:Color="#C25400"/></Style>${heatStyles}</Styles>`;
+    const styles = `<Styles><Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Vertical="Center"/><Font ss:FontName="Calibri" ss:Size="11"/></Style><Style ss:ID="hdr"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#1F2A44" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/></Style><Style ss:ID="title"><Font ss:Bold="1" ss:Size="13"/></Style><Style ss:ID="sub"><Font ss:Italic="1" ss:Color="#555555" ss:Size="9"/></Style><Style ss:ID="bold"><Font ss:Bold="1"/></Style><Style ss:ID="num"><NumberFormat ss:Format="#,##0"/></Style><Style ss:ID="area"><NumberFormat ss:Format="0.0"/></Style><Style ss:ID="link"><Font ss:Color="#1155CC" ss:Underline="Single"/></Style><Style ss:ID="warn"><Font ss:Bold="1" ss:Color="#C25400"/></Style><Style ss:ID="scoreHi"><Font ss:Bold="1" ss:Color="#006100"/><Interior ss:Color="#C6EFCE" ss:Pattern="Solid"/></Style><Style ss:ID="scoreLo"><Font ss:Bold="1" ss:Color="#9C0006"/><Interior ss:Color="#FFC7CE" ss:Pattern="Solid"/></Style><Style ss:ID="pgood"><Font ss:Color="#1D7A43" ss:Bold="1"/></Style><Style ss:ID="pbad"><Font ss:Color="#C25400" ss:Bold="1"/></Style>${heatStyles}</Styles>`;
     return `<?xml version="1.0" encoding="UTF-8"?>\n<?mso-application progid="Excel.Sheet"?>\n<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" xmlns:html="http://www.w3.org/TR/REC-html40">${styles}${sheets.join("")}</Workbook>`;
   }
   const slug = (s) => s.toLowerCase().replace(/\s+/g, "-").replace(/[^0-9a-zа-яё_\-]/g, "") || "jk";
@@ -743,15 +941,31 @@
   // ---------- GUI: панель в Shadow DOM ----------
   const CSS = `
   *{box-sizing:border-box;margin:0;padding:0}
+  :host{
+    --bg-card:#fff; --text-1:#16203a; --text-2:#7a8398; --text-3:#69728a;
+    --stat-bg:#f5f7fb; --chip-bg:#eef1f8; --chip-text:#34406e; --border:#eef0f5;
+    --track-bg:#edeff5; --shadow:rgba(16,24,49,.30); --btn-disabled:#cdd2de;
+    --ok-bg:#e8f7ee; --ok-text:#1d7a43; --warn-bg:#fff3e0; --warn-text:#a96714;
+    --fact-bg1:#fff8ea; --fact-bg2:#fff1d4; --fact-border:#ffe2ad; --fact-text:#7a5a14; --fact-lab:#b5781a;
+    --err-bg:#fdecea; --err-text:#a32a1f; --err-border:#f5c2bb;
+  }
+  @media (prefers-color-scheme:dark){:host{
+    --bg-card:#1b2133; --text-1:#eef1fa; --text-2:#9aa3bd; --text-3:#8b93ab;
+    --stat-bg:#242c47; --chip-bg:#242c47; --chip-text:#b9c3e6; --border:#2b3350;
+    --track-bg:#242c47; --shadow:rgba(0,0,0,.55); --btn-disabled:#3a4262;
+    --ok-bg:#153826; --ok-text:#6fe3a7; --warn-bg:#3a2a12; --warn-text:#f0b15e;
+    --fact-bg1:#2b2410; --fact-bg2:#332a10; --fact-border:#4a3c14; --fact-text:#e9c073; --fact-lab:#f0b84a;
+    --err-bg:#3a1a17; --err-text:#f29288; --err-border:#5c2a24;
+  }}
   .root{position:fixed;right:22px;bottom:88px;z-index:2147483647;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
-  .card{width:312px;background:#fff;border-radius:18px;overflow:hidden;
-    box-shadow:0 16px 48px rgba(16,24,49,.30);animation:in .25s ease}
+  .card{width:312px;background:var(--bg-card);border-radius:18px;overflow:hidden;
+    box-shadow:0 16px 48px var(--shadow);animation:in .25s ease}
   @keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
   .root.collapsed .card{display:none}
   .fab{display:none}
   .root.collapsed .fab{display:flex;align-items:center;justify-content:center;width:60px;height:60px;
-    margin-left:auto;border:none;border-radius:50%;cursor:pointer;font-size:25px;color:#fff;
+    margin-left:auto;border:none;border-radius:50%;cursor:pointer;color:#fff;
     background:linear-gradient(135deg,#1F2A44,#3a4a7d);box-shadow:0 10px 26px rgba(16,24,49,.34);
     animation:fab-pulse 1.8s ease-in-out 4}
   @keyframes fab-pulse{0%,100%{box-shadow:0 10px 26px rgba(16,24,49,.34)}
@@ -759,47 +973,59 @@
   .root.collapsed .fab:hover{filter:brightness(1.08)}
   .head{display:flex;align-items:center;gap:9px;padding:15px 16px;color:#fff;
     background:linear-gradient(135deg,#1F2A44 0%,#34416f 100%)}
-  .head .ic{font-size:18px}.head .t{font-weight:700;font-size:14.5px;flex:1;letter-spacing:.2px}
+  .head .ic{display:flex}.head .t{font-weight:700;font-size:14.5px;flex:1;letter-spacing:.2px}
   .min{background:rgba(255,255,255,.16);border:none;color:#fff;width:26px;height:26px;
     border-radius:8px;cursor:pointer;font-size:16px;line-height:1}
   .min:hover{background:rgba(255,255,255,.28)}
   .body{padding:16px}
-  .jk{font-size:16.5px;font-weight:800;color:#16203a;line-height:1.25}
-  .sub{font-size:12px;color:#7a8398;margin-top:3px}
+  .jk{font-size:16.5px;font-weight:800;color:var(--text-1);line-height:1.25}
+  .sub{font-size:12px;color:var(--text-2);margin-top:3px}
   .pg{margin-top:12px;font-size:12.5px;display:flex;gap:7px;align-items:flex-start;
     padding:9px 11px;border-radius:11px;line-height:1.35}
-  .pg.ok{background:#e8f7ee;color:#1d7a43}.pg.warn{background:#fff3e0;color:#a96714}
+  .pg.ok{background:var(--ok-bg);color:var(--ok-text)}.pg.warn{background:var(--warn-bg);color:var(--warn-text)}
   .btn{margin-top:14px;width:100%;padding:13px;border:none;border-radius:12px;color:#fff;
     font-size:14.5px;font-weight:700;cursor:pointer;letter-spacing:.2px;
     background:linear-gradient(135deg,#1f9d55,#27ae60);transition:filter .15s,transform .05s}
   .btn:hover{filter:brightness(1.07)}.btn:active{transform:translateY(1px)}
-  .btn[disabled]{background:#cdd2de;cursor:default;filter:none}
+  .btn[disabled]{background:var(--btn-disabled);cursor:default;filter:none}
   .prog{margin-top:14px;display:none}
-  .prog .pt{font-size:12.5px;color:#444;font-weight:600;margin-bottom:7px;display:flex;justify-content:space-between}
-  .track{height:11px;background:#edeff5;border-radius:7px;overflow:hidden}
+  .prog .pt{font-size:12.5px;color:var(--text-1);font-weight:600;margin-bottom:7px;display:flex;justify-content:space-between}
+  .track{height:11px;background:var(--track-bg);border-radius:7px;overflow:hidden}
   .bar{height:100%;width:0;border-radius:7px;background:linear-gradient(90deg,#27ae60,#1f9d55);
     transition:width .3s ease}
   .bar.indef{width:40%;animation:slide 1.1s infinite ease-in-out}
   @keyframes slide{0%{margin-left:-40%}100%{margin-left:100%}}
   .res{margin-top:14px;display:none}
   .stats{display:flex;gap:8px}
-  .stat{flex:1;background:#f5f7fb;border-radius:12px;padding:10px 6px;text-align:center}
-  .stat .v{font-size:17px;font-weight:800;color:#16203a;line-height:1}
-  .stat .l{font-size:10px;color:#828ca3;margin-top:4px;text-transform:uppercase;letter-spacing:.3px}
+  .stat{flex:1;background:var(--stat-bg);border-radius:12px;padding:10px 6px;text-align:center}
+  .stat .v{font-size:17px;font-weight:800;color:var(--text-1);line-height:1}
+  .stat .l{font-size:10px;color:var(--text-2);margin-top:4px;text-transform:uppercase;letter-spacing:.3px}
   .stat.full .v{color:#1f9d55}
-  .meta{margin-top:10px;font-size:11.5px;color:#69728a;line-height:1.5}
+  .meta{margin-top:10px;font-size:11.5px;color:var(--text-3);line-height:1.5}
   .cats{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
-  .chip{font-size:11px;background:#eef1f8;color:#34406e;padding:4px 9px;border-radius:20px;font-weight:600}
-  .fact{margin-top:12px;display:none;background:linear-gradient(135deg,#fff8ea,#fff1d4);
-    border:1px solid #ffe2ad;color:#7a5a14;border-radius:12px;padding:11px 13px;font-size:12.5px;line-height:1.5;
+  .chip{font-size:11px;background:var(--chip-bg);color:var(--chip-text);padding:4px 9px;border-radius:20px;font-weight:600}
+  .fact{margin-top:12px;display:none;background:linear-gradient(135deg,var(--fact-bg1),var(--fact-bg2));
+    border:1px solid var(--fact-border);color:var(--fact-text);border-radius:12px;padding:11px 13px;font-size:12.5px;line-height:1.5;
     animation:in .3s ease}
-  .fact .lab{font-weight:800;color:#b5781a;display:block;font-size:10.5px;letter-spacing:.4px;margin-bottom:3px;text-transform:uppercase}
-  .file{margin-top:12px;font-size:12px;color:#1d7a43;background:#e8f7ee;border-radius:10px;
+  .fact .lab{font-weight:800;color:var(--fact-lab);display:block;font-size:10.5px;letter-spacing:.4px;margin-bottom:3px;text-transform:uppercase}
+  .file{margin-top:12px;font-size:12px;color:var(--ok-text);background:var(--ok-bg);border-radius:10px;
     padding:9px 11px;display:flex;gap:7px;align-items:center;word-break:break-all}
-  .foot{padding:11px 16px;border-top:1px solid #eef0f5;font-size:11px;color:#9aa2b4;line-height:1.45}
-  .lnk{color:#2c6ecb;cursor:pointer;text-decoration:underline}`;
+  .err{margin-top:14px;display:none;background:var(--err-bg);border:1px solid var(--err-border);
+    color:var(--err-text);border-radius:12px;padding:11px 13px;font-size:12.5px;line-height:1.5;animation:in .3s ease}
+  .err .et{display:block}
+  .err .retry{margin-top:9px;border:1px solid var(--err-border);background:transparent;color:var(--err-text);
+    font-size:12px;font-weight:700;padding:7px 12px;border-radius:9px;cursor:pointer}
+  .err .retry:hover{background:var(--err-border)}
+  .foot{padding:11px 16px;border-top:1px solid var(--border);font-size:11px;color:var(--text-2);line-height:1.45}
+  .lnk{color:#2c6ecb;cursor:pointer;text-decoration:underline}
+  .btn:focus-visible,.min:focus-visible,.fab:focus-visible,.err .retry:focus-visible{
+    outline:2px solid #4c8dff;outline-offset:2px}`;
 
   const ui = { mounted: false };
+
+  // Инлайн SVG вместо эмодзи — чётче/предсказуемее на всех ОС и масштабах,
+  // currentColor подхватывает цвет из .head/.fab (без доп. CSS на каждый размер).
+  const ICON_SVG = (size) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="3" y="12" width="4.5" height="9" rx="1.2" fill="currentColor"/><rect x="9.75" y="7" width="4.5" height="14" rx="1.2" fill="currentColor"/><rect x="16.5" y="3" width="4.5" height="18" rx="1.2" fill="currentColor"/></svg>`;
 
   function buildPanel() {
     const host = document.createElement("div");
@@ -808,9 +1034,9 @@
     sh.innerHTML =
       "<style>" + CSS + "</style>" +
       '<div class="root collapsed" part="root">' +   // по умолчанию свёрнуто (кружок)
-        '<button class="fab" title="Циан → Excel">📊</button>' +
+        `<button class="fab" title="Циан → Excel">${ICON_SVG(26)}</button>` +
         '<div class="card">' +
-          '<div class="head"><span class="ic">📊</span><span class="t">Циан → Excel</span>' +
+          `<div class="head"><span class="ic">${ICON_SVG(18)}</span><span class="t">Циан → Excel</span>` +
             '<button class="min" title="Свернуть">—</button></div>' +
           '<div class="body">' +
             '<div class="jk" id="jk">ЖК не определён</div>' +
@@ -830,6 +1056,7 @@
               '<div class="fact" id="s-fact"><span class="lab">💡 Любопытный факт</span><span id="s-facttext"></span></div>' +
               '<div class="file" id="s-file"><span>✓</span><span id="s-fname"></span></div>' +
             '</div>' +
+            '<div class="err" id="err"><span class="et" id="err-text"></span><button class="retry" id="err-retry">↻ Повторить</button></div>' +
           '</div>' +
           '<div class="foot" id="foot">Открой страницу ЖК с квартирами на www.cian.ru и нажми кнопку. Данные берутся из твоей сессии.</div>' +
         '</div>' +
@@ -843,6 +1070,7 @@
       res: $("#res"), count: $("#s-count"), cov: $("#s-cov"), ppm: $("#s-ppm"),
       meta: $("#s-meta"), cats: $("#s-cats"), fact: $("#s-fact"), facttext: $("#s-facttext"),
       file: $("#s-file"), fname: $("#s-fname"), foot: $("#foot"),
+      err: $("#err"), errText: $("#err-text"), errRetry: $("#err-retry"),
     };
     const expand = (e) => { if (e) e.stopPropagation(); ui.root.classList.remove("collapsed"); try { refreshHeader(); } catch (err) { /* ignore */ } };
     const collapse = (e) => { if (e) e.stopPropagation(); ui.root.classList.add("collapsed"); };
@@ -852,6 +1080,7 @@
     // внутри) раскрывает панель — чтобы промах по 1-2 px не «ломал» открытие.
     ui.root.addEventListener("click", () => { if (ui.root.classList.contains("collapsed")) expand(); });
     ui.el.go.addEventListener("click", () => run());
+    ui.el.errRetry.addEventListener("click", () => { ui.el.err.style.display = "none"; run(); });
     ui.mounted = true;
     console.log("[cian-excel] панель добавлена");
   }
@@ -911,6 +1140,15 @@
     ui.el.fname.textContent = "Файл скачан: " + filename;
   }
 
+  // Инлайн-баннер ошибки в самой панели (вместо alert(), который блокирует
+  // вкладку и легко теряется за окном браузера) с кнопкой повтора.
+  function showError(msg) {
+    ui.el.prog.style.display = "none";
+    ui.el.res.style.display = "none";
+    ui.el.err.style.display = "block";
+    ui.el.errText.textContent = msg;
+  }
+
   async function run() {
     if (ui._busy) return;
     const subj = detectSubject();   // не из кэша: тема тоже могла смениться (напр. смена ЖК без перезагрузки)
@@ -923,9 +1161,10 @@
     let base = liveQ ? cleanBaseQuery(liveQ) : ui._base;
     const pageCnt = pageResultCount();
     console.log("[cian-excel] страница:", location.href, "| тема:", subj, "| на странице:", pageCnt, "| запрос:", base);
-    if (!base) { alert("Не удалось получить запрос со страницы.\n\n" + OPEN_LIST_MSG); refreshHeader(); return; }
+    if (!base) { showError("Не удалось получить запрос со страницы. " + OPEN_LIST_MSG); refreshHeader(); return; }
 
     ui._busy = true; ui.el.go.disabled = true; ui.el.go.textContent = "⏳ Собираю…";
+    ui.el.err.style.display = "none";
     showProgress("Подключаюсь…", null);
     try {
       const { offers, totalsByRoom, totalInJk } = await collectAll(base, (text, got, total) => showProgress(text, total ? got / total : null));
@@ -944,9 +1183,9 @@
       showResults(computeStats(rows, totalInJk, expInfo), filename);
       ui.el.go.textContent = "📊 Выгрузить снова";
     } catch (e) {
-      console.error(e); ui.el.prog.style.display = "none";
+      console.error(e);
       ui.el.go.textContent = "📊 Выгрузить в Excel";
-      alert("Ошибка: " + e.message + "\nОбновите страницу, дождитесь загрузки списка объявлений и попробуйте снова.");
+      showError("Ошибка: " + e.message + ". Обновите страницу, дождитесь загрузки списка объявлений и нажмите «Повторить».");
     } finally {
       ui._busy = false; refreshHeader();
     }
