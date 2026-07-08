@@ -80,6 +80,24 @@ export function unsavedChangesDialog(docTitle) {
   });
 }
 
+/** Crash-recovery prompt shown at launch when main.js found an autosave
+ * snapshot that's newer than its real document (or an orphaned snapshot
+ * for a never-saved document) — see fileio.js's checkForRecovery().
+ * Resolves 'recover' | 'discard'. */
+export function recoveryDialog(docTitle, timeLabel) {
+  return new Promise((resolve) => {
+    openDialog('', (box, close) => {
+      box.innerHTML = `<h2>Recover unsaved changes?</h2><div class="dialog__body">Lumen Write found unsaved changes to "${escapeHtml(
+        docTitle
+      )}" from ${escapeHtml(timeLabel)} that weren't saved before the app closed unexpectedly.</div>`;
+      buildActions(box, [
+        { label: 'Discard', onClick: () => { close(); resolve('discard'); } },
+        { label: 'Recover', variant: 'primary', onClick: () => { close(); resolve('recover'); } },
+      ]);
+    });
+  });
+}
+
 /** Prompt for a link URL. Resolves the URL string, or null if cancelled. */
 export function promptLinkDialog() {
   return new Promise((resolve) => {

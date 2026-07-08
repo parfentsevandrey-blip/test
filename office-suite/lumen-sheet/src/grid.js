@@ -182,9 +182,12 @@ export class Sheet {
     }
   }
 
-  _recalcFrom(startKey) {
+  /** BFS the transitive dependent closure of a set of start keys (each start
+   * key is included too). Used to figure out exactly which cells a change
+   * can possibly affect, so a recalc pass never has to touch anything else. */
+  _collectAffected(startKeys) {
     const affected = new Set();
-    const stack = [startKey];
+    const stack = [...startKeys];
     while (stack.length) {
       const k = stack.pop();
       if (affected.has(k)) continue;
@@ -192,6 +195,18 @@ export class Sheet {
       const deps = this.dependents.get(k);
       if (deps) for (const d of deps) stack.push(d);
     }
+    return affected;
+  }
+
+  /** Topologically sort `affected` (a Set of cell keys) and evaluate each one
+   * exactly once, in dependency order. Any cell left over once the queue
+   * drains sits on a cycle and gets #CIRCULAR!. This is the one and only
+   * place cells get evaluated during a recalc — callers build the affected
+   * set (via _collectAffected or otherwise) and hand it here once, so a
+   * formula with N precedent cells gets evaluated once per pass, never once
+   * per precedent (see recalcAll()/_recalcFrom() below).
+   */
+  _recalcSet(affected) {
     const inDegree = new Map();
     for (const k of affected) {
       const cell = this.cells.get(k);
@@ -222,6 +237,10 @@ export class Sheet {
       const cell = this.cells.get(k);
       if (cell) cell.computed = new FormulaError('#CIRCULAR!');
     }
+  }
+
+  _recalcFrom(startKey) {
+    this._recalcSet(this._collectAffected([startKey]));
   }
 
   _evalCell(key) {
@@ -273,10 +292,15 @@ export class Sheet {
     return out;
   }
 
-  /** Recompute every formula cell from scratch (used after bulk structural changes). */
+  /** Recompute every formula cell from scratch (used after bulk structural
+   * changes). Visits every cell in ONE topological pass rather than calling
+   * _recalcFrom() per cell — the latter re-walks and re-evaluates the full
+   * transitive-dependent closure from scratch for every single starting
+   * cell, so a formula with N precedent cells (e.g. =SUM(A1:Z10000)) would
+   * get independently recomputed N times per pass instead of once. */
   recalcAll() {
     for (const key of this.cells.keys()) this._reparse(key);
-    for (const key of this.cells.keys()) this._recalcFrom(key);
+    this._recalcSet(new Set(this.cells.keys()));
   }
 
   insertRow(atIndex) {
@@ -386,33 +410,52 @@ export class Sheet {
     };
   }
 
+  // Tolerant of hand-corrupted/partially-written .lsheet input: `data` (and
+  // any of its nested fields) may be null, the wrong type, or simply
+  // missing — every field below falls back to a sane default rather than
+  // dereferencing something that might not be there. This is what stops a
+  // shape like {"cells": {"A1": null}} from throwing deep in the open flow
+  // (see README/data-safety audit) — the outer Workbook.fromJSON() also
+  // wraps the whole parse in try/catch as defense in depth, but individual
+  // cells being null is common enough (a partially-written save, a
+  // hand-edited file) that it's worth tolerating here directly instead of
+  // discarding the whole document over one bad cell.
   static fromJSON(data) {
-    const sheet = new Sheet(data.name || 'Sheet1');
-    sheet.rowCount = data.rowCount || DEFAULT_ROWS;
-    sheet.colCount = data.colCount || DEFAULT_COLS;
-    sheet.colWidths = data.colWidths || {};
-    sheet.rowHeights = data.rowHeights || {};
+    if (!data || typeof data !== 'object' || Array.isArray(data)) data = {};
+    const sheet = new Sheet(typeof data.name === 'string' ? data.name : 'Sheet1');
+    sheet.rowCount = typeof data.rowCount === 'number' && data.rowCount > 0 ? data.rowCount : DEFAULT_ROWS;
+    sheet.colCount = typeof data.colCount === 'number' && data.colCount > 0 ? data.colCount : DEFAULT_COLS;
+    sheet.colWidths = data.colWidths && typeof data.colWidths === 'object' ? data.colWidths : {};
+    sheet.rowHeights = data.rowHeights && typeof data.rowHeights === 'object' ? data.rowHeights : {};
     // freezeRow/freezeCol used to be booleans (v1.1); migrate true/false -> 1/0
     // so older .lsheet files still load under the new "how many rows/cols"
     // Freeze Panes model.
     sheet.freezeRow = typeof data.freezeRow === 'number' ? data.freezeRow : data.freezeRow ? 1 : 0;
     sheet.freezeCol = typeof data.freezeCol === 'number' ? data.freezeCol : data.freezeCol ? 1 : 0;
-    sheet.charts = Array.isArray(data.charts) ? data.charts.map((c) => ({ ...c })) : [];
-    sheet.condFormats = Array.isArray(data.condFormats) ? data.condFormats.map((r) => ({ ...r })) : [];
-    sheet.merges = Array.isArray(data.merges) ? data.merges.slice() : [];
+    sheet.charts = Array.isArray(data.charts)
+      ? data.charts.filter((c) => c && typeof c === 'object').map((c) => ({ ...c }))
+      : [];
+    sheet.condFormats = Array.isArray(data.condFormats)
+      ? data.condFormats.filter((r) => r && typeof r === 'object').map((r) => ({ ...r }))
+      : [];
+    sheet.merges = Array.isArray(data.merges) ? data.merges.filter((m) => typeof m === 'string') : [];
     sheet.dataValidations = Array.isArray(data.dataValidations)
-      ? data.dataValidations.map((r) => ({ ...r, values: Array.isArray(r.values) ? r.values.slice() : [] }))
+      ? data.dataValidations
+          .filter((r) => r && typeof r === 'object')
+          .map((r) => ({ ...r, values: Array.isArray(r.values) ? r.values.slice() : [] }))
       : [];
     sheet.pageSetup = {
       pageSize: 'letter',
       orientation: 'portrait',
       printArea: null,
-      ...(data.pageSetup || {}),
+      ...(data.pageSetup && typeof data.pageSetup === 'object' ? data.pageSetup : {}),
     };
-    const cells = data.cells || {};
+    const cells = data.cells && typeof data.cells === 'object' && !Array.isArray(data.cells) ? data.cells : {};
     for (const key of Object.keys(cells)) {
       const c = cells[key];
-      sheet.cells.set(key, { raw: c.raw || '', format: cloneFormat(c.format || {}), computed: '', deps: new Set() });
+      const raw = c && typeof c === 'object' && typeof c.raw !== 'undefined' ? c.raw || '' : '';
+      const format = c && typeof c === 'object' && c.format && typeof c.format === 'object' ? c.format : {};
+      sheet.cells.set(key, { raw, format: cloneFormat(format), computed: '', deps: new Set() });
     }
     sheet.recalcAll();
     return sheet;
@@ -505,16 +548,41 @@ export class Workbook {
     };
   }
 
+  // Throws WorkbookParseError for shapes that aren't plausibly a Lumen Sheet
+  // document at all (null, wrong type, missing "sheets" array, missing/
+  // unrecognized "version") rather than silently opening a blank workbook or
+  // letting a TypeError escape deep inside Sheet.fromJSON — callers should
+  // catch this and show a friendly "couldn't be opened" message. Individual
+  // sheets/cells within an otherwise-plausible document are tolerated by
+  // Sheet.fromJSON itself (see its comment) rather than rejected wholesale.
   static fromJSON(data) {
+    if (!data || typeof data !== 'object' || Array.isArray(data)) {
+      throw new WorkbookParseError('Document is not a Lumen Sheet workbook.');
+    }
+    if (typeof data.version !== 'number') {
+      throw new WorkbookParseError('Missing or unrecognized document version.');
+    }
+    if (!Array.isArray(data.sheets)) {
+      throw new WorkbookParseError('Document has no "sheets" array.');
+    }
     const wb = new Workbook();
-    wb.title = data.title || 'Untitled spreadsheet';
-    wb.sheets = (data.sheets || []).map((s) => Sheet.fromJSON(s));
+    wb.title = typeof data.title === 'string' ? data.title : 'Untitled spreadsheet';
+    wb.sheets = data.sheets.map((s) => Sheet.fromJSON(s));
     if (wb.sheets.length === 0) wb.sheets = [new Sheet('Sheet1')];
-    wb.activeSheetIndex = Math.min(data.activeSheet || 0, wb.sheets.length - 1);
+    const activeSheet = typeof data.activeSheet === 'number' ? data.activeSheet : 0;
+    wb.activeSheetIndex = Math.min(Math.max(0, activeSheet), wb.sheets.length - 1);
     wb.dirty = false;
     return wb;
   }
 }
+
+/** Thrown by Workbook.fromJSON() when the parsed JSON isn't a plausible
+ * Lumen Sheet document shape (as opposed to a JSON.parse syntax error, which
+ * main.js already turns into a friendly message before the renderer ever
+ * sees this data). Callers should catch this alongside any other exception
+ * from the parse and show the same friendly "couldn't be opened" message —
+ * see openWithDirtyCheck() in renderer.js. */
+export class WorkbookParseError extends Error {}
 
 // ---------------------------------------------------------------------------
 // Number formatting / display

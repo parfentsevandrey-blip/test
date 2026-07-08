@@ -255,9 +255,41 @@ installer (`Lumen Write Setup <version>.exe`) and a portable exe
 - Recent files live in a small JSON file at
   `app.getPath('userData')/recent.json`, read/written only from `main.js`
   and exposed to the renderer via a single `recent:list` IPC handler
-  (`window.lumen.getRecentFiles()`); opening a path (from Open Recent, the
-  start screen, or drag-and-drop) all go through one `file:openPath` IPC
-  channel shared with the regular Open-dialog code path.
+  (`window.lumen.getRecentFiles()`). Each entry carries a stable `id`
+  (a random UUID assigned by `main.js`, not derived from the path).
+  Opening a recent entry (from Open Recent or the start screen) sends only
+  that `id` over IPC (`recent:open`) — `main.js` looks the real path up
+  itself in its own `recent.json` and rejects an id that doesn't match a
+  current entry. Drag-and-drop uses a separate `file:openDropped` channel
+  that *does* accept a renderer-supplied path, since that path can only
+  ever have come from a real OS-level `drop` event (see the comment at the
+  drop listener in `src/renderer.js`); nothing else is allowed to pass an
+  arbitrary path in. Both funnel into the same shared `loadDocumentFromPath`
+  used by the regular Open-dialog code path.
+- **Trust boundary for writes**: `main.js` tracks the current document's
+  on-disk path itself (`currentFilePath`, process-side state — never read
+  back from a renderer payload). `file:save` takes content/options only
+  (no `filePath` argument) and writes to that tracked path, running the
+  same dialog flow as Save As the first time a document is saved. Save As
+  and every Export handler (`export:pdf/docx/markdown/txt`) always call
+  `dialog.showSaveDialog()` themselves and write only to that result. This
+  means a compromised/XSS'd renderer cannot redirect a write (or a
+  by-path read) to an arbitrary file — see the comments at the top of
+  `main.js` and above each handler for the full reasoning.
+- **HTML sanitization on import**: content originating outside the live
+  editor — mammoth's `.docx` conversion, a directly-opened `.html` file,
+  or a `.lwrite` file's `contentHTML` field (which could be hand-edited/
+  tampered with) — is run through a hand-rolled DOM-based sanitizer
+  (`src/sanitize.js`) before it ever becomes `contentHTML`, at the single
+  point `fileio.js`'s `applyOpenedResult` assigns it. It drops
+  `script`/`iframe`/`object`/`embed`/`link`/`meta`/`style` outright, strips
+  `on*` attributes and `javascript:`/`data:` URLs (except `data:image/*`
+  on `<img src>`, needed for mammoth's embedded images), restricts
+  `<a href>` to `http:`/`https:`/`mailto:`, and unwraps (keeps the text of,
+  drops the tag of) anything outside the editor's known formatting
+  vocabulary. Content the editor produces itself (typing, toolbar
+  formatting, inserted images/tables) never passes through this — only
+  external/file-sourced HTML does.
 - `src/startscreen.js` and `src/outline.js` don't import `src/fileio.js`
   (and vice versa isn't a two-way dependency): `renderer.js` wires the
   start screen's template/recent callbacks to `fileio.js` functions,

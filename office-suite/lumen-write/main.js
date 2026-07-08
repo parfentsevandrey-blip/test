@@ -4,12 +4,125 @@
 const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
+
+// ---------- Global error handling ----------
+// A bug anywhere in the main process used to either crash the whole app
+// with no explanation or (inside an async IPC handler without its own
+// try/catch) vanish into an unhandled rejection with zero trace. These are
+// last-resort safety nets, not the primary error handling strategy — every
+// IPC handler below still has its own try/catch that reports a proper
+// { error } back to the renderer, which shows it in the app's own toast/
+// dialog UI. dialog.showErrorBox is a NATIVE dialog — the one deliberate
+// exception to "always use the app's own .dialog-overlay" — because by the
+// time an uncaughtException fires, the renderer's own UI may be unavailable
+// or the very thing that's broken.
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception in main process:', err);
+  try {
+    dialog.showErrorBox(
+      'Lumen Write — unexpected error',
+      `Something went wrong and this action could not complete.\n\n${err && err.message ? err.message : err}`
+    );
+  } catch (boxErr) {
+    // The dialog subsystem itself may not be available (e.g. very early/
+    // late in the app lifecycle) — console.error above already logged it.
+  }
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled promise rejection in main process:', reason);
+});
 
 let win = null;
 
 // Set to true right before we actually want the window to close, so the
 // 'close' handler below doesn't intercept it a second time.
 let allowClose = false;
+
+// ---------- Trust boundary for file writes/reads ----------
+// main.js is the SOLE authority on which on-disk path is legitimate for the
+// current document. This is process-side state — never derived from a
+// renderer-supplied IPC payload — set to null for a new/untitled document
+// and to a real path only when a file is genuinely opened (dialog result,
+// a validated recent-list lookup, or a real OS drop event) or a Save-As
+// dialog completes. file:save writes to THIS path (or falls back to the
+// Save-As flow if it's null); it never accepts a path argument from the
+// renderer. See file:save/file:saveAs/loadDocumentFromPath/doc:new below.
+let currentFilePath = null;
+
+// ---------- Autosave / crash recovery ----------
+// A separate recovery mechanism from the real document file: main.js
+// periodically (at the renderer's request, throttled there — see
+// fileio.js) writes a snapshot of the CURRENT document's content to a
+// dedicated folder under userData, keyed by `currentDocKey` below. This
+// snapshot is NEVER the same file as the user's real document — it is
+// only ever consulted at the next launch to offer recovering content that
+// never made it into a real Save (e.g. after a crash/kill -9). It is
+// deleted the moment there's no longer any reason to believe data could be
+// stranded: a clean Save, a clean New/Open (switching away from a
+// document without a crash), or a clean app close.
+//
+// `currentDocKey` identifies the document currently being edited, exactly
+// in lockstep with `currentFilePath` (see comment above), but survives an
+// untitled/never-saved document too (which has no real path to key off
+// of): `saved:<sha256 of the real path>` once a document has a path, or
+// `untitled:<random uuid>` for a document that has never been saved this
+// "document instance" (a fresh id is minted every time the document
+// becomes untitled — New, a template, or a non-.lwrite Open — so a
+// leftover untitled-*.json found at the next launch is unambiguously
+// orphaned: nothing currently running could still be using that id).
+let currentDocKey = null;
+
+const AUTOSAVE_DIR = path.join(app.getPath('userData'), 'autosave');
+
+function ensureAutosaveDir() {
+  try {
+    fs.mkdirSync(AUTOSAVE_DIR, { recursive: true });
+  } catch (err) {
+    console.error('Failed to create autosave directory', err);
+  }
+}
+
+function keyForRealPath(filePath) {
+  return `saved:${crypto.createHash('sha256').update(filePath).digest('hex')}`;
+}
+
+function newUntitledKey() {
+  return `untitled:${crypto.randomUUID()}`;
+}
+
+function autosaveFilePathFor(key) {
+  // Autosave keys are already filesystem-safe (hex digest / uuid) apart
+  // from the "saved:"/"untitled:" prefix's colon — which is illegal in a
+  // Windows filename (this app ships Windows builds — see package.json's
+  // "build" block), so it's swapped for a hyphen here rather than allowed
+  // through. Anything else unexpected is stripped defensively too.
+  const safe = String(key).replace(/:/g, '-').replace(/[^a-zA-Z0-9_-]/g, '');
+  return path.join(AUTOSAVE_DIR, `${safe}.json`);
+}
+
+function clearAutosaveForKey(key) {
+  if (!key) return;
+  try {
+    const p = autosaveFilePathFor(key);
+    if (fs.existsSync(p)) fs.unlinkSync(p);
+  } catch (err) {
+    console.error('Failed to clear autosave snapshot', err);
+  }
+}
+
+/** Switches `currentDocKey` to `newKey`, clearing both the outgoing key's
+ * snapshot (no crash happened — the document is being cleanly navigated
+ * away from, so any recovery copy for it is no longer meaningful) and any
+ * stale snapshot that might already exist under the incoming key (e.g. a
+ * leftover from a previous crash while editing the same real path, now
+ * being superseded by a fresh, clean load of that same document). */
+function switchDocKey(newKey) {
+  clearAutosaveForKey(currentDocKey);
+  currentDocKey = newKey;
+  clearAutosaveForKey(currentDocKey);
+}
 
 function createWindow() {
   win = new BrowserWindow({
@@ -56,6 +169,15 @@ app.on('activate', () => {
 // (after showing its own in-app "unsaved changes" dialog, if needed).
 ipcMain.on('app:close-response', (event, shouldClose) => {
   if (shouldClose) {
+    // By the time we get here the renderer's own confirmProceedIfDirty()
+    // flow has already run: the document is either clean, was just saved
+    // (file:save/file:saveAs already cleared its autosave snapshot below),
+    // or the user explicitly chose "Don't Save". In every one of those
+    // cases this is a clean, deliberate close — not a crash — so any
+    // leftover autosave snapshot for the current document no longer means
+    // anything and should go too, otherwise the NEXT launch would wrongly
+    // offer to "recover" changes the user just told us to discard.
+    clearAutosaveForKey(currentDocKey);
     allowClose = true;
     if (win) win.close();
   }
@@ -63,15 +185,42 @@ ipcMain.on('app:close-response', (event, shouldClose) => {
 
 // ---------- File I/O helpers ----------
 
+// Thrown for any .lwrite file that parses as JSON but isn't a document
+// this app could have written (or doesn't parse as JSON at all) — carries
+// a message that's already safe to show the user as-is (see
+// loadDocumentFromPath's catch, which forwards err.message verbatim to
+// the renderer's toast), instead of a raw "Unexpected token X in JSON at
+// position Y" or a null-dereference TypeError reaching the user.
+class CorruptFileError extends Error {
+  constructor() {
+    super("This file couldn't be opened — it may be corrupted or in an unrecognized format.");
+    this.name = 'CorruptFileError';
+  }
+}
+
 function readLwrite(filePath) {
   const raw = fs.readFileSync(filePath, 'utf8');
-  const data = JSON.parse(raw);
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch (err) {
+    // Truncated / partially-written / not-JSON-at-all.
+    throw new CorruptFileError();
+  }
+  // Reject anything that isn't a plain object shaped like a document this
+  // app actually wrote: `data` being null (a bare "null" is valid JSON),
+  // an array, a primitive, or missing/mismatched the version field this
+  // app has always stamped on save all indicate a corrupted or foreign
+  // file rather than something safe to guess-parse.
+  if (!data || typeof data !== 'object' || Array.isArray(data) || data.version !== 1) {
+    throw new CorruptFileError();
+  }
   return {
-    contentHTML: data.contentHTML || '',
-    headerHTML: data.headerHTML || '',
-    footerHTML: data.footerHTML || '',
-    pageSetup: data.pageSetup || null,
-    title: data.title || path.basename(filePath, path.extname(filePath)),
+    contentHTML: typeof data.contentHTML === 'string' ? data.contentHTML : '',
+    headerHTML: typeof data.headerHTML === 'string' ? data.headerHTML : '',
+    footerHTML: typeof data.footerHTML === 'string' ? data.footerHTML : '',
+    pageSetup: data.pageSetup && typeof data.pageSetup === 'object' ? data.pageSetup : null,
+    title: typeof data.title === 'string' && data.title ? data.title : path.basename(filePath, path.extname(filePath)),
   };
 }
 
@@ -105,11 +254,23 @@ function titleFromPath(filePath) {
 const RECENT_LIMIT = 8;
 const RECENT_PATH = path.join(app.getPath('userData'), 'recent.json');
 
+// Every entry carries a stable `id` (a random UUID, not derived from the
+// path) so the renderer can ask to open a recent file BY ID instead of by
+// sending main.js an arbitrary path string — see recent:open below. Older
+// recent.json files from before this existed get ids backfilled on load.
 function loadRecent() {
   try {
     const raw = fs.readFileSync(RECENT_PATH, 'utf8');
     const arr = JSON.parse(raw);
-    return Array.isArray(arr) ? arr : [];
+    if (!Array.isArray(arr)) return [];
+    let backfilled = false;
+    const list = arr.filter(Boolean).map((entry) => {
+      if (entry.id) return entry;
+      backfilled = true;
+      return { ...entry, id: crypto.randomUUID() };
+    });
+    if (backfilled) saveRecentList(list);
+    return list;
   } catch (err) {
     return [];
   }
@@ -127,7 +288,12 @@ function saveRecentList(list) {
 function addRecent(filePath, title) {
   if (!filePath) return;
   let list = loadRecent().filter((entry) => entry && entry.path !== filePath);
-  list.unshift({ path: filePath, title: title || titleFromPath(filePath), openedAt: new Date().toISOString() });
+  list.unshift({
+    id: crypto.randomUUID(),
+    path: filePath,
+    title: title || titleFromPath(filePath),
+    openedAt: new Date().toISOString(),
+  });
   list = list.slice(0, RECENT_LIMIT);
   saveRecentList(list);
 }
@@ -191,6 +357,19 @@ async function loadDocumentFromPath(filePath) {
     }
 
     addRecent(filePath, title);
+    // This is the single place a successful open updates the main-tracked
+    // "current document path" (see the currentFilePath comment up top) —
+    // every caller below (dialog Open, Open Recent, drag-and-drop) funnels
+    // through here, so there's exactly one spot to get this right. Non-
+    // .lwrite opens (html/txt/docx) don't get a "current path" at all:
+    // Save on one of those still needs to go through Save As to pick a
+    // real .lwrite destination, same as before this fix.
+    currentFilePath = format === 'lwrite' ? filePath : null;
+    // See the currentDocKey comment up top: a .lwrite open now has a real
+    // path to key its autosave snapshot off of; any other format is still
+    // "untitled" as far as Save/autosave are concerned (Save on one of
+    // these still goes through Save As), so it gets a fresh per-instance id.
+    switchDocKey(format === 'lwrite' ? keyForRealPath(filePath) : newUntitledKey());
     return { filePath: format === 'lwrite' ? filePath : null, title, contentHTML, headerHTML, footerHTML, pageSetup, format, warnings };
   } catch (err) {
     return { error: String(err && err.message ? err.message : err) };
@@ -214,15 +393,62 @@ ipcMain.handle('file:open', async () => {
   return loadDocumentFromPath(result.filePaths[0]);
 });
 
-// Used by File ▸ Open Recent and drag-and-drop — same loading code path as
-// the dialog-based Open above, just given a path directly.
-ipcMain.handle('file:openPath', async (event, filePath) => {
+// File ▸ Open Recent: the renderer sends only a stable `id` — never a raw
+// path — and main.js looks the real path up itself in recent.json, which
+// main.js itself wrote and fully controls. A renderer that sent an
+// arbitrary path here (e.g. a compromised/XSS'd page) could otherwise read
+// any file the OS user can read; an id that doesn't match a *current*
+// entry is rejected outright rather than falling back to anything.
+ipcMain.handle('recent:open', async (event, id) => {
+  if (typeof id !== 'string' || !id) return { error: 'Invalid recent-file selection.' };
+  const entry = loadRecent().find((e) => e && e.id === id);
+  if (!entry) return { error: 'That recent file is no longer available.' };
+  return loadDocumentFromPath(entry.path);
+});
+
+// Drag-and-drop open: by the time a filePath string reaches THIS handler
+// it is just a string like any other IPC argument — main.js itself has no
+// way to tell whether it originated from a real drop or was typed in by a
+// malicious script, so this handler alone is NOT the security boundary.
+// The actual boundary is upstream, in preload.js's exposed openDroppedFile:
+// it takes a real File object (never a string) and resolves the path via
+// Electron's webUtils.getPathForFile(), which only returns a non-empty
+// path for a File Chromium itself created with a genuine on-disk backing —
+// a script-fabricated File resolves to '' and preload rejects it before
+// ever calling this IPC channel. (An earlier version of this bridge
+// accepted a bare path string directly and was a live arbitrary-file-read
+// vulnerability — any renderer script, e.g. via
+// `window.lumen.openDroppedPath('/etc/passwd')`, could read any file the
+// OS user could read. Do not revert preload.js's openDroppedFile to accept
+// a plain path string; that reopens this hole even though this handler's
+// code looks unchanged.) This handler still validates its input defensively
+// since it must never assume its caller is well-behaved.
+ipcMain.handle('file:openDropped', async (event, filePath) => {
+  if (typeof filePath !== 'string' || !filePath) return { error: 'Invalid file.' };
   return loadDocumentFromPath(filePath);
 });
 
+// Renderer tells us the current document has become untitled (New, or a
+// template picked from the start screen) so main.js's own notion of "the
+// current path" — the thing file:save writes to — resets in lockstep with
+// what's on screen, instead of a stale path lingering server-side.
+ipcMain.handle('doc:new', () => {
+  currentFilePath = null;
+  switchDocKey(newUntitledKey());
+  return true;
+});
+
+// Save: intentionally takes NO filePath from the renderer at all — the
+// payload is document content/options only. It writes to the path main.js
+// itself is tracking (currentFilePath); if the document has never been
+// saved (currentFilePath is null), it runs the exact same
+// dialog.showSaveDialog flow as Save As and adopts THAT result. This is
+// what makes repeated Ctrl+S silent for an already-saved document while
+// making it impossible for a compromised renderer to redirect a write
+// anywhere it likes.
 ipcMain.handle('file:save', async (event, payload) => {
-  const { filePath, title, contentHTML, headerHTML, footerHTML, pageSetup } = payload;
-  let targetPath = filePath;
+  const { title, contentHTML, headerHTML, footerHTML, pageSetup } = payload || {};
+  let targetPath = currentFilePath;
   if (!targetPath) {
     const result = await dialog.showSaveDialog(win, {
       title: 'Save document',
@@ -254,6 +480,11 @@ ipcMain.handle('file:save', async (event, payload) => {
       modifiedAt: now,
     };
     fs.writeFileSync(targetPath, JSON.stringify(data, null, 2), 'utf8');
+    currentFilePath = targetPath;
+    // A clean, successful Save means there's no longer any unsaved work
+    // for a crash to strand — clear this document's autosave snapshot
+    // (see the currentDocKey/autosave comments up top).
+    switchDocKey(keyForRealPath(targetPath));
     addRecent(targetPath, title || 'Untitled document');
     return { filePath: targetPath };
   } catch (err) {
@@ -261,8 +492,12 @@ ipcMain.handle('file:save', async (event, payload) => {
   }
 });
 
+// Save As: ALWAYS shows its own dialog.showSaveDialog and uses ONLY that
+// result as the write target — the payload here never carried a filePath
+// (renderer content/options only), so there is no fallback path to a
+// renderer-supplied location, ever.
 ipcMain.handle('file:saveAs', async (event, payload) => {
-  const { title, contentHTML, headerHTML, footerHTML, pageSetup } = payload;
+  const { title, contentHTML, headerHTML, footerHTML, pageSetup } = payload || {};
   const result = await dialog.showSaveDialog(win, {
     title: 'Save document as',
     defaultPath: `${title || 'Untitled document'}.lwrite`,
@@ -282,11 +517,140 @@ ipcMain.handle('file:saveAs', async (event, payload) => {
       modifiedAt: now,
     };
     fs.writeFileSync(result.filePath, JSON.stringify(data, null, 2), 'utf8');
+    currentFilePath = result.filePath;
+    // Same reasoning as file:save above — a clean Save As clears the
+    // autosave snapshot for the document being saved.
+    switchDocKey(keyForRealPath(result.filePath));
     addRecent(result.filePath, title || 'Untitled document');
     return { filePath: result.filePath };
   } catch (err) {
     return { error: String(err && err.message ? err.message : err) };
   }
+});
+
+// ---------- Autosave IPC ----------
+// Separate from file:save/file:saveAs above: these never touch the user's
+// real document file, only the dedicated recovery snapshot described in
+// the currentDocKey/AUTOSAVE_DIR comments near the top of this file.
+
+// Periodic "the document is dirty" snapshot, throttled/deduped on the
+// renderer side (fileio.js) so this only fires roughly every 30-45s and
+// only when the content actually changed since the last autosave.
+ipcMain.handle('autosave:write', (event, payload) => {
+  if (!currentDocKey) return false;
+  try {
+    ensureAutosaveDir();
+    const data = {
+      version: 1,
+      key: currentDocKey,
+      filePath: currentFilePath,
+      title: (payload && payload.title) || 'Untitled document',
+      contentHTML: (payload && payload.contentHTML) || '',
+      headerHTML: (payload && payload.headerHTML) || '',
+      footerHTML: (payload && payload.footerHTML) || '',
+      pageSetup: (payload && payload.pageSetup) || null,
+      savedAt: new Date().toISOString(),
+    };
+    fs.writeFileSync(autosaveFilePathFor(currentDocKey), JSON.stringify(data), 'utf8');
+    return true;
+  } catch (err) {
+    console.error('Autosave write failed', err);
+    return false;
+  }
+});
+
+// Called once at launch. Scans every snapshot under AUTOSAVE_DIR and
+// returns the ones worth offering to recover: for a snapshot tied to a
+// real path, only if it's newer than that file's own last-saved mtime (a
+// snapshot that's older, or whose real file no longer exists but was
+// re-saved since... see below, just means the user already saved normally
+// after the snapshot was taken); for an untitled document, ANY leftover
+// snapshot at all, since a clean New/Save/close always clears its own
+// (see switchDocKey / the app:close-response handler above) — so one
+// still on disk at the next launch can only mean the session that wrote
+// it never shut down cleanly.
+ipcMain.handle('autosave:findRecoverable', () => {
+  ensureAutosaveDir();
+  let files;
+  try {
+    files = fs.readdirSync(AUTOSAVE_DIR).filter((f) => f.endsWith('.json'));
+  } catch (err) {
+    return [];
+  }
+  const candidates = [];
+  for (const file of files) {
+    const full = path.join(AUTOSAVE_DIR, file);
+    let data;
+    try {
+      data = JSON.parse(fs.readFileSync(full, 'utf8'));
+    } catch (err) {
+      // A corrupt/partially-written autosave snapshot itself (e.g. the
+      // process died mid-write of the snapshot) isn't worth surfacing —
+      // and definitely not worth crashing over. Clean it up and move on.
+      try { fs.unlinkSync(full); } catch (e2) { /* ignore */ }
+      continue;
+    }
+    if (!data || typeof data !== 'object' || !data.key) continue;
+    // Never offer to "recover" the document that's currently open and
+    // being actively autosaved this very session — that's a live copy of
+    // the current session's progress, not an orphan from a crash.
+    if (data.key === currentDocKey) continue;
+
+    let recoverable = false;
+    if (data.filePath) {
+      try {
+        const st = fs.statSync(data.filePath);
+        recoverable = !data.savedAt || new Date(data.savedAt).getTime() > st.mtimeMs;
+      } catch (err) {
+        // The real file is missing/unreadable — still surface the
+        // snapshot rather than silently dropping the only remaining copy
+        // of that content.
+        recoverable = true;
+      }
+    } else {
+      recoverable = true;
+    }
+    if (recoverable) {
+      candidates.push({ key: data.key, filePath: data.filePath || null, title: data.title || 'Untitled document', savedAt: data.savedAt || null });
+    }
+  }
+  candidates.sort((a, b) => new Date(b.savedAt || 0) - new Date(a.savedAt || 0));
+  return candidates;
+});
+
+// Applies a specific snapshot (by key) as the new "current document" —
+// the renderer loads its content into the editor and marks it dirty; nothing
+// is written to the real file here (the user still has to Save). Adopting
+// `currentDocKey`/`currentFilePath` from the snapshot means a subsequent
+// Save writes straight back to the original path (if any) instead of
+// re-prompting Save As, and — deliberately — does NOT clear the snapshot
+// itself yet: if the app is killed again before the user saves, the
+// recovery copy needs to still be there next time too.
+ipcMain.handle('autosave:loadSnapshot', (event, key) => {
+  if (typeof key !== 'string' || !key) return null;
+  let data;
+  try {
+    data = JSON.parse(fs.readFileSync(autosaveFilePathFor(key), 'utf8'));
+  } catch (err) {
+    return null;
+  }
+  if (!data || typeof data !== 'object') return null;
+  currentFilePath = data.filePath || null;
+  currentDocKey = data.key || key;
+  return {
+    filePath: data.filePath || null,
+    title: typeof data.title === 'string' ? data.title : 'Untitled document',
+    contentHTML: typeof data.contentHTML === 'string' ? data.contentHTML : '',
+    headerHTML: typeof data.headerHTML === 'string' ? data.headerHTML : '',
+    footerHTML: typeof data.footerHTML === 'string' ? data.footerHTML : '',
+    pageSetup: data.pageSetup && typeof data.pageSetup === 'object' ? data.pageSetup : null,
+  };
+});
+
+// User chose "Discard" in the recovery dialog for a given snapshot.
+ipcMain.handle('autosave:discard', (event, key) => {
+  clearAutosaveForKey(key);
+  return true;
 });
 
 // Chromium's header/footer templates support a few special classes that
@@ -308,6 +672,10 @@ function buildHeaderFooterTemplate(raw) {
   return `<div style="width:100%;font-size:9px;text-align:center;-webkit-print-color-adjust:exact;">${escaped}</div>`;
 }
 
+// Every export handler below (pdf/docx/markdown/txt) follows the same
+// rule as Save As: it always calls dialog.showSaveDialog() itself and
+// writes ONLY to that call's result. None of these payloads carry (or are
+// read for) a filePath — the renderer cannot influence the write target.
 ipcMain.handle('export:pdf', async (event, payload) => {
   const { title, headerHTML, footerHTML, pageSetup } = payload || {};
   try {

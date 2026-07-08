@@ -145,7 +145,9 @@ function buildRecentSection(entries) {
 
     item.appendChild(name);
     item.appendChild(meta);
-    item.addEventListener('click', () => handlers.onRecent(entry.path));
+    // Pass only the entry's stable id — never its path — so main.js is
+    // the one resolving id -> real path against its own recent.json.
+    item.addEventListener('click', () => handlers.onRecent(entry.id));
     wrap.appendChild(item);
   }
   return wrap;

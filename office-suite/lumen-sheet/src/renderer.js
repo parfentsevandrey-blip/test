@@ -97,6 +97,19 @@ let recentCache = []; // [{ path, openedAt }], refreshed on boot and after every
 let fillHandleState = null; // active fill-handle drag, see "Fill handle" section
 let openSubmenuEls = []; // tracked so closeAllMenus() can tear them down too
 
+// Autosave / crash recovery (see "Autosave / crash recovery" section near
+// the file I/O code further down). JSON.stringify of the last content we
+// actually wrote to the autosave snapshot, so the periodic tick can skip a
+// pointless disk write when nothing changed since the last one.
+let lastAutosaveSnapshot = null;
+// Declared here (not next to startAutosaveTimer()/performAutosaveTick()
+// further down) for the exact reason called out in the comment above the
+// other early state below: boot runs at the top of this module and calls
+// startAutosaveTimer() immediately, which reads this constant — a `const`
+// declared down near its usual home would still be in the temporal dead
+// zone at that point in top-to-bottom module evaluation and throw.
+const AUTOSAVE_INTERVAL_MS = 35000; // 30-45s per spec; only fires when dirty AND changed
+
 // Declared here (rather than next to their feature sections further down)
 // because boot runs at the top of this module and calls functions that
 // reference them immediately — `let` bindings are in the temporal dead zone
@@ -126,6 +139,30 @@ let findIndex = -1;
 let els = {};
 
 // ---------------------------------------------------------------------------
+// Global error handling — an uncaught error or rejected promise anywhere in
+// the renderer used to be either silently swallowed or leave the app stuck
+// mid-action with zero user-facing signal. Surface an honest (but generic —
+// we don't know what the user was doing, and a raw stack isn't actionable
+// for them) error toast instead; the real detail still goes to the console
+// for debugging. Throttled so a repeating failure can't flood the toast
+// stack.
+// ---------------------------------------------------------------------------
+let lastGlobalErrorToastAt = 0;
+function reportUnexpectedError(label, err) {
+  console.error(label, err);
+  const now = Date.now();
+  if (now - lastGlobalErrorToastAt < 4000) return; // avoid a toast storm from a repeating failure
+  lastGlobalErrorToastAt = now;
+  showToast('Something went wrong. Your edits are autosaved periodically, but save now if you can.', { type: 'error' });
+}
+window.addEventListener('error', (e) => {
+  reportUnexpectedError('Unhandled error', e.error || e.message);
+});
+window.addEventListener('unhandledrejection', (e) => {
+  reportUnexpectedError('Unhandled promise rejection', e.reason);
+});
+
+// ---------------------------------------------------------------------------
 // Boot
 // ---------------------------------------------------------------------------
 
@@ -138,6 +175,8 @@ refreshRecentCache().then(() => {
   if (startScreenEl) renderStartScreenRecent();
 });
 showStartScreen();
+checkForRecovery();
+startAutosaveTimer();
 
 // ---------------------------------------------------------------------------
 // Shell construction
@@ -1024,16 +1063,17 @@ function renderStartScreenRecent() {
     textWrap.appendChild(meta);
     item.appendChild(icon);
     item.appendChild(textWrap);
-    item.addEventListener('click', () => openFileAtPath(entry.path));
+    item.addEventListener('click', () => openRecentById(entry.id));
     list.appendChild(item);
   }
 }
 
-function applyTemplate(key) {
+async function applyTemplate(key) {
   const tpl = TEMPLATES[key];
   if (!tpl) return;
   workbook = tpl.build();
   currentFilePath = null;
+  await window.lumen.file.newDocument();
   resetUndoRedo();
   renderSheetTabs();
   switchSheet(0, true);
@@ -2619,9 +2659,12 @@ function openDataValidationDialog() {
 // (chartElements is declared with the other early state, near the top of
 // this file.)
 
-function extractChartData(sheet, rangeStr) {
-  const range = parseRangeStr(rangeStr);
-  if (!range) return null;
+// Runs the label-orientation heuristic ONCE, against whatever is in the
+// range right now. Only ever called (a) when a chart is first inserted, and
+// (b) as a one-time migration for a chart loaded from an older .lsheet file
+// that predates storing this decision — see extractChartData() below for why
+// every *redraw* must reuse a stored decision instead of calling this again.
+function computeChartHeaderDecision(sheet, range) {
   const getVal = (c, r) => {
     const cell = sheet.getCell(cellKeyFromRC(c, r));
     return cell ? cell.computed : '';
@@ -2648,6 +2691,41 @@ function extractChartData(sheet, rangeStr) {
   const useRowHeaders =
     width > 1 && rowTotal > 0 && rowTextCount / rowTotal > 0.5 && colTotal > 0 && colNumCount / colTotal > 0.5;
 
+  let skipHeaderRow = false;
+  if (!useRowHeaders) {
+    const valueCol = width > 1 ? range.startCol + 1 : range.startCol;
+    const headerCandidate = getVal(valueCol, range.startRow);
+    skipHeaderRow = width > 1 && headerCandidate !== '' && !isNumeric(headerCandidate);
+  }
+  return { useRowHeaders, skipHeaderRow };
+}
+
+// `chart.header` — { useRowHeaders, skipHeaderRow } — is decided ONCE, at
+// chart-creation time (openInsertChartDialog's insertChart(), below), and
+// persisted on the chart object (and so round-trips through the .lsheet
+// file). Every redraw reuses that stored decision instead of re-running the
+// heuristic against the range's live contents: re-guessing on every redraw
+// is exactly what let sorting a selection that includes the chart's header
+// row corrupt the chart, since sort can move a text header into what the
+// heuristic then reinterprets as a numeric data row (or vice versa). A chart
+// loaded from a .lsheet saved before this fix won't have `chart.header` yet
+// — compute it once here and cache it on the chart object so later redraws
+// of that same chart are stable too.
+function extractChartData(sheet, chart) {
+  const range = parseRangeStr(chart.range);
+  if (!range) return null;
+  const getVal = (c, r) => {
+    const cell = sheet.getCell(cellKeyFromRC(c, r));
+    return cell ? cell.computed : '';
+  };
+  const isNumeric = (v) => typeof v === 'number';
+  const width = range.endCol - range.startCol + 1;
+
+  if (!chart.header || typeof chart.header.useRowHeaders !== 'boolean') {
+    chart.header = computeChartHeaderDecision(sheet, range);
+  }
+  const { useRowHeaders, skipHeaderRow } = chart.header;
+
   const labels = [];
   const values = [];
   if (useRowHeaders) {
@@ -2659,9 +2737,7 @@ function extractChartData(sheet, rangeStr) {
     }
   } else {
     const valueCol = width > 1 ? range.startCol + 1 : range.startCol;
-    let startRow = range.startRow;
-    const headerCandidate = getVal(valueCol, range.startRow);
-    if (width > 1 && headerCandidate !== '' && !isNumeric(headerCandidate)) startRow = range.startRow + 1;
+    const startRow = skipHeaderRow ? range.startRow + 1 : range.startRow;
     for (let r = startRow; r <= range.endRow; r++) {
       labels.push(String(getVal(range.startCol, r)));
       const v = getVal(valueCol, r);
@@ -2807,7 +2883,7 @@ function chartTypeLabel(type) {
 
 function redrawChart(chart, rec) {
   const sheet = workbook.activeSheet;
-  const data = extractChartData(sheet, chart.range);
+  const data = extractChartData(sheet, chart);
   rec.titleEl.textContent = `${chartTypeLabel(chart.type)} — ${chart.range}`;
   // Fade the body out, swap its content, then fade back in — so a refresh
   // (or the initial draw) settles in rather than popping straight to the
@@ -2945,6 +3021,12 @@ function openInsertChartDialog() {
       y,
       w: 340,
       h: 260,
+      // Decide the label orientation / header-row treatment ONCE, right now,
+      // while the range's current contents are actually the header layout
+      // the user picked — see extractChartData()'s comment for why every
+      // later redraw must reuse this instead of re-guessing (that re-guess
+      // is what let Sort corrupt a chart when it moved the header row).
+      header: computeChartHeaderDecision(sheet, parsed),
     };
     sheet.charts.push(chart);
     setDirty(true);
@@ -3113,10 +3195,6 @@ async function refreshRecentCache() {
   return recentCache;
 }
 
-async function touchRecent(filePath) {
-  recentCache = await window.lumen.recent.add(filePath);
-}
-
 function recentLabel(filePath) {
   return filePath
     .split(/[\\/]/)
@@ -3124,11 +3202,19 @@ function recentLabel(filePath) {
     .replace(/\.lsheet$/i, '');
 }
 
+/** Strip a directory prefix and extension off a path, for deriving a workbook
+ *  title from a filename (Save As, imports, first Save of an untitled doc). */
+function titleFromPath(filePath, ext) {
+  const base = filePath.split(/[\\/]/).pop();
+  const re = new RegExp(ext.replace(/\./g, '\\.') + '$', 'i');
+  return base.replace(re, '');
+}
+
 function recentOpenRecentSubmenu() {
   if (!recentCache.length) return [{ label: '(No recent files)', disabled: true }];
   return recentCache.map((entry) => ({
     label: recentLabel(entry.path),
-    onClick: () => openFileAtPath(entry.path),
+    onClick: () => openRecentById(entry.id),
   }));
 }
 
@@ -3138,6 +3224,11 @@ function recentOpenRecentSubmenu() {
 
 function setDirty(v) {
   workbook.dirty = v;
+  // A clean (non-dirty) document has nothing pending to autosave — reset the
+  // "last written snapshot" baseline so the next dirty edit on a *new*
+  // document (after New/Open/Save/recovery) always gets its first autosave
+  // tick evaluated fresh rather than compared against stale content.
+  if (!v) lastAutosaveSnapshot = null;
   updateTitle();
 }
 
@@ -3175,13 +3266,12 @@ async function newWorkbook() {
   showStartScreen();
 }
 
-async function openWorkbookFlow() {
-  const filePath = await window.lumen.dialogs.openLsheet();
-  if (!filePath) return;
-  await openFileAtPath(filePath);
-}
-
-async function openFileAtPath(filePath) {
+// Shared by File > Open, Open Recent, and (once wired to a 'drop' listener)
+// drag-and-drop: `fetchResult` is a thunk that asks main.js for an opened
+// file via one of its own safe flows (fresh open dialog, recent-id lookup,
+// or a genuine drop path) and resolves to { ok, data, filePath, canceled?,
+// error? }. This function never sees or passes along a bare path itself.
+async function openWithDirtyCheck(fetchResult) {
   if (workbook.dirty) {
     const choice = await confirmUnsaved();
     if (choice === 'cancel') return;
@@ -3190,14 +3280,26 @@ async function openFileAtPath(filePath) {
       if (!ok) return;
     }
   }
-  const res = await window.lumen.file.readLsheet(filePath);
+  const res = await fetchResult();
+  if (res.canceled) return;
   if (!res.ok) {
-    showToast('Could not open file', { type: 'error' });
-    showDialog({ title: 'Open failed', bodyHTML: `<p>${escapeHtml(res.error)}</p>` });
+    showCorruptedFileDialog(res.error);
     return;
   }
-  workbook = Workbook.fromJSON(res.data);
-  currentFilePath = filePath;
+  let parsed;
+  try {
+    parsed = Workbook.fromJSON(res.data);
+  } catch (e) {
+    // Valid JSON, but not a shape we recognize as a Lumen Sheet document
+    // (wrong type, missing "sheets"/"version", etc.) — see grid.js. Same
+    // friendly message as a JSON.parse failure; the raw error is logged for
+    // debugging only, never shown to the user.
+    console.error('Failed to parse workbook JSON', e);
+    showCorruptedFileDialog();
+    return;
+  }
+  workbook = parsed;
+  currentFilePath = res.filePath;
   resetUndoRedo();
   clampSelectionToSheet();
   renderSheetTabs();
@@ -3205,51 +3307,186 @@ async function openFileAtPath(filePath) {
   setDirty(false);
   hideStartScreen();
   showToast(`Opened "${workbook.title}"`);
-  await touchRecent(filePath);
+  await refreshRecentCache();
+}
+
+/** Shared "this file couldn't be opened" feedback for both a main-process
+ * read/parse failure (res.error is a short, already-generic message — see
+ * readLsheetFromDisk() in main.js) and a renderer-side shape/parse failure
+ * (no message passed — never show a raw JSON.parse/TypeError to the user). */
+function showCorruptedFileDialog(detail) {
+  const message = "This file couldn't be opened — it may be corrupted or in an unrecognized format.";
+  showToast('Could not open file', { type: 'error' });
+  showDialog({ title: 'Open failed', bodyHTML: `<p>${escapeHtml(detail || message)}</p>` });
+}
+
+// ---------------------------------------------------------------------------
+// Autosave / crash recovery
+// ---------------------------------------------------------------------------
+// A periodic recovery snapshot, written by main.js (the renderer has no fs
+// access) to a dedicated location under app.getPath('userData')/autosave —
+// NEVER the user's real document file. Keyed by main.js to the current
+// document's real path if it has one, or a stable per-session id for a
+// never-saved document (see main.js's autosave section for the full
+// key/lifecycle design). This is what turns a kill -9 mid-edit from silent,
+// total data loss into "relaunch, get offered your last autosaved content
+// back" instead.
+
+function startAutosaveTimer() {
+  setInterval(performAutosaveTick, AUTOSAVE_INTERVAL_MS);
+}
+
+async function performAutosaveTick() {
+  if (!workbook.dirty) return; // nothing unsaved — don't touch the recovery copy
+  const data = workbook.toJSON();
+  const snapshot = JSON.stringify(data);
+  if (snapshot === lastAutosaveSnapshot) return; // unchanged since the last autosave — skip the disk write
+  try {
+    const res = await window.lumen.autosave.save(data);
+    if (res && res.ok) lastAutosaveSnapshot = snapshot;
+  } catch (e) {
+    // Autosave is a best-effort safety net, not the primary save path — a
+    // failure here (e.g. a full disk) shouldn't interrupt editing. It's
+    // still worth knowing about if it happens repeatedly, so log it.
+    console.error('Autosave failed', e);
+  }
+}
+
+// Called once at boot, before the user has done anything. Offers to recover
+// content from a snapshot that's newer than its real document's last-saved
+// state (or, for a never-saved document, any snapshot orphaned by a session
+// that never shut down cleanly) — see main.js's autosave:check-recovery.
+async function checkForRecovery() {
+  let res;
+  try {
+    res = await window.lumen.autosave.checkRecovery();
+  } catch (e) {
+    console.error('Recovery check failed', e);
+    return;
+  }
+  if (!res || !res.found) return;
+
+  const whenStr = new Date(res.savedAt).toLocaleString();
+  const forDoc = res.filePath ? ` for "${escapeHtml(titleFromPath(res.filePath, '.lsheet'))}"` : '';
+  const choice = await new Promise((resolve) => {
+    showDialog({
+      title: 'Recover unsaved changes?',
+      bodyHTML: `<p>Lumen Sheet found unsaved changes${forDoc} from <strong>${escapeHtml(whenStr)}</strong> that weren't saved before the app last closed.</p>`,
+      buttons: [
+        { label: 'Discard', onClick: () => resolve('discard') },
+        { label: 'Recover', variant: 'primary', onClick: () => resolve('recover') },
+      ],
+      onClose: () => resolve('discard'),
+    });
+  });
+
+  if (choice !== 'recover') {
+    try {
+      await window.lumen.autosave.discardRecovery();
+    } catch (e) {
+      console.error('Failed to discard stray autosave', e);
+    }
+    return;
+  }
+
+  let rec;
+  try {
+    rec = await window.lumen.autosave.recover();
+  } catch (e) {
+    console.error('Recovery load failed', e);
+    showCorruptedFileDialog();
+    return;
+  }
+  if (!rec || !rec.ok || !rec.data) {
+    showCorruptedFileDialog();
+    return;
+  }
+  let parsed;
+  try {
+    parsed = Workbook.fromJSON(rec.data);
+  } catch (e) {
+    console.error('Recovered content was not a valid workbook', e);
+    showCorruptedFileDialog();
+    return;
+  }
+  workbook = parsed;
+  currentFilePath = rec.filePath || null;
+  resetUndoRedo();
+  clampSelectionToSheet();
+  renderSheetTabs();
+  switchSheet(workbook.activeSheetIndex, true);
+  // Recovered content is NOT yet written to the real file — the user still
+  // has to Save. Mark dirty so the title bar/close-confirm both reflect that.
+  lastAutosaveSnapshot = null;
+  setDirty(true);
+  hideStartScreen();
+  showToast('Recovered unsaved changes — remember to Save');
+}
+
+async function openWorkbookFlow() {
+  await openWithDirtyCheck(() => window.lumen.file.openLsheet());
+}
+
+async function openRecentById(id) {
+  await openWithDirtyCheck(() => window.lumen.recent.openById(id));
+}
+
+// Ready for a 'drop' DOM handler to call once drag-and-drop lands. Takes the
+// real `File` object straight from the drop event's dataTransfer.files[0] —
+// NOT a path string. preload.js's openDroppedLsheet resolves the on-disk
+// path itself via webUtils.getPathForFile(), which is what actually makes
+// this safe (see the comments on openDroppedLsheet in preload.js and on
+// file:open-dropped-lsheet in main.js). A future 'drop' handler must pass
+// the File object through unmodified — extracting some string path here in
+// page-context JS first and passing that instead would silently recreate
+// the arbitrary-path hole this design specifically closes.
+async function openDroppedFile(file) {
+  await openWithDirtyCheck(() => window.lumen.file.openDroppedLsheet(file));
 }
 
 async function saveWorkbook() {
-  if (!currentFilePath) return saveWorkbookAs();
+  const wasUntitled = !currentFilePath;
+  const defaultName = (workbook.title || 'Untitled spreadsheet') + '.lsheet';
   const data = workbook.toJSON();
-  const res = await window.lumen.file.writeLsheet(currentFilePath, data);
-  if (res.ok) {
-    setDirty(false);
-    showToast('Saved');
-    await touchRecent(currentFilePath);
-    return true;
+  const res = await window.lumen.file.save(data, defaultName);
+  if (res.canceled) return false;
+  if (!res.ok) {
+    showToast('Save failed', { type: 'error' });
+    showDialog({ title: 'Save failed', bodyHTML: `<p>${escapeHtml(res.error)}</p>` });
+    return false;
   }
-  showToast('Save failed', { type: 'error' });
-  showDialog({ title: 'Save failed', bodyHTML: `<p>${escapeHtml(res.error)}</p>` });
-  return false;
+  currentFilePath = res.filePath;
+  // Save fell through to Save-As internally (this was a never-saved
+  // document) — mirror Save As's own title-from-filename behavior. A plain
+  // resave of an already-saved file must NOT touch a user-edited title.
+  if (wasUntitled) workbook.title = titleFromPath(res.filePath, '.lsheet');
+  setDirty(false);
+  showToast('Saved');
+  await refreshRecentCache();
+  return true;
 }
 
 async function saveWorkbookAs() {
   const defaultName = (workbook.title || 'Untitled spreadsheet') + '.lsheet';
-  const filePath = await window.lumen.dialogs.saveLsheet(defaultName);
-  if (!filePath) return false;
-  currentFilePath = filePath;
-  const base = filePath
-    .split(/[\\/]/)
-    .pop()
-    .replace(/\.lsheet$/i, '');
-  workbook.title = base;
   const data = workbook.toJSON();
-  const res = await window.lumen.file.writeLsheet(filePath, data);
-  if (res.ok) {
-    setDirty(false);
-    showToast('Saved');
-    await touchRecent(filePath);
-    return true;
+  const res = await window.lumen.file.saveAs(data, defaultName);
+  if (res.canceled) return false;
+  if (!res.ok) {
+    showToast('Save failed', { type: 'error' });
+    showDialog({ title: 'Save failed', bodyHTML: `<p>${escapeHtml(res.error)}</p>` });
+    return false;
   }
-  showToast('Save failed', { type: 'error' });
-  showDialog({ title: 'Save failed', bodyHTML: `<p>${escapeHtml(res.error)}</p>` });
-  return false;
+  currentFilePath = res.filePath;
+  workbook.title = titleFromPath(res.filePath, '.lsheet');
+  setDirty(false);
+  showToast('Saved');
+  await refreshRecentCache();
+  return true;
 }
 
 async function importCsv() {
-  const filePath = await window.lumen.dialogs.openImport('csv');
-  if (!filePath) return;
-  const res = await window.lumen.file.importCsv(filePath);
+  const res = await window.lumen.file.importCsv();
+  if (res.canceled) return;
   if (!res.ok) {
     showToast('Import failed', { type: 'error' });
     showDialog({ title: 'Import failed', bodyHTML: `<p>${escapeHtml(res.error)}</p>` });
@@ -3264,10 +3501,7 @@ async function importCsv() {
   workbook = new Workbook();
   workbook.sheets = [sheet];
   workbook.activeSheetIndex = 0;
-  workbook.title = filePath
-    .split(/[\\/]/)
-    .pop()
-    .replace(/\.csv$/i, '');
+  workbook.title = titleFromPath(res.filePath, '.csv');
   currentFilePath = null;
   resetUndoRedo();
   renderSheetTabs();
@@ -3278,9 +3512,8 @@ async function importCsv() {
 }
 
 async function importXlsx() {
-  const filePath = await window.lumen.dialogs.openImport('xlsx');
-  if (!filePath) return;
-  const res = await window.lumen.file.importXlsx(filePath);
+  const res = await window.lumen.file.importXlsx();
+  if (res.canceled) return;
   if (!res.ok) {
     showToast('Import failed', { type: 'error' });
     showDialog({ title: 'Import failed', bodyHTML: `<p>${escapeHtml(res.error)}</p>` });
@@ -3297,10 +3530,7 @@ async function importXlsx() {
     return sheet;
   });
   wb.activeSheetIndex = 0;
-  wb.title = filePath
-    .split(/[\\/]/)
-    .pop()
-    .replace(/\.xlsx$/i, '');
+  wb.title = titleFromPath(res.filePath, '.xlsx');
   workbook = wb;
   currentFilePath = null;
   resetUndoRedo();
@@ -3314,14 +3544,13 @@ async function importXlsx() {
 async function exportCsv() {
   const sheet = workbook.activeSheet;
   const defaultName = (workbook.title || 'sheet') + '.csv';
-  const filePath = await window.lumen.dialogs.saveExport('csv', defaultName);
-  if (!filePath) return;
   const cells = {};
   for (const [key, cell] of sheet.cells) {
     if (cell.raw === '') continue;
     cells[key] = { raw: cell.raw, display: formatValue(cell.computed, cell.format.numberFormat) };
   }
-  const res = await window.lumen.file.exportCsv(filePath, { cells, rowCount: sheet.rowCount, colCount: sheet.colCount });
+  const res = await window.lumen.file.exportCsv({ cells, rowCount: sheet.rowCount, colCount: sheet.colCount }, defaultName);
+  if (res.canceled) return;
   if (res.ok) {
     showToast('Exported CSV');
   } else {
@@ -3332,8 +3561,6 @@ async function exportCsv() {
 
 async function exportXlsx() {
   const defaultName = (workbook.title || 'workbook') + '.xlsx';
-  const filePath = await window.lumen.dialogs.saveExport('xlsx', defaultName);
-  if (!filePath) return;
   const sheetsData = workbook.sheets.map((sheet) => {
     const cells = {};
     for (const [key, cell] of sheet.cells) {
@@ -3342,7 +3569,8 @@ async function exportXlsx() {
     }
     return { name: sheet.name, cells, rowCount: sheet.rowCount, colCount: sheet.colCount };
   });
-  const res = await window.lumen.file.exportXlsx(filePath, { sheets: sheetsData });
+  const res = await window.lumen.file.exportXlsx({ sheets: sheetsData }, defaultName);
+  if (res.canceled) return;
   if (res.ok) {
     showToast('Exported Excel workbook');
   } else {
@@ -3482,11 +3710,16 @@ function printSheet() {
 async function exportPdf() {
   const sheet = workbook.activeSheet;
   const defaultName = (workbook.title || 'workbook') + '.pdf';
-  const filePath = await window.lumen.dialogs.saveExport('pdf', defaultName);
-  if (!filePath) return;
+  // Build the off-screen print root before invoking the export IPC call:
+  // main.js now shows its own save dialog *and* calls printToPDF on the
+  // already-loaded page inside the same handler, so the print root has to
+  // already be in the DOM by the time that call fires. #print-root sits at
+  // `left: -10000px` (see app.css) so this is invisible either way — no
+  // difference from the user's point of view versus the old dialog-first order.
   const { cleanup } = buildPrintRoot(sheet);
   try {
-    const res = await window.lumen.file.exportPdf(filePath, {});
+    const res = await window.lumen.file.exportPdf({}, defaultName);
+    if (res.canceled) return;
     if (res.ok) {
       showToast('Exported PDF');
     } else {
@@ -3547,6 +3780,24 @@ async function handleBeforeClose() {
     if (choice === 'save') {
       const ok = await saveWorkbook();
       if (!ok) return;
+      // saveWorkbook()'s success path already clears this document's
+      // autosave snapshot (main.js does it on every clean save) — nothing
+      // more to do here.
+    }
+    // choice === 'discard': deliberately leave the autosave snapshot in
+    // place. "Don't Save" means "not saved to the real file", so the
+    // recovery copy is still the only record of that content — the whole
+    // point of "orphaned snapshots only mean something crashed" is that we
+    // don't invent a *second* way to silently lose it.
+  } else {
+    // No unsaved changes at all — any recovery snapshot for this document is
+    // stale by definition. Clean it up so a future launch doesn't offer to
+    // "recover" content that's already fully reflected on disk (or was
+    // never dirty enough to need saving in the first place).
+    try {
+      await window.lumen.autosave.clear();
+    } catch (e) {
+      console.error('Failed to clear autosave on clean close', e);
     }
   }
   window.lumen.confirmClose();

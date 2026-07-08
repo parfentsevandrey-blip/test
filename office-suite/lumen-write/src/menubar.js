@@ -13,7 +13,7 @@ import { insertTableOfContents } from './toc.js';
 import {
   newDocument,
   openDocument,
-  openDocumentAtPath,
+  openRecentEntry,
   saveDocument,
   saveDocumentAs,
   exportPdf,
@@ -204,7 +204,7 @@ export function initMenubar() {
               recentRow.addEventListener('click', (e) => {
                 e.stopPropagation();
                 closeMenu();
-                openDocumentAtPath(entry.path);
+                openRecentEntry(entry.id);
               });
               submenuEl.appendChild(recentRow);
             }

@@ -361,8 +361,18 @@ function scalarOf(v) {
 function flatten(argVals) {
   const out = [];
   for (const v of argVals) {
-    if (Array.isArray(v)) out.push(...v);
-    else out.push(v);
+    if (Array.isArray(v)) {
+      // Plain loop, not `out.push(...v)`: a spread call has an engine-defined
+      // argument-count ceiling (V8 throws well under a million), and a large
+      // range like =SUM(A1:Z10000) expands to 260,000 values here — spreading
+      // that many arguments into push() intermittently threw, surfacing as a
+      // spurious #VALUE! on an otherwise perfectly valid large-range formula.
+      // Found live while verifying the recalc-performance fix (large ranges
+      // are exactly the case that fix targets), so worth closing here too.
+      for (let i = 0; i < v.length; i++) out.push(v[i]);
+    } else {
+      out.push(v);
+    }
   }
   return out;
 }
