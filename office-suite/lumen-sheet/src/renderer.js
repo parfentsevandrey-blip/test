@@ -90,6 +90,13 @@ const state = {
 };
 
 let clipboard = null; // { rows, width, height, sourceRange, cut }
+// The exact plain-text string we last wrote to the real OS clipboard for a
+// same-app copy/cut (see copySelection() below). Paste compares the OS
+// clipboard's CURRENT text against this to tell "still our own last copy"
+// (use the rich in-memory `clipboard` above, for formula/format fidelity)
+// apart from "something external was copied since" (parse the OS text
+// instead) — see pasteAtActive().
+let lastClipboardOsText = null;
 let undoStack = [];
 let redoStack = [];
 
@@ -118,6 +125,7 @@ let startScreenEl = null; // Start screen (template gallery + recent files)
 let fillHandleEl = null; // Fill handle
 let lastFillPreviewCells = [];
 let chartElements = new Map(); // chart id -> { el, titleEl, bodyEl } (Charts)
+let pendingChartInsertAnimateId = null; // chart id to play the insert animation for on the next renderAllCharts()
 let validationChevronEl = null; // Data validation dropdown affordance
 let validationChevronKey = null;
 let validationChevronRule = null;
@@ -177,6 +185,29 @@ refreshRecentCache().then(() => {
 showStartScreen();
 checkForRecovery();
 startAutosaveTimer();
+
+// ---------------------------------------------------------------------------
+// Drag-and-drop open — dropping a supported file onto the window opens it
+// through the same secured path as File ▸ Open/Import (openDroppedFile,
+// below), instead of leaving Chromium's default behavior in place, which
+// would navigate the whole window away to the dropped file's file:// URL.
+// Mirrors Lumen Write's own drop handler (src/renderer.js there).
+// ---------------------------------------------------------------------------
+const SUPPORTED_DROP_EXTENSIONS = ['lsheet', 'xlsx', 'csv'];
+window.addEventListener('dragover', (e) => {
+  e.preventDefault();
+});
+window.addEventListener('drop', (e) => {
+  e.preventDefault();
+  const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+  if (!file || !file.name) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (!SUPPORTED_DROP_EXTENSIONS.includes(ext)) return;
+  // Forward the real File object itself, NOT a path string — see
+  // openDroppedFile's comment (and preload.js's openDroppedLsheet /
+  // main.js's file:open-dropped-lsheet) for why that matters.
+  openDroppedFile(file);
+});
 
 // ---------------------------------------------------------------------------
 // Shell construction
@@ -263,11 +294,11 @@ function buildShell() {
         <input class="formula-bar__input" id="formula-input" spellcheck="false" autocomplete="off" />
       </div>
 
-      <div class="sheet-viewport" id="sheet-viewport">
+      <div class="sheet-viewport" id="sheet-viewport" tabindex="0" role="group" aria-label="Spreadsheet grid — use arrow keys to move between cells, F2 or Enter to edit">
         <div class="sheet-canvas" id="sheet-canvas"></div>
       </div>
 
-      <div class="sheet-tabs" id="sheet-tabs"></div>
+      <div class="sheet-tabs" id="sheet-tabs" role="tablist" aria-label="Sheets"></div>
     </div>
 
     <div class="statusbar">
@@ -318,6 +349,14 @@ function applyIcons(root) {
       btn.innerHTML = svg;
       extra.forEach((el) => btn.appendChild(el));
     }
+  });
+  // Icon-only buttons carry their accessible name in data-tooltip (also the
+  // source of the CSS hover tooltip) — mirror it onto aria-label here, in
+  // this one shared place, so the Chromium accessibility tree always gets a
+  // real name instead of a bare "button", and the tooltip/label pair can
+  // never drift apart by one getting updated without the other.
+  root.querySelectorAll('[data-tooltip]').forEach((el) => {
+    if (!el.hasAttribute('aria-label')) el.setAttribute('aria-label', el.dataset.tooltip);
   });
 }
 
@@ -381,22 +420,33 @@ function closeAllMenus() {
   }
   if (openMenuAnchor) {
     openMenuAnchor.classList.remove('is-open');
+    openMenuAnchor.setAttribute('aria-expanded', 'false');
     openMenuAnchor = null;
   }
 }
 
+// Builds a <div role="menu"> from an item list (used for the menubar's
+// dropdowns, their submenus, and mouse-driven context menus alike). Menu
+// items get role="menuitem" and tabIndex -1 — they're never part of the
+// page's Tab order; they're only reached by the roving-focus keyboard
+// handling wired up in onOpenMenuKeydown() below, which moves real DOM
+// focus onto them with .focus() as Up/Down/type-ahead are pressed.
 function buildMenuEl(items) {
   const menu = document.createElement('div');
   menu.className = 'menu';
+  menu.setAttribute('role', 'menu');
   for (const item of items) {
     if (item.type === 'sep') {
       const sep = document.createElement('div');
       sep.className = 'menu__sep';
+      sep.setAttribute('role', 'separator');
       menu.appendChild(sep);
       continue;
     }
     const el = document.createElement('div');
     el.className = 'menu__item';
+    el.setAttribute('role', 'menuitem');
+    el.tabIndex = -1;
     if (item.disabled) el.setAttribute('aria-disabled', 'true');
     const label = document.createElement('span');
     label.textContent = item.label;
@@ -409,17 +459,23 @@ function buildMenuEl(items) {
     }
     if (item.submenu) {
       el.classList.add('menu__item--submenu');
+      el.setAttribute('aria-haspopup', 'true');
+      el.setAttribute('aria-expanded', 'false');
       const chevron = document.createElement('span');
       chevron.className = 'menu__chevron';
       chevron.textContent = '▸';
       el.appendChild(chevron);
       let submenuEl = null;
       let closeTimer = null;
-      const openSub = () => {
+      const openSub = (focusFirst) => {
         clearTimeout(closeTimer);
-        if (submenuEl) return;
+        if (submenuEl) {
+          if (focusFirst) focusFirstMenuItem(submenuEl);
+          return;
+        }
         submenuEl = buildMenuEl(item.submenu);
         submenuEl.classList.add('menu--submenu');
+        submenuEl._parentItem = el;
         document.body.appendChild(submenuEl);
         openSubmenuEls.push(submenuEl);
         const rect = el.getBoundingClientRect();
@@ -431,26 +487,35 @@ function buildMenuEl(items) {
         }
         submenuEl.addEventListener('mouseenter', () => clearTimeout(closeTimer));
         submenuEl.addEventListener('mouseleave', scheduleClose);
+        el.setAttribute('aria-expanded', 'true');
+        if (focusFirst) focusFirstMenuItem(submenuEl);
+      };
+      const closeSubNow = () => {
+        clearTimeout(closeTimer);
+        if (submenuEl) {
+          submenuEl.remove();
+          openSubmenuEls = openSubmenuEls.filter((s) => s !== submenuEl);
+          submenuEl = null;
+          el.setAttribute('aria-expanded', 'false');
+        }
       };
       const scheduleClose = () => {
-        closeTimer = setTimeout(() => {
-          if (submenuEl) {
-            submenuEl.remove();
-            openSubmenuEls = openSubmenuEls.filter((s) => s !== submenuEl);
-            submenuEl = null;
-          }
-        }, 250);
+        closeTimer = setTimeout(closeSubNow, 250);
       };
-      el.addEventListener('mouseenter', openSub);
+      el.addEventListener('mouseenter', () => openSub(false));
       el.addEventListener('mouseleave', scheduleClose);
       el.addEventListener('click', (e) => {
         e.stopPropagation();
-        openSub();
+        openSub(false);
       });
+      el._openSubmenu = openSub;
+      el._closeSubmenu = closeSubNow;
     } else if (!item.disabled) {
       el.addEventListener('click', (e) => {
         e.stopPropagation();
+        const anchorToRestore = openMenuAnchor;
         closeAllMenus();
+        if (anchorToRestore && anchorToRestore.isConnected) anchorToRestore.focus();
         item.onClick && item.onClick();
       });
     }
@@ -459,8 +524,18 @@ function buildMenuEl(items) {
   return menu;
 }
 
-function toggleMenu(anchorEl, items) {
-  if (openMenuAnchor === anchorEl) {
+function focusFirstMenuItem(menu) {
+  const first = menu.querySelector('.menu__item[role="menuitem"]:not([aria-disabled="true"])');
+  if (first) first.focus();
+}
+
+/** Opens (or, if `toggle` and it's already open on this anchor, closes) the
+ * dropdown for one menubar item. `focusFirst` moves real keyboard focus
+ * onto the menu's first item (Down/Enter/arrow-driven opens); a plain mouse
+ * click leaves focus on the menubar button itself. */
+function toggleMenu(anchorEl, items, opts = {}) {
+  const { focusFirst = false, toggle = false } = opts;
+  if (toggle && openMenuAnchor === anchorEl) {
     closeAllMenus();
     return;
   }
@@ -473,8 +548,10 @@ function toggleMenu(anchorEl, items) {
   const menuRect = menu.getBoundingClientRect();
   if (menuRect.right > window.innerWidth) menu.style.left = Math.max(4, window.innerWidth - menuRect.width - 8) + 'px';
   anchorEl.classList.add('is-open');
+  anchorEl.setAttribute('aria-expanded', 'true');
   openMenuEl = menu;
   openMenuAnchor = anchorEl;
+  if (focusFirst) focusFirstMenuItem(menu);
 }
 
 function showContextMenu(x, y, items) {
@@ -500,6 +577,108 @@ document.addEventListener('mousedown', (e) => {
     closePopover();
   }
 });
+
+// ---------------------------------------------------------------------------
+// Menu keyboard interaction (ARIA menu pattern) — handles Up/Down/type-ahead
+// within whichever menu currently has focus (top-level dropdown or a
+// submenu), Left/Right to open a submenu / move between top-level menubar
+// items, Enter/Space to activate, and Escape/Tab to leave the menu system.
+// Registered once, at capture time, on document — it's a no-op whenever no
+// menu is open, so it never interferes with anything else.
+// ---------------------------------------------------------------------------
+document.addEventListener(
+  'keydown',
+  (e) => {
+    if (!openMenuEl) return;
+    const ae = document.activeElement;
+    const currentMenu = ae && ae.closest ? ae.closest('.menu') : null;
+    if (!currentMenu) return;
+    const items = Array.from(currentMenu.children).filter(
+      (c) => c.classList.contains('menu__item') && c.getAttribute('aria-disabled') !== 'true'
+    );
+    const idx = items.indexOf(ae);
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const next = items[(idx + 1) % items.length];
+      next && next.focus();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const prev = items[(idx - 1 + items.length) % items.length];
+      prev && prev.focus();
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      if (ae && ae._openSubmenu) {
+        ae._openSubmenu(true);
+      } else if (!currentMenu.classList.contains('menu--submenu')) {
+        moveMenubarSelection(1);
+      }
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      if (currentMenu.classList.contains('menu--submenu')) {
+        const parentItem = currentMenu._parentItem;
+        if (parentItem && parentItem._closeSubmenu) parentItem._closeSubmenu();
+        parentItem && parentItem.focus();
+      } else {
+        moveMenubarSelection(-1);
+      }
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      ae && ae.click();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
+      const anchorToRestore = openMenuAnchor;
+      closeAllMenus();
+      if (anchorToRestore && anchorToRestore.isConnected) anchorToRestore.focus();
+    } else if (e.key === 'Tab') {
+      // Standard ARIA menu behavior: Tab abandons the whole menu system
+      // rather than cycling within it. We can't just let the browser's
+      // default Tab action run here — closeAllMenus() removes the
+      // currently-focused (tabIndex -1) menu item from the DOM, and a
+      // *removed* element gives the browser nothing to advance "from",
+      // which is how this used to drop focus back to <body> instead of
+      // moving on. So we own the destination explicitly: forward Tab goes
+      // to the toolbar's first control (the next real stop after the
+      // menubar in document order); Shift+Tab goes to the titlebar's theme
+      // toggle (the stop just before the menubar).
+      e.preventDefault();
+      closeAllMenus();
+      // getFocusableEls() (already used by the dialog focus trap) excludes
+      // disabled controls — plain querySelector('button') would have
+      // happily picked Undo/Redo, which are routinely disabled (nothing to
+      // undo yet) and therefore un-focusable, silently dropping focus back
+      // to <body>.
+      const dest = e.shiftKey ? els.themeBtn : els.toolbar && getFocusableEls(els.toolbar)[0];
+      if (dest) dest.focus();
+    } else if (e.key.length === 1 && /[a-zA-Z0-9]/.test(e.key)) {
+      e.preventDefault();
+      const letter = e.key.toLowerCase();
+      for (let i = 1; i <= items.length; i++) {
+        const cand = items[(idx + i) % items.length];
+        if (cand.textContent.trim().toLowerCase().startsWith(letter)) {
+          cand.focus();
+          break;
+        }
+      }
+    }
+  },
+  true
+);
+
+/** Left/Right while focus is inside a *top-level* dropdown (not a submenu):
+ * switches which menubar item's menu is showing, matching the roving
+ * tabindex switched in onMenubarItemKeydown(), and keeps focus inside the
+ * newly-opened menu since the user was already navigating by keyboard. */
+function moveMenubarSelection(delta) {
+  if (!openMenuAnchor) return;
+  const items = Array.from(els.menubar.querySelectorAll('.menubar__item'));
+  const idx = items.indexOf(openMenuAnchor);
+  if (idx === -1) return;
+  const next = items[(idx + delta + items.length) % items.length];
+  setMenubarRovingIndex(items, next);
+  toggleMenu(next, menuItemsFor(next.dataset.menu), { toggle: false, focusFirst: true });
+}
 
 let openPopoverEl = null;
 let openPopoverAnchor = null;
@@ -531,20 +710,66 @@ function showPopover(anchorEl, contentEl) {
   openPopoverAnchor = anchorEl;
 }
 
+// Elements a keyboard user can land on inside a dialog (or any other
+// focus-trapped/roving-focus container). Filters out anything currently
+// hidden (display:none / a collapsed ancestor) via offsetParent, which is
+// null for non-rendered elements but never null for the live activeElement
+// itself — that second clause matters for elements positioned with
+// something that legitimately zeroes out offsetParent.
+function getFocusableEls(container) {
+  const sel = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+  return Array.from(container.querySelectorAll(sel)).filter(
+    (el) => el.offsetParent !== null || el === document.activeElement
+  );
+}
+
+let dialogTitleIdCounter = 0;
+
+/**
+ * The app's single shared modal dialog component. On open it: focuses the
+ * first focusable element inside the dialog; traps Tab/Shift+Tab so focus
+ * cycles only among the dialog's own focusable elements (never escaping to
+ * the titlebar/menubar/toolbar behind it); closes on Escape; and restores
+ * focus to whatever control opened it (or a sensible fallback) when it
+ * closes. The app-wide keydown handler additionally bails out entirely
+ * while `.dialog-overlay` is present in the DOM (see the guard at the top
+ * of that handler), so no global shortcut or grid keystroke can reach the
+ * spreadsheet underneath while this is open.
+ */
 function showDialog({ title, bodyHTML, buttons, onClose }) {
   const overlay = document.createElement('div');
   overlay.className = 'dialog-overlay';
   const dialog = document.createElement('div');
   dialog.className = 'dialog';
-  dialog.innerHTML = `<h2>${escapeHtml(title)}</h2><div class="dialog__body">${bodyHTML || ''}</div>`;
+  dialog.setAttribute('role', 'dialog');
+  dialog.setAttribute('aria-modal', 'true');
+  dialog.tabIndex = -1; // fallback focus target if a dialog ever ships with no focusable content
+  const titleId = 'dlg-title-' + ++dialogTitleIdCounter;
+  dialog.innerHTML = `<h2 id="${titleId}">${escapeHtml(title)}</h2><div class="dialog__body">${bodyHTML || ''}</div>`;
+  dialog.setAttribute('aria-labelledby', titleId);
   const actions = document.createElement('div');
   actions.className = 'dialog__actions';
+
+  // Whatever had real (non-body) keyboard focus when this dialog opened —
+  // restored on close so the user lands back where they started instead of
+  // wherever Tab last happened to leave them.
+  const openerEl = document.activeElement && document.activeElement !== document.body ? document.activeElement : null;
+  let closed = false;
+
+  function close() {
+    if (closed) return;
+    closed = true;
+    document.removeEventListener('keydown', onKeydown, true);
+    overlay.remove();
+    restoreFocusAfterDialogClose(openerEl);
+  }
+
   for (const b of buttons || [{ label: 'OK' }]) {
     const btn = document.createElement('button');
     btn.className = 'btn' + (b.variant === 'primary' ? ' btn--primary' : '');
     btn.textContent = b.label;
     btn.addEventListener('click', () => {
-      if (!b.keepOpen) overlay.remove();
+      if (!b.keepOpen) close();
       b.onClick && b.onClick();
     });
     actions.appendChild(btn);
@@ -554,24 +779,189 @@ function showDialog({ title, bodyHTML, buttons, onClose }) {
   document.body.appendChild(overlay);
   overlay.addEventListener('mousedown', (e) => {
     if (e.target === overlay) {
-      overlay.remove();
+      close();
       onClose && onClose();
     }
   });
-  return { overlay, dialog, bodyEl: dialog.querySelector('.dialog__body') };
+
+  // Registered at the capture phase so Escape/Tab are handled here before
+  // they can reach any other document-level listener (menus, the app-wide
+  // shortcut/grid handler). Every other key is deliberately left alone —
+  // it still needs to reach whichever dialog input has focus so normal
+  // typing/Enter-to-submit inside the dialog keeps working; the app-wide
+  // handler's own `.dialog-overlay` guard (see below) is what keeps those
+  // keys from *also* reaching the grid underneath.
+  function onKeydown(e) {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
+      close();
+      onClose && onClose();
+      return;
+    }
+    if (e.key === 'Tab') {
+      const focusable = getFocusableEls(dialog);
+      if (focusable.length === 0) {
+        e.preventDefault();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+      // Any other Tab press is a normal move between two dialog-internal
+      // focusable elements — native DOM order already keeps that inside the
+      // dialog since the whole subtree is contiguous, so no handling needed.
+    }
+  }
+  document.addEventListener('keydown', onKeydown, true);
+
+  const focusable = getFocusableEls(dialog);
+  (focusable[0] || dialog).focus();
+
+  return { overlay, dialog, bodyEl: dialog.querySelector('.dialog__body'), close };
+}
+
+/** Focus fallback used both when a dialog closes with no valid opener to
+ * return to, and as the app's general "give keyboard focus somewhere real"
+ * entry point (fresh launch, after the start screen closes). */
+function focusInitialTarget() {
+  if (startScreenEl && !startScreenEl.classList.contains('is-hidden')) {
+    focusFirstStartScreenItem();
+  } else {
+    focusGridHost();
+  }
+}
+
+function focusFirstStartScreenItem() {
+  const first = startScreenEl && startScreenEl.querySelector('.start-card, .start-recent-item');
+  if (first) first.focus();
+}
+
+function focusGridHost() {
+  if (els.sheetViewport) els.sheetViewport.focus({ preventScroll: true });
+}
+
+function restoreFocusAfterDialogClose(openerEl) {
+  if (openerEl && openerEl !== document.body && openerEl.isConnected && openerEl.offsetParent !== null) {
+    openerEl.focus();
+  } else {
+    focusInitialTarget();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Small a11y helpers reused by every custom (non-native) clickable list item
+// — start-screen template/recent cards, sheet tabs — so Enter/Space activate
+// them like a real button and arrow keys move between siblings the same way
+// a native toolbar/tablist would.
+// ---------------------------------------------------------------------------
+
+/** Makes `el` behave like a button for keyboard users: Enter/Space invoke
+ * `onActivate` (matching whatever the element's own click handler does). */
+function makeActivatable(el, onActivate) {
+  el.tabIndex = 0;
+  if (!el.hasAttribute('role')) el.setAttribute('role', 'button');
+  el.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onActivate();
+    }
+  });
+}
+
+/** Left/Right and Up/Down both move between `items` (siblings in one
+ * logical list) — callers only have one axis in play at a time so wiring
+ * both pairs is harmless and matches how these lists actually lay out
+ * (grid-wrapping cards, a horizontal tab strip). */
+function wireArrowNav(items) {
+  items.forEach((el, i) => {
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        items[(i + 1) % items.length].focus();
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        items[(i - 1 + items.length) % items.length].focus();
+      }
+    });
+  });
 }
 
 // ---------------------------------------------------------------------------
 // Menubar
 // ---------------------------------------------------------------------------
 
+// Standard ARIA menubar keyboard pattern: the bar itself is a single Tab
+// stop (roving tabindex — one item is tabIndex 0, the rest -1), and once
+// focus is on it Left/Right move between top-level items, Down/Enter/Space
+// open a menu and move focus inside it, and typing a letter jumps to the
+// next matching item. Escape/Up/Down/Left/Right/Enter *inside* an already
+// open menu are handled by the document-level keydown listener above; this
+// one only needs to cover the menubar item itself having focus.
 function wireMenubar() {
-  els.menubar.querySelectorAll('.menubar__item').forEach((item) => {
+  const items = Array.from(els.menubar.querySelectorAll('.menubar__item'));
+  els.menubar.setAttribute('role', 'menubar');
+  items.forEach((item, idx) => {
+    item.setAttribute('role', 'menuitem');
+    item.setAttribute('aria-haspopup', 'true');
+    item.setAttribute('aria-expanded', 'false');
+    item.tabIndex = idx === 0 ? 0 : -1;
     item.addEventListener('click', (e) => {
       e.stopPropagation();
-      toggleMenu(item, menuItemsFor(item.dataset.menu));
+      toggleMenu(item, menuItemsFor(item.dataset.menu), { toggle: true });
     });
+    item.addEventListener('keydown', (e) => onMenubarItemKeydown(e, item, items));
   });
+}
+
+function setMenubarRovingIndex(items, activeItem) {
+  items.forEach((it) => {
+    it.tabIndex = it === activeItem ? 0 : -1;
+  });
+}
+
+function onMenubarItemKeydown(e, item, items) {
+  const idx = items.indexOf(item);
+  if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+    e.preventDefault();
+    const dir = e.key === 'ArrowRight' ? 1 : -1;
+    const next = items[(idx + dir + items.length) % items.length];
+    setMenubarRovingIndex(items, next);
+    next.focus();
+    // If a menu is already open (opened by mouse, focus still on the
+    // button), keep the bar in sync by switching to the new item's menu —
+    // but don't force focus off the button just for moving between items.
+    if (openMenuEl) toggleMenu(next, menuItemsFor(next.dataset.menu), { toggle: false, focusFirst: false });
+  } else if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    toggleMenu(item, menuItemsFor(item.dataset.menu), { toggle: false, focusFirst: true });
+  } else if (e.key === 'Escape') {
+    if (openMenuEl) {
+      e.preventDefault();
+      closeAllMenus();
+    }
+  } else if (e.key.length === 1 && /[a-zA-Z0-9]/.test(e.key)) {
+    e.preventDefault();
+    const letter = e.key.toLowerCase();
+    for (let i = 1; i <= items.length; i++) {
+      const cand = items[(idx + i) % items.length];
+      if (cand.textContent.trim().toLowerCase().startsWith(letter)) {
+        setMenubarRovingIndex(items, cand);
+        cand.focus();
+        if (openMenuEl) toggleMenu(cand, menuItemsFor(cand.dataset.menu), { toggle: false, focusFirst: false });
+        break;
+      }
+    }
+  }
+  // Tab: intentionally left to the browser's default — the roving tabindex
+  // means only the currently-active item is a Tab stop, so Tab naturally
+  // leaves the whole menubar for the toolbar's first button.
 }
 
 function menuItemsFor(name) {
@@ -669,7 +1059,17 @@ function menuItemsFor(name) {
   }
 }
 
-function showAbout() {
+async function showAbout() {
+  // Read the real version from package.json (via main.js's app.getVersion())
+  // instead of a literal hand-duplicated here — see preload.js/main.js's
+  // app:getVersion handler. Falls back to no version string at all if the
+  // IPC call somehow fails, rather than showing a stale hardcoded number.
+  let version = '';
+  try {
+    version = await window.lumen.getAppVersion();
+  } catch (e) {
+    version = '';
+  }
   showDialog({
     title: 'About Lumen Sheet',
     bodyHTML: `
@@ -685,7 +1085,7 @@ function showAbout() {
         </span>
         <div>
           <div style="font-weight:600;">Lumen Sheet</div>
-          <div style="font-size:12px;color:var(--ink-400);">Version 1.0.0</div>
+          <div style="font-size:12px;color:var(--ink-400);">${version ? `Version ${escapeHtml(version)}` : ''}</div>
         </div>
       </div>
       <p>A premium, minimalist spreadsheet for Windows desktop. Built with plain
@@ -1014,6 +1414,7 @@ function showStartScreen() {
     `;
     els.sheetArea.appendChild(startScreenEl);
     const grid = startScreenEl.querySelector('#start-template-grid');
+    const cards = [];
     for (const key of Object.keys(TEMPLATES)) {
       const tpl = TEMPLATES[key];
       const card = document.createElement('div');
@@ -1022,16 +1423,27 @@ function showStartScreen() {
         <div class="start-card__preview">${previewSVG(key)}</div>
         <div class="start-card__label">${escapeHtml(tpl.label)}</div>
       `;
-      card.addEventListener('click', () => applyTemplate(key));
+      const activate = () => applyTemplate(key);
+      card.addEventListener('click', activate);
+      makeActivatable(card, activate);
       grid.appendChild(card);
+      cards.push(card);
     }
+    wireArrowNav(cards);
   }
   startScreenEl.classList.remove('is-hidden');
   renderStartScreenRecent();
+  focusFirstStartScreenItem();
 }
 
 function hideStartScreen() {
-  if (startScreenEl) startScreenEl.classList.add('is-hidden');
+  if (startScreenEl && !startScreenEl.classList.contains('is-hidden')) {
+    startScreenEl.classList.add('is-hidden');
+    // Whatever start-screen element had focus is about to stop being
+    // rendered (display:none), which would otherwise drop keyboard focus
+    // back to <body> with no way to Tab into anything — see item 3.
+    focusGridHost();
+  }
 }
 
 function renderStartScreenRecent() {
@@ -1046,6 +1458,7 @@ function renderStartScreenRecent() {
     list.appendChild(empty);
     return;
   }
+  const items = [];
   for (const entry of recentCache) {
     const item = document.createElement('div');
     item.className = 'start-recent-item';
@@ -1063,9 +1476,13 @@ function renderStartScreenRecent() {
     textWrap.appendChild(meta);
     item.appendChild(icon);
     item.appendChild(textWrap);
-    item.addEventListener('click', () => openRecentById(entry.id));
+    const activate = () => openRecentById(entry.id);
+    item.addEventListener('click', activate);
+    makeActivatable(item, activate);
     list.appendChild(item);
+    items.push(item);
   }
+  wireArrowNav(items);
 }
 
 async function applyTemplate(key) {
@@ -1101,13 +1518,18 @@ function renderSheetTabs() {
   // instead of jumping in as a freshly created element would.
   ensureSheetTabIndicator();
   els.sheetTabs.querySelectorAll('.sheet-tab, .sheet-tabs__add').forEach((el) => el.remove());
+  const tabs = [];
   workbook.sheets.forEach((sheet, idx) => {
     const tab = document.createElement('div');
     tab.className = 'sheet-tab' + (idx === workbook.activeSheetIndex ? ' is-active' : '');
     tab.textContent = sheet.name;
-    tab.addEventListener('click', () => {
+    tab.setAttribute('role', 'tab');
+    tab.setAttribute('aria-selected', idx === workbook.activeSheetIndex ? 'true' : 'false');
+    const activate = () => {
       if (idx !== workbook.activeSheetIndex) switchSheet(idx);
-    });
+    };
+    tab.addEventListener('click', activate);
+    makeActivatable(tab, activate);
     tab.addEventListener('dblclick', () => startRenameTab(tab, idx));
     tab.addEventListener('contextmenu', (e) => {
       e.preventDefault();
@@ -1117,7 +1539,9 @@ function renderSheetTabs() {
       ]);
     });
     els.sheetTabs.appendChild(tab);
+    tabs.push(tab);
   });
+  wireArrowNav(tabs);
   const addBtn = document.createElement('button');
   addBtn.className = 'btn-icon sheet-tabs__add';
   addBtn.dataset.icon = 'plus';
@@ -1347,6 +1771,10 @@ function attachGridEvents(tbody, thead) {
     }
     state.dragging = true;
     updateSelectionUI();
+    // Keep keyboard focus on the grid host in sync with mouse selection, so
+    // arrow-key/typing navigation (which keys off document.activeElement)
+    // keeps working immediately after a click — see focusGridHost().
+    focusGridHost();
   });
 
   tbody.addEventListener('dblclick', (e) => {
@@ -1410,6 +1838,7 @@ function selectWholeColumn(col) {
   state.anchor = snapToMergeAnchor(sheet, col, 0);
   state.focus = { col, row: sheet.rowCount - 1 };
   updateSelectionUI();
+  focusGridHost();
 }
 
 function selectWholeRow(row) {
@@ -1417,6 +1846,7 @@ function selectWholeRow(row) {
   state.anchor = snapToMergeAnchor(sheet, 0, row);
   state.focus = { col: sheet.colCount - 1, row };
   updateSelectionUI();
+  focusGridHost();
 }
 
 function attachColResize(handle, col) {
@@ -1642,6 +2072,28 @@ function startEditing(key, mode, payload) {
   input.addEventListener('input', () => {
     els.formulaInput.value = input.value;
   });
+  // Commit whenever the editor loses focus for any reason OTHER than
+  // Enter/Tab/Escape (those already commit/cancel explicitly via
+  // onEditorKeydown, which calls commitEdit()/removeEditor() itself before
+  // the input blurs). Real mouse interaction can steal focus mid-edit in
+  // plenty of ways this module doesn't individually guard against — opening
+  // a dialog by clicking a menu item, clicking a toolbar button, clicking a
+  // sheet tab, even the OS window losing focus — and without this handler
+  // none of them cleared state.editing. That left the *actual* problem: the
+  // orphaned <input> stayed in the DOM and state.editing stayed truthy, so
+  // the app-wide keydown handler's unconditional `if (state.editing) return`
+  // guard (see far below) kept silently swallowing every grid keystroke —
+  // arrows, typing, Delete, F2 — even after the dialog/menu closed, with no
+  // visible sign of why, until the user happened to click a grid cell
+  // (whose own mousedown handler has its own separate "if (state.editing)
+  // commitEdit(...)" escape hatch). This blur handler is the general fix so
+  // every current and future focus-stealing surface is covered by
+  // construction rather than needing its own copy of that escape hatch.
+  input.addEventListener('blur', () => {
+    if (state.editing && state.editing.input === input) {
+      commitEdit(state.editing.key, input.value, { advance: null });
+    }
+  });
 }
 
 function onEditorKeydown(e) {
@@ -1667,8 +2119,14 @@ function onEditorKeydown(e) {
 
 function removeEditor() {
   if (state.editing) {
-    state.editing.input.remove();
+    // Null out state.editing BEFORE detaching the node: removing a focused
+    // element from the document fires its 'blur' event synchronously, and
+    // that blur handler (above) re-enters commitEdit() if it still sees
+    // state.editing pointing at this input — clearing the field first makes
+    // that guard a no-op instead of a double-commit.
+    const input = state.editing.input;
     state.editing = null;
+    input.remove();
   }
 }
 
@@ -1768,8 +2226,57 @@ function applyUndoRedoEntry(entry, useBefore) {
 // ---------------------------------------------------------------------------
 // Clipboard
 // ---------------------------------------------------------------------------
+// Two representations are kept in sync on every copy/cut:
+//   - `clipboard` (module state above): a rich in-memory snapshot (raw
+//     formulas + per-cell format) — the only thing that can reproduce a
+//     same-app paste's formulas/formatting/multi-cell shape exactly.
+//   - the real OS clipboard (via main.js's clipboard module, reached through
+//     preload.js's `window.lumen.clipboard` bridge since the renderer can't
+//     require('electron') directly under contextIsolation): a plain
+//     tab-separated-values / newline-separated-rows string, the de facto
+//     interop format Excel/Sheets/etc. also use, so a paste into a text
+//     editor or another spreadsheet app produces something sane.
+// Paste then picks whichever is right for the situation: if the OS
+// clipboard's text still matches exactly what THIS app last wrote there, it
+// was our own most recent copy — use the rich `clipboard` for full
+// fidelity. If it doesn't match (or there is none), the user must have
+// copied from another app since — parse the OS clipboard's plain text into
+// cells instead of silently ignoring it.
 
-function copySelection() {
+function buildTsvFromRange(sheet, range) {
+  const lines = [];
+  for (let r = range.minRow; r <= range.maxRow; r++) {
+    const cols = [];
+    for (let c = range.minCol; c <= range.maxCol; c++) {
+      const cell = sheet.getCell(cellKeyFromRC(c, r));
+      const display = cell ? formatValue(cell.computed, cell.format.numberFormat) : '';
+      // A literal tab/newline inside a cell's own text would otherwise
+      // corrupt the TSV's row/column structure for whatever reads it back.
+      cols.push(String(display ?? '').replace(/\t/g, ' ').replace(/\r?\n/g, ' '));
+    }
+    lines.push(cols.join('\t'));
+  }
+  return lines.join('\n');
+}
+
+/** Splits pasted plain text (from the OS clipboard, i.e. NOT from this
+ * app's own last copy — see pasteAtActive()) into a 2D array of cell text.
+ * Tab-separated is the de facto spreadsheet interop format (what Excel/
+ * Sheets/etc. put on the clipboard), so it's preferred whenever present;
+ * comma-separated (plain CSV text) is a reasonable fallback for text that
+ * has no tabs at all. */
+function parseClipboardPlainText(text) {
+  const normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  // Drop exactly one trailing newline, if present — copying a range from a
+  // real spreadsheet app conventionally ends with one, and keeping it would
+  // otherwise paste a bogus trailing blank row.
+  const trimmed = normalized.endsWith('\n') ? normalized.slice(0, -1) : normalized;
+  const lines = trimmed.length ? trimmed.split('\n') : [''];
+  const delimiter = text.includes('\t') ? '\t' : ',';
+  return lines.map((line) => line.split(delimiter));
+}
+
+async function copySelection() {
   const sheet = workbook.activeSheet;
   const range = normalizedSelection();
   const rows = [];
@@ -1788,15 +2295,44 @@ function copySelection() {
     sourceRange: range,
     cut: false,
   };
+  lastClipboardOsText = buildTsvFromRange(sheet, range);
+  try {
+    await window.lumen.clipboard.writeText(lastClipboardOsText);
+  } catch (e) {
+    // Non-fatal — same-app copy/paste via the rich `clipboard` above still
+    // works even if the real OS clipboard write fails for some reason.
+  }
 }
 
-function cutSelection() {
-  copySelection();
+async function cutSelection() {
+  await copySelection();
   clipboard.cut = true;
 }
 
-function pasteAtActive() {
-  if (!clipboard) return;
+/** Applies parsed external plain-text cells (see parseClipboardPlainText)
+ * starting at the active cell, as plain literal values — no formula-ref
+ * shifting or format copying, since plain text carries neither. */
+function pasteExternalTextAtActive(rowsOfText) {
+  const sheet = workbook.activeSheet;
+  const dest = state.anchor;
+  const changes = [];
+  for (let dr = 0; dr < rowsOfText.length; dr++) {
+    const rowText = rowsOfText[dr];
+    for (let dc = 0; dc < rowText.length; dc++) {
+      const destCol = dest.col + dc;
+      const destRow = dest.row + dr;
+      if (destCol >= sheet.colCount || destRow >= sheet.rowCount) continue;
+      const key = cellKeyFromRC(destCol, destRow);
+      const before = sheet.snapshotCell(key);
+      changes.push({ key, before, after: { raw: rowText[dc], format: { ...before.format } } });
+    }
+  }
+  applyChanges(changes);
+}
+
+/** The original same-app paste: full fidelity from the rich in-memory
+ * `clipboard` (formula-ref shifting, per-cell format, cut-clears-source). */
+function pasteRichClipboardAtActive() {
   const sheet = workbook.activeSheet;
   const dest = state.anchor;
   const changes = [];
@@ -1830,8 +2366,48 @@ function pasteAtActive() {
       }
     }
     clipboard = null;
+    lastClipboardOsText = null;
   }
   applyChanges(changes);
+}
+
+async function pasteAtActive() {
+  // Ask the real OS clipboard what's there right now and compare it against
+  // the plain text this app itself last wrote (see copySelection()). Equal
+  // means nothing external has been copied since — prefer the rich
+  // in-memory `clipboard` for full same-app fidelity (formulas/formatting/
+  // multi-cell shape). Different (including "we have no OS text on record
+  // at all") means the OS clipboard is the more recent/authoritative
+  // source, so parse ITS plain text instead — this is also what correctly
+  // handles a copy made in another app entirely.
+  let osText = null;
+  try {
+    const res = await window.lumen.clipboard.readText();
+    if (res && res.ok) osText = res.text;
+  } catch (e) {
+    osText = null;
+  }
+
+  const sameAppCopyStillCurrent =
+    clipboard && osText !== null && lastClipboardOsText !== null && osText === lastClipboardOsText;
+
+  if (sameAppCopyStillCurrent) {
+    pasteRichClipboardAtActive();
+    return;
+  }
+  if (osText) {
+    // Genuinely different (or newer) content on the OS clipboard than what
+    // this app last put there — treat it as an external copy and parse its
+    // plain text into cells rather than silently ignoring it.
+    pasteExternalTextAtActive(parseClipboardPlainText(osText));
+    return;
+  }
+  if (clipboard) {
+    // The OS clipboard is empty or unreadable (e.g. the readText IPC call
+    // itself failed) but we still have our own last in-app copy on record —
+    // fall back to it rather than pasting nothing.
+    pasteRichClipboardAtActive();
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -2159,23 +2735,27 @@ function mergeSelection() {
     showToast("Can't merge: overlaps an existing merged cell", { type: 'error' });
     return;
   }
-  // Any existing merge fully inside the new selection is absorbed into it.
-  sheet.merges = existing.filter(({ parsed }) => !mergeFullyContainedInSelection(parsed, range)).map(({ str }) => str);
-  const rangeStr = `${cellKeyFromRC(range.minCol, range.minRow)}:${cellKeyFromRC(range.maxCol, range.maxRow)}`;
-  sheet.merges.push(rangeStr);
-  // Only the top-left cell's content survives — see scope-cut note above.
-  for (let r = range.minRow; r <= range.maxRow; r++) {
-    for (let c = range.minCol; c <= range.maxCol; c++) {
-      if (c === range.minCol && r === range.minRow) continue;
-      const key = cellKeyFromRC(c, r);
-      const cell = sheet.getCell(key);
-      if (cell && cell.raw !== '') sheet.setRaw(key, '');
-    }
-  }
+  // Set before performStructuralChange (not after) since it renders
+  // synchronously — the interior cells of the new merge are about to stop
+  // being present in cellElements, so the selection must already be at the
+  // anchor by the time that render happens.
   state.anchor = { col: range.minCol, row: range.minRow };
   state.focus = { col: range.minCol, row: range.minRow };
-  setDirty(true);
-  renderGrid();
+  performStructuralChange((sheet) => {
+    // Any existing merge fully inside the new selection is absorbed into it.
+    sheet.merges = existing.filter(({ parsed }) => !mergeFullyContainedInSelection(parsed, range)).map(({ str }) => str);
+    const rangeStr = `${cellKeyFromRC(range.minCol, range.minRow)}:${cellKeyFromRC(range.maxCol, range.maxRow)}`;
+    sheet.merges.push(rangeStr);
+    // Only the top-left cell's content survives — see scope-cut note above.
+    for (let r = range.minRow; r <= range.maxRow; r++) {
+      for (let c = range.minCol; c <= range.maxCol; c++) {
+        if (c === range.minCol && r === range.minRow) continue;
+        const key = cellKeyFromRC(c, r);
+        const cell = sheet.getCell(key);
+        if (cell && cell.raw !== '') sheet.setRaw(key, '');
+      }
+    }
+  });
   showToast('Cells merged');
 }
 
@@ -2183,16 +2763,17 @@ function unmergeSelection() {
   const sheet = workbook.activeSheet;
   const range = normalizedSelection();
   const before = sheet.merges.length;
-  sheet.merges = sheet.merges.filter((m) => {
+  const stillMerged = sheet.merges.filter((m) => {
     const mp = parseRangeStr(m);
     return !(mp && mp.startCol <= range.maxCol && mp.endCol >= range.minCol && mp.startRow <= range.maxRow && mp.endRow >= range.minRow);
   });
-  if (sheet.merges.length === before) {
+  if (stillMerged.length === before) {
     showToast('No merged cells in selection', { type: 'error' });
     return;
   }
-  setDirty(true);
-  renderGrid();
+  performStructuralChange((sheet) => {
+    sheet.merges = stillMerged;
+  });
   showToast('Cells unmerged');
 }
 
@@ -2207,11 +2788,10 @@ function unmergeSelection() {
 // "how many rows/columns are frozen" — not booleans.
 
 function applyFreezePanes(rowCount, colCount) {
-  const sheet = workbook.activeSheet;
-  sheet.freezeRow = Math.max(0, rowCount);
-  sheet.freezeCol = Math.max(0, colCount);
-  setDirty(true);
-  renderGrid();
+  performStructuralChange((sheet) => {
+    sheet.freezeRow = Math.max(0, rowCount);
+    sheet.freezeCol = Math.max(0, colCount);
+  });
 }
 
 function freezePanesAtActive() {
@@ -2447,9 +3027,9 @@ function openConditionalFormattingDialog() {
       removeBtn.dataset.icon = 'x';
       removeBtn.dataset.tooltip = 'Remove rule';
       removeBtn.addEventListener('click', () => {
-        sheet.condFormats = sheet.condFormats.filter((r) => r.id !== rule.id);
-        setDirty(true);
-        renderAllCellContents();
+        performStructuralChange((sheet) => {
+          sheet.condFormats = sheet.condFormats.filter((r) => r.id !== rule.id);
+        });
         row.remove();
       });
       row.appendChild(desc);
@@ -2482,9 +3062,12 @@ function openConditionalFormattingDialog() {
         maxColor: bodyEl.querySelector('#cf-max-color').value,
       };
     }
-    sheet.condFormats.push(rule);
-    setDirty(true);
-    renderAllCellContents();
+    performStructuralChange((sheet) => {
+      // Reassign (not push in place): toJSON() hands back the live array by
+      // reference, so mutating it in place would corrupt the undo entry's
+      // "before" snapshot (before/after would alias the same array).
+      sheet.condFormats = [...sheet.condFormats, rule];
+    });
     showToast('Conditional formatting rule added');
   }
 }
@@ -2611,8 +3194,9 @@ function openDataValidationDialog() {
       removeBtn.dataset.icon = 'x';
       removeBtn.dataset.tooltip = 'Remove rule';
       removeBtn.addEventListener('click', () => {
-        sheet.dataValidations = sheet.dataValidations.filter((r) => r.id !== rule.id);
-        setDirty(true);
+        performStructuralChange((sheet) => {
+          sheet.dataValidations = sheet.dataValidations.filter((r) => r.id !== rule.id);
+        });
         updateValidationChevronPosition();
         row.remove();
       });
@@ -2633,12 +3217,14 @@ function openDataValidationDialog() {
       showToast('Enter at least one allowed value', { type: 'error' });
       return;
     }
-    sheet.dataValidations.push({
-      id: 'dv' + Date.now() + Math.random().toString(36).slice(2, 7),
-      range: rangeStr,
-      values,
+    performStructuralChange((sheet) => {
+      // Reassign (not push in place) — see the matching comment in the
+      // conditional-formatting applyRule() above.
+      sheet.dataValidations = [
+        ...sheet.dataValidations,
+        { id: 'dv' + Date.now() + Math.random().toString(36).slice(2, 7), range: rangeStr, values },
+      ];
     });
-    setDirty(true);
     updateValidationChevronPosition();
     showToast('Data validation rule added');
   }
@@ -2928,11 +3514,9 @@ function createChartEl(chart, opts = {}) {
   box.addEventListener('mousedown', (e) => e.stopPropagation());
   box.querySelector('.chart-box__refresh').addEventListener('click', () => redrawChart(chart, rec));
   box.querySelector('.chart-box__close').addEventListener('click', () => {
-    const sheet = workbook.activeSheet;
-    sheet.charts = sheet.charts.filter((c) => c.id !== chart.id);
-    setDirty(true);
-    box.remove();
-    chartElements.delete(chart.id);
+    performStructuralChange((sheet) => {
+      sheet.charts = sheet.charts.filter((c) => c.id !== chart.id);
+    });
   });
 
   const header = box.querySelector('.chart-box__header');
@@ -2963,7 +3547,10 @@ function createChartEl(chart, opts = {}) {
 function renderAllCharts() {
   chartElements.forEach((rec) => rec.el.remove());
   chartElements = new Map();
-  for (const chart of workbook.activeSheet.charts) createChartEl(chart);
+  for (const chart of workbook.activeSheet.charts) {
+    createChartEl(chart, { animate: chart.id === pendingChartInsertAnimateId });
+  }
+  pendingChartInsertAnimateId = null;
 }
 
 function refreshAllCharts() {
@@ -3028,9 +3615,12 @@ function openInsertChartDialog() {
       // is what let Sort corrupt a chart when it moved the header row).
       header: computeChartHeaderDecision(sheet, parsed),
     };
-    sheet.charts.push(chart);
-    setDirty(true);
-    createChartEl(chart, { animate: true });
+    pendingChartInsertAnimateId = chart.id;
+    performStructuralChange((sheet) => {
+      // Reassign (not push in place) — see the matching comment in the
+      // conditional-formatting applyRule() above.
+      sheet.charts = [...sheet.charts, chart];
+    });
     showToast('Chart inserted');
   }
 }
@@ -3271,6 +3861,38 @@ async function newWorkbook() {
 // file via one of its own safe flows (fresh open dialog, recent-id lookup,
 // or a genuine drop path) and resolves to { ok, data, filePath, canceled?,
 // error? }. This function never sees or passes along a bare path itself.
+/** Applies a successful file:open-lsheet / recent:open-by-id / (native-format
+ * branch of) file:open-dropped-lsheet result — a full .lsheet JSON document.
+ * Shared by openWithDirtyCheck() (dialog Open / Open Recent) and
+ * openDroppedFile() (drag-and-drop) so there's exactly one place this parse
+ * + apply logic lives. Returns true on success, false on a recognized parse
+ * failure (already reported to the user via showCorruptedFileDialog). */
+function applyOpenedLsheetResult(res) {
+  let parsed;
+  try {
+    parsed = Workbook.fromJSON(res.data);
+  } catch (e) {
+    // Valid JSON, but not a shape we recognize as a Lumen Sheet document
+    // (wrong type, missing "sheets"/"version", etc.) — see grid.js. Same
+    // friendly message as a JSON.parse failure; the raw error is logged for
+    // debugging only, never shown to the user.
+    console.error('Failed to parse workbook JSON', e);
+    showCorruptedFileDialog();
+    return false;
+  }
+  workbook = parsed;
+  currentFilePath = res.filePath;
+  resetUndoRedo();
+  clampSelectionToSheet();
+  renderSheetTabs();
+  switchSheet(workbook.activeSheetIndex, true);
+  setDirty(false);
+  hideStartScreen();
+  showToast(`Opened "${workbook.title}"`);
+  refreshRecentCache();
+  return true;
+}
+
 async function openWithDirtyCheck(fetchResult) {
   if (workbook.dirty) {
     const choice = await confirmUnsaved();
@@ -3286,28 +3908,7 @@ async function openWithDirtyCheck(fetchResult) {
     showCorruptedFileDialog(res.error);
     return;
   }
-  let parsed;
-  try {
-    parsed = Workbook.fromJSON(res.data);
-  } catch (e) {
-    // Valid JSON, but not a shape we recognize as a Lumen Sheet document
-    // (wrong type, missing "sheets"/"version", etc.) — see grid.js. Same
-    // friendly message as a JSON.parse failure; the raw error is logged for
-    // debugging only, never shown to the user.
-    console.error('Failed to parse workbook JSON', e);
-    showCorruptedFileDialog();
-    return;
-  }
-  workbook = parsed;
-  currentFilePath = res.filePath;
-  resetUndoRedo();
-  clampSelectionToSheet();
-  renderSheetTabs();
-  switchSheet(workbook.activeSheetIndex, true);
-  setDirty(false);
-  hideStartScreen();
-  showToast(`Opened "${workbook.title}"`);
-  await refreshRecentCache();
+  applyOpenedLsheetResult(res);
 }
 
 /** Shared "this file couldn't be opened" feedback for both a main-process
@@ -3431,17 +4032,37 @@ async function openRecentById(id) {
   await openWithDirtyCheck(() => window.lumen.recent.openById(id));
 }
 
-// Ready for a 'drop' DOM handler to call once drag-and-drop lands. Takes the
+// Called by the 'drop' DOM handler (see the "Drag-and-drop open" section
+// near Boot, below) once a supported file lands on the window. Takes the
 // real `File` object straight from the drop event's dataTransfer.files[0] —
 // NOT a path string. preload.js's openDroppedLsheet resolves the on-disk
 // path itself via webUtils.getPathForFile(), which is what actually makes
 // this safe (see the comments on openDroppedLsheet in preload.js and on
-// file:open-dropped-lsheet in main.js). A future 'drop' handler must pass
-// the File object through unmodified — extracting some string path here in
-// page-context JS first and passing that instead would silently recreate
-// the arbitrary-path hole this design specifically closes.
+// file:open-dropped-lsheet in main.js). Do not extract some string path
+// here in page-context JS first and pass that instead — that would
+// silently recreate the arbitrary-path hole this design specifically
+// closes. main.js dispatches on the file's extension and tags the result
+// with a `kind` so a drop can open a native .lsheet OR import an .xlsx/.csv
+// through this one already-secured channel, mirroring the dialog-driven
+// Open/Import flows below.
 async function openDroppedFile(file) {
-  await openWithDirtyCheck(() => window.lumen.file.openDroppedLsheet(file));
+  if (workbook.dirty) {
+    const choice = await confirmUnsaved();
+    if (choice === 'cancel') return;
+    if (choice === 'save') {
+      const ok = await saveWorkbook();
+      if (!ok) return;
+    }
+  }
+  const res = await window.lumen.file.openDroppedLsheet(file);
+  if (res.canceled) return;
+  if (!res.ok) {
+    showCorruptedFileDialog(res.error);
+    return;
+  }
+  if (res.kind === 'xlsx') applyImportedXlsxResult(res);
+  else if (res.kind === 'csv') applyImportedCsvResult(res);
+  else applyOpenedLsheetResult(res);
 }
 
 async function saveWorkbook() {
@@ -3484,14 +4105,11 @@ async function saveWorkbookAs() {
   return true;
 }
 
-async function importCsv() {
-  const res = await window.lumen.file.importCsv();
-  if (res.canceled) return;
-  if (!res.ok) {
-    showToast('Import failed', { type: 'error' });
-    showDialog({ title: 'Import failed', bodyHTML: `<p>${escapeHtml(res.error)}</p>` });
-    return;
-  }
+/** Applies a successful file:import-csv / (csv branch of)
+ * file:open-dropped-lsheet result. Shared by importCsv() (File ▸ Import
+ * CSV…) and openDroppedFile() (drag-and-drop) — see applyOpenedLsheetResult
+ * for why this is factored out. */
+function applyImportedCsvResult(res) {
   const sheet = new Sheet('Imported');
   sheet.rowCount = res.rowCount;
   sheet.colCount = res.colCount;
@@ -3511,14 +4129,22 @@ async function importCsv() {
   showToast('Imported CSV');
 }
 
-async function importXlsx() {
-  const res = await window.lumen.file.importXlsx();
+async function importCsv() {
+  const res = await window.lumen.file.importCsv();
   if (res.canceled) return;
   if (!res.ok) {
     showToast('Import failed', { type: 'error' });
     showDialog({ title: 'Import failed', bodyHTML: `<p>${escapeHtml(res.error)}</p>` });
     return;
   }
+  applyImportedCsvResult(res);
+}
+
+/** Applies a successful file:import-xlsx / (xlsx branch of)
+ * file:open-dropped-lsheet result. Shared by importXlsx() (File ▸ Import
+ * Excel…) and openDroppedFile() (drag-and-drop) — see
+ * applyOpenedLsheetResult for why this is factored out. */
+function applyImportedXlsxResult(res) {
   const wb = new Workbook();
   wb.sheets = res.sheets.map((s) => {
     const sheet = new Sheet(s.name);
@@ -3539,6 +4165,17 @@ async function importXlsx() {
   setDirty(true);
   hideStartScreen();
   showToast('Imported Excel workbook');
+}
+
+async function importXlsx() {
+  const res = await window.lumen.file.importXlsx();
+  if (res.canceled) return;
+  if (!res.ok) {
+    showToast('Import failed', { type: 'error' });
+    showDialog({ title: 'Import failed', bodyHTML: `<p>${escapeHtml(res.error)}</p>` });
+    return;
+  }
+  applyImportedXlsxResult(res);
 }
 
 async function exportCsv() {
@@ -3810,6 +4447,15 @@ async function handleBeforeClose() {
 const ARROW_DIRS = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' };
 
 document.addEventListener('keydown', (e) => {
+  // Explicit, unconditional bail-out while any dialog is open: global
+  // shortcuts (Ctrl+N/O/S/…) must not fire underneath an open modal — that's
+  // how Ctrl+N used to stack a second "unsaved changes?" dialog on top of an
+  // already-open one — and grid navigation/typing-to-edit must not silently
+  // reach the spreadsheet either (previously e.g. typing "HELLO" while Page
+  // Setup was open landed in the active cell's editor, invisibly, underneath
+  // the modal). The dialog itself (showDialog()) owns Escape/Tab while its
+  // `.dialog-overlay` is in the DOM; this handler simply stays out of the way.
+  if (document.querySelector('.dialog-overlay')) return;
   if (state.editing) return; // editor input owns its own keys
   const ae = document.activeElement;
   if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA')) return;
@@ -3896,7 +4542,13 @@ document.addEventListener('keydown', (e) => {
   // Tab/Enter/Space/typing away from that control instead of letting it
   // move focus or activate natively. That made it impossible to Tab off a
   // toolbar button, or to press Enter/Space to activate one.
-  if (ae && ae !== document.body && ae.closest('button, select, a, [tabindex]')) return;
+  // The grid host itself is the one [tabindex] element that *should* fall
+  // through to the grid-navigation/typing-to-edit logic below (that's the
+  // whole point of it being focusable — see focusGridHost()); every other
+  // real, reachable control (toolbar button, menubar item, sheet tab, …)
+  // should keep its own native/roving keyboard behavior instead of having
+  // Tab/Enter/typing hijacked out from under it.
+  if (ae && ae !== document.body && ae !== els.sheetViewport && ae.closest('button, select, a, [tabindex]')) return;
 
   if (!mod && (e.key === 'Delete' || e.key === 'Backspace')) {
     e.preventDefault();

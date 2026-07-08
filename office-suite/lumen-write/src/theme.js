@@ -10,7 +10,12 @@ export function initTheme() {
     document.documentElement.dataset.theme = theme;
     localStorage.setItem(STORAGE_KEY, theme);
     button.innerHTML = theme === 'dark' ? icons.sun : icons.moon;
-    button.setAttribute('data-tooltip', theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
+    // Keep the accessible name in lockstep with the hover tooltip so they
+    // can't drift — both describe the action the click performs (switch TO
+    // the other theme), not the icon currently shown.
+    const label = theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
+    button.setAttribute('data-tooltip', label);
+    button.setAttribute('aria-label', label);
   }
 
   const stored = localStorage.getItem(STORAGE_KEY);

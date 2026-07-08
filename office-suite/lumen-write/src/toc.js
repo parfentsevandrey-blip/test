@@ -62,11 +62,42 @@ function blockMarkup(entries) {
 }
 
 /** Insert ▸ Table of Contents — builds a snapshot from the document's
- * current headings/pages and inserts it at the caret. */
+ * current headings/pages and inserts it at the caret.
+ *
+ * Order matters here: the TOC block itself occupies real vertical space,
+ * so inserting it can push everything after it (including some of the
+ * very headings it's listing) onto a later page. Computing page numbers
+ * *before* insertion — the previous approach — meant a freshly-inserted
+ * TOC was wrong from the moment it appeared, only correcting itself once
+ * the user hit Update. Fix: insert the block first (its heading text/
+ * levels come from a "placeholder" pass so it's inserted at its real,
+ * final size), re-paginate against the now-actual layout, then fill in
+ * the real page numbers from that. */
 export function insertTableOfContents() {
+  const page = getPage();
+  if (!page) return;
+  const before = new Set(page.querySelectorAll('.toc-block'));
+
+  // Placeholder pass: gives the block its real heading list (so it's
+  // inserted at the size it will actually occupy) — the page numbers in
+  // this pass are necessarily stale, since pagination hasn't accounted
+  // for the block's own presence yet, and are overwritten below.
+  const placeholderEntries = collectEntries();
+  insertHTML(`${blockMarkup(placeholderEntries)}<p><br></p>`);
+
+  // Re-paginate now that the TOC block genuinely occupies space in the
+  // document, then find the block just inserted (insertHTML/execCommand
+  // hand back no reference to what was inserted, so identify it by set
+  // difference against the snapshot taken above) and refresh its entries
+  // from the now-correct, post-insertion layout.
   paginateNow();
-  const entries = collectEntries();
-  insertHTML(`${blockMarkup(entries)}<p><br></p>`);
+  const block = Array.from(page.querySelectorAll('.toc-block')).find((b) => !before.has(b));
+  if (block) {
+    const entries = collectEntries();
+    const entriesEl = block.querySelector('.toc-block__entries');
+    if (entriesEl) entriesEl.innerHTML = entriesMarkup(entries);
+  }
+  notifyChange();
 }
 
 /** Rebuilds one existing TOC block's entries in place (used by both the

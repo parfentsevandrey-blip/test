@@ -6,9 +6,37 @@ import { PAGE_SIZES, MARGIN_PRESETS, MARGIN_MIN_IN, MARGIN_MAX_IN } from './pagi
 
 const root = () => document.getElementById('dialog-root');
 
+// Every element type that can meaningfully receive keyboard focus inside a
+// dialog. Excludes disabled controls and anything explicitly pulled out of
+// the tab order (tabindex="-1") since neither is reachable via Tab anyway.
+const FOCUSABLE_SELECTOR = [
+  'a[href]',
+  'button:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(', ');
+
+// Exported so other modules with their own keyboard-navigable overlays
+// (menubar.js's ARIA menu system) can reuse the same "what's focusable
+// right now" logic instead of redefining it.
+export function getFocusable(container) {
+  return Array.from(container.querySelectorAll(FOCUSABLE_SELECTOR)).filter(
+    (el) => el.offsetParent !== null || el === document.activeElement
+  );
+}
+
 /**
  * Open a modal dialog. `render(container)` receives the .dialog element and
  * should populate it; return value is ignored. Returns a `close()` function.
+ *
+ * Reusable focus-trap behavior applied uniformly to every dialog built on
+ * top of this helper: focuses the first focusable element on open; traps
+ * Tab/Shift+Tab so focus cycles only among the dialog's own focusable
+ * elements (it can never escape to the background titlebar/toolbar/menu);
+ * closes on Escape; restores focus to whatever element originally had focus
+ * (i.e. triggered the dialog) once it closes.
  */
 function openDialog(extraClass, render) {
   const overlay = document.createElement('div');
@@ -16,26 +44,69 @@ function openDialog(extraClass, render) {
 
   const box = document.createElement('div');
   box.className = extraClass ? `dialog ${extraClass}` : 'dialog';
+  // Not part of the normal tab order (tabindex="-1"), but gives the dialog
+  // itself a valid focus target as a last resort if a particular dialog
+  // somehow renders with no focusable content.
+  box.tabIndex = -1;
   overlay.appendChild(box);
 
+  // Captured before we move focus into the dialog, so it can be restored
+  // on close — whatever control the user was on (button, menu item, etc.)
+  // when the dialog opened.
+  const previouslyFocused = document.activeElement;
+  let closed = false;
+
   function close() {
+    if (closed) return;
+    closed = true;
     overlay.remove();
     document.removeEventListener('keydown', onKeydown, true);
+    if (previouslyFocused && typeof previouslyFocused.focus === 'function' && document.contains(previouslyFocused)) {
+      previouslyFocused.focus();
+    }
   }
 
   function onKeydown(e) {
     if (e.key === 'Escape') {
       e.preventDefault();
       close();
+      return;
+    }
+    if (e.key === 'Tab') {
+      const focusable = getFocusable(box);
+      if (!focusable.length) {
+        // Nothing to focus inside the dialog at all — keep focus pinned on
+        // the box itself rather than letting Tab fall through to the page.
+        e.preventDefault();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const current = document.activeElement;
+      if (e.shiftKey) {
+        if (current === first || !box.contains(current)) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (current === last || !box.contains(current)) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     }
   }
+  // Capture phase so this always sees Tab/Escape before any other listener
+  // (e.g. the menu bar's own Escape handler) can act on it while a dialog
+  // is open.
   document.addEventListener('keydown', onKeydown, true);
 
   render(box, close);
   root().appendChild(overlay);
 
-  const firstInput = box.querySelector('input, textarea, button');
-  if (firstInput) firstInput.focus();
+  const focusable = getFocusable(box);
+  if (focusable.length) focusable[0].focus();
+  else box.focus();
 
   return close;
 }
@@ -341,12 +412,21 @@ export function shortcutsDialog() {
   });
 }
 
-export function aboutDialog() {
+export async function aboutDialog() {
+  // Read the real version from package.json (via main.js's app.getVersion())
+  // instead of a literal hand-duplicated here — see preload.js/main.js's
+  // app:getVersion.
+  let version = '';
+  try {
+    version = await window.lumen.getAppVersion();
+  } catch (err) {
+    version = '';
+  }
   openDialog('dialog--about', (box, close) => {
     box.innerHTML = `
       <span class="brand-mark">W</span>
       <h2>Lumen Write</h2>
-      <div class="about-version">Version 1.0.0</div>
+      <div class="about-version">${version ? `Version ${escapeHtml(version)}` : ''}</div>
       <p>A premium, minimalist word processor for everyday document editing.</p>
       <p>Part of the Lumen office suite.</p>`;
     buildActions(box, [{ label: 'Close', variant: 'primary', onClick: close }]);

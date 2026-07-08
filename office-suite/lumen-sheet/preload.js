@@ -26,6 +26,17 @@ contextBridge.exposeInMainWorld('lumen', {
   onBeforeClose: (cb) => ipcRenderer.on('app:before-close', cb),
   confirmClose: () => ipcRenderer.send('app:confirm-close'),
 
+  // Help ▸ About's version string — see main.js's app:getVersion handler.
+  getAppVersion: () => ipcRenderer.invoke('app:getVersion'),
+
+  // Real OS clipboard access (plain text only) — see main.js's
+  // clipboard:writeText/clipboard:readText handlers for why this exists
+  // alongside the renderer's own in-memory rich clipboard.
+  clipboard: {
+    writeText: (text) => ipcRenderer.invoke('clipboard:writeText', text),
+    readText: () => ipcRenderer.invoke('clipboard:readText'),
+  },
+
   // Every method below that reads or writes a file takes NO filePath
   // argument (the one deliberate exception being openDroppedLsheet — see the
   // comment on its main.js handler). main.js is the sole authority on which

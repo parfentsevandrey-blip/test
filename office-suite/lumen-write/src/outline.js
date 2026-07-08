@@ -59,7 +59,27 @@ export function refreshOutline() {
     item.className = 'sidebar__item';
     item.style.paddingLeft = `${8 + (level - 1) * 14}px`;
     item.textContent = h.textContent.trim() || '(untitled heading)';
+    // Was a plain click-only div — unreachable via Tab and inert to a
+    // screen reader. tabindex makes it focusable (picking up the shared
+    // [tabindex]:focus-visible ring from theme.css); role="button" plus
+    // Enter/Space keydown makes it behave, and read, like the clickable
+    // control it visually is.
+    item.tabIndex = 0;
+    item.setAttribute('role', 'button');
     item.addEventListener('click', () => jumpTo(h));
+    item.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        jumpTo(h);
+      } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const siblings = Array.from(innerEl.querySelectorAll('.sidebar__item'));
+        const idx = siblings.indexOf(item);
+        const delta = e.key === 'ArrowDown' ? 1 : -1;
+        const next = siblings[idx + delta];
+        if (next) next.focus();
+      }
+    });
     innerEl.appendChild(item);
   }
 }

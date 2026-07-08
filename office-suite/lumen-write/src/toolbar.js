@@ -2,7 +2,7 @@
 // engine. Font family/size and text/highlight color use wrapSelection()
 // (custom <span style> wrapping); everything else uses execCommand.
 
-import { exec, wrapSelection, getSelectionState, restoreSelection, focusPage, insertHTML } from './editor.js';
+import { exec, wrapSelection, applyBlockStyle, getSelectionState, restoreSelection, focusPage, insertHTML } from './editor.js';
 import { promptLinkDialog, promptTableDialog } from './dialogs.js';
 import { toggleSidebar } from './outline.js';
 
@@ -26,6 +26,17 @@ const FORMAT_BLOCKS = [
   { label: 'Heading 3', value: 'h3' },
   { label: 'Quote', value: 'blockquote' },
   { label: 'Code', value: 'pre' },
+];
+
+// Applied as an inline line-height on the top-level block(s) the
+// selection touches (see editor.js's applyBlockStyle) — the same
+// mechanism, minimum spacing set Word/Google Docs expose (Single/1.5/
+// Double), keyed by the literal CSS line-height value.
+export const LINE_SPACINGS = [
+  { label: 'Single', value: '1' },
+  { label: '1.15', value: '1.15' },
+  { label: '1.5', value: '1.5' },
+  { label: 'Double', value: '2' },
 ];
 
 // Curated text-color swatches: theme ink/accent/semantic tokens, resolved
@@ -78,6 +89,11 @@ export function initToolbar() {
 
   toolbar.appendChild(group([
     formatBlockSelect(),
+  ]));
+  toolbar.appendChild(sep());
+
+  toolbar.appendChild(group([
+    lineSpacingSelect(),
   ]));
   toolbar.appendChild(sep());
 
@@ -139,6 +155,12 @@ function iconButton(iconName, tooltip, onClick, stateKey) {
   const btn = document.createElement('button');
   btn.className = 'btn-icon';
   btn.dataset.tooltip = tooltip;
+  // The visible hover tooltip is the only place these icon-only buttons'
+  // labels lived before — nothing reached the accessibility tree, so a
+  // screen reader heard "button" with no indication of function. Reusing
+  // the same tooltip string as the accessible name (rather than writing
+  // separate copy) keeps the two from ever drifting apart.
+  btn.setAttribute('aria-label', tooltip);
   btn.innerHTML = window.lumen.icons[iconName] || '';
   btn.addEventListener('mousedown', (e) => e.preventDefault());
   btn.addEventListener('click', onClick);
@@ -204,6 +226,33 @@ function formatBlockSelect() {
   return select;
 }
 
+/** Line spacing (Single/1.15/1.5/Double) — the toolbar's discoverable
+ * home for a paragraph-level control with no toolbar icon of its own,
+ * following the exact same <select> pattern formatBlockSelect() above
+ * uses for the (also paragraph-level) heading dropdown, just backed by
+ * applyBlockStyle() instead of execCommand('formatBlock', ...) since
+ * there's no execCommand for line-height. Also available from Format ▸
+ * Line Spacing for discoverability outside the toolbar. */
+function lineSpacingSelect() {
+  const select = document.createElement('select');
+  select.className = 'select select--line-spacing';
+  select.dataset.tooltip = 'Line spacing';
+  select.setAttribute('aria-label', 'Line spacing');
+  for (const s of LINE_SPACINGS) {
+    const opt = document.createElement('option');
+    opt.value = s.value;
+    opt.textContent = s.label;
+    select.appendChild(opt);
+  }
+  select.addEventListener('mousedown', () => restoreSelection());
+  select.addEventListener('change', () => {
+    applyBlockStyle('lineHeight', select.value);
+    focusPage();
+  });
+  activeButtons.__lineSpacingSelect = select;
+  return select;
+}
+
 function resolveVar(varName) {
   return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
 }
@@ -216,6 +265,7 @@ function colorSwatchButton(iconName, tooltip, styleProp, swatches) {
   const btn = document.createElement('button');
   btn.className = 'btn-icon btn-swatch';
   btn.dataset.tooltip = tooltip;
+  btn.setAttribute('aria-label', tooltip);
   btn.innerHTML = window.lumen.icons[iconName] || '';
   const chip = document.createElement('span');
   chip.className = 'btn-swatch__chip';
@@ -247,6 +297,7 @@ function colorSwatchButton(iconName, tooltip, styleProp, swatches) {
     }
     sw.style.background = literalColor || (s.color || '#000000');
     sw.dataset.tooltip = label;
+    sw.setAttribute('aria-label', label);
     sw.addEventListener('click', () => {
       const finalColor = typeof s === 'string' ? resolveVar(s) : s.varName ? resolveVar(s.varName) : s.color;
       wrapSelection(styleProp, finalColor);
@@ -361,6 +412,15 @@ function refreshActiveStates() {
   if (select) {
     const known = FORMAT_BLOCKS.map((f) => f.value);
     select.value = known.includes(state.formatBlock) ? state.formatBlock : 'p';
+  }
+
+  const spacingSelect = activeButtons.__lineSpacingSelect;
+  if (spacingSelect) {
+    const known = LINE_SPACINGS.map((s) => s.value);
+    // No explicit inline override (state.lineHeight === '') reads as the
+    // document's own default rhythm — closest in spirit to "Single" of
+    // the choices offered, so that's what the dropdown shows for it.
+    spacingSelect.value = known.includes(state.lineHeight) ? state.lineHeight : '1';
   }
 }
 

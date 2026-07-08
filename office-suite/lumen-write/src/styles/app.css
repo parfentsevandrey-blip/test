@@ -103,6 +103,10 @@
   min-width: 128px;
 }
 
+.select--line-spacing {
+  min-width: 92px;
+}
+
 /* Color swatch trigger buttons: icon + tiny color chip beneath */
 
 .btn-swatch {
@@ -844,7 +848,20 @@
   .start-screen,
   .ruler-row,
   .page-frames,
-  .page-bands {
+  .page-bands,
+  /* Transient floating UI — toasts (.toast-stack, bottom-right,
+   * auto-dismissing after ~3s), the modal scrim/dialog (#dialog-root's
+   * .dialog-overlay), and the TOC block's right-click context menu
+   * (.toc-context-menu) are all `position: fixed`, so left unhidden here
+   * Chromium's print engine repeats whichever of them happens to still be
+   * on screen at the moment of export onto *every* printed page (e.g. the
+   * "Saved" toast from a Save moments before File ▸ Export as PDF), not
+   * just the one page it visually sits over. None of them are part of the
+   * document, so all three are hidden for print exactly like the app
+   * chrome above. */
+  .toast-stack,
+  .dialog-overlay,
+  .toc-context-menu {
     display: none !important;
   }
 
@@ -870,6 +887,15 @@
     min-height: 0 !important;
     box-shadow: none !important;
     border-radius: 0 !important;
+    /* .page's own padding (var(--lw-margin-*)) exists to draw the margin
+     * band on screen; for a printed/exported page the real margin is
+     * already supplied by Chromium's own printToPDF/print() `margins`
+     * option (see main.js's export:pdf handler and app:print), which is
+     * fed the same Page Setup values. Leaving this padding in place for
+     * print would apply the margin a second time (padding inside the
+     * printable area, on top of Chromium's own margin around it) —
+     * doubling it. Zero it out here so only Chromium's margin applies. */
+    padding: 0 !important;
   }
 
   .page > [data-lw-pushed] {

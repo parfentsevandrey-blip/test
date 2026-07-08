@@ -106,6 +106,18 @@ office suite (see `../DESIGN.md` for the shared design system).
   `extractContents` + re-insert for selections that straddle multiple
   nodes) — `execCommand`'s font/color commands are unreliable across
   browsers, so this app never uses them.
+- **Line spacing** (toolbar dropdown next to the paragraph-style select, or
+  Format ▸ Line Spacing): Single / 1.15 / 1.5 / Double, applied as an
+  inline `line-height` directly on every top-level block (paragraph,
+  heading, list item, etc.) the current selection touches — the same
+  paragraph-level granularity `formatBlock`/alignment already apply at
+  (`src/editor.js`'s `applyBlockStyle()`, mirroring the top-level-block
+  resolution pagination.js's page-number lookup already uses), since
+  there's no `execCommand` for line spacing. Because it's a plain inline
+  style, it round-trips through `contentHTML` (save/open) and survives PDF
+  export (Chromium's own print engine) and Word export (`html-to-docx`
+  translates a block's `line-height` CSS into the paragraph's docx line
+  spacing) without any special-casing.
 - **Color pickers**: ~10 curated swatches per picker (text color pulls from
   the theme's ink/accent/semantic tokens, resolved to their literal computed
   color so exports stay portable; highlighter uses a few theme "soft" tones
@@ -141,7 +153,13 @@ office suite (see `../DESIGN.md` for the shared design system).
     `{n}`/`{pages}` resolve correctly per page in the exported PDF too).
     Word export passes the same page size/margins to `html-to-docx`'s
     `pageSize`/`margins` options (it auto-detects the `px`/`in` unit
-    suffix), so the exported `.docx`'s page setup matches too.
+    suffix), so the exported `.docx`'s page setup matches too, and — same
+    as PDF export — passes the header/footer band text to `html-to-docx`'s
+    `header`/`footer`/header-and-footer-HTML-string options so it's
+    present in the generated `.docx` too; unlike PDF export's live
+    Chromium page-number templating, a `{n}`/`{pages}` token in Word
+    export's header/footer is preserved as literal text rather than
+    resolved per page (`html-to-docx` has no equivalent mechanism).
   - Native Print via `webContents.print()` uses the same `@media print`
     rules and the document's Page Setup page size, so print preview/
     physical printing paginate correctly too.

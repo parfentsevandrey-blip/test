@@ -20,7 +20,12 @@
   --ink-900: #1b1a17;
   --ink-700: #3a372f;
   --ink-600: #57534a;
-  --ink-400: #8b867a;
+  /* Darkened from the original #8b867a — that value only cleared ~3.2:1
+   * against --surface-1/--surface-2, below WCAG's 4.5:1 for normal body
+   * text (this token is used for regular-size muted/secondary text, not
+   * just large text). #726d64 clears 4.5:1 against both surfaces while
+   * staying visibly lighter/muted than --ink-700/--ink-900. */
+  --ink-400: #726d64;
   --ink-200: #c7c2b6;
 
   /* Accent — muted antique brass/gold */
@@ -106,7 +111,10 @@
   --ink-900: #f3f1eb;
   --ink-700: #d9d5c9;
   --ink-600: #b3aca0;
-  --ink-400: #837c6f;
+  /* Lightened from the original #837c6f — see the light-theme --ink-400
+   * comment above; same WCAG 4.5:1 contrast fix, mirrored for dark theme
+   * against --surface-1/--surface-2. */
+  --ink-400: #8c867a;
   --ink-200: #4a453b;
 
   --accent-700: #e0c889;

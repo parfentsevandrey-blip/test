@@ -100,6 +100,17 @@ window.addEventListener('drop', (e) => {
 });
 
 window.addEventListener('keydown', (e) => {
+  // Global shortcuts must not fire while a dialog is open — otherwise e.g.
+  // Ctrl+N while an "unsaved changes?" dialog is already open would open a
+  // second dialog stacked on top of the first, orphaning it (the first
+  // dialog's focus trap and Escape handler are still registered, but the
+  // user can no longer see or reach it behind the new one). The app's own
+  // dialog component (dialogs.js openDialog()) always renders its overlay
+  // as a `.dialog-overlay` element appended to #dialog-root, so checking
+  // for one is an exact, explicit signal that a modal is currently open —
+  // not an incidental side effect of some other check.
+  if (document.querySelector('.dialog-overlay')) return;
+
   const mod = e.ctrlKey || e.metaKey;
   if (!mod) return;
   const key = e.key.toLowerCase();

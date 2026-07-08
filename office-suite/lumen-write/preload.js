@@ -73,6 +73,9 @@ contextBridge.exposeInMainWorld('lumen', {
 
   insertImage: () => ipcRenderer.invoke('dialog:insertImage'),
 
+  // Help ▸ About's version string — see main.js's app:getVersion handler.
+  getAppVersion: () => ipcRenderer.invoke('app:getVersion'),
+
   // Autosave / crash recovery — a separate recovery-only snapshot main.js
   // keeps under userData/autosave, never the user's real document file.
   // See the comments above main.js's currentDocKey/AUTOSAVE_DIR and

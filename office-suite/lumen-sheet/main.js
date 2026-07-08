@@ -34,10 +34,29 @@
 //      influence which snapshot gets consumed or what path it names.
 // ---------------------------------------------------------------------------
 
-const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, dialog, screen, clipboard } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
+
+// ---------------------------------------------------------------------------
+// Single-instance lock — launching a second instance used to spin up a
+// fully independent window/process tree sharing the same userData profile,
+// which (among other problems) caused a real reproduced data-loss race in
+// recent.json: two windows doing an unsynchronized read-modify-write against
+// the same file. requestSingleInstanceLock() makes the first-launched
+// instance the sole owner of the userData profile for the lifetime of the
+// app; any later launch attempt fails to acquire the lock and must quit
+// immediately without ever creating a window or touching userData. The
+// primary instance instead gets a 'second-instance' event (wired up once
+// `mainWindow` exists, inside createWindow()) so it can focus itself. This
+// must run before anything else below touches userData (recent.json,
+// autosave, window-state.json, etc).
+// ---------------------------------------------------------------------------
+const gotSingleInstanceLock = app.requestSingleInstanceLock();
+if (!gotSingleInstanceLock) {
+  app.quit();
+}
 
 // ---------------------------------------------------------------------------
 // Global error handling — an uncaught error anywhere in the main process
@@ -158,10 +177,71 @@ function addRecent(filePath) {
 
 ipcMain.handle('recent:get', () => readRecent());
 
+// ---------------------------------------------------------------------------
+// Window size/position persistence — a small JSON file under userData,
+// independent of recent.json/autosave, remembering the last-known NORMAL
+// (non-maximized) bounds plus whether the window was maximized, so the next
+// launch restores it instead of always resetting to the hardcoded default
+// below. Saved on resize/move (debounced) and flushed immediately on close.
+// ---------------------------------------------------------------------------
+const WINDOW_STATE_PATH = path.join(app.getPath('userData'), 'window-state.json');
+const DEFAULT_WINDOW_BOUNDS = { width: 1280, height: 820, x: undefined, y: undefined };
+
+function loadWindowState() {
+  try {
+    const raw = fs.readFileSync(WINDOW_STATE_PATH, 'utf8');
+    const data = JSON.parse(raw);
+    if (!data || typeof data !== 'object') return { ...DEFAULT_WINDOW_BOUNDS, maximized: false };
+    const width = Number.isFinite(data.width) && data.width > 0 ? data.width : DEFAULT_WINDOW_BOUNDS.width;
+    const height = Number.isFinite(data.height) && data.height > 0 ? data.height : DEFAULT_WINDOW_BOUNDS.height;
+    const x = Number.isFinite(data.x) ? data.x : undefined;
+    const y = Number.isFinite(data.y) ? data.y : undefined;
+    return { width, height, x, y, maximized: !!data.maximized };
+  } catch (e) {
+    return { ...DEFAULT_WINDOW_BOUNDS, maximized: false };
+  }
+}
+
+function saveWindowState(state) {
+  try {
+    fs.writeFileSync(WINDOW_STATE_PATH, JSON.stringify(state), 'utf8');
+  } catch (e) {
+    // Non-fatal — window-position memory is a convenience, not correctness.
+  }
+}
+
+// Clamps a saved position to a currently-connected display's work area so a
+// window last seen on a monitor that's since been unplugged (or a
+// resolution that shrank) doesn't restore mostly/fully off-screen. Only the
+// position is validated — width/height are already sane numbers from
+// loadWindowState, and BrowserWindow's own min-size constraints handle the
+// rest. Falls back to letting Electron pick a default position (x/y
+// undefined) if the saved spot doesn't usefully overlap any display.
+function clampToVisibleDisplay(state) {
+  if (typeof state.x !== 'number' || typeof state.y !== 'number') {
+    return { width: state.width, height: state.height, maximized: state.maximized };
+  }
+  const MIN_VISIBLE_PX = 100; // at least this much of the window must land on some display
+  const onScreen = screen.getAllDisplays().some((d) => {
+    const area = d.workArea;
+    const visibleX = Math.min(state.x + state.width, area.x + area.width) - Math.max(state.x, area.x);
+    const visibleY = Math.min(state.y + state.height, area.y + area.height) - Math.max(state.y, area.y);
+    return visibleX >= MIN_VISIBLE_PX && visibleY >= MIN_VISIBLE_PX;
+  });
+  if (!onScreen) {
+    return { width: state.width, height: state.height, maximized: state.maximized };
+  }
+  return state;
+}
+
 function createWindow() {
+  const savedState = clampToVisibleDisplay(loadWindowState());
+
   mainWindow = new BrowserWindow({
-    width: 1280,
-    height: 820,
+    width: savedState.width,
+    height: savedState.height,
+    x: savedState.x,
+    y: savedState.y,
     minWidth: 900,
     minHeight: 600,
     backgroundColor: '#faf9f7',
@@ -183,10 +263,43 @@ function createWindow() {
     },
   });
 
+  if (savedState.maximized) mainWindow.maximize();
+
+  // Tracks the last-known NORMAL (non-maximized, non-minimized,
+  // non-fullscreen) bounds, since win.getBounds() while maximized reports
+  // the maximized bounds, not the restored size the user actually chose —
+  // saving those would mean un-maximizing next launch lands on the wrong
+  // size.
+  let lastNormalBounds = { width: savedState.width, height: savedState.height, x: savedState.x, y: savedState.y };
+  let boundsSaveTimer = null;
+
+  function persistBounds() {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    if (!mainWindow.isMaximized() && !mainWindow.isMinimized() && !mainWindow.isFullScreen()) {
+      lastNormalBounds = mainWindow.getBounds();
+    }
+    saveWindowState({ ...lastNormalBounds, maximized: mainWindow.isMaximized() });
+  }
+
+  function scheduleBoundsSave() {
+    clearTimeout(boundsSaveTimer);
+    boundsSaveTimer = setTimeout(persistBounds, 400);
+  }
+
+  mainWindow.on('resize', scheduleBoundsSave);
+  mainWindow.on('move', scheduleBoundsSave);
+  mainWindow.on('maximize', scheduleBoundsSave);
+  mainWindow.on('unmaximize', scheduleBoundsSave);
+
   Menu.setApplicationMenu(null);
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
 
   mainWindow.on('close', (e) => {
+    // Flush immediately (bypassing the debounce) so a clean quit always
+    // persists the final bounds, even if it happens within the debounce
+    // window of the last resize/move.
+    clearTimeout(boundsSaveTimer);
+    persistBounds();
     // The renderer owns the dirty-flag confirm dialog; ask it to check before
     // we actually let the window close.
     if (mainWindow && !mainWindow.__forceClose) {
@@ -196,7 +309,19 @@ function createWindow() {
   });
 }
 
-app.whenReady().then(createWindow);
+if (gotSingleInstanceLock) {
+  // A later launch attempt that failed to acquire the lock (see top of this
+  // file) fires this event on the PRIMARY instance instead of creating its
+  // own window — bring the existing window to the foreground so the user
+  // isn't left wondering why nothing happened.
+  app.on('second-instance', () => {
+    if (!mainWindow) return;
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    if (!mainWindow.isVisible()) mainWindow.show();
+    mainWindow.focus();
+  });
+  app.whenReady().then(createWindow);
+}
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
@@ -210,6 +335,36 @@ ipcMain.on('app:confirm-close', () => {
   if (mainWindow) {
     mainWindow.__forceClose = true;
     mainWindow.close();
+  }
+});
+
+// Help ▸ About reads the real app version through here instead of a literal
+// string hand-duplicated in the renderer — app.getVersion() resolves to
+// package.json's "version" field both in dev and in a packaged build
+// (electron-builder embeds it), so there is exactly one place this number is
+// ever written.
+ipcMain.handle('app:getVersion', () => app.getVersion());
+
+// ---------------------------------------------------------------------------
+// OS clipboard bridge — the renderer cannot require('electron') under
+// contextIsolation, so real OS-clipboard access (as opposed to the
+// renderer's own in-memory rich clipboard, kept entirely in renderer.js for
+// same-app copy/paste fidelity) is exposed through these two narrow calls.
+// Plain text only, by design: a spreadsheet range's real interop format
+// with other apps (Excel, Sheets, a text editor) is tab-separated columns /
+// newline-separated rows, which the renderer builds before calling
+// writeText and parses after calling readText — main.js just relays it.
+// ---------------------------------------------------------------------------
+ipcMain.handle('clipboard:writeText', (event, text) => {
+  clipboard.writeText(typeof text === 'string' ? text : '');
+  return { ok: true };
+});
+
+ipcMain.handle('clipboard:readText', () => {
+  try {
+    return { ok: true, text: clipboard.readText() };
+  } catch (e) {
+    return { ok: false, text: '' };
   }
 });
 
@@ -404,6 +559,11 @@ function readLsheetFromDisk(filePath) {
   }
   currentFilePath = filePath;
   addRecent(filePath);
+  // OS-level recent-documents integration (Windows taskbar Jump List,
+  // macOS/Linux equivalents) — separate from, and in addition to, the app's
+  // own in-app Recent list (recent.json) above. Cheap, one-shot; a no-op on
+  // platforms/desktop environments that don't support it.
+  app.addRecentDocument(filePath);
   // We now have fresh, authoritative content straight from disk for this
   // exact path — any older autosave snapshot for it (e.g. left over from a
   // crash that happened *before* this successful open) is superseded.
@@ -447,10 +607,27 @@ ipcMain.handle('recent:open-by-id', async (event, id) => {
 // second bridge/IPC path that accepts a filePath string for this feature,
 // and do not weaken the preload-side File check — that check is the whole
 // reason this handler is safe to keep taking a string.
+//
+// Dispatches on the (already-validated-by-the-renderer, but re-checked here
+// too) file extension so a drop can open any of the same formats File >
+// Open / Import already support — a native .lsheet, or an .xlsx/.csv import
+// — all through this one channel, reusing importXlsxFromPath/
+// importCsvFromPath/readLsheetFromDisk rather than adding new IPC surface.
 // ---------------------------------------------------------------------------
 ipcMain.handle('file:open-dropped-lsheet', async (event, filePath) => {
   if (typeof filePath !== 'string' || !filePath) return { ok: false, error: 'Invalid file.' };
-  return readLsheetFromDisk(filePath);
+  const ext = path.extname(filePath).toLowerCase();
+  if (ext === '.xlsx') {
+    const res = importXlsxFromPath(filePath);
+    return res.ok ? { ...res, kind: 'xlsx' } : res;
+  }
+  if (ext === '.csv') {
+    const res = importCsvFromPath(filePath);
+    return res.ok ? { ...res, kind: 'csv' } : res;
+  }
+  if (ext !== '.lsheet') return { ok: false, error: 'Unsupported file type.' };
+  const res = readLsheetFromDisk(filePath);
+  return res.ok ? { ...res, kind: 'lsheet' } : res;
 });
 
 async function saveAsFlow(data, defaultName) {
@@ -468,6 +645,7 @@ async function saveAsFlow(data, defaultName) {
     fs.writeFileSync(res.filePath, JSON.stringify(data, null, 2), 'utf8');
     currentFilePath = res.filePath;
     addRecent(res.filePath);
+    app.addRecentDocument(res.filePath); // OS Jump List / Open Recent, see readLsheetFromDisk's comment
     // A clean, explicit save means there's no longer anything to recover —
     // clear both the old (pre-save) key's snapshot and any stale snapshot
     // that might already exist under the newly-saved path.
@@ -488,6 +666,7 @@ ipcMain.handle('file:save', async (event, data, defaultName) => {
   try {
     fs.writeFileSync(currentFilePath, JSON.stringify(data, null, 2), 'utf8');
     addRecent(currentFilePath);
+    app.addRecentDocument(currentFilePath); // OS Jump List / Open Recent, see readLsheetFromDisk's comment
     // Clean save — no reason to keep a recovery copy for this document.
     deleteAutosaveFile(currentAutosaveFile());
     return { ok: true, filePath: currentFilePath };
@@ -557,18 +736,12 @@ ipcMain.handle('file:export-xlsx', async (event, workbookData, defaultName) => {
   }
 });
 
-// Import Excel: show the picker ourselves and parse the result of THAT SAME
-// dialog call. A fresh import always starts a new, not-yet-saved document —
-// so we also reset the tracked current path, matching the renderer's own
-// "imported content is untitled" bookkeeping.
-ipcMain.handle('file:import-xlsx', async () => {
-  const dlg = await dialog.showOpenDialog(mainWindow, {
-    title: 'Import',
-    filters: [{ name: 'Excel Workbook', extensions: ['xlsx'] }],
-    properties: ['openFile'],
-  });
-  if (dlg.canceled || dlg.filePaths.length === 0) return { ok: false, canceled: true };
-  const filePath = dlg.filePaths[0];
+// Shared by the dialog-driven file:import-xlsx handler below and the
+// drag-and-drop handler further down — factored out so both go through
+// exactly one parsing implementation. A fresh import always starts a new,
+// not-yet-saved document, matching the renderer's own "imported content is
+// untitled" bookkeeping.
+function importXlsxFromPath(filePath) {
   try {
     const xlsx = getXlsx();
     const wb = xlsx.readFile(filePath);
@@ -598,6 +771,18 @@ ipcMain.handle('file:import-xlsx', async () => {
   } catch (e) {
     return { ok: false, error: String(e.message || e) };
   }
+}
+
+// Import Excel: show the picker ourselves and parse the result of THAT SAME
+// dialog call.
+ipcMain.handle('file:import-xlsx', async () => {
+  const dlg = await dialog.showOpenDialog(mainWindow, {
+    title: 'Import',
+    filters: [{ name: 'Excel Workbook', extensions: ['xlsx'] }],
+    properties: ['openFile'],
+  });
+  if (dlg.canceled || dlg.filePaths.length === 0) return { ok: false, canceled: true };
+  return importXlsxFromPath(dlg.filePaths[0]);
 });
 
 // ---------------------------------------------------------------------------
@@ -634,14 +819,10 @@ ipcMain.handle('file:export-csv', async (event, sheetData, defaultName) => {
   }
 });
 
-ipcMain.handle('file:import-csv', async () => {
-  const dlg = await dialog.showOpenDialog(mainWindow, {
-    title: 'Import',
-    filters: [{ name: 'CSV', extensions: ['csv'] }],
-    properties: ['openFile'],
-  });
-  if (dlg.canceled || dlg.filePaths.length === 0) return { ok: false, canceled: true };
-  const filePath = dlg.filePaths[0];
+// Shared by the dialog-driven file:import-csv handler below and the
+// drag-and-drop handler further down — see importXlsxFromPath's comment
+// above for why this is factored out.
+function importCsvFromPath(filePath) {
   try {
     const xlsx = getXlsx();
     const text = fs.readFileSync(filePath, 'utf8');
@@ -664,6 +845,16 @@ ipcMain.handle('file:import-csv', async () => {
   } catch (e) {
     return { ok: false, error: String(e.message || e) };
   }
+}
+
+ipcMain.handle('file:import-csv', async () => {
+  const dlg = await dialog.showOpenDialog(mainWindow, {
+    title: 'Import',
+    filters: [{ name: 'CSV', extensions: ['csv'] }],
+    properties: ['openFile'],
+  });
+  if (dlg.canceled || dlg.filePaths.length === 0) return { ok: false, canceled: true };
+  return importCsvFromPath(dlg.filePaths[0]);
 });
 
 // ---------------------------------------------------------------------------

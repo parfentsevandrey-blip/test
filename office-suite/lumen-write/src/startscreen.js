@@ -90,6 +90,8 @@ function buildPreview(tpl) {
 function buildTemplateGrid() {
   const grid = document.createElement('div');
   grid.className = 'start-screen__grid';
+  grid.setAttribute('role', 'list');
+  const cards = [];
   for (const tpl of TEMPLATES) {
     const card = document.createElement('div');
     card.className = 'start-card';
@@ -98,7 +100,27 @@ function buildTemplateGrid() {
     label.className = 'start-card__label';
     label.textContent = tpl.label;
     card.appendChild(label);
-    card.addEventListener('click', () => handlers.onTemplate(tpl.html, tpl.title));
+    // Was a plain click-only div — unreachable via Tab. tabindex/role make
+    // it a focusable, announced list item; Enter/Space mirrors the click
+    // activation; Left/Right/Up/Down move between template cards the same
+    // way arrow keys move between cards in a native grid/list.
+    card.tabIndex = 0;
+    card.setAttribute('role', 'listitem');
+    const activate = () => handlers.onTemplate(tpl.html, tpl.title);
+    card.addEventListener('click', activate);
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        activate();
+      } else if (['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'].includes(e.key)) {
+        e.preventDefault();
+        const delta = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : -1;
+        const idx = cards.indexOf(card);
+        const next = cards[idx + delta];
+        if (next) next.focus();
+      }
+    });
+    cards.push(card);
     grid.appendChild(card);
   }
   return grid;
@@ -131,6 +153,10 @@ function buildRecentSection(entries) {
   label.textContent = 'Recent';
   wrap.appendChild(label);
 
+  const list = document.createElement('div');
+  list.setAttribute('role', 'list');
+  const items = [];
+
   for (const entry of entries) {
     const item = document.createElement('div');
     item.className = 'start-recent-item';
@@ -145,11 +171,31 @@ function buildRecentSection(entries) {
 
     item.appendChild(name);
     item.appendChild(meta);
+    // Was a plain click-only div — unreachable via Tab. Same pattern as
+    // the template cards above: tabindex/role for focus + AT, Enter/Space
+    // to activate, Up/Down to move between recent-file entries.
+    item.tabIndex = 0;
+    item.setAttribute('role', 'listitem');
     // Pass only the entry's stable id — never its path — so main.js is
     // the one resolving id -> real path against its own recent.json.
-    item.addEventListener('click', () => handlers.onRecent(entry.id));
-    wrap.appendChild(item);
+    const activate = () => handlers.onRecent(entry.id);
+    item.addEventListener('click', activate);
+    item.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        activate();
+      } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const delta = e.key === 'ArrowDown' ? 1 : -1;
+        const idx = items.indexOf(item);
+        const next = items[idx + delta];
+        if (next) next.focus();
+      }
+    });
+    items.push(item);
+    list.appendChild(item);
   }
+  wrap.appendChild(list);
   return wrap;
 }
 

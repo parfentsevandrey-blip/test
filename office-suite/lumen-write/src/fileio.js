@@ -312,7 +312,13 @@ export async function exportPdf() {
 }
 
 export async function exportDocx() {
-  const result = await window.lumen.exportDocx({ title: getTitle(), contentHTML: getContentHTML(), pageSetup: getPageSetup() });
+  const result = await window.lumen.exportDocx({
+    title: getTitle(),
+    contentHTML: getContentHTML(),
+    headerHTML: getHeaderRaw(),
+    footerHTML: getFooterRaw(),
+    pageSetup: getPageSetup(),
+  });
   if (!result) return;
   if (result.error) {
     showToast(result.error, { type: 'error' });

@@ -1,10 +1,34 @@
 // main.js — Electron main process (CommonJS). No import/export syntax here.
 'use strict';
 
-const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, dialog, screen } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
+
+// ---------- Single instance lock ----------
+// Launching a second instance used to spin up a fully independent
+// window/process tree sharing the same userData profile — among other
+// problems, this caused a real reproduced data-loss race in recent.json
+// (two windows doing an unsynchronized read-modify-write against the same
+// file). requestSingleInstanceLock() makes the first-launched instance the
+// sole owner of the userData profile for the lifetime of the app: any
+// later launch attempt fails to acquire the lock, fires 'second-instance'
+// on the ORIGINAL instance (handled below, once `win` exists, to focus it)
+// and must quit itself immediately without ever creating a window or
+// touching any on-disk state. This must run before anything else touches
+// userData (recent.json, autosave, window-state.json, etc. below).
+const gotSingleInstanceLock = app.requestSingleInstanceLock();
+if (!gotSingleInstanceLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (!win) return;
+    if (win.isMinimized()) win.restore();
+    if (!win.isVisible()) win.show();
+    win.focus();
+  });
+}
 
 // ---------- Global error handling ----------
 // A bug anywhere in the main process used to either crash the whole app
@@ -124,10 +148,70 @@ function switchDocKey(newKey) {
   clearAutosaveForKey(currentDocKey);
 }
 
+// ---------- Window size/position persistence ----------
+// A small JSON file in userData, independent of recent.json/autosave,
+// remembering the last-known normal (non-maximized) bounds plus whether
+// the window was maximized, so the next launch restores it instead of
+// always resetting to the hardcoded default below.
+const WINDOW_STATE_PATH = path.join(app.getPath('userData'), 'window-state.json');
+const DEFAULT_WINDOW_BOUNDS = { width: 1280, height: 820, x: undefined, y: undefined };
+
+function loadWindowState() {
+  try {
+    const raw = fs.readFileSync(WINDOW_STATE_PATH, 'utf8');
+    const data = JSON.parse(raw);
+    if (!data || typeof data !== 'object') return { ...DEFAULT_WINDOW_BOUNDS, maximized: false };
+    const width = Number.isFinite(data.width) && data.width > 0 ? data.width : DEFAULT_WINDOW_BOUNDS.width;
+    const height = Number.isFinite(data.height) && data.height > 0 ? data.height : DEFAULT_WINDOW_BOUNDS.height;
+    const x = Number.isFinite(data.x) ? data.x : undefined;
+    const y = Number.isFinite(data.y) ? data.y : undefined;
+    return { width, height, x, y, maximized: !!data.maximized };
+  } catch (err) {
+    return { ...DEFAULT_WINDOW_BOUNDS, maximized: false };
+  }
+}
+
+function saveWindowState(state) {
+  try {
+    fs.mkdirSync(path.dirname(WINDOW_STATE_PATH), { recursive: true });
+    fs.writeFileSync(WINDOW_STATE_PATH, JSON.stringify(state), 'utf8');
+  } catch (err) {
+    console.error('Failed to write window-state.json', err);
+  }
+}
+
+// Clamps a saved position to a currently-connected display's work area so
+// a window last seen on a monitor that's since been unplugged (or a
+// resolution that shrank) doesn't restore mostly/fully off-screen. Only
+// the position is validated — width/height are already sane numbers from
+// loadWindowState, and BrowserWindow's own min/max constraints handle the
+// rest. Falls back to letting Electron pick a default position (x/y
+// undefined) if the saved spot doesn't usefully overlap any display.
+function clampToVisibleDisplay(state) {
+  if (typeof state.x !== 'number' || typeof state.y !== 'number') {
+    return { width: state.width, height: state.height, maximized: state.maximized };
+  }
+  const MIN_VISIBLE_PX = 100; // at least this much of the window must land on some display
+  const onScreen = screen.getAllDisplays().some((d) => {
+    const area = d.workArea;
+    const visibleX = Math.min(state.x + state.width, area.x + area.width) - Math.max(state.x, area.x);
+    const visibleY = Math.min(state.y + state.height, area.y + area.height) - Math.max(state.y, area.y);
+    return visibleX >= MIN_VISIBLE_PX && visibleY >= MIN_VISIBLE_PX;
+  });
+  if (!onScreen) {
+    return { width: state.width, height: state.height, maximized: state.maximized };
+  }
+  return state;
+}
+
 function createWindow() {
+  const savedState = clampToVisibleDisplay(loadWindowState());
+
   win = new BrowserWindow({
-    width: 1280,
-    height: 820,
+    width: savedState.width,
+    height: savedState.height,
+    x: savedState.x,
+    y: savedState.y,
     minWidth: 900,
     minHeight: 600,
     backgroundColor: '#faf9f7',
@@ -141,10 +225,43 @@ function createWindow() {
     },
   });
 
+  if (savedState.maximized) win.maximize();
+
+  // Tracks the last-known NORMAL (non-maximized, non-minimized,
+  // non-fullscreen) bounds, since win.getBounds() while maximized reports
+  // the maximized bounds, not the restored size the user actually chose —
+  // saving those would mean un-maximizing next launch lands on the wrong
+  // size, unlike most native apps.
+  let lastNormalBounds = { width: savedState.width, height: savedState.height, x: savedState.x, y: savedState.y };
+  let boundsSaveTimer = null;
+
+  function persistBounds() {
+    if (!win || win.isDestroyed()) return;
+    if (!win.isMaximized() && !win.isMinimized() && !win.isFullScreen()) {
+      lastNormalBounds = win.getBounds();
+    }
+    saveWindowState({ ...lastNormalBounds, maximized: win.isMaximized() });
+  }
+
+  function scheduleBoundsSave() {
+    clearTimeout(boundsSaveTimer);
+    boundsSaveTimer = setTimeout(persistBounds, 400);
+  }
+
+  win.on('resize', scheduleBoundsSave);
+  win.on('move', scheduleBoundsSave);
+  win.on('maximize', scheduleBoundsSave);
+  win.on('unmaximize', scheduleBoundsSave);
+
   Menu.setApplicationMenu(null);
   win.loadFile('index.html');
 
   win.on('close', (e) => {
+    // Flush immediately (bypassing the debounce) so a clean quit always
+    // persists the final bounds, even if it happens within the debounce
+    // window of the last resize/move.
+    clearTimeout(boundsSaveTimer);
+    persistBounds();
     if (allowClose) return;
     e.preventDefault();
     win.webContents.send('app:request-close-check');
@@ -155,7 +272,9 @@ function createWindow() {
   });
 }
 
-app.whenReady().then(createWindow);
+if (gotSingleInstanceLock) {
+  app.whenReady().then(createWindow);
+}
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
@@ -167,6 +286,13 @@ app.on('activate', () => {
 
 // Renderer tells us whether it's safe to actually close the window
 // (after showing its own in-app "unsaved changes" dialog, if needed).
+// Help ▸ About reads the real app version through here instead of a
+// literal string hand-duplicated in the renderer — app.getVersion()
+// resolves to package.json's "version" field both in dev and in a packaged
+// build (electron-builder embeds it), so there is exactly one place this
+// number is ever written.
+ipcMain.handle('app:getVersion', () => app.getVersion());
+
 ipcMain.on('app:close-response', (event, shouldClose) => {
   if (shouldClose) {
     // By the time we get here the renderer's own confirmProceedIfDirty()
@@ -357,6 +483,11 @@ async function loadDocumentFromPath(filePath) {
     }
 
     addRecent(filePath, title);
+    // OS-level recent-documents integration (Windows Jump List, macOS
+    // "Open Recent"/Dock menu) — separate from, and in addition to, the
+    // app's own in-app Recent list (recent.json) above. Cheap, one-shot;
+    // no-op on platforms/desktop environments that don't support it.
+    app.addRecentDocument(filePath);
     // This is the single place a successful open updates the main-tracked
     // "current document path" (see the currentFilePath comment up top) —
     // every caller below (dialog Open, Open Recent, drag-and-drop) funnels
@@ -486,6 +617,7 @@ ipcMain.handle('file:save', async (event, payload) => {
     // (see the currentDocKey/autosave comments up top).
     switchDocKey(keyForRealPath(targetPath));
     addRecent(targetPath, title || 'Untitled document');
+    app.addRecentDocument(targetPath); // OS Jump List / Open Recent, see loadDocumentFromPath's comment
     return { filePath: targetPath };
   } catch (err) {
     return { error: String(err && err.message ? err.message : err) };
@@ -522,6 +654,7 @@ ipcMain.handle('file:saveAs', async (event, payload) => {
     // autosave snapshot for the document being saved.
     switchDocKey(keyForRealPath(result.filePath));
     addRecent(result.filePath, title || 'Untitled document');
+    app.addRecentDocument(result.filePath); // OS Jump List / Open Recent, see loadDocumentFromPath's comment
     return { filePath: result.filePath };
   } catch (err) {
     return { error: String(err && err.message ? err.message : err) };
@@ -672,6 +805,14 @@ function buildHeaderFooterTemplate(raw) {
   return `<div style="width:100%;font-size:9px;text-align:center;-webkit-print-color-adjust:exact;">${escaped}</div>`;
 }
 
+// html-to-docx has no equivalent of the PDF export's live Chromium
+// pageNumber/totalPages template classes above — {n}/{pages} tokens are
+// preserved as literal text here rather than silently dropped or guessed
+// at, same treatment turndown (Markdown export) already gives them.
+function buildDocxHeaderFooterHtml(raw) {
+  return `<p>${escapeHtml(raw || '')}</p>`;
+}
+
 // Every export handler below (pdf/docx/markdown/txt) follows the same
 // rule as Save As: it always calls dialog.showSaveDialog() itself and
 // writes ONLY to that call's result. None of these payloads carry (or are
@@ -715,26 +856,51 @@ ipcMain.handle('export:pdf', async (event, payload) => {
 });
 
 ipcMain.handle('export:docx', async (event, payload) => {
-  const { title, contentHTML, pageSetup } = payload;
+  const { title, contentHTML, headerHTML, footerHTML, pageSetup } = payload;
   try {
     const htmlToDocx = require('html-to-docx');
     const sizeKey = (pageSetup && pageSetup.sizeKey) || 'letter';
     const size = DOCX_PAGE_SIZE_PX[sizeKey] || DOCX_PAGE_SIZE_PX.letter;
     const margins = (pageSetup && pageSetup.marginsIn) || DEFAULT_MARGINS_IN;
-    const buffer = await htmlToDocx(contentHTML || '', null, {
-      title: title || 'Untitled document',
-      font: 'Georgia',
-      // html-to-docx auto-detects the unit from a "<n>px"/"<n>in" string
-      // suffix (see its normalizeDocumentOptions), so the same pageSetup
-      // the screen/PDF/print paths use feeds Word export too.
-      pageSize: { width: `${size.w}px`, height: `${size.h}px` },
-      margins: {
-        top: `${margins.top}in`,
-        bottom: `${margins.bottom}in`,
-        left: `${margins.left}in`,
-        right: `${margins.right}in`,
+    const hasHeader = !!(headerHTML && headerHTML.trim());
+    const hasFooter = !!(footerHTML && footerHTML.trim());
+    const buffer = await htmlToDocx(
+      contentHTML || '',
+      hasHeader ? buildDocxHeaderFooterHtml(headerHTML) : null,
+      {
+        title: title || 'Untitled document',
+        font: 'Georgia',
+        // Without these, the document's header/footer text (present in
+        // the PDF export of the same document) never made it into the
+        // .docx at all — html-to-docx only emits header/footer parts when
+        // these flags are set.
+        header: hasHeader,
+        footer: hasFooter,
+        // html-to-docx auto-detects the unit from a "<n>px"/"<n>in" string
+        // suffix (see its normalizeDocumentOptions), so the same pageSetup
+        // the screen/PDF/print paths use feeds Word export too.
+        pageSize: { width: `${size.w}px`, height: `${size.h}px` },
+        margins: {
+          top: `${margins.top}in`,
+          bottom: `${margins.bottom}in`,
+          left: `${margins.left}in`,
+          right: `${margins.right}in`,
+          // html-to-docx's normalizer only fills in a default for a
+          // margins key it never SEES at all (it walks Object.keys() of
+          // whatever object we pass) — omitting header/footer/gutter
+          // here, as before, meant they came back `undefined` from
+          // html-to-docx's own shallow options merge and got serialized
+          // as the literal string "undefined" into the docx's <w:pgMar>
+          // XML. These are html-to-docx's own documented defaults (720
+          // twips header/footer distance, 0 gutter), supplied explicitly
+          // so nothing is ever left unset regardless of unit.
+          header: 720,
+          footer: 720,
+          gutter: 0,
+        },
       },
-    });
+      hasFooter ? buildDocxHeaderFooterHtml(footerHTML) : null
+    );
     const result = await dialog.showSaveDialog(win, {
       title: 'Export as Word document',
       defaultPath: `${title || 'Untitled document'}.docx`,
