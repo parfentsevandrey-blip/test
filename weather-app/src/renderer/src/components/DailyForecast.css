@@ -55,11 +55,27 @@
 .df-row {
   flex: 1;
   min-height: 0;
+  width: 100%;
   display: flex;
   align-items: center;
+  text-align: left;
   gap: clamp(7px, 0.9vw, 14px);
   padding: 0 clamp(6px, 0.8vw, 12px);
   border-radius: var(--radius-sm);
+  transition: background-color 0.2s var(--ease-out), transform 0.26s var(--ease-spring-soft);
+}
+
+/* Rows open a same-day detail popover (see DailyDetailPopover) — a real
+   click action, so hover/press choreography is an honest affordance again. */
+.df-row:hover,
+.df-row:focus-visible {
+  background: var(--control-active);
+  transform: translateY(-1px);
+}
+
+.df-row:active {
+  scale: 0.99;
+  transition: scale var(--dur-press) var(--ease-press);
 }
 
 /* ---------- Weekday (+ optional date sub-label) ---------- */
@@ -73,12 +89,14 @@
   justify-content: center;
   line-height: 1.15;
   overflow: hidden;
-  /* Slightly dimmed at rest; today's row alone "strengthens" the weekday —
-     rows have no click handler, so hover no longer implies interactivity. */
+  /* Slightly dimmed at rest; today's row and hover both "strengthen" it. */
   opacity: 0.82;
+  transition: opacity 0.2s var(--ease-out);
 }
 
-.df-row.is-today .df-day-col {
+.df-row.is-today .df-day-col,
+.df-row:hover .df-day-col,
+.df-row:focus-visible .df-day-col {
   opacity: 1;
 }
 
@@ -281,8 +299,14 @@
   display: none;
 }
 
-[data-theme='win95'] .df-row:hover {
+[data-theme='win95'] .df-row:hover,
+[data-theme='win95'] .df-row:focus-visible {
   background: #000080;
+  transform: none;
+}
+
+[data-theme='win95'] .df-row:active {
+  scale: 1;
 }
 
 [data-theme='win95'] .df-row:hover .df-day,
@@ -326,6 +350,15 @@
     transition: none;
   }
 
+  .df-row:hover,
+  .df-row:focus-visible {
+    transform: none;
+  }
+
+  .df-row:active {
+    scale: 1;
+  }
+
   .df-row:hover .df-fill::after {
     animation: none;
   }
@@ -336,4 +369,154 @@
 .df-pop--low {
   color: var(--text-tertiary);
   font-weight: 500;
+}
+
+/* ============================================================
+   Per-day detail popover — an overlay (see DailyDetailPopover in
+   DailyForecast.tsx), not in-place row expansion: the card is a fixed
+   10-row, zero-slack layout with no room to grow a row taller.
+   ============================================================ */
+
+.df-detail-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--scrim);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  animation: fade-in 0.2s var(--ease-out);
+}
+
+.df-detail-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: clamp(280px, 85vw, 360px);
+  padding: 18px 20px;
+  --menu-scale-from: 0.95;
+  transform-origin: center;
+  animation: menu-in 0.3s var(--ease-spring) both;
+}
+
+.df-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.df-detail-icon {
+  width: 40px;
+  height: 40px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.df-detail-heading {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.df-detail-day {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.df-detail-date {
+  font-size: 12.5px;
+  color: var(--text-tertiary);
+}
+
+.df-detail-close {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.df-detail-close svg {
+  width: 15px;
+  height: 15px;
+}
+
+.df-detail-condition {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--glass-border-soft);
+}
+
+.df-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+}
+
+.df-detail-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.df-detail-stat-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+}
+
+.df-detail-stat-value {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .df-detail-overlay,
+  .df-detail-panel {
+    animation: none;
+  }
+}
+
+[data-theme='win95'] .df-detail-overlay {
+  backdrop-filter: none;
+  background: rgba(0, 0, 0, 0.4);
+  animation: none;
+}
+
+[data-theme='win95'] .df-detail-panel {
+  background: #c0c0c0;
+  border: none;
+  border-radius: 0;
+  box-shadow: var(--bevel-out);
+  animation: none;
+}
+
+[data-theme='win95'] .df-detail-day,
+[data-theme='win95'] .df-detail-stat-value {
+  font-family: inherit;
+}
+
+[data-theme='win95'] .df-detail-close {
+  border-radius: 0;
+  background: #c0c0c0;
+  box-shadow: var(--bevel-out);
+}
+
+[data-theme='win95'] .df-detail-close:active {
+  box-shadow: var(--bevel-in);
+}
+
+[data-theme='win95'] .df-detail-condition {
+  border-bottom-color: #808080;
 }

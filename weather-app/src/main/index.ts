@@ -141,11 +141,21 @@ function createTray(): void {
   })
 }
 
+/** Settings-panel IPC: launch-at-Windows-startup is a main-process-only API. */
+function registerSettingsIpc(): void {
+  ipcMain.handle('app:getLaunchAtLogin', () => app.getLoginItemSettings().openAtLogin)
+
+  ipcMain.on('app:setLaunchAtLogin', (_event, enabled: boolean) => {
+    app.setLoginItemSettings({ openAtLogin: enabled })
+  })
+}
+
 app.whenReady().then(() => {
   app.setAppUserModelId('com.cinematicweather.app')
 
   createWindow()
   createTray()
+  registerSettingsIpc()
 
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()

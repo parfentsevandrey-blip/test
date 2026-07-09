@@ -6,6 +6,7 @@ import { SunriseIcon } from './icons'
 import { formatClock } from '../utils/units'
 import { toAbsoluteInstant } from '../utils/time'
 import { clamp01 } from '../utils/math'
+import { getMoonPhase } from '../utils/moonPhase'
 
 const VIEW_W = 100
 const VIEW_H = 52
@@ -14,8 +15,11 @@ const HORIZON_Y = 46
 const RADIUS = 34
 /** How far (in viewBox units) the night-time moon dot dips below the horizon. */
 const NIGHT_DIP = 8
+/** Radius of the moon-phase glyph itself. */
+const MOON_R = 2.6
 const ARC_LENGTH = Math.PI * RADIUS
 const GRADIENT_ID = 'sun-path-arc-gradient'
+const MOON_CLIP_ID = 'sun-path-moon-clip'
 /** Golden hour ≈ the first hour after sunrise / the last hour before sunset. */
 const GOLDEN_HOUR_MS = 3_600_000
 /** Live tick cadence for the countdown hero line (also nudges the arc marker). */
@@ -92,6 +96,15 @@ export function SunCard(): JSX.Element | null {
     moonY = HORIZON_Y + Math.sin(moonAngle) * NIGHT_DIP
   }
 
+  // A real crescent/gibbous silhouette instead of a flat dot: two same-radius
+  // discs, one the moon's lit color, one dark, offset horizontally and
+  // clipped to the moon's circular bounds — offset 0 = full overlap (full
+  // moon), offset ±MOON_R*2 = no overlap (new moon), sign picks which side
+  // is lit (waxing lit on the right, waning on the left).
+  const moonPhase = getMoonPhase(nowMs)
+  const moonIlluminatedFraction = (1 - Math.cos(2 * Math.PI * moonPhase)) / 2
+  const moonLitOffsetX = (moonPhase < 0.5 ? 1 : -1) * MOON_R * 2 * (1 - moonIlluminatedFraction)
+
   const daylightMinutes = Math.max(0, Math.round((sunsetMs - sunriseMs) / 60000))
   const daylight = `${Math.floor(daylightMinutes / 60)}h ${daylightMinutes % 60}m`
   const sunriseLabel = formatClock(sunTimes.sunriseToday)
@@ -151,6 +164,9 @@ export function SunCard(): JSX.Element | null {
               <stop offset="0" className="sun-path-grad-from" />
               <stop offset="1" className="sun-path-grad-to" />
             </linearGradient>
+            <clipPath id={MOON_CLIP_ID}>
+              <circle cx={moonX} cy={moonY} r={MOON_R} />
+            </clipPath>
           </defs>
 
           <line
@@ -192,7 +208,17 @@ export function SunCard(): JSX.Element | null {
               <circle className="sun-path-sun-core" cx={sunX} cy={sunY} r={3.2} />
             </g>
           ) : (
-            <circle className="sun-path-moon" cx={moonX} cy={moonY} r={2.6} />
+            <g>
+              <title>{`Moon, ${Math.round(moonIlluminatedFraction * 100)}% illuminated, ${moonPhase < 0.5 ? 'waxing' : 'waning'}`}</title>
+              <circle className="sun-path-moon-shadow" cx={moonX} cy={moonY} r={MOON_R} />
+              <circle
+                className="sun-path-moon-lit"
+                cx={moonX + moonLitOffsetX}
+                cy={moonY}
+                r={MOON_R}
+                clipPath={`url(#${MOON_CLIP_ID})`}
+              />
+            </g>
           )}
         </svg>
 

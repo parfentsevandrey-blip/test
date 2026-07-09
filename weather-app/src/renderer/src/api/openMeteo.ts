@@ -76,6 +76,58 @@ interface RawForecastResponse {
   }
 }
 
+export interface BatchCurrentConditions {
+  temperature: number
+  weatherCode: number
+  isDay: boolean
+}
+
+interface BatchRawEntry {
+  current?: {
+    temperature_2m?: number
+    weather_code?: number
+    is_day?: number
+  }
+}
+
+/**
+ * Batched current-conditions-only fetch for N locations in ONE request
+ * (Open-Meteo accepts comma-separated lat/lon lists) — used by the favorites
+ * dropdown to show a live temperature per saved city without N separate calls.
+ */
+export async function fetchBatchCurrentConditions(
+  locations: GeoLocation[],
+  signal?: AbortSignal
+): Promise<Array<BatchCurrentConditions | null>> {
+  if (locations.length === 0) return []
+
+  const url = new URL(FORECAST_URL)
+  url.searchParams.set('latitude', locations.map((l) => l.latitude).join(','))
+  url.searchParams.set('longitude', locations.map((l) => l.longitude).join(','))
+  url.searchParams.set('current', 'temperature_2m,weather_code,is_day')
+  url.searchParams.set('temperature_unit', 'celsius')
+  url.searchParams.set('timezone', 'auto')
+
+  const response = await fetch(url, { signal })
+  if (!response.ok) {
+    throw new Error(`Batch weather request failed (${response.status})`)
+  }
+  const raw = (await response.json()) as BatchRawEntry | BatchRawEntry[]
+
+  // Open-Meteo returns a single object (not an array) for a single location
+  // and an array of per-location objects — in request order — otherwise.
+  const entries = Array.isArray(raw) ? raw : [raw]
+  return entries.map((entry) => {
+    const current = entry.current
+    if (!current || current.temperature_2m === undefined || current.weather_code === undefined) return null
+    return {
+      temperature: current.temperature_2m,
+      weatherCode: current.weather_code,
+      isDay: current.is_day === 1
+    }
+  })
+}
+
 function findHourlyValue(
   hourly: RawForecastResponse['hourly'],
   series: number[],

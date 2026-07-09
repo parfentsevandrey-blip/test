@@ -15,6 +15,8 @@ import { UnitToggle } from './components/UnitToggle'
 import { ThemeToggle } from './components/ThemeToggle'
 import { FavoritesMenu } from './components/FavoritesMenu'
 import { LoadingOverlay } from './components/LoadingOverlay'
+import { SettingsPanel } from './components/SettingsPanel'
+import { GearIcon } from './components/icons'
 import { Win95StatusBar } from './components/retro/Win95StatusBar'
 import { Win95Clippy } from './components/retro/Win95Clippy'
 import { Win95BootSplash } from './components/retro/Win95BootSplash'
@@ -22,6 +24,7 @@ import { Win95Dialog } from './components/retro/Win95Dialog'
 import { celsiusTo, formatTemperature } from './utils/units'
 import { getConditionInfo } from './utils/weatherCondition'
 import { renderTrayIcon } from './utils/trayIcon'
+import { useRainAlerts } from './hooks/useRainAlerts'
 
 function RefreshIcon(): JSX.Element {
   return (
@@ -73,6 +76,7 @@ export function App(): JSX.Element {
 
   const resolved = resolveTheme(theme, weather)
   const [aboutOpen, setAboutOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   // Boot splash: plays on every power-on of the retro theme, including a
   // persisted win95 preference on app start. keyed so re-entries restart it.
   const [bootVisible, setBootVisible] = useState(() => resolved === 'win95')
@@ -161,6 +165,8 @@ export function App(): JSX.Element {
     window.api?.updateTray?.(dataUrl, tooltip)
   }, [weather, unit, resolved])
 
+  useRainAlerts()
+
   const isWin95 = resolved === 'win95'
   const busy = status === 'loading' || status === 'locating'
 
@@ -195,6 +201,14 @@ export function App(): JSX.Element {
               title="Refresh weather"
             >
               <RefreshIcon />
+            </button>
+            <button
+              className="icon-btn"
+              onClick={() => setSettingsOpen(true)}
+              aria-label="Settings"
+              title="Settings"
+            >
+              <GearIcon />
             </button>
           </div>
         </header>
@@ -235,6 +249,8 @@ export function App(): JSX.Element {
           </div>
         </Win95Dialog>
       )}
+
+      {settingsOpen && <SettingsPanel onClose={() => setSettingsOpen(false)} />}
     </div>
   )
 }

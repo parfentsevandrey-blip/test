@@ -11,7 +11,12 @@ const UNIT_STORAGE_KEY = 'cinematic-weather:unit'
 const LOCATION_STORAGE_KEY = 'cinematic-weather:last-location'
 const THEME_STORAGE_KEY = 'cinematic-weather:theme'
 const FAVORITES_STORAGE_KEY = 'cinematic-weather:favorites'
-const REFRESH_INTERVAL_MS = 10 * 60 * 1000
+const REFRESH_INTERVAL_STORAGE_KEY = 'cinematic-weather:refresh-interval-minutes'
+const RAIN_ALERTS_STORAGE_KEY = 'cinematic-weather:rain-alerts'
+
+const DEFAULT_REFRESH_MINUTES = 10
+/** The only intervals the settings panel offers — anything else in storage falls back to the default. */
+export const REFRESH_INTERVAL_OPTIONS_MIN = [5, 10, 15, 30, 60] as const
 
 function loadStoredUnit(): TemperatureUnit {
   const stored = localStorage.getItem(UNIT_STORAGE_KEY)
@@ -44,6 +49,17 @@ function loadStoredFavorites(): GeoLocation[] {
   } catch {
     return []
   }
+}
+
+function loadStoredRefreshMinutes(): number {
+  const stored = Number(localStorage.getItem(REFRESH_INTERVAL_STORAGE_KEY))
+  return REFRESH_INTERVAL_OPTIONS_MIN.includes(stored as (typeof REFRESH_INTERVAL_OPTIONS_MIN)[number])
+    ? stored
+    : DEFAULT_REFRESH_MINUTES
+}
+
+function loadStoredRainAlertsEnabled(): boolean {
+  return localStorage.getItem(RAIN_ALERTS_STORAGE_KEY) === 'true'
 }
 
 /** Two locations are "the same place" when their coordinates match to ~100m. */
@@ -79,6 +95,15 @@ interface WeatherStoreState {
   /** Set when search() itself failed (network/geocoding outage) — distinct from a genuine zero-result search. */
   searchError: string | null
 
+  /** Minutes between background refreshes; one of REFRESH_INTERVAL_OPTIONS_MIN. */
+  refreshIntervalMinutes: number
+  /** Desktop notification when rain looks imminent (see hooks/useRainAlerts.ts). */
+  rainAlertsEnabled: boolean
+  /** Whether the app is registered to launch when Windows starts. Only meaningful (and only ever true) inside the packaged Electron app. */
+  launchAtLoginEnabled: boolean
+  /** False in a plain browser tab (no window.api) — the settings panel hides the launch-at-login control in that case. */
+  launchAtLoginSupported: boolean
+
   /** Called once on app start: restores the last location, otherwise tries geolocation, otherwise falls back to a default city. */
   init: () => Promise<void>
   selectLocation: (location: GeoLocation) => Promise<void>
@@ -89,6 +114,9 @@ interface WeatherStoreState {
   /** Adds the location to favorites, or removes it if already present. */
   toggleFavorite: (location: GeoLocation) => void
   refresh: () => Promise<void>
+  setRefreshIntervalMinutes: (minutes: number) => void
+  setRainAlertsEnabled: (enabled: boolean) => void
+  setLaunchAtLogin: (enabled: boolean) => void
 }
 
 let searchAbortController: AbortController | null = null
@@ -107,8 +135,19 @@ export const useWeatherStore = create<WeatherStoreState>((set, get) => ({
   searchResults: [],
   isSearching: false,
   searchError: null,
+  refreshIntervalMinutes: loadStoredRefreshMinutes(),
+  rainAlertsEnabled: loadStoredRainAlertsEnabled(),
+  launchAtLoginEnabled: false,
+  launchAtLoginSupported: typeof window.api?.getLaunchAtLogin === 'function',
 
   init: async () => {
+    if (get().launchAtLoginSupported) {
+      window.api
+        .getLaunchAtLogin()
+        .then((enabled) => set({ launchAtLoginEnabled: enabled }))
+        .catch(() => undefined)
+    }
+
     const stored = loadStoredLocation()
     if (stored) {
       await get().selectLocation(stored)
@@ -134,7 +173,7 @@ export const useWeatherStore = create<WeatherStoreState>((set, get) => ({
       if (refreshTimer) clearInterval(refreshTimer)
       refreshTimer = setInterval(() => {
         get().refresh()
-      }, REFRESH_INTERVAL_MS)
+      }, get().refreshIntervalMinutes * 60_000)
     } catch (err) {
       set({ status: 'error', error: err instanceof Error ? err.message : 'Failed to load weather' })
     }
@@ -200,5 +239,33 @@ export const useWeatherStore = create<WeatherStoreState>((set, get) => ({
       : [...favorites, location]
     localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(next))
     set({ favorites: next })
+  },
+
+  setRefreshIntervalMinutes: (minutes: number) => {
+    if (!REFRESH_INTERVAL_OPTIONS_MIN.includes(minutes as (typeof REFRESH_INTERVAL_OPTIONS_MIN)[number])) return
+    localStorage.setItem(REFRESH_INTERVAL_STORAGE_KEY, String(minutes))
+    set({ refreshIntervalMinutes: minutes })
+
+    // Re-arm immediately on the new cadence rather than waiting out whatever
+    // was left of the old interval.
+    if (refreshTimer) {
+      clearInterval(refreshTimer)
+      refreshTimer = setInterval(() => {
+        get().refresh()
+      }, minutes * 60_000)
+    }
+  },
+
+  setRainAlertsEnabled: (enabled: boolean) => {
+    localStorage.setItem(RAIN_ALERTS_STORAGE_KEY, String(enabled))
+    set({ rainAlertsEnabled: enabled })
+  },
+
+  setLaunchAtLogin: (enabled: boolean) => {
+    if (!get().launchAtLoginSupported) return
+    // Optimistic: the main process call is fire-and-forget from here, and
+    // reflects reality closely enough that a round-trip isn't worth the delay.
+    set({ launchAtLoginEnabled: enabled })
+    window.api.setLaunchAtLogin(enabled)
   }
 }))

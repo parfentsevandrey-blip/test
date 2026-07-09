@@ -110,6 +110,42 @@ export function ClockIcon(): JSX.Element {
   )
 }
 
+export function GearIcon(): JSX.Element {
+  const teeth = [0, 45, 90, 135, 180, 225, 270, 315]
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx={12} cy={12} r={3.4} />
+      <circle cx={12} cy={12} r={7} />
+      {teeth.map((angle) => {
+        const rad = (angle * Math.PI) / 180
+        const x1 = 12 + Math.cos(rad) * 8.4
+        const y1 = 12 + Math.sin(rad) * 8.4
+        const x2 = 12 + Math.cos(rad) * 10.2
+        const y2 = 12 + Math.sin(rad) * 10.2
+        return <line key={angle} x1={x1} y1={y1} x2={x2} y2={y2} />
+      })}
+    </svg>
+  )
+}
+
+export function BellIcon(): JSX.Element {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6 10.5a6 6 0 0 1 12 0c0 4 1.4 5.7 2 6.5H4c.6-.8 2-2.5 2-6.5Z" />
+      <path d="M10 19.5a2 2 0 0 0 4 0" />
+    </svg>
+  )
+}
+
+export function PowerIcon(): JSX.Element {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 3.5v7" />
+      <path d="M7 6a8 8 0 1 0 10 0" />
+    </svg>
+  )
+}
+
 export function CompassNeedleIcon({ rotation }: { rotation: number }): JSX.Element {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">

@@ -136,9 +136,16 @@
   fill: var(--accent-strong);
 }
 
-.sun-path-moon {
+/* Real crescent/gibbous silhouette: two same-radius discs (one lit, one
+   dark) offset and clipped to the moon's circular bounds — see SunCard.tsx. */
+.sun-path-moon-shadow {
+  fill: var(--text-tertiary);
+  opacity: 0.3;
+}
+
+.sun-path-moon-lit {
   fill: var(--info);
-  opacity: 0.85;
+  opacity: 0.9;
 }
 
 /* ---------- Compact three-up stats row under the arc ---------- */

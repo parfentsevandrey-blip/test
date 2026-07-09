@@ -1,0 +1,238 @@
+/* ============================================================
+   SettingsPanel — a modal overlay (app chrome, not a grid card).
+   Matte styling by default; win95 override block near the bottom
+   re-skins it into a period dialog (navy title bar, bevels, no blur).
+   ============================================================ */
+
+.settings-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--scrim);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  animation: fade-in 0.2s var(--ease-out);
+}
+
+.settings-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: clamp(320px, 90vw, 420px);
+  max-height: min(80vh, 560px);
+  overflow-y: auto;
+  padding: 20px 22px;
+  --menu-scale-from: 0.95;
+  transform-origin: center;
+  animation: menu-in 0.3s var(--ease-spring) both;
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings-title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.settings-close {
+  width: 32px;
+  height: 32px;
+}
+
+.settings-close svg {
+  width: 15px;
+  height: 15px;
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings-section-title {
+  margin: 0;
+}
+
+.settings-interval-pill {
+  width: 100%;
+  justify-content: space-between;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.settings-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.settings-row-label {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.settings-row-desc {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  line-height: 1.35;
+}
+
+/* ---------- Toggle switch ---------- */
+
+.settings-toggle {
+  position: relative;
+  flex-shrink: 0;
+  width: 42px;
+  height: 24px;
+  border-radius: var(--radius-pill);
+  background: var(--track);
+  transition: background-color 0.2s var(--ease-out);
+}
+
+.settings-toggle.is-on {
+  background: var(--accent);
+}
+
+.settings-toggle-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--glass-bg-strong);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: transform var(--dur-release) var(--ease-spring);
+}
+
+.settings-toggle.is-on .settings-toggle-thumb {
+  transform: translateX(18px);
+}
+
+.settings-toggle:active .settings-toggle-thumb {
+  transition: transform var(--dur-press) var(--ease-press);
+  scale: 0.92;
+}
+
+.settings-toggle:focus-visible {
+  outline: 1.5px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.settings-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 12px;
+  border-top: 1px solid var(--glass-border-soft);
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settings-overlay,
+  .settings-panel {
+    animation: none;
+  }
+
+  .settings-toggle-thumb {
+    transition: none;
+  }
+
+  .settings-toggle:active .settings-toggle-thumb {
+    scale: 1;
+  }
+}
+
+/* ============================================================
+   Win95 — a period dialog: navy title bar, bevels, no blur, hard corners.
+   ============================================================ */
+
+[data-theme='win95'] .settings-overlay {
+  backdrop-filter: none;
+  background: rgba(0, 0, 0, 0.4);
+  animation: none;
+}
+
+[data-theme='win95'] .settings-panel {
+  background: #c0c0c0;
+  border: none;
+  border-radius: 0;
+  box-shadow: var(--bevel-out);
+  animation: none;
+  padding: 0 0 14px;
+  gap: 14px;
+}
+
+[data-theme='win95'] .settings-header {
+  padding: 5px 6px 5px 10px;
+  background: linear-gradient(90deg, #000080, #1084d0);
+  color: #ffffff;
+}
+
+[data-theme='win95'] .settings-title {
+  font-family: inherit;
+  font-size: 13px;
+  color: #ffffff;
+}
+
+[data-theme='win95'] .settings-close {
+  width: 20px;
+  height: 20px;
+  border-radius: 0;
+  background: #c0c0c0;
+  color: #000000;
+  box-shadow: var(--bevel-out);
+}
+
+[data-theme='win95'] .settings-close:hover {
+  background: #cdcdcd;
+}
+
+[data-theme='win95'] .settings-close:active {
+  box-shadow: var(--bevel-in);
+}
+
+[data-theme='win95'] .settings-section,
+[data-theme='win95'] .settings-footer {
+  padding-left: 14px;
+  padding-right: 14px;
+}
+
+[data-theme='win95'] .settings-toggle {
+  border-radius: 0;
+  background: #ffffff;
+  box-shadow: var(--bevel-field);
+}
+
+[data-theme='win95'] .settings-toggle.is-on {
+  background: #ffffff;
+}
+
+[data-theme='win95'] .settings-toggle-thumb {
+  border-radius: 0;
+  background: #000080;
+  box-shadow: none;
+}
+
+[data-theme='win95'] .settings-footer {
+  border-top-color: #808080;
+}

@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { isSameLocation, useWeatherStore } from '../store/useWeatherStore'
 import { useListNav } from '../hooks/useListNav'
 import { useDelayedUnmount } from '../hooks/useDelayedUnmount'
+import { fetchBatchCurrentConditions, type BatchCurrentConditions } from '../api/openMeteo'
+import { celsiusTo } from '../utils/units'
 import './FavoritesMenu.css'
 
 const EXIT_MS = 160
@@ -34,6 +36,7 @@ function CloseIcon(): JSX.Element {
 export function FavoritesMenu(): JSX.Element {
   const favorites = useWeatherStore((s) => s.favorites)
   const location = useWeatherStore((s) => s.location)
+  const unit = useWeatherStore((s) => s.unit)
   const toggleFavorite = useWeatherStore((s) => s.toggleFavorite)
   const selectLocation = useWeatherStore((s) => s.selectLocation)
 
@@ -42,6 +45,10 @@ export function FavoritesMenu(): JSX.Element {
   const triggerRef = useRef<HTMLButtonElement>(null)
   const itemRefs = useRef<Array<HTMLButtonElement | null>>([])
   const mounted = useDelayedUnmount(open, EXIT_MS)
+
+  // Live temp per saved city — one batched request (not one per favorite),
+  // fetched fresh each time the dropdown opens. null = still loading.
+  const [conditions, setConditions] = useState<Array<BatchCurrentConditions | null> | null>(null)
 
   useEffect(() => {
     function handleMouseDown(event: MouseEvent): void {
@@ -52,6 +59,19 @@ export function FavoritesMenu(): JSX.Element {
     document.addEventListener('mousedown', handleMouseDown)
     return () => document.removeEventListener('mousedown', handleMouseDown)
   }, [])
+
+  useEffect(() => {
+    if (!open || favorites.length === 0) return
+    const controller = new AbortController()
+    setConditions(null)
+    fetchBatchCurrentConditions(favorites, controller.signal)
+      .then(setConditions)
+      .catch((err) => {
+        if (err instanceof DOMException && err.name === 'AbortError') return
+        setConditions(favorites.map(() => null))
+      })
+    return () => controller.abort()
+  }, [open, favorites])
 
   const closeAndRefocusTrigger = (): void => {
     setOpen(false)
@@ -135,11 +155,18 @@ export function FavoritesMenu(): JSX.Element {
                     void selectLocation(favorite)
                   }}
                 >
-                  <span className="favorites-item-name">{favorite.name}</span>
-                  <span className="favorites-item-meta">
-                    {favorite.admin1 ? `${favorite.admin1}, ` : ''}
-                    {favorite.country}
+                  <span className="favorites-item-text">
+                    <span className="favorites-item-name">{favorite.name}</span>
+                    <span className="favorites-item-meta">
+                      {favorite.admin1 ? `${favorite.admin1}, ` : ''}
+                      {favorite.country}
+                    </span>
                   </span>
+                  {conditions?.[index] && (
+                    <span className="favorites-item-temp">
+                      {Math.round(celsiusTo(unit, conditions[index]!.temperature))}°
+                    </span>
+                  )}
                 </button>
                 <button
                   type="button"

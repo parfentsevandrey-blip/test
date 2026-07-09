@@ -1,11 +1,19 @@
-import type { CSSProperties } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
+import { createPortal } from 'react-dom'
 import './DailyForecast.css'
 import { useWeatherStore } from '../store/useWeatherStore'
 import { BentoCard } from './BentoCard'
 import { WeatherIcon } from './WeatherIcon'
 import { CalendarIcon } from './icons'
 import { getConditionInfo } from '../utils/weatherCondition'
-import { formatTemperature, formatWeekday } from '../utils/units'
+import {
+  formatClock,
+  formatSpeed,
+  formatTemperature,
+  formatWeekday,
+  speedUnitFor
+} from '../utils/units'
+import type { DailyForecastPoint, TemperatureUnit } from '../types/weather'
 
 /** Minimum visible fill width (% of track) so single-degree days don't vanish. */
 const MIN_FILL_PCT = 6
@@ -21,11 +29,102 @@ const formatDateShort = (isoDate: string): string =>
 const formatWeekdayLong = (isoDate: string): string =>
   atNoon(isoDate).toLocaleDateString('en-US', { weekday: 'long' })
 
+interface DailyDetailPopoverProps {
+  day: DailyForecastPoint
+  isToday: boolean
+  unit: TemperatureUnit
+  onClose: () => void
+}
+
+/**
+ * Drill-down for a single day, using only data the daily forecast already
+ * fetches (peak wind/UV, sunrise/sunset) — no new request. An overlay
+ * rather than in-place row expansion, since the card is a fixed 10-row,
+ * zero-slack layout with no room to grow a row taller.
+ */
+function DailyDetailPopover({ day, isToday, unit, onClose }: DailyDetailPopoverProps): JSX.Element {
+  const condition = getConditionInfo(day.weatherCode)
+  const speedUnit = speedUnitFor(unit)
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent): void {
+      if (event.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
+  return createPortal(
+    <div className="df-detail-overlay" onMouseDown={onClose}>
+      <div
+        className="df-detail-panel glass-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${isToday ? 'Today' : formatWeekdayLong(day.date)} details`}
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <div className="df-detail-header">
+          <WeatherIcon condition={condition.condition} isDay={true} className="df-detail-icon" />
+          <div className="df-detail-heading">
+            <span className="df-detail-day">{isToday ? 'Today' : formatWeekdayLong(day.date)}</span>
+            <span className="df-detail-date">{formatDateShort(day.date)}</span>
+          </div>
+          <button type="button" className="icon-btn df-detail-close" aria-label="Close" onClick={onClose}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" aria-hidden="true">
+              <line x1={6} y1={6} x2={18} y2={18} />
+              <line x1={18} y1={6} x2={6} y2={18} />
+            </svg>
+          </button>
+        </div>
+
+        <div className="df-detail-condition">{condition.label}</div>
+
+        <div className="df-detail-grid">
+          <div className="df-detail-stat">
+            <span className="df-detail-stat-label">High</span>
+            <span className="df-detail-stat-value">{formatTemperature(day.tempMax, unit)}</span>
+          </div>
+          <div className="df-detail-stat">
+            <span className="df-detail-stat-label">Low</span>
+            <span className="df-detail-stat-value">{formatTemperature(day.tempMin, unit)}</span>
+          </div>
+          <div className="df-detail-stat">
+            <span className="df-detail-stat-label">Rain chance</span>
+            <span className="df-detail-stat-value">{Math.round(day.precipitationProbabilityMax)}%</span>
+          </div>
+          <div className="df-detail-stat">
+            <span className="df-detail-stat-label">Peak wind</span>
+            <span className="df-detail-stat-value">{formatSpeed(day.windSpeedMax, speedUnit)}</span>
+          </div>
+          {day.uvIndexMax !== null && (
+            <div className="df-detail-stat">
+              <span className="df-detail-stat-label">Peak UV</span>
+              <span className="df-detail-stat-value">{Math.round(day.uvIndexMax)}</span>
+            </div>
+          )}
+          <div className="df-detail-stat">
+            <span className="df-detail-stat-label">Sunrise</span>
+            <span className="df-detail-stat-value">{formatClock(day.sunrise)}</span>
+          </div>
+          <div className="df-detail-stat">
+            <span className="df-detail-stat-label">Sunset</span>
+            <span className="df-detail-stat-value">{formatClock(day.sunset)}</span>
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body
+  )
+}
+
 export function DailyForecast(): JSX.Element | null {
   const weather = useWeatherStore((s) => s.weather)
   const unit = useWeatherStore((s) => s.unit)
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
   if (!weather) return null
+
+  const selectedDay = selectedDate ? weather.daily.find((d) => d.date === selectedDate) : undefined
 
   const globalMin = Math.min(...weather.daily.map((day) => day.tempMin))
   const globalMax = Math.max(...weather.daily.map((day) => day.tempMax))
@@ -69,12 +168,15 @@ export function DailyForecast(): JSX.Element | null {
               (pop > 0 ? `, ${pop}% chance of precipitation` : '')
 
             return (
-              <div
+              <button
+                type="button"
                 className={`df-row${isToday ? ' is-today' : ''}`}
                 role="listitem"
-                aria-label={label}
+                aria-label={`${label}. Show details.`}
+                aria-haspopup="dialog"
                 title={condition.label}
                 key={day.date}
+                onClick={() => setSelectedDate(day.date)}
               >
                 <div className="df-day-col">
                   <span className="df-day">{isToday ? 'Today' : formatWeekday(day.date)}</span>
@@ -100,11 +202,20 @@ export function DailyForecast(): JSX.Element | null {
                   </div>
                   <span className="df-temp-max">{formatTemperature(day.tempMax, unit)}</span>
                 </div>
-              </div>
+              </button>
             )
           })}
         </div>
       </div>
+
+      {selectedDay && (
+        <DailyDetailPopover
+          day={selectedDay}
+          isToday={selectedDay.date === weather.daily[0].date}
+          unit={unit}
+          onClose={() => setSelectedDate(null)}
+        />
+      )}
     </BentoCard>
   )
 }

@@ -1220,7 +1220,8 @@ input {
   justify-content: center;
   gap: 18px;
   background: var(--scrim);
-  backdrop-filter: blur(8px);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   animation: fade-in 0.4s var(--ease-out);
 }
 
@@ -1644,6 +1645,7 @@ input {
 [data-theme='win95'] .search-result-item:hover .search-result-meta,
 [data-theme='win95'] .favorites-item:hover .favorites-item-name,
 [data-theme='win95'] .favorites-item:hover .favorites-item-meta,
+[data-theme='win95'] .favorites-item:hover .favorites-item-temp,
 [data-theme='win95'] .favorites-action:hover {
   color: #ffffff;
 }
