@@ -176,18 +176,25 @@ export class SceneManager {
     const t = elapsed
 
     this.ctx.camera.position.set(
-      Math.sin(t * 0.015) * 1.2,
-      7 + Math.sin(t * 0.02) * 0.5,
+      Math.sin(t * 0.06) * 2.2,
+      7 + Math.sin(t * 0.08) * 0.9,
       14
     )
 
+    // A little wind-driven unsteadiness on top of the base sway -- two
+    // incommensurate sine frequencies read as a soft gust rather than a
+    // metronome, and it's silent (zero amplitude) in dead calm.
+    const windJitterAmp = clamp01(params.windSpeed) * 0.05
+    const yawJitter = (Math.sin(t * 0.9) * 0.6 + Math.sin(t * 2.3 + 1.7) * 0.4) * windJitterAmp
+    const pitchJitter = (Math.sin(t * 1.3 + 0.5) * 0.5 + Math.sin(t * 3.1) * 0.5) * windJitterAmp * 0.4
+
     // Base yaw points away from the sun's azimuth so the lit horizon sits in
     // frame; a whisper of oscillation keeps it from reading as a frozen still.
-    const yaw = params.sunAzimuthRad + Math.PI + Math.sin(t * 0.018) * 0.05
+    const yaw = params.sunAzimuthRad + Math.PI + Math.sin(t * 0.072) * 0.09 + yawJitter
     // Pitch a touch above the horizon (higher when the sun is high) so the
     // softened below-horizon band stays low in the frame.
     const altitude01 = clamp01(params.sunAltitude * 0.5 + 0.5)
-    const pitch = lerp(0.08, 0.16, altitude01) + Math.sin(t * 0.025) * 0.015
+    const pitch = lerp(0.08, 0.16, altitude01) + Math.sin(t * 0.1) * 0.025 + pitchJitter
 
     const cosP = Math.cos(pitch)
     const dirX = Math.sin(yaw) * cosP

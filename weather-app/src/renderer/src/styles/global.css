@@ -290,6 +290,36 @@ input {
   margin-right: 4px;
 }
 
+/* One restrained "just refreshed" breath -- App.tsx remounts this span (via
+   a bumped React key) only when a refresh actually completes, so the replay
+   never fires on the once-a-minute "N min ago" text tick. */
+.header-status-pulse {
+  animation: header-status-pulse 900ms var(--ease-out) both;
+}
+
+@keyframes header-status-pulse {
+  0% {
+    opacity: 0.5;
+    scale: 0.96;
+  }
+  40% {
+    opacity: 1;
+    color: var(--accent);
+    scale: 1.03;
+  }
+  100% {
+    opacity: 1;
+    color: var(--text-tertiary);
+    scale: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header-status-pulse {
+    animation: none;
+  }
+}
+
 /* Shared pill/segment control style for everything in the header. */
 .control-pill {
   position: relative;
@@ -372,6 +402,38 @@ input {
   background: transparent;
 }
 
+/* Vertical sibling of the sliding thumb above, for keyboard-navigated list
+   popovers (SearchBar results, FavoritesMenu) — see useListHighlightThumb.
+   Same "armed only once ready, transparent-out the per-row flat highlight"
+   technique. Base rule lives here since .search-results/.search-result-item
+   do too; FavoritesMenu.css carries its own neutralization rule since
+   .favorites-item lives there. */
+.list-nav-thumb {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 0;
+  border-radius: var(--radius-sm);
+  background: var(--control-active);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.search-results.list-thumb-ready .list-nav-thumb,
+.favorites-dropdown.list-thumb-ready .list-nav-thumb {
+  opacity: 1;
+  transition: top var(--dur-release) var(--ease-spring), height var(--dur-release) var(--ease-spring);
+}
+
+:root:not([data-theme='win95']) .search-results.list-thumb-ready .search-result-item.is-highlighted {
+  background: transparent;
+}
+
+[data-theme='win95'] .list-nav-thumb {
+  display: none;
+}
+
 .icon-btn {
   width: 38px;
   height: 38px;
@@ -400,10 +462,6 @@ input {
 .icon-btn svg {
   width: 17px;
   height: 17px;
-}
-
-.icon-btn.spinning svg {
-  animation: spin 1s linear infinite;
 }
 
 /* Keyboard-focus parity: .search-result-item and .hf-scroll already had a
@@ -1302,6 +1360,36 @@ input {
   }
 }
 
+/* Shared weather-condition-glyph pop-in — WeatherIcon gives its <svg> a fresh
+   key (and therefore a fresh DOM node) whenever condition/isDay actually
+   change, so this animation only plays on a real condition change, never on
+   an unrelated re-render. One rule covers the hero icon, hourly cells and
+   daily rows since they all render through the same component. */
+.weather-icon-glyph {
+  animation: weather-icon-pop 0.4s var(--ease-spring) both;
+}
+
+@keyframes weather-icon-pop {
+  from {
+    opacity: 0;
+    scale: 0.7;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .weather-icon-glyph {
+    animation: none;
+  }
+}
+
+[data-theme='win95'] .weather-icon-glyph {
+  animation: none;
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -1530,6 +1618,10 @@ input {
   box-shadow: var(--bevel-in);
   padding: 4px 8px;
   font-size: 11px;
+}
+
+[data-theme='win95'] .header-status-pulse {
+  animation: none;
 }
 
 /* ---------- Controls become gray beveled buttons ---------- */

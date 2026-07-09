@@ -269,6 +269,7 @@
   height: 9px;
   margin-left: 1px;
   flex-shrink: 0;
+  transition: transform 0.4s var(--ease-spring);
 }
 
 .hero-stat-trend--falling {
@@ -326,6 +327,7 @@
   .hero-temp-unit,
   .hero-icon,
   .hero-stat,
+  .hero-stat-trend,
   .hero-insight svg {
     transition: none;
   }
@@ -383,4 +385,8 @@
 [data-theme='win95'] .hero-stat:hover {
   transform: none;
   background: var(--control-bg);
+}
+
+[data-theme='win95'] .hero-stat-trend {
+  transition: none;
 }

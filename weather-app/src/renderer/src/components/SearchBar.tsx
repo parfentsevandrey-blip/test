@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, type CSSProperties } from 'react'
 import { useWeatherStore } from '../store/useWeatherStore'
 import { useListNav } from '../hooks/useListNav'
 import { useDelayedUnmount } from '../hooks/useDelayedUnmount'
+import { useListHighlightThumb } from '../hooks/useListHighlightThumb'
 import type { GeoLocation } from '../types/weather'
 
 const EXIT_MS = 160
@@ -25,6 +26,7 @@ export function SearchBar(): JSX.Element {
   const selectLocation = useWeatherStore((s) => s.selectLocation)
 
   const rootRef = useRef<HTMLDivElement>(null)
+  const resultsRef = useRef<HTMLDivElement>(null)
   const reactId = useId()
   const listboxId = `search-listbox-${reactId}`
 
@@ -58,6 +60,11 @@ export function SearchBar(): JSX.Element {
     onClose: clearSearch
   })
 
+  const { top: thumbTop, height: thumbHeight, ready: thumbReady } = useListHighlightThumb(
+    resultsRef,
+    highlightedIndex
+  )
+
   return (
     <div className="search-bar" ref={rootRef}>
       <div className="search-input-row">
@@ -81,10 +88,14 @@ export function SearchBar(): JSX.Element {
       </div>
       {mounted && (
         <div
-          className={`search-results${showResults ? '' : ' is-closing'}`}
+          className={
+            `search-results${showResults ? '' : ' is-closing'}` +
+            (thumbReady ? ' list-thumb-ready' : '')
+          }
           id={listboxId}
           role="listbox"
           aria-label="City search results"
+          ref={resultsRef}
         >
           {searchError !== null ? (
             <div className="search-empty">Search unavailable — check your connection</div>
@@ -93,24 +104,32 @@ export function SearchBar(): JSX.Element {
           ) : !isSearching && searchResults.length === 0 ? (
             <div className="search-empty">No matches found</div>
           ) : (
-            searchResults.map((result, index) => (
-              <button
-                type="button"
-                id={`${listboxId}-option-${index}`}
-                role="option"
-                aria-selected={index === highlightedIndex}
-                className={`search-result-item${index === highlightedIndex ? ' is-highlighted' : ''}`}
-                key={`${result.name}-${result.latitude}-${result.longitude}`}
-                style={{ '--row-i': index } as CSSProperties}
-                onClick={() => handleSelect(result)}
-              >
-                <span className="search-result-name">{result.name}</span>
-                <span className="search-result-meta">
-                  {result.admin1 ? `${result.admin1}, ` : ''}
-                  {result.country}
-                </span>
-              </button>
-            ))
+            <>
+              <span
+                className="list-nav-thumb"
+                style={{ top: `${thumbTop}px`, height: `${thumbHeight}px` }}
+                aria-hidden="true"
+              />
+              {searchResults.map((result, index) => (
+                <button
+                  type="button"
+                  id={`${listboxId}-option-${index}`}
+                  role="option"
+                  aria-selected={index === highlightedIndex}
+                  className={`search-result-item${index === highlightedIndex ? ' is-highlighted' : ''}`}
+                  key={`${result.name}-${result.latitude}-${result.longitude}`}
+                  data-nav-index={index}
+                  style={{ '--row-i': index } as CSSProperties}
+                  onClick={() => handleSelect(result)}
+                >
+                  <span className="search-result-name">{result.name}</span>
+                  <span className="search-result-meta">
+                    {result.admin1 ? `${result.admin1}, ` : ''}
+                    {result.country}
+                  </span>
+                </button>
+              ))}
+            </>
           )}
         </div>
       )}

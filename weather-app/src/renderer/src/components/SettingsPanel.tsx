@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
 import { REFRESH_INTERVAL_OPTIONS_MIN, useWeatherStore } from '../store/useWeatherStore'
 import { useSegThumb } from '../hooks/useSegThumb'
@@ -96,7 +96,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Element {
           </button>
         </div>
 
-        <div className="settings-section">
+        <div className="settings-section" style={{ '--row-i': 0 } as CSSProperties}>
           <div className="card-title settings-section-title">
             <ClockIcon />
             Refresh interval
@@ -122,7 +122,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Element {
           </div>
         </div>
 
-        <div className="settings-section">
+        <div className="settings-section" style={{ '--row-i': 1 } as CSSProperties}>
           <div className="card-title settings-section-title">
             <BellIcon />
             Notifications
@@ -136,7 +136,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Element {
         </div>
 
         {launchAtLoginSupported && (
-          <div className="settings-section">
+          <div className="settings-section" style={{ '--row-i': 2 } as CSSProperties}>
             <div className="card-title settings-section-title">
               <PowerIcon />
               Windows

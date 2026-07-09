@@ -113,6 +113,7 @@
   fill: var(--accent-glow);
   transform-box: fill-box;
   transform-origin: center;
+  transition: cx 0.6s var(--ease-out), cy 0.6s var(--ease-out);
 }
 
 /* Hover micro-interaction: the sun's halo breathes while the card is hot. */
@@ -134,6 +135,7 @@
 
 .sun-path-sun-core {
   fill: var(--accent-strong);
+  transition: cx 0.6s var(--ease-out), cy 0.6s var(--ease-out);
 }
 
 /* Real crescent/gibbous silhouette: two same-radius discs (one lit, one
@@ -141,11 +143,17 @@
 .sun-path-moon-shadow {
   fill: var(--text-tertiary);
   opacity: 0.3;
+  transition: cx 0.6s var(--ease-out), cy 0.6s var(--ease-out);
 }
 
 .sun-path-moon-lit {
   fill: var(--info);
   opacity: 0.9;
+  transition: cx 0.6s var(--ease-out), cy 0.6s var(--ease-out);
+}
+
+.sun-path-moon-clip {
+  transition: cx 0.6s var(--ease-out), cy 0.6s var(--ease-out);
 }
 
 /* ---------- Compact three-up stats row under the arc ---------- */
@@ -199,7 +207,12 @@
     animation: none;
   }
 
-  .sun-path-progress {
+  .sun-path-progress,
+  .sun-path-sun-halo,
+  .sun-path-sun-core,
+  .sun-path-moon-shadow,
+  .sun-path-moon-lit,
+  .sun-path-moon-clip {
     transition: none;
   }
 }
@@ -207,4 +220,12 @@
 /* Win95 kills all card motion elsewhere; the halo follows suit. */
 [data-theme='win95'] .bento-card:hover .sun-path-sun-halo {
   animation: none;
+}
+
+[data-theme='win95'] .sun-path-sun-halo,
+[data-theme='win95'] .sun-path-sun-core,
+[data-theme='win95'] .sun-path-moon-shadow,
+[data-theme='win95'] .sun-path-moon-lit,
+[data-theme='win95'] .sun-path-moon-clip {
+  transition: none;
 }

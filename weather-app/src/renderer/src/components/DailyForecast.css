@@ -29,13 +29,6 @@
   min-height: 0;
   container-type: size;
   container-name: df;
-  /* Local token: specular highlight for the range-bar hover sheen.
-     (A white glint, not a palette color — tuned per theme below.) */
-  --df-sheen: rgba(255, 255, 255, 0.75);
-}
-
-[data-theme='dark'] .df-root {
-  --df-sheen: rgba(255, 255, 255, 0.5);
 }
 
 .df-title {
@@ -229,41 +222,6 @@
     background-position-x 0.6s var(--ease-out);
 }
 
-/* Hover sheen: a skewed glint sweeps once across the fill (600ms).
-   Invisible at rest (opacity 0), so it costs nothing until hovered. */
-.df-fill::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 60%;
-  opacity: 0;
-  transform: translateX(-180%) skewX(-18deg);
-  background: linear-gradient(90deg, transparent, var(--df-sheen), transparent);
-  pointer-events: none;
-}
-
-/* Glossy shine-sweep on hover retired — reads as a gamified/AI micro-effect,
-   not matte-editorial. */
-.df-row:hover .df-fill::after {
-  animation: none;
-}
-
-@keyframes df-sheen-sweep {
-  0% {
-    opacity: 0;
-    transform: translateX(-180%) skewX(-18deg);
-  }
-  18% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    transform: translateX(290%) skewX(-18deg);
-  }
-}
-
 /* "Now" marker on today's row: current temp on the same scale. */
 .df-now-dot {
   position: absolute;
@@ -293,10 +251,6 @@
 [data-theme='win95'] .df-fill,
 [data-theme='win95'] .df-now-dot {
   transition: none;
-}
-
-[data-theme='win95'] .df-fill::after {
-  display: none;
 }
 
 [data-theme='win95'] .df-row:hover,
@@ -357,10 +311,6 @@
 
   .df-row:active {
     scale: 1;
-  }
-
-  .df-row:hover .df-fill::after {
-    animation: none;
   }
 }
 
@@ -463,6 +413,9 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  opacity: 0;
+  animation: menu-item-in 0.26s var(--ease-out) both;
+  animation-delay: calc(40ms + var(--row-i, 0) * 30ms);
 }
 
 .df-detail-stat-label {
@@ -483,8 +436,10 @@
 
 @media (prefers-reduced-motion: reduce) {
   .df-detail-overlay,
-  .df-detail-panel {
+  .df-detail-panel,
+  .df-detail-stat {
     animation: none;
+    opacity: 1;
   }
 }
 
@@ -500,6 +455,11 @@
   border-radius: 0;
   box-shadow: var(--bevel-out);
   animation: none;
+}
+
+[data-theme='win95'] .df-detail-stat {
+  animation: none;
+  opacity: 1;
 }
 
 [data-theme='win95'] .df-detail-day,

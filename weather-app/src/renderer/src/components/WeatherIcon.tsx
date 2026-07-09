@@ -113,95 +113,86 @@ function Snowflake({ cx, cy, r }: { cx: number; cy: number; r: number }): JSX.El
   )
 }
 
-export function WeatherIcon({ condition, isDay, className }: WeatherIconProps): JSX.Element {
-  const props = { ...SVG_PROPS, className }
-
+/** The glyph markup only (no <svg> wrapper) so WeatherIcon can mount it under one shared, keyed <svg>. */
+function Glyph({ condition, isDay }: { condition: WeatherCondition; isDay: boolean }): JSX.Element {
   switch (condition) {
     case 'clear':
       if (isDay) {
         return (
-          <svg {...props}>
+          <>
             <circle cx={12} cy={12} r={3.8} fill="currentColor" fillOpacity={0.15} />
             <Rays cx={12} cy={12} inner={5.7} outer={8} angles={FULL_SUN_RAYS} />
-          </svg>
+          </>
         )
       }
-      return (
-        <svg {...props}>
-          <path d={CRESCENT_PATH} />
-        </svg>
-      )
+      return <path d={CRESCENT_PATH} />
 
     case 'partly-cloudy':
       if (isDay) {
         return (
-          <svg {...props}>
+          <>
             <path d={PEEK_SUN_ARC} />
             <Rays cx={15.6} cy={8.2} inner={4.6} outer={6} angles={PEEK_SUN_RAYS} />
             <CloudGlyph cx={11.2} cy={19.2} scale={0.8} />
-          </svg>
+          </>
         )
       }
       return (
-        <svg {...props}>
+        <>
           <path d={MINI_CRESCENT_PATH} />
           <CloudGlyph cx={11.2} cy={19.2} scale={0.8} />
-        </svg>
+        </>
       )
 
     case 'cloudy':
-      return (
-        <svg {...props}>
-          <CloudGlyph cx={12} cy={19.4} scale={0.92} />
-        </svg>
-      )
+      return <CloudGlyph cx={12} cy={19.4} scale={0.92} />
 
     case 'fog':
       return (
-        <svg {...props}>
+        <>
           <CloudGlyph cx={12} cy={11.6} scale={0.6} />
           <line x1={4.5} y1={15} x2={19.5} y2={15} />
           <line x1={6.5} y1={18} x2={17.5} y2={18} />
           <line x1={9} y1={21} x2={15} y2={21} />
-        </svg>
+        </>
       )
 
     case 'drizzle':
       return (
-        <svg {...props}>
+        <>
           <CloudGlyph cx={12} cy={13} scale={0.68} />
           <line x1={8.6} y1={16} x2={8} y2={17.8} />
           <line x1={12.6} y1={16} x2={12} y2={17.8} />
           <line x1={16.6} y1={16} x2={16} y2={17.8} />
           <line x1={10.6} y1={19.4} x2={10} y2={21.2} />
           <line x1={14.6} y1={19.4} x2={14} y2={21.2} />
-        </svg>
+        </>
       )
 
     case 'rain':
       return (
-        <svg {...props}>
+        <>
           <CloudGlyph cx={12} cy={12.6} scale={0.68} />
           <line x1={9.1} y1={15.4} x2={7.3} y2={20.8} />
           <line x1={13.1} y1={15.4} x2={11.3} y2={20.8} />
           <line x1={17.1} y1={15.4} x2={15.3} y2={20.8} />
-        </svg>
+        </>
       )
 
     case 'snow':
       return (
-        <svg {...props}>
+        <>
           <CloudGlyph cx={12} cy={12.4} scale={0.68} />
           <g strokeWidth={1.35}>
             <Snowflake cx={9} cy={17.7} r={2.5} />
             <Snowflake cx={15.4} cy={19.1} r={2.5} />
           </g>
-        </svg>
+        </>
       )
 
     case 'thunderstorm':
       return (
-        <svg {...props}>
+        <>
           <CloudGlyph cx={12} cy={12} scale={0.66} />
           <path
             d="M13.7 12.4 L9.9 17.4 H12.3 L11.1 21.8 L15.3 15.6 H12.9 Z"
@@ -209,14 +200,27 @@ export function WeatherIcon({ condition, isDay, className }: WeatherIconProps): 
             stroke="currentColor"
             strokeWidth={1}
           />
-        </svg>
+        </>
       )
 
     default:
-      return (
-        <svg {...props}>
-          <CloudGlyph cx={12} cy={19.4} scale={0.92} />
-        </svg>
-      )
+      return <CloudGlyph cx={12} cy={19.4} scale={0.92} />
   }
+}
+
+export function WeatherIcon({ condition, isDay, className }: WeatherIconProps): JSX.Element {
+  const props = {
+    ...SVG_PROPS,
+    className: className ? `weather-icon-glyph ${className}` : 'weather-icon-glyph'
+  }
+
+  // Keying on condition+isDay forces a fresh <svg> node (and therefore a
+  // replayed CSS entrance animation, see .weather-icon-glyph) only when the
+  // actual glyph changes -- an unrelated re-render (new temperature, tick of
+  // the clock) reuses the same node and stays silent.
+  return (
+    <svg key={`${condition}:${isDay}`} {...props}>
+      <Glyph condition={condition} isDay={isDay} />
+    </svg>
+  )
 }

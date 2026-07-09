@@ -7,6 +7,11 @@ import { clamp, clamp01, lerp } from '../utils/math'
 const SKY_RADIUS = 450
 /** Radius the sun/moon billboards orbit on (must stay inside the dome). */
 const CELESTIAL_RADIUS = 420
+/** Exponential smoothing rate (1/s) for overcast/visibility, matching Fog's
+ * SMOOTHING_RATE so a weather refresh rolls the whole sky -- gradient
+ * flatness, haze, sun/moon dimming -- from e.g. clear to storm over a
+ * couple of seconds instead of popping instantly. */
+const SMOOTHING_RATE = 1.6
 
 const skyVertexShader = /* glsl */ `
   varying vec3 vWorldPosition;
@@ -30,6 +35,7 @@ const skyFragmentShader = /* glsl */ `
   uniform float uTime;
   uniform vec2 uWind;
   uniform float uHaze;
+  uniform float uStriationStrength;
 
   void main() {
     vec3 dir = normalize(vWorldPosition);
@@ -64,7 +70,7 @@ const skyFragmentShader = /* glsl */ `
     float haze = 0.5 + 0.28 * s1 + 0.14 * s2;
     float band = smoothstep(0.04, 0.32, h) * (1.0 - smoothstep(0.5, 0.9, h));
     vec3 hazeColor = mix(uHorizonColor, uZenithColor, 0.42);
-    skyColor = mix(skyColor, hazeColor, clamp(band * uHaze * haze, 0.0, 1.0) * 0.13);
+    skyColor = mix(skyColor, hazeColor, clamp(band * uHaze * haze, 0.0, 1.0) * uStriationStrength);
 
     // Flatten contrast for overcast / foggy / stormy conditions.
     vec3 flatColor = mix(uHorizonColor, uZenithColor, 0.55);
@@ -96,6 +102,10 @@ export class Sky implements SceneEffect {
   private readonly sunLight: THREE.DirectionalLight
   private readonly hemiLight: THREE.HemisphereLight
 
+  // Smoothed toward the raw weather-derived targets each frame (see update()).
+  private smoothedOvercast = 0
+  private smoothedVisibility = 1
+
   // Scratch objects reused every frame -- never reallocated in update().
   private readonly scratchColor = new THREE.Color()
   private readonly sunDiscColor = new THREE.Color()
@@ -126,7 +136,8 @@ export class Sky implements SceneEffect {
         uFlatness: { value: 0 },
         uTime: { value: 0 },
         uWind: { value: new THREE.Vector2(1, 0) },
-        uHaze: { value: 0.4 }
+        uHaze: { value: 0.4 },
+        uStriationStrength: { value: 0.13 }
       },
       vertexShader: skyVertexShader,
       fragmentShader: skyFragmentShader,
@@ -178,11 +189,11 @@ export class Sky implements SceneEffect {
     this.scene.add(this.sunLight.target)
   }
 
-  update(_dt: number, elapsed: number, params: SceneParams): void {
+  update(dt: number, elapsed: number, params: SceneParams): void {
     const altitude = clamp(params.sunAltitude, -1, 1)
     const azimuth = params.sunAzimuthRad
 
-    const overcast = clamp01(
+    const overcastTarget = clamp01(
       Math.max(
         params.cloudCover,
         params.condition === 'cloudy' || params.condition === 'thunderstorm'
@@ -192,6 +203,14 @@ export class Sky implements SceneEffect {
             : 0
       )
     )
+    // Weather data refreshes snap cloudCover/visibility to new values instantly;
+    // smoothing them here (same exponential-lerp as Fog's density) is what makes
+    // every value derived below -- flatness, haze, sun/moon dimming -- glide.
+    const smoothing = 1 - Math.exp(-dt * SMOOTHING_RATE)
+    this.smoothedOvercast += (overcastTarget - this.smoothedOvercast) * smoothing
+    this.smoothedVisibility += (params.visibility - this.smoothedVisibility) * smoothing
+    const overcast = this.smoothedOvercast
+    const visibility = this.smoothedVisibility
 
     // Direction toward the sun (Y up). altitude is sin(elevation), so
     // asin(altitude) recovers the true elevation angle for the horizontal
@@ -225,7 +244,7 @@ export class Sky implements SceneEffect {
     this.groundColor.set(0xb9c2cb).lerp(this.hex(0x10161f), clamp01(nightT * 0.9 + 0.12))
 
     // Desaturate/flatten the gradient for cloudy, foggy or stormy skies.
-    const flatness = clamp01(overcast * 0.85 + (1 - params.visibility) * 0.3)
+    const flatness = clamp01(overcast * 0.85 + (1 - visibility) * 0.3)
 
     const u = this.domeMaterial.uniforms
     ;(u.uZenithColor.value as THREE.Color).copy(this.zenithColor)
@@ -241,7 +260,9 @@ export class Sky implements SceneEffect {
     ).multiplyScalar(0.4 + params.windSpeed)
     // Faint even under a clear sky, a touch more with cloud cover — but capped
     // low so it never becomes a cloud.
-    u.uHaze.value = 0.35 + clamp01(params.cloudCover) * 0.45
+    u.uHaze.value = 0.35 + overcast * 0.45
+    // Stronger wind visibly stirs the striation band; near-calm keeps it a bare whisper.
+    u.uStriationStrength.value = lerp(0.06, 0.2, clamp01(params.windSpeed))
 
     // ---- Sun / moon billboards -------------------------------------------
     this.sunSprite.position.copy(this.sunDir).multiplyScalar(CELESTIAL_RADIUS)
@@ -266,7 +287,7 @@ export class Sky implements SceneEffect {
 
     const dayIntensity = clamp01(altitude * 1.6 + 0.1)
     const overcastDim = lerp(1, 0.22, overcast)
-    const visDim = lerp(0.55, 1, params.visibility)
+    const visDim = lerp(0.55, 1, visibility)
     this.sunLight.intensity = dayIntensity * 2.6 * overcastDim * visDim
 
     this.sunLightColor.set(0xffffff).lerp(this.hex(0xffb46b), sunsetT)

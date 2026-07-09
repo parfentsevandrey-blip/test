@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { forwardRef, useEffect, useRef, useState } from 'react'
 import { resolveTheme, useWeatherStore } from './store/useWeatherStore'
 import { SceneManager } from './scene/SceneManager'
 import { SearchBar } from './components/SearchBar'
@@ -25,15 +25,24 @@ import { celsiusTo, formatTemperature } from './utils/units'
 import { getConditionInfo } from './utils/weatherCondition'
 import { renderTrayIcon } from './utils/trayIcon'
 import { useRainAlerts } from './hooks/useRainAlerts'
+import { useSpinSettle } from './hooks/useSpinSettle'
 
-function RefreshIcon(): JSX.Element {
+const RefreshIcon = forwardRef<SVGSVGElement>(function RefreshIcon(_props, ref): JSX.Element {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      ref={ref}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.7}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M20 11a8 8 0 1 0-2.34 5.66" />
       <path d="M20 5v6h-6" />
     </svg>
   )
-}
+})
 
 /** "just now" / "5 min ago" — refreshed once a minute. */
 function useUpdatedAgo(fetchedAt: number | undefined): string {
@@ -73,6 +82,20 @@ export function App(): JSX.Element {
   const unit = useWeatherStore((s) => s.unit)
 
   const updatedAgo = useUpdatedAgo(weather?.fetchedAt)
+  const refreshIconRef = useSpinSettle(status === 'loading' || isRefreshing)
+
+  // Bumped once whenever a refresh finishes -- keying the status text to it
+  // forces a fresh node (see .header-status-pulse) so a completed refresh
+  // reads as one brief, restrained acknowledgment, never on an unrelated
+  // render (e.g. the once-a-minute "N min ago" tick).
+  const [refreshPulse, setRefreshPulse] = useState(0)
+  const wasRefreshing = useRef(isRefreshing)
+  useEffect(() => {
+    if (wasRefreshing.current && !isRefreshing) {
+      setRefreshPulse((n) => n + 1)
+    }
+    wasRefreshing.current = isRefreshing
+  }, [isRefreshing])
 
   const resolved = resolveTheme(theme, weather)
   const [aboutOpen, setAboutOpen] = useState(false)
@@ -190,17 +213,21 @@ export function App(): JSX.Element {
           <div className="header-spacer" />
 
           <div className="header-controls">
-            {updatedAgo && <span className="header-status">{updatedAgo}</span>}
+            {updatedAgo && (
+              <span key={refreshPulse} className="header-status header-status-pulse">
+                {updatedAgo}
+              </span>
+            )}
             <FavoritesMenu />
             <UnitToggle />
             <ThemeToggle />
             <button
-              className={`icon-btn${status === 'loading' || isRefreshing ? ' spinning' : ''}`}
+              className="icon-btn"
               onClick={() => void refresh()}
               aria-label="Refresh weather"
               title="Refresh weather"
             >
-              <RefreshIcon />
+              <RefreshIcon ref={refreshIconRef} />
             </button>
             <button
               className="icon-btn"

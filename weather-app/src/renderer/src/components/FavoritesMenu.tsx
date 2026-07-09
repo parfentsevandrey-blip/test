@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { isSameLocation, useWeatherStore } from '../store/useWeatherStore'
 import { useListNav } from '../hooks/useListNav'
 import { useDelayedUnmount } from '../hooks/useDelayedUnmount'
+import { useListHighlightThumb } from '../hooks/useListHighlightThumb'
 import { fetchBatchCurrentConditions, type BatchCurrentConditions } from '../api/openMeteo'
 import { celsiusTo } from '../utils/units'
 import './FavoritesMenu.css'
@@ -42,6 +43,7 @@ export function FavoritesMenu(): JSX.Element {
 
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const itemRefs = useRef<Array<HTMLButtonElement | null>>([])
   const mounted = useDelayedUnmount(open, EXIT_MS)
@@ -94,6 +96,11 @@ export function FavoritesMenu(): JSX.Element {
     if (highlightedIndex >= 0) itemRefs.current[highlightedIndex]?.focus()
   }, [highlightedIndex])
 
+  const { top: thumbTop, height: thumbHeight, ready: thumbReady } = useListHighlightThumb(
+    dropdownRef,
+    highlightedIndex
+  )
+
   const currentIsFavorite = location !== null && favorites.some((f) => isSameLocation(f, location))
 
   return (
@@ -111,10 +118,22 @@ export function FavoritesMenu(): JSX.Element {
 
       {mounted && (
         <div
-          className={`favorites-dropdown${open ? '' : ' is-closing'}`}
+          className={
+            `favorites-dropdown${open ? '' : ' is-closing'}` +
+            (thumbReady ? ' list-thumb-ready' : '')
+          }
           role="menu"
           aria-label="Saved locations"
+          ref={dropdownRef}
         >
+          {favorites.length > 0 && (
+            <span
+              className="list-nav-thumb"
+              style={{ top: `${thumbTop}px`, height: `${thumbHeight}px` }}
+              aria-hidden="true"
+            />
+          )}
+
           {location && (
             <button
               type="button"
@@ -141,6 +160,7 @@ export function FavoritesMenu(): JSX.Element {
                   (location && isSameLocation(favorite, location) ? ' is-current' : '')
                 }
                 key={`${favorite.name}-${favorite.latitude}-${favorite.longitude}`}
+                data-nav-index={index}
                 style={{ '--row-i': index } as CSSProperties}
               >
                 <button

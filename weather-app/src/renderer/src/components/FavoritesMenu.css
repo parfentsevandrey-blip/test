@@ -110,6 +110,10 @@
   min-width: 0;
 }
 
+/* Arrives later than the row itself (one batched fetch, after the dropdown
+   has already opened) — its own small entrance, staggered per-row via the
+   inherited --row-i, so the temps populate as a gentle top-to-bottom wave
+   instead of all snapping in in unison. */
 .favorites-item-temp {
   flex-shrink: 0;
   font-family: var(--font-display);
@@ -117,11 +121,22 @@
   font-weight: 600;
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
+  opacity: 0;
+  animation: menu-item-in 0.22s var(--ease-out) both;
+  animation-delay: calc(var(--row-i, 0) * 22ms);
 }
 
 .favorites-item:hover,
 .favorites-item:focus-visible {
   background: var(--control-active);
+}
+
+/* Once the sliding thumb (see useListHighlightThumb / .list-nav-thumb in
+   global.css) is live, it's the only keyboard-highlight indicator; mouse
+   :hover is untouched. Win95 keeps its own navy focus fill (thumb is
+   display:none there). */
+:root:not([data-theme='win95']) .favorites-dropdown.list-thumb-ready .favorites-item:focus-visible {
+  background: transparent;
 }
 
 .favorites-item:active {
@@ -196,6 +211,7 @@
   .favorites-dropdown,
   .favorites-action,
   .favorites-item-row,
+  .favorites-item-temp,
   .favorites-empty {
     animation: none;
     opacity: 1;
@@ -214,6 +230,7 @@
 [data-theme='win95'] .favorites-dropdown,
 [data-theme='win95'] .favorites-action,
 [data-theme='win95'] .favorites-item-row,
+[data-theme='win95'] .favorites-item-temp,
 [data-theme='win95'] .favorites-empty {
   animation: none;
   opacity: 1;

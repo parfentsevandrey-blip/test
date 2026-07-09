@@ -80,33 +80,33 @@ function DailyDetailPopover({ day, isToday, unit, onClose }: DailyDetailPopoverP
         <div className="df-detail-condition">{condition.label}</div>
 
         <div className="df-detail-grid">
-          <div className="df-detail-stat">
+          <div className="df-detail-stat" style={{ '--row-i': 0 } as CSSProperties}>
             <span className="df-detail-stat-label">High</span>
             <span className="df-detail-stat-value">{formatTemperature(day.tempMax, unit)}</span>
           </div>
-          <div className="df-detail-stat">
+          <div className="df-detail-stat" style={{ '--row-i': 1 } as CSSProperties}>
             <span className="df-detail-stat-label">Low</span>
             <span className="df-detail-stat-value">{formatTemperature(day.tempMin, unit)}</span>
           </div>
-          <div className="df-detail-stat">
+          <div className="df-detail-stat" style={{ '--row-i': 2 } as CSSProperties}>
             <span className="df-detail-stat-label">Rain chance</span>
             <span className="df-detail-stat-value">{Math.round(day.precipitationProbabilityMax)}%</span>
           </div>
-          <div className="df-detail-stat">
+          <div className="df-detail-stat" style={{ '--row-i': 3 } as CSSProperties}>
             <span className="df-detail-stat-label">Peak wind</span>
             <span className="df-detail-stat-value">{formatSpeed(day.windSpeedMax, speedUnit)}</span>
           </div>
           {day.uvIndexMax !== null && (
-            <div className="df-detail-stat">
+            <div className="df-detail-stat" style={{ '--row-i': 4 } as CSSProperties}>
               <span className="df-detail-stat-label">Peak UV</span>
               <span className="df-detail-stat-value">{Math.round(day.uvIndexMax)}</span>
             </div>
           )}
-          <div className="df-detail-stat">
+          <div className="df-detail-stat" style={{ '--row-i': 5 } as CSSProperties}>
             <span className="df-detail-stat-label">Sunrise</span>
             <span className="df-detail-stat-value">{formatClock(day.sunrise)}</span>
           </div>
-          <div className="df-detail-stat">
+          <div className="df-detail-stat" style={{ '--row-i': 6 } as CSSProperties}>
             <span className="df-detail-stat-label">Sunset</span>
             <span className="df-detail-stat-value">{formatClock(day.sunset)}</span>
           </div>

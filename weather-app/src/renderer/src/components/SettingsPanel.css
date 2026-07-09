@@ -58,6 +58,9 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  opacity: 0;
+  animation: menu-item-in 0.28s var(--ease-out) both;
+  animation-delay: calc(80ms + var(--row-i, 0) * 40ms);
 }
 
 .settings-section-title {
@@ -149,8 +152,10 @@
 
 @media (prefers-reduced-motion: reduce) {
   .settings-overlay,
-  .settings-panel {
+  .settings-panel,
+  .settings-section {
     animation: none;
+    opacity: 1;
   }
 
   .settings-toggle-thumb {
@@ -215,6 +220,11 @@
 [data-theme='win95'] .settings-footer {
   padding-left: 14px;
   padding-right: 14px;
+}
+
+[data-theme='win95'] .settings-section {
+  animation: none;
+  opacity: 1;
 }
 
 [data-theme='win95'] .settings-toggle {

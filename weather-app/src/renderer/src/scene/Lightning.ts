@@ -19,9 +19,13 @@ const MAX_BRANCHES_BY_QUALITY: Record<Quality, number> = {
   high: 2
 }
 
-/** Seconds between strikes while thunderActive -- re-rolled after every strike so it never settles into a beat. */
+/** Seconds between strikes while thunderActive -- re-rolled after every strike so it never settles into a beat.
+ *  These are the bounds at the lightest storm intensity; a heavy storm scales them down toward
+ *  STRIKE_INTERVAL_*_HEAVY below so a violent thunderstorm crackles noticeably more often than a mild one. */
 const STRIKE_INTERVAL_MIN = 4
 const STRIKE_INTERVAL_MAX = 14
+const STRIKE_INTERVAL_MIN_HEAVY = 1.5
+const STRIKE_INTERVAL_MAX_HEAVY = 5
 
 /** Total lifetime of a single strike's flicker sequence. */
 const FLASH_DURATION_MIN = 0.15
@@ -145,6 +149,8 @@ export class Lightning implements SceneEffect {
   private pulseCount = 0
   private peakLightIntensity = 0
   private nextStrikeIn: number
+  /** Latest params.precipitationIntensity, refreshed every update() -- scales strike frequency + peak brightness. */
+  private stormIntensity = 0.5
 
   constructor(ctx: SceneContext) {
     this.scene = ctx.scene
@@ -235,10 +241,12 @@ export class Lightning implements SceneEffect {
     this.light = new THREE.PointLight(0xffffff, 0, 0, LIGHT_DECAY)
     this.scene.add(this.light)
 
-    this.nextStrikeIn = lerp(STRIKE_INTERVAL_MIN, STRIKE_INTERVAL_MAX, Math.random())
+    this.nextStrikeIn = this.rollNextStrikeInterval()
   }
 
   update(dt: number, _elapsed: number, params: SceneParams): void {
+    this.stormIntensity = clamp01(params.precipitationIntensity)
+
     if (!params.thunderActive) {
       if (this.active || this.light.intensity !== 0) {
         this.resetIdle()
@@ -347,7 +355,9 @@ export class Lightning implements SceneEffect {
     }
     this.strikeTimer = 0
     this.active = true
-    this.peakLightIntensity = lerp(LIGHT_PEAK_MIN, LIGHT_PEAK_MAX, Math.random())
+    // Heavier storms hit harder, not just more often.
+    const intensityBoost = lerp(0.75, 1.25, this.stormIntensity)
+    this.peakLightIntensity = lerp(LIGHT_PEAK_MIN, LIGHT_PEAK_MAX, Math.random()) * intensityBoost
 
     this.flashColor.set(0xffffff).lerp(this.coolColor, Math.random())
     this.light.color.copy(this.flashColor)
@@ -393,7 +403,7 @@ export class Lightning implements SceneEffect {
     this.light.intensity = 0
     this.boltMaterial.uniforms.uOpacity.value = 0
     this.glowMaterial.opacity = 0
-    this.nextStrikeIn = lerp(STRIKE_INTERVAL_MIN, STRIKE_INTERVAL_MAX, Math.random())
+    this.nextStrikeIn = this.rollNextStrikeInterval()
   }
 
   /** Snaps everything back to fully idle -- used whenever thunderActive drops out mid-strike or between strikes. */
@@ -405,7 +415,14 @@ export class Lightning implements SceneEffect {
     this.light.intensity = 0
     this.boltMaterial.uniforms.uOpacity.value = 0
     this.glowMaterial.opacity = 0
-    this.nextStrikeIn = lerp(STRIKE_INTERVAL_MIN, STRIKE_INTERVAL_MAX, Math.random())
+    this.nextStrikeIn = this.rollNextStrikeInterval()
+  }
+
+  /** Rolls the wait until the next strike; a heavier storm (higher stormIntensity) crackles more often. */
+  private rollNextStrikeInterval(): number {
+    const min = lerp(STRIKE_INTERVAL_MIN, STRIKE_INTERVAL_MIN_HEAVY, this.stormIntensity)
+    const max = lerp(STRIKE_INTERVAL_MAX, STRIKE_INTERVAL_MAX_HEAVY, this.stormIntensity)
+    return lerp(min, max, Math.random())
   }
 
   /**

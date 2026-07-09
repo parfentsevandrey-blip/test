@@ -165,7 +165,11 @@ export function SunCard(): JSX.Element | null {
               <stop offset="1" className="sun-path-grad-to" />
             </linearGradient>
             <clipPath id={MOON_CLIP_ID}>
-              <circle cx={moonX} cy={moonY} r={MOON_R} />
+              {/* Kept in lockstep with .sun-path-moon-lit's own cx/cy transition
+                  below (same class -> same transition rule -> same interpolation
+                  each frame) so the crescent clip boundary never lags the disc
+                  it's clipping during the marker's glide. */}
+              <circle className="sun-path-moon-clip" cx={moonX} cy={moonY} r={MOON_R} />
             </clipPath>
           </defs>
 
