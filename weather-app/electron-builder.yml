@@ -34,4 +34,8 @@ nsis:
   createStartMenuShortcut: true
   artifactName: ${productName}-${version}-${arch}-setup.${ext}
 portable:
+  # Fixed rather than electron-builder's default (a fresh UUID per build) —
+  # a changing extraction path makes Windows treat every rebuild as a new
+  # exe/tray icon, resetting any "always show" promotion the user did.
+  unpackDirName: cinematic-weather
   artifactName: ${productName}-${version}-${arch}-portable.${ext}

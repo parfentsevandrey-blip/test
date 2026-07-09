@@ -117,16 +117,27 @@ function createTray(): void {
     }
   })
 
+  let lastTrayLabel: string | null = null
+
   ipcMain.on('tray:update', (_event, dataUrl: string, tooltip: string) => {
     if (!tray) return
     try {
       const image = nativeImage.createFromDataURL(dataUrl)
-      if (!image.isEmpty()) tray.setImage(image)
-    } catch {
-      // Malformed payload: keep whatever image the tray already has.
+      if (image.isEmpty()) {
+        console.error('[tray:update] nativeImage.createFromDataURL produced an empty image')
+      } else {
+        tray.setImage(image)
+      }
+    } catch (err) {
+      console.error('[tray:update] failed to apply tray image', err)
     }
     tray.setToolTip(tooltip)
-    tray.setContextMenu(buildTrayMenu(tooltip))
+    // Rebuilding the menu is otherwise cheap, but there's no reason to touch
+    // native Shell_NotifyIcon state every ~10 minutes if the label is unchanged.
+    if (tooltip !== lastTrayLabel) {
+      lastTrayLabel = tooltip
+      tray.setContextMenu(buildTrayMenu(tooltip))
+    }
   })
 }
 
