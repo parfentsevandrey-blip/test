@@ -50,6 +50,19 @@
   opacity: 0.32;
 }
 
+/*
+ * Condition-tinted breathing wash, layered above the static amber one below.
+ * A real DOM node (not another pseudo-element) so it can crossfade/loop via
+ * Framer Motion in the .tsx — mounted only outside win95, so no reset needed.
+ */
+.hero-condition-wash {
+  position: absolute;
+  inset: -70px -50px;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(75% 65% at 50% 22%, var(--wash-color, var(--accent)), transparent 68%);
+}
+
 /* ---------- Card header (joins the .card-title family) ---------- */
 
 .hero-title {
@@ -149,9 +162,15 @@
   font-weight: 300;
   line-height: 0.95;
   letter-spacing: -0.03em;
-  color: var(--text-primary);
   font-variant-numeric: tabular-nums;
   transition: text-shadow 0.3s var(--ease-out);
+  /* Gradient-text hero treatment — resolves to a flat --text-primary fill
+     automatically in win95 since --gradient-text-hero is reset to `none`
+     there (see the win95 section below, which also restores opaque color). */
+  background: var(--gradient-text-hero);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 /* Degree + unit set at ~40% of the numeral, top-aligned and muted. */
@@ -236,14 +255,15 @@
   border: 1px solid var(--glass-border-soft);
   white-space: nowrap;
   flex-shrink: 0;
-  transition:
-    background-color 0.25s var(--ease-out),
-    transform 0.25s var(--ease-out);
+  /* Only background-color is CSS-transitioned here — the hover/tap lift
+     itself is owned by Framer Motion's whileHover/whileTap spring in the
+     .tsx (non-win95), so it never fights a competing CSS transform
+     transition. win95 renders a plain span with no JS-driven transform. */
+  transition: background-color 0.25s var(--ease-out);
 }
 
 .hero-stat:hover {
   background: var(--control-bg-hover);
-  transform: translateY(-1px);
 }
 
 .hero-stat svg {
@@ -366,6 +386,14 @@
 [data-theme='win95'] .hero-temp-numeral,
 [data-theme='win95'] .hero-temp-unit {
   transition: none;
+}
+
+/* Gradient-text hero reset: flat, opaque, no clip trick. */
+[data-theme='win95'] .hero-temp-numeral {
+  background: none;
+  -webkit-background-clip: unset;
+  background-clip: unset;
+  color: var(--text-primary);
 }
 
 [data-theme='win95'] .hero-main:hover .hero-temp-numeral {

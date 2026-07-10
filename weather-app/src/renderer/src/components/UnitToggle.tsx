@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { motion } from 'framer-motion'
 import { useWeatherStore } from '../store/useWeatherStore'
 import { useSegThumb } from '../hooks/useSegThumb'
 
@@ -16,7 +17,12 @@ export function UnitToggle(): JSX.Element {
       aria-label="Temperature units"
       ref={pillRef}
     >
-      <span className="seg-thumb" style={{ left: `${left}px`, width: `${width}px` }} aria-hidden="true" />
+      <motion.span
+        className="seg-thumb"
+        animate={{ left, width }}
+        transition={ready ? { type: 'spring', stiffness: 420, damping: 34 } : { duration: 0 }}
+        aria-hidden="true"
+      />
       <button
         type="button"
         className={'seg' + (unit === 'celsius' ? ' active' : '')}

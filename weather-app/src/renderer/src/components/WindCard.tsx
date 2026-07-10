@@ -1,5 +1,6 @@
 import { useRef } from 'react'
-import { useWeatherStore } from '../store/useWeatherStore'
+import { motion, useReducedMotion } from 'framer-motion'
+import { resolveTheme, useWeatherStore } from '../store/useWeatherStore'
 import { BentoCard } from './BentoCard'
 import { WindIcon } from './icons'
 import { formatSpeed, msTo, speedUnitFor } from '../utils/units'
@@ -68,8 +69,12 @@ interface NeedleSpin {
 export function WindCard(): JSX.Element | null {
   const weather = useWeatherStore((s) => s.weather)
   const unit = useWeatherStore((s) => s.unit)
-  // Accumulates rotation across updates so the CSS transition always takes
-  // the shortest arc (e.g. 350° -> 10° turns +20°, never -340°).
+  const theme = useWeatherStore((s) => s.theme)
+  const isRetro = resolveTheme(theme, weather) === 'win95'
+  const prefersReducedMotion = useReducedMotion()
+  const motionOn = !isRetro && !prefersReducedMotion
+  // Accumulates rotation across updates so the spin always takes the
+  // shortest arc (e.g. 350° -> 10° turns +20°, never -340°).
   const spin = useRef<NeedleSpin | null>(null)
 
   // Hooks run unconditionally (before the null guard) to satisfy hook rules.
@@ -81,6 +86,7 @@ export function WindCard(): JSX.Element | null {
 
   const { windSpeed, windDirection, windGusts } = weather.current
   const { force, label: beaufortLabel } = beaufort(windSpeed)
+  const needleTransition = motionOn ? { type: 'spring' as const, stiffness: 65, damping: 11 } : { duration: 0 }
 
   if (spin.current === null) {
     spin.current = { lastDirection: windDirection, rotation: windDirection }
@@ -96,7 +102,14 @@ export function WindCard(): JSX.Element | null {
     <BentoCard span="bento-1" floatDelay={0.2}>
       <div className="metric-card">
         <div className="metric-header">
-          <WindIcon />
+          <motion.span
+            className="mx-icon"
+            whileHover={motionOn ? { scale: 1.18, rotate: 14, filter: 'drop-shadow(0 0 6px var(--accent))' } : undefined}
+            whileTap={motionOn ? { scale: 0.9 } : undefined}
+            transition={{ type: 'spring', stiffness: 380, damping: 14 }}
+          >
+            <WindIcon />
+          </motion.span>
           <span className="metric-label">Wind</span>
         </div>
         <div className="metric-value">
@@ -104,15 +117,25 @@ export function WindCard(): JSX.Element | null {
           <span className="mx-unit">{speedUnit === 'mph' ? 'mph' : 'km/h'}</span>
         </div>
         <div className="metric-sub">{directionLabel(windDirection)} · Gusts {formatSpeed(windGusts, speedUnit)}</div>
-        <div className="metric-visual wind-compass" aria-hidden="true">
+        <motion.div
+          className="metric-visual wind-compass"
+          aria-hidden="true"
+          whileHover={motionOn ? { scale: 1.06 } : undefined}
+          whileTap={motionOn ? { scale: 0.97 } : undefined}
+          transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+        >
           <CompassRing />
-          <div className="wind-compass-needle" style={{ transform: `rotate(${spin.current.rotation}deg)` }}>
-            {/* Inner layer so the hover wiggle keyframes compose with the inline rotation. */}
+          <motion.div
+            className="wind-compass-needle"
+            animate={{ rotate: spin.current.rotation }}
+            transition={needleTransition}
+          >
+            {/* Inner layer so the hover wiggle keyframes compose with the live rotation. */}
             <div className="wind-needle-wiggle">
               <CompassNeedle />
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
         <div className="mx-footline">
           Force {force} · <b>{beaufortLabel}</b>
         </div>

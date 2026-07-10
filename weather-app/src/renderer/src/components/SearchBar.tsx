@@ -1,11 +1,9 @@
 import { useEffect, useId, useRef, type CSSProperties } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useWeatherStore } from '../store/useWeatherStore'
 import { useListNav } from '../hooks/useListNav'
-import { useDelayedUnmount } from '../hooks/useDelayedUnmount'
 import { useListHighlightThumb } from '../hooks/useListHighlightThumb'
 import type { GeoLocation } from '../types/weather'
-
-const EXIT_MS = 160
 
 function SearchIcon(): JSX.Element {
   return (
@@ -44,7 +42,6 @@ export function SearchBar(): JSX.Element {
   }, [clearSearch])
 
   const showResults = searchQuery.trim().length >= 2
-  const mounted = useDelayedUnmount(showResults, EXIT_MS)
 
   const handleSelect = (result: GeoLocation): void => {
     void selectLocation(result)
@@ -86,53 +83,62 @@ export function SearchBar(): JSX.Element {
           Ctrl K
         </span>
       </div>
-      {mounted && (
-        <div
-          className={
-            `search-results${showResults ? '' : ' is-closing'}` +
-            (thumbReady ? ' list-thumb-ready' : '')
-          }
-          id={listboxId}
-          role="listbox"
-          aria-label="City search results"
-          ref={resultsRef}
-        >
-          {searchError !== null ? (
-            <div className="search-empty">Search unavailable — check your connection</div>
-          ) : isSearching && searchResults.length === 0 ? (
-            <div className="search-empty">Searching...</div>
-          ) : !isSearching && searchResults.length === 0 ? (
-            <div className="search-empty">No matches found</div>
-          ) : (
-            <>
-              <span
-                className="list-nav-thumb"
-                style={{ top: `${thumbTop}px`, height: `${thumbHeight}px` }}
-                aria-hidden="true"
-              />
-              {searchResults.map((result, index) => (
-                <button
-                  type="button"
-                  id={`${listboxId}-option-${index}`}
-                  role="option"
-                  aria-selected={index === highlightedIndex}
-                  className={`search-result-item${index === highlightedIndex ? ' is-highlighted' : ''}`}
-                  key={`${result.name}-${result.latitude}-${result.longitude}`}
-                  data-nav-index={index}
-                  style={{ '--row-i': index } as CSSProperties}
-                  onClick={() => handleSelect(result)}
-                >
-                  <span className="search-result-name">{result.name}</span>
-                  <span className="search-result-meta">
-                    {result.admin1 ? `${result.admin1}, ` : ''}
-                    {result.country}
-                  </span>
-                </button>
-              ))}
-            </>
-          )}
-        </div>
-      )}
+      <AnimatePresence>
+        {showResults && (
+          <motion.div
+            className={`search-results${thumbReady ? ' list-thumb-ready' : ''}`}
+            id={listboxId}
+            role="listbox"
+            aria-label="City search results"
+            ref={resultsRef}
+            initial={{ opacity: 0, scale: 0.96, y: -8, filter: 'blur(6px)' }}
+            animate={{ opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }}
+            exit={{ opacity: 0, scale: 0.97, y: -4, filter: 'blur(4px)', transition: { duration: 0.15 } }}
+            transition={{ type: 'spring', stiffness: 340, damping: 28 }}
+          >
+            {searchError !== null ? (
+              <div className="search-empty">Search unavailable — check your connection</div>
+            ) : isSearching && searchResults.length === 0 ? (
+              <div className="search-empty">Searching...</div>
+            ) : !isSearching && searchResults.length === 0 ? (
+              <div className="search-empty">No matches found</div>
+            ) : (
+              <>
+                <motion.span
+                  className="list-nav-thumb"
+                  animate={{ top: thumbTop, height: thumbHeight }}
+                  transition={thumbReady ? { type: 'spring', stiffness: 420, damping: 34 } : { duration: 0 }}
+                  aria-hidden="true"
+                />
+                {searchResults.map((result, index) => (
+                  <motion.button
+                    type="button"
+                    id={`${listboxId}-option-${index}`}
+                    role="option"
+                    aria-selected={index === highlightedIndex}
+                    className={`search-result-item${index === highlightedIndex ? ' is-highlighted' : ''}`}
+                    key={`${result.name}-${result.latitude}-${result.longitude}`}
+                    data-nav-index={index}
+                    style={{ '--row-i': index } as CSSProperties}
+                    onClick={() => handleSelect(result)}
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.26, delay: 0.06 + index * 0.024, ease: [0.16, 1, 0.3, 1] }}
+                    whileHover={{ x: 3 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <span className="search-result-name">{result.name}</span>
+                    <span className="search-result-meta">
+                      {result.admin1 ? `${result.admin1}, ` : ''}
+                      {result.country}
+                    </span>
+                  </motion.button>
+                ))}
+              </>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

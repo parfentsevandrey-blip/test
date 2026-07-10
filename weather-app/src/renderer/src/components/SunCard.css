@@ -54,9 +54,16 @@
   font-weight: 500;
   line-height: 1.06;
   letter-spacing: -0.01em;
-  color: var(--text-primary);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  /* Gradient-text hero treatment, matching the app's other headline numerals.
+     win95 resets this to a flat --text-primary fill below since
+     --gradient-text-hero resolves to `none` there and transparent text over
+     no background would vanish. */
+  background: var(--gradient-text-hero);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 /* ---------- Day arc (SVG scales to whatever height is left) ---------- */
@@ -90,6 +97,13 @@
   transition: stroke-dasharray 0.6s var(--ease-out);
 }
 
+/* Non-retro progress arc is drawn in by Framer Motion (spring-driven
+   stroke-dashoffset in SunCard.tsx) instead of the CSS transition above,
+   which stays reserved for win95's plain-attribute variant. */
+.sun-path-progress-motion {
+  transition: none;
+}
+
 /* Warm sunrise-to-sunset gradient for the progress stroke. Stop colors
    live here (not as attributes) so they track the active theme's tokens. */
 .sun-path-grad-from {
@@ -109,33 +123,78 @@
 
 /* ---------- Sun / moon markers ---------- */
 
+/* Non-retro markers are spring-driven by Framer Motion (SunCard.tsx animates
+   cx/cy directly), so this modifier kills the legacy CSS transition below
+   and switches on a proper transform box/origin so whileHover/whileTap scale
+   nudges and the halo pulse pivot around each circle's own center rather
+   than the svg viewport origin. win95 never gets this class -- its plain
+   circles keep the CSS transition beneath untouched. */
+.sun-path-marker-motion {
+  transition: none;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
 .sun-path-sun-halo {
   fill: var(--accent-glow);
   transform-box: fill-box;
   transform-origin: center;
   transition: cx 0.6s var(--ease-out), cy 0.6s var(--ease-out);
+  /* Warm gold bloom -- a two-layer drop-shadow since box-shadow doesn't
+     apply to SVG shapes. */
+  filter:
+    drop-shadow(0 0 4px var(--accent-strong))
+    drop-shadow(0 0 11px color-mix(in srgb, var(--accent) 65%, transparent));
+  animation: sun-halo-pulse 3.2s ease-in-out infinite;
 }
 
-/* Hover micro-interaction: the sun's halo breathes while the card is hot. */
+/* Hover micro-interaction: the sun's halo breathes faster while the card is hot. */
 .bento-card:hover .sun-path-sun-halo {
-  animation: sun-halo-breathe 2s ease-in-out infinite;
+  animation-duration: 1.5s;
 }
 
-@keyframes sun-halo-breathe {
+@keyframes sun-halo-pulse {
   0%,
   100% {
     transform: scale(1);
-    opacity: 1;
+    opacity: 0.85;
   }
   50% {
     transform: scale(1.4);
-    opacity: 0.55;
+    opacity: 0.4;
   }
 }
 
 .sun-path-sun-core {
   fill: var(--accent-strong);
   transition: cx 0.6s var(--ease-out), cy 0.6s var(--ease-out);
+  filter: drop-shadow(0 0 3px var(--accent-strong));
+}
+
+/* Cool silver-blue bloom behind the moon marker, mirroring the sun's halo. */
+.sun-path-moon-halo {
+  fill: color-mix(in srgb, var(--info) 50%, transparent);
+  transition: cx 0.6s var(--ease-out), cy 0.6s var(--ease-out);
+  filter:
+    drop-shadow(0 0 4px var(--info))
+    drop-shadow(0 0 10px color-mix(in srgb, var(--info) 55%, transparent));
+  animation: moon-halo-pulse 4.2s ease-in-out infinite;
+}
+
+.bento-card:hover .sun-path-moon-halo {
+  animation-duration: 2.1s;
+}
+
+@keyframes moon-halo-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.75;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.35;
+  }
 }
 
 /* Real crescent/gibbous silhouette: two same-radius discs (one lit, one
@@ -150,6 +209,7 @@
   fill: var(--info);
   opacity: 0.9;
   transition: cx 0.6s var(--ease-out), cy 0.6s var(--ease-out);
+  filter: drop-shadow(0 0 3px var(--info));
 }
 
 .sun-path-moon-clip {
@@ -203,7 +263,15 @@
 /* ---------- Motion & theme degradations ---------- */
 
 @media (prefers-reduced-motion: reduce) {
-  .bento-card:hover .sun-path-sun-halo {
+  /* The looping halo breathe is real (repeating) motion -- kill it. The
+     glow itself (the drop-shadow filter, a static color effect) stays. */
+  .sun-path-sun-halo,
+  .sun-path-moon-halo {
+    animation: none;
+  }
+
+  .bento-card:hover .sun-path-sun-halo,
+  .bento-card:hover .sun-path-moon-halo {
     animation: none;
   }
 
@@ -217,9 +285,23 @@
   }
 }
 
-/* Win95 kills all card motion elsewhere; the halo follows suit. */
-[data-theme='win95'] .bento-card:hover .sun-path-sun-halo {
+/* Win95 kills all card motion elsewhere; the halo follows suit. Also strips
+   the new glow/gradient additions entirely -- flat, bevelled, instant is the
+   rule for this theme, no bloom, no gradient text. */
+[data-theme='win95'] .bento-card:hover .sun-path-sun-halo,
+[data-theme='win95'] .bento-card:hover .sun-path-moon-halo {
   animation: none;
+}
+
+[data-theme='win95'] .sun-path-sun-halo,
+[data-theme='win95'] .sun-path-moon-halo {
+  animation: none;
+  filter: none;
+}
+
+[data-theme='win95'] .sun-path-sun-core,
+[data-theme='win95'] .sun-path-moon-lit {
+  filter: none;
 }
 
 [data-theme='win95'] .sun-path-sun-halo,
@@ -228,4 +310,12 @@
 [data-theme='win95'] .sun-path-moon-lit,
 [data-theme='win95'] .sun-path-moon-clip {
   transition: none;
+}
+
+/* Gradient-text hero reset: flat, opaque, no clip trick. */
+[data-theme='win95'] .sun-path-countdown-value {
+  background: none;
+  -webkit-background-clip: unset;
+  background-clip: unset;
+  color: var(--text-primary);
 }

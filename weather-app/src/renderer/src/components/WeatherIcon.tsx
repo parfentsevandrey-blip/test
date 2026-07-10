@@ -1,3 +1,5 @@
+import { AnimatePresence, motion } from 'framer-motion'
+import { resolveTheme, useWeatherStore } from '../store/useWeatherStore'
 import type { WeatherCondition } from '../utils/weatherCondition'
 
 interface WeatherIconProps {
@@ -208,19 +210,78 @@ function Glyph({ condition, isDay }: { condition: WeatherCondition; isDay: boole
   }
 }
 
+/** A condition-colored glow, reusing the same theme accent/info/uv-extreme
+ *  tokens the rest of the app draws from rather than inventing new hues. */
+function getGlowColor(condition: WeatherCondition, isDay: boolean): string {
+  switch (condition) {
+    case 'clear':
+    case 'partly-cloudy':
+      return isDay ? 'var(--accent-strong)' : 'var(--info)'
+    case 'fog':
+      return 'color-mix(in srgb, var(--text-tertiary) 50%, white)'
+    case 'snow':
+      return 'color-mix(in srgb, var(--info) 55%, white)'
+    case 'thunderstorm':
+      return 'var(--uv-extreme)'
+    case 'cloudy':
+    case 'drizzle':
+    case 'rain':
+    default:
+      return 'var(--info)'
+  }
+}
+
+const GLOW_MIN_PX = 4
+const GLOW_MAX_PX = 10
+
 export function WeatherIcon({ condition, isDay, className }: WeatherIconProps): JSX.Element {
   const props = {
     ...SVG_PROPS,
     className: className ? `weather-icon-glyph ${className}` : 'weather-icon-glyph'
   }
+  const theme = useWeatherStore((s) => s.theme)
+  const weather = useWeatherStore((s) => s.weather)
+  const isRetro = resolveTheme(theme, weather) === 'win95'
 
-  // Keying on condition+isDay forces a fresh <svg> node (and therefore a
-  // replayed CSS entrance animation, see .weather-icon-glyph) only when the
-  // actual glyph changes -- an unrelated re-render (new temperature, tick of
-  // the clock) reuses the same node and stays silent.
+  // win95 keeps the original plain behavior: keying on condition+isDay forces
+  // a fresh <svg> node so the glyph swaps instantly with no animation, no glow
+  // -- Windows 95 icons never breathed or morphed.
+  if (isRetro) {
+    return (
+      <svg key={`${condition}:${isDay}`} {...props}>
+        <Glyph condition={condition} isDay={isDay} />
+      </svg>
+    )
+  }
+
+  const glowColor = getGlowColor(condition, isDay)
+
   return (
-    <svg key={`${condition}:${isDay}`} {...props}>
-      <Glyph condition={condition} isDay={isDay} />
-    </svg>
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.svg
+        key={`${condition}:${isDay}`}
+        {...props}
+        initial={{ opacity: 0, scale: 0.65, rotate: -10 }}
+        animate={{
+          opacity: 1,
+          scale: 1,
+          rotate: 0,
+          filter: [
+            `drop-shadow(0 0 ${GLOW_MIN_PX}px ${glowColor})`,
+            `drop-shadow(0 0 ${GLOW_MAX_PX}px ${glowColor})`,
+            `drop-shadow(0 0 ${GLOW_MIN_PX}px ${glowColor})`
+          ]
+        }}
+        exit={{ opacity: 0, scale: 0.65, rotate: 10, transition: { duration: 0.15 } }}
+        transition={{
+          opacity: { duration: 0.3 },
+          scale: { type: 'spring', stiffness: 300, damping: 15 },
+          rotate: { type: 'spring', stiffness: 300, damping: 15 },
+          filter: { duration: 3.2, repeat: Infinity, ease: 'easeInOut' }
+        }}
+      >
+        <Glyph condition={condition} isDay={isDay} />
+      </motion.svg>
+    </AnimatePresence>
   )
 }

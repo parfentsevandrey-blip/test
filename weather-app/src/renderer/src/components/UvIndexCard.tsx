@@ -1,4 +1,6 @@
-import { useWeatherStore } from '../store/useWeatherStore'
+import type { CSSProperties } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
+import { resolveTheme, useWeatherStore } from '../store/useWeatherStore'
 import { BentoCard } from './BentoCard'
 import { SunBurstIcon } from './icons'
 import { clamp01 } from '../utils/math'
@@ -38,6 +40,10 @@ function uvHint(uv: number): string {
 
 export function UvIndexCard(): JSX.Element | null {
   const weather = useWeatherStore((s) => s.weather)
+  const theme = useWeatherStore((s) => s.theme)
+  const isRetro = resolveTheme(theme, weather) === 'win95'
+  const prefersReducedMotion = useReducedMotion()
+  const motionOn = !isRetro && !prefersReducedMotion
 
   // Hook runs unconditionally (before the null guard) to satisfy hook rules.
   const targetUv = weather?.current.uvIndex != null ? Math.round(weather.current.uvIndex) : 0
@@ -49,6 +55,7 @@ export function UvIndexCard(): JSX.Element | null {
   const rounded = uv !== null ? Math.round(uv) : null
   const severity = rounded !== null ? uvSeverity(rounded) : null
   const shownUv = rounded !== null ? Math.round(animatedUv) : null
+  const markerTransition = motionOn ? { type: 'spring' as const, stiffness: 100, damping: 18 } : { duration: 0 }
 
   /* 680px-window vertical budget (content ≈ 162px): header 16 + value 40 +
      sub 20 + hint ~17 + scale block ~33 (14 pad + 6 track + 13 end labels)
@@ -58,7 +65,14 @@ export function UvIndexCard(): JSX.Element | null {
     <BentoCard span="bento-1" floatDelay={1}>
       <div className="metric-card">
         <div className="metric-header">
-          <SunBurstIcon />
+          <motion.span
+            className="mx-icon"
+            whileHover={motionOn ? { scale: 1.18, rotate: 24, filter: 'drop-shadow(0 0 6px var(--accent))' } : undefined}
+            whileTap={motionOn ? { scale: 0.9 } : undefined}
+            transition={{ type: 'spring', stiffness: 380, damping: 14 }}
+          >
+            <SunBurstIcon />
+          </motion.span>
           <span className="metric-label">UV Index</span>
         </div>
         <div className="metric-value">{shownUv ?? '—'}</div>
@@ -72,8 +86,13 @@ export function UvIndexCard(): JSX.Element | null {
               <span key={tick} className="uv-tick" style={{ left: `${(tick / UV_MAX) * 100}%` }} />
             ))}
           </div>
-          {rounded !== null && (
-            <div className="uv-scale-marker" style={{ left: `${clamp01(rounded / UV_MAX) * 100}%` }} />
+          {rounded !== null && severity !== null && (
+            <motion.div
+              className="uv-scale-marker"
+              style={{ '--uv-marker-glow': severity.color } as CSSProperties}
+              animate={{ left: `${clamp01(rounded / UV_MAX) * 100}%` }}
+              transition={markerTransition}
+            />
           )}
           <div className="uv-scale-labels" aria-hidden="true">
             <span>0</span>

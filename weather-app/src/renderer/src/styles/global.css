@@ -5,19 +5,20 @@
 :root {
   color-scheme: light;
 
-  /* Matte editorial: solid opaque panels on warm paper, hairline borders, one
-     quiet two-layer shadow (contact + soft ambient — never a glow), tight
-     radii. Surfaces sit ON the page, not floating in frosted fog. */
+  /* Maximalist glass-editorial: real frosted depth, hairline borders lit warm
+     by the accent, a floating shadow that carries an actual color bloom.
+     Surfaces float in frosted light over the scene, not flat on the page. */
   --bg-page: #eae6dd;
 
-  --glass-bg: #faf9f5;
-  --glass-bg-strong: #ffffff;
+  --glass-bg: rgba(250, 249, 245, 0.6);
+  --glass-bg-strong: rgba(255, 255, 255, 0.74);
   --glass-border: rgba(30, 27, 22, 0.11);
   --glass-border-soft: rgba(30, 27, 22, 0.06);
-  --glass-blur: none;
+  --glass-blur: blur(24px) saturate(165%);
   --glass-shadow:
     0 1px 2px rgba(30, 27, 22, 0.04),
-    0 10px 24px -14px rgba(30, 27, 22, 0.18);
+    0 10px 24px -14px rgba(30, 27, 22, 0.18),
+    0 0 50px -22px color-mix(in srgb, var(--accent) 26%, transparent);
 
   --text-primary: #1c1a16;
   --text-secondary: rgba(28, 26, 22, 0.68);
@@ -67,23 +68,45 @@
   --dur-press: 100ms;
   --dur-release: 320ms;
   --dur-theme-crossfade: 420ms;
+
+  /*
+   * Maximalist glow/gradient vocabulary. Defined once here (not per-theme)
+   * and built entirely from color-mix() against each theme's own
+   * --accent/--accent-strong/--info/--danger -- so a single definition
+   * automatically re-tints correctly under dark/tuscany too. win95 resets
+   * every one of these to flat/none below so the retro theme stays untouched.
+   */
+  --glow-soft:
+    0 0 32px -8px color-mix(in srgb, var(--accent) 55%, transparent),
+    0 0 64px -20px color-mix(in srgb, var(--accent-strong) 40%, transparent);
+  --glow-strong:
+    0 0 48px -6px color-mix(in srgb, var(--accent) 70%, transparent),
+    0 0 120px -24px color-mix(in srgb, var(--accent-strong) 55%, transparent);
+  --glow-border: color-mix(in srgb, var(--accent) 45%, var(--glass-border));
+  --gradient-text-hero: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
+  --mesh-gradient:
+    radial-gradient(at 15% 20%, color-mix(in srgb, var(--accent) 38%, transparent) 0%, transparent 55%),
+    radial-gradient(at 85% 10%, color-mix(in srgb, var(--info) 32%, transparent) 0%, transparent 50%),
+    radial-gradient(at 90% 90%, color-mix(in srgb, var(--accent-strong) 34%, transparent) 0%, transparent 55%),
+    radial-gradient(at 10% 95%, color-mix(in srgb, var(--danger) 20%, transparent) 0%, transparent 50%);
 }
 
 [data-theme='dark'] {
   color-scheme: dark;
 
-  /* Warm graphite, not pure black and never blue-glow: a lit interior at dusk,
-     matte and expensive. Panels separate by value + hairline, not by blur. */
+  /* Warm graphite lit from within at dusk -- panels are frosted glass over a
+     glowing interior now, separating by blur + a real accent-tinted bloom. */
   --bg-page: #0f0e0c;
 
-  --glass-bg: #1a1917;
-  --glass-bg-strong: #211f1c;
+  --glass-bg: rgba(26, 25, 23, 0.52);
+  --glass-bg-strong: rgba(33, 31, 28, 0.66);
   --glass-border: rgba(255, 250, 242, 0.09);
   --glass-border-soft: rgba(255, 250, 242, 0.05);
-  --glass-blur: none;
+  --glass-blur: blur(26px) saturate(150%);
   --glass-shadow:
     0 1px 2px rgba(0, 0, 0, 0.45),
-    0 12px 28px -16px rgba(0, 0, 0, 0.62);
+    0 12px 28px -16px rgba(0, 0, 0, 0.62),
+    0 0 60px -20px color-mix(in srgb, var(--accent) 22%, transparent);
 
   --text-primary: rgba(245, 243, 238, 0.95);
   --text-secondary: rgba(245, 243, 238, 0.68);
@@ -113,17 +136,19 @@
   color-scheme: light;
 
   /* Sun-warmed plaster: terracotta, sun-baked ochre and cypress olive on warm
-     cream stone — a curated Mediterranean villa, matte and quietly luxurious. */
+     cream stone -- a curated Mediterranean villa, glowing gold in frosted
+     glass rather than sitting flat on the page. */
   --bg-page: #e7dcc6;
 
-  --glass-bg: #f3ebd9;
-  --glass-bg-strong: #f8f2e4;
+  --glass-bg: rgba(243, 235, 217, 0.62);
+  --glass-bg-strong: rgba(248, 242, 228, 0.76);
   --glass-border: rgba(94, 66, 41, 0.15);
   --glass-border-soft: rgba(94, 66, 41, 0.08);
-  --glass-blur: none;
+  --glass-blur: blur(24px) saturate(170%);
   --glass-shadow:
     0 1px 2px rgba(74, 52, 30, 0.05),
-    0 10px 24px -14px rgba(74, 52, 30, 0.2);
+    0 10px 24px -14px rgba(74, 52, 30, 0.2),
+    0 0 50px -22px color-mix(in srgb, var(--accent) 28%, transparent);
 
   --text-primary: #3a2c1e;
   --text-secondary: rgba(58, 44, 30, 0.7);
@@ -227,6 +252,20 @@ input {
   width: 100%;
   height: 100%;
   z-index: 0;
+}
+
+/* Sits between the 3D scene and the UI overlay (same z-index as the canvas,
+   but later in the DOM so it paints above it) -- a slow-drifting colored wash
+   every translucent glass card now shows through. Not rendered at all for
+   win95 (see App.tsx), which has no glass/blur to show it through anyway. */
+.gradient-mesh {
+  position: absolute;
+  inset: -20%;
+  z-index: 0;
+  background: var(--mesh-gradient);
+  filter: blur(70px);
+  opacity: 0.6;
+  pointer-events: none;
 }
 
 .ui-overlay {
@@ -569,6 +608,8 @@ input {
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--glass-shadow);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
 }
 
 /* The glossy top-edge sheen (.glass-panel::before) is retired — matte panels
@@ -579,62 +620,16 @@ input {
   position: relative;
   overflow: hidden;
   min-height: 0;
-  scale: 1;
-  /* Hover tilt: driven by --tilt-x/--tilt-y set from the cursor position. */
-  transform: perspective(950px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
-  /* Entrance cascade first (rise + de-blur, staggered per card), then the
-     idle float takes over the `translate` channel once the entrance ends. */
-  animation:
-    bento-enter 0.85s var(--ease-out) both calc(var(--stagger, 0s) * 0.5 + 0.05s),
-    bento-float 8s ease-in-out infinite calc(var(--stagger, 0s) * 0.5 + 0.95s);
-  transition:
-    transform 0.3s var(--ease-out),
-    scale 0.6s var(--ease-out),
-    box-shadow 0.6s var(--ease-out),
-    border-color 0.6s var(--ease-out);
+  /* Entrance, idle float, hover tilt/lift and press are all owned by Framer
+     Motion now (BentoCard.tsx) -- this class is pure layout. Hover's glow
+     border/shadow stay declarative CSS since they don't fight FM's transform. */
+  transition: box-shadow 0.28s var(--ease-out), border-color 0.28s var(--ease-out);
 }
 
-@keyframes bento-enter {
-  from {
-    opacity: 0;
-    translate: 0 26px;
-    filter: blur(7px);
-  }
-  to {
-    opacity: 1;
-    translate: 0 0;
-    filter: blur(0);
-  }
-}
-
-/*
- * The idle float animates the standalone `translate` property while hover
- * drives only `scale` -- they compose independently, so the float keeps
- * running smoothly through hover with no snap.
- */
-/* Asymmetric hover: a springy quick ENTRY (declared on the :hover rule
-   itself, so it only governs the transition INTO hover) while the base
-   .bento-card transition above (0.6s ease-out) is left untouched and takes
-   back over the moment :hover stops matching, giving a calm decelerate EXIT.
-   `transform` (the JS-driven continuous tilt channel) is deliberately
-   excluded here so it never fights live mousemove updates. */
 .bento-card:hover {
-  scale: 1.018;
-  border-color: color-mix(in srgb, var(--accent) 40%, var(--glass-border));
-  box-shadow:
-    0 2px 4px rgba(30, 27, 22, 0.06),
-    0 18px 36px -18px rgba(30, 27, 22, 0.26);
+  border-color: var(--glow-border);
+  box-shadow: var(--glow-soft), var(--glass-shadow);
   z-index: 3;
-  transition:
-    scale 0.32s var(--ease-spring),
-    box-shadow 0.28s var(--ease-out),
-    border-color 0.28s var(--ease-out);
-}
-
-[data-theme='dark'] .bento-card:hover {
-  box-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.5),
-    0 18px 40px -18px rgba(0, 0, 0, 0.68);
 }
 
 .bento-card-content {
@@ -646,25 +641,14 @@ input {
   min-height: 0;
 }
 
-@keyframes bento-float {
-  0%,
-  100% {
-    translate: 0 0;
-  }
-  50% {
-    translate: 0 -5px;
-  }
+/* win95 renders BentoCard as a plain (non-motion) div with none of the above --
+   this just protects the retro bevel look from the glow hover rule above. */
+[data-theme='win95'] .bento-card:hover {
+  box-shadow: var(--bevel-out);
+  z-index: auto;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bento-card,
-  .bento-card:hover {
-    animation: none;
-    transform: none;
-    transition: none;
-    scale: 1;
-  }
-
   .bento-card:hover .card-title svg {
     transition: none;
     transform: none;
@@ -745,7 +729,7 @@ input {
   box-shadow: var(--glass-shadow);
   --menu-scale-from: 0.97;
   transform-origin: top center;
-  animation: menu-in 0.3s var(--ease-spring) both;
+  /* Entrance/exit are now owned by Framer Motion (SearchBar.tsx's AnimatePresence). */
 }
 
 .search-result-item {
@@ -757,9 +741,7 @@ input {
   padding: 9px 12px;
   border-radius: var(--radius-sm);
   transition: background-color 0.15s var(--ease-out), scale 0.26s var(--ease-spring);
-  opacity: 0;
-  animation: menu-item-in 0.26s var(--ease-out) both;
-  animation-delay: calc(60ms + var(--row-i, 0) * 24ms);
+  /* Staggered entrance is now Framer Motion (SearchBar.tsx), keyed off the same --row-i. */
 }
 
 .search-result-item:hover,
@@ -1360,35 +1342,10 @@ input {
   }
 }
 
-/* Shared weather-condition-glyph pop-in — WeatherIcon gives its <svg> a fresh
-   key (and therefore a fresh DOM node) whenever condition/isDay actually
-   change, so this animation only plays on a real condition change, never on
-   an unrelated re-render. One rule covers the hero icon, hourly cells and
-   daily rows since they all render through the same component. */
-.weather-icon-glyph {
-  animation: weather-icon-pop 0.4s var(--ease-spring) both;
-}
-
-@keyframes weather-icon-pop {
-  from {
-    opacity: 0;
-    scale: 0.7;
-  }
-  to {
-    opacity: 1;
-    scale: 1;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .weather-icon-glyph {
-    animation: none;
-  }
-}
-
-[data-theme='win95'] .weather-icon-glyph {
-  animation: none;
-}
+/* Shared weather-condition-glyph entrance/exit + glow pulse are now owned by
+   Framer Motion (WeatherIcon.tsx's AnimatePresence + motion.svg) for every
+   theme except win95, which stays a plain instantly-swapped <svg> with no
+   animation at all -- see WeatherIcon.tsx's isRetro branch. */
 
 @keyframes fade-in {
   from {
@@ -1505,6 +1462,15 @@ input {
   --scrim: rgba(0, 128, 128, 0.55);
   --track: #9c9c9c;
 
+  /* The maximalist glow/gradient vocabulary is explicitly switched off here --
+     Windows 95 never had frosted glass or bloom, and every component below
+     is written to gate its glow/gradient/blur additions behind this reset. */
+  --glow-soft: none;
+  --glow-strong: none;
+  --glow-border: var(--glass-border);
+  --gradient-text-hero: none;
+  --mesh-gradient: none;
+
   --radius-sm: 0px;
   --radius-md: 0px;
   --radius-lg: 0px;
@@ -1549,14 +1515,8 @@ input {
   display: none;
 }
 
-[data-theme='win95'] .bento-card,
-[data-theme='win95'] .bento-card:hover {
-  animation: none;
-  transform: none;
-  scale: 1;
-  transition: none;
+[data-theme='win95'] .bento-card {
   box-shadow: var(--bevel-out);
-  z-index: auto;
 }
 
 /* ---------- Card headers become navy title bars ---------- */

@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { motion } from 'framer-motion'
 import { useWeatherStore, type ThemePreference } from '../store/useWeatherStore'
 import { useSegThumb } from '../hooks/useSegThumb'
 
@@ -75,7 +76,12 @@ export function ThemeToggle(): JSX.Element {
       aria-label="Theme"
       ref={pillRef}
     >
-      <span className="seg-thumb" style={{ left: `${left}px`, width: `${width}px` }} aria-hidden="true" />
+      <motion.span
+        className="seg-thumb"
+        animate={{ left, width }}
+        transition={ready ? { type: 'spring', stiffness: 420, damping: 34 } : { duration: 0 }}
+        aria-hidden="true"
+      />
       {OPTIONS.map((option) => (
         <button
           key={option.value}

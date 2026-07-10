@@ -24,12 +24,17 @@
    ============================================================ */
 
 /* Scroll container: bleeds to the card edges with the same
-   negative-margin trick as .hourly-scroll in global.css. */
+   negative-margin trick as .hourly-scroll in global.css.
+   Overflow is hidden by default because the strip itself is now driven by a
+   Framer Motion drag="x" transform (see .hf-strip) instead of native
+   scrollLeft -- wheel and keyboard input are re-wired in HourlyForecast.tsx
+   to move the same transform. Win95 has no drag/transform at all, so it
+   gets its native overflow-x scrolling back further down this file. */
 .hf-scroll {
   flex: 1;
   min-height: 0;
   display: flex;
-  overflow-x: auto;
+  overflow-x: hidden;
   overflow-y: hidden;
   margin: 0 calc(-1 * clamp(14px, 1.6vw, 24px));
   padding: 0 clamp(14px, 1.6vw, 24px);
@@ -57,7 +62,9 @@
   box-shadow: inset 0 0 0 2px var(--accent-glow);
 }
 
-/* The single continuous block that scrolls (width set inline = 24 columns). */
+/* The single continuous block that scrolls (width set inline = 24 columns).
+   Non-retro: this is a Framer Motion drag="x" target, so it gets a
+   grab/grabbing cursor to signal the tactile drag-to-scroll affordance. */
 .hf-strip {
   position: relative;
   flex: 0 0 auto;
@@ -68,19 +75,53 @@
   height: 100%;
   min-height: 0;
   padding-bottom: 2px;
+  cursor: grab;
+  touch-action: pan-y;
+}
+
+.hf-strip:active {
+  cursor: grabbing;
+}
+
+[data-theme='win95'] .hf-strip {
+  cursor: default;
+  touch-action: auto;
 }
 
 /* Full-height highlight pill behind the "Now" column
-   (same look as .hourly-item.is-now). */
+   (same look as .hourly-item.is-now), now with a breathing accent glow so
+   the current hour reads as unmistakably "alive" among the other 23. */
 .hf-now-highlight {
   position: absolute;
   top: 0;
   bottom: 2px;
   border-radius: var(--radius-md);
   background: var(--accent-glow);
-  border: 1px solid var(--accent-glow);
+  border: 1px solid var(--glow-border);
+  box-shadow: var(--glow-soft);
   opacity: 0.5;
   pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hf-now-highlight {
+    animation: hf-now-glow 3.4s ease-in-out infinite;
+  }
+}
+
+@keyframes hf-now-glow {
+  0%,
+  100% {
+    box-shadow: var(--glow-soft);
+  }
+  50% {
+    box-shadow: var(--glow-strong);
+  }
+}
+
+[data-theme='win95'] .hf-now-highlight {
+  box-shadow: none;
+  animation: none;
 }
 
 /* Neutral sibling of the Now pill: tracks the hovered column, gliding
@@ -125,8 +166,18 @@
 }
 
 .hf-cell.is-now .hf-time {
-  color: var(--text-secondary);
   font-weight: 600;
+  background: var(--gradient-text-hero);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+[data-theme='win95'] .hf-cell.is-now .hf-time {
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  color: var(--text-secondary);
 }
 
 .hf-icon {
@@ -137,6 +188,11 @@
 
 .hf-cell.is-now .hf-icon {
   color: var(--accent);
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--accent) 60%, transparent));
+}
+
+[data-theme='win95'] .hf-cell.is-now .hf-icon {
+  filter: none;
 }
 
 .hf-temp {
@@ -270,7 +326,6 @@
   pointer-events: none;
   z-index: 2;
   transform-origin: 50% 100%;
-  animation: hf-tip-in 0.24s var(--ease-spring-soft) both;
 }
 
 .hf-tooltip.is-left {
@@ -281,22 +336,6 @@
 .hf-tooltip.is-right {
   translate: -100% 0;
   transform-origin: 100% 100%;
-}
-
-@keyframes hf-tip-in {
-  from {
-    opacity: 0;
-    scale: 0.86;
-    transform: translateY(4px);
-  }
-  60% {
-    opacity: 1;
-  }
-  to {
-    opacity: 1;
-    scale: 1;
-    transform: translateY(0);
-  }
 }
 
 .hf-tooltip-main {

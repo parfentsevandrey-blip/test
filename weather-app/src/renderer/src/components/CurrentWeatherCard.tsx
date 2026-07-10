@@ -1,6 +1,7 @@
 import './CurrentWeatherCard.css'
-import { useEffect, useMemo, useState } from 'react'
-import { useWeatherStore } from '../store/useWeatherStore'
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { AnimatePresence, motion, useAnimation, useReducedMotion } from 'framer-motion'
+import { resolveTheme, useWeatherStore } from '../store/useWeatherStore'
 import { BentoCard } from './BentoCard'
 import { WeatherIcon } from './WeatherIcon'
 import { LocationPinIcon } from './icons'
@@ -9,6 +10,7 @@ import { celsiusTo, formatHour, formatTemperature } from '../utils/units'
 import { toAbsoluteInstant } from '../utils/time'
 import { useCountUp } from '../hooks/useCountUp'
 import type { TemperatureUnit, WeatherData } from '../types/weather'
+import type { WeatherCondition } from '../utils/weatherCondition'
 
 const STAT_ICON_PROPS = {
   viewBox: '0 0 24 24',
@@ -21,6 +23,7 @@ const STAT_ICON_PROPS = {
 }
 
 const HOUR_MS = 3_600_000
+const EASE_OUT = [0.16, 1, 0.3, 1] as const
 
 /** Stable-per-hour pick so phrasing varies across refreshes/days without flickering on every render. */
 function pick<T>(options: readonly T[], seed: number): T {
@@ -159,15 +162,74 @@ function buildInsight(weather: WeatherData, unit: TemperatureUnit): string {
   return pick(['Steady conditions for the next few hours', 'A quiet stretch of weather ahead'], hourSeed)
 }
 
+/** A condition-tinted ambient wash color for the hero backdrop — same spirit
+ *  as WeatherIcon's per-condition glow, but written locally (warm for clear
+ *  daylight, cool blue for rain/snow, violet for storms). */
+function conditionWashColor(condition: WeatherCondition, isDay: boolean): string {
+  switch (condition) {
+    case 'clear':
+      return isDay ? 'var(--accent-strong)' : 'var(--info)'
+    case 'partly-cloudy':
+      return isDay ? 'var(--accent)' : 'var(--info)'
+    case 'thunderstorm':
+      return 'var(--uv-extreme)'
+    case 'snow':
+      return 'color-mix(in srgb, var(--info) 60%, white)'
+    case 'fog':
+      return 'var(--text-tertiary)'
+    case 'cloudy':
+    case 'drizzle':
+    case 'rain':
+    default:
+      return 'var(--info)'
+  }
+}
+
+const STAT_CONTAINER_VARIANTS = {
+  hidden: {},
+  // delayChildren lands after BentoCard's own ~0.9s entrance settles, so the
+  // stat pills stagger in as a distinct second beat rather than fighting the
+  // card's own rise/de-blur for attention.
+  visible: { transition: { staggerChildren: 0.08, delayChildren: 0.55 } }
+}
+
 export function CurrentWeatherCard(): JSX.Element | null {
   const weather = useWeatherStore((s) => s.weather)
   const unit = useWeatherStore((s) => s.unit)
+  const theme = useWeatherStore((s) => s.theme)
+
+  const isRetro = resolveTheme(theme, weather) === 'win95'
+  const prefersReducedMotion = useReducedMotion()
 
   // Hooks run unconditionally (before the null guard) to satisfy hook rules.
   const cityClock = useCityClock(weather?.utcOffsetSeconds ?? 0)
   const targetTemp = weather ? Math.round(celsiusTo(unit, weather.current.temperature)) : 0
   const animatedTemp = useCountUp(targetTemp)
   const insight = useMemo(() => (weather ? buildInsight(weather, unit) : ''), [weather, unit])
+
+  // A brief spring "pop" + glow flash punctuates every settled temperature
+  // change (new data, unit toggle) on top of the continuous count-up, so the
+  // reading never just snaps — it rolls, then lands with a flourish.
+  const tempPop = useAnimation()
+  const prevTargetRef = useRef(targetTemp)
+  useEffect(() => {
+    if (isRetro || prefersReducedMotion) return
+    if (prevTargetRef.current === targetTemp) return
+    prevTargetRef.current = targetTemp
+    void tempPop.start({
+      scale: [1, 1.1, 1],
+      filter: [
+        'drop-shadow(0 0 0px transparent)',
+        'drop-shadow(0 0 24px var(--accent-glow))',
+        'drop-shadow(0 0 0px transparent)'
+      ],
+      transition: {
+        scale: { type: 'spring', stiffness: 300, damping: 11 },
+        filter: { duration: 0.7, ease: EASE_OUT }
+      }
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [targetTemp, isRetro, prefersReducedMotion])
 
   if (!weather) return null
 
@@ -194,16 +256,62 @@ export function CurrentWeatherCard(): JSX.Element | null {
   const numeralCh = Math.max(String(shownTemp).length, String(targetTemp).length)
   const unitLetter = unit === 'fahrenheit' ? 'F' : 'C'
 
+  // Movement distances collapse to 0 under prefers-reduced-motion — the
+  // crossfades still happen (opacity only), but nothing slides.
+  const slide = prefersReducedMotion ? 0 : 6
+  const washColor = conditionWashColor(condition, weather.current.isDay)
+
+  const statItemVariants = {
+    hidden: { opacity: 0, y: prefersReducedMotion ? 0 : 10 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: EASE_OUT } }
+  }
+  const statWhileHover = prefersReducedMotion ? undefined : { y: -3, scale: 1.05 }
+  const statWhileTap = prefersReducedMotion ? undefined : { scale: 0.95 }
+
   return (
     <BentoCard span="bento-hero">
       <div className="hero-current">
+        {!isRetro && (
+          <AnimatePresence>
+            <motion.div
+              key={`${condition}:${weather.current.isDay}`}
+              className="hero-condition-wash"
+              style={{ '--wash-color': washColor } as CSSProperties}
+              aria-hidden="true"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: prefersReducedMotion ? 0.36 : [0.24, 0.4, 0.24] }}
+              exit={{ opacity: 0, transition: { duration: 0.6 } }}
+              transition={
+                prefersReducedMotion
+                  ? { duration: 0.6 }
+                  : { opacity: { duration: 7, repeat: Infinity, ease: 'easeInOut' } }
+              }
+            />
+          </AnimatePresence>
+        )}
+
         <div className="card-title hero-title">
           <LocationPinIcon />
           Current Conditions
         </div>
 
         <div className="hero-place">
-          <div className="hero-place-name">{name}</div>
+          {isRetro ? (
+            <div className="hero-place-name">{name}</div>
+          ) : (
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={name}
+                className="hero-place-name"
+                initial={{ opacity: 0, y: -slide }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: slide }}
+                transition={{ duration: 0.35, ease: EASE_OUT }}
+              >
+                {name}
+              </motion.div>
+            </AnimatePresence>
+          )}
           {placeSub && <div className="hero-place-sub">{placeSub}</div>}
           <div className="hero-clock">
             <span className="hero-clock-dot" aria-hidden="true" />
@@ -221,13 +329,20 @@ export function CurrentWeatherCard(): JSX.Element | null {
             role="img"
             aria-label={`${targetTemp} degrees ${unit === 'fahrenheit' ? 'Fahrenheit' : 'Celsius'}`}
           >
-            <span
-              className="hero-temp-numeral"
-              style={{ minWidth: `${numeralCh}ch` }}
-              aria-hidden="true"
-            >
-              {shownTemp}
-            </span>
+            {isRetro ? (
+              <span className="hero-temp-numeral" style={{ minWidth: `${numeralCh}ch` }} aria-hidden="true">
+                {shownTemp}
+              </span>
+            ) : (
+              <motion.span
+                className="hero-temp-numeral"
+                style={{ minWidth: `${numeralCh}ch` }}
+                aria-hidden="true"
+                animate={tempPop}
+              >
+                {shownTemp}
+              </motion.span>
+            )}
             <span className="hero-temp-unit" aria-hidden="true">
               °{unitLetter}
             </span>
@@ -236,66 +351,149 @@ export function CurrentWeatherCard(): JSX.Element | null {
         </div>
 
         <div className="hero-cond-group">
-          <div className="hero-condition">{label}</div>
+          {isRetro ? (
+            <div className="hero-condition">{label}</div>
+          ) : (
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={label}
+                className="hero-condition"
+                initial={{ opacity: 0, y: -slide }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: slide }}
+                transition={{ duration: 0.3, ease: EASE_OUT }}
+              >
+                {label}
+              </motion.div>
+            </AnimatePresence>
+          )}
           <div className="hero-feels">
             Feels like {formatTemperature(weather.current.apparentTemperature, unit)}
           </div>
         </div>
 
         <div className="hero-footer">
-          <div className="hero-stats">
-            {today && (
-              <span
-                className="hero-stat hero-stat--high"
-                role="img"
-                aria-label={`Today's high ${formatTemperature(today.tempMax, unit)}`}
-              >
-                <svg {...STAT_ICON_PROPS}>
-                  <path d="M12 19V5" />
-                  <path d="m5 12 7-7 7 7" />
-                </svg>
-                <span className="hero-stat-value">{formatTemperature(today.tempMax, unit)}</span>
-              </span>
-            )}
-            {today && (
-              <span
-                className="hero-stat hero-stat--low"
-                role="img"
-                aria-label={`Today's low ${formatTemperature(today.tempMin, unit)}`}
-              >
-                <svg {...STAT_ICON_PROPS}>
-                  <path d="M12 5v14" />
-                  <path d="m19 12-7 7-7-7" />
-                </svg>
-                <span className="hero-stat-value">{formatTemperature(today.tempMin, unit)}</span>
-              </span>
-            )}
-            <span
-              className="hero-stat hero-stat--pressure"
-              role="img"
-              aria-label={trend ? `Pressure ${pressure}, ${trend}` : `Pressure ${pressure}`}
-            >
-              <svg {...STAT_ICON_PROPS}>
-                <path d="m12 14 4-4" />
-                <path d="M3.34 19a10 10 0 1 1 17.32 0" />
-              </svg>
-              <span className="hero-stat-value">{pressure}</span>
-              {trend && (
-                <svg
-                  className={`hero-stat-trend hero-stat-trend--${trend}`}
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2.6}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
+          {isRetro ? (
+            <div className="hero-stats">
+              {today && (
+                <span
+                  className="hero-stat hero-stat--high"
+                  role="img"
+                  aria-label={`Today's high ${formatTemperature(today.tempMax, unit)}`}
                 >
-                  {trend === 'steady' ? <path d="M5 12h14" /> : <path d="M6 15l6-6 6 6" />}
-                </svg>
+                  <svg {...STAT_ICON_PROPS}>
+                    <path d="M12 19V5" />
+                    <path d="m5 12 7-7 7 7" />
+                  </svg>
+                  <span className="hero-stat-value">{formatTemperature(today.tempMax, unit)}</span>
+                </span>
               )}
-            </span>
-          </div>
+              {today && (
+                <span
+                  className="hero-stat hero-stat--low"
+                  role="img"
+                  aria-label={`Today's low ${formatTemperature(today.tempMin, unit)}`}
+                >
+                  <svg {...STAT_ICON_PROPS}>
+                    <path d="M12 5v14" />
+                    <path d="m19 12-7 7-7-7" />
+                  </svg>
+                  <span className="hero-stat-value">{formatTemperature(today.tempMin, unit)}</span>
+                </span>
+              )}
+              <span
+                className="hero-stat hero-stat--pressure"
+                role="img"
+                aria-label={trend ? `Pressure ${pressure}, ${trend}` : `Pressure ${pressure}`}
+              >
+                <svg {...STAT_ICON_PROPS}>
+                  <path d="m12 14 4-4" />
+                  <path d="M3.34 19a10 10 0 1 1 17.32 0" />
+                </svg>
+                <span className="hero-stat-value">{pressure}</span>
+                {trend && (
+                  <svg
+                    className={`hero-stat-trend hero-stat-trend--${trend}`}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2.6}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    {trend === 'steady' ? <path d="M5 12h14" /> : <path d="M6 15l6-6 6 6" />}
+                  </svg>
+                )}
+              </span>
+            </div>
+          ) : (
+            <motion.div className="hero-stats" variants={STAT_CONTAINER_VARIANTS} initial="hidden" animate="visible">
+              {today && (
+                <motion.span
+                  className="hero-stat hero-stat--high"
+                  role="img"
+                  aria-label={`Today's high ${formatTemperature(today.tempMax, unit)}`}
+                  variants={statItemVariants}
+                  whileHover={statWhileHover}
+                  whileTap={statWhileTap}
+                  transition={{ type: 'spring', stiffness: 380, damping: 20 }}
+                >
+                  <svg {...STAT_ICON_PROPS}>
+                    <path d="M12 19V5" />
+                    <path d="m5 12 7-7 7 7" />
+                  </svg>
+                  <span className="hero-stat-value">{formatTemperature(today.tempMax, unit)}</span>
+                </motion.span>
+              )}
+              {today && (
+                <motion.span
+                  className="hero-stat hero-stat--low"
+                  role="img"
+                  aria-label={`Today's low ${formatTemperature(today.tempMin, unit)}`}
+                  variants={statItemVariants}
+                  whileHover={statWhileHover}
+                  whileTap={statWhileTap}
+                  transition={{ type: 'spring', stiffness: 380, damping: 20 }}
+                >
+                  <svg {...STAT_ICON_PROPS}>
+                    <path d="M12 5v14" />
+                    <path d="m19 12-7 7-7-7" />
+                  </svg>
+                  <span className="hero-stat-value">{formatTemperature(today.tempMin, unit)}</span>
+                </motion.span>
+              )}
+              <motion.span
+                className="hero-stat hero-stat--pressure"
+                role="img"
+                aria-label={trend ? `Pressure ${pressure}, ${trend}` : `Pressure ${pressure}`}
+                variants={statItemVariants}
+                whileHover={statWhileHover}
+                whileTap={statWhileTap}
+                transition={{ type: 'spring', stiffness: 380, damping: 20 }}
+              >
+                <svg {...STAT_ICON_PROPS}>
+                  <path d="m12 14 4-4" />
+                  <path d="M3.34 19a10 10 0 1 1 17.32 0" />
+                </svg>
+                <span className="hero-stat-value">{pressure}</span>
+                {trend && (
+                  <svg
+                    className={`hero-stat-trend hero-stat-trend--${trend}`}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2.6}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    {trend === 'steady' ? <path d="M5 12h14" /> : <path d="M6 15l6-6 6 6" />}
+                  </svg>
+                )}
+              </motion.span>
+            </motion.div>
+          )}
 
           <div className="hero-insight">
             <svg
@@ -309,7 +507,22 @@ export function CurrentWeatherCard(): JSX.Element | null {
             >
               <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
             </svg>
-            <span className="hero-insight-text">{insight}</span>
+            {isRetro ? (
+              <span className="hero-insight-text">{insight}</span>
+            ) : (
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={insight}
+                  className="hero-insight-text"
+                  initial={{ opacity: 0, y: slide }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -slide, transition: { duration: 0.2 } }}
+                  transition={{ duration: 0.3, ease: EASE_OUT }}
+                >
+                  {insight}
+                </motion.span>
+              </AnimatePresence>
+            )}
           </div>
         </div>
       </div>

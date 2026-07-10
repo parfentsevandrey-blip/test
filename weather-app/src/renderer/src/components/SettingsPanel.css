@@ -2,6 +2,11 @@
    SettingsPanel — a modal overlay (app chrome, not a grid card).
    Matte styling by default; win95 override block near the bottom
    re-skins it into a period dialog (navy title bar, bevels, no blur).
+
+   Entrance/exit (backdrop fade, panel spring + de-blur, staggered
+   section cascade) are owned by Framer Motion in SettingsPanel.tsx for
+   every theme except win95 -- these rules are pure layout/paint now.
+   win95 renders a separate, fully static, non-motion tree instead.
    ============================================================ */
 
 .settings-overlay {
@@ -15,7 +20,6 @@
   background: var(--scrim);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
-  animation: fade-in 0.2s var(--ease-out);
 }
 
 .settings-panel {
@@ -26,9 +30,6 @@
   max-height: min(80vh, 560px);
   overflow-y: auto;
   padding: 20px 22px;
-  --menu-scale-from: 0.95;
-  transform-origin: center;
-  animation: menu-in 0.3s var(--ease-spring) both;
 }
 
 .settings-header {
@@ -41,7 +42,10 @@
   font-family: var(--font-display);
   font-size: 17px;
   font-weight: 600;
-  color: var(--text-primary);
+  background: var(--gradient-text-hero);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .settings-close {
@@ -58,9 +62,6 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  opacity: 0;
-  animation: menu-item-in 0.28s var(--ease-out) both;
-  animation-delay: calc(80ms + var(--row-i, 0) * 40ms);
 }
 
 .settings-section-title {
@@ -112,8 +113,13 @@
 
 .settings-toggle.is-on {
   background: var(--accent);
+  box-shadow: var(--glow-soft);
 }
 
+/* Thumb position (x-offset) and press/hover feedback are owned by Framer
+   Motion (motion.button/motion.span in SettingsPanel.tsx) for every theme
+   except win95, which keeps the original CSS transform + transition below,
+   scoped under the win95 block near the bottom of this file. */
 .settings-toggle-thumb {
   position: absolute;
   top: 3px;
@@ -123,16 +129,6 @@
   border-radius: 50%;
   background: var(--glass-bg-strong);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
-  transition: transform var(--dur-release) var(--ease-spring);
-}
-
-.settings-toggle.is-on .settings-toggle-thumb {
-  transform: translateX(18px);
-}
-
-.settings-toggle:active .settings-toggle-thumb {
-  transition: transform var(--dur-press) var(--ease-press);
-  scale: 0.92;
 }
 
 .settings-toggle:focus-visible {
@@ -150,22 +146,12 @@
   color: var(--text-tertiary);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .settings-overlay,
-  .settings-panel,
-  .settings-section {
-    animation: none;
-    opacity: 1;
-  }
-
-  .settings-toggle-thumb {
-    transition: none;
-  }
-
-  .settings-toggle:active .settings-toggle-thumb {
-    scale: 1;
-  }
-}
+/* No @media (prefers-reduced-motion) block needed here — entrance/exit,
+   the toggle thumb's slide and the segment thumb's slide are all driven by
+   Framer Motion in SettingsPanel.tsx, which checks useReducedMotion() itself
+   and swaps to instant/opacity-only variants. The only CSS transition left
+   on this component (.settings-toggle's background-color) is a color
+   change, not movement, so it needs no gating. */
 
 /* ============================================================
    Win95 — a period dialog: navy title bar, bevels, no blur, hard corners.
@@ -196,6 +182,9 @@
 [data-theme='win95'] .settings-title {
   font-family: inherit;
   font-size: 13px;
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
   color: #ffffff;
 }
 
@@ -235,12 +224,27 @@
 
 [data-theme='win95'] .settings-toggle.is-on {
   background: #ffffff;
+  box-shadow: var(--bevel-field);
 }
 
 [data-theme='win95'] .settings-toggle-thumb {
   border-radius: 0;
   background: #000080;
   box-shadow: none;
+  /* Restores the plain CSS-driven slide (no Framer Motion in the win95
+     render path at all) -- identical values to what this component used
+     before the motion pass, just scoped here now that the base rule is
+     Framer-Motion-owned for every other theme. */
+  transition: transform var(--dur-release) var(--ease-spring);
+}
+
+[data-theme='win95'] .settings-toggle.is-on .settings-toggle-thumb {
+  transform: translateX(18px);
+}
+
+[data-theme='win95'] .settings-toggle:active .settings-toggle-thumb {
+  transition: transform var(--dur-press) var(--ease-press);
+  scale: 0.92;
 }
 
 [data-theme='win95'] .settings-footer {

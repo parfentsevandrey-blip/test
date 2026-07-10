@@ -51,6 +51,50 @@
   color: var(--text-secondary);
 }
 
+/* Wraps each card's header glyph so Framer Motion (whileHover/whileTap
+   scale + glow, gated off in win95/reduced-motion by the components
+   themselves) has an element to animate without disturbing
+   global.css's sizing of the inner <svg>. */
+.metric-header .mx-icon {
+  display: inline-flex;
+}
+
+/* Big numeral goes gradient-lit, matching the app's hero-text treatment
+   (UV Index keeps its own severity-tinted color instead -- it doesn't use
+   the .mx-value span, so it's untouched by this rule). win95 resets the
+   clip/color trick below since --gradient-text-hero resolves to `none`
+   there and transparent text over no background would vanish. */
+.metric-card .mx-value {
+  background: var(--gradient-text-hero);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ---------- Shared glow halo for circular dials (humidity ring, wind
+   compass) ----------
+   A soft radial bloom rides behind the dial, hidden until the card is
+   hovered -- the literal --glow-soft token, echoing the card's own hover
+   glow but confined to the instrument face. win95: no pseudo-element at
+   all (content: none is a single unconditional kill, no specificity
+   fight needed against the opacity rule below). */
+.humidity-ring::before,
+.wind-compass::before {
+  content: '';
+  position: absolute;
+  inset: 4%;
+  border-radius: 50%;
+  box-shadow: var(--glow-soft);
+  opacity: 0;
+  transition: opacity 0.5s var(--ease-out);
+  pointer-events: none;
+}
+
+.bento-card:hover .humidity-ring::before,
+.bento-card:hover .wind-compass::before {
+  opacity: 1;
+}
+
 /* ---------- Wind: compass ring with cardinals + smooth needle ---------- */
 
 /* Sits inside .metric-visual (already absolutely positioned), so it only
@@ -87,7 +131,9 @@
 .wind-compass-needle {
   position: absolute;
   inset: 0;
-  transition: transform 0.9s var(--ease-out);
+  /* Rotation is now a Framer Motion spring driven from live heading data
+     (WindCard.tsx) -- no CSS transition here, so its per-frame inline
+     style writes aren't fighting a parallel CSS interpolation. */
   will-change: transform;
 }
 
@@ -130,6 +176,7 @@
 /* ---------- Humidity: SVG donut gauge with droplet glyph ---------- */
 
 .humidity-ring {
+  position: relative;
   height: 100%;
   max-height: 92px;
   aspect-ratio: 1;
@@ -149,26 +196,13 @@
 .humidity-ring-fill {
   fill: none;
   stroke-linecap: round;
-  transition: stroke-dasharray 0.7s var(--ease-out);
+  /* Dasharray is now a Framer Motion spring (HumidityCard.tsx) that
+     re-resolves toward the live value on every change -- real physics
+     instead of a fixed-duration ease, so no CSS transition here. */
 }
 
 .humidity-ring-droplet {
   color: var(--info);
-}
-
-/* Hover: the ring sweeps in again from 0. A from-only keyframe animates
-   toward the element's computed dasharray (the inline attribute), so it
-   always lands exactly on the live value and retriggers per hover entry. */
-@media (prefers-reduced-motion: no-preference) {
-  .bento-card:hover .humidity-ring-fill {
-    animation: humidity-ring-sweep 0.75s var(--ease-out);
-  }
-}
-
-@keyframes humidity-ring-sweep {
-  from {
-    stroke-dasharray: 0 999;
-  }
 }
 
 /* ---------- UV Index: boundary ticks + zone-colored descriptor ---------- */
@@ -193,6 +227,18 @@
 .metric-card .metric-sub.uv-sub {
   font-weight: 600;
   transition: color 0.4s var(--ease-out);
+}
+
+/* Marker glows in its own live severity color (--uv-marker-glow, set inline
+   from the severity token in UvIndexCard.tsx), a literal "glow halo on the
+   active dial". Framer Motion now owns the `left` spring (UvIndexCard.tsx),
+   so this fully replaces the shorthand `transition` inherited from
+   global.css's base rule rather than layering a second one on top. */
+.uv-scale .uv-scale-marker {
+  transition: box-shadow 0.4s var(--ease-out);
+  box-shadow:
+    0 0 0 2px rgba(15, 26, 43, 0.55),
+    0 0 9px 1px color-mix(in srgb, var(--uv-marker-glow, var(--accent)) 55%, transparent);
 }
 
 /* Protection guidance floats between readout and scale: its auto margin
@@ -270,7 +316,10 @@
   height: 100%;
   border-radius: var(--radius-pill);
   background: var(--info);
-  transition: width 0.7s var(--ease-out);
+  /* Width is now a Framer Motion spring (VisibilityCard.tsx); the glow
+     rides along for free since box-shadow paints with it. win95's existing
+     `box-shadow: none` reset below already outranks this single class. */
+  box-shadow: 0 0 10px -1px color-mix(in srgb, var(--info) 60%, transparent);
 }
 
 /* Quarter-scale graduations; absolutely positioned so they paint over the fill. */
@@ -295,18 +344,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Hover: the fill sweeps out from 0 to the live reading. */
-@media (prefers-reduced-motion: no-preference) {
-  .bento-card:hover .vis-gauge-fill {
-    animation: vis-gauge-sweep 0.75s var(--ease-out);
-  }
-}
-
-@keyframes vis-gauge-sweep {
-  from {
-    width: 0%;
-  }
-}
 
 /* ---------- Precipitation: refined bars, hover values, empty state ---------- */
 
@@ -325,9 +362,16 @@
   }
 }
 
-/* Rounded tops only; the track's own rounding still clips the flat bottom. */
+/* Rounded tops only; the track's own rounding still clips the flat bottom.
+   Height is now a Framer Motion staggered spring (PrecipitationCard.tsx),
+   so the plain CSS `transition: height` inherited from global.css's base
+   rule is explicitly cancelled here (2-class specificity beats its 1-class
+   rule) rather than fighting the per-frame inline writes. The glow rides
+   along for free since box-shadow paints with the live height. */
 .precip-card .precip-bar-fill {
   border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  transition: none;
+  box-shadow: 0 4px 12px -4px color-mix(in srgb, var(--info) 65%, transparent);
 }
 
 /* "Now" marker follows the hourly-strip pattern: it tints the CONTAINER and
@@ -345,22 +389,10 @@
   font-weight: 600;
 }
 
-/* Hover anywhere on the card: bars re-grow from 0 with a 40ms cascade.
-   `backwards` holds each bar at 0 through its delay so the wave reads
-   left-to-right; the implicit `to` is the inline data height, so every
-   bar lands exactly on its live value and nothing moves after settle. */
-@media (prefers-reduced-motion: no-preference) {
-  .bento-card:hover .precip-card .precip-bar-fill {
-    animation: precip-bar-grow 0.55s var(--ease-out) backwards;
-    animation-delay: calc(var(--bar-i, 0) * 40ms);
-  }
-}
-
-@keyframes precip-bar-grow {
-  from {
-    height: 0%;
-  }
-}
+/* The bars' entrance cascade (staggered spring, left-to-right) and their
+   ongoing value springs both live in PrecipitationCard.tsx now via Framer
+   Motion variants -- real per-bar physics instead of a CSS animation-delay
+   trick. */
 
 /* Probability chip revealed above a bar on hover. */
 .precip-card .precip-bar-value {
@@ -418,6 +450,31 @@
   flex-shrink: 0;
 }
 
+/* ---------- Shared ambient glow pulse ----------
+   A slow "breathing" brightness pulse on the four instrument faces, so the
+   maximalist glow reads as alive even at rest, not just on hover. filter
+   composites with each element's own box-shadow, so the whole glow (not
+   just the fill) breathes together. Already covered by the win95
+   `animation: none !important` reset below -- no new rule needed there. */
+@media (prefers-reduced-motion: no-preference) {
+  .humidity-ring-fill,
+  .uv-scale-marker,
+  .vis-gauge-fill,
+  .precip-card .precip-bar-fill {
+    animation: mx-ambient-pulse 3.6s ease-in-out infinite;
+  }
+}
+
+@keyframes mx-ambient-pulse {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.22);
+  }
+}
+
 /* ---------- Windows 95: period-correct degradations ----------
    The retro theme is motionless (global.css disables card motion), so the
    hover micro-interactions go quiet here too. !important is deliberate:
@@ -440,4 +497,35 @@
 
 [data-theme='win95'] .vis-gauge-track {
   border-color: var(--glass-border-soft);
+}
+
+/* UV marker keeps its authentic raised-bevel look, not the new severity
+   glow -- restated here (2-class, matching this file's own glow rule
+   above) so it wins regardless of load order against global.css's own
+   win95 override of the same box-shadow property. */
+[data-theme='win95'] .uv-scale .uv-scale-marker {
+  box-shadow:
+    inset -1px -1px 0 #000000,
+    inset 1px 1px 0 #ffffff;
+}
+
+/* Rain bars: flat navy, no bloom under the fill. */
+[data-theme='win95'] .precip-card .precip-bar-fill {
+  box-shadow: none;
+}
+
+/* No halo bloom behind the compass/ring dials. */
+[data-theme='win95'] .humidity-ring::before,
+[data-theme='win95'] .wind-compass::before {
+  content: none;
+}
+
+/* The gradient-clipped numeral would render invisible (transparent text,
+   no background to show through) once --gradient-text-hero resolves to
+   `none` here -- fall back to plain solid text. */
+[data-theme='win95'] .metric-card .mx-value {
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  color: var(--text-primary);
 }

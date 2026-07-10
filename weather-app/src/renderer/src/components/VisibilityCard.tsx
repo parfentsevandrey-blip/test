@@ -1,4 +1,5 @@
-import { useWeatherStore } from '../store/useWeatherStore'
+import { motion, useReducedMotion } from 'framer-motion'
+import { resolveTheme, useWeatherStore } from '../store/useWeatherStore'
 import { BentoCard } from './BentoCard'
 import { EyeIcon } from './icons'
 import { clamp01 } from '../utils/math'
@@ -34,6 +35,10 @@ function visibilityContext(meters: number | null): string {
 export function VisibilityCard(): JSX.Element | null {
   const weather = useWeatherStore((s) => s.weather)
   const unit = useWeatherStore((s) => s.unit)
+  const theme = useWeatherStore((s) => s.theme)
+  const isRetro = resolveTheme(theme, weather) === 'win95'
+  const prefersReducedMotion = useReducedMotion()
+  const motionOn = !isRetro && !prefersReducedMotion
 
   const imperial = unit === 'fahrenheit'
   const targetDistance =
@@ -53,6 +58,7 @@ export function VisibilityCard(): JSX.Element | null {
   const fullScale = imperial
     ? `${Math.round(FULL_VISIBILITY_METERS / METERS_PER_MILE)} mi`
     : `${FULL_VISIBILITY_METERS / 1000} km`
+  const gaugeTransition = motionOn ? { type: 'spring' as const, stiffness: 85, damping: 16 } : { duration: 0 }
 
   /* 680px-window vertical budget (content ≈ 162px): header 16 + value 40 +
      sub 20 = 76 fixed; the gauge (8 track + 6 gap + 13 labels ≈ 27) centers
@@ -61,7 +67,14 @@ export function VisibilityCard(): JSX.Element | null {
     <BentoCard span="bento-1" floatDelay={1.4}>
       <div className="metric-card">
         <div className="metric-header">
-          <EyeIcon />
+          <motion.span
+            className="mx-icon"
+            whileHover={motionOn ? { scale: 1.18, filter: 'drop-shadow(0 0 6px var(--accent))' } : undefined}
+            whileTap={motionOn ? { scale: 0.9 } : undefined}
+            transition={{ type: 'spring', stiffness: 380, damping: 14 }}
+          >
+            <EyeIcon />
+          </motion.span>
           <span className="metric-label">Visibility</span>
         </div>
         <div className="metric-value">
@@ -75,10 +88,19 @@ export function VisibilityCard(): JSX.Element | null {
           )}
         </div>
         <div className="metric-sub">{visibilityDescriptor(visibility)}</div>
-        <div className="metric-visual vis-gauge-wrap" aria-hidden="true">
+        <motion.div
+          className="metric-visual vis-gauge-wrap"
+          aria-hidden="true"
+          whileHover={motionOn ? { scale: 1.035 } : undefined}
+          transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+        >
           <div className="vis-gauge">
             <div className="vis-gauge-track">
-              <div className="vis-gauge-fill" style={{ width: `${fraction * 100}%` }} />
+              <motion.div
+                className="vis-gauge-fill"
+                animate={{ width: `${fraction * 100}%` }}
+                transition={gaugeTransition}
+              />
               {GAUGE_TICKS.map((tick) => (
                 <span key={tick} className="vis-gauge-tick" style={{ left: `${tick * 100}%` }} />
               ))}
@@ -88,7 +110,7 @@ export function VisibilityCard(): JSX.Element | null {
               <span>{fullScale}</span>
             </div>
           </div>
-        </div>
+        </motion.div>
         <div className="mx-footline">{visibilityContext(visibility)}</div>
       </div>
     </BentoCard>

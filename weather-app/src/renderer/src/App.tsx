@@ -1,4 +1,5 @@
 import { forwardRef, useEffect, useRef, useState } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
 import { resolveTheme, useWeatherStore } from './store/useWeatherStore'
 import { SceneManager } from './scene/SceneManager'
 import { SearchBar } from './components/SearchBar'
@@ -192,10 +193,28 @@ export function App(): JSX.Element {
 
   const isWin95 = resolved === 'win95'
   const busy = status === 'loading' || status === 'locating'
+  const prefersReducedMotion = useReducedMotion()
 
   return (
     <div className="app-shell" data-loading={busy ? 'true' : undefined}>
       <canvas ref={canvasRef} className="scene-canvas" />
+
+      {/* A slow-drifting mesh-gradient wash between the 3D scene and the UI --
+          every glass card is real translucent+blurred now, so this is what
+          they're actually showing through. win95 stays flat, so it's skipped
+          entirely rather than merely hidden. */}
+      {!isWin95 && (
+        <motion.div
+          className="gradient-mesh"
+          aria-hidden="true"
+          animate={
+            prefersReducedMotion
+              ? undefined
+              : { x: [0, 40, -25, 0], y: [0, -25, 20, 0], scale: [1, 1.08, 1.04, 1] }
+          }
+          transition={{ duration: 50, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      )}
 
       <div className="ui-overlay">
         <header className="app-header">

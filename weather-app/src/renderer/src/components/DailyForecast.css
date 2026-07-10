@@ -55,15 +55,22 @@
   gap: clamp(7px, 0.9vw, 14px);
   padding: 0 clamp(6px, 0.8vw, 12px);
   border-radius: var(--radius-sm);
-  transition: background-color 0.2s var(--ease-out), transform 0.26s var(--ease-spring-soft);
+  transition:
+    background-color 0.2s var(--ease-out),
+    box-shadow 0.25s var(--ease-out),
+    transform 0.26s var(--ease-spring-soft);
 }
 
 /* Rows open a same-day detail popover (see DailyDetailPopover) — a real
-   click action, so hover/press choreography is an honest affordance again. */
+   click action, so hover/press choreography is an honest affordance again.
+   The lift/scale itself is owned by Framer Motion's whileHover/whileFocus
+   (DailyForecast.tsx) for every theme except win95; this rule still carries
+   the background tint and — new in this pass — a bloom of accent glow. */
 .df-row:hover,
 .df-row:focus-visible {
   background: var(--control-active);
   transform: translateY(-1px);
+  box-shadow: var(--glow-soft);
 }
 
 .df-row:active {
@@ -136,6 +143,16 @@
 }
 
 /* ---------- Condition icon ---------- */
+
+/* Wraps WeatherIcon so the icon can carry a layoutId (DailyForecast.tsx):
+   clicking a row morphs this exact box into .df-detail-icon-wrap in the
+   popover. Unsized on purpose — it shrink-wraps to .df-icon's own clamp(). */
+.df-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
 
 .df-icon {
   /* Grows with the row (rows are ~43px at 900px viewports, ~29px at 680;
@@ -257,6 +274,7 @@
 [data-theme='win95'] .df-row:focus-visible {
   background: #000080;
   transform: none;
+  box-shadow: none;
 }
 
 [data-theme='win95'] .df-row:active {
@@ -338,7 +356,9 @@
   background: var(--scrim);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
-  animation: fade-in 0.2s var(--ease-out);
+  /* Entrance/exit are now owned by Framer Motion (DailyForecast.tsx's
+     AnimatePresence) for every theme except win95, which renders this as a
+     plain instant div with no animation at all. */
 }
 
 .df-detail-panel {
@@ -347,15 +367,27 @@
   gap: 14px;
   width: clamp(280px, 85vw, 360px);
   padding: 18px 20px;
-  --menu-scale-from: 0.95;
-  transform-origin: center;
-  animation: menu-in 0.3s var(--ease-spring) both;
+  /* Entrance/exit/drag-to-dismiss are Framer Motion (see above); a bolder
+     glow befits the drill-down view, layered over the base glass shadow. */
+  box-shadow: var(--glow-strong), var(--glass-shadow);
+  border-color: var(--glow-border);
 }
 
 .df-detail-header {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+/* Wraps WeatherIcon so it can carry the same layoutId as the row's
+   .df-icon-wrap, morphing the small list glyph into this hero icon. */
+.df-detail-icon-wrap {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .df-detail-icon {
@@ -403,6 +435,41 @@
   border-bottom: 1px solid var(--glass-border-soft);
 }
 
+/* Gradient-accented high/low bar, new this pass — non-retro only (win95
+   never renders this markup at all, see the isRetro branch in the .tsx). */
+.df-detail-range {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.df-detail-range-min,
+.df-detail-range-max {
+  flex-shrink: 0;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.df-detail-range-min {
+  color: var(--text-tertiary);
+}
+
+.df-detail-range-max {
+  color: var(--text-primary);
+}
+
+.df-detail-track {
+  flex: 1;
+  height: 8px;
+}
+
+.df-detail-fill {
+  box-shadow: 0 0 12px var(--accent-glow);
+}
+
 .df-detail-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -413,9 +480,9 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  opacity: 0;
-  animation: menu-item-in 0.26s var(--ease-out) both;
-  animation-delay: calc(40ms + var(--row-i, 0) * 30ms);
+  /* Staggered entrance is now owned by Framer Motion's variants
+     (DailyForecast.tsx) for every theme except win95, which renders this
+     statically with no animation at all. */
 }
 
 .df-detail-stat-label {
@@ -434,13 +501,13 @@
   font-variant-numeric: tabular-nums;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .df-detail-overlay,
-  .df-detail-panel,
-  .df-detail-stat {
-    animation: none;
-    opacity: 1;
-  }
+/* High/Low get the hero treatment: the same gradient-clipped text used for
+   headline numbers elsewhere in the app. */
+.df-detail-stat-value--hero {
+  background: var(--gradient-text-hero);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 [data-theme='win95'] .df-detail-overlay {
@@ -465,6 +532,15 @@
 [data-theme='win95'] .df-detail-day,
 [data-theme='win95'] .df-detail-stat-value {
   font-family: inherit;
+}
+
+/* Defensive only — the isRetro branch in DailyForecast.tsx never renders
+   .df-detail-range/.df-detail-stat-value--hero under win95, but --gradient-
+   text-hero resolves to "none" there, which would otherwise leave text
+   transparent-on-transparent if this class were ever reached. */
+[data-theme='win95'] .df-detail-stat-value--hero {
+  background: none;
+  color: var(--text-primary);
 }
 
 [data-theme='win95'] .df-detail-close {

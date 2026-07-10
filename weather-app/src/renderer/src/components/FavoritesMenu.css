@@ -13,6 +13,11 @@
   background: var(--control-bg-hover);
 }
 
+:root:not([data-theme='win95']) .favorites-menu .icon-btn:hover,
+:root:not([data-theme='win95']) .favorites-menu .icon-btn.menu-open {
+  box-shadow: var(--glow-soft);
+}
+
 .favorites-dropdown {
   position: absolute;
   top: calc(100% + 10px);
@@ -29,7 +34,24 @@
   -webkit-backdrop-filter: var(--glass-blur);
   box-shadow: var(--glass-shadow);
   transform-origin: top right;
-  animation: menu-in 0.32s var(--ease-spring) both;
+}
+
+/* No more CSS `animation: menu-in` here (there used to be one) — mount/exit
+   is now owned entirely by Framer Motion (see FavoritesMenu.tsx's
+   AnimatePresence) for every non-win95 theme. win95 renders a plain,
+   un-animated div instead (see the win95 reset further below, which already
+   zeroes out any animation on this class) so it never needed the keyframe
+   either. Leaving the CSS animation declared here would have fought Framer
+   Motion for control of transform/opacity — the animation shorthand
+   outranks inline styles for as long as it runs, which would freeze
+   drag/entrance mid-flight. */
+
+/* A colorful ambient wash behind the glass — purely decorative, and
+   --mesh-gradient already resolves to `none` under win95, but the
+   :not() keeps this rule from ever being reached there regardless. */
+:root:not([data-theme='win95']) .favorites-dropdown {
+  background-image: var(--mesh-gradient);
+  background-blend-mode: overlay;
 }
 
 .favorites-action {
@@ -81,13 +103,65 @@
   animation-delay: 90ms;
 }
 
+/* Mount stagger + reorder-reflow are now Framer Motion's job (this row is a
+   Reorder.Item — see FavoriteRow in FavoritesMenu.tsx), not CSS's — a
+   lingering `animation` here would outrank Framer Motion's own inline
+   transform/opacity control for as long as it ran, which would visibly
+   stall drag mid-gesture. win95 renders the plain, un-animated div instead
+   and forces opacity back to 1 anyway (see the reset further below), so it
+   never needed the keyframe either. */
 .favorites-item-row {
   display: flex;
   align-items: center;
   gap: 2px;
   opacity: 0;
-  animation: menu-item-in 0.26s var(--ease-out) both;
-  animation-delay: calc(90ms + var(--row-i, 0) * 26ms);
+  border-radius: var(--radius-sm);
+}
+
+:root:not([data-theme='win95']) .favorites-item-row {
+  transition: box-shadow 0.2s var(--ease-out);
+}
+
+:root:not([data-theme='win95']) .favorites-item-row:hover,
+:root:not([data-theme='win95']) .favorites-item-row:focus-within {
+  box-shadow: var(--glow-soft);
+}
+
+:root:not([data-theme='win95']) .favorites-item-row.is-current {
+  box-shadow: 0 0 0 1px var(--glow-border);
+}
+
+/* Drag handle — hidden until the row is hovered/focused/dragged, exactly
+   like .favorites-remove's own reveal-on-hover pattern below. Only ever
+   rendered in the non-win95 tree (see FavoritesMenu.tsx), so it needs no
+   win95 reset of its own. */
+.favorites-drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 18px;
+  height: 32px;
+  color: var(--text-tertiary);
+  cursor: grab;
+  touch-action: none;
+  opacity: 0;
+  transition: opacity 0.15s var(--ease-out), color 0.15s var(--ease-out);
+}
+
+.favorites-drag-handle svg {
+  width: 12px;
+  height: 12px;
+}
+
+.favorites-item-row:hover .favorites-drag-handle,
+.favorites-item-row:focus-within .favorites-drag-handle {
+  opacity: 1;
+}
+
+.favorites-drag-handle:active {
+  cursor: grabbing;
+  color: var(--accent);
 }
 
 .favorites-item {

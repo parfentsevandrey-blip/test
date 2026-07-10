@@ -1,7 +1,8 @@
-import { useId, useState } from 'react'
-import type { CSSProperties } from 'react'
+import { useEffect, useId, useState } from 'react'
+import type { CSSProperties, KeyboardEvent, WheelEvent } from 'react'
+import { AnimatePresence, animate, motion, useMotionValue, useReducedMotion } from 'framer-motion'
 import './HourlyForecast.css'
-import { useWeatherStore } from '../store/useWeatherStore'
+import { resolveTheme, useWeatherStore } from '../store/useWeatherStore'
 import { BentoCard } from './BentoCard'
 import { WeatherIcon } from './WeatherIcon'
 import { ClockIcon } from './icons'
@@ -23,6 +24,7 @@ const HOURS_SHOWN = 24
 const NOW_INDEX = 0
 /** Columns whose centre is closer than this to a strip edge get an edge-aligned tooltip. */
 const TIP_EDGE_PX = 150
+const EASE_OUT = [0.16, 1, 0.3, 1] as const
 
 interface CurvePoint {
   x: number
@@ -30,6 +32,7 @@ interface CurvePoint {
 }
 
 const round2 = (n: number): number => Math.round(n * 100) / 100
+const clampNum = (n: number, min: number, max: number): number => Math.min(Math.max(n, min), max)
 
 /**
  * Smooth open path through every point: Catmull-Rom spline converted to
@@ -52,13 +55,48 @@ function buildCurvePath(points: CurvePoint[]): string {
   return d
 }
 
+/** Staggered entrance for the hourly cells (non-retro only). */
+const cellsContainerVariants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.018, delayChildren: 0.04 } }
+}
+
+const cellVariants = {
+  hidden: { opacity: 0, y: 14, scale: 0.92 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.4, ease: EASE_OUT }
+  }
+}
+
 export function HourlyForecast(): JSX.Element | null {
   const weather = useWeatherStore((s) => s.weather)
   const unit = useWeatherStore((s) => s.unit)
+  const theme = useWeatherStore((s) => s.theme)
+  const isRetro = resolveTheme(theme, weather) === 'win95'
+  const prefersReducedMotion = useReducedMotion()
   const reactId = useId()
   // Hovered column index. Set from onMouseEnter per column (cheap, no
   // mousemove math) and cleared when the pointer leaves the whole strip.
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+
+  // The strip's horizontal offset lives in one MotionValue so drag, wheel
+  // and keyboard paging all read/write the same source of truth without
+  // triggering a React re-render on every frame.
+  const stripX = useMotionValue(0)
+  const [scrollEl, setScrollEl] = useState<HTMLDivElement | null>(null)
+  const [containerWidth, setContainerWidth] = useState(0)
+
+  useEffect(() => {
+    if (!scrollEl) return
+    const update = (): void => setContainerWidth(scrollEl.clientWidth)
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(scrollEl)
+    return () => ro.disconnect()
+  }, [scrollEl])
 
   if (!weather) return null
 
@@ -97,6 +135,10 @@ export function HourlyForecast(): JSX.Element | null {
     '--hf-col-w': `${COL_WIDTH}px`
   } as CSSProperties
 
+  // How far the strip can travel: 0 (start) to -(overflow) (fully scrolled).
+  const maxOverflow = Math.max(stripWidth - containerWidth, 0)
+  const dragConstraints = { left: -maxOverflow, right: 0 }
+
   // Guard against a stale index if the data window shrank under the cursor.
   const hovered = hoveredIndex !== null && hoveredIndex < points.length ? hoveredIndex : null
   const hoveredPoint = hovered === null ? null : points[hovered]
@@ -118,6 +160,150 @@ export function HourlyForecast(): JSX.Element | null {
     }
   }
 
+  // Wheel scroll: preserved even though native overflow is off (the strip
+  // now scrolls via transform so the drag gesture and wheel share one
+  // MotionValue instead of fighting over native scrollLeft).
+  const handleWheel = (event: WheelEvent<HTMLDivElement>): void => {
+    if (isRetro || maxOverflow <= 0) return
+    const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY
+    if (delta === 0) return
+    event.preventDefault()
+    stripX.set(clampNum(stripX.get() - delta, -maxOverflow, 0))
+  }
+
+  // Keyboard paging on the focusable region: Left/Right nudge by ~3/4 of a
+  // viewport, Home/End jump to the ends. Springs unless motion is reduced.
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
+    if (isRetro || maxOverflow <= 0) return
+    const step = Math.max(containerWidth * 0.75, COL_WIDTH * 2)
+    let next: number | null = null
+    if (event.key === 'ArrowLeft') next = clampNum(stripX.get() + step, -maxOverflow, 0)
+    else if (event.key === 'ArrowRight') next = clampNum(stripX.get() - step, -maxOverflow, 0)
+    else if (event.key === 'Home') next = 0
+    else if (event.key === 'End') next = -maxOverflow
+    if (next === null) return
+    event.preventDefault()
+    animate(stripX, next, prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 260, damping: 32 })
+  }
+
+  const nowHighlight = (
+    <div
+      className="hf-now-highlight"
+      style={{ left: NOW_INDEX * COL_WIDTH + 2, width: COL_WIDTH - 4 }}
+      aria-hidden="true"
+    />
+  )
+
+  const hoverHighlight = (
+    <div
+      className="hf-hover-highlight"
+      style={{
+        left: (hovered ?? NOW_INDEX) * COL_WIDTH + 2,
+        width: COL_WIDTH - 4,
+        opacity: hovered !== null && hovered !== NOW_INDEX ? 1 : 0
+      }}
+      aria-hidden="true"
+    />
+  )
+
+  const renderCellContent = (point: (typeof points)[number], index: number): JSX.Element => (
+    <>
+      <span className="hf-time">{index === NOW_INDEX ? 'Now' : formatHour(point.time)}</span>
+      <WeatherIcon
+        condition={getConditionInfo(point.weatherCode).condition}
+        isDay={point.isDay}
+        className="hf-icon"
+      />
+      <span className="hf-temp">
+        {Math.round(celsiusTo(unit, point.temperature))}
+        <span className="hf-deg">°</span>
+      </span>
+    </>
+  )
+
+  const bandAndPops = (
+    <>
+      {/* The curve band also hosts the hover tooltip so the chip always
+          stays inside the card (never clips at the card's top edge). */}
+      <div className="hf-curve-band">
+        <svg
+          className="hf-curve"
+          viewBox={`0 0 ${stripWidth} ${BAND_HEIGHT}`}
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <defs>
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.18" />
+              <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <path className="hf-curve-area" d={areaPath} fill={`url(#${gradientId})`} stroke="none" />
+          <path className="hf-curve-line" d={linePath} />
+          <circle
+            className="hf-curve-dot-ring"
+            cx={round2(nowPoint.x)}
+            cy={round2(nowPoint.y)}
+            r={3.2}
+          />
+          <circle className="hf-curve-dot" cx={round2(nowPoint.x)} cy={round2(nowPoint.y)} r={3.2} />
+        </svg>
+
+        {isRetro ? (
+          hoveredPoint &&
+          hovered !== null && (
+            <div className={`hf-tooltip${tipAlign}`} key={hovered} style={{ left: tipLeft }} aria-hidden="true">
+              <span className="hf-tooltip-main">
+                {hovered === NOW_INDEX ? 'Now' : formatHour(hoveredPoint.time)}
+                {' · '}
+                {formatTemperature(hoveredPoint.temperature, unit)}
+                {' · '}
+                {Math.round(hoveredPoint.precipitationProbability)}%
+              </span>
+              <span className="hf-tooltip-cond">{getConditionInfo(hoveredPoint.weatherCode).label}</span>
+            </div>
+          )
+        ) : (
+          <AnimatePresence>
+            {hoveredPoint && hovered !== null && (
+              <motion.div
+                className={`hf-tooltip${tipAlign}`}
+                key={hovered}
+                style={{ left: tipLeft }}
+                aria-hidden="true"
+                initial={{ opacity: 0, scale: 0.86, y: 4 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 2, transition: { duration: 0.12 } }}
+                transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+              >
+                <span className="hf-tooltip-main">
+                  {hovered === NOW_INDEX ? 'Now' : formatHour(hoveredPoint.time)}
+                  {' · '}
+                  {formatTemperature(hoveredPoint.temperature, unit)}
+                  {' · '}
+                  {Math.round(hoveredPoint.precipitationProbability)}%
+                </span>
+                <span className="hf-tooltip-cond">{getConditionInfo(hoveredPoint.weatherCode).label}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        )}
+      </div>
+
+      <div className="hf-pops">
+        {points.map((point, index) => (
+          <span
+            className={'hf-pop' + (Math.round(point.precipitationProbability) >= 30 ? ' is-notable' : '')}
+            key={point.time}
+            onMouseEnter={() => setHoveredIndex(index)}
+          >
+            {Math.round(point.precipitationProbability)}%
+          </span>
+        ))}
+      </div>
+    </>
+  )
+
   return (
     <BentoCard span="bento-hourly">
       <div className="hourly-forecast">
@@ -130,117 +316,67 @@ export function HourlyForecast(): JSX.Element | null {
           role="region"
           aria-label="Hourly forecast for the next 24 hours, scroll horizontally for later hours"
           tabIndex={0}
+          ref={setScrollEl}
+          onWheel={handleWheel}
+          onKeyDown={handleKeyDown}
         >
-          <div
-            className="hf-strip"
-            style={stripStyle}
-            onMouseLeave={() => setHoveredIndex(null)}
-          >
-            <div
-              className="hf-now-highlight"
-              style={{ left: NOW_INDEX * COL_WIDTH + 2, width: COL_WIDTH - 4 }}
-              aria-hidden="true"
-            />
-            {/* Neutral hover pill: glides between columns, fades when idle. */}
-            <div
-              className="hf-hover-highlight"
-              style={{
-                left: (hovered ?? NOW_INDEX) * COL_WIDTH + 2,
-                width: COL_WIDTH - 4,
-                opacity: hovered !== null && hovered !== NOW_INDEX ? 1 : 0
-              }}
-              aria-hidden="true"
-            />
-
-            <div className="hf-cells">
-              {points.map((point, index) => (
-                <div
-                  className={'hf-cell' + (index === NOW_INDEX ? ' is-now' : '')}
-                  key={point.time}
-                  onMouseEnter={() => setHoveredIndex(index)}
-                >
-                  <span className="hf-time">
-                    {index === NOW_INDEX ? 'Now' : formatHour(point.time)}
-                  </span>
-                  <WeatherIcon
-                    condition={getConditionInfo(point.weatherCode).condition}
-                    isDay={point.isDay}
-                    className="hf-icon"
-                  />
-                  <span className="hf-temp">
-                    {Math.round(celsiusTo(unit, point.temperature))}
-                    <span className="hf-deg">°</span>
-                  </span>
-                </div>
-              ))}
+          {isRetro ? (
+            <div className="hf-strip" style={stripStyle} onMouseLeave={() => setHoveredIndex(null)}>
+              {nowHighlight}
+              {hoverHighlight}
+              <div className="hf-cells">
+                {points.map((point, index) => (
+                  <div
+                    className={'hf-cell' + (index === NOW_INDEX ? ' is-now' : '')}
+                    key={point.time}
+                    onMouseEnter={() => setHoveredIndex(index)}
+                  >
+                    {renderCellContent(point, index)}
+                  </div>
+                ))}
+              </div>
+              {bandAndPops}
             </div>
-
-            {/* The curve band also hosts the hover tooltip so the chip always
-                stays inside the card (never clips at the card's top edge). */}
-            <div className="hf-curve-band">
-              <svg
-                className="hf-curve"
-                viewBox={`0 0 ${stripWidth} ${BAND_HEIGHT}`}
-                preserveAspectRatio="none"
-                aria-hidden="true"
+          ) : (
+            <motion.div
+              className="hf-strip"
+              style={{ ...stripStyle, x: stripX }}
+              onMouseLeave={() => setHoveredIndex(null)}
+              drag="x"
+              dragConstraints={dragConstraints}
+              dragElastic={prefersReducedMotion ? 0 : 0.06}
+              dragMomentum={!prefersReducedMotion}
+              dragTransition={
+                prefersReducedMotion
+                  ? { power: 0, timeConstant: 0 }
+                  : { power: 0.35, timeConstant: 250, bounceStiffness: 420, bounceDamping: 40 }
+              }
+            >
+              {nowHighlight}
+              {hoverHighlight}
+              <motion.div
+                className="hf-cells"
+                initial={prefersReducedMotion ? false : 'hidden'}
+                animate={prefersReducedMotion ? undefined : 'visible'}
+                variants={cellsContainerVariants}
               >
-                <defs>
-                  <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.18" />
-                    <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-                <path className="hf-curve-area" d={areaPath} fill={`url(#${gradientId})`} stroke="none" />
-                <path className="hf-curve-line" d={linePath} />
-                <circle
-                  className="hf-curve-dot-ring"
-                  cx={round2(nowPoint.x)}
-                  cy={round2(nowPoint.y)}
-                  r={3.2}
-                />
-                <circle
-                  className="hf-curve-dot"
-                  cx={round2(nowPoint.x)}
-                  cy={round2(nowPoint.y)}
-                  r={3.2}
-                />
-              </svg>
-
-              {hoveredPoint && hovered !== null && (
-                <div
-                  className={`hf-tooltip${tipAlign}`}
-                  key={hovered}
-                  style={{ left: tipLeft }}
-                  aria-hidden="true"
-                >
-                  <span className="hf-tooltip-main">
-                    {hovered === NOW_INDEX ? 'Now' : formatHour(hoveredPoint.time)}
-                    {' · '}
-                    {formatTemperature(hoveredPoint.temperature, unit)}
-                    {' · '}
-                    {Math.round(hoveredPoint.precipitationProbability)}%
-                  </span>
-                  <span className="hf-tooltip-cond">
-                    {getConditionInfo(hoveredPoint.weatherCode).label}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            <div className="hf-pops">
-              {points.map((point, index) => (
-                <span
-                  className={
-                    'hf-pop' + (Math.round(point.precipitationProbability) >= 30 ? ' is-notable' : '')
-                  }
-                  key={point.time}
-                  onMouseEnter={() => setHoveredIndex(index)}
-                >
-                  {Math.round(point.precipitationProbability)}%
-                </span>
-              ))}
-            </div>
-          </div>
+                {points.map((point, index) => (
+                  <motion.div
+                    className={'hf-cell' + (index === NOW_INDEX ? ' is-now' : '')}
+                    key={point.time}
+                    variants={cellVariants}
+                    onMouseEnter={() => setHoveredIndex(index)}
+                    whileHover={prefersReducedMotion ? undefined : { y: -3, scale: 1.06 }}
+                    whileTap={prefersReducedMotion ? undefined : { scale: 0.95 }}
+                    transition={{ type: 'spring', stiffness: 380, damping: 22 }}
+                  >
+                    {renderCellContent(point, index)}
+                  </motion.div>
+                ))}
+              </motion.div>
+              {bandAndPops}
+            </motion.div>
+          )}
         </div>
       </div>
     </BentoCard>

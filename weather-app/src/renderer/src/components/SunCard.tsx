@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import './SunCard.css'
-import { useWeatherStore } from '../store/useWeatherStore'
+import { resolveTheme, useWeatherStore } from '../store/useWeatherStore'
 import { BentoCard } from './BentoCard'
 import { SunriseIcon } from './icons'
 import { formatClock } from '../utils/units'
@@ -27,6 +28,14 @@ const TICK_MS = 30_000
 
 const ARC_PATH = `M ${CX - RADIUS} ${HORIZON_Y} A ${RADIUS} ${RADIUS} 0 0 1 ${CX + RADIUS} ${HORIZON_Y}`
 
+const EASE_OUT = [0.16, 1, 0.3, 1] as const
+/** Spring config the sun/moon marker glides along the arc with -- soft and a
+ *  touch slow so the 30s tick cadence reads as a continuous drift rather than
+ *  a series of little jumps. */
+const MARKER_SPRING = { type: 'spring', stiffness: 65, damping: 18, mass: 1 } as const
+/** Snappier spring for the day/night group swap (mount/unmount at dawn/dusk). */
+const GROUP_SPRING = { type: 'spring', stiffness: 220, damping: 20 } as const
+
 /** Fraction of the way from start to end, clamped to [0, 1]; 0 for degenerate spans. */
 function fracBetween(startMs: number, endMs: number, nowMs: number): number {
   const span = endMs - startMs
@@ -52,6 +61,9 @@ function formatDelta(ms: number): string {
 
 export function SunCard(): JSX.Element | null {
   const weather = useWeatherStore((s) => s.weather)
+  const theme = useWeatherStore((s) => s.theme)
+  const isRetro = resolveTheme(theme, weather) === 'win95'
+  const prefersReducedMotion = useReducedMotion()
   // Live clock: the countdown (and the sun marker with it) refreshes every 30s.
   const [nowMs, setNowMs] = useState(() => Date.now())
 
@@ -139,6 +151,18 @@ export function SunCard(): JSX.Element | null {
       ]
     : []
 
+  // Identifies "today's data" -- changes only when a new day/location's sun
+  // times load, not on every 30s tick. Used as a React key so the arc's
+  // draw-in replays on real data changes but not on every countdown tick.
+  const arcKey = `${sunTimes.sunriseToday}|${sunTimes.sunsetToday}`
+
+  const markerTransition = prefersReducedMotion ? { duration: 0 } : MARKER_SPRING
+  const groupTransition = prefersReducedMotion ? { duration: 0 } : GROUP_SPRING
+  const drawTransition = prefersReducedMotion ? { duration: 0 } : { duration: 1.1, ease: EASE_OUT }
+  const progressTransition = prefersReducedMotion
+    ? { duration: 0 }
+    : { type: 'spring' as const, stiffness: 55, damping: 20 }
+
   return (
     <BentoCard span="bento-wide" floatDelay={0.4}>
       <div className="sun-path-card">
@@ -165,11 +189,21 @@ export function SunCard(): JSX.Element | null {
               <stop offset="1" className="sun-path-grad-to" />
             </linearGradient>
             <clipPath id={MOON_CLIP_ID}>
-              {/* Kept in lockstep with .sun-path-moon-lit's own cx/cy transition
-                  below (same class -> same transition rule -> same interpolation
-                  each frame) so the crescent clip boundary never lags the disc
-                  it's clipping during the marker's glide. */}
-              <circle className="sun-path-moon-clip" cx={moonX} cy={moonY} r={MOON_R} />
+              {/* Kept in lockstep with .sun-path-moon-lit's own cx/cy motion
+                  below (identical spring config -> identical interpolation
+                  each frame) so the crescent clip boundary never lags the
+                  disc it's clipping during the marker's glide. */}
+              {isRetro ? (
+                <circle className="sun-path-moon-clip" cx={moonX} cy={moonY} r={MOON_R} />
+              ) : (
+                <motion.circle
+                  className="sun-path-moon-clip sun-path-marker-motion"
+                  initial={{ cx: moonX, cy: moonY }}
+                  animate={{ cx: moonX, cy: moonY }}
+                  transition={markerTransition}
+                  r={MOON_R}
+                />
+              )}
             </clipPath>
           </defs>
 
@@ -180,49 +214,175 @@ export function SunCard(): JSX.Element | null {
             x2={VIEW_W - 6}
             y2={HORIZON_Y}
           />
-          <path className="sun-path-track" d={ARC_PATH} />
-          {progress > 0 && (
-            <path
-              className="sun-path-progress"
+
+          {isRetro ? (
+            <path className="sun-path-track" d={ARC_PATH} />
+          ) : (
+            <motion.path
+              key={`track-${arcKey}`}
+              className="sun-path-track"
               d={ARC_PATH}
-              stroke={`url(#${GRADIENT_ID})`}
-              strokeDasharray={`${progress * ARC_LENGTH} ${ARC_LENGTH}`}
+              strokeDasharray={`${ARC_LENGTH} ${ARC_LENGTH}`}
+              initial={{ strokeDashoffset: ARC_LENGTH }}
+              animate={{ strokeDashoffset: 0 }}
+              transition={drawTransition}
             />
           )}
 
-          {goldenTicks.map((tick) => {
-            const { x, y } = arcPoint(tick.frac)
-            return (
-              <g key={tick.title} className="sun-path-golden">
-                <title>{tick.title}</title>
-                <rect
-                  x={x - 1.7}
-                  y={y - 1.7}
-                  width={3.4}
-                  height={3.4}
-                  transform={`rotate(45 ${x} ${y})`}
+          {progress > 0 &&
+            (isRetro ? (
+              <path
+                className="sun-path-progress"
+                d={ARC_PATH}
+                stroke={`url(#${GRADIENT_ID})`}
+                strokeDasharray={`${progress * ARC_LENGTH} ${ARC_LENGTH}`}
+              />
+            ) : (
+              <motion.path
+                key={`progress-${arcKey}`}
+                className="sun-path-progress sun-path-progress-motion"
+                d={ARC_PATH}
+                stroke={`url(#${GRADIENT_ID})`}
+                strokeDasharray={`${ARC_LENGTH} ${ARC_LENGTH}`}
+                initial={{ strokeDashoffset: ARC_LENGTH }}
+                animate={{ strokeDashoffset: ARC_LENGTH * (1 - progress) }}
+                transition={progressTransition}
+              />
+            ))}
+
+          {isRetro ? (
+            goldenTicks.map((tick) => {
+              const { x, y } = arcPoint(tick.frac)
+              return (
+                <g key={tick.title} className="sun-path-golden">
+                  <title>{tick.title}</title>
+                  <rect
+                    x={x - 1.7}
+                    y={y - 1.7}
+                    width={3.4}
+                    height={3.4}
+                    transform={`rotate(45 ${x} ${y})`}
+                  />
+                </g>
+              )
+            })
+          ) : (
+            <motion.g
+              key={`golden-${arcKey}`}
+              initial="hidden"
+              animate="visible"
+              variants={{ visible: { transition: { staggerChildren: 0.16, delayChildren: 0.5 } } }}
+            >
+              {goldenTicks.map((tick) => {
+                const { x, y } = arcPoint(tick.frac)
+                return (
+                  <motion.g
+                    key={tick.title}
+                    className="sun-path-golden"
+                    variants={{
+                      hidden: { opacity: 0, scale: 0 },
+                      visible: { opacity: 1, scale: 1, transition: { type: 'spring', stiffness: 320, damping: 16 } }
+                    }}
+                    style={{ transformBox: 'fill-box', transformOrigin: 'center' }}
+                  >
+                    <title>{tick.title}</title>
+                    <rect
+                      x={x - 1.7}
+                      y={y - 1.7}
+                      width={3.4}
+                      height={3.4}
+                      transform={`rotate(45 ${x} ${y})`}
+                    />
+                  </motion.g>
+                )
+              })}
+            </motion.g>
+          )}
+
+          {isRetro ? (
+            isDaytime ? (
+              <g>
+                <circle className="sun-path-sun-halo" cx={sunX} cy={sunY} r={7} />
+                <circle className="sun-path-sun-core" cx={sunX} cy={sunY} r={3.2} />
+              </g>
+            ) : (
+              <g>
+                <title>{`Moon, ${Math.round(moonIlluminatedFraction * 100)}% illuminated, ${moonPhase < 0.5 ? 'waxing' : 'waning'}`}</title>
+                <circle className="sun-path-moon-shadow" cx={moonX} cy={moonY} r={MOON_R} />
+                <circle
+                  className="sun-path-moon-lit"
+                  cx={moonX + moonLitOffsetX}
+                  cy={moonY}
+                  r={MOON_R}
+                  clipPath={`url(#${MOON_CLIP_ID})`}
                 />
               </g>
             )
-          })}
-
-          {isDaytime ? (
-            <g>
-              <circle className="sun-path-sun-halo" cx={sunX} cy={sunY} r={7} />
-              <circle className="sun-path-sun-core" cx={sunX} cy={sunY} r={3.2} />
-            </g>
           ) : (
-            <g>
-              <title>{`Moon, ${Math.round(moonIlluminatedFraction * 100)}% illuminated, ${moonPhase < 0.5 ? 'waxing' : 'waning'}`}</title>
-              <circle className="sun-path-moon-shadow" cx={moonX} cy={moonY} r={MOON_R} />
-              <circle
-                className="sun-path-moon-lit"
-                cx={moonX + moonLitOffsetX}
-                cy={moonY}
-                r={MOON_R}
-                clipPath={`url(#${MOON_CLIP_ID})`}
-              />
-            </g>
+            <AnimatePresence mode="wait" initial={false}>
+              {isDaytime ? (
+                <motion.g
+                  key="sun"
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.5 }}
+                  transition={groupTransition}
+                  style={{ transformBox: 'fill-box', transformOrigin: 'center' }}
+                >
+                  <motion.circle
+                    className="sun-path-sun-halo sun-path-marker-motion"
+                    initial={{ cx: sunX, cy: sunY }}
+                    animate={{ cx: sunX, cy: sunY }}
+                    transition={markerTransition}
+                    r={7}
+                  />
+                  <motion.circle
+                    className="sun-path-sun-core sun-path-marker-motion"
+                    initial={{ cx: sunX, cy: sunY }}
+                    animate={{ cx: sunX, cy: sunY }}
+                    transition={markerTransition}
+                    r={3.2}
+                    whileHover={prefersReducedMotion ? undefined : { scale: 1.3 }}
+                    whileTap={prefersReducedMotion ? undefined : { scale: 0.85 }}
+                  />
+                </motion.g>
+              ) : (
+                <motion.g
+                  key="moon"
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.5 }}
+                  transition={groupTransition}
+                  style={{ transformBox: 'fill-box', transformOrigin: 'center' }}
+                >
+                  <title>{`Moon, ${Math.round(moonIlluminatedFraction * 100)}% illuminated, ${moonPhase < 0.5 ? 'waxing' : 'waning'}`}</title>
+                  <motion.circle
+                    className="sun-path-moon-halo sun-path-marker-motion"
+                    initial={{ cx: moonX, cy: moonY }}
+                    animate={{ cx: moonX, cy: moonY }}
+                    transition={markerTransition}
+                    r={6}
+                  />
+                  <motion.circle
+                    className="sun-path-moon-shadow sun-path-marker-motion"
+                    initial={{ cx: moonX, cy: moonY }}
+                    animate={{ cx: moonX, cy: moonY }}
+                    transition={markerTransition}
+                    r={MOON_R}
+                  />
+                  <motion.circle
+                    className="sun-path-moon-lit sun-path-marker-motion"
+                    initial={{ cx: moonX + moonLitOffsetX, cy: moonY }}
+                    animate={{ cx: moonX + moonLitOffsetX, cy: moonY }}
+                    transition={markerTransition}
+                    r={MOON_R}
+                    clipPath={`url(#${MOON_CLIP_ID})`}
+                    whileHover={prefersReducedMotion ? undefined : { scale: 1.3 }}
+                    whileTap={prefersReducedMotion ? undefined : { scale: 0.85 }}
+                  />
+                </motion.g>
+              )}
+            </AnimatePresence>
           )}
         </svg>
 

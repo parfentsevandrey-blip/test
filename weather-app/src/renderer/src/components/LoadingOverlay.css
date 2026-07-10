@@ -1,9 +1,14 @@
 /* ============================================================
-   LoadingOverlay — branded sun-pulse loader.
+   LoadingOverlay.
    The overlay scrim (.loading-overlay), status text (.loading-text)
    and error card (.error-banner) keep their global.css styles; this
-   file only adds the loader visual. Accent tokens adapt to both the
-   light and dark themes automatically.
+   file only adds the loader visuals. Accent tokens adapt across
+   themes automatically.
+
+   Below is the win95 fallback: a plain sun-pulse loader, rendered by
+   LoadingOverlay.tsx only when isRetro is true. Further down is the
+   "modern" maximalist loader (morphing blob, orbit ring, mesh wash,
+   glowing core) rendered for every other theme.
    ============================================================ */
 
 .loading-sun {
@@ -98,4 +103,146 @@
     opacity: 0.35;
     transform: scale(0.78);
   }
+}
+
+/* ============================================================
+   Modern loader -- everything below is exclusive to the
+   non-win95 themes (LoadingOverlay.tsx only renders this markup
+   when isRetro is false, so win95 never sees any of it). All
+   continuous looping is driven from Framer Motion props already
+   gated on useReducedMotion() in the component; the CSS here is
+   pure visual styling, not animation.
+   ============================================================ */
+
+.loading-overlay-modern {
+  overflow: hidden;
+}
+
+/* Ambient mesh wash breathing behind the whole stage */
+.loading-mesh {
+  position: absolute;
+  inset: -10%;
+  z-index: 0;
+  background: var(--mesh-gradient);
+  pointer-events: none;
+  filter: saturate(1.15);
+}
+
+.loading-mesh-error {
+  background:
+    radial-gradient(at 50% 32%, color-mix(in srgb, var(--danger) 32%, transparent) 0%, transparent 60%),
+    var(--mesh-gradient);
+}
+
+/* Orchestrated centerpiece: orbit ring + morphing blob + glowing core +
+   chasing particles, all layered inside one fixed-size stage. */
+.loading-stage {
+  position: relative;
+  z-index: 1;
+  width: clamp(148px, 24vh, 220px);
+  height: clamp(148px, 24vh, 220px);
+  border-radius: 50%;
+  box-shadow: var(--glow-soft);
+}
+
+.loading-orbit-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 0 10px var(--accent-glow));
+}
+
+.loading-orbit-ring {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.loading-blob-svg {
+  position: absolute;
+  inset: 12%;
+  width: 76%;
+  height: 76%;
+  overflow: visible;
+  filter: drop-shadow(0 0 22px var(--accent-glow)) drop-shadow(0 0 8px var(--accent-glow));
+}
+
+.loading-orb-core {
+  position: absolute;
+  inset: 40%;
+  z-index: 2;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 32% 28%,
+    color-mix(in srgb, white 55%, var(--accent-strong)) 0%,
+    var(--accent-strong) 45%,
+    var(--accent) 100%
+  );
+  box-shadow: var(--glow-strong);
+}
+
+.loading-particle-track {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.loading-particle {
+  position: absolute;
+  top: 3%;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-strong);
+  box-shadow: var(--glow-soft);
+  transform: translate(-50%, -50%);
+}
+
+.loading-particle-track.track-1 .loading-particle {
+  top: 7%;
+  width: 5px;
+  height: 5px;
+}
+
+.loading-particle-track.track-2 .loading-particle {
+  top: 11%;
+  width: 9px;
+  height: 9px;
+  background: var(--accent);
+}
+
+.loading-overlay-modern .loading-text-modern {
+  position: relative;
+  z-index: 1;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  background: var(--gradient-text-hero);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Error card gets a glowing lift instead of the flat default shadow */
+.error-banner-modern {
+  position: relative;
+  z-index: 1;
+  box-shadow: var(--glow-soft), var(--glass-shadow);
+}
+
+.error-glyph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, var(--danger) 0%, color-mix(in srgb, var(--danger) 70%, black) 100%);
+  box-shadow: 0 0 24px -4px color-mix(in srgb, var(--danger) 65%, transparent);
 }
