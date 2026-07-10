@@ -14,7 +14,7 @@
   --glass-bg-strong: rgba(255, 255, 255, 0.74);
   --glass-border: rgba(30, 27, 22, 0.11);
   --glass-border-soft: rgba(30, 27, 22, 0.06);
-  --glass-blur: blur(24px) saturate(165%);
+  --glass-blur: blur(14px) saturate(160%);
   --glass-shadow:
     0 1px 2px rgba(30, 27, 22, 0.04),
     0 10px 24px -14px rgba(30, 27, 22, 0.18),
@@ -102,7 +102,7 @@
   --glass-bg-strong: rgba(33, 31, 28, 0.66);
   --glass-border: rgba(255, 250, 242, 0.09);
   --glass-border-soft: rgba(255, 250, 242, 0.05);
-  --glass-blur: blur(26px) saturate(150%);
+  --glass-blur: blur(15px) saturate(145%);
   --glass-shadow:
     0 1px 2px rgba(0, 0, 0, 0.45),
     0 12px 28px -16px rgba(0, 0, 0, 0.62),
@@ -144,7 +144,7 @@
   --glass-bg-strong: rgba(248, 242, 228, 0.76);
   --glass-border: rgba(94, 66, 41, 0.15);
   --glass-border-soft: rgba(94, 66, 41, 0.08);
-  --glass-blur: blur(24px) saturate(170%);
+  --glass-blur: blur(14px) saturate(165%);
   --glass-shadow:
     0 1px 2px rgba(74, 52, 30, 0.05),
     0 10px 24px -14px rgba(74, 52, 30, 0.2),
@@ -257,15 +257,19 @@ input {
 /* Sits between the 3D scene and the UI overlay (same z-index as the canvas,
    but later in the DOM so it paints above it) -- a slow-drifting colored wash
    every translucent glass card now shows through. Not rendered at all for
-   win95 (see App.tsx), which has no glass/blur to show it through anyway. */
+   win95 (see App.tsx), which has no glass/blur to show it through anyway.
+   Blur radius and oversized inset are both kept modest -- a huge blur over a
+   huge element is expensive to rasterize every time it moves, and this only
+   ever translates a small distance (see App.tsx), so -8% is plenty of margin. */
 .gradient-mesh {
   position: absolute;
-  inset: -20%;
+  inset: -8%;
   z-index: 0;
   background: var(--mesh-gradient);
-  filter: blur(70px);
+  filter: blur(36px);
   opacity: 0.6;
   pointer-events: none;
+  will-change: transform;
 }
 
 .ui-overlay {

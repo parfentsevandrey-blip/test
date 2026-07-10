@@ -215,9 +215,12 @@ function DailyDetailPopover({
             className="icon-btn df-detail-close"
             aria-label="Close"
             onClick={onClose}
-            whileHover={prefersReducedMotion ? undefined : { scale: 1.12, rotate: 90 }}
-            whileTap={prefersReducedMotion ? undefined : { scale: 0.9 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+            // Calibrated down from an earlier 1.12 scale + 90deg spin, which read
+            // as aggressive per user feedback -- same subtle-icon-hover treatment
+            // used elsewhere (see BentoCard's card-level hover calibration).
+            whileHover={prefersReducedMotion ? undefined : { scale: 1.02, rotate: 12 }}
+            whileTap={prefersReducedMotion ? undefined : { scale: 0.94 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 24 }}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" aria-hidden="true">
               <line x1={6} y1={6} x2={18} y2={18} />
@@ -366,10 +369,15 @@ export function DailyForecast(): JSX.Element | null {
         key={day.date}
         onClick={() => setSelectedDate(day.date)}
         variants={rowVariants}
-        whileHover={prefersReducedMotion ? undefined : { y: -4, scale: 1.015 }}
-        whileFocus={prefersReducedMotion ? undefined : { y: -4, scale: 1.015 }}
-        whileTap={prefersReducedMotion ? undefined : { scale: 0.985 }}
-        transition={{ type: 'spring', stiffness: 380, damping: 22 }}
+        // Rows live inside one big BentoCard, which already applies its own
+        // whole-card hover (scale 1.015 + cursor-tilt). Giving each row an
+        // additional scale on top compounded into a chaotic double-hover, so
+        // this stays a small lift only and lets the card-level hover carry
+        // the "grow" feel.
+        whileHover={prefersReducedMotion ? undefined : { y: -2 }}
+        whileFocus={prefersReducedMotion ? undefined : { y: -2 }}
+        whileTap={prefersReducedMotion ? undefined : { scale: 0.99 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 26 }}
       >
         {dayCol}
         <motion.div

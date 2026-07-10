@@ -3,8 +3,12 @@ import './LoadingOverlay.css'
 import { resolveTheme, useWeatherStore } from '../store/useWeatherStore'
 
 /* Three Catmull-Rom-smoothed blob outlines sharing an identical command
- * structure (M + 8 C segments + Z) so Framer Motion can tween the raw "d"
- * attribute between them as a genuine morph, not a crossfade. */
+ * structure (M + 8 C segments + Z). Only BLOB_PATHS[0] is actually rendered
+ * (as a static resting shape) -- animating the raw "d" attribute between
+ * these on a repeat:Infinity loop was real per-frame main-thread path
+ * recompute + repaint cost for a decorative flourish, so it's no longer
+ * tweened at runtime. The alternates are kept in case a future one-shot
+ * transition wants them. */
 const BLOB_PATHS = [
   'M100,28 C114.85,27.76 132.25,42.75 145.25,54.75 C158.25,66.75 178.47,85.39 178,100 C177.53,114.61 155.43,130.09 142.43,142.43 C129.43,154.76 114.85,173.29 100,174 C85.15,174.71 66.66,159 53.33,146.67 C40,134.34 19.53,115.08 20,100 C20.47,84.92 42.83,68.16 56.16,56.16 C69.49,44.16 85.15,28.24 100,28 Z',
   'M100,40 C118.62,40.24 145.49,34.85 155.15,44.85 C164.82,54.85 157.53,81.14 158,100 C158.47,118.86 167.65,147.65 157.98,157.98 C148.32,168.32 118.62,162.71 100,162 C81.38,161.29 56.26,164.07 46.26,153.74 C36.26,143.41 40.47,118.38 40,100 C39.53,81.62 33.43,53.43 43.43,43.43 C53.43,33.43 81.38,39.76 100,40 Z',
@@ -97,8 +101,8 @@ export function LoadingOverlay(): JSX.Element | null {
               type="button"
               aria-label="Try again"
               onClick={() => refresh()}
-              whileHover={prefersReducedMotion ? undefined : { scale: 1.06, transition: { type: 'spring', stiffness: 340, damping: 16 } }}
-              whileTap={prefersReducedMotion ? undefined : { scale: 0.93 }}
+              whileHover={prefersReducedMotion ? undefined : { scale: 1.02, transition: { type: 'spring', stiffness: 300, damping: 22 } }}
+              whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
             >
               Try again
             </motion.button>
@@ -138,6 +142,11 @@ export function LoadingOverlay(): JSX.Element | null {
                   <stop offset="100%" stopColor="var(--accent-strong)" />
                 </linearGradient>
               </defs>
+              {/* Draws in once, then holds steady -- the spinning look comes
+                  from the parent svg's cheap (transform-only) 360deg rotate
+                  loop above, not from re-animating pathLength/opacity every
+                  frame, which was measurable main-thread paint cost for a
+                  purely decorative ring. */}
               <motion.circle
                 cx={100}
                 cy={100}
@@ -145,12 +154,8 @@ export function LoadingOverlay(): JSX.Element | null {
                 className="loading-orbit-ring"
                 stroke="url(#loading-orbit-grad)"
                 initial={prefersReducedMotion ? false : { pathLength: 0, opacity: 0 }}
-                animate={
-                  prefersReducedMotion
-                    ? { pathLength: 0.72, opacity: 0.8 }
-                    : { pathLength: [0, 0.72, 0], opacity: [0, 0.9, 0] }
-                }
-                transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
+                animate={{ pathLength: 0.72, opacity: 0.82 }}
+                transition={{ duration: 0.9, ease: EASE_OUT }}
               />
             </motion.svg>
 
@@ -161,20 +166,16 @@ export function LoadingOverlay(): JSX.Element | null {
                   <stop offset="100%" stopColor="var(--accent)" />
                 </linearGradient>
               </defs>
+              {/* Static shape (was a continuous d-attribute morph across all
+                  three blobs) -- ambient life still comes from the rotating
+                  ring, orbiting particles and pulsing core around it. */}
               <motion.path
                 className="loading-blob-path"
                 fill="url(#loading-blob-grad)"
-                initial={prefersReducedMotion ? false : { d: BLOB_PATHS[0], scale: 0.6, opacity: 0 }}
-                animate={
-                  prefersReducedMotion
-                    ? { d: BLOB_PATHS[0], scale: 1, opacity: 1 }
-                    : { d: [...BLOB_PATHS, BLOB_PATHS[0]], scale: 1, opacity: 1 }
-                }
-                transition={{
-                  d: { duration: 8, repeat: Infinity, ease: 'easeInOut' },
-                  scale: { duration: 0.6, ease: EASE_OUT },
-                  opacity: { duration: 0.6, ease: EASE_OUT }
-                }}
+                d={BLOB_PATHS[0]}
+                initial={prefersReducedMotion ? false : { scale: 0.6, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.6, ease: EASE_OUT }}
               />
             </motion.svg>
 

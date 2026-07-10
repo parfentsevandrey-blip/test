@@ -41,9 +41,9 @@ export function PrecipitationCard(): JSX.Element | null {
         <div className="metric-header">
           <motion.span
             className="mx-icon"
-            whileHover={motionOn ? { scale: 1.18, filter: 'drop-shadow(0 0 6px var(--accent))' } : undefined}
-            whileTap={motionOn ? { scale: 0.9 } : undefined}
-            transition={{ type: 'spring', stiffness: 380, damping: 14 }}
+            whileHover={motionOn ? { scale: 1.05, filter: 'drop-shadow(0 0 6px var(--accent))' } : undefined}
+            whileTap={motionOn ? { scale: 0.95 } : undefined}
+            transition={{ type: 'spring', stiffness: 300, damping: 18 }}
           >
             <RainIcon />
           </motion.span>

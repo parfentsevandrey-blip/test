@@ -6,6 +6,13 @@ interface WeatherIconProps {
   condition: WeatherCondition
   isDay: boolean
   className?: string
+  /** Continuously pulses the glow via a per-frame filter animation -- real
+   *  cost, so it's reserved for the one hero-sized instance on screen at a
+   *  time (CurrentWeatherCard). Every list context (hourly cells, daily
+   *  rows) can have a dozen-plus simultaneous instances; those get a static
+   *  glow instead, since animating `filter` on that many elements at once
+   *  runs entirely on the main thread and was a measurable source of jank. */
+  glowPulse?: boolean
 }
 
 const SVG_PROPS = {
@@ -234,7 +241,7 @@ function getGlowColor(condition: WeatherCondition, isDay: boolean): string {
 const GLOW_MIN_PX = 4
 const GLOW_MAX_PX = 10
 
-export function WeatherIcon({ condition, isDay, className }: WeatherIconProps): JSX.Element {
+export function WeatherIcon({ condition, isDay, className, glowPulse = false }: WeatherIconProps): JSX.Element {
   const props = {
     ...SVG_PROPS,
     className: className ? `weather-icon-glyph ${className}` : 'weather-icon-glyph'
@@ -255,6 +262,7 @@ export function WeatherIcon({ condition, isDay, className }: WeatherIconProps): 
   }
 
   const glowColor = getGlowColor(condition, isDay)
+  const staticGlow = `drop-shadow(0 0 ${GLOW_MIN_PX}px ${glowColor})`
 
   return (
     <AnimatePresence mode="wait" initial={false}>
@@ -266,18 +274,20 @@ export function WeatherIcon({ condition, isDay, className }: WeatherIconProps): 
           opacity: 1,
           scale: 1,
           rotate: 0,
-          filter: [
-            `drop-shadow(0 0 ${GLOW_MIN_PX}px ${glowColor})`,
-            `drop-shadow(0 0 ${GLOW_MAX_PX}px ${glowColor})`,
-            `drop-shadow(0 0 ${GLOW_MIN_PX}px ${glowColor})`
-          ]
+          filter: glowPulse
+            ? [
+                `drop-shadow(0 0 ${GLOW_MIN_PX}px ${glowColor})`,
+                `drop-shadow(0 0 ${GLOW_MAX_PX}px ${glowColor})`,
+                `drop-shadow(0 0 ${GLOW_MIN_PX}px ${glowColor})`
+              ]
+            : staticGlow
         }}
         exit={{ opacity: 0, scale: 0.65, rotate: 10, transition: { duration: 0.15 } }}
         transition={{
           opacity: { duration: 0.3 },
           scale: { type: 'spring', stiffness: 300, damping: 15 },
           rotate: { type: 'spring', stiffness: 300, damping: 15 },
-          filter: { duration: 3.2, repeat: Infinity, ease: 'easeInOut' }
+          filter: glowPulse ? { duration: 3.2, repeat: Infinity, ease: 'easeInOut' } : { duration: 0.3 }
         }}
       >
         <Glyph condition={condition} isDay={isDay} />

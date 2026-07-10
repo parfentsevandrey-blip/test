@@ -272,14 +272,17 @@
 }
 
 /* Rises fast, then falls back on the springy curve so its own natural
-   overshoot puts a small wobble into the landing instead of an even glide. */
+   overshoot puts a small wobble into the landing instead of an even glide.
+   Peak scale is intentionally modest (was 1.45) -- the card itself is
+   already lifting/tilting on hover, so the marker only needs a small accent
+   pop, not a second competing motion. */
 @keyframes uv-marker-pop {
   0% {
     scale: 1;
     animation-timing-function: cubic-bezier(0.3, 0, 0.2, 1);
   }
   40% {
-    scale: 1.45;
+    scale: 1.15;
     animation-timing-function: var(--ease-spring);
   }
   100% {
@@ -451,16 +454,21 @@
 }
 
 /* ---------- Shared ambient glow pulse ----------
-   A slow "breathing" brightness pulse on the four instrument faces, so the
-   maximalist glow reads as alive even at rest, not just on hover. filter
-   composites with each element's own box-shadow, so the whole glow (not
-   just the fill) breathes together. Already covered by the win95
+   A slow "breathing" brightness pulse so the maximalist glow reads as alive
+   even at rest, not just on hover. filter composites with each element's
+   own box-shadow, so the whole glow (not just the fill) breathes together.
+   Each of humidity-ring-fill / uv-scale-marker / vis-gauge-fill is a single
+   on-screen instance (one card each), so an infinite `filter` loop on them
+   is cheap. The precip card renders ~12 bars at once, though -- looping
+   `filter` on every one of them would be the same "N infinite loops"
+   problem WeatherIcon had, so only the single "is-now" bar gets the
+   continuous pulse; the rest stay static. Already covered by the win95
    `animation: none !important` reset below -- no new rule needed there. */
 @media (prefers-reduced-motion: no-preference) {
   .humidity-ring-fill,
   .uv-scale-marker,
   .vis-gauge-fill,
-  .precip-card .precip-bar-fill {
+  .precip-card .precip-bar-col.is-now .precip-bar-fill {
     animation: mx-ambient-pulse 3.6s ease-in-out infinite;
   }
 }

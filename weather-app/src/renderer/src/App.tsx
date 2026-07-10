@@ -202,16 +202,15 @@ export function App(): JSX.Element {
       {/* A slow-drifting mesh-gradient wash between the 3D scene and the UI --
           every glass card is real translucent+blurred now, so this is what
           they're actually showing through. win95 stays flat, so it's skipped
-          entirely rather than merely hidden. */}
+          entirely rather than merely hidden. Translate-only (no scale): a
+          blurred layer can be cheaply repositioned by the compositor, but
+          scaling it forces the browser to re-rasterize the blur every frame,
+          which was a real, measurable cost given how large this element is. */}
       {!isWin95 && (
         <motion.div
           className="gradient-mesh"
           aria-hidden="true"
-          animate={
-            prefersReducedMotion
-              ? undefined
-              : { x: [0, 40, -25, 0], y: [0, -25, 20, 0], scale: [1, 1.08, 1.04, 1] }
-          }
+          animate={prefersReducedMotion ? undefined : { x: [0, 40, -25, 0], y: [0, -25, 20, 0] }}
           transition={{ duration: 50, repeat: Infinity, ease: 'easeInOut' }}
         />
       )}

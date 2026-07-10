@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
 import type { CSSProperties, KeyboardEvent, WheelEvent } from 'react'
 import { AnimatePresence, animate, motion, useMotionValue, useReducedMotion } from 'framer-motion'
 import './HourlyForecast.css'
@@ -98,37 +98,50 @@ export function HourlyForecast(): JSX.Element | null {
     return () => ro.disconnect()
   }, [scrollEl])
 
-  if (!weather) return null
+  // Both the 24-point window and the SVG curve built from it only depend on
+  // the fetched weather data (and the unit-independent temperature values),
+  // never on hoveredIndex -- memoized so hovering across cells/pops (which
+  // updates hoveredIndex on every mouseenter) doesn't re-run the Catmull-Rom
+  // spline + path-string building on every single column crossed.
+  const points = useMemo(() => {
+    if (!weather) return []
+    const flooredHour = `${weather.current.time.slice(0, 13)}:00`
+    const startIndex = weather.hourly.findIndex((h) => h.time === flooredHour)
+    const from = startIndex === -1 ? 0 : startIndex
+    return weather.hourly.slice(from, from + HOURS_SHOWN)
+  }, [weather])
 
-  const flooredHour = `${weather.current.time.slice(0, 13)}:00`
-  const startIndex = weather.hourly.findIndex((h) => h.time === flooredHour)
-  const from = startIndex === -1 ? 0 : startIndex
-  const points = weather.hourly.slice(from, from + HOURS_SHOWN)
+  const curve = useMemo(() => {
+    if (points.length === 0) return null
+    const stripWidth = points.length * COL_WIDTH
 
-  if (points.length === 0) return null
+    // Map the window's min..max temperature onto the band's vertical extent.
+    const temps = points.map((p) => p.temperature)
+    const minTemp = Math.min(...temps)
+    const maxTemp = Math.max(...temps)
+    const tempSpan = maxTemp - minTemp
+    const curvePoints: CurvePoint[] = temps.map((t, i) => ({
+      x: i * COL_WIDTH + COL_WIDTH / 2,
+      y:
+        tempSpan === 0
+          ? BAND_HEIGHT / 2
+          : BAND_PAD + ((maxTemp - t) / tempSpan) * (BAND_HEIGHT - BAND_PAD * 2)
+    }))
+
+    const linePath = buildCurvePath(curvePoints)
+    const firstPoint = curvePoints[0]
+    const lastPoint = curvePoints[curvePoints.length - 1]
+    const areaPath = `${linePath} L ${round2(lastPoint.x)} ${BAND_HEIGHT} L ${round2(firstPoint.x)} ${BAND_HEIGHT} Z`
+    const nowPoint = curvePoints[NOW_INDEX]
+    return { stripWidth, linePath, areaPath, nowPoint }
+  }, [points])
+
+  if (!weather || points.length === 0 || !curve) return null
+
+  const { stripWidth, linePath, areaPath, nowPoint } = curve
 
   // Unique, CSS-safe gradient id (useId can emit ":" which breaks url(#...)).
   const gradientId = `hf-grad-${reactId.replace(/[^a-zA-Z0-9_-]/g, '')}`
-  const stripWidth = points.length * COL_WIDTH
-
-  // Map the window's min..max temperature onto the band's vertical extent.
-  const temps = points.map((p) => p.temperature)
-  const minTemp = Math.min(...temps)
-  const maxTemp = Math.max(...temps)
-  const tempSpan = maxTemp - minTemp
-  const curvePoints: CurvePoint[] = temps.map((t, i) => ({
-    x: i * COL_WIDTH + COL_WIDTH / 2,
-    y:
-      tempSpan === 0
-        ? BAND_HEIGHT / 2
-        : BAND_PAD + ((maxTemp - t) / tempSpan) * (BAND_HEIGHT - BAND_PAD * 2)
-  }))
-
-  const linePath = buildCurvePath(curvePoints)
-  const firstPoint = curvePoints[0]
-  const lastPoint = curvePoints[curvePoints.length - 1]
-  const areaPath = `${linePath} L ${round2(lastPoint.x)} ${BAND_HEIGHT} L ${round2(firstPoint.x)} ${BAND_HEIGHT} Z`
-  const nowPoint = curvePoints[NOW_INDEX]
 
   const stripStyle = {
     width: `${stripWidth}px`,
@@ -198,7 +211,10 @@ export function HourlyForecast(): JSX.Element | null {
     <div
       className="hf-hover-highlight"
       style={{
-        left: (hovered ?? NOW_INDEX) * COL_WIDTH + 2,
+        // transform instead of left: sliding the pill between columns is a
+        // compositor-only reposition this way; animating `left` would force
+        // layout+paint on every hovered cell crossed during a hover sweep.
+        transform: `translateX(${(hovered ?? NOW_INDEX) * COL_WIDTH + 2}px)`,
         width: COL_WIDTH - 4,
         opacity: hovered !== null && hovered !== NOW_INDEX ? 1 : 0
       }}
@@ -366,9 +382,12 @@ export function HourlyForecast(): JSX.Element | null {
                     key={point.time}
                     variants={cellVariants}
                     onMouseEnter={() => setHoveredIndex(index)}
-                    whileHover={prefersReducedMotion ? undefined : { y: -3, scale: 1.06 }}
-                    whileTap={prefersReducedMotion ? undefined : { scale: 0.95 }}
-                    transition={{ type: 'spring', stiffness: 380, damping: 22 }}
+                    // Subtle accent only -- the card this cell lives in already
+                    // gets its own hover scale from BentoCard, so a big lift/scale
+                    // here on top of that read as two competing motions at once.
+                    whileHover={prefersReducedMotion ? undefined : { y: -1, scale: 1.02 }}
+                    whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+                    transition={{ type: 'spring', stiffness: 340, damping: 28 }}
                   >
                     {renderCellContent(point, index)}
                   </motion.div>

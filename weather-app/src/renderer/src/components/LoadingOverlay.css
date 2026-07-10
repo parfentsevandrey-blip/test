@@ -49,7 +49,13 @@
   animation-delay: -1.6s;
 }
 
-.loading-overlay .loading-text {
+/* Scoped to win95's plain wrapper only: .loading-text is also present (as a
+   second class alongside .loading-text-modern) on the modern loader's status
+   text, which already gets its opacity/position handled by Framer Motion on
+   mount/exit. Without the :not() guard this selector's specificity leaked
+   onto the modern text too, layering a redundant always-on CSS animation
+   under the intentional Framer transitions. */
+.loading-overlay:not(.loading-overlay-modern) .loading-text {
   animation: loading-text-breathe 2.4s ease-in-out infinite;
 }
 

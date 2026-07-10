@@ -69,9 +69,9 @@ export function VisibilityCard(): JSX.Element | null {
         <div className="metric-header">
           <motion.span
             className="mx-icon"
-            whileHover={motionOn ? { scale: 1.18, filter: 'drop-shadow(0 0 6px var(--accent))' } : undefined}
-            whileTap={motionOn ? { scale: 0.9 } : undefined}
-            transition={{ type: 'spring', stiffness: 380, damping: 14 }}
+            whileHover={motionOn ? { scale: 1.05, filter: 'drop-shadow(0 0 6px var(--accent))' } : undefined}
+            whileTap={motionOn ? { scale: 0.95 } : undefined}
+            transition={{ type: 'spring', stiffness: 300, damping: 18 }}
           >
             <EyeIcon />
           </motion.span>
@@ -91,7 +91,7 @@ export function VisibilityCard(): JSX.Element | null {
         <motion.div
           className="metric-visual vis-gauge-wrap"
           aria-hidden="true"
-          whileHover={motionOn ? { scale: 1.035 } : undefined}
+          whileHover={motionOn ? { scale: 1.02 } : undefined}
           transition={{ type: 'spring', stiffness: 260, damping: 20 }}
         >
           <div className="vis-gauge">

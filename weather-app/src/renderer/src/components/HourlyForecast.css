@@ -129,13 +129,18 @@
 .hf-hover-highlight {
   position: absolute;
   top: 0;
+  left: 0;
   bottom: 2px;
   border-radius: var(--radius-md);
   background: var(--control-active);
   opacity: 0;
   pointer-events: none;
+  /* Positioned via inline `transform: translateX(...)` (set in TSX) instead
+     of `left` -- transitioning a transform is compositor-only, whereas
+     transitioning `left` forces layout+paint on every column the hover
+     glides across. */
   transition:
-    left 0.25s var(--ease-out),
+    transform 0.25s var(--ease-out),
     opacity 0.2s var(--ease-out);
 }
 
@@ -257,11 +262,13 @@
   transition: scale 0.35s var(--ease-spring-soft);
 }
 
-/* The whole strip "comes alive" on engagement — same idiom the metric-card
-   gauges already use for their own hover sweeps. */
+/* The whole strip gets a quiet accent on engagement -- kept subtle since the
+   dot already breathes continuously via hf-dot-pulse, and the card itself
+   ALSO gets its own hover scale from BentoCard; stacking a big jump here on
+   top of both read as jarring. */
 @media (prefers-reduced-motion: no-preference) {
   .hf-strip:hover .hf-curve-dot {
-    scale: 1.16;
+    scale: 1.08;
   }
 }
 

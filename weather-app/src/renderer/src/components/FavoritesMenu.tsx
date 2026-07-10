@@ -105,7 +105,7 @@ function FavoriteRow({
               y: { duration: 0.26, delay: 0.09 + index * 0.026, ease: [0.16, 1, 0.3, 1] }
             }
       }
-      whileDrag={reducedMotion ? undefined : { scale: 1.035, zIndex: 2, boxShadow: 'var(--glow-strong)' }}
+      whileDrag={reducedMotion ? undefined : { scale: 1.02, zIndex: 2, boxShadow: 'var(--glow-strong)' }}
     >
       <span
         className="favorites-drag-handle"

@@ -206,6 +206,11 @@ export function CurrentWeatherCard(): JSX.Element | null {
   const targetTemp = weather ? Math.round(celsiusTo(unit, weather.current.temperature)) : 0
   const animatedTemp = useCountUp(targetTemp)
   const insight = useMemo(() => (weather ? buildInsight(weather, unit) : ''), [weather, unit])
+  // Keyed on `weather` (not the once-a-second city clock) so this hourly-series
+  // scan doesn't re-run 48-72 Date parses every single tick — the live seconds
+  // clock forces a re-render every second, but pressure trend only actually
+  // changes when new data arrives.
+  const trend = useMemo(() => (weather ? pressureTrend(weather, Date.now()) : null), [weather])
 
   // A brief spring "pop" + glow flash punctuates every settled temperature
   // change (new data, unit toggle) on top of the continuous count-up, so the
@@ -239,7 +244,6 @@ export function CurrentWeatherCard(): JSX.Element | null {
 
   const today = weather.daily.at(0)
   const pressure = `${Math.round(weather.current.pressure)} hPa`
-  const trend = pressureTrend(weather, Date.now())
 
   // City wall clock is encoded in the Date's UTC fields (see useCityClock).
   const clockDay = cityClock.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' })
@@ -265,8 +269,11 @@ export function CurrentWeatherCard(): JSX.Element | null {
     hidden: { opacity: 0, y: prefersReducedMotion ? 0 : 10 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: EASE_OUT } }
   }
-  const statWhileHover = prefersReducedMotion ? undefined : { y: -3, scale: 1.05 }
-  const statWhileTap = prefersReducedMotion ? undefined : { scale: 0.95 }
+  // BentoCard already applies a whole-card hover scale+tilt; a large lift/scale
+  // on these pills too would stack into a chaotic double-motion, so this is
+  // kept to a subtle accent (small lift, no scale) that doesn't compete with it.
+  const statWhileHover = prefersReducedMotion ? undefined : { y: -1 }
+  const statWhileTap = prefersReducedMotion ? undefined : { scale: 0.97 }
 
   return (
     <BentoCard span="bento-hero">
@@ -347,7 +354,7 @@ export function CurrentWeatherCard(): JSX.Element | null {
               °{unitLetter}
             </span>
           </span>
-          <WeatherIcon condition={condition} isDay={weather.current.isDay} className="hero-icon" />
+          <WeatherIcon condition={condition} isDay={weather.current.isDay} className="hero-icon" glowPulse />
         </div>
 
         <div className="hero-cond-group">
@@ -437,7 +444,7 @@ export function CurrentWeatherCard(): JSX.Element | null {
                   variants={statItemVariants}
                   whileHover={statWhileHover}
                   whileTap={statWhileTap}
-                  transition={{ type: 'spring', stiffness: 380, damping: 20 }}
+                  transition={{ type: 'spring', stiffness: 260, damping: 24 }}
                 >
                   <svg {...STAT_ICON_PROPS}>
                     <path d="M12 19V5" />
@@ -454,7 +461,7 @@ export function CurrentWeatherCard(): JSX.Element | null {
                   variants={statItemVariants}
                   whileHover={statWhileHover}
                   whileTap={statWhileTap}
-                  transition={{ type: 'spring', stiffness: 380, damping: 20 }}
+                  transition={{ type: 'spring', stiffness: 260, damping: 24 }}
                 >
                   <svg {...STAT_ICON_PROPS}>
                     <path d="M12 5v14" />
@@ -470,7 +477,7 @@ export function CurrentWeatherCard(): JSX.Element | null {
                 variants={statItemVariants}
                 whileHover={statWhileHover}
                 whileTap={statWhileTap}
-                transition={{ type: 'spring', stiffness: 380, damping: 20 }}
+                transition={{ type: 'spring', stiffness: 260, damping: 24 }}
               >
                 <svg {...STAT_ICON_PROPS}>
                   <path d="m12 14 4-4" />

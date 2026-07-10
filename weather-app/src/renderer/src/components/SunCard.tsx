@@ -342,7 +342,6 @@ export function SunCard(): JSX.Element | null {
                     animate={{ cx: sunX, cy: sunY }}
                     transition={markerTransition}
                     r={3.2}
-                    whileHover={prefersReducedMotion ? undefined : { scale: 1.3 }}
                     whileTap={prefersReducedMotion ? undefined : { scale: 0.85 }}
                   />
                 </motion.g>
@@ -377,7 +376,6 @@ export function SunCard(): JSX.Element | null {
                     transition={markerTransition}
                     r={MOON_R}
                     clipPath={`url(#${MOON_CLIP_ID})`}
-                    whileHover={prefersReducedMotion ? undefined : { scale: 1.3 }}
                     whileTap={prefersReducedMotion ? undefined : { scale: 0.85 }}
                   />
                 </motion.g>

@@ -57,8 +57,8 @@ function ToggleRow({ label, description, checked, onChange, isRetro }: ToggleRow
         aria-label={label}
         className={`settings-toggle${checked ? ' is-on' : ''}`}
         onClick={() => onChange(!checked)}
-        whileHover={prefersReducedMotion ? undefined : { scale: 1.06 }}
-        whileTap={prefersReducedMotion ? undefined : { scale: 0.88 }}
+        whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
+        whileTap={prefersReducedMotion ? undefined : { scale: 0.94 }}
       >
         <motion.span
           className="settings-toggle-thumb"
@@ -319,8 +319,8 @@ export function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Element {
                 className="icon-btn settings-close"
                 aria-label="Close settings"
                 onClick={requestClose}
-                whileHover={prefersReducedMotion ? undefined : { scale: 1.1, rotate: 90 }}
-                whileTap={prefersReducedMotion ? undefined : { scale: 0.85 }}
+                whileHover={prefersReducedMotion ? undefined : { scale: 1.04, rotate: 12 }}
+                whileTap={prefersReducedMotion ? undefined : { scale: 0.92 }}
               >
                 {closeIcon}
               </motion.button>
