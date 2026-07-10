@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import type { SceneContext, SceneEffect, SceneParams } from './contract'
-import { makeRadialTexture } from './textures'
+import { makeMoonDiscTexture, makeSunDiscTexture } from './textures'
 import { clamp, clamp01, lerp } from '../utils/math'
 
 /** Radius of the sky dome mesh itself. */
@@ -36,6 +36,11 @@ const skyFragmentShader = /* glsl */ `
   uniform vec2 uWind;
   uniform float uHaze;
   uniform float uStriationStrength;
+  uniform vec3 uAntiSunDir;
+  uniform float uDuskStrength;
+  uniform float uCloudPatchiness;
+  uniform vec3 uStrikeDir;
+  uniform float uStrikeBrightness;
 
   void main() {
     vec3 dir = normalize(vWorldPosition);
@@ -72,11 +77,88 @@ const skyFragmentShader = /* glsl */ `
     vec3 hazeColor = mix(uHorizonColor, uZenithColor, 0.42);
     skyColor = mix(skyColor, hazeColor, clamp(band * uHaze * haze, 0.0, 1.0) * uStriationStrength);
 
+    // Anti-twilight arch: the Belt of Venus (a dusty pink-mauve band) sitting
+    // just above Earth's own shadow rising (a cooler steel-blue band) on the
+    // side of the sky opposite the sun -- only visible during the ~10 minutes
+    // around sunrise/sunset, and only on the anti-solar side of the dome.
+    float antiSun = dot(dir, uAntiSunDir);
+    float duskCone = pow(clamp(antiSun, 0.0, 1.0), 4.0);
+    float beltBand = smoothstep(0.02, 0.10, h) * (1.0 - smoothstep(0.14, 0.24, h));
+    float shadowBand = smoothstep(-0.02, 0.02, h) * (1.0 - smoothstep(0.02, 0.09, h));
+    vec3 beltColor = vec3(0.68, 0.52, 0.58);
+    vec3 shadowColor = vec3(0.22, 0.29, 0.42);
+    skyColor = mix(skyColor, beltColor, beltBand * duskCone * uDuskStrength * 0.5);
+    skyColor = mix(skyColor, shadowColor, shadowBand * duskCone * uDuskStrength * 0.4);
+
+    // Patchy cloud-shadow flicker: a restless drifting darkening for partly-
+    // cloudy skies (peaks at ~50% cloud cover, silent at 0% or 100%), reusing
+    // the drift phase already computed for the striation haze above.
+    float shadowGate = uCloudPatchiness * (1.0 - uCloudPatchiness) * 4.0;
+    float patchNoise = sin(dir.x * 2.6 + drift * 0.6) * sin(dir.z * 3.1 - drift * 0.4) * 0.5 + 0.5;
+    float shadowMix = shadowGate * smoothstep(0.35, 0.75, patchNoise) * smoothstep(0.05, 0.4, h);
+    skyColor *= mix(1.0, 0.90, shadowMix);
+
     // Flatten contrast for overcast / foggy / stormy conditions.
     vec3 flatColor = mix(uHorizonColor, uZenithColor, 0.55);
     skyColor = mix(skyColor, flatColor, uFlatness);
 
+    // Lightning-lit sky patch: the dome brightens locally toward the actual
+    // strike direction (not a full-screen wash) -- placed AFTER the overcast
+    // flattening above so it still reads clearly during a storm, exactly
+    // when it matters most.
+    float strikeCone = pow(clamp(dot(dir, normalize(uStrikeDir)), 0.0, 1.0), 8.0);
+    skyColor = mix(skyColor, vec3(0.92, 0.95, 1.0), strikeCone * uStrikeBrightness * 0.6);
+
     gl_FragColor = vec4(skyColor, 1.0);
+  }
+`
+
+// The moon is a real billboarded disc (not a THREE.Sprite -- SpriteMaterial's
+// built-in shader can't carry the custom terminator varyings below) that
+// bills itself toward the camera purely in the vertex shader: transform the
+// mesh's own origin into view space via modelViewMatrix, then offset by the
+// local quad corner scaled by uScale, all still in view space. That's the
+// same trick THREE.SpriteMaterial uses internally, so the mesh's own
+// rotation is irrelevant and no per-frame quaternion copy is needed.
+const MOON_VERTEX_SHADER = /* glsl */ `
+  uniform float uScale;
+  varying vec2 vUv;
+
+  void main() {
+    vUv = uv * 2.0 - 1.0;
+    vec4 mvPosition = modelViewMatrix * vec4(0.0, 0.0, 0.0, 1.0);
+    mvPosition.xy += position.xy * uScale;
+    gl_Position = projectionMatrix * mvPosition;
+  }
+`
+
+// Real crescent/gibbous terminator via the same two-same-radius-circle
+// technique SunCard's 2D moon glyph already uses (a shadow disc at the
+// origin, a lit disc offset by uOffsetX, both clipped to the origin disc's
+// circular bounds) -- proven, cheap, and visually convincing despite not
+// being the astronomically-exact ellipse terminator.
+const MOON_FRAGMENT_SHADER = /* glsl */ `
+  uniform sampler2D uMap;
+  uniform float uOffsetX;
+  uniform float uShadowDarken;
+  uniform float uOpacity;
+  varying vec2 vUv;
+
+  void main() {
+    float r = length(vUv);
+    float edgeAlpha = 1.0 - smoothstep(0.94, 1.0, r);
+    if (edgeAlpha <= 0.002) {
+      discard;
+    }
+
+    vec2 uv01 = vUv * 0.5 + 0.5;
+    vec3 texColor = texture2D(uMap, uv01).rgb;
+
+    float distToLit = length(vUv - vec2(uOffsetX, 0.0));
+    float lit = 1.0 - smoothstep(0.98, 1.02, distToLit);
+    vec3 color = texColor * mix(uShadowDarken, 1.0, lit);
+
+    gl_FragColor = vec4(color, edgeAlpha * uOpacity);
   }
 `
 
@@ -95,12 +177,19 @@ export class Sky implements SceneEffect {
   private readonly sunTexture: THREE.CanvasTexture
   private readonly moonTexture: THREE.CanvasTexture
   private readonly sunMaterial: THREE.SpriteMaterial
-  private readonly moonMaterial: THREE.SpriteMaterial
   private readonly sunSprite: THREE.Sprite
-  private readonly moonSprite: THREE.Sprite
+  private readonly moonGeometry: THREE.PlaneGeometry
+  private readonly moonMaterial: THREE.ShaderMaterial
+  private readonly moonMesh: THREE.Mesh
 
   private readonly sunLight: THREE.DirectionalLight
   private readonly hemiLight: THREE.HemisphereLight
+
+  // Shared cross-effect signals (see contract.ts): lightning brightens a local
+  // dome patch, a gust temporarily stirs the striation band harder.
+  private readonly lightningBrightness: { value: number }
+  private readonly lightningDir: THREE.Vector3
+  private readonly windGust: { value: number }
 
   // Smoothed toward the raw weather-derived targets each frame (see update()).
   private smoothedOvercast = 0
@@ -123,6 +212,9 @@ export class Sky implements SceneEffect {
     this.scene = ctx.scene
     this.sunLight = ctx.sunLight
     this.hemiLight = ctx.hemiLight
+    this.lightningBrightness = ctx.lightningBrightness
+    this.lightningDir = ctx.lightningDir
+    this.windGust = ctx.windGust
 
     // --- Sky dome -------------------------------------------------------
     this.domeGeometry = new THREE.SphereGeometry(SKY_RADIUS, 32, 16)
@@ -137,7 +229,12 @@ export class Sky implements SceneEffect {
         uTime: { value: 0 },
         uWind: { value: new THREE.Vector2(1, 0) },
         uHaze: { value: 0.4 },
-        uStriationStrength: { value: 0.13 }
+        uStriationStrength: { value: 0.13 },
+        uAntiSunDir: { value: new THREE.Vector3(0, -1, 0) },
+        uDuskStrength: { value: 0 },
+        uCloudPatchiness: { value: 0 },
+        uStrikeDir: { value: new THREE.Vector3(0, 1, 0) },
+        uStrikeBrightness: { value: 0 }
       },
       vertexShader: skyVertexShader,
       fragmentShader: skyFragmentShader,
@@ -151,10 +248,11 @@ export class Sky implements SceneEffect {
     this.dome.updateMatrix()
     this.scene.add(this.dome)
 
-    // --- Sun / moon billboards ------------------------------------------
-    this.sunTexture = makeRadialTexture('rgba(255,250,230,1)', 'rgba(255,180,80,0)', 128, 0.05)
-    this.moonTexture = makeRadialTexture('rgba(235,245,255,1)', 'rgba(190,210,235,0)', 128, 0.05)
-
+    // --- Sun billboard ----------------------------------------------------
+    // A real photospheric disc (baked once, see textures.ts) rather than a
+    // formless 2-stop blur; still an additive glow sprite, matching the
+    // sun's existing bright-light-source treatment.
+    this.sunTexture = makeSunDiscTexture()
     this.sunMaterial = new THREE.SpriteMaterial({
       map: this.sunTexture,
       color: 0xffffff,
@@ -163,24 +261,35 @@ export class Sky implements SceneEffect {
       fog: false,
       blending: THREE.AdditiveBlending
     })
-    this.moonMaterial = new THREE.SpriteMaterial({
-      map: this.moonTexture,
-      color: 0xffffff,
-      transparent: true,
-      depthWrite: false,
-      fog: false,
-      blending: THREE.AdditiveBlending
-    })
-
     this.sunSprite = new THREE.Sprite(this.sunMaterial)
     this.sunSprite.scale.setScalar(46)
     this.sunSprite.renderOrder = -90
     this.scene.add(this.sunSprite)
 
-    this.moonSprite = new THREE.Sprite(this.moonMaterial)
-    this.moonSprite.scale.setScalar(30)
-    this.moonSprite.renderOrder = -90
-    this.scene.add(this.moonSprite)
+    // --- Moon: a real billboarded disc with a genuine crescent/gibbous
+    // terminator (see MOON_VERTEX_SHADER/MOON_FRAGMENT_SHADER above) instead
+    // of a flat always-full glow sprite. Normal (not additive) blending,
+    // since it's now a lit/shadowed surface that should occlude the sky
+    // behind it, not a light source.
+    this.moonTexture = makeMoonDiscTexture()
+    this.moonMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        uMap: { value: this.moonTexture },
+        uScale: { value: 30 },
+        uOffsetX: { value: 2 },
+        uShadowDarken: { value: 0.15 },
+        uOpacity: { value: 0 }
+      },
+      vertexShader: MOON_VERTEX_SHADER,
+      fragmentShader: MOON_FRAGMENT_SHADER,
+      transparent: true,
+      depthWrite: false,
+      fog: false
+    })
+    this.moonGeometry = new THREE.PlaneGeometry(1, 1)
+    this.moonMesh = new THREE.Mesh(this.moonGeometry, this.moonMaterial)
+    this.moonMesh.renderOrder = -90
+    this.scene.add(this.moonMesh)
 
     // --- Light rig --------------------------------------------------------
     // DirectionalLight needs its target parented into the scene graph for
@@ -261,26 +370,54 @@ export class Sky implements SceneEffect {
     // Faint even under a clear sky, a touch more with cloud cover — but capped
     // low so it never becomes a cloud.
     u.uHaze.value = 0.35 + overcast * 0.45
-    // Stronger wind visibly stirs the striation band; near-calm keeps it a bare whisper.
-    u.uStriationStrength.value = lerp(0.06, 0.2, clamp01(params.windSpeed))
+    // Stronger wind visibly stirs the striation band; near-calm keeps it a bare
+    // whisper. A live gust (shared ctx.windGust) temporarily stirs it harder
+    // still, so the sky visibly surges in sync with the camera/mist/precip gust.
+    u.uStriationStrength.value = lerp(0.06, 0.2, clamp01(params.windSpeed)) * (1 + this.windGust.value * 0.6)
+
+    // Anti-twilight arch (Belt of Venus) peaks in the same dusk/dawn window
+    // the sunset colors already peak in, on the side of the sky opposite the
+    // sun -- moonDir is already that exact antipodal unit vector.
+    ;(u.uAntiSunDir.value as THREE.Vector3).copy(this.moonDir)
+    u.uDuskStrength.value = sunsetT * (1 - nightT)
+    // Patchy cloud-shadow flicker uses the already-smoothed overcast so a
+    // weather refresh never pops the darkening in/out, matching every other
+    // weather-reactive value in this shader.
+    u.uCloudPatchiness.value = overcast
+    // Lightning-lit sky patch: whatever Lightning last wrote to the shared signal.
+    ;(u.uStrikeDir.value as THREE.Vector3).copy(this.lightningDir)
+    u.uStrikeBrightness.value = this.lightningBrightness.value
 
     // ---- Sun / moon billboards -------------------------------------------
     this.sunSprite.position.copy(this.sunDir).multiplyScalar(CELESTIAL_RADIUS)
-    this.moonSprite.position.copy(this.moonDir).multiplyScalar(CELESTIAL_RADIUS)
+    this.moonMesh.position.copy(this.moonDir).multiplyScalar(CELESTIAL_RADIUS)
 
     // Cross-fade smoothly around the horizon instead of a hard cutoff.
     const sunVisibility = clamp01(altitude * 8 + 0.5)
     const moonVisibility = clamp01(-altitude * 8 + 0.5)
     const haze = 1 - flatness * 0.85
     this.sunMaterial.opacity = sunVisibility * haze
-    this.moonMaterial.opacity = moonVisibility * haze * 0.85
+    this.moonMaterial.uniforms.uOpacity.value = moonVisibility * haze * 0.85
 
     // Warmer near the horizon, pale gold near zenith; disc swells slightly
     // low in the sky, mimicking atmospheric magnification.
     this.sunDiscColor.set(0xfff4d6).lerp(this.hex(0xff8c42), sunsetT)
+    // A faint, narrow-window green-flash tint right at the true horizon (real
+    // atmospheric-optics phenomenon: differential refraction separates the
+    // rim's blue/green from its red body) -- gated off under cloud/fog so it
+    // never shows through anything but a genuinely clear horizon.
+    const flashWindow = clamp01(1 - Math.abs(altitude) / 0.018)
+    const flashGate = flashWindow * clamp01(1 - overcast * 2)
+    this.sunDiscColor.lerp(this.hex(0x8fe0c0), flashGate * 0.12)
     this.sunMaterial.color.copy(this.sunDiscColor)
     this.sunSprite.scale.setScalar(46 * lerp(1, 1.35, sunsetT))
-    this.moonSprite.scale.setScalar(30 * lerp(1, 1.15, sunsetT))
+    this.moonMaterial.uniforms.uScale.value = 30 * lerp(1, 1.15, sunsetT)
+
+    // Real crescent/gibbous terminator: same two-same-radius-circle offset
+    // technique as SunCard's 2D moon glyph (utils/moonPhase.ts is the single
+    // shared source of the underlying synodic-month math for both).
+    const moonSign = params.moonPhaseFrac < 0.5 ? 1 : -1
+    this.moonMaterial.uniforms.uOffsetX.value = moonSign * 2 * (1 - params.moonIllumination)
 
     // ---- Celestial lights --------------------------------------------------
     this.sunLight.position.copy(this.sunDir).multiplyScalar(200)
@@ -310,10 +447,12 @@ export class Sky implements SceneEffect {
     this.domeMaterial.dispose()
 
     this.scene.remove(this.sunSprite)
-    this.scene.remove(this.moonSprite)
     this.sunMaterial.dispose()
-    this.moonMaterial.dispose()
     this.sunTexture.dispose()
+
+    this.scene.remove(this.moonMesh)
+    this.moonGeometry.dispose()
+    this.moonMaterial.dispose()
     this.moonTexture.dispose()
 
     this.scene.remove(this.sunLight.target)

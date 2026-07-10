@@ -13,3 +13,8 @@ export function getMoonPhase(nowMs: number): number {
   const phase = (elapsedMs % SYNODIC_MONTH_MS) / SYNODIC_MONTH_MS
   return phase < 0 ? phase + 1 : phase
 }
+
+/** Illuminated fraction (0 = new moon, 1 = full) for a phase from getMoonPhase — shared by SunCard's crescent glyph and the 3D scene's moonlight/moon-disc rendering so the synodic math lives in exactly one place. */
+export function getMoonIlluminatedFraction(phase: number): number {
+  return (1 - Math.cos(2 * Math.PI * phase)) / 2
+}

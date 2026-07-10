@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import type { Quality, SceneContext, SceneEffect, SceneParams } from './contract'
-import { makeRadialTexture } from './textures'
+import { makeRadialTexture, makeStarSpikeTexture } from './textures'
 import { clamp01, lerp } from '../utils/math'
 
 /** Fraction of stars that gently twinkle (brightness + size pulse) over time. */
@@ -16,6 +16,21 @@ const STAR_COUNT_BY_QUALITY: Record<Quality, number> = {
   medium: 3200,
   high: 4000
 }
+
+/** Fixed galactic-plane axis (arbitrary tilt, deliberately not aligned to any world axis) for the Milky Way band re-weighting below. */
+const GALACTIC_AXIS = new THREE.Vector3(1, 0.3, -0.6).normalize()
+/** Stars within this dot-product distance of the galactic plane get the Milky Way size/brightness boost. */
+const GALACTIC_BAND_WIDTH = 0.32
+
+/** Sidereal drift: one full turn per this many seconds -- slow enough to be imperceptible moment-to-moment, a genuine shift only over a long-lived session. */
+const SIDEREAL_PERIOD_S = 1800
+/** Arbitrary tilted rotation axis so the drift doesn't read as a suspiciously perfect vertical spin. */
+const SIDEREAL_AXIS = new THREE.Vector3(0.12, 1, 0.02).normalize()
+
+/** The brightest stars (top ~1-2% by weight) additionally get a diffraction-spike overlay sprite. */
+const SPIKE_WEIGHT_THRESHOLD = 0.93
+/** Spike sprites render noticeably larger than their underlying star dot. */
+const SPIKE_SIZE_MULTIPLIER = 2.4
 
 const VERTEX_SHADER = /* glsl */ `
   attribute float aSize;
@@ -86,6 +101,13 @@ export class Stars implements SceneEffect {
   private readonly starTexture: THREE.CanvasTexture
   private readonly points: THREE.Points
 
+  // Diffraction-spike overlay for the brightest handful of stars -- parented
+  // to `points` so the shared sidereal rotation below carries both together.
+  private readonly spikeGeometry: THREE.BufferGeometry
+  private readonly spikeMaterial: THREE.ShaderMaterial
+  private readonly spikeTexture: THREE.CanvasTexture
+  private readonly spikePoints: THREE.Points
+
   /** Smoothed opacity so weather-driven changes never pop. */
   private opacity = 0
 
@@ -98,6 +120,15 @@ export class Stars implements SceneEffect {
     const brightness = new Float32Array(count)
     const colors = new Float32Array(count * 3)
     const twinkle = new Float32Array(count * 3)
+
+    // Collected alongside the main loop for the brightest handful of stars'
+    // diffraction-spike overlay -- unknown count up front (a random ~1-2% of
+    // `count`), so a plain array first, converted to typed arrays after.
+    const spikePositions: number[] = []
+    const spikeSizes: number[] = []
+    const spikeBrightness: number[] = []
+    const spikeColors: number[] = []
+    const spikeTwinkle: number[] = []
 
     for (let i = 0; i < count; i++) {
       // Uniform random point on a unit sphere.
@@ -115,8 +146,18 @@ export class Stars implements SceneEffect {
 
       // Bias toward small/dim stars with a handful of bright standouts.
       const weight = Math.pow(Math.random(), 2.4)
-      sizes[i] = lerp(0.6, 2.6, weight)
-      brightness[i] = lerp(0.3, 1, weight) * lerp(0.85, 1, Math.random())
+
+      // Milky Way band: stars near the fixed galactic plane get a size/
+      // brightness boost so a clear night sky shows a faint hazy band of
+      // overlapping stars instead of reading as flat uniform-random noise.
+      const bandDist = Math.abs(dx * GALACTIC_AXIS.x + dy * GALACTIC_AXIS.y + dz * GALACTIC_AXIS.z)
+      const bandBoost = 1 - smoothstep(0, GALACTIC_BAND_WIDTH, bandDist)
+
+      sizes[i] = lerp(0.6, 2.6, weight) * lerp(1, 1.6, bandBoost)
+      brightness[i] = Math.max(
+        lerp(0.3, 1, weight) * lerp(0.85, 1, Math.random()),
+        lerp(0, 0.32, bandBoost) * lerp(0.7, 1, Math.random())
+      )
 
       const tint = pickStarColor()
       colors[i * 3] = tint[0]
@@ -131,6 +172,14 @@ export class Stars implements SceneEffect {
         twinkle[i * 3] = 0
         twinkle[i * 3 + 1] = 0
         twinkle[i * 3 + 2] = 1
+      }
+
+      if (weight > SPIKE_WEIGHT_THRESHOLD) {
+        spikePositions.push(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2])
+        spikeSizes.push(sizes[i] * SPIKE_SIZE_MULTIPLIER)
+        spikeBrightness.push(brightness[i])
+        spikeColors.push(tint[0], tint[1], tint[2])
+        spikeTwinkle.push(twinkle[i * 3], twinkle[i * 3 + 1], twinkle[i * 3 + 2])
       }
     }
 
@@ -162,6 +211,37 @@ export class Stars implements SceneEffect {
     this.points = new THREE.Points(this.geometry, this.material)
     this.points.visible = false
     this.scene.add(this.points)
+
+    // --- Diffraction-spike overlay for the brightest stars ----------------
+    this.spikeGeometry = new THREE.BufferGeometry()
+    this.spikeGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(spikePositions), 3))
+    this.spikeGeometry.setAttribute('aSize', new THREE.BufferAttribute(new Float32Array(spikeSizes), 1))
+    this.spikeGeometry.setAttribute('aBrightness', new THREE.BufferAttribute(new Float32Array(spikeBrightness), 1))
+    this.spikeGeometry.setAttribute('aColor', new THREE.BufferAttribute(new Float32Array(spikeColors), 3))
+    this.spikeGeometry.setAttribute('aTwinkle', new THREE.BufferAttribute(new Float32Array(spikeTwinkle), 3))
+    this.spikeGeometry.computeBoundingSphere()
+
+    this.spikeTexture = makeStarSpikeTexture()
+    this.spikeMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        uMap: { value: this.spikeTexture },
+        uOpacity: { value: 0 },
+        uElapsed: { value: 0 },
+        uPixelRatio: { value: ctx.renderer.getPixelRatio() },
+        uBaseSize: { value: 3.2 }
+      },
+      vertexShader: VERTEX_SHADER,
+      fragmentShader: FRAGMENT_SHADER,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    })
+
+    this.spikePoints = new THREE.Points(this.spikeGeometry, this.spikeMaterial)
+    // Parented (not added directly to the scene) so the sidereal rotation in
+    // update() -- applied only to `points` -- carries the spikes along too,
+    // keeping every bright star's overlay locked to its own dot.
+    this.points.add(this.spikePoints)
   }
 
   update(dt: number, elapsed: number, params: SceneParams): void {
@@ -178,6 +258,16 @@ export class Stars implements SceneEffect {
     this.material.uniforms.uOpacity.value = this.opacity
     this.material.uniforms.uElapsed.value = elapsed
     this.points.visible = this.opacity > 0.003
+
+    this.spikeMaterial.uniforms.uOpacity.value = this.opacity
+    this.spikeMaterial.uniforms.uElapsed.value = elapsed
+    this.spikePoints.visible = this.points.visible
+
+    // Sidereal drift: the sun/moon already sweep across the sky in real time,
+    // but the star shell never moved at all -- a subtle inconsistency once
+    // noticed, since the whole point is a living ambient backdrop. Rotating
+    // the shared parent carries the diffraction-spike overlay along with it.
+    this.points.rotateOnWorldAxis(SIDEREAL_AXIS, dt * ((2 * Math.PI) / SIDEREAL_PERIOD_S))
   }
 
   dispose(): void {
@@ -185,5 +275,9 @@ export class Stars implements SceneEffect {
     this.geometry.dispose()
     this.material.dispose()
     this.starTexture.dispose()
+
+    this.spikeGeometry.dispose()
+    this.spikeMaterial.dispose()
+    this.spikeTexture.dispose()
   }
 }

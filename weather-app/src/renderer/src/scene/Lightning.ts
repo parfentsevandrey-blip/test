@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import type { Quality, SceneContext, SceneEffect, SceneParams } from './contract'
-import { makeRadialTexture } from './textures'
-import { clamp01, degToRad, lerp } from '../utils/math'
+import { makeGradientRampTexture, makeRadialTexture } from './textures'
+import { clamp, clamp01, degToRad, lerp } from '../utils/math'
 
 /** Zig-zag vertices along the main channel (2^3 + 1, built by 3 rounds of midpoint displacement). */
 const MAIN_POINTS = 9
@@ -69,6 +69,43 @@ const LIGHT_DECAY = 1
 const LIGHT_PEAK_MIN = 200
 const LIGHT_PEAK_MAX = 380
 
+/** Fraction of strikes that arc roughly horizontally cloud-to-cloud instead of descending toward the ground. */
+const CLOUD_TO_CLOUD_CHANCE = 0.3
+const CTC_HEIGHT_MIN = -6
+const CTC_HEIGHT_MAX = 6
+const CTC_DRIFT_MIN = -55
+const CTC_DRIFT_MAX = 55
+
+/** Chained rapid return-strokes: the same anchor restruck 1-2 extra times within a fraction of a second. */
+const RESTRIKE_MAX_CHAIN = 2
+const RESTRIKE_GAP_MIN = 0.06
+const RESTRIKE_GAP_MAX = 0.18
+/** Small positional jitter so a restrike doesn't look like a perfectly frozen repeat of the same bolt. */
+const RESTRIKE_JITTER_DIST = 6
+const RESTRIKE_JITTER_ANGLE = 0.05
+
+/** Warm ember afterglow lingering briefly after a strike's bright flicker sequence ends. */
+const AFTERGLOW_DURATION_MIN = 0.4
+const AFTERGLOW_DURATION_MAX = 0.9
+const AFTERGLOW_PEAK_FRACTION = 0.12
+
+/** Sub-threshold sheet lightning: a distant, geometry-free horizon glow flashing far more often than a full bolt --
+ *  real storms flicker behind the cloud deck constantly even when no channel is ever visible. Its own independent
+ *  scheduler runs in parallel to the main strike scheduler (both can be active at once, like real storms). */
+const SHEET_INTERVAL_MIN = 2.2
+const SHEET_INTERVAL_MAX = 6
+const SHEET_INTERVAL_MIN_HEAVY = 0.8
+const SHEET_INTERVAL_MAX_HEAVY = 2.2
+const SHEET_DURATION_MIN = 0.35
+const SHEET_DURATION_MAX = 0.85
+const SHEET_MAX_OPACITY = 0.22
+const SHEET_ELEVATION_MIN = degToRad(2)
+const SHEET_ELEVATION_MAX = degToRad(12)
+const SHEET_DISTANCE_MIN = MAX_DISTANCE * 1.15
+const SHEET_DISTANCE_MAX = MAX_DISTANCE * 1.4
+/** Sheet lightning's contribution to the shared ctx.lightningBrightness signal is dimmed -- it's a diffuse, distant glow, not a direct hit. */
+const SHEET_SIGNAL_WEIGHT = 0.4
+
 const BOLT_VERTEX_SHADER = /* glsl */ `
   attribute float aCore;
   varying float vCore;
@@ -82,6 +119,7 @@ const BOLT_VERTEX_SHADER = /* glsl */ `
 const BOLT_FRAGMENT_SHADER = /* glsl */ `
   uniform vec3 uColor;
   uniform float uOpacity;
+  uniform sampler2D uRamp;
   varying float vCore;
 
   void main() {
@@ -90,7 +128,11 @@ const BOLT_FRAGMENT_SHADER = /* glsl */ `
     if (alpha <= 0.003) {
       discard;
     }
-    gl_FragColor = vec4(uColor, alpha);
+    // Hot near-white core fading to a cooler violet-blue fringe, instead of
+    // one flat tint at every point along the ribbon -- uColor still supplies
+    // the existing per-strike white/cool-blue variation on top.
+    vec3 rampColor = texture2D(uRamp, vec2(clamp(vCore, 0.0, 1.0), 0.5)).rgb;
+    gl_FragColor = vec4(rampColor * uColor, alpha);
   }
 `
 
@@ -121,8 +163,19 @@ export class Lightning implements SceneEffect {
   private readonly glowTexture: THREE.CanvasTexture
   private readonly glowMaterial: THREE.SpriteMaterial
   private readonly glowSprite: THREE.Sprite
+  private readonly rampTexture: THREE.CanvasTexture
 
   private readonly light: THREE.PointLight
+
+  // Sub-threshold sheet lightning: its own sprite, independent scheduler.
+  private readonly sheetMaterial: THREE.SpriteMaterial
+  private readonly sheetSprite: THREE.Sprite
+  private readonly sheetDir = new THREE.Vector3(0, 1, 0)
+  private sheetActive = false
+  private sheetTimer = 0
+  private sheetDuration = 0
+  private nextSheetIn: number
+  private currentSheetBrightness = 0
 
   // Scratch buffers/vectors reused every strike -- never reallocated in update().
   private readonly mainT: Float32Array
@@ -141,6 +194,8 @@ export class Lightning implements SceneEffect {
   private readonly scratchOffset = new THREE.Vector3()
   private readonly flashColor = new THREE.Color()
   private readonly coolColor = new THREE.Color(0xb9ccff)
+  private readonly emberColor = new THREE.Color(0xff8a4d)
+  private readonly afterglowColor = new THREE.Color()
 
   // Mutable strike-scheduling state.
   private active = false
@@ -149,13 +204,38 @@ export class Lightning implements SceneEffect {
   private pulseCount = 0
   private peakLightIntensity = 0
   private nextStrikeIn: number
+  private currentStrikeBrightness = 0
   /** Latest params.precipitationIntensity, refreshed every update() -- scales strike frequency + peak brightness. */
   private stormIntensity = 0.5
+
+  // Chained rapid return-strokes: re-striking (approximately) the same anchor.
+  private lastAzimuth = 0
+  private lastElevation = 0
+  private lastDist = 0
+  private restrikeChainCount = 0
+  private forceRestrikeAnchor = false
+
+  // Warm ember afterglow after a strike's bright flicker sequence ends.
+  private afterglowActive = false
+  private afterglowTimer = 0
+  private afterglowDuration = 0
+  private afterglowPeak = 0
+  private currentAfterglowBrightness = 0
+
+  // Shared cross-effect signals (SceneManager constructs these; Sky/PostFX/Precipitation
+  // read them to react to a strike without depending on Lightning directly).
+  private readonly lightningBrightness: { value: number }
+  private readonly lightningDir: THREE.Vector3
+  /** Unit direction + elapsed-seconds timestamp of the most recent strike, for SceneManager's camera-flinch. */
+  readonly lastStrikeDir = new THREE.Vector3()
+  lastStrikeAt = -Infinity
 
   constructor(ctx: SceneContext) {
     this.scene = ctx.scene
     this.camera = ctx.camera
     this.maxBranches = MAX_BRANCHES_BY_QUALITY[ctx.quality]
+    this.lightningBrightness = ctx.lightningBrightness
+    this.lightningDir = ctx.lightningDir
 
     this.mainT = new Float32Array(MAIN_POINTS)
     this.mainS = new Float32Array(MAIN_POINTS)
@@ -204,10 +284,17 @@ export class Lightning implements SceneEffect {
     this.geometry.setAttribute('aCore', new THREE.BufferAttribute(this.cores, 1))
     this.geometry.setIndex(new THREE.BufferAttribute(indices, 1))
 
+    this.rampTexture = makeGradientRampTexture([
+      [0, 'rgba(120,150,255,1)'],
+      [0.35, 'rgba(190,205,255,1)'],
+      [0.7, 'rgba(255,255,255,1)'],
+      [1, 'rgba(255,255,255,1)']
+    ])
     this.boltMaterial = new THREE.ShaderMaterial({
       uniforms: {
         uColor: { value: new THREE.Color(0xffffff) },
-        uOpacity: { value: 0 }
+        uOpacity: { value: 0 },
+        uRamp: { value: this.rampTexture }
       },
       vertexShader: BOLT_VERTEX_SHADER,
       fragmentShader: BOLT_FRAGMENT_SHADER,
@@ -241,62 +328,116 @@ export class Lightning implements SceneEffect {
     this.light = new THREE.PointLight(0xffffff, 0, 0, LIGHT_DECAY)
     this.scene.add(this.light)
 
+    // Sub-threshold sheet lightning: a plain glow sprite (reusing the same
+    // glow texture, its own material so opacity/color are independent of the
+    // main strike's glow), far dimmer and much more frequent.
+    this.sheetMaterial = new THREE.SpriteMaterial({
+      map: this.glowTexture,
+      color: 0xffffff,
+      transparent: true,
+      depthWrite: false,
+      fog: false,
+      opacity: 0,
+      blending: THREE.AdditiveBlending
+    })
+    this.sheetSprite = new THREE.Sprite(this.sheetMaterial)
+    this.sheetSprite.visible = false
+    this.scene.add(this.sheetSprite)
+
     this.nextStrikeIn = this.rollNextStrikeInterval()
+    this.nextSheetIn = this.rollNextSheetInterval()
   }
 
-  update(dt: number, _elapsed: number, params: SceneParams): void {
+  update(dt: number, elapsed: number, params: SceneParams): void {
     this.stormIntensity = clamp01(params.precipitationIntensity)
 
     if (!params.thunderActive) {
-      if (this.active || this.light.intensity !== 0) {
+      if (this.active || this.afterglowActive || this.sheetActive || this.light.intensity !== 0) {
         this.resetIdle()
       }
       return
     }
 
-    if (!this.active) {
+    if (this.active) {
+      this.updateStrike(dt)
+    } else if (this.afterglowActive) {
+      this.updateAfterglow(dt)
+    } else {
       this.nextStrikeIn -= dt
       if (this.nextStrikeIn <= 0) {
-        this.startStrike()
+        this.startStrike(elapsed)
       }
-      return
     }
 
-    this.updateStrike(dt)
+    // Sheet lightning ticks independently -- real storms flicker behind the
+    // cloud deck constantly, whether or not a full bolt is also in progress.
+    this.updateSheetScheduler(dt)
+
+    this.combineLightningSignal()
   }
 
   dispose(): void {
     this.scene.remove(this.bolt)
     this.geometry.dispose()
     this.boltMaterial.dispose()
+    this.rampTexture.dispose()
 
     this.scene.remove(this.glowSprite)
     this.glowMaterial.dispose()
     this.glowTexture.dispose()
 
+    this.scene.remove(this.sheetSprite)
+    this.sheetMaterial.dispose()
+
     this.scene.remove(this.light)
   }
 
   /** Rolls a brand-new jagged bolt (+ optional forks) and flicker sequence, and kicks the strike off. */
-  private startStrike(): void {
+  private startStrike(elapsed: number): void {
     // -- Anchor + camera-facing basis for the bolt's flat zig-zag plane.
-    const azimuth = Math.random() * Math.PI * 2
-    const elevation = lerp(MIN_ELEVATION, MAX_ELEVATION, Math.random())
-    const dist = lerp(MIN_DISTANCE, MAX_DISTANCE, Math.random())
+    // A chained return-stroke reuses (with a small jitter) the previous
+    // strike's exact anchor instead of rolling a fresh random one, so it
+    // reads as a rapid restrike of the same channel rather than a new bolt.
+    let azimuth: number
+    let elevation: number
+    let dist: number
+    if (this.forceRestrikeAnchor) {
+      azimuth = this.lastAzimuth + (Math.random() * 2 - 1) * RESTRIKE_JITTER_ANGLE
+      elevation = clamp(this.lastElevation + (Math.random() * 2 - 1) * RESTRIKE_JITTER_ANGLE, MIN_ELEVATION, MAX_ELEVATION)
+      dist = this.lastDist + (Math.random() * 2 - 1) * RESTRIKE_JITTER_DIST
+      this.forceRestrikeAnchor = false
+    } else {
+      azimuth = Math.random() * Math.PI * 2
+      elevation = lerp(MIN_ELEVATION, MAX_ELEVATION, Math.random())
+      dist = lerp(MIN_DISTANCE, MAX_DISTANCE, Math.random())
+    }
+    this.lastAzimuth = azimuth
+    this.lastElevation = elevation
+    this.lastDist = dist
+
     const horiz = Math.cos(elevation)
     this.origin.set(Math.sin(azimuth) * horiz * dist, Math.sin(elevation) * dist, Math.cos(azimuth) * horiz * dist)
+    this.lastStrikeDir.copy(this.origin).normalize()
+    this.lastStrikeAt = elapsed
 
     this.normal.copy(this.origin).sub(this.camera.position).normalize()
     this.right.crossVectors(this.worldUp, this.normal).normalize()
     this.up.crossVectors(this.normal, this.right).normalize()
 
-    // -- Main channel: descends from the anchor with a random horizontal drift, jagged via midpoint displacement.
-    const height = lerp(MAIN_HEIGHT_MIN, MAIN_HEIGHT_MAX, Math.random())
-    const drift = lerp(MAIN_DRIFT_MIN, MAIN_DRIFT_MAX, Math.random())
+    // -- Main channel: normally descends from the anchor with a random
+    // horizontal drift; a cloud-to-cloud strike instead spreads roughly
+    // level and much wider, staying jagged via the same midpoint displacement.
+    const cloudToCloud = Math.random() < CLOUD_TO_CLOUD_CHANCE
+    const endHeight = cloudToCloud
+      ? lerp(CTC_HEIGHT_MIN, CTC_HEIGHT_MAX, Math.random())
+      : -lerp(MAIN_HEIGHT_MIN, MAIN_HEIGHT_MAX, Math.random())
+    const endDrift = cloudToCloud
+      ? lerp(CTC_DRIFT_MIN, CTC_DRIFT_MAX, Math.random())
+      : lerp(MAIN_DRIFT_MIN, MAIN_DRIFT_MAX, Math.random())
     this.mainT[0] = 0
     this.mainS[0] = 0
-    this.mainT[MAIN_POINTS - 1] = drift
-    this.mainS[MAIN_POINTS - 1] = -height
+    this.mainT[MAIN_POINTS - 1] = endDrift
+    this.mainS[MAIN_POINTS - 1] = endHeight
     this.displacePath(this.mainT, this.mainS, MAIN_POINTS, ROUGHNESS)
 
     const baseWidth = lerp(MAIN_BASE_WIDTH_MIN, MAIN_BASE_WIDTH_MAX, Math.random())
@@ -309,7 +450,8 @@ export class Lightning implements SceneEffect {
     }
 
     // -- Optional forks, peeling off the main channel partway down; unused slots collapse to nothing.
-    const activeBranches = Math.floor(Math.random() * (this.maxBranches + 1))
+    // Cloud-to-cloud discharges viewed edge-on rarely show the same forking silhouette, so skip forks entirely.
+    const activeBranches = cloudToCloud ? 0 : Math.floor(Math.random() * (this.maxBranches + 1))
     for (let b = 0; b < this.maxBranches; b++) {
       const branchBase = MAIN_POINTS + b * BRANCH_POINTS
       if (b < activeBranches) {
@@ -394,28 +536,73 @@ export class Lightning implements SceneEffect {
     this.light.intensity = brightness * this.peakLightIntensity
     this.boltMaterial.uniforms.uOpacity.value = Math.min(1, brightness * 1.15)
     this.glowMaterial.opacity = brightness * GLOW_MAX_OPACITY
+    this.currentStrikeBrightness = brightness
   }
 
   private endStrike(): void {
     this.active = false
+    this.currentStrikeBrightness = 0
     this.bolt.visible = false
-    this.glowSprite.visible = false
-    this.light.intensity = 0
     this.boltMaterial.uniforms.uOpacity.value = 0
-    this.glowMaterial.opacity = 0
-    this.nextStrikeIn = this.rollNextStrikeInterval()
+
+    // The bolt channel itself disappears immediately, but the light/glow
+    // don't hard-cut to zero -- they ease into a brief warm ember tail
+    // instead of a synthetic-looking instant stop (see updateAfterglow).
+    this.afterglowActive = true
+    this.afterglowTimer = 0
+    this.afterglowDuration = lerp(AFTERGLOW_DURATION_MIN, AFTERGLOW_DURATION_MAX, Math.random())
+    this.afterglowPeak = this.peakLightIntensity * AFTERGLOW_PEAK_FRACTION
+    this.afterglowColor.copy(this.flashColor).lerp(this.emberColor, 0.6)
+    this.light.color.copy(this.afterglowColor)
+    this.glowMaterial.color.copy(this.afterglowColor)
+
+    this.rollNextStrikeOrRestrike()
+  }
+
+  /** Advances the post-strike ember tail (see endStrike) and drives the light/glow from its decay envelope. */
+  private updateAfterglow(dt: number): void {
+    this.afterglowTimer += dt
+    if (this.afterglowTimer >= this.afterglowDuration) {
+      this.afterglowActive = false
+      this.currentAfterglowBrightness = 0
+      this.light.intensity = 0
+      this.glowMaterial.opacity = 0
+      this.glowSprite.visible = false
+      return
+    }
+
+    const envelope = 1 - smoothstep(0, this.afterglowDuration, this.afterglowTimer)
+    this.currentAfterglowBrightness = envelope
+    this.light.intensity = envelope * this.afterglowPeak
+    this.glowMaterial.opacity = envelope * GLOW_MAX_OPACITY * 0.5
+    this.glowSprite.visible = true
   }
 
   /** Snaps everything back to fully idle -- used whenever thunderActive drops out mid-strike or between strikes. */
   private resetIdle(): void {
     this.active = false
     this.strikeTimer = 0
+    this.currentStrikeBrightness = 0
     this.bolt.visible = false
     this.glowSprite.visible = false
     this.light.intensity = 0
     this.boltMaterial.uniforms.uOpacity.value = 0
     this.glowMaterial.opacity = 0
+
+    this.afterglowActive = false
+    this.currentAfterglowBrightness = 0
+
+    this.sheetActive = false
+    this.sheetSprite.visible = false
+    this.sheetMaterial.opacity = 0
+    this.currentSheetBrightness = 0
+
+    this.restrikeChainCount = 0
+    this.forceRestrikeAnchor = false
+
+    this.lightningBrightness.value = 0
     this.nextStrikeIn = this.rollNextStrikeInterval()
+    this.nextSheetIn = this.rollNextSheetInterval()
   }
 
   /** Rolls the wait until the next strike; a heavier storm (higher stormIntensity) crackles more often. */
@@ -423,6 +610,89 @@ export class Lightning implements SceneEffect {
     const min = lerp(STRIKE_INTERVAL_MIN, STRIKE_INTERVAL_MIN_HEAVY, this.stormIntensity)
     const max = lerp(STRIKE_INTERVAL_MAX, STRIKE_INTERVAL_MAX_HEAVY, this.stormIntensity)
     return lerp(min, max, Math.random())
+  }
+
+  /**
+   * Called after every strike ends: either chains a rapid return-stroke onto
+   * (approximately) the same anchor, or rolls a normal fresh interval --
+   * real lightning frequently restrikes the same channel 2-3 times within a
+   * fraction of a second, reading as a recognizable stutter-flash.
+   */
+  private rollNextStrikeOrRestrike(): void {
+    const restrikeChance = lerp(0.15, 0.45, this.stormIntensity)
+    if (this.restrikeChainCount < RESTRIKE_MAX_CHAIN && Math.random() < restrikeChance) {
+      this.restrikeChainCount++
+      this.forceRestrikeAnchor = true
+      this.nextStrikeIn = lerp(RESTRIKE_GAP_MIN, RESTRIKE_GAP_MAX, Math.random())
+    } else {
+      this.restrikeChainCount = 0
+      this.nextStrikeIn = this.rollNextStrikeInterval()
+    }
+  }
+
+  /** Rolls the wait until the next sheet flash; scales with storm intensity the same way strikes do. */
+  private rollNextSheetInterval(): number {
+    const min = lerp(SHEET_INTERVAL_MIN, SHEET_INTERVAL_MIN_HEAVY, this.stormIntensity)
+    const max = lerp(SHEET_INTERVAL_MAX, SHEET_INTERVAL_MAX_HEAVY, this.stormIntensity)
+    return lerp(min, max, Math.random())
+  }
+
+  /** Advances the independent sheet-lightning scheduler (see the SHEET_* consts above). */
+  private updateSheetScheduler(dt: number): void {
+    if (this.sheetActive) {
+      this.sheetTimer += dt
+      if (this.sheetTimer >= this.sheetDuration) {
+        this.sheetActive = false
+        this.sheetSprite.visible = false
+        this.currentSheetBrightness = 0
+        this.nextSheetIn = this.rollNextSheetInterval()
+        return
+      }
+      const tFrac = this.sheetTimer / this.sheetDuration
+      const envelope = smoothstep(0, 0.2, tFrac) * (1 - smoothstep(0.6, 1, tFrac))
+      this.currentSheetBrightness = envelope
+      this.sheetMaterial.opacity = envelope * SHEET_MAX_OPACITY
+    } else {
+      this.nextSheetIn -= dt
+      if (this.nextSheetIn <= 0) this.startSheet()
+    }
+  }
+
+  /** Places a new distant, low-elevation sheet flash and kicks its envelope off. */
+  private startSheet(): void {
+    const azimuth = Math.random() * Math.PI * 2
+    const elevation = lerp(SHEET_ELEVATION_MIN, SHEET_ELEVATION_MAX, Math.random())
+    const dist = lerp(SHEET_DISTANCE_MIN, SHEET_DISTANCE_MAX, Math.random())
+    const horiz = Math.cos(elevation)
+    this.sheetDir.set(Math.sin(azimuth) * horiz, Math.sin(elevation), Math.cos(azimuth) * horiz)
+    this.sheetSprite.position.copy(this.sheetDir).multiplyScalar(dist)
+    this.sheetMaterial.color.set(0xffffff).lerp(this.coolColor, Math.random())
+    this.sheetSprite.scale.setScalar(lerp(GLOW_SCALE_MIN * 2.2, GLOW_SCALE_MAX * 2.6, Math.random()))
+
+    this.sheetDuration = lerp(SHEET_DURATION_MIN, SHEET_DURATION_MAX, Math.random())
+    this.sheetTimer = 0
+    this.sheetActive = true
+    this.sheetSprite.visible = true
+  }
+
+  /**
+   * Combines the main strike, ember afterglow and sheet-lightning brightness
+   * sources into the one shared ctx.lightningBrightness/lightningDir signal
+   * Sky/PostFX/Precipitation react to -- whichever source is currently
+   * brightest wins, carrying its own direction along with it.
+   */
+  private combineLightningSignal(): void {
+    const sheetSignal = this.currentSheetBrightness * SHEET_SIGNAL_WEIGHT
+    if (this.currentStrikeBrightness >= this.currentAfterglowBrightness && this.currentStrikeBrightness >= sheetSignal) {
+      this.lightningBrightness.value = this.currentStrikeBrightness
+      this.lightningDir.copy(this.lastStrikeDir)
+    } else if (this.currentAfterglowBrightness >= sheetSignal) {
+      this.lightningBrightness.value = this.currentAfterglowBrightness
+      this.lightningDir.copy(this.lastStrikeDir)
+    } else {
+      this.lightningBrightness.value = sheetSignal
+      this.lightningDir.copy(this.sheetDir)
+    }
   }
 
   /**

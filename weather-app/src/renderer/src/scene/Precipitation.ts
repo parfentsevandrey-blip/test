@@ -52,6 +52,19 @@ const SNOW_SWAY_MIN = 0.5
 const SNOW_SWAY_MAX = 1.6
 const SWAY_FREQ = 0.9
 
+/** Anisotropic motion-blur elongation at full intensity (1 = no stretch). Snow never stretches -- it's slow enough that a round flake reads correctly. */
+const RAIN_STRETCH_MAX = 2.4
+const DRIZZLE_STRETCH_MAX = 1.4
+
+/** Rain "breathes" denser/brighter while the shared wind-gust envelope is up. */
+const RAIN_GUST_DENSITY_BOOST = 0.22
+const RAIN_GUST_OPACITY_BOOST = 0.12
+/** Snow gets extra chaotic sway while the shared wind-gust envelope is up. */
+const SNOW_GUST_SWAY_BOOST = 0.9
+
+const LIGHTNING_FLASH_COLOR = new THREE.Color(0xffffff)
+const LIGHTNING_FLASH_STRENGTH = 0.85
+
 const VERTEX_SHADER = /* glsl */ `
   attribute float aSizeVariance;
   attribute float aSwayPhase;
@@ -60,6 +73,7 @@ const VERTEX_SHADER = /* glsl */ `
   uniform float uPixelRatio;
   uniform float uBaseSize;
   uniform float uSwayAmount;
+  uniform float uStretch;
 
   varying float vFade;
 
@@ -75,7 +89,10 @@ const VERTEX_SHADER = /* glsl */ `
     gl_Position = projectionMatrix * mvPosition;
 
     float dist = max(-mvPosition.z, 0.001);
-    float size = uBaseSize * aSizeVariance * uPixelRatio * (REF_DISTANCE / dist);
+    // uStretch enlarges the whole point sprite; the fragment shader crops the
+    // width back down by the same factor so only the length grows -- a cheap
+    // anisotropic motion-blur streak with no extra geometry.
+    float size = uBaseSize * aSizeVariance * uPixelRatio * (REF_DISTANCE / dist) * uStretch;
     gl_PointSize = clamp(size, 1.0, 260.0);
 
     float nearFade = smoothstep(0.8, 4.0, dist);
@@ -89,11 +106,15 @@ const FRAGMENT_SHADER = /* glsl */ `
   uniform float uOpacity;
   uniform float uTiltAngle;
   uniform vec3 uColor;
+  uniform float uStretch;
 
   varying float vFade;
 
   void main() {
     vec2 uv = gl_PointCoord - 0.5;
+    // Crop the horizontal band back down by uStretch so the enlarged (motion-blurred)
+    // point sprite keeps a constant apparent width -- only the length grows.
+    uv.x *= uStretch;
     float s = sin(uTiltAngle);
     float c = cos(uTiltAngle);
     vec2 ruv = vec2(uv.x * c - uv.y * s, uv.x * s + uv.y * c) + 0.5;
@@ -145,12 +166,17 @@ export class Precipitation implements SceneEffect {
   private readonly targetColor = new THREE.Color()
   private readonly currentColor = new THREE.Color()
 
+  private readonly windGust: { value: number }
+  private readonly lightningBrightness: { value: number }
+
   private smoothedIntensity = 0
   private smoothedWind = 0
 
   constructor(ctx: SceneContext) {
     this.scene = ctx.scene
     this.camera = ctx.camera
+    this.windGust = ctx.windGust
+    this.lightningBrightness = ctx.lightningBrightness
 
     this.maxCount = MAX_COUNT_BY_QUALITY[ctx.quality]
     const count = this.maxCount
@@ -200,6 +226,7 @@ export class Precipitation implements SceneEffect {
         uBaseSize: { value: RAIN_SIZE },
         uSwayAmount: { value: 0 },
         uTiltAngle: { value: 0 },
+        uStretch: { value: 1 },
         uColor: { value: new THREE.Color(0xffffff) }
       },
       vertexShader: VERTEX_SHADER,
@@ -238,6 +265,7 @@ export class Precipitation implements SceneEffect {
     let swayAmount: number
     let texture: THREE.CanvasTexture
     let colorHex: number
+    let stretchMax: number
 
     switch (mode) {
       case 'snow':
@@ -251,6 +279,7 @@ export class Precipitation implements SceneEffect {
         swayAmount = lerp(SNOW_SWAY_MIN, SNOW_SWAY_MAX, wind)
         texture = this.snowTexture
         colorHex = 0xffffff
+        stretchMax = 1
         break
       case 'drizzle':
         fallMin = DRIZZLE_FALL_MIN
@@ -263,6 +292,7 @@ export class Precipitation implements SceneEffect {
         swayAmount = 0
         texture = this.streakTexture
         colorHex = 0xd7e6f5
+        stretchMax = DRIZZLE_STRETCH_MAX
         break
       case 'rain':
       default:
@@ -276,9 +306,21 @@ export class Precipitation implements SceneEffect {
         swayAmount = 0
         texture = this.streakTexture
         colorHex = 0xbcd4f2
+        stretchMax = RAIN_STRETCH_MAX
         break
     }
 
+    // Shared gust envelope (SceneManager-computed, also read by camera/Sky):
+    // snow gets an extra chaotic-sway burst, rain "breathes" denser/brighter.
+    const gust = this.windGust.value
+    if (mode === 'snow') {
+      swayAmount *= 1 + gust * SNOW_GUST_SWAY_BOOST
+    } else if (mode === 'rain') {
+      fracMax *= 1 + gust * RAIN_GUST_DENSITY_BOOST
+      opacityMax *= 1 + gust * RAIN_GUST_OPACITY_BOOST
+    }
+
+    const stretch = lerp(1, stretchMax, intensity)
     const fallSpeed = lerp(fallMin, fallMax, intensity)
     const windDirX = Math.sin(params.windDirectionRad)
     const windDirZ = Math.cos(params.windDirectionRad)
@@ -329,7 +371,7 @@ export class Precipitation implements SceneEffect {
     this.points.visible = activeCount > 0
 
     const visibilityFactor = lerp(0.45, 1, clamp01(params.visibility))
-    const opacity = smoothstep(0, 0.22, intensity) * opacityMax * visibilityFactor
+    const opacity = Math.min(1, smoothstep(0, 0.22, intensity) * opacityMax * visibilityFactor)
 
     // ---- Wind-driven streak tilt: project the world wind direction onto the
     // camera's screen-right axis so streaks visibly lean into the wind from
@@ -342,6 +384,12 @@ export class Precipitation implements SceneEffect {
     const dayFactor = clamp01(params.sunAltitude * 1.4 + 0.55)
     const brightness = lerp(0.4, 1, dayFactor)
     this.targetColor.set(colorHex).multiplyScalar(brightness)
+    // Briefly whiten toward a lightning flash -- shared signal, same brightness
+    // envelope Sky's lit-cloud patch and PostFX's exposure kick read from.
+    const flash = clamp01(this.lightningBrightness.value)
+    if (flash > 0) {
+      this.targetColor.lerp(LIGHTNING_FLASH_COLOR, flash * LIGHTNING_FLASH_STRENGTH)
+    }
     const colorSmoothing = 1 - Math.exp(-dt * 2)
     this.currentColor.lerp(this.targetColor, colorSmoothing)
 
@@ -352,6 +400,7 @@ export class Precipitation implements SceneEffect {
     u.uElapsed.value = elapsed
     u.uSwayAmount.value = swayAmount
     u.uTiltAngle.value = tiltAngle
+    u.uStretch.value = stretch
     ;(u.uColor.value as THREE.Color).copy(this.currentColor)
   }
 

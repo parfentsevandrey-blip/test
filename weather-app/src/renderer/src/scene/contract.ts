@@ -30,6 +30,10 @@ export interface SceneParams {
   /** True only while `condition === 'thunderstorm'`. Effects should idle any storm-only behavior when false. */
   thunderActive: boolean
   temperatureC: number
+  /** 0 (new moon, no moonlight) - 1 (full moon) -- from utils/moonPhase.ts's synodic-month calc, independent of sunAltitude/isDay. */
+  moonIllumination: number
+  /** 0-1 raw synodic phase (0/1 = new, 0.5 = full) from utils/moonPhase.ts's getMoonPhase -- distinct from moonIllumination, since Sky's moon-disc terminator also needs the waxing (< 0.5) vs waning (>= 0.5) side, not just the illuminated fraction. */
+  moonPhaseFrac: number
 }
 
 /**
@@ -52,6 +56,23 @@ export interface SceneContext {
   sunLight: THREE.DirectionalLight
   hemiLight: THREE.HemisphereLight
   quality: Quality
+  /**
+   * Boxed 0-1 signal written by Lightning every frame (its strike/sheet/afterglow
+   * envelopes combined into one number) so Sky/PostFX/Precipitation can react to
+   * a flash without a direct dependency on Lightning. Boxed (rather than a plain
+   * number on SceneContext) so it can be mutated in place by whichever effect
+   * owns it -- same pattern as the shared sunLight/hemiLight objects.
+   */
+  lightningBrightness: { value: number }
+  /** Unit direction toward the most recent strike/sheet source, written alongside lightningBrightness. Only meaningful while lightningBrightness.value > 0. */
+  lightningDir: THREE.Vector3
+  /**
+   * Boxed 0-1 "a gust is happening right now" envelope, computed once per frame
+   * by SceneManager from windSpeed so every wind-reactive effect (camera jitter,
+   * Sky striation, Fog drift, Precipitation turbulence) shares one canonical
+   * gust signal instead of each rolling its own private incommensurate-sine gust.
+   */
+  windGust: { value: number }
 }
 
 /** Implemented by every visual effect module (Sky, Stars, Clouds, Precipitation, Lightning, Fog, Terrain). */
