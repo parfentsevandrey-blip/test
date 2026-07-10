@@ -1835,19 +1835,6 @@ input {
   opacity: 1;
 }
 
-[data-theme='win95'] .vis-gauge-fill {
-  background: #000080;
-  box-shadow: none;
-  border-radius: 0;
-}
-
-[data-theme='win95'] .vis-gauge-track {
-  background: #ffffff;
-  border: none;
-  border-radius: 0;
-  box-shadow: var(--bevel-field);
-}
-
 [data-theme='win95'] .humidity-gauge {
   border-radius: 0;
   background: #ffffff;

@@ -290,64 +290,6 @@
   }
 }
 
-/* ---------- Visibility: horizontal distance gauge ---------- */
-
-/* Bottom-anchored like the UV scale and the wind/humidity footlines, so all
-   four small metric cards share one visual foot baseline across the row. */
-.metric-card .vis-gauge-wrap {
-  align-items: flex-end;
-  padding-bottom: 2px;
-}
-
-.vis-gauge {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: clamp(4px, 0.9vh, 8px);
-}
-
-.vis-gauge-track {
-  position: relative;
-  height: 8px;
-  border-radius: var(--radius-pill);
-  background: var(--track);
-  border: 1px solid var(--glass-border-soft);
-  overflow: hidden;
-}
-
-.vis-gauge-fill {
-  height: 100%;
-  border-radius: var(--radius-pill);
-  background: var(--info);
-  /* Width is now a Framer Motion spring (VisibilityCard.tsx); the glow
-     rides along for free since box-shadow paints with it. win95's existing
-     `box-shadow: none` reset below already outranks this single class. */
-  box-shadow: 0 0 10px -1px color-mix(in srgb, var(--info) 60%, transparent);
-}
-
-/* Quarter-scale graduations; absolutely positioned so they paint over the fill. */
-.vis-gauge-tick {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  transform: translateX(-50%);
-  background: var(--text-primary);
-  opacity: 0.2;
-  pointer-events: none;
-}
-
-.vis-gauge-labels {
-  display: flex;
-  justify-content: space-between;
-  font-size: clamp(8.5px, 1.4vh, 10px);
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  color: var(--text-tertiary);
-  font-variant-numeric: tabular-nums;
-}
-
-
 /* ---------- Precipitation: refined bars, hover values, empty state ---------- */
 
 .precip-card {
@@ -457,17 +399,16 @@
    A slow "breathing" brightness pulse so the maximalist glow reads as alive
    even at rest, not just on hover. filter composites with each element's
    own box-shadow, so the whole glow (not just the fill) breathes together.
-   Each of humidity-ring-fill / uv-scale-marker / vis-gauge-fill is a single
-   on-screen instance (one card each), so an infinite `filter` loop on them
-   is cheap. The precip card renders ~12 bars at once, though -- looping
-   `filter` on every one of them would be the same "N infinite loops"
-   problem WeatherIcon had, so only the single "is-now" bar gets the
-   continuous pulse; the rest stay static. Already covered by the win95
-   `animation: none !important` reset below -- no new rule needed there. */
+   Each of humidity-ring-fill / uv-scale-marker is a single on-screen
+   instance (one card each), so an infinite `filter` loop on them is cheap.
+   The precip card renders ~12 bars at once, though -- looping `filter` on
+   every one of them would be the same "N infinite loops" problem WeatherIcon
+   had, so only the single "is-now" bar gets the continuous pulse; the rest
+   stay static. Already covered by the win95 `animation: none !important`
+   reset below -- no new rule needed there. */
 @media (prefers-reduced-motion: no-preference) {
   .humidity-ring-fill,
   .uv-scale-marker,
-  .vis-gauge-fill,
   .precip-card .precip-bar-col.is-now .precip-bar-fill {
     animation: mx-ambient-pulse 3.6s ease-in-out infinite;
   }
@@ -491,20 +432,9 @@
 [data-theme='win95'] .wind-needle-wiggle,
 [data-theme='win95'] .humidity-ring-fill,
 [data-theme='win95'] .uv-scale-marker,
-[data-theme='win95'] .vis-gauge-fill,
 [data-theme='win95'] .precip-bar-fill {
   animation: none !important;
   transition: none;
-}
-
-/* Distance gauge reads as a classic navy progress bar: flat fill, no glow. */
-[data-theme='win95'] .vis-gauge-fill {
-  background: var(--accent);
-  box-shadow: none;
-}
-
-[data-theme='win95'] .vis-gauge-track {
-  border-color: var(--glass-border-soft);
 }
 
 /* UV marker keeps its authentic raised-bevel look, not the new severity

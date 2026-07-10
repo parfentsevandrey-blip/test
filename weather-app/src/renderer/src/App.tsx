@@ -9,7 +9,7 @@ import { DailyForecast } from './components/DailyForecast'
 import { WindCard } from './components/WindCard'
 import { HumidityCard } from './components/HumidityCard'
 import { UvIndexCard } from './components/UvIndexCard'
-import { VisibilityCard } from './components/VisibilityCard'
+import { WeatherOutlookCard } from './components/WeatherOutlookCard'
 import { SunCard } from './components/SunCard'
 import { PrecipitationCard } from './components/PrecipitationCard'
 import { UnitToggle } from './components/UnitToggle'
@@ -265,7 +265,7 @@ export function App(): JSX.Element {
             <WindCard />
             <HumidityCard />
             <UvIndexCard />
-            <VisibilityCard />
+            <WeatherOutlookCard />
             <DailyForecast />
             <SunCard />
             <PrecipitationCard />

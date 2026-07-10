@@ -146,6 +146,16 @@ export function PowerIcon(): JSX.Element {
   )
 }
 
+/** A small pulse/zig-zag line -- "here's the notable signal in the data,"
+ *  shared by the hero card's one-line insight and WeatherOutlookCard. */
+export function OutlookIcon(): JSX.Element {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+    </svg>
+  )
+}
+
 export function CompassNeedleIcon({ rotation }: { rotation: number }): JSX.Element {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">

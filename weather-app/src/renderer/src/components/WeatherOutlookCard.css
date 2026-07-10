@@ -1,0 +1,41 @@
+/* ============================================================
+   Weather Outlook card -- text-forward, no gauge/ring visual.
+   ============================================================ */
+
+.outlook-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin-top: clamp(8px, 1.6vh, 14px);
+  min-width: 0;
+}
+
+.outlook-item--secondary {
+  margin-top: clamp(6px, 1.2vh, 10px);
+  padding-top: clamp(6px, 1.2vh, 10px);
+  border-top: 1px solid var(--glass-border-soft);
+}
+
+.outlook-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+.outlook-text {
+  font-size: clamp(12px, 1.9vh, 13.5px);
+  line-height: 1.4;
+  color: var(--text-primary);
+  min-width: 0;
+}
+
+.outlook-text--secondary {
+  font-size: clamp(10.5px, 1.6vh, 12px);
+  color: var(--text-tertiary);
+}
+
+[data-theme='win95'] .outlook-dot {
+  border-radius: 0;
+}
