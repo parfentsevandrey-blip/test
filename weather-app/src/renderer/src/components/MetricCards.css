@@ -467,3 +467,94 @@
   background-clip: initial;
   color: var(--text-primary);
 }
+
+/* ---------- Vintage brass instrument panel: skeuomorphic realism ----------
+   Opposite direction from win95 above: this theme ADDS material depth --
+   gradients, glossy highlights, embossed/pressed bevels -- and deliberately
+   leaves every hover lift / press-in / needle-settle animation defined
+   above running exactly as shipped. No transition/animation kills here. */
+
+/* --gradient-text-hero also resolves to `none` for skeuo (a brass panel has
+   no neon hero-gradient), so the clip-text trick would leave the numeral
+   invisible here too -- same fallback as win95, plus a faint engraved-ink
+   emboss (light rim below, dark rim above) so the digit reads as pressed
+   into the enamel rather than flat ink. */
+[data-theme='skeuo'] .metric-card .mx-value {
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  color: var(--text-primary);
+  text-shadow:
+    0 1px 0 rgba(255, 253, 235, 0.55),
+    0 -1px 0 rgba(58, 40, 14, 0.35);
+}
+
+/* Header glyph gets its own little brass medallion bezel, as if it were
+   riveted onto the console beside the gauge it labels. */
+[data-theme='skeuo'] .metric-header .mx-icon {
+  padding: 5px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, #f6ecd4 0%, #d8c48c 45%, #8a5a22 100%);
+  box-shadow: var(--panel-raised);
+}
+
+/* Wind compass and humidity ring both sit in their own sunken glass-covered
+   dial face -- parchment/enamel set into the brass bezel, not floating on
+   nothing. */
+[data-theme='skeuo'] .wind-compass,
+[data-theme='skeuo'] .humidity-ring {
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%, var(--glass-bg-strong) 0%, var(--glass-bg) 68%, #c9b47e 100%);
+  box-shadow: var(--panel-pressed), 0 0 0 1px var(--glass-border);
+}
+
+/* The needle reads as a real pressed-brass pointer: a light rim catching
+   the console light from above, a soft cast shadow below -- it keeps its
+   live-data rotation and hover-settle animation untouched (see the base
+   rules above), only its material finish changes here. */
+[data-theme='skeuo'] .wind-compass-needle svg {
+  filter:
+    drop-shadow(0 -1px 0 rgba(255, 253, 235, 0.6))
+    drop-shadow(0 1.5px 1.5px rgba(30, 20, 8, 0.45));
+}
+
+/* The ambient glow halo becomes a glass dome's highlight sweep instead of
+   vanishing (win95 kills it outright with `content: none`): a fixed
+   reflection sits across the upper-left of the dial like a convex
+   watch-crystal over the gauge face, and brightens further on hover rather
+   than fading in from nothing. The shared 0.5s opacity transition above
+   still drives the change -- only the paint differs here. */
+[data-theme='skeuo'] .humidity-ring::before,
+[data-theme='skeuo'] .wind-compass::before {
+  opacity: 0.85;
+  box-shadow: none;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 253, 235, 0.65) 0%,
+    rgba(255, 253, 235, 0.16) 32%,
+    transparent 58%
+  );
+}
+
+[data-theme='skeuo'] .bento-card:hover .humidity-ring::before,
+[data-theme='skeuo'] .bento-card:hover .wind-compass::before {
+  opacity: 1;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 253, 235, 0.85) 0%,
+    rgba(255, 253, 235, 0.22) 34%,
+    transparent 60%
+  );
+}
+
+/* UV marker restated at this file's own 2-class specificity (matching the
+   shared glow rule earlier in this file) so its authentic brass-bead look
+   wins regardless of load order against global.css's own skeuo treatment
+   of the same box-shadow property -- the same defensive pattern the win95
+   block above uses for the identical selector. */
+[data-theme='skeuo'] .uv-scale .uv-scale-marker {
+  background: radial-gradient(circle at 35% 30%, #f6ecd4, #c99a44 60%, #8a5a22 100%);
+  box-shadow:
+    0 1px 3px rgba(20, 14, 6, 0.5),
+    0 0 0 1px var(--glass-border);
+}

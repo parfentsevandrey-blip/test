@@ -1953,11 +1953,15 @@ input {
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
+  /* Each radial-gradient needs an explicit "transparent" stop at the same
+     100% position as its last color -- without it the gradient floods the
+     rest of the (inset:0, i.e. full-card) box with that last color instead
+     of stopping at the 3px dot, hiding every card's content underneath. */
   background-image:
-    radial-gradient(circle 3px at 9px 9px, #f0dfab 0%, #8a6a34 55%, #3d2d12 100%),
-    radial-gradient(circle 3px at calc(100% - 9px) 9px, #f0dfab 0%, #8a6a34 55%, #3d2d12 100%),
-    radial-gradient(circle 3px at 9px calc(100% - 9px), #f0dfab 0%, #8a6a34 55%, #3d2d12 100%),
-    radial-gradient(circle 3px at calc(100% - 9px) calc(100% - 9px), #f0dfab 0%, #8a6a34 55%, #3d2d12 100%);
+    radial-gradient(circle 3px at 9px 9px, #f0dfab 0%, #8a6a34 55%, #3d2d12 100%, transparent 100%),
+    radial-gradient(circle 3px at calc(100% - 9px) 9px, #f0dfab 0%, #8a6a34 55%, #3d2d12 100%, transparent 100%),
+    radial-gradient(circle 3px at 9px calc(100% - 9px), #f0dfab 0%, #8a6a34 55%, #3d2d12 100%, transparent 100%),
+    radial-gradient(circle 3px at calc(100% - 9px) calc(100% - 9px), #f0dfab 0%, #8a6a34 55%, #3d2d12 100%, transparent 100%);
 }
 
 [data-theme='skeuo'] .bento-card:hover {

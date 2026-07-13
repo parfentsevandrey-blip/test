@@ -250,3 +250,100 @@
 [data-theme='win95'] .settings-footer {
   border-top-color: #808080;
 }
+
+/* ==========================================================================
+   Skeuo — brass instrument panel
+
+   Opposite direction from win95 above: nothing here flattens color or kills
+   motion. The backdrop fade, panel spring + de-blur and staggered section
+   cascade all stay exactly as Framer Motion drives them in
+   SettingsPanel.tsx (this component never renders the win95 static/isRetro
+   tree for this theme) -- only the paint changes, toward real brass/enamel
+   depth.
+   ========================================================================== */
+
+/* Dim, warm console-light vignette behind the dialog instead of a flat
+   scrim -- pure backdrop dressing, not a token used to convey data, so a
+   hand-picked gradient is fine here. */
+[data-theme='skeuo'] .settings-overlay {
+  background: radial-gradient(60% 65% at 50% 38%, rgba(64, 54, 32, 0.4) 0%, rgba(18, 13, 6, 0.78) 100%);
+}
+
+/* .settings-panel's own brass rim, inset highlight and panel-raised drop
+   shadow already come from global.css's shared `[data-theme='skeuo']
+   .glass-panel` rule (this element carries both classes), so it needs no
+   repeat here. */
+
+/* Header becomes a brass nameplate rail: a sunken groove line with a
+   bright highlight riding just above it, separating the title bar from the
+   controls below instead of a flat hairline. */
+[data-theme='skeuo'] .settings-header {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--glass-border-soft);
+  box-shadow: 0 1px 0 rgba(255, 250, 230, 0.45);
+}
+
+/* Gradient-text hero reset: --gradient-text-hero resolves to `none` here
+   too (see the root skeuo block in global.css), so the base rule's
+   transparent-text-over-a-gradient trick would otherwise vanish outright.
+   Restored as an opaque engraved-ink fill with a soft emboss, the same fix
+   used for .sun-path-countdown-value and .hero-temp-numeral elsewhere. */
+[data-theme='skeuo'] .settings-title {
+  background: none;
+  -webkit-background-clip: unset;
+  background-clip: unset;
+  color: var(--text-primary);
+  text-shadow:
+    0 1px 0 rgba(255, 250, 230, 0.55),
+    0 -1px 0 rgba(42, 31, 16, 0.25);
+}
+
+/* .settings-close is a plain .icon-btn -- brass push-button at rest
+   (panel-raised), brightened on hover, sunk flush on press -- already
+   fully styled by the shared `[data-theme='skeuo'] .icon-btn` rules in
+   global.css, so it needs no repeat here (unlike win95, which resizes it
+   to 20x20 and therefore has to restate the whole recipe). */
+
+/* ---------- Toggle switch: a small brass lever, not a flat pill ---------- */
+
+/* Off: a sunken brass channel the lever lives in. */
+[data-theme='skeuo'] .settings-toggle {
+  background: linear-gradient(180deg, rgba(42, 31, 16, 0.4), rgba(42, 31, 16, 0.22));
+  border: 1px solid var(--glass-border-soft);
+  box-shadow: var(--panel-pressed);
+}
+
+[data-theme='skeuo'] .settings-toggle:hover {
+  border-color: var(--accent-strong);
+}
+
+/* On: --glow-soft resolves to `none` in skeuo (this theme opts out of the
+   glass glow token, same as elsewhere in this component family) so the
+   base rule's box-shadow would otherwise go silent -- this fills the gap
+   with a lit brass plate instead: a warm accent fill, proud of the
+   channel, with its own glow standing in for the retired --glow-soft. */
+[data-theme='skeuo'] .settings-toggle.is-on {
+  background: linear-gradient(180deg, var(--accent-strong), var(--accent));
+  border-color: var(--glass-border);
+  box-shadow: var(--panel-raised), 0 0 7px var(--accent-glow);
+}
+
+[data-theme='skeuo'] .settings-toggle.is-on:hover {
+  box-shadow: var(--panel-raised-hover), 0 0 9px var(--accent-glow);
+}
+
+/* Thumb becomes a small polished brass knob -- the same medallion gradient
+   as the header brand dot / UV scale marker -- instead of a flat enamel
+   disc. Its slide and press-scale stay entirely Framer Motion's job (see
+   ToggleRow in SettingsPanel.tsx); only the material changes here. */
+[data-theme='skeuo'] .settings-toggle-thumb {
+  background: radial-gradient(circle at 35% 30%, #f6ecd4, #c99a44 60%, #8a5a22 100%);
+  box-shadow: var(--panel-raised), 0 0 0 1px var(--glass-border);
+}
+
+/* Footer rule becomes an engraved groove (dark line + bright highlight
+   riding above it) instead of a flat hairline. */
+[data-theme='skeuo'] .settings-footer {
+  border-top-width: 2px;
+  box-shadow: 0 -1px 0 rgba(255, 250, 230, 0.35);
+}

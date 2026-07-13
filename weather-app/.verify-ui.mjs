@@ -183,8 +183,8 @@ async function themeRun(theme) {
     await page.waitForTimeout(300)
   }
 
-  // win95-specific: confirm backdrop-filter is actually neutralized on glass panels
-  if (theme === 'win95') {
+  // win95/skeuo-specific: confirm backdrop-filter is actually neutralized on glass panels
+  if (theme === 'win95' || theme === 'skeuo') {
     const blurValue = await page.evaluate(() => {
       const el = document.querySelector('.glass-panel')
       return el ? getComputedStyle(el).backdropFilter : null
@@ -202,7 +202,7 @@ async function themeRun(theme) {
   await context.close()
 }
 
-for (const theme of ['light', 'dark', 'tuscany', 'win95']) {
+for (const theme of ['light', 'dark', 'tuscany', 'win95', 'skeuo']) {
   await themeRun(theme)
 }
 

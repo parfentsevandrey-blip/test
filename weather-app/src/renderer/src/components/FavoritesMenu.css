@@ -325,3 +325,99 @@
   opacity: 1;
   border-radius: 0;
 }
+
+/* ==========================================================================
+   Skeuo — brass instrument panel
+   ========================================================================== */
+
+/* The dropdown's own brass frame (2px rim, panel-raised-hover shadow, opaque
+   enamel fill) already comes from global.css's shared
+   `[data-theme='skeuo'] .favorites-dropdown` rule, so it needs no repeat
+   here. Everything below is the parchment list riding inside that frame.
+   Motion stays exactly as the base rules define it above — nothing in this
+   section zeroes out a transition or animation the way the win95 reset
+   above does; rows still stagger in, still spring on press, still reorder
+   under Framer Motion. */
+
+/* "Add current location" / "Clear all": small brass push-buttons that lift
+   toward the light on hover and sink flush with the panel on press, instead
+   of a flat background tint. */
+[data-theme='skeuo'] .favorites-action:hover {
+  background: linear-gradient(180deg, rgba(255, 250, 230, 0.4) 0%, rgba(138, 90, 34, 0.16) 100%);
+  box-shadow: var(--panel-raised);
+}
+
+[data-theme='skeuo'] .favorites-action:active {
+  background: var(--control-active);
+  box-shadow: var(--panel-pressed);
+}
+
+/* Every saved-city row lifts off the panel on hover/keyboard focus. The
+   shared `:root:not(win95)` glow-soft rule above resolves to `none` here on
+   purpose (skeuo opts out of the glass glow token, same as the root block's
+   own bento-card comment explains) — this fills that gap with a real
+   embossed highlight instead of leaving hover silent. */
+[data-theme='skeuo'] .favorites-item-row:hover,
+[data-theme='skeuo'] .favorites-item-row:focus-within {
+  background: linear-gradient(180deg, rgba(255, 250, 230, 0.32) 0%, rgba(138, 90, 34, 0.12) 100%);
+  box-shadow: var(--panel-raised);
+}
+
+/* The current city's row instead reads as a lit indicator plate pressed
+   into the panel rather than sitting proud. --glow-border already resolves
+   to --glass-border here, so the existing 1px ring above is already
+   theme-correct brass; this just adds the sunken plate it sits in. */
+[data-theme='skeuo'] .favorites-item-row.is-current {
+  background: linear-gradient(180deg, rgba(255, 250, 230, 0.4) 0%, rgba(138, 90, 34, 0.14) 100%);
+  box-shadow: var(--panel-pressed);
+}
+
+/* Drag grip reads as a small knurled brass pull rather than a flat glyph;
+   its own hover/active reveal and color-on-grab (see base rules above) are
+   untouched. */
+[data-theme='skeuo'] .favorites-drag-handle {
+  color: var(--accent);
+}
+
+[data-theme='skeuo'] .favorites-drag-handle svg {
+  filter: drop-shadow(0 1px 0 rgba(255, 253, 235, 0.5));
+}
+
+/* The live temperature becomes a tiny embossed brass tag riveted to the end
+   of the row — solid rim, raised shadow, engraved numeral — instead of
+   plain floating text, echoing the same "proud brass tag" treatment
+   HourlyForecast's own hover tooltip gets. Its mount stagger (animation
+   above) is untouched; only the material differs. */
+[data-theme='skeuo'] .favorites-item-temp {
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(180deg, var(--glass-bg-strong), #d8c48c);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--panel-raised);
+  color: var(--text-primary);
+  text-shadow:
+    0 1px 0 rgba(255, 253, 235, 0.55),
+    0 -1px 0 rgba(58, 40, 14, 0.3);
+}
+
+/* Delete button becomes a small proud brass stud on hover, sinking flush
+   with the panel on press — the reveal-on-hover opacity and the :active
+   scale transition from the base rules above are untouched, only the
+   material differs. */
+[data-theme='skeuo'] .favorites-remove:hover {
+  background: var(--control-bg-hover);
+  box-shadow: var(--panel-raised);
+}
+
+[data-theme='skeuo'] .favorites-remove:active {
+  background: var(--control-active);
+  box-shadow: var(--panel-pressed);
+}
+
+/* Divider becomes an engraved brass groove — a dark hairline with a bright
+   highlight riding just beneath it — instead of a flat translucent line. */
+[data-theme='skeuo'] .favorites-divider {
+  height: 2px;
+  background: rgba(58, 40, 14, 0.35);
+  box-shadow: 0 1px 0 rgba(255, 253, 235, 0.5);
+}

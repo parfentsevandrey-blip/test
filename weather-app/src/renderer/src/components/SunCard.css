@@ -310,3 +310,123 @@
   background-clip: unset;
   color: var(--text-primary);
 }
+
+/* ============================================================
+   Skeuomorphic instrument panel -- brass sun disc & carved moon
+   inlay. Where win95 (above) flattens everything and kills motion,
+   this keeps every spring/transition/pulse exactly as authored and
+   instead layers on physical bevel depth: an embossed groove for
+   the arc track, a glossy brass dome for the sun marker, riveted
+   brass studs for the golden-hour ticks, and a carved ivory/brass
+   crescent for the moon glyph. box-shadow has no effect on SVG
+   shape elements, so the --panel-raised/--panel-pressed recipes
+   aren't usable directly here -- each rule below hand-rolls the
+   same "light rim + dark undercut + cast shadow" language with
+   layered drop-shadow() instead. sun-path-sun-core's fill and
+   sun-path-progress's stroke are already pinned to brass tokens
+   centrally in global.css; this file only adds the relief on top.
+   ============================================================ */
+
+/* ---------- Arc track: an embossed groove with a brass rim ---------- */
+
+[data-theme='skeuo'] .sun-path-track {
+  stroke: var(--glass-border);
+  stroke-width: 2.5;
+  opacity: 0.6;
+  filter:
+    drop-shadow(0 1px 0 rgba(255, 250, 230, 0.55))
+    drop-shadow(0 -1px 0.5px rgba(42, 31, 16, 0.45));
+}
+
+/* Polished brass rail riding in the groove for the elapsed span. */
+[data-theme='skeuo'] .sun-path-progress {
+  stroke-width: 3;
+  filter:
+    drop-shadow(0 -1px 0 rgba(255, 250, 230, 0.6))
+    drop-shadow(0 1px 1px rgba(42, 31, 16, 0.4));
+}
+
+/* Golden-hour ticks read as tiny riveted brass studs, echoing the
+   corner rivets .bento-card::after already stamps into the panel. */
+[data-theme='skeuo'] .sun-path-golden rect {
+  opacity: 0.85;
+  filter:
+    drop-shadow(0 0.5px 0 rgba(255, 250, 230, 0.7))
+    drop-shadow(0 1px 1px rgba(42, 31, 16, 0.45));
+}
+
+/* ---------- Sun disc: glossy brass dome, proud of the panel ---------- */
+
+[data-theme='skeuo'] .sun-path-sun-halo {
+  filter:
+    drop-shadow(0 1px 0 rgba(255, 250, 230, 0.5))
+    drop-shadow(0 0 5px var(--accent-strong))
+    drop-shadow(0 3px 4px rgba(42, 31, 16, 0.35));
+}
+
+/* Bright rim top, dark undercut just below it, soft cast shadow beneath --
+   a brass bezel ring (stroke) completes the medallion look. */
+[data-theme='skeuo'] .sun-path-sun-core {
+  stroke: rgba(58, 40, 14, 0.35);
+  stroke-width: 0.5;
+  filter:
+    drop-shadow(0 -0.6px 0 rgba(255, 250, 230, 0.9))
+    drop-shadow(0 0.8px 0.5px rgba(42, 31, 16, 0.5))
+    drop-shadow(0 1.5px 2px rgba(20, 14, 6, 0.4));
+}
+
+/* "Lifts toward the light" on hover, same idea as --panel-raised-hover,
+   hand-rolled as a brighter bloom since box-shadow can't reach circles. */
+[data-theme='skeuo'] .bento-card:hover .sun-path-sun-halo {
+  filter:
+    drop-shadow(0 1px 0 rgba(255, 250, 230, 0.65))
+    drop-shadow(0 0 7px var(--accent-strong))
+    drop-shadow(0 4px 6px rgba(42, 31, 16, 0.4));
+}
+
+[data-theme='skeuo'] .bento-card:hover .sun-path-moon-halo {
+  filter:
+    drop-shadow(0 1px 0 rgba(255, 250, 230, 0.45))
+    drop-shadow(0 0 7px var(--info))
+    drop-shadow(0 4px 6px rgba(42, 31, 16, 0.4));
+}
+
+/* ---------- Moon glyph: carved ivory/brass crescent inlay ---------- */
+
+[data-theme='skeuo'] .sun-path-moon-halo {
+  filter:
+    drop-shadow(0 1px 0 rgba(255, 250, 230, 0.4))
+    drop-shadow(0 0 5px var(--info))
+    drop-shadow(0 3px 4px rgba(42, 31, 16, 0.35));
+}
+
+/* Dark side of the disc reads as an engraved recess, not a flat tint. */
+[data-theme='skeuo'] .sun-path-moon-shadow {
+  filter:
+    drop-shadow(0 0.5px 0.5px rgba(255, 250, 230, 0.25))
+    drop-shadow(0 -0.5px 0.5px rgba(42, 31, 16, 0.4));
+}
+
+/* Lit crescent gets the same glossy bevel + brass bezel ring as the sun
+   disc, so the whole glyph reads as one inlaid medallion, not a dot. */
+[data-theme='skeuo'] .sun-path-moon-lit {
+  stroke: rgba(58, 40, 14, 0.35);
+  stroke-width: 0.4;
+  filter:
+    drop-shadow(0 -0.5px 0 rgba(255, 250, 230, 0.85))
+    drop-shadow(0 0.6px 0.5px rgba(42, 31, 16, 0.45))
+    drop-shadow(0 0 3px var(--info));
+}
+
+/* Gradient-text hero reset: --gradient-text-hero resolves to `none` here
+   too, but unlike win95's plain flat swap this keeps a touch of material
+   richness -- a soft engraved emboss instead of a flat, inert fill. */
+[data-theme='skeuo'] .sun-path-countdown-value {
+  background: none;
+  -webkit-background-clip: unset;
+  background-clip: unset;
+  color: var(--text-primary);
+  text-shadow:
+    0 1px 0 rgba(255, 250, 230, 0.55),
+    0 -1px 0 rgba(42, 31, 16, 0.25);
+}

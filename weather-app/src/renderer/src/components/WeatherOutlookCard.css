@@ -39,3 +39,21 @@
 [data-theme='win95'] .outlook-dot {
   border-radius: 0;
 }
+
+/* ---------- Skeuo: a small raised brass bead, not a flat swatch ----------
+   Opposite move from win95 above: stays circular, gains real bevel depth.
+   The dot's fill color is set inline from React (severity color) so this
+   only adds shape/lighting on top -- background is left alone. */
+[data-theme='skeuo'] .outlook-dot {
+  position: relative;
+  box-shadow: var(--panel-raised);
+}
+
+[data-theme='skeuo'] .outlook-dot::before {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, rgba(255, 253, 235, 0.85) 0%, rgba(255, 253, 235, 0) 55%);
+  pointer-events: none;
+}

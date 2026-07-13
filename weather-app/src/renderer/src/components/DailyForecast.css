@@ -311,6 +311,47 @@
   background: #ffffff;
 }
 
+/* ============================================================
+   Skeuo — rows read as riveted brass-plate list entries: hovering
+   lifts a row toward the light along its embossed rim, an actual
+   press (:active) sinks it back into the panel. The upward y-lift
+   itself is still owned by Framer Motion's whileHover (see
+   DailyForecast.tsx) — unlike win95, that motion stays fully
+   alive here; these rules only repaint the material each state
+   wears. (.df-day-col is deliberately untouched: its only win95
+   rule kills its opacity transition, a motion-off move this theme
+   never makes, and its resting ink tones already come from the
+   themed --text-* tokens.)
+   ============================================================ */
+
+[data-theme='skeuo'] .df-row:hover,
+[data-theme='skeuo'] .df-row:focus-visible {
+  background: linear-gradient(180deg, rgba(255, 250, 230, 0.4) 0%, rgba(138, 90, 34, 0.16) 100%);
+  box-shadow: var(--panel-raised-hover);
+}
+
+[data-theme='skeuo'] .df-row:active {
+  background: var(--control-active);
+  box-shadow: var(--panel-pressed);
+}
+
+/* "Now" marker becomes a tiny pressed-brass rivet stud — the same bead
+   recipe used by the header-brand dot and the UV scale marker — instead
+   of a flat dot that would otherwise sit oddly on an embossed console. */
+[data-theme='skeuo'] .df-now-dot {
+  background: radial-gradient(circle at 35% 30%, #f6ecd4, #c99a44 60%, #8a5a22 100%);
+  box-shadow:
+    0 0 0 2px var(--glass-bg-strong),
+    0 1px 2px rgba(20, 14, 6, 0.5),
+    0 0 6px var(--accent-glow);
+}
+
+/* Today's small "live" indicator dot gets the same brass bead finish. */
+[data-theme='skeuo'] .df-row.is-today .df-day::before {
+  background: radial-gradient(circle at 35% 30%, #f6ecd4, #c99a44 60%, #8a5a22 100%);
+  box-shadow: 0 1px 1px rgba(20, 14, 6, 0.5);
+}
+
 /* ---------- Reduced motion ---------- */
 
 @media (prefers-reduced-motion: reduce) {
@@ -555,4 +596,49 @@
 
 [data-theme='win95'] .df-detail-condition {
   border-bottom-color: #808080;
+}
+
+/* ============================================================
+   Skeuo — the drill-down popover reads as a small, brighter enamel
+   plate lifted proud of the row that opened it, with a pressed-
+   brass medallion bezel behind its hero condition icon. Entrance/
+   exit/drag-to-dismiss motion (Framer Motion, DailyForecast.tsx)
+   is untouched — only the material changes.
+   ============================================================ */
+
+/* Brighter enamel face + a deeper embossed edge than the resting
+   glass-panel default, so it visibly "lifts" off the list beneath it. */
+[data-theme='skeuo'] .df-detail-panel {
+  background: var(--glass-bg-strong);
+  box-shadow: var(--panel-raised-hover);
+}
+
+/* Hero icon gets a small riveted brass medallion bezel behind it, the
+   same "badge behind a small icon" treatment used for header/metric
+   glyphs elsewhere in this theme. */
+[data-theme='skeuo'] .df-detail-icon-wrap {
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--glass-bg-strong) 0%, #d8c48c 55%, #8a6a34 100%);
+  box-shadow: var(--panel-raised);
+}
+
+[data-theme='skeuo'] .df-detail-icon {
+  filter:
+    drop-shadow(0 1px 0 rgba(255, 253, 235, 0.5))
+    drop-shadow(0 -1px 0 rgba(58, 40, 14, 0.3));
+}
+
+/* Defensive, same reasoning as the win95 fix above: this theme's root
+   also sets --gradient-text-hero: none (no glassy gradient text suits a
+   brass panel), which would otherwise leave the High/Low values
+   transparent-on-transparent. Restated as an engraved ink numeral
+   instead, matching the metric cards' hero-value treatment. */
+[data-theme='skeuo'] .df-detail-stat-value--hero {
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  color: var(--text-primary);
+  text-shadow:
+    0 1px 0 rgba(255, 253, 235, 0.55),
+    0 -1px 0 rgba(58, 40, 14, 0.35);
 }

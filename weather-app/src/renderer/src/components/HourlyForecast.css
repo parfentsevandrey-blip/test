@@ -429,3 +429,62 @@
 [data-theme='win95'] .hf-tooltip-cond {
   color: #000000;
 }
+
+/* ---------- Skeuo: brass instrument panel ----------
+   Opposite direction from win95 above: every transition/animation in this
+   file keeps running (hover lifts, the dot pulse, the curve's morph-in,
+   the hover-highlight glide) -- only the material finish changes. Curve
+   line/dot/dot-ring and the Now pill (hf-now-highlight) are already
+   recoloured centrally in global.css; the pieces below are the ones this
+   file's own win95 rules flag as otherwise theme-blind. */
+
+/* The curve band becomes a sunken brass-etched channel (same --panel-pressed
+   recipe used for gauge tracks elsewhere) instead of floating on nothing,
+   so the temperature line reads as a needle inlaid into the console. */
+[data-theme='skeuo'] .hf-curve-band {
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, rgba(42, 31, 16, 0.1), rgba(42, 31, 16, 0.03));
+  box-shadow: var(--panel-pressed);
+}
+
+/* The base rule paints this label with `--gradient-text-hero` and
+   color:transparent; skeuo sets that token to `none` (no frosted bloom on
+   a brass panel), which would otherwise render the Now hour's time label
+   invisible. A brass ink tone plus a light/dark hairline emboss (the same
+   engraving recipe used for .mx-value elsewhere) makes it read as a small
+   backlit plaque instead of plain parchment. */
+[data-theme='skeuo'] .hf-cell.is-now .hf-time {
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  color: var(--accent);
+  text-shadow:
+    0 1px 0 rgba(255, 253, 235, 0.55),
+    0 -1px 0 rgba(58, 40, 14, 0.35);
+}
+
+/* Riveted brass medallion behind the Now icon -- the other 23 hours' icons
+   stay plain parchment (no background), so this one column alone reads as
+   struck brass. The accent colour + glow drop-shadow from the base rule
+   (already theme-correct via the root tokens) sit on top of it unchanged. */
+[data-theme='skeuo'] .hf-cell.is-now .hf-icon {
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, #f6ecd4 0%, #d8c48c 45%, #8a5a22 100%);
+  box-shadow: var(--panel-raised);
+}
+
+/* Hover highlight becomes a shallow pressed groove gliding under the
+   cursor's column, instead of a flat glass tint -- same glide transition
+   as the base rule above, only the finish differs. */
+[data-theme='skeuo'] .hf-hover-highlight {
+  background: var(--control-active);
+  box-shadow: var(--panel-pressed);
+}
+
+/* Tooltip becomes a small proud brass tag -- solid rim + raised shadow --
+   instead of a translucent glass chip; still rides the same fade/position
+   logic as the base rule. */
+[data-theme='skeuo'] .hf-tooltip {
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--panel-raised);
+}

@@ -252,3 +252,70 @@
   background: linear-gradient(135deg, var(--danger) 0%, color-mix(in srgb, var(--danger) 70%, black) 100%);
   box-shadow: 0 0 24px -4px color-mix(in srgb, var(--danger) 65%, transparent);
 }
+
+/* ============================================================
+   Skeuo -- brass instrument panel.
+   Skeuo is not "isRetro", so it renders the exact same modern
+   blob/orbit/particle loader markup as light/dark/tuscany (only
+   win95 swaps in the plain sun-pulse loader above). But the skeuo
+   root block (global.css) intentionally nulls --glow-soft,
+   --glow-strong, --mesh-gradient and --gradient-text-hero to opt this
+   theme out of the frosted-glass bloom look, the same opt-out trick
+   win95 uses elsewhere. Left alone that would flatten the dial stage,
+   the core and the orbiting markers to zero depth, and would render
+   the status text fully transparent (it's background-clipped to a
+   now-empty gradient). This section swaps in real embossed
+   brass/enamel gradients and raised bevels instead, and keeps every
+   hover lift, press-in and Framer Motion transition already wired up
+   above completely untouched -- skeuo never turns off motion. */
+
+[data-theme='skeuo'] .loading-mesh {
+  background: radial-gradient(60% 60% at 50% 40%, var(--accent-glow) 0%, transparent 70%);
+  filter: none;
+}
+
+[data-theme='skeuo'] .loading-mesh-error {
+  background: radial-gradient(55% 55% at 50% 32%, color-mix(in srgb, var(--danger) 38%, transparent) 0%, transparent 65%);
+}
+
+/* The stage becomes a brass-rimmed enamel dial face instead of a
+   borderless glow ring. .loading-orbit-ring's stroke and
+   .loading-blob-svg's fill already resolve var(--accent) /
+   var(--accent-strong) straight from their own SVG gradients, so
+   neither needs a skeuo override. */
+[data-theme='skeuo'] .loading-stage {
+  background: radial-gradient(circle at 32% 28%, var(--glass-bg-strong) 0%, var(--glass-bg) 68%, #c9b077 100%);
+  border: 3px solid var(--glass-border);
+  box-shadow: var(--panel-raised-hover);
+}
+
+/* Polished-brass boss at the dial's center; keeps its existing
+   accent-driven radial gradient, just gains a rim and real embossing. */
+[data-theme='skeuo'] .loading-orb-core {
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--panel-raised);
+}
+
+/* Orbiting markers read as tiny brass rivets rather than glowing dots. */
+[data-theme='skeuo'] .loading-particle {
+  border: 1px solid var(--glass-border-soft);
+  box-shadow: var(--panel-raised);
+}
+
+[data-theme='skeuo'] .loading-overlay-modern .loading-text-modern {
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  color: #f0dfab;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.55);
+}
+
+[data-theme='skeuo'] .error-banner-modern {
+  box-shadow: var(--panel-raised-hover);
+}
+
+/* Small icon gets the brass-medallion badge treatment. */
+[data-theme='skeuo'] .error-glyph {
+  border: 2px solid var(--glass-border);
+  box-shadow: var(--panel-raised);
+}

@@ -421,3 +421,132 @@
 [data-theme='win95'] .hero-stat-trend {
   transition: none;
 }
+
+/* ============================================================
+   Skeuo — the master barometer. The hero numeral reads as ink
+   engraved straight into the enamel dial face, the condition icon
+   sits in its own small brass-rimmed medallion, and the Hi/Lo/
+   pressure chips become riveted brass plates that lift toward the
+   light on hover and press back in on tap. The ambient wash behind
+   the card (::before) restyles from a colored glow into a
+   glass-dome highlight sweep, as if a convex cover glass sat over
+   the whole gauge. Motion stays fully on here, unlike win95 -- only
+   the material vocabulary changes.
+   ============================================================ */
+
+/* Glass-dome sheen instead of the light/dark themes' accent-tinted glow --
+   a diagonal catch-light like a convex cover glass over the gauge, which
+   brightens slightly along with the rest of the card on hover. */
+[data-theme='skeuo'] .hero-current::before {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 253, 235, 0.5) 0%,
+    rgba(255, 253, 235, 0.14) 30%,
+    transparent 55%
+  );
+  opacity: 0.85;
+}
+
+[data-theme='skeuo'] .bento-card:hover .hero-current::before {
+  opacity: 1;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 253, 235, 0.65) 0%,
+    rgba(255, 253, 235, 0.2) 32%,
+    transparent 58%
+  );
+}
+
+/* Live-clock indicator becomes the same pressed-brass bead used for the
+   header brand dot and the daily forecast's "today" marker, instead of a
+   flat dot -- its pulse animation is untouched, so it keeps breathing. */
+[data-theme='skeuo'] .hero-clock-dot {
+  background: radial-gradient(circle at 35% 30%, #f6ecd4, #c99a44 60%, #8a5a22 100%);
+  box-shadow: 0 1px 1px rgba(20, 14, 6, 0.5);
+}
+
+/* Gradient-text hero reset (mirrors win95's, since --gradient-text-hero is
+   `none` here too): restated as a deep-engraved numeral -- a light rim
+   catching the console light from above, a dark groove-shadow below,
+   instead of a flat/opaque fallback color. */
+[data-theme='skeuo'] .hero-temp-numeral {
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  color: var(--text-primary);
+  text-shadow:
+    0 1px 0 rgba(255, 253, 235, 0.55),
+    0 -1px 0 rgba(58, 40, 14, 0.35);
+}
+
+/* Hover still does something here (unlike win95's flat cancellation) -- the
+   engraving just reads deeper/brighter instead of blooming with a blurred
+   accent-glow, which would read as neon rather than pressed metal. */
+[data-theme='skeuo'] .hero-main:hover .hero-temp-numeral {
+  text-shadow:
+    0 1px 0 rgba(255, 253, 235, 0.75),
+    0 -1.5px 0 rgba(58, 40, 14, 0.5);
+}
+
+[data-theme='skeuo'] .hero-main:hover .hero-temp-unit {
+  color: var(--accent-strong);
+}
+
+/* Condition icon sits in its own small dial face -- same enamel-into-brass
+   radial recipe as the wind compass/humidity ring dials -- and lifts into a
+   deeper bevel along with the existing whole-card hover transform below. */
+[data-theme='skeuo'] .hero-icon {
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--glass-bg-strong) 0%, var(--glass-bg) 70%, #c9b47e 100%);
+  box-shadow: var(--panel-raised);
+}
+
+[data-theme='skeuo'] .bento-card:hover .hero-icon {
+  box-shadow: var(--panel-raised-hover);
+}
+
+/* Hi/Lo/pressure chips become riveted brass plates: raised at rest, a
+   deeper lift on hover (paired with the .tsx's own y:-1 spring), a sunken
+   press-in on :active -- the same raised/pressed vocabulary as icon-btn. */
+[data-theme='skeuo'] .hero-stat {
+  background: var(--control-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--panel-raised);
+  transition: background-color 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out);
+}
+
+[data-theme='skeuo'] .hero-stat:hover {
+  background: var(--control-bg-hover);
+  box-shadow: var(--panel-raised-hover);
+}
+
+[data-theme='skeuo'] .hero-stat:active {
+  box-shadow: var(--panel-pressed);
+}
+
+[data-theme='skeuo'] .hero-stat-value {
+  text-shadow:
+    0 1px 0 rgba(255, 253, 235, 0.55),
+    0 -1px 0 rgba(58, 40, 14, 0.3);
+}
+
+/* Pressure trend arrow gets the same light-above/dark-below engraving as
+   the hero numeral, at needle scale -- no JS-driven inline filter on this
+   svg, so a plain CSS filter is safe here. */
+[data-theme='skeuo'] .hero-stat-trend {
+  filter:
+    drop-shadow(0 1px 0 rgba(255, 253, 235, 0.4))
+    drop-shadow(0 -1px 0 rgba(58, 40, 14, 0.3));
+}
+
+/* Footer dividers read as grooves cut into the brass plate: the existing
+   border-top is the groove's dark edge, this adds the bright catch-light
+   directly beneath it. */
+[data-theme='skeuo'] .hero-stats,
+[data-theme='skeuo'] .hero-insight {
+  box-shadow: 0 -1px 0 rgba(255, 253, 230, 0.35);
+}
+
+[data-theme='skeuo'] .hero-insight svg {
+  filter: drop-shadow(0 1px 0 rgba(255, 253, 235, 0.4));
+}
