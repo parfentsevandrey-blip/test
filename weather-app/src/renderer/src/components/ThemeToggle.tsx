@@ -54,12 +54,24 @@ function RetroWindowIcon(): JSX.Element {
   )
 }
 
+/** A brass instrument gauge: dial arc + needle -- the skeuomorphic theme's signature look. */
+function GaugeIcon(): JSX.Element {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 16a8 8 0 1 1 16 0" />
+      <line x1={12} y1={16} x2={16} y2={10.5} />
+      <circle cx={12} cy={16} r={1.3} fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
 const OPTIONS: { value: ThemePreference; title: string; icon: JSX.Element | string }[] = [
   { value: 'light', title: 'Light theme', icon: <SunIcon /> },
   { value: 'dark', title: 'Dark theme', icon: <MoonIcon /> },
   { value: 'auto', title: 'Follow day/night at the selected location', icon: 'A' },
   { value: 'tuscany', title: 'Tuscany theme', icon: <CypressIcon /> },
-  { value: 'win95', title: 'Windows 95 retro theme', icon: <RetroWindowIcon /> }
+  { value: 'win95', title: 'Windows 95 retro theme', icon: <RetroWindowIcon /> },
+  { value: 'skeuo', title: 'Skeuomorphic instrument-panel theme', icon: <GaugeIcon /> }
 ]
 
 export function ThemeToggle(): JSX.Element {

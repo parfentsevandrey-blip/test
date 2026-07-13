@@ -35,7 +35,14 @@ const EASE_OUT = [0.16, 1, 0.3, 1] as const
 export function BentoCard({ span, floatDelay = 0, children }: BentoCardProps): JSX.Element {
   const theme = useWeatherStore((s) => s.theme)
   const weather = useWeatherStore((s) => s.weather)
-  const isRetro = resolveTheme(theme, weather) === 'win95'
+  const resolved = resolveTheme(theme, weather)
+  const isRetro = resolved === 'win95'
+  // Skeuomorphic cards read as riveted brass plates bolted to a panel -- the
+  // 3D cursor-tracking tilt (great for "floating glass") would make a fixed
+  // physical object warp in space, so it's dropped in favor of a straight
+  // lift-toward-the-light hover (paired with the deeper .bento-card:hover
+  // shadow in global.css) that still reads as a real interactive object.
+  const isSkeuo = resolved === 'skeuo'
   const prefersReducedMotion = useReducedMotion()
 
   const mouseX = useMotionValue(0.5)
@@ -114,17 +121,21 @@ export function BentoCard({ span, floatDelay = 0, children }: BentoCardProps): J
     )
   }
 
+  const skipTilt = prefersReducedMotion || isSkeuo
+
   return (
     <motion.div
       className={`bento-card glass-panel ${span}`}
-      style={prefersReducedMotion ? undefined : { perspective: 950, rotateX, rotateY }}
-      onMouseEnter={prefersReducedMotion ? undefined : handleMouseEnter}
-      onMouseMove={prefersReducedMotion ? undefined : handleMouseMove}
-      onMouseLeave={prefersReducedMotion ? undefined : handleMouseLeave}
+      style={skipTilt ? undefined : { perspective: 950, rotateX, rotateY }}
+      onMouseEnter={skipTilt ? undefined : handleMouseEnter}
+      onMouseMove={skipTilt ? undefined : handleMouseMove}
+      onMouseLeave={skipTilt ? undefined : handleMouseLeave}
       initial={prefersReducedMotion ? false : 'hidden'}
       animate={prefersReducedMotion ? undefined : controls}
       variants={variants}
-      whileHover={prefersReducedMotion ? undefined : { scale: 1.015, transition: HOVER_SPRING }}
+      whileHover={
+        prefersReducedMotion ? undefined : isSkeuo ? { y: -3, transition: HOVER_SPRING } : { scale: 1.015, transition: HOVER_SPRING }
+      }
       whileTap={prefersReducedMotion ? undefined : { scale: 0.985 }}
     >
       <div className="bento-card-content">{children}</div>

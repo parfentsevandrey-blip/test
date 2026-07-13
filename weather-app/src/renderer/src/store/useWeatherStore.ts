@@ -4,8 +4,8 @@ import { fetchWeatherData } from '../api/openMeteo'
 import { FALLBACK_LOCATION, getBrowserLocation, searchLocations } from '../api/geocoding'
 
 export type WeatherStatus = 'idle' | 'locating' | 'loading' | 'ready' | 'error'
-export type ThemePreference = 'light' | 'dark' | 'auto' | 'win95' | 'tuscany'
-export type ResolvedTheme = 'light' | 'dark' | 'win95' | 'tuscany'
+export type ThemePreference = 'light' | 'dark' | 'auto' | 'win95' | 'tuscany' | 'skeuo'
+export type ResolvedTheme = 'light' | 'dark' | 'win95' | 'tuscany' | 'skeuo'
 
 const UNIT_STORAGE_KEY = 'cinematic-weather:unit'
 const LOCATION_STORAGE_KEY = 'cinematic-weather:last-location'
@@ -35,7 +35,11 @@ function loadStoredLocation(): GeoLocation | null {
 
 function loadStoredTheme(): ThemePreference {
   const stored = localStorage.getItem(THEME_STORAGE_KEY)
-  return stored === 'dark' || stored === 'auto' || stored === 'win95' || stored === 'tuscany'
+  return stored === 'dark' ||
+    stored === 'auto' ||
+    stored === 'win95' ||
+    stored === 'tuscany' ||
+    stored === 'skeuo'
     ? stored
     : 'light'
 }

@@ -192,6 +192,9 @@ export function App(): JSX.Element {
   useRainAlerts()
 
   const isWin95 = resolved === 'win95'
+  // Skeuomorphic panels are opaque brass/parchment, not glass -- there's
+  // nothing translucent for the drifting mesh gradient to show through.
+  const isSkeuo = resolved === 'skeuo'
   const busy = status === 'loading' || status === 'locating'
   const prefersReducedMotion = useReducedMotion()
 
@@ -201,12 +204,13 @@ export function App(): JSX.Element {
 
       {/* A slow-drifting mesh-gradient wash between the 3D scene and the UI --
           every glass card is real translucent+blurred now, so this is what
-          they're actually showing through. win95 stays flat, so it's skipped
-          entirely rather than merely hidden. Translate-only (no scale): a
-          blurred layer can be cheaply repositioned by the compositor, but
-          scaling it forces the browser to re-rasterize the blur every frame,
-          which was a real, measurable cost given how large this element is. */}
-      {!isWin95 && (
+          they're actually showing through. win95 and skeuo stay opaque, so
+          it's skipped entirely rather than merely hidden. Translate-only (no
+          scale): a blurred layer can be cheaply repositioned by the
+          compositor, but scaling it forces the browser to re-rasterize the
+          blur every frame, which was a real, measurable cost given how large
+          this element is. */}
+      {!isWin95 && !isSkeuo && (
         <motion.div
           className="gradient-mesh"
           aria-hidden="true"

@@ -1855,3 +1855,283 @@ input {
   background: #000080 !important;
   background-image: none !important;
 }
+
+/* ============================================================
+   SKEUOMORPHIC INSTRUMENT PANEL THEME
+   A "vintage brass weather station" reskin: opaque parchment/enamel
+   gauge faces riveted into a brushed-steel console, brass rims,
+   embossed/pressed shadows instead of blur or glow. The live 3D sky
+   stays exactly as-is -- it's the view through the panel's own glass,
+   not something to retheme. Motion stays on (unlike win95): panels
+   lift toward the light on hover and press down on click, they just
+   never tilt in 3D space like the glass cards do, since a fixed brass
+   plate bolted to a console doesn't warp.
+   ============================================================ */
+
+[data-theme='skeuo'] {
+  color-scheme: light;
+
+  --bg-page: #55524a;
+
+  --glass-bg: #ece0c1;
+  --glass-bg-strong: #f6ecd3;
+  --glass-border: #8a6a34;
+  --glass-border-soft: rgba(58, 40, 14, 0.3);
+  --glass-blur: none;
+  --glass-shadow: var(--panel-raised);
+
+  --text-primary: #2b2013;
+  --text-secondary: rgba(43, 32, 19, 0.72);
+  --text-tertiary: rgba(43, 32, 19, 0.58);
+
+  --accent: #8a5a22;
+  --accent-strong: #c99a44;
+  --accent-glow: rgba(138, 90, 34, 0.24);
+  --info: #3d6b6b;
+  --danger: #8a3323;
+
+  --uv-low: #3f6b34;
+  --uv-moderate: #83681c;
+  --uv-high: #97591c;
+  --uv-veryhigh: #8a3323;
+  --uv-extreme: #654a80;
+
+  --control-bg: #d8c48c;
+  --control-bg-hover: #e6d6a0;
+  --control-active: rgba(42, 31, 16, 0.2);
+  --scrim: rgba(30, 24, 14, 0.6);
+  --track: rgba(42, 31, 16, 0.32);
+
+  /* No frosted-glass bloom on a brass panel -- these feed .bento-card:hover
+     below directly rather than through the shared --glow-* tokens, same
+     opt-out technique win95 uses. */
+  --glow-soft: none;
+  --glow-strong: none;
+  --glow-border: var(--glass-border);
+  --gradient-text-hero: none;
+  --mesh-gradient: none;
+
+  --font-display: 'Rockwell', 'Roboto Slab', Georgia, 'Times New Roman', serif;
+
+  /* Embossed/pressed brass recipes, reused everywhere a panel, gauge or
+     button needs to read as a real raised or sunken physical object. */
+  --panel-raised:
+    0 1px 0 rgba(255, 250, 230, 0.5) inset,
+    0 -2px 3px rgba(30, 20, 8, 0.28) inset,
+    0 1px 0 rgba(255, 250, 230, 0.4),
+    0 8px 14px -4px rgba(20, 14, 6, 0.5),
+    0 2px 5px rgba(20, 14, 6, 0.35);
+  --panel-raised-hover:
+    0 1px 0 rgba(255, 250, 230, 0.55) inset,
+    0 -2px 3px rgba(30, 20, 8, 0.3) inset,
+    0 2px 0 rgba(255, 250, 230, 0.45),
+    0 14px 22px -6px rgba(15, 10, 4, 0.55),
+    0 4px 8px rgba(15, 10, 4, 0.4);
+  --panel-pressed:
+    0 2px 4px rgba(30, 20, 8, 0.4) inset,
+    0 -1px 0 rgba(255, 250, 230, 0.25) inset,
+    0 1px 0 rgba(255, 250, 230, 0.2);
+}
+
+[data-theme='skeuo'] body {
+  background: radial-gradient(120% 140% at 50% 0%, #605c50 0%, #4c4940 60%, #403d36 100%);
+}
+
+/* ---------- Panels become riveted brass-framed gauge plates ---------- */
+
+[data-theme='skeuo'] .glass-panel {
+  border-width: 2px;
+  border-style: solid;
+  border-color: var(--glass-border);
+  outline: 1px solid rgba(255, 250, 230, 0.35);
+  outline-offset: -4px;
+}
+
+[data-theme='skeuo'] .bento-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle 3px at 9px 9px, #f0dfab 0%, #8a6a34 55%, #3d2d12 100%),
+    radial-gradient(circle 3px at calc(100% - 9px) 9px, #f0dfab 0%, #8a6a34 55%, #3d2d12 100%),
+    radial-gradient(circle 3px at 9px calc(100% - 9px), #f0dfab 0%, #8a6a34 55%, #3d2d12 100%),
+    radial-gradient(circle 3px at calc(100% - 9px) calc(100% - 9px), #f0dfab 0%, #8a6a34 55%, #3d2d12 100%);
+}
+
+[data-theme='skeuo'] .bento-card:hover {
+  border-color: var(--accent-strong);
+  box-shadow: var(--panel-raised-hover);
+  z-index: 3;
+}
+
+/* ---------- Header becomes a walnut console rail ---------- */
+
+[data-theme='skeuo'] .app-header {
+  background:
+    repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.12) 0px, transparent 2px, transparent 5px),
+    linear-gradient(180deg, #5c4128 0%, #402c18 100%);
+  box-shadow: 0 2px 0 rgba(255, 250, 230, 0.08) inset, 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme='skeuo'] .header-brand {
+  color: #f0dfab;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.55);
+}
+
+[data-theme='skeuo'] .header-brand .dot {
+  background: radial-gradient(circle at 35% 30%, #f6ecd4, #c99a44 60%, #8a5a22 100%);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme='skeuo'] .header-status {
+  color: #d8c48c;
+}
+
+/* ---------- Controls become brass toggle switches ---------- */
+
+[data-theme='skeuo'] .control-pill {
+  background: var(--control-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--panel-pressed);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+[data-theme='skeuo'] .seg-thumb {
+  background: linear-gradient(180deg, #f0dfab, #c99a44);
+  box-shadow: var(--panel-raised);
+}
+
+[data-theme='skeuo'] .control-pill .seg:hover,
+[data-theme='skeuo'] .icon-btn:hover {
+  background: var(--control-bg-hover);
+}
+
+[data-theme='skeuo'] .icon-btn {
+  background: var(--control-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--panel-raised);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+[data-theme='skeuo'] .icon-btn:active,
+[data-theme='skeuo'] .control-pill .seg:active {
+  box-shadow: var(--panel-pressed);
+}
+
+/* ---------- Search becomes a sunken parchment field ---------- */
+
+[data-theme='skeuo'] .search-input-row {
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--panel-pressed);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+[data-theme='skeuo'] .search-input-row:focus-within {
+  border-color: var(--accent-strong);
+}
+
+[data-theme='skeuo'] .search-results,
+[data-theme='skeuo'] .favorites-dropdown {
+  background: var(--glass-bg-strong);
+  border: 2px solid var(--glass-border);
+  box-shadow: var(--panel-raised-hover);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* ---------- Scrollbars go brass-riveted ---------- */
+
+[data-theme='skeuo'] ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #c99a44, #8a5a22);
+  box-shadow: var(--panel-raised);
+}
+
+[data-theme='skeuo'] ::-webkit-scrollbar-track {
+  background: rgba(42, 31, 16, 0.2);
+}
+
+/* ---------- Odds and ends ---------- */
+
+[data-theme='skeuo'] .loading-overlay {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+[data-theme='skeuo'] .error-banner button {
+  background: var(--control-bg);
+  box-shadow: var(--panel-raised);
+}
+
+/* ---------- Skeuo: gauges get real embossed brass/enamel bevels ----------
+   Where win95 flattens every visualization to solid Windows colors, this
+   theme goes the other way -- real gradients, glossy fills and sunken
+   tracks, since that physical depth is the entire point of the style. */
+
+[data-theme='skeuo'] .humidity-gauge,
+[data-theme='skeuo'] .precip-bar-track {
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--panel-pressed);
+}
+
+[data-theme='skeuo'] .humidity-gauge-fill,
+[data-theme='skeuo'] .precip-bar-fill {
+  background: linear-gradient(180deg, var(--accent-strong), var(--accent));
+  box-shadow: 0 0 0 1px rgba(255, 250, 230, 0.25) inset;
+}
+
+[data-theme='skeuo'] .uv-scale-track {
+  background: linear-gradient(90deg, #4f7a3f 0%, #a68a2e 30%, #a6631f 55%, #8a3323 78%, #6b4a80 100%);
+  box-shadow: var(--panel-pressed);
+  border: 1px solid var(--glass-border);
+}
+
+[data-theme='skeuo'] .uv-scale-marker {
+  background: radial-gradient(circle at 35% 30%, #f6ecd4, #c99a44 60%, #8a5a22 100%);
+  box-shadow: 0 1px 3px rgba(20, 14, 6, 0.5), 0 0 0 1px var(--glass-border);
+}
+
+[data-theme='skeuo'] .humidity-ring-fill {
+  stroke: var(--info);
+}
+
+[data-theme='skeuo'] .sun-path-sun-core {
+  fill: var(--accent-strong);
+}
+
+[data-theme='skeuo'] .sun-path-progress {
+  stroke: var(--accent);
+}
+
+[data-theme='skeuo'] .hf-curve-line {
+  stroke: var(--accent);
+}
+
+[data-theme='skeuo'] .hf-curve-dot,
+[data-theme='skeuo'] .hf-curve-dot-ring {
+  fill: var(--accent-strong);
+}
+
+[data-theme='skeuo'] .hf-now-highlight {
+  background: var(--accent-glow);
+  border: 1px solid var(--glass-border);
+}
+
+[data-theme='skeuo'] .daily-track,
+[data-theme='skeuo'] .df-track {
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--panel-pressed);
+}
+
+[data-theme='skeuo'] .daily-track-fill,
+[data-theme='skeuo'] .df-fill {
+  background-image: linear-gradient(90deg, var(--info), var(--accent)) !important;
+  box-shadow: 0 0 0 1px rgba(255, 250, 230, 0.2) inset;
+}
