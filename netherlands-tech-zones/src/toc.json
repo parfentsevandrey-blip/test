@@ -1,0 +1,82 @@
+[
+ {
+  "level": 1,
+  "title": "Краткое резюме",
+  "page": 3
+ },
+ {
+  "level": 1,
+  "title": "Почему маленькая страна стала сверхдержавой",
+  "page": 4
+ },
+ {
+  "level": 1,
+  "title": "Часть I. Чипы: Брейнпорт Эйндховен",
+  "page": 6
+ },
+ {
+  "level": 2,
+  "title": "ASML — Велдховен, промзона De Run",
+  "page": 6
+ },
+ {
+  "level": 2,
+  "title": "High Tech Campus Eindhoven",
+  "page": 8
+ },
+ {
+  "level": 2,
+  "title": "Неймеген — завод чипов NXP и Ampleon",
+  "page": 9
+ },
+ {
+  "level": 1,
+  "title": "Часть II. Дата-центры: где живёт «облако»",
+  "page": 10
+ },
+ {
+  "level": 2,
+  "title": "Амстердам — Science Park и узел AMS-IX",
+  "page": 10
+ },
+ {
+  "level": 2,
+  "title": "Эмсхавен — гиперскейл-кампус Google",
+  "page": 12
+ },
+ {
+  "level": 2,
+  "title": "Agriport A7 — Мидденмер (Microsoft и Google)",
+  "page": 13
+ },
+ {
+  "level": 1,
+  "title": "Часть III. Искусственный интеллект и наука будущего",
+  "page": 15
+ },
+ {
+  "level": 2,
+  "title": "Делфт — QuTech и квантовые технологии",
+  "page": 15
+ },
+ {
+  "level": 1,
+  "title": "Часть IV. Экономика, энергия и трудные вопросы",
+  "page": 17
+ },
+ {
+  "level": 1,
+  "title": "Сравнение ключевых зон",
+  "page": 18
+ },
+ {
+  "level": 1,
+  "title": "Заключение: что дальше",
+  "page": 18
+ },
+ {
+  "level": 1,
+  "title": "Источники",
+  "page": 19
+ }
+]
