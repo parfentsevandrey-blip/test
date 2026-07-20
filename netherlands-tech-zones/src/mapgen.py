@@ -224,6 +224,39 @@ def national_map(markers, out, center=(52.15, 5.35), z=8, w=1120, h=1360,
     return out
 
 
+def _pin_label(img, px, py, label, w, color=(234, 67, 53)):
+    """Google-style red teardrop pin at (px,py) with a labelled place name."""
+    d = ImageDraw.Draw(img, "RGBA")
+    r = 18
+    top = int(py - 52)
+    d.ellipse([px - 8, py - 5, px + 8, py + 3], fill=(0, 0, 0, 70))          # ground shadow
+    d.polygon([(px - 11, top + 10), (px + 11, top + 10), (px, py + 1)], fill=color)  # stem
+    d.ellipse([px - r, top - r, px + r, top + r], fill=color, outline=(255, 255, 255, 255), width=4)
+    d.ellipse([px - 7, top - 7, px + 7, top + 7], fill=(255, 255, 255, 255))
+    f = _font(30, bold=True)
+    tw = int(d.textlength(label, font=f))
+    tx, ty = px + 26, top - 18
+    if tx + tw > w - 10:
+        tx = px - 26 - tw
+    ty = max(6, ty)
+    for ox in range(-3, 4):                                                 # white halo
+        for oy in range(-3, 4):
+            d.text((tx + ox, ty + oy), label, font=f, fill=(255, 255, 255, 240))
+    d.text((tx, ty), label, font=f, fill=color)
+
+
+def context_map(fac_lat, fac_lon, center_lat, center_lon, zoom, label, out, w=972, h=1016):
+    """Clean Google-Maps-style street map that shows the site marker AND the
+    nearest big city in the same frame."""
+    cx, cy = _deg2num(center_lat, center_lon, zoom)
+    base = _stitch(VOYAGER, zoom, cx, cy, w, h, fallback=(202, 224, 236, 255))
+    px, py = _num2px_in_view(fac_lat, fac_lon, zoom, cx, cy, w, h)
+    _pin_label(base, px, py, label, w)
+    _attribution(base, w, h, "© OpenStreetMap · CARTO")
+    base.convert("RGB").save(out, "JPEG", quality=90)
+    return out
+
+
 if __name__ == "__main__":
     os.makedirs("imgtest", exist_ok=True)
     satellite(51.41056, 5.42622, "imgtest/asml_sat.jpg", z=15,

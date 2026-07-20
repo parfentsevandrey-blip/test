@@ -173,7 +173,7 @@ def zone_slide(z, idx):
       <div class="z-grid">
         <div class="z-left">
           <img class="z-sat" src="{sat}"/>
-          <div class="z-satcap">Спутниковый снимок · {esc(z["lat"])}, {esc(z["lon"])}</div>
+          <div class="z-satcap">{esc(z.get("map_caption", "Карта Google"))}</div>
         </div>
         <div class="z-right">
           <div class="z-cat" style="color:{col}">{CATLABEL[z["cat"]]}</div>

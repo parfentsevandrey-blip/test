@@ -23,7 +23,7 @@ ZONES = [
         "address": "De Run 6501, 5504 DR Велдховен",
         "maps_query": "De Run 6501, 5504 DR Veldhoven",
         "lat": "51.40468", "lon": "5.41736",
-        "img": "assets/sat_asml_veldhoven.jpg",
+        "img": "assets/map_asml.jpg", "map_caption": "Карта Google · рядом — Эйндховен",
         "residents": [
             {"name": "ASML", "tag": "Литография EUV/DUV", "addr": "De Run 6501, 5504 DR Велдховен",
              "text": "Делает самые сложные в мире машины фотолитографии — они, как гигантские проекторы, наносят рисунок микросхемы на кремний. Без оборудования ASML нельзя выпускать передовые чипы, поэтому от этого завода зависит вся мировая электроника."},
@@ -40,7 +40,7 @@ ZONES = [
         "address": "High Tech Campus 60, 5656 AG Эйндховен",
         "maps_query": "High Tech Campus 60, 5656 AG Eindhoven",
         "lat": "51.4089", "lon": "5.4604",
-        "img": "assets/sat_htc_eindhoven.jpg",
+        "img": "assets/map_htc.jpg", "map_caption": "Карта Google · юг Эйндховена",
         "residents": [
             {"name": "NXP Semiconductors", "tag": "Чипы · штаб-квартира", "addr": "High Tech Campus 60, 5656 AG Эйндховен",
              "text": "Один из мировых лидеров по производству чипов: для автомобилей, банковских карт и телефонов. Здесь его мировая штаб-квартира."},
@@ -57,7 +57,7 @@ ZONES = [
         "address": "Gerstweg 2, 6534 AE Неймеген (завод NXP ICN8)",
         "maps_query": "Gerstweg 2, 6534 AE Nijmegen",
         "lat": "51.8248", "lon": "5.8173",
-        "img": "assets/sat_nxp_nijmegen.jpg",
+        "img": "assets/map_nijmegen.jpg", "map_caption": "Карта Google · рядом — центр Неймегена",
         "residents": [
             {"name": "NXP (фабрика ICN8)", "tag": "Производство чипов", "addr": "Gerstweg 2, 6534 AE Неймеген",
              "text": "Крупный производитель микросхем, ведущий историю от завода Philips 1953 года. Здесь чипы реально производят — на фабрике ICN8."},
@@ -74,7 +74,7 @@ ZONES = [
         "address": "Science Park 105, 1098 XG Амстердам",
         "maps_query": "Science Park 105, 1098 XG Amsterdam",
         "lat": "52.3564", "lon": "4.9508",
-        "img": "assets/sat_amsterdam_sciencepark.jpg",
+        "img": "assets/map_amsterdam.jpg", "map_caption": "Карта Google · восток Амстердама",
         "residents": [
             {"name": "AMS-IX", "tag": "Обмен трафиком", "addr": "Science Park 105 (Nikhef), Амстердам",
              "text": "Огромный «перекрёсток» интернета, где сотни операторов связи напрямую обмениваются трафиком. Одна из крупнейших точек обмена в мире."},
@@ -91,7 +91,7 @@ ZONES = [
         "address": "Oostpolder 4, 9979 XT Эмсхавен",
         "maps_query": "Oostpolder 4, 9979 XT Eemshaven",
         "lat": "53.4244", "lon": "6.8592",
-        "img": "assets/sat_google_eemshaven.jpg",
+        "img": "assets/map_eemshaven.jpg", "map_caption": "Карта Google · рядом — Гронинген",
         "residents": [
             {"name": "Google", "tag": "Гиперскейл-ЦОД", "addr": "Oostpolder 4, 9979 XT Эмсхавен",
              "text": "Огромный дата-центр Google: тысячи серверов, на которых работают Поиск, YouTube, Gmail и Google Cloud. Первый в мире ЦОД Google на 100% зелёной энергии."},
@@ -108,7 +108,7 @@ ZONES = [
         "address": "Agriport 570 и 601, 1775 TB Мидденмер",
         "maps_query": "Agriport 570, 1775 TB Middenmeer",
         "lat": "52.7656", "lon": "5.0380",
-        "img": "assets/sat_agriport_middenmeer.jpg",
+        "img": "assets/map_agriport.jpg", "map_caption": "Карта Google · рядом — Хорн и Алкмар",
         "residents": [
             {"name": "Microsoft", "tag": "Облако Azure", "addr": "Agriport 570 и 601, 1775 TB Мидденмер",
              "text": "Один из крупнейших дата-центровых кампусов Microsoft в Европе: здесь работают облако Azure и Microsoft 365 для региона."},
@@ -125,7 +125,7 @@ ZONES = [
         "address": "Lorentzweg 1, 2628 CJ Делфт (TU Delft)",
         "maps_query": "Lorentzweg 1, 2628 CJ Delft",
         "lat": "52.0008", "lon": "4.3754",
-        "img": "assets/sat_qutech_delft.jpg",
+        "img": "assets/map_delft.jpg", "map_caption": "Карта Google · между Гаагой и Роттердамом",
         "residents": [
             {"name": "QuTech (TU Delft + TNO)", "tag": "Квантовые вычисления", "addr": "Lorentzweg 1, 2628 CJ Делфт",
              "text": "Совместный институт университета TU Delft и организации TNO (с 2014 г.) — один из мировых лидеров в квантовых компьютерах и квантовом интернете."},
