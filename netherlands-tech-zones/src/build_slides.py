@@ -649,32 +649,32 @@ h1,h2,.stitle,.zp-name,.z-name,.hero-h,.d2-title,.close-title,.cc-big,.hero-val,
 .ctx-card {{ flex: 1; background: {PAPER}; border-left: 4px solid; border-radius: 12px; padding: 12px 15px; font-size: 14px; line-height: 1.4; color: #29333F; box-shadow: 0 6px 16px rgba(15,27,52,.05); }}
 
 /* ---- Zone residents ---- */
-.zone .zg {{ display: flex; height: 100%; padding: 30px 0 0; position: relative; z-index: 2; }}
-.zg-left {{ width: 484px; padding: 18px 0 18px 46px; }}
+.zone .zg {{ display: flex; height: 100%; padding: 24px 0 0; position: relative; z-index: 2; }}
+.zg-left {{ width: 484px; padding: 12px 0 12px 46px; }}
 .map-frame {{ position: relative; border-radius: 18px; overflow: hidden; box-shadow: 0 20px 44px rgba(15,27,52,.22); border: 1px solid {LINE}; }}
 .map-ring {{ position: absolute; inset: 0; border-radius: 18px; border: 2px solid; opacity: .25; pointer-events: none; }}
-.z-map {{ width: 100%; height: 486px; object-fit: cover; display: block; }}
-.z-mapcap {{ display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12.5px; color: {MUTED}; margin-top: 11px; }}
-.zg-right {{ flex: 1; padding: 12px 54px 18px 42px; }}
-.z-name {{ font-size: 32px; font-weight: 800; color: {INK}; margin: 5px 0 13px; line-height: 1.06; letter-spacing: -.5px; }}
-.addr-card {{ display: flex; gap: 13px; align-items: center; background: {PAPER}; border: 1px solid {LINE}; border-radius: 14px; padding: 12px 15px; box-shadow: 0 8px 20px rgba(15,27,52,.06); }}
+.z-map {{ width: 100%; height: 470px; object-fit: cover; display: block; }}
+.z-mapcap {{ display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12.5px; color: {MUTED}; margin-top: 10px; }}
+.zg-right {{ flex: 1; padding: 6px 54px 14px 42px; }}
+.z-name {{ font-size: 31px; font-weight: 800; color: {INK}; margin: 3px 0 10px; line-height: 1.05; letter-spacing: -.5px; }}
+.addr-card {{ display: flex; gap: 13px; align-items: center; background: {PAPER}; border: 1px solid {LINE}; border-radius: 14px; padding: 10px 14px; box-shadow: 0 8px 20px rgba(15,27,52,.06); }}
 .pin-badge {{ width: 36px; height: 36px; border-radius: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }}
 .addr-card b {{ font-size: 17px; color: {INK}; display: block; font-family: 'Manrope'; font-weight: 800; }}
 .z-city {{ font-size: 13.5px; color: {MUTED}; display: block; margin-top: 2px; }}
-.maps-row {{ display: flex; gap: 16px; align-items: center; margin: 15px 0 16px; }}
-.qr {{ width: 92px; height: 92px; border: 1px solid {LINE}; border-radius: 12px; padding: 4px; background: #fff; box-shadow: 0 8px 20px rgba(15,27,52,.12); }}
+.maps-row {{ display: flex; gap: 15px; align-items: center; margin: 11px 0 11px; }}
+.qr {{ width: 84px; height: 84px; border: 1px solid {LINE}; border-radius: 12px; padding: 4px; background: #fff; box-shadow: 0 8px 20px rgba(15,27,52,.12); }}
 .maps-title {{ font-size: 16.5px; font-weight: 800; color: {INK}; font-family: 'Manrope'; }}
 .maps-sub {{ font-size: 12.5px; color: {MUTED}; margin: 3px 0 7px; line-height: 1.35; }}
 .maps-link {{ font-size: 14.5px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }}
-.z-restitle {{ font-size: 13px; font-weight: 800; letter-spacing: 1.6px; margin-bottom: 9px; display: flex; align-items: center; gap: 9px; }}
-.residents {{ display: flex; flex-direction: column; gap: 8px; }}
+.z-restitle {{ font-size: 13px; font-weight: 800; letter-spacing: 1.6px; margin-bottom: 8px; display: flex; align-items: center; gap: 9px; }}
+.residents {{ display: flex; flex-direction: column; gap: 6px; }}
 .resident {{ border-left: 3px solid; padding-left: 12px; }}
 .r-head {{ display: flex; align-items: center; gap: 10px; }}
 .r-name {{ font-size: 16px; font-weight: 800; font-family: 'Manrope'; }}
 .r-tag {{ font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px; }}
-.r-text {{ font-size: 13.3px; color: #2A3542; line-height: 1.38; margin-top: 3px; }}
-.r-addr {{ display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: {MUTED}; margin-top: 3px; }}
-.z-facts {{ display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }}
+.r-text {{ font-size: 13.2px; color: #2A3542; line-height: 1.33; margin-top: 2px; }}
+.r-addr {{ display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: {MUTED}; margin-top: 2px; }}
+.z-facts {{ display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }}
 .fact {{ font-size: 12.5px; font-weight: 700; color: {INK}; background: {PAPER}; border: 1px solid {LINE}; border-radius: 20px; padding: 5px 13px; font-family: 'Manrope'; }}
 
 /* ---- Charts (dark, native) ---- */
@@ -770,7 +770,7 @@ h1,h2,.stitle,.zp-name,.z-name,.hero-h,.d2-title,.close-title,.cc-big,.hero-val,
 .gp-ic {{ width: 46px; height: 46px; border-radius: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }}
 .gp-t {{ font-size: 18.5px; font-weight: 800; color: #fff; font-family: 'Manrope'; margin-bottom: 6px; }}
 .gp-x {{ font-size: 13.7px; color: #B9C7DB; line-height: 1.45; }}
-.z-nugget {{ margin-top: 12px; font-size: 13px; color: #2A3542; line-height: 1.42; border-left: 3px solid; border-radius: 8px; padding: 9px 13px; }}
+.z-nugget {{ margin-top: 9px; font-size: 12.5px; color: #2A3542; line-height: 1.4; border-left: 3px solid; border-radius: 8px; padding: 8px 12px; }}
 .z-nugget span {{ font-weight: 800; }}
 
 /* ---- Outlook ---- */
