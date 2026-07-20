@@ -7,6 +7,7 @@ from qrcode.image.styledpil import StyledPilImage
 from qrcode.image.styles.moduledrawers.pil import RoundedModuleDrawer
 from qrcode.image.styles.colormasks import SolidFillColorMask
 import deck_data as D
+import deck_extra as E
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 os.chdir(HERE)
@@ -150,7 +151,8 @@ def cover_slide():
 
 def hero_slide():
     cells = ""
-    for val, lab, ic, cat in HERO:
+    stats = E.HERO_STATS if getattr(E, "HERO_STATS", None) else HERO
+    for val, lab, ic, cat in stats:
         a, b = GRADS[cat]
         cells += f'''
           <div class="glass hero-card">
@@ -264,6 +266,9 @@ def zone_slide(z):
             <span class="r-tag" style="color:{col};background:{col}18">{esc(r["tag"])}</span></div>
             <div class="r-text">{esc(r["text"])}</div>{addr}</div>'''
     facts = "".join(f'<span class="fact">{esc(f)}</span>' for f in z["facts"])
+    nug = getattr(E, "ZONE_NUGGETS", {}).get(z["key"])
+    nug_html = (f'<div class="z-nugget" style="border-color:{col};background:{col}10">'
+                f'<span style="color:{col}">★ Интересный факт:</span> {esc(nug)}</div>') if nug else ''
     inner = f'''
       <div class="z-band" style="background:{grad(cat)}"></div>
       <div class="zg">
@@ -289,6 +294,7 @@ def zone_slide(z):
           <div class="z-restitle" style="color:{col}"><span class="hbar-line" style="background:{grad(cat)}"></span>РЕЗИДЕНТЫ</div>
           <div class="residents">{residents}</div>
           <div class="z-facts">{facts}</div>
+          {nug_html}
         </div>
       </div>
       {footer(_pos())}'''
@@ -387,21 +393,135 @@ def closing_slide():
     slide("dark closing", inner)
 
 
+# ================= enrichment slides =================
+def didyouknow_slide():
+    cards = ""
+    for title, text, ic, cat in E.DID_YOU_KNOW:
+        a, b = GRADS[cat]
+        cards += f'''<div class="dyk-card">
+          <div class="dyk-ic" style="background:{grad(cat)};box-shadow:0 10px 24px {a}55">{icon(ic, "#fff", 26)}</div>
+          <div class="dyk-t">{esc(title)}</div><div class="dyk-x">{esc(text)}</div></div>'''
+    inner = f'''
+      {meshbg()}
+      <div class="pad">
+        <div class="eyebrow eyebrow-light">САМОЕ ИНТЕРЕСНОЕ</div>
+        <h2 class="stitle stitle-light">Знаете ли вы?</h2>
+        <div class="dyk-grid">{cards}</div>
+      </div>
+      {footer(_pos())}'''
+    slide("dark", inner)
+
+
+def supplychain_slide():
+    n = len(E.SUPPLY_CHAIN)
+    steps = ""
+    for i, (stage, players, dutch, ic) in enumerate(E.SUPPLY_CHAIN):
+        cat = "chips" if i == 0 else ("data" if i == 1 else ("ai" if i == 2 else "chips"))
+        a, b = GRADS[cat]
+        hl = ' sc-step-hl' if i == 0 else ''
+        steps += f'''<div class="sc-step{hl}">
+            <div class="sc-ic" style="background:{grad(cat)};box-shadow:0 10px 22px {a}44">{icon(ic, "#fff", 24)}</div>
+            <div class="sc-stage">{esc(stage)}</div>
+            <div class="sc-players">{esc(players)}</div>
+            <div class="sc-dutch">{esc(dutch)}</div>
+          </div>'''
+        if i < n - 1:
+            steps += f'<div class="sc-arrow">{icon("arrow", "#B9C2D0", 26, 2.2)}</div>'
+    inner = f'''
+      <div class="corner-blob" style="background:radial-gradient(circle,{GRADS['chips'][0]}18,transparent 70%)"></div>
+      <div class="pad">
+        <div class="eyebrow" style="color:{ORANGE}">МЕСТО В МИРОВОЙ ЦЕПОЧКЕ</div>
+        <h2 class="stitle">Без одного звена не работает всё</h2>
+        <p class="sc-lead">Каждый передовой чип в мире проходит через оборудование из Нидерландов. Вот как устроена глобальная цепочка — и где в ней Нидерланды.</p>
+        <div class="sc-flow">{steps}</div>
+        <div class="sc-note">{icon("shield", ORANGE, 18)}<span>ASML — «узкое место»: единственный поставщик EUV. Поэтому вокруг него и разворачивается технологическая геополитика.</span></div>
+      </div>
+      {footer(_pos())}'''
+    slide("content", inner)
+
+
+def timeline_slide():
+    ev = E.TIMELINE
+    nodes = ""
+    for i, (yr, title, detail, cat) in enumerate(ev):
+        a, b = GRADS[cat]
+        up = i % 2 == 0
+        card = f'<div class="tl-card"><div class="tl-title">{esc(title)}</div><div class="tl-detail">{esc(detail)}</div></div>'
+        nodes += f'''<div class="tl-node {'tl-up' if up else 'tl-down'}">
+            {card if up else ''}
+            <div class="tl-mid"><div class="tl-year" style="color:{CATCOL[cat]}">{esc(yr)}</div><div class="tl-dot" style="background:{grad(cat)}"></div></div>
+            {card if not up else ''}
+          </div>'''
+    inner = f'''
+      <div class="corner-blob" style="background:radial-gradient(circle,{GRADS['data'][0]}16,transparent 70%)"></div>
+      <div class="pad">
+        <div class="eyebrow" style="color:{ORANGE}">ПУТЬ К ВЕРШИНЕ</div>
+        <h2 class="stitle">Как складывалась экосистема</h2>
+        <div class="tl-wrap"><div class="tl-line"></div><div class="tl-row">{nodes}</div></div>
+      </div>
+      {footer(_pos())}'''
+    slide("content", inner)
+
+
+def geopolitics_slide():
+    g = E.GEOPOLITICS
+    cards = ""
+    cats = ["chips", "data", "ai", "chips"]
+    for i, (t, txt, ic) in enumerate(g["points"]):
+        cat = cats[i % len(cats)]; a, b = GRADS[cat]
+        cards += f'''<div class="glass gp-card">
+          <div class="gp-ic" style="background:{grad(cat)};box-shadow:0 10px 22px {a}44">{icon(ic, "#fff", 24)}</div>
+          <div class="gp-t">{esc(t)}</div><div class="gp-x">{esc(txt)}</div></div>'''
+    inner = f'''
+      {meshbg()}
+      <div class="pad">
+        <div class="eyebrow eyebrow-light">ГЕОПОЛИТИКА</div>
+        <h2 class="stitle stitle-light">Чипы — это не только технологии</h2>
+        <p class="gp-lead">{esc(g["lead"])}</p>
+        <div class="gp-grid">{cards}</div>
+      </div>
+      {footer(_pos())}'''
+    slide("dark", inner)
+
+
+def outlook_slide():
+    o = E.OUTLOOK
+    cards = ""
+    cats = ["chips", "ai", "data", "chips"]
+    for i, (t, txt, ic) in enumerate(o["points"]):
+        cat = cats[i % len(cats)]; a, b = GRADS[cat]
+        cards += f'''<div class="ol-card">
+          <div class="ol-ic" style="background:{grad(cat)};box-shadow:0 10px 22px {a}44">{icon(ic, "#fff", 25)}</div>
+          <div class="ol-t">{esc(t)}</div><div class="ol-x">{esc(txt)}</div></div>'''
+    inner = f'''
+      <div class="corner-blob" style="background:radial-gradient(circle,{GRADS['ai'][0]}18,transparent 70%)"></div>
+      <div class="pad">
+        <div class="eyebrow" style="color:{ORANGE}">ЧТО ДАЛЬШЕ · 2026–2030</div>
+        <h2 class="stitle">Куда движется технологическое сердце Европы</h2>
+        <p class="ol-lead">{esc(o["lead"])}</p>
+        <div class="ol-grid">{cards}</div>
+      </div>
+      {footer(_pos())}'''
+    slide("content", inner)
+
+
 # ================= assemble =================
 order = [("chips", ["asml", "htc", "nijmegen"]),
          ("data", ["amsterdam", "eemshaven", "agriport"]),
          ("ai", ["delft"])]
 zmap = {z["key"]: z for z in D.ZONES}
 znames = {z["key"]: D.PROFILES[z["key"]]["zone_title"] for z in D.ZONES}
-_n = 3 + sum(1 + 2 * len(ks) for _, ks in order) + 4
-TOTAL = _n
+_zone_slides = sum(1 + 2 * len(ks) for _, ks in order)  # dividers + profile/residents pairs
+TOTAL = 4 + _zone_slides + 1 + 7  # cover+hero+dyk+overview, +supplychain, +7 closing-group
 
-cover_slide(); hero_slide(); overview_slide()
+cover_slide(); hero_slide(); didyouknow_slide(); overview_slide()
 for cat, keys in order:
     divider_slide(cat, [znames[k] for k in keys])
     for k in keys:
         zone_profile_slide(zmap[k]); zone_slide(zmap[k])
-charts_slide(); challenges_slide(); compare_slide(); closing_slide()
+    if cat == "chips":
+        supplychain_slide()
+timeline_slide(); geopolitics_slide(); charts_slide(); challenges_slide(); outlook_slide(); compare_slide(); closing_slide()
 
 # ================= CSS =================
 CSS = font_faces() + f'''
@@ -608,6 +728,58 @@ h1,h2,.stitle,.zp-name,.z-name,.hero-h,.d2-title,.close-title,.cc-big,.hero-val,
 .cc-big {{ font-size: 62px; font-weight: 800; line-height: 1; }}
 .cc-lab {{ font-size: 16px; color: #9FB0C7; margin-top: 8px; }}
 .close-src {{ position: absolute; z-index: 2; bottom: 40px; left: 84px; right: 84px; font-size: 12px; color: #7E8CA3; line-height: 1.5; border-top: 1px solid rgba(255,255,255,.12); padding-top: 14px; }}
+.fact-star {{ background: transparent !important; border-width: 1.5px !important; font-style: italic; }}
+
+/* ---- Did you know (dark) ---- */
+.dyk-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 8px; }}
+.dyk-card {{ background: linear-gradient(158deg, rgba(255,255,255,.10), rgba(255,255,255,.03)); border: 1px solid rgba(255,255,255,.13); border-radius: 18px; padding: 22px 24px; box-shadow: inset 0 1px 0 rgba(255,255,255,.16); }}
+.dyk-ic {{ width: 50px; height: 50px; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }}
+.dyk-t {{ font-size: 23px; font-weight: 800; color: #fff; font-family: 'Manrope'; margin-bottom: 8px; }}
+.dyk-x {{ font-size: 15.5px; color: #B9C7DB; line-height: 1.5; }}
+
+/* ---- Supply chain ---- */
+.sc-lead {{ font-size: 18px; color: #2A3542; line-height: 1.5; max-width: 1080px; margin: 0 0 30px; }}
+.sc-flow {{ display: flex; align-items: stretch; gap: 6px; }}
+.sc-step {{ flex: 1; background: #fff; border: 1px solid {LINE}; border-radius: 16px; padding: 20px 18px; box-shadow: 0 14px 32px rgba(15,27,52,.08); text-align: center; }}
+.sc-step-hl {{ border: 2px solid {ORANGE}; box-shadow: 0 16px 36px rgba(242,99,19,.16); }}
+.sc-ic {{ width: 52px; height: 52px; border-radius: 15px; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }}
+.sc-stage {{ font-size: 18px; font-weight: 800; color: {INK}; font-family: 'Manrope'; }}
+.sc-players {{ font-size: 14px; color: {INK2}; font-weight: 600; margin: 7px 0 6px; }}
+.sc-dutch {{ font-size: 13px; color: {MUTED}; line-height: 1.4; }}
+.sc-arrow {{ display: flex; align-items: center; }}
+.sc-note {{ display: flex; align-items: center; gap: 11px; font-size: 15px; color: #2A3542; margin-top: 26px; background: {PAPER}; border-radius: 12px; padding: 14px 18px; }}
+
+/* ---- Timeline ---- */
+.tl-wrap {{ position: relative; margin-top: 46px; height: 400px; }}
+.tl-line {{ position: absolute; left: 0; right: 0; top: 200px; height: 4px; border-radius: 3px; background: linear-gradient(90deg, {ORANGE}, {BLUE}, {GREEN}); opacity: .5; }}
+.tl-row {{ display: flex; justify-content: space-between; position: relative; height: 100%; }}
+.tl-node {{ flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; height: 100%; }}
+.tl-mid {{ display: flex; flex-direction: column; align-items: center; position: absolute; top: 154px; }}
+.tl-year {{ font-size: 21px; font-weight: 800; font-family: 'Manrope'; margin-bottom: 6px; }}
+.tl-dot {{ width: 18px; height: 18px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(15,27,52,.25); }}
+.tl-card {{ width: 88%; background: #fff; border: 1px solid {LINE}; border-radius: 12px; padding: 11px 13px; box-shadow: 0 10px 26px rgba(15,27,52,.10); position: absolute; }}
+.tl-up .tl-card {{ bottom: 236px; }}
+.tl-down .tl-card {{ top: 236px; }}
+.tl-title {{ font-size: 14.5px; font-weight: 800; color: {INK}; font-family: 'Manrope'; line-height: 1.15; }}
+.tl-detail {{ font-size: 12px; color: {MUTED}; line-height: 1.35; margin-top: 4px; }}
+
+/* ---- Geopolitics (dark) ---- */
+.gp-lead {{ font-size: 19px; color: #C6D3E6; line-height: 1.5; max-width: 1080px; margin: 0 0 26px; }}
+.gp-grid {{ display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }}
+.gp-card {{ padding: 20px 22px 18px; display: flex; gap: 16px; }}
+.gp-ic {{ width: 46px; height: 46px; border-radius: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }}
+.gp-t {{ font-size: 18.5px; font-weight: 800; color: #fff; font-family: 'Manrope'; margin-bottom: 6px; }}
+.gp-x {{ font-size: 13.7px; color: #B9C7DB; line-height: 1.45; }}
+.z-nugget {{ margin-top: 12px; font-size: 13px; color: #2A3542; line-height: 1.42; border-left: 3px solid; border-radius: 8px; padding: 9px 13px; }}
+.z-nugget span {{ font-weight: 800; }}
+
+/* ---- Outlook ---- */
+.ol-lead {{ font-size: 18px; color: #2A3542; line-height: 1.5; max-width: 1080px; margin: 0 0 26px; }}
+.ol-grid {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }}
+.ol-card {{ background: #fff; border: 1px solid {LINE}; border-radius: 18px; padding: 22px 22px 20px; box-shadow: 0 14px 32px rgba(15,27,52,.08); }}
+.ol-ic {{ width: 50px; height: 50px; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }}
+.ol-t {{ font-size: 19px; font-weight: 800; color: {INK}; font-family: 'Manrope'; margin-bottom: 7px; }}
+.ol-x {{ font-size: 15px; color: #3A4656; line-height: 1.48; }}
 '''
 
 DOC = f'<!doctype html><html lang="ru"><head><meta charset="utf-8"><style>{CSS}</style></head><body>{"".join(SLIDES)}</body></html>'

@@ -1,0 +1,292 @@
+{
+ "heroStats": [
+  {
+   "value": "100%",
+   "labelRu": "мирового рынка EUV-литографии контролирует одна ASML",
+   "cat": "chips"
+  },
+  {
+   "value": "€32,7 млрд",
+   "labelRu": "выручка ASML за 2025 год (чистая прибыль €9,6 млрд)",
+   "cat": "chips"
+  },
+  {
+   "value": "~$674 млрд",
+   "labelRu": "пиковая капитализация ASML — рекорд в истории Европы (2026)",
+   "cat": "chips"
+  },
+  {
+   "value": "35,66 ЭБ",
+   "labelRu": "данных прошло через амстердамский узел AMS-IX за 2025 год",
+   "cat": "data"
+  },
+  {
+   "value": ">110 млрд",
+   "labelRu": "полупроводниковых изделий в год отгружает Nexperia из Неймегена",
+   "cat": "chips"
+  },
+  {
+   "value": "€615 млн",
+   "labelRu": "госфинансирование квантовой программы Quantum Delta NL (Делфт)",
+   "cat": "ai"
+  }
+ ],
+ "didYouKnow": [
+  {
+   "titleRu": "Глаже атома",
+   "textRu": "Зеркала внутри EUV-машины ASML полирует немецкая Zeiss — это самые гладкие макрообъекты в истории. Увеличь такое зеркало до размеров Германии, и самая высокая «гора» на нём была бы всего около 0,1 мм.",
+   "icon": "spark"
+  },
+  {
+   "titleRu": "Плазма горячее Солнца",
+   "textRu": "Чтобы получить ультрафиолет с длиной волны 13,5 нм, лазер разбивает капли олова 50 000 раз в секунду, создавая плазму около 220 000 °C — почти в 40 раз горячее поверхности Солнца.",
+   "icon": "bolt"
+  },
+  {
+   "titleRu": "Python родом из Амстердама",
+   "textRu": "Главный язык data science и ИИ создал Гвидо ван Россум в институте CWI на Amsterdam Science Park в декабре 1989 года — на том же кампусе, где вырос один из крупнейших интернет-узлов мира AMS-IX.",
+   "icon": "globe"
+  },
+  {
+   "titleRu": "Серверы греют помидоры",
+   "textRu": "На площадке Agriport A7 в Мидденмеере остаточное тепло и CO2 дата-центров идут по сетям ECW Energy в крупнейший в Европе тепличный кластер — цифровые «отходы» буквально превращаются в томаты и перцы.",
+   "icon": "cloud"
+  }
+ ],
+ "timeline": [
+  {
+   "year": "1914",
+   "titleRu": "Philips NatLab — колыбель хайтека",
+   "detailRu": "В Эйндховене Philips открывает физическую лабораторию Natuurkundig Laboratorium, из «ДНК» которой позже вырастут ASML, NXP и весь регион Brainport.",
+   "cat": "chips"
+  },
+  {
+   "year": "1984",
+   "titleRu": "Основание ASML",
+   "detailRu": "Philips и ASM International создают совместное предприятие ASM Lithography (позже переехавшее в Велдховен) — будущего монополиста в EUV-литографии.",
+   "cat": "chips"
+  },
+  {
+   "year": "2003",
+   "titleRu": "High Tech Campus Eindhoven",
+   "detailRu": "Бывший исследовательский кампус Philips открывается для сторонних компаний; сегодня это 300+ фирм и 12 500+ исследователей на одном «самом умном квадратном километре Европы».",
+   "cat": "chips"
+  },
+  {
+   "year": "2006",
+   "titleRu": "Выделение NXP из Philips",
+   "detailRu": "Полупроводниковое подразделение Philips становится самостоятельной NXP Semiconductors с ключевой площадкой в Неймегене (рядом Nexperia и Ampleon).",
+   "cat": "chips"
+  },
+  {
+   "year": "2010",
+   "titleRu": "Первый EUV-литограф ASML",
+   "detailRu": "ASML отгружает первый прототип экстремального ультрафиолета (TWINSCAN NXE:3100) в исследовательский центр азиатского чипмейкера — старт технологии передовых чипов.",
+   "cat": "chips"
+  },
+  {
+   "year": "2015",
+   "titleRu": "Основание QuTech в Делфте",
+   "detailRu": "TU Delft и TNO формально учреждают квантовый институт QuTech (статус «Национальной иконы» получен годом ранее), делая Делфт мировым центром квантовых вычислений.",
+   "cat": "quantum"
+  },
+  {
+   "year": "2016",
+   "titleRu": "Google приходит в Эмсхавен",
+   "detailRu": "Google вкладывает около €600 млн в дата-центр на севере страны; охлаждение — переработанная промышленная вода по 28-км трубопроводу, питание — ветер.",
+   "cat": "data"
+  },
+  {
+   "year": "2023",
+   "titleRu": "Экспортный контроль и EU Chips Act",
+   "detailRu": "Под давлением США Гаага с 1 сентября вводит ограничения на DUV-машины ASML; в сентябре вступает в силу European Chips Act (€43+ млрд, цель 20% к 2030).",
+   "cat": "geopolitics"
+  },
+  {
+   "year": "2024",
+   "titleRu": "Project Beethoven — €2,51 млрд",
+   "detailRu": "28 марта правительство объявляет пакет инвестиций в инфраструктуру, жильё и кадры Brainport Eindhoven, чтобы удержать ASML в стране.",
+   "cat": "chips"
+  },
+  {
+   "year": "2025",
+   "titleRu": "Государство берёт Nexperia под контроль",
+   "detailRu": "13 октября Гаага впервые применяет закон 1952 года и отстраняет китайского гендиректора Nexperia; Пекин блокирует экспорт, под угрозой останова — весь автопром ЕС.",
+   "cat": "geopolitics"
+  },
+  {
+   "year": "2026",
+   "titleRu": "ASML — рекорд Европы",
+   "detailRu": "На волне ИИ-бума капитализация ASML в моменте достигает ~$674 млрд — больше, чем когда-либо стоила любая европейская публичная компания.",
+   "cat": "chips"
+  }
+ ],
+ "supplyChain": [
+  {
+   "stageRu": "1. Литография — «станок»",
+   "playersRu": "ASML (Нидерланды) — единственный поставщик EUV на всю планету",
+   "dutchRu": "Верхушка пирамиды: без машины из Велдховена физически не работает ни один следующий этаж для передовых узлов.",
+   "icon": "spark"
+  },
+  {
+   "stageRu": "2. Производство пластин",
+   "playersRu": "TSMC (~90% передовых чипов), Samsung, Intel",
+   "dutchRu": "Тайваньские и корейские фабрики печатают кремний, но только на литографах ASML — рычаг в руках Нидерландов.",
+   "icon": "chip"
+  },
+  {
+   "stageRu": "3. Дизайн (fabless)",
+   "playersRu": "Apple, Nvidia, Qualcomm — рисуют схемы, своих заводов не имеют",
+   "dutchRu": "Даже гиганты-дизайнеры зависят от первого этажа: их чипы нельзя изготовить без нидерландского оборудования.",
+   "icon": "atom"
+  },
+  {
+   "stageRu": "4. Устройства",
+   "playersRu": "Смартфоны, серверы ИИ, автомобили",
+   "dutchRu": "Замыкающее звено: сюда же встроены автомобильные и IoT-чипы NXP и Nexperia из Неймегена.",
+   "icon": "globe"
+  }
+ ],
+ "geopolitics": {
+  "leadRu": "Крошечные Нидерланды оказались прямо на линии фронта чиповой войны США и Китая: Гаага держит рычаг над передовой литографией, а Пекин отвечает контролем над критическим сырьём.",
+  "points": [
+   {
+    "titleRu": "Ноль EUV для Китая",
+    "textRu": "Ни один EUV-литограф никогда не был отгружен в Китай. Ещё в 2019 году США убедили нидерландского премьера не продлевать экспортную лицензию ASML — до первой физической поставки; с тех пор EUV под полным запретом.",
+    "icon": "globe"
+   },
+   {
+    "titleRu": "Контроль пополз к DUV",
+    "textRu": "С 1 сентября 2023 года ограничения распространили и на менее продвинутые DUV-машины, а в начале 2024-го Гаага частично отозвала уже выданные лицензии на топовые системы NXT:2050i и 2100i.",
+    "icon": "bolt"
+   },
+   {
+    "titleRu": "Треть бизнеса под ударом",
+    "textRu": "Китай оставался одним из крупнейших рынков ASML: ~36% выручки в 2024-м и 33% в 2025-м. Из-за экспортных ограничений компания прогнозирует падение примерно до 20% в 2026 году — коммерция против геополитики.",
+    "icon": "euro"
+   },
+   {
+    "titleRu": "Ответ сырьём",
+    "textRu": "С июля 2023 года Китай ввёл лицензии на экспорт галлия и германия, в апреле 2025-го добавил семь редкоземельных металлов. Пекин контролирует около 98% мирового производства галлия — асимметричное сдерживание.",
+    "icon": "drop"
+   },
+   {
+    "titleRu": "Кейс Nexperia",
+    "textRu": "13 октября 2025 года Гаага впервые применила закон 1952 года и взяла под контроль Nexperia (Неймеген, с 2019 у китайской Wingtech). Китай заблокировал экспорт — VW, Honda, Ford и Mercedes предупредили об остановке конвейеров; хрупкое перемирие достигнуто в ноябре 2025-го.",
+    "icon": "chip"
+   },
+   {
+    "titleRu": "Амбиция против реальности ЕС",
+    "textRu": "European Chips Act (€43+ млрд) обещает удвоить долю Европы в мировом производстве чипов с ~10% до 20% к 2030 году, но собственный прогноз Еврокомиссии (июль 2024) — лишь около 11,7%.",
+    "icon": "spark"
+   }
+  ]
+ },
+ "globalPosition": [
+  {
+   "value": "100%",
+   "labelRu": "мировая монополия ASML на EUV-литографию (~90% всей литографии)"
+  },
+  {
+   "value": "№1",
+   "labelRu": "ASML — самая дорогая компания в истории Европы (~$674 млрд, 2026)"
+  },
+  {
+   "value": "22,6",
+   "labelRu": "патента на 10 000 жителей — Эйндховен, самый изобретательный город планеты"
+  },
+  {
+   "value": "1-й",
+   "labelRu": "в мире «loophole-free» тест Белла (Делфт, 2015) — колыбель квантового интернета"
+  }
+ ],
+ "outlook": {
+  "leadRu": "Нидерланды пытаются повторить «фокус ASML» и в новых гонках — от High-NA EUV до квантового интернета, но главный барьер роста уже не технологии, а физический дефицit электросети.",
+  "points": [
+   {
+    "titleRu": "High-NA EUV пошёл в серию",
+    "textRu": "Новейший литограф ASML High-NA (EXE-серия) стоит около $380 млн (≈€350 млн) и весит как два самолёта. В декабре 2025 года Intel первой вышла на серийное производство логики на этой технологии (процессоры Panther Lake).",
+    "icon": "chip"
+   },
+   {
+    "titleRu": "Ставка на кванты",
+    "textRu": "QuTech (TU Delft + TNO) и программа Quantum Delta NL (€615 млн из Национального фонда роста) метят в европейскую столицу квантовых вычислений — с партнёрами Microsoft и Intel и первым «городским» квантовым каналом Делфт-Гаага.",
+    "icon": "atom"
+   },
+   {
+    "titleRu": "Европа не догоняет",
+    "textRu": "Цель EU Chips Act — 20% мирового производства чипов к 2030 году, но прогноз самой Еврокомиссии — лишь ~11,7%. Роль Нидерландов как незаменимого узла остаётся критичной для всей автономии ЕС.",
+    "icon": "globe"
+   },
+   {
+    "titleRu": "Узкое горлышко — электросеть",
+    "textRu": "Рост ИИ и дата-центров упирается не в инновации, а в дефицит мощностей: очередь оператора TenneT — десятки ГВт заявок, Амстердам ввёл мораторий на новые дата-центры, а свободных мощностей в части Северной Голландии не будет примерно до 2035 года.",
+    "icon": "bolt"
+   },
+   {
+    "titleRu": "Разворот китайского рынка",
+    "textRu": "Из-за экспортных ограничений ASML ждёт падения доли Китая в выручке примерно до 20% в 2026 году — тест на устойчивость бизнес-модели «важнейшей компании Европы».",
+    "icon": "euro"
+   }
+  ]
+ },
+ "zoneNuggets": [
+  {
+   "zone": "asml",
+   "factRu": "Один EUV-литограф — это около 100 000 деталей от ~5 000 поставщиков в 60 странах, но лишь ~15% ASML делает сама: оптику даёт Zeiss, источник света — Cymer. Машину отгружают примерно в 250 ящиках на нескольких Boeing 747."
+  },
+  {
+   "zone": "htc",
+   "factRu": "High Tech Campus Eindhoven — «самый умный квадратный километр Европы»: на его компании приходится около 40% всех патентных заявок Нидерландов, примерно 4 патента в день."
+  },
+  {
+   "zone": "nijmegen",
+   "factRu": "Чипы в Неймегене делают со времён Philips с 1953 года; сегодня одна лишь Nexperia отгружает более 110 млрд изделий в год — порядка десятка компонентов на каждого человека на Земле."
+  },
+  {
+   "zone": "amsterdam",
+   "factRu": "Через AMS-IX на Amsterdam Science Park в 2025 году прошло 35,66 эксабайта данных, подключено более 900 сетей (Meta, Netflix, Microsoft, TikTok); пиковая нагрузка — свыше 14 Тбит/с."
+  },
+  {
+   "zone": "eemshaven",
+   "factRu": "Дата-центр Google в Эмсхавене охлаждается не питьевой, а переработанной канальной водой по специально проложенному 28-км трубопроводу — редкий пример «зелёной» инженерии в стране, чувствительной к воде."
+  },
+  {
+   "zone": "agriport",
+   "factRu": "На бизнес-парке Agriport A7 в Мидденмеере с 2015 года стоят гиперскейл-кампусы Microsoft и Google — бывшие польдеры Северной Голландии стали опорной инфраструктурой европейского облака и ИИ."
+  },
+  {
+   "zone": "delft",
+   "factRu": "В октябре 2024 года QuTech впервые в мире связал квантовой запутанностью процессоры в двух городах — Делфте и Гааге — через 25 км уже проложенного обычного телеком-оптоволокна."
+  }
+ ],
+ "sources": [
+  "https://www.cnbc.com/2022/03/23/inside-asml-the-company-advanced-chipmakers-use-for-euv-lithography.html",
+  "https://companiesmarketcap.com/asml/marketcap/",
+  "https://www.asml.com/en/news/press-releases/2026/q4-2025-financial-results",
+  "https://www.cnbc.com/2024/01/02/asml-blocked-from-exporting-some-critical-chipmaking-tools-to-china.html",
+  "https://www.caixinglobal.com/2026-01-29/asml-expects-china-revenue-drop-following-backlog-fueled-surge-102409285.html",
+  "https://digital-strategy.ec.europa.eu/en/policies/european-chips-act",
+  "https://www.csis.org/analysis/beyond-rare-earths-chinas-growing-threat-gallium-supply-chains",
+  "https://www.cnbc.com/2025/10/13/dutch-government-takes-control-of-chinese-owned-chipmaker-nexperia.html",
+  "https://www.aljazeera.com/news/2025/10/14/why-has-dutch-government-taken-control-of-china-owned-chipmaker-nexperia",
+  "https://www.euronews.com/business/2025/11/10/nexperia-cleared-to-resume-civilian-chip-shipments-vital-to-european-car-production",
+  "https://www.asml.com/en/technology/lithography-principles/lenses-and-mirrors",
+  "https://www.asml.com/en/technology/lithography-principles/light-and-lasers",
+  "https://www.zeiss.com/semiconductor-manufacturing-technology/euv-lithography.html",
+  "https://www.tomshardware.com/tech-industry/manufacturing/asmls-high-na-chipmaking-tool-will-cost-dollar380-million",
+  "https://www.tomshardware.com/tech-industry/asml-beocmes-europes-most-valuable-company-ever-as-analysts-bet-on-higher-euv-output",
+  "https://www.hollandhightech.nl/en/news-calendar/news/brainport-eindhoven-once-again-a-top-region-for-patents",
+  "https://www.ams-ix.net/ams/news/ams-ix-hits-new-traffic-peak-at-15-terabit-per-second",
+  "https://blog.google/inside-google/infrastructure/a-sustainable-solution-helped-a-small-town-cool-its-data-center/",
+  "https://www.agriporta7.nl/agriport-datacenter-area/",
+  "https://qutech.nl/2024/10/30/a-rudimentary-quantum-network-link-between-dutch-cities/",
+  "https://www.nexperia.com/about",
+  "https://www.cwi.nl/en/news/25-years-of-python-at-cwi/",
+  "https://www.government.nl/latest/news/2024/03/28/the-netherlands-to-invest-%E2%82%AC2.5-billion-to-strengthen-business-climate-for-chip-industry-in-brainport-eindhoven",
+  "https://quantumdelta.nl/",
+  "https://www.tennet.eu/news/no-extra-space-electricity-grid-large-part-noord-holland-next-decade",
+  "https://qutech.nl/history/",
+  "https://en.wikipedia.org/wiki/High_Tech_Campus_Eindhoven"
+ ]
+}
