@@ -65,6 +65,9 @@ ICONS = {
     "spark": '<path d="M12 3v5M12 16v5M3 12h5M16 12h5M6 6l3 3M15 15l3 3M18 6l-3 3M9 15l-3 3"/>',
     "arrow": '<path d="M5 12h14M13 6l6 6-6 6"/>',
     "trend": '<path d="M3 17l6-6 4 4 8-8M15 7h6v6"/>',
+    "train": '<rect x="5.5" y="3.5" width="13" height="12.5" rx="3.2"/><line x1="5.5" y1="10" x2="18.5" y2="10"/><circle cx="9" cy="12.9" r="0.6"/><circle cx="15" cy="12.9" r="0.6"/><path d="M8 16l-2 4.5M16 16l2 4.5"/>',
+    "bus": '<rect x="3.5" y="4.5" width="17" height="11.5" rx="2.6"/><line x1="3.5" y1="11.5" x2="20.5" y2="11.5"/><path d="M7 16v1.8M17 16v1.8"/><circle cx="8" cy="13.7" r="0.5"/><circle cx="16" cy="13.7" r="0.5"/>',
+    "route": '<circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M8 6h6.5A3.5 3.5 0 0 1 18 9.5v0A3.5 3.5 0 0 1 14.5 13H9.5A3.5 3.5 0 0 0 6 16.5v0A3.5 3.5 0 0 0 9.5 20H16"/>',
 }
 
 
@@ -377,9 +380,12 @@ def challenges_slide():
 
 
 def compare_slide():
+    addrs = [z["address"].split(" (")[0] for z in D.ZONES]  # aligned with COMPARE order
     rows = ""
-    for cat, zone, anchor, why in D.COMPARE:
-        rows += (f'<tr><td><span class="cbar" style="background:{grad(cat)}"></span>{esc(zone)}</td>'
+    for (cat, zone, anchor, why), addr in zip(D.COMPARE, addrs):
+        rows += (f'<tr><td><div class="cz-cell"><span class="cbar" style="background:{grad(cat)}"></span>'
+                 f'<div class="cz-txt"><b>{esc(zone)}</b>'
+                 f'<span class="cz-addr">{icon("pin", MUTED, 12, 2.1)} {esc(addr)}</span></div></div></td>'
                  f'<td><b>{esc(anchor)}</b></td><td class="why">{esc(why)}</td></tr>')
     inner = f'''
       {WASH}
@@ -387,7 +393,7 @@ def compare_slide():
         <div class="eyebrow" style="color:{ORANGE}">ИТОГ</div>
         <h2 class="stitle">Сравнение ключевых зон</h2>
         <div class="glass-lite ctable-wrap">
-        <table class="ctable"><colgroup><col style="width:27%"><col style="width:27%"><col></colgroup><thead><tr><th>Зона</th><th>Якорные резиденты</th><th>Чем важна</th></tr></thead>
+        <table class="ctable"><colgroup><col style="width:31%"><col style="width:24%"><col></colgroup><thead><tr><th>Зона и точный адрес</th><th>Якорные резиденты</th><th>Чем важна</th></tr></thead>
           <tbody>{rows}</tbody></table>
         </div>
       </div>
@@ -524,6 +530,50 @@ def outlook_slide():
     slide("content", inner)
 
 
+def route_slide():
+    TAGLAB = {"chips": "чипы", "data": "дата", "ai": "наука"}
+    days = [
+        ("01", grad("chips"), "День 1", "Юг · чипы и наука", "≈ 2 ч 30 поездом · ночь в Эйндховене", [
+            ("Делфт", "ai", "QuTech · кампус TU Delft", "поезд из Амстердама · ~1 ч"),
+            ("ASML · Велдховен", "chips", "Промзона De Run", "из Делфта · ~1 ч 15 + автобус"),
+            ("High Tech Campus", "chips", "NXP · imec · Эйндховен", "автобус 401 · ~15 мин"),
+        ]),
+        ("02", "linear-gradient(135deg,#7C5CFF,#A78BFA)", "День 2", "Восток и центр", "≈ 2 ч 30 поездом · ночь в Амстердаме", [
+            ("Неймеген", "chips", "NXP · Nexperia · Ampleon", "из Эйндховена · ~1 ч"),
+            ("Amsterdam Science Park", "data", "AMS-IX · узел интернета", "~1 ч 30 → Амстердам, метро 10 мин"),
+        ]),
+        ("03", grad("data"), "День 3", "Север · дата-центры", "≈ 3 ч поездом · возврат в Амстердам", [
+            ("Agriport A7 · Мидденмер", "data", "Microsoft · Google", "Схаген ~40 мин + автобус"),
+            ("Эмсхавен", "data", "Google · «зелёный» ЦОД", "Гронинген ~2 ч 10 + автобус"),
+        ]),
+    ]
+    cards = ""
+    for num, dgrad, dname, ddir, dfoot, stops in days:
+        st = ""
+        for zone, cat, res, leg in stops:
+            col = CATCOL[cat]
+            st += (f'<div class="rt-stop"><span class="rt-node" style="background:{grad(cat)}"></span>'
+                   f'<div><div class="rt-zone">{esc(zone)} <span class="rt-tag" style="color:{col};background:{col}22">{TAGLAB[cat]}</span></div>'
+                   f'<div class="rt-res">{esc(res)}</div>'
+                   f'<div class="rt-leg">{icon("train", "#8DA0B8", 15, 1.9)} {esc(leg)}</div></div></div>')
+        cards += (f'<div class="glass rt-card"><div class="rt-head">'
+                  f'<div class="rt-daynum" style="background:{dgrad}">{num}</div>'
+                  f'<div><div class="rt-dayname">{dname}</div><div class="rt-dir">{esc(ddir)}</div></div></div>'
+                  f'<div class="rt-stops">{st}</div>'
+                  f'<div class="rt-foot">{icon("train", "#DCE5F0", 15, 2.0)} {esc(dfoot)}</div></div>')
+    inner = f'''
+      {meshbg()}
+      <div class="pad">
+        <div class="eyebrow eyebrow-light">МАРШРУТ · 3 ДНЯ · ПОЕЗДОМ</div>
+        <h2 class="stitle stitle-light">Как объехать все семь зон из Амстердама</h2>
+        <div class="rt-start">{icon("pin", "#FFB23D", 15)} Старт и хаб — Амстердам&nbsp;Центральный · зоны сгруппированы по направлениям, чтобы меньше возвращаться</div>
+        <div class="rt-grid">{cards}</div>
+        <div class="rt-note">{icon("bus", "#5CC0FF", 18)}<span>До Велдховена, Agriport&nbsp;A7 и Эмсхавена пассажирской железной дороги прямо в промзоне нет — последний отрезок автобусом от ближайшей станции (Эйндховен · Схаген · Гронинген).</span></div>
+      </div>
+      {footer(_pos())}'''
+    slide("dark route", inner)
+
+
 # ================= assemble =================
 order = [("chips", ["asml", "htc", "nijmegen"]),
          ("data", ["amsterdam", "eemshaven", "agriport"]),
@@ -531,7 +581,7 @@ order = [("chips", ["asml", "htc", "nijmegen"]),
 zmap = {z["key"]: z for z in D.ZONES}
 znames = {z["key"]: D.PROFILES[z["key"]]["zone_title"] for z in D.ZONES}
 _zone_slides = sum(1 + 2 * len(ks) for _, ks in order)  # dividers + profile/residents pairs
-TOTAL = 3 + _zone_slides + 1 + 2  # cover+hero+overview, +supplychain, +charts+compare
+TOTAL = 3 + _zone_slides + 1 + 2 + 1  # cover+hero+overview, +supplychain, +charts+compare, +route
 
 cover_slide(); hero_slide(); overview_slide()
 for cat, keys in order:
@@ -540,7 +590,7 @@ for cat, keys in order:
         zone_profile_slide(zmap[k]); zone_slide(zmap[k])
     if cat == "chips":
         supplychain_slide()
-charts_slide(); compare_slide()
+charts_slide(); compare_slide(); route_slide()
 
 # ================= CSS =================
 CSS = font_faces() + f'''
@@ -752,16 +802,20 @@ h1,h2,.stitle,.zp-name,.z-name,.hero-h,.d2-title,.close-title,.cc-big,.hero-val,
 .ch-x {{ font-size: 15px; color: #3A4656; line-height: 1.48; }}
 
 /* ---- Compare ---- */
-.ctable-wrap {{ padding: 8px 30px 16px; margin-top: 10px; }}
+.ctable-wrap {{ padding: 8px 28px 14px; margin-top: 10px; }}
 .ctable {{ width: 100%; border-collapse: collapse; font-size: 18px; }}
-.ctable th {{ text-align: left; color: {MUTED}; font-size: 13px; letter-spacing: 1.4px; font-weight: 800; padding: 6px 16px 12px; border-bottom: 1px solid {LINE}; }}
-.ctable td {{ padding: 18px 16px; border-bottom: 1px solid rgba(15,27,52,.07); color: #2A3542; vertical-align: middle; }}
+.ctable th {{ text-align: left; color: {MUTED}; font-size: 13px; letter-spacing: 1.4px; font-weight: 800; padding: 4px 16px 11px; border-bottom: 1px solid {LINE}; }}
+.ctable td {{ padding: 12px 16px; border-bottom: 1px solid rgba(15,27,52,.07); color: #2A3542; vertical-align: middle; }}
 .ctable tbody tr:last-child td {{ border-bottom: none; }}
 .ctable tbody tr:nth-child(even) {{ background: rgba(245,248,252,.55); }}
-.ctable td:first-child {{ font-weight: 800; color: {INK}; white-space: nowrap; font-family: 'Manrope'; font-size: 17px; }}
+.ctable td:first-child {{ font-weight: 800; color: {INK}; font-family: 'Manrope'; font-size: 17px; }}
+.cz-cell {{ display: flex; align-items: center; }}
+.cz-txt {{ display: flex; flex-direction: column; min-width: 0; }}
+.cz-txt b {{ white-space: nowrap; }}
+.cz-addr {{ display: flex; align-items: center; gap: 5px; font-family: 'Inter'; font-weight: 600; font-size: 12.5px; color: {MUTED}; margin-top: 4px; white-space: nowrap; letter-spacing: 0; }}
 .ctable td b {{ color: {INK2}; font-weight: 700; }}
-.ctable .why {{ color: {MUTED}; font-size: 16px; }}
-.cbar {{ display: inline-block; width: 10px; height: 30px; border-radius: 5px; margin-right: 14px; vertical-align: -8px; }}
+.ctable .why {{ color: {MUTED}; font-size: 15.5px; }}
+.cbar {{ display: inline-block; width: 10px; height: 38px; border-radius: 5px; margin-right: 14px; flex-shrink: 0; }}
 
 /* ---- Closing ---- */
 .close {{ padding: 92px 84px; }}
@@ -824,6 +878,28 @@ h1,h2,.stitle,.zp-name,.z-name,.hero-h,.d2-title,.close-title,.cc-big,.hero-val,
 .ol-ic {{ width: 50px; height: 50px; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }}
 .ol-t {{ font-size: 19px; font-weight: 800; color: {INK}; font-family: 'Manrope'; margin-bottom: 7px; }}
 .ol-x {{ font-size: 15px; color: #3A4656; line-height: 1.48; }}
+
+/* ---- Route (dark, 3-day train itinerary) ---- */
+.rt-start {{ display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(158deg,rgba(255,255,255,.12),rgba(255,255,255,.04));
+  border: 1px solid rgba(255,255,255,.16); border-radius: 22px; padding: 7px 16px 7px 13px; font-size: 13.5px; font-weight: 600; color: #DCE5F0;
+  box-shadow: 0 8px 22px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.18); margin: 2px 0 20px; }}
+.rt-grid {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }}
+.rt-card {{ padding: 22px 22px 18px; display: flex; flex-direction: column; }}
+.rt-head {{ display: flex; align-items: center; gap: 13px; margin-bottom: 16px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,.12); }}
+.rt-daynum {{ width: 46px; height: 46px; border-radius: 13px; display: flex; align-items: center; justify-content: center; font-family: 'Manrope'; font-weight: 800; font-size: 19px; color: #fff; flex-shrink: 0; box-shadow: 0 10px 22px rgba(0,0,0,.30); }}
+.rt-dayname {{ font-family: 'Manrope'; font-weight: 800; font-size: 19px; color: #fff; line-height: 1.05; }}
+.rt-dir {{ font-size: 12.5px; color: #9FB0C7; font-weight: 700; margin-top: 3px; }}
+.rt-stops {{ display: flex; flex-direction: column; gap: 15px; flex: 1; }}
+.rt-stop {{ display: flex; gap: 12px; align-items: flex-start; }}
+.rt-node {{ width: 13px; height: 13px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; box-shadow: 0 0 0 4px rgba(255,255,255,.05); }}
+.rt-zone {{ font-family: 'Manrope'; font-weight: 800; font-size: 15.5px; color: #fff; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }}
+.rt-tag {{ font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 20px; letter-spacing: .4px; text-transform: uppercase; }}
+.rt-res {{ font-size: 12.5px; color: #C6D3E6; margin-top: 3px; line-height: 1.3; }}
+.rt-leg {{ display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: #8DA0B8; margin-top: 5px; }}
+.rt-foot {{ display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #DCE5F0; font-weight: 700; margin-top: 15px; padding-top: 13px; border-top: 1px solid rgba(255,255,255,.12); }}
+.rt-note {{ display: flex; align-items: center; gap: 11px; font-size: 14px; color: #C6D3E6; line-height: 1.45; margin-top: 20px;
+  background: linear-gradient(158deg,rgba(255,255,255,.09),rgba(255,255,255,.03)); border: 1px solid rgba(255,255,255,.13);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.14); border-radius: 12px; padding: 13px 18px; }}
 '''
 
 DOC = f'<!doctype html><html lang="ru"><head><meta charset="utf-8"><style>{CSS}</style></head><body>{"".join(SLIDES)}</body></html>'
