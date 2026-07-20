@@ -145,6 +145,7 @@ def cover_slide():
     inner = f'''
       <div class="cov-bg" style="background-image:url('{bg}')"></div>
       <div class="cov-scrim"></div>
+      <div class="cov-vign"></div>
       <div class="mesh mesh-cover"></div>
       <div class="grain"></div>
       <div class="cov-grid"></div>
@@ -648,7 +649,8 @@ h1,h2,.stitle,.zp-name,.z-name,.hero-h,.d2-title,.close-title,.cc-big,.hero-val,
 
 /* ---- Cover ---- */
 .cov-bg {{ position: absolute; inset: 0; background-size: cover; background-position: center; }}
-.cov-scrim {{ position: absolute; inset: 0; background: linear-gradient(104deg, rgba(7,12,24,.96) 30%, rgba(7,12,24,.62) 58%, rgba(7,12,24,.14) 100%); }}
+.cov-scrim {{ position: absolute; inset: 0; background: linear-gradient(104deg, rgba(7,12,24,.97) 36%, rgba(7,12,24,.90) 55%, rgba(7,12,24,.66) 72%, rgba(7,12,24,.20) 100%); }}
+.cov-vign {{ position: absolute; inset: 0; z-index: 1; background: radial-gradient(120% 120% at 20% 45%, transparent 46%, rgba(7,12,24,.42)); }}
 .mesh-cover {{ opacity: .8; mix-blend-mode: screen; mask-image: linear-gradient(104deg, #000 45%, transparent 85%); }}
 .cov-grid {{ position: absolute; inset: 0; z-index: 1; opacity: .5;
   background-image: linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
@@ -658,7 +660,8 @@ h1,h2,.stitle,.zp-name,.z-name,.hero-h,.d2-title,.close-title,.cc-big,.hero-val,
 .cov-body {{ position: absolute; z-index: 2; left: 76px; top: 148px; width: 820px; color: #fff; }}
 .cov-kick {{ display: flex; align-items: center; gap: 12px; font-size: 16px; letter-spacing: 4px; font-weight: 800; color: #FFB23D; margin-bottom: 22px; }}
 .kbar {{ width: 34px; height: 4px; border-radius: 3px; background: linear-gradient(90deg,#FF6A2B,#FFB23D); }}
-.cov-title {{ font-size: 68px; line-height: 1.02; font-weight: 800; margin: 0; letter-spacing: -1.6px; text-shadow: 0 6px 40px rgba(0,0,0,.4); }}
+.cov-title {{ font-size: 68px; line-height: 1.02; font-weight: 800; margin: 0; letter-spacing: -1.6px; text-shadow: 0 2px 10px rgba(0,0,0,.62), 0 6px 40px rgba(0,0,0,.45); }}
+.cov-title .grad-text {{ background: linear-gradient(100deg,#FF9142,#FFCE7A); -webkit-background-clip: text; background-clip: text; }}
 .cov-sub {{ font-size: 24px; color: #CBD5E6; margin-top: 22px; font-weight: 500; max-width: 720px; text-wrap: balance; }}
 .cov-tags {{ display: flex; gap: 12px; margin-top: 34px; }}
 .ctag {{ display: flex; align-items: center; gap: 9px; background: linear-gradient(158deg,rgba(255,255,255,.14),rgba(255,255,255,.05)); border: 1px solid rgba(255,255,255,.20);
