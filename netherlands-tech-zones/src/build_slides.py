@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Build a premium 16:9 PDF presentation (Playwright + Chromium). Redesigned look."""
+"""Build a high-impact 16:9 PDF presentation (Playwright + Chromium)."""
 import os, html, base64
 from urllib.parse import quote
 import qrcode
@@ -13,24 +13,22 @@ os.chdir(HERE)
 os.makedirs("assets/qr", exist_ok=True)
 
 # ---------- palette ----------
-INK = "#0F1B34"; INK2 = "#18294A"
-ORANGE = "#F26313"; ORANGE_L = "#FF9A4D"
-BLUE = "#2563EB"; BLUE_L = "#5C9BFF"
-GREEN = "#0E9E6E"; GREEN_L = "#3FD69B"
-MUTED = "#5E6980"; LINE = "#E7EBF1"; PAPER = "#F5F8FC"; GOLD = "#E0A93B"
+BG = "#0A1226"; BG2 = "#0E1A33"; INK = "#0F1B34"; INK2 = "#1B2B4C"
+ORANGE = "#E85D16"; BLUE = "#2563EB"; GREEN = "#0B9E6C"; GOLD = "#F0A93B"; VIOLET = "#7C5CFF"
+MUTED = "#5E6980"; LINE = "#E7EBF1"; PAPER = "#F5F8FC"
+GRADS = {"chips": ("#FF6A2B", "#FFB23D"), "data": ("#2E7CF6", "#4FD8FF"), "ai": ("#10B981", "#5EEAD4")}
 CATCOL = {"chips": ORANGE, "data": BLUE, "ai": GREEN}
-CATCOL_L = {"chips": ORANGE_L, "data": BLUE_L, "ai": GREEN_L}
 CATLABEL = {"chips": "ЧИПЫ", "data": "ДАТА-ЦЕНТРЫ", "ai": "ИИ И НАУКА"}
 CATICON = {"chips": "chip", "data": "cloud", "ai": "atom"}
+GOLDGRAD = "linear-gradient(100deg,#FF7A2B,#F5B843)"
 
 
 def grad(cat, deg=135):
-    return f"linear-gradient({deg}deg, {CATCOL[cat]}, {CATCOL_L[cat]})"
+    a, b = GRADS[cat]; return f"linear-gradient({deg}deg,{a},{b})"
 
 
-# ---------- fonts (embedded) ----------
-def _b64(p):
-    return base64.b64encode(open(p, "rb").read()).decode()
+# ---------- fonts ----------
+def _b64(p): return base64.b64encode(open(p, "rb").read()).decode()
 
 
 def font_faces():
@@ -46,6 +44,11 @@ def font_faces():
     return css
 
 
+# ---------- noise texture ----------
+NOISE = ("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'>"
+         "<filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/>"
+         "<feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/></svg>")
+
 # ---------- icons ----------
 ICONS = {
     "chip": '<rect x="6.5" y="6.5" width="11" height="11" rx="1.6"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9 3v3.5M12 3v3.5M15 3v3.5M9 17.5V21M12 17.5V21M15 17.5V21M3 9h3.5M3 12h3.5M3 15h3.5M17.5 9H21M17.5 12H21M17.5 15H21"/>',
@@ -59,38 +62,24 @@ ICONS = {
     "globe": '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.4 2.3 3.8 5.3 3.8 8.5S14.4 18.2 12 20.5c-2.4-2.3-3.8-5.3-3.8-8.5S9.6 5.8 12 3.5z"/>',
     "spark": '<path d="M12 3v5M12 16v5M3 12h5M16 12h5M6 6l3 3M15 15l3 3M18 6l-3 3M9 15l-3 3"/>',
     "arrow": '<path d="M5 12h14M13 6l6 6-6 6"/>',
-    "flag": '<path d="M6 21V4M6 5h11l-2 3 2 3H6"/>',
+    "trend": '<path d="M3 17l6-6 4 4 8-8M15 7h6v6"/>',
 }
 
 
 def icon(name, color=INK, size=24, sw=1.9):
-    return (f'<svg viewBox="0 0 24 24" width="{size}" height="{size}" fill="none" '
-            f'stroke="{color}" stroke-width="{sw}" stroke-linecap="round" stroke-linejoin="round">'
-            f'{ICONS[name]}</svg>')
+    return (f'<svg viewBox="0 0 24 24" width="{size}" height="{size}" fill="none" stroke="{color}" '
+            f'stroke-width="{sw}" stroke-linecap="round" stroke-linejoin="round">{ICONS[name]}</svg>')
 
 
-def icon_fill(name, color=INK, size=24):
-    return (f'<svg viewBox="0 0 24 24" width="{size}" height="{size}" fill="{color}" '
-            f'stroke="none">{ICONS[name]}</svg>')
-
-
-# ---------- assets helpers ----------
+# ---------- helpers ----------
 def data_uri(path):
     ext = "png" if path.lower().endswith("png") else "jpeg"
-    with open(path, "rb") as f:
-        return f"data:image/{ext};base64," + base64.b64encode(f.read()).decode()
+    return f"data:image/{ext};base64," + base64.b64encode(open(path, "rb").read()).decode()
 
 
-def esc(s):
-    return html.escape(str(s))
-
-
-def gmaps_url(query):
-    return "https://www.google.com/maps/search/?api=1&query=" + quote(query)
-
-
-def _hex(h):
-    h = h.lstrip("#"); return tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+def esc(s): return html.escape(str(s))
+def gmaps_url(q): return "https://www.google.com/maps/search/?api=1&query=" + quote(q)
+def _hex(h): h = h.lstrip("#"); return tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
 
 
 def make_qr(url, key, color):
@@ -104,34 +93,38 @@ def make_qr(url, key, color):
 SLIDES = []
 def _pos(): return len(SLIDES) + 1
 def slide(cls, inner): SLIDES.append(f'<section class="slide {cls}">{inner}</section>')
-def footer(n):
-    return (f'<div class="footer"><span class="fl">Технологические промзоны Нидерландов</span>'
+
+
+def footer(n, light=False):
+    cls = "footer footer-light" if light else "footer"
+    return (f'<div class="{cls}"><span class="fl">Технологические промзоны Нидерландов</span>'
             f'<span class="fr">{n:02d}<span class="ft">/ {TOTAL:02d}</span></span></div>')
 
 
-# ================= extra content for new slides =================
+def meshbg():
+    return '<div class="mesh"></div><div class="grain"></div>'
+
+
+# ================= data for new slides =================
 HERO = [
     ("≈100%", "мирового рынка EUV-литографии — у ASML", "chip", "chips"),
-    ("€32,7 млрд", "выручка ASML за 2025 год", "euro", "chips"),
-    ("$675 млрд", "капитализация ASML — №1 в Европе", "spark", "chips"),
-    ("15 Тбит/с", "пиковый трафик узла AMS-IX", "cloud", "data"),
-    ("~852 МВт", "мощность дата-центров Амстердама", "bolt", "data"),
-    ("~60 000", "рабочих мест в чип-секторе", "globe", "ai"),
+    ("€32,7 млрд", "выручка ASML за 2025 год", "euro", "chips"),
+    ("$675 млрд", "капитализация ASML — №1 в Европе", "spark", "chips"),
+    ("15 Тбит/с", "пиковый трафик узла AMS-IX", "cloud", "data"),
+    ("~852 МВт", "мощность дата-центров Амстердама", "bolt", "data"),
+    ("~60 000", "рабочих мест в чип-секторе", "globe", "ai"),
 ]
 CHALLENGES = [
-    ("bolt", "Перегрузка электросетей", "К концу 2025 года около 14 000 компаний стояли в очереди на подключение к электричеству. Операторы вложат до €8 млрд в год, чтобы разгрузить сети."),
-    ("shield", "Мораторий на большие ЦОД", "С 2024 года новые гиперскейл-дата-центры (>70 МВт или >10 га) разрешено строить лишь в двух зонах — в Эмсхавене и районе Мидденмера."),
-    ("drop", "Энергия и вода", "Кампус Microsoft в Мидденмере потребляет ~1% всего электричества страны; спор о расходе питьевой воды на охлаждение стал публичным."),
-    ("euro", "Поддержка государства", "«Проект Бетховен»: €2,5 млрд на жильё, дороги, сети и образование в регионе Эйндховена, чтобы удержать ASML и её экосистему."),
+    ("bolt", "chips", "Перегрузка электросетей", "К концу 2025 года около 14 000 компаний стояли в очереди на подключение к электричеству. Операторы вложат до €8 млрд в год, чтобы разгрузить сети."),
+    ("shield", "data", "Мораторий на большие ЦОД", "С 2024 года новые гиперскейл-дата-центры (>70 МВт или >10 га) разрешено строить лишь в двух зонах — в Эмсхавене и районе Мидденмера."),
+    ("drop", "ai", "Энергия и вода", "Кампус Microsoft в Мидденмере потребляет ~1% всего электричества страны; спор о расходе питьевой воды на охлаждение стал публичным."),
+    ("euro", "chips", "Поддержка государства", "«Проект Бетховен»: €2,5 млрд на жильё, дороги, сети и образование в регионе Эйндховена, чтобы удержать ASML и её экосистему."),
 ]
-CHARTS = [
-    ("assets/chart_asml.png", "Выручка ASML", "Спрос на чипы и ИИ тянет за собой рекордный рост."),
-    ("assets/chart_investment.png", "Инвестиции в ЦОД", "Гиперскейлеры вложили в 3 площадки более €3,5 млрд."),
-    ("assets/chart_amsterdam_mw.png", "Мощность ЦОД Амстердама", "Один из 4 крупнейших рынков Европы (FLAP-D)."),
-]
+REVENUE = [("2022", 21.2), ("2023", 27.6), ("2024", 28.3), ("2025", 32.7)]
+INVEST = [("Microsoft · Мидденмер", 2.0, "data"), ("Google · Эмсхавен", 1.1, "data"), ("Google · Мидденмер", 0.5, "data")]
 
 
-# ================= slide builders =================
+# ================= slides =================
 def cover_slide():
     bg = data_uri("assets/cover.jpg")
     chips = "".join(
@@ -140,28 +133,32 @@ def cover_slide():
     inner = f'''
       <div class="cov-bg" style="background-image:url('{bg}')"></div>
       <div class="cov-scrim"></div>
+      <div class="mesh mesh-cover"></div>
+      <div class="grain"></div>
       <div class="cov-grid"></div>
+      <div class="cov-streak"></div>
       <div class="cov-body">
         <div class="cov-kick"><span class="kbar"></span>{esc(D.META["kicker"])}</div>
-        <h1 class="cov-title">Технологические<br>промзоны <span class="cov-accent">Нидерландов</span></h1>
+        <h1 class="cov-title">Технологические<br>промзоны <span class="grad-text">Нидерландов</span></h1>
         <div class="cov-sub">{esc(D.META["subtitle"])}</div>
         <div class="cov-tags">{chips}</div>
       </div>
-      <div class="cov-foot"><span>Аналитическая презентация</span><span class="cov-dot">•</span><span>{esc(D.META["date"])}</span></div>'''
-    slide("cover", inner)
+      <div class="cov-foot"><span>Аналитическая презентация</span><span class="cov-dot">●</span><span>{esc(D.META["date"])}</span></div>'''
+    slide("cover dark", inner)
 
 
 def hero_slide():
     cells = ""
     for val, lab, ic, cat in HERO:
+        a, b = GRADS[cat]
         cells += f'''
-          <div class="hero-card">
-            <div class="hero-ic" style="background:{grad(cat)}">{icon(ic, "#fff", 26)}</div>
-            <div class="hero-val">{val}</div>
+          <div class="glass hero-card">
+            <div class="hero-ic" style="background:{grad(cat)};box-shadow:0 10px 26px {a}55">{icon(ic, "#fff", 26)}</div>
+            <div class="hero-val" style="background:{grad(cat)};filter:drop-shadow(0 3px 16px {a}44)">{val}</div>
             <div class="hero-lab">{lab}</div>
           </div>'''
     inner = f'''
-      <div class="hero-bgshape"></div>
+      {meshbg()}
       <div class="hero-wrap">
         <div class="eyebrow eyebrow-light">НИДЕРЛАНДЫ В ЦИФРАХ</div>
         <h2 class="hero-h">Маленькая страна — <span class="grad-text">огромный вес</span></h2>
@@ -181,6 +178,7 @@ def overview_slide():
                           ("data", "Дата-центры", "Амстердам, Эмсхавен, Мидденмер"),
                           ("ai", "ИИ и наука", "Делфт, университеты")])
     inner = f'''
+      <div class="corner-blob" style="background:radial-gradient(circle,{GRADS['chips'][0]}22,transparent 70%)"></div>
       <div class="pad">
         <div class="eyebrow" style="color:{ORANGE}">ОБЗОР</div>
         <h2 class="stitle">Семь ключевых зон на карте страны</h2>
@@ -198,35 +196,35 @@ def overview_slide():
 
 
 def divider_slide(cat, zone_titles):
-    s = D.SECTIONS[cat]
-    img = data_uri(s["img"])
-    lst = "".join(f'<li>{icon("arrow", "#fff", 16, 2.2)}<span>{esc(t)}</span></li>' for t in zone_titles)
+    s = D.SECTIONS[cat]; img = data_uri(s["img"]); a, b = GRADS[cat]
+    lst = "".join(f'<li><span class="dl-dot" style="background:{grad(cat)}"></span>{esc(t)}</li>' for t in zone_titles)
     inner = f'''
-      <div class="div-left" style="background:{INK}">
-        <div class="div-glow" style="background:{grad(cat)}"></div>
-        <div class="div-num-wrap">
-          <div class="div-ic" style="background:{grad(cat)}">{icon(CATICON[cat], "#fff", 34, 2.0)}</div>
-          <div class="div-num">{s["num"]}</div>
-        </div>
-        <div class="div-cat" style="color:{CATCOL_L[cat]}">{CATLABEL[cat]}</div>
-        <h2 class="div-title">{esc(s["title"])}</h2>
-        <div class="div-sub">{esc(s["sub"])}</div>
-        <ul class="div-list">{lst}</ul>
-      </div>
-      <div class="div-right"><img src="{img}"/><div class="div-right-scrim" style="box-shadow: inset 90px 0 120px -40px {INK}"></div></div>'''
-    slide("divider", inner)
+      <img class="d2-img" src="{img}"/>
+      <div class="d2-scrim"></div>
+      <div class="d2-glow" style="background:radial-gradient(circle,{a}55,transparent 62%)"></div>
+      <div class="grain"></div>
+      <div class="d2-ghost" style="background:{grad(cat)}">{s["num"]}</div>
+      <div class="d2-body">
+        <div class="d2-ic" style="background:{grad(cat)};box-shadow:0 14px 34px {a}66">{icon(CATICON[cat], "#fff", 36, 2.0)}</div>
+        <div class="d2-cat" style="color:{b}">{CATLABEL[cat]}</div>
+        <h2 class="d2-title">{esc(s["title"])}</h2>
+        <div class="d2-sub">{esc(s["sub"])}</div>
+        <ul class="d2-list">{lst}</ul>
+      </div>'''
+    slide("divider2 dark", inner)
 
 
 def zone_profile_slide(z):
-    p = D.PROFILES[z["key"]]; cat = z["cat"]; col = CATCOL[cat]
+    p = D.PROFILES[z["key"]]; cat = z["cat"]; col = CATCOL[cat]; a, b = GRADS[cat]
     res = "".join(f'<li><b style="color:{col}">{esc(n)}</b> — {esc(w)}</li>' for n, w in p["residents"])
-    sph = "".join(f'<li><span class="sph-ic" style="color:{col}">{icon("spark", col, 15, 2.2)}</span>{esc(s)}</li>' for s in p["spheres"])
+    sph = "".join(f'<li><span class="sph-ic">{icon("spark", col, 15, 2.2)}</span>{esc(s)}</li>' for s in p["spheres"])
     ctx = "".join(f'<div class="ctx-card" style="border-color:{col}">{esc(c)}</div>' for c in p.get("context", []))
     inner = f'''
       <div class="z-band" style="background:{grad(cat)}"></div>
+      <div class="corner-blob" style="background:radial-gradient(circle,{a}18,transparent 70%)"></div>
       <div class="zp2">
         <div class="zp2-top">
-          <div class="zp2-badge-ic" style="background:{grad(cat)}">{icon(CATICON[cat], "#fff", 24, 2.0)}</div>
+          <div class="zp2-badge-ic" style="background:{grad(cat)};box-shadow:0 10px 24px {a}55">{icon(CATICON[cat], "#fff", 24, 2.0)}</div>
           <div>
             <div class="eyebrow" style="color:{col}">ПРОМЗОНА · {CATLABEL[cat]}</div>
             <div class="zp2-head">
@@ -239,11 +237,11 @@ def zone_profile_slide(z):
         <p class="zp2-about">{esc(p["about"])}</p>
         <div class="zp2-cols">
           <div class="zp2-col">
-            <div class="zp2-h" style="color:{col};border-color:{col}">РЕЗИДЕНТЫ И ЧЕМ ЗАНИМАЮТСЯ</div>
+            <div class="zp2-h" style="color:{col}"><span class="hbar-line" style="background:{grad(cat)}"></span>РЕЗИДЕНТЫ И ЧЕМ ЗАНИМАЮТСЯ</div>
             <ul class="zp2-res">{res}</ul>
           </div>
           <div class="zp2-col zp2-col-narrow">
-            <div class="zp2-h" style="color:{col};border-color:{col}">СФЕРЫ ДЕЯТЕЛЬНОСТИ</div>
+            <div class="zp2-h" style="color:{col}"><span class="hbar-line" style="background:{grad(cat)}"></span>СФЕРЫ ДЕЯТЕЛЬНОСТИ</div>
             <ul class="zp2-sph">{sph}</ul>
           </div>
         </div>
@@ -255,32 +253,28 @@ def zone_profile_slide(z):
 
 
 def zone_slide(z):
-    cat = z["cat"]; col = CATCOL[cat]
-    m = data_uri(z["img"])
-    url = gmaps_url(z.get("maps_query") or z["address"])
-    qr = data_uri(make_qr(url, z["key"], INK))
+    cat = z["cat"]; col = CATCOL[cat]; a, b = GRADS[cat]
+    m = data_uri(z["img"]); url = gmaps_url(z.get("maps_query") or z["address"]); qr = data_uri(make_qr(url, z["key"], INK))
     residents = ""
     for r in z["residents"]:
         addr = f'<div class="r-addr">{icon("pin", MUTED, 13)} {esc(r["addr"])}</div>' if r.get("addr") else ""
-        residents += f'''
-          <div class="resident">
+        residents += f'''<div class="resident" style="border-color:{col}">
             <div class="r-head"><span class="r-name" style="color:{col}">{esc(r["name"])}</span>
             <span class="r-tag" style="color:{col};background:{col}18">{esc(r["tag"])}</span></div>
-            <div class="r-text">{esc(r["text"])}</div>{addr}
-          </div>'''
+            <div class="r-text">{esc(r["text"])}</div>{addr}</div>'''
     facts = "".join(f'<span class="fact">{esc(f)}</span>' for f in z["facts"])
     inner = f'''
       <div class="z-band" style="background:{grad(cat)}"></div>
       <div class="zg">
         <div class="zg-left">
-          <div class="map-frame"><img class="z-map" src="{m}"/></div>
+          <div class="map-frame"><img class="z-map" src="{m}"/><div class="map-ring" style="border-color:{a}"></div></div>
           <div class="z-mapcap">{icon("globe", MUTED, 14)} {esc(z.get("map_caption", "Карта Google"))}</div>
         </div>
         <div class="zg-right">
           <div class="eyebrow" style="color:{col}">{icon(CATICON[cat], col, 16, 2.2)} {CATLABEL[cat]}</div>
           <h2 class="z-name">{esc(z["name"])}</h2>
-          <div class="addr-card" style="border-color:{col}22">
-            <div class="pin-badge" style="background:{grad(cat)}">{icon("pin", "#fff", 18)}</div>
+          <div class="addr-card">
+            <div class="pin-badge" style="background:{grad(cat)};box-shadow:0 8px 18px {a}55">{icon("pin", "#fff", 18)}</div>
             <div><b>{esc(z["address"])}</b><span class="z-city">{esc(z["city"])}, {esc(z["region"])}</span></div>
           </div>
           <div class="maps-row">
@@ -291,7 +285,7 @@ def zone_slide(z):
               <a class="maps-link" style="color:{BLUE}" href="{url}">Открыть в Google&nbsp;Картах {icon("arrow", BLUE, 14, 2.4)}</a>
             </div>
           </div>
-          <div class="z-restitle" style="color:{col}">РЕЗИДЕНТЫ</div>
+          <div class="z-restitle" style="color:{col}"><span class="hbar-line" style="background:{grad(cat)}"></span>РЕЗИДЕНТЫ</div>
           <div class="residents">{residents}</div>
           <div class="z-facts">{facts}</div>
         </div>
@@ -301,33 +295,55 @@ def zone_slide(z):
 
 
 def charts_slide():
-    cards = ""
-    for path, title, take in CHARTS:
-        cards += f'''<div class="chart-card">
-          <div class="chart-t">{esc(title)}</div>
-          <img src="{data_uri(path)}"/>
-          <div class="chart-take">{esc(take)}</div></div>'''
+    mx = max(v for _, v in REVENUE)
+    bars = "".join(
+        f'<div class="vbar"><div class="vbar-val">€{v:.1f}</div>'
+        f'<div class="vbar-track"><div class="vbar-fill" style="height:{int(v/mx*100)}%;background:{grad("chips")}"></div></div>'
+        f'<div class="vbar-x">{yr}</div></div>' for yr, v in REVENUE)
+    inv_mx = max(v for _, v, _ in INVEST)
+    hbars = "".join(
+        f'<div class="ib"><div class="ib-top"><span>{esc(name)}</span><b>€{v:.1f} млрд</b></div>'
+        f'<div class="ib-track"><div class="ib-fill" style="width:{int(v/inv_mx*100)}%;background:{grad(cat)}"></div></div></div>'
+        for name, v, cat in INVEST)
+    ring = f'''conic-gradient(from -90deg, #FF6A2B 0turn, #FFB23D 0.83turn, rgba(255,255,255,.10) 0.83turn 1turn)'''
     inner = f'''
+      {meshbg()}
       <div class="pad">
-        <div class="eyebrow" style="color:{ORANGE}">ЭКОНОМИКА</div>
-        <h2 class="stitle">Рост, мощности и инвестиции — в графиках</h2>
-        <div class="charts-row">{cards}</div>
-        <div class="charts-note">{icon("euro", ORANGE, 18)}<span>Полупроводниковый сектор Нидерландов: 300+ компаний, ~9% мирового рынка, экспорт оборудования ~€25 млрд в год.</span></div>
+        <div class="eyebrow eyebrow-light">ЭКОНОМИКА</div>
+        <h2 class="stitle stitle-light">Рост, доля рынка и инвестиции</h2>
+        <div class="charts3">
+          <div class="glass ch-panel">
+            <div class="ch-h">Выручка ASML, млрд €</div>
+            <div class="vbars">{bars}</div>
+            <div class="ch-sub">Рекордный рост на волне спроса на чипы и ИИ.</div>
+          </div>
+          <div class="glass ch-panel ch-panel-ring">
+            <div class="ch-h">Доля рынка литографии</div>
+            <div class="ring" style="background:{ring}"><div class="ring-hole"></div>
+              <div class="ring-c"><div class="ring-big grad-text">~83%</div><div class="ring-l">всех литографов</div></div></div>
+            <div class="ch-sub">И почти <b style="color:#FFB23D">100%</b> рынка EUV — только ASML.</div>
+          </div>
+          <div class="glass ch-panel">
+            <div class="ch-h">Инвестиции в дата-центры</div>
+            <div class="ibars">{hbars}</div>
+            <div class="ch-sub">Гиперскейлеры вложили в 3 площадки более €3,5 млрд.</div>
+          </div>
+        </div>
+        <div class="charts-note-d">{icon("trend", "#FFB23D", 18)}<span>Полупроводниковый сектор: 300+ компаний, ~9% мирового рынка, экспорт оборудования ~€25 млрд в год.</span></div>
       </div>
       {footer(_pos())}'''
-    slide("content", inner)
+    slide("dark charts", inner)
 
 
 def challenges_slide():
     cards = ""
-    cols = [ORANGE, BLUE, GREEN, GOLD]
-    for i, (ic, t, txt) in enumerate(CHALLENGES):
-        c = cols[i % len(cols)]
+    for ic, cat, t, txt in CHALLENGES:
+        col = CATCOL[cat]; a, b = GRADS[cat]
         cards += f'''<div class="ch-card">
-          <div class="ch-ic" style="background:{c}14;color:{c}">{icon(ic, c, 26)}</div>
-          <div class="ch-t">{esc(t)}</div>
-          <div class="ch-x">{esc(txt)}</div></div>'''
+          <div class="ch-ic" style="background:{grad(cat)};box-shadow:0 10px 22px {a}44">{icon(ic, "#fff", 25)}</div>
+          <div class="ch-t">{esc(t)}</div><div class="ch-x">{esc(txt)}</div></div>'''
     inner = f'''
+      <div class="corner-blob" style="background:radial-gradient(circle,{GRADS['chips'][0]}18,transparent 70%)"></div>
       <div class="pad">
         <div class="eyebrow" style="color:{ORANGE}">ОБОРОТНАЯ СТОРОНА</div>
         <h2 class="stitle">Вызовы, политика и поддержка</h2>
@@ -341,17 +357,14 @@ def challenges_slide():
 def compare_slide():
     rows = ""
     for cat, zone, anchor, why in D.COMPARE:
-        c = CATCOL[cat]
         rows += (f'<tr><td><span class="cbar" style="background:{grad(cat)}"></span>{esc(zone)}</td>'
                  f'<td><b>{esc(anchor)}</b></td><td class="why">{esc(why)}</td></tr>')
     inner = f'''
       <div class="pad">
         <div class="eyebrow" style="color:{ORANGE}">ИТОГ</div>
         <h2 class="stitle">Сравнение ключевых зон</h2>
-        <table class="ctable">
-          <thead><tr><th>Зона</th><th>Якорные резиденты</th><th>Чем важна</th></tr></thead>
-          <tbody>{rows}</tbody>
-        </table>
+        <table class="ctable"><thead><tr><th>Зона</th><th>Якорные резиденты</th><th>Чем важна</th></tr></thead>
+          <tbody>{rows}</tbody></table>
       </div>
       {footer(_pos())}'''
     slide("content", inner)
@@ -362,7 +375,7 @@ def closing_slide():
         f'<div class="cc"><div class="cc-big grad-text">{v}</div><div class="cc-lab">{l}</div></div>'
         for v, l in [("7", "ключевых зон"), ("3", "направления"), ("№1", "ASML — в Европе")])
     inner = f'''
-      <div class="close-glow"></div>
+      {meshbg()}
       <div class="close">
         <div class="eyebrow eyebrow-light">СПАСИБО ЗА ВНИМАНИЕ</div>
         <h2 class="close-title">Маленькая страна — <span class="grad-text">огромное влияние</span></h2>
@@ -379,34 +392,15 @@ order = [("chips", ["asml", "htc", "nijmegen"]),
          ("ai", ["delft"])]
 zmap = {z["key"]: z for z in D.ZONES}
 znames = {z["key"]: D.PROFILES[z["key"]]["zone_title"] for z in D.ZONES}
-
-# pre-count total slides for footer "NN / TOTAL"
-TOTAL = 3 + sum(1 + 2 * len(ks) for _, ks in order) + 3  # cover+hero+overview + (divider+2*zones) + charts+challenges+compare ... plus closing
-# compute exactly:
-_n = 1  # cover
-_n += 1  # hero
-_n += 1  # overview
-for cat, ks in order:
-    _n += 1                # divider
-    _n += 2 * len(ks)      # profile + residents
-_n += 1  # charts
-_n += 1  # challenges
-_n += 1  # compare
-_n += 1  # closing
+_n = 3 + sum(1 + 2 * len(ks) for _, ks in order) + 4
 TOTAL = _n
 
-cover_slide()
-hero_slide()
-overview_slide()
+cover_slide(); hero_slide(); overview_slide()
 for cat, keys in order:
     divider_slide(cat, [znames[k] for k in keys])
     for k in keys:
-        zone_profile_slide(zmap[k])
-        zone_slide(zmap[k])
-charts_slide()
-challenges_slide()
-compare_slide()
-closing_slide()
+        zone_profile_slide(zmap[k]); zone_slide(zmap[k])
+charts_slide(); challenges_slide(); compare_slide(); closing_slide()
 
 # ================= CSS =================
 CSS = font_faces() + f'''
@@ -416,100 +410,112 @@ html, body {{ margin: 0; padding: 0; background: #fff; }}
 .slide {{ width: 1280px; height: 720px; position: relative; overflow: hidden; background: #fff;
   font-family: 'Inter', sans-serif; color: #23303F; page-break-after: always; }}
 .slide:last-child {{ page-break-after: auto; }}
-h1, h2, .stitle, .zp-name, .z-name, .hero-h, .div-title, .close-title, .cc-big, .hero-val {{ font-family: 'Manrope', sans-serif; }}
-.grad-text {{ background: linear-gradient(100deg, {ORANGE}, {GOLD}); -webkit-background-clip: text; background-clip: text; color: transparent; }}
-.pad {{ padding: 52px 66px; height: 100%; }}
+h1,h2,.stitle,.zp-name,.z-name,.hero-h,.d2-title,.close-title,.cc-big,.hero-val,.ring-big {{ font-family: 'Manrope', sans-serif; }}
+.grad-text {{ background: {GOLDGRAD}; -webkit-background-clip: text; background-clip: text; color: transparent;
+  -webkit-box-decoration-break: clone; box-decoration-break: clone; padding-right: .04em; }}
+.pad {{ padding: 50px 66px; height: 100%; position: relative; z-index: 2; }}
 .eyebrow {{ font-size: 14px; font-weight: 800; letter-spacing: 2.6px; display: flex; align-items: center; gap: 8px; }}
-.eyebrow-light {{ color: {ORANGE_L}; }}
-.stitle {{ font-size: 39px; font-weight: 800; color: {INK}; margin: 9px 0 26px; letter-spacing: -.5px; }}
-.footer {{ position: absolute; bottom: 20px; left: 66px; right: 66px; display: flex; justify-content: space-between;
+.eyebrow-light {{ color: #FFB23D; }}
+.stitle {{ font-size: 39px; font-weight: 800; color: {INK}; margin: 10px 0 26px; letter-spacing: -.5px; position: relative; display: inline-block; }}
+.stitle::after {{ content: ''; position: absolute; left: 2px; bottom: -9px; width: 66px; height: 4px; border-radius: 3px; background: {GOLDGRAD}; }}
+.stitle-light {{ color: #fff; }}
+.corner-blob {{ position: absolute; width: 520px; height: 520px; right: -160px; top: -190px; border-radius: 50%; z-index: 0; }}
+
+/* mesh + grain (dark slides) */
+.dark {{ background: {BG}; color: #EAF0F8; }}
+.mesh {{ position: absolute; inset: 0; z-index: 0; background:
+  radial-gradient(circle at 14% 22%, rgba(255,106,43,.20), transparent 40%),
+  radial-gradient(circle at 88% 12%, rgba(46,124,246,.20), transparent 44%),
+  radial-gradient(circle at 78% 92%, rgba(124,92,255,.18), transparent 46%),
+  radial-gradient(circle at 30% 88%, rgba(16,185,129,.13), transparent 44%),
+  linear-gradient(160deg, {BG}, {BG2}); }}
+.grain {{ display: none; }}
+.dark .footer, .dark .pad, .dark .hero-wrap, .dark .close {{ position: relative; z-index: 2; }}
+.footer {{ position: absolute; z-index: 3; bottom: 20px; left: 66px; right: 66px; display: flex; justify-content: space-between;
   align-items: center; font-size: 12.5px; color: {MUTED}; border-top: 1px solid {LINE}; padding-top: 11px; }}
 .footer .fr {{ font-weight: 800; color: {INK}; font-family: 'Manrope'; }}
 .footer .ft {{ color: {MUTED}; font-weight: 600; margin-left: 3px; }}
+.dark .footer {{ border-color: rgba(255,255,255,.13); color: #9FB0C7; }}
+.dark .footer .fr {{ color: #fff; }} .dark .footer .ft {{ color: #7E8CA3; }}
+
+/* glass */
+.glass {{ background: linear-gradient(158deg, rgba(255,255,255,.11), rgba(255,255,255,.035));
+  border: 1px solid rgba(255,255,255,.14); border-radius: 20px;
+  box-shadow: 0 22px 50px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.20); }}
 
 /* ---- Cover ---- */
-.cover {{ background: {INK}; }}
 .cov-bg {{ position: absolute; inset: 0; background-size: cover; background-position: center; }}
-.cov-scrim {{ position: absolute; inset: 0; background:
-  linear-gradient(103deg, rgba(9,15,29,.96) 32%, rgba(9,15,29,.66) 60%, rgba(9,15,29,.24) 100%); }}
-.cov-grid {{ position: absolute; inset: 0; opacity: .5;
+.cov-scrim {{ position: absolute; inset: 0; background: linear-gradient(104deg, rgba(7,12,24,.96) 30%, rgba(7,12,24,.62) 58%, rgba(7,12,24,.14) 100%); }}
+.mesh-cover {{ opacity: .8; mix-blend-mode: screen; mask-image: linear-gradient(104deg, #000 45%, transparent 85%); }}
+.cov-grid {{ position: absolute; inset: 0; z-index: 1; opacity: .5;
   background-image: linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
-  background-size: 46px 46px; mask-image: linear-gradient(103deg, #000 30%, transparent 75%); }}
-.cov-body {{ position: absolute; left: 76px; top: 150px; width: 800px; color: #fff; }}
-.cov-kick {{ display: flex; align-items: center; gap: 12px; font-size: 16px; letter-spacing: 4px; font-weight: 800; color: {ORANGE_L}; margin-bottom: 22px; }}
-.kbar {{ width: 34px; height: 4px; border-radius: 3px; background: linear-gradient(90deg, {ORANGE}, {ORANGE_L}); }}
-.cov-title {{ font-size: 66px; line-height: 1.03; font-weight: 800; margin: 0; letter-spacing: -1.5px; }}
-.cov-accent {{ background: linear-gradient(100deg, {ORANGE}, {GOLD}); -webkit-background-clip: text; background-clip: text; color: transparent; }}
+  background-size: 46px 46px; mask-image: linear-gradient(104deg, #000 28%, transparent 72%); }}
+.cov-streak {{ position: absolute; z-index: 1; left: -10%; top: 32%; width: 120%; height: 3px; transform: rotate(-8deg);
+  background: linear-gradient(90deg, transparent, rgba(255,178,61,.55), transparent); filter: blur(1px); }}
+.cov-body {{ position: absolute; z-index: 2; left: 76px; top: 148px; width: 820px; color: #fff; }}
+.cov-kick {{ display: flex; align-items: center; gap: 12px; font-size: 16px; letter-spacing: 4px; font-weight: 800; color: #FFB23D; margin-bottom: 22px; }}
+.kbar {{ width: 34px; height: 4px; border-radius: 3px; background: linear-gradient(90deg,#FF6A2B,#FFB23D); }}
+.cov-title {{ font-size: 68px; line-height: 1.02; font-weight: 800; margin: 0; letter-spacing: -1.6px; text-shadow: 0 6px 40px rgba(0,0,0,.4); }}
 .cov-sub {{ font-size: 24px; color: #CBD5E6; margin-top: 22px; font-weight: 500; max-width: 660px; }}
 .cov-tags {{ display: flex; gap: 12px; margin-top: 34px; }}
-.ctag {{ display: flex; align-items: center; gap: 9px; background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.16);
-  color: #fff; font-size: 15px; font-weight: 700; padding: 9px 18px 9px 14px; border-radius: 24px; }}
+.ctag {{ display: flex; align-items: center; gap: 9px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18);
+  color: #fff; font-size: 15px; font-weight: 700; padding: 9px 18px 9px 14px; border-radius: 24px; box-shadow: inset 0 1px 0 rgba(255,255,255,.12); }}
 .cdot {{ width: 12px; height: 12px; border-radius: 50%; }}
-.cov-foot {{ position: absolute; right: 60px; bottom: 44px; display: flex; align-items: center; gap: 14px;
-  color: #9FB0C7; font-size: 15px; font-weight: 600; }}
-.cov-dot {{ color: {ORANGE}; }}
+.cov-foot {{ position: absolute; z-index: 2; right: 60px; bottom: 44px; display: flex; align-items: center; gap: 14px; color: #9FB0C7; font-size: 15px; font-weight: 600; }}
+.cov-dot {{ color: #FF6A2B; font-size: 10px; }}
 
-/* ---- Dark / hero ---- */
-.dark {{ background: {INK}; color: #EAF0F8; }}
-.hero-bgshape {{ position: absolute; width: 720px; height: 720px; right: -180px; top: -180px; border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, rgba(242,99,19,.28), transparent 60%); }}
-.hero-wrap {{ position: relative; padding: 56px 66px; }}
-.hero-h {{ font-size: 44px; font-weight: 800; color: #fff; margin: 10px 0 10px; letter-spacing: -.6px; }}
+/* ---- Hero ---- */
+.hero-wrap {{ padding: 54px 66px; }}
+.hero-h {{ font-size: 45px; font-weight: 800; color: #fff; margin: 10px 0 10px; letter-spacing: -.6px; }}
 .hero-lead {{ font-size: 18px; color: #AEBED4; max-width: 900px; line-height: 1.5; margin: 0 0 30px; }}
 .hero-grid {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }}
-.hero-card {{ background: linear-gradient(160deg, rgba(255,255,255,.07), rgba(255,255,255,.03)); border: 1px solid rgba(255,255,255,.10);
-  border-radius: 18px; padding: 22px 22px 20px; }}
-.hero-ic {{ width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }}
-.hero-val {{ font-size: 34px; font-weight: 800; color: #fff; line-height: 1; letter-spacing: -.5px; }}
-.hero-lab {{ font-size: 14.5px; color: #A9B8CE; margin-top: 8px; line-height: 1.35; }}
-.dark .footer {{ border-color: rgba(255,255,255,.12); color: #9FB0C7; }}
-.dark .footer .fr {{ color: #fff; }}
+.hero-card {{ padding: 22px 22px 20px; }}
+.hero-ic {{ width: 46px; height: 46px; border-radius: 13px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }}
+.hero-val {{ font-size: 37px; font-weight: 800; -webkit-background-clip: text; background-clip: text; color: transparent; line-height: 1; letter-spacing: -.5px; }}
+.hero-lab {{ font-size: 14.5px; color: #AABAD0; margin-top: 9px; line-height: 1.35; }}
 
 /* ---- Overview ---- */
-.ov-wrap {{ display: flex; gap: 44px; height: 486px; }}
-.ov-map-box {{ border-radius: 16px; overflow: hidden; box-shadow: 0 18px 44px rgba(15,27,52,.16); border: 1px solid {LINE}; height: 100%; }}
+.ov-wrap {{ display: flex; gap: 44px; height: 480px; }}
+.ov-map-box {{ border-radius: 18px; overflow: hidden; box-shadow: 0 22px 50px rgba(15,27,52,.20); border: 1px solid {LINE}; height: 100%; }}
 .ov-map {{ height: 100%; display: block; }}
 .ov-side {{ flex: 1; padding-top: 6px; }}
 .ov-lead {{ font-size: 21px; line-height: 1.5; color: #2A3542; font-weight: 600; margin: 0 0 26px; }}
 .leg {{ display: flex; align-items: center; gap: 15px; margin-bottom: 18px; }}
-.leg-ic {{ width: 38px; height: 38px; border-radius: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }}
+.leg-ic {{ width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 8px 18px rgba(15,27,52,.14); }}
 .leg b {{ font-size: 18px; color: {INK}; font-family: 'Manrope'; font-weight: 800; display: block; }}
 .leg span {{ font-size: 14px; color: {MUTED}; }}
-.ov-note {{ display: flex; gap: 11px; align-items: flex-start; font-size: 15.5px; color: {MUTED}; line-height: 1.5; margin-top: 26px;
-  background: {PAPER}; border-radius: 12px; padding: 14px 16px; }}
+.ov-note {{ display: flex; gap: 11px; align-items: flex-start; font-size: 15.5px; color: {MUTED}; line-height: 1.5; margin-top: 26px; background: {PAPER}; border-radius: 12px; padding: 14px 16px; }}
 
-/* ---- Divider ---- */
-.divider {{ display: flex; }}
-.div-left {{ width: 60%; height: 100%; padding: 76px 62px; position: relative; overflow: hidden; }}
-.div-glow {{ position: absolute; width: 360px; height: 360px; border-radius: 50%; left: -120px; bottom: -140px; opacity: .28; filter: blur(20px); }}
-.div-num-wrap {{ display: flex; align-items: center; gap: 22px; }}
-.div-ic {{ width: 74px; height: 74px; border-radius: 20px; display: flex; align-items: center; justify-content: center; }}
-.div-num {{ font-size: 118px; font-weight: 800; line-height: 1; color: rgba(255,255,255,.14); font-family: 'Manrope'; }}
-.div-cat {{ font-size: 19px; font-weight: 800; letter-spacing: 3px; margin-top: 22px; }}
-.div-title {{ color: #fff; font-size: 50px; font-weight: 800; margin: 10px 0 0; line-height: 1.05; letter-spacing: -.5px; }}
-.div-sub {{ color: #AEBED4; font-size: 21px; margin-top: 16px; }}
-.div-list {{ list-style: none; margin: 30px 0 0; padding: 0; }}
-.div-list li {{ display: flex; align-items: center; gap: 12px; color: #DCE5F1; font-size: 17px; font-weight: 600; margin-bottom: 13px; }}
-.div-list li svg {{ opacity: .8; }}
-.div-right {{ width: 40%; height: 100%; position: relative; overflow: hidden; }}
-.div-right img {{ width: 100%; height: 100%; object-fit: cover; }}
-.div-right-scrim {{ position: absolute; inset: 0; }}
+/* ---- Divider (full-bleed) ---- */
+.divider2 {{ background: {BG}; }}
+.d2-img {{ position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }}
+.d2-scrim {{ position: absolute; inset: 0; z-index: 1; background: linear-gradient(100deg, {BG} 34%, rgba(10,18,38,.72) 60%, rgba(10,18,38,.30) 100%); }}
+.d2-glow {{ position: absolute; z-index: 1; width: 620px; height: 620px; left: -160px; bottom: -220px; border-radius: 50%; filter: blur(10px); opacity: .7; }}
+.d2-ghost {{ position: absolute; z-index: 1; right: 40px; top: -30px; font-size: 420px; font-weight: 800; font-family: 'Manrope';
+  -webkit-background-clip: text; background-clip: text; color: transparent; opacity: .16; line-height: 1; }}
+.d2-body {{ position: absolute; z-index: 2; left: 66px; top: 150px; width: 640px; }}
+.d2-ic {{ width: 78px; height: 78px; border-radius: 22px; display: flex; align-items: center; justify-content: center; }}
+.d2-cat {{ font-size: 19px; font-weight: 800; letter-spacing: 3px; margin-top: 26px; }}
+.d2-title {{ color: #fff; font-size: 54px; font-weight: 800; margin: 12px 0 0; line-height: 1.04; letter-spacing: -1px; text-shadow: 0 6px 30px rgba(0,0,0,.4); }}
+.d2-sub {{ color: #C2CFE2; font-size: 21px; margin-top: 16px; }}
+.d2-list {{ list-style: none; margin: 30px 0 0; padding: 0; }}
+.d2-list li {{ display: flex; align-items: center; gap: 13px; color: #E4EBF5; font-size: 17.5px; font-weight: 600; margin-bottom: 14px; }}
+.dl-dot {{ width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }}
 
 /* ---- Zone profile ---- */
-.z-band {{ position: absolute; top: 0; left: 0; right: 0; height: 7px; }}
-.zoneprofile .zp2 {{ padding: 34px 58px 30px; height: 100%; }}
+.z-band {{ position: absolute; top: 0; left: 0; right: 0; height: 7px; z-index: 3; }}
+.zoneprofile .zp2 {{ padding: 34px 58px 30px; height: 100%; position: relative; z-index: 2; }}
 .zp2-top {{ display: flex; gap: 18px; align-items: flex-start; margin-bottom: 16px; }}
-.zp2-badge-ic {{ width: 54px; height: 54px; border-radius: 15px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 8px 20px rgba(15,27,52,.16); }}
+.zp2-badge-ic {{ width: 54px; height: 54px; border-radius: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }}
 .zp2-head {{ display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 3px; }}
 .zp-name {{ font-size: 33px; font-weight: 800; color: {INK}; margin: 0; line-height: 1.05; letter-spacing: -.5px; }}
-.zp2-type {{ color: #fff; font-size: 12.5px; font-weight: 800; letter-spacing: .3px; padding: 5px 14px; border-radius: 20px; }}
+.zp2-type {{ color: #fff; font-size: 12.5px; font-weight: 800; padding: 5px 14px; border-radius: 20px; }}
 .zp-loc {{ display: flex; align-items: center; gap: 6px; font-size: 15px; color: {MUTED}; margin-top: 5px; }}
-.zp2-about {{ font-size: 17px; line-height: 1.5; color: #2A3542; margin: 0 0 18px; max-width: 1220px;
-  padding-bottom: 18px; border-bottom: 1px solid {LINE}; }}
+.zp2-about {{ font-size: 17px; line-height: 1.5; color: #2A3542; margin: 0 0 18px; max-width: 1220px; padding-bottom: 18px; border-bottom: 1px solid {LINE}; }}
 .zp2-cols {{ display: flex; gap: 48px; margin-bottom: 18px; }}
-.zp2-col {{ flex: 1.35; }}
-.zp2-col-narrow {{ flex: 1; max-width: 400px; }}
-.zp2-h {{ font-size: 13px; font-weight: 800; letter-spacing: 1.2px; margin-bottom: 13px; padding-bottom: 8px; border-bottom: 2px solid; }}
+.zp2-col {{ flex: 1.35; }} .zp2-col-narrow {{ flex: 1; max-width: 400px; }}
+.zp2-h {{ font-size: 13px; font-weight: 800; letter-spacing: 1.2px; margin-bottom: 13px; padding-bottom: 8px; border-bottom: 1px solid {LINE}; display: flex; align-items: center; gap: 9px; }}
+.hbar-line {{ width: 20px; height: 4px; border-radius: 3px; display: inline-block; }}
 .zp2-res {{ list-style: none; margin: 0; padding: 0; }}
 .zp2-res li {{ font-size: 15px; line-height: 1.4; color: #29333F; margin-bottom: 10px; }}
 .zp2-res li b {{ font-weight: 800; }}
@@ -518,28 +524,29 @@ h1, h2, .stitle, .zp-name, .z-name, .hero-h, .div-title, .close-title, .cc-big, 
 .sph-ic {{ margin-top: 1px; flex-shrink: 0; }}
 .ctx-title {{ font-size: 13px; font-weight: 800; letter-spacing: 1.2px; margin: 2px 0 11px; }}
 .ctx-row {{ display: flex; gap: 16px; }}
-.ctx-card {{ flex: 1; background: {PAPER}; border-left: 4px solid; border-radius: 10px; padding: 12px 15px; font-size: 14px; line-height: 1.4; color: #29333F; }}
+.ctx-card {{ flex: 1; background: {PAPER}; border-left: 4px solid; border-radius: 12px; padding: 12px 15px; font-size: 14px; line-height: 1.4; color: #29333F; box-shadow: 0 6px 16px rgba(15,27,52,.05); }}
 
 /* ---- Zone residents ---- */
-.zone .zg {{ display: flex; height: 100%; padding: 30px 0 0; }}
+.zone .zg {{ display: flex; height: 100%; padding: 30px 0 0; position: relative; z-index: 2; }}
 .zg-left {{ width: 484px; padding: 18px 0 18px 46px; }}
-.map-frame {{ border-radius: 16px; overflow: hidden; box-shadow: 0 14px 34px rgba(15,27,52,.18); border: 1px solid {LINE}; }}
+.map-frame {{ position: relative; border-radius: 18px; overflow: hidden; box-shadow: 0 20px 44px rgba(15,27,52,.22); border: 1px solid {LINE}; }}
+.map-ring {{ position: absolute; inset: 0; border-radius: 18px; border: 2px solid; opacity: .25; pointer-events: none; }}
 .z-map {{ width: 100%; height: 486px; object-fit: cover; display: block; }}
 .z-mapcap {{ display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12.5px; color: {MUTED}; margin-top: 11px; }}
 .zg-right {{ flex: 1; padding: 12px 54px 18px 42px; }}
 .z-name {{ font-size: 32px; font-weight: 800; color: {INK}; margin: 5px 0 13px; line-height: 1.06; letter-spacing: -.5px; }}
-.addr-card {{ display: flex; gap: 13px; align-items: center; background: {PAPER}; border: 1.5px solid; border-radius: 13px; padding: 12px 15px; }}
-.pin-badge {{ width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }}
+.addr-card {{ display: flex; gap: 13px; align-items: center; background: {PAPER}; border: 1px solid {LINE}; border-radius: 14px; padding: 12px 15px; box-shadow: 0 8px 20px rgba(15,27,52,.06); }}
+.pin-badge {{ width: 36px; height: 36px; border-radius: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }}
 .addr-card b {{ font-size: 17px; color: {INK}; display: block; font-family: 'Manrope'; font-weight: 800; }}
 .z-city {{ font-size: 13.5px; color: {MUTED}; display: block; margin-top: 2px; }}
 .maps-row {{ display: flex; gap: 16px; align-items: center; margin: 15px 0 16px; }}
-.qr {{ width: 92px; height: 92px; border: 1px solid {LINE}; border-radius: 10px; padding: 4px; background: #fff; box-shadow: 0 6px 16px rgba(15,27,52,.10); }}
+.qr {{ width: 92px; height: 92px; border: 1px solid {LINE}; border-radius: 12px; padding: 4px; background: #fff; box-shadow: 0 8px 20px rgba(15,27,52,.12); }}
 .maps-title {{ font-size: 16.5px; font-weight: 800; color: {INK}; font-family: 'Manrope'; }}
 .maps-sub {{ font-size: 12.5px; color: {MUTED}; margin: 3px 0 7px; line-height: 1.35; }}
 .maps-link {{ font-size: 14.5px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }}
-.z-restitle {{ font-size: 13px; font-weight: 800; letter-spacing: 1.6px; margin-bottom: 9px; }}
+.z-restitle {{ font-size: 13px; font-weight: 800; letter-spacing: 1.6px; margin-bottom: 9px; display: flex; align-items: center; gap: 9px; }}
 .residents {{ display: flex; flex-direction: column; gap: 8px; }}
-.resident {{ border-left: 3px solid {LINE}; padding-left: 12px; }}
+.resident {{ border-left: 3px solid; padding-left: 12px; }}
 .r-head {{ display: flex; align-items: center; gap: 10px; }}
 .r-name {{ font-size: 16px; font-weight: 800; font-family: 'Manrope'; }}
 .r-tag {{ font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px; }}
@@ -548,19 +555,37 @@ h1, h2, .stitle, .zp-name, .z-name, .hero-h, .div-title, .close-title, .cc-big, 
 .z-facts {{ display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }}
 .fact {{ font-size: 12.5px; font-weight: 700; color: {INK}; background: {PAPER}; border: 1px solid {LINE}; border-radius: 20px; padding: 5px 13px; font-family: 'Manrope'; }}
 
-/* ---- Charts ---- */
-.charts-row {{ display: flex; gap: 22px; }}
-.chart-card {{ flex: 1; background: #fff; border: 1px solid {LINE}; border-radius: 16px; padding: 16px 16px 14px; box-shadow: 0 12px 30px rgba(15,27,52,.08); }}
-.chart-t {{ font-size: 16px; font-weight: 800; color: {INK}; font-family: 'Manrope'; margin-bottom: 6px; }}
-.chart-card img {{ width: 100%; border-radius: 8px; }}
-.chart-take {{ font-size: 13px; color: {MUTED}; line-height: 1.4; margin-top: 8px; }}
-.charts-note {{ display: flex; align-items: center; gap: 11px; font-size: 15px; color: #2A3542; margin-top: 22px; background: {PAPER}; border-radius: 12px; padding: 14px 18px; }}
+/* ---- Charts (dark, native) ---- */
+.charts3 {{ display: flex; gap: 22px; margin-top: 8px; }}
+.ch-panel {{ flex: 1; padding: 22px 24px 20px; color: #EAF0F8; display: flex; flex-direction: column; }}
+.ch-h {{ font-size: 16.5px; font-weight: 800; color: #fff; font-family: 'Manrope'; margin-bottom: 18px; }}
+.ch-sub {{ font-size: 13px; color: #AABAD0; line-height: 1.4; margin-top: auto; padding-top: 16px; }}
+.vbars {{ display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; height: 220px; }}
+.vbar {{ flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; }}
+.vbar-val {{ font-size: 15px; font-weight: 800; color: #fff; font-family: 'Manrope'; margin-bottom: 6px; }}
+.vbar-track {{ width: 100%; height: 100%; display: flex; align-items: flex-end; }}
+.vbar-fill {{ width: 100%; border-radius: 8px 8px 3px 3px; box-shadow: 0 6px 18px rgba(255,106,43,.35); }}
+.vbar-x {{ font-size: 13px; color: #9FB0C7; margin-top: 9px; }}
+.ch-panel-ring {{ align-items: center; text-align: center; }}
+.ring {{ width: 188px; height: 188px; border-radius: 50%; position: relative; margin: 6px auto 0; filter: drop-shadow(0 10px 24px rgba(255,106,43,.3)); }}
+.ring-hole {{ position: absolute; inset: 20px; border-radius: 50%; background: #101c33; }}
+.ring-c {{ position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }}
+.ring-big {{ font-size: 44px; font-weight: 800; line-height: 1; }}
+.ring-l {{ font-size: 13px; color: #AABAD0; margin-top: 4px; }}
+.ibars {{ display: flex; flex-direction: column; gap: 20px; margin-top: 4px; }}
+.ib-top {{ display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }}
+.ib-top span {{ font-size: 13.5px; color: #C6D3E6; }}
+.ib-top b {{ font-size: 16px; color: #fff; font-family: 'Manrope'; font-weight: 800; }}
+.ib-track {{ height: 15px; border-radius: 8px; background: rgba(255,255,255,.09); overflow: hidden; }}
+.ib-fill {{ height: 100%; border-radius: 8px; box-shadow: 0 4px 14px rgba(46,124,246,.4); }}
+.charts-note-d {{ display: flex; align-items: center; gap: 11px; font-size: 15px; color: #C6D3E6; margin-top: 24px;
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); border-radius: 12px; padding: 14px 18px; }}
 
 /* ---- Challenges ---- */
 .ch-lead {{ font-size: 18px; color: #2A3542; line-height: 1.5; max-width: 1060px; margin: 0 0 24px; }}
 .ch-grid {{ display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }}
-.ch-card {{ background: #fff; border: 1px solid {LINE}; border-radius: 16px; padding: 20px 22px; box-shadow: 0 10px 26px rgba(15,27,52,.07); }}
-.ch-ic {{ width: 50px; height: 50px; border-radius: 13px; display: flex; align-items: center; justify-content: center; margin-bottom: 13px; }}
+.ch-card {{ background: #fff; border: 1px solid {LINE}; border-radius: 18px; padding: 20px 22px; box-shadow: 0 14px 32px rgba(15,27,52,.08); }}
+.ch-ic {{ width: 50px; height: 50px; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 13px; }}
 .ch-t {{ font-size: 20px; font-weight: 800; color: {INK}; font-family: 'Manrope'; margin-bottom: 7px; }}
 .ch-x {{ font-size: 15px; color: #3A4656; line-height: 1.48; }}
 
@@ -574,24 +599,19 @@ h1, h2, .stitle, .zp-name, .z-name, .hero-h, .div-title, .close-title, .cc-big, 
 .cbar {{ display: inline-block; width: 6px; height: 22px; border-radius: 3px; margin-right: 13px; vertical-align: -5px; }}
 
 /* ---- Closing ---- */
-.closing {{ background: {INK}; }}
-.close-glow {{ position: absolute; width: 640px; height: 640px; right: -160px; bottom: -220px; border-radius: 50%;
-  background: radial-gradient(circle at 40% 40%, rgba(242,99,19,.26), transparent 62%); }}
-.close {{ position: relative; padding: 92px 84px; }}
-.close-title {{ font-size: 52px; font-weight: 800; color: #fff; margin: 16px 0 20px; line-height: 1.06; letter-spacing: -1px; }}
+.close {{ padding: 92px 84px; }}
+.close-title {{ font-size: 54px; font-weight: 800; color: #fff; margin: 16px 0 20px; line-height: 1.06; letter-spacing: -1px; }}
 .close-text {{ font-size: 22px; color: #B9C7DB; line-height: 1.5; max-width: 920px; }}
 .close-cols {{ display: flex; gap: 84px; margin: 46px 0; }}
-.cc-big {{ font-size: 60px; font-weight: 800; line-height: 1; }}
+.cc-big {{ font-size: 62px; font-weight: 800; line-height: 1; filter: drop-shadow(0 4px 18px rgba(255,140,60,.3)); }}
 .cc-lab {{ font-size: 16px; color: #9FB0C7; margin-top: 8px; }}
-.close-src {{ position: absolute; bottom: 40px; left: 84px; right: 84px; font-size: 12px; color: #7E8CA3; line-height: 1.5;
-  border-top: 1px solid rgba(255,255,255,.12); padding-top: 14px; }}
+.close-src {{ position: absolute; z-index: 2; bottom: 40px; left: 84px; right: 84px; font-size: 12px; color: #7E8CA3; line-height: 1.5; border-top: 1px solid rgba(255,255,255,.12); padding-top: 14px; }}
 '''
 
 DOC = f'<!doctype html><html lang="ru"><head><meta charset="utf-8"><style>{CSS}</style></head><body>{"".join(SLIDES)}</body></html>'
 open("deck.html", "w", encoding="utf-8").write(DOC)
-print("wrote deck.html with", len(SLIDES), "slides (TOTAL const:", TOTAL, ")")
+print("wrote deck.html with", len(SLIDES), "slides")
 
-# ================= render =================
 from playwright.sync_api import sync_playwright
 CHROME = "/opt/pw-browsers/chromium-1194/chrome-linux/chrome"
 with sync_playwright() as p:
