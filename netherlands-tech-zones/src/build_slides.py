@@ -126,6 +126,8 @@ def zone_profile_slide(z):
     res = "".join(
         f'<li><b style="color:{col}">{esc(n)}</b> — {esc(w)}</li>' for n, w in p["residents"])
     sph = "".join(f'<li><span style="color:{col}">■</span> {esc(s)}</li>' for s in p["spheres"])
+    ctx = "".join(
+        f'<div class="zp2-ctx-card" style="border-color:{col}">{esc(c)}</div>' for c in p.get("context", []))
     inner = f'''
       <div class="z-top" style="background:{col}"></div>
       <div class="zp2">
@@ -146,6 +148,8 @@ def zone_profile_slide(z):
             <ul class="zp2-sph">{sph}</ul>
           </div>
         </div>
+        <div class="zp2-ctx-title" style="color:{col}">КОНТЕКСТ И ЗНАЧЕНИЕ</div>
+        <div class="zp2-ctx">{ctx}</div>
       </div>
       {footer(_pos())}'''
     slide("content zoneprofile", inner)
@@ -334,24 +338,28 @@ html, body {{ margin: 0; padding: 0; background: #fff; }}
 
 /* Zone profile (про промзону) — текстовый формат */
 .zoneprofile .z-top {{ position: absolute; top: 0; left: 0; right: 0; height: 8px; }}
-.zp2 {{ padding: 44px 60px 42px; height: 100%; }}
+.zp2 {{ padding: 38px 58px 34px; height: 100%; }}
 .zp2-head {{ display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }}
-.zp-name {{ font-size: 37px; font-weight: 800; color: {INK}; margin: 6px 0 3px; line-height: 1.06; }}
+.zp-name {{ font-size: 35px; font-weight: 800; color: {INK}; margin: 4px 0 2px; line-height: 1.05; }}
 .zp2-type {{ color: #fff; font-size: 13px; font-weight: 700; letter-spacing: .5px; padding: 5px 14px; border-radius: 20px; }}
-.zp-loc {{ font-size: 16px; color: {MUTED}; margin: 2px 0 16px; }}
-.zp2-about {{ font-size: 20px; line-height: 1.6; color: #2A3340; margin: 2px 0 26px; max-width: 1180px;
-  padding-bottom: 26px; border-bottom: 1px solid {LINE}; }}
-.zp2-cols {{ display: flex; gap: 56px; }}
-.zp2-col {{ flex: 1; }}
-.zp2-col-narrow {{ max-width: 410px; }}
-.zp2-h {{ font-size: 14px; font-weight: 800; letter-spacing: 1.5px; margin-bottom: 16px;
-  padding-bottom: 9px; border-bottom: 2px solid; }}
+.zp-loc {{ font-size: 15.5px; color: {MUTED}; margin: 2px 0 14px; }}
+.zp2-about {{ font-size: 17.5px; line-height: 1.5; color: #2A3340; margin: 0 0 18px; max-width: 1200px;
+  padding-bottom: 18px; border-bottom: 1px solid {LINE}; }}
+.zp2-cols {{ display: flex; gap: 50px; margin-bottom: 20px; }}
+.zp2-col {{ flex: 1.35; }}
+.zp2-col-narrow {{ flex: 1; max-width: 400px; }}
+.zp2-h {{ font-size: 13.5px; font-weight: 800; letter-spacing: 1.3px; margin-bottom: 13px;
+  padding-bottom: 8px; border-bottom: 2px solid; }}
 .zp2-res {{ list-style: none; margin: 0; padding: 0; }}
-.zp2-res li {{ font-size: 17px; line-height: 1.45; color: #29333F; margin-bottom: 15px; }}
+.zp2-res li {{ font-size: 15.5px; line-height: 1.4; color: #29333F; margin-bottom: 11px; }}
 .zp2-res li b {{ font-weight: 800; }}
 .zp2-sph {{ list-style: none; margin: 0; padding: 0; }}
-.zp2-sph li {{ font-size: 17px; line-height: 1.4; color: #29333F; margin-bottom: 15px; }}
+.zp2-sph li {{ font-size: 15.5px; line-height: 1.35; color: #29333F; margin-bottom: 11px; }}
 .zp2-sph li span {{ font-size: 10px; margin-right: 10px; vertical-align: 2px; }}
+.zp2-ctx-title {{ font-size: 13.5px; font-weight: 800; letter-spacing: 1.3px; margin: 4px 0 12px; }}
+.zp2-ctx {{ display: flex; gap: 18px; }}
+.zp2-ctx-card {{ flex: 1; background: {PAPER}; border-left: 4px solid; border-radius: 8px;
+  padding: 13px 16px; font-size: 14.5px; line-height: 1.4; color: #29333F; }}
 
 /* Compare */
 .ctable {{ width: 100%; border-collapse: collapse; font-size: 18px; }}
