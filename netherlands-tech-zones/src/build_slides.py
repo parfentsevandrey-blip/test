@@ -119,6 +119,32 @@ def divider_slide(cat):
     slide("divider", inner)
 
 
+# ---------- Zone PROFILE slide (про саму промзону) ----------
+def zone_profile_slide(z):
+    p = D.PROFILES[z["key"]]
+    col = D.CAT[z["cat"]]
+    stats = "".join(
+        f'<div class="zp-stat" style="border-color:{col}"><div class="zp-val">{esc(v)}</div>'
+        f'<div class="zp-lab">{esc(l)}</div></div>' for v, l in p["stats"])
+    desc = "".join(f'<p class="zp-p">{esc(par)}</p>' for par in p["desc"])
+    inner = f'''
+      <div class="z-top" style="background:{col}"></div>
+      <div class="zp-grid">
+        <div class="zp-card">
+          <div class="zp-type" style="background:{col}">{esc(p["type"])}</div>
+          <div class="zp-stats">{stats}</div>
+        </div>
+        <div class="zp-right">
+          <div class="z-cat" style="color:{col}">ПРОМЗОНА · {CATLABEL[z["cat"]]}</div>
+          <h2 class="zp-name">{esc(p["zone_title"])}</h2>
+          <div class="zp-loc">📍 {esc(z["city"])}, {esc(z["region"])}</div>
+          <div class="zp-desc">{desc}</div>
+        </div>
+      </div>
+      {footer(_pos())}'''
+    slide("content zoneprofile", inner)
+
+
 # ---------- Zone slide ----------
 def zone_slide(z, idx):
     col = D.CAT[z["cat"]]
@@ -218,7 +244,8 @@ zmap = {z["key"]: z for z in D.ZONES}
 for cat, keys in order:
     divider_slide(cat)
     for k in keys:
-        zone_slide(zmap[k], keys.index(k))
+        zone_profile_slide(zmap[k])      # слайд про саму промзону
+        zone_slide(zmap[k], keys.index(k))  # слайд про резидентов
 compare_slide()
 closing_slide()
 
@@ -298,6 +325,20 @@ html, body {{ margin: 0; padding: 0; background: #fff; }}
 .r-addr {{ font-size: 12px; color: {MUTED}; margin-top: 3px; }}
 .z-facts {{ display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }}
 .fact {{ font-size: 12.5px; font-weight: 600; color: {INK}; background: {PAPER}; border: 1px solid {LINE}; border-radius: 20px; padding: 5px 12px; }}
+
+/* Zone profile (про промзону) */
+.zoneprofile .z-top {{ position: absolute; top: 0; left: 0; right: 0; height: 8px; }}
+.zp-grid {{ display: flex; height: 100%; padding: 60px 64px 40px; gap: 56px; align-items: center; }}
+.zp-card {{ width: 396px; background: {INK}; border-radius: 16px; padding: 34px 32px; box-shadow: 0 14px 36px rgba(20,33,61,.18); }}
+.zp-type {{ display: inline-block; color: #fff; font-size: 14px; font-weight: 700; letter-spacing: 1px; padding: 6px 15px; border-radius: 20px; margin-bottom: 26px; }}
+.zp-stats {{ display: flex; flex-direction: column; gap: 20px; }}
+.zp-stat {{ border-left: 4px solid; padding-left: 15px; }}
+.zp-val {{ font-size: 25px; font-weight: 800; color: #fff; line-height: 1.1; }}
+.zp-lab {{ font-size: 14px; color: #AEB8C6; margin-top: 3px; }}
+.zp-right {{ flex: 1; }}
+.zp-name {{ font-size: 42px; font-weight: 800; color: {INK}; margin: 8px 0 8px; line-height: 1.08; }}
+.zp-loc {{ font-size: 17px; color: {MUTED}; margin-bottom: 26px; }}
+.zp-p {{ font-size: 19px; line-height: 1.6; color: #2A3340; margin: 0 0 18px; max-width: 640px; }}
 
 /* Compare */
 .ctable {{ width: 100%; border-collapse: collapse; font-size: 18px; }}
