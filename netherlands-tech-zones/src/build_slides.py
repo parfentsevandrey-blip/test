@@ -646,7 +646,7 @@ h1,h2,.stitle,.zp-name,.z-name,.hero-h,.d2-title,.close-title,.cc-big,.hero-val,
 /* ---- Divider (full-bleed) ---- */
 .divider2 {{ background: {BG}; }}
 .d2-img {{ position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }}
-.d2-scrim {{ position: absolute; inset: 0; z-index: 1; background: linear-gradient(100deg, {BG} 34%, rgba(10,18,38,.72) 60%, rgba(10,18,38,.30) 100%); }}
+.d2-scrim {{ position: absolute; inset: 0; z-index: 1; background: linear-gradient(100deg, {BG} 32%, rgba(10,18,38,.92) 56%, rgba(10,18,38,.55) 78%, rgba(10,18,38,.22) 100%); }}
 .d2-glow {{ position: absolute; z-index: 1; width: 620px; height: 620px; left: -160px; bottom: -220px; border-radius: 50%; filter: blur(10px); opacity: .7; }}
 .d2-ghost {{ position: absolute; z-index: 1; right: 40px; top: -30px; font-size: 420px; font-weight: 800; font-family: 'Manrope';
   color: rgba(255,255,255,.06); line-height: 1; }}
@@ -655,11 +655,11 @@ h1,h2,.stitle,.zp-name,.z-name,.hero-h,.d2-title,.close-title,.cc-big,.hero-val,
 .d2-ic {{ width: 78px; height: 78px; border-radius: 22px; display: flex; align-items: center; justify-content: center; }}
 .d2-cat {{ font-size: 19px; font-weight: 800; letter-spacing: 3px; margin-top: 20px; }}
 .d2-title {{ color: #fff; font-size: 54px; font-weight: 800; margin: 12px 0 0; line-height: 1.04; letter-spacing: -1px; text-shadow: 0 6px 30px rgba(0,0,0,.4); }}
-.d2-sub {{ color: #C2CFE2; font-size: 21px; margin-top: 16px; }}
+.d2-sub {{ color: #D5DFEC; font-size: 21px; margin-top: 16px; text-shadow: 0 2px 12px rgba(6,10,20,.55); }}
 .d2-list {{ list-style: none; margin: 26px 0 0; padding: 0; }}
-.d2-list li {{ display: flex; align-items: center; gap: 13px; color: #E4EBF5; font-size: 17px; font-weight: 600; margin-bottom: 12px;
-  background: linear-gradient(158deg,rgba(255,255,255,.10),rgba(255,255,255,.03)); border: 1px solid rgba(255,255,255,.14);
-  border-radius: 14px; padding: 11px 16px; width: fit-content; box-shadow: 0 10px 24px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.14); }}
+.d2-list li {{ display: flex; align-items: center; gap: 13px; color: #F2F6FC; font-size: 17px; font-weight: 700; margin-bottom: 12px;
+  background: linear-gradient(158deg, rgba(16,24,44,.62), rgba(16,24,44,.42)); border: 1px solid rgba(255,255,255,.18);
+  border-radius: 14px; padding: 11px 16px; width: fit-content; box-shadow: 0 12px 26px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.18); }}
 .dl-dot {{ width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }}
 
 /* ---- Zone profile ---- */
