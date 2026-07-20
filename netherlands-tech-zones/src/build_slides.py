@@ -21,6 +21,7 @@ CATCOL = {"chips": ORANGE, "data": BLUE, "ai": GREEN}
 CATLABEL = {"chips": "ЧИПЫ", "data": "ДАТА-ЦЕНТРЫ", "ai": "ИИ И НАУКА"}
 CATICON = {"chips": "chip", "data": "cloud", "ai": "atom"}
 GOLDGRAD = "linear-gradient(100deg,#FF7A2B,#F5B843)"
+HB = {"chips": "#FF9A3D", "data": "#5CC0FF", "ai": "#34D6A0"}  # bright solid stat colors (dark cards)
 
 
 def grad(cat, deg=135):
@@ -154,7 +155,7 @@ def hero_slide():
         cells += f'''
           <div class="glass hero-card">
             <div class="hero-ic" style="background:{grad(cat)};box-shadow:0 10px 26px {a}55">{icon(ic, "#fff", 26)}</div>
-            <div class="hero-val" style="background:{grad(cat)};filter:drop-shadow(0 3px 16px {a}44)">{val}</div>
+            <div class="hero-val" style="color:{HB[cat]}">{val}</div>
             <div class="hero-lab">{lab}</div>
           </div>'''
     inner = f'''
@@ -471,7 +472,8 @@ h1,h2,.stitle,.zp-name,.z-name,.hero-h,.d2-title,.close-title,.cc-big,.hero-val,
 .hero-grid {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }}
 .hero-card {{ padding: 22px 22px 20px; }}
 .hero-ic {{ width: 46px; height: 46px; border-radius: 13px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }}
-.hero-val {{ font-size: 37px; font-weight: 800; -webkit-background-clip: text; background-clip: text; color: transparent; line-height: 1; letter-spacing: -.5px; }}
+.hero-val {{ font-size: 37px; font-weight: 800; line-height: 1; letter-spacing: -.5px; }}
+.gv {{ -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-box-decoration-break: clone; box-decoration-break: clone; }}
 .hero-lab {{ font-size: 14.5px; color: #AABAD0; margin-top: 9px; line-height: 1.35; }}
 
 /* ---- Overview ---- */
@@ -603,7 +605,7 @@ h1,h2,.stitle,.zp-name,.z-name,.hero-h,.d2-title,.close-title,.cc-big,.hero-val,
 .close-title {{ font-size: 54px; font-weight: 800; color: #fff; margin: 16px 0 20px; line-height: 1.06; letter-spacing: -1px; }}
 .close-text {{ font-size: 22px; color: #B9C7DB; line-height: 1.5; max-width: 920px; }}
 .close-cols {{ display: flex; gap: 84px; margin: 46px 0; }}
-.cc-big {{ font-size: 62px; font-weight: 800; line-height: 1; filter: drop-shadow(0 4px 18px rgba(255,140,60,.3)); }}
+.cc-big {{ font-size: 62px; font-weight: 800; line-height: 1; }}
 .cc-lab {{ font-size: 16px; color: #9FB0C7; margin-top: 8px; }}
 .close-src {{ position: absolute; z-index: 2; bottom: 40px; left: 84px; right: 84px; font-size: 12px; color: #7E8CA3; line-height: 1.5; border-top: 1px solid rgba(255,255,255,.12); padding-top: 14px; }}
 '''
