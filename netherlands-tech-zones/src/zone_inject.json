@@ -1,0 +1,51 @@
+{
+  "asml": {
+    "name": "ASML — Велдховен, промзона De Run",
+    "city": "Велдховен", "region": "Северный Брабант",
+    "coords": "51.4047° с.ш., 5.4174° в.д.",
+    "image": "assets/map_asml.jpg",
+    "caption": "Карта: De Run 6501, Велдховен — штаб-квартира ASML; рядом виден Эйндховен. © OpenStreetMap · CARTO"
+  },
+  "htc": {
+    "name": "High Tech Campus Eindhoven",
+    "city": "Эйндховен", "region": "Северный Брабант",
+    "coords": "51.4089° с.ш., 5.4604° в.д.",
+    "image": "assets/map_htc.jpg",
+    "caption": "Карта: High Tech Campus 60 на юге Эйндховена. © OpenStreetMap · CARTO"
+  },
+  "nijmegen": {
+    "name": "Неймеген — завод чипов NXP и Ampleon",
+    "city": "Неймеген", "region": "Гелдерланд",
+    "coords": "51.8248° с.ш., 5.8173° в.д.",
+    "image": "assets/map_nijmegen.jpg",
+    "caption": "Карта: Gerstweg 2, промзона Winkelsteeg, Неймеген — рядом центр города. © OpenStreetMap · CARTO"
+  },
+  "amsterdam": {
+    "name": "Амстердам — Science Park и узел AMS-IX",
+    "city": "Амстердам", "region": "Северная Голландия",
+    "coords": "52.3564° с.ш., 4.9508° в.д.",
+    "image": "assets/map_amsterdam.jpg",
+    "caption": "Карта: Science Park 105 на востоке Амстердама. © OpenStreetMap · CARTO"
+  },
+  "eemshaven": {
+    "name": "Эмсхавен — гиперскейл-кампус Google",
+    "city": "Эмсхавен", "region": "Гронинген",
+    "coords": "53.4244° с.ш., 6.8592° в.д.",
+    "image": "assets/map_eemshaven.jpg",
+    "caption": "Карта: Oostpolder 4, порт Эмсхавен — рядом виден Гронинген. © OpenStreetMap · CARTO"
+  },
+  "agriport": {
+    "name": "Agriport A7 — Мидденмер (Microsoft и Google)",
+    "city": "Мидденмер", "region": "Северная Голландия",
+    "coords": "52.7656° с.ш., 5.0380° в.д.",
+    "image": "assets/map_agriport.jpg",
+    "caption": "Карта: Agriport 570/601, Мидденмер — рядом Хорн и Алкмар. © OpenStreetMap · CARTO"
+  },
+  "delft": {
+    "name": "Делфт — QuTech и квантовые технологии",
+    "city": "Делфт", "region": "Южная Голландия",
+    "coords": "52.0008° с.ш., 4.3754° в.д.",
+    "image": "assets/map_delft.jpg",
+    "caption": "Карта: Lorentzweg 1, кампус TU Delft — между Гаагой и Роттердамом. © OpenStreetMap · CARTO"
+  }
+}

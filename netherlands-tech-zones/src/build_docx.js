@@ -53,15 +53,20 @@ function ext(file) {
   return file.toLowerCase().endsWith(".png") ? "png" : "jpg";
 }
 
-// scale image to a target display width in points (1pt = 1/72 in), max width in px for layout
+// scale image to a target display width in points (1pt = 1/72 in); opts.maxH caps height
 function image(file, widthPt, opts = {}) {
   const abs = path.join(DIR, file);
   const { w, h } = imgSize(abs);
-  const dispW = widthPt;
-  const dispH = Math.round(dispW * h / w);
+  let dispW = widthPt;
+  let dispH = Math.round(dispW * h / w);
+  if (opts.maxH && dispH > opts.maxH) {   // cap tall/portrait images so they never fill a page
+    dispH = opts.maxH;
+    dispW = Math.round(dispH * w / h);
+  }
   return new Paragraph({
     alignment: AlignmentType.CENTER,
     spacing: { before: opts.before ?? 120, after: opts.after ?? 40 },
+    keepNext: opts.keepNext !== false,     // keep image glued to its caption
     children: [
       new ImageRun({
         type: ext(file),
@@ -76,6 +81,7 @@ function caption(text) {
   return new Paragraph({
     alignment: AlignmentType.CENTER,
     spacing: { after: 200 },
+    keepNext: true,   // caption stays with the following text, never orphaned at a page bottom
     children: [new TextRun({ text, italics: true, size: 17, color: MUTED, font: FONT })],
   });
 }
@@ -257,7 +263,7 @@ function zoneCard(z) {
     ],
   }));
   if (z.image) {
-    kids.push(image(z.image, 470));
+    kids.push(image(z.image, 460, { maxH: z.maxH || 350 }));
     if (z.caption) kids.push(caption(z.caption));
   }
   kids.push(para(z.summary, { after: 120 }));
@@ -278,7 +284,8 @@ function zoneCard(z) {
 function renderBlock(b) {
   switch (b.type) {
     case "pagebreak":
-      return [new Paragraph({ children: [new PageBreak()] })];
+      // forced page breaks left large trailing gaps; flow content instead (soft spacer)
+      return [new Paragraph({ spacing: { after: 60 }, children: [] })];
     case "h1": return heading(b.text, "h1");
     case "h2": return heading(b.text, "h2");
     case "h3": return heading(b.text, "h3");
@@ -286,12 +293,12 @@ function renderBlock(b) {
     case "paras": return b.items.map((t) => para(t));
     case "bullets": return b.items.map((t) => bullet(t, b.color || ORANGE));
     case "image": {
-      const out = [image(b.file, b.widthPt || 470)];
+      const out = [image(b.file, b.widthPt || 460, { maxH: b.maxH || 300 })];
       if (b.caption) out.push(caption(b.caption));
       return out;
     }
     case "fullimage": {
-      const out = [image(b.file, b.widthPt || 500, { before: 40 })];
+      const out = [image(b.file, b.widthPt || 470, { before: 40, maxH: b.maxH || 300 })];
       if (b.caption) out.push(caption(b.caption));
       return out;
     }
