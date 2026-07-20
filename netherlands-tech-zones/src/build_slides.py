@@ -127,6 +127,7 @@ def zone_profile_slide(z):
         f'<div class="zp-stat" style="border-color:{col}"><div class="zp-val">{esc(v)}</div>'
         f'<div class="zp-lab">{esc(l)}</div></div>' for v, l in p["stats"])
     desc = "".join(f'<p class="zp-p">{esc(par)}</p>' for par in p["desc"])
+    hls = "".join(f'<li><span style="color:{col}">■</span> {esc(h)}</li>' for h in p.get("highlights", []))
     inner = f'''
       <div class="z-top" style="background:{col}"></div>
       <div class="zp-grid">
@@ -139,6 +140,8 @@ def zone_profile_slide(z):
           <h2 class="zp-name">{esc(p["zone_title"])}</h2>
           <div class="zp-loc">📍 {esc(z["city"])}, {esc(z["region"])}</div>
           <div class="zp-desc">{desc}</div>
+          <div class="zp-hl-title">Ключевые особенности</div>
+          <ul class="zp-hl">{hls}</ul>
         </div>
       </div>
       {footer(_pos())}'''
@@ -328,17 +331,21 @@ html, body {{ margin: 0; padding: 0; background: #fff; }}
 
 /* Zone profile (про промзону) */
 .zoneprofile .z-top {{ position: absolute; top: 0; left: 0; right: 0; height: 8px; }}
-.zp-grid {{ display: flex; height: 100%; padding: 60px 64px 40px; gap: 56px; align-items: center; }}
-.zp-card {{ width: 396px; background: {INK}; border-radius: 16px; padding: 34px 32px; box-shadow: 0 14px 36px rgba(20,33,61,.18); }}
-.zp-type {{ display: inline-block; color: #fff; font-size: 14px; font-weight: 700; letter-spacing: 1px; padding: 6px 15px; border-radius: 20px; margin-bottom: 26px; }}
-.zp-stats {{ display: flex; flex-direction: column; gap: 20px; }}
-.zp-stat {{ border-left: 4px solid; padding-left: 15px; }}
-.zp-val {{ font-size: 25px; font-weight: 800; color: #fff; line-height: 1.1; }}
-.zp-lab {{ font-size: 14px; color: #AEB8C6; margin-top: 3px; }}
+.zp-grid {{ display: flex; height: 100%; padding: 52px 60px 44px; gap: 50px; align-items: center; }}
+.zp-card {{ width: 430px; background: {INK}; border-radius: 16px; padding: 30px 30px 32px; box-shadow: 0 14px 36px rgba(20,33,61,.18); }}
+.zp-type {{ display: inline-block; color: #fff; font-size: 14px; font-weight: 700; letter-spacing: 1px; padding: 6px 16px; border-radius: 20px; margin-bottom: 24px; }}
+.zp-stats {{ display: grid; grid-template-columns: 1fr 1fr; gap: 20px 22px; }}
+.zp-stat {{ border-left: 3px solid; padding-left: 13px; }}
+.zp-val {{ font-size: 21px; font-weight: 800; color: #fff; line-height: 1.12; }}
+.zp-lab {{ font-size: 12.5px; color: #AEB8C6; margin-top: 3px; }}
 .zp-right {{ flex: 1; }}
-.zp-name {{ font-size: 42px; font-weight: 800; color: {INK}; margin: 8px 0 8px; line-height: 1.08; }}
-.zp-loc {{ font-size: 17px; color: {MUTED}; margin-bottom: 26px; }}
-.zp-p {{ font-size: 19px; line-height: 1.6; color: #2A3340; margin: 0 0 18px; max-width: 640px; }}
+.zp-name {{ font-size: 39px; font-weight: 800; color: {INK}; margin: 6px 0 7px; line-height: 1.08; }}
+.zp-loc {{ font-size: 16px; color: {MUTED}; margin-bottom: 18px; }}
+.zp-p {{ font-size: 17px; line-height: 1.5; color: #2A3340; margin: 0 0 12px; max-width: 660px; }}
+.zp-hl-title {{ font-size: 13px; font-weight: 700; letter-spacing: 2px; color: {MUTED}; text-transform: uppercase; margin: 18px 0 10px; }}
+.zp-hl {{ list-style: none; margin: 0; padding: 0; }}
+.zp-hl li {{ font-size: 15.5px; line-height: 1.4; color: #26303C; margin-bottom: 9px; padding-left: 2px; }}
+.zp-hl li span {{ font-size: 11px; margin-right: 8px; }}
 
 /* Compare */
 .ctable {{ width: 100%; border-collapse: collapse; font-size: 18px; }}
