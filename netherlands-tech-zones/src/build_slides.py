@@ -512,16 +512,16 @@ order = [("chips", ["asml", "htc", "nijmegen"]),
 zmap = {z["key"]: z for z in D.ZONES}
 znames = {z["key"]: D.PROFILES[z["key"]]["zone_title"] for z in D.ZONES}
 _zone_slides = sum(1 + 2 * len(ks) for _, ks in order)  # dividers + profile/residents pairs
-TOTAL = 4 + _zone_slides + 1 + 7  # cover+hero+dyk+overview, +supplychain, +7 closing-group
+TOTAL = 3 + _zone_slides + 1 + 2  # cover+hero+overview, +supplychain, +charts+compare
 
-cover_slide(); hero_slide(); didyouknow_slide(); overview_slide()
+cover_slide(); hero_slide(); overview_slide()
 for cat, keys in order:
     divider_slide(cat, [znames[k] for k in keys])
     for k in keys:
         zone_profile_slide(zmap[k]); zone_slide(zmap[k])
     if cat == "chips":
         supplychain_slide()
-timeline_slide(); geopolitics_slide(); charts_slide(); challenges_slide(); outlook_slide(); compare_slide(); closing_slide()
+charts_slide(); compare_slide()
 
 # ================= CSS =================
 CSS = font_faces() + f'''
