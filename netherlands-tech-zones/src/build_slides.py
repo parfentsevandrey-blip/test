@@ -123,25 +123,28 @@ def divider_slide(cat):
 def zone_profile_slide(z):
     p = D.PROFILES[z["key"]]
     col = D.CAT[z["cat"]]
-    stats = "".join(
-        f'<div class="zp-stat" style="border-color:{col}"><div class="zp-val">{esc(v)}</div>'
-        f'<div class="zp-lab">{esc(l)}</div></div>' for v, l in p["stats"])
-    desc = "".join(f'<p class="zp-p">{esc(par)}</p>' for par in p["desc"])
-    hls = "".join(f'<li><span style="color:{col}">■</span> {esc(h)}</li>' for h in p.get("highlights", []))
+    res = "".join(
+        f'<li><b style="color:{col}">{esc(n)}</b> — {esc(w)}</li>' for n, w in p["residents"])
+    sph = "".join(f'<li><span style="color:{col}">■</span> {esc(s)}</li>' for s in p["spheres"])
     inner = f'''
       <div class="z-top" style="background:{col}"></div>
-      <div class="zp-grid">
-        <div class="zp-card">
-          <div class="zp-type" style="background:{col}">{esc(p["type"])}</div>
-          <div class="zp-stats">{stats}</div>
-        </div>
-        <div class="zp-right">
-          <div class="z-cat" style="color:{col}">ПРОМЗОНА · {CATLABEL[z["cat"]]}</div>
+      <div class="zp2">
+        <div class="z-cat" style="color:{col}">ПРОМЗОНА · {CATLABEL[z["cat"]]}</div>
+        <div class="zp2-head">
           <h2 class="zp-name">{esc(p["zone_title"])}</h2>
-          <div class="zp-loc">📍 {esc(z["city"])}, {esc(z["region"])}</div>
-          <div class="zp-desc">{desc}</div>
-          <div class="zp-hl-title">Ключевые особенности</div>
-          <ul class="zp-hl">{hls}</ul>
+          <span class="zp2-type" style="background:{col}">{esc(p["type"])}</span>
+        </div>
+        <div class="zp-loc">📍 {esc(z["city"])}, {esc(z["region"])}</div>
+        <p class="zp2-about">{esc(p["about"])}</p>
+        <div class="zp2-cols">
+          <div class="zp2-col">
+            <div class="zp2-h" style="color:{col};border-color:{col}">РЕЗИДЕНТЫ И ЧЕМ ЗАНИМАЮТСЯ</div>
+            <ul class="zp2-res">{res}</ul>
+          </div>
+          <div class="zp2-col zp2-col-narrow">
+            <div class="zp2-h" style="color:{col};border-color:{col}">СФЕРЫ ДЕЯТЕЛЬНОСТИ</div>
+            <ul class="zp2-sph">{sph}</ul>
+          </div>
         </div>
       </div>
       {footer(_pos())}'''
@@ -329,23 +332,26 @@ html, body {{ margin: 0; padding: 0; background: #fff; }}
 .z-facts {{ display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }}
 .fact {{ font-size: 12.5px; font-weight: 600; color: {INK}; background: {PAPER}; border: 1px solid {LINE}; border-radius: 20px; padding: 5px 12px; }}
 
-/* Zone profile (про промзону) */
+/* Zone profile (про промзону) — текстовый формат */
 .zoneprofile .z-top {{ position: absolute; top: 0; left: 0; right: 0; height: 8px; }}
-.zp-grid {{ display: flex; height: 100%; padding: 52px 60px 44px; gap: 50px; align-items: center; }}
-.zp-card {{ width: 430px; background: {INK}; border-radius: 16px; padding: 30px 30px 32px; box-shadow: 0 14px 36px rgba(20,33,61,.18); }}
-.zp-type {{ display: inline-block; color: #fff; font-size: 14px; font-weight: 700; letter-spacing: 1px; padding: 6px 16px; border-radius: 20px; margin-bottom: 24px; }}
-.zp-stats {{ display: grid; grid-template-columns: 1fr 1fr; gap: 20px 22px; }}
-.zp-stat {{ border-left: 3px solid; padding-left: 13px; }}
-.zp-val {{ font-size: 21px; font-weight: 800; color: #fff; line-height: 1.12; }}
-.zp-lab {{ font-size: 12.5px; color: #AEB8C6; margin-top: 3px; }}
-.zp-right {{ flex: 1; }}
-.zp-name {{ font-size: 39px; font-weight: 800; color: {INK}; margin: 6px 0 7px; line-height: 1.08; }}
-.zp-loc {{ font-size: 16px; color: {MUTED}; margin-bottom: 18px; }}
-.zp-p {{ font-size: 17px; line-height: 1.5; color: #2A3340; margin: 0 0 12px; max-width: 660px; }}
-.zp-hl-title {{ font-size: 13px; font-weight: 700; letter-spacing: 2px; color: {MUTED}; text-transform: uppercase; margin: 18px 0 10px; }}
-.zp-hl {{ list-style: none; margin: 0; padding: 0; }}
-.zp-hl li {{ font-size: 15.5px; line-height: 1.4; color: #26303C; margin-bottom: 9px; padding-left: 2px; }}
-.zp-hl li span {{ font-size: 11px; margin-right: 8px; }}
+.zp2 {{ padding: 44px 60px 42px; height: 100%; }}
+.zp2-head {{ display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }}
+.zp-name {{ font-size: 37px; font-weight: 800; color: {INK}; margin: 6px 0 3px; line-height: 1.06; }}
+.zp2-type {{ color: #fff; font-size: 13px; font-weight: 700; letter-spacing: .5px; padding: 5px 14px; border-radius: 20px; }}
+.zp-loc {{ font-size: 16px; color: {MUTED}; margin: 2px 0 16px; }}
+.zp2-about {{ font-size: 20px; line-height: 1.6; color: #2A3340; margin: 2px 0 26px; max-width: 1180px;
+  padding-bottom: 26px; border-bottom: 1px solid {LINE}; }}
+.zp2-cols {{ display: flex; gap: 56px; }}
+.zp2-col {{ flex: 1; }}
+.zp2-col-narrow {{ max-width: 410px; }}
+.zp2-h {{ font-size: 14px; font-weight: 800; letter-spacing: 1.5px; margin-bottom: 16px;
+  padding-bottom: 9px; border-bottom: 2px solid; }}
+.zp2-res {{ list-style: none; margin: 0; padding: 0; }}
+.zp2-res li {{ font-size: 17px; line-height: 1.45; color: #29333F; margin-bottom: 15px; }}
+.zp2-res li b {{ font-weight: 800; }}
+.zp2-sph {{ list-style: none; margin: 0; padding: 0; }}
+.zp2-sph li {{ font-size: 17px; line-height: 1.4; color: #29333F; margin-bottom: 15px; }}
+.zp2-sph li span {{ font-size: 10px; margin-right: 10px; vertical-align: 2px; }}
 
 /* Compare */
 .ctable {{ width: 100%; border-collapse: collapse; font-size: 18px; }}
