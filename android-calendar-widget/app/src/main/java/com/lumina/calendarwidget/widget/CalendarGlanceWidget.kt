@@ -115,9 +115,11 @@ private fun WidgetRoot(settings: WidgetSettings, systemDark: Boolean, eventDays:
         ThemeCatalog.resolve(settings, systemDark)
     }
 
-    val compact = size.height < 168.dp || size.width < 178.dp
+    val compact = size.height < 150.dp || size.width < 170.dp
     val effDensity = if (compact) Density.COMPACT else settings.density
     val ts = settings.fontScalePercent / 100f
+    // Only drop the year when the widget is genuinely too narrow to fit it beside the month.
+    val dropYear = size.width < 188.dp
 
     val weekdayFormat = if (settings.weekdayLabelFormat == WeekdayLabelFormat.SINGLE && size.width >= 320.dp) {
         WeekdayLabelFormat.TWO
@@ -140,7 +142,7 @@ private fun WidgetRoot(settings: WidgetSettings, systemDark: Boolean, eventDays:
         tileSize = when (effDensity) { Density.COMPACT -> 26.dp; Density.SPACIOUS -> 36.dp; else -> 32.dp },
         weekNumWidth = if (settings.showWeekNumbers) (if (compact) 16.dp else 20.dp) else 0.dp,
         weekdayFormat = weekdayFormat,
-        dropYear = compact,
+        dropYear = dropYear,
     )
 
     var mod = GlanceModifier.fillMaxSize().appWidgetBackground()
@@ -198,9 +200,18 @@ private fun GridView(
             ) {}
         }
         Spacer(GlanceModifier.height(cfg.hairlineGap))
+        // The full month fills the available height (6 weighted rows). The shorter week / two-week
+        // views use a fixed row height and sit at the top, so they never stretch into big gaps.
+        val monthView = settings.viewMode == CalendarViewMode.MONTH
+        val fixedRowHeight = (cfg.tileSize.value + 14f).dp
         weeks.forEachIndexed { i, week ->
-            // defaultWeight() must be created here, inside the Column (ColumnScope), then handed down.
-            WeekRowView(settings, colors, cfg, week, eventDays, yearMonth, GlanceModifier.fillMaxWidth().defaultWeight())
+            // For MONTH, defaultWeight() is created here inside the Column (ColumnScope) and handed down.
+            val rowMod = if (monthView) {
+                GlanceModifier.fillMaxWidth().defaultWeight()
+            } else {
+                GlanceModifier.fillMaxWidth().height(fixedRowHeight)
+            }
+            WeekRowView(settings, colors, cfg, week, eventDays, yearMonth, rowMod)
             if (i != weeks.lastIndex) {
                 if (settings.showGridLines) {
                     Spacer(GlanceModifier.height(cfg.rowGap.value.div(2f).dp))

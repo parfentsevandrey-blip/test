@@ -140,11 +140,17 @@ private fun PreviewGrid(settings: WidgetSettings, colors: ThemeColors) {
             Box(Modifier.fillMaxWidth().height(1.dp).background(colors.gridLine.c()))
         }
         Spacer(Modifier.height(if (settings.density == Density.COMPACT) 6.dp else 10.dp))
+        val monthView = settings.viewMode == CalendarViewMode.MONTH
+        val fixedRowHeight = (when (settings.density) {
+            Density.COMPACT -> 24; Density.SPACIOUS -> 32; else -> 28
+        } + 14).dp
         weeks.forEachIndexed { i, week ->
             if (settings.showGridLines && i > 0) {
                 Box(Modifier.fillMaxWidth().height(1.dp).background(colors.gridLine.c()))
             }
-            Row(Modifier.fillMaxWidth().weight(1f)) {
+            val rowMod = if (monthView) Modifier.fillMaxWidth().weight(1f)
+            else Modifier.fillMaxWidth().height(fixedRowHeight)
+            Row(rowMod) {
                 if (settings.showWeekNumbers) {
                     Box(Modifier.width(18.dp).fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(

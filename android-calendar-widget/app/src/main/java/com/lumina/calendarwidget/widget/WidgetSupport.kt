@@ -113,8 +113,9 @@ fun headerText(
     locale: Locale,
     dropYear: Boolean,
 ): HeaderText {
-    val full = yearMonth.month.getDisplayName(TextStyle.FULL, locale).replaceFirstChar { it.uppercase(locale) }
-    val short = yearMonth.month.getDisplayName(TextStyle.SHORT, locale).replaceFirstChar { it.uppercase(locale) }
+    // STANDALONE gives the nominative month name (e.g. Russian "Июль", not the genitive "Июля").
+    val full = yearMonth.month.getDisplayName(TextStyle.FULL_STANDALONE, locale).replaceFirstChar { it.uppercase(locale) }
+    val short = yearMonth.month.getDisplayName(TextStyle.SHORT_STANDALONE, locale).replaceFirstChar { it.uppercase(locale) }
     val year = yearMonth.year.toString()
     return when (format) {
         HeaderFormat.MONTH_YEAR -> HeaderText(full, if (dropYear) null else year)
