@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">Lumina Calendar</string>
+    <string name="widget_label">Lumina Calendar</string>
+    <string name="widget_description">A beautiful, customizable month calendar for your home screen.</string>
+
+    <!-- App UI -->
+    <string name="customize_title">Customize your widget</string>
+    <string name="section_theme">Theme &amp; Color</string>
+    <string name="section_layout">Layout</string>
+    <string name="section_typography">Typography</string>
+    <string name="section_calendar">Calendar</string>
+    <string name="section_behavior">Behavior</string>
+    <string name="section_advanced">Advanced</string>
+    <string name="apply">Apply to widgets</string>
+    <string name="add_widget_hint">Long-press your home screen, choose Widgets, then drag in Lumina Calendar.</string>
+</resources>

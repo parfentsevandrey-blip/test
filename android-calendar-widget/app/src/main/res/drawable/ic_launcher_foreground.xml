@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Calendar body -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M31,34 L77,34 A9,9 0 0 1 86,43 L86,79 A9,9 0 0 1 77,88 L31,88 A9,9 0 0 1 22,79 L22,43 A9,9 0 0 1 31,34 Z" />
+
+    <!-- Header band -->
+    <path
+        android:fillColor="#4C6FFF"
+        android:pathData="M31,34 L77,34 A9,9 0 0 1 86,43 L86,50 L22,50 L22,43 A9,9 0 0 1 31,34 Z" />
+
+    <!-- Binder rings -->
+    <path
+        android:fillColor="#4C6FFF"
+        android:pathData="M43,26 A3,3 0 0 1 46,29 L46,37 A3,3 0 0 1 43,40 A3,3 0 0 1 40,37 L40,29 A3,3 0 0 1 43,26 Z" />
+    <path
+        android:fillColor="#4C6FFF"
+        android:pathData="M65,26 A3,3 0 0 1 68,29 L68,37 A3,3 0 0 1 65,40 A3,3 0 0 1 62,37 L62,29 A3,3 0 0 1 65,26 Z" />
+
+    <!-- Day cells -->
+    <path
+        android:fillColor="#AAB2C4"
+        android:pathData="M32,58 L36,58 A2,2 0 0 1 38,60 L38,64 A2,2 0 0 1 36,66 L32,66 A2,2 0 0 1 30,64 L30,60 A2,2 0 0 1 32,58 Z M50,58 L54,58 A2,2 0 0 1 56,60 L56,64 A2,2 0 0 1 54,66 L50,66 A2,2 0 0 1 48,64 L48,60 A2,2 0 0 1 50,58 Z M68,58 L72,58 A2,2 0 0 1 74,60 L74,64 A2,2 0 0 1 72,66 L68,66 A2,2 0 0 1 66,64 L66,60 A2,2 0 0 1 68,58 Z M32,72 L36,72 A2,2 0 0 1 38,74 L38,78 A2,2 0 0 1 36,80 L32,80 A2,2 0 0 1 30,78 L30,74 A2,2 0 0 1 32,72 Z M68,72 L72,72 A2,2 0 0 1 74,74 L74,78 A2,2 0 0 1 72,80 L68,80 A2,2 0 0 1 66,78 L66,74 A2,2 0 0 1 68,72 Z" />
+
+    <!-- Today -->
+    <path
+        android:fillColor="#4C6FFF"
+        android:pathData="M50,72 L54,72 A2,2 0 0 1 56,74 L56,78 A2,2 0 0 1 54,80 L50,80 A2,2 0 0 1 48,78 L48,74 A2,2 0 0 1 50,72 Z" />
+</vector>

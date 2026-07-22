@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Calendar body outline -->
+    <path
+        android:strokeColor="#000000"
+        android:strokeWidth="5.5"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000"
+        android:pathData="M31,34 L77,34 A9,9 0 0 1 86,43 L86,79 A9,9 0 0 1 77,88 L31,88 A9,9 0 0 1 22,79 L22,43 A9,9 0 0 1 31,34 Z" />
+
+    <!-- Header divider -->
+    <path
+        android:strokeColor="#000000"
+        android:strokeWidth="5"
+        android:pathData="M24,50 L84,50" />
+
+    <!-- Binder rings -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M43,26 A3,3 0 0 1 46,29 L46,37 A3,3 0 0 1 43,40 A3,3 0 0 1 40,37 L40,29 A3,3 0 0 1 43,26 Z M65,26 A3,3 0 0 1 68,29 L68,37 A3,3 0 0 1 65,40 A3,3 0 0 1 62,37 L62,29 A3,3 0 0 1 65,26 Z" />
+
+    <!-- Today marker -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M50,70 L56,70 A3,3 0 0 1 59,73 L59,79 A3,3 0 0 1 56,82 L50,82 A3,3 0 0 1 47,79 L47,73 A3,3 0 0 1 50,70 Z" />
+</vector>

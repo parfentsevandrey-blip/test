@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A hollow circle. Rendered via an Image with a tint so the ring adopts the accent color. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <stroke android:width="2dp" android:color="#FFFFFFFF" />
+    <solid android:color="#00000000" />
+</shape>
