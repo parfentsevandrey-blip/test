@@ -1,0 +1,3 @@
+# Build artifacts (not source — the APK is produced by the build, not committed)
+/dist/
+*.apk
