@@ -9,6 +9,7 @@ import {
 import { buildOutside, Lightning, FOG_U } from './room-outside.js';
 import { buildShell, buildWindows, buildFireplace, glassMaterials, reflectiveFloor } from './room-interior.js';
 import { buildProps, buildLights } from './room-props.js';
+import { REGISTRY, prewarm, texStats } from './tex/index.js';
 
 const boot = document.getElementById('boot');
 const bootBar = document.getElementById('bootBar');
@@ -298,23 +299,34 @@ let floorRefl, winRefl;
 let env;
 
 async function build() {
-  await step(8, 'Разжигаем камин');
+  await step(4, 'Разжигаем камин');
   env = buildEnvironment();
 
-  await step(20, 'Строим комнату');
+  /* Paint every procedural surface up front, yielding between each one so the
+     loader keeps animating instead of freezing on a long synchronous block. */
+  {
+    const names = Object.keys(REGISTRY);
+    for (let i = 0; i < names.length; i++) {
+      prewarm(names[i]);
+      await step(4 + Math.round((i + 1) / names.length * 26), 'Ткём текстуры');
+    }
+    console.info(`textures: ${texStats.count} surfaces in ${texStats.ms.toFixed(0)} ms`, texStats.byName);
+  }
+
+  await step(34, 'Строим комнату');
   shell = buildShell();
 
-  await step(38, 'Стеклим панорамные окна');
+  await step(46, 'Стеклим панорамные окна');
   windows = buildWindows();
 
-  await step(52, 'Кладём камин');
+  await step(58, 'Кладём камин');
   fire = buildFireplace();
 
-  await step(66, 'Расставляем мебель');
+  await step(70, 'Расставляем мебель');
   props = buildProps();
   lights = buildLights(fire.firePos, props.lamp.lightPos, QUALITY[CFG.quality].shadow);
 
-  await step(82, 'Зажигаем город за окном');
+  await step(84, 'Зажигаем город за окном');
   outside = buildOutside(QUALITY[2].towers, QUALITY[2].rain);
   lightning = new Lightning();
 
@@ -846,6 +858,7 @@ function tick() {
     camera, cam, CFG, QUALITY, VIEWS, lights, post, U, snapView,
     roomScene, outsideScene, shell, windows, fire, props, outside,
     glassMaterials, reflectiveFloor,
+    texStats,
     stats: () => ({ frame: frameNo, fps: lastFps, q: CFG.quality }),
   };
   tick();

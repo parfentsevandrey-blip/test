@@ -46,148 +46,6 @@ export const rnd = () => { _seed = (_seed * 1664525 + 1013904223) >>> 0; return 
 export const rrnd = (a, b) => a + (b - a) * rnd();
 export const pick = (arr) => arr[(rnd() * arr.length) | 0];
 
-/* value noise (JS) — periodic so canvas textures tile seamlessly */
-const _hash = (x, y, s) => {
-  const n = Math.sin(x * 127.1 + y * 311.7 + s * 74.7) * 43758.5453123;
-  return n - Math.floor(n);
-};
-export function vnoise(x, y, period, s) {
-  const p = period | 0;
-  let ix = Math.floor(x), iy = Math.floor(y);
-  let fx = x - ix, fy = y - iy;
-  fx = fx * fx * (3 - 2 * fx); fy = fy * fy * (3 - 2 * fy);
-  const wx = (v) => (p > 0 ? ((v % p) + p) % p : v);
-  const a = _hash(wx(ix), wx(iy), s), b = _hash(wx(ix + 1), wx(iy), s);
-  const c = _hash(wx(ix), wx(iy + 1), s), d = _hash(wx(ix + 1), wx(iy + 1), s);
-  return a + (b - a) * fx + (c - a) * fy + (a - b - c + d) * fx * fy;
-}
-export function fbm(x, y, period, s, oct = 5, gain = 0.5) {
-  let v = 0, amp = 0.5, f = 1, norm = 0;
-  for (let i = 0; i < oct; i++) {
-    v += amp * vnoise(x * f, y * f, period * f, s + i * 19);
-    norm += amp; f *= 2; amp *= gain;
-  }
-  return v / norm;
-}
-
-/* ------------------------------------------------- procedural canvas maps */
-const _texCache = new Map();
-function canvasTex(key, size, draw, { srgb = true, repeat = [1, 1], aniso = 8 } = {}) {
-  if (_texCache.has(key)) return _texCache.get(key);
-  const c = document.createElement('canvas');
-  c.width = c.height = size;
-  draw(c.getContext('2d', { willReadFrequently: true }), size);
-  const t = new THREE.CanvasTexture(c);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.repeat.set(repeat[0], repeat[1]);
-  t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
-  t.anisotropy = aniso;
-  t.needsUpdate = true;
-  _texCache.set(key, t);
-  return t;
-}
-const px = (r, g, b) => `rgb(${r | 0},${g | 0},${b | 0})`;
-
-/** oak floor: 8 planks across the tile, grain + per-plank tone jitter */
-export function makeFloorMaps(aniso) {
-  const S = 1024, PLANKS = 6;
-  const color = canvasTex('floorC', S, (g, s) => {
-    const ph = s / PLANKS;
-    for (let p = 0; p < PLANKS; p++) {
-      const tone = 0.78 + fbm(p * 3.1, 0, 0, 5, 2) * 0.44;
-      const seg = 2 + ((rnd() * 2) | 0);                       // butt joints per plank
-      for (let k = 0; k < seg; k++) {
-        const y0 = (k / seg) * s, y1 = ((k + 1) / seg) * s;
-        const jit = 0.9 + rnd() * 0.22;
-        const base = [96 * tone * jit, 60 * tone * jit, 36 * tone * jit];
-        g.fillStyle = px(base[0], base[1], base[2]);
-        g.fillRect(p * ph, y0, ph, y1 - y0);
-        // grain
-        const img = g.getImageData(p * ph, y0, Math.ceil(ph), Math.ceil(y1 - y0));
-        const d = img.data, w = img.width, hgt = img.height;
-        for (let y = 0; y < hgt; y++) for (let x = 0; x < w; x++) {
-          const n = fbm(x * 0.30, y * 0.016, 0, p * 37 + k * 7, 4, 0.55);
-          const ring = Math.abs(Math.sin((x * 0.24 + n * 5.5) * 1.7));
-          const v = 0.80 + n * 0.34 - Math.pow(ring, 6) * 0.30;
-          const i = (y * w + x) * 4;
-          d[i] = clamp(d[i] * v, 0, 255);
-          d[i + 1] = clamp(d[i + 1] * v * 0.99, 0, 255);
-          d[i + 2] = clamp(d[i + 2] * v * 0.97, 0, 255);
-        }
-        g.putImageData(img, p * ph, y0);
-        // joint shadow
-        g.fillStyle = 'rgba(18,10,6,.55)'; g.fillRect(p * ph, y1 - 1.5, ph, 1.5);
-      }
-      g.fillStyle = 'rgba(14,8,5,.6)'; g.fillRect(p * ph, 0, 1.6, s);
-    }
-  }, { repeat: [7, 4], aniso });
-
-  const rough = canvasTex('floorR', 512, (g, s) => {
-    const img = g.createImageData(s, s), d = img.data;
-    for (let y = 0; y < s; y++) for (let x = 0; x < s; x++) {
-      const n = fbm(x * 0.05, y * 0.012, 26, 11, 4);
-      const v = 92 + n * 90;                                    // fairly glossy oiled oak
-      const i = (y * s + x) * 4;
-      d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255;
-    }
-    g.putImageData(img, 0, 0);
-  }, { srgb: false, repeat: [7, 4], aniso });
-
-  return { color, rough };
-}
-
-/** generic fbm bump map */
-export function makeBump(key, size, freq, seed, oct = 5, contrast = 1) {
-  return canvasTex(key, size, (g, s) => {
-    const img = g.createImageData(s, s), d = img.data;
-    for (let y = 0; y < s; y++) for (let x = 0; x < s; x++) {
-      let n = fbm(x * freq, y * freq, s * freq, seed, oct);
-      n = clamp(0.5 + (n - 0.5) * contrast, 0, 1);
-      const i = (y * s + x) * 4;
-      d[i] = d[i + 1] = d[i + 2] = n * 255; d[i + 3] = 255;
-    }
-    g.putImageData(img, 0, 0);
-  }, { srgb: false });
-}
-
-/** honed dark stone with soft veining, for the fireplace surround */
-export function makeStoneMaps() {
-  const color = canvasTex('stoneC', 512, (g, s) => {
-    const img = g.createImageData(s, s), d = img.data;
-    for (let y = 0; y < s; y++) for (let x = 0; x < s; x++) {
-      const warp = fbm(x * 0.008, y * 0.008, 4, 3, 4) * 26;
-      const vein = Math.abs(Math.sin((x * 0.012 + y * 0.004 + warp * 0.05) * 3.1));
-      const grain = fbm(x * 0.09, y * 0.09, 46, 8, 4);
-      const v = 0.30 + grain * 0.24 + Math.pow(1 - vein, 14) * 0.34;
-      const i = (y * s + x) * 4;
-      d[i] = 62 * v * 2.1; d[i + 1] = 58 * v * 2.0; d[i + 2] = 56 * v * 1.95; d[i + 3] = 255;
-    }
-    g.putImageData(img, 0, 0);
-  }, { repeat: [2, 2] });
-  const bump = makeBump('stoneB', 512, 0.09, 8, 4, 0.7);
-  bump.repeat.set(2, 2);
-  return { color, bump };
-}
-
-/** wool rug: soft mottled pile with a faint border */
-export function makeRugMaps() {
-  const color = canvasTex('rugC', 512, (g, s) => {
-    const img = g.createImageData(s, s), d = img.data;
-    for (let y = 0; y < s; y++) for (let x = 0; x < s; x++) {
-      const n = fbm(x * 0.035, y * 0.035, 18, 21, 5);
-      const fibre = fbm(x * 0.5, y * 0.5, 256, 5, 2);
-      const edge = smoothstep(0.0, 0.055, Math.min(x, y, s - 1 - x, s - 1 - y) / s);
-      const band = 1 - 0.16 * (1 - smoothstep(0.06, 0.085, Math.min(x, y, s - 1 - x, s - 1 - y) / s));
-      const v = (0.62 + n * 0.5) * (0.86 + fibre * 0.28) * band * (0.55 + edge * 0.45);
-      const i = (y * s + x) * 4;
-      d[i] = 196 * v; d[i + 1] = 170 * v; d[i + 2] = 143 * v; d[i + 3] = 255;
-    }
-    g.putImageData(img, 0, 0);
-  });
-  const bump = makeBump('rugB', 512, 0.42, 33, 3, 1.4);
-  return { color, bump };
-}
-
 /* ----------------------------------------------------------- GLSL helpers */
 export const GLSL_NOISE = /* glsl */`
 float hash11(float p){ p = fract(p*0.1031); p *= p+33.33; p *= p+p; return fract(p); }
@@ -239,6 +97,52 @@ export function roundedBoxGeo(w, h, d, r, seg = 3) {
 
 export function faceTowards(obj, x, z) {
   obj.rotation.y = Math.atan2(x - obj.position.x, z - obj.position.z);
+}
+
+/* ---------------------------------------------------------- UV in metres --
+   Texture tiles are authored at a physical size. Rescaling UVs to world units
+   keeps texel density constant no matter how big the piece of geometry is, so
+   the plaster on a 4 m wall matches the plaster on a 0.7 m panel beside it. */
+
+/** PlaneGeometry spanning w × h metres, tiled every `tu` × `tv` metres */
+export function planeUv(geo, w, h, tu, tv = tu) {
+  const uv = geo.attributes.uv;
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * (w / tu), uv.getY(i) * (h / tv));
+  uv.needsUpdate = true;
+  return geo;
+}
+
+/** BoxGeometry w × h × d metres — each face gets its own world-scaled UVs */
+export function boxUv(geo, w, h, d, tile) {
+  const uv = geo.attributes.uv;
+  // BoxGeometry emits faces in the order +x, -x, +y, -y, +z, -z, 4 verts each
+  const spans = [[d, h], [d, h], [w, d], [w, d], [w, h], [w, h]];
+  for (let f = 0; f < 6; f++) {
+    const [su, sv] = spans[f];
+    for (let k = 0; k < 4; k++) {
+      const i = f * 4 + k;
+      if (i >= uv.count) break;
+      uv.setXY(i, uv.getX(i) * (su / tile), uv.getY(i) * (sv / tile));
+    }
+  }
+  uv.needsUpdate = true;
+  return geo;
+}
+
+/** normalise UVs into 0..1 from their bounding box — for ShapeGeometry, whose
+    generator emits raw local coordinates rather than a unit square */
+export function normalizeUv(geo) {
+  const uv = geo.attributes.uv;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (let i = 0; i < uv.count; i++) {
+    const x = uv.getX(i), y = uv.getY(i);
+    if (x < x0) x0 = x; if (x > x1) x1 = x;
+    if (y < y0) y0 = y; if (y > y1) y1 = y;
+  }
+  const dx = x1 - x0 || 1, dy = y1 - y0 || 1;
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, (uv.getX(i) - x0) / dx, (uv.getY(i) - y0) / dy);
+  uv.needsUpdate = true;
+  return geo;
 }
 
 /* --------------------------------------------------------------- renderer */

@@ -4,8 +4,9 @@
 import * as THREE from 'three';
 import {
   GLSL_NOISE, U, ROOM, FIREBOX, rnd, roomScene, MAX_ANISO,
-  makeFloorMaps, makeStoneMaps, makeBump, roundedBoxGeo,
+  roundedBoxGeo, planeUv, boxUv,
 } from './room.js';
+import { applyMaps } from './tex/index.js';
 
 const X = ROOM.x, Z = ROOM.z, H = ROOM.h;
 
@@ -19,14 +20,10 @@ export function buildShell() {
   g.name = 'shell';
 
   /* ---- floor: oiled oak, glossy enough to catch the fire ---- */
-  const { color: floorC, rough: floorR } = makeFloorMaps(MAX_ANISO);
-  const floorBump = makeBump('floorBmp', 512, 0.05, 11, 4, 0.9);
-  floorBump.repeat.set(7, 4);
-
   const floorMat = new THREE.MeshStandardMaterial({
-    map: floorC, roughnessMap: floorR, bumpMap: floorBump, bumpScale: 0.02,
-    roughness: 1.0, metalness: 0.0, envMapIntensity: 0.55,
+    color: 0xffffff, metalness: 0.0, envMapIntensity: 0.55,
   });
+  applyMaps(floorMat, 'oakFloor', { aniso: MAX_ANISO, normalScale: 0.9 });
 
   /* planar reflection injected into the standard lighting result */
   const fu = {
@@ -72,25 +69,27 @@ export function buildShell() {
   reflectiveFloor.material = floorMat;
   reflectiveFloor.uniforms = fu;
 
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(X * 2, Z * 2), floorMat);
+  // one oak tile is 1.45 m across the planks × 2.0 m along them
+  const floor = new THREE.Mesh(planeUv(new THREE.PlaneGeometry(X * 2, Z * 2), X * 2, Z * 2, 1.45, 2.0), floorMat);
   floor.rotation.x = -Math.PI / 2;
   floor.receiveShadow = true;
   floor.name = 'floor';
   g.add(floor);
 
   /* ---- walls & ceiling: warm limewash plaster ---- */
-  const plasterBump = makeBump('plasterB', 512, 0.02, 3, 5, 0.5);
-  plasterBump.repeat.set(3, 2);
+  const PLASTER_TILE = 3.3;
   const wallMat = new THREE.MeshStandardMaterial({
-    color: 0x7a6a5b, roughness: 0.94, metalness: 0,
-    bumpMap: plasterBump, bumpScale: 0.012, envMapIntensity: 0.75,
+    color: 0xb2a08c, metalness: 0, envMapIntensity: 0.75,
   });
+  applyMaps(wallMat, 'plasterWall', { aniso: MAX_ANISO, normalScale: 0.55 });
   const ceilMat = new THREE.MeshStandardMaterial({
-    color: 0x6b6055, roughness: 0.97, metalness: 0,
-    bumpMap: plasterBump, bumpScale: 0.008, envMapIntensity: 0.6,
+    color: 0x9d9184, metalness: 0, envMapIntensity: 0.6,
   });
+  applyMaps(ceilMat, 'plasterCeiling', { aniso: MAX_ANISO, normalScale: 0.4 });
 
-  const wall = (w, h, mat) => new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
+  // UVs in metres so every panel keeps the same plaster grain, whatever its size
+  const wall = (w, h, mat) =>
+    new THREE.Mesh(planeUv(new THREE.PlaneGeometry(w, h), w, h, PLASTER_TILE), mat);
 
   // back wall (z = +Z), facing -z
   const back = wall(X * 2, H, wallMat);
@@ -411,11 +410,11 @@ export function buildFireplace() {
   const g = new THREE.Group();
   g.name = 'fireplace';
 
-  const { color: stoneC, bump: stoneB } = makeStoneMaps();
+  const STONE_TILE = 2.0;
   const stoneMat = new THREE.MeshStandardMaterial({
-    map: stoneC, bumpMap: stoneB, bumpScale: 0.014,
-    color: 0x8a8580, roughness: 0.62, metalness: 0.04, envMapIntensity: 0.5,
+    color: 0xd8d2c9, metalness: 0.04, envMapIntensity: 0.5,
   });
+  applyMaps(stoneMat, 'honedStone', { aniso: MAX_ANISO, normalScale: 0.7 });
   const darkMat = new THREE.MeshStandardMaterial({ color: 0x120d0a, roughness: 0.95, metalness: 0 });
   const steelMat = new THREE.MeshStandardMaterial({ color: 0x1a1715, roughness: 0.35, metalness: 0.85 });
 
@@ -430,7 +429,7 @@ export function buildFireplace() {
 
   /* stone panel, built as four slabs so the firebox is a genuine opening */
   const slab = (h, d, y, z) => {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(PT, h, d), stoneMat);
+    const m = new THREE.Mesh(boxUv(new THREE.BoxGeometry(PT, h, d), PT, h, d, STONE_TILE), stoneMat);
     m.position.set(WALL_X + PT / 2, y, z);
     m.castShadow = true; m.receiveShadow = true;
     g.add(m); return m;
@@ -470,19 +469,20 @@ export function buildFireplace() {
   bar(0.03, BH, RB, BY, FZ + BW / 2 + RB / 2);
 
   /* hearth ledge */
-  const hearth = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.14, SW - 0.6), stoneMat);
+  const hearth = new THREE.Mesh(boxUv(new THREE.BoxGeometry(0.62, 0.14, SW - 0.6), 0.62, 0.14, SW - 0.6, STONE_TILE), stoneMat);
   hearth.position.set(WALL_X + 0.31, 0.07, FZ);
   hearth.castShadow = true; hearth.receiveShadow = true;
   g.add(hearth);
 
   /* mantel shelf */
-  const mantel = new THREE.Mesh(new THREE.BoxGeometry(0.30, 0.08, 3.0), stoneMat);
+  const mantel = new THREE.Mesh(boxUv(new THREE.BoxGeometry(0.30, 0.08, 3.0), 0.30, 0.08, 3.0, STONE_TILE), stoneMat);
   mantel.position.set(WALL_X + 0.15, 1.62, FZ);
   mantel.castShadow = true; mantel.receiveShadow = true;
   g.add(mantel);
 
   /* two floating oak shelves above the mantel */
-  const oak = new THREE.MeshStandardMaterial({ color: 0x503826, roughness: 0.7 });
+  const oak = new THREE.MeshStandardMaterial({ color: 0x8a6a4c, metalness: 0, envMapIntensity: 0.5 });
+  applyMaps(oak, 'oakFloor', { repeat: [0.4, 0.4], aniso: MAX_ANISO, normalScale: 0.5 });
   for (let i = 0; i < 2; i++) {
     const sh = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.035, 1.95), oak);
     sh.position.set(WALL_X + PT + 0.12, 2.14 + i * 0.55, FZ);
@@ -494,7 +494,8 @@ export function buildFireplace() {
   fireGroup.position.set(WALL_X + 0.02, BY - BH / 2 + 0.02, FZ);
   g.add(fireGroup);
 
-  const charMat = new THREE.MeshStandardMaterial({ color: 0x241a14, roughness: 0.95 });
+  const charMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0 });
+  applyMaps(charMat, 'charredLog', { repeat: [2, 4], aniso: MAX_ANISO, normalScale: 1.0 });
   // cylinder axis is local +Y; rotation.x = π/2 lays it along +Z (across the firebox)
   const logGeo = new THREE.CylinderGeometry(0.075, 0.062, 1.0, 9);
   const logs = [

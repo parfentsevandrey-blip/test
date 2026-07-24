@@ -3,53 +3,98 @@
    ========================================================================= */
 import * as THREE from 'three';
 import {
-  GLSL_NOISE, U, ROOM, rnd, rrnd, pick, roomScene,
-  makeRugMaps, makeBump, roundedBoxGeo, faceTowards,
+  GLSL_NOISE, U, ROOM, rnd, rrnd, pick, roomScene, MAX_ANISO,
+  roundedBoxGeo, faceTowards, normalizeUv,
 } from './room.js';
+import { applyMaps } from './tex/index.js';
 
 const X = ROOM.x, Z = ROOM.z, H = ROOM.h;
 
-/* ------------------------------------------------------------ materials */
-const fabricBump = makeBump('fabricB', 512, 0.55, 61, 3, 1.5);
-fabricBump.repeat.set(4, 4);
-const knitBump = makeBump('knitB', 512, 1.1, 77, 2, 1.8);
-knitBump.repeat.set(6, 6);
+/* ------------------------------------------------------------ materials --
+   roundedBoxGeo() is an ExtrudeGeometry, whose UVs are already in metres, so
+   a repeat of 4 means "one texture tile every 25 cm". Box/cylinder primitives
+   carry 0..1 UVs instead, so a few materials get their own repeat. */
+const AN = { aniso: MAX_ANISO };
+const tex = (mat, name, opts) => { applyMaps(mat, name, { ...AN, ...opts }); return mat; };
 
 const M = {
-  linen: new THREE.MeshStandardMaterial({
-    color: 0x9c8b78, roughness: 0.95, metalness: 0,
-    bumpMap: fabricBump, bumpScale: 0.006, envMapIntensity: 0.3,
-  }),
-  linenDark: new THREE.MeshStandardMaterial({
-    color: 0x6d5f52, roughness: 0.96, bumpMap: fabricBump, bumpScale: 0.006, envMapIntensity: 0.25,
-  }),
-  boucle: new THREE.MeshStandardMaterial({
-    color: 0xbfae97, roughness: 1.0, bumpMap: knitBump, bumpScale: 0.012, envMapIntensity: 0.25,
-  }),
-  rust: new THREE.MeshStandardMaterial({
-    color: 0x9a4a2c, roughness: 0.92, bumpMap: fabricBump, bumpScale: 0.007, envMapIntensity: 0.3,
-  }),
-  oak: new THREE.MeshStandardMaterial({ color: 0x6b4a2f, roughness: 0.62, metalness: 0.0, envMapIntensity: 0.5 }),
-  oakDark: new THREE.MeshStandardMaterial({ color: 0x3f2c1c, roughness: 0.55, envMapIntensity: 0.5 }),
-  brass: new THREE.MeshStandardMaterial({ color: 0xb08748, roughness: 0.28, metalness: 0.95, envMapIntensity: 1.2 }),
-  blackSteel: new THREE.MeshStandardMaterial({ color: 0x191715, roughness: 0.4, metalness: 0.8, envMapIntensity: 0.8 }),
-  marble: new THREE.MeshStandardMaterial({ color: 0x30302f, roughness: 0.22, metalness: 0.05, envMapIntensity: 1.0 }),
+  linen: tex(new THREE.MeshStandardMaterial({
+    color: 0xb8a691, metalness: 0, envMapIntensity: 0.3,
+  }), 'linen', { repeat: [4, 4], normalScale: 0.85 }),
+
+  linenDark: tex(new THREE.MeshStandardMaterial({
+    color: 0x83725f, metalness: 0, envMapIntensity: 0.25,
+  }), 'linen', { repeat: [4, 4], normalScale: 0.85 }),
+
+  boucle: tex(new THREE.MeshStandardMaterial({
+    color: 0xd6c6ae, metalness: 0, envMapIntensity: 0.25,
+  }), 'boucle', { repeat: [4, 4], normalScale: 0.9 }),
+
+  boucleRound: tex(new THREE.MeshStandardMaterial({
+    color: 0xd6c6ae, metalness: 0, envMapIntensity: 0.25,
+  }), 'boucle', { repeat: [9, 1.6], normalScale: 0.9 }),
+
+  rust: tex(new THREE.MeshStandardMaterial({
+    color: 0xb05733, metalness: 0, envMapIntensity: 0.3,
+  }), 'linen', { repeat: [4, 4], normalScale: 0.85 }),
+
+  knit: tex(new THREE.MeshStandardMaterial({
+    color: 0xbe9a6c, metalness: 0, side: THREE.DoubleSide, envMapIntensity: 0.2,
+  }), 'knit', { repeat: [3, 5], normalScale: 1.0 }),
+
+  oak: tex(new THREE.MeshStandardMaterial({
+    color: 0x9a7752, metalness: 0, envMapIntensity: 0.5,
+  }), 'oakFloor', { repeat: [0.4, 0.4], normalScale: 0.5 }),
+
+  oakDark: tex(new THREE.MeshStandardMaterial({
+    color: 0x5c412c, metalness: 0, envMapIntensity: 0.5,
+  }), 'oakFloor', { repeat: [0.4, 0.4], normalScale: 0.5 }),
+
+  brass: tex(new THREE.MeshStandardMaterial({
+    color: 0xc59a55, metalness: 0.95, envMapIntensity: 1.2,
+  }), 'brushedMetal', { repeat: [3, 3], normalScale: 0.6 }),
+
+  blackSteel: tex(new THREE.MeshStandardMaterial({
+    color: 0x26221f, metalness: 0.85, envMapIntensity: 0.8,
+  }), 'brushedMetal', { repeat: [3, 3], normalScale: 0.5 }),
+
+  marble: tex(new THREE.MeshStandardMaterial({
+    color: 0x8f8f8c, metalness: 0.05, envMapIntensity: 1.0,
+  }), 'marble', { repeat: [1.5, 1.5], normalScale: 0.5 }),
+
+  bookCloth: tex(new THREE.MeshStandardMaterial({
+    color: 0xffffff, metalness: 0, envMapIntensity: 0.3,
+  }), 'bookCloth', { repeat: [8, 8], normalScale: 0.8 }),
+
   ceramic: new THREE.MeshStandardMaterial({ color: 0xc9bda9, roughness: 0.35, envMapIntensity: 0.8 }),
-  leaf: new THREE.MeshStandardMaterial({
-    color: 0x2f4a2c, roughness: 0.72, side: THREE.DoubleSide, envMapIntensity: 0.4,
-  }),
-  fur: new THREE.MeshStandardMaterial({ color: 0x4a4440, roughness: 1.0, bumpMap: knitBump, bumpScale: 0.01 }),
+
+  leaf: tex(new THREE.MeshStandardMaterial({
+    color: 0xffffff, metalness: 0, side: THREE.DoubleSide, envMapIntensity: 0.4,
+  }), 'leaf', { repeat: [1, 1], normalScale: 0.8 }),
+
+  fur: tex(new THREE.MeshStandardMaterial({
+    color: 0x6d635c, metalness: 0, envMapIntensity: 0.2,
+  }), 'woolRug', { repeat: [5, 5], normalScale: 0.7 }),
 };
 
 const shadowed = (m) => { m.castShadow = true; m.receiveShadow = true; return m; };
 
+/* every book shares one cloth texture and differs only by tint */
+const _bookMats = new Map();
+const bookMat = (hex) => {
+  if (!_bookMats.has(hex)) {
+    _bookMats.set(hex, tex(new THREE.MeshStandardMaterial({
+      color: hex, metalness: 0, envMapIntensity: 0.25,
+    }), 'bookCloth', { repeat: [8, 8], normalScale: 0.8 }));
+  }
+  return _bookMats.get(hex);
+};
+
 /* ================================================================= rug === */
 function buildRug(g) {
-  const { color, bump } = makeRugMaps();
-  const mat = new THREE.MeshStandardMaterial({
-    map: color, bumpMap: bump, bumpScale: 0.008,
-    color: 0xb09a80, roughness: 1.0, metalness: 0, envMapIntensity: 0.25,
-  });
+  const mat = tex(new THREE.MeshStandardMaterial({
+    color: 0xcbb59a, metalness: 0, envMapIntensity: 0.25,
+  }), 'woolRug', { repeat: [0.65, 0.65], normalScale: 1.0 });
   const rug = new THREE.Mesh(roundedBoxGeo(4.6, 0.022, 3.4, 0.05, 1), mat);
   rug.position.set(-0.5, 0.011, 0.35);
   rug.receiveShadow = true;
@@ -110,11 +155,7 @@ function buildSofa(g) {
     tp.setZ(i, Math.sin(u * Math.PI * 3.2) * 0.028 + Math.sin(v * Math.PI * 2.1 + 1.0) * 0.02);
   }
   throwGeo.computeVertexNormals();
-  const knit = new THREE.MeshStandardMaterial({
-    color: 0xa8875f, roughness: 1.0, side: THREE.DoubleSide,
-    bumpMap: knitBump, bumpScale: 0.016, envMapIntensity: 0.2,
-  });
-  const thr = shadowed(new THREE.Mesh(throwGeo, knit));
+  const thr = shadowed(new THREE.Mesh(throwGeo, M.knit));
   thr.position.set(-1.26, 0.44, -0.06);
   thr.rotation.set(-Math.PI / 2 + 0.35, 0, 0.06);
   s.add(thr);
@@ -172,10 +213,7 @@ function buildCoffeeTable(g) {
   let by = 0.405;
   for (let i = 0; i < 3; i++) {
     const w = 0.30 - i * 0.018, d = 0.22 - i * 0.012, h = 0.026 + rnd() * 0.016;
-    const b = shadowed(new THREE.Mesh(
-      roundedBoxGeo(w, h, d, 0.004, 1),
-      new THREE.MeshStandardMaterial({ color: pick(bookCols), roughness: 0.78 }),
-    ));
+    const b = shadowed(new THREE.Mesh(roundedBoxGeo(w, h, d, 0.004, 1), bookMat(pick(bookCols))));
     b.position.set(-0.36, by + h / 2, 0.06);
     b.rotation.y = rrnd(-0.12, 0.12);
     by += h; t.add(b);
@@ -233,10 +271,10 @@ function buildCoffeeTable(g) {
 
 /* ============================================================== pouf ==== */
 function buildPouf(g, x, z) {
-  const p = shadowed(new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.36, 0.36, 24, 1), M.boucle));
+  const p = shadowed(new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.36, 0.36, 24, 1), M.boucleRound));
   p.position.set(x, 0.18, z);
   g.add(p);
-  const seam = new THREE.Mesh(new THREE.TorusGeometry(0.345, 0.012, 8, 28), M.boucle);
+  const seam = new THREE.Mesh(new THREE.TorusGeometry(0.345, 0.012, 8, 28), M.boucleRound);
   seam.position.set(x, 0.30, z); seam.rotation.x = Math.PI / 2;
   seam.castShadow = true; g.add(seam);
   return p;
@@ -280,11 +318,9 @@ function buildSideTable(g, x, z) {
   const foot = shadowed(new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.19, 0.024, 20), M.oak));
   foot.position.y = 0.012; t.add(foot);
   // stack of books + reading glasses stand-in
-  const b1 = shadowed(new THREE.Mesh(roundedBoxGeo(0.19, 0.032, 0.14, 0.004, 1),
-    new THREE.MeshStandardMaterial({ color: 0x2f4038, roughness: 0.8 })));
+  const b1 = shadowed(new THREE.Mesh(roundedBoxGeo(0.19, 0.032, 0.14, 0.004, 1), bookMat(0x2f4038)));
   b1.position.set(0.02, 0.554, 0.01); t.add(b1);
-  const b2 = shadowed(new THREE.Mesh(roundedBoxGeo(0.175, 0.028, 0.13, 0.004, 1),
-    new THREE.MeshStandardMaterial({ color: 0x8a6a3a, roughness: 0.8 })));
+  const b2 = shadowed(new THREE.Mesh(roundedBoxGeo(0.175, 0.028, 0.13, 0.004, 1), bookMat(0x8a6a3a)));
   b2.position.set(0.0, 0.584, 0.02); b2.rotation.y = 0.16; t.add(b2);
   g.add(t);
   return t;
@@ -319,10 +355,7 @@ function buildBookshelf(g) {
       const bw = rrnd(0.022, 0.055);
       const bh = rrnd(0.20, 0.31);
       const bd = rrnd(0.20, 0.27);
-      const b = new THREE.Mesh(
-        new THREE.BoxGeometry(bd, bh, bw),
-        new THREE.MeshStandardMaterial({ color: pick(bookCols), roughness: rrnd(0.6, 0.9) }),
-      );
+      const b = new THREE.Mesh(new THREE.BoxGeometry(bd, bh, bw), bookMat(pick(bookCols)));
       b.position.set(-0.02, y + 0.011 + bh / 2, z + bw / 2);
       if (rnd() < 0.10) { b.rotation.x = 0.28; b.position.y -= 0.02; }
       b.castShadow = true; b.receiveShadow = true;
@@ -363,8 +396,7 @@ function buildPlant(g, x, z, scale = 1) {
     shape.bezierCurveTo(0.11, 0.10, 0.13, 0.34, 0, 0.50);
     shape.bezierCurveTo(-0.13, 0.34, -0.11, 0.10, 0, 0);
     const gg = new THREE.ShapeGeometry(shape, 10);
-    gg.translate(0, 0.0, 0);
-    return gg;
+    return normalizeUv(gg);
   })();
 
   const stems = 5;
