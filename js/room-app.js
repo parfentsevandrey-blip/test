@@ -255,7 +255,7 @@ class Post {
       tHDR: { value: null }, tBloom: { value: null },
       uRes: { value: new THREE.Vector2() },
       uTime: U.time,
-      uExposure: { value: 1.30 },
+      uExposure: { value: 1.42 },
       uBloom: { value: 0.28 },
       uWarm: { value: CFG.warm },
       uVignette: { value: 0.85 },

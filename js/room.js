@@ -104,25 +104,39 @@ export function faceTowards(obj, x, z) {
    keeps texel density constant no matter how big the piece of geometry is, so
    the plaster on a 4 m wall matches the plaster on a 0.7 m panel beside it. */
 
-/** PlaneGeometry spanning w × h metres, tiled every `tu` × `tv` metres */
-export function planeUv(geo, w, h, tu, tv = tu) {
+/** PlaneGeometry spanning w × h metres, tiled every `tu` × `tv` metres.
+ *  `cu`/`cv` are the panel's centre in the surface's own coordinates — pass
+ *  them when one surface is built from several panels, so the pattern runs
+ *  continuously across the joins instead of restarting on each piece. */
+export function planeUv(geo, w, h, tu, tv = tu, cu = 0, cv = 0) {
   const uv = geo.attributes.uv;
-  for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * (w / tu), uv.getY(i) * (h / tv));
+  for (let i = 0; i < uv.count; i++) {
+    uv.setXY(i, (cu + (uv.getX(i) - 0.5) * w) / tu, (cv + (uv.getY(i) - 0.5) * h) / tv);
+  }
   uv.needsUpdate = true;
   return geo;
 }
 
-/** BoxGeometry w × h × d metres — each face gets its own world-scaled UVs */
-export function boxUv(geo, w, h, d, tile) {
+/** BoxGeometry w × h × d metres — each face gets its own world-scaled UVs.
+ *  `centre` is the box's world position; passing it keeps the pattern
+ *  continuous across separate boxes that form one surface. */
+export function boxUv(geo, w, h, d, tile, centre = null) {
   const uv = geo.attributes.uv;
-  // BoxGeometry emits faces in the order +x, -x, +y, -y, +z, -z, 4 verts each
-  const spans = [[d, h], [d, h], [w, d], [w, d], [w, h], [w, h]];
+  const [cx, cy, cz] = centre || [0, 0, 0];
+  // BoxGeometry emits faces +x, -x, +y, -y, +z, -z, 4 verts each.
+  // Per face: [u span, v span, u centre, v centre] — u/v follow three's own
+  // axis choice for each plane (px/nx: z,y · py/ny: x,z · pz/nz: x,y).
+  const F = [
+    [d, h, -cz, cy], [d, h, cz, cy],
+    [w, d, cx, cz], [w, d, cx, -cz],
+    [w, h, cx, cy], [w, h, -cx, cy],
+  ];
   for (let f = 0; f < 6; f++) {
-    const [su, sv] = spans[f];
+    const [su, sv, ou, ov] = F[f];
     for (let k = 0; k < 4; k++) {
       const i = f * 4 + k;
       if (i >= uv.count) break;
-      uv.setXY(i, uv.getX(i) * (su / tile), uv.getY(i) * (sv / tile));
+      uv.setXY(i, (ou + (uv.getX(i) - 0.5) * su) / tile, (ov + (uv.getY(i) - 0.5) * sv) / tile);
     }
   }
   uv.needsUpdate = true;

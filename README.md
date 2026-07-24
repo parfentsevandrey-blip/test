@@ -148,9 +148,17 @@ rainy night city outside. Same vendored Three.js r160, no external assets.
   glass genuine reflections of the room — the signature look of a lit room at
   night. Guarded against feedback: reflective materials switch off while any
   reflection pass renders.
-- **Everything is procedural** — oak planks, plaster, honed stone, wool rug and
-  the environment map are all painted into canvases at load; the page ships no
-  textures or models.
+- **Everything is procedural** — every surface is painted into a canvas at
+  load; the page ships no textures and no models. Thirteen generators produce
+  full PBR sets (albedo + roughness + normal, some with AO or metalness):
+  oiled oak with staggered butt joints, cathedral figure, ring-oriented open
+  pores and eased plank edges; troweled limewash plaster; honed stone with a
+  branching vein network; cut-pile wool; linen, bouclé and hand-knit wool;
+  marble, bookbinding cloth, brushed brass; charred log bark and a veined
+  leaf. UVs are rescaled to **metres**, so the plaster on a 4 m wall matches
+  the plaster on the 0.7 m panel beside it, and patterns run continuously
+  across surfaces built from several pieces. About 2.3 s of generation at
+  load, split into chunks that yield so the loader keeps animating.
 - **Procedural audio** (off by default): filtered-noise rain, a fire roar with
   scheduled crackles, and low thunder — synthesised with WebAudio, no files.
 
@@ -165,19 +173,39 @@ adapts to the measured frame rate; you can pin it manually.
 
 ```
 room.html              Page shell + UI (Russian copy)
-js/room.js             Core: config, maths, procedural textures, renderer, RT helpers
+js/room.js             Core: config, maths, renderer, RT + world-UV helpers
 js/room-outside.js     Sky, city towers, ground, rain, mist, lightning
 js/room-interior.js    Room shell, floor-to-ceiling glazing + rain shader, fireplace
 js/room-props.js       Furniture, soft goods, plants, the cat, lighting rig
 js/room-app.js         Env map, planar reflectors, post stack, controls, audio, loop
+js/tex/noise.js        Texture toolkit: tileable noise, worley, warp, height→normal
+js/tex/index.js        Registry of the 13 surfaces + the bridge to THREE textures
+js/tex/*.js            One generator family per file (oak, plaster, stone, rug, …)
 build-room.js          Bundles the module graph into one HTML file
 cozy-room.html         Self-contained single-file build (double-click to open)
 tools/shoot.js         Headless smoke test + screenshots of all four views
 tools/filecheck.js     Verifies the single-file build runs from file://
+tools/texlab.html      Texture lab: any surface on a lit panel/sphere/cylinder
+tools/texshot.js       Renders one surface to a PNG contact sheet
 ```
 
 `node build-room.js` rebuilds `cozy-room.html` after any source change.
 The dev tools need `npm i playwright-core` and a local Chromium.
+
+### Working on a texture
+
+`js/tex/noise.js` documents the generator contract — a generator is
+`(size, N) => { albedo, rough, height, ao?, metal? }` over flat Float32Arrays,
+and the registry turns those into Three.js textures. To see one:
+
+```
+node tools/texshot.js oakFloor /tmp/oak.png '{"repeat":[4,3]}'
+```
+
+That renders the surface on a lit panel, sphere and cylinder under lighting
+matched to the scene, with the albedo, roughness, normal and height maps tiled
+2×2 underneath so seams are obvious. It exits non-zero if a generator breaks
+the contract, so it doubles as a test.
 
 ---
 

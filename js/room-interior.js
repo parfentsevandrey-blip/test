@@ -79,17 +79,18 @@ export function buildShell() {
   /* ---- walls & ceiling: warm limewash plaster ---- */
   const PLASTER_TILE = 3.3;
   const wallMat = new THREE.MeshStandardMaterial({
-    color: 0xb2a08c, metalness: 0, envMapIntensity: 0.75,
+    color: 0xc6b39c, metalness: 0, envMapIntensity: 0.8,
   });
-  applyMaps(wallMat, 'plasterWall', { aniso: MAX_ANISO, normalScale: 0.55 });
+  applyMaps(wallMat, 'plasterWall', { aniso: MAX_ANISO, normalScale: 0.40 });
   const ceilMat = new THREE.MeshStandardMaterial({
-    color: 0x9d9184, metalness: 0, envMapIntensity: 0.6,
+    color: 0xb0a496, metalness: 0, envMapIntensity: 0.65,
   });
   applyMaps(ceilMat, 'plasterCeiling', { aniso: MAX_ANISO, normalScale: 0.4 });
 
-  // UVs in metres so every panel keeps the same plaster grain, whatever its size
-  const wall = (w, h, mat) =>
-    new THREE.Mesh(planeUv(new THREE.PlaneGeometry(w, h), w, h, PLASTER_TILE), mat);
+  // UVs in metres so every panel keeps the same plaster grain, whatever its
+  // size; cu/cv place the panel within one continuous wall surface
+  const wall = (w, h, mat, cu = 0, cv = 0) =>
+    new THREE.Mesh(planeUv(new THREE.PlaneGeometry(w, h), w, h, PLASTER_TILE, PLASTER_TILE, cu, cv), mat);
 
   // back wall (z = +Z), facing -z
   const back = wall(X * 2, H, wallMat);
@@ -101,12 +102,13 @@ export function buildShell() {
     const F = FIREBOX;
     const fy0 = F.y - F.h / 2, fy1 = F.y + F.h / 2;
     const fz0 = F.z - F.w / 2, fz1 = F.z + F.w / 2;
+    // rotated +90° about Y, the plane's local +x runs along world -z, so the
+    // surface coordinate u is -z and v is y
     const panel = (w, h, cz, cy) => {
-      const m = wall(w, h, wallMat);
+      const m = wall(w, h, wallMat, -cz, cy);
       m.position.set(-X, cy, cz); m.rotation.y = Math.PI / 2;
       m.receiveShadow = true; g.add(m); return m;
     };
-    // the plane's local +x runs along -z once rotated, but widths/centres are symmetric
     panel(Z * 2, fy0, 0, fy0 / 2);                             // below the opening
     panel(Z * 2, H - fy1, 0, (H + fy1) / 2);                   // above
     panel(fz0 + Z, F.h, (-Z + fz0) / 2, F.y);                  // toward -z
@@ -412,7 +414,7 @@ export function buildFireplace() {
 
   const STONE_TILE = 2.0;
   const stoneMat = new THREE.MeshStandardMaterial({
-    color: 0xd8d2c9, metalness: 0.04, envMapIntensity: 0.5,
+    color: 0xf0e9df, metalness: 0.04, envMapIntensity: 0.55,
   });
   applyMaps(stoneMat, 'honedStone', { aniso: MAX_ANISO, normalScale: 0.7 });
   const darkMat = new THREE.MeshStandardMaterial({ color: 0x120d0a, roughness: 0.95, metalness: 0 });
@@ -429,7 +431,8 @@ export function buildFireplace() {
 
   /* stone panel, built as four slabs so the firebox is a genuine opening */
   const slab = (h, d, y, z) => {
-    const m = new THREE.Mesh(boxUv(new THREE.BoxGeometry(PT, h, d), PT, h, d, STONE_TILE), stoneMat);
+    const m = new THREE.Mesh(
+      boxUv(new THREE.BoxGeometry(PT, h, d), PT, h, d, STONE_TILE, [WALL_X + PT / 2, y, z]), stoneMat);
     m.position.set(WALL_X + PT / 2, y, z);
     m.castShadow = true; m.receiveShadow = true;
     g.add(m); return m;
@@ -469,13 +472,13 @@ export function buildFireplace() {
   bar(0.03, BH, RB, BY, FZ + BW / 2 + RB / 2);
 
   /* hearth ledge */
-  const hearth = new THREE.Mesh(boxUv(new THREE.BoxGeometry(0.62, 0.14, SW - 0.6), 0.62, 0.14, SW - 0.6, STONE_TILE), stoneMat);
+  const hearth = new THREE.Mesh(boxUv(new THREE.BoxGeometry(0.62, 0.14, SW - 0.6), 0.62, 0.14, SW - 0.6, STONE_TILE, [WALL_X + 0.31, 0.07, FZ]), stoneMat);
   hearth.position.set(WALL_X + 0.31, 0.07, FZ);
   hearth.castShadow = true; hearth.receiveShadow = true;
   g.add(hearth);
 
   /* mantel shelf */
-  const mantel = new THREE.Mesh(boxUv(new THREE.BoxGeometry(0.30, 0.08, 3.0), 0.30, 0.08, 3.0, STONE_TILE), stoneMat);
+  const mantel = new THREE.Mesh(boxUv(new THREE.BoxGeometry(0.30, 0.08, 3.0), 0.30, 0.08, 3.0, STONE_TILE, [WALL_X + 0.15, 1.62, FZ]), stoneMat);
   mantel.position.set(WALL_X + 0.15, 1.62, FZ);
   mantel.castShadow = true; mantel.receiveShadow = true;
   g.add(mantel);

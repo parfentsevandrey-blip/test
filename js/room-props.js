@@ -19,27 +19,27 @@ const tex = (mat, name, opts) => { applyMaps(mat, name, { ...AN, ...opts }); ret
 
 const M = {
   linen: tex(new THREE.MeshStandardMaterial({
-    color: 0xb8a691, metalness: 0, envMapIntensity: 0.3,
+    color: 0xd2bfa6, metalness: 0, envMapIntensity: 0.32,
   }), 'linen', { repeat: [4, 4], normalScale: 0.85 }),
 
   linenDark: tex(new THREE.MeshStandardMaterial({
-    color: 0x83725f, metalness: 0, envMapIntensity: 0.25,
+    color: 0x9c8971, metalness: 0, envMapIntensity: 0.28,
   }), 'linen', { repeat: [4, 4], normalScale: 0.85 }),
 
   boucle: tex(new THREE.MeshStandardMaterial({
-    color: 0xd6c6ae, metalness: 0, envMapIntensity: 0.25,
+    color: 0xe8dac2, metalness: 0, envMapIntensity: 0.28,
   }), 'boucle', { repeat: [4, 4], normalScale: 0.9 }),
 
   boucleRound: tex(new THREE.MeshStandardMaterial({
-    color: 0xd6c6ae, metalness: 0, envMapIntensity: 0.25,
+    color: 0xe8dac2, metalness: 0, envMapIntensity: 0.28,
   }), 'boucle', { repeat: [9, 1.6], normalScale: 0.9 }),
 
   rust: tex(new THREE.MeshStandardMaterial({
-    color: 0xb05733, metalness: 0, envMapIntensity: 0.3,
+    color: 0xc4653c, metalness: 0, envMapIntensity: 0.32,
   }), 'linen', { repeat: [4, 4], normalScale: 0.85 }),
 
   knit: tex(new THREE.MeshStandardMaterial({
-    color: 0xbe9a6c, metalness: 0, side: THREE.DoubleSide, envMapIntensity: 0.2,
+    color: 0xd4ac79, metalness: 0, side: THREE.DoubleSide, envMapIntensity: 0.22,
   }), 'knit', { repeat: [3, 5], normalScale: 1.0 }),
 
   oak: tex(new THREE.MeshStandardMaterial({
@@ -59,7 +59,7 @@ const M = {
   }), 'brushedMetal', { repeat: [3, 3], normalScale: 0.5 }),
 
   marble: tex(new THREE.MeshStandardMaterial({
-    color: 0x8f8f8c, metalness: 0.05, envMapIntensity: 1.0,
+    color: 0xa5a5a1, metalness: 0.05, envMapIntensity: 1.0,
   }), 'marble', { repeat: [1.5, 1.5], normalScale: 0.5 }),
 
   bookCloth: tex(new THREE.MeshStandardMaterial({
@@ -93,8 +93,8 @@ const bookMat = (hex) => {
 /* ================================================================= rug === */
 function buildRug(g) {
   const mat = tex(new THREE.MeshStandardMaterial({
-    color: 0xcbb59a, metalness: 0, envMapIntensity: 0.25,
-  }), 'woolRug', { repeat: [0.65, 0.65], normalScale: 1.0 });
+    color: 0xe4cfb2, metalness: 0, envMapIntensity: 0.28,
+  }), 'woolRug', { repeat: [2.2, 2.2], normalScale: 0.75 });
   const rug = new THREE.Mesh(roundedBoxGeo(4.6, 0.022, 3.4, 0.05, 1), mat);
   rug.position.set(-0.5, 0.011, 0.35);
   rug.receiveShadow = true;
