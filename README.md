@@ -119,5 +119,67 @@ skyline are parameters inside the builder functions in `js/scene.js`.
 
 ---
 
+# Уютная комната в небоскрёбе (`cozy-room.html`)
+
+A second, independent scene in this repo: a **cozy penthouse living room on the
+47th floor** — floor-to-ceiling glass on two sides, a lit fireplace, and a
+rainy night city outside. Same vendored Three.js r160, no external assets.
+
+> **Just want to see it? Open `cozy-room.html` — double-click, no server, no
+> internet.** `room.html` is the multi-file source and must be served over HTTP
+> (ES modules can't load from `file://`), e.g. `python3 -m http.server`.
+
+## What's in it
+
+- **Rain on the glass.** The world outside is rendered to its own buffer first,
+  then the window shader refracts it through a field of sliding droplets and
+  runnels. Beads act as little lenses — they concentrate the city behind them,
+  pick up a cold rim, and catch the firelight from inside the room. Dry areas
+  fog over with condensation; the wet tracks stay clear.
+- **A real fire.** A layered domain-warped flame shader over a bed of glowing
+  coals and charred logs, with rising embers. Its light drives the room: a
+  shadow-casting spot plus omni fill, both modulated by a two-rate flicker, so
+  furniture throws shadows that breathe.
+- **The city.** ~540 instanced towers with per-window lit/unlit states and slow
+  occupancy changes, aviation beacons, an overcast sky with a drifting cloud
+  deck, sodium light-pollution along the horizon, falling rain streaks, drifting
+  mist, and occasional lightning (with delayed thunder if sound is on).
+- **Planar reflections.** Mirror cameras give the oiled-oak floor and the dark
+  glass genuine reflections of the room — the signature look of a lit room at
+  night. Guarded against feedback: reflective materials switch off while any
+  reflection pass renders.
+- **Everything is procedural** — oak planks, plaster, honed stone, wool rug and
+  the environment map are all painted into canvases at load; the page ships no
+  textures or models.
+- **Procedural audio** (off by default): filtered-noise rain, a fire roar with
+  scheduled crackles, and low thunder — synthesised with WebAudio, no files.
+
+## Controls
+
+Drag to look, wheel/pinch to zoom, keys `1`–`4` for the camera presets
+(Гостиная · У камина · У окна · На диване). The gear panel adjusts fire, rain,
+colour warmth, quality, and camera drift. Quality auto-selects on first run and
+adapts to the measured frame rate; you can pin it manually.
+
+## Files
+
+```
+room.html              Page shell + UI (Russian copy)
+js/room.js             Core: config, maths, procedural textures, renderer, RT helpers
+js/room-outside.js     Sky, city towers, ground, rain, mist, lightning
+js/room-interior.js    Room shell, floor-to-ceiling glazing + rain shader, fireplace
+js/room-props.js       Furniture, soft goods, plants, the cat, lighting rig
+js/room-app.js         Env map, planar reflectors, post stack, controls, audio, loop
+build-room.js          Bundles the module graph into one HTML file
+cozy-room.html         Self-contained single-file build (double-click to open)
+tools/shoot.js         Headless smoke test + screenshots of all four views
+tools/filecheck.js     Verifies the single-file build runs from file://
+```
+
+`node build-room.js` rebuilds `cozy-room.html` after any source change.
+The dev tools need `npm i playwright-core` and a local Chromium.
+
+---
+
 *Conceptual presentation. Imagery, pricing, and contact details are
 illustrative.*

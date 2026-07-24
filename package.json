@@ -1,0 +1,13 @@
+{
+  "name": "cozy-room",
+  "private": true,
+  "description": "Dev tooling for the 3D scenes in this repo (headless smoke tests).",
+  "scripts": {
+    "build:room": "node build-room.js",
+    "test:room": "node tools/shoot.js",
+    "test:file": "node tools/filecheck.js"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.56.1"
+  }
+}
