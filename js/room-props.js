@@ -296,15 +296,22 @@ function buildFloorLamp(g, x, z) {
   });
   const shade = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.235, 0.26, 28, 1, true), shadeMat);
   shade.position.y = 1.50; l.add(shade);
-  const inner = new THREE.Mesh(new THREE.CircleGeometry(0.225, 24),
-    new THREE.MeshBasicMaterial({ color: 0xb9702f, toneMapped: false }));
+  const innerMat = new THREE.MeshBasicMaterial({ color: 0xb9702f, toneMapped: false });
+  const inner = new THREE.Mesh(new THREE.CircleGeometry(0.225, 24), innerMat);
   inner.rotation.x = Math.PI / 2; inner.position.y = 1.372; l.add(inner);
-  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.032, 12, 10),
-    new THREE.MeshBasicMaterial({ color: 0xffcc8a, toneMapped: false }));
+  const bulbMat = new THREE.MeshBasicMaterial({ color: 0xffcc8a, toneMapped: false });
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.032, 12, 10), bulbMat);
   bulb.position.y = 1.48; l.add(bulb);
 
+  // fade the emitters with the light rather than popping them on/off
+  const innerBase = innerMat.color.clone(), bulbBase = bulbMat.color.clone();
+  const setGlow = (k) => {
+    innerMat.color.copy(innerBase).multiplyScalar(k);
+    bulbMat.color.copy(bulbBase).multiplyScalar(k);
+  };
+
   g.add(l);
-  return { group: l, shadeMat, inner, bulb, lightPos: new THREE.Vector3(x, 1.44, z) };
+  return { group: l, shadeMat, inner, bulb, setGlow, lightPos: new THREE.Vector3(x, 1.44, z) };
 }
 
 /* ========================================================== side table == */

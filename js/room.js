@@ -11,13 +11,19 @@ export const CFG = {
   lamps: true,
   drift: true,
   quality: 1,          // 0 low / 1 medium / 2 high
+  res: 0.85,           // internal render scale, 0.4 … 1.0
 };
 
+/* Tiers deliberately hold NO resolution: every buffer stays allocated at the
+   same size for all three, so switching tiers is a handful of uniform writes
+   and costs nothing. Resolution is its own control (CFG.res) because changing
+   it does reallocate, and that should only happen when the user asks. */
 export const QUALITY = [
-  { scale: 0.70, dpr: 1.25, refl: 0,    bloom: 3, rain: 1100, towers: 220, shadow: 512  },
-  { scale: 0.88, dpr: 1.60, refl: 1,    bloom: 4, rain: 2600, towers: 380, shadow: 1024 },
-  { scale: 1.00, dpr: 2.00, refl: 2,    bloom: 5, rain: 4200, towers: 540, shadow: 2048 },
+  { refl: 0, bloom: 3, rain: 1100, towers: 220 },
+  { refl: 1, bloom: 4, rain: 2600, towers: 380 },
+  { refl: 2, bloom: 5, rain: 4200, towers: 540 },
 ];
+export const SHADOW_SIZE = 1024;
 
 /* room is 10 × 8 m, 3.3 m high; floor y = 0 sits 150 m above the street */
 export const ROOM = { x: 5, z: 4, h: 3.3, alt: 150 };

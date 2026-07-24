@@ -166,8 +166,20 @@ rainy night city outside. Same vendored Three.js r160, no external assets.
 
 Drag to look, wheel/pinch to zoom, keys `1`–`4` for the camera presets
 (Гостиная · У камина · У окна · На диване). The gear panel adjusts fire, rain,
-colour warmth, quality, and camera drift. Quality auto-selects on first run and
-adapts to the measured frame rate; you can pin it manually.
+colour warmth, resolution, quality and camera drift, and shows a live fps
+readout.
+
+**Quality** and **resolution** are deliberately separate. A quality tier only
+toggles which passes run — reflections, bloom levels, rain and tower counts —
+so every buffer keeps its size and switching tiers costs no allocation and no
+measurable time. Resolution is the one control that does reallocate the render
+targets, so it is applied when you release the slider rather than during the
+drag. Quality auto-selects on first run and adapts to the measured frame rate,
+but the moment you open the settings panel it stops moving on its own.
+
+`node tools/uicheck.js` audits every control: it actuates each one the way a
+user would and asserts the state actually changed, and fails the build if a
+quality switch costs more than a few ms of main-thread time.
 
 ## Files
 
@@ -185,6 +197,7 @@ build-room.js          Bundles the module graph into one HTML file
 cozy-room.html         Self-contained single-file build (double-click to open)
 tools/shoot.js         Headless smoke test + screenshots of all four views
 tools/filecheck.js     Verifies the single-file build runs from file://
+tools/uicheck.js       Audits every control: does it work, and does it stall?
 tools/texlab.html      Texture lab: any surface on a lit panel/sphere/cylinder
 tools/texshot.js       Renders one surface to a PNG contact sheet
 ```

@@ -3,7 +3,7 @@
    ========================================================================= */
 import * as THREE from 'three';
 import {
-  CFG, QUALITY, ROOM, U, clamp, lerp, damp, easeInOut, rnd, rrnd,
+  CFG, QUALITY, SHADOW_SIZE, ROOM, U, clamp, lerp, damp, easeInOut, rnd, rrnd,
   renderer, camera, roomScene, outsideScene, canvas, blit, rt, VERT_QUAD,
 } from './room.js';
 import { buildOutside, Lightning, FOG_U } from './room-outside.js';
@@ -90,7 +90,9 @@ class PlanarReflector {
     this._rot = new THREE.Matrix4();
   }
   resize(w, h) {
-    this.target.setSize(Math.max(2, (w * this.scale) | 0), Math.max(2, (h * this.scale) | 0));
+    const tw = Math.max(2, (w * this.scale) | 0), th = Math.max(2, (h * this.scale) | 0);
+    if (this.target.width === tw && this.target.height === th) return;
+    this.target.setSize(tw, th);
   }
   update(mainCam, scene, hide = []) {
     const n = this.normal, p = this.point, vc = this.cam;
@@ -265,9 +267,10 @@ class Post {
   }
 
   resize(w, h) {
-    this.hdr.setSize(w, h);
+    if (this.hdr.width !== w || this.hdr.height !== h) this.hdr.setSize(w, h);
     for (let i = 0; i < this.levels.length; i++) {
-      this.levels[i].setSize(Math.max(2, w >> (i + 1)), Math.max(2, h >> (i + 1)));
+      const lw = Math.max(2, w >> (i + 1)), lh = Math.max(2, h >> (i + 1));
+      if (this.levels[i].width !== lw || this.levels[i].height !== lh) this.levels[i].setSize(lw, lh);
     }
     this.composite.uniforms.uRes.value.set(w, h);
   }
@@ -324,7 +327,7 @@ async function build() {
 
   await step(70, 'Расставляем мебель');
   props = buildProps();
-  lights = buildLights(fire.firePos, props.lamp.lightPos, QUALITY[CFG.quality].shadow);
+  lights = buildLights(fire.firePos, props.lamp.lightPos, SHADOW_SIZE);
 
   await step(84, 'Зажигаем город за окном');
   outside = buildOutside(QUALITY[2].towers, QUALITY[2].rain);
@@ -352,48 +355,58 @@ async function build() {
 }
 
 /* =========================================================== quality ==== */
-function applyQuality(q) {
-  CFG.quality = q = clamp(q | 0, 0, 2);
-  const Q = QUALITY[q];
-  outside.city.count = Q.towers;
-  outside.rain.geometry.instanceCount = Q.rain;
-  lights.fireSpot.shadow.mapSize.set(Q.shadow, Q.shadow);
-  if (lights.fireSpot.shadow.map) { lights.fireSpot.shadow.map.dispose(); lights.fireSpot.shadow.map = null; }
-  renderer.shadowMap.needsUpdate = true;
-
-  const reflAmtFloor = Q.refl >= 1 ? 0.6 : 0.0;
-  const reflAmtWin = Q.refl >= 2 ? 0.9 : 0.0;
-  reflectiveFloor.uniforms.uReflAmt.value = reflAmtFloor;
-  for (const m of glassMaterials) m.uniforms.uReflAmt.value = reflAmtWin;
-
+/* Switching tiers used to resize eleven render targets inside the click
+   handler and froze the page for over a second. Tiers now change nothing that
+   allocates — only uniforms, instance counts and which passes run. */
+function paintQualityUi(q) {
   document.querySelectorAll('#segQual button').forEach((b) => {
     b.setAttribute('aria-pressed', String(+b.dataset.q === q));
   });
   const oq = document.getElementById('oQual');
   if (oq) oq.textContent = ['низкое', 'среднее', 'высокое'][q];
-  onResize();
+}
+
+let lastCommitMs = 0;
+function applyQuality(q) {
+  const t0 = performance.now();
+  CFG.quality = q = clamp(q | 0, 0, 2);
+  const Q = QUALITY[q];
+  outside.city.count = Q.towers;
+  outside.rain.geometry.instanceCount = Q.rain;
+  reflectiveFloor.uniforms.uReflAmt.value = Q.refl >= 1 ? 0.6 : 0.0;
+  for (const m of glassMaterials) m.uniforms.uReflAmt.value = Q.refl >= 2 ? 0.9 : 0.0;
+  paintQualityUi(q);
+  lastCommitMs = performance.now() - t0;
 }
 
 /* ============================================================ resize ==== */
-let W = 1, Hh = 1;
+let W = 1, Hh = 1, cssW = 0, cssH = 0;
+/* the canvas backing store is fixed at load; quality only scales the offscreen
+   buffers, so switching tiers never resizes the canvas or the GL drawing buffer */
+const CANVAS_DPR = Math.min(window.devicePixelRatio || 1, 2);
+
 function onResize() {
-  const Q = QUALITY[CFG.quality];
-  const dpr = Math.min(window.devicePixelRatio || 1, Q.dpr);
   const cw = canvas.clientWidth || window.innerWidth;
   const ch = canvas.clientHeight || window.innerHeight;
-  W = Math.max(2, Math.round(cw * dpr * Q.scale));
-  Hh = Math.max(2, Math.round(ch * dpr * Q.scale));
 
-  renderer.setPixelRatio(dpr);
-  renderer.setSize(cw, ch, false);
-  camera.aspect = cw / ch;
-  camera.updateProjectionMatrix();
+  if (cw !== cssW || ch !== cssH) {
+    cssW = cw; cssH = ch;
+    renderer.setPixelRatio(CANVAS_DPR);
+    renderer.setSize(cw, ch, false);
+    camera.aspect = cw / ch;
+    camera.updateProjectionMatrix();
+  }
 
-  if (!post) return;
+  const w = Math.max(2, Math.round(cw * CANVAS_DPR * CFG.res));
+  const h = Math.max(2, Math.round(ch * CANVAS_DPR * CFG.res));
+  if (!post || (w === W && h === Hh)) return;   // nothing to reallocate
+  W = w; Hh = h;
+
   post.resize(W, Hh);
   rtOut.setSize(W, Hh);
-  rtOutSmall.setSize(Math.max(2, W >> 2), Math.max(2, Hh >> 2));
-  rtOutBlur.setSize(Math.max(2, W >> 2), Math.max(2, Hh >> 2));
+  const bw = Math.max(2, W >> 2), bh = Math.max(2, Hh >> 2);
+  rtOutSmall.setSize(bw, bh);
+  rtOutBlur.setSize(bw, bh);
   floorRefl.resize(W, Hh);
   winRefl.resize(W, Hh);
 
@@ -401,7 +414,14 @@ function onResize() {
   fire.embers.material.uniforms.uPix.value = pix;
   props.dust.material.uniforms.uPix.value = pix;
 }
-window.addEventListener('resize', onResize);
+
+/* window resizing fires a storm of events; reallocating buffers on each one
+   is what made dragging the window edge unusable */
+let resizeTimer = 0;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(onResize, 140);
+});
 
 /* =========================================================== controls === */
 const VIEWS = [
@@ -636,6 +656,16 @@ const Audio_ = {
 };
 
 /* ================================================================= UI === */
+const fpsOut = document.getElementById('oFps');
+const qualOut = document.getElementById('oQual');
+
+/** once the user opens the settings, nothing may move on its own again */
+function userTookControl() {
+  if (!autoQuality) return;
+  autoQuality = false;
+  if (qualOut) qualOut.textContent = ['низкое', 'среднее', 'высокое'][CFG.quality];
+}
+
 function wireUI() {
   document.querySelectorAll('#dock button[data-view]').forEach((b) => {
     b.addEventListener('click', () => gotoView(+b.dataset.view));
@@ -646,6 +676,7 @@ function wireUI() {
   btnSheet?.addEventListener('click', () => {
     const open = sheet.classList.toggle('open');
     btnSheet.setAttribute('aria-pressed', String(open));
+    if (open) userTookControl();
   });
 
   const btnLamps = document.getElementById('btnLamps');
@@ -664,6 +695,7 @@ function wireUI() {
     const el = document.getElementById(id), o = document.getElementById(out);
     if (!el) return;
     const run = () => { const v = +el.value / 100; apply(v); if (o) o.textContent = fmt(v); };
+    el.addEventListener('pointerdown', userTookControl);
     el.addEventListener('input', run); run();
   };
   bind('sFire', 'oFire', (v) => Math.round(v * 100) + '%', (v) => { CFG.fire = v; });
@@ -673,8 +705,20 @@ function wireUI() {
     if (post) post.composite.uniforms.uWarm.value = v;
   });
 
+  // Resolution is the only setting that reallocates buffers, so it is applied
+  // when the user lets go of the slider, never on every pixel of the drag.
+  const sRes = document.getElementById('sRes'), oRes = document.getElementById('oRes');
+  if (sRes) {
+    sRes.value = String(Math.round(CFG.res * 100));
+    const label = () => { if (oRes) oRes.textContent = sRes.value + '%'; };
+    label();
+    sRes.addEventListener('pointerdown', userTookControl);
+    sRes.addEventListener('input', label);
+    sRes.addEventListener('change', () => { CFG.res = clamp(+sRes.value / 100, 0.4, 1); onResize(); });
+  }
+
   document.querySelectorAll('#segQual button').forEach((b) => {
-    b.addEventListener('click', () => { autoQuality = false; applyQuality(+b.dataset.q); });
+    b.addEventListener('click', () => { userTookControl(); applyQuality(+b.dataset.q); });
   });
   document.querySelectorAll('#segDrift button').forEach((b) => {
     b.addEventListener('click', () => {
@@ -697,8 +741,8 @@ function updateClock(dt) {
 
 /* ============================================================== loop ==== */
 const clock = new THREE.Clock();
-let flickA = 1, flickB = 1;
-let frames = 0, fpsMark = 0, autoQuality = true, qCooldown = 4;
+let flickA = 1, flickB = 1, lampLevel = 1, audioSyncAt = 0;
+let frames = 0, fpsMark = 0, autoQuality = true, qCooldown = 5, badWin = 0, goodWin = 0;
 const _v3 = new THREE.Vector3();
 let lastFps = 0, frameNo = 0;
 
@@ -709,6 +753,7 @@ function tick() {
   U.time.value += dt;
   frameNo++;
   updateClock(dt);
+
 
   /* --- firelight flicker: two smoothed random walks at different rates --- */
   flickA = damp(flickA, 0.55 + rnd() * 0.9, 9, dt);
@@ -731,13 +776,13 @@ function tick() {
   lights.fireCore.intensity = 2.4 * f * flick;
   lights.fireSpot.position.x = fire.firePos.x + 0.25 + Math.sin(t * 3.1) * 0.03;
   lights.fireSpot.position.z = fire.firePos.z + Math.sin(t * 2.3) * 0.06;
-  const lampOn = CFG.lamps ? 1 : 0;
-  lights.lamp.intensity = damp(lights.lamp.intensity, 7.5 * lampOn, 5, dt);
-  lights.shelf.intensity = damp(lights.shelf.intensity, 2.4 * lampOn, 5, dt);
-  lights.cove.intensity = damp(lights.cove.intensity, 2.0 * lampOn, 5, dt);
+  lampLevel = damp(lampLevel, CFG.lamps ? 1 : 0, 5, dt);
+  lights.lamp.intensity = 7.5 * lampLevel;
+  lights.shelf.intensity = 2.4 * lampLevel;
+  lights.cove.intensity = 2.0 * lampLevel;
   lights.window.intensity = 0.32 + U.flash.value * 2.6;
-  props.lamp.shadeMat.emissiveIntensity = 0.55 * lampOn;
-  props.lamp.inner.visible = props.lamp.bulb.visible = lampOn > 0.5;
+  props.lamp.shadeMat.emissiveIntensity = 0.42 * lampLevel;
+  props.lamp.setGlow(lampLevel);
 
   /* --- billboards: flames turn toward the camera but stay in the firebox --- */
   fire.flames.children.forEach((m) => {
@@ -760,7 +805,7 @@ function tick() {
     if (c.userData.sway) c.rotation.z = c.userData.sway.base + Math.sin(t * 0.6 + c.userData.sway.ph) * c.userData.sway.amp;
   });
 
-  Audio_.sync();
+  if (t > audioSyncAt) { audioSyncAt = t + 0.25; Audio_.sync(); }
   if (Audio_.on && t > Audio_.nextCrackle) {
     Audio_.nextCrackle = t + rrnd(0.12, 1.5) / Math.max(0.15, CFG.fire);
     Audio_.crackle();
@@ -823,10 +868,19 @@ function tick() {
   if (span >= 1.5) {
     const fps = frames / span;
     lastFps = fps;
+    // A single slow window is not evidence — a shader compile or a GC pause
+    // looks identical. Requiring consecutive windows, with a wide dead zone
+    // and a long cooldown after stepping up, stops the tier oscillating (and
+    // every oscillation used to cost a full render-target reallocation).
     if (autoQuality && qCooldown <= 0) {
-      if (fps < 34 && CFG.quality > 0) { applyQuality(CFG.quality - 1); qCooldown = 6; }
-      else if (fps > 57 && CFG.quality < 2) { applyQuality(CFG.quality + 1); qCooldown = 10; }
+      if (fps < 30) { badWin++; goodWin = 0; }
+      else if (fps > 55) { goodWin++; badWin = 0; }
+      else { badWin = 0; goodWin = 0; }
+      if (badWin >= 2 && CFG.quality > 0) { applyQuality(CFG.quality - 1); qCooldown = 8; badWin = 0; }
+      else if (goodWin >= 4 && CFG.quality < 2) { applyQuality(CFG.quality + 1); qCooldown = 20; goodWin = 0; }
     }
+    if (fpsOut) fpsOut.textContent = `${Math.round(fps)} fps`;
+    if (qualOut) qualOut.textContent = ['низкое', 'среднее', 'высокое'][CFG.quality] + (autoQuality ? ' · авто' : '');
     frames = 0; fpsMark = now;
   }
 }
@@ -843,6 +897,10 @@ function tick() {
   // pick a sensible starting tier before the adaptive loop takes over
   const cores = navigator.hardwareConcurrency || 4;
   const mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  CFG.res = mobile ? 0.6 : cores >= 8 ? 1.0 : 0.8;
+  const sRes = document.getElementById('sRes'), oRes = document.getElementById('oRes');
+  if (sRes) { sRes.value = String(Math.round(CFG.res * 100)); if (oRes) oRes.textContent = sRes.value + '%'; }
+  onResize();
   applyQuality(mobile ? 0 : cores >= 8 ? 2 : 1);
 
   gotoView(0);
@@ -859,7 +917,7 @@ function tick() {
     roomScene, outsideScene, shell, windows, fire, props, outside,
     glassMaterials, reflectiveFloor,
     texStats,
-    stats: () => ({ frame: frameNo, fps: lastFps, q: CFG.quality }),
+    stats: () => ({ frame: frameNo, fps: lastFps, q: CFG.quality, commitMs: Math.round(lastCommitMs) }),
   };
   tick();
 })();
