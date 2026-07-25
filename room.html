@@ -164,6 +164,10 @@ input[type=range]::-moz-range-thumb{
 }
 .ready .hint{ opacity:1; }
 .hint.gone{ opacity:0; }
+.walkhint{ opacity:0; visibility:hidden; }
+.ready .walkhint{ opacity:0; }
+.ready .walkhint.show{ opacity:1; visibility:visible; }
+body.walking canvas#scene{ cursor:none; }
 
 /* ---------- fallback ---------- */
 .fallback{
@@ -213,6 +217,9 @@ input[type=range]::-moz-range-thumb{
     <button data-view="2" aria-pressed="false">У окна</button>
     <button data-view="3" aria-pressed="false">На диване</button>
     <span class="sep"></span>
+    <button id="btnWalk" aria-pressed="false" class="icon" title="Пройтись по комнате (WASD)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="1.6"/><path d="M11 21l1.5-5.5L10 13l.8-4.2 2.7-.9 2.5 2.1 2.3.8M10.8 8.8L8 10l-1 3M12.5 15.5L9 21"/></svg>
+      Пройтись</button>
     <button id="btnLamps" aria-pressed="true" class="icon" title="Настольные лампы">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.5.4.8 1 .8 1.6V16h5.6v-.6c0-.6.3-1.2.8-1.6A6 6 0 0 0 12 3z"/></svg>
       Свет</button>
@@ -264,7 +271,8 @@ input[type=range]::-moz-range-thumb{
     </div>
   </aside>
 
-  <div class="hint" id="hint">Потяните — осмотреться · Колесо — приблизить</div>
+  <div class="hint" id="hint">Потяните — осмотреться · Колесо — приблизить · WASD — пройтись</div>
+  <div class="hint walkhint" id="walkHint">WASD — идти · Shift — быстрее · Ctrl — присесть · мышь — осмотреться · Esc — выйти</div>
 </div>
 
 <div class="boot" id="boot">

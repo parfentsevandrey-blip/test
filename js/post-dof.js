@@ -25,6 +25,7 @@ export class DepthOfField {
     this.focusRange = 1.7;      // metres either side of focus that stay sharp
     this.maxBlur = 11.0;        // pixels of blur radius at full defocus
 
+    this.cocRT = rt(2, 2, { depth: false });   // half res: rgb = colour, a = CoC
     this.half = rt(2, 2, { depth: false });
     this.out = rt(2, 2, { depth: false });
 
@@ -58,6 +59,7 @@ export class DepthOfField {
       tColor: { value: null },
       tDepth: { value: null },
       tHalf: { value: null },
+      tCoc: { value: null },
       uProjInv: { value: new THREE.Matrix4() },
       uFocus: { value: 3.0 },
       uRange: { value: this.focusRange },
@@ -66,25 +68,42 @@ export class DepthOfField {
       uMaxBlur: { value: this.maxBlur },
     };
 
-    /* ------------------------------------------------- gather at half res */
-    this.blurMaterial = new THREE.ShaderMaterial({
+    /* --------------------------------------------------------- CoC prepass --
+       The gather used to recompute coc() per sample — a depth fetch and a mat4
+       multiply, twenty-two times per pixel. Packing colour and CoC into one
+       half-res RGBA up front makes the gather a plain texture read. */
+    this.cocMaterial = new THREE.ShaderMaterial({
       uniforms: this.uniforms,
       vertexShader: VERT_QUAD,
       depthTest: false, depthWrite: false,
       fragmentShader: common + /* glsl */`
         uniform sampler2D tColor;
+        void main(){
+          gl_FragColor = vec4(texture2D(tColor, vUv).rgb, coc(vUv) * 0.5 + 0.5);
+        }`,
+    });
+
+    /* ------------------------------------------------- gather at half res */
+    this.blurMaterial = new THREE.ShaderMaterial({
+      uniforms: this.uniforms,
+      vertexShader: VERT_QUAD,
+      depthTest: false, depthWrite: false,
+      fragmentShader: /* glsl */`
+        uniform sampler2D tCoc;
         uniform vec2 uTexel;
         uniform float uMaxBlur;
+        varying vec2 vUv;
 
         const int RINGS = 3;
         const int PER_RING = 7;
         const float GOLDEN = 2.39996323;
 
         void main(){
-          float c0 = coc(vUv);
+          vec4 c = texture2D(tCoc, vUv);
+          float c0 = c.a * 2.0 - 1.0;
           float r0 = abs(c0);
 
-          vec3 sum = texture2D(tColor, vUv).rgb;
+          vec3 sum = c.rgb;
           float wsum = 1.0;
 
           // a hexagonal-ish spiral: cheap, and the ring structure gives the
@@ -93,17 +112,18 @@ export class DepthOfField {
             float fr = float(ring) / float(RINGS);
             for(int i = 0; i < PER_RING; i++){
               float a = float(i) * (6.2831853 / float(PER_RING)) + float(ring) * GOLDEN;
-              // scaling by the texel size keeps the bokeh circular on screen
-              vec2 uv = vUv + vec2(cos(a), sin(a)) * fr * r0 * uMaxBlur * uTexel;
-              vec3 s = texture2D(tColor, uv).rgb;
-              float cs = coc(uv);
+              // texel-scaled so the bokeh stays circular on screen; ×2 because
+              // this buffer is half resolution
+              vec2 uv = vUv + vec2(cos(a), sin(a)) * fr * r0 * uMaxBlur * uTexel * 2.0;
+              vec4 sc = texture2D(tCoc, uv);
+              float cs = sc.a * 2.0 - 1.0;
 
-              // a sample may contribute only if it is itself blurred enough to
+              // a sample contributes only if it is itself blurred enough to
               // reach here; otherwise a sharp foreground bleeds into the plate
               float w = clamp(abs(cs) * 1.4 - fr * 0.4 + 0.35, 0.0, 1.0);
               // and foreground blur is allowed to spill forward
               if(cs < 0.0 && c0 > cs) w = max(w, abs(cs));
-              sum += s * w; wsum += w;
+              sum += sc.rgb * w; wsum += w;
             }
           }
           gl_FragColor = vec4(sum / wsum, r0);
@@ -115,15 +135,15 @@ export class DepthOfField {
       uniforms: this.uniforms,
       vertexShader: VERT_QUAD,
       depthTest: false, depthWrite: false,
-      fragmentShader: common + /* glsl */`
+      fragmentShader: /* glsl */`
         uniform sampler2D tColor, tHalf;
+        varying vec2 vUv;
         void main(){
           vec3 sharp = texture2D(tColor, vUv).rgb;
           vec4 blur = texture2D(tHalf, vUv);
-          float k = smoothstep(0.03, 0.30, abs(coc(vUv)));
-          // the half-res buffer carries its own reach in .a, so a strongly
-          // defocused neighbour can still dominate a nominally sharp pixel
-          k = max(k, smoothstep(0.08, 0.40, blur.a));
+          // the gather already wrote its reach into .a, so no depth fetch and
+          // no matrix multiply are needed at full resolution
+          float k = smoothstep(0.05, 0.34, blur.a);
           gl_FragColor = vec4(mix(sharp, blur.rgb, k), 1.0);
         }`,
     });
@@ -131,7 +151,10 @@ export class DepthOfField {
 
   resize(w, h) {
     const hw = Math.max(2, w >> 1), hh = Math.max(2, h >> 1);
-    if (this.half.width !== hw || this.half.height !== hh) this.half.setSize(hw, hh);
+    if (this.half.width !== hw || this.half.height !== hh) {
+      this.half.setSize(hw, hh);
+      this.cocRT.setSize(hw, hh);
+    }
     if (this.out.width !== w || this.out.height !== h) this.out.setSize(w, h);
     this.uniforms.uTexel.value.set(1 / w, 1 / h);
   }
@@ -148,7 +171,10 @@ export class DepthOfField {
     u.uMaxBlur.value = this.maxBlur;
 
     u.tColor.value = colorTexture;
-    this.blit(this.blurMaterial, this.half);
+    this.blit(this.cocMaterial, this.cocRT);      // colour + CoC, half res
+
+    u.tCoc.value = this.cocRT.texture;
+    this.blit(this.blurMaterial, this.half);      // gather, no depth maths
 
     u.tHalf.value = this.half.texture;
     this.blit(this.compositeMaterial, this.out);

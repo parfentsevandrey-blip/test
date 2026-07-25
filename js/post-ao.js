@@ -30,7 +30,16 @@ uniform sampler2D tDepth;
 uniform mat4 uProjInv;
 uniform vec2 uTexel;
 
+uniform vec2 uNearFar;
+
 float rawDepth(vec2 uv){ return texture2D(tDepth, uv).x; }
+
+/* cheap linear eye depth — the blur only needs to compare depths, and a full
+   unprojection per tap costs a mat4 multiply for nothing */
+float linearZ(vec2 uv){
+  float d = rawDepth(uv) * 2.0 - 1.0;
+  return (2.0 * uNearFar.x * uNearFar.y) / (uNearFar.y + uNearFar.x - d * (uNearFar.y - uNearFar.x));
+}
 
 vec3 viewPos(vec2 uv, float d){
   vec4 clip = vec4(uv * 2.0 - 1.0, d * 2.0 - 1.0, 1.0);
@@ -56,6 +65,7 @@ export class AmbientOcclusion {
       tDepth: { value: null },
       uProjInv: { value: new THREE.Matrix4() },
       uTexel: { value: new THREE.Vector2() },
+      uNearFar: { value: new THREE.Vector2(0.05, 6000) },
     };
     this.shared = shared;
 
@@ -162,7 +172,7 @@ export class AmbientOcclusion {
       void main(){
         float d0 = rawDepth(vUv);
         if(d0 >= 0.9999){ gl_FragColor = vec4(1.0); return; }
-        float z0 = viewPos(vUv, d0).z;
+        float z0 = linearZ(vUv);
 
         float sum = 0.0, wsum = 0.0;
         for(int i = -4; i <= 4; i++){
@@ -171,8 +181,7 @@ export class AmbientOcclusion {
           float w = exp(-fi * fi / 8.0);
           // depth-aware: a plain blur bleeds occlusion across silhouettes and
           // leaves a dark halo, which is the classic cheap-SSAO tell
-          float z = viewPos(uv).z;
-          w *= exp(-abs(z - z0) * 12.0);
+          w *= exp(-abs(linearZ(uv) - z0) * 12.0);
           sum += texture2D(tAO, uv).r * w;
           wsum += w;
         }
@@ -200,6 +209,7 @@ export class AmbientOcclusion {
   render(depthTexture, camera) {
     this.shared.tDepth.value = depthTexture;
     this.shared.uProjInv.value.copy(camera.projectionMatrixInverse);
+    this.shared.uNearFar.value.set(camera.near, camera.far);
     this.aoUniforms.uProj.value.copy(camera.projectionMatrix);
     this.aoUniforms.uRadius.value = this.radius;
     this.aoUniforms.uBias.value = this.bias;

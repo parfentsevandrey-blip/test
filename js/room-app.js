@@ -12,6 +12,7 @@ import { buildProps, buildLights, updateLights } from './room-props.js';
 import { REGISTRY, prewarm, texStats } from './tex/index.js';
 import { AmbientOcclusion } from './post-ao.js';
 import { DepthOfField } from './post-dof.js';
+import { Walker, roomColliders } from './room-walk.js';
 
 const boot = document.getElementById('boot');
 const bootBar = document.getElementById('bootBar');
@@ -102,10 +103,12 @@ function captureRoomEnvironment() {
   // the stretched background quad would be wrong on every cube face
   const prevOn = U.reflOn.value;
   const prevBg = roomScene.background;
-  const prevEnv = roomScene.environment;
   U.reflOn.value = 0;
   roomScene.background = null;
-  roomScene.environment = null;          // capture one bounce, not a feedback loop
+  // NOTE: the environment is deliberately left in place. Setting it to null
+  // flips the USE_ENVMAP define and forces every material in the room to
+  // recompile, twice — which is a visible freeze on a real driver. One extra
+  // bounce in the capture is a far cheaper price.
 
   renderer.setClearColor(0x05070a, 1);
   cubeCam.update(renderer, roomScene);
@@ -116,7 +119,7 @@ function captureRoomEnvironment() {
   const next = pmremGen.fromCubemap(cubeRT.texture).texture;
   if (capturedEnv) capturedEnv.dispose();
   capturedEnv = next;
-  roomScene.environment = capturedEnv || prevEnv;
+  roomScene.environment = capturedEnv;
   renderer.setRenderTarget(null);
 }
 
@@ -425,6 +428,14 @@ async function build() {
   await step(97, 'Снимаем отражения комнаты');
   captureRoomEnvironment();
 
+  // Compile every program up front. Otherwise the driver links a shader the
+  // first time an object becomes visible, and moving the camera to a new view
+  // links several at once — which is exactly what a freeze on a button press
+  // looks like.
+  await step(99, 'Прогреваем шейдеры');
+  renderer.compile(roomScene, camera);
+  renderer.compile(outsideScene, camera);
+
   await step(100, 'Готово');
   document.body.classList.add('ready');
   setTimeout(() => boot?.classList.add('done'), 260);
@@ -544,12 +555,50 @@ function snapView(i) {
   });
 }
 
+/* ------------------------------------------------------------ walking --- */
+const walker = new Walker(camera, canvas);
+walker.setColliders(roomColliders());
+
+function setWalking(on) {
+  const btn = document.getElementById('btnWalk');
+  if (on) {
+    // start from where the orbit camera is, looking the same way
+    walker.start({
+      x: camera.position.x, z: camera.position.z,
+      yaw: Math.atan2(camera.position.x - cam.target.x, camera.position.z - cam.target.z) + Math.PI,
+      pitch: Math.asin(clamp((cam.target.y - camera.position.y) /
+        Math.max(camera.position.distanceTo(cam.target), 1e-3), -1, 1)),
+    });
+    hint?.classList.add('gone');
+  } else {
+    walker.stop();
+  }
+  btn?.setAttribute('aria-pressed', String(on));
+  document.getElementById('walkHint')?.classList.toggle('show', on);
+}
+walker.onExit = () => {
+  document.getElementById('btnWalk')?.setAttribute('aria-pressed', 'false');
+  document.getElementById('walkHint')?.classList.remove('show');
+  // hand control back to the orbit rig from where the walker left off
+  cam.gTarget.set(
+    walker.pos.x - Math.sin(walker.yaw) * 2.4,
+    walker.eye + Math.sin(walker.pitch) * 2.4,
+    walker.pos.z - Math.cos(walker.yaw) * 2.4,
+  );
+  cam.target.copy(cam.gTarget);
+  cam.gDist = cam.dist = 2.4;
+  cam.gTheta = cam.theta = walker.yaw + Math.PI;
+  cam.gPhi = cam.phi = clamp(Math.PI / 2 - walker.pitch, 1.16, 1.86);
+  cam.tween = null;
+};
+
 /* pointer look */
 let dragging = false, lastX = 0, lastY = 0, pinch = 0;
 const hint = document.getElementById('hint');
 const nudge = () => { cam.idle = 0; cam.tween = null; hint?.classList.add('gone'); };
 
 canvas.addEventListener('pointerdown', (e) => {
+  if (walker.active) return;
   if (e.pointerType === 'mouse' && e.button !== 0) return;
   dragging = true; lastX = e.clientX; lastY = e.clientY;
   canvas.classList.add('dragging');
@@ -573,6 +622,7 @@ canvas.addEventListener('pointercancel', endDrag);
 canvas.addEventListener('pointerleave', endDrag);
 
 canvas.addEventListener('wheel', (e) => {
+  if (walker.active) return;
   e.preventDefault();
   cam.gDist = clamp(cam.gDist * (1 + Math.sign(e.deltaY) * 0.08), 1.5, 8.5);
   nudge();
@@ -589,6 +639,8 @@ canvas.addEventListener('touchmove', (e) => {
 canvas.addEventListener('touchend', () => { pinch = 0; });
 
 window.addEventListener('keydown', (e) => {
+  if (!walker.active && ['KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) { setWalking(true); return; }
+  if (walker.active) return;                       // the walker owns the keys
   const n = '1234'.indexOf(e.key);
   if (n >= 0) gotoView(n);
 });
@@ -664,27 +716,28 @@ const Audio_ = {
     };
 
     // rain: a wide hiss plus a lower body
-    const rs = ctx.createBufferSource(); rs.buffer = noise(4, false); rs.loop = true;
+    const white = noise(2.5, false), brown = noise(2.5, true);
+    const rs = ctx.createBufferSource(); rs.buffer = white; rs.loop = true;
     const rlp = ctx.createBiquadFilter(); rlp.type = 'lowpass'; rlp.frequency.value = 2600;
     const rhp = ctx.createBiquadFilter(); rhp.type = 'highpass'; rhp.frequency.value = 380;
     this.rainGain = ctx.createGain(); this.rainGain.gain.value = 0.30;
     rs.connect(rhp).connect(rlp).connect(this.rainGain).connect(master);
     rs.start();
 
-    const rs2 = ctx.createBufferSource(); rs2.buffer = noise(4, true); rs2.loop = true;
+    const rs2 = ctx.createBufferSource(); rs2.buffer = brown; rs2.loop = true;
     const r2lp = ctx.createBiquadFilter(); r2lp.type = 'lowpass'; r2lp.frequency.value = 500;
     const r2g = ctx.createGain(); r2g.gain.value = 0.35;
     rs2.connect(r2lp).connect(r2g).connect(this.rainGain);
     rs2.start();
 
     // fire: low roar; crackles are scheduled on the fly
-    const fs = ctx.createBufferSource(); fs.buffer = noise(4, true); fs.loop = true;
+    const fs = ctx.createBufferSource(); fs.buffer = brown; fs.loop = true;
     const flp = ctx.createBiquadFilter(); flp.type = 'lowpass'; flp.frequency.value = 420;
     this.fireGain = ctx.createGain(); this.fireGain.gain.value = 0.22;
     fs.connect(flp).connect(this.fireGain).connect(master);
     fs.start();
 
-    this.noiseBuf = noise(1, false);
+    this.noiseBuf = white;
   },
   crackle() {
     const ctx = this.ctx; if (!ctx || !this.on) return;
@@ -749,7 +802,12 @@ function userTookControl() {
 
 function wireUI() {
   document.querySelectorAll('#dock button[data-view]').forEach((b) => {
-    b.addEventListener('click', () => gotoView(+b.dataset.view));
+    b.addEventListener('click', () => { if (walker.active) setWalking(false); gotoView(+b.dataset.view); });
+  });
+  document.getElementById('btnWalk')?.addEventListener('click', () => setWalking(!walker.active));
+  // clicking the scene while walking re-acquires pointer lock after an Escape
+  canvas.addEventListener('click', () => {
+    if (walker.active && document.pointerLockElement !== canvas) canvas.requestPointerLock?.();
   });
 
   const sheet = document.getElementById('sheet');
@@ -764,7 +822,6 @@ function wireUI() {
   btnLamps?.addEventListener('click', () => {
     CFG.lamps = !CFG.lamps;
     btnLamps.setAttribute('aria-pressed', String(CFG.lamps));
-    envDirty = 1.2;                      // re-capture once the lamps have faded
   });
 
   const btnSound = document.getElementById('btnSound');
@@ -827,7 +884,7 @@ const clock = new THREE.Clock();
 let flickA = 1, flickB = 1, lampLevel = 1, audioSyncAt = 0;
 let frames = 0, fpsMark = 0, autoQuality = true, qCooldown = 5, badWin = 0, goodWin = 0;
 const _v3 = new THREE.Vector3();
-let lastFps = 0, frameNo = 0, envDirty = 0;
+let lastFps = 0, frameNo = 0;
 
 function tick() {
   requestAnimationFrame(tick);
@@ -888,12 +945,7 @@ function tick() {
     Audio_.crackle();
   }
 
-  if (envDirty > 0) {
-    envDirty -= dt;
-    if (envDirty <= 0) captureRoomEnvironment();
-  }
-
-  updateCamera(dt);
+  if (!walker.update(dt)) updateCamera(dt);
 
   /* ========================= render ========================= */
   const Q = QUALITY[CFG.quality];
@@ -943,7 +995,7 @@ function tick() {
   post.composite.uniforms.uAO.value = ao.strength;
 
   // 6 — defocus before bloom, so out-of-focus highlights bloom as discs
-  const focus = camera.position.distanceTo(cam.target);
+  const focus = walker.active ? walker.focusDistance() : camera.position.distanceTo(cam.target);
   const graded = dof.render(post.hdr.texture, post.hdr.depthTexture, camera, focus);
 
   // 7 — bloom + grade
@@ -1004,9 +1056,9 @@ function tick() {
   FOG_U.uFogDens.value = 0.0027;
   // debug handle: window.__room.snapView(0..3), .stats(), .CFG, .lights …
   window.__room = {
-    camera, cam, CFG, QUALITY, VIEWS, lights, post, U, snapView,
+    camera, cam, CFG, QUALITY, VIEWS, lights, post, U, snapView, renderer,
     roomScene, outsideScene, shell, windows, fire, props, outside, THREE,
-    glassMaterials, reflectiveFloor, ao, dof,
+    glassMaterials, reflectiveFloor, ao, dof, walker, setWalking,
     texStats,
     stats: () => ({ frame: frameNo, fps: lastFps, q: CFG.quality, commitMs: Math.round(lastCommitMs) }),
   };

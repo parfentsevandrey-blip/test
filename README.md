@@ -184,6 +184,13 @@ rainy night city outside. Same vendored Three.js r160, no external assets.
   the plaster on the 0.7 m panel beside it, and patterns run continuously
   across surfaces built from several pieces. About 2.3 s of generation at
   load, split into chunks that yield so the loader keeps animating.
+- **You can walk around it.** "Пройтись" (or just pressing `W`) drops you into
+  the room at eye height with pointer lock. Collision is a capsule against a
+  dozen axis-aligned boxes resolved one axis at a time, so you slide along the
+  sofa instead of sticking to it; low obstacles are stepped over. Speed is a
+  real 1.25 m/s — game speeds read as a game — with damped acceleration, head
+  bob scaled by actual velocity, a little roll into a strafe, and focus that
+  follows wherever you are looking.
 - **Procedural audio** (off by default): filtered-noise rain, a fire roar with
   scheduled crackles, and low thunder — synthesised with WebAudio, no files.
 
@@ -191,8 +198,12 @@ rainy night city outside. Same vendored Three.js r160, no external assets.
 
 Drag to look, wheel/pinch to zoom, keys `1`–`4` for the camera presets
 (Гостиная · У камина · У окна · На диване). The gear panel adjusts fire, rain,
-colour warmth, resolution, quality and camera drift, and shows a live fps
-readout.
+colour warmth, depth of field, resolution, quality and camera drift, and shows
+a live fps readout.
+
+**Walking:** `W` `A` `S` `D` (or the arrows) to move — pressing any of them
+enters walk mode, as does the "Пройтись" button. Mouse looks, `Shift` moves
+faster, `Ctrl` crouches, `Esc` (or a preset key) returns to the orbiting views.
 
 **Quality** and **resolution** are deliberately separate. A quality tier only
 toggles which passes run — reflections, bloom levels, rain and tower counts —
@@ -202,9 +213,19 @@ targets, so it is applied when you release the slider rather than during the
 drag. Quality auto-selects on first run and adapts to the measured frame rate,
 but the moment you open the settings panel it stops moving on its own.
 
+Every shader is compiled at load, in the last step of the loader, rather than
+the first time a light or a pass changes — otherwise the first click on a
+button that flips a material define stalls the frame while Three relinks
+programs. For the same reason the environment capture no longer clears
+`scene.environment` while it renders: doing so toggled `USE_ENVMAP` and
+recompiled every material in the room twice per capture.
+
 `node tools/uicheck.js` audits every control: it actuates each one the way a
 user would and asserts the state actually changed, and fails the build if a
 quality switch costs more than a few ms of main-thread time.
+`node tools/walkcheck.js` does the same for walk mode — that `W` moves you,
+that walls and furniture stop you, that crouching lowers the eye, and that
+`Esc` hands the camera back to the orbit rig.
 
 ## Files
 
@@ -213,7 +234,11 @@ room.html              Page shell + UI (Russian copy)
 js/room.js             Core: config, maths, renderer, RT + world-UV helpers
 js/room-outside.js     Sky, city towers, ground, rain, mist, lightning
 js/room-interior.js    Room shell, floor-to-ceiling glazing + rain shader, fireplace
-js/room-props.js       Furniture, soft goods, plants, the cat, lighting rig
+js/room-props.js       Furniture, soft goods, plants, the cat
+js/room-lights.js      Lighting rig: fire spot + omni, bounces, practicals, window
+js/room-walk.js        First-person controller: pointer lock, collision, head bob
+js/post-ao.js          Depth-only SSAO with a depth-aware blur
+js/post-dof.js         Depth of field: CoC prepass, half-res gather bokeh, composite
 js/room-app.js         Env map, planar reflectors, post stack, controls, audio, loop
 js/tex/noise.js        Texture toolkit: tileable noise, worley, warp, height→normal
 js/tex/index.js        Registry of the 13 surfaces + the bridge to THREE textures
@@ -223,6 +248,7 @@ cozy-room.html         Self-contained single-file build (double-click to open)
 tools/shoot.js         Headless smoke test + screenshots of all four views
 tools/filecheck.js     Verifies the single-file build runs from file://
 tools/uicheck.js       Audits every control: does it work, and does it stall?
+tools/walkcheck.js     Audits walk mode: movement, collision, crouch, exit
 tools/closeup.js       Eight in-scene close-ups + per-surface luminance readout
 tools/texlab.html      Texture lab: any surface on a lit panel/sphere/cylinder
 tools/texshot.js       Renders one surface to a PNG contact sheet

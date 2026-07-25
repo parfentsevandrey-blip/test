@@ -2,7 +2,7 @@
    Part 2 / 5 — the world beyond the glass: overcast sky, city, rain, lightning
    ========================================================================= */
 import * as THREE from 'three';
-import { GLSL_NOISE, U, ROOM, rnd, rrnd, outsideScene } from './room.js';
+import { GLSL_NOISE, U, ROOM, rnd, rrnd, clamp, outsideScene } from './room.js';
 
 const FOG = /* glsl */`
 uniform vec3  uFogColor;
