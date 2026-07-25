@@ -237,6 +237,10 @@ input[type=range]::-moz-range-thumb{
       <input type="range" id="sWarm" min="0" max="100" value="70" />
     </div>
     <div class="row">
+      <div class="row__top"><label for="sDof">Глубина резкости</label><output id="oDof">100%</output></div>
+      <input type="range" id="sDof" min="0" max="200" step="10" value="100" />
+    </div>
+    <div class="row">
       <div class="row__top"><label for="sRes">Разрешение</label><output id="oRes">85%</output></div>
       <input type="range" id="sRes" min="40" max="100" step="5" value="85" />
     </div>
@@ -53573,7 +53577,7 @@ vec3 applyFog(vec3 col, vec3 worldPos, float dist){
 export const FOG_U = {
   uFogColor:  { value: new THREE.Color(0x0b1018) },
   uFogGround: { value: new THREE.Color(0x160e09) },
-  uFogDens:   { value: 0.0020 },
+  uFogDens:   { value: 0.0027 },
 };
 const fogUniforms = () => FOG_U;
 
@@ -58980,7 +58984,7 @@ export function buildShell() {
   const fu = {
     tRefl:      { value: null },
     uReflMat:   { value: new THREE.Matrix4() },
-    uReflAmt:   { value: 0.42 },
+    uReflAmt:   { value: 0.30 },
     uReflOn:    U.reflOn,
     uTime:      U.time,
   };
@@ -59013,7 +59017,7 @@ export function buildShell() {
           r += texture2D(tRefl, base + vec2(0.0, -blur * 1.6)).rgb * 0.15;
           float inside = step(0.0, base.x) * step(base.x, 1.0) * step(0.0, base.y) * step(base.y, 1.0);
           // clamp: an unclamped grazing reflection of the city blew out to white
-          gl_FragColor.rgb += min(r, vec3(3.0)) * uReflAmt * fres * inside * (1.0 - rgh * 0.75);
+          gl_FragColor.rgb += min(r, vec3(1.6)) * uReflAmt * fres * inside * (1.0 - rgh * 0.75);
         }
         #include <tonemapping_fragment>`);
   };
@@ -60574,6 +60578,166 @@ export class AmbientOcclusion {
 }
 </script>
 <script type="text/plain" id="rm17">/* =========================================================================
+   Depth of field.
+
+   Nothing marks an image as computer-generated more reliably than being sharp
+   everywhere. A real photograph of a room taken at f/2 in near-darkness has a
+   focal plane a few centimetres deep and everything else falls away; the eye
+   reads that instantly as "photographed". This is a gather-based bokeh at half
+   resolution, driven by the same depth buffer the AO pass uses.
+
+       const dof = new DepthOfField(deps);
+       dof.resize(w, h);
+       dof.render(colorTexture, depthTexture, camera, focusDistance);
+       dof.texture   // the defocused image, same size as the input
+
+   It runs BEFORE bloom, so out-of-focus highlights bloom as discs rather than
+   as points — which is what makes bokeh look like glass and not like a blur.
+   ========================================================================= */
+
+export class DepthOfField {
+  constructor({ THREE, blit, rt, VERT_QUAD }) {
+    this.THREE = THREE;
+    this.blit = blit;
+    this.enabled = true;
+    this.aperture = 1.0;        // scales the whole effect; 0 disables it
+    this.focusRange = 1.7;      // metres either side of focus that stay sharp
+    this.maxBlur = 11.0;        // pixels of blur radius at full defocus
+
+    this.half = rt(2, 2, { depth: false });
+    this.out = rt(2, 2, { depth: false });
+
+    const common = /* glsl */`
+      uniform sampler2D tDepth;
+      uniform mat4  uProjInv;
+      uniform float uFocus, uRange, uAperture;
+      varying vec2  vUv;
+
+      float viewZ(vec2 uv){
+        float d = texture2D(tDepth, uv).x;
+        vec4 c = vec4(uv * 2.0 - 1.0, d * 2.0 - 1.0, 1.0);
+        vec4 v = uProjInv * c;
+        return -(v.z / v.w);                       // positive distance from eye
+      }
+      /* signed circle of confusion: negative in front of focus, positive
+         behind. Sign matters — foreground bokeh must be allowed to spill over
+         a sharp background, while a sharp subject must not be eaten by the
+         blurred wall behind it. */
+      float coc(vec2 uv){
+        float z = viewZ(uv);
+        float d = z - uFocus;
+        // soft-limited so the far field never runs away — an interior has no
+        // true far plane, and a hard 1/z curve blurs the whole back wall
+        float c = d / (abs(d) + uRange * 4.0);
+        c = sign(c) * max(abs(c) - 0.18, 0.0) / 0.82;   // a real sharp band
+        return clamp(c * uAperture, -1.0, 1.0);
+      }`;
+
+    this.uniforms = {
+      tColor: { value: null },
+      tDepth: { value: null },
+      tHalf: { value: null },
+      uProjInv: { value: new THREE.Matrix4() },
+      uFocus: { value: 3.0 },
+      uRange: { value: this.focusRange },
+      uAperture: { value: this.aperture },
+      uTexel: { value: new THREE.Vector2() },
+      uMaxBlur: { value: this.maxBlur },
+    };
+
+    /* ------------------------------------------------- gather at half res */
+    this.blurMaterial = new THREE.ShaderMaterial({
+      uniforms: this.uniforms,
+      vertexShader: VERT_QUAD,
+      depthTest: false, depthWrite: false,
+      fragmentShader: common + /* glsl */`
+        uniform sampler2D tColor;
+        uniform vec2 uTexel;
+        uniform float uMaxBlur;
+
+        const int RINGS = 3;
+        const int PER_RING = 7;
+        const float GOLDEN = 2.39996323;
+
+        void main(){
+          float c0 = coc(vUv);
+          float r0 = abs(c0);
+
+          vec3 sum = texture2D(tColor, vUv).rgb;
+          float wsum = 1.0;
+
+          // a hexagonal-ish spiral: cheap, and the ring structure gives the
+          // highlight discs an edge instead of a gaussian mush
+          for(int ring = 1; ring <= RINGS; ring++){
+            float fr = float(ring) / float(RINGS);
+            for(int i = 0; i < PER_RING; i++){
+              float a = float(i) * (6.2831853 / float(PER_RING)) + float(ring) * GOLDEN;
+              // scaling by the texel size keeps the bokeh circular on screen
+              vec2 uv = vUv + vec2(cos(a), sin(a)) * fr * r0 * uMaxBlur * uTexel;
+              vec3 s = texture2D(tColor, uv).rgb;
+              float cs = coc(uv);
+
+              // a sample may contribute only if it is itself blurred enough to
+              // reach here; otherwise a sharp foreground bleeds into the plate
+              float w = clamp(abs(cs) * 1.4 - fr * 0.4 + 0.35, 0.0, 1.0);
+              // and foreground blur is allowed to spill forward
+              if(cs < 0.0 && c0 > cs) w = max(w, abs(cs));
+              sum += s * w; wsum += w;
+            }
+          }
+          gl_FragColor = vec4(sum / wsum, r0);
+        }`,
+    });
+
+    /* ------------------------------------------------ composite back up */
+    this.compositeMaterial = new THREE.ShaderMaterial({
+      uniforms: this.uniforms,
+      vertexShader: VERT_QUAD,
+      depthTest: false, depthWrite: false,
+      fragmentShader: common + /* glsl */`
+        uniform sampler2D tColor, tHalf;
+        void main(){
+          vec3 sharp = texture2D(tColor, vUv).rgb;
+          vec4 blur = texture2D(tHalf, vUv);
+          float k = smoothstep(0.03, 0.30, abs(coc(vUv)));
+          // the half-res buffer carries its own reach in .a, so a strongly
+          // defocused neighbour can still dominate a nominally sharp pixel
+          k = max(k, smoothstep(0.08, 0.40, blur.a));
+          gl_FragColor = vec4(mix(sharp, blur.rgb, k), 1.0);
+        }`,
+    });
+  }
+
+  resize(w, h) {
+    const hw = Math.max(2, w >> 1), hh = Math.max(2, h >> 1);
+    if (this.half.width !== hw || this.half.height !== hh) this.half.setSize(hw, hh);
+    if (this.out.width !== w || this.out.height !== h) this.out.setSize(w, h);
+    this.uniforms.uTexel.value.set(1 / w, 1 / h);
+  }
+
+  /** @returns the texture to use downstream — the input itself when disabled */
+  render(colorTexture, depthTexture, camera, focusDistance) {
+    if (!this.enabled || this.aperture <= 0.001) return colorTexture;
+    const u = this.uniforms;
+    u.tDepth.value = depthTexture;
+    u.uProjInv.value.copy(camera.projectionMatrixInverse);
+    u.uFocus.value = focusDistance;
+    u.uRange.value = this.focusRange;
+    u.uAperture.value = this.aperture;
+    u.uMaxBlur.value = this.maxBlur;
+
+    u.tColor.value = colorTexture;
+    this.blit(this.blurMaterial, this.half);
+
+    u.tHalf.value = this.half.texture;
+    this.blit(this.compositeMaterial, this.out);
+    return this.out.texture;
+  }
+
+  get texture() { return this.out.texture; }
+}
+</script>
+<script type="text/plain" id="rm18">/* =========================================================================
    Part 5 / 5 — environment, planar reflections, post stack, controls, audio
    ========================================================================= */
 import * as THREE from 'three';
@@ -60586,6 +60750,7 @@ import { buildShell, buildWindows, buildFireplace, glassMaterials, reflectiveFlo
 import { buildProps, buildLights, updateLights } from './room-props.js';
 import { REGISTRY, prewarm, texStats } from './tex/index.js';
 import { AmbientOcclusion } from './post-ao.js';
+import { DepthOfField } from './post-dof.js';
 
 const boot = document.getElementById('boot');
 const bootBar = document.getElementById('bootBar');
@@ -60650,6 +60815,48 @@ function buildEnvironment() {
 
   roomScene.environment = env;
   return env;
+}
+
+/* ------------------------------------------------ capture the real room ---
+   A painted gradient environment makes every material reflect a generic
+   outdoors, which is exactly why they read as pasted into the room rather than
+   standing in it. Rendering a cube map from inside the room gives genuine
+   colour bleeding: the ceiling picks up the fire, the marble picks up the
+   floor, the brass picks up the wall it is standing against.
+
+   It is captured, not tracked — the environment is a low-frequency term and
+   the flame's variation is carried by the punctual lights, so one capture
+   (plus one when the lamps toggle) is plenty and costs nothing per frame. */
+let cubeRT = null, cubeCam = null, pmremGen = null, capturedEnv = null;
+
+function captureRoomEnvironment() {
+  if (!cubeRT) {
+    cubeRT = new THREE.WebGLCubeRenderTarget(128, { type: THREE.HalfFloatType });
+    cubeCam = new THREE.CubeCamera(0.25, 60, cubeRT);
+    pmremGen = new THREE.PMREMGenerator(renderer);
+  }
+  cubeCam.position.set(-0.4, 1.45, 0.2);
+
+  // the reflective materials must not sample render targets mid-capture, and
+  // the stretched background quad would be wrong on every cube face
+  const prevOn = U.reflOn.value;
+  const prevBg = roomScene.background;
+  const prevEnv = roomScene.environment;
+  U.reflOn.value = 0;
+  roomScene.background = null;
+  roomScene.environment = null;          // capture one bounce, not a feedback loop
+
+  renderer.setClearColor(0x05070a, 1);
+  cubeCam.update(renderer, roomScene);
+
+  U.reflOn.value = prevOn;
+  roomScene.background = prevBg;
+
+  const next = pmremGen.fromCubemap(cubeRT.texture).texture;
+  if (capturedEnv) capturedEnv.dispose();
+  capturedEnv = next;
+  roomScene.environment = capturedEnv || prevEnv;
+  renderer.setRenderTarget(null);
 }
 
 /* ====================================================== planar mirror ==== */
@@ -60869,9 +61076,10 @@ class Post {
     this.composite.uniforms.uRes.value.set(w, h);
   }
 
-  render(nLevels) {
+  render(nLevels, source) {
+    const src = source || this.hdr.texture;
     const L = this.levels, n = Math.min(nLevels, L.length);
-    this.bright.uniforms.tDiffuse.value = this.hdr.texture;
+    this.bright.uniforms.tDiffuse.value = src;
     blit(this.bright, L[0]);
     for (let i = 1; i < n; i++) {
       this.down.uniforms.tDiffuse.value = L[i - 1].texture;
@@ -60883,14 +61091,14 @@ class Post {
       this.up.uniforms.uTexel.value.set(1 / L[i].width, 1 / L[i].height);
       blit(this.up, L[i - 1], false);          // add on top of this level's own content
     }
-    this.composite.uniforms.tHDR.value = this.hdr.texture;
+    this.composite.uniforms.tHDR.value = src;
     this.composite.uniforms.tBloom.value = L[0].texture;
     blit(this.composite, null);
   }
 }
 
 /* ============================================================== build ==== */
-let outside, shell, windows, fire, props, lights, post, lightning, ao;
+let outside, shell, windows, fire, props, lights, post, lightning, ao, dof;
 let rtOut, rtOutSmall, rtOutBlur, outBlurDown, outBlurUp;
 let floorRefl, winRefl;
 let env;
@@ -60930,6 +61138,7 @@ async function build() {
   await step(94, 'Впускаем дождь');
   post = new Post();
   ao = new AmbientOcclusion({ THREE, renderer, blit, rt, VERT_QUAD });
+  dof = new DepthOfField({ THREE, blit, rt, VERT_QUAD });
   rtOut = rt(2, 2, { depth: true });
   rtOutSmall = rt(2, 2, { depth: false });
   rtOutBlur = rt(2, 2, { depth: false });
@@ -60943,6 +61152,17 @@ async function build() {
 
   applyQuality(CFG.quality);
   onResize();
+
+  // one outside pass first, so the glass has a city to refract into the capture
+  renderer.setRenderTarget(rtOut);
+  renderer.clear();
+  renderer.render(outsideScene, camera);
+  for (const m of glassMaterials) {
+    m.uniforms.tBack.value = rtOut.texture;
+    m.uniforms.tBackBlur.value = rtOut.texture;
+  }
+  await step(97, 'Снимаем отражения комнаты');
+  captureRoomEnvironment();
 
   await step(100, 'Готово');
   document.body.classList.add('ready');
@@ -60968,7 +61188,7 @@ function applyQuality(q) {
   const Q = QUALITY[q];
   outside.city.count = Q.towers;
   outside.rain.geometry.instanceCount = Q.rain;
-  reflectiveFloor.uniforms.uReflAmt.value = Q.refl >= 1 ? 0.42 : 0.0;
+  reflectiveFloor.uniforms.uReflAmt.value = Q.refl >= 1 ? 0.30 : 0.0;
   for (const m of glassMaterials) m.uniforms.uReflAmt.value = Q.refl >= 2 ? 0.9 : 0.0;
   paintQualityUi(q);
   lastCommitMs = performance.now() - t0;
@@ -61002,6 +61222,7 @@ function onResize() {
   post.hdr.depthTexture.image.height = Hh;
   post.hdr.depthTexture.needsUpdate = true;
   ao.resize(W, Hh);
+  dof.resize(W, Hh);
   rtOut.setSize(W, Hh);
   const bw = Math.max(2, W >> 2), bh = Math.max(2, Hh >> 2);
   rtOutSmall.setSize(bw, bh);
@@ -61282,6 +61503,7 @@ function wireUI() {
   btnLamps?.addEventListener('click', () => {
     CFG.lamps = !CFG.lamps;
     btnLamps.setAttribute('aria-pressed', String(CFG.lamps));
+    envDirty = 1.2;                      // re-capture once the lamps have faded
   });
 
   const btnSound = document.getElementById('btnSound');
@@ -61299,6 +61521,7 @@ function wireUI() {
   };
   bind('sFire', 'oFire', (v) => Math.round(v * 100) + '%', (v) => { CFG.fire = v; });
   bind('sRain', 'oRain', (v) => Math.round(v * 100) + '%', (v) => { CFG.rain = v; U.rain.value = v; });
+  bind('sDof', 'oDof', (v) => Math.round(v * 100) + '%', (v) => { if (dof) dof.aperture = v; });
   bind('sWarm', 'oWarm', (v) => Math.round(v * 100) + '%', (v) => {
     CFG.warm = v;
     if (post) post.composite.uniforms.uWarm.value = v;
@@ -61343,7 +61566,7 @@ const clock = new THREE.Clock();
 let flickA = 1, flickB = 1, lampLevel = 1, audioSyncAt = 0;
 let frames = 0, fpsMark = 0, autoQuality = true, qCooldown = 5, badWin = 0, goodWin = 0;
 const _v3 = new THREE.Vector3();
-let lastFps = 0, frameNo = 0;
+let lastFps = 0, frameNo = 0, envDirty = 0;
 
 function tick() {
   requestAnimationFrame(tick);
@@ -61404,6 +61627,11 @@ function tick() {
     Audio_.crackle();
   }
 
+  if (envDirty > 0) {
+    envDirty -= dt;
+    if (envDirty <= 0) captureRoomEnvironment();
+  }
+
   updateCamera(dt);
 
   /* ========================= render ========================= */
@@ -61453,8 +61681,12 @@ function tick() {
   post.composite.uniforms.tAO.value = ao.texture;
   post.composite.uniforms.uAO.value = ao.strength;
 
-  // 6 — bloom + grade
-  post.render(Q.bloom);
+  // 6 — defocus before bloom, so out-of-focus highlights bloom as discs
+  const focus = camera.position.distanceTo(cam.target);
+  const graded = dof.render(post.hdr.texture, post.hdr.depthTexture, camera, focus);
+
+  // 7 — bloom + grade
+  post.render(Q.bloom, graded);
   renderer.setRenderTarget(null);
 
   /* --------------------- adaptive quality --------------------- */
@@ -61508,19 +61740,19 @@ function tick() {
   cam.theta = cam.gTheta = VIEWS[0].theta;
   cam.phi = cam.gPhi = VIEWS[0].phi;
 
-  FOG_U.uFogDens.value = 0.0020;
+  FOG_U.uFogDens.value = 0.0027;
   // debug handle: window.__room.snapView(0..3), .stats(), .CFG, .lights …
   window.__room = {
     camera, cam, CFG, QUALITY, VIEWS, lights, post, U, snapView,
     roomScene, outsideScene, shell, windows, fire, props, outside, THREE,
-    glassMaterials, reflectiveFloor, ao,
+    glassMaterials, reflectiveFloor, ao, dof,
     texStats,
     stats: () => ({ frame: frameNo, fps: lastFps, q: CFG.quality, commitMs: Math.round(lastCommitMs) }),
   };
   tick();
 })();
 </script>
-<script type="application/json" id="room-manifest">{"entry":"rm17","order":[{"domId":"rm0","deps":{}},{"domId":"rm1","deps":{"three":"rm0"}},{"domId":"rm2","deps":{"three":"rm0","./room.js":"rm1"}},{"domId":"rm3","deps":{}},{"domId":"rm4","deps":{}},{"domId":"rm5","deps":{}},{"domId":"rm6","deps":{}},{"domId":"rm7","deps":{}},{"domId":"rm8","deps":{}},{"domId":"rm9","deps":{}},{"domId":"rm10","deps":{}},{"domId":"rm11","deps":{"three":"rm0","./noise.js":"rm3","./oak.js":"rm4","./plaster.js":"rm5","./stone.js":"rm6","./rug.js":"rm7","./weave.js":"rm8","./surfaces.js":"rm9","./organic.js":"rm10"}},{"domId":"rm12","deps":{"three":"rm0","./noise.js":"rm3"}},{"domId":"rm13","deps":{"three":"rm0","./room.js":"rm1","./tex/index.js":"rm11","./tex/detail.js":"rm12"}},{"domId":"rm14","deps":{"three":"rm0","./room.js":"rm1"}},{"domId":"rm15","deps":{"three":"rm0","./room.js":"rm1","./tex/index.js":"rm11","./tex/detail.js":"rm12","./room-lights.js":"rm14"}},{"domId":"rm16","deps":{}},{"domId":"rm17","deps":{"three":"rm0","./room.js":"rm1","./room-outside.js":"rm2","./room-interior.js":"rm13","./room-props.js":"rm15","./tex/index.js":"rm11","./post-ao.js":"rm16"}}]}</script>
+<script type="application/json" id="room-manifest">{"entry":"rm18","order":[{"domId":"rm0","deps":{}},{"domId":"rm1","deps":{"three":"rm0"}},{"domId":"rm2","deps":{"three":"rm0","./room.js":"rm1"}},{"domId":"rm3","deps":{}},{"domId":"rm4","deps":{}},{"domId":"rm5","deps":{}},{"domId":"rm6","deps":{}},{"domId":"rm7","deps":{}},{"domId":"rm8","deps":{}},{"domId":"rm9","deps":{}},{"domId":"rm10","deps":{}},{"domId":"rm11","deps":{"three":"rm0","./noise.js":"rm3","./oak.js":"rm4","./plaster.js":"rm5","./stone.js":"rm6","./rug.js":"rm7","./weave.js":"rm8","./surfaces.js":"rm9","./organic.js":"rm10"}},{"domId":"rm12","deps":{"three":"rm0","./noise.js":"rm3"}},{"domId":"rm13","deps":{"three":"rm0","./room.js":"rm1","./tex/index.js":"rm11","./tex/detail.js":"rm12"}},{"domId":"rm14","deps":{"three":"rm0","./room.js":"rm1"}},{"domId":"rm15","deps":{"three":"rm0","./room.js":"rm1","./tex/index.js":"rm11","./tex/detail.js":"rm12","./room-lights.js":"rm14"}},{"domId":"rm16","deps":{}},{"domId":"rm17","deps":{}},{"domId":"rm18","deps":{"three":"rm0","./room.js":"rm1","./room-outside.js":"rm2","./room-interior.js":"rm13","./room-props.js":"rm15","./tex/index.js":"rm11","./post-ao.js":"rm16","./post-dof.js":"rm17"}}]}</script>
 <script type="module">(function bootstrapFn() {
   var reg = JSON.parse(document.getElementById("room-manifest").textContent);
   var esc = function (s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); };

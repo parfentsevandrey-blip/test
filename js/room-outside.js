@@ -22,7 +22,7 @@ vec3 applyFog(vec3 col, vec3 worldPos, float dist){
 export const FOG_U = {
   uFogColor:  { value: new THREE.Color(0x0b1018) },
   uFogGround: { value: new THREE.Color(0x160e09) },
-  uFogDens:   { value: 0.0020 },
+  uFogDens:   { value: 0.0027 },
 };
 const fogUniforms = () => FOG_U;
 

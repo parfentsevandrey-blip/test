@@ -30,7 +30,7 @@ export function buildShell() {
   const fu = {
     tRefl:      { value: null },
     uReflMat:   { value: new THREE.Matrix4() },
-    uReflAmt:   { value: 0.42 },
+    uReflAmt:   { value: 0.30 },
     uReflOn:    U.reflOn,
     uTime:      U.time,
   };
@@ -63,7 +63,7 @@ export function buildShell() {
           r += texture2D(tRefl, base + vec2(0.0, -blur * 1.6)).rgb * 0.15;
           float inside = step(0.0, base.x) * step(base.x, 1.0) * step(0.0, base.y) * step(base.y, 1.0);
           // clamp: an unclamped grazing reflection of the city blew out to white
-          gl_FragColor.rgb += min(r, vec3(3.0)) * uReflAmt * fres * inside * (1.0 - rgh * 0.75);
+          gl_FragColor.rgb += min(r, vec3(1.6)) * uReflAmt * fres * inside * (1.0 - rgh * 0.75);
         }
         #include <tonemapping_fragment>`);
   };

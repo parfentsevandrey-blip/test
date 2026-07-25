@@ -159,6 +159,16 @@ rainy night city outside. Same vendored Three.js r160, no external assets.
   material with whiteout blending, sampled triplanar in world space and faded
   out by view distance, so surfaces keep structure up close without aliasing
   into shimmer at range.
+- **Depth of field.** Nothing marks an image as CG more reliably than being
+  sharp from half a metre to infinity. A gather bokeh at half resolution, run
+  before bloom so defocused highlights bloom as discs rather than points, with
+  a soft-limited circle of confusion — a hard 1/z curve defocuses an interior's
+  whole back wall. Focus tracks whatever the camera is looking at.
+- **A real environment.** The cube map is captured from inside the room rather
+  than painted, so materials reflect *this* room: the ceiling picks up the
+  fire, the marble picks up the floor, the brass picks up the wall behind it.
+  Re-captured when the lamps change; it is a low-frequency term, so the flame's
+  variation is carried by the punctual lights instead.
 - **Planar reflections.** Mirror cameras give the oiled-oak floor and the dark
   glass genuine reflections of the room — the signature look of a lit room at
   night. Guarded against feedback: reflective materials switch off while any

@@ -11,6 +11,7 @@ import { buildShell, buildWindows, buildFireplace, glassMaterials, reflectiveFlo
 import { buildProps, buildLights, updateLights } from './room-props.js';
 import { REGISTRY, prewarm, texStats } from './tex/index.js';
 import { AmbientOcclusion } from './post-ao.js';
+import { DepthOfField } from './post-dof.js';
 
 const boot = document.getElementById('boot');
 const bootBar = document.getElementById('bootBar');
@@ -75,6 +76,48 @@ function buildEnvironment() {
 
   roomScene.environment = env;
   return env;
+}
+
+/* ------------------------------------------------ capture the real room ---
+   A painted gradient environment makes every material reflect a generic
+   outdoors, which is exactly why they read as pasted into the room rather than
+   standing in it. Rendering a cube map from inside the room gives genuine
+   colour bleeding: the ceiling picks up the fire, the marble picks up the
+   floor, the brass picks up the wall it is standing against.
+
+   It is captured, not tracked — the environment is a low-frequency term and
+   the flame's variation is carried by the punctual lights, so one capture
+   (plus one when the lamps toggle) is plenty and costs nothing per frame. */
+let cubeRT = null, cubeCam = null, pmremGen = null, capturedEnv = null;
+
+function captureRoomEnvironment() {
+  if (!cubeRT) {
+    cubeRT = new THREE.WebGLCubeRenderTarget(128, { type: THREE.HalfFloatType });
+    cubeCam = new THREE.CubeCamera(0.25, 60, cubeRT);
+    pmremGen = new THREE.PMREMGenerator(renderer);
+  }
+  cubeCam.position.set(-0.4, 1.45, 0.2);
+
+  // the reflective materials must not sample render targets mid-capture, and
+  // the stretched background quad would be wrong on every cube face
+  const prevOn = U.reflOn.value;
+  const prevBg = roomScene.background;
+  const prevEnv = roomScene.environment;
+  U.reflOn.value = 0;
+  roomScene.background = null;
+  roomScene.environment = null;          // capture one bounce, not a feedback loop
+
+  renderer.setClearColor(0x05070a, 1);
+  cubeCam.update(renderer, roomScene);
+
+  U.reflOn.value = prevOn;
+  roomScene.background = prevBg;
+
+  const next = pmremGen.fromCubemap(cubeRT.texture).texture;
+  if (capturedEnv) capturedEnv.dispose();
+  capturedEnv = next;
+  roomScene.environment = capturedEnv || prevEnv;
+  renderer.setRenderTarget(null);
 }
 
 /* ====================================================== planar mirror ==== */
@@ -294,9 +337,10 @@ class Post {
     this.composite.uniforms.uRes.value.set(w, h);
   }
 
-  render(nLevels) {
+  render(nLevels, source) {
+    const src = source || this.hdr.texture;
     const L = this.levels, n = Math.min(nLevels, L.length);
-    this.bright.uniforms.tDiffuse.value = this.hdr.texture;
+    this.bright.uniforms.tDiffuse.value = src;
     blit(this.bright, L[0]);
     for (let i = 1; i < n; i++) {
       this.down.uniforms.tDiffuse.value = L[i - 1].texture;
@@ -308,14 +352,14 @@ class Post {
       this.up.uniforms.uTexel.value.set(1 / L[i].width, 1 / L[i].height);
       blit(this.up, L[i - 1], false);          // add on top of this level's own content
     }
-    this.composite.uniforms.tHDR.value = this.hdr.texture;
+    this.composite.uniforms.tHDR.value = src;
     this.composite.uniforms.tBloom.value = L[0].texture;
     blit(this.composite, null);
   }
 }
 
 /* ============================================================== build ==== */
-let outside, shell, windows, fire, props, lights, post, lightning, ao;
+let outside, shell, windows, fire, props, lights, post, lightning, ao, dof;
 let rtOut, rtOutSmall, rtOutBlur, outBlurDown, outBlurUp;
 let floorRefl, winRefl;
 let env;
@@ -355,6 +399,7 @@ async function build() {
   await step(94, 'Впускаем дождь');
   post = new Post();
   ao = new AmbientOcclusion({ THREE, renderer, blit, rt, VERT_QUAD });
+  dof = new DepthOfField({ THREE, blit, rt, VERT_QUAD });
   rtOut = rt(2, 2, { depth: true });
   rtOutSmall = rt(2, 2, { depth: false });
   rtOutBlur = rt(2, 2, { depth: false });
@@ -368,6 +413,17 @@ async function build() {
 
   applyQuality(CFG.quality);
   onResize();
+
+  // one outside pass first, so the glass has a city to refract into the capture
+  renderer.setRenderTarget(rtOut);
+  renderer.clear();
+  renderer.render(outsideScene, camera);
+  for (const m of glassMaterials) {
+    m.uniforms.tBack.value = rtOut.texture;
+    m.uniforms.tBackBlur.value = rtOut.texture;
+  }
+  await step(97, 'Снимаем отражения комнаты');
+  captureRoomEnvironment();
 
   await step(100, 'Готово');
   document.body.classList.add('ready');
@@ -393,7 +449,7 @@ function applyQuality(q) {
   const Q = QUALITY[q];
   outside.city.count = Q.towers;
   outside.rain.geometry.instanceCount = Q.rain;
-  reflectiveFloor.uniforms.uReflAmt.value = Q.refl >= 1 ? 0.42 : 0.0;
+  reflectiveFloor.uniforms.uReflAmt.value = Q.refl >= 1 ? 0.30 : 0.0;
   for (const m of glassMaterials) m.uniforms.uReflAmt.value = Q.refl >= 2 ? 0.9 : 0.0;
   paintQualityUi(q);
   lastCommitMs = performance.now() - t0;
@@ -427,6 +483,7 @@ function onResize() {
   post.hdr.depthTexture.image.height = Hh;
   post.hdr.depthTexture.needsUpdate = true;
   ao.resize(W, Hh);
+  dof.resize(W, Hh);
   rtOut.setSize(W, Hh);
   const bw = Math.max(2, W >> 2), bh = Math.max(2, Hh >> 2);
   rtOutSmall.setSize(bw, bh);
@@ -707,6 +764,7 @@ function wireUI() {
   btnLamps?.addEventListener('click', () => {
     CFG.lamps = !CFG.lamps;
     btnLamps.setAttribute('aria-pressed', String(CFG.lamps));
+    envDirty = 1.2;                      // re-capture once the lamps have faded
   });
 
   const btnSound = document.getElementById('btnSound');
@@ -724,6 +782,7 @@ function wireUI() {
   };
   bind('sFire', 'oFire', (v) => Math.round(v * 100) + '%', (v) => { CFG.fire = v; });
   bind('sRain', 'oRain', (v) => Math.round(v * 100) + '%', (v) => { CFG.rain = v; U.rain.value = v; });
+  bind('sDof', 'oDof', (v) => Math.round(v * 100) + '%', (v) => { if (dof) dof.aperture = v; });
   bind('sWarm', 'oWarm', (v) => Math.round(v * 100) + '%', (v) => {
     CFG.warm = v;
     if (post) post.composite.uniforms.uWarm.value = v;
@@ -768,7 +827,7 @@ const clock = new THREE.Clock();
 let flickA = 1, flickB = 1, lampLevel = 1, audioSyncAt = 0;
 let frames = 0, fpsMark = 0, autoQuality = true, qCooldown = 5, badWin = 0, goodWin = 0;
 const _v3 = new THREE.Vector3();
-let lastFps = 0, frameNo = 0;
+let lastFps = 0, frameNo = 0, envDirty = 0;
 
 function tick() {
   requestAnimationFrame(tick);
@@ -829,6 +888,11 @@ function tick() {
     Audio_.crackle();
   }
 
+  if (envDirty > 0) {
+    envDirty -= dt;
+    if (envDirty <= 0) captureRoomEnvironment();
+  }
+
   updateCamera(dt);
 
   /* ========================= render ========================= */
@@ -878,8 +942,12 @@ function tick() {
   post.composite.uniforms.tAO.value = ao.texture;
   post.composite.uniforms.uAO.value = ao.strength;
 
-  // 6 — bloom + grade
-  post.render(Q.bloom);
+  // 6 — defocus before bloom, so out-of-focus highlights bloom as discs
+  const focus = camera.position.distanceTo(cam.target);
+  const graded = dof.render(post.hdr.texture, post.hdr.depthTexture, camera, focus);
+
+  // 7 — bloom + grade
+  post.render(Q.bloom, graded);
   renderer.setRenderTarget(null);
 
   /* --------------------- adaptive quality --------------------- */
@@ -933,12 +1001,12 @@ function tick() {
   cam.theta = cam.gTheta = VIEWS[0].theta;
   cam.phi = cam.gPhi = VIEWS[0].phi;
 
-  FOG_U.uFogDens.value = 0.0020;
+  FOG_U.uFogDens.value = 0.0027;
   // debug handle: window.__room.snapView(0..3), .stats(), .CFG, .lights …
   window.__room = {
     camera, cam, CFG, QUALITY, VIEWS, lights, post, U, snapView,
     roomScene, outsideScene, shell, windows, fire, props, outside, THREE,
-    glassMaterials, reflectiveFloor, ao,
+    glassMaterials, reflectiveFloor, ao, dof,
     texStats,
     stats: () => ({ frame: frameNo, fps: lastFps, q: CFG.quality, commitMs: Math.round(lastCommitMs) }),
   };
