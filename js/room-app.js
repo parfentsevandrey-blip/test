@@ -9,7 +9,7 @@ import {
 import { buildOutside, Lightning, FOG_U } from './room-outside.js';
 import { buildShell, buildWindows, glassMaterials, reflectiveFloors } from './room-shell.js';
 import { buildFireplace } from './room-interior.js';
-import { APT, ROOMS } from './room-plan.js';
+import { APT, ROOMS, roomAt } from './room-plan.js';
 import { buildKitchen } from './room-kitchen.js';
 import { buildBedroom } from './room-bedroom.js';
 import { buildHall } from './room-hall.js';
@@ -102,7 +102,11 @@ function captureRoomEnvironment() {
     cubeCam = new THREE.CubeCamera(0.25, 60, cubeRT);
     pmremGen = new THREE.PMREMGenerator(renderer);
   }
-  cubeCam.position.set(-0.4, 1.45, 0.2);
+  // Captured from the middle of the open plan rather than in front of the
+  // hearth: from the old point the fire filled most of the cube, and every
+  // material in the flat — including the ones in the bedroom two rooms away
+  // — reflected an orange room.
+  cubeCam.position.set(2.40, 1.60, -0.90);
 
   // the reflective materials must not sample render targets mid-capture, and
   // the stretched background quad would be wrong on every cube face
@@ -539,7 +543,9 @@ const VIEWS = [
   { name: 'У камина', target: new THREE.Vector3(-4.55, 1.00, -0.60), dist: 3.55, theta: 1.24, phi: 1.520 },
   { name: 'У окна',   target: new THREE.Vector3(-1.40, 1.05, -4.20), dist: 2.60, theta: 0.10, phi: 1.505 },
   { name: 'Кухня',    target: new THREE.Vector3(8.20, 1.05, -1.60), dist: 3.60, theta: -1.15, phi: 1.505 },
-  { name: 'Спальня',  target: new THREE.Vector3(8.00, 1.00, 3.80), dist: 3.80, theta: -2.20, phi: 1.515 },
+  // east of the bed looking back at the headboard — the old one pointed at
+  //  an empty corner, which read as a lighting problem and was not one
+  { name: 'Спальня',  target: new THREE.Vector3(5.60, 0.95, 2.05), dist: 3.55, theta: 1.14, phi: 1.430 },
 ];
 
 const cam = {
@@ -660,7 +666,7 @@ canvas.addEventListener('touchend', () => { pinch = 0; });
 window.addEventListener('keydown', (e) => {
   if (!walker.active && ['KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) { setWalking(true); return; }
   if (walker.active) return;                       // the walker owns the keys
-  const n = '1234'.indexOf(e.key);
+  const n = '12345'.indexOf(e.key);
   if (n >= 0) gotoView(n);
 });
 
@@ -697,11 +703,21 @@ function updateCamera(dt) {
     cam.target.y + cam.dist * Math.cos(cam.phi),
     cam.target.z + cam.dist * sp * Math.cos(cam.theta),
   );
-  // stay inside the room
-  const mx = ROOM.x - 0.45, mz = ROOM.z - 0.45;
-  _cp.x = clamp(_cp.x, -mx, mx);
-  _cp.z = clamp(_cp.z, -mz, mz);
-  _cp.y = clamp(_cp.y, 0.55, ROOM.h - 0.35);
+  /* Stay inside the room the preset is looking at. This used to clamp to the
+     old single-room box, so every camera aimed at the kitchen or the bedroom
+     was quietly dragged back across the flat and ended up staring at a wall —
+     which looked like the light was broken and was not. */
+  let rk = roomAt(cam.target.x, cam.target.z);
+  // living and kitchen are one open volume, so a camera aimed at one may
+  // legitimately stand in the other
+  const open = rk === 'living' || rk === 'kitchen';
+  const rb = open ? { x0: ROOMS.living.x0, x1: ROOMS.kitchen.x1,
+                     z0: ROOMS.kitchen.z0, z1: ROOMS.living.z1 }
+                  : (rk ? ROOMS[rk] : null);
+  const m = 0.45;
+  _cp.x = clamp(_cp.x, (rb ? rb.x0 : APT.x0) + m, (rb ? rb.x1 : APT.x1) - m);
+  _cp.z = clamp(_cp.z, (rb ? rb.z0 : APT.z0) + m, (rb ? rb.z1 : APT.z1) - m);
+  _cp.y = clamp(_cp.y, 0.55, APT.h - 0.35);
   // breathing, so it never feels like a locked tripod
   const t = U.time.value;
   _cp.y += Math.sin(t * 0.42) * 0.012 + Math.sin(t * 0.29 + 1.7) * 0.008;

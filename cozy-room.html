@@ -59935,25 +59935,25 @@ export const MAT = {
     'honedStone', { repeat: [0.55, 0.55], normalScale: 0.55, detail: D_STONE }),
 
   // limewash: the everyday wall
-  plaster: tex(std({ color: 0x8a8074, metalness: 0, envMapIntensity: 0.7 }),
+  plaster: tex(std({ color: 0x9d9184, metalness: 0, envMapIntensity: 0.7 }),
     'plasterWall', { normalScale: 0.40, detail: { scale: 0.05, strength: 0.5, fade: 4.0, rough: 0.05 } }),
 
   // and the deep olive it goes to on a feature wall
   plasterDark: tex(std({ color: 0x3f453c, metalness: 0, envMapIntensity: 0.55 }),
     'plasterWall', { normalScale: 0.48, detail: { scale: 0.05, strength: 0.55, fade: 4.0, rough: 0.05 } }),
 
-  ceiling: tex(std({ color: 0x7d766c, metalness: 0, envMapIntensity: 0.6 }),
+  ceiling: tex(std({ color: 0x8d857a, metalness: 0, envMapIntensity: 0.6 }),
     'plasterCeiling', { normalScale: 0.4 }),
 
   /* ------------------------------------------------------------ joinery */
-  walnut: tex(std({ color: 0x4e3826, metalness: 0, envMapIntensity: 0.45 }),
+  walnut: tex(std({ color: 0x5a422d, metalness: 0, envMapIntensity: 0.45 }),
     'oakFloor', { repeat: [0.55, 0.55], normalScale: 0.6, detail: D_WOOD }),
 
   oakPale: tex(std({ color: 0x9c7f5b, metalness: 0, envMapIntensity: 0.5 }),
     'oakFloor', { repeat: [0.45, 0.45], normalScale: 0.5, detail: D_WOOD }),
 
   // matt lacquered cabinet fronts — no texture, all shape and sheen
-  cabinet: std({ color: 0x2f342f, roughness: 0.52, metalness: 0.04, envMapIntensity: 0.55 }),
+  cabinet: std({ color: 0x383d38, roughness: 0.52, metalness: 0.04, envMapIntensity: 0.55 }),
   cabinetPale: std({ color: 0x7d7566, roughness: 0.58, metalness: 0.03, envMapIntensity: 0.5 }),
 
   /* -------------------------------------------------------------- stone */
@@ -61285,7 +61285,7 @@ function buildWallUnits(g) {
   g.add(jug);
 
   /* --- the strip under the wall units --------------------------------- */
-  const stripMat = new THREE.MeshBasicMaterial({ color: 0xc07a35, toneMapped: false });
+  const stripMat = new THREE.MeshBasicMaterial({ color: 0x8a5626, toneMapped: false });
   const strip = new THREE.Mesh(new THREE.BoxGeometry(WALLU.x1 - WALLU.x0 - 0.14, 0.006, 0.022), stripMat);
   strip.position.set((WALLU.x0 + WALLU.x1) / 2, WALLU.y0 - 0.006, WALLU_F + 0.05);
   g.add(strip);
@@ -61481,11 +61481,11 @@ function buildPendant(g, x, z) {
   band.position.y = bot + 0.007;
   p.add(band);
 
-  const innerMat = new THREE.MeshBasicMaterial({ color: 0xb26a2c, toneMapped: false });
+  const innerMat = new THREE.MeshBasicMaterial({ color: 0x6f4520, toneMapped: false });
   const inner = new THREE.Mesh(new THREE.CircleGeometry(0.108, 16), innerMat);
   inner.rotation.x = Math.PI / 2; inner.position.y = bot + 0.012;
   p.add(inner);
-  const bulbMat = new THREE.MeshBasicMaterial({ color: 0xffc987, toneMapped: false });
+  const bulbMat = new THREE.MeshBasicMaterial({ color: 0x9e7a50, toneMapped: false });
   const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.026, 10, 8), bulbMat);
   bulb.position.y = bot + 0.055;
   p.add(bulb);
@@ -61996,22 +61996,23 @@ function buildLamp(g, x, z) {
 
   const shadeMat = new THREE.MeshStandardMaterial({
     color: 0xe3cfae, roughness: 0.9, side: THREE.DoubleSide,
-    transparent: true, opacity: 0.94, envMapIntensity: 0.35,
-    // two of these a metre apart bloom into one another; the shade only
-    // has to look lit, the point light does the work
-    emissive: 0xff9d4e, emissiveIntensity: 0.16,
+    envMapIntensity: 0.35,
+    // Opaque, and barely emissive. Two of these a metre apart used to bloom
+    // into one ball that hid both shades; the shade only has to look lit, the
+    // point light does the work.
+    emissive: 0xff9d4e, emissiveIntensity: 0.09,
   });
   const shade = new THREE.Mesh(
     new THREE.CylinderGeometry(0.105, 0.145, 0.19, 22, 1, true), shadeMat);
   shade.position.y = NS_TOP + 0.30;
   l.add(shade);
 
-  const innerMat = new THREE.MeshBasicMaterial({ color: 0x7d4a1e, toneMapped: false });
+  const innerMat = new THREE.MeshBasicMaterial({ color: 0x503014, toneMapped: false });
   const inner = new THREE.Mesh(new THREE.CircleGeometry(0.138, 20), innerMat);
   inner.rotation.x = Math.PI / 2;
   inner.position.y = NS_TOP + 0.208;
   l.add(inner);
-  const bulbMat = new THREE.MeshBasicMaterial({ color: 0xd8a76e, toneMapped: false });
+  const bulbMat = new THREE.MeshBasicMaterial({ color: 0x8a6844, toneMapped: false });
   const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.027, 10, 8), bulbMat);
   bulb.position.y = NS_TOP + 0.28;
   l.add(bulb);
@@ -62442,7 +62443,7 @@ function buildConsoleThings(g) {
   g.add(dish);
 
   const keys = new THREE.Group();
-  keys.position.set(-1.34, y + 0.010, 6.34);
+  keys.position.set(-1.34, y + 0.008, 6.34);
   keys.rotation.y = 0.42;
   [[-0.012, 0.0, 0.30], [0.010, 0.004, -0.18]].forEach(([kx, ky, ka]) => {
     const k = new THREE.Mesh(new THREE.BoxGeometry(0.017, 0.002, 0.055), MAT.steel);
@@ -62474,10 +62475,15 @@ function buildConsoleThings(g) {
     g.add(e);
   }
 
-  /* --- a bud vase, and two dry stems left in it since the autumn --- */
+  /* --- a bud vase, and the dry stems left in it since the autumn --- */
+  /* The profile turns over the rim and runs back down inside to a floor. A
+     lathe stopped at the lip is a shell: look down into the neck and you see
+     straight through the pot to the walnut, because the inside face is
+     backfacing and gets culled. */
   const vase = shadowed(new THREE.Mesh(new THREE.LatheGeometry([
     [0.000, 0.000], [0.045, 0.000], [0.053, 0.035], [0.046, 0.105],
-    [0.030, 0.170], [0.027, 0.200], [0.031, 0.215], [0.026, 0.215],
+    [0.030, 0.170], [0.027, 0.200], [0.031, 0.215],
+    [0.026, 0.212], [0.022, 0.170], [0.024, 0.100], [0.019, 0.048], [0.000, 0.042],
   ].map(([r, h]) => new THREE.Vector2(r, h)), 14), MAT.clay));
   vase.position.set(-3.20, y, 6.38);
   g.add(vase);
@@ -62543,9 +62549,14 @@ function buildDoor(g, cx, w, handSide) {
   const d = new THREE.Group();
   const LIN = 0.032, PROUD = 0.055, TH = 0.042;
 
+  /* The leaf is cut 3 mm short of its lining all round. That is the joint a
+     real door has, and it also keeps the leaf's edges off the lining's faces —
+     butt two boxes together on exactly the same plane and the pair flickers
+     the moment the camera moves. */
+  const LW = w - 0.006, LH = DOOR_H - 0.004;
   const leaf = shadowed(new THREE.Mesh(
-    boxUv(new THREE.BoxGeometry(w, DOOR_H, TH), w, DOOR_H, TH, WOOD_TILE), MAT.walnut));
-  leaf.position.set(cx, DOOR_H / 2, NORTH - TH / 2);
+    boxUv(new THREE.BoxGeometry(LW, LH, TH), LW, LH, TH, WOOD_TILE), MAT.walnut));
+  leaf.position.set(cx, LH / 2, NORTH - TH / 2);
   d.add(leaf);
 
   const line = (bw, bh, x, y) => {
@@ -62720,7 +62731,7 @@ function buildBag(g) {
     new THREE.CatmullRomCurve3([
       new THREE.Vector3(-4.868, 1.400, Z - 0.115),
       new THREE.Vector3(-4.884, 1.640, Z - 0.070),
-      new THREE.Vector3(-4.890, 1.746, Z),
+      new THREE.Vector3(-4.890, 1.738, Z),
       new THREE.Vector3(-4.884, 1.640, Z + 0.070),
       new THREE.Vector3(-4.868, 1.400, Z + 0.115),
     ]), 16, 0.011, 6), MAT.leather));
@@ -62766,7 +62777,7 @@ export function buildHall() {
    walker's own clearance. */
 export const HALL_COLLIDERS = [
   [CON.x0 - 0.04, 0, CON_F - 0.05, CON.x1 + 0.04, CON.top + 0.02, NORTH],
-  [WEST - 0.03, 0, 5.14, WEST + 0.28, 1.80, 6.06],
+  [WEST - 0.03, 0, 5.14, WEST + 0.28, 1.80, 6.12],
 ];
 </script>
 <script type="text/plain" id="rm23">/* =========================================================================
@@ -62796,10 +62807,29 @@ import { ROOMS, APT } from './room-plan.js';
 
 const X = ROOM.x, Z = ROOM.z, H = ROOM.h;
 
-/* Every light here is evaluated by every fragment of every material, so the
-   count is a budget, not a wish list. Four rooms get five extra sources
+/* CONTAINMENT. A point light does not know about walls: without a shadow map
+   covering it, it lights straight through them. In one room that never came
+   up. Measured across the finished flat, all eighteen sources reached all
+   four rooms — the fire lit the bedroom two walls away, the bedside lamps lit
+   the sofa, and a sconce in the windowless hall lit the kitchen. Everything
+   summed everywhere, so no room had its own light and the whole flat took the
+   fire's orange cast.
+   Every `distance` below is therefore set to roughly the reach of the room
+   the fixture stands in, and no further. The falloff is windowed, so a light
+   contributes essentially nothing near its limit — the numbers are chosen so
+   that limit lands on the far wall of its own room.
+
+   Every light here is evaluated by every fragment of every material, so the
+   count is a budget, not a wish list. Four rooms get seven extra sources
    between them: the pendants over the island read as one cluster, the two
-   bedside lamps are genuinely two, and the pair of hall sconces is one. */
+   bedside lamps are genuinely two, the pair of hall sconces is one, and the
+   kitchen and bedroom each get a ceiling bounce.
+
+   That bounce is not optional. The living room has had three of them since
+   the very first pass, for the reason written at the top of this file, and
+   the three new rooms shipped without any: measured, the bedroom came out at
+   0.066 mean luminance with 23% of the frame crushed to pure black. A lamp on
+   a nightstand does not light a room — the ceiling above it does. */
 export function buildLights(opts) {
   const { firePos, lampPos, shadowSize, pendants = [], lamps = [], sconces = [] } = opts;
   const L = {};
@@ -62807,25 +62837,28 @@ export function buildLights(opts) {
   /* --- the constant floor of the room -------------------------------- */
   // never truly black: a night room still has sky through the glass and the
   // last of the city bouncing around it
-  L.ambient = new THREE.AmbientLight(0x46495c, 0.42);
+  L.ambient = new THREE.AmbientLight(0x46495c, 0.60);
   roomScene.add(L.ambient);
 
   // sky above (cool, from the window and ceiling), ground below (warm, from
   // the oak floor) — cheap directionality that flat ambient cannot give
-  L.hemi = new THREE.HemisphereLight(0x5c74a0, 0x6b4526, 1.15);
+  // The ground half used to be strongly orange, which was fine when the only
+  // room was the one with the fire in it. Turned up to light four rooms it
+  // put a sunset on every wall in the flat.
+  L.hemi = new THREE.HemisphereLight(0x5c74a0, 0x6a5a4a, 1.55);
   L.hemi.position.set(0, H, 0);
   roomScene.add(L.hemi);
 
   /* --- the fire ------------------------------------------------------- */
   // Narrow enough that the shadow camera stays well-conditioned; this one
   // carries the shaped light and the moving shadows.
-  L.fireSpot = new THREE.SpotLight(0xff8f4a, 18, 26, 0.95, 1.0, 1.75);
+  L.fireSpot = new THREE.SpotLight(0xff8f4a, 18, 9.0, 0.95, 1.0, 1.75);
   L.fireSpot.position.copy(firePos).add(new THREE.Vector3(0.25, 0.02, 0));
   L.fireSpot.target.position.set(0.40, 0.40, 0.20);
   L.fireSpot.castShadow = true;
   L.fireSpot.shadow.mapSize.set(shadowSize, shadowSize);
   L.fireSpot.shadow.camera.near = 0.30;
-  L.fireSpot.shadow.camera.far = 16;
+  L.fireSpot.shadow.camera.far = 11;
   L.fireSpot.shadow.bias = -0.0016;
   L.fireSpot.shadow.normalBias = 0.03;
   L.fireSpot.shadow.radius = 3;
@@ -62833,7 +62866,7 @@ export function buildLights(opts) {
 
   // No cone, so the spot's boundary never appears as an edge — this is what
   // removes the hard black line the fire used to draw across the wall.
-  L.fireWide = new THREE.PointLight(0xff7d33, 9.0, 18, 1.6);
+  L.fireWide = new THREE.PointLight(0xff7d33, 9.0, 8.0, 1.6);
   L.fireWide.position.copy(firePos).add(new THREE.Vector3(0.30, 0.10, 0));
   roomScene.add(L.fireWide);
 
@@ -62845,33 +62878,35 @@ export function buildLights(opts) {
   /* --- bounce -------------------------------------------------------- */
   // light returning off the oiled oak in front of the hearth: warm, low, and
   // aimed back up into the room, which is what actually reaches the sofa
-  L.bounceFloor = new THREE.PointLight(0xff9048, 5.2, 11, 1.5);
+  L.bounceFloor = new THREE.PointLight(0xff9048, 5.2, 7.0, 1.5);
   L.bounceFloor.position.set(-2.0, 0.30, -0.30);
   roomScene.add(L.bounceFloor);
 
   // and off the ceiling above the fire, spreading much further than the fire
   // itself and lifting the whole back half of the room
-  L.bounceCeil = new THREE.PointLight(0xf0955a, 3.0, 14, 1.5);
+  L.bounceCeil = new THREE.PointLight(0xf0955a, 3.2, 7.5, 1.5);
   L.bounceCeil.position.set(-1.2, H - 0.35, 0.30);
   roomScene.add(L.bounceCeil);
 
   // and off the back wall, which is the only thing lighting the back of the
   // sofa — the darkest surface in the room and the foreground of every wide shot
-  L.bounceBack = new THREE.PointLight(0xe08a52, 3.4, 9, 1.5);
-  L.bounceBack.position.set(0.9, 1.9, Z - 0.9);
+  L.bounceBack = new THREE.PointLight(0xe08a52, 3.4, 6.0, 1.5);
+  L.bounceBack.position.set(0.9, 1.9, ROOMS.living.z1 - 0.6);
   roomScene.add(L.bounceBack);
 
   /* --- practicals ----------------------------------------------------- */
-  L.lamp = new THREE.PointLight(0xffab5e, 13, 8, 1.9);
+  L.lamp = new THREE.PointLight(0xffab5e, 13, 6.0, 1.65);
   L.lamp.position.copy(lampPos);
   roomScene.add(L.lamp);
 
-  L.shelf = new THREE.PointLight(0xffa055, 3.0, 5.5, 2.0);
-  L.shelf.position.set(X - 0.55, 1.55, 1.9);
+  // follows the bookshelf, which moved to the west wall when the east one
+  // became the kitchen
+  L.shelf = new THREE.PointLight(0xffa055, 3.0, 4.0, 1.9);
+  L.shelf.position.set(ROOMS.living.x0 + 0.55, 1.55, 2.15);
   roomScene.add(L.shelf);
 
-  L.cove = new THREE.PointLight(0xffb877, 4.0, 12, 1.8);
-  L.cove.position.set(-X + 1.2, H - 0.25, Z - 1.2);
+  L.cove = new THREE.PointLight(0xffb877, 4.0, 7.0, 1.55);
+  L.cove.position.set(ROOMS.living.x0 + 1.4, H - 0.25, ROOMS.living.z1 - 1.0);
   roomScene.add(L.cove);
 
   /* --- the other rooms ------------------------------------------------ */
@@ -62881,24 +62916,24 @@ export function buildLights(opts) {
   const kp = pendants.length
     ? pendants.reduce((a, p) => a.add(p.lightPos), new THREE.Vector3()).multiplyScalar(1 / pendants.length)
     : new THREE.Vector3((K.x0 + K.x1) / 2, 1.55, -1.4);
-  L.pendant = new THREE.PointLight(0xffbe86, 15, 9.0, 1.6);
+  L.pendant = new THREE.PointLight(0xffbe86, 19, 7.5, 1.40);
   L.pendant.position.copy(kp);
   roomScene.add(L.pendant);
 
   // the worktop run, washed from under the wall units
-  L.worktop = new THREE.PointLight(0xffc490, 4.5, 5.0, 1.9);
+  L.worktop = new THREE.PointLight(0xffc490, 6.5, 4.5, 1.55);
   L.worktop.position.set((K.x0 + K.x1) / 2 + 0.6, 1.42, K.z1 - 0.55);
   roomScene.add(L.worktop);
 
   L.bedside = lamps.slice(0, 2).map((lp, i) => {
-    const pl = new THREE.PointLight(0xffa663, 8.5, 5.2, 1.95);
+    const pl = new THREE.PointLight(0xffa663, 13, 5.5, 1.42);
     pl.position.copy(lp.lightPos);
     roomScene.add(pl);
     return pl;
   });
   if (!L.bedside.length) {
     const B = ROOMS.bedroom;
-    const pl = new THREE.PointLight(0xffa663, 8.5, 5.2, 1.95);
+    const pl = new THREE.PointLight(0xffa663, 13, 5.5, 1.42);
     pl.position.set(B.x1 - 1.1, 0.66, B.z1 - 1.4);
     roomScene.add(pl);
     L.bedside = [pl];
@@ -62909,20 +62944,34 @@ export function buildLights(opts) {
   const sp = sconces.length
     ? sconces.reduce((a, s2) => a.add(s2.lightPos), new THREE.Vector3()).multiplyScalar(1 / sconces.length)
     : new THREE.Vector3(-2.0, 1.75, H_.z1 - 0.3);
-  L.sconce = new THREE.PointLight(0xffb473, 6.0, 7.5, 1.45);
+  L.sconce = new THREE.PointLight(0xffb473, 8.5, 6.0, 1.30);
   L.sconce.position.copy(sp);
   roomScene.add(L.sconce);
 
+  // ceiling bounce: what a pendant and a pair of bedside lamps actually put
+  // into a room, as opposed to what they put on the surface right under them
+  const B = ROOMS.bedroom;
+  L.kBounce = new THREE.PointLight(0xe8c9a4, 4.6, 7.0, 1.25);
+  L.kBounce.position.set((K.x0 + K.x1) / 2, H - 0.45, (K.z0 + K.z1) / 2 - 0.3);
+  roomScene.add(L.kBounce);
+
+  // the bedroom has a window as well as a lamp, so its bounce is not fire-warm
+  L.bBounce = new THREE.PointLight(0xd9c3a8, 4.4, 7.5, 1.25);
+  L.bBounce.position.set((B.x0 + B.x1) / 2 + 0.6, H - 0.45, (B.z0 + B.z1) / 2);
+  roomScene.add(L.bBounce);
+
   /* --- the storm outside ---------------------------------------------- */
-  L.window = new THREE.DirectionalLight(0x8fb0e0, 0.95);
+  // A directional has no range, so this one reaches the hall, which has no
+  // windows. Turned down and let the local fills do the work of the glass.
+  L.window = new THREE.DirectionalLight(0x8fb0e0, 0.62);
   L.window.position.set(-2, 6, -18);
   L.window.target.position.set(0, 0.6, 2);
   roomScene.add(L.window, L.window.target);
 
   // the glass is a broad cool source in its own right; a soft fill just inside
   // it keeps the floor and the near end of the sofa from going flat
-  L.windowFill = new THREE.PointLight(0x86a8d8, 5.0, 13, 1.5);
-  L.windowFill.position.set(0.6, 1.5, -3.3);
+  L.windowFill = new THREE.PointLight(0x86a8d8, 6.0, 8.0, 1.45);
+  L.windowFill.position.set(0.0, 1.5, ROOMS.living.z0 + 0.7);
   roomScene.add(L.windowFill);
 
   return L;
@@ -62947,7 +62996,7 @@ export function updateLights(L, ctx) {
   // the flame over a whole wall, not the flame itself
   const soft = fire * (0.72 + flick * 0.28);
   L.bounceFloor.intensity = 5.2 * soft;
-  L.bounceCeil.intensity = 3.0 * soft;
+  L.bounceCeil.intensity = 3.2 * soft;
 
   L.lamp.intensity = 13 * lampLevel;
   L.shelf.intensity = 3.0 * lampLevel;
@@ -62957,14 +63006,16 @@ export function updateLights(L, ctx) {
   // with the lamps off still has the city coming in and light spilling round
   // a doorway, and rooms that hit pure black just read as holes.
   const k = 0.16 + 0.84 * lampLevel;
-  L.pendant.intensity = 16 * k;
-  L.worktop.intensity = 4.5 * k;
-  L.sconce.intensity = 7.0 * k;
-  for (const b of L.bedside) b.intensity = 8.5 * (0.10 + 0.90 * lampLevel);
+  L.pendant.intensity = 19 * k;
+  L.worktop.intensity = 6.5 * k;
+  L.sconce.intensity = 8.5 * k;
+  L.kBounce.intensity = 4.6 * k;
+  L.bBounce.intensity = 4.4 * (0.14 + 0.86 * lampLevel);
+  for (const b of L.bedside) b.intensity = 13 * (0.14 + 0.86 * lampLevel);
 
   L.bounceBack.intensity = 3.4 * soft;
-  L.window.intensity = 0.95 + flash * 2.6;
-  L.windowFill.intensity = 5.0 + flash * 6.0;
+  L.window.intensity = 0.62 + flash * 2.6;
+  L.windowFill.intensity = 6.0 + flash * 6.0;
 }
 </script>
 <script type="text/plain" id="rm24">/* =========================================================================
@@ -63266,15 +63317,17 @@ function buildFloorLamp(g, x, z) {
 
   const shadeMat = new THREE.MeshStandardMaterial({
     color: 0xe8d3b0, roughness: 0.9, side: THREE.DoubleSide,
-    transparent: true, opacity: 0.94, envMapIntensity: 0.4,
-    emissive: 0xff9d4e, emissiveIntensity: 0.30,
+    envMapIntensity: 0.4,
+    // opaque: a translucent shade shows the basic-material bulb through it,
+    // and bloom then makes the pair one white ball
+    emissive: 0xff9d4e, emissiveIntensity: 0.14,
   });
   const shade = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.235, 0.26, 28, 1, true), shadeMat);
   shade.position.y = 1.50; l.add(shade);
-  const innerMat = new THREE.MeshBasicMaterial({ color: 0xb9702f, toneMapped: false });
+  const innerMat = new THREE.MeshBasicMaterial({ color: 0x6d4520, toneMapped: false });
   const inner = new THREE.Mesh(new THREE.CircleGeometry(0.225, 24), innerMat);
   inner.rotation.x = Math.PI / 2; inner.position.y = 1.372; l.add(inner);
-  const bulbMat = new THREE.MeshBasicMaterial({ color: 0xffcc8a, toneMapped: false });
+  const bulbMat = new THREE.MeshBasicMaterial({ color: 0x9c7550, toneMapped: false });
   const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.032, 12, 10), bulbMat);
   bulb.position.y = 1.48; l.add(bulb);
 
@@ -63328,7 +63381,7 @@ function buildBookshelf(g) {
     sh.position.set(-0.01, y, 0); s.add(sh);
     // concealed strip light under each shelf
     const led = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.008, L - 0.30),
-      new THREE.MeshBasicMaterial({ color: 0x9a5a28, toneMapped: false }));
+      new THREE.MeshBasicMaterial({ color: 0x6b3f1c, toneMapped: false }));
     led.position.set(-0.10, y - 0.02, 0); s.add(led);
 
     // books
@@ -64284,7 +64337,7 @@ import {
 import { buildOutside, Lightning, FOG_U } from './room-outside.js';
 import { buildShell, buildWindows, glassMaterials, reflectiveFloors } from './room-shell.js';
 import { buildFireplace } from './room-interior.js';
-import { APT, ROOMS } from './room-plan.js';
+import { APT, ROOMS, roomAt } from './room-plan.js';
 import { buildKitchen } from './room-kitchen.js';
 import { buildBedroom } from './room-bedroom.js';
 import { buildHall } from './room-hall.js';
@@ -64377,7 +64430,11 @@ function captureRoomEnvironment() {
     cubeCam = new THREE.CubeCamera(0.25, 60, cubeRT);
     pmremGen = new THREE.PMREMGenerator(renderer);
   }
-  cubeCam.position.set(-0.4, 1.45, 0.2);
+  // Captured from the middle of the open plan rather than in front of the
+  // hearth: from the old point the fire filled most of the cube, and every
+  // material in the flat — including the ones in the bedroom two rooms away
+  // — reflected an orange room.
+  cubeCam.position.set(2.40, 1.60, -0.90);
 
   // the reflective materials must not sample render targets mid-capture, and
   // the stretched background quad would be wrong on every cube face
@@ -64814,7 +64871,9 @@ const VIEWS = [
   { name: 'У камина', target: new THREE.Vector3(-4.55, 1.00, -0.60), dist: 3.55, theta: 1.24, phi: 1.520 },
   { name: 'У окна',   target: new THREE.Vector3(-1.40, 1.05, -4.20), dist: 2.60, theta: 0.10, phi: 1.505 },
   { name: 'Кухня',    target: new THREE.Vector3(8.20, 1.05, -1.60), dist: 3.60, theta: -1.15, phi: 1.505 },
-  { name: 'Спальня',  target: new THREE.Vector3(8.00, 1.00, 3.80), dist: 3.80, theta: -2.20, phi: 1.515 },
+  // east of the bed looking back at the headboard — the old one pointed at
+  //  an empty corner, which read as a lighting problem and was not one
+  { name: 'Спальня',  target: new THREE.Vector3(5.60, 0.95, 2.05), dist: 3.55, theta: 1.14, phi: 1.430 },
 ];
 
 const cam = {
@@ -64935,7 +64994,7 @@ canvas.addEventListener('touchend', () => { pinch = 0; });
 window.addEventListener('keydown', (e) => {
   if (!walker.active && ['KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) { setWalking(true); return; }
   if (walker.active) return;                       // the walker owns the keys
-  const n = '1234'.indexOf(e.key);
+  const n = '12345'.indexOf(e.key);
   if (n >= 0) gotoView(n);
 });
 
@@ -64972,11 +65031,21 @@ function updateCamera(dt) {
     cam.target.y + cam.dist * Math.cos(cam.phi),
     cam.target.z + cam.dist * sp * Math.cos(cam.theta),
   );
-  // stay inside the room
-  const mx = ROOM.x - 0.45, mz = ROOM.z - 0.45;
-  _cp.x = clamp(_cp.x, -mx, mx);
-  _cp.z = clamp(_cp.z, -mz, mz);
-  _cp.y = clamp(_cp.y, 0.55, ROOM.h - 0.35);
+  /* Stay inside the room the preset is looking at. This used to clamp to the
+     old single-room box, so every camera aimed at the kitchen or the bedroom
+     was quietly dragged back across the flat and ended up staring at a wall —
+     which looked like the light was broken and was not. */
+  let rk = roomAt(cam.target.x, cam.target.z);
+  // living and kitchen are one open volume, so a camera aimed at one may
+  // legitimately stand in the other
+  const open = rk === 'living' || rk === 'kitchen';
+  const rb = open ? { x0: ROOMS.living.x0, x1: ROOMS.kitchen.x1,
+                     z0: ROOMS.kitchen.z0, z1: ROOMS.living.z1 }
+                  : (rk ? ROOMS[rk] : null);
+  const m = 0.45;
+  _cp.x = clamp(_cp.x, (rb ? rb.x0 : APT.x0) + m, (rb ? rb.x1 : APT.x1) - m);
+  _cp.z = clamp(_cp.z, (rb ? rb.z0 : APT.z0) + m, (rb ? rb.z1 : APT.z1) - m);
+  _cp.y = clamp(_cp.y, 0.55, APT.h - 0.35);
   // breathing, so it never feels like a locked tripod
   const t = U.time.value;
   _cp.y += Math.sin(t * 0.42) * 0.012 + Math.sin(t * 0.29 + 1.7) * 0.008;

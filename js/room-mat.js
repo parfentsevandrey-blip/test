@@ -44,25 +44,25 @@ export const MAT = {
     'honedStone', { repeat: [0.55, 0.55], normalScale: 0.55, detail: D_STONE }),
 
   // limewash: the everyday wall
-  plaster: tex(std({ color: 0x8a8074, metalness: 0, envMapIntensity: 0.7 }),
+  plaster: tex(std({ color: 0x9d9184, metalness: 0, envMapIntensity: 0.7 }),
     'plasterWall', { normalScale: 0.40, detail: { scale: 0.05, strength: 0.5, fade: 4.0, rough: 0.05 } }),
 
   // and the deep olive it goes to on a feature wall
   plasterDark: tex(std({ color: 0x3f453c, metalness: 0, envMapIntensity: 0.55 }),
     'plasterWall', { normalScale: 0.48, detail: { scale: 0.05, strength: 0.55, fade: 4.0, rough: 0.05 } }),
 
-  ceiling: tex(std({ color: 0x7d766c, metalness: 0, envMapIntensity: 0.6 }),
+  ceiling: tex(std({ color: 0x8d857a, metalness: 0, envMapIntensity: 0.6 }),
     'plasterCeiling', { normalScale: 0.4 }),
 
   /* ------------------------------------------------------------ joinery */
-  walnut: tex(std({ color: 0x4e3826, metalness: 0, envMapIntensity: 0.45 }),
+  walnut: tex(std({ color: 0x5a422d, metalness: 0, envMapIntensity: 0.45 }),
     'oakFloor', { repeat: [0.55, 0.55], normalScale: 0.6, detail: D_WOOD }),
 
   oakPale: tex(std({ color: 0x9c7f5b, metalness: 0, envMapIntensity: 0.5 }),
     'oakFloor', { repeat: [0.45, 0.45], normalScale: 0.5, detail: D_WOOD }),
 
   // matt lacquered cabinet fronts — no texture, all shape and sheen
-  cabinet: std({ color: 0x2f342f, roughness: 0.52, metalness: 0.04, envMapIntensity: 0.55 }),
+  cabinet: std({ color: 0x383d38, roughness: 0.52, metalness: 0.04, envMapIntensity: 0.55 }),
   cabinetPale: std({ color: 0x7d7566, roughness: 0.58, metalness: 0.03, envMapIntensity: 0.5 }),
 
   /* -------------------------------------------------------------- stone */

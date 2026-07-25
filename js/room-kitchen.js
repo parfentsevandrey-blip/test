@@ -252,7 +252,7 @@ function buildWallUnits(g) {
   g.add(jug);
 
   /* --- the strip under the wall units --------------------------------- */
-  const stripMat = new THREE.MeshBasicMaterial({ color: 0xc07a35, toneMapped: false });
+  const stripMat = new THREE.MeshBasicMaterial({ color: 0x8a5626, toneMapped: false });
   const strip = new THREE.Mesh(new THREE.BoxGeometry(WALLU.x1 - WALLU.x0 - 0.14, 0.006, 0.022), stripMat);
   strip.position.set((WALLU.x0 + WALLU.x1) / 2, WALLU.y0 - 0.006, WALLU_F + 0.05);
   g.add(strip);
@@ -448,11 +448,11 @@ function buildPendant(g, x, z) {
   band.position.y = bot + 0.007;
   p.add(band);
 
-  const innerMat = new THREE.MeshBasicMaterial({ color: 0xb26a2c, toneMapped: false });
+  const innerMat = new THREE.MeshBasicMaterial({ color: 0x6f4520, toneMapped: false });
   const inner = new THREE.Mesh(new THREE.CircleGeometry(0.108, 16), innerMat);
   inner.rotation.x = Math.PI / 2; inner.position.y = bot + 0.012;
   p.add(inner);
-  const bulbMat = new THREE.MeshBasicMaterial({ color: 0xffc987, toneMapped: false });
+  const bulbMat = new THREE.MeshBasicMaterial({ color: 0x9e7a50, toneMapped: false });
   const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.026, 10, 8), bulbMat);
   bulb.position.y = bot + 0.055;
   p.add(bulb);

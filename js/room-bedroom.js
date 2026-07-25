@@ -319,22 +319,23 @@ function buildLamp(g, x, z) {
 
   const shadeMat = new THREE.MeshStandardMaterial({
     color: 0xe3cfae, roughness: 0.9, side: THREE.DoubleSide,
-    transparent: true, opacity: 0.94, envMapIntensity: 0.35,
-    // two of these a metre apart bloom into one another; the shade only
-    // has to look lit, the point light does the work
-    emissive: 0xff9d4e, emissiveIntensity: 0.16,
+    envMapIntensity: 0.35,
+    // Opaque, and barely emissive. Two of these a metre apart used to bloom
+    // into one ball that hid both shades; the shade only has to look lit, the
+    // point light does the work.
+    emissive: 0xff9d4e, emissiveIntensity: 0.09,
   });
   const shade = new THREE.Mesh(
     new THREE.CylinderGeometry(0.105, 0.145, 0.19, 22, 1, true), shadeMat);
   shade.position.y = NS_TOP + 0.30;
   l.add(shade);
 
-  const innerMat = new THREE.MeshBasicMaterial({ color: 0x7d4a1e, toneMapped: false });
+  const innerMat = new THREE.MeshBasicMaterial({ color: 0x503014, toneMapped: false });
   const inner = new THREE.Mesh(new THREE.CircleGeometry(0.138, 20), innerMat);
   inner.rotation.x = Math.PI / 2;
   inner.position.y = NS_TOP + 0.208;
   l.add(inner);
-  const bulbMat = new THREE.MeshBasicMaterial({ color: 0xd8a76e, toneMapped: false });
+  const bulbMat = new THREE.MeshBasicMaterial({ color: 0x8a6844, toneMapped: false });
   const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.027, 10, 8), bulbMat);
   bulb.position.y = NS_TOP + 0.28;
   l.add(bulb);

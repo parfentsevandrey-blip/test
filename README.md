@@ -290,6 +290,22 @@ quality switch costs more than a few ms of main-thread time.
 that walls and furniture stop you, that crouching lowers the eye, and that
 `Esc` hands the camera back to the orbit rig.
 
+`node tools/expose.js <dir>` reads those PNGs back and reports mean luminance,
+the 5th/50th/95th percentiles, and how much of each frame is crushed to black
+or blown to white. "Too dark" and "too bright" are the same complaint from
+opposite ends and both come out of it as numbers: the bedroom's first lit pass
+measured 0.066 mean with 23% of the frame at pure black, which is not a matter
+of taste.
+
+**Lights are contained.** A point light does not know about walls — without a
+shadow map covering it, it lights straight through them. In a single room that
+never comes up; across four rooms, all eighteen sources reached all four, the
+fire lit the bedroom two walls away, and everything summed everywhere so no
+room had light of its own. Every `distance` in `js/room-lights.js` is set to
+roughly the reach of the room its fixture stands in and no further, and the
+orbit camera is clamped to the room its preset is aimed at rather than to the
+old single-room box.
+
 `node tools/interior.js` photographs the flat from eight natural viewing
 distances with the UI hidden. `tools/closeup.js` gets near enough to read a
 weave; this one gets far enough to see that a cushion is a box — which is how

@@ -297,15 +297,17 @@ function buildFloorLamp(g, x, z) {
 
   const shadeMat = new THREE.MeshStandardMaterial({
     color: 0xe8d3b0, roughness: 0.9, side: THREE.DoubleSide,
-    transparent: true, opacity: 0.94, envMapIntensity: 0.4,
-    emissive: 0xff9d4e, emissiveIntensity: 0.30,
+    envMapIntensity: 0.4,
+    // opaque: a translucent shade shows the basic-material bulb through it,
+    // and bloom then makes the pair one white ball
+    emissive: 0xff9d4e, emissiveIntensity: 0.14,
   });
   const shade = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.235, 0.26, 28, 1, true), shadeMat);
   shade.position.y = 1.50; l.add(shade);
-  const innerMat = new THREE.MeshBasicMaterial({ color: 0xb9702f, toneMapped: false });
+  const innerMat = new THREE.MeshBasicMaterial({ color: 0x6d4520, toneMapped: false });
   const inner = new THREE.Mesh(new THREE.CircleGeometry(0.225, 24), innerMat);
   inner.rotation.x = Math.PI / 2; inner.position.y = 1.372; l.add(inner);
-  const bulbMat = new THREE.MeshBasicMaterial({ color: 0xffcc8a, toneMapped: false });
+  const bulbMat = new THREE.MeshBasicMaterial({ color: 0x9c7550, toneMapped: false });
   const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.032, 12, 10), bulbMat);
   bulb.position.y = 1.48; l.add(bulb);
 
@@ -359,7 +361,7 @@ function buildBookshelf(g) {
     sh.position.set(-0.01, y, 0); s.add(sh);
     // concealed strip light under each shelf
     const led = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.008, L - 0.30),
-      new THREE.MeshBasicMaterial({ color: 0x9a5a28, toneMapped: false }));
+      new THREE.MeshBasicMaterial({ color: 0x6b3f1c, toneMapped: false }));
     led.position.set(-0.10, y - 0.02, 0); s.add(led);
 
     // books
