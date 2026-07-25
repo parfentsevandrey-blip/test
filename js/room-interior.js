@@ -133,22 +133,29 @@ export function buildShell() {
   /* ---- perimeter cove: a shadow gap with a warm strip hidden inside ---- */
   const coveMat = new THREE.MeshStandardMaterial({ color: 0x4a4038, roughness: 0.95 });
   const strip = new THREE.MeshBasicMaterial({ color: 0x4e2d13, toneMapped: false });
-  const coveDrop = 0.14, coveIn = 0.26;
-  /** boxed-out cove running along a wall; `along` is 'x' or 'z' */
-  const addCove = (len, x, z, along) => {
+  const coveDrop = 0.12, coveIn = 0.26, coveGap = 0.09;
+  /* A ledge held clear of the ceiling with the strip lying in the trough on
+     top of it, facing up. Hung tight to the ceiling with the strip underneath
+     — which is what this was — you see the strip itself as a bright bar
+     across the wall instead of a wash on the ceiling.
+     `along` is 'x' or 'z'; `push` moves the strip toward the wall so the
+     ledge's own lip hides it from anywhere in the room. */
+  const addCove = (len, x, z, along, push) => {
     const dim = along === 'x' ? [len, coveDrop, coveIn] : [coveIn, coveDrop, len];
     const shell = new THREE.Mesh(new THREE.BoxGeometry(...dim), coveMat);
-    shell.position.set(x, H - coveDrop / 2, z);
+    shell.position.set(x, H - coveGap - coveDrop / 2, z);
     g.add(shell);
-    // the concealed LED strip, tucked under the box facing the ceiling
-    const ldim = along === 'x' ? [len * 0.985, 0.012, coveIn * 0.45] : [coveIn * 0.45, 0.012, len * 0.985];
+    const ldim = along === 'x' ? [len * 0.985, 0.010, coveIn * 0.40] : [coveIn * 0.40, 0.010, len * 0.985];
     const lp = new THREE.Mesh(new THREE.BoxGeometry(...ldim), strip);
-    lp.position.set(x, H - coveDrop - 0.006, z);
+    lp.position.set(
+      x + (along === 'z' ? push : 0),
+      H - coveGap + 0.006,
+      z + (along === 'x' ? push : 0));
     g.add(lp);
   };
   // cove along the two solid walls only (the glass walls get a slim shadow gap)
-  addCove(Z * 2, -X + coveIn / 2, 0, 'z');
-  addCove(X * 2, 0, Z - coveIn / 2, 'x');
+  addCove(Z * 2, -X + coveIn / 2, 0, 'z', -coveIn * 0.24);
+  addCove(X * 2, 0, Z - coveIn / 2, 'x', coveIn * 0.24);
 
   /* ---- skirting / floor edge trim on the solid walls ---- */
   const trimMat = new THREE.MeshStandardMaterial({ color: 0x3a322b, roughness: 0.7 });
@@ -488,14 +495,64 @@ export function buildFireplace() {
   mantel.castShadow = true; mantel.receiveShadow = true;
   g.add(mantel);
 
-  /* two floating oak shelves above the mantel */
-  const oak = new THREE.MeshStandardMaterial({ color: 0x8a6a4c, metalness: 0, envMapIntensity: 0.5 });
+  /* Two floating oak shelves above the mantel, and things standing on them.
+     Bare, they caught the firelight along their whole length and read as two
+     neon bars across the chimney breast; a darker oak and something to break
+     the run is all it takes. */
+  const oak = new THREE.MeshStandardMaterial({ color: 0x584330, metalness: 0, roughness: 0.85, envMapIntensity: 0.22 });
   applyMaps(oak, 'oakFloor', { repeat: [0.4, 0.4], aniso: MAX_ANISO, normalScale: 0.5 });
+  const shelfY = [2.16, 2.70];
+  const shelfLen = [1.30, 1.00], shelfZ = [FZ + 0.22, FZ - 0.30];
   for (let i = 0; i < 2; i++) {
-    const sh = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.035, 1.95), oak);
-    sh.position.set(WALL_X + PT + 0.12, 2.14 + i * 0.55, FZ);
+    const sh = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.036, shelfLen[i]), oak);
+    sh.position.set(WALL_X + PT + 0.11, shelfY[i], shelfZ[i]);
     sh.castShadow = true; sh.receiveShadow = true; g.add(sh);
   }
+
+  /* what lives on the shelves and the mantel */
+  const clay = new THREE.MeshStandardMaterial({ color: 0x6d5c49, roughness: 0.82, envMapIntensity: 0.35 });
+  const clayPale = new THREE.MeshStandardMaterial({ color: 0x9a8f7c, roughness: 0.68, envMapIntensity: 0.4 });
+  const spine = (hex) => new THREE.MeshStandardMaterial({ color: hex, roughness: 0.85, envMapIntensity: 0.25 });
+
+  const put = (mesh, x, y, z, ry = 0) => {
+    mesh.position.set(x, y, z); mesh.rotation.y = ry;
+    mesh.castShadow = true; mesh.receiveShadow = true; g.add(mesh);
+    return mesh;
+  };
+  const SX = WALL_X + PT + 0.12;
+
+  // a tall stoneware vase and a squat bowl on the lower shelf
+  put(new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.062, 0.26, 14), clay),
+      SX - 0.01, shelfY[0] + 0.148, shelfZ[0] - 0.44);
+  put(new THREE.Mesh(new THREE.SphereGeometry(0.075, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.62), clayPale),
+      SX, shelfY[0] + 0.062, shelfZ[0] + 0.42);
+  // books stacked flat, with one leaning against them
+  let by = shelfY[0] + 0.019;
+  [[0.155, 0x3d4a3f], [0.145, 0x7a3b2c], [0.150, 0x2f3038]].forEach(([w, hex], i) => {
+    const b = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.028, w), spine(hex));
+    put(b, SX - 0.005, by + 0.014, shelfZ[0] + 0.06 + i * 0.008, 0.05 * i);
+    by += 0.028;
+  });
+  const lean = new THREE.Mesh(new THREE.BoxGeometry(0.155, 0.026, 0.20), spine(0x8a6a3a));
+  lean.rotation.set(0, 0.08, 0); lean.position.set(SX, by + 0.03, shelfZ[0] + 0.24);
+  lean.rotateX(-1.15); lean.castShadow = true; g.add(lean);
+
+  // upper shelf: a framed print leaning back, and a small brass-ish tin
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.34, 0.26),
+    new THREE.MeshStandardMaterial({ color: 0x4a3b2c, roughness: 0.6, envMapIntensity: 0.4 }));
+  frame.position.set(SX + 0.045, shelfY[1] + 0.19, shelfZ[1] - 0.20);
+  frame.rotation.z = 0.16;
+  frame.castShadow = true; g.add(frame);
+  put(new THREE.Mesh(new THREE.CylinderGeometry(0.052, 0.052, 0.10, 14), clay),
+      SX - 0.01, shelfY[1] + 0.069, shelfZ[1] + 0.32);
+
+  // mantel: a pair of candles and a shallow dish
+  [[-0.44, 0.13], [-0.30, 0.085]].forEach(([dz, ch]) => {
+    const c = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.027, ch, 12), clayPale);
+    put(c, WALL_X + 0.14, 1.66 + ch / 2, FZ + dz);
+  });
+  put(new THREE.Mesh(new THREE.CylinderGeometry(0.10, 0.085, 0.04, 18), clay),
+      WALL_X + 0.15, 1.68, FZ + 0.55);
 
   /* ------------------------------------------------------- log & embers */
   const fireGroup = new THREE.Group();

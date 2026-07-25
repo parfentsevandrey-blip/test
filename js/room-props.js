@@ -6,6 +6,7 @@ import {
   GLSL_NOISE, U, ROOM, rnd, rrnd, pick, roomScene, MAX_ANISO,
   roundedBoxGeo, faceTowards, normalizeUv,
 } from './room.js';
+import { cushionGeo, weltGeo, drapeGeo, curtainGeo } from './room-soft.js';
 import { applyMaps } from './tex/index.js';
 import { applyDetail } from './tex/detail.js';
 export { buildLights, updateLights } from './room-lights.js';
@@ -84,6 +85,19 @@ const M = {
   fur: tex(new THREE.MeshStandardMaterial({
     color: 0x6d635c, metalness: 0, envMapIntensity: 0.2,
   }), 'woolRug', { repeat: [5, 5], normalScale: 0.7 }),
+
+  // heavy unlined linen, seen from both sides against the glass
+  drape: tex(new THREE.MeshStandardMaterial({
+    color: 0xbfae95, metalness: 0, side: THREE.DoubleSide, envMapIntensity: 0.30,
+  }), 'linen', { repeat: [3, 3], normalScale: 1.0, detail: D_FABRIC }),
+
+  wicker: tex(new THREE.MeshStandardMaterial({
+    color: 0xa57c4c, metalness: 0, envMapIntensity: 0.3,
+  }), 'knit', { repeat: [3.2, 2.2], normalScale: 1.15 }),
+
+  bark: tex(new THREE.MeshStandardMaterial({
+    color: 0x8b7256, metalness: 0, envMapIntensity: 0.25,
+  }), 'charredLog', { repeat: [2.5, 2.5], normalScale: 0.9 }),
 };
 
 const shadowed = (m) => { m.castShadow = true; m.receiveShadow = true; return m; };
@@ -112,61 +126,109 @@ function buildRug(g) {
 }
 
 /* ================================================================ sofa === */
+/* One seat cushion, its welt, and the shadow flags — used by the sofa and the
+   armchair so the two are upholstered the same way. */
+function upholster(s, geoOpts, mat, w, h, d, pos, rot) {
+  const c = shadowed(new THREE.Mesh(cushionGeo(w, h, d, geoOpts), mat));
+  c.position.set(pos[0], pos[1], pos[2]);
+  if (rot) c.rotation.set(rot[0] || 0, rot[1] || 0, rot[2] || 0);
+  s.add(c);
+  // the piping is sewn into the seam, so it follows the same outline
+  const welt = new THREE.Mesh(
+    weltGeo(w * 0.995, d * 0.995, { corner: geoOpts.corner ?? 4.2, radius: geoOpts.welt ?? 0.0085 }),
+    mat);
+  welt.castShadow = false;
+  c.add(welt);
+  return c;
+}
+
 function buildSofa(g) {
   const s = new THREE.Group();
   s.position.set(0.15, 0, 1.95);          // back to the room, facing the window
 
-  const W = 2.95, D = 1.02, SEAT = 0.40;
-  // plinth
-  const plinth = shadowed(new THREE.Mesh(roundedBoxGeo(W, 0.12, D, 0.03), M.oakDark));
-  plinth.position.y = 0.06; s.add(plinth);
-  // seat cushions
-  for (let i = -1; i <= 1; i++) {
-    const c = shadowed(new THREE.Mesh(roundedBoxGeo(W / 3 - 0.03, 0.20, D - 0.16, 0.055), M.linen));
-    c.position.set(i * (W / 3), SEAT - 0.10 + 0.12, 0.02);
-    s.add(c);
-  }
-  // back cushions, tilted
-  for (let i = -1; i <= 1; i++) {
-    const c = shadowed(new THREE.Mesh(roundedBoxGeo(W / 3 - 0.04, 0.44, 0.20, 0.06), M.linen));
-    c.position.set(i * (W / 3), 0.74, D / 2 - 0.14);
-    c.rotation.x = -0.16;
-    s.add(c);
-  }
-  // arms
-  [-1, 1].forEach((sgn) => {
-    const a = shadowed(new THREE.Mesh(roundedBoxGeo(0.20, 0.40, D, 0.07), M.linenDark));
-    a.position.set(sgn * (W / 2 - 0.10), 0.36, 0);
-    s.add(a);
+  const W = 2.52, D = 0.98, SEAT = 0.40;
+  const CW = W / 3 - 0.02;
+
+  // An upholstered base on low wooden feet, inset from the body — the old one
+  // was a dark slab wider than the sofa and read as a pallet.
+  const base = shadowed(new THREE.Mesh(roundedBoxGeo(W - 0.10, 0.20, D - 0.10, 0.02), M.linenDark));
+  base.position.y = 0.20; s.add(base);
+  [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => {
+    const f = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.019, 0.10, 8), M.oakDark);
+    f.position.set(sx * (W / 2 - 0.20), 0.05, sz * (D / 2 - 0.16));
+    f.castShadow = true; s.add(f);
   });
-  // back panel
-  const bp = shadowed(new THREE.Mesh(roundedBoxGeo(W, 0.62, 0.14, 0.05), M.linenDark));
-  bp.position.set(0, 0.49, D / 2 - 0.04);
+
+  /* seat cushions — the middle one has been sat in, the outer two are proud,
+     and none of the three is quite square to the frame */
+  const seatSag = [0.006, 0.020, 0.010];
+  const seatTilt = [-0.012, 0.004, 0.014];
+  for (let i = -1; i <= 1; i++) {
+    const k = i + 1;
+    upholster(s, { corner: 4.8, wide: 5.4, edge: 0.24, sag: seatSag[k], wrinkle: 1.0 },
+      M.linen, CW, 0.185, D - 0.20,
+      [i * (W / 3) + seatTilt[k] * 0.6, SEAT + 0.005 - seatSag[k], 0.015],
+      [0, seatTilt[k], 0]);
+  }
+
+  /* Back cushions. Their seam runs round the perimeter as you look at them,
+     so they are built lying down and stood up — build one the other way and
+     its front face is a pole, which shows as rings across the linen. */
+  const backLean = [-0.20, -0.15, -0.23];
+  for (let i = -1; i <= 1; i++) {
+    const k = i + 1;
+    upholster(s, { corner: 3.4, wide: 3.2, edge: 0.42, wrinkle: 1.5, pinch: 0.07 },
+      M.linen, CW - 0.01, 0.25, 0.50,
+      [i * (W / 3), 0.75, D / 2 - 0.19],
+      [Math.PI / 2 + backLean[k], (k - 1) * 0.02, 0]);
+  }
+
+  // arms: tight-upholstered, so a rounded box with a welt run over its top
+  [-1, 1].forEach((sgn) => {
+    const a = shadowed(new THREE.Mesh(roundedBoxGeo(0.19, 0.42, D, 0.075), M.linenDark));
+    a.position.set(sgn * (W / 2 - 0.095), 0.38, 0);
+    s.add(a);
+    const cap = shadowed(new THREE.Mesh(
+      cushionGeo(0.19, 0.09, D - 0.02, { corner: 5.5, wide: 5.0, edge: 0.26, wrinkle: 0.5 }),
+      M.linenDark));
+    cap.position.set(sgn * (W / 2 - 0.095), 0.605, 0);
+    s.add(cap);
+  });
+
+  const bp = shadowed(new THREE.Mesh(roundedBoxGeo(W, 0.66, 0.13, 0.05), M.linenDark));
+  bp.position.set(0, 0.52, D / 2 - 0.035);
   s.add(bp);
 
-  // throw pillows
-  const pillow = (x, z, rot, mat, sz = 0.42) => {
-    const p = shadowed(new THREE.Mesh(roundedBoxGeo(sz, sz, 0.15, 0.07, 4), mat));
-    p.position.set(x, SEAT + 0.30, z);
-    p.rotation.set(-0.42, rot, rot * 0.5);
+  /* Throw pillows. Real ones are stuffed square and land on their corners,
+     leaning into whatever is behind them — never standing up on edge. */
+  const pillow = (x, z, sz, mat, tilt, spin) => {
+    const p = shadowed(new THREE.Mesh(
+      cushionGeo(sz, 0.16, sz, { corner: 2.9, wide: 2.6, edge: 0.46, wrinkle: 1.8, pinch: 0.09 }),
+      mat));
+    p.position.set(x, SEAT + 0.10 + sz * 0.46, z);
+    p.rotation.set(Math.PI / 2 - tilt, spin, spin * 0.7);
     s.add(p);
+    const welt = new THREE.Mesh(weltGeo(sz * 0.99, sz * 0.99, { corner: 2.9, radius: 0.007 }), mat);
+    welt.castShadow = false; p.add(welt);
   };
-  pillow(-1.02, 0.24, 0.22, M.rust, 0.44);
-  pillow(-0.66, 0.30, -0.14, M.boucle, 0.38);
-  pillow(1.00, 0.26, -0.26, M.boucle, 0.42);
-  pillow(0.68, 0.32, 0.18, M.rust, 0.36);
+  pillow(-0.86, 0.19, 0.44, M.rust, 0.30, 0.20);
+  pillow(-0.53, 0.26, 0.38, M.boucle, 0.20, -0.13);
+  pillow(0.90, 0.21, 0.42, M.boucle, 0.26, -0.24);
+  pillow(0.58, 0.27, 0.36, M.rust, 0.16, 0.17);
 
-  // knitted throw draped over the left arm
-  const throwGeo = new THREE.PlaneGeometry(0.75, 1.25, 12, 18);
-  const tp = throwGeo.attributes.position;
-  for (let i = 0; i < tp.count; i++) {
-    const u = tp.getX(i) / 0.75 + 0.5, v = tp.getY(i) / 1.25 + 0.5;
-    tp.setZ(i, Math.sin(u * Math.PI * 3.2) * 0.028 + Math.sin(v * Math.PI * 2.1 + 1.0) * 0.02);
-  }
-  throwGeo.computeVertexNormals();
-  const thr = shadowed(new THREE.Mesh(throwGeo, M.knit));
-  thr.position.set(-1.26, 0.44, -0.06);
-  thr.rotation.set(-Math.PI / 2 + 0.35, 0, 0.06);
+  /* A knitted throw thrown over the left arm: up the outside, over the top,
+     down onto the seat, with the tail crumpled where it lands. */
+  const ax = -(W / 2 - 0.095);
+  const thr = shadowed(new THREE.Mesh(drapeGeo([
+    [ax - 0.105, 0.30, -0.26],
+    [ax - 0.115, 0.44, -0.14],
+    [ax - 0.10, 0.57, -0.01],
+    [ax - 0.02, 0.645, 0.09],
+    [ax + 0.11, 0.615, 0.15],
+    [ax + 0.24, 0.545, 0.16],
+    [ax + 0.37, 0.515, 0.11],
+  ], 0.46, { folds: 5, amp: 0.024, taper: 0.06,
+             freeAt: (u) => Math.max(0, 1 - Math.abs(u - 0.10) * 3.2) }), M.knit));
   s.add(thr);
 
   g.add(s);
@@ -174,29 +236,49 @@ function buildSofa(g) {
 }
 
 /* ============================================================ armchair === */
-function buildArmchair(g, x, z, lookX, lookZ, mat) {
+function buildArmchair(g, x, z, lookX, lookZ, mat, seed = 0) {
   const c = new THREE.Group();
   c.position.set(x, 0, z);
 
   const W = 0.86, D = 0.84;
-  const cPlinth = shadowed(new THREE.Mesh(roundedBoxGeo(W, 0.10, D, 0.03), M.oakDark));
-  cPlinth.position.y = 0.05; c.add(cPlinth);
-  const seat = shadowed(new THREE.Mesh(roundedBoxGeo(W - 0.06, 0.20, D - 0.10, 0.07), mat));
-  seat.position.set(0, 0.30, 0.02); c.add(seat);
-  const back = shadowed(new THREE.Mesh(roundedBoxGeo(W - 0.04, 0.58, 0.19, 0.08), mat));
-  back.position.set(0, 0.66, D / 2 - 0.11); back.rotation.x = -0.19; c.add(back);
-  [-1, 1].forEach((s) => {
-    const a = shadowed(new THREE.Mesh(roundedBoxGeo(0.16, 0.32, D - 0.10, 0.07), mat));
-    a.position.set(s * (W / 2 - 0.07), 0.42, 0.0); c.add(a);
-  });
-  // tapered legs
+  /* An upholstered skirt on short legs. The chair used to stand on a dark
+     slab wider than its own seat, which read as a shipping pallet. */
+  const skirt = shadowed(new THREE.Mesh(roundedBoxGeo(W - 0.09, 0.14, D - 0.09, 0.02), mat));
+  skirt.position.y = 0.19; c.add(skirt);
   [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => {
-    const l = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.012, 0.10, 6), M.oakDark);
-    l.position.set(sx * (W / 2 - 0.09), 0.05, sz * (D / 2 - 0.09));
+    const l = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.017, 0.13, 8), M.oakDark);
+    l.position.set(sx * (W / 2 - 0.10), 0.062, sz * (D / 2 - 0.10));
     l.castShadow = true; c.add(l);
   });
-  const p = shadowed(new THREE.Mesh(roundedBoxGeo(0.34, 0.34, 0.13, 0.06, 4), M.rust));
-  p.position.set(0.06, 0.55, 0.16); p.rotation.set(-0.5, 0.2, 0.1); c.add(p);
+
+  upholster(c, { corner: 4.8, wide: 5.4, edge: 0.24, sag: 0.014 + seed * 0.006, wrinkle: 1.1 },
+    mat, W - 0.09, 0.18, D - 0.14, [0, 0.335, 0.015], [0, 0.015 - seed * 0.03, 0]);
+
+  const back = shadowed(new THREE.Mesh(
+    cushionGeo(W - 0.09, 0.20, 0.54, { corner: 4.0, wide: 4.2, edge: 0.32, wrinkle: 1.4, pinch: 0.06 }),
+    mat));
+  back.position.set(0, 0.66, D / 2 - 0.14);
+  back.rotation.x = Math.PI / 2 - 0.21 - seed * 0.02;
+  c.add(back);
+  const bWelt = new THREE.Mesh(weltGeo(W - 0.10, 0.53, { corner: 4.0, radius: 0.008 }), mat);
+  bWelt.castShadow = false; back.add(bWelt);
+
+  [-1, 1].forEach((s) => {
+    const a = shadowed(new THREE.Mesh(roundedBoxGeo(0.155, 0.34, D - 0.10, 0.07), mat));
+    a.position.set(s * (W / 2 - 0.065), 0.44, 0.0); c.add(a);
+    const cap = shadowed(new THREE.Mesh(
+      cushionGeo(0.155, 0.075, D - 0.12, { corner: 5.2, wide: 4.8, edge: 0.26, wrinkle: 0.5 }), mat));
+    cap.position.set(s * (W / 2 - 0.065), 0.625, 0); c.add(cap);
+  });
+
+  const p = shadowed(new THREE.Mesh(
+    cushionGeo(0.36, 0.15, 0.36, { corner: 2.9, wide: 2.6, edge: 0.46, wrinkle: 1.8, pinch: 0.09 }),
+    M.rust));
+  p.position.set(0.05, 0.55, 0.03);
+  p.rotation.set(Math.PI / 2 - 0.40, 0.22, 0.14);
+  c.add(p);
+  const pWelt = new THREE.Mesh(weltGeo(0.355, 0.355, { corner: 2.9, radius: 0.007 }), M.rust);
+  pWelt.castShadow = false; p.add(pWelt);
 
   g.add(c);
   faceTowards(c, lookX, lookZ);
@@ -280,11 +362,15 @@ function buildCoffeeTable(g) {
 
 /* ============================================================== pouf ==== */
 function buildPouf(g, x, z) {
-  const p = shadowed(new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.36, 0.36, 24, 1), M.boucleRound));
-  p.position.set(x, 0.18, z);
+  // a stuffed round pouf: soft top, seam round the middle, settled on the rug
+  const p = shadowed(new THREE.Mesh(
+    cushionGeo(0.70, 0.42, 0.70, { corner: 2.0, wide: 2.4, edge: 0.44, wrinkle: 1.1, pinch: 0.06 }),
+    M.boucleRound));
+  p.position.set(x, 0.21, z);
+  p.rotation.y = 0.4;
   g.add(p);
-  const seam = new THREE.Mesh(new THREE.TorusGeometry(0.345, 0.012, 8, 28), M.boucleRound);
-  seam.position.set(x, 0.30, z); seam.rotation.x = Math.PI / 2;
+  const seam = new THREE.Mesh(new THREE.TorusGeometry(0.348, 0.011, 8, 30), M.boucleRound);
+  seam.position.set(x, 0.21, z); seam.rotation.x = Math.PI / 2;
   seam.castShadow = true; g.add(seam);
   return p;
 }
@@ -567,6 +653,79 @@ function buildDust(g) {
   return pts;
 }
 
+/* ============================================================ curtains == */
+/* Floor-to-ceiling glass with nothing at the edges reads as an office. Two
+   panels drawn back at the ends of the front window and one on the side
+   glazing soften the corners and give the firelight something warm to catch
+   between the room and the night. They sit inside the walker's wall clearance
+   so you can never push through one. */
+function buildCurtains(g) {
+  const c = new THREE.Group();
+  c.name = 'curtains';
+  const DROP = 3.14;
+
+  const panel = (x, z, w, ry, lead) => {
+    const m = new THREE.Mesh(curtainGeo(w, DROP, {
+      folds: 6, depth: 0.072, lead, pool: 0.05,
+    }), M.drape);
+    m.position.set(x, 0.015, z);
+    m.rotation.y = ry;
+    // a curtain in front of the window has nothing behind it to shadow, and a
+    // 3 m shadow caster is not what the fire's shadow map is for
+    m.receiveShadow = true;
+    c.add(m);
+    return m;
+  };
+
+  panel(-X + 0.62, -Z + 0.15, 1.08, 0, 0.22);
+  panel(X - 0.62, -Z + 0.15, 1.08, 0, -0.22);
+  panel(X - 0.15, -Z + 1.05, 0.92, -Math.PI / 2, 0.20);
+
+  // tracks, tight under the ceiling cove
+  const rod = (x, y, z, len, ry) => {
+    const r = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.011, len, 8), M.blackSteel);
+    r.position.set(x, y, z); r.rotation.set(0, ry, Math.PI / 2);
+    c.add(r);
+  };
+  rod(0, DROP + 0.035, -Z + 0.15, X * 2 - 0.1, 0);
+  rod(X - 0.15, DROP + 0.035, -Z + 1.6, 2.6, -Math.PI / 2);
+
+  g.add(c);
+  return c;
+}
+
+/* ======================================================== log basket === */
+function buildLogBasket(g, x, z) {
+  const b = new THREE.Group();
+  b.position.set(x, 0, z);
+
+  const body = shadowed(new THREE.Mesh(
+    new THREE.CylinderGeometry(0.27, 0.23, 0.34, 20, 1, true), M.wicker));
+  body.position.y = 0.17; b.add(body);
+  const floor_ = new THREE.Mesh(new THREE.CircleGeometry(0.23, 20), M.wicker);
+  floor_.rotation.x = -Math.PI / 2; floor_.position.y = 0.012; b.add(floor_);
+  const rim = shadowed(new THREE.Mesh(new THREE.TorusGeometry(0.268, 0.016, 6, 24), M.wicker));
+  rim.position.y = 0.34; rim.rotation.x = Math.PI / 2; b.add(rim);
+
+  // split logs, stacked in at whatever angle they landed
+  const logs = [
+    [0.00, 0.26, 0.02, 0.30, 1.25, 0.055],
+    [-0.09, 0.30, -0.05, -0.42, 1.05, 0.048],
+    [0.08, 0.33, 0.06, 0.62, 1.42, 0.050],
+    [-0.02, 0.38, -0.02, 0.10, 1.15, 0.044],
+    [0.06, 0.42, -0.08, -0.75, 1.30, 0.041],
+  ];
+  for (const [lx, ly, lz, ry, rz, r] of logs) {
+    const l = shadowed(new THREE.Mesh(new THREE.CylinderGeometry(r, r * 0.92, rrnd(0.46, 0.58), 7), M.bark));
+    l.position.set(lx, ly, lz);
+    l.rotation.set(rrnd(-0.12, 0.12), ry, rz);
+    b.add(l);
+  }
+
+  g.add(b);
+  return b;
+}
+
 /* ============================================================ assemble == */
 export function buildProps() {
   const g = new THREE.Group();
@@ -574,13 +733,16 @@ export function buildProps() {
 
   const rug = buildRug(g);
   const sofa = buildSofa(g);
-  const chair = buildArmchair(g, -2.55, 1.30, -X, -0.6, M.boucle);
-  const chair2 = buildArmchair(g, 2.95, -0.85, -0.6, 0.3, M.linenDark);
+  const chair = buildArmchair(g, -2.55, 1.30, -X, -0.6, M.boucle, 0);
+  const chair2 = buildArmchair(g, 2.95, -0.85, -0.6, 0.3, M.linenDark, 1);
   const table = buildCoffeeTable(g);
   buildPouf(g, -2.45, -1.35);
   const lamp = buildFloorLamp(g, -3.30, 1.90);
   buildSideTable(g, -1.85, 2.70);
+  buildSideTable(g, 3.90, -1.75);
   buildBookshelf(g);
+  buildCurtains(g);
+  buildLogBasket(g, -4.35, 1.05);
   const plant = buildPlant(g, 3.85, -2.95, 1.0);
   const plant2 = buildPlant(g, -3.6, 2.9, 0.62);
   const cat = buildCat(g, -1.95, -0.55);

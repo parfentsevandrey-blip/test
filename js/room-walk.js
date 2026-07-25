@@ -207,6 +207,10 @@ export function roomColliders() {
     [-3.55, 0, 1.65, -3.05, 1.60, 2.15],
     // bookshelf along the right wall
     [X - 0.36, 0, 0.45, X, 2.4, 3.35],
+    // side table by the window chair
+    [3.64, 0, -2.01, 4.16, 0.60, -1.49],
+    // log basket at the hearth
+    [-4.66, 0, 0.74, -4.04, 0.40, 1.36],
     // plants
     [3.55, 0, -3.25, 4.15, 1.9, -2.65],
     [-3.85, 0, 2.65, -3.35, 1.3, 3.15],

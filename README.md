@@ -176,6 +176,21 @@ rainy night city outside. Same vendored Three.js r160, no external assets.
   stand in for light returning off the floor, the ceiling and the back wall —
   without them every surface out of direct throw fell to about 2% luminance and
   its material was invisible. The bounces flicker with the flame.
+- **Upholstery, not rounded boxes.** A cushion is two panels of cloth sewn
+  round a seam and stuffed: it bulges in the middle, tucks in at the seam,
+  carries a piped welt along it, and creases toward the corners. Every soft
+  piece is built that way — sphere topology with the seam at the equator,
+  which is how the real thing is cut, and the welt swept along the same
+  outline so the two can never disagree. The seat cushions sag by different
+  amounts and sit slightly askew, the back cushions slump forward, the throw
+  pillows land on their corners, and a knitted throw drapes over an arm and
+  crumples where it lands.
+- **Curtains, a log basket, a dressed mantel.** Floor-to-ceiling glass with
+  nothing at its edges reads as an office; three linen panels drawn back at
+  the ends soften the corners and catch the firelight. Firewood sits in a
+  basket by the hearth, and the shelves above it hold a vase, a stack of
+  books, a leaning frame — bare, they caught the fire along their whole
+  length and read as two neon bars across the chimney breast.
 - **A micro-detail layer.** A shared fine normal is blended over every base
   material with whiteout blending, sampled triplanar in world space and faded
   out by view distance, so surfaces keep structure up close without aliasing
@@ -248,6 +263,11 @@ quality switch costs more than a few ms of main-thread time.
 that walls and furniture stop you, that crouching lowers the eye, and that
 `Esc` hands the camera back to the orbit rig.
 
+`node tools/interior.js` photographs the room from seven natural viewing
+distances with the UI hidden. `tools/closeup.js` gets near enough to read a
+weave; this one gets far enough to see that a cushion is a box — which is how
+the furniture stayed a stack of rounded boxes for as long as it did.
+
 `node tools/skyline.js` hides the room and the glass and photographs the world
 on its own from six directions, printing the plan's statistics with it —
 building and instance counts, tallest, median height, nearest neighbour. Judging
@@ -272,7 +292,8 @@ js/room-outside.js     Sky, ground with the river and parks, rain, mist, lightni
 js/room-city.js        The city plan: grid, massing, facades, streets, traffic
 js/room-fog.js         Aerial perspective shared by everything outside the glass
 js/room-interior.js    Room shell, floor-to-ceiling glazing + rain shader, fireplace
-js/room-props.js       Furniture, soft goods, plants, the cat
+js/room-props.js       Furniture, soft goods, curtains, plants, the cat
+js/room-soft.js        Upholstery: stuffed cushions, piped welts, drapes
 js/room-lights.js      Lighting rig: fire spot + omni, bounces, practicals, window
 js/room-walk.js        First-person controller: pointer lock, collision, head bob
 js/post-ao.js          Depth-only SSAO with a depth-aware blur
@@ -289,6 +310,7 @@ tools/uicheck.js       Audits every control: does it work, and does it stall?
 tools/walkcheck.js     Audits walk mode: movement, collision, crouch, exit
 tools/skyline.js       Renders the world alone from six vantage points + plan stats
 tools/closeup.js       Eight in-scene close-ups + per-surface luminance readout
+tools/interior.js      The room from natural viewing distances, UI hidden
 tools/texlab.html      Texture lab: any surface on a lit panel/sphere/cylinder
 tools/texshot.js       Renders one surface to a PNG contact sheet
 ```

@@ -212,8 +212,8 @@ export function honedStone(size, N) {
   const [MDr, MDg, MDb] = hex(0x2c2a26);      // matrix, dark
   const [MLr, MLg, MLb] = hex(0x5b5449);      // matrix, light
   const [BWr, BWg, BWb] = hex(0x4e4335);      // iron staining in the bedding
-  const [VCr, VCg, VCb] = hex(0x8d929c);      // vein core: lighter AND cooler
-  const [VWr, VWg, VWb] = hex(0x8e8474);      // some veins oxidised warm
+  const [VCr, VCg, VCb] = hex(0x74767a);      // vein core: lighter AND cooler
+  const [VWr, VWg, VWb] = hex(0x776f62);      // some veins oxidised warm
   const [VHr, VHg, VHb] = hex(0x615f5c);      // diffuse halo round the core
   const [INr, INg, INb] = hex(0x232019);      // dark mineral inclusion
   const [PGr, PGg, PGb] = hex(0xb1aa9c);      // pale calcite grain
@@ -484,7 +484,7 @@ export function honedStone(size, N) {
       const swell = 0.42 * hone + 0.38 * bed + 0.20 * mot;
 
       // half-widths, in texels at 512² and scaled with size
-      const wA = (1.10 + 3.00 * swell) * gate * S;
+      const wA = (1.55 + 3.50 * swell) * gate * S;
       const hAw = (8 + 22 * swell) * (0.10 + 0.90 * gate) * S;
       /* Companion separations must drift SLOWLY. The curve tA = off is only a
          well-behaved offset of the strand while |∇off| stays well under one
@@ -550,7 +550,7 @@ export function honedStone(size, N) {
       const sm = selv * 0.17;
       cr *= 1 - sm; cg *= 1 - sm; cb *= 1 - sm;
 
-      const halo = haloA * 0.72 + haloB * 0.20;
+      const halo = haloA * 0.58 + haloB * 0.16;
       const hm = halo * halo * 0.40;
       cr += (VHr - cr) * hm; cg += (VHg - cg) * hm; cb += (VHb - cb) * hm;
 
@@ -565,7 +565,7 @@ export function honedStone(size, N) {
       // this the strands read as painted lines however good their shape is.
       let gr = (mot - 0.24) * K_GRAN; gr = gr < 0 ? 0 : gr > 1 ? 1 : gr;
       const cm = cl(core * (0.16 + 0.96 * (gr * gr * (3 - 2 * gr))) * (0.78 + 0.36 * mgF),
-                    0, 0.74);
+                    0, 0.44);
       cr += (vr - cr) * cm; cg += (vg - cg) * cm; cb += (vb - cb) * cm;
 
       const im = inc * 0.86;
