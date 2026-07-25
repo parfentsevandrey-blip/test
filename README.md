@@ -19,6 +19,11 @@ building.
 > Modelled from reference photos of the completed building. This is a
 > conceptual presentation, not affiliated with the developer.
 
+> **Also in this repo:** [`penthouse/`](penthouse/) — a separate, unrelated
+> experiment. A walkable first-person 3D penthouse during a night thunderstorm,
+> in one self-contained `index.html` (double-click to open). See
+> [`penthouse/README.md`](penthouse/README.md).
+
 ## Highlights
 
 - **Faithful 3D model** — the building is rebuilt procedurally from the real

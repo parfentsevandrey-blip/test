@@ -1,0 +1,4436 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#05070b" />
+<title>Пентхаус · ночная гроза</title>
+<style>
+  /* ==========================================================================
+     ИНТЕРФЕЙС. Всё оформление — в одном файле, без внешних шрифтов и картинок.
+     ========================================================================== */
+  :root{
+    --ink: #e8e3da;
+    --dim: #9a958c;
+    --warm: #ffb060;
+    --panel: rgba(10,12,16,.86);
+    --line: rgba(232,227,218,.14);
+    --ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; margin:0; background:#05070b; overflow:hidden; }
+  body{
+    font-family: var(--ui);
+    color: var(--ink);
+    -webkit-user-select:none; user-select:none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: none;
+  }
+  canvas{ display:block; }
+  #app{ position:fixed; inset:0; }
+
+  /* ---- общий слой оверлеев ---- */
+  .layer{ position:fixed; inset:0; pointer-events:none; z-index:10; }
+
+  /* ---- прицел ---- */
+  #reticle{
+    position:fixed; left:50%; top:50%; width:0; height:0; z-index:12; pointer-events:none;
+  }
+  #reticle .dot{
+    position:absolute; left:-2px; top:-2px; width:4px; height:4px; border-radius:50%;
+    background:rgba(255,255,255,.85); box-shadow:0 0 4px rgba(0,0,0,.9);
+    transition: opacity .18s ease, transform .18s ease;
+  }
+  #reticle .ring{
+    position:absolute; left:-13px; top:-13px; width:26px; height:26px; border-radius:50%;
+    border:1.5px solid rgba(255,255,255,.9);
+    box-shadow:0 0 8px rgba(0,0,0,.75);
+    opacity:0; transform:scale(.55);
+    transition: opacity .16s ease, transform .16s cubic-bezier(.2,1.3,.4,1);
+  }
+  #reticle .cap{
+    position:absolute; left:50%; top:24px; transform:translateX(-50%) translateY(4px);
+    white-space:nowrap; font-size:13px; letter-spacing:.06em; text-transform:uppercase;
+    color:rgba(255,255,255,.94); text-shadow:0 1px 8px rgba(0,0,0,.95);
+    opacity:0; transition: opacity .16s ease, transform .16s ease;
+  }
+  #reticle.on .ring{ opacity:1; transform:scale(1); }
+  #reticle.on .dot{ opacity:.25; transform:scale(.7); }
+  #reticle.on .cap{ opacity:1; transform:translateX(-50%) translateY(0); }
+  #reticle.hidden{ display:none; }
+
+  /* ---- подсказка первых секунд ---- */
+  #hint{
+    position:fixed; left:50%; bottom:8vh; transform:translateX(-50%);
+    z-index:13; pointer-events:none; text-align:center;
+    font-size:13px; letter-spacing:.08em; color:rgba(232,227,218,.72);
+    text-shadow:0 1px 10px rgba(0,0,0,.9); line-height:2;
+    transition: opacity 1.4s ease;
+  }
+  #hint kbd{
+    font: inherit; font-size:12px; padding:2px 7px; margin:0 2px; border-radius:5px;
+    border:1px solid rgba(232,227,218,.28); background:rgba(232,227,218,.07);
+  }
+
+  /* ---- «выдох» сцены: тающая надпись ---- */
+  #breath{
+    position:fixed; left:50%; top:50%; transform:translate(-50%,-50%);
+    z-index:13; pointer-events:none; opacity:0;
+    font-size:clamp(15px,2.4vw,24px); font-weight:300; letter-spacing:.22em;
+    color:rgba(255,225,195,.9); text-shadow:0 2px 24px rgba(0,0,0,.9);
+    transition: opacity 2.4s ease;
+    text-align:center;
+  }
+
+  /* ---- стартовый экран ---- */
+  #boot{
+    position:fixed; inset:0; z-index:30; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:26px;
+    background: radial-gradient(ellipse at 50% 42%, #0d1219 0%, #05070b 70%);
+    transition: opacity .8s ease;
+  }
+  #boot h1{
+    margin:0; font-weight:200; font-size:clamp(24px,4.4vw,46px); letter-spacing:.3em;
+    text-transform:uppercase; color:#efe9df; text-indent:.3em;
+  }
+  #boot p{ margin:0; color:var(--dim); font-size:14px; letter-spacing:.1em; text-align:center; max-width:32ch; line-height:1.8; }
+  #boot .bar{ width:min(320px,60vw); height:2px; background:rgba(232,227,218,.12); overflow:hidden; border-radius:2px; }
+  #boot .bar i{ display:block; height:100%; width:0%; background:linear-gradient(90deg,#ff9d4d,#ffd9a8); transition:width .3s ease; }
+  #boot button{
+    font:inherit; font-size:13px; letter-spacing:.18em; text-transform:uppercase;
+    color:#0a0c10; background:#e8e3da; border:0; border-radius:2px; padding:14px 34px;
+    cursor:pointer; opacity:0; pointer-events:none; transition:opacity .5s ease, background .2s ease;
+  }
+  #boot button.ready{ opacity:1; pointer-events:auto; }
+  #boot button:hover{ background:#fff; }
+  #boot.gone{ opacity:0; pointer-events:none; }
+
+  /* ---- пауза / настройки ---- */
+  #pause{
+    position:fixed; inset:0; z-index:25; display:none;
+    align-items:center; justify-content:center;
+    background:rgba(4,6,9,.72); backdrop-filter:blur(9px); -webkit-backdrop-filter:blur(9px);
+  }
+  #pause.on{ display:flex; }
+  #pause .box{
+    width:min(560px,92vw); max-height:88vh; overflow:auto;
+    background:var(--panel); border:1px solid var(--line); border-radius:8px;
+    padding:26px 28px 22px;
+  }
+  #pause h2{ margin:0 0 4px; font-weight:300; font-size:19px; letter-spacing:.2em; text-transform:uppercase; }
+  #pause .sub{ color:var(--dim); font-size:12px; letter-spacing:.08em; margin-bottom:20px; }
+  .row{ display:flex; align-items:center; gap:14px; padding:9px 0; border-top:1px solid rgba(232,227,218,.07); }
+  .row:first-of-type{ border-top:0; }
+  .row label{ flex:0 0 46%; font-size:13px; color:#d6d1c8; letter-spacing:.03em; }
+  .row input[type=range]{ flex:1; accent-color:#ff9d4d; height:18px; }
+  .row .val{ flex:0 0 54px; text-align:right; font-size:12px; color:var(--dim); font-variant-numeric:tabular-nums; }
+  .row select, .row .seg{ flex:1; }
+  .row select{
+    font:inherit; font-size:13px; color:var(--ink); background:rgba(232,227,218,.06);
+    border:1px solid var(--line); border-radius:4px; padding:6px 8px;
+  }
+  .seg{ display:flex; gap:6px; }
+  .seg button{
+    flex:1; font:inherit; font-size:12px; letter-spacing:.06em; padding:7px 4px; cursor:pointer;
+    color:var(--dim); background:rgba(232,227,218,.05); border:1px solid var(--line); border-radius:4px;
+  }
+  .seg button.on{ color:#0a0c10; background:#e8e3da; border-color:#e8e3da; }
+  #pause .keys{ margin-top:18px; padding-top:14px; border-top:1px solid rgba(232,227,218,.09);
+    color:var(--dim); font-size:12px; line-height:2; letter-spacing:.04em; }
+  #pause .keys b{ color:#cfc9c0; font-weight:500; }
+  #pause .resume{
+    margin-top:20px; width:100%; font:inherit; font-size:13px; letter-spacing:.18em; text-transform:uppercase;
+    color:#0a0c10; background:#e8e3da; border:0; border-radius:2px; padding:13px; cursor:pointer;
+  }
+
+  /* ---- мобильные стики ---- */
+  #touch{ position:fixed; inset:0; z-index:14; display:none; }
+  #touch.on{ display:block; }
+  .stick{
+    position:absolute; bottom:max(22px, env(safe-area-inset-bottom)); width:132px; height:132px; border-radius:50%;
+    border:1px solid rgba(232,227,218,.16); background:rgba(232,227,218,.04);
+  }
+  .stick.l{ left:22px; } .stick.r{ right:22px; }
+  .stick i{
+    position:absolute; left:50%; top:50%; width:52px; height:52px; margin:-26px 0 0 -26px; border-radius:50%;
+    background:rgba(232,227,218,.16); border:1px solid rgba(232,227,218,.24);
+  }
+  #tapHint{
+    position:absolute; left:50%; bottom:calc(max(22px, env(safe-area-inset-bottom)) + 150px); transform:translateX(-50%);
+    font-size:12px; color:rgba(232,227,218,.6); letter-spacing:.06em; white-space:nowrap;
+  }
+  #jump{
+    position:absolute; right:170px; bottom:max(30px, env(safe-area-inset-bottom));
+    width:64px; height:64px; border-radius:50%; border:1px solid rgba(232,227,218,.16);
+    background:rgba(232,227,218,.05); color:var(--dim); font-size:11px; letter-spacing:.05em;
+    display:flex; align-items:center; justify-content:center;
+  }
+  #menuBtn{
+    position:absolute; right:14px; top:max(14px, env(safe-area-inset-top));
+    width:42px; height:42px; border-radius:6px; border:1px solid rgba(232,227,218,.16);
+    background:rgba(10,12,16,.5); color:var(--ink); font-size:17px;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  /* ---- VR ---- */
+  #vr{ position:fixed; left:50%; bottom:22px; transform:translateX(-50%); z-index:20; }
+  #vr button{ font-family:var(--ui) !important; }
+
+  /* ---- аварийное сообщение ---- */
+  #fatal{
+    position:fixed; inset:0; z-index:40; display:none; align-items:center; justify-content:center;
+    background:#05070b; padding:8vw; text-align:center; color:var(--dim); font-size:14px; line-height:1.9;
+  }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<div id="reticle" class="hidden">
+  <div class="ring"></div>
+  <div class="dot"></div>
+  <div class="cap"></div>
+</div>
+
+<div id="hint">
+  <div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> — идти &nbsp;·&nbsp; <kbd>Shift</kbd> — быстрее &nbsp;·&nbsp; <kbd>C</kbd> — присесть &nbsp;·&nbsp; <kbd>Space</kbd> — подскок</div>
+  <div><kbd>E</kbd> — взаимодействие &nbsp;·&nbsp; <kbd>F</kbd> — фонарик &nbsp;·&nbsp; <kbd>Esc</kbd> — пауза и настройки</div>
+</div>
+
+<div id="breath"></div>
+
+<div id="touch">
+  <div class="stick l" id="stickL"><i></i></div>
+  <div class="stick r" id="stickR"><i></i></div>
+  <div id="jump">прыжок</div>
+  <div id="menuBtn">≡</div>
+  <div id="tapHint">коснитесь предмета, чтобы взаимодействовать</div>
+</div>
+
+<div id="pause">
+  <div class="box">
+    <h2>Пауза</h2>
+    <div class="sub">Комфорт и качество</div>
+
+    <div class="row"><label>Поле зрения</label><input id="sFov" type="range" min="60" max="90" step="1"><span class="val" id="vFov"></span></div>
+    <div class="row"><label>Чувствительность мыши</label><input id="sSens" type="range" min="20" max="240" step="1"><span class="val" id="vSens"></span></div>
+    <div class="row"><label>Инверсия по вертикали</label><div class="seg" id="sInv"><button data-v="0">Выкл</button><button data-v="1">Вкл</button></div></div>
+    <div class="row"><label>Покачивание при ходьбе</label><input id="sBob" type="range" min="0" max="150" step="5"><span class="val" id="vBob"></span></div>
+    <div class="row"><label>Виньетка движения</label><input id="sVig" type="range" min="0" max="100" step="5"><span class="val" id="vVig"></span></div>
+    <div class="row"><label>Громкость</label><input id="sVol" type="range" min="0" max="100" step="1"><span class="val" id="vVol"></span></div>
+    <div class="row"><label>Громкость музыки</label><input id="sMus" type="range" min="0" max="100" step="1"><span class="val" id="vMus"></span></div>
+    <div class="row"><label>Качество</label><div class="seg" id="sQual"><button data-v="low">Низкое</button><button data-v="medium">Среднее</button><button data-v="high">Высокое</button></div></div>
+
+    <div class="keys">
+      <b>WASD</b> — ходьба · <b>Shift</b> — быстрый шаг · <b>C</b> — присесть · <b>Space</b> — подскок<br>
+      <b>E</b> / ЛКМ — взаимодействие · <b>F</b> — фонарь телефона · <b>Esc</b> — пауза<br>
+      Сидя: <b>W</b> или <b>Esc</b> — встать
+    </div>
+    <button class="resume" id="resumeBtn">Вернуться</button>
+  </div>
+</div>
+
+<div id="boot">
+  <h1>Пентхаус</h1>
+  <p>Ночная гроза над городом.<br>Зажгите камин, поставьте пластинку, сядьте у огня.</p>
+  <div class="bar"><i id="bootBar"></i></div>
+  <button id="startBtn">Войти</button>
+</div>
+
+<div id="vr"></div>
+
+<div id="fatal"><div id="fatalMsg"></div></div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+/* ==========================================================================
+   ПЕНТХАУС · НОЧНАЯ ГРОЗА
+   Одностраничное 3D-демо от первого лица. Всё процедурное: геометрия кодом,
+   текстуры в <canvas>, звук синтезируется WebAudio. Внешних ассетов нет.
+   ========================================================================== */
+
+import * as THREE from 'three';
+import { PointerLockControls }        from 'three/addons/controls/PointerLockControls.js';
+import { Octree }                     from 'three/addons/math/Octree.js';
+import { Capsule }                    from 'three/addons/math/Capsule.js';
+import { RoundedBoxGeometry }         from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { RoomEnvironment }            from 'three/addons/environments/RoomEnvironment.js';
+import { RectAreaLightUniformsLib }   from 'three/addons/lights/RectAreaLightUniformsLib.js';
+import { EffectComposer }             from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass }                 from 'three/addons/postprocessing/RenderPass.js';
+import { GTAOPass }                   from 'three/addons/postprocessing/GTAOPass.js';
+import { SSAOPass }                   from 'three/addons/postprocessing/SSAOPass.js';
+import { UnrealBloomPass }            from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { SMAAPass }                   from 'three/addons/postprocessing/SMAAPass.js';
+import { ShaderPass }                 from 'three/addons/postprocessing/ShaderPass.js';
+import { OutputPass }                 from 'three/addons/postprocessing/OutputPass.js';
+import { VRButton }                   from 'three/addons/webxr/VRButton.js';
+import * as BufferGeometryUtils       from 'three/addons/utils/BufferGeometryUtils.js';
+
+/* ==========================================================================
+   0. СЛУЖЕБНОЕ: детерминированный шум, мелкая математика, DOM
+   ========================================================================== */
+
+const $ = (sel) => document.querySelector(sel);
+
+// Индикатор загрузки. Между этапами отдаём кадр браузеру, иначе полоса
+// просто прыгнет с нуля на сто, а вкладка на секунду замрёт.
+const bootBar = document.getElementById('bootBar');
+const BOOT_STEPS = 18;
+let bootStep = 0;
+const nextFrame = () => new Promise((r) => requestAnimationFrame(() => r()));
+async function progress() {
+  bootStep++;
+  bootBar.style.width = Math.min(100, Math.round(bootStep / BOOT_STEPS * 100)) + '%';
+  await nextFrame();
+}
+
+const clamp  = (v, a, b) => v < a ? a : (v > b ? b : v);
+const lerp   = THREE.MathUtils.lerp;
+const smooth = THREE.MathUtils.smootherstep;
+const TAU = Math.PI * 2;
+
+// Детерминированный ГПСЧ — чтобы город и текстуры были одинаковыми при каждом запуске.
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const rnd = mulberry32(20260725);
+const rr = (a, b) => a + (b - a) * rnd();
+const ri = (a, b) => Math.floor(rr(a, b + 1));
+
+// Кадровая экспонента затухания: единообразно для всех «догоняющих» величин.
+const approach = (cur, target, rate, dt) => cur + (target - cur) * (1 - Math.exp(-rate * dt));
+
+// Нормализация угла в (-PI, PI] — нужна для разворачивания рыска камеры.
+function wrapAngle(a) {
+  a = (a + Math.PI) % TAU;
+  if (a < 0) a += TAU;
+  return a - Math.PI;
+}
+
+/* ==========================================================================
+   1. КОНФИГУРАЦИЯ КАЧЕСТВА И НАСТРОЙКИ ИГРОКА
+   ========================================================================== */
+
+const isTouch = matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 1;
+
+const QUALITY = {
+  low:    { ao:false, bloom:false, smaa:false, transmission:false, shadow:1024,
+            rain:1800, terraceRain:600, towers:110, dropLayers:1, pixelCap:1.25, splashes:14 },
+  medium: { ao:false, bloom:true,  smaa:true,  transmission:true,  shadow:1536,
+            rain:3600, terraceRain:1100, towers:170, dropLayers:2, pixelCap:1.6,  splashes:26 },
+  high:   { ao:true,  bloom:true,  smaa:true,  transmission:true,  shadow:2048,
+            rain:5600, terraceRain:1800, towers:230, dropLayers:3, pixelCap:2.0,  splashes:40 },
+};
+
+const settings = {
+  fov: 70,
+  sens: 100,          // 100 == базовая скорость
+  invert: 0,
+  bob: 100,           // % амплитуды покачивания
+  vignette: 60,       // % динамической виньетки
+  volume: 80,
+  music: 60,
+  quality: isTouch ? 'low' : 'high',
+};
+try {
+  const saved = JSON.parse(localStorage.getItem('penthouse.settings') || 'null');
+  if (saved) Object.assign(settings, saved);
+} catch (e) { /* приватный режим — просто идём с умолчаниями */ }
+const saveSettings = () => {
+  try { localStorage.setItem('penthouse.settings', JSON.stringify(settings)); } catch (e) { /* нестрашно */ }
+};
+let Q = QUALITY[settings.quality] || QUALITY.high;
+
+/* ==========================================================================
+   2. ПЛАНИРОВКА. Все размеры — в метрах, начало координат в центре квартиры.
+      X: запад(-) → восток(+)   Z: север(-) → юг(+)   Y: вверх
+   --------------------------------------------------------------------------
+      -8 ┌───────────────────────────────────────────────┐ +8   z = -6.5
+         │  камин  │        ВИТРАЖ  (север)              │
+         │         СУНКЕН-ГОСТИНАЯ (пол -0.36)           ▐ витраж
+         │                                               ▐ (восток) → терраса
+      ───┼──── лестница ────┬──────────────────────────  ┤   z = +1.2
+         │ холл │ ниша      │      КУХНЯ-БАР             │
+      -8 └──────┴───────────┴───────────────────────────┘      z = +6.5
+      Над холлом и нишей — мезонин (отметка +2.35).
+   ========================================================================== */
+
+const P = {
+  xMin: -8, xMax: 8, zMin: -6.5, zMax: 6.5,
+
+  yFloor: 0,
+  yPit: -0.36,           // сункен-гостиная: две ступени по 0.18
+  step: 0.18,
+
+  yLiving: 5.9,          // двусветный потолок гостиной
+  yKitchen: 3.4,         // потолок кухонной зоны
+  yNook: 2.25,           // низ плиты мезонина (потолок холла и ниши)
+  yDeck: 2.35,           // верх плиты мезонина
+  yUpper: 5.1,           // потолок над мезонином
+
+  zSplit: 1.2,           // граница «гостиная / служебная половина»
+  xBlock: -2.2,          // стена между низким блоком и кухней
+  xHall: -5.0,           // перегородка холла
+  zHall: 1.9,            // начало этой перегородки
+
+  // сункен-зона
+  pitX0: -6.0, pitX1: 1.0, pitZ0: -6.5, pitZ1: -1.2,
+  // остекление
+  glassNorthX0: -2.8,    // север: от -2.8 до +8
+  glassEastZ1: 1.2,      // восток: от -6.5 до +1.2
+
+  // терраса
+  terX0: 8.0, terX1: 12.5, terZ0: -6.5, terZ1: 1.2,
+  yTerrace: -0.02,
+  canopyY: 3.6, canopyX1: 10.6,
+
+  // дверь на террасу (проём в восточном витраже)
+  doorZ0: -0.9, doorZ1: 0.1, doorH: 2.4,
+
+  wallT: 0.16,           // толщина перегородок
+  extT: 0.3,             // толщина наружных стен
+};
+
+// Высота города под нами: пол пентхауса ≈ 182 м над улицей.
+const GROUND_Y = -182;
+
+/* ==========================================================================
+   3. РЕНДЕРЕР, СЦЕНА, КАМЕРА
+   ========================================================================== */
+
+const container = $('#app');
+
+const renderer = new THREE.WebGLRenderer({
+  antialias: false,               // сглаживание делает SMAA в композере
+  powerPreference: 'high-performance',
+  stencil: false,
+});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, Q.pixelCap));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.autoUpdate = false;      // карты теней обновляем вручную
+renderer.xr.enabled = true;
+container.appendChild(renderer.domElement);
+
+// Пометить, что карту теней надо пересчитать на следующем кадре.
+let shadowDirty = 2;
+const markShadows = (n = 1) => { shadowDirty = Math.max(shadowDirty, n); };
+
+const scene = new THREE.Scene();
+// Холодный синий туман: дальние башни тонут в дожде.
+scene.fog = new THREE.FogExp2(0x0b1524, 0.0058);
+
+const camera = new THREE.PerspectiveCamera(settings.fov, window.innerWidth / window.innerHeight, 0.06, 900);
+camera.rotation.order = 'YXZ';
+
+// Камера живёт в «рига», чтобы VR-камера могла двигаться отдельно от игрока.
+const cameraRig = new THREE.Group();
+cameraRig.add(camera);
+scene.add(cameraRig);
+
+RectAreaLightUniformsLib.init();
+
+/* ==========================================================================
+   4. IBL: RoomEnvironment через PMREM — без него материалы плоские.
+      Интенсивность приглушаем на самих материалах (envMapIntensity).
+   ========================================================================== */
+
+const pmrem = new THREE.PMREMGenerator(renderer);
+pmrem.compileEquirectangularShader();
+const envRT = pmrem.fromScene(new RoomEnvironment(), 0.04);
+scene.environment = envRT.texture;
+
+/* ==========================================================================
+   5. ГЛОБАЛЬНОЕ СОСТОЯНИЕ МИРА
+   ========================================================================== */
+
+const world = {
+  time: 0,
+  storm: 0.55,          // 0..1 — общая сила грозы, гуляет по медленной кривой
+  fireLit: false,
+  fireEnergy: 0,        // 0..1 — плавная раскачка огня
+  ceilingOn: false,
+  kitchenOn: false,
+  lampOn: false,
+  deskOn: false,
+  torchOn: false,       // фонарь телефона
+  recordOn: false,
+  kettleOn: false,
+  kettleHeat: 0,
+  doorOpen: 0,          // 0..1 — открытость двери на террасу
+  doorTarget: 0,
+  curtainsN: 0,         // 0..1 — задёрнутость штор
+  curtainsE: 0,
+  curtainTargetN: 0,
+  curtainTargetE: 0,
+  lightning: 0,         // текущая яркость вспышки
+  exposureBoost: 0,
+  breathe: 0,           // прогресс «выдоха» сцены
+  breatheDone: false,
+};
+
+// Группы: collidables собирает статику для Octree.
+const collidables = new THREE.Group();
+scene.add(collidables);
+const decor = new THREE.Group();          // без коллизий
+scene.add(decor);
+
+const interactables = [];                 // объекты с действием по прицелу
+const shadowCasters = [];                 // что попадает в карту теней
+
+// Динамические преграды (дверь на террасу): Octree статичен, их считаем руками.
+const blockers = [];
+
+/* ==========================================================================
+   6. ПРОЦЕДУРНЫЕ ТЕКСТУРЫ. Всё рисуется в <canvas>, ни одного файла.
+      Для каждого материала: цвет + шероховатость + нормаль (из карты высот).
+   ========================================================================== */
+
+const maxAniso = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+
+function makeCanvas(size) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  return c;
+}
+
+function toTexture(canvas, { srgb = false, repeat = 1, aniso = maxAniso } = {}) {
+  const t = new THREE.CanvasTexture(canvas);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(repeat, repeat);
+  t.anisotropy = aniso;
+  if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+  t.needsUpdate = true;
+  return t;
+}
+
+// Карта нормалей из карты высот (Собель по яркости, бесшовно по краям).
+function heightToNormal(heightCanvas, strength = 2.0) {
+  const s = heightCanvas.width;
+  const src = heightCanvas.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, s, s).data;
+  const out = makeCanvas(s);
+  const octx = out.getContext('2d');
+  const img = octx.createImageData(s, s);
+  const h = (x, y) => src[(((y + s) % s) * s + ((x + s) % s)) * 4] / 255;
+  for (let y = 0; y < s; y++) {
+    for (let x = 0; x < s; x++) {
+      const dx = (h(x - 1, y - 1) + 2 * h(x - 1, y) + h(x - 1, y + 1)) -
+                 (h(x + 1, y - 1) + 2 * h(x + 1, y) + h(x + 1, y + 1));
+      const dy = (h(x - 1, y - 1) + 2 * h(x, y - 1) + h(x + 1, y - 1)) -
+                 (h(x - 1, y + 1) + 2 * h(x, y + 1) + h(x + 1, y + 1));
+      let nx = dx * strength, ny = dy * strength, nz = 1;
+      const inv = 1 / Math.hypot(nx, ny, nz);
+      nx *= inv; ny *= inv; nz *= inv;
+      const i = (y * s + x) * 4;
+      img.data[i]     = (nx * 0.5 + 0.5) * 255;
+      img.data[i + 1] = (ny * 0.5 + 0.5) * 255;
+      img.data[i + 2] = (nz * 0.5 + 0.5) * 255;
+      img.data[i + 3] = 255;
+    }
+  }
+  octx.putImageData(img, 0, 0);
+  return out;
+}
+
+// Тайлящийся value-noise: нужен и для цвета, и для высот.
+function makeNoiseGrid(n, seed) {
+  const g = mulberry32(seed);
+  const a = new Float32Array(n * n);
+  for (let i = 0; i < n * n; i++) a[i] = g();
+  return a;
+}
+function sampleGrid(grid, n, x, y) {
+  const xi = Math.floor(x), yi = Math.floor(y);
+  const fx = x - xi, fy = y - yi;
+  const sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy);
+  const g = (i, j) => grid[(((j % n) + n) % n) * n + (((i % n) + n) % n)];
+  const a = g(xi, yi), b = g(xi + 1, yi), c = g(xi, yi + 1), d = g(xi + 1, yi + 1);
+  return lerp(lerp(a, b, sx), lerp(c, d, sx), sy);
+}
+function fbm(grid, n, x, y, oct = 4) {
+  let v = 0, amp = 0.5, f = 1;
+  for (let i = 0; i < oct; i++) { v += amp * sampleGrid(grid, n, x * f, y * f); f *= 2; amp *= 0.5; }
+  return v;
+}
+
+// ---- 6.1 Широкая дубовая доска (пол гостиной и мезонина) -----------------
+function texOak() {
+  const S = 1024, col = makeCanvas(S), hgt = makeCanvas(S), rgh = makeCanvas(S);
+  const c = col.getContext('2d'), h = hgt.getContext('2d'), r = rgh.getContext('2d');
+  const g = mulberry32(4411);
+  const grid = makeNoiseGrid(64, 991);
+
+  c.fillStyle = '#3b2a1c'; c.fillRect(0, 0, S, S);
+  h.fillStyle = '#8c8c8c'; h.fillRect(0, 0, S, S);
+  r.fillStyle = '#a0a0a0'; r.fillRect(0, 0, S, S);
+
+  const rows = 6, rowH = S / rows;                 // 6 досок на тайл
+  for (let row = 0; row < rows; row++) {
+    const y0 = row * rowH;
+    const off = (row % 2) * (S / 3) + g() * 40;    // разбежка стыков
+    for (let k = -1; k < 3; k++) {
+      const x0 = off + k * (S / 2.0);
+      const w = S / 2.0;
+      const tint = 0.82 + g() * 0.36;
+      const base = [92, 66, 44];
+      c.fillStyle = `rgb(${base[0] * tint | 0},${base[1] * tint | 0},${base[2] * tint | 0})`;
+      c.fillRect(x0, y0, w - 1.5, rowH - 1.5);
+      // фаска по краю доски
+      const grd = c.createLinearGradient(0, y0, 0, y0 + rowH);
+      grd.addColorStop(0, 'rgba(255,235,200,.09)');
+      grd.addColorStop(.12, 'rgba(0,0,0,0)');
+      grd.addColorStop(.9, 'rgba(0,0,0,0)');
+      grd.addColorStop(1, 'rgba(0,0,0,.35)');
+      c.fillStyle = grd; c.fillRect(x0, y0, w - 1.5, rowH - 1.5);
+      // текстура волокна
+      c.save(); c.beginPath(); c.rect(x0, y0, w - 1.5, rowH - 1.5); c.clip();
+      for (let i = 0; i < 46; i++) {
+        const yy = y0 + g() * rowH;
+        const amp = 2 + g() * 7;
+        c.strokeStyle = `rgba(${g() > .5 ? 40 : 130},${g() > .5 ? 26 : 96},${16},${0.05 + g() * 0.14})`;
+        c.lineWidth = 0.6 + g() * 1.8;
+        c.beginPath();
+        for (let x = x0; x < x0 + w; x += 8) {
+          const yv = yy + Math.sin((x - x0) * 0.012 + i) * amp + fbm(grid, 64, x * 0.03, yy * 0.05, 3) * 6;
+          x === x0 ? c.moveTo(x, yv) : c.lineTo(x, yv);
+        }
+        c.stroke();
+      }
+      // редкие сучки
+      if (g() < 0.4) {
+        const kx = x0 + 40 + g() * (w - 80), ky = y0 + 12 + g() * (rowH - 24);
+        for (let i = 6; i > 0; i--) {
+          c.strokeStyle = `rgba(30,18,10,${0.1 + i * 0.045})`;
+          c.lineWidth = 1.2;
+          c.beginPath(); c.ellipse(kx, ky, i * 2.6, i * 1.5, 0.4, 0, TAU); c.stroke();
+        }
+      }
+      c.restore();
+      // высоты: планка чуть выпуклая, стык — канавка
+      const hg = h.createLinearGradient(0, y0, 0, y0 + rowH);
+      hg.addColorStop(0, '#4a4a4a'); hg.addColorStop(.2, '#9a9a9a');
+      hg.addColorStop(.8, '#9a9a9a'); hg.addColorStop(1, '#3c3c3c');
+      h.fillStyle = hg; h.fillRect(x0, y0, w - 1.5, rowH - 1.5);
+      h.fillStyle = 'rgba(20,20,20,.9)'; h.fillRect(x0 + w - 2.5, y0, 2.5, rowH);
+      // шероховатость: лак чуть менее матовый вдоль волокна (three читает канал G)
+      const rv = (150 + g() * 45) | 0;
+      r.fillStyle = `rgb(${rv},${rv},${rv})`;
+      r.fillRect(x0, y0, w - 1.5, rowH - 1.5);
+    }
+  }
+  // мелкая пыль/микроцарапины в шероховатости
+  for (let i = 0; i < 3000; i++) {
+    r.fillStyle = `rgba(255,255,255,${g() * 0.08})`;
+    r.fillRect(g() * S, g() * S, 1 + g() * 22, 1);
+  }
+  return {
+    map: toTexture(col, { srgb: true }),
+    normalMap: toTexture(heightToNormal(hgt, 1.1)),
+    roughnessMap: toTexture(rgh),
+  };
+}
+
+// ---- 6.2 Крупноформатный керамогранит (холл, кухня) ----------------------
+function texStone() {
+  const S = 1024, col = makeCanvas(S), hgt = makeCanvas(S), rgh = makeCanvas(S);
+  const c = col.getContext('2d'), h = hgt.getContext('2d'), r = rgh.getContext('2d');
+  const g = mulberry32(777);
+  const grid = makeNoiseGrid(64, 313), grid2 = makeNoiseGrid(128, 5150);
+
+  const img = c.createImageData(S, S);
+  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+    const n = fbm(grid, 64, x / S * 7, y / S * 7, 5);
+    const v = fbm(grid2, 128, x / S * 26 + n * 2, y / S * 26, 3);
+    const t = 0.55 + n * 0.35 + v * 0.14;
+    const i = (y * S + x) * 4;
+    img.data[i] = 46 * t + 14; img.data[i + 1] = 47 * t + 15; img.data[i + 2] = 50 * t + 17; img.data[i + 3] = 255;
+  }
+  c.putImageData(img, 0, 0);
+  // тонкие прожилки
+  for (let i = 0; i < 26; i++) {
+    c.strokeStyle = `rgba(${170 + g() * 60},${168 + g() * 60},${172 + g() * 60},${0.05 + g() * 0.09})`;
+    c.lineWidth = 0.5 + g() * 1.6;
+    c.beginPath();
+    let x = g() * S, y = g() * S;
+    c.moveTo(x, y);
+    for (let k = 0; k < 40; k++) { x += (g() - .35) * 40; y += (g() - .5) * 26; c.lineTo(x, y); }
+    c.stroke();
+  }
+
+  h.fillStyle = '#b4b4b4'; h.fillRect(0, 0, S, S);
+  r.fillStyle = '#8c8c8c'; r.fillRect(0, 0, S, S);
+  // шов плит 2×2 на тайл
+  const half = S / 2;
+  h.fillStyle = '#2a2a2a'; r.fillStyle = '#c8c8c8';
+  for (const p of [half]) {
+    h.fillRect(p - 1.5, 0, 3, S); h.fillRect(0, p - 1.5, S, 3);
+    r.fillRect(p - 1.5, 0, 3, S); r.fillRect(0, p - 1.5, S, 3);
+  }
+  h.fillRect(0, 0, 1.5, S); h.fillRect(0, 0, S, 1.5);
+  h.fillRect(S - 1.5, 0, 1.5, S); h.fillRect(0, S - 1.5, S, 1.5);
+  return {
+    map: toTexture(col, { srgb: true }),
+    normalMap: toTexture(heightToNormal(hgt, 0.7)),
+    roughnessMap: toTexture(rgh),
+  };
+}
+
+// ---- 6.3 Микроцемент стен и потолков ------------------------------------
+function texPlaster(seed, base = [58, 56, 53]) {
+  const S = 512, col = makeCanvas(S), hgt = makeCanvas(S);
+  const c = col.getContext('2d'), h = hgt.getContext('2d');
+  const grid = makeNoiseGrid(64, seed), grid2 = makeNoiseGrid(256, seed + 7);
+  const ci = c.createImageData(S, S), hi = h.createImageData(S, S);
+  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+    const n = fbm(grid, 64, x / S * 6, y / S * 6, 5);
+    const m = fbm(grid2, 256, x / S * 90, y / S * 90, 2);
+    const t = 0.78 + n * 0.34 + m * 0.1;
+    const i = (y * S + x) * 4;
+    ci.data[i] = base[0] * t; ci.data[i + 1] = base[1] * t; ci.data[i + 2] = base[2] * t; ci.data[i + 3] = 255;
+    const hv = (0.45 + n * 0.4 + m * 0.25) * 255;
+    hi.data[i] = hi.data[i + 1] = hi.data[i + 2] = hv; hi.data[i + 3] = 255;
+  }
+  c.putImageData(ci, 0, 0); h.putImageData(hi, 0, 0);
+  return { map: toTexture(col, { srgb: true }), normalMap: toTexture(heightToNormal(hgt, 0.55)) };
+}
+
+// ---- 6.4 Камень камина: колотая пластушка --------------------------------
+function texFireStone() {
+  const S = 1024, col = makeCanvas(S), hgt = makeCanvas(S), rgh = makeCanvas(S);
+  const c = col.getContext('2d'), h = hgt.getContext('2d'), r = rgh.getContext('2d');
+  const g = mulberry32(8123);
+  const grid = makeNoiseGrid(64, 4242);
+
+  c.fillStyle = '#161412'; c.fillRect(0, 0, S, S);
+  h.fillStyle = '#141414'; h.fillRect(0, 0, S, S);
+  r.fillStyle = '#e0e0e0'; r.fillRect(0, 0, S, S);
+
+  const rows = 9, rowH = S / rows;
+  for (let row = 0; row < rows; row++) {
+    let x = -g() * 120;
+    const y0 = row * rowH + 2;
+    while (x < S) {
+      const w = 70 + g() * 190;
+      const t = 0.72 + g() * 0.5;
+      const bh = rowH - 4 - g() * 4;
+      const base = [96, 88, 80];
+      c.fillStyle = `rgb(${base[0] * t | 0},${base[1] * t | 0},${base[2] * t | 0})`;
+      c.beginPath();
+      // слегка неровный камень
+      c.moveTo(x + 2, y0 + g() * 3);
+      c.lineTo(x + w - 2, y0 + g() * 3);
+      c.lineTo(x + w - 2 - g() * 4, y0 + bh - g() * 3);
+      c.lineTo(x + 2 + g() * 4, y0 + bh - g() * 3);
+      c.closePath(); c.fill();
+      // зернистость поверхности
+      c.save(); c.clip();
+      for (let i = 0; i < 90; i++) {
+        c.fillStyle = `rgba(${g() > .5 ? 255 : 0},${g() > .5 ? 255 : 0},${g() > .5 ? 240 : 0},${g() * 0.07})`;
+        c.fillRect(x + g() * w, y0 + g() * bh, 1 + g() * 5, 1 + g() * 3);
+      }
+      c.restore();
+      const hv = (110 + g() * 70) | 0;
+      h.fillStyle = `rgb(${hv},${hv},${hv})`;
+      h.fillRect(x + 3, y0 + 2, w - 6, bh - 4);
+      const rgh2 = (200 + g() * 40) | 0;
+      r.fillStyle = `rgb(${rgh2},${rgh2},${rgh2})`;
+      r.fillRect(x + 3, y0 + 2, w - 6, bh - 4);
+      x += w;
+    }
+  }
+  // общая сажа сверху вниз
+  const sg = c.createLinearGradient(0, 0, 0, S);
+  sg.addColorStop(0, 'rgba(12,10,9,.45)'); sg.addColorStop(1, 'rgba(12,10,9,0)');
+  c.fillStyle = sg; c.fillRect(0, 0, S, S);
+  return {
+    map: toTexture(col, { srgb: true }),
+    normalMap: toTexture(heightToNormal(hgt, 2.4)),
+    roughnessMap: toTexture(rgh),
+  };
+}
+
+// ---- 6.5 Шерстяной ковёр -------------------------------------------------
+function texRug() {
+  const S = 512, col = makeCanvas(S), hgt = makeCanvas(S);
+  const c = col.getContext('2d'), h = hgt.getContext('2d');
+  const g = mulberry32(2929);
+  c.fillStyle = '#5a4b3d'; c.fillRect(0, 0, S, S);
+  h.fillStyle = '#808080'; h.fillRect(0, 0, S, S);
+  for (let i = 0; i < 42000; i++) {
+    const x = g() * S, y = g() * S, a = g() * TAU, l = 2 + g() * 5;
+    const t = 0.7 + g() * 0.6;
+    c.strokeStyle = `rgba(${(126 * t) | 0},${(106 * t) | 0},${(86 * t) | 0},${0.25 + g() * 0.4})`;
+    c.lineWidth = 0.9 + g() * 1.3;
+    c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); c.stroke();
+    const hv = (110 + g() * 130) | 0;
+    h.strokeStyle = `rgba(${hv},${hv},${hv},.5)`; h.lineWidth = 1.4;
+    h.beginPath(); h.moveTo(x, y); h.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); h.stroke();
+  }
+  return { map: toTexture(col, { srgb: true }), normalMap: toTexture(heightToNormal(hgt, 1.7)) };
+}
+
+// ---- 6.6 Букле дивана ----------------------------------------------------
+function texFabric(seed, base = [104, 98, 88]) {
+  const S = 512, col = makeCanvas(S), hgt = makeCanvas(S);
+  const c = col.getContext('2d'), h = hgt.getContext('2d');
+  const g = mulberry32(seed);
+  c.fillStyle = `rgb(${base[0]},${base[1]},${base[2]})`; c.fillRect(0, 0, S, S);
+  h.fillStyle = '#7a7a7a'; h.fillRect(0, 0, S, S);
+  for (let i = 0; i < 26000; i++) {
+    const x = g() * S, y = g() * S, rad = 1.2 + g() * 3.2;
+    const t = 0.75 + g() * 0.55;
+    c.fillStyle = `rgba(${(base[0] * t) | 0},${(base[1] * t) | 0},${(base[2] * t) | 0},.7)`;
+    c.beginPath(); c.arc(x, y, rad, 0, TAU); c.fill();
+    const hv = (90 + g() * 150) | 0;
+    h.fillStyle = `rgba(${hv},${hv},${hv},.6)`;
+    h.beginPath(); h.arc(x, y, rad, 0, TAU); h.fill();
+  }
+  return { map: toTexture(col, { srgb: true }), normalMap: toTexture(heightToNormal(hgt, 1.3)) };
+}
+
+// ---- 6.7 Камень столешницы острова --------------------------------------
+function texMarble() {
+  const S = 512, col = makeCanvas(S);
+  const c = col.getContext('2d');
+  const g = mulberry32(6060);
+  const grid = makeNoiseGrid(64, 1717);
+  const img = c.createImageData(S, S);
+  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+    const n = fbm(grid, 64, x / S * 5, y / S * 5, 5);
+    const t = 0.62 + n * 0.3;
+    const i = (y * S + x) * 4;
+    img.data[i] = 88 * t + 34; img.data[i + 1] = 88 * t + 35; img.data[i + 2] = 92 * t + 38; img.data[i + 3] = 255;
+  }
+  c.putImageData(img, 0, 0);
+  for (let i = 0; i < 22; i++) {
+    c.strokeStyle = `rgba(${190 + g() * 60},${186 + g() * 60},${176 + g() * 60},${0.09 + g() * 0.16})`;
+    c.lineWidth = 0.6 + g() * 2.4;
+    c.beginPath();
+    let x = g() * S, y = g() * S; c.moveTo(x, y);
+    for (let k = 0; k < 34; k++) { x += (g() - .3) * 34; y += (g() - .5) * 30; c.lineTo(x, y); }
+    c.stroke();
+  }
+  return { map: toTexture(col, { srgb: true }) };
+}
+
+// ---- 6.8 Орех: корпусная мебель -----------------------------------------
+function texWalnut() {
+  const S = 512, col = makeCanvas(S), hgt = makeCanvas(S);
+  const c = col.getContext('2d'), h = hgt.getContext('2d');
+  const g = mulberry32(3131);
+  const grid = makeNoiseGrid(64, 8181);
+  c.fillStyle = '#3a281c'; c.fillRect(0, 0, S, S);
+  h.fillStyle = '#909090'; h.fillRect(0, 0, S, S);
+  for (let i = 0; i < 160; i++) {
+    const y0 = g() * S;
+    c.strokeStyle = `rgba(${28 + g() * 90},${18 + g() * 60},${10 + g() * 36},${0.08 + g() * 0.2})`;
+    c.lineWidth = 0.7 + g() * 3.4;
+    c.beginPath();
+    for (let x = 0; x <= S; x += 6) {
+      const yv = y0 + Math.sin(x * 0.01 + i) * (3 + g() * 3) + fbm(grid, 64, x * 0.02, y0 * 0.02, 3) * 16;
+      x === 0 ? c.moveTo(x, yv) : c.lineTo(x, yv);
+    }
+    c.stroke();
+    h.strokeStyle = `rgba(${(120 + g() * 90) | 0},0,0,.25)`; h.lineWidth = 1.6;
+    h.beginPath(); h.moveTo(0, y0); h.lineTo(S, y0 + (g() - .5) * 8); h.stroke();
+  }
+  return { map: toTexture(col, { srgb: true }), normalMap: toTexture(heightToNormal(hgt, 0.7)) };
+}
+
+// ---- 6.9 Корешки книг (одна полоса — на все инстансы) --------------------
+function texBooks() {
+  const S = 512, col = makeCanvas(S);
+  const c = col.getContext('2d');
+  const g = mulberry32(1234);
+  const palette = [[92, 46, 38], [46, 58, 72], [66, 62, 44], [38, 52, 44], [78, 68, 58], [54, 40, 56], [30, 34, 40]];
+  const cols = 16, w = S / cols;
+  for (let i = 0; i < cols; i++) {
+    const p = palette[(g() * palette.length) | 0];
+    const t = 0.75 + g() * 0.5;
+    c.fillStyle = `rgb(${(p[0] * t) | 0},${(p[1] * t) | 0},${(p[2] * t) | 0})`;
+    c.fillRect(i * w, 0, w, S);
+    // блик и тень по краям корешка
+    const gr = c.createLinearGradient(i * w, 0, (i + 1) * w, 0);
+    gr.addColorStop(0, 'rgba(0,0,0,.5)'); gr.addColorStop(.25, 'rgba(255,255,255,.06)');
+    gr.addColorStop(.8, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,0,.55)');
+    c.fillStyle = gr; c.fillRect(i * w, 0, w, S);
+    // тиснение
+    if (g() < 0.8) {
+      c.fillStyle = `rgba(${190 + g() * 60},${170 + g() * 60},${120 + g() * 60},${0.3 + g() * 0.5})`;
+      const n = 1 + ((g() * 3) | 0);
+      for (let k = 0; k < n; k++) c.fillRect(i * w + w * 0.22, S * (0.2 + k * 0.12), w * 0.56, 2 + g() * 3);
+      for (let k = 0; k < 2; k++) c.fillRect(i * w + w * 0.15, S * (0.62 + k * 0.06), w * 0.7, 1.5);
+    }
+  }
+  return { map: toTexture(col, { srgb: true, repeat: 1, aniso: 4 }) };
+}
+
+// ---- 6.10 Шлифованный металл --------------------------------------------
+function texMetal(seed, tint = 150) {
+  const S = 512, col = makeCanvas(S), rgh = makeCanvas(S);
+  const c = col.getContext('2d'), r = rgh.getContext('2d');
+  const g = mulberry32(seed);
+  c.fillStyle = `rgb(${tint},${tint - 4},${tint - 10})`; c.fillRect(0, 0, S, S);
+  r.fillStyle = '#5a5a5a'; r.fillRect(0, 0, S, S);
+  for (let i = 0; i < 9000; i++) {
+    const y = g() * S, len = 20 + g() * 260, a = g() * 0.12;
+    c.strokeStyle = `rgba(255,255,255,${a})`; c.lineWidth = 0.6 + g();
+    c.beginPath(); c.moveTo(g() * S, y); c.lineTo(g() * S + len, y + (g() - .5)); c.stroke();
+    const rv = (70 + g() * 90) | 0;
+    r.strokeStyle = `rgba(${rv},${rv},${rv},.35)`; r.lineWidth = 0.8 + g() * 1.6;
+    r.beginPath(); r.moveTo(g() * S, y); r.lineTo(g() * S + len, y); r.stroke();
+  }
+  return { map: toTexture(col, { srgb: true }), roughnessMap: toTexture(rgh) };
+}
+
+// ---- 6.11 Мокрый настил террасы -----------------------------------------
+function texDeck() {
+  const S = 512, col = makeCanvas(S), hgt = makeCanvas(S), rgh = makeCanvas(S);
+  const c = col.getContext('2d'), h = hgt.getContext('2d'), r = rgh.getContext('2d');
+  const g = mulberry32(5511);
+  c.fillStyle = '#2b2723'; c.fillRect(0, 0, S, S);
+  h.fillStyle = '#a0a0a0'; h.fillRect(0, 0, S, S);
+  r.fillStyle = '#3c3c3c'; r.fillRect(0, 0, S, S);
+  const n = 8, w = S / n;
+  for (let i = 0; i < n; i++) {
+    const t = 0.8 + g() * 0.4;
+    c.fillStyle = `rgb(${(58 * t) | 0},${(52 * t) | 0},${(46 * t) | 0})`;
+    c.fillRect(i * w + 1.5, 0, w - 3, S);
+    for (let k = 0; k < 90; k++) {
+      c.strokeStyle = `rgba(${g() > .5 ? 20 : 90},${g() > .5 ? 18 : 82},${g() > .5 ? 14 : 74},${g() * .2})`;
+      c.lineWidth = 0.5 + g();
+      c.beginPath(); c.moveTo(i * w + g() * w, g() * S); c.lineTo(i * w + g() * w, g() * S + 30 + g() * 90); c.stroke();
+    }
+    h.fillStyle = '#c0c0c0'; h.fillRect(i * w + 2, 0, w - 4, S);
+    h.fillStyle = '#181818'; h.fillRect(i * w, 0, 2, S);
+    // лужицы = более гладкие пятна
+    for (let k = 0; k < 3; k++) {
+      const pv = (10 + g() * 30) | 0;
+      r.fillStyle = `rgba(${pv},${pv},${pv},.6)`;
+      r.beginPath(); r.ellipse(i * w + g() * w, g() * S, 10 + g() * 40, 6 + g() * 22, g() * 3, 0, TAU); r.fill();
+    }
+  }
+  return {
+    map: toTexture(col, { srgb: true }),
+    normalMap: toTexture(heightToNormal(hgt, 1.0)),
+    roughnessMap: toTexture(rgh),
+  };
+}
+
+// ---- 6.12 Угли: рваное пятно тлеющих головешек --------------------------
+function texEmbers() {
+  const S = 256, c = makeCanvas(S).getContext('2d');
+  const g = mulberry32(3377);
+  c.fillStyle = '#000'; c.fillRect(0, 0, S, S);
+  // общая форма — вытянутое пятно с рваным краем
+  for (let i = 0; i < 420; i++) {
+    const a = g() * TAU, rad = Math.pow(g(), 0.6);
+    const x = S / 2 + Math.cos(a) * rad * S * 0.46;
+    const y = S / 2 + Math.sin(a) * rad * S * 0.36;
+    const s = 4 + g() * 16;
+    const v = (90 + g() * 165) | 0;
+    c.fillStyle = `rgba(${v},${(v * 0.55) | 0},${(v * 0.2) | 0},${0.25 + g() * 0.55})`;
+    c.beginPath(); c.ellipse(x, y, s, s * (0.5 + g() * 0.6), g() * 3, 0, TAU); c.fill();
+  }
+  // тёмные прогоревшие корки поверх
+  for (let i = 0; i < 260; i++) {
+    const x = g() * S, y = g() * S, s = 3 + g() * 13;
+    c.fillStyle = `rgba(0,0,0,${0.25 + g() * 0.5})`;
+    c.beginPath(); c.ellipse(x, y, s, s * (0.4 + g() * 0.8), g() * 3, 0, TAU); c.fill();
+  }
+  return { map: toTexture(c.canvas, { srgb: true, aniso: 2 }) };
+}
+
+// ---- 6.13 Дальняя земля: мокрый город внизу ------------------------------
+function texGround() {
+  const S = 512, col = makeCanvas(S);
+  const c = col.getContext('2d');
+  const g = mulberry32(999);
+  c.fillStyle = '#05080e'; c.fillRect(0, 0, S, S);
+  // сетка улиц с фонарями
+  for (let i = 0; i < 26; i++) {
+    const v = g() * S, hor = g() < .5;
+    c.strokeStyle = `rgba(${120 + g() * 60},${110 + g() * 50},${80 + g() * 40},${0.05 + g() * 0.09})`;
+    c.lineWidth = 1 + g() * 2.5;
+    c.beginPath();
+    if (hor) { c.moveTo(0, v); c.lineTo(S, v); } else { c.moveTo(v, 0); c.lineTo(v, S); }
+    c.stroke();
+    for (let k = 0; k < 60; k++) {
+      const p = g() * S;
+      c.fillStyle = `rgba(255,${180 + g() * 50},${110 + g() * 60},${0.1 + g() * 0.35})`;
+      c.beginPath(); c.arc(hor ? p : v, hor ? v : p, 0.7 + g() * 1.4, 0, TAU); c.fill();
+    }
+  }
+  return { map: toTexture(col, { srgb: true, repeat: 3 }) };
+}
+
+/* ==========================================================================
+   7. МАТЕРИАЛЫ И ГЕОМЕТРИЧЕСКИЕ ПОМОЩНИКИ
+   ========================================================================== */
+
+const T = {};
+T.oak = texOak();      await progress();
+T.stone = texStone();  await progress();
+T.wallPlaster = texPlaster(11, [62, 59, 55]);
+T.ceilPlaster = texPlaster(23, [50, 50, 52]);
+T.hallPlaster = texPlaster(37, [38, 37, 37]);
+await progress();
+T.fire = texFireStone(); await progress();
+T.rug = texRug();        await progress();
+T.sofa = texFabric(4001, [96, 90, 80]);
+T.chair = texFabric(4002, [74, 64, 56]);
+await progress();
+T.marble = texMarble();
+T.walnut = texWalnut();
+T.books = texBooks();
+T.metalDark = texMetal(9001, 74);
+T.steel = texMetal(9002, 168);
+T.deck = texDeck();
+T.ground = texGround();
+T.embers = texEmbers();
+await progress();
+
+// В ночном интерьере вклад IBL должен быть скромным — иначе всё «выцветает».
+const ENV = 0.52;
+
+function std(params) {
+  const m = new THREE.MeshStandardMaterial(params);
+  m.envMapIntensity = params.envMapIntensity !== undefined ? params.envMapIntensity : ENV;
+  return m;
+}
+
+const M = {};
+
+M.oak = std({
+  map: T.oak.map, normalMap: T.oak.normalMap, roughnessMap: T.oak.roughnessMap,
+  roughness: 0.62, metalness: 0.0, normalScale: new THREE.Vector2(0.6, 0.6), envMapIntensity: 0.42,
+});
+M.oak.userData.surface = 'wood';
+
+M.stone = std({
+  map: T.stone.map, normalMap: T.stone.normalMap, roughnessMap: T.stone.roughnessMap,
+  roughness: 0.55, metalness: 0.0, color: 0xbfc0c4, envMapIntensity: 0.5,
+});
+M.stone.userData.surface = 'stone';
+
+M.hallStone = std({
+  map: T.stone.map, normalMap: T.stone.normalMap, roughnessMap: T.stone.roughnessMap,
+  roughness: 0.5, metalness: 0.0, color: 0x8f9095, envMapIntensity: 0.35,
+});
+M.hallStone.userData.surface = 'stone';
+
+M.wall = std({ map: T.wallPlaster.map, normalMap: T.wallPlaster.normalMap, roughness: 0.92, metalness: 0, envMapIntensity: 0.3 });
+M.wall.userData.surface = 'stone';
+M.wallDark = std({ map: T.hallPlaster.map, normalMap: T.hallPlaster.normalMap, roughness: 0.95, metalness: 0, color: 0x9a978f, envMapIntensity: 0.22 });
+M.wallDark.userData.surface = 'stone';
+M.ceiling = std({ map: T.ceilPlaster.map, normalMap: T.ceilPlaster.normalMap, roughness: 0.96, metalness: 0, color: 0xa8a8ab, envMapIntensity: 0.24 });
+M.fireStone = std({
+  map: T.fire.map, normalMap: T.fire.normalMap, roughnessMap: T.fire.roughnessMap,
+  roughness: 0.94, metalness: 0, normalScale: new THREE.Vector2(1.1, 1.1), envMapIntensity: 0.3,
+});
+M.fireStone.userData.surface = 'stone';
+M.firebox = std({ color: 0x14100d, roughness: 0.95, metalness: 0.15, envMapIntensity: 0.12 });
+
+M.rug = std({ map: T.rug.map, normalMap: T.rug.normalMap, roughness: 0.98, metalness: 0, envMapIntensity: 0.2 });
+M.rug.userData.surface = 'rug';
+
+M.sofa = std({ map: T.sofa.map, normalMap: T.sofa.normalMap, roughness: 0.95, metalness: 0, envMapIntensity: 0.28 });
+M.chair = std({ map: T.chair.map, normalMap: T.chair.normalMap, roughness: 0.95, metalness: 0, envMapIntensity: 0.28 });
+M.pillow = std({ map: T.sofa.map, normalMap: T.sofa.normalMap, color: 0xc0a98c, roughness: 0.95, metalness: 0, envMapIntensity: 0.3 });
+
+M.marble = std({ map: T.marble.map, color: 0xd8d6d2, roughness: 0.22, metalness: 0.0, envMapIntensity: 0.7 });
+M.marble.userData.surface = 'stone';
+M.walnut = std({ map: T.walnut.map, normalMap: T.walnut.normalMap, roughness: 0.62, metalness: 0.0, envMapIntensity: 0.38 });
+M.walnut.userData.surface = 'wood';
+M.walnutDark = std({ map: T.walnut.map, normalMap: T.walnut.normalMap, color: 0x6e6e6e, roughness: 0.55, metalness: 0, envMapIntensity: 0.4 });
+M.books = std({ map: T.books.map, roughness: 0.88, metalness: 0, envMapIntensity: 0.25 });
+
+M.bronze = std({ map: T.metalDark.map, roughnessMap: T.metalDark.roughnessMap, color: 0x9a8a72, roughness: 0.35, metalness: 0.92, envMapIntensity: 0.9 });
+M.blackMetal = std({ color: 0x1b1c1f, roughness: 0.42, metalness: 0.85, envMapIntensity: 0.7 });
+M.steel = std({ map: T.steel.map, roughnessMap: T.steel.roughnessMap, roughness: 0.3, metalness: 0.95, envMapIntensity: 1.0 });
+M.deck = std({
+  map: T.deck.map, normalMap: T.deck.normalMap, roughnessMap: T.deck.roughnessMap,
+  roughness: 0.30, metalness: 0.0, color: 0x5c5c5e, envMapIntensity: 0.65,
+});
+M.deck.userData.surface = 'terrace';
+
+M.emissiveWarm = new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0xffb26b, emissiveIntensity: 1.6, roughness: 1, metalness: 0 });
+M.emissiveCool = new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0xbfe2ff, emissiveIntensity: 0.9, roughness: 1, metalness: 0 });
+M.ember = new THREE.MeshStandardMaterial({
+  color: 0x0e0603, emissive: 0xff5010, emissiveIntensity: 0.0,
+  emissiveMap: T.embers.map, alphaMap: T.embers.map, alphaTest: 0.04,
+  transparent: true, depthWrite: false, roughness: 1, metalness: 0, envMapIntensity: 0.1,
+});
+
+M.invisible = new THREE.MeshBasicMaterial({ visible: false });
+
+await progress();
+
+/* ---- Геометрия: коробки с правильными UV (текстура в метрах) ------------ */
+
+const _boxCache = new Map();
+function boxGeo(w, h, d, uvScale = 0.5) {
+  const key = `${w.toFixed(3)}|${h.toFixed(3)}|${d.toFixed(3)}|${uvScale}`;
+  let g = _boxCache.get(key);
+  if (g) return g;
+  g = new THREE.BoxGeometry(w, h, d);
+  const uv = g.attributes.uv;
+  // Порядок граней BoxGeometry: +X, -X, +Y, -Y, +Z, -Z по 4 вершины.
+  const spans = [[d, h], [d, h], [w, d], [w, d], [w, h], [w, h]];
+  for (let f = 0; f < 6; f++) {
+    const [su, sv] = spans[f];
+    for (let i = 0; i < 4; i++) {
+      const idx = f * 4 + i;
+      uv.setXY(idx, uv.getX(idx) * su * uvScale, uv.getY(idx) * sv * uvScale);
+    }
+  }
+  uv.needsUpdate = true;
+  _boxCache.set(key, g);
+  return g;
+}
+
+// Коробка по границам мира: box(x0,x1, y0,y1, z0,z1, material)
+function box(x0, x1, y0, y1, z0, z1, mat, { collide = true, uv = 0.5, shadow = false, parent = null } = {}) {
+  const w = Math.abs(x1 - x0), h = Math.abs(y1 - y0), d = Math.abs(z1 - z0);
+  const m = new THREE.Mesh(boxGeo(w, h, d, uv), mat);
+  m.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+  m.matrixAutoUpdate = false;
+  m.updateMatrix();
+  if (shadow) { m.castShadow = true; shadowCasters.push(m); }
+  m.receiveShadow = true;
+  (parent || (collide ? collidables : decor)).add(m);
+  return m;
+}
+
+// Скруглённая коробка — вся мебель: острые кубы убивают «уют».
+function rbox(w, h, d, mat, radius = 0.03, seg = 2) {
+  const r = Math.min(radius, Math.min(w, h, d) * 0.49);
+  const g = new RoundedBoxGeometry(w, h, d, seg, r);
+  const uv = g.attributes.uv;
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * w * 0.9, uv.getY(i) * h * 0.9);
+  uv.needsUpdate = true;
+  const m = new THREE.Mesh(g, mat);
+  m.castShadow = false; m.receiveShadow = true;
+  return m;
+}
+
+// Невидимый коллайдер (парапеты, стойки, инстансы).
+function collider(x0, x1, y0, y1, z0, z1) {
+  const m = new THREE.Mesh(boxGeo(Math.abs(x1 - x0), Math.abs(y1 - y0), Math.abs(z1 - z0), 1), M.invisible);
+  m.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+  m.visible = false;
+  m.matrixAutoUpdate = false; m.updateMatrix();
+  collidables.add(m);
+  return m;
+}
+
+// Быстрый плоский прямоугольник в горизонтали (для световых бликов и колец).
+function planeXZ(w, d, mat) {
+  const g = new THREE.PlaneGeometry(w, d);
+  const m = new THREE.Mesh(g, mat);
+  m.rotation.x = -Math.PI / 2;
+  return m;
+}
+
+/* ==========================================================================
+   8. ОБОЛОЧКА: полы, ступени, стены, потолки, лестница, мезонин, терраса.
+      Всё, что здесь, попадает в Octree и держит игрока.
+   ========================================================================== */
+
+const refs = {};   // ссылки на объекты, которые потом оживают
+
+// ---- 8.1 Полы ------------------------------------------------------------
+// Сункен-гостиная: пол -0.36, вокруг кольцо ступеней -0.18, дальше отметка 0.
+box(P.pitX0, P.pitX1, P.yPit - 0.22, P.yPit, P.pitZ0, P.pitZ1, M.oak, { uv: 0.34 });
+box(-6.35, 1.35, -0.40, -0.18, -1.2, -0.85, M.oak, { uv: 0.34 });          // ступень с юга
+box(1.0, 1.35, -0.40, -0.18, P.pitZ0, -1.2, M.oak, { uv: 0.34 });          // ступень с востока
+box(-6.35, -6.0, -0.40, -0.18, P.pitZ0, -1.2, M.oak, { uv: 0.34 });        // ступень с запада
+
+box(-8, 8, -0.22, 0, -0.85, P.zSplit, M.oak, { uv: 0.34 });                // гостиная, верхняя отметка
+box(-8, -6.35, -0.22, 0, P.pitZ0, -0.85, M.oak, { uv: 0.34 });             // западная дорожка
+box(1.35, 8, -0.22, 0, P.pitZ0, -0.85, M.oak, { uv: 0.34 });               // восточная дорожка вдоль витража
+box(P.xBlock, 8, -0.22, 0, P.zSplit, P.zMax, M.stone, { uv: 0.34 });       // кухня — керамогранит
+box(-8, P.xHall, -0.22, 0, P.zHall, P.zMax, M.hallStone, { uv: 0.34 });    // лифтовой холл
+box(-8, P.xBlock, -0.22, 0, P.zSplit, P.zHall, M.oak, { uv: 0.34 });       // лобби под мезонином
+box(P.xHall, P.xBlock, -0.22, 0, P.zHall, P.zMax, M.oak, { uv: 0.34 });    // ниша-библиотека
+
+// ---- 8.2 Наружная оболочка ----------------------------------------------
+const EXT = P.extT;
+box(-8 - EXT, -8, -0.6, 6.25, -6.5 - EXT, 6.5 + EXT, M.wall, { uv: 0.28 });                 // запад
+box(-8 - EXT, 8 + EXT, -0.6, 6.25, 6.5, 6.5 + EXT, M.wall, { uv: 0.28 });                   // юг
+box(-8 - EXT, P.glassNorthX0, -0.6, 6.25, -6.5 - EXT, -6.5, M.wall, { uv: 0.28 });          // север (глухая часть)
+box(8, 8 + EXT, -0.6, 6.25, P.glassEastZ1, 6.5 + EXT, M.wall, { uv: 0.28 });                // восток (глухая часть)
+box(-8 - EXT, 8 + EXT, P.yLiving, 6.25, -6.5 - EXT, 6.5 + EXT, M.ceiling, { uv: 0.3 });     // кровля = потолок гостиной
+
+// ---- 8.3 Внутренние перегородки -----------------------------------------
+box(-2.36, P.xBlock, -0.2, P.yUpper, P.zSplit, P.zMax, M.wall, { uv: 0.4 });                // низкий блок / кухня
+box(-5.16, P.xHall, -0.2, P.yNook, P.zHall, P.zMax, M.wallDark, { uv: 0.4 });               // холл / ниша
+
+// ---- 8.4 Потолки и падуги -----------------------------------------------
+box(P.xBlock, 8, P.yKitchen, P.yKitchen + 0.2, P.zSplit, P.zMax, M.ceiling, { uv: 0.3 });
+box(-8, P.xBlock, P.yUpper, P.yUpper + 0.2, P.zSplit, P.zMax, M.ceiling, { uv: 0.3 });
+box(P.xBlock, 8, P.yKitchen, P.yLiving, P.zSplit, P.zSplit + 0.16, M.wall, { uv: 0.4 });    // падуга над кухней
+box(-8, P.xBlock, P.yUpper, P.yLiving, P.zSplit, P.zSplit + 0.16, M.wall, { uv: 0.4 });     // падуга над мезонином
+
+// ---- 8.5 Плита мезонина и лестница --------------------------------------
+box(-8, P.xBlock, P.yNook, P.yDeck, P.zSplit, P.zMax, M.oak, { uv: 0.34 });                 // плита мезонина
+box(-3.4, P.xBlock, P.yNook, P.yDeck, 0.1, P.zSplit, M.oak, { uv: 0.34 });                  // площадка у лестницы
+box(-8, P.xBlock, P.yNook - 0.03, P.yNook, P.zSplit, P.zMax, M.ceiling, { uv: 0.4 });       // подшивка снизу
+box(-3.4, P.xBlock, P.yNook - 0.03, P.yNook, 0.1, P.zSplit, M.ceiling, { uv: 0.4 });
+
+const STAIR_N = 13, STAIR_RISE = P.yDeck / STAIR_N, STAIR_GO = 0.29;
+for (let i = 0; i < STAIR_N; i++) {
+  const x1 = 1.3 - i * STAIR_GO;
+  const x0 = x1 - STAIR_GO - 0.015;
+  box(x0, x1, i * STAIR_RISE - 0.2, (i + 1) * STAIR_RISE, 0.1, P.zSplit, M.oak,
+      { uv: 0.34, shadow: i % 4 === 0 });
+}
+// Невидимые борта лестницы и площадки: сойти вбок нельзя, но виден только поручень.
+collider(-2.6, 1.36, 0, 3.6, -0.04, 0.1);          // север лестницы
+collider(-2.36, 1.36, 0, 3.6, P.zSplit, P.zSplit + 0.08);  // юг лестницы
+collider(-3.48, -3.4, P.yDeck, P.yDeck + 1.3, 0.02, P.zSplit);  // запад площадки
+collider(-8, -3.4, P.yDeck, P.yDeck + 1.3, P.zSplit - 0.08, P.zSplit);  // фронт мезонина
+
+// ---- 8.6 Ограждения: стекло в бронзовом профиле --------------------------
+const matRailGlass = new THREE.MeshPhysicalMaterial({
+  color: 0x9fb4c8, transparent: true, opacity: 0.07, roughness: 0.04, metalness: 0,
+  side: THREE.DoubleSide, envMapIntensity: 0.45, depthWrite: false,
+});
+
+function balustrade(x0, x1, z0, z1, y, h = 1.05) {
+  const horiz = Math.abs(x1 - x0) > Math.abs(z1 - z0);
+  const len = horiz ? Math.abs(x1 - x0) : Math.abs(z1 - z0);
+  const g = new THREE.PlaneGeometry(len, h);
+  const panel = new THREE.Mesh(g, matRailGlass);
+  panel.position.set((x0 + x1) / 2, y + h / 2, (z0 + z1) / 2);
+  if (!horiz) panel.rotation.y = Math.PI / 2;
+  decor.add(panel);
+  // бронзовый поручень
+  const rail = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.022, 0.022, len, 8),
+    M.bronze);
+  rail.rotation.z = Math.PI / 2;
+  if (!horiz) rail.rotation.y = Math.PI / 2;
+  rail.position.set((x0 + x1) / 2, y + h + 0.02, (z0 + z1) / 2);
+  decor.add(rail);
+  return panel;
+}
+
+balustrade(-8, -3.4, P.zSplit - 0.04, P.zSplit - 0.04, P.yDeck);
+balustrade(-3.42, -2.2, 0.06, 0.06, P.yDeck);
+balustrade(-3.44, -3.44, 0.06, P.zSplit, P.yDeck);
+
+// Наклонный поручень лестницы
+{
+  const len = Math.hypot(STAIR_N * STAIR_GO, P.yDeck);
+  const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.024, len, 8), M.bronze);
+  rail.position.set(1.3 - STAIR_N * STAIR_GO / 2, P.yDeck / 2 + 0.92, 0.16);
+  rail.rotation.z = Math.PI / 2 - Math.atan2(P.yDeck, STAIR_N * STAIR_GO);
+  decor.add(rail);
+  for (let i = 0; i <= 4; i++) {
+    const t = i / 4;
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.95, 6), M.bronze);
+    post.position.set(1.3 - t * STAIR_N * STAIR_GO, t * P.yDeck + 0.46, 0.16);
+    decor.add(post);
+  }
+}
+
+// ---- 8.7 Коллизия остекления (стекло — не декорация, сквозь него не пройти)
+collider(P.glassNorthX0, 8.02, -0.6, P.yLiving, -6.56, -6.48);            // север
+collider(7.94, 8.02, -0.6, P.yLiving, -6.5, P.doorZ0);                    // восток, до двери
+collider(7.94, 8.02, -0.6, P.yLiving, P.doorZ1, P.glassEastZ1);           // восток, после двери
+collider(7.94, 8.02, P.doorH, P.yLiving, P.doorZ0, P.doorZ1);             // фрамуга над дверью
+
+// ---- 8.8 Терраса ---------------------------------------------------------
+box(P.terX0, P.terX1, P.yTerrace - 0.34, P.yTerrace, P.terZ0, P.terZ1, M.deck, { uv: 0.5 });
+box(P.terX0, P.canopyX1, P.canopyY, P.canopyY + 0.22, P.terZ0 - 0.25, P.terZ1 + 0.25, M.ceiling, { uv: 0.3 });
+for (const cz of [P.terZ0 + 0.25, P.terZ1 - 0.25]) {
+  box(P.canopyX1 - 0.2, P.canopyX1, P.yTerrace, P.canopyY, cz - 0.09, cz + 0.09, M.blackMetal, { uv: 1 });
+}
+box(P.terX0 - 0.06, P.terX0 + 0.06, -0.07, 0.015, P.doorZ0 - 0.04, P.doorZ1 + 0.04, M.bronze, { uv: 1 }); // порог
+
+// Парапет: стекло видно, а держит невидимый борт — упасть нельзя.
+balustrade(P.terX0, P.terX1, P.terZ0 + 0.06, P.terZ0 + 0.06, P.yTerrace, 1.12);
+balustrade(P.terX0, P.terX1, P.terZ1 - 0.06, P.terZ1 - 0.06, P.yTerrace, 1.12);
+balustrade(P.terX1 - 0.06, P.terX1 - 0.06, P.terZ0, P.terZ1, P.yTerrace, 1.12);
+collider(P.terX0 - 0.1, P.terX1 + 0.1, P.yTerrace, P.yTerrace + 2.4, P.terZ0 - 0.1, P.terZ0 + 0.06);
+collider(P.terX0 - 0.1, P.terX1 + 0.1, P.yTerrace, P.yTerrace + 2.4, P.terZ1 - 0.06, P.terZ1 + 0.1);
+collider(P.terX1 - 0.06, P.terX1 + 0.1, P.yTerrace, P.yTerrace + 2.4, P.terZ0 - 0.1, P.terZ1 + 0.1);
+
+// ---- 8.9 Двери-обманки в лифтовом холле ---------------------------------
+function fakeDoor(z0, z1, title) {
+  const g = new THREE.Group();
+  const leaf = rbox(0.06, 2.1, z1 - z0, M.walnut, 0.012, 1);
+  leaf.position.set(-7.965, 1.05, (z0 + z1) / 2);
+  g.add(leaf);
+  // наличник-теневой шов
+  const frame = box(-8.005, -7.995, -0.01, 2.16, z0 - 0.035, z1 + 0.035, M.blackMetal, { collide: false, uv: 1, parent: g });
+  frame.renderOrder = 0;
+  const handle = new THREE.Mesh(new THREE.CapsuleGeometry(0.014, 0.16, 3, 8), M.bronze);
+  handle.rotation.x = Math.PI / 2;
+  handle.position.set(-7.9, 1.05, z1 - 0.14);
+  g.add(handle);
+  decor.add(g);
+  return { group: g, leaf, handle, title, locked: true };
+}
+refs.doorBedroom = fakeDoor(2.7, 3.6, 'Спальня');
+refs.doorBath = fakeDoor(4.8, 5.7, 'Гардеробная');
+
+// ---- 8.10 Лифт: точка старта --------------------------------------------
+{
+  const g = new THREE.Group();
+  for (const [a, b] of [[-7.15, -6.55], [-6.55, -5.95]]) {
+    const leaf = box(a, b, 0, 2.35, 6.44, 6.5, M.steel, { collide: false, uv: 1.2, parent: g });
+    leaf.material = M.steel;
+  }
+  box(-7.24, -5.86, -0.02, 2.44, 6.5, 6.52, M.bronze, { collide: false, uv: 1, parent: g });
+  const btn = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.012, 12), M.emissiveWarm);
+  btn.rotation.x = Math.PI / 2;
+  btn.position.set(-5.7, 1.15, 6.47);
+  g.add(btn);
+  decor.add(g);
+  refs.liftButton = btn;
+}
+
+/* ==========================================================================
+   9. ОСТЕКЛЕНИЕ: витраж, стекло с каплями, дверь на террасу, шторы
+   ========================================================================== */
+
+// Склейка одинаковых коробок в одну геометрию — держим draw calls в узде.
+function mergeBoxes(list, mat, { shadow = false, collide = false, uv = 0.6 } = {}) {
+  const geos = list.map(([x0, x1, y0, y1, z0, z1]) => {
+    const g = boxGeo(Math.abs(x1 - x0), Math.abs(y1 - y0), Math.abs(z1 - z0), uv).clone();
+    g.translate((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+    return g;
+  });
+  const merged = BufferGeometryUtils.mergeGeometries(geos, false);
+  geos.forEach(g => g.dispose());
+  const m = new THREE.Mesh(merged, mat);
+  m.receiveShadow = true;
+  if (shadow) { m.castShadow = true; shadowCasters.push(m); }
+  (collide ? collidables : decor).add(m);
+  return m;
+}
+
+/* ---- 9.1 Материал стекла: физическая прозрачность + поле капель ---------
+   Капли перекашивают нормаль и локально утолщают стекло — преломление
+   через transmission берёт это на вход, поэтому город за каплей реально
+   искажается, а не просто светлеет.                                        */
+
+const GU = {
+  time:   { value: 0 },
+  storm:  { value: 0.55 },
+  player: { value: new THREE.Vector3() },
+  wind:   { value: 0.35 },
+  lens:   { value: Q.transmission ? 0.55 : 0.0 },
+  fres:   { value: 1.7 },
+};
+
+const GLASS_GLSL = /* glsl */`
+  uniform float uTime; uniform float uStorm; uniform vec3 uPlayer;
+  uniform float uWind; uniform float uLens; uniform float uFres;
+  varying vec2 vDropUv; varying vec3 vTanVS; varying vec3 vBitVS; varying vec3 vGlassW;
+  vec2  gDropN_; float gDropMask_; float gFog_;
+
+  float gh21( vec2 p ) {
+    vec3 p3 = fract( vec3( p.xyx ) * 0.1031 );
+    p3 += dot( p3, p3.yzx + 33.33 );
+    return fract( ( p3.x + p3.y ) * p3.z );
+  }
+
+  // Один слой стекающих капель. Ячейка задана в МЕТРАХ, поэтому плотность
+  // одинакова на панелях любого размера.
+  vec3 dropLayer( vec2 uv, float t, float cw, float seed, float amount, float speedK ) {
+    vec2 cs = vec2( cw, cw * 2.6 );
+    vec2 p = uv / cs;
+    vec2 id = floor( p ) + seed;
+    vec2 gv = ( fract( p ) - 0.5 ) * cs;
+
+    float h1 = gh21( id );
+    float h2 = gh21( id + 19.7 );
+    float h3 = gh21( id + 71.3 );
+    float act = step( 1.0 - amount, h3 );
+    if ( act < 0.5 ) return vec3( 0.0 );
+
+    float spd = ( 0.055 + 0.20 * h2 ) * speedK;
+    float ph  = fract( h1 + t * spd / cs.y );
+    float cy  = ( 0.5 - ph ) * cs.y;
+    float cx  = ( h2 - 0.5 ) * cs.x * 0.46
+              + cw * 0.05 * sin( ph * 15.0 + h1 * 6.283 )
+              + uWind * ph * cw * 0.35;
+
+    vec2 q = gv - vec2( cx, cy );
+    float R = cw * ( 0.095 + 0.135 * h1 );
+    float core = smoothstep( R, R * 0.28, length( q ) );
+
+    // след: сужается кверху и рвётся на бусины
+    float dy = gv.y - cy;
+    float up = clamp( dy / ( cs.y * 0.6 ), 0.0, 1.0 );
+    float tw = R * ( 0.46 - 0.36 * up );
+    float trail = smoothstep( tw, 0.0, abs( gv.x - cx ) ) * step( 0.0, dy ) * ( 1.0 - up );
+    trail *= 0.4 + 0.6 * smoothstep( 0.2, 0.85, fract( dy / ( cw * 0.4 ) + h1 * 11.0 ) );
+
+    vec2 n = ( q / max( R, 1e-4 ) ) * core;
+    n.x += sign( gv.x - cx ) * trail * 0.5;
+    return vec3( n, clamp( core + trail * 0.7, 0.0, 1.0 ) );
+  }
+
+  // Мелкая морось: держит разглядывание вплотную.
+  vec3 mistLayer( vec2 uv, float cw, float seed, float amount ) {
+    vec2 p = uv / cw;
+    vec2 id = floor( p ) + seed;
+    vec2 gv = ( fract( p ) - 0.5 ) * cw;
+    float h1 = gh21( id ), h2 = gh21( id + 13.1 ), h3 = gh21( id + 57.9 );
+    if ( h3 > amount ) return vec3( 0.0 );
+    vec2 c = ( vec2( h1, h2 ) - 0.5 ) * cw * 0.5;
+    float R = cw * ( 0.11 + 0.20 * h1 );
+    vec2 q = gv - c;
+    float core = smoothstep( R, R * 0.22, length( q ) );
+    return vec3( ( q / max( R, 1e-4 ) ) * core, core );
+  }
+
+  void computeDrops() {
+    vec2 uv = vDropUv;
+    float amt = 0.22 + 0.55 * uStorm;
+    vec3 acc = dropLayer( uv, uTime, 0.19, 0.0, amt, 1.0 );
+    #if DROP_LAYERS > 1
+      acc += dropLayer( uv + vec2( 0.7, 0.0 ), uTime * 1.17, 0.105, 3.7, amt * 0.85, 1.45 ) * 0.85;
+    #endif
+    // ближе к стеклу — больше мелких деталей
+    float near = 1.0 - smoothstep( 0.8, 4.0, distance( uPlayer, vGlassW ) );
+    #if DROP_LAYERS > 2
+      acc += mistLayer( uv, 0.034, 11.3, 0.34 * amt ) * ( 0.45 + 0.55 * near );
+      if ( near > 0.02 ) {
+        acc += mistLayer( uv + vec2( 0.31, 0.17 ), 0.0165, 41.7, 0.26 * amt ) * near * 0.8;
+      }
+    #else
+      acc += mistLayer( uv, 0.038, 11.3, 0.28 * amt ) * ( 0.4 + 0.6 * near );
+    #endif
+
+    gDropN_ = acc.xy;
+    gDropMask_ = clamp( acc.z, 0.0, 1.0 );
+
+    // Запотевание: у кухни и на двери террасы, снизу вверх.
+    float zone = smoothstep( 6.6, 7.7, vGlassW.x ) * smoothstep( -3.4, 0.4, vGlassW.z );
+    gFog_ = zone * smoothstep( 2.4, 0.1, vGlassW.y ) * ( 0.55 + 0.45 * uStorm );
+  }
+`;
+
+function makeGlassMaterial() {
+  const mat = new THREE.MeshPhysicalMaterial({
+    color: 0xdfe8ef,
+    metalness: 0.0,
+    roughness: 0.055,
+    ior: 1.5,
+    thickness: 0.02,
+    transmission: Q.transmission ? 1.0 : 0.0,
+    transparent: !Q.transmission,
+    opacity: Q.transmission ? 1.0 : 0.22,
+    side: THREE.DoubleSide,
+    envMapIntensity: 1.25,
+    depthWrite: Q.transmission,
+  });
+  mat.onBeforeCompile = (shader) => {
+    Object.assign(shader.uniforms, {
+      uTime: GU.time, uStorm: GU.storm, uPlayer: GU.player,
+      uWind: GU.wind, uLens: GU.lens, uFres: GU.fres,
+    });
+    shader.defines = shader.defines || {};
+    shader.defines.DROP_LAYERS = Q.dropLayers;
+
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', `#include <common>
+        varying vec2 vDropUv; varying vec3 vTanVS; varying vec3 vBitVS; varying vec3 vGlassW;`)
+      .replace('#include <fog_vertex>', `#include <fog_vertex>
+        vDropUv = position.xy;
+        vTanVS = normalize( normalMatrix * vec3( 1.0, 0.0, 0.0 ) );
+        vBitVS = normalize( normalMatrix * vec3( 0.0, 1.0, 0.0 ) );
+        vGlassW = ( modelMatrix * vec4( position, 1.0 ) ).xyz;`);
+
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', `#include <common>\n${GLASS_GLSL}`)
+      .replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
+        computeDrops();`)
+      .replace('#include <roughnessmap_fragment>', `${THREE.ShaderChunk.roughnessmap_fragment}
+        roughnessFactor = clamp( roughnessFactor + gDropMask_ * 0.06 + gFog_ * 0.42, 0.0, 1.0 );`)
+      .replace('#include <normal_fragment_begin>', `${THREE.ShaderChunk.normal_fragment_begin}
+        normal = normalize( normal + ( gDropN_.x * vTanVS + gDropN_.y * vBitVS ) * 0.85 );`)
+      .replace('#include <transmission_fragment>',
+        THREE.ShaderChunk.transmission_fragment.replace(
+          'material.thickness = thickness;',
+          'material.thickness = thickness + gDropMask_ * uLens + gFog_ * 0.05;'))
+      .replace('#include <aomap_fragment>', `${THREE.ShaderChunk.aomap_fragment}
+        {
+          float fres = pow( 1.0 - saturate( dot( normalize( vViewPosition ), normal ) ), 4.0 );
+          reflectedLight.indirectSpecular *= 1.0 + uFres * fres;
+        }`);
+  };
+  // Отдельный ключ кеша: иначе программа может «слипнуться» с обычным физическим.
+  mat.customProgramCacheKey = () => 'penthouse-glass-' + Q.dropLayers;
+  return mat;
+}
+
+const matGlass = makeGlassMaterial();
+
+// Панель остекления. facing: 'n' — нормаль в комнату (+Z), 'e' — нормаль (-X).
+function glassPane(w, h, cx, cy, cz, facing) {
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), matGlass);
+  m.position.set(cx, cy, cz);
+  if (facing === 'e') m.rotation.y = -Math.PI / 2;
+  m.castShadow = false;
+  m.receiveShadow = false;
+  decor.add(m);
+  return m;
+}
+
+/* ---- 9.2 Витраж: тонкие тёмные импосты + стеклянные панели -------------- */
+
+const TRANSOM_Y = 3.6;
+const MULL = 0.055, MULL_D = 0.13;
+const mullionBoxes = [];
+
+// Север: 6 пролётов по 1.8 м
+const nBounds = [];
+for (let i = 0; i <= 6; i++) nBounds.push(P.glassNorthX0 + i * (8 - P.glassNorthX0) / 6);
+for (const x of nBounds) mullionBoxes.push([x - MULL / 2, x + MULL / 2, -0.02, P.yLiving, -6.5, -6.5 + MULL_D]);
+for (const y of [0.02, TRANSOM_Y, P.yLiving - 0.03]) {
+  mullionBoxes.push([P.glassNorthX0, 8, y - MULL / 2, y + MULL / 2, -6.5, -6.5 + MULL_D]);
+}
+glassPane(8 - P.glassNorthX0, TRANSOM_Y, (P.glassNorthX0 + 8) / 2, TRANSOM_Y / 2, -6.45, 'n');
+glassPane(8 - P.glassNorthX0, P.yLiving - TRANSOM_Y, (P.glassNorthX0 + 8) / 2, (P.yLiving + TRANSOM_Y) / 2, -6.45, 'n');
+
+// Восток: пролёты подогнаны под дверной блок
+const eBounds = [-6.5, -5.06, -3.62, -2.18, P.doorZ0, P.doorZ1, P.glassEastZ1];
+for (const z of eBounds) mullionBoxes.push([8 - MULL_D, 8, -0.02, P.yLiving, z - MULL / 2, z + MULL / 2]);
+for (const y of [0.02, TRANSOM_Y, P.yLiving - 0.03]) {
+  mullionBoxes.push([8 - MULL_D, 8, y - MULL / 2, y + MULL / 2, -6.5, P.glassEastZ1]);
+}
+mullionBoxes.push([8 - MULL_D, 8, P.doorH - MULL / 2, P.doorH + MULL / 2, P.doorZ0, P.doorZ1]); // притолока двери
+glassPane(P.doorZ0 + 6.5, TRANSOM_Y, 7.95, TRANSOM_Y / 2, (-6.5 + P.doorZ0) / 2, 'e');
+glassPane(P.glassEastZ1 - P.doorZ1, TRANSOM_Y, 7.95, TRANSOM_Y / 2, (P.doorZ1 + P.glassEastZ1) / 2, 'e');
+glassPane(P.glassEastZ1 + 6.5, P.yLiving - TRANSOM_Y, 7.95, (P.yLiving + TRANSOM_Y) / 2, (-6.5 + P.glassEastZ1) / 2, 'e');
+glassPane(P.doorZ1 - P.doorZ0, TRANSOM_Y - P.doorH, 7.95, (TRANSOM_Y + P.doorH) / 2, (P.doorZ0 + P.doorZ1) / 2, 'e');
+
+mergeBoxes(mullionBoxes, M.blackMetal, { shadow: true, uv: 1.2 });
+
+/* ---- 9.3 Дверь на террасу ---------------------------------------------- */
+
+const doorPivot = new THREE.Group();
+doorPivot.position.set(8.0, 0, P.doorZ1 - 0.03);
+scene.add(doorPivot);
+{
+  const w = (P.doorZ1 - 0.03) - (P.doorZ0 + 0.03);
+  const leaf = new THREE.Mesh(new THREE.PlaneGeometry(w, P.doorH - 0.08), matGlass);
+  leaf.rotation.y = -Math.PI / 2;
+  leaf.position.set(-0.02, (P.doorH - 0.08) / 2, -w / 2);
+  doorPivot.add(leaf);
+  const fr = [
+    [-0.045, 0.01, 0, P.doorH - 0.04, -w - 0.04, -w + 0.01],
+    [-0.045, 0.01, 0, P.doorH - 0.04, -0.05, 0.0],
+    [-0.045, 0.01, 0, 0.05, -w - 0.04, 0.0],
+    [-0.045, 0.01, P.doorH - 0.09, P.doorH - 0.04, -w - 0.04, 0.0],
+  ].map(([x0, x1, y0, y1, z0, z1]) => {
+    const g = boxGeo(Math.abs(x1 - x0), Math.abs(y1 - y0), Math.abs(z1 - z0), 1.4).clone();
+    g.translate((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+    return g;
+  });
+  const frame = new THREE.Mesh(BufferGeometryUtils.mergeGeometries(fr, false), M.blackMetal);
+  frame.castShadow = true; shadowCasters.push(frame);
+  doorPivot.add(frame);
+  fr.forEach(g => g.dispose());
+
+  const handle = new THREE.Mesh(new THREE.CapsuleGeometry(0.016, 0.62, 3, 8), M.bronze);
+  handle.position.set(-0.075, 1.12, -w + 0.1);
+  doorPivot.add(handle);
+  refs.doorHandle = handle;
+  refs.doorLeaf = leaf;
+}
+// Пока дверь закрыта — проём перекрыт; Octree статичен, поэтому считаем руками.
+const doorBlocker = {
+  box: new THREE.Box3(new THREE.Vector3(7.9, -0.6, P.doorZ0), new THREE.Vector3(8.1, P.doorH, P.doorZ1)),
+  active: true,
+};
+blockers.push(doorBlocker);
+
+/* ---- 9.4 Шторы ---------------------------------------------------------- */
+
+const matCurtain = std({
+  map: T.chair.map, normalMap: T.chair.normalMap, color: 0x6b6459,
+  roughness: 0.98, metalness: 0, side: THREE.DoubleSide, envMapIntensity: 0.2,
+});
+
+// Складчатая штора: полотно со «сборкой», которая сжимается при раздвижении.
+function makeCurtain(width, height, folds) {
+  const g = new THREE.PlaneGeometry(width, height, folds * 4, 6);
+  const pos = g.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), y = pos.getY(i);
+    const t = (x / width + 0.5);
+    const taper = smooth(0, 0.35, (y + height / 2) / height * 1.0 + 0.15);
+    pos.setZ(i, Math.sin(t * folds * TAU) * 0.075 * (0.45 + 0.55 * taper));
+  }
+  g.computeVertexNormals();
+  const m = new THREE.Mesh(g, matCurtain);
+  m.castShadow = false;
+  m.receiveShadow = true;
+  return m;
+}
+
+// Северная штора: фиксирована у восточного края, задёргивается на запад.
+{
+  const w = 8 - P.glassNorthX0;
+  const c = makeCurtain(w, 5.6, 22);
+  c.position.set(8, 2.82, -6.28);
+  c.geometry.translate(-w / 2, 0, 0);       // ось сборки — у правого края
+  c.scale.x = 0.055;                        // на старте шторы раздвинуты
+  c.castShadow = true;
+  decor.add(c);
+  refs.curtainN = c;
+  box(P.glassNorthX0 - 0.05, 8.05, 5.66, 5.72, -6.34, -6.24, M.blackMetal, { collide: false, uv: 1 });
+}
+// Восточная штора: фиксирована у южного края, задёргивается на север.
+{
+  const w = P.glassEastZ1 + 6.5;
+  const c = makeCurtain(w, 5.6, 18);
+  c.rotation.y = -Math.PI / 2;
+  c.position.set(7.82, 2.82, P.glassEastZ1);
+  c.geometry.translate(-w / 2, 0, 0);
+  c.scale.x = 0.055;
+  c.castShadow = true;
+  decor.add(c);
+  refs.curtainE = c;
+  box(7.76, 7.86, 5.66, 5.72, -6.55, P.glassEastZ1 + 0.05, M.blackMetal, { collide: false, uv: 1 });
+}
+
+/* ==========================================================================
+   10. ГОРОД ВНИЗУ И ДОЖДЬ СНАРУЖИ
+   ========================================================================== */
+
+// Разделяемые uniform-объекты нельзя гонять через UniformsUtils.merge —
+// он их клонирует. Собираем словарь вручную, ссылки на туман общие.
+const withFog = (u) => Object.assign({}, THREE.UniformsLib.fog, u);
+
+/* ---- 10.1 Башни: окна считаются процедурно от мировых координат --------- */
+
+const CU = { time: { value: 0 }, dim: { value: 1.0 } };
+
+const towerMat = new THREE.ShaderMaterial({
+  fog: true,
+  uniforms: withFog({ uTime: CU.time, uDim: CU.dim }),
+  vertexShader: /* glsl */`
+    #include <common>
+    #include <fog_pars_vertex>
+    attribute float aSeed;
+    varying vec3 vWorld; varying vec3 vNrm; varying float vSeed;
+    void main() {
+      vec4 wp = modelMatrix * instanceMatrix * vec4( position, 1.0 );
+      vWorld = wp.xyz;
+      vNrm = normalize( mat3( instanceMatrix ) * normal );
+      vSeed = aSeed;
+      vec4 mv = viewMatrix * wp;
+      vFogDepth = - mv.z;
+      gl_Position = projectionMatrix * mv;
+    }`,
+  fragmentShader: /* glsl */`
+    #include <common>
+    #include <fog_pars_fragment>
+    uniform float uTime; uniform float uDim;
+    varying vec3 vWorld; varying vec3 vNrm; varying float vSeed;
+    float h21( vec2 p ) {
+      vec3 p3 = fract( vec3( p.xyx ) * 0.1031 );
+      p3 += dot( p3, p3.yzx + 33.33 );
+      return fract( ( p3.x + p3.y ) * p3.z );
+    }
+    void main() {
+      float ax = abs( vNrm.x ), az = abs( vNrm.z );
+      float u = mix( vWorld.z, vWorld.x, step( ax, az ) );
+      float v = vWorld.y;
+      vec2 cw = vec2( 2.7, 3.5 );
+      vec2 cell = floor( vec2( u, v ) / cw );
+      float r  = h21( cell + vSeed * 31.7 );
+      float r2 = h21( cell.yx + vSeed * 77.1 );
+      float lit = step( 0.47, r );
+      float flick = step( 0.975, r2 );                       // редкое мерцание, не в такт
+      lit *= mix( 1.0, step( 0.42, fract( uTime * ( 0.6 + r2 * 2.4 ) + r * 9.0 ) ), flick );
+      vec2 f = fract( vec2( u, v ) / cw );
+      // Мягкие края окна + растворение деталей вдаль: иначе дальние башни
+      // рассыпаются в разноцветную кашу пикселей.
+      float e = 0.06 + 0.30 * smoothstep( 40.0, 300.0, vFogDepth );
+      float win = smoothstep( 0.10, 0.10 + e, f.x ) * ( 1.0 - smoothstep( 0.90 - e, 0.90, f.x ) )
+                * smoothstep( 0.24, 0.24 + e, f.y ) * ( 1.0 - smoothstep( 0.86 - e, 0.86, f.y ) );
+      win *= 0.55 + 0.45 * ( 1.0 - f.y );
+      float lod = smoothstep( 110.0, 300.0, vFogDepth );
+      win = mix( win, 0.42, lod );
+      lit = mix( lit, 0.55, lod );
+      vec3 warm = mix( vec3( 1.0, 0.58, 0.26 ), vec3( 0.55, 0.74, 1.0 ), step( 0.66, fract( r * 6.7 ) ) );
+      vec3 col = vec3( 0.010, 0.014, 0.022 );
+      col += warm * win * lit * ( 0.35 + 0.9 * fract( r * 13.3 ) ) * uDim;
+      col += vec3( 0.026, 0.038, 0.062 ) * ( 0.35 + 0.65 * abs( vNrm.y ) ) * uDim;
+      gl_FragColor = vec4( col, 1.0 );
+      #include <fog_fragment>
+    }`,
+});
+
+const cityGroup = new THREE.Group();
+scene.add(cityGroup);
+
+/* ---- 10.0 Небо: низкая облачность, подсвеченная городом ----------------- */
+const SU = { flash: { value: 0 } };
+{
+  const sky = new THREE.Mesh(
+    new THREE.SphereGeometry(760, 24, 16),
+    new THREE.ShaderMaterial({
+      side: THREE.BackSide, depthWrite: false, fog: false,
+      uniforms: { uFlash: SU.flash },
+      vertexShader: `varying vec3 vP; void main(){ vP = position; gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 ); }`,
+      fragmentShader: /* glsl */`
+        uniform float uFlash;
+        varying vec3 vP;
+        float h21( vec2 p ){ vec3 p3 = fract( vec3( p.xyx ) * 0.1031 ); p3 += dot( p3, p3.yzx + 33.33 ); return fract( ( p3.x + p3.y ) * p3.z ); }
+        float vn( vec2 p ){
+          vec2 i = floor( p ), f = fract( p ); f = f * f * ( 3.0 - 2.0 * f );
+          return mix( mix( h21( i ), h21( i + vec2( 1, 0 ) ), f.x ), mix( h21( i + vec2( 0, 1 ) ), h21( i + vec2( 1, 1 ) ), f.x ), f.y );
+        }
+        void main(){
+          vec3 d = normalize( vP );
+          float up = clamp( d.y * 1.25 + 0.10, 0.0, 1.0 );
+          // зарево города бьёт снизу в брюхо облаков
+          vec3 col = mix( vec3( 0.075, 0.098, 0.145 ), vec3( 0.012, 0.017, 0.030 ), pow( up, 0.55 ) );
+          vec2 uv = d.xz / max( abs( d.y ) + 0.28, 0.28 );
+          float c = vn( uv * 1.7 ) * 0.6 + vn( uv * 4.1 + 11.0 ) * 0.3 + vn( uv * 9.3 + 27.0 ) * 0.1;
+          col += vec3( 0.030, 0.036, 0.050 ) * smoothstep( 0.35, 0.85, c ) * ( 1.0 - up * 0.55 );
+          col += vec3( 0.55, 0.62, 0.80 ) * uFlash * ( 0.10 + 0.45 * smoothstep( 0.30, 0.9, c ) );
+          gl_FragColor = vec4( col, 1.0 );
+        }`,
+    }));
+  sky.frustumCulled = false;
+  sky.renderOrder = -1;
+  scene.add(sky);
+}
+
+// Три плана глубины: ближний детальный, средний, дальний (тонет в тумане).
+// Буферы всегда на максимальное число башен — переключение качества потом
+// просто меняет InstancedMesh.count, без пересборки геометрии.
+const TOWERS_MAX = QUALITY.high.towers;
+const CITY_PLANES = [
+  { count: Math.round(TOWERS_MAX * 0.26), r0: 62,  r1: 165, hMin: 55, hMax: 150, wMin: 11, wMax: 26 },
+  { count: Math.round(TOWERS_MAX * 0.34), r0: 155, r1: 320, hMin: 40, hMax: 140, wMin: 15, wMax: 38 },
+  { count: Math.round(TOWERS_MAX * 0.30), r0: 300, r1: 600, hMin: 28, hMax: 120, wMin: 20, wMax: 58 },
+  // Соседи-высотки: их верхушки поднимаются выше нас, иначе стоя видно
+  // только пустое небо — а нужен силуэт делового центра.
+  { count: Math.round(TOWERS_MAX * 0.10), r0: 95,  r1: 420, hMin: 195, hMax: 285, wMin: 16, wMax: 34 },
+];
+
+const beaconPos = [];
+for (const pl of CITY_PLANES) {
+  const geo = new THREE.BoxGeometry(1, 1, 1);
+  const seeds = new Float32Array(pl.count);
+  const im = new THREE.InstancedMesh(geo, towerMat, pl.count);
+  im.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+  const mtx = new THREE.Matrix4();
+  const sc = new THREE.Vector3();
+  for (let i = 0; i < pl.count; i++) {
+    const a = rr(0, TAU);
+    const rad = Math.sqrt(rr(pl.r0 * pl.r0, pl.r1 * pl.r1));
+    const h = rr(pl.hMin, pl.hMax);
+    const x = Math.cos(a) * rad, z = Math.sin(a) * rad;
+    mtx.makeRotationY(rr(0, TAU));
+    mtx.scale(sc.set(rr(pl.wMin, pl.wMax), h, rr(pl.wMin, pl.wMax)));
+    mtx.setPosition(x, GROUND_Y + h / 2, z);
+    im.setMatrixAt(i, mtx);
+    seeds[i] = rr(0, 100);
+    if (h > pl.hMax * 0.72 && rnd() < 0.55) beaconPos.push(x, GROUND_Y + h + 1.2, z);
+  }
+  geo.setAttribute('aSeed', new THREE.InstancedBufferAttribute(seeds, 1));
+  im.computeBoundingSphere();
+  im.userData.max = pl.count;
+  im.count = Math.max(1, Math.round(pl.count * (Q.towers / TOWERS_MAX)));
+  cityGroup.add(im);
+}
+
+// Наша собственная башня — с террасы должно быть видно, что под ногами 180 метров.
+{
+  const geo = new THREE.BoxGeometry(1, 1, 1);
+  const im = new THREE.InstancedMesh(geo, towerMat, 1);
+  const h = -0.8 - GROUND_Y;
+  const mtx = new THREE.Matrix4().makeScale(19.4, h, 16.2);
+  mtx.setPosition(0, GROUND_Y + h / 2, 0);
+  im.setMatrixAt(0, mtx);
+  geo.setAttribute('aSeed', new THREE.InstancedBufferAttribute(new Float32Array([13.7]), 1));
+  im.computeBoundingSphere();
+  im.userData.max = 1;
+  cityGroup.add(im);
+}
+
+/* ---- 10.2 Красные габаритные огни: мигают вразнобой --------------------- */
+{
+  const n = Math.max(beaconPos.length / 3, 1);
+  const geo = new THREE.SphereGeometry(0.9, 6, 5);
+  const phases = new Float32Array(n);
+  const mat = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: true,
+    uniforms: withFog({ uTime: CU.time }),
+    vertexShader: /* glsl */`
+      #include <common>
+      #include <fog_pars_vertex>
+      attribute float aPhase;
+      varying float vP;
+      void main(){
+        vec4 wp = modelMatrix * instanceMatrix * vec4( position, 1.0 );
+        vP = aPhase;
+        vec4 mv = viewMatrix * wp;
+        vFogDepth = - mv.z;
+        gl_Position = projectionMatrix * mv;
+      }`,
+    fragmentShader: /* glsl */`
+      #include <common>
+      #include <fog_pars_fragment>
+      uniform float uTime; varying float vP;
+      void main(){
+        float b = smoothstep( 0.0, 0.18, sin( uTime * ( 0.7 + vP * 0.09 ) + vP * 1.7 ) );
+        gl_FragColor = vec4( vec3( 1.0, 0.07, 0.03 ) * ( 0.12 + b ), 0.85 );
+        #include <fog_fragment>
+      }`,
+  });
+  const im = new THREE.InstancedMesh(geo, mat, n);
+  const mtx = new THREE.Matrix4();
+  for (let i = 0; i < beaconPos.length / 3; i++) {
+    mtx.makeTranslation(beaconPos[i * 3], beaconPos[i * 3 + 1], beaconPos[i * 3 + 2]);
+    im.setMatrixAt(i, mtx);
+    phases[i] = rr(0, 60);
+  }
+  geo.setAttribute('aPhase', new THREE.InstancedBufferAttribute(phases, 1));
+  im.computeBoundingSphere();
+  cityGroup.add(im);
+}
+
+/* ---- 10.3 Земля: мокрые улицы далеко внизу ------------------------------ */
+{
+  T.ground.map.repeat.set(9, 9);
+  const p = new THREE.Mesh(
+    new THREE.PlaneGeometry(2600, 2600),
+    new THREE.MeshBasicMaterial({ map: T.ground.map, fog: true, color: 0x39445c }));
+  p.rotation.x = -Math.PI / 2;
+  p.position.y = GROUND_Y - 0.5;
+  cityGroup.add(p);
+}
+await progress();
+
+/* ==========================================================================
+   11. ДОЖДЬ. Падение и наклон ветра — целиком в вершинном шейдере,
+       ни одного цикла по каплям на CPU.
+   ========================================================================== */
+
+const RU = {
+  time:    { value: 0 },
+  center:  { value: new THREE.Vector3() },
+  wind:    { value: new THREE.Vector2(0.32, 0.11) },
+  opacity: { value: 0.55 },
+  roomMin: { value: new THREE.Vector3(-8.06, -0.7, -6.56) },
+  roomMax: { value: new THREE.Vector3(8.06, P.yLiving + 0.2, 6.56) },
+  canMin:  { value: new THREE.Vector3(P.terX0 - 0.06, -0.4, P.terZ0 - 0.22) },
+  canMax:  { value: new THREE.Vector3(P.canopyX1, P.canopyY, P.terZ1 + 0.22) },
+};
+
+const RAIN_VS = /* glsl */`
+  attribute vec4 aRain;
+  uniform float uTime, uArea, uHeight, uLen, uWidth;
+  uniform vec3 uCenter, uRoomMin, uRoomMax, uCanMin, uCanMax;
+  uniform vec2 uWind;
+  varying vec2 vUv; varying float vFade;
+  bool inBox( vec3 p, vec3 a, vec3 b ) {
+    return all( greaterThan( p, a ) ) && all( lessThan( p, b ) );
+  }
+  void main() {
+    float speed = 11.0 + aRain.w * 13.0;
+    float top = uCenter.y + uHeight * 0.42;
+    float k = fract( aRain.z + uTime * speed / uHeight );
+    vec3 wp;
+    wp.y = top - k * uHeight;
+    vec2 g = aRain.xy + uWind * ( top - wp.y );
+    wp.xz = uCenter.xz + mod( g - uCenter.xz + uArea * 0.5, uArea ) - uArea * 0.5;
+
+    if ( inBox( wp, uRoomMin, uRoomMax ) || inBox( wp, uCanMin, uCanMax ) ) {
+      gl_Position = vec4( 2.0, 2.0, 2.0, 1.0 );
+      vUv = vec2( 0.0 ); vFade = 0.0;
+      return;
+    }
+
+    vec3 fall = normalize( vec3( - uWind.x, - 1.0, - uWind.y ) );
+    vec3 toCam = cameraPosition - wp;
+    float dist = length( toCam );
+    vec3 right = normalize( cross( fall, toCam / max( dist, 1e-3 ) ) );
+    vec3 p = wp + right * position.x * uWidth - fall * position.y * uLen * ( 0.6 + aRain.w * 0.8 );
+
+    vUv = uv;
+    vFade = smoothstep( 0.30, 1.5, dist ) * ( 1.0 - smoothstep( uArea * 0.30, uArea * 0.52, dist ) );
+    gl_Position = projectionMatrix * viewMatrix * vec4( p, 1.0 );
+  }`;
+
+const RAIN_FS = /* glsl */`
+  uniform float uAlpha, uOpacity;
+  varying vec2 vUv; varying float vFade;
+  void main() {
+    float a = smoothstep( 0.0, 0.4, vUv.x ) * smoothstep( 1.0, 0.6, vUv.x );
+    a *= smoothstep( 0.0, 0.2, vUv.y ) * smoothstep( 1.0, 0.5, vUv.y );
+    a *= vFade * uAlpha * uOpacity;
+    if ( a < 0.004 ) discard;
+    gl_FragColor = vec4( vec3( 0.56, 0.66, 0.82 ), a );
+  }`;
+
+function makeRainSystem(count, area, height, len, width, alpha) {
+  const geo = new THREE.PlaneGeometry(1, 1);
+  const data = new Float32Array(count * 4);
+  for (let i = 0; i < count; i++) {
+    data[i * 4 + 0] = rr(-area / 2, area / 2);
+    data[i * 4 + 1] = rr(-area / 2, area / 2);
+    data[i * 4 + 2] = rnd();
+    data[i * 4 + 3] = rnd();
+  }
+  geo.setAttribute('aRain', new THREE.InstancedBufferAttribute(data, 4));
+  const mat = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, side: THREE.DoubleSide, fog: false,
+    uniforms: {
+      uTime: RU.time, uCenter: RU.center, uWind: RU.wind, uOpacity: RU.opacity,
+      uRoomMin: RU.roomMin, uRoomMax: RU.roomMax, uCanMin: RU.canMin, uCanMax: RU.canMax,
+      uArea: { value: area }, uHeight: { value: height },
+      uLen: { value: len }, uWidth: { value: width }, uAlpha: { value: alpha },
+    },
+    vertexShader: RAIN_VS,
+    fragmentShader: RAIN_FS,
+  });
+  const mesh = new THREE.InstancedMesh(geo, mat, count);
+  mesh.frustumCulled = false;
+  mesh.renderOrder = 3;
+  mesh.userData.max = count;
+  scene.add(mesh);
+  return mesh;
+}
+
+const rainMain  = makeRainSystem(QUALITY.high.rain, 46, 46, 0.55, 0.016, 0.55);
+const rainClose = makeRainSystem(QUALITY.high.terraceRain, 13, 15, 0.42, 0.013, 0.9);
+rainMain.count = Q.rain;
+rainClose.count = Q.terraceRain;
+rainClose.visible = false;
+
+/* ---- 11.1 Брызги о настил террасы --------------------------------------- */
+const splash = (() => {
+  const N = QUALITY.high.splashes;
+  const geo = new THREE.RingGeometry(0.43, 0.5, 16);
+  const life = new Float32Array(N).fill(-1);
+  const off = new Float32Array(N * 3);
+  geo.setAttribute('aLife', new THREE.InstancedBufferAttribute(life, 1).setUsage(THREE.DynamicDrawUsage));
+  geo.setAttribute('aOff', new THREE.InstancedBufferAttribute(off, 3).setUsage(THREE.DynamicDrawUsage));
+  const mat = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, side: THREE.DoubleSide,
+    vertexShader: /* glsl */`
+      attribute float aLife; attribute vec3 aOff;
+      varying float vA;
+      void main(){
+        if ( aLife < 0.0 ) { gl_Position = vec4( 2.0, 2.0, 2.0, 1.0 ); vA = 0.0; return; }
+        float s = 0.07 + aLife * 0.34;
+        vec3 p = aOff + vec3( position.x, 0.0, position.y ) * s;
+        vA = ( 1.0 - aLife ) * 0.22;
+        gl_Position = projectionMatrix * viewMatrix * vec4( p, 1.0 );
+      }`,
+    fragmentShader: `varying float vA; void main(){ if(vA<=0.002) discard; gl_FragColor = vec4( vec3(0.58,0.68,0.84), vA ); }`,
+  });
+  const mesh = new THREE.InstancedMesh(geo, mat, N);
+  mesh.frustumCulled = false;
+  mesh.visible = false;
+  mesh.count = Q.splashes;
+  scene.add(mesh);
+  return { mesh, geo, life, off, N, cursor: 0, acc: 0 };
+})();
+await progress();
+
+/* ==========================================================================
+   12. КАМИН: портал из колотого камня, утопленная топка, дрова, пламя, искры
+   ========================================================================== */
+
+const FIRE = { x: -4.4, y: 0.12, z: -5.92 };   // центр топки
+const fireGroup = new THREE.Group();
+scene.add(fireGroup);
+
+// ---- 12.1 Портал ---------------------------------------------------------
+box(-5.9, -5.30, P.yPit, P.yLiving, -6.5, -5.6, M.fireStone, { uv: 0.55, shadow: true });
+box(-3.50, -2.90, P.yPit, P.yLiving, -6.5, -5.6, M.fireStone, { uv: 0.55, shadow: true });
+box(-5.30, -3.50, P.yPit, 0.06, -6.5, -5.6, M.fireStone, { uv: 0.55 });          // под топкой
+box(-5.30, -3.50, 1.06, P.yLiving, -6.5, -5.6, M.fireStone, { uv: 0.55, shadow: true });  // над топкой
+box(-5.95, -2.85, P.yPit, P.yPit + 0.07, -5.6, -5.14, M.fireStone, { uv: 0.6 }); // приступок
+
+// топка: закопчённый лайнер
+box(-5.30, -3.50, 0.06, 0.10, -6.24, -5.6, M.firebox, { collide: false, uv: 1 });
+box(-5.30, -3.50, 0.06, 1.06, -6.28, -6.24, M.firebox, { collide: false, uv: 1 });
+box(-5.30, -5.24, 0.06, 1.06, -6.24, -5.6, M.firebox, { collide: false, uv: 1 });
+box(-3.56, -3.50, 0.06, 1.06, -6.24, -5.6, M.firebox, { collide: false, uv: 1 });
+box(-5.30, -3.50, 1.02, 1.06, -6.24, -5.6, M.firebox, { collide: false, uv: 1 });
+
+// ---- 12.2 Дрова и угли ---------------------------------------------------
+const logMat = std({ map: T.walnut.map, normalMap: T.walnut.normalMap, color: 0x6a6055, roughness: 0.94, metalness: 0, envMapIntensity: 0.18 });
+{
+  const logGeo = new THREE.CylinderGeometry(0.062, 0.055, 0.78, 7);
+  const cfg = [[-0.30, 0.14, -0.06, 0.14, 0.06], [0.22, 0.15, 0.04, -0.28, -0.05],
+               [-0.04, 0.27, 0.02, 0.55, 0.12], [0.10, 0.13, -0.14, 1.35, 0.0]];
+  for (const [dx, dy, dz, rot, tilt] of cfg) {
+    const l = new THREE.Mesh(logGeo, logMat);
+    l.position.set(FIRE.x + dx, 0.10 + dy * 0.42, FIRE.z + dz);
+    l.rotation.set(tilt, rot, Math.PI / 2 + tilt * 0.4);
+    decor.add(l);
+  }
+}
+// Угли: медленно пульсирующий emissive
+const embers = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.56), M.ember);
+embers.rotation.x = -Math.PI / 2;
+embers.position.set(FIRE.x, 0.105, FIRE.z + 0.02);
+decor.add(embers);
+
+// ---- 12.3 Пламя: 3 скрещённых билборда с fbm-шумом -----------------------
+const FU = { time: { value: 0 }, energy: { value: 0 } };
+const flameMat = new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+  uniforms: { uTime: FU.time, uEnergy: FU.energy },
+  vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 ); }`,
+  fragmentShader: /* glsl */`
+    uniform float uTime, uEnergy;
+    varying vec2 vUv;
+    float h21( vec2 p ){ vec3 p3 = fract( vec3( p.xyx ) * 0.1031 ); p3 += dot( p3, p3.yzx + 33.33 ); return fract( ( p3.x + p3.y ) * p3.z ); }
+    float vnoise( vec2 p ){
+      vec2 i = floor( p ), f = fract( p );
+      vec2 u = f * f * ( 3.0 - 2.0 * f );
+      return mix( mix( h21( i ), h21( i + vec2( 1, 0 ) ), u.x ),
+                  mix( h21( i + vec2( 0, 1 ) ), h21( i + vec2( 1, 1 ) ), u.x ), u.y );
+    }
+    float fbm( vec2 p ){
+      float v = 0.0, a = 0.5;
+      for ( int i = 0; i < 4; i ++ ) { v += a * vnoise( p ); p *= 2.03; a *= 0.5; }
+      return v;
+    }
+    void main(){
+      if ( uEnergy <= 0.001 ) discard;
+      vec2 uv = vUv;
+      float y = uv.y;
+      float w = mix( 0.34, 0.085, pow( y, 0.62 ) );
+      float n  = fbm( vec2( uv.x * 3.6, uv.y * 2.6 - uTime * 1.35 ) );
+      float n2 = fbm( vec2( uv.x * 8.0 + 5.7, uv.y * 5.4 - uTime * 2.4 ) );
+      // ось пламени виляет по шуму — так получаются языки, а не столб
+      float d = abs( uv.x - 0.5 ) / w + ( n - 0.5 ) * 1.7 * ( 0.12 + y * 1.5 );
+      float body = 1.0 - clamp( d, 0.0, 1.0 );
+      body *= smoothstep( 1.0, 0.30, y );          // затухание кверху
+      body *= smoothstep( 0.0, 0.11, y );          // мягкая посадка на дрова
+      body *= 0.40 + 0.80 * n2;                    // рваность
+      float a = clamp( body, 0.0, 1.0 ) * uEnergy;
+      a = a * a;                                    // ядро горячее, края мягкие
+      if ( a < 0.006 ) discard;
+      vec3 col = mix( vec3( 1.0, 0.93, 0.64 ), vec3( 1.0, 0.55, 0.13 ), smoothstep( 0.02, 0.34, y + ( n - 0.5 ) * 0.28 ) );
+      col = mix( col, vec3( 0.72, 0.15, 0.02 ), smoothstep( 0.34, 0.95, y ) );
+      gl_FragColor = vec4( col * a * 0.80, a );
+    }`,
+});
+
+const flameRig = new THREE.Group();
+flameRig.position.set(FIRE.x, 0.09, FIRE.z);
+fireGroup.add(flameRig);
+const flameQuads = [];
+for (const [ry, sx, sy, dx] of [[-0.62, 1.00, 0.94, -0.17], [0.0, 1.20, 1.08, 0.0], [0.66, 0.90, 0.80, 0.18]]) {
+  const q = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), flameMat);
+  q.geometry.translate(0, 0.5, 0);              // растём от низа
+  q.position.set(dx, 0, 0);
+  q.rotation.y = ry;
+  q.scale.set(sx, sy, 1);
+  q.renderOrder = 4;
+  flameRig.add(q);
+  flameQuads.push({ mesh: q, base: ry, sx, sy });
+}
+
+// ---- 12.4 Искры ----------------------------------------------------------
+const SPARKS = 180;
+const sparks = (() => {
+  const pos = new Float32Array(SPARKS * 3);
+  const life = new Float32Array(SPARKS).fill(-1);
+  const vel = new Float32Array(SPARKS * 3);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3).setUsage(THREE.DynamicDrawUsage));
+  g.setAttribute('aLife', new THREE.BufferAttribute(life, 1).setUsage(THREE.DynamicDrawUsage));
+  const m = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    uniforms: { uScale: { value: 1 } },
+    vertexShader: /* glsl */`
+      attribute float aLife; varying float vL; uniform float uScale;
+      void main(){
+        vL = aLife;
+        vec4 mv = modelViewMatrix * vec4( position, 1.0 );
+        // uScale — пикселей на метр на расстоянии 1 м; сама искра ~1–3 см
+        float world = 0.009 + 0.020 * ( 1.0 - aLife );
+        gl_PointSize = clamp( world * uScale / max( - mv.z, 0.25 ), 1.0, 42.0 );
+        gl_Position = projectionMatrix * mv;
+      }`,
+    fragmentShader: /* glsl */`
+      varying float vL;
+      void main(){
+        if ( vL < 0.0 ) discard;
+        vec2 d = gl_PointCoord - 0.5;
+        float a = smoothstep( 0.5, 0.0, length( d ) ) * ( 1.0 - vL );
+        vec3 c = mix( vec3( 1.0, 0.85, 0.45 ), vec3( 1.0, 0.24, 0.03 ), vL );
+        gl_FragColor = vec4( c * a * 2.0, a );
+      }`,
+  });
+  const p = new THREE.Points(g, m);
+  p.frustumCulled = false;
+  p.renderOrder = 5;
+  fireGroup.add(p);
+  return { points: p, geo: g, pos, life, vel, cursor: 0, mat: m };
+})();
+
+function emitSparks(n, power = 1) {
+  for (let i = 0; i < n; i++) {
+    const k = sparks.cursor = (sparks.cursor + 1) % SPARKS;
+    sparks.pos[k * 3] = FIRE.x + rr(-0.42, 0.42);
+    sparks.pos[k * 3 + 1] = 0.13 + rr(0, 0.12);
+    sparks.pos[k * 3 + 2] = FIRE.z + rr(-0.16, 0.16);
+    sparks.vel[k * 3] = rr(-0.28, 0.28);
+    sparks.vel[k * 3 + 1] = rr(0.55, 1.5) * power;
+    sparks.vel[k * 3 + 2] = rr(-0.18, 0.24);
+    sparks.life[k] = 0;
+  }
+}
+
+// ---- 12.5 Кочерга и корзина с поленьями ---------------------------------
+{
+  const stand = new THREE.Group();
+  stand.position.set(-3.15, P.yPit, -5.35);
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.13, 0.03, 14), M.blackMetal);
+  base.position.y = 0.015; stand.add(base);
+  const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.82, 8), M.blackMetal);
+  rod.position.set(0, 0.42, 0); rod.rotation.z = 0.16; stand.add(rod);
+  const hook = new THREE.Mesh(new THREE.TorusGeometry(0.045, 0.011, 6, 10, Math.PI * 1.2), M.blackMetal);
+  hook.position.set(-0.075, 0.05, 0); hook.rotation.set(Math.PI / 2, 0, 0.5); stand.add(hook);
+  const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.11, 8), M.bronze);
+  grip.position.set(0.068, 0.83, 0); grip.rotation.z = 0.16; stand.add(grip);
+  decor.add(stand);
+  refs.poker = stand;
+  refs.pokerRod = rod;
+}
+{
+  const basket = new THREE.Group();
+  basket.position.set(-5.62, P.yPit, -5.28);
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.27, 0.23, 0.34, 14, 1, true), M.blackMetal);
+  body.material = M.bronze;
+  body.position.y = 0.17; basket.add(body);
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.27, 0.014, 6, 18), M.bronze);
+  rim.rotation.x = Math.PI / 2; rim.position.y = 0.34; basket.add(rim);
+  const lg = new THREE.CylinderGeometry(0.055, 0.05, 0.44, 7);
+  for (let i = 0; i < 5; i++) {
+    const l = new THREE.Mesh(lg, logMat);
+    l.position.set(rr(-0.1, 0.1), 0.30 + i * 0.045, rr(-0.08, 0.08));
+    l.rotation.set(rr(-0.2, 0.2), rr(0, 3.1), Math.PI / 2 + rr(-0.2, 0.2));
+    basket.add(l);
+  }
+  decor.add(basket);
+  collider(-5.92, -5.32, P.yPit, P.yPit + 0.5, -5.58, -4.98);
+}
+await progress();
+
+/* ==========================================================================
+   13. МЕБЕЛЬ И ДЕТАЛИ. Всё со скруглениями; одинаковое — через InstancedMesh,
+       родственное — склеено в один меш, чтобы не разгонять draw calls.
+   ========================================================================== */
+
+const _v3 = new THREE.Vector3(), _q = new THREE.Quaternion(), _e = new THREE.Euler(), _m4 = new THREE.Matrix4();
+
+function rgeo(w, h, d, radius = 0.03, seg = 2) {
+  const r = Math.min(radius, Math.min(w, h, d) * 0.49);
+  const g = new RoundedBoxGeometry(w, h, d, seg, r);
+  const uv = g.attributes.uv;
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * w * 0.85, uv.getY(i) * h * 0.85);
+  uv.needsUpdate = true;
+  return g;
+}
+
+// Склейка деталей одного материала в одну геометрию.
+function mergeParts(parts) {
+  const gs = parts.map(([g, px, py, pz, rx, ry, rz]) => {
+    const c = g.clone();
+    _e.set(rx || 0, ry || 0, rz || 0);
+    _q.setFromEuler(_e);
+    _m4.compose(_v3.set(px || 0, py || 0, pz || 0), _q, new THREE.Vector3(1, 1, 1));
+    c.applyMatrix4(_m4);
+    return c;
+  });
+  const out = BufferGeometryUtils.mergeGeometries(gs, false);
+  gs.forEach(g => g.dispose());
+  return out;
+}
+function addMesh(geo, mat, { shadow = false, parent = decor } = {}) {
+  const m = new THREE.Mesh(geo, mat);
+  m.receiveShadow = true;
+  if (shadow) { m.castShadow = true; shadowCasters.push(m); }
+  parent.add(m);
+  return m;
+}
+
+/* ---- 13.1 Ковёр ---------------------------------------------------------- */
+{
+  const rug = new THREE.Mesh(new THREE.PlaneGeometry(6.6, 3.7), M.rug);
+  const uv = rug.geometry.attributes.uv;
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 5.5, uv.getY(i) * 3.1);
+  uv.needsUpdate = true;
+  rug.rotation.x = -Math.PI / 2;
+  rug.position.set(-2.5, P.yPit + 0.008, -3.2);
+  rug.receiveShadow = true;
+  decor.add(rug);
+}
+
+/* ---- 13.2 Диван буквой П ------------------------------------------------- */
+{
+  const F = P.yPit;                      // пол сункен-зоны
+  const SEAT_T = F + 0.50;               // высота сидения
+  const plinths = [], bodies = [], cushions = [], backs = [];
+  // [x0,x1,z0,z1, у какой стороны спинка]
+  const segs = [
+    [-5.35, 0.25, -2.20, -1.30, 's'],
+    [-5.35, -4.50, -4.55, -2.20, 'w'],
+    [-0.60, 0.25, -4.55, -2.20, 'e'],
+  ];
+  for (const [x0, x1, z0, z1, side] of segs) {
+    const w = x1 - x0, d = z1 - z0, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+    plinths.push([rgeo(w - 0.12, 0.14, d - 0.12, 0.015, 1), cx, F + 0.09, cz]);
+    bodies.push([rgeo(w, 0.22, d, 0.03, 2), cx, F + 0.27, cz]);
+    // спинка занимает 0.24 м у наружного края
+    let sx0 = x0, sx1 = x1, sz0 = z0, sz1 = z1;
+    if (side === 's') sz0 = z1 - 0.24;
+    if (side === 'w') sx1 = x0 + 0.24;
+    if (side === 'e') sx0 = x1 - 0.24;
+    backs.push([rgeo(sx1 - sx0, 0.34, sz1 - sz0, 0.07, 2), (sx0 + sx1) / 2, F + 0.67, (sz0 + sz1) / 2]);
+    // подушки сидения — по одной на ~0.8 м
+    let ax0 = x0 + 0.02, ax1 = x1 - 0.02, az0 = z0 + 0.02, az1 = z1 - 0.02;
+    if (side === 's') az1 = sz0;
+    if (side === 'w') ax0 = sx1;
+    if (side === 'e') ax1 = sx0;
+    const along = (side === 's') ? (ax1 - ax0) : (az1 - az0);
+    const n = Math.max(1, Math.round(along / 0.8));
+    for (let i = 0; i < n; i++) {
+      const t0 = i / n, t1 = (i + 1) / n;
+      const c = (side === 's') ? [ax0 + (ax1 - ax0) * t0, ax0 + (ax1 - ax0) * t1, az0, az1]
+                               : [ax0, ax1, az0 + (az1 - az0) * t0, az0 + (az1 - az0) * t1];
+      cushions.push([rgeo(c[1] - c[0] - 0.03, 0.16, c[3] - c[2] - 0.03, 0.05, 2),
+                     (c[0] + c[1]) / 2, F + 0.42, (c[2] + c[3]) / 2]);
+    }
+  }
+  addMesh(mergeParts(plinths), M.walnutDark, { shadow: true });
+  addMesh(mergeParts(bodies.concat(cushions, backs)), M.sofa, { shadow: true });
+  // подушки-думки
+  const pil = [];
+  for (const [px, pz, ry] of [[-4.55, -1.68, 0.3], [-0.95, -1.68, -0.25], [-5.00, -3.3, 1.25], [-0.10, -3.9, -1.3]]) {
+    pil.push([rgeo(0.42, 0.42, 0.14, 0.07, 2), px, SEAT_T + 0.16, pz, 0.12, ry, 0.1]);
+  }
+  addMesh(mergeParts(pil), M.pillow);
+  // коллизии — простыми коробками, а не скруглёнкой
+  collider(-5.4, 0.3, F, F + 0.86, -2.25, -1.25);
+  collider(-5.4, -4.45, F, F + 0.86, -4.6, -2.2);
+  collider(-0.65, 0.3, F, F + 0.86, -4.6, -2.2);
+}
+
+/* ---- 13.3 Журнальный стол ------------------------------------------------ */
+{
+  const top = P.yPit + 0.40;
+  addMesh(mergeParts([[rgeo(2.05, 0.06, 1.0, 0.018, 1), -2.55, top - 0.03, -3.35]]), M.walnut, { shadow: true });
+  const legs = [];
+  for (const [lx, lz] of [[-3.42, -3.78], [-1.68, -3.78], [-3.42, -2.92], [-1.68, -2.92]]) {
+    legs.push([rgeo(0.05, 0.34, 0.05, 0.01, 1), lx, top - 0.23, lz]);
+  }
+  legs.push([rgeo(1.8, 0.03, 0.03, 0.01, 1), -2.55, P.yPit + 0.10, -3.35]);
+  addMesh(mergeParts(legs), M.blackMetal);
+  // мелочи на столе
+  addMesh(mergeParts([
+    [rgeo(0.24, 0.035, 0.30, 0.006, 1), -3.05, top + 0.018, -3.30],
+    [rgeo(0.22, 0.030, 0.28, 0.006, 1), -3.02, top + 0.050, -3.26, 0, 0.18, 0],
+  ]), M.books);
+  const glass = new THREE.Mesh(new THREE.CylinderGeometry(0.037, 0.031, 0.11, 14, 1, true), matRailGlass);
+  glass.position.set(-1.98, top + 0.055, -3.45);
+  decor.add(glass);
+  collider(-3.6, -1.5, P.yPit, top, -3.9, -2.8);
+}
+
+/* ---- 13.4 Кухня-бар вдоль южной стены ------------------------------------ */
+{
+  // нижний ряд
+  addMesh(mergeParts([[rgeo(7.2, 0.80, 0.64, 0.012, 1), 4.2, 0.50, 6.17]]), M.walnut, { shadow: true });
+  addMesh(mergeParts([
+    [rgeo(7.3, 0.05, 0.68, 0.008, 1), 4.2, 0.925, 6.16],
+    [rgeo(7.2, 0.62, 0.04, 0.004, 1), 4.2, 1.24, 6.47],
+  ]), M.marble);
+  box(0.6, 7.8, 0, 0.10, 5.92, 6.42, M.blackMetal, { collide: false, uv: 1 });   // цоколь
+  // верхний ряд
+  addMesh(mergeParts([[rgeo(7.2, 0.78, 0.42, 0.012, 1), 4.2, 1.94, 6.28]]), M.walnut, { shadow: true });
+  // подсветка под шкафами
+  const underCab = new THREE.Mesh(new THREE.PlaneGeometry(6.9, 0.34), M.emissiveWarm.clone());
+  underCab.material.emissive = new THREE.Color(0xffc98a);
+  underCab.material.emissiveIntensity = 0;
+  underCab.rotation.x = Math.PI / 2;
+  underCab.position.set(4.2, 1.548, 6.28);
+  decor.add(underCab);
+  refs.underCab = underCab;
+  // ручки
+  const hs = [];
+  for (let i = 0; i < 6; i++) hs.push([new THREE.CylinderGeometry(0.008, 0.008, 0.34, 6), 1.4 + i * 1.15, 0.83, 5.845, 0, 0, Math.PI / 2]);
+  for (let i = 0; i < 6; i++) hs.push([new THREE.CylinderGeometry(0.008, 0.008, 0.34, 6), 1.4 + i * 1.15, 1.60, 6.065, 0, 0, Math.PI / 2]);
+  addMesh(mergeParts(hs), M.bronze);
+  collider(0.6, 7.8, 0, 0.95, 5.85, 6.5);
+  collider(0.6, 7.8, 1.5, 2.35, 6.05, 6.5);
+
+  // остров
+  addMesh(mergeParts([[rgeo(3.9, 0.86, 0.86, 0.014, 1), 4.0, 0.48, 4.17]]), M.walnut, { shadow: true });
+  addMesh(mergeParts([[rgeo(4.14, 0.055, 1.06, 0.01, 1), 4.0, 0.935, 4.14]]), M.marble);
+  collider(2.0, 6.0, 0, 0.96, 3.6, 4.72);
+
+  // барные стулья — один инстанс-меш
+  const stoolGeo = mergeParts([
+    [new THREE.CylinderGeometry(0.17, 0.17, 0.05, 14), 0, 0.66, 0],
+    [new THREE.CylinderGeometry(0.16, 0.155, 0.16, 14, 1, true), 0, 0.755, -0.14, 0.32],
+    [new THREE.CylinderGeometry(0.026, 0.03, 0.66, 8), 0, 0.33, 0],
+    [new THREE.CylinderGeometry(0.16, 0.16, 0.022, 14), 0, 0.02, 0],
+    [new THREE.TorusGeometry(0.13, 0.011, 5, 14), 0, 0.20, 0, Math.PI / 2],
+  ]);
+  const stools = new THREE.InstancedMesh(stoolGeo, M.blackMetal, 4);
+  for (let i = 0; i < 4; i++) {
+    _e.set(0, rr(-0.35, 0.35), 0); _q.setFromEuler(_e);
+    _m4.compose(_v3.set(2.62 + i * 0.92, 0, 3.30), _q, new THREE.Vector3(1, 1, 1));
+    stools.setMatrixAt(i, _m4);
+    collider(2.62 + i * 0.92 - 0.19, 2.62 + i * 0.92 + 0.19, 0, 0.72, 3.11, 3.49);
+  }
+  stools.computeBoundingSphere();
+  decor.add(stools);
+
+  // чайник
+  const kettle = new THREE.Group();
+  kettle.position.set(3.15, 0.962, 4.18);
+  addMesh(mergeParts([
+    [new THREE.CylinderGeometry(0.098, 0.115, 0.19, 18), 0, 0.095, 0],
+    [new THREE.CylinderGeometry(0.055, 0.095, 0.055, 18), 0, 0.215, 0],
+    [new THREE.CylinderGeometry(0.016, 0.026, 0.14, 10), 0.10, 0.16, 0.02, 0, 0, -0.9],
+    [new THREE.TorusGeometry(0.075, 0.009, 5, 14, Math.PI), -0.005, 0.25, 0, 0, Math.PI / 2, 0],
+  ]), M.steel, { parent: kettle });
+  decor.add(kettle);
+  refs.kettle = kettle;
+
+  // пар от чайника
+  const steam = (() => {
+    const N = 90;
+    const pos = new Float32Array(N * 3), life = new Float32Array(N).fill(-1);
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3).setUsage(THREE.DynamicDrawUsage));
+    g.setAttribute('aLife', new THREE.BufferAttribute(life, 1).setUsage(THREE.DynamicDrawUsage));
+    const m = new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false,
+      uniforms: { uScale: { value: 1 } },
+      vertexShader: `attribute float aLife; varying float vL; uniform float uScale;
+        void main(){ vL = aLife; vec4 mv = modelViewMatrix * vec4(position,1.0);
+          float world = 0.035 + 0.16 * aLife;
+          gl_PointSize = clamp( world * uScale / max(-mv.z, 0.25), 1.0, 96.0 );
+          gl_Position = projectionMatrix * mv; }`,
+      fragmentShader: `varying float vL;
+        void main(){ if(vL<0.0) discard; vec2 d = gl_PointCoord-0.5;
+          float a = smoothstep(0.5,0.02,length(d)) * (1.0-vL) * 0.16;
+          if(a<0.003) discard; gl_FragColor = vec4(vec3(0.92,0.94,0.97), a); }`,
+    });
+    const p = new THREE.Points(g, m);
+    p.frustumCulled = false;
+    decor.add(p);
+    return { geo: g, pos, life, N, cursor: 0, mat: m };
+  })();
+  refs.steam = steam;
+
+  // выключатель подсветки на торце острова
+  const sw = new THREE.Mesh(rgeo(0.07, 0.11, 0.012, 0.004, 1), M.steel);
+  sw.position.set(4.0, 0.70, 3.733);
+  decor.add(sw);
+  refs.swKitchen = sw;
+}
+
+/* ---- 13.5 Ниша-библиотека ------------------------------------------------ */
+{
+  // стеллаж
+  const parts = [];
+  const X0 = -4.72, X1 = -2.44, Z0 = 6.06, Z1 = 6.44;
+  parts.push([rgeo(0.05, 2.16, Z1 - Z0, 0.008, 1), X0 + 0.025, 1.08, (Z0 + Z1) / 2]);
+  parts.push([rgeo(0.05, 2.16, Z1 - Z0, 0.008, 1), X1 - 0.025, 1.08, (Z0 + Z1) / 2]);
+  const shelfY = [0.06, 0.46, 0.88, 1.30, 1.72, 2.13];
+  for (const y of shelfY) parts.push([rgeo(X1 - X0, 0.035, Z1 - Z0, 0.006, 1), (X0 + X1) / 2, y, (Z0 + Z1) / 2]);
+  parts.push([rgeo(X1 - X0, 2.16, 0.03, 0.004, 1), (X0 + X1) / 2, 1.08, Z1 - 0.015]);
+  addMesh(mergeParts(parts), M.walnut, { shadow: true });
+  collider(X0, X1, 0, 2.2, Z0, Z1);
+
+  // книги: один InstancedMesh, у каждой книги своя полоса корешка
+  const matBookInst = M.books.clone();
+  matBookInst.onBeforeCompile = (sh) => {
+    sh.vertexShader = sh.vertexShader
+      .replace('#include <common>', '#include <common>\nattribute float aBook;')
+      .replace('#include <uv_vertex>', '#include <uv_vertex>\n\tvMapUv = vec2( vMapUv.x / 16.0 + aBook, vMapUv.y );');
+  };
+  matBookInst.customProgramCacheKey = () => 'penthouse-books';
+
+  const bookGeo = new THREE.BoxGeometry(1, 1, 1);
+  const slots = [];
+  for (let s = 0; s < 5; s++) {
+    let x = X0 + 0.09;
+    const yBase = shelfY[s] + 0.018;
+    const capacity = X1 - 0.12;
+    while (x < capacity) {
+      const w = rr(0.028, 0.05);
+      if (x + w > capacity) break;
+      const lean = rnd() < 0.05 ? rr(-0.22, 0.22) : 0;
+      slots.push({ x: x + w / 2, y: yBase, w, h: rr(0.24, 0.34), d: rr(0.20, 0.30), lean });
+      x += w + 0.004;
+      if (rnd() < 0.05) x += rr(0.03, 0.12);       // пропуски — полки не забиты под завязку
+    }
+  }
+  const bm = new THREE.InstancedMesh(bookGeo, matBookInst, slots.length);
+  const bAttr = new Float32Array(slots.length);
+  const _scale = new THREE.Vector3();
+  slots.forEach((s, i) => {
+    _e.set(0, 0, s.lean); _q.setFromEuler(_e);
+    _m4.compose(_v3.set(s.x, s.y + s.h / 2, Z1 - 0.04 - s.d / 2), _q, _scale.set(s.w, s.h, s.d));
+    bm.setMatrixAt(i, _m4);
+    bAttr[i] = Math.floor(rnd() * 16) / 16;
+  });
+  bookGeo.setAttribute('aBook', new THREE.InstancedBufferAttribute(bAttr, 1));
+  bm.computeBoundingSphere();
+  bm.castShadow = false;
+  decor.add(bm);
+
+  // кресло
+  const CH = { x: -3.95, z: 4.62, ry: -0.30 };
+  const chair = new THREE.Group();
+  chair.position.set(CH.x, 0, CH.z);
+  chair.rotation.y = CH.ry;
+  addMesh(mergeParts([
+    [rgeo(0.80, 0.30, 0.78, 0.05, 2), 0, 0.30, 0],
+    [rgeo(0.76, 0.14, 0.72, 0.06, 2), 0, 0.49, 0.01],
+    [rgeo(0.80, 0.52, 0.20, 0.08, 2), 0, 0.70, -0.30],
+    [rgeo(0.15, 0.24, 0.66, 0.06, 2), -0.33, 0.61, 0.03],
+    [rgeo(0.15, 0.24, 0.66, 0.06, 2), 0.33, 0.61, 0.03],
+  ]), M.chair, { shadow: true, parent: chair });
+  const legs = [];
+  for (const [lx, lz] of [[-0.31, -0.31], [0.31, -0.31], [-0.31, 0.31], [0.31, 0.31]]) {
+    legs.push([new THREE.CylinderGeometry(0.018, 0.014, 0.15, 6), lx, 0.075, lz]);
+  }
+  addMesh(mergeParts(legs), M.blackMetal, { parent: chair });
+  decor.add(chair);
+  refs.armchair = chair;
+  collider(CH.x - 0.44, CH.x + 0.44, 0, 0.95, CH.z - 0.44, CH.z + 0.44);
+
+  // торшер
+  const lamp = new THREE.Group();
+  lamp.position.set(-4.58, 0, 3.42);
+  addMesh(mergeParts([
+    [new THREE.CylinderGeometry(0.15, 0.17, 0.025, 16), 0, 0.013, 0],
+    [new THREE.CylinderGeometry(0.014, 0.014, 1.42, 8), 0, 0.72, 0],
+  ]), M.bronze, { parent: lamp });
+  const shadeMat = std({ color: 0xd8c9ae, roughness: 0.9, metalness: 0, side: THREE.DoubleSide, envMapIntensity: 0.3 });
+  shadeMat.emissive = new THREE.Color(0xffcf9a);
+  shadeMat.emissiveIntensity = 0;
+  const shade = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.24, 0.26, 20, 1, true), shadeMat);
+  shade.position.y = 1.53;
+  lamp.add(shade);
+  decor.add(lamp);
+  refs.floorLamp = lamp;
+  refs.floorLampShade = shade;
+  collider(-4.76, -4.40, 0, 1.7, 3.24, 3.60);
+
+  // шахматы с недоигранной партией
+  const table = new THREE.Group();
+  table.position.set(-2.92, 0, 5.14);
+  addMesh(mergeParts([
+    [new THREE.CylinderGeometry(0.34, 0.34, 0.035, 22), 0, 0.50, 0],
+    [new THREE.CylinderGeometry(0.035, 0.045, 0.48, 10), 0, 0.26, 0],
+    [new THREE.CylinderGeometry(0.20, 0.22, 0.025, 18), 0, 0.014, 0],
+  ]), M.walnut, { parent: table });
+  // доска
+  const bs = 0.048, board = [];
+  for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) {
+    if ((i + j) % 2 === 0) continue;
+    board.push([rgeo(bs, 0.004, bs, 0.001, 1), (i - 3.5) * bs, 0.5195, (j - 3.5) * bs]);
+  }
+  addMesh(mergeParts(board), M.walnutDark, { parent: table });
+  // фигуры
+  const prof = [];
+  for (let i = 0; i <= 8; i++) {
+    const t = i / 8;
+    prof.push(new THREE.Vector2(0.006 + 0.017 * Math.pow(1 - t, 2.2) + 0.008 * Math.sin(t * 3.0), t * 0.062));
+  }
+  prof.push(new THREE.Vector2(0.0, 0.066));
+  const pieceGeo = new THREE.LatheGeometry(prof, 10);
+  const white = std({ color: 0xd9d2c4, roughness: 0.4, metalness: 0, envMapIntensity: 0.5 });
+  const black = std({ color: 0x241f1b, roughness: 0.35, metalness: 0, envMapIntensity: 0.5 });
+  const wPos = [[0, 1], [2, 1], [3, 3], [5, 1], [6, 2], [7, 1], [4, 0], [1, 0]];
+  const bPos = [[0, 6], [1, 6], [3, 5], [4, 7], [5, 6], [6, 6], [2, 4]];
+  for (const [set, mat] of [[wPos, white], [bPos, black]]) {
+    const im = new THREE.InstancedMesh(pieceGeo, mat, set.length);
+    set.forEach(([i, j], k) => {
+      _m4.makeTranslation((i - 3.5) * bs, 0.5215, (j - 3.5) * bs);
+      im.setMatrixAt(k, _m4);
+    });
+    im.computeBoundingSphere();
+    table.add(im);
+  }
+  // пара снятых фигур рядом с доской
+  const off = new THREE.InstancedMesh(pieceGeo, black, 3);
+  [[0.26, 0.05], [0.29, 0.12], [0.24, 0.15]].forEach(([ox, oz], k) => {
+    _e.set(Math.PI / 2, 0, k * 1.1); _q.setFromEuler(_e);
+    _m4.compose(_v3.set(ox, 0.525, oz), _q, new THREE.Vector3(1, 1, 1));
+    off.setMatrixAt(k, _m4);
+  });
+  off.computeBoundingSphere();
+  table.add(off);
+  decor.add(table);
+  collider(-3.28, -2.56, 0, 0.54, 4.78, 5.50);
+}
+
+/* ---- 13.6 Мезонин: рабочий стол ------------------------------------------ */
+{
+  const y = P.yDeck;
+  addMesh(mergeParts([[rgeo(2.2, 0.05, 0.80, 0.01, 1), -5.5, y + 0.735, 1.92]]), M.walnut, { shadow: true });
+  const legs = [];
+  for (const [lx, lz] of [[-6.52, 1.60], [-4.48, 1.60], [-6.52, 2.24], [-4.48, 2.24]]) {
+    legs.push([rgeo(0.04, 0.71, 0.04, 0.008, 1), lx, y + 0.355, lz]);
+  }
+  addMesh(mergeParts(legs), M.blackMetal);
+  collider(-6.6, -4.4, y, y + 0.76, 1.52, 2.32);
+
+  const ch = new THREE.Group();
+  ch.position.set(-5.5, y, 2.86);
+  ch.rotation.y = Math.PI;
+  addMesh(mergeParts([
+    [rgeo(0.46, 0.08, 0.44, 0.03, 2), 0, 0.44, 0],
+    [rgeo(0.44, 0.46, 0.07, 0.03, 2), 0, 0.70, -0.19],
+  ]), M.chair, { parent: ch });
+  const cl = [];
+  for (const [lx, lz] of [[-0.19, -0.19], [0.19, -0.19], [-0.19, 0.19], [0.19, 0.19]]) {
+    cl.push([new THREE.CylinderGeometry(0.015, 0.012, 0.42, 6), lx, 0.21, lz]);
+  }
+  addMesh(mergeParts(cl), M.blackMetal, { parent: ch });
+  decor.add(ch);
+  refs.deskChair = ch;
+  collider(-5.76, -5.24, y, y + 0.5, 2.60, 3.12);
+
+  // настольная лампа
+  const dl = new THREE.Group();
+  dl.position.set(-6.32, y + 0.76, 1.78);
+  addMesh(mergeParts([
+    [new THREE.CylinderGeometry(0.075, 0.085, 0.018, 14), 0, 0.009, 0],
+    [new THREE.CylinderGeometry(0.009, 0.009, 0.34, 8), 0, 0.18, 0],
+    [new THREE.CylinderGeometry(0.009, 0.009, 0.19, 8), 0.09, 0.345, 0, 0, 0, Math.PI / 2],
+  ]), M.bronze, { parent: dl });
+  const dsMat = std({ color: 0x2b2b2e, roughness: 0.5, metalness: 0.4, side: THREE.DoubleSide, envMapIntensity: 0.5 });
+  dsMat.emissive = new THREE.Color(0xffd7a8); dsMat.emissiveIntensity = 0;
+  const ds = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.085, 0.10, 16, 1, true), dsMat);
+  ds.position.set(0.185, 0.30, 0);
+  dl.add(ds);
+  decor.add(dl);
+  refs.deskLamp = dl; refs.deskLampShade = ds;
+  // бумаги и книга на столе
+  addMesh(mergeParts([
+    [rgeo(0.30, 0.006, 0.22, 0.002, 1), -5.30, y + 0.765, 1.90, 0, 0.2, 0],
+    [rgeo(0.28, 0.028, 0.20, 0.004, 1), -4.92, y + 0.775, 2.02, 0, -0.14, 0],
+  ]), M.books);
+}
+
+/* ---- 13.7 Комод с проигрывателем ---------------------------------------- */
+{
+  addMesh(mergeParts([[rgeo(0.56, 0.66, 2.10, 0.014, 1), -7.66, 0.44, -3.70]]), M.walnut, { shadow: true });
+  box(-7.92, -7.40, 0, 0.11, -4.72, -2.68, M.blackMetal, { collide: false, uv: 1 });
+  collider(-7.96, -7.36, 0, 0.78, -4.78, -2.62);
+
+  const tt = new THREE.Group();
+  tt.position.set(-7.66, 0.77, -3.66);
+  addMesh(mergeParts([[rgeo(0.40, 0.055, 0.34, 0.008, 1), 0, 0.027, 0]]), M.walnutDark, { parent: tt });
+  const platter = new THREE.Mesh(new THREE.CylinderGeometry(0.145, 0.145, 0.014, 24), M.steel);
+  platter.position.set(-0.03, 0.062, 0.0);
+  tt.add(platter);
+  const vinylMat = std({ color: 0x0b0b0d, roughness: 0.32, metalness: 0.0, envMapIntensity: 0.6 });
+  const vinyl = new THREE.Mesh(new THREE.CylinderGeometry(0.152, 0.152, 0.003, 28), vinylMat);
+  vinyl.position.set(-0.03, 0.071, 0.0);
+  tt.add(vinyl);
+  const label = new THREE.Mesh(new THREE.CylinderGeometry(0.048, 0.048, 0.004, 18), std({ color: 0xb9764a, roughness: 0.9, metalness: 0 }));
+  label.position.set(-0.03, 0.0735, 0.0);
+  tt.add(label);
+  addMesh(mergeParts([
+    [new THREE.CylinderGeometry(0.016, 0.016, 0.035, 10), 0.15, 0.072, -0.12],
+    [new THREE.CylinderGeometry(0.005, 0.005, 0.23, 6), 0.07, 0.086, -0.06, 0, 0, Math.PI / 2 + 0.35],
+  ]), M.bronze, { parent: tt });
+  decor.add(tt);
+  refs.turntable = tt; refs.vinyl = vinyl;
+}
+
+/* ---- 13.8 Светильники общего света --------------------------------------- */
+const downMat = std({ color: 0x101012, roughness: 0.6, metalness: 0.4, envMapIntensity: 0.4 });
+downMat.emissive = new THREE.Color(0xffc590);
+downMat.emissiveIntensity = 0;
+{
+  const parts = [];
+  const put = (x, y, z) => parts.push([new THREE.CylinderGeometry(0.075, 0.075, 0.012, 14), x, y, z]);
+  for (const x of [-5.5, -2.0, 1.5, 5.0]) { put(x, P.yLiving - 0.01, -4.8); put(x, P.yLiving - 0.01, -1.2); }
+  for (const x of [0.9, 3.4, 5.9]) put(x, P.yKitchen - 0.01, 2.6);
+  for (const z of [2.9, 5.2]) put(-6.5, P.yNook - 0.02, z);
+  put(-3.6, P.yNook - 0.02, 4.4);
+  for (const x of [-6.6, -3.6]) put(x, P.yUpper - 0.01, 3.4);
+  addMesh(mergeParts(parts), downMat);
+  refs.downMat = downMat;
+
+  // три подвеса над островом
+  const pend = [];
+  for (const x of [2.9, 4.0, 5.1]) {
+    pend.push([new THREE.CylinderGeometry(0.004, 0.004, 1.05, 5), x, 2.87, 4.16]);
+  }
+  addMesh(mergeParts(pend), M.blackMetal);
+  const shMat = std({ color: 0x9a8a72, roughness: 0.35, metalness: 0.9, side: THREE.DoubleSide, envMapIntensity: 0.9 });
+  shMat.emissive = new THREE.Color(0xffc07a); shMat.emissiveIntensity = 0;
+  const pgeo = new THREE.CylinderGeometry(0.115, 0.135, 0.17, 16, 1, true);
+  const pim = new THREE.InstancedMesh(pgeo, shMat, 3);
+  [2.9, 4.0, 5.1].forEach((x, i) => { _m4.makeTranslation(x, 2.27, 4.16); pim.setMatrixAt(i, _m4); });
+  pim.computeBoundingSphere();
+  decor.add(pim);
+  refs.pendantMat = shMat;
+}
+
+/* ---- 13.9 Выключатель у входа -------------------------------------------- */
+{
+  const plate = new THREE.Mesh(rgeo(0.012, 0.13, 0.085, 0.005, 1), M.steel);
+  plate.position.set(-5.172, 1.16, 2.36);
+  decor.add(plate);
+  refs.swMain = plate;
+}
+await progress();
+
+/* ==========================================================================
+   14. СВЕТ. Тёплый интерьер 2200–2700 K против холодной улицы 6500 K.
+       Тени — только от камина и одного уличного источника, карта теней
+       обновляется вручную (см. markShadows).
+   ========================================================================== */
+
+const L = {};
+
+// Слабая холодная подложка: без неё чёрные углы становятся дырами.
+L.hemi = new THREE.HemisphereLight(0x35486a, 0x0d1016, 0.86);
+scene.add(L.hemi);
+
+// Зарево города: холодный направленный свет с северо-востока.
+L.city = new THREE.DirectionalLight(0x9dc4ff, 0.40);
+L.city.position.set(16, 34, -38);
+L.city.target.position.set(-1, 0, 0);
+scene.add(L.city, L.city.target);
+L.city.castShadow = true;
+L.city.shadow.mapSize.set(Q.shadow, Q.shadow);
+L.city.shadow.camera.left = -17; L.city.shadow.camera.right = 17;
+L.city.shadow.camera.top = 17; L.city.shadow.camera.bottom = -17;
+L.city.shadow.camera.near = 6; L.city.shadow.camera.far = 90;
+L.city.shadow.bias = -0.0012;
+L.city.shadow.normalBias = 0.035;
+
+// Вспышка молнии — отдельный источник, чтобы не трогать основной.
+L.flash = new THREE.DirectionalLight(0xd8e6ff, 0.0);
+L.flash.position.set(26, 26, -34);
+scene.add(L.flash, L.flash.target);
+
+// ---- Камин ---------------------------------------------------------------
+L.fire = new THREE.PointLight(0xff8a3d, 0.0, 17, 2);
+L.fire.position.set(FIRE.x, 0.52, FIRE.z + 0.72);
+L.fire.castShadow = true;
+L.fire.shadow.mapSize.set(Q.shadow, Q.shadow);
+L.fire.shadow.camera.near = 0.12;
+L.fire.shadow.camera.far = 17;
+L.fire.shadow.bias = -0.004;
+L.fire.shadow.normalBias = 0.03;
+scene.add(L.fire);
+
+// Разлив пламени на пол и диван — прямоугольный источник в плоскости топки.
+L.fireArea = new THREE.RectAreaLight(0xff9a4a, 0.0, 1.6, 0.9);
+L.fireArea.position.set(FIRE.x, 0.62, FIRE.z + 0.78);
+L.fireArea.lookAt(FIRE.x, 0.20, FIRE.z + 4.2);
+scene.add(L.fireArea);
+
+// ---- Общий свет: четыре зоны -------------------------------------------
+L.ceilLiving = new THREE.PointLight(0xffb26b, 0.0, 22, 2); L.ceilLiving.position.set(-1.6, 5.6, -3.0);
+L.ceilKitchen = new THREE.PointLight(0xffb877, 0.0, 14, 2); L.ceilKitchen.position.set(4.0, 2.3, 4.2);
+L.ceilHall = new THREE.PointLight(0xffb877, 0.0, 10, 2); L.ceilHall.position.set(-6.4, 2.2, 4.0);
+L.ceilMezz = new THREE.PointLight(0xffb877, 0.0, 12, 2); L.ceilMezz.position.set(-5.4, 4.55, 3.6);
+scene.add(L.ceilLiving, L.ceilKitchen, L.ceilHall, L.ceilMezz);
+
+// ---- Подсветка под шкафами ----------------------------------------------
+L.kitchen = new THREE.RectAreaLight(0xffc98a, 0.0, 6.8, 0.34);
+L.kitchen.position.set(4.2, 1.53, 6.26);
+L.kitchen.lookAt(4.2, 0.0, 6.1);
+scene.add(L.kitchen);
+
+// ---- Торшер и настольная лампа ------------------------------------------
+L.lamp = new THREE.PointLight(0xffc189, 0.0, 9, 2);
+L.lamp.position.set(-4.58, 1.54, 3.42);
+scene.add(L.lamp);
+
+L.desk = new THREE.PointLight(0xffd2a0, 0.0, 6, 2);
+L.desk.position.set(-6.16, P.yDeck + 1.03, 1.78);
+scene.add(L.desk);
+
+// ---- Фонарь телефона: слабый и тёплый ------------------------------------
+L.torch = new THREE.SpotLight(0xffd6a8, 0.0, 13, 0.62, 0.85, 1.6);
+L.torch.position.set(0.08, -0.08, 0);
+L.torch.target.position.set(0.08, -0.08, -1);
+camera.add(L.torch, L.torch.target);
+
+/* ---- 14.1 Мерцание пламени: псевдослучайный шум, а не синус ------------- */
+const flickTable = new Float32Array(256);
+for (let i = 0; i < 256; i++) flickTable[i] = rnd();
+function vnoise1(x) {
+  const i = Math.floor(x), f = x - i;
+  const s = f * f * (3 - 2 * f);
+  return lerp(flickTable[i & 255], flickTable[(i + 1) & 255], s);
+}
+const flicker = (t) => 0.52 * vnoise1(t * 7.3) + 0.30 * vnoise1(t * 17.1 + 31.4) + 0.18 * vnoise1(t * 2.9 + 77.7);
+
+/* ---- 14.2 Молния: двухфазная вспышка с раскатом --------------------------- */
+const storm = {
+  next: rr(6, 14),
+  phase: 0,
+  strength: 0,
+  near: false,
+  thunderAt: -1,
+  thunderPower: 0,
+};
+
+function triggerLightning() {
+  storm.near = rnd() < 0.16;
+  storm.strength = storm.near ? rr(0.85, 1.25) : rr(0.35, 0.8);
+  storm.phase = 0.0001;
+  // Гром приходит тем позже, чем дальше молния.
+  const dist = storm.near ? rr(0.25, 0.9) : rr(3.0, 9.0);
+  storm.thunderAt = world.time + dist;
+  storm.thunderPower = storm.near ? 1.0 : clamp(1.15 - dist * 0.09, 0.32, 0.9);
+  storm.next = world.time + rr(15, 40);
+  // силуэты переплётов должны впечататься в комнату — обновляем тени в кадре вспышки
+  markShadows(2);
+}
+
+// Профиль двухфазной вспышки: короткий удар, провал, второй удар, затухание.
+function lightningProfile(t) {
+  if (t < 0.045) return t / 0.045;
+  if (t < 0.13) return 1.0 - (t - 0.045) / 0.085 * 0.85;
+  if (t < 0.20) return 0.15 + (t - 0.13) / 0.07 * 0.85;
+  if (t < 0.85) return Math.max(0, 1.0 - (t - 0.20) / 0.65) * 0.9;
+  return 0;
+}
+await progress();
+
+/* ==========================================================================
+   15. ЗВУК. Ни одного файла: белый шум, фильтры, огибающие и осцилляторы.
+       Всё живёт в WebAudio, пространственность — через PositionalAudio.
+   ========================================================================== */
+
+const A = {
+  ready: false,
+  ctx: null,
+  listener: null,
+  music: null,
+  emitters: [],       // источники, которым считаем окклюзию
+  occIndex: 0,
+};
+
+const _ray = new THREE.Raycaster();
+_ray.far = 40;
+
+function noiseBuffer(ctx, seconds = 4) {
+  const len = Math.floor(ctx.sampleRate * seconds);
+  const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  let last = 0;
+  for (let i = 0; i < len; i++) {
+    const w = rnd() * 2 - 1;
+    last = (last + 0.02 * w) / 1.02;       // немного «розовим», чистый белый режет ухо
+    d[i] = w * 0.72 + last * 4.0;
+  }
+  // сшиваем края, чтобы петля не щёлкала
+  const fade = Math.floor(ctx.sampleRate * 0.02);
+  for (let i = 0; i < fade; i++) {
+    const k = i / fade;
+    d[i] = d[i] * k + d[len - fade + i] * (1 - k);
+  }
+  return buf;
+}
+
+function initAudio() {
+  if (A.ready) return;
+  const listener = new THREE.AudioListener();
+  camera.add(listener);
+  const ctx = listener.context;
+  A.listener = listener; A.ctx = ctx;
+  if (ctx.state === 'suspended') ctx.resume();
+
+  const NB = noiseBuffer(ctx, 4);
+  A.noise = NB;
+
+  const master = listener.getInput();
+  listener.setMasterVolume(settings.volume / 100);
+
+  A.music = ctx.createGain();
+  A.music.gain.value = settings.music / 100 * 0.5;
+  A.music.connect(master);
+
+  // Источник шума с петлёй и случайной фазой.
+  const noiseSrc = (rate = 1) => {
+    const s = ctx.createBufferSource();
+    s.buffer = NB; s.loop = true;
+    s.playbackRate.value = rate;
+    s.start(ctx.currentTime + rnd() * 0.05, rnd() * 3.5);
+    return s;
+  };
+  A.noiseSrc = noiseSrc;
+
+  /* ---- 15.1 Дождь: низкий гул общий + высокий шелест у каждого витража --- */
+  {
+    const src = noiseSrc(0.85);
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 380; lp.Q.value = 0.5;
+    const g = ctx.createGain(); g.gain.value = 0.0;
+    src.connect(lp); lp.connect(g); g.connect(master);
+    A.rainLow = g;
+  }
+
+  // Панель источников вдоль остекления: идёшь вдоль окон — шорох плывёт.
+  const windowSpots = [
+    [-1.4, 1.7, -6.35, 'n'], [1.4, 1.7, -6.35, 'n'], [4.2, 1.7, -6.35, 'n'], [7.0, 1.7, -6.35, 'n'],
+    [7.85, 1.7, -5.0, 'e'], [7.85, 1.7, -2.6, 'e'], [7.85, 1.7, 0.4, 'e'],
+  ];
+  for (const [x, y, z, side] of windowSpots) {
+    const holder = new THREE.Object3D();
+    holder.position.set(x, y, z);
+    scene.add(holder);
+    const pa = new THREE.PositionalAudio(listener);
+    const occ = ctx.createBiquadFilter(); occ.type = 'lowpass'; occ.frequency.value = 18000; occ.Q.value = 0.3;
+    pa.setFilters([occ]);
+    const state = ctx.createGain(); state.gain.value = 0.0;   // сила дождя
+    const occG = ctx.createGain(); occG.gain.value = 1.0;     // затухание от стены
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 900;
+    const pk = ctx.createBiquadFilter(); pk.type = 'peaking'; pk.frequency.value = 3200; pk.gain.value = 5; pk.Q.value = 0.8;
+    noiseSrc(0.92 + rnd() * 0.2).connect(hp);
+    hp.connect(pk); pk.connect(state); state.connect(occG);
+    pa.setNodeSource(occG);
+    pa.setRefDistance(2.2);
+    pa.setRolloffFactor(1.5);
+    pa.setDistanceModel('inverse');
+    holder.add(pa);
+    A.rainSpots = A.rainSpots || [];
+    A.rainSpots.push(state);
+    A.emitters.push({ pa, occ, occG, holder, occluded: 0, kind: 'rain', side });
+  }
+
+  /* ---- 15.2 Терраса: открытая дверь = мир без стекла --------------------- */
+  {
+    const holder = new THREE.Object3D();
+    holder.position.set(8.3, 1.4, -0.4);
+    scene.add(holder);
+    const pa = new THREE.PositionalAudio(listener);
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 500;
+    pa.setFilters([lp]);
+    const g = ctx.createGain(); g.gain.value = 0.0;
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 500;
+    noiseSrc(1.0).connect(hp); hp.connect(g);
+    pa.setNodeSource(g);
+    pa.setRefDistance(3.0);
+    pa.setRolloffFactor(0.7);
+    holder.add(pa);
+    A.outside = { pa, lp, gain: g, holder };
+  }
+  // ветер: шум с медленно гуляющим полосовым фильтром
+  {
+    const g = ctx.createGain(); g.gain.value = 0;
+    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 520; bp.Q.value = 1.1;
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1400;
+    noiseSrc(0.7).connect(bp); bp.connect(lp); lp.connect(g); g.connect(master);
+    A.wind = { gain: g, bp };
+  }
+
+  /* ---- 15.3 Камин: ровный гул + случайные потрескивания ------------------ */
+  {
+    const holder = new THREE.Object3D();
+    holder.position.set(FIRE.x, 0.4, FIRE.z + 0.3);
+    scene.add(holder);
+    const pa = new THREE.PositionalAudio(listener);
+    const occ = ctx.createBiquadFilter(); occ.type = 'lowpass'; occ.frequency.value = 18000; occ.Q.value = 0.3;
+    pa.setFilters([occ]);
+    const bus = ctx.createGain(); bus.gain.value = 1.0;       // сюда льются треск и гул
+    const occG = ctx.createGain(); occG.gain.value = 1.0;
+    bus.connect(occG);
+
+    const hum = ctx.createGain(); hum.gain.value = 0.0;
+    const hlp = ctx.createBiquadFilter(); hlp.type = 'lowpass'; hlp.frequency.value = 240; hlp.Q.value = 0.7;
+    noiseSrc(0.6).connect(hlp); hlp.connect(hum); hum.connect(bus);
+
+    pa.setNodeSource(occG);
+    pa.setRefDistance(1.6);
+    pa.setRolloffFactor(1.4);
+    holder.add(pa);
+    A.fire = { pa, occ, bus, hum, holder, crackAcc: 0 };
+    A.emitters.push({ pa, occ, occG, holder, occluded: 0, kind: 'fire' });
+  }
+
+  /* ---- 15.4 Проигрыватель: генеративный lo-fi ---------------------------- */
+  {
+    const holder = new THREE.Object3D();
+    holder.position.set(-7.66, 0.85, -3.66);
+    scene.add(holder);
+    const pa = new THREE.PositionalAudio(listener);
+    const occ = ctx.createBiquadFilter(); occ.type = 'lowpass'; occ.frequency.value = 18000; occ.Q.value = 0.3;
+    pa.setFilters([occ]);
+    const bus = ctx.createGain(); bus.gain.value = 0.0;
+    const occG = ctx.createGain(); occG.gain.value = 1.0;
+    bus.connect(occG);
+    const tone = ctx.createBiquadFilter(); tone.type = 'lowpass'; tone.frequency.value = 1800; tone.Q.value = 0.6;
+    tone.connect(bus);
+    // шум винила
+    const vg = ctx.createGain(); vg.gain.value = 0.035;
+    const vhp = ctx.createBiquadFilter(); vhp.type = 'highpass'; vhp.frequency.value = 1800;
+    noiseSrc(0.9).connect(vhp); vhp.connect(vg); vg.connect(bus);
+    pa.setNodeSource(occG);
+    pa.setRefDistance(2.4);
+    pa.setRolloffFactor(1.0);
+    holder.add(pa);
+    // громкость музыки — отдельной шиной, минуя общий вход слушателя
+    pa.gain.disconnect();
+    pa.gain.connect(A.music);
+    A.record = { pa, occ, bus, tone, holder, nextChord: 0, chord: 0 };
+    A.emitters.push({ pa, occ, occG, holder, occluded: 0, kind: 'record' });
+  }
+
+  /* ---- 15.5 Чайник -------------------------------------------------------- */
+  {
+    const holder = new THREE.Object3D();
+    holder.position.set(3.15, 1.06, 4.18);
+    scene.add(holder);
+    const pa = new THREE.PositionalAudio(listener);
+    const bus = ctx.createGain(); bus.gain.value = 0;
+    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 900; bp.Q.value = 0.8;
+    noiseSrc(1.0).connect(bp); bp.connect(bus);
+    const w1 = ctx.createOscillator(); w1.type = 'sine'; w1.frequency.value = 2150;
+    const w2 = ctx.createOscillator(); w2.type = 'sine'; w2.frequency.value = 2166;
+    const wg = ctx.createGain(); wg.gain.value = 0;
+    w1.connect(wg); w2.connect(wg); wg.connect(bus);
+    w1.start(); w2.start();
+    pa.setNodeSource(bus);
+    pa.setRefDistance(1.6);
+    holder.add(pa);
+    A.kettle = { pa, bus, bp, wg, w1, w2, holder };
+  }
+
+  A.ready = true;
+}
+
+/* ---- 15.6 Одноразовые звуки: шаги, гром, скрип, щелчки ------------------ */
+
+// Короткий шумовой всплеск с огибающей — основа почти всего.
+function burst(dest, { rate = 1, type = 'bandpass', freq = 1200, q = 1.0, gain = 0.3,
+                       attack = 0.004, decay = 0.12, delay = 0 } = {}) {
+  if (!A.ready) return null;
+  const ctx = A.ctx, t = ctx.currentTime + delay;
+  const s = ctx.createBufferSource();
+  s.buffer = A.noise; s.loop = true;
+  s.playbackRate.value = rate;
+  const f = ctx.createBiquadFilter();
+  f.type = type; f.frequency.value = freq; f.Q.value = q;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(Math.max(gain, 0.0002), t + attack);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + attack + decay);
+  s.connect(f); f.connect(g); g.connect(dest);
+  s.start(t, rnd() * 3.0);
+  s.stop(t + attack + decay + 0.05);
+  return { src: s, filter: f, gain: g, t };
+}
+
+const SURFACE_STEP = {
+  wood:    { freq: 1500, q: 1.4, decay: 0.085, gain: 0.16, type: 'bandpass', tail: 0 },
+  rug:     { freq: 460,  q: 0.7, decay: 0.115, gain: 0.10, type: 'lowpass',  tail: 0 },
+  stone:   { freq: 2700, q: 2.6, decay: 0.115, gain: 0.15, type: 'bandpass', tail: 0.06 },
+  terrace: { freq: 1750, q: 1.1, decay: 0.20,  gain: 0.17, type: 'bandpass', tail: 0.26 },
+};
+
+function playStep(surface, speed) {
+  if (!A.ready) return;
+  const s = SURFACE_STEP[surface] || SURFACE_STEP.wood;
+  const dest = A.listener.getInput();
+  const pitch = 1 + rr(-0.08, 0.08);                 // ±8 %, иначе получается пулемёт
+  const vol = s.gain * (0.55 + 0.45 * clamp(speed / 2.8, 0, 1));
+  burst(dest, { rate: pitch, type: s.type, freq: s.freq * pitch, q: s.q, gain: vol, attack: 0.003, decay: s.decay });
+  // низкий «корпус» шага
+  burst(dest, { rate: pitch * 0.5, type: 'lowpass', freq: 190, q: 0.7, gain: vol * 0.75, attack: 0.005, decay: 0.075 });
+  if (s.tail > 0) {
+    burst(dest, { rate: pitch, type: 'highpass', freq: 3200, q: 0.6, gain: vol * 0.28, attack: 0.01, decay: s.tail, delay: 0.02 });
+  }
+}
+
+function playThunder(power) {
+  if (!A.ready) return;
+  const ctx = A.ctx, dest = A.listener.getInput(), t = ctx.currentTime;
+  const dur = 3.2 + power * 4.0;
+  const s = ctx.createBufferSource();
+  s.buffer = A.noise; s.loop = true; s.playbackRate.value = 0.35;
+  const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = 0.6;
+  lp.frequency.setValueAtTime(420 * (0.6 + power * 0.7), t);
+  lp.frequency.exponentialRampToValueAtTime(58, t + dur);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.42 * power, t + (power > 0.9 ? 0.03 : 0.55));
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  s.connect(lp); lp.connect(g); g.connect(dest);
+  s.start(t, rnd() * 3.0); s.stop(t + dur + 0.1);
+  // ближний удар — резкий хлопок почти сразу
+  if (power > 0.9) {
+    burst(dest, { rate: 1.6, type: 'highpass', freq: 900, q: 0.5, gain: 0.5, attack: 0.002, decay: 0.35 });
+    burst(dest, { rate: 0.8, type: 'bandpass', freq: 260, q: 0.6, gain: 0.45, attack: 0.004, decay: 0.9 });
+  }
+}
+
+function playCreak(open) {
+  if (!A.ready) return;
+  const ctx = A.ctx, dest = A.listener.getInput(), t = ctx.currentTime;
+  const s = ctx.createBufferSource();
+  s.buffer = A.noise; s.loop = true; s.playbackRate.value = 0.9;
+  const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 9;
+  bp.frequency.setValueAtTime(open ? 620 : 1150, t);
+  bp.frequency.linearRampToValueAtTime(open ? 1320 : 540, t + 1.05);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.11, t + 0.18);
+  g.gain.exponentialRampToValueAtTime(0.05, t + 0.8);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 1.15);
+  s.connect(bp); bp.connect(g); g.connect(dest);
+  s.start(t, rnd() * 3.0); s.stop(t + 1.2);
+  burst(dest, { rate: 0.6, type: 'lowpass', freq: 150, q: 0.7, gain: 0.16, attack: 0.004, decay: 0.22, delay: 1.05 });
+}
+
+function playLocked() {
+  if (!A.ready) return;
+  const dest = A.listener.getInput();
+  burst(dest, { rate: 1.3, type: 'bandpass', freq: 2600, q: 4, gain: 0.14, attack: 0.001, decay: 0.035 });
+  burst(dest, { rate: 0.55, type: 'lowpass', freq: 210, q: 0.8, gain: 0.22, attack: 0.003, decay: 0.11, delay: 0.055 });
+  burst(dest, { rate: 0.55, type: 'lowpass', freq: 190, q: 0.8, gain: 0.16, attack: 0.003, decay: 0.09, delay: 0.19 });
+}
+
+function playClick() {
+  if (!A.ready) return;
+  burst(A.listener.getInput(), { rate: 1.5, type: 'bandpass', freq: 3400, q: 6, gain: 0.1, attack: 0.001, decay: 0.028 });
+  burst(A.listener.getInput(), { rate: 1.1, type: 'bandpass', freq: 1100, q: 3, gain: 0.07, attack: 0.001, decay: 0.05, delay: 0.02 });
+}
+
+function playWhoosh() {   // сноп искр от кочерги
+  if (!A.ready) return;
+  const dest = A.listener.getInput();
+  burst(dest, { rate: 1.1, type: 'bandpass', freq: 1800, q: 0.8, gain: 0.22, attack: 0.01, decay: 0.5 });
+  for (let i = 0; i < 14; i++) {
+    burst(dest, { rate: 1 + rnd(), type: 'bandpass', freq: 1200 + rnd() * 3200, q: 7, gain: 0.05 + rnd() * 0.07,
+                  attack: 0.001, decay: 0.03 + rnd() * 0.06, delay: rnd() * 0.55 });
+  }
+}
+
+/* ---- 15.7 Генеративный lo-fi для пластинки ------------------------------ */
+const CHORDS = [
+  [220.00, 261.63, 329.63, 392.00],   // Am7
+  [174.61, 220.00, 261.63, 329.63],   // Fmaj7
+  [130.81, 164.81, 196.00, 246.94],   // Cmaj7
+  [196.00, 246.94, 293.66, 349.23],   // G6
+];
+
+function playChord() {
+  const R = A.record;
+  if (!R) return;
+  const ctx = A.ctx, t = ctx.currentTime;
+  const set = CHORDS[R.chord % CHORDS.length];
+  R.chord++;
+  const dur = 4.6;
+  for (let i = 0; i < set.length; i++) {
+    const o = ctx.createOscillator();
+    o.type = i === 0 ? 'sine' : 'triangle';
+    o.frequency.value = set[i] * (i === 0 ? 0.5 : 1) * (1 + rr(-0.0025, 0.0025));
+    const g = ctx.createGain();
+    const peak = (i === 0 ? 0.075 : 0.036) * (1 - i * 0.06);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(peak, t + 0.35 + i * 0.06);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(R.tone);
+    o.start(t); o.stop(t + dur + 0.05);
+  }
+  // редкий щелчок винила
+  if (rnd() < 0.75) {
+    burst(R.tone, { rate: 1.4, type: 'bandpass', freq: 2600, q: 8, gain: 0.05, attack: 0.001, decay: 0.02, delay: rnd() * 4.0 });
+  }
+}
+await progress();
+
+/* ==========================================================================
+   16. ИГРОК: капсула, Octree, ускорение с затуханием, походка, посадка
+   ========================================================================== */
+
+const worldOctree = new Octree();
+worldOctree.fromGraphNode(collidables);
+await progress();
+
+// Поверхности для определения тембра шага (raycast вниз).
+const surfaceMeshes = [];
+scene.traverse((o) => {
+  if (o.isMesh && o.material && o.material.userData && o.material.userData.surface) surfaceMeshes.push(o);
+});
+
+const GRAVITY = 20;
+const R_CAP = 0.35;
+const EYE_STAND = 1.65, EYE_CROUCH = 1.05, CAM_TOP = 0.25;
+
+const player = {
+  collider: new Capsule(
+    new THREE.Vector3(-6.5, R_CAP, 5.6),
+    new THREE.Vector3(-6.5, EYE_STAND - CAM_TOP, 5.6),
+    R_CAP),
+  velocity: new THREE.Vector3(),
+  wish: new THREE.Vector3(),
+  onFloor: false,
+  eyeH: EYE_STAND,
+  crouch: false,
+  bobT: 0, bobAmp: 0, stepIdx: 0,
+  breath: rr(0, 100),
+  yaw: 0, pitch: 0,
+  yawT: 0, pitchT: 0,
+  yawV: 0, pitchV: 0,
+  speedH: 0,
+  shake: 0,
+  surface: 'stone',
+  seat: null, seatT: 0, seatFrom: new THREE.Vector3(),
+  seatFromYaw: 0, seatFromPitch: 0,
+  torchOn: false,
+};
+
+const input = { f: 0, r: 0, run: false, jump: false, crouch: false, lookX: 0, lookY: 0 };
+
+/* ---- 16.1 Точки посадки -------------------------------------------------- */
+const seats = [
+  { name: 'диван', pos: new THREE.Vector3(-2.55, P.yPit + 1.15, -1.70), yaw: 0.0, pitch: -0.07 },
+  { name: 'кресло', pos: new THREE.Vector3(-3.99, 1.15, 4.74), yaw: -0.30, pitch: -0.05 },
+  { name: 'мезонин', pos: new THREE.Vector3(-5.50, P.yDeck + 1.15, 2.78), yaw: 0.0, pitch: -0.12 },
+];
+
+/* ---- 16.2 Пружина взгляда: камера догоняет мышь с лёгким перелётом ------ */
+function spring(cur, vel, target, omega, zeta, dt) {
+  const f = 1 + 2 * dt * zeta * omega;
+  const oo = omega * omega;
+  const hoo = dt * oo;
+  const hhoo = dt * hoo;
+  const detInv = 1 / (f + hhoo);
+  return [(f * cur + dt * vel + hhoo * target) * detInv, (vel + hoo * (target - cur)) * detInv];
+}
+
+/* ---- 16.3 Коллизии ------------------------------------------------------- */
+const _tmp = new THREE.Vector3();
+
+function playerCollisions() {
+  const res = worldOctree.capsuleIntersect(player.collider);
+  player.onFloor = false;
+  if (res) {
+    player.onFloor = res.normal.y > 0.22;
+    if (!player.onFloor) {
+      player.velocity.addScaledVector(res.normal, -res.normal.dot(player.velocity));
+    } else if (player.velocity.y < 0) {
+      player.velocity.y = 0;
+    }
+    if (res.depth >= 1e-5) player.collider.translate(res.normal.multiplyScalar(res.depth));
+  }
+  // Динамические преграды (закрытая дверь на террасу) — Octree статичен.
+  for (const b of blockers) {
+    if (!b.active) continue;
+    const p = player.collider, r = p.radius;
+    const yLo = p.start.y - r, yHi = p.end.y + r;
+    if (yHi < b.box.min.y || yLo > b.box.max.y) continue;
+    const x = p.start.x, z = p.start.z;
+    const dxa = x - (b.box.min.x - r), dxb = (b.box.max.x + r) - x;
+    const dza = z - (b.box.min.z - r), dzb = (b.box.max.z + r) - z;
+    if (dxa <= 0 || dxb <= 0 || dza <= 0 || dzb <= 0) continue;
+    const m = Math.min(dxa, dxb, dza, dzb);
+    if (m === dxa) p.translate(_tmp.set(-dxa, 0, 0));
+    else if (m === dxb) p.translate(_tmp.set(dxb, 0, 0));
+    else if (m === dza) p.translate(_tmp.set(0, 0, -dza));
+    else p.translate(_tmp.set(0, 0, dzb));
+    player.velocity.x *= 0.2; player.velocity.z *= 0.2;
+  }
+}
+
+const _fwd = new THREE.Vector3(), _rgt = new THREE.Vector3(), _step = new THREE.Vector3();
+
+function movePlayer(dt) {
+  const sitting = !!player.seat;
+  const targetSpeed = sitting ? 0 : (player.crouch ? 0.95 : (input.run ? 2.8 : 1.5));
+  const airCtl = player.onFloor ? 1 : 0.28;
+  const accel = targetSpeed * 4.0 * airCtl;
+
+  _fwd.set(-Math.sin(player.yaw), 0, -Math.cos(player.yaw));
+  _rgt.set(Math.cos(player.yaw), 0, -Math.sin(player.yaw));
+  player.wish.set(0, 0, 0)
+    .addScaledVector(_fwd, input.f)
+    .addScaledVector(_rgt, input.r);
+  if (player.wish.lengthSq() > 1) player.wish.normalize();
+
+  player.velocity.x += player.wish.x * accel * dt;
+  player.velocity.z += player.wish.z * accel * dt;
+
+  // Затухание exp(-4*dt): движение через ускорение, а не мгновенную скорость.
+  const damp = Math.exp(-(player.onFloor ? 4.0 : 0.7) * dt);
+  player.velocity.x *= damp;
+  player.velocity.z *= damp;
+
+  if (!player.onFloor) player.velocity.y -= GRAVITY * dt;
+
+  _step.copy(player.velocity).multiplyScalar(dt);
+  player.collider.translate(_step);
+  playerCollisions();
+}
+
+function tryJump() {
+  if (player.seat || !player.onFloor || player.crouch) return;
+  player.velocity.y = 3.05;          // ~0.23 м — ровно чтобы не чувствовать себя в клетке
+  player.onFloor = false;
+}
+
+function setCrouch(on) {
+  if (on === player.crouch) return;
+  if (!on) {
+    // встать можно только если над головой есть место
+    const saved = player.collider.end.y;
+    player.collider.end.y = player.collider.start.y + (EYE_STAND - CAM_TOP - R_CAP);
+    const blocked = worldOctree.capsuleIntersect(player.collider);
+    player.collider.end.y = saved;
+    if (blocked && blocked.normal.y < -0.4) return;
+  }
+  player.crouch = on;
+}
+
+/* ---- 16.4 Определение поверхности под ногами ---------------------------- */
+const _surfRay = new THREE.Raycaster();
+_surfRay.far = 1.4;
+function sampleSurface() {
+  const feet = player.collider.start.y - R_CAP;
+  _surfRay.set(_tmp.set(player.collider.start.x, feet + 0.45, player.collider.start.z),
+               new THREE.Vector3(0, -1, 0));
+  const hits = _surfRay.intersectObjects(surfaceMeshes, false);
+  for (const h of hits) {
+    if (h.object.material && h.object.material.visible !== false) {
+      player.surface = h.object.material.userData.surface || 'wood';
+      return;
+    }
+  }
+}
+
+/* ---- 16.5 Посадка -------------------------------------------------------- */
+function sitDown(seat) {
+  if (player.seat) return;
+  player.seat = seat;
+  player.seatT = 0;
+  player.seatFrom.set(player.collider.start.x, player.collider.start.y - R_CAP + player.eyeH, player.collider.start.z);
+  player.seatFromYaw = player.yaw;
+  player.seatFromPitch = player.pitch;
+  player.yawT = seat.yaw; player.pitchT = seat.pitch;
+  player.velocity.set(0, 0, 0);
+}
+function standUp() {
+  if (!player.seat) return;
+  player.seat = null;
+  player.seatT = 0;
+}
+
+/* ---- 16.6 Кадровое обновление игрока ------------------------------------- */
+const _camPos = new THREE.Vector3();
+const STEPS_PER_FRAME = 5;
+
+function updatePlayer(dt) {
+  // ---- взгляд ----
+  if (player.seat) {
+    // сидя взгляд подвижен в пределах ±40° от направления посадки
+    const lim = 0.70;
+    player.yawT = clamp(wrapAngle(player.yawT - player.seat.yaw), -lim, lim) + player.seat.yaw;
+    player.pitchT = clamp(player.pitchT, -0.85, 0.72);
+  } else {
+    player.pitchT = clamp(player.pitchT, -1.5, 1.5);
+  }
+  const sy = spring(player.yaw, player.yawV, player.yawT, 38, 0.78, dt);
+  player.yaw = sy[0]; player.yawV = sy[1];
+  const sp = spring(player.pitch, player.pitchV, player.pitchT, 42, 0.86, dt);
+  player.pitch = sp[0]; player.pitchV = sp[1];
+
+  // ---- присед ----
+  player.eyeH = approach(player.eyeH, player.crouch ? EYE_CROUCH : EYE_STAND, 11, dt);
+  player.collider.end.y = player.collider.start.y + Math.max(0.02, player.eyeH - CAM_TOP - R_CAP);
+
+  // ---- физика ----
+  if (!player.seat) {
+    const sub = dt / STEPS_PER_FRAME;
+    for (let i = 0; i < STEPS_PER_FRAME; i++) movePlayer(sub);
+    if (input.jump) { tryJump(); input.jump = false; }
+    // страховка: если игрока всё же выбросило из мира — вернуть в холл
+    if (player.collider.start.y < -12) {
+      player.collider.start.set(-6.5, R_CAP, 5.6);
+      player.collider.end.set(-6.5, EYE_STAND - CAM_TOP, 5.6);
+      player.velocity.set(0, 0, 0);
+    }
+  } else {
+    input.jump = false;
+  }
+
+  player.speedH = Math.hypot(player.velocity.x, player.velocity.z);
+
+  // ---- походка: bob по вертикали + крен в противофазе ----
+  const moving = player.onFloor && player.speedH > 0.3 && !player.seat;
+  if (moving) player.bobT += player.speedH * dt * 8.38;
+  player.bobAmp = approach(player.bobAmp, moving ? clamp(player.speedH / 2.8, 0, 1) : 0, 7, dt);
+
+  const bobScale = settings.bob / 100;
+  const amp = player.bobAmp * 0.042 * bobScale;
+  const bobY = (Math.cos(player.bobT) - 1) * 0.5 * amp * 2.0;
+  const roll = Math.sin(player.bobT * 0.5) * amp * 0.95;
+
+  // триггер шага на минимуме bob
+  const idx = Math.floor(player.bobT / Math.PI);
+  if (idx !== player.stepIdx) {
+    player.stepIdx = idx;
+    if (player.bobAmp > 0.16) {
+      sampleSurface();
+      playStep(player.surface, player.speedH);
+      player.shake = Math.min(player.shake + 0.012 * player.bobAmp * bobScale, 0.03);
+    }
+  }
+  player.shake = approach(player.shake, 0, 9, dt);
+
+  // ---- дыхание: стоя картинка не должна быть мёртвой ----
+  player.breath += dt * (player.seat ? 0.42 : 0.30);
+  const idleK = (1 - player.bobAmp) * (player.seat ? 1.7 : 1.0);
+  const brY = Math.sin(player.breath * 2.0) * 0.0055 * idleK;
+  const brYaw = (vnoise1(player.breath * 0.9) - 0.5) * 0.010 * idleK;
+  const brPit = (vnoise1(player.breath * 0.7 + 40) - 0.5) * 0.008 * idleK;
+
+  // ---- позиция камеры ----
+  const feet = player.collider.start.y - R_CAP;
+  _camPos.set(player.collider.start.x, feet + player.eyeH, player.collider.start.z);
+
+  if (player.seat) {
+    player.seatT = Math.min(1, player.seatT + dt / 1.2);
+    const k = smooth(player.seatT, 0, 1);
+    _camPos.lerpVectors(player.seatFrom, player.seat.pos, k);
+  } else if (player.seatT < 1) {
+    player.seatT = Math.min(1, player.seatT + dt / 0.9);
+  }
+
+  camera.position.copy(_camPos);
+  camera.position.y += bobY + brY + player.shake * Math.sin(world.time * 61.0);
+  camera.rotation.set(player.pitch + brPit, player.yaw + brYaw, roll);
+
+  // фонарь телефона держим чуть в стороне — как в руке
+  L.torch.intensity = approach(L.torch.intensity, world.torchOn ? 1.5 : 0, 9, dt);
+}
+
+/* ==========================================================================
+   17. ВЗАИМОДЕЙСТВИЕ: прицел, подписи, действия, посадка
+   ========================================================================== */
+
+const RIM = new THREE.Color(0xffb46a);
+
+function reg(cfg) {
+  cfg.dist = cfg.dist || 2.5;
+  cfg.cone = cfg.cone || 0.30;               // ~17°
+  if (cfg.mesh && cfg.mesh.isMesh) {
+    cfg.mesh.material = cfg.mesh.material.clone();
+    cfg._mat = cfg.mesh.material;
+    if (!cfg._mat.emissive) cfg._mat.emissive = new THREE.Color(0x000000);
+    cfg._emis = cfg._mat.emissive.clone();
+    cfg._ei = cfg._mat.emissiveIntensity || 0;
+  }
+  interactables.push(cfg);
+  return cfg;
+}
+
+const V = (x, y, z) => new THREE.Vector3(x, y, z);
+
+/* ---- 17.1 Камин ---------------------------------------------------------- */
+reg({
+  point: V(FIRE.x, 0.45, FIRE.z + 0.45),
+  mesh: embers, stateDriven: true, dist: 2.6,
+  label: () => world.fireLit ? 'Поворошить угли' : 'Зажечь камин',
+  action: () => {
+    if (!world.fireLit) {
+      world.fireLit = true;
+      emitSparks(30, 0.8);
+      playWhoosh();
+      markShadows(2);
+    } else {
+      emitSparks(60, 1.5);
+      world.fireEnergy = Math.min(1.35, world.fireEnergy + 0.45);
+      playWhoosh();
+    }
+  },
+});
+reg({
+  point: V(-3.15, P.yPit + 0.55, -5.35),
+  mesh: refs.pokerRod, dist: 2.2,
+  enabled: () => world.fireLit,
+  label: () => 'Поворошить кочергой',
+  action: () => {
+    emitSparks(80, 1.8);
+    world.fireEnergy = Math.min(1.5, world.fireEnergy + 0.6);
+    playWhoosh();
+  },
+});
+
+/* ---- 17.2 Свет ----------------------------------------------------------- */
+reg({
+  point: V(-5.17, 1.16, 2.36), mesh: refs.swMain, dist: 2.0, cone: 0.34,
+  label: () => world.ceilingOn ? 'Выключить свет' : 'Включить свет',
+  action: () => { world.ceilingOn = !world.ceilingOn; playClick(); markShadows(); },
+});
+reg({
+  point: V(4.0, 0.70, 3.70), mesh: refs.swKitchen, dist: 2.0, cone: 0.34,
+  label: () => world.kitchenOn ? 'Выключить подсветку' : 'Подсветка кухни',
+  action: () => { world.kitchenOn = !world.kitchenOn; playClick(); },
+});
+reg({
+  point: V(-4.58, 1.2, 3.42), mesh: refs.floorLamp.children[0], dist: 2.3,
+  label: () => world.lampOn ? 'Погасить торшер' : 'Зажечь торшер',
+  action: () => { world.lampOn = !world.lampOn; playClick(); },
+});
+reg({
+  point: V(-6.32, P.yDeck + 1.02, 1.78), mesh: refs.deskLamp.children[0], dist: 2.0,
+  label: () => world.deskOn ? 'Погасить лампу' : 'Зажечь лампу',
+  action: () => { world.deskOn = !world.deskOn; playClick(); },
+});
+
+/* ---- 17.3 Дверь на террасу ---------------------------------------------- */
+reg({
+  point: V(7.86, 1.12, P.doorZ0 + 0.14), mesh: refs.doorHandle, dist: 2.4, cone: 0.36,
+  label: () => world.doorTarget > 0.5 ? 'Закрыть дверь' : 'Открыть дверь',
+  action: () => {
+    world.doorTarget = world.doorTarget > 0.5 ? 0 : 1;
+    playCreak(world.doorTarget > 0.5);
+  },
+});
+
+/* ---- 17.4 Двери-обманки: границы мира мотивированы ---------------------- */
+for (const d of [refs.doorBedroom, refs.doorBath]) {
+  reg({
+    point: d.handle.position.clone(), mesh: d.handle, dist: 2.2, cone: 0.36,
+    label: () => `${d.title} · заперто`,
+    action: () => playLocked(),
+  });
+}
+
+/* ---- 17.5 Проигрыватель и чайник ---------------------------------------- */
+reg({
+  point: V(-7.66, 0.85, -3.66), mesh: refs.vinyl, dist: 2.2,
+  label: () => world.recordOn ? 'Снять пластинку' : 'Поставить пластинку',
+  action: () => {
+    world.recordOn = !world.recordOn;
+    playClick();
+    if (world.recordOn && A.record) A.record.nextChord = 0;
+  },
+});
+reg({
+  point: V(3.15, 1.06, 4.18), mesh: refs.kettle.children[0], dist: 2.2,
+  label: () => world.kettleOn ? 'Снять чайник с огня' : 'Поставить чайник',
+  action: () => { world.kettleOn = !world.kettleOn; playClick(); },
+});
+
+/* ---- 17.6 Шторы ---------------------------------------------------------- */
+reg({
+  point: V(7.55, 1.6, -6.28), mesh: refs.curtainN, dist: 2.6, cone: 0.34,
+  label: () => world.curtainTargetN > 0.5 ? 'Раздвинуть шторы' : 'Задёрнуть шторы',
+  action: () => { world.curtainTargetN = world.curtainTargetN > 0.5 ? 0 : 1; },
+});
+reg({
+  point: V(7.82, 1.6, 0.85), mesh: refs.curtainE, dist: 2.6, cone: 0.34,
+  label: () => world.curtainTargetE > 0.5 ? 'Раздвинуть шторы' : 'Задёрнуть шторы',
+  action: () => { world.curtainTargetE = world.curtainTargetE > 0.5 ? 0 : 1; },
+});
+
+/* ---- 17.7 Посадка -------------------------------------------------------- */
+reg({ point: V(-2.55, P.yPit + 0.52, -1.75), dist: 2.5, cone: 0.42,
+      label: () => 'Сесть', action: () => sitDown(seats[0]) });
+reg({ point: V(-3.95, 0.52, 4.62), dist: 2.4, cone: 0.42,
+      label: () => 'Сесть', action: () => sitDown(seats[1]) });
+reg({ point: V(-5.50, P.yDeck + 0.46, 2.86), dist: 2.2, cone: 0.42,
+      label: () => 'Сесть', action: () => sitDown(seats[2]) });
+
+/* ---- 17.8 Поиск цели прицела -------------------------------------------- */
+const reticle = $('#reticle');
+const reticleCap = reticle.querySelector('.cap');
+const _losRay = new THREE.Raycaster();
+const _dir = new THREE.Vector3(), _camDir = new THREE.Vector3(), _toObj = new THREE.Vector3();
+const _camWorld = new THREE.Vector3();
+
+let focus = null;
+
+function pickInteractable(originDir) {
+  const cam = camera.getWorldPosition(_camWorld);
+  const dir = originDir || camera.getWorldDirection(_camDir);
+  let best = null, bestScore = Infinity;
+  for (const it of interactables) {
+    if (it.enabled && !it.enabled()) continue;
+    _toObj.copy(it.point).sub(cam);
+    const d = _toObj.length();
+    if (d > it.dist) continue;
+    _toObj.divideScalar(d);
+    const cosA = _toObj.dot(dir);
+    if (cosA < 1 - it.cone * it.cone * 0.5) continue;
+    const score = (1 - cosA) * 10 + d * 0.05;
+    if (score < bestScore) { bestScore = score; best = { it, d }; }
+  }
+  if (!best) return null;
+  // проверка прямой видимости: сквозь стену взаимодействовать нельзя
+  _dir.copy(best.it.point).sub(cam).normalize();
+  _losRay.set(cam, _dir);
+  _losRay.far = best.d - 0.12;
+  const hit = _losRay.intersectObjects(collidables.children, false);
+  for (const h of hit) {
+    if (h.object.material && h.object.material.visible !== false) return null;
+  }
+  return best.it;
+}
+
+function clearHighlight(it) {
+  if (!it || !it._mat || it.stateDriven) return;
+  it._mat.emissive.copy(it._emis);
+  it._mat.emissiveIntensity = it._ei;
+}
+
+function updateInteraction() {
+  const next = (player.seat || paused) ? null : pickInteractable();
+  if (next !== focus) {
+    clearHighlight(focus);
+    focus = next;
+    if (focus) {
+      reticleCap.textContent = focus.label();
+      reticle.classList.add('on');
+    } else {
+      reticle.classList.remove('on');
+    }
+  } else if (focus) {
+    const t = focus.label();
+    if (reticleCap.textContent !== t) reticleCap.textContent = t;
+  }
+  if (focus && focus._mat) {
+    const pulse = 0.34 + 0.10 * Math.sin(world.time * 4.5);
+    focus._mat.emissive.copy(focus._emis).lerp(RIM, 0.75);
+    focus._mat.emissiveIntensity = (focus.stateDriven ? focus._mat.emissiveIntensity : focus._ei) + pulse;
+  }
+  // сидя предлагаем встать
+  if (player.seat) {
+    reticleCap.textContent = 'Esc или W — встать';
+    reticle.classList.add('on');
+  }
+}
+
+function doInteract() {
+  if (player.seat) { standUp(); return; }
+  const it = focus || pickInteractable();
+  if (it) it.action();
+}
+
+/* ---- 17.9 Анимации предметов -------------------------------------------- */
+const easeInOut = (t) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+let animBusy = 0;
+
+function updateProps(dt) {
+  // дверь на террасу
+  const prevDoor = world.doorOpen;
+  world.doorOpen = approach(world.doorOpen, world.doorTarget, 2.4, dt);
+  if (Math.abs(world.doorOpen - prevDoor) > 0.0004) {
+    const k = easeInOut(clamp(world.doorOpen, 0, 1));
+    doorPivot.rotation.y = -k * 1.62;
+    doorBlocker.active = world.doorOpen < 0.28;
+    animBusy = 0.35;
+  }
+  rainClose.visible = world.doorOpen > 0.05 || player.collider.start.x > 7.8;
+  splash.mesh.visible = rainClose.visible;
+
+  // шторы
+  const prevN = world.curtainsN, prevE = world.curtainsE;
+  world.curtainsN = approach(world.curtainsN, world.curtainTargetN, 1.5, dt);
+  world.curtainsE = approach(world.curtainsE, world.curtainTargetE, 1.5, dt);
+  if (Math.abs(world.curtainsN - prevN) > 0.0004 || Math.abs(world.curtainsE - prevE) > 0.0004) {
+    refs.curtainN.scale.x = 0.055 + 0.945 * world.curtainsN;
+    refs.curtainE.scale.x = 0.055 + 0.945 * world.curtainsE;
+    animBusy = 0.35;
+  }
+
+  // проигрыватель: пластинка крутится
+  if (world.recordOn) refs.vinyl.rotation.y -= dt * 3.49;   // 33⅓ об/мин
+
+  // чайник
+  world.kettleHeat = clamp(world.kettleHeat + (world.kettleOn ? dt / 26 : -dt / 8), 0, 1.25);
+
+  if (animBusy > 0) {
+    animBusy -= dt;
+    markShadows();
+  }
+}
+
+/* ==========================================================================
+   18. ПОСТОБРАБОТКА: AO → bloom → тонмаппинг → SMAA → зерно/виньетка
+   ========================================================================== */
+
+const GRADE = {
+  name: 'GradeShader',
+  uniforms: {
+    tDiffuse: { value: null },
+    uVignette: { value: 0.55 },
+    uMotion:   { value: 0.0 },
+    uGrain:    { value: 0.030 },
+    uAber:     { value: 0.0010 },
+    uTime:     { value: 0 },
+  },
+  vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 ); }`,
+  fragmentShader: /* glsl */`
+    uniform sampler2D tDiffuse;
+    uniform float uVignette, uMotion, uGrain, uAber, uTime;
+    varying vec2 vUv;
+    void main(){
+      vec2 uv = vUv;
+      vec2 c = uv - 0.5;
+      float r2 = dot( c, c );
+      // очень слабая хроматическая аберрация — только по самым краям
+      float k = uAber * r2 * r2 * 9.0;
+      vec3 col;
+      col.r = texture2D( tDiffuse, uv + c * k ).r;
+      col.g = texture2D( tDiffuse, uv ).g;
+      col.b = texture2D( tDiffuse, uv - c * k ).b;
+      // виньетка: постоянная + слабая динамическая при движении
+      float v = smoothstep( 1.05, 0.12, r2 * 2.2 );
+      col *= mix( 1.0, v, clamp( uVignette + uMotion, 0.0, 1.0 ) );
+      // зерно
+      float n = fract( sin( dot( uv * 1024.0 + uTime * 37.0, vec2( 12.9898, 78.233 ) ) ) * 43758.545 );
+      col += ( n - 0.5 ) * uGrain * ( 0.35 + 0.65 * ( 1.0 - smoothstep( 0.0, 0.4, dot( col, vec3( 0.33 ) ) ) ) );
+      gl_FragColor = vec4( col, 1.0 );
+    }`,
+};
+
+let composer, renderPass, aoPass, bloomPass, smaaPass, outputPass, gradePass;
+
+function buildComposer() {
+  if (composer) composer.dispose();
+  const w = window.innerWidth, h = window.innerHeight;
+  composer = new EffectComposer(renderer);
+  composer.setPixelRatio(renderer.getPixelRatio());
+  composer.setSize(w, h);
+
+  renderPass = new RenderPass(scene, camera);
+  composer.addPass(renderPass);
+
+  aoPass = null;
+  if (Q.ao) {
+    // В первом лице AO обязателен, иначе мебель не стоит на полу.
+    try {
+      aoPass = new GTAOPass(scene, camera, w, h);
+      aoPass.output = GTAOPass.OUTPUT.Default;
+      aoPass.blendIntensity = 0.85;
+      aoPass.updateGtaoMaterial({ radius: 0.42, distanceExponent: 1.2, thickness: 0.6, scale: 1.1, samples: 16, distanceFallOff: 1 });
+    } catch (e) {
+      aoPass = new SSAOPass(scene, camera, w, h);
+      aoPass.kernelRadius = 0.35;
+      aoPass.minDistance = 0.002;
+      aoPass.maxDistance = 0.12;
+    }
+    // G-буфер AO не должен видеть дождь, пламя и искры: у них позиции считает
+    // вершинный шейдер, а override-материал об этом не знает.
+    const skip = [rainMain, rainClose, splash.mesh, flameRig, sparks.points, cityGroup];
+    const inner = aoPass.render.bind(aoPass);
+    aoPass.render = (r, wb, rb, dt, mask) => {
+      const prev = skip.map(o => o.visible);
+      skip.forEach(o => { o.visible = false; });
+      inner(r, wb, rb, dt, mask);
+      skip.forEach((o, i) => { o.visible = prev[i]; });
+    };
+    composer.addPass(aoPass);
+  }
+
+  bloomPass = null;
+  if (Q.bloom) {
+    bloomPass = new UnrealBloomPass(new THREE.Vector2(w, h), 0.34, 0.62, 0.92);
+    composer.addPass(bloomPass);
+  }
+
+  outputPass = new OutputPass();      // тонмаппинг ACES + перевод в sRGB
+  composer.addPass(outputPass);
+
+  if (Q.smaa) {
+    smaaPass = new SMAAPass(w * renderer.getPixelRatio(), h * renderer.getPixelRatio());
+    composer.addPass(smaaPass);
+  } else smaaPass = null;
+
+  gradePass = new ShaderPass(GRADE);
+  composer.addPass(gradePass);
+}
+buildComposer();
+
+function onResize() {
+  const w = window.innerWidth, h = window.innerHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, Q.pixelCap));
+  renderer.setSize(w, h);
+  composer.setPixelRatio(renderer.getPixelRatio());
+  composer.setSize(w, h);
+  if (aoPass && aoPass.setSize) aoPass.setSize(w, h);
+  if (bloomPass) bloomPass.setSize(w, h);
+  if (smaaPass) smaaPass.setSize(w * renderer.getPixelRatio(), h * renderer.getPixelRatio());
+}
+window.addEventListener('resize', onResize);
+await progress();
+
+/* ==========================================================================
+   19. УПРАВЛЕНИЕ, НАСТРОЙКИ, МОБИЛЬНЫЕ СТИКИ, VR
+   ========================================================================== */
+
+let paused = false;
+let started = false;
+
+// PointerLockControls держит жизненный цикл захвата курсора; повороты
+// считаем сами — нужна инверсия, своя чувствительность и инерция взгляда.
+const lookRig = new THREE.Object3D();
+const controls = new PointerLockControls(lookRig, renderer.domElement);
+controls.pointerSpeed = 0;
+
+const elPause = $('#pause'), elHint = $('#hint'), elBoot = $('#boot'), elBreath = $('#breath');
+
+/* ---- 19.1 Мышь и клавиатура --------------------------------------------- */
+document.addEventListener('mousemove', (e) => {
+  if (!controls.isLocked || paused) return;
+  const s = settings.sens / 100 * 0.0022;
+  player.yawT -= e.movementX * s;
+  player.pitchT -= e.movementY * s * (settings.invert ? -1 : 1);
+});
+
+const KEYMAP = {
+  KeyW: 'f+', KeyS: 'f-', KeyA: 'r-', KeyD: 'r+',
+  ArrowUp: 'f+', ArrowDown: 'f-', ArrowLeft: 'r-', ArrowRight: 'r+',
+};
+
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Escape') return;                 // Esc обрабатывает pointer lock
+  if (e.repeat) return;
+  if (KEYMAP[e.code]) {
+    if (player.seat && (e.code === 'KeyW' || e.code === 'ArrowUp')) { standUp(); return; }
+    const k = KEYMAP[e.code];
+    if (k[0] === 'f') input.f += (k[1] === '+' ? 1 : -1);
+    else input.r += (k[1] === '+' ? 1 : -1);
+    e.preventDefault();
+    return;
+  }
+  switch (e.code) {
+    case 'ShiftLeft': case 'ShiftRight': input.run = true; break;
+    case 'Space': if (!paused) { input.jump = true; e.preventDefault(); } break;
+    case 'KeyC': setCrouch(!player.crouch); break;
+    case 'KeyE': if (!paused && started) doInteract(); break;
+    case 'KeyF': world.torchOn = !world.torchOn; playClick(); break;
+  }
+});
+document.addEventListener('keyup', (e) => {
+  if (KEYMAP[e.code]) {
+    const k = KEYMAP[e.code];
+    if (k[0] === 'f') input.f -= (k[1] === '+' ? 1 : -1);
+    else input.r -= (k[1] === '+' ? 1 : -1);
+    input.f = clamp(input.f, -1, 1); input.r = clamp(input.r, -1, 1);
+    return;
+  }
+  if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') input.run = false;
+});
+// Отпущенные клавиши при потере фокуса не должны «залипать».
+window.addEventListener('blur', () => { input.f = 0; input.r = 0; input.run = false; });
+
+renderer.domElement.addEventListener('mousedown', (e) => {
+  if (e.button !== 0) return;
+  if (controls.isLocked && started && !paused) doInteract();
+});
+
+/* ---- 19.2 Захват курсора и пауза ---------------------------------------- */
+controls.addEventListener('lock', () => {
+  paused = false;
+  elPause.classList.remove('on');
+  reticle.classList.remove('hidden');
+});
+controls.addEventListener('unlock', () => {
+  if (!started) return;
+  paused = true;
+  elPause.classList.add('on');
+  reticle.classList.add('hidden');
+  input.f = 0; input.r = 0; input.run = false;
+});
+
+function requestLock() {
+  // Захватываем тот же элемент, что слушает PointerLockControls. Обещание
+  // ловим сами: сразу после Esc браузер отказывает, и это нормально.
+  try {
+    const p = renderer.domElement.requestPointerLock();
+    if (p && typeof p.catch === 'function') p.catch(() => {});
+  } catch (e) { /* нестрашно */ }
+}
+
+$('#resumeBtn').addEventListener('click', () => {
+  if (isTouch) { paused = false; elPause.classList.remove('on'); reticle.classList.remove('hidden'); }
+  else requestLock();
+});
+
+/* ---- 19.3 Настройки ------------------------------------------------------ */
+function applySettings() {
+  camera.fov = settings.fov;
+  camera.updateProjectionMatrix();
+  if (A.ready) {
+    A.listener.setMasterVolume(settings.volume / 100);
+    A.music.gain.value = settings.music / 100 * 0.5;
+  }
+  GRADE.uniforms.uVignette.value = 0.30 + settings.vignette / 100 * 0.35;
+  saveSettings();
+}
+
+function bindRange(id, key, fmt) {
+  const el = $(id), out = $(id.replace('#s', '#v'));
+  el.value = settings[key];
+  out.textContent = fmt(settings[key]);
+  el.addEventListener('input', () => {
+    settings[key] = parseFloat(el.value);
+    out.textContent = fmt(settings[key]);
+    applySettings();
+  });
+}
+bindRange('#sFov', 'fov', v => v + '°');
+bindRange('#sSens', 'sens', v => v + '%');
+bindRange('#sBob', 'bob', v => v === 0 ? 'выкл' : v + '%');
+bindRange('#sVig', 'vignette', v => v + '%');
+bindRange('#sVol', 'volume', v => v + '%');
+bindRange('#sMus', 'music', v => v + '%');
+
+function bindSeg(id, key, apply) {
+  const box = $(id);
+  const sync = () => box.querySelectorAll('button').forEach(b => {
+    b.classList.toggle('on', String(settings[key]) === b.dataset.v);
+  });
+  box.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+    settings[key] = isNaN(parseFloat(b.dataset.v)) ? b.dataset.v : parseFloat(b.dataset.v);
+    sync(); applySettings(); if (apply) apply();
+  }));
+  sync();
+}
+bindSeg('#sInv', 'invert');
+bindSeg('#sQual', 'quality', () => applyQuality());
+
+const towerMeshes = [];
+cityGroup.traverse(o => { if (o.isInstancedMesh && o.material === towerMat) towerMeshes.push(o); });
+
+function applyQuality() {
+  Q = QUALITY[settings.quality] || QUALITY.high;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, Q.pixelCap));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  matGlass.transmission = Q.transmission ? 1.0 : 0.0;
+  matGlass.transparent = !Q.transmission;
+  matGlass.opacity = Q.transmission ? 1.0 : 0.22;
+  matGlass.depthWrite = Q.transmission;
+  GU.lens.value = Q.transmission ? 0.55 : 0.0;
+  matGlass.needsUpdate = true;
+
+  rainMain.count = Math.min(Q.rain, rainMain.userData.max);
+  rainClose.count = Math.min(Q.terraceRain, rainClose.userData.max);
+  splash.mesh.count = Math.min(Q.splashes, splash.N);
+  for (const im of towerMeshes) {
+    const max = im.userData.max || im.count;
+    im.count = Math.max(1, Math.round(max * (Q.towers / QUALITY.high.towers)));
+  }
+  for (const l of [L.city, L.fire]) {
+    if (l.shadow.map) { l.shadow.map.dispose(); l.shadow.map = null; }
+    l.shadow.mapSize.set(Q.shadow, Q.shadow);
+  }
+  markShadows(2);
+  buildComposer();
+  onResize();
+}
+
+/* ---- 19.4 Мобильное управление ------------------------------------------ */
+if (isTouch) {
+  $('#touch').classList.add('on');
+  const stick = (el, onMove, onEnd) => {
+    const knob = el.querySelector('i');
+    let id = null, ox = 0, oy = 0;
+    const R = 46;
+    el.addEventListener('touchstart', (e) => {
+      const t = e.changedTouches[0];
+      id = t.identifier;
+      const r = el.getBoundingClientRect();
+      ox = r.left + r.width / 2; oy = r.top + r.height / 2;
+      e.preventDefault();
+    }, { passive: false });
+    el.addEventListener('touchmove', (e) => {
+      for (const t of e.changedTouches) {
+        if (t.identifier !== id) continue;
+        let dx = t.clientX - ox, dy = t.clientY - oy;
+        const len = Math.hypot(dx, dy);
+        if (len > R) { dx = dx / len * R; dy = dy / len * R; }
+        knob.style.transform = `translate(${dx}px,${dy}px)`;
+        onMove(dx / R, dy / R);
+      }
+      e.preventDefault();
+    }, { passive: false });
+    const end = (e) => {
+      for (const t of e.changedTouches) if (t.identifier === id) { id = null; knob.style.transform = ''; onEnd(); }
+    };
+    el.addEventListener('touchend', end);
+    el.addEventListener('touchcancel', end);
+  };
+  stick($('#stickL'), (x, y) => { input.r = clamp(x * 1.4, -1, 1); input.f = clamp(-y * 1.4, -1, 1); input.run = Math.hypot(x, y) > 0.85; },
+        () => { input.r = 0; input.f = 0; input.run = false; });
+  let lookRate = { x: 0, y: 0 };
+  stick($('#stickR'), (x, y) => { lookRate.x = x; lookRate.y = y; }, () => { lookRate.x = 0; lookRate.y = 0; });
+  A.touchLook = lookRate;
+
+  $('#jump').addEventListener('touchstart', (e) => { input.jump = true; e.preventDefault(); }, { passive: false });
+  $('#menuBtn').addEventListener('touchstart', (e) => {
+    paused = !paused;
+    elPause.classList.toggle('on', paused);
+    e.preventDefault();
+  }, { passive: false });
+
+  // тап по объекту вместо прицела
+  renderer.domElement.addEventListener('touchstart', (e) => {
+    if (!started || paused) return;
+    const t = e.changedTouches[0];
+    const nx = (t.clientX / window.innerWidth) * 2 - 1;
+    const ny = -(t.clientY / window.innerHeight) * 2 + 1;
+    const dir = new THREE.Vector3(nx, ny, 0.5).unproject(camera).sub(camera.getWorldPosition(new THREE.Vector3())).normalize();
+    if (player.seat) { standUp(); return; }
+    const it = pickInteractable(dir);
+    if (it) it.action();
+  }, { passive: true });
+}
+
+/* ---- 19.5 VR: телепорт дугой и поворот рывками --------------------------- */
+const vrState = { active: false, turnCooldown: 0, aiming: false, valid: false };
+const vrTarget = new THREE.Vector3();
+let vrArc = null, vrDisc = null, vrCtrl0 = null, vrCtrl1 = null;
+
+async function setupVR() {
+  // Кнопку показываем только там, где VR реально есть — иначе она превращается
+  // в надпись «VR NOT SUPPORTED» посреди кадра.
+  if (!navigator.xr || !navigator.xr.isSessionSupported) return;
+  let ok = false;
+  try { ok = await navigator.xr.isSessionSupported('immersive-vr'); } catch (e) { ok = false; }
+  if (!ok) return;
+  const btn = VRButton.createButton(renderer);
+  $('#vr').appendChild(btn);
+
+  vrCtrl0 = renderer.xr.getController(0);
+  vrCtrl1 = renderer.xr.getController(1);
+  cameraRig.add(vrCtrl0, vrCtrl1);
+
+  const arcGeo = new THREE.BufferGeometry();
+  arcGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(32 * 3), 3));
+  vrArc = new THREE.Line(arcGeo, new THREE.LineBasicMaterial({ color: 0xffb46a, transparent: true, opacity: 0.8 }));
+  vrArc.frustumCulled = false;
+  vrArc.visible = false;
+  scene.add(vrArc);
+
+  vrDisc = new THREE.Mesh(new THREE.RingGeometry(0.16, 0.24, 24),
+    new THREE.MeshBasicMaterial({ color: 0xffb46a, transparent: true, opacity: 0.7, side: THREE.DoubleSide }));
+  vrDisc.rotation.x = -Math.PI / 2;
+  vrDisc.visible = false;
+  scene.add(vrDisc);
+
+  const onSelectStart = () => { vrState.aiming = true; };
+  const onSelectEnd = () => {
+    vrState.aiming = false;
+    vrArc.visible = false; vrDisc.visible = false;
+    if (vrState.valid) {
+      const dy = player.collider.end.y - player.collider.start.y;
+      player.collider.start.set(vrTarget.x, vrTarget.y + R_CAP, vrTarget.z);
+      player.collider.end.set(vrTarget.x, vrTarget.y + R_CAP + dy, vrTarget.z);
+      player.velocity.set(0, 0, 0);
+    }
+  };
+  for (const c of [vrCtrl0, vrCtrl1]) {
+    c.addEventListener('selectstart', onSelectStart);
+    c.addEventListener('selectend', onSelectEnd);
+    c.addEventListener('squeezestart', () => { if (started && !paused) doInteract(); });
+  }
+  renderer.xr.addEventListener('sessionstart', () => { vrState.active = true; startExperience(); });
+  renderer.xr.addEventListener('sessionend', () => { vrState.active = false; });
+}
+setupVR();
+
+const _arcRay = new THREE.Raycaster();
+function updateVR(dt) {
+  if (!renderer.xr.isPresenting) return;
+  // поворот рывками по 30°
+  vrState.turnCooldown -= dt;
+  const session = renderer.xr.getSession();
+  if (session) {
+    for (const src of session.inputSources) {
+      const gp = src.gamepad;
+      if (!gp || gp.axes.length < 4) continue;
+      const ax = gp.axes[2];
+      if (Math.abs(ax) > 0.7 && vrState.turnCooldown <= 0) {
+        player.yawT -= Math.sign(ax) * Math.PI / 6;
+        player.yaw = player.yawT; player.yawV = 0;
+        vrState.turnCooldown = 0.32;
+      }
+    }
+  }
+  // дуга телепорта
+  if (vrState.aiming && vrArc) {
+    const ctrl = vrCtrl0.visible ? vrCtrl0 : vrCtrl1;
+    const origin = ctrl.getWorldPosition(new THREE.Vector3());
+    const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(ctrl.getWorldQuaternion(new THREE.Quaternion()));
+    const pos = vrArc.geometry.attributes.position;
+    const v = dir.clone().multiplyScalar(7.0);
+    let hitAt = null;
+    let prev = origin.clone();
+    for (let i = 0; i < 32; i++) {
+      const t = i * 0.055;
+      const p = origin.clone().addScaledVector(v, t).addScaledVector(new THREE.Vector3(0, -1, 0), 4.9 * t * t);
+      pos.setXYZ(i, p.x, p.y, p.z);
+      if (!hitAt && p.y < prev.y) {
+        _arcRay.set(prev, p.clone().sub(prev).normalize());
+        _arcRay.far = prev.distanceTo(p);
+        const hits = _arcRay.intersectObjects(collidables.children, false);
+        for (const h of hits) {
+          if (h.object.material && h.object.material.visible === false) continue;
+          if (h.face && h.face.normal.y > 0.5) hitAt = h.point.clone();
+          break;
+        }
+      }
+      prev = p;
+    }
+    pos.needsUpdate = true;
+    vrArc.visible = true;
+    vrState.valid = !!hitAt;
+    if (hitAt) { vrTarget.copy(hitAt); vrDisc.position.copy(hitAt).setY(hitAt.y + 0.02); vrDisc.visible = true; }
+    else vrDisc.visible = false;
+  }
+}
+
+/* ---- 19.6 Старт --------------------------------------------------------- */
+function startExperience() {
+  if (started) return;
+  started = true;
+  initAudio();
+  applySettings();
+  elBoot.classList.add('gone');
+  setTimeout(() => { elBoot.style.display = 'none'; }, 900);
+  reticle.classList.remove('hidden');
+  // подсказка тает сама через 5 секунд
+  setTimeout(() => { elHint.style.opacity = '0'; }, 5200);
+  setTimeout(() => { elHint.style.display = 'none'; }, 7000);
+}
+
+$('#startBtn').addEventListener('click', () => {
+  startExperience();
+  if (!isTouch) requestLock();
+});
+
+/* ---- 19.7 Пауза при скрытой вкладке ------------------------------------- */
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    input.f = 0; input.r = 0; input.run = false;
+    if (A.ready && A.ctx.state === 'running') A.ctx.suspend();
+  } else if (A.ready && A.ctx.state === 'suspended' && started) {
+    A.ctx.resume();
+  }
+});
+await progress();
+
+/* ==========================================================================
+   20. ЖИЗНЬ СЦЕНЫ И ГЛАВНЫЙ ЦИКЛ
+   ========================================================================== */
+
+const clock = new THREE.Clock();
+const lv = { ceil: 0, kitchen: 0, lamp: 0, desk: 0 };
+let sparkAcc = 0, frameNo = 0, breatheShown = false;
+
+const _pw = new THREE.Vector3();
+
+// Сколько экранных пикселей занимает метр на расстоянии в метр:
+// нужно, чтобы точечные частицы имели физический размер, а не «размер в пикселях».
+function pixelsPerMetre() {
+  const h = renderer.domElement.height;
+  return h * 0.5 / Math.tan(camera.fov * 0.5 * THREE.MathUtils.DEG2RAD);
+}
+
+/* ---- 20.1 Гроза: одна медленная кривая на звук и картинку --------------- */
+function updateStorm(dt) {
+  const t = world.time;
+  world.storm = clamp(0.44 + 0.34 * Math.sin(t * 0.037) + 0.20 * Math.sin(t * 0.0113 + 1.7), 0.14, 1.0);
+
+  const windAmt = 0.16 + 0.42 * world.storm;
+  const windAng = 0.5 + 0.55 * Math.sin(t * 0.023);
+  RU.wind.value.set(Math.cos(windAng) * windAmt, Math.sin(windAng) * windAmt * 0.5);
+  RU.time.value = t;
+  RU.opacity.value = 0.28 + 0.62 * world.storm;
+  camera.getWorldPosition(_pw);
+  RU.center.value.copy(_pw);
+
+  GU.time.value = t;
+  GU.storm.value = world.storm;
+  GU.wind.value = windAmt * 1.4;
+  GU.player.value.copy(_pw);
+  CU.time.value = t;
+
+  // молния
+  if (storm.phase === 0 && t > storm.next) triggerLightning();
+  if (storm.phase > 0) {
+    storm.phase += dt;
+    world.lightning = lightningProfile(storm.phase) * storm.strength;
+    if (storm.phase > 0.9) { storm.phase = 0; world.lightning = 0; }
+  } else world.lightning = 0;
+  if (storm.thunderAt > 0 && t >= storm.thunderAt) {
+    playThunder(storm.thunderPower);
+    storm.thunderAt = -1;
+  }
+}
+
+/* ---- 20.2 Свет ----------------------------------------------------------- */
+function updateLights(dt) {
+  lv.ceil = approach(lv.ceil, world.ceilingOn ? 1 : 0, 6, dt);
+  lv.kitchen = approach(lv.kitchen, world.kitchenOn ? 1 : 0, 7, dt);
+  lv.lamp = approach(lv.lamp, world.lampOn ? 1 : 0, 7, dt);
+  lv.desk = approach(lv.desk, world.deskOn ? 1 : 0, 8, dt);
+
+  L.ceilLiving.intensity = lv.ceil * 62;
+  L.ceilKitchen.intensity = lv.ceil * 20;
+  L.ceilHall.intensity = lv.ceil * 11;
+  L.ceilMezz.intensity = lv.ceil * 16;
+  downMat.emissiveIntensity = lv.ceil * 2.4;
+  refs.pendantMat.emissiveIntensity = lv.ceil * 1.7;
+
+  L.kitchen.intensity = lv.kitchen * 4.2;
+  refs.underCab.material.emissiveIntensity = lv.kitchen * 1.8;
+
+  L.lamp.intensity = lv.lamp * 5.5;
+  refs.floorLampShade.material.emissiveIntensity = lv.lamp * 1.5;
+
+  L.desk.intensity = lv.desk * 3.0;
+  refs.deskLampShade.material.emissiveIntensity = lv.desk * 1.3;
+
+  // Зарево города очень медленно ползёт — прямоугольники переплётов
+  // проходят по полу и по игроку.
+  L.city.position.set(16 + Math.sin(world.time * 0.021) * 9, 34, -38 + Math.cos(world.time * 0.017) * 5);
+  const flash = world.lightning;
+  L.city.intensity = 0.40 + flash * 5.5;
+  L.flash.intensity = flash * 5.0;
+  L.hemi.intensity = 0.86 + flash * 1.1;
+  CU.dim.value = 1.0 + flash * 0.4;
+  SU.flash.value = flash;
+
+  // огонь
+  const targetE = world.fireLit ? 1 : 0;
+  if (world.fireEnergy > 1) world.fireEnergy = Math.max(1, world.fireEnergy - dt * 0.6);
+  else world.fireEnergy = approach(world.fireEnergy, targetE, world.fireLit ? 0.85 : 2.2, dt);
+  const fl = flicker(world.time);
+  const e = world.fireEnergy;
+  L.fire.intensity = e * (3.6 + fl * 3.4);
+  L.fire.position.x = FIRE.x + (fl - 0.5) * 0.10;
+  L.fireArea.intensity = e * (1.05 + fl * 0.8);
+  embers.material.emissiveIntensity = e * (0.55 + 0.50 * vnoise1(world.time * 1.6)) + 0.03;
+  FU.energy.value = clamp(e, 0, 1.25);
+  FU.time.value = world.time;
+
+  // билборды пламени разворачиваем на камеру
+  flameRig.rotation.y = Math.atan2(_pw.x - FIRE.x, _pw.z - FIRE.z);
+  for (let i = 0; i < flameQuads.length; i++) {
+    const q = flameQuads[i];
+    const k = 0.82 + 0.34 * vnoise1(world.time * (5.0 + i * 2.1) + i * 17);
+    q.mesh.scale.set(q.sx * (0.9 + k * 0.15), q.sy * k * clamp(e, 0.2, 1.3), 1);
+  }
+
+  // искры
+  if (e > 0.05) {
+    sparkAcc += dt * (4 + 9 * Math.min(e, 1));
+    while (sparkAcc >= 1) { sparkAcc -= 1; emitSparks(1, 0.55 + rnd() * 0.5); }
+  }
+  const sp = sparks;
+  for (let i = 0; i < SPARKS; i++) {
+    if (sp.life[i] < 0) continue;
+    sp.life[i] += dt / 1.7;
+    if (sp.life[i] >= 1) { sp.life[i] = -1; continue; }
+    const j = i * 3;
+    sp.vel[j + 1] -= dt * 0.42;
+    sp.vel[j] += (vnoise1(world.time * 3 + i) - 0.5) * dt * 1.2;
+    sp.vel[j + 2] += (vnoise1(world.time * 3 + i + 55) - 0.5) * dt * 0.9;
+    sp.pos[j] += sp.vel[j] * dt;
+    sp.pos[j + 1] += sp.vel[j + 1] * dt;
+    sp.pos[j + 2] += sp.vel[j + 2] * dt;
+  }
+  sp.geo.attributes.position.needsUpdate = true;
+  sp.geo.attributes.aLife.needsUpdate = true;
+  sp.mat.uniforms.uScale.value = pixelsPerMetre();
+}
+
+/* ---- 20.3 Брызги и пар --------------------------------------------------- */
+function updateParticles(dt) {
+  // брызги о настил там, где нет козырька
+  if (splash.mesh.visible) {
+    splash.acc += dt * (10 + 34 * world.storm);
+    while (splash.acc >= 1) {
+      splash.acc -= 1;
+      const k = splash.cursor = (splash.cursor + 1) % splash.N;
+      splash.life[k] = 0;
+      // от игрока не ближе полутора метров, иначе кольцо занимает пол-экрана
+      const ang = rr(0, TAU), rad = rr(1.5, 5.5);
+      splash.off[k * 3] = clamp(_pw.x + Math.cos(ang) * rad, P.canopyX1 + 0.2, P.terX1 - 0.3);
+      splash.off[k * 3 + 1] = P.yTerrace + 0.012;
+      splash.off[k * 3 + 2] = clamp(_pw.z + Math.sin(ang) * rad, P.terZ0 + 0.3, P.terZ1 - 0.3);
+    }
+    for (let i = 0; i < splash.N; i++) {
+      if (splash.life[i] < 0) continue;
+      splash.life[i] += dt / 0.55;
+      if (splash.life[i] >= 1) splash.life[i] = -1;
+    }
+    splash.geo.attributes.aLife.needsUpdate = true;
+    splash.geo.attributes.aOff.needsUpdate = true;
+  }
+
+  // пар от чайника
+  const st = refs.steam;
+  const heat = world.kettleHeat;
+  if (heat > 0.25) {
+    st.acc = (st.acc || 0) + dt * (6 + 40 * heat);
+    while (st.acc >= 1) {
+      st.acc -= 1;
+      const k = st.cursor = (st.cursor + 1) % st.N;
+      st.life[k] = 0;
+      st.pos[k * 3] = 3.25 + rr(-0.02, 0.02);
+      st.pos[k * 3 + 1] = 1.13;
+      st.pos[k * 3 + 2] = 4.20 + rr(-0.02, 0.02);
+    }
+  }
+  let anySteam = false;
+  for (let i = 0; i < st.N; i++) {
+    if (st.life[i] < 0) continue;
+    anySteam = true;
+    st.life[i] += dt / 1.8;
+    if (st.life[i] >= 1) { st.life[i] = -1; continue; }
+    st.pos[i * 3 + 1] += dt * (0.28 + 0.4 * heat);
+    st.pos[i * 3] += (vnoise1(world.time * 1.5 + i) - 0.5) * dt * 0.16;
+    st.pos[i * 3 + 2] += (vnoise1(world.time * 1.5 + i + 31) - 0.5) * dt * 0.16;
+  }
+  if (anySteam) {
+    st.geo.attributes.position.needsUpdate = true;
+    st.geo.attributes.aLife.needsUpdate = true;
+  }
+  st.mat.uniforms.uScale.value = pixelsPerMetre();
+}
+
+/* ---- 20.4 Звук ----------------------------------------------------------- */
+const _srcPos = new THREE.Vector3(), _occDir = new THREE.Vector3();
+const _occRay = new THREE.Raycaster();
+_occRay.far = 30;
+
+function updateAudio(dt) {
+  if (!A.ready) return;
+  const boost = 1 + world.breathe * 0.5;
+  const rainBase = (0.10 + 0.42 * world.storm) * boost;
+  A.rainLow.gain.value = approach(A.rainLow.gain.value, rainBase * 0.55, 2, dt);
+  for (const g of A.rainSpots) g.gain.value = approach(g.gain.value, rainBase, 2, dt);
+
+  // окклюзия: по одному источнику за кадр, значения плавно догоняются
+  if (A.emitters.length) {
+    A.occIndex = (A.occIndex + 1) % A.emitters.length;
+    const em = A.emitters[A.occIndex];
+    em.holder.getWorldPosition(_srcPos);
+    _occDir.copy(_srcPos).sub(_pw);
+    const d = _occDir.length();
+    _occDir.divideScalar(Math.max(d, 1e-4));
+    _occRay.set(_pw, _occDir);
+    _occRay.far = Math.max(d - 0.25, 0.05);
+    let blocked = 0;
+    const hits = _occRay.intersectObjects(collidables.children, false);
+    for (const h of hits) {
+      if (h.object.material && h.object.material.visible !== false) { blocked = 1; break; }
+    }
+    em.target = blocked;
+  }
+  for (const em of A.emitters) {
+    em.occluded = approach(em.occluded, em.target || 0, 3.0, dt);
+    em.occ.frequency.value = lerp(18000, 700, em.occluded);
+    em.occG.gain.value = lerp(1.0, 0.4, em.occluded);
+  }
+
+  // терраса: открыл дверь — мир без стекла между тобой и им
+  const openK = easeInOut(clamp(world.doorOpen, 0, 1));
+  const outside = clamp(openK + (_pw.x > 8.1 ? 1 : 0), 0, 1);
+  A.outside.lp.frequency.value = approach(A.outside.lp.frequency.value, lerp(430, 13000, outside), 4, dt);
+  A.outside.gain.gain.value = approach(A.outside.gain.gain.value,
+    (0.05 + 0.30 * world.storm) * (0.22 + 2.6 * outside) * boost, 3, dt);
+  A.wind.gain.gain.value = approach(A.wind.gain.gain.value,
+    (0.012 + 0.10 * world.storm) * (0.12 + 2.2 * outside), 2.5, dt);
+  A.wind.bp.frequency.value = 340 + 320 * vnoise1(world.time * 0.33) + 120 * vnoise1(world.time * 0.11 + 9);
+
+  // камин: ровный гул + треск 2–6 раз в секунду
+  const e = clamp(world.fireEnergy, 0, 1);
+  A.fire.hum.gain.value = approach(A.fire.hum.gain.value, 0.40 * e, 2, dt);
+  if (e > 0.06) {
+    A.fire.crackAcc += dt * (2 + 4 * e);
+    while (A.fire.crackAcc >= 1) {
+      A.fire.crackAcc -= 1;
+      burst(A.fire.bus, {
+        rate: 0.7 + rnd() * 1.5, type: 'bandpass', freq: 700 + rnd() * 2800, q: 5 + rnd() * 9,
+        gain: (0.05 + rnd() * 0.16) * e, attack: 0.001, decay: 0.03 + rnd() * 0.13,
+      });
+    }
+  }
+
+  // пластинка
+  const R = A.record;
+  R.bus.gain.value = approach(R.bus.gain.value, world.recordOn ? 1 : 0, 2.2, dt);
+  if (world.recordOn && world.time >= R.nextChord) {
+    playChord();
+    R.nextChord = world.time + 4.6;
+  }
+
+  // чайник
+  const heat = world.kettleHeat;
+  A.kettle.bus.gain.value = approach(A.kettle.bus.gain.value, clamp(heat * 0.16, 0, 0.16), 2, dt);
+  A.kettle.bp.frequency.value = 620 + heat * 2300;
+  const wh = heat > 0.95 ? clamp((heat - 0.95) / 0.08, 0, 1) : 0;
+  A.kettle.wg.gain.value = approach(A.kettle.wg.gain.value, wh * 0.055, 3, dt);
+  A.kettle.w1.frequency.value = 2140 + Math.sin(world.time * 6.3) * 22;
+  A.kettle.w2.frequency.value = 2163 + Math.sin(world.time * 5.1 + 1) * 18;
+}
+
+/* ---- 20.5 Экспозиция: адаптация глаза при смене зоны -------------------- */
+function updateExposure(dt) {
+  const inHall = _pw.x < P.xHall && _pw.z > P.zHall;
+  const onTerrace = _pw.x > 8.05;
+  let target = inHall ? 1.42 : (onTerrace ? 0.88 : 1.02);
+  if (world.ceilingOn) target -= 0.16 * lv.ceil;
+  if (world.fireLit && _pw.z < P.zSplit) target -= 0.05 * clamp(world.fireEnergy, 0, 1);
+  target += world.exposureBoost;
+  const cur = renderer.toneMappingExposure;
+  renderer.toneMappingExposure = approach(cur, target, 0.9, dt) + world.lightning * 0.22;
+}
+
+/* ---- 20.6 Мягкая цель: сцена «выдыхает» --------------------------------- */
+function updateBreath(dt) {
+  const ok = world.fireLit && !world.ceilingOn && world.recordOn && !!player.seat;
+  if (ok) world.breathe = Math.min(1, world.breathe + dt / 6.0);
+  else world.breathe = Math.max(0, world.breathe - dt / 2.5);
+  world.exposureBoost = world.breathe * 0.13;
+  if (world.breathe >= 1 && !breatheShown) {
+    breatheShown = true;
+    elBreath.textContent = 'дом — это когда снаружи гроза';
+    elBreath.style.opacity = '0.92';
+    setTimeout(() => { elBreath.style.opacity = '0'; }, 5200);
+  }
+}
+
+/* ---- 20.7 Главный цикл --------------------------------------------------- */
+function frame() {
+  const raw = clock.getDelta();
+  // кламп: после сворачивания вкладки игрок иначе улетит сквозь стену
+  const dt = Math.min(raw, 0.05);
+  world.time += dt;
+  frameNo++;
+
+  if (isTouch && A.touchLook && !paused) {
+    player.yawT -= A.touchLook.x * dt * 2.8 * (settings.sens / 100);
+    player.pitchT -= A.touchLook.y * dt * 2.2 * (settings.sens / 100) * (settings.invert ? -1 : 1);
+  }
+
+  updateStorm(dt);
+  if (started && !paused) updatePlayer(dt);
+  else camera.getWorldPosition(_pw);
+  updateProps(dt);
+  updateLights(dt);
+  updateParticles(dt);
+  updateAudio(dt);
+  updateExposure(dt);
+  updateBreath(dt);
+
+  if (renderer.xr.isPresenting) {
+    updateVR(dt);
+    camera.rotation.set(0, player.yaw, 0);      // тангаж и крен даёт шлем
+  }
+
+  updateInteraction();
+
+  // динамическая виньетка — слабая, только чтобы снизить укачивание
+  GRADE.uniforms.uMotion.value = approach(GRADE.uniforms.uMotion.value,
+    clamp(player.speedH / 2.8, 0, 1) * 0.12 * (settings.vignette / 100), 4, dt);
+  GRADE.uniforms.uTime.value = world.time;
+
+  // Карта теней обновляется вручную: мерцание камина меняет яркость,
+  // а не геометрию, поэтому пересчёт не нужен.
+  if (frameNo % 8 === 0) markShadows();
+  if (shadowDirty > 0) { renderer.shadowMap.needsUpdate = true; shadowDirty--; }
+  else renderer.shadowMap.needsUpdate = false;
+
+  if (renderer.xr.isPresenting) renderer.render(scene, camera);
+  else composer.render(dt);
+}
+
+/* ---- 20.8 Прогрев шейдеров и запуск ------------------------------------- */
+scene.updateMatrixWorld(true);
+camera.getWorldPosition(_pw);
+GU.player.value.copy(_pw);
+renderer.compile(scene, camera);
+markShadows(2);
+renderer.shadowMap.needsUpdate = true;
+composer.render(0.016);           // прогреваем и пост-цепочку
+await progress();
+
+$('#startBtn').classList.add('ready');
+renderer.setAnimationLoop(frame);
+
+// Небольшой отладочный доступ: удобно проверять сцену из консоли.
+window.PENTHOUSE = {
+  THREE, scene, camera, renderer, composer, player, world, plan: P, settings, refs, L, A,
+  api: {
+    updatePlayer, sampleSurface, pickInteractable, doInteract, sitDown, standUp, seats,
+    input, interactables, surfaceMeshes, worldOctree, doorPivot, doorBlocker, applyQuality,
+  },
+};
+</script>
+
+<script>
+  // Единственная внешняя зависимость — CDN с three.js. Если он недоступен,
+  // объясняем это словами, а не пустым чёрным экраном.
+  window.addEventListener('error', function (e) {
+    if (e && e.target && e.target.tagName === 'SCRIPT') showFatal();
+  }, true);
+  setTimeout(function () {
+    if (!window.PENTHOUSE) showFatal();
+  }, 25000);
+  function showFatal() {
+    var el = document.getElementById('fatal');
+    if (el.style.display === 'flex') return;
+    document.getElementById('fatalMsg').innerHTML =
+      'Не удалось загрузить three.js с CDN (unpkg.com).<br>' +
+      'Демо самодостаточно, но библиотека подключается по сети — проверьте соединение и обновите страницу.';
+    el.style.display = 'flex';
+  }
+</script>
+</body>
+</html>
