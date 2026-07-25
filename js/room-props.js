@@ -9,6 +9,7 @@ import {
 import { MAT, bookMat, shadowed } from './room-mat.js';
 import { ROOMS } from './room-plan.js';
 import { cushionGeo, weltGeo, drapeGeo, curtainGeo } from './room-soft.js';
+import { chandelier, floorLamp } from './room-lamps.js';
 export { buildLights, updateLights } from './room-lights.js';
 
 /* The living room is no longer the whole flat: it runs x -5..4, z -4..3,
@@ -284,42 +285,6 @@ function buildPouf(g, x, z) {
   seam.position.set(x, 0.21, z); seam.rotation.x = Math.PI / 2;
   seam.castShadow = true; g.add(seam);
   return p;
-}
-
-/* ========================================================= floor lamp === */
-function buildFloorLamp(g, x, z) {
-  const l = new THREE.Group();
-  l.position.set(x, 0, z);
-  const base = shadowed(new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.18, 0.028, 24), M.blackSteel));
-  base.position.y = 0.014; l.add(base);
-  const stem = shadowed(new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.016, 1.42, 12), M.brass));
-  stem.position.y = 0.72; l.add(stem);
-
-  const shadeMat = new THREE.MeshStandardMaterial({
-    color: 0xe8d3b0, roughness: 0.9, side: THREE.DoubleSide,
-    envMapIntensity: 0.4,
-    // opaque: a translucent shade shows the basic-material bulb through it,
-    // and bloom then makes the pair one white ball
-    emissive: 0xff9d4e, emissiveIntensity: 0.14,
-  });
-  const shade = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.235, 0.26, 28, 1, true), shadeMat);
-  shade.position.y = 1.50; l.add(shade);
-  const innerMat = new THREE.MeshBasicMaterial({ color: 0x6d4520, toneMapped: false });
-  const inner = new THREE.Mesh(new THREE.CircleGeometry(0.225, 24), innerMat);
-  inner.rotation.x = Math.PI / 2; inner.position.y = 1.372; l.add(inner);
-  const bulbMat = new THREE.MeshBasicMaterial({ color: 0x9c7550, toneMapped: false });
-  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.032, 12, 10), bulbMat);
-  bulb.position.y = 1.48; l.add(bulb);
-
-  // fade the emitters with the light rather than popping them on/off
-  const innerBase = innerMat.color.clone(), bulbBase = bulbMat.color.clone();
-  const setGlow = (k) => {
-    innerMat.color.copy(innerBase).multiplyScalar(k);
-    bulbMat.color.copy(bulbBase).multiplyScalar(k);
-  };
-
-  g.add(l);
-  return { group: l, shadeMat, inner, bulb, setGlow, lightPos: new THREE.Vector3(x, 1.44, z) };
 }
 
 /* ========================================================== side table == */
@@ -649,7 +614,14 @@ export function buildProps() {
   const chair2 = buildArmchair(g, 2.95, -0.85, -0.6, 0.3, M.linenDark, 1);
   const table = buildCoffeeTable(g);
   buildPouf(g, -2.45, -1.35);
-  const lamp = buildFloorLamp(g, -3.30, 1.90);
+  /* Light you can see the source of. The room used to be lit by a point
+     light with nothing above it: a cluster of glass globes over the seating
+     and a torchère by the armchair give the two pools in here something to
+     come out of. */
+  const lamp = floorLamp(-3.30, 1.90);
+  g.add(lamp.group);
+  const chand = chandelier(-0.85, 0.30, H - 0.02);
+  g.add(chand.group);
   buildSideTable(g, -1.85, 2.52);
   buildSideTable(g, 3.55, -1.75);
   buildBookshelf(g);
@@ -662,5 +634,5 @@ export function buildProps() {
   const dust = buildDust(g);
 
   roomScene.add(g);
-  return { group: g, rug, sofa, chair, chair2, table, lamp, plant, plant2, cat, dust, M };
+  return { group: g, rug, sofa, chair, chair2, table, lamp, chand, plant, plant2, cat, dust, M };
 }

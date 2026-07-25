@@ -23,6 +23,7 @@ import { rnd, rrnd, roundedBoxGeo, boxUv, faceTowards, normalizeUv } from './roo
 import { MAT, shadowed } from './room-mat.js';
 import { cushionGeo, weltGeo, curtainGeo } from './room-soft.js';
 import { ROOMS, APT } from './room-plan.js';
+import { shadeMaterial } from './room-lamps.js';
 
 const K = ROOMS.kitchen;
 const CEIL = APT.h - K.soffit;              // 2.88 — the soffit, not the slab
@@ -448,8 +449,14 @@ function buildPendant(g, x, z) {
   band.position.y = bot + 0.007;
   p.add(band);
 
-  const innerMat = new THREE.MeshBasicMaterial({ color: 0x6f4520, toneMapped: false });
-  const inner = new THREE.Mesh(new THREE.CircleGeometry(0.108, 16), innerMat);
+  /* A frosted diffuser rather than a flat emissive disc. A uniform disc is a
+     hole punched in the shade; this one is brightest under the bulb and falls
+     off to the rim, which is what you actually see looking up into a pendant. */
+  const innerMat = shadeMaterial({
+    color: 0xe8d6b4, glow: 0.72, glowColor: 0xffb877,
+    bulbY: 0.0, spread: 0.075, inside: 1.2, weave: 0.16, roughness: 0.72,
+  });
+  const inner = new THREE.Mesh(new THREE.CircleGeometry(0.108, 18), innerMat);
   inner.rotation.x = Math.PI / 2; inner.position.y = bot + 0.012;
   p.add(inner);
   const bulbMat = new THREE.MeshBasicMaterial({ color: 0x9e7a50, toneMapped: false });
@@ -458,13 +465,14 @@ function buildPendant(g, x, z) {
   p.add(bulb);
 
   // fade the emitters with the lamp level instead of popping them off
-  const iBase = innerMat.color.clone(), bBase = bulbMat.color.clone();
+  const iGlow = innerMat.userData.glowUniforms.uGlow.value;
+  const bBase = bulbMat.color.clone();
   g.add(p);
   return {
     group: p,
     lightPos: new THREE.Vector3(x, bot - 0.03, z),
     setGlow: (k) => {
-      innerMat.color.copy(iBase).multiplyScalar(k);
+      innerMat.userData.glowUniforms.uGlow.value = iGlow * k;
       bulbMat.color.copy(bBase).multiplyScalar(k);
     },
   };

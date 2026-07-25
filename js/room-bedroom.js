@@ -17,6 +17,7 @@ import { rnd, rrnd, pick, roundedBoxGeo, planeUv } from './room.js';
 import { MAT, bookMat, shadowed } from './room-mat.js';
 import { cushionGeo, weltGeo, drapeGeo } from './room-soft.js';
 import { ROOMS, APT, COLUMN } from './room-plan.js';
+import { tableLamp } from './room-lamps.js';
 
 const R = ROOMS.bedroom;
 /* walls are centred on their plan line and carry a 12 mm skirting, so the
@@ -306,49 +307,14 @@ function buildNightstand(g, z) {
    that glows a little on its own, a basic-material disc under it doing the
    pool of light, and a bulb. All three fade together — a shade still lit with
    the lamp switched off is the one thing you always notice. */
+/* A turned ceramic body under a fabric drum that glows from the inside,
+   from the shared fixture library. The old one was a plain cylinder with a
+   flat emissive disc under it: two of them a metre apart bloomed into one
+   ball and neither read as a lamp. */
 function buildLamp(g, x, z) {
-  const l = new THREE.Group();
-  l.position.set(x, 0, z);
-
-  const base = shadowed(new THREE.Mesh(new THREE.CylinderGeometry(0.072, 0.082, 0.022, 16), MAT.steel));
-  base.position.y = NS_TOP + 0.011;
-  l.add(base);
-  const stem = shadowed(new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.013, 0.26, 10), MAT.brass));
-  stem.position.y = NS_TOP + 0.15;
-  l.add(stem);
-
-  const shadeMat = new THREE.MeshStandardMaterial({
-    color: 0xe3cfae, roughness: 0.9, side: THREE.DoubleSide,
-    envMapIntensity: 0.35,
-    // Opaque, and barely emissive. Two of these a metre apart used to bloom
-    // into one ball that hid both shades; the shade only has to look lit, the
-    // point light does the work.
-    emissive: 0xff9d4e, emissiveIntensity: 0.09,
-  });
-  const shade = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.105, 0.145, 0.19, 22, 1, true), shadeMat);
-  shade.position.y = NS_TOP + 0.30;
-  l.add(shade);
-
-  const innerMat = new THREE.MeshBasicMaterial({ color: 0x503014, toneMapped: false });
-  const inner = new THREE.Mesh(new THREE.CircleGeometry(0.138, 20), innerMat);
-  inner.rotation.x = Math.PI / 2;
-  inner.position.y = NS_TOP + 0.208;
-  l.add(inner);
-  const bulbMat = new THREE.MeshBasicMaterial({ color: 0x8a6844, toneMapped: false });
-  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.027, 10, 8), bulbMat);
-  bulb.position.y = NS_TOP + 0.28;
-  l.add(bulb);
-
-  const innerBase = innerMat.color.clone(), bulbBase = bulbMat.color.clone();
-  const setGlow = (k) => {
-    innerMat.color.copy(innerBase).multiplyScalar(k);
-    bulbMat.color.copy(bulbBase).multiplyScalar(k);
-    shadeMat.emissiveIntensity = 0.28 * k;
-  };
-
-  g.add(l);
-  return { group: l, shadeMat, inner, bulb, setGlow, lightPos: new THREE.Vector3(x, NS_TOP + 0.27, z) };
+  const f = tableLamp(x, NS_TOP, z);
+  g.add(f.group);
+  return f;
 }
 
 /* ========================================================== wardrobe ==== */

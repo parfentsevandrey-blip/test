@@ -405,7 +405,8 @@ async function build() {
   const rooms = { kitchen: buildKitchen(), bedroom: buildBedroom(), hall: buildHall() };
   for (const r of Object.values(rooms)) roomScene.add(r.group);
   lights = buildLights({
-    firePos: fire.firePos, lampPos: props.lamp.lightPos, shadowSize: SHADOW_SIZE,
+    firePos: fire.firePos, lampPos: props.lamp.lightPos, chandPos: props.chand.lightPos,
+    shadowSize: SHADOW_SIZE,
     pendants: rooms.kitchen?.pendants, lamps: rooms.bedroom?.lamps, sconces: rooms.hall?.sconces,
   });
 
@@ -950,8 +951,8 @@ function tick() {
   updateLights(lights, {
     fire: f, flick, lampLevel, flash: U.flash.value, t, firePos: fire.firePos,
   });
-  props.lamp.shadeMat.emissiveIntensity = 0.42 * lampLevel;
   props.lamp.setGlow(lampLevel);
+  props.chand.setGlow(lampLevel);
 
   /* --- billboards: flames turn toward the camera but stay in the firebox --- */
   fire.flames.children.forEach((m) => {

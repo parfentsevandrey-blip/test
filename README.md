@@ -153,6 +153,19 @@ flat in first person.
   it, so moving a wall moves everything that touches it. Walls are solid boxes
   with the openings genuinely cut out, so a doorway has a reveal with thickness
   and the firebox is a hole in the wall rather than a picture of one.
+- **Luminaires, not glowing discs.** Every fixture used to be a cylinder with
+  a bright disc inside, so what you saw was bloom with nothing under it. What
+  makes a lamp read as a lamp at night is the shade: cloth or alabaster lit
+  from within glows unevenly, brightest where the bulb sits behind it and much
+  brighter from the inside than the out, and a uniform `emissive` cannot do
+  that. `js/room-lamps.js` gives every shade a small shader injection that
+  profiles the glow in the shade's own local space, lifts the back faces,
+  breaks it up with the weave and clamps it so nothing can tone-map to white.
+  On top of that there is a glass-globe cluster over the seating, a torchère,
+  cone pendants with brass liners over the island, ceramic table lamps and
+  alabaster wall sconces — and the pendants and the chandelier are spot lights,
+  so they throw the soft-edged pool a real fitting makes instead of a sphere
+  of light.
 - **A design, not a palette swap.** Smoked oak and walnut, deep olive limewash,
   honed travertine with real joints, blackened steel, brass only as an accent.
   A dark flat reads far better by firelight than a pale one — pale walls at 2%
@@ -343,6 +356,7 @@ js/room-kitchen.js     Kitchen and dining: island, run, pendants, table
 js/room-bedroom.js     Bedroom: bed and duvet, nightstands, wardrobe
 js/room-hall.js        Hall: console, mirror, sconces, coats
 js/room-soft.js        Upholstery: stuffed cushions, piped welts, drapes
+js/room-lamps.js       Luminaires: backlit shades, chandelier, pendants, sconces
 js/room-lights.js      Lighting rig: fire spot + omni, bounces, practicals, window
 js/room-walk.js        First-person controller: pointer lock, collision, head bob
 js/post-ao.js          Depth-only SSAO with a depth-aware blur

@@ -49,7 +49,8 @@ const X = ROOM.x, Z = ROOM.z, H = ROOM.h;
    0.066 mean luminance with 23% of the frame crushed to pure black. A lamp on
    a nightstand does not light a room — the ceiling above it does. */
 export function buildLights(opts) {
-  const { firePos, lampPos, shadowSize, pendants = [], lamps = [], sconces = [] } = opts;
+  const { firePos, lampPos, chandPos, shadowSize,
+          pendants = [], lamps = [], sconces = [] } = opts;
   const L = {};
 
   /* --- the constant floor of the room -------------------------------- */
@@ -113,6 +114,16 @@ export function buildLights(opts) {
   roomScene.add(L.bounceBack);
 
   /* --- practicals ----------------------------------------------------- */
+  /* The glass cluster over the seating. A SpotLight with a wide penumbra
+     throws the soft-edged pool a real fixture makes; a point light in the
+     same place lights the walls and the ceiling equally and reads as a glow
+     with nothing above it. A little up-spill comes back from bounceCeil. */
+  L.chandelier = new THREE.SpotLight(0xffbe86, 17, 7.0, 1.22, 0.95, 1.40);
+  L.chandelier.position.copy(chandPos || new THREE.Vector3(-0.85, 2.35, 0.30));
+  L.chandelier.target.position.set(
+    (chandPos ? chandPos.x : -0.85), 0.35, (chandPos ? chandPos.z : 0.30));
+  roomScene.add(L.chandelier, L.chandelier.target);
+
   L.lamp = new THREE.PointLight(0xffab5e, 13, 6.0, 1.65);
   L.lamp.position.copy(lampPos);
   roomScene.add(L.lamp);
@@ -134,12 +145,17 @@ export function buildLights(opts) {
   const kp = pendants.length
     ? pendants.reduce((a, p) => a.add(p.lightPos), new THREE.Vector3()).multiplyScalar(1 / pendants.length)
     : new THREE.Vector3((K.x0 + K.x1) / 2, 1.55, -1.4);
-  L.pendant = new THREE.PointLight(0xffbe86, 19, 7.5, 1.40);
+  // A cone alone lights the island and leaves the room round it black —
+  // measured, the kitchen lost a third of its mean when the pendants stopped
+  // being point lights. The cone is the pool you see; kBounce below is the
+  // light the same shades throw up at the ceiling and back down.
+  L.pendant = new THREE.SpotLight(0xffbe86, 24, 7.5, 1.16, 0.92, 1.30);
   L.pendant.position.copy(kp);
-  roomScene.add(L.pendant);
+  L.pendant.target.position.set(kp.x, 0.92, kp.z);
+  roomScene.add(L.pendant, L.pendant.target);
 
   // the worktop run, washed from under the wall units
-  L.worktop = new THREE.PointLight(0xffc490, 6.5, 4.5, 1.55);
+  L.worktop = new THREE.PointLight(0xffc490, 8.0, 4.8, 1.55);
   L.worktop.position.set((K.x0 + K.x1) / 2 + 0.6, 1.42, K.z1 - 0.55);
   roomScene.add(L.worktop);
 
@@ -162,14 +178,14 @@ export function buildLights(opts) {
   const sp = sconces.length
     ? sconces.reduce((a, s2) => a.add(s2.lightPos), new THREE.Vector3()).multiplyScalar(1 / sconces.length)
     : new THREE.Vector3(-2.0, 1.75, H_.z1 - 0.3);
-  L.sconce = new THREE.PointLight(0xffb473, 8.5, 6.0, 1.30);
+  L.sconce = new THREE.PointLight(0xffb473, 10.5, 6.5, 1.28);
   L.sconce.position.copy(sp);
   roomScene.add(L.sconce);
 
   // ceiling bounce: what a pendant and a pair of bedside lamps actually put
   // into a room, as opposed to what they put on the surface right under them
   const B = ROOMS.bedroom;
-  L.kBounce = new THREE.PointLight(0xe8c9a4, 4.6, 7.0, 1.25);
+  L.kBounce = new THREE.PointLight(0xe8c9a4, 9.5, 8.0, 1.20);
   L.kBounce.position.set((K.x0 + K.x1) / 2, H - 0.45, (K.z0 + K.z1) / 2 - 0.3);
   roomScene.add(L.kBounce);
 
@@ -217,6 +233,7 @@ export function updateLights(L, ctx) {
   L.bounceCeil.intensity = 3.2 * soft;
 
   L.lamp.intensity = 13 * lampLevel;
+  L.chandelier.intensity = 17 * lampLevel;
   L.shelf.intensity = 3.0 * lampLevel;
   L.cove.intensity = 4.0 * lampLevel;
 
@@ -224,10 +241,10 @@ export function updateLights(L, ctx) {
   // with the lamps off still has the city coming in and light spilling round
   // a doorway, and rooms that hit pure black just read as holes.
   const k = 0.16 + 0.84 * lampLevel;
-  L.pendant.intensity = 19 * k;
-  L.worktop.intensity = 6.5 * k;
-  L.sconce.intensity = 8.5 * k;
-  L.kBounce.intensity = 4.6 * k;
+  L.pendant.intensity = 24 * k;
+  L.worktop.intensity = 8.0 * k;
+  L.sconce.intensity = 10.5 * k;
+  L.kBounce.intensity = 9.5 * k;
   L.bBounce.intensity = 4.4 * (0.14 + 0.86 * lampLevel);
   for (const b of L.bedside) b.intensity = 13 * (0.14 + 0.86 * lampLevel);
 

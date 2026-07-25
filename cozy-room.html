@@ -61032,6 +61032,343 @@ export function curtainGeo(width, height, o = {}) {
 }
 </script>
 <script type="text/plain" id="rm20">/* =========================================================================
+   Luminaires.
+
+   The complaint was that the light reads as a primitive blob, and it did:
+   every fixture in the flat was a cylinder with a glowing disc inside it, so
+   what you actually saw was bloom with no object under it.
+
+   What makes a lamp read as a lamp at night is not the bulb. It is the shade
+   — a fabric or glass shade lit from the inside glows unevenly, brightest
+   where the bulb sits behind it, and it is much brighter seen from inside
+   than out. That gradient is the whole tell, and a uniform `emissive` cannot
+   produce it. So every shade here gets a small shader injection that adds a
+   glow profiled in the shade's own local space, with the back faces lifted,
+   and the weave breaking it up.
+
+   The second tell is that a shade throws light somewhere specific: a drum
+   throws a disc up at the ceiling and a pool down, a cone throws a hard-edged
+   circle on the worktop. Those come from the rig in room-lights.js; what this
+   file guarantees is that there is a believable object where the light says
+   it comes from.
+
+   Every fixture returns { group, lightPos, setGlow }, so the app can dim the
+   emissive parts with the same switch that dims the lights.
+   ========================================================================= */
+import * as THREE from 'three';
+import { GLSL_NOISE, U } from './room.js';
+import { MAT, shadowed } from './room-mat.js';
+
+/* ------------------------------------------------------------ shade glow */
+let shadeKey = 0;
+
+/**
+ * Fabric or alabaster lit from within.
+ *   bulbY   height of the bulb in shade-local space
+ *   spread  how far the hot patch reaches up and down the shade
+ *   glow    strength; the app scales it with the light switch
+ *   inside  how much brighter the inner face is than the outer
+ */
+export function shadeMaterial(o = {}) {
+  const m = new THREE.MeshStandardMaterial({
+    color: o.color ?? 0xe6d6b8,
+    roughness: o.roughness ?? 0.92,
+    metalness: 0,
+    side: THREE.DoubleSide,
+    envMapIntensity: o.env ?? 0.3,
+  });
+  const u = {
+    uGlow: { value: o.glow ?? 1.0 },
+    uGlowCol: { value: new THREE.Color(o.glowColor ?? 0xffb066) },
+    uBulbY: { value: o.bulbY ?? 0.0 },
+    uSpread: { value: o.spread ?? 0.13 },
+    uInside: { value: o.inside ?? 2.4 },
+    uWeave: { value: o.weave ?? 0.35 },
+  };
+  const key = 'shade' + (shadeKey++);
+  m.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, u);
+    sh.vertexShader = sh.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec3 vShadeP;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvShadeP = position;');
+    sh.fragmentShader = GLSL_NOISE + sh.fragmentShader
+      .replace('#include <common>', `#include <common>
+        varying vec3 vShadeP;
+        uniform float uGlow, uBulbY, uSpread, uInside, uWeave;
+        uniform vec3 uGlowCol;`)
+      .replace('#include <tonemapping_fragment>', `
+        {
+          // hottest level with the bulb, falling away up and down the shade
+          float d = (vShadeP.y - uBulbY) / uSpread;
+          float core = exp(-d * d);
+          // and a little hotter round the back of a shade that is open at both
+          // ends, because you are seeing the lit inside face through the cloth
+          float face = gl_FrontFacing ? 1.0 : uInside;
+          // the weave is what stops it looking like an airbrushed gradient
+          float w = 1.0 - uWeave + uWeave * fbm2(vec2(atan(vShadeP.z, vShadeP.x) * 5.0,
+                                                      vShadeP.y * 46.0));
+          // Clamped: added straight onto the lit result, an unclamped glow runs
+          // past 2.0 on the inner face, tone-maps to white and blooms into the
+          // ball this file exists to get rid of.
+          gl_FragColor.rgb += uGlowCol * min(uGlow * core * face * w, 0.95);
+        }
+        #include <tonemapping_fragment>`);
+  };
+  m.customProgramCacheKey = () => key;
+  m.userData.glowUniforms = u;
+  return m;
+}
+
+/** a small hot glass envelope; hidden inside most shades, visible in a globe */
+function bulbMaterial(hex) {
+  return new THREE.MeshBasicMaterial({ color: hex, toneMapped: false });
+}
+
+/** wires the emissive parts of a fixture to one dimmer */
+function dimmer(shades, basics) {
+  const base = basics.map((m) => m.color.clone());
+  const g0 = shades.map((m) => m.userData.glowUniforms.uGlow.value);
+  return (k) => {
+    shades.forEach((m, i) => { m.userData.glowUniforms.uGlow.value = g0[i] * k; });
+    basics.forEach((m, i) => { m.color.copy(base[i]).multiplyScalar(k); });
+  };
+}
+
+/* ============================================================ chandelier == */
+/* Five hand-blown globes on cables of different lengths from one plate. A
+   cluster reads as a designed object from any angle, which a single pendant
+   over a sofa never does, and each globe is its own small highlight in the
+   dark glass and the oiled floor. */
+export function chandelier(x, z, ceilY, o = {}) {
+  const g = new THREE.Group();
+  g.position.set(x, 0, z);
+
+  const canopy = shadowed(new THREE.Mesh(
+    new THREE.CylinderGeometry(0.19, 0.21, 0.035, 20), MAT.steel));
+  canopy.position.y = ceilY - 0.018;
+  g.add(canopy);
+
+  const glass = new THREE.MeshStandardMaterial({
+    color: 0xe0cdaa, roughness: 0.22, metalness: 0,
+    transparent: true, opacity: 0.42, envMapIntensity: 1.3, side: THREE.DoubleSide,
+  });
+  // small and warm, not white: the nearest globe is the one that blooms
+  const filMat = bulbMaterial(o.bulbColor ?? 0x6d4a28);
+
+  const drops = o.drops ?? [
+    [0.00, 0.00, 0.86, 0.105],
+    [0.26, 0.13, 1.14, 0.086],
+    [-0.24, 0.10, 1.30, 0.078],
+    [0.13, -0.25, 1.02, 0.092],
+    [-0.16, -0.22, 1.42, 0.070],
+  ];
+  let cy = 0;
+  for (const [dx, dz, drop, r] of drops) {
+    const y = ceilY - drop;
+    const cord = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.0035, 0.0035, drop - r, 5), MAT.steel);
+    cord.position.set(dx, y + r + (drop - r) / 2, dz);
+    g.add(cord);
+
+    // a brass collar where the cord enters the glass reads as a fitting
+    const collar = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.30, r * 0.36, 0.026, 12), MAT.brass);
+    collar.position.set(dx, y + r * 0.86, dz);
+    collar.castShadow = true;
+    g.add(collar);
+
+    const globe = new THREE.Mesh(new THREE.SphereGeometry(r, 18, 12), glass);
+    globe.position.set(dx, y, dz);
+    g.add(globe);
+
+    // the filament: small, and the only thing in the fixture that is truly hot
+    const fil = new THREE.Mesh(new THREE.CapsuleGeometry(r * 0.12, r * 0.42, 3, 6), filMat);
+    fil.position.set(dx, y + r * 0.06, dz);
+    g.add(fil);
+    cy += y;
+  }
+  cy /= drops.length;
+
+  return {
+    group: g,
+    lightPos: new THREE.Vector3(x, cy, z),
+    setGlow: dimmer([], [filMat]),
+  };
+}
+
+/* =============================================================== pendant == */
+/* A cone over a worktop. The inside is brass, not the shade colour: that
+   bounce is most of what you see of a pendant from below, and painting it the
+   same matt tone as the outside is what made these read as paper cups. */
+export function pendant(x, y, z, ceilY, o = {}) {
+  const g = new THREE.Group();
+  const rTop = o.rTop ?? 0.055, rBot = o.rBot ?? 0.16, h = o.height ?? 0.20;
+
+  const canopy = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.055, 0.02, 14), MAT.steel);
+  canopy.position.set(x, ceilY - 0.01, z);
+  g.add(canopy);
+  const cord = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.0035, 0.0035, ceilY - y - h / 2, 5), MAT.steel);
+  cord.position.set(x, (y + h / 2 + ceilY) / 2, z);
+  g.add(cord);
+
+  const outer = shadowed(new THREE.Mesh(
+    new THREE.CylinderGeometry(rTop, rBot, h, 24, 1, true),
+    o.material ?? MAT.cabinet));
+  outer.position.set(x, y, z);
+  g.add(outer);
+
+  // the lit brass liner, a hair inside the shell
+  const liner = new THREE.Mesh(
+    new THREE.CylinderGeometry(rTop * 0.94, rBot * 0.97, h * 0.98, 24, 1, true), MAT.brass);
+  liner.position.set(x, y, z);
+  liner.material = MAT.brass;
+  g.add(liner);
+
+  // a frosted diffuser across the mouth: without it you see straight up into
+  // an empty cone and the fixture reads as hollow
+  const diff = shadeMaterial({
+    color: 0xe8d6b4, glow: o.glow ?? 0.70, glowColor: 0xffb877,
+    bulbY: 0.0, spread: 0.09, inside: 1.2, weave: 0.18, roughness: 0.75,
+  });
+  const disc = new THREE.Mesh(new THREE.CircleGeometry(rBot * 0.94, 22), diff);
+  disc.rotation.x = Math.PI / 2;
+  disc.position.set(x, y - h / 2 + 0.012, z);
+  g.add(disc);
+
+  const filMat = bulbMaterial(o.bulbColor ?? 0x936a3e);
+  const fil = new THREE.Mesh(new THREE.SphereGeometry(0.026, 10, 8), filMat);
+  fil.position.set(x, y + 0.01, z);
+  g.add(fil);
+
+  return {
+    group: g,
+    lightPos: new THREE.Vector3(x, y - h / 2, z),
+    setGlow: dimmer([diff], [filMat]),
+  };
+}
+
+/* ============================================================ floor lamp == */
+/* A torchère with a fabric drum: the shade is the light source you actually
+   see, so it carries the gradient, and the brass rings at its rim are what
+   give it an edge instead of dissolving into bloom. */
+export function floorLamp(x, z, o = {}) {
+  const g = new THREE.Group();
+  g.position.set(x, 0, z);
+  const shadeY = o.shadeY ?? 1.46, rt = 0.185, rb = 0.235, sh = 0.27;
+
+  const base = shadowed(new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.165, 0.024, 22), MAT.steel));
+  base.position.y = 0.012; g.add(base);
+  const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.040, 0.05, 12), MAT.brass);
+  collar.position.y = 0.045; g.add(collar);
+  const stem = shadowed(new THREE.Mesh(new THREE.CylinderGeometry(0.013, 0.015, shadeY - 0.08, 12), MAT.brass));
+  stem.position.y = (shadeY - 0.08) / 2 + 0.05; g.add(stem);
+
+  const shadeMat = shadeMaterial({
+    color: 0xe9d9b8, glow: o.glow ?? 0.55, glowColor: 0xffab5e,
+    bulbY: 0.0, spread: 0.135, inside: 1.7, weave: 0.4,
+  });
+  const shade = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, sh, 26, 1, true), shadeMat);
+  shade.position.y = shadeY; g.add(shade);
+
+  // rims: a shade without them has no silhouette once it is glowing
+  [[rt, shadeY + sh / 2], [rb, shadeY - sh / 2]].forEach(([r, yy]) => {
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(r, 0.005, 5, 26), MAT.brass);
+    ring.position.y = yy; ring.rotation.x = Math.PI / 2; g.add(ring);
+  });
+
+  const filMat = bulbMaterial(o.bulbColor ?? 0x9c7550);
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.033, 10, 8), filMat);
+  bulb.position.y = shadeY; g.add(bulb);
+
+  return {
+    group: g,
+    lightPos: new THREE.Vector3(x, shadeY, z),
+    setGlow: dimmer([shadeMat], [filMat]),
+  };
+}
+
+/* ============================================================ table lamp == */
+export function tableLamp(x, y, z, o = {}) {
+  const g = new THREE.Group();
+  const rt = o.rTop ?? 0.105, rb = o.rBot ?? 0.145, sh = 0.185;
+  const shadeY = y + 0.30;
+
+  const foot = shadowed(new THREE.Mesh(new THREE.CylinderGeometry(0.058, 0.072, 0.021, 18), MAT.brass));
+  foot.position.set(x, y + 0.011, z); g.add(foot);
+  // a turned ceramic body, so the lamp is an object even when it is switched off
+  const body = shadowed(new THREE.Mesh(new THREE.LatheGeometry(
+    [[0.052, 0], [0.070, 0.03], [0.078, 0.09], [0.060, 0.16], [0.030, 0.21], [0.020, 0.23]]
+      .map(([r, yy]) => new THREE.Vector2(r, yy)), 20), MAT.ceramic));
+  body.position.set(x, y + 0.02, z); g.add(body);
+  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.10, 8), MAT.brass);
+  stem.position.set(x, y + 0.27, z); g.add(stem);
+
+  const shadeMat = shadeMaterial({
+    color: 0xe9dcc0, glow: o.glow ?? 0.48, glowColor: 0xffa663,
+    bulbY: 0.0, spread: 0.10, inside: 1.7, weave: 0.4,
+  });
+  const shade = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, sh, 22, 1, true), shadeMat);
+  shade.position.set(x, shadeY, z); g.add(shade);
+  [[rt, shadeY + sh / 2], [rb, shadeY - sh / 2]].forEach(([r, yy]) => {
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(r, 0.004, 5, 22), MAT.brass);
+    ring.position.set(x, yy, z); ring.rotation.x = Math.PI / 2; g.add(ring);
+  });
+
+  const filMat = bulbMaterial(o.bulbColor ?? 0x8a6844);
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.026, 10, 8), filMat);
+  bulb.position.set(x, shadeY, z); g.add(bulb);
+
+  return {
+    group: g,
+    lightPos: new THREE.Vector3(x, shadeY, z),
+    setGlow: dimmer([shadeMat], [filMat]),
+  };
+}
+
+/* ================================================================ sconce == */
+/* Half a cylinder of alabaster on a brass backplate: open top and bottom, so
+   it washes the wall in two directions and reads as a fitting rather than a
+   bright spot on the plaster. `ry` turns it to face out of its wall. */
+export function sconce(x, y, z, ry, o = {}) {
+  const g = new THREE.Group();
+  g.position.set(x, y, z);
+  g.rotation.y = ry;
+
+  const plate = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.30, 0.10), MAT.brass);
+  plate.position.set(-0.008, 0, 0);
+  plate.castShadow = true; g.add(plate);
+
+  const shadeMat = shadeMaterial({
+    color: 0xeadfc6, glow: o.glow ?? 0.50, glowColor: 0xffb473,
+    bulbY: 0.0, spread: 0.085, inside: 1.5, weave: 0.28, roughness: 0.7,
+  });
+  // half a cylinder: thetaStart puts the open side against the wall
+  const shade = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.062, 0.075, 0.20, 16, 1, true, -Math.PI / 2, Math.PI), shadeMat);
+  shade.position.set(0.055, 0, 0);
+  g.add(shade);
+  [[0.062, 0.10], [0.075, -0.10]].forEach(([r, yy]) => {
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(r, 0.0038, 5, 16, Math.PI), MAT.brass);
+    ring.position.set(0.055, yy, 0);
+    ring.rotation.set(Math.PI / 2, 0, Math.PI / 2);
+    g.add(ring);
+  });
+
+  const filMat = bulbMaterial(o.bulbColor ?? 0x8f6a42);
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.022, 10, 8), filMat);
+  bulb.position.set(0.055, 0, 0); g.add(bulb);
+
+  return {
+    group: g,
+    // Stood well off the wall. Two sconces average to one source in the rig,
+    // and that average landed 17 cm in front of the mirror between them —
+    // close enough that its specular lobe was a hole burned in the glass.
+    lightPos: new THREE.Vector3(x + Math.sin(ry) * 0.42, y, z + Math.cos(ry) * 0.42),
+    setGlow: dimmer([shadeMat], [filMat]),
+  };
+}
+</script>
+<script type="text/plain" id="rm21">/* =========================================================================
    The kitchen and the dining end.
 
    This is not a room, it is the far half of one open volume: no wall divides
@@ -61056,6 +61393,7 @@ import { rnd, rrnd, roundedBoxGeo, boxUv, faceTowards, normalizeUv } from './roo
 import { MAT, shadowed } from './room-mat.js';
 import { cushionGeo, weltGeo, curtainGeo } from './room-soft.js';
 import { ROOMS, APT } from './room-plan.js';
+import { shadeMaterial } from './room-lamps.js';
 
 const K = ROOMS.kitchen;
 const CEIL = APT.h - K.soffit;              // 2.88 — the soffit, not the slab
@@ -61481,8 +61819,14 @@ function buildPendant(g, x, z) {
   band.position.y = bot + 0.007;
   p.add(band);
 
-  const innerMat = new THREE.MeshBasicMaterial({ color: 0x6f4520, toneMapped: false });
-  const inner = new THREE.Mesh(new THREE.CircleGeometry(0.108, 16), innerMat);
+  /* A frosted diffuser rather than a flat emissive disc. A uniform disc is a
+     hole punched in the shade; this one is brightest under the bulb and falls
+     off to the rim, which is what you actually see looking up into a pendant. */
+  const innerMat = shadeMaterial({
+    color: 0xe8d6b4, glow: 0.72, glowColor: 0xffb877,
+    bulbY: 0.0, spread: 0.075, inside: 1.2, weave: 0.16, roughness: 0.72,
+  });
+  const inner = new THREE.Mesh(new THREE.CircleGeometry(0.108, 18), innerMat);
   inner.rotation.x = Math.PI / 2; inner.position.y = bot + 0.012;
   p.add(inner);
   const bulbMat = new THREE.MeshBasicMaterial({ color: 0x9e7a50, toneMapped: false });
@@ -61491,13 +61835,14 @@ function buildPendant(g, x, z) {
   p.add(bulb);
 
   // fade the emitters with the lamp level instead of popping them off
-  const iBase = innerMat.color.clone(), bBase = bulbMat.color.clone();
+  const iGlow = innerMat.userData.glowUniforms.uGlow.value;
+  const bBase = bulbMat.color.clone();
   g.add(p);
   return {
     group: p,
     lightPos: new THREE.Vector3(x, bot - 0.03, z),
     setGlow: (k) => {
-      innerMat.color.copy(iBase).multiplyScalar(k);
+      innerMat.userData.glowUniforms.uGlow.value = iGlow * k;
       bulbMat.color.copy(bBase).multiplyScalar(k);
     },
   };
@@ -61675,7 +62020,7 @@ export const KITCHEN_COLLIDERS = [
    TABLE.x + TABLE.w / 2 + 0.02, TABLE.h, TABLE.z + TABLE.d / 2 + 0.02],
 ];
 </script>
-<script type="text/plain" id="rm21">/* =========================================================================
+<script type="text/plain" id="rm22">/* =========================================================================
    The bedroom.
 
    Seven metres by six, one window in the far corner, and at night almost no
@@ -61694,6 +62039,7 @@ import { rnd, rrnd, pick, roundedBoxGeo, planeUv } from './room.js';
 import { MAT, bookMat, shadowed } from './room-mat.js';
 import { cushionGeo, weltGeo, drapeGeo } from './room-soft.js';
 import { ROOMS, APT, COLUMN } from './room-plan.js';
+import { tableLamp } from './room-lamps.js';
 
 const R = ROOMS.bedroom;
 /* walls are centred on their plan line and carry a 12 mm skirting, so the
@@ -61983,49 +62329,14 @@ function buildNightstand(g, z) {
    that glows a little on its own, a basic-material disc under it doing the
    pool of light, and a bulb. All three fade together — a shade still lit with
    the lamp switched off is the one thing you always notice. */
+/* A turned ceramic body under a fabric drum that glows from the inside,
+   from the shared fixture library. The old one was a plain cylinder with a
+   flat emissive disc under it: two of them a metre apart bloomed into one
+   ball and neither read as a lamp. */
 function buildLamp(g, x, z) {
-  const l = new THREE.Group();
-  l.position.set(x, 0, z);
-
-  const base = shadowed(new THREE.Mesh(new THREE.CylinderGeometry(0.072, 0.082, 0.022, 16), MAT.steel));
-  base.position.y = NS_TOP + 0.011;
-  l.add(base);
-  const stem = shadowed(new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.013, 0.26, 10), MAT.brass));
-  stem.position.y = NS_TOP + 0.15;
-  l.add(stem);
-
-  const shadeMat = new THREE.MeshStandardMaterial({
-    color: 0xe3cfae, roughness: 0.9, side: THREE.DoubleSide,
-    envMapIntensity: 0.35,
-    // Opaque, and barely emissive. Two of these a metre apart used to bloom
-    // into one ball that hid both shades; the shade only has to look lit, the
-    // point light does the work.
-    emissive: 0xff9d4e, emissiveIntensity: 0.09,
-  });
-  const shade = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.105, 0.145, 0.19, 22, 1, true), shadeMat);
-  shade.position.y = NS_TOP + 0.30;
-  l.add(shade);
-
-  const innerMat = new THREE.MeshBasicMaterial({ color: 0x503014, toneMapped: false });
-  const inner = new THREE.Mesh(new THREE.CircleGeometry(0.138, 20), innerMat);
-  inner.rotation.x = Math.PI / 2;
-  inner.position.y = NS_TOP + 0.208;
-  l.add(inner);
-  const bulbMat = new THREE.MeshBasicMaterial({ color: 0x8a6844, toneMapped: false });
-  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.027, 10, 8), bulbMat);
-  bulb.position.y = NS_TOP + 0.28;
-  l.add(bulb);
-
-  const innerBase = innerMat.color.clone(), bulbBase = bulbMat.color.clone();
-  const setGlow = (k) => {
-    innerMat.color.copy(innerBase).multiplyScalar(k);
-    bulbMat.color.copy(bulbBase).multiplyScalar(k);
-    shadeMat.emissiveIntensity = 0.28 * k;
-  };
-
-  g.add(l);
-  return { group: l, shadeMat, inner, bulb, setGlow, lightPos: new THREE.Vector3(x, NS_TOP + 0.27, z) };
+  const f = tableLamp(x, NS_TOP, z);
+  g.add(f.group);
+  return f;
 }
 
 /* ========================================================== wardrobe ==== */
@@ -62221,7 +62532,7 @@ export const BEDROOM_COLLIDERS = [
   [6.70, 0, 1.26, 7.18, 0.48, 2.84],                   // bench at the foot
 ];
 </script>
-<script type="text/plain" id="rm22">/* =========================================================================
+<script type="text/plain" id="rm23">/* =========================================================================
    The hall.
 
    Nine metres by three and a half, and not one window in it: this is the
@@ -62252,6 +62563,7 @@ import { rnd, rrnd, roundedBoxGeo, boxUv } from './room.js';
 import { MAT, shadowed } from './room-mat.js';
 import { cushionGeo, weltGeo, drapeGeo } from './room-soft.js';
 import { ROOMS, APT } from './room-plan.js';
+import { sconce } from './room-lamps.js';
 
 const R = ROOMS.hall;
 const NORTH = R.z1 - APT.wall / 2;      // 6.545 — inside face of the entrance wall
@@ -62302,7 +62614,10 @@ const MIRROR = new THREE.MeshStandardMaterial({
   // The captured environment is dominated by the fire, so a mirror-smooth
   // metal at 2x intensity puts a blown-out sun in the middle of the hall.
   // Softer and dimmer reads as dark glass; sharper reads as a bug.
-  color: 0x14171a, roughness: 0.17, metalness: 1.0, envMapIntensity: 0.85,
+  // Smooth metal this size takes a specular lobe half a metre across from a
+  // sconce standing next to it — the mirror was a white hole in the wall.
+  // Dark glass rather than polished metal: a little sheen, no lobe.
+  color: 0x171a1e, roughness: 0.46, metalness: 0.18, envMapIntensity: 0.65,
 });
 
 /* ============================================================== runner === */
@@ -62386,44 +62701,15 @@ function buildMirror(g) {
    mapping off, so they stay a clean warm disc however hard the grade pushes
    the rest of the room down. The lamp itself is one point light for the pair,
    built in room-lights.js from the positions returned here. */
+/* The sconces were a brass tube capped top and bottom with flat emissive
+   discs, so what you saw was two white dots and a hot patch on the plaster.
+   The shared fixture is an alabaster half-shade that glows unevenly from
+   inside and washes the wall in both directions — it has a shape, and the
+   light has somewhere to have come from. */
 function buildSconce(g, x) {
-  const s = new THREE.Group();
-  const RB = 0.052, BH = 0.20;
-
-  const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.048, 0.048, 0.014, 12), MAT.brass);
-  plate.rotation.x = Math.PI / 2;
-  plate.position.set(x, SC_Y, NORTH - 0.007);
-  plate.castShadow = true; plate.receiveShadow = true;
-  s.add(plate);
-
-  const body = shadowed(new THREE.Mesh(
-    new THREE.CylinderGeometry(RB, RB, BH, 12, 1, true), MAT.brass));
-  body.position.set(x, SC_Y, NORTH - RB - 0.008);
-  s.add(body);
-
-  const faceMat = new THREE.MeshBasicMaterial({ color: 0xffb173, toneMapped: false });
-  const bulbMat = new THREE.MeshBasicMaterial({ color: 0xffd0a0, toneMapped: false });
-  [1, -1].forEach((sgn) => {
-    const f = new THREE.Mesh(new THREE.CircleGeometry(RB - 0.004, 12), faceMat);
-    f.rotation.x = -sgn * Math.PI / 2;
-    f.position.set(x, SC_Y + sgn * (BH / 2 - 0.002), NORTH - RB - 0.008);
-    s.add(f);
-  });
-  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.020, 10, 8), bulbMat);
-  bulb.position.set(x, SC_Y, NORTH - RB - 0.008);
-  s.add(bulb);
-
-  // fade the emitters with the lamp level rather than popping them off
-  const fBase = faceMat.color.clone(), bBase = bulbMat.color.clone();
-  g.add(s);
-  return {
-    group: s,
-    lightPos: new THREE.Vector3(x, SC_Y, NORTH - 0.16),
-    setGlow: (k) => {
-      faceMat.color.copy(fBase).multiplyScalar(k);
-      bulbMat.color.copy(bBase).multiplyScalar(k);
-    },
-  };
+  const f = sconce(x, SC_Y, NORTH - 0.055, Math.PI);
+  g.add(f.group);
+  return f;
 }
 
 /* ==================================================== what is on the top = */
@@ -62780,7 +63066,7 @@ export const HALL_COLLIDERS = [
   [WEST - 0.03, 0, 5.14, WEST + 0.28, 1.80, 6.12],
 ];
 </script>
-<script type="text/plain" id="rm23">/* =========================================================================
+<script type="text/plain" id="rm24">/* =========================================================================
    The lighting rig.
 
    The room is lit almost entirely by the fireplace on the left wall, plus a
@@ -62831,7 +63117,8 @@ const X = ROOM.x, Z = ROOM.z, H = ROOM.h;
    0.066 mean luminance with 23% of the frame crushed to pure black. A lamp on
    a nightstand does not light a room — the ceiling above it does. */
 export function buildLights(opts) {
-  const { firePos, lampPos, shadowSize, pendants = [], lamps = [], sconces = [] } = opts;
+  const { firePos, lampPos, chandPos, shadowSize,
+          pendants = [], lamps = [], sconces = [] } = opts;
   const L = {};
 
   /* --- the constant floor of the room -------------------------------- */
@@ -62895,6 +63182,16 @@ export function buildLights(opts) {
   roomScene.add(L.bounceBack);
 
   /* --- practicals ----------------------------------------------------- */
+  /* The glass cluster over the seating. A SpotLight with a wide penumbra
+     throws the soft-edged pool a real fixture makes; a point light in the
+     same place lights the walls and the ceiling equally and reads as a glow
+     with nothing above it. A little up-spill comes back from bounceCeil. */
+  L.chandelier = new THREE.SpotLight(0xffbe86, 17, 7.0, 1.22, 0.95, 1.40);
+  L.chandelier.position.copy(chandPos || new THREE.Vector3(-0.85, 2.35, 0.30));
+  L.chandelier.target.position.set(
+    (chandPos ? chandPos.x : -0.85), 0.35, (chandPos ? chandPos.z : 0.30));
+  roomScene.add(L.chandelier, L.chandelier.target);
+
   L.lamp = new THREE.PointLight(0xffab5e, 13, 6.0, 1.65);
   L.lamp.position.copy(lampPos);
   roomScene.add(L.lamp);
@@ -62916,12 +63213,17 @@ export function buildLights(opts) {
   const kp = pendants.length
     ? pendants.reduce((a, p) => a.add(p.lightPos), new THREE.Vector3()).multiplyScalar(1 / pendants.length)
     : new THREE.Vector3((K.x0 + K.x1) / 2, 1.55, -1.4);
-  L.pendant = new THREE.PointLight(0xffbe86, 19, 7.5, 1.40);
+  // A cone alone lights the island and leaves the room round it black —
+  // measured, the kitchen lost a third of its mean when the pendants stopped
+  // being point lights. The cone is the pool you see; kBounce below is the
+  // light the same shades throw up at the ceiling and back down.
+  L.pendant = new THREE.SpotLight(0xffbe86, 24, 7.5, 1.16, 0.92, 1.30);
   L.pendant.position.copy(kp);
-  roomScene.add(L.pendant);
+  L.pendant.target.position.set(kp.x, 0.92, kp.z);
+  roomScene.add(L.pendant, L.pendant.target);
 
   // the worktop run, washed from under the wall units
-  L.worktop = new THREE.PointLight(0xffc490, 6.5, 4.5, 1.55);
+  L.worktop = new THREE.PointLight(0xffc490, 8.0, 4.8, 1.55);
   L.worktop.position.set((K.x0 + K.x1) / 2 + 0.6, 1.42, K.z1 - 0.55);
   roomScene.add(L.worktop);
 
@@ -62944,14 +63246,14 @@ export function buildLights(opts) {
   const sp = sconces.length
     ? sconces.reduce((a, s2) => a.add(s2.lightPos), new THREE.Vector3()).multiplyScalar(1 / sconces.length)
     : new THREE.Vector3(-2.0, 1.75, H_.z1 - 0.3);
-  L.sconce = new THREE.PointLight(0xffb473, 8.5, 6.0, 1.30);
+  L.sconce = new THREE.PointLight(0xffb473, 10.5, 6.5, 1.28);
   L.sconce.position.copy(sp);
   roomScene.add(L.sconce);
 
   // ceiling bounce: what a pendant and a pair of bedside lamps actually put
   // into a room, as opposed to what they put on the surface right under them
   const B = ROOMS.bedroom;
-  L.kBounce = new THREE.PointLight(0xe8c9a4, 4.6, 7.0, 1.25);
+  L.kBounce = new THREE.PointLight(0xe8c9a4, 9.5, 8.0, 1.20);
   L.kBounce.position.set((K.x0 + K.x1) / 2, H - 0.45, (K.z0 + K.z1) / 2 - 0.3);
   roomScene.add(L.kBounce);
 
@@ -62999,6 +63301,7 @@ export function updateLights(L, ctx) {
   L.bounceCeil.intensity = 3.2 * soft;
 
   L.lamp.intensity = 13 * lampLevel;
+  L.chandelier.intensity = 17 * lampLevel;
   L.shelf.intensity = 3.0 * lampLevel;
   L.cove.intensity = 4.0 * lampLevel;
 
@@ -63006,10 +63309,10 @@ export function updateLights(L, ctx) {
   // with the lamps off still has the city coming in and light spilling round
   // a doorway, and rooms that hit pure black just read as holes.
   const k = 0.16 + 0.84 * lampLevel;
-  L.pendant.intensity = 19 * k;
-  L.worktop.intensity = 6.5 * k;
-  L.sconce.intensity = 8.5 * k;
-  L.kBounce.intensity = 4.6 * k;
+  L.pendant.intensity = 24 * k;
+  L.worktop.intensity = 8.0 * k;
+  L.sconce.intensity = 10.5 * k;
+  L.kBounce.intensity = 9.5 * k;
   L.bBounce.intensity = 4.4 * (0.14 + 0.86 * lampLevel);
   for (const b of L.bedside) b.intensity = 13 * (0.14 + 0.86 * lampLevel);
 
@@ -63018,7 +63321,7 @@ export function updateLights(L, ctx) {
   L.windowFill.intensity = 6.0 + flash * 6.0;
 }
 </script>
-<script type="text/plain" id="rm24">/* =========================================================================
+<script type="text/plain" id="rm25">/* =========================================================================
    Part 4 / 5 — furniture, soft goods, plants, the cat, and the lighting rig
    ========================================================================= */
 import * as THREE from 'three';
@@ -63029,6 +63332,7 @@ import {
 import { MAT, bookMat, shadowed } from './room-mat.js';
 import { ROOMS } from './room-plan.js';
 import { cushionGeo, weltGeo, drapeGeo, curtainGeo } from './room-soft.js';
+import { chandelier, floorLamp } from './room-lamps.js';
 export { buildLights, updateLights } from './room-lights.js';
 
 /* The living room is no longer the whole flat: it runs x -5..4, z -4..3,
@@ -63304,42 +63608,6 @@ function buildPouf(g, x, z) {
   seam.position.set(x, 0.21, z); seam.rotation.x = Math.PI / 2;
   seam.castShadow = true; g.add(seam);
   return p;
-}
-
-/* ========================================================= floor lamp === */
-function buildFloorLamp(g, x, z) {
-  const l = new THREE.Group();
-  l.position.set(x, 0, z);
-  const base = shadowed(new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.18, 0.028, 24), M.blackSteel));
-  base.position.y = 0.014; l.add(base);
-  const stem = shadowed(new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.016, 1.42, 12), M.brass));
-  stem.position.y = 0.72; l.add(stem);
-
-  const shadeMat = new THREE.MeshStandardMaterial({
-    color: 0xe8d3b0, roughness: 0.9, side: THREE.DoubleSide,
-    envMapIntensity: 0.4,
-    // opaque: a translucent shade shows the basic-material bulb through it,
-    // and bloom then makes the pair one white ball
-    emissive: 0xff9d4e, emissiveIntensity: 0.14,
-  });
-  const shade = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.235, 0.26, 28, 1, true), shadeMat);
-  shade.position.y = 1.50; l.add(shade);
-  const innerMat = new THREE.MeshBasicMaterial({ color: 0x6d4520, toneMapped: false });
-  const inner = new THREE.Mesh(new THREE.CircleGeometry(0.225, 24), innerMat);
-  inner.rotation.x = Math.PI / 2; inner.position.y = 1.372; l.add(inner);
-  const bulbMat = new THREE.MeshBasicMaterial({ color: 0x9c7550, toneMapped: false });
-  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.032, 12, 10), bulbMat);
-  bulb.position.y = 1.48; l.add(bulb);
-
-  // fade the emitters with the light rather than popping them on/off
-  const innerBase = innerMat.color.clone(), bulbBase = bulbMat.color.clone();
-  const setGlow = (k) => {
-    innerMat.color.copy(innerBase).multiplyScalar(k);
-    bulbMat.color.copy(bulbBase).multiplyScalar(k);
-  };
-
-  g.add(l);
-  return { group: l, shadeMat, inner, bulb, setGlow, lightPos: new THREE.Vector3(x, 1.44, z) };
 }
 
 /* ========================================================== side table == */
@@ -63669,7 +63937,14 @@ export function buildProps() {
   const chair2 = buildArmchair(g, 2.95, -0.85, -0.6, 0.3, M.linenDark, 1);
   const table = buildCoffeeTable(g);
   buildPouf(g, -2.45, -1.35);
-  const lamp = buildFloorLamp(g, -3.30, 1.90);
+  /* Light you can see the source of. The room used to be lit by a point
+     light with nothing above it: a cluster of glass globes over the seating
+     and a torchère by the armchair give the two pools in here something to
+     come out of. */
+  const lamp = floorLamp(-3.30, 1.90);
+  g.add(lamp.group);
+  const chand = chandelier(-0.85, 0.30, H - 0.02);
+  g.add(chand.group);
   buildSideTable(g, -1.85, 2.52);
   buildSideTable(g, 3.55, -1.75);
   buildBookshelf(g);
@@ -63682,10 +63957,10 @@ export function buildProps() {
   const dust = buildDust(g);
 
   roomScene.add(g);
-  return { group: g, rug, sofa, chair, chair2, table, lamp, plant, plant2, cat, dust, M };
+  return { group: g, rug, sofa, chair, chair2, table, lamp, chand, plant, plant2, cat, dust, M };
 }
 </script>
-<script type="text/plain" id="rm25">/* =========================================================================
+<script type="text/plain" id="rm26">/* =========================================================================
    Screen-space ambient occlusion.
 
    The room has exactly one shadow-casting light, so every surface outside the
@@ -63916,7 +64191,7 @@ export class AmbientOcclusion {
   get texture() { return this.target.texture; }
 }
 </script>
-<script type="text/plain" id="rm26">/* =========================================================================
+<script type="text/plain" id="rm27">/* =========================================================================
    Depth of field.
 
    Nothing marks an image as computer-generated more reliably than being sharp
@@ -64102,7 +64377,7 @@ export class DepthOfField {
   get texture() { return this.out.texture; }
 }
 </script>
-<script type="text/plain" id="rm27">/* =========================================================================
+<script type="text/plain" id="rm28">/* =========================================================================
    First-person walking.
 
    WASD (and the arrow keys) move; the mouse looks around once the canvas has
@@ -64326,7 +64601,7 @@ export function roomColliders() {
   ], KITCHEN_COLLIDERS, BEDROOM_COLLIDERS, HALL_COLLIDERS);
 }
 </script>
-<script type="text/plain" id="rm28">/* =========================================================================
+<script type="text/plain" id="rm29">/* =========================================================================
    Part 5 / 5 — environment, planar reflections, post stack, controls, audio
    ========================================================================= */
 import * as THREE from 'three';
@@ -64733,7 +65008,8 @@ async function build() {
   const rooms = { kitchen: buildKitchen(), bedroom: buildBedroom(), hall: buildHall() };
   for (const r of Object.values(rooms)) roomScene.add(r.group);
   lights = buildLights({
-    firePos: fire.firePos, lampPos: props.lamp.lightPos, shadowSize: SHADOW_SIZE,
+    firePos: fire.firePos, lampPos: props.lamp.lightPos, chandPos: props.chand.lightPos,
+    shadowSize: SHADOW_SIZE,
     pendants: rooms.kitchen?.pendants, lamps: rooms.bedroom?.lamps, sconces: rooms.hall?.sconces,
   });
 
@@ -65278,8 +65554,8 @@ function tick() {
   updateLights(lights, {
     fire: f, flick, lampLevel, flash: U.flash.value, t, firePos: fire.firePos,
   });
-  props.lamp.shadeMat.emissiveIntensity = 0.42 * lampLevel;
   props.lamp.setGlow(lampLevel);
+  props.chand.setGlow(lampLevel);
 
   /* --- billboards: flames turn toward the camera but stay in the firebox --- */
   fire.flames.children.forEach((m) => {
@@ -65437,7 +65713,7 @@ function tick() {
   tick();
 })();
 </script>
-<script type="application/json" id="room-manifest">{"entry":"rm28","order":[{"domId":"rm0","deps":{}},{"domId":"rm1","deps":{"three":"rm0"}},{"domId":"rm2","deps":{"three":"rm0"}},{"domId":"rm3","deps":{}},{"domId":"rm4","deps":{"three":"rm0","./room.js":"rm1","./room-plan.js":"rm3","./room-fog.js":"rm2"}},{"domId":"rm5","deps":{"three":"rm0","./room.js":"rm1","./room-fog.js":"rm2","./room-city.js":"rm4"}},{"domId":"rm6","deps":{}},{"domId":"rm7","deps":{}},{"domId":"rm8","deps":{}},{"domId":"rm9","deps":{}},{"domId":"rm10","deps":{}},{"domId":"rm11","deps":{}},{"domId":"rm12","deps":{}},{"domId":"rm13","deps":{}},{"domId":"rm14","deps":{"three":"rm0","./noise.js":"rm6","./oak.js":"rm7","./plaster.js":"rm8","./stone.js":"rm9","./rug.js":"rm10","./weave.js":"rm11","./surfaces.js":"rm12","./organic.js":"rm13"}},{"domId":"rm15","deps":{"three":"rm0","./noise.js":"rm6"}},{"domId":"rm16","deps":{"three":"rm0","./room.js":"rm1","./tex/index.js":"rm14","./tex/detail.js":"rm15"}},{"domId":"rm17","deps":{"three":"rm0","./room.js":"rm1","./room-mat.js":"rm16","./room-plan.js":"rm3"}},{"domId":"rm18","deps":{"three":"rm0","./room.js":"rm1","./room-mat.js":"rm16","./tex/index.js":"rm14","./tex/detail.js":"rm15"}},{"domId":"rm19","deps":{"three":"rm0"}},{"domId":"rm20","deps":{"three":"rm0","./room.js":"rm1","./room-mat.js":"rm16","./room-soft.js":"rm19","./room-plan.js":"rm3"}},{"domId":"rm21","deps":{"three":"rm0","./room.js":"rm1","./room-mat.js":"rm16","./room-soft.js":"rm19","./room-plan.js":"rm3"}},{"domId":"rm22","deps":{"three":"rm0","./room.js":"rm1","./room-mat.js":"rm16","./room-soft.js":"rm19","./room-plan.js":"rm3"}},{"domId":"rm23","deps":{"three":"rm0","./room.js":"rm1","./room-plan.js":"rm3"}},{"domId":"rm24","deps":{"three":"rm0","./room.js":"rm1","./room-mat.js":"rm16","./room-plan.js":"rm3","./room-soft.js":"rm19","./room-lights.js":"rm23"}},{"domId":"rm25","deps":{}},{"domId":"rm26","deps":{}},{"domId":"rm27","deps":{"three":"rm0","./room.js":"rm1","./room-plan.js":"rm3","./room-kitchen.js":"rm20","./room-bedroom.js":"rm21","./room-hall.js":"rm22"}},{"domId":"rm28","deps":{"three":"rm0","./room.js":"rm1","./room-outside.js":"rm5","./room-shell.js":"rm17","./room-interior.js":"rm18","./room-plan.js":"rm3","./room-kitchen.js":"rm20","./room-bedroom.js":"rm21","./room-hall.js":"rm22","./room-props.js":"rm24","./tex/index.js":"rm14","./post-ao.js":"rm25","./post-dof.js":"rm26","./room-walk.js":"rm27"}}]}</script>
+<script type="application/json" id="room-manifest">{"entry":"rm29","order":[{"domId":"rm0","deps":{}},{"domId":"rm1","deps":{"three":"rm0"}},{"domId":"rm2","deps":{"three":"rm0"}},{"domId":"rm3","deps":{}},{"domId":"rm4","deps":{"three":"rm0","./room.js":"rm1","./room-plan.js":"rm3","./room-fog.js":"rm2"}},{"domId":"rm5","deps":{"three":"rm0","./room.js":"rm1","./room-fog.js":"rm2","./room-city.js":"rm4"}},{"domId":"rm6","deps":{}},{"domId":"rm7","deps":{}},{"domId":"rm8","deps":{}},{"domId":"rm9","deps":{}},{"domId":"rm10","deps":{}},{"domId":"rm11","deps":{}},{"domId":"rm12","deps":{}},{"domId":"rm13","deps":{}},{"domId":"rm14","deps":{"three":"rm0","./noise.js":"rm6","./oak.js":"rm7","./plaster.js":"rm8","./stone.js":"rm9","./rug.js":"rm10","./weave.js":"rm11","./surfaces.js":"rm12","./organic.js":"rm13"}},{"domId":"rm15","deps":{"three":"rm0","./noise.js":"rm6"}},{"domId":"rm16","deps":{"three":"rm0","./room.js":"rm1","./tex/index.js":"rm14","./tex/detail.js":"rm15"}},{"domId":"rm17","deps":{"three":"rm0","./room.js":"rm1","./room-mat.js":"rm16","./room-plan.js":"rm3"}},{"domId":"rm18","deps":{"three":"rm0","./room.js":"rm1","./room-mat.js":"rm16","./tex/index.js":"rm14","./tex/detail.js":"rm15"}},{"domId":"rm19","deps":{"three":"rm0"}},{"domId":"rm20","deps":{"three":"rm0","./room.js":"rm1","./room-mat.js":"rm16"}},{"domId":"rm21","deps":{"three":"rm0","./room.js":"rm1","./room-mat.js":"rm16","./room-soft.js":"rm19","./room-plan.js":"rm3","./room-lamps.js":"rm20"}},{"domId":"rm22","deps":{"three":"rm0","./room.js":"rm1","./room-mat.js":"rm16","./room-soft.js":"rm19","./room-plan.js":"rm3","./room-lamps.js":"rm20"}},{"domId":"rm23","deps":{"three":"rm0","./room.js":"rm1","./room-mat.js":"rm16","./room-soft.js":"rm19","./room-plan.js":"rm3","./room-lamps.js":"rm20"}},{"domId":"rm24","deps":{"three":"rm0","./room.js":"rm1","./room-plan.js":"rm3"}},{"domId":"rm25","deps":{"three":"rm0","./room.js":"rm1","./room-mat.js":"rm16","./room-plan.js":"rm3","./room-soft.js":"rm19","./room-lamps.js":"rm20","./room-lights.js":"rm24"}},{"domId":"rm26","deps":{}},{"domId":"rm27","deps":{}},{"domId":"rm28","deps":{"three":"rm0","./room.js":"rm1","./room-plan.js":"rm3","./room-kitchen.js":"rm21","./room-bedroom.js":"rm22","./room-hall.js":"rm23"}},{"domId":"rm29","deps":{"three":"rm0","./room.js":"rm1","./room-outside.js":"rm5","./room-shell.js":"rm17","./room-interior.js":"rm18","./room-plan.js":"rm3","./room-kitchen.js":"rm21","./room-bedroom.js":"rm22","./room-hall.js":"rm23","./room-props.js":"rm25","./tex/index.js":"rm14","./post-ao.js":"rm26","./post-dof.js":"rm27","./room-walk.js":"rm28"}}]}</script>
 <script type="module">(function bootstrapFn() {
   var reg = JSON.parse(document.getElementById("room-manifest").textContent);
   var esc = function (s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); };

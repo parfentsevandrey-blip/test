@@ -29,6 +29,7 @@ import { rnd, rrnd, roundedBoxGeo, boxUv } from './room.js';
 import { MAT, shadowed } from './room-mat.js';
 import { cushionGeo, weltGeo, drapeGeo } from './room-soft.js';
 import { ROOMS, APT } from './room-plan.js';
+import { sconce } from './room-lamps.js';
 
 const R = ROOMS.hall;
 const NORTH = R.z1 - APT.wall / 2;      // 6.545 — inside face of the entrance wall
@@ -79,7 +80,10 @@ const MIRROR = new THREE.MeshStandardMaterial({
   // The captured environment is dominated by the fire, so a mirror-smooth
   // metal at 2x intensity puts a blown-out sun in the middle of the hall.
   // Softer and dimmer reads as dark glass; sharper reads as a bug.
-  color: 0x14171a, roughness: 0.17, metalness: 1.0, envMapIntensity: 0.85,
+  // Smooth metal this size takes a specular lobe half a metre across from a
+  // sconce standing next to it — the mirror was a white hole in the wall.
+  // Dark glass rather than polished metal: a little sheen, no lobe.
+  color: 0x171a1e, roughness: 0.46, metalness: 0.18, envMapIntensity: 0.65,
 });
 
 /* ============================================================== runner === */
@@ -163,44 +167,15 @@ function buildMirror(g) {
    mapping off, so they stay a clean warm disc however hard the grade pushes
    the rest of the room down. The lamp itself is one point light for the pair,
    built in room-lights.js from the positions returned here. */
+/* The sconces were a brass tube capped top and bottom with flat emissive
+   discs, so what you saw was two white dots and a hot patch on the plaster.
+   The shared fixture is an alabaster half-shade that glows unevenly from
+   inside and washes the wall in both directions — it has a shape, and the
+   light has somewhere to have come from. */
 function buildSconce(g, x) {
-  const s = new THREE.Group();
-  const RB = 0.052, BH = 0.20;
-
-  const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.048, 0.048, 0.014, 12), MAT.brass);
-  plate.rotation.x = Math.PI / 2;
-  plate.position.set(x, SC_Y, NORTH - 0.007);
-  plate.castShadow = true; plate.receiveShadow = true;
-  s.add(plate);
-
-  const body = shadowed(new THREE.Mesh(
-    new THREE.CylinderGeometry(RB, RB, BH, 12, 1, true), MAT.brass));
-  body.position.set(x, SC_Y, NORTH - RB - 0.008);
-  s.add(body);
-
-  const faceMat = new THREE.MeshBasicMaterial({ color: 0xffb173, toneMapped: false });
-  const bulbMat = new THREE.MeshBasicMaterial({ color: 0xffd0a0, toneMapped: false });
-  [1, -1].forEach((sgn) => {
-    const f = new THREE.Mesh(new THREE.CircleGeometry(RB - 0.004, 12), faceMat);
-    f.rotation.x = -sgn * Math.PI / 2;
-    f.position.set(x, SC_Y + sgn * (BH / 2 - 0.002), NORTH - RB - 0.008);
-    s.add(f);
-  });
-  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.020, 10, 8), bulbMat);
-  bulb.position.set(x, SC_Y, NORTH - RB - 0.008);
-  s.add(bulb);
-
-  // fade the emitters with the lamp level rather than popping them off
-  const fBase = faceMat.color.clone(), bBase = bulbMat.color.clone();
-  g.add(s);
-  return {
-    group: s,
-    lightPos: new THREE.Vector3(x, SC_Y, NORTH - 0.16),
-    setGlow: (k) => {
-      faceMat.color.copy(fBase).multiplyScalar(k);
-      bulbMat.color.copy(bBase).multiplyScalar(k);
-    },
-  };
+  const f = sconce(x, SC_Y, NORTH - 0.055, Math.PI);
+  g.add(f.group);
+  return f;
 }
 
 /* ==================================================== what is on the top = */
