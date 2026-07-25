@@ -10,6 +10,7 @@ import { buildOutside, Lightning, FOG_U } from './room-outside.js';
 import { buildShell, buildWindows, buildFireplace, glassMaterials, reflectiveFloor } from './room-interior.js';
 import { buildProps, buildLights } from './room-props.js';
 import { REGISTRY, prewarm, texStats } from './tex/index.js';
+import { AmbientOcclusion } from './post-ao.js';
 
 const boot = document.getElementById('boot');
 const bootBar = document.getElementById('bootBar');
@@ -182,6 +183,10 @@ const mkPass = (frag, uniforms, blending) => new THREE.ShaderMaterial({
 class Post {
   constructor() {
     this.hdr = rt(2, 2, { depth: true });
+    this.hdr.depthTexture = new THREE.DepthTexture(2, 2);
+    this.hdr.depthTexture.type = THREE.UnsignedIntType;
+    this.hdr.depthTexture.minFilter = THREE.NearestFilter;
+    this.hdr.depthTexture.magFilter = THREE.NearestFilter;
     this.levels = [];
     for (let i = 0; i < 5; i++) this.levels.push(rt(2, 2, { depth: false }));
 
@@ -205,9 +210,9 @@ class Post {
       THREE.AdditiveBlending);
 
     this.composite = mkPass(/* glsl */`
-      uniform sampler2D tHDR, tBloom;
+      uniform sampler2D tHDR, tBloom, tAO;
       uniform vec2  uRes;
-      uniform float uTime, uExposure, uBloom, uWarm, uVignette, uGrain, uFlash;
+      uniform float uTime, uExposure, uBloom, uWarm, uVignette, uGrain, uFlash, uAO;
       varying vec2 vUv;
 
       vec3 aces(vec3 x){
@@ -232,6 +237,9 @@ class Post {
         col.g = texture2D(tHDR, uv).g;
         col.b = texture2D(tHDR, uv - d * ca).b;
 
+        // contact darkening, before exposure so it reads as light that never
+        // arrived rather than as a grey wash painted on top
+        if (uAO > 0.001) col *= mix(1.0, texture2D(tAO, uv).r, uAO);
         col += texture2D(tBloom, uv).rgb * uBloom;
         col *= uExposure * (1.0 + uFlash * 0.35);
         col = aces(col);
@@ -263,6 +271,8 @@ class Post {
       uVignette: { value: 0.85 },
       uGrain: { value: 0.014 },
       uFlash: U.flash,
+      tAO: { value: null },
+      uAO: { value: 0.0 },
     });
   }
 
@@ -296,7 +306,7 @@ class Post {
 }
 
 /* ============================================================== build ==== */
-let outside, shell, windows, fire, props, lights, post, lightning;
+let outside, shell, windows, fire, props, lights, post, lightning, ao;
 let rtOut, rtOutSmall, rtOutBlur, outBlurDown, outBlurUp;
 let floorRefl, winRefl;
 let env;
@@ -335,6 +345,7 @@ async function build() {
 
   await step(94, 'Впускаем дождь');
   post = new Post();
+  ao = new AmbientOcclusion({ THREE, renderer, blit, rt, VERT_QUAD });
   rtOut = rt(2, 2, { depth: true });
   rtOutSmall = rt(2, 2, { depth: false });
   rtOutBlur = rt(2, 2, { depth: false });
@@ -403,6 +414,10 @@ function onResize() {
   W = w; Hh = h;
 
   post.resize(W, Hh);
+  post.hdr.depthTexture.image.width = W;
+  post.hdr.depthTexture.image.height = Hh;
+  post.hdr.depthTexture.needsUpdate = true;
+  ao.resize(W, Hh);
   rtOut.setSize(W, Hh);
   const bw = Math.max(2, W >> 2), bh = Math.max(2, Hh >> 2);
   rtOutSmall.setSize(bw, bh);
@@ -855,7 +870,12 @@ function tick() {
   renderer.clear();
   renderer.render(roomScene, camera);
 
-  // 5 — bloom + grade
+  // 5 — ambient occlusion from the room pass's depth buffer
+  ao.render(post.hdr.depthTexture, camera);
+  post.composite.uniforms.tAO.value = ao.texture;
+  post.composite.uniforms.uAO.value = ao.strength;
+
+  // 6 — bloom + grade
   post.render(Q.bloom);
   renderer.setRenderTarget(null);
 
@@ -914,8 +934,8 @@ function tick() {
   // debug handle: window.__room.snapView(0..3), .stats(), .CFG, .lights …
   window.__room = {
     camera, cam, CFG, QUALITY, VIEWS, lights, post, U, snapView,
-    roomScene, outsideScene, shell, windows, fire, props, outside,
-    glassMaterials, reflectiveFloor,
+    roomScene, outsideScene, shell, windows, fire, props, outside, THREE,
+    glassMaterials, reflectiveFloor, ao,
     texStats,
     stats: () => ({ frame: frameNo, fps: lastFps, q: CFG.quality, commitMs: Math.round(lastCommitMs) }),
   };

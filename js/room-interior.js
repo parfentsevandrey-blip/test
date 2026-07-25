@@ -631,7 +631,7 @@ export function buildFireplace() {
         );
         vec4 mv = modelViewMatrix * vec4(p, 1.0);
         gl_Position = projectionMatrix * mv;
-        gl_PointSize = (0.55 + aSeed.z * 1.05) * uPix * (1.0 - life * 0.5) * 9.0 / max(-mv.z, 0.25);
+        gl_PointSize = clamp((0.55 + aSeed.z * 1.05) * uPix * (1.0 - life * 0.5) * 9.0 / max(-mv.z, 0.25), 0.0, 8.0);
       }`,
     fragmentShader: /* glsl */`
       varying float vLife, vSeed;
