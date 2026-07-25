@@ -16,13 +16,14 @@ fs.mkdirSync(OUT, { recursive: true });
 const SHOTS = CUSTOM
   ? [{ name: 'custom', ...parse(CUSTOM) }]
   : [
+    { name: 'living', eye: [2.2, 1.55, 2.3], tgt: [-2.4, 0.95, -1.6] },
     { name: 'sofa', eye: [-1.9, 1.30, -1.1], tgt: [0.3, 0.55, 1.9] },
-    { name: 'sofa-end', eye: [2.6, 1.05, 0.4], tgt: [-0.4, 0.55, 2.0] },
-    { name: 'armchair', eye: [-1.1, 1.15, -0.4], tgt: [-2.6, 0.55, 1.3] },
-    { name: 'table', eye: [0.7, 1.00, 1.5], tgt: [-0.6, 0.40, 0.3] },
     { name: 'fire', eye: [-1.4, 1.25, 0.9], tgt: [-4.6, 1.00, -0.6] },
-    { name: 'shelf', eye: [1.4, 1.35, 1.0], tgt: [4.7, 1.20, 2.0] },
-    { name: 'wide', eye: [3.9, 1.65, 3.4], tgt: [-1.6, 0.95, -0.8] },
+    { name: 'kitchen', eye: [4.9, 1.55, -0.1], tgt: [9.2, 1.00, -2.4] },
+    { name: 'island', eye: [5.6, 1.45, -3.2], tgt: [9.4, 0.95, -0.2] },
+    { name: 'bedroom', eye: [4.9, 1.50, 1.4], tgt: [9.0, 0.85, 4.6] },
+    { name: 'hall', eye: [3.4, 1.50, 3.6], tgt: [-4.0, 1.10, 5.6] },
+    { name: 'open', eye: [-3.6, 1.60, -2.6], tgt: [9.0, 1.10, -0.4] },
   ];
 
 function parse(s) {
@@ -43,7 +44,10 @@ function parse(s) {
 
   await page.goto('http://127.0.0.1:8848/room.html', { waitUntil: 'load', timeout: 60000 });
   await page.waitForFunction(() => document.body.classList.contains('ready'), { timeout: 240000 });
-  await page.evaluate(() => { document.getElementById('ui').style.display = 'none'; });
+  await page.evaluate(() => {
+    document.getElementById('ui').style.display = 'none';
+    window.__room.dof.aperture = 0;      // judging form, not focus
+  });
 
   const counts = await page.evaluate(() => {
     let meshes = 0, tris = 0;

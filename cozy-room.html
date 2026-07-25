@@ -212,7 +212,8 @@ body.walking canvas#scene{ cursor:none; }
     <button data-view="0" aria-pressed="true">Гостиная</button>
     <button data-view="1" aria-pressed="false">У камина</button>
     <button data-view="2" aria-pressed="false">У окна</button>
-    <button data-view="3" aria-pressed="false">На диване</button>
+    <button data-view="3" aria-pressed="false">Кухня</button>
+    <button data-view="4" aria-pressed="false">Спальня</button>
     <span class="sep"></span>
     <button id="btnWalk" aria-pressed="false" class="icon" title="Пройтись по комнате (WASD)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="1.6"/><path d="M11 21l1.5-5.5L10 13l.8-4.2 2.7-.9 2.5 2.1 2.3.8M10.8 8.8L8 10l-1 3M12.5 15.5L9 21"/></svg>
@@ -53615,6 +53616,136 @@ export function groundHaze() {
 }
 </script>
 <script type="text/plain" id="rm3">/* =========================================================================
+   The floor plan.
+
+   One apartment on the 47th floor, four spaces, described once here: rooms as
+   rectangles, walls as segments with openings cut in them, glazing as runs
+   along the façade. The shell, the skirting, the coves, the collision boxes
+   the walker uses and the camera presets are all generated from this, so the
+   plan cannot drift out of step with any of them.
+
+        z = -4  ┌──────────────────────────┬──────────────────┐
+                │                          │                  │
+                │        ГОСТИНАЯ          │  КУХНЯ-СТОЛОВАЯ  │  glazed south
+                │      fireplace west      │                  │  and east
+        z = 0.6 │                          ├──────────────────┤
+                │                          │                  │
+        z = 3   ├────────────┬─────────────┤     СПАЛЬНЯ      │
+                │            │             │                  │
+                │    ХОЛЛ    │   (bath)    │                  │
+        z = 6.6 └────────────┴─────────────┴──────────────────┘
+              x = -5                    x = 4              x = 11
+
+   Living and kitchen are one open volume divided by a column and a downstand
+   beam; everything else is walled with doorways.
+   ========================================================================= */
+
+export const APT = {
+  h: 3.3,                 // ceiling
+  wall: 0.11,             // interior partition thickness
+  x0: -5, x1: 11,
+  z0: -4, z1: 6.6,
+};
+
+/** Rooms, in the order the dock lists them. `floor` picks the finish. */
+export const ROOMS = {
+  living:  { x0: -5, x1: 4,  z0: -4,  z1: 3,   floor: 'oak',   soffit: 0,    name: 'Гостиная' },
+  kitchen: { x0: 4,  x1: 11, z0: -4,  z1: 0.6, floor: 'stone', soffit: 0.42, name: 'Кухня' },
+  bedroom: { x0: 4,  x1: 11, z0: 0.6, z1: 6.6, floor: 'oak',   soffit: 0,    name: 'Спальня' },
+  hall:    { x0: -5, x1: 4,  z0: 3,   z1: 6.6, floor: 'stone', soffit: 0.42, name: 'Холл' },
+};
+
+export const roomAt = (x, z) => {
+  for (const k of Object.keys(ROOMS)) {
+    const r = ROOMS[k];
+    if (x >= r.x0 && x <= r.x1 && z >= r.z0 && z <= r.z1) return k;
+  }
+  return null;
+};
+
+export const centre = (r) => [(r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2];
+
+/* ------------------------------------------------------------------ walls */
+/* Segments run a → b. `openings` are measured from a along the segment:
+   `at` is the centre, `w` the width, `h` the head height, `sill` the bottom
+   (0 for a doorway, higher for a hatch). `door` fits a leaf and a lining. */
+export const WALLS = [
+  // living | hall, with the doorway through to the back of the apartment
+  { a: [-5, 3], b: [4, 3], openings: [{ at: 7.1, w: 1.12, h: 2.42, door: 'open' }] },
+  // hall | bedroom
+  { a: [4, 3], b: [4, 6.6], openings: [{ at: 1.25, w: 1.02, h: 2.32, door: 'leaf' }] },
+  // kitchen | bedroom
+  { a: [4, 0.6], b: [11, 0.6], openings: [] },
+];
+
+/* Exterior solid walls (the rest of the perimeter is glass). The firebox is
+   an opening in the west wall like any other, so the wall builder cuts round
+   it instead of the fireplace having to rebuild that wall in four pieces. */
+export const EXT_WALLS = [
+  { a: [-5, -4], b: [-5, 6.6], openings: [{ at: 3.4, w: 1.75, h: 1.32, sill: 0.34 }] },
+  { a: [-5, 6.6], b: [11, 6.6], openings: [] },   // north
+  { a: [11, 3], b: [11, 6.6], openings: [] },     // east, past the glazing
+];
+
+/* ---------------------------------------------------------------- glazing */
+/* Runs a → b along the façade. The inward normal is (-dz, dx), so the runs
+   are wound so that "inward" really is into the apartment. `bays` sets the
+   mullion spacing. */
+export const GLAZING = [
+  { a: [-5, -4], b: [4, -4], room: 'living', bays: 5 },
+  { a: [4, -4], b: [11, -4], room: 'kitchen', bays: 4 },
+  { a: [11, -4], b: [11, 0.6], room: 'kitchen', bays: 3 },
+  { a: [11, 0.6], b: [11, 3], room: 'bedroom', bays: 2 },
+];
+
+/** unit vector into the apartment for a run */
+export function inward(seg) {
+  const dx = seg.b[0] - seg.a[0], dz = seg.b[1] - seg.a[1];
+  const L = Math.hypot(dx, dz);
+  return [-dz / L, dx / L];
+}
+export const segLen = (s) => Math.hypot(s.b[0] - s.a[0], s.b[1] - s.a[1]);
+
+/* -------------------------------------------------------------- structure */
+/* Living and kitchen are one volume; a column and a downstand beam are what
+   tell you where one ends and the other begins. */
+export const COLUMN = { x: 4, z: 1.55, w: 0.44, d: 0.44 };
+export const BEAM = { x: 4, z0: -4, z1: 1.33, w: 0.34, drop: 0.42 };
+
+/* ----------------------------------------------------------- collision ---
+   Wall slabs and the column, as world AABBs. Furniture adds its own. */
+export function planColliders() {
+  const out = [];
+  const t = APT.wall / 2 + 0.02;
+  const push = (seg, openings) => {
+    const [ax, az] = seg.a, [bx, bz] = seg.b;
+    const L = Math.hypot(bx - ax, bz - az);
+    const ux = (bx - ax) / L, uz = (bz - az) / L;
+    // walk the segment, skipping the doorways
+    const gaps = (openings || []).slice().sort((p, q) => p.at - q.at);
+    let s = 0;
+    const emit = (s0, s1) => {
+      if (s1 - s0 < 0.05) return;
+      const x0 = ax + ux * s0, z0 = az + uz * s0;
+      const x1 = ax + ux * s1, z1 = az + uz * s1;
+      out.push([Math.min(x0, x1) - t, 0, Math.min(z0, z1) - t,
+                Math.max(x0, x1) + t, APT.h, Math.max(z0, z1) + t]);
+    };
+    // a firebox opening starts above the floor: you still cannot walk into it
+    for (const g of gaps) {
+      if ((g.sill || 0) > 0.05) continue;
+      emit(s, g.at - g.w / 2); s = g.at + g.w / 2;
+    }
+    emit(s, L);
+  };
+  for (const w of WALLS) push(w, w.openings);
+  for (const w of EXT_WALLS) push(w, w.openings);
+  out.push([COLUMN.x - COLUMN.w / 2 - 0.02, 0, COLUMN.z - COLUMN.d / 2 - 0.02,
+            COLUMN.x + COLUMN.w / 2 + 0.02, APT.h, COLUMN.z + COLUMN.d / 2 + 0.02]);
+  return out;
+}
+</script>
+<script type="text/plain" id="rm4">/* =========================================================================
    The city outside the glass.
 
    The old skyline was a radial scatter of identical boxes, which from the
@@ -53635,6 +53766,7 @@ export function groundHaze() {
    ========================================================================= */
 import * as THREE from 'three';
 import { GLSL_NOISE, U, ROOM, rnd, rrnd, smoothstep, outsideScene } from './room.js';
+import { APT } from './room-plan.js';
 import { FOG, fogUniforms } from './room-fog.js';
 
 /* ------------------------------------------------------------------ plan */
@@ -53858,8 +53990,9 @@ export function cityPlan() {
      It is exactly the room's footprint, so the glazing sits flush with the
      facade, and it is only ever seen from inside, edge-on and downward. */
   boxes.push({
-    x: 0, z: 0, y: -ROOM.alt / 2 - 0.01, w: ROOM.x * 2 - 0.04, h: ROOM.alt - 0.02,
-    d: ROOM.z * 2 - 0.04, rot: 0, id: 7717, style: 0, kind: 0, crown: -1,
+    x: (APT.x0 + APT.x1) / 2, z: (APT.z0 + APT.z1) / 2, y: -ROOM.alt / 2 - 0.01,
+    w: APT.x1 - APT.x0 - 0.04, h: ROOM.alt - 0.02, d: APT.z1 - APT.z0 - 0.04,
+    rot: 0, id: 7717, style: 0, kind: 0, crown: -1,
     baseY: -ROOM.alt, topY: -0.02, glass: 1, occ: 0.38, score: Infinity,
   });
 
@@ -54424,7 +54557,7 @@ export function buildAircraft() {
   return mesh;
 }
 </script>
-<script type="text/plain" id="rm4">/* =========================================================================
+<script type="text/plain" id="rm5">/* =========================================================================
    Part 2 / 5 — the weather and the ground the city stands on.
 
    The buildings, streets, traffic and aircraft live in room-city.js; this
@@ -54781,7 +54914,7 @@ export function buildOutside(Q) {
   return { plan, sky, ground, city, roundTowers, streets, traffic, beacons, aircraft, rain, mist };
 }
 </script>
-<script type="text/plain" id="rm5">/* =========================================================================
+<script type="text/plain" id="rm6">/* =========================================================================
    Procedural texture toolkit.
 
    Everything here is TILEABLE: pass a `period` in lattice cells and the
@@ -55023,7 +55156,7 @@ export function setRGB(dst, i, c, scale = 1) {
   dst[i * 3] = c[0] * scale; dst[i * 3 + 1] = c[1] * scale; dst[i * 3 + 2] = c[2] * scale;
 }
 </script>
-<script type="text/plain" id="rm6">/* =========================================================================
+<script type="text/plain" id="rm7">/* =========================================================================
    Wide-plank oiled European oak floor.
 
    One tile covers ~1.43 m x 2.0 m in the scene (repeat [7,4] on a 10x8 m
@@ -55605,7 +55738,7 @@ export function oakFloor(size, N) {
   return { albedo, rough, height, ao };
 }
 </script>
-<script type="text/plain" id="rm7">/* =========================================================================
+<script type="text/plain" id="rm8">/* =========================================================================
    Hand-troweled limewash plaster — walls and ceiling.
 
    One tile is authored for a 3.3 m x 3.3 m patch of wall (see PLASTER_TILE in
@@ -56231,7 +56364,7 @@ export function plasterCeiling(size, N) {
   return { albedo, rough, height, ao };
 }
 </script>
-<script type="text/plain" id="rm8">/* =========================================================================
+<script type="text/plain" id="rm9">/* =========================================================================
    honedStone — dark honed limestone / soapstone slab for the fireplace
    surround. Seen at close range with firelight raking across it, so it is
    built for micro-relief and roughness break-up rather than big geometry.
@@ -56845,7 +56978,7 @@ export function honedStone(size, N) {
   return { albedo, rough, height };
 }
 </script>
-<script type="text/plain" id="rm9">/* =========================================================================
+<script type="text/plain" id="rm10">/* =========================================================================
    Hand-loomed wool rug — cut pile, natural undyed tones.
 
    Built by splatting leaning elliptical yarn tips, max-blended so adjacent
@@ -57255,7 +57388,7 @@ export function woolRug(size, N) {
   return { albedo, rough, height, ao };
 }
 </script>
-<script type="text/plain" id="rm10">/* =========================================================================
+<script type="text/plain" id="rm11">/* =========================================================================
    Upholstery fabrics: plain-weave linen, looped boucle, hand-knit wool.
 
    All three are built the same way, which is why they share one file:
@@ -58018,7 +58151,7 @@ function tone3(t, f) {
   return v < 0 ? 0 : v > 1 ? 1 : v;
 }
 </script>
-<script type="text/plain" id="rm11">/* =========================================================================
+<script type="text/plain" id="rm12">/* =========================================================================
    Hard surfaces: honed grey-green marble, bookbinding buckram, aged brass.
 
    Shared machinery
@@ -58820,7 +58953,7 @@ export function brushedMetal(size, N) {
   return { albedo, rough, height, metal };
 }
 </script>
-<script type="text/plain" id="rm12">/* =========================================================================
+<script type="text/plain" id="rm13">/* =========================================================================
    Organic surfaces: a burning log for the firebox, and a single glossy
    fiddle-leaf-fig leaf for the houseplants.
 
@@ -59529,7 +59662,7 @@ export function leaf(size, N) {
   return { albedo, rough, height, ao };
 }
 </script>
-<script type="text/plain" id="rm13">/* =========================================================================
+<script type="text/plain" id="rm14">/* =========================================================================
    Texture registry + the bridge from generator output to Three.js textures.
    ========================================================================= */
 import * as THREE from 'three';
@@ -59636,7 +59769,7 @@ export function applyMaps(material, name, opts = {}) {
   return m;
 }
 </script>
-<script type="text/plain" id="rm14">/* =========================================================================
+<script type="text/plain" id="rm15">/* =========================================================================
    A shared micro-detail layer.
 
    Base textures are authored at a tile of tens of centimetres. That is right
@@ -59756,44 +59889,197 @@ export function applyDetail(material, opts = {}) {
   return material;
 }
 </script>
-<script type="text/plain" id="rm15">/* =========================================================================
-   Part 3 / 5 — the room shell, the floor-to-ceiling glass, the fireplace
+<script type="text/plain" id="rm16">/* =========================================================================
+   The material palette — one place, shared by the shell and every room.
+
+   The redesign moves the apartment from warm-rustic (honey oak, cream
+   plaster, brass everywhere) to something darker and quieter: smoked oak,
+   deep olive limewash, honed travertine, walnut joinery, blackened steel,
+   with brass kept as an accent rather than a theme. At night, lit mostly by
+   a fire and a few practicals, a dark room reads far better than a pale one
+   — pale walls at 2% of daylight just look grey.
+
+   Every texture is still generated procedurally at load; this file only
+   decides tint, tiling, roughness and how much environment each surface
+   picks up.
    ========================================================================= */
 import * as THREE from 'three';
-import {
-  GLSL_NOISE, U, ROOM, FIREBOX, rnd, roomScene, MAX_ANISO,
-  roundedBoxGeo, planeUv, boxUv,
-} from './room.js';
+import { MAX_ANISO } from './room.js';
 import { applyMaps } from './tex/index.js';
 import { applyDetail } from './tex/detail.js';
 
-const X = ROOM.x, Z = ROOM.z, H = ROOM.h;
+const AN = { aniso: MAX_ANISO };
 
-/* materials that need textures wired in by the app after the render targets exist */
+/** attach the generated PBR set, and optionally the shared micro-detail normal */
+export const tex = (mat, name, opts) => {
+  applyMaps(mat, name, { ...AN, ...opts });
+  if (opts && opts.detail) applyDetail(mat, opts.detail);
+  return mat;
+};
+
+/* fabric wants a fine fibre break-up; wood and stone a coarser, shallower one */
+export const D_FABRIC = { scale: 0.035, strength: 0.55, fade: 3.5, rough: 0.05 };
+export const D_WOOD = { scale: 0.07, strength: 0.40, fade: 4.5, rough: 0.04 };
+export const D_STONE = { scale: 0.045, strength: 0.45, fade: 3.5, rough: 0.06 };
+
+const std = (o) => new THREE.MeshStandardMaterial(o);
+
+export const MAT = {
+  /* ---------------------------------------------------------- surfaces */
+  // smoked oak, wide plank — cooler and several stops darker than before
+  oakFloor: tex(std({ color: 0x7d6549, metalness: 0, envMapIntensity: 0.5 }),
+    'oakFloor', { normalScale: 0.9 }),
+
+  // honed travertine, large format; the grout is injected by the shell
+  stoneFloor: tex(std({ color: 0x8d8474, metalness: 0.03, envMapIntensity: 0.5 }),
+    'honedStone', { repeat: [0.55, 0.55], normalScale: 0.55, detail: D_STONE }),
+
+  // limewash: the everyday wall
+  plaster: tex(std({ color: 0x8a8074, metalness: 0, envMapIntensity: 0.7 }),
+    'plasterWall', { normalScale: 0.40, detail: { scale: 0.05, strength: 0.5, fade: 4.0, rough: 0.05 } }),
+
+  // and the deep olive it goes to on a feature wall
+  plasterDark: tex(std({ color: 0x3f453c, metalness: 0, envMapIntensity: 0.55 }),
+    'plasterWall', { normalScale: 0.48, detail: { scale: 0.05, strength: 0.55, fade: 4.0, rough: 0.05 } }),
+
+  ceiling: tex(std({ color: 0x7d766c, metalness: 0, envMapIntensity: 0.6 }),
+    'plasterCeiling', { normalScale: 0.4 }),
+
+  /* ------------------------------------------------------------ joinery */
+  walnut: tex(std({ color: 0x4e3826, metalness: 0, envMapIntensity: 0.45 }),
+    'oakFloor', { repeat: [0.55, 0.55], normalScale: 0.6, detail: D_WOOD }),
+
+  oakPale: tex(std({ color: 0x9c7f5b, metalness: 0, envMapIntensity: 0.5 }),
+    'oakFloor', { repeat: [0.45, 0.45], normalScale: 0.5, detail: D_WOOD }),
+
+  // matt lacquered cabinet fronts — no texture, all shape and sheen
+  cabinet: std({ color: 0x2f342f, roughness: 0.52, metalness: 0.04, envMapIntensity: 0.55 }),
+  cabinetPale: std({ color: 0x7d7566, roughness: 0.58, metalness: 0.03, envMapIntensity: 0.5 }),
+
+  /* -------------------------------------------------------------- stone */
+  travertine: tex(std({ color: 0xb0a58f, metalness: 0.03, envMapIntensity: 0.7 }),
+    'honedStone', { repeat: [1.1, 1.1], normalScale: 0.5, detail: D_STONE }),
+
+  marble: tex(std({ color: 0x9d9c98, metalness: 0.05, envMapIntensity: 1.0 }),
+    'marble', { repeat: [1.5, 1.5], normalScale: 0.5 }),
+
+  // the fireplace surround: a darker, denser stone than the floor
+  fireStone: tex(std({ color: 0xcfc6ba, metalness: 0.04, envMapIntensity: 0.5 }),
+    'honedStone', { normalScale: 0.7, detail: D_STONE }),
+
+  /* -------------------------------------------------------------- metal */
+  steel: tex(std({ color: 0x22201d, metalness: 0.82, roughness: 0.42, envMapIntensity: 0.8 }),
+    'brushedMetal', { repeat: [3, 3], normalScale: 0.5 }),
+
+  brass: tex(std({ color: 0xb08f4e, metalness: 0.95, envMapIntensity: 1.1 }),
+    'brushedMetal', { repeat: [3, 3], normalScale: 0.6 }),
+
+  chrome: std({ color: 0xcfd2d4, roughness: 0.12, metalness: 1.0, envMapIntensity: 1.2 }),
+
+  /* ------------------------------------------------------------- fabric */
+  linen: tex(std({ color: 0xb3a68f, metalness: 0, envMapIntensity: 0.32 }),
+    'linen', { repeat: [4, 4], normalScale: 0.85, detail: D_FABRIC }),
+
+  linenDark: tex(std({ color: 0x796d5c, metalness: 0, envMapIntensity: 0.28 }),
+    'linen', { repeat: [4, 4], normalScale: 0.85, detail: D_FABRIC }),
+
+  boucle: tex(std({ color: 0xcdbfa6, metalness: 0, envMapIntensity: 0.28 }),
+    'boucle', { repeat: [4, 4], normalScale: 0.9, detail: D_FABRIC }),
+
+  boucleRound: tex(std({ color: 0xcdbfa6, metalness: 0, envMapIntensity: 0.28 }),
+    'boucle', { repeat: [9, 1.6], normalScale: 0.9 }),
+
+  // the one hot colour in the flat, used sparingly
+  rust: tex(std({ color: 0xa8542f, metalness: 0, envMapIntensity: 0.32 }),
+    'linen', { repeat: [4, 4], normalScale: 0.85, detail: D_FABRIC }),
+
+  olive: tex(std({ color: 0x556052, metalness: 0, envMapIntensity: 0.3 }),
+    'linen', { repeat: [4, 4], normalScale: 0.85, detail: D_FABRIC }),
+
+  knit: tex(std({ color: 0xb59a72, metalness: 0, side: THREE.DoubleSide, envMapIntensity: 0.22 }),
+    'knit', { repeat: [3, 5], normalScale: 1.0, detail: D_FABRIC }),
+
+  drape: tex(std({ color: 0x9d9384, metalness: 0, side: THREE.DoubleSide, envMapIntensity: 0.3 }),
+    'linen', { repeat: [3, 3], normalScale: 1.0, detail: D_FABRIC }),
+
+  rug: tex(std({ color: 0xbaa88c, metalness: 0, envMapIntensity: 0.28 }),
+    'woolRug', { repeat: [2.2, 2.2], normalScale: 0.75 }),
+
+  rugDark: tex(std({ color: 0x6c6a5e, metalness: 0, envMapIntensity: 0.24 }),
+    'woolRug', { repeat: [2.4, 2.4], normalScale: 0.75 }),
+
+  leather: tex(std({ color: 0x5a3a29, roughness: 0.55, metalness: 0, envMapIntensity: 0.55 }),
+    'linen', { repeat: [7, 7], normalScale: 0.35, detail: D_FABRIC }),
+
+  /* --------------------------------------------------------------- misc */
+  wicker: tex(std({ color: 0x8d6a41, metalness: 0, envMapIntensity: 0.3 }),
+    'knit', { repeat: [3.2, 2.2], normalScale: 1.15 }),
+
+  bark: tex(std({ color: 0x7a6249, metalness: 0, envMapIntensity: 0.25 }),
+    'charredLog', { repeat: [2.5, 2.5], normalScale: 0.9 }),
+
+  leaf: tex(std({ color: 0xffffff, metalness: 0, side: THREE.DoubleSide, envMapIntensity: 0.4 }),
+    'leaf', { repeat: [1, 1], normalScale: 0.8 }),
+
+  fur: tex(std({ color: 0x635a53, metalness: 0, envMapIntensity: 0.2 }),
+    'woolRug', { repeat: [5, 5], normalScale: 0.7 }),
+
+  ceramic: std({ color: 0xa89b87, roughness: 0.4, envMapIntensity: 0.7 }),
+  clay: std({ color: 0x6d5c49, roughness: 0.82, envMapIntensity: 0.35 }),
+  clayPale: std({ color: 0x9a8f7c, roughness: 0.68, envMapIntensity: 0.4 }),
+  glassware: std({ color: 0xdfe6e6, roughness: 0.06, metalness: 0, envMapIntensity: 1.4,
+                  transparent: true, opacity: 0.28 }),
+};
+
+/** every book shares one cloth texture and differs only by tint */
+const _bookMats = new Map();
+export const bookMat = (hex) => {
+  if (!_bookMats.has(hex)) {
+    _bookMats.set(hex, tex(std({ color: hex, metalness: 0, envMapIntensity: 0.25 }),
+      'bookCloth', { repeat: [8, 8], normalScale: 0.8 }));
+  }
+  return _bookMats.get(hex);
+};
+
+export const shadowed = (m) => { m.castShadow = true; m.receiveShadow = true; return m; };
+</script>
+<script type="text/plain" id="rm17">/* =========================================================================
+   The shell, generated from js/room-plan.js.
+
+   Walls are solid boxes with the openings genuinely cut out of them, so a
+   doorway has a reveal you can see the thickness of and the firebox is a
+   hole rather than a picture on a flat plane. Floors, ceilings, skirtings,
+   coves, linings and the glazing all come off the same plan, so moving a
+   wall in room-plan.js moves everything that touches it — including the
+   boxes the walker collides with.
+   ========================================================================= */
+import * as THREE from 'three';
+import {
+  GLSL_NOISE, U, roomScene, boxUv, planeUv,
+} from './room.js';
+import { MAT, shadowed } from './room-mat.js';
+import { APT, ROOMS, WALLS, EXT_WALLS, GLAZING, COLUMN, BEAM, inward, segLen } from './room-plan.js';
+
+const H = APT.h, T = APT.wall;
+
+/* materials the app has to finish wiring once the render targets exist */
 export const glassMaterials = [];
-export const reflectiveFloor = { material: null, uniforms: null };
+export const reflectiveFloors = [];
 
-/* ============================================================== shell ==== */
-export function buildShell() {
-  const g = new THREE.Group();
-  g.name = 'shell';
-
-  /* ---- floor: oiled oak, glossy enough to catch the fire ---- */
-  const floorMat = new THREE.MeshStandardMaterial({
-    color: 0xffffff, metalness: 0.0, envMapIntensity: 0.55,
-  });
-  applyMaps(floorMat, 'oakFloor', { aniso: MAX_ANISO, normalScale: 0.9 });
-
-  /* planar reflection injected into the standard lighting result */
-  const fu = {
-    tRefl:      { value: null },
-    uReflMat:   { value: new THREE.Matrix4() },
-    uReflAmt:   { value: 0.30 },
-    uReflOn:    U.reflOn,
-    uTime:      U.time,
+/* ------------------------------------------------------- reflective floor */
+/* The planar reflection is injected into the standard lighting result rather
+   than replacing the material, so the floor still takes shadows and the
+   environment normally. `grout` cuts joints into a large-format stone floor
+   from world position — cheaper and seamless compared with laying slabs. */
+function reflective(base, key, grout) {
+  const u = {
+    tRefl: { value: null },
+    uReflMat: { value: new THREE.Matrix4() },
+    uReflAmt: { value: 0.30 },
+    uReflOn: U.reflOn,
   };
-  floorMat.onBeforeCompile = (sh) => {
-    Object.assign(sh.uniforms, fu);
+  base.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, u);
     sh.vertexShader = sh.vertexShader
       .replace('#include <common>', `#include <common>
         uniform mat4 uReflMat; varying vec4 vReflUv; varying vec3 vWpos;`)
@@ -59803,13 +60089,19 @@ export function buildShell() {
         vReflUv = uReflMat * _wp;`);
     sh.fragmentShader = sh.fragmentShader
       .replace('#include <common>', `#include <common>
-        uniform sampler2D tRefl; uniform float uReflAmt, uReflOn, uTime;
+        uniform sampler2D tRefl; uniform float uReflAmt, uReflOn;
         varying vec4 vReflUv; varying vec3 vWpos;`)
       .replace('#include <tonemapping_fragment>', `
+        ${grout ? `
+        {
+          vec2 j = abs(fract(vWpos.xz / ${grout.toFixed(3)} + 0.5) - 0.5) * ${grout.toFixed(3)};
+          float w = fwidth(vWpos.x) * 1.2 + 0.0015;
+          float line = 1.0 - smoothstep(0.004, 0.004 + w, min(j.x, j.y));
+          gl_FragColor.rgb *= 1.0 - line * 0.55;
+        }` : ''}
         if(uReflOn > 0.5 && uReflAmt > 0.001){
           vec3 V = normalize(cameraPosition - vWpos);
           float fres = pow(1.0 - clamp(V.y, 0.0, 1.0), 4.0);
-          // rougher planks scatter the reflection more
           float rgh = roughnessFactor;
           vec2 base = vReflUv.xy / max(vReflUv.w, 1e-4);
           float blur = 0.004 + rgh * 0.022;
@@ -59825,125 +60117,174 @@ export function buildShell() {
         }
         #include <tonemapping_fragment>`);
   };
-  floorMat.customProgramCacheKey = () => 'floorRefl';
-  applyDetail(floorMat, { scale: 0.06, strength: 0.45, fade: 5.0, rough: 0.05 });
-  reflectiveFloor.material = floorMat;
-  reflectiveFloor.uniforms = fu;
+  base.customProgramCacheKey = () => key;
+  base.extensions = { derivatives: true };
+  reflectiveFloors.push({ material: base, uniforms: u });
+  return base;
+}
 
-  // one oak tile is 1.45 m across the planks × 2.0 m along them
-  const floor = new THREE.Mesh(planeUv(new THREE.PlaneGeometry(X * 2, Z * 2), X * 2, Z * 2, 1.45, 2.0), floorMat);
-  floor.rotation.x = -Math.PI / 2;
-  floor.receiveShadow = true;
-  floor.name = 'floor';
-  g.add(floor);
+/* -------------------------------------------------------------- geometry */
+/** the solid pieces a wall segment breaks into once its openings are cut */
+function wallPieces(seg) {
+  const L = segLen(seg);
+  const [ax, az] = seg.a;
+  const ux = (seg.b[0] - ax) / L, uz = (seg.b[1] - az) / L;
+  const alongX = Math.abs(ux) > 0.5;
+  const out = [];
+  const addBox = (s0, s1, y0, y1) => {
+    if (s1 - s0 < 1e-3 || y1 - y0 < 1e-3) return;
+    const cs = (s0 + s1) / 2, len = s1 - s0;
+    out.push({
+      x: ax + ux * cs, y: (y0 + y1) / 2, z: az + uz * cs,
+      w: alongX ? len : T, h: y1 - y0, d: alongX ? T : len,
+    });
+  };
+  let s = 0;
+  for (const o of (seg.openings || []).slice().sort((a, b) => a.at - b.at)) {
+    addBox(s, o.at - o.w / 2, 0, H);
+    if ((o.sill || 0) > 0.001) addBox(o.at - o.w / 2, o.at + o.w / 2, 0, o.sill);
+    if (o.h < H - 0.001) addBox(o.at - o.w / 2, o.at + o.w / 2, o.h, H);
+    s = o.at + o.w / 2;
+  }
+  addBox(s, L, 0, H);
+  return { pieces: out, alongX, ux, uz, L };
+}
 
-  /* ---- walls & ceiling: warm limewash plaster ---- */
-  const PLASTER_TILE = 3.3;
-  const wallMat = new THREE.MeshStandardMaterial({
-    color: 0xc6b39c, metalness: 0, envMapIntensity: 0.8,
-  });
-  applyMaps(wallMat, 'plasterWall', { aniso: MAX_ANISO, normalScale: 0.40 });
-  applyDetail(wallMat, { scale: 0.05, strength: 0.5, fade: 4.0, rough: 0.05 });
-  const ceilMat = new THREE.MeshStandardMaterial({
-    color: 0xb0a496, metalness: 0, envMapIntensity: 0.65,
-  });
-  applyMaps(ceilMat, 'plasterCeiling', { aniso: MAX_ANISO, normalScale: 0.4 });
+const WALL_TILE = 3.3;
 
-  // UVs in metres so every panel keeps the same plaster grain, whatever its
-  // size; cu/cv place the panel within one continuous wall surface
-  const wall = (w, h, mat, cu = 0, cv = 0) =>
-    new THREE.Mesh(planeUv(new THREE.PlaneGeometry(w, h), w, h, PLASTER_TILE, PLASTER_TILE, cu, cv), mat);
+function addWall(g, seg, mat) {
+  const { pieces, alongX } = wallPieces(seg);
+  for (const p of pieces) {
+    const m = new THREE.Mesh(
+      boxUv(new THREE.BoxGeometry(p.w, p.h, p.d), p.w, p.h, p.d, WALL_TILE, [p.x, p.y, p.z]), mat);
+    m.position.set(p.x, p.y, p.z);
+    m.receiveShadow = true;
+    g.add(m);
+    // Skirting: one box wrapping the wall does both faces at once, which is
+    // both fewer meshes and automatically correct at a doorway, because the
+    // wall pieces already stop there.
+    if (p.y - p.h / 2 < 0.001) {
+      const sk = 0.012, hgt = 0.11;
+      const b = new THREE.Mesh(new THREE.BoxGeometry(
+        alongX ? p.w : T + sk * 2, hgt, alongX ? T + sk * 2 : p.d), MAT.walnut);
+      b.position.set(p.x, hgt / 2, p.z);
+      g.add(b);
+    }
+  }
+  return pieces;
+}
 
-  // back wall (z = +Z), facing -z
-  const back = wall(X * 2, H, wallMat);
-  back.position.set(0, H / 2, Z); back.rotation.y = Math.PI;
-  back.receiveShadow = true; g.add(back);
+/* ------------------------------------------------------------------ shell */
+export function buildShell() {
+  const g = new THREE.Group();
+  g.name = 'shell';
 
-  // left wall (x = -X) — built in four panels so the firebox is a real hole in it
-  {
-    const F = FIREBOX;
-    const fy0 = F.y - F.h / 2, fy1 = F.y + F.h / 2;
-    const fz0 = F.z - F.w / 2, fz1 = F.z + F.w / 2;
-    // rotated +90° about Y, the plane's local +x runs along world -z, so the
-    // surface coordinate u is -z and v is y
-    const panel = (w, h, cz, cy) => {
-      const m = wall(w, h, wallMat, -cz, cy);
-      m.position.set(-X, cy, cz); m.rotation.y = Math.PI / 2;
-      m.receiveShadow = true; g.add(m); return m;
-    };
-    panel(Z * 2, fy0, 0, fy0 / 2);                             // below the opening
-    panel(Z * 2, H - fy1, 0, (H + fy1) / 2);                   // above
-    panel(fz0 + Z, F.h, (-Z + fz0) / 2, F.y);                  // toward -z
-    panel(Z - fz1, F.h, (fz1 + Z) / 2, F.y);                   // toward +z
+  /* ---- floors, one per room, with the reflection injected ---- */
+  const oakFloorMat = reflective(MAT.oakFloor, 'floorOak', 0);
+  const stoneFloorMat = reflective(MAT.stoneFloor, 'floorStone', 0.92);
+  const floors = [];
+  for (const key of Object.keys(ROOMS)) {
+    const r = ROOMS[key];
+    const w = r.x1 - r.x0, d = r.z1 - r.z0;
+    const mat = r.floor === 'stone' ? stoneFloorMat : oakFloorMat;
+    // one oak tile is 1.45 m across the planks × 2.0 m along them
+    const tu = r.floor === 'stone' ? 2.4 : 1.45, tv = r.floor === 'stone' ? 2.4 : 2.0;
+    const f = new THREE.Mesh(
+      planeUv(new THREE.PlaneGeometry(w, d), w, d, tu, tv, (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2), mat);
+    f.rotation.x = -Math.PI / 2;
+    f.position.set((r.x0 + r.x1) / 2, 0, (r.z0 + r.z1) / 2);
+    f.receiveShadow = true;
+    f.name = 'floor-' + key;
+    g.add(f);
+    floors.push(f);
+
+    // ceiling, dropped where the plan asks for a soffit
+    const cy = H - (r.soffit || 0);
+    const c = new THREE.Mesh(
+      planeUv(new THREE.PlaneGeometry(w, d), w, d, WALL_TILE, WALL_TILE, (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2),
+      MAT.ceiling);
+    c.rotation.x = Math.PI / 2;
+    c.position.set((r.x0 + r.x1) / 2, cy, (r.z0 + r.z1) / 2);
+    c.receiveShadow = true;
+    g.add(c);
   }
 
-  // right wall (x = +X) only from z = -0.4 back; the front part is glass
-  const rightW = Z - (-0.4);
-  const right = wall(rightW, H, wallMat);
-  right.position.set(X, H / 2, (-0.4 + Z) / 2); right.rotation.y = -Math.PI / 2;
-  right.receiveShadow = true; g.add(right);
+  /* ---- walls ---- */
+  for (const seg of EXT_WALLS) addWall(g, seg, MAT.plaster);
+  for (const seg of WALLS) addWall(g, seg, MAT.plaster);
 
-  // ceiling
-  const ceil = wall(X * 2, Z * 2, ceilMat);
-  ceil.position.set(0, H, 0); ceil.rotation.x = Math.PI / 2;
-  ceil.receiveShadow = true; g.add(ceil);
+  /* ---- the structure that separates living from kitchen without a wall --- */
+  const col = shadowed(new THREE.Mesh(
+    boxUv(new THREE.BoxGeometry(COLUMN.w, H, COLUMN.d), COLUMN.w, H, COLUMN.d, WALL_TILE,
+      [COLUMN.x, H / 2, COLUMN.z]), MAT.plaster));
+  col.position.set(COLUMN.x, H / 2, COLUMN.z);
+  g.add(col);
 
-  /* ---- perimeter cove: a shadow gap with a warm strip hidden inside ---- */
-  const coveMat = new THREE.MeshStandardMaterial({ color: 0x4a4038, roughness: 0.95 });
-  const strip = new THREE.MeshBasicMaterial({ color: 0x4e2d13, toneMapped: false });
-  const coveDrop = 0.12, coveIn = 0.26, coveGap = 0.09;
-  /* A ledge held clear of the ceiling with the strip lying in the trough on
-     top of it, facing up. Hung tight to the ceiling with the strip underneath
-     — which is what this was — you see the strip itself as a bright bar
-     across the wall instead of a wash on the ceiling.
-     `along` is 'x' or 'z'; `push` moves the strip toward the wall so the
-     ledge's own lip hides it from anywhere in the room. */
-  const addCove = (len, x, z, along, push) => {
-    const dim = along === 'x' ? [len, coveDrop, coveIn] : [coveIn, coveDrop, len];
-    const shell = new THREE.Mesh(new THREE.BoxGeometry(...dim), coveMat);
-    shell.position.set(x, H - coveGap - coveDrop / 2, z);
-    g.add(shell);
-    const ldim = along === 'x' ? [len * 0.985, 0.010, coveIn * 0.40] : [coveIn * 0.40, 0.010, len * 0.985];
-    const lp = new THREE.Mesh(new THREE.BoxGeometry(...ldim), strip);
-    lp.position.set(
-      x + (along === 'z' ? push : 0),
-      H - coveGap + 0.006,
-      z + (along === 'x' ? push : 0));
-    g.add(lp);
-  };
-  // cove along the two solid walls only (the glass walls get a slim shadow gap)
-  addCove(Z * 2, -X + coveIn / 2, 0, 'z', -coveIn * 0.24);
-  addCove(X * 2, 0, Z - coveIn / 2, 'x', coveIn * 0.24);
+  const beamLen = BEAM.z1 - BEAM.z0;
+  const beam = new THREE.Mesh(
+    boxUv(new THREE.BoxGeometry(BEAM.w, BEAM.drop, beamLen), BEAM.w, BEAM.drop, beamLen, WALL_TILE,
+      [BEAM.x, H - BEAM.drop / 2, (BEAM.z0 + BEAM.z1) / 2]), MAT.plaster);
+  beam.position.set(BEAM.x, H - BEAM.drop / 2, (BEAM.z0 + BEAM.z1) / 2);
+  beam.receiveShadow = true;
+  g.add(beam);
 
-  /* ---- skirting / floor edge trim on the solid walls ---- */
-  const trimMat = new THREE.MeshStandardMaterial({ color: 0x3a322b, roughness: 0.7 });
-  const t1 = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.10, Z * 2), trimMat);
-  t1.position.set(-X + 0.02, 0.05, 0); g.add(t1);
-  const t2 = new THREE.Mesh(new THREE.BoxGeometry(X * 2, 0.10, 0.04), trimMat);
-  t2.position.set(0, 0.05, Z - 0.02); g.add(t2);
+  /* ---- door linings and leaves ---- */
+  for (const seg of WALLS) {
+    const L = segLen(seg);
+    const ux = (seg.b[0] - seg.a[0]) / L, uz = (seg.b[1] - seg.a[1]) / L;
+    const alongX = Math.abs(ux) > 0.5;
+    for (const o of seg.openings || []) {
+      if ((o.sill || 0) > 0.001) continue;
+      const cx = seg.a[0] + ux * o.at, cz = seg.a[1] + uz * o.at;
+      const lin = 0.035;
+      const jamb = (s) => {
+        const b = new THREE.Mesh(new THREE.BoxGeometry(
+          alongX ? lin : T + 0.01, o.h + lin, alongX ? T + 0.01 : lin), MAT.walnut);
+        b.position.set(cx + (alongX ? s * o.w / 2 : 0), (o.h + lin) / 2, cz + (alongX ? 0 : s * o.w / 2));
+        g.add(b);
+      };
+      jamb(-1); jamb(1);
+      const head = new THREE.Mesh(new THREE.BoxGeometry(
+        alongX ? o.w + lin * 2 : T + 0.01, lin, alongX ? T + 0.01 : o.w + lin * 2), MAT.walnut);
+      head.position.set(cx, o.h + lin / 2, cz);
+      g.add(head);
 
-  /* ---- doorway on the back wall: a warm slice of the hallway ---- */
-  const doorW = 1.05, doorH = 2.25;
-  const jamb = new THREE.MeshStandardMaterial({ color: 0x2e2823, roughness: 0.6, metalness: 0.2 });
-  const dGroup = new THREE.Group();
-  dGroup.position.set(3.35, 0, Z - 0.02);
-  const dGlow = new THREE.Mesh(
-    new THREE.PlaneGeometry(doorW, doorH),
-    new THREE.MeshBasicMaterial({ color: 0x6b431f, toneMapped: false }),
-  );
-  dGlow.position.set(0, doorH / 2, -0.06); dGlow.rotation.y = Math.PI;
-  dGroup.add(dGlow);
-  const dTop = new THREE.Mesh(new THREE.BoxGeometry(doorW + 0.14, 0.07, 0.14), jamb);
-  dTop.position.set(0, doorH + 0.03, -0.06); dGroup.add(dTop);
-  [-1, 1].forEach((s) => {
-    const p = new THREE.Mesh(new THREE.BoxGeometry(0.07, doorH, 0.14), jamb);
-    p.position.set(s * (doorW / 2 + 0.035), doorH / 2, -0.06); dGroup.add(p);
-  });
-  dGroup.rotation.y = Math.PI;
-  g.add(dGroup);
+      if (o.door === 'leaf') {
+        // hung on the near jamb and left ajar, so you can see through it
+        const pivot = new THREE.Group();
+        pivot.position.set(cx - (alongX ? o.w / 2 : 0), 0, cz - (alongX ? 0 : o.w / 2));
+        const leaf = shadowed(new THREE.Mesh(
+          boxUv(new THREE.BoxGeometry(o.w - 0.012, o.h - 0.02, 0.042),
+            o.w, o.h, 0.042, 1.6), MAT.walnut));
+        leaf.position.set((o.w - 0.012) / 2, (o.h - 0.02) / 2, 0);
+        pivot.add(leaf);
+        const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.011, 0.12, 8), MAT.brass);
+        handle.rotation.z = Math.PI / 2;
+        handle.position.set(o.w - 0.09, 1.04, 0.05);
+        pivot.add(handle);
+        pivot.rotation.y = (alongX ? 0 : -Math.PI / 2) + 0.62;
+        g.add(pivot);
+      }
+    }
+  }
+
+  /* ---- feature wall: vertical walnut slats behind the living room ---- */
+  const slatGeo = new THREE.BoxGeometry(0.042, H - 0.14, 0.032);
+  const slatCount = 62;
+  const slats = new THREE.InstancedMesh(slatGeo, MAT.walnut, slatCount);
+  const m4 = new THREE.Matrix4();
+  const z = ROOMS.living.z1 - T / 2 - 0.018;
+  for (let i = 0; i < slatCount; i++) {
+    const x = -4.82 + i * 0.098;
+    m4.makeTranslation(x, (H - 0.14) / 2 + 0.055, z);
+    slats.setMatrixAt(i, m4);
+  }
+  slats.instanceMatrix.needsUpdate = true;
+  slats.castShadow = true; slats.receiveShadow = true;
+  g.add(slats);
 
   roomScene.add(g);
-  return { group: g, floor, floorMat, wallMat };
+  return { group: g, floors, floorMat: oakFloorMat, wallMat: MAT.plaster };
 }
 
 /* ============================================================ windows ==== */
@@ -60069,8 +60410,7 @@ void main(){
 }
 `;
 
-function makeGlassMaterial(widthM, heightM) {
-  const uvScale = new THREE.Vector2(widthM * 2.0, heightM * 0.91);
+function makeGlassMaterial(widthM, heightM, plane) {
   const m = new THREE.ShaderMaterial({
     uniforms: {
       tBack:     { value: null },
@@ -60087,94 +60427,75 @@ function makeGlassMaterial(widthM, heightM) {
       uReflAmt:  { value: 0.85 },
       uFireDir:  { value: new THREE.Vector3(-0.6, 0.25, 0.4).normalize() },
       uTint:     { value: new THREE.Color(0.90, 0.94, 1.02) },
-      uUvScale:  { value: uvScale },
+      uUvScale:  { value: new THREE.Vector2(widthM * 2.0, heightM * 0.91) },
     },
     vertexShader: GLASS_VERT,
     fragmentShader: GLASS_FRAG,
   });
+  // which reflector feeds it: the façade and the return face are different planes
+  m.userData.plane = plane;
   glassMaterials.push(m);
   return m;
 }
 
+/* Glazing generated from the plan. Each run is one pane with its own mullion
+   grid; splitting per run also means frustum culling can drop the panes you
+   are not looking at, which matters because the drop shader is not cheap. */
 export function buildWindows() {
   const g = new THREE.Group();
   g.name = 'windows';
+  const panes = [];
 
-  const frameMat = new THREE.MeshStandardMaterial({
-    color: 0x2b2723, roughness: 0.42, metalness: 0.75, envMapIntensity: 0.9,
-  });
-
-  /* ---- front wall (z = -Z): five full-height bays ---- */
-  // ~3 cm droplet cells across, ~40 cm runnels down — see makeGlassMaterial
-  const frontGlass = new THREE.Mesh(new THREE.PlaneGeometry(X * 2, H), makeGlassMaterial(X * 2, H));
-  frontGlass.position.set(0, H / 2, -Z);
-  frontGlass.name = 'glassFront';
-  g.add(frontGlass);
-
-  /* ---- right wall front section (x = +X, z in [-Z, -0.4]) ---- */
-  const sideW = -0.4 - (-Z);
-  const sideGlass = new THREE.Mesh(new THREE.PlaneGeometry(sideW, H), makeGlassMaterial(sideW, H));
-  sideGlass.position.set(X, H / 2, -Z + sideW / 2);
-  sideGlass.rotation.y = -Math.PI / 2;
-  sideGlass.name = 'glassSide';
-  g.add(sideGlass);
-
-  /* ---- mullions, head & sill rails ---- */
-  const mull = (x, y, z, w, h, d, ry = 0) => {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), frameMat);
-    m.position.set(x, y, z); m.rotation.y = ry;
-    m.castShadow = false; m.receiveShadow = true;
-    g.add(m); return m;
-  };
   const MW = 0.055, MD = 0.10;
-  for (let i = 0; i <= 5; i++) {
-    const x = -X + (i * (X * 2)) / 5;
-    mull(x, H / 2, -Z + MD / 2, MW, H, MD);
+  for (const run of GLAZING) {
+    const L = segLen(run);
+    const [nx, nz] = inward(run);
+    const ux = (run.b[0] - run.a[0]) / L, uz = (run.b[1] - run.a[1]) / L;
+    const ry = Math.atan2(nx, nz);
+    const cx = (run.a[0] + run.b[0]) / 2, cz = (run.a[1] + run.b[1]) / 2;
+    const plane = Math.abs(nz) > 0.5 ? 'south' : 'east';
+
+    const pane = new THREE.Mesh(new THREE.PlaneGeometry(L, H), makeGlassMaterial(L, H, plane));
+    pane.position.set(cx, H / 2, cz);
+    pane.rotation.y = ry;
+    pane.name = 'glass-' + run.room + '-' + plane;
+    pane.userData.plane = plane;
+    g.add(pane);
+    panes.push(pane);
+
+    /* mullions, sill and head, placed in run-local coordinates */
+    const box = (s, y, along, h, thick) => {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(along, h, thick), MAT.steel);
+      m.position.set(run.a[0] + ux * s + nx * (thick / 2 + 0.001), y,
+                     run.a[1] + uz * s + nz * (thick / 2 + 0.001));
+      m.rotation.y = ry;
+      m.receiveShadow = true;
+      g.add(m);
+    };
+    for (let i = 0; i <= run.bays; i++) box((i * L) / run.bays, H / 2, MW, H, MD);
+    box(L / 2, 0.035, L, 0.07, MD + 0.03);
+    box(L / 2, H - 0.045, L, 0.09, MD + 0.02);
   }
-  mull(0, 0.035, -Z + MD / 2, X * 2, 0.07, MD + 0.03);              // sill
-  mull(0, H - 0.045, -Z + MD / 2, X * 2, 0.09, MD + 0.02);          // head
-
-  for (let i = 0; i <= 2; i++) {
-    const z = -Z + (i * sideW) / 2;
-    mull(X - MD / 2, H / 2, z, MD, H, MW);
-  }
-  mull(X - MD / 2, 0.035, -Z + sideW / 2, MD + 0.03, 0.07, sideW);
-  mull(X - MD / 2, H - 0.045, -Z + sideW / 2, MD + 0.02, 0.09, sideW);
-
-  // jamb where the side glazing meets the solid wall
-  mull(X - MD / 2, H / 2, -0.4, MD, H, MW);
-
-  /* ---- sheer curtains framing the composition ---- */
-  const sheerMat = new THREE.MeshStandardMaterial({
-    color: 0xe6dccd, roughness: 0.98, metalness: 0, envMapIntensity: 0.15,
-    transparent: true, opacity: 0.13, side: THREE.DoubleSide, depthWrite: false,
-  });
-  const makeSheer = (w, h, folds) => {
-    const geo = new THREE.PlaneGeometry(w, h, folds * 4, 10);
-    const p = geo.attributes.position;
-    for (let i = 0; i < p.count; i++) {
-      const x = p.getX(i), y = p.getY(i);
-      const t = (x / w + 0.5);
-      const wave = Math.sin(t * Math.PI * 2 * folds) * 0.055;
-      const sag = Math.sin(t * Math.PI * 2 * folds + 1.1) * 0.02 * (1 - (y / h + 0.5));
-      p.setZ(i, wave + sag);
-    }
-    geo.computeVertexNormals();
-    return geo;
-  };
-  const cur1 = new THREE.Mesh(makeSheer(1.05, H - 0.12, 4), sheerMat);
-  cur1.position.set(-X + 0.62, (H - 0.12) / 2, -Z + 0.22);
-  cur1.renderOrder = 2; g.add(cur1);
-  const cur2 = new THREE.Mesh(makeSheer(0.92, H - 0.12, 3), sheerMat);
-  cur2.position.set(X - 0.58, (H - 0.12) / 2, -Z + 0.22);
-  cur2.renderOrder = 2; g.add(cur2);
-
-  // curtain track
-  mull(0, H - 0.13, -Z + 0.24, X * 2 - 0.1, 0.03, 0.03);
 
   roomScene.add(g);
-  return { group: g, frontGlass, sideGlass, curtains: [cur1, cur2] };
+  return { group: g, panes, frontGlass: panes[0] };
 }
+</script>
+<script type="text/plain" id="rm18">/* =========================================================================
+   Part 3 / 5 — the fireplace.
+
+   The shell and the glazing moved to js/room-shell.js when the apartment
+   stopped being one box; what is left here is the one piece of the building
+   that is really a piece of furniture. The firebox itself is an opening in
+   the west wall declared in room-plan.js, so this only has to dress it.
+   ========================================================================= */
+import * as THREE from 'three';
+import {
+  GLSL_NOISE, U, ROOM, FIREBOX, rnd, roomScene, MAX_ANISO, boxUv,
+} from './room.js';
+import { MAT } from './room-mat.js';
+import { applyMaps } from './tex/index.js';
+import { applyDetail } from './tex/detail.js';
 
 /* ========================================================== fireplace ==== */
 export function buildFireplace() {
@@ -60476,7 +60797,7 @@ export function buildFireplace() {
   };
 }
 </script>
-<script type="text/plain" id="rm16">/* =========================================================================
+<script type="text/plain" id="rm19">/* =========================================================================
    Upholstery.
 
    A cushion is not a rounded box. It is two panels of cloth sewn together
@@ -60710,7 +61031,1745 @@ export function curtainGeo(width, height, o = {}) {
   return g;
 }
 </script>
-<script type="text/plain" id="rm17">/* =========================================================================
+<script type="text/plain" id="rm20">/* =========================================================================
+   The kitchen and the dining end.
+
+   This is not a room, it is the far half of one open volume: no wall divides
+   it from the living room, only the column, the downstand beam and the floor
+   turning from smoked oak to honed stone. So everything here has to read from
+   the sofa, eight metres away, at night, by firelight — which means the room
+   is composed as three masses and almost nothing else. A full-height walnut
+   bank at the near end stops the eye where the beam does; a low run sits along
+   the one solid wall; the island stands in front of them and takes the light.
+   Wall units, the sink and the worktop clutter all live behind the island,
+   where nothing is ever the subject of a shot.
+
+   Two hard constraints come off the plan. z = -4 and x = 11 are glass for the
+   full height, so nothing tall goes within reach of either — the tall joinery
+   is against the bedroom wall and the dining table sits out in the corner with
+   the city under it. And the kitchen carries a 0.42 soffit, so its ceiling is
+   at 2.88, not 3.3: the tall units and the pendant drops are all set out from
+   CEIL, never from APT.h.
+   ========================================================================= */
+import * as THREE from 'three';
+import { rnd, rrnd, roundedBoxGeo, boxUv, faceTowards, normalizeUv } from './room.js';
+import { MAT, shadowed } from './room-mat.js';
+import { cushionGeo, weltGeo, curtainGeo } from './room-soft.js';
+import { ROOMS, APT } from './room-plan.js';
+
+const K = ROOMS.kitchen;
+const CEIL = APT.h - K.soffit;              // 2.88 — the soffit, not the slab
+const WALL = K.z1 - APT.wall / 2;           // 0.545 — inside face of the bedroom wall
+
+const STONE_TILE = 2.0;                     // stone veins run across the joins
+const WOOD_TILE = 1.6;
+
+/* Setting out. Worktops 0.92, tables 0.74, seats 0.45 — every other number in
+   this file is measured off one of those three. */
+const WORK = 0.92;
+const RUN = { x0: 5.50, x1: 10.76, d: 0.62 };
+const TALL = { x0: 4.56, x1: 5.50, d: 0.65 };
+const WALLU = { x0: 5.50, x1: 8.36, d: 0.35, y0: 1.62 };
+const ISL = { x0: 5.05, x1: 7.65, zS: -2.15, zN: -1.15, d: 0.63 };
+const TABLE = { x: 9.55, z: -2.55, w: 1.90, d: 0.95, h: 0.74 };
+
+const RUN_F = WALL - RUN.d;                 // -0.075, the front plane of the run
+const TALL_F = WALL - TALL.d;               // -0.105
+const WALLU_F = WALL - WALLU.d;             //  0.195
+const ISL_F = ISL.zN - 0.02;                // -1.17, worktop overhangs the doors
+
+/* The shadow gaps have to read as voids. MAT.cabinet is a lacquer and picks up
+   far too much of a raking pendant beam down inside a 4 mm joint, so the gaps
+   get their own matt near-black liner — the one place in the room that is not
+   allowed to catch anything. */
+const GAP = new THREE.MeshStandardMaterial({
+  color: 0x131409, roughness: 0.94, metalness: 0, envMapIntensity: 0.12,
+});
+/* the oven's glass, the hob's glass: dark, hard, and the only high-gloss
+   surfaces in the room, which is what makes an appliance read as an appliance */
+const APPL_GLASS = new THREE.MeshStandardMaterial({
+  color: 0x0c0d0e, roughness: 0.09, metalness: 0.15, envMapIntensity: 1.3,
+});
+const BOTTLE = new THREE.MeshStandardMaterial({
+  color: 0x1c2a1e, roughness: 0.12, metalness: 0, envMapIntensity: 1.1,
+});
+const FRUIT_A = new THREE.MeshStandardMaterial({ color: 0x8a5a1e, roughness: 0.62 });
+const FRUIT_B = new THREE.MeshStandardMaterial({ color: 0x3a3326, roughness: 0.7 });
+
+const UPV = new THREE.Vector3(0, 1, 0);
+
+/* ------------------------------------------------------------- primitives */
+
+/** A box given by its extents, which is how joinery is actually drawn, with
+ *  world-scaled UVs so the stone and the walnut match across the joins. */
+function slab(g, mat, x0, x1, y0, y1, z0, z1, tile = WOOD_TILE) {
+  const w = x1 - x0, h = y1 - y0, d = z1 - z0;
+  const c = [(x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2];
+  const m = new THREE.Mesh(
+    boxUv(new THREE.BoxGeometry(w, h, d), w, h, d, tile, c), mat);
+  m.position.set(c[0], c[1], c[2]);
+  g.add(m);
+  return m;
+}
+
+/** A round strut between two points. Legs splay, so they cannot be boxes. */
+function strut(g, mat, a, b, r, seg = 6) {
+  const A = new THREE.Vector3(a[0], a[1], a[2]);
+  const d = new THREE.Vector3(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, d.length(), seg), mat);
+  m.position.copy(A).addScaledVector(d, 0.5);
+  m.quaternion.setFromUnitVectors(UPV, d.clone().normalize());
+  m.castShadow = true;
+  g.add(m);
+  return m;
+}
+
+/* --------------------------------------------------------------- fronts --
+   There are no handles anywhere in this flat. Every door and drawer is a slab
+   standing 18 mm proud of a dark liner, so the 4 mm joints between fronts and
+   the 20 mm recess under the worktop are real gaps you could put your fingers
+   in — which is exactly how the grip works on the real thing, and the only
+   reason the run reads as joinery rather than as a painted wall. */
+const T_FRONT = 0.018;
+const DRAWERS2 = [0.42, 0.58];              // a deep pan drawer under a shallow one
+const DRAWERS3 = [0.22, 0.37, 0.41];
+
+function frontBank(g, o) {
+  const { x0, y0, y1, plane, dir, mat, cabs, grip = 0.020, gap = 0.004 } = o;
+  const zc = plane - dir * T_FRONT / 2;
+  const hAvail = (y1 - grip) - y0;
+  let x = x0;
+  for (const c of cabs) {
+    const rows = c.rows || [1];
+    const cols = c.cols || 1;
+    const cw = c.w / cols;
+    let y = y0;
+    for (const f of rows) {
+      const h = hAvail * f;
+      for (let i = 0; i < cols; i++) {
+        const m = shadowed(new THREE.Mesh(
+          roundedBoxGeo(cw - gap, h - gap, T_FRONT, 0.003, 1), mat));
+        m.position.set(x + (i + 0.5) * cw, y + h / 2, zc);
+        g.add(m);
+      }
+      y += h;
+    }
+    x += c.w;
+  }
+}
+
+/** the dark face the fronts stand off — only ever seen down a 4 mm joint */
+function liner(g, x0, x1, y0, y1, plane, dir) {
+  const z = plane - dir * T_FRONT;
+  return slab(g, GAP, x0, x1, y0, y1,
+    Math.min(z, z + dir * 0.010), Math.max(z, z + dir * 0.010));
+}
+
+/* ================================================== the run and its wall == */
+function buildRun(g) {
+  /* Base units. The plinth is set back 100 mm so the whole run reads as
+     floating clear of the stone floor — with a flush plinth the joinery and
+     the floor merge into one dark mass the moment the pendants come down. */
+  slab(g, MAT.cabinet, RUN.x0, RUN.x1 - 0.06, 0, 0.10, RUN_F + 0.10, WALL).receiveShadow = true;
+  shadowed(slab(g, MAT.cabinet, RUN.x0, RUN.x1, 0.10, WORK - 0.02, RUN_F + T_FRONT, WALL));
+  liner(g, RUN.x0, RUN.x1, 0.10, WORK - 0.02, RUN_F, -1);
+
+  const cabs = [
+    { w: 0.60, rows: DRAWERS3 },
+    { w: 0.90, rows: DRAWERS2 },            // pan drawers, under the hob
+    { w: 0.60 },
+    { w: 0.76, rows: DRAWERS3 },
+    { w: 0.90, cols: 2 },                   // sink base: doors either side of the trap
+    { w: 0.60 },
+    { w: 0.90, rows: DRAWERS2 },
+  ];
+  frontBank(g, {
+    x0: RUN.x0, y0: 0.10, y1: WORK - 0.02, plane: RUN_F, dir: -1,
+    mat: MAT.cabinet, cabs,
+  });
+
+  /* --- worktop, cut round the sink and the hob ---
+     Built as seven slabs rather than one, for the same reason the fireplace
+     facing is built as four: an aperture you can see the stone edge of beats
+     an appliance stuck on top of an unbroken slab. */
+  const zf = RUN_F - 0.02, zb = WALL;       // 20 mm overhang past the doors
+  const SINK = { x0: 8.49, x1: 9.13, z0: 0.03, z1: 0.45 };
+  const HOB = { x0: 6.20, x1: 6.90, z0: 0.06, z1: 0.46 };
+  const top = (x0, x1, z0, z1) =>
+    shadowed(slab(g, MAT.travertine, x0, x1, WORK - 0.02, WORK, z0, z1, STONE_TILE));
+  top(RUN.x0, HOB.x0, zf, zb);
+  top(HOB.x0, HOB.x1, zf, HOB.z0);
+  top(HOB.x0, HOB.x1, HOB.z1, zb);
+  top(HOB.x1, SINK.x0, zf, zb);
+  top(SINK.x0, SINK.x1, zf, SINK.z0);
+  top(SINK.x0, SINK.x1, SINK.z1, zb);
+  top(SINK.x1, RUN.x1 + 0.02, zf, zb);
+
+  /* splashback in the same stone, run to the underside of the wall units. It
+     never casts — it is flat against a wall — but it is the surface the strip
+     light washes, so it has to receive. */
+  slab(g, MAT.travertine, RUN.x0, RUN.x1 + 0.02, WORK, WALLU.y0, WALL - 0.02, WALL,
+    STONE_TILE).receiveShadow = true;
+
+  /* --- undermount sink: five steel plates, so the stone edge stays the rim */
+  const bw = 0.012, bY = 0.71;
+  slab(g, MAT.steel, SINK.x0 - 0.01, SINK.x1 + 0.01, bY, bY + bw, SINK.z0 - 0.01, SINK.z1 + 0.01);
+  slab(g, MAT.steel, SINK.x0 - 0.01, SINK.x0, bY, WORK - 0.02, SINK.z0 - 0.01, SINK.z1 + 0.01);
+  slab(g, MAT.steel, SINK.x1, SINK.x1 + 0.01, bY, WORK - 0.02, SINK.z0 - 0.01, SINK.z1 + 0.01);
+  slab(g, MAT.steel, SINK.x0, SINK.x1, bY, WORK - 0.02, SINK.z0 - 0.01, SINK.z0);
+  slab(g, MAT.steel, SINK.x0, SINK.x1, bY, WORK - 0.02, SINK.z1, SINK.z1 + 0.01);
+  const drain = new THREE.Mesh(new THREE.CylinderGeometry(0.038, 0.038, 0.006, 14), MAT.steel);
+  drain.position.set(8.81, bY + bw + 0.003, 0.24);
+  g.add(drain);
+
+  /* --- tap: one bent tube and a lever, nothing else */
+  const tx = 8.81, tz = 0.485;
+  const body = shadowed(new THREE.Mesh(
+    new THREE.CylinderGeometry(0.021, 0.024, 0.30, 12), MAT.steel));
+  body.position.set(tx, WORK + 0.15, tz);
+  g.add(body);
+  const spout = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(tx, WORK + 0.28, tz),
+    new THREE.Vector3(tx, WORK + 0.35, tz - 0.02),
+    new THREE.Vector3(tx, WORK + 0.375, tz - 0.09),
+    new THREE.Vector3(tx, WORK + 0.35, tz - 0.155),
+    new THREE.Vector3(tx, WORK + 0.26, tz - 0.175),
+  ]);
+  const sp = shadowed(new THREE.Mesh(new THREE.TubeGeometry(spout, 12, 0.019, 6, false), MAT.steel));
+  g.add(sp);
+  strut(g, MAT.steel, [tx + 0.02, WORK + 0.26, tz], [tx + 0.075, WORK + 0.30, tz - 0.01], 0.010);
+
+  /* --- hob: four dark discs flush in the stone, and nothing sticking up */
+  slab(g, APPL_GLASS, HOB.x0, HOB.x1, WORK - 0.008, WORK, HOB.z0, HOB.z1);
+  [[6.37, 0.15], [6.37, 0.37], [6.73, 0.15], [6.73, 0.37]].forEach(([hx, hz], i) => {
+    const r = i % 3 === 0 ? 0.085 : 0.072;
+    const d = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.003, 16),
+      new THREE.MeshStandardMaterial({ color: 0x191a1a, roughness: 0.35, metalness: 0.2 }));
+    d.position.set(hx, WORK + 0.0015, hz);
+    g.add(d);
+  });
+}
+
+/* ---------------------------------------------------------- wall units == */
+function buildWallUnits(g) {
+  const y1 = CEIL - 0.02;                   // a shadow gap under the soffit
+  shadowed(slab(g, MAT.cabinet, WALLU.x0, WALLU.x1, WALLU.y0, y1,
+    WALLU_F + T_FRONT, WALL));
+  liner(g, WALLU.x0, WALLU.x1, WALLU.y0, y1, WALLU_F, -1);
+  /* The grip on a wall unit is at the bottom, so the fronts start 20 mm up
+     and the recess runs the whole length of the units under them. */
+  frontBank(g, {
+    x0: WALLU.x0, y0: WALLU.y0 + 0.020, y1, plane: WALLU_F, dir: -1,
+    mat: MAT.cabinet, grip: 0, cabs: [{ w: WALLU.x1 - WALLU.x0, cols: 4 }],
+  });
+
+  /* The extractor is a slot in the underside of the unit above the hob. A
+     canopy would be the honest thing, but it would hang straight across the
+     one sightline from the sofa to the island and cut the room in half. */
+  slab(g, MAT.steel, 6.16, 6.94, WALLU.y0 - 0.002, WALLU.y0 + 0.02, WALLU_F + 0.03, WALL - 0.06);
+
+  /* A single walnut shelf where the wall units stop, so the east end of the
+     wall stays open toward the glazing instead of running dark to the corner. */
+  const sy = WALLU.y0;
+  shadowed(slab(g, MAT.walnut, 8.42, RUN.x1 + 0.02, sy, sy + 0.036, WALL - 0.26, WALL));
+  const bowlY = sy + 0.036;
+  [[0.052, MAT.clayPale], [0.046, MAT.clay], [0.042, MAT.clayPale]].forEach(([h, m], i) => {
+    const b = shadowed(new THREE.Mesh(new THREE.CylinderGeometry(0.098 - i * 0.006, 0.082, h, 16), m));
+    b.position.set(8.86, bowlY + h / 2 + i * 0.046, WALL - 0.14);
+    g.add(b);
+  });
+  const jug = shadowed(new THREE.Mesh(new THREE.LatheGeometry(
+    [[0.0, 0], [0.052, 0], [0.062, 0.05], [0.055, 0.14], [0.036, 0.19], [0.040, 0.215], [0.0, 0.218]]
+      .map(([r, y]) => new THREE.Vector2(r, y)), 14), MAT.clay));
+  jug.position.set(9.34, bowlY, WALL - 0.13);
+  g.add(jug);
+
+  /* --- the strip under the wall units --------------------------------- */
+  const stripMat = new THREE.MeshBasicMaterial({ color: 0xc07a35, toneMapped: false });
+  const strip = new THREE.Mesh(new THREE.BoxGeometry(WALLU.x1 - WALLU.x0 - 0.14, 0.006, 0.022), stripMat);
+  strip.position.set((WALLU.x0 + WALLU.x1) / 2, WALLU.y0 - 0.006, WALLU_F + 0.05);
+  g.add(strip);
+  const stripBase = stripMat.color.clone();
+  return {
+    lightPos: new THREE.Vector3((WALLU.x0 + WALLU.x1) / 2, WALLU.y0 - 0.05, WALLU_F + 0.14),
+    setGlow: (k) => { stripMat.color.copy(stripBase).multiplyScalar(k); },
+  };
+}
+
+/* --------------------------------------------------- tall units and oven = */
+function buildTallUnits(g) {
+  const y1 = CEIL - 0.02;
+  slab(g, MAT.walnut, TALL.x0 + 0.06, TALL.x1, 0, 0.10, TALL_F + 0.10, WALL).receiveShadow = true;
+  /* This carcass is the one that shows: its west return is what the living
+     room actually sees of the kitchen, so it is walnut all the way round and
+     the dark gap liner is only a facing behind the doors. */
+  shadowed(slab(g, MAT.walnut, TALL.x0, TALL.x1, 0.10, y1, TALL_F + T_FRONT, WALL));
+  liner(g, TALL.x0, TALL.x1, 0.10, y1, TALL_F, -1);
+
+  const W = TALL.x1 - TALL.x0;
+  frontBank(g, {                            // larder base
+    x0: TALL.x0, y0: 0.10, y1: 0.88, plane: TALL_F, dir: -1,
+    mat: MAT.walnut, cabs: [{ w: W }],
+  });
+  frontBank(g, {                            // two doors above the oven
+    x0: TALL.x0, y0: 1.56, y1, plane: TALL_F, dir: -1,
+    mat: MAT.walnut, grip: 0, cabs: [{ w: W, rows: [0.5, 0.5] }],
+  });
+
+  /* --- the oven: a dark glass panel in a steel surround, and a rail --- */
+  const oy0 = 0.90, oy1 = 1.50;
+  shadowed(slab(g, MAT.steel, TALL.x0 + 0.02, TALL.x1 - 0.02, oy0, oy1, TALL_F, TALL_F + 0.08));
+  slab(g, APPL_GLASS, TALL.x0 + 0.07, TALL.x1 - 0.07, oy0 + 0.05, oy1 - 0.09,
+    TALL_F - 0.002, TALL_F);
+  const ry = oy1 - 0.045, rz = TALL_F - 0.042;
+  strut(g, MAT.steel, [TALL.x0 + 0.10, ry, rz], [TALL.x1 - 0.10, ry, rz], 0.011, 8);
+  [TALL.x0 + 0.11, TALL.x1 - 0.11].forEach((sx) =>
+    strut(g, MAT.steel, [sx, ry, TALL_F], [sx, ry, rz], 0.009));
+
+  /* The one hot colour in this room: a rust linen cloth over the oven rail.
+     It is small, it is the first thing the firelight reaches coming through
+     from the living room, and it is the only soft thing on this side. */
+  const clothMat = MAT.rust.clone();
+  clothMat.side = THREE.DoubleSide;         // a hung cloth is seen from both faces
+  const cloth = new THREE.Mesh(curtainGeo(0.25, 0.30, {
+    nu: 12, nv: 8, folds: 3, depth: 0.011, lead: 0.02, pool: 0,
+  }), clothMat);
+  cloth.position.set((TALL.x0 + TALL.x1) / 2 + 0.06, ry - 0.30, rz - 0.014);
+  cloth.receiveShadow = true;
+  g.add(cloth);
+}
+
+/* ================================================================ island = */
+function buildIsland(g) {
+  /* The island is joinery, not a run of units, so it is wrapped in walnut on
+     the two ends and the leg side and only wears cabinet fronts on the face
+     the cook stands at. From the living room you see a solid walnut block; the
+     working half never shows. */
+  shadowed(slab(g, MAT.walnut, ISL.x0 + 0.02, ISL.x1 - 0.02, 0.10, WORK - 0.04,
+    ISL.zS + 0.35, ISL_F - T_FRONT));
+  // the plinth is set back on all four sides here, so the block floats
+  slab(g, MAT.walnut, ISL.x0 + 0.07, ISL.x1 - 0.07, 0, 0.10,
+    ISL.zS + 0.40, ISL_F - 0.06).receiveShadow = true;
+  liner(g, ISL.x0 + 0.02, ISL.x1 - 0.02, 0.10, WORK - 0.04, ISL_F, 1);
+  frontBank(g, {
+    x0: ISL.x0 + 0.02, y0: 0.10, y1: WORK - 0.04, plane: ISL_F, dir: 1,
+    mat: MAT.cabinet,
+    cabs: [{ w: 0.86, rows: DRAWERS2 }, { w: 0.84 }, { w: 0.86, rows: DRAWERS2 }],
+  });
+
+  /* 40 mm rather than the run's 20: this slab cantilevers 350 mm over the
+     stools and a thin edge there reads as laminate. */
+  shadowed(slab(g, MAT.travertine, ISL.x0, ISL.x1, WORK - 0.04, WORK, ISL.zS, ISL.zN,
+    STONE_TILE));
+}
+
+/* ------------------------------------------------------------ bar stool == */
+function buildStool(g, x, z, spin) {
+  const s = new THREE.Group();
+  s.position.set(x, 0, z);
+  const SH = 0.64;                          // 280 below the worktop, which is right
+  const legs = [[-1, -1], [1, -1], [-1, 1], [1, 1]];
+  legs.forEach(([sx, sz]) => {
+    strut(s, MAT.steel, [sx * 0.185, 0, sz * 0.185], [sx * 0.125, SH - 0.025, sz * 0.125], 0.014);
+  });
+  // one footrail ring, at the height a foot actually finds it
+  const fy = 0.22, fr = 0.185 - (0.06 * fy) / (SH - 0.025);
+  [[-1, -1, 1, -1], [1, -1, 1, 1], [1, 1, -1, 1], [-1, 1, -1, -1]].forEach(([ax, az, bx, bz]) => {
+    strut(s, MAT.steel, [ax * fr, fy, az * fr], [bx * fr, fy, bz * fr], 0.010);
+  });
+  const seat = shadowed(new THREE.Mesh(
+    new THREE.CylinderGeometry(0.185, 0.172, 0.045, 20), MAT.walnut));
+  seat.position.y = SH - 0.0225;
+  s.add(seat);
+  s.rotation.y = spin;
+  g.add(s);
+  return s;
+}
+
+/* ========================================================== dining table = */
+function buildTable(g) {
+  const t = new THREE.Group();
+  t.position.set(TABLE.x, 0, TABLE.z);
+  const top = shadowed(new THREE.Mesh(
+    roundedBoxGeo(TABLE.w, 0.045, TABLE.d, 0.008, 1), MAT.walnut));
+  top.position.y = TABLE.h - 0.0225;
+  t.add(top);
+  // blade legs in blackened steel, the same detail as the coffee table next door
+  [-1, 1].forEach((sx) => {
+    const l = shadowed(new THREE.Mesh(
+      roundedBoxGeo(0.05, TABLE.h - 0.045, 0.62, 0.01, 1), MAT.steel));
+    l.position.set(sx * 0.62, (TABLE.h - 0.045) / 2, 0);
+    t.add(l);
+  });
+  const str = new THREE.Mesh(new THREE.BoxGeometry(1.24, 0.035, 0.035), MAT.steel);
+  str.position.y = 0.19; str.castShadow = true;
+  t.add(str);
+  g.add(t);
+  return t;
+}
+
+/* ------------------------------------------------------------ chair ----- */
+/* Built looking down its own +z, so faceTowards() aims the seat at the table.
+   The seat is a real stuffed cushion with a welt sewn into the seam — a
+   rounded box at this size reads as a plastic garden chair immediately. */
+function buildChair(g, x, z, seed) {
+  const c = new THREE.Group();
+  c.position.set(x, 0, z);
+  const SEAT = 0.385;                       // frame top; the cushion adds 75 mm
+
+  [[-1, 1], [1, 1]].forEach(([sx]) => {     // front legs
+    strut(c, MAT.walnut, [sx * 0.19, 0, 0.185], [sx * 0.175, SEAT, 0.165], 0.019);
+  });
+  [-1, 1].forEach((sx) => {                 // rear legs run on up as the back
+    strut(c, MAT.walnut, [sx * 0.19, 0, -0.185], [sx * 0.172, 0.855, -0.238], 0.019);
+  });
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.03, 0.40), MAT.walnut);
+  frame.position.y = SEAT - 0.015; frame.castShadow = true;
+  c.add(frame);
+  strut(c, MAT.walnut, [-0.171, 0.828, -0.234], [0.171, 0.828, -0.234], 0.016, 8);
+
+  const cus = shadowed(new THREE.Mesh(cushionGeo(0.44, 0.075, 0.42, {
+    corner: 4.6, wide: 5.0, edge: 0.26, wrinkle: 0.9,
+    sag: 0.008 + seed * 0.004, seg: 22, rings: 9,
+  }), MAT.olive));
+  cus.position.set(0, SEAT + 0.0375, 0.005);
+  cus.rotation.y = seed * 0.02;
+  c.add(cus);
+  const welt = new THREE.Mesh(weltGeo(0.435, 0.415, { corner: 4.6, radius: 0.0075, seg: 22 }), MAT.olive);
+  welt.castShadow = false;
+  cus.add(welt);
+
+  /* The pad leans back: rotation.x a touch under π/2 tips the cushion's far
+     end up and away, which is the difference between a chair and a bench. */
+  const pad = shadowed(new THREE.Mesh(cushionGeo(0.40, 0.085, 0.30, {
+    corner: 3.6, wide: 4.0, edge: 0.32, wrinkle: 1.2, pinch: 0.05, seg: 20, rings: 9,
+  }), MAT.olive));
+  pad.position.set(0, 0.655, -0.206);
+  pad.rotation.x = Math.PI / 2 - 0.14;
+  c.add(pad);
+
+  g.add(c);
+  return c;
+}
+
+/* ============================================================= pendants == */
+/* Three of them, on the island's centre line. The shade is small and dark on
+   purpose: what should be visible from the living room is the pool of light on
+   the stone, not three bright objects hanging in the middle of the volume. */
+function buildPendant(g, x, z) {
+  const p = new THREE.Group();
+  p.position.set(x, 0, z);
+  const bot = 1.62, top = bot + 0.22;       // 700 above the worktop
+
+  const canopy = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.032, 0.012, 12), MAT.steel);
+  canopy.position.y = CEIL - 0.006;
+  p.add(canopy);
+  const cord = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.005, 0.005, CEIL - top, 6), MAT.steel);
+  cord.position.y = (CEIL + top) / 2;       // a 10 mm cord casting a shadow is noise
+  p.add(cord);
+
+  const shade = shadowed(new THREE.Mesh(
+    new THREE.CylinderGeometry(0.055, 0.115, 0.22, 16, 1, true), MAT.steel));
+  shade.position.y = (bot + top) / 2;
+  p.add(shade);
+  /* The whole flat gets one brass accent per room and this is the kitchen's:
+     a 12 mm band at the lip of each shade. It is the only warm metal in here,
+     it is 30 mm of it, and it sits exactly where the light leaves the shade. */
+  const band = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.1165, 0.1165, 0.014, 16, 1, true), MAT.brass);
+  band.position.y = bot + 0.007;
+  p.add(band);
+
+  const innerMat = new THREE.MeshBasicMaterial({ color: 0xb26a2c, toneMapped: false });
+  const inner = new THREE.Mesh(new THREE.CircleGeometry(0.108, 16), innerMat);
+  inner.rotation.x = Math.PI / 2; inner.position.y = bot + 0.012;
+  p.add(inner);
+  const bulbMat = new THREE.MeshBasicMaterial({ color: 0xffc987, toneMapped: false });
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.026, 10, 8), bulbMat);
+  bulb.position.y = bot + 0.055;
+  p.add(bulb);
+
+  // fade the emitters with the lamp level instead of popping them off
+  const iBase = innerMat.color.clone(), bBase = bulbMat.color.clone();
+  g.add(p);
+  return {
+    group: p,
+    lightPos: new THREE.Vector3(x, bot - 0.03, z),
+    setGlow: (k) => {
+      innerMat.color.copy(iBase).multiplyScalar(k);
+      bulbMat.color.copy(bBase).multiplyScalar(k);
+    },
+  };
+}
+
+/* ========================================================= island props = */
+function buildIslandProps(g) {
+  const y = WORK;
+
+  /* board and knife, left where someone was working */
+  const board = shadowed(new THREE.Mesh(roundedBoxGeo(0.38, 0.026, 0.26, 0.008, 1), MAT.walnut));
+  board.position.set(5.74, y + 0.013, -1.60);
+  board.rotation.y = 0.13;
+  g.add(board);
+  const blade = new THREE.Mesh(roundedBoxGeo(0.17, 0.003, 0.030, 0.001, 1), MAT.chrome);
+  blade.position.set(5.72, y + 0.028, -1.64);
+  blade.rotation.y = 0.42;
+  g.add(blade);
+  // the handle has to lie on the blade's own line, so it carries the blade's
+  // plan angle as well as the roll that lays the cylinder down
+  const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.013, 0.011, 0.10, 8), MAT.walnut);
+  grip.position.set(5.845, y + 0.038, -1.695);
+  grip.rotation.set(0, 0.42, Math.PI / 2);
+  grip.castShadow = true;
+  g.add(grip);
+
+  /* a shallow stoneware bowl — turned as a closed shell so the inside is
+     really there when you look down into it from the walker's eye height */
+  const bowl = shadowed(new THREE.Mesh(new THREE.LatheGeometry(
+    [[0.05, 0], [0.135, 0.045], [0.163, 0.082], [0.166, 0.090],
+     [0.150, 0.086], [0.124, 0.050], [0.044, 0.012], [0, 0.012]]
+      .map(([r, h]) => new THREE.Vector2(r, h)), 16), MAT.clayPale));
+  bowl.position.set(6.46, y, -1.56);
+  g.add(bowl);
+  const fruit = [[-0.05, -0.03, 0.052], [0.045, -0.05, 0.048], [0.0, 0.045, 0.05], [0.02, -0.005, 0.046]];
+  fruit.forEach(([dx, dz, r], i) => {
+    const f = shadowed(new THREE.Mesh(new THREE.SphereGeometry(r, 10, 7),
+      i % 2 ? FRUIT_B : FRUIT_A));
+    f.position.set(6.46 + dx, y + 0.06 + rrnd(0, 0.012), -1.56 + dz);
+    f.rotation.set(rrnd(0, 1), rrnd(0, 1), rrnd(0, 1));
+    g.add(f);
+  });
+
+  /* a bottle and two glasses, at the end where the stools are */
+  const bot = shadowed(new THREE.Mesh(new THREE.LatheGeometry(
+    [[0, 0], [0.038, 0], [0.040, 0.02], [0.040, 0.17], [0.030, 0.212],
+     [0.0135, 0.245], [0.013, 0.30], [0.017, 0.306], [0, 0.308]]
+      .map(([r, h]) => new THREE.Vector2(r, h)), 14), BOTTLE));
+  bot.position.set(7.21, y, -1.70);
+  g.add(bot);
+  [[7.02, -1.88, 0.0], [7.26, -1.94, 0.4]].forEach(([gx, gz, spin]) => {
+    const cup = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.033, 0.026, 0.105, 14, 1, true), MAT.glassware);
+    cup.position.set(gx, y + 0.053, gz);
+    cup.rotation.y = spin;
+    cup.castShadow = true;
+    g.add(cup);
+    const base = new THREE.Mesh(new THREE.CircleGeometry(0.026, 14), MAT.glassware);
+    base.rotation.x = -Math.PI / 2;
+    base.position.set(gx, y + 0.002, gz);
+    g.add(base);
+  });
+}
+
+/* ================================================================ plant == */
+/* One plant, in the corner where the walnut bank meets the threshold from the
+   living room — the only place in the kitchen with no glass behind it and no
+   worktop in front of it. */
+function buildPlant(g, x, z) {
+  const p = new THREE.Group();
+  p.position.set(x, 0, z);
+
+  const pot = shadowed(new THREE.Mesh(new THREE.CylinderGeometry(0.175, 0.135, 0.38, 16), MAT.clay));
+  pot.position.y = 0.19;
+  p.add(pot);
+  const soil = new THREE.Mesh(new THREE.CircleGeometry(0.163, 14), MAT.bark);
+  soil.rotation.x = -Math.PI / 2; soil.position.y = 0.373;
+  p.add(soil);
+
+  const leafGeo = (() => {
+    const s = new THREE.Shape();
+    s.moveTo(0, 0);
+    s.bezierCurveTo(0.075, 0.07, 0.088, 0.23, 0, 0.34);
+    s.bezierCurveTo(-0.088, 0.23, -0.075, 0.07, 0, 0);
+    return normalizeUv(new THREE.ShapeGeometry(s, 8));
+  })();
+
+  const stems = 4;
+  for (let i = 0; i < stems; i++) {
+    const a = (i / stems) * Math.PI * 2 + rnd();
+    const lean = rrnd(0.10, 0.26);
+    const hgt = rrnd(0.52, 0.82);
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.014, hgt, 6), MAT.leaf);
+    stem.position.set(Math.cos(a) * 0.045, 0.37 + hgt / 2, Math.sin(a) * 0.045);
+    stem.rotation.z = -Math.cos(a) * lean;
+    stem.rotation.x = Math.sin(a) * lean;
+    stem.castShadow = true;
+    p.add(stem);
+
+    const n = 3 + ((rnd() * 2) | 0);
+    for (let k = 0; k < n; k++) {
+      const t = 0.42 + (k / n) * 0.62;
+      const lf = new THREE.Mesh(leafGeo, MAT.leaf);
+      lf.scale.setScalar(rrnd(0.7, 1.15));
+      lf.position.set(
+        Math.cos(a) * (0.045 + lean * hgt * t * 0.9),
+        0.37 + hgt * t,
+        Math.sin(a) * (0.045 + lean * hgt * t * 0.9),
+      );
+      lf.rotation.set(rrnd(-0.5, 0.2), a + rrnd(-1.3, 1.3), rrnd(-0.6, 0.6));
+      lf.castShadow = true;
+      lf.userData.sway = { base: lf.rotation.z, amp: rrnd(0.01, 0.03), ph: rnd() * 6.28 };
+      p.add(lf);
+    }
+  }
+  g.add(p);
+  return p;
+}
+
+/* ============================================================= assemble == */
+export function buildKitchen() {
+  const g = new THREE.Group();
+  g.name = 'kitchen';
+
+  buildRun(g);
+  const strip = buildWallUnits(g);
+  buildTallUnits(g);
+  buildIsland(g);
+  buildIslandProps(g);
+
+  /* Three stools tucked into the 350 overhang, facing the run — sit here and
+     you are looking at whoever is cooking, which is the whole point of an
+     island. The middle one has been pushed out and left turned. */
+  const isC = (ISL.x0 + ISL.x1) / 2;
+  buildStool(g, isC - 0.70, ISL.zS - 0.15, 0.06);
+  buildStool(g, isC, ISL.zS - 0.20, -0.34);
+  buildStool(g, isC + 0.70, ISL.zS - 0.15, 0.11);
+
+  buildTable(g);
+  /* Chairs square to the long sides, not aimed at the table's centre, then
+     nudged: four chairs at identical angles is the tell of a showroom. */
+  const seats = [[9.10, -1.80], [10.00, -1.80], [9.10, -3.30], [10.00, -3.30]];
+  seats.forEach(([cx, cz], i) => {
+    const c = buildChair(g, cx, cz, i);
+    faceTowards(c, cx, TABLE.z);
+    c.rotation.y += rrnd(-0.07, 0.07);
+    c.position.x += rrnd(-0.02, 0.02);
+    c.position.z += rrnd(-0.03, 0.03);
+  });
+
+  const pendants = [
+    buildPendant(g, isC - 0.70, (ISL.zS + ISL.zN) / 2),
+    buildPendant(g, isC, (ISL.zS + ISL.zN) / 2),
+    buildPendant(g, isC + 0.70, (ISL.zS + ISL.zN) / 2),
+    /* The strip under the wall units is a practical like any other and wants
+       to dim with them, and the only thing the app asks of one of these is a
+       position and a dimmer — so it rides in the same list. */
+    strip,
+  ];
+
+  buildPlant(g, 4.38, 0.16);
+
+  return { group: g, pendants };
+}
+
+/* ----------------------------------------------------------- collision ---
+   Only the four masses. The island box is stretched 400 south of the worktop
+   so that it swallows the stools: walking through a bar stool is worse than
+   the island feeling 400 deeper than it looks. */
+export const KITCHEN_COLLIDERS = [
+  [ISL.x0 - 0.02, 0, ISL.zS - 0.40, ISL.x1 + 0.02, WORK, ISL.zN + 0.02],
+  [RUN.x0 - 0.02, 0, RUN_F - 0.04, RUN.x1 + 0.04, WORK, WALL],
+  [TALL.x0 - 0.02, 0, TALL_F - 0.04, TALL.x1 + 0.02, CEIL, WALL],
+  [TABLE.x - TABLE.w / 2 - 0.02, 0, TABLE.z - TABLE.d / 2 - 0.02,
+   TABLE.x + TABLE.w / 2 + 0.02, TABLE.h, TABLE.z + TABLE.d / 2 + 0.02],
+];
+</script>
+<script type="text/plain" id="rm21">/* =========================================================================
+   The bedroom.
+
+   Seven metres by six, one window in the far corner, and at night almost no
+   light in it at all: two bedside lamps and whatever the city throws through
+   the glass. That is the whole brief. A room lit this softly lives or dies on
+   silhouette, so the money goes into the bed — a real duvet with folds and a
+   turned-back edge, four pillows that have been slept on — and everything
+   else is kept dark, flat and quiet: walnut joinery, a wool rug the colour of
+   wet slate, one rust throw across the foot.
+
+   Positions are derived from the plan rather than typed in, so the room
+   cannot drift away from the walls it is built against.
+   ========================================================================= */
+import * as THREE from 'three';
+import { rnd, rrnd, pick, roundedBoxGeo, planeUv } from './room.js';
+import { MAT, bookMat, shadowed } from './room-mat.js';
+import { cushionGeo, weltGeo, drapeGeo } from './room-soft.js';
+import { ROOMS, APT, COLUMN } from './room-plan.js';
+
+const R = ROOMS.bedroom;
+/* walls are centred on their plan line and carry a 12 mm skirting, so the
+   face anything can actually stand against is half a wall plus the skirting */
+const SKIRT = APT.wall / 2 + 0.012;
+const WEST = R.x0 + SKIRT;          // 4.067 — the doorway wall
+const SOUTH = R.z0 + SKIRT;         // 0.667 — the wall shared with the kitchen
+const NORTH = R.z1 - SKIRT;         // 6.533 — the outside wall behind the wardrobe
+
+/* --------------------------------------------------------------- the bed --
+   The headboard goes on the west wall. That is the only wall in the room that
+   points the bed at the glazing: the glass runs down x = 11 from z = 0.6 to
+   3.0, so lying with your head at x = 4 you look straight along the bed and
+   out at the city. Against the north or south wall you would be looking at a
+   blank wall with the window somewhere off your shoulder.
+
+   The catch is that the structural column lands at x = 4, z = 1.55 and stands
+   220 mm proud of that wall, right where the pillows want to be. Rather than
+   notch the headboard round a pier, the whole panel is packed out past the
+   column face, so the upholstery reads as one plane and the column simply
+   disappears into it. */
+const HB_FACE = Math.max(R.x0 + 0.34, COLUMN.x + COLUMN.w / 2 + 0.20);   // 4.42
+const HB_TOP = 1.32;
+
+const BED_X = HB_FACE + 0.095 + 1.025;   // mattress head tucked under the tufting
+const BED_Z = 2.05;                      // centred on the glazing, clear of the column
+const MAT_TOP = 0.56;
+
+/* The panel runs from just off the kitchen wall to the same distance the other
+   side of the bed: wide enough to stand both nightstands on and to read as a
+   wall finish rather than a piece of bed. */
+const HB_W = 2 * (BED_Z - SOUTH - 0.02);   // 2.726
+
+const NS_Z = [0.905, 3.195];             // nightstand centres, one either side
+const NS_W = 0.44, NS_D = 0.42, NS_TOP = 0.52;
+
+/* A single sheet of cloth shows its reverse wherever it hangs off an edge or
+   folds back on itself. Cloning the palette material and flipping `side` keeps
+   the same maps and tint instead of inventing a second, subtly different
+   fabric for the same duvet. */
+const twoSided = (m) => { const c = m.clone(); c.side = THREE.DoubleSide; return c; };
+const DUVET = twoSided(MAT.olive);
+const THROW = twoSided(MAT.rust);
+
+/* ========================================================== headboard ==== */
+/* Channel tufting is a stack of horizontal bolsters trapped behind a panel,
+   not a quilted grid — each channel is its own stuffed cushion, so it bulges
+   in the middle and tucks in hard at the seam above and below it. cushionGeo
+   is built lying down, so each one is stood on its side: w becomes the
+   channel's height, h its projection off the panel, d its length. */
+function buildHeadboard(b) {
+  const panelD = HB_FACE - WEST;
+  const panel = shadowed(new THREE.Mesh(
+    roundedBoxGeo(panelD, HB_TOP - 0.12, HB_W, 0.02, 1), MAT.linenDark));
+  panel.position.set(WEST + panelD / 2 - BED_X, (HB_TOP + 0.12) / 2, 0);
+  b.add(panel);
+
+  const CH_H = 0.162, GAP = 0.012, PROJ = 0.115;
+  for (let i = 0; i < 5; i++) {
+    // the bottom channel starts below the mattress line so no gap ever shows
+    const y = 0.42 + CH_H / 2 + i * (CH_H + GAP);
+    const c = shadowed(new THREE.Mesh(
+      cushionGeo(CH_H, PROJ, 1.94, {
+        corner: 7.0, wide: 5.0, edge: 0.30, pinch: 0.06, wrinkle: 0.7,
+        seg: 40, rings: 8,
+      }), MAT.linenDark));
+    c.position.set(HB_FACE + PROJ / 2 - BED_X, y, 0);
+    c.rotation.z = -Math.PI / 2;
+    // no two channels are stuffed alike; a stack of identical ones reads as moulding
+    c.rotation.y = rrnd(-0.006, 0.006);
+    b.add(c);
+  }
+}
+
+/* ================================================================ bed ==== */
+function buildBed(g) {
+  const b = new THREE.Group();
+  b.position.set(BED_X, 0, BED_Z);
+
+  buildHeadboard(b);
+
+  /* A low walnut platform on slim steel feet, the mattress dropped into it so
+     the rail hides its bottom third. */
+  const frame = shadowed(new THREE.Mesh(roundedBoxGeo(2.14, 0.23, 1.94, 0.015, 1), MAT.walnut));
+  frame.position.y = 0.205;
+  b.add(frame);
+  [[-0.92, -0.80], [-0.92, 0.80], [0.92, -0.80], [0.92, 0.80]].forEach(([x, z]) => {
+    const f = new THREE.Mesh(new THREE.CylinderGeometry(0.021, 0.024, 0.09, 8), MAT.steel);
+    f.position.set(x, 0.045, z);
+    f.castShadow = true;
+    b.add(f);
+  });
+
+  const mattress = shadowed(new THREE.Mesh(roundedBoxGeo(2.05, 0.26, 1.80, 0.05, 3), MAT.linen));
+  mattress.position.y = MAT_TOP - 0.13;
+  b.add(mattress);
+
+  /* The fitted sheet. Only the corner the duvet has been pulled off ever
+     shows, but it has to be there, and it has to be softer than a plane —
+     two long, shallow wrinkles are enough to catch the lamp. */
+  const sg = planeUv(new THREE.PlaneGeometry(2.03, 1.78, 8, 8), 2.03, 1.78, 1, 1);
+  const sp = sg.attributes.position;
+  for (let i = 0; i < sp.count; i++) {
+    const x = sp.getX(i), y = sp.getY(i);
+    sp.setZ(i, Math.sin(x * 2.7 + 0.6) * 0.005 + Math.sin(y * 3.4 - 1.1) * 0.004);
+  }
+  sp.needsUpdate = true;
+  sg.computeVertexNormals();
+  const sheet = new THREE.Mesh(sg, MAT.linen);
+  sheet.rotation.x = -Math.PI / 2;
+  sheet.position.y = MAT_TOP + 0.006;
+  sheet.receiveShadow = true;
+  b.add(sheet);
+
+  buildDuvet(b);
+  buildPillows(b);
+  buildFootThrow(b);
+
+  g.add(b);
+  return b;
+}
+
+/* ============================================================== duvet ==== */
+/* The hero. A duvet is swept ACROSS the bed, not along it: the cloth comes up
+   off the floor on one side, over the mattress, and back down the other, which
+   is the only way the two long overhangs come out as real hanging cloth with
+   vertical pleats in them.
+
+   The path's x drifts as it crosses, and the cloth gathers narrower with it,
+   so the duvet ends up skewed on the bed: its top edge is right up against the
+   pillows on the kitchen side and dragged 360 mm down the bed on the other,
+   where somebody got out. That single drift is what opens up a wedge of bare
+   sheet without having to cut a hole in anything. */
+function buildDuvet(b) {
+  const body = shadowed(new THREE.Mesh(drapeGeo([
+    [0.39, 0.175, -1.055],
+    [0.40, 0.365, -1.025],
+    [0.42, 0.530, -0.950],
+    [0.44, 0.598, -0.840],
+    [0.48, 0.607, -0.520],
+    [0.52, 0.600, -0.150],
+    [0.55, 0.606, 0.230],
+    [0.58, 0.601, 0.600],
+    [0.59, 0.590, 0.845],
+    [0.60, 0.520, 0.960],
+    [0.61, 0.330, 1.045],
+    [0.61, 0.150, 1.080],
+  ], 1.26, {
+    nu: 36, nv: 22, folds: 7, amp: 0.028, taper: 0.222,
+    // pressed flat where it lies on the mattress, loose where it hangs
+    freeAt: (u) => 0.18 + 0.82 * Math.max(0, Math.max(1 - u / 0.20, (u - 0.80) / 0.20)),
+  }), DUVET));
+  b.add(body);
+
+  /* The turned-back cuff along that skewed top edge: the duvet folded over
+     onto itself, so the fold is the head-most point and the raw hem lies back
+     down the bed. Rotating the whole piece by the same angle the edge runs at
+     keeps the two aligned however the drift is tuned. */
+  const cuff = shadowed(new THREE.Mesh(drapeGeo([
+    [-0.02, 0.572, 0],
+    [0.02, 0.628, 0],
+    [0.10, 0.668, 0],
+    [0.22, 0.662, 0],
+    [0.34, 0.636, 0],
+    [0.44, 0.610, 0],
+  ], 1.58, {
+    nu: 14, nv: 26, folds: 5, amp: 0.020, taper: 0.05,
+    freeAt: (u) => 0.25 + 0.55 * Math.max(0, 1 - u / 0.30),
+  }), DUVET));
+  cuff.position.set(-0.08, 0, 0);
+  cuff.rotation.y = 0.167;
+  b.add(cuff);
+}
+
+/* ============================================================ pillows ==== */
+/* Two standing against the headboard and two dropped flat in front of them.
+   A standing pillow is rotated about Z, not X: that keeps the cushion's
+   thickness axis pointing down the bed and its length across it, which is the
+   only orientation where the seam runs round the pillow the way it is sewn.
+
+   No welts — piped bed pillows are a hotel thing, and the seam here should
+   read as a soft edge, not a cord. */
+function buildPillows(b) {
+  const prop = (h, thick, len, z, lean, spin, mat) => {
+    const p = shadowed(new THREE.Mesh(
+      cushionGeo(h, thick, len, {
+        corner: 3.0, wide: 3.0, edge: 0.42, pinch: 0.07, wrinkle: 1.6,
+        seg: 28, rings: 9,
+      }), mat));
+    // the pillow's foot rests on the mattress and the head tips back
+    p.position.set(-0.76 - Math.sin(lean) * h / 2, MAT_TOP + Math.cos(lean) * h / 2, z);
+    p.rotation.set(rrnd(-0.03, 0.03), spin, -Math.PI / 2 + lean);
+    b.add(p);
+    return p;
+  };
+  prop(0.46, 0.17, 0.68, -0.40, 0.34, 0.10, MAT.linen);
+  prop(0.44, 0.185, 0.70, 0.41, 0.27, -0.14, MAT.linenDark);
+
+  const flat = (along, thick, across, x, z, spin, mat) => {
+    const p = shadowed(new THREE.Mesh(
+      cushionGeo(along, thick, across, {
+        corner: 3.0, wide: 2.8, edge: 0.44, pinch: 0.07, wrinkle: 1.9,
+        seg: 28, rings: 9,
+      }), mat));
+    p.position.set(x, MAT_TOP + thick / 2 - 0.012, z);
+    p.rotation.set(rrnd(-0.02, 0.02), spin, rrnd(-0.03, 0.03));
+    b.add(p);
+    return p;
+  };
+  // dropped just clear of the standing pair, so the two only squash together
+  flat(0.44, 0.155, 0.66, -0.49, -0.34, 0.13, MAT.linen);
+  flat(0.46, 0.145, 0.64, -0.47, 0.40, -0.20, MAT.linenDark);
+}
+
+/* ======================================================== foot throw ==== */
+/* Folded in two and laid across the foot, so it hangs outside the duvet on
+   both sides. The one warm colour anyone gets to see in here. */
+function buildFootThrow(b) {
+  const main = shadowed(new THREE.Mesh(drapeGeo([
+    [0.66, 0.300, -1.085],
+    [0.67, 0.470, -1.065],
+    [0.68, 0.580, -1.005],
+    [0.69, 0.625, -0.900],
+    [0.70, 0.634, -0.450],
+    [0.71, 0.630, 0.020],
+    [0.72, 0.636, 0.480],
+    [0.73, 0.628, 0.850],
+    [0.74, 0.590, 0.985],
+    [0.75, 0.455, 1.070],
+    [0.75, 0.300, 1.100],
+  ], 0.46, {
+    nu: 26, nv: 10, folds: 3, amp: 0.016, taper: 0.03,
+    freeAt: (u) => 0.20 + 0.80 * Math.max(0, Math.max(1 - u / 0.22, (u - 0.78) / 0.22)),
+  }), THROW));
+  b.add(main);
+
+  // the upper leaf of the fold, set back so the lower one shows past it
+  const leaf = shadowed(new THREE.Mesh(drapeGeo([
+    [0.78, 0.646, -0.880],
+    [0.79, 0.652, -0.440],
+    [0.80, 0.648, 0.020],
+    [0.81, 0.654, 0.470],
+    [0.82, 0.646, 0.870],
+  ], 0.32, { nu: 16, nv: 8, folds: 3, amp: 0.013, taper: 0.02, freeAt: () => 0.35 }), THROW));
+  b.add(leaf);
+}
+
+/* ======================================================== nightstand ==== */
+/* Walnut box on blackened steel legs, two drawers, a 12 mm steel bar for a
+   pull. Slim enough that it does not compete with the headboard behind it. */
+function buildNightstand(g, z) {
+  const n = new THREE.Group();
+  n.position.set(HB_FACE + NS_D / 2, 0, z);
+
+  const LEG = 0.10;
+  const body = shadowed(new THREE.Mesh(
+    roundedBoxGeo(NS_D, NS_TOP - LEG, NS_W, 0.006, 1), MAT.walnut));
+  body.position.y = (NS_TOP + LEG) / 2;
+  n.add(body);
+
+  [[-1, -1], [-1, 1], [1, -1], [1, 1]].forEach(([sx, sz]) => {
+    const l = new THREE.Mesh(new THREE.BoxGeometry(0.026, LEG, 0.026), MAT.steel);
+    l.position.set(sx * (NS_D / 2 - 0.035), LEG / 2, sz * (NS_W / 2 - 0.035));
+    l.castShadow = true;
+    n.add(l);
+  });
+
+  // two drawer fronts, proud of the carcass with a shadow gap between them
+  const DH = 0.19;
+  [0.115, 0.315].forEach((y0) => {
+    const d = shadowed(new THREE.Mesh(
+      roundedBoxGeo(0.014, DH, NS_W - 0.022, 0.003, 1), MAT.walnut));
+    d.position.set(NS_D / 2 + 0.006, y0 + DH / 2, 0);
+    n.add(d);
+    const pull = new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.012, 0.17), MAT.steel);
+    pull.position.set(NS_D / 2 + 0.023, y0 + DH / 2, 0);
+    pull.receiveShadow = true;       // 12 mm of steel casts nothing worth the map
+    n.add(pull);
+  });
+
+  g.add(n);
+  return n;
+}
+
+/* ============================================================== lamp ==== */
+/* Same construction as the floor lamp in the living room: a translucent shade
+   that glows a little on its own, a basic-material disc under it doing the
+   pool of light, and a bulb. All three fade together — a shade still lit with
+   the lamp switched off is the one thing you always notice. */
+function buildLamp(g, x, z) {
+  const l = new THREE.Group();
+  l.position.set(x, 0, z);
+
+  const base = shadowed(new THREE.Mesh(new THREE.CylinderGeometry(0.072, 0.082, 0.022, 16), MAT.steel));
+  base.position.y = NS_TOP + 0.011;
+  l.add(base);
+  const stem = shadowed(new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.013, 0.26, 10), MAT.brass));
+  stem.position.y = NS_TOP + 0.15;
+  l.add(stem);
+
+  const shadeMat = new THREE.MeshStandardMaterial({
+    color: 0xe3cfae, roughness: 0.9, side: THREE.DoubleSide,
+    transparent: true, opacity: 0.94, envMapIntensity: 0.35,
+    // two of these a metre apart bloom into one another; the shade only
+    // has to look lit, the point light does the work
+    emissive: 0xff9d4e, emissiveIntensity: 0.16,
+  });
+  const shade = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.105, 0.145, 0.19, 22, 1, true), shadeMat);
+  shade.position.y = NS_TOP + 0.30;
+  l.add(shade);
+
+  const innerMat = new THREE.MeshBasicMaterial({ color: 0x7d4a1e, toneMapped: false });
+  const inner = new THREE.Mesh(new THREE.CircleGeometry(0.138, 20), innerMat);
+  inner.rotation.x = Math.PI / 2;
+  inner.position.y = NS_TOP + 0.208;
+  l.add(inner);
+  const bulbMat = new THREE.MeshBasicMaterial({ color: 0xd8a76e, toneMapped: false });
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.027, 10, 8), bulbMat);
+  bulb.position.y = NS_TOP + 0.28;
+  l.add(bulb);
+
+  const innerBase = innerMat.color.clone(), bulbBase = bulbMat.color.clone();
+  const setGlow = (k) => {
+    innerMat.color.copy(innerBase).multiplyScalar(k);
+    bulbMat.color.copy(bulbBase).multiplyScalar(k);
+    shadeMat.emissiveIntensity = 0.28 * k;
+  };
+
+  g.add(l);
+  return { group: l, shadeMat, inner, bulb, setGlow, lightPos: new THREE.Vector3(x, NS_TOP + 0.27, z) };
+}
+
+/* ========================================================== wardrobe ==== */
+/* Full height, no handles, no frame: six walnut leaves floating in front of a
+   dark carcass with an 18 mm shadow gap between them and a reveal top and
+   bottom. Push-to-open, so the only thing that draws the eye is the run of
+   vertical lines — which is the point in a room this dark. */
+function buildWardrobe(g) {
+  const w = new THREE.Group();
+  const X0 = R.x0 + 0.10, X1 = X0 + 3.60;
+  const BACK = NORTH, DEPTH = 0.57;
+
+  const carcass = shadowed(new THREE.Mesh(
+    new THREE.BoxGeometry(X1 - X0, APT.h, DEPTH), MAT.cabinet));
+  carcass.position.set((X0 + X1) / 2, APT.h / 2, BACK - DEPTH / 2);
+  w.add(carcass);
+
+  const N = 6, GAP = 0.018;
+  const dw = ((X1 - X0) - GAP * (N - 1)) / N;
+  const dz = BACK - DEPTH - 0.014;
+  for (let i = 0; i < N; i++) {
+    const d = shadowed(new THREE.Mesh(roundedBoxGeo(dw, 3.10, 0.028, 0.004, 1), MAT.walnut));
+    d.position.set(X0 + dw / 2 + i * (dw + GAP), 0.10 + 3.10 / 2, dz);
+    w.add(d);
+  }
+
+  g.add(w);
+  return w;
+}
+
+/* ============================================================= bench ==== */
+/* Leather, on a blackened steel frame, sitting just off the foot of the bed.
+   The seat is a stuffed cushion with a welt, not a slab — it is the one thing
+   in the room at eye level when you are standing in the doorway. */
+function buildBench(g) {
+  const bn = new THREE.Group();
+  bn.position.set(6.94, 0, BED_Z);
+  const W = 0.44, L = 1.50, SEAT = 0.45;
+
+  [[-1, -1], [-1, 1], [1, -1], [1, 1]].forEach(([sx, sz]) => {
+    const l = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.31, 0.028), MAT.steel);
+    l.position.set(sx * (W / 2 - 0.045), 0.155, sz * (L / 2 - 0.075));
+    l.castShadow = true;
+    bn.add(l);
+  });
+  [-1, 1].forEach((sx) => {
+    const r = new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.022, L - 0.15), MAT.steel);
+    r.position.set(sx * (W / 2 - 0.045), 0.285, 0);
+    r.castShadow = true;
+    bn.add(r);
+  });
+
+  const seat = shadowed(new THREE.Mesh(
+    cushionGeo(W, 0.14, L, { corner: 5.0, wide: 5.0, edge: 0.26, sag: 0.008, wrinkle: 0.7, seg: 34, rings: 9 }),
+    MAT.leather));
+  seat.position.y = SEAT - 0.07;
+  bn.add(seat);
+  const welt = new THREE.Mesh(weltGeo(W * 0.99, L * 0.995, { corner: 5.0, radius: 0.008 }), MAT.leather);
+  welt.castShadow = false;
+  seat.add(welt);
+
+  g.add(bn);
+  return bn;
+}
+
+/* =============================================== what is on the tables == */
+function buildBedsideThings(g) {
+  /* Everything lives on the front half of the top; the lamps have the back
+     half, which is what keeps the two from fighting over 42 cm of walnut. */
+  const FRONT = HB_FACE + 0.33;
+
+  /* North side: two books left where they were put down, and a glass. */
+  const cols = [0x3d4a3f, 0x7a3b2c, 0x2f3038, 0x8a6a3a];
+  let by = NS_TOP;
+  for (let i = 0; i < 2; i++) {
+    const h = 0.026 + rnd() * 0.012;
+    const bk = new THREE.Mesh(
+      roundedBoxGeo(0.145 - i * 0.01, h, 0.20 - i * 0.012, 0.004, 1), bookMat(pick(cols)));
+    bk.position.set(FRONT, by + h / 2, NS_Z[1] - 0.10);
+    bk.rotation.y = rrnd(-0.22, 0.22);
+    bk.receiveShadow = true;                 // 30 mm of paperback casts nothing
+    by += h;
+    g.add(bk);
+  }
+
+  const glass = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.034, 0.029, 0.105, 14, 1, true), MAT.glassware);
+  glass.position.set(FRONT, NS_TOP + 0.0525, NS_Z[1] + 0.11);
+  g.add(glass);                              // glass throws a caustic, not a shadow
+  const water = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.031, 0.0275, 0.055, 14),
+    new THREE.MeshStandardMaterial({
+      color: 0x8fa2a6, roughness: 0.04, metalness: 0, transparent: true, opacity: 0.35,
+      envMapIntensity: 1.2,
+    }));
+  water.position.set(FRONT, NS_TOP + 0.028, NS_Z[1] + 0.11);
+  g.add(water);
+
+  /* South side: a small brass tray, and that is the whole of the brass in the
+     room apart from the two lamp stems. */
+  const tray = new THREE.Mesh(roundedBoxGeo(0.15, 0.012, 0.115, 0.005, 1), MAT.brass);
+  tray.position.set(FRONT, NS_TOP + 0.006, NS_Z[0] + 0.10);
+  tray.rotation.y = -0.12;
+  tray.receiveShadow = true;
+  g.add(tray);
+}
+
+/* ============================================================= plant ==== */
+/* A sansevieria in the corner where the glazing meets the solid wall: stiff
+   upright blades, no canopy, so it silhouettes against the city instead of
+   turning into a grey cloud in the dark. Blades are tapered and bent planes —
+   the leaf material is double-sided, so one quad each is enough. */
+function buildPlant(g, x, z) {
+  const p = new THREE.Group();
+  p.position.set(x, 0, z);
+
+  const pot = shadowed(new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.145, 0.38, 16), MAT.clay));
+  pot.position.y = 0.19;
+  p.add(pot);
+  const soil = new THREE.Mesh(new THREE.CircleGeometry(0.162, 16),
+    new THREE.MeshStandardMaterial({ color: 0x1d1710, roughness: 1 }));
+  soil.rotation.x = -Math.PI / 2;
+  soil.position.y = 0.372;
+  p.add(soil);
+
+  for (let i = 0; i < 11; i++) {
+    const h = rrnd(0.52, 0.95);
+    const geo = new THREE.PlaneGeometry(0.075, h, 1, 5);
+    geo.translate(0, h / 2, 0);
+    const pos = geo.attributes.position;
+    const bend = rrnd(0.06, 0.20);
+    for (let k = 0; k < pos.count; k++) {
+      // translate() leaves the bottom row a hair below zero, and a negative
+      // base under a fractional power is NaN — which quietly poisons the
+      // whole blade's bounding sphere
+      const t = Math.max(0, pos.getY(k) / h);
+      pos.setX(k, pos.getX(k) * (1 - 0.72 * Math.pow(t, 1.5)));
+      pos.setZ(k, bend * t * t);
+    }
+    pos.needsUpdate = true;
+    geo.computeVertexNormals();
+    const blade = new THREE.Mesh(geo, MAT.leaf);
+    const a = (i / 11) * Math.PI * 2 + rrnd(-0.25, 0.25);
+    blade.position.set(Math.cos(a) * rrnd(0.02, 0.07), 0.36, Math.sin(a) * rrnd(0.02, 0.07));
+    blade.rotation.set(0, a, rrnd(-0.10, 0.10));
+    blade.castShadow = true;
+    p.add(blade);
+  }
+
+  g.add(p);
+  return p;
+}
+
+/* ========================================================== assemble ==== */
+export function buildBedroom() {
+  const g = new THREE.Group();
+  g.name = 'bedroom';
+
+  /* Wool, laid so it runs out well past the foot and both sides of the bed but
+     stops short of the nightstands — a rug that disappears under joinery reads
+     as fitted carpet. */
+  const rug = new THREE.Mesh(roundedBoxGeo(3.20, 0.022, 2.60, 0.05, 1), MAT.rugDark);
+  rug.position.set(6.66, 0.011, BED_Z + 0.03);
+  rug.receiveShadow = true;
+  g.add(rug);
+
+  buildBed(g);
+  buildNightstand(g, NS_Z[0]);
+  buildNightstand(g, NS_Z[1]);
+  buildWardrobe(g);
+  buildBench(g);
+  buildBedsideThings(g);
+  buildPlant(g, 10.28, 3.42);
+
+  // set back on the top, so the shade sits behind the book rather than over it
+  const lamps = [
+    buildLamp(g, HB_FACE + 0.11, NS_Z[0] - 0.02),
+    buildLamp(g, HB_FACE + 0.11, NS_Z[1] + 0.02),
+  ];
+
+  return { group: g, lamps };
+}
+
+/* ---------------------------------------------------------- collision ----
+   World AABBs, [minX, minY, minZ, maxX, maxY, maxZ]. The nightstand boxes are
+   run back to the wall so they also close off the strip of headboard panel
+   that sticks out past the bed. */
+export const BEDROOM_COLLIDERS = [
+  [WEST - 0.01, 0, 1.06, 6.63, HB_TOP, 3.04],          // bed and headboard
+  [WEST - 0.01, 0, 0.66, 4.89, NS_TOP + 0.02, 1.14],   // nightstand, south
+  [WEST - 0.01, 0, 2.96, 4.89, NS_TOP + 0.02, 3.44],   // nightstand, north
+  [R.x0 + 0.08, 0, NORTH - 0.60, R.x0 + 3.72, APT.h, NORTH + 0.02],   // wardrobe
+  [6.70, 0, 1.26, 7.18, 0.48, 2.84],                   // bench at the foot
+];
+</script>
+<script type="text/plain" id="rm22">/* =========================================================================
+   The hall.
+
+   Nine metres by three and a half, and not one window in it: this is the
+   internal spine of the flat, the piece you cross rather than the piece you
+   sit in. Two things follow from that. It is the darkest room in the
+   apartment — a pair of sconces either side of a mirror, and whatever leaks
+   round the cased opening from the fire — and everything in it is either flat
+   against a wall or hanging on one, because the middle has to stay walkable.
+   The bedroom door lands at x = 4, the opening to the living room at x = 2.1,
+   and the line between them is the busiest metre of floor in the flat.
+
+   So the room is composed as one long wall and one long runner. A floating
+   walnut console with a dark mirror over it takes the north wall, two closed
+   leaves either side of it stand for the front door and the bathroom, two
+   tall canvases face the mirror across the hall, and the coat and the bag by
+   the entrance are the only soft things in here. Nothing is bright, nothing
+   is in the way, and the eye is carried straight through — which is what a
+   threshold between a lit living room and a sleeping bedroom has to do.
+
+   Everything is set out from the plan rather than typed in, so the room
+   cannot drift away from the walls it is built against. The hall carries the
+   same 0.42 soffit the kitchen does, which puts its ceiling at 2.88 — nothing
+   in here reaches past the door heads at 2.33, so the drop is only ever felt
+   rather than seen.
+   ========================================================================= */
+import * as THREE from 'three';
+import { rnd, rrnd, roundedBoxGeo, boxUv } from './room.js';
+import { MAT, shadowed } from './room-mat.js';
+import { cushionGeo, weltGeo, drapeGeo } from './room-soft.js';
+import { ROOMS, APT } from './room-plan.js';
+
+const R = ROOMS.hall;
+const NORTH = R.z1 - APT.wall / 2;      // 6.545 — inside face of the entrance wall
+const SOUTH = R.z0 + APT.wall / 2;      // 3.055 — the living-room wall, the long one
+const WEST = R.x0 + APT.wall / 2;       // -4.945 — the blind end, where the coats go
+const WOOD_TILE = 1.6;                  // the shell's doors are grained at this scale
+
+/* Setting out. A console top is not a worktop: 0.85 is where a hall table
+   lands, low enough that the mirror over it still has a metre of wall. */
+const CON = { x0: -3.40, x1: -0.60, top: 0.85, h: 0.27, d: 0.36 };
+const CX = (CON.x0 + CON.x1) / 2;       // -2.0, and with it the mirror and the pier
+const CON_F = NORTH - CON.d;            // 6.185 — the front plane of the console
+
+const MIR = { w: 1.44, h: 1.10, y: 1.57 };
+const SC_Y = 1.58, SC_DX = 0.90;        // sconces level with the middle of the glass
+const DOOR_H = 2.30;
+const HOOK_Y = 1.72;
+
+/* Openings that have to stay clear, restated from the plan so the numbers in
+   this file can be read against them: the cased opening to the living room
+   runs x 1.54 → 2.66 in the z = 3 wall, the bedroom door z 3.74 → 4.76 in the
+   x = 4 wall. Nothing here goes east of x = 0.96 except the runner. */
+
+/* A single sheet of cloth shows its reverse wherever it folds back on itself,
+   so the coat and the scarf take doubled clones of the palette materials
+   rather than a second, subtly different fabric. */
+const twoSided = (m) => { const c = m.clone(); c.side = THREE.DoubleSide; return c; };
+const COAT = twoSided(MAT.olive);
+const SCARF = twoSided(MAT.rust);       // the hall's one warm note, and it is 300 mm of it
+
+/* Shadow gaps have to read as voids. MAT.walnut catches far too much of a
+   sconce washing straight down the front of the console, so the 24 mm finger
+   reveal gets its own matt near-black liner — the same trick the kitchen uses
+   on its joints, and the one surface in here not allowed to catch anything. */
+const GAP = new THREE.MeshStandardMaterial({
+  color: 0x121310, roughness: 0.95, metalness: 0, envMapIntensity: 0.1,
+});
+
+/* The mirror. There is no reflection in it and there does not need to be one:
+   a real one is a second render of the whole flat, taken from behind a panel
+   you see at a grazing angle, to show a dark hall at night. A near-black
+   metal at 0.08
+   roughness picks up the captured room environment instead — the sconce faces
+   smear down it, the doorway behind you shows as a soft grey block, and that
+   is the whole of what a dark mirror ever gives you by lamplight. It costs
+   one material. */
+const MIRROR = new THREE.MeshStandardMaterial({
+  // The captured environment is dominated by the fire, so a mirror-smooth
+  // metal at 2x intensity puts a blown-out sun in the middle of the hall.
+  // Softer and dimmer reads as dark glass; sharper reads as a bug.
+  color: 0x14171a, roughness: 0.17, metalness: 1.0, envMapIntensity: 0.85,
+});
+
+/* ============================================================== runner === */
+/* Down the length rather than across it: the runner is the only thing telling
+   you the hall is a route, and it stops short of the bedroom door so the leaf
+   swings over stone. */
+function buildRunner(g) {
+  const rug = new THREE.Mesh(roundedBoxGeo(6.70, 0.022, 1.05, 0.05, 1), MAT.rugDark);
+  rug.position.set(-1.15, 0.011, 4.95);
+  rug.receiveShadow = true;
+  g.add(rug);
+  return rug;
+}
+
+/* ============================================================= console === */
+/* Wall-hung, not on legs. Two reasons: the skirting runs across this wall at
+   110 mm and a floating carcass never has to be scribed round it, and 600 mm
+   of clear floor under a 2.8 m box is what stops the hall reading as a
+   corridor with furniture jammed into it. The dark reveal above the drawers
+   is the only handle. */
+function buildConsole(g) {
+  const c = new THREE.Group();
+  const W = CON.x1 - CON.x0;
+  const y0 = CON.top - CON.h;                    // 0.58 — the shadow gap starts here
+
+  const body = shadowed(new THREE.Mesh(
+    roundedBoxGeo(W, CON.h, CON.d - 0.015, 0.006, 1), MAT.walnut));
+  body.position.set(CX, y0 + CON.h / 2, NORTH - (CON.d - 0.015) / 2);
+  c.add(body);
+
+  // two fronts, proud of the carcass, with a gap between them and a reveal over
+  const FW = (W - 0.018) / 2, FH = CON.h - 0.028;
+  [-1, 1].forEach((s) => {
+    const f = shadowed(new THREE.Mesh(roundedBoxGeo(FW, FH, 0.015, 0.004, 1), MAT.walnut));
+    f.position.set(CX + s * (FW / 2 + 0.009), y0 + FH / 2 + 0.004, CON_F + 0.0075);
+    c.add(f);
+  });
+  /* The reveal is filled rather than left open: an empty slot shows the
+     carcass face 15 mm behind it, coplanar with the drawer fronts, and the two
+     walnut planes flicker against each other from across the hall. */
+  const reveal = new THREE.Mesh(new THREE.BoxGeometry(W - 0.01, 0.024, 0.012), GAP);
+  reveal.position.set(CX, CON.top - 0.012, CON_F + 0.006);
+  c.add(reveal);
+
+  g.add(c);
+  return c;
+}
+
+/* ============================================================== mirror === */
+function buildMirror(g) {
+  const m = new THREE.Group();
+
+  const glass = new THREE.Mesh(
+    new THREE.BoxGeometry(MIR.w - 0.04, MIR.h - 0.04, 0.012), MIRROR);
+  glass.position.set(CX, MIR.y, NORTH - 0.006);
+  glass.receiveShadow = true;                    // a 12 mm panel casts nothing worth having
+  m.add(glass);
+
+  /* The surround: 24 mm of brass on edge, and the only brass in the room apart
+     from the sconces and the two levers. Anything wider turns the wall into a
+     picture of a mirror. */
+  const BAR = 0.024, PROUD = 0.030;
+  const bar = (w, h, x, y) => {
+    const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, PROUD), MAT.brass);
+    b.position.set(x, y, NORTH - PROUD / 2);
+    b.castShadow = true; b.receiveShadow = true;
+    m.add(b);
+  };
+  bar(MIR.w, BAR, CX, MIR.y + MIR.h / 2 - BAR / 2);
+  bar(MIR.w, BAR, CX, MIR.y - MIR.h / 2 + BAR / 2);
+  bar(BAR, MIR.h - BAR * 2, CX - MIR.w / 2 + BAR / 2, MIR.y);
+  bar(BAR, MIR.h - BAR * 2, CX + MIR.w / 2 - BAR / 2, MIR.y);
+
+  g.add(m);
+  return m;
+}
+
+/* ============================================================= sconce ==== */
+/* An open brass tube on a plate, throwing up the wall and down onto the
+   console. The tube's two ends are the light: a basic material with tone
+   mapping off, so they stay a clean warm disc however hard the grade pushes
+   the rest of the room down. The lamp itself is one point light for the pair,
+   built in room-lights.js from the positions returned here. */
+function buildSconce(g, x) {
+  const s = new THREE.Group();
+  const RB = 0.052, BH = 0.20;
+
+  const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.048, 0.048, 0.014, 12), MAT.brass);
+  plate.rotation.x = Math.PI / 2;
+  plate.position.set(x, SC_Y, NORTH - 0.007);
+  plate.castShadow = true; plate.receiveShadow = true;
+  s.add(plate);
+
+  const body = shadowed(new THREE.Mesh(
+    new THREE.CylinderGeometry(RB, RB, BH, 12, 1, true), MAT.brass));
+  body.position.set(x, SC_Y, NORTH - RB - 0.008);
+  s.add(body);
+
+  const faceMat = new THREE.MeshBasicMaterial({ color: 0xffb173, toneMapped: false });
+  const bulbMat = new THREE.MeshBasicMaterial({ color: 0xffd0a0, toneMapped: false });
+  [1, -1].forEach((sgn) => {
+    const f = new THREE.Mesh(new THREE.CircleGeometry(RB - 0.004, 12), faceMat);
+    f.rotation.x = -sgn * Math.PI / 2;
+    f.position.set(x, SC_Y + sgn * (BH / 2 - 0.002), NORTH - RB - 0.008);
+    s.add(f);
+  });
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.020, 10, 8), bulbMat);
+  bulb.position.set(x, SC_Y, NORTH - RB - 0.008);
+  s.add(bulb);
+
+  // fade the emitters with the lamp level rather than popping them off
+  const fBase = faceMat.color.clone(), bBase = bulbMat.color.clone();
+  g.add(s);
+  return {
+    group: s,
+    lightPos: new THREE.Vector3(x, SC_Y, NORTH - 0.16),
+    setGlow: (k) => {
+      faceMat.color.copy(fBase).multiplyScalar(k);
+      bulbMat.color.copy(bBase).multiplyScalar(k);
+    },
+  };
+}
+
+/* ==================================================== what is on the top = */
+/* The archaeology of a front door: keys in a dish, the post nobody has opened,
+   a scarf dropped on the way past. It is arranged either side of the mirror
+   rather than under it — the centre of a hall console is always empty, because
+   that is where you put things down. */
+function buildConsoleThings(g) {
+  const y = CON.top;
+
+  /* --- a shallow travertine dish, with the keys thrown into it --- */
+  const dish = shadowed(new THREE.Mesh(new THREE.LatheGeometry([
+    [0.000, 0.000], [0.055, 0.000], [0.090, 0.008], [0.104, 0.026], [0.104, 0.030],
+    [0.096, 0.028], [0.082, 0.014], [0.050, 0.006], [0.000, 0.006],
+  ].map(([r, h]) => new THREE.Vector2(r, h)), 16), MAT.travertine));
+  dish.position.set(-1.34, y, 6.34);
+  g.add(dish);
+
+  const keys = new THREE.Group();
+  keys.position.set(-1.34, y + 0.010, 6.34);
+  keys.rotation.y = 0.42;
+  [[-0.012, 0.0, 0.30], [0.010, 0.004, -0.18]].forEach(([kx, ky, ka]) => {
+    const k = new THREE.Mesh(new THREE.BoxGeometry(0.017, 0.002, 0.055), MAT.steel);
+    k.position.set(kx, ky, 0.008);
+    k.rotation.y = ka;
+    k.receiveShadow = true;              // 2 mm of key casts nothing but noise
+    keys.add(k);
+  });
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.016, 0.0022, 6, 14), MAT.brass);
+  ring.rotation.x = Math.PI / 2 - 0.25;
+  ring.position.set(0.004, 0.006, -0.028);
+  ring.receiveShadow = true;
+  keys.add(ring);
+  g.add(keys);
+
+  /* --- the post, squared up by nobody --- */
+  /* MAT.clayPale and MAT.clay are the palette's only untextured matts, which
+     makes them the closest thing it has to paper and kraft. */
+  let py = y;
+  for (let i = 0; i < 4; i++) {
+    const th = 0.005;
+    const e = new THREE.Mesh(
+      roundedBoxGeo(0.235 - i * 0.006, th, 0.162 - i * 0.004, 0.002, 1),
+      i === 1 ? MAT.clay : MAT.clayPale);
+    e.position.set(-2.56, py + th / 2, 6.33);
+    e.rotation.y = rrnd(-0.13, 0.13);
+    e.receiveShadow = true;              // a 20 mm stack: it takes light, it does not throw it
+    py += th;
+    g.add(e);
+  }
+
+  /* --- a bud vase, and two dry stems left in it since the autumn --- */
+  const vase = shadowed(new THREE.Mesh(new THREE.LatheGeometry([
+    [0.000, 0.000], [0.045, 0.000], [0.053, 0.035], [0.046, 0.105],
+    [0.030, 0.170], [0.027, 0.200], [0.031, 0.215], [0.026, 0.215],
+  ].map(([r, h]) => new THREE.Vector2(r, h)), 14), MAT.clay));
+  vase.position.set(-3.20, y, 6.38);
+  g.add(vase);
+
+  /* The stems lean west, away from the sconce at x = -2.90: a stem through a
+     light fitting is the sort of thing you only ever see once it is rendered. */
+  for (let i = 0; i < 3; i++) {
+    const len = rrnd(0.40, 0.50);
+    const lean = -rrnd(0.10, 0.26), drift = rrnd(-0.10, 0.06);
+    const p0 = new THREE.Vector3(-3.20, y + 0.17, 6.38);
+    const curve = new THREE.CatmullRomCurve3([
+      p0,
+      p0.clone().add(new THREE.Vector3(lean * 0.25, len * 0.45, drift * 0.35)),
+      p0.clone().add(new THREE.Vector3(lean * 0.70, len * 0.80, drift * 0.75)),
+      p0.clone().add(new THREE.Vector3(lean, len, drift)),
+    ]);
+    const stem = new THREE.Mesh(new THREE.TubeGeometry(curve, 8, 0.0035, 4), MAT.wicker);
+    stem.castShadow = true;
+    g.add(stem);
+    // three dry seed heads up the top third, and nothing else
+    for (let k = 0; k < 3; k++) {
+      const t = 0.62 + k * 0.16;
+      const bud = new THREE.Mesh(new THREE.ConeGeometry(0.006, 0.028, 5), MAT.wicker);
+      bud.position.copy(curve.getPointAt(t));
+      bud.rotation.set(rrnd(-0.5, 0.5), rnd() * 6.28, rrnd(-0.6, 0.6));
+      g.add(bud);
+    }
+  }
+
+  /* --- the scarf, folded once and left over the front edge --- */
+  const scarf = shadowed(new THREE.Mesh(drapeGeo([
+    [-0.98, 0.864, 6.470],
+    [-0.99, 0.862, 6.370],
+    [-1.00, 0.859, 6.265],
+    [-1.005, 0.846, 6.196],
+    [-1.010, 0.790, 6.166],
+    [-1.014, 0.710, 6.158],
+    [-1.018, 0.638, 6.166],
+  ], 0.30, {
+    nu: 22, nv: 10, folds: 4, amp: 0.018, taper: 0.06,
+    // pressed flat where it lies on the walnut, loose where it falls
+    freeAt: (u) => Math.max(0.12, (u - 0.48) * 2.1),
+  }), SCARF));
+  g.add(scarf);
+
+  // the upper leaf of the fold, set back so the lower one shows past it
+  const fold = shadowed(new THREE.Mesh(drapeGeo([
+    [-0.94, 0.876, 6.430],
+    [-0.95, 0.874, 6.340],
+    [-0.96, 0.870, 6.255],
+    [-0.965, 0.858, 6.205],
+    [-0.970, 0.822, 6.186],
+  ], 0.26, { nu: 14, nv: 8, folds: 3, amp: 0.014, taper: 0.05, freeAt: () => 0.30 }), SCARF));
+  g.add(fold);
+}
+
+/* ============================================================== doors ==== */
+/* Decoration: there is nothing behind either of these. They are closed leaves
+   in a solid wall, lined and levered like the real one the shell hangs in the
+   bedroom wall, because a hall with one door in it is a corridor and a hall
+   with three is somewhere you arrive. */
+function buildDoor(g, cx, w, handSide) {
+  const d = new THREE.Group();
+  const LIN = 0.032, PROUD = 0.055, TH = 0.042;
+
+  const leaf = shadowed(new THREE.Mesh(
+    boxUv(new THREE.BoxGeometry(w, DOOR_H, TH), w, DOOR_H, TH, WOOD_TILE), MAT.walnut));
+  leaf.position.set(cx, DOOR_H / 2, NORTH - TH / 2);
+  d.add(leaf);
+
+  const line = (bw, bh, x, y) => {
+    const b = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, PROUD), MAT.walnut);
+    b.position.set(x, y, NORTH - PROUD / 2);
+    b.castShadow = true; b.receiveShadow = true;
+    d.add(b);
+  };
+  line(LIN, DOOR_H + LIN, cx - w / 2 - LIN / 2, (DOOR_H + LIN) / 2);
+  line(LIN, DOOR_H + LIN, cx + w / 2 + LIN / 2, (DOOR_H + LIN) / 2);
+  line(w + LIN * 2, LIN, cx, DOOR_H + LIN / 2);
+
+  /* Lever at 1.05, which is where every door handle in the world is, and the
+     lever pointing back toward its hinge — the other way round reads as a
+     bathroom lock. */
+  const hx = cx + handSide * (w / 2 - 0.075);
+  const face = NORTH - TH;
+  const rose = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.026, 0.010, 10), MAT.brass);
+  rose.rotation.x = Math.PI / 2;
+  rose.position.set(hx, 1.05, face - 0.005);
+  rose.receiveShadow = true;
+  d.add(rose);
+  const lever = new THREE.Mesh(new THREE.CylinderGeometry(0.010, 0.009, 0.10, 8), MAT.brass);
+  lever.rotation.z = Math.PI / 2;
+  lever.position.set(hx - handSide * 0.045, 1.05, face - 0.026);
+  lever.castShadow = true;
+  d.add(lever);
+
+  g.add(d);
+  return d;
+}
+
+/* ================================================================ art ==== */
+/* Two tall narrow canvases on the long wall, hung to face the mirror. Painted
+   in a canvas element at load like everything else here: a dark tonal column
+   with one warmer band low in it, which at this light level is all that ever
+   comes back off a picture anyway. */
+function artTexture(tint) {
+  const cv = document.createElement('canvas');
+  cv.width = 128; cv.height = 384;
+  const c = cv.getContext('2d');
+  const grd = c.createLinearGradient(0, 0, 0, 384);
+  grd.addColorStop(0, '#0d0f12');
+  grd.addColorStop(0.60, '#1a191b');
+  grd.addColorStop(0.80, tint);
+  grd.addColorStop(1, '#0b0a0a');
+  c.fillStyle = grd; c.fillRect(0, 0, 128, 384);
+  for (let i = 0; i < 90; i++) {
+    c.globalAlpha = 0.02 + rnd() * 0.05;
+    c.fillStyle = rnd() < 0.5 ? '#4a3b2a' : '#08080a';
+    c.fillRect(rrnd(-24, 128), rrnd(0, 384), rrnd(24, 150), rrnd(2, 13));
+  }
+  c.globalAlpha = 1;
+  const t = new THREE.CanvasTexture(cv);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+function buildArt(g, x, tint) {
+  const W = 0.44, HGT = 1.34, Y = 1.60;
+  const frame = shadowed(new THREE.Mesh(
+    boxUv(new THREE.BoxGeometry(W, HGT, 0.038), W, HGT, 0.038, WOOD_TILE), MAT.walnut));
+  frame.position.set(x, Y, SOUTH + 0.019);
+  g.add(frame);
+
+  const face = new THREE.Mesh(new THREE.PlaneGeometry(W - 0.05, HGT - 0.05),
+    new THREE.MeshStandardMaterial({ map: artTexture(tint), roughness: 0.92, envMapIntensity: 0.22 }));
+  face.position.set(x, Y, SOUTH + 0.039);
+  face.receiveShadow = true;
+  g.add(face);
+  return frame;
+}
+
+/* ============================================================== coats ==== */
+/* A steel rail on the blind west wall, one bay in from the entrance door. The
+   coat is the only thing in the hall with any volume to it, so it is built the
+   way the throw over the sofa arm is: a swept cloth with real folds, hung from
+   the hem upward so the taper closes it into a gather at the hook. */
+function buildHooks(g) {
+  const h = new THREE.Group();
+  const zs = [5.26, 5.48, 5.70, 5.92];
+
+  const rail = new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.032, 0.86), MAT.steel);
+  rail.position.set(WEST + 0.011, HOOK_Y, 5.59);
+  rail.castShadow = true; rail.receiveShadow = true;
+  h.add(rail);
+
+  for (const z of zs) {
+    const peg = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.009, 0.075, 8), MAT.steel);
+    peg.rotation.z = Math.PI / 2;
+    peg.position.set(WEST + 0.0595, HOOK_Y, z);
+    peg.castShadow = true;
+    h.add(peg);
+    const knob = new THREE.Mesh(new THREE.SphereGeometry(0.013, 8, 6), MAT.steel);
+    knob.position.set(WEST + 0.097, HOOK_Y, z);
+    knob.castShadow = true;
+    h.add(knob);
+  }
+
+  g.add(h);
+  return h;
+}
+
+function buildCoat(g) {
+  /* The body. The path leans in toward the wall as it climbs, which is what
+     gives drapeGeo a stable side vector — a dead vertical sweep degenerates —
+     and is also how a wool coat actually hangs off a peg. */
+  const body = shadowed(new THREE.Mesh(drapeGeo([
+    [-4.742, 0.600, 5.488],
+    [-4.757, 0.850, 5.484],
+    [-4.782, 1.110, 5.480],
+    [-4.808, 1.350, 5.478],
+    [-4.836, 1.550, 5.476],
+    [-4.855, 1.655, 5.475],
+  ], 0.50, {
+    nu: 26, nv: 12, folds: 5, amp: 0.030, taper: 0.62,
+    freeAt: (u) => 0.25 + 0.75 * Math.pow(1 - u, 0.8),
+  }), COAT));
+  g.add(body);
+
+  // the front edges, hung a few millimetres proud so the coat reads as open
+  const front = shadowed(new THREE.Mesh(drapeGeo([
+    [-4.706, 0.760, 5.470],
+    [-4.722, 1.000, 5.468],
+    [-4.750, 1.240, 5.466],
+    [-4.784, 1.440, 5.464],
+    [-4.816, 1.570, 5.463],
+  ], 0.30, { nu: 18, nv: 9, folds: 3, amp: 0.020, taper: 0.48, freeAt: (u) => 0.30 + 0.60 * (1 - u) }), COAT));
+  g.add(front);
+
+  // sleeves, hanging shorter and narrower off each shoulder
+  [[5.300, 0.860, 1], [5.660, 0.900, -1]].forEach(([z, hem, s]) => {
+    const sl = shadowed(new THREE.Mesh(drapeGeo([
+      [-4.700, hem, z],
+      [-4.722, hem + 0.20, z + s * 0.005],
+      [-4.762, hem + 0.40, z + s * 0.020],
+      [-4.802, hem + 0.58, z + s * 0.050],
+      [-4.832, hem + 0.69, z + s * 0.100],
+    ], 0.15, { nu: 16, nv: 6, folds: 3, amp: 0.013, taper: 0.30, freeAt: (u) => 0.35 + 0.55 * (1 - u) }), COAT));
+    g.add(sl);
+  });
+
+  // the collar, arced over the peg — the piece that makes it hang rather than float
+  const collar = shadowed(new THREE.Mesh(drapeGeo([
+    [-4.866, 1.600, 5.398],
+    [-4.882, 1.690, 5.437],
+    [-4.890, 1.732, 5.480],
+    [-4.882, 1.690, 5.523],
+    [-4.866, 1.600, 5.562],
+  ], 0.10, { nu: 14, nv: 5, folds: 2, amp: 0.007, taper: 0, freeAt: () => 0.25 }), COAT));
+  g.add(collar);
+}
+
+function buildBag(g) {
+  const Z = 5.92;
+  /* A soft leather tote, so it is a stuffed cushion stood on its edge rather
+     than a box: cushionGeo is built lying down, so rotating it about z turns
+     its thickness axis out from the wall and its width into height. */
+  const bag = shadowed(new THREE.Mesh(
+    cushionGeo(0.30, 0.13, 0.34, {
+      corner: 3.4, wide: 3.2, edge: 0.40, pinch: 0.05, wrinkle: 1.5, seg: 26, rings: 9,
+    }), MAT.leather));
+  bag.position.set(WEST + 0.078, 1.28, Z);
+  bag.rotation.z = -Math.PI / 2;
+  bag.rotation.x = 0.04;
+  g.add(bag);
+  const welt = new THREE.Mesh(weltGeo(0.30 * 0.99, 0.34 * 0.99, { corner: 3.4, radius: 0.006 }), MAT.leather);
+  welt.castShadow = false;
+  bag.add(welt);
+
+  const strap = shadowed(new THREE.Mesh(new THREE.TubeGeometry(
+    new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-4.868, 1.400, Z - 0.115),
+      new THREE.Vector3(-4.884, 1.640, Z - 0.070),
+      new THREE.Vector3(-4.890, 1.746, Z),
+      new THREE.Vector3(-4.884, 1.640, Z + 0.070),
+      new THREE.Vector3(-4.868, 1.400, Z + 0.115),
+    ]), 16, 0.011, 6), MAT.leather));
+  g.add(strap);
+}
+
+/* =========================================================== assemble ==== */
+export function buildHall() {
+  const g = new THREE.Group();
+  g.name = 'hall';
+
+  buildRunner(g);
+  buildConsole(g);
+  buildMirror(g);
+  buildConsoleThings(g);
+
+  /* The entrance at the blind end and the bathroom the other side of the
+     console, both well clear of the 2.88 soffit. */
+  buildDoor(g, -4.30, 0.94, 1);
+  buildDoor(g, 0.55, 0.82, -1);
+
+  // facing the mirror across the hall, on the only long stretch of blank wall
+  buildArt(g, -2.30, '#463020');
+  buildArt(g, -1.72, '#2d3830');
+
+  buildHooks(g);
+  buildCoat(g);
+  buildBag(g);
+
+  const sconces = [
+    buildSconce(g, CX - SC_DX),
+    buildSconce(g, CX + SC_DX),
+  ];
+
+  return { group: g, sconces };
+}
+
+/* ----------------------------------------------------------- collision ---
+   World AABBs, [minX, minY, minZ, maxX, maxY, maxZ]. Only two: the console,
+   run down to the floor because nobody walks under a floating carcass and a
+   box that starts at 580 lets you stand inside it, and the strip of west wall
+   the coat and the bag hang off. Everything else in here is flatter than the
+   walker's own clearance. */
+export const HALL_COLLIDERS = [
+  [CON.x0 - 0.04, 0, CON_F - 0.05, CON.x1 + 0.04, CON.top + 0.02, NORTH],
+  [WEST - 0.03, 0, 5.14, WEST + 0.28, 1.80, 6.06],
+];
+</script>
+<script type="text/plain" id="rm23">/* =========================================================================
    The lighting rig.
 
    The room is lit almost entirely by the fireplace on the left wall, plus a
@@ -60733,10 +62792,16 @@ export function curtainGeo(width, height, o = {}) {
    ========================================================================= */
 import * as THREE from 'three';
 import { ROOM, roomScene } from './room.js';
+import { ROOMS, APT } from './room-plan.js';
 
 const X = ROOM.x, Z = ROOM.z, H = ROOM.h;
 
-export function buildLights(firePos, lampPos, shadowSize) {
+/* Every light here is evaluated by every fragment of every material, so the
+   count is a budget, not a wish list. Four rooms get five extra sources
+   between them: the pendants over the island read as one cluster, the two
+   bedside lamps are genuinely two, and the pair of hall sconces is one. */
+export function buildLights(opts) {
+  const { firePos, lampPos, shadowSize, pendants = [], lamps = [], sconces = [] } = opts;
   const L = {};
 
   /* --- the constant floor of the room -------------------------------- */
@@ -60809,9 +62874,44 @@ export function buildLights(firePos, lampPos, shadowSize) {
   L.cove.position.set(-X + 1.2, H - 0.25, Z - 1.2);
   roomScene.add(L.cove);
 
-  L.door = new THREE.PointLight(0xd07d38, 1.8, 4.5, 2.0);
-  L.door.position.set(3.35, 1.5, Z - 0.5);
-  roomScene.add(L.door);
+  /* --- the other rooms ------------------------------------------------ */
+  // Over the island. Three pendants a metre apart are one source at any
+  // distance you actually see them from, and a third of the shader cost.
+  const K = ROOMS.kitchen;
+  const kp = pendants.length
+    ? pendants.reduce((a, p) => a.add(p.lightPos), new THREE.Vector3()).multiplyScalar(1 / pendants.length)
+    : new THREE.Vector3((K.x0 + K.x1) / 2, 1.55, -1.4);
+  L.pendant = new THREE.PointLight(0xffbe86, 15, 9.0, 1.6);
+  L.pendant.position.copy(kp);
+  roomScene.add(L.pendant);
+
+  // the worktop run, washed from under the wall units
+  L.worktop = new THREE.PointLight(0xffc490, 4.5, 5.0, 1.9);
+  L.worktop.position.set((K.x0 + K.x1) / 2 + 0.6, 1.42, K.z1 - 0.55);
+  roomScene.add(L.worktop);
+
+  L.bedside = lamps.slice(0, 2).map((lp, i) => {
+    const pl = new THREE.PointLight(0xffa663, 8.5, 5.2, 1.95);
+    pl.position.copy(lp.lightPos);
+    roomScene.add(pl);
+    return pl;
+  });
+  if (!L.bedside.length) {
+    const B = ROOMS.bedroom;
+    const pl = new THREE.PointLight(0xffa663, 8.5, 5.2, 1.95);
+    pl.position.set(B.x1 - 1.1, 0.66, B.z1 - 1.4);
+    roomScene.add(pl);
+    L.bedside = [pl];
+  }
+
+  // both hall sconces as one source, midway between them
+  const H_ = ROOMS.hall;
+  const sp = sconces.length
+    ? sconces.reduce((a, s2) => a.add(s2.lightPos), new THREE.Vector3()).multiplyScalar(1 / sconces.length)
+    : new THREE.Vector3(-2.0, 1.75, H_.z1 - 0.3);
+  L.sconce = new THREE.PointLight(0xffb473, 6.0, 7.5, 1.45);
+  L.sconce.position.copy(sp);
+  roomScene.add(L.sconce);
 
   /* --- the storm outside ---------------------------------------------- */
   L.window = new THREE.DirectionalLight(0x8fb0e0, 0.95);
@@ -60853,12 +62953,21 @@ export function updateLights(L, ctx) {
   L.shelf.intensity = 3.0 * lampLevel;
   L.cove.intensity = 4.0 * lampLevel;
 
+  // The other rooms are on the same switch, but never go fully dark — a flat
+  // with the lamps off still has the city coming in and light spilling round
+  // a doorway, and rooms that hit pure black just read as holes.
+  const k = 0.16 + 0.84 * lampLevel;
+  L.pendant.intensity = 16 * k;
+  L.worktop.intensity = 4.5 * k;
+  L.sconce.intensity = 7.0 * k;
+  for (const b of L.bedside) b.intensity = 8.5 * (0.10 + 0.90 * lampLevel);
+
   L.bounceBack.intensity = 3.4 * soft;
   L.window.intensity = 0.95 + flash * 2.6;
   L.windowFill.intensity = 5.0 + flash * 6.0;
 }
 </script>
-<script type="text/plain" id="rm18">/* =========================================================================
+<script type="text/plain" id="rm24">/* =========================================================================
    Part 4 / 5 — furniture, soft goods, plants, the cat, and the lighting rig
    ========================================================================= */
 import * as THREE from 'three';
@@ -60866,120 +62975,31 @@ import {
   GLSL_NOISE, U, ROOM, rnd, rrnd, pick, roomScene, MAX_ANISO,
   roundedBoxGeo, faceTowards, normalizeUv,
 } from './room.js';
+import { MAT, bookMat, shadowed } from './room-mat.js';
+import { ROOMS } from './room-plan.js';
 import { cushionGeo, weltGeo, drapeGeo, curtainGeo } from './room-soft.js';
-import { applyMaps } from './tex/index.js';
-import { applyDetail } from './tex/detail.js';
 export { buildLights, updateLights } from './room-lights.js';
 
+/* The living room is no longer the whole flat: it runs x -5..4, z -4..3,
+   open to the kitchen across x=4. Everything here is placed against those
+   bounds rather than the old symmetric box. */
+const LR = ROOMS.living;
 const X = ROOM.x, Z = ROOM.z, H = ROOM.h;
 
-/* ------------------------------------------------------------ materials --
-   roundedBoxGeo() is an ExtrudeGeometry, whose UVs are already in metres, so
-   a repeat of 4 means "one texture tile every 25 cm". Box/cylinder primitives
-   carry 0..1 UVs instead, so a few materials get their own repeat. */
-const AN = { aniso: MAX_ANISO };
-const tex = (mat, name, opts) => {
-  applyMaps(mat, name, { ...AN, ...opts });
-  if (opts && opts.detail) applyDetail(mat, opts.detail);
-  return mat;
-};
-// fabric wants a fine fibre break-up; wood and stone a coarser, shallower one
-const D_FABRIC = { scale: 0.035, strength: 0.55, fade: 3.5, rough: 0.05 };
-const D_WOOD = { scale: 0.07, strength: 0.40, fade: 4.5, rough: 0.04 };
-
+/* The palette lives in room-mat.js now that four rooms share it. The aliases
+   keep this file's old names working against the redesigned set. */
 const M = {
-  linen: tex(new THREE.MeshStandardMaterial({
-    color: 0xd2bfa6, metalness: 0, envMapIntensity: 0.32,
-  }), 'linen', { repeat: [4, 4], normalScale: 0.85, detail: D_FABRIC }),
-
-  linenDark: tex(new THREE.MeshStandardMaterial({
-    color: 0x9c8971, metalness: 0, envMapIntensity: 0.28,
-  }), 'linen', { repeat: [4, 4], normalScale: 0.85, detail: D_FABRIC }),
-
-  boucle: tex(new THREE.MeshStandardMaterial({
-    color: 0xe8dac2, metalness: 0, envMapIntensity: 0.28,
-  }), 'boucle', { repeat: [4, 4], normalScale: 0.9, detail: D_FABRIC }),
-
-  boucleRound: tex(new THREE.MeshStandardMaterial({
-    color: 0xe8dac2, metalness: 0, envMapIntensity: 0.28,
-  }), 'boucle', { repeat: [9, 1.6], normalScale: 0.9 }),
-
-  rust: tex(new THREE.MeshStandardMaterial({
-    color: 0xc4653c, metalness: 0, envMapIntensity: 0.32,
-  }), 'linen', { repeat: [4, 4], normalScale: 0.85, detail: D_FABRIC }),
-
-  knit: tex(new THREE.MeshStandardMaterial({
-    color: 0xd4ac79, metalness: 0, side: THREE.DoubleSide, envMapIntensity: 0.22,
-  }), 'knit', { repeat: [3, 5], normalScale: 1.0, detail: D_FABRIC }),
-
-  oak: tex(new THREE.MeshStandardMaterial({
-    color: 0x9a7752, metalness: 0, envMapIntensity: 0.5,
-  }), 'oakFloor', { repeat: [0.4, 0.4], normalScale: 0.5, detail: D_WOOD }),
-
-  oakDark: tex(new THREE.MeshStandardMaterial({
-    color: 0x5c412c, metalness: 0, envMapIntensity: 0.5,
-  }), 'oakFloor', { repeat: [0.4, 0.4], normalScale: 0.5, detail: D_WOOD }),
-
-  brass: tex(new THREE.MeshStandardMaterial({
-    color: 0xc59a55, metalness: 0.95, envMapIntensity: 1.2,
-  }), 'brushedMetal', { repeat: [3, 3], normalScale: 0.6 }),
-
-  blackSteel: tex(new THREE.MeshStandardMaterial({
-    color: 0x26221f, metalness: 0.85, envMapIntensity: 0.8,
-  }), 'brushedMetal', { repeat: [3, 3], normalScale: 0.5 }),
-
-  marble: tex(new THREE.MeshStandardMaterial({
-    color: 0xa5a5a1, metalness: 0.05, envMapIntensity: 1.0,
-  }), 'marble', { repeat: [1.5, 1.5], normalScale: 0.5 }),
-
-  bookCloth: tex(new THREE.MeshStandardMaterial({
-    color: 0xffffff, metalness: 0, envMapIntensity: 0.3,
-  }), 'bookCloth', { repeat: [8, 8], normalScale: 0.8 }),
-
-  ceramic: new THREE.MeshStandardMaterial({ color: 0xc9bda9, roughness: 0.35, envMapIntensity: 0.8 }),
-
-  leaf: tex(new THREE.MeshStandardMaterial({
-    color: 0xffffff, metalness: 0, side: THREE.DoubleSide, envMapIntensity: 0.4,
-  }), 'leaf', { repeat: [1, 1], normalScale: 0.8 }),
-
-  fur: tex(new THREE.MeshStandardMaterial({
-    color: 0x6d635c, metalness: 0, envMapIntensity: 0.2,
-  }), 'woolRug', { repeat: [5, 5], normalScale: 0.7 }),
-
-  // heavy unlined linen, seen from both sides against the glass
-  drape: tex(new THREE.MeshStandardMaterial({
-    color: 0xbfae95, metalness: 0, side: THREE.DoubleSide, envMapIntensity: 0.30,
-  }), 'linen', { repeat: [3, 3], normalScale: 1.0, detail: D_FABRIC }),
-
-  wicker: tex(new THREE.MeshStandardMaterial({
-    color: 0xa57c4c, metalness: 0, envMapIntensity: 0.3,
-  }), 'knit', { repeat: [3.2, 2.2], normalScale: 1.15 }),
-
-  bark: tex(new THREE.MeshStandardMaterial({
-    color: 0x8b7256, metalness: 0, envMapIntensity: 0.25,
-  }), 'charredLog', { repeat: [2.5, 2.5], normalScale: 0.9 }),
-};
-
-const shadowed = (m) => { m.castShadow = true; m.receiveShadow = true; return m; };
-
-/* every book shares one cloth texture and differs only by tint */
-const _bookMats = new Map();
-const bookMat = (hex) => {
-  if (!_bookMats.has(hex)) {
-    _bookMats.set(hex, tex(new THREE.MeshStandardMaterial({
-      color: hex, metalness: 0, envMapIntensity: 0.25,
-    }), 'bookCloth', { repeat: [8, 8], normalScale: 0.8 }));
-  }
-  return _bookMats.get(hex);
+  ...MAT,
+  oak: MAT.oakPale,
+  oakDark: MAT.walnut,
+  blackSteel: MAT.steel,
+  bookCloth: MAT.linen,
 };
 
 /* ================================================================= rug === */
 function buildRug(g) {
-  const mat = tex(new THREE.MeshStandardMaterial({
-    color: 0xe4cfb2, metalness: 0, envMapIntensity: 0.28,
-  }), 'woolRug', { repeat: [2.2, 2.2], normalScale: 0.75 });
-  const rug = new THREE.Mesh(roundedBoxGeo(4.6, 0.022, 3.4, 0.05, 1), mat);
-  rug.position.set(-0.5, 0.011, 0.35);
+  const rug = new THREE.Mesh(roundedBoxGeo(4.4, 0.022, 3.3, 0.05, 1), M.rug);
+  rug.position.set(-0.75, 0.011, 0.30);
   rug.receiveShadow = true;
   g.add(rug);
   return rug;
@@ -61291,9 +63311,10 @@ function buildSideTable(g, x, z) {
 /* =========================================================== bookshelf == */
 function buildBookshelf(g) {
   const s = new THREE.Group();
-  s.position.set(X - 0.17, 0, 1.9);
+  // north of the fireplace on the west wall — its old wall is the kitchen now
+  s.position.set(LR.x0 + 0.17, 0, 2.15);
 
-  const W = 0.34, HH = 2.35, L = 2.9;
+  const W = 0.34, HH = 2.35, L = 1.45;
   const carcass = shadowed(new THREE.Mesh(new THREE.BoxGeometry(W, HH, L), M.oakDark));
   carcass.position.set(0, HH / 2, 0); s.add(carcass);
   const front = shadowed(new THREE.Mesh(new THREE.BoxGeometry(0.02, HH, L), M.oak));
@@ -61330,12 +63351,12 @@ function buildBookshelf(g) {
   const vase = shadowed(new THREE.Mesh(new THREE.LatheGeometry(
     [[0.0, 0], [0.05, 0], [0.065, 0.05], [0.055, 0.12], [0.035, 0.17], [0.042, 0.20]]
       .map(([r, y2]) => new THREE.Vector2(r, y2)), 18), M.ceramic));
-  vase.position.set(-0.02, 1.752, -1.0); s.add(vase);
+  vase.position.set(-0.02, 1.752, -0.48); s.add(vase);
   const bowl = shadowed(new THREE.Mesh(new THREE.SphereGeometry(0.075, 16, 10, 0, Math.PI * 2, Math.PI * 0.5, Math.PI * 0.5), M.brass));
-  bowl.position.set(-0.02, 0.955, 0.95); s.add(bowl);
+  bowl.position.set(-0.02, 0.955, 0.44); s.add(bowl);
 
-  s.rotation.y = -Math.PI / 2;
-  s.position.set(X - 0.17, 0, 1.9);
+  s.rotation.y = Math.PI / 2;          // it faces east now, off the west wall
+  s.position.set(LR.x0 + 0.17, 0, 2.15);
   g.add(s);
   return s;
 }
@@ -61454,7 +63475,7 @@ function buildArt(g) {
   const art = shadowed(new THREE.Mesh(new THREE.BoxGeometry(1.9, 1.25, 0.05),
     [M.oakDark, M.oakDark, M.oakDark, M.oakDark,
      new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85, envMapIntensity: 0.3 }), M.oakDark]));
-  art.position.set(-0.9, 1.72, Z - 0.06);
+  art.position.set(-1.5, 1.78, LR.z1 - 0.14);
   art.rotation.y = Math.PI;
   g.add(art);
   return art;
@@ -61466,9 +63487,9 @@ function buildDust(g) {
   const geo = new THREE.BufferGeometry();
   const pos = new Float32Array(N * 3), seed = new Float32Array(N * 3);
   for (let i = 0; i < N; i++) {
-    pos[i * 3] = rrnd(-X + 0.4, X - 0.4);
+    pos[i * 3] = rrnd(LR.x0 + 0.4, LR.x1 - 0.4);
     pos[i * 3 + 1] = rrnd(0.15, H - 0.35);
-    pos[i * 3 + 2] = rrnd(-Z + 0.4, Z - 0.4);
+    pos[i * 3 + 2] = rrnd(LR.z0 + 0.4, LR.z1 - 0.4);
     seed[i * 3] = rnd(); seed[i * 3 + 1] = rnd(); seed[i * 3 + 2] = rnd();
   }
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
@@ -61537,9 +63558,8 @@ function buildCurtains(g) {
     return m;
   };
 
-  panel(-X + 0.62, -Z + 0.15, 1.08, 0, 0.22);
-  panel(X - 0.62, -Z + 0.15, 1.08, 0, -0.22);
-  panel(X - 0.15, -Z + 1.05, 0.92, -Math.PI / 2, 0.20);
+  panel(LR.x0 + 0.62, LR.z0 + 0.15, 1.08, 0, 0.22);
+  panel(LR.x1 - 0.62, LR.z0 + 0.15, 1.08, 0, -0.22);
 
   // tracks, tight under the ceiling cove
   const rod = (x, y, z, len, ry) => {
@@ -61547,8 +63567,7 @@ function buildCurtains(g) {
     r.position.set(x, y, z); r.rotation.set(0, ry, Math.PI / 2);
     c.add(r);
   };
-  rod(0, DROP + 0.035, -Z + 0.15, X * 2 - 0.1, 0);
-  rod(X - 0.15, DROP + 0.035, -Z + 1.6, 2.6, -Math.PI / 2);
+  rod((LR.x0 + LR.x1) / 2, DROP + 0.035, LR.z0 + 0.15, LR.x1 - LR.x0 - 0.1, 0);
 
   g.add(c);
   return c;
@@ -61598,13 +63617,13 @@ export function buildProps() {
   const table = buildCoffeeTable(g);
   buildPouf(g, -2.45, -1.35);
   const lamp = buildFloorLamp(g, -3.30, 1.90);
-  buildSideTable(g, -1.85, 2.70);
-  buildSideTable(g, 3.90, -1.75);
+  buildSideTable(g, -1.85, 2.52);
+  buildSideTable(g, 3.55, -1.75);
   buildBookshelf(g);
   buildCurtains(g);
   buildLogBasket(g, -4.35, 1.05);
-  const plant = buildPlant(g, 3.85, -2.95, 1.0);
-  const plant2 = buildPlant(g, -3.6, 2.9, 0.62);
+  const plant = buildPlant(g, 3.55, -3.05, 1.0);
+  const plant2 = buildPlant(g, -3.6, 2.58, 0.62);
   const cat = buildCat(g, -1.95, -0.55);
   buildArt(g);
   const dust = buildDust(g);
@@ -61613,7 +63632,7 @@ export function buildProps() {
   return { group: g, rug, sofa, chair, chair2, table, lamp, plant, plant2, cat, dust, M };
 }
 </script>
-<script type="text/plain" id="rm19">/* =========================================================================
+<script type="text/plain" id="rm25">/* =========================================================================
    Screen-space ambient occlusion.
 
    The room has exactly one shadow-casting light, so every surface outside the
@@ -61844,7 +63863,7 @@ export class AmbientOcclusion {
   get texture() { return this.target.texture; }
 }
 </script>
-<script type="text/plain" id="rm20">/* =========================================================================
+<script type="text/plain" id="rm26">/* =========================================================================
    Depth of field.
 
    Nothing marks an image as computer-generated more reliably than being sharp
@@ -62030,7 +64049,7 @@ export class DepthOfField {
   get texture() { return this.out.texture; }
 }
 </script>
-<script type="text/plain" id="rm21">/* =========================================================================
+<script type="text/plain" id="rm27">/* =========================================================================
    First-person walking.
 
    WASD (and the arrow keys) move; the mouse looks around once the canvas has
@@ -62044,6 +64063,10 @@ export class DepthOfField {
    ========================================================================= */
 import * as THREE from 'three';
 import { ROOM, clamp, damp } from './room.js';
+import { APT, planColliders } from './room-plan.js';
+import { KITCHEN_COLLIDERS } from './room-kitchen.js';
+import { BEDROOM_COLLIDERS } from './room-bedroom.js';
+import { HALL_COLLIDERS } from './room-hall.js';
 
 const EYE = 1.62;          // standing eye height, metres
 const CROUCH = 1.05;
@@ -62132,8 +64155,8 @@ export class Walker {
 
   clampInside() {
     const m = RADIUS + 0.06;
-    this.pos.x = clamp(this.pos.x, -ROOM.x + m, ROOM.x - m);
-    this.pos.z = clamp(this.pos.z, -ROOM.z + m, ROOM.z - m);
+    this.pos.x = clamp(this.pos.x, APT.x0 + m, APT.x1 - m);
+    this.pos.z = clamp(this.pos.z, APT.z0 + m, APT.z1 - m);
   }
 
   update(dt) {
@@ -62202,9 +64225,9 @@ export class Walker {
       const m = Math.max(a, b);
       if (m > 0 && m < t) t = m;
     };
-    hit(dx, -ROOM.x, ROOM.x, this.pos.x);
-    hit(dz, -ROOM.z, ROOM.z, this.pos.z);
-    hit(dy, 0, ROOM.h, this.eye);
+    hit(dx, APT.x0, APT.x1, this.pos.x);
+    hit(dz, APT.z0, APT.z1, this.pos.z);
+    hit(dy, 0, APT.h, this.eye);
     return clamp(t, 1.1, 9);
   }
 
@@ -62220,10 +64243,11 @@ const MOVE_KEYS = new Set([
   'KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space',
 ]);
 
-/** the solid things in the room, as world-space AABBs */
+/** Everything solid, as world-space AABBs: the walls and the column come
+    straight off the plan, the furniture is listed here. */
 export function roomColliders() {
   const X = ROOM.x, Z = ROOM.z;
-  return [
+  return planColliders().concat([
     // the stone fireplace facing, which stands proud of the left wall
     [-X, 0, -2.6, -X + 0.72, 3.3, 1.4],
     // sofa
@@ -62237,19 +64261,19 @@ export function roomColliders() {
     [-2.85, 0, -1.75, -2.05, 0.40, -0.95],
     [-2.20, 0, 2.35, -1.50, 0.60, 3.05],
     [-3.55, 0, 1.65, -3.05, 1.60, 2.15],
-    // bookshelf along the right wall
-    [X - 0.36, 0, 0.45, X, 2.4, 3.35],
+    // bookshelf, now on the west wall north of the hearth
+    [-X, 0, 1.40, -X + 0.38, 2.4, 2.90],
     // side table by the window chair
-    [3.64, 0, -2.01, 4.16, 0.60, -1.49],
+    [3.29, 0, -2.01, 3.81, 0.60, -1.49],
     // log basket at the hearth
     [-4.66, 0, 0.74, -4.04, 0.40, 1.36],
     // plants
-    [3.55, 0, -3.25, 4.15, 1.9, -2.65],
-    [-3.85, 0, 2.65, -3.35, 1.3, 3.15],
-  ];
+    [3.25, 0, -3.35, 3.85, 1.9, -2.75],
+    [-3.85, 0, 2.33, -3.35, 1.3, 2.83],
+  ], KITCHEN_COLLIDERS, BEDROOM_COLLIDERS, HALL_COLLIDERS);
 }
 </script>
-<script type="text/plain" id="rm22">/* =========================================================================
+<script type="text/plain" id="rm28">/* =========================================================================
    Part 5 / 5 — environment, planar reflections, post stack, controls, audio
    ========================================================================= */
 import * as THREE from 'three';
@@ -62258,7 +64282,12 @@ import {
   renderer, camera, roomScene, outsideScene, canvas, blit, rt, VERT_QUAD,
 } from './room.js';
 import { buildOutside, Lightning, FOG_U } from './room-outside.js';
-import { buildShell, buildWindows, buildFireplace, glassMaterials, reflectiveFloor } from './room-interior.js';
+import { buildShell, buildWindows, glassMaterials, reflectiveFloors } from './room-shell.js';
+import { buildFireplace } from './room-interior.js';
+import { APT, ROOMS } from './room-plan.js';
+import { buildKitchen } from './room-kitchen.js';
+import { buildBedroom } from './room-bedroom.js';
+import { buildHall } from './room-hall.js';
 import { buildProps, buildLights, updateLights } from './room-props.js';
 import { REGISTRY, prewarm, texStats } from './tex/index.js';
 import { AmbientOcclusion } from './post-ao.js';
@@ -62615,7 +64644,7 @@ class Post {
 /* ============================================================== build ==== */
 let outside, shell, windows, fire, props, lights, post, lightning, ao, dof;
 let rtOut, rtOutSmall, rtOutBlur, outBlurDown, outBlurUp;
-let floorRefl, winRefl;
+let floorRefl, winReflS, winReflE;
 let env;
 
 async function build() {
@@ -62644,7 +64673,12 @@ async function build() {
 
   await step(70, 'Расставляем мебель');
   props = buildProps();
-  lights = buildLights(fire.firePos, props.lamp.lightPos, SHADOW_SIZE);
+  const rooms = { kitchen: buildKitchen(), bedroom: buildBedroom(), hall: buildHall() };
+  for (const r of Object.values(rooms)) roomScene.add(r.group);
+  lights = buildLights({
+    firePos: fire.firePos, lampPos: props.lamp.lightPos, shadowSize: SHADOW_SIZE,
+    pendants: rooms.kitchen?.pendants, lamps: rooms.bedroom?.lamps, sconces: rooms.hall?.sconces,
+  });
 
   await step(84, 'Зажигаем город за окном');
   outside = buildOutside(QUALITY[2]);
@@ -62661,7 +64695,8 @@ async function build() {
   outBlurUp = mkPass(KAWASE_UP, { tDiffuse: { value: null }, uTexel: { value: new THREE.Vector2() } });
 
   floorRefl = new PlanarReflector(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 0), 0.5);
-  winRefl = new PlanarReflector(new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 0, -ROOM.z), 0.5);
+  winReflS = new PlanarReflector(new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 0, APT.z0), 0.5);
+  winReflE = new PlanarReflector(new THREE.Vector3(-1, 0, 0), new THREE.Vector3(APT.x1, 0, 0), 0.5);
 
   roomScene.background = rtOut.texture;
 
@@ -62713,7 +64748,7 @@ function applyQuality(q) {
   outside.streets.count = Math.min(Q.streets, outside.plan.streets.length);
   outside.traffic.geometry.instanceCount = Math.min(Q.cars, outside.traffic.maxCars);
   outside.rain.geometry.instanceCount = Q.rain;
-  reflectiveFloor.uniforms.uReflAmt.value = Q.refl >= 1 ? 0.30 : 0.0;
+  for (const f of reflectiveFloors) f.uniforms.uReflAmt.value = Q.refl >= 1 ? 0.30 : 0.0;
   for (const m of glassMaterials) m.uniforms.uReflAmt.value = Q.refl >= 2 ? 0.9 : 0.0;
   paintQualityUi(q);
   lastCommitMs = performance.now() - t0;
@@ -62753,7 +64788,8 @@ function onResize() {
   rtOutSmall.setSize(bw, bh);
   rtOutBlur.setSize(bw, bh);
   floorRefl.resize(W, Hh);
-  winRefl.resize(W, Hh);
+  winReflS.resize(W, Hh);
+  winReflE.resize(W, Hh);
 
   const pix = Hh / 900;
   fire.embers.material.uniforms.uPix.value = pix;
@@ -62769,11 +64805,16 @@ window.addEventListener('resize', () => {
 });
 
 /* =========================================================== controls === */
+/* Each preset has to leave the camera inside its own room — the orbit rig
+   puts the eye at target + dist·(sinθ·sinφ, cosφ, cosθ·sinφ), and it is very
+   easy to end up standing in the hall looking at the living room through a
+   wall. */
 const VIEWS = [
-  { name: 'Гостиная',  target: new THREE.Vector3(-0.85, 1.10, -1.15), dist: 5.55, theta: 0.70, phi: 1.500 },
-  { name: 'У камина',  target: new THREE.Vector3(-4.55, 1.00, -0.60), dist: 3.55, theta: 1.24, phi: 1.520 },
-  { name: 'У окна',    target: new THREE.Vector3(-1.40, 1.05, -4.60), dist: 2.70, theta: 0.10, phi: 1.505 },
-  { name: 'На диване', target: new THREE.Vector3(-2.60, 1.00, -3.00), dist: 5.40, theta: 0.59, phi: 1.543 },
+  { name: 'Гостиная', target: new THREE.Vector3(-1.20, 1.05, -0.80), dist: 4.60, theta: 0.78, phi: 1.500 },
+  { name: 'У камина', target: new THREE.Vector3(-4.55, 1.00, -0.60), dist: 3.55, theta: 1.24, phi: 1.520 },
+  { name: 'У окна',   target: new THREE.Vector3(-1.40, 1.05, -4.20), dist: 2.60, theta: 0.10, phi: 1.505 },
+  { name: 'Кухня',    target: new THREE.Vector3(8.20, 1.05, -1.60), dist: 3.60, theta: -1.15, phi: 1.505 },
+  { name: 'Спальня',  target: new THREE.Vector3(8.00, 1.00, 3.80), dist: 3.80, theta: -2.20, phi: 1.515 },
 ];
 
 const cam = {
@@ -63229,16 +65270,21 @@ function tick() {
 
   // 3 — planar reflections
   if (Q.refl >= 2) {
-    winRefl.update(camera, roomScene, [windows.frontGlass]);
+    // one reflector per glazed plane, and each pane takes the matching one
+    winReflS.update(camera, roomScene, windows.panes);
+    winReflE.update(camera, roomScene, windows.panes);
     for (const m of glassMaterials) {
-      m.uniforms.tRefl.value = winRefl.target.texture;
-      m.uniforms.uReflMat.value.copy(winRefl.matrix);
+      const r = m.userData.plane === 'east' ? winReflE : winReflS;
+      m.uniforms.tRefl.value = r.target.texture;
+      m.uniforms.uReflMat.value.copy(r.matrix);
     }
   }
   if (Q.refl >= 1) {
-    floorRefl.update(camera, roomScene, [shell.floor]);
-    reflectiveFloor.uniforms.tRefl.value = floorRefl.target.texture;
-    reflectiveFloor.uniforms.uReflMat.value.copy(floorRefl.matrix);
+    floorRefl.update(camera, roomScene, shell.floors);
+    for (const f of reflectiveFloors) {
+      f.uniforms.tRefl.value = floorRefl.target.texture;
+      f.uniforms.uReflMat.value.copy(floorRefl.matrix);
+    }
   }
 
   // 4 — the room itself
@@ -63315,14 +65361,14 @@ function tick() {
   window.__room = {
     camera, cam, CFG, QUALITY, VIEWS, lights, post, U, snapView, renderer,
     roomScene, outsideScene, shell, windows, fire, props, outside, THREE,
-    glassMaterials, reflectiveFloor, ao, dof, walker, setWalking,
+    glassMaterials, reflectiveFloors, ao, dof, walker, setWalking,
     texStats,
     stats: () => ({ frame: frameNo, fps: lastFps, q: CFG.quality, commitMs: Math.round(lastCommitMs) }),
   };
   tick();
 })();
 </script>
-<script type="application/json" id="room-manifest">{"entry":"rm22","order":[{"domId":"rm0","deps":{}},{"domId":"rm1","deps":{"three":"rm0"}},{"domId":"rm2","deps":{"three":"rm0"}},{"domId":"rm3","deps":{"three":"rm0","./room.js":"rm1","./room-fog.js":"rm2"}},{"domId":"rm4","deps":{"three":"rm0","./room.js":"rm1","./room-fog.js":"rm2","./room-city.js":"rm3"}},{"domId":"rm5","deps":{}},{"domId":"rm6","deps":{}},{"domId":"rm7","deps":{}},{"domId":"rm8","deps":{}},{"domId":"rm9","deps":{}},{"domId":"rm10","deps":{}},{"domId":"rm11","deps":{}},{"domId":"rm12","deps":{}},{"domId":"rm13","deps":{"three":"rm0","./noise.js":"rm5","./oak.js":"rm6","./plaster.js":"rm7","./stone.js":"rm8","./rug.js":"rm9","./weave.js":"rm10","./surfaces.js":"rm11","./organic.js":"rm12"}},{"domId":"rm14","deps":{"three":"rm0","./noise.js":"rm5"}},{"domId":"rm15","deps":{"three":"rm0","./room.js":"rm1","./tex/index.js":"rm13","./tex/detail.js":"rm14"}},{"domId":"rm16","deps":{"three":"rm0"}},{"domId":"rm17","deps":{"three":"rm0","./room.js":"rm1"}},{"domId":"rm18","deps":{"three":"rm0","./room.js":"rm1","./room-soft.js":"rm16","./tex/index.js":"rm13","./tex/detail.js":"rm14","./room-lights.js":"rm17"}},{"domId":"rm19","deps":{}},{"domId":"rm20","deps":{}},{"domId":"rm21","deps":{"three":"rm0","./room.js":"rm1"}},{"domId":"rm22","deps":{"three":"rm0","./room.js":"rm1","./room-outside.js":"rm4","./room-interior.js":"rm15","./room-props.js":"rm18","./tex/index.js":"rm13","./post-ao.js":"rm19","./post-dof.js":"rm20","./room-walk.js":"rm21"}}]}</script>
+<script type="application/json" id="room-manifest">{"entry":"rm28","order":[{"domId":"rm0","deps":{}},{"domId":"rm1","deps":{"three":"rm0"}},{"domId":"rm2","deps":{"three":"rm0"}},{"domId":"rm3","deps":{}},{"domId":"rm4","deps":{"three":"rm0","./room.js":"rm1","./room-plan.js":"rm3","./room-fog.js":"rm2"}},{"domId":"rm5","deps":{"three":"rm0","./room.js":"rm1","./room-fog.js":"rm2","./room-city.js":"rm4"}},{"domId":"rm6","deps":{}},{"domId":"rm7","deps":{}},{"domId":"rm8","deps":{}},{"domId":"rm9","deps":{}},{"domId":"rm10","deps":{}},{"domId":"rm11","deps":{}},{"domId":"rm12","deps":{}},{"domId":"rm13","deps":{}},{"domId":"rm14","deps":{"three":"rm0","./noise.js":"rm6","./oak.js":"rm7","./plaster.js":"rm8","./stone.js":"rm9","./rug.js":"rm10","./weave.js":"rm11","./surfaces.js":"rm12","./organic.js":"rm13"}},{"domId":"rm15","deps":{"three":"rm0","./noise.js":"rm6"}},{"domId":"rm16","deps":{"three":"rm0","./room.js":"rm1","./tex/index.js":"rm14","./tex/detail.js":"rm15"}},{"domId":"rm17","deps":{"three":"rm0","./room.js":"rm1","./room-mat.js":"rm16","./room-plan.js":"rm3"}},{"domId":"rm18","deps":{"three":"rm0","./room.js":"rm1","./room-mat.js":"rm16","./tex/index.js":"rm14","./tex/detail.js":"rm15"}},{"domId":"rm19","deps":{"three":"rm0"}},{"domId":"rm20","deps":{"three":"rm0","./room.js":"rm1","./room-mat.js":"rm16","./room-soft.js":"rm19","./room-plan.js":"rm3"}},{"domId":"rm21","deps":{"three":"rm0","./room.js":"rm1","./room-mat.js":"rm16","./room-soft.js":"rm19","./room-plan.js":"rm3"}},{"domId":"rm22","deps":{"three":"rm0","./room.js":"rm1","./room-mat.js":"rm16","./room-soft.js":"rm19","./room-plan.js":"rm3"}},{"domId":"rm23","deps":{"three":"rm0","./room.js":"rm1","./room-plan.js":"rm3"}},{"domId":"rm24","deps":{"three":"rm0","./room.js":"rm1","./room-mat.js":"rm16","./room-plan.js":"rm3","./room-soft.js":"rm19","./room-lights.js":"rm23"}},{"domId":"rm25","deps":{}},{"domId":"rm26","deps":{}},{"domId":"rm27","deps":{"three":"rm0","./room.js":"rm1","./room-plan.js":"rm3","./room-kitchen.js":"rm20","./room-bedroom.js":"rm21","./room-hall.js":"rm22"}},{"domId":"rm28","deps":{"three":"rm0","./room.js":"rm1","./room-outside.js":"rm5","./room-shell.js":"rm17","./room-interior.js":"rm18","./room-plan.js":"rm3","./room-kitchen.js":"rm20","./room-bedroom.js":"rm21","./room-hall.js":"rm22","./room-props.js":"rm24","./tex/index.js":"rm14","./post-ao.js":"rm25","./post-dof.js":"rm26","./room-walk.js":"rm27"}}]}</script>
 <script type="module">(function bootstrapFn() {
   var reg = JSON.parse(document.getElementById("room-manifest").textContent);
   var esc = function (s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); };

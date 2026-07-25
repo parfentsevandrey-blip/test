@@ -19,6 +19,7 @@
    ========================================================================= */
 import * as THREE from 'three';
 import { GLSL_NOISE, U, ROOM, rnd, rrnd, smoothstep, outsideScene } from './room.js';
+import { APT } from './room-plan.js';
 import { FOG, fogUniforms } from './room-fog.js';
 
 /* ------------------------------------------------------------------ plan */
@@ -242,8 +243,9 @@ export function cityPlan() {
      It is exactly the room's footprint, so the glazing sits flush with the
      facade, and it is only ever seen from inside, edge-on and downward. */
   boxes.push({
-    x: 0, z: 0, y: -ROOM.alt / 2 - 0.01, w: ROOM.x * 2 - 0.04, h: ROOM.alt - 0.02,
-    d: ROOM.z * 2 - 0.04, rot: 0, id: 7717, style: 0, kind: 0, crown: -1,
+    x: (APT.x0 + APT.x1) / 2, z: (APT.z0 + APT.z1) / 2, y: -ROOM.alt / 2 - 0.01,
+    w: APT.x1 - APT.x0 - 0.04, h: ROOM.alt - 0.02, d: APT.z1 - APT.z0 - 0.04,
+    rot: 0, id: 7717, style: 0, kind: 0, crown: -1,
     baseY: -ROOM.alt, topY: -0.02, glass: 1, occ: 0.38, score: Infinity,
   });
 

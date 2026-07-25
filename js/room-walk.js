@@ -12,6 +12,10 @@
    ========================================================================= */
 import * as THREE from 'three';
 import { ROOM, clamp, damp } from './room.js';
+import { APT, planColliders } from './room-plan.js';
+import { KITCHEN_COLLIDERS } from './room-kitchen.js';
+import { BEDROOM_COLLIDERS } from './room-bedroom.js';
+import { HALL_COLLIDERS } from './room-hall.js';
 
 const EYE = 1.62;          // standing eye height, metres
 const CROUCH = 1.05;
@@ -100,8 +104,8 @@ export class Walker {
 
   clampInside() {
     const m = RADIUS + 0.06;
-    this.pos.x = clamp(this.pos.x, -ROOM.x + m, ROOM.x - m);
-    this.pos.z = clamp(this.pos.z, -ROOM.z + m, ROOM.z - m);
+    this.pos.x = clamp(this.pos.x, APT.x0 + m, APT.x1 - m);
+    this.pos.z = clamp(this.pos.z, APT.z0 + m, APT.z1 - m);
   }
 
   update(dt) {
@@ -170,9 +174,9 @@ export class Walker {
       const m = Math.max(a, b);
       if (m > 0 && m < t) t = m;
     };
-    hit(dx, -ROOM.x, ROOM.x, this.pos.x);
-    hit(dz, -ROOM.z, ROOM.z, this.pos.z);
-    hit(dy, 0, ROOM.h, this.eye);
+    hit(dx, APT.x0, APT.x1, this.pos.x);
+    hit(dz, APT.z0, APT.z1, this.pos.z);
+    hit(dy, 0, APT.h, this.eye);
     return clamp(t, 1.1, 9);
   }
 
@@ -188,10 +192,11 @@ const MOVE_KEYS = new Set([
   'KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space',
 ]);
 
-/** the solid things in the room, as world-space AABBs */
+/** Everything solid, as world-space AABBs: the walls and the column come
+    straight off the plan, the furniture is listed here. */
 export function roomColliders() {
   const X = ROOM.x, Z = ROOM.z;
-  return [
+  return planColliders().concat([
     // the stone fireplace facing, which stands proud of the left wall
     [-X, 0, -2.6, -X + 0.72, 3.3, 1.4],
     // sofa
@@ -205,14 +210,14 @@ export function roomColliders() {
     [-2.85, 0, -1.75, -2.05, 0.40, -0.95],
     [-2.20, 0, 2.35, -1.50, 0.60, 3.05],
     [-3.55, 0, 1.65, -3.05, 1.60, 2.15],
-    // bookshelf along the right wall
-    [X - 0.36, 0, 0.45, X, 2.4, 3.35],
+    // bookshelf, now on the west wall north of the hearth
+    [-X, 0, 1.40, -X + 0.38, 2.4, 2.90],
     // side table by the window chair
-    [3.64, 0, -2.01, 4.16, 0.60, -1.49],
+    [3.29, 0, -2.01, 3.81, 0.60, -1.49],
     // log basket at the hearth
     [-4.66, 0, 0.74, -4.04, 0.40, 1.36],
     // plants
-    [3.55, 0, -3.25, 4.15, 1.9, -2.65],
-    [-3.85, 0, 2.65, -3.35, 1.3, 3.15],
-  ];
+    [3.25, 0, -3.35, 3.85, 1.9, -2.75],
+    [-3.85, 0, 2.33, -3.35, 1.3, 2.83],
+  ], KITCHEN_COLLIDERS, BEDROOM_COLLIDERS, HALL_COLLIDERS);
 }

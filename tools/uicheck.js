@@ -56,7 +56,7 @@ const URL_ = process.argv[2] || 'http://127.0.0.1:8848/room.html';
       sheetOpen: document.getElementById('sheet').classList.contains('open'),
       res: +r.CFG.res.toFixed(2),
       commitMs: r.stats().commitMs,
-      reflFloor: +r.reflectiveFloor.uniforms.uReflAmt.value.toFixed(2),
+      reflFloor: +r.reflectiveFloors[0].uniforms.uReflAmt.value.toFixed(2),
       reflWin: +r.glassMaterials[0].uniforms.uReflAmt.value.toFixed(2),
     };
   });

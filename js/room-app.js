@@ -7,7 +7,12 @@ import {
   renderer, camera, roomScene, outsideScene, canvas, blit, rt, VERT_QUAD,
 } from './room.js';
 import { buildOutside, Lightning, FOG_U } from './room-outside.js';
-import { buildShell, buildWindows, buildFireplace, glassMaterials, reflectiveFloor } from './room-interior.js';
+import { buildShell, buildWindows, glassMaterials, reflectiveFloors } from './room-shell.js';
+import { buildFireplace } from './room-interior.js';
+import { APT, ROOMS } from './room-plan.js';
+import { buildKitchen } from './room-kitchen.js';
+import { buildBedroom } from './room-bedroom.js';
+import { buildHall } from './room-hall.js';
 import { buildProps, buildLights, updateLights } from './room-props.js';
 import { REGISTRY, prewarm, texStats } from './tex/index.js';
 import { AmbientOcclusion } from './post-ao.js';
@@ -364,7 +369,7 @@ class Post {
 /* ============================================================== build ==== */
 let outside, shell, windows, fire, props, lights, post, lightning, ao, dof;
 let rtOut, rtOutSmall, rtOutBlur, outBlurDown, outBlurUp;
-let floorRefl, winRefl;
+let floorRefl, winReflS, winReflE;
 let env;
 
 async function build() {
@@ -393,7 +398,12 @@ async function build() {
 
   await step(70, 'Расставляем мебель');
   props = buildProps();
-  lights = buildLights(fire.firePos, props.lamp.lightPos, SHADOW_SIZE);
+  const rooms = { kitchen: buildKitchen(), bedroom: buildBedroom(), hall: buildHall() };
+  for (const r of Object.values(rooms)) roomScene.add(r.group);
+  lights = buildLights({
+    firePos: fire.firePos, lampPos: props.lamp.lightPos, shadowSize: SHADOW_SIZE,
+    pendants: rooms.kitchen?.pendants, lamps: rooms.bedroom?.lamps, sconces: rooms.hall?.sconces,
+  });
 
   await step(84, 'Зажигаем город за окном');
   outside = buildOutside(QUALITY[2]);
@@ -410,7 +420,8 @@ async function build() {
   outBlurUp = mkPass(KAWASE_UP, { tDiffuse: { value: null }, uTexel: { value: new THREE.Vector2() } });
 
   floorRefl = new PlanarReflector(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 0), 0.5);
-  winRefl = new PlanarReflector(new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 0, -ROOM.z), 0.5);
+  winReflS = new PlanarReflector(new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 0, APT.z0), 0.5);
+  winReflE = new PlanarReflector(new THREE.Vector3(-1, 0, 0), new THREE.Vector3(APT.x1, 0, 0), 0.5);
 
   roomScene.background = rtOut.texture;
 
@@ -462,7 +473,7 @@ function applyQuality(q) {
   outside.streets.count = Math.min(Q.streets, outside.plan.streets.length);
   outside.traffic.geometry.instanceCount = Math.min(Q.cars, outside.traffic.maxCars);
   outside.rain.geometry.instanceCount = Q.rain;
-  reflectiveFloor.uniforms.uReflAmt.value = Q.refl >= 1 ? 0.30 : 0.0;
+  for (const f of reflectiveFloors) f.uniforms.uReflAmt.value = Q.refl >= 1 ? 0.30 : 0.0;
   for (const m of glassMaterials) m.uniforms.uReflAmt.value = Q.refl >= 2 ? 0.9 : 0.0;
   paintQualityUi(q);
   lastCommitMs = performance.now() - t0;
@@ -502,7 +513,8 @@ function onResize() {
   rtOutSmall.setSize(bw, bh);
   rtOutBlur.setSize(bw, bh);
   floorRefl.resize(W, Hh);
-  winRefl.resize(W, Hh);
+  winReflS.resize(W, Hh);
+  winReflE.resize(W, Hh);
 
   const pix = Hh / 900;
   fire.embers.material.uniforms.uPix.value = pix;
@@ -518,11 +530,16 @@ window.addEventListener('resize', () => {
 });
 
 /* =========================================================== controls === */
+/* Each preset has to leave the camera inside its own room — the orbit rig
+   puts the eye at target + dist·(sinθ·sinφ, cosφ, cosθ·sinφ), and it is very
+   easy to end up standing in the hall looking at the living room through a
+   wall. */
 const VIEWS = [
-  { name: 'Гостиная',  target: new THREE.Vector3(-0.85, 1.10, -1.15), dist: 5.55, theta: 0.70, phi: 1.500 },
-  { name: 'У камина',  target: new THREE.Vector3(-4.55, 1.00, -0.60), dist: 3.55, theta: 1.24, phi: 1.520 },
-  { name: 'У окна',    target: new THREE.Vector3(-1.40, 1.05, -4.60), dist: 2.70, theta: 0.10, phi: 1.505 },
-  { name: 'На диване', target: new THREE.Vector3(-2.60, 1.00, -3.00), dist: 5.40, theta: 0.59, phi: 1.543 },
+  { name: 'Гостиная', target: new THREE.Vector3(-1.20, 1.05, -0.80), dist: 4.60, theta: 0.78, phi: 1.500 },
+  { name: 'У камина', target: new THREE.Vector3(-4.55, 1.00, -0.60), dist: 3.55, theta: 1.24, phi: 1.520 },
+  { name: 'У окна',   target: new THREE.Vector3(-1.40, 1.05, -4.20), dist: 2.60, theta: 0.10, phi: 1.505 },
+  { name: 'Кухня',    target: new THREE.Vector3(8.20, 1.05, -1.60), dist: 3.60, theta: -1.15, phi: 1.505 },
+  { name: 'Спальня',  target: new THREE.Vector3(8.00, 1.00, 3.80), dist: 3.80, theta: -2.20, phi: 1.515 },
 ];
 
 const cam = {
@@ -978,16 +995,21 @@ function tick() {
 
   // 3 — planar reflections
   if (Q.refl >= 2) {
-    winRefl.update(camera, roomScene, [windows.frontGlass]);
+    // one reflector per glazed plane, and each pane takes the matching one
+    winReflS.update(camera, roomScene, windows.panes);
+    winReflE.update(camera, roomScene, windows.panes);
     for (const m of glassMaterials) {
-      m.uniforms.tRefl.value = winRefl.target.texture;
-      m.uniforms.uReflMat.value.copy(winRefl.matrix);
+      const r = m.userData.plane === 'east' ? winReflE : winReflS;
+      m.uniforms.tRefl.value = r.target.texture;
+      m.uniforms.uReflMat.value.copy(r.matrix);
     }
   }
   if (Q.refl >= 1) {
-    floorRefl.update(camera, roomScene, [shell.floor]);
-    reflectiveFloor.uniforms.tRefl.value = floorRefl.target.texture;
-    reflectiveFloor.uniforms.uReflMat.value.copy(floorRefl.matrix);
+    floorRefl.update(camera, roomScene, shell.floors);
+    for (const f of reflectiveFloors) {
+      f.uniforms.tRefl.value = floorRefl.target.texture;
+      f.uniforms.uReflMat.value.copy(floorRefl.matrix);
+    }
   }
 
   // 4 — the room itself
@@ -1064,7 +1086,7 @@ function tick() {
   window.__room = {
     camera, cam, CFG, QUALITY, VIEWS, lights, post, U, snapView, renderer,
     roomScene, outsideScene, shell, windows, fire, props, outside, THREE,
-    glassMaterials, reflectiveFloor, ao, dof, walker, setWalking,
+    glassMaterials, reflectiveFloors, ao, dof, walker, setWalking,
     texStats,
     stats: () => ({ frame: frameNo, fps: lastFps, q: CFG.quality, commitMs: Math.round(lastCommitMs) }),
   };

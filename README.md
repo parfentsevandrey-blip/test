@@ -121,9 +121,24 @@ skyline are parameters inside the builder functions in `js/scene.js`.
 
 # Уютная комната в небоскрёбе (`cozy-room.html`)
 
-A second, independent scene in this repo: a **cozy penthouse living room on the
-47th floor** — floor-to-ceiling glass on two sides, a lit fireplace, and a
-rainy night city outside. Same vendored Three.js r160, no external assets.
+A second, independent scene in this repo: a **penthouse apartment on the 47th
+floor** — four rooms, floor-to-ceiling glass down two sides, a lit fireplace,
+and a rainy night city outside. Same vendored Three.js r160, no external
+assets. You can look at it from five camera presets or walk through the whole
+flat in first person.
+
+```
+        z = -4  ┌──────────────────────────┬──────────────────┐
+                │                          │                  │
+                │        ГОСТИНАЯ          │  КУХНЯ-СТОЛОВАЯ  │  glazed south
+                │      fireplace west      │                  │  and east
+        z = 0.6 │                          ├──────────────────┤
+                │                          │                  │
+        z = 3   ├──────────────────────────┤     СПАЛЬНЯ      │
+                │           ХОЛЛ           │                  │
+        z = 6.6 └──────────────────────────┴──────────────────┘
+              x = -5                    x = 4              x = 11
+```
 
 > **Just want to see it? Open `cozy-room.html` — double-click, no server, no
 > internet.** `room.html` is the multi-file source and must be served over HTTP
@@ -131,6 +146,18 @@ rainy night city outside. Same vendored Three.js r160, no external assets.
 
 ## What's in it
 
+- **One plan, one source of truth.** `js/room-plan.js` states the rooms as
+  rectangles, the walls as segments with openings cut in them, and the glazing
+  as runs along the façade. The shell, the skirtings, the door linings, the
+  camera presets and the boxes the walker collides with are all generated from
+  it, so moving a wall moves everything that touches it. Walls are solid boxes
+  with the openings genuinely cut out, so a doorway has a reveal with thickness
+  and the firebox is a hole in the wall rather than a picture of one.
+- **A design, not a palette swap.** Smoked oak and walnut, deep olive limewash,
+  honed travertine with real joints, blackened steel, brass only as an accent.
+  A dark flat reads far better by firelight than a pale one — pale walls at 2%
+  of daylight just look grey. Every material lives in `js/room-mat.js`, so the
+  four rooms cannot drift apart.
 - **Rain on the glass.** The world outside is rendered to its own buffer first,
   then the window shader refracts it through a field of sliding droplets and
   runnels. Beads act as little lenses — they concentrate the city behind them,
@@ -232,8 +259,8 @@ rainy night city outside. Same vendored Three.js r160, no external assets.
 
 ## Controls
 
-Drag to look, wheel/pinch to zoom, keys `1`–`4` for the camera presets
-(Гостиная · У камина · У окна · На диване). The gear panel adjusts fire, rain,
+Drag to look, wheel/pinch to zoom, keys `1`–`5` for the camera presets
+(Гостиная · У камина · У окна · Кухня · Спальня). The gear panel adjusts fire, rain,
 colour warmth, depth of field, resolution, quality and camera drift, and shows
 a live fps readout.
 
@@ -263,7 +290,7 @@ quality switch costs more than a few ms of main-thread time.
 that walls and furniture stop you, that crouching lowers the eye, and that
 `Esc` hands the camera back to the orbit rig.
 
-`node tools/interior.js` photographs the room from seven natural viewing
+`node tools/interior.js` photographs the flat from eight natural viewing
 distances with the UI hidden. `tools/closeup.js` gets near enough to read a
 weave; this one gets far enough to see that a cushion is a box — which is how
 the furniture stayed a stack of rounded boxes for as long as it did.
@@ -292,7 +319,13 @@ js/room-outside.js     Sky, ground with the river and parks, rain, mist, lightni
 js/room-city.js        The city plan: grid, massing, facades, streets, traffic
 js/room-fog.js         Aerial perspective shared by everything outside the glass
 js/room-interior.js    Room shell, floor-to-ceiling glazing + rain shader, fireplace
-js/room-props.js       Furniture, soft goods, curtains, plants, the cat
+js/room-plan.js        The floor plan: rooms, walls, openings, glazing runs
+js/room-mat.js         The shared material palette
+js/room-shell.js       Walls, floors, ceilings and glazing, generated from the plan
+js/room-props.js       Living room: furniture, soft goods, curtains, plants, the cat
+js/room-kitchen.js     Kitchen and dining: island, run, pendants, table
+js/room-bedroom.js     Bedroom: bed and duvet, nightstands, wardrobe
+js/room-hall.js        Hall: console, mirror, sconces, coats
 js/room-soft.js        Upholstery: stuffed cushions, piped welts, drapes
 js/room-lights.js      Lighting rig: fire spot + omni, bounces, practicals, window
 js/room-walk.js        First-person controller: pointer lock, collision, head bob

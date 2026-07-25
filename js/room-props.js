@@ -6,120 +6,31 @@ import {
   GLSL_NOISE, U, ROOM, rnd, rrnd, pick, roomScene, MAX_ANISO,
   roundedBoxGeo, faceTowards, normalizeUv,
 } from './room.js';
+import { MAT, bookMat, shadowed } from './room-mat.js';
+import { ROOMS } from './room-plan.js';
 import { cushionGeo, weltGeo, drapeGeo, curtainGeo } from './room-soft.js';
-import { applyMaps } from './tex/index.js';
-import { applyDetail } from './tex/detail.js';
 export { buildLights, updateLights } from './room-lights.js';
 
+/* The living room is no longer the whole flat: it runs x -5..4, z -4..3,
+   open to the kitchen across x=4. Everything here is placed against those
+   bounds rather than the old symmetric box. */
+const LR = ROOMS.living;
 const X = ROOM.x, Z = ROOM.z, H = ROOM.h;
 
-/* ------------------------------------------------------------ materials --
-   roundedBoxGeo() is an ExtrudeGeometry, whose UVs are already in metres, so
-   a repeat of 4 means "one texture tile every 25 cm". Box/cylinder primitives
-   carry 0..1 UVs instead, so a few materials get their own repeat. */
-const AN = { aniso: MAX_ANISO };
-const tex = (mat, name, opts) => {
-  applyMaps(mat, name, { ...AN, ...opts });
-  if (opts && opts.detail) applyDetail(mat, opts.detail);
-  return mat;
-};
-// fabric wants a fine fibre break-up; wood and stone a coarser, shallower one
-const D_FABRIC = { scale: 0.035, strength: 0.55, fade: 3.5, rough: 0.05 };
-const D_WOOD = { scale: 0.07, strength: 0.40, fade: 4.5, rough: 0.04 };
-
+/* The palette lives in room-mat.js now that four rooms share it. The aliases
+   keep this file's old names working against the redesigned set. */
 const M = {
-  linen: tex(new THREE.MeshStandardMaterial({
-    color: 0xd2bfa6, metalness: 0, envMapIntensity: 0.32,
-  }), 'linen', { repeat: [4, 4], normalScale: 0.85, detail: D_FABRIC }),
-
-  linenDark: tex(new THREE.MeshStandardMaterial({
-    color: 0x9c8971, metalness: 0, envMapIntensity: 0.28,
-  }), 'linen', { repeat: [4, 4], normalScale: 0.85, detail: D_FABRIC }),
-
-  boucle: tex(new THREE.MeshStandardMaterial({
-    color: 0xe8dac2, metalness: 0, envMapIntensity: 0.28,
-  }), 'boucle', { repeat: [4, 4], normalScale: 0.9, detail: D_FABRIC }),
-
-  boucleRound: tex(new THREE.MeshStandardMaterial({
-    color: 0xe8dac2, metalness: 0, envMapIntensity: 0.28,
-  }), 'boucle', { repeat: [9, 1.6], normalScale: 0.9 }),
-
-  rust: tex(new THREE.MeshStandardMaterial({
-    color: 0xc4653c, metalness: 0, envMapIntensity: 0.32,
-  }), 'linen', { repeat: [4, 4], normalScale: 0.85, detail: D_FABRIC }),
-
-  knit: tex(new THREE.MeshStandardMaterial({
-    color: 0xd4ac79, metalness: 0, side: THREE.DoubleSide, envMapIntensity: 0.22,
-  }), 'knit', { repeat: [3, 5], normalScale: 1.0, detail: D_FABRIC }),
-
-  oak: tex(new THREE.MeshStandardMaterial({
-    color: 0x9a7752, metalness: 0, envMapIntensity: 0.5,
-  }), 'oakFloor', { repeat: [0.4, 0.4], normalScale: 0.5, detail: D_WOOD }),
-
-  oakDark: tex(new THREE.MeshStandardMaterial({
-    color: 0x5c412c, metalness: 0, envMapIntensity: 0.5,
-  }), 'oakFloor', { repeat: [0.4, 0.4], normalScale: 0.5, detail: D_WOOD }),
-
-  brass: tex(new THREE.MeshStandardMaterial({
-    color: 0xc59a55, metalness: 0.95, envMapIntensity: 1.2,
-  }), 'brushedMetal', { repeat: [3, 3], normalScale: 0.6 }),
-
-  blackSteel: tex(new THREE.MeshStandardMaterial({
-    color: 0x26221f, metalness: 0.85, envMapIntensity: 0.8,
-  }), 'brushedMetal', { repeat: [3, 3], normalScale: 0.5 }),
-
-  marble: tex(new THREE.MeshStandardMaterial({
-    color: 0xa5a5a1, metalness: 0.05, envMapIntensity: 1.0,
-  }), 'marble', { repeat: [1.5, 1.5], normalScale: 0.5 }),
-
-  bookCloth: tex(new THREE.MeshStandardMaterial({
-    color: 0xffffff, metalness: 0, envMapIntensity: 0.3,
-  }), 'bookCloth', { repeat: [8, 8], normalScale: 0.8 }),
-
-  ceramic: new THREE.MeshStandardMaterial({ color: 0xc9bda9, roughness: 0.35, envMapIntensity: 0.8 }),
-
-  leaf: tex(new THREE.MeshStandardMaterial({
-    color: 0xffffff, metalness: 0, side: THREE.DoubleSide, envMapIntensity: 0.4,
-  }), 'leaf', { repeat: [1, 1], normalScale: 0.8 }),
-
-  fur: tex(new THREE.MeshStandardMaterial({
-    color: 0x6d635c, metalness: 0, envMapIntensity: 0.2,
-  }), 'woolRug', { repeat: [5, 5], normalScale: 0.7 }),
-
-  // heavy unlined linen, seen from both sides against the glass
-  drape: tex(new THREE.MeshStandardMaterial({
-    color: 0xbfae95, metalness: 0, side: THREE.DoubleSide, envMapIntensity: 0.30,
-  }), 'linen', { repeat: [3, 3], normalScale: 1.0, detail: D_FABRIC }),
-
-  wicker: tex(new THREE.MeshStandardMaterial({
-    color: 0xa57c4c, metalness: 0, envMapIntensity: 0.3,
-  }), 'knit', { repeat: [3.2, 2.2], normalScale: 1.15 }),
-
-  bark: tex(new THREE.MeshStandardMaterial({
-    color: 0x8b7256, metalness: 0, envMapIntensity: 0.25,
-  }), 'charredLog', { repeat: [2.5, 2.5], normalScale: 0.9 }),
-};
-
-const shadowed = (m) => { m.castShadow = true; m.receiveShadow = true; return m; };
-
-/* every book shares one cloth texture and differs only by tint */
-const _bookMats = new Map();
-const bookMat = (hex) => {
-  if (!_bookMats.has(hex)) {
-    _bookMats.set(hex, tex(new THREE.MeshStandardMaterial({
-      color: hex, metalness: 0, envMapIntensity: 0.25,
-    }), 'bookCloth', { repeat: [8, 8], normalScale: 0.8 }));
-  }
-  return _bookMats.get(hex);
+  ...MAT,
+  oak: MAT.oakPale,
+  oakDark: MAT.walnut,
+  blackSteel: MAT.steel,
+  bookCloth: MAT.linen,
 };
 
 /* ================================================================= rug === */
 function buildRug(g) {
-  const mat = tex(new THREE.MeshStandardMaterial({
-    color: 0xe4cfb2, metalness: 0, envMapIntensity: 0.28,
-  }), 'woolRug', { repeat: [2.2, 2.2], normalScale: 0.75 });
-  const rug = new THREE.Mesh(roundedBoxGeo(4.6, 0.022, 3.4, 0.05, 1), mat);
-  rug.position.set(-0.5, 0.011, 0.35);
+  const rug = new THREE.Mesh(roundedBoxGeo(4.4, 0.022, 3.3, 0.05, 1), M.rug);
+  rug.position.set(-0.75, 0.011, 0.30);
   rug.receiveShadow = true;
   g.add(rug);
   return rug;
@@ -431,9 +342,10 @@ function buildSideTable(g, x, z) {
 /* =========================================================== bookshelf == */
 function buildBookshelf(g) {
   const s = new THREE.Group();
-  s.position.set(X - 0.17, 0, 1.9);
+  // north of the fireplace on the west wall — its old wall is the kitchen now
+  s.position.set(LR.x0 + 0.17, 0, 2.15);
 
-  const W = 0.34, HH = 2.35, L = 2.9;
+  const W = 0.34, HH = 2.35, L = 1.45;
   const carcass = shadowed(new THREE.Mesh(new THREE.BoxGeometry(W, HH, L), M.oakDark));
   carcass.position.set(0, HH / 2, 0); s.add(carcass);
   const front = shadowed(new THREE.Mesh(new THREE.BoxGeometry(0.02, HH, L), M.oak));
@@ -470,12 +382,12 @@ function buildBookshelf(g) {
   const vase = shadowed(new THREE.Mesh(new THREE.LatheGeometry(
     [[0.0, 0], [0.05, 0], [0.065, 0.05], [0.055, 0.12], [0.035, 0.17], [0.042, 0.20]]
       .map(([r, y2]) => new THREE.Vector2(r, y2)), 18), M.ceramic));
-  vase.position.set(-0.02, 1.752, -1.0); s.add(vase);
+  vase.position.set(-0.02, 1.752, -0.48); s.add(vase);
   const bowl = shadowed(new THREE.Mesh(new THREE.SphereGeometry(0.075, 16, 10, 0, Math.PI * 2, Math.PI * 0.5, Math.PI * 0.5), M.brass));
-  bowl.position.set(-0.02, 0.955, 0.95); s.add(bowl);
+  bowl.position.set(-0.02, 0.955, 0.44); s.add(bowl);
 
-  s.rotation.y = -Math.PI / 2;
-  s.position.set(X - 0.17, 0, 1.9);
+  s.rotation.y = Math.PI / 2;          // it faces east now, off the west wall
+  s.position.set(LR.x0 + 0.17, 0, 2.15);
   g.add(s);
   return s;
 }
@@ -594,7 +506,7 @@ function buildArt(g) {
   const art = shadowed(new THREE.Mesh(new THREE.BoxGeometry(1.9, 1.25, 0.05),
     [M.oakDark, M.oakDark, M.oakDark, M.oakDark,
      new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85, envMapIntensity: 0.3 }), M.oakDark]));
-  art.position.set(-0.9, 1.72, Z - 0.06);
+  art.position.set(-1.5, 1.78, LR.z1 - 0.14);
   art.rotation.y = Math.PI;
   g.add(art);
   return art;
@@ -606,9 +518,9 @@ function buildDust(g) {
   const geo = new THREE.BufferGeometry();
   const pos = new Float32Array(N * 3), seed = new Float32Array(N * 3);
   for (let i = 0; i < N; i++) {
-    pos[i * 3] = rrnd(-X + 0.4, X - 0.4);
+    pos[i * 3] = rrnd(LR.x0 + 0.4, LR.x1 - 0.4);
     pos[i * 3 + 1] = rrnd(0.15, H - 0.35);
-    pos[i * 3 + 2] = rrnd(-Z + 0.4, Z - 0.4);
+    pos[i * 3 + 2] = rrnd(LR.z0 + 0.4, LR.z1 - 0.4);
     seed[i * 3] = rnd(); seed[i * 3 + 1] = rnd(); seed[i * 3 + 2] = rnd();
   }
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
@@ -677,9 +589,8 @@ function buildCurtains(g) {
     return m;
   };
 
-  panel(-X + 0.62, -Z + 0.15, 1.08, 0, 0.22);
-  panel(X - 0.62, -Z + 0.15, 1.08, 0, -0.22);
-  panel(X - 0.15, -Z + 1.05, 0.92, -Math.PI / 2, 0.20);
+  panel(LR.x0 + 0.62, LR.z0 + 0.15, 1.08, 0, 0.22);
+  panel(LR.x1 - 0.62, LR.z0 + 0.15, 1.08, 0, -0.22);
 
   // tracks, tight under the ceiling cove
   const rod = (x, y, z, len, ry) => {
@@ -687,8 +598,7 @@ function buildCurtains(g) {
     r.position.set(x, y, z); r.rotation.set(0, ry, Math.PI / 2);
     c.add(r);
   };
-  rod(0, DROP + 0.035, -Z + 0.15, X * 2 - 0.1, 0);
-  rod(X - 0.15, DROP + 0.035, -Z + 1.6, 2.6, -Math.PI / 2);
+  rod((LR.x0 + LR.x1) / 2, DROP + 0.035, LR.z0 + 0.15, LR.x1 - LR.x0 - 0.1, 0);
 
   g.add(c);
   return c;
@@ -738,13 +648,13 @@ export function buildProps() {
   const table = buildCoffeeTable(g);
   buildPouf(g, -2.45, -1.35);
   const lamp = buildFloorLamp(g, -3.30, 1.90);
-  buildSideTable(g, -1.85, 2.70);
-  buildSideTable(g, 3.90, -1.75);
+  buildSideTable(g, -1.85, 2.52);
+  buildSideTable(g, 3.55, -1.75);
   buildBookshelf(g);
   buildCurtains(g);
   buildLogBasket(g, -4.35, 1.05);
-  const plant = buildPlant(g, 3.85, -2.95, 1.0);
-  const plant2 = buildPlant(g, -3.6, 2.9, 0.62);
+  const plant = buildPlant(g, 3.55, -3.05, 1.0);
+  const plant2 = buildPlant(g, -3.6, 2.58, 0.62);
   const cat = buildCat(g, -1.95, -0.55);
   buildArt(g);
   const dust = buildDust(g);

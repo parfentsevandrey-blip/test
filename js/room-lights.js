@@ -21,10 +21,16 @@
    ========================================================================= */
 import * as THREE from 'three';
 import { ROOM, roomScene } from './room.js';
+import { ROOMS, APT } from './room-plan.js';
 
 const X = ROOM.x, Z = ROOM.z, H = ROOM.h;
 
-export function buildLights(firePos, lampPos, shadowSize) {
+/* Every light here is evaluated by every fragment of every material, so the
+   count is a budget, not a wish list. Four rooms get five extra sources
+   between them: the pendants over the island read as one cluster, the two
+   bedside lamps are genuinely two, and the pair of hall sconces is one. */
+export function buildLights(opts) {
+  const { firePos, lampPos, shadowSize, pendants = [], lamps = [], sconces = [] } = opts;
   const L = {};
 
   /* --- the constant floor of the room -------------------------------- */
@@ -97,9 +103,44 @@ export function buildLights(firePos, lampPos, shadowSize) {
   L.cove.position.set(-X + 1.2, H - 0.25, Z - 1.2);
   roomScene.add(L.cove);
 
-  L.door = new THREE.PointLight(0xd07d38, 1.8, 4.5, 2.0);
-  L.door.position.set(3.35, 1.5, Z - 0.5);
-  roomScene.add(L.door);
+  /* --- the other rooms ------------------------------------------------ */
+  // Over the island. Three pendants a metre apart are one source at any
+  // distance you actually see them from, and a third of the shader cost.
+  const K = ROOMS.kitchen;
+  const kp = pendants.length
+    ? pendants.reduce((a, p) => a.add(p.lightPos), new THREE.Vector3()).multiplyScalar(1 / pendants.length)
+    : new THREE.Vector3((K.x0 + K.x1) / 2, 1.55, -1.4);
+  L.pendant = new THREE.PointLight(0xffbe86, 15, 9.0, 1.6);
+  L.pendant.position.copy(kp);
+  roomScene.add(L.pendant);
+
+  // the worktop run, washed from under the wall units
+  L.worktop = new THREE.PointLight(0xffc490, 4.5, 5.0, 1.9);
+  L.worktop.position.set((K.x0 + K.x1) / 2 + 0.6, 1.42, K.z1 - 0.55);
+  roomScene.add(L.worktop);
+
+  L.bedside = lamps.slice(0, 2).map((lp, i) => {
+    const pl = new THREE.PointLight(0xffa663, 8.5, 5.2, 1.95);
+    pl.position.copy(lp.lightPos);
+    roomScene.add(pl);
+    return pl;
+  });
+  if (!L.bedside.length) {
+    const B = ROOMS.bedroom;
+    const pl = new THREE.PointLight(0xffa663, 8.5, 5.2, 1.95);
+    pl.position.set(B.x1 - 1.1, 0.66, B.z1 - 1.4);
+    roomScene.add(pl);
+    L.bedside = [pl];
+  }
+
+  // both hall sconces as one source, midway between them
+  const H_ = ROOMS.hall;
+  const sp = sconces.length
+    ? sconces.reduce((a, s2) => a.add(s2.lightPos), new THREE.Vector3()).multiplyScalar(1 / sconces.length)
+    : new THREE.Vector3(-2.0, 1.75, H_.z1 - 0.3);
+  L.sconce = new THREE.PointLight(0xffb473, 6.0, 7.5, 1.45);
+  L.sconce.position.copy(sp);
+  roomScene.add(L.sconce);
 
   /* --- the storm outside ---------------------------------------------- */
   L.window = new THREE.DirectionalLight(0x8fb0e0, 0.95);
@@ -140,6 +181,15 @@ export function updateLights(L, ctx) {
   L.lamp.intensity = 13 * lampLevel;
   L.shelf.intensity = 3.0 * lampLevel;
   L.cove.intensity = 4.0 * lampLevel;
+
+  // The other rooms are on the same switch, but never go fully dark — a flat
+  // with the lamps off still has the city coming in and light spilling round
+  // a doorway, and rooms that hit pure black just read as holes.
+  const k = 0.16 + 0.84 * lampLevel;
+  L.pendant.intensity = 16 * k;
+  L.worktop.intensity = 4.5 * k;
+  L.sconce.intensity = 7.0 * k;
+  for (const b of L.bedside) b.intensity = 8.5 * (0.10 + 0.90 * lampLevel);
 
   L.bounceBack.intensity = 3.4 * soft;
   L.window.intensity = 0.95 + flash * 2.6;

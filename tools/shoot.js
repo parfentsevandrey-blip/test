@@ -44,7 +44,7 @@ fs.mkdirSync(OUT, { recursive: true });
       document.querySelector(`#segQual button[data-q="${q}"]`).click();
     }, FORCEQ);
   }
-  const views = ['gostinaya', 'kamin', 'okno', 'divan'];
+  const views = ['gostinaya', 'kamin', 'okno', 'kuhnya', 'spalnya'];
   for (let i = 0; i < views.length; i++) {
     await page.evaluate((n) => window.__room.snapView(n), i);
     // software rendering is ~1 fps — wait for real frames, not wall-clock
