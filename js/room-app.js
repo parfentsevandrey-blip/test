@@ -396,7 +396,7 @@ async function build() {
   lights = buildLights(fire.firePos, props.lamp.lightPos, SHADOW_SIZE);
 
   await step(84, 'Зажигаем город за окном');
-  outside = buildOutside(QUALITY[2].towers, QUALITY[2].rain);
+  outside = buildOutside(QUALITY[2]);
   lightning = new Lightning();
 
   await step(94, 'Впускаем дождь');
@@ -458,7 +458,9 @@ function applyQuality(q) {
   const t0 = performance.now();
   CFG.quality = q = clamp(q | 0, 0, 2);
   const Q = QUALITY[q];
-  outside.city.count = Q.towers;
+  outside.city.count = Math.min(Q.towers, outside.plan.boxes.length);
+  outside.streets.count = Math.min(Q.streets, outside.plan.streets.length);
+  outside.traffic.geometry.instanceCount = Math.min(Q.cars, outside.traffic.maxCars);
   outside.rain.geometry.instanceCount = Q.rain;
   reflectiveFloor.uniforms.uReflAmt.value = Q.refl >= 1 ? 0.30 : 0.0;
   for (const m of glassMaterials) m.uniforms.uReflAmt.value = Q.refl >= 2 ? 0.9 : 0.0;
@@ -945,7 +947,12 @@ function tick() {
     Audio_.crackle();
   }
 
-  if (!walker.update(dt)) updateCamera(dt);
+  // tools/skyline.js parks the camera to inspect the world on its own
+  const lock = window.__room && window.__room.__lockCamera;
+  if (lock) {
+    camera.position.set(lock.eye[0], lock.eye[1], lock.eye[2]);
+    camera.lookAt(lock.tgt[0], lock.tgt[1], lock.tgt[2]);
+  } else if (!walker.update(dt)) updateCamera(dt);
 
   /* ========================= render ========================= */
   const Q = QUALITY[CFG.quality];
@@ -1053,7 +1060,6 @@ function tick() {
   cam.theta = cam.gTheta = VIEWS[0].theta;
   cam.phi = cam.gPhi = VIEWS[0].phi;
 
-  FOG_U.uFogDens.value = 0.0027;
   // debug handle: window.__room.snapView(0..3), .stats(), .CFG, .lights …
   window.__room = {
     camera, cam, CFG, QUALITY, VIEWS, lights, post, U, snapView, renderer,

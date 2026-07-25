@@ -140,10 +140,31 @@ rainy night city outside. Same vendored Three.js r160, no external assets.
   coals and charred logs, with rising embers. Its light drives the room: a
   shadow-casting spot plus omni fill, both modulated by a two-rate flicker, so
   furniture throws shadows that breathe.
-- **The city.** ~540 instanced towers with per-window lit/unlit states and slow
-  occupancy changes, aviation beacons, an overcast sky with a drifting cloud
-  deck, sodium light-pollution along the horizon, falling rain streaks, drifting
-  mist, and occasional lightning (with delayed thunder if sound is on).
+- **A city with a plan.** Not a scatter of boxes — a rotated street grid, a
+  river with bridges, parks, and two clusters of height, all generated from
+  one layout that the buildings, the streets, the traffic, the ground and the
+  sky all read from. We are on the low old bank; the towers stand across the
+  water, so the view layers into roofs, then streets, then the river, then the
+  skyline. Buildings are stacked boxes, which is where the setbacks come from,
+  with lit crowns, masts and roof plant on the tall ones and a couple of round
+  towers to break the silhouette. Everything is instanced: the whole city is
+  three draw calls.
+- **Facades that tell you what a building is.** Four archetypes — curtain wall,
+  punched masonry, vertical fin, panel slab — each with its own bay width,
+  floor height and occupancy. Offices go dark a floor at a time, flats go dark
+  a flat at a time, and about a third of the buildings are dark altogether,
+  which is what gives a skyline its rhythm. Half-drawn blinds dim a share of
+  the lit windows; a few switch over the course of an evening.
+- **Traffic, and streets to put it on.** Each stretch of street is one flat
+  additive quad whose lamps are a periodic function of arc length, so a 900 m
+  avenue costs the same as a 60 m one and there is no such thing as a lamp
+  instance. Cars are streaks that walk those same runs entirely in the vertex
+  shader — white one way, red the other, smeared by the wet road. Two
+  airliners cross on long approaches with red, green, white and a strobe.
+- **An overcast sky** with a drifting, shredded cloud deck, a moon behind a
+  break in the weather, sodium light-pollution aimed at downtown rather than
+  smeared evenly along the horizon, falling rain streaks, drifting mist, and
+  occasional lightning (with delayed thunder if sound is on).
 - **Ambient occlusion.** A depth-only SSAO pass reconstructs view normals from
   the depth buffer, samples a contact-biased hemisphere with per-pixel rotation,
   and blurs the result depth-aware so occlusion never bleeds across a
@@ -227,12 +248,29 @@ quality switch costs more than a few ms of main-thread time.
 that walls and furniture stop you, that crouching lowers the eye, and that
 `Esc` hands the camera back to the orbit rig.
 
+`node tools/skyline.js` hides the room and the glass and photographs the world
+on its own from six directions, printing the plan's statistics with it —
+building and instance counts, tallest, median height, nearest neighbour. Judging
+the city through rain-covered glass in a dim room is how the last version ended
+up as a field of identical boxes.
+
+Two things about the city are worth knowing before changing it. The quality
+tiers cut the instance list off at a count, so the list is emitted **in
+importance order** — tall and near first — and truncating it is a level of
+detail rather than a hole in the skyline. And the facade fades its window grid
+into its own average **per axis, driven by `fwidth`** rather than by distance:
+a 1.5 m bay stops being resolvable long before a 4 m floor does, which is why a
+distant tower reads as horizontal bands of lit and dark storeys. Average both
+axes together and every glass tower downtown turns into a grey monolith.
+
 ## Files
 
 ```
 room.html              Page shell + UI (Russian copy)
 js/room.js             Core: config, maths, renderer, RT + world-UV helpers
-js/room-outside.js     Sky, city towers, ground, rain, mist, lightning
+js/room-outside.js     Sky, ground with the river and parks, rain, mist, lightning
+js/room-city.js        The city plan: grid, massing, facades, streets, traffic
+js/room-fog.js         Aerial perspective shared by everything outside the glass
 js/room-interior.js    Room shell, floor-to-ceiling glazing + rain shader, fireplace
 js/room-props.js       Furniture, soft goods, plants, the cat
 js/room-lights.js      Lighting rig: fire spot + omni, bounces, practicals, window
@@ -249,6 +287,7 @@ tools/shoot.js         Headless smoke test + screenshots of all four views
 tools/filecheck.js     Verifies the single-file build runs from file://
 tools/uicheck.js       Audits every control: does it work, and does it stall?
 tools/walkcheck.js     Audits walk mode: movement, collision, crouch, exit
+tools/skyline.js       Renders the world alone from six vantage points + plan stats
 tools/closeup.js       Eight in-scene close-ups + per-surface luminance readout
 tools/texlab.html      Texture lab: any surface on a lit panel/sphere/cylinder
 tools/texshot.js       Renders one surface to a PNG contact sheet

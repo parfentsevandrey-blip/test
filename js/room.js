@@ -18,10 +18,13 @@ export const CFG = {
    same size for all three, so switching tiers is a handful of uniform writes
    and costs nothing. Resolution is its own control (CFG.res) because changing
    it does reallocate, and that should only happen when the user asks. */
+/* `towers` counts massing boxes, not buildings — a tower is several. The city
+   emits them tall-and-near first, so cutting the list off is a level of
+   detail rather than a hole in the skyline. */
 export const QUALITY = [
-  { refl: 0, bloom: 3, rain: 1100, towers: 220 },
-  { refl: 1, bloom: 4, rain: 2600, towers: 380 },
-  { refl: 2, bloom: 5, rain: 4200, towers: 540 },
+  { refl: 0, bloom: 3, rain: 1100, towers: 1100, streets: 55, cars: 170 },
+  { refl: 1, bloom: 4, rain: 2600, towers: 2200, streets: 110, cars: 420 },
+  { refl: 2, bloom: 5, rain: 4200, towers: 3600, streets: 175, cars: 760 },
 ];
 export const SHADOW_SIZE = 1024;
 

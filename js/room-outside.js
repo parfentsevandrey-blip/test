@@ -1,40 +1,35 @@
 /* =========================================================================
-   Part 2 / 5 — the world beyond the glass: overcast sky, city, rain, lightning
+   Part 2 / 5 — the weather and the ground the city stands on.
+
+   The buildings, streets, traffic and aircraft live in room-city.js; this
+   file is the envelope around them: the overcast, the ground plane with its
+   river and parks, the falling rain, the mist and the lightning. It also
+   composes the whole outdoor scene.
    ========================================================================= */
 import * as THREE from 'three';
 import { GLSL_NOISE, U, ROOM, rnd, rrnd, clamp, outsideScene } from './room.js';
+import { FOG, FOG_U, fogUniforms, groundHaze } from './room-fog.js';
+import {
+  CITY, CBD, GLSL_PLAN, cityPlan,
+  buildCity, buildRoundTowers, buildStreets, buildTraffic, buildBeacons, buildAircraft,
+} from './room-city.js';
 
-const FOG = /* glsl */`
-uniform vec3  uFogColor;
-uniform vec3  uFogGround;
-uniform float uFogDens;
-vec3 applyFog(vec3 col, vec3 worldPos, float dist){
-  float f = 1.0 - exp(-uFogDens * uFogDens * dist * dist);
-  // fog warms and thickens toward the street far below
-  float low = smoothstep(40.0, -140.0, worldPos.y);
-  vec3 fc = mix(uFogColor, uFogGround, low * 0.85);
-  fc += uFogGround * 0.5 * low;
-  return mix(col, fc, clamp(f, 0.0, 1.0));
-}
-`;
-
-/* one shared set of fog uniforms so every outdoor material stays in sync */
-export const FOG_U = {
-  uFogColor:  { value: new THREE.Color(0x0b1018) },
-  uFogGround: { value: new THREE.Color(0x160e09) },
-  uFogDens:   { value: 0.0027 },
-};
-const fogUniforms = () => FOG_U;
+export { FOG_U };
 
 /* ------------------------------------------------------------------- sky */
 export function buildSky() {
+  const az = Math.hypot(CBD[0], CBD[1]);
   const mat = new THREE.ShaderMaterial({
     side: THREE.BackSide,
     depthWrite: false,
     uniforms: {
-      uTime:  U.time,
+      uTime: U.time,
       uFlash: U.flash,
-      uRain:  U.rain,
+      uRain: U.rain,
+      // the glow under the clouds is brightest over downtown, not everywhere
+      uCbd: { value: new THREE.Vector2(CBD[0] / az, CBD[1] / az) },
+      // what the ground plane fades to, so its far edge cannot draw a line
+      uHaze: { value: groundHaze() },
     },
     vertexShader: /* glsl */`
       varying vec3 vDir;
@@ -45,6 +40,8 @@ export function buildSky() {
     fragmentShader: GLSL_NOISE + /* glsl */`
       varying vec3 vDir;
       uniform float uTime, uFlash, uRain;
+      uniform vec2 uCbd;
+      uniform vec3 uHaze;
       void main(){
         vec3 d = normalize(vDir);
         float h = d.y;
@@ -53,25 +50,39 @@ export function buildSky() {
         vec3 horizon = vec3(0.0300, 0.0250, 0.0250);
         vec3 col = mix(horizon, zenith, smoothstep(-0.04, 0.62, h));
 
-        // overcast deck — flattened fbm, drifting
+        // overcast deck — two scales, the coarse one drifting faster
         vec2 cp = d.xz / max(abs(h) + 0.20, 0.20);
         float cl = fbm2(cp * 1.15 + vec2(uTime * 0.0075, uTime * 0.0032));
         cl = smoothstep(0.30, 0.86, cl);
+        float shred = fbm2(cp * 3.6 - vec2(uTime * 0.019, uTime * 0.006));
+        cl = clamp(cl * (0.72 + 0.55 * shred), 0.0, 1.0);
         float deck = smoothstep(-0.02, 0.30, h);
         vec3 cloudLit = mix(vec3(0.012,0.014,0.021), vec3(0.052,0.042,0.038), cl);
         col = mix(col, cloudLit, deck * 0.92);
 
-        // sodium light-pollution glow smeared along the horizon
-        float glow = exp(-pow(max(h, -0.05) / 0.085, 2.0));
-        col += vec3(0.078, 0.034, 0.011) * glow * (0.62 + 0.38 * fbm2(d.xz * 2.2 + 11.0));
+        // sodium light-pollution, aimed: strongest where the city is densest
+        float toward = dot(normalize(d.xz + 1e-5), uCbd) * 0.5 + 0.5;
+        float glow = exp(-pow(max(h, -0.05) / 0.075, 2.0));
+        col += vec3(0.060, 0.026, 0.008) * glow
+             * (0.40 + 1.00 * pow(toward, 2.4))
+             * (0.62 + 0.38 * fbm2(d.xz * 2.2 + 11.0));
+        // and it keeps bouncing off the underside of the deck well up the sky
+        col += vec3(0.017, 0.007, 0.003) * cl * deck * pow(toward, 2.2)
+             * smoothstep(0.50, 0.0, h);
 
-        // lightning: lights the cloud base from inside, hottest where cloud is dense
+        // a break in the weather, with the moon behind it
+        float moon = exp(-pow(distance(d, normalize(vec3(-0.62, 0.55, 0.56))) / 0.30, 2.0));
+        col += vec3(0.055, 0.062, 0.080) * moon * (1.0 - cl * 0.75);
+
+        // lightning: lights the cloud base from inside, hottest where dense
         float bolt = uFlash * (0.35 + 0.95 * cl) * deck;
         col += vec3(0.62, 0.70, 0.92) * bolt;
         col += vec3(0.30, 0.38, 0.55) * uFlash * 0.25;
 
-        // below the horizon: haze over the city floor
-        col = mix(col, vec3(0.022, 0.017, 0.015), smoothstep(0.0, -0.22, h));
+        // Below the horizon this has to become exactly what the ground plane
+        // fades to at distance — the disc runs out at about 1.7 degrees down,
+        // and any mismatch there is a hard line straight across the view.
+        col = mix(col, uHaze, smoothstep(0.010, -0.012, h));
 
         // rain veil desaturates everything a touch
         col = mix(col, vec3(dot(col, vec3(0.299,0.587,0.114))), uRain * 0.13);
@@ -86,9 +97,15 @@ export function buildSky() {
 }
 
 /* ------------------------------------------------------------- city floor */
+/* Inside the modelled radius this is mostly dark — real buildings and real
+   street lights are standing on it and you barely see the ground at all.
+   Its job is the river, the parks, and the low-rise fabric that has to carry
+   on past where the instanced towers stop, so the city does not end in a
+   visible circle. */
 export function buildGround() {
   const mat = new THREE.ShaderMaterial({
-    uniforms: { uTime: U.time, uFlash: U.flash, ...fogUniforms() },
+    extensions: { derivatives: true },
+    uniforms: { uTime: U.time, uFlash: U.flash, uRain: U.rain, ...fogUniforms() },
     vertexShader: /* glsl */`
       varying vec3 vW;
       void main(){
@@ -96,187 +113,96 @@ export function buildGround() {
         vW = w.xyz;
         gl_Position = projectionMatrix * viewMatrix * w;
       }`,
-    fragmentShader: GLSL_NOISE + FOG + /* glsl */`
+    fragmentShader: GLSL_NOISE + FOG + GLSL_PLAN + /* glsl */`
       varying vec3 vW;
-      uniform float uTime, uFlash;
+      uniform float uTime, uFlash, uRain;
+
       void main(){
         vec2 p = vW.xz;
-        // wet asphalt base
+        float r = length(p);
+        float dist = length(vW - cameraPosition);
+
+        // Districts of differing brightness at 1.5 km scale, applied after the
+        // fog so the far haze is not a flat slab of colour.
+        float haze = 0.70 + 0.62 * fbm2(p * 0.00065);
+
+        // The disc runs out to 5 km, well past the point where the haze has
+        // closed over it, so the ground never ends in a visible edge with sky
+        // underneath. Out there nothing is left to draw but the haze itself,
+        // and skipping the rest saves the whole horizon band.
+        if (dist > 3000.0) {
+          gl_FragColor = vec4(applyFog(vec3(0.012, 0.012, 0.014), vW, dist) * haze, 1.0);
+          return;
+        }
+
+        // wet ground between the buildings: nearly black, but not black —
+        // there is always some sodium bouncing around down there
         float n = fbm2(p * 0.004);
-        vec3 col = vec3(0.020, 0.021, 0.026) * (0.6 + n * 0.9);
+        vec3 col = vec3(0.011, 0.012, 0.015) * (0.5 + n * 0.9);
+        col += vec3(0.0075, 0.0035, 0.0012) * (0.30 + 0.70 * cityDensity(p))
+             * (0.5 + 0.5 * fbm2(p * 0.05));
 
-        // street grid, glowing sodium
-        vec2 g = abs(fract(p / 78.0) - 0.5);
-        float street = smoothstep(0.5, 0.47, max(g.x, g.y));
-        float lamps  = smoothstep(0.6, 1.0, fbm2(p * 0.05));
-        col += vec3(0.55, 0.26, 0.09) * street * (0.35 + lamps * 0.9);
+        // ---- low-rise fabric taking over where the instanced towers stop, so
+        // the modelled city does not end in a visible circle. A hard grid here
+        // reads as a checkerboard from 150 m up — this is all smooth terms,
+        // aligned to the same street grid, fading out toward the horizon
+        // where the ground plane is too foreshortened to carry any detail.
+        float fabric = smoothstep(${(CITY.OUTER * 0.42).toFixed(1)}, ${(CITY.OUTER * 1.05).toFixed(1)}, r);
+        if (fabric > 0.001) {
+          vec2 q = toGrid(p);
+          float roofs = fbm2(q * 0.011) * 0.6 + fbm2(q * 0.042) * 0.4;
+          float detail = smoothstep(3100.0, 1100.0, dist);
+          vec3 fab = vec3(0.013, 0.014, 0.017) * (0.35 + roofs * 1.4);
+          float lanes = 0.5 + 0.5 * sin(q.x * 0.0605) * sin(q.y * 0.0731);
+          fab += vec3(0.052, 0.024, 0.008) * (0.35 + 0.65 * lanes * detail) * (0.4 + roofs);
+          fab += vec3(0.058, 0.034, 0.018) * smoothstep(0.66, 0.95, fbm2(q * 0.085 + 7.0)) * detail;
+          col = mix(col, fab, fabric);
+        }
 
-        // a few brighter arterials
-        vec2 g2 = abs(fract(p / 312.0) - 0.5);
-        col += vec3(0.42, 0.30, 0.16) * smoothstep(0.5, 0.485, max(g2.x, g2.y)) * 0.9;
+        // ---- parks: dark voids with a lit path or two through them
+        float park = parkMask(p);
+        if (park > 0.001) {
+          vec3 gr = vec3(0.008, 0.012, 0.009) * (0.6 + fbm2(p * 0.06) * 0.9);
+          float path = smoothstep(0.46, 0.50, fbm2(p * 0.028 + 21.0));
+          path *= 1.0 - smoothstep(0.50, 0.545, fbm2(p * 0.028 + 21.0));
+          gr += vec3(0.24, 0.13, 0.05) * path * 0.55;
+          col = mix(col, gr, park);
+        }
+
+        // ---- the river
+        float riv = riverSdf(p);
+        float water = smoothstep(1.0, -7.0, riv);
+        if (water > 0.001) {
+          // A reflection on water streaks toward the eye, not along the
+          // river — so stretch the ripple noise along the line from here to
+          // the camera and squeeze it across, and the lights on the far bank
+          // draw the long vertical smears that say "wet" from any angle.
+          vec2 toCam = normalize(p - cameraPosition.xz + 1e-4);
+          vec2 perp = vec2(-toCam.y, toCam.x);
+          float ripple = fbm2(vec2(dot(p, toCam) * 0.020 + uTime * 0.05,
+                                   dot(p, perp) * 0.20));
+          float chop = fbm2(p * 0.55 + uTime * 0.4);
+          vec3 w = vec3(0.0035, 0.0045, 0.0070);
+          float refl = cityDensity(p) * 1.35 + 0.10;
+          w += vec3(0.26, 0.115, 0.033) * refl * pow(ripple, 1.6) * 1.5;
+          w += vec3(0.12, 0.15, 0.22) * refl * 0.20 * ripple;
+          // rain stipples the surface and kills the mirror
+          w = mix(w, w * 0.62 + vec3(0.008, 0.009, 0.012), uRain * chop * 0.55);
+          w += vec3(0.40, 0.48, 0.66) * uFlash * 0.7;
+          col = mix(col, w, water);
+          // lit quays along both banks
+          col += vec3(0.13, 0.060, 0.019) * exp(-pow((riv - 6.0) / 9.0, 2.0)) * (1.0 - water);
+        }
 
         col += vec3(0.30, 0.36, 0.50) * uFlash * 0.25;
-        float dist = length(vW - cameraPosition);
-        gl_FragColor = vec4(applyFog(col, vW, dist), 1.0);
+        gl_FragColor = vec4(applyFog(col, vW, dist) * haze, 1.0);
       }`,
   });
-  const g = new THREE.Mesh(new THREE.CircleGeometry(2100, 48), mat);
+  const g = new THREE.Mesh(new THREE.CircleGeometry(5000, 72), mat);
   g.rotation.x = -Math.PI / 2;
   g.position.y = -ROOM.alt;
   outsideScene.add(g);
   return g;
-}
-
-/* ----------------------------------------------------------------- towers */
-export function buildCity(maxCount) {
-  const geo = new THREE.BoxGeometry(1, 1, 1);
-  const mat = new THREE.ShaderMaterial({
-    uniforms: { uTime: U.time, uFlash: U.flash, uRain: U.rain, ...fogUniforms() },
-    vertexShader: /* glsl */`
-      attribute float aId;
-      varying vec3 vLocal, vNrm, vW, vScale;
-      varying float vId;
-      void main(){
-        vScale = vec3(length(instanceMatrix[0].xyz), length(instanceMatrix[1].xyz), length(instanceMatrix[2].xyz));
-        vLocal = position;
-        vNrm   = normal;
-        vId    = aId;
-        vec4 w = modelMatrix * instanceMatrix * vec4(position, 1.0);
-        vW = w.xyz;
-        gl_Position = projectionMatrix * viewMatrix * w;
-      }`,
-    fragmentShader: GLSL_NOISE + FOG + /* glsl */`
-      varying vec3 vLocal, vNrm, vW, vScale;
-      varying float vId;
-      uniform float uTime, uFlash, uRain;
-
-      void main(){
-        vec3 n = normalize(vNrm);
-        bool roof = abs(n.y) > 0.5;
-
-        // concrete / glass shell, faintly lit by the overcast sky from above
-        float up = clamp(n.y * 0.5 + 0.5, 0.0, 1.0);
-        vec3 col = mix(vec3(0.016,0.019,0.026), vec3(0.055,0.060,0.075), up);
-        col *= 0.75 + 0.5 * hash11(vId * 3.1);
-
-        if(!roof){
-          // metres along the facade → constant-size windows regardless of tower size
-          vec2 uvw = (abs(n.x) > 0.5)
-            ? vec2(vLocal.z * vScale.z, vLocal.y * vScale.y)
-            : vec2(vLocal.x * vScale.x, vLocal.y * vScale.y);
-          vec2 CELL = vec2(3.4, 3.8);
-          vec2 cid  = floor(uvw / CELL);
-          vec2 f    = fract(uvw / CELL);
-
-          float pane = step(0.13, f.x) * step(f.x, 0.87) * step(0.20, f.y) * step(f.y, 0.82);
-          float r    = hash12(cid + vId * 41.7);
-          float r2   = hash12(cid.yx + vId * 13.3);
-
-          // ~36% of panes lit; a slow cycle turns a few on and off
-          float slow = step(0.985, hash11(floor(uTime * 0.07 + r2 * 40.0) + r * 97.0));
-          float lit  = step(0.70, r) * (1.0 - slow * 0.85);
-
-          vec3 warm = vec3(1.00, 0.63, 0.28);
-          vec3 cool = vec3(0.62, 0.80, 1.00);
-          vec3 tint = mix(warm, cool, step(0.72, r2));
-          float energy = (0.45 + 0.85 * r2);
-          // faint per-window flicker (fluorescent hum / people moving)
-          energy *= 0.90 + 0.10 * sin(uTime * (1.7 + r * 5.0) + r2 * 30.0);
-
-          col += tint * pane * lit * energy * 0.62;
-          // window recess shadow
-          col *= 1.0 - (1.0 - pane) * 0.35;
-        } else {
-          col *= 0.5;
-        }
-
-        col += vec3(0.34, 0.40, 0.55) * uFlash * (0.25 + up * 0.5);
-
-        float dist = length(vW - cameraPosition);
-        col = applyFog(col, vW, dist);
-        gl_FragColor = vec4(col, 1.0);
-      }`,
-  });
-
-  const mesh = new THREE.InstancedMesh(geo, mat, maxCount);
-  mesh.frustumCulled = false;
-  const ids = new Float32Array(maxCount);
-  const m = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new THREE.Vector3(), p = new THREE.Vector3();
-
-  for (let i = 0; i < maxCount; i++) {
-    // denser ring near the tower we are standing in, thinning outward
-    const t = Math.pow(rnd(), 0.55);
-    const r = 95 + t * 1100;
-    const a = rnd() * Math.PI * 2;
-    const w = rrnd(16, 46) * (1 + t * 0.7);
-    const d = w * rrnd(0.7, 1.35);
-    // the closer towers are the tall ones, so we get neighbours at eye level
-    const hMax = r < 330 ? rrnd(110, 300) : rrnd(30, 190);
-    const h = Math.max(24, hMax * (0.5 + rnd() * 0.5));
-    p.set(Math.cos(a) * r, -ROOM.alt + h / 2, Math.sin(a) * r);
-    s.set(w, h, d);
-    q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), rnd() * Math.PI);
-    m.compose(p, q, s);
-    mesh.setMatrixAt(i, m);
-    ids[i] = i;
-  }
-  geo.setAttribute('aId', new THREE.InstancedBufferAttribute(ids, 1));
-  mesh.instanceMatrix.needsUpdate = true;
-  outsideScene.add(mesh);
-  return mesh;
-}
-
-/* --------------------------------------------- rooftop aviation beacons */
-export function buildBeacons(city, count = 46) {
-  const geo = new THREE.PlaneGeometry(1, 1);
-  const mat = new THREE.ShaderMaterial({
-    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-    uniforms: { uTime: U.time },
-    vertexShader: /* glsl */`
-      attribute vec4 aPos;   // xyz = world position, w = phase
-      varying vec2 vUv; varying float vPhase;
-      void main(){
-        vUv = uv; vPhase = aPos.w;
-        vec3 c = aPos.xyz;
-        float d = length(c - cameraPosition);
-        float size = clamp(d * 0.0032, 0.6, 5.0);
-        vec3 right = normalize(vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]));
-        vec3 up    = normalize(vec3(viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]));
-        vec3 w = c + (right * position.x + up * position.y) * size;
-        gl_Position = projectionMatrix * viewMatrix * vec4(w, 1.0);
-      }`,
-    fragmentShader: /* glsl */`
-      varying vec2 vUv; varying float vPhase;
-      uniform float uTime;
-      void main(){
-        float d = length(vUv - 0.5) * 2.0;
-        float a = smoothstep(1.0, 0.0, d);
-        a = pow(a, 2.4);
-        float blink = smoothstep(0.55, 0.95, sin(uTime * 1.5 + vPhase * 6.283) * 0.5 + 0.5);
-        gl_FragColor = vec4(vec3(1.0, 0.13, 0.07) * (0.25 + blink * 2.4), a);
-      }`,
-  });
-
-  const g = new THREE.InstancedBufferGeometry();
-  g.index = geo.index;
-  g.setAttribute('position', geo.attributes.position);
-  g.setAttribute('uv', geo.attributes.uv);
-  const arr = new Float32Array(count * 4);
-  const m = new THREE.Matrix4(), p = new THREE.Vector3(), q = new THREE.Quaternion(), s = new THREE.Vector3();
-  let n = 0;
-  for (let i = 0; i < city.count && n < count; i += Math.max(1, (city.count / count) | 0)) {
-    city.getMatrixAt(i, m); m.decompose(p, q, s);
-    if (s.y < 90) continue;
-    arr[n * 4 + 0] = p.x; arr[n * 4 + 1] = p.y + s.y / 2 + 1.5; arr[n * 4 + 2] = p.z; arr[n * 4 + 3] = rnd();
-    n++;
-  }
-  g.setAttribute('aPos', new THREE.InstancedBufferAttribute(arr, 4));
-  g.instanceCount = n;
-  const mesh = new THREE.Mesh(g, mat);
-  mesh.frustumCulled = false;
-  mesh.renderOrder = 5;
-  outsideScene.add(mesh);
-  return mesh;
 }
 
 /* ------------------------------------------------------------ falling rain */
@@ -364,17 +290,19 @@ export function buildMist() {
       varying vec2 vUv; varying vec3 vW;
       uniform float uTime, uRain, uFlash;
       void main(){
-        float n = fbm2(vUv * vec2(3.0, 1.6) + vec2(uTime * 0.02, -uTime * 0.06));
-        float a = smoothstep(0.34, 0.86, n) * uRain * 0.30;
+        float n = fbm2(vUv * vec2(3.4, 1.5) + vec2(uTime * 0.02, -uTime * 0.06));
+        float a = smoothstep(0.42, 0.90, n) * uRain * 0.11;
         a *= smoothstep(0.0, 0.25, vUv.y) * smoothstep(1.0, 0.55, vUv.y);
-        vec3 col = mix(vec3(0.10,0.12,0.16), vec3(0.30,0.20,0.14), 0.45) + vec3(0.3,0.36,0.5) * uFlash;
+        // Barely there. These sheets sit between us and the whole skyline, so
+        // anything you can actually see is a grey veil over the entire city.
+        vec3 col = vec3(0.040, 0.038, 0.046) + vec3(0.3,0.36,0.5) * uFlash;
         gl_FragColor = vec4(col, a);
       }`,
   });
   const group = new THREE.Group();
   for (let i = 0; i < 3; i++) {
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(600, 260), mat);
-    m.position.set(rrnd(-120, 120), rrnd(-90, 20), -90 - i * 130);
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(520, 190), mat);
+    m.position.set(rrnd(-130, 130), rrnd(-130, -40), -110 - i * 150);
     group.add(m);
   }
   group.renderOrder = 3;
@@ -412,12 +340,17 @@ export class Lightning {
   }
 }
 
-export function buildOutside(maxTowers, maxRain) {
+export function buildOutside(Q) {
+  const plan = cityPlan();
   const sky = buildSky();
   const ground = buildGround();
-  const city = buildCity(maxTowers);
-  const beacons = buildBeacons(city);
-  const rain = buildRain(maxRain);
+  const city = buildCity(plan, Q.towers);
+  const roundTowers = buildRoundTowers(plan);
+  const streets = buildStreets(plan, Q.streets);
+  const traffic = buildTraffic(plan, Q.cars);
+  const beacons = buildBeacons(plan);
+  const aircraft = buildAircraft();
+  const rain = buildRain(Q.rain);
   const mist = buildMist();
-  return { sky, ground, city, beacons, rain, mist };
+  return { plan, sky, ground, city, roundTowers, streets, traffic, beacons, aircraft, rain, mist };
 }
