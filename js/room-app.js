@@ -8,7 +8,7 @@ import {
 } from './room.js';
 import { buildOutside, Lightning, FOG_U } from './room-outside.js';
 import { buildShell, buildWindows, buildFireplace, glassMaterials, reflectiveFloor } from './room-interior.js';
-import { buildProps, buildLights } from './room-props.js';
+import { buildProps, buildLights, updateLights } from './room-props.js';
 import { REGISTRY, prewarm, texStats } from './tex/index.js';
 import { AmbientOcclusion } from './post-ao.js';
 
@@ -212,7 +212,7 @@ class Post {
     this.composite = mkPass(/* glsl */`
       uniform sampler2D tHDR, tBloom, tAO;
       uniform vec2  uRes;
-      uniform float uTime, uExposure, uBloom, uWarm, uVignette, uGrain, uFlash, uAO;
+      uniform float uTime, uExposure, uBloom, uWarm, uVignette, uGrain, uFlash, uAO, uDebugAO;
       varying vec2 vUv;
 
       vec3 aces(vec3 x){
@@ -227,6 +227,7 @@ class Post {
 
       void main(){
         vec2 uv = vUv;
+        if(uDebugAO > 0.5){ gl_FragColor = vec4(vec3(texture2D(tAO, uv).r), 1.0); return; }
         vec2 d  = uv - 0.5;
         float r2 = dot(d, d);
 
@@ -237,9 +238,16 @@ class Post {
         col.g = texture2D(tHDR, uv).g;
         col.b = texture2D(tHDR, uv - d * ca).b;
 
-        // contact darkening, before exposure so it reads as light that never
-        // arrived rather than as a grey wash painted on top
-        if (uAO > 0.001) col *= mix(1.0, texture2D(tAO, uv).r, uAO);
+        // Contact darkening, before exposure so it reads as light that never
+        // arrived rather than as a grey wash on top. Occlusion belongs to the
+        // ambient term, so fade it out where a pixel is already brightly lit —
+        // otherwise the firelit side of everything gets muddied too.
+        if (uAO > 0.001) {
+          float aoRaw = texture2D(tAO, uv).r;
+          float lit = dot(col, vec3(0.2126, 0.7152, 0.0722));
+          float w = uAO * (1.0 - smoothstep(0.10, 0.85, lit));
+          col *= mix(1.0, aoRaw, w);
+        }
         col += texture2D(tBloom, uv).rgb * uBloom;
         col *= uExposure * (1.0 + uFlash * 0.35);
         col = aces(col);
@@ -265,7 +273,7 @@ class Post {
       tHDR: { value: null }, tBloom: { value: null },
       uRes: { value: new THREE.Vector2() },
       uTime: U.time,
-      uExposure: { value: 1.42 },
+      uExposure: { value: 1.24 },
       uBloom: { value: 0.28 },
       uWarm: { value: CFG.warm },
       uVignette: { value: 0.85 },
@@ -273,6 +281,7 @@ class Post {
       uFlash: U.flash,
       tAO: { value: null },
       uAO: { value: 0.0 },
+      uDebugAO: { value: 0.0 },
     });
   }
 
@@ -384,7 +393,7 @@ function applyQuality(q) {
   const Q = QUALITY[q];
   outside.city.count = Q.towers;
   outside.rain.geometry.instanceCount = Q.rain;
-  reflectiveFloor.uniforms.uReflAmt.value = Q.refl >= 1 ? 0.6 : 0.0;
+  reflectiveFloor.uniforms.uReflAmt.value = Q.refl >= 1 ? 0.42 : 0.0;
   for (const m of glassMaterials) m.uniforms.uReflAmt.value = Q.refl >= 2 ? 0.9 : 0.0;
   paintQualityUi(q);
   lastCommitMs = performance.now() - t0;
@@ -786,16 +795,10 @@ function tick() {
 
   /* --- lights --- */
   const f = CFG.fire;
-  lights.fireSpot.intensity = 20 * f * flick;
-  lights.fireFill.intensity = 3.1 * f * flick;
-  lights.fireCore.intensity = 2.4 * f * flick;
-  lights.fireSpot.position.x = fire.firePos.x + 0.25 + Math.sin(t * 3.1) * 0.03;
-  lights.fireSpot.position.z = fire.firePos.z + Math.sin(t * 2.3) * 0.06;
   lampLevel = damp(lampLevel, CFG.lamps ? 1 : 0, 5, dt);
-  lights.lamp.intensity = 7.5 * lampLevel;
-  lights.shelf.intensity = 2.4 * lampLevel;
-  lights.cove.intensity = 2.0 * lampLevel;
-  lights.window.intensity = 0.32 + U.flash.value * 2.6;
+  updateLights(lights, {
+    fire: f, flick, lampLevel, flash: U.flash.value, t, firePos: fire.firePos,
+  });
   props.lamp.shadeMat.emissiveIntensity = 0.42 * lampLevel;
   props.lamp.setGlow(lampLevel);
 

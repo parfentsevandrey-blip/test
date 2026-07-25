@@ -7,6 +7,7 @@ import {
   roundedBoxGeo, planeUv, boxUv,
 } from './room.js';
 import { applyMaps } from './tex/index.js';
+import { applyDetail } from './tex/detail.js';
 
 const X = ROOM.x, Z = ROOM.z, H = ROOM.h;
 
@@ -29,7 +30,7 @@ export function buildShell() {
   const fu = {
     tRefl:      { value: null },
     uReflMat:   { value: new THREE.Matrix4() },
-    uReflAmt:   { value: 0.55 },
+    uReflAmt:   { value: 0.42 },
     uReflOn:    U.reflOn,
     uTime:      U.time,
   };
@@ -61,11 +62,13 @@ export function buildShell() {
           r += texture2D(tRefl, base + vec2(0.0,  blur * 1.6)).rgb * 0.15;
           r += texture2D(tRefl, base + vec2(0.0, -blur * 1.6)).rgb * 0.15;
           float inside = step(0.0, base.x) * step(base.x, 1.0) * step(0.0, base.y) * step(base.y, 1.0);
-          gl_FragColor.rgb += r * uReflAmt * fres * inside * (1.0 - rgh * 0.55);
+          // clamp: an unclamped grazing reflection of the city blew out to white
+          gl_FragColor.rgb += min(r, vec3(3.0)) * uReflAmt * fres * inside * (1.0 - rgh * 0.75);
         }
         #include <tonemapping_fragment>`);
   };
   floorMat.customProgramCacheKey = () => 'floorRefl';
+  applyDetail(floorMat, { scale: 0.06, strength: 0.45, fade: 5.0, rough: 0.05 });
   reflectiveFloor.material = floorMat;
   reflectiveFloor.uniforms = fu;
 
@@ -82,6 +85,7 @@ export function buildShell() {
     color: 0xc6b39c, metalness: 0, envMapIntensity: 0.8,
   });
   applyMaps(wallMat, 'plasterWall', { aniso: MAX_ANISO, normalScale: 0.40 });
+  applyDetail(wallMat, { scale: 0.05, strength: 0.5, fade: 4.0, rough: 0.05 });
   const ceilMat = new THREE.MeshStandardMaterial({
     color: 0xb0a496, metalness: 0, envMapIntensity: 0.65,
   });
@@ -417,6 +421,7 @@ export function buildFireplace() {
     color: 0xf0e9df, metalness: 0.04, envMapIntensity: 0.55,
   });
   applyMaps(stoneMat, 'honedStone', { aniso: MAX_ANISO, normalScale: 0.7 });
+  applyDetail(stoneMat, { scale: 0.045, strength: 0.45, fade: 3.5, rough: 0.06 });
   const darkMat = new THREE.MeshStandardMaterial({ color: 0x120d0a, roughness: 0.95, metalness: 0 });
   const steelMat = new THREE.MeshStandardMaterial({ color: 0x1a1715, roughness: 0.35, metalness: 0.85 });
 

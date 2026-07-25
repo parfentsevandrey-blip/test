@@ -144,6 +144,21 @@ rainy night city outside. Same vendored Three.js r160, no external assets.
   occupancy changes, aviation beacons, an overcast sky with a drifting cloud
   deck, sodium light-pollution along the horizon, falling rain streaks, drifting
   mist, and occasional lightning (with delayed thunder if sound is on).
+- **Ambient occlusion.** A depth-only SSAO pass reconstructs view normals from
+  the depth buffer, samples a contact-biased hemisphere with per-pixel rotation,
+  and blurs the result depth-aware so occlusion never bleeds across a
+  silhouette. It is weighted toward the ambient term, so it deepens crevices and
+  contact without muddying anything the fire is directly lighting.
+- **A rig that bounces.** The fire's shaped light and moving shadows come from
+  a narrow shadow-casting spot; its throw comes from an unshadowed omni beneath
+  it, so no cone boundary can be drawn across a wall. Three unshadowed fills
+  stand in for light returning off the floor, the ceiling and the back wall —
+  without them every surface out of direct throw fell to about 2% luminance and
+  its material was invisible. The bounces flicker with the flame.
+- **A micro-detail layer.** A shared fine normal is blended over every base
+  material with whiteout blending, sampled triplanar in world space and faded
+  out by view distance, so surfaces keep structure up close without aliasing
+  into shimmer at range.
 - **Planar reflections.** Mirror cameras give the oiled-oak floor and the dark
   glass genuine reflections of the room — the signature look of a lit room at
   night. Guarded against feedback: reflective materials switch off while any
@@ -198,6 +213,7 @@ cozy-room.html         Self-contained single-file build (double-click to open)
 tools/shoot.js         Headless smoke test + screenshots of all four views
 tools/filecheck.js     Verifies the single-file build runs from file://
 tools/uicheck.js       Audits every control: does it work, and does it stall?
+tools/closeup.js       Eight in-scene close-ups + per-surface luminance readout
 tools/texlab.html      Texture lab: any surface on a lit panel/sphere/cylinder
 tools/texshot.js       Renders one surface to a PNG contact sheet
 ```

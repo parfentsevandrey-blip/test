@@ -58829,6 +58829,126 @@ export function applyMaps(material, name, opts = {}) {
 }
 </script>
 <script type="text/plain" id="rm12">/* =========================================================================
+   A shared micro-detail layer.
+
+   Base textures are authored at a tile of tens of centimetres. That is right
+   for the pattern, but it means two things go wrong at the ends of the
+   viewing range: up close there is no structure finer than the base texture's
+   own texel, so surfaces look soft; and at four or five metres the base normal
+   map mips toward flat and the surface goes dead just when the whole room is
+   in shot.
+
+   This adds a second, much finer normal sampled at a few centimetres, faded
+   out with view distance so it never survives to become aliasing shimmer.
+
+       applyDetail(material, { scale: 0.05, strength: 0.6, fade: 4.0 })
+
+   It composes with whatever onBeforeCompile a material already has (the
+   reflective floor has one), and folds its options into the program cache key,
+   without which Three.js hands two materials the same compiled program and the
+   second one silently gets the first one's settings.
+   ========================================================================= */
+import * as THREE from 'three';
+import * as N from './noise.js';
+
+let _detailTex = null;
+
+/** one shared tileable detail normal — fine grain, no directional bias */
+function detailTexture() {
+  if (_detailTex) return _detailTex;
+  const S = 256;
+  const h = N.newF(S * S);
+  for (let y = 0; y < S; y++) {
+    for (let x = 0; x < S; x++) {
+      // two octaves of fine grain plus a sparse scatter of pits, so it reads
+      // as surface irregularity rather than as uniform sandpaper
+      const a = N.fbm(x * 0.28, y * 0.28, S * 0.28, 7, 3, 0.55, 2, N.gnoise);
+      const b = N.vnoise(x * 0.9, y * 0.9, S * 0.9, 31);
+      const w = N.worley(x * 0.055, y * 0.055, S * 0.055, 13, 1);
+      const pit = N.smoothstep(0.30, 0.0, w.f1) * 0.35;
+      h[y * S + x] = N.clamp(a * 0.72 + b * 0.28 - pit, 0, 1);
+    }
+  }
+  const t = new THREE.CanvasTexture(N.normalCanvas(h, S, 1.6));
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.colorSpace = THREE.NoColorSpace;
+  t.needsUpdate = true;
+  _detailTex = t;
+  return t;
+}
+
+/**
+ * @param {THREE.MeshStandardMaterial} material
+ * @param {object} opts
+ *   scale     detail tile size in metres (default 0.06)
+ *   strength  0..1 blend weight (default 0.55)
+ *   fade      distance in metres by which the detail is gone (default 4.5)
+ *   rough     how much the detail breaks up roughness (default 0.06)
+ */
+export function applyDetail(material, opts = {}) {
+  const scale = opts.scale ?? 0.06;
+  const strength = opts.strength ?? 0.55;
+  const fade = opts.fade ?? 4.5;
+  const rough = opts.rough ?? 0.06;
+
+  const uniforms = {
+    tDetail: { value: detailTexture() },
+    uDetail: { value: new THREE.Vector4(1 / scale, strength, fade, rough) },
+  };
+
+  const prev = material.onBeforeCompile;
+  material.onBeforeCompile = (shader, renderer) => {
+    if (prev) prev(shader, renderer);          // compose, never clobber
+    Object.assign(shader.uniforms, uniforms);
+
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', `#include <common>
+        varying vec3 vDetailPos; varying vec3 vDetailNrm;`)
+      .replace('#include <project_vertex>', `#include <project_vertex>
+        vDetailPos = (modelMatrix * vec4(position, 1.0)).xyz;
+        vDetailNrm = normalize(mat3(modelMatrix) * normal);`);
+
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', `#include <common>
+        uniform sampler2D tDetail; uniform vec4 uDetail;
+        varying vec3 vDetailPos; varying vec3 vDetailNrm;
+
+        /* Whiteout blending: adding or replacing tangent-space normals flattens
+           whichever layer is weaker. This keeps both. */
+        vec3 blendNormals(vec3 base, vec3 det){
+          vec3 a = base + vec3(0.0, 0.0, 1.0);
+          vec3 b = det * vec3(-1.0, -1.0, 1.0);
+          return normalize(a * dot(a, b) / max(a.z, 1e-4) - b);
+        }`)
+      // triplanar so it needs no UVs of its own and never stretches
+      .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+        {
+          float dist = length(vDetailPos - cameraPosition);
+          float amt = uDetail.y * (1.0 - smoothstep(uDetail.z * 0.35, uDetail.z, dist));
+          if(amt > 0.002){
+            vec3 aw = abs(normalize(vDetailNrm));
+            aw /= (aw.x + aw.y + aw.z);
+            vec3 p = vDetailPos * uDetail.x;
+            vec3 dn = texture2D(tDetail, p.yz).xyz * aw.x
+                    + texture2D(tDetail, p.xz).xyz * aw.y
+                    + texture2D(tDetail, p.xy).xyz * aw.z;
+            dn = normalize(dn * 2.0 - 1.0);
+            dn = normalize(mix(vec3(0.0, 0.0, 1.0), dn, amt));
+            normal = normalize(blendNormals(normal, dn));
+            roughnessFactor = clamp(roughnessFactor + (dn.z - 0.9) * uDetail.w * amt, 0.04, 1.0);
+          }
+        }`);
+  };
+
+  // without this two materials share one compiled program and the second
+  // silently inherits the first one's detail settings
+  const basis = material.customProgramCacheKey ? material.customProgramCacheKey() : '';
+  material.customProgramCacheKey = () => `${basis}|det${scale},${strength},${fade},${rough}`;
+  material.needsUpdate = true;
+  return material;
+}
+</script>
+<script type="text/plain" id="rm13">/* =========================================================================
    Part 3 / 5 — the room shell, the floor-to-ceiling glass, the fireplace
    ========================================================================= */
 import * as THREE from 'three';
@@ -58837,6 +58957,7 @@ import {
   roundedBoxGeo, planeUv, boxUv,
 } from './room.js';
 import { applyMaps } from './tex/index.js';
+import { applyDetail } from './tex/detail.js';
 
 const X = ROOM.x, Z = ROOM.z, H = ROOM.h;
 
@@ -58859,7 +58980,7 @@ export function buildShell() {
   const fu = {
     tRefl:      { value: null },
     uReflMat:   { value: new THREE.Matrix4() },
-    uReflAmt:   { value: 0.55 },
+    uReflAmt:   { value: 0.42 },
     uReflOn:    U.reflOn,
     uTime:      U.time,
   };
@@ -58891,11 +59012,13 @@ export function buildShell() {
           r += texture2D(tRefl, base + vec2(0.0,  blur * 1.6)).rgb * 0.15;
           r += texture2D(tRefl, base + vec2(0.0, -blur * 1.6)).rgb * 0.15;
           float inside = step(0.0, base.x) * step(base.x, 1.0) * step(0.0, base.y) * step(base.y, 1.0);
-          gl_FragColor.rgb += r * uReflAmt * fres * inside * (1.0 - rgh * 0.55);
+          // clamp: an unclamped grazing reflection of the city blew out to white
+          gl_FragColor.rgb += min(r, vec3(3.0)) * uReflAmt * fres * inside * (1.0 - rgh * 0.75);
         }
         #include <tonemapping_fragment>`);
   };
   floorMat.customProgramCacheKey = () => 'floorRefl';
+  applyDetail(floorMat, { scale: 0.06, strength: 0.45, fade: 5.0, rough: 0.05 });
   reflectiveFloor.material = floorMat;
   reflectiveFloor.uniforms = fu;
 
@@ -58912,6 +59035,7 @@ export function buildShell() {
     color: 0xc6b39c, metalness: 0, envMapIntensity: 0.8,
   });
   applyMaps(wallMat, 'plasterWall', { aniso: MAX_ANISO, normalScale: 0.40 });
+  applyDetail(wallMat, { scale: 0.05, strength: 0.5, fade: 4.0, rough: 0.05 });
   const ceilMat = new THREE.MeshStandardMaterial({
     color: 0xb0a496, metalness: 0, envMapIntensity: 0.65,
   });
@@ -59247,6 +59371,7 @@ export function buildFireplace() {
     color: 0xf0e9df, metalness: 0.04, envMapIntensity: 0.55,
   });
   applyMaps(stoneMat, 'honedStone', { aniso: MAX_ANISO, normalScale: 0.7 });
+  applyDetail(stoneMat, { scale: 0.045, strength: 0.45, fade: 3.5, rough: 0.06 });
   const darkMat = new THREE.MeshStandardMaterial({ color: 0x120d0a, roughness: 0.95, metalness: 0 });
   const steelMat = new THREE.MeshStandardMaterial({ color: 0x1a1715, roughness: 0.35, metalness: 0.85 });
 
@@ -59461,7 +59586,7 @@ export function buildFireplace() {
         );
         vec4 mv = modelViewMatrix * vec4(p, 1.0);
         gl_Position = projectionMatrix * mv;
-        gl_PointSize = (0.55 + aSeed.z * 1.05) * uPix * (1.0 - life * 0.5) * 9.0 / max(-mv.z, 0.25);
+        gl_PointSize = clamp((0.55 + aSeed.z * 1.05) * uPix * (1.0 - life * 0.5) * 9.0 / max(-mv.z, 0.25), 0.0, 8.0);
       }`,
     fragmentShader: /* glsl */`
       varying float vLife, vSeed;
@@ -59486,7 +59611,155 @@ export function buildFireplace() {
   };
 }
 </script>
-<script type="text/plain" id="rm13">/* =========================================================================
+<script type="text/plain" id="rm14">/* =========================================================================
+   The lighting rig.
+
+   The room is lit almost entirely by the fireplace on the left wall, plus a
+   couple of dim practicals and cool spill from the rainy city through the
+   floor-to-ceiling glass.
+
+   Two things this rig has to get right, because the previous one got both
+   wrong. First, a real fire in a real room does not only throw light — it
+   fills the room with light that has bounced off the floor, the ceiling and
+   the facing wall. Without those bounces every surface out of direct throw
+   falls to near-black and its material becomes invisible: the sofa measured
+   0.048 mean luminance, about 2%. Second, a spot light wide enough to cover a
+   room draws a hard cone boundary across the wall, which reads instantly as
+   CG. The fix is not a wider spot — that only makes the shadow camera
+   degenerate — but a narrow shadow-caster carrying the shaped light, with an
+   unshadowed omni underneath it carrying the throw, so no edge exists.
+
+   Everything is driven per frame from updateLights(), so the fire's flicker
+   reaches the direct light and its bounces together.
+   ========================================================================= */
+import * as THREE from 'three';
+import { ROOM, roomScene } from './room.js';
+
+const X = ROOM.x, Z = ROOM.z, H = ROOM.h;
+
+export function buildLights(firePos, lampPos, shadowSize) {
+  const L = {};
+
+  /* --- the constant floor of the room -------------------------------- */
+  // never truly black: a night room still has sky through the glass and the
+  // last of the city bouncing around it
+  L.ambient = new THREE.AmbientLight(0x46495c, 0.42);
+  roomScene.add(L.ambient);
+
+  // sky above (cool, from the window and ceiling), ground below (warm, from
+  // the oak floor) — cheap directionality that flat ambient cannot give
+  L.hemi = new THREE.HemisphereLight(0x5c74a0, 0x6b4526, 1.15);
+  L.hemi.position.set(0, H, 0);
+  roomScene.add(L.hemi);
+
+  /* --- the fire ------------------------------------------------------- */
+  // Narrow enough that the shadow camera stays well-conditioned; this one
+  // carries the shaped light and the moving shadows.
+  L.fireSpot = new THREE.SpotLight(0xff8f4a, 18, 26, 0.95, 1.0, 1.75);
+  L.fireSpot.position.copy(firePos).add(new THREE.Vector3(0.25, 0.02, 0));
+  L.fireSpot.target.position.set(0.40, 0.40, 0.20);
+  L.fireSpot.castShadow = true;
+  L.fireSpot.shadow.mapSize.set(shadowSize, shadowSize);
+  L.fireSpot.shadow.camera.near = 0.30;
+  L.fireSpot.shadow.camera.far = 16;
+  L.fireSpot.shadow.bias = -0.0016;
+  L.fireSpot.shadow.normalBias = 0.03;
+  L.fireSpot.shadow.radius = 3;
+  roomScene.add(L.fireSpot, L.fireSpot.target);
+
+  // No cone, so the spot's boundary never appears as an edge — this is what
+  // removes the hard black line the fire used to draw across the wall.
+  L.fireWide = new THREE.PointLight(0xff7d33, 9.0, 18, 1.6);
+  L.fireWide.position.copy(firePos).add(new THREE.Vector3(0.30, 0.10, 0));
+  roomScene.add(L.fireWide);
+
+  // tight and dim, just enough to model the logs inside the firebox
+  L.fireCore = new THREE.PointLight(0xff8134, 2.2, 1.9, 2.0);
+  L.fireCore.position.copy(firePos).add(new THREE.Vector3(-0.30, -0.18, 0));
+  roomScene.add(L.fireCore);
+
+  /* --- bounce -------------------------------------------------------- */
+  // light returning off the oiled oak in front of the hearth: warm, low, and
+  // aimed back up into the room, which is what actually reaches the sofa
+  L.bounceFloor = new THREE.PointLight(0xff9048, 5.2, 11, 1.5);
+  L.bounceFloor.position.set(-2.0, 0.30, -0.30);
+  roomScene.add(L.bounceFloor);
+
+  // and off the ceiling above the fire, spreading much further than the fire
+  // itself and lifting the whole back half of the room
+  L.bounceCeil = new THREE.PointLight(0xf0955a, 3.0, 14, 1.5);
+  L.bounceCeil.position.set(-1.2, H - 0.35, 0.30);
+  roomScene.add(L.bounceCeil);
+
+  // and off the back wall, which is the only thing lighting the back of the
+  // sofa — the darkest surface in the room and the foreground of every wide shot
+  L.bounceBack = new THREE.PointLight(0xe08a52, 3.4, 9, 1.5);
+  L.bounceBack.position.set(0.9, 1.9, Z - 0.9);
+  roomScene.add(L.bounceBack);
+
+  /* --- practicals ----------------------------------------------------- */
+  L.lamp = new THREE.PointLight(0xffab5e, 13, 8, 1.9);
+  L.lamp.position.copy(lampPos);
+  roomScene.add(L.lamp);
+
+  L.shelf = new THREE.PointLight(0xffa055, 3.0, 5.5, 2.0);
+  L.shelf.position.set(X - 0.55, 1.55, 1.9);
+  roomScene.add(L.shelf);
+
+  L.cove = new THREE.PointLight(0xffb877, 4.0, 12, 1.8);
+  L.cove.position.set(-X + 1.2, H - 0.25, Z - 1.2);
+  roomScene.add(L.cove);
+
+  L.door = new THREE.PointLight(0xd07d38, 1.8, 4.5, 2.0);
+  L.door.position.set(3.35, 1.5, Z - 0.5);
+  roomScene.add(L.door);
+
+  /* --- the storm outside ---------------------------------------------- */
+  L.window = new THREE.DirectionalLight(0x8fb0e0, 0.95);
+  L.window.position.set(-2, 6, -18);
+  L.window.target.position.set(0, 0.6, 2);
+  roomScene.add(L.window, L.window.target);
+
+  // the glass is a broad cool source in its own right; a soft fill just inside
+  // it keeps the floor and the near end of the sofa from going flat
+  L.windowFill = new THREE.PointLight(0x86a8d8, 5.0, 13, 1.5);
+  L.windowFill.position.set(0.6, 1.5, -3.3);
+  roomScene.add(L.windowFill);
+
+  return L;
+}
+
+/* ------------------------------------------------------------ per frame --
+   ctx = { fire, flick, lampLevel, flash, t, firePos }
+   The bounces flicker with the fire too — light that has bounced once still
+   carries the flame's modulation, and holding them steady while the direct
+   light dances is a giveaway. */
+export function updateLights(L, ctx) {
+  const { fire, flick, lampLevel, flash, t, firePos } = ctx;
+  const f = fire * flick;
+
+  L.fireSpot.intensity = 18 * f;
+  L.fireWide.intensity = 9.0 * f;
+  L.fireCore.intensity = 2.2 * f;
+  L.fireSpot.position.x = firePos.x + 0.25 + Math.sin(t * 3.1) * 0.03;
+  L.fireSpot.position.z = firePos.z + Math.sin(t * 2.3) * 0.06;
+
+  // bounce lags the flame very slightly and varies less — it is an average of
+  // the flame over a whole wall, not the flame itself
+  const soft = fire * (0.72 + flick * 0.28);
+  L.bounceFloor.intensity = 5.2 * soft;
+  L.bounceCeil.intensity = 3.0 * soft;
+
+  L.lamp.intensity = 13 * lampLevel;
+  L.shelf.intensity = 3.0 * lampLevel;
+  L.cove.intensity = 4.0 * lampLevel;
+
+  L.bounceBack.intensity = 3.4 * soft;
+  L.window.intensity = 0.95 + flash * 2.6;
+  L.windowFill.intensity = 5.0 + flash * 6.0;
+}
+</script>
+<script type="text/plain" id="rm15">/* =========================================================================
    Part 4 / 5 — furniture, soft goods, plants, the cat, and the lighting rig
    ========================================================================= */
 import * as THREE from 'three';
@@ -59495,6 +59768,8 @@ import {
   roundedBoxGeo, faceTowards, normalizeUv,
 } from './room.js';
 import { applyMaps } from './tex/index.js';
+import { applyDetail } from './tex/detail.js';
+export { buildLights, updateLights } from './room-lights.js';
 
 const X = ROOM.x, Z = ROOM.z, H = ROOM.h;
 
@@ -59503,20 +59778,27 @@ const X = ROOM.x, Z = ROOM.z, H = ROOM.h;
    a repeat of 4 means "one texture tile every 25 cm". Box/cylinder primitives
    carry 0..1 UVs instead, so a few materials get their own repeat. */
 const AN = { aniso: MAX_ANISO };
-const tex = (mat, name, opts) => { applyMaps(mat, name, { ...AN, ...opts }); return mat; };
+const tex = (mat, name, opts) => {
+  applyMaps(mat, name, { ...AN, ...opts });
+  if (opts && opts.detail) applyDetail(mat, opts.detail);
+  return mat;
+};
+// fabric wants a fine fibre break-up; wood and stone a coarser, shallower one
+const D_FABRIC = { scale: 0.035, strength: 0.55, fade: 3.5, rough: 0.05 };
+const D_WOOD = { scale: 0.07, strength: 0.40, fade: 4.5, rough: 0.04 };
 
 const M = {
   linen: tex(new THREE.MeshStandardMaterial({
     color: 0xd2bfa6, metalness: 0, envMapIntensity: 0.32,
-  }), 'linen', { repeat: [4, 4], normalScale: 0.85 }),
+  }), 'linen', { repeat: [4, 4], normalScale: 0.85, detail: D_FABRIC }),
 
   linenDark: tex(new THREE.MeshStandardMaterial({
     color: 0x9c8971, metalness: 0, envMapIntensity: 0.28,
-  }), 'linen', { repeat: [4, 4], normalScale: 0.85 }),
+  }), 'linen', { repeat: [4, 4], normalScale: 0.85, detail: D_FABRIC }),
 
   boucle: tex(new THREE.MeshStandardMaterial({
     color: 0xe8dac2, metalness: 0, envMapIntensity: 0.28,
-  }), 'boucle', { repeat: [4, 4], normalScale: 0.9 }),
+  }), 'boucle', { repeat: [4, 4], normalScale: 0.9, detail: D_FABRIC }),
 
   boucleRound: tex(new THREE.MeshStandardMaterial({
     color: 0xe8dac2, metalness: 0, envMapIntensity: 0.28,
@@ -59524,19 +59806,19 @@ const M = {
 
   rust: tex(new THREE.MeshStandardMaterial({
     color: 0xc4653c, metalness: 0, envMapIntensity: 0.32,
-  }), 'linen', { repeat: [4, 4], normalScale: 0.85 }),
+  }), 'linen', { repeat: [4, 4], normalScale: 0.85, detail: D_FABRIC }),
 
   knit: tex(new THREE.MeshStandardMaterial({
     color: 0xd4ac79, metalness: 0, side: THREE.DoubleSide, envMapIntensity: 0.22,
-  }), 'knit', { repeat: [3, 5], normalScale: 1.0 }),
+  }), 'knit', { repeat: [3, 5], normalScale: 1.0, detail: D_FABRIC }),
 
   oak: tex(new THREE.MeshStandardMaterial({
     color: 0x9a7752, metalness: 0, envMapIntensity: 0.5,
-  }), 'oakFloor', { repeat: [0.4, 0.4], normalScale: 0.5 }),
+  }), 'oakFloor', { repeat: [0.4, 0.4], normalScale: 0.5, detail: D_WOOD }),
 
   oakDark: tex(new THREE.MeshStandardMaterial({
     color: 0x5c412c, metalness: 0, envMapIntensity: 0.5,
-  }), 'oakFloor', { repeat: [0.4, 0.4], normalScale: 0.5 }),
+  }), 'oakFloor', { repeat: [0.4, 0.4], normalScale: 0.5, detail: D_WOOD }),
 
   brass: tex(new THREE.MeshStandardMaterial({
     color: 0xc59a55, metalness: 0.95, envMapIntensity: 1.2,
@@ -60027,7 +60309,7 @@ function buildDust(g) {
         vTw = 0.5 + 0.5 * sin(uTime * 2.4 + aSeed.x * 40.0);
         vec4 mv = modelViewMatrix * vec4(p, 1.0);
         gl_Position = projectionMatrix * mv;
-        gl_PointSize = (0.6 + aSeed.y * 1.1) * uPix * 7.5 / max(-mv.z, 0.25);
+        gl_PointSize = clamp((0.6 + aSeed.y * 1.1) * uPix * 7.5 / max(-mv.z, 0.25), 0.0, 6.0);
       }`,
     fragmentShader: /* glsl */`
       varying float vGlow, vTw;
@@ -60044,65 +60326,6 @@ function buildDust(g) {
   pts.renderOrder = 8;
   g.add(pts);
   return pts;
-}
-
-/* ============================================================== lights == */
-export function buildLights(firePos, lampPos, shadowSize) {
-  const L = {};
-
-  L.ambient = new THREE.AmbientLight(0x3a4762, 0.68);
-  roomScene.add(L.ambient);
-
-  L.hemi = new THREE.HemisphereLight(0x51688e, 0x442a18, 1.05);
-  roomScene.add(L.hemi);
-
-  /* the fire — one wide shadow-casting spot pointed into the room */
-  L.fireSpot = new THREE.SpotLight(0xff8f4a, 20, 26, 0.88, 1.0, 1.85);
-  L.fireSpot.position.copy(firePos).add(new THREE.Vector3(0.25, 0.02, 0));
-  L.fireSpot.target.position.set(1.20, 0.50, 0.05);
-  L.fireSpot.castShadow = true;
-  L.fireSpot.shadow.mapSize.set(shadowSize, shadowSize);
-  L.fireSpot.shadow.camera.near = 0.30;
-  L.fireSpot.shadow.camera.far = 16;
-  L.fireSpot.shadow.bias = -0.0016;
-  L.fireSpot.shadow.normalBias = 0.03;
-  L.fireSpot.shadow.radius = 3;
-  roomScene.add(L.fireSpot, L.fireSpot.target);
-
-  /* close-range fill so the stone around the opening glows */
-  L.fireFill = new THREE.PointLight(0xff7028, 3.0, 11.0, 1.85);
-  L.fireFill.position.copy(firePos).add(new THREE.Vector3(0.22, 0.18, 0));
-  roomScene.add(L.fireFill);
-
-  /* a small light inside the firebox so the logs read as logs */
-  L.fireCore = new THREE.PointLight(0xff8134, 2.2, 1.9, 2.0);
-  L.fireCore.position.copy(firePos).add(new THREE.Vector3(-0.30, -0.18, 0));
-  roomScene.add(L.fireCore);
-
-  /* practicals */
-  L.lamp = new THREE.PointLight(0xffab5e, 9.0, 9.0, 2.0);
-  L.lamp.position.copy(lampPos);
-  roomScene.add(L.lamp);
-
-  L.shelf = new THREE.PointLight(0xffa055, 2.4, 5.0, 2.0);
-  L.shelf.position.set(X - 0.55, 1.55, 1.9);
-  roomScene.add(L.shelf);
-
-  L.cove = new THREE.PointLight(0xffb877, 3.2, 11.0, 2.0);
-  L.cove.position.set(-X + 1.2, H - 0.25, Z - 1.2);
-  roomScene.add(L.cove);
-
-  L.door = new THREE.PointLight(0xd07d38, 1.6, 4.5, 2.0);
-  L.door.position.set(3.35, 1.5, Z - 0.5);
-  roomScene.add(L.door);
-
-  /* cool spill from the storm outside */
-  L.window = new THREE.DirectionalLight(0x8fb0e0, 0.95);
-  L.window.position.set(-2, 6, -18);
-  L.window.target.position.set(0, 0.6, 2);
-  roomScene.add(L.window, L.window.target);
-
-  return L;
 }
 
 /* ============================================================ assemble == */
@@ -60129,7 +60352,228 @@ export function buildProps() {
   return { group: g, rug, sofa, chair, chair2, table, lamp, plant, plant2, cat, dust, M };
 }
 </script>
-<script type="text/plain" id="rm14">/* =========================================================================
+<script type="text/plain" id="rm16">/* =========================================================================
+   Screen-space ambient occlusion.
+
+   The room has exactly one shadow-casting light, so every surface outside the
+   fire's cone is lit by flat ambient and reads as pasted-on: a table leg meets
+   the rug with no darkening, a cushion meets the sofa with no seam, a corner
+   is as bright as the middle of a wall. Contact darkening is what makes a
+   rendered room feel like a photographed one.
+
+   Contract
+   --------
+     const ao = new AmbientOcclusion(deps);
+     ao.resize(w, h);
+     ao.render(depthTexture, camera);   // once per frame, after the room pass
+     ao.texture                          // r = 1 unoccluded … 0 fully occluded
+
+   `deps` = { THREE, renderer, blit, rt, VERT_QUAD } — everything the pass
+   needs, injected so this file imports nothing but stays testable.
+
+   Only depth is available, so view-space normals are reconstructed from it.
+   The scene is a 10 × 8 × 3.3 m room, so the sample radius lives in the
+   0.15–0.5 m range rather than the usual outdoor scale.
+   ========================================================================= */
+
+/* Shared by the AO and blur passes: unproject a depth sample back to view
+   space. Works for any projection because it goes through the inverse matrix
+   rather than assuming a perspective near/far split. */
+const DEPTH_LIB = /* glsl */`
+uniform sampler2D tDepth;
+uniform mat4 uProjInv;
+uniform vec2 uTexel;
+
+float rawDepth(vec2 uv){ return texture2D(tDepth, uv).x; }
+
+vec3 viewPos(vec2 uv, float d){
+  vec4 clip = vec4(uv * 2.0 - 1.0, d * 2.0 - 1.0, 1.0);
+  vec4 v = uProjInv * clip;
+  return v.xyz / v.w;
+}
+vec3 viewPos(vec2 uv){ return viewPos(uv, rawDepth(uv)); }
+`;
+
+export class AmbientOcclusion {
+  constructor({ THREE, renderer, blit, rt, VERT_QUAD }) {
+    this.THREE = THREE;
+    this.renderer = renderer;
+    this.blit = blit;
+    this.scale = 0.6;              // AO is low-frequency, but contact wants some resolution
+    this.strength = 0.85;
+    this.radius = 0.42;            // metres
+    this.bias = 0.018;             // metres, against self-occlusion acne
+    this.target = rt(2, 2, { depth: false });
+    this.blurTarget = rt(2, 2, { depth: false });
+
+    const shared = {
+      tDepth: { value: null },
+      uProjInv: { value: new THREE.Matrix4() },
+      uTexel: { value: new THREE.Vector2() },
+    };
+    this.shared = shared;
+
+    /* ---------------------------------------------------------- AO pass -- */
+    this.aoUniforms = {
+      ...shared,
+      uProj: { value: new THREE.Matrix4() },
+      uRadius: { value: this.radius },
+      uBias: { value: this.bias },
+      uIntensity: { value: 1.7 },
+    };
+
+    this.aoMaterial = new THREE.ShaderMaterial({
+      uniforms: this.aoUniforms,
+      vertexShader: VERT_QUAD,
+      depthTest: false, depthWrite: false,
+      fragmentShader: DEPTH_LIB + /* glsl */`
+        uniform mat4  uProj;
+        uniform float uRadius, uBias, uIntensity;
+        varying vec2  vUv;
+
+        const int SAMPLES = 12;
+        const float GOLDEN = 2.39996323;
+
+        /* Reconstructing the normal from naive dFdx/dFdy puts a one-pixel band
+           of garbage on every silhouette, because the difference straddles two
+           surfaces. Taking whichever of the forward and backward difference is
+           the smaller step in depth keeps the estimate on the near surface. */
+        vec3 viewNormal(vec2 uv, vec3 P){
+          vec3 ddxF = viewPos(uv + vec2(uTexel.x, 0.0)) - P;
+          vec3 ddxB = P - viewPos(uv - vec2(uTexel.x, 0.0));
+          vec3 ddyF = viewPos(uv + vec2(0.0, uTexel.y)) - P;
+          vec3 ddyB = P - viewPos(uv - vec2(0.0, uTexel.y));
+          vec3 dx = abs(ddxF.z) < abs(ddxB.z) ? ddxF : ddxB;
+          vec3 dy = abs(ddyF.z) < abs(ddyB.z) ? ddyF : ddyB;
+          return normalize(cross(dx, dy));
+        }
+
+        float hash12(vec2 p){
+          vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+          p3 += dot(p3, p3.yzx + 33.33);
+          return fract((p3.x + p3.y) * p3.z);
+        }
+
+        void main(){
+          float d = rawDepth(vUv);
+          if(d >= 0.9999){ gl_FragColor = vec4(1.0); return; }   // sky / background
+
+          vec3 P = viewPos(vUv, d);
+          vec3 N = viewNormal(vUv, P);
+
+          // per-pixel rotation turns the sampling pattern's banding into dither
+          float ang = hash12(gl_FragCoord.xy) * 6.2831853;
+          vec3 rvec = vec3(cos(ang), sin(ang), 0.0);
+          vec3 T = normalize(rvec - N * dot(rvec, N));
+          vec3 B = cross(N, T);
+          mat3 TBN = mat3(T, B, N);
+
+          float occ = 0.0;
+          for(int i = 0; i < SAMPLES; i++){
+            float fi = float(i);
+            // cosine-ish hemisphere spiral, pushed away from the very centre
+            float a = fi * GOLDEN + ang;
+            float r = sqrt((fi + 0.5) / float(SAMPLES));
+            float z = sqrt(1.0 - r * r);
+            vec3 dir = TBN * vec3(cos(a) * r, sin(a) * r, z);
+
+            // vary the reach so a few samples probe close contact and a few
+            // probe the wider cavity, instead of all landing on one shell
+            float scl = mix(0.10, 1.0, pow((fi + 0.5) / float(SAMPLES), 1.6));
+            vec3 sp = P + dir * uRadius * scl;
+
+            vec4 clip = uProj * vec4(sp, 1.0);
+            vec2 suv = clip.xy / clip.w * 0.5 + 0.5;
+            if(suv.x < 0.0 || suv.x > 1.0 || suv.y < 0.0 || suv.y > 1.0) continue;
+
+            float sd = rawDepth(suv);
+            if(sd >= 0.9999) continue;
+            vec3 sampleP = viewPos(suv, sd);
+
+            // in view space -z runs away from the eye, so a larger z means the
+            // real surface sits in front of the sample point: it occludes
+            float dz = sampleP.z - sp.z;
+            float occluded = step(uBias, dz);
+
+            // ignore geometry far outside the radius, or a distant wall would
+            // "occlude" a near object it merely sits behind
+            float range = smoothstep(0.0, 1.0, uRadius / max(abs(P.z - sampleP.z), 1e-4));
+            occ += occluded * range;
+          }
+
+          float ao = 1.0 - clamp((occ / float(SAMPLES)) * uIntensity, 0.0, 1.0);
+          ao = pow(ao, 1.9);           // deepen the crevices, keep open areas open
+          gl_FragColor = vec4(clamp(ao, 0.0, 1.0), 0.0, 0.0, 1.0);
+        }`,
+    });
+
+    /* -------------------------------------------------- bilateral blur -- */
+    const blurFrag = DEPTH_LIB + /* glsl */`
+      uniform sampler2D tAO;
+      uniform vec2 uDir;
+      varying vec2 vUv;
+
+      void main(){
+        float d0 = rawDepth(vUv);
+        if(d0 >= 0.9999){ gl_FragColor = vec4(1.0); return; }
+        float z0 = viewPos(vUv, d0).z;
+
+        float sum = 0.0, wsum = 0.0;
+        for(int i = -4; i <= 4; i++){
+          float fi = float(i);
+          vec2 uv = vUv + uDir * uTexel * fi;
+          float w = exp(-fi * fi / 8.0);
+          // depth-aware: a plain blur bleeds occlusion across silhouettes and
+          // leaves a dark halo, which is the classic cheap-SSAO tell
+          float z = viewPos(uv).z;
+          w *= exp(-abs(z - z0) * 12.0);
+          sum += texture2D(tAO, uv).r * w;
+          wsum += w;
+        }
+        gl_FragColor = vec4(sum / max(wsum, 1e-4), 0.0, 0.0, 1.0);
+      }`;
+
+    this.blurUniforms = { ...shared, tAO: { value: null }, uDir: { value: new THREE.Vector2(1, 0) } };
+    this.blurMaterial = new THREE.ShaderMaterial({
+      uniforms: this.blurUniforms,
+      vertexShader: VERT_QUAD,
+      fragmentShader: blurFrag,
+      depthTest: false, depthWrite: false,
+    });
+  }
+
+  resize(w, h) {
+    const tw = Math.max(2, (w * this.scale) | 0), th = Math.max(2, (h * this.scale) | 0);
+    if (this.target.width !== tw || this.target.height !== th) {
+      this.target.setSize(tw, th);
+      this.blurTarget.setSize(tw, th);
+    }
+    this.shared.uTexel.value.set(1 / tw, 1 / th);
+  }
+
+  render(depthTexture, camera) {
+    this.shared.tDepth.value = depthTexture;
+    this.shared.uProjInv.value.copy(camera.projectionMatrixInverse);
+    this.aoUniforms.uProj.value.copy(camera.projectionMatrix);
+    this.aoUniforms.uRadius.value = this.radius;
+    this.aoUniforms.uBias.value = this.bias;
+
+    this.blit(this.aoMaterial, this.target);
+
+    // separable, so two cheap passes rather than one square kernel
+    this.blurUniforms.tAO.value = this.target.texture;
+    this.blurUniforms.uDir.value.set(1, 0);
+    this.blit(this.blurMaterial, this.blurTarget);
+
+    this.blurUniforms.tAO.value = this.blurTarget.texture;
+    this.blurUniforms.uDir.value.set(0, 1);
+    this.blit(this.blurMaterial, this.target);
+  }
+
+  get texture() { return this.target.texture; }
+}
+</script>
+<script type="text/plain" id="rm17">/* =========================================================================
    Part 5 / 5 — environment, planar reflections, post stack, controls, audio
    ========================================================================= */
 import * as THREE from 'three';
@@ -60139,8 +60583,9 @@ import {
 } from './room.js';
 import { buildOutside, Lightning, FOG_U } from './room-outside.js';
 import { buildShell, buildWindows, buildFireplace, glassMaterials, reflectiveFloor } from './room-interior.js';
-import { buildProps, buildLights } from './room-props.js';
+import { buildProps, buildLights, updateLights } from './room-props.js';
 import { REGISTRY, prewarm, texStats } from './tex/index.js';
+import { AmbientOcclusion } from './post-ao.js';
 
 const boot = document.getElementById('boot');
 const bootBar = document.getElementById('bootBar');
@@ -60313,6 +60758,10 @@ const mkPass = (frag, uniforms, blending) => new THREE.ShaderMaterial({
 class Post {
   constructor() {
     this.hdr = rt(2, 2, { depth: true });
+    this.hdr.depthTexture = new THREE.DepthTexture(2, 2);
+    this.hdr.depthTexture.type = THREE.UnsignedIntType;
+    this.hdr.depthTexture.minFilter = THREE.NearestFilter;
+    this.hdr.depthTexture.magFilter = THREE.NearestFilter;
     this.levels = [];
     for (let i = 0; i < 5; i++) this.levels.push(rt(2, 2, { depth: false }));
 
@@ -60336,9 +60785,9 @@ class Post {
       THREE.AdditiveBlending);
 
     this.composite = mkPass(/* glsl */`
-      uniform sampler2D tHDR, tBloom;
+      uniform sampler2D tHDR, tBloom, tAO;
       uniform vec2  uRes;
-      uniform float uTime, uExposure, uBloom, uWarm, uVignette, uGrain, uFlash;
+      uniform float uTime, uExposure, uBloom, uWarm, uVignette, uGrain, uFlash, uAO, uDebugAO;
       varying vec2 vUv;
 
       vec3 aces(vec3 x){
@@ -60353,6 +60802,7 @@ class Post {
 
       void main(){
         vec2 uv = vUv;
+        if(uDebugAO > 0.5){ gl_FragColor = vec4(vec3(texture2D(tAO, uv).r), 1.0); return; }
         vec2 d  = uv - 0.5;
         float r2 = dot(d, d);
 
@@ -60363,6 +60813,16 @@ class Post {
         col.g = texture2D(tHDR, uv).g;
         col.b = texture2D(tHDR, uv - d * ca).b;
 
+        // Contact darkening, before exposure so it reads as light that never
+        // arrived rather than as a grey wash on top. Occlusion belongs to the
+        // ambient term, so fade it out where a pixel is already brightly lit —
+        // otherwise the firelit side of everything gets muddied too.
+        if (uAO > 0.001) {
+          float aoRaw = texture2D(tAO, uv).r;
+          float lit = dot(col, vec3(0.2126, 0.7152, 0.0722));
+          float w = uAO * (1.0 - smoothstep(0.10, 0.85, lit));
+          col *= mix(1.0, aoRaw, w);
+        }
         col += texture2D(tBloom, uv).rgb * uBloom;
         col *= uExposure * (1.0 + uFlash * 0.35);
         col = aces(col);
@@ -60388,12 +60848,15 @@ class Post {
       tHDR: { value: null }, tBloom: { value: null },
       uRes: { value: new THREE.Vector2() },
       uTime: U.time,
-      uExposure: { value: 1.42 },
+      uExposure: { value: 1.24 },
       uBloom: { value: 0.28 },
       uWarm: { value: CFG.warm },
       uVignette: { value: 0.85 },
       uGrain: { value: 0.014 },
       uFlash: U.flash,
+      tAO: { value: null },
+      uAO: { value: 0.0 },
+      uDebugAO: { value: 0.0 },
     });
   }
 
@@ -60427,7 +60890,7 @@ class Post {
 }
 
 /* ============================================================== build ==== */
-let outside, shell, windows, fire, props, lights, post, lightning;
+let outside, shell, windows, fire, props, lights, post, lightning, ao;
 let rtOut, rtOutSmall, rtOutBlur, outBlurDown, outBlurUp;
 let floorRefl, winRefl;
 let env;
@@ -60466,6 +60929,7 @@ async function build() {
 
   await step(94, 'Впускаем дождь');
   post = new Post();
+  ao = new AmbientOcclusion({ THREE, renderer, blit, rt, VERT_QUAD });
   rtOut = rt(2, 2, { depth: true });
   rtOutSmall = rt(2, 2, { depth: false });
   rtOutBlur = rt(2, 2, { depth: false });
@@ -60504,7 +60968,7 @@ function applyQuality(q) {
   const Q = QUALITY[q];
   outside.city.count = Q.towers;
   outside.rain.geometry.instanceCount = Q.rain;
-  reflectiveFloor.uniforms.uReflAmt.value = Q.refl >= 1 ? 0.6 : 0.0;
+  reflectiveFloor.uniforms.uReflAmt.value = Q.refl >= 1 ? 0.42 : 0.0;
   for (const m of glassMaterials) m.uniforms.uReflAmt.value = Q.refl >= 2 ? 0.9 : 0.0;
   paintQualityUi(q);
   lastCommitMs = performance.now() - t0;
@@ -60534,6 +60998,10 @@ function onResize() {
   W = w; Hh = h;
 
   post.resize(W, Hh);
+  post.hdr.depthTexture.image.width = W;
+  post.hdr.depthTexture.image.height = Hh;
+  post.hdr.depthTexture.needsUpdate = true;
+  ao.resize(W, Hh);
   rtOut.setSize(W, Hh);
   const bw = Math.max(2, W >> 2), bh = Math.max(2, Hh >> 2);
   rtOutSmall.setSize(bw, bh);
@@ -60902,16 +61370,10 @@ function tick() {
 
   /* --- lights --- */
   const f = CFG.fire;
-  lights.fireSpot.intensity = 20 * f * flick;
-  lights.fireFill.intensity = 3.1 * f * flick;
-  lights.fireCore.intensity = 2.4 * f * flick;
-  lights.fireSpot.position.x = fire.firePos.x + 0.25 + Math.sin(t * 3.1) * 0.03;
-  lights.fireSpot.position.z = fire.firePos.z + Math.sin(t * 2.3) * 0.06;
   lampLevel = damp(lampLevel, CFG.lamps ? 1 : 0, 5, dt);
-  lights.lamp.intensity = 7.5 * lampLevel;
-  lights.shelf.intensity = 2.4 * lampLevel;
-  lights.cove.intensity = 2.0 * lampLevel;
-  lights.window.intensity = 0.32 + U.flash.value * 2.6;
+  updateLights(lights, {
+    fire: f, flick, lampLevel, flash: U.flash.value, t, firePos: fire.firePos,
+  });
   props.lamp.shadeMat.emissiveIntensity = 0.42 * lampLevel;
   props.lamp.setGlow(lampLevel);
 
@@ -60986,7 +61448,12 @@ function tick() {
   renderer.clear();
   renderer.render(roomScene, camera);
 
-  // 5 — bloom + grade
+  // 5 — ambient occlusion from the room pass's depth buffer
+  ao.render(post.hdr.depthTexture, camera);
+  post.composite.uniforms.tAO.value = ao.texture;
+  post.composite.uniforms.uAO.value = ao.strength;
+
+  // 6 — bloom + grade
   post.render(Q.bloom);
   renderer.setRenderTarget(null);
 
@@ -61045,15 +61512,15 @@ function tick() {
   // debug handle: window.__room.snapView(0..3), .stats(), .CFG, .lights …
   window.__room = {
     camera, cam, CFG, QUALITY, VIEWS, lights, post, U, snapView,
-    roomScene, outsideScene, shell, windows, fire, props, outside,
-    glassMaterials, reflectiveFloor,
+    roomScene, outsideScene, shell, windows, fire, props, outside, THREE,
+    glassMaterials, reflectiveFloor, ao,
     texStats,
     stats: () => ({ frame: frameNo, fps: lastFps, q: CFG.quality, commitMs: Math.round(lastCommitMs) }),
   };
   tick();
 })();
 </script>
-<script type="application/json" id="room-manifest">{"entry":"rm14","order":[{"domId":"rm0","deps":{}},{"domId":"rm1","deps":{"three":"rm0"}},{"domId":"rm2","deps":{"three":"rm0","./room.js":"rm1"}},{"domId":"rm3","deps":{}},{"domId":"rm4","deps":{}},{"domId":"rm5","deps":{}},{"domId":"rm6","deps":{}},{"domId":"rm7","deps":{}},{"domId":"rm8","deps":{}},{"domId":"rm9","deps":{}},{"domId":"rm10","deps":{}},{"domId":"rm11","deps":{"three":"rm0","./noise.js":"rm3","./oak.js":"rm4","./plaster.js":"rm5","./stone.js":"rm6","./rug.js":"rm7","./weave.js":"rm8","./surfaces.js":"rm9","./organic.js":"rm10"}},{"domId":"rm12","deps":{"three":"rm0","./room.js":"rm1","./tex/index.js":"rm11"}},{"domId":"rm13","deps":{"three":"rm0","./room.js":"rm1","./tex/index.js":"rm11"}},{"domId":"rm14","deps":{"three":"rm0","./room.js":"rm1","./room-outside.js":"rm2","./room-interior.js":"rm12","./room-props.js":"rm13","./tex/index.js":"rm11"}}]}</script>
+<script type="application/json" id="room-manifest">{"entry":"rm17","order":[{"domId":"rm0","deps":{}},{"domId":"rm1","deps":{"three":"rm0"}},{"domId":"rm2","deps":{"three":"rm0","./room.js":"rm1"}},{"domId":"rm3","deps":{}},{"domId":"rm4","deps":{}},{"domId":"rm5","deps":{}},{"domId":"rm6","deps":{}},{"domId":"rm7","deps":{}},{"domId":"rm8","deps":{}},{"domId":"rm9","deps":{}},{"domId":"rm10","deps":{}},{"domId":"rm11","deps":{"three":"rm0","./noise.js":"rm3","./oak.js":"rm4","./plaster.js":"rm5","./stone.js":"rm6","./rug.js":"rm7","./weave.js":"rm8","./surfaces.js":"rm9","./organic.js":"rm10"}},{"domId":"rm12","deps":{"three":"rm0","./noise.js":"rm3"}},{"domId":"rm13","deps":{"three":"rm0","./room.js":"rm1","./tex/index.js":"rm11","./tex/detail.js":"rm12"}},{"domId":"rm14","deps":{"three":"rm0","./room.js":"rm1"}},{"domId":"rm15","deps":{"three":"rm0","./room.js":"rm1","./tex/index.js":"rm11","./tex/detail.js":"rm12","./room-lights.js":"rm14"}},{"domId":"rm16","deps":{}},{"domId":"rm17","deps":{"three":"rm0","./room.js":"rm1","./room-outside.js":"rm2","./room-interior.js":"rm13","./room-props.js":"rm15","./tex/index.js":"rm11","./post-ao.js":"rm16"}}]}</script>
 <script type="module">(function bootstrapFn() {
   var reg = JSON.parse(document.getElementById("room-manifest").textContent);
   var esc = function (s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); };

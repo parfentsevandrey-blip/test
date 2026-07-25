@@ -7,6 +7,7 @@ import {
   roundedBoxGeo, faceTowards, normalizeUv,
 } from './room.js';
 import { applyMaps } from './tex/index.js';
+import { applyDetail } from './tex/detail.js';
 export { buildLights, updateLights } from './room-lights.js';
 
 const X = ROOM.x, Z = ROOM.z, H = ROOM.h;
@@ -16,20 +17,27 @@ const X = ROOM.x, Z = ROOM.z, H = ROOM.h;
    a repeat of 4 means "one texture tile every 25 cm". Box/cylinder primitives
    carry 0..1 UVs instead, so a few materials get their own repeat. */
 const AN = { aniso: MAX_ANISO };
-const tex = (mat, name, opts) => { applyMaps(mat, name, { ...AN, ...opts }); return mat; };
+const tex = (mat, name, opts) => {
+  applyMaps(mat, name, { ...AN, ...opts });
+  if (opts && opts.detail) applyDetail(mat, opts.detail);
+  return mat;
+};
+// fabric wants a fine fibre break-up; wood and stone a coarser, shallower one
+const D_FABRIC = { scale: 0.035, strength: 0.55, fade: 3.5, rough: 0.05 };
+const D_WOOD = { scale: 0.07, strength: 0.40, fade: 4.5, rough: 0.04 };
 
 const M = {
   linen: tex(new THREE.MeshStandardMaterial({
     color: 0xd2bfa6, metalness: 0, envMapIntensity: 0.32,
-  }), 'linen', { repeat: [4, 4], normalScale: 0.85 }),
+  }), 'linen', { repeat: [4, 4], normalScale: 0.85, detail: D_FABRIC }),
 
   linenDark: tex(new THREE.MeshStandardMaterial({
     color: 0x9c8971, metalness: 0, envMapIntensity: 0.28,
-  }), 'linen', { repeat: [4, 4], normalScale: 0.85 }),
+  }), 'linen', { repeat: [4, 4], normalScale: 0.85, detail: D_FABRIC }),
 
   boucle: tex(new THREE.MeshStandardMaterial({
     color: 0xe8dac2, metalness: 0, envMapIntensity: 0.28,
-  }), 'boucle', { repeat: [4, 4], normalScale: 0.9 }),
+  }), 'boucle', { repeat: [4, 4], normalScale: 0.9, detail: D_FABRIC }),
 
   boucleRound: tex(new THREE.MeshStandardMaterial({
     color: 0xe8dac2, metalness: 0, envMapIntensity: 0.28,
@@ -37,19 +45,19 @@ const M = {
 
   rust: tex(new THREE.MeshStandardMaterial({
     color: 0xc4653c, metalness: 0, envMapIntensity: 0.32,
-  }), 'linen', { repeat: [4, 4], normalScale: 0.85 }),
+  }), 'linen', { repeat: [4, 4], normalScale: 0.85, detail: D_FABRIC }),
 
   knit: tex(new THREE.MeshStandardMaterial({
     color: 0xd4ac79, metalness: 0, side: THREE.DoubleSide, envMapIntensity: 0.22,
-  }), 'knit', { repeat: [3, 5], normalScale: 1.0 }),
+  }), 'knit', { repeat: [3, 5], normalScale: 1.0, detail: D_FABRIC }),
 
   oak: tex(new THREE.MeshStandardMaterial({
     color: 0x9a7752, metalness: 0, envMapIntensity: 0.5,
-  }), 'oakFloor', { repeat: [0.4, 0.4], normalScale: 0.5 }),
+  }), 'oakFloor', { repeat: [0.4, 0.4], normalScale: 0.5, detail: D_WOOD }),
 
   oakDark: tex(new THREE.MeshStandardMaterial({
     color: 0x5c412c, metalness: 0, envMapIntensity: 0.5,
-  }), 'oakFloor', { repeat: [0.4, 0.4], normalScale: 0.5 }),
+  }), 'oakFloor', { repeat: [0.4, 0.4], normalScale: 0.5, detail: D_WOOD }),
 
   brass: tex(new THREE.MeshStandardMaterial({
     color: 0xc59a55, metalness: 0.95, envMapIntensity: 1.2,
