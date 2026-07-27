@@ -37,12 +37,24 @@ def object_images(obj: dict, *, skip_map: bool = False) -> list[Path]:
         if lat is None or lon is None:
             lat, lon = maps.geocode(conf["query"])
             log.info("%s: геокодирование → %.6f, %.6f", obj["slug"], lat, lon)
+
+        # ближайший крупный город, который должен попасть в кадр
+        city = conf.get("city")
+        city_point = None
+        if city:
+            if city.get("lat") is None or city.get("lon") is None:
+                city_point = maps.geocode(city["query"])
+            else:
+                city_point = (city["lat"], city["lon"])
+
+        name = f"{obj['slug']}-google" + (f"-z{conf['zoom']}" if conf.get("zoom") else "")
         images.append(
             maps.render(
                 lat,
                 lon,
-                CACHE / "maps" / f"{obj['slug']}-z{conf.get('zoom', 13)}.png",
-                zoom=conf.get("zoom", 13),
+                CACHE / "maps" / f"{name}.png",
+                city=city_point,
+                zoom=conf.get("zoom"),
             )
         )
     images.extend(media.fetch_all(obj.get("photos", []), CACHE / "photos"))

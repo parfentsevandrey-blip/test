@@ -1,14 +1,22 @@
-"""Обзорная карта объекта: геокодирование + сборка растровой карты из тайлов.
+"""Обзорная карта объекта на базе Google Maps.
 
-Карта собирается из тайлов CARTO Voyager (OpenStreetMap), поверх ставится
-красная метка. Ключи API не нужны. В шаблоне на этом месте стоял скриншот
-Google Maps — визуально результат эквивалентен.
+Кадр строится так, чтобы в него всегда попадали и объект, и ближайший
+крупный город (масштаб подбирается автоматически по двум точкам).
+
+Источники изображения, по порядку предпочтения:
+
+1. ``google_static`` — официальный Google Maps Static API. Включается, когда
+   задан ключ в переменной окружения ``GOOGLE_MAPS_API_KEY``; это штатный
+   способ для регулярной работы.
+2. ``google_tiles`` — сборка карты из растровых тайлов Google (без ключа).
+   Используется по умолчанию, пока ключ не заведён.
 """
 
 from __future__ import annotations
 
 import logging
 import math
+import os
 from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
 from pathlib import Path
@@ -18,20 +26,58 @@ from PIL import Image, ImageDraw, ImageFont
 
 log = logging.getLogger(__name__)
 
-TILE_URL = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-TILE_FALLBACK = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+GOOGLE_TILE_URL = "https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
+GOOGLE_STATIC_URL = "https://maps.googleapis.com/maps/api/staticmap"
 NOMINATIM = "https://nominatim.openstreetmap.org/search"
 TILE_SIZE = 256
-UA = "dutch-property-reports/1.0 (report generator)"
-ATTRIBUTION = "© OpenStreetMap contributors  © CARTO"
+UA = (
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+)
+ATTRIBUTION = "Картографические данные © Google"
+ZOOM_RANGE = (8, 16)
+API_KEY_ENV = "GOOGLE_MAPS_API_KEY"
+
+
+# --------------------------------------------------------------------------
+# геометрия
+# --------------------------------------------------------------------------
+def _project(lat: float, lon: float, zoom: int) -> tuple[float, float]:
+    """Координаты в пикселях мировой сетки Меркатора для заданного масштаба."""
+    n = TILE_SIZE * 2**zoom
+    x = (lon + 180.0) / 360.0 * n
+    sin_lat = math.sin(math.radians(lat))
+    y = (0.5 - math.log((1 + sin_lat) / (1 - sin_lat)) / (4 * math.pi)) * n
+    return x, y
+
+
+def fit_zoom(points: list[tuple[float, float]], width: int, height: int, padding=0.78) -> int:
+    """Максимальный масштаб, при котором все точки помещаются в кадр."""
+    if len(points) < 2:
+        return 13
+    for zoom in range(ZOOM_RANGE[1], ZOOM_RANGE[0] - 1, -1):
+        xs, ys = zip(*(_project(lat, lon, zoom) for lat, lon in points))
+        if (max(xs) - min(xs)) <= width * padding and (max(ys) - min(ys)) <= height * padding:
+            return zoom
+    return ZOOM_RANGE[0]
+
+
+def _center(points: list[tuple[float, float]], zoom: int) -> tuple[float, float]:
+    """Центр кадра (lat, lon) как середина ограничивающего прямоугольника."""
+    xs, ys = zip(*(_project(lat, lon, zoom) for lat, lon in points))
+    cx, cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
+    n = TILE_SIZE * 2**zoom
+    lon = cx / n * 360.0 - 180.0
+    lat = math.degrees(math.atan(math.sinh(math.pi * (1 - 2 * cy / n))))
+    return lat, lon
 
 
 def geocode(query: str) -> tuple[float, float]:
-    """Возвращает (lat, lon) для адреса. Используется, если координаты не заданы."""
+    """Геокодирование адреса, если координаты не заданы в карточке объекта."""
     resp = requests.get(
         NOMINATIM,
         params={"q": query, "format": "json", "limit": 1},
-        headers={"User-Agent": UA},
+        headers={"User-Agent": "dutch-property-reports/1.0"},
         timeout=30,
     )
     resp.raise_for_status()
@@ -41,105 +87,150 @@ def geocode(query: str) -> tuple[float, float]:
     return float(data[0]["lat"]), float(data[0]["lon"])
 
 
-def _deg2num(lat: float, lon: float, zoom: int) -> tuple[float, float]:
-    lat_rad = math.radians(lat)
-    n = 2.0**zoom
-    x = (lon + 180.0) / 360.0 * n
-    y = (1.0 - math.asinh(math.tan(lat_rad)) / math.pi) / 2.0 * n
-    return x, y
-
-
-def _tile(z: int, x: int, y: int, retina: bool) -> Image.Image:
-    n = 2**z
-    if not (0 <= y < n):
-        return Image.new("RGB", (TILE_SIZE, TILE_SIZE), "white")
-    x %= n
-    sub = "abc"[(x + y) % 3]
-    url = TILE_URL.format(s=sub, z=z, x=x, y=y, r="@2x" if retina else "")
-    try:
-        resp = requests.get(url, headers={"User-Agent": UA}, timeout=30)
-        resp.raise_for_status()
-    except Exception:
-        resp = requests.get(
-            TILE_FALLBACK.format(z=z, x=x, y=y), headers={"User-Agent": UA}, timeout=30
-        )
-        resp.raise_for_status()
-    return Image.open(BytesIO(resp.content)).convert("RGB")
-
-
-def _pin(draw: ImageDraw.ImageDraw, x: int, y: int, scale: int) -> None:
-    """Рисует красную каплевидную метку с остриём в точке (x, y)."""
+# --------------------------------------------------------------------------
+# отрисовка
+# --------------------------------------------------------------------------
+def _pin(draw: ImageDraw.ImageDraw, x: float, y: float, scale: int) -> None:
+    """Красная метка Google-образца с остриём в точке (x, y)."""
     r = 11 * scale
     h = 30 * scale
     red, dark = (219, 68, 55), (150, 30, 25)
     cx, cy = x, y - h + r
     draw.polygon(
-        [(cx - r * 0.72, cy + r * 0.55), (cx + r * 0.72, cy + r * 0.55), (cx, y)],
-        fill=red,
+        [(cx - r * 0.72, cy + r * 0.55), (cx + r * 0.72, cy + r * 0.55), (cx, y)], fill=red
     )
     draw.ellipse([cx - r, cy - r, cx + r, cy + r], fill=red, outline=dark, width=scale)
     ir = r * 0.42
     draw.ellipse([cx - ir, cy - ir, cx + ir, cy + ir], fill="white")
 
 
-def render(
-    lat: float,
-    lon: float,
-    dest: Path,
-    zoom: int = 13,
-    width: int = 1200,
-    height: int = 660,
-    retina: bool = True,
-) -> Path:
-    """Собирает карту с меткой в центре и сохраняет PNG по пути ``dest``."""
-    if dest.exists() and dest.stat().st_size > 0:
-        return dest
-    dest.parent.mkdir(parents=True, exist_ok=True)
-
-    scale = 2 if retina else 1
-    px_tile = TILE_SIZE * scale
-    out_w, out_h = width * scale, height * scale
-
-    cx, cy = _deg2num(lat, lon, zoom)
-    # координаты левого верхнего угла картинки в пикселях мировой сетки
-    origin_x = cx * px_tile - out_w / 2
-    origin_y = cy * px_tile - out_h / 2
-    x0, y0 = math.floor(origin_x / px_tile), math.floor(origin_y / px_tile)
-    x1 = math.floor((origin_x + out_w) / px_tile)
-    y1 = math.floor((origin_y + out_h) / px_tile)
-
-    coords = [(x, y) for x in range(x0, x1 + 1) for y in range(y0, y1 + 1)]
-    log.info("карта %.5f,%.5f zoom=%d — %d тайлов", lat, lon, zoom, len(coords))
-    with ThreadPoolExecutor(8) as pool:
-        tiles = list(pool.map(lambda c: _tile(zoom, c[0], c[1], retina), coords))
-
-    canvas = Image.new("RGB", (out_w, out_h), "white")
-    for (tx, ty), img in zip(coords, tiles):
-        if img.size != (px_tile, px_tile):
-            img = img.resize((px_tile, px_tile))
-        canvas.paste(img, (int(tx * px_tile - origin_x), int(ty * px_tile - origin_y)))
-
+def _attribution(canvas: Image.Image, scale: int) -> None:
     draw = ImageDraw.Draw(canvas, "RGBA")
-    _pin(draw, out_w // 2, out_h // 2, scale)
-
     try:
         font = ImageFont.truetype(
             "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 11 * scale
         )
     except OSError:
         font = ImageFont.load_default()
-    tw = draw.textlength(ATTRIBUTION, font=font)
+    width, height = canvas.size
+    text_width = draw.textlength(ATTRIBUTION, font=font)
     pad = 4 * scale
     draw.rectangle(
-        [out_w - tw - 3 * pad, out_h - 16 * scale - pad, out_w, out_h],
-        fill=(255, 255, 255, 190),
+        [width - text_width - 3 * pad, height - 16 * scale - pad, width, height],
+        fill=(255, 255, 255, 200),
     )
     draw.text(
-        (out_w - tw - pad, out_h - 14 * scale - pad),
+        (width - text_width - pad, height - 14 * scale - pad),
         ATTRIBUTION,
         fill=(70, 70, 70),
         font=font,
     )
+
+
+# --------------------------------------------------------------------------
+# провайдеры
+# --------------------------------------------------------------------------
+def _tile(z: int, x: int, y: int, index: int) -> Image.Image:
+    n = 2**z
+    if not (0 <= y < n):
+        return Image.new("RGB", (TILE_SIZE, TILE_SIZE), "white")
+    url = GOOGLE_TILE_URL.format(s=index % 4, x=x % n, y=y, z=z)
+    resp = requests.get(url, headers={"User-Agent": UA}, timeout=30)
+    resp.raise_for_status()
+    return Image.open(BytesIO(resp.content)).convert("RGB")
+
+
+def _render_tiles(
+    center: tuple[float, float],
+    marker: tuple[float, float],
+    zoom: int,
+    width: int,
+    height: int,
+    scale: int,
+) -> Image.Image:
+    """Сборка карты из тайлов Google (без API-ключа)."""
+    out_w, out_h = width * scale, height * scale
+    # тайлы отдаются в размере 256 px, поэтому кадр собирается в 1x и масштабируется
+    cx, cy = _project(*center, zoom)
+    origin_x, origin_y = cx - width / 2, cy - height / 2
+    x0, y0 = math.floor(origin_x / TILE_SIZE), math.floor(origin_y / TILE_SIZE)
+    x1 = math.floor((origin_x + width) / TILE_SIZE)
+    y1 = math.floor((origin_y + height) / TILE_SIZE)
+
+    coords = [(x, y) for x in range(x0, x1 + 1) for y in range(y0, y1 + 1)]
+    log.info("карта Google: zoom=%d, тайлов %d", zoom, len(coords))
+    with ThreadPoolExecutor(8) as pool:
+        tiles = list(pool.map(lambda item: _tile(zoom, item[1][0], item[1][1], item[0]),
+                              enumerate(coords)))
+
+    canvas = Image.new("RGB", (width, height), "white")
+    for (tx, ty), img in zip(coords, tiles):
+        canvas.paste(img, (int(tx * TILE_SIZE - origin_x), int(ty * TILE_SIZE - origin_y)))
+
+    canvas = canvas.resize((out_w, out_h), Image.LANCZOS)
+    mx, my = _project(*marker, zoom)
+    _pin(
+        ImageDraw.Draw(canvas, "RGBA"),
+        (mx - origin_x) * scale,
+        (my - origin_y) * scale,
+        scale,
+    )
+    _attribution(canvas, scale)
+    return canvas
+
+
+def _render_static_api(
+    center: tuple[float, float],
+    marker: tuple[float, float],
+    zoom: int,
+    width: int,
+    height: int,
+    api_key: str,
+) -> Image.Image:
+    """Официальный Google Maps Static API (нужен ключ)."""
+    params = {
+        "center": f"{center[0]:.6f},{center[1]:.6f}",
+        "zoom": zoom,
+        "size": f"{min(width, 640)}x{min(height, 640)}",
+        "scale": 2,
+        "maptype": "roadmap",
+        "language": "en",
+        "markers": f"color:red|{marker[0]:.6f},{marker[1]:.6f}",
+        "key": api_key,
+    }
+    resp = requests.get(GOOGLE_STATIC_URL, params=params, timeout=40)
+    resp.raise_for_status()
+    return Image.open(BytesIO(resp.content)).convert("RGB")
+
+
+# --------------------------------------------------------------------------
+# точка входа
+# --------------------------------------------------------------------------
+def render(
+    lat: float,
+    lon: float,
+    dest: Path,
+    *,
+    city: tuple[float, float] | None = None,
+    zoom: int | None = None,
+    width: int = 1200,
+    height: int = 660,
+    scale: int = 2,
+) -> Path:
+    """Карта с меткой объекта; при заданном ``city`` город гарантированно в кадре."""
+    if dest.exists() and dest.stat().st_size > 0:
+        return dest
+    dest.parent.mkdir(parents=True, exist_ok=True)
+
+    points = [(lat, lon)] + ([city] if city else [])
+    zoom = zoom or fit_zoom(points, width, height)
+    center = _center(points, zoom) if city else (lat, lon)
+
+    api_key = os.environ.get(API_KEY_ENV)
+    if api_key:
+        canvas = _render_static_api(center, (lat, lon), zoom, width, height, api_key)
+    else:
+        canvas = _render_tiles(center, (lat, lon), zoom, width, height, scale)
 
     canvas.save(dest, "PNG")
     return dest
