@@ -310,7 +310,7 @@ def bullet(doc, item: str | dict, *, size: float = S.FS_BODY, keep_next: bool | 
     keep_next=None — решать самому: пункт, стоящий сразу за заголовком раздела,
     прижимается к нему, чтобы заголовок не отрывался от первых двух пунктов.
     """
-    paragraph = add_paragraph(doc, after=3)
+    paragraph = add_paragraph(doc, after=S.BULLET_GAP)
     fmt = paragraph.paragraph_format
     fmt.left_indent = Pt(S.BULLET_INDENT)
     fmt.first_line_indent = Pt(-S.BULLET_HANGING)
@@ -530,6 +530,84 @@ def summary_table(doc, headers: list[str], rows: list[list[str]]):
             text = str(values[index]) if index < len(values) else ""
             _summary_cell(cell, text, widths[index], label=index == 0)
     return table
+
+
+def card_variant(block: dict) -> str:
+    """Оформление карточки по смыслу раздела: город, риски или обычная."""
+    if block.get("variant"):
+        return block["variant"]
+    if block.get("type") == "callout":
+        return "city"
+    if "риск" in (block.get("heading") or "").lower():
+        return "risk"
+    return "plain"
+
+
+def card(doc, title: str, *, variant: str = "plain"):
+    """Тематическая карточка: рамка, акцентная полоса слева и заголовок внутри.
+
+    Возвращает ячейку — содержимое добавляется в неё теми же помощниками
+    (bullet, body_paragraph), что и обычный текст: они принимают любой
+    контейнер с методом add_paragraph.
+    """
+    look = S.CARD_VARIANTS.get(variant, S.CARD_VARIANTS["plain"])
+    table = doc.add_table(rows=1, cols=1)
+    table.autofit = False
+    table_borders(
+        table,
+        {
+            "top": (look["border"], S.BORDER_CARD_SZ),
+            "bottom": (look["border"], S.BORDER_CARD_SZ),
+            "end": (look["border"], S.BORDER_CARD_SZ),
+            "start": (look["accent"], S.BORDER_CARD_ACCENT_SZ),
+        },
+    )
+    column_widths(table, [S.CARD_WIDTH])
+    cell = table.cell(0, 0)
+    cell.width = Pt(S.CARD_WIDTH)
+    cell_shading(cell, look["bg"])
+    cell_margins(cell, top=S.CARD_PAD_Y, bottom=S.CARD_PAD_Y, left=S.CARD_PAD_X, right=S.CARD_PAD_X)
+
+    head = cell.paragraphs[0]
+    head.paragraph_format.space_after = Pt(7)
+    if title:
+        run = add_run(head, title.upper(), size=S.FS_CARD_TITLE, color=S.NAVY, bold=True)
+        run_tracking(run, S.TRACKING_SECTION)
+        # keepNext здесь не ставится намеренно: LibreOffice в этом случае
+        # переносит на следующую полосу всю карточку целиком, оставляя
+        # до 40 % пустого листа. Карточка должна разрываться по строкам.
+    return cell
+
+
+def card_gap(doc, size: float = S.CARD_GAP):
+    """Зазор между карточками: две таблицы подряд Word и LibreOffice склеивают в одну."""
+    paragraph = add_paragraph(doc, after=0)
+    paragraph.paragraph_format.line_spacing = 1
+    add_run(paragraph, "", size=size, color=S.BODY)
+    return paragraph
+
+
+def card_body(cell, block: dict) -> None:
+    """Наполнение карточки: абзацы, список или врезка «О городе и районе»."""
+    kind = block.get("type", "bullets")
+    if kind == "callout":
+        head = cell.add_paragraph()
+        head.paragraph_format.space_after = Pt(5)
+        add_run(head, f"{S.CALLOUT_MARKER}  ", size=S.FS_BODY, color=S.GOLD, bold=True)
+        add_run(head, block.get("title", ""), size=S.FS_BODY, color=S.NAVY, bold=True)
+        keep_with_next(head)
+        texts = block.get("paragraphs") or []
+    elif kind == "paragraphs":
+        texts = block.get("paragraphs") or []
+    else:
+        items = block.get("bullets") or []
+        for index, item in enumerate(items):
+            bullet(cell, item, keep_next=index == 0 and len(items) > 1)
+        return
+
+    for index, text in enumerate(texts):
+        last = index == len(texts) - 1
+        body_paragraph(cell, text, after=0 if last else 6)
 
 
 def callout(doc, title: str, paragraphs: list[str], marker: str = S.CALLOUT_MARKER):
@@ -902,7 +980,7 @@ def _closing_item(doc, item, *, keep_next: bool = False):
     return paragraph
 
 
-def _closing_columns(doc, items: list) -> None:
+def _closing_columns(doc, items: list, *, width: float | None = None) -> None:
     """Компактный двухколоночный список — для глоссария, чтобы не плодить страницы."""
     if not items:
         return
@@ -912,7 +990,7 @@ def _closing_columns(doc, items: list) -> None:
     table.alignment = WD_TABLE_ALIGNMENT.LEFT
     table.autofit = False
     table_borders(table, {})
-    width = S.CONTENT_WIDTH / 2
+    width = S.CONTENT_WIDTH / 2 if width is None else width
     column_widths(table, [width, width])
     for index in range(half):
         for column, cell in zip(columns, table.rows[index].cells):
@@ -943,31 +1021,19 @@ def closing_page(doc, data: dict) -> None:
     """
     section_heading(doc, data.get("heading") or S.CLOSING_HEADING)
 
-    for block in _closing_blocks(data):
-        items = block["items"]
-        if block.get("title"):
-            paragraph = add_paragraph(doc, before=12, after=5)
-            add_run(
-                paragraph,
-                block["title"],
-                size=S.FS_CLOSING_TITLE,
-                color=S.NAVY,
-                bold=True,
-            )
-            keep_with_next(paragraph)
-            keep_lines_together(paragraph)
+    for index, block in enumerate(_closing_blocks(data)):
         if block.get("break_before"):
             page_break(doc)
+        elif index:
+            card_gap(doc)
+        cell = card(doc, block.get("title", ""))
+        items = block["items"]
         if block.get("layout") == "columns":
-            _closing_columns(doc, items)
+            _closing_columns(cell, items, width=S.CARD_INNER_WIDTH / 2)
             continue
-        for index, item in enumerate(items):
-            # первый пункт держится за подзаголовок блока, второй — за первый
-            _closing_item(
-                doc,
-                item,
-                keep_next=index == 0 and len(items) > 1,
-            )
+        for position, item in enumerate(items):
+            # первый пункт держится за подзаголовком карточки, второй — за первым
+            _closing_item(cell, item, keep_next=position == 0 and len(items) > 1)
 
     if data.get("note"):
         paragraph = add_paragraph(
@@ -1016,18 +1082,10 @@ def object_pages(doc, obj: dict, images: list[Path], extras: dict | None = None)
     spec_table(doc, extras.get("spec_rows") or obj.get("specs") or [])
     add_paragraph(doc, after=0)
 
-    for block in obj["sections"]:
-        kind = block.get("type", "bullets")
-        if block.get("heading"):
-            section_heading(doc, block["heading"])
-        if kind == "callout":
-            callout(doc, block["title"], block["paragraphs"])
-        elif kind == "paragraphs":
-            for text in block["paragraphs"]:
-                body_paragraph(doc, text)
-        else:
-            for item in block["bullets"]:
-                bullet(doc, item)
+    for index, block in enumerate(obj["sections"]):
+        if index:
+            card_gap(doc)
+        card_body(card(doc, block.get("heading", ""), variant=card_variant(block)), block)
 
     if images:
         page_break(doc)

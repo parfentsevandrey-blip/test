@@ -626,7 +626,7 @@ def closing_data(report: dict, report_path: Path, lots: list[Lot]) -> dict:
         {"heading": "Как считались показатели", "type": "bullets", "bullets": method},
         {"heading": "Источники и дата данных", "type": "bullets", "bullets": sources},
         {"heading": "Глоссарий", "type": "bullets", "bullets": glossary,
-         "layout": "columns", "break_before": True},
+         "layout": "columns"},
     ]
     if brokers:
         sections.append(

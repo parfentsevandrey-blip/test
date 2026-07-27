@@ -13,6 +13,9 @@ MUTED = "5A6E80"         # подзаголовки, курсив
 TABLE_LABEL_BG = "FAFAFA"  # заливка левой колонки таблицы характеристик
 TABLE_BORDER = "D8D8D8"    # горизонтальные линии таблицы
 CALLOUT_BG = "F5F1E8"      # заливка врезки «О городе и районе»
+CARD_BG = "FFFFFF"         # фон обычной тематической карточки
+CARD_BORDER = "DDE3EA"     # тонкая рамка карточки
+CARD_RISK_BG = "F4F7FA"    # фон карточки «Ключевые риски и проверки»
 TABLE_GROUP_BG = "EFF2F5"  # строка-подзаголовок в таблице характеристик
 KPI_TILE_BG = "F4F6F8"     # плитки KPI — светлый нейтральный фон
 BADGE_BG = "F7EFD9"        # плашки статуса у заголовка — светло-золотой фон
@@ -42,6 +45,7 @@ FS_COVER_ITEM = 12
 FS_OBJECT_TITLE = 16
 FS_OBJECT_SUBTITLE = 10
 FS_SECTION = 11
+FS_CARD_TITLE = 10.5     # заголовок внутри тематической карточки
 FS_TABLE = 9.5
 FS_BODY = 10
 FS_BULLET_MARK = 11
@@ -70,8 +74,21 @@ TABLE_WIDTH = 451.4      # ширина таблицы характеристи�
 TABLE_COL_LABEL = 145.0  # ширина колонки с подписью
 TABLE_COL_VALUE = 306.4
 CALLOUT_WIDTH = 451.9
+CARD_WIDTH = CONTENT_WIDTH          # карточка занимает всю ширину текстового блока
+CARD_PAD_X = 12.0                   # внутренние поля карточки, pt
+CARD_PAD_Y = 8.0
+CARD_GAP = 6.0                      # зазор между карточками, pt
+CARD_INNER_WIDTH = CARD_WIDTH - 2 * CARD_PAD_X  # доступная ширина внутри карточки
+
+# Варианты карточек: цвет фона, тонкой рамки и акцентной полосы слева
+CARD_VARIANTS = {
+    "plain": {"bg": CARD_BG, "border": CARD_BORDER, "accent": GOLD},
+    "city": {"bg": CALLOUT_BG, "border": GOLD, "accent": GOLD},
+    "risk": {"bg": CARD_RISK_BG, "border": CARD_BORDER, "accent": NAVY},
+}
 BULLET_INDENT = 24.0     # отступ текста маркированного списка
-BULLET_HANGING = 12.0    # выступ маркера
+BULLET_HANGING = 12.0
+BULLET_GAP = 2.5         # отбивка между пунктами списка, pt    # выступ маркера
 SUMMARY_COL_LABEL = 110.0  # колонка показателя в сводной таблице
 
 # --- Плашки статуса --------------------------------------------------------
@@ -86,6 +103,8 @@ RULE_GOLD_SZ = 16        # ~2.0 pt — линейки на обложке и н�
 RULE_NAVY_SZ = 8         # ~1.0 pt — подчёркивание заголовков разделов
 BORDER_HAIRLINE_SZ = 2   # ~0.25 pt — линии таблицы
 BORDER_CALLOUT_SZ = 4    # ~0.5 pt — рамка врезки
+BORDER_CARD_SZ = 4       # ~0.5 pt — рамка карточки
+BORDER_CARD_ACCENT_SZ = 18  # ~2.25 pt — акцентная полоса слева
 KPI_GAP_SZ = 12          # ~1.5 pt — зазор между плитками KPI цветом страницы
 
 # Разрядка заголовков (в 1/20 pt, единицы w:spacing)
