@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import os
 import tempfile
+from functools import lru_cache
 from pathlib import Path
 
 from docx import Document
@@ -15,7 +16,7 @@ from docx.opc.constants import RELATIONSHIP_TYPE as RT
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
-from PIL import Image
+from PIL import Image, ImageFont
 
 from . import style as S
 
@@ -124,6 +125,11 @@ def cell_shading(cell, color: str) -> None:
     )
 
 
+def cell_no_wrap(cell) -> None:
+    """Запрещает перенос строки внутри ячейки (плашки статуса — всегда в одну строку)."""
+    _insert_ordered(cell._tc.get_or_add_tcPr(), _el("noWrap", val="1"))
+
+
 def cell_margins(cell, top=0, bottom=0, left=0, right=0) -> None:
     """Внутренние поля ячейки в pt."""
     margins = _el("tcMar")
@@ -155,7 +161,63 @@ def row_repeat_header(row) -> None:
 
 
 def keep_with_next(paragraph) -> None:
+    if _has_keep_next(paragraph._p):
+        return
     _insert_ordered(paragraph._p.get_or_add_pPr(), _el("keepNext", val="1"))
+
+
+def keep_lines_together(paragraph) -> None:
+    """Запрещает разрывать сам абзац между страницами (w:keepLines)."""
+    pPr = paragraph._p.get_or_add_pPr()
+    if pPr.find(qn("w:keepLines")) is None:
+        _insert_ordered(pPr, _el("keepLines", val="1"))
+
+
+def _has_keep_next(p_element) -> bool:
+    pPr = p_element.find(qn("w:pPr"))
+    if pPr is None:
+        return False
+    node = pPr.find(qn("w:keepNext"))
+    return node is not None and node.get(qn("w:val")) not in ("0", "false")
+
+
+def _keep_next_streak(p_element) -> int:
+    """Сколько абзацев подряд непосредственно перед данным помечены keepNext.
+
+    По этому счётчику список понимает, что стоит сразу за заголовком раздела
+    (streak == 1), и удерживает при заголовке ровно первый свой пункт: заголовок
+    держит первый пункт, первый пункт — второй, дальше цепочка обрывается.
+    """
+    count = 0
+    node = p_element.getprevious()
+    while node is not None and node.tag == qn("w:p") and _has_keep_next(node):
+        count += 1
+        node = node.getprevious()
+    return count
+
+
+_MEASURE_SCALE = 10  # меряем на десятикратном кегле — точность до 0.1 pt
+
+
+@lru_cache(maxsize=16)
+def _measure_font(size_pt: float, bold: bool):
+    """Файл шрифта для замера ширины строки; None — если ничего не нашлось."""
+    names = S.FONT_FILES_BOLD if bold else S.FONT_FILES_REGULAR
+    for name in names:
+        try:
+            return ImageFont.truetype(name, round(size_pt * _MEASURE_SCALE))
+        except OSError:
+            continue
+    log.warning("шрифт для замера не найден (%s), ширина считается оценкой", names[0])
+    return None
+
+
+def text_width_pt(text: str, size_pt: float, *, bold: bool = False) -> float:
+    """Ширина строки в пунктах, измеренная по реальным метрикам шрифта."""
+    font = _measure_font(size_pt, bold)
+    if font is None:  # запасной вариант: грубая оценка по средней ширине символа
+        return len(text) * S.BADGE_CHAR_W * size_pt / S.FS_BADGE
+    return font.getlength(text) / _MEASURE_SCALE
 
 
 def column_widths(table, widths: list[float]) -> None:
@@ -220,11 +282,18 @@ def gold_rule(doc, *, before=0, after=6, size=S.RULE_GOLD_SZ):
 
 
 def section_heading(doc, text: str):
+    """Заголовок раздела с линейкой.
+
+    Заголовок держит следующий абзац (keepNext), а первый пункт списка держит
+    второй — см. bullet(): в итоге заголовок не отрывается от первых двух
+    элементов списка и не остаётся один внизу страницы.
+    """
     paragraph = add_paragraph(doc, before=16, after=8)
     run = add_run(paragraph, text.upper(), size=S.FS_SECTION, color=S.NAVY, bold=True)
     run_tracking(run, S.TRACKING_SECTION)
     paragraph_border(paragraph, "bottom", S.NAVY, S.RULE_NAVY_SZ, space=4)
     keep_with_next(paragraph)
+    keep_lines_together(paragraph)
     return paragraph
 
 
@@ -235,8 +304,12 @@ def body_paragraph(doc, text: str, *, justify=True, after=6):
     return paragraph
 
 
-def bullet(doc, item: str | dict):
-    """Пункт списка: строка либо {'lead': 'Почва', 'text': '…'} — lead жирным."""
+def bullet(doc, item: str | dict, *, size: float = S.FS_BODY, keep_next: bool | None = None):
+    """Пункт списка: строка либо {'lead': 'Почва', 'text': '…'} — lead жирным.
+
+    keep_next=None — решать самому: пункт, стоящий сразу за заголовком раздела,
+    прижимается к нему, чтобы заголовок не отрывался от первых двух пунктов.
+    """
     paragraph = add_paragraph(doc, after=3)
     fmt = paragraph.paragraph_format
     fmt.left_indent = Pt(S.BULLET_INDENT)
@@ -244,14 +317,22 @@ def bullet(doc, item: str | dict):
     tabs = _el("tabs")
     tabs.append(_el("tab", val="left", pos=int(S.BULLET_INDENT * 20)))
     _insert_ordered(paragraph._p.get_or_add_pPr(), tabs)
-    add_run(paragraph, "•", size=S.FS_BULLET_MARK, color=S.GOLD)
-    add_run(paragraph, "\t", size=S.FS_BODY, color=S.BODY)
+    mark_size = size + (S.FS_BULLET_MARK - S.FS_BODY)
+    add_run(paragraph, "•", size=mark_size, color=S.GOLD)
+    add_run(paragraph, "\t", size=size, color=S.BODY)
     if isinstance(item, dict):
-        add_run(paragraph, item.get("lead", ""), size=S.FS_BODY, color=S.NAVY, bold=True)
-        add_run(paragraph, " — ", size=S.FS_BODY, color=S.BODY)
-        add_run(paragraph, item.get("text", ""), size=S.FS_BODY, color=S.BODY)
+        add_run(paragraph, item.get("lead", ""), size=size, color=S.NAVY, bold=True)
+        add_run(paragraph, " — ", size=size, color=S.BODY)
+        add_run(paragraph, item.get("text", ""), size=size, color=S.BODY)
     else:
-        add_run(paragraph, item, size=S.FS_BODY, color=S.BODY)
+        add_run(paragraph, item, size=size, color=S.BODY)
+
+    keep_lines_together(paragraph)  # сам пункт по страницам не разрывается
+    if keep_next is None:
+        # ровно один keepNext перед нами — это заголовок раздела, держимся за него
+        keep_next = _keep_next_streak(paragraph._p) == 1
+    if keep_next:
+        keep_with_next(paragraph)
     return paragraph
 
 
@@ -259,12 +340,14 @@ def badges_paragraph(doc, items: list[str]):
     """Плашки статуса у заголовка: светло-золотые подложки, прижатые влево."""
     if not items:
         return None
-    # ширина плашки — по длине текста; между плашками узкие пустые ячейки
+    # Ширина плашки = измеренная ширина строки плюс фиксированные поля, поэтому
+    # внутренние отступы у всех плашек одинаковы и не «плавают» от длины текста.
     cells: list[tuple[str | None, float]] = []
     for index, text in enumerate(items):
         if index:
             cells.append((None, S.BADGE_GAP))
-        cells.append((text, len(text) * S.BADGE_CHAR_W + S.BADGE_PADDING))
+        width = text_width_pt(text, S.FS_BADGE, bold=True)
+        cells.append((text, width + 2 * S.BADGE_PAD_X + S.BADGE_SAFETY))
     used = sum(width for _, width in cells)
     cells.append((None, max(S.CONTENT_WIDTH - used, S.BADGE_GAP)))  # добор до ширины текста
 
@@ -283,7 +366,14 @@ def badges_paragraph(doc, items: list[str]):
             cell_margins(cell)
             continue
         cell_shading(cell, S.BADGE_BG)
-        cell_margins(cell, top=3, bottom=3, left=7, right=7)
+        cell_margins(
+            cell,
+            top=S.BADGE_PAD_Y,
+            bottom=S.BADGE_PAD_Y,
+            left=S.BADGE_PAD_X,
+            right=S.BADGE_PAD_X,
+        )
+        cell_no_wrap(cell)
         paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
         add_run(paragraph, text, size=S.FS_BADGE, color=S.NAVY, bold=True)
     return table
@@ -319,7 +409,12 @@ def kpi_tiles(doc, tiles: list[tuple[str, str]]):
 
 
 def _spec_group_row(row, title: str) -> None:
-    """Строка-подзаголовок таблицы характеристик на всю её ширину."""
+    """Строка-подзаголовок таблицы характеристик на всю её ширину.
+
+    keepNext у абзацев ячейки не даёт строке-группе («ФИНАНСЫ», «ОБЪЕКТ»)
+    остаться последней на странице: она уходит на следующую вместе с первой
+    строкой своей группы.
+    """
     cell = row.cells[0].merge(row.cells[1])
     cell.width = Pt(S.TABLE_WIDTH)
     cell_shading(cell, S.TABLE_GROUP_BG)
@@ -328,6 +423,9 @@ def _spec_group_row(row, title: str) -> None:
     paragraph.paragraph_format.space_after = Pt(0)
     run = add_run(paragraph, title.upper(), size=S.FS_TABLE_GROUP, color=S.NAVY, bold=True)
     run_tracking(run, S.TRACKING_TABLE_GROUP)
+    for cell_paragraph in cell.paragraphs:
+        keep_with_next(cell_paragraph)
+        keep_lines_together(cell_paragraph)
 
 
 def spec_table(doc, rows: list):
@@ -346,9 +444,12 @@ def spec_table(doc, rows: list):
         },
     )
     column_widths(table, [S.TABLE_COL_LABEL, S.TABLE_COL_VALUE])
+    since_group = None  # сколько обычных строк прошло после строки-группы
     for row, item in zip(table.rows, rows):
+        row_cant_split(row)  # строка целиком остаётся на одной странице
         if isinstance(item, dict):
             _spec_group_row(row, item.get("group", ""))
+            since_group = 0
             continue
 
         label, value = item
@@ -370,6 +471,14 @@ def spec_table(doc, rows: list):
             hyperlink(paragraph, text, text)
         else:
             add_run(paragraph, text, size=S.FS_TABLE, color=S.BODY)
+
+        # группа тянет за собой две первые строки: иначе подзаголовок остаётся
+        # внизу полосы с одной-двумя строками, а остальные уезжают на следующую
+        if since_group is not None and since_group < S.TABLE_GROUP_KEEP_ROWS:
+            for cell in (label_cell, value_cell):
+                for cell_paragraph in cell.paragraphs:
+                    keep_with_next(cell_paragraph)
+            since_group += 1
     return table
 
 
@@ -423,7 +532,7 @@ def summary_table(doc, headers: list[str], rows: list[list[str]]):
     return table
 
 
-def callout(doc, title: str, paragraphs: list[str], marker: str = "\U0001F4CD"):
+def callout(doc, title: str, paragraphs: list[str], marker: str = S.CALLOUT_MARKER):
     table = doc.add_table(rows=1, cols=1)
     table.autofit = False
     table_borders(
@@ -440,7 +549,8 @@ def callout(doc, title: str, paragraphs: list[str], marker: str = "\U0001F4CD"):
 
     head = cell.paragraphs[0]
     head.paragraph_format.space_after = Pt(6)
-    add_run(head, f"{marker}  ", size=S.FS_SECTION, color=S.BODY)
+    # маркер — знак основного шрифта, кегль заголовка врезки, цвет золотой
+    add_run(head, f"{marker}  ", size=S.FS_SECTION, color=S.GOLD, bold=True)
     add_run(head, title, size=S.FS_SECTION, color=S.NAVY, bold=True)
 
     for index, text in enumerate(paragraphs):
@@ -462,9 +572,28 @@ def _crop_to_temp(img: Image.Image, box: tuple[int, int, int, int]) -> Path:
     return path
 
 
+def _picture_paragraph(doc, before: float = 0):
+    """Абзац под снимок: по центру текстовой колонки, без отступов и интерлиньяжа.
+
+    Отступы обнуляются явно: любой унаследованный left_indent сдвинул бы центр
+    картинки относительно центра текстовой колонки. Интерлиньяж 1.0 нужен, чтобы
+    высота строки со снимком равнялась высоте самого снимка — на этом построен
+    расчёт количества снимков на странице.
+    """
+    paragraph = add_paragraph(
+        doc, before=before, after=0, align=WD_ALIGN_PARAGRAPH.CENTER, line=1
+    )
+    fmt = paragraph.paragraph_format
+    fmt.left_indent = Pt(0)
+    fmt.right_indent = Pt(0)
+    fmt.first_line_indent = Pt(0)
+    return paragraph
+
+
 def hero_picture(doc, path: Path, *, width_cm=S.PHOTO_WIDTH_CM, max_height_cm=S.HERO_MAX_HEIGHT_CM):
     """Фото фасада под заголовком: во всю ширину текста, высокий кадр режется по центру."""
     temp: Path | None = None
+    width_cm = min(width_cm, S.PHOTO_WIDTH_CM)
     with Image.open(path) as img:
         width_px, height_px = img.size
         ratio = width_cm / max_height_cm
@@ -477,7 +606,7 @@ def hero_picture(doc, path: Path, *, width_cm=S.PHOTO_WIDTH_CM, max_height_cm=S.
         else:
             height_cm = width_cm * height_px / width_px
 
-    paragraph = add_paragraph(doc, after=0, align=WD_ALIGN_PARAGRAPH.CENTER)
+    paragraph = _picture_paragraph(doc)
     try:
         source = temp if temp is not None else Path(path)
         paragraph.add_run().add_picture(str(source), width=Cm(width_cm), height=Cm(height_cm))
@@ -494,21 +623,78 @@ def picture(
     *,
     max_width_cm=S.PHOTO_WIDTH_CM,
     max_height_cm=S.PHOTO_MAX_HEIGHT_CM,
+    before: float = 0,
 ):
     with Image.open(path) as img:
         width_px, height_px = img.size
-    width_cm = max_width_cm
+    # шире текстовой колонки (с поправкой на клемп LibreOffice) не растём:
+    # такой снимок перестал бы центрироваться и вылез бы за правое поле
+    width_cm = min(max_width_cm, S.PHOTO_WIDTH_CM)
     height_cm = width_cm * height_px / width_px
     if height_cm > max_height_cm:
         height_cm = max_height_cm
         width_cm = height_cm * width_px / height_px
-    paragraph = add_paragraph(doc, after=0, align=WD_ALIGN_PARAGRAPH.CENTER)
+    paragraph = _picture_paragraph(doc, before=before)
     paragraph.add_run().add_picture(str(path), width=Cm(width_cm), height=Cm(height_cm))
     if caption:
         keep_with_next(paragraph)
         signature = add_paragraph(doc, before=3, after=0, align=WD_ALIGN_PARAGRAPH.CENTER)
         add_run(signature, caption, size=S.FS_CAPTION, color=S.MUTED, italic=True)
     return paragraph
+
+
+def _photo_groups(count: int, per_page: int = S.PHOTOS_PER_PAGE) -> list[int]:
+    """Разбивка снимков по страницам.
+
+    Одиночный снимок на последней странице (нечётное число фотографий) прижимает
+    к ней ~400 pt пустоты, поэтому он уходит к предыдущей группе: последняя
+    страница получает три снимка меньшей высоты.
+    """
+    if count <= 0:
+        return []
+    groups = [per_page] * (count // per_page)
+    if count % per_page:
+        groups.append(count % per_page)
+    if len(groups) > 1 and groups[-1] == 1:
+        orphan = groups.pop()
+        groups[-1] += orphan
+    return groups
+
+
+def _photo_max_height_cm(per_page: int) -> float:
+    """Предельная высота снимка, при которой per_page снимков заполняют страницу.
+
+    Из высоты текстового блока вычитаются подписи, отбивки между снимками и
+    запас на подписи в две строки; остаток делится поровну.
+    """
+    if per_page <= S.PHOTOS_PER_PAGE:
+        free = S.CONTENT_HEIGHT_CM - S.PHOTO_PAGE_SLACK_CM
+        free -= S.PHOTOS_PER_PAGE * S.PHOTO_CAPTION_BLOCK_CM
+        free -= (S.PHOTOS_PER_PAGE - 1) * S.PHOTO_GAP_PT / S.PT_PER_CM
+        return min(S.PHOTO_MAX_HEIGHT_CM, free / S.PHOTOS_PER_PAGE)
+    free = S.CONTENT_HEIGHT_CM - S.PHOTO_PAGE_SLACK_CM
+    free -= per_page * S.PHOTO_CAPTION_BLOCK_CM
+    free -= (per_page - 1) * S.PHOTO_GAP_PT / S.PT_PER_CM
+    return max(min(S.PHOTO_MAX_HEIGHT_CM, free / per_page), S.PHOTO_MIN_HEIGHT_CM)
+
+
+def photo_pages(doc, images: list[Path], captions: list[str]) -> None:
+    """Фотографии объекта: страницы заполняются целиком, подписи — под каждым снимком."""
+    index = 0
+    for page_index, per_page in enumerate(_photo_groups(len(images))):
+        if page_index:
+            page_break(doc)
+        max_height_cm = _photo_max_height_cm(per_page)
+        for position in range(per_page):
+            caption = captions[index] if index < len(captions) else None
+            picture(
+                doc,
+                images[index],
+                caption,
+                max_height_cm=max_height_cm,
+                before=0 if position == 0 else S.PHOTO_GAP_PT,
+            )
+            index += 1
 
 
 def page_break(doc):
@@ -558,15 +744,20 @@ def _footer_line(section) -> None:
     page_number_field(paragraph, size=S.FS_HDRFTR, color=S.MUTED)
 
 
-def object_section(doc, obj: dict):
-    """Новая секция под объект: с начала страницы и со своими колонтитулами."""
+def new_section(doc, header_left: str, header_right: str = ""):
+    """Новая секция с начала страницы и со своими колонтитулами: шапка и номер."""
     section = doc.add_section(WD_SECTION.NEW_PAGE)
     section.header_distance = Cm(S.HEADER_DISTANCE)
     section.footer_distance = Cm(S.FOOTER_DISTANCE)
     _unlink_hdrftr(section)
-    _header_line(section, obj.get("title", ""), obj.get("price_short", ""))
+    _header_line(section, header_left, header_right)
     _footer_line(section)
     return section
+
+
+def object_section(doc, obj: dict):
+    """Секция объекта: адрес слева, цена справа."""
+    return new_section(doc, obj.get("title", ""), obj.get("price_short", ""))
 
 
 # --------------------------------------------------------------------------
@@ -575,8 +766,8 @@ def object_section(doc, obj: dict):
 def setup_document() -> Document:
     doc = Document()
     section = doc.sections[0]
-    section.page_width = Cm(21.0)
-    section.page_height = Cm(29.7)
+    section.page_width = Cm(S.PAGE_WIDTH_CM)
+    section.page_height = Cm(S.PAGE_HEIGHT_CM)
     section.top_margin = Cm(S.PAGE_MARGIN_TOP)
     section.bottom_margin = Cm(S.PAGE_MARGIN_BOTTOM)
     section.left_margin = Cm(S.PAGE_MARGIN_LEFT)
@@ -666,12 +857,123 @@ def cover_page(doc, report: dict) -> None:
 
 
 def summary_page(doc, summary: dict) -> None:
-    """Сводная страница сравнения — сразу после обложки, без колонтитулов."""
-    section_heading(doc, "Сравнение объектов")
+    """Сводная страница сравнения — сразу после обложки.
+
+    Секцию с шапкой и номером страницы заводит build(): содержательных страниц
+    без колонтитула в отчёте быть не должно, без них остаётся только обложка.
+    """
+    section_heading(doc, summary.get("heading") or S.SUMMARY_HEADING)
     summary_table(doc, summary.get("headers", []), summary.get("rows", []))
     if summary.get("note"):
         paragraph = add_paragraph(doc, before=8, after=0)
         add_run(paragraph, summary["note"], size=S.FS_CAPTION, color=S.MUTED, italic=True)
+
+
+def _closing_blocks(data: dict) -> list[dict]:
+    """Блоки закрывающей страницы, приведённые к виду {'title': …, 'items': […]}.
+
+    Основной формат — «blocks»/«title»/«items». Дополнительно принимается запись
+    блоками разделов объекта («sections»/«heading»/«bullets»), чтобы страница
+    собиралась независимо от того, каким из двух словарей её описали.
+    """
+    blocks = data.get("blocks") or data.get("sections") or []
+    return [
+        {
+            "title": block.get("title") or block.get("heading") or "",
+            "items": block.get("items") or block.get("bullets") or [],
+            "layout": block.get("layout", ""),
+            "break_before": block.get("break_before", False),
+        }
+        for block in blocks
+        if isinstance(block, dict)
+    ]
+
+
+def _closing_item(doc, item, *, keep_next: bool = False):
+    """Пункт закрывающей страницы; адрес в конце текста становится ссылкой."""
+    text = item.get("text", "") if isinstance(item, dict) else str(item)
+    head, sep, url = text.partition("https://")
+    if not sep:
+        return bullet(doc, item, size=S.FS_CLOSING_ITEM, keep_next=keep_next)
+
+    plain = dict(item, text=head) if isinstance(item, dict) else head
+    paragraph = bullet(doc, plain, size=S.FS_CLOSING_ITEM, keep_next=keep_next)
+    hyperlink(paragraph, sep + url, sep + url, size=S.FS_CLOSING_ITEM)
+    return paragraph
+
+
+def _closing_columns(doc, items: list) -> None:
+    """Компактный двухколоночный список — для глоссария, чтобы не плодить страницы."""
+    if not items:
+        return
+    half = (len(items) + 1) // 2
+    columns = [items[:half], items[half:]]
+    table = doc.add_table(rows=half, cols=2)
+    table.alignment = WD_TABLE_ALIGNMENT.LEFT
+    table.autofit = False
+    table_borders(table, {})
+    width = S.CONTENT_WIDTH / 2
+    column_widths(table, [width, width])
+    for index in range(half):
+        for column, cell in zip(columns, table.rows[index].cells):
+            cell.width = Pt(width)
+            cell_margins(cell, top=1, bottom=1, left=0, right=8)
+            paragraph = cell.paragraphs[0]
+            paragraph.paragraph_format.space_after = Pt(2)
+            if index >= len(column):
+                continue
+            item = column[index]
+            if isinstance(item, dict):
+                add_run(
+                    paragraph, item.get("lead", ""),
+                    size=S.FS_CLOSING_ITEM, color=S.NAVY, bold=True,
+                )
+                add_run(paragraph, " — ", size=S.FS_CLOSING_ITEM, color=S.BODY)
+                add_run(paragraph, item.get("text", ""), size=S.FS_CLOSING_ITEM, color=S.BODY)
+            else:
+                add_run(paragraph, str(item), size=S.FS_CLOSING_ITEM, color=S.BODY)
+
+
+def closing_page(doc, data: dict) -> None:
+    """Закрывающая страница: заголовок с линейкой, блоки подзаголовков и пунктов.
+
+    data: {'heading': '…',
+           'blocks': [{'title': '…', 'items': ['…', {'lead': '…', 'text': '…'}]}],
+           'note': '…'}
+    """
+    section_heading(doc, data.get("heading") or S.CLOSING_HEADING)
+
+    for block in _closing_blocks(data):
+        items = block["items"]
+        if block.get("title"):
+            paragraph = add_paragraph(doc, before=12, after=5)
+            add_run(
+                paragraph,
+                block["title"],
+                size=S.FS_CLOSING_TITLE,
+                color=S.NAVY,
+                bold=True,
+            )
+            keep_with_next(paragraph)
+            keep_lines_together(paragraph)
+        if block.get("break_before"):
+            page_break(doc)
+        if block.get("layout") == "columns":
+            _closing_columns(doc, items)
+            continue
+        for index, item in enumerate(items):
+            # первый пункт держится за подзаголовок блока, второй — за первый
+            _closing_item(
+                doc,
+                item,
+                keep_next=index == 0 and len(items) > 1,
+            )
+
+    if data.get("note"):
+        paragraph = add_paragraph(
+            doc, before=14, after=0, align=WD_ALIGN_PARAGRAPH.JUSTIFY
+        )
+        add_run(paragraph, data["note"], size=S.FS_CAPTION, color=S.MUTED, italic=True)
 
 
 def object_pages(doc, obj: dict, images: list[Path], extras: dict | None = None) -> None:
@@ -729,14 +1031,7 @@ def object_pages(doc, obj: dict, images: list[Path], extras: dict | None = None)
 
     if images:
         page_break(doc)
-        for index, path in enumerate(images):
-            picture(doc, path, captions[index] if index < len(captions) else None)
-            if index == len(images) - 1:
-                break
-            if (index + 1) % S.PHOTOS_PER_PAGE == 0:
-                page_break(doc)
-            else:
-                add_paragraph(doc, after=0, before=14)
+        photo_pages(doc, images, captions)
 
 
 def _unpack(item: tuple) -> tuple[dict, list[Path], dict]:
@@ -764,13 +1059,19 @@ def build(report: dict, objects: list[tuple], dest: Path) -> Path:
 
     summary = _summary(report, objects)
     if summary:
-        page_break(doc)
+        # своя секция: сводная страница получает шапку и номер, как у объектов
+        new_section(doc, summary.get("heading") or S.SUMMARY_HEADING)
         summary_page(doc, summary)
 
     for item in objects:
         obj, images, extras = _unpack(item)
         object_section(doc, obj)  # секция начинает новую страницу сама
         object_pages(doc, obj, images, extras)
+
+    closing = report.get("closing")
+    if closing:
+        new_section(doc, closing.get("heading") or S.CLOSING_HEADING)
+        closing_page(doc, closing)
 
     dest.parent.mkdir(parents=True, exist_ok=True)
     doc.save(str(dest))
