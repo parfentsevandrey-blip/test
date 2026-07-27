@@ -1,0 +1,13 @@
+{
+  "title": "ОБЪЕКТЫ НЕДВИЖИМОСТИ",
+  "subtitle": "Нидерланды",
+  "intro": "В подборку входят:",
+  "footnote": "Данные по объектам приведены по публикациям funda in business по состоянию на 27.07.2026",
+  "filename": "Объекты недвижимости — Нидерланды 27.07.26",
+  "output_dir": "output",
+  "objects": [
+    { "file": "objects/steenovenweg-11-13-montfoort.json" },
+    { "file": "objects/decimalaan-3-utrecht.json" },
+    { "file": "objects/archimedesbaan-11-nieuwegein.json" }
+  ]
+}
