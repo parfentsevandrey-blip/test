@@ -115,7 +115,7 @@ function buildTable(rows) {
 
 // ── карты ──────────────────────────────────────────────────────────────
 function mapBlock(line) {
-  const imgs = [...line.matchAll(/\[(Схема|Спутник)\]\((maps\/[^)\s]+)\)/g)];
+  const imgs = [...line.matchAll(/\[(Схема)\]\((maps\/[^)\s]+)\)/g)];
   const yandex = line.match(/\[Яндекс\.Карты\]\((https?:\/\/[^)\s]+)\)/);
   const out = [];
   for (const [, label, rel] of imgs) {
@@ -128,14 +128,14 @@ function mapBlock(line) {
       children: [new ImageRun({
         type: ext,
         data: fs.readFileSync(file),
-        transformation: { width: 604, height: 436 }, // 16 см по ширине, пропорции 1100×794
+        transformation: { width: 567, height: 327 }, // 15 см по ширине, пропорции 1100×634
       })],
     }));
     out.push(new Paragraph({
       alignment: AlignmentType.CENTER,
       spacing: { after: 160 },
       children: [new TextRun({
-        text: label === 'Схема' ? 'Схема · Яндекс.Карты' : 'Спутник · Яндекс.Карты',
+        text: 'Схема расположения · Яндекс.Карты',
         font: BODY_FONT, size: 17, color: MUTED, italics: true,
       })],
     }));
@@ -153,6 +153,62 @@ function mapBlock(line) {
     }));
   }
   return out;
+}
+
+
+// ── рендеры: одиночный во всю ширину, несколько — в две колонки ────────
+function figure(rel, caption, widthPx) {
+  const file = path.join(ROOT, rel);
+  const meta = require('/opt/node22/lib/node_modules/image-size');
+  let ratio = 0.6;
+  try {
+    const d = (meta.imageSize || meta.default || meta)(fs.readFileSync(file));
+    ratio = d.height / d.width;
+  } catch (e) { /* пропорции по умолчанию */ }
+  return [
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 80, after: 30 },
+      keepNext: true,
+      children: [new ImageRun({
+        type: rel.endsWith('.png') ? 'png' : 'jpg',
+        data: fs.readFileSync(file),
+        transformation: { width: widthPx, height: Math.round(widthPx * ratio) },
+      })],
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 140 },
+      children: [new TextRun({ text: caption, font: BODY_FONT, size: 16, color: MUTED, italics: true })],
+    }),
+  ];
+}
+
+function renderGrid(items) {
+  if (items.length === 1) return figure(items[0].rel, items[0].cap, 492);
+  const colW = Math.floor(CONTENT_W / 2);
+  const rows = [];
+  for (let i = 0; i < items.length; i += 2) {
+    const pair = items.slice(i, i + 2);
+    rows.push(new TableRow({
+      children: [0, 1].map(k => new TableCell({
+        width: { size: colW, type: WidthType.DXA },
+        margins: { top: 40, bottom: 40, left: 60, right: 60 },
+        borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE },
+                   left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
+        children: pair[k] ? figure(pair[k].rel, pair[k].cap, 268)
+                          : [new Paragraph({ text: '' })],
+      })),
+    }));
+  }
+  return [new Table({
+    columnWidths: [colW, CONTENT_W - colW],
+    width: { size: CONTENT_W, type: WidthType.DXA },
+    borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE },
+               left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE },
+               insideHorizontal: { style: BorderStyle.NONE }, insideVertical: { style: BorderStyle.NONE } },
+    rows,
+  }), new Paragraph({ text: '', spacing: { after: 120 } })];
 }
 
 // ── заголовки ──────────────────────────────────────────────────────────
@@ -181,6 +237,7 @@ const h2 = (text) => new Paragraph({
   heading: HeadingLevel.HEADING_2,
   children: [new TextRun({ text: stripEmoji(text), bold: true, font: HEAD_FONT, size: 23, color: ACCENT })],
   spacing: { before: 260, after: 90 },
+  keepNext: true,
 });
 
 // ── разбор markdown ────────────────────────────────────────────────────
@@ -239,6 +296,24 @@ function parse(md) {
       continue;
     }
 
+    // группа рендеров: ![alt](renders/..) + курсивная подпись
+    if (/^!\[[^\]]*\]\(renders\//.test(line)) {
+      const items = [];
+      while (i < lines.length) {
+        const m = lines[i].match(/^!\[([^\]]*)\]\((renders\/[^)\s]+)\)\s*$/);
+        if (!m) { if (lines[i].trim() === '') { i++; continue; } break; }
+        let cap = m[1];
+        if (i + 1 < lines.length && /^\*[^*]+\*\s*$/.test(lines[i + 1])) {
+          cap = lines[i + 1].trim().replace(/^\*|\*$/g, '');
+          i++;
+        }
+        items.push({ rel: m[2], cap });
+        i++;
+      }
+      body.push(...renderGrid(items));
+      continue;
+    }
+
     // маркированный список
     if (/^(\s*)-\s+/.test(line)) {
       const indent = line.match(/^(\s*)/)[1].length;
@@ -248,7 +323,7 @@ function parse(md) {
         text += ' ' + lines[i + 1].trim();
         i++;
       }
-      if (/\[Схема\]|\[Спутник\]/.test(text)) body.push(...mapBlock(text));
+      if (/\[Схема\]/.test(text)) body.push(...mapBlock(text));
       else body.push(bullet(stripEmoji(text), indent >= 2 ? 1 : 0));
       i++;
       continue;

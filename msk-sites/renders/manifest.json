@@ -1,0 +1,93 @@
+{
+ "01-krasny-oktyabr": [
+  {
+   "file": "01-krasny-oktyabr-1.jpg",
+   "caption": "Клубные дома на Берсеневской набережной",
+   "credit": "МСК1, 27.07.2026",
+   "size": [
+    656,
+    369
+   ]
+  },
+  {
+   "file": "01-krasny-oktyabr-2.jpg",
+   "caption": "Квартал «Красный Октябрь» с высоты — вид на стрелку Балчуга",
+   "credit": "МСК1, 27.07.2026",
+   "size": [
+    656,
+    369
+   ]
+  },
+  {
+   "file": "01-krasny-oktyabr-3.jpg",
+   "caption": "Застройка вдоль набережной у памятника Петру I",
+   "credit": "МСК1, 27.07.2026",
+   "size": [
+    656,
+    369
+   ]
+  }
+ ],
+ "04-donskoy": [
+  {
+   "file": "04-donskoy-1.jpg",
+   "caption": "Комплекс The Five в вечерней панораме юга Москвы",
+   "credit": "thefive.ru",
+   "size": [
+    1400,
+    817
+   ]
+  },
+  {
+   "file": "04-donskoy-2.jpg",
+   "caption": "Башни The Five / FIVE TOWERS",
+   "credit": "thefive.ru",
+   "size": [
+    1400,
+    745
+   ]
+  }
+ ],
+ "05-city2": [
+  {
+   "file": "05-city2-1.jpg",
+   "caption": "Башни «Сити-2» на месте квартала «Камушки»",
+   "credit": "Москвич Mag",
+   "size": [
+    1162,
+    610
+   ]
+  }
+ ],
+ "11-sydney-city": [
+  {
+   "file": "11-sydney-city-1.jpg",
+   "caption": "Sydney City ГК ФСК на соседних участках — контекст застройки квартала",
+   "credit": "fsk.ru",
+   "size": [
+    1200,
+    630
+   ]
+  }
+ ],
+ "14-levshinsky": [
+  {
+   "file": "14-levshinsky-1.jpg",
+   "caption": "Фасадное решение клубного дома, бюро «Меганом»",
+   "credit": "meganom.team",
+   "size": [
+    827,
+    509
+   ]
+  },
+  {
+   "file": "14-levshinsky-2.jpg",
+   "caption": "Новый объём и исторические особняки под реконструкцию",
+   "credit": "urbanus.ru / PSN Group",
+   "size": [
+    547,
+    400
+   ]
+  }
+ ]
+}
