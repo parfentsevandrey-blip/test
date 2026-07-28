@@ -10,6 +10,7 @@ const LR = D.LineRuleType.AUTO;
 
 const T  = JSON.parse(fs.readFileSync(path.join(__dirname, 'ph_tables.json'), 'utf8'));
 const CO = JSON.parse(fs.readFileSync(path.join(__dirname, 'ph_comp.json'), 'utf8'));
+const CM = JSON.parse(fs.readFileSync(path.join(__dirname, 'ph_cmp.json'), 'utf8'));
 const IMG = (n) => fs.readFileSync(path.join(__dirname, 'ph_out', n));
 
 // ── palette ────────────────────────────────────────────────────────────────
