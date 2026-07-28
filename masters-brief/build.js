@@ -13,6 +13,7 @@ const C = JSON.parse(fs.readFileSync(path.join(__dirname, 'cmp_tables.json'), 'u
 const PR = JSON.parse(fs.readFileSync(path.join(__dirname, 'prim_tables.json'), 'utf8'));
 const EX = JSON.parse(fs.readFileSync(path.join(__dirname, 'ex_links.json'), 'utf8'));
 const PL = JSON.parse(fs.readFileSync(path.join(__dirname, 'plans.json'), 'utf8'));
+const RC = JSON.parse(fs.readFileSync(path.join(__dirname, 'ren_cards.json'), 'utf8'));
 const IMG = (n) => fs.readFileSync(path.join(__dirname, 'out', n));
 
 // ── palette ────────────────────────────────────────────────────────────────
@@ -260,6 +261,36 @@ function planBlock(pl, pxw, pxh) {
   });
 }
 
+function photoCards(cards, pxw, pxh) {
+  const W = [4819, 4819];
+  const cellOf = (c, left) => new TableCell({
+    width: { size: W[0], type: WidthType.DXA },
+    margins: { top: 0, bottom: 220, left: left ? 0 : 150, right: left ? 150 : 0 },
+    verticalAlign: VerticalAlign.TOP,
+    borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+    children: c ? [
+      p({ children: [new ImageRun({ data: IMG(c.img), type: 'jpg',
+                                    transformation: { width: pxw, height: pxh } })],
+          spacing: { after: 90 } }),
+      p({ children: [txt(`ЖК «${c.zhk}»`, { size: 19, bold: true, color: INK })],
+          spacing: { after: 50, line: 230, lineRule: LR } }),
+      p({ children: [txt(`${c.lot} · ${c.ren}`, { size: 16, color: MUTED })],
+          spacing: { after: 50, line: 230, lineRule: LR } }),
+      p({ children: [txt(c.price, { size: 19, bold: true, color: BRONZE }),
+                     txt(`   ${c.ppm}`, { size: 16, color: MUTED })],
+          spacing: { after: 50, line: 230, lineRule: LR } }),
+      p({ children: [new ExternalHyperlink({
+            children: [txt('Объявление →', { size: 15, color: '2C5FA8' })], link: c.url })],
+          spacing: { after: 0, line: 220, lineRule: LR } }),
+    ] : [p({ children: [txt('')] })],
+  });
+  const rows = [];
+  for (let i = 0; i < cards.length; i += 2) {
+    rows.push(new TableRow({ children: [cellOf(cards[i], true), cellOf(cards[i + 1], false)] }));
+  }
+  return new Table({ columnWidths: W, width: { size: CONTENT_W, type: WidthType.DXA }, rows });
+}
+
 const bullets = (items) => items.map((t) => p({
   children: [txt('—   ', { color: BRONZE, bold: true }), ...(Array.isArray(t) ? t : [txt(t)])],
   spacing: { after: 58, line: 252, lineRule: LR }, indent: { left: 170, hanging: 170, right: MEASURE },
@@ -396,6 +427,26 @@ const doc = new Document({
       spacer(200),
       note('Все изображения — визуализации застройщика (Capital Group). Итоговый облик объекта может отличаться от представленного.'),
 
+      // ─────────────── FLOOR PLANS ───────────────
+      h1('Планировочные варианты', { br: true }),
+      body('В проекте более 100 планировочных решений при площадях от 28 до 161 м². Ниже — три типовых варианта, по одному на каждую основную комнатность, с параметрами конкретных лотов из текущей экспозиции.', { after: 200 }),
+      planBlock(PL.plans[0], 286, 340),
+      spacer(180),
+      planBlock(PL.plans[1], 288, 240),
+
+      h2('Трёхкомнатные', { br: true }),
+      planBlock(PL.plans[2], 204, 380),
+      spacer(200),
+      h2('Экспозиция по типам'),
+      dataTable(
+        ['Тип квартиры', 'Площадь\nна плане, м²', 'Этаж', 'Секция', 'Цена лота,\nмлн ₽', 'Цена за\nм², ₽', 'Лотов\nв продаже', 'Площади в типе\nот — до, м²'],
+        PL.ptab,
+        [1620, 1220, 780, 1180, 1120, 1080, 1080, 1558],
+        { boldFirstCol: true },
+      ),
+      spacer(30),
+      note('Планировки — с официального сайта проекта Capital Group. Параметры лотов и цены — выгрузка Циан от 28.07.2026. Планировочные решения могут отличаться в зависимости от секции и этажа.'),
+
       // ─────────────── PRICES ───────────────
       h1('Цены и структура предложения', { br: true }),
       body([
@@ -504,6 +555,11 @@ const doc = new Document({
       spacer(40),
       note('Ограничения: выборки «Лиц» (12 лотов) и «Династии» (38) малы — оценки по ним индикативны. Расчёт ведётся по лотам с известным уровнем отделки.'),
 
+      h2('Какой ремонт продаётся на вторичном рынке', { br: true }),
+      body('Цифры выше показывают, сколько стоит метр готовой квартиры. Ниже — как эта готовность выглядит: реальные лоты с ремонтом, которые выставлены в соседних комплексах прямо сейчас.', { after: 190 }),
+      photoCards(RC, 300, 225),
+      note('Фотографии и параметры лотов — Яндекс Недвижимость, объявления актуальны на 28.07.2026. Уровень отделки указан продавцом. Показан один характерный лот на комплекс; это не самое дешёвое и не самое дорогое предложение в каждом ЖК.'),
+
       // ─────────────── PRIMARY MARKET ───────────────
       h1('Ценовое сравнение с первичным рынком', { br: true }),
       body('В радиусе полутора километров от МАСТЕРС строятся ещё два премиальных дома — «Муза» (Мангазея) и «Дом на Часовой» (Dar). Это прямые конкуренты: тот же класс, те же сроки, тот же покупатель.', { after: 130 }),
@@ -538,26 +594,6 @@ const doc = new Document({
         '«Дом на Часовой» дешевле и сдаётся на полтора года раньше (II кв. 2028), но это меньший проект с квартирами до 94 м² — верхние форматы МАСТЕРС там просто не с чем сравнивать.',
         'Бюджет входа сильно различается: 21,8 млн ₽ в «Доме на Часовой», 26,3 млн ₽ в МАСТЕРС и 43,7 млн ₽ в «Музе». По нижней границе МАСТЕРС ближе к «Дому на Часовой», по верхней (121,6 млн ₽) — к «Музе».',
       ]),
-
-      // ─────────────── FLOOR PLANS ───────────────
-      h1('Планировочные варианты', { br: true }),
-      body('В проекте более 100 планировочных решений при площадях от 28 до 161 м². Ниже — три типовых варианта, по одному на каждую основную комнатность, с параметрами конкретных лотов из текущей экспозиции.', { after: 200 }),
-      planBlock(PL.plans[0], 286, 340),
-      spacer(180),
-      planBlock(PL.plans[1], 288, 240),
-
-      h2('Трёхкомнатные', { br: true }),
-      planBlock(PL.plans[2], 204, 380),
-      spacer(200),
-      h2('Экспозиция по типам'),
-      dataTable(
-        ['Тип квартиры', 'Площадь\nна плане, м²', 'Этаж', 'Секция', 'Цена лота,\nмлн ₽', 'Цена за\nм², ₽', 'Лотов\nв продаже', 'Площади в типе\nот — до, м²'],
-        PL.ptab,
-        [1620, 1220, 780, 1180, 1120, 1080, 1080, 1558],
-        { boldFirstCol: true },
-      ),
-      spacer(30),
-      note('Планировки — с официального сайта проекта Capital Group. Параметры лотов и цены — выгрузка Циан от 28.07.2026. Планировочные решения могут отличаться в зависимости от секции и этажа.'),
 
       // ─────────────── WHAT THE SAME MONEY BUYS TODAY ───────────────
       h1('Что можно купить за те же деньги сегодня', { br: true }),

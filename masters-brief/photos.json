@@ -1,0 +1,78 @@
+{
+ "Прайм Парк": {
+  "oid": "5180127926973699495",
+  "urls": [
+   "https://avatars.mds.yandex.net/get-realty-offers/11556715/5088ca53-151a-4ac9-9496-4cef709cdb4e/large",
+   "https://avatars.mds.yandex.net/get-realty-offers/16408927/6b246822-b9e5-41a0-9498-6a620bc072f7/large",
+   "https://avatars.mds.yandex.net/get-realty-offers/12728172/988afeb4-ffd1-4103-b81d-d2744dd1ae77/large",
+   "https://avatars.mds.yandex.net/get-realty-offers/16146422/682922d8-9d04-4309-8e1d-d693c36d0085/large",
+   "https://avatars.mds.yandex.net/get-realty-offers/16293048/1828466a-f466-49f7-bc0f-68acada13d21/large",
+   "https://avatars.mds.yandex.net/get-realty-offers/18870748/11dc179f-b0ad-4a89-9861-5e6ff38f9bb1/large"
+  ],
+  "area": 64.8,
+  "price": 47800000,
+  "ren": "PRIME_RENOVATION",
+  "floor": 35,
+  "floors": 40,
+  "rooms": 2,
+  "year": 2022,
+  "url": "https://realty.yandex.ru/offer/5180127926973699495/"
+ },
+ "Династия": {
+  "oid": "1873461766188445376",
+  "urls": [
+   "https://avatars.mds.yandex.net/get-realty-offers/20032892/070b3efc-50b1-4276-8b6c-443d32017b73/large",
+   "https://avatars.mds.yandex.net/get-realty-offers/15352718/e85ce024-c7fd-4c78-8b28-7121f88179d2/large",
+   "https://avatars.mds.yandex.net/get-realty-offers/17741007/3c8da76e-bdc5-40a7-b5fc-06ef181a1185/large",
+   "https://avatars.mds.yandex.net/get-realty-offers/18734988/6503cebf-46f9-43e9-8f47-bf4466d917fb/large",
+   "https://avatars.mds.yandex.net/get-realty-offers/18041365/c8cd0835-3528-4e9f-9de7-f1870627dbfb/large",
+   "https://avatars.mds.yandex.net/get-realty-offers/18041365/31d85320-560c-4fbe-9f70-db6e626098e1/large"
+  ],
+  "area": 71,
+  "price": 52000000,
+  "ren": "DESIGNER_RENOVATION",
+  "floor": 3,
+  "floors": 24,
+  "rooms": 3,
+  "year": 2020,
+  "url": "https://realty.yandex.ru/offer/1873461766188445376/"
+ },
+ "Царская площадь": {
+  "oid": "3939877470316992453",
+  "urls": [
+   "https://avatars.mds.yandex.net/get-realty-offers/11512705/80660bd6-fa9d-493f-99f1-d92909a681a1/large",
+   "https://avatars.mds.yandex.net/get-realty-offers/13293441/3088b02a-b322-439f-b8ec-91f1b1bea280/large",
+   "https://avatars.mds.yandex.net/get-realty-offers/15540911/3ee04447-8653-4f9c-85bf-57f5daa0ba6d/large",
+   "https://avatars.mds.yandex.net/get-realty-offers/15037245/938b0f22-c020-4812-84a5-bdb5cbbf57ad/large",
+   "https://avatars.mds.yandex.net/get-realty-offers/14021747/612144ad-2e6b-4050-9916-3c00953574f8/large",
+   "https://avatars.mds.yandex.net/get-realty-offers/13732998/3ddfcbf4-8269-43e6-9238-7e1cb439c981/large"
+  ],
+  "area": 75,
+  "price": 46500000,
+  "ren": "DESIGNER_RENOVATION",
+  "floor": 10,
+  "floors": 19,
+  "rooms": 3,
+  "year": 2018,
+  "url": "https://realty.yandex.ru/offer/3939877470316992453/"
+ },
+ "Лайнер": {
+  "oid": "7146980933477494272",
+  "urls": [
+   "https://avatars.mds.yandex.net/get-realty-offers/19513189/add.ce9bf483cfb6815b7928cbf3969bbe47.realty-api-vos/large",
+   "https://avatars.mds.yandex.net/get-realty-offers/17698503/add.bfef6e5c0a082aa78d95c59f60b335ca.realty-api-vos/large",
+   "https://avatars.mds.yandex.net/get-realty-offers/19513189/add.51ba306aa84fa719b825804ae9b51413.realty-api-vos/large",
+   "https://avatars.mds.yandex.net/get-realty-offers/20997115/add.171fafd2d7bb713505a8853d11e2c9f8.realty-api-vos/large",
+   "https://avatars.mds.yandex.net/get-realty-offers/20611184/add.6e5a6b39b42b4c5a18c0aef5ddd7ff94.realty-api-vos/large",
+   "https://avatars.mds.yandex.net/get-realty-offers/19513189/add.fb84ceae9c582561db440f22e88e2ac3.realty-api-vos/large"
+  ],
+  "area": 71,
+  "price": 34980000,
+  "ren": "DESIGNER_RENOVATION",
+  "floor": 6,
+  "floors": 15,
+  "rooms": 2,
+  "year": 2017,
+  "url": "https://realty.yandex.ru/offer/7146980933477494272/"
+ }
+}
