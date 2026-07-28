@@ -21,7 +21,7 @@ INK, MUTED, GRID = (34, 40, 52), (112, 120, 134), (226, 223, 216)
 C_FLAT, C_FIT = (74, 123, 200), (185, 130, 47)      # validated categorical pair
 BANDBG = (245, 242, 237)
 
-FIT = 120_000                                        # оценка отделки, ₽/м²
+FIT = 150_000                                        # оценка отделки, ₽/м²
 FIN = json.load(open('cmp.json'))['FIN']
 MASTERS = json.load(open('cmp.json'))['R']['МАСТЕРС']['asis']
 
