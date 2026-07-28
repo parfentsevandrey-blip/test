@@ -1,0 +1,75 @@
+{
+ "ex": {
+  "МАСТЕРС": {
+   "area": "80.9",
+   "floor": "17/23",
+   "price": 61611822,
+   "ppm": 761580,
+   "fin": "Без отделки",
+   "url": "https://www.cian.ru/sale/flat/331893542/"
+  },
+  "Прайм Парк": {
+   "area": "81.7",
+   "floor": "39/42",
+   "price": 61500000,
+   "ppm": 752754,
+   "fin": "Дизайнерский",
+   "url": "https://www.cian.ru/sale/flat/332305623/"
+  },
+  "Царская площадь": {
+   "area": "79.4",
+   "floor": "4/18",
+   "price": 44900000,
+   "ppm": 565491,
+   "fin": "Дизайнерский",
+   "url": "https://www.cian.ru/sale/flat/331410980/"
+  },
+  "Династия": {
+   "area": "72",
+   "floor": "23/24",
+   "price": 42000000,
+   "ppm": 583333,
+   "fin": "Дизайнерский",
+   "url": "https://www.cian.ru/sale/flat/331574253/"
+  },
+  "Лица": {
+   "area": "77.4",
+   "floor": "15/27",
+   "price": 39900000,
+   "ppm": 515504,
+   "fin": "Евроремонт",
+   "url": "https://www.cian.ru/sale/flat/332138573/"
+  },
+  "Лайнер": {
+   "area": "77.1",
+   "floor": "8/15",
+   "price": 35700000,
+   "ppm": 463035,
+   "fin": "Дизайнерский",
+   "url": "https://www.cian.ru/sale/flat/332065871/"
+  }
+ },
+ "plans": {
+  "1": {
+   "area": "54.3",
+   "floor": "2/14",
+   "price": 41749641,
+   "ppm": 768870,
+   "url": "https://www.cian.ru/sale/flat/330066640/"
+  },
+  "2": {
+   "area": "81.5",
+   "floor": "3/23",
+   "price": 57785130,
+   "ppm": 709020,
+   "url": "https://www.cian.ru/sale/flat/330066655/"
+  },
+  "3": {
+   "area": "111.5",
+   "floor": "2/16",
+   "price": 70656435,
+   "ppm": 633690,
+   "url": "https://www.cian.ru/sale/flat/330066649/"
+  }
+ }
+}
