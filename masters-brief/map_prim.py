@@ -5,23 +5,23 @@ from ymap import render
 from markers import pin, label, font
 
 S = 2
-W, H, Z = 1400, 720, 15
-CENTER = (37.5350, 55.8012)
+W, H, Z = 760, 440, 14
+CENTER = (37.5350, 55.8015)
 base, proj = render(CENTER, Z, W, H, scale=S)
 img = base.convert('RGBA'); dr = ImageDraw.Draw(img, 'RGBA')
 
 NAVY, RED = (31, 42, 68), (179, 40, 45)
 SITES = [
-    (37.52304, 55.79527, 'ЖК «МАСТЕРС»',   '761 469 ₽/м² · IV кв. 2029', RED,  'below', 21),
-    (37.54691, 55.79839, 'МУЗА',           '1 042 477 ₽/м² · I–II кв. 2029', NAVY, 'below', 17),
-    (37.53500, 55.80780, 'ДОМ НА ЧАСОВОЙ', '668 643 ₽/м² · II кв. 2028', NAVY, 'above', 17),
+    (37.52304, 55.79527, 'ЖК «МАСТЕРС»',   '761 469 ₽/м² · IV кв. 2029', RED,  'below', 28,  60),
+    (37.54691, 55.79839, 'МУЗА',           '1 042 477 ₽/м² · I–II кв. 2029', NAVY, 'below', 24,   0),
+    (37.53500, 55.80780, 'ДОМ НА ЧАСОВОЙ', '668 643 ₽/м² · II кв. 2028', NAVY, 'below', 24,   0),
 ]
-for lon, lat, name, sub, col, pos, r in SITES:
+for lon, lat, name, sub, col, pos, r, dx in SITES:
     x, y = proj(lon, lat); x, y = int(x), int(y)
     pin(dr, x, y, r=r, fill=col)
     is_m = col == RED
-    label(img, dr, x, y + 12 if pos == 'below' else y - 170, name, sub,
-          fs=25 if is_m else 21,
+    label(img, dr, x + dx, y + 16 if pos == 'below' else y - 190, name, sub,
+          fs=38 if is_m else 34,
           bg=RED if is_m else (255, 255, 255),
           fg=(255, 255, 255) if is_m else (28, 34, 46),
           sfg=(255, 214, 214) if is_m else (110, 118, 132))
@@ -32,7 +32,7 @@ dr.rounded_rectangle([x0 - 12, y0 - 30, x0 + px + 12, y0 + 16], 6, fill=(255, 25
 dr.line([x0, y0, x0 + px, y0], fill=(40, 46, 58), width=4)
 dr.line([x0, y0 - 9, x0, y0 + 5], fill=(40, 46, 58), width=4)
 dr.line([x0 + px, y0 - 9, x0 + px, y0 + 5], fill=(40, 46, 58), width=4)
-dr.text((x0, y0 - 28), '500 м', font=font(20, True), fill=(40, 46, 58))
-dr.text((W * S - 232, H * S - 34), '© Яндекс Карты', font=font(19), fill=(90, 96, 108))
+dr.text((x0, y0 - 30), '500 м', font=font(24, True), fill=(40, 46, 58))
+dr.text((W * S - 260, H * S - 36), '© Яндекс Карты', font=font(22), fill=(90, 96, 108))
 img.convert('RGB').save('map_primary.png', quality=95)
 print('saved', img.size)

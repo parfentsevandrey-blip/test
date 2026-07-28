@@ -17,7 +17,7 @@ def pin(dr, x, y, r=17, fill=(179,40,45), num=None, S=2):
     return cy
 
 def label(img, dr, x, y, text, sub=None, anchor='center', fs=21, bg=(255,255,255),
-          fg=(28,34,46), sfg=(110,118,132), pad=10, radius=8):
+          fg=(28,34,46), sfg=(110,118,132), pad=13, radius=10):
     f  = font(fs, True); fs2 = int(fs*0.82); f2 = font(fs2, False)
     w1 = dr.textbbox((0,0), text, font=f); w1 = w1[2]-w1[0]
     w2 = 0
