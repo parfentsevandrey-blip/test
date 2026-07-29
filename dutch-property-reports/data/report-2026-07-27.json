@@ -5,20 +5,9 @@
   "footnote": "Данные по объектам приведены по публикациям funda in business по состоянию на 27.07.2026",
   "filename": "Объекты недвижимости — Нидерланды 27.07.26",
   "output_dir": "output",
-  "as_of": "2026-07-27",
-  "population_source": "открытые статистические данные по муниципалитетам (Centraal Bureau voor de Statistiek, CBS StatLine), на 1 января 2026 года",
   "objects": [
-    {
-      "file": "objects/steenovenweg-11-13-montfoort.json",
-      "street_full": "Steenovenweg 11‑13"
-    },
-    {
-      "file": "objects/decimalaan-3-utrecht.json",
-      "street_full": "Decimalaan 3‑5‑7‑9 и Nieuw‑Amsterdamlaan 4‑6"
-    },
-    {
-      "file": "objects/archimedesbaan-11-nieuwegein.json",
-      "street_full": "Archimedesbaan 11 и 7‑9"
-    }
+    { "file": "objects/steenovenweg-11-13-montfoort.json" },
+    { "file": "objects/decimalaan-3-utrecht.json" },
+    { "file": "objects/archimedesbaan-11-nieuwegein.json" }
   ]
 }
