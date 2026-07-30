@@ -37,7 +37,18 @@ def lots(name):
              fin=g(c,'Отделка/ремонт'),seller=g(c,'Тип продавца'),
              url=(href or '').split('?')[0]))
         except ValueError: pass
-    return out
+    return dedupe(out)
+
+def dedupe(lots):
+    """Одна квартира попадает в выгрузку несколько раз — её выставляют разные
+    агентства. Схлопываем по (площадь, этаж, цена), оставляя объявление
+    с указанной отделкой."""
+    uniq = {}
+    for x in lots:
+        k = (round(x['area'], 1), x['floor'], x['price'])
+        cur = uniq.get(k)
+        if cur is None or (not cur['fin'] and x['fin']): uniq[k] = x
+    return list(uniq.values())
 if __name__=='__main__':
     import json
     all={n:lots(n) for n in FILES}
