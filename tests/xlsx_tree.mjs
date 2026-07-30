@@ -174,7 +174,13 @@ export function partsToTree(parts, styles) {
         const ref = parseRef(c.attrs.r);
         const st = xfs[+(c.attrs.s || 0)] || {};
         let v = null, t = null;
-        if (c.attrs.t === "inlineStr") {
+        const fEl = kid(c, "f");
+        if (fEl) {
+          // Формулу кладём в дерево как значение с типом "f": иначе снимок
+          // видел бы пустую ячейку и не заметил бы, что формула изменилась.
+          v = "=" + text(fEl);
+          t = "f";
+        } else if (c.attrs.t === "inlineStr") {
           v = maskDates(text(kid(kid(c, "is"), "t")).replace(/\s+$/, ""));
           t = "s";
         } else {

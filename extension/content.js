@@ -773,16 +773,19 @@
   // XML 1.0 запрещает управляющие символы и одинокие суррогаты НА УРОВНЕ ГРАММАТИКИ:
   // закодировать их нельзя даже как &#x1F;, поэтому вырезаем. Один такой символ,
   // просочившийся из описания или из названия ЖК, делает всю книгу нечитаемой.
-  /* ═══════════ КНИГА EXCEL: настоящий .xlsx (zip + OOXML), без библиотек ══════
-   * Раньше здесь собирался SpreadsheetML 2003 с расширением .xls — Excel на
-   * КАЖДОМ открытии показывал «формат файла не соответствует расширению».
-   * Кроме предупреждения, тот формат не умеет условного форматирования, поэтому
-   * тепловую карту ₽/м² приходилось запекать в стили ячеек: цвет переставал
-   * быть функцией значения и не переживал ни сортировку, ни правку цены.
-   *
-   * Строители листов ниже (dataSheet/summarySheet/...) не знают про формат: они
-   * накапливают ДЕРЕВО строк, а превращает его в файл buildXlsxBlob().
-   * ========================================================================= */
+  // ===== XLSX-BLOCK-START ===================================================
+  // СБОРКА КНИГИ EXCEL: настоящий .xlsx (zip + OOXML), без библиотек.
+  // Один и тот же блок лежит в extension/content.js и в cian_browser.js.
+  // Правите один — правьте оба; расхождение ловит tests/check_export.mjs.
+  //
+  // Раньше здесь собирался SpreadsheetML 2003 с расширением .xls — Excel на
+  // КАЖДОМ открытии показывал «формат файла не соответствует расширению».
+  // Кроме предупреждения, тот формат не умеет условного форматирования, поэтому
+  // тепловую карту ₽/м² приходилось запекать в стили ячеек: цвет переставал
+  // быть функцией значения и не переживал ни сортировку, ни правку цены.
+  //
+  // Строители листов (dataSheet/summarySheet/...) про формат не знают: они
+  // накапливают ДЕРЕВО строк, а превращает его в файл buildXlsxBlob().
 
   /* ═══════════════════ 0. Экранирование и примитивы XML ═══════════════════ */
 
@@ -1264,6 +1267,14 @@
           hyperlinks.push({ ref, id });
         }
 
+        // Формула. Значение НЕ кэшируем: Excel посчитает сам при открытии
+        // (в workbook.xml стоит calcPr fullCalcOnLoad). Кэш пришлось бы держать
+        // в согласии с формулой, а разошедшийся кэш — это молча неверные числа
+        // на первом же экране книги.
+        if (c.f) {
+          cells.push('<c r="' + ref + '"' + sAttr + "><f>" + esc(String(c.f).replace(/^=/, "")) + "</f></c>");
+          continue;
+        }
         const empty = c.v == null || c.v === "";
         if (empty) {
           // Пустую ячейку без стиля не пишем вовсе: она ничего не добавляет,
@@ -1488,6 +1499,9 @@
       '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"' +
       ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
       '<workbookPr/><bookViews><workbookView activeTab="0"/></bookViews>' +
+      // Без этого Excel показал бы пустоту вместо формул: кэшированных
+      // значений мы не пишем принципиально.
+      '<calcPr calcId="191029" fullCalcOnLoad="1"/>' +
       "<sheets>" + sheetEntries.join("") + "</sheets></workbook>");
     ctOverrides.push('<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>');
 
@@ -1581,6 +1595,7 @@
     }
     return out;
   }
+  // ===== XLSX-BLOCK-END =====================================================
 
   // row(cells) — строка книги как массив ячеек. Раньше эта функция возвращала
   // XML; теперь просто отдаёт ячейки, а имя оставлено, чтобы строители листов
@@ -1738,28 +1753,63 @@
   }
   function summarySheet(subj, rows, totalsByRoom, totalInJk, health) {
     const present = CATS.filter((c) => rows.some((r) => r.category === c)), today = fmtDate(new Date());
+    // Агрегаты — ЖИВЫЕ ФОРМУЛЫ по листу «Все_лоты», а не запечённые числа:
+    // поправили цену или отфильтровали строки — сводка пересчиталась. Раньше она
+    // устаревала от любой правки, а это первый лист книги, который и показывают.
+    // Бенчмарки по этажу и метро остаются числами: они считаются по группам,
+    // которых нет отдельными колонками, — формулой это выразить нечем.
+    const LOTS = "'Все_лоты'";
+    const lastRow = 4 + rows.length;
+    const RNG = (h) => `${LOTS}!$${colName(HEADERS.indexOf(h) + 1)}$5:$${colName(HEADERS.indexOf(h) + 1)}$${lastRow}`;
+    const catR = RNG("Категория"), sellR = RNG("Тип продавца");
+    const priceR = RNG("Цена, ₽"), ppmR = RNG("Цена за м², ₽");
+    const rn = () => R.length + 1;                          // номер строки, которую сейчас добавим
+    // MINIFS/MAXIFS появились в Excel 2016; префикс _xlfn нужен, чтобы файл
+    // открылся и в более старых версиях без #ИМЯ?.
+    const F = (f, s) => ({ f, s: s || "num" });
     const R = [row([{ v: `${subj.title}${subj.id ? " (ID " + subj.id + ")" : ""} — сводка`, s: "title", merge: 5 }]), row([{ v: `Данные Циан на ${today}. Собрано ${rows.length} лотов. «Частник» = собственник/агентство.`, s: "sub", merge: 5 }]), row([{}])];
     R.push(row([{ v: "ОХВАТ ВЫГРУЗКИ", s: "bold" }]), row(["Категория", "Собрано", "Всего на Циан", "% выдачи"].map((h) => ({ v: h, s: "hdr" }))));
-    let sumC = 0, sumT = 0;
+    let sumT = 0;
+    const covFirst = rn();
     present.forEach((c) => {
       const got = rows.filter((r) => r.category === c).length;
       // totalsByRoom есть только если был добор (>лимита); иначе собрано = всё на Циан
       const tot = totalsByRoom ? (ROOM_OF_CAT[c].reduce((s, rm) => s + (totalsByRoom[rm] || 0), 0) || null) : got;
-      sumC += got; if (tot) sumT += tot;
-      R.push(row([{ v: c }, { v: got, t: "Number" }, num(tot), { v: tot ? Math.round((got / tot) * 100) + "%" : "—" }]));
+      if (tot) sumT += tot;
+      const r = rn();
+      R.push(row([{ v: c }, F(`COUNTIF(${catR},"${c}")`, ""), num(tot),
+        tot ? F(`IFERROR(B${r}/C${r},"—")`, "pct") : { v: "—" }]));
     });
-    R.push(row([{ v: "ИТОГО (категории)", s: "bold" }, { v: sumC, t: "Number", s: "bold" }, num(sumT || null), { v: sumT ? Math.round((sumC / sumT) * 100) + "%" : "—" }]));
-    if (totalInJk) R.push(row([{ v: subj.isJk ? "Всего квартир в ЖК (Циан)" : "Всего по фильтру (Циан)", s: "bold" }, { v: rows.length, t: "Number" }, { v: totalInJk, t: "Number" }, { v: Math.round((rows.length / totalInJk) * 100) + "%" }]));
+    const covLast = rn() - 1;
+    const totalR = rn();
+    R.push(row([{ v: "ИТОГО (категории)", s: "bold" },
+      covLast >= covFirst ? F(`SUM(B${covFirst}:B${covLast})`, "bold") : { v: 0, t: "Number", s: "bold" },
+      num(sumT || null),
+      sumT ? F(`IFERROR(B${totalR}/C${totalR},"—")`, "pct") : { v: "—" }]));
+    if (totalInJk) {
+      const r = rn();
+      R.push(row([{ v: subj.isJk ? "Всего квартир в ЖК (Циан)" : "Всего по фильтру (Циан)", s: "bold" },
+        F(`COUNTA(${RNG("Категория")})`, ""), { v: totalInJk, t: "Number" },
+        F(`IFERROR(B${r}/C${r},"—")`, "pct")]));
+    }
     R.push(row([{}]), row([{ v: "СРЕДНЯЯ ЦЕНА ЗА м², ₽", s: "bold" }]), row(["Категория", "Частник", "Застройщик", "Все"].map((h) => ({ v: h, s: "hdr" }))));
-    const ppmBy = (s) => s.map((r) => r.ppm).filter((x) => x != null);
     present.concat(["ИТОГО по ЖК"]).forEach((c) => {
-      const sub = c === "ИТОГО по ЖК" ? rows : rows.filter((r) => r.category === c);
-      R.push(row([{ v: c, s: c === "ИТОГО по ЖК" ? "bold" : "" }, num(avg(ppmBy(sub.filter((r) => r.seller_type !== "Застройщик")))), num(avg(ppmBy(sub.filter((r) => r.seller_type === "Застройщик")))), num(avg(ppmBy(sub)))]));
+      const all = c === "ИТОГО по ЖК";
+      const byCat = all ? "" : `,${catR},"${c}"`;
+      R.push(row([{ v: c, s: all ? "bold" : "" },
+        F(`IFERROR(AVERAGEIFS(${ppmR},${sellR},"<>Застройщик"${byCat}),"—")`),
+        F(`IFERROR(AVERAGEIFS(${ppmR},${sellR},"Застройщик"${byCat}),"—")`),
+        all ? F(`IFERROR(AVERAGE(${ppmR}),"—")`) : F(`IFERROR(AVERAGEIFS(${ppmR},${catR},"${c}"),"—")`)]));
     });
     R.push(row([{}]), row([{ v: "ДИАПАЗОН ЦЕН, ₽", s: "bold" }]), row(["Категория", "Мин. цена", "Средн. цена", "Макс. цена", "Мин. ₽/м²", "Макс. ₽/м²"].map((h) => ({ v: h, s: "hdr" }))));
     present.forEach((c) => {
-      const sub = rows.filter((r) => r.category === c), pr = sub.map((r) => r.price).filter((x) => x != null), pm = sub.map((r) => r.ppm).filter((x) => x != null);
-      R.push(row([{ v: c }, num(pr.length ? Math.min(...pr) : null), num(avg(pr)), num(pr.length ? Math.max(...pr) : null), num(pm.length ? Math.min(...pm) : null), num(pm.length ? Math.max(...pm) : null)]));
+      const w = `,${catR},"${c}"`;
+      R.push(row([{ v: c },
+        F(`IFERROR(_xlfn.MINIFS(${priceR}${w}),"—")`),
+        F(`IFERROR(AVERAGEIFS(${priceR}${w}),"—")`),
+        F(`IFERROR(_xlfn.MAXIFS(${priceR}${w}),"—")`),
+        F(`IFERROR(_xlfn.MINIFS(${ppmR}${w}),"—")`),
+        F(`IFERROR(_xlfn.MAXIFS(${ppmR}${w}),"—")`)]));
     });
     // спарклайн распределения ₽/м² — форма гистограммы одной строкой (перекос/бимодальность видны сразу)
     const allSpark = sparkline(rows.map((r) => r.ppm));
@@ -1819,9 +1869,15 @@
     FIN_ORDER.filter((k) => finCount[k])
       .concat(Object.keys(finCount).filter((k) => !FIN_ORDER.includes(k)).sort())
       .forEach((k) => {
-        R.push(row([{ v: k }, { v: finCount[k], t: "Number" }, { v: Math.round(finCount[k] / rows.length * 100) + "%" }]));
+        const r = rn();
+        R.push(row([{ v: k }, F(`COUNTIF(${RNG("Отделка/ремонт")},"${k}")`, ""),
+          F(`IFERROR(B${r}/COUNTA(${catR}),"—")`, "pct")]));
       });
-    if (noFin) R.push(row([{ v: "Не определена" }, { v: noFin, t: "Number" }, { v: Math.round(noFin / rows.length * 100) + "%" }]));
+    if (noFin) {
+      const r = rn();
+      R.push(row([{ v: "Не определена" }, F(`COUNTBLANK(${RNG("Отделка/ремонт")})`, ""),
+        F(`IFERROR(B${r}/COUNTA(${catR}),"—")`, "pct")]));
+    }
     R.push(row([{ v: "Источник: поле Циан / описание / нет", s: "sub" }, { v: `${byField} / ${byText} / ${noFin}` }]));
 
     // экспозиция
