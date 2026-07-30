@@ -260,23 +260,23 @@ function photoCards(cards, pxw, pxh) {
   const W = [4819, 4819];
   const cellOf = (c, left) => new TableCell({
     width: { size: W[0], type: WidthType.DXA },
-    margins: { top: 0, bottom: 220, left: left ? 0 : 150, right: left ? 150 : 0 },
+    margins: { top: 0, bottom: 150, left: left ? 0 : 150, right: left ? 150 : 0 },
     verticalAlign: VerticalAlign.TOP,
     borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
     children: c ? [
       p({ children: [new ImageRun({ data: IMG(c.img), type: 'jpg',
                                     transformation: { width: pxw, height: pxh } })],
-          spacing: { after: 90 } }),
-      p({ children: [txt(`ЖК «${c.zhk}»`, { size: 19, bold: true, color: INK })],
-          spacing: { after: 50, line: 230, lineRule: LR } }),
-      p({ children: [txt(`${c.lot} · ${c.ren}`, { size: 16, color: MUTED })],
-          spacing: { after: 50, line: 230, lineRule: LR } }),
-      p({ children: [txt(c.price, { size: 19, bold: true, color: BRONZE }),
-                     txt(`   ${c.ppm}`, { size: 16, color: MUTED })],
-          spacing: { after: 50, line: 230, lineRule: LR } }),
+          spacing: { after: 80 } }),
+      p({ children: [txt(c.title, { size: 18, bold: true, color: c.our ? RED : INK })],
+          spacing: { after: 40, line: 226, lineRule: LR } }),
+      p({ children: [txt(c.spec, { size: 15, color: MUTED })],
+          spacing: { after: 40, line: 226, lineRule: LR } }),
+      p({ children: [txt(c.price, { size: 18, bold: true, color: BRONZE }),
+                     txt(`   ${c.ppm}`, { size: 15, color: MUTED })],
+          spacing: { after: 40, line: 226, lineRule: LR } }),
       p({ children: [new ExternalHyperlink({
-            children: [txt('Объявление →', { size: 15, color: '2C5FA8' })], link: c.url })],
-          spacing: { after: 0, line: 220, lineRule: LR } }),
+            children: [txt('Объявление →', { size: 14, color: '2C5FA8' })], link: c.url })],
+          spacing: { after: 0, line: 216, lineRule: LR } }),
     ] : [p({ children: [txt('')] })],
   });
   const rows = [];
@@ -284,6 +284,31 @@ function photoCards(cards, pxw, pxh) {
     rows.push(new TableRow({ children: [cellOf(cards[i], true), cellOf(cards[i + 1], false)] }));
   }
   return new Table({ columnWidths: W, width: { size: CONTENT_W, type: WidthType.DXA }, rows });
+}
+
+// bronze-ruled call-out box for the headline recommendation
+function callout(title, lines) {
+  return new Table({
+    columnWidths: [CONTENT_W],
+    width: { size: CONTENT_W, type: WidthType.DXA },
+    rows: [new TableRow({ children: [new TableCell({
+      width: { size: CONTENT_W, type: WidthType.DXA },
+      shading: { type: ShadingType.CLEAR, fill: SOFT, color: 'auto' },
+      margins: { top: 170, bottom: 170, left: 240, right: 240 },
+      borders: {
+        top: noBorder, bottom: noBorder, right: noBorder,
+        left: { style: BorderStyle.SINGLE, size: 24, color: BRONZE },
+      },
+      children: [
+        p({ children: [txt(title, { font: S.GEO, size: 23, bold: true, color: INK })],
+            spacing: { after: 90, line: 240, lineRule: LR } }),
+        ...lines.map((t, i) => p({
+          children: Array.isArray(t) ? t : [txt(t)],
+          spacing: { after: i === lines.length - 1 ? 0 : 80, line: 252, lineRule: LR },
+        })),
+      ],
+    })] })],
+  });
 }
 
 const bullets = (items) => items.map((t) => p({

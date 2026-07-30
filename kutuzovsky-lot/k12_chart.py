@@ -9,7 +9,7 @@ F  = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'
 FB = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'
 fnt = lambda s, b=False: ImageFont.truetype(FB if b else F, s)
 S = 2
-W, H = 1400 * S, 560 * S
+W, H = 1400 * S, 640 * S
 SURFACE=(252,252,251); INK,MUTED,GRID=(34,40,52),(112,120,134),(226,223,216)
 C_FLAT,C_FIT=(74,123,200),(185,130,47); BANDBG=(245,242,237)
 D=json.load(open('k12_tables.json')); FIT=D['fit']

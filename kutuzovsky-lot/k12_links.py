@@ -6,7 +6,8 @@ FILES={'Кутузовский XII':'cb26e6ba-cian____________xii_20260730_14___
  'Апартаменты Сити':'7ce832e3-cian___________________20260730_133_____.xls',
  'Дом Дау':'f462fad3-cian________20260730_286_____.xls',
  'Capital Towers':'64d8e1c4-cian_capitaltowers______________20260730_129_____.xls',
- 'Бадаевский':'cdf7eb19-cian____________20260730_144______1.xls'}
+ 'Бадаевский':'cdf7eb19-cian____________20260730_144______1.xls',
+ 'Веспер Кутузовский':'8581a047-cian___________________20260730_88_____.xls'}
 def rows(path):
     for ws in ET.parse(path).getroot().findall(f'{NS}Worksheet'):
         if not ws.get(f'{NS}Name','').startswith('Все_лоты'): continue

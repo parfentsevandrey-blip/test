@@ -8,15 +8,17 @@ W, H, Z = 800, 500, 15
 CEN = (37.5488, 55.7494)
 base, proj = render(CEN, Z, W, H, scale=2)
 img = base.convert('RGBA'); dr = ImageDraw.Draw(img, 'RGBA')
+# lon, lat, name, sub, label anchor point (dx, dy from pin tip), text anchor
 SITES = [
-    (37.55750, 55.75030, 'ЖК «Бадаевский»', '1 607 089 ₽/м² · без отделки', 'above', 150),
-    (37.54398, 55.75013, 'Capital Towers',  '1 305 435 ₽/м² · сдан 2023',   'below', -30),
-    (37.54100, 55.74760, 'Дом Дау',         '1 021 252 ₽/м² · без отделки', 'below',   0),
+    (37.55942, 55.751614, 'ЖК «Бадаевский»',     '1 607 089 ₽/м² · без отделки', -46, -104, 'right'),
+    (37.55676, 55.749866, 'Веспер Кутузовский',  '1 538 394 ₽/м² · без отделки', -46, -112, 'right'),
+    (37.54398, 55.75013,  'Capital Towers',      '1 305 435 ₽/м² · сдан 2023',   -30,   16, 'center'),
+    (37.54100, 55.74760,  'Дом Дау',             '1 021 252 ₽/м² · без отделки',   0,   16, 'center'),
 ]
-for lon, lat, name, sub, pos, dx in SITES:
+for lon, lat, name, sub, dx, dy, anc in SITES:
     x, y = proj(lon, lat); x, y = int(x), int(y)
     pin(dr, x, y, r=24, fill=NAVY)
-    label(img, dr, x + dx, y + 16 if pos == 'below' else y - 190, name, sub, fs=32)
+    label(img, dr, x + dx, y + dy, name, sub, fs=32, anchor=anc)
 x, y = proj(*K12); x, y = int(x), int(y)
 pin(dr, x, y, r=28, fill=RED)
 label(img, dr, x, y + 18, 'НАШ ЛОТ · Кутузовский XII', '162,5 млн ₽ · 1 710 526 ₽/м²', fs=36,
