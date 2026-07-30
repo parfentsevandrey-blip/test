@@ -45,13 +45,14 @@ const kicker = (text, color = BRONZE) => p({
 
 const h1 = (text, o = {}) => p({
   children: [txt(text, { font: S.GEO, size: 36, bold: true, color: INK })],
-  spacing: { after: 160 }, pageBreakBefore: !!o.br,
+  spacing: { after: 160 }, pageBreakBefore: !!o.br, keepNext: true, keepLines: true,
   border: { bottom: { style: BorderStyle.SINGLE, size: 10, color: BRONZE, space: 8 } },
 });
 
 const h2 = (text, o = {}) => p({
   children: [txt(text, { font: S.GEO, size: 24, bold: true, color: INK })],
   spacing: { before: o.br ? 0 : 170, after: 110 }, pageBreakBefore: !!o.br,
+  keepNext: true, keepLines: true,
 });
 
 const caption = (text) => p({

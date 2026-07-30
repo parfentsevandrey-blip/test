@@ -11,10 +11,14 @@ FIT = 150_000
 LO, HI = 65, 95
 OUR = {'area': 79.5, 'price': 56_999_999, 'ppm': 716_981, 'floor': '15/19'}
 
+# Отделка в выгрузке не проставлена, но в описании прямо сказано «не готовая
+# квартира, чистый холст» — считаем без отделки.
+SHELL_URL = {'https://www.cian.ru/sale/flat/330750464/'}
 SHELL = {'Без отделки', 'Черновая', 'Без ремонта'}
 WB    = {'Предчистовая (white box)', 'Чистовая'}
 REN   = {'Дизайнерский', 'Евроремонт', 'Под ключ / с мебелью', 'Косметический', 'С ремонтом (тип не указан)'}
-grp = lambda f: 'shell' if f in SHELL else 'wb' if f in WB else 'ren' if f in REN else 'unk'
+grp = lambda x: ('shell' if x['url'] in SHELL_URL or x['fin'] in SHELL
+                 else 'wb' if x['fin'] in WB else 'ren' if x['fin'] in REN else 'unk')
 
 w  = lambda g: sum(x['price'] for x in g) / sum(x['area'] for x in g)
 nf = lambda v: f'{v:,.0f}'.replace(',', ' ')
@@ -34,9 +38,9 @@ SUB = {'Левел Академическая':   'наш дом · сдан 202
 def block(name):
     band = [x for x in L[name] if LO <= x['area'] <= HI]
     if not band: return None, None
-    fin = [x for x in band if grp(x['fin']) == 'ren']
-    wb  = [x for x in band if grp(x['fin']) == 'wb']
-    sh  = [x for x in band if grp(x['fin']) in ('shell', 'unk')]
+    fin = [x for x in band if grp(x) == 'ren']
+    wb  = [x for x in band if grp(x) == 'wb']
+    sh  = [x for x in band if grp(x) in ('shell', 'unk')]
     if fin:   base, fit, why = w(fin), 0,   f'{len(fin)} с ремонтом'
     elif wb:  base, fit, why = w(wb), FIT,  f'{len(wb)} white box'
     else:     base, fit, why = w(sh), FIT,  f'{len(sh)} без отделки'

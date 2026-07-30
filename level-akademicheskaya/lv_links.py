@@ -32,6 +32,12 @@ def rows(path):
         return out
     return []
 
+# Лоты, исключённые из анализа по решению заказчика
+EXCLUDE = {
+    'https://www.cian.ru/sale/flat/331624688/',   # Новочерёмушкинская, 17: 65 м² за 65 млн ₽
+                                                   # (1 000 000 ₽/м², «под ключ с мебелью») — выброс
+}
+
 def dedupe(lots):
     """Одну квартиру выставляют несколько агентств — схлопываем по
     (площадь, этаж, цена). Совпадение только по этажу и цене дублем НЕ
@@ -58,7 +64,7 @@ def lots(name):
                             fin=g(c, 'Отделка/ремонт'), seller=g(c, 'Тип продавца'), year=g(c, 'Год дома'),
                             url=(href or '').split('?')[0]))
         except ValueError: pass
-    return dedupe(out)
+    return dedupe([x for x in out if x['url'] not in EXCLUDE])
 
 if __name__ == '__main__':
     import json, collections
