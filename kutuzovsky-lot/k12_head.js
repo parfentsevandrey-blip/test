@@ -117,7 +117,7 @@ function dataTable(headers, rows, widths, o = {}) {
         w: widths[i],
         bold: isTotal || (o.boldFirstCol && i === 0),
         fill: isTotal ? SOFT : (ri % 2 === 1 ? 'FBFAF8' : undefined),
-        align: i === 0 ? AlignmentType.LEFT : AlignmentType.CENTER,
+        align: (i === 0 || (o.leftCols || []).includes(i)) ? AlignmentType.LEFT : AlignmentType.CENTER,
         color: isTotal ? INK : undefined,
       })),
     });
