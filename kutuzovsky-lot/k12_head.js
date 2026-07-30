@@ -138,19 +138,19 @@ function statTiles(items) {
     columnWidths: W,
     width: { size: CONTENT_W, type: WidthType.DXA },
     rows: [new TableRow({
-      children: items.map(([val, lab], i) => new TableCell({
+      children: items.map(([val, lab, accent], i) => new TableCell({
         width: { size: W[i], type: WidthType.DXA },
-        shading: { type: ShadingType.CLEAR, fill: SOFT, color: 'auto' },
+        shading: { type: ShadingType.CLEAR, fill: accent ? 'F7EEEE' : SOFT, color: 'auto' },
         margins: { top: 118, bottom: 118, left: 170, right: 110 },
         verticalAlign: VerticalAlign.CENTER,
         borders: {
-          top: { style: BorderStyle.SINGLE, size: 18, color: BRONZE },
+          top: { style: BorderStyle.SINGLE, size: 18, color: accent ? RED : BRONZE },
           bottom: noBorder,
           left: { style: BorderStyle.SINGLE, size: 26, color: 'FCFCFB' },
           right: { style: BorderStyle.SINGLE, size: 26, color: 'FCFCFB' },
         },
         children: [
-          p({ children: [txt(val, { font: S.GEO, size: 27, bold: true, color: INK })],
+          p({ children: [txt(val, { font: S.GEO, size: 27, bold: true, color: accent ? RED : INK })],
               spacing: { after: 40, line: 240, lineRule: LR } }),
           p({ children: [txt(lab, { size: 13, color: MUTED, caps: true, spacing: 24 })],
               spacing: { after: 0, line: 200, lineRule: LR } }),
@@ -284,31 +284,6 @@ function photoCards(cards, pxw, pxh) {
     rows.push(new TableRow({ children: [cellOf(cards[i], true), cellOf(cards[i + 1], false)] }));
   }
   return new Table({ columnWidths: W, width: { size: CONTENT_W, type: WidthType.DXA }, rows });
-}
-
-// bronze-ruled call-out box for the headline recommendation
-function callout(title, lines) {
-  return new Table({
-    columnWidths: [CONTENT_W],
-    width: { size: CONTENT_W, type: WidthType.DXA },
-    rows: [new TableRow({ children: [new TableCell({
-      width: { size: CONTENT_W, type: WidthType.DXA },
-      shading: { type: ShadingType.CLEAR, fill: SOFT, color: 'auto' },
-      margins: { top: 170, bottom: 170, left: 240, right: 240 },
-      borders: {
-        top: noBorder, bottom: noBorder, right: noBorder,
-        left: { style: BorderStyle.SINGLE, size: 24, color: BRONZE },
-      },
-      children: [
-        p({ children: [txt(title, { font: S.GEO, size: 23, bold: true, color: INK })],
-            spacing: { after: 90, line: 240, lineRule: LR } }),
-        ...lines.map((t, i) => p({
-          children: Array.isArray(t) ? t : [txt(t)],
-          spacing: { after: i === lines.length - 1 ? 0 : 80, line: 252, lineRule: LR },
-        })),
-      ],
-    })] })],
-  });
 }
 
 const bullets = (items) => items.map((t) => p({

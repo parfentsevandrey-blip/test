@@ -49,9 +49,22 @@ cards = [{'img': img, 'title': n + (' — наш лот' if i == 0 else ''),
           'url': u, 'our': i == 0}
          for i, (n, q, f, p, a, u, t, img, cap) in enumerate(LOTS) if img]
 
+# «Причина 3»: что покупатель получает в Сити вместо нашей квартиры
+OUR_A, OUR_P = 95.0, 162_500_000
+sg = lambda v, u: ('+' if v > 0 else '−') + f'{abs(v):.1f}'.replace('.', ',') + ' ' + u
+CITY_NAMES = ('Capital Towers', 'Neva Towers*')
+city = [[('▶ ' if i == 0 else '') + n + ('' if i == 0 else ' · ' + f.lower()),
+         f'{a:.1f}'.replace('.', ','), q.split('эт. ')[1], mn(p),
+         '—' if i == 0 else f'{sg(a - OUR_A, "м²")} · {sg((p - OUR_P) / 1e6, "млн ₽")}',
+         {'text': t, 'link': u}]
+        for i, (n, q, f, p, a, u, t, _, cap) in
+        enumerate([LOTS[0]] + sorted([x for x in LOTS if x[0] in CITY_NAMES], key=lambda x: -x[3]))]
+
 K = json.load(open('k12_tables.json'))
-K['alt'], K['photos'] = rows, cards
+K['alt'], K['photos'], K['city'] = rows, cards, city
 json.dump(K, open('k12_tables.json', 'w'), ensure_ascii=False, indent=1)
 for r in rows: print(' | '.join(str(c if not isinstance(c, dict) else c['text']) for c in r))
 print()
 for c in cards: print(c['title'], '|', c['spec'], '|', c['price'], '|', c['ppm'])
+print()
+for r in city: print(' | '.join(str(c if not isinstance(c, dict) else c['text']) for c in r))
