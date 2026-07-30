@@ -244,6 +244,7 @@ python cian_scraper.py --jk 4927817 --jk-name "Среда на Кутузовс�
 ```bash
 node tests/check_finish.mjs      # блок совпадает в двух JS-файлах + корпус 129 кейсов
 node tests/check_export.mjs      # книга cian_browser.js: колонки, Сводка, валидность XML
+node tests/check_workbook.mjs    # книга расширения: снимок 34 листов + сборка zip
 python3 cian_scraper.py --self-test   # тот же корпус + мусорные данные + запись xlsx
 ```
 
