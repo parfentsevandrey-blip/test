@@ -27,6 +27,7 @@ fallback на Playwright — см. README_cian.md и --help.
 import argparse
 import json
 import logging
+import os
 import random
 import re
 import shlex
@@ -534,26 +535,220 @@ def category_of(o):
     return str(rc)
 
 
-_DECORATION_MAP = {
-    "without": "Без отделки",
-    "rough": "Черновая",
-    "fine": "Чистовая",
-    "preFine": "Предчистовая",
-    "prefine": "Предчистовая",
-    "designer": "Дизайнерская",
-    "clean": "Чистовая",
+# ===== FIN-BLOCK-START ======================================================= #
+#  ОТДЕЛКА/РЕМОНТ — порт блока из extension/content.js                           #
+# ----------------------------------------------------------------------------- #
+# Один и тот же набор правил живёт в трёх экспортёрах: extension/content.js,
+# cian_browser.js и здесь. Правите один — правьте все три; расхождение ловит
+# tests/check_finish.mjs (JS) и --self-test (Python) на общем корпусе
+# tests/finish_corpus.json.
+#
+# Слои по убыванию надёжности:
+#   1) поле Циан repairType/decoration -> источник «Циан-поле»
+#   2) разбор текста объявления        -> источник «из описания»
+#   3) не нашлось                      -> категория не определена
+#
+# В регулярках ниже ЗАПРЕЩЕНЫ \w, \b, \d, lookbehind и флаги i/u: в JS \w и \b
+# ASCII-only и на кириллице молча не срабатывают, а в Python — срабатывают.
+# Держим общий знаменатель, иначе один и тот же оффер получит РАЗНЫЕ категории
+# в выгрузке из расширения и из скрипта. Регистр и «ё» снимает _fin_norm().
+
+FIN = {
+    "none": "Без отделки", "rough": "Черновая", "prefine": "Предчистовая (white box)",
+    "fine": "Чистовая", "turnkey": "Под ключ / с мебелью",
+    "norepair": "Без ремонта", "cosmetic": "Косметический", "euro": "Евроремонт",
+    "designer": "Дизайнерский", "some": "С ремонтом (тип не указан)",
+}
+
+# Значение поля Циан -> категория. Подтверждены дампами API:
+#   decoration: without | rough | preFine | fine | fineWithFurniture
+#   repairType: no | cosmetic | euro | design
+# Остальные ключи — толерантные догадки на случай смены словаря.
+_FIELD_FIN = {
+    "without": FIN["none"], "rough": FIN["rough"], "draft": FIN["rough"],
+    "prefine": FIN["prefine"], "preFine": FIN["prefine"], "whitebox": FIN["prefine"],
+    "fine": FIN["fine"], "clean": FIN["fine"], "finish": FIN["fine"],
+    "chistovaya": FIN["fine"],
+    "fineWithFurniture": FIN["turnkey"], "turnkey": FIN["turnkey"],
+    "withFurniture": FIN["turnkey"],
+    "no": FIN["norepair"], "norepair": FIN["norepair"],
+    "cosmetic": FIN["cosmetic"], "normal": FIN["cosmetic"],
+    "euro": FIN["euro"], "good": FIN["euro"],
+    "design": FIN["designer"], "designer": FIN["designer"],
+}
+
+# Стоп-контексты: вырезаются из текста ДО классификации, чтобы ремонт подъезда,
+# соседнего корпуса или «сделаем под ваш вкус» не приписывался самой квартире.
+# Вырезается только найденный участок, а не всё предложение.
+_FIN_STOPS = [
+    re.compile(r"(?:^|[^а-яё])(?:кап(?:итальн[а-яё]*)?[\s-]*)?(?:ремонт|отделк)[а-яё]*[\s-]*(?:в[\s-]*|на[\s-]*)?(?:детск[а-яё]*[\s-]*(?:сад|площадк)|мест[а-яё]*[\s-]*общего|подъезд|фасад|кровл|крыш|дорог|тротуар|лифт|двор|подвал|чердак|площадк|набережн|станц|метро|улиц|шоссе|проспект|школ|моп|стояк|трубопровод|инженерн|паркинг|парковк|холл|лобби|вестибюл|входн[а-яё]*[\s-]*групп)[а-яё]*"),   # S1 — ремонт общедомового/городского объекта: подъезд, фасад, дорога, лифт
+    re.compile(r"(?:^|[^а-яё])(?:кап(?:итальн[а-яё]*)?[\s-]*)?(?:ремонт|отделк)[а-яё]*[\s-]*(?:в[\s-]*)?(?:дом[аеу]|здани|корпус|многоквартирн)[а-яё]*"),   # S2 — ремонт дома/здания/корпуса целиком
+    re.compile(r"(?:^|[^а-яё])(?:дом|здани|корпус|подъезд|фасад|кровл|крыш|школ|поликлиник|детск[а-яё]*[\s-]*сад)[а-яё]*[\s-]*(?:был[а-яё]*[\s-]*|уже[\s-]*|недавно[\s-]*)?(?:после|прошел|прошла|прошли|ждет|ожидает|планируется|стоит[\s-]*в[\s-]*плане|под)[\s-]*(?:кап(?:итальн[а-яё]*)?[\s-]*)?(?:ремонт|отделк)[а-яё]*"),   # S3 — обратный порядок: «дом после капремонта»
+    re.compile(r"(?:^|[^а-яё])(?:в|во)[\s-]*(?:дом[еу]|подъезде|здании|корпусе|дворе|холле|лобби|местах[\s-]*общего[\s-]*пользования)(?![а-яё])(?:(?!квартир|апартамент|комнат)[^.!?;,]){0,12}?(?:ремонт|отделк)[а-яё]*|(?:^|[^а-яё])(?:в|во)[\s-]*(?:дом[еу]|подъезде|здании|корпусе|дворе|холле|лобби|местах[\s-]*общего[\s-]*пользования)(?![а-яё])[\s-]*(?:(?:уже|недавно|полностью|сейчас|как[\s-]*раз|только[\s-]*что)[\s-]*)*(?:сделан|выполнен|проведен|проведён|завершен|завершён|идет|идёт|ведется|ведётся|планируется|запланирован)[а-яё]*[\s-]*(?:кап(?:итальн[а-яё]*)?[\s-]*)?(?:ремонт|отделк)[а-яё]*"),   # S4 — локатив переносит ремонт на дом: «в доме сделан ремонт»
+    re.compile(r"(?:^|[^а-яё])(?:ремонт|отделк)[а-яё]*[\s-]*(?:в|у)[\s-]*(?:соседн|друг|перв|втор|треть|остальн)[а-яё]*[\s-]*(?:корпус|дом|подъезд|квартир|секц|башн|блок|очеред)[а-яё]*"),   # S5 — чужой объект: «ремонт в соседнем корпусе»
+    re.compile(r"(?:^|[^а-яё])(?:в|во|у)[\s-]*(?:соседн[а-яё]*|сосед[а-яё]*|друг[а-яё]*)[\s-]*(?:корпус|дом|подъезд|секц|башн|блок|очеред)?[а-яё]*(?:(?!квартир|апартамент|комнат)[^.!?;,]){0,30}?(?:ремонт|отделк)[а-яё]*"),   # S6 — чужой объект, обратный порядок: «у соседей евроремонт»
+    re.compile(r"(?:^|[^а-яё])(?:рядом|неподалеку|поблизости|напротив|через[\s-]*дорогу|по[\s-]*соседству|во[\s-]*дворе)(?:(?!квартир|апартамент|комнат)[^.!?;,]){0,30}?(?:ремонт|отделк)[а-яё]*"),   # S7 — окружение, а не лот: «рядом идёт ремонт»
+    re.compile(r"(?:^|[^а-яё])(?:сделаем|сделаю|выполним|поможем|организуем|подберем|обеспечим|доделаем|предлагаем|обсуждаем|можем[\s-]*сделать|можно[\s-]*(?:сделать|заказать)|готовы[\s-]*(?:сделать|выполнить)|возможн[а-яё]*|планируетс[а-яё]*|остал[а-яё]*[\s-]*(?:сделать|доделать))(?:(?!квартир|апартамент|комнат)[^.!?;,]){0,30}?(?:ремонт|отделк)[а-яё]*(?:[\s-]*(?:под[\s-]*ключ|от[\s-]*застройщика|под[\s-]*ваш[а-яё]*[\s-]*вкус|за[\s-]*доплату))*"),   # S8 — будущий/гипотетический ремонт: «сделаем ремонт под ваш вкус»
+    re.compile(r"(?:^|[^а-яё])(?:ремонт|отделк)[а-яё]*(?:(?!квартир|апартамент|комнат)[^.!?;,]){0,30}?(?:за[\s-]*доплату|под[\s-]*ваш[а-яё]*[\s-]*вкус|по[\s-]*ваш[а-яё]*[\s-]*проект[а-яё]*|под[\s-]*заказ|по[\s-]*желани[а-яё]*[\s-]*покупател[а-яё]*|на[\s-]*ваш[\s-]*выбор|опционально)"),   # S9 — опциональность: «отделка за доплату»
+    re.compile(r"(?:^|[^а-яё])(?:ремонт|отделк)[а-яё]*[\s-]*(?:в[\s-]*подарок|в[\s-]*кредит|в[\s-]*рассрочку|в[\s-]*ипотеку|за[\s-]*счет[\s-]*(?:банка|застройщика))"),   # S10 — ремонт как бонус/финпродукт: «ремонт в подарок»
+    re.compile(r"(?:^|[^а-яё])(?:скидка|рассрочк|кредит|ипотек|субсиди|бонус|сертификат|смет|материал|бригад|подрядчик|дизайн[\s-]*студи)[а-яё]*(?:(?!квартир|апартамент|комнат)[^.!?;,]){0,30}?(?:на[\s-]*)?(?:ремонт|отделк)[а-яё]*"),   # S11 — реклама услуг и финансирования ремонта: «рассрочка на ремонт»
+]
+
+# Порядок = приоритет: явные категории раньше общих, отрицание раньше
+# утверждения («не требует ремонта» опережает «требует ремонта»), качество
+# отделки важнее меблировки. Последнее правило — catch-all.
+_FIN_RULES = [
+    (FIN["designer"], re.compile(r"(?:^|[^а-яё])дизайнерск[а-яё]*[\s-]*(?:ремонт|отделк|интерьер|квартир|апартамент|решени|проект)[а-яё]*|(?:^|[^а-яё])(?:авторск|эксклюзивн)[а-яё]*[\s-]*(?:ремонт|отделк|интерьер|проект)[а-яё]*|(?:ремонт|отделк[а-яё]*|интерьер[а-яё]*)[\s-]*(?:(?:полностью|целиком)[\s-]*)?(?:выполнен[а-яё]*|сделан[а-яё]*|разработан[а-яё]*)?[\s-]*по[\s-]*(?:(?:индивидуальн|авторск|специальн)[а-яё]*[\s-]*)*дизайн[\s-]*проект[а-яё]*|(?:ремонт|отделк[а-яё]*|интерьер[а-яё]*)[\s-]*от[\s-]*(?:известн[а-яё]*[\s-]*)?дизайнер[а-яё]*|(?:^|[^а-яё])реализован[а-яё]*[\s-]*дизайн[\s-]*проект[а-яё]*|(?:^|[^а-яё])(?:отделк|ремонт|интерьер)[а-яё]*[\s:-]*(?:выполнен[а-яё]*[\s:-]*)?дизайнерск[а-яё]*")),
+    (FIN["euro"], re.compile(r"(?:^|[^а-яё])евро[\s-]*ремонт[а-яё]*|(?:^|[^а-яё])евро[\s-]*отделк[а-яё]*|(?:^|[^а-яё])евростандарт[а-яё]*|ремонт[а-яё]*[\s-]*в[\s-]*евро[\s-]*стиле|(?:^|[^а-яё])(?:отделк|ремонт)[а-яё]*[\s:-]*евро[а-яё]*")),
+    (FIN["prefine"], re.compile(r"white[\s-]*box|(?:^|[^а-яё])(?:вайт|уайт)[\s-]*бокс[а-яё]*|(?:^|[^а-яё])пред[\s-]*чистов[а-яё]*|(?:^|[^а-яё])под[\s-]*чистов[а-яё]*|(?:^|[^а-яё])улучшенн[а-яё]*[\s-]*чернов[а-яё]*|(?:^|[^а-яё])(?:отделк|ремонт)[а-яё]*[\s:-]*(?:предчистов[а-яё]*|white[\s-]*box)")),
+    (FIN["rough"], re.compile(r"(?:^|[^а-яё])чернов[а-яё]*[\s-]*(?:отделк|состоян|вариант|вид)[а-яё]*|(?:^|[^а-яё])чернов(?:ая|ой|ую|ое)(?![а-яё])|(?:^|[^а-яё])(?:с|со)[\s-]*чернов[а-яё]*|(?:^|[^а-яё])(?:отделк|ремонт)[а-яё]*[\s:-]*чернов[а-яё]*")),
+    (FIN["none"], re.compile(r"(?:^|[^а-яё])без[\s-]*(?:как[а-яё]*[\s-]*либо[\s-]*|всяк[а-яё]*[\s-]*)?(?:[а-яё]+(?:ой|ей|ий|ый|ая|ое|ых|ым)[\s-]+){0,2}отделк[а-яё]*|(?:^|[^а-яё])нет[\s-]*отделк[а-яё]*|отделк[а-яё]*[\s-]*(?:полностью[\s-]*)?отсутству[а-яё]*|(?:^|[^а-яё])не[\s-]*выполнен[а-яё]*[\s-]*отделк[а-яё]*|отделк[а-яё]*[\s-]*не[\s-]*(?:выполнен|сделан|производ)[а-яё]*|(?:^|[^а-яё])голы[ех][\s-]*стен[а-яё]*|(?:^|[^а-яё])бетонн[а-яё]*[\s-]*коробк[а-яё]*|отделк[а-яё]*[\s-]*не[\s-]*предусмотрен[а-яё]*|(?:^|[^а-яё])отделк[а-яё]*[\s-]*нет(?![а-яё])")),
+    (FIN["fine"], re.compile(r"(?:^|[^а-яё])чистов[а-яё]*[\s-]*отделк[а-яё]*|отделк[а-яё]*[\s-]*(?:от[\s-]*)?застройщик[а-яё]*|(?:^|[^а-яё])(?:с|со)[\s-]*(?:полной[\s-]*|готовой[\s-]*|качественной[\s-]*|финишной[\s-]*|чистовой[\s-]*)?отделк[а-яё]*|(?:^|[^а-яё])готов[а-яё]*[\s-]*отделк[а-яё]*|отделк[а-яё]*[\s-]*(?:уже[\s-]*)?(?:выполнен|сделан|готов)[а-яё]*|(?:^|[^а-яё])сдан[а-яё]*[\s-]*(?:с|со)[\s-]*отделк[а-яё]*|(?:^|[^а-яё])(?:отделк|ремонт)[а-яё]*[\s:-]*чистов[а-яё]*")),
+    (FIN["some"], re.compile(r"(?:^|[^а-яё])не[\s-]*требу[а-яё]*[\s-]*(?:[а-яё]+[\s-]+){0,2}(?:ремонт|вложен|отделк)[а-яё]*|(?:^|[^а-яё])ремонт[а-яё]*[\s-]*(?:[а-яё]+[\s-]+){0,2}не[\s-]*требу[а-яё]*|(?:^|[^а-яё])не[\s-]*нужен[\s-]*ремонт[а-яё]*")),
+    (FIN["norepair"], re.compile(r"(?:^|[^а-яё])без[\s-]*ремонт[а-яё]*|(?:^|[^а-яё])требу[а-яё]*[\s-]*(?:[а-яё]+[\s-]+){0,2}ремонт[а-яё]*|(?:^|[^а-яё])нужен[\s-]*(?:[а-яё]+[\s-]+){0,1}ремонт[а-яё]*|(?:^|[^а-яё])нужда[а-яё]*[\s-]*в[\s-]*ремонт[а-яё]*|(?:^|[^а-яё])под[\s-]*ремонт(?![а-яё])|(?:^|[^а-яё])убит[а-яё]*[\s-]*(?:квартир|состоян|двушк|трешк|однушк)[а-яё]*|(?:^|[^а-яё])(?:в|во)[\s-]*(?:строительн|первоначальн|плачевн|ужасн|убит|предремонтн)[а-яё]*[\s-]*состоян[а-яё]*|(?:^|[^а-яё])ремонт[а-яё]*[\s-]*(?:[а-яё]+[\s-]+){0,2}не[\s-]*(?:было|делал|начат|производ|провод|дела)[а-яё]*|(?:^|[^а-яё])(?:никогда[\s-]*)?не[\s-]*(?:делал|производил|проводил)[а-яё]*[\s-]*ремонт[а-яё]*|(?:^|[^а-яё])(?:бабушкин|дедушкин|советск)[а-яё]*[\s-]*ремонт[а-яё]*|(?:^|[^а-яё])требует[\s-]*вложени[а-яё]*")),
+    (FIN["cosmetic"], re.compile(r"(?:^|[^а-яё])косметич[а-яё]*|(?:^|[^а-яё])космет(?![а-яё])[\s-]*ремонт|(?:^|[^а-яё])(?:в[\s-]*)?(?:жило[а-яё]*|хорош[а-яё]*|отличн[а-яё]*|нормальн[а-яё]*|приличн[а-яё]*|достойн[а-яё]*|ухожен[а-яё]*)[\s-]*состоян[а-яё]*|(?:^|[^а-яё])(?:сделан|выполнен|произведен|проведен)[а-яё]*[\s-]*(?:[а-яё]+[\s-]+){0,2}ремонт[а-яё]*|(?:^|[^а-яё])после[\s-]*ремонт[а-яё]*|(?:^|[^а-яё])(?:свеж|недавн|нов|аккуратн|добротн|качественн|современн|легк|хорош|отличн|приличн|достойн)[а-яё]*[\s-]*ремонт[а-яё]*|(?:^|[^а-яё])ремонт[а-яё]*[\s-]*(?:сделан|выполнен)[а-яё]*|(?:^|[^а-яё])(?:отделк|ремонт)[а-яё]*[\s:-]*косметическ[а-яё]*")),
+    (FIN["turnkey"], re.compile(r"(?:^|[^а-яё])под[\s-]*ключ(?![а-яё])|(?:^|[^а-яё])(?:с|со)[\s-]*(?:всей[\s-]*|полной[\s-]*|новой[\s-]*)?мебел[а-яё]*|(?:^|[^а-яё])меблирован[а-яё]*|(?:^|[^а-яё])(?:с|со)[\s-]*(?:быт[а-яё]*[\s-]*)?техник(?:а|и|е|у|ой)?(?![а-яё])|(?:^|[^а-яё])(?:вся[\s-]*)?мебел[а-яё]*[\s-]*(?:и[\s-]*техник[а-яё]*[\s-]*)?оста(?:ет|ю)[а-яё]*|(?:^|[^а-яё])оста(?:ет|ю)[а-яё]*[\s-]*(?:вся[\s-]*)?мебел[а-яё]*|(?:^|[^а-яё])полностью[\s-]*обставлен[а-яё]*")),
+    (FIN["some"], re.compile(r"(?:^|[^а-яё])(?:можно[\s-]*(?:сразу[\s-]*)?(?:жить|заезжать|въезжать|заселяться)|(?:за|в)езжай[\s-]*и[\s-]*живи|готов[а-яё]*[\s-]*к[\s-]*(?:заселени|проживани)[а-яё]*)")),
+    (FIN["some"], re.compile(r"(?:^|[^а-яё])ремонт[а-яё]*|(?:^|[^а-яё])отремонтирован[а-яё]*|(?:^|[^а-яё])(?:с|со)[\s-]*отделк[а-яё]*")),
+]
+
+DESC_MAX_CHARS = 600        # предел читаемости листа, не предел Excel
+EXCEL_CELL_LIMIT = 32767    # жёсткий предел длины строки в ячейке
+_TAGS = re.compile(r"<[^>]+>")
+# Символы, которые openpyxl отказывается писать: присваивание строки с \x0b
+# роняет IllegalCharacterError и убивает запись ВСЕЙ книги.
+_ILLEGAL = re.compile(r"[\000-\010\013\014\016-\037]")
+# Одинокие суррогаты приезжают из ответа API как есть (json.loads их пропускает).
+# openpyxl запишет такую строку молча, а вот ОТКРЫТЬ книгу потом не получится.
+_SURROGATE = re.compile("[\ud800-\udfff]")
+_NBSP = re.compile("[\u00a0\u202f]")
+_FIN_ZW = re.compile("[\u00ad\u200b\u200c\u200d\ufeff]")      # мягкий перенос, zero-width
+_ASTRAL = re.compile("[^\u0000-\uffff]")                        # эмодзи и прочее вне BMP
+# Мини-декодер HTML-сущностей — намеренно НЕ html.unescape(): полного аналога в JS
+# нет, и один и тот же оффер получал бы разные категории в разных выгрузках.
+_ENT_RX = re.compile(r"&(#[0-9]{1,7}|#[xX][0-9a-fA-F]{1,6}|[a-zA-Z][a-zA-Z0-9]{1,10});")
+_ENT = {
+    "amp": "&", "lt": "<", "gt": ">", "quot": '"', "apos": "'", "nbsp": " ", "shy": "",
+    "laquo": "\u00ab", "raquo": "\u00bb", "mdash": "\u2014", "ndash": "\u2013",
+    "hellip": "\u2026", "middot": "\u00b7", "times": "\u00d7", "deg": "\u00b0",
+    "lsquo": "\u2018", "rsquo": "\u2019", "ldquo": "\u201c", "rdquo": "\u201d",
+    "copy": "\u00a9", "reg": "\u00ae", "euro": "\u20ac", "rouble": "\u20bd",
 }
 
 
-def decoration_of(o):
-    dec = o.get("decoration") or o.get("repairType")   # в списке часто отсутствует
-    if isinstance(dec, dict):
-        dec = dec.get("type") or dec.get("value")
-    if not dec:
-        dec = dig(o, "flatDecoration") or dig(o, "newbuilding.decoration")
-    if dec is None:
+def _fin_entities(s):
+    def rep(m):
+        e = m.group(1)
+        if e[0] == "#":
+            hexa = e[1] in "xX"
+            try:
+                cp = int(e[2:], 16) if hexa else int(e[1:], 10)
+            except ValueError:
+                return m.group(0)
+            if not (1 <= cp <= 0x10FFFF) or 0xD800 <= cp <= 0xDFFF:
+                return m.group(0)
+            return chr(cp)
+        v = _ENT.get(e.lower())
+        return m.group(0) if v is None else v
+    return _ENT_RX.sub(rep, s)
+
+
+def _field_value(v):
+    """Значение поля отделки: разворачиваем dict на уровень и приводим к строке.
+    Сложное значение считаем отсутствующим — иначе поиск по словарю падает
+    TypeError на нехешируемом ключе и роняет весь прогон."""
+    if isinstance(v, dict):
+        v = v.get("type") or v.get("value")
+    if v is None or isinstance(v, (list, dict, set, tuple)):
         return None
-    return _DECORATION_MAP.get(str(dec), str(dec))
+    if isinstance(v, str):
+        return v.strip() or None
+    return str(v)
+_FIN_DASH = re.compile("[\u2010-\u2015\u2212]")                 # типографские тире
+# Явный класс пробелов вместо \s — см. комментарий в JS-версии блока.
+_FIN_WS = re.compile("[\u0009-\u000d\u001c-\u001f\u0020\u0085\u00a0\u1680"
+                     "\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]+")
+
+
+def description_of(o):
+    """Полный текст объявления, вычищенный до пригодного для Excel. None, если пусто.
+
+    Подтверждённое поле Циан — только `description` (строка на верхнем уровне
+    оффера). `title` у квартир обычно пустой, но у карточек из playwright-фолбэка
+    это единственный доступный текст, поэтому он идёт запасным вариантом.
+    НЕ обрезается: обрезка — дело _clip_desc(), а классификация обязана видеть
+    текст целиком.
+    """
+    d = o.get("description")
+    if isinstance(d, dict):
+        d = d.get("text") or d.get("value")
+    if not isinstance(d, str) or not d.strip():
+        t = o.get("title")
+        d = t if isinstance(t, str) else ""
+    if not d:
+        return None
+    d = _TAGS.sub(" ", d)
+    d = _fin_entities(d)
+    d = _ILLEGAL.sub("", d)
+    d = _SURROGATE.sub("", d)
+    d = _FIN_ZW.sub("", d)
+    d = _NBSP.sub(" ", d)
+    d = _FIN_WS.sub(" ", d).strip(" ")
+    if not d:
+        return None
+    return d[:EXCEL_CELL_LIMIT]
+
+
+def _clip_desc(d):
+    """Обрезка ТОЛЬКО для ячейки: 600 знаков — предел читаемости листа."""
+    if not d:
+        return d
+    return d if len(d) <= DESC_MAX_CHARS else d[:DESC_MAX_CHARS] + "\u2026"
+
+
+def _fin_norm(t):
+    s = ("" if t is None else str(t)).lower().replace("\u0451", "\u0435")   # ё -> е
+    # Эмодзи и одинокие суррогаты: в JS это ДВА code unit, в Python — один символ,
+    # а окна {0,n} в стоп-контекстах считают единицы движка. Без выпиливания один
+    # и тот же текст давал бы разные категории в JS и в Python.
+    s = _ASTRAL.sub(" ", s)
+    s = _SURROGATE.sub(" ", s)
+    s = _FIN_ZW.sub("", s)
+    s = _FIN_DASH.sub("-", s)
+    return _FIN_WS.sub(" ", s).strip(" ")
+
+
+def finish_from_text(t):
+    """Категория отделки по тексту объявления. None, если признаков нет."""
+    if not t:
+        return None
+    s = _fin_norm(t)
+    for rx in _FIN_STOPS:
+        s = rx.sub(" ", s)
+    s = _FIN_WS.sub(" ", s)
+    for label, rx in _FIN_RULES:
+        if rx.search(s):
+            return label
+    return None
+
+
+def finish_of(o, desc=None):
+    """(категория, источник). Источник: «Циан-поле» / «из описания» / None."""
+    rt = _field_value(o.get("repairType"))
+    dc = _field_value(o.get("decoration"))
+    if rt and _FIELD_FIN.get(rt):
+        return _FIELD_FIN[rt], "Циан-поле"
+    if dc and _FIELD_FIN.get(dc):
+        return _FIELD_FIN[dc], "Циан-поле"
+    ft = finish_from_text(desc if desc is not None else description_of(o))
+    if ft:
+        return ft, "из описания"
+    if rt or dc:
+        return str(rt or dc), "Циан-поле"      # словарь отстал от Циан
+    return None, None
+
+
+# ===== FIN-BLOCK-END ========================================================= #
 
 
 def seller_type_of(o):
@@ -663,6 +858,8 @@ def normalize(o, today):
     exposure = (today - pub).days if pub else None
     floor = o.get("floorNumber")
     floors = dig(o, "building.floorsCount") or dig(o, "floorsCount")
+    desc = description_of(o)                 # полный текст, один разбор на лот
+    fin, fin_src = finish_of(o, desc)        # категория — по ПОЛНОМУ тексту
     return {
         "cianId": cid,
         "url": offer_url_of(o),
@@ -673,7 +870,9 @@ def normalize(o, today):
         "building": building_of(o),
         "seller_type": seller_type_of(o),
         "seller_name": seller_name_of(o),
-        "decoration": decoration_of(o),
+        "decoration": fin,
+        "finish_src": fin_src,
+        "description": _clip_desc(desc),   # в ячейку — обрезанный
         "price": price,
         "ppm": ppm,
         "published": pub,
@@ -698,16 +897,17 @@ COLUMNS = [
     ("Корпус / секция",         "building",      16, None),
     ("Тип продавца",            "seller_type",   13, None),
     ("Продавец",                "seller_name",   22, None),
-    ("Отделка",                 "decoration",    14, None),
+    ("Отделка/ремонт",          "decoration",    24, None),
+    ("Источник отделки",        "finish_src",    16, None),
     ("Цена, ₽",                 "price",         15, "#,##0"),
     ("Цена за м², ₽",           "ppm",           13, "#,##0"),      # формула =price/area
     ("Дата публикации",         "published",     15, "dd.mm.yyyy"),
     ("Срок экспоз., дней",      "exposure_days", 12, "0"),          # дни с ПОСЛЕДНЕЙ подачи
     ("Дата обновления",         "updated",       15, "dd.mm.yyyy"),
+    ("Описание",                "description",   46, None),
     ("Ссылка",                  "url",           10, None),
     ("В расчёте",               "in_calc",       9,  "0"),
 ]
-COL_KEY_TO_LETTER = {}   # заполняется в write_sheet_table
 
 
 def _import_openpyxl():
@@ -754,6 +954,7 @@ def write_workbook(rows, jk_id, jk_name, totals_by_room, out_path, total_in_jk=N
             c.border = border
             ws.column_dimensions[get_column_letter(ci)].width = width
         # данные с строки 5
+        desc_align = Alignment(horizontal="left", vertical="top", wrap_text=False)
         area_letter = col_letter("area")
         price_letter = col_letter("price")
         for ri, row in enumerate(table_rows, start=hdr_row + 1):
@@ -767,6 +968,14 @@ def write_workbook(rows, jk_id, jk_name, totals_by_room, out_path, total_in_jk=N
                     if url:
                         cell.hyperlink = url
                         cell.font = link_font
+                elif key == "description":
+                    desc = row.get("description")
+                    # data_type='s' обязателен: текст, начинающийся с «=», openpyxl
+                    # запишет как формулу, и Excel сочтёт книгу повреждённой
+                    cell.value = desc or None
+                    if desc:
+                        cell.data_type = "s"
+                    cell.alignment = desc_align
                 elif key == "ppm":
                     # живая формула =цена/площадь (как в эталоне), формат — целое
                     if row.get("price") is not None and row.get("area"):
@@ -781,7 +990,7 @@ def write_workbook(rows, jk_id, jk_name, totals_by_room, out_path, total_in_jk=N
                         cell.number_format = fmt
                 cell.border = border
         last = hdr_row + len(table_rows)
-        ws.freeze_panes = "A5"
+        ws.freeze_panes = "C5"
         if table_rows:
             ws.auto_filter.ref = f"A{hdr_row}:{get_column_letter(len(COLUMNS))}{last}"
         return last
@@ -811,9 +1020,16 @@ def write_workbook(rows, jk_id, jk_name, totals_by_room, out_path, total_in_jk=N
         write_table(ws, f"ЖК {jk_name} — {cat}", sub, crows)
 
     # ---- наполняем Сводку формулами по листу Все_лоты -------------------- #
+    # порядок категорий отделки берём из FIN, а не перепечатываем подписи руками:
+    # иначе при первой же правке подписи строка в Сводке молча обнулится.
+    # Хвостом добавляем значения, которых в FIN нет (Циан ввёл новое) — иначе они
+    # утекли бы в «Не определена», хотя определены полем.
+    seen_fins = {r.get("decoration") for r in rows if r.get("decoration")}
+    present_fins = [lab for lab in FIN.values() if lab in seen_fins]
+    present_fins += sorted(seen_fins - set(FIN.values()))
     _fill_summary(summary, all_ws.title, last_all, jk_id, jk_name, today_str,
                   totals_by_room, present, col_letter,
-                  Font, Alignment, total_in_jk)
+                  Font, Alignment, total_in_jk, present_fins)
 
     # порядок листов: Сводка первым
     wb.move_sheet("Сводка", -(len(wb.sheetnames) - 1))
@@ -822,7 +1038,7 @@ def write_workbook(rows, jk_id, jk_name, totals_by_room, out_path, total_in_jk=N
 
 def _fill_summary(ws, sheet, last_row, jk_id, jk_name, today_str,
                   totals_by_room, present_cats, col_letter, Font, Alignment,
-                  total_in_jk=None):
+                  total_in_jk=None, present_fins=()):
     """Сводка: охват + средняя ₽/м² (частник vs застройщик) + диапазоны цен."""
     title_font = Font(bold=True, size=13)
     sub_font = Font(italic=True, color="555555", size=9)
@@ -862,8 +1078,14 @@ def _fill_summary(ws, sheet, last_row, jk_id, jk_name, today_str,
             ws.cell(r, 4).number_format = "0%"
         r += 1
     ws.cell(r, 1, "ИТОГО (категории)").font = h_font
-    ws.cell(r, 2).value = f"=SUM(B{first_data}:B{r-1})"
-    ws.cell(r, 3).value = f"=SUM(C{first_data}:C{r-1})"
+    if r > first_data:
+        ws.cell(r, 2).value = f"=SUM(B{first_data}:B{r-1})"
+        ws.cell(r, 3).value = f"=SUM(C{first_data}:C{r-1})"
+    else:
+        # ни одной категории (так бывает на пути --playwright, где нет roomsCount):
+        # SUM(B6:B5) сослался бы на собственную ячейку и дал циклическую ссылку
+        ws.cell(r, 2).value = 0
+        ws.cell(r, 3).value = 0
     ws.cell(r, 4).value = f"=IFERROR(B{r}/C{r},\"—\")"
     ws.cell(r, 4).number_format = "0%"
     r += 1
@@ -902,6 +1124,36 @@ def _fill_summary(ws, sheet, last_row, jk_id, jk_name, today_str,
         r += 1
     r += 1
 
+    # — отделка/ремонт —
+    # «Источник» здесь не украшение: он показывает, на что опирается категория.
+    # Если почти всё пришло «из описания» — стоит выборочно свериться с текстом.
+    fin_col = col_letter("decoration")
+    src_col = col_letter("finish_src")
+    ws.cell(r, 1, "ОТДЕЛКА / РЕМОНТ").font = h_font
+    r += 1
+    for i, h in enumerate(["Категория отделки", "Лотов", "Доля"], start=1):
+        ws.cell(r, i, h).font = h_font
+    r += 1
+    fin_first = r
+    for lab in present_fins:
+        ws.cell(r, 1, lab)
+        ws.cell(r, 2).value = f'=COUNTIFS({R(fin_col)},"{lab}",{R(calc_col)},1)'
+        ws.cell(r, 3).value = f'=IFERROR(B{r}/COUNTIFS({R(calc_col)},1),"—")'
+        ws.cell(r, 3).number_format = "0%"
+        r += 1
+    ws.cell(r, 1, "Не определена")
+    ws.cell(r, 2).value = (f'=COUNTIFS({R(calc_col)},1)'
+                           + (f'-SUM(B{fin_first}:B{r - 1})' if r > fin_first else ""))
+    ws.cell(r, 3).value = f'=IFERROR(B{r}/COUNTIFS({R(calc_col)},1),"—")'
+    ws.cell(r, 3).number_format = "0%"
+    r += 1
+    ws.cell(r, 1, "в т.ч. определено полем Циан")
+    ws.cell(r, 2).value = f'=COUNTIFS({R(src_col)},"Циан-поле",{R(calc_col)},1)'
+    r += 1
+    ws.cell(r, 1, "в т.ч. определено по тексту объявления")
+    ws.cell(r, 2).value = f'=COUNTIFS({R(src_col)},"из описания",{R(calc_col)},1)'
+    r += 2
+
     # — диапазоны цен —
     ws.cell(r, 1, "ДИАПАЗОН ЦЕН ПО КАТЕГОРИЯМ, ₽").font = h_font
     r += 1
@@ -926,6 +1178,9 @@ def _fill_summary(ws, sheet, last_row, jk_id, jk_name, today_str,
         "• Срок экспозиции = сегодня − дата ПОСЛЕДНЕЙ публикации (added/creationDate). Циан сбрасывает дату при переподаче,",
         "  поэтому это «дни с последней подачи», а не полный срок размещения.",
         "• «Цена за м²» — живая формула =цена/площадь, формат «целое».",
+        "• «Отделка/ремонт» берётся сначала из поля Циан (repairType/decoration), а если оно пустое — из текста объявления",
+        "  по ключевым словам. Чем именно определена категория, показывает колонка «Источник отделки»; сам текст —",
+        "  в колонке «Описание» (обрезан до 600 знаков, полный — по ссылке на объявление).",
         "• Полный охват (100%) выдачи Циан режется ~28 страницами × 28 лотов на запрос. Скрипт обходит лимит",
         "  дроблением по комнатности и диапазонам цены с дедупликацией по cianId; гарантированные 100% даёт только API под вашим логином.",
     ]
@@ -1138,18 +1393,21 @@ MOCK_OFFERS = [
      "building": {"floorsCount": 54}, "newbuilding": {"house": {"name": "Графит"}},
      "bargainTerms": {"price": 19000000}, "addedTimestamp": 1748736000,
      "editDate": "2026-06-20T10:00:00+03:00", "isByHomeowner": True,
-     "user": {"userType": "homeowner"}, "decoration": "preFine"},
+     "user": {"userType": "homeowner"}, "decoration": "preFine",
+     # поле Циан обязано победить текст: в описании евроремонт, а поле — preFine
+     "description": "Сделан отличный <b>евроремонт</b>, заезжай и живи."},
     {"cianId": 327006811, "fullUrl": "https://www.cian.ru/sale/flat/327006811/",
      "isStudio": True, "roomsCount": 0, "totalArea": "27.4", "floorNumber": 31,
      "building": {"floorsCount": 54}, "newbuilding": {"house": {"name": "Сильвер"}},
      "bargainTerms": {"price": 21900000}, "addedTimestamp": 1750464000,
      "user": {"userType": "agency", "agencyName": "Илиаз и партнеры"},
-     "decoration": "fine"},
+     "decoration": "fine", "description": "Просторная студия с панорамным видом."},
     {"cianId": 327006812, "fullUrl": "https://www.cian.ru/sale/flat/327006812/",
      "flatType": "rooms", "roomsCount": 1, "totalArea": "41.2", "floorNumber": 12,
      "building": {"floorsCount": 25}, "newbuilding": {"house": {"name": "Кристалл"}},
      "bargainTerms": {"price": 33500000}, "addedTimestamp": 1749600000,
-     "isFromBuilder": True, "user": {"userType": "developer"}, "decoration": "without"},
+     "isFromBuilder": True, "user": {"userType": "developer"}, "decoration": "without",
+     "description": "Передаётся без отделки. Ремонт подъезда завершён в 2025 году."},
     {"cianId": 327006813, "fullUrl": "https://www.cian.ru/sale/flat/327006813/",
      "flatType": "rooms", "roomsCount": 2, "totalArea": "60.0", "floorNumber": 8,
      "building": {"floorsCount": 36}, "newbuilding": {"house": {"name": "Сиена"}},
@@ -1160,13 +1418,78 @@ MOCK_OFFERS = [
      "flatType": "openPlan", "roomsCount": 0, "totalArea": "85.3", "floorNumber": 20,
      "building": {"floorsCount": 43}, "newbuilding": {"house": {"name": "Графит"}},
      "bargainTerms": {"price": 78000000}, "addedTimestamp": 1746230400,
-     "isByHomeowner": True, "user": {"userType": "homeowner"}},
+     "isByHomeowner": True, "user": {"userType": "homeowner"},
+     # поля отделки нет — категория берётся из текста (регресс на «авторский
+     # ремонт»: раньше правило было мертво из-за \\w в JS-версии)
+     "description": "Сделан авторский ремонт по дизайн-проекту, мебель остаётся."},
     {"cianId": 327006815, "fullUrl": "https://www.cian.ru/sale/flat/327006815/",
      "flatType": "rooms", "roomsCount": 4, "totalArea": "120.7", "floorNumber": 40,
      "building": {"floorsCount": 54}, "newbuilding": {"house": {"name": "Кристалл"}},
      "bargainTerms": {"price": 150000000}, "addedTimestamp": 1745020800,
      "isFromBuilder": True, "user": {"userType": "developer"}, "decoration": "fine"},
+    # --- случаи, добавленные под проверку отделки из описания ---
+    {"cianId": 327006816, "fullUrl": "https://www.cian.ru/sale/flat/327006816/",
+     "flatType": "rooms", "roomsCount": 2, "totalArea": "54.0", "floorNumber": 3,
+     "building": {"floorsCount": 12}, "bargainTerms": {"price": 24000000},
+     "addedTimestamp": 1748000000,
+     "description": "Квартира требуется ремонт, состояние строительное."},
+    {"cianId": 327006817, "fullUrl": "https://www.cian.ru/sale/flat/327006817/",
+     "flatType": "rooms", "roomsCount": 1, "totalArea": "38.0", "floorNumber": 7,
+     "building": {"floorsCount": 17}, "bargainTerms": {"price": 17000000},
+     "addedTimestamp": 1748100000,
+     # классификатор не должен ничего выдумывать
+     "description": "Продаётся квартира в новом доме. Рядом парк и школа."},
+    {"cianId": 327006818, "fullUrl": "https://www.cian.ru/sale/flat/327006818/",
+     "flatType": "rooms", "roomsCount": 3, "totalArea": "92.5", "floorNumber": 15,
+     "building": {"floorsCount": 22}, "bargainTerms": {"price": 61000000},
+     "addedTimestamp": 1748200000,
+     # два реальных краша разом: \x0b роняет openpyxl (IllegalCharacterError),
+     # а ведущий «=» превращает текст в формулу и Excel считает книгу битой
+     "description": "=Срочно!\x0b Евроремонт. " + "очень длинный текст " * 60},
+    {"cianId": 327006819, "fullUrl": "https://www.cian.ru/sale/flat/327006819/",
+     "flatType": "rooms", "roomsCount": 1, "totalArea": "44.0", "floorNumber": 9,
+     "building": {"floorsCount": 30}, "bargainTerms": {"price": 28000000},
+     # значение поля Циан не в словаре И текста нет — отдаём значение как есть,
+     # чтобы новая категория Циан не пропала молча
+     "addedTimestamp": 1748300000, "decoration": "superLux"},
+    {"cianId": 327006822, "fullUrl": "https://www.cian.ru/sale/flat/327006822/",
+     "flatType": "rooms", "roomsCount": 2, "totalArea": "51.0", "floorNumber": 4,
+     "building": {"floorsCount": 16}, "bargainTerms": {"price": 23000000},
+     "addedTimestamp": 1748600000, "decoration": "superLux",
+     # незнакомое значение поля УСТУПАЕТ уверенному сигналу из текста:
+     # категорию из словаря мы дать не можем, а текст — можем
+     "description": "Хорошее состояние, сделан свежий ремонт."},
+    {"cianId": 327006820, "fullUrl": "https://www.cian.ru/sale/flat/327006820/",
+     "flatType": "rooms", "roomsCount": 2, "totalArea": "58.0", "floorNumber": 2,
+     "building": {"floorsCount": 9}, "bargainTerms": {"price": 21000000},
+     "addedTimestamp": 1748400000, "repairType": "no",
+     "description": "Квартира в жилом состоянии."},
+    {"cianId": 327006821, "fullUrl": "https://www.cian.ru/sale/flat/327006821/",
+     "flatType": "rooms", "roomsCount": 1, "totalArea": "40.0", "floorNumber": 5,
+     "building": {"floorsCount": 14}, "bargainTerms": {"price": 19500000},
+     "addedTimestamp": 1748500000,
+     # стоп-контекст: ремонт относится к дому, а не к квартире
+     "description": "В доме недавно сделан ремонт подъезда и заменены лифты."},
 ]
+
+# Что именно должен дать классификатор: cianId -> (категория, источник).
+# Ради этого словаря самотест и существует — без него мёртвое правило regex
+# выглядит как успешный прогон.
+EXPECT_FINISH = {
+    327006810: ("Предчистовая (white box)", "Циан-поле"),   # поле важнее текста
+    327006811: ("Чистовая", "Циан-поле"),
+    327006812: ("Без отделки", "Циан-поле"),
+    327006813: ("Дизайнерский", "Циан-поле"),               # decoration=designer
+    327006814: ("Дизайнерский", "из описания"),
+    327006815: ("Чистовая", "Циан-поле"),
+    327006816: ("Без ремонта", "из описания"),
+    327006817: (None, None),
+    327006818: ("Евроремонт", "из описания"),
+    327006819: ("superLux", "Циан-поле"),                   # словарь отстал от Циан
+    327006822: ("Косметический", "из описания"),            # текст важнее непонятного поля
+    327006820: ("Без ремонта", "Циан-поле"),                # repairType=no
+    327006821: (None, None),                                # ремонт дома, не лота
+}
 
 
 def run_self_test(args):
@@ -1189,7 +1512,134 @@ def run_self_test(args):
     write_workbook(rows, args.jk_id or 2515016, args.jk_name or "SELF-TEST", totals, out)
     print(f"\nЗаписан тестовый файл: {out}")
     print_console_stats(rows)
-    return rows
+    log_field_coverage(rows)      # заодно прогоняем диагностику заполненности
+
+    fails = (_check_finish(rows) + _check_corpus() + _check_garbage()
+             + _check_written_file(out))
+    if fails:
+        print(f"\nSELF-TEST ПРОВАЛЕН: расхождений {fails}")
+    else:
+        print("\nSELF-TEST пройден: отделка, корпус и запись файла — без расхождений.")
+    return rows, fails
+
+
+def _check_finish(rows):
+    """Отделка и её источник на мок-лотах."""
+    print("\n--- Отделка/ремонт ---")
+    bad = 0
+    for r in sorted(rows, key=lambda x: x["cianId"]):
+        exp = EXPECT_FINISH.get(r["cianId"])
+        got = (r["decoration"], r["finish_src"])
+        if exp is None:
+            continue
+        mark = "OK" if got == exp else "!!"
+        if got != exp:
+            bad += 1
+        print(f"  {mark} {r['cianId']} -> {got[0]!r} / {got[1]!r}"
+              + ("" if got == exp else f"   ожидалось {exp[0]!r} / {exp[1]!r}"))
+    return bad
+
+
+def _check_garbage():
+    """Мусорные значения полей из API не должны ронять прогон.
+
+    Циан не обязан присылать строку: поле может прийти числом, словарём, списком
+    или отсутствовать вовсе. Раньше нехешируемое значение падало TypeError уже
+    на поиске по словарю и убивало ВЕСЬ сбор — то есть один странный оффер
+    стоил пользователю всей выгрузки.
+    """
+    today = date.today()
+    cases = [
+        ("описание = None", {"cianId": 1, "description": None}),
+        ("описание = число", {"cianId": 2, "description": 12345}),
+        ("описание = список", {"cianId": 3, "description": ["a", "b"]}),
+        ("описание = одни пробелы", {"cianId": 4, "description": "   \n\t  "}),
+        ("описание = dict", {"cianId": 5, "description": {"text": "Свежий ремонт"}}),
+        ("отделка = вложенный dict", {"cianId": 6, "repairType": {"value": {"name": "euro"}}}),
+        ("отделка = число", {"cianId": 7, "decoration": 42}),
+        ("отделка = список", {"cianId": 8, "decoration": ["fine"]}),
+        ("отделка = пустая строка", {"cianId": 9, "decoration": ""}),
+        ("оффер без единого поля", {}),
+        ("одинокий суррогат в описании", {"cianId": 10, "description": "Ремонт \ud83d новый"}),
+        ("очень длинное описание", {"cianId": 11, "description": "Ремонт. " * 9000}),
+    ]
+    print("\n--- Мусорные данные ---")
+    bad = 0
+    for name, offer in cases:
+        try:
+            r = normalize(offer, today)
+        except Exception as e:                                  # noqa: BLE001
+            print(f"  !! {name}: {type(e).__name__}: {e}")
+            bad += 1
+            continue
+        d = r["description"]
+        if d is not None and (not isinstance(d, str) or d == ""):
+            print(f"  !! {name}: description = {d!r} — должно быть None или непустой строкой")
+            bad += 1
+            continue
+        if d and len(d) > DESC_MAX_CHARS + 1:
+            print(f"  !! {name}: описание длиной {len(d)} не обрезано")
+            bad += 1
+            continue
+        if d and _SURROGATE.search(d):
+            print(f"  !! {name}: в описании остался одинокий суррогат — Excel не откроет книгу")
+            bad += 1
+            continue
+    if not bad:
+        print(f"  OK все {len(cases)} случаев отработали без падения")
+    return bad
+
+
+def _check_corpus():
+    """Общий с JS-экспортёрами корпус: tests/finish_corpus.json."""
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                        "tests", "finish_corpus.json")
+    if not os.path.exists(path):
+        print("\n--- Корпус --- пропущен: нет tests/finish_corpus.json")
+        return 0
+    with open(path, encoding="utf-8") as fh:
+        corpus = json.load(fh)
+    bad = 0
+    for text, expected in corpus:
+        got = finish_from_text(text)
+        if got != expected:
+            bad += 1
+            print(f"  !! «{text}»\n     ожидалось {expected!r}, получено {got!r}")
+    print(f"\n--- Корпус --- {len(corpus) - bad}/{len(corpus)}")
+    if not bad:
+        print("     (тот же корпус прогоняет node tests/check_finish.mjs — "
+              "если оба зелёные, три экспортёра классифицируют одинаково)")
+    return bad
+
+
+def _check_written_file(path):
+    """Обратное чтение книги: ловит то, что не видно на уровне строк —
+    текст, записанный как формула, и запрещённые для Excel символы."""
+    import openpyxl
+    bad = 0
+    wb = openpyxl.load_workbook(path)
+    ws = wb["Все_лоты"]
+    headers = {c.value: c.column for c in ws[4] if c.value}
+    for name in ("Описание", "Отделка/ремонт", "Источник отделки"):
+        if name not in headers:
+            print(f"  !! в листе «Все_лоты» нет колонки «{name}»")
+            bad += 1
+    if "Описание" in headers:
+        col = headers["Описание"]
+        filled = 0
+        for row in range(5, ws.max_row + 1):
+            cell = ws.cell(row=row, column=col)
+            if cell.value is None:
+                continue
+            filled += 1
+            if cell.data_type != "s":
+                print(f"  !! «Описание» в строке {row} записано как {cell.data_type!r}, "
+                      f"а не как текст: {str(cell.value)[:40]!r}")
+                bad += 1
+        print(f"\n--- Файл --- «Описание» заполнено в {filled} строках, "
+              f"все ячейки текстовые: {'да' if not bad else 'НЕТ'}")
+    wb.close()
+    return bad
 
 
 # ----------------------------------------------------------------------------- #
@@ -1219,7 +1669,8 @@ def print_console_stats(rows):
 
 
 # поля, которые НЕ всегда есть в ответе search-offers-desktop (нормально, что пустые)
-_OPTIONAL_FIELDS = {"decoration", "updated", "building", "seller_name"}
+_OPTIONAL_FIELDS = {"decoration", "finish_src", "description", "updated", "building",
+                    "seller_name"}
 # критичные поля — если пустые, скорее всего схема ответа изменилась
 _CRITICAL_FIELDS = {"cianId", "url", "area", "price", "category"}
 
@@ -1233,8 +1684,8 @@ def log_field_coverage(rows):
     if not n:
         return
     keys = ["cianId", "url", "category", "area", "floor", "floors", "building",
-            "seller_type", "seller_name", "decoration", "price", "published",
-            "updated", "exposure_days"]
+            "seller_type", "seller_name", "decoration", "finish_src", "description",
+            "price", "published", "updated", "exposure_days"]
     log.info("Заполненность полей (по %d лотам):", n)
     for k in keys:
         filled = sum(1 for r in rows if r.get(k) is not None)
@@ -1248,6 +1699,23 @@ def log_field_coverage(rows):
         log.info("    %-14s %3d/%-3d (%3.0f%%)%s", k, filled, n, pct, flag)
     direct = sum(1 for r in rows if r.get("url") and "/sale/flat/" in r["url"])
     log.info("    прямых ссылок /sale/flat/: %d/%d (%.0f%%)", direct, n, 100 * direct / n)
+
+    # Разрез по источнику отделки. Без него заполненность колонки «Отделка/ремонт»
+    # ничего не значит: 100% может быть следствием одного всеядного правила.
+    by_field = sum(1 for r in rows if r.get("finish_src") == "Циан-поле")
+    by_text = sum(1 for r in rows if r.get("finish_src") == "из описания")
+    with_desc = sum(1 for r in rows if r.get("description"))
+    log.info("    отделка: поле Циан %d / из описания %d / не определена %d",
+             by_field, by_text, n - by_field - by_text)
+    log.info("    описание есть у %d/%d (%.0f%%)", with_desc, n, 100 * with_desc / n)
+    if with_desc > 0.3 * n and by_text == 0:
+        log.warning("    ← описания есть, но по тексту не определено НИ ОДНОГО — "
+                    "похоже, правила классификатора сломаны")
+    labels = {r.get("decoration") for r in rows if r.get("finish_src") == "из описания"}
+    if by_text > 0.95 * n and len(labels) == 1:
+        log.warning("    ← почти всё определено по тексту и одной категорией (%s) — "
+                    "похоже, в description попал общий текст ЖК, а не объявления",
+                    labels.pop())
 
 
 def slugify(text):
@@ -1349,8 +1817,8 @@ def main(argv=None):
 
     if args.self_test:
         args.jk_id = extract_newobject_id(args.jk) if args.jk else 2515016
-        run_self_test(args)
-        return 0
+        _, fails = run_self_test(args)
+        return 1 if fails else 0
 
     if not args.jk:
         log.error("Не задан --jk (ссылка на ЖК или ID). См. --help.")
