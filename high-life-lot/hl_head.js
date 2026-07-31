@@ -139,6 +139,7 @@ function statTiles(items) {
     columnWidths: W,
     width: { size: CONTENT_W, type: WidthType.DXA },
     rows: [new TableRow({
+      cantSplit: true,
       children: items.map(([val, lab, accent], i) => new TableCell({
         width: { size: W[i], type: WidthType.DXA },
         shading: { type: ShadingType.CLEAR, fill: accent ? 'F7EEEE' : SOFT, color: 'auto' },

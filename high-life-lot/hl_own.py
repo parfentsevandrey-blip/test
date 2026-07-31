@@ -8,7 +8,7 @@
 """
 import json, re, sys, os
 sys.path.insert(0, os.path.dirname(__file__))
-from hl_fin import grp, key
+from hl_fin import grp, key, level, cmp_ok
 
 L = json.load(open('hl/hl_linked.json'))
 HL = L['HIGH LIFE']
@@ -52,17 +52,18 @@ towers.append(['Весь квартал HIGH LIFE', '6 башен', str(len(HL))
                str(sum(1 for x in HL if 86e6 <= x['price'] <= 106e6))])
 
 # ── сопоставимая база 110–140 м² ───────────────────────────────────────────
-band = [x for x in HL if LO <= x['area'] <= HI]
+band = [x for x in HL if LO <= x['area'] <= HI and cmp_ok(x)]
 ready = [x for x in band if grp(x) in ('ready', 'wb')]
 shell = [x for x in band if grp(x) == 'shell']
-FINLAB = {'ready': 'готова', 'wb': 'white box', 'shell': 'бетон'}
+FINLAB = {'ready': 'отделка застройщика', 'wb': 'white box', 'shell': 'бетон'}
 
 ownCmp = []
 for x in sorted(ready, key=lambda x: -adj(x)):
     ours = x['url'] == OUR_URL
     ownCmp.append([('▶ ' if ours else '') + d1(x['area']), x['floor'].split('/')[0],
                    d1(x['price'] / 1e6), nf(x['ppm']), f'{OUR_FL - fl(x):+d}',
-                   nf(adj(x)), FINLAB[grp(x)], {'text': 'Циан →', 'link': x['url']}])
+                   nf(adj(x)), level(x) or FINLAB[grp(x)],
+                   {'text': 'Циан →', 'link': x['url']}])
 
 shellCmp = []
 for x in sorted(shell, key=lambda x: -(adj(x) + FIT))[:12]:
