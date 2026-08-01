@@ -1,0 +1,1458 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Нейросети из России — пошаговый маршрут для новичка</title>
+<meta name="description" content="Интерактивный гид для совсем начинающих: как получить доступ к нейросетям из России — что работает без VPN, как выбрать и включить VPN, как создать Google-аккаунт, как начать первый разговор и не потерять деньги.">
+<style>
+/* ─────────────────────────────────────────────────────────────
+   Токены: транспортная навигация — прохладная бумага, кобальт,
+   охра только для предупреждений.
+   ───────────────────────────────────────────────────────────── */
+:root{
+  --paper:#EDEFF2;
+  --surface:#FFFFFF;
+  --surface-2:#F5F7F9;
+  --ink:#101720;
+  --ink-2:#3D4A5A;
+  --ink-3:#5D6B7B;
+  --line:#D5DBE3;
+  --line-2:#E7EBF0;
+  --route:#1B4FD8;
+  --route-2:#123AA6;
+  --route-soft:#E3EAFB;
+  --mark:#9A6A0B;
+  --mark-soft:#FAF0DA;
+  --mark-line:#E3C177;
+  --ok:#166B45;
+  --ok-soft:#DFF2E8;
+  --stop:#A8371A;
+  --stop-soft:#FBE7E0;
+  --shadow:0 1px 2px rgba(16,23,32,.06), 0 8px 24px -16px rgba(16,23,32,.35);
+  --serif:Georgia,"Iowan Old Style","Times New Roman",serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Roboto,Ubuntu,Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Mono","Segoe UI Mono",Menlo,Consolas,monospace;
+  --r:8px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#0E1319; --surface:#151C24; --surface-2:#1B242E;
+    --ink:#E7ECF2; --ink-2:#AAB7C5; --ink-3:#7D8B9A;
+    --line:#2B3644; --line-2:#222C38;
+    --route:#7FA5FF; --route-2:#A5C0FF; --route-soft:#1A2540;
+    --mark:#E8B45C; --mark-soft:#2E2411; --mark-line:#5A481F;
+    --ok:#5FC08C; --ok-soft:#13291F;
+    --stop:#F09070; --stop-soft:#2E1811;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.9);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0E1319; --surface:#151C24; --surface-2:#1B242E;
+  --ink:#E7ECF2; --ink-2:#AAB7C5; --ink-3:#7D8B9A;
+  --line:#2B3644; --line-2:#222C38;
+  --route:#7FA5FF; --route-2:#A5C0FF; --route-soft:#1A2540;
+  --mark:#E8B45C; --mark-soft:#2E2411; --mark-line:#5A481F;
+  --ok:#5FC08C; --ok-soft:#13291F;
+  --stop:#F09070; --stop-soft:#2E1811;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.9);
+}
+:root[data-theme="light"]{
+  --paper:#EDEFF2; --surface:#FFFFFF; --surface-2:#F5F7F9;
+  --ink:#101720; --ink-2:#3D4A5A; --ink-3:#5D6B7B;
+  --line:#D5DBE3; --line-2:#E7EBF0;
+  --route:#1B4FD8; --route-2:#123AA6; --route-soft:#E3EAFB;
+  --mark:#9A6A0B; --mark-soft:#FAF0DA; --mark-line:#E3C177;
+  --ok:#166B45; --ok-soft:#DFF2E8;
+  --stop:#A8371A; --stop-soft:#FBE7E0;
+  --shadow:0 1px 2px rgba(16,23,32,.06), 0 8px 24px -16px rgba(16,23,32,.35);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%; scroll-behavior:smooth; scroll-padding-top:84px}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.001ms !important; transition-duration:.001ms !important}
+}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:var(--sans); font-size:18px; line-height:1.62;
+  text-rendering:optimizeLegibility;
+}
+h1,h2,h3,h4{font-family:var(--serif); font-weight:700; line-height:1.18; text-wrap:balance; margin:0}
+p{margin:0}
+a{color:var(--route); text-underline-offset:3px; text-decoration-thickness:1px}
+a:hover{color:var(--route-2)}
+:focus-visible{outline:3px solid var(--route); outline-offset:2px; border-radius:4px}
+button{font:inherit; color:inherit}
+ul,ol{margin:0; padding:0}
+code,kbd{font-family:var(--mono); font-size:.86em; background:var(--surface-2); border:1px solid var(--line-2); border-radius:5px; padding:.1em .38em}
+
+.skip{position:absolute; left:-9999px; top:0; background:var(--route); color:#fff; padding:.6rem 1rem; z-index:100}
+.skip:focus{left:8px; top:8px}
+
+.tick{position:fixed; inset:0 0 auto 0; height:3px; background:transparent; z-index:60}
+.tick__fill{height:100%; width:0; background:var(--route); transition:width .4s ease}
+
+/* ── Шапка ───────────────────────────────────────────────── */
+.masthead{
+  border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg, var(--surface), var(--paper));
+  padding:44px 0 30px;
+}
+.wrap{max-width:1160px; margin:0 auto; padding:0 22px}
+.eyebrow{
+  font-family:var(--mono); font-size:.7rem; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--route); display:flex; align-items:center; gap:10px; margin-bottom:14px;
+}
+.eyebrow::after{content:""; flex:1; height:1px; background:var(--line); max-width:180px}
+.masthead h1{font-size:clamp(1.9rem,4.4vw,3rem); letter-spacing:-.015em; max-width:19ch}
+.masthead .dek{margin-top:14px; max-width:62ch; color:var(--ink-2); font-size:1.06rem}
+.facts{display:flex; flex-wrap:wrap; gap:10px 26px; margin-top:22px; font-size:.9rem; color:var(--ink-3)}
+.facts b{color:var(--ink); font-weight:600}
+.head-tools{display:flex; flex-wrap:wrap; gap:10px; margin-top:24px}
+
+.btn{
+  display:inline-flex; align-items:center; gap:8px; cursor:pointer;
+  background:var(--surface); border:1px solid var(--line); color:var(--ink);
+  padding:.55rem .95rem; border-radius:var(--r); font-size:.9rem; font-weight:600;
+  transition:border-color .15s, background .15s, transform .1s;
+}
+.btn:hover{border-color:var(--route); color:var(--route)}
+.btn:active{transform:translateY(1px)}
+.btn--primary{background:var(--route); border-color:var(--route); color:#fff}
+.btn--primary:hover{background:var(--route-2); border-color:var(--route-2); color:#fff}
+.btn--ghost{background:transparent}
+
+/* ── Оболочка ────────────────────────────────────────────── */
+.shell{max-width:1160px; margin:0 auto; padding:0 22px 90px; display:grid; grid-template-columns:274px minmax(0,1fr); gap:52px; align-items:start}
+@media (max-width:960px){ .shell{grid-template-columns:1fr; gap:26px; padding-bottom:60px} }
+
+/* ── Рельс маршрута ─────────────────────────────────────── */
+.rail{position:sticky; top:26px; padding-top:34px}
+@media (max-width:960px){ .rail{position:static; padding-top:26px} }
+.rail__meter{display:flex; align-items:baseline; gap:8px; margin-bottom:6px}
+.rail__pct{font-family:var(--mono); font-size:1.5rem; font-weight:700; color:var(--route); font-variant-numeric:tabular-nums}
+.rail__cap{font-family:var(--mono); font-size:.66rem; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3)}
+.rail__bar{height:4px; background:var(--line); border-radius:99px; overflow:hidden; margin-bottom:22px}
+.rail__bar i{display:block; height:100%; width:0; background:var(--route); transition:width .45s ease}
+
+.railgroup{font-family:var(--mono); font-size:.64rem; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-3); margin:26px 0 12px}
+.routewrap{position:relative}
+.route{list-style:none; position:relative; margin:0}
+.route::before{content:""; position:absolute; left:8px; top:12px; bottom:12px; width:2px; background:var(--line)}
+.route__fill{position:absolute; left:8px; top:12px; width:2px; height:0; background:var(--route); transition:height .45s ease; z-index:0}
+.route li{position:relative}
+.route a{
+  display:grid; grid-template-columns:18px 1fr; gap:14px; align-items:start;
+  padding:7px 0 7px 0; text-decoration:none; color:var(--ink-2); font-size:.93rem; line-height:1.35;
+}
+.route a:hover{color:var(--route)}
+.route .dot{
+  width:18px; height:18px; border-radius:50%; background:var(--paper);
+  border:2px solid var(--line); margin-top:3px; position:relative; z-index:1;
+  display:grid; place-items:center; transition:border-color .2s, background .2s;
+}
+.route .dot::after{content:""; width:6px; height:6px; border-radius:50%; background:transparent}
+.route .num{font-family:var(--mono); font-size:.66rem; color:var(--ink-3); display:block; margin-bottom:1px; letter-spacing:.08em}
+.route li.is-done .dot{border-color:var(--route); background:var(--route)}
+.route li.is-done .dot::after{background:#fff}
+.route li.is-current a{color:var(--ink); font-weight:600}
+.route li.is-current .dot{border-color:var(--route); box-shadow:0 0 0 4px var(--route-soft)}
+.route--tools::before,.route--tools .route__fill{display:none}
+.route--tools a{grid-template-columns:18px 1fr}
+.route--tools .dot{border-style:dashed}
+
+.rail__reset{margin-top:26px; font-size:.8rem; color:var(--ink-3); background:none; border:0; padding:0; cursor:pointer; text-decoration:underline; text-underline-offset:3px}
+.rail__reset:hover{color:var(--stop)}
+
+/* ── Карточки ────────────────────────────────────────────── */
+main{display:flex; flex-direction:column; gap:26px; padding-top:34px; min-width:0}
+@media (max-width:960px){ main{padding-top:6px} }
+.card{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--r);
+  box-shadow:var(--shadow); padding:30px 32px 32px; scroll-margin-top:80px;
+}
+@media (max-width:600px){ .card{padding:24px 20px 26px} }
+.card__head{display:flex; gap:16px; align-items:flex-start; margin-bottom:18px}
+.station{
+  flex:none; width:46px; height:46px; border-radius:50%; display:grid; place-items:center;
+  font-family:var(--mono); font-size:.95rem; font-weight:700; font-variant-numeric:tabular-nums;
+  background:var(--route-soft); color:var(--route); border:2px solid var(--route);
+}
+.card.is-done .station{background:var(--route); color:#fff}
+.card__titles{min-width:0}
+.card h2{font-size:clamp(1.35rem,2.6vw,1.72rem); letter-spacing:-.01em}
+.card__sub{color:var(--ink-3); font-size:.85rem; margin-top:5px; font-family:var(--mono); letter-spacing:.03em}
+.prose{max-width:68ch; display:flex; flex-direction:column; gap:15px}
+.prose h3{font-size:1.1rem; margin-top:8px}
+.prose ul,.prose ol{padding-left:1.3em; display:flex; flex-direction:column; gap:9px}
+.prose ol{padding-left:1.5em}
+.prose li::marker{color:var(--route); font-weight:600}
+.lead{font-size:1.06rem}
+.muted{color:var(--ink-2)}
+.small{font-size:.9rem}
+
+/* Пошаговый список с крупными номерами */
+.steps{list-style:none; counter-reset:s; display:flex; flex-direction:column; gap:14px; padding:0 !important}
+.steps li{counter-increment:s; position:relative; padding-left:44px; min-height:30px}
+.steps li::before{
+  content:counter(s); position:absolute; left:0; top:-1px;
+  font-family:var(--mono); font-size:.8rem; font-weight:700;
+  width:30px; height:30px; border-radius:50%; display:grid; place-items:center;
+  background:var(--surface-2); border:1px solid var(--line); color:var(--ink-2);
+}
+
+/* Выноски */
+.note{border-left:3px solid var(--route); background:var(--route-soft); padding:14px 18px; border-radius:0 var(--r) var(--r) 0; font-size:.96rem}
+.note--warn{border-left-color:var(--mark-line); background:var(--mark-soft)}
+.note--stop{border-left-color:var(--stop); background:var(--stop-soft)}
+.note__t{display:block; font-family:var(--mono); font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; margin-bottom:6px; color:var(--route)}
+.note--warn .note__t{color:var(--mark)}
+.note--stop .note__t{color:var(--stop)}
+
+/* Плитки сервисов */
+.tiles{display:grid; grid-template-columns:repeat(auto-fit,minmax(238px,1fr)); gap:14px; max-width:none}
+.tile{border:1px solid var(--line); border-radius:var(--r); padding:16px 18px; background:var(--surface-2); display:flex; flex-direction:column; gap:6px}
+.tile h4{font-family:var(--sans); font-size:1rem; font-weight:700}
+.addr{font-family:var(--mono); font-size:.9em; color:var(--route); overflow-wrap:break-word}
+.tile .addr{font-size:.82rem; word-break:break-all}
+.tile p{font-size:.9rem; color:var(--ink-2)}
+.chip{align-self:flex-start; font-family:var(--mono); font-size:.64rem; letter-spacing:.1em; text-transform:uppercase; padding:.2rem .5rem; border-radius:99px; border:1px solid currentColor}
+.chip--ok{color:var(--ok); background:var(--ok-soft)}
+.chip--vpn{color:var(--mark); background:var(--mark-soft)}
+.chip--hard{color:var(--stop); background:var(--stop-soft)}
+
+/* Переключатель устройства */
+.devbar{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:4px 0 4px}
+.devbar__label{font-family:var(--mono); font-size:.68rem; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3); margin-right:4px}
+.devbtn{cursor:pointer; background:var(--surface); border:1px solid var(--line); color:var(--ink-2); padding:.42rem .8rem; border-radius:99px; font-size:.86rem; font-weight:600}
+.devbtn:hover{border-color:var(--route); color:var(--route)}
+.devbtn[aria-pressed="true"]{background:var(--route); border-color:var(--route); color:#fff}
+.dev{display:none}
+html[data-device="android"] .dev--android,
+html[data-device="ios"] .dev--ios,
+html[data-device="windows"] .dev--windows,
+html[data-device="mac"] .dev--mac{display:flex; flex-direction:column; gap:14px}
+.devi{display:none}
+html[data-device="android"] .devi--android,
+html[data-device="ios"] .devi--ios,
+html[data-device="windows"] .devi--windows,
+html[data-device="mac"] .devi--mac{display:inline}
+.dev__badge{font-family:var(--mono); font-size:.68rem; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3)}
+
+/* Аккордеон */
+details.acc{border:1px solid var(--line); border-radius:var(--r); background:var(--surface-2); overflow:hidden}
+details.acc + details.acc{margin-top:-6px}
+.accwrap{display:flex; flex-direction:column; gap:10px}
+details.acc > summary{
+  cursor:pointer; padding:13px 18px; font-weight:600; font-size:.96rem; list-style:none;
+  display:flex; gap:12px; align-items:center;
+}
+details.acc > summary::-webkit-details-marker{display:none}
+details.acc > summary::before{content:"+"; font-family:var(--mono); color:var(--route); font-weight:700; flex:none}
+details.acc[open] > summary::before{content:"–"}
+details.acc > summary:hover{color:var(--route)}
+.acc__body{padding:0 18px 16px 42px; display:flex; flex-direction:column; gap:11px; font-size:.95rem; color:var(--ink-2)}
+.acc__body ul{padding-left:1.2em; display:flex; flex-direction:column; gap:7px}
+
+/* Кнопка «готово» */
+.done-row{display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-top:26px; padding-top:20px; border-top:1px solid var(--line-2)}
+.done{
+  cursor:pointer; border:1px solid var(--route); background:var(--surface); color:var(--route);
+  padding:.55rem 1.1rem; border-radius:99px; font-size:.9rem; font-weight:700;
+  display:inline-flex; align-items:center; gap:9px;
+}
+.done::before{content:""; width:15px; height:15px; border-radius:4px; border:2px solid currentColor}
+.done:hover{background:var(--route-soft)}
+.done[aria-pressed="true"]{background:var(--route); border-color:var(--route); color:#fff}
+.done[aria-pressed="true"]::before{content:"✓"; border:0; width:auto; height:auto; font-size:.95rem; line-height:1}
+.done-hint{font-size:.84rem; color:var(--ink-3)}
+
+/* Термины и словарь */
+.term{
+  background:none; border:0; padding:0; cursor:pointer; color:inherit; font:inherit;
+  border-bottom:1px dashed var(--route); color:var(--route);
+}
+.term:hover{background:var(--route-soft)}
+.sheet{
+  position:fixed; left:0; right:0; bottom:0; z-index:70; transform:translateY(110%);
+  visibility:hidden; transition:transform .25s ease, visibility 0s linear .25s;
+  background:var(--surface); border-top:2px solid var(--route);
+  box-shadow:0 -10px 40px -20px rgba(0,0,0,.6); padding:20px 22px 24px;
+}
+.sheet.is-open{transform:translateY(0); visibility:visible; transition-delay:0s}
+.sheet__in{max-width:640px; margin:0 auto; position:relative}
+.sheet h4{font-family:var(--sans); font-size:1.05rem; margin-bottom:8px; padding-right:40px}
+.sheet p{font-size:.95rem; color:var(--ink-2)}
+.sheet__x{position:absolute; top:-4px; right:0; background:none; border:0; font-size:1.5rem; line-height:1; cursor:pointer; color:var(--ink-3); padding:4px 8px}
+.sheet__x:hover{color:var(--stop)}
+.gloss{display:grid; gap:2px; max-width:none}
+.gloss div{display:grid; grid-template-columns:190px 1fr; gap:18px; padding:12px 0; border-top:1px solid var(--line-2)}
+.gloss dt{font-weight:700; font-size:.95rem}
+.gloss dd{margin:0; font-size:.94rem; color:var(--ink-2)}
+@media (max-width:620px){ .gloss div{grid-template-columns:1fr; gap:4px} }
+
+/* Конструктор запроса */
+.builder{display:grid; gap:14px; max-width:none}
+.field{display:flex; flex-direction:column; gap:6px}
+.field label{font-family:var(--mono); font-size:.68rem; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3)}
+.field select,.field input,.field textarea{
+  font:inherit; font-size:.95rem; color:var(--ink); background:var(--surface);
+  border:1px solid var(--line); border-radius:var(--r); padding:.6rem .7rem; width:100%;
+}
+.field textarea{min-height:74px; resize:vertical}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+@media (max-width:620px){ .grid2{grid-template-columns:1fr} }
+.out{
+  background:var(--surface-2); border:1px dashed var(--line); border-radius:var(--r);
+  padding:16px 18px; font-size:.95rem; white-space:pre-wrap; line-height:1.55; min-height:80px;
+}
+.copy-row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+.copied{font-size:.85rem; color:var(--ok); opacity:0; transition:opacity .2s}
+.copied.on{opacity:1}
+
+/* Диагностика */
+.diag{border:1px solid var(--line); border-radius:var(--r); background:var(--surface-2); padding:22px; max-width:none}
+.diag__q{font-family:var(--serif); font-size:1.15rem; font-weight:700; margin-bottom:14px}
+.diag__opts{display:flex; flex-direction:column; gap:9px}
+.diag__opt{
+  text-align:left; cursor:pointer; background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--r); padding:.7rem .9rem; font-size:.95rem; line-height:1.4;
+}
+.diag__opt:hover{border-color:var(--route); color:var(--route)}
+.diag__ans{display:flex; flex-direction:column; gap:11px; font-size:.96rem}
+.diag__ans ul{padding-left:1.2em; display:flex; flex-direction:column; gap:8px}
+.diag__crumbs{font-family:var(--mono); font-size:.7rem; color:var(--ink-3); margin-bottom:12px; letter-spacing:.04em}
+
+/* Квиз */
+.quiz{display:flex; flex-direction:column; gap:18px; max-width:none}
+.qcard{border:1px solid var(--line); border-radius:var(--r); padding:18px 20px; background:var(--surface-2)}
+.qcard__q{font-weight:700; margin-bottom:12px; display:flex; gap:10px; align-items:baseline}
+.qcard__q > span:first-child{font-family:var(--mono); color:var(--route); font-size:.85rem; flex:none}
+.qcard__q > span + span{min-width:0; flex:1 1 auto}
+.qopts{display:flex; flex-direction:column; gap:8px}
+.qopt{
+  text-align:left; cursor:pointer; background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--r); padding:.6rem .85rem; font-size:.94rem; line-height:1.4;
+}
+.qopt:hover{border-color:var(--route)}
+.qopt.right{border-color:var(--ok); background:var(--ok-soft); color:var(--ok); font-weight:600}
+.qopt.wrong{border-color:var(--stop); background:var(--stop-soft); color:var(--stop)}
+.qfb{margin-top:11px; font-size:.92rem; color:var(--ink-2); display:none}
+.qfb.on{display:block}
+.qscore{font-family:var(--mono); font-size:.95rem; color:var(--ink-2); font-variant-numeric:tabular-nums}
+
+/* Памятка */
+.cheat{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; max-width:none}
+.cheat div{border:1px solid var(--line); border-radius:var(--r); padding:14px 16px; background:var(--surface-2)}
+.cheat h4{font-family:var(--sans); font-size:.95rem; margin-bottom:6px}
+.cheat p{font-size:.88rem; color:var(--ink-2)}
+
+footer{border-top:1px solid var(--line); padding:30px 0 44px; color:var(--ink-3); font-size:.88rem}
+footer .wrap{display:flex; flex-direction:column; gap:10px; max-width:1160px}
+footer b{color:var(--ink-2)}
+
+@media print{
+  .rail,.tick,.head-tools,.done-row,.sheet,.devbar,.rail__reset{display:none !important}
+  .shell{grid-template-columns:1fr; padding:0}
+  .card{box-shadow:none; break-inside:avoid; border-color:#bbb}
+  .dev{display:block !important}
+  body{font-size:11pt; background:#fff}
+  details.acc{break-inside:avoid}
+  details.acc > .acc__body{display:block !important}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Перейти к содержанию</a>
+<div class="tick"><div class="tick__fill" id="tickfill"></div></div>
+
+<header class="masthead">
+  <div class="wrap">
+    <p class="eyebrow">Пошаговый маршрут · для совсем новичков</p>
+    <h1>Как получить доступ к нейросетям из России</h1>
+    <p class="dek">Здесь нет слов «просто настройте прокси». Есть маршрут из девяти станций: с чего начать сегодня же без всяких настроек, что такое VPN человеческим языком, как завести Google-аккаунт, как начать первый разговор — и как не отдать деньги мошенникам по дороге.</p>
+    <div class="facts">
+      <span>Займёт <b>40–60 минут</b></span>
+      <span>Нужен <b>телефон или компьютер</b></span>
+      <span>Первый результат — <b>через 5 минут</b></span>
+      <span>Прогресс <b>сохраняется</b> в этом браузере</span>
+    </div>
+    <div class="head-tools">
+      <a class="btn btn--primary" href="#s1">Начать с первой станции</a>
+      <a class="btn" href="#diag">Что-то не работает</a>
+      <a class="btn" href="#gloss">Словарик</a>
+      <button class="btn btn--ghost" id="themebtn" type="button" aria-pressed="false">Тёмная тема</button>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="rail" aria-label="Маршрут">
+    <div class="rail__meter"><span class="rail__pct" id="pct">0%</span><span class="rail__cap" id="pctcap">0 из 9 станций</span></div>
+    <div class="rail__bar"><i id="bar"></i></div>
+
+    <p class="railgroup">Маршрут</p>
+    <div class="routewrap">
+    <span class="route__fill" id="routefill"></span>
+    <ol class="route" id="routelist">
+      <li data-step="1"><a href="#s1"><span class="dot"></span><span><span class="num">01</span>Что работает уже сегодня, без VPN</span></a></li>
+      <li data-step="2"><a href="#s2"><span class="dot"></span><span><span class="num">02</span>Готовим телефон или компьютер</span></a></li>
+      <li data-step="3"><a href="#s3"><span class="dot"></span><span><span class="num">03</span>VPN: что это и как выбрать</span></a></li>
+      <li data-step="4"><a href="#s4"><span class="dot"></span><span><span class="num">04</span>Ставим и включаем VPN</span></a></li>
+      <li data-step="5"><a href="#s5"><span class="dot"></span><span><span class="num">05</span>Создаём Google-аккаунт</span></a></li>
+      <li data-step="6"><a href="#s6"><span class="dot"></span><span><span class="num">06</span>Первый разговор с нейросетью</span></a></li>
+      <li data-step="7"><a href="#s7"><span class="dot"></span><span><span class="num">07</span>Как спрашивать, чтобы отвечало</span></a></li>
+      <li data-step="8"><a href="#s8"><span class="dot"></span><span><span class="num">08</span>Деньги: платить или нет</span></a></li>
+      <li data-step="9"><a href="#s9"><span class="dot"></span><span><span class="num">09</span>Безопасность: 7 правил</span></a></li>
+    </ol>
+    </div>
+
+    <p class="railgroup">Инструменты</p>
+    <ol class="route route--tools">
+      <li><a href="#diag"><span class="dot"></span><span>Диагностика поломок</span></a></li>
+      <li><a href="#builder"><span class="dot"></span><span>Конструктор запроса</span></a></li>
+      <li><a href="#gloss"><span class="dot"></span><span>Словарик</span></a></li>
+      <li><a href="#quiz"><span class="dot"></span><span>Проверь себя</span></a></li>
+      <li><a href="#cheat"><span class="dot"></span><span>Памятка на печать</span></a></li>
+    </ol>
+
+    <button class="rail__reset" id="reset" type="button">Сбросить прогресс</button>
+  </nav>
+
+  <main id="main">
+
+    <!-- ── 01 ───────────────────────────────────────────── -->
+    <section class="card" id="s1" data-card="1">
+      <div class="card__head">
+        <div class="station">01</div>
+        <div class="card__titles">
+          <h2>Что работает уже сегодня, без VPN</h2>
+          <p class="card__sub">5 минут · ничего устанавливать не нужно</p>
+        </div>
+      </div>
+      <div class="prose">
+        <p class="lead">Начните отсюда. В России есть нейросети, которые открываются в обычном браузере, принимают российский номер телефона и российскую карту. Попробуйте их прямо сейчас — так вы поймёте, зачем вам вообще всё остальное.</p>
+
+        <div class="tiles">
+          <div class="tile">
+            <span class="chip chip--ok">Без VPN</span>
+            <h4>GigaChat</h4>
+            <span class="addr">giga.chat</span>
+            <p>Текстовый помощник от Сбера: пишет тексты, отвечает на вопросы, рисует картинки. Вход по номеру телефона или Сбер&nbsp;ID.</p>
+          </div>
+          <div class="tile">
+            <span class="chip chip--ok">Без VPN</span>
+            <h4>Алиса</h4>
+            <span class="addr">alice.yandex.ru</span>
+            <p>Нейросеть Яндекса — в браузере и в приложении «Алиса». Умеет отвечать текстом, пересказывать статьи и видео. Нужен Яндекс&nbsp;ID.</p>
+          </div>
+          <div class="tile">
+            <span class="chip chip--ok">Без VPN</span>
+            <h4>Шедеврум</h4>
+            <span class="addr">shedevrum.ai</span>
+            <p>Картинки и короткие видео по описанию, от Яндекса. Есть приложение для телефона.</p>
+          </div>
+          <div class="tile">
+            <span class="chip chip--ok">Без VPN</span>
+            <h4>Kandinsky</h4>
+            <span class="addr">fusionbrain.ai</span>
+            <p>Рисование картинок по тексту от Сбера. Открывается прямо в браузере, регистрация по почте.</p>
+          </div>
+        </div>
+
+        <div class="note">
+          <span class="note__t">Задание на 5 минут</span>
+          Откройте любой из четырёх, зарегистрируйтесь и напишите: <b>«Объясни простыми словами, что такое нейросеть, как будто мне 10 лет»</b>. Это и есть работа с нейросетью — вы просто пишете словами, что вам нужно.
+        </div>
+
+        <h3>Тогда зачем вообще VPN?</h3>
+        <p>Самые сильные модели — ChatGPT (OpenAI), Claude (Anthropic), Gemini (Google) — из России не открываются: они сами закрывают доступ по стране. Разница заметна на сложных задачах: длинные тексты, код, работа с документами, рассуждения. Если вам хватает российских сервисов — прекрасно, маршрут можно закончить здесь. Если нет — идём дальше.</p>
+
+        <div class="note note--warn">
+          <span class="note__t">Честно</span>
+          Доступность сервисов меняется каждые несколько месяцев — в обе стороны. Что-то, что не открывалось вчера, может открыться завтра, и наоборот. Проверяйте сами, а не по советам годичной давности.
+        </div>
+      </div>
+      <div class="done-row"><button class="done" type="button" data-done="1" aria-pressed="false">Готово</button><span class="done-hint">Отмечайте станции — маршрут слева будет закрашиваться</span></div>
+    </section>
+
+    <!-- ── 02 ───────────────────────────────────────────── -->
+    <section class="card" id="s2" data-card="2">
+      <div class="card__head">
+        <div class="station">02</div>
+        <div class="card__titles">
+          <h2>Готовим телефон или компьютер</h2>
+          <p class="card__sub">10 минут · скучно, но экономит часы потом</p>
+        </div>
+      </div>
+      <div class="prose">
+        <p class="lead">Половина проблем новичков — не в блокировках, а в старом браузере и забытом пароле. Пройдите этот чек-лист один раз.</p>
+
+        <div class="devbar" role="group" aria-label="Ваше устройство">
+          <span class="devbar__label">Ваше устройство</span>
+          <button class="devbtn" type="button" data-dev="android" aria-pressed="false">Телефон Android</button>
+          <button class="devbtn" type="button" data-dev="ios" aria-pressed="false">iPhone</button>
+          <button class="devbtn" type="button" data-dev="windows" aria-pressed="false">Компьютер Windows</button>
+          <button class="devbtn" type="button" data-dev="mac" aria-pressed="false">Mac</button>
+        </div>
+        <p class="small muted">Выбор запомнится, и дальше в гиде будут показываться инструкции именно для вашего устройства.</p>
+
+        <ol class="steps">
+          <li><b>Обновите браузер.</b> Нейросети — тяжёлые сайты, на старом браузере они просто не грузятся. Подойдут Chrome, Safari, Firefox, Edge, Яндекс.Браузер последних версий.</li>
+          <li><b>Заведите место для паролей.</b> Их будет минимум три (почта, нейросеть, VPN). Подойдёт встроенный в браузер менеджер паролей или обычный бумажный блокнот, который лежит дома. Главное — не «запомню».</li>
+          <li><b>Проверьте, что есть свободное место.</b> Приложениям нужно 200–500 МБ. На забитом телефоне установка молча не пройдёт.</li>
+          <li><b>Проверьте магазин приложений.</b> <span class="devi devi--android">Откройте Google Play и убедитесь, что он запускается и вы в него вошли.</span><span class="devi devi--ios">Откройте App Store и убедитесь, что вы вошли под своим Apple&nbsp;ID.</span><span class="devi devi--windows">На Windows магазин не обязателен — программы ставятся с сайтов разработчиков.</span><span class="devi devi--mac">Откройте App Store; часть программ на Mac ставится и с сайтов разработчиков.</span></li>
+          <li><b>Если есть компьютер — начинайте с него.</b> На большом экране видно, что происходит, и меньше шансов промахнуться по кнопке. Телефон настроите потом.</li>
+        </ol>
+
+        <div class="note">
+          <span class="note__t">Про пароли</span>
+          Хороший пароль — три случайных слова и цифра: <code>окно-барсук-варенье7</code>. Он длинный, его сложно подобрать и легко записать. Плохой — дата рождения, «qwerty123» и один и тот же пароль везде.
+        </div>
+      </div>
+      <div class="done-row"><button class="done" type="button" data-done="2" aria-pressed="false">Готово</button></div>
+    </section>
+
+    <!-- ── 03 ───────────────────────────────────────────── -->
+    <section class="card" id="s3" data-card="3">
+      <div class="card__head">
+        <div class="station">03</div>
+        <div class="card__titles">
+          <h2>VPN: что это и как выбрать</h2>
+          <p class="card__sub">10 минут чтения · самая важная станция</p>
+        </div>
+      </div>
+      <div class="prose">
+        <p class="lead">Когда вы заходите на сайт, он видит ваш «обратный адрес» — <button class="term" data-term="ip">IP-адрес</button>, по которому понятно, из какой вы страны. <button class="term" data-term="vpn">VPN</button> — это как отправить письмо через знакомого в другой стране: сайт видит его адрес, а не ваш, и открывается.</p>
+
+        <h3>Что VPN <em>не</em> делает</h3>
+        <ul>
+          <li>Не делает вас невидимым. Сервис по-прежнему знает вашу почту, ваши сообщения и вашу оплату.</li>
+          <li>Не защищает от вирусов и мошенников.</li>
+          <li>Не отменяет правила сервиса: если сервис не работает в вашей стране по договору — он может закрыть аккаунт, заметив несоответствие.</li>
+          <li>Не ускоряет интернет. Скорее наоборот — обычно немного медленнее.</li>
+        </ul>
+
+        <h3>Как выбирать</h3>
+        <ul>
+          <li><b>Платный или условно-бесплатный от известной компании.</b> Бесплатные зарабатывают на вас: продают данные о том, куда вы ходите, вставляют рекламу, а иногда просто воруют пароли.</li>
+          <li><b>Есть приложение под вашу систему</b> — с обычной кнопкой «Подключить», а не инструкцией на десять пунктов.</li>
+          <li><b>Понятная политика по логам</b> — написано, что хранится, а что нет.</li>
+          <li><b>Живая поддержка</b>, которая отвечает на письма.</li>
+          <li><b>Скачивается с официального сайта или из магазина приложений</b> — не файлом из чата.</li>
+        </ul>
+
+        <div class="note note--warn">
+          <span class="note__t">Почему тут нет списка названий</span>
+          Любой конкретный список устареет за пару месяцев: сервисы перестают работать, меняют условия и цены. Полезнее знать критерии выше и проверить свежие обзоры за последний месяц — или спросить знакомого, у кого уже работает. Обзор двухлетней давности вам ничего не даст.
+        </div>
+
+        <div class="note note--stop">
+          <span class="note__t">Правовая часть</span>
+          Законодательство о доступе к заблокированным ресурсам в России менялось несколько раз и продолжает меняться. Этот гид — общая информация о том, как устроена техника, а не юридическая консультация и не рекомендация нарушать закон. Ответственность за то, чем и как вы пользуетесь, лежит на вас; при сомнениях сверяйтесь с действующими нормами.
+        </div>
+
+        <div class="accwrap">
+          <details class="acc"><summary>А есть варианты без VPN вообще?</summary>
+            <div class="acc__body">
+              <ul>
+                <li><b>Российские сервисы</b> из станции 01 — самый простой и законный путь.</li>
+                <li><b>Российские сервисы-посредники</b>, которые перепродают доступ к зарубежным моделям через свой сайт или бота. Работают без VPN, принимают карты РФ. Минусы: ваши переписки проходят через посредника, цены выше, качество зависит от честности владельца. Никогда не отправляйте туда личные документы.</li>
+                <li><b>Часть зарубежных сервисов</b> (например, китайский DeepSeek) периодически открывается и без VPN — но рассчитывать на это нельзя.</li>
+              </ul>
+            </div>
+          </details>
+          <details class="acc"><summary>Прокси, «расширение для браузера», «умный DNS» — это то же самое?</summary>
+            <div class="acc__body"><p>Похожие по смыслу, разные по надёжности. Расширение для браузера меняет адрес только внутри браузера — приложение на телефоне через него работать не будет. Бесплатные расширения — самый частый источник кражи данных: они видят всё, что вы делаете на страницах. Если ставите — только известное и платное.</p></div>
+          </details>
+        </div>
+      </div>
+      <div class="done-row"><button class="done" type="button" data-done="3" aria-pressed="false">Готово</button></div>
+    </section>
+
+    <!-- ── 04 ───────────────────────────────────────────── -->
+    <section class="card" id="s4" data-card="4">
+      <div class="card__head">
+        <div class="station">04</div>
+        <div class="card__titles">
+          <h2>Ставим и включаем VPN</h2>
+          <p class="card__sub">10 минут · инструкция под ваше устройство</p>
+        </div>
+      </div>
+      <div class="prose">
+        <div class="devbar" role="group" aria-label="Ваше устройство">
+          <span class="devbar__label">Показать для</span>
+          <button class="devbtn" type="button" data-dev="android" aria-pressed="false">Android</button>
+          <button class="devbtn" type="button" data-dev="ios" aria-pressed="false">iPhone</button>
+          <button class="devbtn" type="button" data-dev="windows" aria-pressed="false">Windows</button>
+          <button class="devbtn" type="button" data-dev="mac" aria-pressed="false">Mac</button>
+        </div>
+
+        <div class="dev dev--android">
+          <span class="dev__badge">Android</span>
+          <ol class="steps">
+            <li>Откройте <b>Google Play</b> и найдите выбранное приложение. Проверьте название разработчика — подделок много.</li>
+            <li>Нажмите <b>«Установить»</b>, дождитесь конца загрузки, откройте.</li>
+            <li>Зарегистрируйтесь или войдите, если у сервиса есть аккаунт.</li>
+            <li>Система спросит: <b>«Разрешить создание VPN-подключения?»</b> — нажмите «ОК». Это обычный системный вопрос, он задаётся один раз.</li>
+            <li>Выберите страну — начните с <b>Германии или Нидерландов</b> (близко, значит быстрее).</li>
+            <li>Нажмите большую кнопку подключения. В строке состояния сверху появится значок ключа <b>VPN</b> — значит, работает.</li>
+          </ol>
+          <div class="note note--stop"><span class="note__t">Не делайте так</span>Не устанавливайте apk-файлы, присланные в мессенджере или скачанные с форума. Это самый популярный способ украсть у новичка все пароли сразу.</div>
+        </div>
+
+        <div class="dev dev--ios">
+          <span class="dev__badge">iPhone</span>
+          <ol class="steps">
+            <li>Откройте <b>App Store</b> и найдите приложение.</li>
+            <li>Установите и откройте его.</li>
+            <li>iPhone попросит <b>разрешить добавить конфигурацию VPN</b> — согласитесь и введите код-пароль телефона.</li>
+            <li>Выберите страну и нажмите «Подключить». Вверху экрана появится значок <b>VPN</b>.</li>
+            <li>Переключать можно и из <b>Настройки → VPN</b>.</li>
+          </ol>
+          <div class="note note--warn"><span class="note__t">Особенность iPhone</span>Часть приложений исчезла из российского App Store. Тогда нужен Apple&nbsp;ID, зарегистрированный на другую страну, — это отдельная история и она сложнее. Если у вас есть компьютер, начните с него: там таких ограничений нет.</div>
+        </div>
+
+        <div class="dev dev--windows">
+          <span class="dev__badge">Windows</span>
+          <ol class="steps">
+            <li>Зайдите на <b>официальный сайт</b> выбранного сервиса и скачайте установщик для Windows.</li>
+            <li>Запустите скачанный файл. На вопрос <b>«Разрешить приложению вносить изменения?»</b> ответьте «Да» — программе нужны права, чтобы настроить сетевое подключение.</li>
+            <li>Войдите в свой аккаунт сервиса.</li>
+            <li>Выберите страну и нажмите «Подключить». Значок в трее у часов покажет, что соединение активно.</li>
+          </ol>
+        </div>
+
+        <div class="dev dev--mac">
+          <span class="dev__badge">Mac</span>
+          <ol class="steps">
+            <li>Скачайте приложение из <b>App Store</b> или с официального сайта разработчика.</li>
+            <li>Перетащите его в «Программы» и запустите.</li>
+            <li>macOS спросит разрешение на добавление конфигурации VPN — подтвердите паролем от компьютера.</li>
+            <li>Выберите страну, нажмите «Подключить». Значок появится в строке меню сверху.</li>
+          </ol>
+        </div>
+
+        <h3>Проверьте, что получилось</h3>
+        <ol class="steps">
+          <li>Откройте <span class="addr">2ip.ru</span> — там написано, из какой вы страны. Должна быть <b>не Россия</b>.</li>
+          <li>Откройте <span class="addr">google.com</span> — страница должна загрузиться.</li>
+          <li>Если страна не изменилась: полностью закройте браузер и откройте заново. Браузер мог сохранить старую страницу.</li>
+        </ol>
+
+        <div class="note">
+          <span class="note__t">Держитесь одной страны</span>
+          Выберите одну страну и не прыгайте между ними. Если завтра вы зайдёте в тот же аккаунт «из другой части света», сервис заподозрит взлом и попросит подтверждение — а подтверждать бывает нечем.
+        </div>
+
+        <div class="accwrap">
+          <details class="acc"><summary>Перестали работать банк и Госуслуги</summary>
+            <div class="acc__body"><p>Так и должно быть: российские сервисы часто не пускают «иностранных» посетителей. Выключайте VPN, когда работаете с банком, Госуслугами и маркетплейсами, и включайте — когда идёте к нейросети. Многие приложения VPN умеют исключать выбранные приложения из туннеля — поищите в настройках «раздельное туннелирование».</p></div>
+          </details>
+          <details class="acc"><summary>Батарея садится и интернет медленный</summary>
+            <div class="acc__body"><p>Нормально: трафик идёт кружным путём. Не держите VPN включённым круглосуточно — включайте под задачу. Если очень медленно, попробуйте другую страну поближе или другой протокол в настройках приложения.</p></div>
+          </details>
+          <details class="acc"><summary>Приложение подключается и сразу отваливается</summary>
+            <div class="acc__body"><ul><li>Смените страну или сервер в приложении.</li><li>Попробуйте другой протокол в настройках (часто помогает переключение на «WireGuard» или, наоборот, на маскирующий режим).</li><li>Переключитесь с мобильного интернета на Wi-Fi или наоборот — блокируют по-разному.</li><li>Если ничего не помогает несколько дней подряд — сервис перестал работать, ищите другой. Это обычная ситуация.</li></ul></div>
+          </details>
+        </div>
+      </div>
+      <div class="done-row"><button class="done" type="button" data-done="4" aria-pressed="false">Готово</button></div>
+    </section>
+
+    <!-- ── 05 ───────────────────────────────────────────── -->
+    <section class="card" id="s5" data-card="5">
+      <div class="card__head">
+        <div class="station">05</div>
+        <div class="card__titles">
+          <h2>Создаём Google-аккаунт</h2>
+          <p class="card__sub">10 минут · VPN должен быть включён</p>
+        </div>
+      </div>
+      <div class="prose">
+        <p class="lead">Google-аккаунт — это универсальный ключ: им открывается Gemini, а ещё через него можно входить в ChatGPT и множество других сервисов, не придумывая новых паролей. Если у вас уже есть Gmail — пропустите станцию.</p>
+
+        <ol class="steps">
+          <li><b>Включите VPN</b> и убедитесь, что он работает (станция 04).</li>
+          <li>Откройте <span class="addr">accounts.google.com/signup</span> и выберите <b>«Для личного использования»</b>.</li>
+          <li><b>Имя и фамилия.</b> Можно любые, но лучше настоящие: при восстановлении доступа их спрашивают.</li>
+          <li><b>Дата рождения и пол.</b> Указывайте настоящую дату: от возраста зависит доступ к части функций, а «исправить потом» — целая процедура.</li>
+          <li><b>Адрес почты.</b> Только латиница, точки и цифры. Занято — Google предложит варианты или добавьте цифры: <code>ivan.petrov.1975</code>.</li>
+          <li><b>Пароль.</b> 12 символов и больше. Придумали — <b>сразу запишите</b>. Это не тот случай, когда «я запомню».</li>
+          <li><b>Номер телефона.</b> Российский номер Google обычно принимает. Иногда шаг можно пропустить кнопкой «Пропустить», но лучше привязать: без телефона восстановить доступ почти невозможно.</li>
+          <li><b>Резервная почта</b> — если есть вторая почта, укажите. Это ваш второй ключ от квартиры.</li>
+          <li>Примите условия — аккаунт готов.</li>
+        </ol>
+
+        <div class="note">
+          <span class="note__t">Сразу после регистрации</span>
+          Зайдите в <b>«Управление аккаунтом Google» → «Безопасность»</b> и включите <button class="term" data-term="2fa">двухэтапную аутентификацию</button>. Там же скачайте <b>резервные коды</b> и сохраните их отдельно — они спасают, когда телефон недоступен.
+        </div>
+
+        <div class="note note--warn">
+          <span class="note__t">Частая ошибка</span>
+          Создать аккаунт без VPN, а потом заходить с VPN (или наоборот). Google видит резкую смену страны и требует подтверждение. Решение простое: регистрируйтесь и заходите <b>всегда в одном режиме</b> и из одной страны.
+        </div>
+
+        <div class="accwrap">
+          <details class="acc"><summary>Пишет «Этот номер телефона нельзя использовать»</summary>
+            <div class="acc__body"><ul><li>Подождите сутки — есть суточные лимиты на номер.</li><li>Попробуйте другую страну VPN.</li><li>Попробуйте с компьютера, а не с телефона.</li><li>Попросите родственника зарегистрировать аккаунт со своим номером <b>вместе с вами</b> — но пароль ставьте свой.</li></ul></div>
+          </details>
+          <details class="acc"><summary>Стоит ли покупать «виртуальный номер» для SMS</summary>
+            <div class="acc__body"><p>Взвесьте риски. Такой номер обычно перепродаётся дальше, и вместе с ним — возможность восстановить <b>ваш</b> аккаунт. Плюс аккаунты, зарегистрированные пачками на такие номера, чаще блокируют. Для Google это обычно не нужно вовсе: российский номер работает.</p></div>
+          </details>
+          <details class="acc"><summary>Забыл пароль, телефон утерян — что делать</summary>
+            <div class="acc__body"><p>Честный ответ: скорее всего, аккаунт потерян. Восстановление у Google завязано на телефон, резервную почту и историю входов. Поэтому пункт «сразу запишите пароль» — не формальность, а самое важное действие на этой станции.</p></div>
+          </details>
+        </div>
+      </div>
+      <div class="done-row"><button class="done" type="button" data-done="5" aria-pressed="false">Готово</button></div>
+    </section>
+
+    <!-- ── 06 ───────────────────────────────────────────── -->
+    <section class="card" id="s6" data-card="6">
+      <div class="card__head">
+        <div class="station">06</div>
+        <div class="card__titles">
+          <h2>Первый разговор с нейросетью</h2>
+          <p class="card__sub">10 минут · ради этого всё и затевалось</p>
+        </div>
+      </div>
+      <div class="prose">
+        <p class="lead">Сервисы отличаются не только качеством, но и тем, насколько тяжело туда попасть. Идите по порядку — от самого простого.</p>
+
+        <div class="tiles">
+          <div class="tile">
+            <span class="chip chip--vpn">Нужен VPN · проще всего</span>
+            <h4>Gemini · Google</h4>
+            <span class="addr">gemini.google.com</span>
+            <p>Вход одним нажатием через Google-аккаунт со станции 05. Телефон отдельно обычно не спрашивают. Есть бесплатный уровень. <b>Начните с него.</b></p>
+          </div>
+          <div class="tile">
+            <span class="chip chip--vpn">Нужен VPN</span>
+            <h4>Copilot · Microsoft</h4>
+            <span class="addr">copilot.microsoft.com</span>
+            <p>Нужен аккаунт Microsoft (регистрируется на любую почту). Бесплатный доступ, умеет искать в интернете и рисовать.</p>
+          </div>
+          <div class="tile">
+            <span class="chip chip--hard">Нужен VPN · часто просит телефон</span>
+            <h4>ChatGPT · OpenAI</h4>
+            <span class="addr">chatgpt.com</span>
+            <p>Регистрация в один клик через Google-аккаунт, но нередко требуется подтверждение номера, и российский номер не принимается.</p>
+          </div>
+          <div class="tile">
+            <span class="chip chip--hard">Нужен VPN · страна из списка</span>
+            <h4>Claude · Anthropic</h4>
+            <span class="addr">claude.ai</span>
+            <p>Работает только в поддерживаемых странах и тоже просит номер. Выбирайте страну VPN из поддерживаемого списка на сайте.</p>
+          </div>
+        </div>
+
+        <div class="note note--stop">
+          <span class="note__t">Если просят номер</span>
+          Не покупайте «готовый аккаунт» и не просите незнакомцев принять за вас SMS. Аккаунт, который завели не вы, у вас заберут в любой момент — вместе со всей перепиской. Лучше остаться на Gemini: для 95% задач новичка его хватает с запасом.
+        </div>
+
+        <h3>Как это выглядит внутри</h3>
+        <ul>
+          <li><b>Поле внизу</b> — туда пишете обычными словами. Enter отправляет.</li>
+          <li><b>Список слева</b> — история разговоров. Каждая новая тема — новый чат, так нейросеть не путается.</li>
+          <li><b>Скрепка или плюс</b> — прикрепить фото или документ, чтобы спросить по нему.</li>
+          <li><b>Ответ можно уточнять:</b> «короче», «проще», «а теперь то же самое для ребёнка».</li>
+        </ul>
+
+        <div class="note">
+          <span class="note__t">Первые три запроса</span>
+          <b>1.</b> «Объясни простыми словами, что такое нейросеть, как будто мне 10 лет».<br>
+          <b>2.</b> «Составь список продуктов на неделю для двоих, бюджет 5000 рублей, без рыбы».<br>
+          <b>3.</b> «Вот моё письмо в управляющую компанию. Сделай вежливее и короче: …»
+        </div>
+
+        <div class="accwrap">
+          <details class="acc"><summary>Приложение на телефон — какое настоящее</summary>
+            <div class="acc__body"><p>У всех четырёх сервисов есть официальные приложения. Проверяйте <b>имя разработчика</b> в магазине (OpenAI, Google, Anthropic, Microsoft) и число установок — подделок с похожими значками очень много, и они существуют ровно для того, чтобы собрать ваши пароли или списать «подписку».</p></div>
+          </details>
+          <details class="acc"><summary>Открылась страница «Not available in your country»</summary>
+            <div class="acc__body"><ul><li>Проверьте на <span class="addr">2ip.ru</span>, что VPN действительно включён.</li><li>Выйдите из аккаунта, очистите cookie этого сайта, зайдите заново.</li><li>Попробуйте режим инкогнито.</li><li>Смените страну VPN на другую (Германия, Нидерланды, США, Великобритания).</li></ul></div>
+          </details>
+        </div>
+      </div>
+      <div class="done-row"><button class="done" type="button" data-done="6" aria-pressed="false">Готово</button></div>
+    </section>
+
+    <!-- ── 07 ───────────────────────────────────────────── -->
+    <section class="card" id="s7" data-card="7">
+      <div class="card__head">
+        <div class="station">07</div>
+        <div class="card__titles">
+          <h2>Как спрашивать, чтобы отвечало</h2>
+          <p class="card__sub">10 минут · и есть конструктор ниже</p>
+        </div>
+      </div>
+      <div class="prose">
+        <p class="lead">Нейросеть не читает мысли. Она отвечает ровно на то, что вы написали. Пять кирпичиков хорошего запроса: <b>кто отвечает · что нужно · для кого и зачем · в каком виде · чего избегать</b>.</p>
+
+        <div class="grid2">
+          <div class="note note--stop"><span class="note__t">Слабо</span>Напиши про отпуск</div>
+          <div class="note"><span class="note__t">Сильно</span>Ты опытный HR. Напиши заявление на отпуск с 5 по 19 августа на имя директора Иванова И.И. от бухгалтера Петровой А.С. Официальный тон, до 80 слов, без вступлений.</div>
+        </div>
+
+        <h3>Приёмы, которые работают всегда</h3>
+        <ul>
+          <li><b>Просите варианты:</b> «дай 3 варианта, разных по тону».</li>
+          <li><b>Просите объяснить:</b> «объясни, как будто мне 10 лет» — работает даже для налогов и медицины.</li>
+          <li><b>Продолжайте диалог.</b> Первый ответ — черновик. «Короче», «убери канцелярит», «добавь пример» — так и доводят до нужного.</li>
+          <li><b>Дайте образец.</b> Вставьте кусок текста «вот так я обычно пишу» — и получите свой стиль.</li>
+          <li><b>Ограничьте объём:</b> «не больше 150 слов», «пять пунктов» — иначе получите простыню.</li>
+        </ul>
+
+        <div class="note note--warn">
+          <span class="note__t">Главное правило</span>
+          Нейросеть уверенно выдумывает. Даты, цифры, цитаты, статьи законов, названия лекарств, ссылки — <b>всё проверяйте отдельно</b>. Она не врёт нарочно: она подбирает правдоподобное продолжение текста, а правдоподобное и правдивое — не одно и то же.
+        </div>
+      </div>
+      <div class="done-row"><button class="done" type="button" data-done="7" aria-pressed="false">Готово</button></div>
+    </section>
+
+    <!-- ── Конструктор ──────────────────────────────────── -->
+    <section class="card" id="builder">
+      <div class="card__head">
+        <div class="station" style="background:var(--surface-2); border-color:var(--line); color:var(--ink-3)">↳</div>
+        <div class="card__titles">
+          <h2>Конструктор запроса</h2>
+          <p class="card__sub">Заполните поля — получите готовый текст, скопируйте в чат</p>
+        </div>
+      </div>
+      <div class="builder">
+        <div class="grid2">
+          <div class="field">
+            <label for="b-task">Что нужно сделать</label>
+            <select id="b-task">
+              <option value="letter">Написать письмо или обращение</option>
+              <option value="explain">Объяснить непонятное</option>
+              <option value="plan">Составить план или список</option>
+              <option value="fix">Проверить и улучшить мой текст</option>
+              <option value="summary">Пересказать длинный текст коротко</option>
+              <option value="translate">Перевести</option>
+              <option value="ideas">Придумать варианты</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="b-role">Кем ей быть</label>
+            <select id="b-role">
+              <option value="">— не важно —</option>
+              <option value="опытный редактор">опытный редактор</option>
+              <option value="юрист, объясняющий простыми словами">юрист простыми словами</option>
+              <option value="терпеливый учитель">терпеливый учитель</option>
+              <option value="практичный бухгалтер">практичный бухгалтер</option>
+              <option value="дружелюбный врач-консультант, который всегда советует обратиться к специалисту">врач-консультант</option>
+              <option value="маркетолог">маркетолог</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="b-topic">О чём именно — чем подробнее, тем лучше</label>
+          <textarea id="b-topic" placeholder="Например: заявление в управляющую компанию о протечке крыши в квартире 45, дом на Ленина 7, протекает третью неделю"></textarea>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label for="b-who">Для кого это</label>
+            <input id="b-who" type="text" placeholder="для директора / для мамы / для клиентов">
+          </div>
+          <div class="field">
+            <label for="b-tone">Тон</label>
+            <select id="b-tone">
+              <option value="">— не важно —</option>
+              <option value="официальный, деловой">официальный</option>
+              <option value="простой, человеческий">простой человеческий</option>
+              <option value="дружелюбный">дружелюбный</option>
+              <option value="строгий и требовательный">строгий</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label for="b-len">Объём</label>
+            <select id="b-len">
+              <option value="">— не важно —</option>
+              <option value="не длиннее 80 слов">очень коротко</option>
+              <option value="примерно 150–200 слов">средне</option>
+              <option value="подробно, но по делу">подробно</option>
+              <option value="в виде списка из 5–7 пунктов">списком</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="b-avoid">Чего избегать</label>
+            <input id="b-avoid" type="text" placeholder="канцелярита, воды, англицизмов">
+          </div>
+        </div>
+        <div class="field">
+          <label for="b-out">Готовый запрос</label>
+          <div class="out" id="b-out">Заполните поля выше — текст соберётся сам.</div>
+        </div>
+        <div class="copy-row">
+          <button class="btn btn--primary" type="button" id="b-copy">Скопировать запрос</button>
+          <span class="copied" id="b-copied">Скопировано</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 08 ───────────────────────────────────────────── -->
+    <section class="card" id="s8" data-card="8">
+      <div class="card__head">
+        <div class="station">08</div>
+        <div class="card__titles">
+          <h2>Деньги: платить или нет</h2>
+          <p class="card__sub">5 минут · здесь теряют деньги чаще всего</p>
+        </div>
+      </div>
+      <div class="prose">
+        <p class="lead">Короткий ответ: <b>первый месяц не платите вообще</b>. Бесплатных версий Gemini, Copilot и ChatGPT новичку хватает с большим запасом. Сначала поймите, нужно ли вам это каждый день.</p>
+
+        <h3>Почему просто оплатить не получится</h3>
+        <p>Карты российских банков у OpenAI, Google и Anthropic не проходят — это ограничение на их стороне, и VPN его не снимает. Работают зарубежные карты, если они у вас есть.</p>
+
+        <div class="note note--stop">
+          <span class="note__t">Красные флаги посредников</span>
+          <ul style="padding-left:1.2em; display:flex; flex-direction:column; gap:6px; margin-top:8px">
+            <li>«Подписка навсегда за 500 ₽» — подписок навсегда не бывает.</li>
+            <li>Просят предоплату переводом на карту физлица.</li>
+            <li>Торопят: «осталось два места», «цена до вечера».</li>
+            <li>Продают «общий аккаунт» — вашу переписку увидят все, кто им пользуется, а аккаунт заблокируют за вход из десяти стран сразу.</li>
+            <li>Нет ни одного отзыва старше месяца.</li>
+          </ul>
+        </div>
+
+        <div class="note">
+          <span class="note__t">Разумные альтернативы</span>
+          <b>Российские сервисы</b> (станция 01) принимают карты РФ напрямую — если нужна платная функция, это самый спокойный путь. <b>Российские сервисы-посредники</b> с юрлицом, договором и чеком — вариант средней надёжности; переписку по-прежнему видит владелец, документы туда не отправляйте.
+        </div>
+
+        <div class="accwrap">
+          <details class="acc"><summary>Что вообще даёт платная версия</summary>
+            <div class="acc__body"><ul><li>Более сильную модель и меньше отказов «слишком много запросов».</li><li>Больше объём: длинные документы, больше файлов.</li><li>Генерацию картинок, голос, работу с видео — в зависимости от сервиса.</li></ul><p>Всё это нужно, когда вы уже работаете с нейросетью каждый день. На старте — нет.</p></div>
+          </details>
+          <details class="acc"><summary>Оформил подписку — как не платить второй месяц</summary>
+            <div class="acc__body"><p>Подписки продлеваются сами. Отменять нужно в настройках аккаунта сервиса (не в банке) минимум за сутки до даты списания. Поставьте напоминание в телефоне в день оформления.</p></div>
+          </details>
+        </div>
+      </div>
+      <div class="done-row"><button class="done" type="button" data-done="8" aria-pressed="false">Готово</button></div>
+    </section>
+
+    <!-- ── 09 ───────────────────────────────────────────── -->
+    <section class="card" id="s9" data-card="9">
+      <div class="card__head">
+        <div class="station">09</div>
+        <div class="card__titles">
+          <h2>Безопасность: 7 правил</h2>
+          <p class="card__sub">5 минут · перечитайте через неделю</p>
+        </div>
+      </div>
+      <div class="prose">
+        <ol class="steps">
+          <li><b>Не отправляйте в чат паспорт, банковские карты, пароли, медицинские справки и чужие персональные данные.</b> Переписка хранится на серверах компании и может использоваться для обучения — в бесплатных версиях особенно.</li>
+          <li><b>Проверяйте адрес сайта в строке браузера.</b> <code>chatgpt.com</code>, <code>gemini.google.com</code>, <code>claude.ai</code>. Сайты-двойники с лишней буквой существуют ровно для того, чтобы собрать ваш пароль от Google.</li>
+          <li><b>Уникальный пароль на каждый сервис + двухэтапный вход.</b> Один и тот же пароль везде — это одна утечка до потери всего.</li>
+          <li><b>Считайте любой ответ черновиком.</b> Факты, цифры, законы, ссылки, дозировки — проверяйте в первоисточнике.</li>
+          <li><b>Не принимайте по совету нейросети решений о здоровье, деньгах и суде.</b> Она хороша, чтобы разобраться в вопросе и подготовиться к разговору со специалистом. Не вместо него.</li>
+          <li><b>Рабочие документы — только по правилам работодателя.</b> Загрузка клиентской базы в чужой сервис бывает нарушением договора и закона.</li>
+          <li><b>Не покупайте «взломанные» аккаунты и не ставьте файлы из чатов.</b> Дешёвый доступ обычно оплачивается вашими данными.</li>
+        </ol>
+
+        <div class="note note--warn">
+          <span class="note__t">Детям</span>
+          У сервисов есть возрастные ограничения, и они не случайны. Ребёнку — только вместе со взрослым и с разговором о том, что нейросеть может ошибаться и выдумывать.
+        </div>
+      </div>
+      <div class="done-row"><button class="done" type="button" data-done="9" aria-pressed="false">Готово</button><span class="done-hint">Это последняя станция маршрута</span></div>
+    </section>
+
+    <!-- ── Диагностика ──────────────────────────────────── -->
+    <section class="card" id="diag">
+      <div class="card__head">
+        <div class="station" style="background:var(--surface-2); border-color:var(--line); color:var(--ink-3)">?</div>
+        <div class="card__titles">
+          <h2>Что-то не работает</h2>
+          <p class="card__sub">Ответьте на пару вопросов — получите конкретные действия</p>
+        </div>
+      </div>
+      <div class="diag" id="diagbox">
+        <div class="diag__crumbs" id="diagcrumbs"></div>
+        <div id="diagbody"></div>
+        <div style="margin-top:16px"><button class="btn btn--ghost" type="button" id="diagreset">← Начать сначала</button></div>
+      </div>
+    </section>
+
+    <!-- ── Словарь ──────────────────────────────────────── -->
+    <section class="card" id="gloss">
+      <div class="card__head">
+        <div class="station" style="background:var(--surface-2); border-color:var(--line); color:var(--ink-3)">А</div>
+        <div class="card__titles">
+          <h2>Словарик простыми словами</h2>
+          <p class="card__sub">Всё, что вам будут говорить и что можно не понимать</p>
+        </div>
+      </div>
+      <dl class="gloss" id="glosslist"></dl>
+    </section>
+
+    <!-- ── Квиз ─────────────────────────────────────────── -->
+    <section class="card" id="quiz">
+      <div class="card__head">
+        <div class="station" style="background:var(--surface-2); border-color:var(--line); color:var(--ink-3)">✓</div>
+        <div class="card__titles">
+          <h2>Проверь себя</h2>
+          <p class="card__sub">Шесть вопросов о том, где обычно теряют деньги и аккаунты</p>
+        </div>
+      </div>
+      <div class="quiz" id="quizbox"></div>
+      <p class="qscore" id="quizscore" style="margin-top:16px">Отвечено 0 из 6</p>
+    </section>
+
+    <!-- ── Памятка ──────────────────────────────────────── -->
+    <section class="card" id="cheat">
+      <div class="card__head">
+        <div class="station" style="background:var(--surface-2); border-color:var(--line); color:var(--ink-3)">≡</div>
+        <div class="card__titles">
+          <h2>Памятка</h2>
+          <p class="card__sub">Распечатайте или сохраните в PDF — и повесьте рядом с компьютером</p>
+        </div>
+      </div>
+      <div class="cheat">
+        <div><h4>Без VPN, прямо сейчас</h4><p>giga.chat · alice.yandex.ru · shedevrum.ai · fusionbrain.ai</p></div>
+        <div><h4>С VPN, по возрастанию сложности</h4><p>gemini.google.com → copilot.microsoft.com → chatgpt.com → claude.ai</p></div>
+        <div><h4>Проверка VPN</h4><p>2ip.ru — страна должна быть не Россия. Не изменилась — перезапустите браузер.</p></div>
+        <div><h4>Правило одной страны</h4><p>Регистрируйтесь и входите всегда из одной страны VPN. Прыжки = блокировки.</p></div>
+        <div><h4>Пароль</h4><p>Три слова и цифра. Записан на бумаге или в менеджере. Двухэтапный вход включён.</p></div>
+        <div><h4>Формула запроса</h4><p>Кто отвечает · что нужно · для кого · в каком виде · чего избегать.</p></div>
+        <div><h4>Никогда</h4><p>Паспорт и карты в чат. Аккаунты с рук. apk из мессенджера. Предоплата незнакомцу.</p></div>
+        <div><h4>Всегда</h4><p>Проверять факты, цифры и ссылки из ответа в первоисточнике.</p></div>
+      </div>
+      <div class="copy-row" style="margin-top:20px">
+        <button class="btn btn--primary" type="button" id="printbtn">Распечатать памятку</button>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  <div class="wrap">
+    <p><b>Об этом гиде.</b> Общая информация для начинающих о том, как устроены доступ к сервисам и базовая цифровая безопасность. Это не юридическая консультация и не реклама конкретных сервисов: названия VPN здесь намеренно не приводятся.</p>
+    <p>Правила сервисов, их доступность и требования законодательства меняются — перед действиями сверяйтесь с актуальными источниками. Прогресс и настройки хранятся только в вашем браузере и никуда не отправляются.</p>
+  </div>
+</footer>
+
+<div class="sheet" id="sheet" role="dialog" aria-modal="false" aria-labelledby="sheet-t">
+  <div class="sheet__in">
+    <button class="sheet__x" type="button" id="sheetx" aria-label="Закрыть">×</button>
+    <h4 id="sheet-t"></h4>
+    <p id="sheet-b"></p>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var LS = {
+    get:function(k,d){ try{ var v=localStorage.getItem(k); return v===null?d:v; }catch(e){ return d; } },
+    set:function(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+  };
+  var $  = function(s,r){ return (r||document).querySelector(s); };
+  var $$ = function(s,r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); };
+
+  /* ── Тема ───────────────────────────────────────────── */
+  var themebtn = $('#themebtn');
+  function applyTheme(t){
+    if(t){ document.documentElement.setAttribute('data-theme', t); }
+    var dark = t === 'dark';
+    themebtn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+    themebtn.textContent = dark ? 'Светлая тема' : 'Тёмная тема';
+  }
+  var saved = LS.get('ai-guide-theme','');
+  if(saved) applyTheme(saved);
+  themebtn.addEventListener('click', function(){
+    var cur = document.documentElement.getAttribute('data-theme');
+    if(!cur){
+      cur = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    var next = cur === 'dark' ? 'light' : 'dark';
+    applyTheme(next); LS.set('ai-guide-theme', next);
+  });
+
+  /* ── Устройство ─────────────────────────────────────── */
+  function setDevice(d){
+    document.documentElement.setAttribute('data-device', d);
+    LS.set('ai-guide-device', d);
+    $$('.devbtn').forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-dev')===d ? 'true':'false'); });
+  }
+  $$('.devbtn').forEach(function(b){
+    b.addEventListener('click', function(){ setDevice(b.getAttribute('data-dev')); });
+  });
+  var devSaved = LS.get('ai-guide-device','');
+  if(!devSaved){
+    var ua = navigator.userAgent;
+    devSaved = /Android/i.test(ua) ? 'android'
+             : /iPhone|iPad|iPod/i.test(ua) ? 'ios'
+             : /Macintosh|Mac OS X/i.test(ua) ? 'mac' : 'windows';
+  }
+  setDevice(devSaved);
+
+  /* ── Прогресс маршрута ──────────────────────────────── */
+  var TOTAL = 9;
+  var done = {};
+  try{ done = JSON.parse(LS.get('ai-guide-progress','{}')) || {}; }catch(e){ done = {}; }
+
+  function paint(){
+    var n = 0, i;
+    for(i=1;i<=TOTAL;i++){ if(done[i]) n++; }
+    var pct = Math.round(n/TOTAL*100);
+    $('#pct').textContent = pct + '%';
+    $('#pctcap').textContent = n + ' из ' + TOTAL + ' станций';
+    $('#bar').style.width = pct + '%';
+    var list = $('#routelist'), fill = $('#routefill');
+    var span = Math.max(0, list.offsetHeight - 24);
+    fill.style.height = Math.round(span * n / TOTAL) + 'px';
+    $$('#routelist li').forEach(function(li){
+      var s = li.getAttribute('data-step');
+      li.classList.toggle('is-done', !!done[s]);
+    });
+    $$('.done').forEach(function(b){
+      var s = b.getAttribute('data-done');
+      var on = !!done[s];
+      b.setAttribute('aria-pressed', on ? 'true':'false');
+      b.textContent = on ? 'Пройдено' : 'Готово';
+      var card = document.querySelector('[data-card="'+s+'"]');
+      if(card) card.classList.toggle('is-done', on);
+    });
+  }
+  $$('.done').forEach(function(b){
+    b.addEventListener('click', function(){
+      var s = b.getAttribute('data-done');
+      if(done[s]) { delete done[s]; } else { done[s] = 1; }
+      LS.set('ai-guide-progress', JSON.stringify(done));
+      paint();
+    });
+  });
+  $('#reset').addEventListener('click', function(){
+    if(!window.confirm('Сбросить отметки о пройденных станциях?')) return;
+    done = {}; LS.set('ai-guide-progress','{}'); paint();
+  });
+  paint();
+
+  /* ── Текущая станция + линейка прокрутки ────────────── */
+  var cards = $$('section.card[id]');
+  if('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(!en.isIntersecting) return;
+        var id = en.target.id;
+        $$('#routelist li').forEach(function(li){
+          var a = li.querySelector('a');
+          li.classList.toggle('is-current', a && a.getAttribute('href') === '#'+id);
+        });
+      });
+    }, { rootMargin: '-15% 0px -70% 0px' });
+    cards.forEach(function(c){ io.observe(c); });
+  }
+  var tick = $('#tickfill');
+  function onScroll(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    tick.style.width = (h > 0 ? (window.pageYOffset / h * 100) : 0) + '%';
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+
+  /* ── Словарь ────────────────────────────────────────── */
+  var TERMS = [
+    ['Нейросеть (ИИ, AI)', 'ip', 'Программа, обученная на огромном количестве текстов. Она не «знает» и не «думает», а очень хорошо предсказывает, какое продолжение текста подходит. Отсюда и сила, и главный недостаток — уверенные выдумки.'],
+    ['Аккаунт', '', 'Ваша учётная запись в сервисе: логин (обычно почта) и пароль. Всё, что вы делали, привязано к ней.'],
+    ['Браузер', '', 'Программа, в которой вы открываете сайты: Chrome, Safari, Firefox, Edge, Яндекс.Браузер.'],
+    ['IP-адрес', 'ip', 'Номер вашего подключения к интернету. По нему сайт понимает, из какой вы страны и какого города — как по обратному адресу на конверте.'],
+    ['VPN', 'vpn', 'Способ выйти в интернет «через другую страну»: ваш трафик идёт до сервера-посредника, и сайты видят его адрес вместо вашего.'],
+    ['Прокси', '', 'Похоже на VPN, но обычно работает только для одной программы или только для браузера, и без шифрования всего трафика.'],
+    ['Двухэтапная аутентификация (2FA)', '2fa', 'Второй ключ от аккаунта: кроме пароля нужен код из SMS или приложения. Без неё аккаунт уводят одним украденным паролем.'],
+    ['Резервные коды', '', 'Список одноразовых кодов, который выдают при включении 2FA. Спасает, когда телефон потерян. Сохраните и распечатайте.'],
+    ['Промпт (запрос)', '', 'То, что вы пишете нейросети. Чем конкретнее — тем лучше ответ.'],
+    ['Галлюцинация', '', 'Красивая правдоподобная выдумка: несуществующий закон, придуманная цитата, битая ссылка. Не злой умысел, а особенность технологии.'],
+    ['Токен', '', 'Кусочек текста (примерно половина слова), которыми нейросеть меряет объём. Лимиты и цены считают в токенах.'],
+    ['Модель', '', 'Конкретная версия нейросети: GPT, Gemini, Claude, GigaChat. Новее — обычно умнее и дороже.'],
+    ['Бесплатный тариф', '', 'Ограниченный доступ: слабее модель и меньше запросов в день. Новичку почти всегда хватает.'],
+    ['Фишинг', '', 'Сайт-двойник с почти таким же адресом, сделанный ради вашего пароля. Защита — читать адресную строку.'],
+    ['apk-файл', '', 'Установочный файл для Android. Из магазина — нормально. Из мессенджера или с форума — почти всегда вредонос.']
+  ];
+  var dl = $('#glosslist');
+  TERMS.forEach(function(t){
+    var row = document.createElement('div');
+    var dt = document.createElement('dt'); dt.textContent = t[0];
+    var dd = document.createElement('dd'); dd.textContent = t[2];
+    if(t[1]) row.id = 'term-' + t[1];
+    row.appendChild(dt); row.appendChild(dd); dl.appendChild(row);
+  });
+
+  var sheet = $('#sheet'), sheetT = $('#sheet-t'), sheetB = $('#sheet-b'), lastTerm = null;
+  function openSheet(key, from){
+    var found = null;
+    TERMS.forEach(function(t){ if(t[1] === key) found = t; });
+    if(!found) return;
+    lastTerm = from || null;
+    sheetT.textContent = found[0];
+    sheetB.textContent = found[2];
+    sheet.classList.add('is-open');
+    $('#sheetx').focus();
+  }
+  function closeSheet(){
+    if(!sheet.classList.contains('is-open')) return;
+    sheet.classList.remove('is-open');
+    if(lastTerm){ lastTerm.focus(); lastTerm = null; }
+  }
+  $$('.term').forEach(function(b){
+    b.addEventListener('click', function(){ openSheet(b.getAttribute('data-term'), b); });
+  });
+  $('#sheetx').addEventListener('click', closeSheet);
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeSheet(); });
+
+  /* ── Печать: раскрыть все свёрнутые блоки ───────────── */
+  var reopen = [];
+  window.addEventListener('beforeprint', function(){
+    reopen = $$('details.acc').filter(function(d){ return !d.open; });
+    reopen.forEach(function(d){ d.open = true; });
+  });
+  window.addEventListener('afterprint', function(){
+    reopen.forEach(function(d){ d.open = false; });
+    reopen = [];
+  });
+  $('#printbtn').addEventListener('click', function(){ window.print(); });
+
+  /* ── Конструктор запроса ────────────────────────────── */
+  var TASKS = {
+    letter:  'Напиши письмо (обращение).',
+    explain: 'Объясни простыми словами, без терминов.',
+    plan:    'Составь понятный план по шагам.',
+    fix:     'Проверь мой текст и улучши его: исправь ошибки, убери лишнее, сохрани смысл.',
+    summary: 'Перескажи коротко, только суть и выводы.',
+    translate:'Переведи, сохранив смысл и естественность языка.',
+    ideas:   'Придумай 5 разных вариантов и коротко поясни каждый.'
+  };
+  var bOut = $('#b-out');
+  function build(){
+    var task = $('#b-task').value, role = $('#b-role').value, topic = $('#b-topic').value.trim();
+    var who  = $('#b-who').value.trim(), tone = $('#b-tone').value, len = $('#b-len').value;
+    var avoid= $('#b-avoid').value.trim();
+    var parts = [];
+    if(role) parts.push('Ты — ' + role + '.');
+    parts.push(TASKS[task]);
+    parts.push('Тема: ' + (topic || '[напишите, о чём именно]') + '.');
+    if(who)  parts.push('Читатель: ' + who + '.');
+    if(tone) parts.push('Тон: ' + tone + '.');
+    if(len)  parts.push('Объём: ' + len + '.');
+    if(avoid)parts.push('Избегай: ' + avoid + '.');
+    parts.push('Если тебе не хватает данных — сначала задай мне уточняющие вопросы, а потом пиши.');
+    bOut.textContent = parts.join(' ');
+  }
+  ['#b-task','#b-role','#b-topic','#b-who','#b-tone','#b-len','#b-avoid'].forEach(function(sel){
+    var el = $(sel);
+    el.addEventListener('input', build); el.addEventListener('change', build);
+  });
+  build();
+  $('#b-copy').addEventListener('click', function(){
+    var txt = bOut.textContent, flag = $('#b-copied');
+    function ok(){ flag.classList.add('on'); setTimeout(function(){ flag.classList.remove('on'); }, 1800); }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(ok, fallback);
+    } else { fallback(); }
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = txt; ta.setAttribute('readonly',''); ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select();
+      try{ document.execCommand('copy'); ok(); }catch(e){}
+      document.body.removeChild(ta);
+    }
+  });
+
+  /* ── Диагностика ────────────────────────────────────── */
+  var NODES = {
+    start: { q:'Что именно не получается?', opts:[
+      ['Сайт нейросети не открывается','site'],
+      ['VPN не подключается или сразу отваливается','vpn'],
+      ['Не приходит SMS с кодом','sms'],
+      ['Просит оплату, а карта не проходит','pay'],
+      ['Отвечает ерундой или отказывается','bad'],
+      ['Выкидывает из аккаунта, просит подтверждение','acc']
+    ]},
+    site: { q:'VPN сейчас включён и на 2ip.ru показана не Россия?', opts:[
+      ['Да, страна другая','site_on'],
+      ['Нет, страна всё ещё Россия','site_off'],
+      ['Не знаю, как проверить','site_check']
+    ]},
+    site_check: { a:'Как проверить за 30 секунд', list:[
+      'Откройте 2ip.ru — вверху будет написана страна.',
+      'Если там Россия, VPN не работает, даже когда в приложении горит «Подключено».',
+      'Полностью закройте браузер и откройте заново — он мог показать сохранённую страницу.'
+    ]},
+    site_off: { a:'VPN не работает — по порядку', list:[
+      'Переподключите приложение: выключить → подождать 10 секунд → включить.',
+      'Смените страну или сервер внутри приложения.',
+      'Проверьте значок VPN в строке состояния — если его нет, соединение не создано.',
+      'Переключитесь между Wi-Fi и мобильным интернетом.',
+      'Перезагрузите устройство — это правда помогает чаще всего.'
+    ]},
+    site_on: { a:'VPN работает, но сайт всё равно не пускает', list:[
+      'Откройте сайт в режиме инкогнито — так не мешают старые cookie.',
+      'Очистите cookie и кэш конкретно этого сайта.',
+      'Смените страну VPN: не все сервисы доступны везде (для Claude выбирайте страну из списка поддерживаемых).',
+      'Проверьте адрес по буквам: chatgpt.com, gemini.google.com, claude.ai. Лишняя буква — это сайт-двойник.',
+      'Попробуйте другой браузер.'
+    ]},
+    vpn: { q:'Приложение вообще запускается и показывает кнопку подключения?', opts:[
+      ['Да, но соединение рвётся','vpn_drop'],
+      ['Нет, не запускается или ошибка при установке','vpn_inst']
+    ]},
+    vpn_drop: { a:'Соединение рвётся', list:[
+      'Смените сервер и страну — часть серверов перегружена или заблокирована.',
+      'В настройках приложения смените протокол (WireGuard / OpenVPN / маскирующий режим).',
+      'Отключите энергосбережение для этого приложения: система «усыпляет» его в фоне.',
+      'Если рвётся несколько дней подряд на всех серверах — сервис перестал работать. Это нормально, ищите другой.'
+    ]},
+    vpn_inst: { a:'Не устанавливается', list:[
+      'Проверьте свободное место — нужно 200–500 МБ.',
+      'Ставьте только из официального магазина приложений или с сайта разработчика.',
+      'Файл apk из мессенджера не устанавливайте вообще: это самый частый способ украсть пароли.',
+      'На iPhone приложения может не быть в российском App Store — попробуйте начать с компьютера.'
+    ]},
+    sms: { q:'Куда именно не приходит код?', opts:[
+      ['В Google при регистрации','sms_g'],
+      ['В ChatGPT / Claude','sms_ai']
+    ]},
+    sms_g: { a:'Google и российский номер', list:[
+      'Обычно российский номер Google принимает — подождите 2–3 минуты, код иногда идёт долго.',
+      'Есть суточный лимит на номер: попробуйте на следующий день.',
+      'Попробуйте с компьютера, а не с телефона, и другую страну VPN.',
+      'Проверьте, не блокирует ли оператор короткие номера.'
+    ]},
+    sms_ai: { a:'ChatGPT и Claude', list:[
+      'Российский номер эти сервисы, как правило, не принимают — дело не в вас.',
+      'Начните с Gemini: там достаточно Google-аккаунта, отдельного номера обычно не требуют.',
+      'Не покупайте «виртуальные номера» и не просите незнакомцев принять код: вместе с номером к вашему аккаунту получают доступ посторонние.',
+      'Не покупайте готовые аккаунты — их забирают вместе с перепиской.'
+    ]},
+    pay: { a:'Оплата', list:[
+      'Карты российских банков у OpenAI, Google и Anthropic не проходят — VPN этого не меняет.',
+      'Сначала месяц поработайте на бесплатном тарифе: новичку его почти всегда хватает.',
+      'Если платная функция нужна — российские сервисы (GigaChat, Яндекс) принимают карты РФ напрямую.',
+      'Посредники: только с юрлицом, договором и чеком. Никакой предоплаты переводом на карту физлица и никаких «общих аккаунтов».'
+    ]},
+    bad: { q:'Что именно не так с ответом?', opts:[
+      ['Отвечает не по делу, слишком общо','bad_vague'],
+      ['Выдумывает факты, ссылки, законы','bad_hall'],
+      ['Отказывается отвечать','bad_ref']
+    ]},
+    bad_vague: { a:'Общие ответы — почти всегда общий вопрос', list:[
+      'Добавьте роль: «Ты опытный юрист…».',
+      'Добавьте контекст: для кого, зачем, что уже пробовали.',
+      'Задайте формат: «список из 5 пунктов», «не длиннее 100 слов», «таблицей».',
+      'Продолжайте диалог: «конкретнее», «добавь пример», «убери воду».',
+      'Соберите запрос в конструкторе выше — он подставит всё это сам.'
+    ]},
+    bad_hall: { a:'Выдумывает — так и должно быть, это не поломка', list:[
+      'Нейросеть подбирает правдоподобное продолжение текста, а не проверяет факты.',
+      'Просите: «укажи, в чём не уверена» и «не выдумывай источники».',
+      'Все цифры, даты, цитаты, статьи законов и ссылки проверяйте отдельно.',
+      'Для свежих новостей выбирайте сервис с поиском в интернете — и всё равно открывайте источник.'
+    ]},
+    bad_ref: { a:'Отказывается отвечать', list:[
+      'Иногда достаточно переформулировать и объяснить цель: «мне нужно для учебного разбора».',
+      'Часть тем закрыта правилами сервиса — это не обходится и не стоит попыток.',
+      'По медицине, праву и финансам ответ обычно даётся с оговорками — это нормально, используйте как подготовку к разговору со специалистом.'
+    ]},
+    acc: { a:'Аккаунт просит подтверждение', list:[
+      'Причина почти всегда одна: вход то из России, то из другой страны.',
+      'Выберите одну страну VPN и заходите всегда из неё.',
+      'Держите привязанный телефон и резервную почту актуальными.',
+      'Включите двухэтапный вход и сохраните резервные коды — они выручают, когда SMS не приходит.',
+      'Не пользуйтесь общими и купленными аккаунтами: их блокируют именно за такое.'
+    ]}
+  };
+  var diagBody = $('#diagbody'), diagCrumbs = $('#diagcrumbs'), path = [];
+  function renderDiag(key){
+    var node = NODES[key]; if(!node) return;
+    diagBody.innerHTML = '';
+    diagCrumbs.textContent = path.length ? ('Диагностика · шаг ' + (path.length + 1)) : 'Диагностика · шаг 1';
+    if(node.q){
+      var q = document.createElement('p'); q.className = 'diag__q'; q.textContent = node.q;
+      var box = document.createElement('div'); box.className = 'diag__opts';
+      node.opts.forEach(function(o){
+        var b = document.createElement('button');
+        b.type = 'button'; b.className = 'diag__opt'; b.textContent = o[0];
+        b.addEventListener('click', function(){ path.push(key); renderDiag(o[1]); });
+        box.appendChild(b);
+      });
+      diagBody.appendChild(q); diagBody.appendChild(box);
+    } else {
+      var wrap = document.createElement('div'); wrap.className = 'diag__ans';
+      var h = document.createElement('p'); h.className = 'diag__q'; h.textContent = node.a;
+      var ul = document.createElement('ul');
+      node.list.forEach(function(t){ var li = document.createElement('li'); li.textContent = t; ul.appendChild(li); });
+      wrap.appendChild(h); wrap.appendChild(ul);
+      diagBody.appendChild(wrap);
+    }
+  }
+  $('#diagreset').addEventListener('click', function(){ path = []; renderDiag('start'); });
+  renderDiag('start');
+
+  /* ── Квиз ───────────────────────────────────────────── */
+  var QUIZ = [
+    { q:'Вам предлагают «ChatGPT Plus навсегда за 490 ₽, предоплата на карту». Что делать?',
+      o:['Купить, пока не разобрали','Отказаться: подписок «навсегда» не существует','Попросить скидку'], c:1,
+      e:'Подписки продлеваются помесячно, и продавец не может гарантировать доступ навсегда. Предоплата переводом физлицу — способ потерять деньги без возврата.' },
+    { q:'Нейросеть привела статью закона и ссылку на решение суда. Ваши действия?',
+      o:['Использовать, она же уверенно ответила','Открыть первоисточник и проверить','Переспросить у неё же — если повторит, значит правда'], c:1,
+      e:'Модель подбирает правдоподобный текст, а не проверяет факты. Повторный вопрос ничего не подтверждает: она повторит ту же выдумку.' },
+    { q:'Нужно, чтобы нейросеть помогла с налоговым вычетом. Что можно отправить в чат?',
+      o:['Скан паспорта и справку 2-НДФЛ','Описание ситуации без персональных данных','Полный доступ к личному кабинету'], c:1,
+      e:'Переписка хранится на серверах компании и может использоваться для обучения. Опишите ситуацию словами, обезличив цифры и имена.' },
+    { q:'VPN включён, приложение пишет «Подключено», но сайт не открывается. Первый шаг?',
+      o:['Проверить на 2ip.ru, какая показана страна','Сразу купить другой VPN','Отключить антивирус'], c:0,
+      e:'«Подключено» в приложении и реально изменившийся адрес — не одно и то же. Сначала факты, потом действия.' },
+    { q:'Друг предлагает свой Google-аккаунт, чтобы вы зашли в Gemini. Стоит?',
+      o:['Да, так быстрее','Нет, завести свой — вход из двух стран приведёт к блокировке','Да, если сменить пароль'], c:1,
+      e:'Одновременный вход из разных стран выглядит как взлом: аккаунт заблокируют, а вся ваша переписка останется у владельца.' },
+    { q:'Приложение VPN пришло файлом .apk в мессенджере от незнакомца. Установить?',
+      o:['Да, если антивирус молчит','Нет, только из магазина приложений или с сайта разработчика','Да, но потом удалить'], c:1,
+      e:'Подменённый apk — самый частый способ украсть пароли и доступ к банку. Антивирус на телефоне такие сборки часто пропускает.' }
+  ];
+  var quizBox = $('#quizbox'), answered = 0, right = 0;
+  QUIZ.forEach(function(item, i){
+    var card = document.createElement('div'); card.className = 'qcard';
+    var q = document.createElement('p'); q.className = 'qcard__q';
+    var num = document.createElement('span'); num.textContent = (i+1) + '.';
+    var txt = document.createElement('span'); txt.textContent = item.q;
+    q.appendChild(num); q.appendChild(txt);
+    var opts = document.createElement('div'); opts.className = 'qopts';
+    var fb = document.createElement('p'); fb.className = 'qfb'; fb.textContent = item.e;
+    var locked = false;
+    item.o.forEach(function(label, j){
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'qopt'; b.textContent = label;
+      b.addEventListener('click', function(){
+        if(locked) return;
+        locked = true; answered++;
+        if(j === item.c) right++;
+        Array.prototype.forEach.call(opts.children, function(el, k){
+          if(k === item.c) el.classList.add('right');
+          else if(k === j) el.classList.add('wrong');
+        });
+        fb.classList.add('on');
+        $('#quizscore').textContent = 'Отвечено ' + answered + ' из ' + QUIZ.length + ' · верно ' + right;
+      });
+      opts.appendChild(b);
+    });
+    card.appendChild(q); card.appendChild(opts); card.appendChild(fb);
+    quizBox.appendChild(card);
+  });
+})();
+</script>
+</body>
+</html>

@@ -98,7 +98,18 @@ kutuzovsky-12.html  Self-contained single-file build (downloadable)
 build-text-video.js    Generates the "video-as-text" experiment
 text-video.html        Plays footage with no <video>/<img> — pure colored text
 docs/preview.svg       Static preview (earlier concept)
+ai-guide.html          Unrelated standalone page (see below)
 ```
+
+## Also in this repo
+
+`ai-guide.html` — a self-contained interactive Russian-language guide for
+complete beginners: *how to get access to AI services from Russia* (what works
+without a VPN, choosing and installing one, creating a Google account, the first
+conversation, payments, safety). One file, no build step, no internet — open it
+by double-clicking. It tracks your progress in `localStorage`, adapts the
+install instructions to your device, and includes a troubleshooting wizard, a
+prompt builder, a glossary and a quiz. Unrelated to the Кутузовский 12 landing.
 
 ## Experiment: video without a video player
 
