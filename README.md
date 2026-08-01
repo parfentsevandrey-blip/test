@@ -104,12 +104,29 @@ ai-guide.html          Unrelated standalone page (see below)
 ## Also in this repo
 
 `ai-guide.html` — a self-contained interactive Russian-language guide for
-complete beginners: *how to get access to AI services from Russia* (what works
-without a VPN, choosing and installing one, creating a Google account, the first
-conversation, payments, safety). One file, no build step, no internet — open it
-by double-clicking. It tracks your progress in `localStorage`, adapts the
-install instructions to your device, and includes a troubleshooting wizard, a
-prompt builder, a glossary and a quiz. Unrelated to the Кутузовский 12 landing.
+complete beginners: *how to get access to AI services from Russia*. One file,
+no build step, no network — double-click to open. Unrelated to the
+Кутузовский 12 landing.
+
+The page opens on a **live canvas diagram** of a request leaving Moscow, hitting
+the country block and dying. The reader flips the VPN switch themselves, the
+route re-draws through a relay abroad and the packets get through — so the
+concept is understood before a word of text. From there:
+
+- **personal route** — three questions produce a plan that drops the steps you
+  don't need and marks each station accordingly;
+- **phone simulator** — tap through installing a VPN on a drawn Android/iPhone,
+  including the system "allow VPN connection?" dialog, before doing it for real;
+- **phishing drill** — pick the real address out of two near-identical ones, with
+  the swapped character revealed on answer;
+- plus a prompt builder, a branching troubleshooting wizard, a click-to-define
+  glossary, a quiz and a print-only cheat sheet.
+
+Progress, answers and theme persist in `localStorage`. Fonts (Unbounded +
+IBM Plex Sans/Mono, Cyrillic + Latin subsets) are embedded as data URIs, so
+there are no external requests at all. Dark and light themes, full
+`prefers-reduced-motion` support (the diagram falls back to a composed static
+frame), keyboard focus states and print styles.
 
 ## Experiment: video without a video player
 
