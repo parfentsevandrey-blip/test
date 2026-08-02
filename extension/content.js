@@ -14,6 +14,7 @@
     maxPages: 54, pageSize: 28,          // реальный потолок Циан ~54 страницы (≈1512)
     minPriceSpan: 200000, priceCeiling: 3000000000,  // дробление по цене
     maxRetries: 4, backoffBase: 1500,    // ретраи на 429/5xx
+    waitCeiling: 60000,                  // потолок ОДНОЙ паузы между попытками
     reqBudget: 400,                      // защита от runaway-запросов
   };
   const API = "https://api.cian.ru/search-offers/v2/search-offers-desktop/";
@@ -253,8 +254,13 @@
         if (r.status === 403) throw new Error("HTTP 403 — нужна авторизация/капча на cian.ru");
         if (r.status === 429 || r.status >= 500) {
           if (health) { health.retries++; health.retryStatuses[r.status] = (health.retryStatuses[r.status] || 0) + 1; }
+          // Retry-After берём с ПОТОЛКОМ. Циан вправе прислать 3600, и без
+          // ограничения одна такая шапка замораживает вкладку на час: прогресс
+          // стоит, кнопка не отвечает, отменить нечем. Лучше подождать минуту и
+          // честно упасть, чем выглядеть зависшим.
           const ra = parseInt(r.headers && r.headers.get && r.headers.get("Retry-After"), 10);
-          const wait = (ra ? ra * 1000 : delay) + Math.random() * 400;
+          const raMs = ra > 0 ? Math.min(ra * 1000, CONFIG.waitCeiling) : 0;
+          const wait = Math.min(raMs || delay, CONFIG.waitCeiling) + Math.random() * 400;
           console.warn(`[cian-excel] HTTP ${r.status} — пауза ${Math.round(wait / 1000)}s (попытка ${attempt}/${CONFIG.maxRetries})`);
           lastErr = "HTTP " + r.status; await sleep(wait); delay *= 2; continue;
         }
