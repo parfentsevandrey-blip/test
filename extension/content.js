@@ -15,14 +15,43 @@
     minPriceSpan: 200000, priceCeiling: 3000000000,  // дробление по цене
     maxRetries: 4, backoffBase: 1500,    // ретраи на 429/5xx
     waitCeiling: 60000,                  // потолок ОДНОЙ паузы между попытками
-    reqBudget: 400,                      // защита от runaway-запросов
+    reqBudget: 400,                      // мягкий лимит ЛОГИЧЕСКИХ страниц
+    // Настоящий предохранитель. reqBudget считает успешные страницы, а ретраи
+    // живут внутри apiFetch и в него не входят: измерено на стенде (негативный
+    // контроль «снят бюджет реальных HTTP») — 400 «страниц» превращались в 2408
+    // реальных обращений к Циан, 2,6 часа сбора; потолок формулы
+    // 2*reqBudget*maxRetries + maxRetries = 3204. Для точной отделки перебором
+    // фильтра это была бы десятитысячная нагрузка. Считаем то, что видит Циан.
+    httpBudget: 900,
+    // Недобор в 1-2 лота дроблением не ищем. Циан регулярно считает в
+    // aggregatedCount лот, которого в выдаче нет, и погоня за ним стоит ВСЕГО
+    // бюджета: измерено — один фантом превращал честные 12 запросов в 400,
+    // из них 289 возвращали ноль лотов. Осознанный размен: до двух лотов
+    // против четырёхсот запросов.
+    minShortfall: 2,
   };
   const API = "https://api.cian.ru/search-offers/v2/search-offers-desktop/";
   const ROOMS = [9, 7, 1, 2, 3, 4, 5, 6];
   // Диагностика качества сбора текущего run() — сбрасывается в начале
   // collectAll(), пишется из apiFetch()/paginateSegment(). null вне сбора.
   let health = null;
-  const isHealthWarn = (h) => !!(h && h.requests && ((h.retries / h.requests > 0.15) || h.totalDrift > 0));
+  // Недобор и исчерпание бюджета — куда более веский повод для предупреждения,
+  // чем дрейф total (у Циан он норма). Порог по дрейфу поднят с нуля.
+  const isHealthWarn = (h) => !!(h && h.requests && (
+    h.budgetExhausted || h.shortfall > 0 ||
+    (h.retries / h.requests > 0.15) || h.totalDrift > 2));
+  // ПОЧЕМУ предупреждение. Одного флага мало: «ретраев: 0» под жёлтой плашкой
+  // сбивает с толку, а причины у неё теперь разные. Список общий для панели и
+  // листа «Сводка» — чтобы человек видел одно и то же в обоих местах.
+  const healthReasons = (h) => {
+    const out = [];
+    if (!h || !h.requests) return out;
+    if (h.budgetExhausted) out.push("исчерпан бюджет запросов — сбор остановлен досрочно");
+    if (h.shortfall > 0) out.push(`не отдано ${h.shortfall} объявлений из заявленных Циан`);
+    if (h.retries / h.requests > 0.15) out.push(`много повторов: ${h.retries} на ${h.requests} страниц`);
+    if (h.totalDrift > 2) out.push(`число объявлений плавало между страницами (расхождений: ${h.totalDrift})`);
+    return out;
+  };
 
   // === Перехват настоящего запроса страницы =================================
   // Циан сам шлёт search-offers с ПРАВИЛЬНЫМ фильтром по этому ЖК. Перехватываем
@@ -235,9 +264,20 @@
   }
 
   // POST с ретраями и экспоненциальным бэк-оффом (429/503/5xx/сеть), уважает Retry-After.
+  // Бросается, когда исчерпан бюджет реальных обращений. Отдельный тип нужен,
+  // чтобы collectAll отличил его от отказа Циан и вернул частичный результат,
+  // а не потерял всё собранное.
+  function BudgetError() { const e = new Error("исчерпан бюджет запросов"); e.budget = true; return e; }
+
   async function apiFetch(body) {
     let delay = CONFIG.backoffBase, lastErr = null;
     for (let attempt = 1; attempt <= CONFIG.maxRetries; attempt++) {
+      // Считаем ДО обращения и на КАЖДОЙ попытке: это единственная точка, где
+      // видны все обращения без исключения.
+      if (health) {
+        if (health.http >= CONFIG.httpBudget) throw BudgetError();
+        health.http++;
+      }
       try {
         const r = await fetch(API, {
           method: "POST", headers: { "Content-Type": "application/json", Accept: "*/*" },
@@ -262,7 +302,12 @@
           const raMs = ra > 0 ? Math.min(ra * 1000, CONFIG.waitCeiling) : 0;
           const wait = Math.min(raMs || delay, CONFIG.waitCeiling) + Math.random() * 400;
           console.warn(`[cian-excel] HTTP ${r.status} — пауза ${Math.round(wait / 1000)}s (попытка ${attempt}/${CONFIG.maxRetries})`);
-          lastErr = "HTTP " + r.status; await sleep(wait); delay *= 2; continue;
+          lastErr = "HTTP " + r.status;
+          // Перед заведомо последней попыткой спать незачем: раньше на пути
+          // 429/5xx это добавляло целый интервал ожидания к каждому фатальному
+          // отказу (на сетевом пути такой сон уже был отсечён).
+          if (attempt >= CONFIG.maxRetries) break;
+          await sleep(wait); delay *= 2; continue;
         }
         throw new Error("HTTP " + r.status);
       } catch (e) {
@@ -283,7 +328,7 @@
   async function collectAll(base, onProgress) {
     const byId = new Map();
     let grandTotal = 0, requests = 0;
-    health = { retries: 0, retryStatuses: {}, totalDrift: 0 };   // диагностика качества сбора этого run()
+    health = { retries: 0, retryStatuses: {}, totalDrift: 0, http: 0, budgetExhausted: false };
     const add = (offers) => offers.forEach((o) => { const id = o.cianId || o.id; if (id != null) byId.set(id, o); });
 
     // Пагинация одного сегмента; seen = сколько УНИКАЛЬНЫХ id вернул сам сегмент.
@@ -299,12 +344,21 @@
         // диагностику качества сбора, не как ошибку (сама логика это переживает).
         if (firstTotal == null) firstTotal = res.total; else if (res.total !== firstTotal) health.totalDrift++;
         total = res.total;
+        // Пустая выдача: сервер сам сказал «ничего нет» и ничего не прислал —
+        // спрашивать вторую страницу незачем. Для фоновых проверок это ×2
+        // трафика на каждое «ничего не изменилось».
+        if (!total && !res.offers.length) break;
         if (!res.offers.length) { if (++empty >= 2) break; page++; await pause(); continue; }
         empty = 0;
         res.offers.forEach((o) => { const id = o.cianId || o.id; if (id != null) seg.add(id); });
         add(res.offers);
         onProgress(`Собрано ${byId.size}${grandTotal ? " из " + grandTotal : ""}…`, byId.size, grandTotal);
-        if (seg.size >= total) break;                                  // весь сегмент собран
+        // Сегмент полон, когда счёт сошёлся ТОЧНО. Расхождение в большую
+        // сторону (заявлено 10, а на странице 28) означает, что total занижен:
+        // раньше на этом пагинация обрывалась после первой страницы, и 28 лотов
+        // из 100 уезжали в файл под видом 100% охвата. Верхнюю границу всё
+        // равно держит правило ceil(total/pageSize)+2 ниже.
+        if (seg.size === total) break;                                  // весь сегмент собран
         if (page >= Math.ceil(total / CONFIG.pageSize) + 2) break;
         page++; await pause();
       }
@@ -322,14 +376,14 @@
       const stack = [];
       if (knownTotal == null) {
         stack.push([lo0, hi0]);                                  // полный проход ещё не делался
-      } else if (knownTotal > (knownSeen || 0) && (hi0 - lo0) > CONFIG.minPriceSpan) {
+      } else if (knownTotal - (knownSeen || 0) > CONFIG.minShortfall && (hi0 - lo0) > CONFIG.minPriceSpan) {
         const mid = Math.floor((lo0 + hi0) / 2);                 // вызывающий уже прошёл [lo0,hi0]
         stack.push([lo0, mid]); stack.push([mid + 1, hi0]);
       }
       while (stack.length && requests < CONFIG.reqBudget) {
         const [a, b] = stack.pop();
         const { total, seen } = await paginateSegment(Object.assign({}, filters, { priceGte: a, priceLte: b }), label);
-        if (total > seen && (b - a) > CONFIG.minPriceSpan) {
+        if (total - seen > CONFIG.minShortfall && (b - a) > CONFIG.minPriceSpan) {
           const mid = Math.floor((a + b) / 2);
           stack.push([a, mid]); stack.push([mid + 1, b]);
         }
@@ -337,29 +391,44 @@
       }
     }
 
-    // 1) прямой проход по запросу пользователя
-    const first = await paginateSegment({}, "");
-    grandTotal = first.total;
-
-    // 2) недобор -> детерминированная декомпозиция
+    // Исчерпание бюджета — это НЕ отказ: всё собранное к этому моменту остаётся
+    // валидным. Раньше такой обрыв был неотличим от штатного завершения, и
+    // пользователю показывали неполную выгрузку как полную.
     let totalsByRoom = null;
-    if (grandTotal && byId.size < grandTotal && requests < CONFIG.reqBudget) {
-      if (!base.room) {
-        totalsByRoom = {};
-        for (const room of ROOMS) {
-          if (requests >= CONFIG.reqBudget || byId.size >= grandTotal) break;
-          onProgress(`Комнаты ${room}… (${byId.size}/${grandTotal})`, byId.size, grandTotal);
-          const pr = await paginateSegment({ room }, `room ${room}: `);
-          totalsByRoom[room] = pr.total;
-          if (pr.total > pr.seen) await priceSplit({ room }, `room ${room} ₽: `, pr.total, pr.seen);
-          await pause();
+    try {
+      // 1) прямой проход по запросу пользователя
+      const first = await paginateSegment({}, "");
+      grandTotal = first.total;
+
+      // 2) недобор -> детерминированная декомпозиция
+      if (grandTotal && byId.size < grandTotal && requests < CONFIG.reqBudget) {
+        if (!base.room) {
+          totalsByRoom = {};
+          for (const room of ROOMS) {
+            if (requests >= CONFIG.reqBudget || byId.size >= grandTotal) break;
+            onProgress(`Комнаты ${room}… (${byId.size}/${grandTotal})`, byId.size, grandTotal);
+            const pr = await paginateSegment({ room }, `room ${room}: `);
+            totalsByRoom[room] = pr.total;
+            if (pr.total > pr.seen) await priceSplit({ room }, `room ${room} ₽: `, pr.total, pr.seen);
+            await pause();
+          }
+        } else {
+          await priceSplit({}, "₽: ", first.total, first.seen);   // у пользователя уже фильтр по комнатам
         }
-      } else {
-        await priceSplit({}, "₽: ", first.total, first.seen);   // у пользователя уже фильтр по комнатам
       }
+    } catch (e) {
+      // Бюджет — единственное исключение, которое мы гасим: остальные (403,
+      // капча, отказ на первой же странице) обязаны дойти до пользователя.
+      if (!e || !e.budget) throw e;
+      health.budgetExhausted = true;
+      console.warn("[cian-excel] исчерпан бюджет запросов — выгрузка неполная");
     }
     health.requests = requests;
-    console.log(`[cian-excel] ИТОГО ${byId.size}/${grandTotal} за ${requests} запросов (ретраев: ${health.retries}, дрейф total: ${health.totalDrift})`);
+    // Недобор — главный признак качества выгрузки, а до сих пор его нигде не
+    // считали: пользователю показывали охват, посчитанный от того же total,
+    // который мог быть занижен.
+    health.shortfall = grandTotal ? Math.max(0, grandTotal - byId.size) : 0;
+    console.log(`[cian-excel] ИТОГО ${byId.size}/${grandTotal} за ${health.http} обращений (${requests} страниц, ретраев: ${health.retries}, дрейф total: ${health.totalDrift}${health.budgetExhausted ? ", БЮДЖЕТ ИСЧЕРПАН" : ""})`);
     return { offers: [...byId.values()], totalsByRoom, totalInJk: grandTotal, health };
   }
 
@@ -1900,8 +1969,11 @@
     if (health && health.requests) {
       const warn = isHealthWarn(health);
       R.push(row([{}]), row([{ v: "ДИАГНОСТИКА СБОРА", s: "bold" }]));
-      R.push(row([{ v: `Запросов: ${health.requests} · ретраев (429/5xx/сеть): ${health.retries} · дрейф total между страницами: ${health.totalDrift}`, s: warn ? "warn" : "sub" }]));
-      if (warn) R.push(row([{ v: "Много ретраев/нестабильный total — Циан мог троттлить сбор; проверьте охват выше и по возможности выгрузите повторно.", s: "sub" }]));
+      // Обращения и страницы — разные числа: одна страница стоит до maxRetries
+      // обращений, и Циан видит именно первое. Бюджет считается по нему.
+      R.push(row([{ v: `Обращений к Циан: ${health.http || health.requests} (страниц: ${health.requests}) · ретраев (429/5xx/сеть): ${health.retries} · дрейф total между страницами: ${health.totalDrift}`, s: warn ? "warn" : "sub" }]));
+      healthReasons(health).forEach((r) => R.push(row([{ v: "· " + r.charAt(0).toUpperCase() + r.slice(1), s: "warn" }])));
+      if (warn) R.push(row([{ v: "Выгрузка может быть неполной — проверьте охват выше и по возможности выгрузите повторно.", s: "sub" }]));
     }
     return worksheet("Сводка", [220, 96, 96, 96, 84, 84], R, false);
   }
@@ -2151,6 +2223,7 @@
     if (health && health.requests) {
       st.retries = health.retries; st.totalDrift = health.totalDrift;
       st.healthWarn = isHealthWarn(health);
+      st.healthWhy = healthReasons(health);
     }
     st.fact = pickFact();   // случайный любопытный факт (из жизни/кода/природы), не про выборку
     return st;
@@ -2384,7 +2457,8 @@
       (stats.total ? " · всего " + fmt(stats.total) : "");
     if (stats.healthWarn) {
       ui.el.health.style.display = "flex";
-      ui.el.healthtext.textContent = `Циан отвечал нестабильно (ретраев: ${stats.retries}${stats.totalDrift ? ", дрейф total: " + stats.totalDrift : ""}) — сверьте охват, при сомнении выгрузите ещё раз.`;
+      const why = (stats.healthWhy && stats.healthWhy.length) ? stats.healthWhy.join("; ") : "Циан отвечал нестабильно";
+      ui.el.healthtext.textContent = why.charAt(0).toUpperCase() + why.slice(1) + " — сверьте охват, при сомнении выгрузите ещё раз.";
     } else { ui.el.health.style.display = "none"; }
     ui.el.cats.innerHTML = "";
     stats.byCat.forEach((x) => {

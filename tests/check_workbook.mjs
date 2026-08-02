@@ -40,14 +40,29 @@ const RealDate = Date;   // захватываем ДО любых подмен 
 // 1. Вырезаем слой генерации из content.js и запускаем его в песочнице
 // ===========================================================================
 
-// В вырезанном куске (categoryOf … download) снаружи нужны ровно четыре имени:
-// dig, isHealthWarn — берём их ИСХОДНЫМ ТЕКСТОМ из того же файла, чтобы правка
-// в content.js не разъехалась с тестом; Date и localStorage — наши стабы.
-function grabLine(src, prefix, what) {
+// В вырезанном куске (categoryOf … download) снаружи нужны пять имён:
+// dig, isHealthWarn, healthReasons — берём их ИСХОДНЫМ ТЕКСТОМ из того же
+// файла, чтобы правка в content.js не разъехалась с тестом; Date и
+// localStorage — наши стабы.
+// Берём объявление ЦЕЛИКОМ: от префикса до строки, на которой скобки сошлись и
+// стоит «;». Однострочный вариант — частный случай: isHealthWarn занимает три
+// строки, healthReasons — двенадцать, и обрыв по первому \n давал в песочнице
+// синтаксическую ошибку вместо внятного сообщения.
+function grabDecl(src, prefix, what) {
   const i = src.indexOf(prefix);
   if (i < 0) throw new Error(`не нашёл ${what} («${prefix}») в ${CONTENT_JS}`);
-  const j = src.indexOf("\n", i);
-  return src.slice(i, j < 0 ? undefined : j);
+  let j = i, depth = 0;
+  for (;;) {
+    const nl = src.indexOf("\n", j);
+    const line = src.slice(j, nl < 0 ? undefined : nl);
+    for (const ch of line) {
+      if ("([{".includes(ch)) depth++;
+      else if (")]}".includes(ch)) depth--;
+    }
+    if (nl < 0) return src.slice(i);
+    if (depth === 0 && line.trimEnd().endsWith(";")) return src.slice(i, nl);
+    j = nl + 1;
+  }
 }
 
 export function makeFactory(contentJsPath = CONTENT_JS) {
@@ -57,8 +72,9 @@ export function makeFactory(contentJsPath = CONTENT_JS) {
   if (from < 0 || to < 0) throw new Error("не нашёл границы экспортирующей части content.js");
 
   const prelude = [
-    grabLine(src, "  const dig = ", "хелпер dig"),
-    grabLine(src, "  const isHealthWarn = ", "хелпер isHealthWarn"),
+    grabDecl(src, "  const dig = ", "хелпер dig"),
+    grabDecl(src, "  const isHealthWarn = ", "хелпер isHealthWarn"),
+    grabDecl(src, "  const healthReasons = ", "хелпер healthReasons"),
   ].join("\n");
 
   // eslint-disable-next-line no-eval
@@ -226,9 +242,11 @@ const SUBJ_FILTER = { id: null, isJk: false, title: "Выборка Циан · 
 
 const TOTALS_BY_ROOM = { 9: 14, 7: 3, 1: 40, 2: 52, 3: 21, 4: 6, 5: 2, 6: 1 };
 
-// health: две ветки блока «ДИАГНОСТИКА СБОРА» — спокойная и тревожная
-const HEALTH_OK = { requests: 14, retries: 1, retryStatuses: { 429: 1 }, totalDrift: 0 };
-const HEALTH_WARN = { requests: 12, retries: 4, retryStatuses: { 429: 3, 500: 1 }, totalDrift: 2 };
+// health: две ветки блока «ДИАГНОСТИКА СБОРА» — спокойная и тревожная.
+// В тревожной намеренно собраны ВСЕ поводы разом (недобор, исчерпанный бюджет,
+// доля повторов, дрейф total), чтобы список причин целиком попал в снимок.
+const HEALTH_OK = { requests: 14, http: 15, retries: 1, retryStatuses: { 429: 1 }, totalDrift: 0, shortfall: 0, budgetExhausted: false };
+const HEALTH_WARN = { requests: 12, http: 31, retries: 4, retryStatuses: { 429: 3, 500: 1 }, totalDrift: 3, shortfall: 7, budgetExhausted: true };
 
 // Один прогон = ровно то, что делает run() в content.js:
 // normalize → sort по ₽/м² → enrichExposure → buildWorkbook.

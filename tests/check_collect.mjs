@@ -370,7 +370,9 @@ async function testCleanRun() {
   check(h.retries === 0 && h.totalDrift === 0 && api0.isHealthWarn(h) === false,
     "здоровье чистого прогона чистое, суффикс «_проверить» к имени файла не добавится",
     `чистый прогон дал предупреждение: ${JSON.stringify(h)}`);
-  check(r.con.logs.some((l) => /ИТОГО 50\/50 за 2 запросов/.test(l)),
+  // Формат итоговой строки поменялся вместе с учётом: теперь она отдельно
+  // называет РЕАЛЬНЫЕ обращения и логические страницы — раньше смешивала.
+  check(r.con.logs.some((l) => /ИТОГО 50\/50 за 2 обращений \(2 страниц/.test(l)),
     `в консоль напечатан понятный итог: «${r.con.logs[0]}»`,
     `итоговая строка сбора не найдена: ${JSON.stringify(r.con.logs)}`);
   check(r.progress[0] === "стр.1…" && r.progress.includes("Собрано 28…"),
@@ -589,9 +591,18 @@ async function testTotalDrift() {
     faults: [{ when: { page: 2 }, then: { total: 30 } }],
   }));
   eq(rDown.res.health.totalDrift, 1, "дрейф total посчитан ровно один раз");
-  check(api0.isHealthWarn(rDown.res.health) === true,
-    "дрейф total включает isHealthWarn (суффикс «_проверить» в имени файла)",
-    "дрейф total не включил isHealthWarn — пользователь не узнает о нестабильной выдаче");
+  // Порог по дрейфу поднят с нуля: у Циан дрейф total — норма, и предупреждение
+  // на КАЖДОЙ выгрузке обесценивало сам суффикс «_проверить». Теперь о качестве
+  // говорит недобор, а дрейф должен быть заметным (>2), чтобы тревожить.
+  check(api0.isHealthWarn(rDown.res.health) === false,
+    "единичный дрейф total больше не тревожит: он у Циан в порядке вещей",
+    "единичный дрейф total всё ещё включает isHealthWarn — предупреждение обесценится");
+  check(api0.isHealthWarn({ requests: 10, retries: 0, totalDrift: 0, shortfall: 5 }) === true,
+    "зато недобор включает isHealthWarn — это и есть признак неполной выгрузки",
+    "недобор не включает isHealthWarn: главный признак качества не виден пользователю");
+  check(api0.isHealthWarn({ requests: 10, retries: 0, totalDrift: 0, budgetExhausted: true }) === true,
+    "исчерпание бюджета включает isHealthWarn",
+    "исчерпание бюджета не видно пользователю");
   gap(rDown.res.totalInJk === 30 && rDown.res.offers.length === 56,
     `totalInJk взят с ПОСЛЕДНЕЙ страницы (${rDown.res.totalInJk}) при ${rDown.res.offers.length} собранных лотах — ` +
     "в панели это охват 187%, зажатый до 100%, и сегмент объявлен полным раньше времени",
@@ -677,7 +688,16 @@ async function testBudget() {
     offers: makeUniverse({ rooms: [9, 7, 1, 2, 3, 4, 5, 6], perRoom: 2500 }),
     faults: [{ when: (f) => (f.page === 1 ? (++a % 4 !== 0) : true), then: { status: 429 } }],
   }));
-  eq(rW.logical, CFG.reqBudget, "худший случай: логические страницы всё ещё ограничены бюджетом");
+  // Предохранителем стал бюджет РЕАЛЬНЫХ обращений, поэтому до потолка
+  // логических страниц прогон в патологии больше не доходит — и это цель, а не
+  // регресс: раньше 400 «страниц» стоили 2472 обращения к Циан.
+  check(rW.logical <= CFG.reqBudget, `логических страниц ${rW.logical} ≤ ${CFG.reqBudget}`,
+    `логических страниц ${rW.logical} — больше мягкого лимита ${CFG.reqBudget}`);
+  check(rW.http <= CFG.httpBudget, `реальных обращений ${rW.http} ≤ httpBudget ${CFG.httpBudget}`,
+    `реальных обращений ${rW.http} — БОЛЬШЕ бюджета ${CFG.httpBudget}: предохранитель не сработал`);
+  check(rW.res && rW.res.health.budgetExhausted === true,
+    "исчерпание бюджета помечено в health, а собранное сохранено",
+    "исчерпание бюджета не помечено — неполная выгрузка неотличима от полной");
   check(rW.http <= HARD_CAP,
     `реальных HTTP ${rW.http} ≤ жёсткого потолка ${HARD_CAP} (2·reqBudget·maxRetries + maxRetries)`,
     `реальных HTTP ${rW.http} — БОЛЬШЕ расчётного потолка ${HARD_CAP}: появился ещё один путь ретраев, формулу надо пересчитать`);
@@ -789,7 +809,7 @@ function snapshotSummary() {
 // 16. НЕГАТИВНЫЙ КОНТРОЛЬ
 // ===========================================================================
 // Тест, который никогда не краснел, ничего не проверяет. Вносим во ВРЕМЕННУЮ
-// копию content.js три разные поломки планировщика и требуем, чтобы прогон
+// копию content.js по одной поломке планировщика и требуем, чтобы прогон
 // падал — и чтобы падал с сообщением про ПРАВИЛЬНУЮ причину.
 const BREAKAGES = [
   {
@@ -810,6 +830,15 @@ const BREAKAGES = [
     to: "if (++empty >= 999) break;",
     expect: "не остановился на двух пустых страницах подряд",
   },
+  {
+    // Настоящий предохранитель после шага 2.1. Мягкий лимит по логическим
+    // страницам его не подменяет: ретраи живут внутри apiFetch и в requests
+    // не попадают — без этой строки патология снова стоит тысячи обращений.
+    name: "снят бюджет реальных HTTP в apiFetch",
+    from: "        if (health.http >= CONFIG.httpBudget) throw BudgetError();",
+    to: "        if (false) throw BudgetError();",
+    expect: "БОЛЬШЕ бюджета",
+  },
 ];
 
 function negativeControl() {
@@ -817,14 +846,16 @@ function negativeControl() {
   const dir = fs.mkdtempSync(path.join(process.env.TMPDIR || "/tmp", "cian-neg-"));
   let bad = 0;
   console.log(`НЕГАТИВНЫЙ КОНТРОЛЬ: ${BREAKAGES.length} поломки во временных копиях content.js\n  (${dir})`);
-  for (const b of BREAKAGES) {
+  for (const [k, b] of BREAKAGES.entries()) {
     console.log(`\n── ${b.name} ─────────────────────`);
     const n = src.split(b.from).length - 1;
     if (n !== 1) {
       console.error(`  ✗ якорь поломки не найден или неоднозначен (${n} вхождений): «${b.from}»`);
       bad++; continue;
     }
-    const file = path.join(dir, b.expect.slice(0, 12).replace(/\W/g, "_") + ".js");
+    // Имя файла нумеруем: кириллица целиком уходит в \W, и две поломки подряд
+    // писались бы в один и тот же «____________.js».
+    const file = path.join(dir, `${k + 1}-${b.expect.slice(0, 12).replace(/\W/g, "_")}.js`);
     fs.writeFileSync(file, src.replace(b.from, b.to));
     const out = spawnSync(process.execPath, [fileURLToPath(import.meta.url)], {
       encoding: "utf8",
