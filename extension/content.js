@@ -672,17 +672,46 @@
   //      самую раннюю дату из группы;
   //  (2) история между запусками — храним минимальную дату, когда-либо виденную;
   //      сдвиг даты вперёд её не уменьшает.
+  // ===== Запись в localStorage: отказ обязан быть виден =====================
+  // Квота Chrome — 5 MiB на ОРИГИН, и ориджин здесь www.cian.ru: квоту мы
+  // делим с самим сайтом. Замер: 805 символов на квартиру, то есть потолок
+  // ~3 250 квартир, а квартиры копятся по ВСЕМ выгруженным ЖК (fpOf включает
+  // jkId) — три-пять крупных ЖК исчерпывают квоту за недели.
+  //
+  // Раньше отказ записи глотался (`catch (e) { /* ignore */ }`): при
+  // QuotaExceededError история просто переставала обновляться — навсегда и без
+  // единого признака. «Реальный срок экспозиции» тихо замерзал, «Изменения»
+  // переставали видеть изменения, пользователь не узнавал ничего. Это был
+  // единственный ДЕЙСТВУЮЩИЙ канал потери невосстановимых данных в проекте.
+  let storageFault = null;   // последний отказ записи: {key, quota, message, at}
+  // Имена и коды отличаются между браузерами, а сообщение — единственное, что
+  // есть всегда. Проверяем всё сразу: ложное срабатывание безобидно (лишний
+  // бэкап), пропуск — нет.
+  const isQuotaError = (e) => !!e && (
+    e.name === "QuotaExceededError" || e.name === "NS_ERROR_DOM_QUOTA_REACHED" ||
+    e.code === 22 || e.code === 1014 || /quota|exceed/i.test(String((e && e.message) || "")));
+  // Сериализация ВНУТРИ try: на большой истории упасть может и сам JSON.stringify.
+  function storageWrite(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+      if (storageFault && storageFault.key === key) storageFault = null;
+      return true;
+    } catch (e) {
+      storageFault = { key, quota: isQuotaError(e), message: (e && e.message) || String(e), at: Date.now() };
+      console.error(`[cian-excel] не удалось сохранить ${key}: ${storageFault.message}`);
+      return false;
+    }
+  }
+
   const HKEY = "cianExcelHistory_v1";
   function loadHistory() {
     try { const s = localStorage.getItem(HKEY); const h = s ? JSON.parse(s) : null; return h && h.flats ? h : { flats: {} }; }
     catch (e) { return { flats: {} }; }
   }
   function saveHistory(h) {
-    try {
-      const cut = Math.floor(Date.now() / 1000) - 400 * 86400;  // чистим квартиры, не виденные >400 дней
-      for (const k in h.flats) if ((h.flats[k].lastSeen || 0) < cut) delete h.flats[k];
-      localStorage.setItem(HKEY, JSON.stringify(h));
-    } catch (e) { /* ignore */ }
+    const cut = Math.floor(Date.now() / 1000) - 400 * 86400;  // чистим квартиры, не виденные >400 дней
+    for (const k in h.flats) if ((h.flats[k].lastSeen || 0) < cut) delete h.flats[k];
+    return storageWrite(HKEY, h);
   }
   // отпечаток физической квартиры (переживает переподачу/смену cianId).
   // Корпус ИЛИ адрес — чтобы на поиске по карте (без корпуса) не склеивать разные дома.
@@ -752,11 +781,9 @@
     catch (e) { return { subjects: {} }; }
   }
   function saveSnapshots(d) {
-    try {
-      const cut = Math.floor(Date.now() / 1000) - 400 * 86400;
-      for (const k in d.subjects) if ((d.subjects[k].ts || 0) < cut) delete d.subjects[k];
-      localStorage.setItem(SKEY, JSON.stringify(d));
-    } catch (e) { /* ignore */ }
+    const cut = Math.floor(Date.now() / 1000) - 400 * 86400;
+    for (const k in d.subjects) if ((d.subjects[k].ts || 0) < cut) delete d.subjects[k];
+    return storageWrite(SKEY, d);
   }
   // ключ снимка: для ЖК — стабильный ID; для выборки по фильтрам — по slug
   // (менее надёжно при смене фильтра, но лучше, чем не сравнивать вовсе).
@@ -799,6 +826,50 @@
   function exportBackupData() {
     return { version: BACKUP_VERSION, exportedAt: new Date().toISOString(), history: loadHistory(), snapshots: loadSnapshots() };
   }
+
+  // ----- Автобэкап: маркеры и правило «пора» --------------------------------
+  // Маркер живёт в ОТДЕЛЬНОМ крошечном ключе, а не внутри истории. Когда квота
+  // исчерпана, запись общего объёма не проходит — а маркер обязан пройти,
+  // иначе автобэкап теряет память ровно там, где он нужнее всего.
+  const MKEY = "cianExcelMeta_v1";
+  function loadMeta() {
+    try { const s = localStorage.getItem(MKEY); const m = s ? JSON.parse(s) : null; return m && typeof m === "object" ? m : {}; }
+    catch (e) { return {}; }
+  }
+  function saveMeta(patch) { const m = Object.assign(loadMeta(), patch); storageWrite(MKEY, m); return m; }
+
+  const BACKUP_MIN_FLATS = 100;                  // ниже этого терять ещё нечего
+  const BACKUP_MAX_AGE_MS = 7 * 86400 * 1000;
+  const BACKUP_GROWTH = 1.2;                     // история выросла на 20%
+  // Чистое решение, отделённое от скачивания: скачивание проверить трудно,
+  // а правило — легко, и ошибка будет именно в правиле.
+  function backupDue(meta, flats, nowMs, fault) {
+    // Заполненная квота бьёт любой порог: терять уже начали.
+    if (fault && fault.quota) return { due: true, why: "хранилище браузера заполнено" };
+    if (!(flats >= BACKUP_MIN_FLATS)) return { due: false, why: "" };
+    const last = meta && meta.lastBackupAt;
+    if (!last) return { due: true, why: "бэкапа ещё не было" };
+    const days = Math.floor((nowMs - last) / 86400000);
+    if (nowMs - last > BACKUP_MAX_AGE_MS) return { due: true, why: `с прошлого бэкапа ${days} дн.` };
+    const was = (meta && meta.lastBackupFlats) || 0;
+    if (flats > was * BACKUP_GROWTH) return { due: true, why: `история выросла с ${was} до ${flats}` };
+    return { due: false, why: "" };
+  }
+  // Русское склонение по числу: «1 квартира / 2 квартиры / 5 квартир».
+  // Отдельная функция, потому что 11-14 идут по форме «много» вопреки
+  // последней цифре, и написанное «на глаз» ошибается именно там.
+  const plural = (n, one, few, many) => {
+    const a = Math.abs(n) % 100, b = a % 10;
+    return a > 10 && a < 20 ? many : b === 1 ? one : b >= 2 && b <= 4 ? few : many;
+  };
+  // Сколько накоплено и когда бэкапили — то, чего в панели не было вовсе.
+  function storageInfo(nowMs) {
+    const flats = Object.keys(loadHistory().flats || {}).length;
+    const subjects = Object.keys(loadSnapshots().subjects || {}).length;
+    const meta = loadMeta();
+    const ageDays = meta.lastBackupAt ? Math.floor((nowMs - meta.lastBackupAt) / 86400000) : null;
+    return { flats, subjects, ageDays, fault: storageFault };
+  }
   // Честный field-level merge, а не перезапись: если запись есть и там, и там,
   // берём самую раннюю firstSeen/minAdded, объединяем addeds/cianIds/priceLog —
   // иначе импорт с другой машины мог бы затереть более точные локальные данные.
@@ -840,7 +911,13 @@
     if (!data || typeof data !== "object" || !(data.history || data.snapshots)) throw new Error("не похоже на бэкап этого расширения (нет history/snapshots)");
     const mergedHist = data.history && data.history.flats ? mergeHistoryFlats(loadHistory(), data.history) : loadHistory();
     const mergedSnap = data.snapshots && data.snapshots.subjects ? mergeSnapshots(loadSnapshots(), data.snapshots) : loadSnapshots();
-    saveHistory(mergedHist); saveSnapshots(mergedSnap);
+    const okH = saveHistory(mergedHist), okS = saveSnapshots(mergedSnap);
+    // Считать импорт успешным по объединённому объекту в памяти нельзя: при
+    // заполненной квоте он бы отрапортовал «импортировано N», не записав ничего.
+    if (!okH || !okS) {
+      throw new Error("не удалось сохранить импортированные данные" +
+        (storageFault && storageFault.quota ? ": хранилище браузера заполнено" : ""));
+    }
     return { flats: Object.keys(mergedHist.flats || {}).length, subjects: Object.keys(mergedSnap.subjects || {}).length };
   }
 
@@ -2313,6 +2390,8 @@
   .bk{margin-top:8px;font-size:11.5px;border-radius:10px;padding:8px 10px;display:none;line-height:1.4}
   .bk.ok{background:var(--ok-bg);color:var(--ok-text)}
   .bk.bad{background:var(--err-bg);color:var(--err-text);border:1px solid var(--err-border)}
+  .bk.info{background:var(--stat-bg);color:var(--text-2)}
+  .bk .lnk{margin-left:6px}
   .btn:focus-visible,.min:focus-visible,.fab:focus-visible,.err .retry:focus-visible,.lnk:focus-visible{
     outline:2px solid #4c8dff;outline-offset:2px}`;
 
@@ -2358,6 +2437,7 @@
               '<button class="lnk" id="bk-import" title="Восстановить/перенести историю из файла бэкапа">📥 Восстановить</button>' +
             '</div>' +
             '<input type="file" id="bk-file" accept="application/json,.json" style="display:none">' +
+            '<div class="bk" id="bk-info"></div>' +
             '<div class="bk" id="bk-status"></div>' +
           '</div>' +
           '<div class="foot" id="foot">Открой страницу ЖК с квартирами на www.cian.ru и нажми кнопку. Данные берутся из твоей сессии.</div>' +
@@ -2373,7 +2453,8 @@
       meta: $("#s-meta"), health: $("#s-health"), healthtext: $("#s-healthtext"), cats: $("#s-cats"), fact: $("#s-fact"), facttext: $("#s-facttext"),
       file: $("#s-file"), fname: $("#s-fname"), foot: $("#foot"),
       err: $("#err"), errText: $("#err-text"), errRetry: $("#err-retry"),
-      bkExport: $("#bk-export"), bkImport: $("#bk-import"), bkFile: $("#bk-file"), bkStatus: $("#bk-status"),
+      bkExport: $("#bk-export"), bkImport: $("#bk-import"), bkFile: $("#bk-file"),
+      bkStatus: $("#bk-status"), bkInfo: $("#bk-info"),
     };
     const expand = (e) => { if (e) e.stopPropagation(); ui.root.classList.remove("collapsed"); try { refreshHeader(); } catch (err) { /* ignore */ } };
     const collapse = (e) => { if (e) e.stopPropagation(); ui.root.classList.add("collapsed"); };
@@ -2385,12 +2466,8 @@
     ui.el.go.addEventListener("click", () => run());
     ui.el.errRetry.addEventListener("click", () => { ui.el.err.style.display = "none"; run(); });
     ui.el.bkExport.addEventListener("click", () => {
-      try {
-        const data = exportBackupData(), n = Object.keys(data.history.flats || {}).length;
-        download(new Blob([JSON.stringify(data)], { type: "application/json;charset=utf-8" }),
-          `cian-excel-backup_${new Date().toISOString().slice(0, 10)}.json`);
-        showBkStatus(`Бэкап сохранён: ${n} записей в истории.`, true);
-      } catch (e) { showBkStatus("Не удалось создать бэкап: " + e.message, false); }
+      try { showBkStatus(`Бэкап сохранён: ${downloadBackup()} записей в истории.`, true); refreshBkInfo(true); }
+      catch (e) { showBkStatus("Не удалось создать бэкап: " + e.message, false); }
     });
     ui.el.bkImport.addEventListener("click", () => ui.el.bkFile.click());
     ui.el.bkFile.addEventListener("change", () => {
@@ -2428,6 +2505,7 @@
       ? ("Готово к выгрузке" + (cnt != null ? " — на странице " + cnt + " объявл." : " — список загружен"))
       : "Откройте страницу со списком объявлений (ЖК или поиск по фильтрам) и дождитесь загрузки";
     if (!ui._busy) { ui.el.go.disabled = !ready; }
+    refreshBkInfo();
   }
 
   function showProgress(text, frac) {
@@ -2488,6 +2566,80 @@
     ui.el.bkStatus.style.display = "block";
   }
 
+  // Один путь скачивания для кнопки и для автобэкапа: маркер обязан ставиться
+  // в обоих случаях, иначе ручной бэкап не отодвигал бы автоматический.
+  function downloadBackup() {
+    const data = exportBackupData(), n = Object.keys(data.history.flats || {}).length;
+    download(new Blob([JSON.stringify(data)], { type: "application/json;charset=utf-8" }),
+      `cian-excel-backup_${new Date().toISOString().slice(0, 10)}.json`);
+    saveMeta({ lastBackupAt: Date.now(), lastBackupFlats: n });
+    return n;
+  }
+
+  // Вызывается ПОСЛЕ скачивания книги: история к этому моменту уже обновлена,
+  // и бэкап уезжает свежим. Второй файл подряд — цена невысокая, зато накопленные
+  // за месяцы данные перестают зависеть от целости одного localStorage.
+  function autoBackup() {
+    try {
+      const flats = Object.keys(loadHistory().flats || {}).length;
+      const d = backupDue(loadMeta(), flats, Date.now(), storageFault);
+      if (!d.due) return;
+      const n = downloadBackup();
+      showBkStatus(`Автобэкап истории сохранён (${d.why}): ${n} записей. ` +
+        "Файл нужен только при переустановке расширения или переезде на другой компьютер.", true);
+      refreshBkInfo(true);   // строка «бэкап: сегодня» должна обновиться сразу
+    } catch (e) { console.warn("[cian-excel] автобэкап:", e); }
+  }
+
+  // Строка «сколько накоплено и когда бэкапили» + КРАСНАЯ ветка на отказ
+  // записи. До сих пор в панели не было ни того, ни другого.
+  //
+  // Счёт КЭШИРУЕТСЯ на минуту: refreshHeader() зовётся по таймеру, а storageInfo
+  // разбирает всю историю целиком — замер даёт 187 мс на 10 000 квартирах, и
+  // раз в пару секунд это заметно подтормаживало бы саму страницу Циан. Отказ
+  // записи, наоборот, читается всегда живым: он обязан появиться сразу.
+  let bkInfoAt = 0, bkInfoVal = null, bkQuotaStr = "";
+  function refreshBkInfo(force) {
+    if (!ui.mounted || !ui.el.bkInfo) return;
+    const el = ui.el.bkInfo, now = Date.now();
+    if (storageFault) {
+      el.className = "bk bad";
+      el.textContent = storageFault.quota
+        ? "Хранилище браузера заполнено — история и снимки больше НЕ обновляются. " +
+          "Нажмите «📦 Бэкап истории», сохраните файл: он восстановится через «📥 Восстановить»."
+        : "Не удалось сохранить историю: " + storageFault.message + ". Сделайте бэкап.";
+      el.style.display = "block";
+      return;
+    }
+    if (force || !bkInfoVal || now - bkInfoAt > 60000) {
+      try { bkInfoVal = storageInfo(now); bkInfoAt = now; }
+      catch (e) { el.style.display = "none"; return; }
+      askQuota();
+    }
+    const info = bkInfoVal;
+    if (!info.flats) { el.style.display = "none"; return; }
+    el.className = "bk info";
+    el.textContent = `В истории ${info.flats} ${plural(info.flats, "квартира", "квартиры", "квартир")}` +
+      (info.subjects ? ` · снимков ${info.subjects}` : "") +
+      " · бэкап: " + (info.ageDays == null ? "не делался"
+        : info.ageDays === 0 ? "сегодня"
+        : `${info.ageDays} ${plural(info.ageDays, "день", "дня", "дней")} назад`) +
+      bkQuotaStr;
+    el.style.display = "block";
+  }
+  // Свободное место — асинхронно и без гарантий: метода может не быть вовсе, а
+  // его отсутствие не должно ломать уже показанную строку. Ответ кладём в
+  // переменную, а не дописываем в DOM: иначе гонка с очередной перерисовкой.
+  function askQuota() {
+    try {
+      if (!navigator.storage || !navigator.storage.estimate) return;
+      navigator.storage.estimate().then((q) => {
+        if (!q || !q.quota) return;
+        bkQuotaStr = ` · занято ${Math.round((q.usage || 0) / 1048576 * 10) / 10} из ${Math.round(q.quota / 1048576)} МБ`;
+      }).catch(() => {});
+    } catch (e) { /* ignore */ }
+  }
+
   async function run() {
     if (ui._busy) return;
     const subj = detectSubject();   // не из кэша: тема тоже могла смениться (напр. смена ЖК без перезагрузки)
@@ -2523,6 +2675,8 @@
       download(await buildXlsxBlob(buildWorkbook(subj, rows, totalsByRoom, totalInJk, collectHealth)), filename);
       showResults(computeStats(rows, totalInJk, expInfo, collectHealth), filename);
       ui.el.go.textContent = "📊 Выгрузить снова";
+      autoBackup();            // после книги: история уже обновлена этим прогоном
+      refreshBkInfo(true);     // счёт квартир только что изменился — кэш сбрасываем
     } catch (e) {
       console.error(e);
       ui.el.go.textContent = "📊 Выгрузить в Excel";

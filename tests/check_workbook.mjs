@@ -83,7 +83,12 @@ ${prelude}
 ${src.slice(from, to)}
   return { normalize, enrichExposure, buildWorkbook, computeChanges,
            buildXlsxParts, buildXlsxBlob,
-           HEADERS, COLW, HEAT, HEAT_THRESH, HEADER_NOTES, FIN, CATS };
+           HEADERS, COLW, HEAT, HEAT_THRESH, HEADER_NOTES, FIN, CATS,
+           // Слой хранения живёт в том же срезе и получает тот же стаб
+           // localStorage — им пользуется tests/check_storage.mjs.
+           loadHistory, saveHistory, loadSnapshots, saveSnapshots, loadMeta, saveMeta,
+           backupDue, storageInfo, plural, exportBackupData, importBackupData, mergeHistoryFlats,
+           storageFault: () => storageFault, HKEY, SKEY, MKEY };
 })`);
 }
 
@@ -102,14 +107,34 @@ export function makeDateStub(fixedMs) {
 }
 
 // localStorage: content.js читает/пишет cianExcelHistory_v1 и cianExcelSnapshot_v1.
-export function makeStorage(initial) {
+// opts.quotaChars — потолок ВСЕГО хранилища в символах: превышение бросает
+// ошибку той же формы, что и Chrome. Именно это нужно, чтобы проверять
+// поведение у потолка, а не флагом «сделай вид, что упало».
+export function makeStorage(initial, opts = {}) {
   const map = new Map(initial ? Object.entries(initial) : []);
+  const writes = [];
+  const size = () => [...map.entries()].reduce((n, [k, v]) => n + k.length + v.length, 0);
   return {
     getItem: (k) => (map.has(k) ? map.get(k) : null),
-    setItem: (k, v) => { map.set(k, String(v)); },
+    setItem: (k, v) => {
+      const s = String(v);
+      if (opts.quotaChars != null) {
+        const was = map.has(k) ? k.length + map.get(k).length : 0;
+        if (size() - was + k.length + s.length > opts.quotaChars) {
+          const e = new Error(`Failed to execute 'setItem' on 'Storage': Setting the value of '${k}' exceeded the quota.`);
+          e.name = "QuotaExceededError"; e.code = 22;
+          writes.push({ k, chars: s.length, ok: false });
+          throw e;
+        }
+      }
+      writes.push({ k, chars: s.length, ok: true });
+      map.set(k, s);
+    },
     removeItem: (k) => { map.delete(k); },
     clear: () => map.clear(),
     dump: () => Object.fromEntries(map),
+    writes: () => writes.slice(),
+    chars: () => size(),
   };
 }
 
