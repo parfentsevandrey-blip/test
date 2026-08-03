@@ -963,15 +963,149 @@
     }
   }
 
-  const HKEY = "cianExcelHistory_v1";
-  function loadHistory() {
-    try { const s = localStorage.getItem(HKEY); const h = s ? JSON.parse(s) : null; return h && h.flats ? h : { flats: {} }; }
-    catch (e) { return { flats: {} }; }
+  // ===== Адаптер хранилища ==================================================
+  // ЗАЧЕМ. localStorage упирается в 5 MiB на ориджин (делим с самим cian.ru) —
+  // это ~4 400 квартир, и до потолка доводит ровно фича «сравнение нескольких
+  // ЖК». У IndexedDB квота измеряется долями свободного диска, запись
+  // асинхронна и не блокирует вкладку (замер синхронного цикла на 10 000
+  // квартир: 187 мс, на 20 000: 428 мс).
+  //
+  // ПОЧЕМУ АДАПТЕР, А НЕ ПРЯМЫЕ ВЫЗОВЫ. Тесты подменяют адаптер, а не
+  // IndexedDB: эмулятор IDB — это полторы сотни строк, которые сами себя
+  // проверять не умеют. Тот же адаптер понадобится чекпоинту (шаг 3).
+  //
+  // ПОЧЕМУ ЗЕРКАЛО В ПАМЯТИ. Весь слой выше (enrichExposure, computeChanges,
+  // экспорт бэкапа) синхронный и вызывается из buildWorkbook. Делать его
+  // асинхронным — это переписывать книгу и её снимок, то есть класть настоящую
+  // регрессию под шум диффа. Зеркало сохраняет синхронный контракт, а на диск
+  // уходит запись целиком и асинхронно — один раз за прогон.
+  const DB_NAME = "cianExcel", DB_VERSION = 1;
+  const STORE_FLATS = "flats", STORE_SNAPS = "snapshots";
+
+  // Настоящая реализация на IndexedDB. Возвращает null, если IDB недоступен
+  // (инкогнито, запрет политикой) — тогда работаем на легаси-пути целиком.
+  function openIdbStore() {
+    return new Promise((resolve) => {
+      let idb = null;
+      try { idb = indexedDB; } catch (e) { idb = null; }
+      if (!idb) return resolve(null);
+      let req;
+      try { req = idb.open(DB_NAME, DB_VERSION); } catch (e) { return resolve(null); }
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains(STORE_FLATS)) {
+          // Индекс по lastSeen — чтобы чистка 400-дневных шла курсором по
+          // индексу, а не перебором всех ключей в JS.
+          db.createObjectStore(STORE_FLATS, { keyPath: "fp" }).createIndex("lastSeen", "lastSeen");
+        }
+        // Снимок хранится ПОСУБЪЕКТНО: сегодня computeChanges грузит снимки
+        // ВСЕХ ЖК, чтобы сравнить один.
+        if (!db.objectStoreNames.contains(STORE_SNAPS)) db.createObjectStore(STORE_SNAPS, { keyPath: "subj" });
+      };
+      req.onsuccess = () => resolve(wrapIdb(req.result));
+      req.onerror = () => resolve(null);
+      req.onblocked = () => resolve(null);
+    });
   }
+
+  // Тонкий интерфейс: getAll / putAll / count. Больше слою выше не нужно.
+  function wrapIdb(db) {
+    const tx = (name, mode, fn) => new Promise((resolve, reject) => {
+      let t;
+      try { t = db.transaction(name, mode); } catch (e) { return reject(e); }
+      const st = t.objectStore(name);
+      let out;
+      try { out = fn(st); } catch (e) { return reject(e); }
+      t.oncomplete = () => resolve(out && out.result !== undefined ? out.result : out);
+      t.onerror = () => reject(t.error || new Error("ошибка транзакции " + name));
+      t.onabort = () => reject(t.error || new Error("транзакция " + name + " прервана"));
+    });
+    return {
+      kind: "idb",
+      getAll: (name) => tx(name, "readonly", (st) => st.getAll()),
+      count: (name) => tx(name, "readonly", (st) => st.count()),
+      // Полная перезапись стора в ОДНОЙ транзакции: либо новое состояние целиком,
+      // либо старое. Полумиграции и полусохранения — худшее, что может случиться
+      // с единственными невосстановимыми данными проекта.
+      putAll: (name, records) => tx(name, "readwrite", (st) => { st.clear(); records.forEach((r) => st.put(r)); }),
+    };
+  }
+
+  // Режимы только целиком: "legacy" (localStorage) или "idb". Смешанных нет —
+  // иначе при отказе на середине половина данных оказалась бы там, половина тут.
+  let store = null, storeMode = "legacy", hydrated = null, memReady = false;
+  let mem = { flats: {}, subjects: {} };
+
+  const HKEY = "cianExcelHistory_v1";
+  const SKEY = "cianExcelSnapshot_v1";
+  const readLegacy = (key, field) => {
+    try { const s = localStorage.getItem(key); const o = s ? JSON.parse(s) : null; return (o && o[field]) || {}; }
+    catch (e) { return {}; }
+  };
+
+  // Легаси-путь синхронен, ждать там нечего: если зеркало ещё не поднимали,
+  // поднимаем прямо сейчас. Без этого любой синхронный читатель до первого
+  // storageReady() видел бы пустую историю — то есть «истории нет» вместо
+  // «история ещё не загружена».
+  function ensureMem() {
+    if (memReady) return;
+    memReady = true;
+    mem = { flats: readLegacy(HKEY, "flats"), subjects: readLegacy(SKEY, "subjects") };
+  }
+
+  // Однократная загрузка в зеркало. Всё остальное читает уже память.
+  function storageReady(makeStore) {
+    if (hydrated) return hydrated;
+    hydrated = (async () => {
+      const meta = loadMeta();
+      if (meta.storageMode === "idb") {
+        try { store = await (makeStore || openIdbStore)(); } catch (e) { store = null; }
+        if (store) {
+          storeMode = "idb";
+          const flats = {}, subjects = {};
+          (await store.getAll(STORE_FLATS)).forEach((r) => { const { fp, ...rest } = r; flats[fp] = rest; });
+          (await store.getAll(STORE_SNAPS)).forEach((r) => { const { subj, ...rest } = r; subjects[subj] = rest; });
+          mem = { flats, subjects }; memReady = true;
+          return storeMode;
+        }
+        // IDB объявлен рабочим, но не открылся: НЕ смешиваем режимы и не
+        // молчим — легаси-ключи целы, читаем их и говорим об этом.
+        storageFault = { key: DB_NAME, quota: false, message: "IndexedDB недоступен, работаем на старом хранилище", at: Date.now() };
+      }
+      storeMode = "legacy";
+      memReady = false; ensureMem();
+      return storeMode;
+    })();
+    return hydrated;
+  }
+  // Для тестов и для повторной миграции: следующий storageReady() перечитает всё.
+  const storageResetForTests = () => { hydrated = null; store = null; storeMode = "legacy"; memReady = false; mem = { flats: {}, subjects: {} }; };
+
+  // Запись: зеркало обновляется синхронно, диск — как получится.
+  function persist(kind) {
+    if (storeMode !== "idb" || !store) {
+      return storageWrite(kind === "flats" ? HKEY : SKEY,
+        kind === "flats" ? { flats: mem.flats } : { subjects: mem.subjects });
+    }
+    const recs = kind === "flats"
+      ? Object.keys(mem.flats).map((fp) => Object.assign({ fp }, mem.flats[fp]))
+      : Object.keys(mem.subjects).map((subj) => Object.assign({ subj }, mem.subjects[subj]));
+    store.putAll(kind === "flats" ? STORE_FLATS : STORE_SNAPS, recs).then(
+      () => { if (storageFault && storageFault.key === kind) storageFault = null; },
+      (e) => {
+        storageFault = { key: kind, quota: isQuotaError(e), message: (e && e.message) || String(e), at: Date.now() };
+        console.error("[cian-excel] не удалось сохранить в IndexedDB: " + storageFault.message);
+      });
+    return true;
+  }
+
+  function loadHistory() { ensureMem(); return { flats: mem.flats }; }
   function saveHistory(h) {
+    ensureMem();
     const cut = Math.floor(Date.now() / 1000) - 400 * 86400;  // чистим квартиры, не виденные >400 дней
     for (const k in h.flats) if ((h.flats[k].lastSeen || 0) < cut) delete h.flats[k];
-    return storageWrite(HKEY, h);
+    mem.flats = h.flats;
+    return persist("flats");
   }
   // отпечаток физической квартиры (переживает переподачу/смену cianId).
   // Корпус ИЛИ адрес — чтобы на поиске по карте (без корпуса) не склеивать разные дома.
@@ -1035,15 +1169,13 @@
   }
 
   // ===== Снимок между запусками: динамика лотов (новые/пропали/подешевели) ===
-  const SKEY = "cianExcelSnapshot_v1";
-  function loadSnapshots() {
-    try { const s = localStorage.getItem(SKEY); const d = s ? JSON.parse(s) : null; return d && d.subjects ? d : { subjects: {} }; }
-    catch (e) { return { subjects: {} }; }
-  }
+  function loadSnapshots() { ensureMem(); return { subjects: mem.subjects }; }
   function saveSnapshots(d) {
+    ensureMem();
     const cut = Math.floor(Date.now() / 1000) - 400 * 86400;
     for (const k in d.subjects) if ((d.subjects[k].ts || 0) < cut) delete d.subjects[k];
-    return storageWrite(SKEY, d);
+    mem.subjects = d.subjects;
+    return persist("snapshots");
   }
   // ключ снимка: для ЖК — стабильный ID; для выборки по фильтрам — по slug
   // (менее надёжно при смене фильтра, но лучше, чем не сравнивать вовсе).
@@ -1116,6 +1248,83 @@
     return storageWrite(RKEY, a.length > RUNS_KEEP ? a.slice(-RUNS_KEEP) : a);
   }
 
+  // ----- Миграция localStorage -> IndexedDB ---------------------------------
+  // Порядок такой, что КАЖДЫЙ шаг обратим, а источник цел до самого конца.
+  // Трогаем единственные невосстановимые данные проекта — месяцы истории цен и
+  // реальных сроков экспозиции, — поэтому гарантий три и нужны все сразу:
+  //   1) файл-бэкап сделан ДО первой записи и блокирует миграцию, если не удался;
+  //   2) ключи localStorage не изменяются до подтверждённой верификации
+  //      (и не переименовываются потом: переименование — это запись тех же
+  //      данных под новым именем, то есть ВРЕМЕННОЕ УДВОЕНИЕ расхода квоты
+  //      ровно тогда, когда квота на исходе);
+  //   3) смешанных режимов нет — либо целиком legacy, либо целиком idb.
+  // Двойная запись (dual-write) не делается по той же причине, что и
+  // переименование: она удваивает давление на квоту, от которой мы уходим.
+  const MIGRATION_RETRY_MS = 24 * 3600 * 1000;
+  const VERIFY_SAMPLE = 25;                      // сколько записей сверяем глубоко
+
+  function migrationDue(meta, nowMs) {
+    if (meta.storageMode === "idb") return false;
+    if (meta.migrationFailedAt && nowMs - meta.migrationFailedAt < MIGRATION_RETRY_MS) return false;
+    return true;
+  }
+
+  // backupFn обязана вернуть true, иначе миграция не начинается вовсе.
+  async function migrateToIdb({ backupFn, makeStore, nowMs, onProgress } = {}) {
+    const say = onProgress || (() => {});
+    const fail = (reason) => {
+      saveMeta({ migrationFailedAt: nowMs || Date.now(), migrationFailReason: reason });
+      console.warn("[cian-excel] миграция не удалась: " + reason);
+      return { ok: false, reason };
+    };
+    // 1. Бэкап файлом — блокирующе. Не удался — не мигрируем.
+    try { if (!(await backupFn())) return fail("не удалось сохранить бэкап перед миграцией"); }
+    catch (e) { return fail("бэкап перед миграцией упал: " + ((e && e.message) || e)); }
+
+    // 2. Читаем источник. Он останется нетронутым до конца и после конца.
+    const srcFlats = readLegacy(HKEY, "flats"), srcSubjects = readLegacy(SKEY, "subjects");
+    const nFlats = Object.keys(srcFlats).length, nSubj = Object.keys(srcSubjects).length;
+
+    let db = null;
+    try { db = await (makeStore || openIdbStore)(); } catch (e) { db = null; }
+    if (!db) return fail("IndexedDB недоступен");
+
+    // 3. Пишем. Одна транзакция на стор: 20 000 записей одной транзакцией на всё
+    // рискуют упасть целиком, а на стор — приемлемо и атомарно.
+    try {
+      say(`Перенос истории: ${nFlats} квартир…`);
+      await db.putAll(STORE_FLATS, Object.keys(srcFlats).map((fp) => Object.assign({ fp }, srcFlats[fp])));
+      say(`Перенос снимков: ${nSubj}…`);
+      await db.putAll(STORE_SNAPS, Object.keys(srcSubjects).map((subj) => Object.assign({ subj }, srcSubjects[subj])));
+    } catch (e) { return fail("запись в IndexedDB: " + ((e && e.message) || e)); }
+
+    // 4. Верификация ДО объявления успеха: количества сходятся и выборка
+    // случайных записей совпадает глубоко. Без неё «частично перенесли» было бы
+    // неотличимо от «перенесли».
+    try {
+      say("Проверка переноса…");
+      const gotFlats = await db.getAll(STORE_FLATS), gotSubj = await db.getAll(STORE_SNAPS);
+      if (gotFlats.length !== nFlats) return fail(`перенесено ${gotFlats.length} квартир из ${nFlats}`);
+      if (gotSubj.length !== nSubj) return fail(`перенесено ${gotSubj.length} снимков из ${nSubj}`);
+      const keys = Object.keys(srcFlats);
+      const step = Math.max(1, Math.floor(keys.length / VERIFY_SAMPLE));
+      const byFp = new Map(gotFlats.map((r) => [r.fp, r]));
+      for (let i = 0; i < keys.length; i += step) {
+        const fp = keys[i], got = byFp.get(fp);
+        if (!got) return fail(`после переноса не нашлась запись ${fp}`);
+        const { fp: _drop, ...rest } = got;
+        if (JSON.stringify(rest) !== JSON.stringify(srcFlats[fp])) return fail(`запись ${fp} перенеслась искажённой`);
+      }
+    } catch (e) { return fail("проверка переноса: " + ((e && e.message) || e)); }
+
+    // 5. Только теперь — переключение режима. Легаси-ключи не трогаем.
+    saveMeta({ storageMode: "idb", migratedAt: nowMs || Date.now(), migratedFlats: nFlats, migrationFailedAt: 0, migrationFailReason: "" });
+    storageResetForTests();
+    await storageReady(makeStore || openIdbStore);
+    console.log(`[cian-excel] хранилище переведено на IndexedDB: ${nFlats} квартир, ${nSubj} снимков`);
+    return { ok: true, flats: nFlats, subjects: nSubj };
+  }
+
   const BACKUP_MIN_FLATS = 100;                  // ниже этого терять ещё нечего
   const BACKUP_MAX_AGE_MS = 7 * 86400 * 1000;
   const BACKUP_GROWTH = 1.2;                     // история выросла на 20%
@@ -1146,7 +1355,7 @@
     const subjects = Object.keys(loadSnapshots().subjects || {}).length;
     const meta = loadMeta();
     const ageDays = meta.lastBackupAt ? Math.floor((nowMs - meta.lastBackupAt) / 86400000) : null;
-    return { flats, subjects, ageDays, fault: storageFault };
+    return { flats, subjects, ageDays, mode: storeMode, fault: storageFault };
   }
   // Честный field-level merge, а не перезапись: если запись есть и там, и там,
   // берём самую раннюю firstSeen/minAdded, объединяем addeds/cianIds/priceLog —
@@ -2912,6 +3121,29 @@
     return n;
   }
 
+  // Перевод хранилища на IndexedDB. Делается ПОСЛЕ успешной выгрузки и только
+  // при непустой истории: пустую переносить незачем, а внезапный второй файл
+  // (обязательный бэкап) на первом же запуске выглядел бы как сбой.
+  async function maybeMigrate() {
+    try {
+      const meta = loadMeta();
+      if (!migrationDue(meta, Date.now())) return;
+      if (Object.keys(loadHistory().flats || {}).length < BACKUP_MIN_FLATS) return;
+      const res = await migrateToIdb({
+        backupFn: () => { downloadBackup(); return true; },
+        onProgress: (t) => showProgress(t, null),
+      });
+      if (res.ok) {
+        showBkStatus(`Хранилище переведено на IndexedDB: ${res.flats} квартир, ${res.subjects} снимков. ` +
+          "Старая копия в памяти браузера не тронута — она удалится сама позже.", true);
+      } else {
+        showBkStatus("Не удалось перевести хранилище на IndexedDB: " + res.reason +
+          ". Работаем по-старому, данные целы, бэкап сохранён.", false);
+      }
+      refreshBkInfo(true);
+    } catch (e) { console.warn("[cian-excel] миграция:", e); }
+  }
+
   // Вызывается ПОСЛЕ скачивания книги: история к этому моменту уже обновлена,
   // и бэкап уезжает свежим. Второй файл подряд — цена невысокая, зато накопленные
   // за месяцы данные перестают зависеть от целости одного localStorage.
@@ -2956,6 +3188,7 @@
     if (!info.flats) { el.style.display = "none"; return; }
     el.className = "bk info";
     el.textContent = `В истории ${info.flats} ${plural(info.flats, "квартира", "квартиры", "квартир")}` +
+      (info.mode === "idb" ? " (IndexedDB)" : "") +
       (info.subjects ? ` · снимков ${info.subjects}` : "") +
       " · бэкап: " + (info.ageDays == null ? "не делался"
         : info.ageDays === 0 ? "сегодня"
@@ -2992,6 +3225,9 @@
 
     ui._busy = true; ui.el.go.disabled = true; ui.el.go.textContent = "⏳ Собираю…";
     ui.el.err.style.display = "none";
+    // Зеркало хранилища должно быть готово ДО enrichExposure/computeChanges:
+    // весь слой выше синхронный и не умеет ждать.
+    await storageReady();
     ui.el.cancel.disabled = false; ui.el.cancel.textContent = "✕ Отмена";
     showProgress("Подключаюсь…", null);
     try {
@@ -3032,6 +3268,7 @@
       showResults(computeStats(rows, totalInJk, expInfo, collectHealth), filename);
       ui.el.go.textContent = "📊 Выгрузить снова";
       autoBackup();            // после книги: история уже обновлена этим прогоном
+      await maybeMigrate();    // и только теперь — перевод хранилища, если пора
       refreshBkInfo(true);     // счёт квартир только что изменился — кэш сбрасываем
     } catch (e) {
       console.error(e);
@@ -3046,6 +3283,9 @@
   }
 
   function ensure() {
+    // Зеркало греем в фоне: строка «в истории N квартир» должна быть живой ещё
+    // до первой выгрузки, но ждать её появления панель не обязана.
+    storageReady().then(() => refreshBkInfo(true), () => {});
     try { if (!ui.mounted && document.body) buildPanel(); if (ui.mounted) refreshHeader(); }
     catch (e) { console.warn("[cian-excel] ui:", e); }
   }

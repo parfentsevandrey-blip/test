@@ -90,6 +90,8 @@ ${src.slice(from, to)}
            // localStorage — им пользуется tests/check_storage.mjs.
            loadHistory, saveHistory, loadSnapshots, saveSnapshots, loadMeta, saveMeta,
            loadRuns, rememberRun, RKEY, RUNS_KEEP,
+           storageReady, storageResetForTests, migrateToIdb, migrationDue,
+           STORE_FLATS, STORE_SNAPS, VERIFY_SAMPLE,
            backupDue, storageInfo, plural, exportBackupData, importBackupData, mergeHistoryFlats,
            storageFault: () => storageFault, HKEY, SKEY, MKEY };
 })`);

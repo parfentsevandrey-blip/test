@@ -89,9 +89,15 @@ function testFaultVisible() {
   }
   // Ключевое следствие: данные НЕ записались. Раньше об этом никто не узнавал.
   eq(store.getItem(api.HKEY), null, "в хранилище ничего не появилось");
-  check(api.loadHistory().flats && Object.keys(api.loadHistory().flats).length === 0,
-    "loadHistory честно отдаёт пустую историю, а не подмену из памяти",
-    "loadHistory отдал что-то, чего в хранилище нет");
+  // Зеркало в памяти НАМЕРЕННО оставляет несохранённое: иначе прогон потерял бы
+  // и обогащение этого запуска тоже. Расхождение «в памяти есть, на диске нет»
+  // не прячется — его показывает storageFault, красная строка в панели и
+  // немедленный автобэкап файлом.
+  eq(Object.keys(api.loadHistory().flats).length, 200,
+    "прогон продолжает работать на зеркале в памяти (иначе потеряли бы и текущее обогащение)");
+  check(store.getItem(api.HKEY) == null && api.storageFault() != null,
+    "но на диске этого нет, и расхождение помечено storageFault — молчания не осталось",
+    "расхождение памяти и диска ничем не помечено");
 
   // Успешная запись того же ключа снимает флаг: иначе панель показывала бы
   // «хранилище заполнено» до перезагрузки страницы даже после чистки.
@@ -311,7 +317,177 @@ function testRunsBuffer() {
 }
 
 // ===========================================================================
-// 9. Сколько на самом деле стоит одна квартира
+// 9. Миграция localStorage -> IndexedDB
+// ===========================================================================
+// Подменяется АДАПТЕР, а не IndexedDB: эмулятор IDB — это полторы сотни строк,
+// которые сами себя проверять не умеют, и тест на нём проверял бы эмулятор.
+// Адаптер — ровно тот контракт, на который опирается content.js.
+function fakeStore({ failOn = null, failAt = null } = {}) {
+  const data = new Map();
+  let writes = 0;
+  return {
+    kind: "fake",
+    calls: () => writes,
+    dump: (name) => (data.get(name) || []).slice(),
+    getAll: async (name) => (data.get(name) || []).slice(),
+    count: async (name) => (data.get(name) || []).length,
+    putAll: async (name, recs) => {
+      writes++;
+      if (failOn === name) throw new Error("стор " + name + " не пишется");
+      if (failAt != null && writes >= failAt) throw new Error("отказ на записи " + writes);
+      data.set(name, recs.slice());
+    },
+  };
+}
+
+async function testMigration() {
+  section("Миграция на IndexedDB: порядок, верификация, откат");
+
+  // --- Золотая миграция.
+  {
+    const store = makeStorage();
+    const { api } = bench({ storage: store });
+    api.saveHistory(historyOf(300));
+    // ts — СВЕЖИЕ: saveSnapshots чистит всё старше 400 дней, и снимок из 1970-го
+    // не дожил бы до миграции (первая версия теста ловила именно это).
+    const nowSec = Math.floor(T0 / 1000);
+    api.saveSnapshots({ subjects: { "jk:1": { ts: nowSec, byFp: { a: { price: 5 } } }, "jk:2": { ts: nowSec - 86400, byFp: {} } } });
+    const before = JSON.stringify(store.dump());
+
+    const db = fakeStore();
+    let backups = 0;
+    const res = await api.migrateToIdb({ backupFn: () => { backups++; return true; }, makeStore: async () => db, nowMs: T0 });
+
+    eq(res.ok, true, "миграция удалась");
+    eq(res.flats, 300, "перенесено квартир");
+    eq(res.subjects, 2, "перенесено снимков");
+    eq(backups, 1, "бэкап файлом сделан РОВНО один раз и до записи");
+    eq(db.dump(api.STORE_FLATS).length, 300, "в сторе flats столько же записей");
+    check(db.dump(api.STORE_FLATS).every((r) => r.fp && r.priceLog),
+      "у каждой записи есть ключ fp и данные целиком",
+      "записи в сторе flats потеряли поля");
+    eq(api.loadMeta().storageMode, "idb", "режим переключён только после проверки");
+    // Главная гарантия: источник не тронут. Сравниваем длиной и хешем, а не
+    // содержимым: в сообщении об ошибке иначе окажется 177 КБ JSON.
+    const now = JSON.parse(store.dump()[api.HKEY] ? "{}" : "{}");   // eslint no-unused
+    check(store.getItem(api.HKEY) === JSON.parse(before)[api.HKEY],
+      `ключ истории в localStorage не изменился (${store.getItem(api.HKEY).length} символов) — ` +
+      "переименование или удаление здесь означало бы удвоение расхода квоты ровно тогда, когда она на исходе",
+      `ключ истории в localStorage изменился: было ${JSON.parse(before)[api.HKEY].length} символов, стало ${store.getItem(api.HKEY).length}`);
+    // И читаем мы теперь оттуда.
+    eq(Object.keys(api.loadHistory().flats).length, 300, "после миграции история читается из IndexedDB");
+    eq(Object.keys(api.loadSnapshots().subjects).length, 2, "и снимки тоже");
+  }
+
+  // --- Бэкап не удался -> миграция не начинается вовсе.
+  {
+    const { api } = bench();
+    api.saveHistory(historyOf(120));
+    const db = fakeStore();
+    const res = await api.migrateToIdb({ backupFn: () => false, makeStore: async () => db, nowMs: T0 });
+    eq(res.ok, false, "миграция отклонена");
+    eq(db.calls(), 0, "в IndexedDB не ушло НИ ОДНОЙ записи");
+    eq(api.loadMeta().storageMode, undefined, "режим остался легаси");
+    check(/бэкап/i.test(res.reason), `причина названа: «${res.reason}»`, `причина невнятная: «${res.reason}»`);
+  }
+
+  // --- Отказ на середине записи -> легаси-режим сохранён, источник цел.
+  {
+    const store = makeStorage();
+    const { api } = bench({ storage: store });
+    api.saveHistory(historyOf(150));
+    const before = store.getItem(api.HKEY);
+    const db = fakeStore({ failOn: "snapshots" });
+    const res = await api.migrateToIdb({ backupFn: () => true, makeStore: async () => db, nowMs: T0 });
+    eq(res.ok, false, "миграция отклонена");
+    eq(api.loadMeta().storageMode, undefined, "смешанного режима не возникло: остались целиком на легаси");
+    check(store.getItem(api.HKEY) === before,
+      `источник в localStorage не изменился (${before.length} символов)`,
+      `источник в localStorage изменился: было ${before.length} символов, стало ${(store.getItem(api.HKEY) || "").length}`);
+    eq(api.loadMeta().migrationFailedAt, T0, "отметка о неудаче поставлена");
+    eq(Object.keys(api.loadHistory().flats).length, 150, "история по-прежнему читается");
+  }
+
+  // --- Верификация ловит недоперенос.
+  {
+    const { api } = bench();
+    api.saveHistory(historyOf(200));
+    const db = fakeStore();
+    // Стор «теряет» часть записей — ровно то, чего верификация обязана не пропустить.
+    const honest = db.putAll;
+    db.putAll = async (name, recs) => honest(name, name === api.STORE_FLATS ? recs.slice(0, 199) : recs);
+    const res = await api.migrateToIdb({ backupFn: () => true, makeStore: async () => db, nowMs: T0 });
+    eq(res.ok, false, "недоперенос пойман");
+    check(/199 квартир из 200/.test(res.reason), `и назван числом: «${res.reason}»`, `недоперенос назван невнятно: «${res.reason}»`);
+    eq(api.loadMeta().storageMode, undefined, "режим не переключился");
+  }
+
+  // --- Верификация ловит ИСКАЖЕНИЕ (количество сходится, содержимое нет).
+  {
+    const { api } = bench();
+    api.saveHistory(historyOf(200));
+    const db = fakeStore();
+    const honest = db.putAll;
+    db.putAll = async (name, recs) => honest(name, name === api.STORE_FLATS
+      ? recs.map((r, i) => (i === 0 ? Object.assign({}, r, { priceLog: [] }) : r)) : recs);
+    const res = await api.migrateToIdb({ backupFn: () => true, makeStore: async () => db, nowMs: T0 });
+    eq(res.ok, false, "искажение поймано, хотя количество сошлось");
+    check(/искажённой/.test(res.reason), `и названо: «${res.reason}»`, `искажение названо невнятно: «${res.reason}»`);
+  }
+
+  // --- IndexedDB недоступен (инкогнито, запрет политикой).
+  {
+    const { api } = bench();
+    api.saveHistory(historyOf(120));
+    const res = await api.migrateToIdb({ backupFn: () => true, makeStore: async () => null, nowMs: T0 });
+    eq(res.ok, false, "миграция отклонена");
+    check(/IndexedDB недоступен/.test(res.reason), `причина названа: «${res.reason}»`, `причина невнятная: «${res.reason}»`);
+    eq(Object.keys(api.loadHistory().flats).length, 120, "работа продолжается на легаси-пути");
+  }
+
+  // --- Повтор не чаще раза в сутки.
+  {
+    const { api } = bench();
+    eq(api.migrationDue({}, T0), true, "на чистом профиле миграция нужна");
+    eq(api.migrationDue({ storageMode: "idb" }, T0), false, "уже мигрировали — не нужна");
+    eq(api.migrationDue({ migrationFailedAt: T0 - 3600000 }, T0), false, "час назад не удалось — не долбимся");
+    eq(api.migrationDue({ migrationFailedAt: T0 - 25 * 3600000 }, T0), true, "через сутки пробуем снова");
+  }
+
+  // --- Идемпотентность: вторая миграция не дублирует и не портит.
+  {
+    const { api } = bench();
+    api.saveHistory(historyOf(180));
+    const db = fakeStore();
+    await api.migrateToIdb({ backupFn: () => true, makeStore: async () => db, nowMs: T0 });
+    const first = JSON.stringify(db.dump(api.STORE_FLATS));
+    await api.migrateToIdb({ backupFn: () => true, makeStore: async () => db, nowMs: T0 });
+    eq(db.dump(api.STORE_FLATS).length, 180, "записей столько же");
+    check(JSON.stringify(db.dump(api.STORE_FLATS)) === first,
+      `и содержимое побитово то же (${first.length} символов)`,
+      "вторая миграция изменила содержимое стора");
+  }
+
+  // --- После миграции запись идёт в IndexedDB, а не в localStorage.
+  {
+    const store = makeStorage();
+    const { api } = bench({ storage: store });
+    api.saveHistory(historyOf(140));
+    const db = fakeStore();
+    await api.migrateToIdb({ backupFn: () => true, makeStore: async () => db, nowMs: T0 });
+    const lsBefore = store.getItem(api.HKEY);
+    const h = api.loadHistory();
+    h.flats["новая|запись|1|50.0|Вторичка"] = { lastSeen: Math.floor(T0 / 1000), addeds: [], cianIds: [], priceLog: [] };
+    api.saveHistory(h);
+    await new Promise((r) => setTimeout(r, 0));      // запись в IDB асинхронна
+    check(store.getItem(api.HKEY) === lsBefore, "localStorage не тронут новой записью",
+      `localStorage переписан после миграции: было ${lsBefore.length} символов, стало ${(store.getItem(api.HKEY) || "").length}`);
+    eq(db.dump(api.STORE_FLATS).length, 141, "новая запись ушла в IndexedDB");
+  }
+}
+
+// ===========================================================================
+// 10. Сколько на самом деле стоит одна квартира
 // ===========================================================================
 // Размерный сторож: если кто-то добавит в историю поле, потолок 5 MiB
 // придвинется, и об этом надо узнать из теста, а не от пользователя.
@@ -359,6 +535,29 @@ const BREAKAGES = [
     to: `    if (false) {`,
     expect: "импорт при полной квоте",
   },
+  {
+    // Первая из трёх гарантий миграции: бэкап файлом ДО первой записи и
+    // блокирующе. Без неё отказ на середине оставляет данные только в одном
+    // месте — и это место мы как раз собирались переписывать.
+    name: "бэкап перед миграцией перестал быть блокирующим",
+    from: `    try { if (!(await backupFn())) return fail("не удалось сохранить бэкап перед миграцией"); }`,
+    to: `    try { await backupFn(); }`,
+    expect: "в IndexedDB не ушло НИ ОДНОЙ записи",
+  },
+  {
+    // Третья гарантия: успех объявляется только после проверки. Без неё
+    // «частично перенесли» неотличимо от «перенесли», а режим уже переключён.
+    name: "верификация переноса снята",
+    from: `      if (gotFlats.length !== nFlats) return fail(\`перенесено \${gotFlats.length} квартир из \${nFlats}\`);`,
+    to: `      if (false) return fail("");`,
+    expect: "недоперенос пойман",
+  },
+  {
+    name: "миграция пробует снова на каждом прогоне",
+    from: `    if (meta.migrationFailedAt && nowMs - meta.migrationFailedAt < MIGRATION_RETRY_MS) return false;`,
+    to: `    if (false) return false;`,
+    expect: "час назад не удалось",
+  },
 ];
 
 function negativeControl() {
@@ -398,7 +597,7 @@ function negativeControl() {
 }
 
 // ===========================================================================
-function main() {
+async function main() {
   console.log(`Слой хранения: ${CONTENT_JS}`);
   testFaultVisible();
   testMarkerSurvives();
@@ -408,9 +607,10 @@ function main() {
   testImportHonest();
   testMergeAndPrune();
   testRunsBuffer();
+  await testMigration();
   testSizeGuard();
   console.log(failed ? `\nПРОВАЛЕНО: ${failed}` : "\nВсё зелено.");
   return failed ? 1 : 0;
 }
 
-process.exit(process.env.NEGATIVE ? negativeControl() : main());
+process.exit(process.env.NEGATIVE ? negativeControl() : await main());
