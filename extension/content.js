@@ -42,17 +42,22 @@
   let health = null;
   // Недобор и исчерпание бюджета — куда более веский повод для предупреждения,
   // чем дрейф total (у Циан он норма). Порог по дрейфу поднят с нуля.
-  const isHealthWarn = (h) => !!(h && h.requests && (
-    h.budgetExhausted || h.cancelled || h.shortfall > 0 ||
-    (h.retries / h.requests > 0.15) || h.totalDrift > 2));
+  // Явные флаги не зависят от числа собранных страниц: блокировка на ПЕРВОМ же
+  // обращении оставляет requests = 0, и прогон, не собравший ничего, выглядел
+  // бы штатным. Относительные признаки — только когда есть от чего считать.
+  const isHealthWarn = (h) => !!(h && (
+    h.budgetExhausted || h.cancelled || h.wafBlock ||
+    (h.requests && (h.shortfall > 0 || (h.retries / h.requests > 0.15) || h.totalDrift > 2))));
   // ПОЧЕМУ предупреждение. Одного флага мало: «ретраев: 0» под жёлтой плашкой
   // сбивает с толку, а причины у неё теперь разные. Список общий для панели и
   // листа «Сводка» — чтобы человек видел одно и то же в обоих местах.
   const healthReasons = (h) => {
     const out = [];
-    if (!h || !h.requests) return out;
+    if (!h) return out;
+    if (h.wafBlock) out.push("Циан прервал сбор проверкой браузера или блокировкой");
     if (h.cancelled) out.push("сбор остановлен по кнопке «Отмена»");
     if (h.budgetExhausted) out.push("исчерпан бюджет запросов — сбор остановлен досрочно");
+    if (!h.requests) return out;
     if (h.shortfall > 0) out.push(`не отдано ${h.shortfall} объявлений из заявленных Циан`);
     if (h.retries / h.requests > 0.15) out.push(`много отказов: неудачных попыток ${h.retries} на ${h.requests} страниц`);
     if (h.totalDrift > 2) out.push(`число объявлений плавало между страницами (расхождений: ${h.totalDrift})`);
@@ -317,6 +322,11 @@
   // чтобы collectAll отличил его от отказа Циан и вернул частичный результат,
   // а не потерял всё собранное.
   function BudgetError(what) { const e = new Error("исчерпан бюджет " + (what || "запросов")); e.budget = true; return e; }
+  // WAF Циан. ТЕРМИНАЛЬНОЕ состояние, а не повод для бэкоффа: 403 — это страница
+  // cian_waf_block без капчи и без выхода, лечится сменой IP или письмом в
+  // поддержку. Ретраить его вредно вдвойне — репутация копится на IP САМОГО
+  // пользователя и между запусками, а не в пределах прогона.
+  function WafError(msg) { const e = new Error(msg); e.waf = true; return e; }
   // Пауза, о которой видно в панели. Раньше во время бэкоффа onProgress не
   // вызывался вовсе: панель молча показывала прежнее сообщение всю паузу, и
   // отличить «ждём» от «зависло» было нельзя.
@@ -325,8 +335,24 @@
     if (onWait) onWait(`Циан отказал (${what}) — жду ${Math.round(ms / 1000)} с, попытка ${attempt + 1} из ${CONFIG.maxRetries}…`);
   };
 
-  async function apiFetch(body) {
+  // ===== Телеметрия: одна запись на КАЖДУЮ попытку ==========================
+  // Не на логическую страницу: страница стоит до maxRetries обращений, и Циан
+  // видит именно попытки. Журнал живёт ТОЛЬКО в памяти прогона и уезжает листом
+  // в скачиваемую книгу; в хранилище попадает лишь агрегат (замер: 30 прогонов
+  // сырого журнала = 2.1 МБ UTF-16 при квоте 5 МиБ на весь ориджин).
+  let tele = null, teleMeta = null, lastDoneAt = 0;
+  const TELE_MAX = 4000;
+  const hdr = (r, name) => {
+    try { return (r && r.headers && r.headers.get && r.headers.get(name)) || ""; }
+    catch (e) { return ""; }
+  };
+  // Content-Type и Content-Length — из CORS-safelist, то есть ЕДИНСТВЕННОЕ, что
+  // кросс-ориджин читается гарантированно. На них и строится детектор WAF.
+  const teleLog = (rec) => { if (tele && tele.length < TELE_MAX) tele.push(rec); };
+
+  async function apiFetch(body, meta) {
     let delay = CONFIG.backoffBase, lastErr = null;
+    const seg = (meta && meta.seg) || "", pg = (meta && meta.page) || null;
     for (let attempt = 1; attempt <= CONFIG.maxRetries; attempt++) {
       // Считаем ДО обращения и на КАЖДОЙ попытке: это единственная точка, где
       // видны все обращения без исключения. Здесь же — оба предохранителя и
@@ -337,28 +363,56 @@
         if (health.t0 && Date.now() - health.t0 >= CONFIG.timeBudgetMs) throw BudgetError("времени");
         health.http++;
       }
+      const startedAt = Date.now();
+      // gap считается от ЗАВЕРШЕНИЯ прошлого обращения, а не от его начала:
+      // проверяет темп по факту, а не по намерению.
+      const gapMs = lastDoneAt ? startedAt - lastDoneAt : 0;
+      const rec = { t: health ? startedAt - health.t0 : 0, att: attempt, gap: gapMs, seg, page: pg };
+      let logged = false;
       try {
         const r = await fetch(API, {
           method: "POST", headers: { "Content-Type": "application/json", Accept: "*/*" },
           body: JSON.stringify(body), credentials: "include",
           signal: cancelToken && cancelToken.ac ? cancelToken.ac.signal : undefined,
         });
+        const dur = Date.now() - startedAt;
+        lastDoneAt = Date.now();
+        const ctRaw = hdr(r, "Content-Type");
+        const ct = /html/i.test(ctRaw) ? "html" : /json/i.test(ctRaw) ? "json" : (ctRaw.split(";")[0] || "?");
+        const len = parseInt(hdr(r, "Content-Length"), 10) || null;
+        const raRaw = hdr(r, "Retry-After");
+        Object.assign(rec, { dur, st: r.status, ct, len, raSeen: raRaw ? 1 : 0 });
+        // «200 с HTML-телом» — это не успех, а проверка браузера; в журнале ему
+        // нужен свой код, иначе он растворится среди честных двухсоток.
+        if (r.status === 200 && ct === "html") rec.st = "HTML";
+        teleLog(rec); logged = true;   // дальше поля дописываются в ту же запись
+
+        // Проверка типа идёт ДО r.json(). Раньше капча, отданная с кодом 200 и
+        // HTML-телом, превращалась в SyntaxError, падала в общий catch и
+        // РЕТРАИЛАСЬ как сетевая ошибка: код отвечал на антибот увеличением
+        // нагрузки, а в диагностике это выглядело как «сеть × 4».
+        if (r.status === 403 || ct === "html") {
+          throw WafError(r.status === 403
+            ? "Циан заблокировал доступ (HTTP 403). Это блокировка сети, а не капча: подождите 10–15 минут, смените сеть или войдите в аккаунт на cian.ru."
+            : "Циан прислал проверку браузера вместо данных. Откройте cian.ru в этой же вкладке, пройдите проверку и повторите.");
+        }
         if (r.status === 200) {
           const d = await r.json(); const data = d.data || d;
           let offers = data.offersSerialized || data.offers || data.items || [];
           offers = offers.map((it) => (it && it.offer ? it.offer : it));
           // aggregatedCount = всего по фильтру; offerCount иногда = размер страницы
           const total = data.aggregatedCount || data.offerCount || data.offersCount || data.totalCount || offers.length;
-          return { offers, total: parseInt(total, 10) || offers.length };
+          const t = parseInt(total, 10) || offers.length;
+          rec.n = offers.length; rec.tot = t;
+          return { offers, total: t };
         }
-        if (r.status === 403) throw new Error("HTTP 403 — нужна авторизация/капча на cian.ru");
         if (r.status === 429 || r.status >= 500) {
           if (health) { health.retries++; health.retryStatuses[r.status] = (health.retryStatuses[r.status] || 0) + 1; }
           // Retry-After берём с ПОТОЛКОМ. Циан вправе прислать 3600, и без
           // ограничения одна такая шапка замораживает вкладку на час: прогресс
           // стоит, кнопка не отвечает, отменить нечем. Лучше подождать минуту и
           // честно упасть, чем выглядеть зависшим.
-          const ra = parseInt(r.headers && r.headers.get && r.headers.get("Retry-After"), 10);
+          const ra = parseInt(raRaw, 10);
           const raMs = ra > 0 ? Math.min(ra * 1000, CONFIG.waitCeiling) : 0;
           const wait = Math.min(raMs || delay, CONFIG.waitCeiling) + Math.random() * 400;
           console.warn(`[cian-excel] HTTP ${r.status} — пауза ${Math.round(wait / 1000)}s (попытка ${attempt}/${CONFIG.maxRetries})`);
@@ -374,12 +428,20 @@
         }
         throw new Error("HTTP " + r.status);
       } catch (e) {
-        // Отмена и бюджет — не отказы Циан: повторять их нельзя, и в статистику
-        // неудачных попыток они не идут.
-        if (e && (e.cancelled || e.budget)) throw e;
+        // Отмена, бюджет и WAF — не отказы, которые лечатся повтором: ни один
+        // из них не идёт ни в статистику неудачных попыток, ни в бэкофф.
+        if (e && (e.cancelled || e.budget || e.waf)) throw e;
         if (e && (e.name === "AbortError" || /aborted/i.test((e && e.message) || ""))) throw CancelError();
         lastErr = (e && e.message) || String(e);
-        if (/403/.test(lastErr)) throw e;
+        if (/403/.test(lastErr)) throw WafError(lastErr);
+        // Обрыв связи и битый JSON под честным content-type в журнал не попали
+        // (записи ещё нет) — дописываем здесь, иначе «каждое обращение
+        // восстановимо по журналу» перестанет быть правдой.
+        if (!logged) {
+          lastDoneAt = Date.now();
+          Object.assign(rec, { dur: lastDoneAt - startedAt, st: "NET", ct: null, len: null, raSeen: 0 });
+          teleLog(rec);
+        }
         // Считаем КАЖДУЮ неудачную попытку, включая последнюю. Раньше сетевой
         // путь инкрементировал после проверки на исчерпание и давал 3 против 4
         // на пути 429 при одинаковых четырёх обращениях — сравнивать статусы
@@ -405,7 +467,15 @@
     health = { retries: 0, retryStatuses: {}, totalDrift: 0, http: 0, budgetExhausted: false, cancelled: false, t0: Date.now() };
     beginRun();
     onWait = (text) => onProgress(text, byId.size, grandTotal);
+    tele = []; teleMeta = null; lastDoneAt = 0;
     const add = (offers) => offers.forEach((o) => { const id = o.cianId || o.id; if (id != null) byId.set(id, o); });
+    // Короткая метка сегмента: «все», «r2», «r2 ₽5.0-9.0». Читается глазами в
+    // листе «Журнал_сбора» и не раздувает журнал.
+    const mln = (v) => (v == null ? "" : (v / 1e6).toFixed(1));
+    const segLabel = (f) => {
+      const r = f.room != null ? "r" + f.room : "все";
+      return (f.priceGte != null || f.priceLte != null) ? `${r} ₽${mln(f.priceGte)}-${mln(f.priceLte)}` : r;
+    };
 
     // Пагинация одного сегмента; seen = сколько УНИКАЛЬНЫХ id вернул сам сегмент.
     async function paginateSegment(filters, label) {
@@ -413,7 +483,9 @@
       let total = 0, firstTotal = null, page = 1, empty = 0;
       while (page <= CONFIG.maxPages && requests < CONFIG.reqBudget) {
         onProgress(`${label}стр.${page}…`, byId.size, grandTotal);
-        let res; try { res = await apiFetch(withFilters(base, Object.assign({}, filters, { page }))); requests++; }
+        // Метка сегмента в журнале — то, чем запись сопоставляется с маршрутом:
+        // без неё «дорого» и «много страниц» неразличимы.
+        let res; try { res = await apiFetch(withFilters(base, Object.assign({}, filters, { page })), { seg: segLabel(filters), page }); requests++; }
         // Отказ на 2-й и дальше странице обрывает СЕГМЕНТ, а не прогон: остаток
         // ещё можно добрать дроблением. Но отмена и бюджет — про весь прогон, и
         // глотать их здесь значило бы прокручивать вхолостую все оставшиеся
@@ -500,8 +572,12 @@
       // Бюджет и отмена — единственные исключения, которые мы гасим: собранное
       // к этому моменту валидно и терять его незачем. Остальные (403, капча,
       // отказ на первой же странице) обязаны дойти до пользователя.
-      if (!e || !(e.budget || e.cancelled)) { onWait = null; endRun(); throw e; }
+      // WAF гасим тоже: терминальность означает «больше не ходить», а НЕ
+      // «выбросить собранное». Сообщение сохраняем — его покажет панель, если
+      // собрать не успели ничего.
+      if (!e || !(e.budget || e.cancelled || e.waf)) { onWait = null; endRun(); throw e; }
       if (e.cancelled) { health.cancelled = true; console.warn("[cian-excel] сбор отменён — выгрузка неполная"); }
+      else if (e.waf) { health.wafBlock = true; health.wafMessage = e.message; console.warn("[cian-excel] " + e.message); }
       else { health.budgetExhausted = true; console.warn(`[cian-excel] ${e.message} — выгрузка неполная`); }
     }
     onWait = null; endRun();
@@ -511,8 +587,32 @@
     // считали: пользователю показывали охват, посчитанный от того же total,
     // который мог быть занижен.
     health.shortfall = grandTotal ? Math.max(0, grandTotal - byId.size) : 0;
-    console.log(`[cian-excel] ИТОГО ${byId.size}/${grandTotal} за ${health.http} обращений (${requests} страниц, неудачных попыток: ${health.retries}, дрейф total: ${health.totalDrift}${health.budgetExhausted ? ", БЮДЖЕТ ИСЧЕРПАН" : ""}${health.cancelled ? ", ОТМЕНЕНО" : ""})`);
-    return { offers: [...byId.values()], totalsByRoom, totalInJk: grandTotal, health };
+    const log = tele || []; tele = null;
+    console.log(`[cian-excel] ИТОГО ${byId.size}/${grandTotal} за ${health.http} обращений (${requests} страниц, неудачных попыток: ${health.retries}, дрейф total: ${health.totalDrift}${health.budgetExhausted ? ", БЮДЖЕТ ИСЧЕРПАН" : ""}${health.cancelled ? ", ОТМЕНЕНО" : ""}${health.wafBlock ? ", БЛОКИРОВКА" : ""})`);
+    return { offers: [...byId.values()], totalsByRoom, totalInJk: grandTotal, health, log, agg: aggregate(health, log) };
+  }
+
+  // Агрегат прогона: ~300 символов, ровно то, что кладётся в хранилище.
+  // Сырой журнал туда не попадает НИКОГДА — замер: 30 прогонов по 400 обращений
+  // = 2.1 МБ UTF-16 при квоте 5 МиБ на весь ориджин www.cian.ru.
+  function aggregate(h, log) {
+    const durs = log.map((r) => r.dur).filter((d) => d != null).sort((a, b) => a - b);
+    const gaps = log.map((r) => r.gap).slice(1);
+    const at = (p) => (durs.length ? durs[Math.min(durs.length - 1, Math.floor(durs.length * p))] : null);
+    const byStatus = {};
+    log.forEach((r) => { byStatus[r.st] = (byStatus[r.st] || 0) + 1; });
+    return {
+      ts: Math.floor(h.t0 / 1000), http: h.http, pages: h.requests || 0, byStatus,
+      p50: at(0.5), p95: at(0.95),
+      minGap: gaps.length ? Math.min.apply(null, gaps) : null,
+      zeroGaps: gaps.filter((g) => g <= 0).length,
+      wallMs: h.elapsedMs, drift: h.totalDrift, shortfall: h.shortfall || 0,
+      // raSeen отвечает на открытый вопрос: Retry-After не входит в CORS-safelist,
+      // и ветка «уважаем просьбу сервера», возможно, мёртвая. Одно поле — один
+      // боевой прогон — окончательный ответ.
+      raSeen: log.filter((r) => r.raSeen).length,
+      budget: h.budgetExhausted ? 1 : 0, cancel: h.cancelled ? 1 : 0, waf: h.wafBlock ? 1 : 0,
+    };
   }
 
   // ---------- нормализация (как в Python/консольной версии) ----------
@@ -920,6 +1020,24 @@
     catch (e) { return {}; }
   }
   function saveMeta(patch) { const m = Object.assign(loadMeta(), patch); storageWrite(MKEY, m); return m; }
+
+  // ----- Кольцевой буфер агрегатов прогонов ---------------------------------
+  // В хранилище едет ТОЛЬКО агрегат (~300 символов). Сырой журнал не попадает
+  // сюда никогда: 30 прогонов по 400 обращений = 2.1 МБ UTF-16 при квоте 5 МиБ
+  // на весь ориджин, который мы делим с самим www.cian.ru. Это инвариант,
+  // проверяемый тестом, а не устная договорённость.
+  const RKEY = "cianExcelRuns_v1";
+  const RUNS_KEEP = 200;                         // ≈ 60 000 символов
+  function loadRuns() {
+    try { const s = localStorage.getItem(RKEY); const a = s ? JSON.parse(s) : null; return Array.isArray(a) ? a : []; }
+    catch (e) { return []; }
+  }
+  function rememberRun(agg) {
+    if (!agg) return false;
+    const a = loadRuns();
+    a.push(agg);
+    return storageWrite(RKEY, a.length > RUNS_KEEP ? a.slice(-RUNS_KEEP) : a);
+  }
 
   const BACKUP_MIN_FLATS = 100;                  // ниже этого терять ещё нечего
   const BACKUP_MAX_AGE_MS = 7 * 86400 * 1000;
@@ -2261,6 +2379,45 @@
     return worksheet("По_корпусам", W, R, { freezeRows: 4, freezeCols: 1, autoFilterRows: items.length });
   }
 
+  // Журнал обращений к Циан — одна строка на КАЖДУЮ попытку, а не на страницу.
+  // Живёт только здесь: в localStorage его класть нельзя (замер — 30 прогонов
+  // = 2.1 МБ UTF-16 при квоте 5 МиБ, делимой с самим www.cian.ru), а файл и так
+  // скачивается. Это делает разбираемой жалобу «выгрузилось не всё» по одному
+  // присланному файлу и даёт корпус для настройки темпа.
+  function logSheet(log, agg) {
+    if (!log || !log.length) return null;
+    const HDR = ["#", "t, с", "Длит., мс", "Код", "Тип", "Размер, Б", "Попытка", "Зазор, мс", "Сегмент", "Стр.", "Лотов", "total", "Retry-After"];
+    const W = [46, 62, 78, 56, 52, 78, 66, 74, 130, 46, 58, 62, 88];
+    const R = [
+      row([{ v: "Журнал обращений к api.cian.ru", s: "title", merge: HDR.length - 1 }]),
+      row([{ v: `Обращений ${agg.http} на ${agg.pages} логических страниц · медиана ответа ${agg.p50 ?? "—"} мс, 95-й процентиль ${agg.p95 ?? "—"} мс · ` +
+        `минимальный зазор ${agg.minGap ?? "—"} мс, нулевых зазоров ${agg.zeroGaps} · Retry-After прочитан ${agg.raSeen} раз`, s: "sub", merge: HDR.length - 1 }]),
+      row([{}]),
+      row(HDR.map((h) => ({ v: h, s: "hdr" }))),
+    ];
+    log.forEach((r, i) => {
+      // Рост Длит. — самый ранний признак «проверки браузера» (по документации
+      // Циан это 5 с…3 мин), поэтому колонка стоит третьей, а не в конце.
+      const bad = r.st !== 200;
+      R.push(row([
+        { v: i + 1, t: "Number" },
+        { v: Math.round(r.t / 100) / 10, t: "Number" },
+        { v: r.dur, t: r.dur != null ? "Number" : "String", s: bad ? "warn" : null },
+        { v: r.st, t: typeof r.st === "number" ? "Number" : "String", s: bad ? "warn" : null },
+        { v: r.ct || "—" },
+        { v: r.len, t: r.len != null ? "Number" : "String" },
+        { v: r.att, t: "Number" },
+        { v: Math.round(r.gap), t: "Number" },
+        { v: r.seg || "—" },
+        { v: r.page, t: r.page != null ? "Number" : "String" },
+        { v: r.n, t: r.n != null ? "Number" : "String" },
+        { v: r.tot, t: r.tot != null ? "Number" : "String" },
+        { v: r.raSeen ? "да" : "" },
+      ]));
+    });
+    return worksheet("Журнал_сбора", W, R, { freezeRows: 4, freezeCols: 1, autoFilterRows: log.length });
+  }
+
   // Динамика между запусками: что появилось/пропало/подешевело/подорожало с
   // прошлой выгрузки этого же ЖК/выборки (сравнение по локальному снимку).
   function changesSheet(subj, changes) {
@@ -2285,7 +2442,7 @@
     return worksheet("Изменения", W, R, { freezeRows: 4, freezeCols: 2, autoFilterRows: totalRows });
   }
 
-  function buildWorkbook(subj, rows, totalsByRoom, totalInJk, health) {
+  function buildWorkbook(subj, rows, totalsByRoom, totalInJk, health, log, agg) {
     rows = rows.slice().sort((a, b) => (a.ppm == null) - (b.ppm == null) || (a.ppm || 0) - (b.ppm || 0));
     computeHeat(rows);                                    // тепловая карта ₽/м² (зелёный↔красный)
     computeScore(rows);                                   // индекс привлекательности лота
@@ -2300,6 +2457,9 @@
     const dupXml = dupSpreadSheet(subj, rows); if (dupXml) sheets.push(dupXml);
     const sellersXml = sellersSheet(subj, rows); if (sellersXml) sheets.push(sellersXml);
     const buildingsXml = buildingsSheet(subj, rows); if (buildingsXml) sheets.push(buildingsXml);
+    // Журнал — последним листом: он служебный и не должен раздвигать привычный
+    // порядок вкладок.
+    const logXml = logSheet(log, agg); if (logXml) sheets.push(logXml);
     return { font: "Calibri", fontSize: 11, sheets: sheets };
   }
   const slug = (s) => s.toLowerCase().replace(/\s+/g, "-").replace(/[^0-9a-zа-яё_\-]/g, "") || "jk";
@@ -2758,7 +2918,10 @@
     ui.el.cancel.disabled = false; ui.el.cancel.textContent = "✕ Отмена";
     showProgress("Подключаюсь…", null);
     try {
-      const { offers, totalsByRoom, totalInJk, health: collectHealth } = await collectAll(base, (text, got, total) => showProgress(text, total ? got / total : null));
+      const { offers, totalsByRoom, totalInJk, health: collectHealth, log, agg } =
+        await collectAll(base, (text, got, total) => showProgress(text, total ? got / total : null));
+      // Агрегат кладём СРАЗУ: он нужен и для прогонов, которые кончились ничем.
+      rememberRun(agg);
       // Сверка с числом на странице — после сбора, чтобы не делать лишний запрос.
       if (pageCnt != null && totalInJk > pageCnt * 2 + 25) {
         const ok = confirm("На странице показано ~" + pageCnt + " объявлений, а запрос вернул " + totalInJk +
@@ -2772,6 +2935,15 @@
         showError("Сбор отменён — собрать не успели ничего, файл не создан. Нажмите «Повторить», когда будете готовы.");
         return;
       }
+      // Блокировка/капча: сообщение уже сформулировано в слое сбора и говорит,
+      // что именно делать. Общий совет «войдите и пройдите капчу» тут вреден —
+      // при WAF-блоке проходить нечего.
+      if (!offers.length && collectHealth && collectHealth.wafBlock) {
+        ui.el.prog.style.display = "none";
+        ui.el.go.textContent = "📊 Выгрузить в Excel";
+        showError(collectHealth.wafMessage);
+        return;
+      }
       if (!offers.length) { throw new Error("не собрано ни одного лота (войдите в аккаунт и пройдите капчу)"); }
       const rows = offers.map(normalize).sort((a, b) => (a.ppm == null) - (b.ppm == null) || (a.ppm || 0) - (b.ppm || 0));
       const expInfo = enrichExposure(rows, subj.id);   // реальный срок экспозиции (учёт сбросов)
@@ -2779,7 +2951,7 @@
       const filename = `cian_${subj.slug}_${new Date().toISOString().slice(0, 10)}_${rows.length}лотов${isHealthWarn(collectHealth) ? "_проверить" : ""}.xlsx`;
       // buildWorkbook отдаёт дерево, buildXlsxBlob упаковывает его в zip
       // (сжатие потоковое, поэтому await)
-      download(await buildXlsxBlob(buildWorkbook(subj, rows, totalsByRoom, totalInJk, collectHealth)), filename);
+      download(await buildXlsxBlob(buildWorkbook(subj, rows, totalsByRoom, totalInJk, collectHealth, log, agg)), filename);
       showResults(computeStats(rows, totalInJk, expInfo, collectHealth), filename);
       ui.el.go.textContent = "📊 Выгрузить снова";
       autoBackup();            // после книги: история уже обновлена этим прогоном

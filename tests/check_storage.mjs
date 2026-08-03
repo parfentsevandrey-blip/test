@@ -266,7 +266,52 @@ function testMergeAndPrune() {
 }
 
 // ===========================================================================
-// 8. Сколько на самом деле стоит одна квартира
+// 8. Телеметрия: в хранилище едет только агрегат
+// ===========================================================================
+// Замер из спеки: 30 прогонов × 400 обращений сырого журнала = 2.1 МБ UTF-16
+// при квоте 5 МиБ на ВЕСЬ ориджин, который мы делим с самим www.cian.ru.
+// Положить журнал в localStorage — значит ускорить ту самую катастрофу, от
+// которой лечит автобэкап. Это проверка, а не устная договорённость.
+function testRunsBuffer() {
+  section("Кольцевой буфер прогонов: только агрегаты, только 200 штук");
+
+  const { api, store } = bench();
+  const agg = (k) => ({
+    ts: Math.floor(T0 / 1000) + k, http: 206, pages: 141, byStatus: { 200: 141, 429: 36, NET: 29 },
+    p50: 180, p95: 940, minGap: 0, zeroGaps: 24, wallMs: 412000, drift: 1,
+    shortfall: 0, raSeen: 36, budget: 0, cancel: 0, waf: 0,
+  });
+
+  eq(api.loadRuns().length, 0, "на чистом хранилище прогонов нет");
+  for (let k = 0; k < 5; k++) api.rememberRun(agg(k));
+  eq(api.loadRuns().length, 5, "агрегаты накапливаются");
+  eq(api.loadRuns()[0].ts, agg(0).ts, "порядок сохраняется: первым лежит самый старый");
+
+  // Кольцо: старые вытесняются, новые остаются.
+  for (let k = 5; k < api.RUNS_KEEP + 40; k++) api.rememberRun(agg(k));
+  const runs = api.loadRuns();
+  eq(runs.length, api.RUNS_KEEP, "буфер обрезан до RUNS_KEEP");
+  eq(runs[runs.length - 1].ts, agg(api.RUNS_KEEP + 39).ts, "последним лежит самый свежий");
+  eq(runs[0].ts, agg(40).ts, "вытеснены именно самые старые");
+
+  const chars = store.getItem(api.RKEY).length;
+  console.log(`    · ${api.RUNS_KEEP} прогонов = ${chars} символов (${Math.round(chars / api.RUNS_KEEP)} на прогон, ` +
+    `${Math.round(chars * 2 / 1024)} КБ UTF-16)`);
+  check(chars < 200 * 1024,
+    `буфер укладывается в разумный объём: ${Math.round(chars * 2 / 1024)} КБ UTF-16 при квоте 5 МиБ`,
+    `буфер разросся до ${Math.round(chars * 2 / 1024)} КБ — это уже заметная доля квоты`);
+
+  // Главный инвариант: сырого журнала в хранилище нет НИГДЕ.
+  const dump = JSON.stringify(store.dump());
+  const rawFields = ["\"dur\"", "\"att\"", "\"seg\"", "\"raSeen\":true", "\"ct\""];
+  const leaked = rawFields.filter((f) => dump.includes(f));
+  check(!leaked.length,
+    "сырой журнал в хранилище не попал ни одним полем (dur/att/seg/ct)",
+    `в хранилище протекли поля сырого журнала: ${leaked.join(", ")}`);
+}
+
+// ===========================================================================
+// 9. Сколько на самом деле стоит одна квартира
 // ===========================================================================
 // Размерный сторож: если кто-то добавит в историю поле, потолок 5 MiB
 // придвинется, и об этом надо узнать из теста, а не от пользователя.
@@ -362,6 +407,7 @@ function main() {
   testStorageInfo();
   testImportHonest();
   testMergeAndPrune();
+  testRunsBuffer();
   testSizeGuard();
   console.log(failed ? `\nПРОВАЛЕНО: ${failed}` : "\nВсё зелено.");
   return failed ? 1 : 0;

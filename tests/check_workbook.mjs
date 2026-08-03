@@ -89,6 +89,7 @@ ${src.slice(from, to)}
            // Слой хранения живёт в том же срезе и получает тот же стаб
            // localStorage — им пользуется tests/check_storage.mjs.
            loadHistory, saveHistory, loadSnapshots, saveSnapshots, loadMeta, saveMeta,
+           loadRuns, rememberRun, RKEY, RUNS_KEEP,
            backupDue, storageInfo, plural, exportBackupData, importBackupData, mergeHistoryFlats,
            storageFault: () => storageFault, HKEY, SKEY, MKEY };
 })`);
@@ -275,16 +276,33 @@ const TOTALS_BY_ROOM = { 9: 14, 7: 3, 1: 40, 2: 52, 3: 21, 4: 6, 5: 2, 6: 1 };
 const HEALTH_OK = { requests: 14, http: 15, retries: 1, retryStatuses: { 429: 1 }, totalDrift: 0, shortfall: 0, budgetExhausted: false };
 const HEALTH_WARN = { requests: 12, http: 31, retries: 4, retryStatuses: { 429: 3, 500: 1 }, totalDrift: 3, shortfall: 7, budgetExhausted: true };
 
+// Журнал сбора: по одной записи каждого вида, какие вообще бывают — успех,
+// троттлинг с Retry-After, обрыв связи, проверка браузера под кодом 200.
+// Иначе лист «Журнал_сбора» попал бы в снимок только в благополучном варианте.
+const LOG_WARN = [
+  { t: 0, att: 1, gap: 0, seg: "все", page: 1, dur: 210, st: 200, ct: "json", len: 48120, raSeen: 0, n: 28, tot: 150 },
+  { t: 812, att: 1, gap: 602, seg: "все", page: 2, dur: 194, st: 200, ct: "json", len: 47004, raSeen: 0, n: 28, tot: 150 },
+  { t: 1620, att: 1, gap: 614, seg: "r2", page: 1, dur: 3980, st: 429, ct: "json", len: 62, raSeen: 1 },
+  { t: 32100, att: 2, gap: 30120, seg: "r2", page: 1, dur: 240, st: 200, ct: "json", len: 45990, raSeen: 0, n: 28, tot: 52 },
+  { t: 33200, att: 1, gap: 660, seg: "r2 ₽5.0-9.0", page: 1, dur: 15020, st: "NET", ct: null, len: null, raSeen: 0 },
+  { t: 49900, att: 2, gap: 1680, seg: "r2 ₽5.0-9.0", page: 1, dur: 1170, st: "HTML", ct: "html", len: 21570, raSeen: 0 },
+];
+const AGG_WARN = {
+  ts: 1781956800, http: 31, pages: 12, byStatus: { 200: 25, 429: 3, 500: 1, NET: 1, HTML: 1 },
+  p50: 240, p95: 15020, minGap: 0, zeroGaps: 1, wallMs: 51070, drift: 3,
+  shortfall: 7, raSeen: 1, budget: 1, cancel: 0, waf: 0,
+};
+
 // Один прогон = ровно то, что делает run() в content.js:
 // normalize → sort по ₽/м² → enrichExposure → buildWorkbook.
-export function buildOnce({ offers, subj, nowMs, storage, totalsByRoom, totalInJk, health, contentJsPath }) {
+export function buildOnce({ offers, subj, nowMs, storage, totalsByRoom, totalInJk, health, log, agg, contentJsPath }) {
   const api = makeFactory(contentJsPath)(makeDateStub(nowMs), storage);
   const rows = offers.map(api.normalize)
     .sort((a, b) => (a.ppm == null) - (b.ppm == null) || (a.ppm || 0) - (b.ppm || 0));
   api.enrichExposure(rows, subj.id);
   // buildWorkbook отдаёт ДЕРЕВО книги, buildXlsxParts превращает его в части
   // OOXML. Снимок снимается с частей — то есть с того, что реально уедет в файл.
-  const book = api.buildWorkbook(subj, rows, totalsByRoom, totalInJk, health);
+  const book = api.buildWorkbook(subj, rows, totalsByRoom, totalInJk, health, log, agg);
   return { book, parts: api.buildXlsxParts(book) };
 }
 
@@ -299,7 +317,7 @@ export function buildScenarios(contentJsPath = CONTENT_JS) {
   });
   const withHistory = buildOnce({
     offers: fixtureOffersB(), subj: SUBJ_JK, nowMs: T_B_MS, storage: jkStore,
-    totalsByRoom: TOTALS_BY_ROOM, totalInJk: 150, health: HEALTH_WARN, contentJsPath,
+    totalsByRoom: TOTALS_BY_ROOM, totalInJk: 150, health: HEALTH_WARN, log: LOG_WARN, agg: AGG_WARN, contentJsPath,
   });
   const filterSubject = buildOnce({
     offers: fixtureOffersA().slice(0, 6), subj: SUBJ_FILTER, nowMs: T_A_MS, storage: makeStorage(),

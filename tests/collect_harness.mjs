@@ -281,7 +281,7 @@ export function makeCianMock({
       ? visible.slice(0, pageSize)
       : visible.slice((f.page - 1) * pageSize, f.page * pageSize);
 
-    let status = 200, retryAfter = null, threw = null;
+    let status = 200, retryAfter = null, threw = null, ct = null, len = null;
     for (const rule of faults) {
       if (rule.times != null && rule.times <= 0) continue;
       if (!hit(rule, f, i)) continue;
@@ -290,16 +290,32 @@ export function makeCianMock({
       if (rule.then.throw) threw = rule.then.throw;
       if (rule.then.empty) page = [];
       if (rule.then.total != null) total = rule.then.total;
+      // WAF Циан: страница cian_waf_block. Размер взят из пойманного ответа —
+      // это второй отпечаток блокировки после content-type.
+      if (rule.then.waf) { status = 403; ct = "text/html; charset=utf-8"; len = 21570; }
+      if (rule.then.ct) { ct = rule.then.ct; len = rule.then.len || 21570; }
     }
 
-    const ok = status === 200 && !threw;
+    const ok = status === 200 && !threw && !/html/i.test(ct || "");
     // got=null для не-200 намеренно: иначе в журнале видно «429 got=28» —
     // число посчитано ДО применения сбоя, и «после 429 страница не засчитана»
     // читается неверно.
     requests.push({
       i, at: Math.round(clock ? clock.elapsed() : 0), url,
       page: f.page, rooms: f.rooms, gte: f.gte, lte: f.lte, body: f.raw,
-      status: threw ? "NET" : status, got: ok ? page.length : null, total,
+      status: threw ? "NET" : status, got: ok ? page.length : null, total, ct,
+    });
+
+    // Заголовки нечувствительны к регистру, как в настоящем Headers: код читает
+    // «Content-Type», а сервер вправе прислать «content-type».
+    const headers = (extra) => ({
+      get: (h) => {
+        const k = String(h).toLowerCase();
+        if (k === "retry-after") return retryAfter != null ? String(retryAfter) : null;
+        if (k === "content-type") return (extra && extra.ct) || null;
+        if (k === "content-length") return (extra && extra.len != null) ? String(extra.len) : null;
+        return null;
+      },
     });
 
     if (threw) { if (clock) clock.tagAs("backoff"); throw new TypeError("Failed to fetch"); }
@@ -307,13 +323,19 @@ export function makeCianMock({
       if (clock) clock.tagAs("backoff");
       return {
         status,
-        headers: { get: (h) => (h === "Retry-After" && retryAfter ? String(retryAfter) : null) },
-        json: async () => ({}),
+        headers: headers({ ct, len }),
+        // Тело блок-страницы — HTML. r.json() на нём бросает SyntaxError, и
+        // именно этот путь раньше маскировал капчу под сетевую ошибку.
+        json: async () => (/html/i.test(ct || "") ? JSON.parse("<html>") : ({})),
       };
     }
     if (clock) clock.tagAs("pause");
     page.forEach((o) => served.set(o.id, (served.get(o.id) || 0) + 1));
-    return { status: 200, headers: { get: () => null }, json: async () => envelope(page, total) };
+    return {
+      status: 200,
+      headers: headers({ ct: ct || "application/json", len: null }),
+      json: async () => envelope(page, total),
+    };
   };
 
   return { fetch: fetchStub, requests, served, httpCalls: () => n };
@@ -378,6 +400,8 @@ export async function runCollect(opts = {}) {
     http: mock.httpCalls(),
     logical: res ? res.health.requests : null,
     ok200: mock.requests.filter((r) => r.status === 200).length,
+    log: res ? res.log : [],
+    agg: res ? res.agg : null,
   };
 }
 

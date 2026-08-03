@@ -229,17 +229,53 @@ async function testFailures() {
 
   const small = makeUniverse({ rooms: [2], perRoom: 50 });
 
-  // --- 403: мгновенный бросок. Ретраи по капче — самый быстрый способ получить
-  // блокировку IP, поэтому «не ретраить» тут важнее, чем «дособрать».
+  // --- 403: ТЕРМИНАЛЬНОЕ состояние. Ретраи по блокировке — самый быстрый
+  // способ получить бан IP, поэтому «не ретраить» тут важнее, чем «дособрать».
+  // Терминальность означает «больше не ходить», а НЕ «выбросить собранное»:
+  // прогон возвращает то, что успел, с пометкой health.wafBlock.
   const r403 = record("403 на первой странице", await runCollect({
     offers: small, faults: [{ when: { nth: 1 }, then: { status: 403 } }],
   }));
-  check(r403.err && /403/.test(r403.err.message) && /капча|авторизац/i.test(r403.err.message),
-    `403 на первой странице пробрасывается наружу: «${r403.err && r403.err.message}»`,
-    `403 на первой странице не дал понятного исключения: ${r403.err ? r403.err.message : "сбор завершился штатно"}`);
+  const h403 = r403.res ? r403.res.health : {};
+  check(h403.wafBlock === true && /403/.test(h403.wafMessage || ""),
+    `403 помечен как блокировка, а сообщение объясняет, что делать: «${h403.wafMessage}»`,
+    `403 не дал понятной диагностики: wafBlock=${h403.wafBlock}, message=${h403.wafMessage}`);
+  check(/подожд|смените сеть/i.test(h403.wafMessage || ""),
+    "и не советует «пройти капчу»: при WAF-блоке проходить нечего",
+    `сообщение про 403 советует не то: «${h403.wafMessage}»`);
   eq(r403.http, 1, "403: сделан ровно один HTTP-запрос (ретраев нет)");
-  eq(r403.clock.log.length, 0, "403: не спали ни миллисекунды перед броском");
-  eq((r403.api.getHealth() || {}).retries, 0, "403: health.retries не тронут");
+  eq(r403.clock.log.length, 0, "403: не спали ни миллисекунды");
+  eq((r403.api.getHealth() || {}).retries, 0, "403: health.retries не тронут — это не «неудачная попытка», а отказ в доступе");
+  check(r403.api.isHealthWarn(h403), "403: прогон помечен как требующий проверки",
+    "403: прогон выглядит штатным");
+
+  // --- Капча под кодом 200. Близнец 403 и до сих пор — самый вредный путь:
+  // apiFetch звал r.json() на любом 200, не глядя на тип, HTML давал
+  // SyntaxError, тот падал в общий catch и РЕТРАИЛСЯ как сетевая ошибка.
+  // То есть на антибот код отвечал увеличением нагрузки, а диагностика
+  // показывала «сеть × 4».
+  const rHtml = record("капча: 200 с HTML-телом", await runCollect({
+    offers: small, faults: [{ when: { nth: 1 }, then: { status: 200, ct: "text/html; charset=utf-8" } }],
+  }));
+  const hHtml = rHtml.res ? rHtml.res.health : {};
+  eq(rHtml.http, 1, "200 с HTML: ровно ОДНО обращение вместо четырёх");
+  eq(rHtml.clock.log.length, 0, "200 с HTML: ни миллисекунды сна");
+  eq(hHtml.retryStatuses.network || 0, 0, "200 с HTML: больше не маскируется под сетевую ошибку");
+  check(hHtml.wafBlock === true && /провер/i.test(hHtml.wafMessage || ""),
+    `200 с HTML распознан как проверка браузера: «${hHtml.wafMessage}»`,
+    `200 с HTML не распознан: wafBlock=${hHtml.wafBlock}, message=${hHtml.wafMessage}`);
+  // В журнале у него свой код: иначе он растворится среди честных двухсоток.
+  check(rHtml.log.length === 1 && rHtml.log[0].st === "HTML" && rHtml.log[0].ct === "html",
+    `в журнале запись со своим кодом: st=${rHtml.log[0] && rHtml.log[0].st}, ct=${rHtml.log[0] && rHtml.log[0].ct}, len=${rHtml.log[0] && rHtml.log[0].len}`,
+    `запись о проверке браузера в журнале неотличима от успеха: ${JSON.stringify(rHtml.log[0])}`);
+
+  // Настоящая блок-страница: 403 + text/html + ~21.5 КБ — оба отпечатка сразу.
+  const rWaf = record("WAF: 403 + text/html, 21570 Б", await runCollect({
+    offers: small, faults: [{ when: { nth: 1 }, then: { waf: true } }],
+  }));
+  eq(rWaf.http, 1, "WAF: одно обращение");
+  eq(rWaf.log[0].len, 21570, "WAF: размер тела попал в журнал (второй отпечаток после content-type)");
+  eq(rWaf.log[0].ct, "html", "WAF: тип тела попал в журнал");
 
   // --- сеть: ретраится, бэкофф растёт вдвое.
   const rnet = record("сеть падает 3 раза подряд", await runCollect({
@@ -756,7 +792,73 @@ async function testBudget() {
 }
 
 // ===========================================================================
-// 13. Отмена сбора
+// 13. Телеметрия
+// ===========================================================================
+// Журнал — основание для всего дальнейшего: константы темпа берутся из
+// измеренного, а не из головы, и он же отвечает на открытые вопросы (читается
+// ли Retry-After через CORS, бывает ли на этом эндпоинте 429 вообще).
+// Поэтому главный инвариант — ПОЛНОТА: одна запись на каждое обращение.
+async function testTelemetry() {
+  section("Телеметрия: одна запись на каждое обращение");
+
+  const rT = record("телеметрия: троттлинг + обрывы", await runCollect({
+    offers: makeUniverse({ rooms: [1, 2, 3], perRoom: 200 }), cap: 2,
+    faults: [
+      { when: (f, i) => i % 5 === 0, then: { status: 429, retryAfter: 3 } },
+      { when: (f, i) => i % 7 === 0, then: { throw: "network" } },
+    ],
+  }));
+  // Самый дешёвый и самый сильный инвариант: ловит ЛЮБОЙ пропуск учёта.
+  eq(rT.log.length, rT.http, "записей в журнале ровно столько, сколько реальных обращений");
+  eq(rT.agg.http, rT.http, "и агрегат сходится с ними же");
+  check(rT.log.every((r) => r.dur != null && r.att >= 1 && r.gap != null && r.seg && r.page != null),
+    "у каждой записи есть длительность, номер попытки, зазор, сегмент и страница",
+    () => `неполные записи: ${JSON.stringify(rT.log.filter((r) => r.dur == null || !r.seg).slice(0, 2))}`);
+
+  // Метка сегмента — то, чем запись сопоставляется с маршрутом. Без неё
+  // «одна страница дорого» и «много страниц» в журнале неразличимы.
+  const segs = new Set(rT.log.map((r) => r.seg));
+  check(segs.size > 3 && [...segs].some((s) => /^r\d/.test(s)),
+    `сегменты различимы в журнале: ${[...segs].slice(0, 4).join(", ")}… (всего ${segs.size})`,
+    `метки сегментов бесполезны: ${JSON.stringify([...segs].slice(0, 5))}`);
+
+  // Ретраи одной страницы отличимы от разных страниц: att растёт внутри одной.
+  const retried = rT.log.filter((r) => r.att > 1);
+  check(retried.length > 0 && retried.every((r) => r.att <= CFG.maxRetries),
+    `повторы видны отдельно: ${retried.length} записей с att>1, максимум ${Math.max(...retried.map((r) => r.att))}`,
+    "повторные попытки в журнале неотличимы от первых");
+
+  // raSeen закрывает открытый вопрос: Retry-After не входит в CORS-safelist,
+  // и ветка «уважаем просьбу сервера» может быть мёртвой в бою. На стенде
+  // заголовок читается — значит поле работает и в бою даст честный ответ.
+  check(rT.agg.raSeen > 0 && rT.log.filter((r) => r.raSeen).every((r) => r.st === 429),
+    `Retry-After зафиксирован ${rT.agg.raSeen} раз и только на 429 — поле готово ответить, читается ли он в бою`,
+    `raSeen считается неверно: ${rT.agg.raSeen}, статусы ${JSON.stringify(rT.log.filter((r) => r.raSeen).map((r) => r.st))}`);
+
+  // Агрегат — ровно то, что поедет в хранилище. Его размер и есть ограничение.
+  const bytes = JSON.stringify(rT.agg).length;
+  check(bytes <= 400,
+    `агрегат прогона занимает ${bytes} символов (кольцевой буфер на 200 прогонов ≈ ${Math.round(bytes * 200 / 1024)} КБ)`,
+    `агрегат раздулся до ${bytes} символов — 200 прогонов дадут ${Math.round(bytes * 200 / 1024)} КБ при квоте 5 МиБ на весь ориджин`);
+  const rawBytes = JSON.stringify(rT.log).length;
+  console.log(`    · сырой журнал этого прогона: ${rawBytes} символов (${Math.round(rawBytes / rT.log.length)} на запись) — ` +
+    "в хранилище он не попадает никогда, только в скачиваемую книгу");
+  check(rT.agg.byStatus && Object.keys(rT.agg.byStatus).length >= 2,
+    `в агрегате разбивка по статусам: ${JSON.stringify(rT.agg.byStatus)}`,
+    "агрегат не различает статусы — по нему нельзя отличить троттлинг от сбоя сети");
+  check(rT.agg.p50 != null && rT.agg.p95 != null && rT.agg.p95 >= rT.agg.p50,
+    `перцентили длительности посчитаны: p50=${rT.agg.p50} мс, p95=${rT.agg.p95} мс (главный ранний признак «проверки браузера»)`,
+    `перцентили сломаны: p50=${rT.agg.p50}, p95=${rT.agg.p95}`);
+
+  // Журнал не должен пережить прогон: следующий начинается с чистого листа.
+  const rT2 = await runCollect({ offers: makeUniverse({ rooms: [2], perRoom: 30 }) });
+  check(rT2.log.length === rT2.http,
+    "следующий прогон пишет свой журнал с нуля",
+    `журнал протёк между прогонами: ${rT2.log.length} записей на ${rT2.http} обращений`);
+}
+
+// ===========================================================================
+// 14. Отмена сбора
 // ===========================================================================
 // Отмены не было ни в каком виде: нажать «Выгрузить» и передумать было нельзя,
 // вкладка оставалась занята до конца — а конец в патологии наступал через
@@ -816,7 +918,7 @@ async function testCancel() {
 }
 
 // ===========================================================================
-// 14. Паузы между обращениями
+// 15. Паузы между обращениями
 // ===========================================================================
 async function testPacing() {
   section("Паузы между обращениями к API");
@@ -956,6 +1058,22 @@ const BREAKAGES = [
     to: "    if (false) t.wakes.add(fire);",
     expect: "не прервался за 500 мс",
   },
+  {
+    // Возврат к поведению до 2.19: r.json() зовётся на любом 200, HTML даёт
+    // SyntaxError, и капча ретраится как сетевая ошибка — код отвечает на
+    // антибот увеличением нагрузки.
+    name: "проверка content-type убрана: капча снова ретраится",
+    from: "        if (r.status === 403 || ct === \"html\") {",
+    to: "        if (r.status === 403) {",
+    expect: "200 с HTML",
+  },
+  {
+    // Журнал с дырами хуже отсутствующего: по нему будут настраивать темп.
+    name: "часть обращений не попадает в журнал",
+    from: "  const teleLog = (rec) => { if (tele && tele.length < TELE_MAX) tele.push(rec); };",
+    to: "  const teleLog = (rec) => { if (tele && tele.length < TELE_MAX && rec.att === 1) tele.push(rec); };",
+    expect: "записей в журнале ровно столько",
+  },
 ];
 
 function negativeControl() {
@@ -1020,6 +1138,7 @@ async function main() {
   await testTotalDrift();
   await testForbiddenMidSegment();
   await testBudget();
+  await testTelemetry();
   await testCancel();
   await testPacing();
   await testRealTimers();
