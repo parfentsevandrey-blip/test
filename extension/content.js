@@ -1325,6 +1325,92 @@
     return { ok: true, flats: nFlats, subjects: nSubj };
   }
 
+  // ----- Выводы по журналу ---------------------------------------------------
+  // Журнал заводился ради шести конкретных вопросов, и до сих пор ответы на них
+  // приходилось вычитывать из таблицы глазами. Здесь они считаются сами — и по
+  // одному прогону, и НАКОПИТЕЛЬНО по кольцевому буферу: четыре вопроса из шести
+  // бинарные, им хватает одного прогона, но двум нужна статистика.
+  //
+  // Каждый вывод обязан уметь сказать «нет данных». Отсутствие отказов — это не
+  // «Retry-After не читается», а «проверить было не на чем», и путать эти два
+  // ответа хуже, чем не отвечать вовсе.
+  const CIAN_CHECK_MS = 5000;      // «проверка браузера» по документации Циан — от 5 с
+
+  // Складывает агрегаты прогонов в одну картину.
+  function rollupRuns(runs) {
+    const byStatus = {};
+    let http = 0, pages = 0, raSeen = 0, zeroGaps = 0, waf = 0, budget = 0, cancel = 0, shortfall = 0;
+    const p50s = [], p95s = [], pacers = [];
+    (runs || []).forEach((r) => {
+      http += r.http || 0; pages += r.pages || 0; raSeen += r.raSeen || 0; zeroGaps += r.zeroGaps || 0;
+      waf += r.waf || 0; budget += r.budget || 0; cancel += r.cancel || 0; shortfall += r.shortfall || 0;
+      Object.keys(r.byStatus || {}).forEach((k) => { byStatus[k] = (byStatus[k] || 0) + r.byStatus[k]; });
+      if (r.p50 != null) p50s.push(r.p50);
+      if (r.p95 != null) p95s.push(r.p95);
+      if (r.pacerFinal != null) pacers.push(r.pacerFinal);
+    });
+    const med = (a) => (a.length ? a.slice().sort((x, y) => x - y)[Math.floor(a.length / 2)] : null);
+    return { runs: (runs || []).length, http, pages, byStatus, raSeen, zeroGaps, waf, budget, cancel, shortfall,
+             p50: med(p50s), p95: p95s.length ? Math.max.apply(null, p95s) : null, pacerFinal: med(pacers) };
+  }
+
+  // Сколько отказов было В ПРИНЦИПЕ — знаменатель для вопроса про Retry-After.
+  const failCount = (byStatus) => Object.keys(byStatus || {})
+    .filter((k) => k !== "200").reduce((n, k) => n + byStatus[k], 0);
+
+  // Возвращает список {q, a, note} — вопрос, ответ, пояснение.
+  function journalVerdicts(roll, cfg) {
+    const s = roll.byStatus || {}, fails = failCount(s), out = [];
+
+    // 1. Retry-After не входит в CORS-safelist, и вся ветка «уважаем просьбу
+    // сервера» может оказаться мёртвой. Одно поле — окончательный ответ.
+    out.push(fails === 0
+      ? { q: "Читается ли заголовок Retry-After", a: "нет данных", note: "отказов не было — проверять было не на чем" }
+      : roll.raSeen > 0
+        ? { q: "Читается ли заголовок Retry-After", a: "да", note: `прочитан ${roll.raSeen} раз из ${fails} отказов — Циан действительно говорит, сколько ждать` }
+        : { q: "Читается ли заголовок Retry-After", a: "НЕТ", note: `за ${fails} ${plural(fails, "отказ", "отказа", "отказов")} заголовок не прочитан ни разу. Он не входит в CORS-safelist: скорее всего браузер его прячет, и пауза всегда считается локально` });
+
+    // 2. Если 429 на этом эндпоинте не бывает, пацер, построенный на нём как на
+    // главном тормозе, не сработает ни разу — и тормозить надо по латентности.
+    const n429 = s["429"] || 0;
+    out.push(n429 > 0
+      ? { q: "Бывает ли на этом API код 429", a: `да, ${n429}`, note: "троттлинг приходит явным кодом — пацеру есть на что реагировать" }
+      : { q: "Бывает ли на этом API код 429", a: roll.http ? "не встречался" : "нет данных",
+          note: roll.http ? `${roll.http} ${plural(roll.http, "обращение", "обращения", "обращений")} без единого 429. Если так и останется — замедляться придётся по росту задержки, а не по коду` : "обращений ещё не было" });
+
+    // 3. Базовая линия задержки. Без неё «ответы стали медленнее» не с чем сравнить.
+    out.push(roll.p50 == null
+      ? { q: "Типичная задержка ответа", a: "нет данных", note: "" }
+      : { q: "Типичная задержка ответа", a: `${roll.p50} мс (медиана), ${roll.p95} мс (худшие 5%)`,
+          note: roll.p95 >= CIAN_CHECK_MS
+            ? `Худшие ответы дольше ${CIAN_CHECK_MS / 1000} с — по документации Циан столько занимает «проверка браузера». Стоит присмотреться`
+            : "это базовая линия: заметный рост в следующих выгрузках — ранний признак, что Циан начал присматриваться" });
+
+    // 4. Восстановимый уровень антибота на XHR-пути. Один живой образец — самое
+    // ценное наблюдение из возможных: без него детектор строить не на чем.
+    const nHtml = s.HTML || 0, n403 = s["403"] || 0;
+    out.push(nHtml || n403
+      ? { q: "Встречалась ли проверка браузера или блокировка", a: `да: проверок ${nHtml}, блокировок ${n403}`,
+          note: "строки с кодом HTML/403 в таблице ниже — образец того, как это выглядит на XHR-пути" }
+      : { q: "Встречалась ли проверка браузера или блокировка", a: "нет", note: "сессия ни разу не показалась Циан подозрительной" });
+
+    // 5. Держится ли темп по факту. Фоновая вкладка троттлит таймеры, и на
+    // стенде это не воспроизводится в принципе.
+    out.push({ q: "Соблюдался ли темп", a: roll.zeroGaps ? `НЕТ: ${roll.zeroGaps} обращений подряд без паузы` : "да",
+      note: roll.zeroGaps ? "пауза перед обращением где-то не сработала — это дефект, а не настройка" : "ни одного обращения без выдержанного зазора" });
+
+    // 6. Куда пришёл пацер. Постоянный упор в потолок = старт выбран слишком дерзко.
+    const ceil = cfg && cfg.pacer ? cfg.pacer.ceil : null;
+    const start = cfg && cfg.pacer ? cfg.pacer.start : null;
+    out.push(roll.pacerFinal == null
+      ? { q: "Где закончил адаптивный темп", a: "нет данных", note: "" }
+      : { q: "Где закончил адаптивный темп", a: `${roll.pacerFinal} мс (старт ${start})`,
+          note: ceil && roll.pacerFinal >= ceil * 0.9
+            ? "упирается в потолок — стартовый темп выбран слишком дерзко, его стоит увеличить"
+            : roll.pacerFinal <= start ? "темп не пришлось замедлять — запас есть" : "темп подстроился вверх, но до потолка не дошёл" });
+    return out;
+  }
+
   const BACKUP_MIN_FLATS = 100;                  // ниже этого терять ещё нечего
   const BACKUP_MAX_AGE_MS = 7 * 86400 * 1000;
   const BACKUP_GROWTH = 1.2;                     // история выросла на 20%
@@ -2257,7 +2343,11 @@
     }
     if (opts.autoFilterRows) {
       // Настоящая таблица Excel: автофильтр, полосы, structured references.
-      sh.table = { ref: rangeA1(1, 4, cols.length, 4 + opts.autoFilterRows) };
+      // headerRow — где на листе лежит строка заголовков. По умолчанию 4-я, как
+      // на всех листах с лотами; журналу нужна другая — над таблицей у него
+      // блок выводов, и таблица, объявленная не с той строки, ломает автофильтр.
+      const hr = opts.headerRow || 4;
+      sh.table = { ref: rangeA1(1, hr, cols.length, hr + opts.autoFilterRows) };
     }
     if (opts.condFormats && opts.condFormats.length) sh.condFormats = opts.condFormats;
     return sh;
@@ -2678,9 +2768,29 @@
       row([{ v: "Журнал обращений к api.cian.ru", s: "title", merge: HDR.length - 1 }]),
       row([{ v: `Обращений ${agg.http} на ${agg.pages} логических страниц · медиана ответа ${agg.p50 ?? "—"} мс, 95-й процентиль ${agg.p95 ?? "—"} мс · ` +
         `минимальный зазор ${agg.minGap ?? "—"} мс, нулевых зазоров ${agg.zeroGaps} · Retry-After прочитан ${agg.raSeen} раз`, s: "sub", merge: HDR.length - 1 }]),
-      row([{}]),
-      row(HDR.map((h) => ({ v: h, s: "hdr" }))),
     ];
+    // Выводы — ВЫШЕ таблицы: смысл журнала в них, а не в трёх сотнях строк.
+    // Считаются накопительно по кольцевому буферу прогонов: четырём вопросам из
+    // шести хватает одного прогона, двум нужна статистика.
+    const runs = loadRuns();
+    const roll = rollupRuns(runs.length ? runs : [agg]);
+    R.push(row([{}]), row([{ v: roll.runs > 1
+      ? `ЧТО ИЗ ЭТОГО СЛЕДУЕТ — по ${roll.runs} последним ${plural(roll.runs, "прогону", "прогонам", "прогонам")} (${roll.http} ${plural(roll.http, "обращение", "обращения", "обращений")})`
+      : "ЧТО ИЗ ЭТОГО СЛЕДУЕТ — по этому прогону", s: "bold", merge: HDR.length - 1 }]));
+    // Колонки разнесены с ЗАПАСОМ и без пересечений: перекрывающиеся merge —
+    // это не «некрасиво», а повреждённая книга, которую Excel чинит молча.
+    journalVerdicts(roll, CONFIG).forEach((v) => {
+      R.push(row([
+        { v: v.q + ":", s: "sub", merge: 1 }, null,
+        { v: v.a, s: /^НЕТ/.test(v.a) ? "warn" : "bold", merge: 1 }, null,
+        { v: v.note, s: "sub", merge: HDR.length - 5 },
+      ]));
+    });
+    R.push(row([{}]),
+      row([{ v: "Ниже — по строке на КАЖДОЕ обращение (не на страницу: одна страница стоит до четырёх попыток).", s: "sub", merge: HDR.length - 1 }]),
+      row([{}]),
+      row(HDR.map((h) => ({ v: h, s: "hdr" }))));
+    const headerRow = R.length;   // строка заголовков таблицы, 1-based
     log.forEach((r, i) => {
       // Рост Длит. — самый ранний признак «проверки браузера» (по документации
       // Циан это 5 с…3 мин), поэтому колонка стоит третьей, а не в конце.
@@ -2701,7 +2811,7 @@
         { v: r.raSeen ? "да" : "" },
       ]));
     });
-    return worksheet("Журнал_сбора", W, R, { freezeRows: 4, freezeCols: 1, autoFilterRows: log.length });
+    return worksheet("Журнал_сбора", W, R, { freezeRows: headerRow, freezeCols: 1, autoFilterRows: log.length, headerRow });
   }
 
   // Динамика между запусками: что появилось/пропало/подешевело/подорожало с

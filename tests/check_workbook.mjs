@@ -72,6 +72,9 @@ export function makeFactory(contentJsPath = CONTENT_JS) {
   if (from < 0 || to < 0) throw new Error("не нашёл границы экспортирующей части content.js");
 
   const prelude = [
+    // CONFIG нужен листу «Журнал_сбора»: выводы сравнивают итоговый темп с
+    // границами пацера, а зашивать их в тест значило бы проверять копию.
+    grabDecl(src, "  const CONFIG = {", "блок CONFIG"),
     grabDecl(src, "  const dig = ", "хелпер dig"),
     grabDecl(src, "  const isHealthWarn = ", "хелпер isHealthWarn"),
     grabDecl(src, "  const healthReasons = ", "хелпер healthReasons"),
@@ -93,6 +96,7 @@ ${src.slice(from, to)}
            storageReady, storageResetForTests, migrateToIdb, migrationDue,
            STORE_FLATS, STORE_SNAPS, VERIFY_SAMPLE,
            backupDue, storageInfo, plural, exportBackupData, importBackupData, mergeHistoryFlats,
+           rollupRuns, journalVerdicts, CONFIG,
            storageFault: () => storageFault, HKEY, SKEY, MKEY };
 })`);
 }
@@ -289,6 +293,15 @@ const LOG_WARN = [
   { t: 33200, att: 1, gap: 660, seg: "r2 ₽5.0-9.0", page: 1, dur: 15020, st: "NET", ct: null, len: null, raSeen: 0 },
   { t: 49900, att: 2, gap: 1680, seg: "r2 ₽5.0-9.0", page: 1, dur: 1170, st: "HTML", ct: "html", len: 21570, raSeen: 0 },
 ];
+// Три прошлых прогона в кольцевом буфере: выводы обязаны считаться накопительно,
+// а не по последнему. Первый — спокойный, второй — с блокировкой, третий — тот же,
+// что AGG_WARN.
+const RUNS_WARN = [
+  { ts: 1781000000, http: 12, pages: 12, byStatus: { 200: 12 }, p50: 160, p95: 320, minGap: 2100, zeroGaps: 0,
+    wallMs: 26000, drift: 0, shortfall: 0, raSeen: 0, pacerFinal: 2000, budget: 0, cancel: 0, waf: 0 },
+  { ts: 1781500000, http: 9, pages: 6, byStatus: { 200: 6, 403: 1, NET: 2 }, p50: 210, p95: 8100, minGap: 1980, zeroGaps: 0,
+    wallMs: 41000, drift: 1, shortfall: 22, raSeen: 0, pacerFinal: 8000, budget: 0, cancel: 0, waf: 1 },
+];
 const AGG_WARN = {
   ts: 1781956800, http: 31, pages: 12, byStatus: { 200: 25, 429: 3, 500: 1, NET: 1, HTML: 1 },
   p50: 240, p95: 15020, minGap: 0, zeroGaps: 1, wallMs: 51070, drift: 3,
@@ -297,8 +310,11 @@ const AGG_WARN = {
 
 // Один прогон = ровно то, что делает run() в content.js:
 // normalize → sort по ₽/м² → enrichExposure → buildWorkbook.
-export function buildOnce({ offers, subj, nowMs, storage, totalsByRoom, totalInJk, health, log, agg, contentJsPath }) {
+export function buildOnce({ offers, subj, nowMs, storage, totalsByRoom, totalInJk, health, log, agg, runs, contentJsPath }) {
   const api = makeFactory(contentJsPath)(makeDateStub(nowMs), storage);
+  // Кольцевой буфер прогонов: лист «Журнал_сбора» считает выводы накопительно,
+  // и ветка «за N прогонов» иначе в снимок не попала бы.
+  (runs || []).forEach((r) => api.rememberRun(r));
   const rows = offers.map(api.normalize)
     .sort((a, b) => (a.ppm == null) - (b.ppm == null) || (a.ppm || 0) - (b.ppm || 0));
   api.enrichExposure(rows, subj.id);
@@ -319,7 +335,7 @@ export function buildScenarios(contentJsPath = CONTENT_JS) {
   });
   const withHistory = buildOnce({
     offers: fixtureOffersB(), subj: SUBJ_JK, nowMs: T_B_MS, storage: jkStore,
-    totalsByRoom: TOTALS_BY_ROOM, totalInJk: 150, health: HEALTH_WARN, log: LOG_WARN, agg: AGG_WARN, contentJsPath,
+    totalsByRoom: TOTALS_BY_ROOM, totalInJk: 150, health: HEALTH_WARN, log: LOG_WARN, agg: AGG_WARN, runs: RUNS_WARN, contentJsPath,
   });
   const filterSubject = buildOnce({
     offers: fixtureOffersA().slice(0, 6), subj: SUBJ_FILTER, nowMs: T_A_MS, storage: makeStorage(),
