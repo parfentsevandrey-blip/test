@@ -124,7 +124,7 @@ async function run(name, { handler, base = makeBase(), seed = 42 }) {
   const clock = makeClock();
   const mock = makeMock({ handler, clock });
   const con = makeConsole();
-  const api = factory(mock.fetch, clock.setTimeout, con, makeMath(seed));
+  const api = factory(mock.fetch, clock.setTimeout, con, makeMath(seed), clock.Date);
   const progress = [];
   let res = null, err = null;
   try { res = await api.collectAll(base, (m) => progress.push(m)); } catch (e) { err = e; }
@@ -441,7 +441,7 @@ async function main() {
   console.log(`Слой сбора: ${CONTENT_JS}`);
   try {
     factory = makeFactory();
-    api0 = factory(async () => { throw new Error("сеть не нужна"); }, () => 0, makeConsole(), Math);
+    api0 = factory(async () => { throw new Error("сеть не нужна"); }, () => 0, makeConsole(), Math, Date);
     CFG = api0.CONFIG;
   } catch (e) {
     fail(`не удалось вырезать слой сбора из content.js:\n      ${e.message.split("\n").join("\n      ")}`);

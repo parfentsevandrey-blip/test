@@ -23,6 +23,11 @@
     // 2*reqBudget*maxRetries + maxRetries = 3204. Для точной отделки перебором
     // фильтра это была бы десятитысячная нагрузка. Считаем то, что видит Циан.
     httpBudget: 900,
+    // Второй предохранитель — по стенным часам. Бюджет обращений сам по себе
+    // времени не ограничивает: 900 обращений, каждое с бэкоффом до waitCeiling,
+    // измерены на стенде как 42 минуты. Через полчаса человек всё равно уже
+    // ушёл, и вкладка держится зря.
+    timeBudgetMs: 30 * 60 * 1000,
     // Недобор в 1-2 лота дроблением не ищем. Циан регулярно считает в
     // aggregatedCount лот, которого в выдаче нет, и погоня за ним стоит ВСЕГО
     // бюджета: измерено — один фантом превращал честные 12 запросов в 400,
@@ -38,7 +43,7 @@
   // Недобор и исчерпание бюджета — куда более веский повод для предупреждения,
   // чем дрейф total (у Циан он норма). Порог по дрейфу поднят с нуля.
   const isHealthWarn = (h) => !!(h && h.requests && (
-    h.budgetExhausted || h.shortfall > 0 ||
+    h.budgetExhausted || h.cancelled || h.shortfall > 0 ||
     (h.retries / h.requests > 0.15) || h.totalDrift > 2));
   // ПОЧЕМУ предупреждение. Одного флага мало: «ретраев: 0» под жёлтой плашкой
   // сбивает с толку, а причины у неё теперь разные. Список общий для панели и
@@ -46,12 +51,21 @@
   const healthReasons = (h) => {
     const out = [];
     if (!h || !h.requests) return out;
+    if (h.cancelled) out.push("сбор остановлен по кнопке «Отмена»");
     if (h.budgetExhausted) out.push("исчерпан бюджет запросов — сбор остановлен досрочно");
     if (h.shortfall > 0) out.push(`не отдано ${h.shortfall} объявлений из заявленных Циан`);
-    if (h.retries / h.requests > 0.15) out.push(`много повторов: ${h.retries} на ${h.requests} страниц`);
+    if (h.retries / h.requests > 0.15) out.push(`много отказов: неудачных попыток ${h.retries} на ${h.requests} страниц`);
     if (h.totalDrift > 2) out.push(`число объявлений плавало между страницами (расхождений: ${h.totalDrift})`);
     return out;
   };
+  // Разбивка отказов по виду. Порядок фиксированный (числовые коды по
+  // возрастанию, «сеть» последней), иначе строка в книге плясала бы от прогона
+  // к прогону и её нельзя было бы сравнивать между выгрузками.
+  const STATUS_LABEL = { network: "сеть (обрыв связи)", 429: "429 (Циан троттлит)", 403: "403 (блокировка)" };
+  const statusBreakdown = (m) => Object.keys(m || {})
+    .sort((a, b) => (a === "network") - (b === "network") || (parseInt(a, 10) || 0) - (parseInt(b, 10) || 0))
+    .map((k) => `${STATUS_LABEL[k] || (/^5\d\d$/.test(k) ? k + " (сбой на стороне Циан)" : k)} × ${m[k]}`)
+    .join(" · ");
 
   // === Перехват настоящего запроса страницы =================================
   // Циан сам шлёт search-offers с ПРАВИЛЬНЫМ фильтром по этому ЖК. Перехватываем
@@ -243,7 +257,42 @@
     return null;
   }
 
-  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  // ===== Отмена сбора =======================================================
+  // Отмены не было ни в каком виде: нажать «Выгрузить» и передумать было
+  // нельзя, вкладка оставалась занята до конца — а конец в патологии наступал
+  // через десятки минут. Токен живёт РОВНО на время одного прогона.
+  let cancelToken = null;
+  function CancelError() { const e = new Error("сбор отменён"); e.cancelled = true; return e; }
+  function beginRun() {
+    // AbortController есть во всех целевых браузерах, но код исполняется и на
+    // стенде — проверяем наличие, а не веру в среду.
+    const ac = typeof AbortController === "function" ? new AbortController() : null;
+    cancelToken = { cancelled: false, wakes: new Set(), ac };
+    return cancelToken;
+  }
+  function endRun() { cancelToken = null; }
+  function cancelRun() {
+    const t = cancelToken;
+    if (!t || t.cancelled) return false;
+    t.cancelled = true;
+    // Разбудить спящих СРАЗУ. Без этого кнопка декоративна: на бэкоффе в
+    // waitCeiling=60 с пользователь жмёт «Отмена» и ещё минуту смотрит на то же
+    // самое. Плюс обрываем запрос, который уже в полёте.
+    t.wakes.forEach((f) => f());
+    try { if (t.ac) t.ac.abort(); } catch (e) { /* ignore */ }
+    return true;
+  }
+  const isCancelled = () => !!(cancelToken && cancelToken.cancelled);
+
+  // Прерываемый сон: обычный setTimeout сделал бы «Отмену» декоративной.
+  const sleep = (ms) => new Promise((resolve) => {
+    const t = cancelToken;
+    if (t && t.cancelled) return resolve();
+    let done = false;
+    const fire = () => { if (done) return; done = true; if (t) t.wakes.delete(fire); resolve(); };
+    setTimeout(fire, ms);
+    if (t) t.wakes.add(fire);
+  });
   const pause = () => sleep(CONFIG.delayMin + Math.random() * (CONFIG.delayMax - CONFIG.delayMin));
   const dig = (o, p) => p.split(".").reduce((a, k) => (a == null ? a : a[k]), o);
 
@@ -267,21 +316,32 @@
   // Бросается, когда исчерпан бюджет реальных обращений. Отдельный тип нужен,
   // чтобы collectAll отличил его от отказа Циан и вернул частичный результат,
   // а не потерял всё собранное.
-  function BudgetError() { const e = new Error("исчерпан бюджет запросов"); e.budget = true; return e; }
+  function BudgetError(what) { const e = new Error("исчерпан бюджет " + (what || "запросов")); e.budget = true; return e; }
+  // Пауза, о которой видно в панели. Раньше во время бэкоффа onProgress не
+  // вызывался вовсе: панель молча показывала прежнее сообщение всю паузу, и
+  // отличить «ждём» от «зависло» было нельзя.
+  let onWait = null;
+  const waitNotice = (what, ms, attempt) => {
+    if (onWait) onWait(`Циан отказал (${what}) — жду ${Math.round(ms / 1000)} с, попытка ${attempt + 1} из ${CONFIG.maxRetries}…`);
+  };
 
   async function apiFetch(body) {
     let delay = CONFIG.backoffBase, lastErr = null;
     for (let attempt = 1; attempt <= CONFIG.maxRetries; attempt++) {
       // Считаем ДО обращения и на КАЖДОЙ попытке: это единственная точка, где
-      // видны все обращения без исключения.
+      // видны все обращения без исключения. Здесь же — оба предохранителя и
+      // отмена: до fetch, а не после, иначе лишнее обращение всё равно уйдёт.
+      if (isCancelled()) throw CancelError();
       if (health) {
-        if (health.http >= CONFIG.httpBudget) throw BudgetError();
+        if (health.http >= CONFIG.httpBudget) throw BudgetError("запросов");
+        if (health.t0 && Date.now() - health.t0 >= CONFIG.timeBudgetMs) throw BudgetError("времени");
         health.http++;
       }
       try {
         const r = await fetch(API, {
           method: "POST", headers: { "Content-Type": "application/json", Accept: "*/*" },
           body: JSON.stringify(body), credentials: "include",
+          signal: cancelToken && cancelToken.ac ? cancelToken.ac.signal : undefined,
         });
         if (r.status === 200) {
           const d = await r.json(); const data = d.data || d;
@@ -307,15 +367,29 @@
           // 429/5xx это добавляло целый интервал ожидания к каждому фатальному
           // отказу (на сетевом пути такой сон уже был отсечён).
           if (attempt >= CONFIG.maxRetries) break;
-          await sleep(wait); delay *= 2; continue;
+          waitNotice(r.status, wait, attempt);
+          await sleep(wait); delay *= 2;
+          if (isCancelled()) throw CancelError();
+          continue;
         }
         throw new Error("HTTP " + r.status);
       } catch (e) {
+        // Отмена и бюджет — не отказы Циан: повторять их нельзя, и в статистику
+        // неудачных попыток они не идут.
+        if (e && (e.cancelled || e.budget)) throw e;
+        if (e && (e.name === "AbortError" || /aborted/i.test((e && e.message) || ""))) throw CancelError();
         lastErr = (e && e.message) || String(e);
         if (/403/.test(lastErr)) throw e;
-        if (attempt >= CONFIG.maxRetries) throw new Error(lastErr);
+        // Считаем КАЖДУЮ неудачную попытку, включая последнюю. Раньше сетевой
+        // путь инкрементировал после проверки на исчерпание и давал 3 против 4
+        // на пути 429 при одинаковых четырёх обращениях — сравнивать статусы
+        // между собой было нельзя.
         if (health) { health.retries++; health.retryStatuses.network = (health.retryStatuses.network || 0) + 1; }
-        await sleep(delay + Math.random() * 400); delay *= 2;
+        if (attempt >= CONFIG.maxRetries) throw new Error(lastErr);
+        const wait = delay + Math.random() * 400;
+        waitNotice("сеть", wait, attempt);
+        await sleep(wait); delay *= 2;
+        if (isCancelled()) throw CancelError();
       }
     }
     throw new Error(lastErr || "запрос не удался");
@@ -328,7 +402,9 @@
   async function collectAll(base, onProgress) {
     const byId = new Map();
     let grandTotal = 0, requests = 0;
-    health = { retries: 0, retryStatuses: {}, totalDrift: 0, http: 0, budgetExhausted: false };
+    health = { retries: 0, retryStatuses: {}, totalDrift: 0, http: 0, budgetExhausted: false, cancelled: false, t0: Date.now() };
+    beginRun();
+    onWait = (text) => onProgress(text, byId.size, grandTotal);
     const add = (offers) => offers.forEach((o) => { const id = o.cianId || o.id; if (id != null) byId.set(id, o); });
 
     // Пагинация одного сегмента; seen = сколько УНИКАЛЬНЫХ id вернул сам сегмент.
@@ -338,7 +414,11 @@
       while (page <= CONFIG.maxPages && requests < CONFIG.reqBudget) {
         onProgress(`${label}стр.${page}…`, byId.size, grandTotal);
         let res; try { res = await apiFetch(withFilters(base, Object.assign({}, filters, { page }))); requests++; }
-        catch (e) { if (page === 1) throw e; break; }
+        // Отказ на 2-й и дальше странице обрывает СЕГМЕНТ, а не прогон: остаток
+        // ещё можно добрать дроблением. Но отмена и бюджет — про весь прогон, и
+        // глотать их здесь значило бы прокручивать вхолостую все оставшиеся
+        // сегменты.
+        catch (e) { if (page === 1 || (e && (e.cancelled || e.budget))) throw e; break; }
         // Циан иногда отдаёт РАЗНЫЙ aggregatedCount на разных страницах ОДНОГО
         // и того же сегмента (ротация/нестабильность выдачи) — фиксируем как
         // диагностику качества сбора, не как ошибку (сама логика это переживает).
@@ -417,18 +497,21 @@
         }
       }
     } catch (e) {
-      // Бюджет — единственное исключение, которое мы гасим: остальные (403,
-      // капча, отказ на первой же странице) обязаны дойти до пользователя.
-      if (!e || !e.budget) throw e;
-      health.budgetExhausted = true;
-      console.warn("[cian-excel] исчерпан бюджет запросов — выгрузка неполная");
+      // Бюджет и отмена — единственные исключения, которые мы гасим: собранное
+      // к этому моменту валидно и терять его незачем. Остальные (403, капча,
+      // отказ на первой же странице) обязаны дойти до пользователя.
+      if (!e || !(e.budget || e.cancelled)) { onWait = null; endRun(); throw e; }
+      if (e.cancelled) { health.cancelled = true; console.warn("[cian-excel] сбор отменён — выгрузка неполная"); }
+      else { health.budgetExhausted = true; console.warn(`[cian-excel] ${e.message} — выгрузка неполная`); }
     }
+    onWait = null; endRun();
     health.requests = requests;
+    health.elapsedMs = Date.now() - health.t0;
     // Недобор — главный признак качества выгрузки, а до сих пор его нигде не
     // считали: пользователю показывали охват, посчитанный от того же total,
     // который мог быть занижен.
     health.shortfall = grandTotal ? Math.max(0, grandTotal - byId.size) : 0;
-    console.log(`[cian-excel] ИТОГО ${byId.size}/${grandTotal} за ${health.http} обращений (${requests} страниц, ретраев: ${health.retries}, дрейф total: ${health.totalDrift}${health.budgetExhausted ? ", БЮДЖЕТ ИСЧЕРПАН" : ""})`);
+    console.log(`[cian-excel] ИТОГО ${byId.size}/${grandTotal} за ${health.http} обращений (${requests} страниц, неудачных попыток: ${health.retries}, дрейф total: ${health.totalDrift}${health.budgetExhausted ? ", БЮДЖЕТ ИСЧЕРПАН" : ""}${health.cancelled ? ", ОТМЕНЕНО" : ""})`);
     return { offers: [...byId.values()], totalsByRoom, totalInJk: grandTotal, health };
   }
 
@@ -2048,7 +2131,13 @@
       R.push(row([{}]), row([{ v: "ДИАГНОСТИКА СБОРА", s: "bold" }]));
       // Обращения и страницы — разные числа: одна страница стоит до maxRetries
       // обращений, и Циан видит именно первое. Бюджет считается по нему.
-      R.push(row([{ v: `Обращений к Циан: ${health.http || health.requests} (страниц: ${health.requests}) · ретраев (429/5xx/сеть): ${health.retries} · дрейф total между страницами: ${health.totalDrift}`, s: warn ? "warn" : "sub" }]));
+      R.push(row([{ v: `Обращений к Циан: ${health.http || health.requests} (страниц: ${health.requests}) · неудачных попыток: ${health.retries} · дрейф total между страницами: ${health.totalDrift}` +
+        (health.elapsedMs ? ` · заняло ${Math.max(1, Math.round(health.elapsedMs / 60000))} мин` : ""), s: warn ? "warn" : "sub" }]));
+      // retryStatuses собирался в двух местах и не читался НИГДЕ, а это
+      // единственное, что отличает «Циан троттлит» от «упал бэкенд» от «плохой
+      // wi-fi»: 429 — троттлинг, 5xx — бэкенд, сеть — канал до Циан.
+      const st = statusBreakdown(health.retryStatuses);
+      if (st) R.push(row([{ v: "Из них отказов: " + st, s: warn ? "warn" : "sub" }]));
       healthReasons(health).forEach((r) => R.push(row([{ v: "· " + r.charAt(0).toUpperCase() + r.slice(1), s: "warn" }])));
       if (warn) R.push(row([{ v: "Выгрузка может быть неполной — проверьте охват выше и по возможности выгрузите повторно.", s: "sub" }]));
     }
@@ -2363,6 +2452,10 @@
     transition:width .3s ease}
   .bar.indef{width:40%;animation:slide 1.1s infinite ease-in-out}
   @keyframes slide{0%{margin-left:-40%}100%{margin-left:100%}}
+  .prog .cancel{margin-top:9px;border:1px solid var(--border);background:transparent;color:var(--text-2);
+    font-size:11.5px;font-weight:600;padding:6px 11px;border-radius:9px;cursor:pointer}
+  .prog .cancel:hover{color:var(--text-1)}
+  .prog .cancel:disabled{opacity:.5;cursor:default}
   .res{margin-top:14px;display:none}
   .stats{display:flex;gap:8px}
   .stat{flex:1;background:var(--stat-bg);border-radius:12px;padding:10px 6px;text-align:center}
@@ -2418,7 +2511,8 @@
             '<div class="pg warn" id="pg"><span id="pgi">⚠</span><span id="pgt">Жду страницу со списком квартир…</span></div>' +
             '<button class="btn" id="go" disabled>📊 Выгрузить в Excel</button>' +
             '<div class="prog" id="prog"><div class="pt"><span id="pt">Собираю…</span><span id="pp"></span></div>' +
-              '<div class="track"><div class="bar indef" id="bar"></div></div></div>' +
+              '<div class="track"><div class="bar indef" id="bar"></div></div>' +
+              '<button class="cancel" id="cancel" title="Остановить сбор и сохранить то, что уже собрано">✕ Отмена</button></div>' +
             '<div class="res" id="res">' +
               '<div class="stats">' +
                 '<div class="stat"><div class="v" id="s-count">0</div><div class="l">лотов</div></div>' +
@@ -2448,7 +2542,7 @@
     ui.host = host; ui.sh = sh; ui.root = $(".root");
     ui.el = {
       jk: $("#jk"), sub: $("#sub"), pg: $("#pg"), pgi: $("#pgi"), pgt: $("#pgt"),
-      go: $("#go"), prog: $("#prog"), pt: $("#pt"), pp: $("#pp"), bar: $("#bar"),
+      go: $("#go"), prog: $("#prog"), pt: $("#pt"), pp: $("#pp"), bar: $("#bar"), cancel: $("#cancel"),
       res: $("#res"), count: $("#s-count"), cov: $("#s-cov"), ppm: $("#s-ppm"),
       meta: $("#s-meta"), health: $("#s-health"), healthtext: $("#s-healthtext"), cats: $("#s-cats"), fact: $("#s-fact"), facttext: $("#s-facttext"),
       file: $("#s-file"), fname: $("#s-fname"), foot: $("#foot"),
@@ -2465,6 +2559,11 @@
     ui.root.addEventListener("click", () => { if (ui.root.classList.contains("collapsed")) expand(); });
     ui.el.go.addEventListener("click", () => run());
     ui.el.errRetry.addEventListener("click", () => { ui.el.err.style.display = "none"; run(); });
+    ui.el.cancel.addEventListener("click", () => {
+      if (!cancelRun()) return;
+      ui.el.cancel.disabled = true;
+      ui.el.pt.textContent = "Останавливаюсь — сохраню то, что уже собрано…";
+    });
     ui.el.bkExport.addEventListener("click", () => {
       try { showBkStatus(`Бэкап сохранён: ${downloadBackup()} записей в истории.`, true); refreshBkInfo(true); }
       catch (e) { showBkStatus("Не удалось создать бэкап: " + e.message, false); }
@@ -2656,6 +2755,7 @@
 
     ui._busy = true; ui.el.go.disabled = true; ui.el.go.textContent = "⏳ Собираю…";
     ui.el.err.style.display = "none";
+    ui.el.cancel.disabled = false; ui.el.cancel.textContent = "✕ Отмена";
     showProgress("Подключаюсь…", null);
     try {
       const { offers, totalsByRoom, totalInJk, health: collectHealth } = await collectAll(base, (text, got, total) => showProgress(text, total ? got / total : null));
@@ -2664,6 +2764,13 @@
         const ok = confirm("На странице показано ~" + pageCnt + " объявлений, а запрос вернул " + totalInJk +
           ".\nВозможно, открыта не та вкладка результатов (фильтры не совпали).\n\nВсё равно сохранить " + offers.length + " лотов?");
         if (!ok) { ui._busy = false; ui.el.go.disabled = false; ui.el.go.textContent = "📊 Выгрузить в Excel"; ui.el.prog.style.display = "none"; return; }
+      }
+      // Отмена на первых же секундах — не ошибка и не повод советовать капчу.
+      if (!offers.length && collectHealth && collectHealth.cancelled) {
+        ui.el.prog.style.display = "none";
+        ui.el.go.textContent = "📊 Выгрузить в Excel";
+        showError("Сбор отменён — собрать не успели ничего, файл не создан. Нажмите «Повторить», когда будете готовы.");
+        return;
       }
       if (!offers.length) { throw new Error("не собрано ни одного лота (войдите в аккаунт и пройдите капчу)"); }
       const rows = offers.map(normalize).sort((a, b) => (a.ppm == null) - (b.ppm == null) || (a.ppm || 0) - (b.ppm || 0));
@@ -2682,6 +2789,9 @@
       ui.el.go.textContent = "📊 Выгрузить в Excel";
       showError("Ошибка: " + e.message + ". Обновите страницу, дождитесь загрузки списка объявлений и нажмите «Повторить».");
     } finally {
+      // Токен обязан умереть вместе с прогоном: иначе следующий запуск начался
+      // бы уже «отменённым» и упал бы на первом же обращении.
+      endRun();
       ui._busy = false; refreshHeader();
     }
   }

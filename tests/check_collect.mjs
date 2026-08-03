@@ -120,7 +120,7 @@ const big = async () => (bigRun ||= record("20000 лотов: обрезка п�
 let factory = null, api0 = null, CFG = null;
 function bootstrap() {
   factory = makeFactory();
-  api0 = factory(async () => { throw new Error("сеть не нужна"); }, () => 0, makeConsole(), Math);
+  api0 = factory(async () => { throw new Error("сеть не нужна"); }, () => 0, makeConsole(), Math, Date);
   CFG = api0.CONFIG;
 }
 
@@ -163,7 +163,7 @@ async function testResponseShapes() {
     let body = null;
     const api = factory(
       async (url, init) => { body = init.body; return { status: 200, headers: { get: () => null }, json: async () => payload }; },
-      () => 0, makeConsole(), makeMath());
+      () => 0, makeConsole(), makeMath(), Date);
     return { res: await api.apiFetch({ jsonQuery: { _type: "flatsale" } }), body };
   };
   const three = [{ cianId: 1 }, { cianId: 2 }, { cianId: 3 }];
@@ -211,7 +211,7 @@ async function testResponseShapes() {
   let sent = null;
   const one = factory(
     async (url, init) => { sent = JSON.parse(init.body).jsonQuery; return { status: 200, headers: { get: () => null }, json: async () => ({ data: { offersSerialized: [], aggregatedCount: 5 } }) }; },
-    () => 0, makeConsole(), makeMath());
+    () => 0, makeConsole(), makeMath(), Date);
   const got = await one.fetchPage(makeBase(), 3, 7);
   check(sent && sent.page.value === 7 && JSON.stringify(sent.room.value) === "[3]" && got.total === 5,
     "fetchPage(base, room, page) шлёт ровно эту комнату и эту страницу",
@@ -279,14 +279,21 @@ async function testFailures() {
     `безнадёжный 429 не завершился исключением: ${r429.err ? r429.err.message : "сбор прошёл штатно"}`);
   eq(r429.http, CFG.maxRetries, "429: ровно maxRetries HTTP на одну логическую страницу");
 
-  // Асимметрия учёта: на пути 429/5xx retries++ делается и на ПОСЛЕДНЕЙ,
-  // заведомо фатальной попытке, а на сетевом пути throw стоит раньше retries++.
-  // Из-за этого порог isHealthWarn (retries/requests) срабатывает по-разному в
-  // зависимости от того, каким способом Циан отказал.
+  // Учёт неудачных попыток обязан быть ОДИНАКОВЫМ на обоих путях. Раньше путь
+  // 429/5xx считал и последнюю, заведомо фатальную попытку, а сетевой бросал
+  // раньше инкремента: 4 против 3 при одинаковых четырёх обращениях. Порог
+  // isHealthWarn (retries/requests) из-за этого зависел от способа отказа.
   const h429 = r429.api.getHealth();
-  gap(h429.retries === 4,
-    `при одинаковых ${CFG.maxRetries} HTTP путь 429 считает retries=${h429.retries}, а сетевой — 3: учёт ретраев асимметричен`,
-    "429 и сеть считают ретраи одинаково");
+  const rNet = record("сеть падает на всех попытках", await runCollect({
+    offers: small, faults: [{ when: () => true, then: { throw: true } }],
+  }));
+  const hNet = rNet.api.getHealth();
+  eq(rNet.http, CFG.maxRetries, "сеть: ровно maxRetries HTTP на одну логическую страницу");
+  check(h429.retries === hNet.retries && h429.retries === CFG.maxRetries,
+    `оба пути считают неудачные попытки одинаково: 429 → ${h429.retries}, сеть → ${hNet.retries} при ${CFG.maxRetries} обращениях`,
+    `учёт асимметричен: 429 → ${h429.retries}, сеть → ${hNet.retries} (обращений в обоих случаях ${CFG.maxRetries})`);
+  eq(h429.retryStatuses["429"], CFG.maxRetries, "и разбивка по статусу совпадает с числом попыток: 429");
+  eq(hNet.retryStatuses.network, CFG.maxRetries, "и разбивка по статусу совпадает с числом попыток: сеть");
   gap(r429.clock.sleeps("backoff").length === CFG.maxRetries,
     () => `перед гарантированным отказом код ещё спит: ${r429.clock.sleeps("backoff").length} сна на ${CFG.maxRetries} попыток, ` +
     `последний (${r429.clock.sleeps("backoff")[CFG.maxRetries - 1]} мс) — чистое ожидание перед throw`,
@@ -297,7 +304,7 @@ async function testFailures() {
     offers: small, faults: [{ when: () => true, then: { status: 404 } }],
   }));
   const h404 = r404.api.getHealth();
-  gap(r404.http === CFG.maxRetries && (h404.retryStatuses.network || 0) === 3,
+  gap(r404.http === CFG.maxRetries && (h404.retryStatuses.network || 0) === CFG.maxRetries,
     () => `404 ретраится ${r404.http} раза и попадает в диагностику как «сеть» (retryStatuses.network=${h404.retryStatuses.network}), ` +
     `хотя это неправильный jsonQuery или капча — 4 бесполезных обращения и ~11 с ожидания`,
     "нерепитабельные 4xx больше не ретраятся и не маскируются под сетевую ошибку");
@@ -706,11 +713,37 @@ async function testBudget() {
     `ретраев ${rW.res.health.retries}. Для фичи (а) decorations_list (×4 запросов) это ~${(rW.http * 4 / 1000).toFixed(1)} тыс. обращений: ` +
     "бюджет надо переносить с логических страниц на реальные HTTP",
     `бюджет теперь ограничивает и реальные HTTP (${rW.http} при reqBudget=${CFG.reqBudget})`);
-  gap(rW.clock.elapsed() > 2 * 3.6e6,
-    () => `тот же прогон занял бы у пользователя ${hh(rW.clock.elapsed())} (${rW.clock.sleeps("backoff").length} бэкоффов): ` +
-    "ограничения по wall-clock в коде нет вообще, как нет AbortController и отмены. " +
-    "Для фичи (б) «фоновые алерты» это главный числовой ограничитель",
-    `суммарное время прогона ограничено (${hh(rW.clock.elapsed())})`);
+
+  // (4) второй предохранитель — по стенным часам. Бюджет обращений времени не
+  // ограничивает: 900 обращений, каждое с бэкоффом до waitCeiling, давали 42
+  // минуты. В ЖЁСТКОЙ патологии первым срабатывает именно он.
+  const spentMs = rW.clock.elapsed();
+  check(spentMs <= CFG.timeBudgetMs + CFG.waitCeiling,
+    `прогон уложился в timeBudgetMs: ${hh(spentMs)} при потолке ${hh(CFG.timeBudgetMs)}`,
+    `прогон занял ${hh(spentMs)} при потолке ${hh(CFG.timeBudgetMs)} — предохранитель по времени не сработал`);
+  check(spentMs > CFG.timeBudgetMs * 0.9 && rW.http < CFG.httpBudget,
+    `в жёсткой патологии первым срабатывает именно ВРЕМЯ (${hh(spentMs)}), а бюджет обращений ещё не выбран (${rW.http} из ${CFG.httpBudget})`,
+    `сценарий перестал упираться во время: ${hh(spentMs)}, HTTP ${rW.http} из ${CFG.httpBudget} — проверка потолка по часам стала холостой`);
+
+  // (5) МЯГКИЙ троттлинг — там, где связывает уже бюджет обращений, а не время.
+  // Каждая страница отдаётся с третьей попытки: 3 HTTP на страницу и всего
+  // ~5 с бэкоффа, поэтому за полчаса успевает накопиться 900 обращений. Без
+  // этого сценария httpBudget проверялся бы «в тени» потолка по времени: тот
+  // срабатывал раньше и делал проверку холостой.
+  let m = 0;
+  const rM = record("мягкий троттлинг: успешна каждая 3-я попытка", await runCollect({
+    offers: makeUniverse({ rooms: [9, 7, 1, 2, 3, 4, 5, 6], perRoom: 2500 }),
+    faults: [{ when: () => (++m % 3 !== 0), then: { status: 429 } }],
+  }));
+  check(rM.http <= CFG.httpBudget, `реальных обращений ${rM.http} ≤ httpBudget ${CFG.httpBudget}`,
+    `реальных обращений ${rM.http} — БОЛЬШЕ бюджета ${CFG.httpBudget}: предохранитель не сработал`);
+  check(rM.http >= CFG.httpBudget * 0.95 && rM.clock.elapsed() < CFG.timeBudgetMs && rM.logical < CFG.reqBudget,
+    `и связывает здесь именно он: ${rM.http} обращений за ${hh(rM.clock.elapsed())} на ${rM.logical} страницах ` +
+    `(время ещё не вышло, логических страниц ещё не ${CFG.reqBudget})`,
+    `сценарий перестал упираться в httpBudget: HTTP ${rM.http}, время ${hh(rM.clock.elapsed())}, страниц ${rM.logical}`);
+  check(rM.res && rM.res.health.budgetExhausted === true,
+    "исчерпание бюджета обращений помечено в health",
+    "исчерпание бюджета обращений не помечено");
 
   // Бэкофф не переносится между страницами: delay — локальная переменная
   // apiFetch, поэтому каждая новая страница начинает эскалацию заново с 1500 мс.
@@ -723,7 +756,67 @@ async function testBudget() {
 }
 
 // ===========================================================================
-// 13. Паузы между обращениями
+// 13. Отмена сбора
+// ===========================================================================
+// Отмены не было ни в каком виде: нажать «Выгрузить» и передумать было нельзя,
+// вкладка оставалась занята до конца — а конец в патологии наступал через
+// десятки минут. Проверяется ровно то, что делает кнопку не декоративной:
+// после нажатия к Циан больше НЕ ходят, а собранное не выбрасывается.
+async function testCancel() {
+  section("Отмена: кнопка останавливает сбор и сохраняет собранное");
+
+  const rC = record("отмена после 5-го обращения", await runCollect({
+    offers: makeUniverse({ rooms: [9, 7, 1, 2, 3, 4, 5, 6], perRoom: 2500 }),
+    cancelAfter: 5,
+  }));
+  check(!rC.err, "отмена не превращается в исключение — вызывающий получает результат",
+    `отмена вылетела исключением: ${rC.err && rC.err.message}`);
+  eq(rC.http, 5, "после отмены к Циан не ушло НИ ОДНОГО лишнего обращения");
+  check(rC.res && rC.res.health.cancelled === true,
+    "отмена помечена в health.cancelled",
+    "отмена не помечена — неполная выгрузка неотличима от полной");
+  check(rC.res && rC.res.offers.length > 0,
+    `собранное до отмены сохранено: ${rC.res ? rC.res.offers.length : 0} лотов`,
+    "отмена выбросила всё собранное");
+  check(rC.api.isHealthWarn(rC.res.health),
+    "отменённый сбор помечен как требующий проверки (имя файла получит «_проверить»)",
+    "отменённый сбор выглядит как штатный");
+  // Причина обязана дойти до человека дословно — это то, что он прочтёт в
+  // панели и в листе «Сводка».
+  const why = rC.api.healthReasons(rC.res.health);
+  check(why.some((s) => /Отмена/.test(s)),
+    `причина названа прямо: «${why[0]}»`,
+    `среди причин нет отмены: ${JSON.stringify(why)}`);
+
+  // Токен обязан умереть вместе с прогоном, иначе следующий запуск начнётся
+  // уже «отменённым» и упадёт на первом же обращении.
+  check(rC.api.isCancelled() === false,
+    "после прогона токен отмены сброшен — следующий запуск начнётся с чистого листа",
+    "токен отмены пережил прогон: повторная выгрузка отменится сразу");
+  const again = await rC.api.collectAll(makeBase(), () => {});
+  check(again.offers.length > 0 && !again.health.cancelled,
+    `повторный сбор на том же экземпляре идёт штатно: ${again.offers.length} лотов`,
+    "повторный сбор после отмены не работает");
+
+  // Прерываемость сна — то, без чего кнопка декоративна: на бэкоффе в
+  // waitCeiling=60 с пользователь нажал бы «Отмена» и ещё минуту ждал.
+  // Проверяется на НАСТОЯЩИХ таймерах: на виртуальных любой сон мгновенен.
+  const rt = makeFactory()(async () => ({ status: 200, headers: { get: () => null }, json: async () => ({}) }),
+    globalThis.setTimeout, makeConsole(), Math, Date);
+  rt.beginRun();
+  const t0 = Date.now();
+  const slept = rt.sleep(CFG.waitCeiling);          // 60 с
+  rt.cancelRun();
+  const won = await Promise.race([slept.then(() => "разбудили"),
+    new Promise((r) => globalThis.setTimeout(() => r("не разбудили"), 500))]);
+  rt.endRun();
+  check(won === "разбудили",
+    `спящий сбор просыпается по отмене за ${Date.now() - t0} мс вместо ${CFG.waitCeiling / 1000} с`,
+    `sleep(${CFG.waitCeiling}) не прервался за 500 мс — «Отмена» на бэкоффе декоративна`);
+}
+
+// ===========================================================================
+// 14. Паузы между обращениями
 // ===========================================================================
 async function testPacing() {
   section("Паузы между обращениями к API");
@@ -835,9 +928,33 @@ const BREAKAGES = [
     // страницам его не подменяет: ретраи живут внутри apiFetch и в requests
     // не попадают — без этой строки патология снова стоит тысячи обращений.
     name: "снят бюджет реальных HTTP в apiFetch",
-    from: "        if (health.http >= CONFIG.httpBudget) throw BudgetError();",
-    to: "        if (false) throw BudgetError();",
+    from: '        if (health.http >= CONFIG.httpBudget) throw BudgetError("запросов");',
+    to: '        if (false) throw BudgetError("запросов");',
     expect: "БОЛЬШЕ бюджета",
+  },
+  {
+    // Второй предохранитель. Бюджет обращений времени не ограничивает: без
+    // этой строки тот же патологический прогон снова растягивается на часы.
+    name: "снят потолок по стенным часам",
+    from: '        if (health.t0 && Date.now() - health.t0 >= CONFIG.timeBudgetMs) throw BudgetError("времени");',
+    to: '        if (false) throw BudgetError("времени");',
+    expect: "предохранитель по времени не сработал",
+  },
+  {
+    // Отмена, которая ничего не отменяет: кнопка нажимается, флаг ставится, а
+    // apiFetch его не читает и продолжает ходить к Циан.
+    name: "apiFetch перестал замечать отмену",
+    from: "  const isCancelled = () => !!(cancelToken && cancelToken.cancelled);",
+    to: "  const isCancelled = () => false;",
+    expect: "после отмены к Циан не ушло",
+  },
+  {
+    // Сон, который нельзя прервать: кнопка «Отмена» на бэкоффе становится
+    // декоративной — пользователь ждёт до waitCeiling независимо от нажатия.
+    name: "sleep снова непрерываемый",
+    from: "    if (t) t.wakes.add(fire);",
+    to: "    if (false) t.wakes.add(fire);",
+    expect: "не прервался за 500 мс",
   },
 ];
 
@@ -903,6 +1020,7 @@ async function main() {
   await testTotalDrift();
   await testForbiddenMidSegment();
   await testBudget();
+  await testCancel();
   await testPacing();
   await testRealTimers();
   snapshotSummary();

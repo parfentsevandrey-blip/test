@@ -27,7 +27,7 @@ export const CONTENT_JS = process.env.CIAN_CONTENT_JS || path.join(ROOT, "extens
 // Границы проводятся не по номерам строк и не по комментариям (и то и другое
 // уезжает при любой правке), а по СМЫСЛУ:
 //   срез A = код, который ещё не знает про браузер (константы сбора);
-//   срез B = сам планировщик, от sleep до начала слоя нормализации.
+//   срез B = сам планировщик, от токена отмены до начала слоя нормализации.
 // Слова document/window/XMLHttpRequest — это Web API, их не переименуют при
 // рефакторинге, поэтому граница «кончился код без браузера» устойчивее любого
 // имени функции.
@@ -89,9 +89,12 @@ function sliceConsts(src) {
 // две: переименуют слой нормализации — оба упадут одинаково и чинить надо в
 // одном месте.
 function sliceCollect(src) {
-  const from = anchor(src, "  const sleep = ", "начало слоя сбора");
+  // Начало — объявление токена отмены: он ПЕРВЫЙ в слое сбора, потому что от
+  // него зависит уже сам sleep (прерываемый). Раньше якорем был `const sleep`,
+  // и появление отмены выше него оставило бы cancelRun за пределами среза.
+  const from = anchor(src, "  let cancelToken = null;", "начало слоя сбора");
   const to = anchor(src, "  function categoryOf(", "начало слоя нормализации");
-  if (to <= from) throw new Error("categoryOf оказался ВЫШЕ sleep — слои content.js переставили местами, срез B бессмыслен");
+  if (to <= from) throw new Error("categoryOf оказался ВЫШЕ слоя сбора — слои content.js переставили местами, срез B бессмыслен");
   return src.slice(from, to);
 }
 
@@ -111,7 +114,7 @@ function checkSlice(name, code, must) {
 }
 
 export const MUST_A = ["CONFIG", "API", "ROOMS", "health", "isHealthWarn", "reqBudget", "maxRetries", "backoffBase", "minPriceSpan"];
-export const MUST_B = ["sleep", "pause", "dig", "withFilters", "apiFetch", "fetchPage", "collectAll", "paginateSegment", "priceSplit"];
+export const MUST_B = ["sleep", "pause", "dig", "withFilters", "apiFetch", "fetchPage", "collectAll", "paginateSegment", "priceSplit", "cancelRun"];
 
 export function sliceCollector(contentJsPath = CONTENT_JS) {
   const src = fs.readFileSync(contentJsPath, "utf8");
@@ -127,11 +130,15 @@ export function sliceCollector(contentJsPath = CONTENT_JS) {
 export function makeFactory(contentJsPath = CONTENT_JS) {
   const { A, B } = sliceCollector(contentJsPath);
   // eslint-disable-next-line no-eval
-  return eval(`(function (fetch, setTimeout, console, Math) {
+  // Date приходит параметром вместе с остальными: предохранитель по стенным
+  // часам (CONFIG.timeBudgetMs) иначе непроверяем — виртуальные часы прогоняют
+  // сутки за миллисекунды настоящего времени, и потолок не сработал бы никогда.
+  return eval(`(function (fetch, setTimeout, console, Math, Date) {
 ${A}
 ${B}
   return { CONFIG, API, ROOMS, sleep, pause, dig, withFilters, apiFetch, fetchPage,
-           collectAll, isHealthWarn, getHealth: () => health };
+           collectAll, isHealthWarn, healthReasons, beginRun, cancelRun, endRun, isCancelled,
+           getHealth: () => health };
 })`);
 }
 
@@ -157,8 +164,16 @@ export function makeClock({ real = false } = {}) {
     setImmediate(cb);
     return 0;
   };
+  // Date для среза: now() идёт по ВИРТУАЛЬНЫМ часам. Наследуемся от настоящего
+  // Date, чтобы всё остальное (конструктор, toISOString) продолжало работать.
+  const T0 = Date.UTC(2026, 6, 1, 12, 0, 0);
+  class VirtualDate extends Date {
+    constructor(...a) { if (!a.length) super(T0 + now); else super(...a); }
+    static now() { return T0 + now; }
+  }
   return {
     setTimeout: setTimeoutStub,
+    Date: VirtualDate,
     log,
     // Тег ставит мок в момент ответа (не 200 -> "backoff", 200 -> "pause"),
     // поэтому классификация сна не гадательная и не требует стек-трейсов.
@@ -332,13 +347,24 @@ export function makeBase(extra = {}) {
 // ===========================================================================
 export async function runCollect(opts = {}) {
   const {
-    offers = [], base = makeBase(), seed = 42, real = false,
+    offers = [], base = makeBase(), seed = 42, real = false, cancelAfter = null,
     factory = makeFactory(), ...mockOpts
   } = opts;
   const clock = makeClock({ real });
   const mock = makeCianMock({ offers, clock, ...mockOpts });
   const con = makeConsole();
-  const api = factory(mock.fetch, clock.setTimeout, con, makeMath(seed));
+  // Отмена «изнутри прогона»: пользователь жмёт кнопку, пока collectAll ещё
+  // работает. Снаружи это не воспроизвести — прогон ждёт сам себя, — поэтому
+  // кнопку «нажимает» мок, отдав N-й ответ.
+  // Нажимает РОВНО ОДИН раз: человек тоже жмёт кнопку однажды, а повторный
+  // прогон на том же экземпляре обязан идти начисто.
+  let pressed = false;
+  const fetchStub = cancelAfter == null ? mock.fetch : async (...a) => {
+    const r = await mock.fetch(...a);
+    if (!pressed && mock.httpCalls() >= cancelAfter) { pressed = true; api.cancelRun(); }
+    return r;
+  };
+  const api = factory(fetchStub, clock.setTimeout, con, makeMath(seed), clock.Date);
   const progress = [];
   const baseSnapshot = JSON.stringify(base);
   let res = null, err = null;

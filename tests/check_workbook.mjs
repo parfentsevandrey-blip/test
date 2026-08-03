@@ -40,10 +40,10 @@ const RealDate = Date;   // захватываем ДО любых подмен 
 // 1. Вырезаем слой генерации из content.js и запускаем его в песочнице
 // ===========================================================================
 
-// В вырезанном куске (categoryOf … download) снаружи нужны пять имён:
-// dig, isHealthWarn, healthReasons — берём их ИСХОДНЫМ ТЕКСТОМ из того же
-// файла, чтобы правка в content.js не разъехалась с тестом; Date и
-// localStorage — наши стабы.
+// В вырезанном куске (categoryOf … download) снаружи нужны семь имён:
+// dig, isHealthWarn, healthReasons, STATUS_LABEL, statusBreakdown — берём их
+// ИСХОДНЫМ ТЕКСТОМ из того же файла, чтобы правка в content.js не разъехалась
+// с тестом; Date и localStorage — наши стабы.
 // Берём объявление ЦЕЛИКОМ: от префикса до строки, на которой скобки сошлись и
 // стоит «;». Однострочный вариант — частный случай: isHealthWarn занимает три
 // строки, healthReasons — двенадцать, и обрыв по первому \n давал в песочнице
@@ -75,6 +75,8 @@ export function makeFactory(contentJsPath = CONTENT_JS) {
     grabDecl(src, "  const dig = ", "хелпер dig"),
     grabDecl(src, "  const isHealthWarn = ", "хелпер isHealthWarn"),
     grabDecl(src, "  const healthReasons = ", "хелпер healthReasons"),
+    grabDecl(src, "  const STATUS_LABEL = ", "таблица STATUS_LABEL"),
+    grabDecl(src, "  const statusBreakdown = ", "хелпер statusBreakdown"),
   ].join("\n");
 
   // eslint-disable-next-line no-eval
