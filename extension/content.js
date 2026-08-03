@@ -10,7 +10,28 @@
   window.__cianExcelMounted = true;
 
   const CONFIG = {
-    region: 1, delayMin: 300, delayMax: 700,
+    region: 1,
+    // ТЕМП. Все константы здесь, чтобы правка по первым боевым журналам была
+    // однострочной. Числа объявляются ВРЕМЕННЫМИ: они взяты из чужих парсеров
+    // того же эндпоинта (2–11 с, мода 4–8 с; самый дисциплинированный 3–8 с),
+    // а не из наших замеров — наших пока нет. Прежние 300–700 мс делали нас
+    // в 4–20 раз быстрее всех, и это никогда не измерялось.
+    pacer: {
+      start: 2000, floor: 800, ceil: 60000,
+      // Джиттер ОДНОСТОРОННИЙ, вверх: ×(1…1.5). Симметричный (×0.75…1.25) увёл
+      // бы интервал ниже пола, и «пол 800 мс» перестал бы значить пол; клампить
+      // же после симметричного джиттера — значит получить ровно на полу кучу
+      // одинаковых значений, то есть потерять сам джиттер там, где мы быстрее
+      // всего. Постоянный интервал — самый заметный признак робота.
+      jitter: 0.5,
+      slowdown: 2,           // 429/5xx: мультипликативно вверх
+      speedup: 0.9,          // после серии чистых ответов: осторожно вниз
+      // Разгон нарочно медленный. При speedupAfter=5 обычный прогон (12–60
+      // страниц) успевал сползти к полу, и start становился декоративным:
+      // steady state задавал бы пол. При 20 стартовое значение и есть темп
+      // типичного прогона, а пол достаётся только длинным и спокойным.
+      speedupAfter: 20,
+    },
     maxPages: 54, pageSize: 28,          // реальный потолок Циан ~54 страницы (≈1512)
     minPriceSpan: 200000, priceCeiling: 3000000000,  // дробление по цене
     maxRetries: 4, backoffBase: 1500,    // ретраи на 429/5xx
@@ -298,7 +319,45 @@
     setTimeout(fire, ms);
     if (t) t.wakes.add(fire);
   });
-  const pause = () => sleep(CONFIG.delayMin + Math.random() * (CONFIG.delayMax - CONFIG.delayMin));
+  // ===== Темп: AIMD, зазор от ЗАВЕРШЕНИЯ прошлого обращения ================
+  // Живёт на уровне ПРОГОНА, а не сегмента: раньше pause() стояла только внутри
+  // paginateSegment, и каждый выход из сегмента (любой break) и каждый переход
+  // к следующему ценовому диапазону в priceSplit шли без задержки вовсе.
+  // Измерено на стенде: 24 из 53 пар запросов уходили залпом, средний интервал
+  // 251 мс при обещанных 300 — и максимальная плотность приходилась ровно на
+  // аварийный режим, когда сервер и так недоволен.
+  let pacer = null;
+  // Момент ЗАВЕРШЕНИЯ последнего обращения. Общий для темпа и для журнала:
+  // «зазор» в обоих означает одно и то же, иначе журнал мерил бы не то, что
+  // соблюдает пацер.
+  let lastDoneAt = 0;
+  const paceReset = () => { pacer = { gap: CONFIG.pacer.start, clean: 0 }; lastDoneAt = 0; };
+  // Ждём не «сколько-нибудь», а РОВНО столько, сколько не хватает до нужного
+  // зазора: после долгого бэкоффа доплачивать уже нечего. Приём взят у самого
+  // дисциплинированного из измеренных парсеров.
+  const pause = () => {
+    if (!pacer) return Promise.resolve();
+    const target = pacer.gap * (1 + Math.random() * CONFIG.pacer.jitter);
+    const since = lastDoneAt ? Date.now() - lastDoneAt : Infinity;
+    const wait = Math.max(0, target - since);
+    return wait > 0 ? sleep(wait) : Promise.resolve();
+  };
+  // Классическая асимметрия AIMD: резко вверх по паузе, осторожно вниз. ×2
+  // против ×0.9 — это семь к одному за шаг, поэтому разгон после отказов идёт
+  // медленно, а торможение мгновенно.
+  // Замедляемся ОДИН раз на логический запрос, а не на каждую попытку. Четыре
+  // отказа подряд по одной странице — это одно событие перегрузки, а не четыре:
+  // реагируя на каждую попытку, пацер за одну страницу улетал бы в ×16 и
+  // мгновенно пинился к потолку. Правило «одно снижение на событие» — то же,
+  // что в классическом AIMD.
+  function paceFeedback(ok) {
+    if (!pacer) return;
+    if (!ok) { pacer.gap = Math.min(pacer.gap * CONFIG.pacer.slowdown, CONFIG.pacer.ceil); pacer.clean = 0; return; }
+    if (++pacer.clean >= CONFIG.pacer.speedupAfter) {
+      pacer.clean = 0;
+      pacer.gap = Math.max(pacer.gap * CONFIG.pacer.speedup, CONFIG.pacer.floor);
+    }
+  }
   const dig = (o, p) => p.split(".").reduce((a, k) => (a == null ? a : a[k]), o);
 
   // Запрос страницы с нашими параметрами поверх фильтров пользователя.
@@ -340,7 +399,7 @@
   // видит именно попытки. Журнал живёт ТОЛЬКО в памяти прогона и уезжает листом
   // в скачиваемую книгу; в хранилище попадает лишь агрегат (замер: 30 прогонов
   // сырого журнала = 2.1 МБ UTF-16 при квоте 5 МиБ на весь ориджин).
-  let tele = null, teleMeta = null, lastDoneAt = 0;
+  let tele = null, teleMeta = null;
   const TELE_MAX = 4000;
   const hdr = (r, name) => {
     try { return (r && r.headers && r.headers.get && r.headers.get(name)) || ""; }
@@ -353,6 +412,8 @@
   async function apiFetch(body, meta) {
     let delay = CONFIG.backoffBase, lastErr = null;
     const seg = (meta && meta.seg) || "", pg = (meta && meta.page) || null;
+    // Одно снижение темпа на ЛОГИЧЕСКИЙ запрос: см. paceFeedback.
+    let braked = false;
     for (let attempt = 1; attempt <= CONFIG.maxRetries; attempt++) {
       // Считаем ДО обращения и на КАЖДОЙ попытке: это единственная точка, где
       // видны все обращения без исключения. Здесь же — оба предохранителя и
@@ -363,6 +424,11 @@
         if (health.t0 && Date.now() - health.t0 >= CONFIG.timeBudgetMs) throw BudgetError("времени");
         health.http++;
       }
+      // Темп соблюдается ЗДЕСЬ — в единственной точке, через которую проходит
+      // каждое обращение. Поэтому пауза есть и между страницами, и на выходе
+      // из сегмента, и на переходе к следующему ценовому диапазону.
+      await pause();
+      if (isCancelled()) throw CancelError();
       const startedAt = Date.now();
       // gap считается от ЗАВЕРШЕНИЯ прошлого обращения, а не от его начала:
       // проверяет темп по факту, а не по намерению.
@@ -386,6 +452,10 @@
         // нужен свой код, иначе он растворится среди честных двухсоток.
         if (r.status === 200 && ct === "html") rec.st = "HTML";
         teleLog(rec); logged = true;   // дальше поля дописываются в ту же запись
+        // Обратная связь темпа: всё, кроме честной двухсотки, — повод замедлиться.
+        const clean = r.status === 200 && ct !== "html";
+        if (clean) paceFeedback(true);
+        else if (!braked) { braked = true; paceFeedback(false); }
 
         // Проверка типа идёт ДО r.json(). Раньше капча, отданная с кодом 200 и
         // HTML-телом, превращалась в SyntaxError, падала в общий catch и
@@ -441,6 +511,7 @@
           lastDoneAt = Date.now();
           Object.assign(rec, { dur: lastDoneAt - startedAt, st: "NET", ct: null, len: null, raSeen: 0 });
           teleLog(rec);
+          if (!braked) { braked = true; paceFeedback(false); }   // обрыв связи — тоже событие перегрузки
         }
         // Считаем КАЖДУЮ неудачную попытку, включая последнюю. Раньше сетевой
         // путь инкрементировал после проверки на исчерпание и давал 3 против 4
@@ -465,7 +536,7 @@
     const byId = new Map();
     let grandTotal = 0, requests = 0;
     health = { retries: 0, retryStatuses: {}, totalDrift: 0, http: 0, budgetExhausted: false, cancelled: false, t0: Date.now() };
-    beginRun();
+    beginRun(); paceReset();
     onWait = (text) => onProgress(text, byId.size, grandTotal);
     tele = []; teleMeta = null; lastDoneAt = 0;
     const add = (offers) => offers.forEach((o) => { const id = o.cianId || o.id; if (id != null) byId.set(id, o); });
@@ -487,10 +558,12 @@
         // без неё «дорого» и «много страниц» неразличимы.
         let res; try { res = await apiFetch(withFilters(base, Object.assign({}, filters, { page })), { seg: segLabel(filters), page }); requests++; }
         // Отказ на 2-й и дальше странице обрывает СЕГМЕНТ, а не прогон: остаток
-        // ещё можно добрать дроблением. Но отмена и бюджет — про весь прогон, и
-        // глотать их здесь значило бы прокручивать вхолостую все оставшиеся
-        // сегменты.
-        catch (e) { if (page === 1 || (e && (e.cancelled || e.budget))) throw e; break; }
+        // ещё можно добрать дроблением. Но отмена, бюджет и БЛОКИРОВКА — про
+        // весь прогон. Раньше waf сюда не входил, и после первого же 403 сбор
+        // продолжал ходить к Циан: обрыв на странице ≥2 неотличим от штатного
+        // недобора, поэтому запускалось дробление — планировщик отвечал на
+        // отказ сервера ростом нагрузки.
+        catch (e) { if (page === 1 || (e && (e.cancelled || e.budget || e.waf))) throw e; break; }
         // Циан иногда отдаёт РАЗНЫЙ aggregatedCount на разных страницах ОДНОГО
         // и того же сегмента (ротация/нестабильность выдачи) — фиксируем как
         // диагностику качества сбора, не как ошибку (сама логика это переживает).
@@ -500,7 +573,7 @@
         // спрашивать вторую страницу незачем. Для фоновых проверок это ×2
         // трафика на каждое «ничего не изменилось».
         if (!total && !res.offers.length) break;
-        if (!res.offers.length) { if (++empty >= 2) break; page++; await pause(); continue; }
+        if (!res.offers.length) { if (++empty >= 2) break; page++; continue; }
         empty = 0;
         res.offers.forEach((o) => { const id = o.cianId || o.id; if (id != null) seg.add(id); });
         add(res.offers);
@@ -512,7 +585,9 @@
         // равно держит правило ceil(total/pageSize)+2 ниже.
         if (seg.size === total) break;                                  // весь сегмент собран
         if (page >= Math.ceil(total / CONFIG.pageSize) + 2) break;
-        page++; await pause();
+        // Паузы здесь больше нет: темп соблюдает apiFetch, и одинаково для
+        // всех переходов, а не только для межстраничных.
+        page++;
       }
       return { total, seen: seg.size };
     }
@@ -562,7 +637,6 @@
             const pr = await paginateSegment({ room }, `room ${room}: `);
             totalsByRoom[room] = pr.total;
             if (pr.total > pr.seen) await priceSplit({ room }, `room ${room} ₽: `, pr.total, pr.seen);
-            await pause();
           }
         } else {
           await priceSplit({}, "₽: ", first.total, first.seen);   // у пользователя уже фильтр по комнатам
@@ -611,6 +685,9 @@
       // и ветка «уважаем просьбу сервера», возможно, мёртвая. Одно поле — один
       // боевой прогон — окончательный ответ.
       raSeen: log.filter((r) => r.raSeen).length,
+      // Куда пацер пришёл к концу прогона: если он раз за разом упирается в
+      // потолок, стартовое значение выбрано слишком дерзко.
+      pacerFinal: pacer ? Math.round(pacer.gap) : null,
       budget: h.budgetExhausted ? 1 : 0, cancel: h.cancelled ? 1 : 0, waf: h.wafBlock ? 1 : 0,
     };
   }

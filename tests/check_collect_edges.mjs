@@ -336,26 +336,29 @@ async function testRetryAfter() {
   const date = await run("Retry-After: HTTP-date", {
     handler: (f, i) => (i <= 2 ? { status: 429, retryAfter: "Wed, 21 Oct 2026 07:28:00 GMT" } : serve({ offers: lots({ n: 40 }) })(f)),
   });
-  const db = date.clock.sleeps("backoff");
-  check(db.length === 2 && db.every((ms, k) => ms >= CFG.backoffBase * 2 ** k && ms < CFG.backoffBase * 2 ** k + 400),
-    `нечисловой Retry-After (HTTP-date) не ломает бэкофф: ${db.map(Math.round).join(" → ")} мс, как без заголовка`,
-    () => `нечисловой Retry-After дал странные паузы: ${db.map(Math.round).join(" → ")} мс`);
+  // Меряем ИНТЕРВАЛЫ между обращениями, а не отдельные сны: с появлением пацера
+  // сон перед попыткой складывается из бэкоффа и зазора темпа, и смотреть на
+  // один из них значит мерить намерение, а не то, что видит сервер.
+  const iv = (r, n) => r.mock.requests.slice(1, n + 1).map((q, k) => q.at - r.mock.requests[k].at);
+  const db = iv(date, 2);
+  check(db.length === 2 && db.every((ms, k) => ms >= CFG.backoffBase * 2 ** k && ms < CFG.waitCeiling),
+    `нечисловой Retry-After (HTTP-date) не ломает темп: ${db.map(Math.round).join(" → ")} мс — как без заголовка, а не 30+ с`,
+    () => `нечисловой Retry-After дал странные интервалы: ${db.map(Math.round).join(" → ")} мс`);
   eq(date.rows, 40, "после ретраев сбор доходит до конца");
 
   // Знак и форма числа: parseInt берёт что дают.
   const neg = await run("Retry-After: -5", {
     handler: (f, i) => (i <= 2 ? { status: 429, retryAfter: -5 } : serve({ offers: lots({ n: 40 }) })(f)),
   });
-  const nb = neg.clock.sleeps("backoff");
-  gap(nb.every((ms) => ms < 0),
-    () => `отрицательный Retry-After превращается в ОТРИЦАТЕЛЬНУЮ паузу (${nb.map(Math.round).join(", ")} мс): ` +
-      "setTimeout выполняет колбэк немедленно, и повторы летят в сервер без задержки ровно тогда, когда он попросил подождать",
-    "отрицательный Retry-After больше не даёт отрицательную паузу");
+  const nb = iv(neg, 2);
+  check(nb.every((ms) => ms >= CFG.pacer.floor),
+    `отрицательный Retry-After не разгоняет повторы: интервалы ${nb.map(Math.round).join(", ")} мс — пол темпа держит их даже когда бэкофф ушёл в минус`,
+    () => `отрицательный Retry-After обнулил задержку: интервалы ${nb.map(Math.round).join(", ")} мс`);
   const exp = await run("Retry-After: 1e3", {
     handler: (f, i) => (i <= 1 ? { status: 429, retryAfter: "1e3" } : serve({ offers: lots({ n: 40 }) })(f)),
   });
-  gap(exp.clock.sleeps("backoff")[0] < 2000,
-    () => `«1e3» читается parseInt как 1 секунда вместо 1000 (пауза ${Math.round(exp.clock.sleeps("backoff")[0])} мс) — ` +
+  gap(iv(exp, 1)[0] < 2000 + CFG.pacer.start,
+    () => `«1e3» читается parseInt как 1 секунда вместо 1000 (интервал ${Math.round(iv(exp, 1)[0])} мс, из них почти всё — зазор темпа) — ` +
       "заголовок разбирается parseInt, а не Number, и любая нестандартная запись молча занижает паузу",
     "Retry-After разбирается строго");
 }
@@ -417,23 +420,19 @@ async function testSilentLoss() {
 // ===========================================================================
 // 7. Плотность обращений к api.cian.ru
 // ===========================================================================
-// CONFIG.delayMin/delayMax — единственная защита от антибота. pause() стоит в
-// конце итерации paginateSegment, поэтому КАЖДЫЙ выход из сегмента (по break) и
-// каждый переход к следующему ценовому сегменту происходят без задержки вовсе.
+// Темп — единственная защита от антибота. Проверяется на САМОМ плотном из
+// сценариев набора: если пол выдержан там, он выдержан везде.
 async function testPacing() {
-  section("Плотность обращений: паузы между сегментами");
+  section("Плотность обращений: пауза перед КАЖДЫМ обращением");
 
   const burn = runs.find((r) => r.name === "фантомный лот в aggregatedCount (+1)");
   const gapsMs = burn.mock.requests.slice(1).map((q, k) => q.at - burn.mock.requests[k].at);
   const zero = gapsMs.filter((g) => g === 0).length;
+  const min = Math.min(...gapsMs);
   const avg = Math.round(burn.clock.elapsed() / burn.mock.requests.length);
-  gap(zero > gapsMs.length / 4,
-    `в сценарии с фантомом ${zero} из ${gapsMs.length} пар запросов уходят БЕЗ единой миллисекунды задержки ` +
-    `(${Math.round(100 * zero / gapsMs.length)}%, средний интервал ${avg} мс при CONFIG.delayMin=${CFG.delayMin}): ` +
-    "pause() вызывается только между страницами ВНУТРИ сегмента, а выход из сегмента (любой break) и переход к " +
-    "следующему ценовому сегменту в priceSplit паузы не делают вовсе. Максимальная плотность приходится ровно на " +
-    "аварийный режим, когда сервер и так недоволен",
-    "паузы соблюдаются и на переходах между сегментами");
+  check(zero === 0 && min >= CFG.pacer.floor,
+    `в самом плотном сценарии ни одной пары без задержки: минимум ${min} мс при поле ${CFG.pacer.floor}, средний интервал ${avg} мс`,
+    `${zero} из ${gapsMs.length} пар уходят залпом, минимальный интервал ${min} мс при поле ${CFG.pacer.floor}`);
 }
 
 // ===========================================================================

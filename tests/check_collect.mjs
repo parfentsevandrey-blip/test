@@ -134,7 +134,7 @@ async function testSlice() {
 
   // Все числовые ожидания ниже выведены из этих констант. Если их поменяли —
   // тест обязан сказать это прямо, а не разойтись в двадцати местах сразу.
-  const want = { region: 1, delayMin: 300, delayMax: 700, maxPages: 54, pageSize: 28,
+  const want = { region: 1, maxPages: 54, pageSize: 28,
                  minPriceSpan: 200000, priceCeiling: 3000000000, maxRetries: 4,
                  backoffBase: 1500, reqBudget: 400 };
   for (const [k, v] of Object.entries(want)) {
@@ -284,13 +284,21 @@ async function testFailures() {
   eq(rnet.http, 5, "сеть: 4 HTTP на первую логическую страницу (3 обрыва + успех) + 1 на вторую");
   eq(rnet.res.health.retries, 3, "сеть: health.retries = 3");
   eq(rnet.res.health.retryStatuses.network, 3, "сеть: health.retryStatuses.network = 3");
-  const nb = rnet.clock.sleeps("backoff");
-  check(nb.length === 3 && nb.every((ms, k) => ms >= CFG.backoffBase * 2 ** k && ms < CFG.backoffBase * 2 ** k + 400),
-    `бэкофф растёт вдвое от backoffBase: ${nb.join(" → ")} мс (база 1500/3000/6000 + джиттер до 400)`,
-    () => `бэкофф не соответствует backoffBase*2^n: получено ${nb.join(" → ")} мс`);
-  check(nb.every((ms, k) => k === 0 || ms > nb[k - 1]),
-    "каждая следующая пауза строго больше предыдущей",
-    () => `паузы не растут: ${nb.join(" → ")} мс`);
+  // Меряем по ФАКТУ — интервалам между обращениями в журнале мока. С появлением
+  // пацера сон перед попыткой складывается из двух источников (бэкофф этой
+  // страницы и зазор темпа), и смотреть на один из них по отдельности значит
+  // мерить намерение, а не то, что видит сервер.
+  const nb = rnet.mock.requests.slice(1, 4).map((q, k) => q.at - rnet.mock.requests[k].at);
+  check(nb.every((ms, k) => ms >= CFG.backoffBase * 2 ** k),
+    `интервал между попытками растёт не медленнее бэкоффа: ${nb.join(" → ")} мс (база 1500/3000/6000)`,
+    () => `интервал между попытками меньше бэкоффа backoffBase*2^n: получено ${nb.join(" → ")} мс`);
+  // Строгой монотонности больше нет и быть не может: интервал — это максимум из
+  // бэкоффа (растёт вдвое) и зазора темпа (после одного торможения постоянен, с
+  // джиттером ±50%). Пока зазор доминирует, соседние интервалы могут идти в
+  // любом порядке. Сохраняется главное — эскалация по сумме последовательности.
+  check(nb[nb.length - 1] > nb[0],
+    `по ходу повторов интервал растёт: ${nb[0]} → ${nb[nb.length - 1]} мс`,
+    () => `эскалации нет: ${nb.join(" → ")} мс`);
 
   // --- Retry-After: игнор заголовка = гарантированная эскалация от троттлинга
   // к капче, то есть смерть фич (а) и (б).
@@ -403,11 +411,13 @@ async function testCleanRun() {
   const withPrice = r.mock.requests.filter((q) => q.gte != null || q.lte != null).length;
   eq(withPrice, 0, "дробления по цене при полном сборе не было (запросов с price)");
 
-  eq(r.clock.log.length, 1, "между двумя страницами ровно одна пауза");
+  eq(r.clock.log.length, 1, "между двумя страницами ровно одна пауза (перед первым обращением не ждём)");
   const p = r.clock.log[0];
-  check(p.tag === "pause" && p.ms >= CFG.delayMin && p.ms < CFG.delayMax,
-    `пауза между страницами ${p.ms} мс — внутри [${CFG.delayMin}, ${CFG.delayMax})`,
-    `пауза между страницами ${p.ms} мс вышла за [${CFG.delayMin}, ${CFG.delayMax}) — CONFIG.delayMin/Max больше не соблюдаются`);
+  const lo = CFG.pacer.start, hi = CFG.pacer.start * (1 + CFG.pacer.jitter);
+  check(p && p.ms >= lo && p.ms <= hi,
+    () => `пауза между страницами ${Math.round(p.ms)} мс — внутри [${lo}, ${hi}] (старт пацера + джиттер вверх)`,
+    () => (p ? `пауза между страницами ${Math.round(p.ms)} мс вышла за [${lo}, ${hi}] — темп больше не соблюдается`
+             : "паузы между страницами не было вовсе — темп не соблюдается"));
 
   const h = r.res.health;
   check(h.retries === 0 && h.totalDrift === 0 && api0.isHealthWarn(h) === false,
@@ -674,7 +684,7 @@ async function testForbiddenMidSegment() {
     faults: [{ when: (f) => f.page >= 2, then: { status: 403 } }],
   }));
   check(!r.err,
-    "403 на не первой странице не роняет весь сбор (сегмент просто обрывается)",
+    "403 на не первой странице не роняет весь сбор — собранное возвращается с пометкой",
     `403 на не первой странице уронил весь сбор: ${r.err && r.err.message}`);
   check(r.res.offers.length > 0,
     `уже собранные лоты сохранены: ${r.res.offers.length} шт.`,
@@ -682,14 +692,18 @@ async function testForbiddenMidSegment() {
 
   const fatal = r.mock.requests.filter((q) => q.status === 403).length;
   eq(r.http - r.logical, fatal, "каждый лишний HTTP сверх логических страниц — это 403 без ретрая");
+  // Блокировка терминальна для ВСЕГО прогона, а не для одного сегмента. Раньше
+  // 403 на странице ≥2 был неотличим от штатного недобора, запускалось
+  // дробление, и планировщик отвечал на отказ сервера ростом нагрузки: 7
+  // фатальных 403 вместо одного.
+  eq(fatal, 1, "после первого же 403 к Циан больше не ходят");
+  check(r.res.health.wafBlock === true,
+    "блокировка помечена в health, собранное до неё сохранено",
+    "403 в середине сегмента не пометил прогон как заблокированный");
   gap(r.res.health.retries === 0 && Object.keys(r.res.health.retryStatuses).length === 0,
-    `${fatal} фатальных 403 не оставили в health ни следа (${JSON.stringify(r.res.health)}): ` +
-    `health.requests=${r.logical} против ${r.http} реальных HTTP — по диагностике невозможно понять, что Циан отказывал`,
-    "оборванные сегменты попали в health");
-  gap(fatal > 5,
-    `на отказ сервера планировщик ответил РОСТОМ нагрузки: после первого 403 сделано ещё ${fatal - 1} обращений ` +
-    "(обрыв на странице ≥2 неотличим от штатного недобора, поэтому запускается дробление)",
-    "обрыв сегмента больше не приводит к дроблению");
+    `фатальный 403 не оставил следа в retryStatuses (${JSON.stringify(r.res.health.retryStatuses)}): ` +
+    "разбивка отказов не различает «нас заблокировали» и «нас не трогали»",
+    "блокировки попали в разбивку отказов");
 }
 
 // ===========================================================================
@@ -713,13 +727,14 @@ async function testBudget() {
   eq(rB.ok200, rB.logical, "health.requests совпадает с числом успешных ответов мока");
   eq(rB.http, rB.logical, "без отказов реальных HTTP ровно столько же, сколько логических страниц");
 
-  // (2) усиление на троттлинге: каждая четвёртая попытка успешна.
+  // (2) усиление на троттлинге: каждая четвёртая попытка успешна. Выборка
+  // намеренно маленькая — с пацером такой прогон упирается уже во ВРЕМЯ
+  // (см. пункт 4), и на большой выборке усиление мерить было бы не на чем.
   const rAmp = record("усиление: успешна каждая 4-я попытка", await runCollect({
-    offers: [...makeUniverse(), { id: 9999, room: 8, price: 12_000_000 }], cap: 2,
+    offers: makeUniverse({ rooms: [2], perRoom: 84 }),
     faults: [{ when: (f, i) => i % 4 !== 0, then: { status: 429 } }],
   }, { усиление: 4 }));
   const amp = rAmp.http / rAmp.logical;
-  eq(rAmp.logical, 20, "логических страниц столько же, сколько без отказов");
   check(Math.abs(amp - CFG.maxRetries) < 0.01,
     `один бюджетный юнит стоит до maxRetries HTTP: ${rAmp.http} обращений на ${rAmp.logical} страниц = ×${amp.toFixed(2)}`,
     `усиление изменилось: ${rAmp.http}/${rAmp.logical} = ×${amp.toFixed(2)} вместо ×${CFG.maxRetries}`);
@@ -761,25 +776,35 @@ async function testBudget() {
     `в жёсткой патологии первым срабатывает именно ВРЕМЯ (${hh(spentMs)}), а бюджет обращений ещё не выбран (${rW.http} из ${CFG.httpBudget})`,
     `сценарий перестал упираться во время: ${hh(spentMs)}, HTTP ${rW.http} из ${CFG.httpBudget} — проверка потолка по часам стала холостой`);
 
-  // (5) МЯГКИЙ троттлинг — там, где связывает уже бюджет обращений, а не время.
-  // Каждая страница отдаётся с третьей попытки: 3 HTTP на страницу и всего
-  // ~5 с бэкоффа, поэтому за полчаса успевает накопиться 900 обращений. Без
-  // этого сценария httpBudget проверялся бы «в тени» потолка по времени: тот
-  // срабатывал раньше и делал проверку холостой.
-  let m = 0;
-  const rM = record("мягкий троттлинг: успешна каждая 3-я попытка", await runCollect({
-    offers: makeUniverse({ rooms: [9, 7, 1, 2, 3, 4, 5, 6], perRoom: 2500 }),
-    faults: [{ when: () => (++m % 3 !== 0), then: { status: 429 } }],
-  }));
-  check(rM.http <= CFG.httpBudget, `реальных обращений ${rM.http} ≤ httpBudget ${CFG.httpBudget}`,
-    `реальных обращений ${rM.http} — БОЛЬШЕ бюджета ${CFG.httpBudget}: предохранитель не сработал`);
-  check(rM.http >= CFG.httpBudget * 0.95 && rM.clock.elapsed() < CFG.timeBudgetMs && rM.logical < CFG.reqBudget,
-    `и связывает здесь именно он: ${rM.http} обращений за ${hh(rM.clock.elapsed())} на ${rM.logical} страницах ` +
-    `(время ещё не вышло, логических страниц ещё не ${CFG.reqBudget})`,
-    `сценарий перестал упираться в httpBudget: HTTP ${rM.http}, время ${hh(rM.clock.elapsed())}, страниц ${rM.logical}`);
-  check(rM.res && rM.res.health.budgetExhausted === true,
-    "исчерпание бюджета обращений помечено в health",
-    "исчерпание бюджета обращений не помечено");
+  // (5) httpBudget после пацера — СТРАХОВКА, а не рабочий ограничитель, и это
+  // надо сказать прямо. При темпе pacer.start = 2000 мс девятьсот обращений
+  // занимают ровно получас, то есть ровно timeBudgetMs: в любом сценарии с
+  // отказами темп уходит вверх и время связывает раньше. Сценария, где
+  // httpBudget срабатывает первым, сегодня не существует — значит проверять
+  // его надо не сценарием (тот был бы холостым), а прямо.
+  check(CFG.httpBudget * CFG.pacer.start >= CFG.timeBudgetMs,
+    `бюджеты согласованы: ${CFG.httpBudget} обращений при темпе ${CFG.pacer.start} мс = ` +
+    `${hh(CFG.httpBudget * CFG.pacer.start)} ≥ потолка по времени ${hh(CFG.timeBudgetMs)}`,
+    `httpBudget=${CFG.httpBudget} при темпе ${CFG.pacer.start} мс исчерпается за ` +
+    `${hh(CFG.httpBudget * CFG.pacer.start)} — раньше потолка по времени, и один из двух предохранителей лишний`);
+  // Прямая проверка самого предохранителя: health на пределе -> следующее же
+  // обращение обязано бросить BudgetError, а не уйти в сеть.
+  let touched = 0;
+  // setTimeout, который срабатывает немедленно: иначе снятая проверка бюджета
+  // уводит прогон в НАСТОЯЩИЙ sleep(2000) на пацере, и тест не падает, а виснет.
+  const spy = makeFactory()(async () => { touched++; return { status: 200, headers: { get: () => null }, json: async () => ({}) }; },
+    (cb) => { cb(); return 0; }, makeConsole(), makeMath(), Date);
+  let spyErr = null;
+  try {
+    // Один прогон нужен, чтобы health вообще появился; дальше добиваем счётчик.
+    await spy.collectAll(makeBase(), () => {});
+    const h = spy.getHealth(); h.http = CFG.httpBudget;
+    touched = 0;
+    await spy.apiFetch({ jsonQuery: {} });
+  } catch (e) { spyErr = e; }
+  check(spyErr && spyErr.budget && /запросов/.test(spyErr.message) && touched === 0,
+    `при исчерпанном httpBudget обращение НЕ уходит в сеть: «${spyErr && spyErr.message}», fetch вызван ${touched} раз`,
+    `предохранитель по обращениям не сработал: ошибка ${spyErr && spyErr.message}, fetch вызван ${touched} раз`);
 
   // Бэкофф не переносится между страницами: delay — локальная переменная
   // apiFetch, поэтому каждая новая страница начинает эскалацию заново с 1500 мс.
@@ -920,24 +945,73 @@ async function testCancel() {
 // ===========================================================================
 // 15. Паузы между обращениями
 // ===========================================================================
+// Темп — единственная защита от антибота, и до 2.20 он был на 0.3–0.7 с при
+// том, что все замеренные чужие парсеры того же эндпоинта держат 2–11 с. Плюс
+// pause() стояла ТОЛЬКО внутри paginateSegment: выход из сегмента и переход к
+// следующему ценовому диапазону шли залпом. Максимальная плотность приходилась
+// ровно на аварийный режим, когда сервер и так недоволен.
 async function testPacing() {
-  section("Паузы между обращениями к API");
+  section("Темп: зазор между ЛЮБЫМИ обращениями, джиттер, AIMD");
+
   const r = record("стыки сегментов: cap=1, две комнатности", await runCollect({
     offers: makeUniverse({ rooms: [9, 7], perRoom: 40 }), cap: 1,
   }));
+  // Зазор считается по журналу мока — по ФАКТУ, а не по намерению кода.
+  const gaps = r.mock.requests.slice(1).map((q, k) => q.at - r.mock.requests[k].at);
+  const floor = CFG.pacer.floor;
+  const tooFast = gaps.filter((g) => g < floor);
+  check(!tooFast.length,
+    `все ${gaps.length} интервалов между обращениями ≥ пола ${floor} мс (минимум ${Math.min(...gaps)}, среднее ${Math.round(gaps.reduce((a, b) => a + b, 0) / gaps.length)})`,
+    () => `${tooFast.length} интервалов быстрее пола ${floor} мс, самый быстрый — ${Math.min(...tooFast)} мс`);
+  // Раньше здесь было 24 залпа из 53 пар. Ноль — и есть смысл переноса паузы
+  // в apiFetch: она одна на все виды переходов.
+  eq(gaps.filter((g) => g === 0).length, 0, "залпов без единой миллисекунды задержки");
   const inSeg = segments(r.mock).reduce((n, s) => n + Math.max(0, s.pages.length - 1), 0);
-  const outOfRange = r.clock.log.filter((s) => s.ms < CFG.delayMin || s.ms >= CFG.delayMax);
-  check(outOfRange.length === 0,
-    `все ${r.clock.log.length} пауз внутри [${CFG.delayMin}, ${CFG.delayMax}) — CONFIG.delayMin/Max соблюдены`,
-    () => `${outOfRange.length} пауз вышли за [${CFG.delayMin}, ${CFG.delayMax}), первая — ${outOfRange[0].ms} мс`);
-  check(r.clock.log.length >= inSeg,
-    `между страницами внутри сегментов паузы есть (${inSeg} межстраничных переходов, ${r.clock.log.length} пауз)`,
-    `пауз меньше, чем переходов между страницами: ${r.clock.log.length} против ${inSeg}`);
-  gap(r.clock.log.length < r.http - 1,
-    `${r.http - 1 - r.clock.log.length} переходов между сегментами прошли ЗАЛПОМ без паузы ` +
-    `(${r.http} обращений, ${r.clock.log.length} пауз): priceSplit стартует следующий диапазон немедленно. ` +
-    "Для фичи (а) decorations_list число стыков вырастет вчетверо",
-    "пауза стоит перед каждым обращением, включая стыки сегментов");
+  check(gaps.length > inSeg,
+    `пауза стоит и на стыках сегментов: ${gaps.length} интервалов против ${inSeg} межстраничных переходов`,
+    `пауза снова только внутри сегментов: ${gaps.length} интервалов, межстраничных переходов ${inSeg}`);
+
+  // Джиттер. Постоянный интервал — самый заметный признак робота, и до сих пор
+  // разброс не проверялся нигде: мутация `pause = () => sleep(500)` проходила
+  // все инварианты до единого.
+  const uniq = new Set(r.clock.log.map((s) => Math.round(s.ms))).size;
+  check(uniq > 0.5 * r.clock.log.length,
+    `паузы не повторяются: ${uniq} различных значений на ${r.clock.log.length} пауз`,
+    `паузы почти одинаковы (${uniq} значений на ${r.clock.log.length}) — постоянный интервал виден антиботу как робот`);
+  const jl = CFG.pacer.start, jh = CFG.pacer.start * (1 + CFG.pacer.jitter);
+  const first = r.clock.log[0].ms;
+  check(first >= jl && first <= jh,
+    `первая пауза ${Math.round(first)} мс — в коридоре джиттера [${jl}, ${jh}] от старта ${CFG.pacer.start}`,
+    `первая пауза ${Math.round(first)} мс вне коридора [${jl}, ${jh}]`);
+  // Джиттер только ВВЕРХ: иначе пол перестаёт быть полом.
+  check(r.clock.log.every((s) => s.ms >= CFG.pacer.floor),
+    `ни одна пауза не ушла ниже пола ${CFG.pacer.floor} мс (джиттер односторонний)`,
+    () => `паузы ниже пола: ${r.clock.log.filter((s) => s.ms < CFG.pacer.floor).map((s) => Math.round(s.ms)).slice(0, 3).join(", ")} мс`);
+
+  // AIMD: всплеск отказов -> зазор растёт вдвое; чистая серия -> осторожно вниз.
+  let phase = 0;
+  const rA = record("AIMD: всплеск 429, затем чистая серия", await runCollect({
+    offers: makeUniverse({ rooms: [2], perRoom: 900 }),
+    faults: [{ when: (f, i) => { phase = i; return i > 2 && i <= 8; }, then: { status: 429 } }],
+  }));
+  const g = rA.log.map((x) => x.gap);
+  const peak = Math.max(...g), tail = g.slice(-6);
+  // Смотрим на СОБСТВЕННОЕ значение пацера, а не на наблюдаемые интервалы:
+  // те растут и от бэкоффа, поэтому по ним нельзя отличить «пацер замедлился»
+  // от «бэкофф отработал».
+  check(rA.agg.pacerFinal > CFG.pacer.start,
+    `после серии 429 пацер ушёл с ${CFG.pacer.start} на ${rA.agg.pacerFinal} мс (наблюдаемый пик интервала ${Math.round(peak)} мс)`,
+    `зазор не вырос на отказах: пацер остался на ${rA.agg.pacerFinal} мс при старте ${CFG.pacer.start}`);
+  check(rA.agg.pacerFinal <= CFG.pacer.ceil && rA.agg.pacerFinal >= CFG.pacer.floor,
+    `итоговый зазор ${rA.agg.pacerFinal} мс внутри [${CFG.pacer.floor}, ${CFG.pacer.ceil}] и попал в агрегат`,
+    `итоговый зазор ${rA.agg.pacerFinal} мс вне [${CFG.pacer.floor}, ${CFG.pacer.ceil}]`);
+  check(Math.min(...tail) < peak,
+    `и на чистой серии снова снижается: хвост ${tail.map((x) => Math.round(x)).join(", ")} мс против пика ${Math.round(peak)}`,
+    `после отказов темп не восстанавливается: хвост ${tail.map((x) => Math.round(x)).join(", ")} мс`);
+  // Асимметрия — то, ради чего AIMD и берут: вверх резко, вниз осторожно.
+  check(CFG.pacer.slowdown / (1 / CFG.pacer.speedup) > 1.5,
+    `торможение резче разгона: ×${CFG.pacer.slowdown} вверх против ×${CFG.pacer.speedup} вниз каждые ${CFG.pacer.speedupAfter} чистых ответов`,
+    `AIMD выродился: ×${CFG.pacer.slowdown} вверх, ×${CFG.pacer.speedup} вниз — разгон не медленнее торможения`);
 }
 
 // ===========================================================================
@@ -1032,7 +1106,7 @@ const BREAKAGES = [
     name: "снят бюджет реальных HTTP в apiFetch",
     from: '        if (health.http >= CONFIG.httpBudget) throw BudgetError("запросов");',
     to: '        if (false) throw BudgetError("запросов");',
-    expect: "БОЛЬШЕ бюджета",
+    expect: "предохранитель по обращениям не сработал",
   },
   {
     // Второй предохранитель. Бюджет обращений времени не ограничивает: без
@@ -1057,6 +1131,27 @@ const BREAKAGES = [
     from: "    if (t) t.wakes.add(fire);",
     to: "    if (false) t.wakes.add(fire);",
     expect: "не прервался за 500 мс",
+  },
+  {
+    // Постоянный интервал — самый заметный признак робота. До 2.20 эту мутацию
+    // не ловил НИ ОДИН инвариант: разброс пауз не проверялся нигде.
+    name: "джиттер убран — интервал стал постоянным",
+    from: "    const target = pacer.gap * (1 + Math.random() * CONFIG.pacer.jitter);",
+    to: "    const target = pacer.gap;",
+    expect: "паузы почти одинаковы",
+  },
+  {
+    name: "пацер перестал замедляться на отказах",
+    from: "    if (!ok) { pacer.gap = Math.min(pacer.gap * CONFIG.pacer.slowdown, CONFIG.pacer.ceil); pacer.clean = 0; return; }",
+    to: "    if (!ok) { pacer.clean = 0; return; }",
+    expect: "зазор не вырос на отказах",
+  },
+  {
+    // Возврат к поведению до 2.20: пауза только внутри сегмента, стыки залпом.
+    name: "пауза убрана из apiFetch (снова только между страницами)",
+    from: "      await pause();\n      if (isCancelled()) throw CancelError();",
+    to: "      if (isCancelled()) throw CancelError();",
+    expect: "залпов без единой миллисекунды задержки",
   },
   {
     // Возврат к поведению до 2.19: r.json() зовётся на любом 200, HTML даёт
