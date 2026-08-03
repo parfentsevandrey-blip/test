@@ -1,0 +1,13 @@
+{
+  "title": "ОБЪЕКТЫ НЕДВИЖИМОСТИ",
+  "subtitle": "Нидерланды",
+  "intro": "В подборку входят:",
+  "footnote": "Данные по объектам приведены по публикациям funda in business по состоянию на 03.08.2026",
+  "filename": "Объекты недвижимости — Нидерланды 03.08.26",
+  "output_dir": "output",
+  "objects": [
+    { "file": "objects/st-ludgerusstraat-365-367-utrecht.json" },
+    { "file": "objects/buys-ballotstraat-11-utrecht.json" },
+    { "file": "objects/groene-hilledijk-173-175-rotterdam.json" }
+  ]
+}
