@@ -23,7 +23,7 @@ HL = L['HIGH LIFE']
 DEV = [x for x in HL if x['seller'] == 'Застройщик']
 K1  = [x for x in HL if x['corp'] == 'K1 SOUL TOWER']
 BASES = [('HIGH LIFE — прайс застройщика', DEV, 'башни 24–47 эт.'),
-         ('HIGH LIFE — вся экспозиция',    HL,  'башни 24–47 эт.'),
+         ('HIGH LIFE — все квартиры в продаже',    HL,  'башни 24–47 эт.'),
          ('K1 SOUL TOWER — наш корпус',    K1,  '32 этажа'),
          ('«Эра» — для сравнения',         L['Эра'], 'башни 27–52 эт.')]
 rows, out, coef = [], {}, {}

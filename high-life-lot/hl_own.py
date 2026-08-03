@@ -2,7 +2,7 @@
 
 278 лотов в одном проекте — таблицей их не показать, поэтому:
   towers  — сводка по шести башням;
-  ownCmp  — сопоставимая база 110–140 м², уже готовая к заселению,
+  ownCmp  — квартиры 110–140 м², готовые к заселению,
             приведённая к нашему 8-му этажу;
   shellCmp— она же в бетоне: сколько стоит метр после отделки.
 """
@@ -51,11 +51,11 @@ towers.append(['Весь квартал HIGH LIFE', '6 башен', str(len(HL))
                nf(w(HL)), str(sum(1 for x in HL if LO <= x['area'] <= HI)),
                str(sum(1 for x in HL if 86e6 <= x['price'] <= 106e6))])
 
-# ── сопоставимая база 110–140 м² ───────────────────────────────────────────
+# ── квартиры 110–140 м², с которыми сравнивает покупатель ──────────────────
 band = [x for x in HL if LO <= x['area'] <= HI and cmp_ok(x)]
 ready = [x for x in band if grp(x) in ('ready', 'wb')]
 shell = [x for x in band if grp(x) == 'shell']
-FINLAB = {'ready': 'отделка застройщика', 'wb': 'white box', 'shell': 'бетон'}
+FINLAB = {'ready': 'отделка застройщика', 'wb': 'под чистовую', 'shell': 'бетон'}
 
 ownCmp = []
 for x in sorted(ready, key=lambda x: -adj(x)):
