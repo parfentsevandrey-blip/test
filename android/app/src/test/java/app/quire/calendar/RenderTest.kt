@@ -17,7 +17,7 @@ import app.quire.calendar.core.Skin
 import app.quire.calendar.core.Tokens
 import app.quire.calendar.ui.GridStyle
 import app.quire.calendar.ui.MotionProfile
-import app.quire.calendar.ui.RadialMenu
+import app.quire.calendar.ui.WheelMenu
 import app.quire.calendar.ui.StageView
 import app.quire.calendar.widget.WidgetRenderer
 import org.junit.Assert.assertEquals
@@ -169,45 +169,83 @@ class RenderTest {
         assertPainted(render(darkDay, 411, 891, "stage-day-ink"), "stage-day-ink")
     }
 
+    /**
+     * The wheel is one rigid object: wherever it is summoned it keeps its shape
+     * and is only moved to fit, and a sector is chosen by direction rather than
+     * by landing on a target.
+     */
     @Test
-    fun `the radial menu blooms without running off the screen`() {
-        val menu = RadialMenu(context).apply {
-            palette = Tokens.palette(false, Accent.CINNABAR)
-            motion = MotionProfile.OFF
-            haptics = false
-            safeTop = 60f
-            safeBottom = 48f
-        }
-        val host = FrameLayout(context).apply {
-            setBackgroundColor(Tokens.palette(false, Accent.CINNABAR).canvas)
-            addView(
-                menu,
+    fun `the wheel opens as one piece wherever it is summoned`() {
+        val density = context.resources.displayMetrics.density
+        val cases = listOf(
+            Triple("wheel-corner", 384f to 812f, null),
+            Triple("wheel-centre", 205f to 420f, 205f to 300f),
+        )
+        cases.forEach { (name, at, drag) ->
+            val behind = stage(dark = false).apply {
+                goTo(today, level = 1, animate = false)
+                setReceded(true)
+            }
+            val wheel = WheelMenu(context).apply {
+                palette = Tokens.palette(false, Accent.CINNABAR)
+                motion = MotionProfile.OFF
+                haptics = false
+                safeTop = 60f
+                safeBottom = 48f
+            }
+            val host = FrameLayout(context)
+            host.addView(
+                behind,
                 FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT,
                 ),
             )
-        }
-        val density = context.resources.displayMetrics.density
-        host.measure(
-            View.MeasureSpec.makeMeasureSpec((411 * density).toInt(), View.MeasureSpec.EXACTLY),
-            View.MeasureSpec.makeMeasureSpec((891 * density).toInt(), View.MeasureSpec.EXACTLY),
-        )
-        host.layout(0, 0, (411 * density).toInt(), (891 * density).toInt())
+            host.addView(
+                wheel,
+                FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                ),
+            )
+            host.measure(
+                View.MeasureSpec.makeMeasureSpec((411 * density).toInt(), View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec((891 * density).toInt(), View.MeasureSpec.EXACTLY),
+            )
+            host.layout(0, 0, (411 * density).toInt(), (891 * density).toInt())
 
-        // Opened in the bottom-right corner: the arc has to fold back inwards.
-        menu.open(
-            380f * density,
-            820f * density,
-            listOf(
-                RadialMenu.Item(1, "Today", R.drawable.ic_ring),
-                RadialMenu.Item(2, "Year", R.drawable.ic_grid),
-                RadialMenu.Item(3, "Search", R.drawable.ic_search),
-                RadialMenu.Item(4, "Add", R.drawable.ic_plus),
-                RadialMenu.Item(5, "Settings", R.drawable.ic_settings),
-            ),
-        )
-        assertPainted(render(host, 411, 891, "radial-menu"), "radial-menu")
+            wheel.open(
+                at.first * density,
+                at.second * density,
+                listOf(
+                    WheelMenu.Item(1, "Today", R.drawable.ic_ring),
+                    WheelMenu.Item(2, "Year", R.drawable.ic_grid),
+                    WheelMenu.Item(3, "Search", R.drawable.ic_search),
+                    WheelMenu.Item(4, "Add", R.drawable.ic_plus),
+                    WheelMenu.Item(5, "Settings", R.drawable.ic_settings),
+                ),
+                centreLabel = today.dayOfMonth.toString(),
+            )
+            if (drag != null) {
+                wheel.trackDrag(drag.first * density, drag.second * density)
+                assertTrue("$name should highlight a sector", wheel.highlightedIndex() >= 0)
+            }
+            assertPainted(render(host, 411, 891, name), name)
+        }
+    }
+
+    @Test
+    fun `the launcher icon draws inside its mask`() {
+        val density = context.resources.displayMetrics.density
+        val size = (108 * density).toInt()
+        val icon = androidx.core.content.ContextCompat.getDrawable(context, R.mipmap.ic_launcher)!!
+        icon.setBounds(0, 0, size, size)
+        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        icon.draw(Canvas(bitmap))
+        File(outputDir, "launcher-icon.png").outputStream().use {
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
+        }
+        assertPainted(bitmap, "launcher-icon")
     }
 
     /**

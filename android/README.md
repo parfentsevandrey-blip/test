@@ -4,16 +4,16 @@ An Android calendar in two halves that share nothing but their palette: a
 home-screen widget that holds perfectly still, and an app that is a single
 zoomable world with no screens in it.
 
-**Install:** [`dist/quire-2.0.apk`](dist/quire-2.0.apk) · 700 KB · Android 8.0+
-(minSdk 26, targetSdk 35) · `sha256 029a48e11742155169642cf8e14d8e9df9703f1420670127b8ed795990a30236`
+**Install:** [`dist/quire-2.1.apk`](dist/quire-2.1.apk) · 704 KB · Android 8.0+
+(minSdk 26, targetSdk 35) · `sha256 dcf4fd9f61c20b9e12ba16197dbdd9fe7a930a3a3daf90bb6c37b2b691bdfe82`
 
-Copy it to the phone and open it, or `adb install -r dist/quire-2.0.apk`. You
+Copy it to the phone and open it, or `adb install -r dist/quire-2.1.apk`. You
 will need to allow installing from an unknown source once — the APK is signed
 with the self-signed key in `keystore/`, not by a store.
 
-| Year | Month | Day | Menu | Panels |
+| Year | Month | Day | Wheel | Panels |
 |---|---|---|---|---|
-| ![Year](docs/stage-year.png) | ![Month](docs/stage-month.png) | ![Day](docs/stage-day.png) | ![Radial menu](docs/radial-menu.png) | ![Settings](docs/sheet-settings.png) |
+| ![Year](docs/stage-year.png) | ![Month](docs/stage-month.png) | ![Day](docs/stage-day.png) | ![Wheel menu](docs/wheel-centre.png) | ![Settings](docs/sheet-settings.png) |
 
 Every image is a real render of the shipping code, produced by the test suite
 (`app/src/test/.../RenderTest.kt`) — not a mockup.
@@ -51,8 +51,21 @@ clear space and the month name grows in ahead of it.
 - **Tap** a month to enter it, a day to choose it, the dock at the bottom to open
   that day.
 - **Back** steps out one level before it leaves the app.
-- **Long-press anywhere** for the menu — and keep holding: the same finger slides
-  to the item and lets go. Lifting first and tapping works too.
+- **Pull the dock up** from the bottom and the day comes with your finger — let
+  go past the halfway mark and it opens, short of it and it falls back.
+- **Long-press anywhere** for the wheel — see below.
+
+**The wheel.** Long-press and a ring opens under the finger, divided into equal
+sectors. It is one rigid object: near an edge it is *moved* to fit rather than
+folded, and a sector is chosen by the **direction** of the finger rather than by
+landing on a target, so a short flick in any direction picks reliably. The hole
+in the middle is cancel — where the finger already is — and it carries the day
+the choice will apply to. Long-pressing a square selects that square first, so
+*Add* means "add to this day".
+
+| Opened mid-screen, one sector held | Opened in a corner |
+|---|---|
+| ![Wheel](docs/wheel-centre.png) | ![Wheel in a corner](docs/wheel-corner.png) |
 
 **Springs, not curves.** Nothing in the app animates on a duration. Every moving
 value is a spring integrator (`ui/Motion.kt`) substepped at 4 ms, because a
@@ -62,6 +75,11 @@ its velocity across the change, so an interrupted gesture continues instead of
 snapping. There are four liveliness settings from **Off** to **Springy**, and
 the app switches itself to Off when the system animator scale is zero, which is
 how someone who needs reduced motion tells every app at once.
+
+**Depth is earned, not decorated.** Opening the wheel or a panel pushes the
+world back a few per cent behind it — the calendar is still there, just no longer
+the thing being touched. The ground underneath does not move, because it is not
+being held.
 
 **The background is driven, not timed.** Two soft pools of colour sit behind
 everything, positioned from the focused month and the zoom level rather than
@@ -76,7 +94,7 @@ through the calendar shifts them underneath at their own slower rate.
 - The day card grows out of the square you tapped and carries the day's entries:
   time in tabular figures, a rule in the calendar's colour, title, place. Drag it
   down past the top to close it.
-- Radial menu: today, year, search, add, settings.
+- Wheel menu: today, year, search, add, settings.
 - **Search** across eight months either way, live as you type, straight into the
   day it found.
 - **Density** tints each square by how full the day is — a heat map of the month
@@ -118,7 +136,11 @@ purpose: pure `#FFFFFF` on `#000000` reads as a spec sheet, not as a page.
 
 **Six accents, one at a time.** Cinnabar (default), Indigo, Moss, Ochre, Plum,
 Graphite. The accent is spent on today, the live segment in a settings strip, and
-the item under your finger in the menu. Everything else is ink at four strengths.
+the sector under your finger in the wheel. Everything else is ink at four
+strengths. The launcher icon is the same two moves and nothing else — three week
+rules and one marked day.
+
+![Icon](docs/launcher-icon.png)
 
 **Structure from rules, depth from shadow — and only where it earns it.** The
 grid is held together by hairlines between weeks, edge to edge, the way a printed
@@ -173,7 +195,7 @@ Needs JDK 17+ and an Android SDK with platform 35 and build-tools 35.0.0.
 echo "sdk.dir=$ANDROID_HOME" > local.properties
 gradle assembleRelease          # dist-ready APK, signed with keystore/
 gradle assembleDebug            # installs alongside it (.debug suffix)
-gradle testDebugUnitTest        # 33 tests; writes app/build/screenshots/*.png
+gradle testDebugUnitTest        # 34 tests; writes app/build/screenshots/*.png
 gradle lintRelease              # must stay at 0 errors
 python3 tools/generate_assets.py   # after editing the icon or picker preview
 ```
@@ -181,8 +203,9 @@ python3 tools/generate_assets.py   # after editing the icon or picker preview
 The tests run on Robolectric with native graphics, so `testDebugUnitTest` checks
 the calendar-provider parsing against a fake provider, proves the springs
 converge and survive a dropped frame, and renders the real views — the stage at
-five points along its zoom, the menu opened in a corner, the settings stack, and
-the widget through `RemoteViews.apply`. Look in `app/build/screenshots/` after a
+five points along its zoom, the wheel opened mid-screen and in a corner, the
+settings stack, the launcher icon inside its mask, and the widget through
+`RemoteViews.apply`. Look in `app/build/screenshots/` after a
 run to see what the current code actually draws.
 
 ## Signing

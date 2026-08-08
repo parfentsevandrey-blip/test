@@ -40,7 +40,7 @@ import java.util.Locale
 class MainActivity : BaseActivity(), StageView.Data {
 
     private lateinit var stage: StageView
-    private lateinit var menu: RadialMenu
+    private lateinit var menu: WheelMenu
     private lateinit var sheet: SheetOverlay
     private lateinit var loader: MonthLoader
 
@@ -69,7 +69,7 @@ class MainActivity : BaseActivity(), StageView.Data {
 
         val root = FrameLayout(this)
         stage = StageView(this)
-        menu = RadialMenu(this)
+        menu = WheelMenu(this)
         sheet = SheetOverlay(this)
 
         root.addView(
@@ -104,6 +104,8 @@ class MainActivity : BaseActivity(), StageView.Data {
         stage.onLevelChanged = { if (sheet.isShowing) sheet.dismiss() }
 
         menu.onPick = { handleMenu(it) }
+        menu.onClosed = { stage.setReceded(sheet.isShowing) }
+        sheet.onDismissed = { stage.setReceded(menu.isOpen) }
 
         ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
             val bars = insets.getInsets(
@@ -227,16 +229,18 @@ class MainActivity : BaseActivity(), StageView.Data {
     // ---- menu ----------------------------------------------------------
 
     private fun openMenu(x: Float, y: Float) {
+        stage.setReceded(true)
         menu.open(
             x,
             y,
             listOf(
-                RadialMenu.Item(MENU_TODAY, getString(R.string.today), R.drawable.ic_ring),
-                RadialMenu.Item(MENU_YEAR, getString(R.string.year), R.drawable.ic_grid),
-                RadialMenu.Item(MENU_SEARCH, getString(R.string.search), R.drawable.ic_search),
-                RadialMenu.Item(MENU_ADD, getString(R.string.add), R.drawable.ic_plus),
-                RadialMenu.Item(MENU_SETTINGS, getString(R.string.settings), R.drawable.ic_settings),
+                WheelMenu.Item(MENU_TODAY, getString(R.string.today), R.drawable.ic_ring),
+                WheelMenu.Item(MENU_YEAR, getString(R.string.year), R.drawable.ic_grid),
+                WheelMenu.Item(MENU_SEARCH, getString(R.string.search), R.drawable.ic_search),
+                WheelMenu.Item(MENU_ADD, getString(R.string.add), R.drawable.ic_plus),
+                WheelMenu.Item(MENU_SETTINGS, getString(R.string.settings), R.drawable.ic_settings),
             ),
+            centreLabel = stage.selected.dayOfMonth.toString(),
         )
     }
 
@@ -386,6 +390,7 @@ class MainActivity : BaseActivity(), StageView.Data {
         }
 
         sheet.present()
+        stage.setReceded(true)
     }
 
     private fun presentSearch() {
@@ -400,6 +405,7 @@ class MainActivity : BaseActivity(), StageView.Data {
         }
         results.note(getString(R.string.search_empty))
         sheet.present()
+        stage.setReceded(true)
         field.post {
             field.requestFocus()
             (getSystemService(android.view.inputmethod.InputMethodManager::class.java))
@@ -461,6 +467,7 @@ class MainActivity : BaseActivity(), StageView.Data {
             }
         }
         sheet.present()
+        stage.setReceded(true)
     }
 
     // ---- intents -------------------------------------------------------

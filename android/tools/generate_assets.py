@@ -33,28 +33,25 @@ def rounded_bar(x, y, w, h):
 
 # ---------------------------------------------------------------- launcher
 
-# Kept inside the 66dp adaptive-icon safe circle: the far corner of the dot
-# field sits at r≈32.8 from centre, just under the 33dp limit.
-COLS, ROWS = 5, 4
-STEP = 10.5
-RADIUS = 2.8
-CX, CY = 54.0, 58.0
-ACCENT_CELL = (3, 1)
+# Three week rules and one marked day — the app reduced to its two moves.
+# Everything stays inside the 66dp adaptive-icon safe circle: the far corner of
+# the top rule sits at r=30 from centre, the disc reaches 23.5.
+RULE_YS = (36.0, 54.0, 72.0)
+RULE_X0, RULE_X1 = 30.0, 78.0
+RULE_H = 3.6
+DISC_CX, DISC_CY, DISC_R = 63.0, 54.0, 14.5
 
 
 def launcher_paths():
-    dots, accent = [], []
-    for j in range(ROWS):
-        for i in range(COLS):
-            x = CX + (i - (COLS - 1) / 2.0) * STEP
-            y = CY + (j - (ROWS - 1) / 2.0) * STEP
-            (accent if (i, j) == ACCENT_CELL else dots).append(circle(x, y, RADIUS))
-    bar = rounded_bar(CX - (COLS - 1) / 2.0 * STEP - RADIUS, 32.0, 19.0, 3.0)
-    return bar, dots, accent
+    rules = "".join(
+        rounded_bar(RULE_X0, y - RULE_H / 2.0, RULE_X1 - RULE_X0, RULE_H) for y in RULE_YS
+    )
+    disc = circle(DISC_CX, DISC_CY, DISC_R)
+    return rules, disc
 
 
 def write_launcher():
-    bar, dots, accent = launcher_paths()
+    rules, disc = launcher_paths()
 
     def vector(body):
         return (
@@ -69,11 +66,25 @@ def write_launcher():
     def path(d, colour):
         return f'    <path\n        android:pathData="{d}"\n        android:fillColor="{colour}" />\n'
 
-    colour_body = path(bar, PAPER) + path("".join(dots), PAPER) + path("".join(accent), CINNABAR)
-    mono_body = path(bar + "".join(dots) + "".join(accent), "#FFFFFFFF")
-
-    write(os.path.join(RES, "drawable", "ic_launcher_foreground.xml"), vector(colour_body))
-    write(os.path.join(RES, "drawable", "ic_launcher_monochrome.xml"), vector(mono_body))
+    write(
+        os.path.join(RES, "drawable", "ic_launcher_foreground.xml"),
+        vector(path(rules, PAPER) + path(disc, CINNABAR)),
+    )
+    # Themed icons get one colour, so the disc has to stay a disc: the rules are
+    # drawn, then the disc is punched back out and re-drawn a size smaller.
+    mono_ring = disc + circle(DISC_CX, DISC_CY, DISC_R - 3.4)
+    write(
+        os.path.join(RES, "drawable", "ic_launcher_monochrome.xml"),
+        vector(
+            '    <path\n'
+            f'        android:pathData="{rules}"\n'
+            '        android:fillColor="#FFFFFFFF" />\n'
+            '    <path\n'
+            f'        android:pathData="{mono_ring}"\n'
+            '        android:fillType="evenOdd"\n'
+            '        android:fillColor="#FFFFFFFF" />\n'
+        ),
+    )
 
 
 # ------------------------------------------------------------ widget preview

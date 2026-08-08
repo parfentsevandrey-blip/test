@@ -110,6 +110,8 @@ class MonthPainter(context: Context) {
         detail: Float,
         alpha: Float,
         locale: Locale = Locale.getDefault(),
+        /** Lets the caller pop the chosen disc when it has just been chosen. */
+        selectionScale: Float = 1f,
     ) {
         if (alpha <= 0.01f || rect.width() <= 1f || rect.height() <= 1f) return
         val cells = MonthModel.cells(month, firstDay)
@@ -218,7 +220,7 @@ class MonthPainter(context: Context) {
                     if (isToday) palette.accent else palette.ink,
                     alpha,
                 )
-                canvas.drawCircle(cx, cy, markerRadius, fillPaint)
+                canvas.drawCircle(cx, cy, markerRadius * selectionScale, fillPaint)
                 textColour = if (isToday) palette.onAccent else palette.canvas
             } else if (isToday && inMonth && detail < 0.5f) {
                 // Too small for coloured type to register: use the disc instead.

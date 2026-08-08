@@ -77,6 +77,10 @@ class StageView(context: Context) : View(context) {
     private val focus = Spring(0f, 0f)
     private val dayEntrance = Spring(0f, 0f)
     private val scroll = Spring(0f, 0f)
+    /** How far the world is pushed back while something floats above it. */
+    private val recede = Spring(0f, 0f)
+    /** The chosen disc lands rather than appears. */
+    private val selectionPop = Spring(1f, 1f)
 
     var palette: Palette = Tokens.palette(false, Accent.CINNABAR)
         set(value) {
@@ -90,7 +94,8 @@ class StageView(context: Context) : View(context) {
     var motion: MotionProfile = MotionProfile.STANDARD
         set(value) {
             field = value
-            listOf(zoom, focus, dayEntrance, scroll).forEach { it.profile(value) }
+            listOf(zoom, focus, dayEntrance, scroll, recede, selectionPop)
+                .forEach { it.profile(value) }
             invalidate()
         }
 
@@ -127,6 +132,7 @@ class StageView(context: Context) : View(context) {
     private val scratch = RectF()
     private val cellRect = RectF()
     private val cardRect = RectF()
+    private val dockRect = RectF()
 
     private var lastFrameNanos = 0L
     private var dragging = false
@@ -134,6 +140,8 @@ class StageView(context: Context) : View(context) {
     private var cardDragging = false
     private var pressedEntry = -1
     private var routingToMenu = false
+    private var dockGesture = false
+    private var dockDragTotal = 0f
 
     /** Thumbnails for the year level, where a live redraw would cost the frame. */
     private val thumbs = object : LinkedHashMap<Int, Bitmap>(16, 0.75f, true) {
@@ -162,6 +170,13 @@ class StageView(context: Context) : View(context) {
         safeBottom = bottom
         requestLayout()
         invalidate()
+    }
+
+    /** Pushes the world back a little while a menu or panel floats over it. */
+    fun setReceded(receded: Boolean) {
+        recede.target = if (receded) 1f else 0f
+        if (motion.instant) recede.snapTo(recede.target)
+        step()
     }
 
     /** Marks or agenda arrived; drop what was baked from the old numbers. */
@@ -224,6 +239,12 @@ class StageView(context: Context) : View(context) {
         if (selected == date) return
         selected = date
         thumbs.clear()
+        if (motion.instant) {
+            selectionPop.snapTo(1f)
+        } else {
+            selectionPop.snapTo(0.68f)
+            selectionPop.target = 1f
+        }
         if (haptic) tick(HapticFeedbackConstants.CLOCK_TICK)
         if (notify) onSelectionChanged?.invoke(date)
         invalidate()
@@ -250,6 +271,12 @@ class StageView(context: Context) : View(context) {
         monthRect.set(inset, top, w - inset, h - safeBottom - dp(108f))
         yearRect.set(inset, top, w - inset, h - safeBottom - dp(28f))
         cardRect.set(inset, safeTop + dp(72f), w - inset, h - safeBottom - dp(20f))
+        dockRect.set(
+            inset,
+            h - safeBottom - dp(88f),
+            w - inset,
+            h - safeBottom - dp(24f),
+        )
         thumbWidth = ((yearRect.width() / 3f) - dp(10f)).toInt().coerceAtLeast(1)
         thumbHeight = ((yearRect.height() / 4f) - dp(24f)).toInt().coerceAtLeast(1)
     }
@@ -301,6 +328,8 @@ class StageView(context: Context) : View(context) {
         if (!pinching) moving = zoom.advance(dt) || moving
         moving = dayEntrance.advance(dt) || moving
         if (!cardDragging) moving = scroll.advance(dt) || moving
+        moving = recede.advance(dt) || moving
+        moving = selectionPop.advance(dt) || moving
         return moving
     }
 
@@ -316,9 +345,16 @@ class StageView(context: Context) : View(context) {
 
         ambient.draw(canvas, w, h, zoom.value, focus.value)
 
+        // The ground stays put; only what the user is holding moves back.
+        val worldRestore = canvas.save()
+        if (recede.value > 0.001f) {
+            val scale = lerp(1f, 0.94f, recede.value)
+            canvas.scale(scale, scale, w / 2f, h * 0.45f)
+        }
         drawMonths(canvas, t, u)
         drawChrome(canvas, t, u)
         if (u > 0.001f) drawDayCard(canvas, u)
+        canvas.restoreToCount(worldRestore)
 
         if (moving) postInvalidateOnAnimation() else lastFrameNanos = 0L
     }
@@ -367,6 +403,7 @@ class StageView(context: Context) : View(context) {
                     style = style,
                     detail = t,
                     alpha = alpha,
+                    selectionScale = selectionPop.value,
                 )
             }
 
@@ -450,13 +487,7 @@ class StageView(context: Context) : View(context) {
     /** The floating strip under the month: what the chosen day holds. */
     private fun drawDock(canvas: Canvas, alpha: Float) {
         val entries = data?.agenda(selected).orEmpty()
-        val h = dp(64f)
-        val rect = RectF(
-            dp(14f),
-            height - safeBottom - dp(88f),
-            width - dp(14f),
-            height - safeBottom - dp(88f) + h,
-        )
+        val rect = RectF(dockRect)
         drawSlab(canvas, rect, dp(22f), alpha, lifted = true)
 
         capsPaint.textSize = dp(10.5f)
@@ -722,6 +753,8 @@ class StageView(context: Context) : View(context) {
             override fun onDown(e: MotionEvent): Boolean {
                 focus.velocity = 0f
                 scroll.velocity = 0f
+                dockGesture = level == 1 && dockRect.contains(e.x, e.y)
+                dockDragTotal = 0f
                 pressedEntry = entryAt(e.x, e.y)
                 if (pressedEntry >= 0) invalidate()
                 return true
@@ -735,6 +768,15 @@ class StageView(context: Context) : View(context) {
             ): Boolean {
                 if (pinching) return false
                 pressedEntry = -1
+                if (dockGesture) {
+                    // Pulling the dock upwards opens the day with the finger.
+                    dockDragTotal += distanceY
+                    val travel = (dockDragTotal / dp(150f)).coerceIn(0f, 1f)
+                    if (travel > 0f && dayEntrance.value < 1f) dayEntrance.snapTo(1f)
+                    zoom.snapTo(1f + travel)
+                    step()
+                    return true
+                }
                 if (level >= 2 && zoom.value > 1.6f) {
                     cardDragging = true
                     val next = (scroll.value + distanceY)
@@ -794,6 +836,10 @@ class StageView(context: Context) : View(context) {
 
             override fun onLongPress(e: MotionEvent) {
                 pressedEntry = -1
+                dockGesture = false
+                // Whatever the menu does next should apply to the day under the
+                // finger, so choose it before the wheel covers it.
+                if (level == 1) selectDayAt(e.x, e.y)
                 routingToMenu = true
                 tick(HapticFeedbackConstants.LONG_PRESS)
                 onMenuRequested?.invoke(e.x, e.y)
@@ -841,6 +887,10 @@ class StageView(context: Context) : View(context) {
         if (event.actionMasked == MotionEvent.ACTION_UP ||
             event.actionMasked == MotionEvent.ACTION_CANCEL
         ) {
+            if (dockGesture) {
+                dockGesture = false
+                setLevel(if (zoom.value > 1.35f) 2 else 1)
+            }
             if (dragging) {
                 dragging = false
                 settleFocus(focus.value)
@@ -868,7 +918,7 @@ class StageView(context: Context) : View(context) {
         when (level) {
             0 -> { focusMonthAt(x, y); setLevel(1) }
             1 -> {
-                if (y > height - safeBottom - dp(92f) && y < height - safeBottom - dp(24f)) {
+                if (dockRect.contains(x, y)) {
                     setLevel(2)
                 } else {
                     selectDayAt(x, y)
