@@ -100,3 +100,64 @@ weight  = 0.6   # the only directional strategy: keep it small
 band_bps   = 25.0
 target_bps = 5.0
 stop_bps   = 60.0
+
+# --------------------------------------------------------------------------
+# Earning: acquiring USDT rather than deploying it
+# --------------------------------------------------------------------------
+#
+# This half goes and gets the money — paid work, customers, referrals — and
+# proves every cent by reading the chain. Only CONFIRMED on-chain transfers
+# count as income; expectations never do.
+
+[earn]
+enabled_channels      = ["bounties", "services", "affiliate", "passive"]
+max_open_orders       = 5      # how much work to have in flight at once
+min_rate_usdt_per_hour = 10.0  # ignore gigs paying less than this, after the odds
+lookback_blocks       = 2000   # transfer-scan window per chain
+require_approval      = true   # never claim work in your name unattended
+serve_host            = "127.0.0.1"
+serve_port            = 8402
+
+# Receiving addresses ONLY. There is no field anywhere in this project for a
+# private key or seed phrase — the agent is watch-only by construction.
+# Environment overrides: USDT_WALLET_TRON, USDT_WALLET_BSC, ...
+[earn.wallet]
+# tron     = "T..."     # cheapest for small payouts — start here
+# bsc      = "0x..."
+# arbitrum = "0x..."
+# ethereum = "0x..."
+
+[earn.channels.bounties]
+enabled = true
+[earn.channels.bounties.params]
+min_reward_usdt        = 25.0
+min_rate_usdt_per_hour = 15.0
+exclude_assigned       = true
+languages              = []    # e.g. ["python"] to match your actual skills
+
+[earn.channels.services]
+enabled = true
+[earn.channels.services.params]
+preferred_chain = "tron"
+invoice_ttl_s   = 21600
+# Each entry becomes a purchasable SKU on the storefront.
+catalogue = [
+  { sku = "market-report", title = "Stablecoin yield report", price_usdt = 5.0, est_minutes = 2.0, description = "Risk-adjusted stablecoin yields across chains, ranked." },
+  { sku = "arb-scan",      title = "Cross-venue spread scan", price_usdt = 3.0, est_minutes = 1.0, description = "Live cross-exchange spreads for the majors, net of fees." },
+]
+
+[earn.channels.affiliate]
+enabled = true
+[earn.channels.affiliate.params]
+# Declare only what you are actually signed up for — nothing is invented.
+programs = []
+# programs = [
+#   { name = "exchange-ref", url = "...", expected_monthly_usdt = 40.0, payout_day = 5, min_payout_usdt = 10.0 },
+# ]
+
+[earn.channels.passive]
+enabled = true
+[earn.channels.passive.params]
+min_deploy_usdt = 200.0   # below this, gas and effort exceed the yield
+min_apy         = 0.04
+max_risk        = 0.5

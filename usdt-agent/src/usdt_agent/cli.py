@@ -7,6 +7,10 @@
     usdt-agent verify       # check the ledger hash chain
     usdt-agent doctor       # connectivity + config + live-interlock check
     usdt-agent strategies   # what the agent knows how to do
+
+    usdt-agent earn setup   # acquiring USDT: what to do first, from zero
+    usdt-agent earn scan    # gigs ranked by USDT per hour
+    usdt-agent earn collect # reconcile the wallet — book only what arrived
 """
 
 from __future__ import annotations
@@ -21,6 +25,8 @@ from pathlib import Path
 from .agent import Agent
 from .config import AgentConfig, ConfigError, load_config
 from .dashboard import Dashboard, paint, supports_color
+from .earn_cli import add_earn_parser
+from .earn_cli import dispatch as earn_dispatch
 from .execution import PaperBroker, build_broker, live_interlocks
 from .execution.live import CONFIRM_ENV, CONFIRM_VALUE, LiveTradingBlocked
 from .feeds import CompositeFeed, SyntheticFeed, build_feed, build_venue_feeds
@@ -108,6 +114,7 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("verify", help="verify the ledger hash chain")
     sub.add_parser("doctor", help="check data sources, config and live interlocks")
     sub.add_parser("strategies", help="list the available strategies")
+    add_earn_parser(sub)
     return p
 
 
@@ -388,6 +395,7 @@ COMMANDS = {
     "verify": cmd_verify,
     "doctor": cmd_doctor,
     "strategies": cmd_strategies,
+    "earn": earn_dispatch,
 }
 
 

@@ -68,6 +68,38 @@ class StrategyConfig:
 
 
 @dataclass(slots=True)
+class EarnConfig:
+    """The earning half: acquiring USDT rather than deploying it.
+
+    ``wallet`` holds *receiving addresses only*. There is deliberately no field
+    anywhere in this project for a private key or a seed phrase.
+    """
+
+    enabled_channels: tuple[str, ...] = ("bounties", "services", "affiliate", "passive")
+    max_open_orders: int = 5
+    min_rate_usdt_per_hour: float = 10.0
+    lookback_blocks: int = 2_000
+    require_approval: bool = True   # never claim work on your behalf unattended
+    serve_host: str = "127.0.0.1"
+    serve_port: int = 8402
+    wallet: dict[str, str] = field(default_factory=dict)
+    channels: dict[str, Any] = field(default_factory=dict)
+
+    def channel_params(self) -> dict[str, dict]:
+        out: dict[str, dict] = {}
+        for name, block in (self.channels or {}).items():
+            out[name] = dict((block or {}).get("params", {}) or {})
+        return out
+
+    def enabled(self) -> tuple[str, ...]:
+        explicit = {
+            name for name, block in (self.channels or {}).items()
+            if (block or {}).get("enabled") is False
+        }
+        return tuple(c for c in self.enabled_channels if c not in explicit)
+
+
+@dataclass(slots=True)
 class AgentConfig:
     mode: str = "paper"  # "paper" | "live"
     starting_equity_usdt: float = 1_000.0
@@ -87,6 +119,7 @@ class AgentConfig:
     risk: RiskConfig = field(default_factory=RiskConfig)
     allocator: AllocatorConfig = field(default_factory=AllocatorConfig)
     execution: ExecutionConfig = field(default_factory=ExecutionConfig)
+    earn: EarnConfig = field(default_factory=EarnConfig)
     strategies: dict[str, StrategyConfig] = field(default_factory=dict)
     notify_webhook: str = ""
 
