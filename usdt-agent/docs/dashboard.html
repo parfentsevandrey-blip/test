@@ -1,0 +1,2422 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<meta name="referrer" content="no-referrer">
+<!-- Deliberately empty, and it stays empty. The token used to be injected
+     here, which meant any local process could `curl /` and read it. The session
+     now arrives as an HttpOnly cookie when the single-use launch link is opened,
+     so this document never holds a secret. The tag remains only as the seam the
+     manual paste-a-token fallback keys off. -->
+<meta name="agent-token" content="__AGENT_TOKEN__">
+<title>usdt-agent — operator dashboard</title>
+<style>
+/* usdt-agent operator console.
+ *
+ * One visual rule outranks every other decision in this file: confirmed,
+ * on-chain money and expected pipeline value must never be mistakable for one
+ * another. Confirmed is solid, saturated and high contrast. Expected is muted,
+ * dashed and always carries a "not income yet" tag. Nothing in the pipeline
+ * palette is ever allowed to borrow the confirmed accent.
+ */
+
+:root {
+  color-scheme: dark;
+
+  --bg:            #0a0e13;
+  --bg-panel:      #10151d;
+  --bg-raised:     #161d27;
+  --bg-sunken:     #0c1117;
+  --line:          #1f2937;
+  --line-strong:   #303f52;
+
+  --text:          #e7eef6;
+  --text-dim:      #9fb0c2;
+  /* Clears 4.5:1 on the panel: this colour carries the small-caps labels that
+     name every number on the page, so it is body text, not decoration. */
+  --text-faint:    #748698;
+
+  /* Confirmed, on-chain money. Reserved. Nothing else uses it. */
+  --confirmed:     #2ee6a8;
+  --confirmed-ink: #04241a;
+  --confirmed-soft:rgba(46, 230, 168, 0.12);
+  --confirmed-line:rgba(46, 230, 168, 0.45);
+
+  /* Expected / pipeline. Deliberately duller than the text around it. */
+  --expected:      #b08a3e;
+  --expected-soft: rgba(176, 138, 62, 0.08);
+  --expected-line: rgba(176, 138, 62, 0.55);
+
+  --info:          #58a6ff;
+  --info-soft:     rgba(88, 166, 255, 0.12);
+  --warn:          #e0b341;
+  --warn-soft:     rgba(224, 179, 65, 0.12);
+  --bad:           #ff7070;
+  --bad-soft:      rgba(255, 112, 112, 0.12);
+
+  --focus:         #7cc4ff;
+  --shadow:        0 1px 0 rgba(255, 255, 255, 0.03), 0 8px 24px rgba(0, 0, 0, 0.35);
+
+  --mono: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --radius: 10px;
+  --radius-sm: 6px;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+
+    --bg:            #f4f6f9;
+    --bg-panel:      #ffffff;
+    --bg-raised:     #f7f9fc;
+    --bg-sunken:     #eef2f7;
+    --line:          #dde4ec;
+    --line-strong:   #b9c5d4;
+
+    --text:          #101820;
+    --text-dim:      #4a5a6a;
+    /* Dark enough to clear 4.5:1 on the panel: the faint colour carries the
+       small-caps labels that name every number on the page. */
+    --text-faint:    #5c6b7d;
+
+    --confirmed:     #04794f;
+    --confirmed-ink: #ffffff;
+    --confirmed-soft:rgba(4, 121, 79, 0.10);
+    --confirmed-line:rgba(4, 121, 79, 0.45);
+
+    --expected:      #8a6512;
+    --expected-soft: rgba(138, 101, 18, 0.07);
+    --expected-line: rgba(138, 101, 18, 0.50);
+
+    --info:          #0b5fd0;
+    --info-soft:     rgba(11, 95, 208, 0.10);
+    --warn:          #8a6512;
+    --warn-soft:     rgba(224, 179, 65, 0.18);
+    --bad:           #b3261e;
+    --bad-soft:      rgba(179, 38, 30, 0.10);
+
+    --focus:         #0b5fd0;
+    --shadow:        0 1px 2px rgba(16, 24, 32, 0.06), 0 8px 20px rgba(16, 24, 32, 0.07);
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+h1, h2, h3 { margin: 0; font-weight: 600; line-height: 1.25; }
+h2 { font-size: 0.95rem; letter-spacing: 0.02em; }
+h3 { font-size: 0.9rem; }
+p { margin: 0 0 0.6rem; }
+a { color: var(--info); }
+a:hover { text-decoration: none; }
+
+/* Numbers are always monospace and always tabular. */
+.num, .mono, code, pre, td.num, .table .right {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.skip-link {
+  position: absolute; left: -9999px; top: 0; z-index: 100;
+  background: var(--bg-panel); color: var(--text);
+  padding: 0.5rem 0.8rem; border: 1px solid var(--line-strong); border-radius: 0 0 var(--radius) 0;
+}
+.skip-link:focus { left: 0; }
+
+/* ------------------------------------------------------------------ banners */
+
+/* Not sticky: two sticky boxes both pinned to top:0 would overlap the header,
+   which carries the treasury figure. Loss of connection is echoed into the
+   sticky header instead (see .stamp.stale). */
+.banners { position: relative; z-index: 40; }
+
+.banner {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem;
+  padding: 0.55rem 1rem; font-size: 0.85rem;
+  border-bottom: 1px solid var(--line);
+}
+.banner-bad  { background: var(--bad-soft);  color: var(--bad); }
+.banner-warn { background: var(--warn-soft); color: var(--warn); }
+.banner strong { color: inherit; }
+.banner[hidden] { display: none; }
+
+/* ------------------------------------------------------------------- header */
+
+.header {
+  position: sticky; top: 0; z-index: 30;
+  background: var(--bg-panel);
+  background: color-mix(in srgb, var(--bg-panel) 92%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+
+.header-top {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 1rem;
+  padding: 0.7rem 1rem 0.6rem;
+  max-width: 1400px; margin: 0 auto;
+}
+
+.brand { display: flex; align-items: center; gap: 0.45rem; font-weight: 600; letter-spacing: 0.01em; }
+.brand-mark { color: var(--confirmed); font-size: 1.1rem; line-height: 1; }
+.brand-name { font-family: var(--mono); font-size: 0.9rem; }
+
+.figures { display: flex; flex-wrap: wrap; gap: 0.5rem; flex: 1 1 auto; }
+
+.figure {
+  display: flex; flex-direction: column; gap: 0.1rem;
+  padding: 0.4rem 0.75rem; border-radius: var(--radius); min-width: 9.5rem;
+}
+.figure-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-faint); }
+.figure-value { font-size: 1.5rem; font-weight: 600; line-height: 1.15; }
+.figure-note  { font-size: 0.68rem; color: var(--text-faint); }
+
+/* Confirmed: solid block, accent, full contrast. */
+.figure-confirmed {
+  background: var(--confirmed-soft);
+  border: 1px solid var(--confirmed-line);
+}
+.figure-confirmed .figure-value { color: var(--confirmed); }
+.figure-confirmed .figure-label { color: var(--confirmed); opacity: 0.85; }
+
+/* Expected: dashed, dimmed, never accent-coloured. */
+.figure-expected {
+  background: var(--expected-soft);
+  border: 1px dashed var(--expected-line);
+  opacity: 0.85;
+}
+.figure-expected .figure-value { color: var(--expected); font-weight: 500; }
+
+.figure-quiet { border: 1px solid var(--line); }
+.figure-quiet .figure-value { font-size: 1.15rem; color: var(--text-dim); font-weight: 500; }
+
+.header-actions { display: flex; align-items: center; gap: 0.6rem; margin-left: auto; }
+.stamp { font-family: var(--mono); font-size: 0.72rem; color: var(--text-faint); white-space: nowrap; }
+/* The header stays pinned, so staleness has to be visible there too. */
+.stamp.stale { color: var(--bad); font-weight: 600; }
+
+/* --------------------------------------------------------------------- tabs */
+
+.tabs { border-top: 1px solid var(--line); }
+.tabs-scroll {
+  display: flex; gap: 0.15rem; overflow-x: auto; scrollbar-width: thin;
+  max-width: 1400px; margin: 0 auto; padding: 0 0.6rem;
+  -webkit-overflow-scrolling: touch;
+}
+.tab {
+  flex: 0 0 auto;
+  appearance: none; background: none; border: 0; cursor: pointer;
+  color: var(--text-dim); font: inherit; font-size: 0.85rem;
+  padding: 0.6rem 0.8rem; border-bottom: 2px solid transparent; white-space: nowrap;
+}
+.tab:hover { color: var(--text); }
+.tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--confirmed); font-weight: 600; }
+
+.pip {
+  display: inline-block; min-width: 1.15rem; padding: 0 0.3rem; margin-left: 0.3rem;
+  border-radius: 999px; background: var(--warn); color: var(--confirmed-ink);
+  font-family: var(--mono); font-size: 0.7rem; text-align: center;
+}
+@media (prefers-color-scheme: light) { .pip { color: #fff; } }
+
+/* -------------------------------------------------------------------- layout */
+
+main { max-width: 1400px; margin: 0 auto; padding: 1rem 1rem 3rem; }
+.panel { display: flex; flex-direction: column; gap: 1rem; }
+.panel[hidden] { display: none; }
+
+.grid { display: grid; gap: 1rem; }
+.grid-2 { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+.stack { display: flex; flex-direction: column; gap: 0.75rem; min-width: 0; }
+
+.card {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.9rem 1rem 1rem;
+  box-shadow: var(--shadow);
+  min-width: 0;
+}
+.card-head {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+.card-head h2 { margin-right: auto; }
+.card-sub { font-size: 0.75rem; color: var(--text-faint); font-family: var(--mono); }
+
+.caption { font-size: 0.78rem; color: var(--text-dim); margin: 0 0 0.75rem; max-width: 78ch; }
+.caption strong { color: var(--text); }
+.warn-caption {
+  border-left: 3px solid var(--warn); background: var(--warn-soft);
+  padding: 0.5rem 0.7rem; border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.empty { color: var(--text-faint); font-size: 0.85rem; padding: 0.6rem 0; }
+
+/* ------------------------------------------------------------------ controls */
+
+.btn {
+  appearance: none; cursor: pointer; font: inherit; font-size: 0.85rem;
+  padding: 0.45rem 0.85rem; border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong); background: var(--bg-raised); color: var(--text);
+  white-space: nowrap;
+}
+.btn:hover:not(:disabled) { border-color: var(--text-faint); }
+.btn:disabled { opacity: 0.5; cursor: progress; }
+.btn-primary { background: var(--confirmed); border-color: var(--confirmed); color: var(--confirmed-ink); font-weight: 600; }
+.btn-ghost { background: transparent; }
+.btn-sm { padding: 0.28rem 0.6rem; font-size: 0.78rem; }
+.btn-big { padding: 0.6rem 1.4rem; font-size: 0.95rem; font-weight: 600; }
+.btn-approve { background: var(--confirmed); border-color: var(--confirmed); color: var(--confirmed-ink); }
+.btn-reject  { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
+.btn-take { padding: 0.25rem 0.6rem; font-size: 0.78rem; }
+
+.input {
+  font: inherit; font-size: 0.85rem; color: var(--text);
+  background: var(--bg-sunken); border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm); padding: 0.38rem 0.5rem; min-width: 0;
+}
+.input.grow { flex: 1 1 14rem; }
+textarea.input { width: 100%; resize: vertical; font-family: var(--mono); font-size: 0.8rem; }
+
+.inline-form { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 0.6rem; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: flex-end; }
+.field { display: flex; flex-direction: column; gap: 0.15rem; }
+.field-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); }
+
+/* --------------------------------------------------------------------- chips */
+
+.chip {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  padding: 0.1rem 0.45rem; border-radius: 999px;
+  font-size: 0.7rem; font-family: var(--mono); letter-spacing: 0.02em;
+  border: 1px solid var(--line-strong); color: var(--text-dim); background: var(--bg-sunken);
+}
+.chip-ok      { color: var(--confirmed); border-color: var(--confirmed-line); background: var(--confirmed-soft); }
+.chip-info    { color: var(--info); border-color: var(--info); background: var(--info-soft); }
+.chip-warn    { color: var(--warn); border-color: var(--warn); background: var(--warn-soft); }
+.chip-bad     { color: var(--bad); border-color: var(--bad); background: var(--bad-soft); }
+.chip-quiet   { color: var(--text-faint); }
+.chip-expected {
+  color: var(--expected); border: 1px dashed var(--expected-line); background: var(--expected-soft);
+}
+
+.tag-notincome {
+  color: var(--expected); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em;
+}
+
+/* ------------------------------------------------------- money presentation */
+
+.money-confirmed { color: var(--confirmed); font-weight: 600; }
+.money-expected  { color: var(--expected); font-weight: 500; opacity: 0.9; }
+
+.money-pair { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.5rem 0; }
+.money-box {
+  flex: 1 1 8rem; padding: 0.4rem 0.55rem; border-radius: var(--radius-sm); min-width: 0;
+}
+.money-box .money-label { display: block; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.money-box .money-value { display: block; font-family: var(--mono); font-size: 1.05rem; }
+.money-box.confirmed {
+  background: var(--confirmed-soft); border: 1px solid var(--confirmed-line);
+}
+.money-box.confirmed .money-label { color: var(--confirmed); opacity: 0.85; }
+.money-box.confirmed .money-value { color: var(--confirmed); font-weight: 600; }
+.money-box.expected {
+  background: var(--expected-soft); border: 1px dashed var(--expected-line); opacity: 0.85;
+}
+.money-box.expected .money-label { color: var(--expected); }
+.money-box.expected .money-value { color: var(--expected); }
+
+/* -------------------------------------------------------------------- counts */
+
+.counts { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.count {
+  flex: 1 1 8rem; min-width: 0;
+  background: var(--bg-panel); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 0.5rem 0.7rem;
+}
+.count-label { display: block; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); }
+.count-value { display: block; font-family: var(--mono); font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+
+/* ------------------------------------------------------------------- stepper */
+
+.stepper { list-style: none; margin: 0; padding: 0; }
+.step { display: grid; grid-template-columns: 1.4rem minmax(0, 1fr); gap: 0.6rem; padding-bottom: 0.5rem; }
+.step-rail { display: flex; flex-direction: column; align-items: center; }
+.step-dot {
+  width: 0.85rem; height: 0.85rem; border-radius: 50%; margin-top: 0.28rem; flex: 0 0 auto;
+  border: 2px solid var(--line-strong); background: var(--bg-sunken);
+}
+.step-line { flex: 1 1 auto; width: 2px; background: var(--line); margin: 0.2rem 0 0; }
+.step:last-child .step-line { display: none; }
+.step-body { min-width: 0; padding-bottom: 0.3rem; }
+.step-title { font-size: 0.88rem; }
+.step-key { font-family: var(--mono); font-size: 0.7rem; color: var(--text-faint); }
+
+.step.done .step-dot { background: var(--confirmed); border-color: var(--confirmed); }
+.step.done .step-line { background: var(--confirmed-line); }
+.step.done .step-title { color: var(--text-dim); }
+.step.current .step-dot { border-color: var(--info); background: var(--info); box-shadow: 0 0 0 3px var(--info-soft); }
+.step.current .step-title { color: var(--text); font-weight: 600; }
+.step.pending .step-title { color: var(--text-faint); }
+
+.actions { list-style: none; margin: 0.4rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.25rem; }
+.action {
+  display: flex; align-items: center; gap: 0.4rem;
+  background: var(--bg-sunken); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); padding: 0.25rem 0.3rem 0.25rem 0.5rem;
+}
+.action code {
+  flex: 1 1 auto; min-width: 0; font-size: 0.75rem; color: var(--text-dim);
+  overflow-x: auto; white-space: pre; scrollbar-width: thin;
+}
+
+/* -------------------------------------------------------------------- wallet */
+
+.wallet-list { display: flex; flex-direction: column; gap: 0.4rem; }
+.wallet-row {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;
+  padding: 0.4rem 0.55rem; border: 1px solid var(--line); border-radius: var(--radius-sm);
+  background: var(--bg-raised);
+}
+.wallet-chain { font-family: var(--mono); font-size: 0.8rem; min-width: 5rem; }
+.wallet-addr {
+  font-family: var(--mono); font-size: 0.75rem; color: var(--text-faint);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1 1 8rem; min-width: 0;
+}
+.wallet-balance { font-family: var(--mono); font-size: 0.9rem; margin-left: auto; }
+
+/* ------------------------------------------------------------------ channels */
+
+.channel-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr)); }
+.channel {
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--bg-raised); padding: 0.7rem 0.8rem; min-width: 0;
+}
+.channel-head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin-bottom: 0.2rem; }
+.channel-name { font-family: var(--mono); font-size: 0.9rem; font-weight: 600; }
+.channel-desc { font-size: 0.78rem; color: var(--text-dim); margin: 0.2rem 0 0.4rem; }
+.channel-meta { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.4rem; }
+.blockers { list-style: none; margin: 0.4rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.2rem; }
+.blockers li {
+  font-size: 0.74rem; color: var(--warn); font-family: var(--mono);
+  border-left: 2px solid var(--warn); padding-left: 0.45rem; word-break: break-word;
+}
+details.reqs { margin-top: 0.5rem; }
+details.reqs summary { cursor: pointer; font-size: 0.74rem; color: var(--text-faint); }
+details.reqs ul { margin: 0.3rem 0 0; padding-left: 1rem; }
+details.reqs li { font-size: 0.74rem; color: var(--text-dim); word-break: break-word; }
+
+/* --------------------------------------------------------------------- table */
+
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
+.table { width: 100%; border-collapse: collapse; font-size: 0.82rem; min-width: 44rem; }
+.table.table-fixed { min-width: 38rem; }
+.table th, .table td {
+  text-align: left; padding: 0.4rem 0.55rem; border-bottom: 1px solid var(--line); vertical-align: top;
+}
+.table thead th {
+  position: sticky; top: 0; background: var(--bg-panel); z-index: 1;
+  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint);
+  font-weight: 600; white-space: nowrap;
+}
+.table td.right, .table th.right { text-align: right; }
+.table tbody tr:hover { background: var(--bg-raised); }
+.table .col-seq  { width: 4.5rem; }
+.table .col-ts   { width: 9.5rem; }
+.table .col-kind { width: 9rem; }
+
+.th-sort {
+  appearance: none; background: none; border: 0; padding: 0; cursor: pointer;
+  font: inherit; color: inherit; text-transform: inherit; letter-spacing: inherit;
+}
+.th-sort::after { content: ""; }
+th[aria-sort="ascending"]  .th-sort::after { content: " \2191"; color: var(--text); }
+th[aria-sort="descending"] .th-sort::after { content: " \2193"; color: var(--text); }
+th[aria-sort] .th-sort:hover { color: var(--text); }
+
+.cell-title { max-width: 34rem; }
+.cell-title a { word-break: break-word; }
+.cell-note { display: block; font-size: 0.7rem; color: var(--text-faint); font-family: var(--mono); }
+
+.errors { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.5rem; }
+.error-line {
+  font-size: 0.75rem; font-family: var(--mono); color: var(--warn);
+  background: var(--warn-soft); border: 1px solid var(--warn); border-radius: var(--radius-sm);
+  padding: 0.25rem 0.5rem; word-break: break-word;
+}
+
+/* ----------------------------------------------------------------- approvals */
+
+.approval {
+  border: 1px solid var(--line-strong); border-left: 3px solid var(--warn);
+  border-radius: var(--radius); background: var(--bg-raised); padding: 0.8rem 0.9rem;
+}
+.approval-head { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: baseline; }
+.approval-title { font-size: 0.95rem; font-weight: 600; word-break: break-word; }
+.approval-detail {
+  white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere;
+  font-family: var(--mono); font-size: 0.78rem; color: var(--text-dim);
+  background: var(--bg-sunken); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); padding: 0.6rem 0.7rem; margin: 0.5rem 0 0.6rem;
+  max-height: 22rem; overflow: auto;
+}
+.approval-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: 0.6rem; }
+
+/* ---------------------------------------------------------------- storefront */
+
+.receiving { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 0.6rem; }
+.catalogue-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); }
+.offer {
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--bg-raised); padding: 0.7rem 0.8rem;
+  display: flex; flex-direction: column; gap: 0.35rem; min-width: 0;
+}
+.offer-price { font-family: var(--mono); font-size: 1.05rem; color: var(--text); }
+.offer-desc { font-size: 0.78rem; color: var(--text-dim); }
+/* Flex children stretch by default; a chip that stretches stops reading as a chip. */
+.offer > .chip { align-self: flex-start; }
+.offer .btn { align-self: flex-start; margin-top: auto; }
+
+.invoice {
+  border: 1px dashed var(--expected-line); border-radius: var(--radius);
+  background: var(--expected-soft); padding: 0.7rem 0.8rem;
+}
+.invoice.paid {
+  border: 1px solid var(--confirmed-line); background: var(--confirmed-soft);
+}
+.invoice-head { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+.invoice-id { font-family: var(--mono); font-size: 0.8rem; color: var(--text-dim); }
+.copyfield {
+  display: flex; align-items: stretch; gap: 0.3rem; margin: 0.45rem 0 0.3rem;
+  flex-wrap: wrap;
+}
+.copyfield .copyvalue {
+  flex: 1 1 12rem; min-width: 0;
+  font-family: var(--mono); font-size: 1.05rem; font-weight: 600;
+  background: var(--bg-sunken); border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm); padding: 0.35rem 0.55rem;
+  overflow-x: auto; white-space: nowrap; scrollbar-width: thin;
+}
+.copyfield .copyvalue.addr { font-size: 0.8rem; font-weight: 400; color: var(--text-dim); }
+.invoice-meta { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.35rem; }
+
+/* ------------------------------------------------------------------ trading */
+
+.spark-wrap { display: flex; gap: 0.5rem; align-items: stretch; }
+.spark-axis {
+  display: flex; flex-direction: column; justify-content: space-between;
+  font-size: 0.7rem; color: var(--text-faint); text-align: right; min-width: 4.5rem;
+}
+.spark { flex: 1 1 auto; min-width: 0; }
+.spark svg { display: block; width: 100%; height: 140px; }
+.spark-foot { display: flex; justify-content: space-between; margin-top: 0.25rem; }
+
+/* ------------------------------------------------------------------- ledger */
+
+.integrity {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;
+  padding: 0.5rem 0.7rem; border-radius: var(--radius-sm);
+  font-size: 0.82rem; margin-bottom: 0.6rem;
+}
+.integrity.ok  { background: var(--confirmed-soft); border: 1px solid var(--confirmed-line); color: var(--confirmed); }
+.integrity.bad { background: var(--bad-soft); border: 1px solid var(--bad); color: var(--bad); }
+.integrity .msg { font-family: var(--mono); font-size: 0.76rem; word-break: break-word; }
+
+pre.json {
+  margin: 0; font-size: 0.74rem; color: var(--text-dim);
+  white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere;
+  max-height: 11rem; overflow: auto; scrollbar-width: thin;
+}
+.kind {
+  font-family: var(--mono); font-size: 0.74rem; color: var(--text);
+  background: var(--bg-sunken); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); padding: 0.05rem 0.35rem; white-space: nowrap;
+}
+.kind.income { color: var(--confirmed); border-color: var(--confirmed-line); background: var(--confirmed-soft); }
+.kind.error  { color: var(--bad); border-color: var(--bad); background: var(--bad-soft); }
+
+/* ---------------------------------------------------------------- discovery */
+
+.source {
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--bg-raised); padding: 0.6rem 0.75rem;
+}
+.source-head { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+.source-url {
+  font-family: var(--mono); font-size: 0.78rem; color: var(--text-dim);
+  word-break: break-all; flex: 1 1 12rem; min-width: 0;
+}
+.kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0.1rem 0.6rem; margin-top: 0.4rem; }
+.kv dt { font-size: 0.7rem; color: var(--text-faint); font-family: var(--mono); }
+.kv dd { margin: 0; font-size: 0.75rem; font-family: var(--mono); word-break: break-word; overflow-wrap: anywhere; }
+
+/* --------------------------------------------------------------------- foot */
+
+.foot {
+  max-width: 1400px; margin: 0 auto; padding: 0 1rem 2rem;
+  display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: space-between;
+  font-size: 0.75rem; color: var(--text-faint); border-top: 1px solid var(--line); padding-top: 0.8rem;
+}
+
+/* ------------------------------------------------------------------- toasts */
+
+.toasts {
+  position: fixed; right: 0.8rem; bottom: 0.8rem; z-index: 60;
+  display: flex; flex-direction: column; gap: 0.4rem; max-width: min(26rem, calc(100vw - 1.6rem));
+}
+.toast {
+  background: var(--bg-panel); border: 1px solid var(--line-strong);
+  border-left: 3px solid var(--info);
+  border-radius: var(--radius-sm); padding: 0.5rem 0.7rem; font-size: 0.8rem;
+  box-shadow: var(--shadow); word-break: break-word;
+}
+.toast.ok  { border-left-color: var(--confirmed); }
+.toast.bad { border-left-color: var(--bad); }
+.toast.warn { border-left-color: var(--warn); }
+
+/* --------------------------------------------------------------- responsive */
+
+@media (max-width: 1000px) {
+  .grid-2 { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 640px) {
+  body { font-size: 14px; }
+  .header-top { gap: 0.6rem; padding: 0.6rem 0.7rem 0.5rem; }
+  .header-actions { margin-left: 0; width: 100%; justify-content: space-between; }
+  .figures { width: 100%; }
+  .figure { flex: 1 1 8.5rem; min-width: 0; }
+  .figure-value { font-size: 1.25rem; }
+  main { padding: 0.7rem 0.7rem 2rem; }
+  .card { padding: 0.7rem 0.7rem 0.8rem; }
+  .foot { padding-left: 0.7rem; padding-right: 0.7rem; }
+}
+
+@media (max-width: 400px) {
+  .figure { flex: 1 1 100%; }
+  .btn-big { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+
+/* ---- standalone build only ------------------------------------------- */
+/* No server, so no session to negotiate: the token banner has nothing to do. */
+#banner-token { display: none !important; }
+
+.demo-banner {
+  position: sticky; top: 0; z-index: 60;
+  display: flex; flex-wrap: wrap; gap: .5ch;
+  align-items: baseline; justify-content: center;
+  padding: .55rem 1rem;
+  background: var(--warn-soft);
+  border-bottom: 1px solid var(--warn);
+  color: var(--text);
+  font-size: .82rem; line-height: 1.45;
+  text-align: center;
+}
+.demo-banner strong { color: var(--warn); letter-spacing: .02em; }
+.demo-banner code {
+  font-family: var(--mono, ui-monospace, monospace);
+  background: var(--bg-sunken); border: 1px solid var(--line);
+  border-radius: 4px; padding: .05rem .4rem;
+}
+@media (max-width: 640px) { .demo-banner { font-size: .76rem; } }
+</style>
+<script>window.__DEMO__ = {"state":{"generated_at":1770000000.0,"treasury":{"confirmed_usdt":640.13,"expected_usdt":455.02,"hours_spent":15.0},"wallet":{"addresses":{"tron":"TMuA6YqfCeX8EhbfYEg5y7S4DqzSJireY9","bsc":"0x8894E0a0c962CB723c1976a4421c95949bE2D4E3"},"balances":{"tron":643.23,"bsc":0.0},"total_usdt":643.23,"errors":{"bsc":"all RPCs failed for bsc: timed out"}},"ladder":{"stage":"compound","completed":5,"total":6,"stages":[{"key":"wallet","title":"Have somewhere to be paid","done":true,"actions":[]},{"key":"channel","title":"Get at least one channel out of the blocked state","done":true,"actions":[]},{"key":"pipeline","title":"Put real work in flight","done":true,"actions":[]},{"key":"first_payout","title":"Confirm the first payout on-chain","done":true,"actions":[]},{"key":"capital","title":"Accumulate 200 USDT so yield is worth switching on","done":true,"actions":[]},{"key":"compound","title":"Let earned capital work alongside earned income","done":false,"actions":["usdt-agent earn run       # earning loop","usdt-agent run            # yield/trading loop, paper first"]}]},"channels":{"bounties":{"name":"bounties","description":"Bounty-labelled issues and crypto-paying tasks, ranked by USDT/hour","autonomy":"assisted","capital_required_usdt":0.0,"typical_lag_days":14.0,"ready":true,"blockers":[],"requirements":["GITHUB_TOKEN (optional)","wallet (required)"],"confirmed_usdt":620.0,"expected_usdt":450.0,"calibration":{"orders":5,"paid":3,"conversion":0.6,"realized_usdt_per_hour":41.33,"effort_calibration":1.36,"verdict":"proven"}},"services":{"name":"services","description":"Sells a priced micro-service for USDT, settled directly on-chain","autonomy":"auto","capital_required_usdt":0.0,"typical_lag_days":0.0,"ready":true,"blockers":[],"requirements":["wallet (required)"],"confirmed_usdt":20.13,"expected_usdt":5.02,"calibration":{"orders":4,"paid":4,"conversion":1.0,"realized_usdt_per_hour":120.78,"effort_calibration":1.0,"verdict":"proven"}},"affiliate":{"name":"affiliate","description":"Tracks referral/affiliate programs and proves payouts on-chain","autonomy":"assisted","capital_required_usdt":0.0,"typical_lag_days":30.0,"ready":false,"blockers":["affiliate.programs: At least one referral program declared in the config"],"requirements":["wallet (required)","affiliate.programs (required)"],"confirmed_usdt":0.0,"expected_usdt":0.0,"calibration":{"orders":0,"paid":0,"conversion":0.0,"realized_usdt_per_hour":0.0,"effort_calibration":0.0,"verdict":"untried"}},"passive":{"name":"passive","description":"Deploys confirmed treasury USDT into stablecoin yield (needs capital)","autonomy":"assisted","capital_required_usdt":200.0,"typical_lag_days":1.0,"ready":true,"blockers":[],"requirements":["wallet (required)","treasury.capital (required)"],"confirmed_usdt":0.0,"expected_usdt":0.0,"calibration":{"orders":1,"paid":0,"conversion":0.0,"realized_usdt_per_hour":0.0,"effort_calibration":0.0,"verdict":"unproven"}}},"counts":{"gigs":5,"open_orders":2,"pending_approvals":1,"transfers_seen":6},"ledger":{"ok":true,"message":"journal intact: 214 entries, head=c969e094a9e2"}},"gigs":[{"id":"a3f19c2b7d4e5061","channel":"bounties","source":"github","external_id":"412","title":"Fix flaky retry loop in the scheduler","url":"https://github.com/acme/core/issues/412","reward_usdt":450.0,"effort_hours":4.0,"payout_probability":0.62,"usdt_per_hour":69.75,"deadline_ts":0,"discovered_ts":1769985600.0,"meta":{"repo":"acme/core"}},{"id":"b7c2e91a4f60d385","channel":"bounties","source":"github","external_id":"88","title":"Add pagination to the public REST API","url":"https://github.com/acme/api/issues/88","reward_usdt":180.0,"effort_hours":2.5,"payout_probability":0.71,"usdt_per_hour":51.12,"deadline_ts":0,"discovered_ts":1769967600.0,"meta":{"repo":"acme/api"}},{"id":"c1d8054e6a2b9f37","channel":"bounties","source":"github","external_id":"1204","title":"Port the CLI config loader to tomllib","url":"https://github.com/acme/tools/issues/1204","reward_usdt":120.0,"effort_hours":1.5,"payout_probability":0.68,"usdt_per_hour":54.4,"deadline_ts":0,"discovered_ts":1769928000.0,"meta":{"repo":"acme/tools"}},{"id":"d5e4b83f210c6a79","channel":"bounties","source":"github","external_id":"9","title":"Audit the signature verification path","url":"https://github.com/acme/sec/issues/9","reward_usdt":2500.0,"effort_hours":16.0,"payout_probability":0.18,"usdt_per_hour":28.13,"deadline_ts":1770950400.0,"discovered_ts":1769827200.0,"meta":{"repo":"acme/sec"}},{"id":"e9a07c1b35d2f846","channel":"bounties","source":"github","external_id":"57","title":"Rewrite the storage layer for multi-tenant use","url":"https://github.com/acme/db/issues/57","reward_usdt":3200.0,"effort_hours":40.0,"payout_probability":0.22,"usdt_per_hour":17.6,"deadline_ts":0,"discovered_ts":1769740800.0,"meta":{"repo":"acme/db"}}],"approvals":[{"id":"7f2c9d1e40b6a583","kind":"work_order","subject_id":"ord-88","channel":"bounties","status":"pending","created_ts":1769992800.0,"title":"[bounties] Add pagination to the public REST API","detail":"https://github.com/acme/api/issues/88\nreward 180.00 USDT \u00b7 est 2.5 h \u00b7 51 USDT/h \u00b7 payout odds 71%\nplan:\n  - read the issue and acme/api's CONTRIBUTING guide\n  - confirm the bounty is unclaimed and comment to claim it\n  - reproduce the problem locally, write a failing test\n  - implement the fix and make the test pass\n  - open a PR referencing the issue, link the bounty\n  - expect payment to tron after merge"}],"catalogue":[{"sku":"market-report","title":"Stablecoin yield report","price_usdt":5.0,"description":"Current risk-adjusted stablecoin yields across chains, ranked."},{"sku":"arb-scan","title":"Cross-venue spread scan","price_usdt":3.0,"description":"Live cross-exchange spreads for the majors, net of fees."}],"invoices":[{"invoice_id":"441d21535502a998","sku":"market-report","chain":"tron","pay_to":"TMuA6YqfCeX8EhbfYEg5y7S4DqzSJireY9","pay_exactly_usdt":5.0214,"status":"unpaid","expires_ts":1770014400.0,"note":"send exactly this amount \u2014 the cents identify your invoice"},{"invoice_id":"9b0e77a1c3d45e02","sku":"arb-scan","chain":"tron","pay_to":"TMuA6YqfCeX8EhbfYEg5y7S4DqzSJireY9","pay_exactly_usdt":3.0091,"status":"paid","expires_ts":1769928000.0,"note":"send exactly this amount \u2014 the cents identify your invoice"}],"events":[{"seq":214,"ts":1769989200.0,"kind":"income","payload":{"channel":"bounties","amount_usdt":450.0,"chain":"tron","tx":"8b5e5f9a99d65c0b3c17f2a4","gig":"a3f19c2b7d4e5061"}},{"seq":213,"ts":1769989200.0,"kind":"approval","payload":{"id":"5c1a...","approved":true,"note":"looks tractable"}},{"seq":211,"ts":1769827200.0,"kind":"income","payload":{"channel":"services","amount_usdt":3.0091,"chain":"tron","tx":"d41c9a7e0b62f5138ea4","gig":""}},{"seq":208,"ts":1769568000.0,"kind":"income","payload":{"channel":"bounties","amount_usdt":120.0,"chain":"tron","tx":"0f7742ab91c3de5608bb","gig":"c1d8054e6a2b9f37"}},{"seq":202,"ts":1769222400.0,"kind":"earn_baseline","payload":{"chain":"tron","opening_balance":3.1,"transfers_ignored":50}},{"seq":201,"ts":1769222400.0,"kind":"earn_start","payload":{"channels":["affiliate","bounties","passive","services"],"chains":["tron"]}}],"sources":[{"url":"https://console.algora.io/api/bounties","host":"algora.io","status":"ok","http_status":200,"content_type":"application/json","item_count":48,"robots_allowed":true,"elapsed_ms":412,"probed_ts":1769978400.0,"suggested_mapping":{"external_id":"$.items[].id","title":"$.items[].task.title","url":"$.items[].task.url","reward_usdt":"$.items[].reward.amount","confidence":0.86},"schema":{"$.items[].id":"str","$.items[].task.title":"str","$.items[].reward.amount":"int"},"sample":{"id":"bty_2f\u2026","task":{"title":"Add retry budget"},"reward":{"amount":25000}},"notes":["robots.txt fetched and parsed","algora.io resolves to 76.76.21.21","socket pinned to 76.76.21.21"]},{"url":"https://example-board.test/api/v1/tasks","host":"example-board.test","status":"blocked","http_status":403,"content_type":"text/html","item_count":0,"robots_allowed":true,"elapsed_ms":233,"probed_ts":1769982000.0,"suggested_mapping":{},"schema":{},"sample":null,"notes":["HTTP 403 \u2014 an access control said no","not retried, and not worked around","host marked blocked for the rest of this run"]},{"url":"https://gitcoin.co/api/v0.1/bounties/","host":"gitcoin.co","status":"disallowed","http_status":0,"content_type":"","item_count":0,"robots_allowed":false,"elapsed_ms":96,"probed_ts":1769982000.0,"suggested_mapping":{},"schema":{},"sample":null,"notes":["robots.txt disallows /api/ for usdt-agent","the target was never requested"]}],"trading":{"strategies":{"cross_venue":{"n":99.0,"pnl":17.7792,"avg_bps":11.22,"turnover":158400.0,"win_rate":0.98},"triangular":{"n":145.0,"pnl":20.7873,"avg_bps":10.8,"turnover":192300.0,"win_rate":0.97},"stable_yield":{"n":3.0,"pnl":0.1889,"avg_bps":7.29,"turnover":2590.0,"win_rate":1.0},"grid":{"n":12.0,"pnl":-0.6426,"avg_bps":-12.38,"turnover":5190.0,"win_rate":0.5},"funding_carry":{"n":29.0,"pnl":-1.6379,"avg_bps":-18.03,"turnover":9080.0,"win_rate":0.03}},"equity":[[1767408000.0,996.5],[1767494400.0,1003.0861],[1767580800.0,1001.7464],[1767667200.0,1008.0321],[1767753600.0,1006.5715],[1767840000.0,1005.0774],[1767926400.0,1011.2573],[1768012800.0,1009.7159],[1768099200.0,1008.1566],[1768185600.0,1014.2818],[1768272000.0,1012.6935],[1768358400.0,1011.0931],[1768444800.0,1017.1818],[1768531200.0,1015.5606],[1768617600.0,1021.6305],[1768704000.0,1019.9919],[1768790400.0,1018.3457],[1768876800.0,1024.3922],[1768963200.0,1022.7321],[1769049600.0,1021.0656],[1769136000.0,1027.0931],[1769222400.0,1025.415],[1769308800.0,1023.7316],[1769395200.0,1029.7432],[1769481600.0,1028.0499],[1769568000.0,1034.052],[1769654400.0,1032.3497],[1769740800.0,1030.6432],[1769827200.0,1036.6326],[1769913600.0,1034.9182],[1770000000.0,1033.2]],"totals":{"closed_trades":288.0,"realized_pnl":36.4749,"costs":84.1702,"gross":120.6451}},"receiving":{"chain":"tron","address":"TMuA6YqfCeX8EhbfYEg5y7S4DqzSJireY9"}};</script>
+<script>
+/* ------------------------------------------------------------------------
+ * Offline API for the standalone build.
+ *
+ * app.js below is the shipped file, unmodified — it still calls fetch() and
+ * still expects the documented contract. Only the wire is replaced. Writes
+ * mutate this in-memory copy, so Take / Approve / Create invoice / Collect
+ * behave the way they do against a live agent.
+ * --------------------------------------------------------------------- */
+(function () {
+  "use strict";
+  var D = window.__DEMO__;
+  var drift = Date.now() / 1000 - D.state.generated_at;   // present the seed as "now"
+
+  function shift(ts) { return ts ? ts + drift : ts; }
+
+  D.state.generated_at += drift;
+  D.gigs.forEach(function (g) {
+    g.discovered_ts = shift(g.discovered_ts);
+    g.deadline_ts = shift(g.deadline_ts);
+  });
+  D.approvals.forEach(function (a) { a.created_ts = shift(a.created_ts); });
+  D.invoices.forEach(function (i) { i.expires_ts = shift(i.expires_ts); });
+  D.events.forEach(function (e) { e.ts = shift(e.ts); });
+  D.sources.forEach(function (s) { s.probed_ts = shift(s.probed_ts); });
+  D.trading.equity = D.trading.equity.map(function (p) { return [shift(p[0]), p[1]]; });
+
+  function ok(payload) {
+    return Promise.resolve(new Response(JSON.stringify(payload), {
+      status: 200, headers: { "Content-Type": "application/json" },
+    }));
+  }
+  function fail(status, message) {
+    return Promise.resolve(new Response(JSON.stringify({ error: message }), {
+      status: status, headers: { "Content-Type": "application/json" },
+    }));
+  }
+
+  function uid() {
+    var s = "";
+    for (var i = 0; i < 16; i++) { s += "0123456789abcdef"[(Math.random() * 16) | 0]; }
+    return s;
+  }
+
+  function route(path, method, body) {
+    var url = new URL(path, "http://demo.local");
+    var p = url.pathname;
+    var q = url.searchParams;
+
+    if (p === "/api/state") {
+      D.state.generated_at = Date.now() / 1000;
+      D.state.counts.gigs = D.gigs.length;
+      D.state.counts.pending_approvals = D.approvals.filter(function (a) {
+        return a.status === "pending";
+      }).length;
+      return ok(D.state);
+    }
+    if (p === "/api/gigs" && method === "GET") {
+      var channel = q.get("channel") || "";
+      var limit = parseInt(q.get("limit") || "50", 10);
+      var rows = D.gigs.filter(function (g) { return !channel || g.channel === channel; });
+      return ok({ gigs: rows.slice(0, limit), errors: {} });
+    }
+    if (method === "POST" && /^\/api\/gigs\/[^/]+\/take$/.test(p)) {
+      var gigId = p.split("/")[3];
+      var gig = D.gigs.filter(function (g) { return g.id === gigId; })[0];
+      if (!gig) { return fail(404, "unknown gig"); }
+      var approvalId = uid();
+      D.approvals.unshift({
+        id: approvalId, kind: "work_order", subject_id: "ord-" + gigId.slice(0, 6),
+        channel: gig.channel, status: "pending", created_ts: Date.now() / 1000,
+        title: "[" + gig.channel + "] " + gig.title,
+        detail: gig.url + "\nreward " + gig.reward_usdt.toFixed(2) + " USDT · est "
+                + gig.effort_hours.toFixed(1) + " h · " + Math.round(gig.usdt_per_hour)
+                + " USDT/h · payout odds " + Math.round(gig.payout_probability * 100) + "%"
+                + "\nplan:\n  - claim the bounty\n  - write a failing test\n"
+                + "  - implement and open a PR\n  - await payment on-chain",
+      });
+      D.state.counts.open_orders += 1;
+      return ok({
+        order: {
+          id: "ord-" + gigId.slice(0, 6), title: gig.title,
+          plan: ["claim the bounty", "write a failing test", "implement and open a PR",
+                 "await payment on-chain"],
+          status: "awaiting_approval", reward_usdt: gig.reward_usdt,
+          estimated_hours: gig.effort_hours, autonomy: "assisted",
+        },
+        approval_id: approvalId,
+      });
+    }
+    if (p === "/api/approvals" && method === "GET") {
+      return ok({ approvals: D.approvals.filter(function (a) { return a.status === "pending"; }) });
+    }
+    if (method === "POST" && /^\/api\/approvals\/[^/]+\/decide$/.test(p)) {
+      var id = p.split("/")[3];
+      var found = D.approvals.filter(function (a) {
+        return a.id === id && a.status === "pending";
+      })[0];
+      if (!found) { return fail(404, "unknown or already decided"); }
+      found.status = body && body.approved ? "approved" : "rejected";
+      return ok({ ok: true, approved: !!(body && body.approved) });
+    }
+    if (p === "/api/catalogue") { return ok({ catalogue: D.catalogue, receiving: D.receiving }); }
+    if (p === "/api/invoices" && method === "GET") { return ok({ invoices: D.invoices }); }
+    if (p === "/api/invoices" && method === "POST") {
+      var sku = body && body.sku;
+      var offer = D.catalogue.filter(function (c) { return c.sku === sku; })[0];
+      if (!offer) { return fail(404, "unknown sku"); }
+      var cents = Math.floor(Math.random() * 500) / 10000;
+      var invoice = {
+        invoice_id: uid(), sku: sku, chain: D.receiving.chain,
+        pay_to: D.receiving.address,
+        pay_exactly_usdt: Math.round((offer.price_usdt + cents) * 10000) / 10000,
+        status: "unpaid", expires_ts: Date.now() / 1000 + 6 * 3600,
+        note: "send exactly this amount — the cents identify your invoice",
+      };
+      D.invoices.unshift(invoice);
+      D.state.treasury.expected_usdt += invoice.pay_exactly_usdt;
+      D.state.channels.services.expected_usdt += invoice.pay_exactly_usdt;
+      return ok({ invoice: invoice });
+    }
+    if (p === "/api/collect" && method === "POST") {
+      // An honest demo: reconciliation against a chain with nothing new on it
+      // returns zero. That is the ordinary result, and the UI should show it.
+      return ok({
+        confirmed_usdt: 0.0, new_transfers: 0, matched: 0, unattributed_usdt: 0.0,
+        expired: 0, delta_detected: {}, balances: D.state.wallet.balances,
+        errors: D.state.wallet.errors, baselined: {},
+        treasury_usdt: D.state.treasury.confirmed_usdt,
+      });
+    }
+    if (p === "/api/trading") { return ok(D.trading); }
+    if (p === "/api/ledger") {
+      var n = parseInt(q.get("limit") || "50", 10);
+      return ok({ events: D.events.slice(0, n), integrity: D.state.ledger });
+    }
+    if (p === "/api/discovery") { return ok({ sources: D.sources }); }
+    if (p === "/api/discovery/probe" && method === "POST") {
+      var target = (body && body.url) || "";
+      var host = "";
+      try { host = new URL(target).hostname; } catch (e) { return fail(400, "malformed URL"); }
+      var isPrivate = /^(127\.|10\.|192\.168\.|169\.254\.|\[?::1)/.test(host);
+      var probe = {
+        url: target, host: host,
+        status: isPrivate ? "refused" : "unreachable",
+        http_status: 0, content_type: "", item_count: 0,
+        robots_allowed: !isPrivate, elapsed_ms: 8,
+        suggested_mapping: {}, schema: {}, sample: null,
+        probed_ts: Date.now() / 1000,
+        notes: isPrivate
+          ? ["SSRF guard: " + host + " resolves to a private address", "nothing was sent"]
+          : ["this standalone build has no network — a live agent would probe it now"],
+      };
+      D.sources.unshift(probe);
+      return ok({ probe: probe });
+    }
+    return fail(404, "not found");
+  }
+
+  window.fetch = function (path, init) {
+    init = init || {};
+    var method = (init.method || "GET").toUpperCase();
+    var body = null;
+    if (init.body) { try { body = JSON.parse(init.body); } catch (e) { body = null; } }
+    // A little latency, so buttons show their pending state as they really do.
+    return new Promise(function (resolve) {
+      setTimeout(function () { resolve(route(String(path), method, body)); }, 90);
+    });
+  };
+})();
+</script>
+<script>
+/* usdt-agent operator console.
+ *
+ * Two invariants this file exists to protect:
+ *
+ * 1. Confirmed on-chain income and expected pipeline value are rendered by
+ *    different code paths into different visual containers, and the pipeline
+ *    always carries a "not income yet" tag. There is deliberately no helper
+ *    that can sum them together.
+ * 2. Everything the server hands us originated with a third party — gig
+ *    titles, approval details, probe output, error strings. It reaches the DOM
+ *    only through textContent or attribute setters, never as markup, and URLs
+ *    are re-parsed and restricted to http/https before becoming an href.
+ *
+ * No framework, no build step, no network dependency beyond the agent itself.
+ */
+
+(function () {
+  "use strict";
+
+  var POLL_MS = 10000;
+  var TAB_KEY = "usdt-agent.tab";
+  var TABS = ["overview", "gigs", "approvals", "storefront", "trading", "ledger", "discovery"];
+
+  var state = {
+    token: "",
+    active: "overview",
+    lastOk: 0,
+    offline: false,
+    channels: [],
+    gigs: [],
+    gigSort: { key: "usdt_per_hour", dir: -1 },
+  };
+
+  // ---------------------------------------------------------------- storage
+
+  function lsGet(key) {
+    try { return window.localStorage.getItem(key) || ""; } catch (e) { return ""; }
+  }
+
+  function lsSet(key, value) {
+    try { window.localStorage.setItem(key, value); } catch (e) { /* private mode */ }
+  }
+
+  // ------------------------------------------------------------ dom helpers
+
+  function $(id) { return document.getElementById(id); }
+
+  function el(tag, opts, kids) {
+    var node = document.createElement(tag);
+    opts = opts || {};
+    if (opts.class) { node.className = opts.class; }
+    if (opts.text !== undefined && opts.text !== null) { node.textContent = String(opts.text); }
+    if (opts.title) { node.title = String(opts.title); }
+    if (opts.attrs) {
+      Object.keys(opts.attrs).forEach(function (k) { node.setAttribute(k, String(opts.attrs[k])); });
+    }
+    if (opts.data) {
+      Object.keys(opts.data).forEach(function (k) { node.dataset[k] = String(opts.data[k]); });
+    }
+    if (opts.on) {
+      Object.keys(opts.on).forEach(function (k) { node.addEventListener(k, opts.on[k]); });
+    }
+    (kids || []).forEach(function (kid) {
+      if (kid) { node.appendChild(kid); }
+    });
+    return node;
+  }
+
+  function clear(node) { if (node) { node.replaceChildren(); } }
+
+  function empty(message) { return el("p", { class: "empty", text: message }); }
+
+  /* Only absolute http(s) URLs may become an href: a gig title is attacker
+     controlled and so is the link beside it. */
+  function safeUrl(raw) {
+    if (typeof raw !== "string" || !raw) { return ""; }
+    try {
+      var u = new URL(raw);
+      return (u.protocol === "http:" || u.protocol === "https:") ? u.href : "";
+    } catch (e) { return ""; }
+  }
+
+  function link(url, label) {
+    var href = safeUrl(url);
+    if (!href) { return el("span", { text: label }); }
+    return el("a", {
+      text: label,
+      attrs: { href: href, target: "_blank", rel: "noopener noreferrer nofollow" },
+      title: href,
+    });
+  }
+
+  // ------------------------------------------------------------ formatting
+
+  function num(v) { var x = Number(v); return isFinite(x) ? x : 0; }
+
+  function money(v, dp) {
+    dp = dp === undefined ? 2 : dp;
+    return num(v).toLocaleString(undefined, { minimumFractionDigits: dp, maximumFractionDigits: dp });
+  }
+
+  /* Invoice amounts must be shown to the cent that identifies them. */
+  function exact(v) { return String(Number(num(v).toFixed(6))); }
+
+  function pct(v, dp) {
+    dp = dp === undefined ? 0 : dp;
+    return (num(v) * 100).toFixed(dp) + "%";
+  }
+
+  function count(v) { return String(Math.round(num(v))); }
+
+  function whenLocal(ts) {
+    var t = num(ts);
+    if (t <= 0) { return "—"; }
+    var d = new Date(t * 1000);
+    return d.toLocaleString(undefined, {
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", second: "2-digit",
+    });
+  }
+
+  function duration(seconds) {
+    var s = Math.max(0, Math.floor(seconds));
+    var d = Math.floor(s / 86400);
+    var h = Math.floor((s % 86400) / 3600);
+    var m = Math.floor((s % 3600) / 60);
+    if (d > 0) { return d + " d " + h + " h"; }
+    if (h > 0) { return h + " h " + String(m).padStart(2, "0") + " m"; }
+    if (m > 0) { return m + " m " + String(s % 60).padStart(2, "0") + " s"; }
+    return s + " s";
+  }
+
+  function ago(ts) {
+    var t = num(ts);
+    if (t <= 0) { return "never"; }
+    return duration(Date.now() / 1000 - t) + " ago";
+  }
+
+  // ------------------------------------------------------------------- api
+
+  function ApiError(status, message) {
+    this.name = "ApiError";
+    this.status = status;
+    this.message = message || ("HTTP " + status);
+  }
+  ApiError.prototype = Object.create(Error.prototype);
+
+  function api(path, options) {
+    options = options || {};
+    // No token header by default: the session rides in an HttpOnly cookie the
+    // server set when the launch link was opened, so this page never holds a
+    // secret that an XSS could read. The header is only used by the manual
+    // escape hatch below, for someone who pasted a token by hand.
+    var init = {
+      method: options.method || "GET",
+      headers: { "Accept": "application/json" },
+      cache: "no-store",
+      credentials: "same-origin",
+    };
+    if (state.token) { init.headers["X-Agent-Token"] = state.token; }
+    if (init.method !== "GET") {
+      init.headers["Content-Type"] = "application/json";
+      init.body = JSON.stringify(options.body || {});
+    }
+    return fetch(path, init).then(function (res) {
+      return res.text().then(function (raw) {
+        var data = {};
+        if (raw) {
+          try { data = JSON.parse(raw); } catch (e) { data = { error: raw.slice(0, 300) }; }
+        }
+        if (res.status === 401) {
+          showTokenBanner(true);
+          throw new ApiError(401, "unauthorized — the token is wrong or missing");
+        }
+        if (!res.ok) {
+          throw new ApiError(res.status, String(data && data.error ? data.error : "HTTP " + res.status));
+        }
+        showTokenBanner(false);
+        return data;
+      });
+    });
+  }
+
+  // ---------------------------------------------------------------- toasts
+
+  function toast(message, kind) {
+    var host = $("toasts");
+    var node = el("div", { class: "toast " + (kind || ""), text: message });
+    host.appendChild(node);
+    window.setTimeout(function () {
+      if (node.parentNode) { node.parentNode.removeChild(node); }
+    }, kind === "bad" ? 12000 : 6000);
+    while (host.childElementCount > 5) { host.removeChild(host.firstElementChild); }
+  }
+
+  function failed(prefix) {
+    return function (err) {
+      var msg = err && err.message ? err.message : String(err);
+      toast(prefix + ": " + msg, "bad");
+    };
+  }
+
+  // ----------------------------------------------------------- copy button
+
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(text);
+    }
+    return new Promise(function (resolve, reject) {
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      var ok = false;
+      try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+      document.body.removeChild(ta);
+      if (ok) { resolve(); } else { reject(new Error("clipboard unavailable")); }
+    });
+  }
+
+  function copyButton(text, label) {
+    return el("button", {
+      class: "btn btn-ghost btn-sm",
+      text: label || "Copy",
+      attrs: { type: "button", "aria-label": "Copy to clipboard" },
+      on: {
+        click: function (ev) {
+          var btn = ev.currentTarget;
+          copyText(text).then(function () {
+            btn.textContent = "Copied";
+            window.setTimeout(function () { btn.textContent = label || "Copy"; }, 1400);
+          }, function () {
+            toast("Could not reach the clipboard — select the text manually.", "warn");
+          });
+        },
+      },
+    });
+  }
+
+  // --------------------------------------------------------------- banners
+
+  function showTokenBanner(show) {
+    var banner = $("banner-token");
+    if (show) { banner.removeAttribute("hidden"); } else { banner.setAttribute("hidden", ""); }
+  }
+
+  function setOffline(isOffline, detail) {
+    var changed = state.offline !== isOffline;
+    state.offline = isOffline;
+    var banner = $("banner-offline");
+    if (isOffline) {
+      $("banner-offline-detail").textContent = detail ||
+        "The agent is not answering. Retrying every 10 s.";
+      banner.removeAttribute("hidden");
+      if (changed) { toast("Connection lost — figures below are stale.", "bad"); }
+    } else {
+      banner.setAttribute("hidden", "");
+      if (changed) { toast("Reconnected.", "ok"); }
+    }
+    // The banner scrolls away; the pinned header must show staleness too.
+    $("stamp").classList.toggle("stale", isOffline);
+  }
+
+  // ------------------------------------------------------------------ tabs
+
+  function selectTab(name, focus) {
+    if (TABS.indexOf(name) === -1) { name = "overview"; }
+    state.active = name;
+    lsSet(TAB_KEY, name);
+    TABS.forEach(function (tab) {
+      var button = $("tab-" + tab);
+      var panel = $("panel-" + tab);
+      var on = tab === name;
+      button.setAttribute("aria-selected", on ? "true" : "false");
+      button.tabIndex = on ? 0 : -1;
+      if (on) { panel.removeAttribute("hidden"); } else { panel.setAttribute("hidden", ""); }
+    });
+    if (focus) { $("tab-" + name).focus(); }
+    loadTab(name);
+  }
+
+  function loadTab(name) {
+    if (name === "gigs") { loadGigs(); }
+    if (name === "approvals") { loadApprovals(); }
+    if (name === "storefront") { loadStorefront(); }
+    if (name === "trading") { loadTrading(); }
+    if (name === "ledger") { loadLedger(); }
+    if (name === "discovery") { loadDiscovery(); }
+  }
+
+  function wireTabs() {
+    var list = $("tablist");
+    list.addEventListener("click", function (ev) {
+      var button = ev.target.closest ? ev.target.closest("[data-tab]") : null;
+      if (button) { selectTab(button.dataset.tab, false); }
+    });
+    list.addEventListener("keydown", function (ev) {
+      var index = TABS.indexOf(state.active);
+      var next = null;
+      if (ev.key === "ArrowRight") { next = TABS[(index + 1) % TABS.length]; }
+      if (ev.key === "ArrowLeft") { next = TABS[(index - 1 + TABS.length) % TABS.length]; }
+      if (ev.key === "Home") { next = TABS[0]; }
+      if (ev.key === "End") { next = TABS[TABS.length - 1]; }
+      if (next) { ev.preventDefault(); selectTab(next, true); }
+    });
+  }
+
+  // ============================================================== OVERVIEW
+
+  function countBox(label, value) {
+    return el("div", { class: "count" }, [
+      el("span", { class: "count-label", text: label }),
+      el("span", { class: "count-value", text: value }),
+    ]);
+  }
+
+  function chip(text, kind, title) {
+    return el("span", { class: "chip " + (kind || ""), text: text, title: title || "" });
+  }
+
+  function refreshState() {
+    return api("/api/state").then(function (data) {
+      setOffline(false);
+      state.lastOk = Date.now() / 1000;
+      renderState(data);
+      return data;
+    }, function (err) {
+      if (err && err.status === 401) {
+        setOffline(false);
+      } else {
+        setOffline(true, err && err.message ? String(err.message) : "unreachable");
+      }
+      throw err;
+    });
+  }
+
+  function renderState(data) {
+    var treasury = data.treasury || {};
+    $("fig-confirmed").textContent = money(treasury.confirmed_usdt) + " USDT";
+    $("fig-expected").textContent = money(treasury.expected_usdt) + " USDT";
+    $("fig-hours").textContent = num(treasury.hours_spent).toFixed(1);
+
+    var counts = data.counts || {};
+    var host = $("counts");
+    clear(host);
+    host.appendChild(countBox("Gigs known", count(counts.gigs)));
+    host.appendChild(countBox("Open orders", count(counts.open_orders)));
+    host.appendChild(countBox("Pending approvals", count(counts.pending_approvals)));
+    host.appendChild(countBox("Transfers seen", count(counts.transfers_seen)));
+
+    var pip = $("pip-approvals");
+    var pending = num(counts.pending_approvals);
+    pip.textContent = count(pending);
+    if (pending > 0) { pip.removeAttribute("hidden"); } else { pip.setAttribute("hidden", ""); }
+
+    renderLadder(data.ladder || {});
+    renderWallet(data.wallet || {});
+    renderChannels(data.channels || {});
+    renderIntegrity($("overview-integrity"), data.ledger || {});
+
+    state.channels = Object.keys(data.channels || {}).sort();
+    syncChannelFilter();
+    stampNow(data.generated_at);
+  }
+
+  function stampNow(generatedAt) {
+    var when = num(generatedAt) > 0 ? num(generatedAt) : state.lastOk;
+    $("stamp").textContent = "updated " + ago(when);
+    $("stamp").dataset.at = String(when);
+    $("foot-stamp").textContent = "server time " + whenLocal(when);
+  }
+
+  function renderLadder(ladder) {
+    var stages = Array.isArray(ladder.stages) ? ladder.stages : [];
+    $("ladder-progress").textContent =
+      count(ladder.completed) + " / " + count(ladder.total) + " · now: " + String(ladder.stage || "—");
+
+    var host = $("stepper");
+    clear(host);
+    if (!stages.length) { host.appendChild(empty("No ladder assessment yet.")); return; }
+
+    var currentSeen = false;
+    stages.forEach(function (stage) {
+      var done = !!stage.done;
+      var current = !done && !currentSeen;
+      if (current) { currentSeen = true; }
+
+      var rail = el("div", { class: "step-rail" }, [
+        el("span", { class: "step-dot" }),
+        el("span", { class: "step-line" }),
+      ]);
+
+      var body = el("div", { class: "step-body" }, [
+        el("div", { class: "step-title", text: String(stage.title || stage.key || "") }),
+        el("div", { class: "step-key", text: String(stage.key || "") + (done ? " · done" : (current ? " · current" : " · pending")) }),
+      ]);
+
+      if (current && Array.isArray(stage.actions) && stage.actions.length) {
+        var list = el("ul", { class: "actions" });
+        stage.actions.forEach(function (action) {
+          var line = String(action);
+          list.appendChild(el("li", { class: "action" }, [
+            el("code", { text: line }),
+            copyButton(line),
+          ]));
+        });
+        body.appendChild(list);
+      }
+
+      host.appendChild(el("li", {
+        class: "step " + (done ? "done" : (current ? "current" : "pending")),
+      }, [rail, body]));
+    });
+  }
+
+  function renderWallet(wallet) {
+    var addresses = wallet.addresses || {};
+    var balances = wallet.balances || {};
+    var errors = wallet.errors || {};
+    $("wallet-total").textContent = money(wallet.total_usdt) + " USDT on-chain balance";
+
+    var host = $("wallet-list");
+    clear(host);
+
+    var chains = Object.keys(addresses);
+    Object.keys(balances).forEach(function (c) { if (chains.indexOf(c) === -1) { chains.push(c); } });
+    Object.keys(errors).forEach(function (c) { if (chains.indexOf(c) === -1) { chains.push(c); } });
+
+    if (!chains.length) {
+      host.appendChild(empty("No wallet address configured. Set USDT_WALLET_TRON=T… and restart."));
+      return;
+    }
+
+    chains.sort().forEach(function (chain) {
+      var address = String(addresses[chain] || "");
+      var row = el("div", { class: "wallet-row" }, [
+        el("span", { class: "wallet-chain", text: chain }),
+        el("span", { class: "wallet-addr", text: address || "no address", title: address }),
+      ]);
+      if (address) { row.appendChild(copyButton(address)); }
+      if (errors[chain]) {
+        row.appendChild(chip("unreachable", "chip-quiet", String(errors[chain])));
+      }
+      row.appendChild(el("span", {
+        class: "wallet-balance",
+        text: balances[chain] === undefined ? "—" : money(balances[chain], 4),
+      }));
+      host.appendChild(row);
+    });
+  }
+
+  var VERDICT_CHIP = {
+    proven: "chip-ok",
+    promising: "chip-info",
+    unproven: "chip-warn",
+    untried: "chip-quiet",
+  };
+
+  var AUTONOMY_CHIP = { auto: "chip-ok", assisted: "chip-info", manual: "chip-quiet" };
+
+  function renderChannels(channels) {
+    var host = $("channel-cards");
+    clear(host);
+    var names = Object.keys(channels).sort();
+    if (!names.length) { host.appendChild(empty("No channels configured.")); return; }
+
+    names.forEach(function (name) {
+      var ch = channels[name] || {};
+      var cal = ch.calibration || {};
+      var verdict = String(cal.verdict || "untried");
+      var autonomy = String(ch.autonomy || "assisted");
+
+      var head = el("div", { class: "channel-head" }, [
+        el("span", { class: "channel-name", text: String(ch.name || name) }),
+        chip(autonomy, AUTONOMY_CHIP[autonomy] || "chip-quiet", "how far this channel runs unattended"),
+        ch.ready ? chip("ready", "chip-ok") : chip("blocked", "chip-warn"),
+        chip(verdict, VERDICT_CHIP[verdict] || "chip-quiet",
+          "proven requires 3+ confirmed payouts; a pipeline alone never proves a channel"),
+      ]);
+
+      var card = el("div", { class: "channel" }, [
+        head,
+        el("p", { class: "channel-desc", text: String(ch.description || "") }),
+        el("div", { class: "money-pair" }, [
+          el("div", { class: "money-box confirmed" }, [
+            el("span", { class: "money-label", text: "confirmed" }),
+            el("span", { class: "money-value", text: money(ch.confirmed_usdt) }),
+          ]),
+          el("div", { class: "money-box expected" }, [
+            el("span", { class: "money-label", text: "expected · not income yet" }),
+            el("span", { class: "money-value", text: money(ch.expected_usdt) }),
+          ]),
+        ]),
+        el("div", { class: "channel-meta" }, [
+          chip("orders " + count(cal.orders), "chip-quiet"),
+          chip("paid " + count(cal.paid), "chip-quiet"),
+          chip("conversion " + pct(cal.conversion, 1), "chip-quiet"),
+          chip("realized " + money(cal.realized_usdt_per_hour) + " USDT/h", "chip-quiet",
+            "measured, from completed orders only"),
+          chip("effort × " + num(cal.effort_calibration).toFixed(2), "chip-quiet",
+            "actual ÷ estimated hours; above 1 means the estimates were optimistic"),
+          chip("capital " + money(ch.capital_required_usdt) + " USDT", "chip-quiet"),
+          chip("lag " + num(ch.typical_lag_days).toFixed(0) + " d", "chip-quiet"),
+        ]),
+      ]);
+
+      var blockers = Array.isArray(ch.blockers) ? ch.blockers : [];
+      if (blockers.length) {
+        var list = el("ul", { class: "blockers" });
+        blockers.forEach(function (b) { list.appendChild(el("li", { text: String(b) })); });
+        card.appendChild(list);
+      }
+
+      var reqs = Array.isArray(ch.requirements) ? ch.requirements : [];
+      if (reqs.length) {
+        var ul = el("ul");
+        reqs.forEach(function (r) { ul.appendChild(el("li", { text: String(r) })); });
+        card.appendChild(el("details", { class: "reqs" }, [
+          el("summary", { text: "requirements (" + reqs.length + ")" }),
+          ul,
+        ]));
+      }
+
+      host.appendChild(card);
+    });
+  }
+
+  function renderIntegrity(host, integrity) {
+    clear(host);
+    var ok = !!integrity.ok;
+    host.className = "integrity " + (ok ? "ok" : "bad");
+    host.appendChild(el("strong", { text: ok ? "Journal intact" : "JOURNAL FAILED VERIFICATION" }));
+    host.appendChild(el("span", { class: "msg", text: String(integrity.message || "") }));
+  }
+
+  // ================================================================== GIGS
+
+  function syncChannelFilter() {
+    var select = $("gig-channel");
+    var current = select.value;
+    var wanted = [""].concat(state.channels);
+    var have = Array.prototype.map.call(select.options, function (o) { return o.value; });
+    if (have.join("|") === wanted.join("|")) { return; }
+    clear(select);
+    select.appendChild(el("option", { text: "all", attrs: { value: "" } }));
+    state.channels.forEach(function (name) {
+      select.appendChild(el("option", { text: name, attrs: { value: name } }));
+    });
+    select.value = wanted.indexOf(current) === -1 ? "" : current;
+  }
+
+  function loadGigs() {
+    var limit = encodeURIComponent($("gig-limit").value || "50");
+    var channel = encodeURIComponent($("gig-channel").value || "");
+    return api("/api/gigs?limit=" + limit + "&channel=" + channel).then(function (data) {
+      state.gigs = Array.isArray(data.gigs) ? data.gigs : [];
+      renderGigErrors(data.errors || {});
+      renderGigs();
+    }, failed("Gigs"));
+  }
+
+  function renderGigErrors(errors) {
+    var host = $("gig-errors");
+    clear(host);
+    Object.keys(errors).forEach(function (key) {
+      host.appendChild(el("div", {
+        class: "error-line",
+        text: key + ": " + String(errors[key]),
+      }));
+    });
+  }
+
+  function sortedGigs() {
+    var key = state.gigSort.key;
+    var dir = state.gigSort.dir;
+    return state.gigs.slice().sort(function (a, b) {
+      var av = a[key];
+      var bv = b[key];
+      if (typeof av === "string" || typeof bv === "string") {
+        return String(av || "").localeCompare(String(bv || "")) * dir;
+      }
+      return (num(av) - num(bv)) * dir;
+    });
+  }
+
+  function renderGigs() {
+    var body = $("gig-body");
+    clear(body);
+    var rows = sortedGigs();
+    if (!rows.length) {
+      body.appendChild(el("tr", {}, [
+        el("td", { attrs: { colspan: "7" } }, [empty("No gigs discovered yet. Run a cycle, or check the Discovery tab.")]),
+      ]));
+      return;
+    }
+
+    rows.forEach(function (gig) {
+      var titleCell = el("td", { class: "cell-title" }, [
+        link(gig.url, String(gig.title || "(untitled)")),
+      ]);
+      var deadline = num(gig.deadline_ts);
+      if (deadline > 0) {
+        titleCell.appendChild(el("span", {
+          class: "cell-note",
+          text: "deadline " + whenLocal(deadline),
+        }));
+      }
+      if (gig.source) {
+        titleCell.appendChild(el("span", { class: "cell-note", text: "source: " + String(gig.source) }));
+      }
+
+      var take = el("button", {
+        class: "btn btn-take",
+        text: "Take",
+        attrs: { type: "button" },
+        on: { click: function (ev) { takeGig(String(gig.id), ev.currentTarget); } },
+      });
+
+      body.appendChild(el("tr", {}, [
+        el("td", {}, [chip(String(gig.channel || "?"), "chip-quiet")]),
+        titleCell,
+        el("td", { class: "right num", text: money(gig.reward_usdt) }),
+        el("td", { class: "right num", text: num(gig.effort_hours).toFixed(1) }),
+        el("td", { class: "right num", text: pct(gig.payout_probability) }),
+        el("td", { class: "right num", text: money(gig.usdt_per_hour) }),
+        el("td", { class: "right" }, [take]),
+      ]));
+    });
+  }
+
+  function takeGig(gigId, button) {
+    button.disabled = true;
+    api("/api/gigs/" + encodeURIComponent(gigId) + "/take", { method: "POST" }).then(function (data) {
+      var order = data.order || {};
+      toast("Order drafted: " + String(order.title || gigId) + " · " + String(order.status || ""), "ok");
+      if (data.approval_id) {
+        toast("Waiting for your approval before anything is sent.", "warn");
+      }
+      return Promise.all([loadGigs(), refreshState().catch(function () {})]);
+    }, function (err) {
+      button.disabled = false;
+      failed("Take")(err);
+    });
+  }
+
+  function wireGigs() {
+    $("gig-refresh").addEventListener("click", loadGigs);
+    $("gig-channel").addEventListener("change", loadGigs);
+    $("gig-limit").addEventListener("change", loadGigs);
+
+    $("gig-table").querySelectorAll(".th-sort").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var key = button.dataset.sort;
+        if (state.gigSort.key === key) {
+          state.gigSort.dir = -state.gigSort.dir;
+        } else {
+          state.gigSort.key = key;
+          state.gigSort.dir = (key === "channel" || key === "title") ? 1 : -1;
+        }
+        $("gig-table").querySelectorAll("th[aria-sort]").forEach(function (th) {
+          th.setAttribute("aria-sort", "none");
+        });
+        button.closest("th").setAttribute(
+          "aria-sort", state.gigSort.dir === 1 ? "ascending" : "descending");
+        renderGigs();
+      });
+    });
+  }
+
+  // ============================================================= APPROVALS
+
+  function loadApprovals() {
+    return api("/api/approvals").then(function (data) {
+      renderApprovals(Array.isArray(data.approvals) ? data.approvals : []);
+    }, failed("Approvals"));
+  }
+
+  function renderApprovals(rows) {
+    var host = $("approval-list");
+    clear(host);
+    if (!rows.length) {
+      host.appendChild(empty("Nothing waiting on you. The agent stops here before it speaks to anyone."));
+      return;
+    }
+
+    rows.forEach(function (row) {
+      var id = String(row.id || "");
+      var note = el("input", {
+        class: "input grow",
+        attrs: {
+          type: "text", placeholder: "note (optional, recorded in the journal)",
+          "aria-label": "Decision note", maxlength: "300",
+        },
+      });
+
+      var approve = el("button", {
+        class: "btn btn-big btn-approve", text: "Approve", attrs: { type: "button" },
+      });
+      var reject = el("button", {
+        class: "btn btn-big btn-reject", text: "Reject", attrs: { type: "button" },
+      });
+
+      function decide(approved) {
+        approve.disabled = true;
+        reject.disabled = true;
+        api("/api/approvals/" + encodeURIComponent(id) + "/decide", {
+          method: "POST",
+          body: { approved: approved, note: note.value.slice(0, 300) },
+        }).then(function () {
+          toast((approved ? "Approved" : "Rejected") + ": " + String(row.title || id), approved ? "ok" : "");
+          return Promise.all([loadApprovals(), refreshState().catch(function () {})]);
+        }, function (err) {
+          approve.disabled = false;
+          reject.disabled = false;
+          failed("Decision")(err);
+        });
+      }
+
+      approve.addEventListener("click", function () { decide(true); });
+      reject.addEventListener("click", function () { decide(false); });
+
+      host.appendChild(el("article", { class: "approval" }, [
+        el("div", { class: "approval-head" }, [
+          el("span", { class: "approval-title", text: String(row.title || "(untitled)") }),
+          chip(String(row.kind || "approval"), "chip-quiet"),
+          row.channel ? chip(String(row.channel), "chip-quiet") : null,
+          el("span", { class: "stamp", text: whenLocal(row.created_ts) }),
+        ]),
+        el("pre", { class: "approval-detail", text: String(row.detail || "(no detail supplied)") }),
+        el("div", { class: "approval-actions" }, [note, approve, reject]),
+      ]));
+    });
+  }
+
+  // ============================================================ STOREFRONT
+
+  function loadStorefront() {
+    var a = api("/api/catalogue").then(renderCatalogue, failed("Catalogue"));
+    var b = api("/api/invoices").then(function (data) {
+      renderInvoices(Array.isArray(data.invoices) ? data.invoices : []);
+    }, failed("Invoices"));
+    return Promise.all([a, b]);
+  }
+
+  function renderCatalogue(data) {
+    var receiving = data.receiving || {};
+    var host = $("receiving");
+    clear(host);
+    var address = String(receiving.address || "");
+    if (!address) {
+      host.appendChild(chip("no receiving address", "chip-bad",
+        "set USDT_WALLET_TRON (or another chain) and restart the agent"));
+    } else {
+      host.appendChild(chip(String(receiving.chain || "?"), "chip-info"));
+      host.appendChild(el("span", { class: "wallet-addr", text: address, title: address }));
+      host.appendChild(copyButton(address, "Copy address"));
+    }
+
+    var grid = $("catalogue");
+    clear(grid);
+    var offers = Array.isArray(data.catalogue) ? data.catalogue : [];
+    if (!offers.length) { grid.appendChild(empty("The catalogue is empty.")); return; }
+
+    offers.forEach(function (offer) {
+      var sku = String(offer.sku || "");
+      var ref = el("input", {
+        class: "input",
+        attrs: { type: "text", placeholder: "customer ref (optional)", "aria-label": "Customer reference for " + sku, maxlength: "64" },
+      });
+      var button = el("button", {
+        class: "btn btn-primary", text: "Create invoice", attrs: { type: "button" },
+      });
+      button.addEventListener("click", function () {
+        button.disabled = true;
+        api("/api/invoices", { method: "POST", body: { sku: sku, ref: ref.value.slice(0, 64) } })
+          .then(function (res) {
+            var inv = res.invoice || {};
+            button.disabled = false;
+            ref.value = "";
+            toast("Invoice " + String(inv.invoice_id || "") + " — pay exactly " +
+              exact(inv.pay_exactly_usdt) + " USDT", "ok");
+            return loadStorefront();
+          }, function (err) {
+            button.disabled = false;
+            failed("Invoice")(err);
+          });
+      });
+
+      grid.appendChild(el("div", { class: "offer" }, [
+        el("div", { class: "channel-head" }, [
+          el("span", { class: "channel-name", text: String(offer.title || sku) }),
+          chip(sku, "chip-quiet"),
+        ]),
+        el("span", { class: "offer-price num", text: money(offer.price_usdt) + " USDT" }),
+        el("p", { class: "offer-desc", text: String(offer.description || "") }),
+        offer.delivery ? chip(String(offer.delivery), "chip-quiet") : null,
+        ref,
+        button,
+      ]));
+    });
+  }
+
+  function renderInvoices(rows) {
+    var host = $("invoices");
+    clear(host);
+    if (!rows.length) {
+      host.appendChild(empty("No invoices issued in this session."));
+      return;
+    }
+
+    rows.slice().reverse().forEach(function (inv) {
+      var paid = String(inv.status || "") === "paid";
+      var amount = exact(inv.pay_exactly_usdt);
+      var address = String(inv.pay_to || "");
+
+      var card = el("article", { class: "invoice " + (paid ? "paid" : "") }, [
+        el("div", { class: "invoice-head" }, [
+          el("span", { class: "invoice-id", text: String(inv.invoice_id || "") }),
+          chip(String(inv.sku || ""), "chip-quiet"),
+          paid ? chip("paid · confirmed on-chain", "chip-ok") : chip("unpaid · not income yet", "chip-expected"),
+          el("span", { class: "chip chip-quiet", data: { expires: String(num(inv.expires_ts)) }, text: "…" }),
+        ]),
+        el("div", { class: "copyfield" }, [
+          el("span", { class: "copyvalue num", text: amount + " USDT" }),
+          copyButton(amount, "Copy amount"),
+        ]),
+        el("div", { class: "copyfield" }, [
+          el("span", { class: "copyvalue addr", text: address || "no address" }),
+          address ? copyButton(address, "Copy address") : null,
+        ]),
+        el("div", { class: "invoice-meta" }, [
+          chip(String(inv.chain || "?"), "chip-info"),
+          el("span", { class: "stamp", text: String(inv.note || "") }),
+        ]),
+      ]);
+      host.appendChild(card);
+    });
+    tickCountdowns();
+  }
+
+  // =============================================================== TRADING
+
+  var SVG_NS = "http://www.w3.org/2000/svg";
+
+  function svg(tag, attrs) {
+    var node = document.createElementNS(SVG_NS, tag);
+    Object.keys(attrs || {}).forEach(function (k) { node.setAttribute(k, String(attrs[k])); });
+    return node;
+  }
+
+  function sparkline(points) {
+    var W = 1000;
+    var H = 140;
+    var PAD = 10;
+    var root = svg("svg", {
+      viewBox: "0 0 " + W + " " + H,
+      preserveAspectRatio: "none",
+      role: "img",
+      "aria-label": "Equity curve, " + points.length + " samples",
+    });
+
+    var values = points.map(function (p) { return num(p[1]); });
+    var lo = Math.min.apply(null, values);
+    var hi = Math.max.apply(null, values);
+    var span = hi - lo;
+    var flat = span < 1e-9;
+
+    function x(i) { return points.length < 2 ? W / 2 : (i / (points.length - 1)) * W; }
+    function y(v) { return flat ? H / 2 : H - PAD - ((v - lo) / span) * (H - 2 * PAD); }
+
+    var d = "";
+    values.forEach(function (v, i) { d += (i ? " L " : "M ") + x(i).toFixed(2) + " " + y(v).toFixed(2); });
+
+    root.appendChild(svg("path", {
+      d: d + " L " + x(values.length - 1).toFixed(2) + " " + H + " L " + x(0).toFixed(2) + " " + H + " Z",
+      fill: "var(--info-soft)", stroke: "none",
+    }));
+    root.appendChild(svg("line", {
+      x1: 0, x2: W, y1: y(values[0]).toFixed(2), y2: y(values[0]).toFixed(2),
+      stroke: "var(--line-strong)", "stroke-width": "1",
+      "stroke-dasharray": "4 4", "vector-effect": "non-scaling-stroke",
+    }));
+    root.appendChild(svg("path", {
+      d: d, fill: "none", stroke: "var(--info)", "stroke-width": "2",
+      "stroke-linejoin": "round", "stroke-linecap": "round",
+      "vector-effect": "non-scaling-stroke",
+    }));
+    root.appendChild(svg("line", {
+      x1: x(values.length - 1).toFixed(2), x2: x(values.length - 1).toFixed(2),
+      y1: (y(values[values.length - 1]) - 6).toFixed(2),
+      y2: (y(values[values.length - 1]) + 6).toFixed(2),
+      stroke: "var(--info)", "stroke-width": "2", "vector-effect": "non-scaling-stroke",
+    }));
+    return { node: root, lo: lo, hi: hi };
+  }
+
+  function loadTrading() {
+    return api("/api/trading").then(function (data) {
+      renderEquity(Array.isArray(data.equity) ? data.equity : []);
+      renderTotals(data.totals || {});
+      renderStrategies(data.strategies || {});
+    }, failed("Trading"));
+  }
+
+  function renderEquity(points) {
+    var host = $("spark");
+    clear(host);
+    var clean = points.filter(function (p) { return Array.isArray(p) && p.length >= 2; });
+
+    if (clean.length < 2) {
+      host.appendChild(empty("Not enough equity history to draw a curve yet."));
+      $("spark-hi").textContent = "—";
+      $("spark-lo").textContent = "—";
+      $("spark-from").textContent = "";
+      $("spark-to").textContent = "";
+      return;
+    }
+
+    // Keep the DOM small on long histories; the shape survives decimation.
+    var step = Math.ceil(clean.length / 1200);
+    var sampled = step > 1 ? clean.filter(function (_, i) { return i % step === 0; }) : clean;
+    if (sampled[sampled.length - 1] !== clean[clean.length - 1]) {
+      sampled.push(clean[clean.length - 1]);
+    }
+
+    var drawn = sparkline(sampled);
+    host.appendChild(drawn.node);
+    $("spark-hi").textContent = money(drawn.hi);
+    $("spark-lo").textContent = money(drawn.lo);
+    $("spark-from").textContent = whenLocal(clean[0][0]);
+    $("spark-to").textContent = whenLocal(clean[clean.length - 1][0]) +
+      " · " + money(clean[clean.length - 1][1]) + " USDT";
+  }
+
+  function renderTotals(totals) {
+    var host = $("trading-totals");
+    clear(host);
+    host.appendChild(countBox("Closed trades", count(totals.closed_trades)));
+    host.appendChild(countBox("Realized P&L", money(totals.realized_pnl, 4)));
+    host.appendChild(countBox("Costs", money(totals.costs, 4)));
+    host.appendChild(countBox("Gross accrued", money(totals.gross, 4)));
+  }
+
+  function renderStrategies(stats) {
+    var body = $("strategy-body");
+    clear(body);
+    var names = Object.keys(stats).sort();
+    if (!names.length) {
+      body.appendChild(el("tr", {}, [
+        el("td", { attrs: { colspan: "6" } }, [empty("No closed trades yet.")]),
+      ]));
+      return;
+    }
+    names.forEach(function (name) {
+      var s = stats[name] || {};
+      body.appendChild(el("tr", {}, [
+        el("td", { class: "mono", text: name }),
+        el("td", { class: "right num", text: count(s.n) }),
+        el("td", { class: "right num", text: money(s.pnl, 4) }),
+        el("td", { class: "right num", text: num(s.avg_bps).toFixed(2) }),
+        el("td", { class: "right num", text: pct(s.win_rate, 1) }),
+        el("td", { class: "right num", text: money(s.turnover) }),
+      ]));
+    });
+  }
+
+  // ================================================================ LEDGER
+
+  function loadLedger() {
+    var limit = encodeURIComponent($("ledger-limit").value || "50");
+    return api("/api/ledger?limit=" + limit).then(function (data) {
+      renderIntegrity($("ledger-integrity"), data.integrity || {});
+      renderLedgerRows(Array.isArray(data.events) ? data.events : []);
+    }, failed("Ledger"));
+  }
+
+  function renderLedgerRows(events) {
+    var body = $("ledger-body");
+    clear(body);
+    if (!events.length) {
+      body.appendChild(el("tr", {}, [
+        el("td", { attrs: { colspan: "4" } }, [empty("The journal is empty.")]),
+      ]));
+      return;
+    }
+    events.forEach(function (event) {
+      var kind = String(event.kind || "");
+      var extra = kind === "income" ? " income" : (kind.indexOf("error") !== -1 ? " error" : "");
+      var payload;
+      try {
+        payload = JSON.stringify(event.payload, null, 2);
+      } catch (e) {
+        payload = String(event.payload);
+      }
+      body.appendChild(el("tr", {}, [
+        el("td", { class: "num", text: count(event.seq) }),
+        el("td", { class: "num", text: whenLocal(event.ts) }),
+        el("td", {}, [el("span", { class: "kind" + extra, text: kind })]),
+        el("td", {}, [el("pre", { class: "json", text: payload === undefined ? "" : payload })]),
+      ]));
+    });
+  }
+
+  // ============================================================= DISCOVERY
+
+  /* The probe payload is defined by the server and may grow fields. Render the
+     ones we understand, then dump the rest as inert key/value text rather than
+     silently hiding information the operator may need. */
+  var PROBE_TITLE_KEYS = ["name", "source", "label", "title", "url", "host"];
+  var PROBE_OK_KEYS = ["ok", "healthy", "reachable", "alive", "up"];
+  var PROBE_SHOWN = PROBE_TITLE_KEYS.concat(PROBE_OK_KEYS, ["error", "url"]);
+
+  function probeCard(probe) {
+    var title = "";
+    for (var i = 0; i < PROBE_TITLE_KEYS.length; i++) {
+      if (probe[PROBE_TITLE_KEYS[i]]) { title = String(probe[PROBE_TITLE_KEYS[i]]); break; }
+    }
+
+    var health = null;
+    for (var j = 0; j < PROBE_OK_KEYS.length; j++) {
+      if (typeof probe[PROBE_OK_KEYS[j]] === "boolean") {
+        health = probe[PROBE_OK_KEYS[j]];
+        break;
+      }
+    }
+
+    var head = el("div", { class: "source-head" }, [
+      el("span", { class: "channel-name", text: title || "(unnamed source)" }),
+      health === null ? chip("unknown", "chip-quiet")
+        : (health ? chip("reachable", "chip-ok") : chip("unreachable", "chip-warn")),
+    ]);
+
+    var url = safeUrl(probe.url);
+    if (url && title !== String(probe.url)) { head.appendChild(link(url, url)); }
+    else if (!url && probe.url) {
+      // Not http(s): show it as text so the operator can see what was rejected.
+      head.appendChild(el("span", { class: "source-url", text: String(probe.url) }));
+    }
+
+    var card = el("article", { class: "source" }, [head]);
+
+    if (probe.error) {
+      card.appendChild(el("div", { class: "error-line", text: String(probe.error) }));
+    }
+
+    var dl = el("dl", { class: "kv" });
+    Object.keys(probe).forEach(function (key) {
+      if (PROBE_SHOWN.indexOf(key) !== -1) { return; }
+      var value = probe[key];
+      var rendered;
+      if (value === null || value === undefined) {
+        rendered = "—";
+      } else if (typeof value === "object") {
+        try { rendered = JSON.stringify(value); } catch (e) { rendered = "[unserialisable]"; }
+      } else if (typeof value === "number" && /_ts$/.test(key)) {
+        rendered = whenLocal(value);
+      } else {
+        rendered = String(value);
+      }
+      dl.appendChild(el("dt", { text: key }));
+      dl.appendChild(el("dd", { text: rendered.slice(0, 2000) }));
+    });
+    if (dl.childElementCount) { card.appendChild(dl); }
+    return card;
+  }
+
+  function loadDiscovery() {
+    return api("/api/discovery").then(function (data) {
+      var host = $("source-list");
+      clear(host);
+      // The registry is optional: the server answers 200 with an explanation
+      // rather than failing the page when it is not installed.
+      if (data.error) {
+        host.appendChild(el("div", { class: "error-line", text: String(data.error) }));
+      }
+      var sources = Array.isArray(data.sources) ? data.sources : [];
+      if (!sources.length) {
+        host.appendChild(empty("No sources reported."));
+        return;
+      }
+      sources.forEach(function (probe) {
+        host.appendChild(probeCard(probe && typeof probe === "object" ? probe : { name: String(probe) }));
+      });
+    }, failed("Discovery"));
+  }
+
+  function wireProbe() {
+    $("probe-form").addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      var input = $("probe-url");
+      var button = $("probe-submit");
+      var url = input.value.trim();
+      if (!url) { return; }
+      button.disabled = true;
+      api("/api/discovery/probe", { method: "POST", body: { url: url } }).then(function (data) {
+        button.disabled = false;
+        var host = $("probe-result");
+        clear(host);
+        var probe = data.probe && typeof data.probe === "object" ? data.probe : {};
+        host.appendChild(probeCard(probe));
+      }, function (err) {
+        button.disabled = false;
+        var host = $("probe-result");
+        clear(host);
+        host.appendChild(el("div", { class: "error-line", text: String(err.message || err) }));
+      });
+    });
+  }
+
+  // =============================================================== COLLECT
+
+  function wireCollect() {
+    $("btn-collect").addEventListener("click", function () {
+      var button = $("btn-collect");
+      button.disabled = true;
+      button.textContent = "Collecting…";
+      api("/api/collect", { method: "POST" }).then(function (res) {
+        button.disabled = false;
+        button.textContent = "Collect";
+        var found = num(res.confirmed_usdt);
+        if (found > 0) {
+          toast("+" + money(found, 4) + " USDT confirmed · " + count(res.new_transfers) +
+            " transfers · " + count(res.matched) + " matched", "ok");
+        } else {
+          toast("No new money on-chain. Treasury unchanged at " +
+            money(res.treasury_usdt) + " USDT.");
+        }
+        if (num(res.unattributed_usdt) > 0) {
+          toast("Unattributed: " + money(res.unattributed_usdt, 4) +
+            " USDT arrived without a matching expectation.", "warn");
+        }
+        if (num(res.expired) > 0) {
+          toast(count(res.expired) + " overdue expectation(s) expired — never counted as income.", "warn");
+        }
+        Object.keys(res.baselined || {}).forEach(function (chain) {
+          toast("Baselined " + chain + " at " + money(res.baselined[chain], 4) +
+            " USDT — pre-existing funds are not earnings.", "warn");
+        });
+        Object.keys(res.errors || {}).forEach(function (chain) {
+          toast(chain + ": " + String(res.errors[chain]), "bad");
+        });
+        return refreshState().catch(function () {});
+      }, function (err) {
+        button.disabled = false;
+        button.textContent = "Collect";
+        failed("Collect")(err);
+      });
+    });
+  }
+
+  // ========================================================= TICK / POLLING
+
+  function tickCountdowns() {
+    var now = Date.now() / 1000;
+    document.querySelectorAll("[data-expires]").forEach(function (node) {
+      var expires = num(node.dataset.expires);
+      if (expires <= 0) { node.textContent = "no expiry"; return; }
+      var left = expires - now;
+      node.textContent = left <= 0 ? "expired" : "expires in " + duration(left);
+      node.classList.toggle("chip-warn", left <= 0);
+    });
+  }
+
+  function tickStamp() {
+    var at = num($("stamp").dataset.at);
+    if (at > 0) { $("stamp").textContent = "updated " + ago(at); }
+  }
+
+  function poll() {
+    if (document.hidden) { return; }
+    refreshState().catch(function () { /* banner already reflects it */ });
+  }
+
+  // ================================================================== BOOT
+
+  function forgetLegacyToken() {
+    // Earlier builds persisted the token here. Clear it on load so upgrading
+    // removes the secret rather than leaving it sitting in the browser.
+    try { window.localStorage.removeItem("usdt-agent.token"); } catch (e) { /* ignore */ }
+  }
+
+  function resolveToken() {
+    // Deliberately returns nothing. The server no longer puts a token in the
+    // markup — that made it readable by `curl /` from any local process — and
+    // we do not persist one to localStorage, where an XSS could lift it. The
+    // normal path is the HttpOnly cookie; a hand-typed token stays in memory
+    // for this tab only.
+    return "";
+  }
+
+  function wireToken() {
+    $("token-form").addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      var value = $("token-input").value.trim();
+      if (!value) { return; }
+      state.token = value;  // in-memory only, gone when the tab closes
+      $("token-input").value = "";
+      showTokenBanner(false);
+      refreshState().then(function () {
+        toast("Token accepted.", "ok");
+        loadTab(state.active);
+      }).catch(function () {});
+    });
+    $("banner-offline").querySelector('[data-action="retry"]').addEventListener("click", poll);
+  }
+
+  function boot() {
+    forgetLegacyToken();
+    state.token = resolveToken();
+    if (!state.token) { showTokenBanner(true); }
+
+    wireTabs();
+    wireGigs();
+    wireCollect();
+    wireProbe();
+    wireToken();
+
+    $("approval-refresh").addEventListener("click", loadApprovals);
+    $("store-refresh").addEventListener("click", loadStorefront);
+    $("trading-refresh").addEventListener("click", loadTrading);
+    $("ledger-refresh").addEventListener("click", loadLedger);
+    $("ledger-limit").addEventListener("change", loadLedger);
+    $("discovery-refresh").addEventListener("click", loadDiscovery);
+
+    selectTab(lsGet(TAB_KEY) || "overview", false);
+
+    refreshState().catch(function () {});
+    window.setInterval(poll, POLL_MS);
+    window.setInterval(function () { tickStamp(); tickCountdowns(); }, 1000);
+
+    document.addEventListener("visibilitychange", function () {
+      if (!document.hidden) { poll(); }
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
+})();
+
+</script>
+</head>
+<body>
+<div class="demo-banner" role="note">
+  <strong>Sample data.</strong>
+  This is the real dashboard with a seeded run behind it, so every tab and button works —
+  but no agent is running and none of these figures are anyone's money.
+  Run <code>usdt-agent web</code> to point it at a live agent.
+</div>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<div id="banners" class="banners">
+  <div id="banner-offline" class="banner banner-bad" role="status" hidden>
+    <strong>Connection lost.</strong>
+    <span id="banner-offline-detail">The agent is not answering. Retrying every 10&nbsp;s.</span>
+    <button type="button" class="btn btn-ghost btn-sm" data-action="retry">Retry now</button>
+  </div>
+  <div id="banner-token" class="banner banner-warn" role="status" hidden>
+    <strong>Not authorised.</strong>
+    <span>Open the launch link the agent printed at startup, or paste its access token.</span>
+    <form id="token-form" class="inline-form">
+      <label class="sr-only" for="token-input">Agent token</label>
+      <input id="token-input" name="token" type="password" class="input mono"
+             autocomplete="off" spellcheck="false" placeholder="X-Agent-Token">
+      <button type="submit" class="btn btn-primary btn-sm">Use token</button>
+    </form>
+  </div>
+</div>
+
+<header class="header">
+  <div class="header-top">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">&#9635;</span>
+      <span class="brand-name">usdt&#8209;agent</span>
+    </div>
+
+    <div class="figures">
+      <div class="figure figure-confirmed">
+        <span class="figure-label">Treasury &middot; confirmed on&#8209;chain</span>
+        <span class="figure-value num" id="fig-confirmed">&mdash;</span>
+        <span class="figure-note">this is the only number that is income</span>
+      </div>
+      <div class="figure figure-expected" id="fig-expected-box">
+        <span class="figure-label">Pipeline &middot; expected</span>
+        <span class="figure-value num" id="fig-expected">&mdash;</span>
+        <span class="figure-note tag-notincome">not income yet</span>
+      </div>
+      <div class="figure figure-quiet">
+        <span class="figure-label">Effort logged</span>
+        <span class="figure-value num" id="fig-hours">&mdash;</span>
+        <span class="figure-note">hours</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button type="button" id="btn-collect" class="btn btn-primary">
+        Collect
+      </button>
+      <span class="stamp" id="stamp" title="Time of the last successful /api/state">never updated</span>
+    </div>
+  </div>
+
+  <nav class="tabs" aria-label="Sections">
+    <div class="tabs-scroll" role="tablist" id="tablist">
+      <button type="button" role="tab" id="tab-overview"  class="tab" data-tab="overview"
+              aria-controls="panel-overview"  aria-selected="true">Overview</button>
+      <button type="button" role="tab" id="tab-gigs"      class="tab" data-tab="gigs"
+              aria-controls="panel-gigs"      aria-selected="false" tabindex="-1">Gigs</button>
+      <button type="button" role="tab" id="tab-approvals" class="tab" data-tab="approvals"
+              aria-controls="panel-approvals" aria-selected="false" tabindex="-1">
+        Approvals <span class="pip" id="pip-approvals" hidden>0</span>
+      </button>
+      <button type="button" role="tab" id="tab-storefront" class="tab" data-tab="storefront"
+              aria-controls="panel-storefront" aria-selected="false" tabindex="-1">Storefront</button>
+      <button type="button" role="tab" id="tab-trading"   class="tab" data-tab="trading"
+              aria-controls="panel-trading"   aria-selected="false" tabindex="-1">Trading</button>
+      <button type="button" role="tab" id="tab-ledger"    class="tab" data-tab="ledger"
+              aria-controls="panel-ledger"    aria-selected="false" tabindex="-1">Ledger</button>
+      <button type="button" role="tab" id="tab-discovery" class="tab" data-tab="discovery"
+              aria-controls="panel-discovery" aria-selected="false" tabindex="-1">Discovery</button>
+    </div>
+  </nav>
+</header>
+
+<main id="main">
+
+  <!-- ================= OVERVIEW ================= -->
+  <section class="panel" id="panel-overview" role="tabpanel" aria-labelledby="tab-overview" tabindex="0">
+    <div class="counts" id="counts"></div>
+
+    <div class="grid grid-2">
+      <section class="card">
+        <div class="card-head">
+          <h2>The ladder</h2>
+          <span class="card-sub" id="ladder-progress"></span>
+        </div>
+        <p class="caption">
+          Rungs are computed from facts &mdash; a wallet that exists, a payout that confirmed &mdash;
+          never from optimism. The current rung lists exactly what unblocks it.
+        </p>
+        <ol class="stepper" id="stepper"></ol>
+      </section>
+
+      <div class="stack">
+        <section class="card">
+          <div class="card-head">
+            <h2>Wallet</h2>
+            <span class="card-sub" id="wallet-total"></span>
+          </div>
+          <p class="caption">
+            Balances are what the address holds right now, including anything you funded it with.
+            They are not earnings: only confirmed incoming transfers move the treasury figure.
+          </p>
+          <div id="wallet-list" class="wallet-list"></div>
+        </section>
+
+        <section class="card">
+          <div class="card-head"><h2>Journal integrity</h2></div>
+          <div id="overview-integrity" class="integrity"></div>
+        </section>
+      </div>
+    </div>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Channels</h2>
+        <span class="card-sub">confirmed vs pipeline, per revenue stream</span>
+      </div>
+      <p class="caption">
+        A verdict of <em>proven</em> requires money that actually arrived &mdash; three or more
+        confirmed payouts. A full pipeline with nothing confirmed stays <em>unproven</em>.
+      </p>
+      <div id="channel-cards" class="channel-grid"></div>
+    </section>
+  </section>
+
+  <!-- ================= GIGS ================= -->
+  <section class="panel" id="panel-gigs" role="tabpanel" aria-labelledby="tab-gigs" tabindex="0" hidden>
+    <section class="card">
+      <div class="card-head">
+        <h2>Ranked opportunities</h2>
+        <div class="toolbar">
+          <label class="field">
+            <span class="field-label">Channel</span>
+            <select id="gig-channel" class="input"><option value="">all</option></select>
+          </label>
+          <label class="field">
+            <span class="field-label">Limit</span>
+            <select id="gig-limit" class="input">
+              <option>25</option><option selected>50</option><option>100</option><option>200</option>
+            </select>
+          </label>
+          <button type="button" class="btn btn-ghost" id="gig-refresh">Refresh</button>
+        </div>
+      </div>
+      <p class="caption">
+        <strong>USDT/h already discounts the odds of being paid</strong> &mdash; it is
+        reward &times; odds &divide; estimated hours, not the headline reward. The hours column is an
+        <strong>estimate, not a measurement</strong>; only a completed order produces a real rate.
+        Nothing in this table is income.
+      </p>
+      <div id="gig-errors" class="errors"></div>
+      <div class="table-wrap">
+        <table class="table" id="gig-table">
+          <caption class="sr-only">Discovered gigs, sortable by column</caption>
+          <thead>
+            <tr>
+              <th scope="col" aria-sort="none"><button type="button" class="th-sort" data-sort="channel">Channel</button></th>
+              <th scope="col" aria-sort="none"><button type="button" class="th-sort" data-sort="title">Title</button></th>
+              <th scope="col" class="right" aria-sort="none"><button type="button" class="th-sort" data-sort="reward_usdt">Reward</button></th>
+              <th scope="col" class="right" aria-sort="none"><button type="button" class="th-sort" data-sort="effort_hours">Est. h</button></th>
+              <th scope="col" class="right" aria-sort="none"><button type="button" class="th-sort" data-sort="payout_probability">Odds</button></th>
+              <th scope="col" class="right" aria-sort="descending"><button type="button" class="th-sort" data-sort="usdt_per_hour">USDT/h</button></th>
+              <th scope="col" class="right">Take</th>
+            </tr>
+          </thead>
+          <tbody id="gig-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </section>
+
+  <!-- ================= APPROVALS ================= -->
+  <section class="panel" id="panel-approvals" role="tabpanel" aria-labelledby="tab-approvals" tabindex="0" hidden>
+    <section class="card">
+      <div class="card-head">
+        <h2>Human&#8209;in&#8209;the&#8209;loop gate</h2>
+        <button type="button" class="btn btn-ghost" id="approval-refresh">Refresh</button>
+      </div>
+      <p class="caption">
+        Anything that speaks to a third party on your behalf stops here. Read the detail before
+        deciding &mdash; the text below comes from the outside world and is shown verbatim.
+      </p>
+      <div id="approval-list" class="stack"></div>
+    </section>
+  </section>
+
+  <!-- ================= STOREFRONT ================= -->
+  <section class="panel" id="panel-storefront" role="tabpanel" aria-labelledby="tab-storefront" tabindex="0" hidden>
+    <section class="card">
+      <div class="card-head">
+        <h2>Receiving address</h2>
+        <button type="button" class="btn btn-ghost" id="store-refresh">Refresh</button>
+      </div>
+      <div id="receiving" class="receiving"></div>
+      <p class="caption warn-caption">
+        Every invoice adds a unique fraction of a cent to the price. <strong>The customer must pay
+        the exact amount</strong> &mdash; those cents are the only thing identifying which invoice
+        was settled. A rounded payment cannot be matched automatically.
+      </p>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Catalogue</h2></div>
+      <div id="catalogue" class="catalogue-grid"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Invoices</h2>
+        <span class="card-sub tag-notincome">unpaid invoices are not income</span>
+      </div>
+      <div id="invoices" class="stack"></div>
+    </section>
+  </section>
+
+  <!-- ================= TRADING ================= -->
+  <section class="panel" id="panel-trading" role="tabpanel" aria-labelledby="tab-trading" tabindex="0" hidden>
+    <section class="card">
+      <div class="card-head">
+        <h2>Equity curve</h2>
+        <button type="button" class="btn btn-ghost" id="trading-refresh">Refresh</button>
+      </div>
+      <p class="caption">
+        The trading half deploys capital the earning half acquired. This curve is equity under
+        management, not earnings &mdash; it moves with market P&amp;L.
+      </p>
+      <div class="spark-wrap">
+        <div class="spark-axis">
+          <span class="num" id="spark-hi">&mdash;</span>
+          <span class="num" id="spark-lo">&mdash;</span>
+        </div>
+        <div id="spark" class="spark"></div>
+      </div>
+      <div class="spark-foot">
+        <span class="stamp" id="spark-from"></span>
+        <span class="stamp" id="spark-to"></span>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Totals</h2></div>
+      <div id="trading-totals" class="counts"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Per&#8209;strategy</h2></div>
+      <div class="table-wrap">
+        <table class="table">
+          <caption class="sr-only">Closed-trade statistics per strategy</caption>
+          <thead>
+            <tr>
+              <th scope="col">Strategy</th>
+              <th scope="col" class="right">Closed</th>
+              <th scope="col" class="right">Realized P&amp;L</th>
+              <th scope="col" class="right">Avg bps</th>
+              <th scope="col" class="right">Win rate</th>
+              <th scope="col" class="right">Turnover</th>
+            </tr>
+          </thead>
+          <tbody id="strategy-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </section>
+
+  <!-- ================= LEDGER ================= -->
+  <section class="panel" id="panel-ledger" role="tabpanel" aria-labelledby="tab-ledger" tabindex="0" hidden>
+    <section class="card">
+      <div class="card-head">
+        <h2>Hash&#8209;chained journal</h2>
+        <div class="toolbar">
+          <label class="field">
+            <span class="field-label">Limit</span>
+            <select id="ledger-limit" class="input">
+              <option>25</option><option selected>50</option><option>100</option><option>250</option>
+            </select>
+          </label>
+          <button type="button" class="btn btn-ghost" id="ledger-refresh">Refresh</button>
+        </div>
+      </div>
+      <div id="ledger-integrity" class="integrity"></div>
+      <p class="caption">
+        Only confirmed money is appended here. Expected payouts never enter the audit trail.
+      </p>
+      <div class="table-wrap">
+        <table class="table table-fixed">
+          <caption class="sr-only">Recent journal events</caption>
+          <thead>
+            <tr>
+              <th scope="col" class="col-seq">Seq</th>
+              <th scope="col" class="col-ts">Time</th>
+              <th scope="col" class="col-kind">Kind</th>
+              <th scope="col">Payload</th>
+            </tr>
+          </thead>
+          <tbody id="ledger-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </section>
+
+  <!-- ================= DISCOVERY ================= -->
+  <section class="panel" id="panel-discovery" role="tabpanel" aria-labelledby="tab-discovery" tabindex="0" hidden>
+    <section class="card">
+      <div class="card-head">
+        <h2>Probe a candidate source</h2>
+      </div>
+      <p class="caption">
+        Anything reachable can be checked before it is trusted. Probe output is third&#8209;party text
+        and is rendered as inert plain text.
+      </p>
+      <form id="probe-form" class="inline-form">
+        <label class="sr-only" for="probe-url">URL to probe</label>
+        <input id="probe-url" name="url" type="url" class="input mono grow"
+               placeholder="https://example.com/api/bounties" spellcheck="false" autocomplete="off">
+        <button type="submit" class="btn btn-primary" id="probe-submit">Probe</button>
+      </form>
+      <div id="probe-result" class="stack"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Known sources</h2>
+        <button type="button" class="btn btn-ghost" id="discovery-refresh">Refresh</button>
+      </div>
+      <div id="source-list" class="stack"></div>
+    </section>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <span>Nothing counts as earned until it is confirmed on&#8209;chain.</span>
+  <span class="stamp" id="foot-stamp"></span>
+</footer>
+
+<div id="toasts" class="toasts" role="status" aria-live="polite" aria-atomic="false"></div>
+</body>
+</html>

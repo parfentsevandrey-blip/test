@@ -1,13 +1,14 @@
 PY ?= python3
 export PYTHONPATH := src
 
-.PHONY: help test test-verbose web earn-setup earn-scan wallet collect serve channels \
+.PHONY: help test test-verbose dashboard-html web earn-setup earn-scan wallet collect serve channels \
         scan doctor backtest run report verify strategies lint clean
 
 help:
 	@echo "make test        — run the test suite (170 tests, no network needed)"
 	@echo ""
 	@echo "make web         — the operator dashboard in a browser"
+	@echo "make dashboard-html — rebuild docs/dashboard.html (opens with no server)"
 	@echo ""
 	@echo "  earning half — acquiring USDT"
 	@echo "make earn-setup  — where you are on the ladder and what to do next"
@@ -30,6 +31,9 @@ test:
 
 test-verbose:
 	$(PY) -m unittest discover -s tests -p 'test_*.py' -v
+
+dashboard-html:
+	$(PY) tools/build_standalone_dashboard.py
 
 web:
 	$(PY) -m usdt_agent -c config/agent.toml web
