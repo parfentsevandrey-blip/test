@@ -100,6 +100,22 @@ class EarnConfig:
 
 
 @dataclass(slots=True)
+class WebConfig:
+    """The local operator dashboard.
+
+    Binds to loopback by default and is protected by a token generated at
+    startup: the UI can approve work and mint invoices in your name, so it is
+    a control surface, not a status page. Exposing it publicly is a deliberate
+    act that needs a TLS-terminating proxy in front.
+    """
+
+    host: str = "127.0.0.1"
+    port: int = 8500
+    open_browser: bool = True
+    poll_interval_s: float = 10.0
+
+
+@dataclass(slots=True)
 class AgentConfig:
     mode: str = "paper"  # "paper" | "live"
     starting_equity_usdt: float = 1_000.0
@@ -120,6 +136,7 @@ class AgentConfig:
     allocator: AllocatorConfig = field(default_factory=AllocatorConfig)
     execution: ExecutionConfig = field(default_factory=ExecutionConfig)
     earn: EarnConfig = field(default_factory=EarnConfig)
+    web: WebConfig = field(default_factory=WebConfig)
     strategies: dict[str, StrategyConfig] = field(default_factory=dict)
     notify_webhook: str = ""
 

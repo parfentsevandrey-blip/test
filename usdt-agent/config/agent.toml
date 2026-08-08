@@ -161,3 +161,17 @@ enabled = true
 min_deploy_usdt = 200.0   # below this, gas and effort exceed the yield
 min_apy         = 0.04
 max_risk        = 0.5
+
+# --------------------------------------------------------------------------
+# Web dashboard
+# --------------------------------------------------------------------------
+#
+# The UI can approve work and mint invoices in your name, so it is a control
+# surface, not a status page. It binds to loopback and is protected by a token
+# generated at startup. Put a TLS proxy in front before exposing it anywhere.
+
+[web]
+host           = "127.0.0.1"
+port           = 8500
+open_browser   = true
+poll_interval_s = 10.0
