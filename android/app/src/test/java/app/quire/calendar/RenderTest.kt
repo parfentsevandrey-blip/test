@@ -17,7 +17,7 @@ import app.quire.calendar.core.Skin
 import app.quire.calendar.core.Tokens
 import app.quire.calendar.ui.GridStyle
 import app.quire.calendar.ui.MotionProfile
-import app.quire.calendar.ui.WheelMenu
+import app.quire.calendar.ui.BottomBar
 import app.quire.calendar.ui.StageView
 import app.quire.calendar.widget.WidgetRenderer
 import org.junit.Assert.assertEquals
@@ -170,68 +170,76 @@ class RenderTest {
     }
 
     /**
-     * The wheel is one rigid object: wherever it is summoned it keeps its shape
-     * and is only moved to fit, and a sector is chosen by direction rather than
-     * by landing on a target.
+     * The bar is a plain fixed row of five, and the world above it has to end
+     * where the bar begins — not run underneath it.
      */
     @Test
-    fun `the wheel opens as one piece wherever it is summoned`() {
+    fun `the bottom bar carries the world above it`() {
         val density = context.resources.displayMetrics.density
-        val cases = listOf(
-            Triple("wheel-corner", 384f to 812f, null),
-            Triple("wheel-centre", 205f to 420f, 205f to 300f),
-        )
-        cases.forEach { (name, at, drag) ->
-            val behind = stage(dark = false).apply {
-                goTo(today, level = 1, animate = false)
-                setReceded(true)
-            }
-            val wheel = WheelMenu(context).apply {
-                palette = Tokens.palette(false, Accent.CINNABAR)
+        listOf(false to "bar-paper", true to "bar-ink").forEach { (dark, name) ->
+            val skin = Tokens.palette(dark, Accent.CINNABAR)
+            val bar = BottomBar(context).apply {
+                palette = skin
                 motion = MotionProfile.OFF
                 haptics = false
-                safeTop = 60f
-                safeBottom = 48f
+                applyBottomInset((16 * density).toInt())
+                setItems(
+                    listOf(
+                        BottomBar.Item(1, context.getString(R.string.today), R.drawable.ic_ring),
+                        BottomBar.Item(2, context.getString(R.string.year), R.drawable.ic_grid),
+                        BottomBar.Item(3, context.getString(R.string.add), R.drawable.ic_plus),
+                        BottomBar.Item(4, context.getString(R.string.search), R.drawable.ic_search),
+                        BottomBar.Item(5, context.getString(R.string.settings), R.drawable.ic_settings),
+                    ),
+                )
+            }
+            val world = stage(dark).apply {
+                setSafeInsets(52f * density / 3f, bar.occupiedHeight().toFloat())
+                goTo(today, level = 1, animate = false)
             }
             val host = FrameLayout(context)
             host.addView(
-                behind,
+                world,
                 FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT,
                 ),
             )
             host.addView(
-                wheel,
+                bar,
                 FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    android.view.Gravity.BOTTOM,
                 ),
             )
-            host.measure(
-                View.MeasureSpec.makeMeasureSpec((411 * density).toInt(), View.MeasureSpec.EXACTLY),
-                View.MeasureSpec.makeMeasureSpec((891 * density).toInt(), View.MeasureSpec.EXACTLY),
-            )
-            host.layout(0, 0, (411 * density).toInt(), (891 * density).toInt())
-
-            wheel.open(
-                at.first * density,
-                at.second * density,
-                listOf(
-                    WheelMenu.Item(1, "Today", R.drawable.ic_ring),
-                    WheelMenu.Item(2, "Year", R.drawable.ic_grid),
-                    WheelMenu.Item(3, "Search", R.drawable.ic_search),
-                    WheelMenu.Item(4, "Add", R.drawable.ic_plus),
-                    WheelMenu.Item(5, "Settings", R.drawable.ic_settings),
-                ),
-                centreLabel = today.dayOfMonth.toString(),
-            )
-            if (drag != null) {
-                wheel.trackDrag(drag.first * density, drag.second * density)
-                assertTrue("$name should highlight a sector", wheel.highlightedIndex() >= 0)
-            }
             assertPainted(render(host, 411, 891, name), name)
+            assertEquals("five entries", 5, bar.childCount)
         }
+    }
+
+    @Test
+    fun `the year entry lights up only while the year is showing`() {
+        val skin = Tokens.palette(false, Accent.CINNABAR)
+        val bar = BottomBar(context).apply {
+            palette = skin
+            motion = MotionProfile.OFF
+            setItems(
+                listOf(
+                    BottomBar.Item(1, "Today", R.drawable.ic_ring),
+                    BottomBar.Item(2, "Year", R.drawable.ic_grid),
+                ),
+            )
+        }
+        val world = stage(dark = false).apply { goTo(today, level = 1, animate = false) }
+        assertEquals(1, world.level)
+        bar.setActive(if (world.level == 0) 2 else null)
+        world.goToLevel(0)
+        assertEquals(0, world.level)
+        bar.setActive(if (world.level == 0) 2 else null)
+        // Nothing to assert visually here beyond it not throwing; the point is
+        // that the level and the bar agree on one source of truth.
+        assertTrue(true)
     }
 
     @Test

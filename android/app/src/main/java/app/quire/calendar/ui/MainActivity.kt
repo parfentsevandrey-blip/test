@@ -40,7 +40,7 @@ import java.util.Locale
 class MainActivity : BaseActivity(), StageView.Data {
 
     private lateinit var stage: StageView
-    private lateinit var menu: WheelMenu
+    private lateinit var bar: BottomBar
     private lateinit var sheet: SheetOverlay
     private lateinit var loader: MonthLoader
 
@@ -69,7 +69,7 @@ class MainActivity : BaseActivity(), StageView.Data {
 
         val root = FrameLayout(this)
         stage = StageView(this)
-        menu = WheelMenu(this)
+        bar = BottomBar(this)
         sheet = SheetOverlay(this)
 
         root.addView(
@@ -80,10 +80,11 @@ class MainActivity : BaseActivity(), StageView.Data {
             ),
         )
         root.addView(
-            menu,
+            bar,
             FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                android.view.Gravity.BOTTOM,
             ),
         )
         root.addView(
@@ -98,22 +99,31 @@ class MainActivity : BaseActivity(), StageView.Data {
         stage.data = this
         stage.onSelectionChanged = { agendaFor(it) }
         stage.onEntryActivated = { openEvent(it) }
-        stage.onMenuRequested = { x, y -> openMenu(x, y) }
-        stage.onMenuDrag = { x, y -> menu.trackDrag(x, y) }
-        stage.onMenuRelease = { x, y -> menu.trackRelease(x, y) }
-        stage.onLevelChanged = { if (sheet.isShowing) sheet.dismiss() }
+        stage.onComposeRequested = { composeEvent() }
+        stage.onLevelChanged = {
+            bar.setActive(if (stage.level == 0) ACTION_YEAR else null)
+            if (sheet.isShowing) sheet.dismiss()
+        }
 
-        menu.onPick = { handleMenu(it) }
-        menu.onClosed = { stage.setReceded(sheet.isShowing) }
-        sheet.onDismissed = { stage.setReceded(menu.isOpen) }
+        bar.setItems(
+            listOf(
+                BottomBar.Item(ACTION_TODAY, getString(R.string.today), R.drawable.ic_ring),
+                BottomBar.Item(ACTION_YEAR, getString(R.string.year), R.drawable.ic_grid),
+                BottomBar.Item(ACTION_ADD, getString(R.string.add), R.drawable.ic_plus),
+                BottomBar.Item(ACTION_SEARCH, getString(R.string.search), R.drawable.ic_search),
+                BottomBar.Item(ACTION_SETTINGS, getString(R.string.settings), R.drawable.ic_settings),
+            ),
+        )
+        bar.onPick = { handleAction(it) }
+        sheet.onDismissed = { stage.setReceded(false) }
 
         ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
             val bars = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout(),
             )
-            stage.setSafeInsets(bars.top.toFloat(), bars.bottom.toFloat())
-            menu.safeTop = bars.top.toFloat()
-            menu.safeBottom = bars.bottom.toFloat()
+            bar.applyBottomInset(bars.bottom)
+            // The world ends where the bar begins.
+            stage.setSafeInsets(bars.top.toFloat(), bar.occupiedHeight().toFloat())
             sheet.applyInsets(bars.top, bars.bottom)
             insets
         }
@@ -124,7 +134,6 @@ class MainActivity : BaseActivity(), StageView.Data {
                 override fun handleOnBackPressed() {
                     when {
                         sheet.isShowing -> sheet.dismiss()
-                        menu.isOpen -> menu.close()
                         stage.zoomOut() -> Unit
                         else -> {
                             isEnabled = false
@@ -189,9 +198,10 @@ class MainActivity : BaseActivity(), StageView.Data {
             weekNumbers = prefs.weekNumbers,
             heat = prefs.heat,
         )
-        menu.palette = palette
-        menu.motion = motion
-        menu.haptics = prefs.haptics
+        bar.palette = palette
+        bar.motion = motion
+        bar.haptics = prefs.haptics
+        bar.setActive(if (stage.level == 0) ACTION_YEAR else null)
         sheet.palette = palette
         sheet.motion = motion
         loader.invalidate()
@@ -226,31 +236,15 @@ class MainActivity : BaseActivity(), StageView.Data {
         }
     }
 
-    // ---- menu ----------------------------------------------------------
+    // ---- bar -----------------------------------------------------------
 
-    private fun openMenu(x: Float, y: Float) {
-        stage.setReceded(true)
-        menu.open(
-            x,
-            y,
-            listOf(
-                WheelMenu.Item(MENU_TODAY, getString(R.string.today), R.drawable.ic_ring),
-                WheelMenu.Item(MENU_YEAR, getString(R.string.year), R.drawable.ic_grid),
-                WheelMenu.Item(MENU_SEARCH, getString(R.string.search), R.drawable.ic_search),
-                WheelMenu.Item(MENU_ADD, getString(R.string.add), R.drawable.ic_plus),
-                WheelMenu.Item(MENU_SETTINGS, getString(R.string.settings), R.drawable.ic_settings),
-            ),
-            centreLabel = stage.selected.dayOfMonth.toString(),
-        )
-    }
-
-    private fun handleMenu(id: Int) {
+    private fun handleAction(id: Int) {
         when (id) {
-            MENU_TODAY -> stage.goTo(LocalDate.now(), level = 1)
-            MENU_YEAR -> stage.goToLevel(0)
-            MENU_SEARCH -> presentSearch()
-            MENU_ADD -> composeEvent()
-            MENU_SETTINGS -> presentSettings()
+            ACTION_TODAY -> stage.goTo(LocalDate.now(), level = 1)
+            ACTION_YEAR -> stage.goToLevel(if (stage.level == 0) 1 else 0)
+            ACTION_SEARCH -> presentSearch()
+            ACTION_ADD -> composeEvent()
+            ACTION_SETTINGS -> presentSettings()
         }
     }
 
@@ -508,10 +502,10 @@ class MainActivity : BaseActivity(), StageView.Data {
         const val STATE_SELECTED = "selected"
         var askedForPermission = false
 
-        const val MENU_TODAY = 1
-        const val MENU_YEAR = 2
-        const val MENU_SEARCH = 3
-        const val MENU_ADD = 4
-        const val MENU_SETTINGS = 5
+        const val ACTION_TODAY = 1
+        const val ACTION_YEAR = 2
+        const val ACTION_SEARCH = 3
+        const val ACTION_ADD = 4
+        const val ACTION_SETTINGS = 5
     }
 }

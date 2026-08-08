@@ -116,10 +116,6 @@ class StageView(context: Context) : View(context) {
         private set
 
     var onSelectionChanged: ((LocalDate) -> Unit)? = null
-    var onMenuRequested: ((Float, Float) -> Unit)? = null
-    /** While the long-pressing finger is still down, it steers the radial menu. */
-    var onMenuDrag: ((Float, Float) -> Unit)? = null
-    var onMenuRelease: ((Float, Float) -> Unit)? = null
     var onEntryActivated: ((AgendaEntry) -> Unit)? = null
     var onComposeRequested: ((LocalDate) -> Unit)? = null
     var onLevelChanged: (() -> Unit)? = null
@@ -139,7 +135,6 @@ class StageView(context: Context) : View(context) {
     private var pinching = false
     private var cardDragging = false
     private var pressedEntry = -1
-    private var routingToMenu = false
     private var dockGesture = false
     private var dockDragTotal = 0f
 
@@ -835,14 +830,12 @@ class StageView(context: Context) : View(context) {
             }
 
             override fun onLongPress(e: MotionEvent) {
+                if (level != 1) return
                 pressedEntry = -1
                 dockGesture = false
-                // Whatever the menu does next should apply to the day under the
-                // finger, so choose it before the wheel covers it.
-                if (level == 1) selectDayAt(e.x, e.y)
-                routingToMenu = true
+                selectDayAt(e.x, e.y)
                 tick(HapticFeedbackConstants.LONG_PRESS)
-                onMenuRequested?.invoke(e.x, e.y)
+                onComposeRequested?.invoke(selected)
                 invalidate()
             }
         },
@@ -871,17 +864,6 @@ class StageView(context: Context) : View(context) {
     )
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        if (routingToMenu) {
-            when (event.actionMasked) {
-                MotionEvent.ACTION_MOVE -> onMenuDrag?.invoke(event.x, event.y)
-                MotionEvent.ACTION_UP -> {
-                    routingToMenu = false
-                    onMenuRelease?.invoke(event.x, event.y)
-                }
-                MotionEvent.ACTION_CANCEL -> routingToMenu = false
-            }
-            return true
-        }
         pinch.onTouchEvent(event)
         val handled = gestures.onTouchEvent(event)
         if (event.actionMasked == MotionEvent.ACTION_UP ||
