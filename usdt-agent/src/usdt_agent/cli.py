@@ -7,6 +7,7 @@
     usdt-agent verify       # check the ledger hash chain
     usdt-agent doctor       # connectivity + config + live-interlock check
     usdt-agent strategies   # what the agent knows how to do
+    usdt-agent web          # the operator dashboard in a browser
 
     usdt-agent earn setup   # acquiring USDT: what to do first, from zero
     usdt-agent earn scan    # gigs ranked by USDT per hour
@@ -16,6 +17,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import logging
 import sys
@@ -114,6 +116,12 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("verify", help="verify the ledger hash chain")
     sub.add_parser("doctor", help="check data sources, config and live interlocks")
     sub.add_parser("strategies", help="list the available strategies")
+
+    web = sub.add_parser("web", help="open the operator dashboard in a browser")
+    web.add_argument("--host", default=None)
+    web.add_argument("--port", type=int, default=None)
+    web.add_argument("--no-browser", action="store_true", help="print the link, do not open it")
+
     add_earn_parser(sub)
     return p
 
@@ -369,6 +377,42 @@ def cmd_doctor(args: argparse.Namespace, cfg: AgentConfig) -> int:
     return 0
 
 
+def cmd_web(args: argparse.Namespace, cfg: AgentConfig) -> int:
+    """Run the dashboard until interrupted."""
+    import webbrowser
+
+    from .web import serve as serve_web
+
+    host = args.host or cfg.web.host
+    port = cfg.web.port if args.port is None else args.port
+    try:
+        httpd, _token = serve_web(args.config, cfg.db_path, host, port)
+    except OSError as e:
+        print(f"error: cannot bind {host}:{port} ({e})", file=sys.stderr)
+        return 2
+
+    bound = httpd.server_address[1]
+    launch = getattr(httpd.RequestHandlerClass, "bootstrap", "")
+    url = f"http://{host}:{bound}/?k={launch}" if launch else f"http://{host}:{bound}/"
+    if cfg.web.open_browser and not args.no_browser:
+        # Best effort: a headless box has no browser and that is not an error.
+        with contextlib.suppress(Exception):
+            webbrowser.open(url)
+    print(paint("\n  Ctrl-C to stop\n", GREY_SEQ, supports_color()))
+
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        print("\nstopping")
+    finally:
+        httpd.shutdown()
+        ctx = getattr(httpd, "agent_context", None)
+        if ctx is not None and hasattr(ctx, "close"):
+            with contextlib.suppress(Exception):
+                ctx.close()
+    return 0
+
+
 def cmd_strategies(args: argparse.Namespace, cfg: AgentConfig) -> int:
     color = supports_color()
     print()
@@ -395,6 +439,7 @@ COMMANDS = {
     "verify": cmd_verify,
     "doctor": cmd_doctor,
     "strategies": cmd_strategies,
+    "web": cmd_web,
     "earn": earn_dispatch,
 }
 

@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<meta name="referrer" content="no-referrer">
+<!-- Deliberately empty, and it stays empty. The token used to be injected
+     here, which meant any local process could `curl /` and read it. The session
+     now arrives as an HttpOnly cookie when the single-use launch link is opened,
+     so this document never holds a secret. The tag remains only as the seam the
+     manual paste-a-token fallback keys off. -->
+<meta name="agent-token" content="__AGENT_TOKEN__">
+<title>usdt-agent</title>
+<link rel="stylesheet" href="/static/styles.css">
+<script src="/static/app.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<div id="banners" class="banners">
+  <div id="banner-offline" class="banner banner-bad" role="status" hidden>
+    <strong>Connection lost.</strong>
+    <span id="banner-offline-detail">The agent is not answering. Retrying every 10&nbsp;s.</span>
+    <button type="button" class="btn btn-ghost btn-sm" data-action="retry">Retry now</button>
+  </div>
+  <div id="banner-token" class="banner banner-warn" role="status" hidden>
+    <strong>Not authorised.</strong>
+    <span>Open the launch link the agent printed at startup, or paste its access token.</span>
+    <form id="token-form" class="inline-form">
+      <label class="sr-only" for="token-input">Agent token</label>
+      <input id="token-input" name="token" type="password" class="input mono"
+             autocomplete="off" spellcheck="false" placeholder="X-Agent-Token">
+      <button type="submit" class="btn btn-primary btn-sm">Use token</button>
+    </form>
+  </div>
+</div>
+
+<header class="header">
+  <div class="header-top">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">&#9635;</span>
+      <span class="brand-name">usdt&#8209;agent</span>
+    </div>
+
+    <div class="figures">
+      <div class="figure figure-confirmed">
+        <span class="figure-label">Treasury &middot; confirmed on&#8209;chain</span>
+        <span class="figure-value num" id="fig-confirmed">&mdash;</span>
+        <span class="figure-note">this is the only number that is income</span>
+      </div>
+      <div class="figure figure-expected" id="fig-expected-box">
+        <span class="figure-label">Pipeline &middot; expected</span>
+        <span class="figure-value num" id="fig-expected">&mdash;</span>
+        <span class="figure-note tag-notincome">not income yet</span>
+      </div>
+      <div class="figure figure-quiet">
+        <span class="figure-label">Effort logged</span>
+        <span class="figure-value num" id="fig-hours">&mdash;</span>
+        <span class="figure-note">hours</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button type="button" id="btn-collect" class="btn btn-primary">
+        Collect
+      </button>
+      <span class="stamp" id="stamp" title="Time of the last successful /api/state">never updated</span>
+    </div>
+  </div>
+
+  <nav class="tabs" aria-label="Sections">
+    <div class="tabs-scroll" role="tablist" id="tablist">
+      <button type="button" role="tab" id="tab-overview"  class="tab" data-tab="overview"
+              aria-controls="panel-overview"  aria-selected="true">Overview</button>
+      <button type="button" role="tab" id="tab-gigs"      class="tab" data-tab="gigs"
+              aria-controls="panel-gigs"      aria-selected="false" tabindex="-1">Gigs</button>
+      <button type="button" role="tab" id="tab-approvals" class="tab" data-tab="approvals"
+              aria-controls="panel-approvals" aria-selected="false" tabindex="-1">
+        Approvals <span class="pip" id="pip-approvals" hidden>0</span>
+      </button>
+      <button type="button" role="tab" id="tab-storefront" class="tab" data-tab="storefront"
+              aria-controls="panel-storefront" aria-selected="false" tabindex="-1">Storefront</button>
+      <button type="button" role="tab" id="tab-trading"   class="tab" data-tab="trading"
+              aria-controls="panel-trading"   aria-selected="false" tabindex="-1">Trading</button>
+      <button type="button" role="tab" id="tab-ledger"    class="tab" data-tab="ledger"
+              aria-controls="panel-ledger"    aria-selected="false" tabindex="-1">Ledger</button>
+      <button type="button" role="tab" id="tab-discovery" class="tab" data-tab="discovery"
+              aria-controls="panel-discovery" aria-selected="false" tabindex="-1">Discovery</button>
+    </div>
+  </nav>
+</header>
+
+<main id="main">
+
+  <!-- ================= OVERVIEW ================= -->
+  <section class="panel" id="panel-overview" role="tabpanel" aria-labelledby="tab-overview" tabindex="0">
+    <div class="counts" id="counts"></div>
+
+    <div class="grid grid-2">
+      <section class="card">
+        <div class="card-head">
+          <h2>The ladder</h2>
+          <span class="card-sub" id="ladder-progress"></span>
+        </div>
+        <p class="caption">
+          Rungs are computed from facts &mdash; a wallet that exists, a payout that confirmed &mdash;
+          never from optimism. The current rung lists exactly what unblocks it.
+        </p>
+        <ol class="stepper" id="stepper"></ol>
+      </section>
+
+      <div class="stack">
+        <section class="card">
+          <div class="card-head">
+            <h2>Wallet</h2>
+            <span class="card-sub" id="wallet-total"></span>
+          </div>
+          <p class="caption">
+            Balances are what the address holds right now, including anything you funded it with.
+            They are not earnings: only confirmed incoming transfers move the treasury figure.
+          </p>
+          <div id="wallet-list" class="wallet-list"></div>
+        </section>
+
+        <section class="card">
+          <div class="card-head"><h2>Journal integrity</h2></div>
+          <div id="overview-integrity" class="integrity"></div>
+        </section>
+      </div>
+    </div>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Channels</h2>
+        <span class="card-sub">confirmed vs pipeline, per revenue stream</span>
+      </div>
+      <p class="caption">
+        A verdict of <em>proven</em> requires money that actually arrived &mdash; three or more
+        confirmed payouts. A full pipeline with nothing confirmed stays <em>unproven</em>.
+      </p>
+      <div id="channel-cards" class="channel-grid"></div>
+    </section>
+  </section>
+
+  <!-- ================= GIGS ================= -->
+  <section class="panel" id="panel-gigs" role="tabpanel" aria-labelledby="tab-gigs" tabindex="0" hidden>
+    <section class="card">
+      <div class="card-head">
+        <h2>Ranked opportunities</h2>
+        <div class="toolbar">
+          <label class="field">
+            <span class="field-label">Channel</span>
+            <select id="gig-channel" class="input"><option value="">all</option></select>
+          </label>
+          <label class="field">
+            <span class="field-label">Limit</span>
+            <select id="gig-limit" class="input">
+              <option>25</option><option selected>50</option><option>100</option><option>200</option>
+            </select>
+          </label>
+          <button type="button" class="btn btn-ghost" id="gig-refresh">Refresh</button>
+        </div>
+      </div>
+      <p class="caption">
+        <strong>USDT/h already discounts the odds of being paid</strong> &mdash; it is
+        reward &times; odds &divide; estimated hours, not the headline reward. The hours column is an
+        <strong>estimate, not a measurement</strong>; only a completed order produces a real rate.
+        Nothing in this table is income.
+      </p>
+      <div id="gig-errors" class="errors"></div>
+      <div class="table-wrap">
+        <table class="table" id="gig-table">
+          <caption class="sr-only">Discovered gigs, sortable by column</caption>
+          <thead>
+            <tr>
+              <th scope="col" aria-sort="none"><button type="button" class="th-sort" data-sort="channel">Channel</button></th>
+              <th scope="col" aria-sort="none"><button type="button" class="th-sort" data-sort="title">Title</button></th>
+              <th scope="col" class="right" aria-sort="none"><button type="button" class="th-sort" data-sort="reward_usdt">Reward</button></th>
+              <th scope="col" class="right" aria-sort="none"><button type="button" class="th-sort" data-sort="effort_hours">Est. h</button></th>
+              <th scope="col" class="right" aria-sort="none"><button type="button" class="th-sort" data-sort="payout_probability">Odds</button></th>
+              <th scope="col" class="right" aria-sort="descending"><button type="button" class="th-sort" data-sort="usdt_per_hour">USDT/h</button></th>
+              <th scope="col" class="right">Take</th>
+            </tr>
+          </thead>
+          <tbody id="gig-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </section>
+
+  <!-- ================= APPROVALS ================= -->
+  <section class="panel" id="panel-approvals" role="tabpanel" aria-labelledby="tab-approvals" tabindex="0" hidden>
+    <section class="card">
+      <div class="card-head">
+        <h2>Human&#8209;in&#8209;the&#8209;loop gate</h2>
+        <button type="button" class="btn btn-ghost" id="approval-refresh">Refresh</button>
+      </div>
+      <p class="caption">
+        Anything that speaks to a third party on your behalf stops here. Read the detail before
+        deciding &mdash; the text below comes from the outside world and is shown verbatim.
+      </p>
+      <div id="approval-list" class="stack"></div>
+    </section>
+  </section>
+
+  <!-- ================= STOREFRONT ================= -->
+  <section class="panel" id="panel-storefront" role="tabpanel" aria-labelledby="tab-storefront" tabindex="0" hidden>
+    <section class="card">
+      <div class="card-head">
+        <h2>Receiving address</h2>
+        <button type="button" class="btn btn-ghost" id="store-refresh">Refresh</button>
+      </div>
+      <div id="receiving" class="receiving"></div>
+      <p class="caption warn-caption">
+        Every invoice adds a unique fraction of a cent to the price. <strong>The customer must pay
+        the exact amount</strong> &mdash; those cents are the only thing identifying which invoice
+        was settled. A rounded payment cannot be matched automatically.
+      </p>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Catalogue</h2></div>
+      <div id="catalogue" class="catalogue-grid"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Invoices</h2>
+        <span class="card-sub tag-notincome">unpaid invoices are not income</span>
+      </div>
+      <div id="invoices" class="stack"></div>
+    </section>
+  </section>
+
+  <!-- ================= TRADING ================= -->
+  <section class="panel" id="panel-trading" role="tabpanel" aria-labelledby="tab-trading" tabindex="0" hidden>
+    <section class="card">
+      <div class="card-head">
+        <h2>Equity curve</h2>
+        <button type="button" class="btn btn-ghost" id="trading-refresh">Refresh</button>
+      </div>
+      <p class="caption">
+        The trading half deploys capital the earning half acquired. This curve is equity under
+        management, not earnings &mdash; it moves with market P&amp;L.
+      </p>
+      <div class="spark-wrap">
+        <div class="spark-axis">
+          <span class="num" id="spark-hi">&mdash;</span>
+          <span class="num" id="spark-lo">&mdash;</span>
+        </div>
+        <div id="spark" class="spark"></div>
+      </div>
+      <div class="spark-foot">
+        <span class="stamp" id="spark-from"></span>
+        <span class="stamp" id="spark-to"></span>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Totals</h2></div>
+      <div id="trading-totals" class="counts"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Per&#8209;strategy</h2></div>
+      <div class="table-wrap">
+        <table class="table">
+          <caption class="sr-only">Closed-trade statistics per strategy</caption>
+          <thead>
+            <tr>
+              <th scope="col">Strategy</th>
+              <th scope="col" class="right">Closed</th>
+              <th scope="col" class="right">Realized P&amp;L</th>
+              <th scope="col" class="right">Avg bps</th>
+              <th scope="col" class="right">Win rate</th>
+              <th scope="col" class="right">Turnover</th>
+            </tr>
+          </thead>
+          <tbody id="strategy-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </section>
+
+  <!-- ================= LEDGER ================= -->
+  <section class="panel" id="panel-ledger" role="tabpanel" aria-labelledby="tab-ledger" tabindex="0" hidden>
+    <section class="card">
+      <div class="card-head">
+        <h2>Hash&#8209;chained journal</h2>
+        <div class="toolbar">
+          <label class="field">
+            <span class="field-label">Limit</span>
+            <select id="ledger-limit" class="input">
+              <option>25</option><option selected>50</option><option>100</option><option>250</option>
+            </select>
+          </label>
+          <button type="button" class="btn btn-ghost" id="ledger-refresh">Refresh</button>
+        </div>
+      </div>
+      <div id="ledger-integrity" class="integrity"></div>
+      <p class="caption">
+        Only confirmed money is appended here. Expected payouts never enter the audit trail.
+      </p>
+      <div class="table-wrap">
+        <table class="table table-fixed">
+          <caption class="sr-only">Recent journal events</caption>
+          <thead>
+            <tr>
+              <th scope="col" class="col-seq">Seq</th>
+              <th scope="col" class="col-ts">Time</th>
+              <th scope="col" class="col-kind">Kind</th>
+              <th scope="col">Payload</th>
+            </tr>
+          </thead>
+          <tbody id="ledger-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </section>
+
+  <!-- ================= DISCOVERY ================= -->
+  <section class="panel" id="panel-discovery" role="tabpanel" aria-labelledby="tab-discovery" tabindex="0" hidden>
+    <section class="card">
+      <div class="card-head">
+        <h2>Probe a candidate source</h2>
+      </div>
+      <p class="caption">
+        Anything reachable can be checked before it is trusted. Probe output is third&#8209;party text
+        and is rendered as inert plain text.
+      </p>
+      <form id="probe-form" class="inline-form">
+        <label class="sr-only" for="probe-url">URL to probe</label>
+        <input id="probe-url" name="url" type="url" class="input mono grow"
+               placeholder="https://example.com/api/bounties" spellcheck="false" autocomplete="off">
+        <button type="submit" class="btn btn-primary" id="probe-submit">Probe</button>
+      </form>
+      <div id="probe-result" class="stack"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Known sources</h2>
+        <button type="button" class="btn btn-ghost" id="discovery-refresh">Refresh</button>
+      </div>
+      <div id="source-list" class="stack"></div>
+    </section>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <span>Nothing counts as earned until it is confirmed on&#8209;chain.</span>
+  <span class="stamp" id="foot-stamp"></span>
+</footer>
+
+<div id="toasts" class="toasts" role="status" aria-live="polite" aria-atomic="false"></div>
+</body>
+</html>
