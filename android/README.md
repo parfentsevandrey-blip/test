@@ -4,16 +4,16 @@ An Android calendar in two halves that share nothing but their palette: a
 home-screen widget that holds perfectly still, and an app that is a single
 zoomable world with no screens in it.
 
-**Install:** [`dist/quire-2.3.apk`](dist/quire-2.3.apk) · 704 KB · Android 8.0+
-(minSdk 26, targetSdk 35) · `sha256 cb1cc51430aa11a75b2088d1dee606f8184deb86e7ebdbe1221aad81b902997b`
+**Install:** [`dist/quire-2.4.apk`](dist/quire-2.4.apk) · 708 KB · Android 8.0+
+(minSdk 26, targetSdk 35) · `sha256 4158f05d15b30bfb68b0cb0e8fe61035445774eed2c017f738fe9330914b8450`
 
-Copy it to the phone and open it, or `adb install -r dist/quire-2.3.apk`. You
+Copy it to the phone and open it, or `adb install -r dist/quire-2.4.apk`. You
 will need to allow installing from an unknown source once — the APK is signed
 with the self-signed key in `keystore/`, not by a store.
 
 | Month | Year | Day | Panels | Ink |
 |---|---|---|---|---|
-| ![Month](docs/bar-paper.png) | ![Year](docs/stage-year.png) | ![Day](docs/stage-day.png) | ![Settings](docs/sheet-settings.png) | ![Ink](docs/bar-ink.png) |
+| ![Month](docs/bar-paper.png) | ![Year](docs/stage-year.png) | ![Day](docs/stage-day.png) | ![Settings](docs/settings-paper.png) | ![Ink](docs/bar-ink.png) |
 
 Every image is a real render of the shipping code, produced by the test suite
 (`app/src/test/.../RenderTest.kt`) — not a mockup.
@@ -62,14 +62,34 @@ gesture that has to be learned belongs anywhere but the one control you reach
 for without looking. *Year* is the only entry with a state: it lights up while
 the year is showing and takes you back to the month.
 
-**Springs, not curves.** Nothing in the app animates on a duration. Every moving
-value is a spring integrator (`ui/Motion.kt`) substepped at 4 ms, because a
-duration-and-easing animation has to restart from zero when its target changes
-mid-flight — which is exactly what a flick between months does. A spring carries
+**Springs, not curves — and not the platform's animators.** Every moving value
+is a spring integrator (`ui/Motion.kt`) substepped at 4 ms, driven from
+`postOnAnimation` and a nanosecond clock. Two reasons, and the second one is the
+important one:
+
+A duration-and-easing animation has to restart from zero when its target changes
+mid-flight, which is exactly what a flick between months does; a spring carries
 its velocity across the change, so an interrupted gesture continues instead of
-snapping. There are four liveliness settings from **Off** to **Springy**, and
-the app switches itself to Off when the system animator scale is zero, which is
-how someone who needs reduced motion tells every app at once.
+snapping.
+
+And `ValueAnimator` and `ViewPropertyAnimator` are both scaled by
+`Settings.Global.ANIMATOR_DURATION_SCALE`. On a phone with system animations
+turned down — a common tweak, and what battery saver does by itself — every one
+of them completes instantly. Motion here is the interface rather than decoration
+on it, so nothing in the app may depend on a setting outside it. Liveliness runs
+from **Off** to **Springy**; the system's animator scale only chooses the value
+on first launch, and the app's own setting wins from then on.
+
+**Settings are painted, not assembled.** The whole screen is one custom view on
+that same frame loop: the active option in a segmented row is a pill that
+travels, the switches are drawn, the accent ring slides between swatches, and the
+rows arrive one after another. A live month sits at the top and answers each
+change as it is made — the point of a setting called *Accent* is easier to see
+than to read.
+
+| Settings, paper | Settings, ink |
+|---|---|
+| ![Settings](docs/settings-paper.png) | ![Settings in ink](docs/settings-ink.png) |
 
 **Depth is earned, not decorated.** Opening a panel pushes the world back a few
 per cent behind it — the calendar is still there, just no longer
@@ -96,8 +116,8 @@ through the calendar shifts them underneath at their own slower rate.
   under the numbers.
 - Creating and opening events hands off to whatever calendar app is installed.
   Quire never writes to your calendar and asks only for read access.
-- Settings float in as a stack of slabs over the world, one after another, and
-  apply live — the accent changes under your finger with nothing recreated.
+- Settings are a drawn layer with a live month at the top; everything applies
+  under your finger with nothing recreated.
 
 **The widget**
 
@@ -189,7 +209,7 @@ Needs JDK 17+ and an Android SDK with platform 35 and build-tools 35.0.0.
 echo "sdk.dir=$ANDROID_HOME" > local.properties
 gradle assembleRelease          # dist-ready APK, signed with keystore/
 gradle assembleDebug            # installs alongside it (.debug suffix)
-gradle testDebugUnitTest        # 37 tests; writes app/build/screenshots/*.png
+gradle testDebugUnitTest        # 38 tests; writes app/build/screenshots/*.png
 gradle lintRelease              # must stay at 0 errors
 python3 tools/generate_assets.py   # after editing the icon or picker preview
 ```
@@ -197,8 +217,8 @@ python3 tools/generate_assets.py   # after editing the icon or picker preview
 The tests run on Robolectric with native graphics, so `testDebugUnitTest` checks
 the calendar-provider parsing against a fake provider, proves the springs
 converge and survive a dropped frame, and renders the real views — the stage at
-five points along its zoom, tilted and mid-turn, the bar in both skins, the
-settings stack, the launcher icon inside its mask, and the widget through
+five points along its zoom, tilted and mid-turn, the bar and the settings layer
+in both skins, the launcher icon inside its mask, and the widget through
 `RemoteViews.apply`. One of them asserts that with Depth off a tilt changes not
 a single pixel. Look in `app/build/screenshots/` after a
 run to see what the current code actually draws.

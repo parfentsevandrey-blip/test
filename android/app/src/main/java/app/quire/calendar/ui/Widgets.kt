@@ -1,12 +1,10 @@
 package app.quire.calendar.ui
 
-import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
 import android.view.View
-import android.view.animation.PathInterpolator
 import app.quire.calendar.core.Accent
 import app.quire.calendar.core.Palette
 import app.quire.calendar.core.Tokens
@@ -24,13 +22,15 @@ class ToggleView(context: Context) : View(context) {
     private val trackPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val knobPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val bounds = RectF()
-    private val easing = PathInterpolator(0.2f, 0f, 0f, 1f)
-
-    private var phase = 0f
-    private var animator: ValueAnimator? = null
+    private val phaseSpring = Spring(0f, 0f)
+    private var lastFrameNanos = 0L
+    private val phase: Float get() = phaseSpring.value
 
     var palette: Palette = Tokens.palette(false, Accent.CINNABAR)
         set(value) { field = value; invalidate() }
+
+    var motion: MotionProfile = MotionProfile.STANDARD
+        set(value) { field = value; phaseSpring.profile(value); invalidate() }
 
     private var checkedState = false
 
@@ -39,7 +39,10 @@ class ToggleView(context: Context) : View(context) {
         set(value) {
             if (checkedState == value) return
             checkedState = value
-            animateTo(if (value) 1f else 0f)
+            phaseSpring.target = if (value) 1f else 0f
+            if (motion.instant) phaseSpring.snapTo(phaseSpring.target)
+            lastFrameNanos = 0L
+            invalidate()
         }
 
     init {
@@ -47,22 +50,11 @@ class ToggleView(context: Context) : View(context) {
         isFocusable = false
     }
 
-    /** Initial state, without the travel animation. */
+    /** Initial state, without the travel. */
     fun setCheckedImmediately(value: Boolean) {
-        animator?.cancel()
         checkedState = value
-        phase = if (value) 1f else 0f
+        phaseSpring.snapTo(if (value) 1f else 0f)
         invalidate()
-    }
-
-    private fun animateTo(target: Float) {
-        animator?.cancel()
-        animator = ValueAnimator.ofFloat(phase, target).apply {
-            duration = 170L
-            interpolator = easing
-            addUpdateListener { phase = it.animatedValue as Float; invalidate() }
-            start()
-        }
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -70,6 +62,11 @@ class ToggleView(context: Context) : View(context) {
     }
 
     override fun onDraw(canvas: Canvas) {
+        val now = System.nanoTime()
+        val dt = if (lastFrameNanos == 0L) 0f else (now - lastFrameNanos) / 1_000_000_000f
+        lastFrameNanos = now
+        val moving = phaseSpring.advance(dt.coerceIn(0f, 0.064f))
+
         val inset = dp(0.75f)
         bounds.set(inset, inset, width - inset, height - inset)
         val radius = bounds.height() / 2f
@@ -88,11 +85,8 @@ class ToggleView(context: Context) : View(context) {
         val cx = bounds.left + knobRadius + dp(4f) + travel * phase
         knobPaint.color = if (phase > 0.5f) palette.onAccent else palette.inkFaint
         canvas.drawCircle(cx, bounds.centerY(), knobRadius, knobPaint)
-    }
 
-    override fun onDetachedFromWindow() {
-        animator?.cancel()
-        super.onDetachedFromWindow()
+        if (moving) postInvalidateOnAnimation() else lastFrameNanos = 0L
     }
 }
 

@@ -74,6 +74,9 @@ class Prefs private constructor(private val sp: SharedPreferences) {
         get() = sp.getBoolean(KEY_COLOURED_DOTS, true)
         set(v) = sp.edit { putBoolean(KEY_COLOURED_DOTS, v) }
 
+    /** False until the user picks a profile; the first value comes from the OS. */
+    val hasMotionPreference: Boolean get() = sp.contains(KEY_MOTION)
+
     /** Liveliness of the whole interface; see ui/Motion.kt. */
     var motion: String
         get() = sp.getString(KEY_MOTION, "standard") ?: "standard"

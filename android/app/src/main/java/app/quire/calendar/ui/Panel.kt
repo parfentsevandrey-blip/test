@@ -21,7 +21,11 @@ import app.quire.calendar.core.Palette
  * option, a hand-drawn switch, a line of accent swatches. Six row types cover
  * both the app's settings and the widget's configuration screen.
  */
-class Panel(private val context: Context, private val palette: Palette) {
+class Panel(
+    private val context: Context,
+    private val palette: Palette,
+    private val motion: MotionProfile = MotionProfile.STANDARD,
+) {
 
     private val density = context.resources.displayMetrics.density
     private fun dp(v: Float) = (v * density).toInt()
@@ -120,6 +124,7 @@ class Panel(private val context: Context, private val palette: Palette) {
     fun toggle(titleRes: Int, hintRes: Int?, checked: Boolean, onChange: (Boolean) -> Unit) {
         val toggle = ToggleView(context).apply {
             palette = this@Panel.palette
+            motion = this@Panel.motion
             setCheckedImmediately(checked)
         }
         val container = row().apply {
@@ -304,7 +309,7 @@ class Panel(private val context: Context, private val palette: Palette) {
                 setBackgroundResource(selectableBackground())
                 setOnClickListener {
                     val next = mark.alpha < 0.5f
-                    mark.animate().alpha(if (next) 1f else 0f).setDuration(140L).start()
+                    mark.alpha = if (next) 1f else 0f
                     onChange(next)
                 }
             },

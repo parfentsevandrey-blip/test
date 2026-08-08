@@ -9,7 +9,6 @@ import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.PathInterpolator
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.LinearLayout
@@ -30,9 +29,6 @@ class SheetOverlay(context: Context) : FrameLayout(context) {
 
     private val density = resources.displayMetrics.density
     private fun dp(v: Float) = (v * density).toInt()
-
-    private val entering = PathInterpolator(0.16f, 0.9f, 0.2f, 1f)
-    private val leaving = PathInterpolator(0.4f, 0f, 0.9f, 0.2f)
 
     private val scrim = View(context).apply {
         layoutParams = LayoutParams(
@@ -60,6 +56,36 @@ class SheetOverlay(context: Context) : FrameLayout(context) {
     var onDismissed: (() -> Unit)? = null
 
     private val slabs = ArrayList<View>()
+    private val enter = Spring(0f, 0f)
+    private var dismissing = false
+    private val ticker = Ticker(this) { dt -> frame(dt) }
+
+    /**
+     * ViewPropertyAnimator is scaled by the system animator setting, so on a
+     * phone with animations turned down these panels appeared instantly. The
+     * entrance runs on a spring of our own instead.
+     */
+    private fun frame(dt: Float): Boolean {
+        val moving = enter.advance(dt)
+        val progress = enter.value.coerceIn(0f, 1.2f)
+        scrim.alpha = progress.coerceIn(0f, 1f)
+        val rise = dp(46f).toFloat()
+        val stagger = motion.staggerMillis / 260f
+        slabs.forEachIndexed { index, slab ->
+            val phase = smoothstep(index * stagger, index * stagger + 0.65f, progress)
+            slab.alpha = phase.coerceIn(0f, 1f)
+            slab.translationY = lerp(rise, 0f, phase)
+            slab.scaleX = lerp(0.96f, 1f, phase)
+            slab.scaleY = slab.scaleX
+        }
+        if (!moving && dismissing && progress <= 0.01f) {
+            visibility = GONE
+            column.removeAllViews()
+            slabs.clear()
+            dismissing = false
+        }
+        return moving
+    }
     var isShowing = false
         private set
 
@@ -196,62 +222,22 @@ class SheetOverlay(context: Context) : FrameLayout(context) {
 
     fun present() {
         isShowing = true
+        dismissing = false
         visibility = VISIBLE
-        scrim.animate().cancel()
-        if (motion.instant) {
-            scrim.alpha = 1f
-        } else {
-            scrim.alpha = 0f
-            scrim.animate().alpha(1f).setDuration(190).start()
-        }
-
-        val rise = dp(44f).toFloat()
-        slabs.forEachIndexed { index, slab ->
-            slab.animate().cancel()
-            if (motion.instant) {
-                slab.alpha = 1f
-                slab.translationY = 0f
-                slab.scaleX = 1f
-                slab.scaleY = 1f
-                return@forEachIndexed
-            }
-            slab.alpha = 0f
-            slab.translationY = rise
-            slab.scaleX = 0.97f
-            slab.scaleY = 0.97f
-            slab.animate()
-                .alpha(1f)
-                .translationY(0f)
-                .scaleX(1f)
-                .scaleY(1f)
-                .setStartDelay(index * motion.staggerMillis)
-                .setDuration(340)
-                .setInterpolator(entering)
-                .start()
-        }
+        enter.profile(motion)
+        enter.snapTo(if (motion.instant) 1f else 0f)
+        enter.target = 1f
+        frame(0f)
+        ticker.kick()
     }
 
     fun dismiss() {
         if (!isShowing) return
         isShowing = false
-        scrim.animate().alpha(0f).setDuration(if (motion.instant) 0 else 150).start()
-        val fall = dp(26f).toFloat()
-        slabs.reversed().forEachIndexed { index, slab ->
-            slab.animate()
-                .alpha(0f)
-                .translationY(fall)
-                .setStartDelay(if (motion.instant) 0 else index * 14L)
-                .setDuration(if (motion.instant) 0 else 160)
-                .setInterpolator(leaving)
-                .start()
-        }
-        postDelayed({
-            if (!isShowing) {
-                visibility = GONE
-                column.removeAllViews()
-                slabs.clear()
-            }
-        }, if (motion.instant) 0 else 260)
+        dismissing = true
+        enter.target = 0f
+        if (motion.instant) enter.snapTo(0f)
+        ticker.kick()
         onDismissed?.invoke()
     }
 }

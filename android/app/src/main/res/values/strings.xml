@@ -85,5 +85,5 @@
     <string name="heat">Density</string>
     <string name="heat_hint">Tint each square by how full the day is</string>
     <string name="depth">Depth</string>
-    <string name="depth_hint">Layers answer the tilt of the phone, and the grid turns as it zooms</string>
+    <string name="depth_hint">The layers answer the tilt of the phone</string>
 </resources>

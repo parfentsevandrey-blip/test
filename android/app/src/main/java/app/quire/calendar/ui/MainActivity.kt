@@ -42,6 +42,7 @@ class MainActivity : BaseActivity(), StageView.Data {
     private lateinit var stage: StageView
     private lateinit var bar: BottomBar
     private lateinit var sheet: SheetOverlay
+    private lateinit var settingsLayer: SettingsLayer
     private lateinit var loader: MonthLoader
     private lateinit var tilt: Tilt
 
@@ -68,11 +69,15 @@ class MainActivity : BaseActivity(), StageView.Data {
         super.onCreate(savedInstanceState)
         loader = MonthLoader(this)
         tilt = Tilt(this)
+        if (!prefs.hasMotionPreference) {
+            prefs.motion = MotionProfile.systemDefault(contentResolver).key
+        }
 
         val root = FrameLayout(this)
         stage = StageView(this)
         bar = BottomBar(this)
         sheet = SheetOverlay(this)
+        settingsLayer = SettingsLayer(this)
 
         root.addView(
             stage,
@@ -96,7 +101,15 @@ class MainActivity : BaseActivity(), StageView.Data {
                 ViewGroup.LayoutParams.MATCH_PARENT,
             ),
         )
+        root.addView(
+            settingsLayer,
+            FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+            ),
+        )
         setContentView(root)
+        settingsLayer.onClose = { stage.setReceded(sheet.isShowing) }
 
         stage.data = this
         stage.onSelectionChanged = { agendaFor(it) }
@@ -105,6 +118,7 @@ class MainActivity : BaseActivity(), StageView.Data {
         stage.onLevelChanged = {
             bar.setActive(if (stage.level == 0) ACTION_YEAR else null)
             if (sheet.isShowing) sheet.dismiss()
+            if (settingsLayer.isShowing) settingsLayer.dismiss()
         }
 
         bar.setItems(
@@ -125,6 +139,8 @@ class MainActivity : BaseActivity(), StageView.Data {
                 WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout(),
             )
             bar.applyBottomInset(bars.bottom)
+            settingsLayer.safeTop = bars.top.toFloat()
+            settingsLayer.safeBottom = bars.bottom.toFloat()
             // The world ends where the bar begins.
             stage.setSafeInsets(bars.top.toFloat(), bar.occupiedHeight().toFloat())
             sheet.applyInsets(bars.top, bars.bottom)
@@ -136,6 +152,7 @@ class MainActivity : BaseActivity(), StageView.Data {
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
                     when {
+                        settingsLayer.isShowing -> settingsLayer.dismiss()
                         sheet.isShowing -> sheet.dismiss()
                         stage.zoomOut() -> Unit
                         else -> {
@@ -190,11 +207,11 @@ class MainActivity : BaseActivity(), StageView.Data {
 
     private fun applySettings() {
         palette = Tokens.palette(Tokens.isSystemDark(this), prefs.accent)
-        val motion = if (MotionProfile.systemHoldsStill(contentResolver)) {
-            MotionProfile.OFF
-        } else {
-            MotionProfile.from(prefs.motion)
-        }
+        // The app's own setting is authoritative. The system animator scale
+        // only chose its first value, back on the first launch — honouring it
+        // every time would leave anyone who turned animations down for speed
+        // with an app that cannot animate and no way to say otherwise.
+        val motion = MotionProfile.from(prefs.motion)
         window.decorView.setBackgroundColor(palette.canvas)
 
         stage.palette = palette
@@ -215,6 +232,13 @@ class MainActivity : BaseActivity(), StageView.Data {
         bar.setActive(if (stage.level == 0) ACTION_YEAR else null)
         sheet.palette = palette
         sheet.motion = motion
+        settingsLayer.palette = palette
+        settingsLayer.motion = motion
+        settingsLayer.haptics = prefs.haptics
+        settingsLayer.previewStyle = stage.style
+        settingsLayer.previewFirstDay = stage.firstDayOfWeek
+        settingsLayer.previewLoads = loader.cached(YearMonth.now(), stage.firstDayOfWeek).orEmpty()
+        settingsLayer.refresh()
         loader.invalidate()
         agendaCache.clear()
         stage.dataChanged()
@@ -262,145 +286,139 @@ class MainActivity : BaseActivity(), StageView.Data {
     // ---- sheets --------------------------------------------------------
 
     private fun presentSettings() {
-        val builder = sheet.begin()
-        builder.title(getString(R.string.settings))
+        val motionKeys = listOf(
+            MotionProfile.OFF,
+            MotionProfile.CALM,
+            MotionProfile.STANDARD,
+            MotionProfile.PLAYFUL,
+        )
+        val skins = listOf(Skin.AUTO, Skin.PAPER, Skin.INK)
+        val firstDays = listOf("auto", "mon", "sat", "sun")
+        val accents = Accent.entries
 
-        builder.slab { panel ->
-            panel.section(R.string.section_motion)
-            val profiles = listOf(
-                MotionProfile.OFF,
-                MotionProfile.CALM,
-                MotionProfile.STANDARD,
-                MotionProfile.PLAYFUL,
-            )
-            panel.segmented(
-                titleRes = R.string.motion,
-                options = listOf(
-                    getString(R.string.motion_off),
-                    getString(R.string.motion_calm),
-                    getString(R.string.motion_standard),
-                    getString(R.string.motion_playful),
-                ),
-                selectedIndex = profiles.indexOf(MotionProfile.from(prefs.motion))
-                    .coerceAtLeast(0),
-            ) { index ->
-                prefs.motion = profiles[index].key
-                applySettings()
-            }
-            panel.rule()
-            panel.toggle(R.string.depth, R.string.depth_hint, prefs.depth) {
-                prefs.depth = it
-                applySettings()
-                if (stage.depth) tilt.start() else tilt.stop()
-            }
-            panel.rule()
-            panel.toggle(R.string.haptics, R.string.haptics_hint, prefs.haptics) {
-                prefs.haptics = it
-                applySettings()
-            }
+        val rows = ArrayList<SettingsLayer.Row>()
+        rows += SettingsLayer.Row.Section(getString(R.string.section_motion))
+        rows += SettingsLayer.Row.Segmented(
+            getString(R.string.motion),
+            listOf(
+                getString(R.string.motion_off),
+                getString(R.string.motion_calm),
+                getString(R.string.motion_standard),
+                getString(R.string.motion_playful),
+            ),
+            motionKeys.indexOf(MotionProfile.from(prefs.motion)).coerceAtLeast(0),
+        ) { index ->
+            prefs.motion = motionKeys[index].key
+            applySettings()
+        }
+        rows += SettingsLayer.Row.Toggle(
+            getString(R.string.depth),
+            getString(R.string.depth_hint),
+            prefs.depth,
+        ) {
+            prefs.depth = it
+            applySettings()
+            if (stage.depth) tilt.start() else tilt.stop()
+        }
+        rows += SettingsLayer.Row.Toggle(
+            getString(R.string.haptics),
+            getString(R.string.haptics_hint),
+            prefs.haptics,
+        ) {
+            prefs.haptics = it
+            applySettings()
         }
 
-        builder.slab { panel ->
-            panel.section(R.string.section_appearance)
-            val skins = listOf(Skin.AUTO, Skin.PAPER, Skin.INK)
-            panel.segmented(
-                titleRes = R.string.skin,
-                options = listOf(
-                    getString(R.string.skin_auto),
-                    getString(R.string.skin_paper),
-                    getString(R.string.skin_ink),
-                ),
-                selectedIndex = skins.indexOf(prefs.skin).coerceAtLeast(0),
-            ) { index ->
-                prefs.skin = skins[index]
-                AppCompatDelegate.setDefaultNightMode(QuireApp.nightMode(skins[index]))
-                applySettings()
-            }
-            panel.accents(prefs.accent) { accent: Accent ->
-                prefs.accent = accent
-                applySettings()
-            }
+        rows += SettingsLayer.Row.Section(getString(R.string.section_appearance))
+        rows += SettingsLayer.Row.Segmented(
+            getString(R.string.skin),
+            listOf(
+                getString(R.string.skin_auto),
+                getString(R.string.skin_paper),
+                getString(R.string.skin_ink),
+            ),
+            skins.indexOf(prefs.skin).coerceAtLeast(0),
+        ) { index ->
+            prefs.skin = skins[index]
+            AppCompatDelegate.setDefaultNightMode(QuireApp.nightMode(skins[index]))
+            applySettings()
+        }
+        rows += SettingsLayer.Row.Accents(
+            accents.indexOf(prefs.accent).coerceAtLeast(0),
+        ) { index ->
+            prefs.accent = accents[index]
+            applySettings()
         }
 
-        builder.slab { panel ->
-            panel.section(R.string.section_week)
-            val keys = listOf("auto", "mon", "sat", "sun")
-            panel.segmented(
-                titleRes = R.string.first_day,
-                options = listOf(
-                    getString(R.string.first_day_auto),
-                    getString(R.string.first_day_mon),
-                    getString(R.string.first_day_sat),
-                    getString(R.string.first_day_sun),
-                ),
-                selectedIndex = keys.indexOf(prefs.firstDay).coerceAtLeast(0),
-            ) { index ->
-                prefs.firstDay = keys[index]
-                applySettings()
-            }
+        rows += SettingsLayer.Row.Section(getString(R.string.section_week))
+        rows += SettingsLayer.Row.Segmented(
+            getString(R.string.first_day),
+            listOf(
+                getString(R.string.first_day_auto),
+                getString(R.string.first_day_mon),
+                getString(R.string.first_day_sat),
+                getString(R.string.first_day_sun),
+            ),
+            firstDays.indexOf(prefs.firstDay).coerceAtLeast(0),
+        ) { index ->
+            prefs.firstDay = firstDays[index]
+            applySettings()
         }
 
-        builder.slab { panel ->
-            panel.section(R.string.section_grid)
-            panel.toggle(R.string.heat, R.string.heat_hint, prefs.heat) {
-                prefs.heat = it
-                applySettings()
-            }
-            panel.rule()
-            panel.toggle(R.string.show_adjacent, R.string.show_adjacent_hint, prefs.showAdjacent) {
-                prefs.showAdjacent = it
-                applySettings()
-            }
-            panel.rule()
-            panel.toggle(R.string.dim_weekends, R.string.dim_weekends_hint, prefs.dimWeekends) {
-                prefs.dimWeekends = it
-                applySettings()
-            }
-            panel.rule()
-            panel.toggle(R.string.week_numbers, R.string.week_numbers_hint, prefs.weekNumbers) {
-                prefs.weekNumbers = it
-                applySettings()
-            }
-            panel.rule()
-            panel.toggle(R.string.coloured_dots, R.string.coloured_dots_hint, prefs.colouredDots) {
-                prefs.colouredDots = it
-                applySettings()
-            }
-        }
+        rows += SettingsLayer.Row.Section(getString(R.string.section_grid))
+        rows += SettingsLayer.Row.Toggle(
+            getString(R.string.heat),
+            getString(R.string.heat_hint),
+            prefs.heat,
+        ) { prefs.heat = it; applySettings() }
+        rows += SettingsLayer.Row.Toggle(
+            getString(R.string.show_adjacent),
+            getString(R.string.show_adjacent_hint),
+            prefs.showAdjacent,
+        ) { prefs.showAdjacent = it; applySettings() }
+        rows += SettingsLayer.Row.Toggle(
+            getString(R.string.dim_weekends),
+            getString(R.string.dim_weekends_hint),
+            prefs.dimWeekends,
+        ) { prefs.dimWeekends = it; applySettings() }
+        rows += SettingsLayer.Row.Toggle(
+            getString(R.string.week_numbers),
+            getString(R.string.week_numbers_hint),
+            prefs.weekNumbers,
+        ) { prefs.weekNumbers = it; applySettings() }
+        rows += SettingsLayer.Row.Toggle(
+            getString(R.string.coloured_dots),
+            getString(R.string.coloured_dots_hint),
+            prefs.colouredDots,
+        ) { prefs.colouredDots = it; applySettings() }
 
         val sources = EventRepository.calendars(this)
         if (sources.isNotEmpty()) {
-            builder.slab { panel ->
-                panel.section(R.string.section_calendars)
-                panel.note(getString(R.string.calendars_hint))
-                val hidden = prefs.hiddenCalendars.toMutableSet()
-                sources.forEachIndexed { index, source ->
-                    if (index > 0) panel.rule()
-                    panel.check(
-                        title = source.displayName,
-                        subtitle = source.accountName.takeIf { it != source.displayName },
-                        colour = source.colour,
-                        checked = source.id !in hidden,
-                    ) { checked ->
-                        if (checked) hidden.remove(source.id) else hidden.add(source.id)
-                        prefs.hiddenCalendars = hidden
-                        applySettings()
-                    }
+            rows += SettingsLayer.Row.Section(getString(R.string.section_calendars))
+            val hidden = prefs.hiddenCalendars.toMutableSet()
+            sources.forEach { source ->
+                rows += SettingsLayer.Row.Check(
+                    source.displayName,
+                    source.accountName.takeIf { it != source.displayName },
+                    source.colour,
+                    source.id !in hidden,
+                ) { checked ->
+                    if (checked) hidden.remove(source.id) else hidden.add(source.id)
+                    prefs.hiddenCalendars = hidden
+                    applySettings()
                 }
             }
         }
 
-        builder.slab { panel ->
-            panel.section(R.string.section_about)
-            val version = runCatching {
-                packageManager.getPackageInfo(packageName, 0).versionName
-            }.getOrNull().orEmpty()
-            panel.note(
-                getString(R.string.about_line, version) + "\n" + getString(R.string.about_body),
-            )
-        }
+        rows += SettingsLayer.Row.Section(getString(R.string.section_about))
+        val version = runCatching {
+            packageManager.getPackageInfo(packageName, 0).versionName
+        }.getOrNull().orEmpty()
+        rows += SettingsLayer.Row.Note(
+            getString(R.string.about_line, version) + "\n" + getString(R.string.about_body),
+        )
 
-        sheet.present()
+        settingsLayer.present(rows)
         stage.setReceded(true)
     }
 

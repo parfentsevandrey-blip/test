@@ -141,17 +141,24 @@ class BottomBar(context: Context) : LinearLayout(context) {
             }
         }
 
+        private val dipSpring = Spring(1f, 1f)
+        private val ticker = Ticker(this) { dt ->
+            val moving = dipSpring.advance(dt)
+            icon.scaleX = dipSpring.value
+            icon.scaleY = dipSpring.value
+            moving
+        }
+
+        /**
+         * Driven by our own ticker: ViewPropertyAnimator would be scaled to
+         * nothing on a phone with system animations turned down.
+         */
         private fun dip() {
             if (motion.instant) return
-            icon.animate().cancel()
-            icon.scaleX = 0.78f
-            icon.scaleY = 0.78f
-            icon.animate()
-                .scaleX(1f)
-                .scaleY(1f)
-                .setDuration(260)
-                .setInterpolator(android.view.animation.OvershootInterpolator(2.4f))
-                .start()
+            dipSpring.profile(motion)
+            dipSpring.snapTo(0.74f)
+            dipSpring.target = 1f
+            ticker.kick()
         }
 
         fun paint(palette: Palette, activeId: Int?) {

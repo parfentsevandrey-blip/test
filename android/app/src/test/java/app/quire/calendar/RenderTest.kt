@@ -18,6 +18,7 @@ import app.quire.calendar.core.Tokens
 import app.quire.calendar.ui.GridStyle
 import app.quire.calendar.ui.MotionProfile
 import app.quire.calendar.ui.BottomBar
+import app.quire.calendar.ui.SettingsLayer
 import app.quire.calendar.ui.StageView
 import app.quire.calendar.widget.WidgetRenderer
 import org.junit.Assert.assertEquals
@@ -409,69 +410,116 @@ class RenderTest {
         }
     }
 
+    /**
+     * Settings are painted now, not assembled from Views animated by the
+     * platform — which is what made them stand still on a phone with system
+     * animations turned down. Rendered over the receded world, with the live
+     * month at the top.
+     */
     @Test
-    fun `floating panels stack and stay readable over the world`() {
-        val skin = Tokens.palette(false, Accent.CINNABAR)
-        val behind = stage(dark = false).apply { goTo(today, level = 1, animate = false) }
-        val sheet = app.quire.calendar.ui.SheetOverlay(context).apply {
-            palette = skin
-            motion = MotionProfile.OFF
-        }
-        val host = FrameLayout(context)
-        host.addView(
-            behind,
-            FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT,
-            ),
-        )
-        host.addView(
-            sheet,
-            FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT,
-            ),
-        )
-
-        val builder = sheet.begin()
-        builder.title(context.getString(R.string.settings))
-        builder.slab { panel ->
-            panel.section(R.string.section_motion)
-            panel.segmented(
-                R.string.motion,
-                listOf(
-                    context.getString(R.string.motion_off),
-                    context.getString(R.string.motion_calm),
-                    context.getString(R.string.motion_standard),
-                    context.getString(R.string.motion_playful),
+    fun `the settings layer paints over the receded world`() {
+        listOf(false to "settings-paper", true to "settings-ink").forEach { (dark, name) ->
+            val skin = Tokens.palette(dark, Accent.CINNABAR)
+            val world = stage(dark).apply {
+                goTo(today, level = 1, animate = false)
+                setReceded(true)
+            }
+            val layer = SettingsLayer(context).apply {
+                palette = skin
+                motion = MotionProfile.OFF
+                haptics = false
+                safeTop = 52f * context.resources.displayMetrics.density / 3f
+                safeBottom = 48f
+                previewFirstDay = DayOfWeek.MONDAY
+                previewLoads = sampleData().loads(YearMonth.now())
+            }
+            val host = FrameLayout(context)
+            host.addView(
+                world,
+                FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT,
                 ),
-                2,
-            ) {}
-            panel.rule()
-            panel.toggle(R.string.haptics, R.string.haptics_hint, true) {}
-        }
-        builder.slab { panel ->
-            panel.section(R.string.section_appearance)
-            panel.segmented(
-                R.string.skin,
-                listOf(
-                    context.getString(R.string.skin_auto),
-                    context.getString(R.string.skin_paper),
-                    context.getString(R.string.skin_ink),
+            )
+            host.addView(
+                layer,
+                FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT,
                 ),
-                0,
-            ) {}
-            panel.accents(Accent.CINNABAR) {}
-        }
-        builder.slab { panel ->
-            panel.section(R.string.section_grid)
-            panel.toggle(R.string.heat, R.string.heat_hint, true) {}
-            panel.rule()
-            panel.toggle(R.string.week_numbers, R.string.week_numbers_hint, false) {}
-        }
-        sheet.present()
+            )
+            val density = context.resources.displayMetrics.density
+            host.measure(
+                View.MeasureSpec.makeMeasureSpec((411 * density).toInt(), View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec((891 * density).toInt(), View.MeasureSpec.EXACTLY),
+            )
+            host.layout(0, 0, (411 * density).toInt(), (891 * density).toInt())
 
-        assertPainted(render(host, 411, 891, "sheet-settings"), "sheet-settings")
+            layer.present(
+                listOf(
+                    SettingsLayer.Row.Section(context.getString(R.string.section_motion)),
+                    SettingsLayer.Row.Segmented(
+                        context.getString(R.string.motion),
+                        listOf(
+                            context.getString(R.string.motion_off),
+                            context.getString(R.string.motion_calm),
+                            context.getString(R.string.motion_standard),
+                            context.getString(R.string.motion_playful),
+                        ),
+                        2,
+                    ) {},
+                    SettingsLayer.Row.Toggle(
+                        context.getString(R.string.depth),
+                        context.getString(R.string.depth_hint),
+                        true,
+                    ) {},
+                    SettingsLayer.Row.Toggle(
+                        context.getString(R.string.haptics),
+                        context.getString(R.string.haptics_hint),
+                        true,
+                    ) {},
+                    SettingsLayer.Row.Section(context.getString(R.string.section_appearance)),
+                    SettingsLayer.Row.Segmented(
+                        context.getString(R.string.skin),
+                        listOf(
+                            context.getString(R.string.skin_auto),
+                            context.getString(R.string.skin_paper),
+                            context.getString(R.string.skin_ink),
+                        ),
+                        0,
+                    ) {},
+                    SettingsLayer.Row.Accents(0) {},
+                    SettingsLayer.Row.Section(context.getString(R.string.section_grid)),
+                    SettingsLayer.Row.Toggle(
+                        context.getString(R.string.heat),
+                        context.getString(R.string.heat_hint),
+                        false,
+                    ) {},
+                ),
+            )
+            assertPainted(render(host, 411, 891, name), name)
+            assertTrue("$name should be showing", layer.isShowing)
+        }
+    }
+
+    /**
+     * The regression that made every animation in the app stand still: the
+     * profile came from the system animator scale on every launch, so a phone
+     * with animations turned down could never be talked out of it.
+     */
+    @Test
+    fun `the stored motion profile is what the app uses`() {
+        val prefs = Prefs.get(context)
+        val before = prefs.motion
+        try {
+            prefs.motion = MotionProfile.PLAYFUL.key
+            assertEquals(MotionProfile.PLAYFUL, MotionProfile.from(prefs.motion))
+            assertTrue(prefs.hasMotionPreference)
+            assertTrue("a live profile must not be instant", !MotionProfile.PLAYFUL.instant)
+            assertTrue("standard must be soft enough to see", MotionProfile.STANDARD.stiffness < 180f)
+        } finally {
+            prefs.motion = before
+        }
     }
 
     @Test

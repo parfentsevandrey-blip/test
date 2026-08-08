@@ -2,6 +2,7 @@ package app.quire.calendar.ui
 
 import android.content.ContentResolver
 import android.provider.Settings
+import android.view.View
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.sqrt
@@ -84,9 +85,9 @@ enum class MotionProfile(
     val dampingRatio: Float,
 ) {
     OFF("off", 1000f, 1f),
-    CALM("calm", 130f, 1.0f),
-    STANDARD("standard", 220f, 0.84f),
-    PLAYFUL("playful", 340f, 0.58f),
+    CALM("calm", 92f, 1.0f),
+    STANDARD("standard", 148f, 0.76f),
+    PLAYFUL("playful", 210f, 0.52f),
     ;
 
     val instant: Boolean get() = this == OFF
@@ -95,18 +96,32 @@ enum class MotionProfile(
     val staggerMillis: Long
         get() = when (this) {
             OFF -> 0L
-            CALM -> 34L
-            STANDARD -> 26L
-            PLAYFUL -> 20L
+            CALM -> 52L
+            STANDARD -> 44L
+            PLAYFUL -> 36L
         }
 
     companion object {
         fun from(key: String?): MotionProfile = entries.firstOrNull { it.key == key } ?: STANDARD
 
-        /** Zero animator scale means the user asked the whole system to hold still. */
-        fun systemHoldsStill(resolver: ContentResolver): Boolean = runCatching {
-            Settings.Global.getFloat(resolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
-        }.getOrDefault(false)
+        /**
+         * Zero animator scale means the system has been asked to hold still —
+         * used to pick the *initial* profile and nothing else. Forcing it on
+         * every launch would leave someone who turned animations down for speed
+         * with an app that can never animate, and no setting that overrides it.
+         */
+        fun systemDefault(resolver: ContentResolver): MotionProfile = runCatching {
+            if (Settings.Global.getFloat(
+                    resolver,
+                    Settings.Global.ANIMATOR_DURATION_SCALE,
+                    1f,
+                ) == 0f
+            ) {
+                OFF
+            } else {
+                STANDARD
+            }
+        }.getOrDefault(STANDARD)
     }
 }
 
@@ -117,4 +132,48 @@ fun smoothstep(edge0: Float, edge1: Float, x: Float): Float {
     if (edge1 == edge0) return if (x < edge0) 0f else 1f
     val t = ((x - edge0) / (edge1 - edge0)).coerceIn(0f, 1f)
     return t * t * (3f - 2f * t)
+}
+
+/**
+ * A frame loop of our own.
+ *
+ * The platform animators — ValueAnimator, ViewPropertyAnimator — are scaled by
+ * Settings.Global.ANIMATOR_DURATION_SCALE, so on a phone with animations turned
+ * down, or simply in battery saver, every one of them completes instantly. This
+ * app's motion is its interface, not decoration on top of it, so it is driven
+ * from postOnAnimation and a nanosecond clock instead, which nothing can scale
+ * to zero.
+ */
+class Ticker(private val view: View, private val onFrame: (Float) -> Boolean) {
+
+    private var last = 0L
+    private var running = false
+
+    private val step = object : Runnable {
+        override fun run() {
+            if (!running) return
+            val now = System.nanoTime()
+            val dt = if (last == 0L) 0f else (now - last) / 1_000_000_000f
+            last = now
+            if (onFrame(dt.coerceIn(0f, 0.064f))) {
+                view.postOnAnimation(this)
+            } else {
+                running = false
+                last = 0L
+            }
+        }
+    }
+
+    fun kick() {
+        if (running) return
+        running = true
+        last = 0L
+        view.postOnAnimation(step)
+    }
+
+    fun stop() {
+        running = false
+        last = 0L
+        view.removeCallbacks(step)
+    }
 }
