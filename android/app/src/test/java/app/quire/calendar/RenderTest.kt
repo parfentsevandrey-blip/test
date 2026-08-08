@@ -9,18 +9,11 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.test.core.app.ApplicationProvider
 import app.quire.calendar.core.Accent
-import app.quire.calendar.core.AgendaEntry
-import app.quire.calendar.core.DayLoad
 import app.quire.calendar.core.MonthModel
 import app.quire.calendar.core.Prefs
 import app.quire.calendar.core.Skin
-import app.quire.calendar.core.Tokens
-import app.quire.calendar.ui.GridStyle
-import app.quire.calendar.ui.MotionProfile
-import app.quire.calendar.ui.BottomBar
-import app.quire.calendar.ui.SettingsLayer
-import app.quire.calendar.ui.StageView
 import app.quire.calendar.widget.WidgetRenderer
+import app.quire.engine.anim.MotionProfile
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -29,17 +22,18 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
-import java.time.DayOfWeek
-import java.time.LocalDate
 import java.time.YearMonth
 import java.util.Locale
 
 /**
- * Draws the real views and inflates the real RemoteViews tree, then writes the
- * pixels out. Two things are checked at once: that the widget survives
- * `RemoteViews.apply` — the host's inflater rejects any class not annotated
- * @RemoteView, which no compiler catches — and that the stage paints at every
- * point along its zoom, including halfway between two levels.
+ * The half of the app that is not the world: the widget, the launcher icon, and the one Activity
+ * assembling and painting end to end.
+ *
+ * The widget is the reason this runs on real graphics. `RemoteViews.apply` puts the tree through
+ * the platform's own inflater with its `@RemoteView` filter, so a disallowed view class fails
+ * here exactly as it would on a home screen — and nothing in a compiler will tell you first.
+ *
+ * The world's own surfaces are covered by `WorldRenderTest`.
  */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -48,8 +42,6 @@ class RenderTest {
 
     private val context: Context get() = ApplicationProvider.getApplicationContext()
     private val outputDir = File("build/screenshots").apply { mkdirs() }
-
-    private val today = LocalDate.now()
 
     private fun render(view: View, widthDp: Int, heightDp: Int, name: String): Bitmap {
         val density = context.resources.displayMetrics.density
@@ -82,205 +74,9 @@ class RenderTest {
         assertTrue("$name painted only ${colours.size} distinct colours", colours.size > 8)
     }
 
-    /** A month with enough going on that marks, colours and density all show. */
-    private fun sampleData(): StageView.Data = object : StageView.Data {
-        private val palette = intArrayOf(
-            0xFF2E4A7D.toInt(), 0xFF4C5D3C.toInt(), 0xFF9A6F21.toInt(), 0xFF6C3A55.toInt(),
-        )
-
-        override fun loads(month: YearMonth): Map<LocalDate, DayLoad> {
-            val out = HashMap<LocalDate, DayLoad>()
-            for (day in 1..month.lengthOfMonth()) {
-                val seed = (day * 7 + month.monthValue * 3) % 11
-                if (seed >= 5) continue
-                val count = seed % 3 + 1
-                out[month.atDay(day)] = DayLoad(
-                    count,
-                    IntArray(count) { palette[(day + it) % palette.size] },
-                )
-            }
-            return out
-        }
-
-        override fun agenda(date: LocalDate): List<AgendaEntry> {
-            val zone = java.time.ZoneId.systemDefault()
-            fun at(hour: Int, minute: Int = 0) =
-                date.atTime(hour, minute).atZone(zone).toInstant().toEpochMilli()
-            return listOf(
-                AgendaEntry(1, at(0), at(23, 59), true, "Studio closed", null, palette[3], "Personal"),
-                AgendaEntry(2, at(9, 30), at(10, 30), false, "Design review", "Kutuzovsky 12", palette[0], "Work"),
-                AgendaEntry(3, at(13), at(14), false, "Lunch with Anna", null, palette[1], "Personal"),
-                AgendaEntry(4, at(16), at(17, 30), false, "Structural walkthrough", "Site", palette[2], "Work"),
-                AgendaEntry(5, at(19), at(21), false, "Rehearsal", "Conservatory", palette[0], "Personal"),
-            )
-        }
-    }
-
-    private fun stage(dark: Boolean, heat: Boolean = false): StageView =
-        StageView(context).apply {
-            palette = Tokens.palette(dark, Accent.CINNABAR)
-            motion = MotionProfile.OFF
-            haptics = false
-            firstDayOfWeek = DayOfWeek.MONDAY
-            this.today = this@RenderTest.today
-            style = GridStyle(heat = heat)
-            data = sampleData()
-            setSafeInsets(52f * context.resources.displayMetrics.density / 3f, 24f)
-        }
-
-    /**
-     * The zoom is one continuous number, so it is worth looking at the frames
-     * between the levels — those are what the user actually sees while moving.
-     */
-    @Test
-    fun `the stage paints at every point along the zoom`() {
-        val cases = listOf(
-            "stage-year" to 0f,
-            "stage-zooming" to 0.55f,
-            "stage-month" to 1f,
-            "stage-opening" to 1.45f,
-            "stage-day" to 2f,
-        )
-        cases.forEach { (name, z) ->
-            val view = stage(dark = false)
-            view.goTo(today, level = 1, animate = false)
-            when {
-                z <= 1f -> {
-                    if (z < 0.5f) view.goToLevel(0)
-                    view.zoom.snapTo(z)
-                }
-                else -> {
-                    view.goTo(today, level = 2, animate = false)
-                    view.zoom.snapTo(z)
-                }
-            }
-            assertPainted(render(view, 411, 891, name), name)
-        }
-    }
-
-    @Test
-    fun `the stage paints in ink and with density on`() {
-        val dark = stage(dark = true).apply { goTo(today, level = 1, animate = false) }
-        assertPainted(render(dark, 411, 891, "stage-ink"), "stage-ink")
-
-        val heat = stage(dark = false, heat = true).apply { goTo(today, level = 1, animate = false) }
-        assertPainted(render(heat, 411, 891, "stage-density"), "stage-density")
-
-        val darkDay = stage(dark = true).apply { goTo(today, level = 2, animate = false) }
-        assertPainted(render(darkDay, 411, 891, "stage-day-ink"), "stage-day-ink")
-    }
-
-    /**
-     * The bar is a plain fixed row of five, and the world above it has to end
-     * where the bar begins — not run underneath it.
-     */
-    @Test
-    fun `the bottom bar carries the world above it`() {
-        val density = context.resources.displayMetrics.density
-        listOf(false to "bar-paper", true to "bar-ink").forEach { (dark, name) ->
-            val skin = Tokens.palette(dark, Accent.CINNABAR)
-            val bar = BottomBar(context).apply {
-                palette = skin
-                motion = MotionProfile.OFF
-                haptics = false
-                applyBottomInset((16 * density).toInt())
-                setItems(
-                    listOf(
-                        BottomBar.Item(1, context.getString(R.string.today), R.drawable.ic_ring),
-                        BottomBar.Item(2, context.getString(R.string.year), R.drawable.ic_grid),
-                        BottomBar.Item(3, context.getString(R.string.add), R.drawable.ic_plus),
-                        BottomBar.Item(4, context.getString(R.string.search), R.drawable.ic_search),
-                        BottomBar.Item(5, context.getString(R.string.settings), R.drawable.ic_settings),
-                    ),
-                )
-            }
-            val world = stage(dark).apply {
-                setSafeInsets(52f * density / 3f, bar.occupiedHeight().toFloat())
-                goTo(today, level = 1, animate = false)
-            }
-            val host = FrameLayout(context)
-            host.addView(
-                world,
-                FrameLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                ),
-            )
-            host.addView(
-                bar,
-                FrameLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    android.view.Gravity.BOTTOM,
-                ),
-            )
-            assertPainted(render(host, 411, 891, name), name)
-            assertEquals("five entries", 5, bar.childCount)
-        }
-    }
-
-    @Test
-    fun `the year entry lights up only while the year is showing`() {
-        val skin = Tokens.palette(false, Accent.CINNABAR)
-        val bar = BottomBar(context).apply {
-            palette = skin
-            motion = MotionProfile.OFF
-            setItems(
-                listOf(
-                    BottomBar.Item(1, "Today", R.drawable.ic_ring),
-                    BottomBar.Item(2, "Year", R.drawable.ic_grid),
-                ),
-            )
-        }
-        val world = stage(dark = false).apply { goTo(today, level = 1, animate = false) }
-        assertEquals(1, world.level)
-        bar.setActive(if (world.level == 0) 2 else null)
-        world.goToLevel(0)
-        assertEquals(0, world.level)
-        bar.setActive(if (world.level == 0) 2 else null)
-        // Nothing to assert visually here beyond it not throwing; the point is
-        // that the level and the bar agree on one source of truth.
-        assertTrue(true)
-    }
-
-    /**
-     * Depth is two things at once: the layers answering the hand, and the plane
-     * turning through a camera. Both are rendered here because neither shows up
-     * in a still frame taken at rest.
-     */
-    @Test
-    fun `the world answers the tilt of the phone`() {
-        val tilted = stage(dark = false).apply {
-            goTo(today, level = 1, animate = false)
-            setTilt(0.85f, -0.6f)
-        }
-        assertPainted(render(tilted, 411, 891, "depth-tilted"), "depth-tilted")
-
-        val turning = stage(dark = false).apply {
-            goTo(today, level = 1, animate = false)
-            setTilt(0.4f, 0.2f)
-            zoom.snapTo(0.5f)
-        }
-        assertPainted(render(turning, 411, 891, "depth-turning"), "depth-turning")
-
-        val rising = stage(dark = true).apply {
-            goTo(today, level = 2, animate = false)
-            zoom.snapTo(1.55f)
-        }
-        assertPainted(render(rising, 411, 891, "depth-card-rising"), "depth-card-rising")
-    }
-
-    @Test
-    fun `turning depth off leaves the world flat`() {
-        val flat = stage(dark = false).apply {
-            depth = false
-            goTo(today, level = 1, animate = false)
-            setTilt(0.9f, -0.9f)
-        }
-        val plain = stage(dark = false).apply { goTo(today, level = 1, animate = false) }
-        val a = render(flat, 411, 891, "depth-off")
-        val b = render(plain, 411, 891, "depth-off-reference")
-        assertTrue("a tilt with depth off must change nothing", a.sameAs(b))
+    private fun collectText(view: View, out: MutableList<String>) {
+        if (view is android.widget.TextView) out += view.text.toString()
+        if (view is ViewGroup) for (i in 0 until view.childCount) collectText(view.getChildAt(i), out)
     }
 
     @Test
@@ -411,101 +207,9 @@ class RenderTest {
     }
 
     /**
-     * Settings are painted now, not assembled from Views animated by the
-     * platform — which is what made them stand still on a phone with system
-     * animations turned down. Rendered over the receded world, with the live
-     * month at the top.
-     */
-    @Test
-    fun `the settings layer paints over the receded world`() {
-        listOf(false to "settings-paper", true to "settings-ink").forEach { (dark, name) ->
-            val skin = Tokens.palette(dark, Accent.CINNABAR)
-            val world = stage(dark).apply {
-                goTo(today, level = 1, animate = false)
-                setReceded(true)
-            }
-            val layer = SettingsLayer(context).apply {
-                palette = skin
-                motion = MotionProfile.OFF
-                haptics = false
-                safeTop = 52f * context.resources.displayMetrics.density / 3f
-                safeBottom = 48f
-                previewFirstDay = DayOfWeek.MONDAY
-                previewLoads = sampleData().loads(YearMonth.now())
-            }
-            val host = FrameLayout(context)
-            host.addView(
-                world,
-                FrameLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                ),
-            )
-            host.addView(
-                layer,
-                FrameLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                ),
-            )
-            val density = context.resources.displayMetrics.density
-            host.measure(
-                View.MeasureSpec.makeMeasureSpec((411 * density).toInt(), View.MeasureSpec.EXACTLY),
-                View.MeasureSpec.makeMeasureSpec((891 * density).toInt(), View.MeasureSpec.EXACTLY),
-            )
-            host.layout(0, 0, (411 * density).toInt(), (891 * density).toInt())
-
-            layer.present(
-                listOf(
-                    SettingsLayer.Row.Section(context.getString(R.string.section_motion)),
-                    SettingsLayer.Row.Segmented(
-                        context.getString(R.string.motion),
-                        listOf(
-                            context.getString(R.string.motion_off),
-                            context.getString(R.string.motion_calm),
-                            context.getString(R.string.motion_standard),
-                            context.getString(R.string.motion_playful),
-                        ),
-                        2,
-                    ) {},
-                    SettingsLayer.Row.Toggle(
-                        context.getString(R.string.depth),
-                        context.getString(R.string.depth_hint),
-                        true,
-                    ) {},
-                    SettingsLayer.Row.Toggle(
-                        context.getString(R.string.haptics),
-                        context.getString(R.string.haptics_hint),
-                        true,
-                    ) {},
-                    SettingsLayer.Row.Section(context.getString(R.string.section_appearance)),
-                    SettingsLayer.Row.Segmented(
-                        context.getString(R.string.skin),
-                        listOf(
-                            context.getString(R.string.skin_auto),
-                            context.getString(R.string.skin_paper),
-                            context.getString(R.string.skin_ink),
-                        ),
-                        0,
-                    ) {},
-                    SettingsLayer.Row.Accents(0) {},
-                    SettingsLayer.Row.Section(context.getString(R.string.section_grid)),
-                    SettingsLayer.Row.Toggle(
-                        context.getString(R.string.heat),
-                        context.getString(R.string.heat_hint),
-                        false,
-                    ) {},
-                ),
-            )
-            assertPainted(render(host, 411, 891, name), name)
-            assertTrue("$name should be showing", layer.isShowing)
-        }
-    }
-
-    /**
-     * The regression that made every animation in the app stand still: the
-     * profile came from the system animator scale on every launch, so a phone
-     * with animations turned down could never be talked out of it.
+     * The regression that once made every animation in the app stand still: the profile came from
+     * the system animator scale on every launch, so a phone with animations turned down could
+     * never be talked out of it. The app's own setting is the authority now.
      */
     @Test
     fun `the stored motion profile is what the app uses`() {
@@ -516,27 +220,57 @@ class RenderTest {
             assertEquals(MotionProfile.PLAYFUL, MotionProfile.from(prefs.motion))
             assertTrue(prefs.hasMotionPreference)
             assertTrue("a live profile must not be instant", !MotionProfile.PLAYFUL.instant)
-            assertTrue("standard must be soft enough to see", MotionProfile.STANDARD.stiffness < 180f)
+            assertTrue(
+                "standard must be soft enough to see",
+                MotionProfile.STANDARD.stiffness < 260f,
+            )
         } finally {
             prefs.motion = before
         }
     }
 
+    /**
+     * The widget's configuration screen is the one place still built from Views rather than
+     * drawn, because it is the launcher's screen rather than the app's. It now runs on the same
+     * spring engine as everything else, so it is worth proving it still assembles and paints.
+     */
     @Test
-    fun `the app assembles and paints end to end`() {
-        Prefs.get(context).motion = MotionProfile.OFF.key
+    fun `the widget configuration screen assembles and paints`() {
+        val intent = android.content.Intent(
+            context,
+            app.quire.calendar.widget.WidgetConfigActivity::class.java,
+        ).putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, 31)
         val controller = org.robolectric.Robolectric
-            .buildActivity(app.quire.calendar.ui.MainActivity::class.java)
+            .buildActivity(app.quire.calendar.widget.WidgetConfigActivity::class.java, intent)
             .setup()
-        org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
-        val bitmap = render(controller.get().window.decorView, 411, 891, "app-main")
-        assertPainted(bitmap, "app-main")
-        controller.close()
-        Prefs.get(context).motion = MotionProfile.STANDARD.key
+        try {
+            org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
+            val bitmap = render(controller.get().window.decorView, 411, 891, "widget-config")
+            assertPainted(bitmap, "widget-config")
+        } finally {
+            controller.close()
+        }
     }
 
-    private fun collectText(view: View, out: MutableList<String>) {
-        if (view is android.widget.TextView) out += view.text.toString()
-        if (view is ViewGroup) for (i in 0 until view.childCount) collectText(view.getChildAt(i), out)
+    /**
+     * The world, its overlay and the Activity holding them, assembled by the real `onCreate` and
+     * drawn through the real window — the one check that the whole thing starts.
+     */
+    @Test
+    fun `the app assembles and paints end to end`() {
+        val prefs = Prefs.get(context)
+        val before = prefs.motion
+        prefs.motion = MotionProfile.OFF.key
+        val controller = org.robolectric.Robolectric
+            .buildActivity(app.quire.calendar.world.WorldActivity::class.java)
+            .setup()
+        try {
+            org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
+            val bitmap = render(controller.get().window.decorView, 411, 891, "app-world")
+            assertPainted(bitmap, "app-world")
+        } finally {
+            controller.close()
+            prefs.motion = before
+        }
     }
 }

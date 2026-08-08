@@ -1,4 +1,4 @@
-package app.quire.calendar.ui
+package app.quire.engine.input
 
 import android.content.Context
 import android.hardware.Sensor

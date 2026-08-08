@@ -27,6 +27,12 @@ class Prefs private constructor(private val sp: SharedPreferences) {
         const val KEY_HAPTICS = "haptics"
         const val KEY_HEAT = "heat"
         const val KEY_DEPTH = "depth"
+        const val KEY_SEED = "seed"
+        const val KEY_CONTRAST = "contrast"
+        const val KEY_SCALE = "scale"
+
+        /** Cinnabar, the same colour the app has always opened on. */
+        const val DEFAULT_SEED = 0xFFC0402B.toInt()
 
         @Volatile
         private var instance: Prefs? = null
@@ -95,6 +101,27 @@ class Prefs private constructor(private val sp: SharedPreferences) {
     var heat: Boolean
         get() = sp.getBoolean(KEY_HEAT, false)
         set(v) = sp.edit { putBoolean(KEY_HEAT, v) }
+
+    /**
+     * The one colour the whole app palette is derived from, in the design engine's sense —
+     * every other colour in the world is walked out of this by `engine/design/Theme`.
+     *
+     * The widget keeps its own [accent] instead: two widgets can be configured independently of
+     * each other and of the app, so there is nothing for them to share here.
+     */
+    var seed: Int
+        get() = sp.getInt(KEY_SEED, DEFAULT_SEED)
+        set(v) = sp.edit { putInt(KEY_SEED, v) }
+
+    /** Extra separation between every plane and the ink on it, 0..1. */
+    var contrast: Float
+        get() = sp.getFloat(KEY_CONTRAST, 0f)
+        set(v) = sp.edit { putFloat(KEY_CONTRAST, v.coerceIn(0f, 1f)) }
+
+    /** The user's own size preference, multiplied into every measurement the world draws. */
+    var scale: Float
+        get() = sp.getFloat(KEY_SCALE, 1f)
+        set(v) = sp.edit { putFloat(KEY_SCALE, v.coerceIn(0.85f, 1.25f)) }
 
     var hiddenCalendars: Set<Long>
         get() = sp.getStringSet(KEY_HIDDEN_CALENDARS, emptySet())

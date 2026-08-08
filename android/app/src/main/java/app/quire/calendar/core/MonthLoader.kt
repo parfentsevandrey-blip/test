@@ -1,11 +1,8 @@
-package app.quire.calendar.ui
+package app.quire.calendar.core
 
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
-import app.quire.calendar.core.DayLoad
-import app.quire.calendar.core.EventRepository
-import app.quire.calendar.core.MonthModel
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
@@ -77,7 +74,7 @@ class MonthLoader(context: Context) {
         text: String,
         around: LocalDate,
         hidden: Set<Long>,
-        onReady: (List<app.quire.calendar.core.AgendaEntry>) -> Unit,
+        onReady: (List<AgendaEntry>) -> Unit,
     ) {
         executor.execute {
             val found = EventRepository.search(app, text, around, hidden = hidden)
@@ -88,7 +85,7 @@ class MonthLoader(context: Context) {
     fun agenda(
         date: LocalDate,
         hidden: Set<Long>,
-        onReady: (LocalDate, List<app.quire.calendar.core.AgendaEntry>) -> Unit,
+        onReady: (LocalDate, List<AgendaEntry>) -> Unit,
     ) {
         executor.execute {
             val entries = EventRepository.agendaFor(app, date, hidden)

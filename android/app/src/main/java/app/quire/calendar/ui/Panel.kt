@@ -14,6 +14,7 @@ import android.widget.TextView
 import app.quire.calendar.R
 import app.quire.calendar.core.Accent
 import app.quire.calendar.core.Palette
+import app.quire.engine.anim.MotionProfile
 
 /**
  * Settings are built in code, not in a preference XML, because the rows here are

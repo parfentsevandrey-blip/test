@@ -8,6 +8,8 @@ import android.view.View
 import app.quire.calendar.core.Accent
 import app.quire.calendar.core.Palette
 import app.quire.calendar.core.Tokens
+import app.quire.engine.anim.MotionProfile
+import app.quire.engine.anim.Spring
 
 /**
  * A switch that is a line and a disc, not a pill of Material chrome. Off it is
@@ -22,7 +24,7 @@ class ToggleView(context: Context) : View(context) {
     private val trackPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val knobPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val bounds = RectF()
-    private val phaseSpring = Spring(0f, 0f)
+    private val phaseSpring = Spring(0f)
     private var lastFrameNanos = 0L
     private val phase: Float get() = phaseSpring.value
 

@@ -73,6 +73,15 @@
     <string name="search_none">Ничего не найдено</string>
     <string name="add">Добавить</string>
 
+    <string name="section_look">Внешний вид</string>
+    <string name="seed">Основной цвет</string>
+    <string name="mode">Режим</string>
+    <string name="mode_auto">Авто</string>
+    <string name="mode_light">Светлый</string>
+    <string name="mode_dark">Тёмный</string>
+    <string name="contrast">Контраст</string>
+    <string name="size">Размер</string>
+
     <string name="section_motion">Движение</string>
     <string name="motion">Живость</string>
     <string name="motion_off">Выкл</string>
