@@ -43,6 +43,7 @@ class MainActivity : BaseActivity(), StageView.Data {
     private lateinit var bar: BottomBar
     private lateinit var sheet: SheetOverlay
     private lateinit var loader: MonthLoader
+    private lateinit var tilt: Tilt
 
     private val agendaCache = HashMap<LocalDate, List<AgendaEntry>>()
     private val agendaPending = HashSet<LocalDate>()
@@ -66,6 +67,7 @@ class MainActivity : BaseActivity(), StageView.Data {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         loader = MonthLoader(this)
+        tilt = Tilt(this)
 
         val root = FrameLayout(this)
         stage = StageView(this)
@@ -115,6 +117,7 @@ class MainActivity : BaseActivity(), StageView.Data {
             ),
         )
         bar.onPick = { handleAction(it) }
+        tilt.onChanged = { x, y -> stage.setTilt(x, y) }
         sheet.onDismissed = { stage.setReceded(false) }
 
         ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
@@ -170,10 +173,17 @@ class MainActivity : BaseActivity(), StageView.Data {
         agendaPending.clear()
         stage.dataChanged()
         agendaFor(stage.selected)
+        if (stage.depth) tilt.start() else tilt.stop()
         if (!EventRepository.hasPermission(this) && !askedForPermission) {
             askedForPermission = true
             presentPermission(denied = false)
         }
+    }
+
+    override fun onPause() {
+        // The sensor is only worth its wake-ups while the world is on screen.
+        tilt.stop()
+        super.onPause()
     }
 
     // ---- settings ------------------------------------------------------
@@ -190,6 +200,7 @@ class MainActivity : BaseActivity(), StageView.Data {
         stage.palette = palette
         stage.motion = motion
         stage.haptics = prefs.haptics
+        stage.depth = prefs.depth && !motion.instant
         stage.firstDayOfWeek = MonthModel.firstDayOfWeek(prefs.firstDay, Locale.getDefault())
         stage.style = GridStyle(
             showAdjacent = prefs.showAdjacent,
@@ -275,6 +286,12 @@ class MainActivity : BaseActivity(), StageView.Data {
             ) { index ->
                 prefs.motion = profiles[index].key
                 applySettings()
+            }
+            panel.rule()
+            panel.toggle(R.string.depth, R.string.depth_hint, prefs.depth) {
+                prefs.depth = it
+                applySettings()
+                if (stage.depth) tilt.start() else tilt.stop()
             }
             panel.rule()
             panel.toggle(R.string.haptics, R.string.haptics_hint, prefs.haptics) {

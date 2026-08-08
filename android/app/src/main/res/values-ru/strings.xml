@@ -83,4 +83,6 @@
     <string name="haptics_hint">Короткий тик под пальцем, когда мир движется</string>
     <string name="heat">Плотность дня</string>
     <string name="heat_hint">Подсвечивать клетку тем сильнее, чем полнее день</string>
+    <string name="depth">Глубина</string>
+    <string name="depth_hint">Слои отзываются на наклон телефона, а сетка разворачивается при зуме</string>
 </resources>

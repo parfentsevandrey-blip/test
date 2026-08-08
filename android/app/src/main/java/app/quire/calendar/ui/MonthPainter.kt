@@ -216,10 +216,17 @@ class MonthPainter(context: Context) {
             // A trailing cell of the previous month also *is* today; marking it
             // would put two discs in the year view for one date.
             if (isSelected && (inMonth || detail > 0.5f)) {
-                fillPaint.color = Tokens.withAlpha(
-                    if (isToday) palette.accent else palette.ink,
-                    alpha,
-                )
+                val disc = if (isToday) palette.accent else palette.ink
+                if (detail > 0.5f) {
+                    // Two flat rings stand in for a blur: a real one would cost
+                    // a mask filter per cell, and this is a 20dp halo.
+                    val halo = smoothstep(0.5f, 0.9f, detail) * alpha
+                    fillPaint.color = Tokens.withAlpha(disc, halo * 0.05f)
+                    canvas.drawCircle(cx, cy, markerRadius * 1.62f * selectionScale, fillPaint)
+                    fillPaint.color = Tokens.withAlpha(disc, halo * 0.07f)
+                    canvas.drawCircle(cx, cy, markerRadius * 1.28f * selectionScale, fillPaint)
+                }
+                fillPaint.color = Tokens.withAlpha(disc, alpha)
                 canvas.drawCircle(cx, cy, markerRadius * selectionScale, fillPaint)
                 textColour = if (isToday) palette.onAccent else palette.canvas
             } else if (isToday && inMonth && detail < 0.5f) {

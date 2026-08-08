@@ -27,12 +27,13 @@ class Ambient(context: Context) {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private var warm: RadialGradient? = null
     private var cool: RadialGradient? = null
+    private var vignette: RadialGradient? = null
     private var builtFor = 0
     private var builtWidth = 0f
     private var builtHeight = 0f
 
     var palette: Palette = Tokens.palette(false, Accent.CINNABAR)
-        set(value) { field = value; warm = null; cool = null }
+        set(value) { field = value; warm = null; cool = null; vignette = null }
 
     private fun build(w: Float, h: Float) {
         val key = palette.accent xor palette.canvas
@@ -52,6 +53,18 @@ class Ambient(context: Context) {
             floatArrayOf(0f, 1f),
             Shader.TileMode.CLAMP,
         )
+        // A vignette keeps the corners from competing with the grid.
+        vignette = RadialGradient(
+            w / 2f,
+            h / 2f,
+            maxOf(w, h) * 0.72f,
+            intArrayOf(
+                Tokens.withAlpha(palette.ink, 0f),
+                Tokens.withAlpha(palette.ink, if (palette.dark) 0.30f else 0.055f),
+            ),
+            floatArrayOf(0.55f, 1f),
+            Shader.TileMode.CLAMP,
+        )
         cool = RadialGradient(
             0f,
             0f,
@@ -69,18 +82,30 @@ class Ambient(context: Context) {
      * [focus] is the continuous month index and [zoom] the level; both are used
      * as parallax input so the pools lag behind the grid rather than track it.
      */
-    fun draw(canvas: Canvas, w: Float, h: Float, zoom: Float, focus: Float) {
+    fun draw(
+        canvas: Canvas,
+        w: Float,
+        h: Float,
+        zoom: Float,
+        focus: Float,
+        tiltX: Float = 0f,
+        tiltY: Float = 0f,
+    ) {
         canvas.drawColor(palette.canvas)
         build(w, h)
 
         val drift = (focus - Math.floor(focus.toDouble() / 12.0).toFloat() * 12f) / 12f
         val depth = 1f - (zoom - 1f).coerceIn(0f, 1f) * 0.6f
 
+        // The pools are the farthest layer, so they answer the tilt the least.
+        val parallaxX = tiltX * dp(9f)
+        val parallaxY = tiltY * dp(7f)
+
         paint.shader = warm
         var restore = canvas.save()
         canvas.translate(
-            w * (0.16f + drift * 0.24f),
-            h * 0.14f - dp(12f) * (1f - zoom.coerceIn(0f, 1f)),
+            w * (0.16f + drift * 0.24f) + parallaxX,
+            h * 0.14f - dp(12f) * (1f - zoom.coerceIn(0f, 1f)) + parallaxY,
         )
         paint.alpha = (255 * depth).toInt()
         canvas.drawPaint(paint)
@@ -88,9 +113,16 @@ class Ambient(context: Context) {
 
         paint.shader = cool
         restore = canvas.save()
-        canvas.translate(w * (0.94f - drift * 0.18f), h * (0.82f + zoom * 0.03f))
+        canvas.translate(
+            w * (0.94f - drift * 0.18f) + parallaxX * 0.7f,
+            h * (0.82f + zoom * 0.03f) + parallaxY * 0.7f,
+        )
         canvas.drawPaint(paint)
         canvas.restoreToCount(restore)
+
+        paint.alpha = 255
+        paint.shader = vignette
+        canvas.drawPaint(paint)
 
         paint.shader = null
         paint.alpha = 255

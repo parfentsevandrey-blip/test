@@ -26,6 +26,7 @@ class Prefs private constructor(private val sp: SharedPreferences) {
         const val KEY_MOTION = "motion"
         const val KEY_HAPTICS = "haptics"
         const val KEY_HEAT = "heat"
+        const val KEY_DEPTH = "depth"
 
         @Volatile
         private var instance: Prefs? = null
@@ -81,6 +82,11 @@ class Prefs private constructor(private val sp: SharedPreferences) {
     var haptics: Boolean
         get() = sp.getBoolean(KEY_HAPTICS, true)
         set(v) = sp.edit { putBoolean(KEY_HAPTICS, v) }
+
+    /** Parallax from the device's tilt, and perspective in the transitions. */
+    var depth: Boolean
+        get() = sp.getBoolean(KEY_DEPTH, true)
+        set(v) = sp.edit { putBoolean(KEY_DEPTH, v) }
 
     /** Tint each square by how full the day is. */
     var heat: Boolean

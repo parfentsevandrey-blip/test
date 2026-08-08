@@ -242,6 +242,46 @@ class RenderTest {
         assertTrue(true)
     }
 
+    /**
+     * Depth is two things at once: the layers answering the hand, and the plane
+     * turning through a camera. Both are rendered here because neither shows up
+     * in a still frame taken at rest.
+     */
+    @Test
+    fun `the world answers the tilt of the phone`() {
+        val tilted = stage(dark = false).apply {
+            goTo(today, level = 1, animate = false)
+            setTilt(0.85f, -0.6f)
+        }
+        assertPainted(render(tilted, 411, 891, "depth-tilted"), "depth-tilted")
+
+        val turning = stage(dark = false).apply {
+            goTo(today, level = 1, animate = false)
+            setTilt(0.4f, 0.2f)
+            zoom.snapTo(0.5f)
+        }
+        assertPainted(render(turning, 411, 891, "depth-turning"), "depth-turning")
+
+        val rising = stage(dark = true).apply {
+            goTo(today, level = 2, animate = false)
+            zoom.snapTo(1.55f)
+        }
+        assertPainted(render(rising, 411, 891, "depth-card-rising"), "depth-card-rising")
+    }
+
+    @Test
+    fun `turning depth off leaves the world flat`() {
+        val flat = stage(dark = false).apply {
+            depth = false
+            goTo(today, level = 1, animate = false)
+            setTilt(0.9f, -0.9f)
+        }
+        val plain = stage(dark = false).apply { goTo(today, level = 1, animate = false) }
+        val a = render(flat, 411, 891, "depth-off")
+        val b = render(plain, 411, 891, "depth-off-reference")
+        assertTrue("a tilt with depth off must change nothing", a.sameAs(b))
+    }
+
     @Test
     fun `the launcher icon draws inside its mask`() {
         val density = context.resources.displayMetrics.density

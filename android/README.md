@@ -4,10 +4,10 @@ An Android calendar in two halves that share nothing but their palette: a
 home-screen widget that holds perfectly still, and an app that is a single
 zoomable world with no screens in it.
 
-**Install:** [`dist/quire-2.2.apk`](dist/quire-2.2.apk) · 700 KB · Android 8.0+
-(minSdk 26, targetSdk 35) · `sha256 07c8217cf348d55910a5af007a7dc04a0a66a856f008868a1ecc863a641c7364`
+**Install:** [`dist/quire-2.3.apk`](dist/quire-2.3.apk) · 704 KB · Android 8.0+
+(minSdk 26, targetSdk 35) · `sha256 cb1cc51430aa11a75b2088d1dee606f8184deb86e7ebdbe1221aad81b902997b`
 
-Copy it to the phone and open it, or `adb install -r dist/quire-2.2.apk`. You
+Copy it to the phone and open it, or `adb install -r dist/quire-2.3.apk`. You
 will need to allow installing from an unknown source once — the APK is signed
 with the self-signed key in `keystore/`, not by a store.
 
@@ -161,7 +161,7 @@ core/     Tokens (palette, accents)   MonthModel (grid maths, julian days)
 ui/       Motion — spring integrator and the four liveliness profiles
           MonthPainter — one month into any rectangle at any detail
           StageView — the world: zoom, pan, gestures, day card
-          Ambient — the driven background
+          Ambient — the driven background   Tilt — gravity, smoothed
           RadialMenu, SheetOverlay, Panel, Widgets (switch, swatch)
           MainActivity — the only Activity
 widget/   WidgetRenderer — builds the RemoteViews tree
@@ -189,7 +189,7 @@ Needs JDK 17+ and an Android SDK with platform 35 and build-tools 35.0.0.
 echo "sdk.dir=$ANDROID_HOME" > local.properties
 gradle assembleRelease          # dist-ready APK, signed with keystore/
 gradle assembleDebug            # installs alongside it (.debug suffix)
-gradle testDebugUnitTest        # 35 tests; writes app/build/screenshots/*.png
+gradle testDebugUnitTest        # 37 tests; writes app/build/screenshots/*.png
 gradle lintRelease              # must stay at 0 errors
 python3 tools/generate_assets.py   # after editing the icon or picker preview
 ```
@@ -197,8 +197,10 @@ python3 tools/generate_assets.py   # after editing the icon or picker preview
 The tests run on Robolectric with native graphics, so `testDebugUnitTest` checks
 the calendar-provider parsing against a fake provider, proves the springs
 converge and survive a dropped frame, and renders the real views — the stage at
-five points along its zoom, the bar in both skins, the settings stack, the
-launcher icon inside its mask, and the widget through `RemoteViews.apply`. Look in `app/build/screenshots/` after a
+five points along its zoom, tilted and mid-turn, the bar in both skins, the
+settings stack, the launcher icon inside its mask, and the widget through
+`RemoteViews.apply`. One of them asserts that with Depth off a tilt changes not
+a single pixel. Look in `app/build/screenshots/` after a
 run to see what the current code actually draws.
 
 ## Signing

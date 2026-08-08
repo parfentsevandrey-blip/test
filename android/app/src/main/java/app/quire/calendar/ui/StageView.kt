@@ -81,6 +81,9 @@ class StageView(context: Context) : View(context) {
     private val recede = Spring(0f, 0f)
     /** The chosen disc lands rather than appears. */
     private val selectionPop = Spring(1f, 1f)
+    /** Where the phone is being held, smoothed into the frame loop. */
+    private val tiltX = Spring(0f, 0f)
+    private val tiltY = Spring(0f, 0f)
 
     var palette: Palette = Tokens.palette(false, Accent.CINNABAR)
         set(value) {
@@ -96,6 +99,8 @@ class StageView(context: Context) : View(context) {
             field = value
             listOf(zoom, focus, dayEntrance, scroll, recede, selectionPop)
                 .forEach { it.profile(value) }
+            // Tilt should glide rather than bounce, whatever the profile.
+            listOf(tiltX, tiltY).forEach { it.profile(MotionProfile.CALM) }
             invalidate()
         }
 
@@ -109,6 +114,14 @@ class StageView(context: Context) : View(context) {
         set(value) { field = value; thumbs.clear(); invalidate() }
 
     var haptics = true
+
+    /** Parallax and perspective; off means everything stays flat. */
+    var depth = true
+        set(value) {
+            field = value
+            if (!value) { tiltX.snapTo(0f); tiltY.snapTo(0f) }
+            invalidate()
+        }
 
     var data: Data? = null
 
@@ -128,6 +141,8 @@ class StageView(context: Context) : View(context) {
     private val scratch = RectF()
     private val cellRect = RectF()
     private val cardRect = RectF()
+    /** Scratch for rectFor, which is itself usually handed `scratch` to fill. */
+    private val lerpTarget = RectF()
     private val dockRect = RectF()
 
     private var lastFrameNanos = 0L
@@ -165,6 +180,18 @@ class StageView(context: Context) : View(context) {
         safeBottom = bottom
         requestLayout()
         invalidate()
+    }
+
+    /** Latest reading from the device's gravity sensor, in −1..1. */
+    fun setTilt(x: Float, y: Float) {
+        if (!depth) return
+        tiltX.target = x
+        tiltY.target = y
+        if (motion.instant) {
+            tiltX.snapTo(x)
+            tiltY.snapTo(y)
+        }
+        step()
     }
 
     /** Pushes the world back a little while a menu or panel floats over it. */
@@ -294,16 +321,29 @@ class StageView(context: Context) : View(context) {
     private fun rectFor(index: Int, t: Float, out: RectF) {
         val w = width.toFloat()
         yearCell(index, out)
-        val yearOffset = (Math.floorDiv(index, 12) - focus.value / 12f) * w
-        out.offset(yearOffset, 0f)
+        // Panning the year needs a continuous coordinate; zooming out of a month
+        // needs that month to stay put while its year assembles around it. Blend
+        // between the two by the zoom itself.
+        // Anchored early rather than gradually: the siblings are dissolving
+        // through that first third anyway, so the switch is never seen, and the
+        // focused month then grows squarely in place instead of drifting.
+        val anchor = lerp(
+            focus.value / 12f,
+            Math.floorDiv(focus.value.roundToInt(), 12).toFloat(),
+            smoothstep(0f, 0.35f, t),
+        )
+        out.offset((Math.floorDiv(index, 12) - anchor) * w, 0f)
         if (t <= 0f) return
-        scratch.set(monthRect)
-        scratch.offset((index - focus.value) * w, 0f)
+        // `out` is frequently `scratch` itself, so the month rectangle needs a
+        // temporary of its own — writing it into scratch would overwrite the
+        // year rectangle before it could be interpolated against.
+        lerpTarget.set(monthRect)
+        lerpTarget.offset((index - focus.value) * w, 0f)
         out.set(
-            lerp(out.left, scratch.left, t),
-            lerp(out.top, scratch.top, t),
-            lerp(out.right, scratch.right, t),
-            lerp(out.bottom, scratch.bottom, t),
+            lerp(out.left, lerpTarget.left, t),
+            lerp(out.top, lerpTarget.top, t),
+            lerp(out.right, lerpTarget.right, t),
+            lerp(out.bottom, lerpTarget.bottom, t),
         )
     }
 
@@ -325,6 +365,8 @@ class StageView(context: Context) : View(context) {
         if (!cardDragging) moving = scroll.advance(dt) || moving
         moving = recede.advance(dt) || moving
         moving = selectionPop.advance(dt) || moving
+        moving = tiltX.advance(dt) || moving
+        moving = tiltY.advance(dt) || moving
         return moving
     }
 
@@ -338,13 +380,27 @@ class StageView(context: Context) : View(context) {
         val t = z.coerceIn(0f, 1f)
         val u = (z - 1f).coerceIn(0f, 1f)
 
-        ambient.draw(canvas, w, h, zoom.value, focus.value)
+        ambient.draw(canvas, w, h, zoom.value, focus.value, tiltX.value, tiltY.value)
 
         // The ground stays put; only what the user is holding moves back.
         val worldRestore = canvas.save()
         if (recede.value > 0.001f) {
             val scale = lerp(1f, 0.94f, recede.value)
             canvas.scale(scale, scale, w / 2f, h * 0.45f)
+        }
+        if (depth) {
+            // A bump, not a state: the plane tips away through the middle of a
+            // zoom and is flat again at both ends, so nothing is ever read at
+            // an angle. On top of that, a couple of degrees answering the hand.
+            val tip = kotlin.math.sin(t * Math.PI).toFloat() * 9f
+            concatPerspective(
+                canvas,
+                w / 2f,
+                h * 0.42f,
+                rotX = tip - tiltY.value * 1.8f,
+                rotY = tiltX.value * 2.4f,
+            )
+            canvas.translate(tiltX.value * dp(4f), tiltY.value * dp(3f))
         }
         drawMonths(canvas, t, u)
         drawChrome(canvas, t, u)
@@ -382,7 +438,28 @@ class StageView(context: Context) : View(context) {
             val distance = abs(index - focus.value)
             // At year level every month is equally present; at month level the
             // neighbours fade so the focused one is unambiguous.
-            val alpha = gridAlpha * lerp(1f, (1f - smoothstep(0.15f, 1f, distance) * 0.55f), t)
+            var alpha = gridAlpha * lerp(1f, (1f - smoothstep(0.15f, 1f, distance) * 0.55f), t)
+            // Halfway through the zoom the two layouts disagree — a year grid
+            // and a one-per-screen carousel — and the siblings would cross over
+            // each other. Let them dissolve while the focused month grows, and
+            // return once the geometry has agreed again.
+            if (index != focusIndex) {
+                alpha *= 1f - kotlin.math.sin(t * Math.PI).toFloat() * 0.88f
+            }
+            if (alpha <= 0.004f) continue
+
+            val leanY = if (depth) {
+                ((index - focus.value) * -13f).coerceIn(-30f, 30f) * t
+            } else {
+                0f
+            }
+            val leanRestore = if (abs(leanY) > 0.05f) {
+                val saved = canvas.save()
+                concatPerspective(canvas, scratch.centerX(), scratch.centerY(), 0f, leanY)
+                saved
+            } else {
+                -1
+            }
 
             if (t < 0.08f && scratch.width() <= thumbWidth * 1.3f) {
                 drawThumb(canvas, index, scratch, alpha)
@@ -417,8 +494,37 @@ class StageView(context: Context) : View(context) {
                     labelPaint,
                 )
             }
+            if (leanRestore >= 0) canvas.restoreToCount(leanRestore)
         }
         if (restore >= 0) canvas.restoreToCount(restore)
+    }
+
+    private val camera = android.graphics.Camera()
+    private val perspective = android.graphics.Matrix()
+
+    /**
+     * Real perspective rather than a scale: a plain scale reads as zoom, while
+     * rotating the plane about its own centre through a camera reads as depth.
+     */
+    private fun concatPerspective(
+        canvas: Canvas,
+        cx: Float,
+        cy: Float,
+        rotX: Float,
+        rotY: Float,
+    ) {
+        if (abs(rotX) < 0.02f && abs(rotY) < 0.02f) return
+        camera.save()
+        // Camera z is in units of 72px; put the eye about 1.4 screens back so
+        // the vanishing point is gentle instead of fish-eyed.
+        camera.setLocation(0f, 0f, -(width / 72f) * 1.4f)
+        camera.rotateX(rotX)
+        camera.rotateY(rotY)
+        camera.getMatrix(perspective)
+        camera.restore()
+        perspective.preTranslate(-cx, -cy)
+        perspective.postTranslate(cx, cy)
+        canvas.concat(perspective)
     }
 
     private fun drawThumb(canvas: Canvas, index: Int, rect: RectF, alpha: Float) {
@@ -483,6 +589,7 @@ class StageView(context: Context) : View(context) {
     private fun drawDock(canvas: Canvas, alpha: Float) {
         val entries = data?.agenda(selected).orEmpty()
         val rect = RectF(dockRect)
+        rect.offset(tiltX.value * dp(7f), tiltY.value * dp(5f))
         drawSlab(canvas, rect, dp(22f), alpha, lifted = true)
 
         capsPaint.textSize = dp(10.5f)
@@ -545,11 +652,21 @@ class StageView(context: Context) : View(context) {
             lerp(cellRect.right, cardRect.right, morph),
             lerp(cellRect.bottom, cardRect.bottom, morph),
         )
+        rect.offset(tiltX.value * dp(8f), tiltY.value * dp(6f))
         val radius = lerp(min(cellRect.width(), cellRect.height()) / 2f, dp(28f), morph)
+
+        val cardRestore = canvas.save()
+        if (depth) {
+            // The card rises out of the grid rather than growing on top of it.
+            concatPerspective(canvas, rect.centerX(), rect.centerY(), (1f - morph) * 11f, 0f)
+        }
         drawSlab(canvas, rect, radius, u, lifted = true)
 
         val contentAlpha = smoothstep(0.5f, 1f, u) * smoothstep(0f, 0.4f, dayEntrance.value)
-        if (contentAlpha <= 0.004f) return
+        if (contentAlpha <= 0.004f) {
+            canvas.restoreToCount(cardRestore)
+            return
+        }
 
         val restore = canvas.save()
         canvas.clipRect(rect)
@@ -615,6 +732,7 @@ class StageView(context: Context) : View(context) {
         }
         contentHeight = (y + scroll.value) - (rect.top + dp(88f))
         canvas.restoreToCount(restore)
+        canvas.restoreToCount(cardRestore)
     }
 
     private val entryTops = ArrayList<Float>()
@@ -709,11 +827,15 @@ class StageView(context: Context) : View(context) {
                 alpha * if (palette.dark) 0.55f else 0.16f,
             )
             shadowPaint.maskFilter = shadowFilter
+            // The shadow leans the opposite way to the card, which is what sells
+            // the gap between them.
+            val shadowX = -tiltX.value * dp(5f)
+            val shadowY = dp(3f) - tiltY.value * dp(3f)
             canvas.drawRoundRect(
-                rect.left,
-                rect.top + dp(3f),
-                rect.right,
-                rect.bottom + dp(3f),
+                rect.left + shadowX,
+                rect.top + shadowY,
+                rect.right + shadowX,
+                rect.bottom + shadowY,
                 radius,
                 radius,
                 shadowPaint,

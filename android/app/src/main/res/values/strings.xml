@@ -84,4 +84,6 @@
     <string name="haptics_hint">A tick under the finger when the world moves</string>
     <string name="heat">Density</string>
     <string name="heat_hint">Tint each square by how full the day is</string>
+    <string name="depth">Depth</string>
+    <string name="depth_hint">Layers answer the tilt of the phone, and the grid turns as it zooms</string>
 </resources>
