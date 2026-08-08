@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Quire" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/window</item>
+        <item name="android:colorControlHighlight">@color/press</item>
+        <item name="android:windowAnimationStyle">@style/Animation.Quire</item>
+    </style>
+
+    <style name="Animation.Quire" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/rise_in</item>
+        <item name="android:activityCloseExitAnimation">@anim/fall_out</item>
+    </style>
+</resources>

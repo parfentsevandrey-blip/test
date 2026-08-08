@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_label">Quire · Месяц</string>
+    <string name="widget_description">Месяц целиком. Шесть строк, один акцент, ничего лишнего.</string>
+    <string name="widget_config_title">Виджет</string>
+
+    <string name="today">Сегодня</string>
+    <string name="settings">Настройки</string>
+    <string name="year">Год</string>
+    <string name="new_event">Новое событие</string>
+    <string name="nothing_scheduled">Ничего не запланировано</string>
+    <string name="all_day">Весь день</string>
+
+    <string name="permission_headline">Quire пока не видит ваши календари</string>
+    <string name="permission_body">Дайте доступ на чтение — и сетка покажет то, что уже есть в вашем дне. Данные не покидают устройство.</string>
+    <string name="permission_action">Дать доступ</string>
+    <string name="permission_denied_body">Доступ запрещён. Измените разрешение в настройках системы.</string>
+    <string name="open_settings">Открыть настройки</string>
+
+    <string name="section_week">Неделя</string>
+    <string name="section_appearance">Оформление</string>
+    <string name="section_grid">Сетка</string>
+    <string name="section_calendars">Календари</string>
+    <string name="section_about">О программе</string>
+
+    <string name="first_day">Первый день</string>
+    <string name="first_day_auto">Авто</string>
+    <string name="first_day_mon">Пн</string>
+    <string name="first_day_sat">Сб</string>
+    <string name="first_day_sun">Вс</string>
+
+    <string name="skin">Оформление</string>
+    <string name="skin_auto">Авто</string>
+    <string name="skin_paper">Бумага</string>
+    <string name="skin_ink">Тушь</string>
+
+    <string name="accent">Акцент</string>
+    <string name="accent_cinnabar">Киноварь</string>
+    <string name="accent_indigo">Индиго</string>
+    <string name="accent_moss">Мох</string>
+    <string name="accent_ochre">Охра</string>
+    <string name="accent_plum">Слива</string>
+    <string name="accent_graphite">Графит</string>
+
+    <string name="show_adjacent">Соседние месяцы</string>
+    <string name="show_adjacent_hint">Заполнять пустые клетки днями соседних месяцев</string>
+    <string name="dim_weekends">Тихие выходные</string>
+    <string name="dim_weekends_hint">Суббота и воскресенье более светлым тоном</string>
+    <string name="week_numbers">Номера недель</string>
+    <string name="week_numbers_hint">Узкая колонка вдоль левого края</string>
+    <string name="coloured_dots">Цветные метки</string>
+    <string name="coloured_dots_hint">Брать цвет точки из календаря события</string>
+    <string name="show_events">Метки событий</string>
+    <string name="show_events_hint">Точка под каждым днём, в котором что-то есть</string>
+
+    <string name="opacity">Плотность карточки</string>
+    <string name="calendars_hint">Снимите отметку, чтобы убрать календарь из сетки</string>
+    <string name="no_calendars">На устройстве нет календарей</string>
+
+    <string name="about_line">Quire %1$s · сделано ради одного</string>
+    <string name="about_body">Сетка месяца, список дня и виджет. Без аккаунта, без сети, без аналитики.</string>
+
+    <string name="done">Готово</string>
+    <string name="widget_preview_hint">На домашнем экране это выглядит так.</string>
+
+    <string name="cd_previous_month">Предыдущий месяц</string>
+    <string name="cd_next_month">Следующий месяц</string>
+    <string name="cd_current_month">Вернуться к текущему месяцу</string>
+</resources>

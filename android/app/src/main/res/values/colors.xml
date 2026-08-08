@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Only the values the framework needs before any of our code runs: the window
+  background, the touch highlight, and the static widget-picker preview.
+  The real palette lives in core/Tokens.kt — these mirror it.
+-->
+<resources>
+    <color name="window">#F6F5F1</color>
+    <color name="press">#1A14130F</color>
+
+    <color name="ic_launcher_background">#14130F</color>
+
+    <color name="pv_surface">#FCFBF8</color>
+    <color name="pv_ink">#14130F</color>
+    <color name="pv_faint">#97948A</color>
+    <color name="pv_ghost">#C8C5BB</color>
+    <color name="pv_rule">#2614130F</color>
+    <color name="pv_accent">#C0402B</color>
+    <color name="pv_on_accent">#FFFFFF</color>
+</resources>

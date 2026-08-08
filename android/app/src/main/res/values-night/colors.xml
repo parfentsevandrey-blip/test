@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="window">#0C0C0B</color>
+    <color name="press">#1FF0EEE8</color>
+
+    <color name="pv_surface">#141413</color>
+    <color name="pv_ink">#F0EEE8</color>
+    <color name="pv_faint">#64615A</color>
+    <color name="pv_ghost">#3A3934</color>
+    <color name="pv_rule">#2EF0EEE8</color>
+    <color name="pv_accent">#E2593F</color>
+    <color name="pv_on_accent">#0C0C0B</color>
+</resources>
