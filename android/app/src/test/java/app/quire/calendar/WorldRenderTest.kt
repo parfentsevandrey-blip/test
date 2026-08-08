@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.RectF
+import android.view.View
 import androidx.test.core.app.ApplicationProvider
 import app.quire.calendar.core.AgendaEntry
 import app.quire.calendar.core.CalendarSource
@@ -15,6 +16,7 @@ import app.quire.calendar.world.MonthPlate
 import app.quire.calendar.world.SearchPanel
 import app.quire.calendar.world.SettingsPanel
 import app.quire.calendar.world.WorldView
+import app.quire.engine.anim.Clock
 import app.quire.engine.anim.MotionProfile
 import app.quire.engine.design.Metrics
 import app.quire.engine.design.Theme
@@ -492,12 +494,22 @@ class WorldRenderTest {
     }
 
     /**
-     * Puts the view in a real window before drawing it.
+     * Puts the view in a real window, lays it out, runs its frame loop until it stops asking for
+     * frames, and draws the settled picture.
      *
-     * This is not ceremony. The world drives itself from `Clock`, which it only subscribes to in
-     * `onAttachedToWindow` — a view that is merely measured and laid out never receives a frame,
-     * so every spring stays at the value it was seeded with and an opened day renders as an empty
-     * card. Hosting it and letting the looper run is what makes the render the settled picture.
+     * The order of the first two steps is the whole point, and getting it wrong is silent. The
+     * world drives itself from [Clock], which it subscribes to in `onAttachedToWindow`, and
+     * within one Choreographer frame the animation callbacks run *before* the traversal that
+     * measures and lays a view out. So a view that is merely hosted and then handed to the looper
+     * takes its first step at 0 x 0: with motion off every spring is already sitting on its
+     * target, the step reports nothing moving, `Clock` drops the listener, and the layout that
+     * arrives later in that very frame — the one that finally gives [DayPanel] a rectangle and
+     * retargets its stagger — is never followed by a frame that could act on it. What renders is
+     * a card with a header, a rule and no entries on it, which no count of distinct colours can
+     * tell apart from a day that has some.
+     *
+     * Laying the view out here, before the looper is allowed to run at all, puts the geometry in
+     * place first, so the first frame the world is given is one it can settle on.
      */
     private fun paint(view: WorldView, name: String): Bitmap {
         val controller = org.robolectric.Robolectric
@@ -511,21 +523,86 @@ class WorldRenderTest {
                     android.view.ViewGroup.LayoutParams.MATCH_PARENT,
                 ),
             )
+            val display = context.resources.displayMetrics
+            val width = display.widthPixels
+            val height = display.heightPixels
+            view.measure(
+                View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY),
+            )
+            view.layout(0, 0, width, height)
+            assertTrue(
+                "$name was hosted but never subscribed to the clock, so no frame can reach it",
+                Clock.isRunning,
+            )
+
             val looper = org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper())
             var frame = 0
-            while (frame < 120) {
-                looper.idleFor(16, java.util.concurrent.TimeUnit.MILLISECONDS)
+            while (frame < SETTLE_FRAMES) {
+                looper.idleFor(FRAME_MILLIS, java.util.concurrent.TimeUnit.MILLISECONDS)
                 frame++
             }
-            val width = view.width.takeIf { it > 0 } ?: (411 * density).toInt()
-            val height = view.height.takeIf { it > 0 } ?: (891 * density).toInt()
-            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            // Clock stops the moment its last listener says it wants no more frames, so this is
+            // the world itself reporting that it has arrived. A world still travelling here would
+            // be photographed mid-flight, and the picture would change with the frame budget.
+            assertTrue(
+                "$name was still asking for frames after $SETTLE_FRAMES of them, so this render " +
+                    "is a picture of the motion rather than of the settled world",
+                !Clock.isRunning,
+            )
+            assertEquals("$name was hosted at the wrong width", width, view.width)
+            assertEquals("$name was hosted at the wrong height", height, view.height)
+
+            val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
             view.draw(Canvas(bitmap))
             write(bitmap, name)
             return bitmap
         } finally {
             controller.close()
         }
+    }
+
+    /**
+     * Fails unless the open day's list actually holds its entries.
+     *
+     * The band sampled is the strip below the panel's header and its rule, held clear of the
+     * panel's own edges and of the sliver of world that shows past its right side, so everything
+     * counted is content. What counts as background is read off the card itself, well below the
+     * last entry, rather than from a [Theme] colour: the card is drawn over a gradient and is
+     * anti-aliased against it, so almost nothing lands on an exact palette value.
+     *
+     * This is the assertion a colour count cannot make. A panel whose stagger never advanced
+     * still draws its header and its rule, so it has plenty of distinct colours and no entries.
+     */
+    private fun assertPanelHasEntries(bitmap: Bitmap, name: String) {
+        val left = (bitmap.width * BAND_LEFT).toInt()
+        val right = (bitmap.width * BAND_RIGHT).toInt()
+        val top = (bitmap.height * BAND_TOP).toInt()
+        val bottom = (bitmap.height * BAND_BOTTOM).toInt()
+        val fill = bitmap.getPixel(bitmap.width / 2, (bitmap.height * BAND_FILL_AT).toInt())
+
+        var ink = 0
+        var samples = 0
+        var y = top
+        while (y < bottom) {
+            var x = left
+            while (x < right) {
+                if (distance(bitmap.getPixel(x, y), fill) > INK_DISTANCE) ink++
+                samples++
+                x += 3
+            }
+            y += 3
+        }
+
+        val needed = (samples * BAND_INK_FRACTION).toInt()
+        assertTrue(
+            "$name: the open day is an empty card. Of $samples samples in the panel's content " +
+                "band (x $left..$right, y $top..$bottom of ${bitmap.width}x${bitmap.height}) " +
+                "only $ink differ from the card fill behind them, and $needed are needed for " +
+                "the day's three entries. The stagger never advanced, which means the view was " +
+                "drawn before its frame loop had run over a laid-out world.",
+            ink >= needed,
+        )
     }
 
     @Test
@@ -536,6 +613,9 @@ class WorldRenderTest {
             val bitmap = paint(view, "world-level-$level")
             assertTrue("level $level drew nothing", distinctColours(bitmap) > 12)
             assertEquals("level $level did not settle where it was sent", level, view.level)
+            // The day is the one level with a list on it, and the only one where arriving at the
+            // right level says nothing about whether the contents made it.
+            if (level == 2) assertPanelHasEntries(bitmap, "world-level-2")
         }
     }
 
@@ -802,5 +882,34 @@ class WorldRenderTest {
         // does, it must settle almost immediately rather than running for half a second.
         assertTrue("Off ran for $frames frames", frames <= 2)
         assertNotNull(hud)
+    }
+
+    private companion object {
+
+        // Frames given to a hosted world before it is called stuck. Under MotionProfile.OFF one
+        // is enough; the rest is headroom for a world that is genuinely travelling. Note that a
+        // world which never stops asking will not fail here, it will hang inside a single
+        // idleFor: Robolectric's vsync advances the clock itself and posts a message that is
+        // immediately due, so the looper never reaches an idle queue.
+        const val SETTLE_FRAMES = 120
+        const val FRAME_MILLIS = 16L
+
+        // The day panel's content band, as fractions of the render. The top clears the panel's
+        // header and the rule under it; the sides stay inside the card, off its edge stroke and
+        // off the strip of world showing past its right side. BAND_FILL_AT is a point on the
+        // same card below every entry, which is what the band is measured against.
+        const val BAND_TOP = 0.18f
+        const val BAND_BOTTOM = 0.38f
+        const val BAND_LEFT = 0.10f
+        const val BAND_RIGHT = 0.85f
+        const val BAND_FILL_AT = 0.80f
+
+        // Text on a card is thin, so this is a floor and not a target: the three entries measure
+        // about 6% of the band, and a panel that never revealed them measures none of it.
+        const val BAND_INK_FRACTION = 0.02f
+
+        // Channel-sum distance at which a sample stops being the card and starts being ink.
+        // Everything is anti-aliased, so it has to sit above the fringe of a glyph's edge.
+        const val INK_DISTANCE = 40
     }
 }

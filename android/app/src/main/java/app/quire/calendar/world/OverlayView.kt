@@ -113,9 +113,18 @@ class OverlayView(context: Context) : View(context), GestureEngine.Listener {
         invalidate()
     }
 
-    /** How far the system's own furniture reaches, so the card hangs below the status bar. */
-    fun setSafeInsets(top: Float, bottom: Float) {
-        safeTop = top
+    /**
+     * How far the status bar and any cutout reach, so the card hangs below them.
+     *
+     * Only the top is asked for. The two sheets fill the screen and inset themselves, and the
+     * card hangs from the top edge — nothing on this surface is positioned from the bottom, so
+     * taking a bottom inset here would be a parameter that quietly did nothing.
+     */
+    fun setSafeTop(top: Float) {
+        if (safeTop != top) {
+            safeTop = top
+            if (width > 0 && height > 0) publishBounds()
+        }
         invalidate()
     }
 
@@ -217,30 +226,40 @@ class OverlayView(context: Context) : View(context), GestureEngine.Listener {
         if (searchOpen.value > 0.001f) alive = search.advance(dt) || alive
         if (noticeOpen.value > 0.001f) alive = notice.advance(dt) || alive
         invalidate()
-        // Everything is gone and nothing is moving: stop taking frames rather than idling at 60.
-        if (!alive && sheet == Sheet.NONE && !notice.visible) {
+        // Frames are asked for only while something is actually moving, whether or not a sheet is
+        // up. A settled sheet is a still picture: asking for sixty of them a second would keep a
+        // core busy for as long as settings were open, and the surface is woken by every gesture
+        // and every present/dismiss anyway, so there is nothing to miss.
+        if (!alive) {
             running = false
             return false
         }
         return true
     }
 
-    override fun onDraw(canvas: Canvas) {
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        publishBounds()
+    }
+
+    /**
+     * Hands the three surfaces their rectangle. Deliberately not done from [onDraw]: settings
+     * marks its whole layout dirty every time it is told its bounds, so calling it once a frame
+     * would re-measure every row of the sheet sixty times a second to no purpose.
+     */
+    private fun publishBounds() {
         bounds.set(0f, 0f, width.toFloat(), height.toFloat())
+        settings.setBounds(bounds)
+        search.setBounds(bounds)
+        notice.setBounds(bounds, safeTop)
+    }
+
+    override fun onDraw(canvas: Canvas) {
         // The card sits under the sheets: a sheet is a place you went, the card is a note left on
         // the world, and a note does not cover the thing you just opened.
-        if (noticeOpen.value > 0.001f) {
-            notice.setBounds(bounds, safeTop)
-            notice.draw(canvas, noticeOpen.value)
-        }
-        if (settingsOpen.value > 0.001f) {
-            settings.setBounds(bounds)
-            settings.draw(canvas, settingsOpen.value)
-        }
-        if (searchOpen.value > 0.001f) {
-            search.setBounds(bounds)
-            search.draw(canvas, searchOpen.value)
-        }
+        if (noticeOpen.value > 0.001f) notice.draw(canvas, noticeOpen.value)
+        if (settingsOpen.value > 0.001f) settings.draw(canvas, settingsOpen.value)
+        if (searchOpen.value > 0.001f) search.draw(canvas, searchOpen.value)
     }
 
     // ---- touch ---------------------------------------------------------

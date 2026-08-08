@@ -71,6 +71,14 @@ private const val RING_MARGIN = 0.18f
 // months readable at once, which is what makes the ring worth standing back for.
 private const val RING_FACE = 0.78f
 
+// The ring is framed by its front arc rather than by its whole circle: twelve plates around a
+// circle this wide are far wider than they are tall, and fitting all of it across a portrait
+// viewport stands the eye six times further back than one month needs, which leaves the year a
+// strip of thumbnails nine tenths of the way to nothing. The fit holds the month this many steps
+// either side of the focus instead, and lets the rest of the year run off both edges — which is
+// what says there is more of it around you.
+private const val RING_FIT_STEPS = 1f
+
 // How far above the plates the eye rises as the ring forms, as a fraction of its radius.
 private const val RING_ELEVATION = 0.30f
 
@@ -122,6 +130,17 @@ private const val RING_FORM_END = 0.88f
 // How far the world is pushed back and dimmed under an open day.
 private const val OPEN_PUSH = 0.07f
 private const val WORLD_DIM = 0.30f
+
+// The open day draws its own header — the number, the weekday, the month — into the corner the
+// Hud's title stands in, so the title fades out as the panel grows and is gone before the panel's
+// contents arrive (DayPanel starts its own fade at 0.34 of openness, which is file-private there,
+// hence a separate number here rather than a shared one). The strip is not touched: Today, Year,
+// Add, Search and Settings are how the day is left.
+//
+// Driven by the openness value rather than by the level, which is an int read off a target and
+// would pop the title on the frame a gesture decided. The value is the same spring the panel
+// morph rides, so the title dissolves with the panel and comes back on a drag that closes it.
+private const val TITLE_FADE_OUT = 0.30f
 
 // How far the eye slides with the hand, in world units at full tilt.
 private const val TILT_REACH = 0.024f
@@ -595,10 +614,16 @@ class WorldView(context: Context) : View(context) {
             PLATE_HEIGHT * h / (2f * tanY * freeHeight),
             PLATE_WIDTH * w / (2f * tanX * freeWidth),
         )
-        // And far enough back that the whole ring fits across that band. The ring's widest
-        // point is its own centre plane, which sits one radius beyond the nearest plate.
-        val reach = RING_RADIUS + PLATE_WIDTH * 0.5f + RING_MARGIN
-        ringZ = max(reach * w / (tanX * freeWidth) - RING_RADIUS, nearZ)
+        // And far enough back that the front arc of the ring fits across that band. The arc ends
+        // RING_FIT_STEPS months round from the focus; the plate standing there is turned most of
+        // the way to tangent, so it covers less width than it is wide, and it stands nearer the
+        // eye than the ring's centre plane, which is what arcZ takes back off the distance.
+        val arc = RING_FIT_STEPS * RING_STEP
+        val reach = RING_RADIUS * sin(arc) +
+            PLATE_WIDTH * 0.5f * cos(arc * RING_FACE) +
+            RING_MARGIN
+        val arcZ = RING_RADIUS * (cos(arc) - 1f)
+        ringZ = max(reach * w / (tanX * freeWidth) + arcZ, nearZ)
         camFar = ringZ + 6f * RING_RADIUS + 8f
         spacing = nearZ * CORRIDOR_SPACING
 
@@ -687,7 +712,14 @@ class WorldView(context: Context) : View(context) {
         drawPlates(canvas)
         particles.draw(canvas)
         dayPanel.draw(canvas, openness.value)
-        hud.draw(canvas, titleText, subtitleText, level, 1f)
+        hud.draw(
+            canvas = canvas,
+            title = titleText,
+            subtitle = subtitleText,
+            level = level,
+            alpha = 1f,
+            titleAlpha = 1f - smoothstep(0f, TITLE_FADE_OUT, openness.value),
+        )
     }
 
     // ---- background ----------------------------------------------------

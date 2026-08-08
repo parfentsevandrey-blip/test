@@ -199,17 +199,29 @@ class Hud(context: Context) {
      * views light `today`, since that is the entry that returns to them. `add`, `search` and
      * `settings` are actions rather than places and are never lit.
      *
-     * @param alpha 0..1 fade for everything drawn here, for a world that wants the screen.
+     * The two halves fade apart, because they answer to different things: the strip is how the
+     * screen is left and stays whatever the world does, while the title stands in a corner
+     * something else may need.
+     *
+     * @param alpha 0..1 fade for the strip and its five targets.
+     * @param titleAlpha 0..1 fade for the month name and the year beside it; defaults to [alpha],
+     *     so a caller that has no reason to separate them does not have to.
      */
-    fun draw(canvas: Canvas, title: String, subtitle: String, level: Int, alpha: Float) {
+    fun draw(
+        canvas: Canvas,
+        title: String,
+        subtitle: String,
+        level: Int,
+        alpha: Float,
+        titleAlpha: Float = alpha,
+    ) {
         val theme = this.theme ?: return
         if (viewWidth <= 0f || viewHeight <= 0f) return
-        // Below one step of an eight-bit alpha there is nothing to see, and the guard is written
-        // positively so a NaN alpha draws nothing rather than something opaque.
+        // Below one step of an eight-bit alpha there is nothing to see, and the guards are
+        // written positively so a NaN alpha draws nothing rather than something opaque.
+        if (titleAlpha > MIN_ALPHA) drawTitle(canvas, theme, title, subtitle, min(titleAlpha, 1f))
         if (!(alpha > MIN_ALPHA)) return
-        val fade = min(alpha, 1f)
-        drawTitle(canvas, theme, title, subtitle, fade)
-        drawBar(canvas, theme, activeAction(level), fade)
+        drawBar(canvas, theme, activeAction(level), min(alpha, 1f))
     }
 
     /**

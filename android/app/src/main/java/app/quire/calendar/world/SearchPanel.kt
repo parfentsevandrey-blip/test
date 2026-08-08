@@ -588,13 +588,19 @@ class SearchPanel(context: Context) {
             flashRow = -1
         }
         if (visible) {
+            // Frames are claimed only for as long as the caret has something to do. Holding it
+            // solid while typing needs them, and blinking needs them; a caret that has been told
+            // not to blink needs none, and saying otherwise would keep a core busy at sixty
+            // frames a second for as long as the field was open — under the one setting whose
+            // whole meaning is that nothing moves.
             if (typingHold > 0f) {
                 typingHold -= dt
                 caretBlink.seek(0f)
-            } else if (!motion.instant && !caretBlink.advance(dt)) {
-                caretBlink.restart()
+                running = true
+            } else if (!motion.instant) {
+                if (!caretBlink.advance(dt)) caretBlink.restart()
+                running = true
             }
-            running = true
         }
         return running
     }

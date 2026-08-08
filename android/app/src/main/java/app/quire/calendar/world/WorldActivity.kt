@@ -126,7 +126,7 @@ class WorldActivity : AppCompatActivity(), WorldView.Data {
                 WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout(),
             )
             world.setSafeInsets(bars.top.toFloat(), bars.bottom.toFloat())
-            overlay.setSafeInsets(bars.top.toFloat(), bars.bottom.toFloat())
+            overlay.setSafeTop(bars.top.toFloat())
             insets
         }
 

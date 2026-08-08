@@ -8,7 +8,8 @@ Every pixel is drawn on a Canvas and every moving value is integrated by an engi
 repository. That is not a stunt — the reason is at [Why none of it is the
 platform's](#why-none-of-it-is-the-platforms), and it is the whole point of the rewrite.
 
-**Install:** [`dist/quire-3.0.apk`](dist/quire-3.0.apk) · Android 8.0+ (minSdk 26, targetSdk 35)
+**Install:** [`dist/quire-3.0.apk`](dist/quire-3.0.apk) · 736 KB · Android 8.0+ (minSdk 26,
+targetSdk 35) · `sha256 c81c67da8d3ce83b639dc8107c9adcbe39b9f77672ba3e14e07ce792b8cefba2`
 
 Copy it to the phone and open it, or `adb install -r dist/quire-3.0.apk`. You will need to allow
 installing from an unknown source once — the APK is signed with the self-signed key in
@@ -17,6 +18,10 @@ installing from an unknown source once — the APK is signed with the self-signe
 | Month | Year | Day | Settings | Search |
 |---|---|---|---|---|
 | ![Month](docs/world-level-1.png) | ![Year](docs/world-level-0.png) | ![Day](docs/world-level-2.png) | ![Settings](docs/world-settings-paper.png) | ![Search](docs/world-search-paper.png) |
+
+| Month, ink | Settings, ink | Settings, Russian | The plate itself |
+|---|---|---|---|
+| ![Ink](docs/world-level-1-ink.png) | ![Settings ink](docs/world-settings-ink.png) | ![Settings ru](docs/world-settings-ru.png) | ![Plate](docs/world-plate-paper.png) |
 
 Every image is a real render of the shipping code, produced by the test suite — not a mockup.
 
@@ -191,9 +196,19 @@ originals almost everywhere, and that is when a hand-drawn row runs out of width
 icon inside its mask, and the widget through `RemoteViews.apply`. Look in
 `app/build/screenshots/` after a run to see what the current code actually draws.
 
-Every visual bug found during this rewrite was found by reading those PNGs, and two of them were
-invisible to the compiler: a today marker drawn twice, and a day panel that rendered its header
-and none of its entries.
+Every visual bug found during this rewrite was found by reading those PNGs — a today marker drawn
+twice, a title that ran off the edge, a HUD title landing on the day panel's own header. Two more
+came from writing the tests rather than from running them:
+
+- **A sheet asked for frames forever.** The overlay returned "still moving" for as long as
+  anything was open, and the search field claimed a frame for a caret it had been told not to
+  blink. Both would have kept a core busy at sixty frames a second for as long as settings or
+  search were on screen — under Liveliness → Off, which exists to make things stand still. They
+  surfaced because a Robolectric test that idles the looper never returns against a view that
+  never stops asking.
+- **`lintRelease` is not optional.** `assembleRelease` runs `lintVitalRelease`, which passed a
+  call to `BitmapShader.setFilterMode` guarded at API 31 when it needs 33 — a `NoSuchMethodError`
+  on every Android 12 device, caught only by the full lint.
 
 ## Signing
 
