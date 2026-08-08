@@ -36,11 +36,36 @@ object WidgetRenderer {
         R.id.wd_0, R.id.wd_1, R.id.wd_2, R.id.wd_3, R.id.wd_4, R.id.wd_5, R.id.wd_6,
     )
     private val DOT_IDS = intArrayOf(R.id.dot_0, R.id.dot_1, R.id.dot_2)
+    private val NAV_IDS = intArrayOf(R.id.nav_prev, R.id.nav_today, R.id.nav_next)
 
-    /** Space above the grid: header, weekday strip, rule, padding. */
-    private const val CHROME_HEIGHT_DP = 74f
+    private fun px(context: Context, dp: Float): Int =
+        (dp * context.resources.displayMetrics.density + 0.5f).toInt()
+
+    /** Below this the card is half a home-screen row wide: tighten everything. */
+    private const val NARROW_DP = 200
 
     fun build(context: Context, manager: AppWidgetManager, widgetId: Int): RemoteViews {
+        val options = manager.getAppWidgetOptions(widgetId)
+        val portrait = context.resources.configuration.orientation !=
+            Configuration.ORIENTATION_LANDSCAPE
+        val widthDp = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0)
+            .takeIf { it > 0 } ?: 250
+        val heightKey = if (portrait) {
+            AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT
+        } else {
+            AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT
+        }
+        val heightDp = options.getInt(heightKey, 0).takeIf { it > 0 }
+            ?: options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0).takeIf { it > 0 }
+            ?: 220
+        return build(context, widgetId, widthDp, heightDp)
+    }
+
+    /**
+     * The size is passed in rather than read here so the same code path can be
+     * driven at any placement — a two-cell card, a full-width one — under test.
+     */
+    fun build(context: Context, widgetId: Int, widthDp: Int, heightDp: Int): RemoteViews {
         val prefs = Prefs.get(context)
         val wp = prefs.widget(widgetId)
         val dark = Tokens.resolveDark(context, wp.skin)
@@ -63,28 +88,20 @@ object WidgetRenderer {
             emptyMap()
         }
 
-        val options = manager.getAppWidgetOptions(widgetId)
-        val portrait = context.resources.configuration.orientation !=
-            Configuration.ORIENTATION_LANDSCAPE
-        val widthDp = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0)
-            .takeIf { it > 0 } ?: 250
-        val heightKey = if (portrait) {
-            AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT
-        } else {
-            AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT
-        }
-        val heightDp = options.getInt(heightKey, 0).takeIf { it > 0 }
-            ?: options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0).takeIf { it > 0 }
-            ?: 220
-
-        val rowHeightDp = ((heightDp - CHROME_HEIGHT_DP) / MonthModel.ROWS).coerceAtLeast(14f)
-        val compact = rowHeightDp < 26f
-        val markDp = (rowHeightDp * 0.72f).coerceIn(13f, 27f)
-        val daySp = (rowHeightDp * 0.42f).coerceIn(9f, 14f)
-        val titleSp = (widthDp * 0.055f).coerceIn(13f, 19f)
+        val narrow = widthDp < NARROW_DP
+        val padDp = if (narrow) 9f else 12f
+        val titleSp = (widthDp * 0.055f).coerceIn(12f, 19f)
         val weekdaySp = (titleSp * 0.62f).coerceIn(8f, 11f)
+        val navDp = (titleSp * 1.85f).coerceIn(21f, 30f)
+
+        // Header row, weekday strip, rule and its margins, plus the card padding.
+        val chromeDp = 2 * padDp + navDp + weekdaySp * 1.8f + 12f
+        val rowHeightDp = ((heightDp - chromeDp) / MonthModel.ROWS).coerceAtLeast(12f)
+        val compact = rowHeightDp < 26f
+        val markDp = (rowHeightDp * 0.72f).coerceIn(12f, 27f)
+        val daySp = (rowHeightDp * 0.42f).coerceIn(8.5f, 14f)
         val showDots = wp.showEvents && rowHeightDp >= 21f
-        val showYear = widthDp >= 200
+        val showYear = !narrow
 
         val root = RemoteViews(context.packageName, R.layout.widget_month)
 
@@ -92,6 +109,15 @@ object WidgetRenderer {
         root.setInt(R.id.surface, "setImageAlpha", wp.opacity * 255 / 100)
         root.setInt(R.id.surface_border, "setColorFilter", palette.hairlineStrong)
         root.setInt(R.id.header_rule, "setBackgroundColor", palette.hairline)
+
+        val pad = px(context, padDp)
+        root.setViewPadding(R.id.content, pad, pad, pad, px(context, padDp - 2f))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            for (id in NAV_IDS) {
+                root.setViewLayoutWidth(id, navDp, TypedValue.COMPLEX_UNIT_DIP)
+                root.setViewLayoutHeight(id, navDp, TypedValue.COMPLEX_UNIT_DIP)
+            }
+        }
 
         root.setTextViewText(R.id.month_title, MonthModel.monthName(month, locale))
         root.setTextColor(R.id.month_title, palette.ink)

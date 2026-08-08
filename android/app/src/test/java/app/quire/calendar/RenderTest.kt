@@ -209,6 +209,55 @@ class RenderTest {
         )
     }
 
+    /**
+     * Two cells on a four-column launcher — exactly half the screen — is the
+     * tightest placement the provider allows. Rendered with the longest month
+     * names in both languages, since the header is what runs out of room first.
+     */
+    @Test
+    fun `widget reads at a half-width placement`() {
+        val cases = listOf(
+            Triple("widget-half-en", Locale.ENGLISH, 175 to 230),
+            Triple("widget-half-ru", Locale("ru", "RU"), 175 to 230),
+            Triple("widget-half-short", Locale.ENGLISH, 165 to 175),
+        )
+        val original = Locale.getDefault()
+        try {
+            cases.forEachIndexed { index, (name, locale, size) ->
+                Locale.setDefault(locale)
+                val widgetId = 20 + index
+                Prefs.get(context).widget(widgetId).apply {
+                    skin = Skin.PAPER
+                    accent = Accent.CINNABAR
+                    opacity = 100
+                    showEvents = true
+                    // Offset to September: the longest month name in both locales.
+                    monthOffset = 9 - YearMonth.now().monthValue
+                }
+                val views = WidgetRenderer.build(context, widgetId, size.first, size.second)
+                val host = FrameLayout(context).apply { setBackgroundColor(0xFFC9C4B8.toInt()) }
+                host.addView(
+                    views.apply(context, host),
+                    FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                    ),
+                )
+                assertPainted(render(host, size.first, size.second, name), name)
+
+                val texts = ArrayList<String>()
+                collectText(host, texts)
+                assertEquals(
+                    "$name renders every square",
+                    MonthModel.CELLS,
+                    texts.mapNotNull { it.toIntOrNull() }.count { it in 1..31 },
+                )
+            }
+        } finally {
+            Locale.setDefault(original)
+        }
+    }
+
     @Test
     fun `widget honours week numbers and switched-off marks`() {
         val widgetId = 11

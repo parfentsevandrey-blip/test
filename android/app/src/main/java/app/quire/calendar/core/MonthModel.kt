@@ -39,8 +39,18 @@ object MonthModel {
         "mon" -> DayOfWeek.MONDAY
         "sat" -> DayOfWeek.SATURDAY
         "sun" -> DayOfWeek.SUNDAY
-        else -> WeekFields.of(locale).firstDayOfWeek
+        else -> autoFirstDayOfWeek(locale)
     }
+
+    /**
+     * java.util.Calendar honours the `fw` Unicode extension, which is how
+     * Android 13 and later carry the user's own "first day of week" regional
+     * preference. WeekFields only knows the region, so it is the fallback.
+     */
+    private fun autoFirstDayOfWeek(locale: Locale): DayOfWeek = runCatching {
+        val calendarDay = java.util.Calendar.getInstance(locale).firstDayOfWeek
+        DayOfWeek.of(((calendarDay + 5) % 7) + 1)
+    }.getOrElse { WeekFields.of(locale).firstDayOfWeek }
 
     fun weekdayOrder(first: DayOfWeek): List<DayOfWeek> =
         (0 until COLUMNS).map { first.plus(it.toLong()) }

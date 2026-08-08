@@ -89,6 +89,22 @@ class MonthModelTest {
     }
 
     @Test
+    fun `auto follows the region, and the user's override when the locale carries one`() {
+        assertEquals(DayOfWeek.MONDAY, MonthModel.firstDayOfWeek("auto", Locale("ru", "RU")))
+        assertEquals(DayOfWeek.MONDAY, MonthModel.firstDayOfWeek("auto", Locale.FRANCE))
+        assertEquals(DayOfWeek.SUNDAY, MonthModel.firstDayOfWeek("auto", Locale.US))
+        // Android 13+ hands the user's own choice over as a `fw` extension.
+        assertEquals(
+            DayOfWeek.MONDAY,
+            MonthModel.firstDayOfWeek("auto", Locale.forLanguageTag("en-US-u-fw-mon")),
+        )
+        assertEquals(
+            DayOfWeek.SATURDAY,
+            MonthModel.firstDayOfWeek("auto", Locale.forLanguageTag("ru-RU-u-fw-sat")),
+        )
+    }
+
+    @Test
     fun `weekends are saturday and sunday`() {
         assertTrue(MonthModel.isWeekend(DayOfWeek.SATURDAY))
         assertTrue(MonthModel.isWeekend(DayOfWeek.SUNDAY))

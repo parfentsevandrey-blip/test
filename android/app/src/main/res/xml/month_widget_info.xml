@@ -1,19 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Sized so a two-cell placement is legal: on a four-column launcher that is
+  exactly half the screen width, next to any other half-width widget.
+
+  minWidth/minHeight are read by pre-Android-12 launchers through the legacy
+  70dp-per-cell formula (n cells = 70n − 30dp), so 110dp is two columns and
+  140dp is three rows. Android 12 and later use targetCell* instead, and the
+  card is placed at two by two. Both ends of the range stay resizable.
+-->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:configure="app.quire.calendar.widget.WidgetConfigActivity"
     android:description="@string/widget_description"
     android:initialLayout="@layout/widget_month"
     android:maxResizeHeight="620dp"
     android:maxResizeWidth="620dp"
-    android:minHeight="220dp"
-    android:minResizeHeight="180dp"
-    android:minResizeWidth="180dp"
-    android:minWidth="250dp"
+    android:minHeight="140dp"
+    android:minResizeHeight="110dp"
+    android:minResizeWidth="110dp"
+    android:minWidth="110dp"
     android:previewImage="@drawable/widget_preview_image"
     android:previewLayout="@layout/widget_preview"
     android:resizeMode="horizontal|vertical"
-    android:targetCellHeight="4"
-    android:targetCellWidth="4"
+    android:targetCellHeight="2"
+    android:targetCellWidth="2"
     android:updatePeriodMillis="0"
     android:widgetCategory="home_screen"
     android:widgetFeatures="reconfigurable|configuration_optional" />

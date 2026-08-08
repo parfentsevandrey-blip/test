@@ -5,16 +5,16 @@ Six rows, hairline rules, one accent colour, tabular figures. The iPhone month
 grid is the reference; the finish is deliberately plainer than either platform's
 defaults.
 
-**Install:** [`dist/quire-1.0.apk`](dist/quire-1.0.apk) · 760 KB · Android 8.0+
-(minSdk 26, targetSdk 35) · `sha256 ab32938980725d7ebda329ec0f9335dad32b65e15d0cc4d52d611e156014b6af`
+**Install:** [`dist/quire-1.1.apk`](dist/quire-1.1.apk) · 760 KB · Android 8.0+
+(minSdk 26, targetSdk 35) · `sha256 fbc146cfcee201d09f4948d63f3056845b74a09850cd7464beb599f2a3c84c95`
 
-Copy it to the phone and open it, or `adb install -r dist/quire-1.0.apk`. You
+Copy it to the phone and open it, or `adb install -r dist/quire-1.1.apk`. You
 will need to allow installing from an unknown source once — the APK is signed
 with the self-signed key in `keystore/`, not by a store.
 
-| App | Widget, paper | Widget, ink |
-|---|---|---|
-| ![Month and day](docs/app-month.png) | ![Paper widget](docs/widget-paper.png) | ![Ink widget](docs/widget-ink.png) |
+| App | Widget, paper | Widget, ink | Half width |
+|---|---|---|---|
+| ![Month and day](docs/app-month.png) | ![Paper widget](docs/widget-paper.png) | ![Ink widget](docs/widget-ink.png) | ![Two cells wide](docs/widget-half-width.png) |
 
 Every image above is a real render of the shipping code, produced by the test
 suite (`app/src/test/.../RenderTest.kt`) — not a mockup.
@@ -35,6 +35,11 @@ suite (`app/src/test/.../RenderTest.kt`) — not a mockup.
 - Repaints when the clock rolls past midnight, when the timezone or locale
   changes, and within seconds of anything being written to the calendar
   (a JobScheduler content trigger, not polling).
+- Sizes from two cells to the full width of the screen. Two cells on the usual
+  four-column launcher is exactly half the width, so it sits next to any other
+  half-width widget; the card lands at that size and grows by dragging. Below
+  200dp it tightens its own padding, drops the year and shrinks the header
+  controls rather than clipping them.
 - Configurable per placement — two widgets can run different skins and accents
   side by side. Re-openable later from the widget's own settings on Android 12+.
 
@@ -47,7 +52,9 @@ suite (`app/src/test/.../RenderTest.kt`) — not a mockup.
   an entry opens it there. Quire never writes to your calendar and asks only for
   read access.
 - Settings: first day of the week, skin, accent, neighbouring months, quiet
-  weekends, week numbers, coloured marks, and which calendars count.
+  weekends, week numbers, coloured marks, and which calendars count. On Auto the
+  first day comes from `java.util.Calendar`, so Android 13's own regional
+  "first day of week" preference is honoured, not just the locale's region.
 
 No account, no network permission, no analytics. The only permission requested
 is `READ_CALENDAR`, and the app is useful (as a plain grid) without it.
@@ -119,14 +126,16 @@ Needs JDK 17+ and an Android SDK with platform 35 and build-tools 35.0.0.
 echo "sdk.dir=$ANDROID_HOME" > local.properties
 gradle assembleRelease          # dist-ready APK, signed with keystore/
 gradle assembleDebug            # installs alongside it (.debug suffix)
-gradle testDebugUnitTest        # 25 tests; writes app/build/screenshots/*.png
+gradle testDebugUnitTest        # 27 tests; writes app/build/screenshots/*.png
 gradle lintRelease              # must stay at 0 errors
 python3 tools/generate_assets.py   # after editing the icon or picker preview
 ```
 
 The tests run on Robolectric with native graphics, so `testDebugUnitTest` both
 checks the calendar-provider parsing against a fake provider and renders the
-real views and the real widget to PNG. Look in `app/build/screenshots/` after a
+real views and the real widget to PNG — including the widget at its tightest
+half-width placement, in both languages, since the header is what runs out of
+room first. Look in `app/build/screenshots/` after a
 run to see what the current code actually draws.
 
 ## Signing
