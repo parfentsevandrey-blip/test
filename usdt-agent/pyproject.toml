@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "usdt-agent"
+version = "1.0.0"
+description = "An autonomous, market-neutral USDT treasury agent with a statistical edge gate"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+keywords = ["trading", "arbitrage", "crypto", "usdt", "agent", "market-neutral"]
+classifiers = [
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Office/Business :: Financial :: Investment",
+    "Intended Audience :: Developers",
+]
+# No runtime dependencies, on purpose: an unattended agent should not break
+# because a transitive package shipped a bad release.
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["ruff>=0.5", "mypy>=1.10"]
+
+[project.scripts]
+usdt-agent = "usdt_agent.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
+# RUF001/RUF002: the report tables use a real minus sign (−) deliberately —
+# it is prose typography, not an identifier that could be confused with `-`.
+ignore = ["E501", "B008", "RUF001", "RUF002"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_unused_ignores = false
+ignore_missing_imports = true

@@ -1,0 +1,102 @@
+# usdt-agent configuration.
+#
+# This file is safe to commit: it holds no secrets. API keys are read from the
+# environment only (BINANCE_API_KEY / BINANCE_API_SECRET), never from here.
+#
+# Any value can also be set from the environment with a USDT_AGENT_ prefix,
+# where "__" nests: USDT_AGENT_RISK__MAX_OPEN_TRADES=4
+
+mode                  = "paper"    # "paper" | "live" — live needs four interlocks
+starting_equity_usdt  = 1000.0
+interval_s            = 30.0       # seconds between cycles
+max_cycles            = 0          # 0 = run until stopped
+data_source           = "auto"     # "auto" falls back to the simulator when offline
+db_path               = "data/agent.db"
+log_level             = "INFO"
+seed                  = 7
+treasury_sweep_fraction = 0.25     # share of each profit parked out of reach
+
+venues  = ["binance", "bybit", "okx"]
+symbols = [
+    "BTC/USDT", "ETH/USDT", "SOL/USDT", "BNB/USDT", "XRP/USDT",
+    "USDC/USDT",                       # the grid strategy's pegged pair
+    "ETH/BTC", "SOL/ETH", "BNB/BTC",   # crosses, so triangular loops exist
+]
+
+# Set to a Slack/Discord/n8n webhook, or use TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID.
+notify_webhook = ""
+
+[risk]
+# Hard limits. Nothing in the system can size a position outside these.
+max_deployed_fraction    = 0.60   # of equity, across everything
+max_strategy_fraction    = 0.25   # of equity, per strategy
+max_venue_fraction       = 0.35   # of equity, per venue
+max_open_trades          = 12
+min_ticket_usdt          = 25.0
+max_ticket_usdt          = 2500.0
+daily_loss_limit_fraction = 0.02  # stop for the rest of the UTC day
+max_drawdown_fraction    = 0.08   # kill switch; only a human resets it
+max_data_age_s           = 90.0   # no new positions on a stale world view
+min_edge_bps             = 1.5    # ignore ideas thinner than this after costs
+cooldown_after_loss_s    = 300.0  # per-strategy penalty box
+
+[allocator]
+# Thompson-sampling bandit over the strategies.
+prior_mean_bps           = 0.0    # assume no edge until shown otherwise
+prior_stdev_bps          = 8.0
+observation_stdev_bps    = 12.0
+memory_halflife_trades   = 40.0   # decayed memory: dead edges stop getting capital
+exploration_floor        = 0.05   # minimum share kept for exploration
+min_trades_for_promotion = 30     # before a strategy can be judged at all
+promotion_p_value        = 0.05   # and before live capital is released to it
+
+[execution]
+taker_fee_bps        = 5.0   # 0.05 % — set this to YOUR actual fee tier
+maker_fee_bps        = 1.0
+slippage_model       = "depth"    # "depth" | "fixed" | "none"
+fixed_slippage_bps   = 2.0
+impact_coefficient   = 0.35
+latency_ms           = 250.0
+reject_probability   = 0.01       # paper realism
+adverse_selection_bps = 0.4       # the tax reality charges on paper edges
+
+# --------------------------------------------------------------------------
+# Strategies
+# --------------------------------------------------------------------------
+
+[strategies.funding_carry]
+enabled = true
+weight  = 1.0
+[strategies.funding_carry.params]
+min_apr              = 0.05
+max_hold_intervals   = 30
+negative_streak_exit = 6
+
+[strategies.cross_venue]
+enabled = true
+weight  = 1.0
+[strategies.cross_venue.params]
+min_edge_bps  = 3.0
+participation = 0.10
+
+[strategies.triangular]
+enabled = true
+weight  = 0.8
+[strategies.triangular.params]
+min_edge_bps = 2.0
+
+[strategies.stable_yield]
+enabled = true
+weight  = 1.0
+[strategies.stable_yield.params]
+min_apy   = 0.04
+max_risk  = 0.50
+hold_days = 14.0
+
+[strategies.grid]
+enabled = true
+weight  = 0.6   # the only directional strategy: keep it small
+[strategies.grid.params]
+band_bps   = 25.0
+target_bps = 5.0
+stop_bps   = 60.0

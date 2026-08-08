@@ -119,5 +119,23 @@ skyline are parameters inside the builder functions in `js/scene.js`.
 
 ---
 
+## Also in this repo: `usdt-agent/`
+
+An unrelated second project shares this repository — **[`usdt-agent/`](usdt-agent/)**,
+an autonomous market-neutral USDT treasury agent (Python 3.11, zero
+dependencies). Five delta-neutral strategies, a Thompson-sampling capital
+allocator, a risk governor with veto power, a hash-chained ledger, and a
+statistical gate that withholds live capital from any strategy that has not
+proven an edge. Paper trading by default.
+
+```bash
+cd usdt-agent && make test && make backtest
+```
+
+It shares nothing with the landing page — different language, different
+toolchain, its own README.
+
+---
+
 *Conceptual presentation. Imagery, pricing, and contact details are
 illustrative.*
