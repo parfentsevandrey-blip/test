@@ -67,4 +67,21 @@
     <string name="cd_previous_month">Previous month</string>
     <string name="cd_next_month">Next month</string>
     <string name="cd_current_month">Back to this month</string>
+
+    <string name="search">Search</string>
+    <string name="search_hint">Find an event</string>
+    <string name="search_empty">Type at least two letters. Eight months either side of where you are.</string>
+    <string name="search_none">Nothing matches</string>
+    <string name="add">Add</string>
+
+    <string name="section_motion">Motion</string>
+    <string name="motion">Liveliness</string>
+    <string name="motion_off">Off</string>
+    <string name="motion_calm">Calm</string>
+    <string name="motion_standard">Normal</string>
+    <string name="motion_playful">Springy</string>
+    <string name="haptics">Haptics</string>
+    <string name="haptics_hint">A tick under the finger when the world moves</string>
+    <string name="heat">Density</string>
+    <string name="heat_hint">Tint each square by how full the day is</string>
 </resources>

@@ -73,6 +73,18 @@ class MonthLoader(context: Context) {
         }
     }
 
+    fun search(
+        text: String,
+        around: LocalDate,
+        hidden: Set<Long>,
+        onReady: (List<app.quire.calendar.core.AgendaEntry>) -> Unit,
+    ) {
+        executor.execute {
+            val found = EventRepository.search(app, text, around, hidden = hidden)
+            main.post { onReady(found) }
+        }
+    }
+
     fun agenda(
         date: LocalDate,
         hidden: Set<Long>,

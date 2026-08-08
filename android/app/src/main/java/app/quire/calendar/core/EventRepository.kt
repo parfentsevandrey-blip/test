@@ -81,6 +81,8 @@ object EventRepository {
         context: Context,
         fromMillis: Long,
         toMillis: Long,
+        extraSelection: String? = null,
+        selectionArgs: Array<String>? = null,
         body: (Cursor) -> Unit,
     ) {
         if (!hasPermission(context)) return
@@ -88,12 +90,16 @@ object EventRepository {
             ContentUris.appendId(this, fromMillis)
             ContentUris.appendId(this, toMillis)
         }.build()
+        val selection = buildString {
+            append(CalendarContract.Calendars.VISIBLE).append(" = 1")
+            if (extraSelection != null) append(" AND ").append(extraSelection)
+        }
         try {
             context.contentResolver.query(
                 uri,
                 PROJECTION,
-                "${CalendarContract.Calendars.VISIBLE} = 1",
-                null,
+                selection,
+                selectionArgs,
                 "${CalendarContract.Instances.BEGIN} ASC",
             )?.use(body)
         } catch (_: SecurityException) {
@@ -189,6 +195,55 @@ object EventRepository {
             compareBy({ !it.allDay }, { if (it.allDay) 0L else it.begin }, { it.title }),
         )
     }
+
+    /**
+     * Free-text search over instance titles within [monthsEachWay] of [around].
+     * The provider expands recurrences per instance, so the same weekly meeting
+     * would come back dozens of times; only the first hit per event is kept.
+     */
+    fun search(
+        context: Context,
+        text: String,
+        around: LocalDate,
+        monthsEachWay: Long = 8,
+        hidden: Set<Long> = emptySet(),
+        limit: Int = 60,
+    ): List<AgendaEntry> {
+        val trimmed = text.trim()
+        if (trimmed.length < 2) return emptyList()
+        val zone = ZoneId.systemDefault()
+        val out = ArrayList<AgendaEntry>()
+        val seen = HashSet<Long>()
+        val escaped = trimmed.replace("!", "!!").replace("%", "!%").replace("_", "!_")
+        query(
+            context = context,
+            fromMillis = startOfDayMillis(around.minusMonths(monthsEachWay), zone),
+            toMillis = startOfDayMillis(around.plusMonths(monthsEachWay), zone),
+            extraSelection = "${CalendarContract.Events.TITLE} LIKE ? ESCAPE '!'",
+            selectionArgs = arrayOf("%" + escaped + "%"),
+        ) { c ->
+            while (c.moveToNext() && out.size < limit) {
+                if (c.isDropped(hidden)) continue
+                val eventId = c.getLong(I_EVENT_ID)
+                if (!seen.add(eventId)) continue
+                out += AgendaEntry(
+                    eventId = eventId,
+                    begin = c.getLong(I_BEGIN),
+                    end = c.getLong(I_END),
+                    allDay = !c.isNull(I_ALL_DAY) && c.getInt(I_ALL_DAY) == 1,
+                    title = c.getString(I_TITLE).orEmpty(),
+                    location = c.getString(I_LOCATION)?.takeIf { it.isNotBlank() },
+                    colour = if (c.isNull(I_COLOUR)) 0 else c.getInt(I_COLOUR),
+                    calendarName = c.getString(I_CALENDAR_NAME),
+                )
+            }
+        }
+        return out
+    }
+
+    /** The day an instance lands on, in the device's timezone. */
+    fun dateOf(entry: AgendaEntry): LocalDate =
+        java.time.Instant.ofEpochMilli(entry.begin).atZone(ZoneId.systemDefault()).toLocalDate()
 
     /** Calendars the user could choose to hide. */
     fun calendars(context: Context): List<CalendarSource> {

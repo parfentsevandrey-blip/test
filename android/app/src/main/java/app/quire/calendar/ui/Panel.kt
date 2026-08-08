@@ -99,6 +99,8 @@ class Panel(private val context: Context, private val palette: Palette) {
                     setTextColor(palette.ink)
                     setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
                     letterSpacing = -0.005f
+                    maxLines = 1
+                    ellipsize = android.text.TextUtils.TruncateAt.END
                 },
             )
             if (hint != null) {
@@ -176,6 +178,13 @@ class Panel(private val context: Context, private val palette: Palette) {
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 13.5f)
                 gravity = Gravity.CENTER
                 setPadding(dp(9f), dp(4f), dp(9f), dp(5f))
+                // Without this the label inherits MATCH_PARENT from its vertical
+                // parent, measures at the full row width inside a wrap-content
+                // column, and the first option swallows the entire strip.
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                )
             }
             val underline = View(context).apply {
                 layoutParams = LinearLayout.LayoutParams(
@@ -231,10 +240,24 @@ class Panel(private val context: Context, private val palette: Palette) {
     }
 
     /** A row that reads as a value and opens something else when tapped. */
-    fun action(title: String, value: String?, onClick: () -> Unit) {
+    fun action(
+        title: String,
+        value: String?,
+        accent: Boolean = false,
+        onClick: () -> Unit,
+    ) {
         add(
             row().apply {
-                addView(titleColumn(title, null))
+                addView(
+                    titleColumn(title, null).apply {
+                        if (accent) {
+                            (getChildAt(0) as TextView).apply {
+                                setTextColor(palette.accent)
+                                typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+                            }
+                        }
+                    },
+                )
                 if (value != null) {
                     addView(
                         TextView(context).apply {
@@ -289,6 +312,9 @@ class Panel(private val context: Context, private val palette: Palette) {
     }
 
     fun custom(child: View) = add(child)
+
+    /** Empties the panel so its owner can rebuild it from new data. */
+    fun clear() = view.removeAllViews()
 
     private fun LinearLayout.children(): List<View> = (0 until childCount).map { getChildAt(it) }
 

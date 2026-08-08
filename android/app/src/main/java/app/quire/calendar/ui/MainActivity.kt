@@ -8,17 +8,23 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.CalendarContract
 import android.provider.Settings
-import android.view.View
+import android.view.ViewGroup
+import android.widget.FrameLayout
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.view.updateLayoutParams
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import androidx.viewpager2.widget.ViewPager2
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import app.quire.calendar.QuireApp
 import app.quire.calendar.R
+import app.quire.calendar.core.Accent
 import app.quire.calendar.core.AgendaEntry
+import app.quire.calendar.core.DayLoad
 import app.quire.calendar.core.EventRepository
 import app.quire.calendar.core.MonthModel
-import app.quire.calendar.databinding.ActivityMainBinding
+import app.quire.calendar.core.Skin
+import app.quire.calendar.core.Tokens
+import app.quire.calendar.widget.MonthWidgetProvider
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.YearMonth
@@ -26,69 +32,117 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-class MainActivity : BaseActivity() {
+/**
+ * One activity, one world. Year, month, day, menus and settings all live on the
+ * same screen — there is no second Activity to navigate to and therefore no
+ * window transition anywhere in the app.
+ */
+class MainActivity : BaseActivity(), StageView.Data {
 
-    private lateinit var b: ActivityMainBinding
+    private lateinit var stage: StageView
+    private lateinit var menu: RadialMenu
+    private lateinit var sheet: SheetOverlay
     private lateinit var loader: MonthLoader
-    private lateinit var pagerAdapter: MonthPagerAdapter
-    private lateinit var agendaAdapter: AgendaAdapter
 
-    private var today: LocalDate = LocalDate.now()
-    private var selected: LocalDate = LocalDate.now()
-    private var visibleMonth: YearMonth = YearMonth.now()
+    private val agendaCache = HashMap<LocalDate, List<AgendaEntry>>()
+    private val agendaPending = HashSet<LocalDate>()
+
+    private var searchJob: Runnable? = null
+
+    /** Settings are applied live, so nothing here should recreate the activity. */
+    override fun settingsSignature(): String = "live"
 
     private val requestCalendar =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) {
                 loader.invalidate()
-                refreshEverything()
+                agendaCache.clear()
+                stage.dataChanged()
             } else {
-                b.permissionBody.text = getString(R.string.permission_denied_body)
-                b.permissionAction.text = getString(R.string.open_settings)
+                presentPermission(denied = true)
             }
         }
 
-    private val pickYear =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            val epochDay = result.data?.getLongExtra(YearActivity.EXTRA_EPOCH_DAY, -1L) ?: -1L
-            if (epochDay >= 0) goTo(LocalDate.ofEpochDay(epochDay), smooth = false)
-        }
-
-    override fun settingsSignature(): String = listOf(
-        prefs.accent.key,
-        prefs.firstDay,
-        prefs.showAdjacent,
-        prefs.dimWeekends,
-        prefs.weekNumbers,
-        prefs.colouredDots,
-        prefs.hiddenCalendars.sorted().joinToString(","),
-    ).joinToString("|")
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        b = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(b.root)
-        padForSystemBars(b.root)
-
         loader = MonthLoader(this)
-        savedInstanceState?.getLong(STATE_SELECTED, -1L)?.takeIf { it >= 0 }?.let {
-            selected = LocalDate.ofEpochDay(it)
+
+        val root = FrameLayout(this)
+        stage = StageView(this)
+        menu = RadialMenu(this)
+        sheet = SheetOverlay(this)
+
+        root.addView(
+            stage,
+            FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+            ),
+        )
+        root.addView(
+            menu,
+            FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+            ),
+        )
+        root.addView(
+            sheet,
+            FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+            ),
+        )
+        setContentView(root)
+
+        stage.data = this
+        stage.onSelectionChanged = { agendaFor(it) }
+        stage.onEntryActivated = { openEvent(it) }
+        stage.onMenuRequested = { x, y -> openMenu(x, y) }
+        stage.onMenuDrag = { x, y -> menu.trackDrag(x, y) }
+        stage.onMenuRelease = { x, y -> menu.trackRelease(x, y) }
+        stage.onLevelChanged = { if (sheet.isShowing) sheet.dismiss() }
+
+        menu.onPick = { handleMenu(it) }
+
+        ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
+            val bars = insets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout(),
+            )
+            stage.setSafeInsets(bars.top.toFloat(), bars.bottom.toFloat())
+            menu.safeTop = bars.top.toFloat()
+            menu.safeBottom = bars.bottom.toFloat()
+            sheet.applyInsets(bars.top, bars.bottom)
+            insets
         }
-        visibleMonth = YearMonth.from(selected)
 
-        paint()
-        buildPager()
-        buildAgenda()
-        wireHeader()
+        onBackPressedDispatcher.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    when {
+                        sheet.isShowing -> sheet.dismiss()
+                        menu.isOpen -> menu.close()
+                        stage.zoomOut() -> Unit
+                        else -> {
+                            isEnabled = false
+                            onBackPressedDispatcher.onBackPressed()
+                        }
+                    }
+                }
+            },
+        )
 
+        applySettings()
+        savedInstanceState?.getLong(STATE_SELECTED, -1L)?.takeIf { it >= 0 }?.let {
+            stage.goTo(LocalDate.ofEpochDay(it), level = 1, animate = false)
+        }
         handleIntent(intent)
-        updateTitle()
-        updateDayLabel()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putLong(STATE_SELECTED, selected.toEpochDay())
+        outState.putLong(STATE_SELECTED, stage.selected.toEpochDay())
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -99,178 +153,314 @@ class MainActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
-        val now = LocalDate.now()
-        if (now != today) {
-            today = now
-            forEachGrid { it.today = now }
-        }
+        stage.today = LocalDate.now()
         loader.invalidate()
-        refreshEverything()
-    }
-
-    // ---- construction --------------------------------------------------
-
-    private fun paint() {
-        b.root.setBackgroundColor(palette.canvas)
-        b.monthTitle.setTextColor(palette.ink)
-        b.yearTitle.setTextColor(palette.inkGhost)
-        b.todayButton.setTextColor(palette.accent)
-        b.settingsButton.setColorFilter(palette.inkMuted)
-        b.addEventButton.setColorFilter(palette.inkMuted)
-        b.selectedDayLabel.setTextColor(palette.inkFaint)
-        b.emptyState.setTextColor(palette.inkGhost)
-        b.gridRule.setBackgroundColor(palette.hairline)
-        b.weekdays.palette = palette
-        b.weekdays.dimWeekends = prefs.dimWeekends
-        b.weekdays.weekNumbers = prefs.weekNumbers
-        b.weekdays.firstDayOfWeek = MonthModel.firstDayOfWeek(prefs.firstDay, Locale.getDefault())
-        b.permissionHeadline.setTextColor(palette.ink)
-        b.permissionBody.setTextColor(palette.inkMuted)
-        b.permissionAction.setTextColor(palette.accent)
-    }
-
-    private fun buildPager() {
-        val metrics = resources.displayMetrics
-        val rowHeight = (metrics.widthPixels / MonthModel.COLUMNS * 0.84f)
-            .coerceIn(42f * metrics.density, 64f * metrics.density)
-        b.pager.updateLayoutParams { height = (rowHeight * MonthModel.ROWS).toInt() }
-
-        pagerAdapter = MonthPagerAdapter(
-            loader = loader,
-            config = ::gridConfig,
-            onDayClick = { date -> select(date) },
-        )
-        b.pager.adapter = pagerAdapter
-        b.pager.offscreenPageLimit = 1
-        b.pager.setCurrentItem(MonthPagerAdapter.positionOf(visibleMonth), false)
-        b.pager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
-            override fun onPageSelected(position: Int) {
-                visibleMonth = MonthModel.monthAt(position)
-                updateTitle()
-                if (YearMonth.from(selected) != visibleMonth) {
-                    val landing = if (visibleMonth == YearMonth.from(today)) {
-                        today
-                    } else {
-                        visibleMonth.atDay(1)
-                    }
-                    select(landing)
-                }
-            }
-        })
-    }
-
-    private fun buildAgenda() {
-        agendaAdapter = AgendaAdapter(this, palette) { entry -> openEvent(entry) }
-        b.agenda.layoutManager = LinearLayoutManager(this)
-        b.agenda.adapter = agendaAdapter
-    }
-
-    private fun wireHeader() {
-        b.todayButton.setOnClickListener { goTo(LocalDate.now(), smooth = true) }
-        b.titleBlock.setOnClickListener {
-            pickYear.launch(YearActivity.intent(this, visibleMonth))
-        }
-        b.settingsButton.setOnClickListener {
-            startActivity(Intent(this, SettingsActivity::class.java))
-        }
-        b.addEventButton.setOnClickListener { composeEvent() }
-        b.permissionAction.setOnClickListener {
-            if (b.permissionAction.text == getString(R.string.open_settings)) {
-                startActivity(
-                    Intent(
-                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                        Uri.fromParts("package", packageName, null),
-                    ),
-                )
-            } else {
-                requestCalendar.launch(Manifest.permission.READ_CALENDAR)
-            }
+        agendaCache.clear()
+        agendaPending.clear()
+        stage.dataChanged()
+        agendaFor(stage.selected)
+        if (!EventRepository.hasPermission(this) && !askedForPermission) {
+            askedForPermission = true
+            presentPermission(denied = false)
         }
     }
 
-    // ---- state ---------------------------------------------------------
+    // ---- settings ------------------------------------------------------
 
-    private fun gridConfig() = GridConfig(
-        palette = palette,
-        firstDay = MonthModel.firstDayOfWeek(prefs.firstDay, Locale.getDefault()),
-        showAdjacent = prefs.showAdjacent,
-        dimWeekends = prefs.dimWeekends,
-        weekNumbers = prefs.weekNumbers,
-        colouredDots = prefs.colouredDots,
-        today = today,
-        selected = selected,
-        hidden = prefs.hiddenCalendars,
-    )
-
-    private fun forEachGrid(action: (MonthGridView) -> Unit) {
-        val recycler = b.pager.getChildAt(0) as? RecyclerView ?: return
-        for (i in 0 until recycler.childCount) {
-            (recycler.getChildAt(i) as? MonthGridView)?.let(action)
-        }
-    }
-
-    private fun select(date: LocalDate) {
-        selected = date
-        forEachGrid { it.selected = date }
-        updateDayLabel()
-        loadAgenda()
-    }
-
-    private fun goTo(date: LocalDate, smooth: Boolean) {
-        val target = YearMonth.from(date)
-        selected = date
-        if (target != visibleMonth) {
-            visibleMonth = target
-            b.pager.setCurrentItem(MonthPagerAdapter.positionOf(target), smooth)
-        }
-        forEachGrid { it.selected = date }
-        updateTitle()
-        updateDayLabel()
-        loadAgenda()
-    }
-
-    private fun refreshEverything() {
-        val granted = EventRepository.hasPermission(this)
-        b.permissionBar.visibility = if (granted) View.GONE else View.VISIBLE
-        b.agendaHeader.visibility = if (granted) View.VISIBLE else View.GONE
-        if (granted) {
-            forEachGrid { grid ->
-                loader.request(grid.month, grid.firstDayOfWeek, prefs.hiddenCalendars) { m, marks ->
-                    if (grid.month == m) grid.loads = marks
-                }
-            }
-            loadAgenda()
+    private fun applySettings() {
+        palette = Tokens.palette(Tokens.isSystemDark(this), prefs.accent)
+        val motion = if (MotionProfile.systemHoldsStill(contentResolver)) {
+            MotionProfile.OFF
         } else {
-            forEachGrid { it.loads = emptyMap() }
-            agendaAdapter.submit(emptyList())
-            b.emptyState.visibility = View.GONE
+            MotionProfile.from(prefs.motion)
+        }
+        window.decorView.setBackgroundColor(palette.canvas)
+
+        stage.palette = palette
+        stage.motion = motion
+        stage.haptics = prefs.haptics
+        stage.firstDayOfWeek = MonthModel.firstDayOfWeek(prefs.firstDay, Locale.getDefault())
+        stage.style = GridStyle(
+            showAdjacent = prefs.showAdjacent,
+            dimWeekends = prefs.dimWeekends,
+            colouredDots = prefs.colouredDots,
+            weekNumbers = prefs.weekNumbers,
+            heat = prefs.heat,
+        )
+        menu.palette = palette
+        menu.motion = motion
+        menu.haptics = prefs.haptics
+        sheet.palette = palette
+        sheet.motion = motion
+        loader.invalidate()
+        agendaCache.clear()
+        stage.dataChanged()
+        MonthWidgetProvider.requestUpdate(this)
+    }
+
+    // ---- data ----------------------------------------------------------
+
+    override fun loads(month: YearMonth): Map<LocalDate, DayLoad> {
+        val cached = loader.cached(month, stage.firstDayOfWeek)
+        if (cached != null) return cached
+        loader.request(month, stage.firstDayOfWeek, prefs.hiddenCalendars) { _, _ ->
+            stage.dataChanged()
+        }
+        return emptyMap()
+    }
+
+    override fun agenda(date: LocalDate): List<AgendaEntry> {
+        agendaCache[date]?.let { return it }
+        agendaFor(date)
+        return emptyList()
+    }
+
+    private fun agendaFor(date: LocalDate) {
+        if (agendaCache.containsKey(date) || !agendaPending.add(date)) return
+        loader.agenda(date, prefs.hiddenCalendars) { day, entries ->
+            agendaPending.remove(day)
+            agendaCache[day] = entries
+            stage.invalidate()
         }
     }
 
-    private fun loadAgenda() {
-        if (!EventRepository.hasPermission(this)) return
-        val requested = selected
-        loader.agenda(requested, prefs.hiddenCalendars) { date, entries ->
-            if (date != selected) return@agenda
-            agendaAdapter.submit(entries)
-            b.emptyState.visibility = if (entries.isEmpty()) View.VISIBLE else View.GONE
+    // ---- menu ----------------------------------------------------------
+
+    private fun openMenu(x: Float, y: Float) {
+        menu.open(
+            x,
+            y,
+            listOf(
+                RadialMenu.Item(MENU_TODAY, getString(R.string.today), R.drawable.ic_ring),
+                RadialMenu.Item(MENU_YEAR, getString(R.string.year), R.drawable.ic_grid),
+                RadialMenu.Item(MENU_SEARCH, getString(R.string.search), R.drawable.ic_search),
+                RadialMenu.Item(MENU_ADD, getString(R.string.add), R.drawable.ic_plus),
+                RadialMenu.Item(MENU_SETTINGS, getString(R.string.settings), R.drawable.ic_settings),
+            ),
+        )
+    }
+
+    private fun handleMenu(id: Int) {
+        when (id) {
+            MENU_TODAY -> stage.goTo(LocalDate.now(), level = 1)
+            MENU_YEAR -> stage.goToLevel(0)
+            MENU_SEARCH -> presentSearch()
+            MENU_ADD -> composeEvent()
+            MENU_SETTINGS -> presentSettings()
         }
     }
 
-    private fun updateTitle() {
-        val locale = Locale.getDefault()
-        b.monthTitle.text = MonthModel.monthName(visibleMonth, locale)
-        b.yearTitle.text = visibleMonth.year.toString()
-        b.todayButton.visibility =
-            if (visibleMonth == YearMonth.from(LocalDate.now())) View.INVISIBLE else View.VISIBLE
+    // ---- sheets --------------------------------------------------------
+
+    private fun presentSettings() {
+        val builder = sheet.begin()
+        builder.title(getString(R.string.settings))
+
+        builder.slab { panel ->
+            panel.section(R.string.section_motion)
+            val profiles = listOf(
+                MotionProfile.OFF,
+                MotionProfile.CALM,
+                MotionProfile.STANDARD,
+                MotionProfile.PLAYFUL,
+            )
+            panel.segmented(
+                titleRes = R.string.motion,
+                options = listOf(
+                    getString(R.string.motion_off),
+                    getString(R.string.motion_calm),
+                    getString(R.string.motion_standard),
+                    getString(R.string.motion_playful),
+                ),
+                selectedIndex = profiles.indexOf(MotionProfile.from(prefs.motion))
+                    .coerceAtLeast(0),
+            ) { index ->
+                prefs.motion = profiles[index].key
+                applySettings()
+            }
+            panel.rule()
+            panel.toggle(R.string.haptics, R.string.haptics_hint, prefs.haptics) {
+                prefs.haptics = it
+                applySettings()
+            }
+        }
+
+        builder.slab { panel ->
+            panel.section(R.string.section_appearance)
+            val skins = listOf(Skin.AUTO, Skin.PAPER, Skin.INK)
+            panel.segmented(
+                titleRes = R.string.skin,
+                options = listOf(
+                    getString(R.string.skin_auto),
+                    getString(R.string.skin_paper),
+                    getString(R.string.skin_ink),
+                ),
+                selectedIndex = skins.indexOf(prefs.skin).coerceAtLeast(0),
+            ) { index ->
+                prefs.skin = skins[index]
+                AppCompatDelegate.setDefaultNightMode(QuireApp.nightMode(skins[index]))
+                applySettings()
+            }
+            panel.accents(prefs.accent) { accent: Accent ->
+                prefs.accent = accent
+                applySettings()
+            }
+        }
+
+        builder.slab { panel ->
+            panel.section(R.string.section_week)
+            val keys = listOf("auto", "mon", "sat", "sun")
+            panel.segmented(
+                titleRes = R.string.first_day,
+                options = listOf(
+                    getString(R.string.first_day_auto),
+                    getString(R.string.first_day_mon),
+                    getString(R.string.first_day_sat),
+                    getString(R.string.first_day_sun),
+                ),
+                selectedIndex = keys.indexOf(prefs.firstDay).coerceAtLeast(0),
+            ) { index ->
+                prefs.firstDay = keys[index]
+                applySettings()
+            }
+        }
+
+        builder.slab { panel ->
+            panel.section(R.string.section_grid)
+            panel.toggle(R.string.heat, R.string.heat_hint, prefs.heat) {
+                prefs.heat = it
+                applySettings()
+            }
+            panel.rule()
+            panel.toggle(R.string.show_adjacent, R.string.show_adjacent_hint, prefs.showAdjacent) {
+                prefs.showAdjacent = it
+                applySettings()
+            }
+            panel.rule()
+            panel.toggle(R.string.dim_weekends, R.string.dim_weekends_hint, prefs.dimWeekends) {
+                prefs.dimWeekends = it
+                applySettings()
+            }
+            panel.rule()
+            panel.toggle(R.string.week_numbers, R.string.week_numbers_hint, prefs.weekNumbers) {
+                prefs.weekNumbers = it
+                applySettings()
+            }
+            panel.rule()
+            panel.toggle(R.string.coloured_dots, R.string.coloured_dots_hint, prefs.colouredDots) {
+                prefs.colouredDots = it
+                applySettings()
+            }
+        }
+
+        val sources = EventRepository.calendars(this)
+        if (sources.isNotEmpty()) {
+            builder.slab { panel ->
+                panel.section(R.string.section_calendars)
+                panel.note(getString(R.string.calendars_hint))
+                val hidden = prefs.hiddenCalendars.toMutableSet()
+                sources.forEachIndexed { index, source ->
+                    if (index > 0) panel.rule()
+                    panel.check(
+                        title = source.displayName,
+                        subtitle = source.accountName.takeIf { it != source.displayName },
+                        colour = source.colour,
+                        checked = source.id !in hidden,
+                    ) { checked ->
+                        if (checked) hidden.remove(source.id) else hidden.add(source.id)
+                        prefs.hiddenCalendars = hidden
+                        applySettings()
+                    }
+                }
+            }
+        }
+
+        builder.slab { panel ->
+            panel.section(R.string.section_about)
+            val version = runCatching {
+                packageManager.getPackageInfo(packageName, 0).versionName
+            }.getOrNull().orEmpty()
+            panel.note(
+                getString(R.string.about_line, version) + "\n" + getString(R.string.about_body),
+            )
+        }
+
+        sheet.present()
     }
 
-    private fun updateDayLabel() {
-        val locale = Locale.getDefault()
-        val pattern = android.text.format.DateFormat.getBestDateTimePattern(locale, "EEEdMMMM")
-        b.selectedDayLabel.text = DateTimeFormatter.ofPattern(pattern, locale)
-            .format(selected)
-            .uppercase(locale)
+    private fun presentSearch() {
+        val builder = sheet.begin()
+        builder.title(getString(R.string.search))
+        val results = builder.liveSlab()
+        val field = builder.searchField(getString(R.string.search_hint)) { text ->
+            searchJob?.let { sheet.removeCallbacks(it) }
+            val job = Runnable { runSearch(text, results) }
+            searchJob = job
+            sheet.postDelayed(job, 220L)
+        }
+        results.note(getString(R.string.search_empty))
+        sheet.present()
+        field.post {
+            field.requestFocus()
+            (getSystemService(android.view.inputmethod.InputMethodManager::class.java))
+                ?.showSoftInput(field, 0)
+        }
+    }
+
+    private fun runSearch(text: String, results: Panel) {
+        if (text.trim().length < 2) {
+            results.clear()
+            results.note(getString(R.string.search_empty))
+            return
+        }
+        loader.search(text, stage.selected, prefs.hiddenCalendars) { entries ->
+            results.clear()
+            if (entries.isEmpty()) {
+                results.note(getString(R.string.search_none))
+                return@search
+            }
+            val locale = Locale.getDefault()
+            val pattern = android.text.format.DateFormat.getBestDateTimePattern(locale, "EEEdMMM")
+            val formatter = DateTimeFormatter.ofPattern(pattern, locale)
+            entries.take(20).forEachIndexed { index, entry ->
+                if (index > 0) results.rule()
+                val date = EventRepository.dateOf(entry)
+                results.action(entry.title.ifBlank { "—" }, formatter.format(date)) {
+                    sheet.dismiss()
+                    stage.goTo(date, level = 2)
+                }
+            }
+        }
+    }
+
+    private fun presentPermission(denied: Boolean) {
+        val builder = sheet.begin()
+        builder.title(getString(R.string.permission_headline))
+        builder.slab { panel ->
+            panel.note(
+                getString(
+                    if (denied) R.string.permission_denied_body else R.string.permission_body,
+                ),
+            )
+            panel.action(
+                getString(if (denied) R.string.open_settings else R.string.permission_action),
+                null,
+                accent = true,
+            ) {
+                sheet.dismiss()
+                if (denied) {
+                    startActivity(
+                        Intent(
+                            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                            Uri.fromParts("package", packageName, null),
+                        ),
+                    )
+                } else {
+                    requestCalendar.launch(Manifest.permission.READ_CALENDAR)
+                }
+            }
+        }
+        sheet.present()
     }
 
     // ---- intents -------------------------------------------------------
@@ -279,17 +469,15 @@ class MainActivity : BaseActivity() {
         val data = intent?.data ?: return
         if (data.scheme != "quire") return
         val date = runCatching { LocalDate.parse(data.lastPathSegment) }.getOrNull() ?: return
-        goTo(date, smooth = false)
+        stage.goTo(date, level = if (data.host == "day") 2 else 1, animate = false)
     }
 
     private fun composeEvent() {
-        val start = if (selected == LocalDate.now()) {
+        val date = stage.selected
+        val start = if (date == LocalDate.now()) {
             System.currentTimeMillis()
         } else {
-            selected.atTime(LocalTime.of(9, 0))
-                .atZone(ZoneId.systemDefault())
-                .toInstant()
-                .toEpochMilli()
+            date.atTime(LocalTime.of(9, 0)).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
         }
         val intent = Intent(Intent.ACTION_INSERT)
             .setData(CalendarContract.Events.CONTENT_URI)
@@ -311,5 +499,12 @@ class MainActivity : BaseActivity() {
 
     private companion object {
         const val STATE_SELECTED = "selected"
+        var askedForPermission = false
+
+        const val MENU_TODAY = 1
+        const val MENU_YEAR = 2
+        const val MENU_SEARCH = 3
+        const val MENU_ADD = 4
+        const val MENU_SETTINGS = 5
     }
 }

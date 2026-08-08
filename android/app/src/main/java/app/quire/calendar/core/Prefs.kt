@@ -23,6 +23,9 @@ class Prefs private constructor(private val sp: SharedPreferences) {
         const val KEY_WEEK_NUMBERS = "week_numbers"
         const val KEY_COLOURED_DOTS = "coloured_dots"
         const val KEY_HIDDEN_CALENDARS = "hidden_calendars"
+        const val KEY_MOTION = "motion"
+        const val KEY_HAPTICS = "haptics"
+        const val KEY_HEAT = "heat"
 
         @Volatile
         private var instance: Prefs? = null
@@ -69,6 +72,20 @@ class Prefs private constructor(private val sp: SharedPreferences) {
     var colouredDots: Boolean
         get() = sp.getBoolean(KEY_COLOURED_DOTS, true)
         set(v) = sp.edit { putBoolean(KEY_COLOURED_DOTS, v) }
+
+    /** Liveliness of the whole interface; see ui/Motion.kt. */
+    var motion: String
+        get() = sp.getString(KEY_MOTION, "standard") ?: "standard"
+        set(v) = sp.edit { putString(KEY_MOTION, v) }
+
+    var haptics: Boolean
+        get() = sp.getBoolean(KEY_HAPTICS, true)
+        set(v) = sp.edit { putBoolean(KEY_HAPTICS, v) }
+
+    /** Tint each square by how full the day is. */
+    var heat: Boolean
+        get() = sp.getBoolean(KEY_HEAT, false)
+        set(v) = sp.edit { putBoolean(KEY_HEAT, v) }
 
     var hiddenCalendars: Set<Long>
         get() = sp.getStringSet(KEY_HIDDEN_CALENDARS, emptySet())

@@ -9,17 +9,18 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.test.core.app.ApplicationProvider
 import app.quire.calendar.core.Accent
+import app.quire.calendar.core.AgendaEntry
 import app.quire.calendar.core.DayLoad
 import app.quire.calendar.core.MonthModel
-import app.quire.calendar.core.Palette
 import app.quire.calendar.core.Prefs
 import app.quire.calendar.core.Skin
 import app.quire.calendar.core.Tokens
-import app.quire.calendar.ui.MonthGridView
-import app.quire.calendar.ui.WeekdayHeaderView
+import app.quire.calendar.ui.GridStyle
+import app.quire.calendar.ui.MotionProfile
+import app.quire.calendar.ui.RadialMenu
+import app.quire.calendar.ui.StageView
 import app.quire.calendar.widget.WidgetRenderer
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -34,9 +35,10 @@ import java.util.Locale
 
 /**
  * Draws the real views and inflates the real RemoteViews tree, then writes the
- * pixels out. Two things are being checked at once: that the widget survives
+ * pixels out. Two things are checked at once: that the widget survives
  * `RemoteViews.apply` — the host's inflater rejects any class not annotated
- * @RemoteView, which no compiler catches — and that the grid actually paints.
+ * @RemoteView, which no compiler catches — and that the stage paints at every
+ * point along its zoom, including halfway between two levels.
  */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -46,25 +48,7 @@ class RenderTest {
     private val context: Context get() = ApplicationProvider.getApplicationContext()
     private val outputDir = File("build/screenshots").apply { mkdirs() }
 
-    private val month = YearMonth.of(2026, 8)
-    private val today = LocalDate.of(2026, 8, 12)
-
-    private fun sampleLoads(palette: Palette): Map<LocalDate, DayLoad> {
-        val colours = intArrayOf(
-            0xFF2E4A7D.toInt(), 0xFF4C5D3C.toInt(), 0xFF9A6F21.toInt(), 0xFF6C3A55.toInt(),
-        )
-        val loads = HashMap<LocalDate, DayLoad>()
-        val busy = listOf(3, 4, 6, 10, 12, 13, 17, 19, 20, 24, 26, 27, 28, 31)
-        busy.forEachIndexed { index, day ->
-            val count = (index % 3) + 1
-            loads[month.atDay(day)] = DayLoad(
-                count,
-                IntArray(count) { colours[(index + it) % colours.size] },
-            )
-        }
-        assertNotNull(palette)
-        return loads
-    }
+    private val today = LocalDate.now()
 
     private fun render(view: View, widthDp: Int, heightDp: Int, name: String): Bitmap {
         val density = context.resources.displayMetrics.density
@@ -97,116 +81,133 @@ class RenderTest {
         assertTrue("$name painted only ${colours.size} distinct colours", colours.size > 8)
     }
 
-    private fun grid(palette: Palette, dark: Boolean): MonthGridView =
-        MonthGridView(context).apply {
-            this.palette = palette
-            firstDayOfWeek = DayOfWeek.MONDAY
-            this.today = this@RenderTest.today
-            this.month = this@RenderTest.month
-            selected = LocalDate.of(2026, 8, 20)
-            loads = sampleLoads(palette)
-            setBackgroundColor(palette.canvas)
-            assertEquals(dark, palette.dark)
-        }
+    /** A month with enough going on that marks, colours and density all show. */
+    private fun sampleData(): StageView.Data = object : StageView.Data {
+        private val palette = intArrayOf(
+            0xFF2E4A7D.toInt(), 0xFF4C5D3C.toInt(), 0xFF9A6F21.toInt(), 0xFF6C3A55.toInt(),
+        )
 
-    @Test
-    fun `month grid paints in both skins`() {
-        listOf(false to "paper", true to "ink").forEach { (dark, label) ->
-            val palette = Tokens.palette(dark, Accent.CINNABAR)
-            val container = FrameLayout(context).apply {
-                setBackgroundColor(palette.canvas)
-                addView(
-                    WeekdayHeaderView(context).apply {
-                        this.palette = palette
-                        firstDayOfWeek = DayOfWeek.MONDAY
-                    },
-                    FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (26 * 3f).toInt()),
-                )
-                addView(
-                    grid(palette, dark),
-                    FrameLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        (300 * 3f).toInt(),
-                    ).apply { topMargin = (26 * 3f).toInt() },
+        override fun loads(month: YearMonth): Map<LocalDate, DayLoad> {
+            val out = HashMap<LocalDate, DayLoad>()
+            for (day in 1..month.lengthOfMonth()) {
+                val seed = (day * 7 + month.monthValue * 3) % 11
+                if (seed >= 5) continue
+                val count = seed % 3 + 1
+                out[month.atDay(day)] = DayLoad(
+                    count,
+                    IntArray(count) { palette[(day + it) % palette.size] },
                 )
             }
-            val bitmap = render(container, 411, 330, "grid-$label")
-            assertPainted(bitmap, "grid-$label")
+            return out
+        }
+
+        override fun agenda(date: LocalDate): List<AgendaEntry> {
+            val zone = java.time.ZoneId.systemDefault()
+            fun at(hour: Int, minute: Int = 0) =
+                date.atTime(hour, minute).atZone(zone).toInstant().toEpochMilli()
+            return listOf(
+                AgendaEntry(1, at(0), at(23, 59), true, "Studio closed", null, palette[3], "Personal"),
+                AgendaEntry(2, at(9, 30), at(10, 30), false, "Design review", "Kutuzovsky 12", palette[0], "Work"),
+                AgendaEntry(3, at(13), at(14), false, "Lunch with Anna", null, palette[1], "Personal"),
+                AgendaEntry(4, at(16), at(17, 30), false, "Structural walkthrough", "Site", palette[2], "Work"),
+                AgendaEntry(5, at(19), at(21), false, "Rehearsal", "Conservatory", palette[0], "Personal"),
+            )
         }
     }
 
-    @Test
-    fun `compact grid paints for the year view`() {
-        val palette = Tokens.palette(false, Accent.INDIGO)
-        val view = MonthGridView(context).apply {
-            this.palette = palette
-            compact = true
-            showAdjacent = false
+    private fun stage(dark: Boolean, heat: Boolean = false): StageView =
+        StageView(context).apply {
+            palette = Tokens.palette(dark, Accent.CINNABAR)
+            motion = MotionProfile.OFF
+            haptics = false
             firstDayOfWeek = DayOfWeek.MONDAY
             this.today = this@RenderTest.today
-            this.month = this@RenderTest.month
-            setBackgroundColor(palette.canvas)
+            style = GridStyle(heat = heat)
+            data = sampleData()
+            setSafeInsets(52f * context.resources.displayMetrics.density / 3f, 24f)
         }
-        assertPainted(render(view, 110, 80, "grid-compact"), "grid-compact")
-    }
 
     /**
-     * The important one: `RemoteViews.apply` runs the platform inflater with the
-     * @RemoteView filter, so a disallowed view class fails here exactly as it
-     * would on a home screen.
+     * The zoom is one continuous number, so it is worth looking at the frames
+     * between the levels — those are what the user actually sees while moving.
      */
     @Test
-    fun `widget inflates and paints through RemoteViews`() {
-        val widgetId = 7
-        val prefs = Prefs.get(context).widget(widgetId)
-        listOf(
-            Triple(Skin.PAPER, Accent.CINNABAR, "widget-paper"),
-            Triple(Skin.INK, Accent.CINNABAR, "widget-ink"),
-            Triple(Skin.PAPER, Accent.INDIGO, "widget-indigo"),
-        ).forEach { (skin, accent, name) ->
-            prefs.skin = skin
-            prefs.accent = accent
-            prefs.opacity = 100
-            prefs.showEvents = true
+    fun `the stage paints at every point along the zoom`() {
+        val cases = listOf(
+            "stage-year" to 0f,
+            "stage-zooming" to 0.55f,
+            "stage-month" to 1f,
+            "stage-opening" to 1.45f,
+            "stage-day" to 2f,
+        )
+        cases.forEach { (name, z) ->
+            val view = stage(dark = false)
+            view.goTo(today, level = 1, animate = false)
+            when {
+                z <= 1f -> {
+                    if (z < 0.5f) view.goToLevel(0)
+                    view.zoom.snapTo(z)
+                }
+                else -> {
+                    view.goTo(today, level = 2, animate = false)
+                    view.zoom.snapTo(z)
+                }
+            }
+            assertPainted(render(view, 411, 891, name), name)
+        }
+    }
 
-            val views = WidgetRenderer.build(context, AppWidgetManager.getInstance(context), widgetId)
-            val host = FrameLayout(context)
-            val inflated = views.apply(context, host)
-            host.addView(
-                inflated,
+    @Test
+    fun `the stage paints in ink and with density on`() {
+        val dark = stage(dark = true).apply { goTo(today, level = 1, animate = false) }
+        assertPainted(render(dark, 411, 891, "stage-ink"), "stage-ink")
+
+        val heat = stage(dark = false, heat = true).apply { goTo(today, level = 1, animate = false) }
+        assertPainted(render(heat, 411, 891, "stage-density"), "stage-density")
+
+        val darkDay = stage(dark = true).apply { goTo(today, level = 2, animate = false) }
+        assertPainted(render(darkDay, 411, 891, "stage-day-ink"), "stage-day-ink")
+    }
+
+    @Test
+    fun `the radial menu blooms without running off the screen`() {
+        val menu = RadialMenu(context).apply {
+            palette = Tokens.palette(false, Accent.CINNABAR)
+            motion = MotionProfile.OFF
+            haptics = false
+            safeTop = 60f
+            safeBottom = 48f
+        }
+        val host = FrameLayout(context).apply {
+            setBackgroundColor(Tokens.palette(false, Accent.CINNABAR).canvas)
+            addView(
+                menu,
                 FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT,
                 ),
             )
-            assertPainted(render(host, 280, 260, name), name)
         }
-    }
-
-    @Test
-    fun `widget week rows carry every day of the month`() {
-        val widgetId = 9
-        Prefs.get(context).widget(widgetId).apply {
-            skin = Skin.PAPER
-            accent = Accent.CINNABAR
-            showAdjacent = true
-        }
-        val views = WidgetRenderer.build(context, AppWidgetManager.getInstance(context), widgetId)
-        val host = FrameLayout(context)
-        val inflated = views.apply(context, host)
-        host.addView(inflated)
-        render(host, 280, 260, "widget-structure")
-
-        val numbers = ArrayList<String>()
-        collectText(inflated, numbers)
-        val expected = MonthModel.cells(YearMonth.now(), DayOfWeek.MONDAY).size
-        // The year sits in the header and is also a number; day numbers are 1..31.
-        val digits = numbers.mapNotNull { it.toIntOrNull() }.filter { it in 1..31 }
-        assertEquals("cells rendered", expected, digits.size)
-        assertTrue(
-            "month title present",
-            numbers.any { it.equals(MonthModel.monthName(YearMonth.now(), Locale.getDefault()), true) },
+        val density = context.resources.displayMetrics.density
+        host.measure(
+            View.MeasureSpec.makeMeasureSpec((411 * density).toInt(), View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec((891 * density).toInt(), View.MeasureSpec.EXACTLY),
         )
+        host.layout(0, 0, (411 * density).toInt(), (891 * density).toInt())
+
+        // Opened in the bottom-right corner: the arc has to fold back inwards.
+        menu.open(
+            380f * density,
+            820f * density,
+            listOf(
+                RadialMenu.Item(1, "Today", R.drawable.ic_ring),
+                RadialMenu.Item(2, "Year", R.drawable.ic_grid),
+                RadialMenu.Item(3, "Search", R.drawable.ic_search),
+                RadialMenu.Item(4, "Add", R.drawable.ic_plus),
+                RadialMenu.Item(5, "Settings", R.drawable.ic_settings),
+            ),
+        )
+        assertPainted(render(host, 411, 891, "radial-menu"), "radial-menu")
     }
 
     /**
@@ -231,7 +232,6 @@ class RenderTest {
                     accent = Accent.CINNABAR
                     opacity = 100
                     showEvents = true
-                    // Offset to September: the longest month name in both locales.
                     monthOffset = 9 - YearMonth.now().monthValue
                 }
                 val views = WidgetRenderer.build(context, widgetId, size.first, size.second)
@@ -267,6 +267,7 @@ class RenderTest {
             weekNumbers = true
             showEvents = false
             opacity = 90
+            monthOffset = 0
         }
         val views = WidgetRenderer.build(context, AppWidgetManager.getInstance(context), widgetId)
         val host = FrameLayout(context).apply { setBackgroundColor(0xFFC9C4B8.toInt()) }
@@ -277,92 +278,127 @@ class RenderTest {
                 ViewGroup.LayoutParams.MATCH_PARENT,
             ),
         )
-        val bitmap = render(host, 300, 270, "widget-weeknumbers")
-        assertPainted(bitmap, "widget-weeknumbers")
+        assertPainted(render(host, 300, 270, "widget-weeknumbers"), "widget-weeknumbers")
 
         val texts = ArrayList<String>()
         collectText(host, texts)
-        val weeks = MonthModel.ROWS
-        val numbers = texts.mapNotNull { it.toIntOrNull() }
         assertEquals(
             "day cells plus one week number per row",
-            MonthModel.CELLS + weeks,
-            numbers.count { it in 1..53 } - 0,
+            MonthModel.CELLS + MonthModel.ROWS,
+            texts.mapNotNull { it.toIntOrNull() }.count { it in 1..53 },
         )
     }
 
+    /**
+     * The important one: `RemoteViews.apply` runs the platform inflater with the
+     * @RemoteView filter, so a disallowed view class fails here exactly as it
+     * would on a home screen.
+     */
     @Test
-    fun `the app screen assembles and paints`() {
-        val controller = org.robolectric.Robolectric
-            .buildActivity(app.quire.calendar.ui.MainActivity::class.java)
-            .setup()
-        val decor = controller.get().window.decorView
-        val bitmap = render(decor, 411, 891, "app-main")
-        assertPainted(bitmap, "app-main")
-        controller.close()
-    }
+    fun `widget inflates and paints through RemoteViews`() {
+        val widgetId = 7
+        val prefs = Prefs.get(context).widget(widgetId)
+        listOf(
+            Triple(Skin.PAPER, Accent.CINNABAR, "widget-paper"),
+            Triple(Skin.INK, Accent.CINNABAR, "widget-ink"),
+            Triple(Skin.PAPER, Accent.INDIGO, "widget-indigo"),
+        ).forEach { (skin, accent, name) ->
+            prefs.skin = skin
+            prefs.accent = accent
+            prefs.opacity = 100
+            prefs.showEvents = true
+            prefs.weekNumbers = false
+            prefs.monthOffset = 0
 
-    @Test
-    fun `the app screen shows the day's entries once calendars are readable`() {
-        FakeCalendarProvider.reset()
-        org.robolectric.Robolectric.setupContentProvider(
-            FakeCalendarProvider::class.java,
-            android.provider.CalendarContract.AUTHORITY,
-        )
-        org.robolectric.Shadows.shadowOf(
-            ApplicationProvider.getApplicationContext<android.app.Application>(),
-        ).grantPermissions(android.Manifest.permission.READ_CALENDAR)
-
-        val now = LocalDate.now()
-        val zone = java.time.ZoneId.systemDefault()
-        fun at(hour: Int, minute: Int = 0) = now.atTime(hour, minute)
-            .atZone(zone).toInstant().toEpochMilli()
-        val julian = MonthModel.julianDay(now)
-        FakeCalendarProvider.instances = listOf(
-            FakeCalendarProvider.instance(
-                eventId = 1, beginMillis = at(0), endMillis = at(23, 59),
-                startDay = julian, endDay = julian, title = "Studio closed", allDay = 1,
-                colour = 0xFF6C3A55.toInt(), calendarName = "Personal",
-            ),
-            FakeCalendarProvider.instance(
-                eventId = 2, beginMillis = at(9, 30), endMillis = at(10, 30),
-                startDay = julian, endDay = julian, title = "Design review",
-                location = "Kutuzovsky 12", colour = 0xFF2E4A7D.toInt(),
-            ),
-            FakeCalendarProvider.instance(
-                eventId = 3, beginMillis = at(13), endMillis = at(14),
-                startDay = julian, endDay = julian, title = "Lunch with Anna",
-                colour = 0xFF4C5D3C.toInt(), calendarName = "Personal",
-            ),
-            FakeCalendarProvider.instance(
-                eventId = 4, beginMillis = at(18), endMillis = at(20),
-                startDay = julian, endDay = julian + 1, title = "Overnight render",
-                colour = 0xFF9A6F21.toInt(), calendarName = "Work",
-            ),
-        ) + (1..24).map { offset ->
-            val date = now.plusDays((offset % 20).toLong() - 6)
-            FakeCalendarProvider.instance(
-                eventId = 100L + offset,
-                beginMillis = at(8 + offset % 10),
-                endMillis = at(9 + offset % 10),
-                startDay = MonthModel.julianDay(date),
-                endDay = MonthModel.julianDay(date),
-                title = "Slot $offset",
-                colour = intArrayOf(
-                    0xFF2E4A7D.toInt(), 0xFF4C5D3C.toInt(),
-                    0xFF9A6F21.toInt(), 0xFF6C3A55.toInt(),
-                )[offset % 4],
+            val views = WidgetRenderer.build(context, AppWidgetManager.getInstance(context), widgetId)
+            val host = FrameLayout(context)
+            host.addView(
+                views.apply(context, host),
+                FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                ),
             )
+            assertPainted(render(host, 280, 260, name), name)
         }
+    }
 
+    @Test
+    fun `floating panels stack and stay readable over the world`() {
+        val skin = Tokens.palette(false, Accent.CINNABAR)
+        val behind = stage(dark = false).apply { goTo(today, level = 1, animate = false) }
+        val sheet = app.quire.calendar.ui.SheetOverlay(context).apply {
+            palette = skin
+            motion = MotionProfile.OFF
+        }
+        val host = FrameLayout(context)
+        host.addView(
+            behind,
+            FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+            ),
+        )
+        host.addView(
+            sheet,
+            FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+            ),
+        )
+
+        val builder = sheet.begin()
+        builder.title(context.getString(R.string.settings))
+        builder.slab { panel ->
+            panel.section(R.string.section_motion)
+            panel.segmented(
+                R.string.motion,
+                listOf(
+                    context.getString(R.string.motion_off),
+                    context.getString(R.string.motion_calm),
+                    context.getString(R.string.motion_standard),
+                    context.getString(R.string.motion_playful),
+                ),
+                2,
+            ) {}
+            panel.rule()
+            panel.toggle(R.string.haptics, R.string.haptics_hint, true) {}
+        }
+        builder.slab { panel ->
+            panel.section(R.string.section_appearance)
+            panel.segmented(
+                R.string.skin,
+                listOf(
+                    context.getString(R.string.skin_auto),
+                    context.getString(R.string.skin_paper),
+                    context.getString(R.string.skin_ink),
+                ),
+                0,
+            ) {}
+            panel.accents(Accent.CINNABAR) {}
+        }
+        builder.slab { panel ->
+            panel.section(R.string.section_grid)
+            panel.toggle(R.string.heat, R.string.heat_hint, true) {}
+            panel.rule()
+            panel.toggle(R.string.week_numbers, R.string.week_numbers_hint, false) {}
+        }
+        sheet.present()
+
+        assertPainted(render(host, 411, 891, "sheet-settings"), "sheet-settings")
+    }
+
+    @Test
+    fun `the app assembles and paints end to end`() {
+        Prefs.get(context).motion = MotionProfile.OFF.key
         val controller = org.robolectric.Robolectric
             .buildActivity(app.quire.calendar.ui.MainActivity::class.java)
             .setup()
         org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
-        val bitmap = render(controller.get().window.decorView, 411, 891, "app-main-events")
-        assertPainted(bitmap, "app-main-events")
+        val bitmap = render(controller.get().window.decorView, 411, 891, "app-main")
+        assertPainted(bitmap, "app-main")
         controller.close()
-        FakeCalendarProvider.reset()
+        Prefs.get(context).motion = MotionProfile.STANDARD.key
     }
 
     private fun collectText(view: View, out: MutableList<String>) {

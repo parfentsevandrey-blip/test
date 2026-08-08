@@ -66,4 +66,21 @@
     <string name="cd_previous_month">Предыдущий месяц</string>
     <string name="cd_next_month">Следующий месяц</string>
     <string name="cd_current_month">Вернуться к текущему месяцу</string>
+
+    <string name="search">Поиск</string>
+    <string name="search_hint">Найти событие</string>
+    <string name="search_empty">Наберите хотя бы две буквы. Ищем восемь месяцев в обе стороны.</string>
+    <string name="search_none">Ничего не найдено</string>
+    <string name="add">Добавить</string>
+
+    <string name="section_motion">Движение</string>
+    <string name="motion">Живость</string>
+    <string name="motion_off">Выкл</string>
+    <string name="motion_calm">Спокойно</string>
+    <string name="motion_standard">Обычно</string>
+    <string name="motion_playful">Упруго</string>
+    <string name="haptics">Отклик</string>
+    <string name="haptics_hint">Короткий тик под пальцем, когда мир движется</string>
+    <string name="heat">Плотность дня</string>
+    <string name="heat_hint">Подсвечивать клетку тем сильнее, чем полнее день</string>
 </resources>
