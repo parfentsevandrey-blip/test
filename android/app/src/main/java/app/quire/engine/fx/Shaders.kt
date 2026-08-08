@@ -92,6 +92,10 @@ object Shaders {
      * The alpha of [colourA] and [colourB] is how strongly each pool stains [base]; the result
      * is always opaque. Null only when the size is degenerate, which is the one case where
      * there is nothing to fill.
+     *
+     * Where AGSL is unavailable the result is a small bitmap stretched to fill, so **the paint
+     * this is set on must have `isFilterBitmap = true`** — `BitmapShader.setFilterMode` only
+     * exists from API 33, and without either one the pools come out as visible blocks.
      */
     fun background(
         width: Float,
@@ -276,7 +280,11 @@ object Shaders {
             // A shader holds the bitmap, not a copy of it, but the uploaded texture is keyed
             // on the bitmap's generation and a stale one is cheaper to rule out than to debug.
             shader = BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // The stand-in is a handful of pixels stretched across the screen, so it has to be
+            // filtered or the pools come out as visible blocks. setFilterMode arrived in API 33;
+            // before that the same thing is asked for through the paint, which is why
+            // [FILTERED_PAINT_REQUIRED] is part of this object's contract.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 shader.setFilterMode(BitmapShader.FILTER_MODE_LINEAR)
             }
             standInShader = shader

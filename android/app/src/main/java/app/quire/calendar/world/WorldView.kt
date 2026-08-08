@@ -268,7 +268,10 @@ class WorldView(context: Context) : View(context) {
 
     // ---- per-frame scratch, never allocated in draw ---------------------
 
-    private val backgroundPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    // Filtering is asked for here as well as on the shader: Shaders' stand-in is a few dozen
+    // pixels stretched across the whole screen, and BitmapShader.setFilterMode only exists from
+    // API 33, so below that the paint is the only thing that can smooth it.
+    private val backgroundPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { isFilterBitmap = true }
     private val poolMatrix = Matrix()
     private val poolStops = FloatArray(POOL_STOPS)
     private val poolAColours = IntArray(POOL_STOPS)
