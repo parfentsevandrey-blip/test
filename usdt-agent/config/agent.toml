@@ -115,6 +115,7 @@ max_open_orders       = 5      # how much work to have in flight at once
 min_rate_usdt_per_hour = 10.0  # ignore gigs paying less than this, after the odds
 lookback_blocks       = 2000   # transfer-scan window per chain
 require_approval      = true   # never claim work in your name unattended
+notify_min_usdt_per_hour = 60.0
 serve_host            = "127.0.0.1"
 serve_port            = 8402
 
@@ -175,3 +176,7 @@ host           = "127.0.0.1"
 port           = 8500
 open_browser   = true
 poll_interval_s = 10.0
+
+# Ping the operator when a gig this good shows up. Bounties are claimed
+# first-come: a queue nobody reads is a queue that expires.
+# Notifications go to USDT_AGENT_WEBHOOK or TELEGRAM_BOT_TOKEN+TELEGRAM_CHAT_ID.

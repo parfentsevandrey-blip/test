@@ -27,6 +27,7 @@ from typing import Any
 
 from ..config import AgentConfig
 from ..ledger import Ledger
+from ..notify import Notifier
 from .base import Channel
 from .bootstrap import Ladder, assess_ladder
 from .collector import CollectionResult, Collector
@@ -103,6 +104,7 @@ class EarningAgent:
         *,
         max_open_orders: int = 5,
         min_rate_usdt_per_hour: float = 10.0,
+        notifier: Notifier | None = None,
     ) -> None:
         self.cfg = cfg
         self.channels = channels
@@ -113,6 +115,12 @@ class EarningAgent:
         self.min_rate = min_rate_usdt_per_hour
         self.cycle = 0
         self.history: list[EarnCycleReport] = []
+
+        # An unattended loop that cannot reach you is a loop that watches
+        # bounties expire. Claims and approvals are time-sensitive: the money
+        # goes to whoever moves first.
+        self.notifier = notifier or Notifier(cfg.notify_webhook)
+        self._announced: set[str] = set()
 
         self.collector = Collector(
             wallet, self.store, service_channel=channels.get("services")
@@ -207,6 +215,51 @@ class EarningAgent:
         return self.collector.collect()
 
     # ------------------------------------------------------------------
+    def announce(self, report: EarnCycleReport, gigs: list[Gig]) -> None:
+        """Tell the operator the three things that cost money to miss.
+
+        Confirmed income, because it is the only number that is real. Work
+        waiting on a decision, because nothing proceeds until it is made. And a
+        gig worth dropping what you are doing for, because bounties are claimed
+        first-come and a queue nobody reads is a queue that expires.
+        """
+        if not self.notifier.enabled:
+            return
+
+        if report.confirmed_this_cycle > 0:
+            self.notifier.send(
+                f"💰 *+{report.confirmed_this_cycle:,.2f} USDT confirmed on-chain*\n"
+                f"treasury: {report.treasury_usdt:,.2f} USDT",
+                key="income", force=True,
+            )
+
+        pending = self.store.pending_approvals()
+        fresh = [a for a in pending if a["id"] not in self._announced]
+        if fresh:
+            self._announced.update(a["id"] for a in fresh)
+            lines = "\n".join(f"· {a['title'][:90]}" for a in fresh[:3])
+            self.notifier.send(
+                f"✋ *{len(fresh)} decision(s) waiting*\n{lines}\n"
+                f"`usdt-agent earn approvals`",
+                key="approvals",
+            )
+
+        threshold = float(self.cfg.earn.notify_min_usdt_per_hour)
+        if threshold > 0:
+            hot = [
+                g for g in gigs
+                if g.usdt_per_hour >= threshold and g.id not in self._announced
+            ]
+            if hot:
+                self._announced.update(g.id for g in hot)
+                best = hot[0]
+                self.notifier.send(
+                    f"🎯 *{best.usdt_per_hour:,.0f} USDT/h* — {best.title[:90]}\n"
+                    f"{best.reward_usdt:,.0f} USDT · ~{best.effort_hours:.1f} h · "
+                    f"odds {best.payout_probability:.0%}\n{best.url}",
+                    key="hot_gig",
+                )
+
     def step(self) -> EarnCycleReport:
         self.cycle += 1
         gigs, errors = self.discover()
@@ -234,6 +287,7 @@ class EarningAgent:
             errors=errors,
         )
         self.history.append(report)
+        self.announce(report, gigs)
         log.info(
             "earn cycle %d | treasury %.2f USDT (+%.2f) | %d gigs (%d new) | %d orders | %d awaiting approval",
             report.cycle, report.treasury_usdt, report.confirmed_this_cycle,
@@ -242,7 +296,17 @@ class EarningAgent:
         return report
 
     def run(self, cycles: int = 1, interval_s: float = 0.0, on_cycle: Any = None) -> list[EarnCycleReport]:
-        for _ in range(max(1, cycles)):
+        """Run ``cycles`` iterations, or until stopped when ``cycles`` is 0.
+
+        Zero means "until stopped" here for the same reason it does in the
+        trading half: a daemon is the normal way to run this, and a flag that
+        silently means "once" would leave the operator thinking it was watching.
+        """
+        forever = cycles <= 0
+        remaining = 1 if forever else cycles
+        while remaining > 0:
+            if not forever:
+                remaining -= 1
             started = time.time()
             try:
                 report = self.step()

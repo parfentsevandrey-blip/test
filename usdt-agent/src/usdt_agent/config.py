@@ -80,6 +80,9 @@ class EarnConfig:
     min_rate_usdt_per_hour: float = 10.0
     lookback_blocks: int = 2_000
     require_approval: bool = True   # never claim work on your behalf unattended
+    #: Ping the operator when a gig this good appears. Bounties are claimed
+    #: first-come, so a queue nobody reads is a queue that expires.
+    notify_min_usdt_per_hour: float = 60.0
     serve_host: str = "127.0.0.1"
     serve_port: int = 8402
     wallet: dict[str, str] = field(default_factory=dict)

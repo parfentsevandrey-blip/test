@@ -47,8 +47,10 @@ def add_earn_parser(sub: argparse._SubParsersAction) -> None:
     scan.add_argument("--json", action="store_true")
 
     run = ops.add_parser("run", help="run the earning loop")
-    run.add_argument("--cycles", type=int, default=1)
-    run.add_argument("--interval", type=float, default=300.0)
+    run.add_argument("--cycles", type=int, default=1,
+                     help="0 = run until stopped (what a daemon wants)")
+    run.add_argument("--interval", type=float, default=300.0,
+                     help="seconds between cycles")
 
     ops.add_parser("collect", help="reconcile the wallet — book only what arrived on-chain")
 

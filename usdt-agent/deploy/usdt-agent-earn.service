@@ -1,0 +1,40 @@
+[Unit]
+Description=usdt-agent — earning loop (scan, reconcile, notify)
+Documentation=https://github.com/parfentsevandrey-blip/test
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=usdt
+Group=usdt
+WorkingDirectory=/opt/usdt-agent
+Environment=PYTHONPATH=/opt/usdt-agent/src
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=/etc/usdt-agent.env
+
+# --cycles 0 runs until stopped; 15 minutes is well inside GitHub's search
+# rate limit and far faster than any bounty is claimed.
+ExecStart=/usr/bin/python3 -m usdt_agent -c config/agent.toml earn run --cycles 0 --interval 900
+
+Restart=on-failure
+RestartSec=30s
+
+# The agent needs its own directory, the network, and nothing else. It holds no
+# keys, so there is no reason to let it read the rest of the filesystem.
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/opt/usdt-agent/data
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictNamespaces=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target

@@ -649,6 +649,129 @@ class TestEarningAgent(unittest.TestCase):
         ledger.close()
 
 
+class RecordingNotifier:
+    """A notifier that keeps what it was told instead of sending it."""
+
+    def __init__(self, enabled: bool = True) -> None:
+        self.enabled = enabled
+        self.sent: list[tuple[str, str]] = []
+
+    def send(self, text: str, key: str = "default", force: bool = False) -> bool:
+        self.sent.append((key, text))
+        return True
+
+    def keys(self) -> list[str]:
+        return [k for k, _ in self.sent]
+
+
+class TestAnnouncements(unittest.TestCase):
+    """An unattended loop that cannot reach you is a loop that watches bounties
+    expire. These check it reaches you for the three time-sensitive things."""
+
+    def build(self, notifier=None, wallet=None):  # type: ignore[no-untyped-def]
+        cfg = load_config()
+        cfg.earn.notify_min_usdt_per_hour = 60.0
+        wallet = wallet or FakeWallet({"tron": 0.0})
+        channels = build_channels(cfg, wallet, None, ("bounties", "services"))
+        ledger = Ledger(":memory:")
+        agent = EarningAgent(cfg, channels, wallet, ledger,
+                             min_rate_usdt_per_hour=1.0, notifier=notifier)
+        return agent
+
+    def test_confirmed_income_is_announced(self) -> None:
+        note = RecordingNotifier()
+        wallet = FakeWallet({"tron": 0.0}, {"tron": []})
+        agent = self.build(note, wallet)
+        agent.collect()                       # baseline
+        wallet.credit("tron", transfer(75.0, "0xpaid"))
+        with mock.patch.object(BountyChannel, "_search", return_value=[]):
+            agent.step()
+        self.assertIn("income", note.keys())
+        self.assertTrue(any("75" in text for key, text in note.sent if key == "income"))
+        agent.ledger.close()
+
+    def test_a_waiting_decision_is_announced_once(self) -> None:
+        note = RecordingNotifier()
+        agent = self.build(note)
+        issue = {
+            "id": 11, "title": "Add retry budget ($900)", "body": "x" * 100,
+            "labels": [{"name": "bounty"}], "assignees": [], "comments": 0,
+            "html_url": "https://github.com/a/b/issues/11",
+            "created_at": "2026-08-01T00:00:00Z",
+        }
+        with mock.patch.object(BountyChannel, "_search", return_value=[issue]):
+            agent.step()
+            first = note.keys().count("approvals")
+            agent.step()
+        self.assertEqual(first, 1)
+        # The same pending approval must not be announced on every cycle.
+        self.assertEqual(note.keys().count("approvals"), 1)
+        agent.ledger.close()
+
+    def test_a_high_rate_gig_is_announced(self) -> None:
+        note = RecordingNotifier()
+        agent = self.build(note)
+        issue = {
+            "id": 12, "title": "One-line config fix ($800)", "body": "trivial",
+            "labels": [{"name": "bounty"}, {"name": "good first issue"}],
+            "assignees": [], "comments": 0,
+            "html_url": "https://github.com/a/b/issues/12",
+            "created_at": "2026-08-01T00:00:00Z",
+        }
+        with mock.patch.object(BountyChannel, "_search", return_value=[issue]):
+            agent.step()
+        self.assertIn("hot_gig", note.keys())
+        agent.ledger.close()
+
+    def test_a_thin_gig_is_not_announced(self) -> None:
+        note = RecordingNotifier()
+        agent = self.build(note)
+        issue = {
+            "id": 13, "title": "Rewrite the storage layer ($300)", "body": "refactor " * 300,
+            "labels": [{"name": "bounty"}], "assignees": [], "comments": 0,
+            "html_url": "https://github.com/a/b/issues/13",
+            "created_at": "2026-08-01T00:00:00Z",
+        }
+        with mock.patch.object(BountyChannel, "_search", return_value=[issue]):
+            agent.step()
+        self.assertNotIn("hot_gig", note.keys())
+        agent.ledger.close()
+
+    def test_nothing_is_sent_when_notifications_are_off(self) -> None:
+        note = RecordingNotifier(enabled=False)
+        agent = self.build(note)
+        with mock.patch.object(BountyChannel, "_search", return_value=[]):
+            agent.step()
+        self.assertEqual(note.sent, [])
+        agent.ledger.close()
+
+    def test_cycles_zero_means_until_stopped_not_once(self) -> None:
+        """A daemon flag that silently meant 'once' would leave the operator
+        thinking the agent was watching when it had already exited."""
+        agent = self.build(RecordingNotifier(enabled=False))
+        calls = {"n": 0}
+        original = agent.step
+
+        def counted():  # type: ignore[no-untyped-def]
+            calls["n"] += 1
+            if calls["n"] >= 4:
+                raise KeyboardInterrupt
+            return original()
+
+        agent.step = counted  # type: ignore[method-assign]
+        with mock.patch.object(BountyChannel, "_search", return_value=[]):
+            agent.run(cycles=0)
+        self.assertEqual(calls["n"], 4)
+        agent.ledger.close()
+
+    def test_a_finite_cycle_count_is_respected(self) -> None:
+        agent = self.build(RecordingNotifier(enabled=False))
+        with mock.patch.object(BountyChannel, "_search", return_value=[]):
+            agent.run(cycles=3)
+        self.assertEqual(agent.cycle, 3)
+        agent.ledger.close()
+
+
 class TestEarnConfig(unittest.TestCase):
     def test_defaults(self) -> None:
         cfg = load_config()

@@ -1,0 +1,35 @@
+[Unit]
+Description=usdt-agent — operator dashboard
+Documentation=https://github.com/parfentsevandrey-blip/test
+After=network-online.target
+
+[Service]
+Type=simple
+User=usdt
+Group=usdt
+WorkingDirectory=/opt/usdt-agent
+Environment=PYTHONPATH=/opt/usdt-agent/src
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=/etc/usdt-agent.env
+
+# Loopback only. This surface approves work and issues payment instructions, so
+# reaching it from another machine means an SSH tunnel, never an open port:
+#   ssh -N -L 8500:127.0.0.1:8500 user@this-host
+# The launch link (with its single-use nonce) is printed to the journal:
+#   journalctl -u usdt-agent-web -n 20
+ExecStart=/usr/bin/python3 -m usdt_agent -c config/agent.toml web --host 127.0.0.1 --no-browser
+
+Restart=on-failure
+RestartSec=10s
+
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/opt/usdt-agent/data
+RestrictNamespaces=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+
+[Install]
+WantedBy=multi-user.target
