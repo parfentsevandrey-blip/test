@@ -66,6 +66,7 @@ class AppRenderTest {
 
     @Before
     fun stockTheCalendar() {
+        compose.mainClock.autoAdvance = false
         FakeCalendarProvider.reset()
         org.robolectric.Robolectric.setupContentProvider(
             FakeCalendarProvider::class.java,
@@ -108,14 +109,22 @@ class AppRenderTest {
         )
     }
 
-    /** Lets the loader's background thread answer, then runs what it posted to the main thread. */
+    /**
+     * Lets the loader's background thread answer, runs what it posted to the main thread, and
+     * moves the animation clock on far enough for everything the frame started to have finished.
+     *
+     * The clock is driven by hand rather than left to advance itself because the screens contain
+     * an animation that never ends — the expressive loading indicator — and `waitForIdle` with an
+     * automatic clock waits for animations to finish. Against an endless one it never returns.
+     */
     private fun settle(rounds: Int = 40) {
         repeat(rounds) {
             shadowOf(Looper.getMainLooper()).idle()
-            compose.waitForIdle()
-            Thread.sleep(10)
+            compose.mainClock.advanceTimeBy(FRAME_MS)
+            Thread.sleep(5)
         }
         shadowOf(Looper.getMainLooper()).idle()
+        compose.mainClock.advanceTimeBy(SETTLE_MS)
         compose.waitForIdle()
     }
 
@@ -241,3 +250,7 @@ class AppRenderTest {
         assertTrue("search found nothing it should have found", showing("Design review") > 0)
     }
 }
+
+/** One frame at sixty a second, and long enough after it for any spring to have stopped. */
+private const val FRAME_MS = 16L
+private const val SETTLE_MS = 2_000L

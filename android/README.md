@@ -11,11 +11,11 @@ every accessibility setting without holding an opinion about any of them. What s
 rewrite is the part that reads your calendar — the grid arithmetic, the provider queries and the
 off-thread loader — because that part had tests and had been debugged against a real provider.
 
-**Install:** [`dist/quire-5.0.apk`](dist/quire-5.0.apk) · 1.4 MB · Android 8.0+ (minSdk 26,
+**Install:** [`dist/quire-5.1.apk`](dist/quire-5.1.apk) · 1.4 MB · Android 8.0+ (minSdk 26,
 targetSdk 37 — Android 17) ·
-`sha256 2a2eb535f4376f1f48bf9aa1b517837531a81f828c0f79e2afe7aacfcdd96de2`
+`sha256 42299388165d29e88cc255953c86999ffbc7d8687b93647ce53bd90c1b72d393`
 
-Copy it to the phone and open it, or `adb install -r dist/quire-5.0.apk`. You will need to allow
+Copy it to the phone and open it, or `adb install -r dist/quire-5.1.apk`. You will need to allow
 installing from an unknown source once — the APK is signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -61,6 +61,37 @@ colour of its own, so a busy day reads as raised paper instead of a stain.
 
 Creating and opening events hands off to whatever calendar app is installed. Quire never writes to
 your calendar and asks only for read access.
+
+## Motion
+
+Every animation takes its spec from `MaterialTheme.motionScheme` rather than from a duration
+written here, which is what keeps them one family: *spatial* springs for anything that moves or
+changes size, and they overshoot slightly; *effects* springs for anything that only fades or
+changes colour, and they do not — a colour that overshoots is a colour that goes somewhere it was
+never asked to be.
+
+- **Between destinations**, Material's fade-through: the outgoing screen fades, the incoming one
+  fades and grows the last tenth of its size. Nothing slides, because the four destinations are
+  siblings rather than a stack.
+- **Between days**, a shared axis: the agenda travels the way the date did, later to the left,
+  earlier to the right. The day is handed to the transition as one value, so the copy on its way
+  out keeps showing its own entries instead of being repainted with the new day's half way
+  through.
+- **The title** rolls in the direction the months moved — up for a later month, down for an
+  earlier one. It has to be told which way that is, because "August" is not after "July" in any
+  ordering a string knows about.
+- **The month you are swiping away** sinks and fades a little as it goes, driven by the pager's
+  own offset, so a half-finished swipe reads as one month passing behind another rather than two
+  grids sliding on the same plane.
+- **Today's disc and a selection** grow into the cell that was tapped instead of appearing in it,
+  and the marks under a date grow in when the month's events arrive — a frame or two after the
+  grid itself, which without this reads as a glitch.
+- **Back** returns to the month before it leaves the app, and it does it under the finger:
+  `PredictiveBackHandler` drives the screen's own retreat from the gesture's progress, so a back
+  you change your mind about springs back rather than committing.
+- **While a day is being fetched**, the expressive `LoadingIndicator` — the shape-morphing one —
+  rather than the sentence "nothing scheduled", which was what an unasked-for day used to claim
+  for the frame before its entries arrived.
 
 ## The widget
 
@@ -144,6 +175,10 @@ Four things worth knowing before editing:
 - **`TextUtils.ellipsize` is a no-op under Robolectric.** It measures correctly and truncates
   nothing, so a widget title that overflowed would look fine in a render and be cut on a real
   phone. Truncation there is written out with `breakText`.
+- **An animation that never ends will hang the test that waits for one.** `waitForIdle` on an
+  automatic clock waits for animations to finish, and the loading indicator's does not. The
+  screen tests drive `mainClock` by hand for that reason; the raw Robolectric ones use `idleFor`,
+  because `idle` alone runs what is already due and the Choreographer's next frame never is.
 
 ## Building
 

@@ -1,5 +1,12 @@
 package app.quire.calendar.m3
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,9 +23,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -116,6 +125,7 @@ private fun DayCell(
     val isToday = date == today
     val isSelected = date == selected
     val scheme = MaterialTheme.colorScheme
+    val motion = MaterialTheme.motionScheme
 
     // Today wins the filled treatment; a selection elsewhere gets the quieter container. Both are
     // Material roles, so the pair stays legible whatever the wallpaper turns them into.
@@ -141,6 +151,25 @@ private fun DayCell(
         Color.Transparent
     }
 
+    // The disc grows into the cell it was tapped in rather than appearing there, on the theme's
+    // spatial spring — which overshoots slightly, so the selection lands with a little weight.
+    // Colour crosses on an effects spec instead: a colour that overshoots is a colour that goes
+    // somewhere it was never asked to be.
+    val marked = isToday || isSelected
+    val discScale by animateFloatAsState(
+        targetValue = if (marked) 1f else 0.5f,
+        animationSpec = motion.defaultSpatialSpec(),
+        label = "disc",
+    )
+    val discAlpha by animateFloatAsState(
+        targetValue = if (marked) 1f else 0f,
+        animationSpec = motion.fastEffectsSpec(),
+        label = "discAlpha",
+    )
+    val discColour by animateColorAsState(disc, motion.defaultEffectsSpec(), label = "discColour")
+    val inkColour by animateColorAsState(onDisc, motion.defaultEffectsSpec(), label = "ink")
+    val groundColour by animateColorAsState(ground, motion.slowEffectsSpec(), label = "ground")
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -148,27 +177,39 @@ private fun DayCell(
             .height(CellHeight)
             .padding(2.dp)
             .clip(MaterialTheme.shapes.medium)
-            .background(ground)
+            .background(groundColour)
             .clickable(enabled = inMonth || settings.showAdjacent) { onPick(date) },
     ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.size(DiscSize).clip(CircleShape).background(disc),
-        ) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(DiscSize)) {
+            Box(
+                Modifier
+                    .matchParentSize()
+                    .graphicsLayer {
+                        scaleX = discScale
+                        scaleY = discScale
+                        alpha = discAlpha
+                    }
+                    .clip(CircleShape)
+                    .background(discColour),
+            )
             if (inMonth || settings.showAdjacent) {
                 Text(
                     text = date.dayOfMonth.toString(),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = onDisc,
+                    color = inkColour,
                 )
             }
         }
         Spacer(Modifier.height(3.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-            if (count > 0 && (inMonth || settings.showAdjacent)) {
+            if (inMonth || settings.showAdjacent) {
                 val colours = load?.colours ?: IntArray(0)
                 val shown = minOf(count, 3)
-                repeat(shown) { index ->
+                // Marks arrive when a month's events do, which is a frame or two after the grid
+                // itself. Growing them in is what keeps that from reading as a glitch. They are
+                // hidden rather than scaled to nothing so an absent mark takes no width — one dot
+                // has to sit under the middle of its date, not to the left of it.
+                repeat(3) { index ->
                     val mark = if (settings.colouredMarks && index < colours.size) {
                         Color(colours[index])
                     } else if (isToday) {
@@ -176,7 +217,15 @@ private fun DayCell(
                     } else {
                         scheme.tertiary
                     }
-                    Box(Modifier.size(MarkSize).clip(CircleShape).background(mark))
+                    AnimatedVisibility(
+                        visible = index < shown,
+                        enter = scaleIn(motion.defaultSpatialSpec()) +
+                            fadeIn(motion.fastEffectsSpec()),
+                        exit = scaleOut(motion.fastSpatialSpec()) +
+                            fadeOut(motion.fastEffectsSpec()),
+                    ) {
+                        Box(Modifier.size(MarkSize).clip(CircleShape).background(mark))
+                    }
                 }
             }
         }

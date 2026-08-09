@@ -8,9 +8,21 @@ import android.os.Bundle
 import android.provider.CalendarContract
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
+import androidx.activity.compose.PredictiveBackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -24,6 +36,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeFlexibleTopAppBar
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ShortNavigationBar
 import androidx.compose.material3.ShortNavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -38,10 +51,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -108,17 +125,25 @@ private fun QuireApp(intent: Intent?) {
                 } else {
                     LargeFlexibleTopAppBar(
                         title = {
-                            Text(
-                                when (destination) {
+                            // The title is the one label that changes on every swipe, so it
+                            // travels the way the months did: up for a later month, down for an
+                            // earlier one. Anything else and the bar reads as a caption on a
+                            // screen that moved without it.
+                            RollingLabel(
+                                text = when (destination) {
                                     Destination.YEAR -> model.month.year.toString()
                                     Destination.SETTINGS -> stringResource(R.string.settings)
                                     else -> MonthModel.monthName(model.month, locale)
                                 },
+                                order = model.month.year * 12 + model.month.monthValue,
                             )
                         },
                         subtitle = {
                             if (destination == Destination.MONTH) {
-                                Text(model.month.year.toString())
+                                RollingLabel(
+                                    text = model.month.year.toString(),
+                                    order = model.month.year,
+                                )
                             }
                         },
                         scrollBehavior = scrollBehavior,
@@ -159,34 +184,119 @@ private fun QuireApp(intent: Intent?) {
                 }
             },
             floatingActionButton = {
-                if (destination == Destination.MONTH) {
+                AnimatedVisibility(
+                    visible = destination == Destination.MONTH,
+                    enter = scaleIn(MaterialTheme.motionScheme.defaultSpatialSpec()) +
+                        fadeIn(MaterialTheme.motionScheme.fastEffectsSpec()),
+                    exit = scaleOut(MaterialTheme.motionScheme.fastSpatialSpec()) +
+                        fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
+                ) {
                     FloatingActionButton(onClick = { activity?.compose(model.selected) }) {
                         Icon(Icons.Default.Add, stringResource(R.string.new_event))
                     }
                 }
             },
         ) { padding ->
-            when (destination) {
-                Destination.MONTH -> MonthScreen(
-                    model = model,
-                    padding = padding,
-                    onOpenEvent = { activity?.open(it) },
-                    onGrant = { requestCalendar.launch(Manifest.permission.READ_CALENDAR) },
-                )
-                Destination.YEAR -> YearScreen(model, padding) { month ->
-                    model.showMonth(month)
-                    model.openDay(month.atDay(1))
+            // Back returns to the month before it leaves the app, and it does it under the
+            // finger: the gesture's own progress shrinks and slides the screen you are leaving,
+            // so a back you change your mind about springs back instead of committing.
+            var backProgress by remember { mutableFloatStateOf(0f) }
+            PredictiveBackHandler(enabled = destination != Destination.MONTH) { events ->
+                try {
+                    events.collect { backProgress = it.progress }
                     destination = Destination.MONTH
+                } finally {
+                    backProgress = 0f
                 }
-                Destination.SEARCH -> Box(Modifier.fillMaxSize().padding(padding)) {
-                    SearchResults(model) { date ->
-                        model.openDay(date)
+            }
+            val retreat by animateFloatAsState(
+                targetValue = backProgress,
+                animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+                label = "back",
+            )
+
+            // Material's fade-through between destinations: the outgoing screen fades, the
+            // incoming one fades and grows the last tenth of its size. Nothing slides, because
+            // these four are siblings rather than a stack.
+            // The specs are read here rather than inside the transition, because a transition
+            // spec is an ordinary lambda: it cannot reach the theme once it is running.
+            val arriving = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
+            val appearing = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+            val leaving = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+            AnimatedContent(
+                targetState = destination,
+                transitionSpec = {
+                    (
+                        fadeIn(appearing) +
+                            scaleIn(arriving, initialScale = FADE_THROUGH_SCALE)
+                        ) togetherWith fadeOut(leaving)
+                },
+                modifier = Modifier.graphicsLayer {
+                    val shrink = 1f - BACK_SHRINK * retreat
+                    scaleX = shrink
+                    scaleY = shrink
+                    alpha = 1f - BACK_FADE * retreat
+                },
+                label = "destination",
+            ) { current ->
+                when (current) {
+                    Destination.MONTH -> MonthScreen(
+                        model = model,
+                        padding = padding,
+                        onOpenEvent = { activity?.open(it) },
+                        onGrant = { requestCalendar.launch(Manifest.permission.READ_CALENDAR) },
+                    )
+                    Destination.YEAR -> YearScreen(model, padding) { month ->
+                        model.showMonth(month)
+                        model.openDay(month.atDay(1))
                         destination = Destination.MONTH
                     }
+                    Destination.SEARCH -> Box(Modifier.fillMaxSize().padding(padding)) {
+                        SearchResults(model) { date ->
+                            model.openDay(date)
+                            destination = Destination.MONTH
+                        }
+                    }
+                    Destination.SETTINGS -> SettingsScreen(model, padding)
                 }
-                Destination.SETTINGS -> SettingsScreen(model, padding)
             }
         }
+    }
+}
+
+/** How small an arriving screen starts, as Material's fade-through has it. */
+private const val FADE_THROUGH_SCALE = 0.92f
+
+/** How far a back gesture pushes the screen away before it commits. */
+private const val BACK_SHRINK = 0.10f
+private const val BACK_FADE = 0.35f
+
+/**
+ * A label that travels when it changes, in whichever direction its subject moved.
+ *
+ * [order] is what makes the direction meaningful rather than arbitrary — a later month rolls up,
+ * an earlier one rolls down — and it is passed separately because the text itself cannot be
+ * compared: "August" is not after "July" in any ordering a string knows about.
+ */
+@Composable
+private fun RollingLabel(text: String, order: Int) {
+    val spatial = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
+    val quick = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+    AnimatedContent(
+        targetState = text to order,
+        transitionSpec = {
+            val forward = targetState.second >= initialState.second
+            (
+                slideInVertically(spatial) { height -> if (forward) height else -height } +
+                    fadeIn(quick)
+                ) togetherWith (
+                slideOutVertically(spatial) { height -> if (forward) -height else height } +
+                    fadeOut(quick)
+                ) using SizeTransform(clip = false)
+        },
+        label = "label",
+    ) { (shown, _) ->
+        Text(shown)
     }
 }
 

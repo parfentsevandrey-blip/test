@@ -1,5 +1,14 @@
 package app.quire.calendar.m3
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -22,6 +31,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.SegmentedButton
@@ -35,6 +45,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.util.lerp
+import kotlin.math.abs
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -81,11 +95,22 @@ fun MonthScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-        if (!model.hasPermission) {
+        AnimatedVisibility(
+            visible = !model.hasPermission,
+            enter = expandVertically(MaterialTheme.motionScheme.defaultSpatialSpec()) +
+                fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()),
+            exit = shrinkVertically(MaterialTheme.motionScheme.defaultSpatialSpec()) +
+                fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
+        ) {
             PermissionCard(onGrant)
         }
         HorizontalPager(state = state, modifier = Modifier.fillMaxWidth()) { page ->
             val month = anchor.plusMonths((page - PAGE_ORIGIN).toLong())
+            // How far this page is from settled, as a fraction of a screen. The month being swiped
+            // away sinks and fades a little as it goes, so a half-finished swipe reads as one
+            // month passing behind another rather than as two grids sliding on the same plane.
+            val offset = ((state.currentPage - page) + state.currentPageOffsetFraction)
+                .coerceIn(-1f, 1f)
             MonthGrid(
                 month = month,
                 cells = model.cells(month),
@@ -96,13 +121,22 @@ fun MonthScreen(
                 loads = model.loads[month].orEmpty(),
                 settings = model.settings,
                 onPick = { model.openDay(it) },
-                modifier = Modifier.padding(horizontal = 8.dp),
+                modifier = Modifier
+                    .padding(horizontal = 8.dp)
+                    .graphicsLayer {
+                        val away = abs(offset)
+                        alpha = lerp(1f, 0.35f, away)
+                        val shrink = lerp(1f, 0.90f, away)
+                        scaleX = shrink
+                        scaleY = shrink
+                    },
             )
         }
         HorizontalDivider(Modifier.padding(top = 8.dp))
         AgendaList(
             date = model.selected,
             entries = model.agenda,
+            loading = model.agendaLoading,
             onOpenEvent = onOpenEvent,
         )
     }
@@ -130,41 +164,89 @@ private fun PermissionCard(onGrant: () -> Unit) {
     }
 }
 
+/** One day's worth of agenda, as a value, so an outgoing transition keeps showing its own day. */
+private data class Day(
+    val date: LocalDate,
+    val entries: List<AgendaEntry>,
+    val loading: Boolean,
+)
+
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun AgendaList(
     date: LocalDate,
     entries: List<AgendaEntry>,
+    loading: Boolean,
     onOpenEvent: (AgendaEntry) -> Unit,
 ) {
     val locale = rememberLocale()
-    val heading = remember(date, locale) {
-        DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(locale).format(date)
-    }
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
-        item {
-            Text(
-                text = heading,
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp),
-            )
+    val spatial = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
+    val quick = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+
+    // The whole day travels rather than the heading alone — Material's shared axis, along the one
+    // the dates themselves lie on: a later day arrives from the right, an earlier one from the
+    // left. The day is passed in as one value so the copy on its way out keeps its own entries
+    // instead of being repainted with the new day's.
+    AnimatedContent(
+        targetState = Day(date, entries, loading),
+        transitionSpec = {
+            val forward = targetState.date > initialState.date
+            (
+                slideInHorizontally(spatial) { width -> if (forward) width / 4 else -width / 4 } +
+                    fadeIn(quick)
+                ) togetherWith (
+                slideOutHorizontally(spatial) { width -> if (forward) -width / 4 else width / 4 } +
+                    fadeOut(quick)
+                )
+        },
+        modifier = Modifier.fillMaxSize(),
+        label = "day",
+    ) { day ->
+        val heading = remember(day.date, locale) {
+            DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(locale).format(day.date)
         }
-        if (entries.isEmpty()) {
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
             item {
                 Text(
-                    text = stringResource(R.string.nothing_scheduled),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(16.dp),
+                    text = heading,
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = 16.dp,
+                        bottom = 4.dp,
+                    ),
                 )
             }
-        } else {
-            items(entries) { entry -> AgendaRow(entry, onOpenEvent) }
+            if (day.entries.isEmpty()) {
+                item {
+                    // Loading and empty look alike from the outside, so they are told apart here:
+                    // the expressive indicator while the provider is being asked, the sentence
+                    // only once it has answered.
+                    if (day.loading) {
+                        LoadingIndicator(modifier = Modifier.padding(16.dp))
+                    } else {
+                        Text(
+                            text = stringResource(R.string.nothing_scheduled),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(16.dp),
+                        )
+                    }
+                }
+            } else {
+                items(day.entries) { entry -> AgendaRow(entry, onOpenEvent) }
+            }
         }
     }
 }
 
 @Composable
-private fun AgendaRow(entry: AgendaEntry, onOpen: (AgendaEntry) -> Unit) {
+private fun AgendaRow(
+    entry: AgendaEntry,
+    onOpen: (AgendaEntry) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val scheme = MaterialTheme.colorScheme
     val zone = remember { ZoneId.systemDefault() }
     val times = remember(entry) {
@@ -179,6 +261,7 @@ private fun AgendaRow(entry: AgendaEntry, onOpen: (AgendaEntry) -> Unit) {
     }
     ListItem(
         onClick = { onOpen(entry) },
+        modifier = modifier,
         supportingContent = {
             val detail = listOfNotNull(
                 times ?: stringResource(R.string.all_day),

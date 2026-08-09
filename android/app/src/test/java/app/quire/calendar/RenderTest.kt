@@ -42,7 +42,15 @@ class RenderTest {
     private val context: Context get() = ApplicationProvider.getApplicationContext()
     private val outputDir = File("build/screenshots").apply { mkdirs() }
 
-    private fun render(view: View, widthDp: Int, heightDp: Int, name: String): Bitmap {
+    /**
+     * Measures and lays out at a fixed size, without drawing.
+     *
+     * Laying a Compose tree out is what starts the animations its content asks for on the way in —
+     * a lazy list's items fade in as they are placed — so a screenshot taken in the same breath
+     * catches them at nothing. Anything animated has to be laid out first, given frames, and only
+     * then drawn.
+     */
+    private fun layOut(view: View, widthDp: Int, heightDp: Int): Pair<Int, Int> {
         val density = context.resources.displayMetrics.density
         val width = (widthDp * density).toInt()
         val height = (heightDp * density).toInt()
@@ -51,6 +59,11 @@ class RenderTest {
             View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY),
         )
         view.layout(0, 0, width, height)
+        return width to height
+    }
+
+    private fun render(view: View, widthDp: Int, heightDp: Int, name: String): Bitmap {
+        val (width, height) = layOut(view, widthDp, heightDp)
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         view.draw(Canvas(bitmap))
         File(outputDir, "$name.png").outputStream().use {
@@ -389,11 +402,20 @@ class RenderTest {
             .buildActivity(app.quire.calendar.m3.MainActivity::class.java)
             .setup()
         try {
+            // Laid out at the size it will be shot at before any of the waiting, so the frames
+            // below are the ones the arriving content animates on.
+            layOut(controller.get().window.decorView, 411, 891)
+
+            // idleFor rather than idle: the clock has to move for the Choreographer to hand
+            // Compose a frame, and without frames every animation the first composition started
+            // stays at the value it began on.
             repeat(30) {
-                org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
+                org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper())
+                    .idleFor(java.time.Duration.ofMillis(32))
                 Thread.sleep(10)
             }
-            org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
+            org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper())
+                .idleFor(java.time.Duration.ofSeconds(2))
             val bitmap = render(controller.get().window.decorView, 411, 891, "app-main")
             assertPainted(bitmap, "app-main")
 

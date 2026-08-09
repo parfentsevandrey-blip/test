@@ -69,6 +69,15 @@ class CalendarModel(app: Application) : AndroidViewModel(app) {
     var agenda by mutableStateOf<List<AgendaEntry>>(emptyList())
         private set
 
+    /**
+     * True between asking the provider for a day and hearing back.
+     *
+     * Without it an empty list means two different things — "nothing on" and "not asked yet" —
+     * and every day you open says "nothing scheduled" for a frame before its entries arrive.
+     */
+    var agendaLoading by mutableStateOf(false)
+        private set
+
     var query by mutableStateOf("")
         private set
 
@@ -141,8 +150,14 @@ class CalendarModel(app: Application) : AndroidViewModel(app) {
         selected = date
         if (month != YearMonth.from(date)) showMonth(YearMonth.from(date))
         agenda = emptyList()
+        agendaLoading = true
         loader.agenda(date, settings.hidden) { answered, entries ->
-            if (answered == selected) agenda = entries
+            // A day opened while another was still being fetched: the stale answer is dropped, and
+            // with it any claim about whether the day now showing is still loading.
+            if (answered == selected) {
+                agenda = entries
+                agendaLoading = false
+            }
         }
     }
 
