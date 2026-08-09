@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The weather app's window. Identical to the calendar's; it is named separately so the two can
+     part company later without one of them having to be renamed. -->
+<resources>
+    <style name="Theme.Quire.Weather" parent="Theme.Quire" />
+</resources>

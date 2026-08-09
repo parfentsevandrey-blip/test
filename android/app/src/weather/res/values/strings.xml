@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The weather app. -->
+<resources>
+    <string name="app_name">Quire Weather</string>
+    <string name="weather">Weather</string>
+    <string name="wx_clear">Clear</string>
+    <string name="wx_mostly_clear">Mostly clear</string>
+    <string name="wx_partly_cloudy">Partly cloudy</string>
+    <string name="wx_overcast">Overcast</string>
+    <string name="wx_fog">Fog</string>
+    <string name="wx_drizzle">Drizzle</string>
+    <string name="wx_rain">Rain</string>
+    <string name="wx_showers">Showers</string>
+    <string name="wx_sleet">Sleet</string>
+    <string name="wx_snow">Snow</string>
+    <string name="wx_thunder">Thunderstorm</string>
+    <string name="wx_feels_like">Feels like %1$s</string>
+    <string name="wx_humidity">Humidity</string>
+    <string name="wx_wind">Wind</string>
+    <string name="wx_wind_value">%1$d km/h</string>
+    <string name="wx_rain_chance">Chance of rain</string>
+    <string name="wx_five_days">Next five days</string>
+    <string name="wx_no_location">Quire does not know where you are</string>
+    <string name="wx_no_location_body">Weather needs an approximate location. Nothing but a rounded latitude and longitude leaves the device, and no account is involved.</string>
+    <string name="wx_grant">Share approximate location</string>
+    <string name="wx_waiting">Looking up the weather…</string>
+    <string name="wx_updated">Updated %1$s</string>
+    <string name="wx_widget_label">Quire weather</string>
+    <string name="wx_widget_description">Now and the next five days, in the same card as the calendar.</string>
+    <string name="wx_today">Today</string>
+</resources>

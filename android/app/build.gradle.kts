@@ -12,15 +12,37 @@ val keystoreProps = Properties().apply {
 }
 
 android {
-    namespace = "app.quire.calendar"
+    // One namespace for both applications, because they share a source tree and therefore share
+    // an R class. The applicationId is what actually separates them on a device, and that is set
+    // per flavour below.
+    namespace = "app.quire"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "app.quire.calendar"
         minSdk = 26
         targetSdk = 37
-        versionCode = 16
-        versionName = "6.0"
+        versionCode = 17
+        versionName = "6.1"
+    }
+
+    /**
+     * Two applications out of one tree.
+     *
+     * src/main holds only what both need — the Oklch palette, the widget's card surface, the
+     * Material theme — and everything else lives in src/calendar or src/weather, including the
+     * manifests. That is what lets the calendar ask for READ_CALENDAR and nothing else while the
+     * weather app asks for a location and the network and never sees a calendar.
+     */
+    flavorDimensions += "app"
+    productFlavors {
+        create("calendar") {
+            dimension = "app"
+            applicationId = "app.quire.calendar"
+        }
+        create("weather") {
+            dimension = "app"
+            applicationId = "app.quire.weather"
+        }
     }
 
     signingConfigs {
