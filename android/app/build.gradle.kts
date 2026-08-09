@@ -19,8 +19,8 @@ android {
         applicationId = "app.quire.calendar"
         minSdk = 26
         targetSdk = 37
-        versionCode = 14
-        versionName = "5.2"
+        versionCode = 15
+        versionName = "5.3"
     }
 
     signingConfigs {

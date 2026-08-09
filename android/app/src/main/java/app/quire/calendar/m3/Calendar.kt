@@ -9,6 +9,8 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,13 +23,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ripple
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -170,15 +176,37 @@ private fun DayCell(
     val inkColour by animateColorAsState(onDisc, motion.defaultEffectsSpec(), label = "ink")
     val groundColour by animateColorAsState(ground, motion.slowEffectsSpec(), label = "ground")
 
+    // A day is a small target with no edges of its own, so the ripple alone is easy to miss.
+    // Pressing it shrinks it under the finger and it springs back on release.
+    val interactions = remember { MutableInteractionSource() }
+    val pressed by interactions.collectIsPressedAsState()
+    val press by animateFloatAsState(
+        targetValue = if (pressed) PRESSED_SCALE else 1f,
+        animationSpec = motion.fastSpatialSpec(),
+        label = "press",
+    )
+    val haptics = LocalHapticFeedback.current
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
         modifier = modifier
             .height(CellHeight)
             .padding(2.dp)
+            .graphicsLayer {
+                scaleX = press
+                scaleY = press
+            }
             .clip(MaterialTheme.shapes.medium)
             .background(groundColour)
-            .clickable(enabled = inMonth || settings.showAdjacent) { onPick(date) },
+            .clickable(
+                enabled = inMonth || settings.showAdjacent,
+                interactionSource = interactions,
+                indication = ripple(),
+            ) {
+                haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
+                onPick(date)
+            },
     ) {
         Box(contentAlignment = Alignment.Center, modifier = Modifier.size(DiscSize)) {
             Box(
@@ -319,3 +347,6 @@ private val DiscSize = 34.dp
 private val MarkSize = 4.dp
 private val WeekNumberWidth = 24.dp
 private val MiniDiscSize = 18.dp
+
+/** How far a day sinks while it is held. */
+private const val PRESSED_SCALE = 0.90f

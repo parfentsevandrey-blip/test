@@ -14,6 +14,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
@@ -32,7 +33,16 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Today
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FloatingActionButtonMenu
+import androidx.compose.material3.FloatingActionButtonMenuItem
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.ToggleFloatingActionButton
+import androidx.compose.material3.ToggleFloatingActionButtonDefaults
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeFlexibleTopAppBar
@@ -57,8 +67,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -66,8 +79,13 @@ import app.quire.calendar.R
 import app.quire.calendar.core.AgendaEntry
 import app.quire.calendar.core.MonthModel
 import java.time.LocalDate
+import java.time.Instant
 import java.time.LocalTime
 import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+import java.util.Locale
 
 /**
  * The whole app, as one Material 3 Expressive screen with a navigation bar under it.
@@ -100,6 +118,8 @@ private fun QuireApp(intent: Intent?) {
     }
 
     var destination by rememberSaveable { mutableStateOf(Destination.MONTH) }
+    var showing by remember { mutableStateOf<AgendaEntry?>(null) }
+    var jumping by rememberSaveable { mutableStateOf(false) }
 
     val requestCalendar = androidx.activity.compose.rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
@@ -191,9 +211,11 @@ private fun QuireApp(intent: Intent?) {
                     exit = scaleOut(MaterialTheme.motionScheme.fastSpatialSpec()) +
                         fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
                 ) {
-                    FloatingActionButton(onClick = { activity?.compose(model.selected) }) {
-                        Icon(Icons.Default.Add, stringResource(R.string.new_event))
-                    }
+                    QuireFabMenu(
+                        onNew = { activity?.compose(model.selected) },
+                        onJump = { jumping = true },
+                        onToday = { model.goToToday() },
+                    )
                 }
             },
         ) { padding ->
@@ -223,44 +245,164 @@ private fun QuireApp(intent: Intent?) {
             val arriving = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
             val appearing = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
             val leaving = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
-            AnimatedContent(
-                targetState = destination,
-                transitionSpec = {
-                    (
-                        fadeIn(appearing) +
-                            scaleIn(arriving, initialScale = FADE_THROUGH_SCALE)
-                        ) togetherWith fadeOut(leaving)
-                },
-                modifier = Modifier.graphicsLayer {
-                    val shrink = 1f - BACK_SHRINK * retreat
-                    scaleX = shrink
-                    scaleY = shrink
-                    alpha = 1f - BACK_FADE * retreat
-                },
-                label = "destination",
-            ) { current ->
-                when (current) {
-                    Destination.MONTH -> MonthScreen(
-                        model = model,
-                        padding = padding,
-                        onOpenEvent = { activity?.open(it) },
-                        onGrant = { requestCalendar.launch(Manifest.permission.READ_CALENDAR) },
-                    )
-                    Destination.YEAR -> YearScreen(model, padding) { month ->
-                        model.showMonth(month)
-                        model.openDay(month.atDay(1))
-                        destination = Destination.MONTH
-                    }
-                    Destination.SEARCH -> Box(Modifier.fillMaxSize().padding(padding)) {
-                        SearchResults(model) { date ->
-                            model.openDay(date)
+            // The year and the month are the same twelve months at two sizes, so going between
+            // them is a container transform rather than a cut: the tile you tapped keeps its
+            // place on screen and grows into the grid. Everything else still fades through.
+            SharedTransitionLayout {
+                AnimatedContent(
+                    targetState = destination,
+                    transitionSpec = {
+                        (
+                            fadeIn(appearing) +
+                                scaleIn(arriving, initialScale = FADE_THROUGH_SCALE)
+                            ) togetherWith fadeOut(leaving)
+                    },
+                    modifier = Modifier.graphicsLayer {
+                        val shrink = 1f - BACK_SHRINK * retreat
+                        scaleX = shrink
+                        scaleY = shrink
+                        alpha = 1f - BACK_FADE * retreat
+                    },
+                    label = "destination",
+                ) { current ->
+                    when (current) {
+                        Destination.MONTH -> MonthScreen(
+                            model = model,
+                            padding = padding,
+                            onOpenEvent = { showing = it },
+                            onGrant = {
+                                requestCalendar.launch(Manifest.permission.READ_CALENDAR)
+                            },
+                            shared = this@SharedTransitionLayout,
+                            visibility = this@AnimatedContent,
+                        )
+                        Destination.YEAR -> YearScreen(
+                            model = model,
+                            padding = padding,
+                            shared = this@SharedTransitionLayout,
+                            visibility = this@AnimatedContent,
+                        ) { month ->
+                            model.showMonth(month)
+                            model.openDay(month.atDay(1))
                             destination = Destination.MONTH
                         }
+                        Destination.SEARCH -> Box(Modifier.fillMaxSize().padding(padding)) {
+                            SearchResults(model) { date ->
+                                model.openDay(date)
+                                destination = Destination.MONTH
+                            }
+                        }
+                        Destination.SETTINGS -> SettingsScreen(model, padding)
                     }
-                    Destination.SETTINGS -> SettingsScreen(model, padding)
                 }
             }
         }
+
+        showing?.let { entry ->
+            EventSheet(
+                entry = entry,
+                onOpen = { showing = null; activity?.open(it) },
+                onShare = { showing = null; activity?.share(it, locale) },
+                onDismiss = { showing = null },
+            )
+        }
+
+        if (jumping) {
+            JumpToDate(
+                from = model.selected,
+                onPick = { date ->
+                    jumping = false
+                    model.openDay(date)
+                    destination = Destination.MONTH
+                },
+                onDismiss = { jumping = false },
+            )
+        }
+    }
+}
+
+/**
+ * The expressive floating action button: one button that opens into the three things worth doing
+ * from a month, rather than three buttons competing for the same corner.
+ *
+ * The toggle carries its own progress, which is what lets the plus rotate into a close as the menu
+ * comes out instead of swapping icons half way.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun QuireFabMenu(onNew: () -> Unit, onJump: () -> Unit, onToday: () -> Unit) {
+    var open by rememberSaveable { mutableStateOf(false) }
+    val haptics = LocalHapticFeedback.current
+
+    FloatingActionButtonMenu(
+        expanded = open,
+        button = {
+            ToggleFloatingActionButton(
+                checked = open,
+                onCheckedChange = {
+                    open = it
+                    haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+                },
+            ) {
+                // The plus turns into a close as the menu comes out, driven by the toggle's own
+                // progress rather than swapped at the half-way point.
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = stringResource(R.string.actions),
+                    modifier = with(ToggleFloatingActionButtonDefaults) {
+                        Modifier.animateIcon({ checkedProgress })
+                    },
+                )
+            }
+        },
+    ) {
+        FloatingActionButtonMenuItem(
+            onClick = { open = false; onNew() },
+            icon = { Icon(Icons.Default.Add, null) },
+            text = { Text(stringResource(R.string.new_event)) },
+        )
+        FloatingActionButtonMenuItem(
+            onClick = { open = false; onJump() },
+            icon = { Icon(Icons.Default.CalendarMonth, null) },
+            text = { Text(stringResource(R.string.jump)) },
+        )
+        FloatingActionButtonMenuItem(
+            onClick = { open = false; onToday() },
+            icon = { Icon(Icons.Default.Today, null) },
+            text = { Text(stringResource(R.string.today)) },
+        )
+    }
+}
+
+/** Material's own date picker, for the months a swipe would take all afternoon to reach. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun JumpToDate(from: LocalDate, onPick: (LocalDate) -> Unit, onDismiss: () -> Unit) {
+    val zone = ZoneId.systemDefault()
+    val state = rememberDatePickerState(
+        initialSelectedDateMillis = from.atStartOfDay(zone).toInstant().toEpochMilli(),
+    )
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    val millis = state.selectedDateMillis
+                    if (millis == null) {
+                        onDismiss()
+                    } else {
+                        // The picker answers in UTC midnight, which is the day before in any
+                        // zone west of Greenwich if it is read as a local instant.
+                        onPick(Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate())
+                    }
+                },
+            ) { Text(stringResource(R.string.jump_confirm)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+        },
+    ) {
+        DatePicker(state = state, title = { Text(stringResource(R.string.jump), Modifier.padding(24.dp)) })
     }
 }
 
@@ -344,6 +486,39 @@ private fun ComponentActivity.compose(date: LocalDate) {
         .putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, start)
         .putExtra(CalendarContract.EXTRA_EVENT_END_TIME, start + 3_600_000L)
     runCatching { startActivity(intent) }
+        .onFailure { if (it !is ActivityNotFoundException) throw it }
+}
+
+/**
+ * Passes an entry on as text.
+ *
+ * Text rather than a calendar file, because the receiver is as likely to be a chat as a calendar,
+ * and a line somebody can read beats an attachment they have to open. The times are formatted in
+ * the reader's own locale for the same reason.
+ */
+private fun ComponentActivity.share(entry: AgendaEntry, locale: Locale) {
+    val zone = ZoneId.systemDefault()
+    val day = DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(locale)
+    val clock = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale)
+    val from = Instant.ofEpochMilli(entry.begin).atZone(zone)
+    val to = Instant.ofEpochMilli(entry.end).atZone(zone)
+
+    val when_ = if (entry.allDay) {
+        day.format(from)
+    } else {
+        "${day.format(from)}, ${clock.format(from)} – ${clock.format(to)}"
+    }
+    val text = listOfNotNull(
+        entry.title.takeIf { it.isNotBlank() },
+        when_,
+        entry.location?.takeIf { it.isNotBlank() },
+    ).joinToString("\n")
+
+    val send = Intent(Intent.ACTION_SEND)
+        .setType("text/plain")
+        .putExtra(Intent.EXTRA_SUBJECT, entry.title)
+        .putExtra(Intent.EXTRA_TEXT, text)
+    runCatching { startActivity(Intent.createChooser(send, getString(R.string.share_via))) }
         .onFailure { if (it !is ActivityNotFoundException) throw it }
 }
 

@@ -119,6 +119,10 @@ class CalendarModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /** True while a pull-to-refresh is being honoured, so the indicator has something to follow. */
+    var refreshing by mutableStateOf(false)
+        private set
+
     fun refresh() {
         today = LocalDate.now()
         hasPermission = EventRepository.hasPermission(getApplication())
@@ -126,7 +130,15 @@ class CalendarModel(app: Application) : AndroidViewModel(app) {
         calendars = EventRepository.calendars(getApplication())
         loader.invalidate()
         loads.clear()
-        request(month)
+        refreshing = true
+        // The month is what the indicator is over, so its arrival is what ends the refresh —
+        // the agenda underneath carries its own.
+        loader.request(month, firstDayOfWeek, settings.hidden) { answered, marks ->
+            loads[answered] = marks
+            refreshing = false
+        }
+        request(month.minusMonths(1))
+        request(month.plusMonths(1))
         openDay(selected)
     }
 

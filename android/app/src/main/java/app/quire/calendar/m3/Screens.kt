@@ -1,6 +1,9 @@
 package app.quire.calendar.m3
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -33,6 +36,9 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -44,11 +50,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.util.lerp
 import kotlin.math.abs
+import kotlinx.coroutines.flow.drop
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -73,18 +83,23 @@ private const val PAGE_ORIGIN = PAGE_COUNT / 2
  * The pager is the whole navigation between months — no arrows, because a swipe is what a
  * calendar on a phone is for — and the app bar names whichever page it settles on.
  */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MonthScreen(
     model: CalendarModel,
     padding: PaddingValues,
     onOpenEvent: (AgendaEntry) -> Unit,
     onGrant: () -> Unit,
+    shared: SharedTransitionScope? = null,
+    visibility: AnimatedVisibilityScope? = null,
 ) {
     val anchor = remember { YearMonth.now() }
     val state = rememberPagerState(
         initialPage = PAGE_ORIGIN + monthsBetween(anchor, model.month),
         pageCount = { PAGE_COUNT },
     )
+
+    val haptics = LocalHapticFeedback.current
 
     // The pager is the source of truth for which month is showing; the model follows it rather
     // than the two trying to drive each other into a loop.
@@ -94,51 +109,83 @@ fun MonthScreen(
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-        AnimatedVisibility(
-            visible = !model.hasPermission,
-            enter = expandVertically(MaterialTheme.motionScheme.defaultSpatialSpec()) +
-                fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()),
-            exit = shrinkVertically(MaterialTheme.motionScheme.defaultSpatialSpec()) +
-                fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
-        ) {
-            PermissionCard(onGrant)
+    // A settled page is worth a tick: a swipe that lands between two months and springs back to
+    // the one it came from otherwise feels identical to one that carried.
+    LaunchedEffect(state) {
+        snapshotFlow { state.settledPage }.drop(1).collect {
+            haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
         }
-        HorizontalPager(state = state, modifier = Modifier.fillMaxWidth()) { page ->
-            val month = anchor.plusMonths((page - PAGE_ORIGIN).toLong())
-            // How far this page is from settled, as a fraction of a screen. The month being swiped
-            // away sinks and fades a little as it goes, so a half-finished swipe reads as one
-            // month passing behind another rather than as two grids sliding on the same plane.
-            val offset = ((state.currentPage - page) + state.currentPageOffsetFraction)
-                .coerceIn(-1f, 1f)
-            MonthGrid(
-                month = month,
-                cells = model.cells(month),
-                weekdayLabels = model.weekdayLabels(),
-                weekdayOrder = model.weekdayOrder(),
-                today = model.today,
-                selected = model.selected,
-                loads = model.loads[month].orEmpty(),
-                settings = model.settings,
-                onPick = { model.openDay(it) },
-                modifier = Modifier
-                    .padding(horizontal = 8.dp)
-                    .graphicsLayer {
-                        val away = abs(offset)
-                        alpha = lerp(1f, 0.35f, away)
-                        val shrink = lerp(1f, 0.90f, away)
-                        scaleX = shrink
-                        scaleY = shrink
-                    },
+    }
+
+    // Pulling down asks the provider again. A calendar that syncs in the background has no moment
+    // the user can point at where it became stale, so the gesture that means "are you sure?"
+    // everywhere else means it here too.
+    val refresh = rememberPullToRefreshState()
+    PullToRefreshBox(
+        isRefreshing = model.refreshing,
+        onRefresh = {
+            haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+            model.refresh()
+        },
+        state = refresh,
+        modifier = Modifier.fillMaxSize().padding(padding),
+        indicator = {
+            PullToRefreshDefaults.LoadingIndicator(
+                state = refresh,
+                isRefreshing = model.refreshing,
+                modifier = Modifier.align(Alignment.TopCenter),
+            )
+        },
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            AnimatedVisibility(
+                visible = !model.hasPermission,
+                enter = expandVertically(MaterialTheme.motionScheme.defaultSpatialSpec()) +
+                    fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()),
+                exit = shrinkVertically(MaterialTheme.motionScheme.defaultSpatialSpec()) +
+                    fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
+            ) {
+                PermissionCard(onGrant)
+            }
+            HorizontalPager(state = state, modifier = Modifier.fillMaxWidth()) { page ->
+                val month = anchor.plusMonths((page - PAGE_ORIGIN).toLong())
+                // How far this page is from settled, as a fraction of a screen. The month being swiped
+                // away sinks and fades a little as it goes, so a half-finished swipe reads as one
+                // month passing behind another rather than as two grids sliding on the same plane.
+                val offset = ((state.currentPage - page) + state.currentPageOffsetFraction)
+                    .coerceIn(-1f, 1f)
+                MonthGrid(
+                    month = month,
+                    cells = model.cells(month),
+                    weekdayLabels = model.weekdayLabels(),
+                    weekdayOrder = model.weekdayOrder(),
+                    today = model.today,
+                    selected = model.selected,
+                    loads = model.loads[month].orEmpty(),
+                    settings = model.settings,
+                    onPick = { model.openDay(it) },
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp)
+                        // Only the settled month is the shared element. A page still sliding past has
+                        // no business claiming the bounds the year tile is growing into.
+                        .then(sharedMonth(shared, visibility, month, page == state.currentPage))
+                        .graphicsLayer {
+                            val away = abs(offset)
+                            alpha = lerp(1f, 0.35f, away)
+                            val shrink = lerp(1f, 0.90f, away)
+                            scaleX = shrink
+                            scaleY = shrink
+                        },
+                )
+            }
+            HorizontalDivider(Modifier.padding(top = 8.dp))
+            AgendaList(
+                date = model.selected,
+                entries = model.agenda,
+                loading = model.agendaLoading,
+                onOpenEvent = onOpenEvent,
             )
         }
-        HorizontalDivider(Modifier.padding(top = 8.dp))
-        AgendaList(
-            date = model.selected,
-            entries = model.agenda,
-            loading = model.agendaLoading,
-            onOpenEvent = onOpenEvent,
-        )
     }
 }
 
@@ -296,6 +343,8 @@ private fun AgendaRow(
 fun YearScreen(
     model: CalendarModel,
     padding: PaddingValues,
+    shared: SharedTransitionScope? = null,
+    visibility: AnimatedVisibilityScope? = null,
     onOpenMonth: (YearMonth) -> Unit,
 ) {
     val year = model.month.year
@@ -319,12 +368,13 @@ fun YearScreen(
                 LaunchedEffect(month) { model.request(month) }
                 MiniMonth(
                     month = month,
+                    modifier = Modifier.height(tile)
+                        .then(sharedMonth(shared, visibility, month)),
                     cells = model.cells(month),
                     weekdayInitials = initials,
                     today = model.today,
                     loads = model.loads[month].orEmpty(),
                     onOpen = onOpenMonth,
-                    modifier = Modifier.height(tile),
                 )
             }
         }
@@ -550,3 +600,38 @@ private fun ChoiceRow(
 private fun monthsBetween(from: YearMonth, to: YearMonth): Int =
     ((to.year - from.year) * 12 + (to.monthValue - from.monthValue))
         .coerceIn(-PAGE_ORIGIN, PAGE_ORIGIN)
+
+/**
+ * Marks a grid as the same month at both sizes, so the year's tile and the full month are one
+ * thing moving rather than two things swapping.
+ *
+ * Both scopes are optional because these screens are also composed on their own — by a test, or a
+ * preview — where there is no transition to belong to, and a shared element outside a
+ * [SharedTransitionScope] is an error rather than a no-op.
+ *
+ * [active] is separate from [month] on purpose: the pager holds three months at a time and only
+ * the settled one may claim the bounds, but the state is remembered for all of them either way,
+ * so a swipe does not add and remove a `remember` on every frame.
+ */
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+private fun sharedMonth(
+    shared: SharedTransitionScope?,
+    visibility: AnimatedVisibilityScope?,
+    month: YearMonth,
+    active: Boolean = true,
+): Modifier {
+    if (shared == null || visibility == null) return Modifier
+    return with(shared) {
+        val state = rememberSharedContentState(key = "month-$month")
+        if (!active) {
+            Modifier
+        } else {
+            Modifier.sharedBounds(
+                sharedContentState = state,
+                animatedVisibilityScope = visibility,
+                resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
+            )
+        }
+    }
+}

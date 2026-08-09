@@ -78,4 +78,14 @@
 
     <string name="heat">Density</string>
     <string name="heat_hint">Tint each square by how full the day is</string>
+    <string name="sheet_when">When</string>
+    <string name="sheet_where">Where</string>
+    <string name="sheet_calendar">Calendar</string>
+    <string name="sheet_open">Open</string>
+    <string name="sheet_share">Share</string>
+    <string name="share_via">Share event</string>
+    <string name="jump">Jump to a date</string>
+    <string name="jump_confirm">Go</string>
+    <string name="cancel">Cancel</string>
+    <string name="actions">Actions</string>
 </resources>

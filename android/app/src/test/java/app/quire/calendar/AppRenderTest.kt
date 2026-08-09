@@ -17,10 +17,12 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ApplicationProvider
+import app.quire.calendar.core.AgendaEntry
 import app.quire.calendar.core.MonthModel
 import app.quire.calendar.core.Prefs
 import app.quire.calendar.core.Skin
 import app.quire.calendar.m3.CalendarModel
+import app.quire.calendar.m3.EventDetails
 import app.quire.calendar.m3.MonthScreen
 import app.quire.calendar.m3.QuireTheme
 import app.quire.calendar.m3.SearchResults
@@ -236,6 +238,32 @@ class AppRenderTest {
         model.refresh()
         settle()
         shoot("app-settings")
+    }
+
+    /**
+     * The sheet's contents rather than the sheet: a modal sheet composes into a window of its own,
+     * which a capture of the screen underneath does not include.
+     */
+    @Test
+    fun `the details sheet lays an entry out in full`() {
+        val zone = ZoneId.systemDefault()
+        val entry = AgendaEntry(
+            eventId = 7,
+            begin = month.atDay(17).atTime(14, 0).atZone(zone).toInstant().toEpochMilli(),
+            end = month.atDay(17).atTime(15, 30).atZone(zone).toInstant().toEpochMilli(),
+            allDay = false,
+            title = "Flight to Porto",
+            location = "Terminal 2",
+            colour = 0xFF2E4A7D.toInt(),
+            calendarName = "Personal",
+        )
+        page(dark = false) { EventDetails(entry, onOpen = {}, onShare = {}) }
+        settle(rounds = 4)
+        shoot("app-sheet")
+
+        assertTrue("the sheet did not name the entry", showing("Flight to Porto") > 0)
+        assertTrue("the sheet dropped the place", showing("Terminal 2") > 0)
+        assertTrue("the sheet cannot be acted on", showing("Share") > 0)
     }
 
     @Test

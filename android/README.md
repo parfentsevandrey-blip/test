@@ -11,17 +11,21 @@ every accessibility setting without holding an opinion about any of them. What s
 rewrite is the part that reads your calendar — the grid arithmetic, the provider queries and the
 off-thread loader — because that part had tests and had been debugged against a real provider.
 
-**Install:** [`dist/quire-5.2.apk`](dist/quire-5.2.apk) · 1.4 MB · Android 8.0+ (minSdk 26,
+**Install:** [`dist/quire-5.3.apk`](dist/quire-5.3.apk) · 1.9 MB · Android 8.0+ (minSdk 26,
 targetSdk 37 — Android 17) ·
-`sha256 8a91367008ff9b97ed1ce544ea111553a8e4f3632c4634950931735645e1e946`
+`sha256 8cad4a5021ba82a1c90881e61208d613cd349beaf858dfede898545d5bc96773`
 
-Copy it to the phone and open it, or `adb install -r dist/quire-5.2.apk`. You will need to allow
+Copy it to the phone and open it, or `adb install -r dist/quire-5.3.apk`. You will need to allow
 installing from an unknown source once — the APK is signed with the self-signed key in
 `keystore/`, not by a store.
 
 | Month | Month, dark | Year | Settings | Search |
 |---|---|---|---|---|
 | ![Month](docs/app-month.png) | ![Dark](docs/app-month-dark.png) | ![Year](docs/app-year.png) | ![Settings](docs/app-settings.png) | ![Search](docs/app-search.png) |
+
+| An entry, in full | The actions | Year to month, part way through |
+|---|---|---|
+| ![Sheet](docs/app-sheet.png) | ![Actions](docs/app-actions.png) | ![Transition](docs/app-transition.png) |
 
 Every image is a real render of the shipping code, produced by the test suite — not a mockup.
 
@@ -34,6 +38,7 @@ selection pill that grows around the icon on the theme's own spring.
 
 - **Today** — the month, swiped through a pager, with the selected day's entries underneath.
   Tapping Today again while you are already there returns to today rather than doing nothing.
+  Pull down to ask the provider again.
 - **Year** — all twelve months at once, three across and four down, every date legible. The tiles
   take whatever height the page has, so a year fills its screen instead of ending half way down.
 - **Search** — `AppBarWithSearch`, so the field *is* the app bar rather than a box floating over
@@ -59,6 +64,16 @@ than a label and a separate widget it cannot connect to it.
 **Density** tints each square by how full the day is, using the surface stepping up rather than a
 colour of its own, so a busy day reads as raised paper instead of a stain.
 
+**An entry opens where it is**, in a sheet with the whole of it laid out — when, where, which
+calendar — rather than by throwing you into another app to read a room number. Opening it properly
+and passing it on are both still there as buttons; sharing sends it as text, because the receiver
+is as likely to be a chat as a calendar.
+
+**The button is a menu.** `FloatingActionButtonMenu` opens into the three things worth doing from
+a month — a new event, a jump to any date through Material's own date picker, and back to today —
+and the plus turns into a close as it opens, driven by the toggle's own progress rather than
+swapped half way.
+
 Creating and opening events hands off to whatever calendar app is installed. Quire never writes to
 your calendar and asks only for read access.
 
@@ -73,6 +88,11 @@ never asked to be.
 - **Between destinations**, Material's fade-through: the outgoing screen fades, the incoming one
   fades and grows the last tenth of its size. Nothing slides, because the four destinations are
   siblings rather than a stack.
+- **Between the year and a month**, a container transform instead. They are the same twelve months
+  at two sizes, so a `SharedTransitionLayout` keyed by month means the tile you tapped keeps its
+  place on screen and grows into the grid — and the grid shrinks back into its tile on the way
+  out. Only the settled pager page may claim those bounds; a page still sliding past has no
+  business growing into anything.
 - **Between days**, a shared axis: the agenda travels the way the date did, later to the left,
   earlier to the right. The day is handed to the transition as one value, so the copy on its way
   out keeps showing its own entries instead of being repainted with the new day's half way
@@ -92,6 +112,10 @@ never asked to be.
 - **While a day is being fetched**, the expressive `LoadingIndicator` — the shape-morphing one —
   rather than the sentence "nothing scheduled", which was what an unasked-for day used to claim
   for the frame before its entries arrived.
+- **Under the finger**, a day sinks while it is held and springs back on release, because a day is
+  a small target with no edges of its own and the ripple alone is easy to miss. Picking one ticks,
+  and so does a swipe that carries to the next month — which is the only thing that tells it apart
+  from one that sprang back to where it started.
 
 ## The widget
 
@@ -155,9 +179,10 @@ marked day.
 ## Layout of the source
 
 ```
-m3/       MainActivity   the whole app: scaffold, bars, destinations
+m3/       MainActivity   the whole app: scaffold, bars, destinations, the action menu
           Screens        month, year, search, settings
           Calendar       MonthGrid and MiniMonth — the only two drawn things left
+          EventSheet     one entry in full, and the details on their own for the camera
           Rows           the shared settings row and its grouping
           CalendarModel  everything the screens read and everything they can ask for
           Theme          the Expressive theme        Locale  the observable locale
@@ -221,6 +246,11 @@ screen composed on its own, the whole app assembled through the real `onCreate` 
 the real window, the launcher icon inside its mask, and the widget through `RemoteViews.apply` —
 which is the only way to find out that the launcher's inflater would have rejected a view class.
 Look in `app/build/screenshots/` after a run to see what the current code actually draws.
+
+`AppFlowTest` goes further and drives the real Activity by pressing what a finger would press.
+Because the animation clock is stopped and stepped by hand, it can photograph a transition *part
+of the way through* — which is the only way to see that the year grows out of the month rather
+than dissolving into it, and it is where `docs/app-transition.png` comes from.
 
 Every visual bug found in this project was found by reading those PNGs — a today marker drawn
 twice, a title that ran off the edge, an add button that measured to nothing. Two things the tests
