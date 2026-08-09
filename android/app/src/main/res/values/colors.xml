@@ -6,7 +6,6 @@
 -->
 <resources>
     <color name="window">#F6F5F1</color>
-    <color name="press">#1A14130F</color>
 
     <color name="ic_launcher_background">#14130F</color>
 

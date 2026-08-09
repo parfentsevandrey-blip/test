@@ -14,11 +14,8 @@
     <string name="permission_headline">Quire пока не видит ваши календари</string>
     <string name="permission_body">Дайте доступ на чтение — и сетка покажет то, что уже есть в вашем дне. Данные не покидают устройство.</string>
     <string name="permission_action">Дать доступ</string>
-    <string name="permission_denied_body">Доступ запрещён. Измените разрешение в настройках системы.</string>
-    <string name="open_settings">Открыть настройки</string>
 
     <string name="section_week">Неделя</string>
-    <string name="section_appearance">Оформление</string>
     <string name="section_grid">Сетка</string>
     <string name="section_calendars">Календари</string>
     <string name="section_about">О программе</string>
@@ -56,14 +53,10 @@
     <string name="show_events_hint">Точка под каждым днём, в котором что-то есть</string>
 
     <string name="opacity">Плотность карточки</string>
-    <string name="calendars_hint">Снимите отметку, чтобы убрать календарь из сетки</string>
-    <string name="no_calendars">На устройстве нет календарей</string>
 
-    <string name="about_line">Quire %1$s · сделано ради одного</string>
     <string name="about_body">Сетка месяца, список дня и виджет. Без аккаунта, без сети, без аналитики.</string>
 
     <string name="done">Готово</string>
-    <string name="widget_preview_hint">На домашнем экране это выглядит так.</string>
 
     <string name="cd_previous_month">Предыдущий месяц</string>
     <string name="cd_next_month">Следующий месяц</string>
@@ -73,29 +66,15 @@
     <string name="search_hint">Найти событие</string>
     <string name="search_empty">Наберите хотя бы две буквы. Ищем восемь месяцев в обе стороны.</string>
     <string name="search_none">Ничего не найдено</string>
-    <string name="add">Добавить</string>
 
     <string name="section_look">Внешний вид</string>
     <string name="dynamic_colour">Цвета системы</string>
     <string name="dynamic_colour_hint">Брать палитру из обоев, как это делает остальной телефон</string>
-    <string name="seed">Основной цвет</string>
     <string name="mode">Режим</string>
     <string name="mode_auto">Авто</string>
     <string name="mode_light">Светлый</string>
     <string name="mode_dark">Тёмный</string>
-    <string name="contrast">Контраст</string>
-    <string name="size">Размер</string>
 
-    <string name="section_motion">Движение</string>
-    <string name="motion">Живость</string>
-    <string name="motion_off">Выкл</string>
-    <string name="motion_calm">Спокойно</string>
-    <string name="motion_standard">Обычно</string>
-    <string name="motion_playful">Упруго</string>
-    <string name="haptics">Отклик</string>
-    <string name="haptics_hint">Короткий тик под пальцем, когда мир движется</string>
     <string name="heat">Плотность дня</string>
     <string name="heat_hint">Подсвечивать клетку тем сильнее, чем полнее день</string>
-    <string name="depth">Глубина</string>
-    <string name="depth_hint">Слои отзываются на наклон телефона</string>
 </resources>

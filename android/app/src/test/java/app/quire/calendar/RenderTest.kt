@@ -13,7 +13,6 @@ import app.quire.calendar.core.MonthModel
 import app.quire.calendar.core.Prefs
 import app.quire.calendar.core.Skin
 import app.quire.calendar.widget.WidgetRenderer
-import app.quire.engine.anim.MotionProfile
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -26,14 +25,14 @@ import java.time.YearMonth
 import java.util.Locale
 
 /**
- * The half of the app that is not the world: the widget, the launcher icon, and the one Activity
- * assembling and painting end to end.
+ * Everything the app puts on a screen that is not a composable in isolation: the home-screen
+ * widget, the launcher icon, and the two Activities assembling and painting end to end.
  *
  * The widget is the reason this runs on real graphics. `RemoteViews.apply` puts the tree through
  * the platform's own inflater with its `@RemoteView` filter, so a disallowed view class fails
  * here exactly as it would on a home screen — and nothing in a compiler will tell you first.
  *
- * The world's own surfaces are covered by `WorldRenderTest`.
+ * The app's own screens are drawn one at a time by `AppRenderTest`.
  */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -326,32 +325,10 @@ class RenderTest {
     }
 
     /**
-     * The regression that once made every animation in the app stand still: the profile came from
-     * the system animator scale on every launch, so a phone with animations turned down could
-     * never be talked out of it. The app's own setting is the authority now.
-     */
-    @Test
-    fun `the stored motion profile is what the app uses`() {
-        val prefs = Prefs.get(context)
-        val before = prefs.motion
-        try {
-            prefs.motion = MotionProfile.PLAYFUL.key
-            assertEquals(MotionProfile.PLAYFUL, MotionProfile.from(prefs.motion))
-            assertTrue(prefs.hasMotionPreference)
-            assertTrue("a live profile must not be instant", !MotionProfile.PLAYFUL.instant)
-            assertTrue(
-                "standard must be soft enough to see",
-                MotionProfile.STANDARD.stiffness < 260f,
-            )
-        } finally {
-            prefs.motion = before
-        }
-    }
-
-    /**
-     * The widget's configuration screen is the one place still built from Views rather than
-     * drawn, because it is the launcher's screen rather than the app's. It now runs on the same
-     * spring engine as everything else, so it is worth proving it still assembles and paints.
+     * The widget's configuration screen is now Compose like everything else, but it is still the
+     * launcher's screen rather than the app's, and it is still the one that has to hand a result
+     * back. Assembling it through the real `onCreate` is the only way to catch a theme or a
+     * missing extra that a composable preview would sail past.
      */
     @Test
     fun `the widget configuration screen assembles and paints`() {
@@ -372,24 +349,73 @@ class RenderTest {
     }
 
     /**
-     * The world, its overlay and the Activity holding them, assembled by the real `onCreate` and
-     * drawn through the real window — the one check that the whole thing starts.
+     * The app as it actually opens: the real `onCreate`, the real window, and with it everything
+     * the screen tests leave out — the flexible top app bar, the navigation bar, the button.
+     *
+     * Assembling it here is also the check that nothing in the theme fights Compose: the window
+     * is a platform DeviceDefault one and the content is Material 3 Expressive, and a mismatch
+     * between them shows up as a black or blank page rather than as a compiler error.
      */
     @Test
     fun `the app assembles and paints end to end`() {
+        FakeCalendarProvider.reset()
+        org.robolectric.Robolectric.setupContentProvider(
+            FakeCalendarProvider::class.java,
+            android.provider.CalendarContract.AUTHORITY,
+        )
+        val zone = java.time.ZoneId.systemDefault()
+        val month = YearMonth.now()
+        FakeCalendarProvider.instances = listOf(3, 9, 17, 23).mapIndexed { index, day ->
+            FakeCalendarProvider.instance(
+                eventId = index + 1L,
+                beginMillis = month.atDay(day).atTime(9, 0).atZone(zone).toInstant().toEpochMilli(),
+                endMillis = month.atDay(day).atTime(10, 0).atZone(zone).toInstant().toEpochMilli(),
+                startDay = MonthModel.julianDay(month.atDay(day)),
+                endDay = MonthModel.julianDay(month.atDay(day)),
+                title = listOf("Dentist", "Standup", "Flight to Porto", "Books due")[index],
+            )
+        }
+        org.robolectric.Shadows.shadowOf(
+            ApplicationProvider.getApplicationContext<android.app.Application>(),
+        ).grantPermissions(android.Manifest.permission.READ_CALENDAR)
+
+        // Preferences outlive a test class, so the mode is pinned rather than inherited: a
+        // screenshot that comes out light or dark depending on what ran before it is no evidence.
         val prefs = Prefs.get(context)
-        val before = prefs.motion
-        prefs.motion = MotionProfile.OFF.key
+        val beforeSkin = prefs.skin
+        prefs.skin = Skin.PAPER
+
         val controller = org.robolectric.Robolectric
-            .buildActivity(app.quire.calendar.world.WorldActivity::class.java)
+            .buildActivity(app.quire.calendar.m3.MainActivity::class.java)
             .setup()
         try {
+            repeat(30) {
+                org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
+                Thread.sleep(10)
+            }
             org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
-            val bitmap = render(controller.get().window.decorView, 411, 891, "app-world")
-            assertPainted(bitmap, "app-world")
+            val bitmap = render(controller.get().window.decorView, 411, 891, "app-main")
+            assertPainted(bitmap, "app-main")
+
+            // Compose draws rather than inflating TextViews, so there is no view tree to read the
+            // labels out of; what can be checked without a semantics tree is that the bottom of
+            // the window is a navigation bar rather than more page — four labelled destinations
+            // put far more than a page's worth of colour into that band.
+            val band = HashSet<Int>()
+            var y = bitmap.height - 160
+            while (y < bitmap.height) {
+                var x = 0
+                while (x < bitmap.width) {
+                    band += bitmap.getPixel(x, y)
+                    x += 2
+                }
+                y += 2
+            }
+            assertTrue("nothing painted a navigation bar (${band.size} colours)", band.size > 24)
         } finally {
             controller.close()
-            prefs.motion = before
+            prefs.skin = beforeSkin
+            FakeCalendarProvider.reset()
         }
     }
 }

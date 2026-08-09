@@ -22,7 +22,7 @@
         android:theme="@style/Theme.Quire">
 
         <activity
-            android:name=".world.WorldActivity"
+            android:name=".m3.MainActivity"
             android:exported="true"
             android:launchMode="singleTask"
             android:windowSoftInputMode="adjustResize">

@@ -15,11 +15,8 @@
     <string name="permission_headline">Quire cannot see your calendars yet</string>
     <string name="permission_body">Grant read access and the grid starts showing what is already in your day. Nothing leaves the device.</string>
     <string name="permission_action">Grant access</string>
-    <string name="permission_denied_body">Access was denied. Open system settings to change it.</string>
-    <string name="open_settings">Open settings</string>
 
     <string name="section_week">Week</string>
-    <string name="section_appearance">Appearance</string>
     <string name="section_grid">Grid</string>
     <string name="section_calendars">Calendars</string>
     <string name="section_about">About</string>
@@ -57,14 +54,10 @@
     <string name="show_events_hint">A dot under every day that has something in it</string>
 
     <string name="opacity">Card opacity</string>
-    <string name="calendars_hint">Uncheck a calendar to keep it out of the grid</string>
-    <string name="no_calendars">No calendars found on this device</string>
 
-    <string name="about_line">Quire %1$s · built for one thing</string>
     <string name="about_body">A month grid, a day list, and a widget. No account, no network, no analytics.</string>
 
     <string name="done">Done</string>
-    <string name="widget_preview_hint">Placed on the home screen it looks like this.</string>
 
     <string name="cd_previous_month">Previous month</string>
     <string name="cd_next_month">Next month</string>
@@ -74,29 +67,15 @@
     <string name="search_hint">Find an event</string>
     <string name="search_empty">Type at least two letters. Eight months either side of where you are.</string>
     <string name="search_none">Nothing matches</string>
-    <string name="add">Add</string>
 
     <string name="section_look">Look</string>
     <string name="dynamic_colour">System colours</string>
     <string name="dynamic_colour_hint">Take the palette from the wallpaper, the way the rest of the phone does</string>
-    <string name="seed">Seed</string>
     <string name="mode">Mode</string>
     <string name="mode_auto">Auto</string>
     <string name="mode_light">Light</string>
     <string name="mode_dark">Dark</string>
-    <string name="contrast">Contrast</string>
-    <string name="size">Size</string>
 
-    <string name="section_motion">Motion</string>
-    <string name="motion">Liveliness</string>
-    <string name="motion_off">Off</string>
-    <string name="motion_calm">Calm</string>
-    <string name="motion_standard">Normal</string>
-    <string name="motion_playful">Springy</string>
-    <string name="haptics">Haptics</string>
-    <string name="haptics_hint">A tick under the finger when the world moves</string>
     <string name="heat">Density</string>
     <string name="heat_hint">Tint each square by how full the day is</string>
-    <string name="depth">Depth</string>
-    <string name="depth_hint">The layers answer the tilt of the phone</string>
 </resources>

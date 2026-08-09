@@ -20,8 +20,8 @@ import kotlin.math.min
 /** Accent is the single coloured voice in the interface. Everything else is ink. */
 enum class Accent(
     val key: String,
-    @ColorInt val light: Int,
-    @ColorInt val dark: Int,
+    @get:ColorInt val light: Int,
+    @get:ColorInt val dark: Int,
 ) {
     CINNABAR("cinnabar", 0xFFC0402B.toInt(), 0xFFE2593F.toInt()),
     INDIGO("indigo", 0xFF2E4A7D.toInt(), 0xFF7D97D1.toInt()),
@@ -58,17 +58,17 @@ enum class Skin(val key: String) {
 
 data class Palette(
     val dark: Boolean,
-    @ColorInt val canvas: Int,
-    @ColorInt val surface: Int,
-    @ColorInt val ink: Int,
-    @ColorInt val inkMuted: Int,
-    @ColorInt val inkFaint: Int,
-    @ColorInt val inkGhost: Int,
-    @ColorInt val hairline: Int,
-    @ColorInt val hairlineStrong: Int,
-    @ColorInt val accent: Int,
-    @ColorInt val onAccent: Int,
-    @ColorInt val press: Int,
+    @get:ColorInt val canvas: Int,
+    @get:ColorInt val surface: Int,
+    @get:ColorInt val ink: Int,
+    @get:ColorInt val inkMuted: Int,
+    @get:ColorInt val inkFaint: Int,
+    @get:ColorInt val inkGhost: Int,
+    @get:ColorInt val hairline: Int,
+    @get:ColorInt val hairlineStrong: Int,
+    @get:ColorInt val accent: Int,
+    @get:ColorInt val onAccent: Int,
+    @get:ColorInt val press: Int,
 )
 
 object Tokens {

@@ -25,18 +25,18 @@ import androidx.annotation.ColorInt
  * since a real device's scheme always passes.
  */
 class SystemScheme internal constructor(
-    @ColorInt val primary: Int,
-    @ColorInt val onPrimary: Int,
-    @ColorInt val primaryContainer: Int,
-    @ColorInt val secondaryContainer: Int,
-    @ColorInt val tertiaryContainer: Int,
-    @ColorInt val surface: Int,
-    @ColorInt val surfaceContainer: Int,
-    @ColorInt val surfaceContainerHigh: Int,
-    @ColorInt val onSurface: Int,
-    @ColorInt val onSurfaceVariant: Int,
-    @ColorInt val outline: Int,
-    @ColorInt val outlineVariant: Int,
+    @get:ColorInt val primary: Int,
+    @get:ColorInt val onPrimary: Int,
+    @get:ColorInt val primaryContainer: Int,
+    @get:ColorInt val secondaryContainer: Int,
+    @get:ColorInt val tertiaryContainer: Int,
+    @get:ColorInt val surface: Int,
+    @get:ColorInt val surfaceContainer: Int,
+    @get:ColorInt val surfaceContainerHigh: Int,
+    @get:ColorInt val onSurface: Int,
+    @get:ColorInt val onSurfaceVariant: Int,
+    @get:ColorInt val outline: Int,
+    @get:ColorInt val outlineVariant: Int,
 ) {
 
     /** Two schemes are equal when every role is, so a theme can skip an identical rebuild. */

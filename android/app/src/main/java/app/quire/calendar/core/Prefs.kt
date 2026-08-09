@@ -23,17 +23,8 @@ class Prefs private constructor(private val sp: SharedPreferences) {
         const val KEY_WEEK_NUMBERS = "week_numbers"
         const val KEY_COLOURED_DOTS = "coloured_dots"
         const val KEY_HIDDEN_CALENDARS = "hidden_calendars"
-        const val KEY_MOTION = "motion"
-        const val KEY_HAPTICS = "haptics"
         const val KEY_HEAT = "heat"
-        const val KEY_DEPTH = "depth"
-        const val KEY_SEED = "seed"
-        const val KEY_CONTRAST = "contrast"
-        const val KEY_SCALE = "scale"
         const val KEY_DYNAMIC = "dynamic"
-
-        /** Cinnabar, the same colour the app has always opened on. */
-        const val DEFAULT_SEED = 0xFFC0402B.toInt()
 
         @Volatile
         private var instance: Prefs? = null
@@ -81,60 +72,21 @@ class Prefs private constructor(private val sp: SharedPreferences) {
         get() = sp.getBoolean(KEY_COLOURED_DOTS, true)
         set(v) = sp.edit { putBoolean(KEY_COLOURED_DOTS, v) }
 
-    /** False until the user picks a profile; the first value comes from the OS. */
-    val hasMotionPreference: Boolean get() = sp.contains(KEY_MOTION)
-
-    /** Liveliness of the whole interface; see ui/Motion.kt. */
-    var motion: String
-        get() = sp.getString(KEY_MOTION, "standard") ?: "standard"
-        set(v) = sp.edit { putString(KEY_MOTION, v) }
-
-    var haptics: Boolean
-        get() = sp.getBoolean(KEY_HAPTICS, true)
-        set(v) = sp.edit { putBoolean(KEY_HAPTICS, v) }
-
-    /** Parallax from the device's tilt, and perspective in the transitions. */
-    var depth: Boolean
-        get() = sp.getBoolean(KEY_DEPTH, true)
-        set(v) = sp.edit { putBoolean(KEY_DEPTH, v) }
-
     /** Tint each square by how full the day is. */
     var heat: Boolean
         get() = sp.getBoolean(KEY_HEAT, false)
         set(v) = sp.edit { putBoolean(KEY_HEAT, v) }
 
     /**
-     * The one colour the whole app palette is derived from, in the design engine's sense —
-     * every other colour in the world is walked out of this by `engine/design/Theme`.
-     *
-     * The widget keeps its own [accent] instead: two widgets can be configured independently of
-     * each other and of the app, so there is nothing for them to share here.
-     */
-    var seed: Int
-        get() = sp.getInt(KEY_SEED, DEFAULT_SEED)
-        set(v) = sp.edit { putInt(KEY_SEED, v) }
-
-    /**
-     * Whether the palette comes from the device's own Material colour scheme — the one Android
-     * recomputes from the wallpaper — instead of from [seed].
+     * Whether the app takes its colours from the device's own Material scheme — the one Android
+     * recomputes from the wallpaper — instead of from the built-in cinnabar palette.
      *
      * On by default where the platform publishes a scheme, because a calendar that matches the
-     * phone it lives on is the better first impression; the seed is still there for anyone who
-     * would rather choose.
+     * phone it lives on is the better first impression.
      */
     var dynamic: Boolean
         get() = sp.getBoolean(KEY_DYNAMIC, true)
         set(v) = sp.edit { putBoolean(KEY_DYNAMIC, v) }
-
-    /** Extra separation between every plane and the ink on it, 0..1. */
-    var contrast: Float
-        get() = sp.getFloat(KEY_CONTRAST, 0f)
-        set(v) = sp.edit { putFloat(KEY_CONTRAST, v.coerceIn(0f, 1f)) }
-
-    /** The user's own size preference, multiplied into every measurement the world draws. */
-    var scale: Float
-        get() = sp.getFloat(KEY_SCALE, 1f)
-        set(v) = sp.edit { putFloat(KEY_SCALE, v.coerceIn(0.85f, 1.25f)) }
 
     var hiddenCalendars: Set<Long>
         get() = sp.getStringSet(KEY_HIDDEN_CALENDARS, emptySet())

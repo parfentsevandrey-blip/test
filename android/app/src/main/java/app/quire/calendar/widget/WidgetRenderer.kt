@@ -18,7 +18,7 @@ import app.quire.calendar.core.Prefs
 import app.quire.calendar.core.Skin
 import app.quire.calendar.core.Tokens
 import app.quire.calendar.core.WidgetPrefs
-import app.quire.calendar.world.WorldActivity
+import app.quire.calendar.m3.MainActivity
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.Locale
@@ -421,7 +421,7 @@ object WidgetRenderer {
         date: LocalDate,
         monthOnly: Boolean,
     ): PendingIntent {
-        val intent = Intent(context, WorldActivity::class.java).apply {
+        val intent = Intent(context, MainActivity::class.java).apply {
             action = Intent.ACTION_VIEW
             data = Uri.parse("quire://${if (monthOnly) "month" else "day"}/$date")
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
