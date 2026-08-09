@@ -11,11 +11,11 @@ every accessibility setting without holding an opinion about any of them. What s
 rewrite is the part that reads your calendar — the grid arithmetic, the provider queries and the
 off-thread loader — because that part had tests and had been debugged against a real provider.
 
-**Install:** [`dist/quire-5.1.apk`](dist/quire-5.1.apk) · 1.4 MB · Android 8.0+ (minSdk 26,
+**Install:** [`dist/quire-5.2.apk`](dist/quire-5.2.apk) · 1.4 MB · Android 8.0+ (minSdk 26,
 targetSdk 37 — Android 17) ·
-`sha256 42299388165d29e88cc255953c86999ffbc7d8687b93647ce53bd90c1b72d393`
+`sha256 8a91367008ff9b97ed1ce544ea111553a8e4f3632c4634950931735645e1e946`
 
-Copy it to the phone and open it, or `adb install -r dist/quire-5.1.apk`. You will need to allow
+Copy it to the phone and open it, or `adb install -r dist/quire-5.2.apk`. You will need to allow
 installing from an unknown source once — the APK is signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -123,10 +123,23 @@ palette computed in Oklch.
 - Sizes from two cells to the full width of the screen. Two cells on the usual four-column
   launcher is exactly half the width; below 200dp the card tightens its own padding, drops the
   year and shrinks the header controls rather than clipping them.
-- Repaints at midnight, on timezone or locale change, and within seconds of anything being
-  written to the calendar — a JobScheduler content trigger, not polling.
+- Repaints at midnight, on timezone or locale change, within seconds of anything being written to
+  the calendar, and **when the phone's colours change** — all content triggers and alarms, no
+  polling.
 - Configured per placement: two widgets can run different skins and accents side by side. That is
   why the widget keeps its own six fixed accents rather than sharing the app's setting.
+
+**Keeping up with the phone's theme** is the one thing a widget cannot be told about. A widget is
+a picture the launcher holds on to, Quire bakes its colours into that picture, and nothing asks
+for a new one when the user picks new wallpaper colours: `ACTION_CONFIGURATION_CHANGED` cannot be
+delivered to a receiver declared in a manifest, and the wallpaper-changed broadcast has not been
+sent since API 26. So the change is caught two ways, either of which is enough on its own — the
+app process compares and repaints whenever it starts or is reconfigured, and the watch job also
+wakes on the setting the theme picker writes, which is what reaches a widget whose app is not
+running. The comparison is what keeps it cheap: every rotation and every launch arrives at the
+same check, and a repaint is a cross-process query, so it only happens when the colours really
+moved. The night mode is part of the comparison too — a widget following the system paints a
+different half of the scheme when the phone goes dark.
 
 The configuration screen the launcher shows is Compose like the rest of the app, and every change
 in it repaints the real widget rather than a preview of one.

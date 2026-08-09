@@ -26,6 +26,14 @@ class MonthWidgetProvider : AppWidgetProvider() {
                         MidnightScheduler.schedule(context)
                         renderAll(context)
                     }
+                    Intent.ACTION_MY_PACKAGE_REPLACED -> {
+                        // A job keeps the triggers it was scheduled with, and only re-arms itself
+                        // when it runs. An update that adds one — the theme setting did — would
+                        // otherwise never reach a widget that was already placed.
+                        MidnightScheduler.schedule(context)
+                        CalendarWatchService.schedule(context)
+                        renderAll(context)
+                    }
                     Intent.ACTION_DATE_CHANGED,
                     Intent.ACTION_TIME_CHANGED,
                     Intent.ACTION_TIMEZONE_CHANGED,

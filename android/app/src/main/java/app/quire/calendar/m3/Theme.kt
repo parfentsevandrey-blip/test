@@ -9,7 +9,9 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 
 /**
@@ -32,19 +34,29 @@ fun QuireTheme(
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
-    val scheme: ColorScheme = when {
-        dynamic && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
-            if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        dark -> darkColorScheme(
-            primary = SeedPrimaryDark,
-            secondary = SeedSecondaryDark,
-            tertiary = SeedTertiaryDark,
-        )
-        else -> lightColorScheme(
-            primary = SeedPrimaryLight,
-            secondary = SeedSecondaryLight,
-            tertiary = SeedTertiaryLight,
-        )
+
+    // The configuration is read, and the scheme keyed on it, because that is the only thing that
+    // ties this to the user changing their colours. `dynamicLightColorScheme` is a plain function
+    // over the context's resources: it answers with whatever is current when it is called, and
+    // nothing calls it again on its own. Without a read of the configuration here, a screen that
+    // is already composed keeps the colours it was composed with — which is exactly the bug this
+    // fixes, an app that only took the new palette after being killed and reopened.
+    val configuration = LocalConfiguration.current
+    val scheme: ColorScheme = remember(dark, dynamic, configuration) {
+        when {
+            dynamic && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
+                if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            dark -> darkColorScheme(
+                primary = SeedPrimaryDark,
+                secondary = SeedSecondaryDark,
+                tertiary = SeedTertiaryDark,
+            )
+            else -> lightColorScheme(
+                primary = SeedPrimaryLight,
+                secondary = SeedSecondaryLight,
+                tertiary = SeedTertiaryLight,
+            )
+        }
     }
 
     MaterialExpressiveTheme(

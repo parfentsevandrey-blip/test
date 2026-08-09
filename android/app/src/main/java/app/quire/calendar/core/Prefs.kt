@@ -25,6 +25,7 @@ class Prefs private constructor(private val sp: SharedPreferences) {
         const val KEY_HIDDEN_CALENDARS = "hidden_calendars"
         const val KEY_HEAT = "heat"
         const val KEY_DYNAMIC = "dynamic"
+        const val KEY_PAINTED_SCHEME = "painted_scheme"
 
         @Volatile
         private var instance: Prefs? = null
@@ -87,6 +88,17 @@ class Prefs private constructor(private val sp: SharedPreferences) {
     var dynamic: Boolean
         get() = sp.getBoolean(KEY_DYNAMIC, true)
         set(v) = sp.edit { putBoolean(KEY_DYNAMIC, v) }
+
+    /**
+     * A fingerprint of the device's Material colours as the widgets were last painted in them.
+     *
+     * Widgets bake their colours, so this is what tells a later launch that the palette has moved
+     * and the pictures on the home screen are out of date. Zero where the platform publishes no
+     * scheme, which is also the default, so a device without one never repaints for this.
+     */
+    var paintedScheme: Int
+        get() = sp.getInt(KEY_PAINTED_SCHEME, 0)
+        set(v) = sp.edit { putInt(KEY_PAINTED_SCHEME, v) }
 
     var hiddenCalendars: Set<Long>
         get() = sp.getStringSet(KEY_HIDDEN_CALENDARS, emptySet())

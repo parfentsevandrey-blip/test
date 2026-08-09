@@ -2,10 +2,12 @@ package app.quire.calendar
 
 import android.app.Application
 import android.app.UiModeManager
+import android.content.res.Configuration
 import android.os.Build
 import androidx.annotation.RequiresApi
 import app.quire.calendar.core.Prefs
 import app.quire.calendar.core.Skin
+import app.quire.calendar.widget.SchemeWatch
 
 /**
  * The one thing that has to happen before any window opens: telling the platform which mode this
@@ -22,6 +24,19 @@ class QuireApp : Application() {
             getSystemService(UiModeManager::class.java)
                 ?.setApplicationNightMode(nightMode(Prefs.get(this).skin))
         }
+        // Opening the app is one of the two chances to notice that the phone's colours moved
+        // while the widgets on the home screen were holding still.
+        SchemeWatch.repaintIfChanged(this)
+    }
+
+    /**
+     * The other chance, and the one that catches it as it happens: picking new colours reconfigures
+     * every running process, so if Quire is on screen when the user changes them the widgets are
+     * repainted before they can be looked at again.
+     */
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        SchemeWatch.repaintIfChanged(this)
     }
 
     companion object {
