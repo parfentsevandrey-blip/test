@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.res.Configuration
 import androidx.annotation.ColorInt
 import app.quire.engine.design.Oklch
+import app.quire.engine.design.SystemScheme
 import kotlin.math.max
 import kotlin.math.min
 
@@ -134,9 +135,9 @@ object Tokens {
      * accents give a card of the same weight instead of one that is nearly black and another
      * that glows. Lightness is fixed and only the hue travels, which is the whole trick.
      */
-    fun filled(accent: Accent): Palette {
+    fun filled(@ColorInt source: Int): Palette {
         val lch = FloatArray(3)
-        Oklch.fromSrgb(accent.light, lch)
+        Oklch.fromSrgb(source, lch)
         val hue = lch[2]
         // A near-grey accent has no hue worth carrying, so the ground borrows a little chroma
         // rather than landing on black — otherwise Graphite would be the only skinless skin.
@@ -182,9 +183,24 @@ object Tokens {
         Skin.AUTO -> isSystemDark(context)
     }
 
-    /** The palette a widget wearing [skin] paints in, filled or otherwise. */
-    fun widgetPalette(context: Context, skin: Skin, accent: Accent): Palette =
-        if (skin == Skin.COLOUR) filled(accent) else palette(resolveDark(context, skin), accent)
+    /**
+     * The palette a widget wearing [skin] paints in.
+     *
+     * A filled card follows the device's own Material scheme when [dynamic] is set and the
+     * platform publishes one, so the widget matches the wallpaper it is sitting on; otherwise it
+     * is built from the accent the placement was configured with. Paper and Ink are unaffected —
+     * they are a printed page, and a printed page does not change colour with the wallpaper.
+     */
+    fun widgetPalette(
+        context: Context,
+        skin: Skin,
+        accent: Accent,
+        dynamic: Boolean = false,
+    ): Palette {
+        if (skin != Skin.COLOUR) return palette(resolveDark(context, skin), accent)
+        val scheme = if (dynamic) SystemScheme.read(context, dark = true) else null
+        return filled(scheme?.primary ?: accent.light)
+    }
 
     /** Blend `color` towards transparency without touching its channels. */
     @ColorInt

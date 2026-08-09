@@ -29,6 +29,7 @@ import app.quire.calendar.core.Skin
 import app.quire.calendar.widget.MonthWidgetProvider
 import app.quire.engine.anim.MotionProfile
 import app.quire.engine.design.Metrics
+import app.quire.engine.design.SystemScheme
 import app.quire.engine.design.Theme
 import app.quire.engine.input.Tilt
 import java.time.DayOfWeek
@@ -234,7 +235,10 @@ class WorldActivity : AppCompatActivity(), WorldView.Data {
      */
     private fun applySettings() {
         val dark = wantsDark()
-        theme = Theme(prefs.seed, dark, prefs.contrast)
+        // The device's own Material scheme when there is one and the user has not opted out of
+        // it; otherwise the palette is walked from the seed, exactly as before.
+        val scheme = if (prefs.dynamic) SystemScheme.read(this, dark) else null
+        theme = Theme(prefs.seed, dark, prefs.contrast, scheme)
         val metrics = Metrics(resources.displayMetrics.density, prefs.scale)
         // The app's own setting is authoritative. Reading the system animator scale every time
         // would leave anyone who turned animations down for speed with an app that cannot move
@@ -272,6 +276,7 @@ class WorldActivity : AppCompatActivity(), WorldView.Data {
 
     /** The settings sheet hands back a whole state; this is the only place it is written down. */
     private fun store(state: SettingsPanel.State) {
+        prefs.dynamic = state.dynamic
         prefs.seed = state.seed
         prefs.skin = when (state.dark) {
             null -> Skin.AUTO
@@ -298,6 +303,7 @@ class WorldActivity : AppCompatActivity(), WorldView.Data {
 
     /** The values the sheet opens on, read back out of the same store. */
     private fun currentState(): SettingsPanel.State = SettingsPanel.State(
+        dynamic = prefs.dynamic,
         seed = prefs.seed,
         dark = when (prefs.skin) {
             Skin.AUTO -> null

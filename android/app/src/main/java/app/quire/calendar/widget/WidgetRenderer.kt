@@ -83,7 +83,7 @@ object WidgetRenderer {
     fun build(context: Context, widgetId: Int, widthDp: Int, heightDp: Int): RemoteViews {
         val prefs = Prefs.get(context)
         val wp = prefs.widget(widgetId)
-        val palette = Tokens.widgetPalette(context, wp.skin, wp.accent)
+        val palette = Tokens.widgetPalette(context, wp.skin, wp.accent, wp.dynamic)
         // The filled skin is a card with its own colour rather than ink on paper, so it wants a
         // lattice under the dates and a heavier title. Everything else is shared.
         val filled = wp.skin == Skin.COLOUR

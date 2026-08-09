@@ -30,6 +30,7 @@ class Prefs private constructor(private val sp: SharedPreferences) {
         const val KEY_SEED = "seed"
         const val KEY_CONTRAST = "contrast"
         const val KEY_SCALE = "scale"
+        const val KEY_DYNAMIC = "dynamic"
 
         /** Cinnabar, the same colour the app has always opened on. */
         const val DEFAULT_SEED = 0xFFC0402B.toInt()
@@ -113,6 +114,18 @@ class Prefs private constructor(private val sp: SharedPreferences) {
         get() = sp.getInt(KEY_SEED, DEFAULT_SEED)
         set(v) = sp.edit { putInt(KEY_SEED, v) }
 
+    /**
+     * Whether the palette comes from the device's own Material colour scheme — the one Android
+     * recomputes from the wallpaper — instead of from [seed].
+     *
+     * On by default where the platform publishes a scheme, because a calendar that matches the
+     * phone it lives on is the better first impression; the seed is still there for anyone who
+     * would rather choose.
+     */
+    var dynamic: Boolean
+        get() = sp.getBoolean(KEY_DYNAMIC, true)
+        set(v) = sp.edit { putBoolean(KEY_DYNAMIC, v) }
+
     /** Extra separation between every plane and the ink on it, 0..1. */
     var contrast: Float
         get() = sp.getFloat(KEY_CONTRAST, 0f)
@@ -159,6 +172,14 @@ class WidgetPrefs(private val sp: SharedPreferences, private val id: Int) {
         get() = Accent.from(sp.getString(k("accent"), Accent.CINNABAR.key))
         set(v) = sp.edit { putString(k("accent"), v.key) }
 
+    /**
+     * Whether a filled card takes its colour from the device's Material scheme rather than from
+     * [accent]. Only the filled skin can honour it; Paper and Ink ignore it.
+     */
+    var dynamic: Boolean
+        get() = sp.getBoolean(k("dynamic"), true)
+        set(v) = sp.edit { putBoolean(k("dynamic"), v) }
+
     /** Card opacity, 0..100. Below 100 the wallpaper reads through. */
     var opacity: Int
         get() = sp.getInt(k("opacity"), 96)
@@ -192,6 +213,7 @@ class WidgetPrefs(private val sp: SharedPreferences, private val id: Int) {
     fun copyFrom(other: WidgetPrefs) {
         skin = other.skin
         accent = other.accent
+        dynamic = other.dynamic
         opacity = other.opacity
         showEvents = other.showEvents
         colouredDots = other.colouredDots

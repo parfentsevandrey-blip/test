@@ -42,9 +42,53 @@ class Theme(
     @ColorInt val seed: Int,
     val dark: Boolean,
     val contrastBoost: Float = 0f,
+    val scheme: SystemScheme? = null,
 ) {
 
     private val boost: Float = contrastBoost.coerceIn(0f, 1f)
+
+    /**
+     * Takes a role from the device's own Material scheme, but only if it actually clears the bar
+     * this palette promises against [against].
+     *
+     * The system's scheme is built to be legible and almost always passes, so in practice this
+     * wears the device's colours exactly. It is checked anyway because the promise is the point:
+     * a vendor scheme, a contrast boost the user has asked for, or a role that simply is not what
+     * its name suggests must not be able to quietly cost the calendar its readability. Whatever
+     * fails falls back to the walk that cannot fail.
+     *
+     * The fallback is passed by name rather than by value so it is only computed when it is
+     * needed — every one of them is a loop over colour conversions.
+     */
+    private inline fun adopt(
+        candidate: Int?,
+        @ColorInt against: Int,
+        target: Float,
+        fallback: () -> Int,
+    ): Int {
+        if (candidate != null && Oklch.contrast(candidate, against) >= target) return candidate
+        return fallback()
+    }
+
+    /**
+     * The scheme, but only if its page can carry the ink this palette promises.
+     *
+     * The planes are not like the other roles: everything else is judged *against* the page, so a
+     * page that no ink can be read on cannot be rescued by falling back role by role. A mid-grey
+     * surface is the worst case — black reaches about 6:1 on it and white about 3.4:1, so a 7:1
+     * promise is unreachable in either direction, and the ink fallback would quietly miss the bar
+     * it exists to keep. So the page is vetted first, and if it fails the whole scheme is set
+     * aside and the palette is derived from the seed as though there were none.
+     *
+     * A real Material scheme passes: its surfaces are near the ends of the lightness range, which
+     * is exactly what makes them pages.
+     */
+    private val usable: SystemScheme? = scheme?.takeIf { candidate ->
+        max(
+            Oklch.contrast(BLACK, candidate.surface),
+            Oklch.contrast(WHITE, candidate.surface),
+        ) >= INK_TARGET
+    }
 
     private val seedLch: FloatArray = FloatArray(3).also { Oklch.fromSrgb(seed, it) }
     private val seedL: Float = seedLch[0]
@@ -68,32 +112,37 @@ class Theme(
 
     /** The page behind everything: the plane every other colour is judged against. */
     @ColorInt
-    val canvas: Int = Oklch.toSrgb(planeL, neutralAt(planeL), hue)
+    val canvas: Int = usable?.surface ?: Oklch.toSrgb(planeL, neutralAt(planeL), hue)
 
     /** The plane cards, rows and sheets sit on, one step off the canvas. */
     @ColorInt
-    val surface: Int = Oklch.toSrgb(planeL + planeStep, neutralAt(planeL + planeStep), hue)
+    val surface: Int = usable?.surfaceContainer
+        ?: Oklch.toSrgb(planeL + planeStep, neutralAt(planeL + planeStep), hue)
 
     /** The plane for anything that floats above a surface, such as a menu or a dragged card. */
     @ColorInt
-    val surfaceLifted: Int =
-        Oklch.toSrgb(planeL + 2f * planeStep, neutralAt(planeL + 2f * planeStep), hue)
+    val surfaceLifted: Int = usable?.surfaceContainerHigh
+        ?: Oklch.toSrgb(planeL + 2f * planeStep, neutralAt(planeL + 2f * planeStep), hue)
 
     /** Body text and anything that must be read without effort. */
     @ColorInt
-    val ink: Int = walkToContrast(
-        against = canvas,
-        startL = inkStartL,
-        // Text carries a little more of the seed than the planes do: at reading size a colour is
-        // seen in thin strokes, which shows less of it than a whole plane does.
-        chroma = neutralAt(inkStartL) * 1.2f,
-        target = 11f + 4f * boost,
-        lighter = dark,
-    )
+    val ink: Int = adopt(usable?.onSurface, canvas, INK_TARGET) {
+        walkToContrast(
+            against = canvas,
+            startL = inkStartL,
+            // Text carries a little more of the seed than the planes do: at reading size a colour
+            // is seen in thin strokes, which shows less of it than a whole plane does.
+            chroma = neutralAt(inkStartL) * 1.2f,
+            target = 11f + 4f * boost,
+            lighter = dark,
+        )
+    }
 
     /** Secondary text: still read, but not first. */
     @ColorInt
-    val inkMuted: Int = tier(0.36f, 4.5f + 1.5f * boost)
+    val inkMuted: Int = adopt(usable?.onSurfaceVariant, canvas, 4.5f + 1.5f * boost) {
+        tier(0.36f, 4.5f + 1.5f * boost)
+    }
 
     /** Labels and units that are there when looked for. */
     @ColorInt
@@ -105,11 +154,13 @@ class Theme(
 
     /** The default rule between rows and around fields. */
     @ColorInt
-    val hairline: Int = inkAlpha((if (dark) 0.14f else 0.12f) + 0.06f * boost)
+    val hairline: Int = usable?.outlineVariant
+        ?: inkAlpha((if (dark) 0.14f else 0.12f) + 0.06f * boost)
 
     /** The rule used where a division is structural rather than incidental. */
     @ColorInt
-    val hairlineStrong: Int = inkAlpha((if (dark) 0.30f else 0.26f) + 0.10f * boost)
+    val hairlineStrong: Int = usable?.outline
+        ?: inkAlpha((if (dark) 0.30f else 0.26f) + 0.10f * boost)
 
     /** The wash laid over anything being touched, so a press is felt before it is understood. */
     @ColorInt
@@ -117,15 +168,17 @@ class Theme(
 
     /** The single coloured voice: selection, today, the one action that matters on a screen. */
     @ColorInt
-    val accent: Int = walkToContrast(
-        against = canvas,
-        // The seed is only a hue and a chroma here; its lightness is pushed into the half of the
-        // range the mode leaves room in, so one seed serves both modes.
-        startL = if (dark) max(seedL, 0.70f) else min(seedL, 0.56f),
-        chroma = seedChroma,
-        target = 3.1f + 1.5f * boost,
-        lighter = dark,
-    )
+    val accent: Int = adopt(usable?.primary, canvas, ACCENT_TARGET) {
+        walkToContrast(
+            against = canvas,
+            // The seed is only a hue and a chroma here; its lightness is pushed into the half of
+            // the range the mode leaves room in, so one seed serves both modes.
+            startL = if (dark) max(seedL, 0.70f) else min(seedL, 0.56f),
+            chroma = seedChroma,
+            target = 3.1f + 1.5f * boost,
+            lighter = dark,
+        )
+    }
 
     /**
      * What is written or drawn on top of [accent]. Both candidates are pushed to the contrast
@@ -133,35 +186,43 @@ class Theme(
      * where neither a fixed near-white nor a fixed near-black is far enough away to be read.
      */
     @ColorInt
-    val onAccent: Int = Oklch.readableOn(
+    val onAccent: Int = adopt(
+        // Only usable when the accent itself was adopted: the system's onPrimary is built for
+        // the system's primary, and pairing it with a walked accent would be a guess.
+        if (accent == usable?.primary) usable.onPrimary else null,
         accent,
-        walkToContrast(
-            against = accent,
-            startL = 0.985f,
-            chroma = neutralAt(0.985f),
-            target = ON_ACCENT_TARGET + 2f * boost,
-            lighter = true,
-        ),
-        walkToContrast(
-            against = accent,
-            startL = 0.150f,
-            chroma = neutralAt(0.150f),
-            target = ON_ACCENT_TARGET + 2f * boost,
-            lighter = false,
-        ),
-    )
+        ON_ACCENT_TARGET,
+    ) {
+        Oklch.readableOn(
+            accent,
+            walkToContrast(
+                against = accent,
+                startL = 0.985f,
+                chroma = neutralAt(0.985f),
+                target = ON_ACCENT_TARGET + 2f * boost,
+                lighter = true,
+            ),
+            walkToContrast(
+                against = accent,
+                startL = 0.150f,
+                chroma = neutralAt(0.150f),
+                target = ON_ACCENT_TARGET + 2f * boost,
+                lighter = false,
+            ),
+        )
+    }
 
     /** The accent as a fill rather than a mark: chips, selected rows, the tint behind a badge. */
     @ColorInt
-    val accentSoft: Int = Oklch.blend(surface, accent, ACCENT_SOFT_MIX)
+    val accentSoft: Int = usable?.primaryContainer ?: Oklch.blend(surface, accent, ACCENT_SOFT_MIX)
 
     /** Two further hues in harmony with the seed, for the background pools. */
     @ColorInt
-    val auroraA: Int = pool(AURORA_A_DEGREES)
+    val auroraA: Int = usable?.secondaryContainer ?: pool(AURORA_A_DEGREES)
 
     /** The second background pool, on the other side of the seed from [auroraA]. */
     @ColorInt
-    val auroraB: Int = pool(AURORA_B_DEGREES)
+    val auroraB: Int = usable?.tertiaryContainer ?: pool(AURORA_B_DEGREES)
 
     // Precomputed because categorical colours are asked for inside draw loops, one per mark.
     private val categories: IntArray = IntArray(CATEGORY_COUNT) { index ->
@@ -188,7 +249,8 @@ class Theme(
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is Theme) return false
-        return seed == other.seed && dark == other.dark && contrastBoost == other.contrastBoost
+        return seed == other.seed && dark == other.dark && contrastBoost == other.contrastBoost &&
+            scheme == other.scheme
     }
 
     /** Agrees with [equals], so a theme can key a cache of anything derived from it. */
@@ -196,6 +258,7 @@ class Theme(
         var result = seed
         result = 31 * result + if (dark) 1 else 0
         result = 31 * result + contrastBoost.toRawBits()
+        result = 31 * result + (scheme?.hashCode() ?: 0)
         return result
     }
 
@@ -267,6 +330,19 @@ class Theme(
     }
 
     companion object {
+        /**
+         * The bar an adopted role has to clear, which is the promise this palette makes rather
+         * than the higher mark its own derivation aims for. The walk targets 11:1 for body text
+         * because nothing stops it; a role handed over by the platform only has to be legible.
+         */
+        const val INK_TARGET = 7f
+
+        /** The same idea for the coloured voice: readable as a mark against the page. */
+        const val ACCENT_TARGET = 3f
+
+        private const val BLACK = 0xFF000000.toInt()
+        private const val WHITE = 0xFFFFFFFF.toInt()
+
         /** A handful of seeds worth offering as presets, with names. */
         val seeds: List<Pair<String, Int>> = listOf(
             "Cinnabar" to 0xFFC0402B.toInt(),

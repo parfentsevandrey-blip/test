@@ -77,6 +77,8 @@
     <string name="add">Add</string>
 
     <string name="section_look">Look</string>
+    <string name="dynamic_colour">System colours</string>
+    <string name="dynamic_colour_hint">Take the palette from the wallpaper, the way the rest of the phone does</string>
     <string name="seed">Seed</string>
     <string name="mode">Mode</string>
     <string name="mode_auto">Auto</string>

@@ -3,7 +3,6 @@ import java.util.Properties
 
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
 }
 
 val keystorePropsFile = rootProject.file("keystore.properties")
@@ -13,14 +12,14 @@ val keystoreProps = Properties().apply {
 
 android {
     namespace = "app.quire.calendar"
-    compileSdk = 35
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "app.quire.calendar"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 10
-        versionName = "3.2"
+        targetSdk = 37
+        versionCode = 11
+        versionName = "4.0"
     }
 
     signingConfigs {

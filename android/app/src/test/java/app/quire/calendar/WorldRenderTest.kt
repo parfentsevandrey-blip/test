@@ -695,6 +695,7 @@ class WorldRenderTest {
     // ---- the two sheets ------------------------------------------------
 
     private fun state(seed: Int = 0xFFC0402B.toInt()) = SettingsPanel.State(
+        dynamic = false,
         seed = seed,
         dark = null,
         contrast = 0.2f,

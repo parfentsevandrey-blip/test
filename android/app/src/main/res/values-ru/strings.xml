@@ -76,6 +76,8 @@
     <string name="add">Добавить</string>
 
     <string name="section_look">Внешний вид</string>
+    <string name="dynamic_colour">Цвета системы</string>
+    <string name="dynamic_colour_hint">Брать палитру из обоев, как это делает остальной телефон</string>
     <string name="seed">Основной цвет</string>
     <string name="mode">Режим</string>
     <string name="mode_auto">Авто</string>

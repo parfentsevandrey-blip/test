@@ -45,6 +45,7 @@ class OverlayViewTest {
     private val outputDir = File("build/screenshots").apply { mkdirs() }
 
     private fun state() = SettingsPanel.State(
+        dynamic = false,
         seed = 0xFFC0402B.toInt(),
         dark = null,
         contrast = 0f,

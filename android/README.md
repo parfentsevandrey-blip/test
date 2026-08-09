@@ -8,10 +8,11 @@ Every pixel is drawn on a Canvas and every moving value is integrated by an engi
 repository. That is not a stunt — the reason is at [Why none of it is the
 platform's](#why-none-of-it-is-the-platforms), and it is the whole point of the rewrite.
 
-**Install:** [`dist/quire-3.2.apk`](dist/quire-3.2.apk) · 748 KB · Android 8.0+ (minSdk 26,
-targetSdk 35) · `sha256 1970cf1467581551eefd4fc7b561344c8d08326135ec85f8e19b14f1504aa5a4`
+**Install:** [`dist/quire-4.0.apk`](dist/quire-4.0.apk) · 732 KB · Android 8.0+ (minSdk 26,
+targetSdk 37 — Android 17) ·
+`sha256 2857d47f0e03ec0d3deac6abbde4a678f26dc0b4c8a1e7d354572567834bc49d`
 
-Copy it to the phone and open it, or `adb install -r dist/quire-3.2.apk`. You will need to allow
+Copy it to the phone and open it, or `adb install -r dist/quire-4.0.apk`. You will need to allow
 installing from an unknown source once — the APK is signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -78,7 +79,21 @@ lines, and nothing in them knows what a calendar is.
 | **design** | `Oklch` — perceptual colour, gamut-mapped; `Theme` — a whole palette walked out of one seed; `Metrics` — every size from one density and one user scale |
 | **state** | `Signal`, `Store` — observation that skips a rebuild when the value did not really change |
 
-**The palette is one number.** `Theme(seed, dark, contrastBoost)` derives fifteen colours by
+**The palette is the device's, when the device has one.** Android publishes its whole Material
+colour scheme as ordinary resources — `system_primary_light`, `system_surface_container_dark` and
+the rest — recomputed from the wallpaper whenever it changes, public since API 34. Quire reads
+them and wears them: the page, the cards, the ink, the rules and the accent are the numbers a
+Material component would use, not an approximation of them. *System colours* in settings turns it
+off, and then the palette is derived from a seed exactly as it always was.
+
+Every adopted role is still checked against the bar this palette promises, and the page hardest of
+all. The planes are not like the other roles — everything else is judged *against* the page — so a
+surface no ink could be read on cannot be rescued role by role. A mid-grey page is the worst case:
+black reaches about 6:1 on it and white about 3.4:1, so a 7:1 promise is unreachable in either
+direction. A page that fails sets the whole scheme aside rather than half-adopting it. A real
+Material scheme passes; a vendor's need not.
+
+**And underneath, the palette is still one number.** `Theme(seed, dark, contrastBoost)` derives fifteen colours by
 walking lightness in Oklch until each pair actually clears its contrast target — measured on the
 real eight-bit colours, because chroma pulled in to fit the gamut moves luminance too. The worst
 ink-on-canvas pair measures 16.9:1; the worst text-on-accent pair 4.5:1. Move the *Seed* slider
@@ -205,16 +220,21 @@ Five things worth knowing before editing:
 
 ## Building
 
-Needs JDK 17+ and an Android SDK with platform 35 and build-tools 35.0.0.
+Needs JDK 17+. Needs the Android 17 platform (`platforms;android-37.1`) and build-tools 37. The Gradle wrapper
+pins the toolchain, so use it rather than a system Gradle:
 
 ```bash
 echo "sdk.dir=$ANDROID_HOME" > local.properties
-gradle assembleRelease          # dist-ready APK, signed with keystore/
-gradle assembleDebug            # installs alongside it (.debug suffix)
-gradle testDebugUnitTest        # writes app/build/screenshots/*.png
-gradle lintRelease              # must stay at 0 errors
-python3 tools/generate_assets.py   # after editing the icon or picker preview
+./gradlew assembleRelease        # dist-ready APK, signed with keystore/
+./gradlew assembleDebug          # installs alongside it (.debug suffix)
+./gradlew testDebugUnitTest      # writes app/build/screenshots/*.png
+./gradlew lintRelease            # must stay at 0 errors
+python3 tools/generate_assets.py # after editing the icon or picker preview
 ```
+
+Gradle 9.5, AGP 9.3.1, Kotlin via AGP's built-in support — AGP 9 registers the `kotlin` extension
+itself, so applying `org.jetbrains.kotlin.android` on top of it fails. `android.nonFinalResIds` is
+on because AGP 9 shrinks resources through R8, which needs ids it can rewrite.
 
 There is no emulator in this project's development environment, so **the tests are how the
 interface is looked at**. They run on Robolectric with native graphics and write real PNGs: the

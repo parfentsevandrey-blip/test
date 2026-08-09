@@ -20,6 +20,7 @@ import app.quire.engine.anim.lerp
 import app.quire.engine.anim.smoothstep
 import app.quire.engine.design.Metrics
 import app.quire.engine.design.Oklch
+import app.quire.engine.design.SystemScheme
 import app.quire.engine.design.Theme
 import app.quire.engine.fx.Noise
 import java.time.DayOfWeek
@@ -55,6 +56,7 @@ private const val ID_DENSITY: Int = 9
 private const val ID_MARKS: Int = 10
 private const val ID_ADJACENT: Int = 11
 private const val ID_CALENDAR: Int = 12
+private const val ID_DYNAMIC: Int = 13
 
 // The Size setting's range, and the step both sliders quantise to. Detents make the value text
 // hold still and give the thumb somewhere to spring to when the finger lets go between them.
@@ -98,6 +100,9 @@ class SettingsPanel(private val context: Context) {
     /**
      * Everything the panel shows and edits, emitted whole on every change.
      *
+     * @property dynamic whether the palette comes from the device's own Material colour scheme
+     *   rather than from [seed]; where it does, the seed row is still shown but does nothing
+     *   until it is turned off.
      * @property seed the colour the whole palette is derived from, one of Theme.seeds.
      * @property dark light or dark, or null to follow whatever the system is wearing.
      * @property contrast 0..1, handed to Theme.contrastBoost.
@@ -112,6 +117,7 @@ class SettingsPanel(private val context: Context) {
      * @property hidden the calendars kept out of the grid, by provider id.
      */
     class State(
+        val dynamic: Boolean,
         val seed: Int,
         val dark: Boolean?,
         val contrast: Float,
@@ -192,6 +198,7 @@ class SettingsPanel(private val context: Context) {
     private var contrast: Float = 0f
     private var scale: Float = 1f
     private var firstDay: DayOfWeek? = null
+    private var dynamicColour: Boolean = true
     private var haptics: Boolean = true
     private var depth: Boolean = true
     private var density: Boolean = false
@@ -286,6 +293,8 @@ class SettingsPanel(private val context: Context) {
     private val textSettings = context.getString(R.string.settings)
     private val textLook = context.getString(R.string.section_look)
     private val textSeed = context.getString(R.string.seed)
+    private val textDynamic = context.getString(R.string.dynamic_colour)
+    private val textDynamicHint = context.getString(R.string.dynamic_colour_hint)
     private val textMode = context.getString(R.string.mode)
     private val textContrast = context.getString(R.string.contrast)
     private val textSize = context.getString(R.string.size)
@@ -1130,6 +1139,7 @@ class SettingsPanel(private val context: Context) {
             }
             KIND_TOGGLE -> {
                 when (row.id) {
+                    ID_DYNAMIC -> dynamicColour = !dynamicColour
                     ID_HAPTICS -> haptics = !haptics
                     ID_DEPTH -> depth = !depth
                     ID_DENSITY -> density = !density
@@ -1176,6 +1186,7 @@ class SettingsPanel(private val context: Context) {
     private fun emit() {
         onChange?.invoke(
             State(
+                dynamic = dynamicColour,
                 seed = seed,
                 dark = darkMode,
                 contrast = contrast,
@@ -1193,6 +1204,7 @@ class SettingsPanel(private val context: Context) {
     }
 
     private fun adopt(state: State) {
+        dynamicColour = state.dynamic
         seed = state.seed
         darkMode = state.dark
         contrast = clamp(state.contrast, 0f, 1f)
@@ -1303,6 +1315,7 @@ class SettingsPanel(private val context: Context) {
             }
             KIND_TOGGLE -> {
                 val on = when (row.id) {
+                    ID_DYNAMIC -> dynamicColour
                     ID_HAPTICS -> haptics
                     ID_DEPTH -> depth
                     ID_DENSITY -> density
@@ -1368,6 +1381,9 @@ class SettingsPanel(private val context: Context) {
     private fun buildRows() {
         rows.clear()
         rows.add(Row(KIND_SECTION, ID_NONE, textLook.uppercase(locale)))
+        if (SystemScheme.supported) {
+            rows.add(Row(KIND_TOGGLE, ID_DYNAMIC, textDynamic, hint = textDynamicHint))
+        }
         rows.add(Row(KIND_SEEDS, ID_SEED, textSeed))
         rows.add(Row(KIND_SEGMENTED, ID_MODE, textMode, options = modeOptions))
         rows.add(Row(KIND_SLIDER, ID_CONTRAST, textContrast))
