@@ -1,8 +1,8 @@
 # Quire
 
-An Android calendar in two halves: an app built entirely from Material 3 Expressive, and a
-home-screen widget that cannot be, because a widget is `RemoteViews` and `RemoteViews` is not
-Compose.
+A calendar and a weather app for Android, and a home-screen card for each. The apps are built
+entirely from Material 3 Expressive; the widgets cannot be, because a widget is `RemoteViews` and
+`RemoteViews` is not Compose.
 
 The app half was rebuilt from nothing for Android 17. It has no components of its own: the app
 bar, the navigation bar, the search field, the list rows, the switches and the segmented buttons
@@ -11,11 +11,11 @@ every accessibility setting without holding an opinion about any of them. What s
 rewrite is the part that reads your calendar — the grid arithmetic, the provider queries and the
 off-thread loader — because that part had tests and had been debugged against a real provider.
 
-**Install:** [`dist/quire-5.3.apk`](dist/quire-5.3.apk) · 1.9 MB · Android 8.0+ (minSdk 26,
+**Install:** [`dist/quire-6.0.apk`](dist/quire-6.0.apk) · 1.9 MB · Android 8.0+ (minSdk 26,
 targetSdk 37 — Android 17) ·
-`sha256 8cad4a5021ba82a1c90881e61208d613cd349beaf858dfede898545d5bc96773`
+`sha256 d2d7321dd0d8b2af902044e95ae459e9de8fe41e766b628390f91dd3b2f0a013`
 
-Copy it to the phone and open it, or `adb install -r dist/quire-5.3.apk`. You will need to allow
+Copy it to the phone and open it, or `adb install -r dist/quire-6.0.apk`. You will need to allow
 installing from an unknown source once — the APK is signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -33,7 +33,7 @@ Every image is a real render of the shipping code, produced by the test suite �
 
 ## The app
 
-Four destinations in a `ShortNavigationBar`, which is the Expressive one: a shorter band, and a
+Five destinations in a `ShortNavigationBar`, which is the Expressive one: a shorter band, and a
 selection pill that grows around the icon on the theme's own spring.
 
 - **Today** — the month, swiped through a pager, with the selected day's entries underneath.
@@ -41,6 +41,9 @@ selection pill that grows around the icon on the theme's own spring.
   Pull down to ask the provider again.
 - **Year** — all twelve months at once, three across and four down, every date legible. The tiles
   take whatever height the page has, so a year fills its screen instead of ending half way down.
+- **Weather** — now and the next five days, with everything the card has no room for: the chance
+  of rain, the humidity, the wind, and a bar per day showing where that day's swing sits inside
+  the week's.
 - **Search** — `AppBarWithSearch`, so the field *is* the app bar rather than a box floating over
   one. Results filter as you type and open the day they were found in.
 - **Settings** — everything the app can be told.
@@ -117,7 +120,45 @@ never asked to be.
   and so does a swipe that carries to the next month — which is the only thing that tells it apart
   from one that sprang back to where it started.
 
-## The widget
+## The weather
+
+| The app | Four by two | Half width |
+|---|---|---|
+| ![Weather](docs/app-weather.png) | ![Wide](docs/widget-weather-wide.png) | ![Half](docs/widget-weather-half.png) |
+
+The card was built by looking at the one it sits next to. Google's weather widget spends a
+four-by-two placement on one temperature, a place name truncated to "Западный адм…", a "feels
+like" truncated to nothing, and says not one word about tomorrow. This one puts the place, the
+temperature, the sky, the feels-like **and five days** in the same space — because five days are
+the reason to look at a weather widget rather than at a thermometer.
+
+Fitting that in is a question of what gets measured first. The strip is dealt its share of the
+height before anything else, and the "now" row is sized from what is left; sizing the temperature
+first is exactly what produces a card with a huge number and no forecast. As the card shrinks,
+things leave in order rather than being clipped: below 172dp the sky and the feels-like go and the
+number takes their width, below 46dp per column the low goes and the high stays, and below 128dp
+tall the strip goes entirely and the card becomes an honest "now".
+
+![Weather icons](docs/weather-icons.png)
+
+The twelve glyphs are drawn here, on Material's 24dp grid, as XML vectors — so the widget and the
+app show the same picture rather than two versions of it, since `RemoteViews` cannot use Compose's
+icons. WMO's weather codes distinguish things a person standing outside does not (light, moderate
+and dense drizzle are three codes and one picture), so they are folded into eleven states, each
+with a day and a night face where that matters.
+
+**Where the numbers come from.** Open-Meteo, because it needs no account and no key: an app that
+asks somebody to register for an API key before it can tell them whether to take a coat has
+already failed. Nothing leaves the device but a latitude and a longitude rounded to two decimal
+places — about a kilometre, which is finer than the weather and coarser than a person. Location is
+coarse and last-known rather than a live fix, since waking the GPS to find out if it is raining
+would cost more than it could buy.
+
+The forecast is fetched by an hourly job with a network requirement and stored; the card is always
+painted from the store, never from a request, because a widget is repainted at moments nobody
+chose and none of them are a good time to wait on a network.
+
+## The calendar widget
 
 | Half width | Full width | Named entries |
 |---|---|---|
@@ -181,6 +222,7 @@ marked day.
 ```
 m3/       MainActivity   the whole app: scaffold, bars, destinations, the action menu
           Screens        month, year, search, settings
+          WeatherScreen  now, the readings, and five days with their spread bars
           Calendar       MonthGrid and MiniMonth — the only two drawn things left
           EventSheet     one entry in full, and the details on their own for the camera
           Rows           the shared settings row and its grouping
@@ -190,6 +232,10 @@ core/     MonthModel (grid maths, julian days)   EventRepository (provider, sear
           MonthLoader (off-thread, cached)       Prefs   Tokens (the widget's palette)
 widget/   WidgetRenderer  MonthWidgetProvider  WidgetConfigActivity
           MidnightScheduler  CalendarWatchService
+weather/  Forecast  Sky (WMO codes folded to eleven pictures)
+          WeatherRepository (Open-Meteo, parsing separable from fetching)
+          WeatherStore (what the card paints from)  Whereabouts (coarse, last-known)
+          WeatherRefresh (the hourly job)  WeatherWidgetProvider  WeatherWidgetRenderer
 engine/   design/Oklch        perceptual colour, gamut-mapped
           design/SystemScheme the platform's own Material roles, read as resources
 tools/    generate_assets.py — launcher icon and widget picker preview

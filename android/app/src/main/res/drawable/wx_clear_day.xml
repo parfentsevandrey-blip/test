@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The sun: a disc and eight rays, on the 24dp grid Material draws on.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="#FFFFFF">
+    <path
+        android:pathData="M12,1.6V3.6 M12,20.4V22.4 M1.6,12H3.6 M20.4,12H22.4 M4.7,4.7l1.4,1.4 M17.9,17.9l1.4,1.4 M19.3,4.7l-1.4,1.4 M6.1,17.9l-1.4,1.4"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:strokeWidth="1.9" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M7,12A5,5 0 1,0 17,12A5,5 0 1,0 7,12Z" />
+</vector>

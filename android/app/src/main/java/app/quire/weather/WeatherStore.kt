@@ -1,0 +1,141 @@
+package app.quire.weather
+
+import android.content.Context
+import androidx.core.content.edit
+import org.json.JSONArray
+import org.json.JSONObject
+import java.time.LocalDate
+
+/**
+ * The last forecast, kept where a widget can reach it without a network.
+ *
+ * A home-screen widget is painted at moments nobody chose — a launcher restarting, a wallpaper
+ * changing, midnight — and none of them are a good time to wait on a request. So the card is
+ * always drawn from here, and fetching is a separate thing that happens on its own schedule and
+ * writes here when it succeeds.
+ *
+ * It is written as JSON rather than as a dozen keys because the whole point is that a forecast is
+ * one consistent reading: a half-updated card showing yesterday's high next to today's icon would
+ * be worse than a stale one.
+ */
+object WeatherStore {
+
+    private const val FILE = "quire-weather"
+    private const val KEY_FORECAST = "forecast"
+    private const val KEY_PLACE = "place"
+    private const val KEY_LATITUDE = "latitude"
+    private const val KEY_LONGITUDE = "longitude"
+
+    private fun prefs(context: Context) =
+        context.applicationContext.getSharedPreferences(FILE, Context.MODE_PRIVATE)
+
+    fun save(context: Context, forecast: Forecast) {
+        prefs(context).edit {
+            putString(KEY_FORECAST, encode(forecast).toString())
+            putString(KEY_PLACE, forecast.place)
+            putFloat(KEY_LATITUDE, forecast.latitude.toFloat())
+            putFloat(KEY_LONGITUDE, forecast.longitude.toFloat())
+        }
+    }
+
+    fun load(context: Context): Forecast? {
+        val raw = prefs(context).getString(KEY_FORECAST, null) ?: return null
+        return runCatching { decode(JSONObject(raw)) }.getOrNull()
+    }
+
+    /**
+     * The last place a forecast was fetched for.
+     *
+     * Location can be unavailable for a long time — indoors, permission not yet granted, provider
+     * asleep — and a widget that forgets where it is every time is useless. The coordinates
+     * outlive the forecast on purpose.
+     */
+    fun lastPlace(context: Context): Triple<String, Double, Double>? {
+        val p = prefs(context)
+        if (!p.contains(KEY_LATITUDE)) return null
+        return Triple(
+            p.getString(KEY_PLACE, "").orEmpty(),
+            p.getFloat(KEY_LATITUDE, 0f).toDouble(),
+            p.getFloat(KEY_LONGITUDE, 0f).toDouble(),
+        )
+    }
+
+    fun rememberPlace(context: Context, place: String, latitude: Double, longitude: Double) {
+        prefs(context).edit {
+            putString(KEY_PLACE, place)
+            putFloat(KEY_LATITUDE, latitude.toFloat())
+            putFloat(KEY_LONGITUDE, longitude.toFloat())
+        }
+    }
+
+    fun clear(context: Context) = prefs(context).edit { clear() }
+
+    // ---- Wire format ---------------------------------------------------
+
+    fun encode(forecast: Forecast): JSONObject = JSONObject().apply {
+        put("place", forecast.place)
+        put("latitude", forecast.latitude)
+        put("longitude", forecast.longitude)
+        put("fetched", forecast.fetched)
+        put(
+            "now",
+            JSONObject().apply {
+                put("temperature", forecast.now.temperature)
+                put("feelsLike", forecast.now.feelsLike)
+                put("sky", forecast.now.sky.name)
+                put("day", forecast.now.day)
+                put("humidity", forecast.now.humidity)
+                put("wind", forecast.now.wind)
+            },
+        )
+        put(
+            "days",
+            JSONArray().apply {
+                forecast.days.forEach { day ->
+                    put(
+                        JSONObject().apply {
+                            put("date", day.date.toString())
+                            put("sky", day.sky.name)
+                            put("high", day.high)
+                            put("low", day.low)
+                            put("rain", day.rain)
+                        },
+                    )
+                }
+            },
+        )
+    }
+
+    fun decode(json: JSONObject): Forecast {
+        val now = json.getJSONObject("now")
+        val days = json.getJSONArray("days")
+        return Forecast(
+            place = json.optString("place"),
+            latitude = json.optDouble("latitude", 0.0),
+            longitude = json.optDouble("longitude", 0.0),
+            fetched = json.optLong("fetched", 0L),
+            now = Conditions(
+                temperature = now.getDouble("temperature"),
+                feelsLike = now.optDouble("feelsLike", now.getDouble("temperature")),
+                sky = sky(now.optString("sky")),
+                day = now.optBoolean("day", true),
+                humidity = now.optInt("humidity", -1),
+                wind = now.optDouble("wind", 0.0),
+            ),
+            days = (0 until days.length()).map { index ->
+                val day = days.getJSONObject(index)
+                DayForecast(
+                    date = LocalDate.parse(day.getString("date")),
+                    sky = sky(day.optString("sky")),
+                    high = day.getDouble("high"),
+                    low = day.getDouble("low"),
+                    rain = day.optInt("rain", 0),
+                )
+            },
+        )
+    }
+
+    /** A stored name this build no longer has is overcast, not an exception. */
+    private fun sky(name: String): Sky =
+        Sky.entries.firstOrNull { it.name == name } ?: Sky.OVERCAST
+}

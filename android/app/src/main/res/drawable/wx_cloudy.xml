@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Overcast: the cloud alone.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="#FFFFFF">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M7.4,10A4.6,4.6 0 1,0 16.6,10A4.6,4.6 0 1,0 7.4,10Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M4.3999999999999995,12.2A3.2,3.2 0 1,0 10.8,12.2A3.2,3.2 0 1,0 4.3999999999999995,12.2Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M13.2,12.2A3.2,3.2 0 1,0 19.599999999999998,12.2A3.2,3.2 0 1,0 13.2,12.2Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M7.6,12.2h8.8v3.2h-8.8z" />
+</vector>

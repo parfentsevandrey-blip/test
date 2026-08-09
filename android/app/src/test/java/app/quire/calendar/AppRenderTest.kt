@@ -27,7 +27,14 @@ import app.quire.calendar.m3.MonthScreen
 import app.quire.calendar.m3.QuireTheme
 import app.quire.calendar.m3.SearchResults
 import app.quire.calendar.m3.SettingsScreen
+import app.quire.calendar.m3.WeatherModel
+import app.quire.calendar.m3.WeatherScreen
 import app.quire.calendar.m3.YearScreen
+import app.quire.weather.Conditions
+import app.quire.weather.DayForecast
+import app.quire.weather.Forecast
+import app.quire.weather.Sky
+import app.quire.weather.WeatherStore
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -264,6 +271,50 @@ class AppRenderTest {
         assertTrue("the sheet did not name the entry", showing("Flight to Porto") > 0)
         assertTrue("the sheet dropped the place", showing("Terminal 2") > 0)
         assertTrue("the sheet cannot be acted on", showing("Share") > 0)
+    }
+
+    /** The weather screen, against a stored forecast rather than a network. */
+    @Test
+    fun `the weather screen lays out now and the five days`() {
+        val today = java.time.LocalDate.now()
+        val skies = listOf(
+            Sky.SHOWERS,
+            Sky.PARTLY_CLOUDY,
+            Sky.CLEAR,
+            Sky.THUNDER,
+            Sky.SNOW,
+        )
+        WeatherStore.save(
+            app,
+            Forecast(
+                place = "Западный административный округ",
+                latitude = 55.75,
+                longitude = 37.62,
+                now = Conditions(12.8, 11.4, skies[0], false, 81, 13.7),
+                days = skies.mapIndexed { index, sky ->
+                    DayForecast(
+                        date = today.plusDays(index.toLong()),
+                        sky = sky,
+                        high = 22.0 - index * 1.4,
+                        low = 11.0 - index * 1.1,
+                        rain = listOf(70, 30, 0, 80, 60)[index],
+                    )
+                },
+                fetched = System.currentTimeMillis(),
+            ),
+        )
+
+        val model = WeatherModel(app)
+        page(dark = true) {
+            WeatherScreen(model, PaddingValues(0.dp), onGrant = {})
+        }
+        settle(rounds = 6)
+        shoot("app-weather")
+
+        assertTrue("the screen did not name the place", showing("Западный") > 0)
+        assertTrue("the screen lost the temperature", showing("13°") > 0)
+        assertTrue("the screen lost the humidity", showing("81%") > 0)
+        assertTrue("the screen lost the five-day heading", showing("Next five days") > 0)
     }
 
     @Test

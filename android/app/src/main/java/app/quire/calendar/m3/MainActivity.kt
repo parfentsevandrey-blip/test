@@ -73,6 +73,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.quire.calendar.R
@@ -103,12 +104,13 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private enum class Destination { MONTH, YEAR, SEARCH, SETTINGS }
+private enum class Destination { MONTH, YEAR, WEATHER, SEARCH, SETTINGS }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun QuireApp(intent: Intent?) {
     val model: CalendarModel = viewModel()
+    val sky: WeatherModel = viewModel()
     val activity = LocalActivity.current as? ComponentActivity
 
     val dark = when (model.settings.dark) {
@@ -125,10 +127,21 @@ private fun QuireApp(intent: Intent?) {
         ActivityResultContracts.RequestPermission(),
     ) { granted -> if (granted) model.permissionGranted() }
 
+    val requestLocation = androidx.activity.compose.rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted -> if (granted) sky.permissionGranted() }
+
     androidx.compose.runtime.LaunchedEffect(Unit) {
         model.refresh()
-        intent?.data?.takeIf { it.scheme == "quire" }?.lastPathSegment?.let { segment ->
-            runCatching { LocalDate.parse(segment) }.getOrNull()?.let { model.openDay(it) }
+        sky.refresh()
+        val link = intent?.data?.takeIf { it.scheme == "quire" }
+        // The weather card opens the weather; a calendar square opens its day.
+        if (link?.host == "weather" || link?.lastPathSegment == "weather") {
+            destination = Destination.WEATHER
+        } else {
+            link?.lastPathSegment?.let { segment ->
+                runCatching { LocalDate.parse(segment) }.getOrNull()?.let { model.openDay(it) }
+            }
         }
     }
 
@@ -152,6 +165,7 @@ private fun QuireApp(intent: Intent?) {
                             RollingLabel(
                                 text = when (destination) {
                                     Destination.YEAR -> model.month.year.toString()
+                                    Destination.WEATHER -> stringResource(R.string.weather)
                                     Destination.SETTINGS -> stringResource(R.string.settings)
                                     else -> MonthModel.monthName(model.month, locale)
                                 },
@@ -188,6 +202,12 @@ private fun QuireApp(intent: Intent?) {
                         onClick = { destination = Destination.YEAR },
                         icon = { Icon(Icons.Default.CalendarMonth, null) },
                         label = { Text(stringResource(R.string.year)) },
+                    )
+                    ShortNavigationBarItem(
+                        selected = destination == Destination.WEATHER,
+                        onClick = { destination = Destination.WEATHER },
+                        icon = { Icon(painterResource(R.drawable.wx_partly_day), null) },
+                        label = { Text(stringResource(R.string.weather)) },
                     )
                     ShortNavigationBarItem(
                         selected = destination == Destination.SEARCH,
@@ -285,6 +305,9 @@ private fun QuireApp(intent: Intent?) {
                             model.showMonth(month)
                             model.openDay(month.atDay(1))
                             destination = Destination.MONTH
+                        }
+                        Destination.WEATHER -> WeatherScreen(sky, padding) {
+                            requestLocation.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
                         }
                         Destination.SEARCH -> Box(Modifier.fillMaxSize().padding(padding)) {
                             SearchResults(model) { date ->

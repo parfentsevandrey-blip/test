@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Four by two is the shape this card is designed for: wide enough for the temperature and the
+  sky beside it, and two rows deep so the five-day strip fits under the rule. It stays legal
+  down to two by two, where it drops the strip and becomes a "now" card.
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/wx_widget_description"
+    android:initialLayout="@layout/weather_widget"
+    android:maxResizeHeight="420dp"
+    android:maxResizeWidth="620dp"
+    android:minHeight="110dp"
+    android:minResizeHeight="110dp"
+    android:minResizeWidth="110dp"
+    android:minWidth="180dp"
+    android:previewLayout="@layout/weather_widget"
+    android:resizeMode="horizontal|vertical"
+    android:targetCellHeight="2"
+    android:targetCellWidth="4"
+    android:updatePeriodMillis="0"
+    android:widgetCategory="home_screen" />
