@@ -35,6 +35,8 @@
     <string name="skin_paper">Paper</string>
     <string name="skin_ink">Ink</string>
 
+    <string name="skin_colour">Colour</string>
+
     <string name="accent">Accent</string>
     <string name="accent_cinnabar">Cinnabar</string>
     <string name="accent_indigo">Indigo</string>

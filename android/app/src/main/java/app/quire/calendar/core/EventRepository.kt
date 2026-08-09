@@ -10,8 +10,21 @@ import androidx.core.content.ContextCompat
 import java.time.LocalDate
 import java.time.ZoneId
 
-/** Aggregate load for one square of the grid. */
-class DayLoad(val count: Int, val colours: IntArray)
+/**
+ * Aggregate load for one square of the grid.
+ *
+ * @property count how many things happen that day.
+ * @property colours up to a few distinct calendar colours, for the marks under the number.
+ * @property label the day's earliest entry, for a surface with room to name it rather than dot
+ *   it. Null when nothing is happening, or when the entry has no title of its own.
+ * @property labelColour the colour of the entry [label] came from, or 0 if it has none.
+ */
+class DayLoad(
+    val count: Int,
+    val colours: IntArray,
+    val label: String? = null,
+    val labelColour: Int = 0,
+)
 
 class AgendaEntry(
     val eventId: Long,
@@ -134,6 +147,12 @@ object EventRepository {
         val to = from.plusDays(days.toLong())
         val counts = HashMap<LocalDate, Int>(days * 2)
         val colours = HashMap<LocalDate, MutableList<Int>>(days * 2)
+        // The earliest entry on each day, and when it starts, so "first" means first rather than
+        // whatever the provider happened to return first. Free: the title is already in the
+        // projection this query is reading, so naming a day costs no second pass.
+        val labels = HashMap<LocalDate, String>(days * 2)
+        val labelColours = HashMap<LocalDate, Int>(days * 2)
+        val labelStarts = HashMap<LocalDate, Long>(days * 2)
         val firstJulian = julian(from)
         val lastJulian = julian(to) - 1
 
@@ -143,6 +162,8 @@ object EventRepository {
                 val colour = if (c.isNull(I_COLOUR)) 0 else c.getInt(I_COLOUR)
                 val startDay = c.getLong(I_START_DAY).coerceAtLeast(firstJulian)
                 val endDay = c.getLong(I_END_DAY).coerceAtMost(lastJulian)
+                val begin = c.getLong(I_BEGIN)
+                val title = c.getString(I_TITLE)?.trim().orEmpty()
                 var j = startDay
                 while (j <= endDay) {
                     val date = MonthModel.dateOfJulianDay(j)
@@ -151,13 +172,23 @@ object EventRepository {
                         val list = colours.getOrPut(date) { ArrayList(maxColours) }
                         if (list.size < maxColours && !list.contains(colour)) list.add(colour)
                     }
+                    if (title.isNotEmpty() && begin < (labelStarts[date] ?: Long.MAX_VALUE)) {
+                        labelStarts[date] = begin
+                        labels[date] = title
+                        labelColours[date] = colour
+                    }
                     j++
                 }
             }
         }
 
         return counts.mapValues { (date, count) ->
-            DayLoad(count, colours[date]?.toIntArray() ?: IntArray(0))
+            DayLoad(
+                count = count,
+                colours = colours[date]?.toIntArray() ?: IntArray(0),
+                label = labels[date],
+                labelColour = labelColours[date] ?: 0,
+            )
         }
     }
 

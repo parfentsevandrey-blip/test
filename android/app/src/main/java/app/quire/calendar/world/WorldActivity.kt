@@ -221,7 +221,8 @@ class WorldActivity : AppCompatActivity(), WorldView.Data {
     /** True when the palette should be the dark one, honouring the user's override first. */
     private fun wantsDark(): Boolean = when (prefs.skin) {
         Skin.PAPER -> false
-        Skin.INK -> true
+        // COLOUR belongs to the widget, which is a dark card; the app never sets it.
+        Skin.INK, Skin.COLOUR -> true
         Skin.AUTO ->
             (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
                 Configuration.UI_MODE_NIGHT_YES
@@ -301,7 +302,7 @@ class WorldActivity : AppCompatActivity(), WorldView.Data {
         dark = when (prefs.skin) {
             Skin.AUTO -> null
             Skin.PAPER -> false
-            Skin.INK -> true
+            Skin.INK, Skin.COLOUR -> true
         },
         contrast = prefs.contrast,
         scale = prefs.scale,

@@ -1,63 +1,118 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  One square of the grid.
+
+  The outer row is horizontal only so the cell can carry a hairline down its right edge: with a
+  rule under every week as well, the two together draw the lattice the filled skin is set on.
+  The divider is a FrameLayout rather than a View because RemoteViews will not inflate a bare
+  <View> — the host's inflater rejects any class not annotated @RemoteView, at runtime, with no
+  compile-time warning.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/cell_root"
     android:layout_width="0dp"
     android:layout_height="match_parent"
     android:layout_weight="1"
-    android:gravity="center"
-    android:orientation="vertical">
-
-    <FrameLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
-
-        <ImageView
-            android:id="@+id/cell_mark"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_gravity="center"
-            android:importantForAccessibility="no"
-            android:src="@drawable/shape_circle" />
-
-        <TextView
-            android:id="@+id/cell_text"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_gravity="center"
-            android:fontFeatureSettings="tnum"
-            android:gravity="center"
-            android:includeFontPadding="false"
-            android:textSize="12sp" />
-    </FrameLayout>
+    android:baselineAligned="false"
+    android:orientation="horizontal">
 
     <LinearLayout
-        android:id="@+id/cell_dots"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        android:orientation="horizontal">
+        android:id="@+id/cell_body"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="vertical">
 
-        <ImageView
-            android:id="@+id/dot_0"
-            android:layout_width="3.5dp"
-            android:layout_height="3.5dp"
-            android:importantForAccessibility="no"
-            android:src="@drawable/shape_circle" />
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
 
-        <ImageView
-            android:id="@+id/dot_1"
-            android:layout_width="3.5dp"
-            android:layout_height="3.5dp"
-            android:layout_marginStart="2.5dp"
-            android:importantForAccessibility="no"
-            android:src="@drawable/shape_circle" />
+            <ImageView
+                android:id="@+id/cell_mark"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                android:src="@drawable/shape_circle" />
 
-        <ImageView
-            android:id="@+id/dot_2"
-            android:layout_width="3.5dp"
-            android:layout_height="3.5dp"
-            android:layout_marginStart="2.5dp"
-            android:importantForAccessibility="no"
-            android:src="@drawable/shape_circle" />
+            <TextView
+                android:id="@+id/cell_text"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:fontFeatureSettings="tnum"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:textSize="12sp" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:id="@+id/cell_dots"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/dot_0"
+                android:layout_width="3.5dp"
+                android:layout_height="3.5dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/shape_circle" />
+
+            <ImageView
+                android:id="@+id/dot_1"
+                android:layout_width="3.5dp"
+                android:layout_height="3.5dp"
+                android:layout_marginStart="2.5dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/shape_circle" />
+
+            <ImageView
+                android:id="@+id/dot_2"
+                android:layout_width="3.5dp"
+                android:layout_height="3.5dp"
+                android:layout_marginStart="2.5dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/shape_circle" />
+        </LinearLayout>
+
+        <!-- Only ever shown where a cell is wide enough to hold a word. -->
+        <FrameLayout
+            android:id="@+id/cell_chip"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="2dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginEnd="2dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/chip_back"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:importantForAccessibility="no"
+                android:scaleType="fitXY"
+                android:src="@drawable/widget_chip" />
+
+            <TextView
+                android:id="@+id/chip_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:paddingStart="4dp"
+                android:paddingTop="1.5dp"
+                android:paddingEnd="4dp"
+                android:paddingBottom="1.5dp"
+                android:textSize="8sp" />
+        </FrameLayout>
     </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/cell_divider"
+        android:layout_width="1dp"
+        android:layout_height="match_parent" />
 </LinearLayout>

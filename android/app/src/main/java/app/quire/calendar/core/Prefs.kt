@@ -146,8 +146,13 @@ class WidgetPrefs(private val sp: SharedPreferences, private val id: Int) {
 
     val configured: Boolean get() = sp.contains(k("skin"))
 
+    /**
+     * A placed widget wears the filled card until it is configured otherwise. The app half is a
+     * page of ink and follows the system; a widget sits on somebody's wallpaper, and a card that
+     * carries its own colour reads as an object on it rather than a hole in it.
+     */
     var skin: Skin
-        get() = Skin.from(sp.getString(k("skin"), Skin.AUTO.key))
+        get() = Skin.from(sp.getString(k("skin"), Skin.COLOUR.key))
         set(v) = sp.edit { putString(k("skin"), v.key) }
 
     var accent: Accent

@@ -34,6 +34,8 @@
     <string name="skin_paper">Бумага</string>
     <string name="skin_ink">Тушь</string>
 
+    <string name="skin_colour">Цвет</string>
+
     <string name="accent">Акцент</string>
     <string name="accent_cinnabar">Киноварь</string>
     <string name="accent_indigo">Индиго</string>

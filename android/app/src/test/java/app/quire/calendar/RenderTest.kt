@@ -207,6 +207,125 @@ class RenderTest {
     }
 
     /**
+     * The chip is the part of the reference style that only a wide card can carry, so it is the
+     * part most likely to ship unlooked-at. Real events are pushed through the fake provider so
+     * the widget queries them the way it will on a phone.
+     */
+    @Test
+    fun `a wide filled card names the day's first event`() {
+        FakeCalendarProvider.reset()
+        org.robolectric.Robolectric.setupContentProvider(
+            FakeCalendarProvider::class.java,
+            android.provider.CalendarContract.AUTHORITY,
+        )
+        org.robolectric.Shadows.shadowOf(
+            ApplicationProvider.getApplicationContext<android.app.Application>(),
+        ).grantPermissions(android.Manifest.permission.READ_CALENDAR)
+
+        val zone = java.time.ZoneId.systemDefault()
+        val month = YearMonth.now()
+        fun at(day: Int, hour: Int) = month.atDay(day)
+            .atTime(hour, 0).atZone(zone).toInstant().toEpochMilli()
+        fun julian(day: Int) = MonthModel.julianDay(month.atDay(day))
+
+        FakeCalendarProvider.instances = listOf(
+            // Two on the same day, out of order, so "first" has to mean earliest rather than
+            // whichever row the provider happened to hand back first.
+            FakeCalendarProvider.instance(
+                eventId = 1, beginMillis = at(12, 15), endMillis = at(12, 16),
+                startDay = julian(12), endDay = julian(12),
+                title = "Afternoon", colour = 0xFF4C5D3C.toInt(),
+            ),
+            FakeCalendarProvider.instance(
+                eventId = 2, beginMillis = at(12, 9), endMillis = at(12, 10),
+                startDay = julian(12), endDay = julian(12),
+                title = "Standup", colour = 0xFF2E4A7D.toInt(),
+            ),
+            FakeCalendarProvider.instance(
+                eventId = 3, beginMillis = at(20, 11), endMillis = at(20, 12),
+                startDay = julian(20), endDay = julian(20),
+                title = "Рабочая встреча", colour = 0xFF9A6F21.toInt(),
+            ),
+        )
+
+        val widgetId = 44
+        Prefs.get(context).widget(widgetId).apply {
+            skin = Skin.COLOUR
+            accent = Accent.PLUM
+            opacity = 100
+            showEvents = true
+            weekNumbers = false
+            monthOffset = 0
+        }
+        val views = WidgetRenderer.build(context, widgetId, 350, 300)
+        val host = FrameLayout(context).apply { setBackgroundColor(0xFF101014.toInt()) }
+        host.addView(
+            views.apply(context, host),
+            FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+            ),
+        )
+        assertPainted(render(host, 350, 300, "widget-colour-chips"), "widget-colour-chips")
+
+        val texts = ArrayList<String>()
+        collectText(host, texts)
+        assertTrue(
+            "the earliest event of the day was not named: $texts",
+            texts.any { it == "Standup" },
+        )
+        assertTrue(
+            "a later event won the cell instead of the earliest",
+            texts.none { it == "Afternoon" },
+        )
+        assertTrue("a Cyrillic title did not survive", texts.any { it == "Рабочая встреча" })
+
+        FakeCalendarProvider.reset()
+    }
+
+    /**
+     * The filled skin at the two placements that matter: half a home-screen row, which is what it
+     * was asked for, and a full-width card where a column is wide enough to name the day's first
+     * entry instead of dotting it.
+     */
+    @Test
+    fun `the filled skin reads at half width and at full width`() {
+        val cases = listOf(
+            Triple("widget-colour-half", 175 to 230, 40),
+            Triple("widget-colour-wide", 350 to 300, 41),
+            Triple("widget-colour-indigo", 175 to 230, 42),
+        )
+        cases.forEachIndexed { index, (name, size, widgetId) ->
+            Prefs.get(context).widget(widgetId).apply {
+                skin = Skin.COLOUR
+                accent = if (index == 2) Accent.INDIGO else Accent.PLUM
+                opacity = 100
+                showEvents = true
+                weekNumbers = false
+                monthOffset = 0
+            }
+            val views = WidgetRenderer.build(context, widgetId, size.first, size.second)
+            val host = FrameLayout(context).apply { setBackgroundColor(0xFF101014.toInt()) }
+            host.addView(
+                views.apply(context, host),
+                FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                ),
+            )
+            assertPainted(render(host, size.first, size.second, name), name)
+
+            val texts = ArrayList<String>()
+            collectText(host, texts)
+            assertEquals(
+                "$name renders every square",
+                MonthModel.CELLS,
+                texts.mapNotNull { it.toIntOrNull() }.count { it in 1..31 },
+            )
+        }
+    }
+
+    /**
      * The regression that once made every animation in the app stand still: the profile came from
      * the system animator scale on every launch, so a phone with animations turned down could
      * never be talked out of it. The app's own setting is the authority now.

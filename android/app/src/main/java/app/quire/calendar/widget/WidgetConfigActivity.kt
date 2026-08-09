@@ -144,13 +144,14 @@ class WidgetConfigActivity : BaseActivity() {
         val panel = Panel(this, palette)
 
         panel.section(R.string.section_appearance)
-        val skins = listOf(Skin.AUTO, Skin.PAPER, Skin.INK)
+        val skins = listOf(Skin.AUTO, Skin.PAPER, Skin.INK, Skin.COLOUR)
         panel.segmented(
             titleRes = R.string.skin,
             options = listOf(
                 getString(R.string.skin_auto),
                 getString(R.string.skin_paper),
                 getString(R.string.skin_ink),
+                getString(R.string.skin_colour),
             ),
             selectedIndex = skins.indexOf(widgetPrefs.skin).coerceAtLeast(0),
         ) { index ->

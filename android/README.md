@@ -8,10 +8,10 @@ Every pixel is drawn on a Canvas and every moving value is integrated by an engi
 repository. That is not a stunt — the reason is at [Why none of it is the
 platform's](#why-none-of-it-is-the-platforms), and it is the whole point of the rewrite.
 
-**Install:** [`dist/quire-3.1.apk`](dist/quire-3.1.apk) · 744 KB · Android 8.0+ (minSdk 26,
-targetSdk 35) · `sha256 551dd39f9826f9e59e98e6ba311b60463470b2e29023ceea4392a99d675418ba`
+**Install:** [`dist/quire-3.2.apk`](dist/quire-3.2.apk) · 748 KB · Android 8.0+ (minSdk 26,
+targetSdk 35) · `sha256 1970cf1467581551eefd4fc7b561344c8d08326135ec85f8e19b14f1504aa5a4`
 
-Copy it to the phone and open it, or `adb install -r dist/quire-3.1.apk`. You will need to allow
+Copy it to the phone and open it, or `adb install -r dist/quire-3.2.apk`. You will need to allow
 installing from an unknown source once — the APK is signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -129,6 +129,21 @@ quad ended up, a world that has stopped moving holds a still image and asks for 
 
 **The widget**
 
+| Half width | Full width | Named entries |
+|---|---|---|
+| ![Half](docs/widget-colour-half.png) | ![Wide](docs/widget-colour-wide.png) | ![Chips](docs/widget-colour-chips.png) |
+
+- **Four skins.** *Paper* and *Ink* are the calendar as a printed page. *Colour* fills the card
+  with the accent taken down to a deep ground, sets the dates in near-white on a lattice, and puts
+  a filled add button in the header — a card that carries its own colour reads as an object on a
+  wallpaper rather than a hole in it. Every value is walked in Oklch from the accent, so all six
+  accents give a card of the same weight instead of one nearly black and another that glows. It is
+  what a newly placed widget wears.
+- **A day is named where there is room for a name, and dotted where there is not.** Given a column
+  at least 44dp wide the filled card labels each day with its earliest entry, in that calendar's
+  own colour. Seven columns of a half-width card are 25dp each, so there the dots say the same
+  thing in the space available. The title costs no extra query — it was already in the one the
+  marks are counted from.
 - The full month, always six rows, so the geometry never shifts between months.
 - Today is a filled disc in the accent. Days with something in them carry up to three dots,
   coloured by the calendar the event belongs to.

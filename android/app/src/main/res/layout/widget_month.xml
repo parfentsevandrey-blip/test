@@ -92,6 +92,40 @@
                 android:contentDescription="@string/cd_next_month"
                 android:padding="6dp"
                 android:src="@drawable/ic_chevron_right" />
+
+            <!--
+              The add button. Two views rather than one because a RemoteViews ImageView can be
+              tinted but not given a tinted background: the pill behind and the glyph on top take
+              their colours separately.
+            -->
+            <FrameLayout
+                android:id="@+id/add_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp">
+
+                <!--
+                  Sized in dp rather than match_parent: a match_parent child of a wrap_content
+                  FrameLayout measures against a parent that has no size yet and collapses to
+                  nothing, which is exactly what it did the first time. Both this and the glyph
+                  are resized together at runtime where the platform allows it.
+                -->
+                <ImageView
+                    android:id="@+id/add_pill"
+                    android:layout_width="30dp"
+                    android:layout_height="28dp"
+                    android:importantForAccessibility="no"
+                    android:scaleType="fitXY"
+                    android:src="@drawable/widget_pill" />
+
+                <ImageView
+                    android:id="@+id/add_glyph"
+                    android:layout_width="30dp"
+                    android:layout_height="28dp"
+                    android:contentDescription="@string/new_event"
+                    android:padding="7dp"
+                    android:src="@drawable/ic_plus" />
+            </FrameLayout>
         </LinearLayout>
 
         <LinearLayout

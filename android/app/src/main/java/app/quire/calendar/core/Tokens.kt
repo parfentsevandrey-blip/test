@@ -3,6 +3,9 @@ package app.quire.calendar.core
 import android.content.Context
 import android.content.res.Configuration
 import androidx.annotation.ColorInt
+import app.quire.engine.design.Oklch
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  * The whole visual language lives here, in one file, as plain numbers.
@@ -32,11 +35,19 @@ enum class Accent(
     }
 }
 
-/** Which set of surfaces to paint on. AUTO follows the system. */
+/**
+ * Which set of surfaces to paint on. AUTO follows the system.
+ *
+ * COLOUR is the odd one out: rather than ink on paper it fills the whole card with the accent
+ * taken down to a deep, saturated ground and sets the dates in near-white on top of it. It is a
+ * widget skin only — the app derives its own palette from a seed — and it exists because a card
+ * that carries its own colour reads as an object on the wallpaper instead of a hole in it.
+ */
 enum class Skin(val key: String) {
     AUTO("auto"),
     PAPER("paper"),
     INK("ink"),
+    COLOUR("colour"),
     ;
 
     companion object {
@@ -115,15 +126,65 @@ object Tokens {
         )
     }
 
+    /**
+     * The filled card: the accent's own hue taken down to a deep ground, with the dates set in
+     * near-white on it.
+     *
+     * Every value is walked in Oklch from the accent rather than picked by hand, so all six
+     * accents give a card of the same weight instead of one that is nearly black and another
+     * that glows. Lightness is fixed and only the hue travels, which is the whole trick.
+     */
+    fun filled(accent: Accent): Palette {
+        val lch = FloatArray(3)
+        Oklch.fromSrgb(accent.light, lch)
+        val hue = lch[2]
+        // A near-grey accent has no hue worth carrying, so the ground borrows a little chroma
+        // rather than landing on black — otherwise Graphite would be the only skinless skin.
+        val chroma = max(lch[1], 0.035f)
+
+        val card = Oklch.toSrgb(CARD_L, min(chroma * 0.85f, CARD_CHROMA_MAX), hue)
+        val ink = Oklch.toSrgb(FILLED_INK_L, min(chroma * 0.10f, 0.02f), hue)
+        val light = Oklch.toSrgb(FILLED_ACCENT_L, min(chroma * 0.75f, 0.11f), hue)
+        return Palette(
+            dark = true,
+            canvas = card,
+            surface = card,
+            ink = ink,
+            // The quiet tiers are the same white at less of it, so the card colour reads through
+            // them: a separate grey would go muddy against a saturated ground.
+            inkMuted = withAlpha(ink, 0.74f),
+            inkFaint = withAlpha(ink, 0.56f),
+            inkGhost = withAlpha(ink, 0.34f),
+            hairline = withAlpha(ink, 0.16f),
+            hairlineStrong = withAlpha(ink, 0.26f),
+            accent = light,
+            onAccent = Oklch.toSrgb(CARD_L * 0.8f, min(chroma * 0.6f, 0.06f), hue),
+            press = withAlpha(ink, 0.12f),
+        )
+    }
+
+    // Deep enough that white sits on it at better than 12:1, light enough that the hue is still
+    // a colour rather than a black with a rumour in it.
+    private const val CARD_L = 0.255f
+    private const val CARD_CHROMA_MAX = 0.085f
+    private const val FILLED_INK_L = 0.975f
+
+    // The today disc and the add button: light enough to carry the card colour as its own text.
+    private const val FILLED_ACCENT_L = 0.80f
+
     fun isSystemDark(context: Context): Boolean =
         (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
             Configuration.UI_MODE_NIGHT_YES
 
     fun resolveDark(context: Context, skin: Skin): Boolean = when (skin) {
         Skin.PAPER -> false
-        Skin.INK -> true
+        Skin.INK, Skin.COLOUR -> true
         Skin.AUTO -> isSystemDark(context)
     }
+
+    /** The palette a widget wearing [skin] paints in, filled or otherwise. */
+    fun widgetPalette(context: Context, skin: Skin, accent: Accent): Palette =
+        if (skin == Skin.COLOUR) filled(accent) else palette(resolveDark(context, skin), accent)
 
     /** Blend `color` towards transparency without touching its channels. */
     @ColorInt

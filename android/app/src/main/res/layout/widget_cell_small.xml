@@ -1,12 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Same structure as widget_cell, tuned for rows shorter than ~26dp. -->
+<!--
+  Same structure as widget_cell, tuned for rows shorter than ~26dp. It keeps the right-edge
+  hairline, because the lattice is most of what the filled skin looks like and a half-width
+  widget is exactly where these short rows happen.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/cell_root"
     android:layout_width="0dp"
     android:layout_height="match_parent"
     android:layout_weight="1"
-    android:gravity="center"
-    android:orientation="vertical">
+    android:baselineAligned="false"
+    android:orientation="horizontal">
+
+    <LinearLayout
+        android:id="@+id/cell_body"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="vertical">
 
     <FrameLayout
         android:layout_width="wrap_content"
@@ -61,4 +73,10 @@
             android:importantForAccessibility="no"
             android:src="@drawable/shape_circle" />
     </LinearLayout>
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/cell_divider"
+        android:layout_width="1dp"
+        android:layout_height="match_parent" />
 </LinearLayout>
