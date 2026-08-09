@@ -260,6 +260,50 @@ class WorldRenderTest {
     }
 
     @Test
+    fun `the month today falls in is named in the accent`() {
+        val theme = theme(false)
+
+        fun redness(target: YearMonth): Int {
+            val bitmap = surface(411, 640)
+            val canvas = Canvas(bitmap)
+            canvas.drawColor(theme.canvas)
+            val plate = MonthPlate(context)
+            plate.configure(theme, metrics(), DayOfWeek.MONDAY, today, false, false)
+            plate.draw(canvas, facingQuad(bitmap.width, bitmap.height), target, null, emptyMap(), 1f)
+            plate.release()
+            // The title sits in the top eighth of the plate. Saturation rather than hue, so the
+            // check does not break the day a different accent is chosen.
+            var most = 0
+            var y = (bitmap.height * 0.10f).toInt()
+            val bottom = (bitmap.height * 0.20f).toInt()
+            while (y < bottom) {
+                var x = 0
+                while (x < bitmap.width) {
+                    val pixel = bitmap.getPixel(x, y)
+                    val red = (pixel shr 16) and 0xFF
+                    val green = (pixel shr 8) and 0xFF
+                    val blue = pixel and 0xFF
+                    most = maxOf(most, red - (green + blue) / 2)
+                    x++
+                }
+                y++
+            }
+            return most
+        }
+
+        val current = redness(month)
+        val other = redness(month.plusMonths(3))
+        assertTrue(
+            "the current month's name is not in the accent (saturation $current)",
+            current > 60,
+        )
+        assertTrue(
+            "every month's name is in the accent (other month saturation $other)",
+            other < current / 2,
+        )
+    }
+
+    @Test
     fun `month plate fades out rather than snapping`() {
         val bitmap = surface(411, 640)
         val canvas = Canvas(bitmap)

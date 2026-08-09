@@ -8,10 +8,10 @@ Every pixel is drawn on a Canvas and every moving value is integrated by an engi
 repository. That is not a stunt — the reason is at [Why none of it is the
 platform's](#why-none-of-it-is-the-platforms), and it is the whole point of the rewrite.
 
-**Install:** [`dist/quire-3.0.apk`](dist/quire-3.0.apk) · 736 KB · Android 8.0+ (minSdk 26,
-targetSdk 35) · `sha256 c81c67da8d3ce83b639dc8107c9adcbe39b9f77672ba3e14e07ce792b8cefba2`
+**Install:** [`dist/quire-3.1.apk`](dist/quire-3.1.apk) · 744 KB · Android 8.0+ (minSdk 26,
+targetSdk 35) · `sha256 551dd39f9826f9e59e98e6ba311b60463470b2e29023ceea4392a99d675418ba`
 
-Copy it to the phone and open it, or `adb install -r dist/quire-3.0.apk`. You will need to allow
+Copy it to the phone and open it, or `adb install -r dist/quire-3.1.apk`. You will need to allow
 installing from an unknown source once — the APK is signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -33,19 +33,24 @@ There are no screens and no navigation. Months are plates standing in a corridor
 from you, and the whole interface is two numbers:
 
 ```
-travel     ── a fractional month index: where the camera stands, and how far round the ring
-distance   ── 1: one month fills the view        12: the year, as a ring you orbit
+travel     ── a fractional month index: where the camera stands, and where on the wall it looks
+distance   ── 1: one month fills the view        12: the whole year, three across and four down
 ```
 
 Pulling back with two fingers does not switch to a year view. The same twelve plates are placed
 by the same function, blended between two layouts, so a pinch stopped halfway is a real position
-rather than an animation caught between two states. Choosing a day lifts its tile out of the
-plate it was drawn on and opens it into the day panel.
+rather than an animation caught between two states — the months fly out of the corridor and into
+their cells on a wave that starts at the one you were reading. Choosing a day lifts its tile out
+of the plate it was drawn on and opens it into the day panel.
+
+The year is a whole calendar year, January to December, every date legible at once — and it is
+still a scene rather than a page: the twelve cards stand on a gently curved wall, each turned a
+little towards the eye, each with its own shadow, and the wall answers the tilt of the phone.
 
 **Moving through it**
 
-- **Drag** sideways to travel. One screen is one month down the corridor, rather more once the
-  ring is turning under your finger.
+- **Drag** sideways to travel. One screen is one month down the corridor, and a year once the
+  wall is under your finger.
 - **Pinch** to move along the distance continuously; **double-tap** to jump a level. Both land on
   whatever your fingers were over.
 - **Tap** a month to enter it, a day to open it, an entry to hand it to your calendar app.
@@ -102,7 +107,7 @@ velocity across the change, so an interrupted gesture continues instead of snapp
 
 **The app**
 
-- The month corridor, the year ring and the day panel, all as one continuous position.
+- The month corridor, the year wall and the day panel, all as one continuous position.
 - The day panel grows out of the square you tapped and carries the day's entries: time in
   tabular figures, a rule in the calendar's colour, title, place. It scrolls with real inertia
   and rubber-bands at both ends.
@@ -111,9 +116,16 @@ velocity across the change, so an interrupted gesture continues instead of snapp
 - **Settings** are one drawn sheet with a live month at the top that answers every change as it
   is made — the point of a setting called *Seed* is easier to see than to read. Pills travel,
   switches spring, sliders keep the velocity your finger let go at, rows arrive on a stagger.
-- **Density** tints each square by how full the day is. **Depth** answers the tilt of the phone.
+- **Density** tints each square by how full the day is — a soft warmth that pools where a run of
+  busy days meets, rather than a row of coloured pills. **Depth** answers the tilt of the phone.
 - Creating and opening events hands off to whatever calendar app is installed. Quire never
   writes to your calendar and asks only for read access.
+
+**Light is the one thing that is never baked.** A plate is rasterised once and thereafter costs a
+single `drawBitmap`, but its shadow, the sheen sliding across it as it turns, and the bloom on
+today all answer where the plate is *standing* rather than what is written on it. So they are
+drawn over the picture from the projected quad — and because they are pure functions of where the
+quad ended up, a world that has stopped moving holds a still image and asks for no frames at all.
 
 **The widget**
 
@@ -145,7 +157,8 @@ marked day.
 ```
 engine/   math scene anim input fx design state — no calendar anywhere in it
 world/    MonthPlate  a month baked to a bitmap, pasted onto a plane
-          WorldView   the corridor: travel, distance, gestures, the whole scene
+          WorldView   the scene: travel, distance, the corridor and the year wall
+          Ambience    the driven background, answering travel and depth rather than a clock
           DayPanel    the opened day        Hud       the fixed foreground
           SettingsPanel  SearchPanel  Notice          OverlayView  the sheets above the world
           WorldActivity  the only Activity of the app half
