@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-6.5.apk`](dist/quire-calendar-6.5.apk) · 1.9 MB | `sha256 2e6be42df7ceaeb87e40464999607ca025c0d103a32c69d3d73b6ef89e3faaf4` |
-| **Weather** | [`dist/quire-weather-6.5.apk`](dist/quire-weather-6.5.apk) · 1.5 MB | `sha256 545a063707a51013db9317c062d365724e6f35efafb34e084e83a375844ea2a8` |
+| **Calendar** | [`dist/quire-calendar-6.6.apk`](dist/quire-calendar-6.6.apk) · 1.9 MB | `sha256 6f90b4043f9034ca5324580ab1b76c7ec82c6dcb8d7cffd73b00f300b001c535` |
+| **Weather** | [`dist/quire-weather-6.6.apk`](dist/quire-weather-6.6.apk) · 1.5 MB | `sha256 56008bd52c3bcf12371985c9b62065c3d8d05469dbded9c402533c26bba2f76a` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-6.5.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-6.6.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -168,6 +168,22 @@ them 16dp, so each heading hung eight points left of the thing it named, the who
 render test measures it, walking in from the margin on a row through the middle of each card and
 failing if the four disagree by more than a pixel, because that is the kind of fault that comes
 back the moment somebody adds a block and types a number.
+
+**The hourly numbers sit on one line.** They used to ride the curve, each label just above its
+own point, on the argument that a number and its place on the line should be the same place on
+screen. On a real afternoon that is wrong: a stretch of weather that changes by a degree an hour
+moves each label three points, so the row comes out neither aligned nor visibly stepped — it reads
+as badly set type rather than as data. And wherever the line happened to sit, the rest of the band
+was empty, so every screenful carried a dead strip along its top or its bottom. The numbers are a
+row now and the curve runs under them as a short filled band, which is the one thing a row of
+numbers cannot say: where the afternoon peaks and how sharply the evening falls off.
+
+That curve is **one path across the whole strip**, not a slice drawn inside each column. Two
+translucent shapes that share an edge do not add up to one shape — each edge is antialiased
+against what is behind it, so the seam comes out lighter than either side, and the first version
+of the fill had a row of notches along its foot, one per hour. The fill fades to its own colour at
+zero alpha rather than to `Color.Transparent`, because transparent is black and a gradient run in
+non-premultiplied sRGB walks the hue towards it on the way down.
 
 Three more things were crooked for reasons worth naming. The sun's arc put its apex at a fixed
 fraction of the card's width, which is a half-circle at exactly one width: on a phone it wanted to

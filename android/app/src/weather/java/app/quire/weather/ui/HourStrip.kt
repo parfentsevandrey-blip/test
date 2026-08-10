@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -27,7 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
@@ -48,8 +46,15 @@ import kotlin.math.roundToInt
  * head, and a line does the comparing for you: where the afternoon peaks, when it falls off, how
  * sharply the rain arrives.
  *
- * The curve is drawn behind the columns rather than beside them, so a temperature and its point on
- * the line occupy the same place on screen and the eye does not have to travel between them.
+ * The numbers sit in a row of their own and the curve runs underneath them, filled. The labels
+ * used to ride the line, each one just above its own point, which is defensible on paper and wrong
+ * on a real afternoon: a stretch of weather that changes by a degree an hour moves each label
+ * three points, so the row is neither aligned nor visibly stepped and reads as badly set type.
+ *
+ * The curve is one path across the whole strip rather than a slice drawn inside each column. Two
+ * translucent shapes that share an edge do not add up to one shape — each edge is antialiased
+ * against what is behind it, so the seam comes out lighter than either side and the fill ends up
+ * with a row of notches along its foot, one per hour.
  *
  * It sits in a card at [Gutter], like the readings above it and the days below, so the scrolling
  * content is bounded by the same left and right edges as everything else on the screen instead of
@@ -62,147 +67,162 @@ fun HourStrip(
     modifier: Modifier = Modifier,
 ) {
     if (hours.size < 2) return
+    val scheme = MaterialTheme.colorScheme
     val locale = app.quire.calendar.m3.rememberLocale()
     val clock = remember(locale) { DateTimeFormatter.ofPattern("HH", locale) }
+    val now = remember { LocalDateTime.now() }
 
     val warmest = hours.maxOf { it.temperature }
     val coldest = hours.minOf { it.temperature }
     val span = (warmest - coldest).coerceAtLeast(1.0)
+    val levels = hours.map { ((it.temperature - coldest) / span).toFloat().coerceIn(0f, 1f) }
 
     // Decided once for the whole strip, not per column: if any hour is wet every column gets the
-    // line so their curves stay level with each other, and if none is, nobody gets a blank one.
-    // The blank line was the dead band that opened up between the icons and the curve.
+    // line so the rows stay level with each other, and if none is, nobody gets a blank one. The
+    // blank line was a dead band across the strip on exactly the days nothing was happening.
     val wet = hours.any { it.rain > 0 }
+
+    // Read out here: a draw scope has no access to the theme.
+    val primary = scheme.primary
+    val tertiary = scheme.tertiary
 
     Card(
         modifier = modifier.fillMaxWidth().padding(horizontal = Gutter),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        ),
+        colors = CardDefaults.cardColors(containerColor = scheme.surfaceContainerHigh),
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .horizontalScroll(rememberScrollState())
                 .padding(horizontal = 8.dp, vertical = 12.dp),
         ) {
-            hours.forEachIndexed { index, hour ->
-                HourColumn(
-                    hour = hour,
-                    units = units,
-                    clock = clock,
-                    // Where this hour's temperature sits between the coldest and warmest of the
-                    // day, and where its neighbours do, which is what lets each column draw its
-                    // own slice of one continuous line.
-                    before = hours.getOrNull(index - 1)
-                        ?.let { level(it.temperature, coldest, span) },
-                    here = level(hour.temperature, coldest, span),
-                    after = hours.getOrNull(index + 1)
-                        ?.let { level(it.temperature, coldest, span) },
-                    first = index == 0,
-                    wet = wet,
-                )
+            Row {
+                hours.forEachIndexed { index, hour ->
+                    val isNow = index == 0 ||
+                        (hour.time.hour == now.hour && hour.time.toLocalDate() == now.toLocalDate())
+                    HourHead(hour, units, clock, isNow)
+                }
             }
-        }
-    }
-}
 
-private fun level(value: Double, coldest: Double, span: Double): Float =
-    ((value - coldest) / span).toFloat().coerceIn(0f, 1f)
+            Spacer(Modifier.height(4.dp))
 
-@Composable
-private fun HourColumn(
-    hour: HourForecast,
-    units: WeatherModel.Settings,
-    clock: DateTimeFormatter,
-    before: Float?,
-    here: Float,
-    after: Float?,
-    first: Boolean,
-    wet: Boolean,
-) {
-    val scheme = MaterialTheme.colorScheme
-    // Read out here: a draw scope has no access to the theme.
-    val primary = scheme.primary
-    val tertiary = scheme.tertiary
-    val now = remember { LocalDateTime.now() }
-    val isNow = first || (hour.time.hour == now.hour && hour.time.toLocalDate() == now.toLocalDate())
+            // The shape, under the numbers rather than behind them: a short filled band that says
+            // where the afternoon peaks and how sharply the evening falls off, which is the one
+            // thing a row of numbers cannot say.
+            Canvas(
+                Modifier
+                    .width(ColumnWidth * hours.size)
+                    .height(CurveHeight),
+            ) {
+                val step = size.width / hours.size
+                fun y(level: Float) = Ceiling.toPx() +
+                    (size.height - Ceiling.toPx() - Floor.toPx()) * (1f - level)
 
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .width(ColumnWidth)
-            .clip(RoundedCornerShape(16.dp))
-            .background(if (isNow) scheme.surfaceContainerHighest else Color.Transparent)
-            .padding(vertical = 6.dp),
-    ) {
-        Text(
-            text = if (isNow) stringResource(R.string.wx_now) else clock.format(hour.time),
-            style = MaterialTheme.typography.labelMedium,
-            color = if (isNow) scheme.primary else scheme.onSurfaceVariant,
-            maxLines = 1,
-        )
-        Spacer(Modifier.height(6.dp))
-        Icon(
-            painter = painterResource(hour.sky.icon(hour.day)),
-            contentDescription = stringResource(hour.sky.label),
-            tint = scheme.onSurfaceVariant,
-            modifier = Modifier.size(22.dp),
-        )
-
-        // The curve, with each temperature riding its own point on it.
-        //
-        // The label moves with the line rather than sitting in a row above it: a flat row of
-        // numbers over a line is two things to read, and the whole reason to draw a curve is that
-        // the shape should be readable without reading anything.
-        Box(modifier = Modifier.fillMaxWidth().height(CurveHeight)) {
-            Canvas(Modifier.fillMaxWidth().height(CurveHeight)) {
-                fun y(level: Float) = LabelBand.toPx() +
-                    (size.height - LabelBand.toPx() - Baseline.toPx()) * (1f - level)
-
-                val path = Path()
-                val midX = size.width / 2f
-                path.moveTo(0f, y(((before ?: here) + here) / 2f))
-                path.lineTo(midX, y(here))
-                path.lineTo(size.width, y((here + (after ?: here)) / 2f))
+                val ridge = Path().apply {
+                    moveTo(0f, y(levels.first()))
+                    levels.forEachIndexed { index, level ->
+                        lineTo(step * index + step / 2f, y(level))
+                    }
+                    lineTo(size.width, y(levels.last()))
+                }
                 drawPath(
-                    path = path,
+                    path = Path().apply {
+                        addPath(ridge)
+                        lineTo(size.width, size.height)
+                        lineTo(0f, size.height)
+                        close()
+                    },
+                    // Faded to the same colour at zero alpha rather than to Color.Transparent:
+                    // transparent is black, and a gradient run in non-premultiplied sRGB walks the
+                    // hue towards black on the way there, which puts a dirty band under the curve.
+                    brush = Brush.verticalGradient(
+                        listOf(primary.copy(alpha = 0.32f), primary.copy(alpha = 0f)),
+                    ),
+                )
+                drawPath(
+                    path = ridge,
                     brush = Brush.horizontalGradient(listOf(tertiary, primary)),
                     style = Stroke(width = 2.dp.toPx()),
                 )
-                drawCircle(color = primary, radius = 3.dp.toPx(), center = Offset(midX, y(here)))
+                levels.forEachIndexed { index, level ->
+                    drawCircle(
+                        color = primary,
+                        radius = 3.dp.toPx(),
+                        center = Offset(step * index + step / 2f, y(level)),
+                    )
+                }
             }
-            Text(
-                text = "${units.degrees.from(hour.temperature).roundToInt()}°",
-                style = MaterialTheme.typography.labelLarge,
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .offset(y = labelOffset(here)),
+
+            if (wet) {
+                Spacer(Modifier.height(6.dp))
+                Row {
+                    hours.forEach { hour ->
+                        Text(
+                            text = if (hour.rain > 0) "${hour.rain}%" else "",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = scheme.tertiary,
+                            textAlign = TextAlign.Center,
+                            maxLines = 1,
+                            modifier = Modifier.width(ColumnWidth),
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** The hour, its sky and its temperature: three rows level across the whole strip. */
+@Composable
+private fun HourHead(
+    hour: HourForecast,
+    units: WeatherModel.Settings,
+    clock: DateTimeFormatter,
+    isNow: Boolean,
+) {
+    val scheme = MaterialTheme.colorScheme
+    Box(Modifier.width(ColumnWidth)) {
+        if (isNow) {
+            Box(
+                Modifier
+                    .matchParentSize()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(scheme.surfaceContainerHighest),
             )
         }
-
-        if (wet) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+        ) {
             Text(
-                text = if (hour.rain > 0) "${hour.rain}%" else " ",
-                style = MaterialTheme.typography.labelSmall,
-                color = scheme.tertiary,
+                text = if (isNow) stringResource(R.string.wx_now) else clock.format(hour.time),
+                style = MaterialTheme.typography.labelMedium,
+                color = if (isNow) scheme.primary else scheme.onSurfaceVariant,
+                maxLines = 1,
+            )
+            Spacer(Modifier.height(6.dp))
+            Icon(
+                painter = painterResource(hour.sky.icon(hour.day)),
+                contentDescription = stringResource(hour.sky.label),
+                tint = scheme.onSurfaceVariant,
+                modifier = Modifier.size(22.dp),
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = "${units.degrees.from(hour.temperature).roundToInt()}°",
+                style = MaterialTheme.typography.titleSmall,
+                textAlign = TextAlign.Center,
                 maxLines = 1,
             )
         }
     }
 }
 
-/** Where a label sits for a given level: just above that level's point on the curve. */
-private fun labelOffset(level: Float): androidx.compose.ui.unit.Dp =
-    (CurveHeight - LabelBand - Baseline) * (1f - level)
-
 private val ColumnWidth = 52.dp
 
-/** Tall enough that a day's swing is a shape rather than a wobble. */
-private val CurveHeight = 72.dp
+/** Short, because it is now a shape beside the numbers rather than the place they live. */
+private val CurveHeight = 44.dp
 
-/** Room for the label above the highest point, and for the line below the lowest. */
-private val LabelBand = 20.dp
-private val Baseline = 6.dp
+/** Room above the warmest point for the stroke, and below the coldest for the fill to read. */
+private val Ceiling = 5.dp
+private val Floor = 7.dp
