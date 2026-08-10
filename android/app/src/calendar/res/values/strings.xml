@@ -75,4 +75,11 @@
     <string name="jump_confirm">Go</string>
     <string name="cancel">Cancel</string>
     <string name="actions">Actions</string>
+    <string name="entry_now">Now</string>
+    <string name="entry_in_minutes">in %1$d min</string>
+    <string name="entry_in_hours">in %1$d h</string>
+    <plurals name="agenda_count">
+        <item quantity="one">%1$d entry</item>
+        <item quantity="other">%1$d entries</item>
+    </plurals>
 </resources>

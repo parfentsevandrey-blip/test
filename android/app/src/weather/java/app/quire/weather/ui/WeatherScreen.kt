@@ -35,6 +35,7 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -213,32 +214,81 @@ private fun Heading(text: String) {
 @Composable
 private fun Readings(forecast: Forecast, units: WeatherModel.Settings) {
     val today = forecast.days.firstOrNull()
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = Gutter, vertical = 12.dp)
-            .height(IntrinsicSize.Min),
+    val now = forecast.now
+    val compass = stringArrayResource(R.array.wx_compass)
+
+    // Everything the widget has no room for, in the order it gets asked about. A reading the
+    // provider did not send is left out entirely rather than shown as a dash: a card that says
+    // "—" is a card spent saying nothing.
+    val readings = buildList {
+        add(
+            Triple(
+                R.drawable.wx_drop,
+                stringResource(R.string.wx_rain_chance_short),
+                "${today?.rain ?: 0}%",
+            ),
+        )
+        if (now.humidity >= 0) {
+            add(
+                Triple(
+                    R.drawable.wx_humidity,
+                    stringResource(R.string.wx_humidity),
+                    "${now.humidity}%",
+                ),
+            )
+        }
+        add(
+            Triple(
+                R.drawable.wx_wind,
+                // The quarter it blows from goes in the label rather than the value: it is what
+                // kind of wind this is, not how much of it there is.
+                now.quarter?.let { stringResource(R.string.wx_wind_from, compass[it]) }
+                    ?: stringResource(R.string.wx_wind),
+                "${units.wind.from(now.wind).roundToInt()} " + stringResource(windLabel(units.wind)),
+            ),
+        )
+        if (now.gust >= 0) {
+            add(
+                Triple(
+                    R.drawable.wx_gust,
+                    stringResource(R.string.wx_gust),
+                    "${units.wind.from(now.gust).roundToInt()} " +
+                        stringResource(windLabel(units.wind)),
+                ),
+            )
+        }
+        if (now.uv >= 0) {
+            add(Triple(R.drawable.wx_uv, stringResource(R.string.wx_uv), "${now.uv.roundToInt()}"))
+        }
+        if (now.pressure >= 0) {
+            add(
+                Triple(
+                    R.drawable.wx_pressure,
+                    stringResource(R.string.wx_pressure),
+                    "${units.pressure.from(now.pressure).roundToInt()} " +
+                        stringResource(pressureLabel(units.pressure)),
+                ),
+            )
+        }
+    }
+
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = Gutter, vertical = 12.dp),
     ) {
-        Reading(
-            icon = R.drawable.wx_drop,
-            label = stringResource(R.string.wx_rain_chance_short),
-            value = "${today?.rain ?: 0}%",
-            modifier = Modifier.weight(1f),
-        )
-        Reading(
-            icon = R.drawable.wx_humidity,
-            label = stringResource(R.string.wx_humidity),
-            value = if (forecast.now.humidity >= 0) "${forecast.now.humidity}%" else "—",
-            modifier = Modifier.weight(1f),
-        )
-        Reading(
-            icon = R.drawable.wx_wind,
-            label = stringResource(R.string.wx_wind),
-            value = "${units.wind.from(forecast.now.wind).roundToInt()} " +
-                stringResource(windLabel(units.wind)),
-            modifier = Modifier.weight(1f),
-        )
+        readings.chunked(3).forEach { row ->
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+            ) {
+                row.forEach { (icon, label, value) ->
+                    Reading(icon, label, value, Modifier.weight(1f))
+                }
+                // A short last row keeps the cards the width of the ones above rather than
+                // stretching two of them across three columns.
+                repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
+            }
+        }
     }
 }
 
@@ -467,4 +517,9 @@ private fun windLabel(unit: app.quire.weather.WindUnit): Int = when (unit) {
     app.quire.weather.WindUnit.KMH -> R.string.wx_units_kmh
     app.quire.weather.WindUnit.MS -> R.string.wx_units_ms
     app.quire.weather.WindUnit.MPH -> R.string.wx_units_mph
+}
+
+private fun pressureLabel(unit: app.quire.weather.Pressure): Int = when (unit) {
+    app.quire.weather.Pressure.HPA -> R.string.wx_units_hpa
+    app.quire.weather.Pressure.MMHG -> R.string.wx_units_mmhg
 }

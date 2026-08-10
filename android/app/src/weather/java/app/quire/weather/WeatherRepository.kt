@@ -27,10 +27,11 @@ object WeatherRepository {
 
     private const val ENDPOINT = "https://api.open-meteo.com/v1/forecast"
     private const val CURRENT =
-        "temperature_2m,apparent_temperature,weather_code,is_day,relative_humidity_2m,wind_speed_10m"
+        "temperature_2m,apparent_temperature,weather_code,is_day,relative_humidity_2m," +
+            "wind_speed_10m,wind_gusts_10m,wind_direction_10m,surface_pressure"
     private const val DAILY =
         "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max," +
-            "sunrise,sunset"
+            "sunrise,sunset,uv_index_max"
     private const val HOURLY = "temperature_2m,weather_code,precipitation_probability,is_day"
     private const val DAYS = 6
     private const val TIMEOUT_MILLIS = 12_000
@@ -100,14 +101,6 @@ object WeatherRepository {
     ): Forecast {
         val root = JSONObject(body)
         val current = root.getJSONObject("current")
-        val conditions = Conditions(
-            temperature = current.getDouble("temperature_2m"),
-            feelsLike = current.optDouble("apparent_temperature", current.getDouble("temperature_2m")),
-            sky = Sky.of(current.optInt("weather_code", 3)),
-            day = current.optInt("is_day", 1) == 1,
-            humidity = current.optInt("relative_humidity_2m", -1),
-            wind = current.optDouble("wind_speed_10m", 0.0),
-        )
 
         // The hours are optional: a provider that stops sending them costs the screen a strip,
         // not a forecast.
@@ -140,6 +133,27 @@ object WeatherRepository {
         val rain = daily.optJSONArray("precipitation_probability_max")
         val sunrise = daily.optJSONArray("sunrise")
         val sunset = daily.optJSONArray("sunset")
+        val ultraviolet = daily.optJSONArray("uv_index_max")
+
+        // The UV index is a daily figure everywhere it is published, so "now" takes today's peak
+        // rather than pretending to a reading of its own. A day is dropped below if its row is
+        // short; the index is read before that so it survives a truncated tail.
+        val conditions = Conditions(
+            temperature = current.getDouble("temperature_2m"),
+            feelsLike = current.optDouble("apparent_temperature", current.getDouble("temperature_2m")),
+            sky = Sky.of(current.optInt("weather_code", 3)),
+            day = current.optInt("is_day", 1) == 1,
+            humidity = current.optInt("relative_humidity_2m", -1),
+            wind = current.optDouble("wind_speed_10m", 0.0),
+            gust = current.optDouble("wind_gusts_10m", -1.0),
+            direction = if (current.has("wind_direction_10m")) {
+                current.optInt("wind_direction_10m", -1)
+            } else {
+                -1
+            },
+            pressure = current.optDouble("surface_pressure", -1.0),
+            uv = ultraviolet?.optDouble(0, -1.0) ?: -1.0,
+        )
 
         val days = ArrayList<DayForecast>(dates.length())
         for (index in 0 until dates.length()) {

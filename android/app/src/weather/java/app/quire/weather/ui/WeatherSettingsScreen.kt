@@ -26,6 +26,7 @@ import app.quire.R
 import app.quire.calendar.m3.SettingGroup
 import app.quire.calendar.m3.SettingRow
 import app.quire.weather.Degrees
+import app.quire.weather.Pressure
 import app.quire.weather.WeatherRefresh
 import app.quire.weather.WeatherSettings
 import app.quire.weather.WindUnit
@@ -123,6 +124,17 @@ fun WeatherSettingsScreen(model: WeatherModel, padding: PaddingValues) {
                 ),
                 selected = WindUnit.entries.indexOf(settings.wind),
                 onSelect = { model.setWind(WindUnit.entries[it]) },
+            )
+        }
+        item {
+            ChoiceRow(
+                title = stringResource(R.string.wx_units_pressure),
+                options = listOf(
+                    stringResource(R.string.wx_units_hpa),
+                    stringResource(R.string.wx_units_mmhg),
+                ),
+                selected = Pressure.entries.indexOf(settings.pressure),
+                onSelect = { model.setPressure(Pressure.entries[it]) },
             )
         }
 

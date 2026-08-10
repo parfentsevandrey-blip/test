@@ -96,7 +96,7 @@ class WeatherScreenTest {
                 place = "Западный административный округ",
                 latitude = 55.75,
                 longitude = 37.62,
-                now = Conditions(12.8, 11.4, skies[0], false, 81, 13.7),
+                now = Conditions(12.8, 11.4, skies[0], false, 81, 13.7, 27.4, 210, 1004.0, 6.2),
                 hours = (0 until 26).map { hour ->
                     HourForecast(
                         time = java.time.LocalDateTime.now().withMinute(0).plusHours(hour.toLong()),
@@ -244,7 +244,7 @@ class WeatherScreenTest {
                 place = "Moscow",
                 latitude = 55.75,
                 longitude = 37.62,
-                now = Conditions(22.0, 22.0, Sky.MOSTLY_CLEAR, true, 48, 5.0),
+                now = Conditions(22.0, 22.0, Sky.MOSTLY_CLEAR, true, 48, 5.0, 11.0, 315, 1012.0, 5.0),
                 hours = (0 until 26).map { hour ->
                     HourForecast(
                         time = java.time.LocalDateTime.now().withMinute(0).plusHours(hour.toLong()),
@@ -305,7 +305,7 @@ class WeatherScreenTest {
                 place = "Moscow",
                 latitude = 55.75,
                 longitude = 37.62,
-                now = Conditions(21.4, 21.4, Sky.CLEAR, true, 44, 9.0),
+                now = Conditions(21.4, 21.4, Sky.CLEAR, true, 44, 9.0, 18.0, 45, 1018.0, 7.4),
                 hours = (0 until 26).map { hour ->
                     HourForecast(
                         time = java.time.LocalDateTime.now().withMinute(0).plusHours(hour.toLong()),

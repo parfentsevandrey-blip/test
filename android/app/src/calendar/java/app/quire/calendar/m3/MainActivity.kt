@@ -287,6 +287,7 @@ private fun QuireApp(intent: Intent?) {
                             onGrant = {
                                 requestCalendar.launch(Manifest.permission.READ_CALENDAR)
                             },
+                            onCreate = { day -> activity?.compose(day) },
                             shared = this@SharedTransitionLayout,
                             visibility = this@AnimatedContent,
                         )

@@ -8,6 +8,7 @@ import androidx.lifecycle.AndroidViewModel
 import app.quire.weather.Forecast
 import app.quire.weather.Place
 import app.quire.weather.PlaceSearch
+import app.quire.weather.Pressure
 import app.quire.weather.Degrees
 import app.quire.weather.RainAlert
 import app.quire.weather.WeatherRefresh
@@ -63,6 +64,7 @@ class WeatherModel(app: Application) : AndroidViewModel(app) {
         val threshold: Int,
         val degrees: Degrees,
         val wind: WindUnit,
+        val pressure: Pressure,
     ) {
         companion object {
             fun from(store: WeatherSettings) = Settings(
@@ -71,6 +73,7 @@ class WeatherModel(app: Application) : AndroidViewModel(app) {
                 threshold = store.threshold,
                 degrees = store.degrees,
                 wind = store.wind,
+                pressure = store.pressure,
             )
         }
     }
@@ -137,6 +140,11 @@ class WeatherModel(app: Application) : AndroidViewModel(app) {
 
     fun setWind(unit: WindUnit) {
         store().wind = unit
+        reread()
+    }
+
+    fun setPressure(unit: Pressure) {
+        store().pressure = unit
         reread()
     }
 

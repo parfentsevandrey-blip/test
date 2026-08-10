@@ -8,7 +8,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -67,6 +69,7 @@ fun MonthGrid(
     loads: Map<LocalDate, DayLoad>,
     settings: CalendarModel.Settings,
     onPick: (LocalDate) -> Unit,
+    onCompose: (LocalDate) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val locale = rememberLocale()
@@ -113,6 +116,7 @@ fun MonthGrid(
                         load = loads[date],
                         settings = settings,
                         onPick = onPick,
+                        onCompose = onCompose,
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -121,6 +125,7 @@ fun MonthGrid(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun DayCell(
     date: LocalDate,
@@ -130,6 +135,7 @@ private fun DayCell(
     load: DayLoad?,
     settings: CalendarModel.Settings,
     onPick: (LocalDate) -> Unit,
+    onCompose: (LocalDate) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val inMonth = YearMonth.from(date) == month
@@ -204,14 +210,24 @@ private fun DayCell(
             }
             .clip(MaterialTheme.shapes.medium)
             .background(groundColour)
-            .clickable(
+            // Hold a day to put something in it. A calendar's second verb after "look at this
+            // day" is "put something in this day", and the button at the bottom of the screen
+            // always means today — reaching a Thursday three weeks out took a tap, a scroll and a
+            // date picker to say what the finger was already resting on.
+            .combinedClickable(
                 enabled = inMonth || settings.showAdjacent,
                 interactionSource = interactions,
                 indication = ripple(),
-            ) {
-                haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
-                onPick(date)
-            },
+                onLongClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onPick(date)
+                    onCompose(date)
+                },
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
+                    onPick(date)
+                },
+            ),
     ) {
         Box(contentAlignment = Alignment.Center, modifier = Modifier.size(DiscSize)) {
             Box(

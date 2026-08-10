@@ -2,7 +2,13 @@ package app.quire.weather
 
 import java.time.LocalDate
 
-/** What it is doing outside right now. */
+/**
+ * What it is doing outside right now.
+ *
+ * The last four are the ones a widget has no room for and a screen does. They default to "not
+ * known" rather than to zero: a gust of 0 km/h and a provider that did not send the field are
+ * different facts, and only one of them is worth a card.
+ */
 class Conditions(
     val temperature: Double,
     val feelsLike: Double,
@@ -10,7 +16,18 @@ class Conditions(
     val day: Boolean,
     val humidity: Int,
     val wind: Double,
-)
+    /** The strongest gust, in km/h, or negative where it is not known. */
+    val gust: Double = -1.0,
+    /** Where the wind is coming from, in degrees clockwise from north, or negative if unknown. */
+    val direction: Int = -1,
+    /** Surface pressure in hectopascals, or negative if unknown. */
+    val pressure: Double = -1.0,
+    /** Today's peak UV index, or negative if unknown. */
+    val uv: Double = -1.0,
+) {
+    /** Which of the eight points the wind is coming from, or null where it is not known. */
+    val quarter: Int? get() = if (direction < 0) null else ((direction + 22) % 360) / 45
+}
 
 /** One hour of the next day and a bit: the shape of what is coming, rather than its summary. */
 class HourForecast(

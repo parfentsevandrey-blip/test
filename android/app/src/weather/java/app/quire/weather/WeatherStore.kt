@@ -116,6 +116,10 @@ object WeatherStore {
                 put("day", forecast.now.day)
                 put("humidity", forecast.now.humidity)
                 put("wind", forecast.now.wind)
+                put("gust", forecast.now.gust)
+                put("direction", forecast.now.direction)
+                put("pressure", forecast.now.pressure)
+                put("uv", forecast.now.uv)
             },
         )
         put(
@@ -169,6 +173,10 @@ object WeatherStore {
                 day = now.optBoolean("day", true),
                 humidity = now.optInt("humidity", -1),
                 wind = now.optDouble("wind", 0.0),
+                gust = now.optDouble("gust", -1.0),
+                direction = now.optInt("direction", -1),
+                pressure = now.optDouble("pressure", -1.0),
+                uv = now.optDouble("uv", -1.0),
             ),
             days = (0 until days.length()).map { index ->
                 val day = days.getJSONObject(index)

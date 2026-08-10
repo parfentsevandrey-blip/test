@@ -54,8 +54,12 @@ import androidx.compose.material3.Text
 import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,6 +71,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.util.lerp
 import kotlin.math.abs
 import kotlinx.coroutines.flow.drop
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
@@ -100,6 +105,7 @@ fun MonthScreen(
     padding: PaddingValues,
     onOpenEvent: (AgendaEntry) -> Unit,
     onGrant: () -> Unit,
+    onCreate: (LocalDate) -> Unit = {},
     shared: SharedTransitionScope? = null,
     visibility: AnimatedVisibilityScope? = null,
 ) {
@@ -198,6 +204,7 @@ fun MonthScreen(
                         loads = model.loads[month].orEmpty(),
                         settings = model.settings,
                         onPick = { model.openDay(it) },
+                        onCompose = onCreate,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 8.dp),
                     )
                 }
@@ -254,6 +261,17 @@ private fun AgendaList(
     val spatial = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
     val quick = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
 
+    // The clock, read once a minute rather than once per composition. "In 40 min" that was true
+    // when the screen opened and has said so ever since is worse than no figure at all, and a
+    // minute is the resolution the phrase is written to anyway.
+    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(MINUTE_MILLIS)
+            now = System.currentTimeMillis()
+        }
+    }
+
     // The whole day travels rather than the heading alone — Material's shared axis, along the one
     // the dates themselves lie on: a later day arrives from the right, an earlier one from the
     // left. The day is passed in as one value so the copy on its way out keeps its own entries
@@ -278,16 +296,32 @@ private fun AgendaList(
         }
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             item {
-                Text(
-                    text = heading,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(
+                Row(
+                    verticalAlignment = Alignment.Bottom,
+                    modifier = Modifier.fillMaxWidth().padding(
                         start = 16.dp,
                         end = 16.dp,
                         top = 16.dp,
                         bottom = 4.dp,
                     ),
-                )
+                ) {
+                    Text(text = heading, style = MaterialTheme.typography.titleMedium)
+                    Spacer(Modifier.weight(1f))
+                    // How many, so the day has a shape before any of it is read. Left off when
+                    // there is nothing, because "0 entries" and the empty state below it are the
+                    // same sentence twice.
+                    if (day.entries.isNotEmpty()) {
+                        Text(
+                            text = pluralStringResource(
+                                R.plurals.agenda_count,
+                                day.entries.size,
+                                day.entries.size,
+                            ),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
             }
             if (day.entries.isEmpty()) {
                 item {
@@ -324,15 +358,24 @@ private fun AgendaList(
                     }
                 }
             } else {
-                items(day.entries) { entry -> AgendaRow(entry, onOpenEvent) }
+                items(day.entries) { entry -> AgendaRow(entry, now, onOpenEvent) }
             }
         }
     }
 }
 
+/**
+ * One entry, and where it stands relative to the clock.
+ *
+ * A calendar's real question is not "what is on today" but "what is next", and the times alone
+ * make that arithmetic the reader's job. So an entry under way says so, one coming up soon says
+ * how soon, and one that has finished steps back rather than sitting in the list at full strength
+ * competing with the ones that have not.
+ */
 @Composable
 private fun AgendaRow(
     entry: AgendaEntry,
+    now: Long,
     onOpen: (AgendaEntry) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -353,14 +396,25 @@ private fun AgendaRow(
         entry.location?.takeIf { it.isNotBlank() } ?: entry.calendarName,
     ).joinToString(" · ")
 
+    val running = !entry.allDay && now in entry.begin until entry.end
+    val over = !entry.allDay && now >= entry.end
+    val soon = (entry.begin - now).takeIf { !entry.allDay && it > 0 && it < SOON_MILLIS }
+
     // A card rather than a list row. An entry is a thing you can pick up and open, and the flat
     // row it used to be — a stripe and two lines of text straight on the page — read as a caption
     // under the grid rather than as something with a tap target.
     Card(
         onClick = { onOpen(entry) },
-        colors = CardDefaults.cardColors(containerColor = scheme.surfaceContainerLow),
+        colors = CardDefaults.cardColors(
+            containerColor = if (running) scheme.secondaryContainer else scheme.surfaceContainerLow,
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            // Finished, not gone. It stays where it was — a day you can no longer see the start
+            // of is a day that has been edited behind your back — but it stops competing.
+            .alpha(if (over) 0.55f else 1f),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -392,9 +446,42 @@ private fun AgendaRow(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
+            if (running || soon != null) {
+                Spacer(Modifier.width(10.dp))
+                Countdown(running, soon)
+            }
         }
     }
 }
+
+/** "Now", or how long until then, as a pill at the end of the row it belongs to. */
+@Composable
+private fun Countdown(running: Boolean, soon: Long?) {
+    val scheme = MaterialTheme.colorScheme
+    // Rounded, not truncated: forty-four minutes and fifty seconds is "in 45 min" to
+    // anybody reading it, and "in 44 min" to nobody.
+    val minutes = (((soon ?: 0L) + 30_000L) / 60_000L).toInt()
+    Text(
+        text = when {
+            running -> stringResource(R.string.entry_now)
+            // Under an hour it is a number of minutes, because that is the resolution the
+            // decision is made at; over one it is hours, because "in 154 min" is arithmetic.
+            minutes < 60 -> stringResource(R.string.entry_in_minutes, minutes.coerceAtLeast(1))
+            else -> stringResource(R.string.entry_in_hours, minutes / 60)
+        },
+        style = MaterialTheme.typography.labelMedium,
+        color = if (running) scheme.onPrimary else scheme.onSurfaceVariant,
+        maxLines = 1,
+        modifier = Modifier
+            .clip(CircleShape)
+            .background(if (running) scheme.primary else scheme.surfaceContainerHighest)
+            .padding(horizontal = 10.dp, vertical = 4.dp),
+    )
+}
+
+/** How far ahead an entry is still worth counting down to rather than simply listing. */
+private const val SOON_MILLIS = 6L * 60L * 60L * 1000L
+private const val MINUTE_MILLIS = 60_000L
 
 /**
  * The whole year, three across and four down, every date legible.

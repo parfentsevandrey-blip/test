@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-6.9.apk`](dist/quire-calendar-6.9.apk) · 1.9 MB | `sha256 3254a4575aa57c3da2fe293d41db9ef3f8cc8b5b33b91031efa59fdddedc0675` |
-| **Weather** | [`dist/quire-weather-6.9.apk`](dist/quire-weather-6.9.apk) · 1.5 MB | `sha256 835797f440240fc6f02d2ceefe17b4995f96ad2f581fbdd32dbe4fff6b821549` |
+| **Calendar** | [`dist/quire-calendar-7.0.apk`](dist/quire-calendar-7.0.apk) · 1.9 MB | `sha256 82ee7cc06e0e3d763e7c8d825949dc4cdcec50d44a9d811ecd166771e9be58d8` |
+| **Weather** | [`dist/quire-weather-7.0.apk`](dist/quire-weather-7.0.apk) · 1.5 MB | `sha256 72d121b1d029caf2fee58335fdda8e583fd49f612cb6c2d03fbe3d83834ae5b1` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-6.9.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-7.0.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -117,6 +117,24 @@ under it — instead of a sentence hung on the left margin of an otherwise blank
 **Density** tints each square by how full the day is, using the surface stepping up rather than a
 colour of its own, so a busy day reads as raised paper instead of a stain.
 
+**Today is read against the clock, not off it.** A calendar's real question is "what is next",
+and a column of times leaves that arithmetic to the reader. So the entry under way wears a filled
+*Now*, the next one says how soon in the units the decision is made in — minutes under an hour,
+hours over one — and one that has finished steps back to a little over half strength. It stays in
+the list: a day you can no longer see the start of is a day that has been edited behind your back.
+The clock is read once a minute rather than once per composition, because "in 40 min" that was
+true when the screen opened and has said so ever since is worse than no figure at all. The day's
+heading carries the count, so a day has a shape before any of it is read.
+
+| Today, against the clock |
+|---|
+| ![Today](docs/app-today.png) |
+
+**Hold a day to put something in it.** A calendar's second verb after "look at this day" is "put
+something in this day", and the button at the bottom of the screen always means today — reaching a
+Thursday three weeks out took a tap, a scroll and a date picker to say what the finger was already
+resting on.
+
 **An entry opens where it is**, in a sheet with the whole of it laid out — when, where, which
 calendar — rather than by throwing you into another app to read a room number. Opening it properly
 and passing it on are both still there as buttons; sharing sends it as text, because the receiver
@@ -200,6 +218,15 @@ neighbouring rows, because a step is exactly what a hard edge is; with the opaqu
 "the sky steps by 22 at row 456".
 
 ![The sky behind the bar](docs/app-weather-bar.png)
+
+**Six readings, and none of them invented.** The chance of rain, the humidity, the wind and the
+quarter it blows from, the gusts, the peak UV index and the pressure — in a grid of cards three
+across. A reading the provider did not send is left out entirely rather than shown as a dash,
+because a card that says "—" is a card spent saying nothing. The wind's quarter goes in the label
+rather than the value: it is what kind of wind this is, not how much of it there is. Pressure is
+offered in hectopascals or millimetres of mercury, chosen rather than inferred from the locale —
+plenty of people read millimetres in a country that publishes hectopascals, and the other way
+round.
 
 **And the readings the card has no room for** — the chance of rain, the humidity, the wind — plus
 five days each with a bar showing where its swing sits inside the week's, which is the part a list

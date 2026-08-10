@@ -33,6 +33,25 @@ enum class WindUnit(val key: String, val factor: Double) {
 }
 
 /**
+ * How the pressure is written, from the hectopascals the forecast is fetched in.
+ *
+ * Both are offered rather than one picked from the locale, because the reading is a preference
+ * and not a fact about where somebody is: plenty of people read millimetres in a country that
+ * publishes hectopascals, and the other way round.
+ */
+enum class Pressure(val key: String, val factor: Double) {
+    HPA("hpa", 1.0),
+    MMHG("mmhg", 0.750062),
+    ;
+
+    fun from(hpa: Double): Double = hpa * factor
+
+    companion object {
+        fun of(key: String?): Pressure = entries.firstOrNull { it.key == key } ?: HPA
+    }
+}
+
+/**
  * Everything the weather app can be told.
  *
  * Units are a display decision and nothing else: the forecast is always fetched and stored in
@@ -73,6 +92,10 @@ class WeatherSettings private constructor(private val context: Context) {
         get() = WindUnit.of(prefs.getString(KEY_WIND, null))
         set(value) = prefs.edit { putString(KEY_WIND, value.key) }
 
+    var pressure: Pressure
+        get() = Pressure.of(prefs.getString(KEY_PRESSURE, null))
+        set(value) = prefs.edit { putString(KEY_PRESSURE, value.key) }
+
     /** The day an alert was last posted for, so the same rain is not announced twice. */
     var alertedOn: String
         get() = prefs.getString(KEY_ALERTED, "").orEmpty()
@@ -91,6 +114,7 @@ class WeatherSettings private constructor(private val context: Context) {
         private const val KEY_THRESHOLD = "threshold"
         private const val KEY_DEGREES = "degrees"
         private const val KEY_WIND = "wind"
+        private const val KEY_PRESSURE = "pressure"
         private const val KEY_ALERTED = "alerted"
 
         /**

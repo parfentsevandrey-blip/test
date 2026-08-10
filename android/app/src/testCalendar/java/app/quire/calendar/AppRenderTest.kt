@@ -194,6 +194,68 @@ class AppRenderTest {
         assertTrue("a second entry on the day was dropped", showing("Design review") > 0)
     }
 
+    /**
+     * Today, against the clock.
+     *
+     * A calendar's real question is "what is next", and the times alone leave that arithmetic to
+     * the reader. One entry is under way, one starts in three quarters of an hour and one finished
+     * this morning; each should say so without being read.
+     */
+    @Test
+    fun `today says which entry is running and which is next`() {
+        val now = System.currentTimeMillis()
+        val today = java.time.LocalDate.now()
+        val julian = MonthModel.julianDay(today)
+        FakeCalendarProvider.instances = listOf(
+            FakeCalendarProvider.instance(
+                eventId = 101L,
+                beginMillis = now - 3L * 3_600_000L,
+                endMillis = now - 2L * 3_600_000L,
+                startDay = julian,
+                endDay = julian,
+                title = "Morning run",
+                location = null,
+                colour = 0xFF4C5D3C.toInt(),
+            ),
+            FakeCalendarProvider.instance(
+                eventId = 102L,
+                beginMillis = now - 15L * 60_000L,
+                endMillis = now + 45L * 60_000L,
+                startDay = julian,
+                endDay = julian,
+                title = "Design review",
+                location = "Room 4",
+                colour = 0xFF9A6F21.toInt(),
+            ),
+            FakeCalendarProvider.instance(
+                eventId = 103L,
+                beginMillis = now + 45L * 60_000L,
+                endMillis = now + 105L * 60_000L,
+                startDay = julian,
+                endDay = julian,
+                title = "One to one",
+                location = null,
+                colour = 0xFF7B3B6E.toInt(),
+            ),
+        )
+
+        val model = model(dark = false)
+        page(dark = false) {
+            MonthScreen(model, PaddingValues(0.dp), onOpenEvent = {}, onGrant = {})
+        }
+        model.refresh()
+        model.openDay(today)
+        settle()
+        shoot("app-today")
+
+        assertTrue("the running entry is not marked", showing("Now") > 0)
+        assertTrue("the next entry does not say how soon", showing("in 45 min") > 0)
+        assertTrue("the count is missing", showing("3 entries") > 0)
+        // The one that finished is still listed. A day you can no longer see the start of is a
+        // day that has been edited behind your back.
+        assertTrue("the finished entry was dropped", showing("Morning run") > 0)
+    }
+
     @Test
     fun `the month screen paints dark`() {
         val model = model(dark = true)
