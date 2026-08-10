@@ -404,8 +404,13 @@ class WeatherScreenTest {
         assertTrue("the glass moved $inTheMiddle pixels off its own edge", inTheMiddle == 0)
     }
 
-    /** How far from a card's edge the glass is allowed to reach, in points. */
-    private val RIM = 8f
+    /**
+     * How far from a card's edge the glass is allowed to reach, in points.
+     *
+     * Wide enough for a mote to float off the line and carry its halo with it, and nowhere near
+     * wide enough to touch anything the card is actually for.
+     */
+    private val RIM = 12f
 
     /**
      * Every sky, drawn on its own.
