@@ -30,10 +30,17 @@ import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.EventAvailable
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.SearchOff
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -61,6 +68,7 @@ import kotlin.math.abs
 import kotlinx.coroutines.flow.drop
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.quire.R
 import app.quire.calendar.core.AgendaEntry
@@ -154,18 +162,18 @@ fun MonthScreen(
                 // month passing behind another rather than as two grids sliding on the same plane.
                 val offset = ((state.currentPage - page) + state.currentPageOffsetFraction)
                     .coerceIn(-1f, 1f)
-                MonthGrid(
-                    month = month,
-                    cells = model.cells(month),
-                    weekdayLabels = model.weekdayLabels(),
-                    weekdayOrder = model.weekdayOrder(),
-                    today = model.today,
-                    selected = model.selected,
-                    loads = model.loads[month].orEmpty(),
-                    settings = model.settings,
-                    onPick = { model.openDay(it) },
+                // The month is a card rather than ink on the page. It used to be the latter, with
+                // a rule under it to keep it off the agenda — and a full-width hairline is how a
+                // list separates two rows, not how a page separates two things. A card says the
+                // same thing by being an object: the grid has edges, the agenda is what is under
+                // it, and nothing has to be drawn to announce that.
+                Card(
+                    shape = RoundedCornerShape(28.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                    ),
                     modifier = Modifier
-                        .padding(horizontal = 8.dp)
+                        .padding(horizontal = 16.dp, vertical = 4.dp)
                         // Only the settled month is the shared element. A page still sliding past has
                         // no business claiming the bounds the year tile is growing into.
                         .then(sharedMonth(shared, visibility, month, page == state.currentPage))
@@ -176,9 +184,22 @@ fun MonthScreen(
                             scaleX = shrink
                             scaleY = shrink
                         },
-                )
+                ) {
+                    MonthGrid(
+                        month = month,
+                        cells = model.cells(month),
+                        weekdayLabels = model.weekdayLabels(),
+                        weekdayOrder = model.weekdayOrder(),
+                        today = model.today,
+                        selected = model.selected,
+                        loads = model.loads[month].orEmpty(),
+                        settings = model.settings,
+                        onPick = { model.openDay(it) },
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 8.dp),
+                    )
+                }
             }
-            HorizontalDivider(Modifier.padding(top = 8.dp))
+            Spacer(Modifier.height(4.dp))
             AgendaList(
                 date = model.selected,
                 entries = model.agenda,
@@ -271,14 +292,32 @@ private fun AgendaList(
                     // the expressive indicator while the provider is being asked, the sentence
                     // only once it has answered.
                     if (day.loading) {
-                        LoadingIndicator(modifier = Modifier.padding(16.dp))
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.fillMaxWidth().padding(32.dp),
+                        ) {
+                            LoadingIndicator()
+                        }
                     } else {
-                        Text(
-                            text = stringResource(R.string.nothing_scheduled),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(16.dp),
-                        )
+                        // Centred under an outline of the thing that is empty, rather than a
+                        // sentence hung on the left margin of a page with nothing else on it.
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxWidth().padding(top = 32.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.EventAvailable,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.outlineVariant,
+                                modifier = Modifier.size(44.dp),
+                            )
+                            Spacer(Modifier.height(10.dp))
+                            Text(
+                                text = stringResource(R.string.nothing_scheduled),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
                 }
             } else {
@@ -306,29 +345,50 @@ private fun AgendaRow(
             "${fmt.format(from)} – ${fmt.format(to)}"
         }
     }
-    ListItem(
+    val detail = listOfNotNull(
+        times ?: stringResource(R.string.all_day),
+        entry.location?.takeIf { it.isNotBlank() } ?: entry.calendarName,
+    ).joinToString(" · ")
+
+    // A card rather than a list row. An entry is a thing you can pick up and open, and the flat
+    // row it used to be — a stripe and two lines of text straight on the page — read as a caption
+    // under the grid rather than as something with a tap target.
+    Card(
         onClick = { onOpen(entry) },
-        modifier = modifier,
-        supportingContent = {
-            val detail = listOfNotNull(
-                times ?: stringResource(R.string.all_day),
-                entry.location?.takeIf { it.isNotBlank() } ?: entry.calendarName,
-            ).joinToString(" · ")
-            Text(detail)
-        },
-        leadingContent = {
+        colors = CardDefaults.cardColors(containerColor = scheme.surfaceContainerLow),
+        modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+        ) {
             Box(
                 Modifier
                     .width(4.dp)
-                    .height(36.dp)
+                    .height(38.dp)
                     .clip(CircleShape)
                     .background(
                         if (entry.colour != 0) Color(entry.colour) else scheme.tertiary,
                     ),
             )
-        },
-    ) {
-        Text(entry.title.ifBlank { stringResource(R.string.nothing_scheduled) })
+            Spacer(Modifier.width(14.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = entry.title.ifBlank { stringResource(R.string.untitled_event) },
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = detail,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = scheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
     }
 }
 
@@ -398,34 +458,65 @@ fun SearchResults(
     val formatter = remember(locale) {
         DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale)
     }
+    val scheme = MaterialTheme.colorScheme
     if (model.query.trim().length < 2) {
-        Text(
-            text = stringResource(R.string.search_empty),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(16.dp),
-        )
+        Nothing(Icons.Outlined.Search, stringResource(R.string.search_empty))
         return
     }
     if (model.results.isEmpty()) {
-        Text(
-            text = stringResource(R.string.search_none),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(16.dp),
-        )
+        Nothing(Icons.Outlined.SearchOff, stringResource(R.string.search_none))
         return
     }
-    LazyColumn {
+    LazyColumn(contentPadding = PaddingValues(vertical = 8.dp)) {
         items(model.results) { entry ->
             val date = remember(entry) { EventRepository.dateOf(entry) }
-            ListItem(
+            // The same card as an agenda entry, because it is the same thing found a different
+            // way. A result that looks unlike the row it takes you to is two designs for one
+            // object.
+            Card(
                 onClick = { onPick(date) },
-                supportingContent = { Text(formatter.format(date)) },
+                colors = CardDefaults.cardColors(containerColor = scheme.surfaceContainerLow),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
             ) {
-                Text(entry.title.ifBlank { "—" })
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+                    Text(
+                        text = entry.title.ifBlank { stringResource(R.string.untitled_event) },
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = formatter.format(date),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = scheme.onSurfaceVariant,
+                    )
+                }
             }
         }
+    }
+}
+
+/** An empty state: the outline of the missing thing, and one line about it, both centred. */
+@Composable
+private fun Nothing(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxWidth().padding(top = 48.dp, start = 32.dp, end = 32.dp),
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.outlineVariant,
+            modifier = Modifier.size(44.dp),
+        )
+        Spacer(Modifier.height(10.dp))
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+        )
     }
 }
 

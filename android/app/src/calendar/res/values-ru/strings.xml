@@ -9,6 +9,7 @@
     <string name="year">Год</string>
     <string name="new_event">Новое событие</string>
     <string name="nothing_scheduled">Ничего не запланировано</string>
+    <string name="untitled_event">Без названия</string>
     <string name="all_day">Весь день</string>
     <string name="permission_headline">Quire пока не видит ваши календари</string>
     <string name="permission_body">Дайте доступ на чтение — и сетка покажет то, что уже есть в вашем дне. Данные не покидают устройство.</string>

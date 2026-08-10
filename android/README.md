@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-6.6.apk`](dist/quire-calendar-6.6.apk) · 1.9 MB | `sha256 6f90b4043f9034ca5324580ab1b76c7ec82c6dcb8d7cffd73b00f300b001c535` |
-| **Weather** | [`dist/quire-weather-6.6.apk`](dist/quire-weather-6.6.apk) · 1.5 MB | `sha256 56008bd52c3bcf12371985c9b62065c3d8d05469dbded9c402533c26bba2f76a` |
+| **Calendar** | [`dist/quire-calendar-6.7.apk`](dist/quire-calendar-6.7.apk) · 1.9 MB | `sha256 a280119c713d81002eb0a23cdcacd68f48b7b0b527a84a58c5fc6ccdf164b77e` |
+| **Weather** | [`dist/quire-weather-6.7.apk`](dist/quire-weather-6.7.apk) · 1.5 MB | `sha256 ff03c9f14af2318922117ca01838161a685762a0b4d02eecc2f876062e0af7d4` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-6.6.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-6.7.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -80,6 +80,19 @@ rows as one connected block, outer corners rounded and inner ones squared off, w
 `ListItemDefaults.segmentedShapes` computes from a row's position. Each row is a toggleable
 `SegmentedListItem`, so the whole row is the switch — a screen reader announces one control rather
 than a label and a separate widget it cannot connect to it.
+
+**The month is a card, and so is every entry under it.** Both used to be ink straight on the
+page, with a full-width rule between them — which is how a list separates two of its own rows, not
+how a page separates two different things. Cards say it by being objects: the grid has edges, the
+entries have edges, and the tap target for an entry is visibly the whole of it rather than the
+text you happen to hit. The year's twelve tiles are the same card, so the container transform
+between a tile and the month it opens grows a card into a card instead of a rectangle out of
+nothing, and the current month wears a `secondaryContainer` wash so a year is not twelve
+identical blocks.
+
+**Nothing to show is drawn rather than written.** An empty day, a search with nothing typed and a
+search with no matches each get the outline of the thing that is missing, centred, with one line
+under it — instead of a sentence hung on the left margin of an otherwise blank page.
 
 **Density** tints each square by how full the day is, using the surface stepping up rather than a
 colour of its own, so a busy day reads as raised paper instead of a stain.
@@ -152,6 +165,13 @@ head; drawn as an arc with the sun on it, "how much daylight is left" is a glanc
 only question anybody actually asks of a sunset time. The arc is a plain half-circle rather than
 the true solar path: the true one depends on latitude and season and would be a different shape
 every day, which is precision nobody wants at the cost of a picture nobody recognises.
+
+**There is a sky behind it.** A wash of the theme's own container colour under the top of the
+page, at full strength beneath the app bar and gone by the time the hour strip starts — warm while
+the sun is up, cool once it is down. It is the one thing on the screen that says which of those it
+is without spelling it out, and it gives the temperature something to sit on other than flat
+paper. It is measured from under the app bar rather than from the top of the window: a gradient
+started at zero spends its strong end behind something opaque and arrives on screen already faded.
 
 **And the readings the card has no room for** — the chance of rain, the humidity, the wind — plus
 five days each with a bar showing where its swing sits inside the week's, which is the part a list

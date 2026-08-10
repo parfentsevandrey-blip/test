@@ -10,6 +10,7 @@
     <string name="year">Year</string>
     <string name="new_event">New event</string>
     <string name="nothing_scheduled">Nothing scheduled</string>
+    <string name="untitled_event">Untitled</string>
     <string name="all_day">All day</string>
     <string name="permission_headline">Quire cannot see your calendars yet</string>
     <string name="permission_body">Grant read access and the grid starts showing what is already in your day. Nothing leaves the device.</string>

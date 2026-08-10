@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Water level: humidity, as two waves rather than a second raindrop. Two rather than three, and
+  with the amplitude of a wave rather than of a ripple: at the eighteen points this is drawn at on
+  a reading card, three tight ones close up into a smudge.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="#FFFFFF">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M2,9.4c1.7,0 2.1,-2.6 4.2,-2.6s2.4,2.6 4.2,2.6s2.1,-2.6 4.2,-2.6s2.4,2.6 4.2,2.6s2.1,-1.3 3.2,-2.1v2.9c-1.2,0.8 -1.9,1.9 -3.4,1.9c-2.1,0 -2.4,-2.6 -4.2,-2.6s-2.1,2.6 -4.2,2.6s-2.4,-2.6 -4.2,-2.6S3.7,12.3 2,12.3z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M2,16.7c1.7,0 2.1,-2.6 4.2,-2.6s2.4,2.6 4.2,2.6s2.1,-2.6 4.2,-2.6s2.4,2.6 4.2,2.6s2.1,-1.3 3.2,-2.1v2.9c-1.2,0.8 -1.9,1.9 -3.4,1.9c-2.1,0 -2.4,-2.6 -4.2,-2.6s-2.1,2.6 -4.2,2.6s-2.4,-2.6 -4.2,-2.6S3.7,19.6 2,19.6z" />
+</vector>

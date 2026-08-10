@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -67,52 +68,79 @@ fun WeatherScreen(
     onChoosePlace: () -> Unit = {},
 ) {
     val forecast = model.forecast
-    LazyColumn(contentPadding = padding, modifier = Modifier.fillMaxSize()) {
-        // Only when there is no place at all. Somebody who named one has answered the question,
-        // and being asked again for a permission they declined is nagging rather than helping.
-        if (!model.located && !model.pinned) {
-            item { LocationCard(onGrant, onChoosePlace) }
-        }
-        if (forecast == null) {
-            item {
-                Box(Modifier.fillMaxWidth().padding(48.dp), contentAlignment = Alignment.Center) {
-                    if (model.located) {
-                        LoadingIndicator()
-                    } else {
-                        Text(
-                            text = stringResource(R.string.wx_waiting),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+    val scheme = MaterialTheme.colorScheme
+    // A sky behind the page: the theme's own container colour at the top, gone by the time the
+    // cards start. It carries the one bit of information the screen otherwise only spells out —
+    // whether it is day or night out there — and it gives the hero something to sit on other than
+    // flat paper. Fixed rather than scrolling, because a sky that scrolls away is a rectangle.
+    val sky = if (forecast?.now?.day != false) scheme.primaryContainer else scheme.secondaryContainer
+    // It starts under the app bar rather than at the top of the window. The bar paints over the
+    // first inch of this, so a gradient measured from zero spends its whole strong end behind
+    // something opaque and arrives on screen already faded out.
+    val density = LocalDensity.current
+    val top = with(density) { padding.calculateTopPadding().toPx() }
+    val reach = with(density) { SkyHeight.toPx() }
+    val wash = remember(sky, top, reach) {
+        Brush.verticalGradient(
+            0f to sky.copy(alpha = 0.70f),
+            0.45f to sky.copy(alpha = 0.20f),
+            1f to sky.copy(alpha = 0f),
+            startY = top,
+            endY = top + reach,
+        )
+    }
+
+    Box(Modifier.fillMaxSize().background(wash)) {
+        LazyColumn(contentPadding = padding, modifier = Modifier.fillMaxSize()) {
+            // Only when there is no place at all. Somebody who named one has answered the question,
+            // and being asked again for a permission they declined is nagging rather than helping.
+            if (!model.located && !model.pinned) {
+                item { LocationCard(onGrant, onChoosePlace) }
+            }
+            if (forecast == null) {
+                item {
+                    Box(Modifier.fillMaxWidth().padding(48.dp), contentAlignment = Alignment.Center) {
+                        if (model.located) {
+                            LoadingIndicator()
+                        } else {
+                            Text(
+                                text = stringResource(R.string.wx_waiting),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
                 }
+                return@LazyColumn
             }
-            return@LazyColumn
-        }
 
-        item { Now(forecast, model.settings) }
-        item { Readings(forecast, model.settings) }
-        if (forecast.hours.isNotEmpty()) {
-            item { Heading(stringResource(R.string.wx_hours)) }
-            item {
-                HourStrip(
-                    hours = forecast.hoursAhead(java.time.LocalDateTime.now()),
-                    units = model.settings,
-                )
+            item { Now(forecast, model.settings) }
+            item { Readings(forecast, model.settings) }
+            if (forecast.hours.isNotEmpty()) {
+                item { Heading(stringResource(R.string.wx_hours)) }
+                item {
+                    HourStrip(
+                        hours = forecast.hoursAhead(java.time.LocalDateTime.now()),
+                        units = model.settings,
+                    )
+                }
             }
-        }
-        forecast.days.firstOrNull()?.let { today ->
-            if (today.sunrise != null && today.sunset != null) {
-                item { Heading(stringResource(R.string.wx_sun)) }
-                item { SunArc(today.sunrise, today.sunset) }
+            forecast.days.firstOrNull()?.let { today ->
+                if (today.sunrise != null && today.sunset != null) {
+                    item { Heading(stringResource(R.string.wx_sun)) }
+                    item { SunArc(today.sunrise, today.sunset) }
+                }
             }
+            item { Heading(stringResource(R.string.wx_five_days)) }
+            item { Days(forecast, model.settings) }
+            item { Freshness(forecast) }
+            item { Spacer(Modifier.height(24.dp)) }
         }
-        item { Heading(stringResource(R.string.wx_five_days)) }
-        item { Days(forecast, model.settings) }
-        item { Freshness(forecast) }
-        item { Spacer(Modifier.height(24.dp)) }
     }
 }
+
+/** How far down the sky reaches: the hero and the readings, and nothing after them. */
+private val SkyHeight = 320.dp
 
 /**
  * What it is doing now.
@@ -194,16 +222,19 @@ private fun Readings(forecast: Forecast, units: WeatherModel.Settings) {
             .height(IntrinsicSize.Min),
     ) {
         Reading(
+            icon = R.drawable.wx_drop,
             label = stringResource(R.string.wx_rain_chance_short),
             value = "${today?.rain ?: 0}%",
             modifier = Modifier.weight(1f),
         )
         Reading(
+            icon = R.drawable.wx_humidity,
             label = stringResource(R.string.wx_humidity),
             value = if (forecast.now.humidity >= 0) "${forecast.now.humidity}%" else "—",
             modifier = Modifier.weight(1f),
         )
         Reading(
+            icon = R.drawable.wx_wind,
             label = stringResource(R.string.wx_wind),
             value = "${units.wind.from(forecast.now.wind).roundToInt()} " +
                 stringResource(windLabel(units.wind)),
@@ -212,8 +243,14 @@ private fun Readings(forecast: Forecast, units: WeatherModel.Settings) {
     }
 }
 
+/**
+ * One reading: its mark, the number, and the word for it.
+ *
+ * The number comes before the word because that is the order it is read in — you look at a card
+ * like this to find out what the humidity is, not to be reminded that humidity exists.
+ */
 @Composable
-private fun Reading(label: String, value: String, modifier: Modifier = Modifier) {
+private fun Reading(icon: Int, label: String, value: String, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.fillMaxHeight(),
         colors = CardDefaults.cardColors(
@@ -222,19 +259,25 @@ private fun Reading(label: String, value: String, modifier: Modifier = Modifier)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxWidth().padding(vertical = 14.dp, horizontal = 6.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp, horizontal = 6.dp),
         ) {
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(18.dp),
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleLarge,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+            )
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-            )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleLarge,
                 textAlign = TextAlign.Center,
                 maxLines = 1,
             )

@@ -17,11 +17,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ripple
 import androidx.compose.material3.Text
@@ -278,61 +281,72 @@ fun MiniMonth(
     val scheme = MaterialTheme.colorScheme
     val locale = rememberLocale()
     val isThisMonth = YearMonth.from(today) == month
-    Column(
-        modifier = modifier
-            .clip(MaterialTheme.shapes.large)
-            .clickable { onOpen(month) }
-            .padding(6.dp),
+    // A card, the same as the month it opens into. Twelve blocks of numbers on bare page have
+    // nothing saying where one month stops and the next starts except the gap between them, and
+    // the transform into the full month then grows a rectangle out of nothing.
+    Card(
+        onClick = { onOpen(month) },
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(
+            containerColor = if (isThisMonth) {
+                scheme.secondaryContainer.copy(alpha = 0.45f)
+            } else {
+                scheme.surfaceContainerLow
+            },
+        ),
+        modifier = modifier.padding(3.dp),
     ) {
-        Text(
-            text = MonthModel.monthName(month, locale),
-            style = MaterialTheme.typography.titleSmall,
-            color = if (isThisMonth) scheme.primary else scheme.onSurface,
-            modifier = Modifier.padding(bottom = 2.dp),
-        )
-        Row(modifier = Modifier.fillMaxWidth()) {
-            weekdayInitials.forEach { initial ->
-                Text(
-                    text = initial,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = scheme.outline,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.weight(1f),
-                )
+        Column(modifier = Modifier.fillMaxSize().padding(6.dp)) {
+            Text(
+                text = MonthModel.monthName(month, locale),
+                style = MaterialTheme.typography.titleSmall,
+                color = if (isThisMonth) scheme.primary else scheme.onSurface,
+                modifier = Modifier.padding(bottom = 2.dp),
+            )
+            Row(modifier = Modifier.fillMaxWidth()) {
+                weekdayInitials.forEach { initial ->
+                    Text(
+                        text = initial,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = scheme.outline,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
             }
-        }
-        // The weeks take whatever height the tile has left, so a year fills its page instead of
-        // sitting in a band at the top of one.
-        Column(modifier = Modifier.fillMaxWidth().weight(1f)) {
-            for (row in 0 until MonthModel.ROWS) {
-                Row(modifier = Modifier.fillMaxWidth().weight(1f)) {
-                    for (column in 0 until MonthModel.COLUMNS) {
-                        val date = cells[row * MonthModel.COLUMNS + column]
-                        val inMonth = YearMonth.from(date) == month
-                        val isToday = date == today
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier.weight(1f).fillMaxHeight(),
-                        ) {
+            // The weeks take whatever height the tile has left, so a year fills its page instead of
+            // sitting in a band at the top of one.
+            Column(modifier = Modifier.fillMaxWidth().weight(1f)) {
+                for (row in 0 until MonthModel.ROWS) {
+                    Row(modifier = Modifier.fillMaxWidth().weight(1f)) {
+                        for (column in 0 until MonthModel.COLUMNS) {
+                            val date = cells[row * MonthModel.COLUMNS + column]
+                            val inMonth = YearMonth.from(date) == month
+                            val isToday = date == today
                             Box(
                                 contentAlignment = Alignment.Center,
-                                modifier = Modifier
-                                    .size(MiniDiscSize)
-                                    .clip(CircleShape)
-                                    .background(
-                                        if (isToday) scheme.primary else Color.Transparent,
-                                    ),
+                                modifier = Modifier.weight(1f).fillMaxHeight(),
                             ) {
-                                Text(
-                                    text = if (inMonth) date.dayOfMonth.toString() else "",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = when {
-                                        isToday -> scheme.onPrimary
-                                        loads[date] != null -> scheme.onSurface
-                                        else -> scheme.onSurfaceVariant
-                                    },
-                                    textAlign = TextAlign.Center,
-                                )
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier
+                                        .size(MiniDiscSize)
+                                        .clip(CircleShape)
+                                        .background(
+                                            if (isToday) scheme.primary else Color.Transparent,
+                                        ),
+                                ) {
+                                    Text(
+                                        text = if (inMonth) date.dayOfMonth.toString() else "",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = when {
+                                            isToday -> scheme.onPrimary
+                                            loads[date] != null -> scheme.onSurface
+                                            else -> scheme.onSurfaceVariant
+                                        },
+                                        textAlign = TextAlign.Center,
+                                    )
+                                }
                             }
                         }
                     }

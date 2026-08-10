@@ -13,6 +13,8 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ApplicationProvider
@@ -161,31 +163,64 @@ class WeatherScreenTest {
 
         // Every block on the screen starts on the same left edge. This is the fault the screen was
         // rebuilt for: headings at one inset and the cards under them at another, all the way
-        // down. Measured rather than trusted — the left edge of each card's fill, found by walking
-        // in from the margin on the row through its middle.
+        // down. The headings are checked where they are laid out, and the cards in pixels — a
+        // card has no text of its own to ask, so its fill is found by walking in from the margin.
+        val headings = listOf("Next 24 hours", "Sunrise and sunset", "Next five days")
+            .map { it to compose.onNodeWithText(it).getUnclippedBoundsInRoot().left.value }
+        assertTrue(
+            "the headings start at different x: $headings",
+            headings.maxOf { it.second } - headings.minOf { it.second } < 0.5f,
+        )
+
+        // Each row is found from something laid out inside the card rather than from a fraction of
+        // the page, so adding a block above one does not quietly move the measurement into a gap.
         val rails = listOf(
-            "the readings" to 0.20f,
-            "the hours" to 0.33f,
-            "the sun" to 0.55f,
-            "the days" to 0.85f,
-        ).map { (what, fraction) ->
-            what to bitmap.leftEdge((bitmap.height * fraction).toInt())
-        }
+            "the readings" to bitmap.rowThrough("81%"),
+            "the hours" to bitmap.rowUnder("Next 24 hours", 40f),
+            "the sun" to bitmap.rowUnder("Sunrise and sunset", 40f),
+            "the days" to bitmap.rowUnder("Next five days", 40f),
+        ).map { (what, y) -> what to bitmap.leftEdge(y) }
         assertTrue("a block was not found at all: $rails", rails.none { it.second < 0 })
         val spread = rails.maxOf { it.second } - rails.minOf { it.second }
         assertTrue("the blocks start at different x: $rails", spread <= 1)
     }
 
+    /** The pixel row through the middle of whatever is laid out with this text. */
+    private fun Bitmap.rowThrough(text: String): Int {
+        val bounds = compose.onNodeWithText(text, substring = true).getUnclippedBoundsInRoot()
+        val middle = (bounds.top.value + bounds.bottom.value) / 2f
+        return (middle * compose.density.density).toInt().coerceIn(0, height - 1)
+    }
+
+    /** The pixel row a given number of points below the bottom of that text. */
+    private fun Bitmap.rowUnder(text: String, below: Float): Int {
+        val bounds = compose.onNodeWithText(text, substring = true).getUnclippedBoundsInRoot()
+        return ((bounds.bottom.value + below) * compose.density.density)
+            .toInt().coerceIn(0, height - 1)
+    }
+
     /**
      * Finds where a card's fill begins on a row, by walking in from the left until the colour
      * stops being the page behind it.
+     *
+     * The comparison has a tolerance because the page behind it is a gradient now, and Android
+     * dithers gradients: two pixels side by side in the same row differ by a bit or two, so exact
+     * equality finds an "edge" at x = 3 every time.
      */
     private fun Bitmap.leftEdge(y: Int): Int {
         val background = getPixel(2, y)
         for (x in 2 until width) {
-            if (getPixel(x, y) != background) return x
+            if (apart(getPixel(x, y), background)) return x
         }
         return -1
+    }
+
+    private fun apart(a: Int, b: Int): Boolean {
+        var sum = 0
+        for (shift in intArrayOf(16, 8, 0)) {
+            sum += kotlin.math.abs(((a shr shift) and 0xFF) - ((b shr shift) and 0xFF))
+        }
+        return sum > 12
     }
 
     /** The same screen in daylight, because the dark one is only half of what ships. */
