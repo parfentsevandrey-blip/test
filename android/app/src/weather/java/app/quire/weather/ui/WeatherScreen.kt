@@ -153,7 +153,7 @@ fun WeatherScreen(
             forecast.days.firstOrNull()?.let { today ->
                 if (today.sunrise != null && today.sunset != null) {
                     item { Heading(stringResource(R.string.wx_sun)) }
-                    item { SunArc(today.sunrise, today.sunset) }
+                    item { SunArc(today.sunrise, today.sunset, model.settings.glassEdges) }
                 }
             }
             item { Heading(stringResource(R.string.wx_five_days)) }
@@ -326,13 +326,15 @@ private fun Readings(forecast: Forecast, units: WeatherModel.Settings) {
             .padding(horizontal = Gutter, vertical = 12.dp)
             .testTag(BLOCK),
     ) {
-        readings.chunked(3).forEach { row ->
+        readings.chunked(3).forEachIndexed { line, row ->
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
             ) {
-                row.forEach { (icon, label, value) ->
-                    Reading(icon, label, value, Modifier.weight(1f))
+                row.forEachIndexed { column, (icon, label, value) ->
+                    // Its place in the grid is its seed, so no two cards on the screen carry the
+                    // same light in the same place at the same moment.
+                    Reading(icon, label, value, units, line * 3 + column, Modifier.weight(1f))
                 }
                 // A short last row keeps the cards the width of the ones above rather than
                 // stretching two of them across three columns.
@@ -349,9 +351,18 @@ private fun Readings(forecast: Forecast, units: WeatherModel.Settings) {
  * like this to find out what the humidity is, not to be reminded that humidity exists.
  */
 @Composable
-private fun Reading(icon: Int, label: String, value: String, modifier: Modifier = Modifier) {
+private fun Reading(
+    icon: Int,
+    label: String,
+    value: String,
+    units: WeatherModel.Settings,
+    seed: Int,
+    modifier: Modifier = Modifier,
+) {
     Card(
-        modifier = modifier.fillMaxHeight(),
+        modifier = modifier
+            .fillMaxHeight()
+            .glassEdge(CardDefaults.shape, units.glassEdges, seed),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         ),
@@ -394,7 +405,11 @@ private fun Days(forecast: Forecast, units: WeatherModel.Settings) {
     val span = (warmest - coldest).coerceAtLeast(1.0)
 
     Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = Gutter).testTag(BLOCK),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Gutter)
+            .testTag(BLOCK)
+            .glassEdge(CardDefaults.shape, units.glassEdges, seed = 11),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         ),

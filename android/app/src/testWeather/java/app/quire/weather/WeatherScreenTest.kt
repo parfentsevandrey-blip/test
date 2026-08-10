@@ -4,8 +4,12 @@ import android.app.Application
 import android.graphics.Bitmap
 import android.os.Looper
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
@@ -25,6 +29,7 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import app.quire.weather.ui.BLOCK
 import app.quire.weather.ui.LiveSky
+import app.quire.weather.ui.glassEdge
 import app.quire.weather.ui.WeatherApp
 import app.quire.weather.ui.WeatherModel
 import app.quire.weather.ui.WeatherScreen
@@ -61,6 +66,9 @@ class WeatherScreenTest {
     @Before
     fun stopTheClock() {
         compose.mainClock.autoAdvance = false
+        // Stated rather than assumed. The settings object outlives a single test method, so a test
+        // that turns the glass off would otherwise decide what the next one renders.
+        WeatherSettings.get(app).glassEdges = true
     }
 
     private fun settle(rounds: Int = 8) {
@@ -308,6 +316,11 @@ class WeatherScreenTest {
             ),
         )
 
+        // The cards' own rims shimmer, which is the point of them and would also be movement below
+        // the skyline. Turned off here so this test keeps asking exactly what it was written to
+        // ask: whether the page itself is being dragged along by the sky.
+        WeatherSettings.get(app).glassEdges = false
+
         val model = WeatherModel(app)
         compose.setContent {
             QuireTheme(dark = true, dynamic = false) {
@@ -337,6 +350,62 @@ class WeatherScreenTest {
         assertTrue("nothing moved in the sky at all", movedAbove > 200)
         assertTrue("the page moved under the sky ($movedBelow pixels)", movedBelow == 0)
     }
+
+    /**
+     * The rim of a card, and only the rim.
+     *
+     * The glass is meant to live on the edge a card already has: light travelling round it and a
+     * few sparks riding it. That is two claims, and both are worth holding on to. It has to move —
+     * a still rim is a border — and it has to stay on the edge, because anything that wanders into
+     * the middle of a card is drawing on top of the reading somebody opened the app for.
+     */
+    @Test
+    fun `the light on a card rim moves, and stays on the rim`() {
+        compose.setContent {
+            QuireTheme(dark = true, dynamic = false) {
+                Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+                    Box(Modifier.fillMaxSize().padding(24.dp)) {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .glassEdge(CardDefaults.shape)
+                                .testTag("glass"),
+                        ) {}
+                    }
+                }
+            }
+        }
+        settle()
+        val first = shoot("weather-glass")
+        // Far enough round the lap for the travelling band to have left where it was, and not so
+        // far that a spark has come back to the same place.
+        compose.mainClock.advanceTimeBy(1_800L)
+        val second = shoot("weather-glass-later")
+
+        val bounds = compose.onNodeWithTag("glass").getUnclippedBoundsInRoot()
+        val scale = compose.density.density
+        val left = (bounds.left.value * scale).toInt()
+        val top = (bounds.top.value * scale).toInt()
+        val right = (bounds.right.value * scale).toInt()
+        val bottom = (bounds.bottom.value * scale).toInt()
+        // Two bands: within [RIM] of the card's edge, and everything further in than that.
+        val rim = (RIM * scale).toInt()
+
+        var onTheRim = 0
+        var inTheMiddle = 0
+        for (y in 0 until first.height) {
+            for (x in 0 until first.width) {
+                if (first.getPixel(x, y) == second.getPixel(x, y)) continue
+                val inset = minOf(x - left, right - x, y - top, bottom - y)
+                if (inset in -rim..rim) onTheRim++ else inTheMiddle++
+            }
+        }
+        assertTrue("nothing on the rim moved at all", onTheRim > 200)
+        assertTrue("the glass moved $inTheMiddle pixels off its own edge", inTheMiddle == 0)
+    }
+
+    /** How far from a card's edge the glass is allowed to reach, in points. */
+    private val RIM = 8f
 
     /**
      * Every sky, drawn on its own.

@@ -91,4 +91,6 @@
     <string name="wx_section_look">Вид</string>
     <string name="wx_live_sky">Живое небо</string>
     <string name="wx_live_sky_hint">Дождь, снег и облака, еле заметно движущиеся за верхом экрана</string>
+    <string name="wx_glass_edges">Стеклянные рамки</string>
+    <string name="wx_glass_edges_hint">Свет и крошечные искры, скользящие по краю каждой карточки</string>
 </resources>

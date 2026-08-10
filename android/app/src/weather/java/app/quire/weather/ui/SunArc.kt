@@ -47,7 +47,7 @@ import java.time.format.FormatStyle
  * a picture nobody recognises.
  */
 @Composable
-fun SunArc(sunrise: LocalDateTime, sunset: LocalDateTime) {
+fun SunArc(sunrise: LocalDateTime, sunset: LocalDateTime, glass: Boolean = true) {
     val scheme = MaterialTheme.colorScheme
     val locale = app.quire.calendar.m3.rememberLocale()
     val clock = remember(locale) {
@@ -80,7 +80,11 @@ fun SunArc(sunrise: LocalDateTime, sunset: LocalDateTime) {
     val disc = scheme.primary
 
     Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = Gutter).testTag(BLOCK),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Gutter)
+            .testTag(BLOCK)
+            .glassEdge(CardDefaults.shape, glass, seed = 8),
         colors = CardDefaults.cardColors(containerColor = scheme.surfaceContainerHigh),
     ) {
         Column(Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {

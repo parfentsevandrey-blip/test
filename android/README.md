@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-7.5.apk`](dist/quire-calendar-7.5.apk) · 1.9 MB | `sha256 bbe40ac3ec62fac2cc101ff55e9db72dac3f34313e2c5dd7b236b662c4bfa12d` |
-| **Weather** | [`dist/quire-weather-7.5.apk`](dist/quire-weather-7.5.apk) · 1.5 MB | `sha256 1e85d181758476b6300dcad784f79aa741ac39c4c370696c92f8f2b5125c103e` |
+| **Calendar** | [`dist/quire-calendar-7.6.apk`](dist/quire-calendar-7.6.apk) · 1.9 MB | `sha256 77420ed77fb53302358e40f72f48ca35010669c68aa2fc623f3d4723eefccdfa` |
+| **Weather** | [`dist/quire-weather-7.6.apk`](dist/quire-weather-7.6.apk) · 1.5 MB | `sha256 278bc8524a453b30ac74164a45b60632050ae9f67360ed51f11ef00808798479` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-7.5.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-7.6.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -262,6 +262,34 @@ for it in the app's own settings for anyone who would still rather have a still 
 | Rain, behind the page | Every sky, one on top of another |
 |---|---|
 | ![Rain](docs/app-weather-rain.png) | ![Skies](docs/weather-skies.png) |
+
+**The cards are edged in glass.** Every card on the weather screen carries a rim with light moving
+in it: a still hairline so the card has an edge when nothing is happening, a band of the theme's
+own primary and tertiary travelling round it, and a few sparks riding the rim, each at its own
+speed and twinkling on its own phase. It is the one place on the page where an ornament costs
+nothing — it lives on an edge the card already has, so there is no text it can sit on top of and
+nothing it can push out of the way.
+
+The sparks travel by measuring the card's *actual outline* rather than by walking a rectangle, so
+they round the corners instead of cutting them and the effect comes out right whatever shape a
+card turns out to be. The travelling band is a repeating gradient tile whose two ends are the same
+colour — no seam where one repeat meets the next — slid along the diagonal by exactly one tile per
+lap, which is what makes it come back to where it started without a jump anybody can see. And each
+card is given a different phase: three reading cards side by side are the same size and would
+otherwise carry the same light in the same place at the same moment, which reads as a repeating
+pattern rather than as glass.
+
+The clock is read inside the draw block rather than in composition. Reading an animated value
+while composing recomposes the whole card sixty times a second; reading it while drawing redraws
+it, which is the only part that has changed — and the path and its measure are built once per size
+rather than once per frame. Two claims are held by a test, because both are worth keeping: the rim
+has to move (a still rim is a border), and it has to *stay* on the rim — two frames are compared
+pixel by pixel, and every difference must fall within eight points of the card's own edge, because
+anything that wanders into the middle of a card is drawing on top of the reading somebody opened
+the app for. There is a switch for it beside the sky's, and a phone that has been told not to
+animate anything keeps the hairline and loses the light.
+
+![Glass on a card rim](docs/weather-glass.png)
 
 Two more things move, once each rather than forever. The hourly curve draws itself outwards from
 now, because it is the one thing on the screen that is a shape rather than a number and a shape

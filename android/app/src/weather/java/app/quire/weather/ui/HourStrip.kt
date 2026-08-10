@@ -99,7 +99,11 @@ fun HourStrip(
     }
 
     Card(
-        modifier = modifier.fillMaxWidth().padding(horizontal = Gutter).testTag(BLOCK),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = Gutter)
+            .testTag(BLOCK)
+            .glassEdge(CardDefaults.shape, units.glassEdges, seed = 5),
         colors = CardDefaults.cardColors(containerColor = scheme.surfaceContainerHigh),
     ) {
         Column(
