@@ -48,14 +48,31 @@ class WeatherRefresh : JobService() {
         }
 
         /**
-         * Arms the refresh at whatever interval the user asked for.
+         * The shortest interval JobScheduler will honour for periodic work.
          *
-         * Called again whenever that changes: a periodic job keeps the interval it was scheduled
-         * with, so changing the setting without rescheduling changes nothing at all.
+         * Below this the platform does not refuse — it silently clamps, which is worse: the app
+         * would offer five minutes, the system would run fifteen, and nothing anywhere would say
+         * so. Short intervals therefore go through [WeatherTick] and the alarm manager instead.
+         */
+        const val JOB_FLOOR_MINUTES = 15
+
+        /**
+         * Arms the refresh at whatever interval the user asked for, by whichever mechanism can
+         * actually deliver it.
+         *
+         * Called again whenever the interval changes: a periodic job keeps the interval it was
+         * scheduled with, so writing the setting without rescheduling changes nothing at all. Both
+         * mechanisms are cancelled first, because the interval may have crossed the floor in
+         * either direction and two of these running at once would double the fetches.
          */
         fun schedule(context: Context) {
-            val scheduler = context.getSystemService(JobScheduler::class.java) ?: return
             val minutes = WeatherSettings.get(context).periodMinutes
+            cancel(context)
+            if (minutes < JOB_FLOOR_MINUTES) {
+                WeatherTick.arm(context, minutes)
+                return
+            }
+            val scheduler = context.getSystemService(JobScheduler::class.java) ?: return
             val job = JobInfo.Builder(JOB_ID, ComponentName(context, WeatherRefresh::class.java))
                 .setPeriodic(minutes * 60L * 1000L)
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
@@ -66,6 +83,7 @@ class WeatherRefresh : JobService() {
 
         fun cancel(context: Context) {
             context.getSystemService(JobScheduler::class.java)?.cancel(JOB_ID)
+            WeatherTick.disarm(context)
         }
 
         /** Asks for a fetch off the caller's thread, for when the app is opened or pulled down. */
@@ -87,8 +105,12 @@ class WeatherRefresh : JobService() {
         fun refreshNow(context: Context, force: Boolean = false): Forecast? {
             val stored = WeatherStore.load(context)
             val now = System.currentTimeMillis()
-            val fresh = stored != null &&
-                now - stored.fetched < WeatherRepository.FRESH_FOR_MILLIS
+            // How old is too old is the interval the user chose, not a constant. It used to be a
+            // flat forty-five minutes, which was invisible while the shortest interval was an
+            // hour and would have swallowed every tick the moment five minutes was offered: the
+            // alarm would fire on time and the fetch would decline, nine times out of ten.
+            val staleAfter = staleAfterMillis(context)
+            val fresh = stored != null && now - stored.fetched < staleAfter
             if (fresh && !force) return stored
 
             val remembered = WeatherStore.lastPlace(context)
@@ -114,6 +136,19 @@ class WeatherRefresh : JobService() {
                 }
             }.getOrElse { stored }
         }
+
+        /**
+         * The age at which the stored forecast is worth replacing.
+         *
+         * The floor is there for the other caller: opening the app refreshes, and without one a
+         * handful of app switches would each be a request.
+         */
+        fun staleAfterMillis(context: Context): Long {
+            val minutes = WeatherSettings.get(context).periodMinutes
+            return maxOf(minutes, MIN_STALE_MINUTES) * 60L * 1000L
+        }
+
+        private const val MIN_STALE_MINUTES = 2
 
         /** Within about a kilometre, which is the resolution the forecast is asked for anyway. */
         private fun near(aLat: Double, aLon: Double, bLat: Double, bLon: Double): Boolean =

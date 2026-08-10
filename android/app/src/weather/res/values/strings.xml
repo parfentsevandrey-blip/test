@@ -58,4 +58,7 @@
     <string name="wx_units_kmh">km/h</string>
     <string name="wx_units_ms">m/s</string>
     <string name="wx_units_mph">mph</string>
+    <string name="wx_period_5">5 min</string>
+    <string name="wx_period_10">10 min</string>
+    <string name="wx_period_short_hint">Under 15 minutes Android will not run a background job, so this uses an alarm instead: about right while you are using the phone, and deferred once it has been idle a while. It costs noticeably more battery.</string>
 </resources>

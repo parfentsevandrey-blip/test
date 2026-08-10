@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-6.2.apk`](dist/quire-calendar-6.2.apk) · 1.9 MB | `sha256 07ace777300248bd40c1fbde424be78305068b6699ef81f9de2dbe8d45d2a439` |
-| **Weather** | [`dist/quire-weather-6.2.apk`](dist/quire-weather-6.2.apk) · 1.5 MB | `sha256 bf4fce9e338ccb5fb93a67802a571fc2c4a308856d8382a16872a2750a72b4a9` |
+| **Calendar** | [`dist/quire-calendar-6.3.apk`](dist/quire-calendar-6.3.apk) · 1.9 MB | `sha256 7a7d7acd63c579767a679c73a969c58257d3eb657aeb4bbaf02334aa1fe7dec7` |
+| **Weather** | [`dist/quire-weather-6.3.apk`](dist/quire-weather-6.3.apk) · 1.5 MB | `sha256 883be54ed90e761473ea1231bb8abf20e7c2b622f90921286889f8d7fc6d785c` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-6.2.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-6.3.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -183,9 +183,17 @@ is a test asserting it rather than a sentence claiming it. Location, when it is 
 coarse and last-known rather than a live fix: waking the GPS to find out if it is raining would
 cost more than it could buy.
 
-**What it can be told.** How often to refresh (30 minutes to 6 hours; the default is an hour,
+**What it can be told.** How often to refresh, from 5 minutes to 6 hours. The default is an hour,
 because that is roughly how often the forecast is recomputed upstream and asking twice as often
-gets the same answer twice). Whether to say something when rain is likely, and from what
+gets the same answer twice — but the short intervals are offered anyway, since somebody watching a
+storm come in has a reason. They need a different mechanism: `JobScheduler` will not run periodic
+work more often than every 15 minutes and, below that, does not refuse but silently *clamps*, so
+an app offering 5 minutes and getting 15 would be lying to the person who chose it. Under the
+floor the refresh is an inexact alarm instead, re-armed on each firing — about right while the
+phone is in use, deferred by Doze once it has been idle a while, and the setting says so rather
+than leaving it to be discovered. The age at which a stored forecast is worth replacing follows
+the same setting; leaving it at the old flat 45 minutes would have had nine ticks in ten fire and
+then decline to fetch. Whether to say something when rain is likely, and from what
 probability — one notification a day, for today, and never the same day twice, which is the only
 part of an hourly job that needs writing down. And units: °C or °F, km/h or m/s or mph, applied
 where the number is written rather than where it is fetched, so switching one changes the card you

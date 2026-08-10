@@ -22,6 +22,7 @@ import app.quire.R
 import app.quire.calendar.m3.SettingGroup
 import app.quire.calendar.m3.SettingRow
 import app.quire.weather.Degrees
+import app.quire.weather.WeatherRefresh
 import app.quire.weather.WeatherSettings
 import app.quire.weather.WindUnit
 import kotlin.math.roundToInt
@@ -42,6 +43,8 @@ fun WeatherSettingsScreen(model: WeatherModel, padding: PaddingValues) {
             ChoiceRow(
                 title = stringResource(R.string.wx_period),
                 options = listOf(
+                    stringResource(R.string.wx_period_5),
+                    stringResource(R.string.wx_period_10),
                     stringResource(R.string.wx_period_30),
                     stringResource(R.string.wx_period_60),
                     stringResource(R.string.wx_period_180),
@@ -49,7 +52,14 @@ fun WeatherSettingsScreen(model: WeatherModel, padding: PaddingValues) {
                 ),
                 selected = WeatherSettings.PERIODS.indexOf(settings.period).coerceAtLeast(0),
                 onSelect = { model.setPeriod(WeatherSettings.PERIODS[it]) },
-                hint = stringResource(R.string.wx_period_hint),
+                // Two hints, because the short intervals come with a caveat the long ones do not
+                // and burying it would be the same as not saying it.
+                hint = stringResource(R.string.wx_period_hint) +
+                    if (settings.period < WeatherRefresh.JOB_FLOOR_MINUTES) {
+                        "\n" + stringResource(R.string.wx_period_short_hint)
+                    } else {
+                        ""
+                    },
             )
         }
 

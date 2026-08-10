@@ -58,4 +58,7 @@
     <string name="wx_units_kmh">км/ч</string>
     <string name="wx_units_ms">м/с</string>
     <string name="wx_units_mph">миль/ч</string>
+    <string name="wx_period_5">5 мин</string>
+    <string name="wx_period_10">10 мин</string>
+    <string name="wx_period_short_hint">Меньше 15 минут Android не запускает фоновую задачу, поэтому здесь используется будильник: примерно по расписанию, пока телефоном пользуются, и с задержкой, когда он давно спит. Заметно расходует батарею.</string>
 </resources>

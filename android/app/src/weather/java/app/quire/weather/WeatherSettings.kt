@@ -47,9 +47,10 @@ class WeatherSettings private constructor(private val context: Context) {
     /**
      * Minutes between refreshes.
      *
-     * The floor is fifteen because that is JobScheduler's, and the default is sixty because that
-     * is roughly how often the forecast is recomputed upstream — asking twice as often gets the
-     * same answer twice and charges the battery for it.
+     * The default is sixty because that is roughly how often the forecast is recomputed upstream:
+     * asking twice as often gets the same answer twice and charges the battery for it. The
+     * shorter intervals are offered anyway — a person watching a storm come in has a reason — and
+     * are driven by an alarm rather than a job, since jobs will not go below fifteen minutes.
      */
     var periodMinutes: Int
         get() = prefs.getInt(KEY_PERIOD, DEFAULT_PERIOD)
@@ -92,8 +93,13 @@ class WeatherSettings private constructor(private val context: Context) {
         private const val KEY_WIND = "wind"
         private const val KEY_ALERTED = "alerted"
 
-        /** The offered intervals, in minutes. Anything else is snapped to the nearest. */
-        val PERIODS = listOf(30, 60, 180, 360)
+        /**
+         * The offered intervals, in minutes. Anything else is snapped to the nearest.
+         *
+         * The two short ones are below JobScheduler's floor and are driven by [WeatherTick]
+         * instead; see the note there for what "five minutes" honestly means on a sleeping phone.
+         */
+        val PERIODS = listOf(5, 10, 30, 60, 180, 360)
 
         const val DEFAULT_PERIOD = 60
         const val DEFAULT_THRESHOLD = 50

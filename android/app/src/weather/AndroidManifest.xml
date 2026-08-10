@@ -49,6 +49,10 @@
                 android:resource="@xml/weather_widget_info" />
         </receiver>
 
+        <receiver
+            android:name="app.quire.weather.WeatherTick"
+            android:exported="false" />
+
         <service
             android:name="app.quire.weather.WeatherRefresh"
             android:exported="false"

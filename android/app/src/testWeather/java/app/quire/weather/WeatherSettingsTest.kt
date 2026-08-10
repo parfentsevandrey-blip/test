@@ -54,6 +54,55 @@ class WeatherSettingsTest {
         assertTrue(settings.periodMinutes in WeatherSettings.PERIODS)
         settings.periodMinutes = 360
         assertEquals(360, settings.periodMinutes)
+        settings.periodMinutes = 5
+        assertEquals(5, settings.periodMinutes)
+    }
+
+    /**
+     * The two mechanisms, and that only one of them is ever armed.
+     *
+     * Periodic jobs will not go below fifteen minutes — the platform clamps rather than refusing —
+     * so the short intervals are alarms instead. Leaving both armed across a change would double
+     * the fetches, which is the failure this checks for.
+     */
+    @Test
+    fun `a short interval uses an alarm and a long one uses a job`() {
+        val scheduler = context.getSystemService(android.app.job.JobScheduler::class.java)
+        val alarms = org.robolectric.Shadows.shadowOf(
+            context.getSystemService(android.app.AlarmManager::class.java),
+        )
+
+        settings.periodMinutes = 60
+        WeatherRefresh.schedule(context)
+        assertEquals("an hourly interval should be a job", 1, scheduler.allPendingJobs.size)
+        assertTrue("an hourly interval armed an alarm too", alarms.scheduledAlarms.isEmpty())
+
+        settings.periodMinutes = 5
+        WeatherRefresh.schedule(context)
+        assertTrue("a five-minute interval was left as a job", scheduler.allPendingJobs.isEmpty())
+        assertEquals("a five-minute interval armed no alarm", 1, alarms.scheduledAlarms.size)
+
+        settings.periodMinutes = 180
+        WeatherRefresh.schedule(context)
+        assertEquals("going back up did not restore the job", 1, scheduler.allPendingJobs.size)
+        assertTrue("the alarm outlived the switch back", alarms.scheduledAlarms.isEmpty())
+
+        WeatherRefresh.cancel(context)
+        assertTrue(scheduler.allPendingJobs.isEmpty())
+        assertTrue(alarms.scheduledAlarms.isEmpty())
+    }
+
+    /**
+     * The interaction that would have made five minutes a lie even with the alarm firing: the age
+     * at which a stored forecast is worth replacing used to be a flat forty-five minutes, so nine
+     * ticks out of ten would have fired and then declined to fetch.
+     */
+    @Test
+    fun `how stale is too stale follows the chosen interval`() {
+        settings.periodMinutes = 5
+        assertEquals(5 * 60_000L, WeatherRefresh.staleAfterMillis(context))
+        settings.periodMinutes = 360
+        assertEquals(360 * 60_000L, WeatherRefresh.staleAfterMillis(context))
     }
 
     @Test
