@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-8.0.apk`](dist/quire-calendar-8.0.apk) · 1.9 MB | `sha256 58a1151a974ed3afbccc249e855af45f9195b84e4c3f7a1d91c5b80876448b23` |
-| **Weather** | [`dist/quire-weather-8.0.apk`](dist/quire-weather-8.0.apk) · 1.5 MB | `sha256 1dbf8014fcff241d572bd7c1e3c487a7b2028aca3b1eabd4d13fa1bdc1853737` |
+| **Calendar** | [`dist/quire-calendar-8.1.apk`](dist/quire-calendar-8.1.apk) · 1.9 MB | `sha256 db29af0a5b46129f882251729e4ac564bbbcd1bdb4008dba85e144a2a771a57a` |
+| **Weather** | [`dist/quire-weather-8.1.apk`](dist/quire-weather-8.1.apk) · 1.5 MB | `sha256 0b47bb2dc4c66b2d78dcb4a58f32361abb5ac2e9e72b6a95f8e4595db116c0af` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-8.0.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-8.1.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -275,6 +275,22 @@ through the middle, black along the foot. And a real **shadow** — three points
 cards are right for the calendar's year, where twelve are transformed at once and twelve resting
 shadows are twelve more layers to compose; nothing here is transformed, and the page these sit on
 is a gradient with weather falling down it.
+
+**The readings are one slab, sliced.** Six loose cards with equal gaps everywhere are six things
+to look at; the same six with three-point gaps inside and only the group's outer corners rounded
+large are one object with six readings on it. That is the connected-block grammar Android's own
+settings established and this app's settings screens already speak — which corners are the slab's
+own is a fact about where a cell sits, so each cell computes its shape from its place in the grid.
+The full-width cards below share the slab's twenty-point outer corner, so the whole page is
+visibly one family of shapes.
+
+**The number wears the light.** The big temperature is drawn with a brush rather than a colour —
+ink at the top drifting toward the accent at the foot. Display type is the one place a gradient
+can live in the letterforms without hurting them: at that size it reads as light on the figure,
+where the same brush on body text would read as a misprint. In the five-day card, today's row
+wears the same tonal pill the hour strip's "Now" does, so the two cards point at the present the
+same way, and the sun on its arc carries a small halo — a hard dot is a point on a graph, and a
+dot with light around it is the thing the card is about.
 
 The one thing that moves is the rim's **colour**. Three washes lie over the whole edge at once —
 the primary from the top left, the tertiary from the top right, the secondary up from the foot —

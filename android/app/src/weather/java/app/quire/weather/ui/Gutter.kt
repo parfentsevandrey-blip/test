@@ -36,3 +36,11 @@ internal val HeadingBottom = 8.dp
  * say *raised*, the other two being the highlight and the shade the glass draws itself.
  */
 internal val CardLift = 3.dp
+
+/**
+ * The corner every full-width card on the weather screen wears, and the outer corner of the
+ * readings slab. Larger than Material's card default, which is the Expressive direction — a page
+ * whose objects are generously rounded reads as designed rather than defaulted — and one value
+ * shared, so the slab's outer corners and the cards below it are visibly the same family.
+ */
+internal val CardCorner = 20.dp

@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -193,7 +194,17 @@ private fun Now(forecast: Forecast, units: WeatherModel.Settings) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = actual,
-                style = MaterialTheme.typography.displayLarge,
+                // Ink that turns toward the accent on its way down. The number is the largest
+                // thing the app ever draws, which makes it the one place a gradient can live in
+                // the type itself without hurting it — at display size the drift reads as light
+                // on the figure, where the same brush on body text would read as a misprint.
+                style = MaterialTheme.typography.displayLarge.merge(
+                    androidx.compose.ui.text.TextStyle(
+                        brush = Brush.linearGradient(
+                            listOf(scheme.onSurface, scheme.primary),
+                        ),
+                    ),
+                ),
                 maxLines = 1,
             )
             Spacer(Modifier.width(16.dp))
@@ -319,22 +330,38 @@ private fun Readings(forecast: Forecast, units: WeatherModel.Settings) {
         }
     }
 
+    // One slab, sliced. Six loose cards with equal gaps everywhere are six things; the same six
+    // with hairline gaps inside and the outer corners rounded as a group are one object with six
+    // readings on it — the connected-block grammar Android's own settings established, and the
+    // same one this app's settings screens already speak.
+    val rows = readings.chunked(3)
     Column(
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(SlabGap),
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = Gutter, vertical = 12.dp)
             .testTag(BLOCK),
     ) {
-        readings.chunked(3).forEachIndexed { line, row ->
+        rows.forEachIndexed { line, row ->
             Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(SlabGap),
                 modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
             ) {
                 row.forEachIndexed { column, (icon, label, value) ->
-                    // Its place in the grid is its seed, so no two cards on the screen carry the
-                    // same light in the same place at the same moment.
-                    Reading(icon, label, value, units, line * 3 + column, Modifier.weight(1f))
+                    // Its place in the grid is its seed, so no two cells carry the same light in
+                    // the same place at the same moment — and its shape, because which corners
+                    // are the slab's own is a fact about where the cell sits.
+                    Reading(
+                        icon, label, value, units,
+                        seed = line * 3 + column,
+                        shape = cellShape(
+                            firstRow = line == 0,
+                            lastRow = line == rows.size - 1,
+                            firstCol = column == 0,
+                            lastCol = column == row.size - 1,
+                        ),
+                        modifier = Modifier.weight(1f),
+                    )
                 }
                 // A short last row keeps the cards the width of the ones above rather than
                 // stretching two of them across three columns.
@@ -343,6 +370,23 @@ private fun Readings(forecast: Forecast, units: WeatherModel.Settings) {
         }
     }
 }
+
+/** Which corners of a cell belong to the slab, from where the cell sits in it. */
+private fun cellShape(
+    firstRow: Boolean,
+    lastRow: Boolean,
+    firstCol: Boolean,
+    lastCol: Boolean,
+): RoundedCornerShape = RoundedCornerShape(
+    topStart = if (firstRow && firstCol) CardCorner else CellCorner,
+    topEnd = if (firstRow && lastCol) CardCorner else CellCorner,
+    bottomStart = if (lastRow && firstCol) CardCorner else CellCorner,
+    bottomEnd = if (lastRow && lastCol) CardCorner else CellCorner,
+)
+
+/** The gap inside the slab, and the corner a cell keeps where it meets another cell. */
+private val SlabGap = 3.dp
+private val CellCorner = 7.dp
 
 /**
  * One reading: its mark, the number, and the word for it.
@@ -357,12 +401,14 @@ private fun Reading(
     value: String,
     units: WeatherModel.Settings,
     seed: Int,
+    shape: RoundedCornerShape,
     modifier: Modifier = Modifier,
 ) {
     Card(
+        shape = shape,
         modifier = modifier
             .fillMaxHeight()
-            .glass(CardDefaults.shape, units.glassEdges, seed),
+            .glass(shape, units.glassEdges, seed),
         elevation = CardDefaults.cardElevation(defaultElevation = CardLift),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -406,11 +452,12 @@ private fun Days(forecast: Forecast, units: WeatherModel.Settings) {
     val span = (warmest - coldest).coerceAtLeast(1.0)
 
     Card(
+        shape = RoundedCornerShape(CardCorner),
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = Gutter)
             .testTag(BLOCK)
-            .glass(CardDefaults.shape, units.glassEdges, seed = 11),
+            .glass(RoundedCornerShape(CardCorner), units.glassEdges, seed = 11),
         elevation = CardDefaults.cardElevation(defaultElevation = CardLift),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -430,7 +477,22 @@ private fun DayRow(day: DayForecast, coldest: Double, span: Double, units: Weath
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+        // Today wears the same tonal pill the hour strip's "Now" does, so the two cards point at
+        // the present the same way. The pill is inset from the card's edge and the row's content
+        // keeps its old inset in total, so the columns still line up with the rows around them.
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 6.dp)
+            .then(
+                if (today) {
+                    Modifier
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(scheme.surfaceContainerHighest)
+                } else {
+                    Modifier
+                },
+            )
+            .padding(horizontal = 10.dp, vertical = 10.dp),
     ) {
         // Short form even for today: "Сегодня" in a 64dp column wraps to two lines and drags the
         // whole row out of alignment, which is exactly what it did.

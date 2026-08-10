@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -80,11 +81,12 @@ fun SunArc(sunrise: LocalDateTime, sunset: LocalDateTime, glass: Boolean = true)
     val disc = scheme.primary
 
     Card(
+        shape = RoundedCornerShape(CardCorner),
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = Gutter)
             .testTag(BLOCK)
-            .glass(CardDefaults.shape, glass, seed = 8),
+            .glass(RoundedCornerShape(CardCorner), glass, seed = 8),
         elevation = CardDefaults.cardElevation(defaultElevation = CardLift),
         colors = CardDefaults.cardColors(containerColor = scheme.surfaceContainerHigh),
     ) {
@@ -151,6 +153,18 @@ fun SunArc(sunrise: LocalDateTime, sunset: LocalDateTime, glass: Boolean = true)
                         strokeWidth = 1.dp.toPx(),
                     )
                     if (up) {
+                        // A halo before the disc: a sun that is a hard dot is a point on a graph,
+                        // and one with a little light around it is the thing the card is about.
+                        val glow = 16.dp.toPx()
+                        drawCircle(
+                            brush = androidx.compose.ui.graphics.Brush.radialGradient(
+                                listOf(disc.copy(alpha = 0.38f), disc.copy(alpha = 0f)),
+                                center = point(walk),
+                                radius = glow,
+                            ),
+                            radius = glow,
+                            center = point(walk),
+                        )
                         drawCircle(color = disc, radius = 5.dp.toPx(), center = point(walk))
                     }
                 }

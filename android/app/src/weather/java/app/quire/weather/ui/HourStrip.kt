@@ -99,11 +99,12 @@ fun HourStrip(
     }
 
     Card(
+        shape = RoundedCornerShape(CardCorner),
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = Gutter)
             .testTag(BLOCK)
-            .glass(CardDefaults.shape, units.glassEdges, seed = 5),
+            .glass(RoundedCornerShape(CardCorner), units.glassEdges, seed = 5),
         elevation = CardDefaults.cardElevation(defaultElevation = CardLift),
         colors = CardDefaults.cardColors(containerColor = scheme.surfaceContainerHigh),
     ) {
