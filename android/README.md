@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-7.2.apk`](dist/quire-calendar-7.2.apk) · 1.9 MB | `sha256 04b0149c9fe0a5b01b41ffc8118753d8d6b3f0fe0f0f01e76014ab7e5dbec369` |
-| **Weather** | [`dist/quire-weather-7.2.apk`](dist/quire-weather-7.2.apk) · 1.5 MB | `sha256 b3fcdb9b53aa19e3765814cd769cd28e89c799ec42a7a15827dee0ab864ff955` |
+| **Calendar** | [`dist/quire-calendar-7.3.apk`](dist/quire-calendar-7.3.apk) · 1.9 MB | `sha256 da446e008b1de23370e1a00d0cc91ed8d26dc6a941cf09051b40b7c3b4348cf0` |
+| **Weather** | [`dist/quire-weather-7.3.apk`](dist/quire-weather-7.3.apk) · 1.5 MB | `sha256 d35cdd0075e41d21715865f255003ea8ef0ccb298662650a77b7359860493ee2` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-7.2.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-7.3.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -218,6 +218,33 @@ neighbouring rows, because a step is exactly what a hard edge is; with the opaqu
 "the sky steps by 22 at row 456".
 
 ![The sky behind the bar](docs/app-weather-bar.png)
+
+**The sky moves.** An app that draws a raincloud and then sits perfectly still is a diagram of the
+weather. Behind the top of the page the actual sky runs: rain falls, snow drifts and wanders
+sideways, cloud passes, fog breathes in and out, stars come and go at their own rates, the sun
+swells and settles, and a storm flashes twice a lap. It is under everything and never touched, so
+it costs nothing but the frames.
+
+Every particle's position is a pure function of one looping clock and its own index — a field of
+forty drops is forty sines, not forty objects being stepped and collected, and nothing is
+allocated in a frame. That also makes it deterministic, which is what lets a test look at it: two
+frames three seconds apart must differ where the weather is and be *identical* everywhere else,
+because a page that shifts under a moving sky is a page that has been dragged along with it.
+
+The loop is seamless because every particle's speed is a whole number of laps per period. At two
+and a third laps a drop arrives back a third of the way down and the whole field visibly jumps; at
+two exactly, nobody can find the seam. And somebody who has switched animation off in the system
+settings gets the same sky standing still — an endless animation is precisely the kind they meant.
+
+| Rain, behind the page |
+|---|
+| ![Rain](docs/app-weather-rain.png) |
+
+Two more things move, once each rather than forever. The hourly curve draws itself outwards from
+now, because it is the one thing on the screen that is a shape rather than a number and a shape
+arriving as a shape is how you notice it is one. And the sun runs out along its arc to where it
+actually is, because that card is a picture of a journey, and a journey that is over before you
+look at it is a diagram.
 
 **Six readings, and none of them invented.** The chance of rain, the humidity, the wind and the
 quarter it blows from, the gusts, the peak UV index and the pressure — in a grid of cards three

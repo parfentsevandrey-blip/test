@@ -1,5 +1,8 @@
 package app.quire.weather.ui
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +17,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -62,8 +66,16 @@ fun SunArc(sunrise: LocalDateTime, sunset: LocalDateTime) {
     val caption =
         stringResource(if (up) R.string.wx_daylight_left else R.string.wx_daylight, span)
 
+    // The sun runs out along the arc to where it actually is rather than appearing there. It is
+    // a picture of a journey, and a journey that is over before you look at it is a diagram.
+    val travelled = remember(sunrise) { Animatable(0f) }
+    LaunchedEffect(sunrise, progress) {
+        travelled.animateTo(progress, tween(durationMillis = 1_100, easing = FastOutSlowInEasing))
+    }
+    val walk = travelled.value
+
     val track = scheme.outlineVariant
-    val travelled = scheme.primary
+    val ink = scheme.primary
     val disc = scheme.primary
 
     Card(
@@ -113,16 +125,16 @@ fun SunArc(sunrise: LocalDateTime, sunset: LocalDateTime) {
                         ),
                     )
 
-                    if (progress > 0f) {
+                    if (walk > 0f) {
                         val walked = Path().apply {
                             moveTo(point(0f).x, point(0f).y)
-                            val last = (STEPS * progress).toInt().coerceAtLeast(1)
+                            val last = (STEPS * walk).toInt().coerceAtLeast(1)
                             for (step in 1..last) {
                                 val p = point(step / STEPS.toFloat())
                                 lineTo(p.x, p.y)
                             }
                         }
-                        drawPath(walked, color = travelled, style = Stroke(width = 3.dp.toPx()))
+                        drawPath(walked, color = ink, style = Stroke(width = 3.dp.toPx()))
                     }
 
                     // The horizon, and the sun on it or above it.
@@ -133,7 +145,7 @@ fun SunArc(sunrise: LocalDateTime, sunset: LocalDateTime) {
                         strokeWidth = 1.dp.toPx(),
                     )
                     if (up) {
-                        drawCircle(color = disc, radius = 5.dp.toPx(), center = point(progress))
+                        drawCircle(color = disc, radius = 5.dp.toPx(), center = point(walk))
                     }
                 }
                 // Under the arc and above the horizon — the one part of the card the drawing

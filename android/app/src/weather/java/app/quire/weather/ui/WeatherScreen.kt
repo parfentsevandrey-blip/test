@@ -31,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalDensity
@@ -91,6 +92,22 @@ fun WeatherScreen(
     }
 
     Box(Modifier.fillMaxSize().background(wash)) {
+        // The weather itself, moving, under everything else. It is drawn over the same band the
+        // wash covers and fades out with it, so the page below stays a page.
+        forecast?.let {
+            LiveSky(
+                sky = it.now.sky,
+                day = it.now.day,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(padding.calculateTopPadding() + SkyHeight)
+                    // Clipped, because a draw scope is not: a drop whose head is at the last row
+                    // of the band still draws its whole tail below it, at whatever alpha its head
+                    // had. Twenty points of very faint rain over the page is not visible and is
+                    // still wrong.
+                    .clipToBounds(),
+            )
+        }
         LazyColumn(contentPadding = padding, modifier = Modifier.fillMaxSize()) {
             // Only when there is no place at all. Somebody who named one has answered the question,
             // and being asked again for a permission they declined is nagging rather than helping.

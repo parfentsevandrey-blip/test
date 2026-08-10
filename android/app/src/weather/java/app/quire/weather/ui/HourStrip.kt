@@ -1,5 +1,8 @@
 package app.quire.weather.ui
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
@@ -20,6 +23,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -86,6 +90,13 @@ fun HourStrip(
     val primary = scheme.primary
     val tertiary = scheme.tertiary
 
+    // How much of the line has arrived. Keyed on the hours, so a refresh that brings a new
+    // forecast draws the new shape rather than swapping it in behind the old one.
+    val drawn = remember(hours.first().time) { Animatable(0f) }
+    LaunchedEffect(hours.first().time) {
+        drawn.animateTo(1f, tween(durationMillis = 900, easing = FastOutSlowInEasing))
+    }
+
     Card(
         modifier = modifier.fillMaxWidth().padding(horizontal = Gutter),
         colors = CardDefaults.cardColors(containerColor = scheme.surfaceContainerHigh),
@@ -118,12 +129,17 @@ fun HourStrip(
                 fun y(level: Float) = Ceiling.toPx() +
                     (size.height - Ceiling.toPx() - Floor.toPx()) * (1f - level)
 
+                // The line draws itself from now outwards rather than appearing all at once. It
+                // is the one thing on the screen that is a shape rather than a number, and a
+                // shape arriving as a shape is how you notice it is one.
+                val reach = drawn.value * levels.size
                 val ridge = Path().apply {
                     moveTo(0f, y(levels.first()))
                     levels.forEachIndexed { index, level ->
+                        if (index > reach) return@forEachIndexed
                         lineTo(step * index + step / 2f, y(level))
                     }
-                    lineTo(size.width, y(levels.last()))
+                    if (reach >= levels.size - 1) lineTo(size.width, y(levels.last()))
                 }
                 drawPath(
                     path = Path().apply {
@@ -136,7 +152,10 @@ fun HourStrip(
                     // transparent is black, and a gradient run in non-premultiplied sRGB walks the
                     // hue towards black on the way there, which puts a dirty band under the curve.
                     brush = Brush.verticalGradient(
-                        listOf(primary.copy(alpha = 0.32f), primary.copy(alpha = 0f)),
+                        listOf(
+                            primary.copy(alpha = 0.32f * drawn.value),
+                            primary.copy(alpha = 0f),
+                        ),
                     ),
                 )
                 drawPath(
@@ -145,6 +164,7 @@ fun HourStrip(
                     style = Stroke(width = 2.dp.toPx()),
                 )
                 levels.forEachIndexed { index, level ->
+                    if (index > reach) return@forEachIndexed
                     drawCircle(
                         color = primary,
                         radius = 3.dp.toPx(),

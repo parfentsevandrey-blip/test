@@ -210,11 +210,19 @@ class WeatherScreenTest {
      */
     private fun Bitmap.leftEdge(y: Int): Int {
         val background = getPixel(2, y)
-        for (x in 2 until width) {
-            if (apart(getPixel(x, y), background)) return x
+        for (x in 2 until width - RUN) {
+            // A run rather than a pixel. There is weather falling behind this page now, and a
+            // raindrop is two pixels wide; a card edge is the rest of the row.
+            if ((0 until RUN).all { apart(getPixel(x + it, y), background) }) return x
         }
         return -1
     }
+
+    /** How many pixels in a row have to differ before it counts as an edge and not a drop. */
+    private val RUN = 8
+
+    /** How far down the window the weather is drawn, in points. */
+    private val SKY_BAND = 320f
 
     private fun apart(a: Int, b: Int): Boolean {
         var sum = 0
@@ -292,6 +300,79 @@ class WeatherScreenTest {
             sum += kotlin.math.abs(((a shr shift) and 0xFF) - ((b shr shift) and 0xFF))
         }
         return sum
+    }
+
+    /**
+     * The sky moves, and only the sky.
+     *
+     * An app that draws a raincloud and then sits perfectly still is a diagram of the weather.
+     * Two frames three seconds apart have to differ where the weather is, and be identical
+     * everywhere else — a page that shifts under a moving sky is a page that has been dragged
+     * along with it.
+     */
+    @Test
+    fun `the weather behind the page is moving`() {
+        val today = LocalDate.now()
+        WeatherStore.pin(app, Place("Moscow", null, "Russia", 55.75, 37.62))
+        WeatherStore.save(
+            app,
+            Forecast(
+                place = "Moscow",
+                latitude = 55.75,
+                longitude = 37.62,
+                now = Conditions(4.0, 2.0, Sky.SHOWERS, true, 88, 21.0, 33.0, 180, 998.0, 1.0),
+                hours = (0 until 26).map { hour ->
+                    HourForecast(
+                        time = java.time.LocalDateTime.now().withMinute(0).plusHours(hour.toLong()),
+                        temperature = 4.0 + kotlin.math.sin(hour / 3.6),
+                        sky = Sky.SHOWERS,
+                        day = true,
+                        rain = 80,
+                    )
+                },
+                days = (0 until 5).map { index ->
+                    DayForecast(
+                        date = today.plusDays(index.toLong()),
+                        sky = Sky.SHOWERS,
+                        high = 8.0 - index,
+                        low = 2.0 - index,
+                        rain = 80,
+                        sunrise = today.plusDays(index.toLong()).atTime(5, 12),
+                        sunset = today.plusDays(index.toLong()).atTime(20, 41),
+                    )
+                },
+                fetched = System.currentTimeMillis(),
+            ),
+        )
+
+        val model = WeatherModel(app)
+        compose.setContent {
+            QuireTheme(dark = true, dynamic = false) {
+                Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+                    WeatherScreen(model, PaddingValues(0.dp), onGrant = {})
+                }
+            }
+        }
+        settle()
+        val first = shoot("app-weather-rain")
+
+        // Far enough for a drop to have crossed a third of the band, and past the end of the
+        // one-off animations that play on arrival — those are settled by now, so anything that
+        // moves between these two frames is the sky itself.
+        compose.mainClock.advanceTimeBy(3_000L)
+        val second = shoot("app-weather-rain-later")
+
+        var movedAbove = 0
+        var movedBelow = 0
+        val skyline = (SKY_BAND * compose.density.density).toInt()
+        for (y in 0 until first.height step 3) {
+            for (x in 0 until first.width step 3) {
+                if (first.getPixel(x, y) == second.getPixel(x, y)) continue
+                if (y < skyline) movedAbove++ else movedBelow++
+            }
+        }
+        assertTrue("nothing moved in the sky at all", movedAbove > 200)
+        assertTrue("the page moved under the sky ($movedBelow pixels)", movedBelow == 0)
     }
 
     /** The same screen in daylight, because the dark one is only half of what ships. */
