@@ -61,4 +61,7 @@
     <string name="wx_period_5">5 мин</string>
     <string name="wx_period_10">10 мин</string>
     <string name="wx_period_short_hint">Меньше 15 минут Android не запускает фоновую задачу, поэтому здесь используется будильник: примерно по расписанию, пока телефоном пользуются, и с задержкой, когда он давно спит. Заметно расходует батарею.</string>
+    <string name="wx_now">Сейчас</string>
+    <string name="wx_hours">Ближайшие 24 часа</string>
+    <string name="wx_sun">Восход и закат</string>
 </resources>

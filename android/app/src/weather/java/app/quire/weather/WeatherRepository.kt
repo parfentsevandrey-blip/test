@@ -5,6 +5,7 @@ import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.Locale
 
 /**
@@ -28,7 +29,9 @@ object WeatherRepository {
     private const val CURRENT =
         "temperature_2m,apparent_temperature,weather_code,is_day,relative_humidity_2m,wind_speed_10m"
     private const val DAILY =
-        "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max"
+        "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max," +
+            "sunrise,sunset"
+    private const val HOURLY = "temperature_2m,weather_code,precipitation_probability,is_day"
     private const val DAYS = 6
     private const val TIMEOUT_MILLIS = 12_000
 
@@ -46,6 +49,7 @@ object WeatherRepository {
         append("&longitude=").append(round(longitude))
         append("&current=").append(CURRENT)
         append("&daily=").append(DAILY)
+        append("&hourly=").append(HOURLY)
         append("&timezone=auto")
         append("&forecast_days=").append(DAYS)
     }
@@ -105,12 +109,37 @@ object WeatherRepository {
             wind = current.optDouble("wind_speed_10m", 0.0),
         )
 
+        // The hours are optional: a provider that stops sending them costs the screen a strip,
+        // not a forecast.
+        val hours = ArrayList<HourForecast>()
+        root.optJSONObject("hourly")?.let { hourly ->
+            val times = hourly.optJSONArray("time")
+            val temps = hourly.optJSONArray("temperature_2m")
+            val codes = hourly.optJSONArray("weather_code")
+            val chance = hourly.optJSONArray("precipitation_probability")
+            val daylight = hourly.optJSONArray("is_day")
+            if (times != null && temps != null && codes != null) {
+                for (index in 0 until times.length()) {
+                    if (index >= temps.length() || index >= codes.length()) break
+                    hours += HourForecast(
+                        time = LocalDateTime.parse(times.getString(index)),
+                        temperature = temps.getDouble(index),
+                        sky = Sky.of(codes.getInt(index)),
+                        day = (daylight?.optInt(index, 1) ?: 1) == 1,
+                        rain = chance?.optInt(index, 0) ?: 0,
+                    )
+                }
+            }
+        }
+
         val daily = root.getJSONObject("daily")
         val dates = daily.getJSONArray("time")
         val codes = daily.getJSONArray("weather_code")
         val highs = daily.getJSONArray("temperature_2m_max")
         val lows = daily.getJSONArray("temperature_2m_min")
         val rain = daily.optJSONArray("precipitation_probability_max")
+        val sunrise = daily.optJSONArray("sunrise")
+        val sunset = daily.optJSONArray("sunset")
 
         val days = ArrayList<DayForecast>(dates.length())
         for (index in 0 until dates.length()) {
@@ -121,6 +150,10 @@ object WeatherRepository {
                 high = highs.getDouble(index),
                 low = lows.getDouble(index),
                 rain = rain?.optInt(index, 0) ?: 0,
+                sunrise = sunrise?.optString(index)?.takeIf { it.isNotBlank() }
+                    ?.let { runCatching { LocalDateTime.parse(it) }.getOrNull() },
+                sunset = sunset?.optString(index)?.takeIf { it.isNotBlank() }
+                    ?.let { runCatching { LocalDateTime.parse(it) }.getOrNull() },
             )
         }
 
@@ -131,6 +164,7 @@ object WeatherRepository {
             now = conditions,
             days = days,
             fetched = now,
+            hours = hours,
         )
     }
 

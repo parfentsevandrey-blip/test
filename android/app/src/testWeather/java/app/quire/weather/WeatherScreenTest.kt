@@ -88,6 +88,15 @@ class WeatherScreenTest {
                 latitude = 55.75,
                 longitude = 37.62,
                 now = Conditions(12.8, 11.4, skies[0], false, 81, 13.7),
+                hours = (0 until 26).map { hour ->
+                    HourForecast(
+                        time = java.time.LocalDateTime.now().withMinute(0).plusHours(hour.toLong()),
+                        temperature = 12.0 + 6.0 * kotlin.math.sin(hour / 3.6),
+                        sky = skies[hour % skies.size],
+                        day = hour % 24 in 6..20,
+                        rain = if (hour % 5 == 0) 10 * (hour % 9) else 0,
+                    )
+                },
                 days = skies.mapIndexed { index, sky ->
                     DayForecast(
                         date = today.plusDays(index.toLong()),
@@ -95,6 +104,8 @@ class WeatherScreenTest {
                         high = 22.0 - index * 1.4,
                         low = 11.0 - index * 1.1,
                         rain = listOf(70, 30, 0, 80, 60)[index],
+                        sunrise = java.time.LocalDate.now().plusDays(index.toLong()).atTime(5, 12),
+                        sunset = java.time.LocalDate.now().plusDays(index.toLong()).atTime(20, 41),
                     )
                 },
                 fetched = System.currentTimeMillis(),
@@ -124,10 +135,17 @@ class WeatherScreenTest {
         assertTrue("the screen painted only ${colours.size} colours", colours.size > 8)
 
         // The place name in full is the whole point of the screen existing beside the card.
-        assertTrue("the place was cut", showing("Западный административный округ") > 0)
         assertTrue("the temperature is missing", showing("13°") > 0)
         assertTrue("the humidity is missing", showing("81%") > 0)
         assertTrue("the five-day heading is missing", showing("Next five days") > 0)
+        assertTrue("the hourly strip is missing", showing("Next 24 hours") > 0)
+        assertTrue("the sun times are missing", showing("5:12") > 0)
+        // The place is the app bar's job; repeating it over the temperature was the first thing
+        // that read as crooked on a real phone.
+        assertTrue(
+            "the place is written twice on one screen",
+            showing("Западный административный округ") == 0,
+        )
     }
 
     /** The settings, with the alerts open so the threshold slider is on screen too. */

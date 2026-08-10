@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-6.3.apk`](dist/quire-calendar-6.3.apk) · 1.9 MB | `sha256 7a7d7acd63c579767a679c73a969c58257d3eb657aeb4bbaf02334aa1fe7dec7` |
-| **Weather** | [`dist/quire-weather-6.3.apk`](dist/quire-weather-6.3.apk) · 1.5 MB | `sha256 883be54ed90e761473ea1231bb8abf20e7c2b622f90921286889f8d7fc6d785c` |
+| **Calendar** | [`dist/quire-calendar-6.4.apk`](dist/quire-calendar-6.4.apk) · 1.9 MB | `sha256 196b2fc05ae977057572284a1b1c0dd81d93579ce5f96280cca2be4f45acf4c4` |
+| **Weather** | [`dist/quire-weather-6.4.apk`](dist/quire-weather-6.4.apk) · 1.5 MB | `sha256 c4905a6091b44f421596e67d78925b0abd48652cde15d3a3c35492f9169b72e9` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-6.3.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-6.4.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -139,9 +139,23 @@ never asked to be.
 
 ## The weather app
 
-A separate application, `app.quire.weather`, with its own icon and its own permissions. Now, the
-three readings the card has no room for, and five days each with a bar showing where its swing
-sits inside the week's — which is the part a list of numbers cannot do.
+A separate application, `app.quire.weather`, with its own icon and its own permissions.
+
+**The next twenty-four hours, as a shape.** A five-day forecast tells you what kind of week it is;
+the hourly strip tells you whether to leave now. Each temperature rides its own point on a curve
+rather than sitting in a row of numbers above one — a flat row over a line is two things to read,
+and the whole reason to draw a curve is that the shape should be readable without reading
+anything.
+
+**Where the day is.** Sunrise and sunset as a pair of numbers are something to subtract in your
+head; drawn as an arc with the sun on it, "how much daylight is left" is a glance, which is the
+only question anybody actually asks of a sunset time. The arc is a plain half-circle rather than
+the true solar path: the true one depends on latitude and season and would be a different shape
+every day, which is precision nobody wants at the cost of a picture nobody recognises.
+
+**And the readings the card has no room for** — the chance of rain, the humidity, the wind — plus
+five days each with a bar showing where its swing sits inside the week's, which is the part a list
+of numbers cannot do.
 
 | The app | Settings | Four by two | The daylight face |
 |---|---|---|---|

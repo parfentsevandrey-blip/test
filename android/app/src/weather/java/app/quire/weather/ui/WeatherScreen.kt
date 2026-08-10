@@ -92,74 +92,85 @@ fun WeatherScreen(
             return@LazyColumn
         }
 
-        item { Now(forecast, model.pinned, model.settings) }
+        item { Now(forecast, model.settings) }
         item { Readings(forecast, model.settings) }
-        item {
-            Text(
-                text = stringResource(R.string.wx_five_days),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(start = 28.dp, end = 28.dp, top = 24.dp, bottom = 8.dp),
-            )
+        if (forecast.hours.isNotEmpty()) {
+            item { Heading(stringResource(R.string.wx_hours)) }
+            item {
+                HourStrip(
+                    hours = forecast.hoursAhead(java.time.LocalDateTime.now()),
+                    units = model.settings,
+                )
+            }
         }
+        forecast.days.firstOrNull()?.let { today ->
+            if (today.sunrise != null && today.sunset != null) {
+                item { Heading(stringResource(R.string.wx_sun)) }
+                item { SunArc(today.sunrise, today.sunset) }
+            }
+        }
+        item { Heading(stringResource(R.string.wx_five_days)) }
         item { Days(forecast, model.settings) }
         item { Freshness(forecast) }
         item { Spacer(Modifier.height(24.dp)) }
     }
 }
 
+/**
+ * What it is doing now.
+ *
+ * Left-aligned rather than centred: the app bar already carries the place, and a centred stack
+ * under a left-aligned bar is the sort of thing that reads as crooked without anybody being able
+ * to say why. The number and the sky sit on one line at a size worth the space, and the
+ * feels-like appears only when it has something to add — "19°, feels like 19°" is a sentence that
+ * spends a line saying nothing.
+ */
 @Composable
-private fun Now(forecast: Forecast, pinned: Boolean, units: WeatherModel.Settings) {
+private fun Now(forecast: Forecast, units: WeatherModel.Settings) {
     val scheme = MaterialTheme.colorScheme
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 8.dp),
+    val feels = write(units, forecast.now.feelsLike)
+    val actual = write(units, forecast.now.temperature)
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 4.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            if (pinned) {
-                Icon(
-                    imageVector = Icons.Default.Place,
-                    contentDescription = stringResource(R.string.wx_named_place),
-                    tint = scheme.onSurfaceVariant,
-                    modifier = Modifier.size(16.dp),
-                )
-                Spacer(Modifier.width(4.dp))
-            }
+        Icon(
+            painter = painterResource(forecast.now.sky.icon(forecast.now.day)),
+            contentDescription = stringResource(forecast.now.sky.label),
+            tint = scheme.primary,
+            modifier = Modifier.size(76.dp),
+        )
+        Spacer(Modifier.width(16.dp))
+        Column {
+            Text(text = actual, style = MaterialTheme.typography.displayLarge)
             Text(
-                text = forecast.place.ifBlank { stringResource(R.string.weather) },
+                text = stringResource(forecast.now.sky.label),
                 style = MaterialTheme.typography.titleMedium,
                 color = scheme.onSurfaceVariant,
             )
+            if (feels != actual) {
+                Text(
+                    text = stringResource(R.string.wx_feels_like, feels),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = scheme.onSurfaceVariant,
+                )
+            }
         }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                painter = painterResource(forecast.now.sky.icon(forecast.now.day)),
-                contentDescription = stringResource(forecast.now.sky.label),
-                tint = scheme.primary,
-                modifier = Modifier.size(84.dp),
-            )
-            Spacer(Modifier.width(8.dp))
-            Text(
-                text = write(units, forecast.now.temperature),
-                style = MaterialTheme.typography.displayLarge,
-            )
-        }
-        Text(
-            text = stringResource(forecast.now.sky.label),
-            style = MaterialTheme.typography.titleLarge,
-        )
-        Text(
-            text = stringResource(
-                R.string.wx_feels_like,
-                write(units, forecast.now.feelsLike),
-            ),
-            style = MaterialTheme.typography.bodyLarge,
-            color = scheme.onSurfaceVariant,
-        )
     }
 }
 
 /** The three numbers the widget has no room for, as one row of tonal cards. */
+@Composable
+private fun Heading(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 8.dp),
+    )
+}
+
 @Composable
 private fun Readings(forecast: Forecast, units: WeatherModel.Settings) {
     val today = forecast.days.firstOrNull()
@@ -242,15 +253,14 @@ private fun DayRow(day: DayForecast, coldest: Double, span: Double, units: Weath
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
     ) {
+        // Short form even for today: "Сегодня" in a 64dp column wraps to two lines and drags the
+        // whole row out of alignment, which is exactly what it did.
         Text(
-            text = if (today) {
-                stringResource(R.string.wx_today)
-            } else {
-                day.date.dayOfWeek.getDisplayName(TextStyle.SHORT, locale)
-            },
+            text = day.date.dayOfWeek.getDisplayName(TextStyle.SHORT, locale),
             style = MaterialTheme.typography.bodyLarge,
             color = if (today) scheme.primary else scheme.onSurface,
-            modifier = Modifier.width(64.dp),
+            maxLines = 1,
+            modifier = Modifier.width(44.dp),
         )
         Icon(
             painter = painterResource(day.sky.dayIcon),
@@ -258,11 +268,15 @@ private fun DayRow(day: DayForecast, coldest: Double, span: Double, units: Weath
             tint = scheme.onSurfaceVariant,
             modifier = Modifier.size(26.dp),
         )
+        // Always written, even at nothing: a column that disappears on dry days leaves the row
+        // above and the row below disagreeing about where the temperatures start.
         Text(
-            text = if (day.rain > 0) "${day.rain}%" else "",
+            text = if (day.rain > 0) "${day.rain}%" else "—",
             style = MaterialTheme.typography.labelMedium,
-            color = scheme.tertiary,
-            modifier = Modifier.width(44.dp).padding(start = 6.dp),
+            color = if (day.rain > 0) scheme.tertiary else scheme.outlineVariant,
+            textAlign = TextAlign.End,
+            maxLines = 1,
+            modifier = Modifier.width(42.dp).padding(start = 6.dp),
         )
         Text(
             text = write(units, day.low),

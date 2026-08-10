@@ -119,6 +119,22 @@ object WeatherStore {
             },
         )
         put(
+            "hours",
+            JSONArray().apply {
+                forecast.hours.forEach { hour ->
+                    put(
+                        JSONObject().apply {
+                            put("t", hour.time.toString())
+                            put("c", hour.temperature)
+                            put("s", hour.sky.name)
+                            put("d", hour.day)
+                            put("r", hour.rain)
+                        },
+                    )
+                }
+            },
+        )
+        put(
             "days",
             JSONArray().apply {
                 forecast.days.forEach { day ->
@@ -129,6 +145,8 @@ object WeatherStore {
                             put("high", day.high)
                             put("low", day.low)
                             put("rain", day.rain)
+                            day.sunrise?.let { put("sunrise", it.toString()) }
+                            day.sunset?.let { put("sunset", it.toString()) }
                         },
                     )
                 }
@@ -160,8 +178,26 @@ object WeatherStore {
                     high = day.getDouble("high"),
                     low = day.getDouble("low"),
                     rain = day.optInt("rain", 0),
+                    sunrise = day.optString("sunrise").takeIf { it.isNotBlank() }
+                        ?.let { runCatching { java.time.LocalDateTime.parse(it) }.getOrNull() },
+                    sunset = day.optString("sunset").takeIf { it.isNotBlank() }
+                        ?.let { runCatching { java.time.LocalDateTime.parse(it) }.getOrNull() },
                 )
             },
+            hours = json.optJSONArray("hours")?.let { array ->
+                (0 until array.length()).mapNotNull { index ->
+                    val hour = array.optJSONObject(index) ?: return@mapNotNull null
+                    runCatching {
+                        HourForecast(
+                            time = java.time.LocalDateTime.parse(hour.getString("t")),
+                            temperature = hour.getDouble("c"),
+                            sky = sky(hour.optString("s")),
+                            day = hour.optBoolean("d", true),
+                            rain = hour.optInt("r", 0),
+                        )
+                    }.getOrNull()
+                }
+            }.orEmpty(),
         )
     }
 
