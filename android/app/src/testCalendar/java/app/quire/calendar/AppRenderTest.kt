@@ -231,6 +231,76 @@ class AppRenderTest {
         )
     }
 
+    /**
+     * The year at a font scale of one and a half, which is where it fell apart on a real phone:
+     * the day numbers ran into each other — "12131415161718" — and the twelve tiles no longer fit,
+     * so the one view whose whole claim is that a year is visible at a glance had to be scrolled.
+     *
+     * Both are asserted from the layout rather than from the picture. Nothing is hard-coded about
+     * how wide a column is: the columns are found from the numbers themselves, by grouping them
+     * into rows and taking the smallest gap between two neighbours' centres, and the widest number
+     * anywhere must fit inside that. If any two numbers touch, this fails.
+     */
+    @Test
+    fun `the year holds together at a large font scale`() {
+        val model = model(dark = false)
+        compose.setContent {
+            QuireTheme(dark = false, dynamic = false) {
+                androidx.compose.runtime.CompositionLocalProvider(
+                    androidx.compose.ui.platform.LocalDensity provides
+                        androidx.compose.ui.unit.Density(density = 3f, fontScale = 1.5f),
+                ) {
+                    Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+                        // The insets a phone actually hands this screen: the compact app bar
+                        // above and the navigation bar below. With nothing subtracted the year
+                        // has a hundred and fifty points it does not really have, which is how it
+                        // came to need scrolling on a device and not here.
+                        YearScreen(
+                            model,
+                            PaddingValues(top = 72.dp, bottom = 96.dp),
+                        ) {}
+                    }
+                }
+            }
+        }
+        model.refresh()
+        settle()
+        shoot("app-year-large-type")
+
+        val named = (1..12).count {
+            showing(MonthModel.monthName(YearMonth.of(month.year, it), java.util.Locale.getDefault())) > 0
+        }
+        assertTrue("only $named of twelve months are on screen — the year has to be scrolled", named == 12)
+
+        val numbers = compose
+            .onAllNodes(
+                androidx.compose.ui.test.SemanticsMatcher.keyIsDefined(
+                    androidx.compose.ui.semantics.SemanticsProperties.Text,
+                ),
+                useUnmergedTree = true,
+            )
+            .fetchSemanticsNodes()
+            .filter { node ->
+                node.config[androidx.compose.ui.semantics.SemanticsProperties.Text]
+                    .joinToString("").matches(Regex("\\d{1,2}"))
+            }
+            .map { it.boundsInRoot }
+        assertTrue("no day numbers were laid out at all", numbers.size > 200)
+
+        // Neighbours in a row, found by grouping on the top edge. The smallest centre-to-centre
+        // gap anywhere is one column; the gap between two tiles is always wider than that.
+        val rows = numbers.groupBy { (it.top / 8f).toInt() }
+        val column = rows.values.filter { it.size > 1 }.minOf { row ->
+            val centres = row.map { it.center.x }.sorted()
+            centres.zipWithNext { a, b -> b - a }.min()
+        }
+        val widest = numbers.maxOf { it.width }
+        assertTrue(
+            "a day number is ${widest}px wide in a ${column}px column — the numbers touch",
+            widest < column,
+        )
+    }
+
     @Test
     fun `the settings screen paints every section`() {
         val model = model(dark = false)

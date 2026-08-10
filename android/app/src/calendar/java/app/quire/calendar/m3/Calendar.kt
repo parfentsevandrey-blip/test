@@ -39,6 +39,8 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import app.quire.calendar.core.DayLoad
 import app.quire.calendar.core.MonthModel
@@ -275,6 +277,9 @@ fun MiniMonth(
     weekdayInitials: List<String>,
     today: LocalDate,
     loads: Map<LocalDate, DayLoad>,
+    dayFont: TextUnit,
+    nameFont: TextUnit,
+    disc: Dp,
     onOpen: (YearMonth) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -294,13 +299,19 @@ fun MiniMonth(
                 scheme.surfaceContainerLow
             },
         ),
+        // Flat. Twelve resting shadows is twelve extra layers to compose, and they are all being
+        // animated at once during the transform into a month — which is where the year showed it.
+        // The colour already says the tile is a tile; the shadow was only saying it again slower.
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = modifier.padding(3.dp),
     ) {
-        Column(modifier = Modifier.fillMaxSize().padding(6.dp)) {
+        Column(modifier = Modifier.fillMaxSize().padding(horizontal = 6.dp, vertical = 5.dp)) {
             Text(
                 text = MonthModel.monthName(month, locale),
                 style = MaterialTheme.typography.titleSmall,
+                fontSize = nameFont,
                 color = if (isThisMonth) scheme.primary else scheme.onSurface,
+                maxLines = 1,
                 modifier = Modifier.padding(bottom = 2.dp),
             )
             Row(modifier = Modifier.fillMaxWidth()) {
@@ -308,8 +319,10 @@ fun MiniMonth(
                     Text(
                         text = initial,
                         style = MaterialTheme.typography.labelSmall,
+                        fontSize = dayFont,
                         color = scheme.outline,
                         textAlign = TextAlign.Center,
+                        maxLines = 1,
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -330,7 +343,7 @@ fun MiniMonth(
                                 Box(
                                     contentAlignment = Alignment.Center,
                                     modifier = Modifier
-                                        .size(MiniDiscSize)
+                                        .size(disc)
                                         .clip(CircleShape)
                                         .background(
                                             if (isToday) scheme.primary else Color.Transparent,
@@ -339,12 +352,16 @@ fun MiniMonth(
                                     Text(
                                         text = if (inMonth) date.dayOfMonth.toString() else "",
                                         style = MaterialTheme.typography.labelSmall,
+                                        fontSize = dayFont,
+                                        lineHeight = dayFont,
                                         color = when {
                                             isToday -> scheme.onPrimary
                                             loads[date] != null -> scheme.onSurface
                                             else -> scheme.onSurfaceVariant
                                         },
                                         textAlign = TextAlign.Center,
+                                        maxLines = 1,
+                                        softWrap = false,
                                     )
                                 }
                             }
@@ -360,7 +377,6 @@ private val CellHeight = 56.dp
 private val DiscSize = 34.dp
 private val MarkSize = 4.dp
 private val WeekNumberWidth = 24.dp
-private val MiniDiscSize = 18.dp
 
 /** How far a day sinks while it is held. */
 private const val PRESSED_SCALE = 0.90f

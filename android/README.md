@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-6.7.apk`](dist/quire-calendar-6.7.apk) · 1.9 MB | `sha256 a280119c713d81002eb0a23cdcacd68f48b7b0b527a84a58c5fc6ccdf164b77e` |
-| **Weather** | [`dist/quire-weather-6.7.apk`](dist/quire-weather-6.7.apk) · 1.5 MB | `sha256 ff03c9f14af2318922117ca01838161a685762a0b4d02eecc2f876062e0af7d4` |
+| **Calendar** | [`dist/quire-calendar-6.8.apk`](dist/quire-calendar-6.8.apk) · 1.9 MB | `sha256 d08a95a4c8654c420ab2f79e4b26f767fe7e83541a1d7fc0b9eff8b8589b566c` |
+| **Weather** | [`dist/quire-weather-6.8.apk`](dist/quire-weather-6.8.apk) · 1.5 MB | `sha256 0002b122f13036a45ba707a449693a320b48a7beacba980689bbf5ed23dd72a0` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-6.7.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-6.8.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -88,7 +88,27 @@ entries have edges, and the tap target for an entry is visibly the whole of it r
 text you happen to hit. The year's twelve tiles are the same card, so the container transform
 between a tile and the month it opens grows a card into a card instead of a rectangle out of
 nothing, and the current month wears a `secondaryContainer` wash so a year is not twelve
-identical blocks.
+identical blocks. All of them are flat: twelve resting shadows are twelve extra layers to
+compose, and they are all being animated at once during that transform, which is where the year
+showed it.
+
+**A year has to fit on a screen**, or it is a list of months with extra steps. Two things stopped
+it fitting on a real phone. The large app bar spends about a fifth of the screen on four digits,
+which the month view can afford and this one cannot — the year gets the compact bar, and only the
+year. And the day numbers were `labelSmall` at whatever scale the system asked for: a cell in the
+year is a seventh of a third of a screen, sixteen points, and two digits are wider than that
+before the font scale is touched at all. Turned up, they ran together — "12131415161718".
+
+The type in a tile is now sized from the tile, in pixels, and converted back through the current
+scale, so what is drawn is pinned to the space there is. It is capped at the style's own size, so
+this can only make the year smaller than the theme asked for and never larger, and the month a tap
+away honours the scale in full. The test measures it without knowing any of the layout constants:
+it groups every day number into rows, takes the smallest gap between two neighbours' centres as
+the column width, and fails if the widest number anywhere does not fit inside it.
+
+| A year at one and a half times the type |
+|---|
+| ![Large type](docs/app-year-large-type.png) |
 
 **Nothing to show is drawn rather than written.** An empty day, a search with nothing typed and a
 search with no matches each get the outline of the thing that is missing, centred, with one line

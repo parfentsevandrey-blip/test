@@ -60,6 +60,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.IntOffset
@@ -70,6 +71,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import app.quire.R
 import app.quire.calendar.core.AgendaEntry
 import app.quire.calendar.core.EventRepository
@@ -172,6 +174,7 @@ fun MonthScreen(
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                     ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                     modifier = Modifier
                         .padding(horizontal = 16.dp, vertical = 4.dp)
                         // Only the settled month is the shared element. A page still sliding past has
@@ -356,6 +359,7 @@ private fun AgendaRow(
     Card(
         onClick = { onOpen(entry) },
         colors = CardDefaults.cardColors(containerColor = scheme.surfaceContainerLow),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
     ) {
         Row(
@@ -410,10 +414,34 @@ fun YearScreen(
     val year = model.month.year
     val months = remember(year) { (1..12).map { YearMonth.of(year, it) } }
     val initials = model.weekdayLabels().map { it.take(1) }
+    val density = LocalDensity.current
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val available = maxHeight - padding.calculateTopPadding() -
             padding.calculateBottomPadding() - YearGridPadding * 2
         val tile = (available / YearRows).coerceAtLeast(MinimumYearTile)
+
+        // The type is sized to the tile rather than the other way round.
+        //
+        // A day cell in the year is about a seventh of a third of the screen — sixteen points on a
+        // phone — and two digits of `labelSmall` are wider than that before the font scale is
+        // touched at all. Turned up, the numbers ran into each other: "12131415161718". So the
+        // size is derived from the cell in *pixels* and converted back through the current scale,
+        // which pins the drawn width to the space there is. It is capped at the style's own size,
+        // so this can only ever make the year smaller than the theme asked for, never larger, and
+        // the month view a tap away honours the scale in full.
+        val column = (maxWidth - YearGridPadding * 2) / YearColumns - MiniMonthInsets
+        val cell = column / 7
+        val rows = tile - MiniMonthHeader
+        val dayFont = with(density) {
+            minOf(cell.toPx() * 0.62f, rows.toPx() / 9f, MiniMonthMaxDay.toPx()).toSp()
+        }
+        // The month's name gets the same treatment for the same reason: "September" is nine
+        // characters, and at a turned-up scale it ran off the end of its own tile.
+        val nameFont = with(density) {
+            minOf(column.toPx() / 5.5f, MiniMonthMaxName.toPx()).toSp()
+        }
+        val disc = minOf(cell * 0.92f, MiniDiscMax)
+
         LazyVerticalGrid(
             columns = GridCells.Fixed(YearColumns),
             contentPadding = PaddingValues(
@@ -434,6 +462,9 @@ fun YearScreen(
                     weekdayInitials = initials,
                     today = model.today,
                     loads = model.loads[month].orEmpty(),
+                    dayFont = dayFont,
+                    nameFont = nameFont,
+                    disc = disc,
                     onOpen = onOpenMonth,
                 )
             }
@@ -445,8 +476,19 @@ private const val YearColumns = 3
 private const val YearRows = 4
 private val YearGridPadding = 8.dp
 
+/** What a tile spends on its own margins and padding before the seven columns start. */
+private val MiniMonthInsets = 18.dp
+
+/** What a tile spends above the weeks: the month's name and the row of initials. */
+private val MiniMonthHeader = 40.dp
+
+/** The year never sets its days larger than this, whatever room it turns out to have. */
+private val MiniMonthMaxDay = 11.sp
+private val MiniMonthMaxName = 14.sp
+private val MiniDiscMax = 18.dp
+
 /** Below this a month's dates stop being readable, so the year scrolls rather than shrinking. */
-private val MinimumYearTile = 150.dp
+private val MinimumYearTile = 118.dp
 
 /** Search results, straight into the day they were found in. */
 @Composable
@@ -476,6 +518,7 @@ fun SearchResults(
             Card(
                 onClick = { onPick(date) },
                 colors = CardDefaults.cardColors(containerColor = scheme.surfaceContainerLow),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
             ) {
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {

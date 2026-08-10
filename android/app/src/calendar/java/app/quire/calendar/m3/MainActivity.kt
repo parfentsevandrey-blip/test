@@ -54,6 +54,7 @@ import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.AppBarWithSearch
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -142,6 +143,19 @@ private fun QuireApp(intent: Intent?) {
             topBar = {
                 if (destination == Destination.SEARCH) {
                     QuireSearchBar(model)
+                } else if (destination == Destination.YEAR) {
+                    // A compact bar on the year, and only there. The large one spends about a
+                    // fifth of the screen on four digits, and this is the one screen whose whole
+                    // claim is that a year fits on it — with the tall bar it did not, and a year
+                    // you have to scroll is a list of months.
+                    TopAppBar(
+                        title = {
+                            RollingLabel(
+                                text = model.month.year.toString(),
+                                order = model.month.year,
+                            )
+                        },
+                    )
                 } else {
                     LargeFlexibleTopAppBar(
                         title = {
