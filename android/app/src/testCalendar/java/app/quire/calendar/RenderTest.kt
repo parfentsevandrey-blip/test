@@ -225,6 +225,7 @@ class RenderTest {
      */
     @Test
     fun `a wide filled card names the day's first event`() {
+        org.robolectric.RuntimeEnvironment.setQualifiers("+night")
         FakeCalendarProvider.reset()
         org.robolectric.Robolectric.setupContentProvider(
             FakeCalendarProvider::class.java,
@@ -293,6 +294,7 @@ class RenderTest {
         assertTrue("a Cyrillic title did not survive", texts.any { it == "Рабочая встреча" })
 
         FakeCalendarProvider.reset()
+        org.robolectric.RuntimeEnvironment.setQualifiers("+notnight")
     }
 
     /**
@@ -302,6 +304,10 @@ class RenderTest {
      */
     @Test
     fun `the filled skin reads at half width and at full width`() {
+        // The filled card follows the system now, so a picture of it is a picture of one of its
+        // two faces and has to say which. These are the night one; the daylight face is rendered
+        // beside it in the weather app's own tests.
+        org.robolectric.RuntimeEnvironment.setQualifiers("+night")
         val cases = listOf(
             Triple("widget-colour-half", 175 to 230, 40),
             Triple("widget-colour-wide", 350 to 300, 41),

@@ -192,6 +192,56 @@ class WeatherRenderTest {
         }
     }
 
+    /**
+     * The filled card in daylight.
+     *
+     * It used to be pinned dark whatever the phone was doing, which on a bright morning is a
+     * widget that forgot to look outside. The two faces are rendered side by side so the pair can
+     * be judged as a pair — they have to be recognisably the same card, not two designs.
+     */
+    @Test
+    fun `the filled card has a daylight face`() {
+        WeatherStore.save(context, stub())
+        val widgetId = 70
+        Prefs.get(context).widget(widgetId).apply {
+            skin = Skin.COLOUR
+            accent = Accent.PLUM
+            opacity = 100
+            dynamic = false
+        }
+
+        val shots = listOf("weather-light" to false, "weather-dark" to true).map { (name, night) ->
+            org.robolectric.RuntimeEnvironment.setQualifiers(if (night) "+night" else "+notnight")
+            val views = app.quire.weather.WeatherWidgetRenderer
+                .build(context, widgetId, 340, 160)
+            val host = FrameLayout(context).apply { setBackgroundColor(0xFF7A7A80.toInt()) }
+            host.addView(
+                views.apply(context, host),
+                FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                ),
+            )
+            name to render(host, 340, 160, name)
+        }
+        org.robolectric.RuntimeEnvironment.setQualifiers("+notnight")
+
+        // The card is what the corner pixel is, since the surface reaches the edges.
+        fun luma(bitmap: Bitmap): Int {
+            val p = bitmap.getPixel(bitmap.width / 2, 6)
+            return (
+                android.graphics.Color.red(p) * 299 +
+                    android.graphics.Color.green(p) * 587 +
+                    android.graphics.Color.blue(p) * 114
+                ) / 1000
+        }
+
+        val light = luma(shots[0].second)
+        val dark = luma(shots[1].second)
+        assertTrue("the daylight card came out dark (luma $light)", light > 170)
+        assertTrue("the night card came out light (luma $dark)", dark < 90)
+    }
+
     /** A card placed before the first fetch says so, rather than showing a plausible zero. */
     @Test
     fun `a card with nothing fetched yet says so`() {

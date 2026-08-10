@@ -42,16 +42,22 @@ class WeatherRefresh : JobService() {
     companion object {
         private const val TAG = "QuireWeather"
         private const val JOB_ID = 0x9113
-        private const val EVERY_MILLIS = 60L * 60L * 1000L
 
         private val EXECUTOR = Executors.newSingleThreadExecutor { r ->
             Thread(r, "quire-weather").apply { isDaemon = true }
         }
 
+        /**
+         * Arms the refresh at whatever interval the user asked for.
+         *
+         * Called again whenever that changes: a periodic job keeps the interval it was scheduled
+         * with, so changing the setting without rescheduling changes nothing at all.
+         */
         fun schedule(context: Context) {
             val scheduler = context.getSystemService(JobScheduler::class.java) ?: return
+            val minutes = WeatherSettings.get(context).periodMinutes
             val job = JobInfo.Builder(JOB_ID, ComponentName(context, WeatherRefresh::class.java))
-                .setPeriodic(EVERY_MILLIS)
+                .setPeriodic(minutes * 60L * 1000L)
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                 .setPersisted(true)
                 .build()
@@ -85,8 +91,9 @@ class WeatherRefresh : JobService() {
                 now - stored.fetched < WeatherRepository.FRESH_FOR_MILLIS
             if (fresh && !force) return stored
 
-            val fix = Whereabouts.last(context)
             val remembered = WeatherStore.lastPlace(context)
+            // A named place is not re-derived from where the phone happens to be.
+            val fix = if (WeatherStore.pinned(context)) null else Whereabouts.last(context)
             val latitude = fix?.latitude ?: remembered?.second
             val longitude = fix?.longitude ?: remembered?.third
             if (latitude == null || longitude == null) return stored
@@ -94,6 +101,7 @@ class WeatherRefresh : JobService() {
             // The name is only looked up again when the position moved enough to have a different
             // one; a geocode is a network round trip of its own and the answer rarely changes.
             val place = when {
+                WeatherStore.pinned(context) -> remembered?.first.orEmpty()
                 remembered != null && remembered.first.isNotBlank() &&
                     near(latitude, longitude, remembered.second, remembered.third) -> remembered.first
                 else -> Whereabouts.name(context, latitude, longitude)
@@ -102,6 +110,7 @@ class WeatherRefresh : JobService() {
             return runCatching {
                 WeatherRepository.fetch(latitude, longitude, place, now).also {
                     WeatherStore.save(context, it)
+                    RainAlert.consider(context, it)
                 }
             }.getOrElse { stored }
         }

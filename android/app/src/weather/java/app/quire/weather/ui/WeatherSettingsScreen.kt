@@ -1,0 +1,164 @@
+package app.quire.weather.ui
+
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Slider
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import app.quire.R
+import app.quire.calendar.m3.SettingGroup
+import app.quire.calendar.m3.SettingRow
+import app.quire.weather.Degrees
+import app.quire.weather.WeatherSettings
+import app.quire.weather.WindUnit
+import kotlin.math.roundToInt
+
+/**
+ * Everything the weather app can be told.
+ *
+ * Laid out the same way the calendar's settings are — grouped, connected blocks with the outer
+ * corners rounded — because they are the same app wearing a different hat, and a person who has
+ * used one should not have to learn the other.
+ */
+@Composable
+fun WeatherSettingsScreen(model: WeatherModel, padding: PaddingValues) {
+    val settings = model.settings
+    LazyColumn(contentPadding = padding, modifier = Modifier.fillMaxSize()) {
+        item { Heading(stringResource(R.string.wx_section_updates)) }
+        item {
+            ChoiceRow(
+                title = stringResource(R.string.wx_period),
+                options = listOf(
+                    stringResource(R.string.wx_period_30),
+                    stringResource(R.string.wx_period_60),
+                    stringResource(R.string.wx_period_180),
+                    stringResource(R.string.wx_period_360),
+                ),
+                selected = WeatherSettings.PERIODS.indexOf(settings.period).coerceAtLeast(0),
+                onSelect = { model.setPeriod(WeatherSettings.PERIODS[it]) },
+                hint = stringResource(R.string.wx_period_hint),
+            )
+        }
+
+        item { Heading(stringResource(R.string.wx_section_alerts)) }
+        item {
+            SettingGroup {
+                SettingRow(
+                    index = 0,
+                    count = 1,
+                    title = stringResource(R.string.wx_alerts),
+                    hint = stringResource(R.string.wx_alerts_hint),
+                    checked = settings.alerts,
+                    onChange = { model.setAlerts(it) },
+                )
+            }
+        }
+        if (settings.alerts) {
+            item {
+                Column(Modifier.padding(horizontal = 28.dp, vertical = 8.dp)) {
+                    Text(
+                        text = stringResource(R.string.wx_threshold, settings.threshold),
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                    Slider(
+                        value = settings.threshold.toFloat(),
+                        onValueChange = { model.setThreshold(it.roundToInt()) },
+                        valueRange = WeatherSettings.MIN_THRESHOLD.toFloat()..
+                            WeatherSettings.MAX_THRESHOLD.toFloat(),
+                        steps = 6,
+                    )
+                    if (!model.canNotify) {
+                        Text(
+                            text = stringResource(R.string.wx_notifications_blocked),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                }
+            }
+        }
+
+        item { Heading(stringResource(R.string.wx_section_units)) }
+        item {
+            ChoiceRow(
+                title = stringResource(R.string.wx_units_temperature),
+                options = listOf(
+                    stringResource(R.string.wx_units_celsius),
+                    stringResource(R.string.wx_units_fahrenheit),
+                ),
+                selected = Degrees.entries.indexOf(settings.degrees),
+                onSelect = { model.setDegrees(Degrees.entries[it]) },
+            )
+        }
+        item {
+            ChoiceRow(
+                title = stringResource(R.string.wx_units_wind),
+                options = listOf(
+                    stringResource(R.string.wx_units_kmh),
+                    stringResource(R.string.wx_units_ms),
+                    stringResource(R.string.wx_units_mph),
+                ),
+                selected = WindUnit.entries.indexOf(settings.wind),
+                onSelect = { model.setWind(WindUnit.entries[it]) },
+            )
+        }
+
+        item { Spacer(Modifier.height(32.dp)) }
+    }
+}
+
+@Composable
+private fun Heading(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(start = 28.dp, end = 28.dp, top = 24.dp, bottom = 8.dp),
+    )
+}
+
+@Composable
+private fun ChoiceRow(
+    title: String,
+    options: List<String>,
+    selected: Int,
+    onSelect: (Int) -> Unit,
+    hint: String? = null,
+) {
+    Column(Modifier.padding(horizontal = 28.dp, vertical = 8.dp)) {
+        Text(title, style = MaterialTheme.typography.bodyLarge)
+        Spacer(Modifier.height(8.dp))
+        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+            options.forEachIndexed { index, label ->
+                SegmentedButton(
+                    selected = index == selected,
+                    onClick = { onSelect(index) },
+                    shape = SegmentedButtonDefaults.itemShape(index, options.size),
+                ) {
+                    Text(label, maxLines = 1)
+                }
+            }
+        }
+        if (hint != null) {
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = hint,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}

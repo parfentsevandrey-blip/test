@@ -135,7 +135,7 @@ object Tokens {
      * accents give a card of the same weight instead of one that is nearly black and another
      * that glows. Lightness is fixed and only the hue travels, which is the whole trick.
      */
-    fun filled(@ColorInt source: Int): Palette {
+    fun filled(@ColorInt source: Int, dark: Boolean = true): Palette {
         val lch = FloatArray(3)
         Oklch.fromSrgb(source, lch)
         val hue = lch[2]
@@ -143,44 +143,74 @@ object Tokens {
         // rather than landing on black — otherwise Graphite would be the only skinless skin.
         val chroma = max(lch[1], 0.035f)
 
-        val card = Oklch.toSrgb(CARD_L, min(chroma * 0.85f, CARD_CHROMA_MAX), hue)
-        val ink = Oklch.toSrgb(FILLED_INK_L, min(chroma * 0.10f, 0.02f), hue)
-        val light = Oklch.toSrgb(FILLED_ACCENT_L, min(chroma * 0.75f, 0.11f), hue)
+        // Both faces are the same idea at opposite ends of the lightness axis: a ground that is
+        // unmistakably the accent's hue, ink far enough from it to read, and a marker lightness
+        // chosen so the ink of the *other* face sits on it. Only the numbers differ, which is
+        // what keeps a widget recognisably itself when the phone changes its mind at sunrise.
+        val cardL = if (dark) CARD_L_DARK else CARD_L_LIGHT
+        val inkL = if (dark) INK_L_DARK else INK_L_LIGHT
+        val markL = if (dark) MARK_L_DARK else MARK_L_LIGHT
+
+        val card = Oklch.toSrgb(cardL, min(chroma * (if (dark) 0.85f else 0.28f), CARD_CHROMA_MAX), hue)
+        val ink = Oklch.toSrgb(inkL, min(chroma * 0.10f, 0.02f), hue)
+        val mark = Oklch.toSrgb(markL, min(chroma * (if (dark) 0.75f else 0.95f), 0.14f), hue)
         return Palette(
-            dark = true,
+            dark = dark,
             canvas = card,
             surface = card,
             ink = ink,
-            // The quiet tiers are the same white at less of it, so the card colour reads through
+            // The quiet tiers are the same ink at less of it, so the card colour reads through
             // them: a separate grey would go muddy against a saturated ground.
             inkMuted = withAlpha(ink, 0.74f),
             inkFaint = withAlpha(ink, 0.56f),
             inkGhost = withAlpha(ink, 0.34f),
             hairline = withAlpha(ink, 0.16f),
             hairlineStrong = withAlpha(ink, 0.26f),
-            accent = light,
-            onAccent = Oklch.toSrgb(CARD_L * 0.8f, min(chroma * 0.6f, 0.06f), hue),
+            accent = mark,
+            // What sits on the marker: the far end of the lightness axis from it, so a today disc
+            // carries its date whichever face the card is wearing.
+            onAccent = Oklch.toSrgb(
+                if (dark) cardL * 0.8f else 0.99f,
+                min(chroma * 0.6f, 0.06f),
+                hue,
+            ),
             press = withAlpha(ink, 0.12f),
         )
     }
 
     // Deep enough that white sits on it at better than 12:1, light enough that the hue is still
     // a colour rather than a black with a rumour in it.
-    private const val CARD_L = 0.255f
-    private const val CARD_CHROMA_MAX = 0.085f
-    private const val FILLED_INK_L = 0.975f
+    private const val CARD_L_DARK = 0.255f
 
-    // The today disc and the add button: light enough to carry the card colour as its own text.
-    private const val FILLED_ACCENT_L = 0.80f
+    // The same card in daylight: a tint rather than a wash, with the chroma pulled well in —
+    // a pale ground holds far less colour before it stops looking like paper and starts looking
+    // like a highlighter.
+    private const val CARD_L_LIGHT = 0.945f
+
+    private const val CARD_CHROMA_MAX = 0.085f
+    private const val INK_L_DARK = 0.975f
+    private const val INK_L_LIGHT = 0.22f
+
+    // The today disc and the add button.
+    private const val MARK_L_DARK = 0.80f
+    private const val MARK_L_LIGHT = 0.52f
 
     fun isSystemDark(context: Context): Boolean =
         (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
             Configuration.UI_MODE_NIGHT_YES
 
+    /**
+     * Whether a skin paints dark.
+     *
+     * COLOUR follows the system like AUTO does. It used to be pinned dark, on the reasoning that a
+     * card carrying its own colour is an object rather than a page — but an object on a home
+     * screen that stays night-black through a bright morning is not an object, it is a widget that
+     * forgot to look. The filled card has a daylight face; this is what asks for it.
+     */
     fun resolveDark(context: Context, skin: Skin): Boolean = when (skin) {
         Skin.PAPER -> false
-        Skin.INK, Skin.COLOUR -> true
-        Skin.AUTO -> isSystemDark(context)
+        Skin.INK -> true
+        Skin.AUTO, Skin.COLOUR -> isSystemDark(context)
     }
 
     /**
@@ -197,9 +227,12 @@ object Tokens {
         accent: Accent,
         dynamic: Boolean = false,
     ): Palette {
-        if (skin != Skin.COLOUR) return palette(resolveDark(context, skin), accent)
-        val scheme = if (dynamic) SystemScheme.read(context, dark = true) else null
-        return filled(scheme?.primary ?: accent.light)
+        val dark = resolveDark(context, skin)
+        if (skin != Skin.COLOUR) return palette(dark, accent)
+        // The scheme is read for the face the card is about to wear, so a light card takes the
+        // wallpaper's light primary rather than a dark-scheme colour lightened after the fact.
+        val scheme = if (dynamic) SystemScheme.read(context, dark = dark) else null
+        return filled(scheme?.primary ?: if (dark) accent.light else accent.dark, dark)
     }
 
     /** Blend `color` towards transparency without touching its channels. */

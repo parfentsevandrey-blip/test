@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-6.1.apk`](dist/quire-calendar-6.1.apk) · 1.9 MB | `sha256 a00c1b4f353278431757d469bbe7a827ced699b9eeda8f6eb14e64f1b7960ad2` |
-| **Weather** | [`dist/quire-weather-6.1.apk`](dist/quire-weather-6.1.apk) · 1.1 MB | `sha256 99760b0fa2523411e88f2a644d60d68e27137d8f87b9d26f0304ca19b9fd7ccf` |
+| **Calendar** | [`dist/quire-calendar-6.2.apk`](dist/quire-calendar-6.2.apk) · 1.9 MB | `sha256 07ace777300248bd40c1fbde424be78305068b6699ef81f9de2dbe8d45d2a439` |
+| **Weather** | [`dist/quire-weather-6.2.apk`](dist/quire-weather-6.2.apk) · 1.5 MB | `sha256 bf4fce9e338ccb5fb93a67802a571fc2c4a308856d8382a16872a2750a72b4a9` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-6.1.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-6.2.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -65,6 +65,15 @@ is what makes the whole grid follow the wallpaper on Android 12 and up.
 the wallpaper; `dynamicLightColorScheme` hands it over as the roles, and the app wears it. That is
 what *System colours* switches, and turning it off falls back to a fixed cinnabar scheme. Motion is
 `MotionScheme.expressive()` — springs with a little overshoot — rather than the standard one.
+
+**Light and dark follow the system**, which took two fixes to actually be true. `MODE_NIGHT_AUTO`
+is not "follow the system" — it is "switch by the time of day", a different thing and the wrong
+one, and setting it took a phone that was light at ten at night and made the app dark anyway;
+following the system means saying nothing and letting the configuration through. And the filled
+card was pinned dark on the reasoning that a card carrying its own colour is an object rather than
+a page — but an object on a home screen that stays night-black through a bright morning is not an
+object, it is a widget that forgot to look. It has a daylight face now: the same hue, the same
+layout, at the other end of the lightness axis.
 
 **Settings are grouped, not listed.** Android's own settings from 16 onwards draw a run of related
 rows as one connected block, outer corners rounded and inner ones squared off, which is what
@@ -134,9 +143,9 @@ A separate application, `app.quire.weather`, with its own icon and its own permi
 three readings the card has no room for, and five days each with a bar showing where its swing
 sits inside the week's — which is the part a list of numbers cannot do.
 
-| The app | Four by two | Half width |
-|---|---|---|
-| ![Weather](docs/app-weather.png) | ![Wide](docs/widget-weather-wide.png) | ![Half](docs/widget-weather-half.png) |
+| The app | Settings | Four by two | The daylight face |
+|---|---|---|---|
+| ![Weather](docs/app-weather.png) | ![Settings](docs/app-weather-settings.png) | ![Wide](docs/widget-weather-wide.png) | ![Light](docs/widget-weather-light.png) |
 
 The card was built by looking at the one it sits next to. Google's weather widget spends a
 four-by-two placement on one temperature, a place name truncated to "Западный адм…", a "feels
@@ -159,12 +168,28 @@ icons. WMO's weather codes distinguish things a person standing outside does not
 and dense drizzle are three codes and one picture), so they are folded into eleven states, each
 with a day and a night face where that matters.
 
+**Where, without being followed.** There are two ways to answer "where", and the app works with
+either: name a place, or let the device say. Naming one needs no permission at all, which is why
+it is offered first rather than buried under a refusal — an app that only works if you hand over a
+location has not really left the choice open. A named place then outranks the device: somebody who
+typed Berlin while sitting in Munich meant Berlin, and a location fix arriving afterwards is not
+new information about what they wanted.
+
 **Where the numbers come from.** Open-Meteo, because it needs no account and no key: an app that
 asks somebody to register for an API key before it can tell them whether to take a coat has
 already failed. Nothing leaves the device but a latitude and a longitude rounded to two decimal
-places — about a kilometre, which is finer than the weather and coarser than a person. Location is
-coarse and last-known rather than a live fix, since waking the GPS to find out if it is raining
-would cost more than it could buy.
+places — about a kilometre, which is finer than the weather and coarser than a person, and there
+is a test asserting it rather than a sentence claiming it. Location, when it is used at all, is
+coarse and last-known rather than a live fix: waking the GPS to find out if it is raining would
+cost more than it could buy.
+
+**What it can be told.** How often to refresh (30 minutes to 6 hours; the default is an hour,
+because that is roughly how often the forecast is recomputed upstream and asking twice as often
+gets the same answer twice). Whether to say something when rain is likely, and from what
+probability — one notification a day, for today, and never the same day twice, which is the only
+part of an hourly job that needs writing down. And units: °C or °F, km/h or m/s or mph, applied
+where the number is written rather than where it is fetched, so switching one changes the card you
+are already looking at instead of the one that arrives in an hour.
 
 The forecast is fetched by an hourly job with a network requirement and stored; the card is always
 painted from the store, never from a request, because a widget is repainted at moments nobody
@@ -253,8 +278,10 @@ src/weather/  the weather application
 weather/  Forecast  Sky (WMO codes folded to eleven pictures)
           WeatherRepository (Open-Meteo, parsing separable from fetching)
           WeatherStore (what the card paints from)  Whereabouts (coarse, last-known)
-          WeatherRefresh (the hourly job)  WeatherWidgetProvider  WeatherWidgetRenderer
-          ui/WeatherActivity  ui/WeatherScreen  ui/WeatherModel
+          WeatherRefresh (the periodic job)  WeatherWidgetProvider  WeatherWidgetRenderer
+          PlaceSearch (naming a place)  WeatherSettings  RainAlert
+          ui/WeatherActivity  ui/WeatherScreen  ui/WeatherSettingsScreen
+          ui/PlaceSheet  ui/WeatherModel
 tools/    generate_assets.py — launcher icon and widget picker preview
 ```
 

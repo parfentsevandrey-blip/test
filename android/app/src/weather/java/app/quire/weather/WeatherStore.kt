@@ -25,6 +25,7 @@ object WeatherStore {
     private const val KEY_PLACE = "place"
     private const val KEY_LATITUDE = "latitude"
     private const val KEY_LONGITUDE = "longitude"
+    private const val KEY_PINNED = "pinned"
 
     private fun prefs(context: Context) =
         context.applicationContext.getSharedPreferences(FILE, Context.MODE_PRIVATE)
@@ -65,6 +66,35 @@ object WeatherStore {
             putString(KEY_PLACE, place)
             putFloat(KEY_LATITUDE, latitude.toFloat())
             putFloat(KEY_LONGITUDE, longitude.toFloat())
+        }
+    }
+
+    /**
+     * Whether the place was named rather than measured.
+     *
+     * A pinned place outranks anything the device knows: somebody who typed "Berlin" while
+     * sitting in Munich meant Berlin, and a location fix arriving afterwards is not new
+     * information about what they wanted.
+     */
+    fun pinned(context: Context): Boolean = prefs(context).getBoolean(KEY_PINNED, false)
+
+    fun pin(context: Context, place: Place) {
+        prefs(context).edit {
+            putBoolean(KEY_PINNED, true)
+            putString(KEY_PLACE, place.name)
+            putFloat(KEY_LATITUDE, place.latitude.toFloat())
+            putFloat(KEY_LONGITUDE, place.longitude.toFloat())
+            // The forecast belongs to the old place; keeping it would show Munich's weather under
+            // Berlin's name until the next fetch landed.
+            remove(KEY_FORECAST)
+        }
+    }
+
+    /** Hands the choice of place back to the device. */
+    fun unpin(context: Context) {
+        prefs(context).edit {
+            putBoolean(KEY_PINNED, false)
+            remove(KEY_FORECAST)
         }
     }
 

@@ -19,6 +19,7 @@ import androidx.test.core.app.ApplicationProvider
 import app.quire.calendar.m3.QuireTheme
 import app.quire.weather.ui.WeatherModel
 import app.quire.weather.ui.WeatherScreen
+import app.quire.weather.ui.WeatherSettingsScreen
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -127,5 +128,32 @@ class WeatherScreenTest {
         assertTrue("the temperature is missing", showing("13°") > 0)
         assertTrue("the humidity is missing", showing("81%") > 0)
         assertTrue("the five-day heading is missing", showing("Next five days") > 0)
+    }
+
+    /** The settings, with the alerts open so the threshold slider is on screen too. */
+    @Test
+    fun `the settings screen lays out every group`() {
+        WeatherSettings.get(app).apply {
+            alerts = true
+            threshold = 60
+            periodMinutes = 180
+        }
+        val model = WeatherModel(app)
+        model.setAlerts(true)
+        compose.setContent {
+            QuireTheme(dark = true, dynamic = false) {
+                Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+                    WeatherSettingsScreen(model, PaddingValues(0.dp))
+                }
+            }
+        }
+        settle()
+        shoot("app-weather-settings")
+
+        assertTrue("no update interval", showing("3 hours") > 0)
+        assertTrue("no rain alert switch", showing("Tell me about rain") > 0)
+        assertTrue("no threshold", showing("From 60%") > 0)
+        assertTrue("no temperature unit", showing("°F") > 0)
+        assertTrue("no wind unit", showing("m/s") > 0)
     }
 }

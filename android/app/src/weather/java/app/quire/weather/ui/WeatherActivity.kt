@@ -19,7 +19,17 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.EditLocation
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -58,9 +68,18 @@ private fun WeatherApp() {
     val model: WeatherModel = viewModel()
     val haptics = LocalHapticFeedback.current
 
+    var choosing by rememberSaveable { mutableStateOf(false) }
+    var configuring by rememberSaveable { mutableStateOf(false) }
+
     val requestLocation = androidx.activity.compose.rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { granted -> if (granted) model.permissionGranted() }
+
+    // Alerts are the only thing here that needs to be allowed to interrupt, so the ask happens
+    // when they are switched on rather than at launch.
+    val requestNotifications = androidx.activity.compose.rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { model.notificationsAnswered() }
 
     LaunchedEffect(Unit) { model.refresh() }
 
@@ -73,14 +92,49 @@ private fun WeatherApp() {
             modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
                 LargeFlexibleTopAppBar(
-                    title = { Text(stringResource(R.string.weather)) },
+                    title = {
+                        Text(
+                            stringResource(
+                                if (configuring) R.string.wx_settings else R.string.weather,
+                            ),
+                        )
+                    },
                     subtitle = {
-                        model.forecast?.place?.takeIf { it.isNotBlank() }?.let { Text(it) }
+                        if (!configuring) {
+                            model.forecast?.place?.takeIf { it.isNotBlank() }?.let { Text(it) }
+                        }
+                    },
+                    navigationIcon = {
+                        if (configuring) {
+                            IconButton(onClick = { configuring = false }) {
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
+                            }
+                        }
+                    },
+                    actions = {
+                        if (!configuring) {
+                            IconButton(onClick = { choosing = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.EditLocation,
+                                    contentDescription = stringResource(R.string.wx_place),
+                                )
+                            }
+                        }
+                        IconButton(onClick = { configuring = !configuring }) {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = stringResource(R.string.wx_settings),
+                            )
+                        }
                     },
                     scrollBehavior = scrollBehavior,
                 )
             },
         ) { padding ->
+            if (configuring) {
+                WeatherSettingsScreen(model, padding)
+                return@Scaffold
+            }
             PullToRefreshBox(
                 isRefreshing = model.loading,
                 onRefresh = {
@@ -98,10 +152,31 @@ private fun WeatherApp() {
                     )
                 },
             ) {
-                WeatherScreen(model, padding) {
-                    requestLocation.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
-                }
+                WeatherScreen(
+                    model = model,
+                    padding = padding,
+                    onGrant = {
+                        requestLocation.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+                    },
+                    onChoosePlace = { choosing = true },
+                )
             }
         }
+
+        if (choosing) {
+            PlaceSheet(model) { choosing = false }
+        }
+
+        // Asking exactly when the switch goes on, and only on the versions that ask.
+        LaunchedEffect(model.settings.alerts) {
+            if (model.settings.alerts && !model.canNotify &&
+                android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU
+            ) {
+                requestNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+
+        // A back press inside settings goes back to the weather rather than out of the app.
+        androidx.activity.compose.BackHandler(enabled = configuring) { configuring = false }
     }
 }

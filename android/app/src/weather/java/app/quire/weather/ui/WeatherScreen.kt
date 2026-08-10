@@ -15,7 +15,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -61,11 +66,14 @@ fun WeatherScreen(
     model: WeatherModel,
     padding: PaddingValues,
     onGrant: () -> Unit,
+    onChoosePlace: () -> Unit = {},
 ) {
     val forecast = model.forecast
     LazyColumn(contentPadding = padding, modifier = Modifier.fillMaxSize()) {
-        if (!model.located) {
-            item { LocationCard(onGrant) }
+        // Only when there is no place at all. Somebody who named one has answered the question,
+        // and being asked again for a permission they declined is nagging rather than helping.
+        if (!model.located && !model.pinned) {
+            item { LocationCard(onGrant, onChoosePlace) }
         }
         if (forecast == null) {
             item {
@@ -84,8 +92,8 @@ fun WeatherScreen(
             return@LazyColumn
         }
 
-        item { Now(forecast) }
-        item { Readings(forecast) }
+        item { Now(forecast, model.pinned, model.settings) }
+        item { Readings(forecast, model.settings) }
         item {
             Text(
                 text = stringResource(R.string.wx_five_days),
@@ -94,24 +102,35 @@ fun WeatherScreen(
                 modifier = Modifier.padding(start = 28.dp, end = 28.dp, top = 24.dp, bottom = 8.dp),
             )
         }
-        item { Days(forecast) }
+        item { Days(forecast, model.settings) }
         item { Freshness(forecast) }
         item { Spacer(Modifier.height(24.dp)) }
     }
 }
 
 @Composable
-private fun Now(forecast: Forecast) {
+private fun Now(forecast: Forecast, pinned: Boolean, units: WeatherModel.Settings) {
     val scheme = MaterialTheme.colorScheme
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 8.dp),
     ) {
-        Text(
-            text = forecast.place.ifBlank { stringResource(R.string.weather) },
-            style = MaterialTheme.typography.titleMedium,
-            color = scheme.onSurfaceVariant,
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (pinned) {
+                Icon(
+                    imageVector = Icons.Default.Place,
+                    contentDescription = stringResource(R.string.wx_named_place),
+                    tint = scheme.onSurfaceVariant,
+                    modifier = Modifier.size(16.dp),
+                )
+                Spacer(Modifier.width(4.dp))
+            }
+            Text(
+                text = forecast.place.ifBlank { stringResource(R.string.weather) },
+                style = MaterialTheme.typography.titleMedium,
+                color = scheme.onSurfaceVariant,
+            )
+        }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 painter = painterResource(forecast.now.sky.icon(forecast.now.day)),
@@ -121,7 +140,7 @@ private fun Now(forecast: Forecast) {
             )
             Spacer(Modifier.width(8.dp))
             Text(
-                text = WeatherRepository.degrees(forecast.now.temperature),
+                text = write(units, forecast.now.temperature),
                 style = MaterialTheme.typography.displayLarge,
             )
         }
@@ -132,7 +151,7 @@ private fun Now(forecast: Forecast) {
         Text(
             text = stringResource(
                 R.string.wx_feels_like,
-                WeatherRepository.degrees(forecast.now.feelsLike),
+                write(units, forecast.now.feelsLike),
             ),
             style = MaterialTheme.typography.bodyLarge,
             color = scheme.onSurfaceVariant,
@@ -142,7 +161,7 @@ private fun Now(forecast: Forecast) {
 
 /** The three numbers the widget has no room for, as one row of tonal cards. */
 @Composable
-private fun Readings(forecast: Forecast) {
+private fun Readings(forecast: Forecast, units: WeatherModel.Settings) {
     val today = forecast.days.firstOrNull()
     Row(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -160,7 +179,8 @@ private fun Readings(forecast: Forecast) {
         )
         Reading(
             label = stringResource(R.string.wx_wind),
-            value = stringResource(R.string.wx_wind_value, forecast.now.wind.roundToInt()),
+            value = "${units.wind.from(forecast.now.wind).roundToInt()} " +
+                stringResource(windLabel(units.wind)),
             modifier = Modifier.weight(1f),
         )
     }
@@ -192,7 +212,7 @@ private fun Reading(label: String, value: String, modifier: Modifier = Modifier)
 }
 
 @Composable
-private fun Days(forecast: Forecast) {
+private fun Days(forecast: Forecast, units: WeatherModel.Settings) {
     val days = forecast.ahead(5)
     // Every bar is measured against the same week, which is the whole point of drawing them: a
     // day is cold relative to the days on either side of it, not relative to itself.
@@ -207,13 +227,13 @@ private fun Days(forecast: Forecast) {
         ),
     ) {
         Column(Modifier.padding(vertical = 6.dp)) {
-            days.forEach { day -> DayRow(day, coldest, span) }
+            days.forEach { day -> DayRow(day, coldest, span, units) }
         }
     }
 }
 
 @Composable
-private fun DayRow(day: DayForecast, coldest: Double, span: Double) {
+private fun DayRow(day: DayForecast, coldest: Double, span: Double, units: WeatherModel.Settings) {
     val scheme = MaterialTheme.colorScheme
     val locale = rememberLocale()
     val today = day.date == LocalDate.now()
@@ -245,7 +265,7 @@ private fun DayRow(day: DayForecast, coldest: Double, span: Double) {
             modifier = Modifier.width(44.dp).padding(start = 6.dp),
         )
         Text(
-            text = WeatherRepository.degrees(day.low, locale),
+            text = write(units, day.low),
             style = MaterialTheme.typography.bodyMedium,
             color = scheme.onSurfaceVariant,
             textAlign = TextAlign.End,
@@ -253,7 +273,7 @@ private fun DayRow(day: DayForecast, coldest: Double, span: Double) {
         )
         Spread(day, coldest, span, Modifier.weight(1f).padding(horizontal = 10.dp))
         Text(
-            text = WeatherRepository.degrees(day.high, locale),
+            text = write(units, day.high),
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.width(36.dp),
         )
@@ -328,8 +348,14 @@ private fun Freshness(forecast: Forecast) {
     )
 }
 
+/**
+ * The two ways to answer "where".
+ *
+ * Naming a place is offered first and as the filled button, because it is the one that needs no
+ * permission: an app that can only work by being given a location has not left the choice open.
+ */
 @Composable
-private fun LocationCard(onGrant: () -> Unit) {
+private fun LocationCard(onGrant: () -> Unit, onChoosePlace: () -> Unit) {
     OutlinedCard(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
         Column(Modifier.padding(16.dp)) {
             Text(
@@ -343,9 +369,24 @@ private fun LocationCard(onGrant: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(12.dp))
-            FilledTonalButton(onClick = onGrant) {
-                Text(stringResource(R.string.wx_grant))
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Button(onClick = onChoosePlace) {
+                    Text(stringResource(R.string.wx_place))
+                }
+                FilledTonalButton(onClick = onGrant) {
+                    Text(stringResource(R.string.wx_grant))
+                }
             }
         }
     }
+}
+
+/** A temperature in whatever unit the user asked for. */
+private fun write(units: WeatherModel.Settings, celsius: Double): String =
+    "${units.degrees.from(celsius).roundToInt()}°"
+
+private fun windLabel(unit: app.quire.weather.WindUnit): Int = when (unit) {
+    app.quire.weather.WindUnit.KMH -> R.string.wx_units_kmh
+    app.quire.weather.WindUnit.MS -> R.string.wx_units_ms
+    app.quire.weather.WindUnit.MPH -> R.string.wx_units_mph
 }

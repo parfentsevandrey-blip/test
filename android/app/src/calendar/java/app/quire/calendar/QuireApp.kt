@@ -20,9 +20,13 @@ import app.quire.calendar.widget.SchemeWatch
 class QuireApp : Application() {
     override fun onCreate() {
         super.onCreate()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            getSystemService(UiModeManager::class.java)
-                ?.setApplicationNightMode(nightMode(Prefs.get(this).skin))
+        // Only when the user has actually chosen. `MODE_NIGHT_AUTO` is not "follow the system" —
+        // it is "switch by the time of day", which is a different thing and the wrong one: it
+        // takes a phone that is light at ten at night and makes this app dark anyway. Following
+        // the system means saying nothing and letting the configuration through.
+        val chosen = Prefs.get(this).skin.takeIf { it != Skin.AUTO }
+        if (chosen != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            getSystemService(UiModeManager::class.java)?.setApplicationNightMode(nightMode(chosen))
         }
         // Opening the app is one of the two chances to notice that the phone's colours moved
         // while the widgets on the home screen were holding still.
@@ -40,14 +44,20 @@ class QuireApp : Application() {
     }
 
     companion object {
-        // COLOUR is a widget skin — a card that carries the accent as its own ground — and the
-        // app never offers it, so it can only be seen here if a widget's value ever reached the
-        // app's own preference. It is a dark card, so it answers as one rather than throwing.
+        /**
+         * The platform's night mode for a skin the user picked.
+         *
+         * AUTO is deliberately absent: there is no value here that means "follow the system", so
+         * following the system is done by not calling the setter at all. COLOUR is a widget skin —
+         * a card carrying the accent as its ground — and the app never offers it; it can only
+         * arrive here if a widget's value once reached the app's own preference, and it is a dark
+         * card, so it answers as one rather than throwing.
+         */
         @RequiresApi(Build.VERSION_CODES.R)
         fun nightMode(skin: Skin): Int = when (skin) {
             Skin.PAPER -> UiModeManager.MODE_NIGHT_NO
             Skin.INK, Skin.COLOUR -> UiModeManager.MODE_NIGHT_YES
-            Skin.AUTO -> UiModeManager.MODE_NIGHT_AUTO
+            Skin.AUTO -> error("AUTO means following the system, which is done by saying nothing")
         }
     }
 }
