@@ -4,9 +4,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,12 +17,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material.icons.filled.Place
-import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -119,67 +117,84 @@ fun WeatherScreen(
 /**
  * What it is doing now.
  *
- * Left-aligned rather than centred: the app bar already carries the place, and a centred stack
- * under a left-aligned bar is the sort of thing that reads as crooked without anybody being able
- * to say why. The number and the sky sit on one line at a size worth the space, and the
- * feels-like appears only when it has something to add — "19°, feels like 19°" is a sentence that
- * spends a line saying nothing.
+ * A column, every line of it starting at [Gutter], so the number, the sky and the cards below all
+ * share one left edge. The earlier version put a 76dp icon to the left of a two-line column and
+ * centred the two against each other, which meant the icon, the number and the word underneath it
+ * each began at a different x — three edges in a block four lines tall, and the reason the screen
+ * read as crooked before anything else on it did.
+ *
+ * The sky and the feels-like share a line, and the feels-like appears only when it has something
+ * to add: "19°, feels like 19°" is a sentence that spends a line saying nothing.
  */
 @Composable
 private fun Now(forecast: Forecast, units: WeatherModel.Settings) {
     val scheme = MaterialTheme.colorScheme
     val feels = write(units, forecast.now.feelsLike)
     val actual = write(units, forecast.now.temperature)
+    val sky = stringResource(forecast.now.sky.label)
 
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 4.dp),
-    ) {
-        Icon(
-            painter = painterResource(forecast.now.sky.icon(forecast.now.day)),
-            contentDescription = stringResource(forecast.now.sky.label),
-            tint = scheme.primary,
-            modifier = Modifier.size(76.dp),
-        )
-        Spacer(Modifier.width(16.dp))
-        Column {
-            Text(text = actual, style = MaterialTheme.typography.displayLarge)
+    Column(Modifier.fillMaxWidth().padding(start = Gutter, end = Gutter, top = 8.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = stringResource(forecast.now.sky.label),
-                style = MaterialTheme.typography.titleMedium,
-                color = scheme.onSurfaceVariant,
+                text = actual,
+                style = MaterialTheme.typography.displayLarge,
+                maxLines = 1,
             )
-            if (feels != actual) {
-                Text(
-                    text = stringResource(R.string.wx_feels_like, feels),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = scheme.onSurfaceVariant,
-                )
-            }
+            Spacer(Modifier.width(16.dp))
+            Icon(
+                painter = painterResource(forecast.now.sky.icon(forecast.now.day)),
+                contentDescription = sky,
+                tint = scheme.primary,
+                modifier = Modifier.size(64.dp),
+            )
         }
+        Text(
+            text = if (feels == actual) {
+                sky
+            } else {
+                sky + " · " + stringResource(R.string.wx_feels_like_short, feels)
+            },
+            style = MaterialTheme.typography.titleMedium,
+            color = scheme.onSurfaceVariant,
+        )
     }
 }
 
-/** The three numbers the widget has no room for, as one row of tonal cards. */
+/** A section heading, on the same left edge as the block it names. */
 @Composable
 private fun Heading(text: String) {
     Text(
         text = text,
         style = MaterialTheme.typography.titleSmall,
         color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 8.dp),
+        modifier = Modifier.padding(
+            start = Gutter,
+            end = Gutter,
+            top = HeadingTop,
+            bottom = HeadingBottom,
+        ),
     )
 }
 
+/**
+ * The three numbers the widget has no room for, as one row of tonal cards.
+ *
+ * The row is measured at [IntrinsicSize.Min] and the cards fill it, so all three end at the same
+ * height whatever their labels do. Without that, one label wrapping to a second line made its card
+ * taller than the two beside it and left the row with a ragged bottom.
+ */
 @Composable
 private fun Readings(forecast: Forecast, units: WeatherModel.Settings) {
     val today = forecast.days.firstOrNull()
     Row(
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Gutter, vertical = 12.dp)
+            .height(IntrinsicSize.Min),
     ) {
         Reading(
-            label = stringResource(R.string.wx_rain_chance),
+            label = stringResource(R.string.wx_rain_chance_short),
             value = "${today?.rain ?: 0}%",
             modifier = Modifier.weight(1f),
         )
@@ -200,7 +215,7 @@ private fun Readings(forecast: Forecast, units: WeatherModel.Settings) {
 @Composable
 private fun Reading(label: String, value: String, modifier: Modifier = Modifier) {
     Card(
-        modifier = modifier,
+        modifier = modifier.fillMaxHeight(),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         ),
@@ -211,13 +226,18 @@ private fun Reading(label: String, value: String, modifier: Modifier = Modifier)
         ) {
             Text(
                 text = label,
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
-                maxLines = 2,
+                maxLines = 1,
             )
             Spacer(Modifier.height(4.dp))
-            Text(text = value, style = MaterialTheme.typography.titleLarge)
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleLarge,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+            )
         }
     }
 }
@@ -232,7 +252,7 @@ private fun Days(forecast: Forecast, units: WeatherModel.Settings) {
     val span = (warmest - coldest).coerceAtLeast(1.0)
 
     Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = Gutter),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         ),
@@ -268,12 +288,14 @@ private fun DayRow(day: DayForecast, coldest: Double, span: Double, units: Weath
             tint = scheme.onSurfaceVariant,
             modifier = Modifier.size(26.dp),
         )
-        // Always written, even at nothing: a column that disappears on dry days leaves the row
-        // above and the row below disagreeing about where the temperatures start.
+        // The column keeps its width on a dry day but writes nothing in it. It has to keep the
+        // width or the rows below disagree about where the temperatures start; it must not write a
+        // dash, because a dash in a column of percentages reads as a stray minus sign rather than
+        // as "none", which is what it looked like on a real phone.
         Text(
-            text = if (day.rain > 0) "${day.rain}%" else "—",
+            text = if (day.rain > 0) "${day.rain}%" else "",
             style = MaterialTheme.typography.labelMedium,
-            color = if (day.rain > 0) scheme.tertiary else scheme.outlineVariant,
+            color = scheme.tertiary,
             textAlign = TextAlign.End,
             maxLines = 1,
             modifier = Modifier.width(42.dp).padding(start = 6.dp),
@@ -370,7 +392,7 @@ private fun Freshness(forecast: Forecast) {
  */
 @Composable
 private fun LocationCard(onGrant: () -> Unit, onChoosePlace: () -> Unit) {
-    OutlinedCard(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+    OutlinedCard(modifier = Modifier.fillMaxWidth().padding(Gutter)) {
         Column(Modifier.padding(16.dp)) {
             Text(
                 text = stringResource(R.string.wx_no_location),

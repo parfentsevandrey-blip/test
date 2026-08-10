@@ -556,7 +556,7 @@ fun SettingsScreen(model: CalendarModel, padding: PaddingValues) {
                 text = stringResource(R.string.about_body),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
         }
         item { Spacer(Modifier.height(24.dp)) }
@@ -569,7 +569,7 @@ private fun SectionHeading(text: String) {
         text = text,
         style = MaterialTheme.typography.titleSmall,
         color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 28.dp, end = 28.dp, top = 24.dp, bottom = 8.dp),
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 8.dp),
     )
 }
 
@@ -580,7 +580,7 @@ private fun ChoiceRow(
     selected: Int,
     onSelect: (Int) -> Unit,
 ) {
-    Column(Modifier.padding(horizontal = 28.dp, vertical = 8.dp)) {
+    Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
         Text(title, style = MaterialTheme.typography.bodyLarge)
         Spacer(Modifier.height(8.dp))
         SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {

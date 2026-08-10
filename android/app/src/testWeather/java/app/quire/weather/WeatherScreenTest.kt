@@ -81,6 +81,12 @@ class WeatherScreenTest {
     fun `the screen lays out now, the readings and the five days`() {
         val today = LocalDate.now()
         val skies = listOf(Sky.SHOWERS, Sky.PARTLY_CLOUDY, Sky.CLEAR, Sky.THUNDER, Sky.SNOW)
+        // A named place, so the screen is the one somebody who has finished setting it up sees:
+        // no permission card at the top pushing the five days off the bottom of the shot.
+        WeatherStore.pin(
+            app,
+            Place("Западный административный округ", null, "Россия", 55.75, 37.62),
+        )
         WeatherStore.save(
             app,
             Forecast(
@@ -146,6 +152,94 @@ class WeatherScreenTest {
             "the place is written twice on one screen",
             showing("Западный административный округ") == 0,
         )
+        // The arc says roughly; this says exactly, and it fills the one part of that card the
+        // drawing leaves empty.
+        assertTrue("the daylight left is missing", showing("of daylight left") > 0)
+        // A dash in a column of percentages reads as a stray minus sign. The column keeps its
+        // width on a dry day and writes nothing in it.
+        assertTrue("a dash is written for a dry day", showing("—") == 0)
+
+        // Every block on the screen starts on the same left edge. This is the fault the screen was
+        // rebuilt for: headings at one inset and the cards under them at another, all the way
+        // down. Measured rather than trusted — the left edge of each card's fill, found by walking
+        // in from the margin on the row through its middle.
+        val rails = listOf(
+            "the readings" to 0.20f,
+            "the hours" to 0.33f,
+            "the sun" to 0.55f,
+            "the days" to 0.85f,
+        ).map { (what, fraction) ->
+            what to bitmap.leftEdge((bitmap.height * fraction).toInt())
+        }
+        assertTrue("a block was not found at all: $rails", rails.none { it.second < 0 })
+        val spread = rails.maxOf { it.second } - rails.minOf { it.second }
+        assertTrue("the blocks start at different x: $rails", spread <= 1)
+    }
+
+    /**
+     * Finds where a card's fill begins on a row, by walking in from the left until the colour
+     * stops being the page behind it.
+     */
+    private fun Bitmap.leftEdge(y: Int): Int {
+        val background = getPixel(2, y)
+        for (x in 2 until width) {
+            if (getPixel(x, y) != background) return x
+        }
+        return -1
+    }
+
+    /** The same screen in daylight, because the dark one is only half of what ships. */
+    @Test
+    fun `the screen lays out in the light theme too`() {
+        val today = LocalDate.now()
+        WeatherStore.pin(app, Place("Moscow", null, "Russia", 55.75, 37.62))
+        WeatherStore.save(
+            app,
+            Forecast(
+                place = "Moscow",
+                latitude = 55.75,
+                longitude = 37.62,
+                now = Conditions(21.4, 21.4, Sky.CLEAR, true, 44, 9.0),
+                hours = (0 until 26).map { hour ->
+                    HourForecast(
+                        time = java.time.LocalDateTime.now().withMinute(0).plusHours(hour.toLong()),
+                        temperature = 18.0 + 5.0 * kotlin.math.sin(hour / 3.6),
+                        sky = Sky.CLEAR,
+                        day = hour % 24 in 6..20,
+                        rain = 0,
+                    )
+                },
+                days = (0 until 5).map { index ->
+                    DayForecast(
+                        date = today.plusDays(index.toLong()),
+                        sky = Sky.CLEAR,
+                        high = 24.0 - index,
+                        low = 13.0 - index,
+                        rain = 0,
+                        sunrise = today.plusDays(index.toLong()).atTime(5, 12),
+                        sunset = today.plusDays(index.toLong()).atTime(20, 41),
+                    )
+                },
+                fetched = System.currentTimeMillis(),
+            ),
+        )
+
+        val model = WeatherModel(app)
+        compose.setContent {
+            QuireTheme(dark = false, dynamic = false) {
+                Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+                    WeatherScreen(model, PaddingValues(0.dp), onGrant = {})
+                }
+            }
+        }
+        settle()
+        shoot("app-weather-light")
+
+        assertTrue("the temperature is missing", showing("21°") > 0)
+        assertTrue("the humidity is missing", showing("44%") > 0)
+        // Clear all week, so no day row writes a chance of rain and no hour column writes one
+        // either — the two rain figures on this screen are the reading card's 0% and nothing else.
+        assertTrue("a chance of rain appeared on a dry week", showing("0%") == 1)
     }
 
     /** The settings, with the alerts open so the threshold slider is on screen too. */

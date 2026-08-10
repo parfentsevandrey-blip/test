@@ -1,6 +1,9 @@
 package app.quire.weather.ui
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -32,7 +36,8 @@ import kotlin.math.roundToInt
  *
  * Laid out the same way the calendar's settings are — grouped, connected blocks with the outer
  * corners rounded — because they are the same app wearing a different hat, and a person who has
- * used one should not have to learn the other.
+ * used one should not have to learn the other. Every block starts at [Gutter], the same edge the
+ * weather screen's cards start at, so moving between the two is not a step sideways.
  */
 @Composable
 fun WeatherSettingsScreen(model: WeatherModel, padding: PaddingValues) {
@@ -40,18 +45,13 @@ fun WeatherSettingsScreen(model: WeatherModel, padding: PaddingValues) {
     LazyColumn(contentPadding = padding, modifier = Modifier.fillMaxSize()) {
         item { Heading(stringResource(R.string.wx_section_updates)) }
         item {
-            ChoiceRow(
-                title = stringResource(R.string.wx_period),
-                options = listOf(
-                    stringResource(R.string.wx_period_5),
-                    stringResource(R.string.wx_period_10),
-                    stringResource(R.string.wx_period_30),
-                    stringResource(R.string.wx_period_60),
-                    stringResource(R.string.wx_period_180),
-                    stringResource(R.string.wx_period_360),
-                ),
-                selected = WeatherSettings.PERIODS.indexOf(settings.period).coerceAtLeast(0),
-                onSelect = { model.setPeriod(WeatherSettings.PERIODS[it]) },
+            // Chips rather than one segmented row. Six segments across a phone leaves about
+            // fifty points each, which cut "1 hour", "3 hours" and "6 hours" down to "1", "3"
+            // and "6" — three intervals a person could not tell apart, and the unit dropped from
+            // exactly the options where it mattered. Chips wrap instead of shrinking.
+            PeriodRow(
+                selected = settings.period,
+                onSelect = { model.setPeriod(it) },
                 // Two hints, because the short intervals come with a caveat the long ones do not
                 // and burying it would be the same as not saying it.
                 hint = stringResource(R.string.wx_period_hint) +
@@ -78,7 +78,7 @@ fun WeatherSettingsScreen(model: WeatherModel, padding: PaddingValues) {
         }
         if (settings.alerts) {
             item {
-                Column(Modifier.padding(horizontal = 28.dp, vertical = 8.dp)) {
+                Column(Modifier.padding(horizontal = Gutter, vertical = 8.dp)) {
                     Text(
                         text = stringResource(R.string.wx_threshold, settings.threshold),
                         style = MaterialTheme.typography.bodyLarge,
@@ -136,8 +136,46 @@ private fun Heading(text: String) {
         text = text,
         style = MaterialTheme.typography.titleSmall,
         color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 28.dp, end = 28.dp, top = 24.dp, bottom = 8.dp),
+        modifier = Modifier.padding(
+            start = Gutter,
+            end = Gutter,
+            top = HeadingTop,
+            bottom = HeadingBottom,
+        ),
     )
+}
+
+/** The six intervals, as chips that keep their units by wrapping onto a second line. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun PeriodRow(selected: Int, onSelect: (Int) -> Unit, hint: String) {
+    val labels = listOf(
+        stringResource(R.string.wx_period_5),
+        stringResource(R.string.wx_period_10),
+        stringResource(R.string.wx_period_30),
+        stringResource(R.string.wx_period_60),
+        stringResource(R.string.wx_period_180),
+        stringResource(R.string.wx_period_360),
+    )
+    Column(Modifier.padding(horizontal = Gutter, vertical = 8.dp)) {
+        Text(stringResource(R.string.wx_period), style = MaterialTheme.typography.bodyLarge)
+        Spacer(Modifier.height(8.dp))
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            WeatherSettings.PERIODS.forEachIndexed { index, minutes ->
+                FilterChip(
+                    selected = minutes == selected,
+                    onClick = { onSelect(minutes) },
+                    label = { Text(labels[index], maxLines = 1) },
+                )
+            }
+        }
+        Spacer(Modifier.height(6.dp))
+        Text(
+            text = hint,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
 }
 
 @Composable
@@ -146,9 +184,8 @@ private fun ChoiceRow(
     options: List<String>,
     selected: Int,
     onSelect: (Int) -> Unit,
-    hint: String? = null,
 ) {
-    Column(Modifier.padding(horizontal = 28.dp, vertical = 8.dp)) {
+    Column(Modifier.padding(horizontal = Gutter, vertical = 8.dp)) {
         Text(title, style = MaterialTheme.typography.bodyLarge)
         Spacer(Modifier.height(8.dp))
         SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
@@ -161,14 +198,6 @@ private fun ChoiceRow(
                     Text(label, maxLines = 1)
                 }
             }
-        }
-        if (hint != null) {
-            Spacer(Modifier.height(6.dp))
-            Text(
-                text = hint,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
         }
     }
 }

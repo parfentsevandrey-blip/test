@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-6.4.apk`](dist/quire-calendar-6.4.apk) · 1.9 MB | `sha256 196b2fc05ae977057572284a1b1c0dd81d93579ce5f96280cca2be4f45acf4c4` |
-| **Weather** | [`dist/quire-weather-6.4.apk`](dist/quire-weather-6.4.apk) · 1.5 MB | `sha256 c4905a6091b44f421596e67d78925b0abd48652cde15d3a3c35492f9169b72e9` |
+| **Calendar** | [`dist/quire-calendar-6.5.apk`](dist/quire-calendar-6.5.apk) · 1.9 MB | `sha256 2e6be42df7ceaeb87e40464999607ca025c0d103a32c69d3d73b6ef89e3faaf4` |
+| **Weather** | [`dist/quire-weather-6.5.apk`](dist/quire-weather-6.5.apk) · 1.5 MB | `sha256 545a063707a51013db9317c062d365724e6f35efafb34e084e83a375844ea2a8` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-6.4.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-6.5.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -157,9 +157,32 @@ every day, which is precision nobody wants at the cost of a picture nobody recog
 five days each with a bar showing where its swing sits inside the week's, which is the part a list
 of numbers cannot do.
 
-| The app | Settings | Four by two | The daylight face |
+| The app | The same, in daylight | Settings | Four by two |
 |---|---|---|---|
-| ![Weather](docs/app-weather.png) | ![Settings](docs/app-weather-settings.png) | ![Wide](docs/widget-weather-wide.png) | ![Light](docs/widget-weather-light.png) |
+| ![Weather](docs/app-weather.png) | ![Light](docs/app-weather-light.png) | ![Settings](docs/app-weather-settings.png) | ![Wide](docs/widget-weather-wide.png) |
+
+**One left edge.** Every block on the screen — the temperature, each section heading, and all four
+cards — starts at the same x, from one constant rather than from a number typed at each call site.
+That is not a detail: the screen before this one had the headings inset 24dp and the cards under
+them 16dp, so each heading hung eight points left of the thing it named, the whole way down. The
+render test measures it, walking in from the margin on a row through the middle of each card and
+failing if the four disagree by more than a pixel, because that is the kind of fault that comes
+back the moment somebody adds a block and types a number.
+
+Three more things were crooked for reasons worth naming. The sun's arc put its apex at a fixed
+fraction of the card's width, which is a half-circle at exactly one width: on a phone it wanted to
+be a hundred points tall inside a seventy-point box, so its whole middle was clipped away and what
+was left looked like two stubs in the corners. It now puts the apex where the box ends. The hourly
+strip gave every column a line for a chance of rain and wrote a blank into it on dry hours, which
+opened a dead band across the strip on exactly the days nothing was happening; the line is now
+decided once for the whole strip. And the five-day rows wrote "—" where a day had no rain, which
+in a column of percentages does not read as "none" — it reads as a stray minus sign. The column
+keeps its width and writes nothing.
+
+The six refresh intervals were a segmented row of six, which on a phone leaves about fifty points
+each and cut "1 hour", "3 hours" and "6 hours" down to "1", "3" and "6" — three settings nobody
+could tell apart, with the unit dropped from precisely the options that needed it. They are chips
+now, and chips wrap instead of shrinking.
 
 The card was built by looking at the one it sits next to. Google's weather widget spends a
 four-by-two placement on one temperature, a place name truncated to "Западный адм…", a "feels

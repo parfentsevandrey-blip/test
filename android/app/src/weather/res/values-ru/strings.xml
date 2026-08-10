@@ -64,4 +64,11 @@
     <string name="wx_now">Сейчас</string>
     <string name="wx_hours">Ближайшие 24 часа</string>
     <string name="wx_sun">Восход и закат</string>
+    <string name="wx_feels_like_short">ощущается как %1$s</string>
+    <string name="wx_rain_chance_short">Осадки</string>
+    <string name="wx_sunrise">Восход</string>
+    <string name="wx_sunset">Закат</string>
+    <string name="wx_daylight">Светло %1$s</string>
+    <string name="wx_daylight_left">Светло ещё %1$s</string>
+    <string name="wx_span">%1$d ч %2$d мин</string>
 </resources>

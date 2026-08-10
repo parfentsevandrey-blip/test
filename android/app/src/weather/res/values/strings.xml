@@ -64,4 +64,11 @@
     <string name="wx_now">Now</string>
     <string name="wx_hours">Next 24 hours</string>
     <string name="wx_sun">Sunrise and sunset</string>
+    <string name="wx_feels_like_short">feels like %1$s</string>
+    <string name="wx_rain_chance_short">Rain</string>
+    <string name="wx_sunrise">Sunrise</string>
+    <string name="wx_sunset">Sunset</string>
+    <string name="wx_daylight">%1$s of daylight</string>
+    <string name="wx_daylight_left">%1$s of daylight left</string>
+    <string name="wx_span">%1$dh %2$dm</string>
 </resources>
