@@ -1,0 +1,13 @@
+{
+  "title": "ОБЪЕКТЫ НЕДВИЖИМОСТИ",
+  "subtitle": "Нидерланды",
+  "intro": "В подборку входят:",
+  "footnote": "Данные по объектам приведены по публикациям funda in business по состоянию на 10.08.2026",
+  "filename": "Объекты недвижимости — Нидерланды 10.08.26",
+  "output_dir": "output",
+  "objects": [
+    { "file": "objects/lange-leidsedwarsstraat-73c-amsterdam.json" },
+    { "file": "objects/plaats-5-den-haag.json" },
+    { "file": "objects/ampereweg-17-delft.json" }
+  ]
+}
