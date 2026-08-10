@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-7.4.apk`](dist/quire-calendar-7.4.apk) · 1.9 MB | `sha256 5db31b9796ac57fe7835ca9ef3b646a56661b2301c0a942634692e6e018dc831` |
-| **Weather** | [`dist/quire-weather-7.4.apk`](dist/quire-weather-7.4.apk) · 1.5 MB | `sha256 f30e0cce78e3aaadd98ea869594977261fa6df4b164789a2ec35f001ace2b3f0` |
+| **Calendar** | [`dist/quire-calendar-7.5.apk`](dist/quire-calendar-7.5.apk) · 1.9 MB | `sha256 bbe40ac3ec62fac2cc101ff55e9db72dac3f34313e2c5dd7b236b662c4bfa12d` |
+| **Weather** | [`dist/quire-weather-7.5.apk`](dist/quire-weather-7.5.apk) · 1.5 MB | `sha256 1e85d181758476b6300dcad784f79aa741ac39c4c370696c92f8f2b5125c103e` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-7.4.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-7.5.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -244,14 +244,20 @@ pushes things along by is the opposite — a westerly blows east.
 how far the wind carries it. That is the whole trick: a field where every drop is the same drop
 reads as a screensaver, and a field with a near edge and a far one reads as sky. The near
 snowflakes get three crossed arms and a slow turn; the far ones stay dots, because at four pixels
-an arm is a smudge. The clouds are radial fades rather than discs, in two banks at two speeds, and
-the parallax between them does more for the depth than any amount of extra alpha would. The sun
-carries a fan of eleven rays that sweeps round once a lap, each with its own length riding a sine,
-so it shimmers rather than turning like a wheel. The stars twinkle on two rates multiplied rather
-than one, so the field never settles into a rhythm, and the brightest few carry a cross of light;
-once a lap something crosses them. A storm gets an actual bolt — jagged, different every strike,
-under a wash that goes sharp on and slow off, which is what lightning does and what a linear ramp
-does not.
+an arm is a smudge. Stars twinkle on two rates multiplied rather than one, so the field never
+settles into a rhythm, and the brightest few carry a cross of light; once a lap something crosses
+them. A storm gets a bolt — jagged, different every strike — under a wash that goes sharp on and
+slow off, which is what lightning does and what a linear ramp does not.
+
+**And it is quiet, because the first version was not.** It had a bank of cloud drifting under the
+rain, and a fan of eleven rays turning behind the temperature. Both are good drawings and both
+were wrong here: a cloud is a large soft shape and rain is a field of small hard ones, and the two
+together over a page of type stopped being weather behind it and started being a picture in front
+of it — and a turning fan is a pinwheel, which is a thing you look at rather than a thing you read
+past. The cloud is gone from the wet skies, the fan is gone from the sun, the counts are roughly
+halved, the alphas cut to about a third, and the whole layer stops well above the reading cards.
+The colour can run down behind them unnoticed; things falling past them cannot. There is a switch
+for it in the app's own settings for anyone who would still rather have a still page.
 
 | Rain, behind the page | Every sky, one on top of another |
 |---|---|

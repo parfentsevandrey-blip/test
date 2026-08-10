@@ -64,6 +64,20 @@ fun WeatherSettingsScreen(model: WeatherModel, padding: PaddingValues) {
             )
         }
 
+        item { Heading(stringResource(R.string.wx_section_look)) }
+        item {
+            SettingGroup {
+                SettingRow(
+                    index = 0,
+                    count = 1,
+                    title = stringResource(R.string.wx_live_sky),
+                    hint = stringResource(R.string.wx_live_sky_hint),
+                    checked = settings.liveSky,
+                    onChange = { model.setLiveSky(it) },
+                )
+            }
+        }
+
         item { Heading(stringResource(R.string.wx_section_alerts)) }
         item {
             SettingGroup {

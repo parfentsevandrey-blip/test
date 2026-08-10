@@ -101,22 +101,21 @@ fun LiveSky(
                 cloud(clock, ink, lean)
             }
             Sky.FOG -> fog(clock, ink)
-            Sky.DRIZZLE -> rain(clock, accent, drops = 30, weight = 0.65f, lean = lean)
-            Sky.RAIN -> rain(clock, accent, drops = 44, weight = 1f, lean = lean)
-            Sky.SHOWERS -> {
-                cloud(clock, ink, lean)
-                rain(clock, accent, drops = 58, weight = 1.3f, lean = lean)
-            }
+            // No cloud under the rain. A bank of cloud is a large soft shape and the rain is a
+            // field of small hard ones; together over a page of type they stopped being weather
+            // behind it and started being a picture in front of it.
+            Sky.DRIZZLE -> rain(clock, accent, drops = 18, weight = 0.6f, lean = lean)
+            Sky.RAIN -> rain(clock, accent, drops = 26, weight = 0.9f, lean = lean)
+            Sky.SHOWERS -> rain(clock, accent, drops = 34, weight = 1.1f, lean = lean)
             Sky.THUNDER -> {
-                cloud(clock, ink, lean)
-                rain(clock, accent, drops = 48, weight = 1.2f, lean = lean)
+                rain(clock, accent, drops = 28, weight = 1f, lean = lean)
                 lightning(clock, accent)
             }
             Sky.SLEET -> {
-                rain(clock, accent, drops = 24, weight = 0.8f, lean = lean)
-                snow(clock, ink, flakes = 18, lean = lean)
+                rain(clock, accent, drops = 14, weight = 0.7f, lean = lean)
+                snow(clock, ink, flakes = 10, lean = lean)
             }
-            Sky.SNOW -> snow(clock, ink, flakes = 38, lean = lean)
+            Sky.SNOW -> snow(clock, ink, flakes = 22, lean = lean)
         }
     }
 }
@@ -160,7 +159,7 @@ private fun DrawScope.rain(clock: Float, colour: Color, drops: Int, weight: Floa
         val x = scatter(index, 1) * (size.width + 2f * SPILL * density) - SPILL * density
         // Faded at the bottom of the band rather than cut off at it: rain that stops on a
         // straight line across the page is a rectangle of rain, not weather behind a page.
-        val alpha = 0.30f * weight * near * (1f - (y / height).coerceIn(0f, 1f))
+        val alpha = 0.17f * weight * near * (1f - (y / height).coerceIn(0f, 1f))
         if (alpha <= 0.01f) continue
         drawLine(
             color = colour.copy(alpha = alpha),
@@ -191,7 +190,7 @@ private fun DrawScope.snow(clock: Float, colour: Color, flakes: Int, lean: Float
         val sway = wave(fall(clock, laps * 2, phase)) * 10f * near * density
         val push = lean * (y + LEAD) * 0.18f
         val x = scatter(index, 4) * size.width + sway + push
-        val alpha = 0.40f * near * (1f - (y / height).coerceIn(0f, 1f))
+        val alpha = 0.24f * near * (1f - (y / height).coerceIn(0f, 1f))
         if (alpha <= 0.01f) continue
         val ink = colour.copy(alpha = alpha)
         val radius = (1.3f + 2.6f * depth) * density
@@ -226,7 +225,7 @@ private fun DrawScope.snow(clock: Float, colour: Color, flakes: Int, lean: Float
 private fun DrawScope.cloud(clock: Float, colour: Color, lean: Float) {
     val height = size.height
     val direction = if (lean < 0f) -1f else 1f
-    for (index in 0 until 7) {
+    for (index in 0 until 4) {
         val depth = scatter(index, 22)
         val laps = 1 + (index % 2)
         val span = size.width + 2f * BANK * density
@@ -235,7 +234,7 @@ private fun DrawScope.cloud(clock: Float, colour: Color, lean: Float) {
         val bob = wave(fall(clock, laps, scatter(index, 23))) * 6f * density
         val y = (0.10f + scatter(index, 7) * 0.60f) * height + bob
         val radius = (30f + depth * 62f) * density
-        val alpha = 0.055f + 0.055f * depth
+        val alpha = 0.028f + 0.026f * depth
         // A radial fade rather than a flat disc. A cloud with a crisp edge is a circle, and three
         // circles with crisp edges are three circles. This is the one thing here that allocates
         // per frame — a gradient bakes its centre, and the centre is what is moving — and seven
@@ -283,7 +282,7 @@ private fun DrawScope.fog(clock: Float, colour: Color) {
             // Butt caps, and each segment overlapping the next. A round cap on a segment as thick
             // as this one is a bead, and a row of beads is a row of beads however faint it is.
             drawLine(
-                color = colour.copy(alpha = 0.045f * swell + 0.012f),
+                color = colour.copy(alpha = 0.026f * swell + 0.008f),
                 start = Offset(x0, y),
                 end = Offset(x1, y),
                 strokeWidth = thick * swell,
@@ -294,42 +293,28 @@ private fun DrawScope.fog(clock: Float, colour: Color) {
 }
 
 /**
- * The sun: a glow that breathes and a fan of rays that turns.
+ * The sun, breathing.
  *
  * Three rings at three phases, so it swells and settles instead of pulsing on one beat like a
- * warning light — and eleven rays sweeping round once a lap, each with its own length riding a
- * sine, so the fan shimmers rather than rotating like a wheel.
+ * warning light. It had a turning fan of rays for a version; over a page of type that is a
+ * pinwheel, and a pinwheel is a thing you look at rather than a thing you read past.
  */
 private fun DrawScope.sun(clock: Float, colour: Color) {
     val centre = Offset(size.width * 0.80f, size.height * 0.15f)
-    val rays = 11
-    val turn = clock * 2f * PI.toFloat()
-    for (index in 0 until rays) {
-        val angle = turn / 3f + index * 2f * PI.toFloat() / rays
-        val reach = (74f + 46f * (0.5f + 0.5f * wave(fall(clock, 1, scatter(index, 24))))) * density
-        val from = 52f * density
-        drawLine(
-            color = colour.copy(alpha = 0.055f),
-            start = Offset(centre.x + cos(angle) * from, centre.y + sin(angle) * from),
-            end = Offset(centre.x + cos(angle) * reach, centre.y + sin(angle) * reach),
-            strokeWidth = 5f * density,
-            cap = StrokeCap.Round,
-        )
-    }
     for (ring in 0 until 3) {
-        val swell = 1f + 0.07f * wave(fall(clock, 1, ring * 0.33f))
+        val swell = 1f + 0.06f * wave(fall(clock, 1, ring * 0.33f))
         drawCircle(
-            colour.copy(alpha = 0.075f - ring * 0.02f),
+            colour.copy(alpha = 0.045f - ring * 0.012f),
             (50f + ring * 38f) * density * swell,
             centre,
         )
     }
-    val halo = 1f + 0.05f * wave(fall(clock, 2, 0.5f))
+    val halo = 1f + 0.04f * wave(fall(clock, 2, 0.5f))
     drawCircle(
-        color = colour.copy(alpha = 0.12f),
+        color = colour.copy(alpha = 0.07f),
         radius = 44f * density * halo,
         center = centre,
-        style = Stroke(width = 2f * density),
+        style = Stroke(width = 1.6f * density),
     )
 }
 
@@ -342,16 +327,16 @@ private fun DrawScope.sun(clock: Float, colour: Color) {
  * something to have missed.
  */
 private fun DrawScope.stars(clock: Float, colour: Color, accent: Color) {
-    for (index in 0 until 44) {
+    for (index in 0 until 30) {
         val x = scatter(index, 11) * size.width
         val y = scatter(index, 12) * size.height * 0.82f
         val slow = 0.5f + 0.5f * wave(fall(clock, 1 + (index % 3), scatter(index, 13)))
         val quick = 0.5f + 0.5f * wave(fall(clock, 3 + (index % 4), scatter(index, 25)))
         val bright = scatter(index, 26)
-        val alpha = (0.08f + 0.42f * slow * (0.4f + 0.6f * quick)) * (0.5f + 0.8f * bright)
+        val alpha = (0.06f + 0.26f * slow * (0.4f + 0.6f * quick)) * (0.5f + 0.8f * bright)
         val radius = (0.7f + bright * 1.6f) * density
         drawCircle(colour.copy(alpha = alpha), radius, Offset(x, y))
-        if (bright > 0.86f) {
+        if (bright > 0.92f) {
             val flare = radius * 4.5f
             drawLine(
                 colour.copy(alpha = alpha * 0.45f),
@@ -377,12 +362,12 @@ private fun DrawScope.stars(clock: Float, colour: Color, accent: Color) {
         val tail = Offset(head.x + 70f * density, head.y - 39f * density)
         val fade = (1f - along) * (if (along < 0.15f) along / 0.15f else 1f)
         drawLine(
-            accent.copy(alpha = 0.55f * fade),
+            accent.copy(alpha = 0.30f * fade),
             head, tail,
             strokeWidth = 1.8f * density,
             cap = StrokeCap.Round,
         )
-        drawCircle(accent.copy(alpha = 0.7f * fade), 2.2f * density, head)
+        drawCircle(accent.copy(alpha = 0.40f * fade), 2f * density, head)
     }
 }
 
@@ -401,7 +386,7 @@ private fun DrawScope.lightning(clock: Float, colour: Color) {
         if (since < 0f || since > FLASH_FOR) continue
         val decay = 1f - (since / FLASH_FOR)
         val glow = decay * decay
-        drawRect(colour.copy(alpha = 0.16f * glow), size = Size(size.width, size.height))
+        drawRect(colour.copy(alpha = 0.07f * glow), size = Size(size.width, size.height))
 
         val bolt = Path()
         val top = -6f * density
@@ -416,12 +401,12 @@ private fun DrawScope.lightning(clock: Float, colour: Color) {
         }
         drawPath(
             path = bolt,
-            color = colour.copy(alpha = 0.85f * glow),
+            color = colour.copy(alpha = 0.45f * glow),
             style = Stroke(width = 2.4f * density, cap = StrokeCap.Round),
         )
         drawPath(
             path = bolt,
-            color = colour.copy(alpha = 0.25f * glow),
+            color = colour.copy(alpha = 0.12f * glow),
             style = Stroke(width = 7f * density, cap = StrokeCap.Round),
         )
     }

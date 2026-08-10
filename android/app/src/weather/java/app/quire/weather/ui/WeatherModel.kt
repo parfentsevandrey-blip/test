@@ -60,6 +60,7 @@ class WeatherModel(app: Application) : AndroidViewModel(app) {
     /** What the settings screen reads; the store behind it is written straight through. */
     data class Settings(
         val period: Int,
+        val liveSky: Boolean,
         val alerts: Boolean,
         val threshold: Int,
         val degrees: Degrees,
@@ -69,6 +70,7 @@ class WeatherModel(app: Application) : AndroidViewModel(app) {
         companion object {
             fun from(store: WeatherSettings) = Settings(
                 period = store.periodMinutes,
+                liveSky = store.liveSky,
                 alerts = store.alerts,
                 threshold = store.threshold,
                 degrees = store.degrees,
@@ -117,6 +119,11 @@ class WeatherModel(app: Application) : AndroidViewModel(app) {
     fun setPeriod(minutes: Int) {
         store().periodMinutes = minutes
         WeatherRefresh.schedule(getApplication())
+        reread()
+    }
+
+    fun setLiveSky(on: Boolean) {
+        store().liveSky = on
         reread()
     }
 

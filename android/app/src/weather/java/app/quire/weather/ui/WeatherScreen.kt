@@ -95,7 +95,7 @@ fun WeatherScreen(
     Box(Modifier.fillMaxSize().background(wash)) {
         // The weather itself, moving, under everything else. It is drawn over the same band the
         // wash covers and fades out with it, so the page below stays a page.
-        forecast?.let {
+        forecast?.takeIf { model.settings.liveSky }?.let {
             LiveSky(
                 sky = it.now.sky,
                 day = it.now.day,
@@ -106,7 +106,9 @@ fun WeatherScreen(
                 windFrom = it.now.direction,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(padding.calculateTopPadding() + SkyHeight)
+                    // Shorter than the wash. The colour can run down behind the reading cards
+                    // without being noticed; things falling past them cannot.
+                    .height(padding.calculateTopPadding() + WeatherHeight)
                     // Clipped, because a draw scope is not: a drop whose head is at the last row
                     // of the band still draws its whole tail below it, at whatever alpha its head
                     // had. Twenty points of very faint rain over the page is not visible and is
@@ -162,8 +164,11 @@ fun WeatherScreen(
     }
 }
 
-/** How far down the sky reaches: the hero and the readings, and nothing after them. */
+/** How far down the wash reaches: the hero and the readings, and nothing after them. */
 private val SkyHeight = 320.dp
+
+/** How far down the weather falls, which is as far as the hero and no further. */
+private val WeatherHeight = 232.dp
 
 /**
  * What it is doing now.

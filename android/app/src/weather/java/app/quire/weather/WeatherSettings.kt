@@ -75,6 +75,17 @@ class WeatherSettings private constructor(private val context: Context) {
         get() = prefs.getInt(KEY_PERIOD, DEFAULT_PERIOD)
         set(value) = prefs.edit { putInt(KEY_PERIOD, PERIODS.minByOrNull { kotlin.math.abs(it - value) } ?: DEFAULT_PERIOD) }
 
+    /**
+     * Whether the weather moves behind the top of the screen.
+     *
+     * On, and quiet: it is the app's one piece of atmosphere and it is drawn faintly enough to
+     * read past. Somebody who would rather have a still page can say so here, and somebody who
+     * has turned animation off system-wide gets the still page without asking.
+     */
+    var liveSky: Boolean
+        get() = prefs.getBoolean(KEY_LIVE_SKY, true)
+        set(value) = prefs.edit { putBoolean(KEY_LIVE_SKY, value) }
+
     var alerts: Boolean
         get() = prefs.getBoolean(KEY_ALERTS, false)
         set(value) = prefs.edit { putBoolean(KEY_ALERTS, value) }
@@ -111,6 +122,7 @@ class WeatherSettings private constructor(private val context: Context) {
         private const val FILE = "quire-weather-settings"
         private const val KEY_PERIOD = "period"
         private const val KEY_ALERTS = "alerts"
+        private const val KEY_LIVE_SKY = "livesky"
         private const val KEY_THRESHOLD = "threshold"
         private const val KEY_DEGREES = "degrees"
         private const val KEY_WIND = "wind"
