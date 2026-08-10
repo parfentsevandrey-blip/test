@@ -19,6 +19,7 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ApplicationProvider
 import app.quire.calendar.m3.QuireTheme
+import app.quire.weather.ui.WeatherApp
 import app.quire.weather.ui.WeatherModel
 import app.quire.weather.ui.WeatherScreen
 import app.quire.weather.ui.WeatherSettingsScreen
@@ -221,6 +222,76 @@ class WeatherScreenTest {
             sum += kotlin.math.abs(((a shr shift) and 0xFF) - ((b shr shift) and 0xFF))
         }
         return sum > 12
+    }
+
+    /**
+     * The whole app, bar and all, because the fault this catches only exists where the two meet.
+     *
+     * The sky behind the page used to start under the app bar, and the bar was opaque over it, so
+     * the screen carried one hard horizontal line across its full width with a square corner at
+     * each end — the only edge on a page made entirely of rounded cards. The bar is transparent
+     * over the forecast now and the wash runs from the top of the window.
+     *
+     * Asserted as smoothness rather than as a colour: walking down the left margin, no two
+     * neighbouring rows of a gradient differ by much. A step is exactly what a hard edge is.
+     */
+    @Test
+    fun `the sky runs behind the app bar with no edge in it`() {
+        WeatherStore.pin(app, Place("Moscow", null, "Russia", 55.75, 37.62))
+        WeatherStore.save(
+            app,
+            Forecast(
+                place = "Moscow",
+                latitude = 55.75,
+                longitude = 37.62,
+                now = Conditions(22.0, 22.0, Sky.MOSTLY_CLEAR, true, 48, 5.0),
+                hours = (0 until 26).map { hour ->
+                    HourForecast(
+                        time = java.time.LocalDateTime.now().withMinute(0).plusHours(hour.toLong()),
+                        temperature = 22.0 + 2.0 * kotlin.math.sin(hour / 3.6),
+                        sky = Sky.MOSTLY_CLEAR,
+                        day = true,
+                        rain = 0,
+                    )
+                },
+                days = (0 until 5).map { index ->
+                    DayForecast(
+                        date = LocalDate.now().plusDays(index.toLong()),
+                        sky = Sky.MOSTLY_CLEAR,
+                        high = 24.0 - index,
+                        low = 13.0 - index,
+                        rain = 0,
+                        sunrise = LocalDate.now().plusDays(index.toLong()).atTime(4, 51),
+                        sunset = LocalDate.now().plusDays(index.toLong()).atTime(20, 17),
+                    )
+                },
+                fetched = System.currentTimeMillis(),
+            ),
+        )
+
+        compose.setContent { WeatherApp() }
+        settle()
+        val bitmap = shoot("app-weather-bar")
+
+        // Down the margin, through the bar and out the other side of the wash.
+        var worst = 0
+        var worstAt = 0
+        for (y in 1 until (bitmap.height * 0.45f).toInt()) {
+            val step = distance(bitmap.getPixel(2, y), bitmap.getPixel(2, y - 1))
+            if (step > worst) {
+                worst = step
+                worstAt = y
+            }
+        }
+        assertTrue("the sky steps by $worst at row $worstAt — there is an edge in it", worst <= 8)
+    }
+
+    private fun distance(a: Int, b: Int): Int {
+        var sum = 0
+        for (shift in intArrayOf(16, 8, 0)) {
+            sum += kotlin.math.abs(((a shr shift) and 0xFF) - ((b shr shift) and 0xFF))
+        }
+        return sum
     }
 
     /** The same screen in daylight, because the dark one is only half of what ships. */

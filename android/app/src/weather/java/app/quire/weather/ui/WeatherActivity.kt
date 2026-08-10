@@ -32,6 +32,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -64,7 +65,7 @@ class WeatherActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun WeatherApp() {
+internal fun WeatherApp() {
     val model: WeatherModel = viewModel()
     val haptics = LocalHapticFeedback.current
 
@@ -126,6 +127,19 @@ private fun WeatherApp() {
                                 contentDescription = stringResource(R.string.wx_settings),
                             )
                         }
+                    },
+                    // Transparent over the forecast, so the sky behind the page runs up behind
+                    // the title instead of stopping dead at the bottom of the bar. An opaque bar
+                    // over a coloured page draws a hard horizontal line across the screen with
+                    // two square corners on it, which is the one edge on the whole screen that
+                    // nothing else has. The settings screen has no sky and keeps the usual bar.
+                    colors = if (configuring) {
+                        TopAppBarDefaults.topAppBarColors()
+                    } else {
+                        TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color.Transparent,
+                            scrolledContainerColor = Color.Transparent,
+                        )
                     },
                     scrollBehavior = scrollBehavior,
                 )

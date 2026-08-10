@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-6.8.apk`](dist/quire-calendar-6.8.apk) · 1.9 MB | `sha256 d08a95a4c8654c420ab2f79e4b26f767fe7e83541a1d7fc0b9eff8b8589b566c` |
-| **Weather** | [`dist/quire-weather-6.8.apk`](dist/quire-weather-6.8.apk) · 1.5 MB | `sha256 0002b122f13036a45ba707a449693a320b48a7beacba980689bbf5ed23dd72a0` |
+| **Calendar** | [`dist/quire-calendar-6.9.apk`](dist/quire-calendar-6.9.apk) · 1.9 MB | `sha256 3254a4575aa57c3da2fe293d41db9ef3f8cc8b5b33b91031efa59fdddedc0675` |
+| **Weather** | [`dist/quire-weather-6.9.apk`](dist/quire-weather-6.9.apk) · 1.5 MB | `sha256 835797f440240fc6f02d2ceefe17b4995f96ad2f581fbdd32dbe4fff6b821549` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-6.8.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-6.9.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -186,12 +186,20 @@ only question anybody actually asks of a sunset time. The arc is a plain half-ci
 the true solar path: the true one depends on latitude and season and would be a different shape
 every day, which is precision nobody wants at the cost of a picture nobody recognises.
 
-**There is a sky behind it.** A wash of the theme's own container colour under the top of the
-page, at full strength beneath the app bar and gone by the time the hour strip starts — warm while
-the sun is up, cool once it is down. It is the one thing on the screen that says which of those it
-is without spelling it out, and it gives the temperature something to sit on other than flat
-paper. It is measured from under the app bar rather than from the top of the window: a gradient
-started at zero spends its strong end behind something opaque and arrives on screen already faded.
+**There is a sky behind it.** A wash of the theme's own container colour over the top of the page,
+gone by the time the hour strip starts — warm while the sun is up, cool once it is down. It is the
+one thing on the screen that says which of those it is without spelling it out, and it gives the
+temperature something to sit on other than flat paper.
+
+It runs from the top of the window, behind the app bar, which is transparent over the forecast for
+exactly that reason. Starting it under the bar instead — and leaving the bar opaque — drew one hard
+horizontal line across the full width of the screen with a square corner at each end: the only
+edge on a page otherwise made entirely of rounded cards, and the thing that made the colour look
+stuck on rather than behind. The test walks down the left margin and fails on any step between
+neighbouring rows, because a step is exactly what a hard edge is; with the opaque bar it reports
+"the sky steps by 22 at row 456".
+
+![The sky behind the bar](docs/app-weather-bar.png)
 
 **And the readings the card has no room for** — the chance of rain, the humidity, the wind — plus
 five days each with a bar showing where its swing sits inside the week's, which is the part a list

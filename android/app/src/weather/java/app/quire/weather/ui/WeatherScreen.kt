@@ -74,19 +74,18 @@ fun WeatherScreen(
     // whether it is day or night out there — and it gives the hero something to sit on other than
     // flat paper. Fixed rather than scrolling, because a sky that scrolls away is a rectangle.
     val sky = if (forecast?.now?.day != false) scheme.primaryContainer else scheme.secondaryContainer
-    // It starts under the app bar rather than at the top of the window. The bar paints over the
-    // first inch of this, so a gradient measured from zero spends its whole strong end behind
-    // something opaque and arrives on screen already faded out.
+    // It runs from the very top of the window, behind the app bar, which is transparent over this
+    // screen for exactly that reason. Starting it under the bar instead put a hard horizontal
+    // line across the screen with a square corner at each end — the only edge on a page where
+    // everything else is a rounded card, and the thing that made it look stuck on.
     val density = LocalDensity.current
-    val top = with(density) { padding.calculateTopPadding().toPx() }
-    val reach = with(density) { SkyHeight.toPx() }
-    val wash = remember(sky, top, reach) {
+    val reach = with(density) { (padding.calculateTopPadding() + SkyHeight).toPx() }
+    val wash = remember(sky, reach) {
         Brush.verticalGradient(
-            0f to sky.copy(alpha = 0.70f),
-            0.45f to sky.copy(alpha = 0.20f),
+            0f to sky.copy(alpha = 0.62f),
+            0.55f to sky.copy(alpha = 0.22f),
             1f to sky.copy(alpha = 0f),
-            startY = top,
-            endY = top + reach,
+            endY = reach,
         )
     }
 
