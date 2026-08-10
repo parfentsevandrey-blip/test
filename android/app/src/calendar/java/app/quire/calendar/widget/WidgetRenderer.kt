@@ -59,6 +59,16 @@ object WidgetRenderer {
     // strength would make forty-two stickers, and the numbers are what the widget is for.
     private const val CHIP_GROUND_ALPHA = 92
 
+    /**
+     * How opaque the ground under a day gets, out of 255.
+     *
+     * Low, and stepping low: this has to read as paper raised under the numbers rather than as a
+     * fill behind them, and it sits on a card that may itself be translucent over a wallpaper.
+     */
+    private const val GROUND_ALPHA_BASE = 26
+    private const val GROUND_ALPHA_STEP = 14
+    private const val GROUND_ALPHA_MAX = 68
+
     fun build(context: Context, manager: AppWidgetManager, widgetId: Int): RemoteViews {
         val options = manager.getAppWidgetOptions(widgetId)
         val portrait = context.resources.configuration.orientation !=
@@ -250,14 +260,6 @@ object WidgetRenderer {
             for (column in 0 until MonthModel.COLUMNS) {
                 val date = cells[row * MonthModel.COLUMNS + column]
                 val cell = RemoteViews(context.packageName, cellLayout)
-                // The lattice is drawn by the cells themselves: a hairline down every column's
-                // right edge but the last, meeting the rule under every week. The final column's
-                // line would sit on the card's own rounded edge and read as a crack.
-                cell.setInt(
-                    R.id.cell_divider,
-                    "setBackgroundColor",
-                    if (filled && column < MonthModel.COLUMNS - 1) palette.hairline else 0,
-                )
                 paintCell(
                     context = context,
                     cell = cell,
@@ -314,6 +316,7 @@ object WidgetRenderer {
         }
 
         if (!visible) {
+            cell.setViewVisibility(R.id.cell_ground, android.view.View.GONE)
             cell.setTextViewText(R.id.cell_text, "")
             cell.setViewVisibility(R.id.cell_mark, android.view.View.INVISIBLE)
             cell.setViewVisibility(
@@ -344,6 +347,29 @@ object WidgetRenderer {
         }
 
         val count = load?.count ?: 0
+
+        // The ground under a busy day: the last tier of the same ladder the chips and the dots
+        // are on. A chip names the day's first entry, dots count it up to three, and below the
+        // height where a dot fits there was nothing at all — a card small enough to be only
+        // numbers said nothing whatever about which of them mattered. The tint says it in no
+        // height at all, and it steps with the count, so a week reads as a shape.
+        //
+        // It is deliberately not drawn alongside a chip or a dot. Both already say "busy", and
+        // saying it twice on one square is how a design starts to look like a rendering fault.
+        val ground = prefs.density && prefs.showEvents && !showChip && !showDots &&
+            count > 0 && !isToday && inMonth
+        if (ground) {
+            cell.setViewVisibility(R.id.cell_ground, android.view.View.VISIBLE)
+            cell.setInt(R.id.cell_ground, "setColorFilter", palette.ink)
+            cell.setInt(
+                R.id.cell_ground,
+                "setImageAlpha",
+                (GROUND_ALPHA_BASE + GROUND_ALPHA_STEP * (count - 1))
+                    .coerceAtMost(GROUND_ALPHA_MAX),
+            )
+        } else {
+            cell.setViewVisibility(R.id.cell_ground, android.view.View.GONE)
+        }
 
         // The chip names the day's first entry where a column is wide enough to hold a word.
         // Its ground is the calendar's own colour thinned into the card, so a run of them reads

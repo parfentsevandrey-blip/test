@@ -2,25 +2,34 @@
 <!--
   One square of the grid.
 
-  The outer row is horizontal only so the cell can carry a hairline down its right edge: with a
-  rule under every week as well, the two together draw the lattice the filled skin is set on.
-  The divider is a FrameLayout rather than a View because RemoteViews will not inflate a bare
-  <View> — the host's inflater rejects any class not annotated @RemoteView, at runtime, with no
-  compile-time warning.
+  A frame rather than a row, because the cell now has something behind it: a rounded ground that
+  the renderer tints by how full the day is, which is the same thing the app does and the reason
+  the vertical hairline down every column could go. Seven verticals meeting six horizontals is a
+  lattice, and a lattice is a spreadsheet; the tint says "busy" without drawing a single line.
+
+  The ground is an ImageView rather than a background on the body, because a background cannot be
+  colour-filtered through RemoteViews and setImageAlpha is the only way to thin one from here.
 -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/cell_root"
     android:layout_width="0dp"
     android:layout_height="match_parent"
-    android:layout_weight="1"
-    android:baselineAligned="false"
-    android:orientation="horizontal">
+    android:layout_weight="1">
+
+    <ImageView
+        android:id="@+id/cell_ground"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="2.5dp"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_day_ground"
+        android:visibility="gone" />
 
     <LinearLayout
         android:id="@+id/cell_body"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="1"
         android:gravity="center"
         android:orientation="vertical">
 
@@ -110,9 +119,4 @@
                 android:textSize="8sp" />
         </FrameLayout>
     </LinearLayout>
-
-    <FrameLayout
-        android:id="@+id/cell_divider"
-        android:layout_width="1dp"
-        android:layout_height="match_parent" />
-</LinearLayout>
+</FrameLayout>

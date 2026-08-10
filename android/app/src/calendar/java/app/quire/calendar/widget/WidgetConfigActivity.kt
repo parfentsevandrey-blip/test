@@ -114,6 +114,7 @@ private fun WidgetConfigScreen(widgetId: Int, onDone: () -> Unit) {
     var opacity by remember { mutableStateOf(prefs.opacity.toFloat()) }
     var showEvents by remember { mutableStateOf(prefs.showEvents) }
     var weekNumbers by remember { mutableStateOf(prefs.weekNumbers) }
+    var density by remember { mutableStateOf(prefs.density) }
 
     fun repaint() = MonthWidgetProvider.requestUpdate(context)
 
@@ -229,14 +230,21 @@ private fun WidgetConfigScreen(widgetId: Int, onDone: () -> Unit) {
                 SettingGroup {
                     SettingRow(
                         index = 0,
-                        count = 2,
+                        count = 3,
                         title = stringResource(R.string.show_events),
                         hint = stringResource(R.string.show_events_hint),
                         checked = showEvents,
                     ) { showEvents = it; prefs.showEvents = it; repaint() }
                     SettingRow(
                         index = 1,
-                        count = 2,
+                        count = 3,
+                        title = stringResource(R.string.heat),
+                        hint = stringResource(R.string.heat_hint),
+                        checked = density,
+                    ) { density = it; prefs.density = it; repaint() }
+                    SettingRow(
+                        index = 2,
+                        count = 3,
                         title = stringResource(R.string.week_numbers),
                         hint = stringResource(R.string.week_numbers_hint),
                         checked = weekNumbers,

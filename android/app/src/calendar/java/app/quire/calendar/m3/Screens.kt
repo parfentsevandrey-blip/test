@@ -291,8 +291,17 @@ private fun AgendaList(
         modifier = Modifier.fillMaxSize(),
         label = "day",
     ) { day ->
-        val heading = remember(day.date, locale) {
+        // Named where a name is what people use. "Monday, August 10, 2026" is correct and nobody
+        // says it about today; the full date stays for every other day, where it is the only way
+        // to know which one you are looking at.
+        val written = remember(day.date, locale) {
             DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(locale).format(day.date)
+        }
+        val heading = when (day.date) {
+            LocalDate.now() -> stringResource(R.string.today)
+            LocalDate.now().plusDays(1) -> stringResource(R.string.tomorrow)
+            LocalDate.now().minusDays(1) -> stringResource(R.string.yesterday)
+            else -> written
         }
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             item {

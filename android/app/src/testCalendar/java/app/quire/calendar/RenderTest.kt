@@ -293,8 +293,62 @@ class RenderTest {
         )
         assertTrue("a Cyrillic title did not survive", texts.any { it == "Рабочая встреча" })
 
+        // The same month on a card too short for a dot, which is the bottom of the same ladder:
+        // a chip names the day, dots count it, and below the height where a dot fits the ground
+        // says it in no height at all. This size used to say nothing whatever.
+        val narrow = 45
+        Prefs.get(context).widget(narrow).apply {
+            skin = Skin.COLOUR
+            accent = Accent.PLUM
+            opacity = 100
+            showEvents = true
+            density = true
+            weekNumbers = false
+            monthOffset = 0
+        }
+        val small = FrameLayout(context).apply { setBackgroundColor(0xFF101014.toInt()) }
+        small.addView(
+            WidgetRenderer.build(context, narrow, 160, 150).apply(context, small),
+            FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+            ),
+        )
+        val ground = render(small, 160, 150, "widget-colour-busy")
+        assertPainted(ground, "widget-colour-busy")
+
+        // The busy day carries a colour the empty ones do not. Measured rather than trusted: a
+        // tint that fails to apply is invisible, and an invisible tint is exactly what a colour
+        // filter silently dropped through RemoteViews looks like.
+        assertTrue(
+            "a busy day is not tinted at all on a card too small for dots",
+            grounds(ground) > 0,
+        )
+
         FakeCalendarProvider.reset()
         org.robolectric.RuntimeEnvironment.setQualifiers("+notnight")
+    }
+
+    /**
+     * How many distinct card colours the grid area holds.
+     *
+     * The card is one flat colour behind the numbers; a ground tint puts a second one on it. So
+     * "more than one" is exactly the claim that a tint was painted, and it needs no coordinates.
+     */
+    private fun grounds(bitmap: android.graphics.Bitmap): Int {
+        val counts = HashMap<Int, Int>()
+        var y = bitmap.height / 3
+        while (y < bitmap.height - 4) {
+            var x = 6
+            while (x < bitmap.width - 6) {
+                counts[bitmap.getPixel(x, y)] = (counts[bitmap.getPixel(x, y)] ?: 0) + 1
+                x += 2
+            }
+            y += 2
+        }
+        // Colours that cover a real area rather than antialiasing on the edge of a glyph.
+        val broad = counts.filterValues { it > 60 }.keys
+        return broad.size - 1
     }
 
     /**

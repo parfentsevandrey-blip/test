@@ -83,4 +83,6 @@
         <item quantity="many">%1$d записей</item>
         <item quantity="other">%1$d записи</item>
     </plurals>
+    <string name="tomorrow">Завтра</string>
+    <string name="yesterday">Вчера</string>
 </resources>

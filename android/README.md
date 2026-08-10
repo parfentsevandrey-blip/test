@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-7.0.apk`](dist/quire-calendar-7.0.apk) · 1.9 MB | `sha256 82ee7cc06e0e3d763e7c8d825949dc4cdcec50d44a9d811ecd166771e9be58d8` |
-| **Weather** | [`dist/quire-weather-7.0.apk`](dist/quire-weather-7.0.apk) · 1.5 MB | `sha256 72d121b1d029caf2fee58335fdda8e583fd49f612cb6c2d03fbe3d83834ae5b1` |
+| **Calendar** | [`dist/quire-calendar-7.1.apk`](dist/quire-calendar-7.1.apk) · 1.9 MB | `sha256 469df9dcaeba8acc0b13b31fb764b34390f202e34f761c33bc0bba4d216f6f05` |
+| **Weather** | [`dist/quire-weather-7.1.apk`](dist/quire-weather-7.1.apk) · 1.5 MB | `sha256 eeaa84cc255b04dc4ea63915653bfbad0111098add43b12ea493a86fc00c9832` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-7.0.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-7.1.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -327,15 +327,25 @@ part of an hourly job that needs writing down. And units: °C or °F, km/h or m/
 where the number is written rather than where it is fetched, so switching one changes the card you
 are already looking at instead of the one that arrives in an hour.
 
+**A taller card buys a line, and spends it on rain.** Given a row more height than the four-by-two
+it was designed for, the strip writes each day's chance of precipitation under its temperatures —
+but only if some day in it has a chance worth writing, and only if paying for the line still
+leaves an icon worth looking at. A row of blanks on a dry week is a line spent saying nothing, and
+an eleven-point icon is a smudge.
+
+| Four by two | A row taller |
+|---|---|
+| ![Wide](docs/widget-weather-wide.png) | ![Tall](docs/widget-weather-tall.png) |
+
 The forecast is fetched by an hourly job with a network requirement and stored; the card is always
 painted from the store, never from a request, because a widget is repainted at moments nobody
 chose and none of them are a good time to wait on a network.
 
 ## The calendar widget
 
-| Half width | Full width | Named entries |
-|---|---|---|
-| ![Half](docs/widget-colour-half.png) | ![Wide](docs/widget-colour-wide.png) | ![Chips](docs/widget-colour-chips.png) |
+| Half width | Full width | Named entries | Too small for a dot |
+|---|---|---|---|
+| ![Half](docs/widget-colour-half.png) | ![Wide](docs/widget-colour-wide.png) | ![Chips](docs/widget-colour-chips.png) | ![Busy](docs/widget-colour-busy.png) |
 
 A widget is `RemoteViews`: inflated by the launcher, in the launcher's process, from a fixed set of
 view classes. None of the app half applies here, so this half is drawn from XML layouts and a
@@ -352,7 +362,13 @@ palette computed in Oklch.
   at least 44dp wide the filled card labels each day with its earliest entry, in that calendar's
   own colour. Seven columns of a half-width card are 25dp each, so there the dots say the same
   thing in the space available. The title costs no extra query — it was already in the one the
-  marks are counted from.
+  marks are counted from. Below the height where a dot fits, the day's own ground is tinted by
+  how full it is instead — which is the bottom rung of the same ladder, and a size that used to
+  say nothing whatever about which numbers mattered.
+- **No lattice.** The filled card used to draw a hairline down every column to meet the rule under
+  every week, and seven verticals crossing six horizontals is a spreadsheet. The verticals are
+  gone: they said where the columns were, which the numbers already said, and the tint that
+  replaced them says something the numbers cannot.
 - The full month, always six rows, so the geometry never shifts between months.
 - Today is a filled disc in the accent. Days with something in them carry up to three dots,
   coloured by the calendar the event belongs to.

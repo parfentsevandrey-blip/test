@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The ground under a busy day. Tinted at runtime with setColorFilter and thinned with
+  setImageAlpha, so the fill must stay pure white.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#FFFFFFFF" />
+    <corners android:radius="5dp" />
+</shape>

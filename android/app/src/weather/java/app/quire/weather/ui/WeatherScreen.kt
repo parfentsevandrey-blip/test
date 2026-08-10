@@ -185,6 +185,25 @@ private fun Now(forecast: Forecast, units: WeatherModel.Settings) {
             style = MaterialTheme.typography.titleMedium,
             color = scheme.onSurfaceVariant,
         )
+        // Today's range under the reading it belongs to. The five-day card carries it too, four
+        // scrolls down; up here it answers the question the current temperature raises and does
+        // not settle — whether this is the warm part of the day or the cold one.
+        forecast.days.firstOrNull()?.let { today ->
+            Spacer(Modifier.height(2.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "↑ " + write(units, today.high),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = scheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    text = "↓ " + write(units, today.low),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = scheme.onSurfaceVariant,
+                )
+            }
+        }
     }
 }
 

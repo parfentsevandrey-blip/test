@@ -45,4 +45,20 @@
         android:includeFontPadding="false"
         android:maxLines="1"
         android:textSize="13sp" />
+
+    <!--
+      The chance of rain. Only ever shown when some day in the strip has one worth writing and
+      the strip is tall enough to give it a line; otherwise it is gone and the icon takes the
+      room back.
+    -->
+    <TextView
+        android:id="@+id/day_rain"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:textSize="9sp"
+        android:visibility="gone" />
 </LinearLayout>

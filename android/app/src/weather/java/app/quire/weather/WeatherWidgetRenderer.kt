@@ -48,6 +48,12 @@ object WeatherWidgetRenderer {
     /** Below this a column cannot hold "22° 11°", and shows the high alone rather than "22° …". */
     private const val BOTH_TEMPS_MIN_COLUMN_DP = 46f
 
+    /** Below this a chance of rain is noise rather than news. */
+    private const val RAIN_FLOOR = 20
+
+    /** How big the day icon must still be for the rain line to be worth its height. */
+    private const val RAIN_MIN_ICON_DP = 20f
+
     /** Below this the sky and the feels-like are dropped rather than truncated to initials. */
     private const val DETAIL_MIN_DP = 172
 
@@ -188,19 +194,30 @@ object WeatherWidgetRenderer {
             // than the strip it sits in, and how the lows came to be sliced off the bottom.
             val nameSp = (stripDp * 0.155f).coerceIn(9f, 12f)
             val tempSp = (stripDp * 0.21f).coerceIn(11f, 15f)
-            val dayIconDp = (stripDp - LINE_HEIGHT * (nameSp + tempSp) - DAY_MARGINS_DP)
-                .coerceIn(16f, 34f)
+            val rainSp = (nameSp - 0.5f).coerceAtLeast(8f)
+            // The rain line is offered to the strip only if two things are true: some day in it
+            // has a chance worth writing, and paying for the line still leaves an icon worth
+            // looking at. A row of blanks on a dry week is a line spent saying nothing, and an
+            // eleven-point icon is a smudge.
+            val shown = forecast.ahead(columns)
+            val wet = shown.any { it.rain >= RAIN_FLOOR }
+            val withRain = stripDp - LINE_HEIGHT * (nameSp + tempSp + rainSp) - DAY_MARGINS_DP
+            val showRain = wet && withRain >= RAIN_MIN_ICON_DP
+            val dayIconDp = (
+                stripDp - LINE_HEIGHT * (nameSp + tempSp + if (showRain) rainSp else 0f) -
+                    DAY_MARGINS_DP
+                ).coerceIn(16f, 34f)
             // Narrow columns keep the high and drop the low. Showing more days badly is worse
             // than showing the same days with one number each: "22° …" is not a temperature.
             val columnDp = (widthDp - 2 * PAD_SIDE_DP) / columns
             val bothTemps = columnDp >= BOTH_TEMPS_MIN_COLUMN_DP
 
-            forecast.ahead(columns).forEach { day ->
+            shown.forEach { day ->
                 root.addView(
                     R.id.strip,
                     dayColumn(
                         context, day, today, locale, palette,
-                        dayIconDp, nameSp, tempSp, bothTemps,
+                        dayIconDp, nameSp, tempSp, bothTemps, showRain, rainSp,
                     ),
                 )
             }
@@ -220,6 +237,8 @@ object WeatherWidgetRenderer {
         nameSp: Float,
         highSp: Float,
         bothTemps: Boolean,
+        showRain: Boolean,
+        rainSp: Float,
     ): RemoteViews {
         val column = RemoteViews(context.packageName, R.layout.weather_day)
         val isToday = day.date == today
@@ -260,6 +279,22 @@ object WeatherWidgetRenderer {
         column.setTextViewText(R.id.day_temps, temps)
         column.setTextColor(R.id.day_temps, palette.ink)
         column.setTextViewTextSize(R.id.day_temps, TypedValue.COMPLEX_UNIT_SP, highSp)
+
+        if (showRain) {
+            // Present on every column so the five stay level, written on the ones that have
+            // something to say. Below the floor a percentage is noise: nobody changes a plan
+            // over a one-in-ten chance, and a strip of small numbers reads as a strip of small
+            // numbers whatever they are.
+            column.setViewVisibility(R.id.day_rain, android.view.View.VISIBLE)
+            column.setTextViewText(
+                R.id.day_rain,
+                if (day.rain >= RAIN_FLOOR) "${day.rain}%" else " ",
+            )
+            column.setTextColor(R.id.day_rain, palette.accent)
+            column.setTextViewTextSize(R.id.day_rain, TypedValue.COMPLEX_UNIT_SP, rainSp)
+        } else {
+            column.setViewVisibility(R.id.day_rain, android.view.View.GONE)
+        }
 
         return column
     }

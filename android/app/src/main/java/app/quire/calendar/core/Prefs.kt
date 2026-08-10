@@ -169,6 +169,17 @@ class WidgetPrefs(private val sp: SharedPreferences, private val id: Int) {
         get() = sp.getBoolean(k("weeknum"), false)
         set(v) = sp.edit { putBoolean(k("weeknum"), v) }
 
+    /**
+     * Whether a day is tinted by how full it is.
+     *
+     * The same reading the app gives a busy day, and the reason the card no longer draws a
+     * hairline down every column: a lattice says where the columns are, which the numbers already
+     * say, and the tint says something the numbers cannot.
+     */
+    var density: Boolean
+        get() = sp.getBoolean(k("density"), true)
+        set(v) = sp.edit { putBoolean(k("density"), v) }
+
     /** Months away from today; reset whenever the calendar day rolls over. */
     var monthOffset: Int
         get() = sp.getInt(k("offset"), 0)
@@ -184,5 +195,6 @@ class WidgetPrefs(private val sp: SharedPreferences, private val id: Int) {
         showAdjacent = other.showAdjacent
         dimWeekends = other.dimWeekends
         weekNumbers = other.weekNumbers
+        density = other.density
     }
 }

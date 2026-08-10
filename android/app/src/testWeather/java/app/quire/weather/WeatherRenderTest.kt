@@ -129,6 +129,9 @@ class WeatherRenderTest {
             Triple("weather-wide", 340 to 160, 60),
             Triple("weather-half", 175 to 160, 61),
             Triple("weather-small", 155 to 110, 62),
+            // A card a row taller than the one it was designed for. The strip gets enough height
+            // to buy a line back, and what it buys is the chance of rain under each day.
+            Triple("weather-tall", 340 to 230, 63),
         ).forEach { (name, size, widgetId) ->
             Prefs.get(context).widget(widgetId).apply {
                 skin = Skin.COLOUR
@@ -180,9 +183,17 @@ class WeatherRenderTest {
             // half-width one shows as many as fit without truncating, and the smallest gives the
             // strip up rather than drawing columns nobody can read.
             val owed = when (name) {
-                "weather-wide" -> 5
+                "weather-wide", "weather-tall" -> 5
                 "weather-half" -> 3
                 else -> 0
+            }
+            // The rain line is bought with height and only with height. The tall card has it;
+            // the one it was designed for spends the same points on an icon worth looking at.
+            val wet = strip.count { it.endsWith("%") }
+            if (name == "weather-tall") {
+                assertTrue("the tall card did not write a chance of rain: $strip", wet >= 3)
+            } else {
+                assertTrue("$name found room for rain it does not have: $strip", wet == 0)
             }
             assertTrue(
                 "$name showed $days days of forecast, expected at least $owed: $strip",
