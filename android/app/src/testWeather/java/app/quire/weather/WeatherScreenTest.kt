@@ -378,9 +378,9 @@ class WeatherScreenTest {
         }
         settle()
         val first = shoot("weather-glass")
-        // A quarter of a lap: far enough that the comet has left where it was, not so far that it
-        // has come back round to it.
-        compose.mainClock.advanceTimeBy(800L)
+        // A fifth of the slowest wash's cycle. Nothing on the rim travels, so what this catches is
+        // the three washes standing at different weights than they did.
+        compose.mainClock.advanceTimeBy(1_800L)
         val second = shoot("weather-glass-later")
 
         val bounds = compose.onNodeWithTag("glass").getUnclippedBoundsInRoot()

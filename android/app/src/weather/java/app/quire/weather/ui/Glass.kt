@@ -16,22 +16,19 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.PathMeasure
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.addOutline
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import kotlin.math.PI
 import kotlin.math.floor
-import kotlin.math.min
 import kotlin.math.sin
 
 /**
- * A card under glass: a lit pane over it, and a light running round its edge.
+ * A card under glass: a lit pane over it, and light that keeps moving in its edge without ever
+ * going anywhere.
  *
  * Three things, and only the last of them moves.
  *
@@ -46,23 +43,26 @@ import kotlin.math.sin
  * card casts, that is the whole of the trick — the three cues that say *raised* are a highlight
  * where the light lands, a shade opposite it, and something underneath.
  *
- * **A comet.** A short bright streak that runs round the rim, tapering from a lit head to nothing
- * at its tail and shifting colour down its length — primary at the head, tertiary through the
- * middle, secondary at the tail. It travels by *arc length along the card's own outline*, which is
- * the thing the version before it got wrong: that one was a gradient sliding across the card in
- * screen space, so it did not go round anything, and slowed to invisibility it may as well not
- * have been there. This one is on the path, so it rounds the corners, and it is quick — a lap
- * takes about three seconds, which is fast enough to catch out of the corner of an eye.
+ * **A glow that breathes.** Three washes of colour lie over the whole rim at once — the primary
+ * from the top left, the tertiary from the top right, the secondary up from the foot — and each
+ * one rises and falls on its own count, one, two and three times a lap. Nothing travels. What you
+ * see is the bright part of the edge drifting from one quarter of the card to another and the
+ * colour of it turning over as it goes, which is what glass does under a light somebody is walking
+ * past, and is not a marquee going round a sign.
  *
- * The taper is two dozen strokes stacked rather than two dozen laid end to end. Each one starts
- * further along than the last and they all finish at the head, so the light builds up by how many
- * have piled at a point — and, because every layer is a single unbroken stroke, there is no joint
- * anywhere for the notch to appear at. Their paths, strokes and colours are built once per size,
- * so a frame is two dozen calls to `getSegment` and as many strokes, and nothing else.
+ * That distinction is the whole history of this file. It was a comet before — a bright streak
+ * running the rim on a three-second lap — and a comet is a *thing*, so a page of six of them is
+ * six things circling while you are trying to read a temperature. Before that it was a gradient
+ * sliding across the card, slowed until it was not quiet but absent. What is here now has no
+ * object in it to follow: the light is everywhere on the rim always, and only its weight changes.
  *
- * [seed] sets a card apart from its neighbours, so six of them are not all lit in the same corner
- * at the same moment. [shimmer] switches off the comet alone: the sheen and the bevel are the
- * card's shape rather than an animation, and stay whatever anybody has asked for.
+ * The three washes are fixed brushes, built once with the size. A frame changes three floats and
+ * hands them to `drawPath` as its alpha — nothing is measured, nothing is rebuilt and nothing is
+ * allocated, which is what lets nine cards do this at once without it costing anything.
+ *
+ * [seed] sets a card apart from its neighbours, so six of them are not all bright in the same
+ * corner at the same moment. [shimmer] switches the glow off alone: the sheen and the bevel are
+ * the card's shape rather than an animation, and stay whatever anybody has asked for.
  *
  * The clock is read inside the draw block rather than in composition. Reading an animated value
  * while composing recomposes the whole card sixty times a second; reading it while drawing redraws
@@ -73,7 +73,7 @@ fun Modifier.glass(shape: Shape, shimmer: Boolean = true, seed: Int = 0): Modifi
     val scheme = MaterialTheme.colorScheme
 
     // Somebody who has switched animation off in the system settings meant this kind too. They
-    // keep the pane and lose the comet — and nothing is left running behind the card to produce a
+    // keep the pane and its still rim, and nothing is left running behind the card to produce a
     // frame nobody will look at.
     val context = LocalContext.current
     val moving = remember(context) {
@@ -88,8 +88,8 @@ fun Modifier.glass(shape: Shape, shimmer: Boolean = true, seed: Int = 0): Modifi
         rememberInfiniteTransition(label = "glass").animateFloat(
             initialValue = 0f,
             targetValue = 1f,
-            animationSpec = infiniteRepeatable(tween(LAP_MILLIS, easing = LinearEasing)),
-            label = "lap",
+            animationSpec = infiniteRepeatable(tween(BREATH_MILLIS, easing = LinearEasing)),
+            label = "breath",
         )
     } else {
         null
@@ -108,87 +108,49 @@ fun Modifier.glass(shape: Shape, shimmer: Boolean = true, seed: Int = 0): Modifi
         val outline = Path().apply {
             addOutline(shape.createOutline(size, layoutDirection, this@drawWithCache))
         }
-        val ruler = PathMeasure().apply { setPath(outline, true) }
-        val around = ruler.length
-
         val sheen = sheenBrush(night, size)
         val bevel = bevelBrush(night, edge, size)
         val bevelStroke = Stroke(width = EDGE.dp.toPx())
+        val rimStroke = Stroke(width = RIM.dp.toPx())
 
-        // The comet, laid out once. Nothing here changes from frame to frame except where the
-        // head is, so all of it — the paths to measure into, the strokes and the colours — is
-        // built with the size and reused.
-        val streak = min(around * STREAK_SHARE, STREAK_CAP.dp.toPx())
-        val pieces = List(LAYERS) { Path() }
-        val reaches = FloatArray(LAYERS) { index -> streak * (LAYERS - index) / LAYERS }
-        val strokes = List(LAYERS) { index ->
-            val along = index / (LAYERS - 1f)
-            Stroke(
-                width = (THIN + (THICK - THIN) * along).dp.toPx(),
-                cap = StrokeCap.Round,
-            )
-        }
-        val inks = List(LAYERS) { index ->
-            val along = index / (LAYERS - 1f)
-            val hue = if (along < 0.5f) {
-                lerp(tint, glint, along * 2f)
-            } else {
-                lerp(glint, lit, (along - 0.5f) * 2f)
-            }
-            hue.copy(alpha = LAYER)
-        }
+        // One wash per accent, each brightest at a different quarter of the card and falling away
+        // across it. Fixed: only how much of each is showing changes.
+        val washes = listOf(
+            washBrush(lit, Offset.Zero, Offset(size.width, size.height)),
+            washBrush(glint, Offset(size.width, 0f), Offset(0f, size.height)),
+            washBrush(tint, Offset(size.width / 2f, size.height), Offset(size.width / 2f, 0f)),
+        )
 
         onDrawWithContent {
             drawContent()
             drawPath(outline, brush = sheen)
             drawPath(outline, brush = bevel, style = bevelStroke)
 
-            val lap = clock ?: return@onDrawWithContent
-            if (around <= 0f) return@onDrawWithContent
-            val head = wrap(lap.value + apart) * around
-            // Nested rather than laid end to end. Cutting the streak into pieces and giving each
-            // its own alpha is the obvious way to taper it and it does not work: two translucent
-            // strokes that merely touch are each antialiased against what is behind them, so the
-            // pair composites to less than either and the streak comes out notched at every joint
-            // — the same fault the hourly curve had when it was drawn a column at a time. These
-            // all start at their own point and run to the same head, so every one of them is a
-            // single unbroken stroke and the fade is how many of them have piled up. The deepest
-            // steps land at the tail, where the light is faint enough that nobody can see them,
-            // and the widths grow by a fifteenth of a point a layer, which is nothing at all.
-            for (index in 0 until LAYERS) {
-                strand(ruler, pieces[index], around, head - reaches[index], head, inks[index], strokes[index])
+            val breath = clock ?: return@onDrawWithContent
+            val turn = wrap(breath.value + apart)
+            for (index in washes.indices) {
+                // One, two and three risings a lap. Whole numbers, so the whole thing comes back
+                // to itself; different ones, so the three of them never settle into a rhythm.
+                val swell = 0.5f + 0.5f * sin(TAU * (turn * (index + 1) + PHASES[index]))
+                drawPath(
+                    path = outline,
+                    brush = washes[index],
+                    alpha = FLOOR + (1f - FLOOR) * swell,
+                    style = rimStroke,
+                )
             }
         }
     }
 }
 
-/**
- * One short piece of the streak, laid on the outline between two distances along it.
- *
- * A path measure will not hand back a segment that runs off the end and back to the start, so a
- * layer straddling the seam is asked for in two halves — which most of them are for the moment
- * the comet is crossing whatever point the outline happens to begin at.
- */
-private fun DrawScope.strand(
-    ruler: PathMeasure,
-    piece: Path,
-    around: Float,
-    from: Float,
-    to: Float,
-    ink: Color,
-    stroke: Stroke,
-) {
-    val start = wrap(from / around) * around
-    val end = wrap(to / around) * around
-    piece.reset()
-    if (start <= end) {
-        ruler.getSegment(start, end, piece, true)
-    } else {
-        ruler.getSegment(start, around, piece, true)
-        ruler.getSegment(0f, end, piece, true)
-    }
-    drawPath(piece, color = ink, style = stroke)
-}
+/** One accent laid over the whole rim, strongest where its axis begins. */
+private fun washBrush(ink: Color, from: Offset, to: Offset): Brush = Brush.linearGradient(
+    0.00f to ink.copy(alpha = 0.50f),
+    0.55f to ink.copy(alpha = 0.13f),
+    1.00f to ink.copy(alpha = 0.05f),
+    start = from,
+    end = to,
+)
 
 /** The lit face of the pane: bright at the top, falling away to a shade at the foot. */
 private fun sheenBrush(night: Boolean, size: Size): Brush = Brush.linearGradient(
@@ -209,7 +171,7 @@ private fun bevelBrush(night: Boolean, edge: Color, size: Size): Brush = Brush.l
     end = Offset(0f, size.height),
 )
 
-/** A fixed scatter in 0..1, so each card starts its lap somewhere else. */
+/** A fixed scatter in 0..1, so each card is somewhere else in the breath. */
 private fun scatter(index: Int): Float {
     val value = sin(index * 21.317f + 4.113f) * 12345.678f
     return value - floor(value)
@@ -218,30 +180,21 @@ private fun scatter(index: Int): Float {
 /** Into 0..1, whichever side of it the arithmetic came out on. */
 private fun wrap(turn: Float): Float = turn - floor(turn)
 
-/**
- * How long the comet takes to go round once.
- *
- * Three seconds. It was seven at first, then twenty-six in an attempt to quieten it, and at
- * twenty-six it was not quiet — it was invisible, which is a different thing and not what a switch
- * marked "glass edges" should leave you with. Slow enough to be still is slow enough to be absent.
- */
-private const val LAP_MILLIS = 3_100
-
-/** How much of the rim the streak covers, and the most it may be on a long one. */
-private const val STREAK_SHARE = 0.3f
-private const val STREAK_CAP = 260f
+private const val TAU = 2f * PI.toFloat()
 
 /**
- * How many layers the streak is built from, and how much each one carries.
+ * How long the slowest of the three washes takes to rise and fall once.
  *
- * Twenty-four at nine per cent apiece compose to about nine tenths at the head — bright enough to
- * be the point of the effect — while the step between two neighbouring layers is small enough
- * that the ramp reads as continuous.
+ * Nine seconds, and the other two ride it at twice and three times that, so the rim is always
+ * changing and never at any speed you would call movement.
  */
-private const val LAYERS = 24
-private const val LAYER = 0.09f
+private const val BREATH_MILLIS = 9_000
 
-private const val THIN = 1f
-private const val THICK = 2.8f
+/** Where each wash starts in its own cycle, so they do not swell together. */
+private val PHASES = floatArrayOf(0f, 0.37f, 0.71f)
+
+/** How much of a wash is showing at its lowest, so the rim never goes plain. */
+private const val FLOOR = 0.22f
 
 private const val EDGE = 1.2f
+private const val RIM = 1.8f

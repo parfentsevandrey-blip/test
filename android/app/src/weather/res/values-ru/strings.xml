@@ -92,5 +92,5 @@
     <string name="wx_live_sky">Живое небо</string>
     <string name="wx_live_sky_hint">Дождь, снег и облака, еле заметно движущиеся за верхом экрана</string>
     <string name="wx_glass_edges">Стеклянные рамки</string>
-    <string name="wx_glass_edges_hint">Полоска света, бегущая по рамке каждой карточки</string>
+    <string name="wx_glass_edges_hint">Цвет, то разгорающийся, то стихающий в рамке каждой карточки</string>
 </resources>

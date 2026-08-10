@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-7.9.apk`](dist/quire-calendar-7.9.apk) · 1.9 MB | `sha256 6f6aeff2fe921a8224904e1548a9dc0bd925958dae78cd2a84ef3d324250b6f8` |
-| **Weather** | [`dist/quire-weather-7.9.apk`](dist/quire-weather-7.9.apk) · 1.5 MB | `sha256 d3adfdd43aca781408d4e1a8e5269af445d09d700ffbd3f764ea5cf64292a770` |
+| **Calendar** | [`dist/quire-calendar-8.0.apk`](dist/quire-calendar-8.0.apk) · 1.9 MB | `sha256 58a1151a974ed3afbccc249e855af45f9195b84e4c3f7a1d91c5b80876448b23` |
+| **Weather** | [`dist/quire-weather-8.0.apk`](dist/quire-weather-8.0.apk) · 1.5 MB | `sha256 1dbf8014fcff241d572bd7c1e3c487a7b2028aca3b1eabd4d13fa1bdc1853737` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-7.9.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-8.0.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -276,42 +276,46 @@ cards are right for the calendar's year, where twelve are transformed at once an
 shadows are twelve more layers to compose; nothing here is transformed, and the page these sit on
 is a gradient with weather falling down it.
 
-The one thing that moves is a **comet**: a short bright streak that runs round the rim, tapering
-from a lit head to nothing at its tail and shifting colour down its length — primary at the head,
-tertiary through the middle, secondary at the tail. It travels by *arc length along the card's own
-outline*, so it actually goes round the card and rounds its corners, and a lap takes about three
-seconds.
+The one thing that moves is the rim's **colour**. Three washes lie over the whole edge at once —
+the primary from the top left, the tertiary from the top right, the secondary up from the foot —
+and each rises and falls on its own count, one, two and three times a nine-second lap. Nothing
+travels. What you see is the bright part of the edge drifting from one quarter of the card to
+another and its colour turning over as it goes, which is what glass does under a light somebody is
+walking past.
 
-That took two wrong turns to arrive at. The first was a linear gradient sliding across the card in
-screen space, which does not go round anything — the left and right edges change together and the
-whole thing reads as a sweep, not a circuit. The second was slowing that sweep to half a minute to
-make it quiet; at half a minute it was not quiet, it was invisible, and a switch marked *glass
-edges* that leaves you with nothing at all is worse than one that does something you can see.
-Slow enough to be still is slow enough to be absent.
+That distinction took three wrong turns to find. First a gradient sliding across the card in
+screen space, which does not go round anything: the left and right edges change together and it
+reads as a sweep. Then the same thing slowed to half a minute a lap to quieten it — at which point
+it was not quiet but *absent*, and a switch marked *glass edges* that leaves you nothing to look at
+is worse than one that does something. Then a comet: a bright streak running the rim on a
+three-second lap, which was certainly visible and was the wrong idea altogether. A comet is a
+**thing**, and a page carrying six of them is six things circling while you are trying to read a
+temperature off it. What is here now has no object in it to follow — the light is everywhere on
+the rim always, and only its weight changes.
 
-The taper is **two dozen strokes stacked, not laid end to end**. Cutting the streak into pieces
-and giving each its own alpha is the obvious way to fade it and it does not work: two translucent
-strokes that merely touch are each antialiased against what is behind them, so the pair composites
-to *less* than either and the streak comes out notched at every joint — the same fault the hourly
-curve had when it was drawn a column at a time, and clearly visible in the first render of this.
-Round caps make it worse, turning every joint into a bead. The layers instead each start at their
-own point and all finish at the head, so every one is a single unbroken stroke and the fade is
-simply how many have piled up at a point. The deepest steps land at the tail where the light is
-too faint to show them, and the widths grow by a fifteenth of a point a layer, which is nothing.
+It is also the cheapest of the four. The three washes are fixed brushes built once with the size;
+a frame works out three floats and hands them to `drawPath` as its alpha. Nothing is measured,
+nothing is rebuilt, nothing is allocated, which is what lets nine cards do it at once for nothing.
+The comet it replaced had to measure two dozen sub-paths off the outline every frame — and needed
+them stacked rather than laid end to end, because two translucent strokes that merely touch are
+each antialiased against what is behind them, so the pair composites to *less* than either and the
+streak came out notched at every joint. Round caps made it worse, turning each joint into a bead.
+Both faults are in the git history as rendered PNGs; neither can happen to a stroke that is drawn
+once round the whole rim.
 
-| One card on its own, with the comet on its rim |
+| One card on its own, with the glass on its rim |
 |---|
-| ![The comet on a card rim](docs/weather-glass.png) |
+| ![The glass on a card rim](docs/weather-glass.png) |
 
 The clock is read inside the draw block rather than in composition. Reading an animated value
 while composing recomposes the whole card sixty times a second; reading it while drawing redraws
 it, which is the only part that has changed — and the path and the brushes are built once per size
 rather than once per frame. Each card is given a different phase, because six of them would
-otherwise all be lit in the same corner at the same moment. Two claims are held by a test: the rim has to move, since a still rim is a border; and it
+otherwise all be bright in the same corner at the same moment. Two claims are held by a test: the rim has to move, since a still rim is a border; and it
 has to *stay* on the rim, so two frames are compared pixel by pixel and every difference must fall
 within six points of the card's own edge. The sheen and the bevel cover the whole card and never
 change, so they never turn up in that comparison — which is the point of them being still. The
-switch beside the sky's turns the comet off and leaves the volume alone, because the volume is the
+switch beside the sky's turns the glow off and leaves the volume alone, because the volume is the
 card's shape rather than an animation.
 
 Two more things move, once each rather than forever. The hourly curve draws itself outwards from
