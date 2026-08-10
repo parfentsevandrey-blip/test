@@ -114,6 +114,120 @@ class WeatherRenderTest {
     }
 
     /**
+     * The card on a phone with the type turned up, in the language whose word for "today" is
+     * seven characters long.
+     *
+     * Both faults this catches came back from a real home screen. The chance of rain was sliced
+     * off the bottom, because the type was asked for in sp and budgeted for in dp — a widget is a
+     * fixed rectangle that cannot scroll or grow, so above a font scale of one the arithmetic was
+     * simply wrong. And "Сегодня" came out as "Сег…", because whether the word fits was never
+     * asked.
+     *
+     * Checked from the layout rather than from the picture: a view laid out past the bottom of
+     * the one holding it is exactly what clipping is, and it needs no coordinates to look for.
+     */
+    @Test
+    fun `the card fits its box with the type turned up`() {
+        WeatherStore.save(context, stub())
+        val original = java.util.Locale.getDefault()
+        val configuration = context.resources.configuration
+        val metrics = context.resources.displayMetrics
+        val wasScale = configuration.fontScale
+        @Suppress("DEPRECATION")
+        val wasScaled = metrics.scaledDensity
+        try {
+            // On the configuration as well as on the JVM: the day names come from java.time and
+            // read the default locale, but "Сегодня" comes from resources and reads this one.
+            java.util.Locale.setDefault(java.util.Locale("ru", "RU"))
+            configuration.setLocale(java.util.Locale("ru", "RU"))
+            configuration.fontScale = 1.3f
+            // Both, because they are two different things and only one of them is what a text
+            // size in sp is actually multiplied by: `Configuration.fontScale` is what the
+            // renderer reads to do its arithmetic, and `scaledDensity` is what TypedValue reads
+            // when the size is applied. Setting the first alone makes a test that agrees with
+            // the code about the wrong answer.
+            @Suppress("DEPRECATION")
+            metrics.scaledDensity = metrics.density * 1.3f
+            @Suppress("DEPRECATION")
+            context.resources.updateConfiguration(configuration, metrics)
+
+            listOf(190 to 170, 340 to 160, 340 to 230).forEach { (widthDp, heightDp) ->
+                val widgetId = 70 + heightDp
+                Prefs.get(context).widget(widgetId).apply {
+                    skin = Skin.COLOUR
+                    accent = Accent.PLUM
+                    opacity = 100
+                    dynamic = false
+                }
+                val host = FrameLayout(context)
+                host.addView(
+                    WeatherWidgetRenderer.build(context, widgetId, widthDp, heightDp)
+                        .apply(context, host),
+                    FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                    ),
+                )
+                render(host, widthDp, heightDp, "weather-large-type-$widthDp")
+
+                val over = overflowing(host)
+                assertTrue("${widthDp}x$heightDp clips: $over", over == null)
+
+                val texts = ArrayList<String>()
+                collectText(host, texts)
+                assertTrue(
+                    "${widthDp}x$heightDp truncated something: $texts",
+                    texts.none { it.contains("…") },
+                )
+                // Either the word or the weekday, never a stump of the word.
+                assertTrue(
+                    "${widthDp}x$heightDp wrote a fragment of today: $texts",
+                    texts.none { it.startsWith("Сег") && it != "Сегодня" },
+                )
+            }
+        } finally {
+            java.util.Locale.setDefault(original)
+            configuration.setLocale(original)
+            configuration.fontScale = wasScale
+            @Suppress("DEPRECATION")
+            metrics.scaledDensity = wasScaled
+            @Suppress("DEPRECATION")
+            context.resources.updateConfiguration(configuration, metrics)
+        }
+    }
+
+    /**
+     * The first thing laid out too small for what it holds, or null if nothing is.
+     *
+     * Two shapes of the same fault. A view can be placed past the edge of the one holding it,
+     * which is the obvious one. Or — and this is what a widget actually does, because a
+     * LinearLayout with a fixed height hands the last child whatever is left — the view fits and
+     * its text does not: the row is nineteen pixels tall and the line inside it is thirty-five.
+     * From outside, both are a number with its bottom sliced off.
+     */
+    private fun overflowing(view: android.view.View, path: String = "root"): String? {
+        if (view is android.widget.TextView) {
+            val room = view.height - view.paddingTop - view.paddingBottom
+            val needs = view.layout?.height ?: 0
+            if (needs > room + 1) {
+                return "$path '${view.text}' needs ${needs}px in $room"
+            }
+        }
+        if (view !is ViewGroup) return null
+        for (index in 0 until view.childCount) {
+            val child = view.getChildAt(index)
+            if (child.visibility == android.view.View.GONE) continue
+            val name = "$path > ${child.javaClass.simpleName}"
+            val text = (child as? android.widget.TextView)?.text?.toString().orEmpty()
+            if (child.bottom > view.height + 1 || child.top < -1) {
+                return "$name '$text' spans ${child.top}..${child.bottom} in ${view.height}"
+            }
+            overflowing(child, name)?.let { return it }
+        }
+        return null
+    }
+
+    /**
      * The card, through `RemoteViews.apply` — the launcher's own inflater, with its `@RemoteView`
      * filter, which is the only thing that can tell you a view class would have been rejected.
      *

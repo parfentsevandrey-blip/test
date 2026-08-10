@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-7.1.apk`](dist/quire-calendar-7.1.apk) · 1.9 MB | `sha256 469df9dcaeba8acc0b13b31fb764b34390f202e34f761c33bc0bba4d216f6f05` |
-| **Weather** | [`dist/quire-weather-7.1.apk`](dist/quire-weather-7.1.apk) · 1.5 MB | `sha256 eeaa84cc255b04dc4ea63915653bfbad0111098add43b12ea493a86fc00c9832` |
+| **Calendar** | [`dist/quire-calendar-7.2.apk`](dist/quire-calendar-7.2.apk) · 1.9 MB | `sha256 04b0149c9fe0a5b01b41ffc8118753d8d6b3f0fe0f0f01e76014ab7e5dbec369` |
+| **Weather** | [`dist/quire-weather-7.2.apk`](dist/quire-weather-7.2.apk) · 1.5 MB | `sha256 b3fcdb9b53aa19e3765814cd769cd28e89c799ec42a7a15827dee0ab864ff955` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-7.1.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-7.2.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -290,6 +290,12 @@ tall the strip goes entirely and the card becomes an honest "now".
 
 ![Weather icons](docs/weather-icons.png)
 
+The sun and the moon sit clear of the cloud rather than behind it. Overlapped, the two shapes
+merged into one blob at the twenty-two points a strip draws them at, which is what "primitive"
+looks like from arm's length; separated, both are still legible at half that. Only the five rays
+pointing away from the cloud are drawn — the three that would point into it are the ones that made
+the blob, and a sun is recognisable from an arc of rays without the full eight.
+
 The twelve glyphs are drawn here, on Material's 24dp grid, as XML vectors — so the widget and the
 app show the same picture rather than two versions of it, since `RemoteViews` cannot use Compose's
 icons. WMO's weather codes distinguish things a person standing outside does not (light, moderate
@@ -336,6 +342,25 @@ an eleven-point icon is a smudge.
 | Four by two | A row taller |
 |---|---|
 | ![Wide](docs/widget-weather-wide.png) | ![Tall](docs/widget-weather-tall.png) |
+
+**A widget is a fixed rectangle.** It cannot scroll and it cannot grow, so type asked for in `sp`
+against a budget kept in `dp` is arithmetic that stops being true the moment the phone's font
+scale goes above one — which is how the chance of rain came back from a real home screen with its
+bottom sliced off, and how "Сегодня" came back as "Сег…". Both cards now do their sizing through
+the scale: the type is still asked for in `sp`, so a larger setting is honoured as far as it fits,
+and where it would not fit the card keeps the layout and gives up the extra size rather than the
+other way round. Whether the word "today" is written at all is decided by whether it fits, from
+its own length at its own size — and where it does not, the short weekday stands in, which loses
+nothing, because what actually marks today is that its column is in the accent colour.
+
+The test reads it off the layout rather than the picture, and looks for both shapes of the fault:
+a view placed past the edge of the one holding it, and — the one a widget actually produces,
+because a `LinearLayout` with a fixed height hands the last child whatever is left — a view that
+fits with text that does not. From outside, both are a number with its bottom cut off.
+
+| At one and a third times the type |
+|---|
+| ![Large type](docs/widget-weather-large-type.png) |
 
 The forecast is fetched by an hourly job with a network requirement and stored; the card is always
 painted from the store, never from a request, because a widget is repainted at moments nobody

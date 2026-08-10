@@ -55,6 +55,12 @@ object WidgetRenderer {
     // gap above it. The number is sized from what is left.
     private const val CHIP_BLOCK_DP = 16f
 
+    /** What a chip spends on its own padding and margin before any letters go in. */
+    private const val CHIP_PADDING_DP = 6f
+
+    /** Roughly what a line of this face occupies, as a multiple of its type size. */
+    private const val LINE_HEIGHT = 1.3f
+
     // The chip's ground is its calendar's colour laid into the card rather than over it: full
     // strength would make forty-two stickers, and the numbers are what the widget is for.
     private const val CHIP_GROUND_ALPHA = 92
@@ -117,18 +123,29 @@ object WidgetRenderer {
 
         val narrow = widthDp < NARROW_DP
         val padDp = if (narrow) 9f else 12f
+        // The card is a fixed rectangle that cannot scroll or grow, so type asked for in sp
+        // against a budget kept in dp overflows its own row the moment the phone's font scale
+        // goes above one. Every size below is still asked for in sp — the scale is honoured as
+        // far as it fits — but the ceiling is the room there is, not the room there would be at
+        // a scale of one.
+        val scale = context.resources.configuration.fontScale.coerceIn(0.85f, 2f)
         // The filled card sets its month name as a headline rather than a label; on paper it
         // stays the quieter size it always was.
-        val titleSp = (widthDp * (if (filled) 0.075f else 0.055f)).coerceIn(12f, 24f)
-        val weekdaySp = (titleSp * 0.62f).coerceIn(8f, 11f)
+        val titleSp = minOf(
+            widthDp * (if (filled) 0.075f else 0.055f),
+            widthDp * (if (filled) 0.085f else 0.063f) / scale,
+        ).coerceIn(11f, 24f)
+        val weekdaySp = minOf(titleSp * 0.62f, titleSp * 0.70f / scale).coerceIn(7.5f, 11f)
         val navDp = (titleSp * 1.85f).coerceIn(21f, 30f)
 
         // Header row, weekday strip, rule and its margins, plus the card padding.
-        val chromeDp = 2 * padDp + navDp + weekdaySp * 1.8f + 12f
+        val chromeDp = 2 * padDp + navDp + weekdaySp * 1.8f * scale + 12f
         val rowHeightDp = ((heightDp - chromeDp) / MonthModel.ROWS).coerceAtLeast(12f)
         val compact = rowHeightDp < 26f
         var markDp = (rowHeightDp * 0.72f).coerceIn(12f, 27f)
-        var daySp = (rowHeightDp * 0.42f).coerceIn(8.5f, 14f)
+        // The disc is the ceiling on the number: a digit set larger than the circle it sits in is
+        // a digit clipped by it.
+        var daySp = minOf(rowHeightDp * 0.42f, markDp * 0.62f / scale).coerceIn(7f, 14f)
         val showDots = wp.showEvents && rowHeightDp >= 21f
         val showYear = !narrow && !filled
 
@@ -144,7 +161,7 @@ object WidgetRenderer {
             // row and the chip is sliced in half by the rule beneath it — which is exactly what
             // the first render showed.
             markDp = (rowHeightDp - CHIP_BLOCK_DP).coerceIn(14f, 24f)
-            daySp = (markDp * 0.55f).coerceIn(8.5f, 12.5f)
+            daySp = minOf(markDp * 0.55f, markDp * 0.62f / scale).coerceIn(7f, 12.5f)
         }
 
         val root = RemoteViews(context.packageName, R.layout.widget_month)
@@ -273,7 +290,13 @@ object WidgetRenderer {
                     markDp = markDp,
                     showDots = showDots && !showChips,
                     showChip = showChips,
-                    chipSp = (daySp * 0.62f).coerceIn(7f, 9.5f),
+                    // The chip is a word inside a fixed block, so its ceiling is the block and
+                    // not the number above it: at a turned-up font scale the word grew and the
+                    // block did not, and the launcher sliced the difference off.
+                    chipSp = minOf(
+                        daySp * 0.62f,
+                        (CHIP_BLOCK_DP - CHIP_PADDING_DP) / (LINE_HEIGHT * scale),
+                    ).coerceIn(6f, 9.5f),
                     widgetId = widgetId,
                 )
                 week.addView(R.id.week_cells, cell)
@@ -376,12 +399,16 @@ object WidgetRenderer {
         // as a set rather than as seven unrelated stickers.
         if (showChip) {
             val label = load?.label
+            // Sized whether or not it is shown. An invisible view still measures, and one left at
+            // the layout's own eight points is one that pushes the row out from behind the day it
+            // is hiding under — which is a fault you cannot see, on the days where you cannot see
+            // the chip either.
+            cell.setTextViewTextSize(R.id.chip_text, TypedValue.COMPLEX_UNIT_SP, chipSp)
             if (label.isNullOrEmpty()) {
                 cell.setViewVisibility(R.id.cell_chip, android.view.View.INVISIBLE)
             } else {
                 cell.setViewVisibility(R.id.cell_chip, android.view.View.VISIBLE)
                 cell.setTextViewText(R.id.chip_text, label)
-                cell.setTextViewTextSize(R.id.chip_text, TypedValue.COMPLEX_UNIT_SP, chipSp)
                 cell.setTextColor(R.id.chip_text, palette.ink)
                 val source = load.labelColour.takeIf { it != 0 } ?: palette.accent
                 cell.setInt(R.id.chip_back, "setColorFilter", source)

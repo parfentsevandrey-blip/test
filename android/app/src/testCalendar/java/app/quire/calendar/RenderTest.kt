@@ -398,6 +398,98 @@ class RenderTest {
     }
 
     /**
+     * The card on a phone with the type turned up.
+     *
+     * A widget is a fixed rectangle that cannot scroll or grow, and its type is asked for in sp
+     * against a budget kept in dp — so above a font scale of one the arithmetic is simply wrong,
+     * and the first thing to go is the bottom of whatever is last in a row. The weather card lost
+     * its chance of rain that way on a real phone; this is the same fault's other half.
+     *
+     * Read from the layout: a line of text taller than the view holding it is what clipping is.
+     */
+    @Test
+    fun `the calendar card fits its rows with the type turned up`() {
+        val configuration = context.resources.configuration
+        val metrics = context.resources.displayMetrics
+        val wasScale = configuration.fontScale
+        @Suppress("DEPRECATION")
+        val wasScaled = metrics.scaledDensity
+        try {
+            configuration.fontScale = 1.4f
+            @Suppress("DEPRECATION")
+            metrics.scaledDensity = metrics.density * 1.4f
+            @Suppress("DEPRECATION")
+            context.resources.updateConfiguration(configuration, metrics)
+
+            listOf(175 to 230, 350 to 300, 160 to 150).forEach { (widthDp, heightDp) ->
+                val widgetId = 80 + widthDp
+                Prefs.get(context).widget(widgetId).apply {
+                    skin = Skin.COLOUR
+                    accent = Accent.PLUM
+                    opacity = 100
+                    showEvents = true
+                    weekNumbers = false
+                    monthOffset = 0
+                }
+                val host = FrameLayout(context)
+                host.addView(
+                    WidgetRenderer.build(context, widgetId, widthDp, heightDp).apply(context, host),
+                    FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                    ),
+                )
+                render(host, widthDp, heightDp, "widget-large-type-$widthDp")
+
+                val over = overflowing(host)
+                assertTrue("${widthDp}x$heightDp clips: $over", over == null)
+
+                val texts = ArrayList<String>()
+                collectText(host, texts)
+                assertEquals(
+                    "${widthDp}x$heightDp lost a square",
+                    MonthModel.CELLS,
+                    texts.mapNotNull { it.toIntOrNull() }.count { it in 1..31 },
+                )
+            }
+        } finally {
+            configuration.fontScale = wasScale
+            @Suppress("DEPRECATION")
+            metrics.scaledDensity = wasScaled
+            @Suppress("DEPRECATION")
+            context.resources.updateConfiguration(configuration, metrics)
+        }
+    }
+
+    /**
+     * The first thing laid out too small for what it holds, or null if nothing is.
+     *
+     * Two shapes of the same fault. A view placed past the edge of the one holding it is the
+     * obvious one. The other is what a LinearLayout with a fixed height actually does — it hands
+     * the last child whatever is left — so the view fits and its text does not. From outside,
+     * both are a number with its bottom sliced off.
+     */
+    private fun overflowing(view: View, path: String = "root"): String? {
+        if (view is android.widget.TextView) {
+            val room = view.height - view.paddingTop - view.paddingBottom
+            val needs = view.layout?.height ?: 0
+            if (needs > room + 1) return "$path '${view.text}' needs ${needs}px in $room"
+        }
+        if (view !is ViewGroup) return null
+        for (index in 0 until view.childCount) {
+            val child = view.getChildAt(index)
+            if (child.visibility == View.GONE) continue
+            val name = "$path > ${child.javaClass.simpleName}"
+            if (child.bottom > view.height + 1 || child.top < -1) {
+                val text = (child as? android.widget.TextView)?.text?.toString().orEmpty()
+                return "$name '$text' spans ${child.top}..${child.bottom} in ${view.height}"
+            }
+            overflowing(child, name)?.let { return it }
+        }
+        return null
+    }
+
+    /**
      * The widget's configuration screen is now Compose like everything else, but it is still the
      * launcher's screen rather than the app's, and it is still the one that has to hand a result
      * back. Assembling it through the real `onCreate` is the only way to catch a theme or a

@@ -54,6 +54,12 @@ object WeatherWidgetRenderer {
     /** How big the day icon must still be for the rain line to be worth its height. */
     private const val RAIN_MIN_ICON_DP = 20f
 
+    /**
+     * A rough character width, as a fraction of the type size, for the medium-weight face the
+     * day names are set in. Only ever used to decide whether a word fits, never to place one.
+     */
+    private const val NAME_CHAR_WIDTH = 0.62f
+
     /** Below this the sky and the feels-like are dropped rather than truncated to initials. */
     private const val DETAIL_MIN_DP = 172
 
@@ -109,13 +115,21 @@ object WeatherWidgetRenderer {
 
         val narrow = widthDp < NARROW_DP
 
+        // A widget is a fixed rectangle on somebody's home screen. It cannot scroll and it cannot
+        // grow, so type set in sp against a budget kept in dp overflows the moment the phone's
+        // font scale goes above one — which is exactly what sliced the chance of rain off the
+        // bottom of a real card. Every size below is still asked for in sp, so the scale is
+        // honoured as far as it fits; where it would not fit, the card keeps the layout and gives
+        // up the extra size rather than keeping the size and giving up the layout.
+        val scale = context.resources.configuration.fontScale.coerceIn(0.85f, 2f)
+
         // The strip is dealt its share of the height first, and the "now" row is sized from what
         // is left — not the other way round. Sizing the temperature first is what produces a card
         // with a huge number and no forecast, which is the card this one exists to be better
         // than: five days are the reason to look at a weather widget rather than the clock.
         val columns = ((widthDp - 2 * PAD_SIDE_DP) / DAY_MIN_COLUMN_DP).toInt().coerceIn(0, 5)
-        val placeSp = (widthDp * 0.042f).coerceIn(11f, 15f)
-        val placeLineDp = placeSp * 1.45f
+        val placeSp = minOf(widthDp * 0.042f, widthDp * 0.048f / scale).coerceIn(10f, 15f)
+        val placeLineDp = placeSp * 1.45f * scale
         val showStrip = heightDp >= STRIP_MIN_CARD_DP && columns >= 3
         val stripDp = if (showStrip) (heightDp * 0.38f).coerceIn(54f, 80f) else 0f
 
@@ -130,10 +144,13 @@ object WeatherWidgetRenderer {
         val showDetail = widthDp >= DETAIL_MIN_DP
         // Height decides how big the number can be; width decides whether it fits beside the icon
         // and whatever else is on the row. Whichever runs out first is the one that governs.
-        val tempSp = minOf(nowDp * 0.62f, widthDp * (if (showDetail) 0.16f else 0.26f))
-            .coerceIn(22f, 44f)
-        val skySp = (tempSp * 0.34f).coerceIn(11f, 15f)
-        val feelsSp = (tempSp * 0.31f).coerceIn(10f, 13.5f)
+        val tempSp = minOf(
+            nowDp * 0.62f,
+            nowDp * 0.72f / scale,
+            widthDp * (if (showDetail) 0.16f else 0.26f),
+        ).coerceIn(20f, 44f)
+        val skySp = minOf(tempSp * 0.34f, nowDp * 0.30f / scale).coerceIn(9.5f, 15f)
+        val feelsSp = minOf(tempSp * 0.31f, nowDp * 0.26f / scale).coerceIn(8.5f, 13.5f)
 
         // Sizing a view from code is API 31 and up. Below it the layout's own dimensions stand,
         // which is why they are chosen to be a sensible middle rather than placeholders: an
@@ -192,32 +209,40 @@ object WeatherWidgetRenderer {
             // The two lines of type are sized first and the icon takes what is left, rather than
             // all three being guessed at independently — which is how a column comes to be taller
             // than the strip it sits in, and how the lows came to be sliced off the bottom.
-            val nameSp = (stripDp * 0.155f).coerceIn(9f, 12f)
-            val tempSp = (stripDp * 0.21f).coerceIn(11f, 15f)
-            val rainSp = (nameSp - 0.5f).coerceAtLeast(8f)
+            val nameSp = minOf(stripDp * 0.155f, stripDp * 0.175f / scale).coerceIn(8f, 12f)
+            val tempSp = minOf(stripDp * 0.21f, stripDp * 0.24f / scale).coerceIn(9.5f, 15f)
+            val rainSp = (nameSp - 0.5f).coerceAtLeast(7.5f)
             // The rain line is offered to the strip only if two things are true: some day in it
             // has a chance worth writing, and paying for the line still leaves an icon worth
             // looking at. A row of blanks on a dry week is a line spent saying nothing, and an
             // eleven-point icon is a smudge.
             val shown = forecast.ahead(columns)
             val wet = shown.any { it.rain >= RAIN_FLOOR }
-            val withRain = stripDp - LINE_HEIGHT * (nameSp + tempSp + rainSp) - DAY_MARGINS_DP
+            val lines = LINE_HEIGHT * scale
+            val withRain = stripDp - lines * (nameSp + tempSp + rainSp) - DAY_MARGINS_DP
             val showRain = wet && withRain >= RAIN_MIN_ICON_DP
             val dayIconDp = (
-                stripDp - LINE_HEIGHT * (nameSp + tempSp + if (showRain) rainSp else 0f) -
-                    DAY_MARGINS_DP
-                ).coerceIn(16f, 34f)
+                stripDp - lines * (nameSp + tempSp + if (showRain) rainSp else 0f) - DAY_MARGINS_DP
+                ).coerceIn(14f, 34f)
             // Narrow columns keep the high and drop the low. Showing more days badly is worse
             // than showing the same days with one number each: "22° …" is not a temperature.
             val columnDp = (widthDp - 2 * PAD_SIDE_DP) / columns
             val bothTemps = columnDp >= BOTH_TEMPS_MIN_COLUMN_DP
+            // "Today" is a word, and words are a different length in every language: the Russian
+            // one is seven characters and came back from a real phone as "Сег…". Whether it is
+            // written is decided by whether it fits — estimated from its own length at its own
+            // size — and where it does not, the short weekday stands in. Nothing is lost: today's
+            // column is in the accent colour either way, which is what actually marks it.
+            val todayWord = context.getString(R.string.wx_today)
+            val nameWidthDp = todayWord.length * nameSp * scale * NAME_CHAR_WIDTH
+            val nameToday = nameWidthDp <= columnDp - 2f
 
             shown.forEach { day ->
                 root.addView(
                     R.id.strip,
                     dayColumn(
                         context, day, today, locale, palette,
-                        dayIconDp, nameSp, tempSp, bothTemps, showRain, rainSp,
+                        dayIconDp, nameSp, tempSp, bothTemps, showRain, rainSp, nameToday,
                     ),
                 )
             }
@@ -239,13 +264,14 @@ object WeatherWidgetRenderer {
         bothTemps: Boolean,
         showRain: Boolean,
         rainSp: Float,
+        nameToday: Boolean,
     ): RemoteViews {
         val column = RemoteViews(context.packageName, R.layout.weather_day)
         val isToday = day.date == today
 
         column.setTextViewText(
             R.id.day_name,
-            if (isToday) {
+            if (isToday && nameToday) {
                 context.getString(R.string.wx_today)
             } else {
                 day.date.dayOfWeek.getDisplayName(TextStyle.SHORT, locale).uppercase(locale)
