@@ -25,3 +25,14 @@ internal const val BLOCK = "weather-block"
 /** The gap between a section heading and the block it names, and above the heading itself. */
 internal val HeadingTop = 24.dp
 internal val HeadingBottom = 8.dp
+
+/**
+ * How far every card on the weather screen stands off the page.
+ *
+ * Flat cards are right for the calendar's year, where twelve of them are transformed at once and
+ * twelve resting shadows are twelve more layers to compose. Nothing here is transformed, and the
+ * page these sit on is a gradient with weather in it — without a shadow a card is a lighter patch
+ * of the same page rather than an object on top of it. This is the third of the three cues that
+ * say *raised*, the other two being the highlight and the shade the glass draws itself.
+ */
+internal val CardLift = 3.dp

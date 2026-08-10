@@ -29,7 +29,7 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import app.quire.weather.ui.BLOCK
 import app.quire.weather.ui.LiveSky
-import app.quire.weather.ui.glassEdge
+import app.quire.weather.ui.glass
 import app.quire.weather.ui.WeatherApp
 import app.quire.weather.ui.WeatherModel
 import app.quire.weather.ui.WeatherScreen
@@ -354,10 +354,11 @@ class WeatherScreenTest {
     /**
      * The rim of a card, and only the rim.
      *
-     * The glass is meant to live on the edge a card already has: light travelling round it and a
-     * few sparks riding it. That is two claims, and both are worth holding on to. It has to move —
-     * a still rim is a border — and it has to stay on the edge, because anything that wanders into
-     * the middle of a card is drawing on top of the reading somebody opened the app for.
+     * The glass lives on the edge a card already has: colour moving in it, and nothing anywhere
+     * else. That is two claims and both are worth holding on to. It has to move — a still rim is a
+     * border — and it has to stay on the edge, because anything that wanders into the middle of a
+     * card is drawing on top of the reading somebody opened the app for. The second half of that
+     * is what the motes could not honestly promise, and the reason they are gone.
      */
     @Test
     fun `the light on a card rim moves, and stays on the rim`() {
@@ -368,7 +369,7 @@ class WeatherScreenTest {
                         Card(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .glassEdge(CardDefaults.shape)
+                                .glass(CardDefaults.shape)
                                 .testTag("glass"),
                         ) {}
                     }
@@ -377,9 +378,9 @@ class WeatherScreenTest {
         }
         settle()
         val first = shoot("weather-glass")
-        // Far enough round the lap for the travelling band to have left where it was, and not so
-        // far that a spark has come back to the same place.
-        compose.mainClock.advanceTimeBy(1_800L)
+        // A tenth of a lap. The colour in the rim is deliberately slow now, so this is a long wait
+        // by the standards of the rest of the suite and still only a small move.
+        compose.mainClock.advanceTimeBy(2_600L)
         val second = shoot("weather-glass-later")
 
         val bounds = compose.onNodeWithTag("glass").getUnclippedBoundsInRoot()
@@ -405,12 +406,13 @@ class WeatherScreenTest {
     }
 
     /**
-     * How far from a card's edge the glass is allowed to reach, in points.
+     * How far from a card's edge the moving part of the glass is allowed to reach, in points.
      *
-     * Wide enough for a mote to float off the line and carry its halo with it, and nowhere near
-     * wide enough to touch anything the card is actually for.
+     * Tight, because all that moves now is a band of colour inside a stroke a point or so wide.
+     * The sheen and the bevel do cover the whole card, but they never change, so they never turn
+     * up in a comparison of two frames.
      */
-    private val RIM = 12f
+    private val RIM = 6f
 
     /**
      * Every sky, drawn on its own.

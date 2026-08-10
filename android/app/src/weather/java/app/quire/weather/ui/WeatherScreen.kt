@@ -362,7 +362,8 @@ private fun Reading(
     Card(
         modifier = modifier
             .fillMaxHeight()
-            .glassEdge(CardDefaults.shape, units.glassEdges, seed),
+            .glass(CardDefaults.shape, units.glassEdges, seed),
+        elevation = CardDefaults.cardElevation(defaultElevation = CardLift),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         ),
@@ -409,7 +410,8 @@ private fun Days(forecast: Forecast, units: WeatherModel.Settings) {
             .fillMaxWidth()
             .padding(horizontal = Gutter)
             .testTag(BLOCK)
-            .glassEdge(CardDefaults.shape, units.glassEdges, seed = 11),
+            .glass(CardDefaults.shape, units.glassEdges, seed = 11),
+        elevation = CardDefaults.cardElevation(defaultElevation = CardLift),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         ),

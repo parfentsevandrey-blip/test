@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-7.7.apk`](dist/quire-calendar-7.7.apk) · 1.9 MB | `sha256 353b9dc3ee7eb79a2bdc4d76ee012faa9fd26d2cda752f18f1714c6f3e86aec6` |
-| **Weather** | [`dist/quire-weather-7.7.apk`](dist/quire-weather-7.7.apk) · 1.5 MB | `sha256 73badb49e094e33b186e9917e6e4bb2137fa7ed9ce802a15191cceed6f561c82` |
+| **Calendar** | [`dist/quire-calendar-7.8.apk`](dist/quire-calendar-7.8.apk) · 1.9 MB | `sha256 2d8f47f3775ddefb9c8b3bc09499520954aae3bb8761c531266ea4fc93673dc2` |
+| **Weather** | [`dist/quire-weather-7.8.apk`](dist/quire-weather-7.8.apk) · 1.5 MB | `sha256 1fd2ef3e605e7221b1b7cc9691e0c272e510f39e12fe0f89636212fc32687bb2` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-7.7.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-7.8.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -263,58 +263,43 @@ for it in the app's own settings for anyone who would still rather have a still 
 |---|---|
 | ![Rain](docs/app-weather-rain.png) | ![Skies](docs/weather-skies.png) |
 
-**The cards are edged in glass.** It lives on an edge every card already has, which is why it can
-be there at all: there is no text it can sit on top of and nothing it can push out of the way.
-Four things make it up.
+**The cards are under glass, and they have volume.** They used to be flat filled rectangles: a
+lighter patch of the same page rather than an object on top of it. Three cues say *raised*, and
+all three are here.
 
-**A bevel.** The edge is not a flat hairline but a stroke whose colour changes along the card's
-diagonal — accent where the light would fall, the plain outline colour through the middle, a
-cooler tone where it falls away. That is what makes an edge read as the lit side of a pane rather
-than as a border, and it is there before anything moves. Tonal rather than light-and-dark on
-purpose: "brighter" is white on a dark card and black on a light one, and there is no single
-colour that means it in both.
+A **sheen** — a vertical wash over each card, brightest at the top and darkest at the foot, which
+is what a lit surface does. It is drawn in white and black rather than in any of the scheme's
+colours, because "lit from above" is a fact about light and not about a palette. A **bevel** that
+picks the light up in the same direction: white along the top of the rim, the outline colour
+through the middle, black along the foot. And a real **shadow** — three points of elevation. Flat
+cards are right for the calendar's year, where twelve are transformed at once and twelve resting
+shadows are twelve more layers to compose; nothing here is transformed, and the page these sit on
+is a gradient with weather falling down it.
 
-**A flow.** A wider, softer stroke carrying a band of colour that repeats two and a half times
-round the card and slides. Because it *repeats*, several different colours sit on the rim at once
-and travel through each other — which is what iridescence actually is, and the difference between
-a rim that shimmers and a rim being swept by one bright line. The tile's two ends are the same
-colour, so there is no seam where one repeat meets the next, and it slides by exactly one repeat
-per lap, so there is no jump at the end of one.
+The one thing that moves is a **flow**: a slow band of the scheme's own primary, tertiary and
+secondary repeating along the rim and sliding. Because it *repeats*, several colours sit on the
+edge at once and pass through each other, which is what makes it read as light in glass rather
+than as a border being recoloured. It takes the better part of half a minute to go round — at a
+glance the card is still, and only somebody looking at it will catch it changing.
 
-**Motes.** The first attempt at this was five dots going round a circle at a constant speed, which
-is a chase light, not glass. Each mote now is born, blooms and goes out on its own schedule, so
-the field is always changing who is in it; travels *unevenly*, gathering speed and easing off
-again, so it drifts rather than marches; floats a little off the line and back along the rim's own
-normal, so it is a speck suspended in the glass rather than a bead threaded on it; and drags a
-short trail behind it in whatever direction it happens to be going. They take the primary, the
-tertiary and the secondary between them, so the field is as iridescent as the flow it rides in.
-How many there are comes from how long the rim is rather than from a constant — a small reading
-card gets five and the five-day card a dozen — which keeps them the same *density* of light
-instead of the same count crammed into different perimeters.
-
-**And they know whether it is night.** On a dark card a mote carries a soft halo, because that is
-what a point of light does. On a light card it does not: every accent in a light scheme is *darker*
-than the card it sits on, so a halo of one is not a glow but a grey smudge, and six cards' worth of
-them read as a dirty screen. In daylight a mote is a smaller, harder, more saturated speck instead.
-
-Everything closes on the lap. A mote's uneven travel is `t + k·sin(2πwt)/2πw` for whole `w`, which
-is periodic in `t` and stays monotone while `k < 1` — so it speeds up and slows down and still
-comes back to exactly where it started with no jump for anyone to catch; its float, its bloom and
-its twinkle are whole numbers of cycles per lap for the same reason. It all rides the card's
-*actual outline*, measured with a `PathMeasure`, so the motes round the corners instead of cutting
-them and the effect comes out right whatever shape a card turns out to be. Each card is given a
-different phase, because three reading cards side by side are the same size and would otherwise
-carry the same light in the same place at the same moment.
+There were **motes** riding this rim for two versions: first five dots going round at a constant
+speed, which is a chase light; then specks with lifetimes that were born, drifted unevenly, floated
+off the line and went out. The second was a much better drawing and still the wrong one. A weather
+screen is a page of numbers you check for four seconds, and anything travelling around the edge of
+it is a thing to watch rather than a thing to read past. What is left is the part that does not ask
+for attention.
 
 The clock is read inside the draw block rather than in composition. Reading an animated value
 while composing recomposes the whole card sixty times a second; reading it while drawing redraws
-it, which is the only part that has changed — and the path, its measure and the brushes are built
-once per size rather than once per frame. Two claims are held by a test, because both are worth
-keeping: the rim has to move, since a still rim is a border; and it has to *stay* on the rim, so
-two frames are compared pixel by pixel and every difference must fall within twelve points of the
-card's own edge — anything that wanders into the middle of a card is drawing on top of the reading
-somebody opened the app for. There is a switch for it beside the sky's, and a phone that has been
-told not to animate anything keeps the bevel and loses the light.
+it, which is the only part that has changed — and the path and the brushes are built once per size
+rather than once per frame. Each card is given a different phase, because three reading cards side
+by side are the same size and would otherwise be the same colour in the same place at the same
+moment. Two claims are held by a test: the rim has to move, since a still rim is a border; and it
+has to *stay* on the rim, so two frames are compared pixel by pixel and every difference must fall
+within six points of the card's own edge. The sheen and the bevel cover the whole card and never
+change, so they never turn up in that comparison — which is the point of them being still. The
+switch beside the sky's turns the flow off and leaves the volume alone, because the volume is the
+card's shape rather than an animation.
 
 ![Glass on a card rim](docs/weather-glass.png)
 

@@ -92,5 +92,5 @@
     <string name="wx_live_sky">Live sky</string>
     <string name="wx_live_sky_hint">Rain, snow and cloud moving faintly behind the top of the screen</string>
     <string name="wx_glass_edges">Glass edges</string>
-    <string name="wx_glass_edges_hint">Light and small sparks drifting along the rim of every card</string>
+    <string name="wx_glass_edges_hint">Colour moving slowly in the rim of every card</string>
 </resources>
