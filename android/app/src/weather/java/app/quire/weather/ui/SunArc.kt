@@ -22,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -79,7 +80,7 @@ fun SunArc(sunrise: LocalDateTime, sunset: LocalDateTime) {
     val disc = scheme.primary
 
     Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = Gutter),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = Gutter).testTag(BLOCK),
         colors = CardDefaults.cardColors(containerColor = scheme.surfaceContainerHigh),
     ) {
         Column(Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {

@@ -12,6 +12,16 @@ import androidx.compose.ui.unit.dp
  */
 internal val Gutter = 16.dp
 
+/**
+ * The tag every block that must start at [Gutter] carries.
+ *
+ * A card has no text of its own to ask where it begins, and finding its edge in the picture stopped
+ * being possible once there was weather falling in front of it: the page is a dithered gradient
+ * with rain on it, and at some heights the wash lifts it to within a hair of the card's own colour.
+ * So the blocks say where they are instead of being measured, and the test asks all four at once.
+ */
+internal const val BLOCK = "weather-block"
+
 /** The gap between a section heading and the block it names, and above the heading itself. */
 internal val HeadingTop = 24.dp
 internal val HeadingBottom = 8.dp

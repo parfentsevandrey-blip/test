@@ -35,6 +35,7 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
@@ -98,6 +99,11 @@ fun WeatherScreen(
             LiveSky(
                 sky = it.now.sky,
                 day = it.now.day,
+                // The rain leans the way the wind is actually blowing and as hard as it is
+                // actually blowing, which makes the picture one more reading rather than one
+                // more ornament.
+                windKmh = it.now.wind,
+                windFrom = it.now.direction,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(padding.calculateTopPadding() + SkyHeight)
@@ -310,7 +316,10 @@ private fun Readings(forecast: Forecast, units: WeatherModel.Settings) {
 
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.fillMaxWidth().padding(horizontal = Gutter, vertical = 12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Gutter, vertical = 12.dp)
+            .testTag(BLOCK),
     ) {
         readings.chunked(3).forEach { row ->
             Row(
@@ -380,7 +389,7 @@ private fun Days(forecast: Forecast, units: WeatherModel.Settings) {
     val span = (warmest - coldest).coerceAtLeast(1.0)
 
     Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = Gutter),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = Gutter).testTag(BLOCK),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         ),

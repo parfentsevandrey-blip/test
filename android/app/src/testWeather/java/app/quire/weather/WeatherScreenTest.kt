@@ -19,6 +19,12 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ApplicationProvider
 import app.quire.calendar.m3.QuireTheme
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onNodeWithTag
+import app.quire.weather.ui.BLOCK
+import app.quire.weather.ui.LiveSky
 import app.quire.weather.ui.WeatherApp
 import app.quire.weather.ui.WeatherModel
 import app.quire.weather.ui.WeatherScreen
@@ -173,64 +179,21 @@ class WeatherScreenTest {
             headings.maxOf { it.second } - headings.minOf { it.second } < 0.5f,
         )
 
-        // Each row is found from something laid out inside the card rather than from a fraction of
-        // the page, so adding a block above one does not quietly move the measurement into a gap.
-        val rails = listOf(
-            "the readings" to bitmap.rowThrough("81%"),
-            "the hours" to bitmap.rowUnder("Next 24 hours", 40f),
-            "the sun" to bitmap.rowUnder("Sunrise and sunset", 40f),
-            "the days" to bitmap.rowUnder("Next five days", 40f),
-        ).map { (what, y) -> what to bitmap.leftEdge(y) }
-        assertTrue("a block was not found at all: $rails", rails.none { it.second < 0 })
-        val spread = rails.maxOf { it.second } - rails.minOf { it.second }
-        assertTrue("the blocks start at different x: $rails", spread <= 1)
-    }
+        // And the four blocks under them. They say where they are rather than being measured out
+        // of the picture: there is weather falling in front of the page now, and at some heights
+        // the wash lifts the page to within a hair of a card's own colour.
+        val blocks = compose.onAllNodesWithTag(BLOCK).fetchSemanticsNodes()
+            .map { it.boundsInRoot.left }
+        assertTrue("only ${blocks.size} blocks are tagged", blocks.size == 4)
+        assertTrue(
+            "the blocks start at different x: $blocks",
+            blocks.max() - blocks.min() < 0.5f,
+        )
 
-    /** The pixel row through the middle of whatever is laid out with this text. */
-    private fun Bitmap.rowThrough(text: String): Int {
-        val bounds = compose.onNodeWithText(text, substring = true).getUnclippedBoundsInRoot()
-        val middle = (bounds.top.value + bounds.bottom.value) / 2f
-        return (middle * compose.density.density).toInt().coerceIn(0, height - 1)
     }
-
-    /** The pixel row a given number of points below the bottom of that text. */
-    private fun Bitmap.rowUnder(text: String, below: Float): Int {
-        val bounds = compose.onNodeWithText(text, substring = true).getUnclippedBoundsInRoot()
-        return ((bounds.bottom.value + below) * compose.density.density)
-            .toInt().coerceIn(0, height - 1)
-    }
-
-    /**
-     * Finds where a card's fill begins on a row, by walking in from the left until the colour
-     * stops being the page behind it.
-     *
-     * The comparison has a tolerance because the page behind it is a gradient now, and Android
-     * dithers gradients: two pixels side by side in the same row differ by a bit or two, so exact
-     * equality finds an "edge" at x = 3 every time.
-     */
-    private fun Bitmap.leftEdge(y: Int): Int {
-        val background = getPixel(2, y)
-        for (x in 2 until width - RUN) {
-            // A run rather than a pixel. There is weather falling behind this page now, and a
-            // raindrop is two pixels wide; a card edge is the rest of the row.
-            if ((0 until RUN).all { apart(getPixel(x + it, y), background) }) return x
-        }
-        return -1
-    }
-
-    /** How many pixels in a row have to differ before it counts as an edge and not a drop. */
-    private val RUN = 8
 
     /** How far down the window the weather is drawn, in points. */
     private val SKY_BAND = 320f
-
-    private fun apart(a: Int, b: Int): Boolean {
-        var sum = 0
-        for (shift in intArrayOf(16, 8, 0)) {
-            sum += kotlin.math.abs(((a shr shift) and 0xFF) - ((b shr shift) and 0xFF))
-        }
-        return sum > 12
-    }
 
     /**
      * The whole app, bar and all, because the fault this catches only exists where the two meet.
@@ -373,6 +336,67 @@ class WeatherScreenTest {
         }
         assertTrue("nothing moved in the sky at all", movedAbove > 200)
         assertTrue("the page moved under the sky ($movedBelow pixels)", movedBelow == 0)
+    }
+
+    /**
+     * Every sky, drawn on its own.
+     *
+     * The screen can only show one at a time, and the branch that has never been looked at is the
+     * branch that draws nothing. Each one gets a tile on a sheet, and each tile has to carry
+     * enough ink to be a picture rather than an empty rectangle.
+     */
+    @Test
+    fun `every sky paints something of its own`() {
+        val skies = listOf(
+            Sky.CLEAR to true,
+            Sky.CLEAR to false,
+            Sky.OVERCAST to true,
+            Sky.FOG to true,
+            Sky.DRIZZLE to true,
+            Sky.RAIN to true,
+            Sky.SHOWERS to true,
+            Sky.THUNDER to true,
+            Sky.SLEET to true,
+            Sky.SNOW to true,
+        )
+        compose.setContent {
+            QuireTheme(dark = true, dynamic = false) {
+                Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+                    androidx.compose.foundation.layout.Column(Modifier.fillMaxSize()) {
+                        skies.forEach { (sky, day) ->
+                            LiveSky(
+                                sky = sky,
+                                day = day,
+                                windKmh = 28.0,
+                                windFrom = 270,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .weight(1f)
+                                    .testTag("sky-${sky.name}-$day"),
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        settle()
+        // A quarter of the way in: past the flash and the shooting star, which both happen later
+        // in the lap and would otherwise never be drawn in a picture taken at the start of one.
+        compose.mainClock.advanceTimeBy(5_600L)
+        val sheet = shoot("weather-skies")
+
+        skies.forEach { (sky, day) ->
+            val bounds = compose.onNodeWithTag("sky-${sky.name}-$day").getUnclippedBoundsInRoot()
+            val top = (bounds.top.value * compose.density.density).toInt() + 2
+            val bottom = (bounds.bottom.value * compose.density.density).toInt() - 2
+            var lit = 0
+            for (y in top until bottom step 2) {
+                for (x in 0 until sheet.width step 2) {
+                    if (sheet.getPixel(x, y) != sheet.getPixel(2, top)) lit++
+                }
+            }
+            assertTrue("${sky.name} (day=$day) drew nothing at all", lit > 300)
+        }
     }
 
     /** The same screen in daylight, because the dark one is only half of what ships. */

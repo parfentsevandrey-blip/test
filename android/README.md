@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-7.3.apk`](dist/quire-calendar-7.3.apk) · 1.9 MB | `sha256 da446e008b1de23370e1a00d0cc91ed8d26dc6a941cf09051b40b7c3b4348cf0` |
-| **Weather** | [`dist/quire-weather-7.3.apk`](dist/quire-weather-7.3.apk) · 1.5 MB | `sha256 d35cdd0075e41d21715865f255003ea8ef0ccb298662650a77b7359860493ee2` |
+| **Calendar** | [`dist/quire-calendar-7.4.apk`](dist/quire-calendar-7.4.apk) · 1.9 MB | `sha256 5db31b9796ac57fe7835ca9ef3b646a56661b2301c0a942634692e6e018dc831` |
+| **Weather** | [`dist/quire-weather-7.4.apk`](dist/quire-weather-7.4.apk) · 1.5 MB | `sha256 f30e0cce78e3aaadd98ea869594977261fa6df4b164789a2ec35f001ace2b3f0` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-7.3.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-7.4.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -236,9 +236,26 @@ and a third laps a drop arrives back a third of the way down and the whole field
 two exactly, nobody can find the seam. And somebody who has switched animation off in the system
 settings gets the same sky standing still — an endless animation is precisely the kind they meant.
 
-| Rain, behind the page |
-|---|
-| ![Rain](docs/app-weather-rain.png) |
+**It leans the way the wind is blowing**, and as hard as it is blowing, so the sky is one more
+reading rather than one more ornament. A direction is where the wind comes *from*, so what it
+pushes things along by is the opposite — a westerly blows east.
+
+**Everything has depth.** One number per particle decides its size, its speed, its brightness and
+how far the wind carries it. That is the whole trick: a field where every drop is the same drop
+reads as a screensaver, and a field with a near edge and a far one reads as sky. The near
+snowflakes get three crossed arms and a slow turn; the far ones stay dots, because at four pixels
+an arm is a smudge. The clouds are radial fades rather than discs, in two banks at two speeds, and
+the parallax between them does more for the depth than any amount of extra alpha would. The sun
+carries a fan of eleven rays that sweeps round once a lap, each with its own length riding a sine,
+so it shimmers rather than turning like a wheel. The stars twinkle on two rates multiplied rather
+than one, so the field never settles into a rhythm, and the brightest few carry a cross of light;
+once a lap something crosses them. A storm gets an actual bolt — jagged, different every strike,
+under a wash that goes sharp on and slow off, which is what lightning does and what a linear ramp
+does not.
+
+| Rain, behind the page | Every sky, one on top of another |
+|---|---|
+| ![Rain](docs/app-weather-rain.png) | ![Skies](docs/weather-skies.png) |
 
 Two more things move, once each rather than forever. The hourly curve draws itself outwards from
 now, because it is the one thing on the screen that is a shape rather than a number and a shape
