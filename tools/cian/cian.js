@@ -2,6 +2,7 @@
 /**
  * Клиент Циан поверх того же API, которым пользуется сама выдача.
  *
+ *   node tools/cian/cian.js find   Остров              — id ЖК, метро, района по названию
  *   node tools/cian/cian.js count  --query q.json
  *   node tools/cian/cian.js search --query q.json [--pages 3] [--all] [--out lots.json] [--no-apartments] [--min-year 2016]
  *   node tools/cian/cian.js url    --query q.json      — каноническая ссылка cat.php
@@ -171,23 +172,39 @@ async function collect(ctx, jsonQuery, maxPages, all) {
 const DECORATIONS = ['fineWithFurniture', 'fine', 'preFine', 'without', 'rough'];
 const ROOMS = [9, 1, 2, 3, 4, 5, 6];       // 9 — студия, у неё roomsCount пустой
 
-async function splitByAxis(ctx, q, axis) {
-  const out = [];
-  const values = axis === 'decor' ? DECORATIONS : ROOMS;
+/* Ось дробления обязана СУЖАТЬ запрос. Если ключ уже задан в исходном
+   запросе, берём пересечение, а не затираем: иначе поиск «3 комнаты» после
+   дробления по комнатности уходит искать студии и однушки, и на выходе
+   оказывается больше объявлений, чем было заявлено. */
+async function splitByAxis(ctx, q, axis, parentCount) {
   const key = axis === 'decor' ? 'decorations_list' : 'room';
+  const axisValues = axis === 'decor' ? DECORATIONS : ROOMS;
+  const already = q[key] && Array.isArray(q[key].value) ? q[key].value : null;
+  const values = already ? axisValues.filter((v) => already.includes(v)) : axisValues;
+  if (already && values.length <= 1) return [];          // делить нечего
+  const out = [];
   for (const v of values) {
     const sub = { ...q, [key]: { type: 'terms', value: [v] } };
     const { count } = await searchPage(ctx, sub, 1);
-    if (count) out.push({ q: sub, count, label: `${key}=${v}` });
     await sleep(700);
+    if (!count) continue;
+    if (parentCount != null && count > parentCount) {     // страховка от расширения
+      log(`  ! ${key}=${v} даёт ${count} при родительских ${parentCount} — ось отброшена`);
+      return [];
+    }
+    out.push({ q: sub, count, label: `${key}=${v}` });
   }
   return out;
 }
 
 async function splitByPrice(ctx, bucket, limit) {
-  /* Делим пополам по цене, пока каждая половина не станет меньше потолка. */
+  /* Делим пополам по цене, пока каждая половина не станет меньше потолка.
+     Границы берём из самого запроса: свои поставить — значит снять
+     пользовательский потолок цены и притащить лоты дороже заказанного. */
+  const base = (bucket.q.price && bucket.q.price.value) || {};
+  const LO = base.gte || 0, HI = base.lte || 200e6;
   const out = [];
-  const queue = [{ ...bucket, lo: 0, hi: 200e6 }];
+  const queue = [{ ...bucket, lo: LO, hi: HI }];
   let guard = 0;
   while (queue.length && guard++ < 24) {
     const b = queue.shift();
@@ -211,7 +228,8 @@ async function sweep(ctx, q, limit, maxPages) {
     const next = [];
     for (const b of buckets) {
       if (b.count <= limit) { next.push(b); continue; }
-      const parts = await splitByAxis(ctx, b.q, axis);
+      const parts = await splitByAxis(ctx, b.q, axis, b.count);
+      if (!parts.length) { next.push(b); continue; }     // ось не подошла — кусок несём дальше как есть
       log(`  ${b.label}: ${b.count} -> ${parts.map((x) => `${x.label}:${x.count}`).join(' ')}`);
       next.push(...parts.map((x) => ({ ...x, label: `${b.label} / ${x.label}` })));
     }
@@ -235,6 +253,9 @@ async function sweep(ctx, q, limit, maxPages) {
       await sleep(800);
     }
     log(`  ${b.label.padEnd(46)} ${String(b.count).padStart(5)} -> накоплено ${seen.size}`);
+  }
+  if (seen.size > top.count * 1.05) {
+    log(`\n! собрано ${seen.size} при заявленных ${top.count}: дробление расширило запрос, результату верить нельзя`);
   }
   return { declared: top.count, lots: [...seen.values()] };
 }
@@ -407,6 +428,22 @@ const loadQuery = (v) => {
       if (a.out) fs.writeFileSync(a.out, JSON.stringify(out, null, 2) + '\n');
       log(`${out.okrugCount} округов, ${out.raionCount} районов` + (a.out ? ` -> ${a.out}` : ''));
       log(out.okrugs.map((o) => `${String(o.id).padStart(4)}  ${o.name}`).join('\n'));
+
+    } else if (cmd === 'find') {
+      /* Поиск id по названию: ЖК, метро, район, город. Без этого id ЖК
+         приходилось выуживать, перебирая выдачу по району. */
+      const query = a._.slice(1).join(' ') || a.query;
+      const url = 'https://api.cian.ru/geo-suggest/v1/suggest/'
+        + `?query=${encodeURIComponent(query)}&regionId=${a.region || 1}&offerType=flat&dealType=sale`;
+      const r = await ctx.request.get(url, { headers: { referer: 'https://www.cian.ru/', 'user-agent': UA }, timeout: 30000 });
+      const s = ((await r.json()).data || {}).suggestions || {};
+      const GEO = { newbuildings: 'newobject', undergrounds: 'underground', districts: 'district', streets: 'street' };
+      for (const [group, items] of Object.entries(s)) {
+        const list = (items && items.items) || [];
+        if (!list.length) continue;
+        log(`\n${group}${GEO[group] ? `  (geo type "${GEO[group]}")` : ''}`);
+        list.slice(0, 8).forEach((i) => log(`  id=${String(i.id).padEnd(9)} ${i.fullName || i.name}${i.address ? ' — ' + i.address : ''}`));
+      }
 
     } else if (cmd === 'count') {
       const { count } = await searchPage(ctx, loadQuery(a.query), 1);

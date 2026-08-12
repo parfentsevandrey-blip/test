@@ -24,6 +24,9 @@
 в него. Подробности — в [`jsonquery.md`](jsonquery.md).
 
 ```bash
+# найти id ЖК, метро или района по названию
+node tools/cian/cian.js find Остров
+
 # сколько всего найдётся
 node tools/cian/cian.js count --query tools/cian/queries/zao-3room.json
 
