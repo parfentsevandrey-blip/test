@@ -101,6 +101,7 @@ class Comp:
     observed_at: Optional[date] = None
     url: str = ""
     seller_type: str = ""                   # частник / агентство / застройщик
+    seller_name: str = ""                   # кто продаёт — идентификация конкурента
     republish: Optional[int] = None         # сколько раз объявление переподавали
 
     @property

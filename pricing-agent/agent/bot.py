@@ -18,6 +18,7 @@ from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
+from .analytics import analyse_lot
 from .models import Action, Apartment, Verdict
 from .narrative import explain
 from .pricing import evaluate
@@ -84,8 +85,9 @@ def card_keyboard(apartment_id: str) -> InlineKeyboardMarkup:
             ],
             [
                 InlineKeyboardButton(text="Аналоги", callback_data=f"comps:{apartment_id}"),
-                InlineKeyboardButton(text="↻ Пересчитать", callback_data=f"lot:{apartment_id}"),
+                InlineKeyboardButton(text="Конкуренты", callback_data=f"rivals:{apartment_id}"),
             ],
+            [InlineKeyboardButton(text="↻ Пересчитать", callback_data=f"lot:{apartment_id}")],
             [InlineKeyboardButton(text="⬅️ К списку", callback_data="list")],
         ]
     )
@@ -214,6 +216,70 @@ async def show_comps(call: CallbackQuery) -> None:
         "<b>Аналоги, на которых построен коридор</b>\n\n" + "\n".join(rows),
         reply_markup=card_keyboard(apartment_id),
         parse_mode="HTML",
+    )
+
+
+@dp.callback_query(F.data.startswith("rivals:"))
+async def show_rivals(call: CallbackQuery) -> None:
+    await call.answer("Смотрю конкурентов…")
+    apartment_id = call.data.split(":", 1)[1]
+    apartment = next((a for a in registry() if a.id == apartment_id), None)
+    if apartment is None:
+        return
+
+    c = analyse_lot(apartment, SOURCES.comps.fetch_comps(apartment))
+    if not c.direct:
+        await call.message.answer(
+            "По этому ЖК нет выгрузки расширения — сопоставимых лотов не с чем сравнивать.",
+            reply_markup=card_keyboard(apartment_id),
+        )
+        return
+
+    lines = [
+        f"<b>Конкуренты · {apartment.complex_name.strip()}</b>",
+        f"Сопоставимых лотов: {len(c.direct)} · дешевле нас {len(c.cheaper)}",
+        f"Медиана конкурентов: {c.median_ppsm / 1000:.0f} тыс ₽/м² "
+        f"(<b>{c.raw_gap:+.1%}</b> к нашей цене)",
+        f"Давление: <b>{c.pressure}</b>",
+    ]
+    if c.adjusted_gap is not None:
+        lines.append(f"После поправок отрыв {c.adjusted_gap:+.1%}")
+
+    if c.alternatives:
+        lines += ["", "<b>Что покупатель увидит вместо нас:</b>"]
+        for alt in c.alternatives:
+            gap = alt.price_per_sqm / apartment.price_per_sqm - 1
+            tail = f" · снижал на {alt.price_cut_pct:.0%}" if alt.price_cut_pct else ""
+            link = f' — <a href="{alt.url}">Циан</a>' if alt.url else ""
+            lines.append(
+                f"• {alt.area:g} м², {alt.floor}/{alt.floors_total} — "
+                f"{money(alt.price)} ({gap:+.0%}) · {alt.finish.value}{link}"
+            )
+            lines.append(
+                f"  <i>{alt.seller_name or '—'}"
+                + (f" · {alt.days_on_market} дн. в продаже" if alt.days_on_market else "")
+                + f"{tail}</i>"
+            )
+
+    lines += ["", f"Снижали цену {c.cutting} из {len(c.direct)} · "
+              f"переподавали {c.republishing} из {len(c.direct)}"]
+    if c.median_exposure is not None:
+        ours = f", у нас {apartment.days_on_market}" if apartment.days_on_market else ""
+        lines.append(f"Медиана экспозиции {c.median_exposure:.0f} дн.{ours}")
+
+    if c.rivals:
+        lines += ["", "<b>Кто ещё продаёт здесь:</b>"]
+        lines += [
+            f"• {r.name} — {r.lots} лот(ов), медиана {r.median_ppsm / 1000:.0f} тыс, "
+            f"снижали {r.cutting}/{r.lots}"
+            for r in c.rivals[:5]
+        ]
+
+    await call.message.answer(
+        "\n".join(lines),
+        reply_markup=card_keyboard(apartment_id),
+        parse_mode="HTML",
+        disable_web_page_preview=True,
     )
 
 

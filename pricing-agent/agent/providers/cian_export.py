@@ -57,6 +57,7 @@ COLUMNS = {
     "floor": ("этаж",),
     "building": ("корпус",),
     "seller_type": ("тип продавца",),
+    "seller_name": ("продавец",),
     "finish": ("отделка",),
     "price": ("цена, ₽",),
     "ppsm": ("цена за м",),
@@ -216,6 +217,7 @@ class CianExportProvider:
                     observed_at=observed,
                     url=_hyperlink(cell("url")),
                     seller_type=seller,
+                    seller_name=str(_value(cell("seller_name")) or "").strip(),
                     republish=_int(_value(cell("republish"))),
                 )
             )
@@ -277,6 +279,14 @@ def _fuzzy_lookup(index: dict[str, list[Comp]], complex_name: str) -> list[Comp]
 
 
 def _find(header: list[str], hints: tuple[str, ...]) -> int | None:
+    """Точное совпадение имеет приоритет над подстрокой.
+
+    Иначе «Продавец» матчится на «Тип продавца» — заголовок стоит левее и содержит
+    искомую подстроку, и имя конкурента молча подменяется словом «агентство».
+    """
+    for i, title in enumerate(header, start=1):
+        if any(title == h for h in hints):
+            return i
     for i, title in enumerate(header, start=1):
         if any(h in title for h in hints):
             return i

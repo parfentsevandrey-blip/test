@@ -4,12 +4,14 @@
     python -m agent.cli sky-house-7     # один объект, подробно
     python -m agent.cli --no-ops        # без демо-данных о спросе
     python -m agent.cli --feed          # собрать YRL-фид для Яндекс Недвижимости
+    python -m agent.cli --competitors   # аналитика по конкурентам: портфель и каждый лот
 """
 
 from __future__ import annotations
 
 import sys
 
+from .analytics import analyse_lot, portfolio_rivals, render_lot, render_rivals
 from .models import Action, Verdict
 from .pricing import evaluate
 from .providers.yandex import build_yrl_feed
@@ -89,6 +91,29 @@ def main() -> None:
     for note in sources.notes:
         print(f"  · {note}")
     print()
+
+    if "--competitors" in sys.argv:
+        lots = [analyse_lot(a, sources.comps.fetch_comps(a)) for a in apartments]
+        if args:
+            lots = [c for c in lots if c.apartment.id == args[0]]
+        print("КОНКУРЕНТЫ В НАШИХ ЖК\n")
+        print(render_rivals(portfolio_rivals(lots)))
+        print()
+        covered = [c for c in lots if c.direct]
+        if covered:
+            print("ДАВЛЕНИЕ ПО ЛОТАМ (по доле конкурентов дешевле нас)\n")
+            order = sorted(covered, key=lambda c: -len(c.cheaper) / max(len(c.direct), 1))
+            for c in order:
+                a = c.apartment
+                print(
+                    f"  {a.complex_name.strip()[:22]:<24}{a.area:>6.1f} м²  "
+                    f"дешевле {len(c.cheaper):>2}/{len(c.direct):<2}  "
+                    f"отрыв {c.raw_gap:+6.1%}  давление: {c.pressure}"
+                )
+        for c in lots:
+            print()
+            print(render_lot(c))
+        return
 
     def verdict(a):
         return evaluate(a, sources.comps.fetch_comps(a), baseline=sources.valuation_for(a))

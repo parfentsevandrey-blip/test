@@ -27,6 +27,8 @@ python scripts/make_demo_comps.py                                      # дем�
 python -m agent.cli                                                    # вердикты по всем лотам
 python -m agent.cli sky-house-6                                        # разбор одного лота
 python -m agent.cli --feed                                             # собрать YRL-фид
+python -m agent.cli --competitors                                      # аналитика по конкурентам
+python -m agent.cli --competitors sky-house-7                          # конкуренты одного лота
 ```
 
 ## Аналоги: расширение «Циан → Excel»
@@ -92,6 +94,7 @@ python -m agent.bot
 | `agent/models.py` | Доменные модели: объект, аналог, поправка, вердикт |
 | `agent/adjustments.py` | Поправки сравнительного подхода; коэффициенты в `PricingConfig` |
 | `agent/pricing.py` | Коридор, перцентили, вердикт, ограничители, сценарии |
+| `agent/analytics.py` | Аналитика по конкурентам: кто продаёт рядом, куда уйдёт покупатель |
 | `agent/providers/cian_export.py` | Импорт выгрузок расширения — аналоги для коридора |
 | `agent/providers/yandex.py` | Яндекс: звонки, оценка по дому, YRL-фид |
 | `agent/sources.py` | Сборка источников: аналоги, спрос, оценка по дому |
