@@ -1,0 +1,696 @@
+{
+  "fetched": "2026-08-12",
+  "note": "exposure.* снято с карточки объявления: кнопка [data-name=\"OfferStats\"] → всплывающая статистика.",
+  "searches": {
+    "A": {
+      "name": "ЦАО · до 100 м² · дизайнерский ремонт · дом от 2019",
+      "url": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&region=1&district%5B0%5D=4&repair%5B0%5D=4&maxtarea=100&min_house_year=2019",
+      "found": 817,
+      "picks": [
+        "332790244",
+        "331061665",
+        "318398796",
+        "331881824",
+        "332446561"
+      ],
+      "alts": [
+        "332753739",
+        "321787938",
+        "330208766",
+        "328205111"
+      ]
+    },
+    "B": {
+      "name": "ЦАО · вторичка · 3 комн. · до 70 млн · до 100 м² · метро ≤10 мин пешком · этаж от 5 · без апартаментов · дом от 2016 · дизайнерский ремонт",
+      "url": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&object_type%5B0%5D=1&room3=1&region=1&district%5B0%5D=4&repair%5B0%5D=4&maxtarea=100&maxprice=70000000&minfloor=5&only_foot=2&foot_min=10&apartment=0&min_house_year=2016",
+      "found": 50,
+      "picks": [
+        "326349732",
+        "332656433",
+        "327423094",
+        "330815908",
+        "328971186"
+      ],
+      "alts": [
+        "331881824",
+        "332753739",
+        "332194265"
+      ]
+    },
+    "C": {
+      "name": "ЗАО · те же фильтры, что и в наборе B",
+      "url": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&object_type%5B0%5D=1&room3=1&region=1&district%5B0%5D=11&repair%5B0%5D=4&maxtarea=100&maxprice=70000000&minfloor=5&only_foot=2&foot_min=10&apartment=0&min_house_year=2016",
+      "found": 88,
+      "picks": [
+        "332550701",
+        "332791567",
+        "302516650",
+        "332343149",
+        "331961171"
+      ],
+      "alts": [
+        "332135944"
+      ]
+    }
+  },
+  "lots": [
+    {
+      "id": "332790244",
+      "url": "https://www.cian.ru/sale/flat/332790244/",
+      "title": "Продается студия, 28,7 м²",
+      "priceRub": 27000000,
+      "address": "Москва, ЦАО, р-н Басманный, Малая Почтовая ул., 12",
+      "metro": "Бауманская 9 мин. Лефортово 18 мин. Лефортово 19 мин.",
+      "totalAreaM2": 28.7,
+      "livingAreaM2": 20,
+      "kitchenAreaM2": 4,
+      "floor": "14 из 19",
+      "buildYear": 2025,
+      "repair": "Дизайнерский",
+      "houseType": null,
+      "ceiling": "3 м",
+      "exposure": {
+        "created": "10.08.2026",
+        "daysOnMarket": 2,
+        "viewsTotal": 82,
+        "viewsPerDay": 41,
+        "statsLine": "82 просмотра, 20 за сегодня",
+        "phrase": "82 просмотров с даты создания объявления 10.08.2026"
+      },
+      "sets": [
+        {
+          "set": "A",
+          "role": "pick"
+        }
+      ]
+    },
+    {
+      "id": "332791567",
+      "url": "https://www.cian.ru/sale/flat/332791567/",
+      "title": "Продается 3-комн. квартира, 65,5 м²",
+      "priceRub": 40000000,
+      "address": "Москва, ЗАО, р-н Тропарево-Никулино, Озерная ул., 35",
+      "metro": "Озёрная 4 мин. Очаково 23 мин. Юго-Западная 4 мин.",
+      "totalAreaM2": 65.5,
+      "livingAreaM2": 43,
+      "kitchenAreaM2": 10,
+      "floor": "12 из 22",
+      "buildYear": 2018,
+      "repair": "Дизайнерский",
+      "houseType": "Монолитный",
+      "ceiling": "3 м",
+      "exposure": {
+        "created": "10.08.2026",
+        "daysOnMarket": 2,
+        "viewsTotal": 64,
+        "viewsPerDay": 32,
+        "statsLine": "64 просмотра, 16 за сегодня",
+        "phrase": "64 просмотров с даты создания объявления 10.08.2026"
+      },
+      "sets": [
+        {
+          "set": "C",
+          "role": "pick"
+        }
+      ]
+    },
+    {
+      "id": "332753739",
+      "url": "https://www.cian.ru/sale/flat/332753739/",
+      "title": "Продается 3-комн. квартира, 80,7 м²",
+      "priceRub": 54000000,
+      "address": "Москва, ЦАО, р-н Пресненский, Шмитовский проезд, 39к8",
+      "metro": "Москва-Сити 6 мин. Шелепиха 8 мин. Москва-Сити 12 мин. ⁠Посмотреть ещё 2⁠",
+      "totalAreaM2": 80.7,
+      "livingAreaM2": 38,
+      "kitchenAreaM2": 25,
+      "floor": "29 из 53",
+      "buildYear": 2023,
+      "repair": "Дизайнерский",
+      "houseType": "Монолитный",
+      "ceiling": "2,9 м",
+      "exposure": {
+        "created": "08.08.2026",
+        "daysOnMarket": 4,
+        "viewsTotal": 67,
+        "viewsPerDay": 16.8,
+        "statsLine": "67 просмотров, 22 за сегодня",
+        "phrase": "67 просмотров с даты создания объявления 08.08.2026"
+      },
+      "sets": [
+        {
+          "set": "A",
+          "role": "alt"
+        },
+        {
+          "set": "B",
+          "role": "alt"
+        }
+      ]
+    },
+    {
+      "id": "332656433",
+      "url": "https://www.cian.ru/sale/flat/332656433/",
+      "title": "Продается 3-комн. квартира, 88,1 м²",
+      "priceRub": 48500000,
+      "address": "Москва, ЦАО, р-н Пресненский, Мукомольный проезд, 2",
+      "metro": "Москва-Сити 2 мин. Москва-Сити 7 мин. Шелепиха 11 мин. ⁠Посмотреть ещё 2⁠",
+      "totalAreaM2": 88.1,
+      "livingAreaM2": 55,
+      "kitchenAreaM2": 17,
+      "floor": "26 из 36",
+      "buildYear": 2019,
+      "repair": "Дизайнерский",
+      "houseType": null,
+      "ceiling": "2,7 м",
+      "exposure": {
+        "created": "05.08.2026",
+        "daysOnMarket": 7,
+        "viewsTotal": 145,
+        "viewsPerDay": 20.7,
+        "statsLine": "145 просмотров, 13 за сегодня",
+        "phrase": "145 просмотров с даты создания объявления 05.08.2026"
+      },
+      "sets": [
+        {
+          "set": "B",
+          "role": "pick"
+        }
+      ]
+    },
+    {
+      "id": "332550701",
+      "url": "https://www.cian.ru/sale/flat/332550701/",
+      "title": "Продается 3-комн. квартира, 72 м²",
+      "priceRub": 34100000,
+      "address": "Москва, ЗАО, р-н Филевский парк, Барклая ул., 6Ак1",
+      "metro": "Багратионовская 9 мин. Парк Победы 10 мин. Фили 12 мин. ⁠Посмотреть ещё 1⁠",
+      "totalAreaM2": 72,
+      "livingAreaM2": null,
+      "kitchenAreaM2": 18,
+      "floor": "23 из 24",
+      "buildYear": 2024,
+      "repair": "Дизайнерский",
+      "houseType": null,
+      "ceiling": null,
+      "exposure": {
+        "created": "02.08.2026",
+        "daysOnMarket": 10,
+        "viewsTotal": 851,
+        "viewsPerDay": 85.1,
+        "statsLine": "851 просмотр, 71 за сегодня",
+        "phrase": "851 просмотров с даты создания объявления 02.08.2026"
+      },
+      "sets": [
+        {
+          "set": "C",
+          "role": "pick"
+        }
+      ]
+    },
+    {
+      "id": "332446561",
+      "url": "https://www.cian.ru/sale/flat/332446561/",
+      "title": "Продается 3-комн. квартира, 83 м²",
+      "priceRub": 108000000,
+      "address": "Москва, ЦАО, р-н Пресненский, Мантулинская ул., 9к4",
+      "metro": "Москва-Сити 20 мин. Москва-Сити 13 мин. Деловой центр 14 мин. ⁠Посмотреть ещё 3⁠",
+      "totalAreaM2": 83,
+      "livingAreaM2": 30,
+      "kitchenAreaM2": 34,
+      "floor": "12 из 20",
+      "buildYear": 2019,
+      "repair": "Дизайнерский",
+      "houseType": "Монолитный",
+      "ceiling": "3,2 м",
+      "exposure": {
+        "created": "29.07.2026",
+        "daysOnMarket": 14,
+        "viewsTotal": 90,
+        "viewsPerDay": 6.4,
+        "statsLine": "90 просмотров, 12 за сегодня",
+        "phrase": "90 просмотров с даты создания объявления 29.07.2026"
+      },
+      "sets": [
+        {
+          "set": "A",
+          "role": "pick"
+        }
+      ]
+    },
+    {
+      "id": "332343149",
+      "url": "https://www.cian.ru/sale/flat/332343149/",
+      "title": "Продается 3-комн. квартира, 82,4 м²",
+      "priceRub": 46000000,
+      "address": "Москва, ЗАО, р-н Проспект Вернадского, просп. Вернадского, 67",
+      "metro": "Проспект Вернадского 9 мин. Проспект Вернадского 13 мин. Новаторская 15 мин. ⁠Посмотреть ещё 2⁠",
+      "totalAreaM2": 82.4,
+      "livingAreaM2": 48.1,
+      "kitchenAreaM2": 10,
+      "floor": "16 из 23",
+      "buildYear": 2016,
+      "repair": "Дизайнерский",
+      "houseType": "Монолитный",
+      "ceiling": "— 2.8 метра.",
+      "exposure": {
+        "created": "26.07.2026",
+        "daysOnMarket": 17,
+        "viewsTotal": 333,
+        "viewsPerDay": 19.6,
+        "statsLine": "333 просмотра, 19 за сегодня",
+        "phrase": "333 просмотров с даты создания объявления 26.07.2026"
+      },
+      "sets": [
+        {
+          "set": "C",
+          "role": "pick"
+        }
+      ]
+    },
+    {
+      "id": "332194265",
+      "url": "https://www.cian.ru/sale/flat/332194265/",
+      "title": "Продается 3-комн. квартира, 67,9 м²",
+      "priceRub": 57900000,
+      "address": "Москва, ЦАО, р-н Басманный, Малая Почтовая ул., 12",
+      "metro": "Бауманская 9 мин. Лефортово 18 мин. Лефортово 19 мин.",
+      "totalAreaM2": 67.9,
+      "livingAreaM2": 41,
+      "kitchenAreaM2": 9,
+      "floor": "6 из 13",
+      "buildYear": 2025,
+      "repair": "Дизайнерский",
+      "houseType": "Монолитный",
+      "ceiling": null,
+      "exposure": {
+        "created": "21.07.2026",
+        "daysOnMarket": 22,
+        "viewsTotal": 223,
+        "viewsPerDay": 10.1,
+        "statsLine": "223 просмотра, 10 за сегодня",
+        "phrase": "223 просмотров с даты создания объявления 21.07.2026"
+      },
+      "sets": [
+        {
+          "set": "B",
+          "role": "alt"
+        }
+      ]
+    },
+    {
+      "id": "332135944",
+      "url": "https://www.cian.ru/sale/flat/332135944/",
+      "title": "Продается 3-комн. квартира, 87,3 м²",
+      "priceRub": 61500000,
+      "address": "Москва, ЗАО, р-н Филевский парк, Багратионовский проезд, 1Ак1",
+      "metro": "Фили 2 мин. Багратионовская 14 мин. Парк Победы 22 мин.",
+      "totalAreaM2": 87.3,
+      "livingAreaM2": null,
+      "kitchenAreaM2": 8,
+      "floor": "9 из 20",
+      "buildYear": 2018,
+      "repair": "Дизайнерский",
+      "houseType": "Монолитный",
+      "ceiling": "3,1 м",
+      "exposure": {
+        "created": "18.07.2026",
+        "daysOnMarket": 25,
+        "viewsTotal": 108,
+        "viewsPerDay": 4.3,
+        "statsLine": "108 просмотров, 2 за сегодня",
+        "phrase": "108 просмотров с даты создания объявления 18.07.2026"
+      },
+      "sets": [
+        {
+          "set": "C",
+          "role": "alt"
+        }
+      ]
+    },
+    {
+      "id": "331961171",
+      "url": "https://www.cian.ru/sale/flat/331961171/",
+      "title": "Продается 3-комн. квартира, 71 м²",
+      "priceRub": 47000000,
+      "address": "Москва, ЗАО, р-н Очаково-Матвеевское, проезд Стройкомбината, 1",
+      "metro": "Очаково 6 мин. Озёрная 6 мин. Давыдково 7 мин.",
+      "totalAreaM2": 71,
+      "livingAreaM2": 32,
+      "kitchenAreaM2": 21.5,
+      "floor": "6 из 33",
+      "buildYear": 2024,
+      "repair": "Дизайнерский",
+      "houseType": "Монолитный",
+      "ceiling": "2,7 м",
+      "exposure": {
+        "created": "13.07.2026",
+        "daysOnMarket": 30,
+        "viewsTotal": 216,
+        "viewsPerDay": 7.2,
+        "statsLine": "216 просмотров, 7 за сегодня",
+        "phrase": "216 просмотров с даты создания объявления 13.07.2026"
+      },
+      "sets": [
+        {
+          "set": "C",
+          "role": "pick"
+        }
+      ]
+    },
+    {
+      "id": "331881824",
+      "url": "https://www.cian.ru/sale/flat/331881824/",
+      "title": "Продается 3-комн. квартира, 82 м²",
+      "priceRub": 49700000,
+      "address": "Москва, ЦАО, р-н Пресненский, Шмитовский проезд, 39к6",
+      "metro": "Шелепиха 5 мин. Шелепиха 8 мин. Москва-Сити 10 мин. ⁠Посмотреть ещё 3⁠",
+      "totalAreaM2": 82,
+      "livingAreaM2": 50,
+      "kitchenAreaM2": 25,
+      "floor": "10 из 51",
+      "buildYear": 2025,
+      "repair": "Дизайнерский",
+      "houseType": "Монолитный",
+      "ceiling": "3 м",
+      "exposure": {
+        "created": "10.07.2026",
+        "daysOnMarket": 33,
+        "viewsTotal": 1369,
+        "viewsPerDay": 41.5,
+        "statsLine": "1369 просмотров, 52 за сегодня",
+        "phrase": "1369 просмотров с даты создания объявления 10.07.2026"
+      },
+      "sets": [
+        {
+          "set": "A",
+          "role": "pick"
+        },
+        {
+          "set": "B",
+          "role": "alt"
+        }
+      ]
+    },
+    {
+      "id": "331061665",
+      "url": "https://www.cian.ru/sale/flat/331061665/",
+      "title": "Продается 1-комн. квартира, 31 м²",
+      "priceRub": 23500000,
+      "address": "Москва, ЦАО, р-н Басманный, ул. Новая Дорога, 9",
+      "metro": "Электрозаводская 16 мин. Электрозаводская 14 мин. Электрозаводская 14 мин. ⁠Посмотреть ещё 2⁠",
+      "totalAreaM2": 31,
+      "livingAreaM2": 18,
+      "kitchenAreaM2": 8,
+      "floor": "14 из 15",
+      "buildYear": 2022,
+      "repair": "Дизайнерский",
+      "houseType": "Монолитный",
+      "ceiling": "3 м",
+      "exposure": {
+        "created": "15.06.2026",
+        "daysOnMarket": 58,
+        "viewsTotal": 1324,
+        "viewsPerDay": 22.8,
+        "statsLine": "1324 просмотра, 35 за сегодня",
+        "phrase": "1324 просмотров с даты создания объявления 15.06.2026"
+      },
+      "sets": [
+        {
+          "set": "A",
+          "role": "pick"
+        }
+      ]
+    },
+    {
+      "id": "330815908",
+      "url": "https://www.cian.ru/sale/flat/330815908/",
+      "title": "Продается 3-комн. квартира, 64 м²",
+      "priceRub": 57500000,
+      "address": "Москва, ЦАО, р-н Басманный, Малая Почтовая ул., 12",
+      "metro": "Бауманская 9 мин. Лефортово 18 мин. Лефортово 19 мин.",
+      "totalAreaM2": 64,
+      "livingAreaM2": 40,
+      "kitchenAreaM2": 10,
+      "floor": "8 из 19",
+      "buildYear": 2024,
+      "repair": "Дизайнерский",
+      "houseType": "Монолитный",
+      "ceiling": "3 м",
+      "exposure": {
+        "created": "05.06.2026",
+        "daysOnMarket": 68,
+        "viewsTotal": 1020,
+        "viewsPerDay": 15,
+        "statsLine": "1020 просмотров, 12 за сегодня",
+        "phrase": "1020 просмотров с даты создания объявления 05.06.2026"
+      },
+      "sets": [
+        {
+          "set": "B",
+          "role": "pick"
+        }
+      ]
+    },
+    {
+      "id": "330208766",
+      "url": "https://www.cian.ru/sale/flat/330208766/",
+      "title": "Продаются 2-комн. апартаменты, 57 м²",
+      "priceRub": 23200000,
+      "address": "Москва, ЦАО, р-н Красносельский, 3-й Красносельский пер., 19С4",
+      "metro": "Красносельская 12 мин. Комсомольская 22 мин. Сокольники 23 мин.",
+      "totalAreaM2": 57,
+      "livingAreaM2": null,
+      "kitchenAreaM2": 15,
+      "floor": "4 из 5",
+      "buildYear": 2019,
+      "repair": "Дизайнерский",
+      "houseType": "Кирпичный",
+      "ceiling": "3 м",
+      "exposure": {
+        "created": "20.05.2026",
+        "daysOnMarket": 84,
+        "viewsTotal": 1984,
+        "viewsPerDay": 23.6,
+        "statsLine": "1984 просмотра, 44 за сегодня",
+        "phrase": "1984 просмотров с даты создания объявления 20.05.2026"
+      },
+      "sets": [
+        {
+          "set": "A",
+          "role": "alt"
+        }
+      ]
+    },
+    {
+      "id": "328971186",
+      "url": "https://www.cian.ru/sale/flat/328971186/",
+      "title": "Продается 3-комн. квартира, 82 м²",
+      "priceRub": 65000000,
+      "address": "Москва, ЦАО, р-н Басманный, Малая Почтовая ул., 12",
+      "metro": "Бауманская 9 мин. Лефортово 18 мин. Лефортово 19 мин.",
+      "totalAreaM2": 82,
+      "livingAreaM2": null,
+      "kitchenAreaM2": 25,
+      "floor": "19 из 19",
+      "buildYear": 2025,
+      "repair": "Дизайнерский",
+      "houseType": "Монолитный",
+      "ceiling": "3 м",
+      "exposure": {
+        "created": "14.04.2026",
+        "daysOnMarket": 120,
+        "viewsTotal": 1980,
+        "viewsPerDay": 16.5,
+        "statsLine": "1980 просмотров, 9 за сегодня",
+        "phrase": "1980 просмотров с даты создания объявления 14.04.2026"
+      },
+      "sets": [
+        {
+          "set": "B",
+          "role": "pick"
+        }
+      ]
+    },
+    {
+      "id": "328205111",
+      "url": "https://www.cian.ru/sale/flat/328205111/",
+      "title": "Продаются 2-комн. апартаменты, 94 м²",
+      "priceRub": 119900000,
+      "address": "Москва, ЦАО, р-н Тверской, 1-я Тверская-Ямская ул., 2А",
+      "metro": "Маяковская 2 мин. Тверская 10 мин. Пушкинская 10 мин. ⁠Посмотреть ещё 5⁠",
+      "totalAreaM2": 94,
+      "livingAreaM2": null,
+      "kitchenAreaM2": null,
+      "floor": "5 из 9",
+      "buildYear": 2023,
+      "repair": "Дизайнерский",
+      "houseType": "Монолитный",
+      "ceiling": "3 м",
+      "exposure": {
+        "created": "25.03.2026",
+        "daysOnMarket": 140,
+        "viewsTotal": 1804,
+        "viewsPerDay": 12.9,
+        "statsLine": "1804 просмотра, 11 за сегодня",
+        "phrase": "1804 просмотров с даты создания объявления 25.03.2026"
+      },
+      "sets": [
+        {
+          "set": "A",
+          "role": "alt"
+        }
+      ]
+    },
+    {
+      "id": "327423094",
+      "url": "https://www.cian.ru/sale/flat/327423094/",
+      "title": "Продается 3-комн. квартира, 70 м²",
+      "priceRub": 48900000,
+      "address": "Москва, ЦАО, р-н Пресненский, Шмитовский проезд, 39к3",
+      "metro": "Шелепиха 6 мин. Шелепиха 10 мин. Москва-Сити 15 мин. ⁠Посмотреть ещё 2⁠",
+      "totalAreaM2": 70,
+      "livingAreaM2": null,
+      "kitchenAreaM2": 28,
+      "floor": "5 из 7",
+      "buildYear": 2019,
+      "repair": "Дизайнерский",
+      "houseType": "Монолитный",
+      "ceiling": "3,1 м",
+      "exposure": {
+        "created": "03.03.2026",
+        "daysOnMarket": 162,
+        "viewsTotal": 1821,
+        "viewsPerDay": 11.2,
+        "statsLine": "1821 просмотр, 6 за сегодня",
+        "phrase": "1821 просмотров с даты создания объявления 03.03.2026"
+      },
+      "sets": [
+        {
+          "set": "B",
+          "role": "pick"
+        }
+      ]
+    },
+    {
+      "id": "326349732",
+      "url": "https://www.cian.ru/sale/flat/326349732/",
+      "title": "Продается 3-комн. квартира, 88 м²",
+      "priceRub": 45300000,
+      "address": "Москва, ЦАО, р-н Пресненский, Шмитовский проезд, 39к2",
+      "metro": "Шелепиха 6 мин. Шелепиха 9 мин. Москва-Сити 11 мин. ⁠Посмотреть ещё 2⁠",
+      "totalAreaM2": 88,
+      "livingAreaM2": 41.5,
+      "kitchenAreaM2": 30,
+      "floor": "7 из 23",
+      "buildYear": 2019,
+      "repair": "Дизайнерский",
+      "houseType": "Монолитный",
+      "ceiling": null,
+      "exposure": {
+        "created": "30.01.2026",
+        "daysOnMarket": 194,
+        "viewsTotal": 715,
+        "viewsPerDay": 3.7,
+        "statsLine": "715 просмотров, 6 за сегодня",
+        "phrase": "715 просмотров с даты создания объявления 30.01.2026"
+      },
+      "sets": [
+        {
+          "set": "B",
+          "role": "pick"
+        }
+      ]
+    },
+    {
+      "id": "321787938",
+      "url": "https://www.cian.ru/sale/flat/321787938/",
+      "title": "Продается 3-комн. квартира, 83,5 м²",
+      "priceRub": 105000000,
+      "address": "Москва, ЦАО, р-н Пресненский, Мантулинская ул., 9к5",
+      "metro": "Деловой центр 14 мин. Москва-Сити 12 мин. Деловой центр 13 мин. ⁠Посмотреть ещё 4⁠",
+      "totalAreaM2": 83.5,
+      "livingAreaM2": 50,
+      "kitchenAreaM2": 28.5,
+      "floor": "6 из 21",
+      "buildYear": 2021,
+      "repair": "Дизайнерский",
+      "houseType": "Монолитный",
+      "ceiling": "3,1 м",
+      "exposure": {
+        "created": "12.09.2025",
+        "daysOnMarket": 334,
+        "viewsTotal": 1944,
+        "viewsPerDay": 5.8,
+        "statsLine": "1944 просмотра, 14 за сегодня",
+        "phrase": "1944 просмотров с даты создания объявления 12.09.2025"
+      },
+      "sets": [
+        {
+          "set": "A",
+          "role": "alt"
+        }
+      ]
+    },
+    {
+      "id": "318398796",
+      "url": "https://www.cian.ru/sale/flat/318398796/",
+      "title": "Продается 2-комн. квартира, 59,5 м²",
+      "priceRub": 63000000,
+      "address": "Москва, ЦАО, р-н Пресненский, Краснопресненская наб., 14Ак3",
+      "metro": "Деловой центр 14 мин. Москва-Сити 6 мин. Москва-Сити 15 мин. ⁠Посмотреть ещё 2⁠",
+      "totalAreaM2": 59.5,
+      "livingAreaM2": 42,
+      "kitchenAreaM2": 10,
+      "floor": "25 из 67",
+      "buildYear": 2023,
+      "repair": "Дизайнерский",
+      "houseType": "Монолитный",
+      "ceiling": "3,3 м",
+      "exposure": {
+        "created": "04.06.2025",
+        "daysOnMarket": 434,
+        "viewsTotal": 710,
+        "viewsPerDay": 1.6,
+        "statsLine": "710 просмотров, 8 за сегодня",
+        "phrase": "710 просмотров с даты создания объявления 04.06.2025"
+      },
+      "sets": [
+        {
+          "set": "A",
+          "role": "pick"
+        }
+      ]
+    },
+    {
+      "id": "302516650",
+      "url": "https://www.cian.ru/sale/flat/302516650/",
+      "title": "Продается 3-комн. квартира, 81 м²",
+      "priceRub": 43900000,
+      "address": "Москва, ЗАО, р-н Раменки, ул. Лобачевского, 120к1",
+      "metro": "Аминьевская 2 мин. Аминьевская 4 мин. Матвеевская 22 мин.",
+      "totalAreaM2": 81,
+      "livingAreaM2": 38.7,
+      "kitchenAreaM2": 14.5,
+      "floor": "13 из 39",
+      "buildYear": 2022,
+      "repair": "Дизайнерский",
+      "houseType": "Монолитный",
+      "ceiling": "3,1 м",
+      "exposure": {
+        "created": "26.05.2024",
+        "daysOnMarket": 808,
+        "viewsTotal": 6839,
+        "viewsPerDay": 8.5,
+        "statsLine": "6839 просмотров, 30 за сегодня",
+        "phrase": "6839 просмотров с даты создания объявления 26.05.2024"
+      },
+      "sets": [
+        {
+          "set": "C",
+          "role": "pick"
+        }
+      ]
+    }
+  ]
+}
