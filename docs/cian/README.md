@@ -13,6 +13,7 @@
 | [`lots.json`](lots.json) | 21 лот: характеристики + экспозиция и просмотры |
 | [`lots.md`](lots.md) | То же таблицами, по поисковым наборам |
 | [`quality.md`](quality.md) | Проверка заявленного ремонта и настоящего срока экспозиции |
+| [`traps.md`](traps.md) | Каталог подвохов Циан, разбор большого ЖК |
 | [`archive.json`](archive.json) | Когда квартира впервые попала в наши снимки |
 | [`../../tools/cian/cian.js`](../../tools/cian/cian.js) | Клиент: поиск, счётчик, проверка фильтров, просмотры, гео |
 
@@ -38,6 +39,9 @@ node tools/cian/cian.js verify --query q.json --limit 8 --photos 6 --dir photos
 
 # найти квартиры, выставленные повторно, и их настоящий срок экспозиции
 node tools/cian/cian.js exposure --query q.json --deep 12
+
+# большой ЖК целиком: дробление на подзапросы + схлопывание дублей в квартиры
+node tools/cian/cian.js sweep --query tools/cian/queries/zhk-ostrov.json --dedupe
 ```
 
 Про `verify` и `exposure` — отдельно в [`quality.md`](quality.md): галочка
@@ -45,7 +49,8 @@ node tools/cian/cian.js exposure --query q.json --deep 12
 врут.
 
 `--all` объединяет выдачу по четырём сортировкам: у каждой свой обрыв, вместе
-они дают больший охват (84 против 80 на проверочном поиске).
+они дают больший охват (84 против 80 на проверочном поиске). Для больших ЖК
+этого мало — там нужен `sweep`, см. [traps.md](traps.md).
 
 Проверить незнакомый фильтр:
 

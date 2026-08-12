@@ -6,6 +6,7 @@
  *   node tools/cian/cian.js search --query q.json [--pages 3] [--all] [--out lots.json] [--no-apartments] [--min-year 2016]
  *   node tools/cian/cian.js url    --query q.json      — каноническая ссылка cat.php
  *   node tools/cian/cian.js probe  --query q.json --with '{"loggia":{"type":"term","value":true}}'
+ *   node tools/cian/cian.js sweep  --query q.json [--limit 250] [--dedupe] — большой ЖК целиком
  *   node tools/cian/cian.js verify --query q.json [--ids 1,2] [--photos 6] [--dir out]
  *   node tools/cian/cian.js snapshot --query q.json   — записать выдачу в архив
  *   node tools/cian/cian.js exposure --query q.json [--deep] — двойники и реальный срок
@@ -163,6 +164,81 @@ async function collect(ctx, jsonQuery, maxPages, all) {
   return { count, lots: [...seen.values()] };
 }
 
+/* ---------- развёртка большой выдачи ----------
+   Пагинация обрывается, не добрав до offerCount: у ЖК «Остров» 974 из 1212 за
+   44 страницы. Лечится дроблением на непересекающиеся подзапросы: каждый
+   меньше потолка — значит перечисляется целиком. */
+const DECORATIONS = ['fineWithFurniture', 'fine', 'preFine', 'without', 'rough'];
+const ROOMS = [9, 1, 2, 3, 4, 5, 6];       // 9 — студия, у неё roomsCount пустой
+
+async function splitByAxis(ctx, q, axis) {
+  const out = [];
+  const values = axis === 'decor' ? DECORATIONS : ROOMS;
+  const key = axis === 'decor' ? 'decorations_list' : 'room';
+  for (const v of values) {
+    const sub = { ...q, [key]: { type: 'terms', value: [v] } };
+    const { count } = await searchPage(ctx, sub, 1);
+    if (count) out.push({ q: sub, count, label: `${key}=${v}` });
+    await sleep(700);
+  }
+  return out;
+}
+
+async function splitByPrice(ctx, bucket, limit) {
+  /* Делим пополам по цене, пока каждая половина не станет меньше потолка. */
+  const out = [];
+  const queue = [{ ...bucket, lo: 0, hi: 200e6 }];
+  let guard = 0;
+  while (queue.length && guard++ < 24) {
+    const b = queue.shift();
+    if (b.count <= limit || b.hi - b.lo < 2e6) { out.push(b); continue; }
+    const mid = Math.round((b.lo + b.hi) / 2 / 1e5) * 1e5;
+    for (const [lo, hi] of [[b.lo, mid], [mid, b.hi]]) {
+      const sub = { ...b.q, price: { type: 'range', value: { gte: lo || undefined, lte: hi } } };
+      const { count } = await searchPage(ctx, sub, 1);
+      if (count) queue.push({ q: sub, count, lo, hi, label: `${b.label} ${(lo / 1e6).toFixed(0)}–${(hi / 1e6).toFixed(0)}млн` });
+      await sleep(700);
+    }
+  }
+  return out;
+}
+
+async function sweep(ctx, q, limit, maxPages) {
+  const top = await searchPage(ctx, q, 1);
+  log(`заявлено ${top.count}`);
+  let buckets = [{ q, count: top.count, label: 'всё' }];
+  for (const axis of ['decor', 'rooms']) {
+    const next = [];
+    for (const b of buckets) {
+      if (b.count <= limit) { next.push(b); continue; }
+      const parts = await splitByAxis(ctx, b.q, axis);
+      log(`  ${b.label}: ${b.count} -> ${parts.map((x) => `${x.label}:${x.count}`).join(' ')}`);
+      next.push(...parts.map((x) => ({ ...x, label: `${b.label} / ${x.label}` })));
+    }
+    buckets = next;
+    if (buckets.every((b) => b.count <= limit)) break;
+  }
+  const heavy = buckets.filter((b) => b.count > limit);
+  for (const b of heavy) {
+    const parts = await splitByPrice(ctx, b, limit);
+    log(`  ${b.label}: ${b.count} -> дроблю по цене на ${parts.length}`);
+    buckets = buckets.filter((x) => x !== b).concat(parts);
+  }
+  log(`подзапросов: ${buckets.length}`);
+
+  const seen = new Map();
+  for (const b of buckets) {
+    for (let p = 1; p <= maxPages; p++) {
+      const { offers } = await searchPage(ctx, b.q, p);
+      if (!offers.length) break;
+      offers.forEach((o) => { const n = normalize(o); if (!seen.has(n.id)) seen.set(n.id, n); });
+      await sleep(800);
+    }
+    log(`  ${b.label.padEnd(46)} ${String(b.count).padStart(5)} -> накоплено ${seen.size}`);
+  }
+  return { declared: top.count, lots: [...seen.values()] };
+}
+
 /* ---------- проверка заявленного ремонта ----------
    Галочка «дизайнерский» ставится продавцом и ничем не подтверждается.
    Текст объявления при этом почти всегда себя выдаёт: под ключ описывают
@@ -244,6 +320,31 @@ function mergeArchive(arc, lots, today) {
   }
   arc.updated = today;
   return { fresh, updated };
+}
+
+/* Схлопывание объявлений в квартиры. В больших ЖК одну квартиру выставляют
+   десятки субагентов по разной цене — считать их отдельными лотами бессмысленно,
+   а переплата за такой же объект доходит до 20%. */
+function dedupe(lots) {
+  const byFp = new Map(), loose = [];
+  for (const l of lots) {
+    if (!l.fingerprint) { loose.push(l); continue; }
+    (byFp.get(l.fingerprint) || byFp.set(l.fingerprint, []).get(l.fingerprint)).push(l);
+  }
+  const flats = [...byFp.values()].map((g) => {
+    const priced = g.filter((x) => x.priceRub).sort((x, y) => x.priceRub - y.priceRub);
+    const best = priced[0] || g[0], worst = priced[priced.length - 1] || g[0];
+    return {
+      ...best,
+      listings: g.length,
+      priceMin: best.priceRub, priceMax: worst.priceRub,
+      overpay: best.priceRub && worst.priceRub !== best.priceRub
+        ? +((worst.priceRub - best.priceRub) / best.priceRub * 100).toFixed(1) : 0,
+      alsoListedAs: g.filter((x) => x.id !== best.id).map((x) => ({ id: x.id, price: x.priceRub })),
+      earliestCreated: g.map((x) => x.created).filter(Boolean).sort()[0] || best.created,
+    };
+  });
+  return { flats, loose };
 }
 
 /* Что видно уже сейчас, без накопленного архива: одна и та же квартира,
@@ -354,6 +455,22 @@ const loadQuery = (v) => {
       const res = { fetched: new Date().toISOString().slice(0, 10), declaredCount: count, enumerated, kept: lots.length, jsonQuery: q, lots };
       if (a.out) { fs.writeFileSync(a.out, JSON.stringify(res, null, 2) + '\n'); log(`-> ${a.out}`); }
       else log(JSON.stringify(res, null, 2));
+
+    } else if (cmd === 'sweep') {
+      const q = loadQuery(a.query);
+      const { declared, lots } = await sweep(ctx, q, parseInt(a.limit || '250', 10), parseInt(a.pages || '12', 10));
+      log(`\nзаявлено ${declared}, собрано ${lots.length} (${Math.round(lots.length / declared * 100)}%)`);
+      const { flats, loose } = dedupe(lots);
+      const multi = flats.filter((f) => f.listings > 1).sort((x, y) => y.listings - x.listings);
+      log(`объявлений ${lots.length} -> квартир ${flats.length}` +
+          (loose.length ? ` (+${loose.length} без корпуса в адресе, схлопнуть нельзя)` : ''));
+      log(`квартир, выставленных больше одного раза: ${multi.length}, лишних объявлений ${lots.length - flats.length - loose.length}`);
+      multi.slice(0, 5).forEach((f) => log(
+        `  ${f.street}, ${f.house}, эт.${f.floor}, ${f.totalArea} м² — ${f.listings} объявл., ` +
+        `${(f.priceMin || 0).toLocaleString('ru-RU')}–${(f.priceMax || 0).toLocaleString('ru-RU')} ₽` +
+        (f.overpay ? `, переплата за верхнее ${f.overpay}%` : '')));
+      const out = a.dedupe ? flats.concat(loose) : lots;
+      if (a.out) { fs.writeFileSync(a.out, JSON.stringify({ declared, collected: lots.length, flats: flats.length, lots: out }, null, 2) + '\n'); log(`-> ${a.out}`); }
 
     } else if (cmd === 'verify') {
       const q = loadQuery(a.query);
