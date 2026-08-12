@@ -3,23 +3,18 @@
     python -m agent.cli                 # все объекты, кратко
     python -m agent.cli sky-house-7     # один объект, подробно
     python -m agent.cli --no-ops        # без демо-данных о спросе
+    python -m agent.cli --feed          # собрать YRL-фид для Яндекс Недвижимости
 """
 
 from __future__ import annotations
 
-import json
 import sys
-from datetime import date
-from pathlib import Path
 
 from .models import Action, Verdict
 from .pricing import evaluate
-from .providers import ChainProvider
-from .providers.cian import CianProvider
-from .providers.demo import DemoProvider
+from .providers.yandex import build_yrl_feed
 from .registry import load_registry, portfolio_checks
-
-ROOT = Path(__file__).resolve().parent.parent
+from .sources import Sources, yrl_output_path
 
 ICON = {
     Action.CUT: "снизить",
@@ -27,23 +22,6 @@ ICON = {
     Action.HOLD: "держать",
     Action.MANUAL: "ручная оценка",
 }
-
-
-def apply_demo_ops(apartments):
-    """Подмешивает синтетические оперативные данные (срок экспозиции, спрос)."""
-    path = ROOT / "data" / "ops_demo.json"
-    if not path.exists():
-        return apartments
-    ops = json.loads(path.read_text(encoding="utf-8"))["ops"]
-    for a in apartments:
-        item = ops.get(a.id)
-        if not item:
-            continue
-        a.listed_at = date.fromisoformat(item["listed_at"])
-        a.views_7d = item["views_7d"]
-        a.calls_7d = item["calls_7d"]
-        a.viewings_30d = item["viewings_30d"]
-    return apartments
 
 
 def brief(v: Verdict) -> str:
@@ -96,22 +74,29 @@ def detail(v: Verdict) -> str:
 
 def main() -> None:
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    use_ops = "--no-ops" not in sys.argv
+    sources = Sources(allow_demo_ops="--no-ops" not in sys.argv)
+    apartments = sources.apply_ops(load_registry())
 
-    apartments = load_registry()
-    if use_ops:
-        apartments = apply_demo_ops(apartments)
+    if "--feed" in sys.argv:
+        path = yrl_output_path()
+        path.write_text(build_yrl_feed(apartments), encoding="utf-8")
+        print(f"YRL-фид для Яндекс Недвижимости собран: {path}")
+        print("Перед первой боевой выгрузкой прогоните его через валидатор площадки.")
+        return
 
-    provider = ChainProvider(CianProvider(), DemoProvider())
-    if isinstance(provider.providers[0], CianProvider) and not provider.providers[0].configured:
-        print("⚠️  Циан API не сконфигурирован — работаем на СИНТЕТИЧЕСКИХ демо-аналогах.\n")
+    for note in sources.notes:
+        print(f"  · {note}")
+    print()
+
+    def verdict(a):
+        return evaluate(a, sources.comps.fetch_comps(a), baseline=sources.valuation_for(a))
 
     if args:
         target = next((a for a in apartments if a.id == args[0]), None)
         if target is None:
             print(f"Объект {args[0]!r} не найден. Доступны: {', '.join(a.id for a in apartments)}")
             raise SystemExit(1)
-        print(detail(evaluate(target, provider.fetch_comps(target))))
+        print(detail(verdict(target)))
         return
 
     print(
@@ -121,7 +106,7 @@ def main() -> None:
     print("-" * 120)
     verdicts = []
     for a in apartments:
-        v = evaluate(a, provider.fetch_comps(a))
+        v = verdict(a)
         verdicts.append(v)
         print(brief(v))
 

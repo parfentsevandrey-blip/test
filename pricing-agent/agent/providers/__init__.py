@@ -9,16 +9,39 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from ..models import Apartment, Comp
+from ..models import Apartment, Comp, HouseValuation, OpsSnapshot
 
 
 class MarketDataProvider(Protocol):
-    """Контракт источника аналогов."""
+    """Контракт источника аналогов — из чего строится коридор."""
 
     name: str
 
     def fetch_comps(self, apartment: Apartment, radius_km: float = 1.5) -> list[Comp]:
         """Возвращает аналоги для оцениваемой квартиры: экспозиция и/или сделки."""
+        ...
+
+
+class OpsDataProvider(Protocol):
+    """Контракт источника данных о спросе по нашим же объявлениям.
+
+    Отделён от аналогов намеренно: аналоги отвечают на вопрос «сколько стоит рынок»,
+    оперативные данные — на вопрос «как рынок реагирует на нашу цену». Второй сигнал
+    сильнее первого, и приходит он из другого места (кабинет площадки, CRM).
+    """
+
+    name: str
+
+    def fetch_ops(self, apartment: Apartment) -> OpsSnapshot | None:
+        ...
+
+
+class ValuationProvider(Protocol):
+    """Контракт независимой оценки по дому — контрольная точка для коридора."""
+
+    name: str
+
+    def fetch_valuation(self, apartment: Apartment) -> HouseValuation | None:
         ...
 
 

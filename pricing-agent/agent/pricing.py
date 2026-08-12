@@ -11,7 +11,15 @@ from dataclasses import dataclass
 from datetime import date
 
 from .adjustments import DEFAULT_CONFIG, PricingConfig, adjust_comp
-from .models import Action, AdjustedComp, Apartment, Comp, Scenario, Verdict
+from .models import (
+    Action,
+    AdjustedComp,
+    Apartment,
+    Comp,
+    HouseValuation,
+    Scenario,
+    Verdict,
+)
 
 
 @dataclass
@@ -99,8 +107,14 @@ def evaluate(
     comps: list[Comp],
     cfg: PricingConfig = DEFAULT_CONFIG,
     decision: DecisionConfig = DEFAULT_DECISION,
+    baseline: HouseValuation | None = None,
 ) -> Verdict:
-    """Главная функция. Аналоги → коридор → вердикт с ограничителями и сценариями."""
+    """Главная функция. Аналоги → коридор → вердикт с ограничителями и сценариями.
+
+    `baseline` — независимая оценка ₽/м² по дому (у Яндекс Недвижимости это
+    ML-калькулятор «Оценка квартиры»). На вердикт она не влияет: расхождение с нашим
+    коридором — повод проверить выборку аналогов, а не подвинуть цену.
+    """
     adjusted = [adjust_comp(apartment, c, cfg) for c in comps]
     adjusted.sort(key=lambda a: a.weight, reverse=True)
 
@@ -108,7 +122,9 @@ def evaluate(
     warnings: list[str] = []
 
     if not adjusted:
-        return _manual_verdict(apartment, [], ["Аналоги не найдены — рынок не проанализирован."])
+        return _manual_verdict(
+            apartment, [], ["Аналоги не найдены — рынок не проанализирован."], baseline=baseline
+        )
 
     values = [a.adjusted_price_per_sqm for a in adjusted]
     weights = [a.weight for a in adjusted]
@@ -150,6 +166,22 @@ def evaluate(
             "Это главный недостающий сигнал."
         )
 
+    # Сверка с независимой оценкой по дому. Мы строили коридор по своим аналогам и
+    # своим поправкам; если внешняя оценка сильно расходится — скорее всего дело в
+    # выборке аналогов, и это надо увидеть до, а не после разговора с собственником.
+    if baseline is not None:
+        gap = baseline.price_per_sqm / p50 - 1
+        signals.append(
+            f"Оценка по дому ({baseline.source}): {baseline.price_per_sqm / 1000:.0f} тыс ₽/м² "
+            f"против нашей медианы {p50 / 1000:.0f} — расхождение {gap:+.1%}"
+        )
+        if abs(gap) > 0.15:
+            warnings.append(
+                f"Наш коридор расходится с оценкой по дому на {gap:+.1%}. "
+                "Проверьте выборку аналогов до применения рекомендации: "
+                "скорее всего в неё попали лоты другого класса или метража."
+            )
+
     cutters = [a for a in adjusted if (a.comp.price_cut_pct or 0) > 0]
     if cutters:
         share = len(cutters) / len(adjusted)
@@ -179,7 +211,9 @@ def evaluate(
             f"Эффективное число аналогов {n_eff:.1f} < {decision.min_comps:.0f} — "
             "статистике доверять нельзя, нужен ручной разбор."
         )
-        return _manual_verdict(apartment, adjusted, warnings, signals, confidence, (p25, p50, p75), pct)
+        return _manual_verdict(
+            apartment, adjusted, warnings, signals, confidence, (p25, p50, p75), pct, baseline
+        )
 
     action = Action.HOLD
     target_ppsm = our
@@ -249,6 +283,7 @@ def evaluate(
         signals=signals,
         warnings=warnings,
         scenarios=scenarios,
+        baseline=baseline,
     )
 
 
@@ -343,6 +378,7 @@ def _manual_verdict(
     confidence: float = 0.2,
     corridor: tuple[float, float, float] | None = None,
     pct: float = 50.0,
+    baseline: HouseValuation | None = None,
 ) -> Verdict:
     ppsm = apartment.price_per_sqm
     return Verdict(
@@ -357,4 +393,5 @@ def _manual_verdict(
         signals=signals or [],
         warnings=warnings,
         scenarios=[],
+        baseline=baseline,
     )

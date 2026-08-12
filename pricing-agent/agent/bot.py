@@ -18,20 +18,16 @@ from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
-from .cli import apply_demo_ops
 from .models import Action, Apartment, Verdict
 from .narrative import explain
 from .pricing import evaluate
-from .providers import ChainProvider
-from .providers.cian import CianProvider
-from .providers.demo import DemoProvider
 from .registry import load_registry, portfolio_checks
+from .sources import Sources
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger(__name__)
 
-DEMO_OPS = os.getenv("DEMO_OPS", "1") == "1"
-PROVIDER = ChainProvider(CianProvider(), DemoProvider())
+SOURCES = Sources(allow_demo_ops=os.getenv("DEMO_OPS", "1") == "1")
 
 BADGE = {
     Action.CUT: "🔻",
@@ -42,15 +38,20 @@ BADGE = {
 
 
 def registry() -> list[Apartment]:
-    apartments = load_registry()
-    return apply_demo_ops(apartments) if DEMO_OPS else apartments
+    return SOURCES.apply_ops(load_registry())
+
+
+def assess(apartment: Apartment) -> Verdict:
+    return evaluate(
+        apartment,
+        SOURCES.comps.fetch_comps(apartment),
+        baseline=SOURCES.valuation_for(apartment),
+    )
 
 
 def verdict_for(apartment_id: str) -> Verdict | None:
     apartment = next((a for a in registry() if a.id == apartment_id), None)
-    if apartment is None:
-        return None
-    return evaluate(apartment, PROVIDER.fetch_comps(apartment))
+    return None if apartment is None else assess(apartment)
 
 
 def money(rub: float) -> str:
@@ -124,7 +125,7 @@ dp = Dispatcher()
 
 @dp.message(Command("start", "objects"))
 async def cmd_start(message: Message) -> None:
-    verdicts = [evaluate(a, PROVIDER.fetch_comps(a)) for a in registry()]
+    verdicts = [assess(a) for a in registry()]
     await message.answer(
         "Агент по ценообразованию. Выберите объект — покажу рыночный коридор "
         "и рекомендацию по цене.",
@@ -134,7 +135,7 @@ async def cmd_start(message: Message) -> None:
 
 @dp.callback_query(F.data == "list")
 async def show_list(call: CallbackQuery) -> None:
-    verdicts = [evaluate(a, PROVIDER.fetch_comps(a)) for a in registry()]
+    verdicts = [assess(a) for a in registry()]
     await call.message.edit_text(
         "Объекты в продаже:", reply_markup=objects_keyboard(verdicts)
     )
@@ -220,7 +221,7 @@ async def show_comps(call: CallbackQuery) -> None:
 async def show_digest(call: CallbackQuery) -> None:
     await call.answer("Собираю сводку…")
     apartments = registry()
-    verdicts = [evaluate(a, PROVIDER.fetch_comps(a)) for a in apartments]
+    verdicts = [assess(a) for a in apartments]
 
     actionable = [v for v in verdicts if v.action in (Action.CUT, Action.RAISE)]
     total = sum(v.apartment.price for v in verdicts)

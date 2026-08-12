@@ -39,13 +39,22 @@ class Apartment:
     comment: str = ""
     video_url: str = ""
     presentation_url: str = ""
-    # Оперативные данные — заполняются из CRM/фида, без них вердикт менее уверенный.
+    # internal-id объявления в YRL-фиде Яндекс Недвижимости. Мы его сами и назначаем,
+    # поэтому по умолчанию совпадает с id лота — именно по нему выгрузка звонков из
+    # кабинета связывается с объектом реестра.
+    yandex_internal_id: Optional[str] = None
+    # Оперативные данные — заполняются из кабинета площадки/CRM.
+    # Без них вердикт менее уверенный: не видно реакции рынка на нашу цену.
     listed_at: Optional[date] = None      # дата выхода в экспозицию
     views_7d: Optional[int] = None        # просмотры объявления за 7 дней
     calls_7d: Optional[int] = None        # звонки за 7 дней
     viewings_30d: Optional[int] = None    # показы за 30 дней
     last_price_change: Optional[date] = None
     price_history: list[tuple[str, int]] = field(default_factory=list)
+
+    @property
+    def feed_id(self) -> str:
+        return self.yandex_internal_id or self.id
 
     @property
     def price_per_sqm(self) -> float:
@@ -118,6 +127,38 @@ class AdjustedComp:
         return self.adjusted_price_per_sqm / self.comp.price_per_sqm - 1
 
 
+@dataclass
+class OpsSnapshot:
+    """Оперативные данные по объявлению: как рынок реагирует на нашу цену.
+
+    Приходят из кабинета площадки (у Яндекс Недвижимости — выгрузка XLS) или из CRM.
+    Это то, чего нет в xlsx-реестре и без чего вердикт опирается только на цены.
+    """
+
+    source: str
+    listed_at: Optional[date] = None
+    views_7d: Optional[int] = None
+    calls_7d: Optional[int] = None
+    calls_30d: Optional[int] = None
+    viewings_30d: Optional[int] = None
+
+
+@dataclass
+class HouseValuation:
+    """Независимая оценка ₽/м² по дому — контрольная точка для нашего коридора.
+
+    У Яндекс Недвижимости это ML-калькулятор «Оценка квартиры»: он учитывает адрес,
+    комнатность, этаж, площадь и состояние ремонта и обучен на многолетней базе
+    объявлений. Наш коридор строится независимо, поэтому расхождение — сигнал
+    проверить выборку аналогов, а не повод менять цену.
+    """
+
+    source: str
+    price_per_sqm: float
+    observed_at: Optional[date] = None
+    note: str = ""
+
+
 class Action(str, Enum):
     CUT = "снизить"
     HOLD = "держать"
@@ -140,6 +181,7 @@ class Verdict:
     signals: list[str]                # человекочитаемые факторы, повлиявшие на вердикт
     warnings: list[str]
     scenarios: list["Scenario"] = field(default_factory=list)
+    baseline: Optional[HouseValuation] = None   # независимая оценка по дому, если есть
 
     @property
     def recommended_price_per_sqm(self) -> float:

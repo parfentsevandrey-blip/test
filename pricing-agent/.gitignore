@@ -1,3 +1,6 @@
 .env
 __pycache__/
 *.pyc
+
+# Собранный YRL-фид — артефакт сборки, не исходник
+data/yandex-feed.xml
