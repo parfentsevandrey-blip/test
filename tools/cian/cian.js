@@ -8,7 +8,7 @@
  *   node tools/cian/cian.js url    --query q.json      — каноническая ссылка cat.php
  *   node tools/cian/cian.js probe  --query q.json --with '{"loggia":{"type":"term","value":true}}'
  *   node tools/cian/cian.js sweep  --query q.json [--limit 250] [--dedupe] — большой ЖК целиком
- *   node tools/cian/cian.js verify --query q.json [--ids 1,2] [--photos 6] [--dir out]
+ *   node tools/cian/cian.js verify --query q.json [--ids 1,2] [--photos 9] [--files] [--dir out]
  *   node tools/cian/cian.js snapshot --query q.json   — записать выдачу в архив
  *   node tools/cian/cian.js exposure --query q.json [--deep] — двойники и реальный срок
  *   node tools/cian/cian.js stats  332550701 331961171
@@ -283,17 +283,36 @@ const YELLOW = [
   ['свободная планировк', 'свободная планировка'],
 ];
 
+/* Слова, после которых упоминание белой коробки говорит о прошлом квартиры,
+   а не о её нынешнем состоянии: «куплена в состоянии white box, сделан ремонт». */
+const PAST = /(был|была|было|куплен|приобрет|из состояния|после|вместо|до ремонта|сдавалась|передан|передела|перестро|демонтир|заменен|заменён|убран)\S*\s+(\S+\s+){0,4}$/i;
+
 function assessRepair(lot) {
   const t = (lot.description || '').toLowerCase();
-  const hit = (list) => list.filter(([re]) => new RegExp(re).test(t)).map(([, why]) => why);
-  const red = hit(RED), yellow = hit(YELLOW), green = hit(GREEN);
+  /* RED засчитывается, только если перед ним нет разговора о прошлом. */
+  const red = RED.filter(([re, ]) => {
+    const m = new RegExp(re).exec(t);
+    return m && !PAST.test(t.slice(Math.max(0, m.index - 60), m.index));
+  }).map(([, why]) => why);
+  const redPast = RED.filter(([re]) => new RegExp(re).test(t)).length - red.length;
+  const yellow = YELLOW.filter(([re]) => new RegExp(re).test(t)).map(([, why]) => why);
+  const green = GREEN.filter(([re]) => new RegExp(re).test(t)).map(([, why]) => why);
+
   const flags = [];
-  if (lot.hasFurniture === false) flags.push('поле hasFurniture=false');
-  if (lot.hasFurniture == null) flags.push('поле hasFurniture не заполнено');
+  if (redPast) flags.push(`${redPast} упоминание о прошлом состоянии — не в счёт`);
   if (lot.photosCount < 8) flags.push(`мало фото (${lot.photosCount})`);
+
+  /* Проверено вручную: hasFurniture=false ловил настоящую подмену (голая
+     отделка застройщика под видом дизайнерского ремонта), а пустое поле
+     давало один шум — оно не заполнено у большинства объявлений. */
+  /* Текстовый признак сам по себе слабый: на проверке единственное найденное
+     «противоречие» оказалось рассказом о переделанной белой коробке. Поэтому
+     твёрдый вердикт даёт только структурное поле, а слово против богатого
+     описания понижается до «под вопросом». */
   let verdict = 'похоже на правду';
-  if (red.length) verdict = 'ПРОТИВОРЕЧИЕ';
-  else if (!green.length || (lot.hasFurniture !== true && lot.photosCount < 10)) verdict = 'под вопросом';
+  if (lot.hasFurniture === false) { verdict = 'ПРОТИВОРЕЧИЕ'; red.unshift('поле hasFurniture=false при заявленном ремонте под ключ'); }
+  else if (red.length) verdict = green.length >= 2 ? 'под вопросом' : 'ПРОТИВОРЕЧИЕ';
+  else if (!green.length && lot.hasFurniture !== true) verdict = 'под вопросом';
   return { verdict, red, yellow, green, flags };
 }
 
@@ -309,6 +328,53 @@ async function fetchPhotos(ctx, lot, dir, n) {
     } catch (e) { /* одна битая картинка не повод ронять проверку */ }
   }
   return files;
+}
+
+/* Контактный лист: все фотографии лота одним изображением. Смотреть шесть
+   файлов на объявление не масштабируется — на тридцати лотах это почти две
+   сотни открытий. Сборка идёт в браузере: он и декодирует JPEG, и рисует.
+   Картинки подаются как data:-URL, иначе холст «портится» чужим origin
+   и toDataURL запрещён. */
+async function contactSheet(ctx, page, lot, file, n, cols = 3) {
+  const imgs = [];
+  for (const u of lot.photos.slice(0, n)) {
+    try {
+      const r = await ctx.request.get(u, { timeout: 30000 });
+      imgs.push('data:image/jpeg;base64,' + (await r.body()).toString('base64'));
+    } catch (e) { /* пропускаем битую */ }
+  }
+  if (!imgs.length) return null;
+  const dataUrl = await page.evaluate(async ({ imgs, cols, caption }) => {
+    const CELL = 420, PAD = 6, HEAD = 34;
+    const rows = Math.ceil(imgs.length / cols);
+    const cv = document.createElement('canvas');
+    cv.width = cols * CELL + (cols + 1) * PAD;
+    cv.height = HEAD + rows * CELL + (rows + 1) * PAD;
+    const g = cv.getContext('2d');
+    g.fillStyle = '#111'; g.fillRect(0, 0, cv.width, cv.height);
+    g.fillStyle = '#fff'; g.font = '18px sans-serif';
+    g.fillText(caption, PAD, 24);
+    await Promise.all(imgs.map((src, i) => new Promise((res) => {
+      const im = new Image();
+      im.onload = () => {
+        const x = PAD + (i % cols) * (CELL + PAD);
+        const y = HEAD + PAD + Math.floor(i / cols) * (CELL + PAD);
+        // вписываем с сохранением пропорций, лишнее обрезаем по центру
+        const s = Math.max(CELL / im.width, CELL / im.height);
+        const w = im.width * s, h = im.height * s;
+        g.save(); g.beginPath(); g.rect(x, y, CELL, CELL); g.clip();
+        g.drawImage(im, x + (CELL - w) / 2, y + (CELL - h) / 2, w, h);
+        g.restore();
+        res();
+      };
+      im.onerror = () => res();
+      im.src = src;
+    })));
+    return cv.toDataURL('image/jpeg', 0.82);
+  }, { imgs, cols, caption: `${lot.id} · ${lot.rooms || 'студия'} · ${lot.totalArea} м² · ${(lot.priceRub || 0).toLocaleString('ru-RU')} ₽ · ${lot.street || ''} ${lot.house || ''}` });
+  fs.mkdirSync(require('path').dirname(file), { recursive: true });
+  fs.writeFileSync(file, Buffer.from(dataUrl.split(',')[1], 'base64'));
+  return file;
 }
 
 /* ---------- реальный срок экспозиции ----------
@@ -587,15 +653,20 @@ if (require.main === module) (async () => {
       const report = [];
       for (const l of lots) {
         const r = assessRepair(l);
-        const files = a.photos === false || a.photos === '0' ? []
-          : await fetchPhotos(ctx, l, `${dir}/${l.id}`, parseInt(a.photos || '6', 10));
-        report.push({ id: l.id, url: l.url, price: l.priceRub, area: l.totalArea, ...r, photos: files });
+        const nPhoto = parseInt(a.photos || '9', 10);
+        let files = [], sheet = null;
+        if (a.photos !== '0') {
+          if (a.files) files = await fetchPhotos(ctx, l, `${dir}/${l.id}`, nPhoto);
+          else sheet = await contactSheet(ctx, page, l, `${dir}/${l.id}.jpg`, nPhoto);
+        }
+        report.push({ id: l.id, url: l.url, price: l.priceRub, area: l.totalArea, ...r, sheet, photos: files });
         log(`\n${l.id}  ${l.rooms}к ${l.totalArea} м²  ${(l.priceRub || 0).toLocaleString('ru-RU')} ₽  — ${r.verdict}`);
         if (r.red.length) log(`   против: ${r.red.join('; ')}`);
         if (r.yellow.length) log(`   насторожило: ${r.yellow.join('; ')}`);
         if (r.green.length) log(`   за: ${r.green.join('; ')}`);
         if (r.flags.length) log(`   поля: ${r.flags.join('; ')}`);
-        if (files.length) log(`   фото: ${files.length} шт. в ${dir}/${l.id}/ — посмотреть глазами`);
+        if (sheet) log(`   контактный лист: ${sheet}`);
+        else if (files.length) log(`   фото: ${files.length} шт. в ${dir}/${l.id}/`);
       }
       if (a.out) fs.writeFileSync(a.out, JSON.stringify(report, null, 2) + '\n');
       log('\nТекст и поля — только предварительный отсев. Окончательный ответ дают фотографии.');

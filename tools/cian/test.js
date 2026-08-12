@@ -106,6 +106,40 @@ test('пустое описание не выдаётся за проверен�
   assert.notStrictEqual(r.verdict, 'похоже на правду');
 });
 
+test('hasFurniture=false опровергает заявленный ремонт под ключ', () => {
+  // проверено вручную на 332342009: галочка «дизайнерский», на фото голая отделка
+  const r = assessRepair(lot({ description: 'Дизайнерский ремонт, мебель и техника', hasFurniture: false }));
+  assert.strictEqual(r.verdict, 'ПРОТИВОРЕЧИЕ');
+});
+
+test('white box в рассказе о прошлом не считается противоречием', () => {
+  // 317582567: «куплена в состоянии white box», а на фото законченный интерьер
+  const r = assessRepair(lot({ description: 'Квартира куплена в состоянии white box, сделан ремонт с мебелью', hasFurniture: true }));
+  assert.strictEqual(r.verdict, 'похоже на правду');
+  assert.ok(r.flags.some((f) => /прошлом/.test(f)));
+});
+
+test('white box про нынешнее состояние остаётся противоречием', () => {
+  const r = assessRepair(lot({ description: 'Продаётся в состоянии white box', hasFurniture: null }));
+  assert.strictEqual(r.verdict, 'ПРОТИВОРЕЧИЕ');
+});
+
+test('«переделан white box от застройщика» — про прошлое, не противоречие', () => {
+  // 317582567 дословно: «полностью переделан white box от застройщика»
+  const r = assessRepair(lot({ description: 'Выполнен дизайнерский ремонт, полностью переделан white box от застройщика, мебель и техника остаются', hasFurniture: true }));
+  assert.strictEqual(r.verdict, 'похоже на правду');
+});
+
+test('слово против богатого описания понижается до «под вопросом», а не рубит сплеча', () => {
+  const r = assessRepair(lot({ description: 'бетон. дизайн-проект, мебель и техника, встроенные шкафы', hasFurniture: null }));
+  assert.strictEqual(r.verdict, 'под вопросом');
+});
+
+test('незаполненное hasFurniture само по себе не повод для подозрения', () => {
+  const r = assessRepair(lot({ description: 'Мебель и техника остаются', hasFurniture: null }));
+  assert.strictEqual(r.verdict, 'похоже на правду');
+});
+
 process.stdout.write('архив\n');
 
 test('изменение цены между снимками попадает в changes', () => {
