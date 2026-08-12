@@ -2,9 +2,10 @@
 
 Три роли разведены намеренно, потому что приходят из разных мест:
 
-  аналоги     — из чего строится коридор. Яндекс Недвижимость чужие объявления не
-                отдаёт, поэтому здесь ЕГРН, своя база, платная аналитика. В демо —
-                синтетический провайдер.
+  аналоги     — из чего строится коридор. Ни Яндекс, ни партнёрское API Циан чужих
+                объявлений не отдают, поэтому основной источник здесь — выгрузки
+                расширения «Циан → Excel» (data/cian_exports/*.xlsx). Если их нет,
+                подставляется синтетический демо-провайдер.
   спрос       — как рынок реагирует на нашу цену. Выгрузка звонков из кабинета
                 Яндекса; если её нет — демо-данные (и об этом честно сообщается).
   оценка дома — независимая контрольная точка для коридора. На вердикт не влияет.
@@ -20,6 +21,7 @@ from pathlib import Path
 
 from .models import Apartment, HouseValuation, OpsSnapshot
 from .providers import ChainProvider
+from .providers.cian_export import CianExportProvider
 from .providers.demo import DemoProvider
 from .providers.yandex import YandexCallLog, YandexValuation
 
@@ -65,17 +67,31 @@ class DemoOps:
 class Sources:
     """Собранный набор источников плюс отчёт о том, что реально подключено."""
 
-    def __init__(self, *, allow_demo_ops: bool = True) -> None:
-        self.comps = ChainProvider(DemoProvider())
+    def __init__(self, *, allow_demo_ops: bool = True, allow_demo_comps: bool = True) -> None:
+        self.exports = CianExportProvider(
+            os.getenv("CIAN_EXPORTS_DIR", ROOT / "data" / "cian_exports"),
+            include_developer=os.getenv("CIAN_INCLUDE_DEVELOPER", "0") == "1",
+        )
         self.valuation = YandexValuation()
-
         self.calls = YandexCallLog()
         self.demo_ops = DemoOps() if allow_demo_ops else None
 
-        self.notes: list[str] = [
-            "Аналоги: синтетические (data/comps_demo.json) — проверка механики, "
-            "не рыночная информация."
-        ]
+        self.notes: list[str] = []
+        if self.exports.available:
+            # Реальные аналоги есть — демо-выборка отключается целиком, иначе
+            # синтетика молча размывает настоящий коридор.
+            self.comps = ChainProvider(self.exports)
+            self.notes.append(self.exports.summary())
+        elif allow_demo_comps:
+            self.comps = ChainProvider(DemoProvider())
+            self.notes.append(
+                "Аналоги: синтетические (data/comps_demo.json) — проверка механики, "
+                "не рыночная информация. Положите выгрузки расширения в "
+                f"{self.exports.directory}, чтобы считать по реальным лотам."
+            )
+        else:
+            self.comps = ChainProvider()
+            self.notes.append("Аналоги: источников нет — коридор не строится.")
         if self.calls.available:
             self.notes.append(f"Спрос: выгрузка звонков Яндекса — {self.calls.path}")
         elif self.demo_ops and self.demo_ops.available:
@@ -93,7 +109,13 @@ class Sources:
             )
 
     def apply_ops(self, apartments: list[Apartment]) -> list[Apartment]:
-        """Заполняет оперативные поля. Реальные звонки перекрывают демо-данные."""
+        """Заполняет оперативные поля. Реальные звонки перекрывают демо-данные.
+
+        Здесь же провайдеру аналогов сообщается весь портфель: наши лоты висят на
+        площадках и попадают в выгрузку, а без полного списка объект в ЖК с
+        несколькими нашими квартирами сравнивался бы сам с собой.
+        """
+        self.exports.exclude_own(apartments)
         for a in apartments:
             snap = None
             if self.demo_ops is not None:

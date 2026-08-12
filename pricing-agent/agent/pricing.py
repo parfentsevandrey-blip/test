@@ -193,6 +193,19 @@ def evaluate(
         if share >= 0.5:
             slow = True
 
+    # Переподачи: продавец снимает и заново публикует объявление, сбрасывая счётчик
+    # срока на площадке. Много переподач у конкурентов означает, что реальная
+    # экспозиция в ЖК длиннее, чем показывает витрина, — рынок медленнее, чем кажется.
+    republished = [a for a in adjusted if (a.comp.republish or 0) > 0]
+    if republished:
+        share = len(republished) / len(adjusted)
+        signals.append(
+            f"Переподавали объявление {len(republished)} из {len(adjusted)} аналогов — "
+            f"витринный срок экспозиции в ЖК занижен"
+        )
+        if share >= 0.4:
+            slow = True
+
     demand_weak = apartment.viewings_30d is not None and apartment.viewings_30d <= 1
     if apartment.viewings_30d is not None:
         signals.append(f"Показов за 30 дней: {apartment.viewings_30d}")

@@ -27,11 +27,13 @@ ICON = {
 def brief(v: Verdict) -> str:
     a = v.apartment
     delta = f"{v.delta_pct:+.1%}" if v.action is not Action.MANUAL else "—"
+    # Без аналогов перцентиль не считается — показывать «p50» было бы враньём.
+    pct = f"p{v.our_percentile:>3.0f}" if v.comps else "   —"
     return (
         f"{a.complex_name:<24} {a.area:>6.1f} м²  "
         f"{a.price / 1e6:>6.1f} млн  "
         f"{a.price_per_sqm / 1000:>6.0f} тыс/м²  "
-        f"p{v.our_percentile:>3.0f}  "
+        f"{pct}  "
         f"{ICON[v.action]:<14} {delta:>7}  "
         f"→ {v.recommended_price / 1e6:>6.1f} млн   conf {v.confidence:.2f}"
     )
