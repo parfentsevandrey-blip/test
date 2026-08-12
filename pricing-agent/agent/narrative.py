@@ -15,8 +15,12 @@ import json
 import logging
 import os
 import textwrap
+from typing import TYPE_CHECKING
 
 from .models import Action, Verdict
+
+if TYPE_CHECKING:  # только для типов — иначе получится цикл импорта
+    from .lotreport import LotReport
 
 log = logging.getLogger(__name__)
 
@@ -39,37 +43,46 @@ SYSTEM = """\
 """
 
 
-def explain(verdict: Verdict) -> str:
-    """Текст объяснения вердикта. При недоступности LLM — шаблон."""
+def _ask(system: str, payload: dict, fallback: str) -> str:
+    """Один вызов модели с пересказом готового расчёта. Любой сбой → fallback.
+
+    Бот обязан ответить всегда: недоступность LLM не должна оставлять менеджера
+    без цены, поэтому здесь нет ни одного пути, который бросает исключение наружу.
+    """
     try:
         import anthropic
     except ImportError:
         log.info("anthropic SDK не установлен — шаблонное объяснение")
-        return template_explanation(verdict)
+        return fallback
 
     if not os.getenv("ANTHROPIC_API_KEY"):
         log.info("ANTHROPIC_API_KEY не задан — шаблонное объяснение")
-        return template_explanation(verdict)
+        return fallback
 
     try:
         client = anthropic.Anthropic()
         response = client.messages.create(
             model=MODEL,
             max_tokens=1200,
-            system=SYSTEM,
+            system=system,
             output_config={"effort": "low"},
-            messages=[{"role": "user", "content": json.dumps(_payload(verdict), ensure_ascii=False)}],
+            messages=[{"role": "user", "content": json.dumps(payload, ensure_ascii=False)}],
         )
     except Exception as exc:  # сеть, лимиты, отказ — бот всё равно должен ответить
         log.error("LLM недоступна (%s) — шаблонное объяснение", exc)
-        return template_explanation(verdict)
+        return fallback
 
     if response.stop_reason == "refusal":
         log.warning("Модель отказалась отвечать — шаблонное объяснение")
-        return template_explanation(verdict)
+        return fallback
 
     text = "".join(b.text for b in response.content if b.type == "text").strip()
-    return text or template_explanation(verdict)
+    return text or fallback
+
+
+def explain(verdict: Verdict) -> str:
+    """Текст объяснения вердикта. При недоступности LLM — шаблон."""
+    return _ask(SYSTEM, _payload(verdict), template_explanation(verdict))
 
 
 def _payload(v: Verdict) -> dict:
@@ -111,6 +124,115 @@ def _payload(v: Verdict) -> dict:
             for s in v.scenarios
         ],
     }
+
+
+SYSTEM_PRICE = """\
+Ты — аналитик отдела продаж премиальной недвижимости Москвы. Тебе дают ГОТОВЫЙ разбор
+лота: позицию внутри дома, приведение цен соседей к нашему этажу, бюджет въезда
+(цена плюс доводка), сравнение с проектами локации и уже рассчитанную рекомендованную
+цену с перечнем причин.
+
+Задача — объяснить менеджеру за 4–6 предложений ровно две вещи: какую цену ставим и
+почему именно её. Ничего больше наружу не идёт.
+
+Жёсткие правила:
+- НЕ меняй ни одного числа и не выводи новых. Все цифры бери из переданных данных.
+- НЕ предлагай другую цену, чем рекомендованная, и не давай «вилку от себя».
+- НЕ придумывай рыночных фактов, которых нет во входных данных.
+- Обязательно назови ограничение, которое определило цену (поле «что_определило_цену»).
+- Если лот без отделки — объясни разницу между ценой в объявлении и бюджетом въезда:
+  покупатель сравнивает второе.
+- Пиши по-деловому, без маркетинговых прилагательных и без эмодзи.
+- Начни с сути: цена и действие.
+"""
+
+_BINDING = {
+    "цель": "конкурентная цель по бюджету въезда в локации",
+    "дом": "уровень соседей по дому, приведённый к нашему этажу",
+    "пол": "нижняя граница по ценам соседей в доме, приведённым к нашему этажу",
+    "шаг": "ограничитель шага снижения за один пересмотр",
+    "уже конкурентна": "цена уже ниже всех найденных ориентиров — снижать не от чего",
+    "нет ориентира": (
+        "ни в доме, ни в локации не нашлось ориентира ниже нашей цены — "
+        "снижать её не от чего"
+    ),
+    "нет данных": "выгрузки по ЖК нет, цена не проверена",
+}
+
+
+def explain_price(report: "LotReport") -> str:
+    """Обоснование рекомендованной цены. Единственный текст, который видит менеджер."""
+    return _ask(SYSTEM_PRICE, price_payload(report), template_price(report))
+
+
+def price_payload(r: "LotReport") -> dict:
+    """Готовый расчёт для пересказа. Модель получает выводы, а не сырьё."""
+    a = r.apartment
+    rec = r.recommendation
+    return {
+        "объект": {
+            "жк": a.complex_name.strip(),
+            "адрес": a.address,
+            "комнат": a.rooms,
+            "площадь_м2": a.area,
+            "этаж": f"{a.floor} из {a.floors_total}",
+            "отделка": a.finish.value,
+            "текущая_цена_руб": a.price,
+            "текущая_цена_за_м2": round(a.price_per_sqm),
+            "дней_в_экспозиции": a.days_on_market,
+        },
+        "внутри_дома": {
+            "лотов_в_экспозиции": r.house_lots,
+            "наше_место_по_цене_метра": r.rank_in_house,
+            "сопоставимых_по_метражу": len(r.peers),
+            "паритет_с_медианой_соседей_процент": (
+                round(r.parity_gap * 100, 2) if r.parity_gap is not None else None
+            ),
+            "надбавка_за_этаж": r.floor_premium.summary if r.floor_premium else None,
+        },
+        "бюджет_въезда": {
+            "доводка_руб_за_м2": r.finishing_cost,
+            "бюджет_въезда_руб": r.move_in,
+            "метр_готовой_квартиры": round(r.move_in_ppsm),
+        },
+        "локация": {
+            "проектов_в_сравнении": len(r.location),
+            "наше_место_по_метру_готовой": r.location_rank,
+            "готовых_лотов_дешевле_нашего_бюджета": sum(
+                1 for x in r.alternatives if x.ready and x.budget_delta < 0
+            ),
+            "ближайшие_альтернативы": [
+                {
+                    "проект": x.project.name if x.project else "—",
+                    "площадь_м2": x.comp.area,
+                    "бюджет_въезда_руб": x.move_in,
+                    "разница_с_нашим_руб": x.budget_delta,
+                    "ключи_на_руках": x.ready,
+                }
+                for x in r.alternatives[:4]
+            ],
+        },
+        "рекомендация": {
+            "цена_руб": rec.price,
+            "изменение_процент": round(rec.delta_pct * 100, 1),
+            "коридор_торга_руб": list(rec.corridor),
+            "бюджет_въезда_после_снижения_руб": rec.move_in,
+            "уверенность": rec.confidence,
+            "что_определило_цену": _BINDING.get(rec.binding, rec.binding),
+        },
+        "причины": rec.reasons,
+        "оговорки": rec.caveats,
+    }
+
+
+def template_price(r: "LotReport") -> str:
+    """Fallback без LLM: та же рекомендация, просто суше. Ничего не выдумывает."""
+    rec = r.recommendation
+    body = [rec.headline, ""]
+    body += [f"• {x}" for x in rec.reasons]
+    if rec.caveats:
+        body += [""] + [f"⚠️ {x}" for x in rec.caveats]
+    return "\n".join(body)
 
 
 def template_explanation(v: Verdict) -> str:

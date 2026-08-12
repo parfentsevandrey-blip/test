@@ -29,6 +29,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any, Iterable
 
+from ..location import canonical_key, load_projects, normalise
 from ..models import Apartment, Comp, Finish
 
 log = logging.getLogger(__name__)
@@ -88,6 +89,7 @@ class CianExportProvider:
         self.max_age_days = max_age_days
         self._by_complex: dict[str, list[Comp]] | None = None
         self._own: list[Apartment] = []
+        self._projects = load_projects()
         self.stats: dict[str, Any] = {}
 
     def exclude_own(self, apartments: list[Apartment]) -> None:
@@ -107,15 +109,46 @@ class CianExportProvider:
     def _files(self) -> Iterable[Path]:
         if not self.directory.is_dir():
             return []
-        return sorted(p for p in self.directory.glob("*.xlsx") if not p.name.startswith("~$"))
+        # rglob, а не glob: выгрузки удобно раскладывать по подпапкам-локациям.
+        return sorted(p for p in self.directory.rglob("*.xlsx") if not p.name.startswith("~$"))
 
-    def fetch_comps(self, apartment: Apartment, radius_km: float = 1.5) -> list[Comp]:
+    def house_lots(self, apartment: Apartment) -> list[Comp]:
+        """Вся экспозиция нашего ЖК, включая прайс застройщика. Без наших лотов.
+
+        Отдельно от fetch_comps, потому что у прайса застройщика есть применение, для
+        которого он незаменим: по нему меряется надбавка за этаж. Это единственный
+        набор цен в доме, где все прочие условия равны по построению — один продавец,
+        одна отделка, один момент времени, — поэтому регрессия на нём даёт чистый
+        коэффициент, а на разрозненных частных объявлениях разваливается.
+        """
         index = self._index()
-        comps = index.get(_norm(apartment.complex_name), [])
+        comps = index.get(self._key(apartment.complex_name), [])
         if not comps:
             comps = _fuzzy_lookup(index, apartment.complex_name)
         own = self._own or [apartment]
         return [c for c in comps if not any(_is_same_lot(c, o) for o in own)]
+
+    def fetch_comps(self, apartment: Apartment, radius_km: float = 1.5) -> list[Comp]:
+        """Аналоги для коридора: свой ЖК, без лотов застройщика.
+
+        Первичка и вторичка — разные рынки, и для нашего лота перепродажи прайс
+        застройщика смещает коридор. Для АНАЛИЗА ЛОКАЦИИ фильтр обратный: там
+        новостройка и есть конкуренция, поэтому by_project() отдаёт всё —
+        иначе из выборки исчезает целый конкурирующий проект.
+        """
+        return [
+            c
+            for c in self.house_lots(apartment)
+            if self.include_developer or DEVELOPER not in (c.seller_type or "").lower()
+        ]
+
+    def by_project(self) -> dict[str, list[Comp]]:
+        """Все выгрузки, сгруппированные по ЖК — сырьё для анализа локации."""
+        return dict(self._index())
+
+    def _key(self, name: str) -> str:
+        """Ключ проекта с учётом алиасов: «Level» и «Левел» — один и тот же ЖК."""
+        return canonical_key(name, self._projects)
 
     def _index(self) -> dict[str, list[Comp]]:
         if self._by_complex is None:
@@ -136,7 +169,7 @@ class CianExportProvider:
             totals["files"] += 1
             for key, value in counters.items():
                 totals[key] += value
-            index.setdefault(_norm(complex_name), []).extend(comps)
+            index.setdefault(self._key(complex_name), []).extend(comps)
             log.info(
                 "%s: ЖК «%s», принято %d аналогов из %d строк",
                 path.name,
@@ -192,9 +225,8 @@ class CianExportProvider:
                 continue
 
             seller = str(_value(cell("seller_type")) or "").strip()
-            if not self.include_developer and DEVELOPER in seller.lower():
+            if DEVELOPER in seller.lower():
                 counters["developer"] += 1
-                continue
 
             exposure = _number(_value(cell("exposure")))
             comps.append(
@@ -244,7 +276,10 @@ class CianExportProvider:
             return "Выгрузок расширения не найдено."
         parts = [f"выгрузок {s['files']}", f"строк {s['rows']}", f"аналогов {s['kept']}"]
         if s["developer"]:
-            parts.append(f"лотов застройщика отброшено {s['developer']}")
+            parts.append(
+                f"лотов застройщика {s['developer']} "
+                f"({'учтены' if self.include_developer else 'вне коридора, но в локации'})"
+            )
         if s["stale"]:
             parts.append(f"устаревших {s['stale']}")
         if s["bad"]:
@@ -255,18 +290,13 @@ class CianExportProvider:
 # --- сопоставление ЖК --------------------------------------------------------------
 
 
-def _norm(name: str) -> str:
-    """Название ЖК в реестре и в выгрузке пишут по-разному — приводим к одному виду."""
-    return re.sub(r"\s+", " ", str(name).strip().lower().replace("ё", "е"))
-
-
 def _fuzzy_lookup(index: dict[str, list[Comp]], complex_name: str) -> list[Comp]:
     """Запасное сопоставление: «Золотой жилой квартал» ↔ «Золотой квартал».
 
     Берётся только однозначное совпадение: если под условие подходят два ЖК, лучше
     отдать пусто и показать «аналогов нет», чем молча смешать два разных дома.
     """
-    target = _norm(complex_name)
+    target = normalise(complex_name)
     hits = [
         comps
         for key, comps in index.items()
@@ -368,7 +398,7 @@ def _is_same_lot(comp: Comp, apartment: Apartment) -> bool:
     один аналог — мелочь, сравнить лот сам с собой — систематическая ошибка.
     """
     return (
-        _norm(comp.complex_name) == _norm(apartment.complex_name)
+        normalise(comp.complex_name) == normalise(apartment.complex_name)
         and comp.floor == apartment.floor
         and abs(comp.area - apartment.area) < 0.6
     )

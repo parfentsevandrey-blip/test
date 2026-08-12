@@ -5,6 +5,7 @@
     python -m agent.cli --no-ops        # без демо-данных о спросе
     python -m agent.cli --feed          # собрать YRL-фид для Яндекс Недвижимости
     python -m agent.cli --competitors   # аналитика по конкурентам: портфель и каждый лот
+    python -m agent.cli --report LOT     # полный внутренний разбор одного лота
 """
 
 from __future__ import annotations
@@ -12,6 +13,8 @@ from __future__ import annotations
 import sys
 
 from .analytics import analyse_lot, portfolio_rivals, render_lot, render_rivals
+from .lotreport import build_report
+from .render import full_report, recommendation
 from .models import Action, Verdict
 from .pricing import evaluate
 from .providers.yandex import build_yrl_feed
@@ -92,6 +95,24 @@ def main() -> None:
         print(f"  · {note}")
     print()
 
+    def report_for(a):
+        return build_report(
+            a,
+            sources.comps.fetch_comps(a),
+            sources.location_comps(a),
+            price_list=sources.house_price_list(a),
+        )
+
+    if "--report" in sys.argv:
+        targets = [a for a in apartments if not args or a.id == args[0]]
+        if not targets:
+            print(f"Объект {args[0]!r} не найден.")
+            raise SystemExit(1)
+        for a in targets:
+            print(full_report(report_for(a)))
+            print()
+        return
+
     if "--competitors" in sys.argv:
         lots = [analyse_lot(a, sources.comps.fetch_comps(a)) for a in apartments]
         if args:
@@ -126,16 +147,10 @@ def main() -> None:
         print(detail(verdict(target)))
         return
 
-    print(
-        f"{'ЖК':<24} {'площадь':>8} {'цена':>10} {'за м²':>12} {'перц':>5}  "
-        f"{'вердикт':<14} {'Δ':>7}   рекомендация"
-    )
-    print("-" * 120)
-    verdicts = []
-    for a in apartments:
-        v = verdict(a)
-        verdicts.append(v)
-        print(brief(v))
+    reports = [report_for(a) for a in apartments]
+    for rep in reports:
+        print(recommendation(rep))
+        print()
 
     notes = portfolio_checks(apartments)
     if notes:
@@ -143,8 +158,8 @@ def main() -> None:
         for n in notes:
             print(f"  ⚠️  {n}")
 
-    total = sum(v.apartment.price for v in verdicts)
-    recommended = sum(v.recommended_price for v in verdicts)
+    total = sum(r.apartment.price for r in reports)
+    recommended = sum(r.recommendation.price for r in reports)
     print(
         f"\nПортфель: {total / 1e6:.0f} млн ₽ → {recommended / 1e6:.0f} млн ₽ "
         f"({recommended / total - 1:+.1%})"

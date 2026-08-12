@@ -19,7 +19,7 @@ import os
 from datetime import date
 from pathlib import Path
 
-from .models import Apartment, HouseValuation, OpsSnapshot
+from .models import Apartment, Comp, HouseValuation, OpsSnapshot
 from .providers import ChainProvider
 from .providers.cian_export import CianExportProvider
 from .providers.demo import DemoProvider
@@ -144,6 +144,42 @@ class Sources:
 
     def valuation_for(self, apartment: Apartment) -> HouseValuation | None:
         return self.valuation.fetch_valuation(apartment)
+
+    def house_price_list(self, apartment: Apartment) -> list[Comp]:
+        """Вся экспозиция дома, включая прайс застройщика — сырьё для надбавки за этаж.
+
+        В коридор эти лоты не идут, но именно они дают чистую зависимость цены от
+        этажа. Демо-провайдер такого разделения не знает, поэтому там пусто и модель
+        честно работает по тому же, что и коридор.
+        """
+        return self.exports.house_lots(apartment) if self.exports.available else []
+
+    def location_comps(self, apartment: Apartment) -> dict[str, list[Comp]]:
+        """Лоты соседних проектов ТОЙ ЖЕ локации — то, с чем сравнивает покупатель.
+
+        Локация задаётся в реестре проектов, а не выводится из папки с выгрузками.
+        Иначе «ближайшим конкурентом» лота на Профсоюзной становится дом на
+        Летниковской: формально другой проект, фактически другой город для покупателя.
+        Если локация у проекта не заведена, анализ локации не делается вовсе —
+        это честнее, чем сравнить с чем попало.
+        """
+        from .location import load_projects, normalise
+
+        projects = load_projects()
+        own_project = projects.get(normalise(apartment.complex_name))
+        if own_project is None or not own_project.location:
+            return {}
+
+        own = self.exports._key(apartment.complex_name)
+        out: dict[str, list[Comp]] = {}
+        for key, comps in self.exports.by_project().items():
+            if key == own or not comps:
+                continue
+            proj = projects.get(key)
+            if proj is None or proj.location != own_project.location:
+                continue
+            out[comps[0].complex_name] = comps
+        return out
 
 
 def yrl_output_path() -> Path:
