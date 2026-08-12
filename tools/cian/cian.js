@@ -321,9 +321,18 @@ function loadArchive(p) {
 
 function mergeArchive(arc, lots, today) {
   let fresh = 0, updated = 0;
+  const changes = [];
   for (const l of lots) {
     if (!l.fingerprint) continue;
     const e = arc.flats[l.fingerprint];
+    if (e) {
+      // цена того же объявления между снимками — самый честный сигнал торга
+      const prev = e.listings.filter((x) => x.id === l.id).pop();
+      if (prev && prev.price && l.priceRub && prev.price !== l.priceRub) {
+        changes.push({ id: l.id, from: prev.price, to: l.priceRub, address: e.address });
+        e.listings.push({ id: l.id, created: l.created, price: l.priceRub, seen: today });
+      }
+    }
     if (!e) {
       arc.flats[l.fingerprint] = {
         firstSeen: today, lastSeen: today, address: `${l.street || ''}, ${l.house || ''}`.trim(),
@@ -340,19 +349,72 @@ function mergeArchive(arc, lots, today) {
     }
   }
   arc.updated = today;
-  return { fresh, updated };
+  // квартиры, которых в этом снимке не было: сняты, проданы или ушли из фильтра
+  const seenFps = new Set(lots.map((l) => l.fingerprint).filter(Boolean));
+  const gone = Object.entries(arc.flats)
+    .filter(([fp, e]) => e.lastSeen !== today && seenFps.size && !seenFps.has(fp))
+    .map(([fp, e]) => ({ fp, address: e.address, lastSeen: e.lastSeen }));
+  return { fresh, updated, changes, gone };
+}
+
+/* ---------- цена относительно рынка ----------
+   Голая цена ничего не говорит. После sweep на руках весь дом и весь район,
+   поэтому положение лота считается по своим данным, без оценок Циан. */
+const median = (xs) => {
+  if (!xs.length) return null;
+  const s = [...xs].sort((a, b) => a - b);
+  const m = s.length >> 1;
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+};
+
+function withMarket(lots, minCohort = 4) {
+  const ppm = (l) => (l.priceRub && l.totalArea ? l.priceRub / l.totalArea : null);
+  const groups = { house: new Map(), cohort: new Map() };
+  for (const l of lots) {
+    const v = ppm(l); if (!v) continue;
+    if (l.houseId) (groups.house.get(l.houseId) || groups.house.set(l.houseId, []).get(l.houseId)).push(v);
+    const ck = `${l.district}|${l.rooms}`;
+    (groups.cohort.get(ck) || groups.cohort.set(ck, []).get(ck)).push(v);
+  }
+  const med = (m, k, n) => { const xs = m.get(k); return xs && xs.length >= n ? median(xs) : null; };
+  return lots.map((l) => {
+    const v = ppm(l);
+    const mh = l.houseId ? med(groups.house, l.houseId, minCohort) : null;
+    const mc = med(groups.cohort, `${l.district}|${l.rooms}`, minCohort);
+    const rel = (m) => (v && m ? +((v - m) / m * 100).toFixed(1) : null);
+    return { ...l, pricePerM2: v ? Math.round(v) : null, vsBuildingPct: rel(mh), vsCohortPct: rel(mc) };
+  });
 }
 
 /* Схлопывание объявлений в квартиры. В больших ЖК одну квартиру выставляют
    десятки субагентов по разной цене — считать их отдельными лотами бессмысленно,
    а переплата за такой же объект доходит до 20%. */
-function dedupe(lots) {
-  const byFp = new Map(), loose = [];
+/* Площадь одной и той же квартиры продавцы указывают по-разному — встречалось
+   «65,5 м² (по факту 67,8)». Точное совпадение теряет такие пары, поэтому
+   внутри дома/этажа/комнатности площади сшиваются с допуском. */
+function groupSameFlat(lots, areaTol = 0.6) {
+  const coarse = new Map(), loose = [];
   for (const l of lots) {
-    if (!l.fingerprint) { loose.push(l); continue; }
-    (byFp.get(l.fingerprint) || byFp.set(l.fingerprint, []).get(l.fingerprint)).push(l);
+    if (!l.houseId || l.floor == null || l.totalArea == null) { loose.push(l); continue; }
+    const k = `${l.houseId}|${l.floor}|${l.rooms}`;
+    (coarse.get(k) || coarse.set(k, []).get(k)).push(l);
   }
-  const flats = [...byFp.values()].map((g) => {
+  const groups = [];
+  for (const bucket of coarse.values()) {
+    const byArea = [...bucket].sort((a, b) => a.totalArea - b.totalArea);
+    let cur = [byArea[0]];
+    for (const l of byArea.slice(1)) {
+      if (l.totalArea - cur[cur.length - 1].totalArea <= areaTol) cur.push(l);
+      else { groups.push(cur); cur = [l]; }
+    }
+    groups.push(cur);
+  }
+  return { groups, loose };
+}
+
+function dedupe(lots, areaTol) {
+  const { groups, loose } = groupSameFlat(lots, areaTol);
+  const flats = groups.map((g) => {
     const priced = g.filter((x) => x.priceRub).sort((x, y) => x.priceRub - y.priceRub);
     const best = priced[0] || g[0], worst = priced[priced.length - 1] || g[0];
     return {
@@ -370,10 +432,8 @@ function dedupe(lots) {
 
 /* Что видно уже сейчас, без накопленного архива: одна и та же квартира,
    выставленная несколькими объявлениями — разными агентами или заново. */
-function findTwins(lots) {
-  const byFp = new Map();
-  lots.forEach((l) => { if (l.fingerprint) (byFp.get(l.fingerprint) || byFp.set(l.fingerprint, []).get(l.fingerprint)).push(l); });
-  return [...byFp.values()].filter((g) => g.length > 1);
+function findTwins(lots, areaTol) {
+  return groupSameFlat(lots, areaTol).groups.filter((g) => g.length > 1);
 }
 
 /* Просмотры живут только в отрисованной карточке: кнопка статистики,
@@ -410,7 +470,7 @@ const loadQuery = (v) => {
   return JSON.parse(fs.existsSync(v) ? fs.readFileSync(v, 'utf8') : v);
 };
 
-(async () => {
+if (require.main === module) (async () => {
   const a = args(process.argv.slice(2));
   const cmd = a._[0];
   if (!cmd || a.help) { log(fs.readFileSync(__filename, 'utf8').split('*/')[0]); process.exit(0); }
@@ -483,6 +543,7 @@ const loadQuery = (v) => {
       if (a['min-year']) lots = lots.filter((l) => l.buildYear && l.buildYear >= parseInt(a['min-year'], 10));
       if (a['max-area']) lots = lots.filter((l) => l.totalArea && l.totalArea <= parseFloat(a['max-area']));
       if (lots.length !== before) log(`после доотбора на своей стороне: ${lots.length} из ${before}`);
+      lots = withMarket(lots);
       if (a.stats) {
         for (const l of lots.slice(0, parseInt(a.stats, 10) || 5)) {
           Object.assign(l, await stats(page, l.id));
@@ -495,8 +556,9 @@ const loadQuery = (v) => {
 
     } else if (cmd === 'sweep') {
       const q = loadQuery(a.query);
-      const { declared, lots } = await sweep(ctx, q, parseInt(a.limit || '250', 10), parseInt(a.pages || '12', 10));
+      let { declared, lots } = await sweep(ctx, q, parseInt(a.limit || '250', 10), parseInt(a.pages || '12', 10));
       log(`\nзаявлено ${declared}, собрано ${lots.length} (${Math.round(lots.length / declared * 100)}%)`);
+      lots = withMarket(lots);
       const { flats, loose } = dedupe(lots);
       const multi = flats.filter((f) => f.listings > 1).sort((x, y) => y.listings - x.listings);
       log(`объявлений ${lots.length} -> квартир ${flats.length}` +
@@ -506,6 +568,12 @@ const loadQuery = (v) => {
         `  ${f.street}, ${f.house}, эт.${f.floor}, ${f.totalArea} м² — ${f.listings} объявл., ` +
         `${(f.priceMin || 0).toLocaleString('ru-RU')}–${(f.priceMax || 0).toLocaleString('ru-RU')} ₽` +
         (f.overpay ? `, переплата за верхнее ${f.overpay}%` : '')));
+      const rated = flats.filter((f) => f.vsBuildingPct != null).sort((x, y) => x.vsBuildingPct - y.vsBuildingPct);
+      if (rated.length) {
+        log('\nцена относительно медианы своего корпуса:');
+        rated.slice(0, 3).forEach((f) => log(`  дешевле  ${String(f.vsBuildingPct).padStart(6)}%  ${f.id}  ${f.totalArea} м², ${(f.priceRub||0).toLocaleString('ru-RU')} ₽  ${f.street}, ${f.house}`));
+        rated.slice(-2).forEach((f) => log(`  дороже   ${String('+'+f.vsBuildingPct).padStart(6)}%  ${f.id}  ${f.totalArea} м², ${(f.priceRub||0).toLocaleString('ru-RU')} ₽  ${f.street}, ${f.house}`));
+      }
       const out = a.dedupe ? flats.concat(loose) : lots;
       if (a.out) { fs.writeFileSync(a.out, JSON.stringify({ declared, collected: lots.length, flats: flats.length, lots: out }, null, 2) + '\n'); log(`-> ${a.out}`); }
 
@@ -540,9 +608,15 @@ const loadQuery = (v) => {
       const { lots } = await collect(ctx, q, parseInt(a.pages || '3', 10), !!a.all);
 
       if (cmd === 'snapshot') {
-        const { fresh, updated } = mergeArchive(arc, lots, today);
+        const { fresh, updated, changes, gone } = mergeArchive(arc, lots, today);
         fs.writeFileSync(archivePath, JSON.stringify(arc, null, 2) + '\n');
         log(`архив ${archivePath}: +${fresh} новых квартир, ${updated} подтверждено, всего ${Object.keys(arc.flats).length}`);
+        if (changes.length) {
+          log(`\nцена изменилась с прошлого снимка (${changes.length}):`);
+          changes.slice(0, 10).forEach((c) => log(`  ${c.id}  ${c.from.toLocaleString('ru-RU')} -> ${c.to.toLocaleString('ru-RU')} ₽` +
+            `  (${c.to < c.from ? '' : '+'}${((c.to - c.from) / c.from * 100).toFixed(1)}%)  ${c.address}`));
+        }
+        if (gone.length) log(`\nне попали в этот снимок (сняты, проданы или ушли из фильтра): ${gone.length}`);
         log('Чем дольше архив ведётся, тем труднее скрыть настоящий срок экспозиции.');
       } else {
         /* --deep: добираем близнецов запросом по дому. Второе объявление той же
@@ -554,12 +628,17 @@ const loadQuery = (v) => {
           log(`\nдобираю объявления по домам (${houses.length})…`);
           for (const h of houses) {
             try {
-              const { offers } = await searchPage(ctx, {
-                _type: 'flatsale', engine_version: { type: 'term', value: 2 },
-                region: q.region || { type: 'terms', value: [1] },
-                geo: { type: 'geo', value: [{ type: 'house', id: h }] },
-              }, 1);
-              offers.map(normalize).forEach((n) => { if (!lots.some((l) => l.id === n.id)) lots.push(n); });
+              // в большом доме объявлений сильно больше 28, одной страницей не обойтись
+              for (let pg = 1; pg <= parseInt(a['house-pages'] || '3', 10); pg++) {
+                const { offers } = await searchPage(ctx, {
+                  _type: 'flatsale', engine_version: { type: 'term', value: 2 },
+                  region: q.region || { type: 'terms', value: [1] },
+                  geo: { type: 'geo', value: [{ type: 'house', id: h }] },
+                }, pg);
+                if (!offers.length) break;
+                offers.map(normalize).forEach((n) => { if (!lots.some((l) => l.id === n.id)) lots.push(n); });
+                await sleep(800);
+              }
             } catch (e) { /* дом мог не отдаться — не повод рушить разбор */ }
             await sleep(1000);
           }
@@ -609,3 +688,6 @@ const loadQuery = (v) => {
     await browser.close();
   }
 })();
+
+/* Чистые функции наружу — чтобы их можно было проверить без сети. */
+module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive };
