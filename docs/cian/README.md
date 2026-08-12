@@ -10,6 +10,8 @@
 | [`jsonquery.md`](jsonquery.md) | Поисковый API и `jsonQuery` — основной способ работы |
 | [`moscow-geo.json`](moscow-geo.json) | 13 округов и 149 районов Москвы с id для географии |
 | [`filters.json`](filters.json) | Фильтры: параметры `cat.php`, ключи `jsonQuery`, словари значений |
+| [`moscow-newbuildings.json`](moscow-newbuildings.json) | 771 ЖК Москвы с корпусами 2018+ — id, округ, район, годы |
+| [`moscow-newbuildings.md`](moscow-newbuildings.md) | То же таблицей, с разбивкой по округам |
 | [`lots.json`](lots.json) | 21 лот: характеристики + экспозиция и просмотры |
 | [`lots.md`](lots.md) | То же таблицами, по поисковым наборам |
 | [`quality.md`](quality.md) | Проверка заявленного ремонта и настоящего срока экспозиции |
