@@ -6,6 +6,9 @@
  *   node tools/cian/cian.js search --query q.json [--pages 3] [--all] [--out lots.json] [--no-apartments] [--min-year 2016]
  *   node tools/cian/cian.js url    --query q.json      — каноническая ссылка cat.php
  *   node tools/cian/cian.js probe  --query q.json --with '{"loggia":{"type":"term","value":true}}'
+ *   node tools/cian/cian.js verify --query q.json [--ids 1,2] [--photos 6] [--dir out]
+ *   node tools/cian/cian.js snapshot --query q.json   — записать выдачу в архив
+ *   node tools/cian/cian.js exposure --query q.json [--deep] — двойники и реальный срок
  *   node tools/cian/cian.js stats  332550701 331961171
  *   node tools/cian/cian.js geo    [--out moscow-geo.json]
  *
@@ -92,8 +95,15 @@ function normalize(o) {
   const pick = (t) => (addr.find((a) => a.type === t) || {}).name || null;
   const und = ((o.geo && o.geo.undergrounds) || [])[0] || null;
   const created = o.creationDate ? o.creationDate.slice(0, 10) : null;
+  const houseId = (addr.find((a) => a.type === 'house') || {}).id || null;
+  const area = o.totalArea ? parseFloat(o.totalArea) : null;
   return {
     id: o.cianId || o.id,
+    /* Отпечаток физической квартиры: переживает переразмещение объявления,
+       потому что новый id получает объявление, а не сама квартира. */
+    fingerprint: houseId && area != null && o.floorNumber != null
+      ? `${houseId}|${o.floorNumber}|${area.toFixed(1)}|${o.roomsCount}` : null,
+    houseId,
     url: (o.fullUrl || '').split('?')[0],
     rooms: o.roomsCount ?? null,
     isApartments: !!o.isApartments,
@@ -113,7 +123,13 @@ function normalize(o) {
     complex: (o.newbuilding && o.newbuilding.name) || null,
     created,
     daysOnMarket: created ? Math.round((Date.now() - Date.parse(created)) / 86400000) : null,
+    // added — дата последнего поднятия, creationDate её переживает
+    bumped: o.added || null,
     title: o.title || null,
+    hasFurniture: o.hasFurniture ?? null,
+    photosCount: (o.photos || []).length,
+    photos: (o.photos || []).map((ph) => ph.fullUrl).filter(Boolean),
+    description: o.description || '',
   };
 }
 
@@ -145,6 +161,97 @@ async function collect(ctx, jsonQuery, maxPages, all) {
     if (!all) break;
   }
   return { count, lots: [...seen.values()] };
+}
+
+/* ---------- проверка заявленного ремонта ----------
+   Галочка «дизайнерский» ставится продавцом и ничем не подтверждается.
+   Текст объявления при этом почти всегда себя выдаёт: под ключ описывают
+   мебелью и техникой, а белую коробку — отделкой и планировкой. */
+const RED = [
+  ['без отделки', 'прямо сказано «без отделки»'], ['предчистов', 'предчистовая отделка'],
+  ['white ?box', 'white box'], ['вайтбокс', 'white box'], ['под чистовую', 'под чистовую'],
+  ['черновая', 'черновая отделка'], ['требует ремонта', 'требует ремонта'],
+  ['под ремонт', 'под ремонт'], ['голые стены', 'голые стены'], ['бетон', 'упомянут бетон'],
+];
+const GREEN = [
+  ['мебел', 'мебель'], ['техник', 'техника'], ['встроен', 'встроенная мебель'],
+  ['дизайн-проект', 'дизайн-проект'], ['авторск', 'авторский интерьер'],
+  ['под ключ', 'под ключ'], ['гардеробн', 'гардеробная'], ['заезжай и живи', 'заезжай и живи'],
+  ['miele|gaggenau|bosch|siemens|smeg|poliform|molteni|boffi|hansgrohe|grohe|villeroy|duravit|kettal|flos',
+    'названы бренды мебели/техники'],
+];
+const YELLOW = [
+  ['отделка от застройщика', 'отделка застройщика, а не дизайнерский ремонт'],
+  ['чистовая отделка', 'чистовая отделка застройщика'],
+  ['свободная планировк', 'свободная планировка'],
+];
+
+function assessRepair(lot) {
+  const t = (lot.description || '').toLowerCase();
+  const hit = (list) => list.filter(([re]) => new RegExp(re).test(t)).map(([, why]) => why);
+  const red = hit(RED), yellow = hit(YELLOW), green = hit(GREEN);
+  const flags = [];
+  if (lot.hasFurniture === false) flags.push('поле hasFurniture=false');
+  if (lot.hasFurniture == null) flags.push('поле hasFurniture не заполнено');
+  if (lot.photosCount < 8) flags.push(`мало фото (${lot.photosCount})`);
+  let verdict = 'похоже на правду';
+  if (red.length) verdict = 'ПРОТИВОРЕЧИЕ';
+  else if (!green.length || (lot.hasFurniture !== true && lot.photosCount < 10)) verdict = 'под вопросом';
+  return { verdict, red, yellow, green, flags };
+}
+
+async function fetchPhotos(ctx, lot, dir, n) {
+  fs.mkdirSync(dir, { recursive: true });
+  const files = [];
+  for (const [i, u] of lot.photos.slice(0, n).entries()) {
+    try {
+      const r = await ctx.request.get(u, { timeout: 30000 });
+      const f = `${dir}/${String(i + 1).padStart(2, '0')}.jpg`;
+      fs.writeFileSync(f, await r.body());
+      files.push(f);
+    } catch (e) { /* одна битая картинка не повод ронять проверку */ }
+  }
+  return files;
+}
+
+/* ---------- реальный срок экспозиции ----------
+   creationDate обнуляется, если объявление снять и выложить заново. Отпечаток
+   квартиры — нет. Архив хранит, когда мы увидели квартиру впервые, и это
+   переразмещением не стирается. */
+function loadArchive(p) {
+  try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return { updated: null, flats: {} }; }
+}
+
+function mergeArchive(arc, lots, today) {
+  let fresh = 0, updated = 0;
+  for (const l of lots) {
+    if (!l.fingerprint) continue;
+    const e = arc.flats[l.fingerprint];
+    if (!e) {
+      arc.flats[l.fingerprint] = {
+        firstSeen: today, lastSeen: today, address: `${l.street || ''}, ${l.house || ''}`.trim(),
+        rooms: l.rooms, area: l.totalArea, floor: l.floor,
+        listings: [{ id: l.id, created: l.created, price: l.priceRub, seen: today }],
+      };
+      fresh++;
+    } else {
+      e.lastSeen = today;
+      if (!e.listings.some((x) => x.id === l.id)) {
+        e.listings.push({ id: l.id, created: l.created, price: l.priceRub, seen: today });
+      }
+      updated++;
+    }
+  }
+  arc.updated = today;
+  return { fresh, updated };
+}
+
+/* Что видно уже сейчас, без накопленного архива: одна и та же квартира,
+   выставленная несколькими объявлениями — разными агентами или заново. */
+function findTwins(lots) {
+  const byFp = new Map();
+  lots.forEach((l) => { if (l.fingerprint) (byFp.get(l.fingerprint) || byFp.set(l.fingerprint, []).get(l.fingerprint)).push(l); });
+  return [...byFp.values()].filter((g) => g.length > 1);
 }
 
 /* Просмотры живут только в отрисованной карточке: кнопка статистики,
@@ -247,6 +354,93 @@ const loadQuery = (v) => {
       const res = { fetched: new Date().toISOString().slice(0, 10), declaredCount: count, enumerated, kept: lots.length, jsonQuery: q, lots };
       if (a.out) { fs.writeFileSync(a.out, JSON.stringify(res, null, 2) + '\n'); log(`-> ${a.out}`); }
       else log(JSON.stringify(res, null, 2));
+
+    } else if (cmd === 'verify') {
+      const q = loadQuery(a.query);
+      const only = a.ids ? String(a.ids).split(',').map(Number) : null;
+      let { lots } = await collect(ctx, q, parseInt(a.pages || '2', 10), false);
+      if (only) lots = lots.filter((l) => only.includes(l.id));
+      lots = lots.slice(0, parseInt(a.limit || '8', 10));
+      const dir = a.dir || 'cian-photos';
+      const report = [];
+      for (const l of lots) {
+        const r = assessRepair(l);
+        const files = a.photos === false || a.photos === '0' ? []
+          : await fetchPhotos(ctx, l, `${dir}/${l.id}`, parseInt(a.photos || '6', 10));
+        report.push({ id: l.id, url: l.url, price: l.priceRub, area: l.totalArea, ...r, photos: files });
+        log(`\n${l.id}  ${l.rooms}к ${l.totalArea} м²  ${(l.priceRub || 0).toLocaleString('ru-RU')} ₽  — ${r.verdict}`);
+        if (r.red.length) log(`   против: ${r.red.join('; ')}`);
+        if (r.yellow.length) log(`   насторожило: ${r.yellow.join('; ')}`);
+        if (r.green.length) log(`   за: ${r.green.join('; ')}`);
+        if (r.flags.length) log(`   поля: ${r.flags.join('; ')}`);
+        if (files.length) log(`   фото: ${files.length} шт. в ${dir}/${l.id}/ — посмотреть глазами`);
+      }
+      if (a.out) fs.writeFileSync(a.out, JSON.stringify(report, null, 2) + '\n');
+      log('\nТекст и поля — только предварительный отсев. Окончательный ответ дают фотографии.');
+
+    } else if (cmd === 'snapshot' || cmd === 'exposure') {
+      const q = loadQuery(a.query);
+      const today = new Date().toISOString().slice(0, 10);
+      const archivePath = a.archive || 'docs/cian/archive.json';
+      const arc = loadArchive(archivePath);
+      const { lots } = await collect(ctx, q, parseInt(a.pages || '3', 10), !!a.all);
+
+      if (cmd === 'snapshot') {
+        const { fresh, updated } = mergeArchive(arc, lots, today);
+        fs.writeFileSync(archivePath, JSON.stringify(arc, null, 2) + '\n');
+        log(`архив ${archivePath}: +${fresh} новых квартир, ${updated} подтверждено, всего ${Object.keys(arc.flats).length}`);
+        log('Чем дольше архив ведётся, тем труднее скрыть настоящий срок экспозиции.');
+      } else {
+        /* --deep: добираем близнецов запросом по дому. Второе объявление той же
+           квартиры часто не проходит фильтры поиска (другая цена, другой ремонт),
+           и внутри выдачи его не видно. */
+        if (a.deep) {
+          const houses = [...new Set(lots.map((l) => l.houseId).filter(Boolean))]
+            .slice(0, parseInt(a.deep === true ? '12' : a.deep, 10));
+          log(`\nдобираю объявления по домам (${houses.length})…`);
+          for (const h of houses) {
+            try {
+              const { offers } = await searchPage(ctx, {
+                _type: 'flatsale', engine_version: { type: 'term', value: 2 },
+                region: q.region || { type: 'terms', value: [1] },
+                geo: { type: 'geo', value: [{ type: 'house', id: h }] },
+              }, 1);
+              offers.map(normalize).forEach((n) => { if (!lots.some((l) => l.id === n.id)) lots.push(n); });
+            } catch (e) { /* дом мог не отдаться — не повод рушить разбор */ }
+            await sleep(1000);
+          }
+        }
+
+        const twins = findTwins(lots);
+        log(`\nдвойники (одна квартира — несколько объявлений): ${twins.length}`);
+        twins.forEach((g) => {
+          const sorted = [...g].sort((x, y) => (x.created || '').localeCompare(y.created || ''));
+          const oldest = sorted[0], newest = sorted[sorted.length - 1];
+          const real = oldest.daysOnMarket;
+          log(`\n  ${g[0].street}, ${g[0].house} — ${g[0].rooms}к ${g[0].totalArea} м², эт.${g[0].floor}`);
+          sorted.forEach((x) => log(`      ${x.id}  создано ${x.created}  ${String(x.daysOnMarket).padStart(4)} дн  ` +
+            `${(x.priceRub || 0).toLocaleString('ru-RU')} ₽`));
+          log(`      реальная экспозиция не меньше ${real} дн (младшее объявление показывает ${newest.daysOnMarket})`);
+          if (oldest.priceRub && newest.priceRub && oldest.priceRub !== newest.priceRub) {
+            const d = newest.priceRub - oldest.priceRub;
+            log(`      цена за это время ${d < 0 ? 'снижена' : 'поднята'} на ${Math.abs(d).toLocaleString('ru-RU')} ₽`);
+          }
+        });
+        log('\nсрок экспозиции: заявленный против архивного');
+        let corrected = 0;
+        for (const l of lots) {
+          const e = l.fingerprint && arc.flats[l.fingerprint];
+          if (!e) continue;
+          const real = Math.round((Date.parse(today) - Date.parse(e.firstSeen)) / 86400000);
+          if (real > (l.daysOnMarket || 0) + 1) {
+            corrected++;
+            log(`  ${l.id}  заявлено ${l.daysOnMarket} дн, в архиве с ${e.firstSeen} — не меньше ${real} дн` +
+                (e.listings.length > 1 ? `, объявлений за это время: ${e.listings.length}` : ''));
+          }
+        }
+        if (!Object.keys(arc.flats).length) log('  архив пуст — сначала наберите снимки командой snapshot');
+        else if (!corrected) log('  расхождений с архивом нет');
+      }
 
     } else if (cmd === 'stats') {
       for (const id of a._.slice(1)) {
