@@ -1,0 +1,264 @@
+"""Telegram-бот: по клику — вердикт по цене объекта.
+
+    export TELEGRAM_BOT_TOKEN=...
+    python -m agent.bot
+
+Экран один и тот же на всех входах: список объектов → карточка → «почему / сценарии /
+аналоги». Всё, что показывается, приходит из agent.pricing — бот не считает ничего сам.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import logging
+import os
+from typing import Iterable
+
+from aiogram import Bot, Dispatcher, F
+from aiogram.filters import Command
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
+
+from .cli import apply_demo_ops
+from .models import Action, Apartment, Verdict
+from .narrative import explain
+from .pricing import evaluate
+from .providers import ChainProvider
+from .providers.cian import CianProvider
+from .providers.demo import DemoProvider
+from .registry import load_registry, portfolio_checks
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+log = logging.getLogger(__name__)
+
+DEMO_OPS = os.getenv("DEMO_OPS", "1") == "1"
+PROVIDER = ChainProvider(CianProvider(), DemoProvider())
+
+BADGE = {
+    Action.CUT: "🔻",
+    Action.RAISE: "🔺",
+    Action.HOLD: "⏸",
+    Action.MANUAL: "❓",
+}
+
+
+def registry() -> list[Apartment]:
+    apartments = load_registry()
+    return apply_demo_ops(apartments) if DEMO_OPS else apartments
+
+
+def verdict_for(apartment_id: str) -> Verdict | None:
+    apartment = next((a for a in registry() if a.id == apartment_id), None)
+    if apartment is None:
+        return None
+    return evaluate(apartment, PROVIDER.fetch_comps(apartment))
+
+
+def money(rub: float) -> str:
+    return f"{rub / 1e6:.1f} млн ₽"
+
+
+def objects_keyboard(verdicts: Iterable[Verdict]) -> InlineKeyboardMarkup:
+    rows = [
+        [
+            InlineKeyboardButton(
+                text=(
+                    f"{BADGE[v.action]} {v.apartment.complex_name} · "
+                    f"{v.apartment.area:g} м² · {money(v.apartment.price)}"
+                ),
+                callback_data=f"lot:{v.apartment.id}",
+            )
+        ]
+        for v in verdicts
+    ]
+    rows.append([InlineKeyboardButton(text="📊 Сводка по портфелю", callback_data="digest")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def card_keyboard(apartment_id: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="Почему", callback_data=f"why:{apartment_id}"),
+                InlineKeyboardButton(text="Сценарии", callback_data=f"scen:{apartment_id}"),
+            ],
+            [
+                InlineKeyboardButton(text="Аналоги", callback_data=f"comps:{apartment_id}"),
+                InlineKeyboardButton(text="↻ Пересчитать", callback_data=f"lot:{apartment_id}"),
+            ],
+            [InlineKeyboardButton(text="⬅️ К списку", callback_data="list")],
+        ]
+    )
+
+
+def card_text(v: Verdict) -> str:
+    a = v.apartment
+    lines = [
+        f"<b>{a.complex_name}</b> — {a.address}",
+        f"{a.rooms} комн. · {a.area:g} м² · этаж {a.floor}/{a.floors_total} · {a.finish.value}",
+        "",
+        f"Текущая цена: <b>{money(a.price)}</b> ({a.price_per_sqm / 1000:.0f} тыс ₽/м²)",
+        f"Коридор рынка: {v.corridor[0] / 1000:.0f} — <b>{v.corridor[1] / 1000:.0f}</b> — "
+        f"{v.corridor[2] / 1000:.0f} тыс ₽/м²",
+        f"Наша позиция: <b>{v.our_percentile:.0f}-й перцентиль</b>",
+    ]
+    if a.days_on_market is not None:
+        lines.append(f"В экспозиции: {a.days_on_market} дн.")
+
+    lines.append("")
+    if v.action is Action.MANUAL:
+        lines.append(f"{BADGE[v.action]} <b>Требуется ручная оценка</b>")
+    else:
+        lines.append(
+            f"{BADGE[v.action]} <b>{v.action.value.capitalize()}</b>: "
+            f"{money(v.recommended_price)} ({v.delta_pct:+.1%})"
+        )
+    lines.append(f"Уверенность: {v.confidence:.0%} · аналогов: {len(v.comps)}")
+
+    if v.warnings:
+        lines += ["", "⚠️ " + v.warnings[0]]
+    return "\n".join(lines)
+
+
+dp = Dispatcher()
+
+
+@dp.message(Command("start", "objects"))
+async def cmd_start(message: Message) -> None:
+    verdicts = [evaluate(a, PROVIDER.fetch_comps(a)) for a in registry()]
+    await message.answer(
+        "Агент по ценообразованию. Выберите объект — покажу рыночный коридор "
+        "и рекомендацию по цене.",
+        reply_markup=objects_keyboard(verdicts),
+    )
+
+
+@dp.callback_query(F.data == "list")
+async def show_list(call: CallbackQuery) -> None:
+    verdicts = [evaluate(a, PROVIDER.fetch_comps(a)) for a in registry()]
+    await call.message.edit_text(
+        "Объекты в продаже:", reply_markup=objects_keyboard(verdicts)
+    )
+    await call.answer()
+
+
+@dp.callback_query(F.data.startswith("lot:"))
+async def show_lot(call: CallbackQuery) -> None:
+    await call.answer("Считаю…")
+    v = verdict_for(call.data.split(":", 1)[1])
+    if v is None:
+        await call.message.answer("Объект не найден в реестре.")
+        return
+    await call.message.edit_text(
+        card_text(v), reply_markup=card_keyboard(v.apartment.id), parse_mode="HTML"
+    )
+
+
+@dp.callback_query(F.data.startswith("why:"))
+async def show_why(call: CallbackQuery) -> None:
+    await call.answer("Готовлю объяснение…")
+    apartment_id = call.data.split(":", 1)[1]
+    v = verdict_for(apartment_id)
+    if v is None:
+        return
+    # Вызов LLM блокирующий — уводим в поток, чтобы не морозить event loop бота.
+    # В проде: очередь задач и кэш вердиктов, см. docs/IMPLEMENTATION.md.
+    text = await asyncio.to_thread(explain, v)
+    factors = "\n".join(f"• {s}" for s in v.signals)
+    await call.message.answer(
+        f"{text}\n\n<b>Что учтено:</b>\n{factors}",
+        reply_markup=card_keyboard(apartment_id),
+        parse_mode="HTML",
+    )
+
+
+@dp.callback_query(F.data.startswith("scen:"))
+async def show_scenarios(call: CallbackQuery) -> None:
+    await call.answer()
+    apartment_id = call.data.split(":", 1)[1]
+    v = verdict_for(apartment_id)
+    if v is None:
+        return
+    if not v.scenarios:
+        await call.message.answer("Сценарии не рассчитаны: недостаточно аналогов.")
+        return
+    body = "\n".join(
+        f"<b>{s.name}</b>: {money(s.price)} — ориентировочно {s.expected_days} дн.\n<i>{s.comment}</i>"
+        for s in v.scenarios
+    )
+    await call.message.answer(
+        f"<b>Цена ↔ срок продажи</b>\n\n{body}\n\n"
+        "<i>Срок — оценка по позиции в коридоре и темпу рынка, не гарантия.</i>",
+        reply_markup=card_keyboard(apartment_id),
+        parse_mode="HTML",
+    )
+
+
+@dp.callback_query(F.data.startswith("comps:"))
+async def show_comps(call: CallbackQuery) -> None:
+    await call.answer()
+    apartment_id = call.data.split(":", 1)[1]
+    v = verdict_for(apartment_id)
+    if v is None:
+        return
+    rows = []
+    for ac in v.comps[:7]:
+        c = ac.comp
+        mark = "сделка" if c.is_closed_deal else f"{c.days_on_market} дн. в продаже"
+        rows.append(
+            f"• {c.complex_name}, {c.area:g} м², {c.floor}/{c.floors_total} — "
+            f"{c.price_per_sqm / 1000:.0f} тыс ₽/м² → после поправок "
+            f"<b>{ac.adjusted_price_per_sqm / 1000:.0f}</b> ({mark})"
+        )
+    await call.message.answer(
+        "<b>Аналоги, на которых построен коридор</b>\n\n" + "\n".join(rows),
+        reply_markup=card_keyboard(apartment_id),
+        parse_mode="HTML",
+    )
+
+
+@dp.callback_query(F.data == "digest")
+async def show_digest(call: CallbackQuery) -> None:
+    await call.answer("Собираю сводку…")
+    apartments = registry()
+    verdicts = [evaluate(a, PROVIDER.fetch_comps(a)) for a in apartments]
+
+    actionable = [v for v in verdicts if v.action in (Action.CUT, Action.RAISE)]
+    total = sum(v.apartment.price for v in verdicts)
+    recommended = sum(v.recommended_price for v in verdicts)
+
+    lines = [
+        f"<b>Портфель: {len(verdicts)} объектов на {money(total)}</b>",
+        f"С учётом рекомендаций: {money(recommended)} ({recommended / total - 1:+.1%})",
+        "",
+    ]
+    if actionable:
+        lines.append("<b>Требуют решения:</b>")
+        lines += [
+            f"{BADGE[v.action]} {v.apartment.complex_name} ({v.apartment.area:g} м²): "
+            f"{money(v.apartment.price)} → {money(v.recommended_price)} ({v.delta_pct:+.1%})"
+            for v in actionable
+        ]
+    else:
+        lines.append("Объектов, требующих изменения цены, нет.")
+
+    manual = [v for v in verdicts if v.action is Action.MANUAL]
+    if manual:
+        lines += ["", "<b>Мало данных, нужна ручная оценка:</b>"]
+        lines += [f"❓ {v.apartment.complex_name} ({v.apartment.area:g} м²)" for v in manual]
+
+    notes = portfolio_checks(apartments)
+    if notes:
+        lines += ["", "<b>Нестыковки в собственном прайсе:</b>"] + [f"⚠️ {n}" for n in notes]
+
+    await call.message.answer("\n".join(lines), parse_mode="HTML")
+
+
+async def main() -> None:
+    token = os.getenv("TELEGRAM_BOT_TOKEN")
+    if not token:
+        raise SystemExit("Задайте TELEGRAM_BOT_TOKEN (получить у @BotFather)")
+    await dp.start_polling(Bot(token))
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

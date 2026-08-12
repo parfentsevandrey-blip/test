@@ -1,0 +1,47 @@
+{
+  "_disclaimer": "СИНТЕТИЧЕСКИЕ оперативные данные (срок экспозиции, просмотры, звонки, показы). В боевом контуре берутся из CRM и статистики площадок.",
+  "ops": {
+    "kutuzovskiy-xii-1": {
+      "listed_at": "2026-05-08",
+      "views_7d": 210,
+      "calls_7d": 3,
+      "viewings_30d": 2
+    },
+    "level-akademiceskaa-2": {
+      "listed_at": "2026-07-09",
+      "views_7d": 480,
+      "calls_7d": 11,
+      "viewings_30d": 6
+    },
+    "zolotoy-jiloy-kvartal-3": {
+      "listed_at": "2026-01-14",
+      "views_7d": 95,
+      "calls_7d": 1,
+      "viewings_30d": 1
+    },
+    "high-life-4": {
+      "listed_at": "2026-06-22",
+      "views_7d": 260,
+      "calls_7d": 5,
+      "viewings_30d": 3
+    },
+    "sky-house-5": {
+      "listed_at": "2026-06-11",
+      "views_7d": 190,
+      "calls_7d": 2,
+      "viewings_30d": 2
+    },
+    "sky-house-6": {
+      "listed_at": "2026-05-30",
+      "views_7d": 150,
+      "calls_7d": 2,
+      "viewings_30d": 1
+    },
+    "sky-house-7": {
+      "listed_at": "2026-04-16",
+      "views_7d": 120,
+      "calls_7d": 1,
+      "viewings_30d": 0
+    }
+  }
+}
