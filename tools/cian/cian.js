@@ -3,7 +3,8 @@
  * Клиент Циан поверх того же API, которым пользуется сама выдача.
  *
  *   node tools/cian/cian.js count  --query q.json
- *   node tools/cian/cian.js search --query q.json [--pages 3] [--out lots.json] [--no-apartments] [--min-year 2016]
+ *   node tools/cian/cian.js search --query q.json [--pages 3] [--all] [--out lots.json] [--no-apartments] [--min-year 2016]
+ *   node tools/cian/cian.js url    --query q.json      — каноническая ссылка cat.php
  *   node tools/cian/cian.js probe  --query q.json --with '{"loggia":{"type":"term","value":true}}'
  *   node tools/cian/cian.js stats  332550701 331961171
  *   node tools/cian/cian.js geo    [--out moscow-geo.json]
@@ -52,20 +53,35 @@ const API_HEADERS = {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-/* Частые подряд запросы иногда получают 5xx/429 — отступаем и повторяем. */
+/* Частые подряд запросы получают то 5xx, то обрыв соединения — отступаем
+   и повторяем в обоих случаях. */
 async function searchPage(ctx, jsonQuery, pageNumber, attempt = 1) {
-  const res = await ctx.request.post(SEARCH_API, {
-    headers: API_HEADERS,
-    data: { jsonQuery: { ...jsonQuery, page: { type: 'term', value: pageNumber } } },
-    timeout: 45000,
-  });
-  if (res.status() !== 200) {
-    if (attempt <= 3) { await sleep(2000 * attempt); return searchPage(ctx, jsonQuery, pageNumber, attempt + 1); }
-    throw new Error(`search API ${res.status()} на странице ${pageNumber}`);
+  const retry = async (why) => {
+    if (attempt > 3) throw new Error(`search API: ${why} (страница ${pageNumber})`);
+    await sleep(2500 * attempt);
+    return searchPage(ctx, jsonQuery, pageNumber, attempt + 1);
+  };
+  let res;
+  try {
+    res = await ctx.request.post(SEARCH_API, {
+      headers: API_HEADERS,
+      data: { jsonQuery: { ...jsonQuery, page: { type: 'term', value: pageNumber } } },
+      timeout: 45000,
+    });
+  } catch (e) {
+    return retry(e.message.split('\n')[0]);
   }
+  if (res.status() !== 200) return retry(`http ${res.status()}`);
   const j = await res.json();
   const d = j.data || {};
-  return { count: d.offerCount ?? null, offers: d.offersSerialized || d.offers || [] };
+  return {
+    count: d.offerCount ?? null,
+    offers: d.offersSerialized || d.offers || [],
+    // Циан сам сериализует jsonQuery обратно в query-строку cat.php — по ней
+    // видно, какие фильтры он принял, и как они называются в адресе.
+    queryString: d.queryString || null,
+    fullUrl: d.fullUrl || null,
+  };
 }
 
 /* Плоская запись из «сырого» оффера: только то, по чему реально отбирают. */
@@ -101,17 +117,32 @@ function normalize(o) {
   };
 }
 
-async function collect(ctx, jsonQuery, maxPages) {
-  const seen = new Map();
+/* Порядки сортировки дают частично разные срезы: выдача обрывается раньше
+   заявленного offerCount, и «хвост» у каждой сортировки свой. */
+const SORTS = [null, 'price_object_order', 'creation_date_desc', 'area_order'];
+
+async function collectSorted(ctx, jsonQuery, maxPages, seen, sort) {
   let count = null;
+  const q = sort ? { ...jsonQuery, sort: { type: 'term', value: sort } } : jsonQuery;
   for (let p = 1; p <= maxPages; p++) {
-    const { count: c, offers } = await searchPage(ctx, jsonQuery, p);
+    const { count: c, offers } = await searchPage(ctx, q, p);
     if (count === null) count = c;
     if (!offers.length) break;
+    const before = seen.size;
     offers.forEach((o) => { const n = normalize(o); if (!seen.has(n.id)) seen.set(n.id, n); });
-    log(`  страница ${p}: +${offers.length} (всего собрано ${seen.size} из ${count})`);
-    if (seen.size >= (count || 0)) break;
+    log(`  ${(sort || 'по умолчанию').padEnd(18)} стр ${p}: +${offers.length}, новых ${seen.size - before}, накоплено ${seen.size}`);
     await sleep(1200);
+  }
+  return count;
+}
+
+async function collect(ctx, jsonQuery, maxPages, all) {
+  const seen = new Map();
+  let count = null;
+  for (const sort of all ? SORTS : [null]) {
+    const c = await collectSorted(ctx, jsonQuery, maxPages, seen, sort);
+    if (count === null) count = c;
+    if (!all) break;
   }
   return { count, lots: [...seen.values()] };
 }
@@ -173,21 +204,35 @@ const loadQuery = (v) => {
       const { count } = await searchPage(ctx, loadQuery(a.query), 1);
       log(String(count));
 
+    } else if (cmd === 'url') {
+      // Каноническая ссылка cat.php для jsonQuery — её можно открыть в браузере.
+      const r = await searchPage(ctx, loadQuery(a.query), 1);
+      log(r.fullUrl || `https://www.cian.ru/cat.php?${r.queryString}`);
+
     } else if (cmd === 'probe') {
-      // Подбор имени фильтра: если счётчик не сдвинулся — Циан молча его проигнорировал.
+      /* Признак «фильтр принят» — появление ключа в канонической query-строке,
+         а не изменение счётчика: фильтр может быть применён и не отсечь ничего. */
       const q = loadQuery(a.query);
-      const base = (await searchPage(ctx, q, 1)).count;
-      log(`база: ${base}`);
-      const extra = JSON.parse(a.with);
-      for (const [k, v] of Object.entries(extra)) {
-        const c = (await searchPage(ctx, { ...q, [k]: v }, 1)).count;
-        log(`  ${k} = ${JSON.stringify(v)} -> ${c}` + (c === base ? '   (не применился)' : ''));
+      const b0 = await searchPage(ctx, q, 1);
+      const baseKeys = new Set(decodeURIComponent(b0.queryString || '').split('&').map((x) => x.split('=')[0]));
+      log(`база: ${b0.count}`);
+      for (const [k, v] of Object.entries(JSON.parse(a.with))) {
+        await sleep(1100);
+        const r = await searchPage(ctx, { ...q, [k]: v }, 1);
+        const added = decodeURIComponent(r.queryString || '').split('&')
+          .filter((x) => !baseKeys.has(x.split('=')[0]));
+        log(`  ${k} = ${JSON.stringify(v)}`);
+        log(`      count ${b0.count} -> ${r.count}` +
+            (added.length ? `, принят как ${added.join(' ')}` : ', НЕ ПРИНЯТ (в query-строку не попал)'));
       }
 
     } else if (cmd === 'search') {
       const q = loadQuery(a.query);
       const pages = parseInt(a.pages || '3', 10);
-      let { count, lots } = await collect(ctx, q, pages);
+      let { count, lots } = await collect(ctx, q, pages, !!a.all);
+      const enumerated = lots.length;
+      log(`Циан заявляет ${count}, реально перечислено ${enumerated}` +
+          (count && enumerated < count ? ' — offerCount у Циан завышен, это оценка, а не точное число' : ''));
       const before = lots.length;
       if (a['no-apartments']) lots = lots.filter((l) => !l.isApartments);
       if (a['min-year']) lots = lots.filter((l) => l.buildYear && l.buildYear >= parseInt(a['min-year'], 10));
@@ -199,7 +244,7 @@ const loadQuery = (v) => {
           await page.waitForTimeout(2000);
         }
       }
-      const res = { fetched: new Date().toISOString().slice(0, 10), count, jsonQuery: q, lots };
+      const res = { fetched: new Date().toISOString().slice(0, 10), declaredCount: count, enumerated, kept: lots.length, jsonQuery: q, lots };
       if (a.out) { fs.writeFileSync(a.out, JSON.stringify(res, null, 2) + '\n'); log(`-> ${a.out}`); }
       else log(JSON.stringify(res, null, 2));
 

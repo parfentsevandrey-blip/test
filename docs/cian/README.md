@@ -26,33 +26,35 @@ node tools/cian/cian.js count --query tools/cian/queries/zao-3room.json
 
 # собрать лоты, отсеяв апартаменты и дома старше 2016 года
 node tools/cian/cian.js search --query tools/cian/queries/zao-3room.json \
-  --pages 4 --no-apartments --min-year 2016 --out lots.json
+  --pages 4 --all --no-apartments --min-year 2016 --out lots.json
 
 # просмотры и срок экспозиции по конкретным объявлениям
 node tools/cian/cian.js stats 332550701 331961171
 ```
 
-Подобрать незнакомый фильтр: `probe` шлёт запрос с добавленным ключом и
-сравнивает счётчик. Не сдвинулся — Циан ключ выбросил.
+`--all` объединяет выдачу по четырём сортировкам: у каждой свой обрыв, вместе
+они дают больший охват (84 против 80 на проверочном поиске).
+
+Проверить незнакомый фильтр:
 
 ```bash
 node tools/cian/cian.js probe --query q.json \
-  --with '{"loggia":{"type":"term","value":true}}'
+  --with '{"balconies":{"type":"range","value":{"gte":1}}}'
 ```
+
+`probe` показывает не только счётчик, но и то, под каким именем Циан принял
+фильтр в адресе — либо что не принял вовсе.
 
 ## Ссылка для человека
 
-`cat.php` остаётся нужен, когда подборку надо открыть в браузере:
+Когда подборку надо открыть в браузере, ссылку строит сам Циан:
 
-```
-https://www.cian.ru/cat.php
-  ?deal_type=sale&engine_version=2&offer_type=flat&region=1
-  &district[0]=11&object_type[0]=1&room3=1&maxprice=70000000&maxtarea=100
-  &only_foot=2&foot_min=10&minfloor=5&apartment=0&min_house_year=2016&repair[0]=4
+```bash
+node tools/cian/cian.js url --query tools/cian/queries/zao-3room.json
 ```
 
-Имена параметров — в `filters.json`. Незнакомые Циан молча отбрасывает, поэтому
-принятые фильтры видно по строке `"jsonQuery"` в HTML выдачи.
+Собирать адрес руками не нужно — API возвращает каноническую сериализацию
+запроса в `data.queryString`.
 
 ## Округа Москвы
 
