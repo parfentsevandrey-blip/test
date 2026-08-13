@@ -520,3 +520,32 @@ test('«ремонт не сдан» и пустые кадры — не про�
   assert.strictEqual(r.conflict, false);
   assert.strictEqual(r.state, 'ремонт не сдан', 'уточнение из текста не теряется');
 });
+
+process.stdout.write('архив и пропажи\n');
+
+test('пропажа считается только внутри своего запроса', () => {
+  // залив по Пресне не делает «ушедшими» квартиры, набранные по Дорогомилову
+  const arc = { updated: null, flats: {} };
+  mergeArchive(arc, [lot({ id: 1, fingerprint: 'f1' })], '2026-08-01', 'дорогомилово');
+  const other = lot({ id: 2, fingerprint: 'f2' });
+  const r = mergeArchive(arc, [other], '2026-08-02', 'пресня');
+  assert.strictEqual(r.gone.length, 0, 'чужой запрос не объявляет пропажу');
+});
+
+test('в своём запросе пропажа находится', () => {
+  const arc = { updated: null, flats: {} };
+  const a1 = lot({ id: 1, fingerprint: 'f1' });
+  const a2 = lot({ id: 2, fingerprint: 'f2' });
+  mergeArchive(arc, [a1, a2], '2026-08-01', 'дорогомилово');
+  const r = mergeArchive(arc, [a1], '2026-08-02', 'дорогомилово');
+  assert.strictEqual(r.gone.length, 1);
+  assert.strictEqual(r.gone[0].lastSeen, '2026-08-01');
+});
+
+test('залив без имени запроса не выдумывает пропаж', () => {
+  const arc = { updated: null, flats: {} };
+  mergeArchive(arc, [lot({ id: 1, fingerprint: 'f1' })], '2026-08-01', 'дорогомилово');
+  const r = mergeArchive(arc, [lot({ id: 9, fingerprint: 'f9' })], '2026-08-02', null);
+  assert.strictEqual(r.gone.length, 0);
+  assert.strictEqual(r.source, null);
+});

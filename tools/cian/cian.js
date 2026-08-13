@@ -9,7 +9,7 @@
  *   node tools/cian/cian.js probe  --query q.json --with '{"loggia":{"type":"term","value":true}}'
  *   node tools/cian/cian.js sweep  --query q.json [--limit 250] [--dedupe] [--resolve 0] — большой ЖК целиком
  *   node tools/cian/cian.js verify --query q.json [--ids 1,2] [--photos 9] [--files] [--dir out]
- *   node tools/cian/cian.js snapshot --query q.json   — записать выдачу в архив
+ *   node tools/cian/cian.js snapshot --query q.json | --queries watchlist.json | --from a.json,b.json
  *   node tools/cian/cian.js exposure --query q.json [--deep] — двойники и реальный срок
  *   node tools/cian/cian.js grade  --lots lots.json --marks marks.json  — записать оценку отделки
  *   node tools/cian/cian.js grade  --list
@@ -461,7 +461,7 @@ function loadArchive(p) {
   try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return { updated: null, flats: {} }; }
 }
 
-function mergeArchive(arc, lots, today) {
+function mergeArchive(arc, lots, today, source) {
   let fresh = 0, updated = 0;
   const changes = [];
   for (const l of lots) {
@@ -479,11 +479,16 @@ function mergeArchive(arc, lots, today) {
       arc.flats[l.fingerprint] = {
         firstSeen: today, lastSeen: today, address: `${l.street || ''}, ${l.house || ''}`.trim(),
         rooms: l.rooms, area: l.totalArea, floor: l.floor,
+        sources: source ? [source] : [],
         listings: [{ id: l.id, created: l.created, price: l.priceRub, seen: today }],
       };
       fresh++;
     } else {
       e.lastSeen = today;
+      if (source) {
+        e.sources = e.sources || [];
+        if (!e.sources.includes(source)) e.sources.push(source);
+      }
       if (!e.listings.some((x) => x.id === l.id)) {
         e.listings.push({ id: l.id, created: l.created, price: l.priceRub, seen: today });
       }
@@ -491,12 +496,24 @@ function mergeArchive(arc, lots, today) {
     }
   }
   arc.updated = today;
-  // квартиры, которых в этом снимке не было: сняты, проданы или ушли из фильтра
-  const seenFps = new Set(lots.map((l) => l.fingerprint).filter(Boolean));
-  const gone = Object.entries(arc.flats)
-    .filter(([fp, e]) => e.lastSeen !== today && seenFps.size && !seenFps.has(fp))
-    .map(([fp, e]) => ({ fp, address: e.address, lastSeen: e.lastSeen }));
-  return { fresh, updated, changes, gone };
+  /* Пропажа считается только внутри своего запроса. Иначе снимок по одному
+     району объявляет «ушедшими» все квартиры всех остальных запросов —
+     ровно это и произошло при первом же большом заливе, и в отчёте появились
+     76 несуществующих пропаж.
+
+     Без имени запроса (навалом из файлов) пропажу не считаем вовсе: судить
+     не по чему, а молчание честнее выдуманного списка. */
+  const gone = [];
+  if (source) {
+    const seenFps = new Set(lots.map((l) => l.fingerprint).filter(Boolean));
+    for (const [fp, e] of Object.entries(arc.flats)) {
+      if (e.lastSeen === today) continue;
+      if (!(e.sources || []).includes(source)) continue;
+      if (seenFps.has(fp)) continue;
+      gone.push({ fp, address: e.address, lastSeen: e.lastSeen, sources: e.sources });
+    }
+  }
+  return { fresh, updated, changes, gone, source: source || null };
 }
 
 /* ---------- комплектность ----------
@@ -1150,14 +1167,42 @@ if (require.main === module) (async () => {
       log('\nТекст и поля — только предварительный отсев. Окончательный ответ дают фотографии.');
 
     } else if (cmd === 'snapshot' || cmd === 'exposure') {
-      const q = loadQuery(a.query);
       const today = new Date().toISOString().slice(0, 10);
       const archivePath = a.archive || 'docs/cian/archive.json';
       const arc = loadArchive(archivePath);
-      const { lots } = await collect(ctx, q, parseInt(a.pages || '3', 10), !!a.all);
+      let lots = [], q = null;
+      if (a.from) {
+        /* Уже собранная выдача кладётся в архив без сети. Иначе всё, что
+           набрано по ходу разбора, пропадает, а архив растёт по одному
+           запросу за раз и годами не догоняет то, что мы и так видели. */
+        for (const f of String(a.from).split(',')) {
+          const d = JSON.parse(fs.readFileSync(f.trim(), 'utf8'));
+          const part = d.lots || d.flats || (Array.isArray(d) ? d : []);
+          part.forEach((l) => { if (!lots.some((x) => x.id === l.id)) lots.push(l); });
+          log(`  ${f.trim()}: ${part.length}`);
+        }
+        log(`из файлов: ${lots.length} объявлений`);
+      } else if (a.queries) {
+        /* Список запросов, за которыми следим постоянно. Снимок по одному
+           запросу почти бесполезен: он видит только свой угол рынка. */
+        const list = JSON.parse(fs.readFileSync(a.queries, 'utf8'));
+        for (const item of (list.queries || list)) {
+          log(`\n[${item.name || item.query}]`);
+          const sub = typeof item.jsonQuery === 'object' ? item.jsonQuery : loadQuery(item.query);
+          const r = await collect(ctx, sub, parseInt(a.pages || '3', 10), !!a.all);
+          r.lots.forEach((l) => { if (!lots.some((x) => x.id === l.id)) lots.push(l); });
+        }
+        log(`\nвсего по ${(list.queries || list).length} запросам: ${lots.length}`);
+      } else {
+        q = loadQuery(a.query);
+        lots = (await collect(ctx, q, parseInt(a.pages || '3', 10), !!a.all)).lots;
+      }
 
       if (cmd === 'snapshot') {
-        const { fresh, updated, changes, gone } = mergeArchive(arc, lots, today);
+        /* Имя запроса — то, внутри чего считается пропажа. У залива из файлов
+           его нет, и это не оплошность: судить о пропаже там не по чему. */
+        const source = a.source || (a.from ? null : a.queries ? null : (a.query || null));
+        const { fresh, updated, changes, gone } = mergeArchive(arc, lots, today, source);
         fs.writeFileSync(archivePath, JSON.stringify(arc, null, 2) + '\n');
         log(`архив ${archivePath}: +${fresh} новых квартир, ${updated} подтверждено, всего ${Object.keys(arc.flats).length}`);
         if (changes.length) {
@@ -1165,7 +1210,11 @@ if (require.main === module) (async () => {
           changes.slice(0, 10).forEach((c) => log(`  ${c.id}  ${c.from.toLocaleString('ru-RU')} -> ${c.to.toLocaleString('ru-RU')} ₽` +
             `  (${c.to < c.from ? '' : '+'}${((c.to - c.from) / c.from * 100).toFixed(1)}%)  ${c.address}`));
         }
-        if (gone.length) log(`\nне попали в этот снимок (сняты, проданы или ушли из фильтра): ${gone.length}`);
+        if (source) {
+          if (gone.length) log(`\nбыли в этом же запросе, теперь нет (сняты, проданы или ушли из фильтра): ${gone.length}`);
+        } else {
+          log('\nпропажу не считаю: снимок без имени запроса, сравнивать не с чем');
+        }
         log('Чем дольше архив ведётся, тем труднее скрыть настоящий срок экспозиции.');
       } else {
         /* --deep: добираем близнецов запросом по дому. Второе объявление той же
@@ -1181,7 +1230,7 @@ if (require.main === module) (async () => {
               for (let pg = 1; pg <= parseInt(a['house-pages'] || '3', 10); pg++) {
                 const { offers } = await searchPage(ctx, {
                   _type: 'flatsale', engine_version: { type: 'term', value: 2 },
-                  region: q.region || { type: 'terms', value: [1] },
+                  region: (q && q.region) || { type: 'terms', value: [1] },
                   geo: { type: 'geo', value: [{ type: 'house', id: h }] },
                 }, pg);
                 if (!offers.length) break;
