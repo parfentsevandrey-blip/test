@@ -1462,7 +1462,12 @@ if (require.main === module) (async () => {
           if (!raw.some((x) => x.id === l.id)) raw.push(l);
         }
       }
-      const { flats } = dedupe(raw);
+      /* Лоты без корпуса в адресе схлопнуть нельзя — их четверть выдачи, и
+         раньше они молча выпадали из сравнения вместе со своими ценами.
+         Схлопнутые и одиночные идут в когорту вместе. */
+      const { flats: collapsed, loose } = dedupe(raw);
+      const flats = collapsed.concat(loose);
+      if (loose.length) log(`без корпуса в адресе: ${loose.length} — в когорте оставлены, но дубли среди них не схлопнуть`);
       const grades = loadGrades(a.grades || 'docs/cian/grades.json').flats;
       const ppm = (l) => (l.priceRub && l.totalArea ? l.priceRub / l.totalArea : null);
       /* Искать надо и среди схлопнутых: та же квартира могла попасть в
@@ -1476,16 +1481,51 @@ if (require.main === module) (async () => {
       if (!target) { log(`лот ${a.lot} не найден ни в одном из файлов когорты`); }
       else {
         const g = gradeFor(grades, target) || {};
+        const arc = loadArchive(a.archive || 'docs/cian/archive.json');
+        /* История цены живёт в архиве по отпечатку квартиры и переживает
+           переклейку объявления. Снижали ли цену — сигнал не слабее срока
+           экспозиции, а часто и сильнее. */
+        const histOf = (l) => {
+          /* Ищем и по отпечатку, и по номеру объявления: собранный файл мог
+             прийти без отпечатка, а история в архиве всё равно есть. */
+          let e = l.fingerprint && arc.flats[l.fingerprint];
+          if (!e) {
+            const ids = [l.id, ...((l.alsoListedAs || []).map((x) => (x && x.id) ?? x))];
+            e = Object.values(arc.flats).find((f) => f.priceHistory
+              && ids.some((id) => f.priceHistory[String(id)]));
+          }
+          if (!e || !e.priceHistory) return null;
+          const all = Object.entries(e.priceHistory)
+            .flatMap(([id, ch]) => (ch || []).map((p) => ({ ...p, id })))
+            .sort((x, y) => x.date.localeCompare(y.date));
+          if (all.length < 2) return null;
+          return { from: all[0], to: all[all.length - 1], n: all.length,
+            pct: (all[all.length - 1].price - all[0].price) / all[0].price * 100 };
+        };
         const tPpm = ppm(target);
         const tier = a.tier || 'бизнес';
         log(`${target.id}  ${target.rooms || 'ст'}к ${target.totalArea} м²  ${(target.priceRub || 0).toLocaleString('ru-RU')} ₽  ` +
             `= ${Math.round(tPpm).toLocaleString('ru-RU')} ₽/м²  ${target.street || ''} ${target.house || ''}`);
+        const th = histOf(target);
+        if (th) {
+          log(`цена: ${th.n} изменений, ${th.from.date} ${(th.from.price / 1e6).toFixed(1)} млн -> ` +
+              `${th.to.date} ${(th.to.price / 1e6).toFixed(1)} млн  (${th.pct > 0 ? '+' : ''}${th.pct.toFixed(1)}%)`);
+        }
         log(`состояние: ${g.state || completeness(target)}` +
             (g.level ? `, отделка ${g.level}` : ', отделка не оценивалась') +
             (g.proof ? `, подтверждено: ${g.proof}` : '') +
             (g.conflict ? '  ! текст объявления расходится с фотографиями' : ''));
         const pool = flats.filter((l) => l.id !== target.id && ppm(l));
         log(`\nкогорта: ${raw.length} объявлений -> ${flats.length} квартир`);
+        /* Когорту задаёт человек, и склеить в неё пол-Москвы легко. Состав по
+           районам печатается, чтобы смешение было видно до, а не после
+           вывода о медиане. */
+        const byD = {};
+        flats.forEach((l) => { const d = l.district || 'без района'; byD[d] = (byD[d] || 0) + 1; });
+        const parts = Object.entries(byD).sort((x, y) => y[1] - x[1]);
+        log(`  районы: ${parts.slice(0, 6).map(([d, n]) => `${d} ${n}`).join(', ')}` +
+            (parts.length > 6 ? ` и ещё ${parts.length - 6}` : ''));
+        if (parts.length > 3) log('  ! когорта из нескольких районов — медиана по ней смешивает разные рынки');
 
         const band = (name, xs) => {
           if (xs.length < 4) { log(`  ${name.padEnd(34)} ${String(xs.length).padStart(3)} — меньше четырёх, медиану не считаю`); return; }
@@ -1525,10 +1565,12 @@ if (require.main === module) (async () => {
         log(`\nближайшие по площади (±15%), ${near.length}:`);
         for (const l of near.slice(0, 14)) {
           const x = gradeFor(grades, l) || {};
+          const h = histOf(l);
           log(`  ${String(Math.round(ppm(l)).toLocaleString('ru-RU')).padStart(10)} ${String(l.id).padEnd(11)} ` +
               `${String(l.totalArea).padStart(6)} м² ${String((l.priceRub / 1e6).toFixed(1)).padStart(6)} млн ` +
               `${String(l.daysOnMarket ?? '').padStart(4)}д ${(x.level || '—').padEnd(2)} ${(x.proof || '').padEnd(13)} ` +
-              `${(x.state || completeness(l)).padEnd(14)} ${(l.street || '')} ${(l.house || '')}`);
+              `${(x.state || completeness(l)).padEnd(14)} ${h ? `${h.pct > 0 ? '+' : ''}${h.pct.toFixed(0)}% ` : '     '}` +
+              `${(l.street || '')} ${(l.house || '')}`);
         }
         const gaps = near.slice(0, 6).map((l) => ({ l, g: comparabilityGaps(target, l) })).filter((x) => x.g.length);
         if (gaps.length) {
