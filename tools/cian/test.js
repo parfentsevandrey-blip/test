@@ -5,7 +5,7 @@
 const assert = require('assert');
 const { groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive,
         completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing,
-        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice } = require('./cian.js');
+        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor } = require('./cian.js');
 
 let passed = 0;
 const test = (name, fn) => {
@@ -548,4 +548,24 @@ test('залив без имени запроса не выдумывает пр
   const r = mergeArchive(arc, [lot({ id: 9, fingerprint: 'f9' })], '2026-08-02', null);
   assert.strictEqual(r.gone.length, 0);
   assert.strictEqual(r.source, null);
+});
+
+test('оценка находится по любому объявлению одной квартиры', () => {
+  // 327985409 и 331215568 — одна квартира на Профсоюзной; оценка ставилась
+  // первому, а в когорту после схлопывания попал второй
+  const grades = { '327985409': { id: 327985409, fingerprint: '66566|15|79.5|3', level: 'E', proof: 'фото' } };
+  const collapsed = lot({ id: 331215568, fingerprint: '66566|15|79.5|3',
+    alsoListedAs: [{ id: 327985409, priceRub: 54e6 }] });
+  assert.strictEqual((gradeFor(grades, collapsed) || {}).level, 'E');
+});
+
+test('оценка переживает переклейку объявления через отпечаток', () => {
+  const grades = { '327985409': { id: 327985409, fingerprint: '66566|15|79.5|3', level: 'E' } };
+  const relisted = lot({ id: 999999999, fingerprint: '66566|15|79.5|3', alsoListedAs: [] });
+  assert.strictEqual((gradeFor(grades, relisted) || {}).level, 'E');
+});
+
+test('чужая квартира чужую оценку не получает', () => {
+  const grades = { '327985409': { id: 327985409, fingerprint: '66566|15|79.5|3', level: 'E' } };
+  assert.strictEqual(gradeFor(grades, lot({ id: 5, fingerprint: 'другой' })), null);
 });

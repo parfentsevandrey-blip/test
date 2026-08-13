@@ -11,6 +11,7 @@
  *   node tools/cian/cian.js verify --query q.json [--ids 1,2] [--photos 9] [--files] [--dir out]
  *   node tools/cian/cian.js snapshot --query q.json | --queries watchlist.json | --from a.json,b.json
  *   node tools/cian/cian.js exposure --query q.json [--deep] — двойники и реальный срок
+ *   node tools/cian/cian.js compare --lot 327985409 --cohort lots.json [--tier бизнес]
  *   node tools/cian/cian.js grade  --lots lots.json --marks marks.json  — записать оценку отделки
  *   node tools/cian/cian.js grade  --list
  *   node tools/cian/cian.js stats  332550701 331961171
@@ -453,6 +454,19 @@ async function contactSheet(ctx, page, lot, file, n, cols = 3) {
    creationDate обнуляется, если объявление снять и выложить заново. Отпечаток
    квартиры — нет. Архив хранит, когда мы увидели квартиру впервые, и это
    переразмещением не стирается. */
+/* Оценку ищем по всем объявлениям одной квартиры: у схлопнутой записи
+   победившее объявление может быть не тем, которое оценивали. */
+function gradeFor(grades, lot) {
+  if (!grades || !lot) return null;
+  const ids = [lot.id, ...((lot.alsoListedAs || []).map((x) => (x && x.id) ?? x))];
+  for (const id of ids) if (grades[String(id)]) return grades[String(id)];
+  if (lot.fingerprint) {
+    const hit = Object.values(grades).find((g) => g.fingerprint && g.fingerprint === lot.fingerprint);
+    if (hit) return hit;
+  }
+  return null;
+}
+
 function loadGrades(p) {
   try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return { updated: null, flats: {} }; }
 }
@@ -694,6 +708,9 @@ function gradeRecord(lot, g) {
   const conflict = rank(observed) != null && rank(claimed) != null && rank(observed) !== rank(claimed);
   return {
     id: lot.id,
+    /* Оценка ставится квартире, а не объявлению: объявление переклеивают, и
+       без отпечатка оценка теряется вместе со старым id. */
+    fingerprint: lot.fingerprint || null,
     address: `${lot.street || ''} ${lot.house || ''}`.trim(),
     area: lot.totalArea,
     price: lot.priceRub,
@@ -1273,6 +1290,93 @@ if (require.main === module) (async () => {
         else if (!corrected) log('  расхождений с архивом нет');
       }
 
+    } else if (cmd === 'compare') {
+      /* Положение лота в когорте я считал руками в одноразовых скриптах, и
+         поэтому ни один разбор не повторялся дважды одинаково. Здесь тот же
+         счёт, но с разделением по комплектности и по проверенному уровню
+         отделки: без него медиана смешивает бетон с квартирой под ключ. */
+      const raw = [];
+      for (const f of String(a.cohort).split(',')) {
+        const src = JSON.parse(fs.readFileSync(f.trim(), 'utf8'));
+        for (const l of (src.lots || src.flats || (Array.isArray(src) ? src : []))) {
+          if (!raw.some((x) => x.id === l.id)) raw.push(l);
+        }
+      }
+      const { flats } = dedupe(raw);
+      const grades = loadGrades(a.grades || 'docs/cian/grades.json').flats;
+      const ppm = (l) => (l.priceRub && l.totalArea ? l.priceRub / l.totalArea : null);
+      /* Искать надо и среди схлопнутых: та же квартира могла попасть в
+         когорту под другим объявлением, и «не найден» было бы неправдой. */
+      const target = flats.find((l) => String(l.id) === String(a.lot))
+        || flats.find((l) => (l.alsoListedAs || []).some((x) => String(x.id ?? x) === String(a.lot)))
+        || raw.find((l) => String(l.id) === String(a.lot));
+      if (target && String(target.id) !== String(a.lot)) {
+        log(`${a.lot} — то же самое, что ${target.id}: одна квартира, разные объявления\n`);
+      }
+      if (!target) { log(`лот ${a.lot} не найден ни в одном из файлов когорты`); }
+      else {
+        const g = gradeFor(grades, target) || {};
+        const tPpm = ppm(target);
+        const tier = a.tier || 'бизнес';
+        log(`${target.id}  ${target.rooms || 'ст'}к ${target.totalArea} м²  ${(target.priceRub || 0).toLocaleString('ru-RU')} ₽  ` +
+            `= ${Math.round(tPpm).toLocaleString('ru-RU')} ₽/м²  ${target.street || ''} ${target.house || ''}`);
+        log(`состояние: ${g.state || completeness(target)}` +
+            (g.level ? `, отделка ${g.level}` : ', отделка не оценивалась') +
+            (g.proof ? `, подтверждено: ${g.proof}` : '') +
+            (g.conflict ? '  ! текст объявления расходится с фотографиями' : ''));
+        const pool = flats.filter((l) => l.id !== target.id && ppm(l));
+        log(`\nкогорта: ${raw.length} объявлений -> ${flats.length} квартир`);
+
+        const band = (name, xs) => {
+          if (xs.length < 4) { log(`  ${name.padEnd(34)} ${String(xs.length).padStart(3)} — меньше четырёх, медиану не считаю`); return; }
+          const m = median(xs.map(ppm));
+          log(`  ${name.padEnd(34)} ${String(xs.length).padStart(3)} шт  медиана ${String(Math.round(m).toLocaleString('ru-RU')).padStart(10)} ₽/м²  ` +
+              `наш ${tPpm > m ? '+' : ''}${((tPpm / m - 1) * 100).toFixed(0)}%`);
+        };
+        log('медианы по когорте:');
+        band('все', pool);
+        for (const st of ['под ключ', 'оболочка', 'ремонт не сдан', 'неизвестно']) {
+          band(`комплектность: ${st}`, pool.filter((l) => { const x = gradeFor(grades, l); return x ? x.state === st : completeness(l) === st; }));
+        }
+        for (const lv of ['A', 'B', 'C', 'D', 'E']) {
+          band(`отделка ${lv} (по фотографиям)`, pool.filter((l) => { const x = gradeFor(grades, l); return x && x.level === lv && x.proof === 'фото'; }));
+        }
+
+        const shell = ['оболочка', 'ремонт не сдан'].includes(g.state || completeness(target));
+        if (shell) {
+          const loaded = loadedPricePerM2(target, tier);
+          const c = finishCost(target.totalArea, tier);
+          log(`\nэто не готовая квартира. Ремонт класса «${tier}» — допущение ${(c.perM2.low / 1e3).toFixed(0)}–${(c.perM2.high / 1e3).toFixed(0)} тыс ₽/м²:`);
+          log(`  довести до «под ключ»: ${(c.low / 1e6).toFixed(1)}–${(c.high / 1e6).toFixed(1)} млн, 8–12 месяцев`);
+          log(`  метр после ремонта: ${loaded.low.toLocaleString('ru-RU')} – ${loaded.high.toLocaleString('ru-RU')} ₽/м²`);
+          const turnkey = pool.filter((l) => { const x = gradeFor(grades, l); return x ? x.state === 'под ключ' : completeness(l) === 'под ключ'; });
+          if (turnkey.length >= 4) {
+            const m = median(turnkey.map(ppm));
+            const fair = fairShellPrice(target.totalArea, m, tier);
+            log(`  готовая медиана ${Math.round(m).toLocaleString('ru-RU')} ₽/м² -> оболочка должна стоить ` +
+                `${(fair.low / 1e6).toFixed(1)}–${(fair.high / 1e6).toFixed(1)} млн, просят ${(target.priceRub / 1e6).toFixed(1)}`);
+            const over = (target.priceRub / fair.mid - 1) * 100;
+            log(`  переоценка: ${over > 0 ? '+' : ''}${over.toFixed(0)}% (${((target.priceRub - fair.mid) / 1e6).toFixed(1)} млн)`);
+          } else log('  готовых в когорте меньше четырёх — не с чем сводить');
+        }
+
+        const near = pool.filter((l) => Math.abs(l.totalArea - target.totalArea) / target.totalArea <= 0.15)
+          .sort((x, y) => ppm(y) - ppm(x));
+        log(`\nближайшие по площади (±15%), ${near.length}:`);
+        for (const l of near.slice(0, 14)) {
+          const x = gradeFor(grades, l) || {};
+          log(`  ${String(Math.round(ppm(l)).toLocaleString('ru-RU')).padStart(10)} ${String(l.id).padEnd(11)} ` +
+              `${String(l.totalArea).padStart(6)} м² ${String((l.priceRub / 1e6).toFixed(1)).padStart(6)} млн ` +
+              `${String(l.daysOnMarket ?? '').padStart(4)}д ${(x.level || '—').padEnd(2)} ${(x.proof || '').padEnd(13)} ` +
+              `${(x.state || completeness(l)).padEnd(14)} ${(l.street || '')} ${(l.house || '')}`);
+        }
+        const gaps = near.slice(0, 6).map((l) => ({ l, g: comparabilityGaps(target, l) })).filter((x) => x.g.length);
+        if (gaps.length) {
+          log('\nчем эти лоты не сопоставимы с нашим:');
+          gaps.forEach((x) => log(`  ${x.l.id}: ${x.g.join('; ')}`));
+        }
+      }
+
     } else if (cmd === 'grade') {
       /* Оценка отделки живёт в файле, а не в переписке: иначе каждая новая
          сессия оценивает те же квартиры заново и приходит к другой букве. */
@@ -1334,4 +1438,4 @@ if (require.main === module) (async () => {
 
 /* Чистые функции наружу — чтобы их можно было проверить без сети. */
 module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, pointInPolygon,
-  gradeLevel, gradeRecord, observedState, finishCost, loadedPricePerM2, fairShellPrice, MARKERS, PROOFS };
+  gradeLevel, gradeRecord, observedState, gradeFor, finishCost, loadedPricePerM2, fairShellPrice, MARKERS, PROOFS };
