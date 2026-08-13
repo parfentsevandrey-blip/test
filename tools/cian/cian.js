@@ -87,6 +87,11 @@ async function searchPage(ctx, jsonQuery, pageNumber, attempt = 1) {
   const d = j.data || {};
   return {
     count: d.offerCount ?? null,
+    /* Честный потолок перечисления. Пагинация отдаёт РОВНО столько и на
+       следующей странице возвращает пустоту; offerCount — счётчик ДО
+       схлопывания похожих объявлений, и добрать его подряд нельзя.
+       Замер: offerCount 400, aggregatedCount 177, собрано ровно 177. */
+    aggregated: d.aggregatedCount ?? null,
     offers: d.offersSerialized || d.offers || [],
     // Циан сам сериализует jsonQuery обратно в query-строку cat.php — по ней
     // видно, какие фильтры он принял, и как они называются в адресе.
@@ -247,29 +252,29 @@ function normalize(o) {
 const SORTS = [null, 'price_object_order', 'creation_date_desc', 'area_order'];
 
 async function collectSorted(ctx, jsonQuery, maxPages, seen, sort) {
-  let count = null;
+  let count = null, aggregated = null;
   const q = sort ? { ...jsonQuery, sort: { type: 'term', value: sort } } : jsonQuery;
   for (let p = 1; p <= maxPages; p++) {
-    const { count: c, offers } = await searchPage(ctx, q, p);
-    if (count === null) count = c;
+    const { count: c, aggregated: ag, offers } = await searchPage(ctx, q, p);
+    if (count === null) { count = c; aggregated = ag; }
     if (!offers.length) break;
     const before = seen.size;
     offers.forEach((o) => { const n = normalize(o); if (!seen.has(n.id)) seen.set(n.id, n); });
     log(`  ${(sort || 'по умолчанию').padEnd(18)} стр ${p}: +${offers.length}, новых ${seen.size - before}, накоплено ${seen.size}`);
     await sleep(1200);
   }
-  return count;
+  return { count, aggregated };
 }
 
 async function collect(ctx, jsonQuery, maxPages, all) {
   const seen = new Map();
-  let count = null;
+  let count = null, aggregated = null;
   for (const sort of all ? SORTS : [null]) {
     const c = await collectSorted(ctx, jsonQuery, maxPages, seen, sort);
-    if (count === null) count = c;
+    if (count === null) { count = c.count; aggregated = c.aggregated; }
     if (!all) break;
   }
-  return { count, lots: [...seen.values()] };
+  return { count, aggregated, lots: [...seen.values()] };
 }
 
 /* ---------- развёртка большой выдачи ----------
@@ -332,7 +337,10 @@ async function splitByArea(ctx, q, parentCount, parts = 3) {
   const lo = base.gte, hi = base.lte;
   if (lo == null || hi == null || hi - lo < 6) return [];
   const edges = [lo];
-  for (let i = 1; i < parts; i++) edges.push(+(lo + (hi - lo) * i / parts).toFixed(1));
+  /* Границы только целые: дробное lte Циан округляет вниз и создаёт дыру
+     (297+95=392 против родительских 400). Целые дают перекрытие, а его
+     снимает схлопывание по id. */
+  for (let i = 1; i < parts; i++) edges.push(Math.round(lo + (hi - lo) * i / parts));
   edges.push(hi);
   const out = [];
   for (let i = 0; i < edges.length - 1; i++) {
@@ -345,6 +353,32 @@ async function splitByArea(ctx, q, parentCount, parts = 3) {
       return [];
     }
     out.push({ q: sub, count, label: `${edges[i]}–${edges[i + 1]} м²` });
+  }
+  return out;
+}
+
+/* Ось этажа — единственная, которая не только режет без пересечений, но и
+   РАЗБИВАЕТ схлопывание: сумма offerCount по полосам точно равна родителю,
+   а сумма aggregatedCount выше родительской на треть. Оси geo и room режут
+   так же чисто, но не вскрывают ничего — множество id после них то же.
+
+   Полосы подобраны под московские новостройки 2018+, где этажность почти
+   вся 17+. На малоэтажной вторичке их придётся считать от распределения. */
+const FLOOR_BANDS = [[1, 5], [6, 11], [12, 19], [20, 99]];
+
+async function splitByFloor(ctx, q, parentCount) {
+  if (q.floor) return [];                       // этаж уже задан — делить нечего
+  const out = [];
+  for (const [lo, hi] of FLOOR_BANDS) {
+    const sub = { ...q, floor: { type: 'range', value: { gte: lo, lte: hi } } };
+    const { count, aggregated } = await searchPage(ctx, sub, 1);
+    await sleep(700);
+    if (!count) continue;
+    if (parentCount != null && count > parentCount) {
+      log(`  ! этажи ${lo}–${hi} дают ${count} при родительских ${parentCount} — ось отброшена`);
+      return [];
+    }
+    out.push({ q: sub, count, aggregated, label: `эт.${lo}–${hi}` });
   }
   return out;
 }
@@ -374,19 +408,22 @@ async function splitByPrice(ctx, bucket, limit) {
 
 async function sweep(ctx, q, limit, maxPages, allSorts) {
   const top = await searchPage(ctx, q, 1);
-  log(`заявлено ${top.count}`);
+  log(`заявлено ${top.count}, перечислимо за один проход ${top.aggregated ?? '?'}` +
+      (top.aggregated && top.count > top.aggregated
+        ? ` — разницу в ${top.count - top.aggregated} подряд не добрать, только дроблением` : ''));
   let buckets = [{ q, count: top.count, label: 'всё' }];
   /* Порядок осей — от самой «чистой» к самой грубой. География делит без
      остатка и первой; отделка на вторичке бесполезна (см. traps.md, п. 15),
      поэтому идёт после комнатности, а не до неё; площадь — последний рубеж
      перед дроблением по цене. */
-  for (const axis of ['geo', 'rooms', 'decor', 'area']) {
+  for (const axis of ['geo', 'rooms', 'floor', 'decor', 'area']) {
     const next = [];
     for (const b of buckets) {
       if (b.count <= limit) { next.push(b); continue; }
       const parts = axis === 'geo' ? await splitByGeo(ctx, b.q, b.count)
-        : axis === 'area' ? await splitByArea(ctx, b.q, b.count)
-          : await splitByAxis(ctx, b.q, axis, b.count);
+        : axis === 'floor' ? await splitByFloor(ctx, b.q, b.count)
+          : axis === 'area' ? await splitByArea(ctx, b.q, b.count)
+            : await splitByAxis(ctx, b.q, axis, b.count);
       if (!parts.length) { next.push(b); continue; }     // ось не подошла — кусок несём дальше как есть
       log(`  ${b.label}: ${b.count} -> ${parts.map((x) => `${x.label}:${x.count}`).join(' ')}`);
       next.push(...parts.map((x) => ({ ...x, label: `${b.label} / ${x.label}` })));
@@ -427,7 +464,7 @@ async function sweep(ctx, q, limit, maxPages, allSorts) {
     }
     log(`  ${b.label.padEnd(46)} ${String(b.count).padStart(5)} -> накоплено ${seen.size}`);
   }
-  return { seen, declared: top.count };
+  return { seen, declared: top.count, aggregated: top.aggregated };
 }
 
 /* Фильтр decorations_list делит выдачу без остатка, поэтому прогон по каждому
@@ -1378,16 +1415,22 @@ if (require.main === module) (async () => {
     } else if (cmd === 'search') {
       const q = loadQuery(a.query);
       const pages = parseInt(a.pages || '3', 10);
-      let { count, lots } = await collect(ctx, q, pages, !!a.all);
+      let { count, aggregated, lots } = await collect(ctx, q, pages, !!a.all);
       const enumerated = lots.length;
-      log(`Циан заявляет ${count}, реально перечислено ${enumerated}` +
-          (count && enumerated < count ? ' — offerCount у Циан завышен, это оценка, а не точное число' : ''));
+      log(`Циан заявляет ${count}, перечислимо за проход ${aggregated ?? '?'}, реально перечислено ${enumerated}` +
+          (count && enumerated < count ? ' — offerCount считает ДО схлопывания похожих объявлений' : ''));
       /* Недобор молчаливым быть не должен. На районном запросе развёртка с
          перебором сортировок дала 238 лотов против 168 у обычного обхода —
          на 42% больше, и без подсказки этой разницы никто не заметит. */
-      if (count && enumerated < count * 0.75) {
-        log(`перечислено ${Math.round(enumerated / count * 100)}% от заявленного. Выдача обрывается раньше, чем кончаются лоты.`);
-        log(`Полнее будет так:  node tools/cian/cian.js sweep --query ${a.query || '<запрос>'} --all --limit 120`);
+      /* Считать недобор надо от aggregatedCount, а не от offerCount: второй
+         завышен схлопыванием и недостижим подряд в принципе. */
+      const ceiling = aggregated || count;
+      if (ceiling && enumerated < ceiling * 0.9) {
+        log(`перечислено ${Math.round(enumerated / ceiling * 100)}% от потолка одного прохода — добавьте --pages/--all.`);
+      }
+      if (aggregated && count > aggregated * 1.15) {
+        log(`заявлено на ${count - aggregated} больше, чем можно перечислить подряд: схлопывание похожих объявлений.`);
+        log(`Разбить его умеет только дробление:  node tools/cian/cian.js sweep --query ${a.query || '<запрос>'} --all --limit 120`);
       }
       const before = lots.length;
       if (a['no-apartments']) lots = lots.filter((l) => !l.isApartments);
@@ -1424,11 +1467,12 @@ if (require.main === module) (async () => {
     } else if (cmd === 'sweep') {
       const q = loadQuery(a.query);
       const maxPages = parseInt(a.pages || '12', 10);
-      const { seen, declared } = await sweep(ctx, q, parseInt(a.limit || '250', 10), maxPages, !!a.all);
+      const { seen, declared, aggregated } = await sweep(ctx, q, parseInt(a.limit || '250', 10), maxPages, !!a.all);
       // по умолчанию доопределяем комплектность фильтром: без неё сравнение цен врёт
       if (a.resolve !== '0') await resolveDecoration(ctx, q, seen, Math.min(maxPages, 6));
       let { lots } = finishSweep(seen, { count: declared });
-      log(`\nзаявлено ${declared}, собрано ${lots.length} (${Math.round(lots.length / declared * 100)}%)`);
+      log(`\nзаявлено ${declared}, за один проход перечислимо ${aggregated ?? '?'}, собрано ${lots.length}` +
+          (aggregated ? ` — против ${aggregated} без дробления` : ''));
       lots = withMarket(lots);
       const { flats, loose } = dedupe(lots);
       const multi = flats.filter((f) => f.listings > 1).sort((x, y) => y.listings - x.listings);
