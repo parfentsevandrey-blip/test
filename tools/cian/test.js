@@ -4,7 +4,7 @@
    дробление запроса обязано сужать, а не расширять. */
 const assert = require('assert');
 const { groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive,
-        completeness, comparabilityGaps, features, readiness, finishEvidence } = require('./cian.js');
+        completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear } = require('./cian.js');
 
 let passed = 0;
 const test = (name, fn) => {
@@ -357,3 +357,17 @@ test('первая встреча квартиры не перезаписыва
 });
 
 process.stdout.write(`\n${passed} проверок пройдено${process.exitCode ? ', есть провалы' : ''}\n`);
+
+process.stdout.write('год постройки\n');
+
+test('у новостройки год берётся из срока сдачи', () => {
+  assert.strictEqual(buildingYear(lot({ buildYear: null, deadline: { year: 2023, quarter: 1 } })), 2023);
+});
+
+test('заполненный buildYear важнее срока сдачи', () => {
+  assert.strictEqual(buildingYear(lot({ buildYear: 2019, deadline: { year: 2030 } })), 2019);
+});
+
+test('когда года нет нигде — null, а не ноль', () => {
+  assert.strictEqual(buildingYear(lot({ buildYear: null, deadline: null })), null);
+});

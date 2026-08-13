@@ -578,6 +578,17 @@ function finishEvidence(lot) {
   };
 }
 
+/* Год постройки. У новостроек buildYear пустой — год живёт в сроке сдачи
+   корпуса. На запросе «дизайнерский ремонт, дом от 2017» по ЦАО поле было
+   пустым у 63 лотов из 137, и отсев по нему выбрасывал их все, включая
+   готовые дома 2017–2023. Отсутствие данных — не то же самое, что
+   несоответствие. */
+function buildingYear(lot) {
+  if (lot.buildYear) return lot.buildYear;
+  if (lot.deadline && lot.deadline.year) return lot.deadline.year;
+  return null;
+}
+
 /* Готовность: ключи на руках или обязательство построить к сроку.
    Квартира со сдачей в 2030 и квартира, куда можно въехать сегодня, — разные
    товары: деньги на эскроу заморожены на годы, а сроки сдвигаются. */
@@ -839,7 +850,12 @@ if (require.main === module) (async () => {
           (count && enumerated < count ? ' — offerCount у Циан завышен, это оценка, а не точное число' : ''));
       const before = lots.length;
       if (a['no-apartments']) lots = lots.filter((l) => !l.isApartments);
-      if (a['min-year']) lots = lots.filter((l) => l.buildYear && l.buildYear >= parseInt(a['min-year'], 10));
+      if (a['min-year']) {
+        const y = parseInt(a['min-year'], 10);
+        const unknown = lots.filter((l) => buildingYear(l) == null).length;
+        lots = lots.filter((l) => { const b = buildingYear(l); return b == null || b >= y; });
+        if (unknown) log(`год постройки неизвестен у ${unknown} лотов — оставлены, отсев по году их не касается`);
+      }
       if (a['max-area']) lots = lots.filter((l) => l.totalArea && l.totalArea <= parseFloat(a['max-area']));
       if (lots.length !== before) log(`после доотбора на своей стороне: ${lots.length} из ${before}`);
       lots = withMarket(lots);
@@ -1017,4 +1033,4 @@ if (require.main === module) (async () => {
 })();
 
 /* Чистые функции наружу — чтобы их можно было проверить без сети. */
-module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, completeness, comparabilityGaps, features, readiness, finishEvidence };
+module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear };
