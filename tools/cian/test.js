@@ -4,7 +4,8 @@
    дробление запроса обязано сужать, а не расширять. */
 const assert = require('assert');
 const { groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive,
-        completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing } = require('./cian.js');
+        completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing,
+        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice } = require('./cian.js');
 
 let passed = 0;
 const test = (name, fn) => {
@@ -402,4 +403,120 @@ test('Мантулинская и Шмитовский — снаружи, хо�
 
 test('без координат — null, а не «снаружи»', () => {
   assert.strictEqual(insideGardenRing({ lat: null, lng: null }), null);
+});
+
+process.stdout.write('уровень отделки\n');
+
+/* Признаки списаны с фотографий этой сессии. Проверка в том, что буква,
+   выведенная арифметикой, совпадает с тем, как квартиру прочитал глаз. */
+const M = {
+  premium: { stone: 'слэб', joinery: 'на заказ', kitchen: 'интегрированная',
+    light: 'сценарный', furniture: 'полный', bath: 'камень и бренд' },
+  ordinary: { stone: 'нет', joinery: 'серийная', kitchen: 'встроенная',
+    light: 'базовый', furniture: 'полный', bath: 'плитка' },
+};
+
+test('авторский премиум — A', () => {
+  // 331300080, Кутузовский XII: камень слэбом, латунь, гнутые фасады, Bosch
+  assert.strictEqual(gradeLevel(M.premium), 'A');
+});
+
+test('полный, но массовый ремонт — C', () => {
+  // 332133656, Ленинский 95Б: ламинат, белая кухня, плитка под мрамор, мебель
+  assert.strictEqual(gradeLevel(M.ordinary), 'C');
+});
+
+test('отделка есть, кухни и мебели нет — D, баллы не считаются', () => {
+  // 330733568, Victory Park: ёлочка и мрамор на месте, вместо кухни выводы воды
+  assert.strictEqual(gradeLevel({ stone: 'слэб', joinery: 'нет', kitchen: 'нет',
+    light: 'нет', furniture: 'нет', bath: 'камень и бренд' }), 'D');
+});
+
+test('бетон — E, а не «плохая отделка»', () => {
+  // 327985409, Профсоюзная 2/22: плиты, блоки, стяжка, разводка по полу
+  assert.strictEqual(gradeLevel({ stone: 'нет', joinery: 'нет', kitchen: 'нет',
+    light: 'нет', furniture: 'нет', bath: 'не отделан' }), 'E');
+});
+
+test('меньше четырёх признаков — оценки нет, а не буква наугад', () => {
+  assert.strictEqual(gradeLevel({ kitchen: 'встроенная', furniture: 'полный', light: 'базовый' }), null);
+});
+
+test('невидимый на кадрах признак не считается отсутствующим', () => {
+  const seen = { ...M.premium, bath: null };
+  assert.strictEqual(gradeLevel(seen), 'A', 'пять признаков из шести — оценка ставится');
+});
+
+test('выдуманное значение признака — ошибка, а не молчаливый ноль', () => {
+  assert.throws(() => gradeLevel({ stone: 'мрамор', joinery: 'на заказ',
+    kitchen: 'встроенная', light: 'базовый' }), /stone/);
+});
+
+test('в запись попадает и уровень, и чем он подтверждён', () => {
+  // 326035617, ЖК Золотой: продаётся визуализациями
+  const lot = { id: 326035617, totalArea: 87.5, priceRub: 280e6, street: 'Софийская', house: '18',
+    decoration: 'turnkey', fromDeveloper: true, description: 'с дизайнерским ремонтом' };
+  const r = gradeRecord(lot, { markers: M.premium, proof: 'рендер', photosSeen: 26, gradedAt: '2026-08-13' });
+  assert.strictEqual(r.level, 'A');
+  assert.strictEqual(r.proof, 'рендер');
+  assert.strictEqual(r.pricePerM2, 3200000);
+  assert.strictEqual(r.state, 'под ключ');
+});
+
+test('выдуманный вид подтверждения — ошибка', () => {
+  assert.throws(() => gradeRecord({ id: 1 }, { markers: M.premium, proof: 'со слов агента' }), /подтверждение/);
+});
+
+process.stdout.write('стоимость доведения до «под ключ»\n');
+
+test('оболочка сравнивается с готовой только после добавления сметы', () => {
+  // 327985409: 79.5 м² бетона за 54 млн выглядит дешевле готовых 610 тыс ₽/м²
+  const shell = { totalArea: 79.5, priceRub: 54e6 };
+  assert.strictEqual(Math.round(shell.priceRub / shell.totalArea), 679245);
+  const loaded = loadedPricePerM2(shell, 'бизнес');
+  assert.ok(loaded.mid > 830000 && loaded.mid < 840000, `итог метра ${loaded.mid}`);
+  assert.ok(loaded.low < loaded.mid && loaded.mid < loaded.high);
+});
+
+test('справедливая цена оболочки — от цены готовой минус смета', () => {
+  const fair = fairShellPrice(79.5, 767606, 'бизнес');
+  assert.ok(fair.mid > 48e6 && fair.mid < 49e6, `${fair.mid}`);
+  assert.ok(fair.low < fair.mid, 'дорогой ремонт оставляет оболочке меньше');
+});
+
+test('класс отделки меняет смету, а не переписывается втихую', () => {
+  assert.ok(finishCost(100, 'делюкс').mid > finishCost(100, 'бизнес').mid * 2);
+  assert.throws(() => finishCost(100, 'эконом'), /эконом/);
+});
+
+test('фотографии перебивают текст, но расхождение остаётся видимым', () => {
+  // 311102437, Костянский 13: в тексте «под ключ», на кадрах кухня стоит,
+  // а комнаты пустые — мебели нет
+  const lot = { id: 311102437, totalArea: 109.3, priceRub: 381e6, hasFurniture: true,
+    description: 'Пентхаус под ключ, полностью укомплектован мебелью и техникой' };
+  const r = gradeRecord(lot, { proof: 'фото', gradedAt: '2026-08-13',
+    markers: { stone: 'слэб', joinery: 'на заказ', kitchen: 'интегрированная',
+      light: 'нет', furniture: 'нет', bath: 'камень и бренд' } });
+  assert.strictEqual(r.claimedState, 'под ключ');
+  assert.strictEqual(r.observedState, 'оболочка');
+  assert.strictEqual(r.state, 'оболочка', 'в итоговое состояние идут кадры');
+  assert.strictEqual(r.conflict, true);
+});
+
+test('когда кадры молчат, остаётся заявленное — без выдуманного конфликта', () => {
+  const lot = { id: 1, hasFurniture: null, description: 'Меблирована, вся техника остаётся' };
+  const r = gradeRecord(lot, { proof: 'фото', markers: { stone: 'нет', joinery: 'серийная' } });
+  assert.strictEqual(r.state, 'под ключ');
+  assert.strictEqual(r.conflict, false);
+});
+
+test('«ремонт не сдан» и пустые кадры — не противоречие, а уточнение', () => {
+  // 331424705, МОНЭ: текст говорит, когда работы кончатся, кадры — что их нет.
+  // Оба правы, и текст здесь точнее
+  const lot = { id: 331424705, hasFurniture: true,
+    description: 'Новый дизайнерский ремонт. Ремонтные работы завершатся в августе 2026 года' };
+  const r = gradeRecord(lot, { proof: 'фото', markers: { stone: 'нет', joinery: 'нет',
+    kitchen: 'нет', light: 'нет', furniture: 'нет', bath: 'не отделан' } });
+  assert.strictEqual(r.conflict, false);
+  assert.strictEqual(r.state, 'ремонт не сдан', 'уточнение из текста не теряется');
 });

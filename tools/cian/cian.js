@@ -11,6 +11,8 @@
  *   node tools/cian/cian.js verify --query q.json [--ids 1,2] [--photos 9] [--files] [--dir out]
  *   node tools/cian/cian.js snapshot --query q.json   — записать выдачу в архив
  *   node tools/cian/cian.js exposure --query q.json [--deep] — двойники и реальный срок
+ *   node tools/cian/cian.js grade  --lots lots.json --marks marks.json  — записать оценку отделки
+ *   node tools/cian/cian.js grade  --list
  *   node tools/cian/cian.js stats  332550701 331961171
  *   node tools/cian/cian.js geo    [--out moscow-geo.json]
  *
@@ -451,6 +453,10 @@ async function contactSheet(ctx, page, lot, file, n, cols = 3) {
    creationDate обнуляется, если объявление снять и выложить заново. Отпечаток
    квартиры — нет. Архив хранит, когда мы увидели квартиру впервые, и это
    переразмещением не стирается. */
+function loadGrades(p) {
+  try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return { updated: null, flats: {} }; }
+}
+
 function loadArchive(p) {
   try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return { updated: null, flats: {} }; }
 }
@@ -580,6 +586,155 @@ function finishEvidence(lot) {
     categories: Object.keys(found),
     /* Три и более категории марок — комплектацию описали, а не назвали. */
     spelledOut: Object.keys(found).length >= 3,
+  };
+}
+
+/* ---------- уровень отделки ----------
+   Комплектность (`completeness`) отвечает только на вопрос «есть мебель или
+   нет». Разницу между авторским интерьером за 1,7 млн ₽/м² и обычной
+   квартирой за те же деньги поля не описывают вообще, и решает её глаз.
+
+   Чтобы взгляд был повторяемым, оценка ставится не буквой, а шестью
+   наблюдаемыми признаками — их видно на фотографиях, и через полгода они
+   читаются так же. Буква из них выводится арифметикой, а не впечатлением.
+
+   Шкала признаков — от богатого к бедному, `null` — «на кадрах не видно»
+   (это не то же самое, что «нет»). */
+const MARKERS = {
+  stone: ['слэб', 'керамогранит', 'нет'],            // камень: цельная плита / имитация / отсутствует
+  joinery: ['на заказ', 'серийная', 'нет'],          // столярка и системы хранения
+  kitchen: ['интегрированная', 'встроенная', 'эконом', 'нет'],
+  light: ['сценарный', 'базовый', 'нет'],            // «нет» — голые крюки в потолке
+  furniture: ['полный', 'частичный', 'нет'],
+  bath: ['камень и бренд', 'плитка', 'не отделан'],
+};
+
+/* Веса подобраны так, чтобы буква совпала с тем, как эти же квартиры
+   читаются глазом: A — авторский премиум, B — качественный полный ремонт,
+   C — жилая массовая отделка, D — отделка застройщика без мебели,
+   E — бетон или белая коробка. */
+const MARKER_POINTS = {
+  stone: { 'слэб': 2, 'керамогранит': 1, 'нет': 0 },
+  joinery: { 'на заказ': 2, 'серийная': 1, 'нет': 0 },
+  kitchen: { 'интегрированная': 2, 'встроенная': 1, 'эконом': 0.5, 'нет': 0 },
+  light: { 'сценарный': 2, 'базовый': 1, 'нет': 0 },
+  furniture: { 'полный': 2, 'частичный': 1, 'нет': 0 },
+  bath: { 'камень и бренд': 2, 'плитка': 1, 'не отделан': 0 },
+};
+
+function gradeLevel(m) {
+  m = m || {};
+  for (const [k, v] of Object.entries(m)) {
+    if (v != null && MARKERS[k] && !MARKERS[k].includes(v)) {
+      throw new Error(`признак ${k}: «${v}» не из списка ${MARKERS[k].join(' / ')}`);
+    }
+  }
+  /* Бетон и белая коробка — состояние, а не оценка: считать баллы там нечего. */
+  if (m.kitchen === 'нет' && m.furniture === 'нет' && m.bath === 'не отделан') return 'E';
+  /* Отделка есть, а жить нельзя: ни кухни, ни мебели, ни света. */
+  if (m.kitchen === 'нет' && m.furniture === 'нет') return 'D';
+  const known = Object.keys(MARKER_POINTS).filter((k) => m[k] != null);
+  /* Меньше четырёх признаков — судить не по чему. Пустая оценка честнее
+     выдуманной буквы, как и с медианой по когорте меньше четырёх лотов. */
+  if (known.length < 4) return null;
+  const avg = known.reduce((s, k) => s + MARKER_POINTS[k][m[k]], 0) / known.length;
+  if (avg >= 1.7) return 'A';
+  if (avg >= 1.2) return 'B';
+  if (avg >= 0.6) return 'C';
+  return 'D';
+}
+
+/* Чем подтверждён уровень — вопрос отдельный от самого уровня и не менее
+   важный: рендер и фотография описывают одну и ту же квартиру с разной
+   доказательной силой, и разница должна попадать в цену, а не теряться. */
+const PROOFS = ['фото', 'рендер', 'смешанное', 'интерьера нет'];
+
+/* Что говорят сами фотографии, без оглядки на текст объявления. Словарь тот
+   же, что у completeness, чтобы два ответа можно было сравнить в лоб. */
+function observedState(m) {
+  m = m || {};
+  if (m.kitchen == null && m.furniture == null) return 'неизвестно';
+  if (m.kitchen === 'нет' && m.furniture === 'нет') return 'оболочка';
+  if (m.furniture === 'нет') return 'оболочка';       // кухня есть, жить нельзя
+  if (m.furniture === 'полный' && m.kitchen && m.kitchen !== 'нет') return 'под ключ';
+  return 'неизвестно';
+}
+
+function gradeRecord(lot, g) {
+  if (g.proof && !PROOFS.includes(g.proof)) {
+    throw new Error(`подтверждение: «${g.proof}» не из списка ${PROOFS.join(' / ')}`);
+  }
+  const level = g.level || gradeLevel(g.markers);
+  const claimed = completeness(lot);
+  const observed = observedState(g.markers);
+  /* Ради этой строки всё и затевалось: продавец пишет «под ключ», на кадрах
+     пустые комнаты. Побеждают кадры, но расхождение остаётся видимым — это
+     сведение о продавце, а не только о квартире. */
+  /* «Ремонт не сдан» и «оболочка» описывают одно и то же положение дел —
+     въехать нельзя; текст здесь точнее кадров, а не противоречит им.
+     Расхождение считается только между «жить можно» и «жить нельзя». */
+  const rank = (s) => (s === 'под ключ' ? 1 : s === 'неизвестно' ? null : 0);
+  const conflict = rank(observed) != null && rank(claimed) != null && rank(observed) !== rank(claimed);
+  return {
+    id: lot.id,
+    address: `${lot.street || ''} ${lot.house || ''}`.trim(),
+    area: lot.totalArea,
+    price: lot.priceRub,
+    pricePerM2: lot.priceRub && lot.totalArea ? Math.round(lot.priceRub / lot.totalArea) : null,
+    state: conflict || claimed === 'неизвестно' ? observed : claimed,
+    claimedState: claimed,
+    observedState: observed,
+    conflict,
+    level,
+    proof: g.proof || null,
+    markers: g.markers || {},
+    photosSeen: g.photosSeen ?? null,
+    note: g.note || '',
+    gradedAt: g.gradedAt,
+  };
+}
+
+/* ---------- сколько стоит довести до «под ключ» ----------
+   Это ДОПУЩЕНИЕ, а не измерение: у нас нет ни одной сметы. Оно вынесено
+   сюда, чтобы всякий вывод «переоценён на N%» можно было пересчитать под
+   другую цифру, а не искать её в тексте ответа.
+
+   Диапазоны — за квадратный метр, включая отделку, кухню, технику, мебель и
+   ведение проекта; срок работ 8-12 месяцев в цену не входит и обсуждается
+   отдельно. */
+const FINISH_COST = {
+  'бизнес': { low: 130e3, mid: 155e3, high: 180e3 },
+  'премиум': { low: 200e3, mid: 260e3, high: 320e3 },
+  'делюкс': { low: 300e3, mid: 400e3, high: 500e3 },
+};
+
+function finishCost(area, tier = 'бизнес') {
+  const c = FINISH_COST[tier];
+  if (!c) throw new Error(`класс «${tier}» неизвестен: ${Object.keys(FINISH_COST).join(', ')}`);
+  return { low: c.low * area, mid: c.mid * area, high: c.high * area, perM2: c };
+}
+
+/* Во сколько обойдётся метр после ремонта — то число, которое сравнивается с
+   ценой готовой квартиры. Без него оболочка выглядит дешёвой. */
+function loadedPricePerM2(lot, tier = 'бизнес') {
+  if (!lot.priceRub || !lot.totalArea) return null;
+  const c = finishCost(lot.totalArea, tier);
+  return {
+    low: Math.round((lot.priceRub + c.low) / lot.totalArea),
+    mid: Math.round((lot.priceRub + c.mid) / lot.totalArea),
+    high: Math.round((lot.priceRub + c.high) / lot.totalArea),
+  };
+}
+
+/* Обратный ход: сколько должна стоить оболочка, чтобы после ремонта выйти
+   вровень с готовой квартирой по цене метра. Разница с запрашиваемой ценой и
+   есть переоценка. */
+function fairShellPrice(area, finishedPricePerM2, tier = 'бизнес') {
+  const c = finishCost(area, tier);
+  return {
+    low: Math.round(finishedPricePerM2 * area - c.high),
+    mid: Math.round(finishedPricePerM2 * area - c.mid),
+    high: Math.round(finishedPricePerM2 * area - c.low),
   };
 }
 
@@ -1069,6 +1224,51 @@ if (require.main === module) (async () => {
         else if (!corrected) log('  расхождений с архивом нет');
       }
 
+    } else if (cmd === 'grade') {
+      /* Оценка отделки живёт в файле, а не в переписке: иначе каждая новая
+         сессия оценивает те же квартиры заново и приходит к другой букве. */
+      const store = loadGrades(a.store || 'docs/cian/grades.json');
+      if (a.list || !a.marks) {
+        const rows = Object.values(store.flats).sort((x, y) => (y.pricePerM2 || 0) - (x.pricePerM2 || 0));
+        log(`оценок в ${a.store || 'docs/cian/grades.json'}: ${rows.length}` + (store.updated ? `, обновлено ${store.updated}` : ''));
+        for (const r of rows) {
+          log(`  ${String(r.level || '—').padEnd(2)} ${String(r.proof || '').padEnd(13)} ${String(r.pricePerM2 || '').padStart(9)} ₽/м²  ` +
+              `${String(r.id).padEnd(11)} ${String(r.area || '').padStart(6)} м²  ${(r.state || '').padEnd(14)}` +
+              `${r.conflict ? ' ! текст врёт ' : '             '}${r.address}`);
+        }
+        if (!rows.length) log('  пусто: оценки ставятся командой grade --lots <файл> --marks <файл>');
+      } else {
+        const marks = JSON.parse(fs.readFileSync(a.marks, 'utf8'));
+        const src = a.lots ? JSON.parse(fs.readFileSync(a.lots, 'utf8')) : {};
+        const lots = src.lots || src.flats || (Array.isArray(src) ? src : []);
+        const today = new Date().toISOString().slice(0, 10);
+        let added = 0, changed = 0;
+        for (const [id, g] of Object.entries(marks)) {
+          const lot = lots.find((l) => String(l.id) === String(id)) || g.lot || { id: Number(id) };
+          let rec;
+          try { rec = gradeRecord(lot, { ...g, gradedAt: g.gradedAt || today }); }
+          catch (e) { log(`  ! ${id}: ${e.message}`); continue; }
+          const prev = store.flats[id];
+          if (!prev) added++;
+          else if (prev.level !== rec.level || prev.proof !== rec.proof) {
+            changed++;
+            log(`  ${id}: ${prev.level || '—'}/${prev.proof || '—'} -> ${rec.level || '—'}/${rec.proof || '—'}`);
+          }
+          store.flats[id] = { ...prev, ...rec };
+        }
+        store.updated = today;
+        fs.writeFileSync(a.store || 'docs/cian/grades.json', JSON.stringify(store, null, 2) + '\n');
+        log(`оценок: +${added} новых, ${changed} пересмотрено, всего ${Object.keys(store.flats).length}`);
+        const all = Object.values(store.flats);
+        const noProof = all.filter((r) => r.proof === 'рендер' || r.proof === 'интерьера нет').length;
+        if (noProof) log(`не подтверждено фотографиями: ${noProof} — при сравнении цен это отдельный товар`);
+        const clash = all.filter((r) => r.conflict);
+        if (clash.length) {
+          log(`\nтекст расходится с фотографиями (${clash.length}):`);
+          clash.forEach((r) => log(`  ${r.id}  по тексту «${r.claimedState}», на кадрах «${r.observedState}»  ${r.address}`));
+        }
+      }
+
     } else if (cmd === 'stats') {
       for (const id of a._.slice(1)) {
         const s = await stats(page, id);
@@ -1084,4 +1284,5 @@ if (require.main === module) (async () => {
 })();
 
 /* Чистые функции наружу — чтобы их можно было проверить без сети. */
-module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, pointInPolygon };
+module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, pointInPolygon,
+  gradeLevel, gradeRecord, observedState, finishCost, loadedPricePerM2, fairShellPrice, MARKERS, PROOFS };
