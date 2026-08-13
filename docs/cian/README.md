@@ -14,9 +14,11 @@
 | [`moscow-newbuildings.md`](moscow-newbuildings.md) | То же таблицей, с разбивкой по округам |
 | [`lots.json`](lots.json) | 21 лот: характеристики + экспозиция и просмотры |
 | [`lots.md`](lots.md) | То же таблицами, по поисковым наборам |
-| [`quality.md`](quality.md) | Проверка заявленного ремонта и настоящего срока экспозиции |
+| [`grades.json`](grades.json) | 31 оценка отделки: шесть признаков, буква, чем подтверждена |
+| [`quality.md`](quality.md) | Проверка заявленного ремонта, шкала отделки, смета доведения |
 | [`traps.md`](traps.md) | Каталог подвохов Циан, разбор большого ЖК |
-| [`archive.json`](archive.json) | Когда квартира впервые попала в наши снимки |
+| [`archive.json`](archive.json) | 1711 квартир: когда каждая впервые попала в наши снимки |
+| [`watchlist.json`](watchlist.json) | Запросы, за которыми следим постоянно |
 | [`../../tools/cian/cian.js`](../../tools/cian/cian.js) | Клиент: поиск, развёртка, схлопывание, проверка ремонта, экспозиция |
 | [`../../tools/cian/test.js`](../../tools/cian/test.js) | Проверки чистой логики без сети — `node tools/cian/test.js` |
 
@@ -48,11 +50,24 @@ node tools/cian/cian.js exposure --query q.json --deep 12
 
 # большой ЖК целиком: дробление на подзапросы + схлопывание дублей в квартиры
 node tools/cian/cian.js sweep --query tools/cian/queries/zhk-ostrov.json --dedupe
+
+# положение лота в когорте: медианы по комплектности и по уровню отделки,
+# для оболочки — смета доведения и справедливая цена
+node tools/cian/cian.js compare --lot 327985409 --cohort akadem.json
+
+# записать оценку отделки по фотографиям, чтобы она пережила сессию
+node tools/cian/cian.js grade --lots lots.json --marks marks.json
+node tools/cian/cian.js grade --list
+
+# снимок в архив: по одному запросу, по списку запросов или из готовых файлов
+node tools/cian/cian.js snapshot --queries docs/cian/watchlist.json --all
+node tools/cian/cian.js snapshot --from собранное.json
 ```
 
-Про `verify` и `exposure` — отдельно в [`quality.md`](quality.md): галочка
-«дизайнерский» и дата создания объявления заполняются продавцом и регулярно
-врут.
+Про `verify`, `grade` и `exposure` — отдельно в [`quality.md`](quality.md):
+галочка «дизайнерский», поле «есть мебель» и дата создания объявления
+заполняются продавцом и регулярно врут. Уровень отделки решают фотографии, и
+шкала из шести наблюдаемых признаков нужна, чтобы это решение повторялось.
 
 `--all` объединяет выдачу по четырём сортировкам: у каждой свой обрыв, вместе
 они дают больший охват (84 против 80 на проверочном поиске). Для больших ЖК
