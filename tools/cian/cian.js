@@ -119,33 +119,49 @@ async function offerAliveById(ctx, id) {
 }
 
 async function offersByIds(ctx, ids, dealType = 'flatsale') {
-  const uniq = [...new Set(ids.map(Number).filter(Boolean))];
-  const out = [];
-  for (let i = 0; i < uniq.length; i += BY_IDS_LIMIT) {
-    const chunk = uniq.slice(i, i + BY_IDS_LIMIT);
-    let res = null;
+  /* Мусор на входе не должен исчезать молча: вернём его отдельным списком,
+     иначе опечатка в номере выглядит как снятое объявление. */
+  const asked = [], bad = [];
+  for (const raw of ids) {
+    const n = Number(raw);
+    if (Number.isFinite(n) && n > 0) { if (!asked.includes(n)) asked.push(n); } else bad.push(raw);
+  }
+  const offers = [], failed = [];
+  for (let i = 0; i < asked.length; i += BY_IDS_LIMIT) {
+    const chunk = asked.slice(i, i + BY_IDS_LIMIT);
+    let res = null, why = null;
     for (let attempt = 1; attempt <= 4; attempt++) {
       try {
-        res = await ctx.request.post(BY_IDS_API, {
+        const r = await ctx.request.post(BY_IDS_API, {
           headers: API_HEADERS,
           /* jsonQuery нужен только ради _type: он обязателен, а фильтры в нём
              на отбор не влияют — список id главнее. */
           data: { cianOfferIds: chunk, jsonQuery: { _type: dealType } },
           timeout: 60000,
         });
-        if (res.status() === 200) break;
-        if (res.status() < 500) throw new Error(`http ${res.status()}`);
-      } catch (e) {
-        if (attempt === 4) throw new Error(`get-offers-by-ids: ${e.message.split('\n')[0]}`);
-      }
-      res = null;
+        if (r.status() === 200) { res = r; break; }
+        why = `http ${r.status()}`;
+        /* 400 «Too many cianOfferIds» и прочие клиентские отказы повторять
+           бессмысленно — сдаёмся сразу. */
+        if (r.status() < 500) break;
+      } catch (e) { why = e.message.split('\n')[0]; }
       await sleep(2500 * attempt);
     }
-    if (!res) continue;
-    out.push(...((await res.json()).offersSerialized || []));
-    if (i + BY_IDS_LIMIT < uniq.length) await sleep(1100);
+    if (!res) {
+      /* Раньше здесь стоял `continue`, и пачка из 28 номеров исчезала без
+         следа: refresh счёл бы их снятыми с продажи. Молчаливая потеря —
+         худший вид ошибки, потому что выглядит как ответ. */
+      failed.push(...chunk);
+      log(`  ! пачка из ${chunk.length} не ответила (${why}) — эти номера не проверены`);
+      continue;
+    }
+    offers.push(...((await res.json()).offersSerialized || []));
+    if (i + BY_IDS_LIMIT < asked.length) await sleep(1100);
   }
-  return out;
+  /* Сопоставлять только по cianId: длина ответа не равна длине запроса —
+     мёртвых нет, дубли сервер схлопывает. */
+  const back = new Set(offers.map((o) => o.cianId || o.id));
+  return { offers, failed, bad, missing: asked.filter((id) => !back.has(id) && !failed.includes(id)) };
 }
 
 /* Плоская запись из «сырого» оффера: только то, по чему реально отбирают. */
@@ -1464,8 +1480,12 @@ if (require.main === module) (async () => {
       } else if (only && !a.query) {
         /* Раньше, чтобы посмотреть десять известных лотов, приходилось
            воспроизводить поиск, который их содержит. Теперь спрашиваем прямо. */
-        lots = (await offersByIds(ctx, only)).map(normalize);
+        const r = await offersByIds(ctx, only);
+        lots = r.offers.map(normalize);
         log(`по номерам: ${lots.length} из ${only.length}`);
+        if (r.bad.length) log(`  не номера, пропущены: ${r.bad.join(', ')}`);
+        if (r.failed.length) log(`  НЕ ПРОВЕРЕНЫ (ручка не ответила): ${r.failed.join(', ')}`);
+        if (r.missing.length) log(`  не нашлись — сняты или чужие номера: ${r.missing.join(', ')}`);
       } else {
         lots = (await collect(ctx, loadQuery(a.query), parseInt(a.pages || '2', 10), false)).lots;
       }
@@ -1804,7 +1824,10 @@ if (require.main === module) (async () => {
       const rows = Object.values(grades.flats);
       const ids = rows.map((r) => r.id);
       log(`оценённых лотов: ${ids.length}, спрашиваю текущие цены…`);
-      const live = new Map((await offersByIds(ctx, ids)).map((o) => [o.cianId || o.id, normalize(o)]));
+      const lr = await offersByIds(ctx, ids);
+      if (lr.failed.length) log(`! ${lr.failed.length} номеров не проверены — в таблице они останутся с прошлой ценой`);
+      const live = new Map(lr.offers.map((o) => [o.cianId || o.id, normalize(o)]));
+      const unchecked = new Set(lr.failed);
       const today = new Date().toISOString().slice(0, 10);
       const histOf = (r) => mergedPriceHistory((r.fingerprint && arc.flats[r.fingerprint])
         || Object.values(arc.flats).find((f) => f.priceHistory && f.priceHistory[String(r.id)]));
@@ -1820,14 +1843,14 @@ if (require.main === module) (async () => {
       let gone = 0;
       for (const r of rows) {
         const l = live.get(r.id);
-        if (!l) gone++;
+        if (!l && !unchecked.has(r.id)) gone++;
         const price = l ? l.priceRub : r.price;
         const ppm = price && r.area ? Math.round(price / r.area) : r.pricePerM2;
         const h = histOf(r);
         const move = h ? `${((h[h.length - 1].price - h[0].price) / h[0].price * 100).toFixed(0)}% с ${h[0].date}` : '';
         out.push(`| ${(ppm || '').toLocaleString('ru-RU')} | [${r.id}](https://www.cian.ru/sale/flat/${r.id}/) | ` +
           `${r.area || ''} | ${price ? (price / 1e6).toFixed(1) + ' млн' : ''} | ${r.level || '—'} | ${r.proof || ''} | ` +
-          `${r.state || ''}${r.conflict ? ' ⚠' : ''} | ${move} | ${l ? '' : '**снят** · '}${r.address} |`);
+          `${r.state || ''}${r.conflict ? ' ⚠' : ''} | ${move} | ${l ? '' : unchecked.has(r.id) ? '_не проверен_ · ' : '**снят** · '}${r.address} |`);
       }
       out.push('', `⚠ — текст объявления расходится с фотографиями. Снято с продажи с момента осмотра: ${gone}.`, '');
       out.push('## Заметки по каждому', '');
@@ -1854,14 +1877,18 @@ if (require.main === module) (async () => {
       }
       const ids = [...probe.keys()].slice(0, parseInt(a.limit || '2000', 10));
       log(`спрашиваю ${ids.length} объявлений пачками по ${BY_IDS_LIMIT}…`);
-      const got = await offersByIds(ctx, ids);
-      const alive = new Map(got.map((o) => [o.cianId || o.id, normalize(o)]));
+      const rr = await offersByIds(ctx, ids);
+      const alive = new Map(rr.offers.map((o) => [o.cianId || o.id, normalize(o)]));
+      const unchecked = new Set(rr.failed);
       log(`ответили: ${alive.size} из ${ids.length}`);
+      if (unchecked.size) log(`не проверены (ручка отказала): ${unchecked.size} — они НЕ считаются ушедшими`);
 
       /* Молчание ручки — не приговор: подтверждаем вторым способом. Проверка
          именно так и поймала себя на деле — две квартиры на Усачёва
          действительно ушли, и обе метода сошлись. */
-      const silent = ids.filter((id) => !alive.has(id));
+      /* Непроверенные — не молчащие. Смешать эти две вещи значило бы
+         объявить проданными 28 квартир из-за одной сетевой ошибки. */
+      const silent = ids.filter((id) => !alive.has(id) && !unchecked.has(id));
       const confirmed = new Set();
       const doConfirm = a.confirm !== 'нет' && silent.length <= parseInt(a['confirm-limit'] || '300', 10);
       if (silent.length && doConfirm) {
@@ -1881,6 +1908,7 @@ if (require.main === module) (async () => {
       let gone = 0, moved = 0, same = 0, doubted = 0;
       const moves = [];
       for (const id of ids) {
+        if (unchecked.has(id)) continue;
         const { fp, e, listed } = probe.get(id);
         const live = alive.get(id);
         if (!live) {

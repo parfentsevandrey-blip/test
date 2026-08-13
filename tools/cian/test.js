@@ -5,11 +5,15 @@
 const assert = require('assert');
 const { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive,
         completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringVerdict,
-        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, parseViews, mergedPriceHistory } = require('./cian.js');
+        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, parseViews, mergedPriceHistory, offersByIds } = require('./cian.js');
 
 let passed = 0;
 const test = (name, fn) => {
-  try { fn(); passed++; process.stdout.write(`  ok  ${name}\n`); }
+  try { const r = fn(); if (r && r.then) { r.then(() => { passed++; process.stdout.write(`  ok  ${name}
+`); },
+    (e) => { process.stdout.write(`  FAIL ${name}
+       ${e.message}
+`); process.exitCode = 1; }); return; } passed++; process.stdout.write(`  ok  ${name}\n`); }
   catch (e) { process.stdout.write(`  FAIL ${name}\n       ${e.message}\n`); process.exitCode = 1; }
 };
 
@@ -706,4 +710,36 @@ test('ряды из разных объявлений одной квартир�
 test('одно изменение — не ряд', () => {
   assert.strictEqual(mergedPriceHistory({ priceHistory: { '1': [{ date: '2026-01-01', price: 1 }] } }), null);
   assert.strictEqual(mergedPriceHistory({}), null);
+});
+
+process.stdout.write('запрос по номерам\n');
+
+/* offersByIds ходит в сеть, поэтому проверяем его разбор входа и учёт
+   потерь на поддельном контексте — без сети, но на настоящей функции. */
+const fakeCtx = (plan) => ({ request: { post: async () => {
+  const step = plan.shift();
+  return { status: () => step.status, json: async () => ({ offersSerialized: step.offers || [] }) };
+} } });
+
+test('мусор во входе не выдаётся за снятые объявления', async () => {
+  const ctx = fakeCtx([{ status: 200, offers: [{ cianId: 111 }] }]);
+  const r = await offersByIds(ctx, [111, 'abc', 0, null, 111]);
+  assert.deepStrictEqual(r.bad, ['abc', 0, null]);
+  assert.strictEqual(r.offers.length, 1);
+  assert.deepStrictEqual(r.missing, []);
+});
+
+test('отказавшая пачка попадает в failed, а не исчезает', async () => {
+  const ctx = fakeCtx([{ status: 500 }, { status: 500 }, { status: 500 }, { status: 500 }]);
+  const r = await offersByIds(ctx, [111, 222]);
+  assert.deepStrictEqual(r.failed, [111, 222]);
+  assert.strictEqual(r.offers.length, 0);
+  assert.deepStrictEqual(r.missing, [], 'непроверенные не считаются пропавшими');
+});
+
+test('не вернувшийся номер при удачном ответе — это missing', async () => {
+  const ctx = fakeCtx([{ status: 200, offers: [{ cianId: 111 }] }]);
+  const r = await offersByIds(ctx, [111, 222]);
+  assert.deepStrictEqual(r.missing, [222]);
+  assert.deepStrictEqual(r.failed, []);
 });
