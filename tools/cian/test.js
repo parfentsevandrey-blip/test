@@ -3,7 +3,7 @@
    Здесь живёт та инвариантa, нарушение которой уже один раз испортило выдачу:
    дробление запроса обязано сужать, а не расширять. */
 const assert = require('assert');
-const { groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive,
+const { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive,
         completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing,
         gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor } = require('./cian.js');
 
@@ -568,4 +568,53 @@ test('оценка переживает переклейку объявлени�
 test('чужая квартира чужую оценку не получает', () => {
   const grades = { '327985409': { id: 327985409, fingerprint: '66566|15|79.5|3', level: 'E' } };
   assert.strictEqual(gradeFor(grades, lot({ id: 5, fingerprint: 'другой' })), null);
+});
+
+process.stdout.write('разбор настоящих ответов API\n');
+
+/* Все проверки выше — про чистую логику на выдуманных объектах. Если Циан
+   поменяет форму ответа, они останутся зелёными, а сбор молча сломается.
+   Здесь лежат настоящие срезы ответов, снятые с живого API, и normalize
+   разбирает именно их. */
+const FIX = require('./fixtures/offers.json');
+
+test('вторичка: адрес, дом, цена, отпечаток', () => {
+  const n = normalize(FIX.resale);
+  assert.strictEqual(n.id, 330559973);
+  assert.ok(n.totalArea > 0 && n.priceRub > 0, `${n.totalArea} / ${n.priceRub}`);
+  assert.ok(n.district && n.street, `район ${n.district}, улица ${n.street}`);
+  assert.ok(n.fingerprint && n.fingerprint.split('|').length === 4, `отпечаток ${n.fingerprint}`);
+  assert.ok(n.lat > 55 && n.lat < 56 && n.lng > 37 && n.lng < 38, `${n.lat}, ${n.lng}`);
+  assert.strictEqual(n.saleType, 'free');
+});
+
+test('ДДУ: тип сделки и срок сдачи не теряются', () => {
+  const n = normalize(FIX.ddu);
+  assert.strictEqual(n.saleType, 'fz214');
+  assert.ok(n.deadline && n.deadline.year >= 2024, JSON.stringify(n.deadline));
+  assert.notStrictEqual(readiness(n), 'сдан');
+});
+
+test('студия: пустой roomsCount не превращается в ноль комнат', () => {
+  const n = normalize(FIX.studio);
+  assert.strictEqual(n.rooms, null);
+  assert.ok(n.flatType, `flatType ${n.flatType}`);
+  assert.ok(n.totalArea > 0);
+});
+
+test('карточка застройщика: decoration и признак застройщика на месте', () => {
+  const n = normalize(FIX['card-developer']);
+  assert.strictEqual(n.decoration, 'turnkey');
+  assert.strictEqual(n.houseFinished, true);
+  assert.strictEqual(completeness({ ...n, fromDeveloper: true }), 'под ключ');
+});
+
+test('на каждом срезе normalize отдаёт непустые обязательные поля', () => {
+  for (const [name, raw] of Object.entries(FIX)) {
+    const n = normalize(raw);
+    assert.ok(n.id, `${name}: нет id`);
+    assert.ok(n.totalArea > 0, `${name}: нет площади`);
+    assert.ok(n.floor != null, `${name}: нет этажа`);
+    assert.ok(Array.isArray(n.photos), `${name}: photos не массив`);
+  }
 });
