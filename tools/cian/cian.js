@@ -462,7 +462,9 @@ function groupSameFlat(lots, areaTol = 0.6) {
   const coarse = new Map(), loose = [];
   for (const l of lots) {
     if (!l.houseId || l.floor == null || l.totalArea == null) { loose.push(l); continue; }
-    const k = `${l.houseId}|${l.floor}|${l.rooms}`;
+    // Комнатность в ключ не идёт: у студий и свободных планировок она пустая,
+    // и одно объявление той же квартиры уезжало в отдельную группу.
+    const k = `${l.houseId}|${l.floor}`;
     (coarse.get(k) || coarse.set(k, []).get(k)).push(l);
   }
   const groups = [];
@@ -474,6 +476,15 @@ function groupSameFlat(lots, areaTol = 0.6) {
       else { groups.push(cur); cur = [l]; }
     }
     groups.push(cur);
+    /* Совпали дом, этаж и площадь — но если комнатность указана у разных
+       объявлений по-разному, это разные квартиры зеркальных планировок.
+       Пустая комнатность ничему не противоречит и остаётся с группой. */
+    for (let i = groups.length - 1; i >= 0; i--) {
+      const g = groups[i];
+      const kinds = [...new Set(g.map((x) => x.rooms).filter((r) => r != null))];
+      if (kinds.length <= 1) continue;
+      groups.splice(i, 1, ...kinds.map((r) => g.filter((x) => x.rooms === r || x.rooms == null)));
+    }
   }
   return { groups, loose };
 }

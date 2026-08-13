@@ -43,6 +43,20 @@ test('без корпуса в адресе лот уходит в loose, а н�
   assert.strictEqual(groups.length, 0);
 });
 
+test('пустая комнатность не разбивает группу одной квартиры', () => {
+  // Кутузовский 12: 158.3 м² на 4 этаже за 190 млн, у одного объявления rooms пустой
+  const { groups } = groupSameFlat([lot({ id: 1, rooms: 5, totalArea: 158.3, floor: 4 }),
+                                    lot({ id: 2, rooms: null, totalArea: 158.3, floor: 4 })]);
+  assert.strictEqual(groups.length, 1);
+  assert.strictEqual(groups[0].length, 2);
+});
+
+test('разная указанная комнатность при равной площади — разные квартиры', () => {
+  const { groups } = groupSameFlat([lot({ id: 1, rooms: 2, totalArea: 60, floor: 4 }),
+                                    lot({ id: 2, rooms: 3, totalArea: 60, floor: 4 })]);
+  assert.strictEqual(groups.length, 2, 'зеркальные планировки склеивать нельзя');
+});
+
 process.stdout.write('схлопывание и переплата\n');
 
 test('остаётся самое дешёвое объявление, остальные — в alsoListedAs', () => {
