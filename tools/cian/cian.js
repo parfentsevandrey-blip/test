@@ -88,10 +88,14 @@ async function searchPage(ctx, jsonQuery, pageNumber, attempt = 1) {
   const d = j.data || {};
   return {
     count: d.offerCount ?? null,
-    /* Честный потолок перечисления. Пагинация отдаёт РОВНО столько и на
-       следующей странице возвращает пустоту; offerCount — счётчик ДО
-       схлопывания похожих объявлений, и добрать его подряд нельзя.
-       Замер: offerCount 400, aggregatedCount 177, собрано ровно 177. */
+    /* Сколько отдаст пагинация этой сортировки. Держится точно только на
+       сортировке по умолчанию: у остальных заявлено 181, а выдано 177–180,
+       и внутри одной пагинации попадаются повторы. Останавливаться надо по
+       пустой странице, а не по достижению этого числа.
+
+       Разница с offerCount — схлопнутые «похожие»: в выдачу попадает лидер
+       группы, остальные прячутся за ним. Достаются они не дроблением, а
+       ключом multi_id по номеру лидера (см. expandSimilar). */
     aggregated: d.aggregatedCount ?? null,
     offers: d.offersSerialized || d.offers || [],
     // Циан сам сериализует jsonQuery обратно в query-строку cat.php — по ней
@@ -241,6 +245,10 @@ function normalize(o) {
     isSubAgent: (o.user && o.user.isSubAgent) ?? null,
     fromDeveloper: o.fromDeveloper ?? null,
     parkingType: ((b.parking || {}).type) || null,
+    /* Сколько объявлений Циан спрятал за это как «похожие». Ровно из-за них
+       offerCount больше того, что отдаёт пагинация: в выдачу попадает
+       только лидер группы. */
+    similarCount: ((o.similar || {}).count) ?? 0,
     promoted: !!(o.isTop3 || o.isPremium),
     photosCount: (o.photos || []).length,
     photos: (o.photos || []).map((ph) => ph.fullUrl).filter(Boolean),
@@ -276,6 +284,64 @@ async function collect(ctx, jsonQuery, maxPages, all) {
     if (!all) break;
   }
   return { count, aggregated, lots: [...seen.values()] };
+}
+
+/* ---------- раскрытие схлопнутых групп ----------
+   Циан прячет похожие объявления за одним: у лидера приходит
+   `similar: {count, url}`, а в url — параметр `multi_id` с его же номером.
+   Запрос с этим ключом отдаёт всю группу и уважает остальные фильтры;
+   по номеру не-лидера возвращается ноль, из-за чего ключ и сочли нерабочим.
+
+   Это и есть разница между offerCount и тем, что отдаёт пагинация, — и
+   достаётся она прямо, а не дроблением запроса по осям. */
+/* Ключ multi_id отдаёт группу целиком и НЕ уважает остальные фильтры: на
+   запросе с apartment=false раскрытие групп притащило 178 апартаментов,
+   тогда как обычная выдача не дала ни одного. Всё, что пришло из группы,
+   надо сверить с исходным запросом самому.
+
+   Проверяются только те условия, которые видны в записи лота; чего проверить
+   нечем — то и не отбрасывается. */
+function matchesQuery(lot, q) {
+  const rng = (key, val) => {
+    const r = q[key] && q[key].value;
+    if (!r || val == null) return true;
+    if (r.gte != null && val < r.gte) return false;
+    if (r.lte != null && val > r.lte) return false;
+    return true;
+  };
+  if (q.apartment && q.apartment.value === false && lot.isApartments) return false;
+  if (q.room && Array.isArray(q.room.value) && lot.rooms != null && !q.room.value.includes(lot.rooms)) return false;
+  if (!rng('total_area', lot.totalArea)) return false;
+  if (!rng('price', lot.priceRub)) return false;
+  if (q.house_year && buildingYear(lot) != null && !rng('house_year', buildingYear(lot))) return false;
+  if (q.floor && lot.floor != null && !rng('floor', lot.floor)) return false;
+  return true;
+}
+
+async function expandSimilar(ctx, q, lots, maxPages = 4) {
+  const leaders = lots.filter((l) => l.similarCount > 0);
+  if (!leaders.length) return { added: [], leaders: 0 };
+  const have = new Set(lots.map((l) => l.id));
+  const added = [];
+  let dropped = 0;
+  for (const l of leaders) {
+    const sub = { ...q, multi_id: { type: 'term', value: l.id } };
+    for (let p = 1; p <= maxPages; p++) {
+      let r;
+      try { r = await searchPage(ctx, sub, p); } catch (e) { break; }
+      if (!r.offers.length) break;
+      for (const o of r.offers) {
+        const n = normalize(o);
+        if (have.has(n.id)) continue;
+        have.add(n.id);
+        if (matchesQuery(n, q)) added.push(n); else dropped++;
+      }
+      if (r.offers.length < 28) break;
+      await sleep(700);
+    }
+    await sleep(500);
+  }
+  return { added, dropped, leaders: leaders.length };
 }
 
 /* ---------- развёртка большой выдачи ----------
@@ -1433,6 +1499,14 @@ if (require.main === module) (async () => {
       const q = loadQuery(a.query);
       const pages = parseInt(a.pages || '3', 10);
       let { count, aggregated, lots } = await collect(ctx, q, pages, !!a.all);
+      if (a.similar !== 'нет') {
+        const { added, dropped, leaders } = await expandSimilar(ctx, q, lots);
+        if (leaders) {
+          log(`раскрыл схлопнутые группы: лидеров ${leaders}, добавилось ${added.length}` +
+              (dropped ? `, отброшено не подходящих под запрос ${dropped}` : ''));
+          lots = lots.concat(added);
+        }
+      }
       const enumerated = lots.length;
       log(`Циан заявляет ${count}, перечислимо за проход ${aggregated ?? '?'}, реально перечислено ${enumerated}` +
           (count && enumerated < count ? ' — offerCount считает ДО схлопывания похожих объявлений' : ''));
@@ -2219,4 +2293,5 @@ if (require.main === module) (async () => {
 
 /* Чистые функции наружу — чтобы их можно было проверить без сети. */
 module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringMargin, ringVerdict, pointInPolygon,
-  gradeLevel, gradeRecord, observedState, gradeFor, parseViews, REPAIR_RU, offersByIds, mergedPriceHistory, finishCost, loadedPricePerM2, fairShellPrice, MARKERS, PROOFS };
+  gradeLevel, gradeRecord, observedState, gradeFor, parseViews, REPAIR_RU, offersByIds, mergedPriceHistory,
+  expandSimilar, matchesQuery, finishCost, loadedPricePerM2, fairShellPrice, MARKERS, PROOFS };

@@ -5,7 +5,7 @@
 const assert = require('assert');
 const { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive,
         completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringVerdict,
-        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, parseViews, mergedPriceHistory, offersByIds } = require('./cian.js');
+        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, parseViews, mergedPriceHistory, offersByIds, matchesQuery } = require('./cian.js');
 
 let passed = 0;
 const pending = [];
@@ -788,4 +788,29 @@ test('на границе B и C пол решает', () => {
 
 test('номера кадров — список, а не число', () => {
   assert.throws(() => gradeRecord({ id: 1 }, { markers: { stone: 'нет' }, framesSeen: 5 }), /framesSeen/);
+});
+
+process.stdout.write('раскрытие схлопнутых групп\n');
+
+test('из группы не берётся то, что не подходит под запрос', () => {
+  // multi_id отдаёт группу целиком и фильтры игнорирует: на запросе
+  // apartment=false раскрытие притащило 178 апартаментов
+  const q = { apartment: { type: 'term', value: false },
+    room: { type: 'terms', value: [2, 3] },
+    total_area: { type: 'range', value: { gte: 70, lte: 92 } } };
+  assert.strictEqual(matchesQuery(lot({ isApartments: true, rooms: 3, totalArea: 80 }), q), false);
+  assert.strictEqual(matchesQuery(lot({ isApartments: false, rooms: 1, totalArea: 80 }), q), false);
+  assert.strictEqual(matchesQuery(lot({ isApartments: false, rooms: 3, totalArea: 95 }), q), false);
+  assert.strictEqual(matchesQuery(lot({ isApartments: false, rooms: 3, totalArea: 80 }), q), true);
+});
+
+test('чего проверить нечем — то и не отбрасывается', () => {
+  const q = { house_year: { type: 'range', value: { gte: 2018 } } };
+  assert.strictEqual(matchesQuery(lot({ buildYear: null, deadline: null }), q), true);
+  assert.strictEqual(matchesQuery(lot({ buildYear: 2005 }), q), false);
+  assert.strictEqual(matchesQuery(lot({ buildYear: null, deadline: { year: 2025 } }), q), true);
+});
+
+test('пустой запрос ничего не отбрасывает', () => {
+  assert.strictEqual(matchesQuery(lot({ isApartments: true, rooms: 9 }), {}), true);
 });
