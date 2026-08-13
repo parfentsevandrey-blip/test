@@ -7,7 +7,7 @@
  *   node tools/cian/cian.js search --query q.json [--pages 3] [--all] [--out lots.json] [--no-apartments] [--min-year 2016]
  *   node tools/cian/cian.js url    --query q.json      — каноническая ссылка cat.php
  *   node tools/cian/cian.js probe  --query q.json --with '{"loggia":{"type":"term","value":true}}'
- *   node tools/cian/cian.js sweep  --query q.json [--limit 250] [--dedupe] — большой ЖК целиком
+ *   node tools/cian/cian.js sweep  --query q.json [--limit 250] [--dedupe] [--resolve 0] — большой ЖК целиком
  *   node tools/cian/cian.js verify --query q.json [--ids 1,2] [--photos 9] [--files] [--dir out]
  *   node tools/cian/cian.js snapshot --query q.json   — записать выдачу в архив
  *   node tools/cian/cian.js exposure --query q.json [--deep] — двойники и реальный срок
@@ -129,6 +129,18 @@ function normalize(o) {
     bumped: o.added || null,
     title: o.title || null,
     hasFurniture: o.hasFurniture ?? null,
+    decoration: o.decoration ?? null,
+    /* Поля, которые API отдаёт почти всегда, а прежняя запись выбрасывала.
+       Каждое меняет смысл сравнения: переуступка — не то же, что ДДУ;
+       субагент накидывает поверх цены застройщика; студия — не «0 комнат». */
+    flatType: o.flatType || null,                                   // rooms / studio / openPlan
+    saleType: (o.bargainTerms && o.bargainTerms.saleType) || null,  // free / fz214 / dupt
+    mortgageAllowed: (o.bargainTerms && o.bargainTerms.mortgageAllowed) ?? null,
+    sellerType: (o.user && o.user.userType) || null,
+    isSubAgent: (o.user && o.user.isSubAgent) ?? null,
+    fromDeveloper: o.fromDeveloper ?? null,
+    parkingType: ((b.parking || {}).type) || null,
+    promoted: !!(o.isTop3 || o.isPremium),
     photosCount: (o.photos || []).length,
     photos: (o.photos || []).map((ph) => ph.fullUrl).filter(Boolean),
     description: o.description || '',
@@ -246,14 +258,48 @@ async function sweep(ctx, q, limit, maxPages) {
 
   const seen = new Map();
   for (const b of buckets) {
+    // из какой ветки отделки пришёл лот — это и есть надёжная метка комплектности
+    const dv = b.q.decorations_list && b.q.decorations_list.value[0];
     for (let p = 1; p <= maxPages; p++) {
       const { offers } = await searchPage(ctx, b.q, p);
       if (!offers.length) break;
-      offers.forEach((o) => { const n = normalize(o); if (!seen.has(n.id)) seen.set(n.id, n); });
+      offers.forEach((o) => {
+        const n = normalize(o);
+        if (dv) n.decorFilter = dv;
+        if (!seen.has(n.id)) seen.set(n.id, n);
+        else if (dv && !seen.get(n.id).decorFilter) seen.get(n.id).decorFilter = dv;
+      });
       await sleep(800);
     }
     log(`  ${b.label.padEnd(46)} ${String(b.count).padStart(5)} -> накоплено ${seen.size}`);
   }
+  return { seen, declared: top.count };
+}
+
+/* Фильтр decorations_list делит выдачу без остатка, поэтому прогон по каждому
+   его значению доопределяет комплектность там, где поля пустые. */
+async function resolveDecoration(ctx, q, seen, maxPages) {
+  const unknown = () => [...seen.values()].filter((l) => !l.decorFilter).length;
+  log(`доопределяю отделку фильтром (без метки: ${unknown()})`);
+  for (const v of DECORATIONS) {
+    const sub = { ...q, decorations_list: { type: 'terms', value: [v] } };
+    let n = 0;
+    for (let p = 1; p <= maxPages; p++) {
+      let r; try { r = await searchPage(ctx, sub, p); } catch (e) { break; }
+      if (!r.offers.length) break;
+      r.offers.forEach((o) => {
+        const id = o.cianId || o.id;
+        const l = seen.get(id);
+        if (l && !l.decorFilter) { l.decorFilter = v; n++; }
+      });
+      await sleep(800);
+    }
+    if (n) log(`  ${v}: помечено ${n}`);
+  }
+  log(`осталось без метки: ${unknown()}`);
+}
+
+function finishSweep(seen, top) {
   if (seen.size > top.count * 1.05) {
     log(`\n! собрано ${seen.size} при заявленных ${top.count}: дробление расширило запрос, результату верить нельзя`);
   }
@@ -423,6 +469,56 @@ function mergeArchive(arc, lots, today) {
   return { fresh, updated, changes, gone };
 }
 
+/* ---------- комплектность ----------
+   Цена за метр сопоставима только между объектами одной готовности. Оболочка
+   с премиальной отделкой и квартира под ключ с мебелью и кухней — разные
+   товары, и сравнивать их по ₽/м² значит выдавать одно за другое. */
+const BARE = /без отделки|предчистов|white ?box|под чистовую|черновая/;
+
+function completeness(lot) {
+  const t = (lot.description || '').toLowerCase();
+  const m = BARE.exec(t);
+  const bareNow = m && !PAST.test(t.slice(Math.max(0, m.index - 60), m.index));
+  /* Самый надёжный источник — не поле в ответе, а фильтр Циан: поле decoration
+     пустует у 70% объявлений, а decorations_list делит выдачу без остатка. */
+  if (lot.decorFilter === 'fineWithFurniture') return 'под ключ';
+  if (['without', 'rough', 'fine', 'preFine'].includes(lot.decorFilter)) return 'оболочка';
+  if (lot.hasFurniture === false) return 'оболочка';
+  if (lot.decoration === 'without' || lot.decoration === 'rough') return 'оболочка';
+  if (bareNow) return 'оболочка';
+  if (lot.hasFurniture === true) return 'под ключ';
+  if (/мебел/.test(t) && /техник/.test(t)) return 'под ключ';
+  return 'неизвестно';
+}
+
+/* Что мешает сравнивать два лота напрямую. Пустой список — сравнение честное. */
+function comparabilityGaps(a, b) {
+  const g = [];
+  const ca = completeness(a), cb = completeness(b);
+  if (ca !== cb) g.push(`комплектность: ${ca} против ${cb}`);
+  if (a.saleType && b.saleType && a.saleType !== b.saleType) g.push(`условия сделки: ${a.saleType} против ${b.saleType}`);
+  if (a.isApartments !== b.isApartments) g.push('апартаменты против квартиры');
+  const f = (x) => x.features || {};
+  if (f(a).euroLayout !== f(b).euroLayout) g.push('евро-планировка против классической');
+  if (a.floors && b.floors && a.floor != null && b.floor != null) {
+    const rel = (x) => x.floor / x.floors;
+    if (Math.abs(rel(a) - rel(b)) > 0.4) g.push('сильно разная высота этажа в доме');
+  }
+  return g;
+}
+
+/* Признаки, которых нет в полях API и которые живут только в описании.
+   Замерено на 300 лотах: паркинг упоминают 45%, евро-планировку 34%, вид 31%. */
+function features(lot) {
+  const t = (lot.description || '').toLowerCase();
+  return {
+    parkingMentioned: /парк(инг|овочн)|машиноместо|м\/м\b/.test(t),
+    parkingSeparate: /(машиноместо|парковочн\w+|паркинг)[^.]{0,60}(отдельн|доплат|не включ)/.test(t),
+    euroLayout: /\bевро[-\s]?\d|кухня-гостиная|евродвушк|евротрёшк|евротрешк/.test(t),
+    viewClaimed: /вид[^.]{0,40}(на реку|на парк|кремл|сити|панорамн|на воду)/.test(t),
+  };
+}
+
 /* ---------- цена относительно рынка ----------
    Голая цена ничего не говорит. После sweep на руках весь дом и весь район,
    поэтому положение лота считается по своим данным, без оценок Циан. */
@@ -435,20 +531,33 @@ const median = (xs) => {
 
 function withMarket(lots, minCohort = 4) {
   const ppm = (l) => (l.priceRub && l.totalArea ? l.priceRub / l.totalArea : null);
+  const enriched = lots.map((l) => ({ ...l, completeness: completeness(l), features: features(l) }));
+  /* Медиана считается внутри своей комплектности: иначе оболочки утягивают
+     планку вниз и квартира под ключ выглядит переоценённой (или наоборот). */
   const groups = { house: new Map(), cohort: new Map() };
-  for (const l of lots) {
+  for (const l of enriched) {
     const v = ppm(l); if (!v) continue;
-    if (l.houseId) (groups.house.get(l.houseId) || groups.house.set(l.houseId, []).get(l.houseId)).push(v);
-    const ck = `${l.district}|${l.rooms}`;
+    if (l.houseId) {
+      const hk = `${l.houseId}|${l.completeness}`;
+      (groups.house.get(hk) || groups.house.set(hk, []).get(hk)).push(v);
+    }
+    const ck = `${l.district}|${l.rooms}|${l.completeness}`;
     (groups.cohort.get(ck) || groups.cohort.set(ck, []).get(ck)).push(v);
   }
   const med = (m, k, n) => { const xs = m.get(k); return xs && xs.length >= n ? median(xs) : null; };
-  return lots.map((l) => {
+  return enriched.map((l) => {
     const v = ppm(l);
-    const mh = l.houseId ? med(groups.house, l.houseId, minCohort) : null;
-    const mc = med(groups.cohort, `${l.district}|${l.rooms}`, minCohort);
+    const hk = `${l.houseId}|${l.completeness}`, ck = `${l.district}|${l.rooms}|${l.completeness}`;
+    const mh = l.houseId ? med(groups.house, hk, minCohort) : null;
+    const mc = med(groups.cohort, ck, minCohort);
     const rel = (m) => (v && m ? +((v - m) / m * 100).toFixed(1) : null);
-    return { ...l, pricePerM2: v ? Math.round(v) : null, vsBuildingPct: rel(mh), vsCohortPct: rel(mc) };
+    return {
+      ...l,
+      pricePerM2: v ? Math.round(v) : null,
+      vsBuildingPct: rel(mh), vsCohortPct: rel(mc),
+      // с чем именно сравнивали — чтобы процент нельзя было прочитать вслепую
+      comparedWith: { completeness: l.completeness, inBuilding: (groups.house.get(hk) || []).length, inCohort: (groups.cohort.get(ck) || []).length },
+    };
   });
 }
 
@@ -481,9 +590,12 @@ function groupSameFlat(lots, areaTol = 0.6) {
        Пустая комнатность ничему не противоречит и остаётся с группой. */
     for (let i = groups.length - 1; i >= 0; i--) {
       const g = groups[i];
-      const kinds = [...new Set(g.map((x) => x.rooms).filter((r) => r != null))];
+      /* Вид жилья берём из flatType (rooms/studio/openPlan) — он заполнен
+         всегда, в отличие от roomsCount, пустого у студий. */
+      const kind = (x) => (x.flatType && x.flatType !== 'rooms' ? x.flatType : x.rooms);
+      const kinds = [...new Set(g.map(kind).filter((r) => r != null))];
       if (kinds.length <= 1) continue;
-      groups.splice(i, 1, ...kinds.map((r) => g.filter((x) => x.rooms === r || x.rooms == null)));
+      groups.splice(i, 1, ...kinds.map((r) => g.filter((x) => kind(x) === r || kind(x) == null)));
     }
   }
   return { groups, loose };
@@ -633,7 +745,11 @@ if (require.main === module) (async () => {
 
     } else if (cmd === 'sweep') {
       const q = loadQuery(a.query);
-      let { declared, lots } = await sweep(ctx, q, parseInt(a.limit || '250', 10), parseInt(a.pages || '12', 10));
+      const maxPages = parseInt(a.pages || '12', 10);
+      const { seen, declared } = await sweep(ctx, q, parseInt(a.limit || '250', 10), maxPages);
+      // по умолчанию доопределяем комплектность фильтром: без неё сравнение цен врёт
+      if (a.resolve !== '0') await resolveDecoration(ctx, q, seen, Math.min(maxPages, 6));
+      let { lots } = finishSweep(seen, { count: declared });
       log(`\nзаявлено ${declared}, собрано ${lots.length} (${Math.round(lots.length / declared * 100)}%)`);
       lots = withMarket(lots);
       const { flats, loose } = dedupe(lots);
@@ -645,11 +761,20 @@ if (require.main === module) (async () => {
         `  ${f.street}, ${f.house}, эт.${f.floor}, ${f.totalArea} м² — ${f.listings} объявл., ` +
         `${(f.priceMin || 0).toLocaleString('ru-RU')}–${(f.priceMax || 0).toLocaleString('ru-RU')} ₽` +
         (f.overpay ? `, переплата за верхнее ${f.overpay}%` : '')));
+      const byComp = {};
+      flats.forEach((f) => { byComp[f.completeness] = (byComp[f.completeness] || 0) + 1; });
+      log(`комплектность: ${Object.entries(byComp).map(([k, v]) => `${k} ${v}`).join(', ')}`);
+      const feat = (k) => flats.filter((f) => f.features && f.features[k]).length;
+      log(`из описаний: паркинг ${feat('parkingMentioned')}, евро-планировка ${feat('euroLayout')}, заявлен вид ${feat('viewClaimed')}`);
+      const promoted = flats.filter((f) => f.promoted).length;
+      if (promoted) log(`платное продвижение: ${promoted} из ${flats.length}`);
       const rated = flats.filter((f) => f.vsBuildingPct != null).sort((x, y) => x.vsBuildingPct - y.vsBuildingPct);
       if (rated.length) {
         log('\nцена относительно медианы своего корпуса:');
-        rated.slice(0, 3).forEach((f) => log(`  дешевле  ${String(f.vsBuildingPct).padStart(6)}%  ${f.id}  ${f.totalArea} м², ${(f.priceRub||0).toLocaleString('ru-RU')} ₽  ${f.street}, ${f.house}`));
-        rated.slice(-2).forEach((f) => log(`  дороже   ${String('+'+f.vsBuildingPct).padStart(6)}%  ${f.id}  ${f.totalArea} м², ${(f.priceRub||0).toLocaleString('ru-RU')} ₽  ${f.street}, ${f.house}`));
+        const line = (f, tag) => log(`  ${tag} ${String(f.vsBuildingPct > 0 ? '+' + f.vsBuildingPct : f.vsBuildingPct).padStart(6)}%  ${f.id}  ` +
+          `${f.totalArea} м², ${(f.priceRub || 0).toLocaleString('ru-RU')} ₽  [${f.completeness}, сравнение с ${f.comparedWith.inBuilding} такими же]  ${f.street}, ${f.house}`);
+        rated.slice(0, 3).forEach((f) => line(f, 'дешевле'));
+        rated.slice(-2).forEach((f) => line(f, 'дороже '));
       }
       const out = a.dedupe ? flats.concat(loose) : lots;
       if (a.out) { fs.writeFileSync(a.out, JSON.stringify({ declared, collected: lots.length, flats: flats.length, lots: out }, null, 2) + '\n'); log(`-> ${a.out}`); }
@@ -772,4 +897,4 @@ if (require.main === module) (async () => {
 })();
 
 /* Чистые функции наружу — чтобы их можно было проверить без сети. */
-module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive };
+module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, completeness, comparabilityGaps, features };

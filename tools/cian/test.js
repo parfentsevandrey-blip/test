@@ -3,7 +3,8 @@
    Здесь живёт та инвариантa, нарушение которой уже один раз испортило выдачу:
    дробление запроса обязано сужать, а не расширять. */
 const assert = require('assert');
-const { groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive } = require('./cian.js');
+const { groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive,
+        completeness, comparabilityGaps, features } = require('./cian.js');
 
 let passed = 0;
 const test = (name, fn) => {
@@ -101,6 +102,64 @@ test('лот дешевле медианы корпуса получает от�
 test('когорта меньше минимума не даёт оценки вместо выдумывания', () => {
   const m = withMarket([lot({ id: 1 })], 4);
   assert.strictEqual(m[0].vsBuildingPct, null);
+});
+
+process.stdout.write('комплектность и сопоставимость\n');
+
+test('hasFurniture=false — оболочка, даже при премиальной отделке', () => {
+  // 331115316, Victory Park: мрамор, двери Barausse, но ни кухни, ни мебели
+  assert.strictEqual(completeness(lot({ hasFurniture: false,
+    description: 'Дизайнерская отделка Neo-Deco, натуральный мрамор, двери Barausse' })), 'оболочка');
+});
+
+test('decoration=without — оболочка', () => {
+  assert.strictEqual(completeness(lot({ hasFurniture: null, decoration: 'without' })), 'оболочка');
+});
+
+test('мебель и техника в тексте — под ключ', () => {
+  assert.strictEqual(completeness(lot({ hasFurniture: null,
+    description: 'Остаётся вся мебель и техника' })), 'под ключ');
+});
+
+test('рассказ о прошлой белой коробке не делает квартиру оболочкой', () => {
+  assert.strictEqual(completeness(lot({ hasFurniture: true,
+    description: 'Полностью переделан white box от застройщика' })), 'под ключ');
+});
+
+test('оболочку и квартиру под ключ не сравнить — разрыв назван', () => {
+  const gaps = comparabilityGaps(lot({ hasFurniture: true }), lot({ hasFurniture: false }));
+  assert.ok(gaps.some((g) => /комплектность/.test(g)), gaps.join('; '));
+});
+
+test('переуступка против ДДУ попадает в разрывы', () => {
+  const gaps = comparabilityGaps(lot({ saleType: 'fz214' }), lot({ saleType: 'dupt' }));
+  assert.ok(gaps.some((g) => /условия сделки/.test(g)));
+});
+
+test('одинаковые лоты сравнимы, разрывов нет', () => {
+  assert.deepStrictEqual(comparabilityGaps(lot({}), lot({})), []);
+});
+
+test('медиана корпуса считается внутри своей комплектности', () => {
+  // четыре оболочки по 1 млн/м² и одна квартира под ключ — она не должна
+  // выглядеть дороже рынка только потому, что рядом стоят голые
+  const shells = [1, 2, 3, 4].map((i) => lot({ id: i, hasFurniture: false, priceRub: 60e6, totalArea: 60 }));
+  const turnkey = lot({ id: 5, hasFurniture: true, priceRub: 90e6, totalArea: 60 });
+  const m = withMarket(shells.concat([turnkey]));
+  const t = m.find((x) => x.id === 5);
+  assert.strictEqual(t.completeness, 'под ключ');
+  assert.strictEqual(t.vsBuildingPct, null, 'не с чем сравнивать: под ключ в доме один');
+});
+
+test('признаки из описания: паркинг, евро-планировка, вид', () => {
+  const f = features(lot({ description: 'Евро-3, кухня-гостиная, вид на реку, машиноместо оплачивается отдельно' }));
+  assert.ok(f.parkingMentioned && f.parkingSeparate && f.euroLayout && f.viewClaimed);
+});
+
+test('студия и квартира с комнатами не склеиваются по flatType', () => {
+  const { groups } = groupSameFlat([lot({ id: 1, flatType: 'studio', rooms: null, totalArea: 40, floor: 3 }),
+                                    lot({ id: 2, flatType: 'rooms', rooms: 1, totalArea: 40, floor: 3 })]);
+  assert.strictEqual(groups.length, 2);
 });
 
 process.stdout.write('проверка ремонта\n');
