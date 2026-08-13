@@ -12,6 +12,7 @@
  *   node tools/cian/cian.js snapshot --query q.json | --queries watchlist.json | --from a.json,b.json
  *   node tools/cian/cian.js exposure --query q.json [--deep] — двойники и реальный срок
  *   node tools/cian/cian.js compare --lot 327985409 --cohort lots.json [--tier бизнес]
+ *   node tools/cian/cian.js grade  --template 331300080 [--from lots.json]  — заготовка под заполнение
  *   node tools/cian/cian.js grade  --lots lots.json --marks marks.json  — записать оценку отделки
  *   node tools/cian/cian.js grade  --list
  *   node tools/cian/cian.js report — пересобрать docs/cian/lots.md из оценок и архива
@@ -1851,7 +1852,30 @@ if (require.main === module) (async () => {
       /* Оценка отделки живёт в файле, а не в переписке: иначе каждая новая
          сессия оценивает те же квартиры заново и приходит к другой букве. */
       const store = loadGrades(a.store || 'docs/cian/grades.json');
-      if (a.list || !a.marks) {
+      if (a.template) {
+        /* Заготовка под заполнение. Приём применяется тем чаще, чем меньше
+           вокруг него возни: набирать восемь ключей руками по памяти —
+           верный способ забросить его через неделю. */
+        const ids = String(a.template).split(',').map(Number).filter(Boolean);
+        const known = a.from ? (() => { const d = JSON.parse(fs.readFileSync(a.from, 'utf8'));
+          return d.lots || d.flats || (Array.isArray(d) ? d : []); })() : [];
+        const out = {};
+        for (const id of ids) {
+          const l = known.find((x) => x.id === id) || {};
+          out[id] = {
+            proof: `<${PROOFS.join(' | ')}>`,
+            photosSeen: l.photosCount ?? null,
+            framesSeen: [],
+            framesFull: [],
+            markers: Object.fromEntries(Object.entries(MARKERS)
+              .map(([k, v]) => [k, `<${v.join(' | ')} | null>`])),
+            note: '',
+          };
+        }
+        process.stdout.write(JSON.stringify(out, null, 2) + '\n');
+        log('\nЗаполнить по docs/cian/photo.md, null — «на кадрах не видно».');
+        log(`Кадры в оригинале:  node tools/cian/cian.js verify --ids ${ids.join(',')} --frames 3,6,11 --dir sheets`);
+      } else if (a.list || !a.marks) {
         const rows = Object.values(store.flats).sort((x, y) => (y.pricePerM2 || 0) - (x.pricePerM2 || 0));
         log(`оценок в ${a.store || 'docs/cian/grades.json'}: ${rows.length}` + (store.updated ? `, обновлено ${store.updated}` : ''));
         for (const r of rows) {

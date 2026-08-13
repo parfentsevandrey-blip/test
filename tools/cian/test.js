@@ -753,3 +753,29 @@ test('не вернувшийся номер при удачном ответе 
 Promise.all(pending).then(() => {
   process.stdout.write(`\n${passed} проверок пройдено${process.exitCode ? ', есть провалы' : ''}\n`);
 });
+
+test('пол и двери добавляют разрешение, но не переписывают прежние буквы', () => {
+  // Признаки добавлены после тридцати оценок; проверка в том, что старые
+  // записи без них считаются так же, а с ними — так же
+  const base = { stone: 'нет', joinery: 'серийная', kitchen: 'встроенная',
+    light: 'базовый', furniture: 'полный', bath: 'плитка' };
+  assert.strictEqual(gradeLevel(base), 'C');
+  assert.strictEqual(gradeLevel({ ...base, floor: 'ламинат', doors: 'в наличнике' }), 'C');
+  const rich = { stone: 'слэб', joinery: 'на заказ', kitchen: 'интегрированная',
+    light: 'сценарный', furniture: 'полный', bath: 'камень и бренд' };
+  assert.strictEqual(gradeLevel(rich), 'A');
+  assert.strictEqual(gradeLevel({ ...rich, floor: 'массив ёлочкой', doors: 'скрытые' }), 'A');
+});
+
+test('пол разводит одинаковые в остальном квартиры', () => {
+  const m = { stone: 'нет', joinery: 'серийная', kitchen: 'встроенная',
+    light: 'базовый', furniture: 'полный', bath: 'плитка', doors: 'в наличнике' };
+  const cheap = gradeLevel({ ...m, floor: 'ламинат' });
+  const dear = gradeLevel({ ...m, floor: 'массив ёлочкой' });
+  assert.strictEqual(cheap, 'C');
+  assert.strictEqual(dear, 'B', 'ёлочка из массива тянет ту же квартиру на ступень выше');
+});
+
+test('номера кадров — список, а не число', () => {
+  assert.throws(() => gradeRecord({ id: 1 }, { markers: { stone: 'нет' }, framesSeen: 5 }), /framesSeen/);
+});
