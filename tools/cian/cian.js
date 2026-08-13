@@ -494,6 +494,14 @@ function mergeArchive(arc, lots, today) {
    товары, и сравнивать их по ₽/м² значит выдавать одно за другое. */
 const BARE = /без отделки|предчистов|white ?box|под чистовую|черновая/;
 
+/* Ремонт, который ещё идёт. Продавец пишет об этом прямо — «работы завершатся
+   в августе», — но поля объявления такую квартиру не отличают от готовой. */
+const UNFINISHED = /(ремонтн\w+ работ\w*|ремонт|отделк\w+|работы)[^.]{0,80}(завершат?ся|заверш[иё]тся|будет заверш|планируется заверш|закончат?ся|окончани\w+)|ремонт в процессе|идёт ремонт|идет ремонт/;
+
+/* Мебель и техника в комплекте — заявка словами. Поле hasFurniture этого не
+   говорит (см. ниже), а текст говорит, и его хотя бы можно предъявить. */
+const FURNISHED = /меблирован|с мебелью и техник|мебел\w+ и (бытов\w+ )?техник|под ключ|под тапочк|укомплектован\w* мебел/;
+
 function completeness(lot) {
   const t = (lot.description || '').toLowerCase();
   const m = BARE.exec(t);
@@ -510,9 +518,61 @@ function completeness(lot) {
   if (lot.hasFurniture === false) return 'оболочка';
   if (lot.decoration === 'without' || lot.decoration === 'rough') return 'оболочка';
   if (bareNow) return 'оболочка';
-  if (lot.hasFurniture === true) return 'под ключ';
-  if (/мебел/.test(t) && /техник/.test(t)) return 'под ключ';
+  /* Незавершённый ремонт — отдельное состояние. Это не оболочка (деньги в
+     отделку вложены) и не «под ключ» (въехать нельзя, и результата никто
+     не видел). Проверять до всех остальных признаков готовности. */
+  if (UNFINISHED.test(t)) return 'ремонт не сдан';
+  /* hasFurniture=true не значит ничего. На вторичке галочка стоит у 70 лотов
+     из 187, и в их числе пустая квартира без кухни (330733568) и квартира,
+     где ремонт сдаётся в августе (331424705). Ставит её продавец, никто не
+     проверяет. Заявка словами хотя бы конкретна: «полностью укомплектована
+     мебелью и техникой» — это обещание, за которое можно спросить. */
+  if (FURNISHED.test(t) || (/мебел/.test(t) && /техник/.test(t))) return 'под ключ';
   return 'неизвестно';
+}
+
+/* ---------- чем подтверждён уровень отделки ----------
+   «Дизайнерский ремонт» — галочка, её ставят все. Что действительно отличает
+   премиальную комплектацию от чистовой отделки застройщика, так это
+   перечень марок: кухня Arrital со столешницей Fenix и техникой Gaggenau —
+   проверяемое утверждение, «квартира с новой отделкой» — нет.
+   Список не полный и не может быть полным; он нужен, чтобы отделить лот с
+   поимённой комплектацией от лота, где о начинке не сказано ничего. */
+const BRANDS = {
+  'техника': ['gaggenau', 'miele', 'sub-zero', 'subzero', 'wolf', 'la cornue', 'v-zug', 'liebherr',
+    'smeg', 'bosch', 'siemens', 'neff', 'aeg', 'electrolux', 'asko', 'kuppersbusch', 'falmec', 'daikin'],
+  'кухня и мебель': ['arrital', 'poliform', 'varenna', 'boffi', 'molteni', 'scavolini', 'valcucine',
+    'ernestomeda', 'snaidero', 'rimadesio', 'minotti', 'flexform', 'ditre', 'cassina', 'baxter',
+    'meridiani', 'porada', 'bonaldo', 'bontempi', 'natuzzi', 'calligaris', 'boconcept', 'b&b italia'],
+  'сантехника': ['cea', 'fantini', 'gessi', 'dornbracht', 'axor', 'hansgrohe', 'grohe', 'thg',
+    'flaminia', 'antonio lupi', 'agape', 'kaldewei', 'duravit', 'villeroy', 'geberit', 'tece',
+    'simas', 'cielo', 'catalano', 'carlofrattini'],
+  'свет': ['moooi', 'flos', 'vibia', 'artemide', 'foscarini', 'lodes', 'occhio', 'delta light',
+    'tom dixon', 'catellani', 'bocci', 'sovet'],
+  'материалы': ['fenix', 'maxfine', 'fmg', 'iris ceramica', 'italon', 'laminam', 'florim', 'marazzi',
+    'atlas concorde', 'dekton', 'neolith', 'caesarstone', 'antolini', 'landoor'],
+};
+
+function finishEvidence(lot) {
+  const t = (lot.description || '').toLowerCase();
+  const found = {}, list = [];
+  for (const [cat, names] of Object.entries(BRANDS)) {
+    for (const n of names) {
+      if (new RegExp(`(^|[^a-zа-я])${n.replace(/[-&]/g, '\\$&')}([^a-zа-я]|$)`).test(t)) {
+        (found[cat] = found[cat] || []).push(n);
+        list.push(n);
+      }
+    }
+  }
+  return {
+    furnished: FURNISHED.test(t) || (/мебел/.test(t) && /техник/.test(t)),
+    unfinished: UNFINISHED.test(t),
+    designerClaimed: /дизайнерск\w+ (ремонт|отделк|интерьер)|авторск\w+ (ремонт|интерьер|проект)/.test(t),
+    brands: list,
+    categories: Object.keys(found),
+    /* Три и более категории марок — комплектацию описали, а не назвали. */
+    spelledOut: Object.keys(found).length >= 3,
+  };
 }
 
 /* Готовность: ключи на руках или обязательство построить к сроку.
@@ -847,8 +907,13 @@ if (require.main === module) (async () => {
           if (a.files) files = await fetchPhotos(ctx, l, `${dir}/${l.id}`, nPhoto);
           else sheet = await contactSheet(ctx, page, l, `${dir}/${l.id}.jpg`, nPhoto);
         }
-        report.push({ id: l.id, url: l.url, price: l.priceRub, area: l.totalArea, ...r, sheet, photos: files });
-        log(`\n${l.id}  ${l.rooms}к ${l.totalArea} м²  ${(l.priceRub || 0).toLocaleString('ru-RU')} ₽  — ${r.verdict}`);
+        const ev = finishEvidence(l);
+        report.push({ id: l.id, url: l.url, price: l.priceRub, area: l.totalArea, ...r, evidence: ev, completeness: completeness(l), sheet, photos: files });
+        log(`\n${l.id}  ${l.rooms}к ${l.totalArea} м²  ${(l.priceRub || 0).toLocaleString('ru-RU')} ₽  — ${r.verdict}, ${completeness(l)}`);
+        if (ev.unfinished) log('   ремонт по тексту ещё не завершён');
+        log(`   комплектация: ${ev.spelledOut ? 'расписана по маркам' : ev.brands.length ? 'марки названы частично' : 'марки не названы'}` +
+          (ev.brands.length ? ` (${ev.categories.join(', ')}: ${ev.brands.slice(0, 8).join(', ')})` : '') +
+          `; мебель и техника ${ev.furnished ? 'заявлены' : 'не заявлены'}`);
         if (r.red.length) log(`   против: ${r.red.join('; ')}`);
         if (r.yellow.length) log(`   насторожило: ${r.yellow.join('; ')}`);
         if (r.green.length) log(`   за: ${r.green.join('; ')}`);
@@ -949,4 +1014,4 @@ if (require.main === module) (async () => {
 })();
 
 /* Чистые функции наружу — чтобы их можно было проверить без сети. */
-module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, completeness, comparabilityGaps, features, readiness };
+module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, completeness, comparabilityGaps, features, readiness, finishEvidence };

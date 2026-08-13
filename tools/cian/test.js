@@ -4,7 +4,7 @@
    дробление запроса обязано сужать, а не расширять. */
 const assert = require('assert');
 const { groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive,
-        completeness, comparabilityGaps, features, readiness } = require('./cian.js');
+        completeness, comparabilityGaps, features, readiness, finishEvidence } = require('./cian.js');
 
 let passed = 0;
 const test = (name, fn) => {
@@ -135,8 +135,64 @@ test('мебель и техника в тексте — под ключ', () =>
 });
 
 test('рассказ о прошлой белой коробке не делает квартиру оболочкой', () => {
+  assert.notStrictEqual(completeness(lot({ hasFurniture: true,
+    description: 'Полностью переделан white box от застройщика' })), 'оболочка');
+});
+
+/* Галочка «есть мебель» стоит у 70 вторичных лотов из 187, и хотя бы у двух
+   из них она врёт. Пока это единственное основание — комплектность неизвестна. */
+test('одной галочки hasFurniture для «под ключ» мало', () => {
   assert.strictEqual(completeness(lot({ hasFurniture: true,
-    description: 'Полностью переделан white box от застройщика' })), 'под ключ');
+    description: 'Современная квартира с новой отделкой в ЖК Lucky' })), 'неизвестно');
+});
+
+test('«готовый интерьер» без слова о мебели — ещё не под ключ', () => {
+  // 330733568, Victory Park, 168,5 млн: по тексту «готовый интерьер»,
+  // на фото пустые комнаты, вместо кухни выводы воды и розетки
+  assert.strictEqual(completeness(lot({ hasFurniture: true,
+    description: 'Трехкомнатная квартира с готовым интерьером! Выполнена качественная отделка в светлых тонах' })),
+  'неизвестно');
+});
+
+test('незавершённый ремонт — отдельное состояние, не «под ключ»', () => {
+  // 331424705, Резиденция МОНЭ, 145 млн: двери в плёнке, кухни нет,
+  // а в тексте прямо сказано, когда работы кончатся
+  assert.strictEqual(completeness(lot({ hasFurniture: true,
+    description: 'Новый дизайнерский ремонт. Ремонтные работы в квартире завершатся в августе 2026 года' })),
+  'ремонт не сдан');
+});
+
+test('незавершённый ремонт ломает сопоставимость с готовой квартирой', () => {
+  const gaps = comparabilityGaps(
+    lot({ description: 'Ремонтные работы завершатся в августе' }),
+    lot({ description: 'Полностью укомплектована мебелью и бытовой техникой' }));
+  assert.ok(gaps.some((g) => /ремонт не сдан/.test(g)), gaps.join('; '));
+});
+
+process.stdout.write('чем подтверждён уровень отделки\n');
+
+test('поимённая комплектация отличается от «квартиры с новой отделкой»', () => {
+  // 329819607, Кутузовский XII, 158 млн — марки перечислены по комнатам
+  const rich = finishEvidence(lot({ description: 'Кухня Arrital, столешница Fenix, фартук MaxFine, '
+    + 'диван Ditre Italia, люстра MOOOI, сантехника CEA, Fantini, керамогранит FMG' }));
+  assert.ok(rich.spelledOut, 'марки названы в ' + rich.categories.length + ' категориях');
+  // 327357005, Lucky, 195 млн — самый дорогой метр и ни одной марки
+  const bare = finishEvidence(lot({ description: 'Современная квартира с новой отделкой в ЖК Lucky' }));
+  assert.strictEqual(bare.brands.length, 0);
+  assert.strictEqual(bare.spelledOut, false);
+});
+
+test('техника названа, мебель — нет: комплектность не заявлена', () => {
+  // 332239634, Capital Towers, 190 млн: Smeg, Grohe, Duravit — и ни слова о мебели
+  const ev = finishEvidence(lot({ description: 'Квартира оснащена техникой Smeg, '
+    + 'смесители Grohe и сантехника Duravit' }));
+  assert.ok(ev.brands.includes('smeg'));
+  assert.strictEqual(ev.furnished, false);
+});
+
+test('марка не ловится внутри чужого слова', () => {
+  const ev = finishEvidence(lot({ description: 'Рядом фитнес-клуб и Гроховская улица, ceao' }));
+  assert.strictEqual(ev.brands.length, 0, ev.brands.join(','));
 });
 
 test('оболочку и квартиру под ключ не сравнить — разрыв назван', () => {
@@ -157,7 +213,8 @@ test('медиана корпуса считается внутри своей �
   // четыре оболочки по 1 млн/м² и одна квартира под ключ — она не должна
   // выглядеть дороже рынка только потому, что рядом стоят голые
   const shells = [1, 2, 3, 4].map((i) => lot({ id: i, hasFurniture: false, priceRub: 60e6, totalArea: 60 }));
-  const turnkey = lot({ id: 5, hasFurniture: true, priceRub: 90e6, totalArea: 60 });
+  const turnkey = lot({ id: 5, hasFurniture: true, priceRub: 90e6, totalArea: 60,
+    description: 'Полностью меблирована, вся бытовая техника остаётся' });
   const m = withMarket(shells.concat([turnkey]));
   const t = m.find((x) => x.id === 5);
   assert.strictEqual(t.completeness, 'под ключ');
