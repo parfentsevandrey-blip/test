@@ -8,13 +8,13 @@
  *   node tools/cian/cian.js url    --query q.json      — каноническая ссылка cat.php
  *   node tools/cian/cian.js probe  --query q.json --with '{"loggia":{"type":"term","value":true}}'
  *   node tools/cian/cian.js sweep  --query q.json [--limit 250] [--dedupe] [--resolve 0] — большой ЖК целиком
- *   node tools/cian/cian.js verify --query q.json | --from lots.json [--ids 1,2] [--photos 9] [--cols 4]
+ *   node tools/cian/cian.js verify --ids 1,2 | --query q.json | --from lots.json [--photos 9] [--cols 4]
  *   node tools/cian/cian.js snapshot --query q.json | --queries watchlist.json | --from a.json,b.json
  *   node tools/cian/cian.js exposure --query q.json [--deep] — двойники и реальный срок
  *   node tools/cian/cian.js compare --lot 327985409 --cohort lots.json [--tier бизнес]
  *   node tools/cian/cian.js grade  --lots lots.json --marks marks.json  — записать оценку отделки
  *   node tools/cian/cian.js grade  --list
- *   node tools/cian/cian.js refresh — что из архива ещё продаётся, а что ушло
+ *   node tools/cian/cian.js refresh [--limit N] [--confirm нет] — что из архива ещё продаётся, а что ушло
  *   node tools/cian/cian.js card   327985409 331215568 [--out cards.json]  — история цены и поля, которых нет в выдаче
  *   node tools/cian/cian.js stats  332550701 331961171
  *   node tools/cian/cian.js geo    [--out moscow-geo.json]
@@ -104,6 +104,18 @@ async function searchPage(ctx, jsonQuery, pageNumber, attempt = 1) {
    Срок экспозиции отсюда брать нельзя. */
 const BY_IDS_API = 'https://api.cian.ru/search-offers/v1/get-offers-by-ids-desktop/';
 const BY_IDS_LIMIT = 28;
+
+/* Второй, независимый способ спросить про один лот: обычный поиск умеет
+   фильтр `id` типа term. Нужен как подтверждение: ручка by-ids не
+   документирована, и её молчание само по себе ещё не доказательство. */
+async function offerAliveById(ctx, id) {
+  try {
+    const r = await searchPage(ctx, { _type: 'flatsale',
+      engine_version: { type: 'term', value: 2 },
+      id: { type: 'term', value: Number(id) } }, 1);
+    return r.count > 0 || (r.offers || []).length > 0;
+  } catch (e) { return null; }   // сеть подвела — не знаем, а не «нет»
+}
 
 async function offersByIds(ctx, ids, dealType = 'flatsale') {
   const uniq = [...new Set(ids.map(Number).filter(Boolean))];
@@ -1334,6 +1346,11 @@ if (require.main === module) (async () => {
           }
         }
         log(`из файлов: ${lots.length} лотов`);
+      } else if (only && !a.query) {
+        /* Раньше, чтобы посмотреть десять известных лотов, приходилось
+           воспроизводить поиск, который их содержит. Теперь спрашиваем прямо. */
+        lots = (await offersByIds(ctx, only)).map(normalize);
+        log(`по номерам: ${lots.length} из ${only.length}`);
       } else {
         lots = (await collect(ctx, loadQuery(a.query), parseInt(a.pages || '2', 10), false)).lots;
       }
@@ -1688,13 +1705,35 @@ if (require.main === module) (async () => {
       const alive = new Map(got.map((o) => [o.cianId || o.id, normalize(o)]));
       log(`ответили: ${alive.size} из ${ids.length}`);
 
-      let gone = 0, moved = 0, same = 0;
+      /* Молчание ручки — не приговор: подтверждаем вторым способом. Проверка
+         именно так и поймала себя на деле — две квартиры на Усачёва
+         действительно ушли, и обе метода сошлись. */
+      const silent = ids.filter((id) => !alive.has(id));
+      const confirmed = new Set();
+      const doConfirm = a.confirm !== 'нет' && silent.length <= parseInt(a['confirm-limit'] || '300', 10);
+      if (silent.length && doConfirm) {
+        log(`подтверждаю пропажу вторым способом (${silent.length} лотов)…`);
+        let unknown = 0;
+        for (const id of silent) {
+          const alive2 = await offerAliveById(ctx, id);
+          if (alive2 === false) confirmed.add(id);
+          else if (alive2 === null) unknown++;
+          await sleep(900);
+        }
+        if (unknown) log(`  у ${unknown} проверка не прошла по сети — считаю их живыми`);
+      } else if (silent.length) {
+        log(`не подтверждаю: ${silent.length} молчащих больше потолка, ставлю метку под вопросом`);
+      }
+
+      let gone = 0, moved = 0, same = 0, doubted = 0;
       const moves = [];
       for (const id of ids) {
         const { fp, e, listed } = probe.get(id);
         const live = alive.get(id);
         if (!live) {
+          if (doConfirm && !confirmed.has(id)) { doubted++; continue; }
           e.goneSince = e.goneSince || today;
+          e.goneConfirmed = doConfirm;
           gone++;
           continue;
         }
@@ -1710,7 +1749,8 @@ if (require.main === module) (async () => {
       arc.updated = today;
       fs.writeFileSync(ap, JSON.stringify(arc, null, 2) + '\n');
       log(`\nещё продаётся: ${same}`);
-      log(`не отвечают (продано, снято или скрыто): ${gone}`);
+      log(`не отвечают, подтверждено двумя способами (продано, снято или скрыто): ${gone}`);
+      if (doubted) log(`молчали в ручке, но нашлись поиском — считаю живыми: ${doubted}`);
       if (moves.length) {
         moves.sort((x, y) => (x.to - x.from) / x.from - (y.to - y.from) / y.from);
         log(`\nцена изменилась у ${moves.length}:`);
