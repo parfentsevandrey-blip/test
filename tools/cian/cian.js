@@ -295,11 +295,16 @@ async function sweep(ctx, q, limit, maxPages) {
 async function resolveDecoration(ctx, q, seen, maxPages) {
   const unknown = () => [...seen.values()].filter((l) => !l.decorFilter).length;
   log(`доопределяю отделку фильтром (без метки: ${unknown()})`);
+  let base = null;
+  try { base = (await searchPage(ctx, q, 1)).count; } catch (e) { /* сверять будет не с чем */ }
   for (const v of DECORATIONS) {
     const sub = { ...q, decorations_list: { type: 'terms', value: [v] } };
     let n = 0;
     for (let p = 1; p <= maxPages; p++) {
       let r; try { r = await searchPage(ctx, sub, p); } catch (e) { break; }
+      /* На вторичке фильтр отделки — пустышка: он возвращает ту же выдачу
+         целиком. Метить по нему нельзя, иначе всё подряд станет «оболочкой». */
+      if (p === 1 && base && r.count === base) { log(`  ${v}: фильтр не сузил выдачу — метка не ставится`); break; }
       if (!r.offers.length) break;
       r.offers.forEach((o) => {
         const id = o.cianId || o.id;
@@ -493,10 +498,15 @@ function completeness(lot) {
   const t = (lot.description || '').toLowerCase();
   const m = BARE.exec(t);
   const bareNow = m && !PAST.test(t.slice(Math.max(0, m.index - 60), m.index));
-  /* Самый надёжный источник — не поле в ответе, а фильтр Циан: поле decoration
-     пустует у 70% объявлений, а decorations_list делит выдачу без остатка. */
-  if (lot.decorFilter === 'fineWithFurniture') return 'под ключ';
-  if (['without', 'rough', 'fine', 'preFine'].includes(lot.decorFilter)) return 'оболочка';
+  /* Метка отделки осмысленна только для первичной продажи. На вторичке фильтр
+     decorations_list приравнивает «нет данных» к «без отделки» и возвращает
+     469 лотов из 492 — по нему вся вторичка стала бы оболочкой. */
+  const isPrimary = lot.fromDeveloper === true || lot.saleType === 'fz214'
+    || lot.saleType === 'dupt' || lot.houseFinished === false;
+  if (isPrimary) {
+    if (lot.decorFilter === 'fineWithFurniture' || lot.decoration === 'fineWithFurniture') return 'под ключ';
+    if (['without', 'rough', 'fine', 'preFine'].includes(lot.decorFilter)) return 'оболочка';
+  }
   if (lot.hasFurniture === false) return 'оболочка';
   if (lot.decoration === 'without' || lot.decoration === 'rough') return 'оболочка';
   if (bareNow) return 'оболочка';

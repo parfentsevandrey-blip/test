@@ -116,6 +116,19 @@ test('decoration=without — оболочка', () => {
   assert.strictEqual(completeness(lot({ hasFurniture: null, decoration: 'without' })), 'оболочка');
 });
 
+test('метка отделки на вторичке игнорируется', () => {
+  // фильтр decorations_list=without возвращает 469 из 492 по Пресненскому —
+  // на вторичке «нет данных» = «без отделки», и метке верить нельзя
+  const resale = lot({ hasFurniture: null, decorFilter: 'without', saleType: 'free',
+    houseFinished: true, fromDeveloper: false, description: 'Мебель и техника остаются' });
+  assert.strictEqual(completeness(resale), 'под ключ');
+});
+
+test('на первичке метка отделки работает', () => {
+  const primary = lot({ hasFurniture: null, decorFilter: 'without', saleType: 'fz214', fromDeveloper: true });
+  assert.strictEqual(completeness(primary), 'оболочка');
+});
+
 test('мебель и техника в тексте — под ключ', () => {
   assert.strictEqual(completeness(lot({ hasFurniture: null,
     description: 'Остаётся вся мебель и техника' })), 'под ключ');
