@@ -4,7 +4,7 @@
    дробление запроса обязано сужать, а не расширять. */
 const assert = require('assert');
 const { groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive,
-        completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear } = require('./cian.js');
+        completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing } = require('./cian.js');
 
 let passed = 0;
 const test = (name, fn) => {
@@ -370,4 +370,36 @@ test('заполненный buildYear важнее срока сдачи', () =
 
 test('когда года нет нигде — null, а не ноль', () => {
   assert.strictEqual(buildingYear(lot({ buildYear: null, deadline: null })), null);
+});
+
+process.stdout.write('Садовое кольцо\n');
+
+/* Проверка на настоящих адресах: район для центра ничего не решает — все
+   четыре пары ниже лежат в одном округе, а по разные стороны кольца. */
+const at = (lat, lng) => insideGardenRing({ lat, lng });
+
+test('Софийская набережная — внутри', () => {
+  assert.strictEqual(at(55.74774, 37.61769), true);  // 326035617, ЖК Золотой
+});
+
+test('Ордынский тупик и Большой Толмачёвский — внутри', () => {
+  assert.strictEqual(at(55.7355, 37.6237), true);    // Ордынка
+  assert.strictEqual(at(55.7420, 37.6210), true);    // Лаврушинский
+});
+
+test('Хлебный переулок на Арбате — внутри', () => {
+  assert.strictEqual(at(55.7549, 37.5926), true);    // 267826294
+});
+
+test('Садовые кварталы на Усачёва — снаружи, хотя это Хамовники', () => {
+  assert.strictEqual(at(55.7270, 37.5680), false);   // 331956041, 322282922
+});
+
+test('Мантулинская и Шмитовский — снаружи, хотя это Пресненский', () => {
+  assert.strictEqual(at(55.7570, 37.5390), false);
+  assert.strictEqual(at(55.7580, 37.5230), false);
+});
+
+test('без координат — null, а не «снаружи»', () => {
+  assert.strictEqual(insideGardenRing({ lat: null, lng: null }), null);
 });

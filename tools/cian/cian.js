@@ -4,7 +4,7 @@
  *
  *   node tools/cian/cian.js find   Остров              — id ЖК, метро, района по названию
  *   node tools/cian/cian.js count  --query q.json
- *   node tools/cian/cian.js search --query q.json [--pages 3] [--all] [--out lots.json] [--no-apartments] [--min-year 2016]
+ *   node tools/cian/cian.js search --query q.json [--pages 3] [--all] [--out lots.json] [--no-apartments] [--min-year 2016] [--garden-ring]
  *   node tools/cian/cian.js url    --query q.json      — каноническая ссылка cat.php
  *   node tools/cian/cian.js probe  --query q.json --with '{"loggia":{"type":"term","value":true}}'
  *   node tools/cian/cian.js sweep  --query q.json [--limit 250] [--dedupe] [--resolve 0] — большой ЖК целиком
@@ -123,6 +123,11 @@ function normalize(o) {
     house: pick('house'),
     metro: und ? { name: und.name, minutes: und.time ?? null, byFoot: und.transportType === 'walk' } : null,
     complex: (o.newbuilding && o.newbuilding.name) || null,
+    /* Координаты приходят и в выдаче, и в карточке. Без них нельзя отсечь
+       выдачу по кольцу: район — слишком грубая единица, Хамовники и
+       Пресненский лежат по обе стороны Садового. */
+    lat: ((o.geo || {}).coordinates || {}).lat ?? null,
+    lng: ((o.geo || {}).coordinates || {}).lng ?? null,
     created,
     daysOnMarket: created ? Math.round((Date.now() - Date.parse(created)) / 86400000) : null,
     // added — дата последнего поднятия, creationDate её переживает
@@ -578,6 +583,47 @@ function finishEvidence(lot) {
   };
 }
 
+/* ---------- внутри Садового кольца ----------
+   Границы районов для центра бесполезны: Хамовники, Пресненский, Таганский и
+   Замоскворечье лежат по обе стороны кольца, и «ЦАО» смешивает Софийскую
+   набережную с Шмитовским проездом. Отсекать надо по географии.
+
+   Контур — по площадям, через которые проходит само кольцо, с запада по
+   часовой стрелке. Это приближение: реальная линия идёт по проездам, а не по
+   прямым между площадями, и лоты в 100–150 м от кольца могут попасть не на ту
+   сторону. Для отбора сопоставимых этой точности достаточно, для спора о
+   конкретном адресе — нет. */
+const GARDEN_RING = [
+  [55.7607, 37.5806], // Кудринская площадь
+  [55.7474, 37.5828], // Смоленская площадь
+  [55.7379, 37.5896], // Зубовская площадь
+  [55.7346, 37.5977], // Крымская площадь
+  [55.7286, 37.6112], // Калужская (Октябрьская) площадь
+  [55.7288, 37.6250], // Серпуховская площадь
+  [55.7300, 37.6377], // Павелецкая площадь
+  [55.7412, 37.6529], // Таганская площадь
+  [55.7583, 37.6602], // Земляной Вал, Курская
+  [55.7692, 37.6494], // Садовая-Черногрязская, Красные Ворота
+  [55.7730, 37.6320], // Сухаревская площадь
+  [55.7745, 37.6160], // Самотёчная площадь
+  [55.7702, 37.5960], // Триумфальная площадь
+];
+
+function pointInPolygon(lat, lng, poly) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [yi, xi] = poly[i], [yj, xj] = poly[j];
+    if ((yi > lat) !== (yj > lat) && lng < ((xj - xi) * (lat - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+/* null, а не false, когда координат нет: «неизвестно» и «снаружи» — разное. */
+function insideGardenRing(lot) {
+  if (lot.lat == null || lot.lng == null) return null;
+  return pointInPolygon(lot.lat, lot.lng, GARDEN_RING);
+}
+
 /* Год постройки. У новостроек buildYear пустой — год живёт в сроке сдачи
    корпуса. На запросе «дизайнерский ремонт, дом от 2017» по ЦАО поле было
    пустым у 63 лотов из 137, и отсев по нему выбрасывал их все, включая
@@ -857,6 +903,11 @@ if (require.main === module) (async () => {
         if (unknown) log(`год постройки неизвестен у ${unknown} лотов — оставлены, отсев по году их не касается`);
       }
       if (a['max-area']) lots = lots.filter((l) => l.totalArea && l.totalArea <= parseFloat(a['max-area']));
+      if (a['garden-ring']) {
+        const noCoords = lots.filter((l) => insideGardenRing(l) === null).length;
+        lots = lots.filter((l) => insideGardenRing(l) === true);
+        if (noCoords) log(`координат нет у ${noCoords} лотов — в отбор по кольцу не попали`);
+      }
       if (lots.length !== before) log(`после доотбора на своей стороне: ${lots.length} из ${before}`);
       lots = withMarket(lots);
       if (a.stats) {
@@ -1033,4 +1084,4 @@ if (require.main === module) (async () => {
 })();
 
 /* Чистые функции наружу — чтобы их можно было проверить без сети. */
-module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear };
+module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, pointInPolygon };
