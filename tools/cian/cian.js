@@ -8,7 +8,7 @@
  *   node tools/cian/cian.js url    --query q.json      — каноническая ссылка cat.php
  *   node tools/cian/cian.js probe  --query q.json --with '{"loggia":{"type":"term","value":true}}'
  *   node tools/cian/cian.js sweep  --query q.json [--limit 250] [--all] [--dedupe] [--resolve 0]
- *   node tools/cian/cian.js verify --ids 1,2 | --query q.json | --from lots.json [--photos 9] [--cols 4]
+ *   node tools/cian/cian.js verify --ids 1,2 [--photos 12] [--cols 4] [--frames 5,13]  — лист, затем кадры в оригинале
  *   node tools/cian/cian.js snapshot --query q.json | --queries watchlist.json | --from a.json,b.json
  *   node tools/cian/cian.js exposure --query q.json [--deep] — двойники и реальный срок
  *   node tools/cian/cian.js compare --lot 327985409 --cohort lots.json [--tier бизнес]
@@ -829,12 +829,18 @@ function finishEvidence(lot) {
    Шкала признаков — от богатого к бедному, `null` — «на кадрах не видно»
    (это не то же самое, что «нет»). */
 const MARKERS = {
-  stone: ['слэб', 'керамогранит', 'нет'],            // камень: цельная плита / имитация / отсутствует
-  joinery: ['на заказ', 'серийная', 'нет'],          // столярка и системы хранения
+  stone: ['слэб', 'керамогранит', 'нет'],            // цельная плита / плитка с повтором рисунка / нет
+  joinery: ['на заказ', 'серийная', 'нет'],          // в размер помещения / стандартные модули / нет
   kitchen: ['интегрированная', 'встроенная', 'эконом', 'нет'],
   light: ['сценарный', 'базовый', 'нет'],            // «нет» — голые крюки в потолке
   furniture: ['полный', 'частичный', 'нет'],
   bath: ['камень и бренд', 'плитка', 'не отделан'],
+  /* Добавлены после того, как на трёх десятках квартир стало ясно, чего не
+     хватает: пол разделяет B и C лучше всех прочих признаков, а двери
+     скрытого монтажа — самая дешёвая примета авторской работы.
+     Записи без них остаются в силе: буква считается по видимым. */
+  floor: ['массив ёлочкой', 'инженерная доска', 'ламинат', 'стяжка'],
+  doors: ['скрытые', 'в наличнике', 'нет'],
 };
 
 /* Веса подобраны так, чтобы буква совпала с тем, как эти же квартиры
@@ -848,6 +854,8 @@ const MARKER_POINTS = {
   light: { 'сценарный': 2, 'базовый': 1, 'нет': 0 },
   furniture: { 'полный': 2, 'частичный': 1, 'нет': 0 },
   bath: { 'камень и бренд': 2, 'плитка': 1, 'не отделан': 0 },
+  floor: { 'массив ёлочкой': 2, 'инженерная доска': 1.5, 'ламинат': 0.5, 'стяжка': 0 },
+  doors: { 'скрытые': 2, 'в наличнике': 1, 'нет': 0 },
 };
 
 function gradeLevel(m) {
@@ -893,6 +901,9 @@ function gradeRecord(lot, g) {
     throw new Error(`подтверждение: «${g.proof}» не из списка ${PROOFS.join(' / ')}`);
   }
   const level = g.level || gradeLevel(g.markers);
+  if (g.framesSeen != null && !Array.isArray(g.framesSeen)) {
+    throw new Error('framesSeen: список номеров кадров, а не число');
+  }
   const claimed = completeness(lot);
   const observed = observedState(g.markers);
   /* Ради этой строки всё и затевалось: продавец пишет «под ключ», на кадрах
@@ -920,6 +931,11 @@ function gradeRecord(lot, g) {
     proof: g.proof || null,
     markers: g.markers || {},
     photosSeen: g.photosSeen ?? null,
+    /* Какие кадры и в каком разрешении смотрели. Без этого оценку нельзя
+       перепроверить: «премиум» без указания, что именно показало камень,
+       остаётся впечатлением. */
+    framesSeen: g.framesSeen || null,
+    framesFull: g.framesFull || null,
     note: g.note || '',
     gradedAt: g.gradedAt,
   };
@@ -1551,7 +1567,24 @@ if (require.main === module) (async () => {
         const r = assessRepair(l);
         const nPhoto = parseInt(a.photos || '9', 10);
         let files = [], sheet = null;
-        if (a.photos !== '0') {
+        if (a.frames) {
+          /* Второй шаг проверки: выбранные кадры в исходном разрешении.
+             Контактный лист отвечает на вопрос «что в квартире есть», а
+             «настоящее ли это» решается только в оригинале — на мелком
+             кадре рендер один раз уже сошёл за съёмку. */
+          const want = String(a.frames).split(',').map((x) => parseInt(x, 10)).filter(Boolean);
+          fs.mkdirSync(`${dir}/${l.id}`, { recursive: true });
+          for (const n of want) {
+            const url = (l.photos || [])[n - 1];
+            if (!url) { log(`   кадра ${n} нет: всего ${(l.photos || []).length}`); continue; }
+            try {
+              const r = await ctx.request.get(url, { timeout: 30000 });
+              const f = `${dir}/${l.id}/кадр-${String(n).padStart(2, '0')}.jpg`;
+              fs.writeFileSync(f, await r.body());
+              files.push(f);
+            } catch (e) { log(`   кадр ${n} не скачался`); }
+          }
+        } else if (a.photos !== '0') {
           if (a.files) files = await fetchPhotos(ctx, l, `${dir}/${l.id}`, nPhoto);
           else sheet = await contactSheet(ctx, page, l, `${dir}/${l.id}.jpg`, nPhoto, parseInt(a.cols || '3', 10));
         }
@@ -1576,7 +1609,7 @@ if (require.main === module) (async () => {
         if (r.green.length) log(`   за: ${r.green.join('; ')}`);
         if (r.flags.length) log(`   поля: ${r.flags.join('; ')}`);
         if (sheet) log(`   контактный лист: ${sheet}`);
-        else if (files.length) log(`   фото: ${files.length} шт. в ${dir}/${l.id}/`);
+        else if (files.length) log(`   кадры в исходном разрешении: ${files.length} шт. в ${dir}/${l.id}/`);
       }
       if (a.out) fs.writeFileSync(a.out, JSON.stringify(report, null, 2) + '\n');
       log('\nТекст и поля — только предварительный отсев. Окончательный ответ дают фотографии.');
