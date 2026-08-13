@@ -813,6 +813,44 @@ function insideGardenRing(lot) {
   return pointInPolygon(lot.lat, lot.lng, GARDEN_RING);
 }
 
+/* Насколько близко к линии кольца, в метрах. Контур приблизительный, и
+   уточнить его нечем: во всей собранной выдаче нашлось два адреса на самом
+   кольце — на калибровку этого не хватает. Раз точности нет, пусть будет
+   хотя бы видно, где ответу верить нельзя.
+
+   Расстояние считается по плоской близости: на широте Москвы градус долготы
+   короче градуса широты примерно вдвое. Для сотен метров этого довольно. */
+const M_PER_DEG_LAT = 111320;
+const M_PER_DEG_LNG = 111320 * Math.cos(55.75 * Math.PI / 180);
+
+function ringMargin(lot) {
+  if (lot.lat == null || lot.lng == null) return null;
+  const px = lot.lng * M_PER_DEG_LNG, py = lot.lat * M_PER_DEG_LAT;
+  let best = Infinity;
+  for (let i = 0, j = GARDEN_RING.length - 1; i < GARDEN_RING.length; j = i++) {
+    const ax = GARDEN_RING[j][1] * M_PER_DEG_LNG, ay = GARDEN_RING[j][0] * M_PER_DEG_LAT;
+    const bx = GARDEN_RING[i][1] * M_PER_DEG_LNG, by = GARDEN_RING[i][0] * M_PER_DEG_LAT;
+    const dx = bx - ax, dy = by - ay;
+    const len2 = dx * dx + dy * dy;
+    const t = len2 ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / len2)) : 0;
+    const cx = ax + t * dx, cy = ay + t * dy;
+    best = Math.min(best, Math.hypot(px - cx, py - cy));
+  }
+  return Math.round(best);
+}
+
+/* Пограничная полоса, внутри которой машинному ответу верить нельзя. 300 м —
+   порядок ошибки самого контура: он идёт прямыми между площадями, а кольцо
+   изгибается по проездам. */
+const RING_DOUBT_M = 300;
+
+function ringVerdict(lot) {
+  const inside = insideGardenRing(lot);
+  if (inside === null) return { inside: null, margin: null, sure: false };
+  const margin = ringMargin(lot);
+  return { inside, margin, sure: margin > RING_DOUBT_M };
+}
+
 /* Год постройки. У новостроек buildYear пустой — год живёт в сроке сдачи
    корпуса. На запросе «дизайнерский ремонт, дом от 2017» по ЦАО поле было
    пустым у 63 лотов из 137, и отсев по нему выбрасывал их все, включая
@@ -1094,8 +1132,14 @@ if (require.main === module) (async () => {
       if (a['max-area']) lots = lots.filter((l) => l.totalArea && l.totalArea <= parseFloat(a['max-area']));
       if (a['garden-ring']) {
         const noCoords = lots.filter((l) => insideGardenRing(l) === null).length;
+        const doubt = lots.filter((l) => { const v = ringVerdict(l); return v.inside !== null && !v.sure; });
         lots = lots.filter((l) => insideGardenRing(l) === true);
         if (noCoords) log(`координат нет у ${noCoords} лотов — в отбор по кольцу не попали`);
+        if (doubt.length) {
+          log(`у самой линии кольца (±${RING_DOUBT_M} м), машинному ответу верить нельзя — ${doubt.length}:`);
+          doubt.forEach((l) => { const v = ringVerdict(l);
+            log(`  ${l.id}  ${v.inside ? 'внутри' : 'снаружи'} с запасом ${v.margin} м  ${l.street || ''} ${l.house || ''}`); });
+        }
       }
       if (lots.length !== before) log(`после доотбора на своей стороне: ${lots.length} из ${before}`);
       lots = withMarket(lots);
@@ -1470,5 +1514,5 @@ if (require.main === module) (async () => {
 })();
 
 /* Чистые функции наружу — чтобы их можно было проверить без сети. */
-module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, pointInPolygon,
+module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringMargin, ringVerdict, pointInPolygon,
   gradeLevel, gradeRecord, observedState, gradeFor, finishCost, loadedPricePerM2, fairShellPrice, MARKERS, PROOFS };

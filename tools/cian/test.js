@@ -4,7 +4,7 @@
    дробление запроса обязано сужать, а не расширять. */
 const assert = require('assert');
 const { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive,
-        completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing,
+        completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringVerdict,
         gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor } = require('./cian.js');
 
 let passed = 0;
@@ -617,4 +617,31 @@ test('на каждом срезе normalize отдаёт непустые об�
     assert.ok(n.floor != null, `${name}: нет этажа`);
     assert.ok(Array.isArray(n.photos), `${name}: photos не массив`);
   }
+});
+
+test('у самой линии кольца ответ помечается ненадёжным', () => {
+  // Малая Сухаревская — единственный найденный адрес на самом кольце
+  const v = ringVerdict({ lat: 55.77199, lng: 37.62906 });
+  assert.ok(v.margin < 300, `запас ${v.margin} м — должен быть в полосе сомнения`);
+  assert.strictEqual(v.sure, false);
+});
+
+test('глубоко внутри кольца ответ надёжен', () => {
+  // Софийская набережная, 18 — напротив Кремля
+  const v = ringVerdict({ lat: 55.74774, lng: 37.61769 });
+  assert.strictEqual(v.inside, true);
+  assert.ok(v.sure, `запас ${v.margin} м`);
+});
+
+test('далеко снаружи ответ тоже надёжен', () => {
+  // Шмитовский проезд
+  const v = ringVerdict({ lat: 55.7580, lng: 37.5230 });
+  assert.strictEqual(v.inside, false);
+  assert.ok(v.sure && v.margin > 1000, `запас ${v.margin} м`);
+});
+
+test('без координат — ни ответа, ни уверенности', () => {
+  const v = ringVerdict({ lat: null, lng: null });
+  assert.strictEqual(v.inside, null);
+  assert.strictEqual(v.sure, false);
 });
