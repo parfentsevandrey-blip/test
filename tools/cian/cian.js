@@ -4,7 +4,7 @@
  *
  *   node tools/cian/cian.js find   Остров              — id ЖК, метро, района по названию
  *   node tools/cian/cian.js count  --query q.json
- *   node tools/cian/cian.js search --query q.json [--pages 3] [--all] [--out lots.json] [--no-apartments] [--min-year 2016] [--garden-ring]
+ *   node tools/cian/cian.js search --query q.json [--pages 3] [--all] [--out lots.json] [--min-year 2016] [--garden-ring] [--strict нет]
  *   node tools/cian/cian.js url    --query q.json      — каноническая ссылка cat.php
  *   node tools/cian/cian.js probe  --query q.json --with '{"loggia":{"type":"term","value":true}}'
  *   node tools/cian/cian.js sweep  --query q.json [--limit 250] [--all] [--dedupe] [--resolve 0]
@@ -1505,6 +1505,25 @@ if (require.main === module) (async () => {
           log(`раскрыл схлопнутые группы: лидеров ${leaders}, добавилось ${added.length}` +
               (dropped ? `, отброшено не подходящих под запрос ${dropped}` : ''));
           lots = lots.concat(added);
+        }
+      }
+      /* Фильтры Циан текут: `apartment=0` пропускает апартаменты, и чем
+         глубже пагинация, тем больше — на районном запросе 52 из 274.
+         Флаги --no-apartments и --min-year были частным случаем этого;
+         теперь весь запрос сверяется со своей же выдачей. */
+      if (a.strict !== 'нет') {
+        const before = lots.length;
+        const bad = lots.filter((l) => !matchesQuery(l, q));
+        if (bad.length) {
+          lots = lots.filter((l) => matchesQuery(l, q));
+          const why = {};
+          bad.forEach((l) => {
+            if (q.apartment && q.apartment.value === false && l.isApartments) why['апартаменты'] = (why['апартаменты'] || 0) + 1;
+            else if (q.room && l.rooms != null && !q.room.value.includes(l.rooms)) why['другая комнатность'] = (why['другая комнатность'] || 0) + 1;
+            else why['вне заданных границ'] = (why['вне заданных границ'] || 0) + 1;
+          });
+          log(`фильтры Циан протекли: ${before - lots.length} лотов не подходят под собственный запрос ` +
+              `(${Object.entries(why).map(([k, v]) => `${k} ${v}`).join(', ')})`);
         }
       }
       const enumerated = lots.length;
