@@ -1,0 +1,14 @@
+{
+  "_type": "flatsale",
+  "engine_version": { "type": "term", "value": 2 },
+  "region": { "type": "terms", "value": [1] },
+  "geo": { "type": "geo", "value": [
+    { "type": "district", "id": 22 }, { "type": "district", "id": 21 },
+    { "type": "district", "id": 15 }, { "type": "district", "id": 13 },
+    { "type": "district", "id": 20 }, { "type": "district", "id": 18 }
+  ] },
+  "room": { "type": "terms", "value": [2, 3] },
+  "total_area": { "type": "range", "value": { "gte": 70, "lte": 115 } },
+  "price": { "type": "range", "value": { "gte": 180000000 } },
+  "apartment": { "type": "term", "value": false }
+}

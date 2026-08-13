@@ -129,6 +129,13 @@ test('на первичке метка отделки работает', () => {
   assert.strictEqual(completeness(primary), 'оболочка');
 });
 
+test('decoration=turnkey из карточки — под ключ на первичке', () => {
+  // 326035617, ЖК Золотой: продажа от застройщика, в выдаче поиска поле пустое,
+  // значение turnkey отдаёт только карточка объявления
+  assert.strictEqual(completeness(lot({ hasFurniture: null, decoration: 'turnkey',
+    fromDeveloper: true, description: 'Квартира предлагается к продаже с дизайнерским ремонтом' })), 'под ключ');
+});
+
 test('мебель и техника в тексте — под ключ', () => {
   assert.strictEqual(completeness(lot({ hasFurniture: null,
     description: 'Остаётся вся мебель и техника' })), 'под ключ');

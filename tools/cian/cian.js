@@ -512,7 +512,10 @@ function completeness(lot) {
   const isPrimary = lot.fromDeveloper === true || lot.saleType === 'fz214'
     || lot.saleType === 'dupt' || lot.houseFinished === false;
   if (isPrimary) {
-    if (lot.decorFilter === 'fineWithFurniture' || lot.decoration === 'fineWithFurniture') return 'под ключ';
+    /* turnkey приходит только из карточки: в выдаче поиска decoration
+       принимает without/fine/rough/null и ничего больше. */
+    if (lot.decoration === 'turnkey' || lot.decorFilter === 'fineWithFurniture'
+      || lot.decoration === 'fineWithFurniture') return 'под ключ';
     if (['without', 'rough', 'fine', 'preFine'].includes(lot.decorFilter)) return 'оболочка';
   }
   if (lot.hasFurniture === false) return 'оболочка';
