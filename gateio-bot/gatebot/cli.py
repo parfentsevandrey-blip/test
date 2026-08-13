@@ -16,6 +16,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Optional, Sequence
 
+from .arbitrage import ArbitrageRunner, TriangleExecutor, TriangleScanner
 from .backtest import BacktestResult, run_backtest
 from .config import Config, load_config, load_env
 from .engine import TradingEngine
@@ -65,6 +66,19 @@ def build_parser() -> argparse.ArgumentParser:
     bt.add_argument("--csv", help="взять свечи из CSV вместо биржи")
     bt.add_argument("--save-csv", help="сохранить кривую капитала в CSV")
 
+    arb = add("arb", "треугольный арбитраж: сканировать и (опционально) торговать")
+    arb.add_argument("--once", action="store_true", help="один скан и выход")
+    arb.add_argument("--duration", type=float, help="сколько секунд наблюдать")
+    arb.add_argument("--amount", type=Decimal, help="размер цикла в базовой валюте")
+    arb.add_argument("--min-profit", type=Decimal, help="порог прибыли, например 0.002 = 0.2%%")
+    arb.add_argument("--triangles", action="store_true", help="показать найденные циклы и выйти")
+    arb.add_argument(
+        "--execute",
+        action="store_true",
+        help="реально отправлять ордера; требует ключей и подтверждения",
+    )
+    arb.add_argument("--yes", action="store_true", help="не спрашивать подтверждение для --execute")
+
     add("balance", "показать балансы спот-аккаунта")
     add("strategies", "список стратегий")
     add("reset", "снять аварийную остановку и очистить состояние")
@@ -90,6 +104,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     handlers = {
         "run": cmd_run,
         "backtest": cmd_backtest,
+        "arb": cmd_arb,
         "balance": cmd_balance,
         "strategies": cmd_strategies,
         "reset": cmd_reset,
@@ -201,6 +216,96 @@ def cmd_backtest(args: argparse.Namespace, config: Config) -> int:
         _write_curve(args.save_csv, result)
         print(f"Кривая капитала сохранена: {args.save_csv}")
     return 0
+
+
+def cmd_arb(args: argparse.Namespace, config: Config) -> int:
+    arb = config.arbitrage
+    amount = args.amount or arb.trade_quote
+    threshold = args.min_profit if args.min_profit is not None else arb.min_profit_pct
+
+    client = _client(config)
+    scanner = TriangleScanner(
+        client,
+        base=arb.base,
+        fee=config.exchange.taker_fee,
+        min_quote_volume=arb.min_quote_volume,
+        allowed_middle=arb.middle,
+        max_verify=arb.max_verify,
+        book_depth=arb.book_depth,
+    )
+
+    if args.triangles:
+        count = scanner.load_universe()
+        for triangle in scanner.triangles:
+            print(f"  {triangle.path:<34}{' | '.join(str(leg) for leg in triangle.legs)}")
+        print(f"\nВсего циклов: {count}")
+        return 0
+
+    if args.execute:
+        if not all(config.credentials()):
+            print("Для --execute нужны GATEIO_API_KEY и GATEIO_API_SECRET.", file=sys.stderr)
+            return 2
+        if not args.yes and not _confirm_arb(arb, amount, threshold):
+            print("Отменено.")
+            return 1
+
+    executor = TriangleExecutor(
+        client,
+        specs={},
+        base=arb.base,
+        min_profit_pct=threshold,
+        max_failures=arb.max_failures,
+        dry_run=not args.execute,
+    )
+    runner = ArbitrageRunner(
+        client,
+        scanner,
+        executor,
+        trade_quote=amount,
+        poll_seconds=arb.poll_seconds,
+    )
+
+    if args.once:
+        result = runner.once()
+        _print_scan(result, threshold)
+        return 0
+
+    runner.run(duration=args.duration)
+    return 0
+
+
+def _print_scan(result, threshold: Decimal) -> None:
+    print(f"\nЦиклов в обороте: {result.triangles}")
+    print(f"Прошли отбор по тикерам: {result.verified}")
+    if result.best_screen_pct is not None:
+        print(f"Лучшая грубая оценка:    {result.best_screen_pct:+.4%}")
+    print(f"Время скана:             {result.elapsed:.2f} с\n")
+
+    if result.opportunities:
+        print("Возможности по живому стакану:")
+        for opportunity in result.opportunities:
+            mark = "✓" if opportunity.profit_pct >= threshold else " "
+            print(f"  {mark} {opportunity}")
+    else:
+        print("Прибыльных циклов по живому стакану нет.")
+
+    if result.rejected:
+        print("\nОтклонено при проверке:")
+        for path, reason in list(result.rejected.items())[:10]:
+            print(f"  {path:<34}{reason}")
+
+
+def _confirm_arb(arb, amount: Decimal, threshold: Decimal) -> bool:
+    print()
+    print("=" * 62)
+    print("  ВНИМАНИЕ: арбитраж будет торговать реальными деньгами")
+    print(f"  Базовая валюта:  {arb.base}")
+    print(f"  Размер цикла:    {amount} {arb.base}")
+    print(f"  Порог прибыли:   {threshold:+.3%}")
+    print("  Каждый цикл — 3 рыночные сделки подряд. При обрыве в середине")
+    print("  бот попытается откатиться, но убыток на откате возможен.")
+    print("=" * 62)
+    return input("Введите 'РИСКУЮ' для запуска: ").strip().upper() == "РИСКУЮ"
 
 
 def cmd_balance(args: argparse.Namespace, config: Config) -> int:

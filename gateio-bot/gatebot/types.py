@@ -177,6 +177,78 @@ class Position:
         self.realized_pnl -= fill.fee
 
 
+@dataclass(frozen=True)
+class BookLevel:
+    price: Decimal
+    amount: Decimal
+
+
+@dataclass
+class OrderBook:
+    """Стакан. `asks` по возрастанию цены, `bids` по убыванию.
+
+    Методы «прохода» считают реальную среднюю цену исполнения по объёму: при
+    расчёте арбитража нельзя брать лучшую цену как данность — на ней стоит
+    ограниченный объём, и заявка крупнее съедает стакан вглубь.
+    """
+
+    symbol: str
+    asks: list[BookLevel] = field(default_factory=list)
+    bids: list[BookLevel] = field(default_factory=list)
+    ts: int = 0
+
+    @property
+    def best_ask(self) -> Optional[Decimal]:
+        return self.asks[0].price if self.asks else None
+
+    @property
+    def best_bid(self) -> Optional[Decimal]:
+        return self.bids[0].price if self.bids else None
+
+    def buy_with(self, quote_amount: Decimal) -> tuple[Decimal, Decimal]:
+        """Потратить `quote_amount` котировочной валюты, покупая по asks.
+
+        Возвращает (сколько базовой купили, сколько котировочной реально ушло).
+        Если стакана не хватило, второе число меньше запрошенного.
+        """
+        left = quote_amount
+        got = Decimal(0)
+        for level in self.asks:
+            cost = level.price * level.amount
+            if cost >= left:
+                got += left / level.price
+                return got, quote_amount
+            got += level.amount
+            left -= cost
+        return got, quote_amount - left
+
+    def sell_amount(self, base_amount: Decimal) -> tuple[Decimal, Decimal]:
+        """Продать `base_amount` базовой валюты по bids.
+
+        Возвращает (сколько котировочной получили, сколько базовой реально ушло).
+        """
+        left = base_amount
+        got = Decimal(0)
+        for level in self.bids:
+            take = level.amount if level.amount < left else left
+            got += take * level.price
+            left -= take
+            if left <= 0:
+                return got, base_amount
+        return got, base_amount - left
+
+
+@dataclass(frozen=True)
+class Ticker:
+    """Снимок верха стакана из /spot/tickers — кешированный, для отбора кандидатов."""
+
+    symbol: str
+    last: Decimal
+    bid: Decimal
+    ask: Decimal
+    quote_volume: Decimal = Decimal(0)
+
+
 @dataclass
 class Balance:
     currency: str

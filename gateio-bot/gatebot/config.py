@@ -46,6 +46,21 @@ class StrategyConfig:
 
 
 @dataclass
+class ArbitrageConfig:
+    """Настройки треугольного арбитража (команда `arb`)."""
+
+    base: str = "USDT"
+    middle: list[str] = field(default_factory=lambda: ["BTC", "ETH", "USDC"])
+    trade_quote: Decimal = Decimal(100)
+    min_profit_pct: Decimal = Decimal("0.002")
+    min_quote_volume: Decimal = Decimal(100_000)
+    max_verify: int = 8
+    book_depth: int = 20
+    poll_seconds: float = 2.0
+    max_failures: int = 3
+
+
+@dataclass
 class Config:
     symbol: str = "BTC_USDT"
     interval: str = "1h"
@@ -56,6 +71,7 @@ class Config:
     strategy: StrategyConfig = field(default_factory=StrategyConfig)
     risk: RiskLimits = field(default_factory=RiskLimits)
     exchange: ExchangeConfig = field(default_factory=ExchangeConfig)
+    arbitrage: ArbitrageConfig = field(default_factory=ArbitrageConfig)
     log_level: str = "INFO"
     log_file: str = "logs/bot.log"
     state_file: str = "state/bot-state.json"
@@ -82,6 +98,12 @@ class Config:
             errors.append("poll_seconds должен быть >= 1")
         if self.candles < 10:
             errors.append("candles должен быть >= 10")
+        if self.arbitrage.trade_quote <= 0:
+            errors.append("arbitrage.trade_quote должен быть > 0")
+        if not self.arbitrage.middle:
+            errors.append("arbitrage.middle не может быть пустым списком")
+        if self.arbitrage.poll_seconds < 0.2:
+            errors.append("arbitrage.poll_seconds должен быть >= 0.2 (лимиты частоты Gate.io)")
         if self.is_live and not all(self.credentials()):
             errors.append(
                 "для mode: live нужны переменные окружения GATEIO_API_KEY и GATEIO_API_SECRET"
@@ -122,6 +144,7 @@ def from_dict(raw: dict[str, Any]) -> Config:
     exchange_raw = raw.get("exchange") or {}
     logging_raw = raw.get("logging") or {}
     paper_raw = raw.get("paper") or {}
+    arb_raw = raw.get("arbitrage") or {}
 
     cfg = Config(
         symbol=str(raw.get("symbol", "BTC_USDT")).upper(),
@@ -135,6 +158,17 @@ def from_dict(raw: dict[str, Any]) -> Config:
             params=dict(strategy_raw.get("params") or {}),
         ),
         risk=RiskLimits.from_dict(raw.get("risk") or {}),
+        arbitrage=ArbitrageConfig(
+            base=str(arb_raw.get("base", "USDT")).upper(),
+            middle=[str(c).upper() for c in (arb_raw.get("middle") or ["BTC", "ETH", "USDC"])],
+            trade_quote=Decimal(str(arb_raw.get("trade_quote", 100))),
+            min_profit_pct=Decimal(str(arb_raw.get("min_profit_pct", "0.002"))),
+            min_quote_volume=Decimal(str(arb_raw.get("min_quote_volume", 100_000))),
+            max_verify=int(arb_raw.get("max_verify", 8)),
+            book_depth=int(arb_raw.get("book_depth", 20)),
+            poll_seconds=float(arb_raw.get("poll_seconds", 2.0)),
+            max_failures=int(arb_raw.get("max_failures", 3)),
+        ),
         exchange=ExchangeConfig(
             maker_fee=Decimal(str(exchange_raw.get("maker_fee", "0.002"))),
             taker_fee=Decimal(str(exchange_raw.get("taker_fee", "0.002"))),

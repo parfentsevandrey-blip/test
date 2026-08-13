@@ -19,7 +19,18 @@ from typing import Any, Optional
 
 import requests
 
-from ..types import Balance, Candle, Order, OrderStatus, OrderType, PairSpec, Side
+from ..types import (
+    Balance,
+    BookLevel,
+    Candle,
+    Order,
+    OrderBook,
+    OrderStatus,
+    OrderType,
+    PairSpec,
+    Side,
+    Ticker,
+)
 from .base import Exchange, ExchangeError, InsufficientBalance
 
 log = logging.getLogger(__name__)
@@ -255,6 +266,57 @@ class GateIOClient(Exchange):
             raise ExchangeError(f"Нет тикера для {symbol}", label="NO_TICKER")
         return Decimal(data[0]["last"])
 
+    def get_order_book(self, symbol: str, limit: int = 20) -> OrderBook:
+        data = self._request(
+            "GET", "/spot/order_book", params={"currency_pair": symbol, "limit": limit}
+        )
+        return OrderBook(
+            symbol=symbol,
+            asks=[BookLevel(Decimal(p), Decimal(a)) for p, a in data.get("asks", [])],
+            bids=[BookLevel(Decimal(p), Decimal(a)) for p, a in data.get("bids", [])],
+            ts=int(data.get("current") or 0),
+        )
+
+    def get_all_tickers(self) -> dict[str, Ticker]:
+        """Верх стакана по всем ~2200 парам одним запросом.
+
+        Данные кешированные и отстают от живого стакана, поэтому годятся только
+        для отбора кандидатов, но не для расчёта сделки.
+        """
+        rows = self._request("GET", "/spot/tickers")
+        out: dict[str, Ticker] = {}
+        for r in rows:
+            bid, ask = r.get("highest_bid"), r.get("lowest_ask")
+            if not bid or not ask:
+                continue  # пара без встречных заявок — торговать нечем
+            out[r["currency_pair"]] = Ticker(
+                symbol=r["currency_pair"],
+                last=Decimal(r.get("last") or 0),
+                bid=Decimal(bid),
+                ask=Decimal(ask),
+                quote_volume=Decimal(r.get("quote_volume") or 0),
+            )
+        return out
+
+    def get_all_pairs(self) -> list[PairSpec]:
+        rows = self._request("GET", "/spot/currency_pairs")
+        out: list[PairSpec] = []
+        for r in rows:
+            if r.get("trade_status") != "tradable":
+                continue
+            spec = PairSpec(
+                symbol=r["id"],
+                base=r["base"],
+                quote=r["quote"],
+                amount_precision=int(r["amount_precision"]),
+                price_precision=int(r["precision"]),
+                min_base_amount=Decimal(str(r.get("min_base_amount") or 0)),
+                min_quote_amount=Decimal(str(r.get("min_quote_amount") or 0)),
+            )
+            self._pair_cache[spec.symbol] = spec
+            out.append(spec)
+        return out
+
     # -------------------------------------------------------------- Приватное
 
     def get_balances(self) -> dict[str, Balance]:
@@ -343,9 +405,26 @@ class GateIOClient(Exchange):
     def _to_order(row: dict[str, Any]) -> Order:
         amount = Decimal(row.get("amount") or 0)
         left = Decimal(row.get("left") or 0)
-        filled = amount - left
         filled_quote = Decimal(row.get("filled_total") or 0)
-        avg = filled_quote / filled if filled > 0 else Decimal(0)
+        order_type = OrderType(row.get("type", "limit"))
+        side = Side(row.get("side", "buy"))
+        avg_deal = Decimal(row["avg_deal_price"]) if row.get("avg_deal_price") else None
+
+        # У рыночной ПОКУПКИ поля amount/left выражены в валюте котировки, а не
+        # в базовой: на Gate.io такая заявка задаётся суммой к трате. Считать
+        # `amount - left` объёмом купленного здесь нельзя — получится сумма
+        # в USDT вместо количества монет.
+        if row.get("filled_amount") is not None:
+            filled = Decimal(row["filled_amount"])
+        elif order_type is OrderType.MARKET and side is Side.BUY:
+            filled = filled_quote / avg_deal if avg_deal else Decimal(0)
+        else:
+            filled = amount - left
+
+        if avg_deal:
+            avg = avg_deal
+        else:
+            avg = filled_quote / filled if filled > 0 else Decimal(0)
 
         status_map = {
             "open": OrderStatus.OPEN,
@@ -364,8 +443,8 @@ class GateIOClient(Exchange):
         return Order(
             client_id=text[2:] if text.startswith("t-") else text,
             symbol=str(row.get("currency_pair") or ""),
-            side=Side(row.get("side", "buy")),
-            type=OrderType(row.get("type", "limit")),
+            side=side,
+            type=order_type,
             amount=amount,
             price=Decimal(row["price"]) if row.get("price") else None,
             order_id=str(row.get("id") or ""),

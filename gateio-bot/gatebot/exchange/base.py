@@ -6,7 +6,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from decimal import Decimal
 
-from ..types import Balance, Candle, Order, PairSpec
+from ..types import Balance, Candle, Order, OrderBook, PairSpec, Ticker
 
 
 class ExchangeError(RuntimeError):
@@ -62,3 +62,15 @@ class Exchange(ABC):
     def cancel_all(self, symbol: str) -> None:
         for order in self.get_open_orders(symbol):
             self.cancel_order(symbol, order.order_id)
+
+    # Нужно только арбитражу; обычной стратегии хватает свечей, поэтому методы
+    # не абстрактные — реализации без поддержки стакана остаются валидными.
+
+    def get_order_book(self, symbol: str, limit: int = 20) -> OrderBook:
+        raise NotImplementedError(f"{self.name}: стакан не поддерживается")
+
+    def get_all_tickers(self) -> dict[str, Ticker]:
+        raise NotImplementedError(f"{self.name}: тикеры не поддерживаются")
+
+    def get_all_pairs(self) -> list[PairSpec]:
+        raise NotImplementedError(f"{self.name}: список пар не поддерживается")

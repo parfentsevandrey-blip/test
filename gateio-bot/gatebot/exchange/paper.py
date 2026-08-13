@@ -17,7 +17,18 @@ import logging
 from decimal import Decimal
 from typing import Optional
 
-from ..types import Balance, Candle, Fill, Order, OrderStatus, OrderType, PairSpec, Side
+from ..types import (
+    Balance,
+    Candle,
+    Fill,
+    Order,
+    OrderBook,
+    OrderStatus,
+    OrderType,
+    PairSpec,
+    Side,
+    Ticker,
+)
 from .base import Exchange, InsufficientBalance
 
 log = logging.getLogger(__name__)
@@ -66,6 +77,15 @@ class PaperExchange(Exchange):
         price = self.market.get_price(symbol)
         self._last_price[symbol] = price
         return price
+
+    def get_order_book(self, symbol: str, limit: int = 20) -> OrderBook:
+        return self.market.get_order_book(symbol, limit)
+
+    def get_all_tickers(self) -> dict[str, Ticker]:
+        return self.market.get_all_tickers()
+
+    def get_all_pairs(self) -> list[PairSpec]:
+        return self.market.get_all_pairs()
 
     # -------------------------------------------------------------- Аккаунт
 
