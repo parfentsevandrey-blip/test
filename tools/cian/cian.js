@@ -135,6 +135,20 @@ function normalize(o) {
        субагент накидывает поверх цены застройщика; студия — не «0 комнат». */
     flatType: o.flatType || null,                                   // rooms / studio / openPlan
     saleType: (o.bargainTerms && o.bargainTerms.saleType) || null,  // free / fz214 / dupt
+    /* По ДДУ покупается не квартира, а обязательство её построить. Срок сдачи
+       и признак готовности корпуса решают не меньше, чем площадь и цена. */
+    deadline: (() => {
+      const d = b.deadline, h = ((o.newbuilding || {}).house || {});
+      const y = (d && d.year) || (h.finishDate && h.finishDate.year) || null;
+      if (!y) return null;
+      return { year: y, quarter: (d && d.quarter) || (h.finishDate && h.finishDate.quarter) || null };
+    })(),
+    houseFinished: (() => {
+      const h = ((o.newbuilding || {}).house || {});
+      if (typeof h.isFinished === 'boolean') return h.isFinished;
+      if (b.deadline && typeof b.deadline.isComplete === 'boolean') return b.deadline.isComplete;
+      return null;
+    })(),
     mortgageAllowed: (o.bargainTerms && o.bargainTerms.mortgageAllowed) ?? null,
     sellerType: (o.user && o.user.userType) || null,
     isSubAgent: (o.user && o.user.isSubAgent) ?? null,
@@ -491,15 +505,36 @@ function completeness(lot) {
   return 'неизвестно';
 }
 
+/* Готовность: ключи на руках или обязательство построить к сроку.
+   Квартира со сдачей в 2030 и квартира, куда можно въехать сегодня, — разные
+   товары: деньги на эскроу заморожены на годы, а сроки сдвигаются. */
+function readiness(lot) {
+  if (lot.houseFinished === true) return 'сдан';
+  if (lot.houseFinished === false || (lot.deadline && lot.deadline.year)) {
+    return lot.deadline && lot.deadline.year ? `строится до ${lot.deadline.year}` : 'строится';
+  }
+  if (lot.saleType === 'free' && lot.buildYear) return 'сдан';
+  return 'неизвестно';
+}
+
+const SALE_RU = { free: 'свободная продажа', fz214: 'ДДУ', dupt: 'переуступка' };
+
 /* Что мешает сравнивать два лота напрямую. Пустой список — сравнение честное. */
 function comparabilityGaps(a, b) {
   const g = [];
   const ca = completeness(a), cb = completeness(b);
-  if (ca !== cb) g.push(`комплектность: ${ca} против ${cb}`);
-  if (a.saleType && b.saleType && a.saleType !== b.saleType) g.push(`условия сделки: ${a.saleType} против ${b.saleType}`);
-  if (a.isApartments !== b.isApartments) g.push('апартаменты против квартиры');
+  if (ca !== cb) g.push(`комплектность: ${ca} / ${cb}`);
+  const ra = readiness(a), rb = readiness(b);
+  if (ra !== rb && ra !== 'неизвестно' && rb !== 'неизвестно') g.push(`готовность: ${ra} / ${rb}`);
+  else if (a.deadline && b.deadline && Math.abs(a.deadline.year - b.deadline.year) >= 1) {
+    g.push(`срок сдачи: ${a.deadline.year} / ${b.deadline.year}`);
+  }
+  if (a.saleType && b.saleType && a.saleType !== b.saleType) {
+    g.push(`условия сделки: ${SALE_RU[a.saleType] || a.saleType} / ${SALE_RU[b.saleType] || b.saleType}`);
+  }
+  if (a.isApartments !== b.isApartments) g.push('апартаменты / квартира');
   const f = (x) => x.features || {};
-  if (f(a).euroLayout !== f(b).euroLayout) g.push('евро-планировка против классической');
+  if (f(a).euroLayout !== f(b).euroLayout) g.push('планировка: евро / классическая');
   if (a.floors && b.floors && a.floor != null && b.floor != null) {
     const rel = (x) => x.floor / x.floors;
     if (Math.abs(rel(a) - rel(b)) > 0.4) g.push('сильно разная высота этажа в доме');
@@ -531,23 +566,24 @@ const median = (xs) => {
 
 function withMarket(lots, minCohort = 4) {
   const ppm = (l) => (l.priceRub && l.totalArea ? l.priceRub / l.totalArea : null);
-  const enriched = lots.map((l) => ({ ...l, completeness: completeness(l), features: features(l) }));
+  const enriched = lots.map((l) => ({ ...l, completeness: completeness(l), readiness: readiness(l), features: features(l) }));
   /* Медиана считается внутри своей комплектности: иначе оболочки утягивают
      планку вниз и квартира под ключ выглядит переоценённой (или наоборот). */
   const groups = { house: new Map(), cohort: new Map() };
   for (const l of enriched) {
     const v = ppm(l); if (!v) continue;
     if (l.houseId) {
-      const hk = `${l.houseId}|${l.completeness}`;
+      // готовность и в ключе корпуса: в одном доме корпуса сдают разными годами
+      const hk = `${l.houseId}|${l.completeness}|${l.readiness}`;
       (groups.house.get(hk) || groups.house.set(hk, []).get(hk)).push(v);
     }
-    const ck = `${l.district}|${l.rooms}|${l.completeness}`;
+    const ck = `${l.district}|${l.rooms}|${l.completeness}|${l.readiness}`;
     (groups.cohort.get(ck) || groups.cohort.set(ck, []).get(ck)).push(v);
   }
   const med = (m, k, n) => { const xs = m.get(k); return xs && xs.length >= n ? median(xs) : null; };
   return enriched.map((l) => {
     const v = ppm(l);
-    const hk = `${l.houseId}|${l.completeness}`, ck = `${l.district}|${l.rooms}|${l.completeness}`;
+    const hk = `${l.houseId}|${l.completeness}|${l.readiness}`, ck = `${l.district}|${l.rooms}|${l.completeness}|${l.readiness}`;
     const mh = l.houseId ? med(groups.house, hk, minCohort) : null;
     const mc = med(groups.cohort, ck, minCohort);
     const rel = (m) => (v && m ? +((v - m) / m * 100).toFixed(1) : null);
@@ -556,7 +592,8 @@ function withMarket(lots, minCohort = 4) {
       pricePerM2: v ? Math.round(v) : null,
       vsBuildingPct: rel(mh), vsCohortPct: rel(mc),
       // с чем именно сравнивали — чтобы процент нельзя было прочитать вслепую
-      comparedWith: { completeness: l.completeness, inBuilding: (groups.house.get(hk) || []).length, inCohort: (groups.cohort.get(ck) || []).length },
+      comparedWith: { completeness: l.completeness, readiness: l.readiness,
+        inBuilding: (groups.house.get(hk) || []).length, inCohort: (groups.cohort.get(ck) || []).length },
     };
   });
 }
@@ -764,6 +801,11 @@ if (require.main === module) (async () => {
       const byComp = {};
       flats.forEach((f) => { byComp[f.completeness] = (byComp[f.completeness] || 0) + 1; });
       log(`комплектность: ${Object.entries(byComp).map(([k, v]) => `${k} ${v}`).join(', ')}`);
+      const tally = (fn) => { const m = {}; flats.forEach((f) => { const k = fn(f); if (k) m[k] = (m[k] || 0) + 1; }); return m; };
+      const sales = tally((f) => SALE_RU[f.saleType] || f.saleType);
+      if (Object.keys(sales).length) log(`договор: ${Object.entries(sales).map(([k, v]) => `${k} ${v}`).join(', ')}`);
+      const ready = tally((f) => f.readiness);
+      log(`готовность: ${Object.entries(ready).map(([k, v]) => `${k} ${v}`).join(', ')}`);
       const feat = (k) => flats.filter((f) => f.features && f.features[k]).length;
       log(`из описаний: паркинг ${feat('parkingMentioned')}, евро-планировка ${feat('euroLayout')}, заявлен вид ${feat('viewClaimed')}`);
       const promoted = flats.filter((f) => f.promoted).length;
@@ -772,7 +814,7 @@ if (require.main === module) (async () => {
       if (rated.length) {
         log('\nцена относительно медианы своего корпуса:');
         const line = (f, tag) => log(`  ${tag} ${String(f.vsBuildingPct > 0 ? '+' + f.vsBuildingPct : f.vsBuildingPct).padStart(6)}%  ${f.id}  ` +
-          `${f.totalArea} м², ${(f.priceRub || 0).toLocaleString('ru-RU')} ₽  [${f.completeness}, сравнение с ${f.comparedWith.inBuilding} такими же]  ${f.street}, ${f.house}`);
+          `${f.totalArea} м², ${(f.priceRub || 0).toLocaleString('ru-RU')} ₽  [${f.completeness}, ${f.readiness}, сравнение с ${f.comparedWith.inBuilding}]  ${f.street}, ${f.house}`);
         rated.slice(0, 3).forEach((f) => line(f, 'дешевле'));
         rated.slice(-2).forEach((f) => line(f, 'дороже '));
       }
@@ -897,4 +939,4 @@ if (require.main === module) (async () => {
 })();
 
 /* Чистые функции наружу — чтобы их можно было проверить без сети. */
-module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, completeness, comparabilityGaps, features };
+module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, completeness, comparabilityGaps, features, readiness };

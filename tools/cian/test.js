@@ -4,7 +4,7 @@
    дробление запроса обязано сужать, а не расширять. */
 const assert = require('assert');
 const { groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive,
-        completeness, comparabilityGaps, features } = require('./cian.js');
+        completeness, comparabilityGaps, features, readiness } = require('./cian.js');
 
 let passed = 0;
 const test = (name, fn) => {
@@ -160,6 +160,53 @@ test('студия и квартира с комнатами не склеива
   const { groups } = groupSameFlat([lot({ id: 1, flatType: 'studio', rooms: null, totalArea: 40, floor: 3 }),
                                     lot({ id: 2, flatType: 'rooms', rooms: 1, totalArea: 40, floor: 3 })]);
   assert.strictEqual(groups.length, 2);
+});
+
+process.stdout.write('ДДУ и готовность\n');
+
+test('сданный корпус — «сдан»', () => {
+  assert.strictEqual(readiness(lot({ houseFinished: true })), 'сдан');
+});
+
+test('строящийся корпус несёт год сдачи', () => {
+  // Веспер Кутузовский: ДДУ, сдача 2030
+  assert.strictEqual(readiness(lot({ houseFinished: false, deadline: { year: 2030, quarter: null } })),
+    'строится до 2030');
+});
+
+test('свободная продажа в готовом доме — «сдан»', () => {
+  assert.strictEqual(readiness(lot({ houseFinished: null, saleType: 'free', buildYear: 2020 })), 'сдан');
+});
+
+test('готовую квартиру не сравнить со стройкой', () => {
+  const ready = lot({ houseFinished: true, saleType: 'free' });
+  const ddu = lot({ houseFinished: false, deadline: { year: 2030 }, saleType: 'fz214' });
+  const g = comparabilityGaps(ready, ddu);
+  assert.ok(g.some((x) => /готовность/.test(x)), g.join('; '));
+  assert.ok(g.some((x) => /ДДУ/.test(x)), g.join('; '));
+});
+
+test('разные годы сдачи внутри стройки — тоже разрыв', () => {
+  // Бадаевский сдаёт 2026 и 2027 разными корпусами
+  const g = comparabilityGaps(lot({ houseFinished: false, deadline: { year: 2026 } }),
+                              lot({ houseFinished: false, deadline: { year: 2027 } }));
+  assert.ok(g.some((x) => /2026/.test(x) && /2027/.test(x)), g.join('; '));
+});
+
+test('переуступка и ДДУ названы по-русски в разрыве', () => {
+  const g = comparabilityGaps(lot({ saleType: 'fz214' }), lot({ saleType: 'dupt' }));
+  assert.ok(g.some((x) => /ДДУ \/ переуступка/.test(x)), g.join('; '));
+});
+
+test('когорта разделяет готовое и строящееся', () => {
+  const built = [1, 2, 3, 4].map((i) => lot({ id: i, houseFinished: true, saleType: 'free',
+    priceRub: 60e6, totalArea: 60, houseId: null }));
+  const site = lot({ id: 9, houseFinished: false, deadline: { year: 2030 },
+    priceRub: 120e6, totalArea: 60, houseId: null });
+  const m = withMarket(built.concat([site]));
+  const s = m.find((x) => x.id === 9);
+  assert.strictEqual(s.readiness, 'строится до 2030');
+  assert.strictEqual(s.vsCohortPct, null, 'стройку не с чем сравнивать среди готовых');
 });
 
 process.stdout.write('проверка ремонта\n');
