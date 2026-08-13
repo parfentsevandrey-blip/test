@@ -8,13 +8,19 @@ const { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessR
         gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, parseViews, mergedPriceHistory, offersByIds } = require('./cian.js');
 
 let passed = 0;
+const pending = [];
+
+/* Асинхронные проверки нельзя просто запустить и забыть: итоговый счётчик
+   печатался синхронно и показывал 52 при 101 пройденной. Собираем обещания
+   и дожидаемся их перед подсчётом. */
 const test = (name, fn) => {
-  try { const r = fn(); if (r && r.then) { r.then(() => { passed++; process.stdout.write(`  ok  ${name}
-`); },
-    (e) => { process.stdout.write(`  FAIL ${name}
-       ${e.message}
-`); process.exitCode = 1; }); return; } passed++; process.stdout.write(`  ok  ${name}\n`); }
-  catch (e) { process.stdout.write(`  FAIL ${name}\n       ${e.message}\n`); process.exitCode = 1; }
+  const ok = () => { passed++; process.stdout.write(`  ok  ${name}\n`); };
+  const bad = (e) => { process.stdout.write(`  FAIL ${name}\n       ${e.message}\n`); process.exitCode = 1; };
+  try {
+    const r = fn();
+    if (r && typeof r.then === 'function') { pending.push(r.then(ok, bad)); return; }
+    ok();
+  } catch (e) { bad(e); }
 };
 
 const lot = (o) => ({ id: 1, houseId: 10, floor: 5, rooms: 2, totalArea: 60, priceRub: 10e6,
@@ -361,7 +367,7 @@ test('первая встреча квартиры не перезаписыва
   assert.strictEqual(arc.flats.f1.firstSeen, '2026-05-01');
 });
 
-process.stdout.write(`\n${passed} проверок пройдено${process.exitCode ? ', есть провалы' : ''}\n`);
+
 
 process.stdout.write('год постройки\n');
 
@@ -742,4 +748,8 @@ test('не вернувшийся номер при удачном ответе 
   const r = await offersByIds(ctx, [111, 222]);
   assert.deepStrictEqual(r.missing, [222]);
   assert.deepStrictEqual(r.failed, []);
+});
+
+Promise.all(pending).then(() => {
+  process.stdout.write(`\n${passed} проверок пройдено${process.exitCode ? ', есть провалы' : ''}\n`);
 });
