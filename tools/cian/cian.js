@@ -14,7 +14,7 @@
  *   node tools/cian/cian.js compare --lot 327985409 --cohort lots.json [--tier бизнес]
  *   node tools/cian/cian.js grade  --template 331300080 [--from lots.json]  — заготовка под заполнение
  *   node tools/cian/cian.js grade  --lots lots.json --marks marks.json  — записать оценку отделки
- *   node tools/cian/cian.js grade  --list
+ *   node tools/cian/cian.js grade  --list | --check
  *   node tools/cian/cian.js report — пересобрать docs/cian/lots.md из оценок и архива
  *   node tools/cian/cian.js refresh [--limit N] [--confirm нет] — что из архива ещё продаётся, а что ушло
  *   node tools/cian/cian.js card   327985409 331215568 [--out cards.json]  — история цены и поля, которых нет в выдаче
@@ -1875,6 +1875,44 @@ if (require.main === module) (async () => {
         process.stdout.write(JSON.stringify(out, null, 2) + '\n');
         log('\nЗаполнить по docs/cian/photo.md, null — «на кадрах не видно».');
         log(`Кадры в оригинале:  node tools/cian/cian.js verify --ids ${ids.join(',')} --frames 3,6,11 --dir sheets`);
+      } else if (a.check) {
+        /* Хранилище оценок должно возражать само. Три претензии, каждая
+           уже случалась на живых данных. */
+        const rows = Object.values(store.flats);
+        const say = (t, xs, how) => {
+          if (!xs.length) return;
+          log(`\n${t} (${xs.length}):`);
+          xs.forEach((r) => log(`  ${String(r.id).padEnd(11)} ${(r.level || '—').padEnd(2)} ${(r.proof || '').padEnd(13)} ${how(r)}  ${r.address}`));
+        };
+        say('оценка поставлена по картинке, а не по квартире',
+          rows.filter((r) => r.level && r.proof === 'рендер'),
+          () => 'буква описывает визуализацию — в сравнении цен это другой товар');
+        say('буква есть, а кадров интерьера нет',
+          rows.filter((r) => r.level && r.proof === 'интерьера нет'),
+          () => 'признак поставлен выводом из текста, а не увиден');
+        say('текст объявления расходится с кадрами',
+          rows.filter((r) => r.conflict),
+          (r) => `по тексту «${r.claimedState}», на кадрах «${r.observedState}»`);
+        say('премиальные признаки при пустой квартире',
+          rows.filter((r) => r.state === 'оболочка' && ['A', 'B'].includes(r.level)),
+          (r) => 'отделка есть, жить нельзя — сравнивать только с такими же');
+        /* Одинаковые признаки, разные буквы означали бы, что арифметика
+           разъехалась с записями. */
+        const byKey = {};
+        rows.forEach((r) => {
+          if (!r.markers) return;
+          const k = JSON.stringify(Object.entries(r.markers).sort());
+          (byKey[k] = byKey[k] || []).push(r);
+        });
+        const split = Object.values(byKey).filter((g) => new Set(g.map((r) => r.level)).size > 1);
+        if (split.length) {
+          log(`\nодинаковые признаки, разные буквы (${split.length}) — так быть не может:`);
+          split.forEach((g) => log(`  ${g.map((r) => `${r.id}:${r.level}`).join(' ')}`));
+        }
+        const thin = rows.filter((r) => r.markers && Object.values(r.markers).filter((v) => v != null).length < 4);
+        if (thin.length) log(`\nпризнаков меньше четырёх, буквы нет (${thin.length}): ${thin.map((r) => r.id).join(', ')}`);
+        const noFull = rows.filter((r) => !r.framesFull || !r.framesFull.length);
+        log(`\nбез кадров в исходном разрешении: ${noFull.length} из ${rows.length} — второй шаг проверки пропущен`);
       } else if (a.list || !a.marks) {
         const rows = Object.values(store.flats).sort((x, y) => (y.pricePerM2 || 0) - (x.pricePerM2 || 0));
         log(`оценок в ${a.store || 'docs/cian/grades.json'}: ${rows.length}` + (store.updated ? `, обновлено ${store.updated}` : ''));
