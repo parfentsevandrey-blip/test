@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gatebot"
+version = "0.1.0"
+description = "Торговый бот для спотового рынка Gate.io"
+requires-python = ">=3.10"
+dependencies = ["requests>=2.31", "PyYAML>=6.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4"]
+
+[project.scripts]
+gatebot = "gatebot.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["gatebot*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

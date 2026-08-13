@@ -1,0 +1,63 @@
+# Конфигурация бота. Скопируйте в config.yaml и правьте под себя.
+# Ключи API сюда НЕ пишутся — они берутся из переменных окружения (см. .env.example).
+
+symbol: BTC_USDT      # пара в формате BASE_QUOTE
+interval: 1h          # 10s 1m 5m 15m 30m 1h 4h 8h 1d 7d 30d
+mode: paper           # paper — виртуальные деньги, live — реальные
+poll_seconds: 60      # как часто опрашивать биржу
+candles: 300          # сколько свечей истории держать в памяти
+
+paper:
+  initial_quote: 1000  # виртуальный депозит в валюте котировки
+
+exchange:
+  maker_fee: 0.002     # 0.2% — базовая ставка Gate.io; с GT-скидкой ниже
+  taker_fee: 0.002
+  slippage: 0.0005     # закладываемое проскальзывание рыночных ордеров (paper)
+  timeout: 10
+
+strategy:
+  name: ema_cross      # grid | ema_cross | rsi_reversion
+
+  # --- ema_cross: вход по пересечению EMA снизу вверх -------------------
+  params:
+    fast: 12
+    slow: 26
+    trend: 100         # 0 — выключить фильтр тренда
+    order_quote: 100   # сумма входа в USDT
+    # equity_pct: 0.25 # альтернатива order_quote: доля счёта на сделку
+
+  # --- grid: сетка лимитных ордеров в коридоре --------------------------
+  # params:
+  #   levels: 12
+  #   order_quote: 20        # сумма на один уровень
+  #   lower: 55000           # границы коридора; если не задать —
+  #   upper: 72000           # возьмётся ±range_pct вокруг цены запуска
+  #   range_pct: 0.05
+  #   geometric: true        # равные шаги в процентах, а не в долларах
+  #   max_orders_per_side: 5
+  #   exit_on_break: false   # закрыть позицию при выходе цены из коридора
+
+  # --- rsi_reversion: покупка на выходе из перепроданности ---------------
+  # params:
+  #   period: 14
+  #   oversold: 30
+  #   overbought: 70
+  #   order_quote: 100
+
+# Риск-лимиты. Доли единицы: 0.03 == 3%. Пустое значение или 0 выключает правило.
+risk:
+  stop_loss_pct: 0.03        # выход при -3% от средней цены входа
+  take_profit_pct: 0.06      # выход при +6%
+  trailing_stop_pct: 0.02    # выход при откате на 2% от максимума позиции
+  max_position_quote: 300    # максимум денег в позиции, USDT
+  # max_position_pct: 0.5    # альтернатива: доля счёта
+  max_daily_loss_pct: 0.05   # стоп на день при -5% от утреннего капитала
+  max_drawdown_pct: 0.15     # полная остановка при просадке 15% от пика
+  max_open_orders: 20
+
+logging:
+  level: INFO
+  file: logs/bot.log
+
+state_file: state/bot-state.json
