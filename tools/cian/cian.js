@@ -1109,10 +1109,11 @@ const CARD_GRAB = () => {
   return {
     id: o.id,
     price: (o.bargainTerms || {}).price ?? null,
-    priceChanges: (d.priceChanges || []).map((p) => ({
+    /* null — ключа не было вовсе, [] — ключ есть и пуст: разные вещи. */
+    priceChanges: Array.isArray(d.priceChanges) ? d.priceChanges.map((p) => ({
       date: (p.changeTime || '').slice(0, 10),
       price: (p.priceData || {}).price ?? null,
-    })),
+    })) : null,
     viewsLine: (d.stats || {}).totalViewsFormattedString || null,
     bti: (d.bti || {}).houseData || null,
     tourUrl: (((d.tours || {}).externalTour) || {}).tourUrl || null,
@@ -1141,21 +1142,55 @@ function parseViews(line) {
   return { total: n(nums[0]), today: /сегодня/.test(line) ? n(nums[1]) : null };
 }
 
+/* Собственная оценка Циан. Отдельный вызов, приходит не всегда: из восьми
+   проверенных лотов пусто у трёх — у обеих оболочек и у продажи от
+   застройщика. Модель, судя по всему, не видит отделки: авторский ремонт в
+   Кутузовском XII она оценила на 28% ниже запрашиваемой цены, а обычные
+   квартиры в ЮЗАО пометила «Хорошая цена». Поэтому это не истина, а ещё
+   один независимый взгляд — полезный именно тем, что чужой. */
+async function estimation(ctx, id) {
+  try {
+    const r = await ctx.request.get(
+      `https://api.cian.ru/price-estimator/v1/get-estimation-and-trend-web/?cianOfferId=${id}`,
+      { headers: { referer: `https://www.cian.ru/sale/flat/${id}/`, 'user-agent': UA, 'accept-language': 'ru-RU' },
+        timeout: 40000 });
+    const j = await r.json();
+    const pi = j.priceInfo;
+    if (!pi) return null;
+    return {
+      estimation: pi.estimation || null,
+      range: pi.estimationRange || null,
+      label: (pi.priceTag || {}).priceLabel || null,
+      /* Числа Циан отдаёт строками для человека; для счёта берём их же
+         короткие границы из priceTag. */
+      lowMln: parseFloat(String((pi.priceTag || {}).estimationLowerBoundShort || '').replace(',', '.')) || null,
+      highMln: parseFloat(String((pi.priceTag || {}).estimationUpperBoundShort || '').replace(',', '.')) || null,
+    };
+  } catch (e) { return null; }
+}
+
 async function readCard(ctx, id, attempts = 3) {
+  let why = 'не прочиталась';
   for (let i = 1; i <= attempts; i++) {
     const p = await ctx.newPage();
     try {
-      await p.goto(`https://www.cian.ru/sale/flat/${id}/`, { waitUntil: 'domcontentloaded', timeout: 60000 });
+      const resp = await p.goto(`https://www.cian.ru/sale/flat/${id}/`, { waitUntil: 'domcontentloaded', timeout: 60000 });
       await p.waitForTimeout(3000);
-      if (!/captcha/i.test(p.url())) {
+      if (/captcha/i.test(p.url())) { why = 'капча'; }
+      else if (resp && resp.status() === 404) { await p.close(); return { error: 'объявление снято (404)' }; }
+      else {
         const r = await p.evaluate(CARD_GRAB);
-        if (r) { await p.close(); return { ...r, views: parseViews(r.viewsLine) }; }
+        if (!r) why = 'разметка не разобралась';
+        /* Сверка на всякий случай: страница могла увести редиректом на
+           другой лот, и тогда мы бы записали чужие данные своему id. */
+        else if (Number(r.id) !== Number(id)) why = `страница отдала чужой лот ${r.id}`;
+        else { await p.close(); return { ...r, views: parseViews(r.viewsLine) }; }
       }
-    } catch (e) { /* сеть — идём на повтор */ }
+    } catch (e) { why = e.message.split('\n')[0]; }
     await p.close();
     await sleep(9000);   // капча ловится примерно на каждой пятой карточке
   }
-  return null;
+  return { error: why };
 }
 
 async function stats(page, id) {
@@ -1775,7 +1810,8 @@ if (require.main === module) (async () => {
       const cards = [];
       for (const id of ids) {
         const c = await readCard(ctx, id);
-        if (!c) { log(`${id}  не прочиталась (капча или страница снята)`); continue; }
+        if (!c || c.error) { log(`${id}  ${(c && c.error) || 'не прочиталась'}`); continue; }
+        c.estimation = await estimation(ctx, id);
         cards.push(c);
         const ch = c.priceChanges || [];
         const first = ch[ch.length - 1], last = ch[0];
@@ -1789,6 +1825,14 @@ if (require.main === module) (async () => {
           ch.slice().reverse().forEach((p) => log(`     ${p.date}  ${(p.price / 1e6).toFixed(2)} млн`));
         } else if (ch.length === 1) {
           log(`  цена: с ${ch[0].date} не менялась — но это может значить и «объявление свежее»`);
+        } else if (c.priceChanges === null) {
+          log('  цена: блока истории в карточке нет (не то же самое, что «не менялась»)');
+        }
+        if (c.estimation) {
+          const e = c.estimation;
+          const over = e.highMln && c.price ? (c.price / 1e6 / e.highMln - 1) * 100 : null;
+          log(`  оценка Циан: ${e.estimation} (${e.range})` + (e.label ? `, метка «${e.label}»` : '') +
+              (over != null && over > 0 ? `  — цена выше верхней границы на ${over.toFixed(0)}%` : ''));
         }
         const extra = [];
         if (c.decoration) extra.push(`отделка ${c.decoration}`);
@@ -1881,4 +1925,4 @@ if (require.main === module) (async () => {
 
 /* Чистые функции наружу — чтобы их можно было проверить без сети. */
 module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringMargin, ringVerdict, pointInPolygon,
-  gradeLevel, gradeRecord, observedState, gradeFor, parseViews, REPAIR_RU, finishCost, loadedPricePerM2, fairShellPrice, MARKERS, PROOFS };
+  gradeLevel, gradeRecord, observedState, gradeFor, parseViews, REPAIR_RU, offersByIds, finishCost, loadedPricePerM2, fairShellPrice, MARKERS, PROOFS };
