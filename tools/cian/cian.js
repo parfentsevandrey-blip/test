@@ -8,7 +8,7 @@
  *   node tools/cian/cian.js url    --query q.json      — каноническая ссылка cat.php
  *   node tools/cian/cian.js probe  --query q.json --with '{"loggia":{"type":"term","value":true}}'
  *   node tools/cian/cian.js sweep  --query q.json [--limit 250] [--dedupe] [--resolve 0] — большой ЖК целиком
- *   node tools/cian/cian.js verify --query q.json [--ids 1,2] [--photos 9] [--files] [--dir out]
+ *   node tools/cian/cian.js verify --query q.json | --from lots.json [--ids 1,2] [--photos 9] [--cols 4]
  *   node tools/cian/cian.js snapshot --query q.json | --queries watchlist.json | --from a.json,b.json
  *   node tools/cian/cian.js exposure --query q.json [--deep] — двойники и реальный срок
  *   node tools/cian/cian.js compare --lot 327985409 --cohort lots.json [--tier бизнес]
@@ -1151,11 +1151,35 @@ if (require.main === module) (async () => {
       if (a.out) { fs.writeFileSync(a.out, JSON.stringify({ declared, collected: lots.length, flats: flats.length, lots: out }, null, 2) + '\n'); log(`-> ${a.out}`); }
 
     } else if (cmd === 'verify') {
-      const q = loadQuery(a.query);
       const only = a.ids ? String(a.ids).split(',').map(Number) : null;
-      let { lots } = await collect(ctx, q, parseInt(a.pages || '2', 10), false);
-      if (only) lots = lots.filter((l) => only.includes(l.id));
-      lots = lots.slice(0, parseInt(a.limit || '8', 10));
+      let lots = [];
+      if (a.from) {
+        /* Проверять уже собранное, не гоняя поиск заново. Раньше, чтобы
+           посмотреть десять известных лотов, приходилось воспроизводить
+           запрос, который их содержит, — и вся работа по контактным листам
+           уходила в одноразовые скрипты мимо инструмента. */
+        for (const f of String(a.from).split(',')) {
+          const d = JSON.parse(fs.readFileSync(f.trim(), 'utf8'));
+          for (const l of (d.lots || d.flats || (Array.isArray(d) ? d : []))) {
+            if (!lots.some((x) => x.id === l.id)) lots.push(l);
+          }
+        }
+        log(`из файлов: ${lots.length} лотов`);
+      } else {
+        lots = (await collect(ctx, loadQuery(a.query), parseInt(a.pages || '2', 10), false)).lots;
+      }
+      if (only) {
+        const missing = only.filter((id) => !lots.some((l) => l.id === id));
+        lots = lots.filter((l) => only.includes(l.id));
+        /* Молчаливая потеря — та же болезнь, что с отсевом по году: если
+           запрошенного лота в источнике нет, об этом надо сказать. */
+        if (missing.length) log(`не нашлось в источнике: ${missing.join(', ')}`);
+        lots.sort((x, y) => only.indexOf(x.id) - only.indexOf(y.id));
+      }
+      const vGrades = loadGrades(a.grades || 'docs/cian/grades.json').flats;
+      const noPhotos = lots.filter((l) => !(l.photos || []).length).map((l) => l.id);
+      if (noPhotos.length && a.photos !== '0') log(`без фотографий в источнике: ${noPhotos.join(', ')}`);
+      lots = lots.slice(0, parseInt(a.limit || String(only ? only.length : 8), 10));
       const dir = a.dir || 'cian-photos';
       const report = [];
       for (const l of lots) {
@@ -1164,11 +1188,20 @@ if (require.main === module) (async () => {
         let files = [], sheet = null;
         if (a.photos !== '0') {
           if (a.files) files = await fetchPhotos(ctx, l, `${dir}/${l.id}`, nPhoto);
-          else sheet = await contactSheet(ctx, page, l, `${dir}/${l.id}.jpg`, nPhoto);
+          else sheet = await contactSheet(ctx, page, l, `${dir}/${l.id}.jpg`, nPhoto, parseInt(a.cols || '3', 10));
         }
         const ev = finishEvidence(l);
-        report.push({ id: l.id, url: l.url, price: l.priceRub, area: l.totalArea, ...r, evidence: ev, completeness: completeness(l), sheet, photos: files });
+        const gr = gradeFor(vGrades, l);
+        report.push({ id: l.id, url: l.url, price: l.priceRub, area: l.totalArea, ...r, evidence: ev,
+          completeness: completeness(l), grade: gr || null, sheet, photos: files });
         log(`\n${l.id}  ${l.rooms}к ${l.totalArea} м²  ${(l.priceRub || 0).toLocaleString('ru-RU')} ₽  — ${r.verdict}, ${completeness(l)}`);
+        /* Если квартиру уже смотрели глазами, слово за записанной оценкой, а
+           не за разбором текста: текст — предварительный отсев, и не более. */
+        if (gr) {
+          log(`   ОЦЕНКА ПО ФОТО (${gr.gradedAt}): отделка ${gr.level || '—'}, ${gr.state}, подтверждено: ${gr.proof || '—'}` +
+              (gr.conflict ? '  ! текст объявления этому противоречит' : ''));
+          if (gr.note) log(`   ${gr.note}`);
+        }
         if (ev.unfinished) log('   ремонт по тексту ещё не завершён');
         log(`   комплектация: ${ev.spelledOut ? 'расписана по маркам' : ev.brands.length ? 'марки названы частично' : 'марки не названы'}` +
           (ev.brands.length ? ` (${ev.categories.join(', ')}: ${ev.brands.slice(0, 8).join(', ')})` : '') +
