@@ -14,6 +14,7 @@
  *   node tools/cian/cian.js compare --lot 327985409 --cohort lots.json [--tier бизнес]
  *   node tools/cian/cian.js grade  --lots lots.json --marks marks.json  — записать оценку отделки
  *   node tools/cian/cian.js grade  --list
+ *   node tools/cian/cian.js card   327985409 331215568 [--out cards.json]  — история цены и поля, которых нет в выдаче
  *   node tools/cian/cian.js stats  332550701 331961171
  *   node tools/cian/cian.js geo    [--out moscow-geo.json]
  *
@@ -138,6 +139,7 @@ function normalize(o) {
     title: o.title || null,
     hasFurniture: o.hasFurniture ?? null,
     decoration: o.decoration ?? null,
+    repairType: o.repairType ?? null,
     /* Поля, которые API отдаёт почти всегда, а прежняя запись выбрасывала.
        Каждое меняет смысл сравнения: переуступка — не то же, что ДДУ;
        субагент накидывает поверх цены застройщика; студия — не «0 комнат». */
@@ -544,8 +546,23 @@ const UNFINISHED = /(ремонтн\w+ работ\w*|ремонт|отделк\w
    говорит (см. ниже), а текст говорит, и его хотя бы можно предъявить. */
 const FURNISHED = /меблирован|с мебелью и техник|мебел\w+ и (бытов\w+ )?техник|под ключ|под тапочк|укомплектован\w* мебел/;
 
+/* Значения repairType из карточки. В выдаче поиска этого поля нет вовсе.
+   На первых семи лотах оно совпало с оценкой по фотографиям — бетон `no`,
+   обычный ремонт `euro`, авторский `design`, — и я чуть не записал его в
+   надёжные. Восьмой опроверг: Lucky (327357005) помечен `design`, а на
+   кадрах кухня эконом и крашеные двери, оценка C.
+
+   Значит поле такое же заявительное, как галочка «дизайнерский» в поиске, и
+   работает та же несимметричность, что у hasFurniture: `no` продавцу
+   невыгодно, поэтому ему верим; `design` не стоит ничего, поэтому нет.
+   Заполняется у вторички; у застройщика вместо него `decoration`. */
+const REPAIR_RU = { no: 'без ремонта', cosmetic: 'косметический', euro: 'евроремонт', design: 'дизайнерский' };
+
 function completeness(lot) {
   const t = (lot.description || '').toLowerCase();
+  /* Верим только отрицанию: «нет ремонта» продавцу невыгодно. Значение
+     `design` не проверяем и в выводы не берём — см. REPAIR_RU. */
+  if (lot.repairType === 'no') return 'оболочка';
   const m = BARE.exec(t);
   const bareNow = m && !PAST.test(t.slice(Math.max(0, m.index - 60), m.index));
   /* Метка отделки осмысленна только для первичной продажи. На вторичке фильтр
@@ -1021,6 +1038,72 @@ function findTwins(lots, areaTol) {
 
 /* Просмотры живут только в отрисованной карточке: кнопка статистики,
    по клику — «N просмотров с даты создания объявления DD.MM.YYYY». */
+/* ---------- карточка объявления ----------
+   Выдача поиска и карточка — два разных источника, и ни один не покрывает
+   другой: 51 поле есть только в карточке, 98 — только в выдаче. Самое ценное
+   из карточного — история цены. Она лежит НЕ внутри объекта оффера, а рядом
+   с ним, в `offerData.priceChanges`; из-за этого её полгода никто не видел.
+
+   Отдельного запроса не нужно: блок приходит сразу в разметке страницы.
+   Индекс элемента внутри бандла — деталь сборки фронтенда, а не договор,
+   поэтому ищем перебором по наличию `value.offerData.offer`. */
+const CARD_GRAB = () => {
+  const bundle = (window._cianConfig || {})['frontend-offer-card'] || [];
+  const hit = bundle.find((x) => x && x.value && x.value.offerData && x.value.offerData.offer);
+  if (!hit) return null;
+  const d = hit.value.offerData, o = d.offer;
+  return {
+    id: o.id,
+    price: (o.bargainTerms || {}).price ?? null,
+    priceChanges: (d.priceChanges || []).map((p) => ({
+      date: (p.changeTime || '').slice(0, 10),
+      price: (p.priceData || {}).price ?? null,
+    })),
+    viewsLine: (d.stats || {}).totalViewsFormattedString || null,
+    bti: (d.bti || {}).houseData || null,
+    tourUrl: (((d.tours || {}).externalTour) || {}).tourUrl || null,
+    decoration: o.decoration ?? null,
+    decorationInfo: (d.decorationInfo || {}).type ?? null,
+    repairType: o.repairType ?? null,
+    roomType: o.roomType ?? null,
+    windowsViewType: o.windowsViewType ?? null,
+    allRoomsArea: o.allRoomsArea ?? null,
+    amenities: o.amenities || null,
+    passengerLifts: o.passengerLiftsCount ?? null,
+    cargoLifts: o.cargoLiftsCount ?? null,
+    editDate: o.editDate ?? null,
+    isImported: o.isImported ?? null,
+    isFromBuilder: o.isFromBuilder ?? null,
+    isDuplicate: o.isDuplicate ?? null,
+    objectGuid: o.objectGuid ?? null,
+  };
+};
+
+/* «2046 просмотров, 14 за сегодня» — строка для человека, а не число. */
+function parseViews(line) {
+  if (!line) return { total: null, today: null };
+  const nums = String(line).match(/\d[\d\s ]*/g) || [];
+  const n = (x) => (x == null ? null : parseInt(String(x).replace(/\D/g, ''), 10));
+  return { total: n(nums[0]), today: /сегодня/.test(line) ? n(nums[1]) : null };
+}
+
+async function readCard(ctx, id, attempts = 3) {
+  for (let i = 1; i <= attempts; i++) {
+    const p = await ctx.newPage();
+    try {
+      await p.goto(`https://www.cian.ru/sale/flat/${id}/`, { waitUntil: 'domcontentloaded', timeout: 60000 });
+      await p.waitForTimeout(3000);
+      if (!/captcha/i.test(p.url())) {
+        const r = await p.evaluate(CARD_GRAB);
+        if (r) { await p.close(); return { ...r, views: parseViews(r.viewsLine) }; }
+      }
+    } catch (e) { /* сеть — идём на повтор */ }
+    await p.close();
+    await sleep(9000);   // капча ловится примерно на каждой пятой карточке
+  }
+  return null;
+}
+
 async function stats(page, id) {
   await page.goto(`https://www.cian.ru/sale/flat/${id}/`, { waitUntil: 'domcontentloaded', timeout: 60000 });
   await page.waitForTimeout(4000);
@@ -1499,6 +1582,112 @@ if (require.main === module) (async () => {
         }
       }
 
+    } else if (cmd === 'card') {
+      /* История цены привязана к объявлению, а не к квартире: перевыставление
+         её обнуляет. Поэтому истории склеиваются по отпечатку — тем же,
+         которым схлопываются дубли. Иначе «цена не менялась» будет означать
+         всего лишь «объявление свежее». */
+      let ids = a._.slice(1).map(Number).filter(Boolean);
+      if (a.from) {
+        for (const f of String(a.from).split(',')) {
+          const d = JSON.parse(fs.readFileSync(f.trim(), 'utf8'));
+          for (const l of (d.lots || d.flats || (Array.isArray(d) ? d : []))) if (!ids.includes(l.id)) ids.push(l.id);
+        }
+      }
+      ids = ids.slice(0, parseInt(a.limit || '25', 10));
+      const cards = [];
+      for (const id of ids) {
+        const c = await readCard(ctx, id);
+        if (!c) { log(`${id}  не прочиталась (капча или страница снята)`); continue; }
+        cards.push(c);
+        const ch = c.priceChanges || [];
+        const first = ch[ch.length - 1], last = ch[0];
+        log(`\n${id}  ${(c.price || 0).toLocaleString('ru-RU')} ₽  ` +
+            `${c.views.total != null ? c.views.total + ' просмотров' : 'просмотры не прочитались'}` +
+            (c.views.today ? `, ${c.views.today} за сегодня` : ''));
+        if (ch.length > 1) {
+          const d = (last.price - first.price) / first.price * 100;
+          log(`  цена: ${ch.length} изменений, ${first.date} ${(first.price / 1e6).toFixed(1)} млн -> ` +
+              `${last.date} ${(last.price / 1e6).toFixed(1)} млн  (${d > 0 ? '+' : ''}${d.toFixed(1)}%)`);
+          ch.slice().reverse().forEach((p) => log(`     ${p.date}  ${(p.price / 1e6).toFixed(2)} млн`));
+        } else if (ch.length === 1) {
+          log(`  цена: с ${ch[0].date} не менялась — но это может значить и «объявление свежее»`);
+        }
+        const extra = [];
+        if (c.decoration) extra.push(`отделка ${c.decoration}`);
+        if (c.repairType) extra.push(`ремонт: ${REPAIR_RU[c.repairType] || c.repairType}`);
+        if (c.roomType) extra.push(`комнаты ${c.roomType}`);
+        if (c.windowsViewType) extra.push(`окна ${c.windowsViewType}`);
+        if (c.allRoomsArea) extra.push(`площади комнат ${c.allRoomsArea}`);
+        if (c.isDuplicate) extra.push('Циан считает объявление дублем');
+        if (extra.length) log(`  из карточки: ${extra.join('; ')}`);
+        if (c.bti) log(`  БТИ: ${c.bti.yearRelease} г., ${c.bti.flatCount} квартир, лифтов ${c.bti.lifts}, ` +
+                       `${c.bti.seriesName || ''}${c.bti.isEmergency ? ', АВАРИЙНЫЙ' : ''}`);
+        if (c.tourUrl) log(`  3D-тур: ${c.tourUrl}`);
+        await sleep(2500);
+      }
+      if (a.out) { fs.writeFileSync(a.out, JSON.stringify(cards, null, 2) + '\n'); log(`\n-> ${a.out}`); }
+      if (a.archive !== 'нет') {
+        /* История цены пропадает вместе с объявлением, поэтому её место в
+           архиве, привязанном к квартире, а не к объявлению. */
+        const ap = a.archive || 'docs/cian/archive.json';
+        const arc = loadArchive(ap);
+        const srcAll = [];
+        if (a.from) for (const f of String(a.from).split(',')) {
+          const d = JSON.parse(fs.readFileSync(f.trim(), 'utf8'));
+          srcAll.push(...(d.lots || d.flats || (Array.isArray(d) ? d : [])));
+        }
+        let saved = 0;
+        for (const c of cards) {
+          const lot = srcAll.find((l) => l.id === c.id);
+          const fp = (lot && lot.fingerprint)
+            || Object.keys(arc.flats).find((k) => (arc.flats[k].listings || []).some((x) => x.id === c.id));
+          if (!fp || !arc.flats[fp]) continue;
+          const e = arc.flats[fp];
+          e.priceHistory = e.priceHistory || {};
+          e.priceHistory[c.id] = c.priceChanges;
+          if (c.views && c.views.total != null) {
+            e.views = e.views || {};
+            e.views[c.id] = { total: c.views.total, seen: new Date().toISOString().slice(0, 10) };
+          }
+          if (c.repairType) e.repairType = c.repairType;
+          saved++;
+        }
+        if (saved) {
+          fs.writeFileSync(ap, JSON.stringify(arc, null, 2) + '\n');
+          log(`история цены записана в архив для ${saved} квартир`);
+        } else log('в архиве этих квартир нет — история никуда не записана');
+      }
+      /* Склейка историй по квартире: разные объявления одной квартиры дают
+         разные куски одного ряда цен. */
+      if (a.from || ids.length > 1) {
+        const src = [];
+        if (a.from) for (const f of String(a.from).split(',')) {
+          const d = JSON.parse(fs.readFileSync(f.trim(), 'utf8'));
+          src.push(...(d.lots || d.flats || (Array.isArray(d) ? d : [])));
+        }
+        const byFp = new Map();
+        for (const c of cards) {
+          const lot = src.find((l) => l.id === c.id);
+          const fp = lot && lot.fingerprint;
+          if (!fp) continue;
+          if (!byFp.has(fp)) byFp.set(fp, []);
+          byFp.get(fp).push(c);
+        }
+        const merged = [...byFp.entries()].filter(([, cs]) => cs.length > 1);
+        if (merged.length) {
+          log(`\nодна квартира — несколько объявлений, история склеена (${merged.length}):`);
+          for (const [fp, cs] of merged) {
+            const all = cs.flatMap((c) => (c.priceChanges || []).map((p) => ({ ...p, id: c.id })))
+              .sort((x, y) => x.date.localeCompare(y.date));
+            log(`  ${fp}: объявления ${cs.map((c) => c.id).join(', ')}`);
+            all.forEach((p) => log(`     ${p.date}  ${(p.price / 1e6).toFixed(2)} млн  (объявление ${p.id})`));
+            const d = (all[all.length - 1].price - all[0].price) / all[0].price * 100;
+            log(`     итого с ${all[0].date}: ${d > 0 ? '+' : ''}${d.toFixed(1)}%`);
+          }
+        }
+      }
+
     } else if (cmd === 'stats') {
       for (const id of a._.slice(1)) {
         const s = await stats(page, id);
@@ -1515,4 +1704,4 @@ if (require.main === module) (async () => {
 
 /* Чистые функции наружу — чтобы их можно было проверить без сети. */
 module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringMargin, ringVerdict, pointInPolygon,
-  gradeLevel, gradeRecord, observedState, gradeFor, finishCost, loadedPricePerM2, fairShellPrice, MARKERS, PROOFS };
+  gradeLevel, gradeRecord, observedState, gradeFor, parseViews, REPAIR_RU, finishCost, loadedPricePerM2, fairShellPrice, MARKERS, PROOFS };

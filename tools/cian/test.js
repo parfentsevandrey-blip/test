@@ -5,7 +5,7 @@
 const assert = require('assert');
 const { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive,
         completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringVerdict,
-        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor } = require('./cian.js');
+        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, parseViews } = require('./cian.js');
 
 let passed = 0;
 const test = (name, fn) => {
@@ -644,4 +644,34 @@ test('без координат — ни ответа, ни уверенност
   const v = ringVerdict({ lat: null, lng: null });
   assert.strictEqual(v.inside, null);
   assert.strictEqual(v.sure, false);
+});
+
+process.stdout.write('поля из карточки\n');
+
+test('repairType=no из карточки — оболочка, что бы ни писал продавец', () => {
+  // 327985409, Профсоюзная 2/22: бетон, а в тексте «квартира бизнес-класса
+  // с прекрасными видовыми характеристиками»
+  assert.strictEqual(completeness(lot({ repairType: 'no', hasFurniture: true,
+    description: 'Квартира в жилом комплексе бизнес-класса с прекрасными видовыми характеристиками' })), 'оболочка');
+});
+
+test('дизайнерский ремонт из карточки оболочкой не делает', () => {
+  assert.notStrictEqual(completeness(lot({ repairType: 'design',
+    description: 'Меблирована, вся техника остаётся' })), 'оболочка');
+});
+
+test('счётчик просмотров разбирается со всеми склонениями', () => {
+  assert.deepStrictEqual(parseViews('2046 просмотров, 14 за сегодня'), { total: 2046, today: 14 });
+  assert.deepStrictEqual(parseViews('451 просмотр'), { total: 451, today: null });
+  assert.deepStrictEqual(parseViews('862 просмотра, нет за сегодня'), { total: 862, today: null });
+  assert.deepStrictEqual(parseViews(null), { total: null, today: null });
+});
+
+test('repairType=design ничего не доказывает: помечают и простую отделку', () => {
+  // 327357005, Lucky, 195 млн — самый дорогой метр кутузовской подборки,
+  // в карточке repairType=design, на кадрах кухня эконом и крашеные двери
+  const lucky = lot({ repairType: 'design', hasFurniture: true,
+    description: 'Современная квартира с новой отделкой в ЖК Lucky' });
+  assert.strictEqual(completeness(lucky), 'неизвестно',
+    'заявленный дизайнерский ремонт не делает комплектность известной');
 });
