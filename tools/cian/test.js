@@ -5,7 +5,7 @@
 const assert = require('assert');
 const { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive,
         completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringVerdict,
-        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, parseViews } = require('./cian.js');
+        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, parseViews, mergedPriceHistory } = require('./cian.js');
 
 let passed = 0;
 const test = (name, fn) => {
@@ -674,4 +674,36 @@ test('repairType=design ничего не доказывает: помечают
     description: 'Современная квартира с новой отделкой в ЖК Lucky' });
   assert.strictEqual(completeness(lucky), 'неизвестно',
     'заявленный дизайнерский ремонт не делает комплектность известной');
+});
+
+test('два изменения за одну дату не путают начало ряда с концом', () => {
+  // 324077709, Ордынский 4А: 18.11.2025 записаны и 500, и 400 млн.
+  // Циан отдаёт новыми вперёд, значит 500 — раньше
+  const e = { priceHistory: { '324077709': [
+    { date: '2026-07-12', price: 399e6 },
+    { date: '2026-02-19', price: 420e6 },
+    { date: '2026-01-16', price: 370e6 },
+    { date: '2025-11-18', price: 400e6 },
+    { date: '2025-11-18', price: 500e6 },
+  ] } };
+  const all = mergedPriceHistory(e);
+  assert.strictEqual(all[0].price, 500e6, 'первым должен стоять самый ранний');
+  assert.strictEqual(all[all.length - 1].price, 399e6);
+  const pct = (all[all.length - 1].price - all[0].price) / all[0].price * 100;
+  assert.ok(pct < -20 && pct > -21, `падение ${pct.toFixed(1)}%`);
+});
+
+test('ряды из разных объявлений одной квартиры сливаются по дате', () => {
+  const e = { priceHistory: {
+    '327985409': [{ date: '2026-08-11', price: 54e6 }, { date: '2026-03-19', price: 57e6 }],
+    '331215568': [{ date: '2026-08-11', price: 53999999 }, { date: '2026-06-19', price: 56e6 }],
+  } };
+  const all = mergedPriceHistory(e);
+  assert.strictEqual(all.length, 4);
+  assert.strictEqual(all[0].date, '2026-03-19');
+});
+
+test('одно изменение — не ряд', () => {
+  assert.strictEqual(mergedPriceHistory({ priceHistory: { '1': [{ date: '2026-01-01', price: 1 }] } }), null);
+  assert.strictEqual(mergedPriceHistory({}), null);
 });

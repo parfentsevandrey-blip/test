@@ -14,6 +14,7 @@
  *   node tools/cian/cian.js compare --lot 327985409 --cohort lots.json [--tier бизнес]
  *   node tools/cian/cian.js grade  --lots lots.json --marks marks.json  — записать оценку отделки
  *   node tools/cian/cian.js grade  --list
+ *   node tools/cian/cian.js report — пересобрать docs/cian/lots.md из оценок и архива
  *   node tools/cian/cian.js refresh [--limit N] [--confirm нет] — что из архива ещё продаётся, а что ушло
  *   node tools/cian/cian.js card   327985409 331215568 [--out cards.json]  — история цены и поля, которых нет в выдаче
  *   node tools/cian/cian.js stats  332550701 331961171
@@ -580,6 +581,19 @@ function gradeFor(grades, lot) {
     if (hit) return hit;
   }
   return null;
+}
+
+/* Ряд цен квартиры из всех её объявлений. Циан отдаёт изменения новыми
+   вперёд; переворачиваем каждый список, а потом сортируем по дате —
+   сортировка в JS устойчива, поэтому внутри одного дня порядок сохранится.
+   Без этого два изменения за одну дату встают как попало, и «500 -> 399»
+   превращается в «-0%». */
+function mergedPriceHistory(entry) {
+  if (!entry || !entry.priceHistory) return null;
+  const all = Object.entries(entry.priceHistory)
+    .flatMap(([id, ch]) => (Array.isArray(ch) ? ch.slice().reverse() : []).map((p) => ({ ...p, id })))
+    .sort((x, y) => x.date.localeCompare(y.date));
+  return all.length > 1 ? all : null;
 }
 
 function loadGrades(p) {
@@ -1654,11 +1668,8 @@ if (require.main === module) (async () => {
             e = Object.values(arc.flats).find((f) => f.priceHistory
               && ids.some((id) => f.priceHistory[String(id)]));
           }
-          if (!e || !e.priceHistory) return null;
-          const all = Object.entries(e.priceHistory)
-            .flatMap(([id, ch]) => (ch || []).map((p) => ({ ...p, id })))
-            .sort((x, y) => x.date.localeCompare(y.date));
-          if (all.length < 2) return null;
+          const all = mergedPriceHistory(e);
+          if (!all) return null;
           return { from: all[0], to: all[all.length - 1], n: all.length,
             pct: (all[all.length - 1].price - all[0].price) / all[0].price * 100 };
         };
@@ -1783,6 +1794,47 @@ if (require.main === module) (async () => {
           clash.forEach((r) => log(`  ${r.id}  по тексту «${r.claimedState}», на кадрах «${r.observedState}»  ${r.address}`));
         }
       }
+
+    } else if (cmd === 'report') {
+      /* Таблица лотов раньше писалась руками и устаревала на следующий день.
+         Теперь она собирается из оценок и архива, поэтому не гниёт: чтобы
+         обновить, достаточно перезапустить. */
+      const grades = loadGrades(a.grades || 'docs/cian/grades.json');
+      const arc = loadArchive(a.archive || 'docs/cian/archive.json');
+      const rows = Object.values(grades.flats);
+      const ids = rows.map((r) => r.id);
+      log(`оценённых лотов: ${ids.length}, спрашиваю текущие цены…`);
+      const live = new Map((await offersByIds(ctx, ids)).map((o) => [o.cianId || o.id, normalize(o)]));
+      const today = new Date().toISOString().slice(0, 10);
+      const histOf = (r) => mergedPriceHistory((r.fingerprint && arc.flats[r.fingerprint])
+        || Object.values(arc.flats).find((f) => f.priceHistory && f.priceHistory[String(r.id)]));
+      const out = [];
+      out.push('# Осмотренные лоты', '');
+      out.push('Собирается командой `node tools/cian/cian.js report`, руками не правится.', '');
+      out.push(`Оценок: ${rows.length}. Цены проверены ${today}.`, '');
+      out.push('Буква — уровень отделки по шести наблюдаемым признакам, см. [quality.md](quality.md).');
+      out.push('«Чем подтверждено» важнее буквы: рендер и фотография — разная доказательная сила.', '');
+      out.push('| ₽/м² | id | м² | Цена | Отделка | Подтверждено | Состояние | Движение цены | Адрес |');
+      out.push('|--:|---|--:|--:|:--:|---|---|---|---|');
+      rows.sort((x, y) => (y.pricePerM2 || 0) - (x.pricePerM2 || 0));
+      let gone = 0;
+      for (const r of rows) {
+        const l = live.get(r.id);
+        if (!l) gone++;
+        const price = l ? l.priceRub : r.price;
+        const ppm = price && r.area ? Math.round(price / r.area) : r.pricePerM2;
+        const h = histOf(r);
+        const move = h ? `${((h[h.length - 1].price - h[0].price) / h[0].price * 100).toFixed(0)}% с ${h[0].date}` : '';
+        out.push(`| ${(ppm || '').toLocaleString('ru-RU')} | [${r.id}](https://www.cian.ru/sale/flat/${r.id}/) | ` +
+          `${r.area || ''} | ${price ? (price / 1e6).toFixed(1) + ' млн' : ''} | ${r.level || '—'} | ${r.proof || ''} | ` +
+          `${r.state || ''}${r.conflict ? ' ⚠' : ''} | ${move} | ${l ? '' : '**снят** · '}${r.address} |`);
+      }
+      out.push('', `⚠ — текст объявления расходится с фотографиями. Снято с продажи с момента осмотра: ${gone}.`, '');
+      out.push('## Заметки по каждому', '');
+      for (const r of rows) if (r.note) out.push(`**${r.id}**, ${r.address}. ${r.note}`, '');
+      const file = a.out || 'docs/cian/lots.md';
+      fs.writeFileSync(file, out.join('\n'));
+      log(`-> ${file}: ${rows.length} лотов, снято с продажи ${gone}`);
 
     } else if (cmd === 'refresh') {
       /* Что из архива ещё продаётся, а что ушло. До сих пор «ушло» нельзя
@@ -1991,4 +2043,4 @@ if (require.main === module) (async () => {
 
 /* Чистые функции наружу — чтобы их можно было проверить без сети. */
 module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringMargin, ringVerdict, pointInPolygon,
-  gradeLevel, gradeRecord, observedState, gradeFor, parseViews, REPAIR_RU, offersByIds, finishCost, loadedPricePerM2, fairShellPrice, MARKERS, PROOFS };
+  gradeLevel, gradeRecord, observedState, gradeFor, parseViews, REPAIR_RU, offersByIds, mergedPriceHistory, finishCost, loadedPricePerM2, fairShellPrice, MARKERS, PROOFS };
