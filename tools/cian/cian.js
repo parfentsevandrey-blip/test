@@ -14,6 +14,7 @@
  *   node tools/cian/cian.js compare --lot 327985409 --cohort lots.json [--tier бизнес]
  *   node tools/cian/cian.js grade  --lots lots.json --marks marks.json  — записать оценку отделки
  *   node tools/cian/cian.js grade  --list
+ *   node tools/cian/cian.js refresh — что из архива ещё продаётся, а что ушло
  *   node tools/cian/cian.js card   327985409 331215568 [--out cards.json]  — история цены и поля, которых нет в выдаче
  *   node tools/cian/cian.js stats  332550701 331961171
  *   node tools/cian/cian.js geo    [--out moscow-geo.json]
@@ -91,6 +92,47 @@ async function searchPage(ctx, jsonQuery, pageNumber, attempt = 1) {
     queryString: d.queryString || null,
     fullUrl: d.fullUrl || null,
   };
+}
+
+/* ---------- произвольные объявления по списку id ----------
+   Поиск фильтровать по списку id не умеет: `multi_id` и `identical_id` — это
+   номера группы дублей, а не лота, и на любом id объявления дают ноль.
+   Отдельная ручка умеет: до 28 штук за запрос, в том же порядке, с полным
+   оффером. На 29 отвечает HTTP 400 «Too many cianOfferIds».
+
+   Ловушка: в этой сериализации НЕТ creationDate, есть только дата поднятия.
+   Срок экспозиции отсюда брать нельзя. */
+const BY_IDS_API = 'https://api.cian.ru/search-offers/v1/get-offers-by-ids-desktop/';
+const BY_IDS_LIMIT = 28;
+
+async function offersByIds(ctx, ids, dealType = 'flatsale') {
+  const uniq = [...new Set(ids.map(Number).filter(Boolean))];
+  const out = [];
+  for (let i = 0; i < uniq.length; i += BY_IDS_LIMIT) {
+    const chunk = uniq.slice(i, i + BY_IDS_LIMIT);
+    let res = null;
+    for (let attempt = 1; attempt <= 4; attempt++) {
+      try {
+        res = await ctx.request.post(BY_IDS_API, {
+          headers: API_HEADERS,
+          /* jsonQuery нужен только ради _type: он обязателен, а фильтры в нём
+             на отбор не влияют — список id главнее. */
+          data: { cianOfferIds: chunk, jsonQuery: { _type: dealType } },
+          timeout: 60000,
+        });
+        if (res.status() === 200) break;
+        if (res.status() < 500) throw new Error(`http ${res.status()}`);
+      } catch (e) {
+        if (attempt === 4) throw new Error(`get-offers-by-ids: ${e.message.split('\n')[0]}`);
+      }
+      res = null;
+      await sleep(2500 * attempt);
+    }
+    if (!res) continue;
+    out.push(...((await res.json()).offersSerialized || []));
+    if (i + BY_IDS_LIMIT < uniq.length) await sleep(1100);
+  }
+  return out;
 }
 
 /* Плоская запись из «сырого» оффера: только то, по чему реально отбирают. */
@@ -1623,6 +1665,59 @@ if (require.main === module) (async () => {
           clash.forEach((r) => log(`  ${r.id}  по тексту «${r.claimedState}», на кадрах «${r.observedState}»  ${r.address}`));
         }
       }
+
+    } else if (cmd === 'refresh') {
+      /* Что из архива ещё продаётся, а что ушло. До сих пор «ушло» нельзя
+         было отличить от «просто не попало в этот запрос»; теперь объявления
+         спрашиваются поимённо, и молчание в ответе — это факт, а не пробел
+         в охвате. */
+      const ap = a.archive || 'docs/cian/archive.json';
+      const arc = loadArchive(ap);
+      const today = new Date().toISOString().slice(0, 10);
+      const entries = Object.entries(arc.flats);
+      /* По одному свежему объявлению на квартиру: этого хватает, чтобы
+         понять, жива ли она, и вчетверо дешевле полного перебора. */
+      const probe = new Map();
+      for (const [fp, e] of entries) {
+        const last = (e.listings || []).slice().sort((x, y) => String(x.seen).localeCompare(String(y.seen))).pop();
+        if (last && last.id) probe.set(last.id, { fp, e, listed: last });
+      }
+      const ids = [...probe.keys()].slice(0, parseInt(a.limit || '2000', 10));
+      log(`спрашиваю ${ids.length} объявлений пачками по ${BY_IDS_LIMIT}…`);
+      const got = await offersByIds(ctx, ids);
+      const alive = new Map(got.map((o) => [o.cianId || o.id, normalize(o)]));
+      log(`ответили: ${alive.size} из ${ids.length}`);
+
+      let gone = 0, moved = 0, same = 0;
+      const moves = [];
+      for (const id of ids) {
+        const { fp, e, listed } = probe.get(id);
+        const live = alive.get(id);
+        if (!live) {
+          e.goneSince = e.goneSince || today;
+          gone++;
+          continue;
+        }
+        delete e.goneSince;
+        e.lastSeen = today;
+        same++;
+        if (live.priceRub && listed.price && live.priceRub !== listed.price) {
+          moved++;
+          moves.push({ fp, id, from: listed.price, to: live.priceRub, address: e.address });
+          e.listings.push({ id, created: live.created, price: live.priceRub, seen: today });
+        }
+      }
+      arc.updated = today;
+      fs.writeFileSync(ap, JSON.stringify(arc, null, 2) + '\n');
+      log(`\nещё продаётся: ${same}`);
+      log(`не отвечают (продано, снято или скрыто): ${gone}`);
+      if (moves.length) {
+        moves.sort((x, y) => (x.to - x.from) / x.from - (y.to - y.from) / y.from);
+        log(`\nцена изменилась у ${moves.length}:`);
+        moves.slice(0, 20).forEach((m) => log(`  ${m.id}  ${(m.from / 1e6).toFixed(1)} -> ${(m.to / 1e6).toFixed(1)} млн  ` +
+          `(${m.to > m.from ? '+' : ''}${((m.to - m.from) / m.from * 100).toFixed(1)}%)  ${m.address}`));
+      }
+      log('\nМолчание в ответе — не то же самое, что продано: объявление могли снять, скрыть или переклеить.');
 
     } else if (cmd === 'card') {
       /* История цены привязана к объявлению, а не к квартире: перевыставление
