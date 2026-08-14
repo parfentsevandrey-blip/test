@@ -762,9 +762,15 @@ function archiveStat(arc) {
   }
   const sorted = [...dates].filter(Boolean).sort();
   const last = sorted[sorted.length - 1] || null;
-  const stale = flats.filter((f) => f.lastSeen !== last).length;
+  /* «Не попала в последний снимок» — кандидат в ушедшие только для тех, чей
+     запрос в этом снимке был. Квартира, залитая из файла и ни в одном
+     запросе не состоящая, просто вне поля зрения, и считать её пропавшей —
+     та же ошибка, что уже дала 76 выдуманных пропаж. */
+  const missing = flats.filter((f) => f.lastSeen !== last);
+  const stale = missing.filter((f) => (f.sources || []).length).length;
+  const blind = missing.length - stale;
   return { flats: flats.length, dates: sorted, first: sorted[0] || null, last,
-    repeat, sources, moved, priceMoves, stale };
+    repeat, sources, moved, priceMoves, stale, blind };
 }
 
 function mergeArchive(arc, lots, today, source) {
@@ -1490,7 +1496,8 @@ if (require.main === module) (async () => {
     log(`архив: ${s.flats} квартир, снимки ${s.first} … ${s.last} (${s.dates.length} дат)`);
     log(`встречались больше одного раза: ${s.repeat}` +
       (s.repeat ? '' : ' — пока ни одна: срок экспозиции держится только на близнецах'));
-    log(`не попали в последний снимок: ${s.stale} — кандидаты в ушедшие, подтверждать командой refresh`);
+    log(`не попали в последний снимок, хотя их запрос снимался: ${s.stale} — кандидаты в ушедшие, подтверждать командой refresh`);
+    if (s.blind) log(`вне поля зрения (запрос не снимался или имени нет): ${s.blind} — про них снимок не говорит ничего`);
     const src = Object.entries(s.sources).sort((x, y) => y[1] - x[1]);
     if (src.length) {
       log(`\nпо запросам (внутри них и считается пропажа):`);
