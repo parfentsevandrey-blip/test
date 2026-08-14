@@ -63,6 +63,9 @@ node tools/cian/cian.js grade --list
 node tools/cian/cian.js snapshot --queries docs/cian/watchlist.json --all
 node tools/cian/cian.js snapshot --from собранное.json
 
+# что накоплено в архиве: даты снимков, запросы, движение цен (без сети)
+node tools/cian/cian.js archive
+
 # что из архива ещё продаётся, а что ушло (двумя независимыми способами)
 node tools/cian/cian.js refresh
 

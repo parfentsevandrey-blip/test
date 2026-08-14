@@ -3,7 +3,7 @@
    Здесь живёт та инвариантa, нарушение которой уже один раз испортило выдачу:
    дробление запроса обязано сужать, а не расширять. */
 const assert = require('assert');
-const { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive,
+const { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, archiveStat,
         completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringVerdict,
         gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, galleryGrew, parseViews, mergedPriceHistory, offersByIds, matchesQuery } = require('./cian.js');
 
@@ -550,6 +550,32 @@ test('в своём запросе пропажа находится', () => {
   const r = mergeArchive(arc, [a1], '2026-08-02', 'дорогомилово');
   assert.strictEqual(r.gone.length, 1);
   assert.strictEqual(r.gone[0].lastSeen, '2026-08-01');
+});
+
+test('сводка по архиву считает повторные встречи и движение цен', () => {
+  const arc = { updated: null, flats: {} };
+  const a1 = lot({ id: 1, fingerprint: 'f1', priceRub: 25e6 });
+  mergeArchive(arc, [a1, lot({ id: 2, fingerprint: 'f2' })], '2026-08-01', 'дорогомилово');
+  mergeArchive(arc, [{ ...a1, priceRub: 23e6 }], '2026-08-12', 'дорогомилово');
+  const s = archiveStat(arc);
+  assert.strictEqual(s.flats, 2);
+  assert.deepStrictEqual(s.dates, ['2026-08-01', '2026-08-12']);
+  assert.strictEqual(s.repeat, 1, 'вторую квартиру видели один раз');
+  assert.strictEqual(s.moved, 1);
+  assert.strictEqual(s.stale, 1, 'f2 не попала в последний снимок');
+  assert.strictEqual(s.sources['дорогомилово'], 2);
+});
+
+test('запросы одного снимка не объявляют пропавшими друг друга', () => {
+  // watchlist снимается в один день подряд: сначала Дорогомилово, потом Пресня.
+  // Соседний запрос в тот же день не должен ронять чужие квартиры в «ушедшие»
+  const arc = { updated: null, flats: {} };
+  mergeArchive(arc, [lot({ id: 1, fingerprint: 'f1' })], '2026-08-01', 'дорогомилово');
+  mergeArchive(arc, [lot({ id: 2, fingerprint: 'f2' })], '2026-08-01', 'пресня');
+  const r1 = mergeArchive(arc, [lot({ id: 1, fingerprint: 'f1' })], '2026-08-02', 'дорогомилово');
+  const r2 = mergeArchive(arc, [lot({ id: 2, fingerprint: 'f2' })], '2026-08-02', 'пресня');
+  assert.strictEqual(r1.gone.length, 0);
+  assert.strictEqual(r2.gone.length, 0);
 });
 
 test('залив без имени запроса не выдумывает пропаж', () => {

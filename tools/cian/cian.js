@@ -10,6 +10,7 @@
  *   node tools/cian/cian.js sweep  --query q.json [--limit 250] [--all] [--dedupe] [--resolve 0]
  *   node tools/cian/cian.js verify --ids 1,2 [--photos 12] [--cols 4] [--frames 5,13]  — лист, затем кадры в оригинале
  *   node tools/cian/cian.js snapshot --query q.json | --queries watchlist.json | --from a.json,b.json
+ *   node tools/cian/cian.js archive   — что накоплено: даты снимков, запросы, движение цен
  *   node tools/cian/cian.js exposure --query q.json [--deep] — двойники и реальный срок
  *   node tools/cian/cian.js compare --lot 327985409 --cohort lots.json [--tier бизнес]
  *   node tools/cian/cian.js grade  --template 331300080 [--from lots.json]  — заготовка под заполнение
@@ -735,6 +736,37 @@ function loadArchive(p) {
   try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return { updated: null, flats: {} }; }
 }
 
+/* Что накоплено в архиве. Пока этого не было, форму архива приходилось
+   выяснивать одноразовыми скриптами — и «в архиве одна дата» я заметил
+   позже, чем следовало. */
+function archiveStat(arc) {
+  const flats = Object.values(arc.flats || {});
+  const dates = new Set(), sources = {};
+  let repeat = 0, moved = 0, priceMoves = [];
+  for (const f of flats) {
+    dates.add(f.firstSeen); dates.add(f.lastSeen);
+    (f.sources || []).forEach((s) => { sources[s] = (sources[s] || 0) + 1; });
+    const seen = new Set((f.listings || []).map((l) => l.seen).filter(Boolean));
+    if (f.firstSeen !== f.lastSeen || seen.size > 1) repeat++;
+    /* Одно объявление, две цены — это торг, а не переразмещение. */
+    const byId = {};
+    (f.listings || []).forEach((l) => { (byId[l.id] = byId[l.id] || []).push(l); });
+    for (const rows of Object.values(byId)) {
+      const prices = [...new Set(rows.map((r) => r.price).filter(Boolean))];
+      if (prices.length > 1) {
+        moved++;
+        priceMoves.push({ address: f.address, from: rows[0].price, to: rows[rows.length - 1].price,
+          id: rows[0].id, seen: rows[rows.length - 1].seen });
+      }
+    }
+  }
+  const sorted = [...dates].filter(Boolean).sort();
+  const last = sorted[sorted.length - 1] || null;
+  const stale = flats.filter((f) => f.lastSeen !== last).length;
+  return { flats: flats.length, dates: sorted, first: sorted[0] || null, last,
+    repeat, sources, moved, priceMoves, stale };
+}
+
 function mergeArchive(arc, lots, today, source) {
   let fresh = 0, updated = 0;
   const changes = [];
@@ -1450,6 +1482,30 @@ if (require.main === module) (async () => {
   const cmd = a._[0];
   if (!cmd || a.help) { log(fs.readFileSync(__filename, 'utf8').split('*/')[0]); process.exit(0); }
 
+  /* Единственная команда, которой сеть не нужна вовсе: поднимать ради неё
+     браузер и греть куки — платить полминуты ни за что. */
+  if (cmd === 'archive') {
+    const arc = loadArchive(a.archive || 'docs/cian/archive.json');
+    const s = archiveStat(arc);
+    log(`архив: ${s.flats} квартир, снимки ${s.first} … ${s.last} (${s.dates.length} дат)`);
+    log(`встречались больше одного раза: ${s.repeat}` +
+      (s.repeat ? '' : ' — пока ни одна: срок экспозиции держится только на близнецах'));
+    log(`не попали в последний снимок: ${s.stale} — кандидаты в ушедшие, подтверждать командой refresh`);
+    const src = Object.entries(s.sources).sort((x, y) => y[1] - x[1]);
+    if (src.length) {
+      log(`\nпо запросам (внутри них и считается пропажа):`);
+      src.forEach(([k, v]) => log(`  ${String(v).padStart(5)}  ${k}`));
+      const noSrc = s.flats - Object.values(s.sources).reduce((x, y) => x + y, 0);
+      if (noSrc > 0) log(`  ${String(noSrc).padStart(5)}  без имени запроса (залив из файлов) — пропажа по ним не считается`);
+    } else log('\nни у одной квартиры нет имени запроса: весь архив залит из файлов, пропажу считать не по чему');
+    if (s.moved) {
+      log(`\nцена одного и того же объявления менялась между снимками: ${s.moved}`);
+      s.priceMoves.slice(0, 10).forEach((m) => log(`  ${m.id}  ${m.from.toLocaleString('ru-RU')} -> ${m.to.toLocaleString('ru-RU')} ₽` +
+        `  (${((m.to - m.from) / m.from * 100).toFixed(1)}%)  ${m.seen}  ${m.address}`));
+    } else log('\nдвижения цен пока не видно: для этого нужны два снимка одной и той же квартиры');
+    process.exit(0);
+  }
+
   const { browser, ctx, page } = await open();
   try {
     if (cmd === 'geo') {
@@ -1726,6 +1782,7 @@ if (require.main === module) (async () => {
       const archivePath = a.archive || 'docs/cian/archive.json';
       const arc = loadArchive(archivePath);
       let lots = [], q = null;
+      const perQuery = [];
       if (a.from) {
         /* Уже собранная выдача кладётся в архив без сети. Иначе всё, что
            набрано по ходу разбора, пропадает, а архив растёт по одному
@@ -1745,6 +1802,11 @@ if (require.main === module) (async () => {
           log(`\n[${item.name || item.query}]`);
           const sub = typeof item.jsonQuery === 'object' ? item.jsonQuery : loadQuery(item.query);
           const r = await collect(ctx, sub, parseInt(a.pages || '3', 10), !!a.all);
+          /* Каждый запрос кладётся в архив под своим именем. Свалить всё в
+             одну кучу значит потерять единственное, внутри чего пропажу
+             можно считать: без имени запроса «ушедших» не отличить от тех,
+             кого этот запрос никогда и не видел. */
+          perQuery.push({ name: item.name || item.query, lots: r.lots });
           r.lots.forEach((l) => { if (!lots.some((x) => x.id === l.id)) lots.push(l); });
         }
         log(`\nвсего по ${(list.queries || list).length} запросам: ${lots.length}`);
@@ -1757,7 +1819,22 @@ if (require.main === module) (async () => {
         /* Имя запроса — то, внутри чего считается пропажа. У залива из файлов
            его нет, и это не оплошность: судить о пропаже там не по чему. */
         const source = a.source || (a.from ? null : a.queries ? null : (a.query || null));
-        const { fresh, updated, changes, gone } = mergeArchive(arc, lots, today, source);
+        /* Список запросов сливается в архив по одному, каждый под своим
+           именем: пропажа считается внутри запроса, и общий котёл её съедал. */
+        const runs = perQuery.length ? perQuery.map((p) => ({ name: p.name, lots: p.lots }))
+          : [{ name: source, lots }];
+        let fresh = 0, updated = 0;
+        const changes = [], goneAll = [];
+        for (const run of runs) {
+          const r = mergeArchive(arc, run.lots, today, run.name);
+          fresh += r.fresh; updated += r.updated;
+          changes.push(...r.changes);
+          if (r.gone.length) goneAll.push({ name: run.name, gone: r.gone });
+          if (perQuery.length) {
+            log(`  [${run.name}] +${r.fresh} новых, ${r.updated} подтверждено` +
+                (r.gone.length ? `, пропали ${r.gone.length}` : ''));
+          }
+        }
         fs.writeFileSync(archivePath, JSON.stringify(arc, null, 2) + '\n');
         log(`архив ${archivePath}: +${fresh} новых квартир, ${updated} подтверждено, всего ${Object.keys(arc.flats).length}`);
         if (changes.length) {
@@ -1765,9 +1842,13 @@ if (require.main === module) (async () => {
           changes.slice(0, 10).forEach((c) => log(`  ${c.id}  ${c.from.toLocaleString('ru-RU')} -> ${c.to.toLocaleString('ru-RU')} ₽` +
             `  (${c.to < c.from ? '' : '+'}${((c.to - c.from) / c.from * 100).toFixed(1)}%)  ${c.address}`));
         }
-        if (source) {
-          if (gone.length) log(`\nбыли в этом же запросе, теперь нет (сняты, проданы или ушли из фильтра): ${gone.length}`);
-        } else {
+        if (goneAll.length) {
+          log('\nбыли в этом же запросе, теперь нет (сняты, проданы или ушли из фильтра):');
+          goneAll.forEach(({ name, gone }) => {
+            log(`  [${name}] ${gone.length}`);
+            gone.slice(0, 8).forEach((g) => log(`      ${g.address} — в последний раз ${g.lastSeen}`));
+          });
+        } else if (!runs.some((r) => r.name)) {
           log('\nпропажу не считаю: снимок без имени запроса, сравнивать не с чем');
         }
         log('Чем дольше архив ведётся, тем труднее скрыть настоящий срок экспозиции.');
@@ -2335,6 +2416,6 @@ if (require.main === module) (async () => {
 })();
 
 /* Чистые функции наружу — чтобы их можно было проверить без сети. */
-module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringMargin, ringVerdict, pointInPolygon,
+module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, archiveStat, completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringMargin, ringVerdict, pointInPolygon,
   gradeLevel, gradeRecord, observedState, gradeFor, galleryGrew, parseViews, REPAIR_RU, offersByIds, mergedPriceHistory,
   expandSimilar, matchesQuery, finishCost, loadedPricePerM2, fairShellPrice, MARKERS, PROOFS };
