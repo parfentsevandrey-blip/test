@@ -703,6 +703,17 @@ function gradeFor(grades, lot) {
   return null;
 }
 
+/* Оценка ставилась по тем кадрам, которые были в галерее в тот день. Если
+   продавец с тех пор добавил снимки, запись описывает уже не весь товар: на
+   Космодамианской 4/22 к двенадцати рендерам дома потом добавили съёмку
+   квартиры, и она оказалась бетонной коробкой, а в записи стояло «буква не
+   ставится». Сравнивать есть с чем только там, где записано photosSeen. */
+function galleryGrew(grade, lot) {
+  if (!grade || !grade.photosSeen || !lot) return null;
+  const now = (lot.photos || []).length;
+  return now > grade.photosSeen ? { was: grade.photosSeen, now } : null;
+}
+
 /* Ряд цен квартиры из всех её объявлений. Циан отдаёт изменения новыми
    вперёд; переворачиваем каждый список, а потом сортируем по дате —
    сортировка в JS устойчива, поэтому внутри одного дня порядок сохранится.
@@ -1693,6 +1704,8 @@ if (require.main === module) (async () => {
           log(`   ОЦЕНКА ПО ФОТО (${gr.gradedAt}): отделка ${gr.level || '—'}, ${gr.state}, подтверждено: ${gr.proof || '—'}` +
               (gr.conflict ? '  ! текст объявления этому противоречит' : ''));
           if (gr.note) log(`   ${gr.note}`);
+          const grew = galleryGrew(gr, l);
+          if (grew) log(`   ГАЛЕРЕЯ ВЫРОСЛА: смотрели ${grew.was} кадров, сейчас ${grew.now} — оценку надо пересмотреть`);
         }
         if (ev.unfinished) log('   ремонт по тексту ещё не завершён');
         log(`   комплектация: ${ev.spelledOut ? 'расписана по маркам' : ev.brands.length ? 'марки названы частично' : 'марки не названы'}` +
@@ -2004,6 +2017,17 @@ if (require.main === module) (async () => {
         }
         const thin = rows.filter((r) => r.markers && Object.values(r.markers).filter((v) => v != null).length < 4);
         if (thin.length) log(`\nпризнаков меньше четырёх, буквы нет (${thin.length}): ${thin.map((r) => r.id).join(', ')}`);
+        /* Средний балл по шести признакам и по восьми — разные шкалы: пол и
+           двери оба стоят по два, и стоит их дописать, как средний ползёт
+           вверх. На Усачева 11Д ровно это и перевело B в A. Буква на неполном
+           наборе сравнима с такой же неполной, но не с восьмёркой. */
+        const part = rows.filter((r) => r.level && r.markers &&
+          Object.values(r.markers).filter((v) => v != null).length < 6);
+        if (part.length) {
+          log(`\nбуква на пяти признаках и меньше — черновая (${part.length}):`);
+          part.forEach((r) => log(`  ${String(r.id).padEnd(11)} ${r.level}  ` +
+            `${Object.values(r.markers).filter((v) => v != null).length} признаков  ${r.address}`));
+        }
         const noFull = rows.filter((r) => !r.framesFull || !r.framesFull.length);
         log(`\nбез кадров в исходном разрешении: ${noFull.length} из ${rows.length} — второй шаг проверки пропущен`);
       } else if (a.list || !a.marks) {
@@ -2312,5 +2336,5 @@ if (require.main === module) (async () => {
 
 /* Чистые функции наружу — чтобы их можно было проверить без сети. */
 module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringMargin, ringVerdict, pointInPolygon,
-  gradeLevel, gradeRecord, observedState, gradeFor, parseViews, REPAIR_RU, offersByIds, mergedPriceHistory,
+  gradeLevel, gradeRecord, observedState, gradeFor, galleryGrew, parseViews, REPAIR_RU, offersByIds, mergedPriceHistory,
   expandSimilar, matchesQuery, finishCost, loadedPricePerM2, fairShellPrice, MARKERS, PROOFS };

@@ -5,7 +5,7 @@
 const assert = require('assert');
 const { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive,
         completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringVerdict,
-        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, parseViews, mergedPriceHistory, offersByIds, matchesQuery } = require('./cian.js');
+        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, galleryGrew, parseViews, mergedPriceHistory, offersByIds, matchesQuery } = require('./cian.js');
 
 let passed = 0;
 const pending = [];
@@ -578,6 +578,17 @@ test('оценка переживает переклейку объявлени�
 test('чужая квартира чужую оценку не получает', () => {
   const grades = { '327985409': { id: 327985409, fingerprint: '66566|15|79.5|3', level: 'E' } };
   assert.strictEqual(gradeFor(grades, lot({ id: 5, fingerprint: 'другой' })), null);
+});
+
+test('выросшая галерея делает оценку устаревшей', () => {
+  // 330937338: смотрели 12 кадров дома, продавец добавил съёмку квартиры —
+  // и в добавленных оказалась бетонная коробка
+  const g = { photosSeen: 12 };
+  assert.deepStrictEqual(galleryGrew(g, lot({ photos: new Array(21).fill('u') })), { was: 12, now: 21 });
+  assert.strictEqual(galleryGrew(g, lot({ photos: new Array(12).fill('u') })), null);
+  assert.strictEqual(galleryGrew(g, lot({ photos: new Array(9).fill('u') })), null);
+  // без записанного числа кадров сравнивать не с чем — молчим, а не врём
+  assert.strictEqual(galleryGrew({ photosSeen: null }, lot({ photos: ['u'] })), null);
 });
 
 process.stdout.write('разбор настоящих ответов API\n');
