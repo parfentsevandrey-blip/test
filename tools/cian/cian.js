@@ -1164,6 +1164,31 @@ function observedState(m) {
   return 'неизвестно';
 }
 
+/* ---------- возраст ремонта и что менять ----------
+   Буква мерит уровень материалов и слепа к возрасту: на разборе флиппинга у
+   Литвина-Седого все двенадцать сопоставимых квартир получили C, при том что
+   среди них были свежий флип, розовый ремонт 2010-х, «памятник» 2008 года и
+   квартира под снос отделки. В массовом сегменте различает не буква — возраст
+   и износ. Возраст ортогонален букве: свежий дешёвый флип это C+свежий,
+   дорогой ремонт 2008-го — C+устаревший. */
+const AGES = ['свежий', 'жилой', 'устаревший', 'под ремонт'];
+
+const WORK_ITEMS = ['окна', 'полы', 'стены', 'потолки', 'двери', 'кухня', 'санузел', 'проводка'];
+const WORK_STATES = ['менять', 'освежить', 'оставить'];
+
+/* Объём работ из перечня «что менять»: это не смета, а её скелет — смета
+   считается через finishCost, когда известна площадь и класс. */
+function worksScope(works) {
+  if (!works) return null;
+  const known = Object.entries(works).filter(([, v]) => v != null);
+  if (!known.length) return null;
+  const score = known.reduce((s, [, v]) => s + (v === 'менять' ? 1 : v === 'освежить' ? 0.5 : 0), 0);
+  const share = score / known.length;
+  if (share >= 0.7) return 'капитальный';
+  if (share >= 0.3) return 'частичный';
+  return 'косметика';
+}
+
 function gradeRecord(lot, g) {
   if (g.proof && !PROOFS.includes(g.proof)) {
     throw new Error(`подтверждение: «${g.proof}» не из списка ${PROOFS.join(' / ')}`);
@@ -1171,6 +1196,22 @@ function gradeRecord(lot, g) {
   const level = g.level || gradeLevel(g.markers);
   if (g.framesSeen != null && !Array.isArray(g.framesSeen)) {
     throw new Error('framesSeen: список номеров кадров, а не число');
+  }
+  if (g.age != null && !AGES.includes(g.age)) {
+    throw new Error(`возраст: «${g.age}» не из списка ${AGES.join(' / ')}`);
+  }
+  if (g.works != null) {
+    for (const [k, v] of Object.entries(g.works)) {
+      if (!WORK_ITEMS.includes(k)) throw new Error(`works: «${k}» не из списка ${WORK_ITEMS.join(' / ')}`);
+      if (v != null && !WORK_STATES.includes(v)) throw new Error(`works.${k}: «${v}» не из списка ${WORK_STATES.join(' / ')}`);
+    }
+  }
+  /* Вывод — не пересказ признаков, а суждение: что это за товар, что его
+     продаёт или топит, что сделает следующий владелец. Оценка возраста без
+     вывода — половина работы: записи «устаревший» без слов, почему это
+     важно для цены, через месяц не поможет никому. */
+  if (g.age != null && !(g.verdict && String(g.verdict).trim().length >= 40)) {
+    throw new Error('возраст поставлен, а вывода нет: verdict обязателен (и не короче 40 символов)');
   }
   const claimed = completeness(lot);
   const observed = observedState(g.markers);
@@ -1204,6 +1245,10 @@ function gradeRecord(lot, g) {
        остаётся впечатлением. */
     framesSeen: g.framesSeen || null,
     framesFull: g.framesFull || null,
+    age: g.age ?? null,
+    works: g.works || null,
+    worksScope: worksScope(g.works),
+    verdict: g.verdict ? String(g.verdict).trim() : null,
     note: g.note || '',
     gradedAt: g.gradedAt,
   };
@@ -1388,6 +1433,13 @@ function profileLot(lot, opts = {}) {
   }
   const grew = galleryGrew(grade, lot);
   if (grew) say('оценка устарела', `смотрели ${grew.was} кадров, сейчас ${grew.now}`);
+  /* Устаревший ремонт продаётся по цене «под ключ», а покупается как
+     оболочка с демонтажем: покупатель его переделает и вычтет из цены.
+     На Шмитовском 28 два соседних лота показали это в лоб: свежий флип за
+     565 тыс/м² ушёл бы раньше, чем «дорогой ремонт 2008 года» за 595. */
+  if (grade && ['устаревший', 'под ремонт'].includes(grade.age) && state === 'под ключ') {
+    say('ремонт не актив', `ремонт ${grade.age === 'под ремонт' ? 'под замену' : 'устарел'}: покупатель будет вычитать переделку, а не платить за отделку`);
+  }
   const band = floorBand(lot);
   if (band === 'первый' || band === 'последний') say('этаж', `${band} этаж — скидка к цене корпуса, а не премия`);
   if (lot.isApartments) say('апартаменты', 'не жильё: нет прописки, налог и коммуналка выше, ипотека дороже');
@@ -1417,7 +1469,10 @@ function profileLot(lot, opts = {}) {
     complex: lot.complex || null,
     price: { rub: lot.priceRub, perM2, vsClassPct: classMedian && perM2 ? Math.round((perM2 - classMedian) / classMedian * 100) : null,
       classMedian, classPeers: sameClass.length },
-    finish: grade ? { level, proof: grade.proof, state, markers: grade.markers || null } : { level: null, proof: null, state, markers: null },
+    finish: grade
+      ? { level, proof: grade.proof, state, age: grade.age || null, verdict: grade.verdict || null,
+          worksScope: grade.worksScope || null, markers: grade.markers || null }
+      : { level: null, proof: null, state, age: null, verdict: null, worksScope: null, markers: null },
     house: { class: cls, year: buildingYear(lot), floors: lot.floors, parking: lot.parkingType,
       markers: house ? house.markers : null, note: house ? house.note : null },
     location: { ring: ring.inside === null ? null : ring.inside ? 'внутри Садового' : 'за Садовым',
@@ -2035,8 +2090,14 @@ if (require.main === module) (async () => {
            не за разбором текста: текст — предварительный отсев, и не более. */
         if (gr) {
           log(`   ОЦЕНКА ПО ФОТО (${gr.gradedAt}): отделка ${gr.level || '—'}, ${gr.state}, подтверждено: ${gr.proof || '—'}` +
+              (gr.age ? `, ремонт: ${gr.age}` : '') +
               (gr.conflict ? '  ! текст объявления этому противоречит' : ''));
           if (gr.note) log(`   ${gr.note}`);
+          if (gr.worksScope) {
+            const w = Object.entries(gr.works || {}).filter(([, v]) => v === 'менять').map(([k]) => k);
+            log(`   объём работ: ${gr.worksScope}${w.length ? ` — менять: ${w.join(', ')}` : ''}`);
+          }
+          if (gr.verdict) log(`   ВЫВОД: ${gr.verdict}`);
           const grew = galleryGrew(gr, l);
           if (grew) log(`   ГАЛЕРЕЯ ВЫРОСЛА: смотрели ${grew.was} кадров, сейчас ${grew.now} — оценку надо пересмотреть`);
         }
@@ -2333,6 +2394,9 @@ if (require.main === module) (async () => {
             framesFull: [],
             markers: Object.fromEntries(Object.entries(MARKERS)
               .map(([k, v]) => [k, `<${v.join(' | ')} | null>`])),
+            age: `<${AGES.join(' | ')} | null>`,
+            works: Object.fromEntries(WORK_ITEMS.map((k) => [k, `<${WORK_STATES.join(' | ')} | null>`])),
+            verdict: '<обязателен при возрасте: что это за товар, что его продаёт или топит, что сделает следующий владелец>',
             note: '',
           };
         }
@@ -2388,11 +2452,17 @@ if (require.main === module) (async () => {
         }
         const noFull = rows.filter((r) => !r.framesFull || !r.framesFull.length);
         log(`\nбез кадров в исходном разрешении: ${noFull.length} из ${rows.length} — второй шаг проверки пропущен`);
+        /* Оценка без вывода — каталожная карточка без суждения: признаки
+           перечислены, а что это значит для цены, читателю додумывать самому. */
+        const noVerdict = rows.filter((r) => r.level && !r.verdict);
+        if (noVerdict.length) log(`без критического вывода: ${noVerdict.length} из ${rows.length} — ${noVerdict.map((r) => r.id).join(', ')}`);
+        const noAge = rows.filter((r) => r.level && r.proof === 'фото' && !r.age);
+        if (noAge.length) log(`возраст ремонта не определён: ${noAge.length} из ${rows.length}`);
       } else if (a.list || !a.marks) {
         const rows = Object.values(store.flats).sort((x, y) => (y.pricePerM2 || 0) - (x.pricePerM2 || 0));
         log(`оценок в ${a.store || 'docs/cian/grades.json'}: ${rows.length}` + (store.updated ? `, обновлено ${store.updated}` : ''));
         for (const r of rows) {
-          log(`  ${String(r.level || '—').padEnd(2)} ${String(r.proof || '').padEnd(13)} ${String(r.pricePerM2 || '').padStart(9)} ₽/м²  ` +
+          log(`  ${String(r.level || '—').padEnd(2)} ${String(r.age || '').padEnd(11)} ${String(r.proof || '').padEnd(13)} ${String(r.pricePerM2 || '').padStart(9)} ₽/м²  ` +
               `${String(r.id).padEnd(11)} ${String(r.area || '').padStart(6)} м²  ${(r.state || '').padEnd(14)}` +
               `${r.conflict ? ' ! текст врёт ' : '             '}${r.address}`);
         }
@@ -2504,7 +2574,9 @@ if (require.main === module) (async () => {
           log(`\n${p.id}  ${p.address}${p.complex ? ` (${p.complex})` : ''}  ${(p.price.rub || 0).toLocaleString('ru-RU')} ₽`);
           log(`  цена     ${(p.price.perM2 || 0).toLocaleString('ru-RU')} ₽/м²` +
               (p.price.vsClassPct != null ? `, ${p.price.vsClassPct > 0 ? '+' : ''}${p.price.vsClassPct}% к медиане класса` : ''));
-          log(`  отделка  ${p.finish.level || '—'}, ${p.finish.state}, подтверждено: ${p.finish.proof || '—'}`);
+          log(`  отделка  ${p.finish.level || '—'}, ${p.finish.state}, подтверждено: ${p.finish.proof || '—'}` +
+              (p.finish.age ? `, ремонт: ${p.finish.age}` : ''));
+          if (p.finish.verdict) log(`  вывод    ${p.finish.verdict}`);
           log(`  дом      ${p.house.class || 'класс не поставлен'}` +
               `${p.house.year ? `, ${p.house.year}` : ''}${p.house.floors ? `, ${p.house.floors} эт.` : ''}` +
               `${p.house.parking ? `, паркинг ${p.house.parking}` : ''}`);
@@ -2535,8 +2607,10 @@ if (require.main === module) (async () => {
           for (const p of out) {
             L.push(`**${p.id}**, ${esc(p.address)}${p.complex ? ` (${esc(p.complex)})` : ''} — ` +
               `${(p.price.rub || 0).toLocaleString('ru-RU')} ₽ за ${p.flat.area} м². ` +
-              `Отделка ${p.finish.level || '—'} (${p.finish.proof || '—'}), дом ${p.house.class || 'класс не поставлен'}` +
+              `Отделка ${p.finish.level || '—'} (${p.finish.proof || '—'}${p.finish.age ? `, ${p.finish.age}` : ''}), ` +
+              `дом ${p.house.class || 'класс не поставлен'}` +
               `${p.house.year ? `, ${p.house.year}` : ''}. ${p.house.note ? esc(p.house.note) : ''}`);
+            if (p.finish.verdict) L.push(`  **Вывод:** ${esc(p.finish.verdict)}`);
             p.gaps.forEach((g) => L.push(`- ${g.name}: ${esc(g.text)}`));
             L.push('');
           }
@@ -2569,8 +2643,8 @@ if (require.main === module) (async () => {
       out.push(`Оценок: ${rows.length}. Цены проверены ${today}.`, '');
       out.push('Буква — уровень отделки по шести наблюдаемым признакам, см. [quality.md](quality.md).');
       out.push('«Чем подтверждено» важнее буквы: рендер и фотография — разная доказательная сила.', '');
-      out.push('| ₽/м² | id | м² | Цена | Отделка | Подтверждено | Состояние | Движение цены | Адрес |');
-      out.push('|--:|---|--:|--:|:--:|---|---|---|---|');
+      out.push('| ₽/м² | id | м² | Цена | Отделка | Ремонт | Подтверждено | Состояние | Движение цены | Адрес |');
+      out.push('|--:|---|--:|--:|:--:|---|---|---|---|---|');
       rows.sort((x, y) => (y.pricePerM2 || 0) - (x.pricePerM2 || 0));
       let gone = 0;
       for (const r of rows) {
@@ -2581,12 +2655,16 @@ if (require.main === module) (async () => {
         const h = histOf(r);
         const move = h ? `${((h[h.length - 1].price - h[0].price) / h[0].price * 100).toFixed(0)}% с ${h[0].date}` : '';
         out.push(`| ${(ppm || '').toLocaleString('ru-RU')} | [${r.id}](https://www.cian.ru/sale/flat/${r.id}/) | ` +
-          `${r.area || ''} | ${price ? (price / 1e6).toFixed(1) + ' млн' : ''} | ${r.level || '—'} | ${r.proof || ''} | ` +
+          `${r.area || ''} | ${price ? (price / 1e6).toFixed(1) + ' млн' : ''} | ${r.level || '—'} | ${r.age || ''} | ${r.proof || ''} | ` +
           `${r.state || ''}${r.conflict ? ' ⚠' : ''} | ${move} | ${l ? '' : unchecked.has(r.id) ? '_не проверен_ · ' : '**снят** · '}${r.address} |`);
       }
       out.push('', `⚠ — текст объявления расходится с фотографиями. Снято с продажи с момента осмотра: ${gone}.`, '');
       out.push('## Заметки по каждому', '');
-      for (const r of rows) if (r.note) out.push(`**${r.id}**, ${r.address}. ${r.note}`, '');
+      for (const r of rows) if (r.note || r.verdict) {
+        out.push(`**${r.id}**, ${r.address}. ${r.note || ''}`);
+        if (r.verdict) out.push(`  **Вывод:** ${r.verdict}`);
+        out.push('');
+      }
       const file = a.out || 'docs/cian/lots.md';
       fs.writeFileSync(file, out.join('\n'));
       log(`-> ${file}: ${rows.length} лотов, снято с продажи ${gone}`);
@@ -2812,6 +2890,6 @@ if (require.main === module) (async () => {
 
 /* Чистые функции наружу — чтобы их можно было проверить без сети. */
 module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, archiveStat, completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringMargin, ringVerdict, pointInPolygon,
-  gradeLevel, gradeRecord, observedState, gradeFor, galleryGrew, parseViews, REPAIR_RU, offersByIds, mergedPriceHistory,
+  gradeLevel, gradeRecord, observedState, gradeFor, galleryGrew, parseViews, REPAIR_RU, offersByIds, mergedPriceHistory, worksScope, AGES, WORK_ITEMS,
   expandSimilar, matchesQuery, finishCost, loadedPricePerM2, fairShellPrice, MARKERS, PROOFS,
   houseClass, houseFor, houseRecord, profileLot, floorBand, HOUSE_MARKERS, HOUSE_CLASSES };

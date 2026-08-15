@@ -5,7 +5,7 @@
 const assert = require('assert');
 const { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, archiveStat,
         completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringVerdict,
-        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, galleryGrew, parseViews, mergedPriceHistory, offersByIds, matchesQuery, expandSimilar, houseClass, profileLot, floorBand } = require('./cian.js');
+        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, galleryGrew, parseViews, mergedPriceHistory, offersByIds, matchesQuery, expandSimilar, houseClass, profileLot, floorBand, worksScope } = require('./cian.js');
 
 let passed = 0;
 const pending = [];
@@ -903,6 +903,54 @@ test('на границе B и C пол решает', () => {
 
 test('номера кадров — список, а не число', () => {
   assert.throws(() => gradeRecord({ id: 1 }, { markers: { stone: 'нет' }, framesSeen: 5 }), /framesSeen/);
+});
+
+process.stdout.write('возраст ремонта и вывод\n');
+
+test('возраст без вывода не принимается', () => {
+  // каталожная карточка без суждения бесполезна для анализа
+  assert.throws(() => gradeRecord({ id: 1 }, { age: 'устаревший' }), /вывода нет/);
+  assert.throws(() => gradeRecord({ id: 1 }, { age: 'свежий', verdict: 'ок' }), /вывода нет/, 'отписка короче 40 символов — не вывод');
+});
+
+test('возраст с выводом записывается и не трогает букву', () => {
+  const m = { stone: 'нет', joinery: 'серийная', kitchen: 'встроенная', light: 'базовый',
+    furniture: 'полный', bath: 'плитка', floor: 'ламинат', doors: 'в наличнике' };
+  const v = 'Дорогой ремонт 2008 года: вложено много, вернётся ноль — покупатель вычтет демонтаж.';
+  const r = gradeRecord({ id: 1 }, { markers: m, age: 'устаревший', verdict: v });
+  assert.strictEqual(r.level, 'C');
+  assert.strictEqual(r.age, 'устаревший');
+  assert.strictEqual(r.verdict, v);
+  // тот же набор признаков без возраста даёт ту же букву: оси ортогональны
+  assert.strictEqual(gradeRecord({ id: 1 }, { markers: m }).level, 'C');
+});
+
+test('чужое значение возраста — ошибка, а не тихий null', () => {
+  assert.throws(() => gradeRecord({ id: 1 }, { age: 'старый', verdict: 'достаточно длинный вывод про эту квартиру и её судьбу' }), /возраст/);
+});
+
+test('перечень работ проверяется по словарю и сводится в объём', () => {
+  assert.throws(() => gradeRecord({ id: 1 }, { works: { крыша: 'менять' } }), /works/);
+  assert.throws(() => gradeRecord({ id: 1 }, { works: { окна: 'выкинуть' } }), /works\.окна/);
+  assert.strictEqual(worksScope({ окна: 'менять', полы: 'менять', кухня: 'менять', санузел: 'менять' }), 'капитальный');
+  assert.strictEqual(worksScope({ окна: 'оставить', стены: 'освежить', полы: 'менять' }), 'частичный');
+  assert.strictEqual(worksScope({ окна: 'оставить', стены: 'оставить' }), 'косметика');
+  assert.strictEqual(worksScope({}), null);
+  assert.strictEqual(worksScope(null), null);
+});
+
+test('паспорт называет устаревший ремонт пассивом', () => {
+  const v = 'Целый ремонт прошлой эпохи: покупатель заплатит как за жилое и вычтет переделку.';
+  const stale = profileLot(lot({ priceRub: 20e6, totalArea: 35 }),
+    { grade: { level: 'C', proof: 'фото', state: 'под ключ', age: 'устаревший', verdict: v,
+      markers: { kitchen: 'встроенная', furniture: 'полный' } } });
+  assert.ok(stale.gaps.some((g) => g.name === 'ремонт не актив'));
+  assert.strictEqual(stale.finish.age, 'устаревший');
+  assert.strictEqual(stale.finish.verdict, v);
+  const fresh = profileLot(lot({ priceRub: 20e6, totalArea: 35 }),
+    { grade: { level: 'C', proof: 'фото', state: 'под ключ', age: 'свежий', verdict: v,
+      markers: { kitchen: 'встроенная', furniture: 'полный' } } });
+  assert.ok(!fresh.gaps.some((g) => g.name === 'ремонт не актив'));
 });
 
 process.stdout.write('вторая ось: дом и паспорт лота\n');
