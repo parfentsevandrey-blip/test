@@ -5,7 +5,7 @@
 const assert = require('assert');
 const { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, archiveStat,
         completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringVerdict,
-        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, galleryGrew, parseViews, mergedPriceHistory, offersByIds, matchesQuery, expandSimilar, houseClass, profileLot, floorBand, worksScope } = require('./cian.js');
+        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, galleryGrew, parseViews, mergedPriceHistory, offersByIds, matchesQuery, expandSimilar, houseClass, profileLot, floorBand, worksScope, buildCohort } = require('./cian.js');
 
 let passed = 0;
 const pending = [];
@@ -903,6 +903,39 @@ test('на границе B и C пол решает', () => {
 
 test('номера кадров — список, а не число', () => {
   assert.throws(() => gradeRecord({ id: 1 }, { markers: { stone: 'нет' }, framesSeen: 5 }), /framesSeen/);
+});
+
+process.stdout.write('окрестная когорта\n');
+
+test('лоты без года не выпадают, а ложатся в отдельную корзину', () => {
+  // условие (год ?? 9999) < 2005 и (год ?? 0) >= 2005 ложно в обе стороны:
+  // на живом разборе так молча выпало самое дешёвое предложение округи
+  const at = { lat: 55.76171, lng: 37.54038 };
+  const lots = [
+    lot({ id: 1, lat: 55.7620, lng: 37.5410, buildYear: 1965 }),
+    lot({ id: 2, lat: 55.7625, lng: 37.5400, buildYear: 2020 }),
+    lot({ id: 3, lat: 55.7615, lng: 37.5395, buildYear: null }),
+  ];
+  const c = buildCohort(lots, at, 1500);
+  assert.strictEqual(c.old.length, 1);
+  assert.strictEqual(c.fresh.length, 1);
+  assert.strictEqual(c.unknownYear.length, 1, 'без года — отдельная корзина, не мусор');
+  assert.strictEqual(c.old.length + c.fresh.length + c.unknownYear.length, c.near.length, 'ни один лот круга не потерян');
+});
+
+test('лот без координат не исчезает молча', () => {
+  const at = { lat: 55.76171, lng: 37.54038 };
+  const c = buildCohort([lot({ id: 1, lat: null, lng: null })], at, 1500);
+  assert.strictEqual(c.near.length, 0);
+  assert.strictEqual(c.noCoords.length, 1);
+});
+
+test('радиус меряется честно', () => {
+  const at = { lat: 55.76171, lng: 37.54038 };
+  // ~111 м на 0.001 широты
+  const c = buildCohort([lot({ id: 1, lat: 55.76271, lng: 37.54038 })], at, 1500);
+  assert.ok(c.near[0].distM > 100 && c.near[0].distM < 125, `ожидал ~111 м, получил ${c.near[0].distM}`);
+  assert.strictEqual(buildCohort([lot({ id: 1, lat: 55.78, lng: 37.54038 })], at, 1500).near.length, 0);
 });
 
 process.stdout.write('возраст ремонта и вывод\n');

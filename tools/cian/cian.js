@@ -20,6 +20,7 @@
  *   node tools/cian/cian.js refresh [--limit N] [--confirm нет] — что из архива ещё продаётся, а что ушло
  *   node tools/cian/cian.js card   327985409 331215568 [--out cards.json]  — история цены и поля, которых нет в выдаче
  *   node tools/cian/cian.js stats  332550701 331961171
+ *   node tools/cian/cian.js near   --lot 331539381 --from a.json,b.json [--radius 1500] — окрестная когорта с учётом отсевов
  *   node tools/cian/cian.js geo    [--out moscow-geo.json]
  *
  * --query принимает путь к JSON-файлу с jsonQuery или сам JSON строкой.
@@ -1487,6 +1488,38 @@ function profileLot(lot, opts = {}) {
   };
 }
 
+/* ---------- окрестная когорта ----------
+   Выборка для сравнения течёт четырьмя способами, и все четыре были
+   пойманы на одном разборе (флиппинг у Литвина-Седого):
+   - фильтр по комнатам выбросил двухкомнатные той же площади, одна из них
+     оказалась ближайшим конкурентом в 427 метрах;
+   - лоты без года постройки не попадали ни в «старые», ни в «новые» —
+     условие ложно в обе стороны, и среди выпавших было самое дешёвое
+     предложение округи;
+   - радиус — произвольный выбор: 900 м дали 12 сопоставимых, 1500 м — 34,
+     и дисконт входа сжался с 17% до 3%;
+   - границы районов режут круг: сосед может лежать в другом районе.
+
+   Отсюда правила: комнатность не фильтровать, а показывать; лоты без года
+   класть в отдельную корзину и печатать поимённо; радиус показывать с
+   чувствительностью; про соседние районы говорить вслух. */
+function buildCohort(lots, at, radiusM, yearCutoff = 2005) {
+  const dist = (l) => {
+    const dy = (l.lat - at.lat) * 111320;
+    const dx = (l.lng - at.lng) * 111320 * Math.cos(at.lat * Math.PI / 180);
+    return Math.round(Math.hypot(dx, dy));
+  };
+  const noCoords = lots.filter((l) => !l.lat || !l.lng);
+  const near = lots.filter((l) => l.lat && l.lng)
+    .map((l) => ({ ...l, distM: dist(l) }))
+    .filter((l) => l.distM <= radiusM)
+    .sort((a, b) => a.distM - b.distM);
+  const old = near.filter((l) => (buildingYear(l) || 0) < yearCutoff && buildingYear(l));
+  const fresh = near.filter((l) => (buildingYear(l) || 0) >= yearCutoff);
+  const unknownYear = near.filter((l) => !buildingYear(l));
+  return { near, old, fresh, unknownYear, noCoords };
+}
+
 /* Год постройки. У новостроек buildYear пустой — год живёт в сроке сдачи
    корпуса. На запросе «дизайнерский ремонт, дом от 2017» по ЦАО поле было
    пустым у 63 лотов из 137, и отсев по нему выбрасывал их все, включая
@@ -2085,7 +2118,9 @@ if (require.main === module) (async () => {
         const gr = gradeFor(vGrades, l);
         report.push({ id: l.id, url: l.url, price: l.priceRub, area: l.totalArea, ...r, evidence: ev,
           completeness: completeness(l), grade: gr || null, sheet, photos: files });
-        log(`\n${l.id}  ${l.rooms}к ${l.totalArea} м²  ${(l.priceRub || 0).toLocaleString('ru-RU')} ₽  — ${r.verdict}, ${completeness(l)}`);
+        /* Ссылка в каждой шапке: вывод без неё нельзя перепроверить, а
+           перепроверка — не любезность, а часть процедуры. */
+        log(`\n${l.id}  ${l.rooms}к ${l.totalArea} м²  ${(l.priceRub || 0).toLocaleString('ru-RU')} ₽  — ${r.verdict}, ${completeness(l)}  ${l.url || `https://www.cian.ru/sale/flat/${l.id}/`}`);
         /* Если квартиру уже смотрели глазами, слово за записанной оценкой, а
            не за разбором текста: текст — предварительный отсев, и не более. */
         if (gr) {
@@ -2456,8 +2491,10 @@ if (require.main === module) (async () => {
            перечислены, а что это значит для цены, читателю додумывать самому. */
         const noVerdict = rows.filter((r) => r.level && !r.verdict);
         if (noVerdict.length) log(`без критического вывода: ${noVerdict.length} из ${rows.length} — ${noVerdict.map((r) => r.id).join(', ')}`);
-        const noAge = rows.filter((r) => r.level && r.proof === 'фото' && !r.age);
-        if (noAge.length) log(`возраст ремонта не определён: ${noAge.length} из ${rows.length}`);
+        /* У бетона возраста ремонта нет — ремонта нет. E из проверки
+           исключается по смыслу, а не по забывчивости. */
+        const noAge = rows.filter((r) => r.level && r.level !== 'E' && r.proof === 'фото' && !r.age);
+        if (noAge.length) log(`возраст ремонта не определён: ${noAge.length} из ${rows.length} — ${noAge.map((r) => r.id).join(', ')}`);
       } else if (a.list || !a.marks) {
         const rows = Object.values(store.flats).sort((x, y) => (y.pricePerM2 || 0) - (x.pricePerM2 || 0));
         log(`оценок в ${a.store || 'docs/cian/grades.json'}: ${rows.length}` + (store.updated ? `, обновлено ${store.updated}` : ''));
@@ -2498,6 +2535,61 @@ if (require.main === module) (async () => {
           clash.forEach((r) => log(`  ${r.id}  по тексту «${r.claimedState}», на кадрах «${r.observedState}»  ${r.address}`));
         }
       }
+
+    } else if (cmd === 'near') {
+      /* Окрестная когорта с громким учётом отсевов. Каждый способ, которым
+         выборка текла на живом разборе, здесь либо закрыт, либо назван. */
+      let at = null;
+      if (a.at) { const [lat, lng] = String(a.at).split(',').map(Number); at = { lat, lng }; }
+      else if (a.lot) {
+        const r = await offersByIds(ctx, [parseInt(a.lot, 10)]);
+        const l = r.offers.map(normalize)[0];
+        if (!l || !l.lat) throw new Error(`лот ${a.lot} не отдал координат`);
+        at = { lat: l.lat, lng: l.lng };
+        log(`центр: ${l.street || ''} ${l.house || ''} (${l.lat}, ${l.lng})`);
+      } else throw new Error('нужен --at "lat,lng" или --lot <id>');
+      if (!a.from) throw new Error('нужны файлы выдачи: --from a.json,b.json');
+      const seen = new Map();
+      for (const f of String(a.from).split(',')) {
+        const d = JSON.parse(fs.readFileSync(f.trim(), 'utf8'));
+        for (const l of (d.lots || d.flats || (Array.isArray(d) ? d : []))) {
+          if (l.priceRub && l.totalArea && !seen.has(l.id)) seen.set(l.id, l);
+        }
+      }
+      const lots = [...seen.values()];
+      const radius = parseInt(a.radius || '1500', 10);
+      const cutoff = parseInt(a['year-cutoff'] || '2005', 10);
+      const c = buildCohort(lots, at, radius, cutoff);
+      const pm = (l) => Math.round(l.priceRub / l.totalArea);
+      log(`лотов в файлах: ${lots.length}${c.noCoords.length ? `, без координат (в круг не попадут): ${c.noCoords.length}` : ''}`);
+      /* Чувствительность к радиусу — чтобы выбор круга был виден, а не вшит. */
+      for (const r of [Math.round(radius * 0.6), radius, Math.round(radius * 1.3)]) {
+        const cc = buildCohort(lots, at, r, cutoff);
+        const oldish = cc.old.concat(cc.unknownYear);
+        const p = oldish.map(pm).sort((x, y) => x - y);
+        log(`  радиус ${String(r).padStart(5)} м: всего ${String(cc.near.length).padStart(4)}, до ${cutoff} года или без года ${String(oldish.length).padStart(3)}` +
+            (p.length ? `, медиана ${median(p).toLocaleString('ru-RU')} ₽/м²` : ''));
+      }
+      const rooms = {};
+      c.near.forEach((l) => { const k = l.rooms === 9 ? 'студия' : l.rooms == null ? '?' : l.rooms + 'к'; rooms[k] = (rooms[k] || 0) + 1; });
+      log(`комнатность в круге ${radius} м (не фильтруется — показывается): ${Object.entries(rooms).map(([k, v]) => `${k}:${v}`).join('  ')}`);
+      const ring = { in: 0, out: 0, unsure: 0 };
+      c.near.forEach((l) => { const v = ringVerdict(l); if (v.inside === null) ring.unsure++; else if (v.inside) ring.in++; else ring.out++; });
+      if (ring.in && ring.out) log(`! круг пересекает Садовое: внутри ${ring.in}, снаружи ${ring.out} — когорта неоднородна по локации`);
+      if (c.unknownYear.length) {
+        log(`\nгод постройки неизвестен (${c.unknownYear.length}) — раньше такие молча выпадали, теперь поимённо:`);
+        c.unknownYear.forEach((l) => log(`  ${String(l.distM).padStart(5)} м  ${String(pm(l)).padStart(8)} ₽/м²  ${l.totalArea} м²  ${(l.street || '') + ' ' + (l.house || '')}  ${l.url}`));
+      }
+      const cohort = c.old.concat(c.unknownYear).sort((x, y) => pm(x) - pm(y));
+      log(`\nкогорта (до ${cutoff} года или без года), ${cohort.length} лотов:`);
+      for (const l of cohort) {
+        log(`  ${String(pm(l)).padStart(8)} ₽/м²  ${(l.priceRub / 1e6).toFixed(1).padStart(5)} млн  ${String(l.totalArea).padStart(5)} м²  ` +
+            `${l.rooms === 9 ? 'ст' : (l.rooms ?? '?') + 'к'}  эт.${String(l.floor ?? '?').padStart(2)}/${l.floors ?? '?'}  ${String(buildingYear(l) || '—').padStart(4)}  ` +
+            `${String(completeness(l)).padEnd(10)} ${String(l.daysOnMarket ?? '—').padStart(4)} дн  ${String(l.distM).padStart(5)} м  ` +
+            `${(l.street || '') + ' ' + (l.house || '')}  ${l.url}`);
+      }
+      log(`\nграницы районов круг не уважают: если файлы собраны по одному району, соседние проверить отдельно.`);
+      if (a.out) fs.writeFileSync(a.out, JSON.stringify({ at, radius, cohort }, null, 2) + '\n');
 
     } else if (cmd === 'profile') {
       /* Паспорт лота: пять осей рядом. Отделка приходит из grades.json, класс
@@ -2584,7 +2676,7 @@ if (require.main === module) (async () => {
               `, ${p.location.district || '—'}${p.location.metro ? `, ${p.location.metro}` : ''}`);
           log(`  квартира ${p.flat.rooms}к ${p.flat.area} м², ${p.flat.floor} этаж (${p.flat.band || '—'})`);
           log(`  рынок    ${p.market.days == null ? 'срок неизвестен'
-              : `${p.market.daysFromArchive ? 'не меньше ' : ''}${p.market.days} дней в экспозиции` +
+              : `${p.market.daysFromArchive ? 'не меньше ' : ''}${p.market.days} дн в экспозиции` +
                 (p.market.daysFromArchive ? ' (по архиву)' : '')}` +
               `${p.market.priceMoves ? `, изменений цены ${p.market.priceMoves}` : ''}`);
           p.gaps.forEach((g) => log(`  ! ${g.name}: ${g.text}`));
@@ -2605,7 +2697,7 @@ if (require.main === module) (async () => {
           }
           L.push('', '## Что видно на кадрах', '');
           for (const p of out) {
-            L.push(`**${p.id}**, ${esc(p.address)}${p.complex ? ` (${esc(p.complex)})` : ''} — ` +
+            L.push(`**[${p.id}](${p.url})**, ${esc(p.address)}${p.complex ? ` (${esc(p.complex)})` : ''} — ` +
               `${(p.price.rub || 0).toLocaleString('ru-RU')} ₽ за ${p.flat.area} м². ` +
               `Отделка ${p.finish.level || '—'} (${p.finish.proof || '—'}${p.finish.age ? `, ${p.finish.age}` : ''}), ` +
               `дом ${p.house.class || 'класс не поставлен'}` +
@@ -2641,7 +2733,7 @@ if (require.main === module) (async () => {
       out.push('# Осмотренные лоты', '');
       out.push('Собирается командой `node tools/cian/cian.js report`, руками не правится.', '');
       out.push(`Оценок: ${rows.length}. Цены проверены ${today}.`, '');
-      out.push('Буква — уровень отделки по шести наблюдаемым признакам, см. [quality.md](quality.md).');
+      out.push('Буква — уровень отделки по восьми наблюдаемым признакам, «Ремонт» — его возраст: буква мерит уровень материалов, возраст — свежесть и износ. Метод — [photo.md](photo.md).');
       out.push('«Чем подтверждено» важнее буквы: рендер и фотография — разная доказательная сила.', '');
       out.push('| ₽/м² | id | м² | Цена | Отделка | Ремонт | Подтверждено | Состояние | Движение цены | Адрес |');
       out.push('|--:|---|--:|--:|:--:|---|---|---|---|---|');
@@ -2661,7 +2753,7 @@ if (require.main === module) (async () => {
       out.push('', `⚠ — текст объявления расходится с фотографиями. Снято с продажи с момента осмотра: ${gone}.`, '');
       out.push('## Заметки по каждому', '');
       for (const r of rows) if (r.note || r.verdict) {
-        out.push(`**${r.id}**, ${r.address}. ${r.note || ''}`);
+        out.push(`**[${r.id}](https://www.cian.ru/sale/flat/${r.id}/)**, ${r.address}. ${r.note || ''}`);
         if (r.verdict) out.push(`  **Вывод:** ${r.verdict}`);
         out.push('');
       }
@@ -2891,5 +2983,5 @@ if (require.main === module) (async () => {
 /* Чистые функции наружу — чтобы их можно было проверить без сети. */
 module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, archiveStat, completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringMargin, ringVerdict, pointInPolygon,
   gradeLevel, gradeRecord, observedState, gradeFor, galleryGrew, parseViews, REPAIR_RU, offersByIds, mergedPriceHistory, worksScope, AGES, WORK_ITEMS,
-  expandSimilar, matchesQuery, finishCost, loadedPricePerM2, fairShellPrice, MARKERS, PROOFS,
+  expandSimilar, matchesQuery, buildCohort, finishCost, loadedPricePerM2, fairShellPrice, MARKERS, PROOFS,
   houseClass, houseFor, houseRecord, profileLot, floorBand, HOUSE_MARKERS, HOUSE_CLASSES };

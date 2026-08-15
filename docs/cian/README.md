@@ -69,6 +69,9 @@ node tools/cian/cian.js snapshot --from собранное.json
 # что накоплено в архиве: даты снимков, запросы, движение цен (без сети)
 node tools/cian/cian.js archive
 
+# окрестная когорта вокруг адреса: отсевы называются, радиус с чувствительностью
+node tools/cian/cian.js near --lot 331539381 --from пресня.json,соседи.json --radius 1500
+
 # паспорт лота: пять осей рядом и разрывы между ними
 node tools/cian/cian.js profile --ids 331300080,326035617
 node tools/cian/cian.js profile --marks дома.json    # записать класс дома
