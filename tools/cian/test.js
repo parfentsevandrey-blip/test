@@ -5,7 +5,7 @@
 const assert = require('assert');
 const { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, archiveStat,
         completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringVerdict,
-        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, galleryGrew, parseViews, mergedPriceHistory, offersByIds, matchesQuery, expandSimilar } = require('./cian.js');
+        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, galleryGrew, parseViews, mergedPriceHistory, offersByIds, matchesQuery, expandSimilar, houseClass, profileLot, floorBand } = require('./cian.js');
 
 let passed = 0;
 const pending = [];
@@ -890,6 +890,66 @@ test('на границе B и C пол решает', () => {
 
 test('номера кадров — список, а не число', () => {
   assert.throws(() => gradeRecord({ id: 1 }, { markers: { stone: 'нет' }, framesSeen: 5 }), /framesSeen/);
+});
+
+process.stdout.write('вторая ось: дом и паспорт лота\n');
+
+test('класс дома считается долей от максимума, а не одним признаком', () => {
+  assert.strictEqual(houseClass({ facade: 'камень', lobby: 'дизайнерское', yard: 'закрытый ландшафт',
+    amenities: 'много', parking: 'подземный' }), 'делюкс');
+  assert.strictEqual(houseClass({ facade: 'штукатурка', lobby: 'простое', yard: 'благоустроенный',
+    amenities: 'нет', parking: 'подземный' }), 'бизнес');
+  assert.strictEqual(houseClass({ facade: 'панель', lobby: 'простое', yard: 'парковка',
+    amenities: 'нет', parking: 'наземный' }), 'комфорт');
+  // один дорогой фасад панельную коробку в премиум не вытягивает
+  assert.strictEqual(houseClass({ facade: 'камень', lobby: 'нет', yard: 'парковка',
+    amenities: 'нет', parking: 'нет' }), 'комфорт');
+});
+
+test('меньше трёх признаков — класса нет', () => {
+  assert.strictEqual(houseClass({ facade: 'камень', lobby: 'дизайнерское' }), null);
+  assert.strictEqual(houseClass({}), null);
+  assert.strictEqual(houseClass(null), null);
+});
+
+test('чужое значение в признаке дома — ошибка, а не тихий ноль', () => {
+  assert.throws(() => houseClass({ facade: 'мрамор', lobby: 'простое', yard: 'парковка' }), /facade/);
+});
+
+test('паспорт видит разрыв между отделкой и домом в обе стороны', () => {
+  const rich = profileLot(lot({ priceRub: 250e6, totalArea: 91 }),
+    { grade: { level: 'A', proof: 'фото', state: 'под ключ' }, house: { class: 'комфорт', markers: {} } });
+  assert.ok(rich.gaps.some((g) => g.name === 'отделка дороже дома'));
+
+  const bare = profileLot(lot({ priceRub: 325e6, totalArea: 101 }),
+    { grade: { level: 'E', proof: 'фото', state: 'оболочка' }, house: { class: 'делюкс', markers: {} } });
+  assert.ok(bare.gaps.some((g) => g.name === 'дом дороже отделки'));
+
+  const fine = profileLot(lot({ priceRub: 250e6, totalArea: 91 }),
+    { grade: { level: 'A', proof: 'фото', state: 'под ключ' }, house: { class: 'премиум', markers: {} } });
+  assert.deepStrictEqual(fine.gaps.filter((g) => g.name.includes('дороже')), []);
+});
+
+test('паспорт не выдумывает медиану класса на трёх соседях', () => {
+  const peers = [1, 2, 3].map((i) => ({ id: i, pricePerM2: 1e6, houseClass: 'бизнес' }));
+  const p = profileLot(lot({ id: 9, priceRub: 300e6, totalArea: 60 }),
+    { house: { class: 'бизнес', markers: {} }, peers });
+  assert.strictEqual(p.price.vsClassPct, null, 'на трёх соседях медианы нет');
+  const more = peers.concat([{ id: 4, pricePerM2: 1e6, houseClass: 'бизнес' }]);
+  const p2 = profileLot(lot({ id: 9, priceRub: 300e6, totalArea: 60 }),
+    { house: { class: 'бизнес', markers: {} }, peers: more });
+  assert.strictEqual(p2.price.vsClassPct, 400);
+});
+
+test('паспорт называет непроверенный товар и лишние объявления', () => {
+  const p = profileLot(lot({ priceRub: 300e6, totalArea: 100, daysOnMarket: 900 }), {
+    grade: { level: 'A', proof: 'рендер', state: 'под ключ' },
+    archiveEntry: { firstSeen: '2024-01-01', listings: [{ id: 1, price: 300e6, seen: '2026-08-13' },
+      { id: 2, price: 300e6, seen: '2026-08-14' }] },
+  });
+  assert.ok(p.gaps.some((g) => g.name === 'товар не подтверждён'));
+  assert.ok(p.gaps.some((g) => g.name === 'несколько объявлений'));
+  assert.ok(p.gaps.some((g) => g.name === 'стоит без движения'));
 });
 
 process.stdout.write('раскрытие схлопнутых групп\n');

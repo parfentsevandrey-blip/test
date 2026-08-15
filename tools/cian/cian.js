@@ -1023,6 +1023,125 @@ function gradeLevel(m) {
    доказательной силой, и разница должна попадать в цену, а не теряться. */
 const PROOFS = ['фото', 'рендер', 'смешанное', 'интерьера нет'];
 
+/* ---------- вторая ось: дом ----------
+   Кадры лобби, фасада, двора и паркинга оценка квартиры обязана выбрасывать
+   (photo.md: «признаки читаются только по квартире»), и на Космодамианской
+   я на этом уже обжёгся. Но выбрасывать их из анализа вовсе — терять
+   половину того, за что платят: класс дома входит в цену метра не меньше
+   ремонта, а продавец показывает его теми же двенадцатью кадрами.
+
+   Поэтому у дома свой словарь и своя буква. Признаки наблюдаемые, класс —
+   по ним, а не по тому, что написано в рекламе жилого комплекса. */
+const HOUSE_MARKERS = {
+  /* «остекление» добавлено на первом же прочитанном доме: башня Level
+     Академическая одета в сплошную светопрозрачную систему, которой в шкале
+     не было вовсе. Стоит она дороже штукатурки и дешевле камня, а главное —
+     обезличена: такой фасад одинаков у бизнес-класса и у офисов. */
+  facade: ['камень', 'кирпич', 'остекление', 'штукатурка', 'панель'],
+  lobby: ['дизайнерское', 'простое', 'нет'],
+  yard: ['закрытый ландшафт', 'благоустроенный', 'парковка'],
+  amenities: ['много', 'есть', 'нет'],
+  parking: ['подземный', 'наземный', 'нет'],
+};
+
+const HOUSE_POINTS = {
+  facade: { 'камень': 3, 'кирпич': 2, 'остекление': 1.5, 'штукатурка': 1, 'панель': 0 },
+  lobby: { 'дизайнерское': 3, 'простое': 1, 'нет': 0 },
+  yard: { 'закрытый ландшафт': 3, 'благоустроенный': 2, 'парковка': 0 },
+  amenities: { 'много': 3, 'есть': 1.5, 'нет': 0 },
+  parking: { 'подземный': 2, 'наземный': 1, 'нет': 0 },
+};
+
+const HOUSE_CLASSES = ['делюкс', 'премиум', 'бизнес', 'комфорт'];
+
+/* Подтверждение у дома своё: «интерьера нет» здесь бессмысленно, а вот
+   «дома нет на кадрах» встречается сплошь и рядом. У Кутузовского 12 все
+   двадцать четыре кадра — квартира, дома не видно ни разу; класс по такой
+   галерее не ставится, и это не пробел в работе, а свойство объявления. */
+const HOUSE_PROOFS = ['фото', 'рендер', 'смешанное', 'дома нет на кадрах'];
+
+/* Класс считается средним баллом, как и буква квартиры, и по той же причине:
+   иначе один дорогой фасад вытягивает панельную коробку в премиум. Меньше
+   трёх признаков — класса нет: по одному кадру фасада класс не ставится. */
+function houseClass(m) {
+  m = m || {};
+  for (const [k, v] of Object.entries(m)) {
+    if (v != null && HOUSE_MARKERS[k] && !HOUSE_MARKERS[k].includes(v)) {
+      throw new Error(`признак дома ${k}: «${v}» не из списка ${HOUSE_MARKERS[k].join(' / ')}`);
+    }
+  }
+  const known = Object.keys(HOUSE_POINTS).filter((k) => m[k] != null);
+  if (known.length < 3) return null;
+  const max = known.reduce((s, k) => s + Math.max(...Object.values(HOUSE_POINTS[k])), 0);
+  const got = known.reduce((s, k) => s + HOUSE_POINTS[k][m[k]], 0);
+  const share = got / max;
+  /* Верх шкалы требует больше доказательств, чем середина. На Костянском 13
+     видны только фасад и двор, оба лучшие в своём ряду, — и трёх признаков
+     хватило бы на «делюкс». Но лобби и инфраструктуру там просто не показали,
+     а класс верхней ступени по двум наблюдениям — это уже не измерение. */
+  if (share >= 0.85) return known.length >= 4 ? 'делюкс' : 'премиум';
+  if (share >= 0.62) return 'премиум';
+  if (share >= 0.35) return 'бизнес';
+  return 'комфорт';
+}
+
+function loadHouses(p) {
+  try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return { updated: null, houses: {} }; }
+}
+
+/* Класс ставится дому, а не объявлению: в Кутузовском XII три оценённые
+   квартиры, и лобби у них одно на всех. Ищем по номеру дома, а если его нет
+   (первичка без houseId) — по названию жилого комплекса. */
+function houseFor(houses, lot) {
+  if (!houses || !lot) return null;
+  if (lot.houseId && houses[String(lot.houseId)]) return houses[String(lot.houseId)];
+  if (lot.complex) {
+    const hit = Object.values(houses).find((h) => h.complex && h.complex === lot.complex);
+    if (hit) return hit;
+  }
+  return null;
+}
+
+const PARKING_RU = { underground: 'подземный', ground: 'наземный', multilevel: 'наземный',
+  open: 'наземный', roof: 'наземный' };
+
+function houseRecord(lot, h, today) {
+  if (h.proof && !HOUSE_PROOFS.includes(h.proof)) {
+    throw new Error(`подтверждение дома: «${h.proof}» не из списка ${HOUSE_PROOFS.join(' / ')}`);
+  }
+  /* Паркинг — единственный признак дома, который приходит полем. Поле
+     заполняет застройщик и Циан, а не фотограф, и прятать подземный паркинг
+     продавцу невыгодно: это ровно тот случай, когда полю верить можно. Если
+     в записи признак не проставлен руками, берём из поля. */
+  const markers = { ...(h.markers || {}) };
+  if (markers.parking == null && lot.parkingType && PARKING_RU[lot.parkingType]) {
+    markers.parking = PARKING_RU[lot.parkingType];
+  }
+  h = { ...h, markers };
+  const cls = h.class || houseClass(h.markers);
+  return {
+    houseId: lot.houseId ?? null,
+    complex: lot.complex || null,
+    address: `${lot.street || ''} ${lot.house || ''}`.trim(),
+    class: cls,
+    /* У дома то же различие, что у квартиры: показанное против нарисованного.
+       Застройщик рисует бассейн и лаундж за годы до того, как они появятся,
+       и в «Лаврушинском» весь блок инфраструктуры — визуализации. */
+    proof: h.proof || null,
+    markers: h.markers || null,
+    /* Год, этажность и паркинг класс не решают, но объясняют его: башня на
+       34 этажа с четырьмя лифтами и особняк на пять квартир бывают одного
+       класса и совершенно разного товара. */
+    year: h.year ?? (lot.buildYear || (lot.deadline && lot.deadline.year) || null),
+    floors: lot.floors ?? null,
+    parking: lot.parkingType || null,
+    framesFull: h.framesFull || [],
+    fromLot: lot.id,
+    note: h.note || '',
+    gradedAt: h.gradedAt || today,
+  };
+}
+
 /* Что говорят сами фотографии, без оглядки на текст объявления. Словарь тот
    же, что у completeness, чтобы два ответа можно было сравнить в лоб. */
 function observedState(m) {
@@ -1200,6 +1319,106 @@ function ringVerdict(lot) {
   if (inside === null) return { inside: null, margin: null, sure: false };
   const margin = ringMargin(lot);
   return { inside, margin, sure: margin > RING_DOUBT_M };
+}
+
+/* ---------- паспорт лота ----------
+   Пять осей вместо одной буквы. Каждая читается своим источником, и ни одна
+   не сводится в общий балл: складывать «отделку A» с «домом премиум» и
+   «внутри Садового» в одно число значит выдумать веса, которых мы не мерили.
+
+   Ценность не в оценке, а в разрывах между осями: авторский ремонт в
+   панельном доме и бетон в делюксе стоят по-разному, и оба случая цена
+   объявления обычно не различает. */
+function floorBand(lot) {
+  const f = lot.floor, top = lot.floors;
+  if (f == null) return null;
+  if (f === 1) return 'первый';
+  if (top && f === top) return 'последний';
+  if (f <= 5) return 'низкий';
+  if (f <= 11) return 'средний';
+  return 'высокий';
+}
+
+function profileLot(lot, opts = {}) {
+  const { grade = null, house = null, archiveEntry = null, peers = [] } = opts;
+  const perM2 = lot.priceRub && lot.totalArea ? Math.round(lot.priceRub / lot.totalArea) : null;
+  const cls = house ? (house.class || houseClass(house.markers)) : null;
+  const ring = ringVerdict(lot);
+  const level = grade ? grade.level : null;
+  const state = grade ? grade.state : completeness(lot);
+
+  /* Медиана считается по своему классу дома: сравнивать метр в делюксе с
+     метром в комфорте бессмысленно, а именно это делает общая выдача. */
+  const sameClass = peers.filter((p) => p.houseClass && p.houseClass === cls && p.pricePerM2 && p.id !== lot.id);
+  const classMedian = sameClass.length >= 4 ? median(sameClass.map((p) => p.pricePerM2)) : null;
+
+  const gaps = [];
+  const say = (name, text) => gaps.push({ name, text });
+  if (['A', 'B'].includes(level) && ['бизнес', 'комфорт'].includes(cls)) {
+    say('отделка дороже дома', `ремонт уровня ${level} в доме класса «${cls}»: при перепродаже класс дома останется, ремонт — нет`);
+  }
+  if (['делюкс', 'премиум'].includes(cls) && (['D', 'E'].includes(level) || state === 'оболочка')) {
+    say('дом дороже отделки', `дом класса «${cls}», а внутри ${level === 'E' ? 'бетон' : 'отделки нет'}: к цене надо прибавить ремонт`);
+  }
+  if (grade && ['рендер', 'интерьера нет'].includes(grade.proof)) {
+    say('товар не подтверждён', `отделка известна только со слов: подтверждение «${grade.proof}»`);
+  }
+  /* У дома та же болезнь, что у квартиры, и лечится тем же различием.
+     В клубном доме DUO все двенадцать кадров — визуализации: лобби, винная,
+     фитнес, паркинг. Дом ещё не построен, и класс по таким кадрам — это
+     обещание застройщика, а не наблюдение. */
+  if (house && ['рендер', 'дома нет на кадрах'].includes(house.proof)) {
+    say('дом не подтверждён', house.proof === 'рендер'
+      ? 'дом показан визуализациями: класс обещан, а не увиден'
+      : 'дома на кадрах нет: класс поставить не по чему');
+  }
+  if (grade && grade.conflict) {
+    say('текст расходится с кадрами', `по тексту «${grade.claimedState}», на кадрах «${grade.observedState}»`);
+  }
+  const grew = galleryGrew(grade, lot);
+  if (grew) say('оценка устарела', `смотрели ${grew.was} кадров, сейчас ${grew.now}`);
+  const band = floorBand(lot);
+  if (band === 'первый' || band === 'последний') say('этаж', `${band} этаж — скидка к цене корпуса, а не премия`);
+  if (lot.isApartments) say('апартаменты', 'не жильё: нет прописки, налог и коммуналка выше, ипотека дороже');
+  if (classMedian && perM2 && Math.abs(perM2 - classMedian) / classMedian > 0.15) {
+    const up = perM2 > classMedian;
+    say(up ? 'дороже своего класса' : 'дешевле своего класса',
+      `${Math.round(Math.abs(perM2 - classMedian) / classMedian * 100)}% ${up ? 'выше' : 'ниже'} медианы класса «${cls}» (${sameClass.length} домов)`);
+  }
+  const cuts = archiveEntry ? (mergedPriceHistory(archiveEntry) || []) : [];
+  /* Запрос по номерам не отдаёт creationDate, и срок экспозиции у половины
+     паспортов был пустым. Архив знает, когда квартиру увидели впервые: это
+     не дата подачи, а нижняя граница — но нижняя граница честнее прочерка. */
+  const days = lot.daysOnMarket != null ? lot.daysOnMarket
+    : (archiveEntry && archiveEntry.firstSeen
+      ? Math.round((Date.now() - Date.parse(archiveEntry.firstSeen)) / 86400000) : null);
+  const daysFromArchive = lot.daysOnMarket == null && days != null;
+  if ((days || 0) > 180 && !cuts.some((c, i) => i && c.price < cuts[i - 1].price)) {
+    say('стоит без движения', `${days} дней в экспозиции, цену не двигали`);
+  }
+  if (archiveEntry && (archiveEntry.listings || []).length > 1) {
+    const ids = new Set(archiveEntry.listings.map((l) => l.id));
+    if (ids.size > 1) say('несколько объявлений', `одна квартира выставлена ${ids.size} раза — заявленный срок экспозиции короче настоящего`);
+  }
+
+  return {
+    id: lot.id, url: lot.url, address: `${lot.street || ''} ${lot.house || ''}`.trim(),
+    complex: lot.complex || null,
+    price: { rub: lot.priceRub, perM2, vsClassPct: classMedian && perM2 ? Math.round((perM2 - classMedian) / classMedian * 100) : null,
+      classMedian, classPeers: sameClass.length },
+    finish: grade ? { level, proof: grade.proof, state, markers: grade.markers || null } : { level: null, proof: null, state, markers: null },
+    house: { class: cls, year: buildingYear(lot), floors: lot.floors, parking: lot.parkingType,
+      markers: house ? house.markers : null, note: house ? house.note : null },
+    location: { ring: ring.inside === null ? null : ring.inside ? 'внутри Садового' : 'за Садовым',
+      ringSure: ring.sure, okrug: lot.okrug, district: lot.district,
+      metro: lot.metro ? `${lot.metro.name}, ${lot.metro.minutes} мин ${lot.metro.byFoot ? 'пешком' : 'транспортом'}` : null },
+    flat: { rooms: lot.rooms, area: lot.totalArea, kitchen: lot.kitchenArea, floor: lot.floor, band,
+      apartments: lot.isApartments },
+    market: { days, daysFromArchive, created: lot.created,
+      firstSeen: archiveEntry ? archiveEntry.firstSeen : null,
+      priceMoves: cuts.length > 1 ? cuts.length - 1 : 0 },
+    gaps,
+  };
 }
 
 /* Год постройки. У новостроек buildYear пустой — год живёт в сроке сдачи
@@ -2199,6 +2418,124 @@ if (require.main === module) (async () => {
         }
       }
 
+    } else if (cmd === 'profile') {
+      /* Паспорт лота: пять осей рядом. Отделка приходит из grades.json, класс
+         дома — из houses.json, срок и движение цены — из архива, остальное из
+         полей. Ни одна ось не выводится из другой: в этом весь смысл. */
+      const housesPath = a.houses || 'docs/cian/houses.json';
+      const store = loadHouses(housesPath);
+      const today = new Date().toISOString().slice(0, 10);
+
+      if (a.marks) {
+        /* Запись класса дома. Отдельная от grade команда потому, что класс
+           ставится дому: у Кутузовского XII три оценённые квартиры и одно
+           лобби на всех. */
+        const marks = JSON.parse(fs.readFileSync(a.marks, 'utf8'));
+        const ids = Object.keys(marks).map((k) => Number(marks[k].lotId || k)).filter(Boolean);
+        const r = await offersByIds(ctx, ids);
+        if (r.failed.length) log(`! не проверены: ${r.failed.join(', ')}`);
+        if (r.missing.length) log(`! не нашлись: ${r.missing.join(', ')}`);
+        const lots = r.offers.map(normalize);
+        let added = 0, changed = 0;
+        for (const [key, h] of Object.entries(marks)) {
+          const lotId = Number(h.lotId || key);
+          const lot = lots.find((l) => l.id === lotId);
+          if (!lot) { log(`  ! ${key}: лот ${lotId} не отдался, пропускаю`); continue; }
+          let rec;
+          try { rec = houseRecord(lot, h, today); }
+          catch (e) { log(`  ! ${key}: ${e.message}`); continue; }
+          const id = String(rec.houseId || rec.complex || key);
+          const prev = store.houses[id];
+          if (!prev) added++;
+          else if (prev.class !== rec.class) { changed++; log(`  ${id}: ${prev.class || '—'} -> ${rec.class || '—'}`); }
+          store.houses[id] = { ...prev, ...rec };
+        }
+        store.updated = today;
+        fs.writeFileSync(housesPath, JSON.stringify(store, null, 2) + '\n');
+        log(`домов: +${added} новых, ${changed} пересмотрено, всего ${Object.keys(store.houses).length}`);
+        const thin = Object.values(store.houses).filter((h) => !h.class);
+        if (thin.length) log(`без класса (признаков меньше трёх): ${thin.map((h) => h.address).join('; ')}`);
+        /* То же требование, что и к квартире: контактный лист отвечает, что в
+           доме есть, а «камень это или панель под камень» решает только
+           оригинал. Пока второй шаг не сделан, класс черновой. */
+        const sheetOnly = Object.values(store.houses).filter((h) => h.class && !(h.framesFull || []).length);
+        if (sheetOnly.length) {
+          log(`\nкласс по контактному листу, второй шаг пропущен (${sheetOnly.length}):`);
+          sheetOnly.forEach((h) => log(`  ${String(h.class).padEnd(8)} ${h.address}`));
+        }
+
+      } else {
+        const grades = loadGrades(a.grades || 'docs/cian/grades.json').flats;
+        const arc = loadArchive(a.archive || 'docs/cian/archive.json');
+        let lots = [];
+        if (a.from) {
+          const d = JSON.parse(fs.readFileSync(a.from, 'utf8'));
+          lots = (d.lots || d.flats || (Array.isArray(d) ? d : [])).map((l) => (l.photos ? l : l));
+        } else {
+          const ids = a.ids ? String(a.ids).split(',').map(Number).filter(Boolean)
+            : Object.values(grades).map((g) => g.id);
+          log(`спрашиваю ${ids.length} лотов…`);
+          const r = await offersByIds(ctx, ids);
+          if (r.failed.length) log(`! ${r.failed.length} номеров не проверены`);
+          if (r.missing.length) log(`! ${r.missing.length} не нашлись (сняты): ${r.missing.slice(0, 8).join(', ')}`);
+          lots = r.offers.map(normalize);
+        }
+        /* Два прохода: сперва узнаём класс и цену метра у всех, потом
+           считаем медиану внутри класса. Иначе первый лот сравнивать не с чем. */
+        const seed = lots.map((l) => ({ id: l.id, pricePerM2: l.priceRub && l.totalArea ? Math.round(l.priceRub / l.totalArea) : null,
+          houseClass: (() => { const h = houseFor(store.houses, l); return h ? h.class : null; })() }));
+        const out = lots.map((l) => profileLot(l, {
+          grade: gradeFor(grades, l), house: houseFor(store.houses, l),
+          archiveEntry: l.fingerprint ? arc.flats[l.fingerprint] : null, peers: seed,
+        }));
+        out.sort((x, y) => (y.price.perM2 || 0) - (x.price.perM2 || 0));
+        for (const p of out) {
+          log(`\n${p.id}  ${p.address}${p.complex ? ` (${p.complex})` : ''}  ${(p.price.rub || 0).toLocaleString('ru-RU')} ₽`);
+          log(`  цена     ${(p.price.perM2 || 0).toLocaleString('ru-RU')} ₽/м²` +
+              (p.price.vsClassPct != null ? `, ${p.price.vsClassPct > 0 ? '+' : ''}${p.price.vsClassPct}% к медиане класса` : ''));
+          log(`  отделка  ${p.finish.level || '—'}, ${p.finish.state}, подтверждено: ${p.finish.proof || '—'}`);
+          log(`  дом      ${p.house.class || 'класс не поставлен'}` +
+              `${p.house.year ? `, ${p.house.year}` : ''}${p.house.floors ? `, ${p.house.floors} эт.` : ''}` +
+              `${p.house.parking ? `, паркинг ${p.house.parking}` : ''}`);
+          log(`  локация  ${p.location.ring || 'кольцо не определено'}${p.location.ringSure === false && p.location.ring ? ' (у самой границы)' : ''}` +
+              `, ${p.location.district || '—'}${p.location.metro ? `, ${p.location.metro}` : ''}`);
+          log(`  квартира ${p.flat.rooms}к ${p.flat.area} м², ${p.flat.floor} этаж (${p.flat.band || '—'})`);
+          log(`  рынок    ${p.market.days == null ? 'срок неизвестен'
+              : `${p.market.daysFromArchive ? 'не меньше ' : ''}${p.market.days} дней в экспозиции` +
+                (p.market.daysFromArchive ? ' (по архиву)' : '')}` +
+              `${p.market.priceMoves ? `, изменений цены ${p.market.priceMoves}` : ''}`);
+          p.gaps.forEach((g) => log(`  ! ${g.name}: ${g.text}`));
+        }
+        if (a.out) fs.writeFileSync(a.out, JSON.stringify(out, null, 2) + '\n');
+        if (a.md) {
+          /* Реестр паспортов в читаемом виде. Пересобирается командой, а не
+             руками, — иначе устареет на следующий день, как было с lots.md. */
+          const esc = (s) => String(s == null ? '' : s).replace(/\|/g, '\\|');
+          const L = [`# Паспорта лотов`, '',
+            `Собрано ${today} командой \`profile --md\`. Пять осей на лот, метод — [model.md](model.md).`, '',
+            '| ₽/м² | Лот | Отделка | Дом | Локация | Этаж | Разрывы |', '|--:|---|---|---|---|--:|---|'];
+          for (const p of out) {
+            L.push(`| ${(p.price.perM2 || 0).toLocaleString('ru-RU')} | [${p.id}](${p.url}) ${esc(p.address)} | ` +
+              `${p.finish.level || '—'} ${esc(p.finish.proof || '')} | ${esc(p.house.class || '—')} | ` +
+              `${esc(p.location.ring || '—')}, ${esc(p.location.district || '')} | ${p.flat.floor || '—'} | ` +
+              `${esc(p.gaps.map((g) => g.name).join('; ') || '—')} |`);
+          }
+          L.push('', '## Что видно на кадрах', '');
+          for (const p of out) {
+            L.push(`**${p.id}**, ${esc(p.address)}${p.complex ? ` (${esc(p.complex)})` : ''} — ` +
+              `${(p.price.rub || 0).toLocaleString('ru-RU')} ₽ за ${p.flat.area} м². ` +
+              `Отделка ${p.finish.level || '—'} (${p.finish.proof || '—'}), дом ${p.house.class || 'класс не поставлен'}` +
+              `${p.house.year ? `, ${p.house.year}` : ''}. ${p.house.note ? esc(p.house.note) : ''}`);
+            p.gaps.forEach((g) => L.push(`- ${g.name}: ${esc(g.text)}`));
+            L.push('');
+          }
+          fs.writeFileSync(a.md, L.join('\n') + '\n');
+          log(`-> ${a.md}: ${out.length} паспортов`);
+        }
+        const noHouse = out.filter((p) => !p.house.class).length;
+        log(`\nпаспортов: ${out.length}` + (noHouse ? `, без класса дома: ${noHouse} — заполнять командой profile --marks` : ''));
+      }
+
     } else if (cmd === 'report') {
       /* Таблица лотов раньше писалась руками и устаревала на следующий день.
          Теперь она собирается из оценок и архива, поэтому не гниёт: чтобы
@@ -2465,4 +2802,5 @@ if (require.main === module) (async () => {
 /* Чистые функции наружу — чтобы их можно было проверить без сети. */
 module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, archiveStat, completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringMargin, ringVerdict, pointInPolygon,
   gradeLevel, gradeRecord, observedState, gradeFor, galleryGrew, parseViews, REPAIR_RU, offersByIds, mergedPriceHistory,
-  expandSimilar, matchesQuery, finishCost, loadedPricePerM2, fairShellPrice, MARKERS, PROOFS };
+  expandSimilar, matchesQuery, finishCost, loadedPricePerM2, fairShellPrice, MARKERS, PROOFS,
+  houseClass, houseFor, houseRecord, profileLot, floorBand, HOUSE_MARKERS, HOUSE_CLASSES };
