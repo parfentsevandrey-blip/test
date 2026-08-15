@@ -823,6 +823,17 @@ test('упёршаяся в потолок группа сообщает об о
   assert.strictEqual(r.short.length, 0, 'обрезанная группа не считается ещё и недодавшей');
 });
 
+test('обрыв ровно на обещанном числе — не обрыв', async () => {
+  // группа из 56, потолок в две страницы: прочитано всё, кричать не о чем
+  const full = Array.from({ length: 28 }, (_, i) => groupOffer(1000 + i));
+  const full2 = Array.from({ length: 28 }, (_, i) => groupOffer(2000 + i));
+  const ctx = fakeSearch([full, full2]);
+  const r = await expandSimilar(ctx, {}, [{ id: 7, similarCount: 56 }], 2);
+  assert.deepStrictEqual(r.cut, []);
+  assert.deepStrictEqual(r.short, []);
+  assert.strictEqual(r.added.length, 56);
+});
+
 test('группа, отдавшая меньше обещанного, тоже не молчит', async () => {
   const ctx = fakeSearch([[groupOffer(1001), groupOffer(1002)]]);
   const r = await expandSimilar(ctx, {}, [{ id: 7, similarCount: 9 }], 4);

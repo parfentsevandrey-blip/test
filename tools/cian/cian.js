@@ -350,8 +350,12 @@ async function expandSimilar(ctx, q, lots, maxPages = 4) {
         if (matchesQuery(n, q)) added.push(n); else dropped++;
       }
       if (r.offers.length < 28) break;
-      /* Страница полная и потолок близко — за ним осталось непрочитанное. */
-      if (p === maxPages) cut.push({ id: l.id, promised: l.similarCount, seen, pages: p });
+      /* Страница полная и потолок близко — за ним осталось непрочитанное.
+         Кроме случая, когда лидер обещал ровно столько, сколько уже
+         прочитано: тогда обрыв мнимый, и кричать не о чем. */
+      if (p === maxPages && (l.similarCount == null || l.similarCount > seen)) {
+        cut.push({ id: l.id, promised: l.similarCount, seen, pages: p });
+      }
       await sleep(700);
     }
     if (broke) failed.push({ id: l.id, promised: l.similarCount, seen, pages, why: broke });
