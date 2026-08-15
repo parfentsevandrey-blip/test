@@ -4,7 +4,7 @@
  *
  *   node tools/cian/cian.js find   Остров              — id ЖК, метро, района по названию
  *   node tools/cian/cian.js count  --query q.json
- *   node tools/cian/cian.js search --query q.json [--pages 3] [--all] [--out lots.json] [--min-year 2016] [--garden-ring] [--strict нет]
+ *   node tools/cian/cian.js search --query q.json [--pages 3] [--all] [--out lots.json] [--min-year 2016] [--garden-ring] [--strict нет] [--similar-pages 4]
  *   node tools/cian/cian.js url    --query q.json      — каноническая ссылка cat.php
  *   node tools/cian/cian.js probe  --query q.json --with '{"loggia":{"type":"term","value":true}}'
  *   node tools/cian/cian.js sweep  --query q.json [--limit 250] [--all] [--dedupe] [--resolve 0]
@@ -321,16 +321,28 @@ function matchesQuery(lot, q) {
 
 async function expandSimilar(ctx, q, lots, maxPages = 4) {
   const leaders = lots.filter((l) => l.similarCount > 0);
-  if (!leaders.length) return { added: [], leaders: 0 };
+  if (!leaders.length) return { added: [], dropped: 0, leaders: 0, cut: [], failed: [], short: [] };
   const have = new Set(lots.map((l) => l.id));
   const added = [];
   let dropped = 0;
+  /* Группа могла оборваться тремя разными способами, и молчать нельзя ни об
+     одном: раньше всё это выглядело одинаково — «раскрыл группы, добавилось
+     N», и сколько осталось за краем, не знал никто.
+
+     cut    — упёрлись в потолок страниц, за ним ещё есть;
+     failed — ручка не ответила, группа не перечислена вовсе или наполовину;
+     short  — лидер обещал similarCount, а пришло меньше. */
+  const cut = [], failed = [], short = [];
   for (const l of leaders) {
     const sub = { ...q, multi_id: { type: 'term', value: l.id } };
+    let seen = 0, pages = 0, broke = null;
     for (let p = 1; p <= maxPages; p++) {
       let r;
-      try { r = await searchPage(ctx, sub, p); } catch (e) { break; }
+      try { r = await searchPage(ctx, sub, p); }
+      catch (e) { broke = e.message || 'ручка не ответила'; break; }
+      pages = p;
       if (!r.offers.length) break;
+      seen += r.offers.length;
       for (const o of r.offers) {
         const n = normalize(o);
         if (have.has(n.id)) continue;
@@ -338,11 +350,17 @@ async function expandSimilar(ctx, q, lots, maxPages = 4) {
         if (matchesQuery(n, q)) added.push(n); else dropped++;
       }
       if (r.offers.length < 28) break;
+      /* Страница полная и потолок близко — за ним осталось непрочитанное. */
+      if (p === maxPages) cut.push({ id: l.id, promised: l.similarCount, seen, pages: p });
       await sleep(700);
+    }
+    if (broke) failed.push({ id: l.id, promised: l.similarCount, seen, pages, why: broke });
+    else if (l.similarCount != null && seen < l.similarCount && !cut.some((c) => c.id === l.id)) {
+      short.push({ id: l.id, promised: l.similarCount, seen });
     }
     await sleep(500);
   }
-  return { added, dropped, leaders: leaders.length };
+  return { added, dropped, leaders: leaders.length, cut, failed, short };
 }
 
 /* ---------- развёртка большой выдачи ----------
@@ -1574,11 +1592,29 @@ if (require.main === module) (async () => {
       const pages = parseInt(a.pages || '3', 10);
       let { count, aggregated, lots } = await collect(ctx, q, pages, !!a.all);
       if (a.similar !== 'нет') {
-        const { added, dropped, leaders } = await expandSimilar(ctx, q, lots);
+        const simPages = parseInt(a['similar-pages'] || '4', 10);
+        const { added, dropped, leaders, cut, failed, short } = await expandSimilar(ctx, q, lots, simPages);
         if (leaders) {
           log(`раскрыл схлопнутые группы: лидеров ${leaders}, добавилось ${added.length}` +
               (dropped ? `, отброшено не подходящих под запрос ${dropped}` : ''));
           lots = lots.concat(added);
+          /* Обрезка обязана быть слышной. Пока о ней молчали, «раскрыл
+             группы» читалось как «раскрыл целиком», а за потолком в четыре
+             страницы могло остаться сколько угодно. */
+          if (cut.length) {
+            log(`  ! ${cut.length} групп упёрлись в потолок ${simPages} страниц — за ним ещё есть:`);
+            cut.slice(0, 5).forEach((c) => log(`      лидер ${c.id}: прочитано ${c.seen}` +
+              (c.promised ? ` из обещанных ${c.promised}` : '')));
+            log(`      добрать: --similar-pages ${simPages * 2}`);
+          }
+          if (failed.length) {
+            log(`  ! ${failed.length} групп не перечислены: ручка не ответила`);
+            failed.slice(0, 5).forEach((f) => log(`      лидер ${f.id}: прочитано ${f.seen} за ${f.pages} стр. — ${f.why}`));
+          }
+          if (short.length) {
+            log(`  ! ${short.length} групп отдали меньше обещанного (Циан считает similar по-своему):`);
+            short.slice(0, 5).forEach((s) => log(`      лидер ${s.id}: обещано ${s.promised}, пришло ${s.seen}`));
+          }
         }
       }
       /* Фильтры Циан текут: `apartment=0` пропускает апартаменты, и чем

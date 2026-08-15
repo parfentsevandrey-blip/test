@@ -5,7 +5,7 @@
 const assert = require('assert');
 const { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, archiveStat,
         completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringVerdict,
-        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, galleryGrew, parseViews, mergedPriceHistory, offersByIds, matchesQuery } = require('./cian.js');
+        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, galleryGrew, parseViews, mergedPriceHistory, offersByIds, matchesQuery, expandSimilar } = require('./cian.js');
 
 let passed = 0;
 const pending = [];
@@ -796,6 +796,49 @@ test('не вернувшийся номер при удачном ответе 
   const r = await offersByIds(ctx, [111, 222]);
   assert.deepStrictEqual(r.missing, [222]);
   assert.deepStrictEqual(r.failed, []);
+});
+
+process.stdout.write('раскрытие схлопнутых групп\n');
+
+/* Тот же приём, что и с offersByIds: настоящая функция на поддельном
+   контексте. Страницы поиска раздаются по кругу из плана. */
+const fakeSearch = (pages) => ({ request: { post: async (url, opt) => {
+  const p = opt.data.jsonQuery.page.value;
+  return { status: () => 200, json: async () => ({ data: { offersSerialized: pages[p - 1] || [] } }) };
+} } });
+
+const groupOffer = (id) => ({ cianId: id, roomsCount: 2, totalArea: 60, bargainTerms: { priceRur: 10e6 },
+  building: { deadline: null, buildYear: 2020 }, floorNumber: 5, geo: { address: [] } });
+
+test('упёршаяся в потолок группа сообщает об обрезке, а не молчит', async () => {
+  // лидер обещает 200 похожих, потолок — две страницы по 28
+  const full = Array.from({ length: 28 }, (_, i) => groupOffer(1000 + i));
+  const full2 = Array.from({ length: 28 }, (_, i) => groupOffer(2000 + i));
+  const ctx = fakeSearch([full, full2, full, full2]);
+  const lots = [{ id: 7, similarCount: 200 }];
+  const r = await expandSimilar(ctx, {}, lots, 2);
+  assert.strictEqual(r.cut.length, 1, 'обрезка обязана попасть в отчёт');
+  assert.strictEqual(r.cut[0].seen, 56);
+  assert.strictEqual(r.cut[0].promised, 200);
+  assert.strictEqual(r.short.length, 0, 'обрезанная группа не считается ещё и недодавшей');
+});
+
+test('группа, отдавшая меньше обещанного, тоже не молчит', async () => {
+  const ctx = fakeSearch([[groupOffer(1001), groupOffer(1002)]]);
+  const r = await expandSimilar(ctx, {}, [{ id: 7, similarCount: 9 }], 4);
+  assert.deepStrictEqual(r.cut, []);
+  assert.strictEqual(r.short.length, 1);
+  assert.strictEqual(r.short[0].seen, 2);
+  assert.strictEqual(r.short[0].promised, 9);
+});
+
+test('целиком перечисленная группа не поднимает тревоги', async () => {
+  const ctx = fakeSearch([[groupOffer(1001), groupOffer(1002)]]);
+  const r = await expandSimilar(ctx, {}, [{ id: 7, similarCount: 2 }], 4);
+  assert.deepStrictEqual(r.cut, []);
+  assert.deepStrictEqual(r.short, []);
+  assert.deepStrictEqual(r.failed, []);
+  assert.strictEqual(r.added.length, 2);
 });
 
 Promise.all(pending).then(() => {
