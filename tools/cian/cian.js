@@ -787,10 +787,21 @@ function archiveStat(arc) {
   /* «Не попала в последний снимок» — кандидат в ушедшие только для тех, чей
      запрос в этом снимке был. Квартира, залитая из файла и ни в одном
      запросе не состоящая, просто вне поля зрения, и считать её пропавшей —
-     та же ошибка, что уже дала 76 выдуманных пропаж. */
-  const missing = flats.filter((f) => f.lastSeen !== last);
-  const stale = missing.filter((f) => (f.sources || []).length).length;
-  const blind = missing.length - stale;
+     та же ошибка, что уже дала 76 выдуманных пропаж.
+
+     И сравнивать надо не с общей последней датой архива, а с последней датой
+     СВОЕГО запроса: залив 727 объявлений из файлов пятнадцатого числа сразу
+     объявил 805 квартир watchlist кандидатами в ушедшие — только потому, что
+     их запрос в тот день не снимали. */
+  const lastBySource = {};
+  for (const f of flats) {
+    for (const s of (f.sources || [])) {
+      if (!lastBySource[s] || f.lastSeen > lastBySource[s]) lastBySource[s] = f.lastSeen;
+    }
+  }
+  const named = flats.filter((f) => (f.sources || []).length);
+  const stale = named.filter((f) => (f.sources || []).some((s) => lastBySource[s] > f.lastSeen)).length;
+  const blind = flats.filter((f) => !(f.sources || []).length && f.lastSeen !== last).length;
   return { flats: flats.length, dates: sorted, first: sorted[0] || null, last,
     repeat, sources, moved, priceMoves, stale, blind };
 }
