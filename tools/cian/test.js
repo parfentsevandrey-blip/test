@@ -5,7 +5,7 @@
 const assert = require('assert');
 const { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, archiveStat,
         completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringVerdict,
-        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, galleryGrew, parseViews, mergedPriceHistory, offersByIds, matchesQuery, expandSimilar, houseClass, profileLot, floorBand, worksScope, buildCohort } = require('./cian.js');
+        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, galleryGrew, parseViews, mergedPriceHistory, offersByIds, matchesQuery, expandSimilar, houseClass, profileLot, floorBand, worksScope, buildCohort, metroSummary, metroLine, metroCell } = require('./cian.js');
 
 let passed = 0;
 const pending = [];
@@ -1105,4 +1105,99 @@ test('чего проверить нечем — то и не отбрасыва
 
 test('пустой запрос ничего не отбрасывает', () => {
   assert.strictEqual(matchesQuery(lot({ isApartments: true, rooms: 9 }), {}), true);
+});
+
+process.stdout.write('метро\n');
+
+/* Станции из живой выдачи: у одного лота их бывает 15, и раньше в записи
+   оставалась одна. Здесь проверяется, что выбрасывать перестали. */
+const und = (name, time, o = {}) => ({ name, time, id: o.id ?? name.length,
+  lineId: o.lineId ?? 1, lineType: o.lineType ?? null,
+  transportType: o.transportType ?? 'walk', underConstruction: !!o.underConstruction,
+  releaseYear: o.releaseYear ?? null });
+
+test('пересадочный узел считается линиями, а не строчками', () => {
+  // Большая Дмитровка: 15 станций на 8 линий — Театральная и Охотный Ряд
+  // идут отдельными строчками, но это один узел
+  const m = metroSummary([
+    und('Театральная', 4, { lineId: 9 }), und('Охотный Ряд', 5, { lineId: 1 }),
+    und('Площадь Революции', 5, { lineId: 3 }), und('Кузнецкий Мост', 7, { lineId: 9 }),
+    und('Лубянка', 8, { lineId: 1 }),
+  ]);
+  assert.strictEqual(m.walkStations, 5);
+  assert.strictEqual(m.walkLines, 3);
+});
+
+test('МЦК и МЦД в счёт метро не идут, но и не пропадают', () => {
+  // 211 записей из 941 на живой выдаче — это не метро: интервалы другие
+  const m = metroSummary([
+    und('Шелепиха', 5, { lineId: 8 }),
+    und('Деловой центр', 10, { lineId: 99, lineType: 'mck' }),
+    und('Тестовская', 12, { lineId: 98, lineType: 'mcd4' }),
+  ]);
+  assert.strictEqual(m.walkStations, 1);
+  assert.strictEqual(m.walkLines, 1);
+  assert.deepStrictEqual(m.rail, ['МЦД-4', 'МЦК']);
+});
+
+test('строящаяся станция не считается доступностью, но названа со сроком', () => {
+  // Академическая (2026) нашлась у 4 лотов: обещание в графе наблюдения —
+  // та же болезнь, что рендер вместо фото у отделки и у дома
+  const m = metroSummary([
+    und('Шаболовская', 9, { lineId: 6 }),
+    und('Академическая', 3, { lineId: 11, underConstruction: true, releaseYear: 2026 }),
+  ]);
+  assert.strictEqual(m.walkStations, 1);
+  assert.strictEqual(m.name, 'Шаболовская');
+  assert.deepStrictEqual(m.planned, [{ name: 'Академическая', year: 2026 }]);
+});
+
+test('заголовочной берётся ближайшая пешая, а не первая в списке', () => {
+  // Циан отдаёт список неотсортированным у 5 лотов из 28
+  const m = metroSummary([und('Улица 1905 года', 15, { lineId: 7 }), und('Краснопресненская', 2, { lineId: 5 })]);
+  assert.strictEqual(m.name, 'Краснопресненская');
+  assert.strictEqual(m.minutes, 2);
+  assert.strictEqual(m.byFoot, true);
+});
+
+test('если пешком станций нет — это сказано, а не выдано за пешие минуты', () => {
+  const m = metroSummary([und('Москва-Сити', 3, { transportType: 'transport', lineId: 8 })]);
+  assert.strictEqual(m.byFoot, false);
+  assert.strictEqual(m.walkStations, 0);
+  const gaps = profileLot(lot({ metro: m, lat: 55.75, lng: 37.6 })).gaps.map((g) => g.name);
+  assert.ok(gaps.includes('до метро транспортом'));
+});
+
+test('пешком только рельсы — это не метро в шаге ходьбы', () => {
+  const m = metroSummary([und('Тестовская', 6, { lineId: 98, lineType: 'mcd4' })]);
+  assert.strictEqual(m.walkStations, 0);
+  assert.deepStrictEqual(m.rail, ['МЦД-4']);
+  const gaps = profileLot(lot({ metro: m, lat: 55.75, lng: 37.6 })).gaps.map((g) => g.name);
+  assert.ok(gaps.includes('вместо метро рельсы'));
+});
+
+test('станций нет вовсе — null, а не выдуманный ноль', () => {
+  assert.strictEqual(metroSummary([]), null);
+  assert.strictEqual(metroSummary(null), null);
+  assert.strictEqual(metroSummary(undefined), null);
+});
+
+test('строка про метро называет все части, ни одну не сводя к другой', () => {
+  const s = metroLine(metroSummary([
+    und('Краснопресненская', 2, { lineId: 5 }), und('Баррикадная', 6, { lineId: 7 }),
+    und('Деловой центр', 12, { lineId: 99, lineType: 'mck' }),
+    und('Суворовская', 4, { lineId: 11, underConstruction: true, releaseYear: 2026 }),
+  ]));
+  assert.ok(s.includes('Краснопресненская, 2 мин пешком'));
+  assert.ok(s.includes('2 ст. на 2 лин.'));
+  assert.ok(s.includes('МЦК'));
+  assert.ok(s.includes('строится: Суворовская 2026'));
+});
+
+test('старая запись про метро не выдаётся за ноль линий', () => {
+  // файлы выдачи до этой правки хранят только ближайшую станцию: линии там
+  // неизвестны, а «0» читалось бы как наблюдение
+  assert.strictEqual(metroCell({ name: 'Курская', minutes: 8, byFoot: true }).trim(), '8м/?');
+  assert.strictEqual(metroCell({ name: 'Курская', minutes: 8, byFoot: true, walkLines: 3, walkStations: 4 }).trim(), '8м/3л');
+  assert.strictEqual(metroCell(null).trim(), '—');
 });

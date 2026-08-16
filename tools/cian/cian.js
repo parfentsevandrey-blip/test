@@ -176,13 +176,91 @@ async function offersByIds(ctx, ids, dealType = 'flatsale') {
   return { offers, failed, bad, missing: asked.filter((id) => !back.has(id) && !failed.includes(id)) };
 }
 
+/* ---------- метро ----------
+   Раньше здесь стояло undergrounds[0] — одна станция, и весь остальной
+   список молча выбрасывался. На 190 живых лотах видно, чего это стоило.
+
+   Во-первых, станций у лота от 1 до 15, и это не украшение: 15 станций
+   пешком на Большой Дмитровке и 1 станция на окраине Садового — разная
+   локация, а в записи они выглядели одинаково.
+
+   Во-вторых, число станций само по себе врёт. У той же Большой Дмитровки
+   15 станций, но линий всего 8: пересадочный узел считается по платформам,
+   и Театральная с Охотным Рядом идут двумя строчками. Связность меряется
+   линиями, а не строчками.
+
+   В-третьих, в том же списке лежат МЦК и МЦД — 211 записей из 941 (22%).
+   Диаметр полезен, но это не метро: интервалы другие, и считать их вместе
+   значит завышать доступность каждому пятому лоту.
+
+   В-четвёртых, часть станций ещё не построена: Звенигородская, Суворовская
+   и Академическая со сроком 2026 нашлись у 7 лотов из 190. Это та же
+   болезнь, что рендер вместо фото у отделки и у дома, — обещание в графе
+   наблюдения. Строящиеся не считаем, но и не прячем: они уходят в planned
+   поимённо, со сроком.
+
+   И в-пятых, у 4 лотов из 190 ближайшая станция — транспортом. «4 минуты»
+   транспортом и «6 минут» пешком в одной колонке несопоставимы, поэтому
+   заголовочной берётся ближайшая пешая построенная, а подмена называется. */
+const RAIL_LINES = { mck: 'МЦК', mcd1: 'МЦД-1', mcd2: 'МЦД-2', mcd3: 'МЦД-3', mcd4: 'МЦД-4', mcd5: 'МЦД-5' };
+
+function metroSummary(undergrounds) {
+  const list = Array.isArray(undergrounds) ? undergrounds : [];
+  if (!list.length) return null;
+  const planned = list.filter((u) => u.underConstruction)
+    .map((u) => ({ name: u.name, year: u.releaseYear ?? null }));
+  const built = list.filter((u) => !u.underConstruction);
+  const walk = built.filter((u) => u.transportType === 'walk');
+  const rail = (u) => !!RAIL_LINES[u.lineType];
+  /* Ближайшая пешая построенная. Если пешком нет ни одной — берём
+     ближайшую построенную любым способом и говорим, что это не пешком. */
+  const pool = walk.length ? walk : built;
+  const head = pool.length ? pool.reduce((a, b) => ((b.time ?? 1e9) < (a.time ?? 1e9) ? b : a)) : null;
+  const metroWalk = walk.filter((u) => !rail(u));
+  return {
+    name: head ? head.name : null,
+    minutes: head ? (head.time ?? null) : null,
+    byFoot: head ? head.transportType === 'walk' : false,
+    /* Пешие станции и линии — отдельно метро, отдельно рельсы. */
+    walkStations: metroWalk.length,
+    walkLines: new Set(metroWalk.map((u) => u.lineId)).size,
+    rail: [...new Set(walk.filter(rail).map((u) => RAIL_LINES[u.lineType]))].sort(),
+    planned,
+  };
+}
+
+/* Одна строка про доступность — для таблиц и паспорта. Ни одна из частей
+   не выводится из другой: станции, линии, рельсы и обещания живут рядом. */
+function metroLine(m) {
+  if (!m) return null;
+  const parts = [`${m.name || '—'}, ${m.minutes ?? '?'} мин ${m.byFoot ? 'пешком' : 'транспортом'}`];
+  if (m.walkStations > 1) parts.push(`пешком ${m.walkStations} ст. на ${m.walkLines} лин.`);
+  if ((m.rail || []).length) parts.push(m.rail.join('/'));
+  if ((m.planned || []).length) parts.push(`строится: ${m.planned.map((p) => `${p.name}${p.year ? ' ' + p.year : ''}`).join(', ')}`);
+  return parts.join('; ');
+}
+
+/* Узкая ячейка для таблиц: минуты, число линий и метка, если пешком нет.
+   «8м/3л» — восемь минут пешком, три линии в пешей доступности.
+
+   Файлы выдачи, собранные до этой правки, хранят старую запись — только
+   имя, минуты и признак «пешком». Число линий у них не «ноль», а
+   неизвестно, и печатать «8м/0л» значило бы выдумать наблюдение задним
+   числом. Такие ячейки показываются без линий. */
+function metroCell(m) {
+  if (!m) return '   —    ';
+  const t = `${m.minutes ?? '?'}м`;
+  if (!m.byFoot) return `${t}тр`.padEnd(8);
+  if (m.walkLines == null) return `${t}/?`.padEnd(8);
+  return `${t}/${m.walkLines}л${(m.planned || []).length ? '+с' : ''}`.padEnd(8);
+}
+
 /* Плоская запись из «сырого» оффера: только то, по чему реально отбирают. */
 function normalize(o) {
   const b = o.building || {};
   const addr = (o.geo && o.geo.address) || [];
   // Округ и район оба приходят с geoType="district", различаются полем type.
   const pick = (t) => (addr.find((a) => a.type === t) || {}).name || null;
-  const und = ((o.geo && o.geo.undergrounds) || [])[0] || null;
   const created = o.creationDate ? o.creationDate.slice(0, 10) : null;
   const houseId = (addr.find((a) => a.type === 'house') || {}).id || null;
   const area = o.totalArea ? parseFloat(o.totalArea) : null;
@@ -208,7 +286,7 @@ function normalize(o) {
     district: pick('raion'),
     street: pick('street'),
     house: pick('house'),
-    metro: und ? { name: und.name, minutes: und.time ?? null, byFoot: und.transportType === 'walk' } : null,
+    metro: metroSummary((o.geo || {}).undergrounds),
     complex: (o.newbuilding && o.newbuilding.name) || null,
     /* Координаты приходят и в выдаче, и в карточке. Без них нельзя отсечь
        выдачу по кольцу: район — слишком грубая единица, Хамовники и
@@ -1453,6 +1531,17 @@ function profileLot(lot, opts = {}) {
   if (grade && ['устаревший', 'под ремонт'].includes(grade.age) && state === 'под ключ') {
     say('ремонт не актив', `ремонт ${grade.age === 'под ремонт' ? 'под замену' : 'устарел'}: покупатель будет вычитать переделку, а не платить за отделку`);
   }
+  /* Доступность: те же обещания, что у отделки и у дома, только в графе
+     локации. Объявление пишет «5 минут до метро», а станция открывается
+     в 2026 году — жить в этой квартире придётся до открытия. */
+  const m = lot.metro;
+  if (m && !m.byFoot) say('до метро транспортом', `ближайшая станция ${m.name} — ${m.minutes} мин транспортом, пешком станций нет`);
+  if (m && (m.planned || []).length && m.walkStations === 0) {
+    say('метро обещано', `пеших станций сейчас нет, строится ${m.planned.map((p) => `${p.name}${p.year ? ' (' + p.year + ')' : ''}`).join(', ')}`);
+  }
+  if (m && m.walkStations === 0 && (m.rail || []).length) {
+    say('вместо метро рельсы', `пешком только ${m.rail.join('/')} — интервалы и режим другие, метром это не считается`);
+  }
   const band = floorBand(lot);
   if (band === 'первый' || band === 'последний') say('этаж', `${band} этаж — скидка к цене корпуса, а не премия`);
   if (lot.isApartments) say('апартаменты', 'не жильё: нет прописки, налог и коммуналка выше, ипотека дороже');
@@ -1490,7 +1579,7 @@ function profileLot(lot, opts = {}) {
       markers: house ? house.markers : null, note: house ? house.note : null },
     location: { ring: ring.inside === null ? null : ring.inside ? 'внутри Садового' : 'за Садовым',
       ringSure: ring.sure, okrug: lot.okrug, district: lot.district,
-      metro: lot.metro ? `${lot.metro.name}, ${lot.metro.minutes} мин ${lot.metro.byFoot ? 'пешком' : 'транспортом'}` : null },
+      metro: metroLine(lot.metro), metroRaw: lot.metro || null },
     flat: { rooms: lot.rooms, area: lot.totalArea, kitchen: lot.kitchenArea, floor: lot.floor, band,
       apartments: lot.isApartments },
     market: { days, daysFromArchive, created: lot.created,
@@ -2648,6 +2737,26 @@ if (require.main === module) (async () => {
       if (apts.length) {
         log(`! апартаментов в круге: ${apts.length} — не жильё (нет прописки, налог и коммуналка выше); в когорте помечены`);
       }
+      /* Доступность внутри круга. Круг в 1,5 км спокойно вмещает и дом
+         в двух минутах от станции, и дом, до которого пешком станции нет
+         вовсе, — это разная локация при одинаковом расстоянии до центра
+         выборки, и медиана их складывает. */
+      const withM = c.near.filter((l) => l.metro);
+      const legacy = withM.filter((l) => l.metro.walkLines == null).length;
+      if (legacy) log(`метро: у ${legacy} лотов запись старого образца (только ближайшая станция) — линии и строящиеся по ним неизвестны, пересоберите выдачу`);
+      if (withM.length) {
+        const noWalk = withM.filter((l) => !l.metro.byFoot || l.metro.walkStations === 0);
+        const mins = withM.filter((l) => l.metro.byFoot && l.metro.minutes != null).map((l) => l.metro.minutes).sort((x, y) => x - y);
+        if (mins.length) {
+          log(`метро пешком в круге: медиана ${median(mins)} мин, разброс ${mins[0]}–${mins[mins.length - 1]} мин` +
+              (noWalk.length ? `; без пеших станций ${noWalk.length}` : ''));
+        }
+        if (mins.length && mins[mins.length - 1] - mins[0] >= 10) {
+          log(`! разброс по метро ${mins[0]}–${mins[mins.length - 1]} мин — когорта неоднородна по доступности, медиана складывает разные локации`);
+        }
+        const plan = withM.filter((l) => (l.metro.planned || []).length);
+        if (plan.length) log(`! у ${plan.length} лотов в списке станций есть строящиеся — в счёт не идут, помечены «+с»`);
+      }
       if (c.unknownYear.length) {
         log(`\nгод постройки неизвестен (${c.unknownYear.length}) — раньше такие молча выпадали, теперь поимённо:`);
         c.unknownYear.forEach((l) => log(`  ${String(l.distM).padStart(5)} м  ${String(pm(l)).padStart(8)} ₽/м²  ${l.totalArea} м²  ${(l.street || '') + ' ' + (l.house || '')}  ${l.url}`));
@@ -2658,7 +2767,7 @@ if (require.main === module) (async () => {
         log(`  ${String(pm(l)).padStart(8)} ₽/м²  ${(l.priceRub / 1e6).toFixed(1).padStart(5)} млн  ${String(l.totalArea).padStart(5)} м²  ` +
             `${l.rooms === 9 ? 'ст' : (l.rooms ?? '?') + 'к'}${l.isApartments ? ' АПАРТ' : '     '}  эт.${String(l.floor ?? '?').padStart(2)}/${l.floors ?? '?'}  ${String(buildingYear(l) || '—').padStart(4)}  ` +
             `${String(completeness(l)).padEnd(10)} ${String(l.daysOnMarket ?? '—').padStart(4)} дн  ${String(l.distM).padStart(5)} м  ` +
-            `${(l.street || '') + ' ' + (l.house || '')}  ${l.url}`);
+            `${metroCell(l.metro)}  ${(l.street || '') + ' ' + (l.house || '')}  ${l.url}`);
       }
       log(`\nграницы районов круг не уважают: если файлы собраны по одному району, соседние проверить отдельно.`);
       if (a.out) fs.writeFileSync(a.out, JSON.stringify({ at, radius, cohort }, null, 2) + '\n');
@@ -3056,4 +3165,5 @@ if (require.main === module) (async () => {
 module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, archiveStat, completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringMargin, ringVerdict, pointInPolygon,
   gradeLevel, gradeRecord, observedState, gradeFor, galleryGrew, parseViews, REPAIR_RU, offersByIds, mergedPriceHistory, worksScope, AGES, WORK_ITEMS,
   expandSimilar, matchesQuery, buildCohort, finishCost, loadedPricePerM2, fairShellPrice, MARKERS, PROOFS,
-  houseClass, houseFor, houseRecord, profileLot, floorBand, HOUSE_MARKERS, HOUSE_CLASSES };
+  houseClass, houseFor, houseRecord, profileLot, floorBand, HOUSE_MARKERS, HOUSE_CLASSES,
+  metroSummary, metroLine, metroCell, RAIL_LINES };
