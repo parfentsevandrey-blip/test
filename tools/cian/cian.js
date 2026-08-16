@@ -1500,6 +1500,43 @@ function profileLot(lot, opts = {}) {
   };
 }
 
+/* ---------- улицы и адреса ----------
+   Подсказка Циана (geo-suggest) знает ЖК, метро, районы и города — и НЕ знает
+   улиц: на запрос «Литвина-Седого» она отвечает «Митино» и «Тихвин», то есть
+   нечётким совпадением по буквам. Из-за этого поиск по улице был невозможен,
+   и на разборе флиппинга улицу пришлось искать одноразовым скриптом.
+
+   Рабочий путь — двухшаговый, тот же, которым пользуется сама выдача:
+     1. geocode-cached отдаёт координаты и kind (street / house / locality);
+     2. geocoded-for-search по этим координатам отдаёт details — цепочку
+        geo-объектов Циана с их id: Location -> District -> Street -> House.
+   Последний в цепочке — самый точный; его id и идёт в фильтр geo. */
+async function geoResolve(page, query, region = 1) {
+  const geo = await page.evaluate(async (q) => {
+    const r = await fetch(`https://www.cian.ru/api/geo/geocode-cached/?request=${encodeURIComponent(q)}`,
+      { credentials: 'include' });
+    return r.ok ? await r.json() : null;
+  }, query);
+  const hit = ((geo || {}).items || [])[0];
+  if (!hit) return { found: false, query };
+  const [lng, lat] = hit.coordinates || [];
+  const det = await page.evaluate(async (b) => {
+    const r = await fetch('https://www.cian.ru/api/geo/geocoded-for-search/', {
+      method: 'POST', credentials: 'include',
+      headers: { 'content-type': 'application/json' }, body: JSON.stringify(b) });
+    return r.ok ? await r.json() : null;
+  }, { Lat: lat, Lng: lng, Kind: hit.kind, Address: hit.text });
+  const details = ((det || {}).details || []).map((d) => ({ id: d.id, name: d.name, geoType: d.geoType }));
+  /* Циан называет тип с большой буквы в ответе и с маленькой в фильтре. */
+  const TYPE = { Street: 'street', House: 'house', District: 'district', Location: 'location', Underground: 'underground' };
+  const precise = details.filter((d) => TYPE[d.geoType] && d.geoType !== 'Location').pop() || null;
+  return {
+    found: true, query, text: hit.text, name: hit.name, kind: hit.kind, lat, lng,
+    bbox: hit.boundedBy || null, details, region,
+    geo: precise ? { type: TYPE[precise.geoType], id: precise.id } : null,
+  };
+}
+
 /* ---------- окрестная когорта ----------
    Выборка для сравнения течёт четырьмя способами, и все четыре были
    пойманы на одном разборе (флиппинг у Литвина-Седого):
@@ -1888,12 +1925,28 @@ if (require.main === module) (async () => {
       const r = await ctx.request.get(url, { headers: { referer: 'https://www.cian.ru/', 'user-agent': UA }, timeout: 30000 });
       const s = ((await r.json()).data || {}).suggestions || {};
       const GEO = { newbuildings: 'newobject', undergrounds: 'underground', districts: 'district', streets: 'street' };
+      let shown = 0;
       for (const [group, items] of Object.entries(s)) {
         const list = (items && items.items) || [];
         if (!list.length) continue;
+        shown += list.length;
         log(`\n${group}${GEO[group] ? `  (geo type "${GEO[group]}")` : ''}`);
         list.slice(0, 8).forEach((i) => log(`  id=${String(i.id).padEnd(9)} ${i.fullName || i.name}${i.address ? ' — ' + i.address : ''}`));
       }
+      /* Подсказка улиц не знает и отвечает на них мусором по буквам, поэтому
+         адрес всегда доразрешается геокодером — и когда подсказка молчит, и
+         когда она отвечает не тем. */
+      const g = await geoResolve(page, `${a.city || 'Москва'}, ${query}`, a.region || 1);
+      if (g.found) {
+        log(`\nгеокодер: ${g.text}  (${g.kind})  ${g.lat}, ${g.lng}`);
+        if (g.details.length) log(`  цепочка: ${g.details.map((d) => `${d.geoType} ${d.id} ${d.name}`).join('  ->  ')}`);
+        if (g.geo) {
+          log(`  фильтр:  "geo": { "type": "geo", "value": [${JSON.stringify(g.geo)}] }`);
+          const cnt = await searchPage(ctx, { _type: 'flatsale', engine_version: { type: 'term', value: 2 },
+            region: { type: 'terms', value: [a.region || 1] }, geo: { type: 'geo', value: [g.geo] } }, 1);
+          log(`  продаётся сейчас: ${cnt.count}`);
+        } else log('  id в цепочке нет — фильтр не построить, остаются координаты');
+      } else if (!shown) log('\nни подсказка, ни геокодер ничего не нашли');
 
     } else if (cmd === 'count') {
       const { count } = await searchPage(ctx, loadQuery(a.query), 1);
@@ -2588,6 +2641,13 @@ if (require.main === module) (async () => {
       const ring = { in: 0, out: 0, unsure: 0 };
       c.near.forEach((l) => { const v = ringVerdict(l); if (v.inside === null) ring.unsure++; else if (v.inside) ring.in++; else ring.out++; });
       if (ring.in && ring.out) log(`! круг пересекает Садовое: внутри ${ring.in}, снаружи ${ring.out} — когорта неоднородна по локации`);
+      /* Апартаменты в когорте тянут медиану вниз и это не скидка, а другой
+         товар: на Литвина-Седого 31 м² за 8,5 млн (274 тыс/м² против 450 по
+         улице) оказались именно ими. Если запрос их не отсекал — сказать. */
+      const apts = c.near.filter((l) => l.isApartments);
+      if (apts.length) {
+        log(`! апартаментов в круге: ${apts.length} — не жильё (нет прописки, налог и коммуналка выше); в когорте помечены`);
+      }
       if (c.unknownYear.length) {
         log(`\nгод постройки неизвестен (${c.unknownYear.length}) — раньше такие молча выпадали, теперь поимённо:`);
         c.unknownYear.forEach((l) => log(`  ${String(l.distM).padStart(5)} м  ${String(pm(l)).padStart(8)} ₽/м²  ${l.totalArea} м²  ${(l.street || '') + ' ' + (l.house || '')}  ${l.url}`));
@@ -2596,7 +2656,7 @@ if (require.main === module) (async () => {
       log(`\nкогорта (до ${cutoff} года или без года), ${cohort.length} лотов:`);
       for (const l of cohort) {
         log(`  ${String(pm(l)).padStart(8)} ₽/м²  ${(l.priceRub / 1e6).toFixed(1).padStart(5)} млн  ${String(l.totalArea).padStart(5)} м²  ` +
-            `${l.rooms === 9 ? 'ст' : (l.rooms ?? '?') + 'к'}  эт.${String(l.floor ?? '?').padStart(2)}/${l.floors ?? '?'}  ${String(buildingYear(l) || '—').padStart(4)}  ` +
+            `${l.rooms === 9 ? 'ст' : (l.rooms ?? '?') + 'к'}${l.isApartments ? ' АПАРТ' : '     '}  эт.${String(l.floor ?? '?').padStart(2)}/${l.floors ?? '?'}  ${String(buildingYear(l) || '—').padStart(4)}  ` +
             `${String(completeness(l)).padEnd(10)} ${String(l.daysOnMarket ?? '—').padStart(4)} дн  ${String(l.distM).padStart(5)} м  ` +
             `${(l.street || '') + ' ' + (l.house || '')}  ${l.url}`);
       }
