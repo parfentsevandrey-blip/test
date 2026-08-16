@@ -24,7 +24,11 @@ class WeatherWidgetProvider : AppWidgetProvider() {
                 when (intent.action) {
                     ACTION_REFRESH -> renderAll(context)
                     Intent.ACTION_MY_PACKAGE_REPLACED -> {
+                        // A job keeps the triggers it was scheduled with, and only re-arms itself
+                        // when it runs. An update that adds one — the theme watch — would
+                        // otherwise never reach a widget that was already placed.
                         WeatherRefresh.schedule(context)
+                        WeatherWatch.schedule(context)
                         renderAll(context)
                     }
                     Intent.ACTION_TIMEZONE_CHANGED, Intent.ACTION_LOCALE_CHANGED -> {
@@ -42,6 +46,9 @@ class WeatherWidgetProvider : AppWidgetProvider() {
 
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
         ids.forEach { render(context, manager, it) }
+        // Content-trigger jobs are one-shot and this arrives on boot and on placement, so the
+        // watch is re-armed from here too; scheduling over a live job is a no-op.
+        WeatherWatch.schedule(context)
         // A card that has just been placed has nothing to show, so the first fetch is not left to
         // the hourly job an hour from now.
         WeatherRefresh.request(context) { renderAll(context) }
@@ -58,10 +65,12 @@ class WeatherWidgetProvider : AppWidgetProvider() {
 
     override fun onEnabled(context: Context) {
         WeatherRefresh.schedule(context)
+        WeatherWatch.schedule(context)
     }
 
     override fun onDisabled(context: Context) {
         WeatherRefresh.cancel(context)
+        WeatherWatch.cancel(context)
     }
 
     companion object {

@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-8.4.apk`](dist/quire-calendar-8.4.apk) · 1.9 MB | `sha256 c2a8c7d733ec52acf02a38cb66d8c436821065c43698eab052e7013656f3335f` |
-| **Weather** | [`dist/quire-weather-8.4.apk`](dist/quire-weather-8.4.apk) · 1.5 MB | `sha256 b07425efbb9ab2206663fa7fa52018aae929bfa326b0d091d113eadff18e11de` |
+| **Calendar** | [`dist/quire-calendar-8.5.apk`](dist/quire-calendar-8.5.apk) · 1.9 MB | `sha256 e31949c4ec9e1dcb6224c4fd7b1a8833ae87604d3eb2d75d05ffa2eb5a1ea37a` |
+| **Weather** | [`dist/quire-weather-8.5.apk`](dist/quire-weather-8.5.apk) · 1.5 MB | `sha256 4e2940473a618ac34c10d739c263405a631931259160926e0942339cf6e351dd` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-8.4.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-8.5.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -662,6 +662,31 @@ are pointed at specifically:
 - **`lintRelease` is not optional.** `assembleRelease` runs `lintVitalRelease`, which is a subset;
   the full lint is what catches a locale read that will not recompose or a `LocalContext` cast to
   an Activity.
+
+## What wakes a widget
+
+A widget is a picture the launcher keeps, and every one of these bugs shipped before it was
+caught: the picture only changes when something asks the provider for a new one, and each of
+these was a change nothing asked about.
+
+- **The weather job fetched and told nobody.** The hourly refresh fetched and saved faithfully,
+  so the app always opened on fresh numbers — and the card on the home screen showed the
+  forecast from whenever the app was last opened, forever. A background refresh whose output
+  nobody draws is no refresh at all on exactly the surface it exists for. The job now ends by
+  asking the provider to repaint, fetch or no fetch, which also caps how long any missed theme
+  change can survive on the card.
+- **Nothing fired when dark theme flipped.** The calendar's colour fingerprint always included
+  the night mode, but its watcher only held the palette setting — so a widget following the
+  system stayed in yesterday's half of the scheme until some other wake happened along. Both
+  apps now watch `ui_night_mode`, the setting the dark-theme switch writes, alongside
+  `theme_customization_overlay_packages`, the one the palette picker writes.
+- **The weather card had no watcher at all.** The calendar repainted on a palette change and the
+  weather card beside it did not. It has its own content-trigger job now, re-armed on every
+  firing, on boot, on placement and on package update — a job keeps the triggers it was
+  scheduled with, so an update that adds one has to re-arm it by hand.
+
+All three are held by tests that count the repaint requests: the job must end in exactly one,
+the watch must hold both settings, and replacing the package must re-arm the watch.
 
 ## Signing
 

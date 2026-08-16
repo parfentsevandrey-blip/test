@@ -45,6 +45,17 @@ class CalendarWatchService : JobService() {
          */
         private const val THEME_SETTING = "theme_customization_overlay_packages"
 
+        /**
+         * Where the dark-theme switch records its choice.
+         *
+         * The fingerprint in [SchemeWatch] has always included the night mode, but nothing ever
+         * *fired* when only the night mode changed: this job watched the palette setting alone,
+         * and a widget following the system stayed in yesterday's half of the scheme until some
+         * other wake came along. Flipping dark theme writes this setting; watching it is what
+         * turns the flip into a repaint while the app is not running.
+         */
+        private const val NIGHT_SETTING = "ui_night_mode"
+
         fun schedule(context: Context) {
             val scheduler = context.getSystemService(JobScheduler::class.java) ?: return
             val job = JobInfo.Builder(
@@ -59,6 +70,9 @@ class CalendarWatchService : JobService() {
                 )
                 .addTriggerContentUri(
                     JobInfo.TriggerContentUri(Settings.Secure.getUriFor(THEME_SETTING), 0),
+                )
+                .addTriggerContentUri(
+                    JobInfo.TriggerContentUri(Settings.Secure.getUriFor(NIGHT_SETTING), 0),
                 )
                 .setTriggerContentUpdateDelay(2_000L)
                 .setTriggerContentMaxDelay(30_000L)

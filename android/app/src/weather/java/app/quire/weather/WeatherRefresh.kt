@@ -26,7 +26,7 @@ class WeatherRefresh : JobService() {
     override fun onStartJob(params: JobParameters?): Boolean {
         EXECUTOR.execute {
             try {
-                refreshNow(applicationContext)
+                runOnce(applicationContext)
             } catch (t: Throwable) {
                 Log.w(TAG, "weather refresh failed", t)
             } finally {
@@ -84,6 +84,25 @@ class WeatherRefresh : JobService() {
         fun cancel(context: Context) {
             context.getSystemService(JobScheduler::class.java)?.cancel(JOB_ID)
             WeatherTick.disarm(context)
+        }
+
+        /**
+         * One round of the job's actual work: fetch if stale, then repaint the card regardless.
+         *
+         * The repaint is the half this class shipped without, and the bug it caused is worth
+         * recording: the job fetched and *saved* faithfully every hour, so the app always opened
+         * on fresh numbers — and the widget, which is a picture the launcher keeps until someone
+         * paints a new one, showed the forecast from whenever the app was last opened, forever.
+         * A background refresh whose output nobody draws is indistinguishable from no refresh at
+         * all on exactly the surface the refresh exists for.
+         *
+         * It repaints even when the fetch was skipped as fresh, because the repaint is also the
+         * card's staleness cap for everything that is not weather: a theme or palette change the
+         * watchers missed gets painted over at most one interval later.
+         */
+        internal fun runOnce(context: Context) {
+            refreshNow(context)
+            WeatherWidgetProvider.requestUpdate(context)
         }
 
         /** Asks for a fetch off the caller's thread, for when the app is opened or pulled down. */

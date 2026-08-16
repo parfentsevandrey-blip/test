@@ -76,6 +76,13 @@ class WidgetWakeTest {
             "nothing watches the setting the theme picker writes: $triggers",
             triggers.any { it.endsWith("theme_customization_overlay_packages") },
         )
+        // The fingerprint always included the night mode; nothing ever fired when only the night
+        // mode changed. A widget following the system stayed in yesterday's half of the scheme
+        // until some other wake happened along.
+        assertTrue(
+            "nothing watches the setting the dark-theme switch writes: $triggers",
+            triggers.any { it.endsWith("ui_night_mode") },
+        )
     }
 
     /**
