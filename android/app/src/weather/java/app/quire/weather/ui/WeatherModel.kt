@@ -61,7 +61,6 @@ class WeatherModel(app: Application) : AndroidViewModel(app) {
     data class Settings(
         val period: Int,
         val liveSky: Boolean,
-        val glassEdges: Boolean,
         val alerts: Boolean,
         val threshold: Int,
         val degrees: Degrees,
@@ -72,7 +71,6 @@ class WeatherModel(app: Application) : AndroidViewModel(app) {
             fun from(store: WeatherSettings) = Settings(
                 period = store.periodMinutes,
                 liveSky = store.liveSky,
-                glassEdges = store.glassEdges,
                 alerts = store.alerts,
                 threshold = store.threshold,
                 degrees = store.degrees,
@@ -126,11 +124,6 @@ class WeatherModel(app: Application) : AndroidViewModel(app) {
 
     fun setLiveSky(on: Boolean) {
         store().liveSky = on
-        reread()
-    }
-
-    fun setGlassEdges(on: Boolean) {
-        store().glassEdges = on
         reread()
     }
 

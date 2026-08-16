@@ -102,15 +102,18 @@ fun WeatherScreen(
     // screen for exactly that reason. Starting it under the bar instead put a hard horizontal
     // line across the screen with a square corner at each end — the only edge on a page where
     // everything else is a rounded card, and the thing that made it look stuck on.
-    // Full height now, not a band that dies a third of the way down: the sky is the page, the
-    // way every weather product that feels like a place rather than a table does it. Strong where
-    // the hero is, thinned to a tint by the time the cards take over — the cards are translucent,
-    // so the same wash keeps working behind them all the way to the bottom.
-    val wash = remember(sky) {
+    // A band behind the hero, gone before the cards begin. The full-height version of this — a
+    // wash down the whole page with translucent cards over it — looked like an idea and read as
+    // mush: colour under everything means contrast under nothing. The sky gets the top of the
+    // page; the content gets a page.
+    val density = LocalDensity.current
+    val reach = with(density) { (padding.calculateTopPadding() + SkyHeight).toPx() }
+    val wash = remember(sky, reach) {
         Brush.verticalGradient(
             0f to sky.copy(alpha = 0.55f),
-            0.40f to sky.copy(alpha = 0.16f),
-            1f to sky.copy(alpha = 0.05f),
+            0.55f to sky.copy(alpha = 0.20f),
+            1f to sky.copy(alpha = 0f),
+            endY = reach,
         )
     }
 
@@ -185,7 +188,7 @@ fun WeatherScreen(
                     item { Box(Modifier.arrive(3, forecast.fetched, ledger)) { Heading(stringResource(R.string.wx_sun)) } }
                     item {
                         Box(Modifier.arrive(3, forecast.fetched, ledger)) {
-                            SunArc(today.sunrise, today.sunset, model.settings.glassEdges)
+                            SunArc(today.sunrise, today.sunset)
                         }
                     }
                 }
@@ -230,6 +233,9 @@ private fun Modifier.arrive(slot: Int, fetched: Long, ledger: MutableSet<Int>): 
     }
 }
 
+/** How far down the wash reaches: the hero and the readings, and nothing after them. */
+private val SkyHeight = 320.dp
+
 /** How far down the weather falls, which is as far as the hero and no further. */
 private val WeatherHeight = 232.dp
 
@@ -256,27 +262,27 @@ private fun Now(forecast: Forecast, units: WeatherModel.Settings) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = actual,
-                // The number is the reason the app was opened, and it is set like it: ninety-two
-                // points of the lightest weight the face carries, with ink that turns toward the
-                // accent on its way down. Display size is the one place a gradient can live in
-                // the letterforms without hurting them — at this scale it reads as light on the
-                // figure, where the same brush on body text would read as a misprint — and the
-                // hairline weight is what keeps that much type from being a wall.
+                // The number is the reason the app was opened, and it is set like it: large,
+                // light and in plain ink. It had a gradient in it for one release; type wearing
+                // an effect is an effect first and a number second, and everything else this
+                // screen shed went for the same reason.
                 style = MaterialTheme.typography.displayLarge.merge(
                     androidx.compose.ui.text.TextStyle(
-                        fontSize = 92.sp,
-                        lineHeight = 96.sp,
-                        fontWeight = FontWeight.W200,
-                        letterSpacing = (-2).sp,
-                        brush = Brush.linearGradient(
-                            listOf(scheme.onSurface, scheme.primary),
-                        ),
+                        fontSize = 88.sp,
+                        lineHeight = 92.sp,
+                        fontWeight = FontWeight.Light,
+                        letterSpacing = (-1).sp,
                     ),
                 ),
                 maxLines = 1,
             )
             Spacer(Modifier.width(18.dp))
-            ConditionBadge(forecast)
+            Icon(
+                painter = painterResource(forecast.now.sky.icon(forecast.now.day)),
+                contentDescription = sky,
+                tint = skyInk(forecast.now.sky, scheme),
+                modifier = Modifier.size(56.dp),
+            )
         }
         Text(
             text = if (feels == actual) {
@@ -291,84 +297,21 @@ private fun Now(forecast: Forecast, units: WeatherModel.Settings) {
         // scrolls down; up here it answers the question the current temperature raises and does
         // not settle — whether this is the warm part of the day or the cold one.
         forecast.days.firstOrNull()?.let { today ->
-            Spacer(Modifier.height(8.dp))
-            // As two small pills rather than a line of type: the day's bounds are the second
-            // thing the hero answers, and a pill is how this design says "a fact you can lean
-            // on" everywhere else — the hour strip's Now, today in the five days.
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                RangePill("↑", write(units, today.high), scheme.primary, scheme.primaryContainer)
-                RangePill("↓", write(units, today.low), scheme.tertiary, scheme.tertiaryContainer)
+            Spacer(Modifier.height(2.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "↑ " + write(units, today.high),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = scheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    text = "↓ " + write(units, today.low),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = scheme.onSurfaceVariant,
+                )
             }
         }
-    }
-}
-
-/**
- * The face of the forecast: the sky's icon inside a lit disc, with the light spilling past it.
- *
- * A bare glyph beside a ninety-point numeral read as clip-art next to a headline. Setting it in a
- * frosted disc with a halo of the sky's own colour gives the hero a second object with actual
- * presence — and the halo doubles as the one place the page says "this colour means this weather"
- * at more than icon size.
- */
-@Composable
-private fun ConditionBadge(forecast: Forecast) {
-    val scheme = MaterialTheme.colorScheme
-    val ink = skyInk(forecast.now.sky, scheme)
-    val fill = paneFill()
-    val rim = ink.copy(alpha = 0.35f)
-    Box(contentAlignment = Alignment.Center, modifier = Modifier.size(96.dp)) {
-        androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
-            // The halo first, past the disc's edge, so the disc sits in light rather than
-            // carrying an outline of it.
-            drawCircle(
-                brush = Brush.radialGradient(
-                    listOf(ink.copy(alpha = 0.30f), ink.copy(alpha = 0f)),
-                    center = center,
-                    radius = size.minDimension / 2f,
-                ),
-            )
-            drawCircle(color = fill, radius = size.minDimension / 2.9f)
-            drawCircle(
-                color = rim,
-                radius = size.minDimension / 2.9f,
-                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.dp.toPx()),
-            )
-        }
-        Icon(
-            painter = painterResource(forecast.now.sky.icon(forecast.now.day)),
-            contentDescription = stringResource(forecast.now.sky.label),
-            tint = ink,
-            modifier = Modifier.size(38.dp),
-        )
-    }
-}
-
-/** One bound of the day, worn as a pill: the mark in the day's own accent, the number in ink. */
-@Composable
-private fun RangePill(
-    mark: String,
-    value: String,
-    accent: androidx.compose.ui.graphics.Color,
-    ground: androidx.compose.ui.graphics.Color,
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .clip(CircleShape)
-            .background(ground.copy(alpha = 0.55f))
-            .padding(horizontal = 12.dp, vertical = 5.dp),
-    ) {
-        Text(
-            text = mark,
-            style = MaterialTheme.typography.labelLarge,
-            color = accent,
-        )
-        Spacer(Modifier.width(4.dp))
-        Text(
-            text = value,
-            style = MaterialTheme.typography.labelLarge,
-        )
     }
 }
 
@@ -512,8 +455,7 @@ private fun Readings(forecast: Forecast, units: WeatherModel.Settings) {
                     // the same place at the same moment — and its shape, because which corners
                     // are the slab's own is a fact about where the cell sits.
                     Reading(
-                        meter, units,
-                        seed = line * 3 + column,
+                        meter,
                         shape = cellShape(
                             firstRow = line == 0,
                             lastRow = line == rows.size - 1,
@@ -557,18 +499,16 @@ private val CellCorner = 7.dp
 @Composable
 private fun Reading(
     meter: Meter,
-    units: WeatherModel.Settings,
-    seed: Int,
     shape: RoundedCornerShape,
     modifier: Modifier = Modifier,
 ) {
     Card(
         shape = shape,
-        modifier = modifier
-            .fillMaxHeight()
-            .glass(shape, units.glassEdges, seed),
-        elevation = CardDefaults.cardElevation(defaultElevation = CardLift),
-        colors = CardDefaults.cardColors(containerColor = paneFill()),
+        modifier = modifier.fillMaxHeight(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        ),
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -606,7 +546,6 @@ private fun MeterDial(meter: Meter) {
     val scheme = MaterialTheme.colorScheme
     val track = scheme.outlineVariant.copy(alpha = 0.45f)
     val lit = scheme.primary
-    val tip = scheme.tertiary
     Box(contentAlignment = Alignment.Center, modifier = Modifier.size(44.dp)) {
         androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
             val stroke = androidx.compose.ui.graphics.drawscope.Stroke(
@@ -626,12 +565,7 @@ private fun MeterDial(meter: Meter) {
             )
             meter.fill?.let { fill ->
                 drawArc(
-                    brush = Brush.sweepGradient(
-                        0f to lit,
-                        0.75f to tip,
-                        1f to lit,
-                        center = center,
-                    ),
+                    color = lit,
                     startAngle = -90f,
                     sweepAngle = 360f * fill.coerceIn(0.02f, 1f),
                     useCenter = false,
@@ -666,10 +600,11 @@ internal fun Days(forecast: Forecast, units: WeatherModel.Settings) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = Gutter)
-            .testTag(BLOCK)
-            .glass(RoundedCornerShape(CardCorner), units.glassEdges, seed = 11),
-        elevation = CardDefaults.cardElevation(defaultElevation = CardLift),
-        colors = CardDefaults.cardColors(containerColor = paneFill()),
+            .testTag(BLOCK),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        ),
     ) {
         // One open at a time: a card with every day unfolded is the long screen this screen
         // replaced. Opening a second day closes the first, the way an accordion holds one note.

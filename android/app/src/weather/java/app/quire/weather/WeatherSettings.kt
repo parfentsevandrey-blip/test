@@ -86,18 +86,6 @@ class WeatherSettings private constructor(private val context: Context) {
         get() = prefs.getBoolean(KEY_LIVE_SKY, true)
         set(value) = prefs.edit { putBoolean(KEY_LIVE_SKY, value) }
 
-    /**
-     * Whether the cards carry a rim of moving light.
-     *
-     * On, because it is the one place on the page where an ornament costs nothing: it lives on the
-     * edge a card already has, so there is no text it can sit on top of and nothing it can push out
-     * of the way. It is still a switch, because "quiet" and "still" are not the same preference and
-     * somebody who wants the second should not have to want the first as well.
-     */
-    var glassEdges: Boolean
-        get() = prefs.getBoolean(KEY_GLASS, true)
-        set(value) = prefs.edit { putBoolean(KEY_GLASS, value) }
-
     var alerts: Boolean
         get() = prefs.getBoolean(KEY_ALERTS, false)
         set(value) = prefs.edit { putBoolean(KEY_ALERTS, value) }
@@ -135,7 +123,6 @@ class WeatherSettings private constructor(private val context: Context) {
         private const val KEY_PERIOD = "period"
         private const val KEY_ALERTS = "alerts"
         private const val KEY_LIVE_SKY = "livesky"
-        private const val KEY_GLASS = "glassedges"
         private const val KEY_THRESHOLD = "threshold"
         private const val KEY_DEGREES = "degrees"
         private const val KEY_WIND = "wind"

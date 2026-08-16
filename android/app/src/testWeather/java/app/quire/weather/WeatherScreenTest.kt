@@ -4,12 +4,8 @@ import android.app.Application
 import android.graphics.Bitmap
 import android.os.Looper
 import androidx.activity.ComponentActivity
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
@@ -32,7 +28,6 @@ import app.quire.weather.ui.BLOCK
 import app.quire.weather.ui.Days
 import app.quire.weather.ui.SunArc
 import app.quire.weather.ui.LiveSky
-import app.quire.weather.ui.glass
 import app.quire.weather.ui.WeatherApp
 import app.quire.weather.ui.WeatherModel
 import app.quire.weather.ui.WeatherScreen
@@ -69,9 +64,6 @@ class WeatherScreenTest {
     @Before
     fun stopTheClock() {
         compose.mainClock.autoAdvance = false
-        // Stated rather than assumed. The settings object outlives a single test method, so a test
-        // that turns the glass off would otherwise decide what the next one renders.
-        WeatherSettings.get(app).glassEdges = true
     }
 
     private fun settle(rounds: Int = 8) {
@@ -183,6 +175,10 @@ class WeatherScreenTest {
             .flatMap { text ->
                 compose.onAllNodes(hasText(text))
                     .fetchSemanticsNodes(atLeastOneRootRequired = false)
+                    // A lazy list composes a little past the viewport, and a node it has built
+                    // but not placed reports empty bounds at the origin — that is bookkeeping,
+                    // not a heading hanging on the left edge.
+                    .filter { it.boundsInRoot.width > 0f }
                     .map { text to it.boundsInRoot.left }
             }
         assertTrue("no headings are on screen at all", headings.isNotEmpty())
@@ -323,11 +319,6 @@ class WeatherScreenTest {
             ),
         )
 
-        // The cards' own rims shimmer, which is the point of them and would also be movement below
-        // the skyline. Turned off here so this test keeps asking exactly what it was written to
-        // ask: whether the page itself is being dragged along by the sky.
-        WeatherSettings.get(app).glassEdges = false
-
         val model = WeatherModel(app)
         compose.setContent {
             QuireTheme(dark = true, dynamic = false) {
@@ -449,56 +440,6 @@ class WeatherScreenTest {
         assertTrue("the sunrise is missing", showing("5:12") > 0)
         assertTrue("the sunset is missing", showing("8:41") > 0)
         assertTrue("the daylight line is missing", showing("of daylight") > 0)
-    }
-
-    /**
-     * The light drifts, and the card holds it.
-     *
-     * The glass is a band of light crossing the card's face, endlessly and slowly. Two claims,
-     * both held: it has to move — a still pane is a rectangle — and every moving pixel has to be
-     * inside the card, because the effect is drawn by filling the card's own outline and a pixel
-     * outside it would mean the glass is leaking onto the page.
-     */
-    @Test
-    fun `the light on a card face drifts, and stays inside the card`() {
-        compose.setContent {
-            QuireTheme(dark = true, dynamic = false) {
-                Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
-                    Box(Modifier.fillMaxSize().padding(24.dp)) {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .glass(CardDefaults.shape)
-                                .testTag("glass"),
-                        ) {}
-                    }
-                }
-            }
-        }
-        settle()
-        val first = shoot("weather-glass")
-        // A fifth of a lap: far enough for the band of light to be somewhere else entirely.
-        compose.mainClock.advanceTimeBy(1_700L)
-        val second = shoot("weather-glass-later")
-
-        val bounds = compose.onNodeWithTag("glass").getUnclippedBoundsInRoot()
-        val scale = compose.density.density
-        val left = (bounds.left.value * scale).toInt()
-        val top = (bounds.top.value * scale).toInt()
-        val right = (bounds.right.value * scale).toInt()
-        val bottom = (bounds.bottom.value * scale).toInt()
-        var inside = 0
-        var outside = 0
-        for (y in 0 until first.height) {
-            for (x in 0 until first.width) {
-                if (first.getPixel(x, y) == second.getPixel(x, y)) continue
-                // Two pixels of grace at the boundary for the outline's own antialiasing.
-                val contained = x in (left - 2)..(right + 2) && y in (top - 2)..(bottom + 2)
-                if (contained) inside++ else outside++
-            }
-        }
-        assertTrue("nothing on the card moved at all", inside > 200)
-        assertTrue("the glass leaked $outside pixels onto the page", outside == 0)
     }
 
     /**

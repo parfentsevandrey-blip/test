@@ -103,10 +103,9 @@ fun HourStrip(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = Gutter)
-            .testTag(BLOCK)
-            .glass(RoundedCornerShape(CardCorner), units.glassEdges, seed = 5),
-        elevation = CardDefaults.cardElevation(defaultElevation = CardLift),
-        colors = CardDefaults.cardColors(containerColor = paneFill()),
+            .testTag(BLOCK),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        colors = CardDefaults.cardColors(containerColor = scheme.surfaceContainerHigh),
     ) {
         Column(
             modifier = Modifier

@@ -33,39 +33,12 @@ internal val HeadingTop = 24.dp
 internal val HeadingBottom = 8.dp
 
 /**
- * How far every card on the weather screen stands off the page.
- *
- * Flat cards are right for the calendar's year, where twelve of them are transformed at once and
- * twelve resting shadows are twelve more layers to compose. Nothing here is transformed, and the
- * page these sit on is a gradient with weather in it — without a shadow a card is a lighter patch
- * of the same page rather than an object on top of it. This is the third of the three cues that
- * say *raised*, the other two being the highlight and the shade the glass draws itself.
- */
-internal val CardLift = 3.dp
-
-/**
  * The corner every full-width card on the weather screen wears, and the outer corner of the
  * readings slab. Larger than Material's card default, which is the Expressive direction — a page
  * whose objects are generously rounded reads as designed rather than defaulted — and one value
  * shared, so the slab's outer corners and the cards below it are visibly the same family.
  */
 internal val CardCorner = 20.dp
-
-/**
- * The fill every card on the weather screen wears: the tonal surface, slightly ajar.
- *
- * The page behind the cards is a full-height wash of the sky's colour now, and a fully opaque
- * card sitting on a coloured page is a grey rectangle with colour around it. Letting a fifth of
- * the page through is what makes a card read as frosted glass over the sky rather than as paper
- * laid on top of it — and it is why the same card is a slightly different colour at the top of
- * the screen and the bottom, which is exactly what panes do.
- */
-@Composable
-internal fun paneFill(): Color {
-    val scheme = MaterialTheme.colorScheme
-    val night = scheme.surface.luminance() < 0.5f
-    return scheme.surfaceContainerHigh.copy(alpha = if (night) 0.78f else 0.86f)
-}
 
 /** The colour a sky wears in the small marks: its icon in the hour strip and the day rows. */
 internal fun skyInk(sky: Sky, scheme: ColorScheme): Color = when (sky) {

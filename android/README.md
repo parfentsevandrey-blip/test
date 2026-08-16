@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-8.3.apk`](dist/quire-calendar-8.3.apk) · 1.9 MB | `sha256 997617f5677fa356e60e9f8d66c9019102aa975e6710ccbce6bd96d705362a80` |
-| **Weather** | [`dist/quire-weather-8.3.apk`](dist/quire-weather-8.3.apk) · 1.5 MB | `sha256 ec429333ca640559a9905f68ba522892497aed9d6175bca9928a11af9a9354eb` |
+| **Calendar** | [`dist/quire-calendar-8.4.apk`](dist/quire-calendar-8.4.apk) · 1.9 MB | `sha256 c2a8c7d733ec52acf02a38cb66d8c436821065c43698eab052e7013656f3335f` |
+| **Weather** | [`dist/quire-weather-8.4.apk`](dist/quire-weather-8.4.apk) · 1.5 MB | `sha256 b07425efbb9ab2206663fa7fa52018aae929bfa326b0d091d113eadff18e11de` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-8.3.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-8.4.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -204,11 +204,11 @@ only question anybody actually asks of a sunset time. The arc is a plain half-ci
 the true solar path: the true one depends on latitude and season and would be a different shape
 every day, which is precision nobody wants at the cost of a picture nobody recognises.
 
-**The sky is the page.** A wash of the theme's own container colour over the full height of the
-screen — strong where the hero is, thinned to a tint by the time the cards take over, warm while
-the sun is up and cool once it is down. The cards are translucent, so the same wash keeps working
-behind them all the way to the bottom, which is what makes the screen read as a place rather than
-a table printed on grey. It is the
+**There is a sky behind it, and it knows its place.** A wash of the theme's own container colour
+behind the hero — warm while the sun is up, cool once it is down — gone before the cards begin.
+For one release it ran the full height of the screen with translucent cards over it, which
+sounded like a place and read as mush: colour under everything means contrast under nothing. The
+sky gets the top of the page; the content gets a page. It is the
 one thing on the screen that says which of those it is without spelling it out, and it gives the
 temperature something to sit on other than flat paper.
 
@@ -266,18 +266,15 @@ for it in the app's own settings for anyone who would still rather have a still 
 |---|---|
 | ![Rain](docs/app-weather-rain.png) | ![Skies](docs/weather-skies.png) |
 
-**The cards are frosted glass, quietly alive.** Three layers, each with one job. A clean hairline
-— white in the dark, ink on paper — because every animated rim this project tried photographed
-badly for the same reason: a rim seen mid-frame is a frame, and so is every glance. A breath of
-frost falling from each card's top edge, which against the page's wash is what makes a card read
-as a pane of something rather than a grey rectangle. And one wide, soft band of light crossing
-the face on the diagonal, endlessly and slowly — a lap takes eight and a half seconds, and what
-registers is not "something is moving" but "the light is not quite still", which is how glass
-behaves in a room where anything at all is happening. The band is a repeating gradient tile slid
-by exactly one period per lap, so the loop has no seam; it is filled inside the card's own
-outline, so the test that two frames differ *inside* the card and nowhere outside it holds by
-construction. Every earlier version that put an object on the rim — sparks, motes, a comet — died
-of the same disease: an object asks to be watched, and a page of numbers must not.
+**The cards are plain, on purpose, and that took five tries to learn.** This project shipped five
+versions of "glass" on these cards: sparks riding the rim, breathing colour washes, a comet, a
+bevel with a travelling highlight, and finally a slow band of light crossing each card's face.
+Every one of them was defensible in prose and wrong on a phone, and the last one taught the
+general lesson: **on a page of numbers, any surface that performs is a performance in front of the
+numbers.** The cards are now flat, opaque, tonal and still — the same card the calendar app uses,
+which is also what makes the two apps read as one family — and the motion budget is spent where
+motion is information: the sky that actually moves the way the weather does, the hourly curve
+drawing itself, the sun running out along its arc, a day unfolding on its spring.
 
 **The readings are one slab, sliced.** Six loose cards with equal gaps everywhere are six things
 to look at; the same six with three-point gaps inside and only the group's outer corners rounded
@@ -288,8 +285,8 @@ The full-width cards below share the slab's twenty-point outer corner, so the wh
 visibly one family of shapes.
 
 And every cell is an instrument now, not a caption: the mark sits in a ring, the ring's track is
-the metric's everyday range, and the lit arc — running clockwise from twelve, gold at its start
-and the accent at its tip — is where today stands in it. Rain and humidity fill by their per
+the metric's everyday range, and the lit arc, running clockwise from twelve in the accent alone,
+is where today stands in it. Rain and humidity fill by their per
 cent, wind is full at the fifty km/h everybody calls windy, UV at the top of the published
 scale, pressure across the band nearly all surface weather lives in. The slab answers "how windy,
 how wet, how hard is the sun" at a glance and keeps the numbers for the second look; the wind's
@@ -329,10 +326,6 @@ each antialiased against what is behind them, so the pair composites to *less* t
 streak came out notched at every joint. Round caps made it worse, turning each joint into a bead.
 Both faults are in the git history as rendered PNGs; neither can happen to a stroke that is drawn
 once round the whole rim.
-
-| One card on its own, with the glass on its rim |
-|---|
-| ![The glass on a card rim](docs/weather-glass.png) |
 
 The clock is read inside the draw block rather than in composition. Reading an animated value
 while composing recomposes the whole card sixty times a second; reading it while drawing redraws
