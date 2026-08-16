@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- roof -->
+    <path
+        android:fillColor="#7A4A3F"
+        android:pathData="M28,56 L54,32 L80,56 Z" />
+    <!-- house body -->
+    <path
+        android:fillColor="#FFF6EA"
+        android:pathData="M34,54 h40 a4,4 0 0 1 4,4 v20 a4,4 0 0 1 -4,4 h-40 a4,4 0 0 1 -4,-4 v-20 a4,4 0 0 1 4,-4 Z" />
+    <!-- warm window -->
+    <path
+        android:fillColor="#FFB74D"
+        android:pathData="M54,60 m-8,0 a8,8 0 1 1 16,0 a8,8 0 1 1 -16,0" />
+    <!-- flame in window -->
+    <path
+        android:fillColor="#E65100"
+        android:pathData="M54,56 c2.4,2 3.6,3.8 3.6,5.6 c0,2.2 -1.6,3.8 -3.6,3.8 c-2,0 -3.6,-1.6 -3.6,-3.8 c0,-1.8 1.2,-3.6 3.6,-5.6 Z" />
+    <!-- chimney smoke -->
+    <path
+        android:fillColor="#E8DFD4"
+        android:pathData="M67,38 m-3,0 a3,3 0 1 1 6,0 a3,3 0 1 1 -6,0" />
+    <path
+        android:fillColor="#E8DFD4"
+        android:pathData="M71,30 m-2,0 a2,2 0 1 1 4,0 a2,2 0 1 1 -4,0" />
+</vector>

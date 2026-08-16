@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Уютная погода</string>
+    <string name="widget_label">Уютная погода</string>
+    <string name="widget_description">Погода с цветами Material You</string>
+    <string name="search_hint">Найти город…</string>
+    <string name="loading">Загружаем уют…</string>
+    <string name="feels_like">Ощущается</string>
+    <string name="humidity">Влажность</string>
+    <string name="wind">Ветер</string>
+    <string name="pressure">Давление</string>
+    <string name="today">Сегодня</string>
+    <string name="hourly">По часам</string>
+    <string name="daily">На неделю</string>
+    <string name="updated">Обновлено</string>
+    <string name="my_location">Моё местоположение</string>
+    <string name="retry">Повторить</string>
+    <string name="error_network">Не удалось загрузить погоду. Проверьте интернет.</string>
+</resources>
