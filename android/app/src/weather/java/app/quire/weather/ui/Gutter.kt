@@ -1,6 +1,12 @@
 package app.quire.weather.ui
 
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.dp
+import app.quire.weather.Sky
 
 /**
  * The one left edge on the weather screen.
@@ -44,3 +50,26 @@ internal val CardLift = 3.dp
  * shared, so the slab's outer corners and the cards below it are visibly the same family.
  */
 internal val CardCorner = 20.dp
+
+/**
+ * The fill every card on the weather screen wears: the tonal surface, slightly ajar.
+ *
+ * The page behind the cards is a full-height wash of the sky's colour now, and a fully opaque
+ * card sitting on a coloured page is a grey rectangle with colour around it. Letting a fifth of
+ * the page through is what makes a card read as frosted glass over the sky rather than as paper
+ * laid on top of it — and it is why the same card is a slightly different colour at the top of
+ * the screen and the bottom, which is exactly what panes do.
+ */
+@Composable
+internal fun paneFill(): Color {
+    val scheme = MaterialTheme.colorScheme
+    val night = scheme.surface.luminance() < 0.5f
+    return scheme.surfaceContainerHigh.copy(alpha = if (night) 0.78f else 0.86f)
+}
+
+/** The colour a sky wears in the small marks: its icon in the hour strip and the day rows. */
+internal fun skyInk(sky: Sky, scheme: ColorScheme): Color = when (sky) {
+    Sky.CLEAR, Sky.MOSTLY_CLEAR -> scheme.primary
+    Sky.DRIZZLE, Sky.RAIN, Sky.SHOWERS, Sky.SLEET, Sky.THUNDER -> scheme.tertiary
+    else -> scheme.secondary
+}

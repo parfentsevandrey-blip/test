@@ -88,7 +88,7 @@ fun SunArc(sunrise: LocalDateTime, sunset: LocalDateTime, glass: Boolean = true)
             .testTag(BLOCK)
             .glass(RoundedCornerShape(CardCorner), glass, seed = 8),
         elevation = CardDefaults.cardElevation(defaultElevation = CardLift),
-        colors = CardDefaults.cardColors(containerColor = scheme.surfaceContainerHigh),
+        colors = CardDefaults.cardColors(containerColor = paneFill()),
     ) {
         Column(Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
             Box(Modifier.fillMaxWidth().height(ArcHeight)) {

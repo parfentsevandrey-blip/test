@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-8.2.apk`](dist/quire-calendar-8.2.apk) · 1.9 MB | `sha256 4d40dbb6e1206f754dc35f8acf61de003834dea60016a8fdf4d8a1bafeacf077` |
-| **Weather** | [`dist/quire-weather-8.2.apk`](dist/quire-weather-8.2.apk) · 1.5 MB | `sha256 7155e230a2ca07af79fa749ef7d7fde38d3e6845776159c25ee3afd5048fd93b` |
+| **Calendar** | [`dist/quire-calendar-8.3.apk`](dist/quire-calendar-8.3.apk) · 1.9 MB | `sha256 997617f5677fa356e60e9f8d66c9019102aa975e6710ccbce6bd96d705362a80` |
+| **Weather** | [`dist/quire-weather-8.3.apk`](dist/quire-weather-8.3.apk) · 1.5 MB | `sha256 ec429333ca640559a9905f68ba522892497aed9d6175bca9928a11af9a9354eb` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-8.2.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-8.3.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -204,8 +204,11 @@ only question anybody actually asks of a sunset time. The arc is a plain half-ci
 the true solar path: the true one depends on latitude and season and would be a different shape
 every day, which is precision nobody wants at the cost of a picture nobody recognises.
 
-**There is a sky behind it.** A wash of the theme's own container colour over the top of the page,
-gone by the time the hour strip starts — warm while the sun is up, cool once it is down. It is the
+**The sky is the page.** A wash of the theme's own container colour over the full height of the
+screen — strong where the hero is, thinned to a tint by the time the cards take over, warm while
+the sun is up and cool once it is down. The cards are translucent, so the same wash keeps working
+behind them all the way to the bottom, which is what makes the screen read as a place rather than
+a table printed on grey. It is the
 one thing on the screen that says which of those it is without spelling it out, and it gives the
 temperature something to sit on other than flat paper.
 
@@ -263,41 +266,18 @@ for it in the app's own settings for anyone who would still rather have a still 
 |---|---|
 | ![Rain](docs/app-weather-rain.png) | ![Skies](docs/weather-skies.png) |
 
-**The cards are under glass, and they have volume.** They used to be flat filled rectangles: a
-lighter patch of the same page rather than an object on top of it. Three cues say *raised*, and
-all three are here.
-
-A **sheen** — a vertical wash over each card, brightest at the top and darkest at the foot, which
-is what a lit surface does. It is drawn in white and black rather than in any of the scheme's
-colours, because "lit from above" is a fact about light and not about a palette. A **bevel** that
-picks the light up in the same direction: white along the top of the rim, the outline colour
-through the middle, black along the foot. And a real **shadow** — three points of elevation. Flat
-cards are right for the calendar's year, where twelve are transformed at once and twelve resting
-shadows are twelve more layers to compose; nothing here is transformed, and the page these sit on
-is a gradient with weather falling down it.
-
-**The hero is set like the reason the app was opened.** Ninety-two points of the lightest weight
-the face carries, with ink that turns toward the accent on its way down; the day's bounds ride
-under it as two pills, which is how this design says "a fact you can lean on" everywhere else.
-The app bar gives its title to the place — the one word that changes what every number on the page
-means; the app's own name is on the launcher, where names belong — and the day's date rides under
-it, because a weather page is read in the morning and "what day is it" is the second question of a
-morning. The wind cell's mark is a needle turned to where the wind is actually going (the label
-names the quarter it comes *from*; what it pushes things along by is the opposite), and each block
-of the page arrives a beat after the one above it, once per fetch — a ledger remembers which
-entrances have played, so a block scrolled away and back does not perform its entrance again.
-
-**Each day opens to the rest of itself.** A row in the five-day card gives the day's swing; a tap
-gives its sunrise, its sunset and the word for its sky, growing out on the theme's spring behind a
-chevron that leans into the open state. One day is open at a time — a card with every day unfolded
-is the long screen this card replaced — and the test drives it by tapping: the sunrise time exists
-nowhere before the tap, once after it, and still once after a second day is opened instead.
-
-**And the phone answers the hand.** Every switch in both apps clicks on and off with the
-platform's own toggle pulses; the segmented rows and interval chips tick as a segment lands; the
-rain-threshold slider ticks once per step it crosses, not per pixel it moves; opening a day
-clicks; and a calendar entry dips two per cent under the finger and springs back on the theme's
-expressive spring — enough for the hand to notice, not enough for the eye to call it an animation.
+**The cards are frosted glass, quietly alive.** Three layers, each with one job. A clean hairline
+— white in the dark, ink on paper — because every animated rim this project tried photographed
+badly for the same reason: a rim seen mid-frame is a frame, and so is every glance. A breath of
+frost falling from each card's top edge, which against the page's wash is what makes a card read
+as a pane of something rather than a grey rectangle. And one wide, soft band of light crossing
+the face on the diagonal, endlessly and slowly — a lap takes eight and a half seconds, and what
+registers is not "something is moving" but "the light is not quite still", which is how glass
+behaves in a room where anything at all is happening. The band is a repeating gradient tile slid
+by exactly one period per lap, so the loop has no seam; it is filled inside the card's own
+outline, so the test that two frames differ *inside* the card and nowhere outside it holds by
+construction. Every earlier version that put an object on the rim — sparks, motes, a comet — died
+of the same disease: an object asks to be watched, and a page of numbers must not.
 
 **The readings are one slab, sliced.** Six loose cards with equal gaps everywhere are six things
 to look at; the same six with three-point gaps inside and only the group's outer corners rounded
@@ -306,6 +286,14 @@ settings established and this app's settings screens already speak — which cor
 own is a fact about where a cell sits, so each cell computes its shape from its place in the grid.
 The full-width cards below share the slab's twenty-point outer corner, so the whole page is
 visibly one family of shapes.
+
+And every cell is an instrument now, not a caption: the mark sits in a ring, the ring's track is
+the metric's everyday range, and the lit arc — running clockwise from twelve, gold at its start
+and the accent at its tip — is where today stands in it. Rain and humidity fill by their per
+cent, wind is full at the fifty km/h everybody calls windy, UV at the top of the published
+scale, pressure across the band nearly all surface weather lives in. The slab answers "how windy,
+how wet, how hard is the sun" at a glance and keeps the numbers for the second look; the wind's
+mark is still the needle, turned to where the wind is actually going, now inside its own dial.
 
 **The number wears the light.** The big temperature is drawn with a brush rather than a colour —
 ink at the top drifting toward the accent at the foot. Display type is the one place a gradient

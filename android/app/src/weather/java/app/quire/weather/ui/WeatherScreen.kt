@@ -47,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -101,14 +102,15 @@ fun WeatherScreen(
     // screen for exactly that reason. Starting it under the bar instead put a hard horizontal
     // line across the screen with a square corner at each end — the only edge on a page where
     // everything else is a rounded card, and the thing that made it look stuck on.
-    val density = LocalDensity.current
-    val reach = with(density) { (padding.calculateTopPadding() + SkyHeight).toPx() }
-    val wash = remember(sky, reach) {
+    // Full height now, not a band that dies a third of the way down: the sky is the page, the
+    // way every weather product that feels like a place rather than a table does it. Strong where
+    // the hero is, thinned to a tint by the time the cards take over — the cards are translucent,
+    // so the same wash keeps working behind them all the way to the bottom.
+    val wash = remember(sky) {
         Brush.verticalGradient(
-            0f to sky.copy(alpha = 0.62f),
-            0.55f to sky.copy(alpha = 0.22f),
-            1f to sky.copy(alpha = 0f),
-            endY = reach,
+            0f to sky.copy(alpha = 0.55f),
+            0.40f to sky.copy(alpha = 0.16f),
+            1f to sky.copy(alpha = 0.05f),
         )
     }
 
@@ -228,9 +230,6 @@ private fun Modifier.arrive(slot: Int, fetched: Long, ledger: MutableSet<Int>): 
     }
 }
 
-/** How far down the wash reaches: the hero and the readings, and nothing after them. */
-private val SkyHeight = 320.dp
-
 /** How far down the weather falls, which is as far as the hero and no further. */
 private val WeatherHeight = 232.dp
 
@@ -276,13 +275,8 @@ private fun Now(forecast: Forecast, units: WeatherModel.Settings) {
                 ),
                 maxLines = 1,
             )
-            Spacer(Modifier.width(16.dp))
-            Icon(
-                painter = painterResource(forecast.now.sky.icon(forecast.now.day)),
-                contentDescription = sky,
-                tint = scheme.primary,
-                modifier = Modifier.size(64.dp),
-            )
+            Spacer(Modifier.width(18.dp))
+            ConditionBadge(forecast)
         }
         Text(
             text = if (feels == actual) {
@@ -302,21 +296,67 @@ private fun Now(forecast: Forecast, units: WeatherModel.Settings) {
             // thing the hero answers, and a pill is how this design says "a fact you can lean
             // on" everywhere else — the hour strip's Now, today in the five days.
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                RangePill("↑", write(units, today.high), scheme.primary)
-                RangePill("↓", write(units, today.low), scheme.tertiary)
+                RangePill("↑", write(units, today.high), scheme.primary, scheme.primaryContainer)
+                RangePill("↓", write(units, today.low), scheme.tertiary, scheme.tertiaryContainer)
             }
         }
     }
 }
 
+/**
+ * The face of the forecast: the sky's icon inside a lit disc, with the light spilling past it.
+ *
+ * A bare glyph beside a ninety-point numeral read as clip-art next to a headline. Setting it in a
+ * frosted disc with a halo of the sky's own colour gives the hero a second object with actual
+ * presence — and the halo doubles as the one place the page says "this colour means this weather"
+ * at more than icon size.
+ */
+@Composable
+private fun ConditionBadge(forecast: Forecast) {
+    val scheme = MaterialTheme.colorScheme
+    val ink = skyInk(forecast.now.sky, scheme)
+    val fill = paneFill()
+    val rim = ink.copy(alpha = 0.35f)
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.size(96.dp)) {
+        androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
+            // The halo first, past the disc's edge, so the disc sits in light rather than
+            // carrying an outline of it.
+            drawCircle(
+                brush = Brush.radialGradient(
+                    listOf(ink.copy(alpha = 0.30f), ink.copy(alpha = 0f)),
+                    center = center,
+                    radius = size.minDimension / 2f,
+                ),
+            )
+            drawCircle(color = fill, radius = size.minDimension / 2.9f)
+            drawCircle(
+                color = rim,
+                radius = size.minDimension / 2.9f,
+                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.dp.toPx()),
+            )
+        }
+        Icon(
+            painter = painterResource(forecast.now.sky.icon(forecast.now.day)),
+            contentDescription = stringResource(forecast.now.sky.label),
+            tint = ink,
+            modifier = Modifier.size(38.dp),
+        )
+    }
+}
+
 /** One bound of the day, worn as a pill: the mark in the day's own accent, the number in ink. */
 @Composable
-private fun RangePill(mark: String, value: String, accent: androidx.compose.ui.graphics.Color) {
+private fun RangePill(
+    mark: String,
+    value: String,
+    accent: androidx.compose.ui.graphics.Color,
+    ground: androidx.compose.ui.graphics.Color,
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .background(ground.copy(alpha = 0.55f))
             .padding(horizontal = 12.dp, vertical = 5.dp),
     ) {
         Text(
@@ -348,8 +388,20 @@ private fun Heading(text: String) {
     )
 }
 
-/** One cell of the slab: its mark, its words, its number, and — for the wind — its bearing. */
-private data class Meter(val icon: Int, val label: String, val value: String, val turn: Float? = null)
+/**
+ * One cell of the slab: its mark, its words, its number — and where it stands.
+ *
+ * [fill] is the reading as a fraction of its own everyday range, and it is what turns a cell from
+ * a caption into an instrument: the ring around the mark is at a glance what the number is on a
+ * second look. [turn] is the wind's bearing, worn by the needle.
+ */
+private data class Meter(
+    val icon: Int,
+    val label: String,
+    val value: String,
+    val turn: Float? = null,
+    val fill: Float? = null,
+)
 
 /**
  * The three numbers the widget has no room for, as one row of tonal cards.
@@ -373,6 +425,7 @@ private fun Readings(forecast: Forecast, units: WeatherModel.Settings) {
                 R.drawable.wx_drop,
                 stringResource(R.string.wx_rain_chance_short),
                 "${today?.rain ?: 0}%",
+                fill = (today?.rain ?: 0) / 100f,
             ),
         )
         if (now.humidity >= 0) {
@@ -381,6 +434,7 @@ private fun Readings(forecast: Forecast, units: WeatherModel.Settings) {
                     R.drawable.wx_humidity,
                     stringResource(R.string.wx_humidity),
                     "${now.humidity}%",
+                    fill = now.humidity / 100f,
                 ),
             )
         }
@@ -396,6 +450,8 @@ private fun Readings(forecast: Forecast, units: WeatherModel.Settings) {
                     ?: stringResource(R.string.wx_wind),
                 "${units.wind.from(now.wind).roundToInt()} " + stringResource(windLabel(units.wind)),
                 turn = if (now.quarter != null) ((now.direction + 180) % 360).toFloat() else null,
+                // Fifty km/h is a day everybody calls windy; the ring is full there.
+                fill = (now.wind / 50.0).toFloat(),
             ),
         )
         if (now.gust >= 0) {
@@ -405,11 +461,20 @@ private fun Readings(forecast: Forecast, units: WeatherModel.Settings) {
                     stringResource(R.string.wx_gust),
                     "${units.wind.from(now.gust).roundToInt()} " +
                         stringResource(windLabel(units.wind)),
+                    fill = (now.gust / 70.0).toFloat(),
                 ),
             )
         }
         if (now.uv >= 0) {
-            add(Meter(R.drawable.wx_uv, stringResource(R.string.wx_uv), "${now.uv.roundToInt()}"))
+            add(
+                Meter(
+                    R.drawable.wx_uv,
+                    stringResource(R.string.wx_uv),
+                    "${now.uv.roundToInt()}",
+                    // Eleven is the top of the published scale.
+                    fill = (now.uv / 11.0).toFloat(),
+                ),
+            )
         }
         if (now.pressure >= 0) {
             add(
@@ -418,6 +483,8 @@ private fun Readings(forecast: Forecast, units: WeatherModel.Settings) {
                     stringResource(R.string.wx_pressure),
                     "${units.pressure.from(now.pressure).roundToInt()} " +
                         stringResource(pressureLabel(units.pressure)),
+                    // The band nearly all surface weather lives in, centred on 1010 hPa.
+                    fill = ((now.pressure - 980.0) / 60.0).toFloat(),
                 ),
             )
         }
@@ -501,23 +568,14 @@ private fun Reading(
             .fillMaxHeight()
             .glass(shape, units.glassEdges, seed),
         elevation = CardDefaults.cardElevation(defaultElevation = CardLift),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        ),
+        colors = CardDefaults.cardColors(containerColor = paneFill()),
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp, horizontal = 6.dp),
         ) {
-            Icon(
-                painter = painterResource(meter.icon),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .size(18.dp)
-                    .then(meter.turn?.let { Modifier.rotate(it) } ?: Modifier),
-            )
-            Spacer(Modifier.height(6.dp))
+            MeterDial(meter)
+            Spacer(Modifier.height(8.dp))
             Text(
                 text = meter.value,
                 style = MaterialTheme.typography.titleLarge,
@@ -532,6 +590,65 @@ private fun Reading(
                 maxLines = 1,
             )
         }
+    }
+}
+
+/**
+ * The mark in its ring: the reading drawn before it is read.
+ *
+ * The track is the metric's everyday range and the lit arc is where today stands in it, so the
+ * slab answers "how windy, how wet, how hard is the sun" at a glance and keeps the numbers for
+ * the second look. The arc starts at twelve and runs clockwise, because that is where every dial
+ * anyone has ever read starts.
+ */
+@Composable
+private fun MeterDial(meter: Meter) {
+    val scheme = MaterialTheme.colorScheme
+    val track = scheme.outlineVariant.copy(alpha = 0.45f)
+    val lit = scheme.primary
+    val tip = scheme.tertiary
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.size(44.dp)) {
+        androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
+            val stroke = androidx.compose.ui.graphics.drawscope.Stroke(
+                width = 3.dp.toPx(),
+                cap = androidx.compose.ui.graphics.StrokeCap.Round,
+            )
+            val inset = stroke.width / 2f
+            val bounds = androidx.compose.ui.geometry.Size(size.width - inset * 2, size.height - inset * 2)
+            drawArc(
+                color = track,
+                startAngle = 0f,
+                sweepAngle = 360f,
+                useCenter = false,
+                topLeft = Offset(inset, inset),
+                size = bounds,
+                style = stroke,
+            )
+            meter.fill?.let { fill ->
+                drawArc(
+                    brush = Brush.sweepGradient(
+                        0f to lit,
+                        0.75f to tip,
+                        1f to lit,
+                        center = center,
+                    ),
+                    startAngle = -90f,
+                    sweepAngle = 360f * fill.coerceIn(0.02f, 1f),
+                    useCenter = false,
+                    topLeft = Offset(inset, inset),
+                    size = bounds,
+                    style = stroke,
+                )
+            }
+        }
+        Icon(
+            painter = painterResource(meter.icon),
+            contentDescription = null,
+            tint = scheme.primary,
+            modifier = Modifier
+                .size(18.dp)
+                .then(meter.turn?.let { Modifier.rotate(it) } ?: Modifier),
+        )
     }
 }
 
@@ -552,9 +669,7 @@ internal fun Days(forecast: Forecast, units: WeatherModel.Settings) {
             .testTag(BLOCK)
             .glass(RoundedCornerShape(CardCorner), units.glassEdges, seed = 11),
         elevation = CardDefaults.cardElevation(defaultElevation = CardLift),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        ),
+        colors = CardDefaults.cardColors(containerColor = paneFill()),
     ) {
         // One open at a time: a card with every day unfolded is the long screen this screen
         // replaced. Opening a second day closes the first, the way an accordion holds one note.
@@ -639,7 +754,7 @@ private fun DayRow(
         Icon(
             painter = painterResource(day.sky.dayIcon),
             contentDescription = stringResource(day.sky.label),
-            tint = scheme.onSurfaceVariant,
+            tint = skyInk(day.sky, scheme),
             modifier = Modifier.size(26.dp),
         )
         // The column keeps its width on a dry day but writes nothing in it. It has to keep the

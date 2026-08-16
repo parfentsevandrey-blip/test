@@ -106,7 +106,7 @@ fun HourStrip(
             .testTag(BLOCK)
             .glass(RoundedCornerShape(CardCorner), units.glassEdges, seed = 5),
         elevation = CardDefaults.cardElevation(defaultElevation = CardLift),
-        colors = CardDefaults.cardColors(containerColor = scheme.surfaceContainerHigh),
+        colors = CardDefaults.cardColors(containerColor = paneFill()),
     ) {
         Column(
             modifier = Modifier
@@ -231,7 +231,9 @@ private fun HourHead(
             Icon(
                 painter = painterResource(hour.sky.icon(hour.day)),
                 contentDescription = stringResource(hour.sky.label),
-                tint = scheme.onSurfaceVariant,
+                // The sky's own ink, so a wet afternoon is visible in the strip's colour before
+                // a single glyph is read.
+                tint = skyInk(hour.sky, scheme),
                 modifier = Modifier.size(22.dp),
             )
             Spacer(Modifier.height(6.dp))

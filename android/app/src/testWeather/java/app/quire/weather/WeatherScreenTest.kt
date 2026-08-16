@@ -30,6 +30,7 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import app.quire.weather.ui.BLOCK
 import app.quire.weather.ui.Days
+import app.quire.weather.ui.SunArc
 import app.quire.weather.ui.LiveSky
 import app.quire.weather.ui.glass
 import app.quire.weather.ui.WeatherApp
@@ -159,31 +160,32 @@ class WeatherScreenTest {
         }
         assertTrue("the screen painted only ${colours.size} colours", colours.size > 8)
 
-        // The place name in full is the whole point of the screen existing beside the card.
+        // What the first screenful must hold. The hero grew and the readings became dials, so
+        // the sun and the five days start below this viewport now — they are asserted in their
+        // own tests, against their own compositions, where a lazy list cannot hide them.
         assertTrue("the temperature is missing", showing("13°") > 0)
         assertTrue("the humidity is missing", showing("81%") > 0)
-        assertTrue("the five-day heading is missing", showing("Next five days") > 0)
         assertTrue("the hourly strip is missing", showing("Next 24 hours") > 0)
-        assertTrue("the sun times are missing", showing("5:12") > 0)
         // The place is the app bar's job; repeating it over the temperature was the first thing
         // that read as crooked on a real phone.
         assertTrue(
             "the place is written twice on one screen",
             showing("Западный административный округ") == 0,
         )
-        // The arc says roughly; this says exactly, and it fills the one part of that card the
-        // drawing leaves empty.
-        assertTrue("the daylight left is missing", showing("of daylight left") > 0)
-        // A dash in a column of percentages reads as a stray minus sign. The column keeps its
-        // width on a dry day and writes nothing in it.
-        assertTrue("a dash is written for a dry day", showing("—") == 0)
 
         // Every block on the screen starts on the same left edge. This is the fault the screen was
         // rebuilt for: headings at one inset and the cards under them at another, all the way
         // down. The headings are checked where they are laid out, and the cards in pixels — a
         // card has no text of its own to ask, so its fill is found by walking in from the margin.
+        // Over the headings that made it into the viewport: the page is taller than a screen now
+        // and a LazyColumn does not compose what it cannot show.
         val headings = listOf("Next 24 hours", "Sunrise and sunset", "Next five days")
-            .map { it to compose.onNodeWithText(it).getUnclippedBoundsInRoot().left.value }
+            .flatMap { text ->
+                compose.onAllNodes(hasText(text))
+                    .fetchSemanticsNodes(atLeastOneRootRequired = false)
+                    .map { text to it.boundsInRoot.left }
+            }
+        assertTrue("no headings are on screen at all", headings.isNotEmpty())
         assertTrue(
             "the headings start at different x: $headings",
             headings.maxOf { it.second } - headings.minOf { it.second } < 0.5f,
@@ -422,19 +424,43 @@ class WeatherScreenTest {
         compose.onNodeWithTag("day-3").performClick()
         settle()
         assertTrue("two days are open at once", showing("5:12") == 1)
+
+        // A dash in a column of percentages reads as a stray minus sign. The column keeps its
+        // width on a dry day and writes nothing in it.
+        assertTrue("a dash is written for a dry day", showing("—") == 0)
+    }
+
+    /** The sun card on its own: the times, and the exact daylight the drawing can only gesture at. */
+    @Test
+    fun `the sun card says the times and the daylight`() {
+        compose.setContent {
+            QuireTheme(dark = true, dynamic = false) {
+                Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+                    SunArc(
+                        sunrise = LocalDate.now().atTime(5, 12),
+                        sunset = LocalDate.now().atTime(20, 41),
+                    )
+                }
+            }
+        }
+        settle()
+        shoot("app-weather-sun")
+
+        assertTrue("the sunrise is missing", showing("5:12") > 0)
+        assertTrue("the sunset is missing", showing("8:41") > 0)
+        assertTrue("the daylight line is missing", showing("of daylight") > 0)
     }
 
     /**
-     * The rim of a card, and only the rim.
+     * The light drifts, and the card holds it.
      *
-     * The glass lives on the edge a card already has: colour moving in it, and nothing anywhere
-     * else. That is two claims and both are worth holding on to. It has to move — a still rim is a
-     * border — and it has to stay on the edge, because anything that wanders into the middle of a
-     * card is drawing on top of the reading somebody opened the app for. The second half of that
-     * is what the motes could not honestly promise, and the reason they are gone.
+     * The glass is a band of light crossing the card's face, endlessly and slowly. Two claims,
+     * both held: it has to move — a still pane is a rectangle — and every moving pixel has to be
+     * inside the card, because the effect is drawn by filling the card's own outline and a pixel
+     * outside it would mean the glass is leaking onto the page.
      */
     @Test
-    fun `the light on a card rim moves, and stays on the rim`() {
+    fun `the light on a card face drifts, and stays inside the card`() {
         compose.setContent {
             QuireTheme(dark = true, dynamic = false) {
                 Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
@@ -451,9 +477,8 @@ class WeatherScreenTest {
         }
         settle()
         val first = shoot("weather-glass")
-        // A fifth of the slowest wash's cycle. Nothing on the rim travels, so what this catches is
-        // the three washes standing at different weights than they did.
-        compose.mainClock.advanceTimeBy(1_800L)
+        // A fifth of a lap: far enough for the band of light to be somewhere else entirely.
+        compose.mainClock.advanceTimeBy(1_700L)
         val second = shoot("weather-glass-later")
 
         val bounds = compose.onNodeWithTag("glass").getUnclippedBoundsInRoot()
@@ -462,30 +487,19 @@ class WeatherScreenTest {
         val top = (bounds.top.value * scale).toInt()
         val right = (bounds.right.value * scale).toInt()
         val bottom = (bounds.bottom.value * scale).toInt()
-        // Two bands: within [RIM] of the card's edge, and everything further in than that.
-        val rim = (RIM * scale).toInt()
-
-        var onTheRim = 0
-        var inTheMiddle = 0
+        var inside = 0
+        var outside = 0
         for (y in 0 until first.height) {
             for (x in 0 until first.width) {
                 if (first.getPixel(x, y) == second.getPixel(x, y)) continue
-                val inset = minOf(x - left, right - x, y - top, bottom - y)
-                if (inset in -rim..rim) onTheRim++ else inTheMiddle++
+                // Two pixels of grace at the boundary for the outline's own antialiasing.
+                val contained = x in (left - 2)..(right + 2) && y in (top - 2)..(bottom + 2)
+                if (contained) inside++ else outside++
             }
         }
-        assertTrue("nothing on the rim moved at all", onTheRim > 200)
-        assertTrue("the glass moved $inTheMiddle pixels off its own edge", inTheMiddle == 0)
+        assertTrue("nothing on the card moved at all", inside > 200)
+        assertTrue("the glass leaked $outside pixels onto the page", outside == 0)
     }
-
-    /**
-     * How far from a card's edge the moving part of the glass is allowed to reach, in points.
-     *
-     * Tight, because all that moves now is a band of colour inside a stroke a point or so wide.
-     * The sheen and the bevel do cover the whole card, but they never change, so they never turn
-     * up in a comparison of two frames.
-     */
-    private val RIM = 6f
 
     /**
      * Every sky, drawn on its own.
