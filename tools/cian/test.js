@@ -5,7 +5,7 @@
 const assert = require('assert');
 const { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, archiveStat,
         completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringVerdict,
-        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, galleryGrew, parseViews, mergedPriceHistory, offersByIds, matchesQuery, expandSimilar, houseClass, profileLot, floorBand, worksScope, buildCohort, metroSummary, metroLine, metroCell } = require('./cian.js');
+        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, galleryGrew, parseViews, mergedPriceHistory, offersByIds, matchesQuery, expandSimilar, houseClass, profileLot, floorBand, worksScope, buildCohort, metroSummary, metroLine, metroCell, photoKinds } = require('./cian.js');
 
 let passed = 0;
 const pending = [];
@@ -634,7 +634,9 @@ test('выросшая галерея делает оценку устаревш
   // 330937338: смотрели 12 кадров дома, продавец добавил съёмку квартиры —
   // и в добавленных оказалась бетонная коробка
   const g = { photosSeen: 12 };
-  assert.deepStrictEqual(galleryGrew(g, lot({ photos: new Array(21).fill('u') })), { was: 12, now: 21 });
+  // мера названа вслух: без разметки галереи сравнение идёт по всем кадрам
+  assert.deepStrictEqual(galleryGrew(g, lot({ photos: new Array(21).fill('u') })),
+    { was: 12, now: 21, of: 'кадров в галерее' });
   assert.strictEqual(galleryGrew(g, lot({ photos: new Array(12).fill('u') })), null);
   assert.strictEqual(galleryGrew(g, lot({ photos: new Array(9).fill('u') })), null);
   // без записанного числа кадров сравнивать не с чем — молчим, а не врём
@@ -1200,4 +1202,62 @@ test('старая запись про метро не выдаётся за н�
   assert.strictEqual(metroCell({ name: 'Курская', minutes: 8, byFoot: true }).trim(), '8м/?');
   assert.strictEqual(metroCell({ name: 'Курская', minutes: 8, byFoot: true, walkLines: 3, walkStations: 4 }).trim(), '8м/3л');
   assert.strictEqual(metroCell(null).trim(), '—');
+});
+
+process.stdout.write('кадры: планировка — не квартира\n');
+
+const ph = (n, layouts = []) => Array.from({ length: n }, (_, i) => ({
+  fullUrl: `https://x/${i + 1}.jpg`, isLayout: layouts.includes(i + 1) }));
+
+test('планировки отделяются от кадров квартиры и называются номерами', () => {
+  // на 244 живых лотах планировка нашлась у 203, и чаще всего кадром №1
+  const k = photoKinds(ph(10, [1, 7]));
+  assert.strictEqual(k.photosRooms, 8);
+  assert.deepStrictEqual(k.layoutFrames, [1, 7]);
+  assert.strictEqual(k.photosClassified, true);
+});
+
+test('неразмеченная галерея — это «неизвестно», а не «планировок нет»', () => {
+  // у 41 лота из 244 isLayout пуст у всех кадров разом: считать это нулём
+  // значило бы утверждать то, чего не видел
+  const k = photoKinds(Array.from({ length: 12 }, () => ({ fullUrl: 'x', isLayout: null })));
+  assert.strictEqual(k.photosRooms, null);
+  assert.strictEqual(k.photosClassified, false);
+  assert.deepStrictEqual(k.layoutFrames, []);
+});
+
+test('пустая галерея не выдаёт нулей', () => {
+  assert.deepStrictEqual(photoKinds([]), { photosRooms: null, layoutFrames: [], photosClassified: false });
+  assert.deepStrictEqual(photoKinds(null), { photosRooms: null, layoutFrames: [], photosClassified: false });
+});
+
+test('порог «мало фото» считает квартиру, а не строчки галереи', () => {
+  // 9 кадров, из них 2 планировки — квартиры показано семь
+  const l = lot({ description: 'ремонт под ключ', photosCount: 9, photosRooms: 7, layoutFrames: [1, 2] });
+  const f = assessRepair(l).flags.join(' ');
+  assert.ok(/мало кадров квартиры \(7 из 9, планировок 2\)/.test(f), f);
+  // размеченная галерея из восьми комнатных кадров порога не задевает
+  const ok = assessRepair(lot({ description: 'ремонт под ключ', photosCount: 10, photosRooms: 8, layoutFrames: [1, 2] }));
+  assert.ok(!ok.flags.some((x) => /мало кадров/.test(x)), ok.flags.join(' '));
+});
+
+test('где галерея не размечена — сказано, что планировки не отделены', () => {
+  const f = assessRepair(lot({ description: 'ремонт под ключ', photosCount: 6, photosRooms: null,
+    photos: ['a', 'b'] })).flags.join(' ');
+  assert.ok(/галерея не размечена/.test(f), f);
+});
+
+test('добавленная планировка не сбрасывает оценку', () => {
+  // продавец, доложивший чертёж, товар не изменил
+  const grade = { photosSeen: 12, photosRoomsSeen: 11 };
+  assert.strictEqual(galleryGrew(grade, { photos: ph(13, [1, 5]), photosRooms: 11 }), null);
+  // а новые кадры квартиры — меняют
+  const g = galleryGrew(grade, { photos: ph(15, [1]), photosRooms: 14 });
+  assert.deepStrictEqual(g, { was: 11, now: 14, of: 'кадров квартиры' });
+});
+
+test('без размеченных кадров сравнение идёт по галерее и так и названо', () => {
+  const g = galleryGrew({ photosSeen: 12 }, { photos: ph(14), photosRooms: null });
+  assert.deepStrictEqual(g, { was: 12, now: 14, of: 'кадров в галерее' });
+  assert.strictEqual(galleryGrew({ photosSeen: 12 }, { photos: ph(12), photosRooms: null }), null);
 });

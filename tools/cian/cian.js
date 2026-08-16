@@ -8,7 +8,7 @@
  *   node tools/cian/cian.js url    --query q.json      — каноническая ссылка cat.php
  *   node tools/cian/cian.js probe  --query q.json --with '{"loggia":{"type":"term","value":true}}'
  *   node tools/cian/cian.js sweep  --query q.json [--limit 250] [--all] [--dedupe] [--resolve 0]
- *   node tools/cian/cian.js verify --ids 1,2 [--photos 12] [--cols 4] [--frames 5,13]  — лист, затем кадры в оригинале
+ *   node tools/cian/cian.js verify --ids 1,2 [--photos 12] [--cols 4] [--frames 5,13] [--skip-layout]  — лист, затем кадры в оригинале
  *   node tools/cian/cian.js snapshot --query q.json | --queries watchlist.json | --from a.json,b.json
  *   node tools/cian/cian.js archive   — что накоплено: даты снимков, запросы, движение цен
  *   node tools/cian/cian.js exposure --query q.json [--deep] — двойники и реальный срок
@@ -240,6 +240,37 @@ function metroLine(m) {
   return parts.join('; ');
 }
 
+/* ---------- кадры ----------
+   Движок отделки считает кадры штуками: порог «мало фото» стоит на числе
+   снимков, framesFull хранит их номера, galleryGrew сравнивает «было и
+   стало». Всё это меряет галерею, а в галерее лежит не только квартира.
+
+   У кадра есть поле isLayout — планировка. На 244 живых лотах планировка
+   нашлась у 203: у 196 одна, у 4 две, у 3 три. И лежит она чаще всего
+   первой — 98 раз кадром №1 и 34 раза кадром №2, но встречается и
+   пятидесятым. То есть контактный лист из девяти кадров почти в половине
+   случаев тратит ячейку на чертёж, а номер кадра в framesFull может
+   означать планировку, а не комнату.
+
+   Оговорка, без которой это стало бы очередным выдуманным наблюдением:
+   у 41 лота из 244 isLayout не проставлен НИ У ОДНОГО кадра — поле пустое
+   целиком, а не «планировок нет». Считать их нулём значит утверждать то,
+   чего не видел. У таких лотов rooms остаётся null: неизвестно.
+
+   Проверено заодно: rotateDegree пуст у всех 5855 кадров — поворачивать
+   ничего не нужно, и возвращаться к этому вопросу не за чем. */
+function photoKinds(photos) {
+  const list = Array.isArray(photos) ? photos : [];
+  if (!list.length) return { photosRooms: null, layoutFrames: [], photosClassified: false };
+  const classified = list.some((p) => p.isLayout != null);
+  const layoutFrames = list.map((p, i) => (p.isLayout === true ? i + 1 : 0)).filter(Boolean);
+  return {
+    photosRooms: classified ? list.length - layoutFrames.length : null,
+    layoutFrames,
+    photosClassified: classified,
+  };
+}
+
 /* Узкая ячейка для таблиц: минуты, число линий и метка, если пешком нет.
    «8м/3л» — восемь минут пешком, три линии в пешей доступности.
 
@@ -332,6 +363,7 @@ function normalize(o) {
     promoted: !!(o.isTop3 || o.isPremium),
     photosCount: (o.photos || []).length,
     photos: (o.photos || []).map((ph) => ph.fullUrl).filter(Boolean),
+    ...photoKinds(o.photos),
     description: o.description || '',
   };
 }
@@ -711,7 +743,16 @@ function assessRepair(lot) {
 
   const flags = [];
   if (redPast) flags.push(`${redPast} упоминание о прошлом состоянии — не в счёт`);
-  if (lot.photosCount < 8) flags.push(`мало фото (${lot.photosCount})`);
+  /* Порог считает кадры квартиры, а не строчки галереи: планировка —
+     чертёж, по ней об отделке не судят. Где галерея не размечена, счёт
+     остаётся прежним и об этом сказано, а не додумано. */
+  const rooms = lot.photosRooms;
+  if (rooms != null) {
+    const lay = (lot.layoutFrames || []).length;
+    if (rooms < 8) flags.push(`мало кадров квартиры (${rooms}${lay ? ` из ${lot.photosCount}, планировок ${lay}` : ''})`);
+  } else if (lot.photosCount < 8) {
+    flags.push(`мало фото (${lot.photosCount}${lot.photos && lot.photos.length ? ', галерея не размечена — планировки не отделены' : ''})`);
+  }
 
   /* Проверено вручную: hasFurniture=false ловил настоящую подмену (голая
      отделка застройщика под видом дизайнерского ремонта), а пустое поле
@@ -746,12 +787,23 @@ async function fetchPhotos(ctx, lot, dir, n) {
    сотни открытий. Сборка идёт в браузере: он и декодирует JPEG, и рисует.
    Картинки подаются как data:-URL, иначе холст «портится» чужим origin
    и toDataURL запрещён. */
-async function contactSheet(ctx, page, lot, file, n, cols = 3) {
+async function contactSheet(ctx, page, lot, file, n, cols = 3, skipLayout = false) {
+  /* Номера кадров на листе обязаны совпадать с номерами в галерее: в
+     framesFull записывают именно их, и сдвиг на единицу превратил бы
+     ссылку на кадр в ссылку на соседний. Поэтому подпись у каждой ячейки
+     своя, а планировки либо помечаются, либо выбрасываются целиком. */
+  const picked = [];
+  lot.photos.forEach((u, i) => {
+    const isLayout = (lot.layoutFrames || []).includes(i + 1);
+    if (skipLayout && isLayout) return;
+    if (picked.length < n) picked.push({ u, no: i + 1, isLayout });
+  });
   const imgs = [];
-  for (const u of lot.photos.slice(0, n)) {
+  for (const p of picked) {
     try {
-      const r = await ctx.request.get(u, { timeout: 30000 });
-      imgs.push('data:image/jpeg;base64,' + (await r.body()).toString('base64'));
+      const r = await ctx.request.get(p.u, { timeout: 30000 });
+      imgs.push({ src: 'data:image/jpeg;base64,' + (await r.body()).toString('base64'),
+        no: p.no, isLayout: p.isLayout });
     } catch (e) { /* пропускаем битую */ }
   }
   if (!imgs.length) return null;
@@ -765,21 +817,32 @@ async function contactSheet(ctx, page, lot, file, n, cols = 3) {
     g.fillStyle = '#111'; g.fillRect(0, 0, cv.width, cv.height);
     g.fillStyle = '#fff'; g.font = '18px sans-serif';
     g.fillText(caption, PAD, 24);
-    await Promise.all(imgs.map((src, i) => new Promise((res) => {
+    await Promise.all(imgs.map((it, i) => new Promise((res) => {
       const im = new Image();
+      const x = PAD + (i % cols) * (CELL + PAD);
+      const y = HEAD + PAD + Math.floor(i / cols) * (CELL + PAD);
+      const label = () => {
+        /* Номер кадра — из галереи, а не порядковый по листу. */
+        g.fillStyle = 'rgba(0,0,0,.65)';
+        const txt = it.isLayout ? `${it.no} · планировка` : String(it.no);
+        g.font = 'bold 15px sans-serif';
+        const w = g.measureText(txt).width + 12;
+        g.fillRect(x, y, w, 22);
+        g.fillStyle = it.isLayout ? '#ffd166' : '#fff';
+        g.fillText(txt, x + 6, y + 16);
+      };
       im.onload = () => {
-        const x = PAD + (i % cols) * (CELL + PAD);
-        const y = HEAD + PAD + Math.floor(i / cols) * (CELL + PAD);
         // вписываем с сохранением пропорций, лишнее обрезаем по центру
         const s = Math.max(CELL / im.width, CELL / im.height);
         const w = im.width * s, h = im.height * s;
         g.save(); g.beginPath(); g.rect(x, y, CELL, CELL); g.clip();
         g.drawImage(im, x + (CELL - w) / 2, y + (CELL - h) / 2, w, h);
         g.restore();
+        label();
         res();
       };
-      im.onerror = () => res();
-      im.src = src;
+      im.onerror = () => { label(); res(); };
+      im.src = it.src;
     })));
     return cv.toDataURL('image/jpeg', 0.82);
   }, { imgs, cols, caption: `${lot.id} · ${lot.rooms || 'студия'} · ${lot.totalArea} м² · ${(lot.priceRub || 0).toLocaleString('ru-RU')} ₽ · ${lot.street || ''} ${lot.house || ''}` });
@@ -810,10 +873,19 @@ function gradeFor(grades, lot) {
    Космодамианской 4/22 к двенадцати рендерам дома потом добавили съёмку
    квартиры, и она оказалась бетонной коробкой, а в записи стояло «буква не
    ставится». Сравнивать есть с чем только там, где записано photosSeen. */
+/* Считать надо кадры квартиры: продавец, добавивший планировку, товар не
+   изменил, а оценку так сбрасывало бы впустую. Сравнение идёт по комнатным
+   кадрам, когда они известны с обеих сторон, и по всей галерее иначе —
+   какой мерой мерили, тем и сказано. */
 function galleryGrew(grade, lot) {
   if (!grade || !grade.photosSeen || !lot) return null;
+  const wasRooms = grade.photosRoomsSeen ?? null;
+  const nowRooms = lot.photosRooms ?? null;
+  if (wasRooms != null && nowRooms != null) {
+    return nowRooms > wasRooms ? { was: wasRooms, now: nowRooms, of: 'кадров квартиры' } : null;
+  }
   const now = (lot.photos || []).length;
-  return now > grade.photosSeen ? { was: grade.photosSeen, now } : null;
+  return now > grade.photosSeen ? { was: grade.photosSeen, now, of: 'кадров в галерее' } : null;
 }
 
 /* Ряд цен квартиры из всех её объявлений. Циан отдаёт изменения новыми
@@ -1331,6 +1403,9 @@ function gradeRecord(lot, g) {
     proof: g.proof || null,
     markers: g.markers || {},
     photosSeen: g.photosSeen ?? null,
+    /* Отдельно от всей галереи: планировка — не квартира, и её добавление
+       не должно сбрасывать оценку. */
+    photosRoomsSeen: g.photosRoomsSeen ?? null,
     /* Какие кадры и в каком разрешении смотрели. Без этого оценку нельзя
        перепроверить: «премиум» без указания, что именно показало камень,
        остаётся впечатлением. */
@@ -1523,7 +1598,7 @@ function profileLot(lot, opts = {}) {
     say('текст расходится с кадрами', `по тексту «${grade.claimedState}», на кадрах «${grade.observedState}»`);
   }
   const grew = galleryGrew(grade, lot);
-  if (grew) say('оценка устарела', `смотрели ${grew.was} кадров, сейчас ${grew.now}`);
+  if (grew) say('оценка устарела', `смотрели ${grew.was} ${grew.of}, сейчас ${grew.now}`);
   /* Устаревший ремонт продаётся по цене «под ключ», а покупается как
      оболочка с демонтажем: покупатель его переделает и вычтет из цены.
      На Шмитовском 28 два соседних лота показали это в лоб: свежий флип за
@@ -2266,7 +2341,8 @@ if (require.main === module) (async () => {
           }
         } else if (a.photos !== '0') {
           if (a.files) files = await fetchPhotos(ctx, l, `${dir}/${l.id}`, nPhoto);
-          else sheet = await contactSheet(ctx, page, l, `${dir}/${l.id}.jpg`, nPhoto, parseInt(a.cols || '3', 10));
+          else sheet = await contactSheet(ctx, page, l, `${dir}/${l.id}.jpg`, nPhoto,
+            parseInt(a.cols || '3', 10), a['skip-layout'] === true || a['skip-layout'] === 'да');
         }
         const ev = finishEvidence(l);
         const gr = gradeFor(vGrades, l);
@@ -2288,7 +2364,7 @@ if (require.main === module) (async () => {
           }
           if (gr.verdict) log(`   ВЫВОД: ${gr.verdict}`);
           const grew = galleryGrew(gr, l);
-          if (grew) log(`   ГАЛЕРЕЯ ВЫРОСЛА: смотрели ${grew.was} кадров, сейчас ${grew.now} — оценку надо пересмотреть`);
+          if (grew) log(`   ГАЛЕРЕЯ ВЫРОСЛА: смотрели ${grew.was} ${grew.of}, сейчас ${grew.now} — оценку надо пересмотреть`);
         }
         if (ev.unfinished) log('   ремонт по тексту ещё не завершён');
         log(`   комплектация: ${ev.spelledOut ? 'расписана по маркам' : ev.brands.length ? 'марки названы частично' : 'марки не названы'}` +
@@ -2579,6 +2655,7 @@ if (require.main === module) (async () => {
           out[id] = {
             proof: `<${PROOFS.join(' | ')}>`,
             photosSeen: l.photosCount ?? null,
+            photosRoomsSeen: l.photosRooms ?? null,
             framesSeen: [],
             framesFull: [],
             markers: Object.fromEntries(Object.entries(MARKERS)
@@ -3166,4 +3243,4 @@ module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, medi
   gradeLevel, gradeRecord, observedState, gradeFor, galleryGrew, parseViews, REPAIR_RU, offersByIds, mergedPriceHistory, worksScope, AGES, WORK_ITEMS,
   expandSimilar, matchesQuery, buildCohort, finishCost, loadedPricePerM2, fairShellPrice, MARKERS, PROOFS,
   houseClass, houseFor, houseRecord, profileLot, floorBand, HOUSE_MARKERS, HOUSE_CLASSES,
-  metroSummary, metroLine, metroCell, RAIL_LINES };
+  metroSummary, metroLine, metroCell, RAIL_LINES, photoKinds };
