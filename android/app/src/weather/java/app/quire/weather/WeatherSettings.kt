@@ -107,6 +107,11 @@ class WeatherSettings private constructor(private val context: Context) {
         get() = Pressure.of(prefs.getString(KEY_PRESSURE, null))
         set(value) = prefs.edit { putString(KEY_PRESSURE, value.key) }
 
+    /** The look the widgets were last painted in; see WeatherWatch for what counts as a look. */
+    var paintedLook: Int
+        get() = prefs.getInt(KEY_PAINTED, 0)
+        set(value) = prefs.edit { putInt(KEY_PAINTED, value) }
+
     /** The day an alert was last posted for, so the same rain is not announced twice. */
     var alertedOn: String
         get() = prefs.getString(KEY_ALERTED, "").orEmpty()
@@ -128,6 +133,7 @@ class WeatherSettings private constructor(private val context: Context) {
         private const val KEY_WIND = "wind"
         private const val KEY_PRESSURE = "pressure"
         private const val KEY_ALERTED = "alerted"
+        private const val KEY_PAINTED = "painted"
 
         /**
          * The offered intervals, in minutes. Anything else is snapped to the nearest.

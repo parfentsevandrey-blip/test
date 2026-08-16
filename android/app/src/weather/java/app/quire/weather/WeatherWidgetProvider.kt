@@ -89,6 +89,9 @@ class WeatherWidgetProvider : AppWidgetProvider() {
             val manager = AppWidgetManager.getInstance(context) ?: return
             manager.getAppWidgetIds(ComponentName(context, WeatherWidgetProvider::class.java))
                 .forEach { render(context, manager, it) }
+            // Whatever asked for this paint, the cards now wear the current look, so the pulse
+            // does not ask again for the same change.
+            WeatherWatch.markPainted(context)
         }
 
         fun requestUpdate(context: Context) {

@@ -58,6 +58,12 @@ class WeatherWakeTest {
             "nothing watches the setting the dark-theme switch writes: $triggers",
             triggers.any { it.endsWith("ui_night_mode") },
         )
+
+        // And the net under the triggers: a periodic pulse that compares the look and repaints
+        // only when it moved, for the theme flip no setting announces.
+        val periodic = app.getSystemService(JobScheduler::class.java).allPendingJobs
+            .any { it.isPeriodic }
+        assertTrue("there is no pulse under the triggers", periodic)
     }
 
     /**

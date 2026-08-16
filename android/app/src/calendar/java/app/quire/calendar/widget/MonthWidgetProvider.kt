@@ -55,6 +55,10 @@ class MonthWidgetProvider : AppWidgetProvider() {
 
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
         ids.forEach { render(context, manager, it) }
+        // This arrives on boot and on placement, and the watch's pulse cannot be persisted
+        // without the boot permission this app refuses to carry — so boot re-arming happens
+        // here, where the launcher's own re-bind provides the wake.
+        CalendarWatchService.schedule(context)
     }
 
     override fun onAppWidgetOptionsChanged(

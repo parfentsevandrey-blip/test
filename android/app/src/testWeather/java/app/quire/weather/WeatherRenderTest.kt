@@ -367,6 +367,64 @@ class WeatherRenderTest {
         assertTrue("the night card came out light (luma $dark)", dark < 90)
     }
 
+    /**
+     * One picture, both faces.
+     *
+     * This is the launcher's side of the theme fix. The card that sat pale on a dark home screen
+     * was painted once, in whatever face the process wore at paint time, and stayed that way
+     * until some watcher fired — and on the phone that mattered, none did. Every colour is now
+     * applied with the paired day/night setter, so the test builds the RemoteViews ONCE under a
+     * light configuration and merely re-applies the same object under a dark one: if the card
+     * comes out dark anyway, the launcher can flip the theme with no help from this app at all.
+     */
+    @Test
+    fun `one picture wears both faces`() {
+        WeatherStore.save(context, stub())
+        val widgetId = 71
+        Prefs.get(context).widget(widgetId).apply {
+            skin = Skin.COLOUR
+            accent = Accent.PLUM
+            opacity = 100
+            dynamic = false
+        }
+
+        org.robolectric.RuntimeEnvironment.setQualifiers("+notnight")
+        val views = app.quire.weather.WeatherWidgetRenderer.build(context, widgetId, 340, 160)
+
+        fun shoot(name: String): Bitmap {
+            val host = FrameLayout(context).apply { setBackgroundColor(0xFF7A7A80.toInt()) }
+            host.addView(
+                views.apply(context, host),
+                FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                ),
+            )
+            return render(host, 340, 160, name)
+        }
+
+        fun luma(bitmap: Bitmap): Int {
+            val p = bitmap.getPixel(bitmap.width / 2, 6)
+            return (
+                android.graphics.Color.red(p) * 299 +
+                    android.graphics.Color.green(p) * 587 +
+                    android.graphics.Color.blue(p) * 114
+                ) / 1000
+        }
+
+        val light = luma(shoot("widget-faces-light"))
+        org.robolectric.RuntimeEnvironment.setQualifiers("+night")
+        val dark = luma(shoot("widget-faces-dark"))
+        org.robolectric.RuntimeEnvironment.setQualifiers("+notnight")
+
+        assertTrue("the light application came out dark (luma XX)".replace("XX", "" + light), light > 170)
+        assertTrue(
+            "the picture painted in the light did not go dark when applied dark (luma XX)"
+                .replace("XX", "" + dark),
+            dark < 90,
+        )
+    }
+
     /** A card placed before the first fetch says so, rather than showing a plausible zero. */
     @Test
     fun `a card with nothing fetched yet says so`() {

@@ -6,7 +6,9 @@ import android.app.job.JobScheduler
 import android.app.job.JobService
 import android.content.ComponentName
 import android.content.Context
+import android.content.res.Configuration
 import android.provider.Settings
+import app.quire.engine.design.SystemScheme
 
 /**
  * Notices that the phone's look has moved under a placed weather card, and repaints it.
@@ -28,6 +30,14 @@ import android.provider.Settings
 class WeatherWatch : JobService() {
 
     override fun onStartJob(params: JobParameters?): Boolean {
+        if (params?.jobId == PULSE_ID) {
+            // The half-hour pulse: compare, and only repaint when the look actually moved. This
+            // is the net under the trigger — a device that names the settings differently, or a
+            // dark theme flipped by schedule rather than by hand, still lands within the half
+            // hour. The comparison is two ints, so a quiet pulse costs nothing.
+            repaintIfLookChanged(applicationContext)
+            return false
+        }
         schedule(applicationContext)
         // A broadcast to the provider rather than a render on this thread: the provider already
         // owns a background lane for painting, and the job can finish immediately.
@@ -39,6 +49,8 @@ class WeatherWatch : JobService() {
 
     companion object {
         private const val JOB_ID = 0x9114
+        private const val PULSE_ID = 0x9116
+        private const val PULSE_MINUTES = 30L
 
         /** Where the palette picker records its choice; not in the SDK's constants, only the platform's. */
         private const val THEME_SETTING = "theme_customization_overlay_packages"
@@ -59,10 +71,41 @@ class WeatherWatch : JobService() {
                 .setTriggerContentMaxDelay(30_000L)
                 .build()
             runCatching { scheduler.schedule(job) }
+
+            val pulse = JobInfo.Builder(PULSE_ID, ComponentName(context, WeatherWatch::class.java))
+                .setPeriodic(PULSE_MINUTES * 60_000L)
+                .setPersisted(true)
+                .build()
+            runCatching { scheduler.schedule(pulse) }
         }
 
         fun cancel(context: Context) {
             context.getSystemService(JobScheduler::class.java)?.cancel(JOB_ID)
+            context.getSystemService(JobScheduler::class.java)?.cancel(PULSE_ID)
+        }
+
+        /** Repaints the card if the phone's look is not the one it was painted in. */
+        fun repaintIfLookChanged(context: Context) {
+            val settings = WeatherSettings.get(context)
+            val now = lookFingerprint(context)
+            if (now == settings.paintedLook) return
+            settings.paintedLook = now
+            WeatherWidgetProvider.requestUpdate(context)
+        }
+
+        /** Records the look as painted, for a repaint that happened for some other reason. */
+        fun markPainted(context: Context) {
+            WeatherSettings.get(context).paintedLook = lookFingerprint(context)
+        }
+
+        /** The night half of the config and both halves of the wallpaper scheme, in one number. */
+        private fun lookFingerprint(context: Context): Int {
+            var hash = context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+            if (SystemScheme.supported) {
+                hash = 31 * hash + (SystemScheme.read(context, dark = false)?.hashCode() ?: 0)
+                hash = 31 * hash + (SystemScheme.read(context, dark = true)?.hashCode() ?: 0)
+            }
+            return hash
         }
     }
 }

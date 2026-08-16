@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-8.5.apk`](dist/quire-calendar-8.5.apk) · 1.9 MB | `sha256 e31949c4ec9e1dcb6224c4fd7b1a8833ae87604d3eb2d75d05ffa2eb5a1ea37a` |
-| **Weather** | [`dist/quire-weather-8.5.apk`](dist/quire-weather-8.5.apk) · 1.5 MB | `sha256 4e2940473a618ac34c10d739c263405a631931259160926e0942339cf6e351dd` |
+| **Calendar** | [`dist/quire-calendar-8.6.apk`](dist/quire-calendar-8.6.apk) · 1.9 MB | `sha256 ab87c0fb2625a209fe7ad3e4b58aeba2613064e5e8861c5ac5b7af1b3ae154ab` |
+| **Weather** | [`dist/quire-weather-8.6.apk`](dist/quire-weather-8.6.apk) · 1.5 MB | `sha256 5e3622948fe49edeb0fa714d57d858922384c4d9b5ad8b63b48b8aa2dccabb1e` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-8.5.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-8.6.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -685,8 +685,24 @@ these was a change nothing asked about.
   firing, on boot, on placement and on package update — a job keeps the triggers it was
   scheduled with, so an update that adds one has to re-arm it by hand.
 
-All three are held by tests that count the repaint requests: the job must end in exactly one,
-the watch must hold both settings, and replacing the package must re-arm the watch.
+- **The weather card now wears both faces at once.** On Android 12 and up every colour on it is
+  applied with the paired day/night setter, so the *launcher itself* swaps light for dark the
+  instant the theme changes — no broadcast, no job, no process of ours running. The one obstacle
+  was a `ForegroundColorSpan`: a span is a baked colour, so the high/low pair became two views.
+  The test is the strongest kind this project has: it builds the RemoteViews **once** under a
+  light configuration, re-applies the same object under a dark one, and requires the card to
+  come out dark anyway.
+- **A half-hour pulse under the triggers.** The watched settings are the platform's own names,
+  not the SDK's, and a dark theme flipped by schedule announces itself to nobody. Both apps run
+  a periodic check that compares the look's fingerprint — two ints — and repaints only when it
+  actually moved, so the net costs nothing when nothing changed. The calendar's pulse is not
+  persisted across boot, because that needs the boot permission and the calendar's whole
+  contract is `READ_CALENDAR` and nothing else; the launcher re-binds widgets on boot and the
+  provider re-arms the watch from there.
+
+All of it is held by tests: the job must end in exactly one repaint request, the watch must hold
+both settings and a pulse, replacing the package must re-arm the watch — and one picture must
+wear both faces.
 
 ## Signing
 

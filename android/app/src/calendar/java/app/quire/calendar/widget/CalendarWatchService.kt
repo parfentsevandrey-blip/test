@@ -20,6 +20,13 @@ import android.provider.Settings
 class CalendarWatchService : JobService() {
 
     override fun onStartJob(params: JobParameters?): Boolean {
+        if (params?.jobId == PULSE_ID) {
+            // The half-hour net under the content triggers: compare, and repaint only if the
+            // look really moved. Covers a dark theme flipped by schedule, and any device that
+            // names the watched settings differently.
+            SchemeWatch.repaintIfChanged(applicationContext)
+            return false
+        }
         schedule(applicationContext)
         // Whatever woke this, the repaint below uses the colours as they are now, so the app
         // process does not go looking for the same change again next time it starts.
@@ -32,6 +39,8 @@ class CalendarWatchService : JobService() {
 
     companion object {
         private const val JOB_ID = 0x9112
+        private const val PULSE_ID = 0x9117
+        private const val PULSE_MINUTES = 30L
 
         /**
          * Where the theme picker records the colours it was told to use.
@@ -78,10 +87,22 @@ class CalendarWatchService : JobService() {
                 .setTriggerContentMaxDelay(30_000L)
                 .build()
             runCatching { scheduler.schedule(job) }
+
+            // Not persisted: that needs the boot permission, and this app's whole contract is
+            // READ_CALENDAR and nothing else. Boot re-arms it anyway — the launcher re-binds
+            // widgets on boot, and onUpdate schedules the watch.
+            val pulse = JobInfo.Builder(
+                PULSE_ID,
+                ComponentName(context, CalendarWatchService::class.java),
+            )
+                .setPeriodic(PULSE_MINUTES * 60_000L)
+                .build()
+            runCatching { scheduler.schedule(pulse) }
         }
 
         fun cancel(context: Context) {
             context.getSystemService(JobScheduler::class.java)?.cancel(JOB_ID)
+            context.getSystemService(JobScheduler::class.java)?.cancel(PULSE_ID)
         }
     }
 }

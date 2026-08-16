@@ -35,16 +35,38 @@
         android:importantForAccessibility="no"
         android:scaleType="fitCenter" />
 
-    <TextView
-        android:id="@+id/day_temps"
-        android:layout_width="match_parent"
+    <!--
+      High and low as two views rather than one styled string. A ForegroundColorSpan is a baked
+      colour, and a baked colour is the one thing on this card that cannot wear a day face and a
+      night face at once — every other colour here is applied with the paired setters the
+      launcher resolves against the current theme.
+    -->
+    <LinearLayout
+        android:id="@+id/day_temps_row"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:ellipsize="end"
-        android:fontFamily="sans-serif-medium"
         android:gravity="center"
-        android:includeFontPadding="false"
-        android:maxLines="1"
-        android:textSize="13sp" />
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/day_high"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/day_low"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:fontFamily="sans-serif-medium"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:textSize="13sp" />
+    </LinearLayout>
 
     <!--
       The chance of rain. Only ever shown when some day in the strip has one worth writing and

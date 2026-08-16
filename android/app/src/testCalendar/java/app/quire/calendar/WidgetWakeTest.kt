@@ -83,6 +83,10 @@ class WidgetWakeTest {
             "nothing watches the setting the dark-theme switch writes: $triggers",
             triggers.any { it.endsWith("ui_night_mode") },
         )
+        assertTrue(
+            "there is no pulse under the triggers",
+            jobs.any { it.isPeriodic },
+        )
     }
 
     /**
