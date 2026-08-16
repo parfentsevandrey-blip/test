@@ -1,6 +1,15 @@
 package app.quire.weather.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,11 +37,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalDensity
@@ -40,8 +57,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import app.quire.R
 import app.quire.calendar.m3.rememberLocale
 import app.quire.weather.DayForecast
@@ -117,6 +136,9 @@ fun WeatherScreen(
                     .clipToBounds(),
             )
         }
+        // Which entrance slots have played for this fetch; kept up here because a LazyColumn's
+        // content block is a list builder, not a composition, and remembering is composing.
+        val ledger = remember(forecast?.fetched) { mutableSetOf<Int>() }
         LazyColumn(contentPadding = padding, modifier = Modifier.fillMaxSize()) {
             // Only when there is no place at all. Somebody who named one has answered the question,
             // and being asked again for a permission they declined is nagging rather than helping.
@@ -140,28 +162,69 @@ fun WeatherScreen(
                 return@LazyColumn
             }
 
-            item { Now(forecast, model.settings) }
-            item { Readings(forecast, model.settings) }
+            // Each block arrives a beat after the one above it, once per fetch. The ledger
+            // remembers which slots have played, so a block scrolled away and back does not
+            // perform its entrance again — an entrance repeated is a tic, not a welcome.
+            item { Box(Modifier.arrive(0, forecast.fetched, ledger)) { Now(forecast, model.settings) } }
+            item { Box(Modifier.arrive(1, forecast.fetched, ledger)) { Readings(forecast, model.settings) } }
             if (forecast.hours.isNotEmpty()) {
-                item { Heading(stringResource(R.string.wx_hours)) }
+                item { Box(Modifier.arrive(2, forecast.fetched, ledger)) { Heading(stringResource(R.string.wx_hours)) } }
                 item {
-                    HourStrip(
-                        hours = forecast.hoursAhead(java.time.LocalDateTime.now()),
-                        units = model.settings,
-                    )
+                    Box(Modifier.arrive(2, forecast.fetched, ledger)) {
+                        HourStrip(
+                            hours = forecast.hoursAhead(java.time.LocalDateTime.now()),
+                            units = model.settings,
+                        )
+                    }
                 }
             }
             forecast.days.firstOrNull()?.let { today ->
                 if (today.sunrise != null && today.sunset != null) {
-                    item { Heading(stringResource(R.string.wx_sun)) }
-                    item { SunArc(today.sunrise, today.sunset, model.settings.glassEdges) }
+                    item { Box(Modifier.arrive(3, forecast.fetched, ledger)) { Heading(stringResource(R.string.wx_sun)) } }
+                    item {
+                        Box(Modifier.arrive(3, forecast.fetched, ledger)) {
+                            SunArc(today.sunrise, today.sunset, model.settings.glassEdges)
+                        }
+                    }
                 }
             }
-            item { Heading(stringResource(R.string.wx_five_days)) }
-            item { Days(forecast, model.settings) }
-            item { Freshness(forecast) }
+            item { Box(Modifier.arrive(4, forecast.fetched, ledger)) { Heading(stringResource(R.string.wx_five_days)) } }
+            item { Box(Modifier.arrive(4, forecast.fetched, ledger)) { Days(forecast, model.settings) } }
+            item { Box(Modifier.arrive(5, forecast.fetched, ledger)) { Freshness(forecast) } }
             item { Spacer(Modifier.height(24.dp)) }
         }
+    }
+}
+
+/**
+ * One block's entrance: a fade up from two dozen points below, [slot] beats after the fetch.
+ *
+ * Played once per forecast. The ledger is what stops a LazyColumn from replaying it — an item
+ * scrolled off the screen is disposed, and without a note that its entrance already happened it
+ * would perform it again every time it scrolled back in.
+ */
+@Composable
+private fun Modifier.arrive(slot: Int, fetched: Long, ledger: MutableSet<Int>): Modifier {
+    val played = slot in ledger
+    val progress = remember(fetched, slot) {
+        androidx.compose.animation.core.Animatable(if (played) 1f else 0f)
+    }
+    LaunchedEffect(fetched, slot) {
+        if (!played) {
+            kotlinx.coroutines.delay(slot * 70L)
+            progress.animateTo(
+                1f,
+                androidx.compose.animation.core.tween(
+                    durationMillis = 420,
+                    easing = androidx.compose.animation.core.FastOutSlowInEasing,
+                ),
+            )
+            ledger += slot
+        }
+    }
+    return this.graphicsLayer {
+        alpha = progress.value
+        translationY = (1f - progress.value) * 24.dp.toPx()
     }
 }
 
@@ -194,12 +257,18 @@ private fun Now(forecast: Forecast, units: WeatherModel.Settings) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = actual,
-                // Ink that turns toward the accent on its way down. The number is the largest
-                // thing the app ever draws, which makes it the one place a gradient can live in
-                // the type itself without hurting it — at display size the drift reads as light
-                // on the figure, where the same brush on body text would read as a misprint.
+                // The number is the reason the app was opened, and it is set like it: ninety-two
+                // points of the lightest weight the face carries, with ink that turns toward the
+                // accent on its way down. Display size is the one place a gradient can live in
+                // the letterforms without hurting them — at this scale it reads as light on the
+                // figure, where the same brush on body text would read as a misprint — and the
+                // hairline weight is what keeps that much type from being a wall.
                 style = MaterialTheme.typography.displayLarge.merge(
                     androidx.compose.ui.text.TextStyle(
+                        fontSize = 92.sp,
+                        lineHeight = 96.sp,
+                        fontWeight = FontWeight.W200,
+                        letterSpacing = (-2).sp,
                         brush = Brush.linearGradient(
                             listOf(scheme.onSurface, scheme.primary),
                         ),
@@ -228,21 +297,38 @@ private fun Now(forecast: Forecast, units: WeatherModel.Settings) {
         // scrolls down; up here it answers the question the current temperature raises and does
         // not settle — whether this is the warm part of the day or the cold one.
         forecast.days.firstOrNull()?.let { today ->
-            Spacer(Modifier.height(2.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = "↑ " + write(units, today.high),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = scheme.onSurfaceVariant,
-                )
-                Spacer(Modifier.width(12.dp))
-                Text(
-                    text = "↓ " + write(units, today.low),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = scheme.onSurfaceVariant,
-                )
+            Spacer(Modifier.height(8.dp))
+            // As two small pills rather than a line of type: the day's bounds are the second
+            // thing the hero answers, and a pill is how this design says "a fact you can lean
+            // on" everywhere else — the hour strip's Now, today in the five days.
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                RangePill("↑", write(units, today.high), scheme.primary)
+                RangePill("↓", write(units, today.low), scheme.tertiary)
             }
         }
+    }
+}
+
+/** One bound of the day, worn as a pill: the mark in the day's own accent, the number in ink. */
+@Composable
+private fun RangePill(mark: String, value: String, accent: androidx.compose.ui.graphics.Color) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .padding(horizontal = 12.dp, vertical = 5.dp),
+    ) {
+        Text(
+            text = mark,
+            style = MaterialTheme.typography.labelLarge,
+            color = accent,
+        )
+        Spacer(Modifier.width(4.dp))
+        Text(
+            text = value,
+            style = MaterialTheme.typography.labelLarge,
+        )
     }
 }
 
@@ -262,6 +348,9 @@ private fun Heading(text: String) {
     )
 }
 
+/** One cell of the slab: its mark, its words, its number, and — for the wind — its bearing. */
+private data class Meter(val icon: Int, val label: String, val value: String, val turn: Float? = null)
+
 /**
  * The three numbers the widget has no room for, as one row of tonal cards.
  *
@@ -280,7 +369,7 @@ private fun Readings(forecast: Forecast, units: WeatherModel.Settings) {
     // "—" is a card spent saying nothing.
     val readings = buildList {
         add(
-            Triple(
+            Meter(
                 R.drawable.wx_drop,
                 stringResource(R.string.wx_rain_chance_short),
                 "${today?.rain ?: 0}%",
@@ -288,7 +377,7 @@ private fun Readings(forecast: Forecast, units: WeatherModel.Settings) {
         )
         if (now.humidity >= 0) {
             add(
-                Triple(
+                Meter(
                     R.drawable.wx_humidity,
                     stringResource(R.string.wx_humidity),
                     "${now.humidity}%",
@@ -296,18 +385,22 @@ private fun Readings(forecast: Forecast, units: WeatherModel.Settings) {
             )
         }
         add(
-            Triple(
-                R.drawable.wx_wind,
+            Meter(
+                // With a bearing the mark is a needle turned to where the wind is going — the
+                // direction named in the label is where it comes FROM, and what it pushes things
+                // along by is the opposite. Without one, the generic gusts glyph.
+                if (now.quarter != null) R.drawable.wx_needle else R.drawable.wx_wind,
                 // The quarter it blows from goes in the label rather than the value: it is what
                 // kind of wind this is, not how much of it there is.
                 now.quarter?.let { stringResource(R.string.wx_wind_from, compass[it]) }
                     ?: stringResource(R.string.wx_wind),
                 "${units.wind.from(now.wind).roundToInt()} " + stringResource(windLabel(units.wind)),
+                turn = if (now.quarter != null) ((now.direction + 180) % 360).toFloat() else null,
             ),
         )
         if (now.gust >= 0) {
             add(
-                Triple(
+                Meter(
                     R.drawable.wx_gust,
                     stringResource(R.string.wx_gust),
                     "${units.wind.from(now.gust).roundToInt()} " +
@@ -316,11 +409,11 @@ private fun Readings(forecast: Forecast, units: WeatherModel.Settings) {
             )
         }
         if (now.uv >= 0) {
-            add(Triple(R.drawable.wx_uv, stringResource(R.string.wx_uv), "${now.uv.roundToInt()}"))
+            add(Meter(R.drawable.wx_uv, stringResource(R.string.wx_uv), "${now.uv.roundToInt()}"))
         }
         if (now.pressure >= 0) {
             add(
-                Triple(
+                Meter(
                     R.drawable.wx_pressure,
                     stringResource(R.string.wx_pressure),
                     "${units.pressure.from(now.pressure).roundToInt()} " +
@@ -347,12 +440,12 @@ private fun Readings(forecast: Forecast, units: WeatherModel.Settings) {
                 horizontalArrangement = Arrangement.spacedBy(SlabGap),
                 modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
             ) {
-                row.forEachIndexed { column, (icon, label, value) ->
+                row.forEachIndexed { column, meter ->
                     // Its place in the grid is its seed, so no two cells carry the same light in
                     // the same place at the same moment — and its shape, because which corners
                     // are the slab's own is a fact about where the cell sits.
                     Reading(
-                        icon, label, value, units,
+                        meter, units,
                         seed = line * 3 + column,
                         shape = cellShape(
                             firstRow = line == 0,
@@ -396,9 +489,7 @@ private val CellCorner = 7.dp
  */
 @Composable
 private fun Reading(
-    icon: Int,
-    label: String,
-    value: String,
+    meter: Meter,
     units: WeatherModel.Settings,
     seed: Int,
     shape: RoundedCornerShape,
@@ -419,20 +510,22 @@ private fun Reading(
             modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp, horizontal = 6.dp),
         ) {
             Icon(
-                painter = painterResource(icon),
+                painter = painterResource(meter.icon),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier
+                    .size(18.dp)
+                    .then(meter.turn?.let { Modifier.rotate(it) } ?: Modifier),
             )
             Spacer(Modifier.height(6.dp))
             Text(
-                text = value,
+                text = meter.value,
                 style = MaterialTheme.typography.titleLarge,
                 textAlign = TextAlign.Center,
                 maxLines = 1,
             )
             Text(
-                text = label,
+                text = meter.label,
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -443,7 +536,7 @@ private fun Reading(
 }
 
 @Composable
-private fun Days(forecast: Forecast, units: WeatherModel.Settings) {
+internal fun Days(forecast: Forecast, units: WeatherModel.Settings) {
     val days = forecast.ahead(5)
     // Every bar is measured against the same week, which is the whole point of drawing them: a
     // day is cold relative to the days on either side of it, not relative to itself.
@@ -463,46 +556,86 @@ private fun Days(forecast: Forecast, units: WeatherModel.Settings) {
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         ),
     ) {
+        // One open at a time: a card with every day unfolded is the long screen this screen
+        // replaced. Opening a second day closes the first, the way an accordion holds one note.
+        var open by remember { mutableIntStateOf(-1) }
+        val haptics = LocalHapticFeedback.current
         Column(Modifier.padding(vertical = 6.dp)) {
-            days.forEach { day -> DayRow(day, coldest, span, units) }
+            days.forEachIndexed { index, day ->
+                DayRow(
+                    day = day,
+                    coldest = coldest,
+                    span = span,
+                    units = units,
+                    index = index,
+                    open = open == index,
+                    onToggle = {
+                        haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
+                        open = if (open == index) -1 else index
+                    },
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun DayRow(day: DayForecast, coldest: Double, span: Double, units: WeatherModel.Settings) {
+private fun DayRow(
+    day: DayForecast,
+    coldest: Double,
+    span: Double,
+    units: WeatherModel.Settings,
+    index: Int,
+    open: Boolean,
+    onToggle: () -> Unit,
+) {
     val scheme = MaterialTheme.colorScheme
     val locale = rememberLocale()
     val today = day.date == LocalDate.now()
 
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
+    // The chevron leans into the row's state on a spring rather than snapping, which is the whole
+    // of the affordance: a mark that moves when touched is a mark that says it can be.
+    val lean by animateFloatAsState(
+        targetValue = if (open) 180f else 0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMediumLow,
+        ),
+        label = "lean",
+    )
+
+    Column(
         // Today wears the same tonal pill the hour strip's "Now" does, so the two cards point at
         // the present the same way. The pill is inset from the card's edge and the row's content
         // keeps its old inset in total, so the columns still line up with the rows around them.
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 6.dp)
+            .clip(RoundedCornerShape(14.dp))
             .then(
                 if (today) {
-                    Modifier
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(scheme.surfaceContainerHighest)
+                    Modifier.background(scheme.surfaceContainerHighest)
                 } else {
                     Modifier
                 },
             )
-            .padding(horizontal = 10.dp, vertical = 10.dp),
+            .clickable(onClick = onToggle)
+            .testTag("day-$index")
+            .padding(horizontal = 10.dp),
     ) {
-        // Short form even for today: "Сегодня" in a 64dp column wraps to two lines and drags the
-        // whole row out of alignment, which is exactly what it did.
-        Text(
-            text = day.date.dayOfWeek.getDisplayName(TextStyle.SHORT, locale),
-            style = MaterialTheme.typography.bodyLarge,
-            color = if (today) scheme.primary else scheme.onSurface,
-            maxLines = 1,
-            modifier = Modifier.width(44.dp),
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
+        ) {
+            // Short form even for today: "Сегодня" in a 64dp column wraps to two lines and drags
+            // the whole row out of alignment, which is exactly what it did.
+            Text(
+                text = day.date.dayOfWeek.getDisplayName(TextStyle.SHORT, locale),
+                style = MaterialTheme.typography.bodyLarge,
+                color = if (today) scheme.primary else scheme.onSurface,
+                maxLines = 1,
+                modifier = Modifier.width(44.dp),
+            )
         Icon(
             painter = painterResource(day.sky.dayIcon),
             contentDescription = stringResource(day.sky.label),
@@ -534,6 +667,62 @@ private fun DayRow(day: DayForecast, coldest: Double, span: Double, units: Weath
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.width(36.dp),
         )
+            Icon(
+                painter = painterResource(R.drawable.wx_more),
+                contentDescription = null,
+                tint = scheme.onSurfaceVariant,
+                modifier = Modifier
+                    .padding(start = 4.dp)
+                    .size(16.dp)
+                    .rotate(lean),
+            )
+        }
+
+        // The rest of the day, under the row that names it: when the sun is up and down, and the
+        // word for the sky. It grows out on the theme's spring and takes the day's own accent for
+        // its times, so the open row answers the two questions a plain row raises — how long is
+        // the light, and what kind of day is it.
+        AnimatedVisibility(
+            visible = open,
+            enter = expandVertically(
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioLowBouncy,
+                    stiffness = Spring.StiffnessMediumLow,
+                ),
+            ) + fadeIn(),
+            exit = shrinkVertically() + fadeOut(),
+        ) {
+            val clock = remember(locale) {
+                DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale)
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                modifier = Modifier.fillMaxWidth().padding(start = 44.dp, bottom = 12.dp),
+            ) {
+                Text(
+                    text = stringResource(day.sky.label),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = scheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f),
+                )
+                if (day.sunrise != null) {
+                    Text(
+                        text = stringResource(R.string.wx_sunrise) + " " +
+                            clock.format(day.sunrise),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = scheme.primary,
+                    )
+                }
+                if (day.sunset != null) {
+                    Text(
+                        text = stringResource(R.string.wx_sunset) + " " + clock.format(day.sunset),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = scheme.tertiary,
+                    )
+                }
+            }
+        }
     }
 }
 

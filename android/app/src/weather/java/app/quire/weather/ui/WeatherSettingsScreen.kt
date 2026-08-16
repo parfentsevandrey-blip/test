@@ -20,6 +20,8 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.quire.R
@@ -101,6 +103,7 @@ fun WeatherSettingsScreen(model: WeatherModel, padding: PaddingValues) {
         }
         if (settings.alerts) {
             item {
+                val haptics = LocalHapticFeedback.current
                 Column(Modifier.padding(horizontal = Gutter, vertical = 8.dp)) {
                     Text(
                         text = stringResource(R.string.wx_threshold, settings.threshold),
@@ -108,7 +111,13 @@ fun WeatherSettingsScreen(model: WeatherModel, padding: PaddingValues) {
                     )
                     Slider(
                         value = settings.threshold.toFloat(),
-                        onValueChange = { model.setThreshold(it.roundToInt()) },
+                        onValueChange = {
+                            // One light tick per step the thumb lands on, not per pixel it moves.
+                            if (it.roundToInt() != settings.threshold) {
+                                haptics.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
+                            }
+                            model.setThreshold(it.roundToInt())
+                        },
                         valueRange = WeatherSettings.MIN_THRESHOLD.toFloat()..
                             WeatherSettings.MAX_THRESHOLD.toFloat(),
                         steps = 6,
@@ -191,6 +200,7 @@ private fun PeriodRow(selected: Int, onSelect: (Int) -> Unit, hint: String) {
         stringResource(R.string.wx_period_180),
         stringResource(R.string.wx_period_360),
     )
+    val haptics = LocalHapticFeedback.current
     Column(Modifier.padding(horizontal = Gutter, vertical = 8.dp)) {
         Text(stringResource(R.string.wx_period), style = MaterialTheme.typography.bodyLarge)
         Spacer(Modifier.height(8.dp))
@@ -198,7 +208,10 @@ private fun PeriodRow(selected: Int, onSelect: (Int) -> Unit, hint: String) {
             WeatherSettings.PERIODS.forEachIndexed { index, minutes ->
                 FilterChip(
                     selected = minutes == selected,
-                    onClick = { onSelect(minutes) },
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
+                        onSelect(minutes)
+                    },
                     label = { Text(labels[index], maxLines = 1) },
                 )
             }
@@ -219,6 +232,7 @@ private fun ChoiceRow(
     selected: Int,
     onSelect: (Int) -> Unit,
 ) {
+    val haptics = LocalHapticFeedback.current
     Column(Modifier.padding(horizontal = Gutter, vertical = 8.dp)) {
         Text(title, style = MaterialTheme.typography.bodyLarge)
         Spacer(Modifier.height(8.dp))
@@ -226,7 +240,10 @@ private fun ChoiceRow(
             options.forEachIndexed { index, label ->
                 SegmentedButton(
                     selected = index == selected,
-                    onClick = { onSelect(index) },
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
+                        onSelect(index)
+                    },
                     shape = SegmentedButtonDefaults.itemShape(index, options.size),
                 ) {
                     Text(label, maxLines = 1)

@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-8.1.apk`](dist/quire-calendar-8.1.apk) · 1.9 MB | `sha256 db29af0a5b46129f882251729e4ac564bbbcd1bdb4008dba85e144a2a771a57a` |
-| **Weather** | [`dist/quire-weather-8.1.apk`](dist/quire-weather-8.1.apk) · 1.5 MB | `sha256 0b47bb2dc4c66b2d78dcb4a58f32361abb5ac2e9e72b6a95f8e4595db116c0af` |
+| **Calendar** | [`dist/quire-calendar-8.2.apk`](dist/quire-calendar-8.2.apk) · 1.9 MB | `sha256 4d40dbb6e1206f754dc35f8acf61de003834dea60016a8fdf4d8a1bafeacf077` |
+| **Weather** | [`dist/quire-weather-8.2.apk`](dist/quire-weather-8.2.apk) · 1.5 MB | `sha256 7155e230a2ca07af79fa749ef7d7fde38d3e6845776159c25ee3afd5048fd93b` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-8.1.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-8.2.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -275,6 +275,29 @@ through the middle, black along the foot. And a real **shadow** — three points
 cards are right for the calendar's year, where twelve are transformed at once and twelve resting
 shadows are twelve more layers to compose; nothing here is transformed, and the page these sit on
 is a gradient with weather falling down it.
+
+**The hero is set like the reason the app was opened.** Ninety-two points of the lightest weight
+the face carries, with ink that turns toward the accent on its way down; the day's bounds ride
+under it as two pills, which is how this design says "a fact you can lean on" everywhere else.
+The app bar gives its title to the place — the one word that changes what every number on the page
+means; the app's own name is on the launcher, where names belong — and the day's date rides under
+it, because a weather page is read in the morning and "what day is it" is the second question of a
+morning. The wind cell's mark is a needle turned to where the wind is actually going (the label
+names the quarter it comes *from*; what it pushes things along by is the opposite), and each block
+of the page arrives a beat after the one above it, once per fetch — a ledger remembers which
+entrances have played, so a block scrolled away and back does not perform its entrance again.
+
+**Each day opens to the rest of itself.** A row in the five-day card gives the day's swing; a tap
+gives its sunrise, its sunset and the word for its sky, growing out on the theme's spring behind a
+chevron that leans into the open state. One day is open at a time — a card with every day unfolded
+is the long screen this card replaced — and the test drives it by tapping: the sunrise time exists
+nowhere before the tap, once after it, and still once after a second day is opened instead.
+
+**And the phone answers the hand.** Every switch in both apps clicks on and off with the
+platform's own toggle pulses; the segmented rows and interval chips tick as a segment lands; the
+rain-threshold slider ticks once per step it crosses, not per pixel it moves; opening a day
+clicks; and a calendar entry dips two per cent under the finger and springs back on the theme's
+expressive spring — enough for the hand to notice, not enough for the eye to call it an animation.
 
 **The readings are one slab, sliced.** Six loose cards with equal gaps everywhere are six things
 to look at; the same six with three-point gaps inside and only the group's outer corners rounded

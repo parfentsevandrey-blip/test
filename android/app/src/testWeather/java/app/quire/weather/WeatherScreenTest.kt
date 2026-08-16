@@ -20,6 +20,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ApplicationProvider
 import app.quire.calendar.m3.QuireTheme
@@ -28,6 +29,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import app.quire.weather.ui.BLOCK
+import app.quire.weather.ui.Days
 import app.quire.weather.ui.LiveSky
 import app.quire.weather.ui.glass
 import app.quire.weather.ui.WeatherApp
@@ -192,7 +194,10 @@ class WeatherScreenTest {
         // the wash lifts the page to within a hair of a card's own colour.
         val blocks = compose.onAllNodesWithTag(BLOCK).fetchSemanticsNodes()
             .map { it.boundsInRoot.left }
-        assertTrue("only ${blocks.size} blocks are tagged", blocks.size == 4)
+        // The hero grew tall enough that the five-day card starts below this viewport, and a
+        // LazyColumn does not compose what it cannot show — so the check runs over every block
+        // that is composed rather than naming a count that depends on the hero's height.
+        assertTrue("only ${blocks.size} blocks are tagged", blocks.size >= 3)
         assertTrue(
             "the blocks start at different x: $blocks",
             blocks.max() - blocks.min() < 0.5f,
@@ -349,6 +354,74 @@ class WeatherScreenTest {
         }
         assertTrue("nothing moved in the sky at all", movedAbove > 200)
         assertTrue("the page moved under the sky ($movedBelow pixels)", movedBelow == 0)
+    }
+
+    /**
+     * A day opens to the rest of itself.
+     *
+     * The row gives the day's swing; the tap gives its sunrise, its sunset and the word for its
+     * sky. Before the tap those times exist once on the screen — on the sun card — and after it
+     * they exist twice, which is the whole assertion: the detail is real text a reader can find,
+     * not a drawing.
+     */
+    @Test
+    fun `a day opens to its sunrise and sunset`() {
+        val today = LocalDate.now()
+        WeatherStore.pin(app, Place("Moscow", null, "Russia", 55.75, 37.62))
+        WeatherStore.save(
+            app,
+            Forecast(
+                place = "Moscow",
+                latitude = 55.75,
+                longitude = 37.62,
+                now = Conditions(15.0, 14.0, Sky.PARTLY_CLOUDY, true, 60, 10.0, 16.0, 90, 1010.0, 4.0),
+                hours = (0 until 26).map { hour ->
+                    HourForecast(
+                        time = java.time.LocalDateTime.now().withMinute(0).plusHours(hour.toLong()),
+                        temperature = 15.0,
+                        sky = Sky.PARTLY_CLOUDY,
+                        day = true,
+                        rain = 0,
+                    )
+                },
+                days = (0 until 5).map { index ->
+                    DayForecast(
+                        date = today.plusDays(index.toLong()),
+                        sky = Sky.PARTLY_CLOUDY,
+                        high = 20.0 - index,
+                        low = 10.0 - index,
+                        rain = 0,
+                        sunrise = today.plusDays(index.toLong()).atTime(5, 12),
+                        sunset = today.plusDays(index.toLong()).atTime(20, 41),
+                    )
+                },
+                fetched = System.currentTimeMillis(),
+            ),
+        )
+
+        // The card on its own rather than the whole screen: scrolling a paused-clock test is a
+        // fight with the scroll animation, and the card is the thing under test.
+        val model = WeatherModel(app)
+        compose.setContent {
+            QuireTheme(dark = true, dynamic = false) {
+                Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+                    Days(model.forecast!!, model.settings)
+                }
+            }
+        }
+        settle()
+
+        assertTrue("a sunrise is on show before any tap", showing("5:12") == 0)
+        compose.onNodeWithTag("day-1").performClick()
+        settle()
+        assertTrue("opening a day did not surface its sunrise", showing("5:12") == 1)
+        assertTrue("opening a day did not surface its sunset", showing("8:41") == 1)
+        shoot("app-weather-day-open")
+
+        // And the accordion holds one note: opening another day closes the first.
+        compose.onNodeWithTag("day-3").performClick()
+        settle()
+        assertTrue("two days are open at once", showing("5:12") == 1)
     }
 
     /**

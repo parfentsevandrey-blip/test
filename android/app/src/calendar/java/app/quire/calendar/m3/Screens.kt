@@ -52,6 +52,7 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -412,8 +413,16 @@ private fun AgendaRow(
     // A card rather than a list row. An entry is a thing you can pick up and open, and the flat
     // row it used to be — a stripe and two lines of text straight on the page — read as a caption
     // under the grid rather than as something with a tap target.
+    // The card dips under the finger and springs back, and the open lands with a click the hand
+    // can feel: the two together are what make it an object rather than a picture of one.
+    val pressing = remember { MutableInteractionSource() }
+    val haptics = LocalHapticFeedback.current
     Card(
-        onClick = { onOpen(entry) },
+        onClick = {
+            haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+            onOpen(entry)
+        },
+        interactionSource = pressing,
         colors = CardDefaults.cardColors(
             containerColor = if (running) scheme.secondaryContainer else scheme.surfaceContainerLow,
         ),
@@ -421,6 +430,7 @@ private fun AgendaRow(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
+            .springPress(pressing)
             // Finished, not gone. It stays where it was — a day you can no longer see the start
             // of is a day that has been edited behind your back — but it stops competing.
             .alpha(if (over) 0.55f else 1f),
@@ -611,11 +621,16 @@ fun SearchResults(
             // The same card as an agenda entry, because it is the same thing found a different
             // way. A result that looks unlike the row it takes you to is two designs for one
             // object.
+            val pressing = remember { MutableInteractionSource() }
             Card(
                 onClick = { onPick(date) },
+                interactionSource = pressing,
                 colors = CardDefaults.cardColors(containerColor = scheme.surfaceContainerLow),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
+                    .springPress(pressing),
             ) {
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
                     Text(

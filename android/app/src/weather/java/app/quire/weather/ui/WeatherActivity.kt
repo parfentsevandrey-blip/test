@@ -93,16 +93,27 @@ internal fun WeatherApp() {
             modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
                 LargeFlexibleTopAppBar(
+                    // The place is the title, because it is the one word that changes what every
+                    // number on the page means; the app's own name is on the launcher, where names
+                    // belong. The date rides under it — a weather page is read in the morning, and
+                    // "what day is it" is the second question of a morning.
                     title = {
                         Text(
-                            stringResource(
-                                if (configuring) R.string.wx_settings else R.string.weather,
-                            ),
+                            if (configuring) {
+                                stringResource(R.string.wx_settings)
+                            } else {
+                                model.forecast?.place?.takeIf { it.isNotBlank() }
+                                    ?: stringResource(R.string.weather)
+                            },
                         )
                     },
                     subtitle = {
                         if (!configuring) {
-                            model.forecast?.place?.takeIf { it.isNotBlank() }?.let { Text(it) }
+                            val locale = app.quire.calendar.m3.rememberLocale()
+                            val today = java.time.LocalDate.now().format(
+                                java.time.format.DateTimeFormatter.ofPattern("EEEE, d MMMM", locale),
+                            ).replaceFirstChar { it.titlecase(locale) }
+                            Text(today)
                         }
                     },
                     navigationIcon = {

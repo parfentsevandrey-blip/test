@@ -15,6 +15,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 
 /**
@@ -53,9 +55,17 @@ internal fun SettingRow(
     tint: Color? = null,
     onChange: (Boolean) -> Unit,
 ) {
+    // The platform's own on/off pulses, so a switch flipped in here feels like a switch flipped
+    // in the system settings — two different clicks for the two directions.
+    val haptics = LocalHapticFeedback.current
     SegmentedListItem(
         checked = checked,
-        onCheckedChange = onChange,
+        onCheckedChange = {
+            haptics.performHapticFeedback(
+                if (it) HapticFeedbackType.ToggleOn else HapticFeedbackType.ToggleOff,
+            )
+            onChange(it)
+        },
         shapes = ListItemDefaults.segmentedShapes(index, count),
         supportingContent = hint?.let { { Text(it) } },
         leadingContent = tint?.let {
