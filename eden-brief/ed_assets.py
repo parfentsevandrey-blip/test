@@ -11,18 +11,22 @@ from PIL import Image
 HERE = os.path.dirname(os.path.abspath(__file__))
 ASSETS = os.path.join(HERE, 'assets')
 
+#  исходник,      результат,   качество
+#  карта рисуется 1840×1120, а в документе стоит шириной 643 px — почти
+#  трёхкратный запас, поэтому качество 82 на странице неотличимо от 92,
+#  но файл легче на четверть
 CONVERT = [
-    ('ed_map.png',   'map.jpg'),
-    ('ed_chart.png', 'chart.jpg'),
+    ('ed_map.png',   'map.jpg',   82),
+    ('ed_chart.png', 'chart.jpg', 92),
 ]
 
 if __name__ == '__main__':
     os.makedirs(ASSETS, exist_ok=True)
-    for src, dst in CONVERT:
+    for src, dst, q in CONVERT:
         p = os.path.join(HERE, src)
         if not os.path.exists(p):
             p = os.path.join(ASSETS, src)
         im = Image.open(p).convert('RGB')
         out = os.path.join(ASSETS, dst)
-        im.save(out, 'JPEG', quality=92, subsampling=0, optimize=True)
+        im.save(out, 'JPEG', quality=q, subsampling=0, optimize=True)
         print(f'{src} {im.size} -> assets/{dst}  {os.path.getsize(out) // 1024} КБ')
