@@ -1,10 +1,11 @@
-"""Цена метра: EDEN против элитных районов Москвы.
+"""Сколько стоит метр квартиры, в которую можно заехать.
 
-Столбики — средневзвешенная цена предложения по элитным районам
-(NF Group, I квартал 2026). Красный — расчётная цена EDEN, полученная
-из единственной опубликованной цифры: от 1,1 млрд ₽ за резиденцию
-около 250 м².
+EDEN и «Кло 17» продаются без отделки, поэтому к их цене метра добавлена
+стоимость отделки де-люкс — 750 тыс. ₽/м². У остальных проектов квартиры
+идут с отделкой, доплачивать нечего. Цифры по конкурентам — из выгрузок
+Циан от 17.08.2026, цена EDEN — расчёт по старту продаж.
 """
+import json
 from PIL import Image, ImageDraw, ImageFont
 
 F  = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'
@@ -12,58 +13,65 @@ FB = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'
 fnt = lambda s, b=False: ImageFont.truetype(FB if b else F, s)
 
 S = 2
-W, H = 1400, 700
+W, H = 1400, 620
 SURFACE, INK, MUTED, GRID = (252, 252, 251), (34, 40, 52), (112, 120, 134), (226, 223, 216)
-BLUE, BRONZE, RED = (74, 123, 200), (185, 130, 47), (179, 40, 45)
+C_FLAT, C_FIT, RED = (74, 123, 200), (185, 130, 47), (179, 40, 45)
 
+K = json.load(open('eden/ed_tables.json'))
+FIT = K['priceStats']['fit']
+
+#  название,                 цена метра, доплата за отделку, подпись
 ROWS = [
-    ('Остоженка – Пречистенка',     4798, BLUE,   'самый дорогой район Москвы'),
-    ('EDEN Private Residence',      4400, RED,    'расчёт по старту продаж'),
-    ('Патриаршие пруды',            3948, BLUE,   ''),
-    ('Тверской',                    3410, BLUE,   ''),
-    ('Средняя по классу делюкс',    3242, BRONZE, 'вся Москва, июнь 2026'),
-    ('Арбат — район проекта',       3169, BRONZE, 'средняя по району'),
-    ('Якиманка',                    2938, BLUE,   ''),
-    ('Хамовники',                   2808, BLUE,   ''),
-    ('Замоскворечье',               2020, BLUE,   ''),
+    ('EDEN Private Residence', 4_400_000, FIT,     '22 резиденции · расчёт по старту продаж'),
+    ('Stella di Mosca',        4_283_845, 0,       '3 лота · вторичка, дизайнерский ремонт'),
+    ('Никитский-6',            3_194_829, 0,       '16 лотов · чистовая от застройщика'),
+    ('Кло 17 (Clos 17)',       2_627_192, FIT,     '17 лотов · всё без отделки'),
+    ('Фамильный дом Люче',     2_935_276, FIT / 26, '26 лотов · 25 с отделкой, 1 без'),
+    ('Turandot Residences',    1_380_790, FIT * 7 / 8, '8 лотов · 7 без отделки'),
 ]
+ROWS.sort(key=lambda r: -(r[1] + r[2]))
 
 img = Image.new('RGB', (W * S, H * S), SURFACE)
 dr = ImageDraw.Draw(img)
 
-L, R, T = 40 * S, 60 * S, 116 * S
-PLOT_L = L + 400 * S
+L, R, T = 40 * S, 60 * S, 118 * S
+PLOT_L = L + 360 * S
 PLOT_W = W * S - R - PLOT_L
-MAXV = 5200
+MAXV = 5_600_000
 x_of = lambda v: PLOT_L + PLOT_W * v / MAXV
+nf = lambda v: f'{v:,.0f}'.replace(',', ' ')
 
-dr.text((L, 32 * S), 'Цена метра: EDEN и элитные районы Москвы', font=fnt(23 * S, True), fill=INK)
-dr.text((L, 68 * S), 'Тысяч ₽ за м², цена предложения. NF Group, I квартал 2026',
+dr.text((L, 32 * S), 'Метр квартиры, в которую можно заехать', font=fnt(23 * S, True), fill=INK)
+dr.text((L, 68 * S), 'Синее — цена метра сейчас, бронзовое — сколько нужно доплатить за отделку',
         font=fnt(14 * S, False), fill=MUTED)
 
 BOT = H * S - 54 * S
-for g in range(0, MAXV + 1, 1000):
+for g in range(0, MAXV + 1, 1_000_000):
     x = x_of(g)
     dr.line([(x, T - 8 * S), (x, BOT)], fill=GRID, width=1 * S)
-    lab = f'{g:,}'.replace(',', ' ')
-    dr.text((x - dr.textlength(lab, font=fnt(12 * S)) / 2, BOT + 10 * S), lab,
-            font=fnt(12 * S), fill=MUTED)
+    dr.text((x - dr.textlength(nf(g / 1e6), font=fnt(12 * S)) / 2, BOT + 10 * S),
+            nf(g / 1e6), font=fnt(12 * S), fill=MUTED)
+dr.text((PLOT_W + PLOT_L - 60 * S, BOT + 28 * S), 'млн ₽ за м²', font=fnt(12 * S), fill=MUTED)
 
 rowh = (BOT - T) / len(ROWS)
-BH = int(rowh * 0.50)
-for i, (name, val, col, sub) in enumerate(ROWS):
+BH = int(rowh * 0.46)
+for i, (name, flat, fit, sub) in enumerate(ROWS):
     cy = int(T + rowh * i + rowh / 2)
-    ours = col == RED
-    dr.text((L, cy - (16 * S if sub else 9 * S)), name, font=fnt(15 * S, ours), fill=INK)
-    if sub:
-        dr.text((L, cy + 4 * S), sub, font=fnt(11 * S), fill=MUTED)
-    dr.rectangle([PLOT_L, cy - BH // 2, x_of(val), cy + BH // 2], fill=col)
-    dr.text((x_of(val) + 12 * S, cy - 11 * S),
-            ('≈ ' if ours else '') + f'{val:,}'.replace(',', ' '),
-            font=fnt(18 * S, True), fill=col)
+    ours = name.startswith('EDEN')
+    dr.text((L, cy - 17 * S), name, font=fnt(15 * S, ours), fill=RED if ours else INK)
+    dr.text((L, cy + 3 * S), sub, font=fnt(11 * S), fill=MUTED)
+    x1 = x_of(flat)
+    dr.rectangle([PLOT_L, cy - BH // 2, x1, cy + BH // 2], fill=RED if ours else C_FLAT)
+    if fit > 1000:
+        dr.rectangle([x1, cy - BH // 2, x_of(flat + fit), cy + BH // 2], fill=C_FIT)
+    tot = flat + fit
+    dr.text((x_of(tot) + 12 * S, cy - 11 * S), ('≈ ' if ours else '') + nf(tot),
+            font=fnt(17 * S, True), fill=RED if ours else INK)
 
 dr.line([(PLOT_L, T - 8 * S), (PLOT_L, BOT)], fill=(200, 197, 190), width=1 * S)
 dr.line([(PLOT_L, BOT), (W * S - R, BOT)], fill=(200, 197, 190), width=1 * S)
 
 img.resize((W, H), Image.LANCZOS).save('eden/ed_chart.png')
 print('written eden/ed_chart.png', (W, H))
+for n, f_, ft, _ in ROWS:
+    print(f'  {n:24s} {nf(f_):>10s} + {nf(ft):>8s} = {nf(f_ + ft):>10s}')
