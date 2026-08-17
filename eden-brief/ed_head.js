@@ -9,7 +9,13 @@ const {
 const LR = D.LineRuleType.AUTO;
 
 const K  = JSON.parse(fs.readFileSync(path.join(__dirname, 'ed_tables.json'), 'utf8'));
-const IMG = (n) => fs.readFileSync(path.join(__dirname, 'out', n));
+const IMG = (n) => {
+  for (const d of ['assets', 'out']) {
+    const p = path.join(__dirname, d, n);
+    if (fs.existsSync(p)) return fs.readFileSync(p);
+  }
+  throw new Error('не найдена картинка ' + n);
+};
 
 // ── palette ────────────────────────────────────────────────────────────────
 const INK = '1F2A44', BRONZE = 'A9762F', MUTED = '70788A',
