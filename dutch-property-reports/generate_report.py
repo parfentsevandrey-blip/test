@@ -61,10 +61,36 @@ def object_images(obj: dict, *, skip_map: bool = False) -> list[Path]:
     return images
 
 
+def warn_repeated_objects(report_path: Path, refs: list[dict]) -> list[str]:
+    """Объекты, которые уже входили в другие отчёты этого каталога.
+
+    Один и тот же объект в двух подборках — почти всегда ошибка сборки,
+    поэтому сборка не падает, но список повторов печатается заметно.
+    """
+    used = {ref.get("file") for ref in refs if ref.get("file")}
+    repeats: list[str] = []
+    for other in sorted(report_path.parent.glob("report-*.json")):
+        if other.resolve() == report_path.resolve():
+            continue
+        try:
+            data = json.loads(other.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        for ref in data.get("objects", []):
+            name = ref.get("file")
+            if name in used:
+                repeats.append(f"{name} — уже в отчёте {other.name}")
+    return repeats
+
+
 def cmd_build(args: argparse.Namespace) -> int:
     report_path = Path(args.report).resolve()
     report = load_json(report_path)
     base = report_path.parent
+
+    repeats = warn_repeated_objects(report_path, report["objects"])
+    for line in repeats:
+        print(f"ВНИМАНИЕ: повтор объекта — {line}", file=sys.stderr)
 
     objects: list[tuple[dict, list[Path]]] = []
     for ref in report["objects"]:

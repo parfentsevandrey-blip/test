@@ -6,8 +6,14 @@
   "filename": "Объекты недвижимости — Схипхол 17.08.26",
   "output_dir": "output",
   "objects": [
-    { "file": "objects/aalsmeerderweg-249d-aalsmeer.json" },
-    { "file": "objects/industrieweg-10-uithoorn.json" },
-    { "file": "objects/lireweg-42-50-nieuw-vennep.json" }
+    {
+      "file": "objects/ijweg-459-463-boesingheliede.json"
+    },
+    {
+      "file": "objects/industrieweg-10-uithoorn.json"
+    },
+    {
+      "file": "objects/lireweg-42-50-nieuw-vennep.json"
+    }
   ]
 }
