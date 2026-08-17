@@ -9,9 +9,9 @@ EDEN продаётся без отделки, поэтому сравнение
 из опубликованного старта продаж «от 1,1 млрд ₽ за резиденцию около
 250 кв. м» и помечена в таблицах как расчётная.
 """
-import json, collections
+import json, collections, os
 
-L = json.load(open('eden/ed_lots.json'))
+L = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ed_lots.json')))
 FIT = 750_000                       # отделка де-люкс, ₽/м²
 ED_PPM = 4_400_000                  # расчётная цена метра EDEN
 ED_AREA_LO, ED_AREA_HI = 107.3, 410.6
@@ -22,6 +22,7 @@ SHORT = {
     'Никитский-6': 'Никитский-6',
     'Фамильный дом Люче': 'Фамильный дом Люче',
     'Кло 17': 'Кло 17 (Clos 17)',
+    'БРЮСОВ': 'Брюсов',
 }
 ADDR = {
     'Stella di Mosca':     'Б. Никитская, 9/15',
@@ -29,6 +30,7 @@ ADDR = {
     'Никитский-6':         'Никитский б-р, 6/20',
     'Фамильный дом Люче':  'Крестовоздвиженский пер., 4',
     'Кло 17 (Clos 17)':    'Староваганьковский пер., 17',
+    'Брюсов':              'Брюсов пер., 2',
 }
 DEV = {
     'Stella di Mosca':     'вторичка, агентства',
@@ -36,24 +38,36 @@ DEV = {
     'Никитский-6':         'R4S / СЗ «Третий Рим»',
     'Фамильный дом Люче':  'MR Group',
     'Кло 17 (Clos 17)':    'MR Group',
+    'Брюсов':              'клубный дом на 17 резиденций',
 }
+
+# Пустое Циан-поле «Отделка/ремонт» само по себе не значит «бетон». У одного
+# лота — вторичной квартиры 209,0 м² в «Брюсове» (дом 1914 года, продаёт
+# агентство) — поле пустое, но это готовое жильё, а не бетон от застройщика.
+# Ремонт в описании прямо не назван, поэтому лот не считается ни «под ключ»,
+# ни «без отделки»: доплата за отделку к нему просто не прибавляется.
+UNKNOWN_FIN = {'332940679'}
+lot_id = lambda x: (x['url'].rsplit('/flat/', 1)[-1].split('/')[0] if '/flat/' in x['url'] else '')
 
 nf = lambda v: f'{v:,.0f}'.replace(',', ' ')
 d1 = lambda v: f'{v:.1f}'.replace('.', ',')
 w = lambda g: sum(x['price'] for x in g) / sum(x['area'] for x in g)
 
 BARE = {'Без отделки', 'Черновая', ''}
-bare = lambda x: (x['fin'] or '') in BARE
+bare = lambda x: (x['fin'] or '') in BARE and lot_id(x) not in UNKNOWN_FIN
 
 
 def block(name, lots):
     n = len(lots)
     nb = sum(1 for x in lots if bare(x))
+    nu = sum(1 for x in lots if lot_id(x) in UNKNOWN_FIN)
     base = w(lots)
     fit = FIT * nb / n                       # доплата пропорционально доле бетона
     why = ('всё без отделки' if nb == n else
-           'всё с отделкой' if nb == 0 else
-           f'{n - nb} с отделкой, {nb} без')
+           'всё с отделкой' if nb == 0 and nu == 0 else
+           ', '.join(p for p in (f'{n - nb - nu} с отделкой' if n - nb - nu else '',
+                                 f'{nb} без' if nb else '',
+                                 f'{nu} не указана' if nu else '') if p))
     return [name, ADDR[name], str(n),
             f"{d1(min(x['area'] for x in lots))}–{d1(max(x['area'] for x in lots))}",
             f"{d1(min(x['price'] for x in lots) / 1e6)}–{d1(max(x['price'] for x in lots) / 1e6)}",
@@ -101,9 +115,9 @@ stats = {
 stats['wAllKey'] = w(allx) + FIT * sum(1 for x in allx if bare(x)) / len(allx)
 
 if __name__ == '__main__':
-    K = json.load(open('eden/ed_tables.json'))
+    K = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ed_tables.json')))
     K['price'], K['city'], K['priceStats'] = rows, city, stats
-    json.dump(K, open('eden/ed_tables.json', 'w'), ensure_ascii=False, indent=1)
+    json.dump(K, open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ed_tables.json'), 'w'), ensure_ascii=False, indent=1)
     for r in rows:
         print(' | '.join(str(c) for c in r))
     print()

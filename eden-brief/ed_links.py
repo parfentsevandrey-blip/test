@@ -19,6 +19,7 @@ FILES = {
     'ф3': '9142502a-cian*6_20260817_32*.xls',
     'ф4': 'be80c355-cian*20260817_26*.xls',
     'ф5': 'f6684f29-cian*17_20260817_17*.xls',
+    'ф6': 'e1610364-cian*20260817_4*.xls',
 }
 
 num = lambda s: float(re.sub(r'[^\d.,]', '', str(s)).replace(',', '.') or 0)
@@ -104,7 +105,7 @@ if __name__ == '__main__':
         res[real] = d
         print(f'{real:34s} {len(lots):3d} объявлений -> {len(d):3d} лотов  '
               f'[{os.path.basename(hits[0])[:24]}]')
-    json.dump(res, open('eden/ed_lots.json', 'w'), ensure_ascii=False, indent=1)
+    json.dump(res, open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ed_lots.json'), 'w'), ensure_ascii=False, indent=1)
     print()
     for k, v in raw_names.items():
         print(' ', k, '->', v)
