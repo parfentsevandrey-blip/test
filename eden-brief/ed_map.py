@@ -57,7 +57,7 @@ for lon, lat, name, sub, dx, dy, anchor in SITES:
 x, y = proj(*OUR)
 pin(dr, x, y, R_OUR, RED)
 label(img, dr, x + 72, y - 178, 'EDEN Private Residence',
-      '≈ 4 400 тыс. ₽/м² · без отделки · III кв. 2029', 'left', FS_OUR,
+      '≈ 3 500 тыс. ₽/м² · без отделки · III кв. 2029', 'left', FS_OUR,
       (255, 255, 255), RED, (104, 112, 126), pad=17, radius=13)
 
 out = os.path.join(HERE, 'assets', 'ed_map.png')
