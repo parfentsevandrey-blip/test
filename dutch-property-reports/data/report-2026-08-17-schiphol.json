@@ -1,0 +1,13 @@
+{
+  "title": "ОБЪЕКТЫ НЕДВИЖИМОСТИ",
+  "subtitle": "Нидерланды — район аэропорта Схипхол",
+  "intro": "В подборку входят:",
+  "footnote": "Данные по объектам приведены по публикациям funda in business по состоянию на 17.08.2026",
+  "filename": "Объекты недвижимости — Схипхол 17.08.26",
+  "output_dir": "output",
+  "objects": [
+    { "file": "objects/aalsmeerderweg-249d-aalsmeer.json" },
+    { "file": "objects/industrieweg-10-uithoorn.json" },
+    { "file": "objects/lireweg-42-50-nieuw-vennep.json" }
+  ]
+}
