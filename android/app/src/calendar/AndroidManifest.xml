@@ -66,6 +66,23 @@
                 android:resource="@xml/month_widget_info" />
         </receiver>
 
+        <receiver
+            android:name="app.quire.calendar.widget.AgendaWidgetProvider"
+            android:exported="true"
+            android:label="@string/agenda_widget_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="android.intent.action.DATE_CHANGED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.LOCALE_CHANGED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/agenda_widget_info" />
+        </receiver>
+
         <service
             android:name="app.quire.calendar.widget.CalendarWatchService"
             android:exported="false"

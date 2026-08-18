@@ -3,6 +3,12 @@
 <resources>
     <string name="widget_label">Quire · Месяц</string>
     <string name="widget_description">Месяц целиком. Шесть строк, один акцент, ничего лишнего.</string>
+    <string name="agenda_widget_label">Quire · Агенда</string>
+    <string name="agenda_widget_description">Что дальше, по порядку. Две недели списком.</string>
+    <string name="agenda_more">+ ещё %1$d</string>
+    <string name="agenda_empty">Ближайшие две недели свободны</string>
+    <string name="agenda_no_access">Откройте приложение, чтобы дать доступ к календарю</string>
+    <string name="agenda_untitled">(без названия)</string>
     <string name="widget_config_title">Виджет</string>
     <string name="today">Сегодня</string>
     <string name="settings">Настройки</string>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A single line of quiet type: a day's name over its rows, the honest "+ N more" tail, or
+     the empty card's one sentence. Which of those it is decides its colour and spacing at
+     runtime; the shape is the same. -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/line_text"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:ellipsize="end"
+    android:fontFamily="sans-serif-medium"
+    android:includeFontPadding="false"
+    android:letterSpacing="0.06"
+    android:maxLines="1"
+    android:textSize="10sp" />

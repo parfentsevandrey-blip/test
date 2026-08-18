@@ -6,6 +6,7 @@ import android.content.Intent
 import android.provider.CalendarContract
 import androidx.test.core.app.ApplicationProvider
 import app.quire.calendar.core.Prefs
+import app.quire.calendar.widget.AgendaWidgetProvider
 import app.quire.calendar.widget.CalendarWatchService
 import app.quire.calendar.widget.MonthWidgetProvider
 import app.quire.calendar.widget.SchemeWatch
@@ -33,6 +34,9 @@ class WidgetWakeTest {
     private fun refreshes(): Int = shadowOf(app).broadcastIntents
         .count { it.action == MonthWidgetProvider.ACTION_REFRESH }
 
+    private fun agendaRefreshes(): Int = shadowOf(app).broadcastIntents
+        .count { it.action == AgendaWidgetProvider.ACTION_REFRESH }
+
     /**
      * The colours are compared rather than assumed changed, because everything that reconfigures
      * the process arrives at the same check — every rotation, every font-scale change, every
@@ -45,8 +49,16 @@ class WidgetWakeTest {
         prefs.paintedScheme = SOMETHING_ELSE
 
         val before = refreshes()
+        val beforeAgenda = agendaRefreshes()
         SchemeWatch.repaintIfChanged(app)
         assertEquals("a changed scheme did not ask for a repaint", before + 1, refreshes())
+        // Both cards live under the same colours: a repaint that reaches one and not the other
+        // is the mismatched pair the home screen actually shows.
+        assertEquals(
+            "the agenda card was left in the old colours",
+            beforeAgenda + 1,
+            agendaRefreshes(),
+        )
 
         SchemeWatch.repaintIfChanged(app)
         SchemeWatch.repaintIfChanged(app)

@@ -32,6 +32,7 @@ class CalendarWatchService : JobService() {
         // process does not go looking for the same change again next time it starts.
         SchemeWatch.markPainted(applicationContext)
         MonthWidgetProvider.requestUpdate(applicationContext)
+        AgendaWidgetProvider.requestUpdate(applicationContext)
         return false
     }
 

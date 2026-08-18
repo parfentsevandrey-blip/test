@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-9.2.apk`](dist/quire-calendar-9.2.apk) · 1.9 MB | `sha256 28644b34dc3d588941dac1c59f0364c2e146f0bdd8483585f230ad09c9e9d244` |
-| **Weather** | [`dist/quire-weather-9.2.apk`](dist/quire-weather-9.2.apk) · 1.5 MB | `sha256 d765c94483ba5844a88cc2d6af3624f56be77b4b7044ffb1361a0dcc7f48268a` |
+| **Calendar** | [`dist/quire-calendar-9.3.apk`](dist/quire-calendar-9.3.apk) · 1.9 MB | `sha256 a109013eea8cbead72e5044a0a875378a3dbdf76d45717e3c8529cd709f9a251` |
+| **Weather** | [`dist/quire-weather-9.3.apk`](dist/quire-weather-9.3.apk) · 1.5 MB | `sha256 f7570c66dd27f191c49416cf019df5194b1faa6c50078a5802fbd8ca65b05fb2` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-9.2.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-9.3.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -560,6 +560,22 @@ palette computed in Oklch.
   polling.
 - Configured per placement: two widgets can run different skins and accents side by side. That is
   why the widget keeps its own six fixed accents rather than sharing the app's setting.
+
+**The agenda card** is the month's other half: not "what shape is the month" but "what is next".
+The coming fortnight as a list — today's entries straight under the header (the card's title
+*is* today), later days under quiet labels, each row wearing its calendar's colour as a bar and
+opening its day in the app. It shares the month card's whole anatomy and palette, wears the
+system colours by default, and repaints on every signal the month card does: the two providers
+share the midnight alarm and the watch jobs, which die only when the home screen holds no Quire
+calendar card of any kind.
+
+It does not scroll, on purpose. A widget is a fixed rectangle, and the honest use of one is to
+show what fits and say what does not: the rows are counted against the height before any view
+exists, the "+ N more" tail reserves its own line first — so it can never itself be the thing
+that gets clipped — and a card too short for the fortnight ends with an exact count rather than
+half a row. An empty fortnight says it is clear; a missing permission says to open the app,
+because "nothing was read" and "nothing was found" are different facts. An all-day entry simply
+has no time column: a dash pretending to be a time is noise, and the bar alone marks the kind.
 
 **Keeping up with the phone's theme** is the one thing a widget cannot be told about. A widget is
 a picture the launcher holds on to, Quire bakes its colours into that picture, and nothing asks

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The agenda card: what is coming, in order. The same anatomy as the month card — surface,
+  optional outline, a title block and an add glyph on one header row — so the two widgets side
+  by side are plainly the same object at two jobs. The day sections and rows are added at
+  runtime, sized from the box the launcher gave, because a widget is a fixed rectangle and the
+  honest question is "how many rows fit", not "how small can the type go".
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/surface"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_surface" />
+
+    <ImageView
+        android:id="@+id/surface_border"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_surface_border" />
+
+    <LinearLayout
+        android:id="@+id/content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingStart="12dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="10dp">
+
+        <LinearLayout
+            android:id="@+id/header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:baselineAligned="false"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:id="@+id/title_block"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:baselineAligned="true"
+                android:orientation="horizontal"
+                android:paddingEnd="4dp">
+
+                <TextView
+                    android:id="@+id/agenda_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:fontFamily="sans-serif-medium"
+                    android:includeFontPadding="false"
+                    android:letterSpacing="-0.02"
+                    android:maxLines="1"
+                    android:textSize="15sp" />
+
+                <TextView
+                    android:id="@+id/agenda_date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
+                    android:ellipsize="end"
+                    android:includeFontPadding="false"
+                    android:letterSpacing="-0.02"
+                    android:maxLines="1"
+                    android:textSize="15sp" />
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/add_button"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:contentDescription="@string/new_event"
+                android:padding="6dp"
+                android:src="@drawable/ic_plus" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/agenda_days"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="4dp"
+            android:layout_weight="1"
+            android:orientation="vertical" />
+    </LinearLayout>
+</FrameLayout>

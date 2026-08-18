@@ -192,6 +192,56 @@ object EventRepository {
         }
     }
 
+    /**
+     * The next [days] of entries, keyed by date — the agenda widget's feed.
+     *
+     * A multi-day entry appears under every day it covers, exactly as it does in the app: the
+     * widget's row and the day that row opens must never disagree about what the day holds.
+     * Each day is sorted the way [agendaFor] sorts, all-day entries first, so the two surfaces
+     * read as one calendar rather than two opinions of it.
+     */
+    fun upcoming(
+        context: Context,
+        from: LocalDate,
+        days: Int,
+        hidden: Set<Long> = emptySet(),
+    ): Map<LocalDate, List<AgendaEntry>> {
+        val zone = ZoneId.systemDefault()
+        val firstJulian = julian(from)
+        val lastJulian = julian(from.plusDays(days.toLong())) - 1
+        val out = HashMap<LocalDate, MutableList<AgendaEntry>>()
+        query(
+            context,
+            startOfDayMillis(from, zone),
+            startOfDayMillis(from.plusDays(days.toLong()), zone),
+        ) { c ->
+            while (c.moveToNext()) {
+                if (c.isDropped(hidden)) continue
+                val entry = AgendaEntry(
+                    eventId = c.getLong(I_EVENT_ID),
+                    begin = c.getLong(I_BEGIN),
+                    end = c.getLong(I_END),
+                    allDay = !c.isNull(I_ALL_DAY) && c.getInt(I_ALL_DAY) == 1,
+                    title = c.getString(I_TITLE).orEmpty(),
+                    location = c.getString(I_LOCATION)?.takeIf { it.isNotBlank() },
+                    colour = if (c.isNull(I_COLOUR)) 0 else c.getInt(I_COLOUR),
+                    calendarName = c.getString(I_CALENDAR_NAME),
+                )
+                var j = c.getLong(I_START_DAY).coerceAtLeast(firstJulian)
+                val endDay = c.getLong(I_END_DAY).coerceAtMost(lastJulian)
+                while (j <= endDay) {
+                    out.getOrPut(MonthModel.dateOfJulianDay(j)) { ArrayList() } += entry
+                    j++
+                }
+            }
+        }
+        return out.mapValues { (_, list) ->
+            list.sortedWith(
+                compareBy({ !it.allDay }, { if (it.allDay) 0L else it.begin }, { it.title }),
+            )
+        }
+    }
+
     /** Everything happening on [date], all-day entries first. */
     fun agendaFor(
         context: Context,

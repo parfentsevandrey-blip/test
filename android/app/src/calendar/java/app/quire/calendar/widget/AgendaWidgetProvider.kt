@@ -10,26 +10,23 @@ import app.quire.calendar.core.Prefs
 import java.util.concurrent.Executors
 
 /**
- * Every branch of onReceive runs off the main thread behind goAsync(): the
- * calendar provider is a cross-process query and a widget update must not sit
- * on the broadcast thread waiting for it.
+ * The agenda card's half of what [MonthWidgetProvider] does, minus the month navigation the
+ * agenda does not have. The two providers share the schedulers — the midnight alarm, the
+ * calendar watch, the theme watch — and either of them keeps those alive for both: the jobs are
+ * cancelled only when the home screen holds no Quire calendar card of any kind.
  */
-class MonthWidgetProvider : AppWidgetProvider() {
+class AgendaWidgetProvider : AppWidgetProvider() {
 
     override fun onReceive(context: Context, intent: Intent) {
         val pending = goAsync()
         EXECUTOR.execute {
             try {
                 when (intent.action) {
-                    ACTION_PREV, ACTION_NEXT, ACTION_TODAY -> navigate(context, intent)
                     ACTION_REFRESH -> {
                         MidnightScheduler.schedule(context)
                         renderAll(context)
                     }
                     Intent.ACTION_MY_PACKAGE_REPLACED -> {
-                        // A job keeps the triggers it was scheduled with, and only re-arms itself
-                        // when it runs. An update that adds one — the theme setting did — would
-                        // otherwise never reach a widget that was already placed.
                         MidnightScheduler.schedule(context)
                         CalendarWatchService.schedule(context)
                         renderAll(context)
@@ -39,14 +36,13 @@ class MonthWidgetProvider : AppWidgetProvider() {
                     Intent.ACTION_TIMEZONE_CHANGED,
                     Intent.ACTION_LOCALE_CHANGED,
                     -> {
-                        returnToToday(context)
                         MidnightScheduler.schedule(context)
                         renderAll(context)
                     }
                     else -> super.onReceive(context, intent)
                 }
             } catch (t: Throwable) {
-                Log.w(TAG, "widget update failed", t)
+                Log.w(TAG, "agenda widget update failed", t)
             } finally {
                 pending.finish()
             }
@@ -55,9 +51,8 @@ class MonthWidgetProvider : AppWidgetProvider() {
 
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
         ids.forEach { render(context, manager, it) }
-        // This arrives on boot and on placement, and the watch's pulse cannot be persisted
-        // without the boot permission this app refuses to carry — so boot re-arming happens
-        // here, where the launcher's own re-bind provides the wake.
+        // Boot re-arm, same as the month card: the pulse cannot be persisted without the boot
+        // permission this app refuses to carry, and the launcher's re-bind is the wake instead.
         CalendarWatchService.schedule(context)
     }
 
@@ -81,70 +76,45 @@ class MonthWidgetProvider : AppWidgetProvider() {
     }
 
     override fun onDisabled(context: Context) {
-        // The schedulers are shared with the agenda card: they die with the last Quire card on
-        // the home screen, not with the last month.
-        if (!AgendaWidgetProvider.placed(context)) {
+        // The last agenda card is gone, but the month cards may not be: the schedulers belong
+        // to whichever cards remain.
+        if (!MonthWidgetProvider.placed(context)) {
             MidnightScheduler.cancel(context)
             CalendarWatchService.cancel(context)
         }
     }
 
-    private fun navigate(context: Context, intent: Intent) {
-        val widgetId = intent.getIntExtra(
-            AppWidgetManager.EXTRA_APPWIDGET_ID,
-            AppWidgetManager.INVALID_APPWIDGET_ID,
-        )
-        if (widgetId == AppWidgetManager.INVALID_APPWIDGET_ID) return
-        val prefs = Prefs.get(context).widget(widgetId)
-        prefs.monthOffset = when (intent.action) {
-            ACTION_PREV -> (prefs.monthOffset - 1).coerceAtLeast(-1200)
-            ACTION_NEXT -> (prefs.monthOffset + 1).coerceAtMost(1200)
-            else -> 0
-        }
-        render(context, AppWidgetManager.getInstance(context), widgetId)
-    }
-
     companion object {
-        private const val TAG = "QuireWidget"
+        private const val TAG = "QuireAgenda"
 
-        const val ACTION_PREV = "app.quire.calendar.PREV"
-        const val ACTION_NEXT = "app.quire.calendar.NEXT"
-        const val ACTION_TODAY = "app.quire.calendar.TODAY"
-        const val ACTION_REFRESH = "app.quire.calendar.REFRESH"
+        const val ACTION_REFRESH = "app.quire.calendar.AGENDA_REFRESH"
 
         private val EXECUTOR = Executors.newSingleThreadExecutor { r ->
-            Thread(r, "quire-widget").apply { isDaemon = true }
+            Thread(r, "quire-agenda").apply { isDaemon = true }
         }
 
         fun render(context: Context, manager: AppWidgetManager, widgetId: Int) {
-            manager.updateAppWidget(widgetId, WidgetRenderer.build(context, manager, widgetId))
+            manager.updateAppWidget(widgetId, AgendaWidgetRenderer.build(context, manager, widgetId))
         }
 
         fun renderAll(context: Context) {
             val manager = AppWidgetManager.getInstance(context) ?: return
-            manager.getAppWidgetIds(ComponentName(context, MonthWidgetProvider::class.java))
+            manager.getAppWidgetIds(ComponentName(context, AgendaWidgetProvider::class.java))
                 .forEach { render(context, manager, it) }
         }
 
-        /** Whether any month card is placed at all. */
+        /** Whether any agenda card is placed at all. */
         fun placed(context: Context): Boolean {
             val manager = AppWidgetManager.getInstance(context) ?: return false
             return manager
-                .getAppWidgetIds(ComponentName(context, MonthWidgetProvider::class.java))
+                .getAppWidgetIds(ComponentName(context, AgendaWidgetProvider::class.java))
                 .isNotEmpty()
         }
 
-        private fun returnToToday(context: Context) {
-            val manager = AppWidgetManager.getInstance(context) ?: return
-            val prefs = Prefs.get(context)
-            manager.getAppWidgetIds(ComponentName(context, MonthWidgetProvider::class.java))
-                .forEach { prefs.widget(it).monthOffset = 0 }
-        }
-
-        /** Ask every placed widget to redraw; safe to call from the main thread. */
+        /** Ask every placed agenda card to redraw; safe to call from the main thread. */
         fun requestUpdate(context: Context) {
             context.sendBroadcast(
-                Intent(context, MonthWidgetProvider::class.java).setAction(ACTION_REFRESH),
+                Intent(context, AgendaWidgetProvider::class.java).setAction(ACTION_REFRESH),
             )
         }
     }

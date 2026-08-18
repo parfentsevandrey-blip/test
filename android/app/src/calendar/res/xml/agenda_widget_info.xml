@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Sized like the month card's two-by-two minimum, but happiest a row or two taller: a list is
+  bought with height. No configure activity — a fresh placement wears the system colours, which
+  is the right default and the only setting v1 offers.
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/agenda_widget_description"
+    android:initialLayout="@layout/agenda_widget"
+    android:maxResizeHeight="620dp"
+    android:maxResizeWidth="620dp"
+    android:minHeight="110dp"
+    android:minResizeHeight="110dp"
+    android:minResizeWidth="110dp"
+    android:minWidth="110dp"
+    android:previewLayout="@layout/agenda_preview"
+    android:resizeMode="horizontal|vertical"
+    android:targetCellHeight="2"
+    android:targetCellWidth="2"
+    android:updatePeriodMillis="0"
+    android:widgetCategory="home_screen" />

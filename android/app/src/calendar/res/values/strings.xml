@@ -4,6 +4,12 @@
     <string name="app_name" translatable="false">Quire</string>
     <string name="widget_label">Quire Month</string>
     <string name="widget_description">A month at a glance. Six rows, one accent, no noise.</string>
+    <string name="agenda_widget_label">Quire Agenda</string>
+    <string name="agenda_widget_description">What is next, in order. Two weeks as a list.</string>
+    <string name="agenda_more">+%1$d more</string>
+    <string name="agenda_empty">The next two weeks are clear</string>
+    <string name="agenda_no_access">Open the app to allow calendar access</string>
+    <string name="agenda_untitled">(untitled)</string>
     <string name="widget_config_title">Widget</string>
     <string name="today">Today</string>
     <string name="settings">Settings</string>

@@ -35,6 +35,7 @@ object SchemeWatch {
         if (now == prefs.paintedScheme) return
         prefs.paintedScheme = now
         MonthWidgetProvider.requestUpdate(context)
+        AgendaWidgetProvider.requestUpdate(context)
     }
 
     /** Records the colours as painted, for a repaint that happened for some other reason. */
