@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The dynamic palette, by day. The launcher re-resolves these at every apply, so a new
+     wallpaper palette lands on the card without this app's process ever waking. -->
+<resources>
+    <color name="widget_surface">@android:color/system_accent2_50</color>
+    <color name="widget_ink">@android:color/system_neutral1_900</color>
+    <color name="widget_ink_muted">@android:color/system_neutral2_700</color>
+    <color name="widget_ink_faint">@android:color/system_neutral2_500</color>
+    <color name="widget_ink_ghost">@android:color/system_neutral2_300</color>
+    <color name="widget_accent">@android:color/system_accent1_600</color>
+    <color name="widget_on_accent">@android:color/system_accent1_10</color>
+    <color name="widget_hairline">@android:color/system_neutral2_100</color>
+    <color name="widget_hairline_strong">@android:color/system_neutral2_200</color>
+</resources>

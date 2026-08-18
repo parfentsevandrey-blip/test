@@ -368,7 +368,18 @@ private fun AgendaList(
                     }
                 }
             } else {
-                items(day.entries) { entry -> AgendaRow(entry, now, onOpenEvent) }
+                // Keyed, so switching days reflows the list instead of restamping it: a row
+                // that survives the switch slides to its new place on the theme's spring, and
+                // rows that come and go fade — which is what makes flicking through a week feel
+                // like moving through it rather than reloading it.
+                items(
+                    day.entries,
+                    // A recurring event carries one eventId across every occurrence, so the key
+                    // is the occurrence: the event at its start.
+                    key = { entry -> entry.eventId to entry.begin },
+                ) { entry ->
+                    AgendaRow(entry, now, onOpenEvent, Modifier.animateItem())
+                }
             }
         }
     }

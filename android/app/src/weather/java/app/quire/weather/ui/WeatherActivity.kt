@@ -6,6 +6,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -156,35 +162,55 @@ internal fun WeatherApp() {
                 )
             },
         ) { padding ->
-            if (configuring) {
-                WeatherSettingsScreen(model, padding)
-                return@Scaffold
-            }
-            PullToRefreshBox(
-                isRefreshing = model.loading,
-                onRefresh = {
-                    haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
-                    model.refresh(force = true)
-                    WeatherWidgetProvider.requestUpdate(model.getApplication())
+            // The two screens trade places rather than snapping: settings arrives from the side
+            // its gear lives on and the forecast comes back from the other, each over a fade —
+            // the standard grammar for "you went somewhere" as opposed to "the page changed".
+            AnimatedContent(
+                targetState = configuring,
+                transitionSpec = {
+                    val fromEnd = targetState
+                    (
+                        slideInHorizontally { full -> if (fromEnd) full / 4 else -full / 4 } +
+                            fadeIn()
+                        ) togetherWith (
+                        slideOutHorizontally { full -> if (fromEnd) -full / 4 else full / 4 } +
+                            fadeOut()
+                        )
                 },
-                state = refresh,
-                modifier = Modifier.fillMaxSize(),
-                indicator = {
-                    PullToRefreshDefaults.LoadingIndicator(
-                        state = refresh,
+                label = "screens",
+            ) { inSettings ->
+                if (inSettings) {
+                    WeatherSettingsScreen(model, padding)
+                } else {
+                    PullToRefreshBox(
                         isRefreshing = model.loading,
-                        modifier = Modifier.align(Alignment.TopCenter),
-                    )
-                },
-            ) {
-                WeatherScreen(
-                    model = model,
-                    padding = padding,
-                    onGrant = {
-                        requestLocation.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
-                    },
-                    onChoosePlace = { choosing = true },
-                )
+                        onRefresh = {
+                            haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+                            model.refresh(force = true)
+                            WeatherWidgetProvider.requestUpdate(model.getApplication())
+                        },
+                        state = refresh,
+                        modifier = Modifier.fillMaxSize(),
+                        indicator = {
+                            PullToRefreshDefaults.LoadingIndicator(
+                                state = refresh,
+                                isRefreshing = model.loading,
+                                modifier = Modifier.align(Alignment.TopCenter),
+                            )
+                        },
+                    ) {
+                        WeatherScreen(
+                            model = model,
+                            padding = padding,
+                            onGrant = {
+                                requestLocation.launch(
+                                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                                )
+                            },
+                            onChoosePlace = { choosing = true },
+                        )
+                    }
+                }
             }
         }
 

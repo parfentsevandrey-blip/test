@@ -13,10 +13,9 @@ import android.widget.RemoteViews
 import app.quire.R
 import app.quire.calendar.core.EventRepository
 import app.quire.calendar.core.MonthModel
-import app.quire.calendar.core.Palette
 import app.quire.calendar.core.Prefs
 import app.quire.calendar.core.Skin
-import app.quire.calendar.core.Tokens
+import app.quire.calendar.core.WidgetPaint
 import app.quire.calendar.core.WidgetPrefs
 import app.quire.calendar.m3.MainActivity
 import java.time.LocalDate
@@ -99,7 +98,10 @@ object WidgetRenderer {
     fun build(context: Context, widgetId: Int, widthDp: Int, heightDp: Int): RemoteViews {
         val prefs = Prefs.get(context)
         val wp = prefs.widget(widgetId)
-        val palette = Tokens.widgetPalette(context, wp.skin, wp.accent, wp.dynamic)
+        // Every palette-derived colour below goes through this, so the launcher can flip the
+        // card's face — and, on the default placement, follow a new wallpaper palette — without
+        // this process running. See WidgetPaint for the three ways a colour can be applied.
+        val paint = WidgetPaint.of(context, wp.skin, wp.accent, wp.dynamic)
         // The filled skin is a card with its own colour rather than ink on paper, so it wants a
         // lattice under the dates and a heavier title. Everything else is shared.
         val filled = wp.skin == Skin.COLOUR
@@ -166,20 +168,20 @@ object WidgetRenderer {
 
         val root = RemoteViews(context.packageName, R.layout.widget_month)
 
-        root.setInt(R.id.surface, "setColorFilter", palette.surface)
+        paint.tint(root, R.id.surface, "setColorFilter", R.color.widget_surface) { it.surface }
         root.setInt(R.id.surface, "setImageAlpha", wp.opacity * 255 / 100)
         // A card that carries its own colour needs no outline drawn round it; on paper the
         // outline is what separates it from a pale wallpaper.
-        root.setInt(
-            R.id.surface_border,
-            "setColorFilter",
-            if (filled) 0 else palette.hairlineStrong,
-        )
+        if (!filled) {
+            paint.tint(root, R.id.surface_border, "setColorFilter", R.color.widget_hairline_strong) {
+                it.hairlineStrong
+            }
+        }
         root.setViewVisibility(
             R.id.surface_border,
             if (filled) android.view.View.GONE else android.view.View.VISIBLE,
         )
-        root.setInt(R.id.header_rule, "setBackgroundColor", palette.hairline)
+        paint.tint(root, R.id.header_rule, "setBackgroundColor", R.color.widget_hairline) { it.hairline }
 
         val pad = px(context, padDp)
         root.setViewPadding(R.id.content, pad, pad, pad, px(context, padDp - 2f))
@@ -191,20 +193,25 @@ object WidgetRenderer {
         }
 
         root.setTextViewText(R.id.month_title, MonthModel.monthName(month, locale))
-        root.setTextColor(R.id.month_title, palette.ink)
+        paint.tint(root, R.id.month_title, "setTextColor", R.color.widget_ink) { it.ink }
         root.setTextViewTextSize(R.id.month_title, TypedValue.COMPLEX_UNIT_SP, titleSp)
         root.setTextViewText(R.id.year_title, month.year.toString())
-        root.setTextColor(R.id.year_title, palette.inkFaint)
+        paint.tint(root, R.id.year_title, "setTextColor", R.color.widget_ink_faint) { it.inkFaint }
         root.setTextViewTextSize(R.id.year_title, TypedValue.COMPLEX_UNIT_SP, titleSp)
         root.setViewVisibility(R.id.year_title, if (showYear) android.view.View.VISIBLE else android.view.View.GONE)
 
-        root.setInt(R.id.nav_prev, "setColorFilter", if (filled) palette.inkMuted else palette.inkFaint)
-        root.setInt(R.id.nav_next, "setColorFilter", if (filled) palette.inkMuted else palette.inkFaint)
-        root.setInt(
-            R.id.nav_today,
-            "setColorFilter",
-            if (wp.monthOffset == 0) palette.inkGhost else palette.accent,
-        )
+        paint.tint(
+            root, R.id.nav_prev, "setColorFilter",
+            if (filled) R.color.widget_ink_muted else R.color.widget_ink_faint,
+        ) { if (filled) it.inkMuted else it.inkFaint }
+        paint.tint(
+            root, R.id.nav_next, "setColorFilter",
+            if (filled) R.color.widget_ink_muted else R.color.widget_ink_faint,
+        ) { if (filled) it.inkMuted else it.inkFaint }
+        paint.tint(
+            root, R.id.nav_today, "setColorFilter",
+            if (wp.monthOffset == 0) R.color.widget_ink_ghost else R.color.widget_accent,
+        ) { if (wp.monthOffset == 0) it.inkGhost else it.accent }
         // On the filled card the add button takes the space "back to this month" was holding, so
         // the ring only appears once there is somewhere to go back from.
         root.setViewVisibility(
@@ -217,8 +224,8 @@ object WidgetRenderer {
             if (filled) android.view.View.VISIBLE else android.view.View.GONE,
         )
         if (filled) {
-            root.setInt(R.id.add_pill, "setColorFilter", palette.accent)
-            root.setInt(R.id.add_glyph, "setColorFilter", palette.onAccent)
+            paint.tint(root, R.id.add_pill, "setColorFilter", R.color.widget_accent) { it.accent }
+            paint.tint(root, R.id.add_glyph, "setColorFilter", R.color.widget_on_accent) { it.onAccent }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 val pillW = navDp * 1.55f
                 for (id in intArrayOf(R.id.add_pill, R.id.add_glyph)) {
@@ -238,10 +245,11 @@ object WidgetRenderer {
         for (i in WEEKDAY_IDS.indices) {
             root.setTextViewText(WEEKDAY_IDS[i], labels[i])
             root.setTextViewTextSize(WEEKDAY_IDS[i], TypedValue.COMPLEX_UNIT_SP, weekdaySp)
-            root.setTextColor(
-                WEEKDAY_IDS[i],
-                if (wp.dimWeekends && MonthModel.isWeekend(order[i])) palette.inkGhost else palette.inkFaint,
-            )
+            val restDay = wp.dimWeekends && MonthModel.isWeekend(order[i])
+            paint.tint(
+                root, WEEKDAY_IDS[i], "setTextColor",
+                if (restDay) R.color.widget_ink_ghost else R.color.widget_ink_faint,
+            ) { if (restDay) it.inkGhost else it.inkFaint }
         }
         root.setViewVisibility(
             R.id.wd_gutter,
@@ -256,7 +264,7 @@ object WidgetRenderer {
             if (row == 0) {
                 week.setViewVisibility(R.id.week_rule, android.view.View.GONE)
             } else {
-                week.setInt(R.id.week_rule, "setBackgroundColor", palette.hairline)
+                paint.tint(week, R.id.week_rule, "setBackgroundColor", R.color.widget_hairline) { it.hairline }
             }
 
             if (wp.weekNumbers) {
@@ -265,7 +273,7 @@ object WidgetRenderer {
                     R.id.week_number,
                     MonthModel.weekOfYear(cells[row * MonthModel.COLUMNS], locale).toString(),
                 )
-                number.setTextColor(R.id.week_number, palette.inkGhost)
+                paint.tint(number, R.id.week_number, "setTextColor", R.color.widget_ink_ghost) { it.inkGhost }
                 number.setTextViewTextSize(
                     R.id.week_number,
                     TypedValue.COMPLEX_UNIT_SP,
@@ -283,7 +291,7 @@ object WidgetRenderer {
                     date = date,
                     month = month,
                     today = today,
-                    palette = palette,
+                    paint = paint,
                     prefs = wp,
                     load = loads[date],
                     daySp = daySp,
@@ -317,7 +325,7 @@ object WidgetRenderer {
         date: LocalDate,
         month: YearMonth,
         today: LocalDate,
-        palette: Palette,
+        paint: WidgetPaint,
         prefs: WidgetPrefs,
         load: app.quire.calendar.core.DayLoad?,
         daySp: Float,
@@ -352,19 +360,27 @@ object WidgetRenderer {
 
         cell.setTextViewText(R.id.cell_text, date.dayOfMonth.toString())
         cell.setTextViewTextSize(R.id.cell_text, TypedValue.COMPLEX_UNIT_SP, daySp)
-        cell.setTextColor(
-            R.id.cell_text,
+        val restDay = prefs.dimWeekends && MonthModel.isWeekend(date.dayOfWeek)
+        paint.tint(
+            cell, R.id.cell_text, "setTextColor",
             when {
-                isToday -> palette.onAccent
-                !inMonth -> palette.inkGhost
-                prefs.dimWeekends && MonthModel.isWeekend(date.dayOfWeek) -> palette.inkMuted
-                else -> palette.ink
+                isToday -> R.color.widget_on_accent
+                !inMonth -> R.color.widget_ink_ghost
+                restDay -> R.color.widget_ink_muted
+                else -> R.color.widget_ink
             },
-        )
+        ) {
+            when {
+                isToday -> it.onAccent
+                !inMonth -> it.inkGhost
+                restDay -> it.inkMuted
+                else -> it.ink
+            }
+        }
 
         if (isToday) {
             cell.setViewVisibility(R.id.cell_mark, android.view.View.VISIBLE)
-            cell.setInt(R.id.cell_mark, "setColorFilter", palette.accent)
+            paint.tint(cell, R.id.cell_mark, "setColorFilter", R.color.widget_accent) { it.accent }
         } else {
             cell.setViewVisibility(R.id.cell_mark, android.view.View.INVISIBLE)
         }
@@ -383,7 +399,7 @@ object WidgetRenderer {
             count > 0 && !isToday && inMonth
         if (ground) {
             cell.setViewVisibility(R.id.cell_ground, android.view.View.VISIBLE)
-            cell.setInt(R.id.cell_ground, "setColorFilter", palette.ink)
+            paint.tint(cell, R.id.cell_ground, "setColorFilter", R.color.widget_ink) { it.ink }
             cell.setInt(
                 R.id.cell_ground,
                 "setImageAlpha",
@@ -409,9 +425,14 @@ object WidgetRenderer {
             } else {
                 cell.setViewVisibility(R.id.cell_chip, android.view.View.VISIBLE)
                 cell.setTextViewText(R.id.chip_text, label)
-                cell.setTextColor(R.id.chip_text, palette.ink)
-                val source = load.labelColour.takeIf { it != 0 } ?: palette.accent
-                cell.setInt(R.id.chip_back, "setColorFilter", source)
+                paint.tint(cell, R.id.chip_text, "setTextColor", R.color.widget_ink) { it.ink }
+                val source = load.labelColour.takeIf { it != 0 }
+                if (source != null) {
+                    // The calendar's own colour is data, not palette: both faces wear it as it is.
+                    paint.fixed(cell, R.id.chip_back, "setColorFilter", source)
+                } else {
+                    paint.tint(cell, R.id.chip_back, "setColorFilter", R.color.widget_accent) { it.accent }
+                }
                 cell.setInt(R.id.chip_back, "setImageAlpha", CHIP_GROUND_ALPHA)
             }
         } else {
@@ -436,15 +457,14 @@ object WidgetRenderer {
             for (i in DOT_IDS.indices) {
                 if (i < shown) {
                     cell.setViewVisibility(DOT_IDS[i], android.view.View.VISIBLE)
-                    cell.setInt(
-                        DOT_IDS[i],
-                        "setColorFilter",
-                        when {
-                            !inMonth -> palette.inkGhost
-                            prefs.colouredDots && i < colours.size -> colours[i]
-                            else -> palette.inkFaint
-                        },
-                    )
+                    if (inMonth && prefs.colouredDots && i < colours.size) {
+                        paint.fixed(cell, DOT_IDS[i], "setColorFilter", colours[i])
+                    } else {
+                        paint.tint(
+                            cell, DOT_IDS[i], "setColorFilter",
+                            if (!inMonth) R.color.widget_ink_ghost else R.color.widget_ink_faint,
+                        ) { if (!inMonth) it.inkGhost else it.inkFaint }
+                    }
                 } else {
                     cell.setViewVisibility(DOT_IDS[i], android.view.View.GONE)
                 }

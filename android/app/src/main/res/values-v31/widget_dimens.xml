@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The radius every widget on the launcher wears, so ours sit flush in the grid. -->
+<resources>
+    <dimen name="widget_corner">@android:dimen/system_app_widget_background_radius</dimen>
+</resources>

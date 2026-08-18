@@ -189,6 +189,67 @@ class RenderTest {
      * @RemoteView filter, so a disallowed view class fails here exactly as it
      * would on a home screen.
      */
+    /**
+     * One calendar picture, both faces — and on the system look, the launcher's own resources.
+     *
+     * Two placements are built ONCE under a light configuration and re-applied under a dark one.
+     * The pinned-accent card exercises the day/night pair path; the default card — the filled
+     * skin taking the wallpaper's colours — exercises the resource path, where every colour is a
+     * resource id the launcher resolves again at each apply. Both must come out dark from a
+     * picture painted in the light, because that is exactly what a launcher does to a widget when
+     * the theme flips at midnight with the app's process dead.
+     */
+    @Test
+    fun `one calendar picture wears both faces`() {
+        listOf(
+            Triple(72, false, "cal-faces"),
+            Triple(73, true, "cal-faces-system"),
+        ).forEach { (widgetId, dynamicLook, name) ->
+            Prefs.get(context).widget(widgetId).apply {
+                skin = Skin.COLOUR
+                accent = Accent.PLUM
+                opacity = 100
+                dynamic = dynamicLook
+                showEvents = false
+            }
+
+            org.robolectric.RuntimeEnvironment.setQualifiers("+notnight")
+            val views = WidgetRenderer.build(context, widgetId, 300, 270)
+
+            fun luma(name: String): Int {
+                val host = FrameLayout(context).apply { setBackgroundColor(0xFF7A7A80.toInt()) }
+                host.addView(
+                    views.apply(context, host),
+                    FrameLayout.LayoutParams(
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                    ),
+                )
+                val shot = render(host, 300, 270, name)
+                val p = shot.getPixel(shot.width / 2, 6)
+                return (
+                    android.graphics.Color.red(p) * 299 +
+                        android.graphics.Color.green(p) * 587 +
+                        android.graphics.Color.blue(p) * 114
+                    ) / 1000
+            }
+
+            val light = luma("$name-light")
+            org.robolectric.RuntimeEnvironment.setQualifiers("+night")
+            val dark = luma("$name-dark")
+            org.robolectric.RuntimeEnvironment.setQualifiers("+notnight")
+
+            org.junit.Assert.assertTrue(
+                "$name: the light application came out dark (luma $light)",
+                light > 150,
+            )
+            org.junit.Assert.assertTrue(
+                "$name: the picture painted in the light stayed light when applied dark (luma $dark)",
+                dark < 100,
+            )
+        }
+    }
+
     @Test
     fun `widget inflates and paints through RemoteViews`() {
         val widgetId = 7

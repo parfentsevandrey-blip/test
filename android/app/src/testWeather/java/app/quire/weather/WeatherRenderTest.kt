@@ -385,7 +385,10 @@ class WeatherRenderTest {
             skin = Skin.COLOUR
             accent = Accent.PLUM
             opacity = 100
-            dynamic = false
+            // The system look: colours as resource ids the launcher re-resolves at every apply,
+            // which is the path the default placement takes and the only one that also follows a
+            // wallpaper-palette change without a repaint.
+            dynamic = true
         }
 
         org.robolectric.RuntimeEnvironment.setQualifiers("+notnight")

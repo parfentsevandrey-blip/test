@@ -104,12 +104,15 @@
             </LinearLayout>
         </LinearLayout>
 
+        <!-- A white background, so the resource-path tint has a drawable to land on: a bare
+             View has nothing to tint and setBackgroundTintList would fall on air. -->
         <FrameLayout
             android:id="@+id/rule"
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_marginTop="8dp"
-            android:layout_marginBottom="4dp" />
+            android:layout_marginBottom="4dp"
+            android:background="#FFFFFFFF" />
 
         <LinearLayout
             android:id="@+id/strip"

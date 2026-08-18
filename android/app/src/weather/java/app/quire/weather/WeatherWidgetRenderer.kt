@@ -10,10 +10,10 @@ import android.os.Build
 import android.util.TypedValue
 import android.widget.RemoteViews
 import app.quire.R
-import app.quire.calendar.core.Palette
 import app.quire.calendar.core.Prefs
 import app.quire.calendar.core.Skin
 import app.quire.calendar.core.Tokens
+import app.quire.calendar.core.WidgetPaint
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
@@ -68,34 +68,6 @@ object WeatherWidgetRenderer {
 
     private const val NARROW_DP = 200
 
-    /**
-     * The card's colours, in both faces at once.
-     *
-     * On Android 12 and up every colour is applied with the paired day/night setter, so the
-     * launcher itself swaps the faces the instant the theme changes — no broadcast, no job, no
-     * process of ours running. This is the fix for the card that sat pale on a dark home screen:
-     * the old renderer painted whichever single face the process's configuration wore at paint
-     * time, and a picture painted at noon stayed noon all night. Below 12 the current face is
-     * baked as before and the watchers carry the job alone.
-     */
-    private class Faces(val current: Palette, val day: Palette, val night: Palette) {
-        fun paint(views: RemoteViews, id: Int, method: String, pick: (Palette) -> Int) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                views.setColorInt(id, method, pick(day), pick(night))
-            } else {
-                views.setInt(id, method, pick(current))
-            }
-        }
-    }
-
-    /** The same context wearing the asked-for half of the day, for reading that face's palette. */
-    private fun face(context: Context, night: Boolean): Context {
-        val config = Configuration(context.resources.configuration)
-        config.uiMode = (config.uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or
-            (if (night) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO)
-        return context.createConfigurationContext(config)
-    }
-
     fun build(context: Context, manager: AppWidgetManager, widgetId: Int): RemoteViews {
         val options = manager.getAppWidgetOptions(widgetId)
         val widthDp = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0)
@@ -110,34 +82,29 @@ object WeatherWidgetRenderer {
     fun build(context: Context, widgetId: Int, widthDp: Int, heightDp: Int): RemoteViews {
         val prefs = Prefs.get(context)
         val wp = prefs.widget(widgetId)
-        val palette = Tokens.widgetPalette(context, wp.skin, wp.accent, wp.dynamic)
-        val faces = Faces(
-            current = palette,
-            day = Tokens.widgetPalette(face(context, night = false), wp.skin, wp.accent, wp.dynamic),
-            night = Tokens.widgetPalette(face(context, night = true), wp.skin, wp.accent, wp.dynamic),
-        )
+        val paint = WidgetPaint.of(context, wp.skin, wp.accent, wp.dynamic)
         val filled = wp.skin == Skin.COLOUR
         val locale = Locale.getDefault()
 
         val root = RemoteViews(context.packageName, R.layout.weather_widget)
-        faces.paint(root, R.id.surface, "setColorFilter") { it.surface }
+        paint.tint(root, R.id.surface, "setColorFilter", R.color.widget_surface) { it.surface }
         root.setInt(R.id.surface, "setImageAlpha", wp.opacity * 255 / 100)
         root.setViewVisibility(
             R.id.surface_border,
             if (filled) android.view.View.GONE else android.view.View.VISIBLE,
         )
-        faces.paint(root, R.id.surface_border, "setColorFilter") { it.hairline }
-        faces.paint(root, R.id.rule, "setBackgroundColor") { it.hairline }
+        paint.tint(root, R.id.surface_border, "setColorFilter", R.color.widget_hairline_strong) { it.hairline }
+        paint.tint(root, R.id.rule, "setBackgroundColor", R.color.widget_hairline) { it.hairline }
 
         val forecast = WeatherStore.load(context)
         if (forecast == null) {
             // Nothing fetched yet: say so in the card rather than showing a plausible zero.
             root.setTextViewText(R.id.place, context.getString(R.string.weather))
-            faces.paint(root, R.id.place, "setTextColor") { it.inkMuted }
+            paint.tint(root, R.id.place, "setTextColor", R.color.widget_ink_muted) { it.inkMuted }
             root.setTextViewText(R.id.now_temperature, "—")
-            faces.paint(root, R.id.now_temperature, "setTextColor") { it.ink }
+            paint.tint(root, R.id.now_temperature, "setTextColor", R.color.widget_ink) { it.ink }
             root.setTextViewText(R.id.now_sky, context.getString(R.string.wx_waiting))
-            faces.paint(root, R.id.now_sky, "setTextColor") { it.inkMuted }
+            paint.tint(root, R.id.now_sky, "setTextColor", R.color.widget_ink_muted) { it.inkMuted }
             root.setTextViewText(R.id.now_feels, "")
             root.setViewVisibility(R.id.now_icon, android.view.View.GONE)
             root.setViewVisibility(R.id.rule, android.view.View.GONE)
@@ -198,12 +165,12 @@ object WeatherWidgetRenderer {
         )
 
         root.setTextViewText(R.id.place, forecast.place.ifBlank { context.getString(R.string.weather) })
-        faces.paint(root, R.id.place, "setTextColor") { it.inkMuted }
+        paint.tint(root, R.id.place, "setTextColor", R.color.widget_ink_muted) { it.inkMuted }
         root.setTextViewTextSize(R.id.place, TypedValue.COMPLEX_UNIT_SP, placeSp)
 
         root.setViewVisibility(R.id.now_icon, android.view.View.VISIBLE)
         root.setImageViewResource(R.id.now_icon, forecast.now.sky.icon(forecast.now.day))
-        faces.paint(root, R.id.now_icon, "setColorFilter") { it.accent }
+        paint.tint(root, R.id.now_icon, "setColorFilter", R.color.widget_accent) { it.accent }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             root.setViewLayoutWidth(R.id.now_icon, iconDp, TypedValue.COMPLEX_UNIT_DIP)
             root.setViewLayoutHeight(R.id.now_icon, iconDp, TypedValue.COMPLEX_UNIT_DIP)
@@ -213,11 +180,11 @@ object WeatherWidgetRenderer {
             R.id.now_temperature,
             WeatherRepository.degrees(forecast.now.temperature, locale),
         )
-        faces.paint(root, R.id.now_temperature, "setTextColor") { it.ink }
+        paint.tint(root, R.id.now_temperature, "setTextColor", R.color.widget_ink) { it.ink }
         root.setTextViewTextSize(R.id.now_temperature, TypedValue.COMPLEX_UNIT_SP, tempSp)
 
         root.setTextViewText(R.id.now_sky, context.getString(forecast.now.sky.label))
-        faces.paint(root, R.id.now_sky, "setTextColor") { it.ink }
+        paint.tint(root, R.id.now_sky, "setTextColor", R.color.widget_ink) { it.ink }
         root.setTextViewTextSize(R.id.now_sky, TypedValue.COMPLEX_UNIT_SP, skySp)
 
         // On a narrow card the words "feels like" are what goes, not the number: the number is
@@ -227,7 +194,7 @@ object WeatherWidgetRenderer {
             R.id.now_feels,
             if (narrow) feels else context.getString(R.string.wx_feels_like, feels),
         )
-        faces.paint(root, R.id.now_feels, "setTextColor") { it.inkFaint }
+        paint.tint(root, R.id.now_feels, "setTextColor", R.color.widget_ink_faint) { it.inkFaint }
         root.setTextViewTextSize(R.id.now_feels, TypedValue.COMPLEX_UNIT_SP, feelsSp)
 
         root.removeAllViews(R.id.strip)
@@ -273,7 +240,7 @@ object WeatherWidgetRenderer {
                 root.addView(
                     R.id.strip,
                     dayColumn(
-                        context, day, today, locale, faces,
+                        context, day, today, locale, paint,
                         dayIconDp, nameSp, tempSp, bothTemps, showRain, rainSp, nameToday,
                         columnDp, scale,
                     ),
@@ -290,7 +257,7 @@ object WeatherWidgetRenderer {
         day: DayForecast,
         today: LocalDate,
         locale: Locale,
-        faces: Faces,
+        paint: WidgetPaint,
         iconDp: Float,
         nameSp: Float,
         highSp: Float,
@@ -312,15 +279,16 @@ object WeatherWidgetRenderer {
                 day.date.dayOfWeek.getDisplayName(TextStyle.SHORT, locale).uppercase(locale)
             },
         )
-        faces.paint(column, R.id.day_name, "setTextColor") {
-            if (isToday) it.accent else it.inkFaint
-        }
+        paint.tint(
+            column, R.id.day_name, "setTextColor",
+            if (isToday) R.color.widget_accent else R.color.widget_ink_faint,
+        ) { if (isToday) it.accent else it.inkFaint }
         column.setTextViewTextSize(R.id.day_name, TypedValue.COMPLEX_UNIT_SP, nameSp)
 
         // A forecast icon is always the daytime one: it describes a whole day, and half of every
         // day is not night in any sense a person means by it.
         column.setImageViewResource(R.id.day_icon, day.sky.dayIcon)
-        faces.paint(column, R.id.day_icon, "setColorFilter") { it.inkMuted }
+        paint.tint(column, R.id.day_icon, "setColorFilter", R.color.widget_ink_muted) { it.inkMuted }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             column.setViewLayoutWidth(R.id.day_icon, iconDp, TypedValue.COMPLEX_UNIT_DIP)
             column.setViewLayoutHeight(R.id.day_icon, iconDp, TypedValue.COMPLEX_UNIT_DIP)
@@ -339,12 +307,12 @@ object WeatherWidgetRenderer {
         val pairDp = (high.length + low.length) * highSp * scale * NAME_CHAR_WIDTH + 6f
         val showLow = bothTemps && pairDp <= columnDp - 2f
         column.setTextViewText(R.id.day_high, high)
-        faces.paint(column, R.id.day_high, "setTextColor") { it.ink }
+        paint.tint(column, R.id.day_high, "setTextColor", R.color.widget_ink) { it.ink }
         column.setTextViewTextSize(R.id.day_high, TypedValue.COMPLEX_UNIT_SP, highSp)
         if (showLow) {
             column.setViewVisibility(R.id.day_low, android.view.View.VISIBLE)
             column.setTextViewText(R.id.day_low, low)
-            faces.paint(column, R.id.day_low, "setTextColor") { it.inkFaint }
+            paint.tint(column, R.id.day_low, "setTextColor", R.color.widget_ink_faint) { it.inkFaint }
             column.setTextViewTextSize(R.id.day_low, TypedValue.COMPLEX_UNIT_SP, highSp)
         } else {
             column.setViewVisibility(R.id.day_low, android.view.View.GONE)
@@ -360,7 +328,7 @@ object WeatherWidgetRenderer {
                 R.id.day_rain,
                 if (day.rain >= RAIN_FLOOR) "${day.rain}%" else " ",
             )
-            faces.paint(column, R.id.day_rain, "setTextColor") { it.accent }
+            paint.tint(column, R.id.day_rain, "setTextColor", R.color.widget_accent) { it.accent }
             column.setTextViewTextSize(R.id.day_rain, TypedValue.COMPLEX_UNIT_SP, rainSp)
         } else {
             column.setViewVisibility(R.id.day_rain, android.view.View.GONE)

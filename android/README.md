@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-8.6.apk`](dist/quire-calendar-8.6.apk) · 1.9 MB | `sha256 ab87c0fb2625a209fe7ad3e4b58aeba2613064e5e8861c5ac5b7af1b3ae154ab` |
-| **Weather** | [`dist/quire-weather-8.6.apk`](dist/quire-weather-8.6.apk) · 1.5 MB | `sha256 5e3622948fe49edeb0fa714d57d858922384c4d9b5ad8b63b48b8aa2dccabb1e` |
+| **Calendar** | [`dist/quire-calendar-8.7.apk`](dist/quire-calendar-8.7.apk) · 1.9 MB | `sha256 7377ea2c4946a3a5aadcf7c1980f5478019f2218e8ed8b9bc1432bbc94d22cef` |
+| **Weather** | [`dist/quire-weather-8.7.apk`](dist/quire-weather-8.7.apk) · 1.5 MB | `sha256 363cf0fb3f76e8c62db4111f808067d40f8ce44c200e5cba785d9ef19fa904d9` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-8.6.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-8.7.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -685,13 +685,25 @@ these was a change nothing asked about.
   firing, on boot, on placement and on package update — a job keeps the triggers it was
   scheduled with, so an update that adds one has to re-arm it by hand.
 
-- **The weather card now wears both faces at once.** On Android 12 and up every colour on it is
-  applied with the paired day/night setter, so the *launcher itself* swaps light for dark the
-  instant the theme changes — no broadcast, no job, no process of ours running. The one obstacle
-  was a `ForegroundColorSpan`: a span is a baked colour, so the high/low pair became two views.
-  The test is the strongest kind this project has: it builds the RemoteViews **once** under a
-  light configuration, re-applies the same object under a dark one, and requires the card to
-  come out dark anyway.
+- **Both cards wear their colours three ways, and pick the longest-lived one that fits.** On
+  Android 12 and up, a widget wearing the system's look — the default placement — has every
+  colour applied *by resource id* (`setColorStateList`), which the launcher resolves again at
+  every apply: dark mode **and** a new wallpaper palette land on the card with this app's
+  process asleep, exactly the way the system's own widgets do it. A placement configured with
+  its own skin or accent gets the day/night *pair* instead — both faces baked, the launcher
+  picks — because a chosen look should not follow the wallpaper. Before Android 12, one face
+  and the watchers. The calendar's grid data stays data: an event's own colour is worn
+  identically by both faces. The corner radius is the system's own
+  (`system_app_widget_background_radius`), so the cards sit flush with every other widget in
+  the launcher's grid.
+
+  The test is the strongest kind this project has, run against both paths and both widgets: it
+  builds the RemoteViews **once** under a light configuration, re-applies the same object under
+  a dark one, and requires the card to come out dark anyway.
+
+| One weather build, both faces | One calendar build, both faces |
+|---|---|
+| ![Light](docs/widget-faces-light.png) ![Dark](docs/widget-faces-dark.png) | ![Light](docs/cal-faces-system-light.png) ![Dark](docs/cal-faces-system-dark.png) |
 - **A half-hour pulse under the triggers.** The watched settings are the platform's own names,
   not the SDK's, and a dark theme flipped by schedule announces itself to nobody. Both apps run
   a periodic check that compares the look's fingerprint — two ints — and repaints only when it

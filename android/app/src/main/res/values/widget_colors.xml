@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The widget's colour roles, as resources.
+
+  These exist so the launcher can repaint a widget without this app running: a colour applied by
+  resource id is resolved again at every apply, so flipping dark mode or picking a new wallpaper
+  palette recolours the card exactly the way it recolours the system's own widgets. The v31
+  variants point straight at the platform's dynamic palette; these base values are the static
+  fallback for phones that predate it, which are also the phones where the renderer bakes its
+  colours the old way and never reads these.
+-->
+<resources>
+    <color name="widget_surface">#F5EFF3</color>
+    <color name="widget_ink">#1C1B1E</color>
+    <color name="widget_ink_muted">#49454E</color>
+    <color name="widget_ink_faint">#79747E</color>
+    <color name="widget_ink_ghost">#AEA9B4</color>
+    <color name="widget_accent">#984716</color>
+    <color name="widget_on_accent">#FFFFFF</color>
+    <color name="widget_hairline">#E7E0E8</color>
+    <color name="widget_hairline_strong">#CBC4CC</color>
+</resources>
