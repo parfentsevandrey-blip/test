@@ -5,7 +5,7 @@
 const assert = require('assert');
 const { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, archiveStat,
         completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringVerdict,
-        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, galleryGrew, parseViews, mergedPriceHistory, offersByIds, matchesQuery, expandSimilar, houseClass, profileLot, floorBand, worksScope, buildCohort, metroSummary, metroLine, metroCell, photoKinds } = require('./cian.js');
+        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, galleryGrew, parseViews, mergedPriceHistory, offersByIds, matchesQuery, expandSimilar, houseClass, profileLot, floorBand, worksScope, buildCohort, metroSummary, metroLine, metroCell, photoKinds, photoIdent, galleryKey, galleryDiff, sweepCost } = require('./cian.js');
 
 let passed = 0;
 const pending = [];
@@ -1260,4 +1260,119 @@ test('без размеченных кадров сравнение идёт п�
   const g = galleryGrew({ photosSeen: 12 }, { photos: ph(14), photosRooms: null });
   assert.deepStrictEqual(g, { was: 12, now: 14, of: 'кадров в галерее' });
   assert.strictEqual(galleryGrew({ photosSeen: 12 }, { photos: ph(12), photosRooms: null }), null);
+});
+
+process.stdout.write('\nотпечаток галереи: те же ли это кадры\n');
+
+/* Ссылки Циана несут номер снимка: …/images/2893840431-1.jpg. Второй
+   номер — размер, он в отпечаток не идёт. */
+const url = (id, size = 1) => `https://images.cdn-cian.ru/images/${id}-${size}.jpg`;
+const gal = (ids, layouts = []) => ({
+  photos: ids.map((i) => url(i)),
+  photosCount: ids.length,
+  layoutFrames: layouts,
+  photosClassified: layouts.length > 0 || undefined,
+});
+
+test('номер снимка берётся из ссылки, размер — не берётся', () => {
+  assert.strictEqual(photoIdent(url(2893840431, 1)), '2893840431');
+  assert.strictEqual(photoIdent(url(2893840431, 2)), '2893840431');
+  // чужая форма ссылки не отбрасывается молча: она сама становится ключом
+  assert.strictEqual(photoIdent('https://x/abc.png'), 'https://x/abc.png');
+});
+
+test('перестановка кадров галереи отпечаток не меняет', () => {
+  // порядок в галерее продавец двигает мышью; товар от этого не другой
+  const a = galleryKey(gal([11, 22, 33]));
+  const b = galleryKey(gal([33, 11, 22]));
+  assert.strictEqual(a.key, b.key);
+  assert.strictEqual(a.n, 3);
+});
+
+test('подмена кадров при том же их числе ловится отпечатком, а счётчиком — нет', () => {
+  // ровно этот случай счётчик пропускал: восемь тусклых кадров заменили
+  // восемью свежими, photosSeen не изменился, оценка осталась от старых
+  const was = gradeRecord({ id: 1, ...gal([1, 2, 3, 4, 5, 6, 7, 8]) },
+    { photosSeen: 8, markers: {}, gradedAt: '2026-01-01' });
+  const now = gal([91, 92, 93, 94, 95, 96, 97, 98]);
+  assert.strictEqual(galleryGrew(was, now), null, 'счётчик молчит — в этом и была дыра');
+  const d = galleryDiff(was, now);
+  assert.strictEqual(d.verdict, 'смотреть');
+  assert.ok(/заменены/.test(d.why), d.why);
+});
+
+test('та же галерея — «пропустить», и сказано, какой мерой мерили', () => {
+  const same = gal([5, 6, 7]);
+  const was = gradeRecord({ id: 1, ...same }, { photosSeen: 3, markers: {}, gradedAt: '2026-01-01' });
+  const d = galleryDiff(was, same);
+  assert.strictEqual(d.verdict, 'пропустить');
+  assert.ok(/всей галереи/.test(d.why), d.why);
+});
+
+test('добавленная планировка на пересмотр не отправляет', () => {
+  // размеченная галерея: ключ считается по кадрам квартиры
+  const before = gal([1, 2, 3], [1]);
+  const was = gradeRecord({ id: 1, ...before }, { photosSeen: 3, photosRoomsSeen: 2, markers: {}, gradedAt: '2026-01-01' });
+  assert.strictEqual(was.galleryKeyOf, 'кадров квартиры');
+  const after = { photos: [url(1), url(9), url(2), url(3)], photosCount: 4, layoutFrames: [1, 2], photosClassified: true };
+  assert.strictEqual(galleryDiff(was, after).verdict, 'пропустить');
+});
+
+test('запись без отпечатка — «неизвестно», а не «пропустить»', () => {
+  // так выглядят все оценки, поставленные до появления ключа: молчаливое
+  // «пропустить» на них означало бы, что пересъёмку не увидим уже никогда
+  const old = { photosSeen: 3, level: 'B' };
+  const d = galleryDiff(old, gal([1, 2, 3]));
+  assert.strictEqual(d.verdict, 'неизвестно');
+  assert.ok(/не записан/.test(d.why), d.why);
+  // а если кадров с тех пор прибавилось — старая проверка всё ещё работает
+  assert.strictEqual(galleryDiff(old, gal([1, 2, 3, 4])).verdict, 'смотреть');
+});
+
+test('ключи, снятые разной мерой, между собой не сравниваются', () => {
+  // Циан размечает isLayout не у всех лотов и не всегда сразу: ключ по
+  // всей галерее и ключ по кадрам квартиры — разные величины
+  const was = gradeRecord({ id: 1, ...gal([1, 2, 3]) }, { photosSeen: 3, markers: {}, gradedAt: '2026-01-01' });
+  const now = { photos: [url(1), url(2), url(3)], photosCount: 3, layoutFrames: [1], photosClassified: true };
+  const d = galleryDiff(was, now);
+  assert.strictEqual(d.verdict, 'неизвестно');
+  assert.ok(/меры разные/.test(d.why), d.why);
+});
+
+test('оценки нет — смотреть, и причина названа именно так', () => {
+  assert.deepStrictEqual(galleryDiff(null, gal([1, 2])), { verdict: 'смотреть', why: 'оценки нет' });
+  assert.strictEqual(galleryDiff(null, { photos: [] }).verdict, 'смотреть');
+});
+
+test('заглушка без кадров не затирает записанный отпечаток', () => {
+  // grade без --lots подаёт lot из одного id: ключ выходит пустым
+  const stub = gradeRecord({ id: 1 }, { photosSeen: null, markers: {}, gradedAt: '2026-01-01' });
+  assert.strictEqual(stub.galleryKey, null);
+  const full = gradeRecord({ id: 1, ...gal([1, 2, 3]) }, { photosSeen: 3, markers: {}, gradedAt: '2026-01-01' });
+  assert.ok(full.galleryKey);
+});
+
+process.stdout.write('\nцена свипа\n');
+
+test('пачка 19 дороже пачки 5: накопленный контекст растёт быстрее экономии', () => {
+  // это и была ошибка совета «берите пачки покрупнее»: постоянные расходы
+  // линейны, а контекст квадратичен
+  const b5 = sweepCost(115, 5), b19 = sweepCost(115, 19), b29 = sweepCost(115, 29);
+  assert.ok(b5.perLot < b19.perLot, `${b5.perLot} против ${b19.perLot}`);
+  assert.ok(b19.perLot < b29.perLot, `${b19.perLot} против ${b29.perLot}`);
+});
+
+test('формула сходится с замером дорогого флота', () => {
+  // замерено: 792к токенов на 105 лотов пачками по ~19
+  const got = sweepCost(105, 19).tokens;
+  assert.ok(Math.abs(got - 792000) / 792000 < 0.1, `формула даёт ${got}, замерено 792000`);
+});
+
+test('пачка из одного листа дороже средней: постоянные расходы не размазаны', () => {
+  assert.ok(sweepCost(115, 1).perLot > sweepCost(115, 5).perLot);
+});
+
+test('ужатый лист удешевляет свип примерно вдвое', () => {
+  const now = sweepCost(115, 8).tokens, small = sweepCost(115, 8, 1526).tokens;
+  assert.ok(small < now / 1.5, `${small} против ${now}`);
 });

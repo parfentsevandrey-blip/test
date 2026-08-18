@@ -16,6 +16,7 @@
  *   node tools/cian/cian.js grade  --template 331300080 [--from lots.json]  — заготовка под заполнение
  *   node tools/cian/cian.js grade  --lots lots.json --marks marks.json  — записать оценку отделки
  *   node tools/cian/cian.js grade  --list | --check
+ *   node tools/cian/cian.js grade  --plan --lots lots.json [--ids]  — кого пересматривать: галереи сверяются по отпечатку
  *   node tools/cian/cian.js report — пересобрать docs/cian/lots.md из оценок и архива
  *   node tools/cian/cian.js refresh [--limit N] [--confirm нет] — что из архива ещё продаётся, а что ушло
  *   node tools/cian/cian.js card   327985409 331215568 [--out cards.json]  — история цены и поля, которых нет в выдаче
@@ -28,6 +29,7 @@
  */
 const { chromium } = require('/opt/node22/lib/node_modules/playwright');
 const fs = require('fs');
+const crypto = require('crypto');
 
 const SEARCH_API = 'https://api.cian.ru/search-offers/v2/search-offers-desktop/';
 const GEO_API = 'https://www.cian.ru/api/geo/get-districts-tree/?locationId=1';
@@ -888,6 +890,114 @@ function galleryGrew(grade, lot) {
   return now > grade.photosSeen ? { was: grade.photosSeen, now, of: 'кадров в галерее' } : null;
 }
 
+/* ---------- отпечаток галереи ----------
+   Счётчик кадров ловит только добавление. Продавец, заменивший восемь
+   тусклых снимков на восемь свежих, оставляет photosSeen прежним — и
+   оценка, поставленная по старым кадрам, молча продолжает числиться
+   действующей. Отпечаток отвечает на другой вопрос: те же ли это кадры,
+   а не столько ли их.
+
+   Идентификатор снимка лежит в самом URL (…/images/2893840431-1.jpg —
+   значим первый номер, второй лишь размер). Порядок кадров в ключ не
+   входит: перестановка галереи товар не меняет. */
+function photoIdent(u) {
+  const m = String(u).match(/\/(\d+)-\d+\.[a-z]+$/i);
+  return m ? m[1] : String(u || '') || null;
+}
+
+/* Ключ считается по кадрам квартиры, когда галерея размечена, и по всей
+   галерее иначе — та же мера, что у galleryGrew, и по той же причине:
+   добавленная планировка не должна отправлять лот на пересмотр. Мера
+   записывается рядом с ключом, потому что два ключа, снятые разной
+   мерой, между собой не сравнимы. */
+function galleryKey(lot) {
+  const photos = (lot && lot.photos) || [];
+  if (!photos.length) return null;
+  const classified = lot.photosClassified === true;
+  const layouts = new Set(lot.layoutFrames || []);
+  const ids = photos
+    .map((u, i) => (classified && layouts.has(i + 1) ? null : photoIdent(u)))
+    .filter(Boolean)
+    .sort();
+  if (!ids.length) return null;
+  return {
+    key: crypto.createHash('sha1').update(ids.join(',')).digest('hex').slice(0, 12),
+    of: classified ? 'кадров квартиры' : 'всей галереи',
+    n: ids.length,
+  };
+}
+
+/* Что делать с лотом на повторном свипе. Ответ троичный, и третье значение
+   существует не для красоты: «не изменилось» имеет право звучать только
+   там, где есть с чем сравнивать. У записей, поставленных до появления
+   ключа, ответ — «неизвестно», и решать приходится старой проверкой по
+   счётчику. Молчаливое «пропустить» на таких записях означало бы, что
+   пересъёмку галереи мы не увидим уже никогда. */
+function galleryDiff(grade, lot) {
+  const now = galleryKey(lot);
+  if (!now) return { verdict: 'смотреть', why: 'кадров нет — сравнивать нечего' };
+  const was = grade && grade.galleryKey
+    ? { key: grade.galleryKey, of: grade.galleryKeyOf || null, n: grade.galleryKeyN ?? null }
+    : null;
+  if (!was) {
+    const grew = grade ? galleryGrew(grade, lot) : null;
+    if (grew) return { verdict: 'смотреть', why: `${grew.of}: было ${grew.was}, стало ${grew.now}` };
+    if (!grade) return { verdict: 'смотреть', why: 'оценки нет' };
+    return { verdict: 'неизвестно', why: 'ключ галереи не записан — замену кадров не поймать' };
+  }
+  if (was.of && was.of !== now.of) {
+    return { verdict: 'неизвестно', why: `ключ снят по ${was.of}, теперь по ${now.of} — меры разные` };
+  }
+  if (was.key === now.key) {
+    return { verdict: 'пропустить', why: `галерея та же (${now.n} ${now.of})` };
+  }
+  const d = was.n == null ? null : now.n - was.n;
+  return {
+    verdict: 'смотреть',
+    why: d == null ? 'галерея другая'
+      : d === 0 ? `кадры заменены: ${now.n}, столько же`
+      : d > 0 ? `кадров стало больше: ${was.n} → ${now.n}`
+      : `кадров стало меньше: ${was.n} → ${now.n}`,
+  };
+}
+
+/* ---------- во что обходится свип ----------
+   Отделку не отдаёт ни одно поле API — её ставит взгляд на кадры, и это
+   единственный этап всего движка, который платит модели. Поиск, геокодер,
+   схлопывание дублей, архив, когорта, сборка таблиц — код: их выдача
+   приходит в разбор сводкой в сотни токенов, тогда как сами данные весят
+   сотни тысяч.
+
+   Замерено на выборке у Киевской (115 листов):
+   - лист 4x4 из 16 кадров сохраняется как 1710x1744, но API сам ужимает
+     длинную сторону до 1568 — в модель он идёт как 1537x1568, 3213 токенов.
+     Прежняя оценка «3976» считала неужатый размер и завышала на четверть;
+   - JSON-ответ агента — около 120 токенов на лот;
+   - доктрина плюс системный промпт агента — около 5000 токенов на агента.
+
+   Считать надо не только сами листы. Агент читает пачку подряд, и каждый
+   следующий лист уходит вместе со всем, что уже прочитано: к концу пачки
+   из девятнадцати контекст весит девятнадцать листов. Кэш промпта берёт за
+   повтор десятую часть, но повтор растёт квадратично и на такой пачке уже
+   дороже самого просмотра. Поэтому пачка 19 (768к на 115 лотов по этой
+   формуле, замерено 792к) — не «крупная и потому выгодная», а почти
+   худшая из разумных: оптимум 5–8 листов на агента. Совет «брать пачки
+   по 35–40, чтобы размазать постоянные расходы» был ошибкой: постоянные
+   расходы линейны, а накопление контекста квадратично, и оно побеждает. */
+const SWEEP = { sheet: 3213, out: 120, fixed: 5000, cache: 0.1 };
+
+function sweepCost(lots, batch, sheet = SWEEP.sheet) {
+  if (!lots || !batch || batch < 1) return null;
+  let total = 0, agents = 0;
+  for (let left = lots; left > 0; left -= batch) {
+    const b = Math.min(batch, left);
+    agents++;
+    total += SWEEP.fixed + b * (sheet + SWEEP.out)
+      + SWEEP.cache * ((b - 1) * SWEEP.fixed + sheet * b * (b - 1) / 2);
+  }
+  return { tokens: Math.round(total), perLot: Math.round(total / lots), agents, batch, sheet };
+}
+
 /* Ряд цен квартиры из всех её объявлений. Циан отдаёт изменения новыми
    вперёд; переворачиваем каждый список, а потом сортируем по дате —
    сортировка в JS устойчива, поэтому внутри одного дня порядок сохранится.
@@ -1386,6 +1496,7 @@ function gradeRecord(lot, g) {
      Расхождение считается только между «жить можно» и «жить нельзя». */
   const rank = (s) => (s === 'под ключ' ? 1 : s === 'неизвестно' ? null : 0);
   const conflict = rank(observed) != null && rank(claimed) != null && rank(observed) !== rank(claimed);
+  const gk = galleryKey(lot);
   return {
     id: lot.id,
     /* Оценка ставится квартире, а не объявлению: объявление переклеивают, и
@@ -1406,6 +1517,11 @@ function gradeRecord(lot, g) {
     /* Отдельно от всей галереи: планировка — не квартира, и её добавление
        не должно сбрасывать оценку. */
     photosRoomsSeen: g.photosRoomsSeen ?? null,
+    /* Какие именно кадры видели. Счётчик выше отвечает «сколько», ключ —
+       «те же ли»; пересъёмку галереи прежним числом кадров ловит только он. */
+    galleryKey: gk ? gk.key : null,
+    galleryKeyOf: gk ? gk.of : null,
+    galleryKeyN: gk ? gk.n : null,
     /* Какие кадры и в каком разрешении смотрели. Без этого оценку нельзя
        перепроверить: «премиум» без указания, что именно показало камень,
        остаётся впечатлением. */
@@ -2669,6 +2785,53 @@ if (require.main === module) (async () => {
         process.stdout.write(JSON.stringify(out, null, 2) + '\n');
         log('\nЗаполнить по docs/cian/photo.md, null — «на кадрах не видно».');
         log(`Кадры в оригинале:  node tools/cian/cian.js verify --ids ${ids.join(',')} --frames 3,6,11 --dir sheets`);
+      } else if (a.plan) {
+        /* Сколько взгляда на самом деле нужно. Пересматривать всю выборку
+           каждый свип — платить за то, что не менялось: у Киевской за
+           неделю обновилось 9% лотов. Но пропускать можно только то, про
+           что известно, что оно не изменилось, поэтому третья корзина
+           здесь не «прочее», а именно «неизвестно», и она идёт в работу
+           наравне с изменившимися. */
+        const src = a.lots ? JSON.parse(fs.readFileSync(a.lots, 'utf8')) : null;
+        if (!src) { log('нужен --lots <файл выдачи>: план сравнивает записанный отпечаток с текущей галереей'); }
+        else {
+          const lots = src.lots || src.flats || (Array.isArray(src) ? src : []);
+          const buckets = { 'пропустить': [], 'смотреть': [], 'неизвестно': [] };
+          for (const l of lots) {
+            const d = galleryDiff(gradeFor(store.flats, l), l);
+            buckets[d.verdict].push({ l, d });
+          }
+          const work = buckets['смотреть'].length + buckets['неизвестно'].length;
+          log(`лотов в выдаче: ${lots.length}`);
+          log(`  пропустить (галерея та же): ${buckets['пропустить'].length}`);
+          log(`  смотреть:                   ${buckets['смотреть'].length}`);
+          log(`  неизвестно (нет отпечатка): ${buckets['неизвестно'].length}`);
+          const why = {};
+          for (const b of ['смотреть', 'неизвестно']) for (const x of buckets[b]) why[x.d.why] = (why[x.d.why] || 0) + 1;
+          if (Object.keys(why).length) {
+            log('\nпочему смотреть:');
+            Object.entries(why).sort((p, q) => q[1] - p[1]).forEach(([k, v]) => log(`  ${String(v).padStart(4)}  ${k}`));
+          }
+          log('\nцена свипа при разном размере пачки (токенов, оценка по замеру):');
+          for (const b of [3, 5, 8, 12, 19, 29]) {
+            const full = sweepCost(lots.length, b), inc = sweepCost(work, b);
+            log(`  пачка ${String(b).padStart(2)}:  всё ${String(Math.round(full.tokens / 1000)).padStart(4)}к` +
+                ` (${full.perLot} ток/лот, агентов ${full.agents})` +
+                `   только нужное ${String(Math.round((inc ? inc.tokens : 0) / 1000)).padStart(4)}к`);
+          }
+          const best = [3, 5, 8, 12, 19, 29].map((b) => sweepCost(lots.length, b))
+            .reduce((x, y) => (y.perLot < x.perLot ? y : x));
+          log(`\nдешевле всего пачка ${best.batch}: ${best.perLot} ток/лот.` +
+              ` Пачка 19 стоит ${sweepCost(lots.length, 19).perLot} — накопленный контекст дороже сэкономленных промптов.`);
+          if (buckets['неизвестно'].length) {
+            log(`\nу ${buckets['неизвестно'].length} записей отпечатка нет: они ставились до его появления.` +
+                ' Отпечаток запишется при следующей оценке, и дальше эти лоты начнут пропускаться.');
+          }
+          if (a.ids) {
+            const ids = [...buckets['смотреть'], ...buckets['неизвестно']].map((x) => x.l.id);
+            process.stdout.write(ids.join(',') + '\n');
+          }
+        }
       } else if (a.check) {
         /* Хранилище оценок должно возражать само. Три претензии, каждая
            уже случалась на живых данных. */
@@ -2751,6 +2914,15 @@ if (require.main === module) (async () => {
           else if (prev.level !== rec.level || prev.proof !== rec.proof) {
             changed++;
             log(`  ${id}: ${prev.level || '—'}/${prev.proof || '—'} -> ${rec.level || '—'}/${rec.proof || '—'}`);
+          }
+          /* Оценку можно поставить, не подавая --lots: тогда lot — заглушка
+             из одного id, кадров у неё нет и ключ выходит пустым. Затирать
+             им записанный ранее отпечаток нельзя, иначе лот навсегда уедет
+             в «ключ не записан» и будет пересматриваться каждый свип. */
+          if (!rec.galleryKey && prev && prev.galleryKey) {
+            rec.galleryKey = prev.galleryKey;
+            rec.galleryKeyOf = prev.galleryKeyOf ?? null;
+            rec.galleryKeyN = prev.galleryKeyN ?? null;
           }
           store.flats[id] = { ...prev, ...rec };
         }
@@ -3243,4 +3415,5 @@ module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, medi
   gradeLevel, gradeRecord, observedState, gradeFor, galleryGrew, parseViews, REPAIR_RU, offersByIds, mergedPriceHistory, worksScope, AGES, WORK_ITEMS,
   expandSimilar, matchesQuery, buildCohort, finishCost, loadedPricePerM2, fairShellPrice, MARKERS, PROOFS,
   houseClass, houseFor, houseRecord, profileLot, floorBand, HOUSE_MARKERS, HOUSE_CLASSES,
-  metroSummary, metroLine, metroCell, RAIL_LINES, photoKinds };
+  metroSummary, metroLine, metroCell, RAIL_LINES, photoKinds,
+  photoIdent, galleryKey, galleryDiff, sweepCost, SWEEP };
