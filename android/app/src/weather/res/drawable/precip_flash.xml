@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generated: one phase of the falling layer. See WeatherWidgetRenderer. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="360dp"
+    android:height="360dp"
+    android:viewportWidth="360"
+    android:viewportHeight="360">
+    <path
+        android:pathData="M226,28 L172,168 L212,168 L146,332 L262,148 L214,148 L286,28 Z"
+        android:fillColor="#FFFFFFFF" />
+</vector>

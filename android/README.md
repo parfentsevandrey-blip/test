@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-9.1.apk`](dist/quire-calendar-9.1.apk) · 1.9 MB | `sha256 e25eb2423225e4d3204f2180e407fd9b2d1d06653c7293b595ab250603018eef` |
-| **Weather** | [`dist/quire-weather-9.1.apk`](dist/quire-weather-9.1.apk) · 1.5 MB | `sha256 3d5a993dc404e4b6b0085d272a3dcace296d933bfbc5ec54b794a492ddca0d38` |
+| **Calendar** | [`dist/quire-calendar-9.2.apk`](dist/quire-calendar-9.2.apk) · 1.9 MB | `sha256 28644b34dc3d588941dac1c59f0364c2e146f0bdd8483585f230ad09c9e9d244` |
+| **Weather** | [`dist/quire-weather-9.2.apk`](dist/quire-weather-9.2.apk) · 1.5 MB | `sha256 d765c94483ba5844a88cc2d6af3624f56be77b4b7044ffb1361a0dcc7f48268a` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-9.1.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-9.2.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -423,6 +423,23 @@ first is exactly what produces a card with a huge number and no forecast. As the
 things leave in order rather than being clipped: below 172dp the sky and the feels-like go and the
 number takes their width, below 46dp per column the low goes and the high stays, and below 128dp
 tall the strip goes entirely and the card becomes an honest "now".
+
+**The card counts the minutes.** Open-Meteo publishes a quarter-hour minute-cast, and the card
+turns it into the one line a glance actually wants: *Rain in 25 min* when the sky is about to
+open, *Ends in ~40 min* while it is falling. The line takes the feels-like's place — what the
+next twenty minutes will do outranks how the current ones feel — and it is computed against the
+moment the launcher paints, not the moment the app fetched, so a half-hour-old cache still counts
+down correctly. Nothing shows when nothing changes within two hours: "rain in three hours" is the
+daily forecast's news.
+
+**And the rain falls on it.** When something is falling outside, it falls on the card — a layer
+of drops (or flakes, or a lightning frame every eighth beat in a thunderstorm) behind the type,
+in muted ink, moving. A widget is `RemoteViews` and cannot animate; the one exception is
+`ViewFlipper`, which the launcher steps through its children on its own clock. Four phase frames,
+each advancing the drops a quarter of the lattice, loop seamlessly at four beats a second with a
+short crossfade — while this app's process sleeps and spends nothing. A dry sky gets an empty,
+`GONE` flipper: the card with no weather in it is exactly the card that shipped before it learned
+this, because motion on a page of numbers is only ever allowed to *be* information.
 
 ![Weather icons](docs/weather-icons.png)
 

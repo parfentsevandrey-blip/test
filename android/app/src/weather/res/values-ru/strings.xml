@@ -15,6 +15,9 @@
     <string name="wx_snow">Снег</string>
     <string name="wx_thunder">Гроза</string>
     <string name="wx_feels_like">Ощущается как %1$s</string>
+    <string name="wx_rain_in">Дождь через %1$d мин</string>
+    <string name="wx_snow_in">Снег через %1$d мин</string>
+    <string name="wx_wet_ends">Кончится через ~%1$d мин</string>
     <string name="wx_humidity">Влажность</string>
     <string name="wx_wind">Ветер</string>
     <string name="wx_wind_value">%1$d км/ч</string>

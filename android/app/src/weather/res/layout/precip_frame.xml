@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One phase of the falling layer. centerCrop rather than fitXY so the drops keep their shape
+     at every card size: the vector is a 360dp square and the card shows whatever middle of it
+     the placement's aspect calls for. -->
+<ImageView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/precip_frame"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:importantForAccessibility="no"
+    android:scaleType="centerCrop" />

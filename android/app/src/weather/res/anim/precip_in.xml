@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The crossfade between falling-layer phases. Shorter than the flip interval, so each frame
+     spends most of its beat fully drawn; the overlap is what turns a four-phase loop from a
+     slideshow into motion blur. -->
+<alpha xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="160"
+    android:fromAlpha="0.0"
+    android:toAlpha="1.0" />

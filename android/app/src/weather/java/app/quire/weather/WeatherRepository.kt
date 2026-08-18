@@ -33,7 +33,17 @@ object WeatherRepository {
         "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max," +
             "sunrise,sunset,uv_index_max"
     private const val HOURLY = "temperature_2m,weather_code,precipitation_probability,is_day"
+    // Rain and snow separately rather than one "precipitation": the line the widget writes from
+    // these has to choose a word, and a millimetre that fell as snow is a different sentence.
+    private const val MINUTELY = "rain,snowfall"
     private const val DAYS = 6
+
+    /** Sixteen quarter-hours — four hours of minute-cast, twice the two-hour "soon" horizon. */
+    private const val QUARTERS = 16
+
+    /** The ceiling on stored quarters even if the provider ignores the count above. */
+    private const val QUARTERS_MAX = 48
+
     private const val TIMEOUT_MILLIS = 12_000
 
     /**
@@ -51,6 +61,8 @@ object WeatherRepository {
         append("&current=").append(CURRENT)
         append("&daily=").append(DAILY)
         append("&hourly=").append(HOURLY)
+        append("&minutely_15=").append(MINUTELY)
+        append("&forecast_minutely_15=").append(QUARTERS)
         append("&timezone=auto")
         append("&forecast_days=").append(DAYS)
     }
@@ -125,6 +137,25 @@ object WeatherRepository {
             }
         }
 
+        // The quarter-hours are as optional as the hours: their absence costs the card one line.
+        val quarters = ArrayList<QuarterCast>()
+        root.optJSONObject("minutely_15")?.let { soon ->
+            val times = soon.optJSONArray("time")
+            val rainfall = soon.optJSONArray("rain")
+            val snowfall = soon.optJSONArray("snowfall")
+            if (times != null) {
+                // Capped even if the provider ignores the count the request asked for: a widget's
+                // store is a SharedPreferences string, not a database.
+                for (index in 0 until minOf(times.length(), QUARTERS_MAX)) {
+                    quarters += QuarterCast(
+                        time = LocalDateTime.parse(times.getString(index)),
+                        rain = rainfall?.optDouble(index, 0.0) ?: 0.0,
+                        snow = snowfall?.optDouble(index, 0.0) ?: 0.0,
+                    )
+                }
+            }
+        }
+
         val daily = root.getJSONObject("daily")
         val dates = daily.getJSONArray("time")
         val codes = daily.getJSONArray("weather_code")
@@ -179,6 +210,7 @@ object WeatherRepository {
             days = days,
             fetched = now,
             hours = hours,
+            quarters = quarters,
         )
     }
 

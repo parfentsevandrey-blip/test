@@ -139,6 +139,20 @@ object WeatherStore {
             },
         )
         put(
+            "quarters",
+            JSONArray().apply {
+                forecast.quarters.forEach { quarter ->
+                    put(
+                        JSONObject().apply {
+                            put("t", quarter.time.toString())
+                            put("r", quarter.rain)
+                            put("s", quarter.snow)
+                        },
+                    )
+                }
+            },
+        )
+        put(
             "days",
             JSONArray().apply {
                 forecast.days.forEach { day ->
@@ -202,6 +216,18 @@ object WeatherStore {
                             sky = sky(hour.optString("s")),
                             day = hour.optBoolean("d", true),
                             rain = hour.optInt("r", 0),
+                        )
+                    }.getOrNull()
+                }
+            }.orEmpty(),
+            quarters = json.optJSONArray("quarters")?.let { array ->
+                (0 until array.length()).mapNotNull { index ->
+                    val quarter = array.optJSONObject(index) ?: return@mapNotNull null
+                    runCatching {
+                        QuarterCast(
+                            time = java.time.LocalDateTime.parse(quarter.getString("t")),
+                            rain = quarter.optDouble("r", 0.0),
+                            snow = quarter.optDouble("s", 0.0),
                         )
                     }.getOrNull()
                 }

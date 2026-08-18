@@ -28,6 +28,24 @@
         android:scaleType="fitXY"
         android:src="@drawable/widget_surface_border" />
 
+    <!--
+      The falling layer: rain or snow, behind the type and over the surface, so the card has
+      weather in it rather than on it. A ViewFlipper because it is the one view a widget is
+      allowed that animates itself — the launcher steps it through its children on its own
+      clock, and this process sleeps. Children are added at runtime (WeatherWidgetRenderer):
+      four phase frames when something is falling, none when the sky is dry, in which case the
+      flipper is GONE and costs nothing.
+    -->
+    <ViewFlipper
+        android:id="@+id/sky_motion"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:autoStart="true"
+        android:flipInterval="240"
+        android:inAnimation="@anim/precip_in"
+        android:outAnimation="@anim/precip_out"
+        android:visibility="gone" />
+
     <LinearLayout
         android:id="@+id/content"
         android:layout_width="match_parent"

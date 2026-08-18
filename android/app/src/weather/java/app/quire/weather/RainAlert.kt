@@ -18,9 +18,10 @@ import app.quire.R
  * Telling somebody it is going to rain, once.
  *
  * The rule is deliberately dull: one notification per day, for today, when the chance of
- * precipitation is at or above what the user asked for. Anything cleverer — hourly nagging, "rain
- * starting in 20 minutes" — needs data this app does not fetch and attention it has not been
- * given permission to take.
+ * precipitation is at or above what the user asked for. Anything chattier — hourly nagging, a
+ * push for every shower — is attention this app has not been given permission to take. The
+ * minute-cast ("rain in 25 min") lives on the widget and the screen, where glancing is free;
+ * a notification is an interruption, and it stays once a day.
  *
  * [WeatherSettings.alertedOn] is what makes "once" true: an hourly job that re-evaluates the same
  * day would otherwise post the same sentence every hour until the rain arrived.

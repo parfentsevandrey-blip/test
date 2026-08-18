@@ -97,6 +97,11 @@ object WeatherWidgetRenderer {
         paint.tint(root, R.id.rule, "setBackgroundColor", R.color.widget_hairline) { it.hairline }
 
         val forecast = WeatherStore.load(context)
+
+        // The falling layer goes in before anything is written on the card, so the weather is
+        // in the card whether or not the rest of the paint lands.
+        skyMotion(context, root, paint, forecast?.now?.sky)
+
         if (forecast == null) {
             // Nothing fetched yet: say so in the card rather than showing a plausible zero.
             root.setTextViewText(R.id.place, context.getString(R.string.weather))
@@ -187,14 +192,34 @@ object WeatherWidgetRenderer {
         paint.tint(root, R.id.now_sky, "setTextColor", R.color.widget_ink) { it.ink }
         root.setTextViewTextSize(R.id.now_sky, TypedValue.COMPLEX_UNIT_SP, skySp)
 
-        // On a narrow card the words "feels like" are what goes, not the number: the number is
-        // the part somebody is reading it for.
-        val feels = WeatherRepository.degrees(forecast.now.feelsLike, locale)
-        root.setTextViewText(
-            R.id.now_feels,
-            if (narrow) feels else context.getString(R.string.wx_feels_like, feels),
-        )
-        paint.tint(root, R.id.now_feels, "setTextColor", R.color.widget_ink_faint) { it.inkFaint }
+        // The feels-like yields its line to the minute-cast when the sky is about to turn:
+        // what the next twenty minutes will do is worth more than how the current ones feel.
+        // Set in the accent because it is the one line on the card that is news — the same
+        // weight the chance-of-rain figures carry in the strip below.
+        val soon = forecast.soon(java.time.LocalDateTime.now())
+        if (soon != null) {
+            root.setTextViewText(
+                R.id.now_feels,
+                context.getString(
+                    when {
+                        !soon.starts -> R.string.wx_wet_ends
+                        soon.snow -> R.string.wx_snow_in
+                        else -> R.string.wx_rain_in
+                    },
+                    soon.minutes,
+                ),
+            )
+            paint.tint(root, R.id.now_feels, "setTextColor", R.color.widget_accent) { it.accent }
+        } else {
+            // On a narrow card the words "feels like" are what goes, not the number: the number
+            // is the part somebody is reading it for.
+            val feels = WeatherRepository.degrees(forecast.now.feelsLike, locale)
+            root.setTextViewText(
+                R.id.now_feels,
+                if (narrow) feels else context.getString(R.string.wx_feels_like, feels),
+            )
+            paint.tint(root, R.id.now_feels, "setTextColor", R.color.widget_ink_faint) { it.inkFaint }
+        }
         root.setTextViewTextSize(R.id.now_feels, TypedValue.COMPLEX_UNIT_SP, feelsSp)
 
         root.removeAllViews(R.id.strip)
@@ -335,6 +360,86 @@ object WeatherWidgetRenderer {
         }
 
         return column
+    }
+
+    // ---- the falling layer ---------------------------------------------
+
+    private val RAIN_FRAMES = intArrayOf(
+        R.drawable.precip_rain_0, R.drawable.precip_rain_1,
+        R.drawable.precip_rain_2, R.drawable.precip_rain_3,
+    )
+    private val SNOW_FRAMES = intArrayOf(
+        R.drawable.precip_snow_0, R.drawable.precip_snow_1,
+        R.drawable.precip_snow_2, R.drawable.precip_snow_3,
+    )
+
+    // How loud the layer is, out of 255. It sits behind the type: legible weather, not a
+    // watermark over the numbers. Drizzle is fainter than rain because drizzle is fainter
+    // than rain; the flash is the loudest thing the card ever does and it lasts one beat.
+    private const val DRIZZLE_ALPHA = 64
+    private const val RAIN_ALPHA = 100
+    private const val SNOW_ALPHA = 120
+    private const val FLASH_ALPHA = 150
+
+    /**
+     * Fills the flipper with the phases of whatever is falling, or empties it.
+     *
+     * The flipper steps through its children in the launcher's process on its own clock — the
+     * one animation a RemoteViews widget can run without waking its app. Four phase frames make
+     * a seamless loop; thunder runs the loop twice with the last beat swapped for a lightning
+     * frame, so the flash lands every eighth beat instead of strobing on every fourth.
+     *
+     * Dry skies get an empty, GONE flipper, which costs the launcher nothing — a card with no
+     * weather falling must be exactly the card this app shipped before it learned to do this.
+     */
+    private fun skyMotion(context: Context, root: RemoteViews, paint: WidgetPaint, sky: Sky?) {
+        root.removeAllViews(R.id.sky_motion)
+
+        val frames: IntArray
+        val alpha: Int
+        when (sky) {
+            Sky.DRIZZLE -> { frames = RAIN_FRAMES; alpha = DRIZZLE_ALPHA }
+            Sky.RAIN, Sky.SHOWERS, Sky.THUNDER -> { frames = RAIN_FRAMES; alpha = RAIN_ALPHA }
+            Sky.SNOW, Sky.SLEET -> { frames = SNOW_FRAMES; alpha = SNOW_ALPHA }
+            else -> {
+                root.setViewVisibility(R.id.sky_motion, android.view.View.GONE)
+                return
+            }
+        }
+
+        root.setViewVisibility(R.id.sky_motion, android.view.View.VISIBLE)
+        val laps = if (sky == Sky.THUNDER) 2 else 1
+        for (lap in 0 until laps) {
+            for ((index, res) in frames.withIndex()) {
+                if (sky == Sky.THUNDER && lap == 1 && index == frames.lastIndex) continue
+                root.addView(R.id.sky_motion, phase(context, paint, res, alpha, flash = false))
+            }
+        }
+        if (sky == Sky.THUNDER) {
+            root.addView(
+                R.id.sky_motion,
+                phase(context, paint, R.drawable.precip_flash, FLASH_ALPHA, flash = true),
+            )
+        }
+    }
+
+    /** One frame of the layer: the drops in muted ink, the lightning in the accent. */
+    private fun phase(
+        context: Context,
+        paint: WidgetPaint,
+        res: Int,
+        alpha: Int,
+        flash: Boolean,
+    ): RemoteViews {
+        val frame = RemoteViews(context.packageName, R.layout.precip_frame)
+        frame.setImageViewResource(R.id.precip_frame, res)
+        if (flash) {
+            paint.tint(frame, R.id.precip_frame, "setColorFilter", R.color.widget_accent) { it.accent }
+        } else {
+            paint.tint(frame, R.id.precip_frame, "setColorFilter", R.color.widget_ink_muted) { it.inkMuted }
+        }
+        frame.setInt(R.id.precip_frame, "setImageAlpha", alpha)
+        return frame
     }
 
     /** Tapping anywhere on the card opens the weather the card is showing. */

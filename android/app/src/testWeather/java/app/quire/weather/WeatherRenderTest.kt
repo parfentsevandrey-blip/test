@@ -326,7 +326,9 @@ class WeatherRenderTest {
      */
     @Test
     fun `the filled card has a daylight face`() {
-        WeatherStore.save(context, stub())
+        // A dry sky, so the surface luma is read off the surface and not off a raindrop that
+        // happens to cross the sampling point.
+        WeatherStore.save(context, stub(nowSky = Sky.OVERCAST))
         val widgetId = 70
         Prefs.get(context).widget(widgetId).apply {
             skin = Skin.COLOUR
@@ -379,7 +381,8 @@ class WeatherRenderTest {
      */
     @Test
     fun `one picture wears both faces`() {
-        WeatherStore.save(context, stub())
+        // Dry for the same reason the daylight test is: the luma is the surface's to answer.
+        WeatherStore.save(context, stub(nowSky = Sky.OVERCAST))
         val widgetId = 71
         Prefs.get(context).widget(widgetId).apply {
             skin = Skin.COLOUR
@@ -449,7 +452,10 @@ class WeatherRenderTest {
         assertTrue("an unfetched card said nothing: $texts", texts.any { it.contains("…") })
     }
 
-    private fun stub(): Forecast {
+    private fun stub(
+        nowSky: Sky = Sky.SHOWERS,
+        quarters: List<QuarterCast> = emptyList(),
+    ): Forecast {
         val today = java.time.LocalDate.now()
         val skies = listOf(
             Sky.SHOWERS,
@@ -465,7 +471,7 @@ class WeatherRenderTest {
             now = Conditions(
                 temperature = 12.4,
                 feelsLike = 10.6,
-                sky = Sky.SHOWERS,
+                sky = nowSky,
                 day = false,
                 humidity = 82,
                 wind = 14.0,
@@ -480,6 +486,7 @@ class WeatherRenderTest {
                 )
             },
             fetched = System.currentTimeMillis(),
+            quarters = quarters,
         )
     }
 
@@ -516,6 +523,168 @@ class WeatherRenderTest {
         if (view.visibility != android.view.View.VISIBLE) return
         if (view is android.widget.TextView) out += view.text.toString()
         if (view is ViewGroup) for (i in 0 until view.childCount) collectText(view.getChildAt(i), out)
+    }
+
+    /** Applies the card at a placement and hands back the host for inspection. */
+    private fun applied(widgetId: Int, widthDp: Int = 340, heightDp: Int = 160): FrameLayout {
+        Prefs.get(context).widget(widgetId).apply {
+            skin = Skin.COLOUR
+            accent = Accent.PLUM
+            opacity = 100
+            dynamic = false
+        }
+        val host = FrameLayout(context).apply { setBackgroundColor(0xFF101014.toInt()) }
+        host.addView(
+            WeatherWidgetRenderer.build(context, widgetId, widthDp, heightDp).apply(context, host),
+            FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+            ),
+        )
+        return host
+    }
+
+    /** How many sampled pixels two renders of the same card disagree on. */
+    private fun moved(a: Bitmap, b: Bitmap): Int {
+        var different = 0
+        var x = 0
+        while (x < a.width) {
+            var y = 0
+            while (y < a.height) {
+                if (a.getPixel(x, y) != b.getPixel(x, y)) different++
+                y += 2
+            }
+            x += 2
+        }
+        return different
+    }
+
+    /**
+     * The rain on the card is real motion, not a picture of some.
+     *
+     * The flipper's phases are stepped by hand — the launcher's clock cannot run in a test — and
+     * consecutive phases must disagree about a meaningful number of pixels: four identical frames
+     * would flip merrily and show a card standing perfectly still. Each phase is written out as a
+     * picture, because whether the loop reads as falling rain is a judgement the diff cannot make.
+     */
+    @Test
+    fun `the rain on the card actually moves`() {
+        // With a minute-cast attached, so the phase pictures also show the countdown line the
+        // way a real shower would carry it.
+        val now = java.time.LocalDateTime.now()
+        WeatherStore.save(
+            context,
+            stub(
+                quarters = listOf(
+                    QuarterCast(now.minusMinutes(5), 1.2, 0.0),
+                    QuarterCast(now.plusMinutes(10), 0.9, 0.0),
+                    QuarterCast(now.plusMinutes(25), 0.6, 0.0),
+                    QuarterCast(now.plusMinutes(40), 0.0, 0.0),
+                ),
+            ),
+        )
+        val host = applied(widgetId = 75)
+
+        val flipper = host.findViewById<android.widget.ViewFlipper>(app.quire.R.id.sky_motion)
+        assertTrue("the shower card has no falling layer", flipper != null)
+        flipper!!
+        assertTrue("the falling layer is hidden", flipper.visibility == android.view.View.VISIBLE)
+        assertTrue("expected 4 phases, found ${flipper.childCount}", flipper.childCount == 4)
+
+        // The crossfade belongs to the launcher's clock; stepping by hand it only smears the
+        // snapshot with a half-faded neighbour.
+        flipper.inAnimation = null
+        flipper.outAnimation = null
+        val phases = (0 until flipper.childCount).map { index ->
+            flipper.displayedChild = index
+            render(host, 340, 160, "precip-rain-phase-$index")
+        }
+
+        for (index in phases.indices) {
+            val next = phases[(index + 1) % phases.size]
+            assertTrue(
+                "phase $index and the next differ by too little to read as motion",
+                moved(phases[index], next) > 400,
+            )
+        }
+    }
+
+    /**
+     * Thunder flashes on the eighth beat; snow falls its own way; a dry card stands still.
+     *
+     * The dry case is the taste rule holding: a clear evening's card must be exactly the card
+     * this app shipped before it learned to animate — an empty, GONE flipper, no cost and no
+     * motion in front of the numbers.
+     */
+    @Test
+    fun `thunder flashes, snow falls, and a clear sky stands still`() {
+        WeatherStore.save(context, stub(nowSky = Sky.THUNDER))
+        var flipper = applied(widgetId = 76)
+            .findViewById<android.widget.ViewFlipper>(app.quire.R.id.sky_motion)!!
+        assertTrue(
+            "thunder should run two laps with one flash, found ${flipper.childCount}",
+            flipper.childCount == 8,
+        )
+        flipper.inAnimation = null
+        flipper.outAnimation = null
+        flipper.displayedChild = flipper.childCount - 1
+        render(flipper, 340, 160, "precip-thunder-flash")
+
+        WeatherStore.save(context, stub(nowSky = Sky.SNOW))
+        flipper = applied(widgetId = 77)
+            .findViewById<android.widget.ViewFlipper>(app.quire.R.id.sky_motion)!!
+        assertTrue("snow should fall in 4 phases, found ${flipper.childCount}", flipper.childCount == 4)
+        flipper.inAnimation = null
+        flipper.outAnimation = null
+        render(flipper.also { it.displayedChild = 0 }, 340, 160, "precip-snow-phase-0")
+
+        WeatherStore.save(context, stub(nowSky = Sky.CLEAR))
+        flipper = applied(widgetId = 78)
+            .findViewById<android.widget.ViewFlipper>(app.quire.R.id.sky_motion)!!
+        assertTrue("a clear sky left the flipper on", flipper.visibility == android.view.View.GONE)
+        assertTrue("a clear sky kept ${flipper.childCount} frames", flipper.childCount == 0)
+    }
+
+    /**
+     * The minute-cast line, on the card.
+     *
+     * Two cards: one where rain is 25 minutes out, one where it is falling and due to stop. The
+     * quarters are anchored to the asking clock because that is the whole design — the line is
+     * computed against "now", not against fetch time — which costs the assertion a minute of
+     * tolerance for the moment the renderer reads its own clock.
+     */
+    @Test
+    fun `the card counts down to rain, and out of it`() {
+        val now = java.time.LocalDateTime.now()
+        fun q(minutes: Long, rain: Double) = QuarterCast(now.plusMinutes(minutes), rain, 0.0)
+
+        WeatherStore.save(
+            context,
+            stub(
+                nowSky = Sky.OVERCAST,
+                quarters = listOf(q(-5, 0.0), q(10, 0.0), q(25, 1.4), q(40, 1.1)),
+            ),
+        )
+        val coming = ArrayList<String>()
+        collectText(applied(widgetId = 79), coming)
+        assertTrue(
+            "no countdown to rain on the card: $coming",
+            coming.any { it.matches(Regex("Rain in 2[45] min")) },
+        )
+
+        WeatherStore.save(
+            context,
+            stub(
+                nowSky = Sky.SHOWERS,
+                quarters = listOf(q(-5, 1.2), q(10, 0.9), q(25, 0.6), q(40, 0.0)),
+            ),
+        )
+        val passing = ArrayList<String>()
+        collectText(applied(widgetId = 80), passing)
+        assertTrue(
+            "no countdown out of the rain on the card: $passing",
+            passing.any { it.matches(Regex("Ends in ~(39|40) min")) },
+        )
     }
 
     /** The smallest a five-day strip ever shows one: still a recognisable shape, not a blob. */

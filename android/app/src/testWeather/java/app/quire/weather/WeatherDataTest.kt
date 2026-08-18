@@ -3,6 +3,7 @@ package app.quire.weather
 import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -36,6 +37,11 @@ class WeatherDataTest {
             "weather_code": 80,
             "wind_speed_10m": 13.7
           },
+          "minutely_15": {
+            "time": ["2026-08-09T23:00","2026-08-09T23:15","2026-08-09T23:30","2026-08-09T23:45"],
+            "rain": [0.0,0.0,1.2,0.8],
+            "snowfall": [0.0,0.0,0.0,0.0]
+          },
           "daily": {
             "time": ["2026-08-09","2026-08-10","2026-08-11","2026-08-12","2026-08-13","2026-08-14"],
             "weather_code": [80,3,0,95,71,45],
@@ -55,6 +61,11 @@ class WeatherDataTest {
         assertEquals(81, forecast.now.humidity)
         assertEquals(Sky.SHOWERS, forecast.now.sky)
         assertTrue("is_day 0 was read as daytime", !forecast.now.day)
+
+        assertEquals(4, forecast.quarters.size)
+        assertEquals(1.2, forecast.quarters[2].rain, 0.001)
+        assertTrue("a 1.2mm quarter-hour is not wet", forecast.quarters[2].wet)
+        assertTrue("a dry quarter-hour claims rain", !forecast.quarters[0].wet)
 
         assertEquals(6, forecast.days.size)
         assertEquals(5, forecast.ahead().size)
@@ -113,6 +124,79 @@ class WeatherDataTest {
         assertEquals(original.days[3].sky, restored.days[3].sky)
         assertEquals(original.days[3].high, restored.days[3].high, 0.001)
         assertEquals(original.days[3].date, restored.days[3].date)
+        assertEquals(original.quarters.size, restored.quarters.size)
+        assertEquals(original.quarters[2].time, restored.quarters[2].time)
+        assertEquals(original.quarters[2].rain, restored.quarters[2].rain, 0.001)
+    }
+
+    /**
+     * The minute-cast arithmetic, at the four moments that matter: before the rain, inside it,
+     * past the horizon, and off the edge of the data. Times are handed in rather than read from
+     * a clock, which is what makes these worth having — the widget asks with its own "now" and
+     * these prove the answer is a function of when you ask.
+     */
+    @Test
+    fun `the minute-cast counts to the next turn of the sky`() {
+        fun q(time: String, rain: Double = 0.0, snow: Double = 0.0) =
+            QuarterCast(java.time.LocalDateTime.parse(time), rain, snow)
+        fun forecastOf(vararg quarters: QuarterCast) = Forecast(
+            place = "",
+            latitude = 0.0,
+            longitude = 0.0,
+            now = Conditions(1.0, 1.0, Sky.OVERCAST, true, 50, 5.0),
+            days = emptyList(),
+            fetched = 0L,
+            quarters = quarters.toList(),
+        )
+
+        val shower = forecastOf(
+            q("2026-01-01T12:00"),
+            q("2026-01-01T12:15"),
+            q("2026-01-01T12:30", rain = 0.9),
+            q("2026-01-01T12:45", rain = 0.4),
+            q("2026-01-01T13:00"),
+        )
+
+        // Asked at 12:05, the rain at 12:30 is 25 minutes out.
+        val coming = shower.soon(java.time.LocalDateTime.parse("2026-01-01T12:05"))
+        assertNotNull("no countdown before the rain", coming)
+        assertTrue("the coming rain read as an ending", coming!!.starts)
+        assertEquals(25, coming.minutes)
+        assertTrue("rain read as snow", !coming.snow)
+
+        // Asked at 12:35, inside the spell, the dry slot at 13:00 is the news.
+        val passing = shower.soon(java.time.LocalDateTime.parse("2026-01-01T12:35"))
+        assertNotNull("no countdown inside the rain", passing)
+        assertTrue("the ending read as a beginning", !passing!!.starts)
+        assertEquals(25, passing.minutes)
+
+        // Snow gets its own word, from the slot where it falls.
+        val flurry = forecastOf(
+            q("2026-01-01T12:00"),
+            q("2026-01-01T12:15", snow = 0.4),
+        )
+        val snowSoon = flurry.soon(java.time.LocalDateTime.parse("2026-01-01T12:01"))
+        assertTrue("snow read as rain", snowSoon != null && snowSoon.snow)
+
+        // A turn beyond the two-hour horizon is the daily forecast's news, not this line's.
+        val distant = forecastOf(
+            *(0 until 12).map { q("2026-01-01T${12 + it / 4}:${"%02d".format(it % 4 * 15)}") }
+                .toTypedArray(),
+            q("2026-01-01T15:00", rain = 2.0),
+        )
+        assertNull(
+            "a three-hour-away rain got a countdown",
+            distant.soon(java.time.LocalDateTime.parse("2026-01-01T12:01")),
+        )
+
+        // Asked before the data begins, or after it runs out: nothing, rather than a guess.
+        assertNull(shower.soon(java.time.LocalDateTime.parse("2026-01-01T11:00")))
+        assertNull(shower.soon(java.time.LocalDateTime.parse("2026-01-01T14:00")))
+        // Dry throughout: no turn to count to.
+        assertNull(
+            forecastOf(q("2026-01-01T12:00"), q("2026-01-01T12:15"))
+                .soon(java.time.LocalDateTime.parse("2026-01-01T12:05")),
+        )
     }
 
     /**
@@ -156,6 +240,10 @@ class WeatherDataTest {
         }
         assertTrue("the fetch did not use the endpoint: $asked", asked!!.contains("open-meteo"))
         assertTrue("the fetch asked for no forecast days", asked!!.contains("forecast_days=6"))
+        assertTrue(
+            "the fetch did not ask for the minute-cast: $asked",
+            asked!!.contains("minutely_15=rain,snowfall"),
+        )
         assertEquals("Nowhere", forecast.place)
         assertEquals(7L, forecast.fetched)
     }

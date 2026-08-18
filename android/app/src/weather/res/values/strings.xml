@@ -15,6 +15,11 @@
     <string name="wx_snow">Snow</string>
     <string name="wx_thunder">Thunderstorm</string>
     <string name="wx_feels_like">Feels like %1$s</string>
+    <!-- The minute-cast line: what the sky is about to do, counted in minutes. The "ends" form
+         never names what is falling because the sky label directly above it already has. -->
+    <string name="wx_rain_in">Rain in %1$d min</string>
+    <string name="wx_snow_in">Snow in %1$d min</string>
+    <string name="wx_wet_ends">Ends in ~%1$d min</string>
     <string name="wx_humidity">Humidity</string>
     <string name="wx_wind">Wind</string>
     <string name="wx_wind_value">%1$d km/h</string>
