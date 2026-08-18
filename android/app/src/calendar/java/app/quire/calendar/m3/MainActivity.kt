@@ -429,35 +429,6 @@ private const val BACK_SHRINK = 0.10f
 private const val BACK_FADE = 0.35f
 
 /**
- * A label that travels when it changes, in whichever direction its subject moved.
- *
- * [order] is what makes the direction meaningful rather than arbitrary — a later month rolls up,
- * an earlier one rolls down — and it is passed separately because the text itself cannot be
- * compared: "August" is not after "July" in any ordering a string knows about.
- */
-@Composable
-private fun RollingLabel(text: String, order: Int) {
-    val spatial = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
-    val quick = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
-    AnimatedContent(
-        targetState = text to order,
-        transitionSpec = {
-            val forward = targetState.second >= initialState.second
-            (
-                slideInVertically(spatial) { height -> if (forward) height else -height } +
-                    fadeIn(quick)
-                ) togetherWith (
-                slideOutVertically(spatial) { height -> if (forward) -height else height } +
-                    fadeOut(quick)
-                ) using SizeTransform(clip = false)
-        },
-        label = "label",
-    ) { (shown, _) ->
-        Text(shown)
-    }
-}
-
-/**
  * The search field, as the app bar rather than as a box floating over one.
  *
  * `AppBarWithSearch` takes the whole top slot and hands the query over as a `TextFieldState`, which is

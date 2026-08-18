@@ -627,7 +627,9 @@ fun SearchResults(
         return
     }
     LazyColumn(contentPadding = PaddingValues(vertical = 8.dp)) {
-        items(model.results) { entry ->
+        // Keyed like the agenda, so narrowing a query reflows the survivors instead of
+        // restamping the list from the top.
+        items(model.results, key = { it.eventId to it.begin }) { entry ->
             val date = remember(entry) { EventRepository.dateOf(entry) }
             // The same card as an agenda entry, because it is the same thing found a different
             // way. A result that looks unlike the row it takes you to is two designs for one

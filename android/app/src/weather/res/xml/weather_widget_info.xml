@@ -3,6 +3,13 @@
   Four by two is the shape this card is designed for: wide enough for the temperature and the
   sky beside it, and two rows deep so the five-day strip fits under the rule. It stays legal
   down to two by two, where it drops the strip and becomes a "now" card.
+
+  updatePeriodMillis is the launcher's own clock, at the platform's half-hour floor. It is the
+  one wake that ignores App Standby buckets: a sideloaded app nobody opens slides into the
+  restricted bucket, where a periodic job can be deferred for days — which is exactly how the
+  card sat for a week saying Tuesday. The wake repaints always and fetches only when the stored
+  forecast is older than the interval the user chose, so a half-hour clock does not mean
+  half-hour network traffic.
 -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:description="@string/wx_widget_description"
@@ -17,5 +24,5 @@
     android:resizeMode="horizontal|vertical"
     android:targetCellHeight="2"
     android:targetCellWidth="4"
-    android:updatePeriodMillis="0"
+    android:updatePeriodMillis="1800000"
     android:widgetCategory="home_screen" />

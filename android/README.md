@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-8.7.apk`](dist/quire-calendar-8.7.apk) · 1.9 MB | `sha256 7377ea2c4946a3a5aadcf7c1980f5478019f2218e8ed8b9bc1432bbc94d22cef` |
-| **Weather** | [`dist/quire-weather-8.7.apk`](dist/quire-weather-8.7.apk) · 1.5 MB | `sha256 363cf0fb3f76e8c62db4111f808067d40f8ce44c200e5cba785d9ef19fa904d9` |
+| **Calendar** | [`dist/quire-calendar-8.8.apk`](dist/quire-calendar-8.8.apk) · 1.9 MB | `sha256 dcfb941895929ef44686614e1f4304f156415b4bf8c24ba1b206e30277950ff3` |
+| **Weather** | [`dist/quire-weather-8.8.apk`](dist/quire-weather-8.8.apk) · 1.5 MB | `sha256 4dad829531fc03f954a9f34ca75a117d1b031c344fd5d5a2fea16fd17c8d160e` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-8.7.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-8.8.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -685,6 +685,15 @@ these was a change nothing asked about.
   firing, on boot, on placement and on package update — a job keeps the triggers it was
   scheduled with, so an update that adds one has to re-arm it by hand.
 
+- **The launcher itself winds the weather card's clock.** Every earlier fix here scheduled our
+  own work, and our own work is subject to App Standby: a sideloaded app nobody opens lands in
+  the restricted bucket, where a periodic job can be deferred for *days* — which is how the card
+  sat for a week saying Tuesday while every test of the job's logic passed.
+  `updatePeriodMillis` is the one wake the buckets do not touch, so the card now carries it at
+  the platform's half-hour floor. The wake repaints always and fetches only when the stored
+  forecast is older than the interval the user chose, so the half-hour clock does not mean
+  half-hour network traffic — and a test asserts the attribute so nobody trades it away for a
+  tidier-looking zero again.
 - **Both cards wear their colours three ways, and pick the longest-lived one that fits.** On
   Android 12 and up, a widget wearing the system's look — the default placement — has every
   colour applied *by resource id* (`setColorStateList`), which the launcher resolves again at

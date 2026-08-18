@@ -4,6 +4,7 @@ import android.app.Application
 import android.app.job.JobScheduler
 import android.content.Intent
 import androidx.test.core.app.ApplicationProvider
+import app.quire.R
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -64,6 +65,35 @@ class WeatherWakeTest {
         val periodic = app.getSystemService(JobScheduler::class.java).allPendingJobs
             .any { it.isPeriodic }
         assertTrue("there is no pulse under the triggers", periodic)
+    }
+
+    /**
+     * The launcher itself winds the clock.
+     *
+     * Everything else here is our own scheduling, and our own scheduling is subject to App
+     * Standby: a sideloaded app nobody opens lands in the restricted bucket, where a periodic
+     * job can be deferred for days — which is how the card sat for a week saying Tuesday while
+     * every test of the job's *logic* passed. updatePeriodMillis is the one wake the buckets do
+     * not touch, so it is the floor under all of it, and it is asserted here so nobody trades it
+     * away for a tidier-looking zero again.
+     */
+    @Test
+    fun `the launcher itself winds the clock`() {
+        val parser = app.resources.getXml(R.xml.weather_widget_info)
+        var period = 0L
+        while (parser.eventType != org.xmlpull.v1.XmlPullParser.END_DOCUMENT) {
+            if (parser.eventType == org.xmlpull.v1.XmlPullParser.START_TAG &&
+                parser.name == "appwidget-provider"
+            ) {
+                period = parser.getAttributeIntValue(
+                    "http://schemas.android.com/apk/res/android",
+                    "updatePeriodMillis",
+                    0,
+                ).toLong()
+            }
+            parser.next()
+        }
+        assertTrue("the launcher never wakes the card (updatePeriodMillis=$period)", period >= 1_800_000L)
     }
 
     /**

@@ -97,7 +97,14 @@ fun WeatherScreen(
     // cards start. It carries the one bit of information the screen otherwise only spells out —
     // whether it is day or night out there — and it gives the hero something to sit on other than
     // flat paper. Fixed rather than scrolling, because a sky that scrolls away is a rectangle.
-    val sky = if (forecast?.now?.day != false) scheme.primaryContainer else scheme.secondaryContainer
+    // Eased rather than swapped: when the answer changes from day to night — a refresh at dusk,
+    // a place picked on the other side of the planet — the whole top of the page crossfades
+    // instead of flicking, which is the difference between weather moving and a poster changing.
+    val sky by androidx.compose.animation.animateColorAsState(
+        targetValue = if (forecast?.now?.day != false) scheme.primaryContainer else scheme.secondaryContainer,
+        animationSpec = androidx.compose.animation.core.tween(durationMillis = 900),
+        label = "sky",
+    )
     // It runs from the very top of the window, behind the app bar, which is transparent over this
     // screen for exactly that reason. Starting it under the bar instead put a hard horizontal
     // line across the screen with a square corner at each end — the only edge on a page where
@@ -258,10 +265,23 @@ private fun Now(forecast: Forecast, units: WeatherModel.Settings) {
     val actual = write(units, forecast.now.temperature)
     val sky = stringResource(forecast.now.sky.label)
 
+    // The number walks to a new value rather than being restamped: first composition lands on
+    // the answer at once, and after that a refresh that moves the temperature — or a switch to
+    // Fahrenheit, which moves it further — counts there, so a change is something you can see
+    // happen instead of something you have to notice happened.
+    val degrees = units.degrees.from(forecast.now.temperature)
+    val counted = remember { androidx.compose.animation.core.Animatable(degrees.toFloat()) }
+    LaunchedEffect(degrees) {
+        counted.animateTo(
+            degrees.toFloat(),
+            androidx.compose.animation.core.tween(650, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+        )
+    }
+
     Column(Modifier.fillMaxWidth().padding(start = Gutter, end = Gutter, top = 8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = actual,
+                text = counted.value.roundToInt().toString() + "°",
                 // The number is the reason the app was opened, and it is set like it: large,
                 // light and in plain ink. It had a gradient in it for one release; type wearing
                 // an effect is an effect first and a number second, and everything else this
@@ -835,13 +855,19 @@ private fun Freshness(forecast: Forecast) {
         DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale)
             .format(Instant.ofEpochMilli(forecast.fetched).atZone(ZoneId.systemDefault()))
     }
-    Text(
-        text = stringResource(R.string.wx_updated, stamp),
-        style = MaterialTheme.typography.labelMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-        textAlign = TextAlign.Center,
-    )
+    // A pill rather than a floating line: the one sentence on the page that is about the app
+    // instead of the weather, set the way this design sets asides everywhere else.
+    Row(Modifier.fillMaxWidth().padding(top = 16.dp), horizontalArrangement = Arrangement.Center) {
+        Text(
+            text = stringResource(R.string.wx_updated, stamp),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.7f))
+                .padding(horizontal = 12.dp, vertical = 5.dp),
+        )
+    }
 }
 
 /**

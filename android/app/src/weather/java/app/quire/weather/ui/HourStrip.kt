@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -28,6 +29,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -107,10 +113,16 @@ fun HourStrip(
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         colors = CardDefaults.cardColors(containerColor = scheme.surfaceContainerHigh),
     ) {
+        val strip = rememberScrollState()
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
+                // The content dissolves at the viewport's edges instead of being guillotined by
+                // them, and each fade appears only while there is something on its side to scroll
+                // to — a fade over the end of the data would say "more" where there is none.
+                .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+                .edgeFades(strip)
+                .horizontalScroll(strip)
                 .padding(horizontal = 8.dp, vertical = 12.dp),
         ) {
             Row {
@@ -245,6 +257,47 @@ private fun HourHead(
         }
     }
 }
+
+/**
+ * The dissolve at each end of the strip's viewport.
+ *
+ * Drawn over the scrolled content with destination-in alpha, which is why the whole strip is
+ * composed offscreen first — a blend against the card behind it would punch through to the card.
+ * Each side's strength follows how much there is left to scroll on that side, so the fade is the
+ * scroll saying "more", not a decoration.
+ */
+private fun Modifier.edgeFades(strip: ScrollState): Modifier = this.drawWithContent {
+    drawContent()
+    val reach = FadeWidth.toPx()
+    val left = (strip.value / reach).coerceIn(0f, 1f)
+    val right = ((strip.maxValue - strip.value) / reach).coerceIn(0f, 1f)
+    if (left > 0f) {
+        drawRect(
+            brush = Brush.horizontalGradient(
+                0f to Color.Black.copy(alpha = 1f - left),
+                1f to Color.Black,
+                endX = reach,
+            ),
+            size = androidx.compose.ui.geometry.Size(reach, size.height),
+            blendMode = BlendMode.DstIn,
+        )
+    }
+    if (right > 0f) {
+        drawRect(
+            brush = Brush.horizontalGradient(
+                0f to Color.Black,
+                1f to Color.Black.copy(alpha = 1f - right),
+                startX = size.width - reach,
+                endX = size.width,
+            ),
+            topLeft = Offset(size.width - reach, 0f),
+            size = androidx.compose.ui.geometry.Size(reach, size.height),
+            blendMode = BlendMode.DstIn,
+        )
+    }
+}
+
+private val FadeWidth = 18.dp
 
 private val ColumnWidth = 52.dp
 

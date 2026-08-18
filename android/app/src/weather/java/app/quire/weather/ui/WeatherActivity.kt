@@ -88,7 +88,13 @@ internal fun WeatherApp() {
         ActivityResultContracts.RequestPermission(),
     ) { model.notificationsAnswered() }
 
-    LaunchedEffect(Unit) { model.refresh() }
+    LaunchedEffect(Unit) {
+        model.refresh()
+        // Re-armed on every open. The job is scheduled when a widget is placed and when the
+        // package updates, but a job can be lost — data cleared, forced stop — and the app being
+        // opened is the one signal that always still arrives.
+        app.quire.weather.WeatherRefresh.schedule(model.getApplication())
+    }
 
     QuireTheme(dark = isSystemInDarkTheme(), dynamic = true) {
         val scrollBehavior =
@@ -104,13 +110,16 @@ internal fun WeatherApp() {
                     // belong. The date rides under it — a weather page is read in the morning, and
                     // "what day is it" is the second question of a morning.
                     title = {
-                        Text(
-                            if (configuring) {
+                        // The place rolls in the way the calendar's months do — up, which reads
+                        // as "new" and is the truth about a place you just chose.
+                        app.quire.calendar.m3.RollingLabel(
+                            text = if (configuring) {
                                 stringResource(R.string.wx_settings)
                             } else {
                                 model.forecast?.place?.takeIf { it.isNotBlank() }
                                     ?: stringResource(R.string.weather)
                             },
+                            order = 0,
                         )
                     },
                     subtitle = {
