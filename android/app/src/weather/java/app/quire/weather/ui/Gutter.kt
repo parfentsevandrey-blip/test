@@ -32,14 +32,6 @@ internal const val BLOCK = "weather-block"
 internal val HeadingTop = 24.dp
 internal val HeadingBottom = 8.dp
 
-/**
- * The corner every full-width card on the weather screen wears, and the outer corner of the
- * readings slab. Larger than Material's card default, which is the Expressive direction — a page
- * whose objects are generously rounded reads as designed rather than defaulted — and one value
- * shared, so the slab's outer corners and the cards below it are visibly the same family.
- */
-internal val CardCorner = 20.dp
-
 /** The colour a sky wears in the small marks: its icon in the hour strip and the day rows. */
 internal fun skyInk(sky: Sky, scheme: ColorScheme): Color = when (sky) {
     Sky.CLEAR, Sky.MOSTLY_CLEAR -> scheme.primary

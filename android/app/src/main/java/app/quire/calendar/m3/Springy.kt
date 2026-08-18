@@ -1,9 +1,8 @@
 package app.quire.calendar.m3
 
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -21,15 +20,15 @@ import androidx.compose.ui.graphics.graphicsLayer
  * It reads the interaction source the component already has, so the ripple and the dip are the
  * same gesture rather than two effects that happen to start together.
  */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun Modifier.springPress(interaction: MutableInteractionSource): Modifier {
     val pressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(
         targetValue = if (pressed) 0.98f else 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMediumLow,
-        ),
+        // The theme's own fast spatial spring, not a hand-tuned one: every press in both apps
+        // answers with the same physics the rest of Expressive moves by.
+        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
         label = "press",
     )
     return this.graphicsLayer {

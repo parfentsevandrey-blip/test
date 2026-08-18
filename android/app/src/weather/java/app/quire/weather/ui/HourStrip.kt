@@ -1,8 +1,6 @@
 package app.quire.weather.ui
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
@@ -71,6 +69,7 @@ import kotlin.math.roundToInt
  * content is bounded by the same left and right edges as everything else on the screen instead of
  * running off into the margin.
  */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun HourStrip(
     hours: List<HourForecast>,
@@ -100,12 +99,13 @@ fun HourStrip(
     // How much of the line has arrived. Keyed on the hours, so a refresh that brings a new
     // forecast draws the new shape rather than swapping it in behind the old one.
     val drawn = remember(hours.first().time) { Animatable(0f) }
+    val arrivalSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
     LaunchedEffect(hours.first().time) {
-        drawn.animateTo(1f, tween(durationMillis = 900, easing = FastOutSlowInEasing))
+        drawn.animateTo(1f, arrivalSpec)
     }
 
     Card(
-        shape = RoundedCornerShape(CardCorner),
+        shape = MaterialTheme.shapes.largeIncreased,
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = Gutter)
@@ -224,7 +224,7 @@ private fun HourHead(
             Box(
                 Modifier
                     .matchParentSize()
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(MaterialTheme.shapes.large)
                     .background(scheme.surfaceContainerHighest),
             )
         }

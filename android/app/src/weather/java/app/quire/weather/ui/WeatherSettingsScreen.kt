@@ -13,9 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,6 +22,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.quire.R
+import app.quire.calendar.m3.ChoiceRow
 import app.quire.calendar.m3.SettingGroup
 import app.quire.calendar.m3.SettingRow
 import app.quire.weather.Degrees
@@ -214,33 +212,5 @@ private fun PeriodRow(selected: Int, onSelect: (Int) -> Unit, hint: String) {
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-    }
-}
-
-@Composable
-private fun ChoiceRow(
-    title: String,
-    options: List<String>,
-    selected: Int,
-    onSelect: (Int) -> Unit,
-) {
-    val haptics = LocalHapticFeedback.current
-    Column(Modifier.padding(horizontal = Gutter, vertical = 8.dp)) {
-        Text(title, style = MaterialTheme.typography.bodyLarge)
-        Spacer(Modifier.height(8.dp))
-        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-            options.forEachIndexed { index, label ->
-                SegmentedButton(
-                    selected = index == selected,
-                    onClick = {
-                        haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
-                        onSelect(index)
-                    },
-                    shape = SegmentedButtonDefaults.itemShape(index, options.size),
-                ) {
-                    Text(label, maxLines = 1)
-                }
-            }
-        }
     }
 }

@@ -47,9 +47,6 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -177,7 +174,9 @@ fun MonthScreen(
                 // same thing by being an object: the grid has edges, the agenda is what is under
                 // it, and nothing has to be drawn to announce that.
                 Card(
-                    shape = RoundedCornerShape(28.dp),
+                    // The theme's own role for the largest container, not a number: 28 today,
+                    // whatever Expressive says tomorrow.
+                    shape = MaterialTheme.shapes.extraLarge,
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                     ),
@@ -829,30 +828,6 @@ private fun SectionHeading(text: String) {
         color = MaterialTheme.colorScheme.primary,
         modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 8.dp),
     )
-}
-
-@Composable
-private fun ChoiceRow(
-    title: String,
-    options: List<String>,
-    selected: Int,
-    onSelect: (Int) -> Unit,
-) {
-    Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-        Text(title, style = MaterialTheme.typography.bodyLarge)
-        Spacer(Modifier.height(8.dp))
-        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-            options.forEachIndexed { index, label ->
-                SegmentedButton(
-                    selected = index == selected,
-                    onClick = { onSelect(index) },
-                    shape = SegmentedButtonDefaults.itemShape(index, options.size),
-                ) {
-                    Text(label, maxLines = 1)
-                }
-            }
-        }
-    }
 }
 
 private fun monthsBetween(from: YearMonth, to: YearMonth): Int =

@@ -1,8 +1,6 @@
 package app.quire.weather.ui
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -47,6 +45,7 @@ import java.time.format.FormatStyle
  * season and would be a different shape every day, which is precision nobody wants at the cost of
  * a picture nobody recognises.
  */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SunArc(sunrise: LocalDateTime, sunset: LocalDateTime) {
     val scheme = MaterialTheme.colorScheme
@@ -71,8 +70,11 @@ fun SunArc(sunrise: LocalDateTime, sunset: LocalDateTime) {
     // The sun runs out along the arc to where it actually is rather than appearing there. It is
     // a picture of a journey, and a journey that is over before you look at it is a diagram.
     val travelled = remember(sunrise) { Animatable(0f) }
+    // The slow spatial token: this is the one journey on the page, and it takes the theme's own
+    // unhurried spring rather than a hand-tuned duration.
+    val journey = MaterialTheme.motionScheme.slowSpatialSpec<Float>()
     LaunchedEffect(sunrise, progress) {
-        travelled.animateTo(progress, tween(durationMillis = 1_100, easing = FastOutSlowInEasing))
+        travelled.animateTo(progress, journey)
     }
     val walk = travelled.value
 
@@ -81,7 +83,7 @@ fun SunArc(sunrise: LocalDateTime, sunset: LocalDateTime) {
     val disc = scheme.primary
 
     Card(
-        shape = RoundedCornerShape(CardCorner),
+        shape = MaterialTheme.shapes.largeIncreased,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = Gutter)

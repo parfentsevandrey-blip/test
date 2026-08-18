@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-8.8.apk`](dist/quire-calendar-8.8.apk) · 1.9 MB | `sha256 dcfb941895929ef44686614e1f4304f156415b4bf8c24ba1b206e30277950ff3` |
-| **Weather** | [`dist/quire-weather-8.8.apk`](dist/quire-weather-8.8.apk) · 1.5 MB | `sha256 4dad829531fc03f954a9f34ca75a117d1b031c344fd5d5a2fea16fd17c8d160e` |
+| **Calendar** | [`dist/quire-calendar-8.9.apk`](dist/quire-calendar-8.9.apk) · 1.9 MB | `sha256 7a9a8023ba46d101c7ba40e317a9dfe3ae0b069fffa7dfe6510fe066fdb8ee7d` |
+| **Weather** | [`dist/quire-weather-8.9.apk`](dist/quire-weather-8.9.apk) · 1.5 MB | `sha256 49ca3ace49adb489d95df98a85b5a880b291414562ad3eea1a24337b5ef15f77` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-8.8.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-8.9.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -74,6 +74,17 @@ card was pinned dark on the reasoning that a card carrying its own colour is an 
 a page — but an object on a home screen that stays night-black through a bright morning is not an
 object, it is a widget that forgot to look. It has a daylight face now: the same hue, the same
 layout, at the other end of the lightness axis.
+
+**The theme's tokens are the only source of shape and motion.** Every corner on both apps comes
+from the Expressive shape scale — the month card and the readings slab wear `extraLarge` and
+`largeIncreased`, the pills wear `large` — and every animation runs on the motion scheme's own
+springs: `defaultSpatialSpec` for things that move, `defaultEffectsSpec` for things that fade or
+recolour, the fast and slow variants where the guidelines say so. Not one hand-tuned duration or
+hardcoded radius survives in either app's screens, which is what lets a future theme change the
+physics and the geometry of both apps at once. The old `SingleChoiceSegmentedButtonRow`s became
+one shared `ChoiceRow` built on Expressive's connected `TonalToggleButton` group — the shape this
+pattern wears on Android 16 and 17, with the checked segment morphing towards a pill — so the
+units in the weather and the theme mode in the calendar are one control, not two lookalikes.
 
 **Settings are grouped, not listed.** Android's own settings from 16 onwards draw a run of related
 rows as one connected block, outer corners rounded and inner ones squared off, which is what

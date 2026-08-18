@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -102,7 +103,7 @@ fun WeatherScreen(
     // instead of flicking, which is the difference between weather moving and a poster changing.
     val sky by androidx.compose.animation.animateColorAsState(
         targetValue = if (forecast?.now?.day != false) scheme.primaryContainer else scheme.secondaryContainer,
-        animationSpec = androidx.compose.animation.core.tween(durationMillis = 900),
+        animationSpec = MaterialTheme.motionScheme.slowEffectsSpec(),
         label = "sky",
     )
     // It runs from the very top of the window, behind the app bar, which is transparent over this
@@ -215,22 +216,18 @@ fun WeatherScreen(
  * scrolled off the screen is disposed, and without a note that its entrance already happened it
  * would perform it again every time it scrolled back in.
  */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun Modifier.arrive(slot: Int, fetched: Long, ledger: MutableSet<Int>): Modifier {
     val played = slot in ledger
     val progress = remember(fetched, slot) {
         androidx.compose.animation.core.Animatable(if (played) 1f else 0f)
     }
+    val entrance = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
     LaunchedEffect(fetched, slot) {
         if (!played) {
             kotlinx.coroutines.delay(slot * 70L)
-            progress.animateTo(
-                1f,
-                androidx.compose.animation.core.tween(
-                    durationMillis = 420,
-                    easing = androidx.compose.animation.core.FastOutSlowInEasing,
-                ),
-            )
+            progress.animateTo(1f, entrance)
             ledger += slot
         }
     }
@@ -271,11 +268,9 @@ private fun Now(forecast: Forecast, units: WeatherModel.Settings) {
     // happen instead of something you have to notice happened.
     val degrees = units.degrees.from(forecast.now.temperature)
     val counted = remember { androidx.compose.animation.core.Animatable(degrees.toFloat()) }
+    val settleSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
     LaunchedEffect(degrees) {
-        counted.animateTo(
-            degrees.toFloat(),
-            androidx.compose.animation.core.tween(650, easing = androidx.compose.animation.core.FastOutSlowInEasing),
-        )
+        counted.animateTo(degrees.toFloat(), settleSpec)
     }
 
     Column(Modifier.fillMaxWidth().padding(start = Gutter, end = Gutter, top = 8.dp)) {
@@ -481,6 +476,7 @@ private fun Readings(forecast: Forecast, units: WeatherModel.Settings) {
                             lastRow = line == rows.size - 1,
                             firstCol = column == 0,
                             lastCol = column == row.size - 1,
+                            slab = MaterialTheme.shapes.largeIncreased,
                         ),
                         modifier = Modifier.weight(1f),
                     )
@@ -493,17 +489,23 @@ private fun Readings(forecast: Forecast, units: WeatherModel.Settings) {
     }
 }
 
-/** Which corners of a cell belong to the slab, from where the cell sits in it. */
+/**
+ * Which corners of a cell belong to the slab, from where the cell sits in it.
+ *
+ * The slab's own corners are the theme's shape role, not a number, so the group's outline is
+ * whatever Expressive says a large container is this year; only the inner seams are ours.
+ */
 private fun cellShape(
     firstRow: Boolean,
     lastRow: Boolean,
     firstCol: Boolean,
     lastCol: Boolean,
-): RoundedCornerShape = RoundedCornerShape(
-    topStart = if (firstRow && firstCol) CardCorner else CellCorner,
-    topEnd = if (firstRow && lastCol) CardCorner else CellCorner,
-    bottomStart = if (lastRow && firstCol) CardCorner else CellCorner,
-    bottomEnd = if (lastRow && lastCol) CardCorner else CellCorner,
+    slab: androidx.compose.foundation.shape.CornerBasedShape,
+): androidx.compose.foundation.shape.CornerBasedShape = RoundedCornerShape(
+    topStart = if (firstRow && firstCol) slab.topStart else CornerSize(CellCorner),
+    topEnd = if (firstRow && lastCol) slab.topEnd else CornerSize(CellCorner),
+    bottomStart = if (lastRow && firstCol) slab.bottomStart else CornerSize(CellCorner),
+    bottomEnd = if (lastRow && lastCol) slab.bottomEnd else CornerSize(CellCorner),
 )
 
 /** The gap inside the slab, and the corner a cell keeps where it meets another cell. */
@@ -519,7 +521,7 @@ private val CellCorner = 7.dp
 @Composable
 private fun Reading(
     meter: Meter,
-    shape: RoundedCornerShape,
+    shape: androidx.compose.ui.graphics.Shape,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -616,7 +618,7 @@ internal fun Days(forecast: Forecast, units: WeatherModel.Settings) {
     val span = (warmest - coldest).coerceAtLeast(1.0)
 
     Card(
-        shape = RoundedCornerShape(CardCorner),
+        shape = MaterialTheme.shapes.largeIncreased,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = Gutter)
@@ -667,10 +669,7 @@ private fun DayRow(
     // of the affordance: a mark that moves when touched is a mark that says it can be.
     val lean by animateFloatAsState(
         targetValue = if (open) 180f else 0f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMediumLow,
-        ),
+        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
         label = "lean",
     )
 
@@ -681,7 +680,7 @@ private fun DayRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 6.dp)
-            .clip(RoundedCornerShape(14.dp))
+            .clip(MaterialTheme.shapes.large)
             .then(
                 if (today) {
                     Modifier.background(scheme.surfaceContainerHighest)
@@ -754,13 +753,10 @@ private fun DayRow(
         // the light, and what kind of day is it.
         AnimatedVisibility(
             visible = open,
-            enter = expandVertically(
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioLowBouncy,
-                    stiffness = Spring.StiffnessMediumLow,
-                ),
-            ) + fadeIn(),
-            exit = shrinkVertically() + fadeOut(),
+            enter = expandVertically(MaterialTheme.motionScheme.defaultSpatialSpec()) +
+                fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()),
+            exit = shrinkVertically(MaterialTheme.motionScheme.defaultSpatialSpec()) +
+                fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
         ) {
             val clock = remember(locale) {
                 DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale)

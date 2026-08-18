@@ -174,16 +174,20 @@ internal fun WeatherApp() {
             // The two screens trade places rather than snapping: settings arrives from the side
             // its gear lives on and the forecast comes back from the other, each over a fade —
             // the standard grammar for "you went somewhere" as opposed to "the page changed".
+            // Read outside the spec lambda, which cannot reach the theme once it is running.
+            val travel = MaterialTheme.motionScheme.defaultSpatialSpec<androidx.compose.ui.unit.IntOffset>()
+            val appear = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+            val leave = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
             AnimatedContent(
                 targetState = configuring,
                 transitionSpec = {
                     val fromEnd = targetState
                     (
-                        slideInHorizontally { full -> if (fromEnd) full / 4 else -full / 4 } +
-                            fadeIn()
+                        slideInHorizontally(travel) { full -> if (fromEnd) full / 4 else -full / 4 } +
+                            fadeIn(appear)
                         ) togetherWith (
-                        slideOutHorizontally { full -> if (fromEnd) -full / 4 else full / 4 } +
-                            fadeOut()
+                        slideOutHorizontally(travel) { full -> if (fromEnd) -full / 4 else full / 4 } +
+                            fadeOut(leave)
                         )
                 },
                 label = "screens",
