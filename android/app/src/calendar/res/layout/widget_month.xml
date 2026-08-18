@@ -94,19 +94,38 @@
                 android:src="@drawable/ic_chevron_right" />
 
             <!--
-              The add button: a bare accent glyph in the same row of glyphs as the chevrons.
-              It wore a filled pill for a while, and on a themed home screen that pill was the
-              only piece of chrome on the whole screen with a fill of its own — the today disc
-              earns its fill by being information, a button does not.
+              The add button. Two views rather than one because a RemoteViews ImageView can be
+              tinted but not given a tinted background: the pill behind and the glyph on top take
+              their colours separately.
             -->
-            <ImageView
+            <FrameLayout
                 android:id="@+id/add_button"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:layout_marginStart="2dp"
-                android:contentDescription="@string/new_event"
-                android:padding="6dp"
-                android:src="@drawable/ic_plus" />
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp">
+
+                <!--
+                  Sized in dp rather than match_parent: a match_parent child of a wrap_content
+                  FrameLayout measures against a parent that has no size yet and collapses to
+                  nothing, which is exactly what it did the first time. Both this and the glyph
+                  are resized together at runtime where the platform allows it.
+                -->
+                <ImageView
+                    android:id="@+id/add_pill"
+                    android:layout_width="30dp"
+                    android:layout_height="28dp"
+                    android:importantForAccessibility="no"
+                    android:scaleType="fitXY"
+                    android:src="@drawable/widget_pill" />
+
+                <ImageView
+                    android:id="@+id/add_glyph"
+                    android:layout_width="30dp"
+                    android:layout_height="28dp"
+                    android:contentDescription="@string/new_event"
+                    android:padding="7dp"
+                    android:src="@drawable/ic_plus" />
+            </FrameLayout>
         </LinearLayout>
 
         <LinearLayout
@@ -151,11 +170,17 @@
                 style="@style/WidgetWeekday" />
         </LinearLayout>
 
+        <FrameLayout
+            android:id="@+id/header_rule"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="6dp"
+            android:background="#FFFFFFFF" />
+
         <LinearLayout
             android:id="@+id/weeks"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_marginTop="7dp"
             android:layout_weight="1"
             android:orientation="vertical" />
     </LinearLayout>

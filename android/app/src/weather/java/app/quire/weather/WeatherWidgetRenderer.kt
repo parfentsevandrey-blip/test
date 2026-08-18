@@ -39,7 +39,9 @@ object WeatherWidgetRenderer {
     /** Below this the card is only tall enough to be a "now", and gives the strip up. */
     private const val STRIP_MIN_CARD_DP = 128f
 
-    /** The air between the now row and the strip — the spacer view and its margins. */
+    /** What the layout's own padding costs, top and bottom, and the rule with its margins. */
+    private const val PAD_VERTICAL_DP = 22f
+    private const val PAD_SIDE_DP = 14f
     private const val RULE_BLOCK_DP = 11f
 
     /** Below this a column cannot hold "22° 11°", and shows the high alone rather than "22° …". */
@@ -65,9 +67,6 @@ object WeatherWidgetRenderer {
     private const val DAY_MARGINS_DP = 5f
 
     private const val NARROW_DP = 200
-
-    private fun px(context: Context, dp: Float): Int =
-        (dp * context.resources.displayMetrics.density + 0.5f).toInt()
 
     fun build(context: Context, manager: AppWidgetManager, widgetId: Int): RemoteViews {
         val options = manager.getAppWidgetOptions(widgetId)
@@ -95,13 +94,7 @@ object WeatherWidgetRenderer {
             if (filled) android.view.View.GONE else android.view.View.VISIBLE,
         )
         paint.tint(root, R.id.surface_border, "setColorFilter", R.color.widget_hairline_strong) { it.hairline }
-
-        // The same padding scheme as the calendar card, applied at runtime for the same reason:
-        // two Quire cards side by side should start their content on the same line.
-        val narrow = widthDp < NARROW_DP
-        val padDp = if (narrow) 9f else 12f
-        val pad = px(context, padDp)
-        root.setViewPadding(R.id.content, pad, pad, pad, px(context, padDp - 2f))
+        paint.tint(root, R.id.rule, "setBackgroundColor", R.color.widget_hairline) { it.hairline }
 
         val forecast = WeatherStore.load(context)
         if (forecast == null) {
@@ -119,6 +112,8 @@ object WeatherWidgetRenderer {
             return root
         }
 
+        val narrow = widthDp < NARROW_DP
+
         // A widget is a fixed rectangle on somebody's home screen. It cannot scroll and it cannot
         // grow, so type set in sp against a budget kept in dp overflows the moment the phone's
         // font scale goes above one — which is exactly what sliced the chance of rain off the
@@ -131,20 +126,14 @@ object WeatherWidgetRenderer {
         // is left — not the other way round. Sizing the temperature first is what produces a card
         // with a huge number and no forecast, which is the card this one exists to be better
         // than: five days are the reason to look at a weather widget rather than the clock.
-        val columns = ((widthDp - 2 * padDp) / DAY_MIN_COLUMN_DP).toInt().coerceIn(0, 5)
-        // The calendar card's own title formula, digit for digit: the place name over this card
-        // and the month name over that one are the same header on two jobs, so they are sized by
-        // the same rule rather than by two hands that happen to agree at one width.
-        val placeSp = minOf(
-            widthDp * (if (filled) 0.075f else 0.055f),
-            widthDp * (if (filled) 0.085f else 0.063f) / scale,
-        ).coerceIn(11f, 24f)
+        val columns = ((widthDp - 2 * PAD_SIDE_DP) / DAY_MIN_COLUMN_DP).toInt().coerceIn(0, 5)
+        val placeSp = minOf(widthDp * 0.042f, widthDp * 0.048f / scale).coerceIn(10f, 15f)
         val placeLineDp = placeSp * 1.45f * scale
         val showStrip = heightDp >= STRIP_MIN_CARD_DP && columns >= 3
         val stripDp = if (showStrip) (heightDp * 0.38f).coerceIn(54f, 80f) else 0f
 
         val nowDp = (
-            heightDp - (2 * padDp - 2f) - placeLineDp -
+            heightDp - PAD_VERTICAL_DP - placeLineDp -
                 (if (showStrip) RULE_BLOCK_DP + stripDp else 0f)
             ).coerceAtLeast(34f)
         val iconDp = (nowDp * 0.90f).coerceIn(26f, 56f)
@@ -176,7 +165,7 @@ object WeatherWidgetRenderer {
         )
 
         root.setTextViewText(R.id.place, forecast.place.ifBlank { context.getString(R.string.weather) })
-        paint.tint(root, R.id.place, "setTextColor", R.color.widget_ink) { it.ink }
+        paint.tint(root, R.id.place, "setTextColor", R.color.widget_ink_muted) { it.inkMuted }
         root.setTextViewTextSize(R.id.place, TypedValue.COMPLEX_UNIT_SP, placeSp)
 
         root.setViewVisibility(R.id.now_icon, android.view.View.VISIBLE)
@@ -236,7 +225,7 @@ object WeatherWidgetRenderer {
                 ).coerceIn(14f, 34f)
             // Narrow columns keep the high and drop the low. Showing more days badly is worse
             // than showing the same days with one number each: "22° …" is not a temperature.
-            val columnDp = (widthDp - 2 * padDp) / columns
+            val columnDp = (widthDp - 2 * PAD_SIDE_DP) / columns
             val bothTemps = columnDp >= BOTH_TEMPS_MIN_COLUMN_DP
             // "Today" is a word, and words are a different length in every language: the Russian
             // one is seven characters and came back from a real phone as "Сег…". Whether it is

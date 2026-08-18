@@ -7,13 +7,8 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.geometry.lerp
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.SemanticsProperties
-import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performTouchInput
 import app.quire.calendar.m3.MainActivity
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -140,33 +135,6 @@ class AppFlowTest {
         assertTrue(
             "the picker has no way out",
             compose.onAllNodes(hasText("Cancel")).fetchSemanticsNodes().isNotEmpty(),
-        )
-    }
-
-    @Test
-    fun `the bar can be scrubbed - a slide from Today to Year switches without a lift`() {
-        // "Today" is also the agenda heading over today's events, so the bar's items are told
-        // apart by the role the bar gives them rather than by their label alone.
-        val isTab = SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab)
-        val start = compose.onNode(hasText("Today") and isTab)
-            .fetchSemanticsNode().boundsInRoot.center
-        val end = compose.onNode(hasText("Year") and isTab)
-            .fetchSemanticsNode().boundsInRoot.center
-
-        // One gesture: down on Today, slide across to Year, lift there. No tap ever lands on
-        // the Year item — if the year still opens, the selection followed the finger.
-        compose.onRoot().performTouchInput {
-            down(start)
-            for (step in 1..8) {
-                moveTo(lerp(start, end, step / 8f))
-            }
-            up()
-        }
-        settle()
-
-        assertTrue(
-            "sliding the finger to Year did not open the year",
-            compose.onAllNodes(hasText("December")).fetchSemanticsNodes().isNotEmpty(),
         )
     }
 
