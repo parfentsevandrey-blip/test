@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-8.9.apk`](dist/quire-calendar-8.9.apk) · 1.9 MB | `sha256 7a9a8023ba46d101c7ba40e317a9dfe3ae0b069fffa7dfe6510fe066fdb8ee7d` |
-| **Weather** | [`dist/quire-weather-8.9.apk`](dist/quire-weather-8.9.apk) · 1.5 MB | `sha256 49ca3ace49adb489d95df98a85b5a880b291414562ad3eea1a24337b5ef15f77` |
+| **Calendar** | [`dist/quire-calendar-9.0.apk`](dist/quire-calendar-9.0.apk) · 1.9 MB | `sha256 d30f4d50550f05855d109a06553be7e587f2549cf35c69a4151989fbf653e388` |
+| **Weather** | [`dist/quire-weather-9.0.apk`](dist/quire-weather-9.0.apk) · 1.5 MB | `sha256 ee462e83587bb5b73c70f9df4b2415f73d1703d344b69c66b2277483ff4db9d8` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-8.9.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-9.0.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -45,7 +45,10 @@ Every image is a real render of the shipping code, produced by the test suite �
 ## The calendar app
 
 Four destinations in a `ShortNavigationBar`, which is the Expressive one: a shorter band, and a
-selection pill that grows around the icon on the theme's own spring.
+selection pill that grows around the icon on the theme's own spring. The bar can also be
+scrubbed: press anywhere on it and slide without lifting, and the selection follows the finger —
+the pill hops from item to item, the screens fade through behind it, and each crossing ticks. A
+tap still taps; the drag claims the gesture only past touch slop.
 
 - **Today** — the month, swiped through a pager, with the selected day's entries underneath.
   Tapping Today again while you are already there returns to today rather than doing nothing.
@@ -513,11 +516,11 @@ view classes. None of the app half applies here, so this half is drawn from XML 
 palette computed in Oklch.
 
 - **Four skins.** *Paper* and *Ink* are the calendar as a printed page. *Colour* fills the card
-  with the accent taken down to a deep ground, sets the dates in near-white on a lattice, and puts
-  a filled add button in the header — a card that carries its own colour reads as an object on a
-  wallpaper rather than a hole in it. Every value is walked in Oklch from the accent, so all six
-  accents give a card of the same weight instead of one nearly black and another that glows. It is
-  what a newly placed widget wears, and with *System colours* on it takes the device's own scheme
+  with the accent taken down to a deep ground, sets the dates in near-white, and puts an add
+  glyph in the header — a card that carries its own colour reads as an object on a wallpaper
+  rather than a hole in it. Every value is walked in Oklch from the accent, so all six accents
+  give a card of the same weight instead of one nearly black and another that glows. It is what a
+  newly placed widget wears, and with *System colours* on it takes the device's own scheme
   instead of a fixed accent.
 - **A day is named where there is room for a name, and dotted where there is not.** Given a column
   at least 44dp wide the filled card labels each day with its earliest entry, in that calendar's
@@ -526,10 +529,11 @@ palette computed in Oklch.
   marks are counted from. Below the height where a dot fits, the day's own ground is tinted by
   how full it is instead — which is the bottom rung of the same ladder, and a size that used to
   say nothing whatever about which numbers mattered.
-- **No lattice.** The filled card used to draw a hairline down every column to meet the rule under
-  every week, and seven verticals crossing six horizontals is a spreadsheet. The verticals are
-  gone: they said where the columns were, which the numbers already said, and the tint that
-  replaced them says something the numbers cannot.
+- **No lines at all.** The filled card used to draw a hairline down every column and a rule under
+  every week, and seven verticals crossing six horizontals is a spreadsheet. Both are gone — on a
+  home screen of plain glyphs on plain surfaces, the one card ruled like a ledger was the one
+  that looked out of place. Whitespace separates the header from the grid, on both widgets, and
+  the only filled marks left are the ones that carry information: today's disc and the dots.
 - The full month, always six rows, so the geometry never shifts between months.
 - Today is a filled disc in the accent. Days with something in them carry up to three dots,
   coloured by the calendar the event belongs to.
@@ -608,7 +612,7 @@ Four things worth knowing before editing:
   reads it keeps whatever it saw first and a language change leaves month names in the old one.
   Lint catches it; `rememberLocale()` is the way through.
 - **RemoteViews will not inflate a bare `<View>`.** The host's inflater rejects any class not
-  annotated `@RemoteView`, at runtime, with no compile-time warning. Hairlines inside widget
+  annotated `@RemoteView`, at runtime, with no compile-time warning. Spacers inside widget
   layouts are therefore `FrameLayout`s.
 - **The widget's week rows are built at runtime** with `RemoteViews.addView`, so each row and cell
   is its own `RemoteViews` and duplicate ids across siblings are fine. That is what lets all 42

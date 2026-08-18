@@ -102,8 +102,11 @@ object WidgetRenderer {
         // card's face — and, on the default placement, follow a new wallpaper palette — without
         // this process running. See WidgetPaint for the three ways a colour can be applied.
         val paint = WidgetPaint.of(context, wp.skin, wp.accent, wp.dynamic)
-        // The filled skin is a card with its own colour rather than ink on paper, so it wants a
-        // lattice under the dates and a heavier title. Everything else is shared.
+        // The filled skin is a card with its own colour rather than ink on paper: no outline
+        // round it and a heavier title. Neither face draws lines inside the card — the grid held
+        // a hairline lattice for a while, and on a home screen of plain glyphs on plain circles
+        // the one surface ruled like a ledger was the one that looked out of place. Whitespace
+        // does the separating on both faces now.
         val filled = wp.skin == Skin.COLOUR
         val locale = Locale.getDefault()
 
@@ -140,7 +143,7 @@ object WidgetRenderer {
         val weekdaySp = minOf(titleSp * 0.62f, titleSp * 0.70f / scale).coerceIn(7.5f, 11f)
         val navDp = (titleSp * 1.85f).coerceIn(21f, 30f)
 
-        // Header row, weekday strip, rule and its margins, plus the card padding.
+        // Header row, weekday strip, the air between them and the grid, plus the card padding.
         val chromeDp = 2 * padDp + navDp + weekdaySp * 1.8f * scale + 12f
         val rowHeightDp = ((heightDp - chromeDp) / MonthModel.ROWS).coerceAtLeast(12f)
         val compact = rowHeightDp < 26f
@@ -181,7 +184,6 @@ object WidgetRenderer {
             R.id.surface_border,
             if (filled) android.view.View.GONE else android.view.View.VISIBLE,
         )
-        paint.tint(root, R.id.header_rule, "setBackgroundColor", R.color.widget_hairline) { it.hairline }
 
         val pad = px(context, padDp)
         root.setViewPadding(R.id.content, pad, pad, pad, px(context, padDp - 2f))
@@ -224,14 +226,10 @@ object WidgetRenderer {
             if (filled) android.view.View.VISIBLE else android.view.View.GONE,
         )
         if (filled) {
-            paint.tint(root, R.id.add_pill, "setColorFilter", R.color.widget_accent) { it.accent }
-            paint.tint(root, R.id.add_glyph, "setColorFilter", R.color.widget_on_accent) { it.onAccent }
+            paint.tint(root, R.id.add_button, "setColorFilter", R.color.widget_accent) { it.accent }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                val pillW = navDp * 1.55f
-                for (id in intArrayOf(R.id.add_pill, R.id.add_glyph)) {
-                    root.setViewLayoutWidth(id, pillW, TypedValue.COMPLEX_UNIT_DIP)
-                    root.setViewLayoutHeight(id, navDp, TypedValue.COMPLEX_UNIT_DIP)
-                }
+                root.setViewLayoutWidth(R.id.add_button, navDp, TypedValue.COMPLEX_UNIT_DIP)
+                root.setViewLayoutHeight(R.id.add_button, navDp, TypedValue.COMPLEX_UNIT_DIP)
             }
             root.setOnClickPendingIntent(R.id.add_button, composeIntent(context, widgetId, month))
         }
@@ -261,11 +259,6 @@ object WidgetRenderer {
 
         for (row in 0 until MonthModel.ROWS) {
             val week = RemoteViews(context.packageName, R.layout.widget_week)
-            if (row == 0) {
-                week.setViewVisibility(R.id.week_rule, android.view.View.GONE)
-            } else {
-                paint.tint(week, R.id.week_rule, "setBackgroundColor", R.color.widget_hairline) { it.hairline }
-            }
 
             if (wp.weekNumbers) {
                 val number = RemoteViews(context.packageName, R.layout.widget_week_number)

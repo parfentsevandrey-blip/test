@@ -47,6 +47,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.material3.ShortNavigationBar
 import androidx.compose.material3.ShortNavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -74,6 +75,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.quire.R
@@ -119,6 +122,7 @@ private fun QuireApp(intent: Intent?) {
     }
 
     var destination by rememberSaveable { mutableStateOf(Destination.MONTH) }
+    val haptics = LocalHapticFeedback.current
     var showing by remember { mutableStateOf<AgendaEntry?>(null) }
     var jumping by rememberSaveable { mutableStateOf(false) }
 
@@ -187,7 +191,53 @@ private fun QuireApp(intent: Intent?) {
             bottomBar = {
                 // The short bar is Expressive's own: a shorter band, and a selection pill that
                 // grows around the icon on the same spring the rest of the theme moves on.
-                ShortNavigationBar {
+                //
+                // It can also be scrubbed: press anywhere on it and slide, and the selection
+                // follows the finger — the pill hops from item to item on its spring, the screen
+                // fades through behind it, and each crossing ticks. A tap still taps; the drag
+                // only claims the gesture once it has moved past touch slop, at which point the
+                // item under the finger loses its press instead of firing.
+                val order = remember {
+                    listOf(
+                        Destination.MONTH, Destination.YEAR,
+                        Destination.SEARCH, Destination.SETTINGS,
+                    )
+                }
+                val rtl = androidx.compose.ui.platform.LocalLayoutDirection.current ==
+                    androidx.compose.ui.unit.LayoutDirection.Rtl
+                var barWidth by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+
+                fun under(x: Float): Destination {
+                    if (barWidth <= 0) return destination
+                    val slot = (x / (barWidth / order.size))
+                        .toInt()
+                        .coerceIn(0, order.lastIndex)
+                    return order[if (rtl) order.lastIndex - slot else slot]
+                }
+
+                fun scrubTo(x: Float) {
+                    val landed = under(x)
+                    if (landed != destination) {
+                        haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
+                        destination = landed
+                    }
+                }
+
+                ShortNavigationBar(
+                    modifier = Modifier
+                        .onSizeChanged { barWidth = it.width }
+                        .pointerInput(order) {
+                            detectHorizontalDragGestures(
+                                // The press point counts too: a scrub that starts on Search and
+                                // ends on Settings should pass through Search on the way.
+                                onDragStart = { start -> scrubTo(start.x) },
+                                onHorizontalDrag = { change, _ ->
+                                    change.consume()
+                                    scrubTo(change.position.x)
+                                },
+                            )
+                        },
+                ) {
                     ShortNavigationBarItem(
                         selected = destination == Destination.MONTH,
                         onClick = {

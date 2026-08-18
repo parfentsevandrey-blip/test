@@ -33,11 +33,14 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:paddingStart="14dp"
+        android:paddingStart="12dp"
         android:paddingTop="12dp"
-        android:paddingEnd="14dp"
+        android:paddingEnd="12dp"
         android:paddingBottom="10dp">
 
+        <!-- Set exactly like the calendar card's month title: same face, same tracking, and at
+             runtime the same size-for-width formula and the same ink. Two Quire cards side by
+             side open with the same word-shape, which is most of what "matching" means. -->
         <TextView
             android:id="@+id/place"
             android:layout_width="match_parent"
@@ -45,6 +48,7 @@
             android:ellipsize="end"
             android:fontFamily="sans-serif-medium"
             android:includeFontPadding="false"
+            android:letterSpacing="-0.02"
             android:maxLines="1"
             android:textSize="13sp" />
 
@@ -104,15 +108,16 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- A white background, so the resource-path tint has a drawable to land on: a bare
-             View has nothing to tint and setBackgroundTintList would fall on air. -->
+        <!-- Nothing is drawn here: it is the air between the now row and the strip. It held a
+             hairline once, and a line across a card on a home screen of line-free surfaces is
+             what made the card read as a table. Kept as a view so the height budget in the
+             renderer keeps one name for the gap. -->
         <FrameLayout
             android:id="@+id/rule"
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_marginTop="8dp"
-            android:layout_marginBottom="4dp"
-            android:background="#FFFFFFFF" />
+            android:layout_marginBottom="4dp" />
 
         <LinearLayout
             android:id="@+id/strip"
