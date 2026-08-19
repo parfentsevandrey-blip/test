@@ -24,10 +24,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.draw.clipToBounds
 import app.quire.weather.ui.BLOCK
 import app.quire.weather.ui.Days
+import app.quire.weather.ui.Puff
 import app.quire.weather.ui.SunArc
 import app.quire.weather.ui.LiveSky
+import app.quire.weather.ui.puffField
 import app.quire.weather.ui.WeatherApp
 import app.quire.weather.ui.WeatherModel
 import app.quire.weather.ui.WeatherScreen
@@ -621,6 +624,104 @@ class WeatherScreenTest {
             "hard rain (${raining("sheet")}) is not visibly harder than a sprinkle (${raining("sprinkle")})",
             raining("sheet") > raining("sprinkle") * 3 / 2,
         )
+    }
+
+    /**
+     * The clouds are truly three-dimensional, measured with a ruler.
+     *
+     * The same puff at two depths must differ in drawn area by better than the linear ratio —
+     * perspective scales both axes, so depth 2 against depth 5 is a factor of 2.5 in radius and
+     * six in area, and a flat field would give exactly one. Then the weather's own field: an
+     * overcast sky must out-ink a partly cloudy one, and the golden hour must actually reach
+     * the clouds — two fields identical but for the glow must not draw the same picture.
+     */
+    @Test
+    fun `the clouds have depth, weight, and catch the sunset`() {
+        val puff = { z: Float -> listOf(Puff(0f, 0.8f, z, 0.5f)) }
+        compose.setContent {
+            QuireTheme(dark = true, dynamic = false) {
+                Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+                    val ink = MaterialTheme.colorScheme.onSurface
+                    val gold = MaterialTheme.colorScheme.tertiary
+                    // Every tile clipped, so each band of the ruler measures only its own sky.
+                    androidx.compose.foundation.layout.Column(Modifier.fillMaxSize()) {
+                        androidx.compose.foundation.Canvas(
+                            Modifier.fillMaxSize().weight(1f).clipToBounds().testTag("near"),
+                        ) { puffField(puff(2f), ink, gold, 0f) }
+                        androidx.compose.foundation.Canvas(
+                            Modifier.fillMaxSize().weight(1f).clipToBounds().testTag("far"),
+                        ) { puffField(puff(5f), ink, gold, 0f) }
+                        LiveSky(
+                            Sky.PARTLY_CLOUDY, day = false,
+                            modifier = Modifier.fillMaxSize().weight(1f).clipToBounds().testTag("partly"),
+                        )
+                        LiveSky(
+                            Sky.OVERCAST, day = false, glow = 0f,
+                            modifier = Modifier.fillMaxSize().weight(1f).clipToBounds().testTag("calm"),
+                        )
+                        LiveSky(
+                            Sky.OVERCAST, day = false, glow = 1f,
+                            modifier = Modifier.fillMaxSize().weight(1f).clipToBounds().testTag("golden"),
+                        )
+                        LiveSky(
+                            Sky.OVERCAST, day = false,
+                            modifier = Modifier.fillMaxSize().weight(1f).clipToBounds().testTag("overcast"),
+                        )
+                    }
+                }
+            }
+        }
+        settle()
+        val sheet = shoot("weather-clouds-3d")
+        val density = compose.density.density
+
+        fun band(tag: String): Pair<Int, Int> {
+            val bounds = compose.onNodeWithTag(tag).getUnclippedBoundsInRoot()
+            return (bounds.top.value * density).toInt() + 2 to
+                (bounds.bottom.value * density).toInt() - 2
+        }
+
+        fun luma(pixel: Int): Int = (
+            android.graphics.Color.red(pixel) * 299 +
+                android.graphics.Color.green(pixel) * 587 +
+                android.graphics.Color.blue(pixel) * 114
+            ) / 1000
+
+        fun ink(tag: String): Int {
+            val (top, bottom) = band(tag)
+            val ground = luma(sheet.getPixel(4, bottom - 4))
+            var lit = 0
+            for (y in top until bottom step 2) {
+                for (x in 0 until sheet.width step 2) {
+                    if (luma(sheet.getPixel(x, y)) > ground + 4) lit++
+                }
+            }
+            return lit
+        }
+
+        val near = ink("near")
+        val far = ink("far")
+        assertTrue("the far puff drew nothing at all ($far)", far > 150)
+        assertTrue(
+            "one puff at depth 2 ($near) against depth 5 ($far) shows no perspective",
+            near > far * 3,
+        )
+
+        assertTrue(
+            "an overcast sky (${ink("overcast")}) does not out-ink a partly cloudy one (${ink("partly")})",
+            ink("overcast") > ink("partly") * 5 / 4,
+        )
+
+        // Same field, same clock, only the glow differs: the sunset must reach the pixels.
+        val (calmTop, calmBottom) = band("calm")
+        val (goldTop, _) = band("golden")
+        var tinted = 0
+        for (y in calmTop until calmBottom step 2) {
+            for (x in 0 until sheet.width step 2) {
+                if (sheet.getPixel(x, y) != sheet.getPixel(x, y - calmTop + goldTop)) tinted++
+            }
+        }
+        assertTrue("the golden hour never reached the clouds", tinted > 500)
     }
 
     /**

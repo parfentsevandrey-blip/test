@@ -21,8 +21,8 @@ android {
     defaultConfig {
         minSdk = 26
         targetSdk = 37
-        versionCode = 52
-        versionName = "9.6"
+        versionCode = 53
+        versionName = "9.7"
     }
 
     /**

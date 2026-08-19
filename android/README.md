@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-9.6.apk`](dist/quire-calendar-9.6.apk) · 1.9 MB | `sha256 667ff654d2fe2555cca039462780fcf8c101c12390d532cb136af3df3a73c73e` |
-| **Weather** | [`dist/quire-weather-9.6.apk`](dist/quire-weather-9.6.apk) · 1.5 MB | `sha256 70018ef836e364bf96fb7c125e8080abea465b36a3c0ad9fe87b9e8d2e98ac8f` |
+| **Calendar** | [`dist/quire-calendar-9.7.apk`](dist/quire-calendar-9.7.apk) · 1.9 MB | `sha256 f1d62a4f6dd3396f46496504bb1d0e5a855cc7d29bc798e907a6253a247d2894` |
+| **Weather** | [`dist/quire-weather-9.7.apk`](dist/quire-weather-9.7.apk) · 1.5 MB | `sha256 6238377e71062304cb60b090b5b7afb88872126f2d96fb72dcb74b7b8203c15a` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-9.6.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-9.7.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -255,6 +255,19 @@ forty drops is forty sines, not forty objects being stepped and collected, and n
 allocated in a frame. That also makes it deterministic, which is what lets a test look at it: two
 frames three seconds apart must differ where the weather is and be *identical* everywhere else,
 because a page that shifts under a moving sky is a page that has been dragged along with it.
+
+**The clouds are three-dimensional, and there is no engine.** The case against 3D here was never
+the third dimension — it was shipping a five-megabyte renderer whose pixels no test can see. So
+the renderer is one small file: clouds are clusters of soft spheres placed in an actual 3D box, a
+camera projects them by the one honest rule there is (a thing twice as far away is half as big
+and half as far off-centre), far ones paint first, and the drawing is the same Skia canvas as the
+rest of the sky — GPU on the phone, software in a test, the same picture in both. Zero bytes of
+engine. The wind drives the drift, depth does the shading, and the golden hour lights the
+undersides with the same `glow` that leans the wash, because a sunset that colours the sky but
+not the clouds in it is only half a sunset. The perspective is tested with a ruler: the same puff
+drawn at depth two and depth five must differ in area by better than threefold, an overcast field
+must out-ink a partly cloudy one, and two fields identical but for the glow must not draw the
+same picture. The projection itself is three unit tests of one division.
 
 The loop is seamless because every particle's speed is a whole number of laps per period. At two
 and a third laps a drop arrives back a third of the way down and the whole field visibly jumps; at

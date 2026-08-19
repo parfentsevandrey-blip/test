@@ -62,6 +62,8 @@ fun LiveSky(
     night: Float? = null,
     /** The moon, 0 new → 0.5 full → 1 new again. Only read when [night] is known. */
     moonPhase: Float = 0.5f,
+    /** How deep into the golden hour, 0..1: the same lean the wash takes, on the clouds. */
+    glow: Float = 0f,
     // How hard it is actually falling this quarter-hour, from the minute-cast. Negative means
     // "not known", and the sky falls back to what its category usually looks like.
     rainMm: Double = -1.0,
@@ -115,13 +117,24 @@ fun LiveSky(
     fun weightOf(usual: Float) = if (pour < 0f) usual else 0.55f + 0.65f * pour
     fun flakesOf(usual: Int) = if (flurry < 0f) usual else (8 + 26 * flurry).toInt()
 
+    val golden = scheme.tertiary
+
     Canvas(modifier) {
         when (sky) {
             Sky.CLEAR, Sky.MOSTLY_CLEAR ->
                 if (day) sun(clock, accent, daylight) else stars(clock, ink, accent, night, moonPhase)
             Sky.PARTLY_CLOUDY, Sky.OVERCAST -> {
                 if (day) sun(clock, accent, daylight) else stars(clock, ink, accent, night, moonPhase)
-                cloud(clock, ink, lean)
+                // The field is three-dimensional: clusters of soft spheres in a real box,
+                // projected by a real camera, far ones first — see CloudField for the argument.
+                cloudField(
+                    clock = clock,
+                    cover = if (sky == Sky.OVERCAST) 1f else 0.45f,
+                    lean = lean,
+                    colour = ink,
+                    glowTint = golden,
+                    glow = glow,
+                )
             }
             Sky.FOG -> fog(clock, ink)
             // No cloud under the rain. A bank of cloud is a large soft shape and the rain is a
@@ -150,19 +163,19 @@ fun LiveSky(
  * do is scatter fifty drops across a width without any two landing on top of each other, and do it
  * the same way every frame.
  */
-private fun scatter(index: Int, salt: Int): Float {
+internal fun scatter(index: Int, salt: Int): Float {
     val value = sin(index * 12.9898f + salt * 78.233f) * 43758.5453f
     return value - kotlin.math.floor(value)
 }
 
 /** Where a particle is on its way down, given how many laps of the clock it does. */
-private fun fall(clock: Float, laps: Int, phase: Float): Float {
+internal fun fall(clock: Float, laps: Int, phase: Float): Float {
     val value = clock * laps + phase
     return value - kotlin.math.floor(value)
 }
 
 /** One turn of a sine, from a value already wrapped into 0..1. */
-private fun wave(turn: Float): Float = sin(turn * 2f * PI.toFloat())
+internal fun wave(turn: Float): Float = sin(turn * 2f * PI.toFloat())
 
 /**
  * Rain, in three depths.
@@ -238,38 +251,8 @@ private fun DrawScope.snow(clock: Float, colour: Color, flakes: Int, lean: Float
     }
 }
 
-/**
- * Cloud, in layers.
- *
- * Two banks at two depths crossing at two speeds, each bobbing gently on its own phase. One bank
- * at one speed is a texture sliding past; two at different speeds is weather with a distance in
- * it, and the parallax does all of that for the price of a second loop.
- */
-private fun DrawScope.cloud(clock: Float, colour: Color, lean: Float) {
-    val height = size.height
-    val direction = if (lean < 0f) -1f else 1f
-    for (index in 0 until 4) {
-        val depth = scatter(index, 22)
-        val laps = 1 + (index % 2)
-        val span = size.width + 2f * BANK * density
-        val travel = fall(clock, laps, scatter(index, 6))
-        val x = (if (direction > 0f) travel else 1f - travel) * span - BANK * density
-        val bob = wave(fall(clock, laps, scatter(index, 23))) * 6f * density
-        val y = (0.10f + scatter(index, 7) * 0.60f) * height + bob
-        val radius = (30f + depth * 62f) * density
-        val alpha = 0.028f + 0.026f * depth
-        // A radial fade rather than a flat disc. A cloud with a crisp edge is a circle, and three
-        // circles with crisp edges are three circles. This is the one thing here that allocates
-        // per frame — a gradient bakes its centre, and the centre is what is moving — and seven
-        // small brushes a frame is nothing against what it buys.
-        blob(Offset(x, y), radius, colour, alpha)
-        blob(Offset(x + radius * 0.70f, y + radius * 0.20f), radius * 0.70f, colour, alpha * 0.85f)
-        blob(Offset(x - radius * 0.64f, y + radius * 0.16f), radius * 0.58f, colour, alpha * 0.75f)
-    }
-}
-
 /** One soft round of cloud: solid at the middle, gone at the edge. */
-private fun DrawScope.blob(centre: Offset, radius: Float, colour: Color, alpha: Float) {
+internal fun DrawScope.blob(centre: Offset, radius: Float, colour: Color, alpha: Float) {
     drawCircle(
         brush = Brush.radialGradient(
             colors = listOf(colour.copy(alpha = alpha), colour.copy(alpha = 0f)),
@@ -531,9 +514,6 @@ private const val HARD_RAIN_MM = 2.5
 
 /** A quarter-hour of snow, in cm, past which the flurry is as thick as it gets. */
 private const val HARD_SNOW_CM = 1.0
-
-/** How far off each edge a cloud is allowed to sit while it drifts in. */
-private const val BANK = 90f
 
 /** When in the lap a star falls, and for how much of it. */
 private const val SHOOT_AT = 0.55f

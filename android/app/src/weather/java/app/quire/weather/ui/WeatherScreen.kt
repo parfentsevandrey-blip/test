@@ -155,6 +155,7 @@ fun WeatherScreen(
                 daylight = moment.daylight,
                 night = moment.night,
                 moonPhase = moment.moonPhase,
+                glow = moment.glow,
                 rainMm = quarter?.rain ?: -1.0,
                 snowCm = quarter?.snow ?: -1.0,
                 modifier = Modifier
