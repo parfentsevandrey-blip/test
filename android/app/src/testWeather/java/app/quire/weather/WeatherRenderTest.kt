@@ -687,48 +687,6 @@ class WeatherRenderTest {
         )
     }
 
-    /**
-     * A tapped day takes the hero, and a stale peek gives it back.
-     *
-     * The peek is honoured from the widget's own prefs at paint time, so this needs no
-     * launcher: set the state a tap would set, paint, and read the card. The stale case is the
-     * design's other half — the timestamp is what stops a Friday looked at once from being the
-     * card's headline all afternoon.
-     */
-    @Test
-    fun `a tapped day takes the hero, and a stale peek expires`() {
-        WeatherStore.save(context, stub(nowSky = Sky.OVERCAST))
-        val target = java.time.LocalDate.now().plusDays(2)
-        val name = target.dayOfWeek
-            .getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault())
-            .replaceFirstChar { it.titlecase(java.util.Locale.getDefault()) }
-
-        val held = 83
-        Prefs.get(context).widget(held).apply {
-            peekDay = target.toString()
-            peekAt = System.currentTimeMillis()
-        }
-        val texts = ArrayList<String>()
-        collectText(applied(widgetId = held).also { render(it, 340, 160, "weather-peek") }, texts)
-        // The stub's third day: CLEAR, high 20, low 9, rain 40.
-        assertTrue("the day's name is not on the hero: $texts", texts.any { it == name })
-        assertTrue("the peeked high is not the big number: $texts", texts.count { it == "20°" } >= 2)
-        assertTrue(
-            "the low and the rain are not under it: $texts",
-            texts.any { it == "Low 9° · 40%" },
-        )
-
-        val stale = 84
-        Prefs.get(context).widget(stale).apply {
-            peekDay = target.toString()
-            peekAt = System.currentTimeMillis() - WeatherWidgetProvider.PEEK_MILLIS - 60_000L
-        }
-        val back = ArrayList<String>()
-        collectText(applied(widgetId = stale), back)
-        assertTrue("a stale peek still holds the hero: $back", back.none { it == name })
-        assertTrue("the card did not go back to now: $back", back.any { it == "12°" })
-    }
-
     /** The smallest a five-day strip ever shows one: still a recognisable shape, not a blob. */
     @Test
     fun `an icon still reads at strip size`() {

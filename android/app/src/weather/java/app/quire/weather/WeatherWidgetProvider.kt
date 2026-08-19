@@ -23,7 +23,6 @@ class WeatherWidgetProvider : AppWidgetProvider() {
             try {
                 when (intent.action) {
                     ACTION_REFRESH -> renderAll(context)
-                    ACTION_PEEK -> peek(context, intent)
                     Intent.ACTION_MY_PACKAGE_REPLACED -> {
                         // A job keeps the triggers it was scheduled with, and only re-arms itself
                         // when it runs. An update that adds one — the theme watch — would
@@ -43,32 +42,6 @@ class WeatherWidgetProvider : AppWidgetProvider() {
                 pending.finish()
             }
         }
-    }
-
-    /**
-     * A tap on a day column: open that day on the card, or close it if it is the one open.
-     *
-     * The peek walks back to "now" on its own as well — an inexact alarm a couple of minutes
-     * out asks for a repaint, and the renderer ignores a peek older than [PEEK_MILLIS]. A card
-     * showing Friday all afternoon because somebody looked once and walked away would be a
-     * forecast wearing the wrong headline.
-     */
-    private fun peek(context: Context, intent: Intent) {
-        val widgetId = intent.getIntExtra(
-            AppWidgetManager.EXTRA_APPWIDGET_ID,
-            AppWidgetManager.INVALID_APPWIDGET_ID,
-        )
-        if (widgetId == AppWidgetManager.INVALID_APPWIDGET_ID) return
-        val day = intent.getStringExtra(EXTRA_DAY).orEmpty()
-        val wp = app.quire.calendar.core.Prefs.get(context).widget(widgetId)
-        if (wp.peekDay == day) {
-            wp.peekDay = ""
-        } else {
-            wp.peekDay = day
-            wp.peekAt = System.currentTimeMillis()
-            armPeekTimeout(context)
-        }
-        render(context, AppWidgetManager.getInstance(context), widgetId)
     }
 
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
@@ -103,33 +76,6 @@ class WeatherWidgetProvider : AppWidgetProvider() {
     companion object {
         private const val TAG = "QuireWeather"
         const val ACTION_REFRESH = "app.quire.weather.REFRESH"
-        const val ACTION_PEEK = "app.quire.weather.PEEK"
-        const val EXTRA_DAY = "day"
-
-        /** How long a peeked day holds the hero before the card goes back to now. */
-        const val PEEK_MILLIS = 150_000L
-
-        private const val PEEK_TIMEOUT_REQUEST = 0x9119
-
-        /** The walk back: an inexact repaint just past the peek's expiry. */
-        private fun armPeekTimeout(context: Context) {
-            val alarms = context.getSystemService(android.app.AlarmManager::class.java) ?: return
-            val intent = android.app.PendingIntent.getBroadcast(
-                context,
-                PEEK_TIMEOUT_REQUEST,
-                Intent(context, WeatherWidgetProvider::class.java).setAction(ACTION_REFRESH),
-                android.app.PendingIntent.FLAG_UPDATE_CURRENT or
-                    android.app.PendingIntent.FLAG_IMMUTABLE,
-            )
-            runCatching {
-                alarms.setWindow(
-                    android.app.AlarmManager.RTC,
-                    System.currentTimeMillis() + PEEK_MILLIS + 5_000L,
-                    60_000L,
-                    intent,
-                )
-            }
-        }
 
         private val EXECUTOR = Executors.newSingleThreadExecutor { r ->
             Thread(r, "quire-weather-widget").apply { isDaemon = true }

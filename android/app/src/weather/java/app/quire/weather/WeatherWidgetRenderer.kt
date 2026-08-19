@@ -173,20 +173,8 @@ object WeatherWidgetRenderer {
         paint.tint(root, R.id.place, "setTextColor", R.color.widget_ink_muted) { it.inkMuted }
         root.setTextViewTextSize(R.id.place, TypedValue.COMPLEX_UNIT_SP, placeSp)
 
-        // A tapped day holds the hero: the card answers "what about Friday" where it stands
-        // instead of sending a finger to an app for one number. The peek is honoured only while
-        // it is fresh and only while the forecast still carries its day — an expired or orphaned
-        // one falls straight back to "now" with no state to clean up.
-        val peek = wp.peekDay.takeIf { it.isNotEmpty() }
-            ?.takeIf { System.currentTimeMillis() - wp.peekAt <= WeatherWidgetProvider.PEEK_MILLIS }
-            ?.let { raw -> runCatching { LocalDate.parse(raw) }.getOrNull() }
-            ?.let { day -> forecast.days.firstOrNull { it.date == day } }
-
         root.setViewVisibility(R.id.now_icon, android.view.View.VISIBLE)
-        root.setImageViewResource(
-            R.id.now_icon,
-            peek?.sky?.dayIcon ?: forecast.now.sky.icon(forecast.now.day),
-        )
+        root.setImageViewResource(R.id.now_icon, forecast.now.sky.icon(forecast.now.day))
         paint.tint(root, R.id.now_icon, "setColorFilter", R.color.widget_accent) { it.accent }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             root.setViewLayoutWidth(R.id.now_icon, iconDp, TypedValue.COMPLEX_UNIT_DIP)
@@ -195,68 +183,42 @@ object WeatherWidgetRenderer {
 
         root.setTextViewText(
             R.id.now_temperature,
-            WeatherRepository.degrees(peek?.high ?: forecast.now.temperature, locale),
+            WeatherRepository.degrees(forecast.now.temperature, locale),
         )
         paint.tint(root, R.id.now_temperature, "setTextColor", R.color.widget_ink) { it.ink }
         root.setTextViewTextSize(R.id.now_temperature, TypedValue.COMPLEX_UNIT_SP, tempSp)
 
-        if (peek != null) {
-            // The day's name where the sky's name goes: the one word that says the hero is a
-            // peek and not the weather outside the window right now.
-            root.setTextViewText(
-                R.id.now_sky,
-                if (peek.date == LocalDate.now()) {
-                    context.getString(R.string.wx_today)
-                } else {
-                    peek.date.dayOfWeek.getDisplayName(TextStyle.FULL, locale)
-                        .replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
-                },
-            )
-        } else {
-            root.setTextViewText(R.id.now_sky, context.getString(forecast.now.sky.label))
-        }
+        root.setTextViewText(R.id.now_sky, context.getString(forecast.now.sky.label))
         paint.tint(root, R.id.now_sky, "setTextColor", R.color.widget_ink) { it.ink }
         root.setTextViewTextSize(R.id.now_sky, TypedValue.COMPLEX_UNIT_SP, skySp)
 
-        if (peek != null) {
-            val low = WeatherRepository.degrees(peek.low, locale)
+        // The feels-like yields its line to the minute-cast when the sky is about to turn:
+        // what the next twenty minutes will do is worth more than how the current ones feel.
+        // Set in the accent because it is the one line on the card that is news — the same
+        // weight the chance-of-rain figures carry in the strip below.
+        val soon = forecast.soon(java.time.LocalDateTime.now())
+        if (soon != null) {
             root.setTextViewText(
                 R.id.now_feels,
-                context.getString(R.string.wx_peek_low, low) +
-                    if (peek.rain >= RAIN_FLOOR) " · " + peek.rain + "%" else "",
+                context.getString(
+                    when {
+                        !soon.starts -> R.string.wx_wet_ends
+                        soon.snow -> R.string.wx_snow_in
+                        else -> R.string.wx_rain_in
+                    },
+                    soon.minutes,
+                ),
+            )
+            paint.tint(root, R.id.now_feels, "setTextColor", R.color.widget_accent) { it.accent }
+        } else {
+            // On a narrow card the words "feels like" are what goes, not the number: the number
+            // is the part somebody is reading it for.
+            val feels = WeatherRepository.degrees(forecast.now.feelsLike, locale)
+            root.setTextViewText(
+                R.id.now_feels,
+                if (narrow) feels else context.getString(R.string.wx_feels_like, feels),
             )
             paint.tint(root, R.id.now_feels, "setTextColor", R.color.widget_ink_faint) { it.inkFaint }
-            // Tapping the opened hero closes it — the same toggle its own column carries.
-            root.setOnClickPendingIntent(R.id.now_row, peekIntent(context, widgetId, peek.date))
-        } else {
-            // The feels-like yields its line to the minute-cast when the sky is about to turn:
-            // what the next twenty minutes will do is worth more than how the current ones feel.
-            // Set in the accent because it is the one line on the card that is news — the same
-            // weight the chance-of-rain figures carry in the strip below.
-            val soon = forecast.soon(java.time.LocalDateTime.now())
-            if (soon != null) {
-                root.setTextViewText(
-                    R.id.now_feels,
-                    context.getString(
-                        when {
-                            !soon.starts -> R.string.wx_wet_ends
-                            soon.snow -> R.string.wx_snow_in
-                            else -> R.string.wx_rain_in
-                        },
-                        soon.minutes,
-                    ),
-                )
-                paint.tint(root, R.id.now_feels, "setTextColor", R.color.widget_accent) { it.accent }
-            } else {
-                // On a narrow card the words "feels like" are what goes, not the number: the
-                // number is the part somebody is reading it for.
-                val feels = WeatherRepository.degrees(forecast.now.feelsLike, locale)
-                root.setTextViewText(
-                    R.id.now_feels,
-                    if (narrow) feels else context.getString(R.string.wx_feels_like, feels),
-                )
-                paint.tint(root, R.id.now_feels, "setTextColor", R.color.widget_ink_faint) { it.inkFaint }
-            }
         }
         root.setTextViewTextSize(R.id.now_feels, TypedValue.COMPLEX_UNIT_SP, feelsSp)
 
@@ -306,8 +268,6 @@ object WeatherWidgetRenderer {
                         context, day, today, locale, paint,
                         dayIconDp, nameSp, tempSp, bothTemps, showRain, rainSp, nameToday,
                         columnDp, scale,
-                        widgetId = widgetId,
-                        selected = peek?.date == day.date,
                     ),
                 )
             }
@@ -332,14 +292,9 @@ object WeatherWidgetRenderer {
         nameToday: Boolean,
         columnDp: Float,
         scale: Float,
-        widgetId: Int,
-        selected: Boolean,
     ): RemoteViews {
         val column = RemoteViews(context.packageName, R.layout.weather_day)
         val isToday = day.date == today
-
-        // Every column is a question the card can answer where it stands.
-        column.setOnClickPendingIntent(R.id.day_root, peekIntent(context, widgetId, day.date))
 
         column.setTextViewText(
             R.id.day_name,
@@ -356,15 +311,9 @@ object WeatherWidgetRenderer {
         column.setTextViewTextSize(R.id.day_name, TypedValue.COMPLEX_UNIT_SP, nameSp)
 
         // A forecast icon is always the daytime one: it describes a whole day, and half of every
-        // day is not night in any sense a person means by it. The column holding the hero wears
-        // the accent on its icon and name, so the strip says which day the big number belongs to.
+        // day is not night in any sense a person means by it.
         column.setImageViewResource(R.id.day_icon, day.sky.dayIcon)
-        if (selected) {
-            paint.tint(column, R.id.day_icon, "setColorFilter", R.color.widget_accent) { it.accent }
-            paint.tint(column, R.id.day_name, "setTextColor", R.color.widget_accent) { it.accent }
-        } else {
-            paint.tint(column, R.id.day_icon, "setColorFilter", R.color.widget_ink_muted) { it.inkMuted }
-        }
+        paint.tint(column, R.id.day_icon, "setColorFilter", R.color.widget_ink_muted) { it.inkMuted }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             column.setViewLayoutWidth(R.id.day_icon, iconDp, TypedValue.COMPLEX_UNIT_DIP)
             column.setViewLayoutHeight(R.id.day_icon, iconDp, TypedValue.COMPLEX_UNIT_DIP)
@@ -491,24 +440,6 @@ object WeatherWidgetRenderer {
         }
         frame.setInt(R.id.precip_frame, "setImageAlpha", alpha)
         return frame
-    }
-
-    /** A tap on a day: hold it in the hero, or let it go if it is the one held. */
-    private fun peekIntent(context: Context, widgetId: Int, date: LocalDate): PendingIntent {
-        val intent = Intent(context, WeatherWidgetProvider::class.java).apply {
-            action = WeatherWidgetProvider.ACTION_PEEK
-            putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
-            putExtra(WeatherWidgetProvider.EXTRA_DAY, date.toString())
-            // Distinct data per (widget, day), so five columns are five intents rather than one
-            // intent updated five times.
-            data = Uri.parse("quire://weather/peek/" + widgetId + "/" + date)
-        }
-        return PendingIntent.getBroadcast(
-            context,
-            widgetId * 32 + date.dayOfMonth,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-        )
     }
 
     /** Tapping anywhere on the card opens the weather the card is showing. */

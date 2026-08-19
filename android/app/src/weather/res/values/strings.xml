@@ -18,8 +18,6 @@
     <!-- The minute-cast line: what the sky is about to do, counted in minutes. The "ends" form
          never names what is falling because the sky label directly above it already has. -->
     <string name="wx_rain_in">Rain in %1$d min</string>
-    <!-- Under a peeked day's high: its low, and its chance of rain when worth writing. -->
-    <string name="wx_peek_low">Low %1$s</string>
     <string name="wx_snow_in">Snow in %1$d min</string>
     <string name="wx_wet_ends">Ends in ~%1$d min</string>
     <string name="wx_humidity">Humidity</string>
