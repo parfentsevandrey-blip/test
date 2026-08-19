@@ -185,6 +185,22 @@ class WidgetPrefs(private val sp: SharedPreferences, private val id: Int) {
         get() = sp.getInt(k("offset"), 0)
         set(v) = sp.edit { putInt(k("offset"), v) }
 
+    // ---- The weather card's peek ---------------------------------------
+
+    /**
+     * The forecast day the weather card is holding open, as an ISO date — or empty for "now".
+     * Lives here because it is per-placement state like everything else about a widget; the
+     * calendar cards never read it.
+     */
+    var peekDay: String
+        get() = sp.getString(k("peek"), "").orEmpty()
+        set(v) = sp.edit { putString(k("peek"), v) }
+
+    /** When the peek was opened, so it can quietly expire back to "now". */
+    var peekAt: Long
+        get() = sp.getLong(k("peekAt"), 0L)
+        set(v) = sp.edit { putLong(k("peekAt"), v) }
+
     fun copyFrom(other: WidgetPrefs) {
         skin = other.skin
         accent = other.accent

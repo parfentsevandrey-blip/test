@@ -5,6 +5,7 @@ import android.app.job.JobScheduler
 import android.content.Intent
 import androidx.test.core.app.ApplicationProvider
 import app.quire.R
+import app.quire.calendar.core.Prefs
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -94,6 +95,40 @@ class WeatherWakeTest {
             parser.next()
         }
         assertTrue("the launcher never wakes the card (updatePeriodMillis=$period)", period >= 1_800_000L)
+    }
+
+    /**
+     * The day columns are a toggle: the same tap that opens a day on the card closes it. The
+     * state lives in the widget's own prefs, so two placed cards can hold two different days
+     * open — and the timestamp is what lets an abandoned peek expire on its own.
+     */
+    @Test
+    fun `tapping a day holds it, and tapping it again lets it go`() {
+        val widgetId = 55
+        fun tap() {
+            WeatherWidgetProvider().onReceive(
+                app,
+                Intent(app, WeatherWidgetProvider::class.java)
+                    .setAction(WeatherWidgetProvider.ACTION_PEEK)
+                    .putExtra(
+                        android.appwidget.AppWidgetManager.EXTRA_APPWIDGET_ID,
+                        widgetId,
+                    )
+                    .putExtra(WeatherWidgetProvider.EXTRA_DAY, "2026-08-21"),
+            )
+            repeat(20) {
+                shadowOf(android.os.Looper.getMainLooper()).idle()
+                Thread.sleep(20)
+            }
+        }
+
+        val wp = Prefs.get(app).widget(widgetId)
+        tap()
+        assertTrue("the tap did not hold the day: '" + wp.peekDay + "'", wp.peekDay == "2026-08-21")
+        assertTrue("the peek carries no clock to expire by", wp.peekAt > 0L)
+
+        tap()
+        assertTrue("the second tap did not let the day go: '" + wp.peekDay + "'", wp.peekDay.isEmpty())
     }
 
     /**

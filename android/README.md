@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-9.3.apk`](dist/quire-calendar-9.3.apk) · 1.9 MB | `sha256 a109013eea8cbead72e5044a0a875378a3dbdf76d45717e3c8529cd709f9a251` |
-| **Weather** | [`dist/quire-weather-9.3.apk`](dist/quire-weather-9.3.apk) · 1.5 MB | `sha256 f7570c66dd27f191c49416cf019df5194b1faa6c50078a5802fbd8ca65b05fb2` |
+| **Calendar** | [`dist/quire-calendar-9.4.apk`](dist/quire-calendar-9.4.apk) · 1.9 MB | `sha256 74ac785f4972088ef367e91c787ddb2d940f215392d01040eb3f59fb2f50f4a2` |
+| **Weather** | [`dist/quire-weather-9.4.apk`](dist/quire-weather-9.4.apk) · 1.5 MB | `sha256 c63cce346443eaa14d7a0399032477b7ebed8c495eba3a982be01d4b3dd0f3ee` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-9.3.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-9.4.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -440,6 +440,16 @@ each advancing the drops a quarter of the lattice, loop seamlessly at four beats
 short crossfade — while this app's process sleeps and spends nothing. A dry sky gets an empty,
 `GONE` flipper: the card with no weather in it is exactly the card that shipped before it learned
 this, because motion on a page of numbers is only ever allowed to *be* information.
+
+**And it answers a tap.** Each day in the strip is a question, and the card answers it where it
+stands: tap Friday and the hero becomes Friday — its icon, its high as the big number, its name
+where the sky's name goes (the one word that says this is a peek, not the window), its low and
+chance of rain underneath, the column lit in the accent. Tap it again, or tap the hero, and the
+card goes back to now; walk away and it goes back by itself — the peek carries a timestamp, an
+inexact alarm repaints just past its expiry, and a stale peek is simply ignored at paint time.
+The state is per placement, like every other widget setting, so two cards can hold two different
+days open. All of it is broadcasts into the provider and a repaint: no service, no process kept
+alive, nothing the launcher was not already doing.
 
 ![Weather icons](docs/weather-icons.png)
 
