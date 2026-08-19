@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-9.5.apk`](dist/quire-calendar-9.5.apk) · 1.9 MB | `sha256 f01fc3528ca375247977aad672d59f980e52a2b571793e3b84447a71281311d0` |
-| **Weather** | [`dist/quire-weather-9.5.apk`](dist/quire-weather-9.5.apk) · 1.5 MB | `sha256 b7001598540491875f00e081f82670a3d1e1d7abd9450fa80e174b8027ea1b14` |
+| **Calendar** | [`dist/quire-calendar-9.6.apk`](dist/quire-calendar-9.6.apk) · 1.9 MB | `sha256 667ff654d2fe2555cca039462780fcf8c101c12390d532cb136af3df3a73c73e` |
+| **Weather** | [`dist/quire-weather-9.6.apk`](dist/quire-weather-9.6.apk) · 1.5 MB | `sha256 70018ef836e364bf96fb7c125e8080abea465b36a3c0ad9fe87b9e8d2e98ac8f` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-9.5.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-9.6.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -215,13 +215,17 @@ only question anybody actually asks of a sunset time. The arc is a plain half-ci
 the true solar path: the true one depends on latitude and season and would be a different shape
 every day, which is precision nobody wants at the cost of a picture nobody recognises.
 
-**There is a sky behind it, and it knows its place.** A wash of the theme's own container colour
-behind the hero — warm while the sun is up, cool once it is down — gone before the cards begin.
-For one release it ran the full height of the screen with translucent cards over it, which
-sounded like a place and read as mush: colour under everything means contrast under nothing. The
-sky gets the top of the page; the content gets a page. It is the
-one thing on the screen that says which of those it is without spelling it out, and it gives the
-temperature something to sit on other than flat paper.
+**There is a sky behind it, and it knows its place — and the time.** A wash of the theme's own
+containers behind the hero, gone before the cards begin. It used to know one bit — day or night —
+and wear one of two colours for it; but a sky is not a two-state lamp, and the data to do better
+was already on the phone, because the forecast carries today's sunrise and sunset. Now the wash
+ramps through its day: deep night, a climb that starts an hour before sunrise, the golden lean at
+the horizon crossings (the tertiary container, so even the sunset answers the wallpaper), full
+day, and down again through dusk. The arithmetic lives in one pure file the tests interrogate at
+chosen moments — what does half past four in the morning look like — and the screen only draws
+what it has already decided. For one release the wash ran the full height of the screen with
+translucent cards over it, which sounded like a place and read as mush: colour under everything
+means contrast under nothing. The sky gets the top of the page; the content gets a page.
 
 It runs from the top of the window, behind the app bar, which is transparent over the forecast for
 exactly that reason. Starting it under the bar instead — and leaving the bar opaque — drew one hard
@@ -233,11 +237,18 @@ neighbouring rows, because a step is exactly what a hard edge is; with the opaqu
 
 ![The sky behind the bar](docs/app-weather-bar.png)
 
-**The sky moves.** An app that draws a raincloud and then sits perfectly still is a diagram of the
-weather. Behind the top of the page the actual sky runs: rain falls, snow drifts and wanders
-sideways, cloud passes, fog breathes in and out, stars come and go at their own rates, the sun
-swells and settles, and a storm flashes twice a lap. It is under everything and never touched, so
-it costs nothing but the frames.
+**The sky moves, and it moves like the readings say.** An app that draws a raincloud and then
+sits perfectly still is a diagram of the weather. Behind the top of the page the actual sky runs:
+rain falls, snow drifts and wanders sideways, cloud passes, fog breathes in and out, stars come
+and go at their own rates, and a storm flashes twice a lap. The sun is not a corner ornament any
+more — it rides its actual arc, low in the east over morning coffee, overhead at noon, low in the
+west by dinner, so the glance that reads the temperature reads the hour for free. At night the
+moon takes the same arc wearing its real phase, a calendar fold checked against the almanac: a
+January-the-third moon is full, a January-the-eighteenth one a thin ring. And the rain falls as
+hard as it is falling — the drop count and weight ride the minute-cast's actual millimetres, so
+the same weather code is a sprinkle or a sheet depending on which it is. Battery saver stills all
+of it, the same stillness the animations-off setting gets: two frames three seconds apart must be
+identical, and a test checks exactly that.
 
 Every particle's position is a pure function of one looping clock and its own index — a field of
 forty drops is forty sines, not forty objects being stepped and collected, and nothing is

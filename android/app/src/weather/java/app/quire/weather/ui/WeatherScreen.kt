@@ -94,15 +94,26 @@ fun WeatherScreen(
 ) {
     val forecast = model.forecast
     val scheme = MaterialTheme.colorScheme
-    // A sky behind the page: the theme's own container colour at the top, gone by the time the
-    // cards start. It carries the one bit of information the screen otherwise only spells out —
-    // whether it is day or night out there — and it gives the hero something to sit on other than
-    // flat paper. Fixed rather than scrolling, because a sky that scrolls away is a rectangle.
-    // Eased rather than swapped: when the answer changes from day to night — a refresh at dusk,
-    // a place picked on the other side of the planet — the whole top of the page crossfades
-    // instead of flicking, which is the difference between weather moving and a poster changing.
+    // A sky behind the page: gone by the time the cards start, and no longer a two-state lamp.
+    // The forecast already carries today's sunrise and sunset, so the wash knows six in the
+    // morning from noon from the golden hour from deep night — SkyMoment is that arithmetic,
+    // done once, off in a file a test can interrogate at chosen times. Fixed rather than
+    // scrolling, because a sky that scrolls away is a rectangle. Recomputed per fetch: a page
+    // left open across dusk catches up on its next refresh, which the tick already schedules.
+    // Eased rather than swapped: when the answer changes — a refresh at dusk, a place picked on
+    // the other side of the planet — the whole top of the page crossfades instead of flicking,
+    // which is the difference between weather moving and a poster changing.
+    val today = forecast?.days?.firstOrNull()
+    val moment = remember(forecast?.fetched, forecast?.now?.day) {
+        SkyMoment.of(
+            now = java.time.LocalDateTime.now(),
+            sunrise = today?.sunrise,
+            sunset = today?.sunset,
+            day = forecast?.now?.day != false,
+        )
+    }
     val sky by androidx.compose.animation.animateColorAsState(
-        targetValue = if (forecast?.now?.day != false) scheme.primaryContainer else scheme.secondaryContainer,
+        targetValue = skyColour(scheme, moment),
         animationSpec = MaterialTheme.motionScheme.slowEffectsSpec(),
         label = "sky",
     )
@@ -129,14 +140,23 @@ fun WeatherScreen(
         // The weather itself, moving, under everything else. It is drawn over the same band the
         // wash covers and fades out with it, so the page below stays a page.
         forecast?.takeIf { model.settings.liveSky }?.let {
+            // How hard it is falling right now, when the minute-cast knows; negative for "ask
+            // the category". Read once per fetch, like the moment above.
+            val quarter = remember(it.fetched) { it.falling(java.time.LocalDateTime.now()) }
             LiveSky(
                 sky = it.now.sky,
                 day = it.now.day,
                 // The rain leans the way the wind is actually blowing and as hard as it is
                 // actually blowing, which makes the picture one more reading rather than one
-                // more ornament.
+                // more ornament. The sun and the moon sit where the day has actually got to,
+                // and the drops fall as thick as the minute-cast says they are falling.
                 windKmh = it.now.wind,
                 windFrom = it.now.direction,
+                daylight = moment.daylight,
+                night = moment.night,
+                moonPhase = moment.moonPhase,
+                rainMm = quarter?.rain ?: -1.0,
+                snowCm = quarter?.snow ?: -1.0,
                 modifier = Modifier
                     .fillMaxWidth()
                     // Shorter than the wash. The colour can run down behind the reading cards

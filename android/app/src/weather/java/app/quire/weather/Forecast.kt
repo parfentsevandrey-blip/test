@@ -129,6 +129,10 @@ class Forecast(
         return SoonChange(minutes, starts = change.wet, snow = telling.snow >= telling.rain)
     }
 
+    /** The quarter-hour covering [from], or null once the minute-cast has run out. */
+    fun falling(from: java.time.LocalDateTime): QuarterCast? =
+        quarters.firstOrNull { !it.time.isAfter(from) && it.time.plusMinutes(15).isAfter(from) }
+
     companion object {
         /** How far ahead a "soon" is still soon: two hours, past which it is just the forecast. */
         const val SOON_MINUTES = 120

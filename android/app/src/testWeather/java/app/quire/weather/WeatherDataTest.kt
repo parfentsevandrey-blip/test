@@ -192,6 +192,13 @@ class WeatherDataTest {
         // Asked before the data begins, or after it runs out: nothing, rather than a guess.
         assertNull(shower.soon(java.time.LocalDateTime.parse("2026-01-01T11:00")))
         assertNull(shower.soon(java.time.LocalDateTime.parse("2026-01-01T14:00")))
+
+        // The covering quarter, which is what the living sky reads its intensity from: the slot
+        // holding the asking time, and nothing once the data has run out.
+        val covering = shower.falling(java.time.LocalDateTime.parse("2026-01-01T12:35"))
+        assertNotNull("no quarter covers half past twelve", covering)
+        assertEquals(0.9, covering!!.rain, 0.001)
+        assertNull(shower.falling(java.time.LocalDateTime.parse("2026-01-01T14:00")))
         // Dry throughout: no turn to count to.
         assertNull(
             forecastOf(q("2026-01-01T12:00"), q("2026-01-01T12:15"))

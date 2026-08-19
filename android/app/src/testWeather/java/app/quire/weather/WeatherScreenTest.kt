@@ -503,6 +503,159 @@ class WeatherScreenTest {
         }
     }
 
+    /**
+     * The sky knows the time and the gauge.
+     *
+     * Six tiles, each a claim: a morning sun sits east and an evening one west (found by the
+     * brightest pixel, which is the sun's own centre); a full moon puts more light in its patch
+     * of sky than a new one, over an identical star field; and a sheet of rain draws visibly
+     * more than a sprinkle, because the drop count now rides the actual millimetres.
+     */
+    @Test
+    fun `the sun crosses, the moon waxes, and the rain falls as hard as it falls`() {
+        compose.setContent {
+            QuireTheme(dark = true, dynamic = false) {
+                Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+                    androidx.compose.foundation.layout.Column(Modifier.fillMaxSize()) {
+                        LiveSky(
+                            Sky.CLEAR, day = true, daylight = 0.15f,
+                            modifier = Modifier.fillMaxSize().weight(1f).testTag("morning"),
+                        )
+                        LiveSky(
+                            Sky.CLEAR, day = true, daylight = 0.85f,
+                            modifier = Modifier.fillMaxSize().weight(1f).testTag("evening"),
+                        )
+                        LiveSky(
+                            Sky.CLEAR, day = false, night = 0.5f, moonPhase = 0.5f,
+                            modifier = Modifier.fillMaxSize().weight(1f).testTag("full"),
+                        )
+                        LiveSky(
+                            Sky.CLEAR, day = false, night = 0.5f, moonPhase = 0.02f,
+                            modifier = Modifier.fillMaxSize().weight(1f).testTag("new"),
+                        )
+                        LiveSky(
+                            Sky.RAIN, day = true, rainMm = 0.15,
+                            modifier = Modifier.fillMaxSize().weight(1f).testTag("sprinkle"),
+                        )
+                        LiveSky(
+                            Sky.RAIN, day = true, rainMm = 2.5,
+                            modifier = Modifier.fillMaxSize().weight(1f).testTag("sheet"),
+                        )
+                    }
+                }
+            }
+        }
+        settle()
+        val sheet = shoot("weather-sky-moments")
+        val density = compose.density.density
+
+        fun band(tag: String): Pair<Int, Int> {
+            val bounds = compose.onNodeWithTag(tag).getUnclippedBoundsInRoot()
+            return (bounds.top.value * density).toInt() + 2 to
+                (bounds.bottom.value * density).toInt() - 2
+        }
+
+        fun luma(pixel: Int): Int = (
+            android.graphics.Color.red(pixel) * 299 +
+                android.graphics.Color.green(pixel) * 587 +
+                android.graphics.Color.blue(pixel) * 114
+            ) / 1000
+
+        // Where the light in a tile is, on average: the sun is a broad soft glow, so its centre
+        // is the centroid of everything brighter than the tile's own empty corner — a single
+        // brightest pixel is a coin toss between quantised neighbours, but a centroid of a few
+        // thousand of them is geography.
+        fun litCentroidX(tag: String): Int {
+            val (top, bottom) = band(tag)
+            val ground = luma(sheet.getPixel(sheet.width / 20, bottom - 4))
+            var sum = 0L
+            var count = 0
+            for (y in top until bottom step 2) {
+                for (x in 0 until sheet.width step 2) {
+                    if (luma(sheet.getPixel(x, y)) > ground + 4) { sum += x; count++ }
+                }
+            }
+            assertTrue("$tag drew no sun at all", count > 50)
+            return (sum / count).toInt()
+        }
+        assertTrue("the morning sun is not in the east", litCentroidX("morning") < sheet.width * 45 / 100)
+        assertTrue("the evening sun is not in the west", litCentroidX("evening") > sheet.width * 55 / 100)
+
+        // The moon sits half way along its arc; count what shines in its patch of sky. The star
+        // field is identical between the two tiles, so the difference is the moon itself.
+        fun moonlight(tag: String): Int {
+            val (top, bottom) = band(tag)
+            val height = bottom - top
+            val cx = sheet.width / 2
+            val cy = top + height * 15 / 100
+            val reach = (16f * density).toInt()
+            val ground = luma(sheet.getPixel(sheet.width / 20, bottom - 4))
+            var lit = 0
+            for (y in (cy - reach).coerceAtLeast(top) until (cy + reach).coerceAtMost(bottom)) {
+                for (x in cx - reach until cx + reach) {
+                    // Well above the halo, which both phases wear alike: only the disc itself is
+                    // this bright, and the disc is the thing the phase decides.
+                    if (luma(sheet.getPixel(x, y)) > ground + 40) lit++
+                }
+            }
+            return lit
+        }
+        assertTrue(
+            "a full moon (${moonlight("full")}) does not outshine a new one (${moonlight("new")})",
+            moonlight("full") > moonlight("new") + 400,
+        )
+
+        // Rain by the millimetre: the sheet draws well over what the sprinkle does.
+        fun raining(tag: String): Int {
+            val (top, bottom) = band(tag)
+            val ground = luma(sheet.getPixel(sheet.width / 20, bottom - 4))
+            var lit = 0
+            for (y in top until bottom step 2) {
+                for (x in 0 until sheet.width step 2) {
+                    if (luma(sheet.getPixel(x, y)) > ground + 6) lit++
+                }
+            }
+            return lit
+        }
+        assertTrue(
+            "hard rain (${raining("sheet")}) is not visibly harder than a sprinkle (${raining("sprinkle")})",
+            raining("sheet") > raining("sprinkle") * 3 / 2,
+        )
+    }
+
+    /**
+     * Battery saver is "animations off" said by the battery: the sky stands still, in the same
+     * scattered pose the accessibility setting freezes it in, and not one pixel moves.
+     */
+    @Test
+    fun `battery saver stills the sky`() {
+        val power = app.getSystemService(android.os.PowerManager::class.java)
+        shadowOf(power).setIsPowerSaveMode(true)
+        try {
+            compose.setContent {
+                QuireTheme(dark = true, dynamic = false) {
+                    Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+                        LiveSky(Sky.SHOWERS, day = true, modifier = Modifier.fillMaxSize())
+                    }
+                }
+            }
+            settle()
+            val first = shoot("weather-saver")
+            compose.mainClock.advanceTimeBy(3_000L)
+            val second = shoot("weather-saver-later")
+
+            var moved = 0
+            for (y in 0 until first.height step 3) {
+                for (x in 0 until first.width step 3) {
+                    if (first.getPixel(x, y) != second.getPixel(x, y)) moved++
+                }
+            }
+            assertTrue("the sky kept moving on battery saver ($moved pixels)", moved == 0)
+        } finally {
+            shadowOf(power).setIsPowerSaveMode(false)
+        }
+    }
+
     /** The same screen in daylight, because the dark one is only half of what ships. */
     @Test
     fun `the screen lays out in the light theme too`() {

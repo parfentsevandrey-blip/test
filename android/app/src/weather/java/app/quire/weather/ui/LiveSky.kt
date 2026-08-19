@@ -56,18 +56,32 @@ fun LiveSky(
     modifier: Modifier = Modifier,
     windKmh: Double = 0.0,
     windFrom: Int = -1,
+    // Where the sun or the moon actually is, 0..1 across its arc — null keeps the old fixed
+    // corner, which is also what a forecast without sunrise times degrades to.
+    daylight: Float? = null,
+    night: Float? = null,
+    /** The moon, 0 new → 0.5 full → 1 new again. Only read when [night] is known. */
+    moonPhase: Float = 0.5f,
+    // How hard it is actually falling this quarter-hour, from the minute-cast. Negative means
+    // "not known", and the sky falls back to what its category usually looks like.
+    rainMm: Double = -1.0,
+    snowCm: Double = -1.0,
 ) {
     val scheme = MaterialTheme.colorScheme
 
     // Somebody who has turned animation off in the system settings has said what they want, and
-    // an endless one is exactly the kind they meant. They get the same sky, standing still.
+    // an endless one is exactly the kind they meant. Battery saver is the same sentence said by
+    // the battery. Both get the same sky, standing still.
     val context = LocalContext.current
     val moving = remember(context) {
-        android.provider.Settings.Global.getFloat(
+        val animated = android.provider.Settings.Global.getFloat(
             context.contentResolver,
             android.provider.Settings.Global.ANIMATOR_DURATION_SCALE,
             1f,
         ) > 0f
+        val saving = context.getSystemService(android.os.PowerManager::class.java)
+            ?.isPowerSaveMode == true
+        animated && !saving
     }
 
     val transition = rememberInfiniteTransition(label = "sky")
@@ -92,30 +106,39 @@ fun LiveSky(
     val ink = scheme.onSurface
     val accent = scheme.primary
 
+    // The same weather code can be a sprinkle or a sheet. When the minute-cast knows which,
+    // the field says which: the count and the weight of the drops ride the actual millimetres,
+    // and the category's usual look stands in only where nothing better is known.
+    val pour = if (rainMm >= 0.0) (rainMm / HARD_RAIN_MM).coerceIn(0.0, 1.0).toFloat() else -1f
+    val flurry = if (snowCm >= 0.0) (snowCm / HARD_SNOW_CM).coerceIn(0.0, 1.0).toFloat() else -1f
+    fun dropsOf(usual: Int) = if (pour < 0f) usual else (10 + 44 * pour).toInt()
+    fun weightOf(usual: Float) = if (pour < 0f) usual else 0.55f + 0.65f * pour
+    fun flakesOf(usual: Int) = if (flurry < 0f) usual else (8 + 26 * flurry).toInt()
+
     Canvas(modifier) {
         when (sky) {
             Sky.CLEAR, Sky.MOSTLY_CLEAR ->
-                if (day) sun(clock, accent) else stars(clock, ink, accent)
+                if (day) sun(clock, accent, daylight) else stars(clock, ink, accent, night, moonPhase)
             Sky.PARTLY_CLOUDY, Sky.OVERCAST -> {
-                if (day) sun(clock, accent) else stars(clock, ink, accent)
+                if (day) sun(clock, accent, daylight) else stars(clock, ink, accent, night, moonPhase)
                 cloud(clock, ink, lean)
             }
             Sky.FOG -> fog(clock, ink)
             // No cloud under the rain. A bank of cloud is a large soft shape and the rain is a
             // field of small hard ones; together over a page of type they stopped being weather
             // behind it and started being a picture in front of it.
-            Sky.DRIZZLE -> rain(clock, accent, drops = 18, weight = 0.6f, lean = lean)
-            Sky.RAIN -> rain(clock, accent, drops = 26, weight = 0.9f, lean = lean)
-            Sky.SHOWERS -> rain(clock, accent, drops = 34, weight = 1.1f, lean = lean)
+            Sky.DRIZZLE -> rain(clock, accent, drops = dropsOf(18), weight = weightOf(0.6f), lean = lean)
+            Sky.RAIN -> rain(clock, accent, drops = dropsOf(26), weight = weightOf(0.9f), lean = lean)
+            Sky.SHOWERS -> rain(clock, accent, drops = dropsOf(34), weight = weightOf(1.1f), lean = lean)
             Sky.THUNDER -> {
-                rain(clock, accent, drops = 28, weight = 1f, lean = lean)
+                rain(clock, accent, drops = dropsOf(28), weight = weightOf(1f), lean = lean)
                 lightning(clock, accent)
             }
             Sky.SLEET -> {
-                rain(clock, accent, drops = 14, weight = 0.7f, lean = lean)
-                snow(clock, ink, flakes = 10, lean = lean)
+                rain(clock, accent, drops = dropsOf(14), weight = weightOf(0.7f), lean = lean)
+                snow(clock, ink, flakes = flakesOf(10), lean = lean)
             }
-            Sky.SNOW -> snow(clock, ink, flakes = 22, lean = lean)
+            Sky.SNOW -> snow(clock, ink, flakes = flakesOf(22), lean = lean)
         }
     }
 }
@@ -293,14 +316,23 @@ private fun DrawScope.fog(clock: Float, colour: Color) {
 }
 
 /**
- * The sun, breathing.
+ * The sun, breathing, where the sun actually is.
  *
  * Three rings at three phases, so it swells and settles instead of pulsing on one beat like a
  * warning light. It had a turning fan of rays for a version; over a page of type that is a
  * pinwheel, and a pinwheel is a thing you look at rather than a thing you read past.
+ *
+ * Its place comes from the day itself: how far between sunrise and sunset the clock is, run
+ * along a shallow arc — low in the east over morning coffee, overhead at noon, low in the west
+ * by dinner. The glance that reads the temperature reads the hour for free. Without the times
+ * it keeps the old fixed corner rather than pretending to know.
  */
-private fun DrawScope.sun(clock: Float, colour: Color) {
-    val centre = Offset(size.width * 0.80f, size.height * 0.15f)
+private fun DrawScope.sun(clock: Float, colour: Color, daylight: Float? = null) {
+    val centre = if (daylight == null) {
+        Offset(size.width * 0.80f, size.height * 0.15f)
+    } else {
+        arcSpot(daylight)
+    }
     for (ring in 0 until 3) {
         val swell = 1f + 0.06f * wave(fall(clock, 1, ring * 0.33f))
         drawCircle(
@@ -318,15 +350,74 @@ private fun DrawScope.sun(clock: Float, colour: Color) {
     )
 }
 
+/** Where along the shallow arc across the band a body at [fraction] of its journey sits. */
+private fun DrawScope.arcSpot(fraction: Float): Offset = Offset(
+    size.width * (0.12f + 0.76f * fraction),
+    size.height * (0.68f - 0.53f * sin(PI.toFloat() * fraction)),
+)
+
+/**
+ * The moon, wearing its actual phase, where the night actually is.
+ *
+ * The shape is the difference of two circles — the disc and its own shadow, slid aside by how
+ * lit the moon is tonight: on top of it at new, clear of it at full, half-way off at a quarter.
+ * A new moon keeps a thin ring rather than vanishing, because a night sky with a hole where the
+ * moon should be reads as a mistake, and a ring is what a new moon looks like to anyone who
+ * looks up. The arithmetic for the phase is a calendar fold in [SkyMoment]; this only draws it.
+ */
+private fun DrawScope.moon(night: Float, phase: Float, colour: Color) {
+    val centre = arcSpot(night)
+    val radius = 9f * density
+    blob(centre, radius * 3.4f, colour, 0.05f)
+
+    // 0 at new, 1 at full, by the cosine of the phase angle.
+    val lit = 0.5f * (1f - cos(phase * 2f * PI.toFloat()))
+    if (lit < 0.06f) {
+        drawCircle(
+            color = colour.copy(alpha = 0.14f),
+            radius = radius,
+            center = centre,
+            style = Stroke(width = 1.2f * density),
+        )
+        return
+    }
+    val disc = Path().apply {
+        addOval(androidx.compose.ui.geometry.Rect(centre - Offset(radius, radius), Size(radius * 2f, radius * 2f)))
+    }
+    // Waxing is lit from the right, waning from the left; the shadow slides the other way.
+    val side = if (phase < 0.5f) 1f else -1f
+    val shadowCentre = Offset(centre.x - side * 2.3f * radius * lit, centre.y)
+    val shadowRadius = radius * 1.04f
+    val shadow = Path().apply {
+        addOval(
+            androidx.compose.ui.geometry.Rect(
+                shadowCentre - Offset(shadowRadius, shadowRadius),
+                Size(shadowRadius * 2f, shadowRadius * 2f),
+            ),
+        )
+    }
+    drawPath(
+        path = Path.combine(androidx.compose.ui.graphics.PathOperation.Difference, disc, shadow),
+        color = colour.copy(alpha = 0.32f),
+    )
+}
+
 /**
  * Stars, and once a lap something crossing them.
  *
  * The twinkle is two sines of different rates multiplied rather than one, so the field never
  * settles into a visible rhythm. A handful of the brightest carry a small cross of light, which is
  * what a bright star looks like through anything, and one shooting star a lap gives the sky
- * something to have missed.
+ * something to have missed. When the night's own clock is known, the moon rides it.
  */
-private fun DrawScope.stars(clock: Float, colour: Color, accent: Color) {
+private fun DrawScope.stars(
+    clock: Float,
+    colour: Color,
+    accent: Color,
+    night: Float? = null,
+    moonPhase: Float = 0.5f,
+) {
+    if (night != null) moon(night, moonPhase, colour)
     for (index in 0 until 30) {
         val x = scatter(index, 11) * size.width
         val y = scatter(index, 12) * size.height * 0.82f
@@ -434,6 +525,12 @@ private const val SLANT = 0.75f
 
 /** The wind, in km/h, at which the lean is as far over as it goes. */
 private const val WIND_FULL = 55.0
+
+/** A quarter-hour of rain, in mm, past which the field is as thick as it gets (~10 mm/h). */
+private const val HARD_RAIN_MM = 2.5
+
+/** A quarter-hour of snow, in cm, past which the flurry is as thick as it gets. */
+private const val HARD_SNOW_CM = 1.0
 
 /** How far off each edge a cloud is allowed to sit while it drifts in. */
 private const val BANK = 90f
