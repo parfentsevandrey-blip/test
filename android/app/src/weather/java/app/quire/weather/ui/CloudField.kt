@@ -56,6 +56,15 @@ internal fun DrawScope.puffField(
     glowTint: Color,
     glow: Float,
     alphaScale: Float = 1f,
+    // Aerial perspective: what the far clouds dissolve towards. Unspecified turns it off.
+    haze: Color = Color.Unspecified,
+    // Where the light is, in screen x — the sun or the moon. Null lights from straight above.
+    lightX: Float? = null,
+    // Lightning, 0..1: for one beat the whole bank goes brighter and whiter.
+    boost: Float = 0f,
+    // The hand's camera offset, in world units. One number, and every depth answers it by its
+    // own amount — which is the entire point of projecting instead of sliding a picture.
+    camX: Float = 0f,
 ) {
     val focal = size.width * 0.5f
     val cx = size.width * 0.5f
@@ -64,15 +73,35 @@ internal fun DrawScope.puffField(
 
     for (puff in puffs.sortedByDescending { it.z }) {
         if (puff.z <= CLOUD_NEAR * 0.5f) continue
-        val sx = cx + projected(puff.x, puff.z, focal)
+        val sx = cx + projected(puff.x - camX, puff.z, focal)
         val sy = horizon - projected(puff.y, puff.z, focal)
         val radius = projected(puff.size, puff.z, focal)
         if (radius < 1f) continue
         if (sx + radius < 0f || sx - radius > size.width) continue
 
         val nearness = ((CLOUD_FAR - puff.z) / (CLOUD_FAR - CLOUD_NEAR)).coerceIn(0f, 1f)
-        val alpha = (0.030f + 0.045f * nearness) * alphaScale
-        blob(Offset(sx, sy), radius, inked, alpha)
+        // Distance is also colour: the far bank leans into the sky it stands in front of, the
+        // way real distance behaves, and lightning cancels the lean for its one lit beat.
+        val body = if (haze == Color.Unspecified) {
+            inked
+        } else {
+            lerp(inked, haze, (1f - nearness) * 0.5f * (1f - boost))
+        }
+        val alpha = ((0.030f + 0.045f * nearness) * alphaScale * (1f + 1.6f * boost))
+            .coerceAtMost(0.28f)
+        blob(Offset(sx, sy), radius, body, alpha)
+
+        // The lit side: a smaller, brighter round offset towards the light, which is the whole
+        // difference between a soft flat shape and a thing the sun is on one side of.
+        val towards = if (lightX == null) 0f else {
+            ((lightX - sx) / (size.width * 0.5f)).coerceIn(-1f, 1f)
+        }
+        blob(
+            Offset(sx + towards * radius * 0.24f, sy - radius * 0.26f),
+            radius * 0.62f,
+            lerp(body, Color.White, 0.35f + 0.3f * boost),
+            alpha * 0.8f,
+        )
     }
 }
 
@@ -91,6 +120,13 @@ internal fun DrawScope.cloudField(
     colour: Color,
     glowTint: Color,
     glow: Float,
+    haze: Color = Color.Unspecified,
+    lightX: Float? = null,
+    camX: Float = 0f,
+    boost: Float = 0f,
+    // A storm's bank: the same field held to the far half of the box, where it belongs behind
+    // the rain — near clouds under falling rain read as mush in front of the page.
+    distant: Boolean = false,
 ) {
     val count = (3 + cover * 6f).toInt()
     val direction = if (lean < 0f) -1f else 1f
@@ -101,7 +137,11 @@ internal fun DrawScope.cloudField(
     for (cloud in 0 until count) {
         // The whole cluster shares one journey across the box; a whole number of laps keeps the
         // loop seamless, and deeper clouds take the slower lap the way distance does.
-        val z = CLOUD_NEAR + 0.6f + scatter(cloud, 31) * (CLOUD_FAR - CLOUD_NEAR - 1.2f)
+        val z = if (distant) {
+            CLOUD_NEAR + (CLOUD_FAR - CLOUD_NEAR) * (0.55f + scatter(cloud, 31) * 0.40f)
+        } else {
+            CLOUD_NEAR + 0.6f + scatter(cloud, 31) * (CLOUD_FAR - CLOUD_NEAR - 1.2f)
+        }
         val laps = 1 + (cloud % 2)
         val travel = fall(clock, laps, scatter(cloud, 32))
         val x = ((if (direction > 0f) travel else 1f - travel) * 2f - 1f) * CLOUD_SPAN
@@ -121,5 +161,12 @@ internal fun DrawScope.cloudField(
         puffs += Puff(x + core * 0.38f, y + core * 0.36f, z + 0.03f, core * 0.52f)
     }
 
-    puffField(puffs, colour, glowTint, glow, alphaScale = 0.8f + 0.5f * cover)
+    puffField(
+        puffs, colour, glowTint, glow,
+        alphaScale = (0.8f + 0.5f * cover) * (if (distant) 0.8f else 1f),
+        haze = haze,
+        lightX = lightX,
+        boost = boost,
+        camX = camX,
+    )
 }

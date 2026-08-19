@@ -67,6 +67,7 @@ import app.quire.R
 import app.quire.calendar.m3.rememberLocale
 import app.quire.weather.DayForecast
 import app.quire.weather.Forecast
+import app.quire.weather.Sky
 import app.quire.weather.WeatherRepository
 import java.time.Instant
 import java.time.LocalDate
@@ -143,6 +144,24 @@ fun WeatherScreen(
             // How hard it is falling right now, when the minute-cast knows; negative for "ask
             // the category". Read once per fetch, like the moment above.
             val quarter = remember(it.fetched) { it.falling(java.time.LocalDateTime.now()) }
+            // The hand's tilt: the sky is drawn through a camera, and the camera listens to
+            // the accelerometer, so tipping the phone slides the layers by their own depths.
+            val tilt by rememberTilt(enabled = true)
+            // And the rain lands in the hand: the lightest tick there is, at rain's own
+            // irregular rhythm, harder rain closing the gaps. Frame-driven, so it stops when
+            // the screen does — background, battery saver, animations off.
+            val raining = it.now.sky in WET_SKIES
+            RainPulse(
+                active = raining && model.settings.hapticRain,
+                intensity = quarter?.rain?.let { mm -> (mm / 2.5).coerceIn(0.15, 1.0).toFloat() }
+                    ?: when (it.now.sky) {
+                        Sky.DRIZZLE -> 0.2f
+                        Sky.SHOWERS -> 0.75f
+                        Sky.THUNDER -> 0.7f
+                        Sky.SLEET -> 0.35f
+                        else -> 0.5f
+                    },
+            )
             LiveSky(
                 sky = it.now.sky,
                 day = it.now.day,
@@ -156,6 +175,8 @@ fun WeatherScreen(
                 night = moment.night,
                 moonPhase = moment.moonPhase,
                 glow = moment.glow,
+                haze = sky,
+                tilt = tilt,
                 rainMm = quarter?.rain ?: -1.0,
                 snowCm = quarter?.snow ?: -1.0,
                 modifier = Modifier
@@ -263,6 +284,9 @@ private val SkyHeight = 320.dp
 
 /** How far down the weather falls, which is as far as the hero and no further. */
 private val WeatherHeight = 232.dp
+
+/** The skies where something is falling that a hand should feel. */
+private val WET_SKIES = setOf(Sky.DRIZZLE, Sky.RAIN, Sky.SHOWERS, Sky.THUNDER, Sky.SLEET)
 
 /**
  * What it is doing now.

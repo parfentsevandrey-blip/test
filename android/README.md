@@ -23,10 +23,10 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-9.7.apk`](dist/quire-calendar-9.7.apk) · 1.9 MB | `sha256 f1d62a4f6dd3396f46496504bb1d0e5a855cc7d29bc798e907a6253a247d2894` |
-| **Weather** | [`dist/quire-weather-9.7.apk`](dist/quire-weather-9.7.apk) · 1.5 MB | `sha256 6238377e71062304cb60b090b5b7afb88872126f2d96fb72dcb74b7b8203c15a` |
+| **Calendar** | [`dist/quire-calendar-9.8.apk`](dist/quire-calendar-9.8.apk) · 1.9 MB | `sha256 61768c93c4f1b2ef9205d9c50e2d902bdcb9f7507ba47a829bcf11739c8cfffe` |
+| **Weather** | [`dist/quire-weather-9.8.apk`](dist/quire-weather-9.8.apk) · 1.5 MB | `sha256 03dae5ab72fa26892613e91a7c971f25aaba68b6fd9a1e52d7d1a92fcc4ee8ca` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-9.7.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-9.8.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -268,6 +268,28 @@ not the clouds in it is only half a sunset. The perspective is tested with a rul
 drawn at depth two and depth five must differ in area by better than threefold, an overcast field
 must out-ink a partly cloudy one, and two fields identical but for the glow must not draw the
 same picture. The projection itself is three unit tests of one division.
+
+**The hand moves the camera.** The accelerometer feeds a camera offset — a slow average learns
+the resting pose, so any way of holding the phone is neutral within seconds, and only the *lean*
+moves the view. Because the sky is drawn through a real camera, one offset gives every layer its
+own honest shift: near clouds slide furthest, the rain by its nearness, and the stars, the sun
+and the moon not at all — infinity has no parallax, which is exactly what makes the rest read as
+depth. Nothing here animates by itself; the parallax is driven entirely by the hand, the one
+kind of motion this project has never had to apologise for. Each cloud also has a lit side now —
+a brighter round offset towards the sun by day and the moon by night — the far bank dissolves
+into the sky it stands in front of the way real distance does, and a storm keeps a distant bank
+that the lightning lights from inside on the very beat the bolt comes down.
+
+**And the rain lands in the hand.** While it rains, the lightest tick the platform has, at rain's
+own irregular rhythm — rain on a roof does not keep a beat, and a metronome in the hand would be
+a notification, not weather. The gap between ticks rides the minute-cast's actual millimetres: a
+drizzle is an occasional tap, a downpour a patter, and there is a floor under the gaps because
+the point is weather in the hand, not a phone buzzing. The loop is paced by the frame clock
+rather than wall time, and that one choice does three jobs: the taps stop the moment the app
+leaves the screen, they stop under battery saver and animations-off exactly when the sky stops,
+and a test can drive the whole thing on a paused clock and simply count — a downpour out-taps a
+drizzle, dry weather taps zero times. It is a setting ("Rain you can feel"), on by default,
+under the living sky's own switch.
 
 The loop is seamless because every particle's speed is a whole number of laps per period. At two
 and a third laps a drop arrives back a third of the way down and the whole field visibly jumps; at

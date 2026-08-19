@@ -94,4 +94,6 @@
     <string name="wx_section_look">Вид</string>
     <string name="wx_live_sky">Живое небо</string>
     <string name="wx_live_sky_hint">Дождь, снег и облака, еле заметно движущиеся за верхом экрана</string>
+    <string name="wx_haptic_rain">Дождь в руку</string>
+    <string name="wx_haptic_rain_hint">Лёгкие тап-тап, пока идёт дождь — в такт его силе</string>
 </resources>

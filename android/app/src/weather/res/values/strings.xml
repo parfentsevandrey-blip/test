@@ -96,4 +96,6 @@
     <string name="wx_section_look">Look</string>
     <string name="wx_live_sky">Live sky</string>
     <string name="wx_live_sky_hint">Rain, snow and cloud moving faintly behind the top of the screen</string>
+    <string name="wx_haptic_rain">Rain you can feel</string>
+    <string name="wx_haptic_rain_hint">A light tap now and then while it rains, in step with how hard</string>
 </resources>

@@ -24,13 +24,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.draw.clipToBounds
 import app.quire.weather.ui.BLOCK
 import app.quire.weather.ui.Days
 import app.quire.weather.ui.Puff
+import app.quire.weather.ui.RainPulse
 import app.quire.weather.ui.SunArc
 import app.quire.weather.ui.LiveSky
 import app.quire.weather.ui.puffField
+import app.quire.weather.ui.rememberTilt
 import app.quire.weather.ui.WeatherApp
 import app.quire.weather.ui.WeatherModel
 import app.quire.weather.ui.WeatherScreen
@@ -722,6 +725,146 @@ class WeatherScreenTest {
             }
         }
         assertTrue("the golden hour never reached the clouds", tinted > 500)
+    }
+
+    /**
+     * The hand moves the camera, and the light has a side.
+     *
+     * Four tiles: the same overcast night twice, once with the phone level and once tipped —
+     * the clouds' light must shift sideways, because the tilt is a camera offset and not a
+     * sticker slide. Then one puff lit from the left and the same puff lit from the right —
+     * the bright side must actually change sides.
+     */
+    @Test
+    fun `tilting the phone moves the sky, and the light has a side`() {
+        val lone = listOf(Puff(0f, 0.8f, 3f, 0.5f))
+        compose.setContent {
+            QuireTheme(dark = true, dynamic = false) {
+                Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+                    val ink = MaterialTheme.colorScheme.onSurface
+                    val gold = MaterialTheme.colorScheme.tertiary
+                    androidx.compose.foundation.layout.Column(Modifier.fillMaxSize()) {
+                        androidx.compose.foundation.Canvas(
+                            Modifier.fillMaxSize().weight(1f).clipToBounds().testTag("level"),
+                        ) { puffField(lone, ink, gold, 0f, camX = 0f) }
+                        androidx.compose.foundation.Canvas(
+                            Modifier.fillMaxSize().weight(1f).clipToBounds().testTag("tipped"),
+                        ) { puffField(lone, ink, gold, 0f, camX = 0.45f) }
+                        androidx.compose.foundation.Canvas(
+                            Modifier.fillMaxSize().weight(1f).clipToBounds().testTag("litleft"),
+                        ) { puffField(lone, ink, gold, 0f, lightX = size.width * 0.05f) }
+                        androidx.compose.foundation.Canvas(
+                            Modifier.fillMaxSize().weight(1f).clipToBounds().testTag("litright"),
+                        ) { puffField(lone, ink, gold, 0f, lightX = size.width * 0.95f) }
+                    }
+                }
+            }
+        }
+        settle()
+        val sheet = shoot("weather-tilt-light")
+        val density = compose.density.density
+
+        fun band(tag: String): Pair<Int, Int> {
+            val bounds = compose.onNodeWithTag(tag).getUnclippedBoundsInRoot()
+            return (bounds.top.value * density).toInt() + 2 to
+                (bounds.bottom.value * density).toInt() - 2
+        }
+
+        fun luma(pixel: Int): Int = (
+            android.graphics.Color.red(pixel) * 299 +
+                android.graphics.Color.green(pixel) * 587 +
+                android.graphics.Color.blue(pixel) * 114
+            ) / 1000
+
+        fun centroidX(tag: String): Int {
+            val (top, bottom) = band(tag)
+            val ground = luma(sheet.getPixel(4, bottom - 4))
+            var sum = 0L
+            var count = 0
+            for (y in top until bottom step 2) {
+                for (x in 0 until sheet.width step 2) {
+                    if (luma(sheet.getPixel(x, y)) > ground + 4) { sum += x; count++ }
+                }
+            }
+            assertTrue("$tag drew nothing", count > 50)
+            return (sum / count).toInt()
+        }
+
+        // Tilted right, the camera moves right and the world slides left — by the projection's
+        // own amount for this depth, give or take the clipped rim.
+        val slid = centroidX("level") - centroidX("tipped")
+        assertTrue("the tilt moved the cloud by only $slid px", slid > 40)
+
+        // The bright side follows the light. Weigh each half of the puff's tile by luma-above-
+        // ground: the lit-from-the-left picture must lean left of the lit-from-the-right one.
+        assertTrue(
+            "the light has no side",
+            centroidX("litleft") < centroidX("litright") - 6,
+        )
+    }
+
+    /** The sensor reaches the camera: an injected accelerometer event moves the tilt state. */
+    @Test
+    fun `the accelerometer reaches the sky`() {
+        val manager = app.getSystemService(android.hardware.SensorManager::class.java)
+        shadowOf(manager).addSensor(
+            org.robolectric.shadows.ShadowSensor.newInstance(
+                android.hardware.Sensor.TYPE_ACCELEROMETER,
+            ),
+        )
+        var seen = androidx.compose.ui.geometry.Offset.Zero
+        compose.setContent {
+            val tilt by rememberTilt(enabled = true)
+            seen = tilt
+        }
+        compose.waitForIdle()
+
+        // A real SensorEvent with a sized values array; the platform hides the constructor and
+        // this Robolectric's no-argument factory leaves the array null, so it is built the
+        // blunt way. A settled grip first, then a sharp lean: the state must answer the lean.
+        fun event(ax: Float, ay: Float): android.hardware.SensorEvent {
+            val ctor = android.hardware.SensorEvent::class.java
+                .getDeclaredConstructor(Int::class.javaPrimitiveType)
+            ctor.isAccessible = true
+            return ctor.newInstance(3).also {
+                it.values[0] = ax
+                it.values[1] = ay
+            }
+        }
+        repeat(60) { shadowOf(manager).sendSensorEventToListeners(event(0f, 9.8f)) }
+        repeat(5) { shadowOf(manager).sendSensorEventToListeners(event(2.6f, 9.8f)) }
+        repeat(4) {
+            compose.mainClock.advanceTimeBy(16L)
+            shadowOf(Looper.getMainLooper()).idle()
+        }
+        assertTrue("the lean never reached the tilt state (${seen.x})", seen.x > 0.3f)
+    }
+
+    /**
+     * The rain taps the hand in step with itself: a downpour patters, a drizzle only now and
+     * then, and dry weather never. Counted on the paused clock through the same frame pacing
+     * that also silences the taps whenever the screen stops getting frames — background,
+     * battery saver, animations off.
+     */
+    @Test
+    fun `the rain taps the hand as hard as it falls`() {
+        var hard = 0
+        var light = 0
+        var dry = 0
+        compose.setContent {
+            RainPulse(active = true, intensity = 1f, tap = { hard++ })
+            RainPulse(active = true, intensity = 0.1f, tap = { light++ })
+            RainPulse(active = false, intensity = 1f, tap = { dry++ })
+        }
+        compose.waitForIdle()
+        repeat(100) {
+            compose.mainClock.advanceTimeBy(160L)
+            shadowOf(Looper.getMainLooper()).idle()
+        }
+
+        assertTrue("no taps in a downpour", hard > 20)
+        assertTrue("a drizzle taps like a downpour ($light vs $hard)", light < hard / 2)
+        assertTrue("dry weather tapped $dry times", dry == 0)
     }
 
     /**

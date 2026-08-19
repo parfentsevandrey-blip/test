@@ -69,11 +69,19 @@ fun WeatherSettingsScreen(model: WeatherModel, padding: PaddingValues) {
             SettingGroup {
                 SettingRow(
                     index = 0,
-                    count = 1,
+                    count = 2,
                     title = stringResource(R.string.wx_live_sky),
                     hint = stringResource(R.string.wx_live_sky_hint),
                     checked = settings.liveSky,
                     onChange = { model.setLiveSky(it) },
+                )
+                SettingRow(
+                    index = 1,
+                    count = 2,
+                    title = stringResource(R.string.wx_haptic_rain),
+                    hint = stringResource(R.string.wx_haptic_rain_hint),
+                    checked = settings.hapticRain,
+                    onChange = { model.setHapticRain(it) },
                 )
             }
         }

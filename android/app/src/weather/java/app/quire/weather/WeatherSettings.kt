@@ -86,6 +86,15 @@ class WeatherSettings private constructor(private val context: Context) {
         get() = prefs.getBoolean(KEY_LIVE_SKY, true)
         set(value) = prefs.edit { putBoolean(KEY_LIVE_SKY, value) }
 
+    /**
+     * Whether rain on the screen also lands in the hand — a light tick now and then, in step
+     * with how hard it is falling. Part of the living sky, so it obeys the same master switch;
+     * this is only the finer one.
+     */
+    var hapticRain: Boolean
+        get() = prefs.getBoolean(KEY_HAPTIC_RAIN, true)
+        set(value) = prefs.edit { putBoolean(KEY_HAPTIC_RAIN, value) }
+
     var alerts: Boolean
         get() = prefs.getBoolean(KEY_ALERTS, false)
         set(value) = prefs.edit { putBoolean(KEY_ALERTS, value) }
@@ -128,6 +137,7 @@ class WeatherSettings private constructor(private val context: Context) {
         private const val KEY_PERIOD = "period"
         private const val KEY_ALERTS = "alerts"
         private const val KEY_LIVE_SKY = "livesky"
+        private const val KEY_HAPTIC_RAIN = "hapticrain"
         private const val KEY_THRESHOLD = "threshold"
         private const val KEY_DEGREES = "degrees"
         private const val KEY_WIND = "wind"

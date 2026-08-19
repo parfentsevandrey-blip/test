@@ -64,6 +64,15 @@ fun LiveSky(
     moonPhase: Float = 0.5f,
     /** How deep into the golden hour, 0..1: the same lean the wash takes, on the clouds. */
     glow: Float = 0f,
+    /** The wash's own colour, for aerial perspective: what the far clouds dissolve towards. */
+    haze: Color = Color.Unspecified,
+    /**
+     * The hand's tilt, each axis -1..1, from [rememberTilt]. It moves the camera, and the
+     * camera moves every depth by its own amount: near clouds slide furthest, the rain by its
+     * nearness, and the stars, the sun and the moon not at all — infinity has no parallax,
+     * which is precisely what makes the rest of it read as depth.
+     */
+    tilt: Offset = Offset.Zero,
     // How hard it is actually falling this quarter-hour, from the minute-cast. Negative means
     // "not known", and the sky falls back to what its category usually looks like.
     rainMm: Double = -1.0,
@@ -113,13 +122,21 @@ fun LiveSky(
     // and the category's usual look stands in only where nothing better is known.
     val pour = if (rainMm >= 0.0) (rainMm / HARD_RAIN_MM).coerceIn(0.0, 1.0).toFloat() else -1f
     val flurry = if (snowCm >= 0.0) (snowCm / HARD_SNOW_CM).coerceIn(0.0, 1.0).toFloat() else -1f
-    fun dropsOf(usual: Int) = if (pour < 0f) usual else (10 + 44 * pour).toInt()
-    fun weightOf(usual: Float) = if (pour < 0f) usual else 0.55f + 0.65f * pour
-    fun flakesOf(usual: Int) = if (flurry < 0f) usual else (8 + 26 * flurry).toInt()
+    fun dropsOf(usual: Int) = if (pour < 0f) usual else (12 + 56 * pour).toInt()
+    fun weightOf(usual: Float) = if (pour < 0f) usual else 0.55f + 0.7f * pour
+    fun flakesOf(usual: Int) = if (flurry < 0f) usual else (8 + 34 * flurry).toInt()
 
     val golden = scheme.tertiary
 
     Canvas(modifier) {
+        // Where the light is, in screen x: the sun by day, the moon by night, or nowhere known.
+        val lightX: Float? = when {
+            day && daylight != null -> size.width * (0.12f + 0.76f * daylight)
+            !day && night != null -> size.width * (0.12f + 0.76f * night)
+            else -> null
+        }
+        val camX = tilt.x * 0.5f
+
         when (sky) {
             Sky.CLEAR, Sky.MOSTLY_CLEAR ->
                 if (day) sun(clock, accent, daylight) else stars(clock, ink, accent, night, moonPhase)
@@ -134,24 +151,42 @@ fun LiveSky(
                     colour = ink,
                     glowTint = golden,
                     glow = glow,
+                    haze = haze,
+                    lightX = lightX,
+                    camX = camX,
                 )
             }
             Sky.FOG -> fog(clock, ink)
-            // No cloud under the rain. A bank of cloud is a large soft shape and the rain is a
-            // field of small hard ones; together over a page of type they stopped being weather
-            // behind it and started being a picture in front of it.
-            Sky.DRIZZLE -> rain(clock, accent, drops = dropsOf(18), weight = weightOf(0.6f), lean = lean)
-            Sky.RAIN -> rain(clock, accent, drops = dropsOf(26), weight = weightOf(0.9f), lean = lean)
-            Sky.SHOWERS -> rain(clock, accent, drops = dropsOf(34), weight = weightOf(1.1f), lean = lean)
+            // No cloud under plain rain — a bank of cloud over a field of drops over a page of
+            // type reads as a picture in front of the page. The storm below is the exception,
+            // and it keeps its bank to the far half of the box for the same reason.
+            Sky.DRIZZLE -> rain(clock, accent, drops = dropsOf(22), weight = weightOf(0.6f), lean = lean, tiltX = tilt.x)
+            Sky.RAIN -> rain(clock, accent, drops = dropsOf(34), weight = weightOf(0.9f), lean = lean, tiltX = tilt.x)
+            Sky.SHOWERS -> rain(clock, accent, drops = dropsOf(46), weight = weightOf(1.1f), lean = lean, tiltX = tilt.x)
             Sky.THUNDER -> {
-                rain(clock, accent, drops = dropsOf(28), weight = weightOf(1f), lean = lean)
+                // The storm has a back to it: a distant bank the bolts light from inside, on
+                // the same beat the flash fades by.
+                cloudField(
+                    clock = clock,
+                    cover = 0.55f,
+                    lean = lean,
+                    colour = ink,
+                    glowTint = golden,
+                    glow = glow,
+                    haze = haze,
+                    lightX = null,
+                    camX = camX,
+                    boost = strikeGlow(clock),
+                    distant = true,
+                )
+                rain(clock, accent, drops = dropsOf(38), weight = weightOf(1f), lean = lean, tiltX = tilt.x)
                 lightning(clock, accent)
             }
             Sky.SLEET -> {
-                rain(clock, accent, drops = dropsOf(14), weight = weightOf(0.7f), lean = lean)
-                snow(clock, ink, flakes = flakesOf(10), lean = lean)
+                rain(clock, accent, drops = dropsOf(16), weight = weightOf(0.7f), lean = lean, tiltX = tilt.x)
+                snow(clock, ink, flakes = flakesOf(12), lean = lean, tiltX = tilt.x)
             }
-            Sky.SNOW -> snow(clock, ink, flakes = flakesOf(22), lean = lean)
+            Sky.SNOW -> snow(clock, ink, flakes = flakesOf(30), lean = lean, tiltX = tilt.x)
         }
     }
 }
@@ -184,7 +219,14 @@ internal fun wave(turn: Float): Float = sin(turn * 2f * PI.toFloat())
  * slow. One number does all four, which is what keeps a downpour from looking like a hatching
  * pattern. Every drop also carries a little of its own speed, so no two columns beat together.
  */
-private fun DrawScope.rain(clock: Float, colour: Color, drops: Int, weight: Float, lean: Float) {
+private fun DrawScope.rain(
+    clock: Float,
+    colour: Color,
+    drops: Int,
+    weight: Float,
+    lean: Float,
+    tiltX: Float = 0f,
+) {
     val height = size.height
     for (index in 0 until drops) {
         val depth = scatter(index, 20)
@@ -192,7 +234,10 @@ private fun DrawScope.rain(clock: Float, colour: Color, drops: Int, weight: Floa
         val near = 0.45f + 0.55f * depth
         val y = fall(clock, laps, scatter(index, 2)) * (height + LEAD) - LEAD
         val length = (9f + laps * 4.5f) * weight * near * density
-        val x = scatter(index, 1) * (size.width + 2f * SPILL * density) - SPILL * density
+        // The hand's parallax, by nearness: tilting the phone slides the close rain past the
+        // far rain, the same camera the clouds answer.
+        val x = scatter(index, 1) * (size.width + 2f * SPILL * density) - SPILL * density -
+            tiltX * (0.4f + near) * 40f * density
         // Faded at the bottom of the band rather than cut off at it: rain that stops on a
         // straight line across the page is a rectangle of rain, not weather behind a page.
         val alpha = 0.17f * weight * near * (1f - (y / height).coerceIn(0f, 1f))
@@ -214,7 +259,13 @@ private fun DrawScope.rain(clock: Float, colour: Color, drops: Int, weight: Floa
  * field of full stops; the far ones stay dots, because at four pixels an arm is a smudge and the
  * cost of drawing it is the same as the cost of drawing a flake you can see.
  */
-private fun DrawScope.snow(clock: Float, colour: Color, flakes: Int, lean: Float) {
+private fun DrawScope.snow(
+    clock: Float,
+    colour: Color,
+    flakes: Int,
+    lean: Float,
+    tiltX: Float = 0f,
+) {
     val height = size.height
     for (index in 0 until flakes) {
         val depth = scatter(index, 21)
@@ -222,10 +273,12 @@ private fun DrawScope.snow(clock: Float, colour: Color, flakes: Int, lean: Float
         val laps = 1 + (index % 2)
         val phase = scatter(index, 3)
         val y = fall(clock, laps, phase) * (height + LEAD) - LEAD
-        // Sideways wander on its own loop, plus whatever the wind is doing to everything.
+        // Sideways wander on its own loop, plus whatever the wind is doing to everything,
+        // plus the hand: near flakes answer a tilt harder than far ones, like the rain.
         val sway = wave(fall(clock, laps * 2, phase)) * 10f * near * density
         val push = lean * (y + LEAD) * 0.18f
-        val x = scatter(index, 4) * size.width + sway + push
+        val x = scatter(index, 4) * size.width + sway + push -
+            tiltX * (0.4f + near) * 40f * density
         val alpha = 0.24f * near * (1f - (y / height).coerceIn(0f, 1f))
         if (alpha <= 0.01f) continue
         val ink = colour.copy(alpha = alpha)
@@ -401,7 +454,7 @@ private fun DrawScope.stars(
     moonPhase: Float = 0.5f,
 ) {
     if (night != null) moon(night, moonPhase, colour)
-    for (index in 0 until 30) {
+    for (index in 0 until 42) {
         val x = scatter(index, 11) * size.width
         val y = scatter(index, 12) * size.height * 0.82f
         val slow = 0.5f + 0.5f * wave(fall(clock, 1 + (index % 3), scatter(index, 13)))
@@ -453,6 +506,23 @@ private fun DrawScope.stars(
  * the strike's own index — and the shape of the fade: sharp on, slow off, which is what lightning
  * does and what a linear ramp does not.
  */
+/**
+ * How lit the storm is right now: sharp on, slow off, the same shape the bolts fade by.
+ * The distant bank multiplies its ink by this, so the flash lights the clouds from inside
+ * on exactly the beat the bolt comes down.
+ */
+internal fun strikeGlow(clock: Float): Float {
+    var glow = 0f
+    for (strike in 0 until 2) {
+        val since = clock - (0.22f + strike * 0.46f)
+        if (since in 0f..FLASH_FOR) {
+            val decay = 1f - since / FLASH_FOR
+            glow = maxOf(glow, decay * decay)
+        }
+    }
+    return glow
+}
+
 private fun DrawScope.lightning(clock: Float, colour: Color) {
     for (strike in 0 until 2) {
         val at = 0.22f + strike * 0.46f
