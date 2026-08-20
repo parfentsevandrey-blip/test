@@ -563,9 +563,14 @@ class WeatherRenderTest {
      * The rain on the card is real motion, not a picture of some.
      *
      * The flipper's phases are stepped by hand — the launcher's clock cannot run in a test — and
-     * consecutive phases must disagree about a meaningful number of pixels: four identical frames
+     * consecutive phases must disagree about a meaningful number of pixels: six identical frames
      * would flip merrily and show a card standing perfectly still. Each phase is written out as a
      * picture, because whether the loop reads as falling rain is a judgement the diff cannot make.
+     *
+     * The frames also claim three depths, and that claim is checked in the alpha channel: the
+     * near, mid and far layers are drawn at three different strokeAlphas, so a lone frame drawn
+     * on nothing must show three distinct bands of opacity. One band would mean the layers
+     * collapsed back into the flat scratches this version exists to replace.
      */
     @Test
     fun `the rain on the card actually moves`() {
@@ -589,12 +594,22 @@ class WeatherRenderTest {
         assertTrue("the shower card has no falling layer", flipper != null)
         flipper!!
         assertTrue("the falling layer is hidden", flipper.visibility == android.view.View.VISIBLE)
-        assertTrue("expected 4 phases, found ${flipper.childCount}", flipper.childCount == 4)
+        assertTrue("expected 6 phases, found ${flipper.childCount}", flipper.childCount == 6)
+
+        // The two-tone hero: rain is falling, so the icon's drops step forward in the ink
+        // while the cloud keeps the accent — the overlay must be on and have a picture in it.
+        val detail = host.findViewById<android.widget.ImageView>(app.quire.R.id.now_icon_detail)
+        assertTrue("a wet card has no detail overlay on its icon", detail != null)
+        assertTrue(
+            "the icon's falling part is not shown on a wet card",
+            detail!!.visibility == android.view.View.VISIBLE && detail.drawable != null,
+        )
 
         // The crossfade belongs to the launcher's clock; stepping by hand it only smears the
         // snapshot with a half-faded neighbour.
         flipper.inAnimation = null
         flipper.outAnimation = null
+
         val phases = (0 until flipper.childCount).map { index ->
             flipper.displayedChild = index
             render(host, 340, 160, "precip-rain-phase-$index")
@@ -607,14 +622,40 @@ class WeatherRenderTest {
                 moved(phases[index], next) > 400,
             )
         }
+
+        // One frame on its own — laid out by the renders above — for the depth claim: the near,
+        // mid and far layers sit at three different strokeAlphas, so drawn on nothing the frame
+        // must show three distinct bands of opacity. One band would mean the layers collapsed
+        // back into the flat scratches this version exists to replace.
+        flipper.displayedChild = 0
+        val lone = flipper.getChildAt(0)
+        val solo = Bitmap.createBitmap(lone.width, lone.height, Bitmap.Config.ARGB_8888)
+        lone.draw(Canvas(solo))
+        var near = 0
+        var mid = 0
+        var far = 0
+        for (x in 0 until solo.width step 2) {
+            for (y in 0 until solo.height step 2) {
+                when (android.graphics.Color.alpha(solo.getPixel(x, y))) {
+                    in 95..125 -> near++
+                    in 55..85 -> mid++
+                    in 30..52 -> far++
+                }
+            }
+        }
+        assertTrue(
+            "expected three depths of rain, found near=$near mid=$mid far=$far",
+            near > 50 && mid > 50 && far > 50,
+        )
     }
 
     /**
-     * Thunder flashes on the eighth beat; snow falls its own way; a dry card stands still.
+     * Thunder flashes on the twelfth beat; snow falls its own way; a dry card stands still.
      *
      * The dry case is the taste rule holding: a clear evening's card must be exactly the card
      * this app shipped before it learned to animate — an empty, GONE flipper, no cost and no
-     * motion in front of the numbers.
+     * motion in front of the numbers — and a one-colour icon, because nothing is falling out
+     * of it for the second tone to pick out.
      */
     @Test
     fun `thunder flashes, snow falls, and a clear sky stands still`() {
@@ -623,7 +664,7 @@ class WeatherRenderTest {
             .findViewById<android.widget.ViewFlipper>(app.quire.R.id.sky_motion)!!
         assertTrue(
             "thunder should run two laps with one flash, found ${flipper.childCount}",
-            flipper.childCount == 8,
+            flipper.childCount == 12,
         )
         flipper.inAnimation = null
         flipper.outAnimation = null
@@ -633,16 +674,21 @@ class WeatherRenderTest {
         WeatherStore.save(context, stub(nowSky = Sky.SNOW))
         flipper = applied(widgetId = 77)
             .findViewById<android.widget.ViewFlipper>(app.quire.R.id.sky_motion)!!
-        assertTrue("snow should fall in 4 phases, found ${flipper.childCount}", flipper.childCount == 4)
+        assertTrue("snow should fall in 6 phases, found ${flipper.childCount}", flipper.childCount == 6)
         flipper.inAnimation = null
         flipper.outAnimation = null
         render(flipper.also { it.displayedChild = 0 }, 340, 160, "precip-snow-phase-0")
 
         WeatherStore.save(context, stub(nowSky = Sky.CLEAR))
-        flipper = applied(widgetId = 78)
-            .findViewById<android.widget.ViewFlipper>(app.quire.R.id.sky_motion)!!
+        val clearHost = applied(widgetId = 78)
+        flipper = clearHost.findViewById<android.widget.ViewFlipper>(app.quire.R.id.sky_motion)!!
         assertTrue("a clear sky left the flipper on", flipper.visibility == android.view.View.GONE)
         assertTrue("a clear sky kept ${flipper.childCount} frames", flipper.childCount == 0)
+        val detail = clearHost.findViewById<android.widget.ImageView>(app.quire.R.id.now_icon_detail)!!
+        assertTrue(
+            "a clear sky put a second tone on an icon with nothing falling",
+            detail.visibility == android.view.View.GONE,
+        )
     }
 
     /**

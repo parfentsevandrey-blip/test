@@ -111,7 +111,7 @@ object WeatherWidgetRenderer {
             root.setTextViewText(R.id.now_sky, context.getString(R.string.wx_waiting))
             paint.tint(root, R.id.now_sky, "setTextColor", R.color.widget_ink_muted) { it.inkMuted }
             root.setTextViewText(R.id.now_feels, "")
-            root.setViewVisibility(R.id.now_icon, android.view.View.GONE)
+            root.setViewVisibility(R.id.now_icon_box, android.view.View.GONE)
             root.setViewVisibility(R.id.rule, android.view.View.GONE)
             root.setOnClickPendingIntent(R.id.widget_root, openIntent(context, widgetId))
             return root
@@ -173,12 +173,25 @@ object WeatherWidgetRenderer {
         paint.tint(root, R.id.place, "setTextColor", R.color.widget_ink_muted) { it.inkMuted }
         root.setTextViewTextSize(R.id.place, TypedValue.COMPLEX_UNIT_SP, placeSp)
 
-        root.setViewVisibility(R.id.now_icon, android.view.View.VISIBLE)
+        root.setViewVisibility(R.id.now_icon_box, android.view.View.VISIBLE)
         root.setImageViewResource(R.id.now_icon, forecast.now.sky.icon(forecast.now.day))
         paint.tint(root, R.id.now_icon, "setColorFilter", R.color.widget_accent) { it.accent }
+        // The falling part of a wet icon, painted again over itself in the ink: the cloud keeps
+        // the accent and the drops, bolt or flakes step forward in the text's own colour. The
+        // overlay's paths sit on the same grid as the base's, so nothing has to line up — it
+        // already is. Dry skies have no falling part and stay one colour, which is the contrast
+        // doing its job: two tones mean something is coming down.
+        val detail = detailOf(forecast.now.sky)
+        if (detail != null) {
+            root.setViewVisibility(R.id.now_icon_detail, android.view.View.VISIBLE)
+            root.setImageViewResource(R.id.now_icon_detail, detail)
+            paint.tint(root, R.id.now_icon_detail, "setColorFilter", R.color.widget_ink) { it.ink }
+        } else {
+            root.setViewVisibility(R.id.now_icon_detail, android.view.View.GONE)
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            root.setViewLayoutWidth(R.id.now_icon, iconDp, TypedValue.COMPLEX_UNIT_DIP)
-            root.setViewLayoutHeight(R.id.now_icon, iconDp, TypedValue.COMPLEX_UNIT_DIP)
+            root.setViewLayoutWidth(R.id.now_icon_box, iconDp, TypedValue.COMPLEX_UNIT_DIP)
+            root.setViewLayoutHeight(R.id.now_icon_box, iconDp, TypedValue.COMPLEX_UNIT_DIP)
         }
 
         root.setTextViewText(
@@ -364,30 +377,47 @@ object WeatherWidgetRenderer {
 
     // ---- the falling layer ---------------------------------------------
 
+    /** The falling part of each wet icon, alone, for the hero's second tone. */
+    private fun detailOf(sky: Sky): Int? = when (sky) {
+        Sky.DRIZZLE -> R.drawable.wx_drizzle_detail
+        Sky.RAIN -> R.drawable.wx_rain_detail
+        Sky.SHOWERS -> R.drawable.wx_showers_detail
+        Sky.THUNDER -> R.drawable.wx_thunder_detail
+        Sky.SNOW -> R.drawable.wx_snow_detail
+        Sky.SLEET -> R.drawable.wx_sleet_detail
+        else -> null
+    }
+
     private val RAIN_FRAMES = intArrayOf(
-        R.drawable.precip_rain_0, R.drawable.precip_rain_1,
-        R.drawable.precip_rain_2, R.drawable.precip_rain_3,
+        R.drawable.precip_rain_0, R.drawable.precip_rain_1, R.drawable.precip_rain_2,
+        R.drawable.precip_rain_3, R.drawable.precip_rain_4, R.drawable.precip_rain_5,
     )
     private val SNOW_FRAMES = intArrayOf(
-        R.drawable.precip_snow_0, R.drawable.precip_snow_1,
-        R.drawable.precip_snow_2, R.drawable.precip_snow_3,
+        R.drawable.precip_snow_0, R.drawable.precip_snow_1, R.drawable.precip_snow_2,
+        R.drawable.precip_snow_3, R.drawable.precip_snow_4, R.drawable.precip_snow_5,
     )
 
     // How loud the layer is, out of 255. It sits behind the type: legible weather, not a
     // watermark over the numbers. Drizzle is fainter than rain because drizzle is fainter
     // than rain; the flash is the loudest thing the card ever does and it lasts one beat.
-    private const val DRIZZLE_ALPHA = 64
-    private const val RAIN_ALPHA = 100
-    private const val SNOW_ALPHA = 120
+    // A shade higher than they were when the frames were one flat layer: the far depths
+    // carry their own strokeAlpha inside the vector, so most of each frame is quieter now
+    // and only the nearest strokes ever reach this ceiling.
+    private const val DRIZZLE_ALPHA = 70
+    private const val RAIN_ALPHA = 110
+    private const val SNOW_ALPHA = 130
     private const val FLASH_ALPHA = 150
 
     /**
      * Fills the flipper with the phases of whatever is falling, or empties it.
      *
      * The flipper steps through its children in the launcher's process on its own clock — the
-     * one animation a RemoteViews widget can run without waking its app. Four phase frames make
-     * a seamless loop; thunder runs the loop twice with the last beat swapped for a lightning
-     * frame, so the flash lands every eighth beat instead of strobing on every fourth.
+     * one animation a RemoteViews widget can run without waking its app. Six phase frames make
+     * a seamless loop, and each frame is three depths of rain at three speeds, so the loop
+     * carries a parallax the flipper itself knows nothing about. Thunder runs the loop twice
+     * with the last beat swapped for a lightning frame, so the flash lands every twelfth beat
+     * instead of strobing — and the flash frame keeps the far rain behind the bolt, so the
+     * shower does not stall while the sky lights.
      *
      * Dry skies get an empty, GONE flipper, which costs the launcher nothing — a card with no
      * weather falling must be exactly the card this app shipped before it learned to do this.

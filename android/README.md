@@ -25,11 +25,11 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-9.9.apk`](dist/quire-calendar-9.9.apk) · 1.9 MB | `sha256 1707a430eb8572452730bdc194cebdf53fd14af58384f5f7ba5e51a8a3df58d8` |
-| **Weather** | [`dist/quire-weather-9.9.apk`](dist/quire-weather-9.9.apk) · 1.5 MB | `sha256 7b41a8f1ee078a6003dae8fff5cfc88e1b99d09064702f429d3e2ed11f52e5ba` |
-| **Quire 95** | [`dist/quire-95-9.9.apk`](dist/quire-95-9.9.apk) · 0.9 MB | `sha256 8b6dc865bb90059ad9da11f0fb5fa46185b01827ddf37006babfdde5a4b7bae6` |
+| **Calendar** | [`dist/quire-calendar-9.10.apk`](dist/quire-calendar-9.10.apk) · 1.9 MB | `sha256 d35e6a09d894a92ba7ddd696c3b89429aa865f97eed8dac8eaaa07c3e69cf9b7` |
+| **Weather** | [`dist/quire-weather-9.10.apk`](dist/quire-weather-9.10.apk) · 1.6 MB | `sha256 778d56284d265dd733d6cab79ad0a86c98a439168d9252ad7a11ac79434df0c7` |
+| **Quire 95** | [`dist/quire-95-9.10.apk`](dist/quire-95-9.10.apk) · 0.9 MB | `sha256 373ab9506777ef67198f8b03fa5333b164777700db7a499ff74ac42a51ab5965` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-9.9.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-9.10.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -481,14 +481,28 @@ moment the launcher paints, not the moment the app fetched, so a half-hour-old c
 down correctly. Nothing shows when nothing changes within two hours: "rain in three hours" is the
 daily forecast's news.
 
-**And the rain falls on it.** When something is falling outside, it falls on the card — a layer
-of drops (or flakes, or a lightning frame every eighth beat in a thunderstorm) behind the type,
-in muted ink, moving. A widget is `RemoteViews` and cannot animate; the one exception is
-`ViewFlipper`, which the launcher steps through its children on its own clock. Four phase frames,
-each advancing the drops a quarter of the lattice, loop seamlessly at four beats a second with a
-short crossfade — while this app's process sleeps and spends nothing. A dry sky gets an empty,
-`GONE` flipper: the card with no weather in it is exactly the card that shipped before it learned
-this, because motion on a page of numbers is only ever allowed to *be* information.
+**And the rain falls on it — in three depths.** When something is falling outside, it falls on
+the card — a layer of drops (or flakes, or a lightning frame every twelfth beat in a
+thunderstorm) behind the type, in muted ink, moving. A widget is `RemoteViews` and cannot
+animate; the one exception is `ViewFlipper`, which the launcher steps through its children on
+its own clock. Six phase frames loop seamlessly at five beats a second with a short crossfade —
+and each frame is three rains, not one: a faint far mist of short slivers, a middle layer, and
+a near layer of fewer, longer, heavier strokes falling three times as fast. The parallax is
+baked into the frames — every layer advances by exactly its own lattice ÷ 6 per beat, so all
+three loop in step — and the launcher still just flips pictures while this app's process sleeps
+and spends nothing. Snow gets the same treatment in its own vocabulary: six-armed flakes near,
+discs in the middle, dots far, each depth wobbling on a sine whose whole period is the loop.
+The thunder flash keeps the far rain behind the bolt, so the shower turns the accent colour for
+a beat instead of stalling. A dry sky gets an empty, `GONE` flipper: the card with no weather
+in it is exactly the card that shipped before it learned this, because motion on a page of
+numbers is only ever allowed to *be* information.
+
+**The icon says it twice.** When the sky is wet, the card's big icon splits into two tones: the
+cloud keeps the accent, and its falling part — the drops, the bolt, the flakes — is painted
+again over itself in the text's own ink, a second `ImageView` whose paths sit on the same grid
+as the base's so nothing has to be aligned. Both tones go through the same palette plumbing as
+every other glyph, so a launcher retheming the widget recolours them together. Dry skies stay
+one colour — two tones mean something is coming down.
 
 ![Weather icons](docs/weather-icons.png)
 

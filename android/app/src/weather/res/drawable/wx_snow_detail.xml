@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The two flakes from wx_snow, alone. See wx_rain_detail. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="#FFFFFF">
+    <path
+        android:pathData="M9,17.4v3.4 M7.5,18.3l3,1.6 M10.5,18.3l-3,1.6 M15.4,17.4v3.4 M13.9,18.3l3,1.6 M16.9,18.3l-3,1.6"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:strokeWidth="1.5" />
+</vector>
