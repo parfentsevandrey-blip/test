@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  No Material anywhere, on purpose. The window is drawn by the app itself, so the platform theme
+  only has to hand over a bare grey window with no action bar and get out of the way.
+-->
+<resources>
+    <style name="Theme.Quire95" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">#FF008080</item>
+        <item name="android:statusBarColor">#FF000080</item>
+        <item name="android:navigationBarColor">#FFC0C0C0</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

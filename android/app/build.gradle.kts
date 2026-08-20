@@ -21,12 +21,12 @@ android {
     defaultConfig {
         minSdk = 26
         targetSdk = 37
-        versionCode = 54
-        versionName = "9.8"
+        versionCode = 55
+        versionName = "9.9"
     }
 
     /**
-     * Two applications out of one tree.
+     * Three applications out of one tree.
      *
      * src/main holds only what both need — the Oklch palette, the widget's card surface, the
      * Material theme — and everything else lives in src/calendar or src/weather, including the
@@ -43,6 +43,38 @@ android {
             dimension = "app"
             applicationId = "app.quire.weather"
         }
+        // The joke that turned out to be a good architecture test: the same forecast, drawn as
+        // Windows 95. It installs beside the others and shares everything below the interface.
+        create("retro") {
+            dimension = "app"
+            applicationId = "app.quire.retro"
+        }
+    }
+
+    /**
+     * The weather half of the tree is in three parts, not one.
+     *
+     * `src/wxcore` is everything that has no opinion about pixels — the Open-Meteo client, the
+     * store, the settings, the sky codes, the wake-up jobs and the widget provider — and both
+     * weather-facing flavours compile it. `src/weather` is the Material 3 Expressive interface;
+     * `src/retro` is the 1995 one. Neither can see the other, which is what keeps the joke from
+     * quietly becoming a fork: a bug fixed in the forecast is fixed in both apps, and a stray
+     * `MaterialTheme` in the retro build simply will not compile.
+     */
+    sourceSets {
+        // `kotlin`, not `java`: from AGP 9 the Kotlin sources are their own directory set, and a
+        // path added only to `java` compiles nothing at all — silently, until every symbol in it
+        // comes back unresolved.
+        getByName("weather") {
+            kotlin.srcDir("src/wxcore/java")
+            res.srcDir("src/wxcore/res")
+        }
+        getByName("retro") {
+            kotlin.srcDir("src/wxcore/java")
+            res.srcDir("src/wxcore/res")
+        }
+        getByName("testWeather") { kotlin.srcDir("src/testWxcore/java") }
+        getByName("testRetro") { kotlin.srcDir("src/testWxcore/java") }
     }
 
     signingConfigs {

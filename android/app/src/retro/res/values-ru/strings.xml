@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The window's own furniture stays in English on purpose — "File Edit View Help", "Ready",
+  "Extended forecast" — because a Windows 95 window in a Russian locale in 1995 was as likely
+  to be an English build as not, and the joke is the era rather than the translation. What is
+  translated is what the launcher and the widget picker show, which are this decade's surfaces.
+-->
+<resources>
+    <string name="retro_app_name">Quire 95</string>
+    <string name="retro_widget_label">Погода 95</string>
+    <string name="retro_widget_description">Прогноз в виде окна Windows 95. Серый, с фасками и навсегда в 1995-м.</string>
+</resources>

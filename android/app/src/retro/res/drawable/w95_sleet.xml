@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generated: a sixteen-colour block icon on a 16x16 grid. See gen_w95_icons. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="16dp"
+    android:height="16dp"
+    android:viewportWidth="16"
+    android:viewportHeight="16">
+    <path
+        android:fillColor="#FFC0C0C0"
+        android:pathData="M3,5 h10 v4 h-10 z" />
+    <path
+        android:fillColor="#FFC0C0C0"
+        android:pathData="M5,3 h6 v3 h-6 z" />
+    <path
+        android:fillColor="#FF808080"
+        android:pathData="M3,9 h10 v1 h-10 z" />
+    <path
+        android:fillColor="#FF0000FF"
+        android:pathData="M4,12 h1 v2 h-1 z" />
+    <path
+        android:fillColor="#FF0000FF"
+        android:pathData="M10,13 h1 v2 h-1 z" />
+    <path
+        android:fillColor="#FF00FFFF"
+        android:pathData="M7,12 h1 v2 h-1 z" />
+    <path
+        android:fillColor="#FF00FFFF"
+        android:pathData="M13,13 h1 v2 h-1 z" />
+</vector>

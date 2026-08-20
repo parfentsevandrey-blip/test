@@ -1,16 +1,18 @@
 # Quire
 
-Two Android apps out of one source tree — a calendar and a weather app, each with a home-screen
-card. Both are built entirely from Material 3 Expressive; the widgets cannot be, because a widget
-is `RemoteViews` and `RemoteViews` is not Compose.
+Three Android apps out of one source tree — a calendar, a weather app, and the same forecast
+drawn as Windows 95 — each with a home-screen card. The two modern ones are built entirely from
+Material 3 Expressive; the widgets cannot be, because a widget is `RemoteViews` and `RemoteViews`
+is not Compose. The third is built from nothing at all: a bevel is four rectangles.
 
 They install and update independently, and — the part that matters — they are permissioned
 independently. **The calendar asks for `READ_CALENDAR` and nothing else: no location, no network,
 no account.** A calendar carrying a location permission because it happens to also show the
 weather is asking for something it does not need, and separate applications are the only
 arrangement in which it does not. What they share is a source tree, not a process: the Oklch
-palette, the Material theme and the card surface are the same code, so the two widgets sitting
-next to each other on a home screen are plainly the same object at two jobs.
+palette, the Material theme and the card surface are the same code, so the two modern widgets
+sitting next to each other on a home screen are plainly the same object at two jobs — and the
+third deliberately is not.
 
 The app half was rebuilt from nothing for Android 17. It has no components of its own: the app
 bar, the navigation bar, the search field, the list rows, the switches and the segmented buttons
@@ -19,14 +21,15 @@ every accessibility setting without holding an opinion about any of them. What s
 rewrite is the part that reads your calendar — the grid arithmetic, the provider queries and the
 off-thread loader — because that part had tests and had been debugged against a real provider.
 
-**Install** — Android 8.0+ (minSdk 26, targetSdk 37 — Android 17), either or both:
+**Install** — Android 8.0+ (minSdk 26, targetSdk 37 — Android 17), any or all three:
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-9.8.apk`](dist/quire-calendar-9.8.apk) · 1.9 MB | `sha256 61768c93c4f1b2ef9205d9c50e2d902bdcb9f7507ba47a829bcf11739c8cfffe` |
-| **Weather** | [`dist/quire-weather-9.8.apk`](dist/quire-weather-9.8.apk) · 1.5 MB | `sha256 03dae5ab72fa26892613e91a7c971f25aaba68b6fd9a1e52d7d1a92fcc4ee8ca` |
+| **Calendar** | [`dist/quire-calendar-9.9.apk`](dist/quire-calendar-9.9.apk) · 1.9 MB | `sha256 1707a430eb8572452730bdc194cebdf53fd14af58384f5f7ba5e51a8a3df58d8` |
+| **Weather** | [`dist/quire-weather-9.9.apk`](dist/quire-weather-9.9.apk) · 1.5 MB | `sha256 7b41a8f1ee078a6003dae8fff5cfc88e1b99d09064702f429d3e2ed11f52e5ba` |
+| **Quire 95** | [`dist/quire-95-9.9.apk`](dist/quire-95-9.9.apk) · 0.9 MB | `sha256 8b6dc865bb90059ad9da11f0fb5fa46185b01827ddf37006babfdde5a4b7bae6` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-9.8.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-9.9.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -645,6 +648,52 @@ and the grid still works without it.
 
 The launcher icon is the same two moves as the grid and nothing else: three week rules and one
 marked day.
+
+## Quire 95
+
+![The 1995 window](docs/retro-app.png)
+
+The same forecast, drawn the way a computer would have drawn it in 1995: teal desktop, grey
+window, navy-to-blue title bar, a menu that does not drop down, a sunken well for the big number,
+a list box whose selected row inverts to navy and white, and a status bar that says `Ready`. It
+installs beside the other two and has a widget of its own, which is a window on the home screen —
+title bar, close box, status bar and all.
+
+It started as a joke and turned into the best test the architecture has had. To build it, the
+weather half of the tree had to split in three: `src/wxcore` is everything with no opinion about
+pixels — the Open-Meteo client, the store, the settings, the sky codes, the wake-up jobs, the
+widget provider — and both weather-facing flavours compile it; `src/weather` is the Material 3
+Expressive interface; `src/retro` is the 1995 one. The two interfaces cannot see each other, so
+this is not a fork of the forecast, only of the paint: a bug fixed in the fetch is fixed in both
+apps at once. The one seam between them is a single object called `WeatherCard`, compiled once
+per flavour, which the shared provider calls without knowing what decade it is in.
+
+The look is one rule, applied without exception: every rectangle is a physical thing lit from the
+top left. White along the top and left, black along the bottom and right, and a grey step between
+— that is a button; invert the light and the same shape is a hole, which is a text field, a well,
+or a pressed button. No rounded corner appears anywhere, no shadow that is not a bevel, and no
+colour outside the sixteen VGA guaranteed. It is drawn as four filled rectangles per edge rather
+than as a nine-patch, so it is one crisp pixel at any density and weighs nothing — which is also
+how the original did it.
+
+The icons are blocks on a 16×16 grid, generated rather than drawn: a stack of bars for a cloud, a
+disc for the sun, blue ticks for rain, cyan for snow. The modern app's vector icon set is right
+there in the shared resources and using it would have been the one thing to give the joke away.
+The first render of them was invisible — white cloud on a white client area — which is a mistake
+the era made too, and the fix was the era's as well: silver body, grey underside.
+
+**What it does not have:** dark mode (Windows 95 did not have one), dynamic colour, a motion
+scheme, a settings window, or notifications — the manifest does not even ask for the permission,
+so the shared alert code is unreachable in this build by construction rather than by a flag. What
+it does have is a working forecast, because that part is shared.
+
+The tests are about the era rather than the layout, since the layout is the easy part: the face is
+`#C0C0C0` exactly, the title bar is navy on the left and measurably lighter on the right, the top
+edge of the card is the light one and the bottom edge the dark one, and the corner pixel is square
+— a rounded corner would leave the host's background showing, which is what every modern card does
+and this one must not. It weighs 0.9 MB against the modern app's 1.5, because it has no design
+system in it at all.
+
 
 ## Layout of the source
 

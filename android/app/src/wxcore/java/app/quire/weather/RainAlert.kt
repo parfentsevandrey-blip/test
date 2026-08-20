@@ -65,7 +65,13 @@ object RainAlert {
 
     // Guarded by [allowed] on the only path that reaches here, and wrapped besides; lint cannot
     // follow the check through the helper.
-    @android.annotation.SuppressLint("MissingPermission")
+    //
+    // NotificationPermission is suppressed for a second reason worth writing down: the retro
+    // build compiles this file and deliberately does not declare POST_NOTIFICATIONS, because it
+    // has no alerts to offer. A permission that is never declared can never be granted, so
+    // [allowed] returns false there for ever and this line is unreachable in that application —
+    // which is exactly the arrangement lint is warning about and exactly the one intended.
+    @android.annotation.SuppressLint("MissingPermission", "NotificationPermission")
     private fun post(context: Context, forecast: Forecast, today: DayForecast) {
         ensureChannel(context)
 

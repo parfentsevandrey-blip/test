@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Quire 95. The same permissions as the modern weather app, because it is the same weather: a
+  coarse location, the network, and a boot receiver so the refresh survives a reboot. It asks
+  for nothing extra for the joke — notifications included, since a 1995 window has no business
+  posting them.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <application
+        android:icon="@mipmap/ic_retro"
+        android:label="@string/retro_app_name"
+        android:roundIcon="@mipmap/ic_retro_round"
+        android:theme="@style/Theme.Quire95">
+
+        <activity
+            android:name="app.quire.retro.RetroActivity"
+            android:exported="true"
+            android:launchMode="singleTask">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="quire" android:host="weather" />
+            </intent-filter>
+        </activity>
+
+        <receiver
+            android:name="app.quire.weather.WeatherWidgetProvider"
+            android:exported="true"
+            android:label="@string/retro_widget_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.LOCALE_CHANGED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/w95_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name="app.quire.weather.WeatherTick"
+            android:exported="false" />
+
+        <service
+            android:name="app.quire.weather.WeatherRefresh"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <service
+            android:name="app.quire.weather.WeatherWatch"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+
+    </application>
+
+</manifest>

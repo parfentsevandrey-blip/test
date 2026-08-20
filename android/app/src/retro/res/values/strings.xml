@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="retro_app_name">Quire 95</string>
+    <string name="retro_widget_label">Weather 95</string>
+    <string name="retro_widget_description">The forecast as a Windows 95 window. Grey, beveled, and permanently 1995.</string>
+</resources>

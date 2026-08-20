@@ -82,7 +82,19 @@ class WeatherWidgetProvider : AppWidgetProvider() {
         }
 
         fun render(context: Context, manager: AppWidgetManager, widgetId: Int) {
-            manager.updateAppWidget(widgetId, WeatherWidgetRenderer.build(context, manager, widgetId))
+            // The placement's size is the launcher's business and the same in every build; what
+            // is drawn inside it is the flavour's — see WeatherCard, which each one supplies.
+            val options = manager.getAppWidgetOptions(widgetId)
+            val widthDp = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0)
+                .takeIf { it > 0 } ?: 250
+            val heightDp = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
+                .takeIf { it > 0 }
+                ?: options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0).takeIf { it > 0 }
+                ?: 140
+            manager.updateAppWidget(
+                widgetId,
+                WeatherCard.build(context, widgetId, widthDp, heightDp),
+            )
         }
 
         fun renderAll(context: Context) {

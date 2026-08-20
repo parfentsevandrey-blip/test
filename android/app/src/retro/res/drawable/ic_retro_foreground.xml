@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The launcher icon: a beveled grey slab with a navy title bar, which is the whole joke. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:fillColor="#FF008080" android:pathData="M0,0 h108 v108 h-108 z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M26,26 h56 v56 h-56 z" />
+    <path android:fillColor="#FF000000" android:pathData="M28,28 h54 v54 h-54 z" />
+    <path android:fillColor="#FFC0C0C0" android:pathData="M28,28 h52 v52 h-52 z" />
+    <path android:fillColor="#FF000080" android:pathData="M31,31 h46 v10 h-46 z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M34,44 h40 v33 h-40 z" />
+    <path android:fillColor="#FFFFFF00" android:pathData="M40,50 h10 v10 h-10 z" />
+    <path android:fillColor="#FF0000FF" android:pathData="M40,64 h3 v7 h-3 z M48,64 h3 v7 h-3 z M56,64 h3 v7 h-3 z" />
+    <path android:fillColor="#FF808080" android:pathData="M56,48 h14 v3 h-14 z M56,54 h14 v3 h-14 z" />
+</vector>

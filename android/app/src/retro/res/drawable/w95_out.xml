@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  A slab standing proud: white along the top and left, black along the bottom and right, with
+  the grey step between. Layers rather than a nine-patch, because the bevel is one pixel at
+  every density and a stretched bitmap is not.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#FF000000" />
+        </shape>
+    </item>
+    <item android:right="1dp" android:bottom="1dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFFFF" />
+        </shape>
+    </item>
+    <item android:left="1dp" android:top="1dp" android:right="1dp" android:bottom="1dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#FF808080" />
+        </shape>
+    </item>
+    <item android:left="1dp" android:top="1dp" android:right="2dp" android:bottom="2dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFC0C0C0" />
+        </shape>
+    </item>
+</layer-list>
