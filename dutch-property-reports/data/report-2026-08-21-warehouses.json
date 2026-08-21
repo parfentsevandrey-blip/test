@@ -1,0 +1,19 @@
+{
+  "title": "ОБЪЕКТЫ НЕДВИЖИМОСТИ",
+  "subtitle": "Нидерланды — склады и производство до € 2 млн",
+  "intro": "Отбор: подтверждённый арендный доход, прямой выезд на трассу A-уровня, крупный город рядом. В подборку входят:",
+  "footnote": "Данные по объектам приведены по публикациям funda in business по состоянию на 21.08.2026",
+  "filename": "Объекты недвижимости — склады до 2 млн 21.08.26",
+  "output_dir": "output",
+  "objects": [
+    {
+      "file": "objects/nieuwe-hemweg-8-amsterdam.json"
+    },
+    {
+      "file": "objects/mercuriusstraat-40-vlaardingen.json"
+    },
+    {
+      "file": "objects/valkenierstraat-45-ridderkerk.json"
+    }
+  ]
+}
