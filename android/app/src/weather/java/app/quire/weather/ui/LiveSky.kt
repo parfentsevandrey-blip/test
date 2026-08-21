@@ -8,7 +8,9 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -77,32 +79,15 @@ fun LiveSky(
     // "not known", and the sky falls back to what its category usually looks like.
     rainMm: Double = -1.0,
     snowCm: Double = -1.0,
+    /**
+     * The lap to draw by, from [rememberSkyClock] — passed in when somebody else needs the same
+     * lap, which is how the thunder's rumble lands in the hand on the beat the bolt is seen.
+     * Null makes a private clock, which is what every sky without a listener gets.
+     */
+    clockState: State<Float>? = null,
 ) {
     val scheme = MaterialTheme.colorScheme
-
-    // Somebody who has turned animation off in the system settings has said what they want, and
-    // an endless one is exactly the kind they meant. Battery saver is the same sentence said by
-    // the battery. Both get the same sky, standing still.
-    val context = LocalContext.current
-    val moving = remember(context) {
-        val animated = android.provider.Settings.Global.getFloat(
-            context.contentResolver,
-            android.provider.Settings.Global.ANIMATOR_DURATION_SCALE,
-            1f,
-        ) > 0f
-        val saving = context.getSystemService(android.os.PowerManager::class.java)
-            ?.isPowerSaveMode == true
-        animated && !saving
-    }
-
-    val transition = rememberInfiniteTransition(label = "sky")
-    val running by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(PERIOD_MILLIS, easing = LinearEasing)),
-        label = "clock",
-    )
-    val clock = if (moving) running else STILL
+    val clock by (clockState ?: rememberSkyClock())
 
     // Which way the weather leans, and how hard. A direction is where the wind comes *from*, so
     // what it pushes things along by is the opposite: a westerly blows east. With no direction
@@ -189,6 +174,41 @@ fun LiveSky(
             Sky.SNOW -> snow(clock, ink, flakes = flakesOf(30), lean = lean, tiltX = tilt.x)
         }
     }
+}
+
+/**
+ * The sky's lap, 0..1 over [PERIOD_MILLIS], or standing still.
+ *
+ * Somebody who has turned animation off in the system settings has said what they want, and an
+ * endless one is exactly the kind they meant. Battery saver is the same sentence said by the
+ * battery. Both get the same lap, frozen at [STILL] — a scattered pose, not a blank one.
+ *
+ * Hoisted out of [LiveSky] so a second listener can ride the same lap: the thunder's rumble in
+ * [SkyPulse] fires when this clock crosses [STRIKE_AT], which is the exact moment the bolt is
+ * drawn — one clock for the eye and the hand.
+ */
+@Composable
+internal fun rememberSkyClock(): State<Float> {
+    val context = LocalContext.current
+    val moving = remember(context) {
+        val animated = android.provider.Settings.Global.getFloat(
+            context.contentResolver,
+            android.provider.Settings.Global.ANIMATOR_DURATION_SCALE,
+            1f,
+        ) > 0f
+        val saving = context.getSystemService(android.os.PowerManager::class.java)
+            ?.isPowerSaveMode == true
+        animated && !saving
+    }
+
+    val transition = rememberInfiniteTransition(label = "sky")
+    val running = transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(PERIOD_MILLIS, easing = LinearEasing)),
+        label = "clock",
+    )
+    return if (moving) running else remember { mutableStateOf(STILL) }
 }
 
 /**
@@ -507,14 +527,23 @@ private fun DrawScope.stars(
  * does and what a linear ramp does not.
  */
 /**
+ * When in the lap the bolts come down, as fractions of the loop.
+ *
+ * One list for the eye and the hand: [lightning] draws by it, [strikeGlow] lights the bank by
+ * it, and [SkyPulse]'s rumble fires when the shared clock crosses it — which is what makes the
+ * thunder something felt on the beat it is seen, not a second storm on its own schedule.
+ */
+internal val STRIKE_AT = floatArrayOf(0.22f, 0.68f)
+
+/**
  * How lit the storm is right now: sharp on, slow off, the same shape the bolts fade by.
  * The distant bank multiplies its ink by this, so the flash lights the clouds from inside
  * on exactly the beat the bolt comes down.
  */
 internal fun strikeGlow(clock: Float): Float {
     var glow = 0f
-    for (strike in 0 until 2) {
-        val since = clock - (0.22f + strike * 0.46f)
+    for (at in STRIKE_AT) {
+        val since = clock - at
         if (since in 0f..FLASH_FOR) {
             val decay = 1f - since / FLASH_FOR
             glow = maxOf(glow, decay * decay)
@@ -524,8 +553,7 @@ internal fun strikeGlow(clock: Float): Float {
 }
 
 private fun DrawScope.lightning(clock: Float, colour: Color) {
-    for (strike in 0 until 2) {
-        val at = 0.22f + strike * 0.46f
+    for ((strike, at) in STRIKE_AT.withIndex()) {
         val since = clock - at
         if (since < 0f || since > FLASH_FOR) continue
         val decay = 1f - (since / FLASH_FOR)

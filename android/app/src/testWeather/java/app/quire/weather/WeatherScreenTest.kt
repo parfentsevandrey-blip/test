@@ -29,7 +29,7 @@ import androidx.compose.ui.draw.clipToBounds
 import app.quire.weather.ui.BLOCK
 import app.quire.weather.ui.Days
 import app.quire.weather.ui.Puff
-import app.quire.weather.ui.RainPulse
+import app.quire.weather.ui.SkyPulse
 import app.quire.weather.ui.SunArc
 import app.quire.weather.ui.LiveSky
 import app.quire.weather.ui.puffField
@@ -249,8 +249,12 @@ class WeatherScreenTest {
                         high = 24.0 - index,
                         low = 13.0 - index,
                         rain = 0,
-                        sunrise = LocalDate.now().plusDays(index.toLong()).atTime(4, 51),
-                        sunset = LocalDate.now().plusDays(index.toLong()).atTime(20, 17),
+                        // Anchored to the asking clock, not to Moscow's: fixed times put the
+                        // sun wherever the test happens to run — at six in the morning UTC it
+                        // stood at the left edge and laid its halo's rim down the very margin
+                        // this test walks. Noon-of-now keeps it mid-sky at any hour.
+                        sunrise = java.time.LocalDateTime.now().minusHours(8).plusDays(index.toLong()),
+                        sunset = java.time.LocalDateTime.now().plusHours(8).plusDays(index.toLong()),
                     )
                 },
                 fetched = System.currentTimeMillis(),
@@ -852,9 +856,9 @@ class WeatherScreenTest {
         var light = 0
         var dry = 0
         compose.setContent {
-            RainPulse(active = true, intensity = 1f, tap = { hard++ })
-            RainPulse(active = true, intensity = 0.1f, tap = { light++ })
-            RainPulse(active = false, intensity = 1f, tap = { dry++ })
+            SkyPulse(sky = Sky.RAIN, active = true, intensity = 1f, tap = { hard++ })
+            SkyPulse(sky = Sky.RAIN, active = true, intensity = 0.1f, tap = { light++ })
+            SkyPulse(sky = Sky.RAIN, active = false, intensity = 1f, tap = { dry++ })
         }
         compose.waitForIdle()
         repeat(100) {
@@ -865,6 +869,83 @@ class WeatherScreenTest {
         assertTrue("no taps in a downpour", hard > 20)
         assertTrue("a drizzle taps like a downpour ($light vs $hard)", light < hard / 2)
         assertTrue("dry weather tapped $dry times", dry == 0)
+    }
+
+    /**
+     * Snow lands, rain hits: the same sixteen driven seconds must produce far fewer touches of
+     * snow than of rain, and every one of them the softest touch there is — not the rain's tick
+     * said slower.
+     */
+    @Test
+    fun `snow lands on the hand softly and seldom`() {
+        var rainTaps = 0
+        var snowTaps = 0
+        val snowTouches = mutableSetOf<androidx.compose.ui.hapticfeedback.HapticFeedbackType>()
+        compose.setContent {
+            SkyPulse(sky = Sky.RAIN, active = true, intensity = 0.5f, tap = { rainTaps++ })
+            SkyPulse(
+                sky = Sky.SNOW, active = true, intensity = 0.5f,
+                tap = { touch -> snowTaps++; snowTouches += touch },
+            )
+        }
+        compose.waitForIdle()
+        repeat(100) {
+            compose.mainClock.advanceTimeBy(160L)
+            shadowOf(Looper.getMainLooper()).idle()
+        }
+
+        assertTrue("no flakes landed at all", snowTaps > 2)
+        assertTrue("snow fell as often as rain ($snowTaps vs $rainTaps)", snowTaps < rainTaps / 2)
+        assertTrue(
+            "snow landed as something other than the softest touch: $snowTouches",
+            snowTouches == setOf(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove),
+        )
+    }
+
+    /**
+     * The thunder is felt on the beat it is seen: the rumble fires when the sky's shared lap
+     * crosses a strike — one hard knock, then two echoes rolling off — and a lap standing
+     * still never strikes, which is what silences the storm under battery saver along with
+     * everything else.
+     */
+    @Test
+    fun `thunder rumbles on the beat the bolt is drawn`() {
+        val lap = androidx.compose.runtime.mutableStateOf(0.10f)
+        val landed = mutableListOf<androidx.compose.ui.hapticfeedback.HapticFeedbackType>()
+        compose.setContent {
+            SkyPulse(
+                sky = Sky.THUNDER, active = true, intensity = 0.7f,
+                clock = lap, tap = { touch -> landed += touch },
+            )
+        }
+        compose.waitForIdle()
+        fun frames(count: Int) = repeat(count) {
+            compose.mainClock.advanceTimeBy(16L)
+            shadowOf(Looper.getMainLooper()).idle()
+        }
+        // Let the loop take the resting lap, then cross the first strike.
+        frames(3)
+        landed.clear()
+        lap.value = 0.24f
+        frames(3)
+        assertTrue(
+            "no knock landed on the flash: $landed",
+            androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress in landed,
+        )
+        // The echoes trail in over the next quarter second.
+        frames(20)
+        assertTrue(
+            "the rumble had no tail: $landed",
+            androidx.compose.ui.hapticfeedback.HapticFeedbackType.ContextClick in landed &&
+                androidx.compose.ui.hapticfeedback.HapticFeedbackType.SegmentTick in landed,
+        )
+        // And a lap standing still never strikes again.
+        val knocks = landed.count { it == androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress }
+        frames(20)
+        assertTrue(
+            "a still lap kept striking",
+            landed.count { it == androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress } == knocks,
+        )
     }
 
     /**

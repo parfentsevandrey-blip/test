@@ -25,11 +25,11 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-9.10.apk`](dist/quire-calendar-9.10.apk) · 1.9 MB | `sha256 d35e6a09d894a92ba7ddd696c3b89429aa865f97eed8dac8eaaa07c3e69cf9b7` |
-| **Weather** | [`dist/quire-weather-9.10.apk`](dist/quire-weather-9.10.apk) · 1.6 MB | `sha256 778d56284d265dd733d6cab79ad0a86c98a439168d9252ad7a11ac79434df0c7` |
-| **Quire 95** | [`dist/quire-95-9.10.apk`](dist/quire-95-9.10.apk) · 0.9 MB | `sha256 373ab9506777ef67198f8b03fa5333b164777700db7a499ff74ac42a51ab5965` |
+| **Calendar** | [`dist/quire-calendar-9.11.apk`](dist/quire-calendar-9.11.apk) · 1.9 MB | `sha256 653cbca601dad1143cb3bc0f407bbab02eb739660ce7f40d939b81c8f6809397` |
+| **Weather** | [`dist/quire-weather-9.11.apk`](dist/quire-weather-9.11.apk) · 1.6 MB | `sha256 747eed27ab4e2ff64168cab58343d9d7089b72d846d25797150925c15b1a73da` |
+| **Quire 95** | [`dist/quire-95-9.11.apk`](dist/quire-95-9.11.apk) · 0.9 MB | `sha256 c8fe8fc4da472537781c525174c8033f68b9c19fab2729df1373df873e726fec` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-9.10.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-9.11.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -283,16 +283,25 @@ a brighter round offset towards the sun by day and the moon by night — the far
 into the sky it stands in front of the way real distance does, and a storm keeps a distant bank
 that the lightning lights from inside on the very beat the bolt comes down.
 
-**And the rain lands in the hand.** While it rains, the lightest tick the platform has, at rain's
-own irregular rhythm — rain on a roof does not keep a beat, and a metronome in the hand would be
-a notification, not weather. The gap between ticks rides the minute-cast's actual millimetres: a
-drizzle is an occasional tap, a downpour a patter, and there is a floor under the gaps because
-the point is weather in the hand, not a phone buzzing. The loop is paced by the frame clock
-rather than wall time, and that one choice does three jobs: the taps stop the moment the app
-leaves the screen, they stop under battery saver and animations-off exactly when the sky stops,
-and a test can drive the whole thing on a paused clock and simply count — a downpour out-taps a
-drizzle, dry weather taps zero times. It is a setting ("Rain you can feel"), on by default,
-under the living sky's own switch.
+**And the weather lands in the hand — each sky its own way.** Rain is the lightest tick the
+platform has, at rain's own irregular rhythm — rain on a roof does not keep a beat, and a
+metronome in the hand would be a notification, not weather. The gap between ticks rides the
+minute-cast's actual millimetres: a drizzle is an occasional tap, a downpour a patter, and there
+is a floor under the gaps because the point is weather in the hand, not a phone buzzing. Snow is
+the same idea said quietly: a softer touch, seconds apart, riding the centimetres — snow lands,
+rain hits. Sleet is rain with the odd harder knock in it — the ice — on the same deterministic
+scatter the sky falls by, so the same sleet knocks the same rhythm. Thunder rumbles: the sky's
+clock is shared between the pixels and the hand, and when it crosses a strike — the exact beat
+the bolt is drawn and the bank lights from inside — the hand gets one hard knock and two echoes
+rolling off. Fog gets nothing on purpose: fog is the weather that makes no sound, and a haptic
+for it would be an ornament. The loop is paced by the frame clock rather than wall time, and
+that one choice does three jobs: the touches stop the moment the app leaves the screen, they
+stop under battery saver and animations-off exactly when the sky stops (a frozen clock never
+crosses a strike, so the thunder falls silent with everything else), and a test can drive the
+whole thing on a paused clock and simply count — a downpour out-taps a drizzle, snow lands
+seldom and soft, the rumble fires on the crossing and never off a still clock, dry weather
+touches zero times. It is a setting ("Weather you can feel"), on by default, under the living
+sky's own switch.
 
 The loop is seamless because every particle's speed is a whole number of laps per period. At two
 and a third laps a drop arrives back a third of the way down and the whole field visibly jumps; at
