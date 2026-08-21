@@ -61,14 +61,23 @@ def object_images(obj: dict, *, skip_map: bool = False) -> list[Path]:
     return images
 
 
-def warn_repeated_objects(report_path: Path, refs: list[dict]) -> list[str]:
-    """Объекты, которые уже входили в другие отчёты этого каталога.
+SEEN_OBJECTS = "seen-objects.json"
 
-    Один и тот же объект в двух подборках — почти всегда ошибка сборки,
-    поэтому сборка не падает, но список повторов печатается заметно.
+
+def warn_repeated_objects(
+    report_path: Path, refs: list[dict], objects: list[dict]
+) -> list[str]:
+    """Объекты, которые заказчик уже видел.
+
+    Проверяются два источника: другие отчёты этого каталога (по имени файла
+    карточки) и список seen-objects.json — объекты, ушедшие заказчику любым
+    другим путём (по slug). Один и тот же объект в двух подборках — почти
+    всегда ошибка, поэтому сборка не падает, но повторы печатаются заметно.
     """
-    used = {ref.get("file") for ref in refs if ref.get("file")}
+    used_files = {ref.get("file") for ref in refs if ref.get("file")}
+    used_slugs = {obj.get("slug") for obj in objects if obj.get("slug")}
     repeats: list[str] = []
+
     for other in sorted(report_path.parent.glob("report-*.json")):
         if other.resolve() == report_path.resolve():
             continue
@@ -78,8 +87,18 @@ def warn_repeated_objects(report_path: Path, refs: list[dict]) -> list[str]:
             continue
         for ref in data.get("objects", []):
             name = ref.get("file")
-            if name in used:
+            if name in used_files:
                 repeats.append(f"{name} — уже в отчёте {other.name}")
+
+    seen_path = report_path.parent / SEEN_OBJECTS
+    try:
+        seen = json.loads(seen_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return repeats
+    for entry in seen.get("objects", []):
+        if entry.get("slug") in used_slugs:
+            source = entry.get("source", SEEN_OBJECTS)
+            repeats.append(f"{entry['slug']} — {source}")
     return repeats
 
 
@@ -88,13 +107,16 @@ def cmd_build(args: argparse.Namespace) -> int:
     report = load_json(report_path)
     base = report_path.parent
 
-    repeats = warn_repeated_objects(report_path, report["objects"])
+    cards = [
+        load_json(base / ref["file"]) if "file" in ref else ref
+        for ref in report["objects"]
+    ]
+    repeats = warn_repeated_objects(report_path, report["objects"], cards)
     for line in repeats:
         print(f"ВНИМАНИЕ: повтор объекта — {line}", file=sys.stderr)
 
     objects: list[tuple[dict, list[Path]]] = []
-    for ref in report["objects"]:
-        obj = load_json(base / ref["file"]) if "file" in ref else ref
+    for ref, obj in zip(report["objects"], cards):
         ref.setdefault("street", obj.get("street", obj["title"].split(",")[0]))
         ref.setdefault("city", obj.get("city", ""))
         ref.setdefault("price_short", obj.get("price_short", ""))
