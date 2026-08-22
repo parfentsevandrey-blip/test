@@ -386,6 +386,11 @@ def object_pages(doc, obj: dict, images: list[Path]) -> None:
 
 
 def build(report: dict, objects: list[tuple[dict, list[Path]]], dest: Path) -> Path:
+    if report.get("layout") == "editorial":
+        from . import editorial  # локальный импорт: editorial тянет помощники отсюда
+
+        return editorial.build(report, objects, dest)
+
     doc = setup_document()
     cover_page(doc, report)
     for obj, images in objects:

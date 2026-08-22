@@ -65,7 +65,7 @@ SEEN_OBJECTS = "seen-objects.json"
 
 
 def warn_repeated_objects(
-    report_path: Path, refs: list[dict], objects: list[dict]
+    report_path: Path, report: dict, objects: list[dict]
 ) -> list[str]:
     """Объекты, которые заказчик уже видел.
 
@@ -74,17 +74,22 @@ def warn_repeated_objects(
     другим путём (по slug). Один и тот же объект в двух подборках — почти
     всегда ошибка, поэтому сборка не падает, но повторы печатаются заметно.
     """
+    refs = report.get("objects", [])
     used_files = {ref.get("file") for ref in refs if ref.get("file")}
     used_slugs = {obj.get("slug") for obj in objects if obj.get("slug")}
     repeats: list[str] = []
 
+    # тот же набор объектов в другом оформлении — не повтор, а вариант вёрстки
+    variant_of = report.get("variant_of")
     for other in sorted(report_path.parent.glob("report-*.json")):
-        if other.resolve() == report_path.resolve():
+        if other.resolve() == report_path.resolve() or other.name == variant_of:
             continue
         try:
             data = json.loads(other.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             continue
+        if data.get("variant_of") == report_path.name:
+            continue                       # связь варианта работает в обе стороны
         for ref in data.get("objects", []):
             name = ref.get("file")
             if name in used_files:
@@ -111,7 +116,7 @@ def cmd_build(args: argparse.Namespace) -> int:
         load_json(base / ref["file"]) if "file" in ref else ref
         for ref in report["objects"]
     ]
-    repeats = warn_repeated_objects(report_path, report["objects"], cards)
+    repeats = warn_repeated_objects(report_path, report, cards)
     for line in repeats:
         print(f"ВНИМАНИЕ: повтор объекта — {line}", file=sys.stderr)
 
