@@ -25,11 +25,11 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-9.11.apk`](dist/quire-calendar-9.11.apk) · 1.9 MB | `sha256 653cbca601dad1143cb3bc0f407bbab02eb739660ce7f40d939b81c8f6809397` |
-| **Weather** | [`dist/quire-weather-9.11.apk`](dist/quire-weather-9.11.apk) · 1.6 MB | `sha256 747eed27ab4e2ff64168cab58343d9d7089b72d846d25797150925c15b1a73da` |
-| **Quire 95** | [`dist/quire-95-9.11.apk`](dist/quire-95-9.11.apk) · 0.9 MB | `sha256 c8fe8fc4da472537781c525174c8033f68b9c19fab2729df1373df873e726fec` |
+| **Calendar** | [`dist/quire-calendar-9.12.apk`](dist/quire-calendar-9.12.apk) · 1.9 MB | `sha256 260d9bf9c2c85e4142c0ef23d096a7845bbeae7969b21ab069222673529008ad` |
+| **Weather** | [`dist/quire-weather-9.12.apk`](dist/quire-weather-9.12.apk) · 1.6 MB | `sha256 209e6fd8b13b5693a193c933a1790b1efa2175959f3afe5f332c91046efcb0c3` |
+| **Quire 95** | [`dist/quire-95-9.12.apk`](dist/quire-95-9.12.apk) · 0.9 MB | `sha256 6d40cf3e0408b7609b3ccfa4312e0bc318d817fd19e18f69d41e871732a85c36` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-9.11.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-9.12.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -345,21 +345,46 @@ which is also what makes the two apps read as one family — and the motion budg
 motion is information: the sky that actually moves the way the weather does, the hourly curve
 drawing itself, the sun running out along its arc, a day unfolding on its spring.
 
-**The readings are one slab, sliced.** Six loose cards with equal gaps everywhere are six things
-to look at; the same six with three-point gaps inside and only the group's outer corners rounded
-large are one object with six readings on it. That is the connected-block grammar Android's own
-settings established and this app's settings screens already speak — which corners are the slab's
-own is a fact about where a cell sits, so each cell computes its shape from its place in the grid.
-The full-width cards below share the slab's twenty-point outer corner, so the whole page is
-visibly one family of shapes.
+**Every reading is drawn the way its own quantity is shaped.** This block used to be six
+identical rings in six identical rounded rectangles — one picture answering six different
+questions. The rings were honest; every one of them had a real denominator. But a ring says only
+"somewhere between empty and full", which is the least any of these numbers has to say, and six
+of them side by side is a dashboard. The old comment on the block admitted whose grammar that
+was: the connected-block idiom Android's own *settings* screens speak.
 
-And every cell is an instrument now, not a caption: the mark sits in a ring, the ring's track is
-the metric's everyday range, and the lit arc, running clockwise from twelve in the accent alone,
-is where today stands in it. Rain and humidity fill by their per
-cent, wind is full at the fifty km/h everybody calls windy, UV at the top of the published
-scale, pressure across the band nearly all surface weather lives in. The slab answers "how windy,
-how wet, how hard is the sun" at a glance and keeps the numbers for the second look; the wind's
-mark is still the needle, turned to where the wind is actually going, now inside its own dial.
+So each reading left the rectangle. It gets a container shaped like itself, from the Expressive
+shape library, and a mark that encodes what that particular quantity actually means:
+
+| | Shape | Mark |
+|---|---|---|
+| **Rain** | four-leaf clover | five drops, filled — a chance is read in fifths |
+| **Humidity** | puff | the container *is* a vessel, filled to a waterline that behaves like water |
+| **Wind** | twelve-sided cookie | a compass rose, needled to where the wind is going, needle longer in a gale |
+| **Gusts** | soft burst | a profile that spikes above the steady wind, the gap between them filled |
+| **UV** | sun | the published green-to-violet scale, with today pipped on it |
+| **Pressure** | circle | a barometer's three-quarter dial, with *normal* ticked on the face |
+
+None of them is a ring and none is interchangeable with another, which is the whole point: the
+silhouette and the mark together say what the reading is before the number under it is read. The
+type sits below the shape rather than inside it — a lobed or spiked container has no honest
+rectangle to set type in, and type crammed into one is what makes expressive shapes look like a
+mistake instead of a decision.
+
+The UV bands are the one place in either app with fixed colours. They are semantic, not the
+accent: the point of those bands is that they mean the same thing on every forecast anybody has
+ever read, the way a traffic light does, and re-tinting them to the wallpaper would be re-tinting
+the meaning.
+
+Two claims here are not provable by reading the code, so both are tested in pixels: that the six
+marks come out as six *distinguishable* pictures at the size a phone draws them, and that each
+one still answers its own number — every assertion moves one value and insists the picture moves
+with it, on the axis that quantity is encoded on. Finding the ink took three goes, and the
+failures are worth recording: the tile is clipped to its shape, so a corner pixel is not the tile;
+the page shows through outside the silhouette and is opaque, so it swamps the mark twenty to one;
+and "the commonest colour is the ground" inverts on the one mark that is a fill, because at ninety
+per cent humidity the water *is* the commonest colour. Ink is now simply the warm pixels — every
+mark is drawn in the accent, and every surface in this scheme is cool. Tracks and tick marks are
+cool on purpose and fall out of the count: they are the scale, not the reading.
 
 **The number wears the light.** The big temperature is drawn with a brush rather than a colour —
 ink at the top drifting toward the accent at the foot. Display type is the one place a gradient
