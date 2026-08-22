@@ -276,14 +276,22 @@ class Flow:
         gaps = len(items) * (5 * 25.4 / 72)
         return lines * self.LINE_MM + gaps + extra_mm
 
-    def fit(self, mm: float) -> bool:
-        """Резервирует место; при нехватке начинает новую страницу."""
-        if self.used and self.used + mm > self.HEIGHT_MM:
+    def fit(self, mm: float, budget: float | None = None) -> bool:
+        """Резервирует место; при нехватке начинает новую страницу.
+
+        budget позволяет считать по реальной высоте полосы там, где высота
+        блока известна точно (таблицы, иллюстрации), а не по заниженной с
+        запасом оценке текста.
+        """
+        limit = self.HEIGHT_MM if budget is None else budget
+        if self.used and self.used + mm > limit:
             page_break(self.doc)
             self.used = mm
             return False
         self.used += mm
         return True
+
+    SHEET_BUDGET_MM = S.PAGE_H_MM - S.MARGIN_TOP_MM - S.MARGIN_BOTTOM_MM - 6.0
 
 
 def grid(doc, *, rail_mm: float = S.RAIL_W_MM, gutter_mm: float = S.GUTTER_MM):
@@ -380,17 +388,26 @@ def spec_sheet(doc, specs: list[list[str]], flow: "Flow | None" = None):
     """
     names = [name for name, _ in S.SPEC_GROUPS] + ["Прочее"]
     buckets: dict[int, list[list[str]]] = {}
+    links: list[str] = []
     for row in specs:
+        # ссылка на листинг уходит из таблицы в сноску: голый URL в колонке
+        # значений и выглядит инородно, и оставляет висячую строку на полосе
+        if str(row[1]).startswith("http"):
+            links.append(str(row[1]))
+            continue
         buckets.setdefault(_group_of(row[0]), []).append(row)
 
     label_mm = 46.0
     for index in sorted(buckets):
         rows = buckets[index]
-        if flow is not None:
+        # короткую хвостовую группу не переносим: одна-две строки на отдельной
+        # полосе выглядят хуже, чем те же строки внизу заполненной полосы
+        if flow is not None and len(rows) > 2:
             # ширина колонки значений — 124 мм при 8 pt, отсюда своя оценка
             values = [f"{label} {value}" for label, value in rows]
-            flow.fit(flow.estimate(values, extra_mm=10) * 0.72)
-        micro(doc, names[index], before=11, after=3)
+            flow.fit(flow.estimate(values, extra_mm=8) * 0.58,
+                     budget=flow.SHEET_BUDGET_MM)
+        micro(doc, names[index], before=9, after=3)
         table = doc.add_table(rows=len(rows), cols=2)
         table.alignment = WD_TABLE_ALIGNMENT.LEFT
         table.autofit = False
@@ -407,8 +424,8 @@ def spec_sheet(doc, specs: list[list[str]], flow: "Flow | None" = None):
             label_cell, value_cell = row.cells
             label_cell.width = Mm(label_mm)
             value_cell.width = Mm(S.CONTENT_W_MM - label_mm)
-            cell_margins(label_cell, top=4.5, bottom=4.5, left=0, right=8)
-            cell_margins(value_cell, top=4.5, bottom=4.5, left=0, right=0)
+            cell_margins(label_cell, top=3.4, bottom=3.4, left=0, right=8)
+            cell_margins(value_cell, top=3.4, bottom=3.4, left=0, right=0)
 
             head = label_cell.paragraphs[0]
             head.paragraph_format.space_after = Pt(0)
@@ -418,14 +435,18 @@ def spec_sheet(doc, specs: list[list[str]], flow: "Flow | None" = None):
             body = value_cell.paragraphs[0]
             body.paragraph_format.space_after = Pt(0)
             body.paragraph_format.line_spacing = Pt(S.LH_SMALL)
-            link = value.startswith("http")
-            txt(
-                body,
-                value,
-                font=S.SANS,
-                size=S.FS_CAPTION if link else S.FS_SMALL,
-                color=S.MUTED if link else S.BODY,
-            )
+            txt(body, value, font=S.SANS, size=S.FS_SMALL, color=S.BODY)
+    if index == max(buckets) and links:
+        source_note(doc, links)
+
+
+def source_note(doc, links: list[str]) -> None:
+    """Сноска с адресом публикации — после таблицы, кеглем подписи."""
+    for link in links:
+        paragraph = par(doc, before=6, after=0, lead=S.LH_SMALL)
+        txt(paragraph, "Публикация объекта: ", font=S.SANS_MEDIUM,
+            size=S.FS_CAPTION, color=S.MUTED)
+        txt(paragraph, link, size=S.FS_CAPTION, color=S.MUTED)
 
 
 def panel(doc, label: str, title: str, paragraphs: list[str]):
