@@ -404,12 +404,26 @@ private fun Heading(text: String) {
 }
 
 /**
- * The numbers the card has no room for, handed over as quantities rather than as pictures.
+ * One cell of the slab: its mark, its words, its number — and where it stands.
  *
- * This function's whole job is knowing which readings today actually has and what each one's
- * everyday range is; how a range becomes a mark lives in [ReadingGrid], with the drawing. A
- * reading the provider did not send is left out entirely rather than shown as a dash — a tile
- * that says "—" is a tile spent saying nothing.
+ * [fill] is the reading as a fraction of its own everyday range, and it is what turns a cell from
+ * a caption into an instrument: the ring around the mark is at a glance what the number is on a
+ * second look. [turn] is the wind's bearing, worn by the needle.
+ */
+private data class Meter(
+    val icon: Int,
+    val label: String,
+    val value: String,
+    val turn: Float? = null,
+    val fill: Float? = null,
+)
+
+/**
+ * The three numbers the widget has no room for, as one row of tonal cards.
+ *
+ * The row is measured at [IntrinsicSize.Min] and the cards fill it, so all three end at the same
+ * height whatever their labels do. Without that, one label wrapping to a second line made its card
+ * taller than the two beside it and left the row with a ragged bottom.
  */
 @Composable
 private fun Readings(forecast: Forecast, units: WeatherModel.Settings) {
@@ -417,86 +431,238 @@ private fun Readings(forecast: Forecast, units: WeatherModel.Settings) {
     val now = forecast.now
     val compass = stringArrayResource(R.array.wx_compass)
 
+    // Everything the widget has no room for, in the order it gets asked about. A reading the
+    // provider did not send is left out entirely rather than shown as a dash: a card that says
+    // "—" is a card spent saying nothing.
     val readings = buildList {
         add(
-            Reading(
-                dial = Dial.RAIN,
-                label = stringResource(R.string.wx_rain_chance_short),
-                value = "${today?.rain ?: 0}%",
-                fraction = (today?.rain ?: 0) / 100f,
+            Meter(
+                R.drawable.wx_drop,
+                stringResource(R.string.wx_rain_chance_short),
+                "${today?.rain ?: 0}%",
+                fill = (today?.rain ?: 0) / 100f,
             ),
         )
         if (now.humidity >= 0) {
             add(
-                Reading(
-                    dial = Dial.HUMIDITY,
-                    label = stringResource(R.string.wx_humidity),
-                    value = "${now.humidity}%",
-                    fraction = now.humidity / 100f,
+                Meter(
+                    R.drawable.wx_humidity,
+                    stringResource(R.string.wx_humidity),
+                    "${now.humidity}%",
+                    fill = now.humidity / 100f,
                 ),
             )
         }
         add(
-            Reading(
-                dial = Dial.WIND,
+            Meter(
+                // With a bearing the mark is a needle turned to where the wind is going — the
+                // direction named in the label is where it comes FROM, and what it pushes things
+                // along by is the opposite. Without one, the generic gusts glyph.
+                if (now.quarter != null) R.drawable.wx_needle else R.drawable.wx_wind,
                 // The quarter it blows from goes in the label rather than the value: it is what
                 // kind of wind this is, not how much of it there is.
-                label = now.quarter?.let { stringResource(R.string.wx_wind_from, compass[it]) }
+                now.quarter?.let { stringResource(R.string.wx_wind_from, compass[it]) }
                     ?: stringResource(R.string.wx_wind),
-                value = "${units.wind.from(now.wind).roundToInt()} " +
-                    stringResource(windLabel(units.wind)),
-                // Fifty km/h is a day everybody calls windy; the needle is longest there.
-                fraction = (now.wind / 50.0).toFloat(),
-                // The needle points where the wind is going. The direction named in the label is
-                // where it comes FROM, and what it pushes things along by is the opposite.
-                bearing = if (now.quarter != null) ((now.direction + 180) % 360).toFloat() else null,
+                "${units.wind.from(now.wind).roundToInt()} " + stringResource(windLabel(units.wind)),
+                turn = if (now.quarter != null) ((now.direction + 180) % 360).toFloat() else null,
+                // Fifty km/h is a day everybody calls windy; the ring is full there.
+                fill = (now.wind / 50.0).toFloat(),
             ),
         )
         if (now.gust >= 0) {
             add(
-                Reading(
-                    dial = Dial.GUST,
-                    label = stringResource(R.string.wx_gust),
-                    value = "${units.wind.from(now.gust).roundToInt()} " +
+                Meter(
+                    R.drawable.wx_gust,
+                    stringResource(R.string.wx_gust),
+                    "${units.wind.from(now.gust).roundToInt()} " +
                         stringResource(windLabel(units.wind)),
-                    fraction = (now.gust / 70.0).toFloat(),
-                    // The steady wind on the gust's own scale, so the tile can draw the gap
-                    // between them — which is the only thing a gust figure ever means.
-                    second = (now.wind / 70.0).toFloat(),
+                    fill = (now.gust / 70.0).toFloat(),
                 ),
             )
         }
         if (now.uv >= 0) {
             add(
-                Reading(
-                    dial = Dial.UV,
-                    label = stringResource(R.string.wx_uv),
-                    value = "${now.uv.roundToInt()}",
+                Meter(
+                    R.drawable.wx_uv,
+                    stringResource(R.string.wx_uv),
+                    "${now.uv.roundToInt()}",
                     // Eleven is the top of the published scale.
-                    fraction = (now.uv / 11.0).toFloat(),
+                    fill = (now.uv / 11.0).toFloat(),
                 ),
             )
         }
         if (now.pressure >= 0) {
             add(
-                Reading(
-                    dial = Dial.PRESSURE,
-                    label = stringResource(R.string.wx_pressure),
-                    value = "${units.pressure.from(now.pressure).roundToInt()} " +
+                Meter(
+                    R.drawable.wx_pressure,
+                    stringResource(R.string.wx_pressure),
+                    "${units.pressure.from(now.pressure).roundToInt()} " +
                         stringResource(pressureLabel(units.pressure)),
-                    // The band nearly all surface weather lives in, centred on 1013 hPa.
-                    fraction = ((now.pressure - 980.0) / 60.0).toFloat(),
+                    // The band nearly all surface weather lives in, centred on 1010 hPa.
+                    fill = ((now.pressure - 980.0) / 60.0).toFloat(),
                 ),
             )
         }
     }
 
-    ReadingGrid(
-        readings = readings,
+    // One slab, sliced. Six loose cards with equal gaps everywhere are six things; the same six
+    // with hairline gaps inside and the outer corners rounded as a group are one object with six
+    // readings on it — the connected-block grammar Android's own settings established, and the
+    // same one this app's settings screens already speak.
+    val rows = readings.chunked(3)
+    Column(
+        verticalArrangement = Arrangement.spacedBy(SlabGap),
         modifier = Modifier
+            .fillMaxWidth()
             .padding(horizontal = Gutter, vertical = 12.dp)
             .testTag(BLOCK),
-    )
+    ) {
+        rows.forEachIndexed { line, row ->
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(SlabGap),
+                modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+            ) {
+                row.forEachIndexed { column, meter ->
+                    // Its place in the grid is its seed, so no two cells carry the same light in
+                    // the same place at the same moment — and its shape, because which corners
+                    // are the slab's own is a fact about where the cell sits.
+                    Reading(
+                        meter,
+                        shape = cellShape(
+                            firstRow = line == 0,
+                            lastRow = line == rows.size - 1,
+                            firstCol = column == 0,
+                            lastCol = column == row.size - 1,
+                            slab = MaterialTheme.shapes.largeIncreased,
+                        ),
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                // A short last row keeps the cards the width of the ones above rather than
+                // stretching two of them across three columns.
+                repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
+            }
+        }
+    }
+}
+
+/**
+ * Which corners of a cell belong to the slab, from where the cell sits in it.
+ *
+ * The slab's own corners are the theme's shape role, not a number, so the group's outline is
+ * whatever Expressive says a large container is this year; only the inner seams are ours.
+ */
+private fun cellShape(
+    firstRow: Boolean,
+    lastRow: Boolean,
+    firstCol: Boolean,
+    lastCol: Boolean,
+    slab: androidx.compose.foundation.shape.CornerBasedShape,
+): androidx.compose.foundation.shape.CornerBasedShape = RoundedCornerShape(
+    topStart = if (firstRow && firstCol) slab.topStart else CornerSize(CellCorner),
+    topEnd = if (firstRow && lastCol) slab.topEnd else CornerSize(CellCorner),
+    bottomStart = if (lastRow && firstCol) slab.bottomStart else CornerSize(CellCorner),
+    bottomEnd = if (lastRow && lastCol) slab.bottomEnd else CornerSize(CellCorner),
+)
+
+/** The gap inside the slab, and the corner a cell keeps where it meets another cell. */
+private val SlabGap = 3.dp
+private val CellCorner = 7.dp
+
+/**
+ * One reading: its mark, the number, and the word for it.
+ *
+ * The number comes before the word because that is the order it is read in — you look at a card
+ * like this to find out what the humidity is, not to be reminded that humidity exists.
+ */
+@Composable
+private fun Reading(
+    meter: Meter,
+    shape: androidx.compose.ui.graphics.Shape,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        shape = shape,
+        modifier = modifier.fillMaxHeight(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        ),
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp, horizontal = 6.dp),
+        ) {
+            MeterDial(meter)
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = meter.value,
+                style = MaterialTheme.typography.titleLarge,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+            )
+            Text(
+                text = meter.label,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+            )
+        }
+    }
+}
+
+/**
+ * The mark in its ring: the reading drawn before it is read.
+ *
+ * The track is the metric's everyday range and the lit arc is where today stands in it, so the
+ * slab answers "how windy, how wet, how hard is the sun" at a glance and keeps the numbers for
+ * the second look. The arc starts at twelve and runs clockwise, because that is where every dial
+ * anyone has ever read starts.
+ */
+@Composable
+private fun MeterDial(meter: Meter) {
+    val scheme = MaterialTheme.colorScheme
+    val track = scheme.outlineVariant.copy(alpha = 0.45f)
+    val lit = scheme.primary
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.size(44.dp)) {
+        androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
+            val stroke = androidx.compose.ui.graphics.drawscope.Stroke(
+                width = 3.dp.toPx(),
+                cap = androidx.compose.ui.graphics.StrokeCap.Round,
+            )
+            val inset = stroke.width / 2f
+            val bounds = androidx.compose.ui.geometry.Size(size.width - inset * 2, size.height - inset * 2)
+            drawArc(
+                color = track,
+                startAngle = 0f,
+                sweepAngle = 360f,
+                useCenter = false,
+                topLeft = Offset(inset, inset),
+                size = bounds,
+                style = stroke,
+            )
+            meter.fill?.let { fill ->
+                drawArc(
+                    color = lit,
+                    startAngle = -90f,
+                    sweepAngle = 360f * fill.coerceIn(0.02f, 1f),
+                    useCenter = false,
+                    topLeft = Offset(inset, inset),
+                    size = bounds,
+                    style = stroke,
+                )
+            }
+        }
+        Icon(
+            painter = painterResource(meter.icon),
+            contentDescription = null,
+            tint = scheme.primary,
+            modifier = Modifier
+                .size(18.dp)
+                .then(meter.turn?.let { Modifier.rotate(it) } ?: Modifier),
+        )
+    }
 }
 
 @Composable
