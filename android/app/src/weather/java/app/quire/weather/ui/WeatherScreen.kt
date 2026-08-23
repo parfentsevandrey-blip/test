@@ -208,20 +208,33 @@ fun WeatherScreen(
         LazyColumn(contentPadding = padding, modifier = Modifier.fillMaxSize()) {
             // Only when there is no place at all. Somebody who named one has answered the question,
             // and being asked again for a permission they declined is nagging rather than helping.
-            if (!model.located && !model.pinned) {
+            // Only when there is no place at all — and when that is true, the card is the whole
+            // message. The screen used to print "Looking up the weather…" underneath it, which
+            // fires on exactly the condition that means nothing is being looked up: the app has
+            // no location and no pinned place and is waiting on the person, not on a network.
+            // Two sentences, one of them false, one under the other.
+            val asking = !model.located && !model.pinned
+            if (asking) {
                 item { LocationCard(onGrant, onChoosePlace) }
             }
             if (forecast == null) {
-                item {
-                    Box(Modifier.fillMaxWidth().padding(48.dp), contentAlignment = Alignment.Center) {
-                        if (model.located) {
-                            LoadingIndicator()
-                        } else {
-                            Text(
-                                text = stringResource(R.string.wx_waiting),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+                if (!asking) {
+                    item {
+                        Box(
+                            Modifier.fillMaxWidth().padding(48.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            if (model.located) {
+                                LoadingIndicator()
+                            } else {
+                                // A place was named but nothing has come back yet: this one is
+                                // true, so it stays.
+                                Text(
+                                    text = stringResource(R.string.wx_waiting),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
                         }
                     }
                 }
@@ -595,11 +608,16 @@ private fun Reading(
         ) {
             MeterDial(meter)
             Spacer(Modifier.height(8.dp))
+            // Two lines, because a reading without its unit is not a reading. At a raised font
+            // scale "1009 hPa" no longer fits one line of this cell, and on one line it did not
+            // shrink or ellipsise — it simply lost "hPa" off the end and showed a bare 1009.
+            // Wrapping keeps the unit; the row is measured at its tallest cell, so the six stay
+            // level whichever of them needs the second line.
             Text(
                 text = meter.value,
                 style = MaterialTheme.typography.titleLarge,
                 textAlign = TextAlign.Center,
-                maxLines = 1,
+                maxLines = 2,
             )
             Text(
                 text = meter.label,
@@ -642,11 +660,11 @@ private fun MeterDial(meter: Meter) {
                 size = bounds,
                 style = stroke,
             )
-            meter.fill?.let { fill ->
+            dialSweep(meter.fill).takeIf { it > 0f }?.let { sweep ->
                 drawArc(
                     color = lit,
                     startAngle = -90f,
-                    sweepAngle = 360f * fill.coerceIn(0.02f, 1f),
+                    sweepAngle = sweep,
                     useCenter = false,
                     topLeft = Offset(inset, inset),
                     size = bounds,
@@ -944,16 +962,46 @@ private fun LocationCard(onGrant: () -> Unit, onChoosePlace: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Button(onClick = onChoosePlace) {
-                    Text(stringResource(R.string.wx_place))
+            // Measured at the taller of the two and both filled to it, the same way the readings
+            // row keeps its cells level. "Share approximate location" wraps to two lines where
+            // "Choose a place" does not, and left alone that left one button visibly taller than
+            // the other — a ragged pair on the first card anybody ever sees.
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+            ) {
+                Button(
+                    onClick = onChoosePlace,
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                ) {
+                    Text(stringResource(R.string.wx_place), textAlign = TextAlign.Center)
                 }
-                FilledTonalButton(onClick = onGrant) {
-                    Text(stringResource(R.string.wx_grant))
+                FilledTonalButton(
+                    onClick = onGrant,
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                ) {
+                    Text(stringResource(R.string.wx_grant), textAlign = TextAlign.Center)
                 }
             }
         }
     }
+}
+
+/**
+ * How far a dial's lit arc runs, in degrees, for a reading that is [fill] of its own range.
+ *
+ * The floor keeps a one-per-cent reading visible as a tick rather than letting it vanish into
+ * the track. Nought went through that same floor and got the same tick — so a dry day drew a
+ * mark on the rain dial saying there was a little, which is the one thing a nought must never
+ * do. Nought, and a reading the provider never sent, now draw nothing at all.
+ *
+ * Pulled out as a function because that is the whole of the claim, and a claim this small is
+ * better proved by arithmetic than by counting pixels around a glyph that is drawn in the same
+ * colour as the arc.
+ */
+internal fun dialSweep(fill: Float?): Float {
+    if (fill == null || fill <= 0.005f) return 0f
+    return 360f * fill.coerceIn(0.02f, 1f)
 }
 
 /** A temperature in whatever unit the user asked for. */

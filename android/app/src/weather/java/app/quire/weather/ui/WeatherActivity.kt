@@ -71,8 +71,7 @@ class WeatherActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-internal fun WeatherApp() {
-    val model: WeatherModel = viewModel()
+internal fun WeatherApp(model: WeatherModel = viewModel()) {
     val haptics = LocalHapticFeedback.current
 
     var choosing by rememberSaveable { mutableStateOf(false) }

@@ -25,11 +25,11 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-9.14.apk`](dist/quire-calendar-9.14.apk) · 1.9 MB | `sha256 42b9f693ad32aaeb8fcb9de82b723f380f07674f43e3b133a0cd3d03051624a5` |
-| **Weather** | [`dist/quire-weather-9.14.apk`](dist/quire-weather-9.14.apk) · 1.6 MB | `sha256 792428bde031bc4ee814c54278bb80cd04113d322cf302742444d360a8704d96` |
-| **Quire 95** | [`dist/quire-95-9.14.apk`](dist/quire-95-9.14.apk) · 0.9 MB | `sha256 8b15b60afeed4d2c6f1f6196aa65f11202462b1eda2e8b950845f9d866661740` |
+| **Calendar** | [`dist/quire-calendar-9.15.apk`](dist/quire-calendar-9.15.apk) · 1.9 MB | `sha256 6fd409b09607bf4fb53357f9bf5e578f318b8dcdba972b8fc95a14fb727d7152` |
+| **Weather** | [`dist/quire-weather-9.15.apk`](dist/quire-weather-9.15.apk) · 1.6 MB | `sha256 2c4fedda0e5ab014a6354964f1b34bc23a6eda33a5d647fbc88a9ebd8cf2f40c` |
+| **Quire 95** | [`dist/quire-95-9.15.apk`](dist/quire-95-9.15.apk) · 0.9 MB | `sha256 2170517d2018d9995d93c05f239e9e38d1e83eda35e7c1f8fbf8c39e79879567` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-9.14.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-9.15.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -237,6 +237,46 @@ edge on a page otherwise made entirely of rounded cards, and the thing that made
 stuck on rather than behind. The test walks down the left margin and fails on any step between
 neighbouring rows, because a step is exactly what a hard edge is; with the opaque bar it reports
 "the sky steps by 22 at row 456".
+
+## The audit
+
+The header fault was not found by a test. It was found by somebody scrolling a real phone, and
+every test this app had photographed the screen **at rest**, where it was perfect. So the states
+nobody scrolls to got a file of their own — scrolled, scrolled twice, at the font scale an older
+phone is actually set to, with a place name longer than the bar, with nothing fetched at all —
+and one invariant asked of each: **does any text share pixels with any other text?**
+
+Two exemptions, and only two. A node whose string contains another's is its own parent in the
+semantics tree. And an overlap sitting entirely above the top bar's ground is the page passing
+under an opaque bar, which is what a bar is for — an exemption *granted by the pixels*, because
+the bar's ground is found by walking the left margin for its bottom edge rather than assumed
+from a height. A bar with no ground covers nothing, so no overlap is forgiven, and the original
+fault comes straight back out.
+
+Four more defects came out of the same sweep, none of them findable at rest:
+
+- **A nought drew a mark.** The dial's sweep has a floor so a one-per-cent reading stays visible
+  as a tick instead of vanishing into the track — and nought went through that same floor, so a
+  dry day drew a tick on the rain dial saying there was a little. The sweep is now a function
+  with a name, `dialSweep`, and it returns nothing for nothing.
+- **A reading lost its unit.** At a raised font scale "1009 hPa" stopped fitting one line of its
+  cell, and the cell was one line with no ellipsis, so it silently dropped "hPa" and showed a
+  bare 1009. A pressure with no unit is not a pressure; it wraps now, and the row is measured at
+  its tallest cell so the six stay level.
+- **The screen claimed to be fetching what it could not fetch.** With no location and no place
+  named, the card asking for one is the whole message — but "Looking up the weather…" was printed
+  underneath it, on exactly the condition that means nothing is being looked up.
+- **The first card in the app was ragged.** "Share approximate location" wraps to two lines where
+  "Choose a place" does not, and a row at wrap height gave each button its own.
+
+Every one of the four has a test, and every one of those tests was **proved in both directions** —
+reverted the fix, watched it fail, restored it. Two of them had to be rewritten to earn that:
+semantics report the string a node *says* whether or not the phone drew it, so a clipped unit is
+invisible there, and `hasVisualOverflow` answers true for nearly every string on the screen. What
+is measurable is the consequence — a fitted reading takes a second line and a clipped one does
+not — compared inside a single picture so nothing needs calibrating. The dial's nought is
+arithmetic and is tested as arithmetic, because the droplet inside the ring is drawn in the very
+colour the arc is and no pixel count can separate them.
 
 **Transparent at rest, and only at rest** — which took a second bug to learn. The first fix set
 *both* the bar's colours to transparent, its resting one and its scrolled one, and the scrolled
