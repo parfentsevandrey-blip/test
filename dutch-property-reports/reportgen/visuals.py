@@ -293,3 +293,129 @@ def statement(dest: Path, *, kicker: str, text: str, figures: list[tuple[str, st
     dest.parent.mkdir(parents=True, exist_ok=True)
     canvas.save(dest, quality=92, subsampling=1)
     return dest
+
+
+def rounded_photo(dest: Path, source: Path, *, width_mm: float, ratio: float,
+                  radius_mm: float = 2.6, pad_mm: float = 4.0,
+                  background=PAPER) -> Path:
+    """Кадр со скруглёнными углами и мягкой тенью.
+
+    Тень рисуется прямо в файле, на фоне цвета бумаги: DOCX не умеет ни
+    скруглять углы встроенной картинки, ни давать ей тень, а вставка
+    изображения с уже готовым фоном ложится на полосу бесшовно.
+    """
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    if dest.exists():
+        return dest
+
+    inner_w = int((width_mm - 2 * pad_mm) * MM)
+    inner_h = int(inner_w / ratio)
+    pad = int(pad_mm * MM)
+    radius = int(radius_mm * MM)
+    canvas = Image.new("RGB", (inner_w + 2 * pad, inner_h + 2 * pad), background)
+
+    # тень: скруглённый прямоугольник, размытый и смещённый вниз
+    shadow = Image.new("L", canvas.size, 0)
+    ImageDraw.Draw(shadow).rounded_rectangle(
+        (pad, pad + int(0.9 * MM), pad + inner_w, pad + inner_h + int(0.9 * MM)),
+        radius=radius, fill=104,
+    )
+    shadow = shadow.filter(ImageFilter.GaussianBlur(int(1.5 * MM)))
+    canvas.paste(Image.new("RGB", canvas.size, (58, 54, 48)), (0, 0), shadow)
+
+    photo_img = grade(fill_crop(source, inner_w, inner_h), warmth=1.02)
+    mask = Image.new("L", (inner_w, inner_h), 0)
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, inner_w - 1, inner_h - 1),
+                                           radius=radius, fill=255)
+    canvas.paste(photo_img, (pad, pad), mask)
+    canvas.save(dest, quality=92, subsampling=1)
+    return dest
+
+
+def contents_cover(dest: Path, *, kicker: str, title: str, subtitle: str,
+                   items: list[tuple[str, str, str, Path]], meta: str,
+                   page: tuple[float, float] = (200.0, 265.0),
+                   margin: tuple[float, float] = (17.0, 13.0)) -> Path:
+    """Обложка: шапка и список объектов с ценами — и больше ничего.
+
+    Каждая строка списка — номер, миниатюра со скруглением, адрес, город и
+    цена: содержания ровно столько, сколько просил заказчик, а плотность
+    держится на типографике и кадрах, а не на дополнительных сведениях.
+    """
+    width_px, height_px = int(page[0] * MM), int(page[1] * MM)
+    left, right = margin[0] * MM, page[0] * MM - margin[1] * MM
+    canvas = Image.new("RGB", (width_px, height_px), PAPER)
+    draw = ImageDraw.Draw(canvas)
+
+    y = 22 * MM
+    hairline(draw, left, y, right, y, GOLD, 0.6)
+    tracked(draw, (left, y + 4.6 * MM), kicker.upper(), font(SANS_MED, 7), GOLD, 0.10)
+
+    title_font = font(DISPLAY, 47)
+    y = 40 * MM
+    for line in wrap(draw, title, title_font, right - left):
+        draw.text((left, y), line, font=title_font, fill=INK)
+        y += title_font.size * 1.03
+
+    sub_font = font(SERIF, 11.5)
+    y += 9 * MM
+    for line in wrap(draw, subtitle, sub_font, (right - left) * 0.86):
+        draw.text((left, y), line, font=sub_font, fill=(88, 88, 84))
+        y += sub_font.size * 1.34
+    subtitle_end = y
+
+    # список объектов: низ списка привязан к подвалу, высота строки
+    # подбирается так, чтобы список не наехал на подзаголовок
+    thumb_w, thumb_h = 54 * MM, 35 * MM
+    bottom = height_px - 32 * MM
+    row_h = min(46 * MM, (bottom - subtitle_end - 16 * MM) / len(items))
+    top = bottom - len(items) * row_h
+    tracked(draw, (left, top - 8 * MM), "В подборку входят".upper(),
+            font(SANS_MED, 6.5), GOLD, 0.10)
+    ordinal_font = font(DISPLAY, 21)
+    name_font = font(DISPLAY, 17)
+    city_font = font(SANS, 7.6)
+    price_font = font(SANS_LIGHT, 17)
+
+    for index, (name, city, price, photo_path) in enumerate(items, start=1):
+        y = top + (index - 1) * row_h
+        hairline(draw, left, y, right, y, GREY_SOFT, 0.25)
+
+        draw.text((left, y + 14 * MM), f"{index:02d}", font=ordinal_font, fill=GOLD)
+
+        thumb_x = left + 16 * MM
+        thumb = grade(fill_crop(photo_path, int(thumb_w), int(thumb_h)), warmth=1.02)
+        mask = Image.new("L", thumb.size, 0)
+        ImageDraw.Draw(mask).rounded_rectangle(
+            (0, 0, thumb.size[0] - 1, thumb.size[1] - 1), radius=int(2.2 * MM), fill=255)
+        shadow = Image.new("L", canvas.size, 0)
+        ImageDraw.Draw(shadow).rounded_rectangle(
+            (thumb_x, y + 6 * MM + int(0.8 * MM), thumb_x + thumb_w,
+             y + 6 * MM + thumb_h + int(0.8 * MM)), radius=int(2.2 * MM), fill=90)
+        shadow = shadow.filter(ImageFilter.GaussianBlur(int(1.2 * MM)))
+        canvas.paste(Image.new("RGB", canvas.size, (58, 54, 48)), (0, 0), shadow)
+        canvas.paste(thumb, (int(thumb_x), int(y + 6 * MM)), mask)
+
+        text_x = thumb_x + thumb_w + 9 * MM
+        price_w = draw.textlength(price, font=price_font)
+        # длинное название не должно наезжать на цену — кегль подбирается
+        room = right - price_w - 7 * MM - text_x
+        fitted = name_font
+        for size in (17, 15.5, 14, 12.5, 11):
+            fitted = font(DISPLAY, size)
+            if draw.textlength(name, font=fitted) <= room:
+                break
+        draw.text((text_x, y + 14 * MM), name, font=fitted, fill=INK)
+        draw.text((text_x, y + 22.5 * MM), city, font=city_font, fill=GREY)
+        draw.text((right - price_w, y + 14.5 * MM), price, font=price_font, fill=INK)
+
+    y = height_px - 20 * MM
+    hairline(draw, left, y, right, y, GREY_SOFT, 0.25)
+    draw.text((left, y + 3.4 * MM), meta, font=font(SANS, 7), fill=GREY)
+    count = f"{len(items)} объекта"
+    w = tracked_width(draw, count.upper(), font(SANS_MED, 7), 0.10)
+    tracked(draw, (right - w, y + 3.4 * MM), count.upper(), font(SANS_MED, 7), GOLD, 0.10)
+
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    canvas.save(dest, quality=94, subsampling=1)
+    return dest
