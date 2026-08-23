@@ -17,6 +17,8 @@ import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ApplicationProvider
 import app.quire.calendar.m3.QuireTheme
@@ -276,6 +278,92 @@ class WeatherScreenTest {
             }
         }
         assertTrue("the sky steps by $worst at row $worstAt — there is an edge in it", worst <= 8)
+    }
+
+    /**
+     * The header keeps a ground of its own once the page slides under it.
+     *
+     * The bar is transparent on purpose so the sky runs up behind the title instead of stopping
+     * at a hard horizontal line. That is right at rest and wrong the moment anything scrolls:
+     * with nothing behind it, the page's own headings and cards ride straight through the title,
+     * which is what a real phone showed — "Ближайшие 24 часа" printed across "Москва".
+     *
+     * Asserted where it actually goes wrong: a strip inside the bar, clear of the bar's own type,
+     * has to stop being a window onto the page. At rest it may show whatever is behind it; once
+     * scrolled it has to be flat.
+     */
+    @Test
+    fun `the header keeps its own ground when the page scrolls under it`() {
+        WeatherStore.pin(app, Place("Moscow", null, "Russia", 55.75, 37.62))
+        WeatherStore.save(
+            app,
+            Forecast(
+                place = "Moscow",
+                latitude = 55.75,
+                longitude = 37.62,
+                now = Conditions(22.0, 22.0, Sky.MOSTLY_CLEAR, true, 48, 5.0, 11.0, 315, 1012.0, 5.0),
+                hours = (0 until 26).map { hour ->
+                    HourForecast(
+                        time = java.time.LocalDateTime.now().withMinute(0).plusHours(hour.toLong()),
+                        temperature = 22.0 - hour * 0.4,
+                        sky = Sky.MOSTLY_CLEAR,
+                        day = true,
+                        rain = 0,
+                    )
+                },
+                days = (0 until 5).map { index ->
+                    DayForecast(
+                        date = LocalDate.now().plusDays(index.toLong()),
+                        sky = Sky.MOSTLY_CLEAR,
+                        high = 24.0 - index,
+                        low = 13.0 - index,
+                        rain = 0,
+                        sunrise = java.time.LocalDateTime.now().minusHours(8).plusDays(index.toLong()),
+                        sunset = java.time.LocalDateTime.now().plusHours(8).plusDays(index.toLong()),
+                    )
+                },
+                fetched = System.currentTimeMillis(),
+            ),
+        )
+
+        compose.setContent { WeatherApp() }
+        settle()
+        shoot("app-weather-header-rest")
+
+        compose.mainClock.autoAdvance = true
+        compose.onRoot().performTouchInput {
+            swipeUp(startY = height * 0.85f, endY = height * 0.15f)
+        }
+        compose.waitForIdle()
+        compose.mainClock.autoAdvance = false
+        settle()
+        val scrolled = shoot("app-weather-header-scrolled")
+
+        // Walked down the left margin, which is inside the bar but clear of its title, its
+        // subtitle and its two icons — so the only thing that can put an edge in this column is
+        // the bar's own bottom, and finding one is the whole claim: the header is a surface,
+        // not a window. With the bar transparent all the way down, the column is one unbroken
+        // run of page from the status bar to the first card and no edge exists at all.
+        val density = compose.density.density
+        val ceiling = (120 * density).toInt()
+        var edge = -1
+        for (y in 1 until ceiling) {
+            if (distance(scrolled.getPixel(4, y), scrolled.getPixel(4, y - 1)) > 12) {
+                edge = y
+                break
+            }
+        }
+        assertTrue(
+            "the header has no bottom edge — it is the same surface as the page under it",
+            edge > (16 * density).toInt(),
+        )
+        // And what sits above that edge is one flat ground, not a view of whatever scrolled past.
+        val ground = scrolled.getPixel(4, edge - 2)
+        var strays = 0
+        for (y in 1 until edge - 2) {
+            if (distance(scrolled.getPixel(4, y), ground) > 12) strays++
+        }
+        assertTrue("the header's own ground is not flat ($strays rows off it)", strays == 0)
     }
 
     private fun distance(a: Int, b: Int): Int {

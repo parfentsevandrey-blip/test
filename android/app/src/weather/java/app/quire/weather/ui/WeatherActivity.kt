@@ -154,17 +154,27 @@ internal fun WeatherApp() {
                             )
                         }
                     },
-                    // Transparent over the forecast, so the sky behind the page runs up behind
-                    // the title instead of stopping dead at the bottom of the bar. An opaque bar
-                    // over a coloured page draws a hard horizontal line across the screen with
-                    // two square corners on it, which is the one edge on the whole screen that
-                    // nothing else has. The settings screen has no sky and keeps the usual bar.
+                    // Transparent over the forecast *at rest*, so the sky behind the page runs up
+                    // behind the title instead of stopping dead at the bottom of the bar. An
+                    // opaque bar over a coloured page draws a hard horizontal line across the
+                    // screen with two square corners on it, which is the one edge on the whole
+                    // screen that nothing else has.
+                    //
+                    // But only at rest. `scrolledContainerColor` exists precisely so a bar can
+                    // take a ground once the page passes under it, and setting it transparent
+                    // too — which is what shipped — meant the page never stopped showing
+                    // through: a real phone printed "Ближайшие 24 часа" straight across
+                    // "Москва". Material cross-fades between the two as the bar collapses, so
+                    // the sky keeps its clean top edge and the title keeps its legibility, and
+                    // neither costs the other anything.
+                    //
+                    // The settings screen has no sky and keeps the usual bar.
                     colors = if (configuring) {
                         TopAppBarDefaults.topAppBarColors()
                     } else {
                         TopAppBarDefaults.topAppBarColors(
                             containerColor = Color.Transparent,
-                            scrolledContainerColor = Color.Transparent,
+                            scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
                         )
                     },
                     scrollBehavior = scrollBehavior,

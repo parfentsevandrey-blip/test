@@ -25,11 +25,11 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-9.13.apk`](dist/quire-calendar-9.13.apk) · 1.9 MB | `sha256 f478e824e57caf928700aefe0600e162820d45c9269fd695f34a5edd92d78fc0` |
-| **Weather** | [`dist/quire-weather-9.13.apk`](dist/quire-weather-9.13.apk) · 1.6 MB | `sha256 44939e27ced3543b6af6bc548bceb4a45edacff80911b00ebf5be2dddee525e5` |
-| **Quire 95** | [`dist/quire-95-9.13.apk`](dist/quire-95-9.13.apk) · 0.9 MB | `sha256 ee7c748238db75c0b530c99835743bcb2a6c9e6032365cb5496d9ccf23580c3b` |
+| **Calendar** | [`dist/quire-calendar-9.14.apk`](dist/quire-calendar-9.14.apk) · 1.9 MB | `sha256 42b9f693ad32aaeb8fcb9de82b723f380f07674f43e3b133a0cd3d03051624a5` |
+| **Weather** | [`dist/quire-weather-9.14.apk`](dist/quire-weather-9.14.apk) · 1.6 MB | `sha256 792428bde031bc4ee814c54278bb80cd04113d322cf302742444d360a8704d96` |
+| **Quire 95** | [`dist/quire-95-9.14.apk`](dist/quire-95-9.14.apk) · 0.9 MB | `sha256 8b15b60afeed4d2c6f1f6196aa65f11202462b1eda2e8b950845f9d866661740` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-9.13.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-9.14.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -237,6 +237,18 @@ edge on a page otherwise made entirely of rounded cards, and the thing that made
 stuck on rather than behind. The test walks down the left margin and fails on any step between
 neighbouring rows, because a step is exactly what a hard edge is; with the opaque bar it reports
 "the sky steps by 22 at row 456".
+
+**Transparent at rest, and only at rest** — which took a second bug to learn. The first fix set
+*both* the bar's colours to transparent, its resting one and its scrolled one, and the scrolled
+one exists for precisely the opposite reason: it is the ground a bar takes once the page starts
+passing underneath it. With it cleared, nothing ever appeared, and a real phone printed
+"Ближайшие 24 часа" straight across "Москва" — the header stopped being a surface and became a
+window. Material cross-fades between the two as the bar collapses, so the sky keeps its clean top
+edge at rest and the title keeps its legibility in motion, and neither costs the other anything.
+Its own test scrolls the page and then walks the same left margin looking for the opposite thing:
+the bar's **bottom edge** must exist and the ground above it must be flat. With the bar
+transparent all the way down there is no edge to find, which is exactly what "the header blends
+into the page" means measured in pixels.
 
 ![The sky behind the bar](docs/app-weather-bar.png)
 
