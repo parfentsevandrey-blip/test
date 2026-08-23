@@ -155,7 +155,9 @@ def object_location(doc, obj: dict, cache: Path, images: list[Path]) -> None:
     if images:
         par(doc, after=0, lead=13)
         framed_photo(doc, images[0], cache, width_mm=S.CONTENT_W_MM, ratio=16 / 9)
-        caption = par(doc, before=3, after=0, lead=S.LH_SMALL)
+        # подпись выключается по центру кадра, а не по левому краю набора
+        caption = par(doc, before=3, after=0, lead=S.LH_SMALL,
+                      align=WD_ALIGN_PARAGRAPH.CENTER)
         txt(caption, "Расположение объекта · картографические данные © Google",
             size=S.FS_CAPTION, color=S.MUTED)
 
