@@ -433,14 +433,18 @@ def contents_cover(dest: Path, *, kicker: str, title: str, subtitle: str,
 
 
 def cards_panel(dest: Path, cards: list[list[str]], *, width_mm: float,
-                columns: int = 3, gap_mm: float = 4.5,
-                max_height_mm: float | None = None) -> tuple[Path, float]:
+                columns: int = 3, gap_mm: float = 4.5, bleed_mm: float = 3.2,
+                max_height_mm: float | None = None) -> tuple[Path, float, float]:
     """Сетка карточек с характеристиками — одним изображением.
 
     Ячейка таблицы DOCX не умеет скругляться и не умеет отбрасывать тень,
     поэтому карточки рисуются так же, как фотографии: скруглённый прямоугольник
     с мягкой тенью на бумажном фоне. Возвращается путь и фактическая высота в
     миллиметрах, чтобы вызывающий код знал, сколько места занял блок.
+
+    Вокруг сетки оставляется поле bleed_mm: без него тень и скругление крайних
+    карточек срезались границей самого изображения. Вызывающий код сдвигает
+    картинку на это поле влево, чтобы карточки встали ровно по краю набора.
     """
     card_w = (width_mm - gap_mm * (columns - 1)) / columns
     rows = -(-len(cards) // columns)
@@ -485,15 +489,19 @@ def cards_panel(dest: Path, cards: list[list[str]], *, width_mm: float,
         card_h = max(card_h, height_for(3.4))
     total_h = rows * card_h + (rows - 1) * gap_mm
 
-    canvas = Image.new("RGB", (int(width_mm * MM), int(total_h * MM) + 2), PAPER)
+    canvas = Image.new(
+        "RGB",
+        (int((width_mm + 2 * bleed_mm) * MM), int((total_h + 2 * bleed_mm) * MM)),
+        PAPER,
+    )
     radius = int(2.6 * MM)
 
     shadow = Image.new("L", canvas.size, 0)
     shadow_draw = ImageDraw.Draw(shadow)
     boxes = []
     for index in range(len(prepared)):
-        x = (index % columns) * (card_w + gap_mm) * MM
-        y = (index // columns) * (card_h + gap_mm) * MM
+        x = (bleed_mm + (index % columns) * (card_w + gap_mm)) * MM
+        y = (bleed_mm + (index // columns) * (card_h + gap_mm)) * MM
         boxes.append((x, y))
         shadow_draw.rounded_rectangle(
             (x, y + 0.7 * MM, x + card_w * MM, y + (card_h + 0.7) * MM),
@@ -519,4 +527,4 @@ def cards_panel(dest: Path, cards: list[list[str]], *, width_mm: float,
 
     dest.parent.mkdir(parents=True, exist_ok=True)
     canvas.save(dest, quality=95, subsampling=1)
-    return dest, total_h
+    return dest, total_h + 2 * bleed_mm, bleed_mm

@@ -91,10 +91,13 @@ def card_grid(doc, obj: dict, assets: Path, cards: list[list[str]]) -> None:
     Ячейка таблицы DOCX не скругляется, поэтому вся сетка рисуется одним
     изображением (visuals.cards_panel) и ставится на полосу целиком.
     """
-    image, height = visuals.cards_panel(
+    image, height, bleed = visuals.cards_panel(
         assets / f"cards-{obj['slug']}.jpg", cards,
         width_mm=S.CONTENT_W_MM, max_height_mm=181.0)
-    photo(doc, image, width_mm=S.CONTENT_W_MM, max_h=height + 2)
+    paragraph, _ = photo(doc, image, width_mm=S.CONTENT_W_MM + 2 * bleed,
+                         max_h=height + 2)
+    # поле под тень вынесено за край набора, чтобы карточки стояли по границе
+    paragraph.paragraph_format.left_indent = Mm(-bleed)
 
 
 def framed_photo(doc, source: Path, cache: Path, *, width_mm: float,
