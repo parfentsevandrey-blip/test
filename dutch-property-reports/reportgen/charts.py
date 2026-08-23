@@ -39,7 +39,7 @@ def _canvas(width_mm: float, height_mm: float):
 
 
 def _caption(draw, x, y, text: str, width: float):
-    tracked(draw, (x, y), text.upper(), font(SANS_MED, 6.2), GOLD, 0.10)
+    tracked(draw, (x, y), text.upper(), font(SANS_MED, 6.2), GOLD)
     hairline(draw, x, y + 4.4 * MM, x + width, y + 4.4 * MM, GREY_SOFT, 0.25)
 
 
@@ -146,8 +146,8 @@ def position(dest: Path, points: list[tuple[str, float, float, float]], *,
                   area_text, font=note_font, fill=GREY)
 
     tracked(draw, (x0, height_mm * MM - 6 * MM), x_label.upper(),
-            font(SANS_MED, 6.0), GREY, 0.10)
-    tracked(draw, (0, 9.5 * MM), y_label.upper(), font(SANS_MED, 6.0), GREY, 0.10)
+            font(SANS_MED, 6.0), GREY)
+    tracked(draw, (0, 9.5 * MM), y_label.upper(), font(SANS_MED, 6.0), GREY)
     dest.parent.mkdir(parents=True, exist_ok=True)
     image.save(dest, quality=95)
     return dest

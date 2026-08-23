@@ -56,9 +56,19 @@ def full_bleed(doc, image: Path) -> None:
 
 
 def display_title(doc, text: str, *, size: float = 30.0, after: float = 8.0):
-    paragraph = par(doc, after=after, lead=size * 1.08)
-    txt(paragraph, text, font=DISPLAY, size=size, color=S.INK, tracking=-6)
+    paragraph = par(doc, after=after, lead=size * 1.06)
+    txt(paragraph, text, font=DISPLAY, size=size, color=S.INK, tracking=-8)
     return paragraph
+
+
+def body_paragraphs(doc, texts: list[str], *, after: float = 8.0) -> None:
+    """Проза антиквой: гротеск на всю полосу читается серо."""
+    for position, text in enumerate(texts):
+        # выключка влево, а не по формату: без переносов русский текст
+        # при выключке по формату разваливается на разреженные строки
+        paragraph = par(doc, after=0 if position == len(texts) - 1 else after,
+                        lead=S.LH_BODY)
+        txt(paragraph, text, font=S.BODY_FONT, size=S.FS_BODY, color=S.BODY)
 
 
 def lead_paragraph(doc, text: str, *, after: float = 12.0):
@@ -67,79 +77,24 @@ def lead_paragraph(doc, text: str, *, after: float = 12.0):
     return paragraph
 
 
-def pull_quote(doc, text: str, *, before: float = 12.0, after: float = 12.0):
-    rule(doc, color=S.BRASS, size=S.SZ_ACCENT, before=before, after=7)
-    paragraph = par(doc, after=7, lead=21, right=34)
-    txt(paragraph, text, font=DISPLAY, size=16, color=S.INK, tracking=-4)
+def pull_quote(doc, text: str, *, before: float = 13.0, after: float = 13.0):
+    """Врезка-цитата курсивом дисплейной антиквы — главный тезис полосы."""
+    rule(doc, color=S.BRASS, size=S.SZ_ACCENT, before=before, after=8)
+    paragraph = par(doc, after=8, lead=23, right=30)
+    txt(paragraph, text, font=DISPLAY, size=17, color=S.INK, tracking=-6, italic=True)
     rule(doc, color=S.RULE, size=S.SZ_HAIRLINE, after=after)
 
 
-GAP_MM = 5.0
-CARD_MM = (S.CONTENT_W_MM - GAP_MM * (CARD_COLUMNS - 1)) / CARD_COLUMNS
+def card_grid(doc, obj: dict, assets: Path, cards: list[list[str]]) -> None:
+    """Характеристики карточками со скруглением и тенью — как у фотографий.
 
-
-def card_row(doc, cards: list[list[str]]) -> None:
-    """Одна строка карточек.
-
-    Каждая строка — отдельная таблица с пустыми колонками-разделителями:
-    w:tblCellSpacing в LibreOffice не даёт зазора, и плашки слипаются в
-    сплошную таблицу вместо карточек.
+    Ячейка таблицы DOCX не скругляется, поэтому вся сетка рисуется одним
+    изображением (visuals.cards_panel) и ставится на полосу целиком.
     """
-    widths: list[float] = []
-    for position in range(CARD_COLUMNS):
-        if position:
-            widths.append(GAP_MM)
-        widths.append(CARD_MM)
-    table = doc.add_table(rows=1, cols=len(widths))
-    table.alignment = WD_TABLE_ALIGNMENT.LEFT
-    table.autofit = False
-    table_borders(table, {})
-    fixed_layout(table, widths)
-
-    for position, cell in enumerate(table.rows[0].cells):
-        cell.width = Mm(widths[position])
-        paragraph = cell.paragraphs[0]
-        paragraph.paragraph_format.space_after = Pt(0)
-        paragraph.paragraph_format.line_spacing = Pt(1)
-        if position % 2:                       # колонка-разделитель
-            cell_margins(cell, top=0, bottom=0, left=0, right=0)
-            continue
-        index = position // 2
-        if index >= len(cards):
-            continue
-        label, value, note = (list(cards[index]) + ["", "", ""])[:3]
-        cell_shading(cell, S.PANEL)
-        cell_margins(cell, top=13, bottom=14, left=9, right=8)
-
-        paragraph.paragraph_format.space_after = Pt(4)
-        paragraph.paragraph_format.line_spacing = Pt(S.FS_MICRO + 2)
-        txt(paragraph, label, font=S.SANS_MEDIUM, size=S.FS_MICRO, color=S.BRASS,
-            tracking=S.TR_MICRO, caps=True)
-
-        big = cell.add_paragraph()
-        big.paragraph_format.space_after = Pt(3)
-        big.paragraph_format.line_spacing = Pt(17)
-        size = 15.5 if len(value) <= 14 else (12.5 if len(value) <= 22 else 11.0)
-        txt(big, value, font=DISPLAY, size=size, color=S.INK, tracking=-4)
-
-        if note:
-            caption = cell.add_paragraph()
-            caption.paragraph_format.space_after = Pt(0)
-            caption.paragraph_format.line_spacing = Pt(9.6)
-            txt(caption, note, size=7.0, color=S.MUTED)
-
-
-def card_grid(doc, cards: list[list[str]]) -> None:
-    """Ключевые характеристики карточками, а не строками таблицы.
-
-    Карточка держит три уровня: подпись капителью, значение крупно и уточнение
-    подписью — так на одной полосе умещается пятнадцать показателей и полоса
-    при этом не выглядит выгрузкой из базы.
-    """
-    for start in range(0, len(cards), CARD_COLUMNS):
-        if start:
-            par(doc, after=0, lead=GAP_MM * 72 / 25.4)
-        card_row(doc, cards[start:start + CARD_COLUMNS])
+    image, height = visuals.cards_panel(
+        assets / f"cards-{obj['slug']}.jpg", cards,
+        width_mm=S.CONTENT_W_MM, max_height_mm=181.0)
+    photo(doc, image, width_mm=S.CONTENT_W_MM, max_h=height + 2)
 
 
 def framed_photo(doc, source: Path, cache: Path, *, width_mm: float,
@@ -154,29 +109,28 @@ def framed_photo(doc, source: Path, cache: Path, *, width_mm: float,
 # --------------------------------------------------------------------------
 # полосы объекта
 # --------------------------------------------------------------------------
-def object_cards(doc, index: int, obj: dict) -> None:
-    micro(doc, f"Объект {index:02d} · {obj.get('city', '')}", after=7)
-    display_title(doc, obj["title"], size=29, after=9)
+def object_cards(doc, index: int, obj: dict, assets: Path) -> None:
+    micro(doc, f"Объект {index:02d} · {obj.get('city', '')}", after=6)
+    # длинное название сажаем на кегль поменьше, иначе оно уходит на две
+    # строки и сетка карточек не помещается на ту же полосу
+    display_title(doc, obj["title"], size=31 if len(obj["title"]) <= 26 else 25,
+                  after=8)
     if obj.get("lead"):
-        lead_paragraph(doc, obj["lead"], after=11)
-    rule(doc, color=S.BRASS, size=S.SZ_ACCENT, after=12)
+        lead_paragraph(doc, obj["lead"], after=9)
+    rule(doc, color=S.BRASS, size=S.SZ_ACCENT, after=11)
     cards = obj.get("cards") or [[label, value, ""] for label, value in obj["specs"][:15]]
-    card_grid(doc, cards)
+    card_grid(doc, obj, assets, cards)
 
 
 def object_description(doc, obj: dict, cache: Path, images: list[Path]) -> None:
-    micro(doc, "Описание объекта", after=7)
-    display_title(doc, obj["street"], size=21, after=8)
-    rule(doc, color=S.INK, size=S.SZ_RULE, after=10)
+    micro(doc, "Описание объекта", after=6)
+    display_title(doc, obj["street"], size=26, after=8)
+    rule(doc, color=S.INK, size=S.SZ_RULE, after=11)
 
     for block in obj["sections"]:
         if block.get("type") != "paragraphs":
             continue
-        texts = block["paragraphs"]
-        for position, text in enumerate(texts):
-            body = par(doc, after=0 if position == len(texts) - 1 else 7,
-                       lead=S.LH_BODY, align=WD_ALIGN_PARAGRAPH.JUSTIFY)
-            txt(body, text, size=S.FS_BODY, color=S.BODY)
+        body_paragraphs(doc, block["paragraphs"])
         break
 
     if obj.get("pull"):
@@ -190,15 +144,10 @@ def object_location(doc, obj: dict, cache: Path, images: list[Path]) -> None:
     block = next((b for b in obj["sections"] if b.get("type") == "callout"), None)
     if block is None:
         return
-    micro(doc, "Локация", after=7)
-    display_title(doc, block["title"], size=21, after=8)
-    rule(doc, color=S.INK, size=S.SZ_RULE, after=10)
-
-    texts = block["paragraphs"]
-    for position, text in enumerate(texts):
-        body = par(doc, after=0 if position == len(texts) - 1 else 7,
-                   lead=S.LH_BODY, align=WD_ALIGN_PARAGRAPH.JUSTIFY)
-        txt(body, text, size=S.FS_BODY, color=S.BODY)
+    micro(doc, "Локация", after=6)
+    display_title(doc, block["title"], size=26, after=8)
+    rule(doc, color=S.INK, size=S.SZ_RULE, after=11)
+    body_paragraphs(doc, block["paragraphs"])
 
     if images:
         par(doc, after=0, lead=13)
@@ -271,7 +220,7 @@ def build(report: dict, objects: list[tuple[dict, list[Path]]], dest: Path) -> P
                 kpi=[(label, value) for label, value, _ in obj.get("kpi", [])[:4]],
             ))
             flow.new_page()
-        object_cards(doc, index, obj)
+        object_cards(doc, index, obj, assets)
         flow.new_page()
         object_description(doc, obj, cache, images)
         flow.new_page()

@@ -57,7 +57,12 @@ SERIF = "Spectral-Light"
 # примитивы
 # --------------------------------------------------------------------------
 def tracked(draw, xy, text, fnt, fill, tracking_em: float = 0.0):
-    """Текст с разрядкой. У PIL её нет, поэтому знаки ставятся по одному."""
+    """Текст с необязательной разрядкой.
+
+    Разрядка прописных из оформления убрана целиком, поэтому по умолчанию
+    функция просто рисует строку; параметр оставлен на случай единичных
+    исключений.
+    """
     x, y = xy
     extra = tracking_em * fnt.size
     for char in text:
@@ -168,7 +173,7 @@ def cover(dest: Path, photo: Path, *, kicker: str, title: str, subtitle: str,
     y = 20 * MM
     hairline(draw, left, y, right, y, GOLD_BRIGHT, 0.5)
     kicker_font = font(SANS_MED, 7)
-    tracked(draw, (left, y + 4 * MM), kicker.upper(), kicker_font, PAPER_PURE, 0.10)
+    tracked(draw, (left, y + 4 * MM), kicker.upper(), kicker_font, PAPER_PURE)
 
     # низ: заголовок в дисплейной антикве
     title_font = font(DISPLAY, 44)
@@ -194,9 +199,9 @@ def cover(dest: Path, photo: Path, *, kicker: str, title: str, subtitle: str,
     meta_font = font(SANS, 7)
     draw.text((left, y - 3.5 * MM), meta_left, font=meta_font, fill=(206, 201, 190))
     meta_font_r = font(SANS_MED, 7)
-    w = tracked_width(draw, meta_right.upper(), meta_font_r, 0.10)
+    w = tracked_width(draw, meta_right.upper(), meta_font_r)
     tracked(draw, (right - w, y - 3.5 * MM), meta_right.upper(), meta_font_r,
-            GOLD_BRIGHT, 0.10)
+            GOLD_BRIGHT)
 
     dest.parent.mkdir(parents=True, exist_ok=True)
     canvas.save(dest, quality=90, subsampling=1)
@@ -218,7 +223,7 @@ def opener(dest: Path, photo: Path, *, ordinal: str, city: str, title: str,
 
     y = 20 * MM
     hairline(draw, left, y, right, y, GOLD_BRIGHT, 0.5)
-    tracked(draw, (left, y + 4 * MM), city.upper(), font(SANS_MED, 7), PAPER_PURE, 0.10)
+    tracked(draw, (left, y + 4 * MM), city.upper(), font(SANS_MED, 7), PAPER_PURE)
 
     ordinal_font = font(DISPLAY, 84)
     title_font = font(DISPLAY, 34)
@@ -249,7 +254,7 @@ def opener(dest: Path, photo: Path, *, ordinal: str, city: str, title: str,
             hairline(draw, x - 4 * MM, strip_top + 5 * MM, x - 4 * MM,
                      strip_top + 22 * MM, (120, 116, 108), 0.25)
         tracked(draw, (x, strip_top + 6 * MM), label.upper(), label_font,
-                (196, 191, 181), 0.10)
+                (196, 191, 181))
         draw.text((x, strip_top + 11 * MM), value, font=value_font, fill=PAPER_PURE)
 
     dest.parent.mkdir(parents=True, exist_ok=True)
@@ -269,7 +274,7 @@ def statement(dest: Path, *, kicker: str, text: str, figures: list[tuple[str, st
     y = 26 * MM
     hairline(draw, left, y, right, y, GOLD_BRIGHT, 0.5)
     tracked(draw, (left, y + 4 * MM), kicker.upper(), font(SANS_MED, 7),
-            GOLD_BRIGHT, 0.10)
+            GOLD_BRIGHT)
 
     text_font = font(DISPLAY, 27)
     lines = wrap(draw, text, text_font, right - left)
@@ -284,7 +289,7 @@ def statement(dest: Path, *, kicker: str, text: str, figures: list[tuple[str, st
     note_font = font(SANS, 7.5)
     for label, value, note in figures:
         hairline(draw, left, y, right, y, (70, 68, 64), 0.25)
-        tracked(draw, (left, y + 4 * MM), label.upper(), label_font, (150, 146, 138), 0.10)
+        tracked(draw, (left, y + 4 * MM), label.upper(), label_font, (150, 146, 138))
         draw.text((left, y + 9 * MM), value, font=value_font, fill=PAPER_PURE)
         w = draw.textlength(note, font=note_font)
         draw.text((right - w, y + 15 * MM), note, font=note_font, fill=(150, 146, 138))
@@ -349,7 +354,7 @@ def contents_cover(dest: Path, *, kicker: str, title: str, subtitle: str,
 
     y = 22 * MM
     hairline(draw, left, y, right, y, GOLD, 0.6)
-    tracked(draw, (left, y + 4.6 * MM), kicker.upper(), font(SANS_MED, 7), GOLD, 0.10)
+    tracked(draw, (left, y + 4.6 * MM), kicker.upper(), font(SANS_MED, 7), GOLD)
 
     title_font = font(DISPLAY, 47)
     y = 40 * MM
@@ -366,12 +371,16 @@ def contents_cover(dest: Path, *, kicker: str, title: str, subtitle: str,
 
     # список объектов: низ списка привязан к подвалу, высота строки
     # подбирается так, чтобы список не наехал на подзаголовок
-    thumb_w, thumb_h = 54 * MM, 35 * MM
     bottom = height_px - 32 * MM
     row_h = min(46 * MM, (bottom - subtitle_end - 16 * MM) / len(items))
+    # миниатюра выводится из высоты строки, иначе при сжатой строке она
+    # перекрывает линейку, отделяющую следующий объект
+    inset = 5.5 * MM
+    thumb_h = row_h - 2 * inset
+    thumb_w = thumb_h * 1.52
     top = bottom - len(items) * row_h
     tracked(draw, (left, top - 8 * MM), "В подборку входят".upper(),
-            font(SANS_MED, 6.5), GOLD, 0.10)
+            font(SANS_MED, 6.5), GOLD)
     ordinal_font = font(DISPLAY, 21)
     name_font = font(DISPLAY, 17)
     city_font = font(SANS, 7.6)
@@ -381,20 +390,21 @@ def contents_cover(dest: Path, *, kicker: str, title: str, subtitle: str,
         y = top + (index - 1) * row_h
         hairline(draw, left, y, right, y, GREY_SOFT, 0.25)
 
-        draw.text((left, y + 14 * MM), f"{index:02d}", font=ordinal_font, fill=GOLD)
+        draw.text((left, y + row_h / 2 - 5 * MM), f"{index:02d}",
+                  font=ordinal_font, fill=GOLD)
 
         thumb_x = left + 16 * MM
         thumb = grade(fill_crop(photo_path, int(thumb_w), int(thumb_h)), warmth=1.02)
         mask = Image.new("L", thumb.size, 0)
         ImageDraw.Draw(mask).rounded_rectangle(
-            (0, 0, thumb.size[0] - 1, thumb.size[1] - 1), radius=int(2.2 * MM), fill=255)
+            (0, 0, thumb.size[0] - 1, thumb.size[1] - 1), radius=int(2.6 * MM), fill=255)
         shadow = Image.new("L", canvas.size, 0)
         ImageDraw.Draw(shadow).rounded_rectangle(
-            (thumb_x, y + 6 * MM + int(0.8 * MM), thumb_x + thumb_w,
-             y + 6 * MM + thumb_h + int(0.8 * MM)), radius=int(2.2 * MM), fill=90)
+            (thumb_x, y + inset + int(0.8 * MM), thumb_x + thumb_w,
+             y + inset + thumb_h + int(0.8 * MM)), radius=int(2.6 * MM), fill=90)
         shadow = shadow.filter(ImageFilter.GaussianBlur(int(1.2 * MM)))
         canvas.paste(Image.new("RGB", canvas.size, (58, 54, 48)), (0, 0), shadow)
-        canvas.paste(thumb, (int(thumb_x), int(y + 6 * MM)), mask)
+        canvas.paste(thumb, (int(thumb_x), int(y + inset)), mask)
 
         text_x = thumb_x + thumb_w + 9 * MM
         price_w = draw.textlength(price, font=price_font)
@@ -405,17 +415,108 @@ def contents_cover(dest: Path, *, kicker: str, title: str, subtitle: str,
             fitted = font(DISPLAY, size)
             if draw.textlength(name, font=fitted) <= room:
                 break
-        draw.text((text_x, y + 14 * MM), name, font=fitted, fill=INK)
-        draw.text((text_x, y + 22.5 * MM), city, font=city_font, fill=GREY)
-        draw.text((right - price_w, y + 14.5 * MM), price, font=price_font, fill=INK)
+        middle = y + row_h / 2
+        draw.text((text_x, middle - 6 * MM), name, font=fitted, fill=INK)
+        draw.text((text_x, middle + 2 * MM), city, font=city_font, fill=GREY)
+        draw.text((right - price_w, middle - 5.5 * MM), price, font=price_font, fill=INK)
 
     y = height_px - 20 * MM
     hairline(draw, left, y, right, y, GREY_SOFT, 0.25)
     draw.text((left, y + 3.4 * MM), meta, font=font(SANS, 7), fill=GREY)
     count = f"{len(items)} объекта"
-    w = tracked_width(draw, count.upper(), font(SANS_MED, 7), 0.10)
-    tracked(draw, (right - w, y + 3.4 * MM), count.upper(), font(SANS_MED, 7), GOLD, 0.10)
+    w = tracked_width(draw, count.upper(), font(SANS_MED, 7))
+    tracked(draw, (right - w, y + 3.4 * MM), count.upper(), font(SANS_MED, 7), GOLD)
 
     dest.parent.mkdir(parents=True, exist_ok=True)
     canvas.save(dest, quality=94, subsampling=1)
     return dest
+
+
+def cards_panel(dest: Path, cards: list[list[str]], *, width_mm: float,
+                columns: int = 3, gap_mm: float = 4.5,
+                max_height_mm: float | None = None) -> tuple[Path, float]:
+    """Сетка карточек с характеристиками — одним изображением.
+
+    Ячейка таблицы DOCX не умеет скругляться и не умеет отбрасывать тень,
+    поэтому карточки рисуются так же, как фотографии: скруглённый прямоугольник
+    с мягкой тенью на бумажном фоне. Возвращается путь и фактическая высота в
+    миллиметрах, чтобы вызывающий код знал, сколько места занял блок.
+    """
+    card_w = (width_mm - gap_mm * (columns - 1)) / columns
+    rows = -(-len(cards) // columns)
+
+    pad = 6.6
+    label_font = font(SANS_MED, 7.0)
+    note_font = font(SANS, 7.0)
+    probe = ImageDraw.Draw(Image.new("RGB", (1, 1)))
+    inner_px = (card_w - 2 * pad) * MM
+
+    def value_font_for(text: str):
+        for size in (19.0, 16.5, 14.0, 12.0, 10.5):
+            candidate = font(DISPLAY, size)
+            if probe.textlength(text, font=candidate) <= inner_px:
+                return candidate, size
+        return font(DISPLAY, 10.0), 10.0
+
+    prepared = []
+    note_lines_max = 1
+    for entry in cards:
+        label, value, note = (list(entry) + ["", "", ""])[:3]
+        value_fnt, value_size = value_font_for(value)
+        lines = wrap(probe, note, note_font, inner_px) if note else []
+        note_lines_max = max(note_lines_max, len(lines))
+        prepared.append((label, value, value_fnt, value_size, lines))
+
+    label_h, value_gap, note_gap, note_lh = 4.0, 2.6, 2.4, 3.7
+    value_h = max(size for _, _, _, size, _ in prepared) * 25.4 / 72 * 1.02
+
+    def height_for(padding: float) -> float:
+        return (padding * 2 + label_h + value_gap + value_h
+                + note_gap + note_lines_max * note_lh)
+
+    # высота карточки подгоняется полями, а не обрезкой: при жёстком лимите
+    # уточнение вылезало из плашки и печаталось прямо на бумаге
+    card_h = height_for(pad)
+    if max_height_mm:
+        available = (max_height_mm - gap_mm * (rows - 1)) / rows
+        while card_h > available and pad > 3.4:
+            pad -= 0.3
+            card_h = height_for(pad)
+        card_h = max(card_h, height_for(3.4))
+    total_h = rows * card_h + (rows - 1) * gap_mm
+
+    canvas = Image.new("RGB", (int(width_mm * MM), int(total_h * MM) + 2), PAPER)
+    radius = int(2.6 * MM)
+
+    shadow = Image.new("L", canvas.size, 0)
+    shadow_draw = ImageDraw.Draw(shadow)
+    boxes = []
+    for index in range(len(prepared)):
+        x = (index % columns) * (card_w + gap_mm) * MM
+        y = (index // columns) * (card_h + gap_mm) * MM
+        boxes.append((x, y))
+        shadow_draw.rounded_rectangle(
+            (x, y + 0.7 * MM, x + card_w * MM, y + (card_h + 0.7) * MM),
+            radius=radius, fill=76)
+    shadow = shadow.filter(ImageFilter.GaussianBlur(int(1.2 * MM)))
+    canvas.paste(Image.new("RGB", canvas.size, (72, 68, 60)), (0, 0), shadow)
+
+    draw = ImageDraw.Draw(canvas)
+    for (label, value, value_fnt, value_size, lines), (x, y) in zip(prepared, boxes):
+        draw.rounded_rectangle((x, y, x + card_w * MM, y + card_h * MM),
+                               radius=radius, fill=(233, 229, 218))
+        text_x = x + pad * MM
+        cursor = y + pad * MM
+        draw.text((text_x, cursor), label.upper(), font=label_font, fill=GOLD)
+        cursor += (label_h + value_gap) * MM
+        draw.text((text_x, cursor), value, font=value_fnt, fill=INK)
+        # величина кегля берётся в пунктах: у шрифта PIL .size хранится в
+        # пикселях, и подстановка его сюда уводила уточнение за низ карточки
+        cursor += (value_size * 25.4 / 72 * 1.02 + note_gap) * MM
+        for line in lines:
+            draw.text((text_x, cursor), line, font=note_font, fill=GREY)
+            cursor += note_lh * MM
+
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    canvas.save(dest, quality=95, subsampling=1)
+    return dest, total_h
