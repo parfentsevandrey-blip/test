@@ -452,30 +452,37 @@ def cards_panel(dest: Path, cards: list[list[str]], *, width_mm: float,
     pad = 6.6
     label_font = font(SANS_MED, 7.0)
     note_font = font(SANS, 7.0)
+    # Одна гарнитура и один кегль на всю сетку. Раньше кегль подбирался под
+    # каждое значение отдельно — в одной сетке оказывалось пять разных
+    # размеров, и полоса читалась как хаос. Теперь размер выбирается один на
+    # всю сетку: самый крупный, при котором ни одно значение не переносится.
     probe = ImageDraw.Draw(Image.new("RGB", (1, 1)))
     inner_px = (card_w - 2 * pad) * MM
-
-    def value_font_for(text: str):
-        for size in (19.0, 16.5, 14.0, 12.0, 10.5):
-            candidate = font(DISPLAY, size)
-            if probe.textlength(text, font=candidate) <= inner_px:
-                return candidate, size
-        return font(DISPLAY, 10.0), 10.0
+    values = [(list(entry) + ["", "", ""])[1] for entry in cards]
+    value_pt = 12.0
+    for candidate in (15.0, 14.0, 13.0, 12.0):
+        trial = font(SANS_LIGHT, candidate)
+        if all(probe.textlength(value, font=trial) <= inner_px for value in values):
+            value_pt = candidate
+            break
+    value_font = font(SANS_LIGHT, value_pt)
 
     prepared = []
-    note_lines_max = 1
+    value_lines_max, note_lines_max = 1, 1
     for entry in cards:
         label, value, note = (list(entry) + ["", "", ""])[:3]
-        value_fnt, value_size = value_font_for(value)
-        lines = wrap(probe, note, note_font, inner_px) if note else []
-        note_lines_max = max(note_lines_max, len(lines))
-        prepared.append((label, value, value_fnt, value_size, lines))
+        value_rows = wrap(probe, value, value_font, inner_px)[:2]
+        note_rows = wrap(probe, note, note_font, inner_px) if note else []
+        value_lines_max = max(value_lines_max, len(value_rows))
+        note_lines_max = max(note_lines_max, len(note_rows))
+        prepared.append((label, value_rows, note_rows))
 
-    label_h, value_gap, note_gap, note_lh = 4.0, 2.6, 2.4, 3.7
-    value_h = max(size for _, _, _, size, _ in prepared) * 25.4 / 72 * 1.02
+    label_h, value_gap, note_gap = 4.0, 2.8, 2.6
+    value_lh = value_pt * 25.4 / 72 * 1.16
+    note_lh = 3.7
 
     def height_for(padding: float) -> float:
-        return (padding * 2 + label_h + value_gap + value_h
+        return (padding * 2 + label_h + value_gap + value_lines_max * value_lh
                 + note_gap + note_lines_max * note_lh)
 
     # высота карточки подгоняется полями, а не обрезкой: при жёстком лимите
@@ -510,18 +517,21 @@ def cards_panel(dest: Path, cards: list[list[str]], *, width_mm: float,
     canvas.paste(Image.new("RGB", canvas.size, (72, 68, 60)), (0, 0), shadow)
 
     draw = ImageDraw.Draw(canvas)
-    for (label, value, value_fnt, value_size, lines), (x, y) in zip(prepared, boxes):
+    for (label, value_rows, note_rows), (x, y) in zip(prepared, boxes):
         draw.rounded_rectangle((x, y, x + card_w * MM, y + card_h * MM),
                                radius=radius, fill=(233, 229, 218))
         text_x = x + pad * MM
         cursor = y + pad * MM
         draw.text((text_x, cursor), label.upper(), font=label_font, fill=GOLD)
         cursor += (label_h + value_gap) * MM
-        draw.text((text_x, cursor), value, font=value_fnt, fill=INK)
-        # величина кегля берётся в пунктах: у шрифта PIL .size хранится в
-        # пикселях, и подстановка его сюда уводила уточнение за низ карточки
-        cursor += (value_size * 25.4 / 72 * 1.02 + note_gap) * MM
-        for line in lines:
+        for line in value_rows:
+            draw.text((text_x, cursor), line, font=value_font, fill=INK)
+            cursor += value_lh * MM
+        # уточнение всегда на одной высоте: значения выровнены по верху, а
+        # подписи — по нижнему краю блока значений
+        cursor = (y + pad * MM + (label_h + value_gap) * MM
+                  + value_lines_max * value_lh * MM + note_gap * MM)
+        for line in note_rows:
             draw.text((text_x, cursor), line, font=note_font, fill=GREY)
             cursor += note_lh * MM
 
