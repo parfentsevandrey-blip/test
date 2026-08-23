@@ -95,7 +95,13 @@ internal fun WeatherApp(model: WeatherModel = viewModel()) {
         app.quire.weather.WeatherRefresh.schedule(model.getApplication())
     }
 
-    QuireTheme(dark = isSystemInDarkTheme(), dynamic = true) {
+    // Expressive on purpose, and now the only one of the three that asks for it: this is the
+    // app with the sky and the hero in it, so it is where the loud scheme is earned.
+    QuireTheme(
+        dark = isSystemInDarkTheme(),
+        dynamic = true,
+        motion = androidx.compose.material3.MotionScheme.expressive(),
+    ) {
         val scrollBehavior =
             TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
         val refresh = rememberPullToRefreshState()

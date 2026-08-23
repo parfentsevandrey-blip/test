@@ -26,9 +26,22 @@ internal fun Modifier.springPress(interaction: MutableInteractionSource): Modifi
     val pressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(
         targetValue = if (pressed) 0.98f else 1f,
-        // The theme's own fast spatial spring, not a hand-tuned one: every press in both apps
-        // answers with the same physics the rest of Expressive moves by.
-        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+        // Two specs, not one, and the asymmetry is the whole point.
+        //
+        // Going down, the finger is on the card and the theme's fast spring answers it. Coming
+        // back it must NOT overshoot, because an overshoot is a claim about inertia and a tap
+        // has none: the card was bloomed a hair past its resting size after every single tap,
+        // reporting a flick nobody performed. That is worse than plain decoration — it is a
+        // miscalibrated signal, spending the loudness budget where there is nothing to say.
+        // Material already forbids overshoot on colour for exactly this reason.
+        //
+        // Where a finger genuinely does hand over inertia — a fling through the pager, a
+        // pull-to-refresh let go — the spatial specs still overshoot, and should.
+        animationSpec = if (pressed) {
+            MaterialTheme.motionScheme.fastSpatialSpec()
+        } else {
+            tapReturnSpec()
+        },
         label = "press",
     )
     return this.graphicsLayer {
@@ -36,3 +49,15 @@ internal fun Modifier.springPress(interaction: MutableInteractionSource): Modifi
         scaleY = scale
     }
 }
+
+/**
+ * The spring a surface returns on when the gesture that moved it carried no inertia.
+ *
+ * Kept here so the rule lives in one file and an audit is a grep rather than a reading: anything
+ * springing back from a tap uses this, and anything springing back from a throw does not.
+ */
+internal fun <T> tapReturnSpec(): androidx.compose.animation.core.FiniteAnimationSpec<T> =
+    androidx.compose.animation.core.spring(
+        dampingRatio = androidx.compose.animation.core.Spring.DampingRatioNoBouncy,
+        stiffness = androidx.compose.animation.core.Spring.StiffnessMedium,
+    )

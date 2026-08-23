@@ -90,4 +90,6 @@
     </plurals>
     <string name="tomorrow">Tomorrow</string>
     <string name="yesterday">Yesterday</string>
+    <string name="a11y_open_day">open this day</string>
+    <string name="a11y_compose_day">add an entry</string>
 </resources>

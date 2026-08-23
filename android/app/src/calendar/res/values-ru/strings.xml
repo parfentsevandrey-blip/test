@@ -91,4 +91,6 @@
     </plurals>
     <string name="tomorrow">Завтра</string>
     <string name="yesterday">Вчера</string>
+    <string name="a11y_open_day">открыть день</string>
+    <string name="a11y_compose_day">создать запись</string>
 </resources>

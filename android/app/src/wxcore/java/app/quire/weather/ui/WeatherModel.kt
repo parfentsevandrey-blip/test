@@ -30,6 +30,19 @@ class WeatherModel(app: Application) : AndroidViewModel(app) {
     var forecast by mutableStateOf(WeatherStore.load(app))
         private set
 
+    /**
+     * Takes up whatever is in the store, without asking the network.
+     *
+     * The screen holds its own copy of the forecast, so a background job or a widget refresh
+     * writing a newer one does not reach an open screen by itself. This is also the only way
+     * a test can put a second forecast in front of the UI: `setContent` happens once, so a
+     * second model cannot be swapped in, and without this the test drives nothing and passes
+     * whatever the code does.
+     */
+    fun reload() {
+        forecast = WeatherStore.load(getApplication())
+    }
+
     var located by mutableStateOf(Whereabouts.granted(app))
         private set
 

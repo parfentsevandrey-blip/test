@@ -35,6 +35,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import app.quire.R
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -198,6 +206,34 @@ private fun DayCell(
     )
     val haptics = LocalHapticFeedback.current
 
+    // Everything the cell draws, said out loud.
+    //
+    // This cell paints three channels of data — today or selected as a filled disc, how busy the
+    // day is as a density wash, and up to three coloured marks for the calendars involved — and
+    // until now spoke none of them: three contentDescriptions in the whole calendar flavour, all
+    // null, and not one `semantics` anywhere. Which means for anyone not looking at the screen,
+    // the entire grid was a field of bare numbers.
+    //
+    // It is also the channel that survives the stillness contract. The moment motion is switched
+    // off, a state with no spoken channel has no channel at all — which is why this is load-
+    // bearing rather than cosmetic.
+    val locale = rememberLocale()
+    val spokenDate = remember(date, locale) {
+        java.time.format.DateTimeFormatter
+            .ofLocalizedDate(java.time.format.FormatStyle.LONG)
+            .withLocale(locale)
+            .format(date)
+    }
+    val entries = if (count > 0) {
+        pluralStringResource(R.plurals.agenda_count, count, count)
+    } else {
+        null
+    }
+    val state = listOfNotNull(
+        entries,
+        if (isToday) stringResource(R.string.today) else null,
+    ).joinToString(", ")
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -227,7 +263,17 @@ private fun DayCell(
                     haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
                     onPick(date)
                 },
-            ),
+                // The verbs, named. Holding a day composes in it, and without this that is
+                // undiscoverable to anyone who cannot see the grid to experiment on it.
+                onClickLabel = stringResource(R.string.a11y_open_day),
+                onLongClickLabel = stringResource(R.string.a11y_compose_day),
+            )
+            .semantics(mergeDescendants = true) {
+                contentDescription = spokenDate
+                if (state.isNotEmpty()) stateDescription = state
+                role = androidx.compose.ui.semantics.Role.Button
+                this.selected = isSelected
+            },
     ) {
         Box(contentAlignment = Alignment.Center, modifier = Modifier.size(DiscSize)) {
             Box(

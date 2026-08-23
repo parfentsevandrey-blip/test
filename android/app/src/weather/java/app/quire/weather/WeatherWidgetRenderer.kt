@@ -421,6 +421,16 @@ object WeatherWidgetRenderer {
      *
      * Dry skies get an empty, GONE flipper, which costs the launcher nothing — a card with no
      * weather falling must be exactly the card this app shipped before it learned to do this.
+     *
+     * And it stops when it is asked to. Three separate switches mean stop — the battery saver,
+     * the system's animation scale, and this app's own Live sky setting — and none of them
+     * reached here: somebody who turned the sky off *in the app* still had rain running for
+     * ever on their home screen. WCAG 2.2.2 makes that a level-A failure, not a preference.
+     *
+     * Stopping is not hiding. The drops stay drawn: one phase is added instead of six, and a
+     * ViewFlipper holding a single child has nothing to flip to. What the layer says — that
+     * something is falling, and how heavily — is carried by any one of the six phases just as
+     * well as by the sequence, so nothing is lost but the motion that was asked to stop.
      */
     private fun skyMotion(context: Context, root: RemoteViews, paint: WidgetPaint, sky: Sky?) {
         root.removeAllViews(R.id.sky_motion)
@@ -438,6 +448,18 @@ object WeatherWidgetRenderer {
         }
 
         root.setViewVisibility(R.id.sky_motion, android.view.View.VISIBLE)
+
+        if (!moving(context)) {
+            // One frame, and the middle one so it is a representative sky rather than the
+            // top of the loop. Deterministic: two redraws in the same state pick the same
+            // resource, which is what the test pins.
+            root.addView(
+                R.id.sky_motion,
+                phase(context, paint, frames[frames.size / 2], alpha, flash = false),
+            )
+            return
+        }
+
         val laps = if (sky == Sky.THUNDER) 2 else 1
         for (lap in 0 until laps) {
             for ((index, res) in frames.withIndex()) {
@@ -451,6 +473,25 @@ object WeatherWidgetRenderer {
                 phase(context, paint, R.drawable.precip_flash, FLASH_ALPHA, flash = true),
             )
         }
+    }
+
+    /**
+     * Whether anything on this device is asking the card to hold still.
+     *
+     * Read at render time rather than cached: a widget is rebuilt by the provider, so the
+     * answer is fresh on every update without needing a listener of its own. The app's own
+     * Live sky switch counts too — a person who turned the sky off did not mean "except on
+     * the home screen".
+     */
+    private fun moving(context: Context): Boolean {
+        val animated = android.provider.Settings.Global.getFloat(
+            context.contentResolver,
+            android.provider.Settings.Global.ANIMATOR_DURATION_SCALE,
+            1f,
+        ) > 0f
+        val saving = context.getSystemService(android.os.PowerManager::class.java)
+            ?.isPowerSaveMode == true
+        return animated && !saving && WeatherSettings.get(context).liveSky
     }
 
     /** One frame of the layer: the drops in muted ink, the lightning in the accent. */

@@ -17,6 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,10 +55,13 @@ fun SunArc(sunrise: LocalDateTime, sunset: LocalDateTime) {
         DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale)
     }
 
-    val now = remember { LocalDateTime.now() }
+    // Live, not frozen. The sun's place on this arc IS the reading, so an arc drawn against
+    // the moment the screen opened is a graph telling a lie — quietly, and worse the longer
+    // the screen stays open.
+    val now by rememberMinute()
     val whole = Duration.between(sunrise, sunset).toMinutes().coerceAtLeast(1L)
     val gone = Duration.between(sunrise, now).toMinutes()
-    val progress = (gone.toFloat() / whole.toFloat()).coerceIn(0f, 1f)
+    val progress = dayProgress(now, sunrise, sunset)
     val up = now.isAfter(sunrise) && now.isBefore(sunset)
 
     // While the sun is up the useful number is what is left of the day; once it is down, what the
@@ -69,7 +73,11 @@ fun SunArc(sunrise: LocalDateTime, sunset: LocalDateTime) {
 
     // The sun runs out along the arc to where it actually is rather than appearing there. It is
     // a picture of a journey, and a journey that is over before you look at it is a diagram.
-    val travelled = remember(sunrise) { Animatable(0f) }
+    // No key. The run-out is the arc's entrance and an entrance is played once per screen;
+    // keyed on sunrise it replayed from zero every time a fetch landed, and now that `now`
+    // is live it would replay every minute. `animateTo` from wherever it already is does
+    // exactly the right thing on every subsequent move.
+    val travelled = remember { Animatable(0f) }
     // The slow spatial token: this is the one journey on the page, and it takes the theme's own
     // unhurried spring rather than a hand-tuned duration.
     val journey = MaterialTheme.motionScheme.slowSpatialSpec<Float>()
@@ -219,3 +227,21 @@ private val ArcHeight = 96.dp
 /** How far the horizon sits above the bottom of the box, and the apex below the top. */
 private val Horizon = 6.dp
 private val Apex = 4.dp
+
+/**
+ * How far through its own day this moment is, 0 before sunrise and 1 after sunset.
+ *
+ * The arithmetic the arc is drawn from, pulled out where it can be proved directly. The claim
+ * that matters is not "the sun is somewhere plausible" but "the sun is where the clock says",
+ * and that is a statement about numbers — provable in a form that will still be true in two
+ * years, rather than by counting lit pixels around a glowing disc.
+ */
+internal fun dayProgress(
+    now: LocalDateTime,
+    sunrise: LocalDateTime,
+    sunset: LocalDateTime,
+): Float {
+    val whole = Duration.between(sunrise, sunset).toMinutes().coerceAtLeast(1L)
+    val gone = Duration.between(sunrise, now).toMinutes()
+    return (gone.toFloat() / whole.toFloat()).coerceIn(0f, 1f)
+}

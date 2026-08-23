@@ -9,6 +9,8 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
@@ -31,6 +33,22 @@ import androidx.compose.ui.platform.LocalContext
 fun QuireTheme(
     dark: Boolean,
     dynamic: Boolean,
+    /**
+     * How loudly this application moves.
+     *
+     * Loudness is a claim about importance, and it is finite: an app where everything is loud
+     * scores nothing by being loud anywhere. IBM Carbon and Atlassian arrived independently at
+     * exactly two levels and no third — productive/expressive, practical/bold — and reserve the
+     * loud one for rare, important moments. Android's own documentation says the same: standard
+     * for utilitarian UI and repeated interactions.
+     *
+     * So the weather keeps expressive, where the sky and the hero are the point, and the calendar
+     * takes standard. Tapping a day in a month grid is the most repeated interaction in either
+     * app, and a calendar that bounces like a hero surface is overstating a change of month. The
+     * effects specs are identical in both schemes, so not one fade, colour or opacity shifts by a
+     * frame — the whole difference is locked inside geometry.
+     */
+    motion: MotionScheme = MotionScheme.standard(),
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
@@ -59,11 +77,18 @@ fun QuireTheme(
         }
     }
 
-    MaterialExpressiveTheme(
-        colorScheme = scheme,
-        motionScheme = MotionScheme.expressive(),
-        content = content,
-    )
+    // The one place stillness is enforced. Every animation in both apps resolves its spec through
+    // `MaterialTheme.motionScheme`, so swapping the scheme here stops all of them at once and
+    // cannot be forgotten at a new call site — which is the difference between a contract and a
+    // habit. Places holding their own Animatable read `LocalStillness` and snap themselves.
+    val still by rememberStillness()
+    CompositionLocalProvider(LocalStillness provides still) {
+        MaterialExpressiveTheme(
+            colorScheme = scheme,
+            motionScheme = if (still) CalmMotionScheme else motion,
+            content = content,
+        )
+    }
 }
 
 // The fallback scheme, for a device with no dynamic colour and for anyone who turns it off. It is

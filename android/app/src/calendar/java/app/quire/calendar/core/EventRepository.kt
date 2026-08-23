@@ -26,7 +26,10 @@ class DayLoad(
     val labelColour: Int = 0,
 )
 
-class AgendaEntry(
+// A data class on purpose. Structural equality is what lets a screen ask "is this the same
+// day's entries I am already showing?" — without it every answer from the provider is a
+// different object, and anything comparing lists concludes the day changed when it did not.
+data class AgendaEntry(
     val eventId: Long,
     val begin: Long,
     val end: Long,

@@ -73,8 +73,12 @@ fun LiveSky(
      * camera moves every depth by its own amount: near clouds slide furthest, the rain by its
      * nearness, and the stars, the sun and the moon not at all — infinity has no parallax,
      * which is precisely what makes the rest of it read as depth.
+     *
+     * Taken as state rather than as a value, and read inside the Canvas: the accelerometer
+     * arrives at SENSOR_DELAY_GAME, and a value read in composition recomposes everything
+     * around it fifty times a second for something only the draw phase looks at.
      */
-    tilt: Offset = Offset.Zero,
+    tiltState: State<Offset>? = null,
     // How hard it is actually falling this quarter-hour, from the minute-cast. Negative means
     // "not known", and the sky falls back to what its category usually looks like.
     rainMm: Double = -1.0,
@@ -114,6 +118,8 @@ fun LiveSky(
     val golden = scheme.tertiary
 
     Canvas(modifier) {
+        // Read here, in the draw phase, and nowhere else.
+        val tilt = tiltState?.value ?: Offset.Zero
         // Where the light is, in screen x: the sun by day, the moon by night, or nowhere known.
         val lightX: Float? = when {
             day && daylight != null -> size.width * (0.12f + 0.76f * daylight)
@@ -189,17 +195,10 @@ fun LiveSky(
  */
 @Composable
 internal fun rememberSkyClock(): State<Float> {
-    val context = LocalContext.current
-    val moving = remember(context) {
-        val animated = android.provider.Settings.Global.getFloat(
-            context.contentResolver,
-            android.provider.Settings.Global.ANIMATOR_DURATION_SCALE,
-            1f,
-        ) > 0f
-        val saving = context.getSystemService(android.os.PowerManager::class.java)
-            ?.isPowerSaveMode == true
-        animated && !saving
-    }
+    // The shared contract, read live. This used to sample both settings inside
+    // `remember(context)`, so a battery saver switched on mid-session never arrived here at all —
+    // and it was the only place in either app that listened to either setting.
+    val moving = !app.quire.calendar.m3.LocalStillness.current
 
     val transition = rememberInfiniteTransition(label = "sky")
     val running = transition.animateFloat(

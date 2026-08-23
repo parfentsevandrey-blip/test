@@ -23,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,6 +35,7 @@ import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -75,12 +77,23 @@ fun HourStrip(
     hours: List<HourForecast>,
     units: WeatherModel.Settings,
     modifier: Modifier = Modifier,
+    /**
+     * The days the strip runs across, for shading the dark hours under the curve.
+     *
+     * A list rather than one sunrise and one sunset, because this strip is a rolling
+     * twenty-four-hour window and crosses midnight most of the time it is looked at — and
+     * because Open-Meteo's sunrise and sunset are per day and nullable. Each hour asks the
+     * day it actually falls in; an hour whose day has no answer is not shaded.
+     */
+    days: List<app.quire.weather.DayForecast> = emptyList(),
 ) {
     if (hours.size < 2) return
     val scheme = MaterialTheme.colorScheme
     val locale = app.quire.calendar.m3.rememberLocale()
     val clock = remember(locale) { DateTimeFormatter.ofPattern("HH", locale) }
-    val now = remember { LocalDateTime.now() }
+    // Live: this decides which column is marked "Now", and a strip that marks the wrong hour
+    // is worse than one that marks none. It feeds a boolean, so there is nothing to animate.
+    val now by rememberMinute()
 
     val warmest = hours.maxOf { it.temperature }
     val coldest = hours.minOf { it.temperature }
@@ -93,12 +106,18 @@ fun HourStrip(
     val wet = hours.any { it.rain > 0 }
 
     // Read out here: a draw scope has no access to the theme.
+    // Night is a wash of the surface's own dim role rather than a black overlay: one alpha
+    // over one colour silently disappears in one of the two themes, and this has to read in
+    // both. In a dark scheme it lands darker than the card; in a light one, lighter.
+    val nightInk = scheme.onSurfaceVariant.copy(alpha = 0.10f)
     val primary = scheme.primary
     val tertiary = scheme.tertiary
 
     // How much of the line has arrived. Keyed on the hours, so a refresh that brings a new
     // forecast draws the new shape rather than swapping it in behind the old one.
-    val drawn = remember(hours.first().time) { Animatable(0f) }
+    // No key. Keyed on the first hour, the curve erased itself to nothing and re-drew on
+    // every hour boundary — an entrance replayed on a clock tick, which is a tic.
+    val drawn = remember { Animatable(0f) }
     val arrivalSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
     LaunchedEffect(hours.first().time) {
         drawn.animateTo(1f, arrivalSpec)
@@ -146,6 +165,25 @@ fun HourStrip(
                 val step = size.width / hours.size
                 fun y(level: Float) = Ceiling.toPx() +
                     (size.height - Ceiling.toPx() - Floor.toPx()) * (1f - level)
+
+                // The dark hours, shaded before anything is drawn on them. It explains the
+                // shape of the curve — the evening falls off because the sun went down — and
+                // answers "will it be dark when I get there" without opening the sun's arc.
+                // One rectangle, no motion, nothing to run per frame.
+                var run = -1
+                hours.forEachIndexed { index, hour ->
+                    val dark = nightAt(hour.time, days)
+                    if (dark && run < 0) run = index
+                    if ((!dark || index == hours.lastIndex) && run >= 0) {
+                        val end = if (dark) index + 1 else index
+                        drawRect(
+                            color = nightInk,
+                            topLeft = Offset(step * run, 0f),
+                            size = Size(step * (end - run), size.height),
+                        )
+                        run = -1
+                    }
+                }
 
                 // The line draws itself from now outwards rather than appearing all at once. It
                 // is the one thing on the screen that is a shape rather than a number, and a
@@ -307,3 +345,19 @@ private val CurveHeight = 44.dp
 /** Room above the warmest point for the stroke, and below the coldest for the fill to read. */
 private val Ceiling = 5.dp
 private val Floor = 7.dp
+
+/**
+ * Whether this hour is after sunset or before sunrise, asked of the day it actually falls in.
+ *
+ * Returns false when the day is unknown or carries no solar times — an unshaded strip is right
+ * when nothing is known, and a guessed band would be a claim the forecast never made.
+ */
+internal fun nightAt(
+    at: java.time.LocalDateTime,
+    days: List<app.quire.weather.DayForecast>,
+): Boolean {
+    val day = days.firstOrNull { it.date == at.toLocalDate() } ?: return false
+    val up = day.sunrise ?: return false
+    val down = day.sunset ?: return false
+    return at.isBefore(up) || at.isAfter(down)
+}

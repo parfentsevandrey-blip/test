@@ -25,11 +25,11 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-9.15.apk`](dist/quire-calendar-9.15.apk) · 1.9 MB | `sha256 6fd409b09607bf4fb53357f9bf5e578f318b8dcdba972b8fc95a14fb727d7152` |
-| **Weather** | [`dist/quire-weather-9.15.apk`](dist/quire-weather-9.15.apk) · 1.6 MB | `sha256 2c4fedda0e5ab014a6354964f1b34bc23a6eda33a5d647fbc88a9ebd8cf2f40c` |
-| **Quire 95** | [`dist/quire-95-9.15.apk`](dist/quire-95-9.15.apk) · 0.9 MB | `sha256 2170517d2018d9995d93c05f239e9e38d1e83eda35e7c1f8fbf8c39e79879567` |
+| **Calendar** | [`dist/quire-calendar-9.16.apk`](dist/quire-calendar-9.16.apk) · 1.9 MB | `sha256 be6f186892e5d5fe6d4b2b8853a93eb5c64fc3ea26515fb71d131bc65aafd552` |
+| **Weather** | [`dist/quire-weather-9.16.apk`](dist/quire-weather-9.16.apk) · 1.6 MB | `sha256 58cf5143ffe6f37f16f863f2ea4e858c652c1a4eaffa2a657d28a803b55bc96e` |
+| **Quire 95** | [`dist/quire-95-9.16.apk`](dist/quire-95-9.16.apk) · 0.9 MB | `sha256 77de37f04679b470bdcae01fcf0b7d69421b8f105359ade685f598c4a75cd692` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-9.15.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-9.16.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -237,6 +237,68 @@ edge on a page otherwise made entirely of rounded cards, and the thing that made
 stuck on rather than behind. The test walks down the left margin and fails on any step between
 neighbouring rows, because a step is exactly what a hard edge is; with the opaque bar it reports
 "the sky steps by 22 at row 456".
+
+## Движение как информация
+
+A research sweep across design systems, award-winning apps and web motion craft went looking for
+ideas to borrow and came back with a list of our own defects instead. Fourteen changes shipped
+from it; the rule they all answer to is the one this project already claimed and had never
+written down as anything testable.
+
+**Things that were lying about data.** The sun's position on its arc and the "Now" column of the
+hour strip both held `remember { LocalDateTime.now() }` — frozen at first composition, so the arc
+answered "where the day was when you opened the screen" and drifted further from the truth the
+longer the screen stayed open. The agenda's day transition had no `contentKey` and `AgendaEntry`
+was not a data class, so the day you were already looking at slid in from the left again every
+time the ContentProvider answered: a horizontal slide meant "a query returned", not "the date
+changed". The hero counted through thirty temperatures that are a reading in neither scale when
+you switched Celsius to Fahrenheit — every intermediate frame of a transition is supposed to stay
+a correct picture of the data. The entrance cascade replayed on every quiet refresh, which the
+comment on the modifier already condemned while the key underneath it guaranteed. And at a raised
+font scale the hero pushed the sky icon off the right edge, which the overlap audit could not see
+because a glyph shoved out of a row overlaps nothing.
+
+**Things that ignored the person using them.** The widget's rain ran for ever regardless of the
+battery saver, the system animation scale, or this app's own Live sky switch — WCAG 2.2.2 makes
+that a level-A failure, and somebody who turned the sky off *in the app* still had rain on their
+home screen. Stopping it is not hiding it: the drops stay drawn, one phase instead of six, and a
+ViewFlipper with a single child has nothing to flip to. The accelerometer ran at
+`SENSOR_DELAY_GAME` under the same switch, and its value was read in composition — recomposing the
+whole forecast block about fifty times a second for something only the draw phase consumes. And
+the calendar's day cell painted three channels of data — today, density, per-calendar marks — and
+spoke none of them: three `contentDescription`s in the whole flavour, all null.
+
+**The stillness contract.** One live read of both settings, and the theme hands out a scheme that
+does not move — so every animation in both apps stops at once and a new call site cannot forget
+to. Spatial specs snap; effects specs keep a short fade, because WCAG 2.3.3 excludes colour and
+opacity from what it calls motion and the crossfades are what stop a value changing behind your
+back. The old code sampled both settings inside `remember(context)`, so a battery saver switched
+on mid-session never arrived at all.
+
+**Loudness is finite.** Carbon and Atlassian arrived independently at exactly two levels and no
+third, and reserve the loud one for rare moments. The weather keeps `expressive`, where the sky
+and the hero are the point; the calendar takes `standard`, because tapping a day in a month grid
+is the most repeated interaction in either app. The effects specs are identical between the two
+schemes, so not one fade shifts by a frame — the whole difference is locked inside geometry.
+
+**And the finger is the animation.** Predictive back wrote its progress into state read in the
+composition and then ran it through a spring: five frames and an overshoot between the thumb and
+the pixels, and forty-two day cells recomposed per frame of the drag. It snaps to the gesture now
+and is read only inside `graphicsLayer`; the spring comes back for one job, letting go of a
+cancelled gesture, where there is no finger left to disagree with it. A press releases on a
+non-bouncy spring for the same reason — an overshoot is a claim about inertia, and a tap has none.
+
+Two smaller ones: the dark hours are shaded under the temperature curve, from a per-hour predicate
+rather than one sunrise pair, because the strip is a rolling window that crosses midnight; and the
+day spinner waits 300ms before appearing and stays 400 once it has, because a promise kept in
+200ms reads as a fault and a delay without a minimum only moves the blink somewhere else.
+
+Every claim has a test, and the ones that could not be tested honestly were rewritten until they
+could. Three of them were wrong first, and the failures are worth recording: semantics report the
+string a node *says* whether or not the phone drew it; `boundsInRoot` cannot see a `graphicsLayer`
+translation, so a test comparing layout positions passed with the entrance bug fully restored; and
+a test that stored a forecast without telling the view model drove nothing at all and was green
+against every version of the code. The last of those is why `WeatherModel.reload()` exists.
 
 ## The audit
 

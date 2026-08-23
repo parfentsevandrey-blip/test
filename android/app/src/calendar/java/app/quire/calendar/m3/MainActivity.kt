@@ -16,6 +16,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -236,20 +237,29 @@ private fun QuireApp(intent: Intent?) {
             // Back returns to the month before it leaves the app, and it does it under the
             // finger: the gesture's own progress shrinks and slides the screen you are leaving,
             // so a back you change your mind about springs back instead of committing.
-            var backProgress by remember { mutableFloatStateOf(0f) }
+            // The finger IS the animation. This used to write the gesture's progress into
+            // state read in the composition and then run it through a spring — which put about
+            // five frames and an overshoot between the thumb and the pixels, and recomposed the
+            // whole content lambda, forty-two day cells included, on every frame of the drag.
+            // A spring between a touch and what it moves does not smooth the answer, it makes
+            // the answer wrong; and an overshoot reports a gesture the finger never made.
+            //
+            // So: snapTo on every event, no spring at all while the finger is down, and the
+            // value read only inside graphicsLayer — the draw phase, which is the only phase
+            // that wants it. The spring comes back for exactly one job, letting go of a
+            // cancelled gesture, where there is no finger left to disagree with it.
+            val retreat = remember { Animatable(0f) }
+            val settle = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
             PredictiveBackHandler(enabled = destination != Destination.MONTH) { events ->
                 try {
-                    events.collect { backProgress = it.progress }
+                    events.collect { retreat.snapTo(it.progress) }
                     destination = Destination.MONTH
-                } finally {
-                    backProgress = 0f
+                    retreat.snapTo(0f)
+                } catch (cancelled: kotlin.coroutines.cancellation.CancellationException) {
+                    retreat.animateTo(0f, settle)
+                    throw cancelled
                 }
             }
-            val retreat by animateFloatAsState(
-                targetValue = backProgress,
-                animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-                label = "back",
-            )
 
             // Material's fade-through between destinations: the outgoing screen fades, the
             // incoming one fades and grows the last tenth of its size. Nothing slides, because
@@ -271,11 +281,14 @@ private fun QuireApp(intent: Intent?) {
                                 scaleIn(arriving, initialScale = FADE_THROUGH_SCALE)
                             ) togetherWith fadeOut(leaving)
                     },
+                    // Read HERE and nowhere else. A graphicsLayer lambda runs in the draw
+                    // phase, so the gesture moves pixels without recomposing anything —
+                    // which is what takes forty-two day cells out of every frame of a drag.
                     modifier = Modifier.graphicsLayer {
-                        val shrink = 1f - BACK_SHRINK * retreat
+                        val shrink = 1f - BACK_SHRINK * retreat.value
                         scaleX = shrink
                         scaleY = shrink
-                        alpha = 1f - BACK_FADE * retreat
+                        alpha = 1f - BACK_FADE * retreat.value
                     },
                     label = "destination",
                 ) { current ->

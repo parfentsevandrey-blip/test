@@ -61,6 +61,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -278,6 +279,13 @@ private fun AgendaList(
     // instead of being repainted with the new day's.
     AnimatedContent(
         targetState = Day(date, entries, loading),
+        // Identity is the DATE, not the whole Day. Without this key every reply from the
+        // ContentProvider was a new target — `entries` is a fresh list each time and
+        // `loading` flips at least twice per open — so the day you were already looking at
+        // slid in from the left again on each one, and the direction came from a comparison
+        // that is false when the dates are equal. A horizontal slide is supposed to mean one
+        // thing: the date changed, and this way.
+        contentKey = { it.date },
         transitionSpec = {
             val forward = targetState.date > initialState.date
             (
@@ -337,13 +345,25 @@ private fun AgendaList(
                     // Loading and empty look alike from the outside, so they are told apart here:
                     // the expressive indicator while the provider is being asked, the sentence
                     // only once it has answered.
-                    if (day.loading) {
+                    // Shown late and kept a moment. A provider that answers in eighty
+                    // milliseconds used to produce a flash, and a flash reads as a fault
+                    // rather than as work; a promise kept in 200ms is a blink. So it waits
+                    // 300ms before appearing at all, and once it has appeared it stays 400
+                    // — a delay on its own only moves the blink to the requests that cross
+                    // the threshold, which is the same defect, rarer and sharper.
+                    val waiting = patiently(day.loading)
+                    if (waiting) {
                         Box(
                             contentAlignment = Alignment.Center,
-                            modifier = Modifier.fillMaxWidth().padding(32.dp),
+                            modifier = Modifier.fillMaxWidth().padding(32.dp)
+                                .testTag(WAITING),
                         ) {
                             LoadingIndicator()
                         }
+                    } else if (day.loading) {
+                        // Asked for, but not long enough to say so. Nothing is drawn: the
+                        // day the screen already had stays on it.
+                        Unit
                     } else {
                         // Centred under an outline of the thing that is empty, rather than a
                         // sentence hung on the left margin of a page with nothing else on it.
@@ -868,3 +888,35 @@ private fun sharedMonth(
         }
     }
 }
+
+/** The test handle for the loading indicator, so its timing can be asserted rather than eyeballed. */
+internal const val WAITING = "waiting"
+
+/**
+ * Turns "is it loading" into "should anybody be told it is loading".
+ *
+ * Two thresholds, and both are needed. Nothing appears for the first [SHOW_AFTER]: a request that
+ * finishes inside it never had anything to report, and a spinner that lives for 80ms is noise
+ * wearing the costume of information. Once shown it stays for [KEEP_FOR], because otherwise the
+ * flash simply moves to whichever requests happen to land just past the first threshold.
+ *
+ * The Doherty threshold — 400ms — is the hard number here; the 300ms before showing is the
+ * compromise around it, not a finding.
+ */
+@androidx.compose.runtime.Composable
+internal fun patiently(loading: Boolean): Boolean {
+    val shown = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    androidx.compose.runtime.LaunchedEffect(loading) {
+        if (loading) {
+            kotlinx.coroutines.delay(SHOW_AFTER)
+            shown.value = true
+        } else if (shown.value) {
+            kotlinx.coroutines.delay(KEEP_FOR)
+            shown.value = false
+        }
+    }
+    return shown.value
+}
+
+private const val SHOW_AFTER = 300L
+private const val KEEP_FOR = 400L

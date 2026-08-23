@@ -146,7 +146,17 @@ fun WeatherScreen(
             val quarter = remember(it.fetched) { it.falling(java.time.LocalDateTime.now()) }
             // The hand's tilt: the sky is drawn through a camera, and the camera listens to
             // the accelerometer, so tipping the phone slides the layers by their own depths.
-            val tilt by rememberTilt(enabled = true)
+            //
+            // Held as state and handed over unread. The sensor runs at SENSOR_DELAY_GAME, so
+            // reading `by` here recomposed this whole forecast block about fifty times a
+            // second for a value only the draw phase consumes. LiveSky reads it inside its
+            // Canvas instead, which is the phase that actually wants it.
+            // Gated by the same contract. The sensor ran at SENSOR_DELAY_GAME regardless —
+            // including with the sky switched off and under a battery saver, which is the
+            // setting that exists to stop exactly this. Depth and parallax are the first
+            // things Apple's Reduce Motion criteria name.
+            val still = app.quire.calendar.m3.LocalStillness.current
+            val tilt = rememberTilt(enabled = !still)
             // One clock for the eye and the hand: the sky draws its lap from this state, and
             // the thunder's rumble fires when the same lap crosses a strike — so the knock
             // lands on the flash, not on a schedule of its own.
@@ -186,7 +196,7 @@ fun WeatherScreen(
                 moonPhase = moment.moonPhase,
                 glow = moment.glow,
                 haze = sky,
-                tilt = tilt,
+                tiltState = tilt,
                 rainMm = quarter?.rain ?: -1.0,
                 snowCm = quarter?.snow ?: -1.0,
                 clockState = skyClock,
@@ -202,9 +212,13 @@ fun WeatherScreen(
                     .clipToBounds(),
             )
         }
-        // Which entrance slots have played for this fetch; kept up here because a LazyColumn's
-        // content block is a list builder, not a composition, and remembering is composing.
-        val ledger = remember(forecast?.fetched) { mutableSetOf<Int>() }
+        // Which entrance slots have played on THIS SCREEN — not on this fetch. Keyed on
+        // `fetched`, the whole cascade replayed every time a refresh landed, including the
+        // silent ones nobody asked for; the comment on `arrive` already condemned exactly
+        // that ("an entrance repeated is a tic, not a welcome") while the key underneath it
+        // guaranteed the repeat. On a first draw the stagger sets the reading order of the
+        // page; on the fourth it says only that an animation is playing.
+        val ledger = remember { mutableSetOf<Int>() }
         LazyColumn(contentPadding = padding, modifier = Modifier.fillMaxSize()) {
             // Only when there is no place at all. Somebody who named one has answered the question,
             // and being asked again for a permission they declined is nagging rather than helping.
@@ -253,6 +267,7 @@ fun WeatherScreen(
                         HourStrip(
                             hours = forecast.hoursAhead(java.time.LocalDateTime.now()),
                             units = model.settings,
+                            days = forecast.days,
                         )
                     }
                 }
@@ -286,11 +301,11 @@ fun WeatherScreen(
 @Composable
 private fun Modifier.arrive(slot: Int, fetched: Long, ledger: MutableSet<Int>): Modifier {
     val played = slot in ledger
-    val progress = remember(fetched, slot) {
+    val progress = remember(slot) {
         androidx.compose.animation.core.Animatable(if (played) 1f else 0f)
     }
     val entrance = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
-    LaunchedEffect(fetched, slot) {
+    LaunchedEffect(slot) {
         if (!played) {
             kotlinx.coroutines.delay(slot * 70L)
             progress.animateTo(1f, entrance)
@@ -332,12 +347,19 @@ private fun Now(forecast: Forecast, units: WeatherModel.Settings) {
     val actual = write(units, forecast.now.temperature)
     val sky = stringResource(forecast.now.sky.label)
 
-    // The number walks to a new value rather than being restamped: first composition lands on
-    // the answer at once, and after that a refresh that moves the temperature — or a switch to
-    // Fahrenheit, which moves it further — counts there, so a change is something you can see
-    // happen instead of something you have to notice happened.
+    // The number walks to a new value rather than being restamped, so a change is something
+    // you can see happen instead of something you have to notice happened.
+    //
+    // Keyed on the unit, though, because switching Celsius to Fahrenheit does not move the
+    // temperature — it renames it. Counting across that scrolls the hero through thirty
+    // numbers that are a reading in neither scale, and every intermediate frame of a
+    // transition is supposed to stay a correct picture of the data (Heer & Robertson,
+    // InfoVis 2007). Re-keying rebuilds the Animatable already holding the new value, so the
+    // switch lands instantly and a real change still counts.
     val degrees = units.degrees.from(forecast.now.temperature)
-    val counted = remember { androidx.compose.animation.core.Animatable(degrees.toFloat()) }
+    val counted = remember(units.degrees) {
+        androidx.compose.animation.core.Animatable(degrees.toFloat())
+    }
     val settleSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
     LaunchedEffect(degrees) {
         counted.animateTo(degrees.toFloat(), settleSpec)
@@ -347,6 +369,18 @@ private fun Now(forecast: Forecast, units: WeatherModel.Settings) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = counted.value.roundToInt().toString() + "°",
+                // The Row will not squeeze an unweighted child, so at a raised font scale it
+                // was the SKY ICON that went off the right edge — and the overlap audit could
+                // not see it, because a glyph pushed out of the row overlaps nothing. The
+                // weight hands the icon its 56dp first; auto-size then gives the number back
+                // whatever it cannot have. Size makes the hero the hero and never encodes a
+                // value, so it is the right thing to yield.
+                modifier = Modifier.weight(1f, fill = false),
+                autoSize = androidx.compose.foundation.text.TextAutoSize.StepBased(
+                    minFontSize = 48.sp,
+                    maxFontSize = 88.sp,
+                    stepSize = 2.sp,
+                ),
                 // The number is the reason the app was opened, and it is set like it: large,
                 // light and in plain ink. It had a gradient in it for one release; type wearing
                 // an effect is an effect first and a number second, and everything else this
