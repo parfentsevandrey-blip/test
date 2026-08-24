@@ -23,7 +23,14 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Mm, Pt
 
 from . import style_editorial as S, visuals
-from .docx_render import _el, _insert_ordered, cell_margins, cell_shading, table_borders
+from .docx_render import (
+    _el,
+    _insert_ordered,
+    cell_margins,
+    cell_shading,
+    paragraph_border,
+    table_borders,
+)
 from .editorial import (
     Flow,
     _clean,
@@ -85,19 +92,99 @@ def pull_quote(doc, text: str, *, before: float = 13.0, after: float = 13.0):
     rule(doc, color=S.RULE, size=S.SZ_HAIRLINE, after=after)
 
 
-def card_grid(doc, obj: dict, assets: Path, cards: list[list[str]]) -> None:
-    """Характеристики карточками со скруглением и тенью — как у фотографий.
+def figures_band(doc, items: list[list[str]]):
+    """Полоса главных цифр: цена, доход, доходность, площадь.
 
-    Ячейка таблицы DOCX не скругляется, поэтому вся сетка рисуется одним
-    изображением (visuals.cards_panel) и ставится на полосу целиком.
+    Одна плашка на четыре показателя, а не четыре отдельные карточки: полоса
+    задаёт иерархию, с которой начинается чтение, и не спорит с перечнем ниже.
     """
-    image, height, bleed = visuals.cards_panel(
-        assets / f"cards-{obj['slug']}.jpg", cards,
-        width_mm=S.CONTENT_W_MM, max_height_mm=181.0)
-    paragraph, _ = photo(doc, image, width_mm=S.CONTENT_W_MM + 2 * bleed,
-                         max_h=height + 2)
-    # поле под тень вынесено за край набора, чтобы карточки стояли по границе
-    paragraph.paragraph_format.left_indent = Mm(-bleed)
+    table = doc.add_table(rows=1, cols=len(items))
+    table.alignment = WD_TABLE_ALIGNMENT.LEFT
+    table.autofit = False
+    table_borders(table, {
+        "top": (S.BRASS, S.SZ_ACCENT),
+        "bottom": (S.RULE, S.SZ_HAIRLINE),
+        "insideV": (S.RULE, S.SZ_HAIRLINE),
+    })
+    width = S.CONTENT_W_MM / len(items)
+    fixed_layout(table, [width] * len(items))
+    for cell, entry in zip(table.rows[0].cells, items):
+        label, value, note = (list(entry) + ["", "", ""])[:3]
+        cell.width = Mm(width)
+        cell_shading(cell, S.PANEL)
+        cell_margins(cell, top=15, bottom=16, left=8, right=6)
+
+        head = cell.paragraphs[0]
+        head.paragraph_format.space_after = Pt(4)
+        head.paragraph_format.line_spacing = Pt(S.FS_MICRO + 2)
+        txt(head, label, font=S.SANS_MEDIUM, size=S.FS_MICRO, color=S.BRASS, caps=True)
+
+        big = cell.add_paragraph()
+        big.paragraph_format.space_after = Pt(3)
+        big.paragraph_format.line_spacing = Pt(21)
+        # кегль подобран под самое длинное значение полосы («€ 1.900.000»):
+        # при большем оно переносилось на вторую строку
+        txt(big, value, font=S.SANS_LIGHT, size=17, color=S.INK, tracking=-6)
+
+        if note:
+            caption = cell.add_paragraph()
+            caption.paragraph_format.space_after = Pt(0)
+            caption.paragraph_format.line_spacing = Pt(9.6)
+            txt(caption, note, size=7.4, color=S.MUTED)
+    return table
+
+
+LABEL_INDENT_PT = 96.0          # 34 мм под подпись строки
+
+
+def fact_row(cell, label: str, value: str) -> None:
+    """Строка перечня: подпись слева, значение с висячим отступом справа."""
+    paragraph = par(cell, before=5.6, after=5.6, lead=12.8,
+                    left=LABEL_INDENT_PT, hanging=LABEL_INDENT_PT)
+    tabs = _el("tabs")
+    tabs.append(_el("tab", val="left", pos=int(LABEL_INDENT_PT * 20)))
+    _insert_ordered(paragraph._p.get_or_add_pPr(), tabs)
+    paragraph_border(paragraph, "bottom", S.RULE_SOFT, S.SZ_HAIRLINE, space=3)
+    txt(paragraph, label, font=S.SANS_MEDIUM, size=8.8, color=S.INK)
+    txt(paragraph, "\t", size=8.8, color=S.BODY)
+    txt(paragraph, value, size=8.8, color=S.BODY)
+
+
+def fact_columns(doc, groups: list) -> None:
+    """Характеристики группами в две колонки — перечень, а не сетка плашек.
+
+    Волосяная линейка под каждой строкой держит ритм лучше, чем рамка вокруг
+    каждого показателя: глаз читает столбец, а не пятнадцать отдельных блоков.
+    """
+    counts = [len(rows) for _, rows in groups]
+    total = sum(counts)
+    # точка деления выбирается по минимальному перекосу, а не по первому
+    # превышению половины: иначе в одной колонке оказывалось вдвое больше строк
+    split = min(range(1, len(groups)),
+                key=lambda index: abs(sum(counts[:index]) - total / 2),
+                default=1)
+    halves = (groups[:split], groups[split:])
+
+    column_mm = (S.CONTENT_W_MM - 6.0) / 2
+    table = doc.add_table(rows=1, cols=2)
+    table.alignment = WD_TABLE_ALIGNMENT.LEFT
+    table.autofit = False
+    table_borders(table, {})
+    fixed_layout(table, [column_mm + 6.0, column_mm])
+
+    for position, (cell, half) in enumerate(zip(table.rows[0].cells, halves)):
+        cell.width = Mm(column_mm + (6.0 if position == 0 else 0.0))
+        cell_margins(cell, top=0, bottom=0, left=0,
+                     right=17 if position == 0 else 0)
+        _clean(cell)
+        for order, (title, rows) in enumerate(half):
+            header = par(cell, before=0 if order == 0 else 12, after=5,
+                         lead=S.FS_MICRO + 2)
+            paragraph_border(header, "top", S.BRASS, S.SZ_RULE, space=5)
+            txt(header, title, font=S.SANS_MEDIUM, size=S.FS_MICRO,
+                color=S.BRASS, caps=True)
+            for label, value in rows:
+                fact_row(cell, label, value)
 
 
 def framed_photo(doc, source: Path, cache: Path, *, width_mm: float,
@@ -112,17 +199,31 @@ def framed_photo(doc, source: Path, cache: Path, *, width_mm: float,
 # --------------------------------------------------------------------------
 # полосы объекта
 # --------------------------------------------------------------------------
-def object_cards(doc, index: int, obj: dict, assets: Path) -> None:
+def object_facts(doc, index: int, obj: dict) -> None:
     micro(doc, f"Объект {index:02d} · {obj.get('city', '')}", after=6)
-    # длинное название сажаем на кегль поменьше, иначе оно уходит на две
-    # строки и сетка карточек не помещается на ту же полосу
+    # длинное название сажаем на кегль поменьше, иначе оно уходит на две строки
     display_title(doc, obj["title"], size=31 if len(obj["title"]) <= 26 else 25,
                   after=8)
     if obj.get("lead"):
-        lead_paragraph(doc, obj["lead"], after=9)
-    rule(doc, color=S.BRASS, size=S.SZ_ACCENT, after=11)
-    cards = obj.get("cards") or [[label, value, ""] for label, value in obj["specs"][:15]]
-    card_grid(doc, obj, assets, cards)
+        lead_paragraph(doc, obj["lead"], after=11)
+
+    facts = obj.get("facts") or {}
+    if facts.get("headline"):
+        figures_band(doc, facts["headline"])
+    if facts.get("groups"):
+        par(doc, after=0, lead=15)
+        fact_columns(doc, facts["groups"])
+
+    # ссылка на публикацию закрывает полосу и заменяет строку в перечне
+    link = next((value for label, value in obj.get("specs", [])
+                 if str(value).startswith("http")), None)
+    if link:
+        par(doc, after=0, lead=14)
+        rule(doc, color=S.RULE, size=S.SZ_HAIRLINE, after=5)
+        source = par(doc, after=0, lead=S.LH_SMALL)
+        txt(source, "Публикация объекта: ", font=S.SANS_MEDIUM,
+            size=S.FS_CAPTION, color=S.MUTED)
+        txt(source, link, size=S.FS_CAPTION, color=S.MUTED)
 
 
 def object_description(doc, obj: dict, cache: Path, images: list[Path]) -> None:
@@ -225,7 +326,7 @@ def build(report: dict, objects: list[tuple[dict, list[Path]]], dest: Path) -> P
                 kpi=[(label, value) for label, value, _ in obj.get("kpi", [])[:4]],
             ))
             flow.new_page()
-        object_cards(doc, index, obj, assets)
+        object_facts(doc, index, obj)
         flow.new_page()
         object_description(doc, obj, cache, images)
         flow.new_page()
