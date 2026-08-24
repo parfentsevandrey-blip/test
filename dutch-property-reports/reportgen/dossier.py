@@ -117,13 +117,32 @@ def display_title(doc, text: str, *, size: float = 30.0, after: float = 8.0):
 ACCENT = re.compile(r"\*\*(.+?)\*\*", re.DOTALL)
 
 
+# Число и единица не должны расходиться по строкам: «7,5» в конце одной, «%»
+# в начале следующей — обычный дефект автоматической вёрстки.
+UNITS = ("%", "м²", "м", "км", "мм", "кг/м²", "A", "Wp", "т", "мин")
+NUMBER_UNIT = re.compile(r"(\d)\s+(" + "|".join(re.escape(u) for u in UNITS) + r")(?![\w²])")
+CURRENCY = re.compile(r"€\s+(?=[\d])")
+
+
+def _nbsp(text: str) -> str:
+    """Неразрывные пробелы после знака валюты и перед единицами измерения."""
+    text = CURRENCY.sub("€\u00a0", text)
+    return NUMBER_UNIT.sub(lambda m: f"{m.group(1)}\u00a0{m.group(2)}", text)
+
+
+def _words(text: str) -> list[str]:
+    """Разбивка на слова только по обычным пробелам: неразрывный остаётся в слове."""
+    return [word for word in re.split(r"[ \t\n\r]+", text) if word]
+
+
 def _mark_words(text: str) -> str:
     """Разметка по словам: `**два слова**` → `**два** **слова**`.
 
     Дальше текст живёт обычной строкой: его меряют, режут по строкам и
     развешивают по колонкам, а пословная разметка переживает любую резку.
     """
-    return ACCENT.sub(lambda m: " ".join(f"**{w}**" for w in m.group(1).split()), text)
+    return ACCENT.sub(lambda m: " ".join(f"**{w}**" for w in _words(m.group(1))),
+                      _nbsp(text))
 
 
 def _plain(word: str) -> tuple[str, bool]:
@@ -140,7 +159,7 @@ def emphasis(paragraph, text: str, *, size: float = S.FS_BODY,
              accent: str = S.SERIF_MEDIUM) -> None:
     """Набор абзаца с выделенными фрагментами."""
     run, bold = [], False
-    for word in _mark_words(text).split():
+    for word in _words(_mark_words(text)):
         clean, mark = _plain(word)
         if mark != bold and run:
             txt(paragraph, " ".join(run) + " ",
@@ -179,7 +198,7 @@ def _measure_lines(text: str, width_mm: float) -> list[str]:
     lines: list[str] = []
     current: list[str] = []
     width = 0.0
-    for word in _mark_words(text).split():
+    for word in _words(_mark_words(text)):
         clean, mark = _plain(word)
         step = faces[mark].getlength(clean if not current else " " + clean)
         if current and width + step > limit:
