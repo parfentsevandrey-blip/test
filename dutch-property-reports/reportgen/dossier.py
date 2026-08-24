@@ -829,7 +829,7 @@ def build(report: dict, objects: list[tuple[dict, list[Path]]], dest: Path) -> P
                 assets / f"opener-{index}.jpg", opener_photo,
                 ordinal=f"{index:02d}", city=obj.get("city", ""),
                 title=obj["title"], subtitle=obj["subtitle"],
-                kpi=[(label, value) for label, value, _ in obj.get("kpi", [])[:4]],
+                kpi=[(label, value) for label, value, _ in obj.get("kpi", [])[:5]],
             ))
             body_section()
         elif not started:

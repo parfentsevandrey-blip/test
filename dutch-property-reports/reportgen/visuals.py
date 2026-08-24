@@ -252,7 +252,15 @@ def opener(dest: Path, photo: Path, *, ordinal: str, city: str, title: str,
     # полоса ключевых цифр по нижнему краю
     hairline(draw, left, strip_top, right, strip_top, (150, 145, 135), 0.25)
     step = (right - left) / len(kpi)
-    label_font, value_font = font(SANS_MED, 6.2), font(SANS_LIGHT, 17)
+    label_font = font(SANS_MED, 6.2)
+    # кегль подбирается под самое длинное значение полосы: от числа показателей
+    # зависит ширина колонки, и на пяти «€ 1.700.000» в 17 pt уже не помещается
+    value_font = font(SANS_LIGHT, 17)
+    for size in (17, 16, 15, 14, 13, 12, 11):
+        value_font = font(SANS_LIGHT, size)
+        if all(draw.textlength(value, font=value_font) <= step - 5 * MM
+               for _, value in kpi):
+            break
     for index, (label, value) in enumerate(kpi):
         x = left + index * step
         if index:
