@@ -153,31 +153,33 @@ def fact_row(cell, label: str, value: str) -> None:
 def fact_columns(doc, groups: list) -> None:
     """Характеристики группами в две колонки — перечень, а не сетка плашек.
 
-    Волосяная линейка под каждой строкой держит ритм лучше, чем рамка вокруг
-    каждого показателя: глаз читает столбец, а не пятнадцать отдельных блоков.
+    Группы раскладываются попарно по строкам таблицы: левая колонка получает
+    первую половину, правая — вторую, и заголовок каждой пары стоит на одной
+    высоте. Если просто складывать группы в две ячейки подряд, вторые
+    заголовки расходятся по вертикали, как только строки в группах
+    переносятся по-разному.
     """
-    counts = [len(rows) for _, rows in groups]
-    total = sum(counts)
-    # точка деления выбирается по минимальному перекосу, а не по первому
-    # превышению половины: иначе в одной колонке оказывалось вдвое больше строк
-    split = min(range(1, len(groups)),
-                key=lambda index: abs(sum(counts[:index]) - total / 2),
-                default=1)
-    halves = (groups[:split], groups[split:])
+    half = -(-len(groups) // 2)
+    pairs = [(groups[index], groups[index + half] if index + half < len(groups) else None)
+             for index in range(half)]
 
     column_mm = (S.CONTENT_W_MM - 6.0) / 2
-    table = doc.add_table(rows=1, cols=2)
+    table = doc.add_table(rows=len(pairs), cols=2)
     table.alignment = WD_TABLE_ALIGNMENT.LEFT
     table.autofit = False
     table_borders(table, {})
     fixed_layout(table, [column_mm + 6.0, column_mm])
 
-    for position, (cell, half) in enumerate(zip(table.rows[0].cells, halves)):
-        cell.width = Mm(column_mm + (6.0 if position == 0 else 0.0))
-        cell_margins(cell, top=0, bottom=0, left=0,
-                     right=17 if position == 0 else 0)
-        _clean(cell)
-        for order, (title, rows) in enumerate(half):
+    for order, (row, pair) in enumerate(zip(table.rows, pairs)):
+        for position, cell in enumerate(row.cells):
+            cell.width = Mm(column_mm + (6.0 if position == 0 else 0.0))
+            cell_margins(cell, top=0, bottom=0, left=0,
+                         right=17 if position == 0 else 0)
+            _clean(cell)
+            group = pair[position]
+            if group is None:
+                continue
+            title, rows = group
             header = par(cell, before=0 if order == 0 else 12, after=5,
                          lead=S.FS_MICRO + 2)
             paragraph_border(header, "top", S.BRASS, S.SZ_RULE, space=5)
