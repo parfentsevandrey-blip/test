@@ -16,7 +16,7 @@ import logging
 import sys
 from pathlib import Path
 
-from reportgen import docx_render, funda_parse, maps, media, pdf, registry
+from reportgen import docx_render, funda_parse, maps, media, pdf, registry, verify
 
 ROOT = Path(__file__).resolve().parent
 CACHE = ROOT / ".cache"
@@ -106,6 +106,14 @@ def cmd_registry(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_check(args: argparse.Namespace) -> int:
+    problems = verify.check(Path(args.pdf))
+    for line in problems:
+        print(line, file=sys.stderr)
+    print("Формат соблюдён" if not problems else f"Нарушений: {len(problems)}")
+    return 1 if problems else 0
+
+
 def cmd_parse(args: argparse.Namespace) -> int:
     dest = Path(args.out)
     funda_parse.parse_to_file(Path(args.html), dest, args.url)
@@ -132,6 +140,10 @@ def main(argv: list[str] | None = None) -> int:
                      help="пересобрать по отчётам каталога")
     reg.add_argument("--data", help="каталог данных (по умолчанию data/)")
     reg.set_defaults(func=cmd_registry)
+
+    check = sub.add_parser("check", help="проверить готовый PDF на соответствие формату")
+    check.add_argument("pdf", help="собранный PDF")
+    check.set_defaults(func=cmd_check)
 
     parse = sub.add_parser("parse", help="черновик карточки из сохранённой HTML funda")
     parse.add_argument("html", help="сохранённая страница объекта")
