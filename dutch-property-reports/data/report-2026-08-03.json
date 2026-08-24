@@ -1,4 +1,5 @@
 {
+  "layout": "classic",
   "title": "ОБЪЕКТЫ НЕДВИЖИМОСТИ",
   "subtitle": "Нидерланды",
   "intro": "В подборку входят:",
@@ -6,8 +7,14 @@
   "filename": "Объекты недвижимости — Нидерланды 03.08.26",
   "output_dir": "output",
   "objects": [
-    { "file": "objects/st-ludgerusstraat-365-367-utrecht.json" },
-    { "file": "objects/buys-ballotstraat-11-utrecht.json" },
-    { "file": "objects/groene-hilledijk-173-175-rotterdam.json" }
+    {
+      "file": "objects/st-ludgerusstraat-365-367-utrecht.json"
+    },
+    {
+      "file": "objects/buys-ballotstraat-11-utrecht.json"
+    },
+    {
+      "file": "objects/groene-hilledijk-173-175-rotterdam.json"
+    }
   ]
 }

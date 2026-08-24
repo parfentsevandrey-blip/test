@@ -16,7 +16,7 @@ import logging
 import sys
 from pathlib import Path
 
-from reportgen import docx_render, funda_parse, maps, media, pdf
+from reportgen import docx_render, funda_parse, maps, media, pdf, registry
 
 ROOT = Path(__file__).resolve().parent
 CACHE = ROOT / ".cache"
@@ -61,52 +61,6 @@ def object_images(obj: dict, *, skip_map: bool = False) -> list[Path]:
     return images
 
 
-SEEN_OBJECTS = "seen-objects.json"
-
-
-def warn_repeated_objects(
-    report_path: Path, report: dict, objects: list[dict]
-) -> list[str]:
-    """Объекты, которые заказчик уже видел.
-
-    Проверяются два источника: другие отчёты этого каталога (по имени файла
-    карточки) и список seen-objects.json — объекты, ушедшие заказчику любым
-    другим путём (по slug). Один и тот же объект в двух подборках — почти
-    всегда ошибка, поэтому сборка не падает, но повторы печатаются заметно.
-    """
-    refs = report.get("objects", [])
-    used_files = {ref.get("file") for ref in refs if ref.get("file")}
-    used_slugs = {obj.get("slug") for obj in objects if obj.get("slug")}
-    repeats: list[str] = []
-
-    # тот же набор объектов в другом оформлении — не повтор, а вариант вёрстки
-    variant_of = report.get("variant_of")
-    for other in sorted(report_path.parent.glob("report-*.json")):
-        if other.resolve() == report_path.resolve() or other.name == variant_of:
-            continue
-        try:
-            data = json.loads(other.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            continue
-        if data.get("variant_of") == report_path.name:
-            continue                       # связь варианта работает в обе стороны
-        for ref in data.get("objects", []):
-            name = ref.get("file")
-            if name in used_files:
-                repeats.append(f"{name} — уже в отчёте {other.name}")
-
-    seen_path = report_path.parent / SEEN_OBJECTS
-    try:
-        seen = json.loads(seen_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return repeats
-    for entry in seen.get("objects", []):
-        if entry.get("slug") in used_slugs:
-            source = entry.get("source", SEEN_OBJECTS)
-            repeats.append(f"{entry['slug']} — {source}")
-    return repeats
-
-
 def cmd_build(args: argparse.Namespace) -> int:
     report_path = Path(args.report).resolve()
     report = load_json(report_path)
@@ -116,7 +70,7 @@ def cmd_build(args: argparse.Namespace) -> int:
         load_json(base / ref["file"]) if "file" in ref else ref
         for ref in report["objects"]
     ]
-    repeats = warn_repeated_objects(report_path, report, cards)
+    repeats = registry.repeats(base, report_path, cards)
     for line in repeats:
         print(f"ВНИМАНИЕ: повтор объекта — {line}", file=sys.stderr)
 
@@ -141,7 +95,25 @@ def cmd_build(args: argparse.Namespace) -> int:
         except Exception as exc:
             log.error("PDF не собран: %s", exc)
             return 1
+
+    # отчёт собран — объекты уходят в реестр, чтобы не попасть в следующую подборку
+    registry.record(base, report_path, cards)
     print(f"Готово: {docx_path}")
+    return 0
+
+
+def cmd_registry(args: argparse.Namespace) -> int:
+    data_dir = Path(args.data or ROOT / "data").resolve()
+    if args.rebuild:
+        destination, count = registry.rebuild(data_dir)
+        print(f"Реестр пересобран: {destination} — объектов: {count}")
+        return 0
+    entries = registry.load(data_dir)["objects"]
+    for entry in entries:
+        where = ", ".join(entry.get("reports", [])) or entry.get("source", "—")
+        print(f"{entry['slug']:44s} {entry.get('city', ''):16s} "
+              f"{entry.get('price', ''):14s} {where}")
+    print(f"Всего объектов: {len(entries)}")
     return 0
 
 
@@ -165,6 +137,12 @@ def main(argv: list[str] | None = None) -> int:
     build.add_argument("--no-pdf", dest="pdf", action="store_false", help="только DOCX")
     build.add_argument("--no-map", action="store_true", help="без обзорных карт")
     build.set_defaults(func=cmd_build, pdf=True)
+
+    reg = sub.add_parser("registry", help="реестр показанных объектов")
+    reg.add_argument("--rebuild", action="store_true",
+                     help="пересобрать по отчётам каталога")
+    reg.add_argument("--data", help="каталог данных (по умолчанию data/)")
+    reg.set_defaults(func=cmd_registry)
 
     parse = sub.add_parser("parse", help="черновик карточки из сохранённой HTML funda")
     parse.add_argument("html", help="сохранённая страница объекта")

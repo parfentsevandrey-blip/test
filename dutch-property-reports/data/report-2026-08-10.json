@@ -1,4 +1,5 @@
 {
+  "layout": "classic",
   "title": "ОБЪЕКТЫ НЕДВИЖИМОСТИ",
   "subtitle": "Нидерланды",
   "intro": "В подборку входят:",
@@ -6,8 +7,14 @@
   "filename": "Объекты недвижимости — Нидерланды 10.08.26",
   "output_dir": "output",
   "objects": [
-    { "file": "objects/lange-leidsedwarsstraat-73c-amsterdam.json" },
-    { "file": "objects/plaats-5-den-haag.json" },
-    { "file": "objects/ampereweg-17-delft.json" }
+    {
+      "file": "objects/lange-leidsedwarsstraat-73c-amsterdam.json"
+    },
+    {
+      "file": "objects/plaats-5-den-haag.json"
+    },
+    {
+      "file": "objects/ampereweg-17-delft.json"
+    }
   ]
 }

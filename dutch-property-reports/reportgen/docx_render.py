@@ -386,7 +386,9 @@ def object_pages(doc, obj: dict, images: list[Path]) -> None:
 
 
 def build(report: dict, objects: list[tuple[dict, list[Path]]], dest: Path) -> Path:
-    layout = report.get("layout")
+    # схема по умолчанию — dossier: оформление еженедельника заказчика.
+    # Ранние отчёты помечены layout: "classic" и собираются как прежде.
+    layout = report.get("layout", "dossier")
     if layout == "editorial":
         from . import editorial  # локальный импорт: editorial тянет помощники отсюда
 

@@ -1,0 +1,210 @@
+{
+  "note": "Реестр объектов, которые уже уходили заказчику. Пополняется автоматически при сборке отчёта; объекты, показанные мимо генератора, добавляйте руками с заполненным полем source. Сборка предупреждает, если объект из реестра попал в новую подборку.",
+  "objects": [
+    {
+      "slug": "aalsmeerderdijk-66-oude-meer",
+      "title": "Aalsmeerderdijk 66, Oude Meer",
+      "city": "Oude Meer",
+      "price": "€ 995.000",
+      "url": "https://www.fundainbusiness.nl/en/belegging/oude-meer/object-43317595-aalsmeerderdijk-66/",
+      "reports": [
+        "report-2026-08-10-schiphol.json"
+      ]
+    },
+    {
+      "slug": "aalsmeerderweg-249d-aalsmeer",
+      "title": "Aalsmeerderweg 249-D, Aalsmeer",
+      "city": "Aalsmeer",
+      "price": "€ 1.095.000",
+      "url": "https://www.fundainbusiness.nl/en/kantoor/aalsmeer/object-80860483-aalsmeerderweg-249-d/",
+      "reports": [
+        "report-2026-08-10-schiphol.json"
+      ]
+    },
+    {
+      "slug": "ampereweg-17-delft",
+      "title": "Ampèreweg 17, Delft",
+      "city": "Delft",
+      "price": "аренда € 7.250/мес",
+      "url": "https://www.fundainbusiness.nl/en/bedrijfshal/delft/object-43079154-ampereweg-17/",
+      "reports": [
+        "report-2026-08-10.json"
+      ]
+    },
+    {
+      "slug": "archimedesbaan-11-nieuwegein",
+      "title": "Archimedesbaan 11 и 7-9, Nieuwegein",
+      "city": "Nieuwegein",
+      "price": "€ 1.750.000",
+      "url": "https://www.fundainbusiness.nl/en/belegging/nieuwegein/object-80846890-archimedesbaan-11/",
+      "reports": [
+        "report-2026-07-27.json"
+      ]
+    },
+    {
+      "slug": "buys-ballotstraat-11-utrecht",
+      "title": "Buys Ballotstraat 11 bs, Utrecht",
+      "city": "Utrecht",
+      "price": "€ 845.000",
+      "url": "https://www.fundainbusiness.nl/en/belegging/utrecht/object-44464482-buys-ballotstraat-11-bs/",
+      "reports": [
+        "report-2026-08-03.json"
+      ]
+    },
+    {
+      "slug": "decimalaan-3-utrecht",
+      "title": "Decimalaan 3-5-7-9 и Nieuw-Amsterdamlaan 4-6, Utrecht",
+      "city": "Utrecht",
+      "price": "€ 2.975.000",
+      "url": "https://www.fundainbusiness.nl/en/belegging/utrecht/object-43068622-decimalaan-3/",
+      "reports": [
+        "report-2026-07-27.json"
+      ]
+    },
+    {
+      "slug": "groene-hilledijk-173-175-rotterdam",
+      "title": "Groene Hilledijk 173-175 и Heer Arnoldstraat 64-66, Rotterdam",
+      "city": "Rotterdam",
+      "price": "€ 2.825.000",
+      "url": "https://www.fundainbusiness.nl/en/belegging/rotterdam/object-89779774-groene-hilledijk-173-175/",
+      "reports": [
+        "report-2026-08-03.json"
+      ]
+    },
+    {
+      "slug": "ijweg-459-463-boesingheliede",
+      "title": "IJweg 459-463, Boesingheliede",
+      "city": "Boesingheliede",
+      "price": "€ 2.200.000",
+      "url": "https://www.fundainbusiness.nl/en/belegging/boesingheliede/object-43208985-ijweg-459-463/",
+      "reports": [
+        "report-2026-08-17-schiphol.json"
+      ]
+    },
+    {
+      "slug": "industrieweg-10-uithoorn",
+      "title": "Industrieweg 10, Uithoorn",
+      "city": "Uithoorn",
+      "price": "€ 795.000",
+      "url": "https://www.fundainbusiness.nl/en/bedrijfshal/uithoorn/object-89705200-industrieweg-10/",
+      "reports": [
+        "report-2026-08-17-schiphol.json"
+      ]
+    },
+    {
+      "slug": "lange-leidsedwarsstraat-73c-amsterdam",
+      "title": "Lange Leidsedwarsstraat 73-C, Amsterdam",
+      "city": "Amsterdam",
+      "price": "€ 1.225.000",
+      "url": "https://www.fundainbusiness.nl/en/horeca/amsterdam/object-44444835-lange-leidsedwarsstraat-73-c/",
+      "reports": [
+        "report-2026-08-10.json"
+      ]
+    },
+    {
+      "slug": "lireweg-42-50-nieuw-vennep",
+      "title": "Lireweg 42-50, Nieuw-Vennep",
+      "city": "Nieuw-Vennep",
+      "price": "€ 1.895.000",
+      "url": "https://www.fundainbusiness.nl/en/belegging/nieuw-vennep/object-89402645-lireweg-42-50/",
+      "reports": [
+        "report-2026-08-17-schiphol.json"
+      ]
+    },
+    {
+      "slug": "mercuriusstraat-40-vlaardingen",
+      "title": "Mercuriusstraat 40, Vlaardingen",
+      "city": "Vlaardingen",
+      "price": "",
+      "url": "",
+      "reports": [],
+      "source": "показан заказчику вне этого репозитория"
+    },
+    {
+      "slug": "nieuwe-hemweg-8-amsterdam",
+      "title": "Nieuwe Hemweg 8, Amsterdam",
+      "city": "Amsterdam",
+      "price": "€ 1.900.000",
+      "url": "https://www.fundainbusiness.nl/en/belegging/amsterdam/object-43104766-nieuwe-hemweg-8/",
+      "reports": [
+        "report-2026-08-21-warehouses-dossier.json",
+        "report-2026-08-21-warehouses-editorial.json",
+        "report-2026-08-21-warehouses.json"
+      ]
+    },
+    {
+      "slug": "nijverheidscentrum-26-zevenhuizen",
+      "title": "Nijverheidscentrum 26, Zevenhuizen",
+      "city": "Zevenhuizen",
+      "price": "€ 1.500.000",
+      "url": "https://www.fundainbusiness.nl/en/belegging/zevenhuizen-zh/object-43728053-nijverheidscentrum-26/",
+      "reports": [
+        "report-2026-08-21-warehouses-dossier.json",
+        "report-2026-08-21-warehouses-editorial.json",
+        "report-2026-08-21-warehouses.json"
+      ]
+    },
+    {
+      "slug": "overvliet-40-utrecht",
+      "title": "Overvliet 40, Utrecht",
+      "city": "Utrecht",
+      "price": "€ 305.000",
+      "url": "https://www.fundainbusiness.nl/en/belegging/utrecht/object-44483888-overvliet-40/",
+      "reports": [
+        "report-2026-08-21-warehouses-dossier.json",
+        "report-2026-08-21-warehouses-editorial.json",
+        "report-2026-08-21-warehouses.json"
+      ]
+    },
+    {
+      "slug": "plaats-5-den-haag",
+      "title": "Plaats 5, Den Haag",
+      "city": "Den Haag",
+      "price": "€ 995.000",
+      "url": "https://www.fundainbusiness.nl/en/winkel/den-haag/object-43205908-plaats-5/",
+      "reports": [
+        "report-2026-08-10.json"
+      ]
+    },
+    {
+      "slug": "st-ludgerusstraat-365-367-utrecht",
+      "title": "St.-Ludgerusstraat 365-367, Utrecht",
+      "city": "Utrecht",
+      "price": "€ 575.000",
+      "url": "https://www.fundainbusiness.nl/en/belegging/utrecht/object-44421368-st-ludgerusstraat-365-367/",
+      "reports": [
+        "report-2026-08-03.json"
+      ]
+    },
+    {
+      "slug": "steenovenweg-11-13-montfoort",
+      "title": "Steenovenweg 11-13, Montfoort",
+      "city": "Montfoort",
+      "price": "€ 975.000",
+      "url": "https://www.fundainbusiness.nl/en/belegging/montfoort/object-44425433-steenovenweg-11-13/",
+      "reports": [
+        "report-2026-07-27.json"
+      ]
+    },
+    {
+      "slug": "tuinweg-12-hoofddorp",
+      "title": "Tuinweg 12, Hoofddorp",
+      "city": "Hoofddorp",
+      "price": "€ 1.369.000",
+      "url": "https://www.fundainbusiness.nl/en/belegging/hoofddorp/object-43306631-tuinweg-12/",
+      "reports": [
+        "report-2026-08-10-schiphol.json"
+      ]
+    },
+    {
+      "slug": "valkenierstraat-45-ridderkerk",
+      "title": "Valkenierstraat 45, Ridderkerk",
+      "city": "Ridderkerk",
+      "price": "",
+      "url": "",
+      "reports": [],
+      "source": "показан заказчику вне этого репозитория"
+    }
+  ],
+  "updated": "2026-08-24"
+}
