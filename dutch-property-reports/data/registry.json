@@ -62,6 +62,16 @@
       ]
     },
     {
+      "slug": "edisonstraat-16-reeuwijk",
+      "title": "Edisonstraat 16, Reeuwijk",
+      "city": "Reeuwijk",
+      "price": "€ 1.300.000",
+      "url": "https://www.fundainbusiness.nl/en/belegging/reeuwijk/object-43015830-edisonstraat-16/",
+      "reports": [
+        "report-2026-08-24-warehouses.json"
+      ]
+    },
+    {
       "slug": "groene-hilledijk-173-175-rotterdam",
       "title": "Groene Hilledijk 173-175 и Heer Arnoldstraat 64-66, Rotterdam",
       "city": "Rotterdam",
@@ -92,6 +102,16 @@
       ]
     },
     {
+      "slug": "koepelstraat-30-32-rotterdam",
+      "title": "Koepelstraat 30-32, Rotterdam",
+      "city": "Rotterdam",
+      "price": "€ 655.000",
+      "url": "https://www.fundainbusiness.nl/en/belegging/rotterdam/object-80864426-koepelstraat-30-32/",
+      "reports": [
+        "report-2026-08-24-warehouses.json"
+      ]
+    },
+    {
       "slug": "lange-leidsedwarsstraat-73c-amsterdam",
       "title": "Lange Leidsedwarsstraat 73-C, Amsterdam",
       "city": "Amsterdam",
@@ -119,6 +139,16 @@
       "url": "",
       "reports": [],
       "source": "показан заказчику вне этого репозитория"
+    },
+    {
+      "slug": "mercuriusweg-19-waddinxveen",
+      "title": "Mercuriusweg 19, Waddinxveen",
+      "city": "Waddinxveen",
+      "price": "€ 1.700.000",
+      "url": "https://www.fundainbusiness.nl/en/belegging/waddinxveen/object-89607521-mercuriusweg-19/",
+      "reports": [
+        "report-2026-08-24-warehouses.json"
+      ]
     },
     {
       "slug": "nieuwe-hemweg-8-amsterdam",

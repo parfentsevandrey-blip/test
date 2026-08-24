@@ -69,6 +69,9 @@ FACTS_PHOTO_GAP_MM = 11.0
 # и от исходного снимка остаётся вырезанная середина.
 PHOTO_CAP_MM = 150.0
 MAP_CAP_MM = 130.0
+# Нижний предел карты: ниже она перестаёт читаться, но и выталкивать ею
+# перечень доступности на отдельную полосу нельзя.
+MAP_MIN_MM = 52.0
 
 
 # --------------------------------------------------------------------------
@@ -558,7 +561,7 @@ def object_description(doc, obj: dict, cache: Path, images: list[Path]) -> None:
                                     "SourceSerif4-Italic", 22)
                  + _mm(8 + 13) + 0.5)
 
-    free = S.PAGE_H_MM - S.MARGIN_TOP_MM - S.MARGIN_BOTTOM_MM - used - 1.0
+    free = S.PAGE_H_MM - S.MARGIN_TOP_MM - S.MARGIN_BOTTOM_MM - used - 6.0
     if len(images) > 1 and free >= 42.0:
         # кадр добирает полосу до нижнего поля — вместо белой трети внизу
         par(doc, after=0, lead=3)
@@ -602,7 +605,7 @@ def object_location(doc, obj: dict, cache: Path, images: list[Path]) -> None:
     if images:
         par(doc, after=0, lead=13)
         framed_photo(doc, images[0], cache, width_mm=S.CONTENT_W_MM,
-                     ratio=frame_ratio(S.CONTENT_W_MM, min(max(free, 78.0), MAP_CAP_MM)))
+                     ratio=frame_ratio(S.CONTENT_W_MM, min(max(free, MAP_MIN_MM), MAP_CAP_MM)))
         # подпись выключается по центру кадра, а не по левому краю набора
         caption = par(doc, before=3, after=0, lead=S.LH_SMALL,
                       align=WD_ALIGN_PARAGRAPH.CENTER)
