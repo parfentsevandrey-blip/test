@@ -187,6 +187,32 @@ def fact_columns(doc, groups: list) -> None:
                 fact_row(cell, label, value)
 
 
+def access_block(doc, title: str, rows: list[list[str]]) -> None:
+    """Перечень доступности под картой, разложенный на две колонки.
+
+    Заголовок идёт во всю ширину, а строки делятся пополам: у группы из
+    восьми пунктов колонка вышла бы вдвое длиннее соседней.
+    """
+    header = par(doc, before=13, after=5, lead=S.FS_MICRO + 2)
+    paragraph_border(header, "top", S.BRASS, S.SZ_RULE, space=5)
+    txt(header, title, font=S.SANS_MEDIUM, size=S.FS_MICRO, color=S.BRASS, caps=True)
+
+    half = -(-len(rows) // 2)
+    column_mm = (S.CONTENT_W_MM - 6.0) / 2
+    table = doc.add_table(rows=1, cols=2)
+    table.alignment = WD_TABLE_ALIGNMENT.LEFT
+    table.autofit = False
+    table_borders(table, {})
+    fixed_layout(table, [column_mm + 6.0, column_mm])
+    for position, cell in enumerate(table.rows[0].cells):
+        cell.width = Mm(column_mm + (6.0 if position == 0 else 0.0))
+        cell_margins(cell, top=0, bottom=0, left=0,
+                     right=17 if position == 0 else 0)
+        _clean(cell)
+        for label, value in (rows[:half] if position == 0 else rows[half:]):
+            fact_row(cell, label, value)
+
+
 def framed_photo(doc, source: Path, cache: Path, *, width_mm: float,
                  ratio: float = S.PHOTO_RATIO):
     """Кадр со скруглением и тенью — на полосу ложится уже готовым файлом."""
@@ -261,6 +287,9 @@ def object_location(doc, obj: dict, cache: Path, images: list[Path]) -> None:
                       align=WD_ALIGN_PARAGRAPH.CENTER)
         txt(caption, "Расположение объекта · картографические данные © Google",
             size=S.FS_CAPTION, color=S.MUTED)
+
+    if obj.get("access"):
+        access_block(doc, "Доступность и окружение", obj["access"])
 
 
 def photo_pages(doc, images: list[Path], flow: Flow, cache: Path) -> None:
