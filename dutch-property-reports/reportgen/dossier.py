@@ -26,9 +26,8 @@ from docx.enum.section import WD_SECTION
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Mm, Pt
-from PIL import Image
 
-from . import style_editorial as S, visuals
+from . import maps, style_editorial as S, visuals
 from .docx_render import (
     _el,
     _insert_ordered,
@@ -69,6 +68,12 @@ FACTS_PHOTO_GAP_MM = 11.0
 # Предел высоты кадра во всю ширину набора: ниже пропорция уходит в квадрат
 # и от исходного снимка остаётся вырезанная середина.
 PHOTO_CAP_MM = 150.0
+# Карта строится под остаток полосы: ниже MAP_MIN она перестаёт читаться,
+# выше MAP_MAX начинает спорить с текстом. MAP_SLACK — воздух до нижнего поля.
+MAP_MIN_MM = 62.0
+MAP_MAX_MM = 118.0
+MAP_SLACK_MM = 4.0
+MAP_PX = 1400
 
 
 # --------------------------------------------------------------------------
@@ -654,7 +659,8 @@ def _rows_height(rows: list, columns: int = 2) -> float:
     return height
 
 
-def object_location(doc, obj: dict, cache: Path, overview: Path | None) -> None:
+def object_location(doc, obj: dict, cache: Path, assets: Path, *,
+                    skip_map: bool = False) -> None:
     block = next((b for b in obj["sections"] if b.get("type") == "callout"), None)
     if block is None:
         return
@@ -663,27 +669,25 @@ def object_location(doc, obj: dict, cache: Path, overview: Path | None) -> None:
     rule(doc, color=S.INK, size=S.SZ_RULE, after=11)
     text_columns(doc, block["paragraphs"])
 
-    # карта тянется до перечня доступности, а тот прижат к нижнему полю
+    # карта занимает весь остаток полосы: перечень доступности прижат к
+    # нижнему полю, всё, что выше него, отдаётся карте
     used = (_heading_height(block["title"], 26)
             + _columns_height(block["paragraphs"]) + _mm(13)
             + _mm(3 + S.LH_SMALL))
     if obj.get("access"):
         used += _mm(13 + 5 + S.FS_MICRO + 2 + 5) + _rows_height(obj["access"])
-    free = S.PAGE_H_MM - S.MARGIN_TOP_MM - S.MARGIN_BOTTOM_MM - used - 9.0
+    free = S.PAGE_H_MM - S.MARGIN_TOP_MM - S.MARGIN_BOTTOM_MM - used - MAP_SLACK_MM
+    free = min(max(free, MAP_MIN_MM), MAP_MAX_MM)
 
+    # карта рисуется сразу под остаток полосы, поэтому её не приходится
+    # подрезать: подрезка срезала бы то, ради чего карта и стоит в отчёте, —
+    # метку объекта или центр города
+    ratio = (S.CONTENT_W_MM - FRAME_PAD_MM) / (free - FRAME_PAD_MM)
+    overview = None if skip_map else maps.for_object(
+        obj, assets, width=MAP_PX, height=int(round(MAP_PX / ratio)))
     if overview:
         par(doc, after=0, lead=13)
-        # карта вставляется в своей пропорции и не подрезается: подрезка
-        # срезает то, ради чего карта в отчёте и стоит, — метку объекта или
-        # центр города. Если по высоте не помещается, уменьшается ширина.
-        with Image.open(overview) as image:
-            source_ratio = image.width / image.height
-        width = S.CONTENT_W_MM
-        height = (width - FRAME_PAD_MM) / source_ratio + FRAME_PAD_MM
-        if height > free:
-            width = FRAME_PAD_MM + (free - FRAME_PAD_MM) * source_ratio
-        framed_photo(doc, overview, cache, width_mm=width, ratio=source_ratio,
-                     align=WD_ALIGN_PARAGRAPH.CENTER)
+        framed_photo(doc, overview, cache, width_mm=S.CONTENT_W_MM, ratio=ratio)
         # подпись выключается по центру кадра, а не по левому краю набора
         caption = par(doc, before=3, after=0, lead=S.LH_SMALL,
                       align=WD_ALIGN_PARAGRAPH.CENTER)
@@ -911,7 +915,8 @@ def build(report: dict, objects: list[tuple[dict, list[Path]]], dest: Path) -> P
         flow.new_page()
         object_description(doc, obj, cache, plan.portrait)
         flow.new_page()
-        object_location(doc, obj, cache, plan.overview)
+        object_location(doc, obj, cache, assets,
+                        skip_map=bool(report.get("skip_map")))
         photo_pages(doc, plan.gallery, flow, cache)
 
     dest.parent.mkdir(parents=True, exist_ok=True)

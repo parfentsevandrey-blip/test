@@ -37,32 +37,10 @@ def object_images(obj: dict, *, skip_map: bool = False) -> list[Path]:
     Спутниковые крупные планы участка в отчёт не идут.
     """
     images: list[Path] = []
-    if not skip_map and obj.get("map"):
-        conf = obj["map"]
-        lat, lon = conf.get("lat"), conf.get("lon")
-        if lat is None or lon is None:
-            lat, lon = maps.geocode(conf["query"])
-            log.info("%s: геокодирование → %.6f, %.6f", obj["slug"], lat, lon)
-
-        # ближайший крупный город, который должен попасть в кадр
-        city = conf.get("city")
-        city_point = None
-        if city:
-            if city.get("lat") is None or city.get("lon") is None:
-                city_point = maps.geocode(city["query"])
-            else:
-                city_point = (city["lat"], city["lon"])
-
-        name = f"{obj['slug']}-google" + (f"-z{conf['zoom']}" if conf.get("zoom") else "")
-        images.append(
-            maps.render(
-                lat,
-                lon,
-                CACHE / "maps" / f"{name}.png",
-                city=city_point,
-                zoom=conf.get("zoom"),
-            )
-        )
+    if not skip_map:
+        overview = maps.for_object(obj, CACHE / "maps")
+        if overview:
+            images.append(overview)
     images.extend(media.fetch_all(obj.get("photos", []), CACHE / "photos"))
     return images
 
@@ -80,12 +58,17 @@ def cmd_build(args: argparse.Namespace) -> int:
     for line in repeats:
         print(f"ВНИМАНИЕ: повтор объекта — {line}", file=sys.stderr)
 
+    layout = report.get("layout", "dossier")
+    report["skip_map"] = args.no_map
+
     objects: list[tuple[dict, list[Path]]] = []
     for ref, obj in zip(report["objects"], cards):
         ref.setdefault("street", obj.get("street", obj["title"].split(",")[0]))
         ref.setdefault("city", obj.get("city", ""))
         ref.setdefault("price_short", obj.get("price_short", ""))
-        images = object_images(obj, skip_map=args.no_map)
+        # схема dossier строит карту сама: ей нужна пропорция под остаток
+        # полосы, а он известен только на вёрстке
+        images = object_images(obj, skip_map=args.no_map or layout == "dossier")
         log.info("%s: %d изображений", obj["slug"], len(images))
         objects.append((obj, images))
 

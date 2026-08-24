@@ -239,3 +239,34 @@ def render(
 
     canvas.save(dest, "PNG")
     return dest
+
+
+def for_object(obj: dict, cache_dir: Path, *, width: int = 1200,
+               height: int = 480) -> Path | None:
+    """Карта объекта по его карточке; размер задаёт вызывающая сторона.
+
+    Размер входит в имя файла: одна и та же точка нужна вёрстке в той
+    пропорции, которая осталась на полосе, и кэш не должен отдавать кадр,
+    собранный под другую высоту.
+    """
+    conf = obj.get("map")
+    if not conf:
+        return None
+    lat, lon = conf.get("lat"), conf.get("lon")
+    if lat is None or lon is None:
+        lat, lon = geocode(conf["query"])
+        log.info("%s: геокодирование → %.6f, %.6f", obj.get("slug", "?"), lat, lon)
+
+    # ближайший крупный город, который должен попасть в кадр
+    city, point = conf.get("city"), None
+    if city:
+        if city.get("lat") is None or city.get("lon") is None:
+            point = geocode(city["query"])
+        else:
+            point = (city["lat"], city["lon"])
+
+    name = f"{obj['slug']}-google-{width}x{height}"
+    if conf.get("zoom"):
+        name += f"-z{conf['zoom']}"
+    return render(lat, lon, cache_dir / f"{name}.png", city=point,
+                  zoom=conf.get("zoom"), width=width, height=height)
