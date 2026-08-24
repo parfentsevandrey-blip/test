@@ -28,8 +28,15 @@ def load_json(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def object_images(obj: dict, *, skip_map: bool = False) -> list[Path]:
-    """Карта-обзор + фотографии объекта (всё кэшируется на диске)."""
+def object_images(obj: dict, *, skip_map: bool = False,
+                  aerial: bool = True) -> list[Path]:
+    """Карта-обзор, аэрофотоснимок участка и фотографии (всё кэшируется).
+
+    Аэрофотоснимок добавляется потому, что листингов с большой галереей мало:
+    funda отдаёт в HTML пять кадров, остальное подгружает скриптом. Вид
+    участка сверху — материал, который не зависит от щедрости брокера, и в
+    отчёте он на своём месте: показывает пятно застройки, двор и подъезды.
+    """
     images: list[Path] = []
     if not skip_map and obj.get("map"):
         conf = obj["map"]
@@ -57,6 +64,16 @@ def object_images(obj: dict, *, skip_map: bool = False) -> list[Path]:
                 zoom=conf.get("zoom"),
             )
         )
+        if aerial and conf.get("aerial", True):
+            images.append(
+                maps.render(
+                    lat,
+                    lon,
+                    CACHE / "maps" / f"{obj['slug']}-aerial.png",
+                    zoom=conf.get("aerial_zoom", 18),
+                    style="aerial",
+                )
+            )
     images.extend(media.fetch_all(obj.get("photos", []), CACHE / "photos"))
     return images
 
@@ -79,7 +96,10 @@ def cmd_build(args: argparse.Namespace) -> int:
         ref.setdefault("street", obj.get("street", obj["title"].split(",")[0]))
         ref.setdefault("city", obj.get("city", ""))
         ref.setdefault("price_short", obj.get("price_short", ""))
-        images = object_images(obj, skip_map=args.no_map)
+        # аэрофотоснимок кладётся только в схему по умолчанию: ранние отчёты
+        # собраны без него, и пересборка не должна их менять
+        images = object_images(obj, skip_map=args.no_map,
+                               aerial=report.get("layout", "dossier") == "dossier")
         log.info("%s: %d изображений", obj["slug"], len(images))
         objects.append((obj, images))
 

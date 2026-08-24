@@ -38,7 +38,6 @@ from .docx_render import (
 from .editorial import (
     Flow,
     _clean,
-    _opener_image,
     _page_setup,
     bleed_image,
     fixed_layout,
@@ -501,14 +500,21 @@ def object_facts(doc, index: int, obj: dict, cache: Path,
             size=S.FS_CAPTION, color=S.MUTED)
         txt(source, link, size=S.FS_CAPTION, color=S.MUTED)
 
-    # свободную треть полосы закрывает кадр объекта во всю ширину набора:
+    # свободную треть полосы закрывает вид участка сверху во всю ширину набора:
     # высота считается по остатку, поэтому полоса заканчивается ровно на поле
+    aerial = closer is not None and closer.name.endswith("-aerial.png")
+    caption_mm = _mm(3 + S.LH_SMALL) if aerial else 0.0
     free = (S.PAGE_H_MM - S.MARGIN_TOP_MM - S.MARGIN_BOTTOM_MM
-            - _facts_height(index, obj, title_size) - FACTS_PHOTO_GAP_MM)
+            - _facts_height(index, obj, title_size) - FACTS_PHOTO_GAP_MM - caption_mm)
     if closer and free >= 42.0:
         par(doc, after=0, lead=FACTS_PHOTO_GAP_MM * 72 / 25.4)
         framed_photo(doc, closer, cache, width_mm=S.CONTENT_W_MM,
                      ratio=frame_ratio(S.CONTENT_W_MM, min(free, PHOTO_CAP_MM)))
+        if aerial:
+            caption = par(doc, before=3, after=0, lead=S.LH_SMALL,
+                          align=WD_ALIGN_PARAGRAPH.CENTER)
+            txt(caption, "Участок и застройка · снимок © Google",
+                size=S.FS_CAPTION, color=S.MUTED)
 
 
 def _heading_height(title: str, size: float) -> float:
@@ -540,7 +546,7 @@ def _columns_height(texts: list[str]) -> float:
     return height
 
 
-def object_description(doc, obj: dict, cache: Path, images: list[Path]) -> None:
+def object_description(doc, obj: dict, cache: Path, portrait: Path | None) -> None:
     micro(doc, "Описание объекта", after=6)
     display_title(doc, obj["street"], size=26, after=8)
     rule(doc, color=S.INK, size=S.SZ_RULE, after=11)
@@ -562,10 +568,10 @@ def object_description(doc, obj: dict, cache: Path, images: list[Path]) -> None:
                  + _mm(8 + 13) + 0.5)
 
     free = S.PAGE_H_MM - S.MARGIN_TOP_MM - S.MARGIN_BOTTOM_MM - used - 6.0
-    if len(images) > 1 and free >= 42.0:
+    if portrait and free >= 42.0:
         # кадр добирает полосу до нижнего поля — вместо белой трети внизу
         par(doc, after=0, lead=3)
-        framed_photo(doc, images[1], cache, width_mm=S.CONTENT_W_MM,
+        framed_photo(doc, portrait, cache, width_mm=S.CONTENT_W_MM,
                      ratio=frame_ratio(S.CONTENT_W_MM, min(free, PHOTO_CAP_MM)))
 
 
@@ -585,7 +591,7 @@ def _rows_height(rows: list, columns: int = 2) -> float:
     return height
 
 
-def object_location(doc, obj: dict, cache: Path, images: list[Path]) -> None:
+def object_location(doc, obj: dict, cache: Path, overview: Path | None) -> None:
     block = next((b for b in obj["sections"] if b.get("type") == "callout"), None)
     if block is None:
         return
@@ -602,9 +608,9 @@ def object_location(doc, obj: dict, cache: Path, images: list[Path]) -> None:
         used += _mm(13 + 5 + S.FS_MICRO + 2 + 5) + _rows_height(obj["access"])
     free = S.PAGE_H_MM - S.MARGIN_TOP_MM - S.MARGIN_BOTTOM_MM - used - 9.0
 
-    if images:
+    if overview:
         par(doc, after=0, lead=13)
-        framed_photo(doc, images[0], cache, width_mm=S.CONTENT_W_MM,
+        framed_photo(doc, overview, cache, width_mm=S.CONTENT_W_MM,
                      ratio=frame_ratio(S.CONTENT_W_MM, min(max(free, MAP_MIN_MM), MAP_CAP_MM)))
         # подпись выключается по центру кадра, а не по левому краю набора
         caption = par(doc, before=3, after=0, lead=S.LH_SMALL,
@@ -616,17 +622,64 @@ def object_location(doc, obj: dict, cache: Path, images: list[Path]) -> None:
         access_block(doc, "Доступность и окружение", obj["access"])
 
 
-def _closing_image(images: list[Path], index: int) -> Path | None:
-    """Кадр, закрывающий полосу характеристик.
+class Plan:
+    """Разбор списка изображений объекта по назначению.
 
-    Берётся из тех, что ещё не заняты: первый кадр уходит в описание объекта,
-    второй — на шмуцтитул, поэтому здесь начинаем с третьего.
+    Список приходит плоским: обзорная карта, аэрофотоснимок участка и кадры
+    листинга. Карты узнаются по имени файла — так схема не зависит от того,
+    добавлен снимок или нет, и не сдвигаются индексы кадров.
+
+    Кадров у объекта мало: funda отдаёт в HTML пять штук, остальное подгружает
+    скриптом. Поэтому полосу характеристик закрывает аэрофотоснимок, а не кадр
+    из листинга — все фотографии уходят описанию, шмуцтитулу и галерее.
     """
-    used = {1, 2 if index == 1 else 1}
-    for position in range(1, len(images)):
-        if position not in used:
-            return images[position]
-    return images[1] if len(images) > 1 else None
+
+    def __init__(self, images: list[Path]):
+        self.overview: Path | None = None
+        self.aerial: Path | None = None
+        self.photos: list[Path] = []
+        for path in images:
+            if path.name.endswith("-aerial.png"):
+                self.aerial = path
+            elif path.suffix == ".png" and "-google" in path.name:
+                self.overview = path
+            else:
+                self.photos.append(path)
+
+    @property
+    def hero(self) -> Path | None:
+        """Кадр шмуцтитула и миниатюры на обложке — общий вид здания.
+
+        Брокеры ставят его первым в галерее, поэтому берётся первый кадр:
+        интерьер склада на шмуцтитуле читается как случайная фотография.
+        """
+        return self.photos[0] if self.photos else None
+
+    @property
+    def portrait(self) -> Path | None:
+        """Кадр полосы описания — следующий за общим видом."""
+        if len(self.photos) > 1:
+            return self.photos[1]
+        return self.photos[0] if self.photos else None
+
+    @property
+    def closer(self) -> Path | None:
+        """Изображение, закрывающее полосу характеристик."""
+        if self.aerial:
+            return self.aerial
+        return self.photos[2] if len(self.photos) > 2 else None
+
+    @property
+    def gallery(self) -> list[Path]:
+        """Кадры галереи.
+
+        Кадр шмуцтитула из галереи не исключается: на шмуцтитуле он затемнён,
+        обрезан под полосу и закрыт заголовком, а в галерее показан целиком.
+        При пяти-семи кадрах на объект отдавать один целиком под шмуцтитул
+        слишком расточительно.
+        """
+        used = {self.portrait, self.closer}
+        return [path for path in self.photos if path not in used]
 
 
 PAIR_W_MM = (S.CONTENT_W_MM - 6.0) / 2      # два кадра в ряд со средником 6 мм
@@ -638,8 +691,6 @@ GALLERY_GAP_MM = 9.0
 # Наборы подобраны так, чтобы сумма «естественных» высот была близка к высоте
 # полосы: тогда растяжка до нижнего поля не уводит пропорцию кадра в квадрат.
 GALLERY_ROWS: dict[int, tuple[int, ...]] = {
-    5: (1, 2, 2),
-    4: (1, 2, 1),
     3: (1, 2),
     2: (1, 1),
     1: (1,),
@@ -648,15 +699,16 @@ GALLERY_SLACK_MM = 4.0      # запас до нижнего поля, инач�
 
 
 def _gallery_plan(count: int) -> list[int]:
-    """Разбивка кадров по полосам: по пять, но без одинокого кадра в хвосте."""
+    """Разбивка кадров по полосам: по три, крупно.
+
+    Пять кадров на полосу мельчат каждый до открытки. У листингов funda кадров
+    мало, и правильнее показать их крупно на двух полосах, чем сжать в одну.
+    Одинокий кадр в хвосте не допускается: остаток в один кадр забирается у
+    предыдущей полосы.
+    """
     plan = []
     while count > 0:
-        if count == 6:
-            take = 3        # 3 + 3 ровнее, чем 5 + 1
-        elif count >= 5:
-            take = 5
-        else:
-            take = count
+        take = 2 if count == 4 else min(3, count)
         plan.append(take)
         count -= take
     return plan
@@ -682,15 +734,12 @@ def photo_row(doc, paths: list[Path], cache: Path, height_mm: float) -> None:
                      ratio=frame_ratio(PAIR_W_MM, height_mm))
 
 
-def photo_pages(doc, images: list[Path], flow: Flow, cache: Path,
-                skip: set[Path] | None = None) -> None:
-    """Полосы иллюстраций мозаикой: кадр во всю ширину и ряды по два.
+def photo_pages(doc, gallery: list[Path], flow: Flow, cache: Path) -> None:
+    """Полосы иллюстраций мозаикой: кадр во всю ширину и ряд из двух.
 
     Высоты рядов растягиваются до нижнего поля, поэтому полоса заполнена
     целиком, а не обрывается на середине белым полем.
     """
-    skip = skip or set()
-    gallery = [path for path in images[2:] if path not in skip]
     if not gallery:
         return
     flow.new_page()
@@ -727,7 +776,7 @@ def build(report: dict, objects: list[tuple[dict, list[Path]]], dest: Path) -> P
 
     items = []
     for obj, images in objects:
-        thumb = images[1] if len(images) > 1 else images[0]
+        thumb = Plan(images).hero or images[0]
         items.append((obj["street"], obj.get("city", ""),
                       obj.get("price_short", ""), thumb))
     full_bleed(doc, visuals.contents_cover(
@@ -757,7 +806,8 @@ def build(report: dict, objects: list[tuple[dict, list[Path]]], dest: Path) -> P
     flow = Flow(doc)
     started = False
     for index, (obj, images) in enumerate(objects, start=1):
-        opener_photo = _opener_image(images, index)
+        plan = Plan(images)
+        opener_photo = plan.hero
         if opener_photo:
             plate_section()
             full_bleed(doc, visuals.opener(
@@ -772,13 +822,12 @@ def build(report: dict, objects: list[tuple[dict, list[Path]]], dest: Path) -> P
         else:
             flow.new_page()
         started = True
-        closer = _closing_image(images, index)
-        object_facts(doc, index, obj, cache, closer)
+        object_facts(doc, index, obj, cache, plan.closer)
         flow.new_page()
-        object_description(doc, obj, cache, images)
+        object_description(doc, obj, cache, plan.portrait)
         flow.new_page()
-        object_location(doc, obj, cache, images)
-        photo_pages(doc, images, flow, cache, skip={closer} if closer else None)
+        object_location(doc, obj, cache, plan.overview)
+        photo_pages(doc, plan.gallery, flow, cache)
 
     dest.parent.mkdir(parents=True, exist_ok=True)
     doc.save(str(dest))
