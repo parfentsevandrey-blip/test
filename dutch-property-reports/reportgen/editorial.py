@@ -733,7 +733,7 @@ def object_brief(doc, obj: dict, flow: Flow) -> None:
 
     for block in obj["sections"]:
         if block.get("type") == "callout":
-            texts = block["paragraphs"]
+            texts = [t.replace("**", "") for t in block["paragraphs"]]
             par(doc, after=0, lead=11)
             # врезка залита плашкой: разрыв между страницами разрезал бы её,
             # поэтому она либо помещается целиком, либо уходит на новую полосу
@@ -743,7 +743,7 @@ def object_brief(doc, obj: dict, flow: Flow) -> None:
 
     for block in obj["sections"]:
         if block.get("type") == "paragraphs":
-            texts = block["paragraphs"]
+            texts = [t.replace("**", "") for t in block["paragraphs"]]
 
             def render(main, texts=texts):
                 for i, text in enumerate(texts):
@@ -758,7 +758,7 @@ def object_brief(doc, obj: dict, flow: Flow) -> None:
 def _first_sentence(obj: dict) -> str:
     for block in obj["sections"]:
         if block.get("type") == "paragraphs" and block.get("paragraphs"):
-            text = block["paragraphs"][0]
+            text = block["paragraphs"][0].replace("**", "")
             cut = text.find(". ")
             return text if cut < 0 else text[: cut + 1]
     return obj.get("subtitle", "")

@@ -365,9 +365,9 @@ def object_pages(doc, obj: dict, images: list[Path]) -> None:
         if block.get("heading"):
             section_heading(doc, block["heading"])
         if kind == "callout":
-            callout(doc, block["title"], block["paragraphs"])
+            callout(doc, block["title"], plain_text(block["paragraphs"]))
         elif kind == "paragraphs":
-            for text in block["paragraphs"]:
+            for text in plain_text(block["paragraphs"]):
                 body_paragraph(doc, text)
         else:
             for item in block["bullets"]:
@@ -384,6 +384,13 @@ def object_pages(doc, obj: dict, images: list[Path]) -> None:
             else:
                 add_paragraph(doc, after=0, before=14)
 
+
+
+def plain_text(value):
+    """Текст карточки без разметки выделений — для схем, которые её не набирают."""
+    if isinstance(value, list):
+        return [plain_text(item) for item in value]
+    return value.replace("**", "")
 
 def build(report: dict, objects: list[tuple[dict, list[Path]]], dest: Path) -> Path:
     # схема по умолчанию — dossier: оформление еженедельника заказчика.

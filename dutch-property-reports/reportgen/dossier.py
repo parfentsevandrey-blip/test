@@ -19,6 +19,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from pathlib import Path
 
 from docx.enum.section import WD_SECTION
@@ -110,6 +111,48 @@ def display_title(doc, text: str, *, size: float = 30.0, after: float = 8.0):
     return paragraph
 
 
+# Выделение в наборе: **фрагмент** набирается полужирной антиквой тем же
+# цветом. Цветом или подложкой цифры не выделяются — в сплошном тексте это
+# читается как ссылка или маркер, а не как акцент издания.
+ACCENT = re.compile(r"\*\*(.+?)\*\*", re.DOTALL)
+
+
+def _mark_words(text: str) -> str:
+    """Разметка по словам: `**два слова**` → `**два** **слова**`.
+
+    Дальше текст живёт обычной строкой: его меряют, режут по строкам и
+    развешивают по колонкам, а пословная разметка переживает любую резку.
+    """
+    return ACCENT.sub(lambda m: " ".join(f"**{w}**" for w in m.group(1).split()), text)
+
+
+def _plain(word: str) -> tuple[str, bool]:
+    """Слово без разметки и признак выделения.
+
+    Знаки препинания часто прилипают снаружи (`**%**.`), поэтому звёздочки
+    снимаются отовсюду, а не только с краёв слова.
+    """
+    return word.replace("**", ""), "**" in word
+
+
+def emphasis(paragraph, text: str, *, size: float = S.FS_BODY,
+             color: str = S.BODY, font: str = S.BODY_FONT,
+             accent: str = S.SERIF_MEDIUM) -> None:
+    """Набор абзаца с выделенными фрагментами."""
+    run, bold = [], False
+    for word in _mark_words(text).split():
+        clean, mark = _plain(word)
+        if mark != bold and run:
+            txt(paragraph, " ".join(run) + " ",
+                font=accent if bold else font, size=size, color=color)
+            run = []
+        bold = mark
+        run.append(clean)
+    if run:
+        txt(paragraph, " ".join(run), font=accent if bold else font,
+            size=size, color=color)
+
+
 def body_paragraphs(container, texts: list[str], *, after: float = 8.0) -> None:
     """Проза антиквой: гротеск на всю полосу читается серо."""
     for position, text in enumerate(texts):
@@ -117,28 +160,36 @@ def body_paragraphs(container, texts: list[str], *, after: float = 8.0) -> None:
         # при выключке по формату разваливается на разреженные строки
         paragraph = par(container, after=0 if position == len(texts) - 1 else after,
                         lead=S.LH_BODY)
-        txt(paragraph, text, font=S.BODY_FONT, size=S.FS_BODY, color=S.BODY)
+        emphasis(paragraph, text)
 
 
 def _measure_lines(text: str, width_mm: float) -> list[str]:
     """Разбивка абзаца на строки в колонке заданной ширины.
 
     Считается по тем же метрикам, которыми набирается полоса: Source Serif 4
-    в кегле основного текста. LibreOffice переносит чуть иначе, но развеска
-    по колонкам от расхождения в одну строку не разваливается.
+    в кегле основного текста, выделенные фрагменты — полужирным начертанием.
+    LibreOffice переносит чуть иначе, но развеска по колонкам от расхождения
+    в одну строку не разваливается.
     """
-    face = visuals.font("SourceSerif4-Regular", S.FS_BODY)
+    faces = {
+        False: visuals.font("SourceSerif4-Regular", S.FS_BODY),
+        True: visuals.font("SourceSerif4-SemiBold", S.FS_BODY),
+    }
     limit = width_mm / 25.4 * visuals.DPI
-    lines, current = [], ""
-    for word in text.split():
-        probe = f"{current} {word}".strip()
-        if current and face.getlength(probe) > limit:
-            lines.append(current)
-            current = word
+    lines: list[str] = []
+    current: list[str] = []
+    width = 0.0
+    for word in _mark_words(text).split():
+        clean, mark = _plain(word)
+        step = faces[mark].getlength(clean if not current else " " + clean)
+        if current and width + step > limit:
+            lines.append(" ".join(current))
+            current, width = [word], faces[mark].getlength(clean)
         else:
-            current = probe
+            current.append(word)
+            width += step
     if current:
-        lines.append(current)
+        lines.append(" ".join(current))
     return lines
 
 
@@ -200,7 +251,7 @@ def text_columns(doc, texts: list[str], *, after: float = 8.0):
         first = cell.paragraphs[0]
         first.paragraph_format.space_after = Pt(after if len(block) > 1 else 0)
         first.paragraph_format.line_spacing = Pt(S.LH_BODY)
-        txt(first, block[0], font=S.BODY_FONT, size=S.FS_BODY, color=S.BODY)
+        emphasis(first, block[0])
         body_paragraphs(cell, block[1:], after=after)
     return table
 
