@@ -6,15 +6,9 @@
 к абзацу. Поэтому обложка, шмуцтитулы, тёмные полосы и вся графика данных
 рисуются здесь в PIL и вставляются в документ навылет.
 
-Ориентиры сняты с самих изданий (разбор CSS главных страниц):
-
-* NYT — пара «дисплейная антиква + гротеск», чернила #121212, разрядка
-  надстрочных подписей 0,1 em, интерлиньяж заголовка 1,15;
-* Vogue — Didot в крупном кегле, золото #E0C04E, чернила #1A1A1A;
-* Bloomberg — тёмный фон, крупные числа, график вместо картинки.
-
-Свободные замены гарнитур: Playfair Display вместо Didot, Inter вместо
-гротеска NYT, Spectral для прозы.
+Палитра и гарнитуры взяты из еженедельного обзора заказчика (выпуск № 05):
+Source Serif 4 для заголовков и лидов, Source Sans 3 для рубрик и подписей,
+чернила #16233A, охра #9C7C38, бумага #F5F4F0, служебный серо-синий #5D6B7C.
 """
 
 from __future__ import annotations
@@ -27,17 +21,23 @@ from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
 DPI = 250
 MM = DPI / 25.4                      # мм → пиксели
 
+# Полосы-изображения кладутся навылет и растягиваются до формата листа,
+# поэтому рисовать их надо в самом формате: при 200 × 265 на A4 набор
+# растягивался по вертикали на двенадцать процентов вместе со шрифтом.
+PAGE = (210.0, 297.0)
+MARGIN = (20.0, 20.0)
+
 FONTS = Path(__file__).resolve().parent.parent / "assets" / "fonts"
 
-# --- палитра ---------------------------------------------------------------
-INK = (20, 20, 20)                   # чернила: нейтральный почти-чёрный, как у NYT
-INK_DEEP = (12, 12, 12)
-PAPER = (244, 241, 234)
-PAPER_PURE = (250, 248, 244)
-GOLD = (176, 141, 63)
-GOLD_BRIGHT = (201, 169, 97)         # золото на тёмном
-GREY = (122, 122, 118)
-GREY_SOFT = (198, 193, 182)
+# --- палитра (снята с еженедельного обзора заказчика) -----------------------
+INK = (22, 35, 58)                   # #16233A — чернила издания
+INK_DEEP = (22, 35, 58)
+PAPER = (245, 244, 240)              # #F5F4F0
+PAPER_PURE = (255, 255, 255)
+GOLD = (156, 124, 56)                # #9C7C38 — охра рубрик и крупных чисел
+GOLD_BRIGHT = (201, 169, 97)         # охра на тёмном фоне
+GREY = (93, 107, 124)                # #5D6B7C — служебный серо-синий
+GREY_SOFT = (200, 203, 208)
 WHITE = (255, 255, 255)
 
 
@@ -45,12 +45,12 @@ def font(name: str, size_pt: float) -> ImageFont.FreeTypeFont:
     return ImageFont.truetype(str(FONTS / f"{name}.ttf"), int(round(size_pt * DPI / 72)))
 
 
-DISPLAY = "PlayfairDisplay-Regular"
-DISPLAY_MED = "PlayfairDisplay-Medium"
-SANS = "Inter-Regular"
-SANS_MED = "Inter-Medium"
-SANS_LIGHT = "Inter-Light"
-SERIF = "Spectral-Light"
+DISPLAY = "SourceSerif4-Light"        # заголовки издания набраны именно им
+DISPLAY_MED = "SourceSerif4-SemiBold"
+SANS = "SourceSans3-Regular"
+SANS_MED = "SourceSans3-SemiBold"
+SANS_LIGHT = "SourceSans3-Light"
+SERIF = "SourceSerif4-Italic"         # лид на обложке — курсив антиквы
 
 
 # --------------------------------------------------------------------------
@@ -158,8 +158,8 @@ def hairline(draw, x0, y0, x1, y1, color, width_mm: float = 0.25):
 # --------------------------------------------------------------------------
 def cover(dest: Path, photo: Path, *, kicker: str, title: str, subtitle: str,
           meta_left: str, meta_right: str,
-          page: tuple[float, float] = (200.0, 265.0),
-          margin: tuple[float, float] = (17.0, 13.0)) -> Path:
+          page: tuple[float, float] = PAGE,
+          margin: tuple[float, float] = MARGIN) -> Path:
     """Обложка: кадр навылет, вуаль, типографика поверх кадра."""
     width_px, height_px = int(page[0] * MM), int(page[1] * MM)
     left, right = margin[0] * MM, page[0] * MM - margin[1] * MM
@@ -210,15 +210,20 @@ def cover(dest: Path, photo: Path, *, kicker: str, title: str, subtitle: str,
 
 def opener(dest: Path, photo: Path, *, ordinal: str, city: str, title: str,
            subtitle: str, kpi: list[tuple[str, str]],
-           page: tuple[float, float] = (200.0, 265.0),
-           margin: tuple[float, float] = (17.0, 13.0)) -> Path:
+           page: tuple[float, float] = PAGE,
+           margin: tuple[float, float] = MARGIN) -> Path:
     """Шмуцтитул объекта: номер и название на кадре, полоса цифр по низу."""
     width_px, height_px = int(page[0] * MM), int(page[1] * MM)
     left, right = margin[0] * MM, page[0] * MM - margin[1] * MM
     canvas = grade(fill_crop(photo, width_px, height_px), warmth=1.02)
-    veil = scrim((width_px, height_px), start=0.10, end=0.68,
-                 top_alpha=70, bottom_alpha=243)
+    # вуаль начинается ниже трети полосы: раньше она мутила и середину кадра
+    veil = scrim((width_px, height_px), start=0.30, end=0.70,
+                 top_alpha=26, bottom_alpha=246)
     canvas.paste(veil, (0, 0), veil)
+    # встречная вуаль сверху: на светлом небе рубрика белым иначе не читается
+    cap = scrim((width_px, height_px), start=0.0, end=0.22,
+                top_alpha=170, bottom_alpha=0)
+    canvas.paste(cap, (0, 0), cap)
     draw = ImageDraw.Draw(canvas)
 
     y = 20 * MM
@@ -263,8 +268,8 @@ def opener(dest: Path, photo: Path, *, ordinal: str, city: str, title: str,
 
 
 def statement(dest: Path, *, kicker: str, text: str, figures: list[tuple[str, str, str]],
-              page: tuple[float, float] = (200.0, 265.0),
-              margin: tuple[float, float] = (17.0, 13.0)) -> Path:
+              page: tuple[float, float] = PAGE,
+              margin: tuple[float, float] = MARGIN) -> Path:
     """Тёмная полоса-манифест: короткое утверждение и крупные числа."""
     width_px, height_px = int(page[0] * MM), int(page[1] * MM)
     left, right = margin[0] * MM, page[0] * MM - margin[1] * MM
@@ -339,8 +344,8 @@ def rounded_photo(dest: Path, source: Path, *, width_mm: float, ratio: float,
 
 def contents_cover(dest: Path, *, kicker: str, title: str, subtitle: str,
                    items: list[tuple[str, str, str, Path]], meta: str,
-                   page: tuple[float, float] = (200.0, 265.0),
-                   margin: tuple[float, float] = (17.0, 13.0)) -> Path:
+                   page: tuple[float, float] = PAGE,
+                   margin: tuple[float, float] = MARGIN) -> Path:
     """Обложка: шапка и список объектов с ценами — и больше ничего.
 
     Каждая строка списка — номер, миниатюра со скруглением, адрес, город и

@@ -559,14 +559,15 @@ def running_footer(section, left_text: str) -> None:
     paragraph.paragraph_format.space_before = Pt(0)
     paragraph.paragraph_format.space_after = Pt(0)
     paragraph.paragraph_format.line_spacing = Pt(S.FS_MICRO + 2)
-    paragraph_border(paragraph, "top", S.RULE, S.SZ_HAIRLINE, space=6)
     tabs = _el("tabs")
-    tabs.append(_el("tab", val="right", pos=int(S.CONTENT_W_MM * 72 / 25.4 * 20)))
+    tabs.append(_el("tab", val="center", pos=int(S.CONTENT_W_MM / 2 * 72 / 25.4 * 20)))
     _insert_ordered(paragraph._p.get_or_add_pPr(), tabs)
-    txt(paragraph, left_text, font=S.SANS_MEDIUM, size=S.FS_MICRO, color=S.MUTED,
-        tracking=S.TR_EYEBROW, caps=True)
+    if left_text:
+        txt(paragraph, left_text, font=S.SANS_MEDIUM, size=S.FS_MICRO,
+            color=S.MUTED, caps=True)
     txt(paragraph, "\t", size=S.FS_MICRO, color=S.MUTED)
-    _field(paragraph, " PAGE ", size=S.FS_CAPTION, color=S.INK, font=S.SANS_MEDIUM)
+    # номер полосы по центру — как в еженедельнике
+    _field(paragraph, " PAGE ", size=S.FS_CAPTION, color=S.MUTED, font=S.SANS)
 
 
 def cover(doc, report: dict, image: Path | None) -> None:

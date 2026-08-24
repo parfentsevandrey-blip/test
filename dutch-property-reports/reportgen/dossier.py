@@ -7,9 +7,13 @@
 
 Полосы, которые должны производить впечатление, собираются как изображения
 (модуль visuals): DOCX не умеет ни положить текст на кадр, ни скруглить углы
-иллюстрации, ни дать ей тень. Приёмы взяты у изданий, на которые указал
-заказчик: дисплейная антиква поверх кадра и разрядка надстрочных подписей
-0,1 em (NYT), Didot в крупном кегле и золото как единственный акцент (Vogue).
+иллюстрации, ни дать ей тень.
+
+Оформление снято с еженедельного обзора заказчика: формат A4, две колонки по
+80 мм со средником 10 мм, Source Serif 4 и Source Sans 3, чернила #16233A и
+охра #9C7C38. Текстовые полосы добираются кадром до нижнего поля — высота
+считается по тем же величинам, которыми набраны блоки, поэтому полоса
+заканчивается на поле, а не белой третью.
 """
 
 from __future__ import annotations
@@ -51,13 +55,52 @@ from .editorial import (
 
 log = logging.getLogger(__name__)
 
-DISPLAY = "Playfair Display"
+DISPLAY = "Source Serif 4 Light"
 CARD_COLUMNS = 3
+
+# Ширина колонки и средник взяты из еженедельника: две полосы по 80 мм с
+# промежутком 10 мм. При кегле 9,5 pt это ~42 знака в строке — то, ради чего
+# издание вообще держит две колонки: на всю ширину набора строка вдвое длиннее
+# комфортной и текст читается как служебная записка.
+COL_W_MM = 80.0
+COL_GUTTER_MM = S.CONTENT_W_MM - 2 * COL_W_MM   # 10 мм
+FACTS_PHOTO_GAP_MM = 11.0
+# Предел высоты кадра во всю ширину набора: ниже пропорция уходит в квадрат
+# и от исходного снимка остаётся вырезанная середина.
+PHOTO_CAP_MM = 150.0
+MAP_CAP_MM = 130.0
 
 
 # --------------------------------------------------------------------------
 # элементы полосы
 # --------------------------------------------------------------------------
+def running_head(section, left_text: str, right_text: str) -> None:
+    """Верхний колонтитул еженедельника: выпуск слева, рубрика охрой справа."""
+    section.header.is_linked_to_previous = False
+    paragraph = section.header.paragraphs[0]
+    paragraph.paragraph_format.space_before = Pt(0)
+    paragraph.paragraph_format.space_after = Pt(0)
+    paragraph.paragraph_format.line_spacing = Pt(S.FS_MICRO + 3)
+    paragraph_border(paragraph, "bottom", S.RULE, S.SZ_HAIRLINE, space=5)
+    tabs = _el("tabs")
+    tabs.append(_el("tab", val="right", pos=int(S.CONTENT_W_MM * 72 / 25.4 * 20)))
+    _insert_ordered(paragraph._p.get_or_add_pPr(), tabs)
+    txt(paragraph, left_text, size=S.FS_MICRO, color=S.MUTED)
+    txt(paragraph, "\t", size=S.FS_MICRO, color=S.MUTED)
+    txt(paragraph, right_text, font=S.SANS_MEDIUM, size=S.FS_MICRO,
+        color=S.BRASS, caps=True)
+
+
+def blank_running(section) -> None:
+    """Полоса навылет живёт без колонтитулов: они легли бы прямо на кадр."""
+    for area in (section.header, section.footer):
+        area.is_linked_to_previous = False
+        paragraph = area.paragraphs[0]
+        paragraph.paragraph_format.space_before = Pt(0)
+        paragraph.paragraph_format.space_after = Pt(0)
+        paragraph.paragraph_format.line_spacing = Pt(1)
+
+
 def full_bleed(doc, image: Path) -> None:
     bleed_image(doc, image, x_mm=0, y_mm=0, w_mm=S.PAGE_W_MM, h_mm=S.PAGE_H_MM)
 
@@ -68,28 +111,160 @@ def display_title(doc, text: str, *, size: float = 30.0, after: float = 8.0):
     return paragraph
 
 
-def body_paragraphs(doc, texts: list[str], *, after: float = 8.0) -> None:
+def body_paragraphs(container, texts: list[str], *, after: float = 8.0) -> None:
     """Проза антиквой: гротеск на всю полосу читается серо."""
     for position, text in enumerate(texts):
         # выключка влево, а не по формату: без переносов русский текст
         # при выключке по формату разваливается на разреженные строки
-        paragraph = par(doc, after=0 if position == len(texts) - 1 else after,
+        paragraph = par(container, after=0 if position == len(texts) - 1 else after,
                         lead=S.LH_BODY)
         txt(paragraph, text, font=S.BODY_FONT, size=S.FS_BODY, color=S.BODY)
 
 
+def _measure_lines(text: str, width_mm: float) -> list[str]:
+    """Разбивка абзаца на строки в колонке заданной ширины.
+
+    Считается по тем же метрикам, которыми набирается полоса: Source Serif 4
+    в кегле основного текста. LibreOffice переносит чуть иначе, но развеска
+    по колонкам от расхождения в одну строку не разваливается.
+    """
+    face = visuals.font("SourceSerif4-Regular", S.FS_BODY)
+    limit = width_mm / 25.4 * visuals.DPI
+    lines, current = [], ""
+    for word in text.split():
+        probe = f"{current} {word}".strip()
+        if current and face.getlength(probe) > limit:
+            lines.append(current)
+            current = word
+        else:
+            current = probe
+    if current:
+        lines.append(current)
+    return lines
+
+
+# межабзацный отбив в строках — чтобы развеска считала его наравне с текстом
+PARAGRAPH_GAP_LINES = 0.6
+
+
+def _split_evenly(texts: list[str], width_mm: float) -> tuple[list[str], list[str]]:
+    """Развеска текста по двум колонкам поровну.
+
+    Резать только по границам абзацев мало: три абзаца в 8, 13 и 11 строк дают
+    в лучшем случае 21 против 11. Поэтому абзац при необходимости продолжается
+    во второй колонке — как в самом еженедельнике.
+    """
+    blocks = [_measure_lines(text, width_mm) for text in texts]
+    total = sum(len(block) for block in blocks) + PARAGRAPH_GAP_LINES * (len(blocks) - 1)
+    target = total / 2
+
+    left: list[str] = []
+    right: list[str] = []
+    filled = 0.0
+    for index, block in enumerate(blocks):
+        if index:
+            filled += PARAGRAPH_GAP_LINES
+        if filled >= target - 0.5:
+            right.append(" ".join(block))
+            filled += len(block)
+            continue
+        room = int(round(target - filled))
+        if room >= len(block):
+            left.append(" ".join(block))
+        else:
+            # абзац рвётся по строке: хвост уходит в правую колонку
+            if room > 0:
+                left.append(" ".join(block[:room]))
+            right.append(" ".join(block[room:] if room > 0 else block))
+        filled += len(block)
+    if not left:
+        left, right = right[:1], right[1:]
+    return left, right
+
+
+def text_columns(doc, texts: list[str], *, after: float = 8.0):
+    """Две колонки по 80 мм со средником 10 мм — набор еженедельника."""
+    if len(texts) < 2:
+        body_paragraphs(doc, texts, after=after)
+        return None
+    left_texts, right_texts = _split_evenly(texts, COL_W_MM)
+    table = doc.add_table(rows=1, cols=3)
+    table.alignment = WD_TABLE_ALIGNMENT.LEFT
+    table.autofit = False
+    table_borders(table, {})
+    fixed_layout(table, [COL_W_MM, COL_GUTTER_MM, COL_W_MM])
+    left, _, right = table.rows[0].cells
+    for cell in (left, right):
+        cell.width = Mm(COL_W_MM)
+        cell_margins(cell, top=0, bottom=0, left=0, right=0)
+    for cell, block in ((left, left_texts), (right, right_texts)):
+        first = cell.paragraphs[0]
+        first.paragraph_format.space_after = Pt(after if len(block) > 1 else 0)
+        first.paragraph_format.line_spacing = Pt(S.LH_BODY)
+        txt(first, block[0], font=S.BODY_FONT, size=S.FS_BODY, color=S.BODY)
+        body_paragraphs(cell, block[1:], after=after)
+    return table
+
+
 def lead_paragraph(doc, text: str, *, after: float = 12.0):
+    """Лид — курсив антиквы: в еженедельнике это Source Serif 4 Italic 12,5 pt."""
     paragraph = par(doc, after=after, lead=S.LH_LEAD)
-    txt(paragraph, text, font=S.SERIF_LIGHT, size=S.FS_LEAD, color=S.INK)
+    txt(paragraph, text, font=S.SERIF, size=S.FS_LEAD, color=S.INK_SOFT, italic=True)
     return paragraph
 
 
 def pull_quote(doc, text: str, *, before: float = 13.0, after: float = 13.0):
     """Врезка-цитата курсивом дисплейной антиквы — главный тезис полосы."""
     rule(doc, color=S.BRASS, size=S.SZ_ACCENT, before=before, after=8)
-    paragraph = par(doc, after=8, lead=23, right=30)
-    txt(paragraph, text, font=DISPLAY, size=17, color=S.INK, tracking=-6, italic=True)
+    paragraph = par(doc, after=8, lead=27, right=24)
+    txt(paragraph, text, font=S.SERIF, size=22, color=S.INK, italic=True)
     rule(doc, color=S.RULE, size=S.SZ_HAIRLINE, after=after)
+
+
+PAD_MM = 4.0            # поля ячейки полосы цифр, 6 + 4 pt
+
+
+# Отбивки перечня характеристик, снятые с готового PDF: считать их из
+# space_before/space_after нельзя — соседние отбивки схлопываются, и расчёт
+# расходится с вёрсткой на треть полосы.
+GROUP_TOP_MM = 2.3       # от отбива до первого заголовка группы
+GROUP_GAP_MM = 8.7       # между группами в колонке
+GROUP_HEAD_MM = 5.5      # заголовок группы с отбивкой до первой строки
+LINK_BLOCK_MM = 14.6     # линейка и строка со ссылкой на публикацию
+
+
+def _mm(points: float) -> float:
+    return points * 25.4 / 72
+
+
+def _lines(text: str, width_mm: float, face: str, size: float) -> int:
+    """Число строк произвольного набора — для расчёта высоты полосы.
+
+    Кегль округляется вниз до половины пункта: DOCX хранит его в половинах
+    пункта, поэтому 7,4 pt на полосе выходит семёркой, а не семёркой с
+    хвостом, и строка помещается там, где расчёт по 7,4 давал перенос.
+    """
+    metrics = visuals.font(face, int(size * 2) / 2)
+    limit = width_mm / 25.4 * visuals.DPI
+    count, current = 1, ""
+    for word in str(text).split():
+        probe = f"{current} {word}".strip()
+        if current and metrics.getlength(probe) > limit:
+            count += 1
+            current = word
+        else:
+            current = probe
+    return count
+
+
+def _fit_numerals(values: list[str], width_mm: float) -> float:
+    """Наибольший кегль, при котором все значения полосы влезают в строку."""
+    for size in (S.FS_NUMERAL, 21, 20, 19, 18, 17, 16, 15, 14):
+        face = visuals.font("SourceSerif4-Light", size)
+        if all(face.getlength(str(value)) / visuals.DPI * 25.4 <= width_mm
+               for value in values):
+            return float(size)
+    return 14.0
 
 
 def figures_band(doc, items: list[list[str]]):
@@ -108,11 +283,15 @@ def figures_band(doc, items: list[list[str]]):
     })
     width = S.CONTENT_W_MM / len(items)
     fixed_layout(table, [width] * len(items))
+    # один кегль на всю полосу — крупнейший, при котором самое длинное значение
+    # («€ 1.900.000») ещё держится в одну строку. Разнокегельность внутри полосы
+    # цифр читается как сбой вёрстки, поэтому размер общий, а не поячеечный
+    size = _fit_numerals([entry[1] for entry in items], width - PAD_MM)
     for cell, entry in zip(table.rows[0].cells, items):
         label, value, note = (list(entry) + ["", "", ""])[:3]
         cell.width = Mm(width)
         cell_shading(cell, S.PANEL)
-        cell_margins(cell, top=15, bottom=16, left=8, right=6)
+        cell_margins(cell, top=15, bottom=16, left=6, right=4)
 
         head = cell.paragraphs[0]
         head.paragraph_format.space_after = Pt(4)
@@ -121,10 +300,8 @@ def figures_band(doc, items: list[list[str]]):
 
         big = cell.add_paragraph()
         big.paragraph_format.space_after = Pt(3)
-        big.paragraph_format.line_spacing = Pt(21)
-        # кегль подобран под самое длинное значение полосы («€ 1.900.000»):
-        # при большем оно переносилось на вторую строку
-        txt(big, value, font=S.SANS_LIGHT, size=17, color=S.INK, tracking=-6)
+        big.paragraph_format.line_spacing = Pt(size * 1.18)
+        txt(big, value, font=S.SERIF_LIGHT, size=size, color=S.BRASS)
 
         if note:
             caption = cell.add_paragraph()
@@ -215,11 +392,24 @@ def access_block(doc, title: str, rows: list[list[str]]) -> None:
             fact_row(cell, label, value)
 
 
+FRAME_PAD_MM = 8.0      # поле под тень вокруг кадра: 4 мм с каждой стороны
+
+
+def frame_ratio(width_mm: float, height_mm: float) -> float:
+    """Пропорция кадра, при которой готовый файл встанет ровно в высоту.
+
+    Файл с тенью шире и выше самого снимка на поле под тень, поэтому под
+    заданную высоту полосы пропорцию надо считать по внутреннему кадру.
+    """
+    return (width_mm - FRAME_PAD_MM) / max(height_mm - FRAME_PAD_MM, 1.0)
+
+
 def framed_photo(doc, source: Path, cache: Path, *, width_mm: float,
                  ratio: float = S.PHOTO_RATIO):
     """Кадр со скруглением и тенью — на полосу ложится уже готовым файлом."""
+    # пропорция входит в имя: один и тот же кадр берётся и панорамой, и полосой
     prepared = visuals.rounded_photo(
-        cache / f"{source.stem}-{int(width_mm)}.jpg", source,
+        cache / f"{source.stem}-{int(width_mm)}-{ratio:.3f}.jpg", source,
         width_mm=width_mm, ratio=ratio)
     return photo(doc, prepared, width_mm=width_mm, max_h=260.0)
 
@@ -227,11 +417,66 @@ def framed_photo(doc, source: Path, cache: Path, *, width_mm: float,
 # --------------------------------------------------------------------------
 # полосы объекта
 # --------------------------------------------------------------------------
-def object_facts(doc, index: int, obj: dict) -> None:
-    micro(doc, f"Объект {index:02d} · {obj.get('city', '')}", after=6)
+def _facts_height(index: int, obj: dict, title_size: float) -> float:
+    """Оценка высоты полосы характеристик в мм.
+
+    Нужна, чтобы закрыть полосу кадром ровно по нижнему полю: точной вёрстки
+    в DOCX нет, поэтому высота собирается из тех же величин, которыми набраны
+    блоки. Расхождение с готовым PDF — доли миллиметра на блок.
+    """
+    used = _mm(S.FS_MICRO + 2) + _mm(6)
+    used += _mm(title_size * 1.06) * _lines(
+        obj["title"], S.CONTENT_W_MM, "SourceSerif4-Light", title_size) + _mm(8)
+    if obj.get("lead"):
+        used += _mm(S.LH_LEAD) * _lines(
+            obj["lead"], S.CONTENT_W_MM, "SourceSerif4-Italic", S.FS_LEAD) + _mm(11)
+
+    facts = obj.get("facts") or {}
+    headline = facts.get("headline") or []
+    if headline:
+        width = S.CONTENT_W_MM / len(headline)
+        size = _fit_numerals([entry[1] for entry in headline], width - PAD_MM)
+        notes = max(_lines(entry[2], width - PAD_MM, "SourceSans3-Regular", 7.4)
+                    if len(entry) > 2 and entry[2] else 0 for entry in headline)
+        used += (_mm(15 + S.FS_MICRO + 2 + 4 + size * 1.18 + 3 + 16)
+                 + _mm(9.6) * notes)
+
+    if facts.get("groups"):
+        used += _mm(15)
+        groups = facts["groups"]
+        half = -(-len(groups) // 2)
+        column_mm = (S.CONTENT_W_MM - 6.0) / 2
+        for order in range(half):
+            pair = [groups[order]]
+            if order + half < len(groups):
+                pair.append(groups[order + half])
+            # у левой колонки лишние 6 мм ширины съедает её правое поле,
+            # так что место под значение в обеих колонках одинаковое
+            value_mm = column_mm - _mm(LABEL_INDENT_PT)
+            heights = []
+            for group in pair:
+                # соседние отбивки абзацев LibreOffice схлопывает в одну,
+                # поэтому шаг строки перечня — интерлиньяж плюс один отбив
+                height = (GROUP_GAP_MM if order else GROUP_TOP_MM) + GROUP_HEAD_MM
+                for position_row, (label, value) in enumerate(group[1]):
+                    if position_row:
+                        height += _mm(5.6)
+                    height += _mm(12.8) * _lines(
+                        value, value_mm, "SourceSans3-Regular", 8.8)
+                heights.append(height)
+            used += max(heights)
+
+    if any(str(value).startswith("http") for _, value in obj.get("specs", [])):
+        used += LINK_BLOCK_MM
+    return used
+
+
+def object_facts(doc, index: int, obj: dict, cache: Path,
+                 closer: Path | None) -> None:
     # длинное название сажаем на кегль поменьше, иначе оно уходит на две строки
-    display_title(doc, obj["title"], size=31 if len(obj["title"]) <= 26 else 25,
-                  after=8)
+    title_size = 31 if len(obj["title"]) <= 26 else 25
+    micro(doc, f"Объект {index:02d} · {obj.get('city', '')}", after=6)
+    display_title(doc, obj["title"], size=title_size, after=8)
     if obj.get("lead"):
         lead_paragraph(doc, obj["lead"], after=11)
 
@@ -253,23 +498,88 @@ def object_facts(doc, index: int, obj: dict) -> None:
             size=S.FS_CAPTION, color=S.MUTED)
         txt(source, link, size=S.FS_CAPTION, color=S.MUTED)
 
+    # свободную треть полосы закрывает кадр объекта во всю ширину набора:
+    # высота считается по остатку, поэтому полоса заканчивается ровно на поле
+    free = (S.PAGE_H_MM - S.MARGIN_TOP_MM - S.MARGIN_BOTTOM_MM
+            - _facts_height(index, obj, title_size) - FACTS_PHOTO_GAP_MM)
+    if closer and free >= 42.0:
+        par(doc, after=0, lead=FACTS_PHOTO_GAP_MM * 72 / 25.4)
+        framed_photo(doc, closer, cache, width_mm=S.CONTENT_W_MM,
+                     ratio=frame_ratio(S.CONTENT_W_MM, min(free, PHOTO_CAP_MM)))
+
+
+def _heading_height(title: str, size: float) -> float:
+    """Рубрика, заголовок и линейка под ним — шапка любой текстовой полосы."""
+    return (_mm(S.FS_MICRO + 2) + _mm(6)
+            + _mm(size * 1.06) * _lines(title, S.CONTENT_W_MM,
+                                        "SourceSerif4-Light", size) + _mm(8)
+            + _mm(12) + 0.5)
+
+
+def _columns_height(texts: list[str]) -> float:
+    """Высота двухколонного набора — по более длинной колонке.
+
+    Ширина колонки берётся с запасом в три процента: LibreOffice переносит
+    чуть раньше расчёта, и без запаса полоса иногда не закрывалась кадром, а
+    выталкивала его на отдельную страницу.
+    """
+    if len(texts) < 2:
+        blocks = [texts]
+    else:
+        left, right = _split_evenly(texts, COL_W_MM)
+        blocks = [left, right]
+    height = 0.0
+    for block in blocks:
+        column = sum(_mm(S.LH_BODY) * len(_measure_lines(text, COL_W_MM * 0.97))
+                     for text in block)
+        column += _mm(8) * (len(block) - 1)
+        height = max(height, column)
+    return height
+
 
 def object_description(doc, obj: dict, cache: Path, images: list[Path]) -> None:
     micro(doc, "Описание объекта", after=6)
     display_title(doc, obj["street"], size=26, after=8)
     rule(doc, color=S.INK, size=S.SZ_RULE, after=11)
 
+    texts: list[str] = []
     for block in obj["sections"]:
         if block.get("type") != "paragraphs":
             continue
-        body_paragraphs(doc, block["paragraphs"])
+        texts = block["paragraphs"]
+        text_columns(doc, texts)
         break
 
+    used = _heading_height(obj["street"], 26) + _columns_height(texts)
     if obj.get("pull"):
         pull_quote(doc, obj["pull"])
-    if len(images) > 1:
+        used += (_mm(13 + 8) + 0.5
+                 + _mm(27) * _lines(obj["pull"], (S.CONTENT_W_MM - _mm(24)) * 0.97,
+                                    "SourceSerif4-Italic", 22)
+                 + _mm(8 + 13) + 0.5)
+
+    free = S.PAGE_H_MM - S.MARGIN_TOP_MM - S.MARGIN_BOTTOM_MM - used - 1.0
+    if len(images) > 1 and free >= 42.0:
+        # кадр добирает полосу до нижнего поля — вместо белой трети внизу
         par(doc, after=0, lead=3)
-        framed_photo(doc, images[1], cache, width_mm=S.CONTENT_W_MM, ratio=21 / 9)
+        framed_photo(doc, images[1], cache, width_mm=S.CONTENT_W_MM,
+                     ratio=frame_ratio(S.CONTENT_W_MM, min(free, PHOTO_CAP_MM)))
+
+
+def _rows_height(rows: list, columns: int = 2) -> float:
+    """Высота перечня «подпись — значение», разложенного по колонкам."""
+    half = -(-len(rows) // columns) if columns > 1 else len(rows)
+    column_mm = (S.CONTENT_W_MM - 6.0) / 2
+    value_mm = column_mm - _mm(LABEL_INDENT_PT)
+    height = 0.0
+    for start in range(0, len(rows), half):
+        chunk = rows[start:start + half]
+        column = _mm(5.6) * (len(chunk) - 1)
+        for label, value in chunk:
+            column += _mm(12.8) * _lines(value, value_mm * 0.97,
+                                         "SourceSans3-Regular", 8.8)
+        height = max(height, column)
+    return height
 
 
 def object_location(doc, obj: dict, cache: Path, images: list[Path]) -> None:
@@ -279,11 +589,20 @@ def object_location(doc, obj: dict, cache: Path, images: list[Path]) -> None:
     micro(doc, "Локация", after=6)
     display_title(doc, block["title"], size=26, after=8)
     rule(doc, color=S.INK, size=S.SZ_RULE, after=11)
-    body_paragraphs(doc, block["paragraphs"])
+    text_columns(doc, block["paragraphs"])
+
+    # карта тянется до перечня доступности, а тот прижат к нижнему полю
+    used = (_heading_height(block["title"], 26)
+            + _columns_height(block["paragraphs"]) + _mm(13)
+            + _mm(3 + S.LH_SMALL))
+    if obj.get("access"):
+        used += _mm(13 + 5 + S.FS_MICRO + 2 + 5) + _rows_height(obj["access"])
+    free = S.PAGE_H_MM - S.MARGIN_TOP_MM - S.MARGIN_BOTTOM_MM - used - 9.0
 
     if images:
         par(doc, after=0, lead=13)
-        framed_photo(doc, images[0], cache, width_mm=S.CONTENT_W_MM, ratio=16 / 9)
+        framed_photo(doc, images[0], cache, width_mm=S.CONTENT_W_MM,
+                     ratio=frame_ratio(S.CONTENT_W_MM, min(max(free, 78.0), MAP_CAP_MM)))
         # подпись выключается по центру кадра, а не по левому краю набора
         caption = par(doc, before=3, after=0, lead=S.LH_SMALL,
                       align=WD_ALIGN_PARAGRAPH.CENTER)
@@ -294,27 +613,104 @@ def object_location(doc, obj: dict, cache: Path, images: list[Path]) -> None:
         access_block(doc, "Доступность и окружение", obj["access"])
 
 
-def photo_pages(doc, images: list[Path], flow: Flow, cache: Path) -> None:
-    gallery = images[2:] if len(images) > 2 else []
+def _closing_image(images: list[Path], index: int) -> Path | None:
+    """Кадр, закрывающий полосу характеристик.
+
+    Берётся из тех, что ещё не заняты: первый кадр уходит в описание объекта,
+    второй — на шмуцтитул, поэтому здесь начинаем с третьего.
+    """
+    used = {1, 2 if index == 1 else 1}
+    for position in range(1, len(images)):
+        if position not in used:
+            return images[position]
+    return images[1] if len(images) > 1 else None
+
+
+PAIR_W_MM = (S.CONTENT_W_MM - 6.0) / 2      # два кадра в ряд со средником 6 мм
+FULL_NATURAL_MM = (S.CONTENT_W_MM - FRAME_PAD_MM) / (16 / 10) + FRAME_PAD_MM
+PAIR_NATURAL_MM = (PAIR_W_MM - FRAME_PAD_MM) / (4 / 3) + FRAME_PAD_MM
+GALLERY_GAP_MM = 9.0
+
+# Раскладка полосы под число кадров: 1 — во всю ширину, 2 — парой.
+# Наборы подобраны так, чтобы сумма «естественных» высот была близка к высоте
+# полосы: тогда растяжка до нижнего поля не уводит пропорцию кадра в квадрат.
+GALLERY_ROWS: dict[int, tuple[int, ...]] = {
+    5: (1, 2, 2),
+    4: (1, 2, 1),
+    3: (1, 2),
+    2: (1, 1),
+    1: (1,),
+}
+GALLERY_SLACK_MM = 4.0      # запас до нижнего поля, иначе разрыв даёт пустую полосу
+
+
+def _gallery_plan(count: int) -> list[int]:
+    """Разбивка кадров по полосам: по пять, но без одинокого кадра в хвосте."""
+    plan = []
+    while count > 0:
+        if count == 6:
+            take = 3        # 3 + 3 ровнее, чем 5 + 1
+        elif count >= 5:
+            take = 5
+        else:
+            take = count
+        plan.append(take)
+        count -= take
+    return plan
+
+
+def photo_row(doc, paths: list[Path], cache: Path, height_mm: float) -> None:
+    """Ряд галереи: один кадр во всю ширину набора или пара кадров."""
+    if len(paths) == 1:
+        framed_photo(doc, paths[0], cache, width_mm=S.CONTENT_W_MM,
+                     ratio=frame_ratio(S.CONTENT_W_MM, height_mm))
+        return
+    table = doc.add_table(rows=1, cols=3)
+    table.alignment = WD_TABLE_ALIGNMENT.LEFT
+    table.autofit = False
+    table_borders(table, {})
+    fixed_layout(table, [PAIR_W_MM, 6.0, PAIR_W_MM])
+    cells = table.rows[0].cells
+    for cell, path in zip((cells[0], cells[2]), paths):
+        cell.width = Mm(PAIR_W_MM)
+        cell_margins(cell, top=0, bottom=0, left=0, right=0)
+        _clean(cell)
+        framed_photo(cell, path, cache, width_mm=PAIR_W_MM,
+                     ratio=frame_ratio(PAIR_W_MM, height_mm))
+
+
+def photo_pages(doc, images: list[Path], flow: Flow, cache: Path,
+                skip: set[Path] | None = None) -> None:
+    """Полосы иллюстраций мозаикой: кадр во всю ширину и ряды по два.
+
+    Высоты рядов растягиваются до нижнего поля, поэтому полоса заполнена
+    целиком, а не обрывается на середине белым полем.
+    """
+    skip = skip or set()
+    gallery = [path for path in images[2:] if path not in skip]
     if not gallery:
         return
     flow.new_page()
     micro(doc, "Объект в кадре", after=7)
 
-    budget = S.PAGE_H_MM - S.MARGIN_TOP_MM - S.MARGIN_BOTTOM_MM - 4.0
-    ratio = 16 / 9
-    height = (S.CONTENT_W_MM - 8.0) / ratio + 8.0
-    used = 9.0
-    for path in gallery:
-        if used + S.PHOTO_GAP_MM + height > budget:
+    head_mm = _mm(S.FS_MICRO + 2 + 7)
+    position = 0
+    for order, take in enumerate(_gallery_plan(len(gallery))):
+        if order:
             page_break(doc)
-            used = 0.0
-        else:
-            par(doc, after=0, lead=S.PHOTO_GAP_MM * 72 / 25.4)
-            used += S.PHOTO_GAP_MM
-        framed_photo(doc, path, cache, width_mm=S.CONTENT_W_MM, ratio=ratio)
-        used += height
-    flow.used = used
+        rows = GALLERY_ROWS[take]
+        budget = (S.PAGE_H_MM - S.MARGIN_TOP_MM - S.MARGIN_BOTTOM_MM
+                  - (head_mm if order == 0 else 0.0) - GALLERY_SLACK_MM
+                  - GALLERY_GAP_MM * (len(rows) - 1))
+        natural = [FULL_NATURAL_MM if size == 1 else PAIR_NATURAL_MM for size in rows]
+        scale = min(budget / sum(natural), 1.45)
+        for step, size in enumerate(rows):
+            if step:
+                par(doc, after=0, lead=GALLERY_GAP_MM * 72 / 25.4)
+            photo_row(doc, gallery[position:position + size], cache,
+                      natural[step] * scale)
+            position += size
+    flow.used = S.PAGE_H_MM
 
 
 # --------------------------------------------------------------------------
@@ -340,29 +736,46 @@ def build(report: dict, objects: list[tuple[dict, list[Path]]], dest: Path) -> P
         meta=report.get("source_line", ""),
     ))
 
-    body = doc.add_section(WD_SECTION.NEW_PAGE)
-    _page_setup(body)
-    running_footer(body, report.get("running_title", report["title"]))
+    def plate_section():
+        """Полоса-шмуцтитул: своя секция, чтобы снять с неё колонтитулы."""
+        section = doc.add_section(WD_SECTION.NEW_PAGE)
+        _page_setup(section)
+        blank_running(section)
+        return section
+
+    def body_section():
+        section = doc.add_section(WD_SECTION.NEW_PAGE)
+        _page_setup(section)
+        running_head(section, report.get("running_title", report["title"]),
+                     report.get("rubric", "Подборка объектов"))
+        running_footer(section, "")
+        return section
 
     flow = Flow(doc)
+    started = False
     for index, (obj, images) in enumerate(objects, start=1):
         opener_photo = _opener_image(images, index)
-        if index > 1:
-            flow.new_page()
         if opener_photo:
+            plate_section()
             full_bleed(doc, visuals.opener(
                 assets / f"opener-{index}.jpg", opener_photo,
                 ordinal=f"{index:02d}", city=obj.get("city", ""),
                 title=obj["title"], subtitle=obj["subtitle"],
                 kpi=[(label, value) for label, value, _ in obj.get("kpi", [])[:4]],
             ))
+            body_section()
+        elif not started:
+            body_section()
+        else:
             flow.new_page()
-        object_facts(doc, index, obj)
+        started = True
+        closer = _closing_image(images, index)
+        object_facts(doc, index, obj, cache, closer)
         flow.new_page()
         object_description(doc, obj, cache, images)
         flow.new_page()
         object_location(doc, obj, cache, images)
-        photo_pages(doc, images, flow, cache)
+        photo_pages(doc, images, flow, cache, skip={closer} if closer else None)
 
     dest.parent.mkdir(parents=True, exist_ok=True)
     doc.save(str(dest))
