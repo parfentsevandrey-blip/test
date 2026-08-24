@@ -682,60 +682,81 @@ class Plan:
         return [path for path in self.photos if path not in used]
 
 
-PAIR_W_MM = (S.CONTENT_W_MM - 6.0) / 2      # два кадра в ряд со средником 6 мм
-FULL_NATURAL_MM = (S.CONTENT_W_MM - FRAME_PAD_MM) / (16 / 10) + FRAME_PAD_MM
-PAIR_NATURAL_MM = (PAIR_W_MM - FRAME_PAD_MM) / (4 / 3) + FRAME_PAD_MM
+GALLERY_GUTTER_MM = 6.0
 GALLERY_GAP_MM = 9.0
-
-# Раскладка полосы под число кадров: 1 — во всю ширину, 2 — парой.
-# Наборы подобраны так, чтобы сумма «естественных» высот была близка к высоте
-# полосы: тогда растяжка до нижнего поля не уводит пропорцию кадра в квадрат.
-GALLERY_ROWS: dict[int, tuple[int, ...]] = {
-    3: (1, 2),
-    2: (1, 1),
-    1: (1,),
-}
 GALLERY_SLACK_MM = 4.0      # запас до нижнего поля, иначе разрыв даёт пустую полосу
 
 
-def _gallery_plan(count: int) -> list[int]:
-    """Разбивка кадров по полосам: по три, крупно.
+def row_width(count: int) -> float:
+    """Ширина одного кадра в ряду из ``count`` штук."""
+    return (S.CONTENT_W_MM - GALLERY_GUTTER_MM * (count - 1)) / count
 
-    Пять кадров на полосу мельчат каждый до открытки. У листингов funda кадров
-    мало, и правильнее показать их крупно на двух полосах, чем сжать в одну.
-    Одинокий кадр в хвосте не допускается: остаток в один кадр забирается у
-    предыдущей полосы.
-    """
+
+# «Естественная» высота ряда: кадр во всю ширину идёт под 16:10, кадры в ряду
+# по два и по три — под 4:3. От этих величин считается растяжка полосы.
+NATURAL_MM = {
+    1: (S.CONTENT_W_MM - FRAME_PAD_MM) / (16 / 10) + FRAME_PAD_MM,
+    2: (row_width(2) - FRAME_PAD_MM) / (4 / 3) + FRAME_PAD_MM,
+    3: (row_width(3) - FRAME_PAD_MM) / (4 / 3) + FRAME_PAD_MM,
+}
+
+# Раскладки полосы: крупный кадр в связке с рядами мелких. Наборы подобраны
+# так, чтобы сумма «естественных» высот была близка к высоте полосы — тогда
+# растяжка до нижнего поля не уводит пропорцию кадра в квадрат. На каждое
+# число кадров есть несколько вариантов: они чередуются, чтобы соседние
+# полосы галереи не повторяли друг друга ритмом.
+GALLERY_ROWS: dict[int, tuple[tuple[int, ...], ...]] = {
+    6: ((1, 2, 3), (3, 1, 2), (2, 3, 1), (1, 3, 2)),
+    5: ((1, 2, 2), (2, 1, 2), (2, 2, 1)),
+    4: ((1, 3), (3, 1)),
+    3: ((1, 2), (2, 1)),
+    2: ((1, 1),),
+    1: ((1,),),
+}
+
+
+def _gallery_plan(count: int) -> list[int]:
+    """Разбивка кадров по полосам: до шести, без одинокого кадра в хвосте."""
     plan = []
     while count > 0:
-        take = 2 if count == 4 else min(3, count)
+        if count in (7, 8):
+            take = count - 4      # 7 → 3 + 4, 8 → 4 + 4: ровнее, чем 6 + 1|2
+        else:
+            take = min(6, count)
         plan.append(take)
         count -= take
     return plan
 
 
 def photo_row(doc, paths: list[Path], cache: Path, height_mm: float) -> None:
-    """Ряд галереи: один кадр во всю ширину набора или пара кадров."""
+    """Ряд галереи: один кадр во всю ширину набора либо два-три в строку."""
     if len(paths) == 1:
         framed_photo(doc, paths[0], cache, width_mm=S.CONTENT_W_MM,
                      ratio=frame_ratio(S.CONTENT_W_MM, height_mm))
         return
-    table = doc.add_table(rows=1, cols=3)
+    width = row_width(len(paths))
+    widths: list[float] = []
+    for position in range(len(paths)):
+        if position:
+            widths.append(GALLERY_GUTTER_MM)
+        widths.append(width)
+    table = doc.add_table(rows=1, cols=len(widths))
     table.alignment = WD_TABLE_ALIGNMENT.LEFT
     table.autofit = False
     table_borders(table, {})
-    fixed_layout(table, [PAIR_W_MM, 6.0, PAIR_W_MM])
+    fixed_layout(table, widths)
     cells = table.rows[0].cells
-    for cell, path in zip((cells[0], cells[2]), paths):
-        cell.width = Mm(PAIR_W_MM)
+    for index, path in enumerate(paths):
+        cell = cells[index * 2]
+        cell.width = Mm(width)
         cell_margins(cell, top=0, bottom=0, left=0, right=0)
         _clean(cell)
-        framed_photo(cell, path, cache, width_mm=PAIR_W_MM,
-                     ratio=frame_ratio(PAIR_W_MM, height_mm))
+        framed_photo(cell, path, cache, width_mm=width,
+                     ratio=frame_ratio(width, height_mm))
 
 
 def photo_pages(doc, gallery: list[Path], flow: Flow, cache: Path) -> None:
-    """Полосы иллюстраций мозаикой: кадр во всю ширину и ряд из двух.
+    """Полосы иллюстраций мозаикой: крупный кадр и ряды мелких.
 
     Высоты рядов растягиваются до нижнего поля, поэтому полоса заполнена
     целиком, а не обрывается на середине белым полем.
@@ -750,11 +771,12 @@ def photo_pages(doc, gallery: list[Path], flow: Flow, cache: Path) -> None:
     for order, take in enumerate(_gallery_plan(len(gallery))):
         if order:
             page_break(doc)
-        rows = GALLERY_ROWS[take]
+        variants = GALLERY_ROWS[take]
+        rows = variants[order % len(variants)]
         budget = (S.PAGE_H_MM - S.MARGIN_TOP_MM - S.MARGIN_BOTTOM_MM
                   - (head_mm if order == 0 else 0.0) - GALLERY_SLACK_MM
                   - GALLERY_GAP_MM * (len(rows) - 1))
-        natural = [FULL_NATURAL_MM if size == 1 else PAIR_NATURAL_MM for size in rows]
+        natural = [NATURAL_MM[size] for size in rows]
         scale = min(budget / sum(natural), 1.45)
         for step, size in enumerate(rows):
             if step:

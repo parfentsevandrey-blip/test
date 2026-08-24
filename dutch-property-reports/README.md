@@ -125,6 +125,21 @@ python generate_report.py parse raw/steenovenweg.html \
 Сами изображения (`cloud.funda.nl`) отдаются без защиты, их загружает
 `reportgen/media.py` — правится только список ссылок.
 
+### Полная галерея объекта
+
+В HTML funda лежат только первые пять кадров: остальные подгружает скрипт,
+до которого ни curl, ни headless-браузер не доходят. Те же объекты выложены
+целиком на сайтах брокеров и на порталах вроде bedrijfspand.com — оттуда
+галерея снимается без препятствий:
+
+```bash
+python -m reportgen.broker_photos https://www.bijabram.nl/property/mercuriusweg-19-waddinxveen-216
+```
+
+Ссылку на страницу брокера стоит сохранять в карточке строкой `Галерея`.
+Кадры приводятся к JPEG при загрузке: брокерские сайты отдают WebP, который
+python-docx вставить не умеет.
+
 ## Устройство пакета
 
 | Модуль | Отвечает за |
@@ -134,6 +149,7 @@ python generate_report.py parse raw/steenovenweg.html \
 | `reportgen/visuals.py` | полосы-изображения: обложка, шмуцтитулы, кадры со скруглением и тенью |
 | `reportgen/editorial.py` | общие помощники вёрстки и промежуточная схема `editorial` |
 | `reportgen/registry.py` | реестр показанных объектов и проверка на повторы |
+| `reportgen/broker_photos.py` | полная галерея объекта со страницы брокера |
 | `reportgen/style.py` | оформление схемы `classic` |
 | `reportgen/docx_render.py` | выбор схемы и вёрстка `classic` |
 | `reportgen/maps.py` | геокодирование (Nominatim) и сборка карты Google Maps |
