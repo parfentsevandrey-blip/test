@@ -41,9 +41,9 @@
     "lat": 52.0403153,
     "lon": 4.7175047,
     "city": {
-      "query": "Gouda",
-      "lat": 52.0181194,
-      "lon": 4.7111221
+      "query": "Rotterdam Centraal",
+      "lat": 51.9250574,
+      "lon": 4.4692289
     }
   },
   "specs": [

@@ -25,6 +25,7 @@ from docx.enum.section import WD_SECTION
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Mm, Pt
+from PIL import Image
 
 from . import style_editorial as S, visuals
 from .docx_render import (
@@ -67,10 +68,6 @@ FACTS_PHOTO_GAP_MM = 11.0
 # Предел высоты кадра во всю ширину набора: ниже пропорция уходит в квадрат
 # и от исходного снимка остаётся вырезанная середина.
 PHOTO_CAP_MM = 150.0
-MAP_CAP_MM = 130.0
-# Нижний предел карты: ниже она перестаёт читаться, но и выталкивать ею
-# перечень доступности на отдельную полосу нельзя.
-MAP_MIN_MM = 52.0
 
 
 # --------------------------------------------------------------------------
@@ -407,13 +404,16 @@ def frame_ratio(width_mm: float, height_mm: float) -> float:
 
 
 def framed_photo(doc, source: Path, cache: Path, *, width_mm: float,
-                 ratio: float = S.PHOTO_RATIO):
+                 ratio: float = S.PHOTO_RATIO, align=None):
     """Кадр со скруглением и тенью — на полосу ложится уже готовым файлом."""
-    # пропорция входит в имя: один и тот же кадр берётся и панорамой, и полосой
+    # в имя входят пропорция и время правки исходника: один и тот же кадр
+    # берётся и панорамой, и полосой, а перерисованная карта не должна
+    # подхватываться из кэша по старому имени
+    stamp = int(source.stat().st_mtime)
     prepared = visuals.rounded_photo(
-        cache / f"{source.stem}-{int(width_mm)}-{ratio:.3f}.jpg", source,
+        cache / f"{source.stem}-{int(width_mm)}-{ratio:.3f}-{stamp}.jpg", source,
         width_mm=width_mm, ratio=ratio)
-    return photo(doc, prepared, width_mm=width_mm, max_h=260.0)
+    return photo(doc, prepared, width_mm=width_mm, max_h=260.0, align=align)
 
 
 # --------------------------------------------------------------------------
@@ -500,21 +500,14 @@ def object_facts(doc, index: int, obj: dict, cache: Path,
             size=S.FS_CAPTION, color=S.MUTED)
         txt(source, link, size=S.FS_CAPTION, color=S.MUTED)
 
-    # свободную треть полосы закрывает вид участка сверху во всю ширину набора:
+    # свободную треть полосы закрывает кадр объекта во всю ширину набора:
     # высота считается по остатку, поэтому полоса заканчивается ровно на поле
-    aerial = closer is not None and closer.name.endswith("-aerial.png")
-    caption_mm = _mm(3 + S.LH_SMALL) if aerial else 0.0
     free = (S.PAGE_H_MM - S.MARGIN_TOP_MM - S.MARGIN_BOTTOM_MM
-            - _facts_height(index, obj, title_size) - FACTS_PHOTO_GAP_MM - caption_mm)
+            - _facts_height(index, obj, title_size) - FACTS_PHOTO_GAP_MM)
     if closer and free >= 42.0:
         par(doc, after=0, lead=FACTS_PHOTO_GAP_MM * 72 / 25.4)
         framed_photo(doc, closer, cache, width_mm=S.CONTENT_W_MM,
                      ratio=frame_ratio(S.CONTENT_W_MM, min(free, PHOTO_CAP_MM)))
-        if aerial:
-            caption = par(doc, before=3, after=0, lead=S.LH_SMALL,
-                          align=WD_ALIGN_PARAGRAPH.CENTER)
-            txt(caption, "Участок и застройка · снимок © Google",
-                size=S.FS_CAPTION, color=S.MUTED)
 
 
 def _heading_height(title: str, size: float) -> float:
@@ -610,8 +603,17 @@ def object_location(doc, obj: dict, cache: Path, overview: Path | None) -> None:
 
     if overview:
         par(doc, after=0, lead=13)
-        framed_photo(doc, overview, cache, width_mm=S.CONTENT_W_MM,
-                     ratio=frame_ratio(S.CONTENT_W_MM, min(max(free, MAP_MIN_MM), MAP_CAP_MM)))
+        # карта вставляется в своей пропорции и не подрезается: подрезка
+        # срезает то, ради чего карта в отчёте и стоит, — метку объекта или
+        # центр города. Если по высоте не помещается, уменьшается ширина.
+        with Image.open(overview) as image:
+            source_ratio = image.width / image.height
+        width = S.CONTENT_W_MM
+        height = (width - FRAME_PAD_MM) / source_ratio + FRAME_PAD_MM
+        if height > free:
+            width = FRAME_PAD_MM + (free - FRAME_PAD_MM) * source_ratio
+        framed_photo(doc, overview, cache, width_mm=width, ratio=source_ratio,
+                     align=WD_ALIGN_PARAGRAPH.CENTER)
         # подпись выключается по центру кадра, а не по левому краю набора
         caption = par(doc, before=3, after=0, lead=S.LH_SMALL,
                       align=WD_ALIGN_PARAGRAPH.CENTER)
@@ -625,23 +627,16 @@ def object_location(doc, obj: dict, cache: Path, overview: Path | None) -> None:
 class Plan:
     """Разбор списка изображений объекта по назначению.
 
-    Список приходит плоским: обзорная карта, аэрофотоснимок участка и кадры
-    листинга. Карты узнаются по имени файла — так схема не зависит от того,
-    добавлен снимок или нет, и не сдвигаются индексы кадров.
-
-    Кадров у объекта мало: funda отдаёт в HTML пять штук, остальное подгружает
-    скриптом. Поэтому полосу характеристик закрывает аэрофотоснимок, а не кадр
-    из листинга — все фотографии уходят описанию, шмуцтитулу и галерее.
+    Список приходит плоским: обзорная карта и кадры листинга. Карта узнаётся
+    по имени файла, а не по позиции — так порядок кадров не зависит от того,
+    строилась карта в этой сборке или нет.
     """
 
     def __init__(self, images: list[Path]):
         self.overview: Path | None = None
-        self.aerial: Path | None = None
         self.photos: list[Path] = []
         for path in images:
-            if path.name.endswith("-aerial.png"):
-                self.aerial = path
-            elif path.suffix == ".png" and "-google" in path.name:
+            if path.suffix == ".png" and "-google" in path.name:
                 self.overview = path
             else:
                 self.photos.append(path)
@@ -664,9 +659,7 @@ class Plan:
 
     @property
     def closer(self) -> Path | None:
-        """Изображение, закрывающее полосу характеристик."""
-        if self.aerial:
-            return self.aerial
+        """Кадр, закрывающий полосу характеристик."""
         return self.photos[2] if len(self.photos) > 2 else None
 
     @property

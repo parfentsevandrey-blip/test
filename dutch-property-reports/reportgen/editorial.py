@@ -220,10 +220,11 @@ def crop_to_ratio(path: Path, ratio: float, cache: Path) -> Path:
     return dest
 
 
-def photo(container, path: Path, *, width_mm: float = S.CONTENT_W_MM, max_h: float = S.PHOTO_MAX_H_MM):
+def photo(container, path: Path, *, width_mm: float = S.CONTENT_W_MM,
+          max_h: float = S.PHOTO_MAX_H_MM, align=None):
     width, height = _fit(path, width_mm, max_h)
     # без точного интерлиньяжа: он обрезал бы встроенную картинку до высоты строки
-    paragraph = par(container, after=0)
+    paragraph = par(container, after=0, align=align)
     paragraph.paragraph_format.line_spacing = 1
     paragraph.add_run().add_picture(str(path), width=Mm(width), height=Mm(height))
     return paragraph, height

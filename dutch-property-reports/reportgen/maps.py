@@ -26,10 +26,10 @@ from PIL import Image, ImageDraw, ImageFont
 
 log = logging.getLogger(__name__)
 
-GOOGLE_TILE_URL = "https://mt{s}.google.com/vt/lyrs={layer}&x={x}&y={y}&z={z}"
-# lyrs=m — схема, lyrs=y — спутник с подписями улиц. Аэрофотоснимок нужен
-# затем, чтобы показать сам участок: на схеме застройка и двор неразличимы.
-LAYERS = {"roadmap": "m", "aerial": "y"}
+# lyrs=m — схематическая карта. Спутниковый слой сознательно не используется:
+# в отчёте карта отвечает на вопрос «где объект относительно города», а не
+# «как выглядит крыша», и читается она только схемой.
+GOOGLE_TILE_URL = "https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
 GOOGLE_STATIC_URL = "https://maps.googleapis.com/maps/api/staticmap"
 NOMINATIM = "https://nominatim.openstreetmap.org/search"
 TILE_SIZE = 256
@@ -133,11 +133,11 @@ def _attribution(canvas: Image.Image, scale: int) -> None:
 # --------------------------------------------------------------------------
 # провайдеры
 # --------------------------------------------------------------------------
-def _tile(z: int, x: int, y: int, index: int, layer: str = "m") -> Image.Image:
+def _tile(z: int, x: int, y: int, index: int) -> Image.Image:
     n = 2**z
     if not (0 <= y < n):
         return Image.new("RGB", (TILE_SIZE, TILE_SIZE), "white")
-    url = GOOGLE_TILE_URL.format(s=index % 4, layer=layer, x=x % n, y=y, z=z)
+    url = GOOGLE_TILE_URL.format(s=index % 4, x=x % n, y=y, z=z)
     resp = requests.get(url, headers={"User-Agent": UA}, timeout=30)
     resp.raise_for_status()
     return Image.open(BytesIO(resp.content)).convert("RGB")
@@ -150,7 +150,6 @@ def _render_tiles(
     width: int,
     height: int,
     scale: int,
-    layer: str = "m",
 ) -> Image.Image:
     """Сборка карты из тайлов Google (без API-ключа)."""
     out_w, out_h = width * scale, height * scale
@@ -164,9 +163,8 @@ def _render_tiles(
     coords = [(x, y) for x in range(x0, x1 + 1) for y in range(y0, y1 + 1)]
     log.info("карта Google: zoom=%d, тайлов %d", zoom, len(coords))
     with ThreadPoolExecutor(8) as pool:
-        tiles = list(pool.map(
-            lambda item: _tile(zoom, item[1][0], item[1][1], item[0], layer),
-            enumerate(coords)))
+        tiles = list(pool.map(lambda item: _tile(zoom, item[1][0], item[1][1], item[0]),
+                              enumerate(coords)))
 
     canvas = Image.new("RGB", (width, height), "white")
     for (tx, ty), img in zip(coords, tiles):
@@ -191,7 +189,6 @@ def _render_static_api(
     width: int,
     height: int,
     api_key: str,
-    maptype: str = "roadmap",
 ) -> Image.Image:
     """Официальный Google Maps Static API (нужен ключ)."""
     params = {
@@ -199,7 +196,7 @@ def _render_static_api(
         "zoom": zoom,
         "size": f"{min(width, 640)}x{min(height, 640)}",
         "scale": 2,
-        "maptype": maptype,
+        "maptype": "roadmap",
         "language": "en",
         "markers": f"color:red|{marker[0]:.6f},{marker[1]:.6f}",
         "key": api_key,
@@ -220,16 +217,12 @@ def render(
     city: tuple[float, float] | None = None,
     zoom: int | None = None,
     width: int = 1200,
-    height: int = 660,
+    # широкий кадр: между объектом и центром города два-три десятка километров,
+    # и в полосе отчёта карта живёт лентой под текстом, а не квадратом
+    height: int = 480,
     scale: int = 2,
-    style: str = "roadmap",
 ) -> Path:
-    """Карта с меткой объекта; при заданном ``city`` город гарантированно в кадре.
-
-    ``style="aerial"`` даёт спутниковый снимок с подписями улиц — им показывают
-    сам участок: пятно застройки, двор, подъезды и соседние корпуса, которых
-    на схеме не видно.
-    """
+    """Карта с меткой объекта; при заданном ``city`` город гарантированно в кадре."""
     if dest.exists() and dest.stat().st_size > 0:
         return dest
     dest.parent.mkdir(parents=True, exist_ok=True)
@@ -240,11 +233,9 @@ def render(
 
     api_key = os.environ.get(API_KEY_ENV)
     if api_key:
-        canvas = _render_static_api(center, (lat, lon), zoom, width, height, api_key,
-                                    maptype="satellite" if style == "aerial" else "roadmap")
+        canvas = _render_static_api(center, (lat, lon), zoom, width, height, api_key)
     else:
-        canvas = _render_tiles(center, (lat, lon), zoom, width, height, scale,
-                               LAYERS.get(style, "m"))
+        canvas = _render_tiles(center, (lat, lon), zoom, width, height, scale)
 
     canvas.save(dest, "PNG")
     return dest
