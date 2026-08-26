@@ -1,0 +1,14 @@
+{
+  "title": "ОБЪЕКТЫ НЕДВИЖИМОСТИ",
+  "cover_title": "Lireweg 42-50",
+  "eyebrow": "Разбор объекта · Нидерланды",
+  "subtitle": "Офисное здание с производственным блоком на бизнес-парке Nieuw-Vennep Zuid: подробный разбор объекта № 3 из подборки от 17 августа — состав, арендатор, экономика, локация и сделка.",
+  "running_title": "Lireweg 42-50, Nieuw-Vennep · 26.08.2026",
+  "rubric": "Разбор объекта",
+  "source_line": "Источники: funda in business, Van Luling BOG, кадастр BAG, бизнес-парк Nieuw-Vennep Zuid, CaptureTech. Данные на 26 августа 2026 года.",
+  "filename": "Lireweg 42-50 Nieuw-Vennep — разбор объекта 26.08.26",
+  "output_dir": "output",
+  "objects": [
+    { "file": "objects/lireweg-42-50-nieuw-vennep.json" }
+  ]
+}

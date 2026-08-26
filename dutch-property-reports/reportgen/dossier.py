@@ -698,6 +698,77 @@ def object_location(doc, obj: dict, cache: Path, assets: Path, *,
         access_block(doc, "Доступность и окружение", obj["access"])
 
 
+CHAPTER_SLACK_MM = 6.0
+CHAPTER_MIN_MM = 40.0
+
+
+def _pull_height(text: str) -> float:
+    return (_mm(13 + 8) + 0.5
+            + _mm(27) * _lines(text, (S.CONTENT_W_MM - _mm(24)) * 0.97,
+                               "SourceSerif4-Italic", 22)
+            + _mm(8 + 13) + 0.5)
+
+
+def object_chapter(doc, obj: dict, chapter: dict, cache: Path, assets: Path,
+                   images: list[Path]) -> None:
+    """Дополнительная полоса объекта: текст в две колонки, кадр и перечень.
+
+    Пяти полос схемы хватает, чтобы показать объект. Когда по объекту нужен
+    разбор — состав площадей, арендаторы, экономика, окружение, — полосы
+    добавляются карточкой в поле ``chapters``. Набираются они тем же
+    инструментом, что и остальные, поэтому в отчёте не видно, где кончается
+    схема и начинается дополнение.
+
+    Кадры берутся по номерам из общего списка изображений объекта: один
+    закрывает полосу во всю ширину, два-три встают рядом.
+    """
+    micro(doc, chapter.get("kicker", "Разбор"), after=6)
+    display_title(doc, chapter["title"], size=26, after=8)
+    rule(doc, color=S.INK, size=S.SZ_RULE, after=11)
+
+    texts = chapter.get("paragraphs", [])
+    if texts:
+        text_columns(doc, texts)
+    used = _heading_height(chapter["title"], 26) + _columns_height(texts)
+
+    if chapter.get("pull"):
+        pull_quote(doc, chapter["pull"])
+        used += _pull_height(chapter["pull"])
+
+    rows = chapter.get("rows") or []
+    if rows:
+        used += _mm(13 + 5 + S.FS_MICRO + 2 + 5) + _rows_height(rows)
+
+    frames = [images[index] for index in chapter.get("images", [])
+              if 0 <= index < len(images)]
+    if frames or chapter.get("map"):
+        used += _mm(13) + (_mm(3 + S.LH_SMALL) if chapter.get("caption") else 0.0)
+        free = (S.PAGE_H_MM - S.MARGIN_TOP_MM - S.MARGIN_BOTTOM_MM
+                - used - CHAPTER_SLACK_MM)
+        # поэтажный план нельзя тянуть на всю оставшуюся полосу: кадр режется
+        # под заданную высоту, и растянутый план теряет поля с размерами
+        height = min(free, chapter.get("image_height", PHOTO_CAP_MM), PHOTO_CAP_MM)
+
+        if chapter.get("map"):
+            # карта строится сразу под остаток полосы и не подрезается
+            ratio = (S.CONTENT_W_MM - FRAME_PAD_MM) / max(height - FRAME_PAD_MM, 1.0)
+            conf = dict(obj.get("map") or {}, **chapter["map"])
+            overview = maps.for_object({**obj, "map": conf}, assets, width=MAP_PX,
+                                       height=int(round(MAP_PX / ratio)))
+            frames = ([overview] if overview else []) + frames
+
+        if frames and free >= CHAPTER_MIN_MM:
+            par(doc, after=0, lead=13)
+            photo_row(doc, frames[:4], cache, height)
+            if chapter.get("caption"):
+                caption = par(doc, before=3, after=0, lead=S.LH_SMALL,
+                              align=WD_ALIGN_PARAGRAPH.CENTER)
+                txt(caption, chapter["caption"], size=S.FS_CAPTION, color=S.MUTED)
+
+    if rows:
+        access_block(doc, chapter.get("rows_title", "Подробности"), rows)
+
+
 class Plan:
     """Разбор списка изображений объекта по назначению.
 
@@ -917,7 +988,15 @@ def build(report: dict, objects: list[tuple[dict, list[Path]]], dest: Path) -> P
         flow.new_page()
         object_location(doc, obj, cache, assets,
                         skip_map=bool(report.get("skip_map")))
-        photo_pages(doc, plan.gallery, flow, cache)
+        chapters = obj.get("chapters", [])
+        for chapter in chapters:
+            flow.new_page()
+            object_chapter(doc, obj, chapter, cache, assets, plan.photos)
+        # кадр, уже показанный в разборе, в галерее не повторяется
+        shown = {plan.photos[index] for chapter in chapters
+                 for index in chapter.get("images", [])
+                 if 0 <= index < len(plan.photos)}
+        photo_pages(doc, [p for p in plan.gallery if p not in shown], flow, cache)
 
     dest.parent.mkdir(parents=True, exist_ok=True)
     doc.save(str(dest))

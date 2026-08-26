@@ -126,9 +126,10 @@
       "title": "Lireweg 42-50, Nieuw-Vennep",
       "city": "Nieuw-Vennep",
       "price": "€ 1.895.000",
-      "url": "https://www.fundainbusiness.nl/en/belegging/nieuw-vennep/object-89402645-lireweg-42-50/",
+      "url": "https://www.fundainbusiness.nl/belegging/nieuw-vennep/object-89402645-lireweg-42-50/",
       "reports": [
-        "report-2026-08-17-schiphol.json"
+        "report-2026-08-17-schiphol.json",
+        "report-lireweg-42-50.json"
       ]
     },
     {
@@ -236,5 +237,5 @@
       "source": "показан заказчику вне этого репозитория"
     }
   ],
-  "updated": "2026-08-24"
+  "updated": "2026-08-26"
 }

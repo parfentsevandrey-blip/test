@@ -17,6 +17,7 @@ from __future__ import annotations
 import logging
 import math
 import os
+import time
 from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
 from pathlib import Path
@@ -134,13 +135,26 @@ def _attribution(canvas: Image.Image, scale: int) -> None:
 # провайдеры
 # --------------------------------------------------------------------------
 def _tile(z: int, x: int, y: int, index: int) -> Image.Image:
+    """Один тайл карты.
+
+    Google придерживает отдельные поддомены: один и тот же тайл на mt2 может
+    ответить 403, а на mt0 отдаться сразу. Поэтому тайл запрашивается по
+    очереди со всех четырёх — сдаёмся только если отказали все.
+    """
     n = 2**z
     if not (0 <= y < n):
         return Image.new("RGB", (TILE_SIZE, TILE_SIZE), "white")
-    url = GOOGLE_TILE_URL.format(s=index % 4, x=x % n, y=y, z=z)
-    resp = requests.get(url, headers={"User-Agent": UA}, timeout=30)
-    resp.raise_for_status()
-    return Image.open(BytesIO(resp.content)).convert("RGB")
+    last: Exception | None = None
+    for attempt in range(4):
+        url = GOOGLE_TILE_URL.format(s=(index + attempt) % 4, x=x % n, y=y, z=z)
+        try:
+            resp = requests.get(url, headers={"User-Agent": UA}, timeout=30)
+            resp.raise_for_status()
+            return Image.open(BytesIO(resp.content)).convert("RGB")
+        except Exception as exc:                       # 403 и сетевые сбои
+            last = exc
+            time.sleep(0.4 * (attempt + 1))
+    raise last
 
 
 def _render_tiles(
