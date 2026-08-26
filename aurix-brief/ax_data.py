@@ -43,6 +43,44 @@ PLOTS = [
      '4,9 тыс. м² квартир', '34', '9', '—'],
 ]
 
+# ── карточки по каждой площадке ────────────────────────────────────────────
+CARD_ORD = [
+    ['Адрес', 'ул. Большая Ордынка, 25, стр. 1 и 4'],
+    ['Район', 'ЦАО, Замоскворечье · м. «Третьяковская»'],
+    ['Что было', 'Первая московская АТС, 1927 год'],
+    ['Площадь проекта', '17 300 м²'],
+    ['Этажность', '7 этажей и мансардный уровень'],
+    ['Квартир', 'Не раскрыто'],
+    ['Класс и отделка', 'Делюкс · white box, опция полной отделки'],
+    ['Архитектура', 'Бюро «ЭталонПроект», концепция 2025 года'],
+    ['Статус', 'Концепцию согласовала ГЗК в марте 2026 года'],
+    ['Сдача', 'IV квартал 2031 года — по данным брокера'],
+]
+CARD_ZEM = [
+    ['Адрес', 'Земледельческий переулок, 15'],
+    ['Район', 'ЦАО, Хамовники · м. «Смоленская», 1 км'],
+    ['Что было', 'АТС, затем административное здание 1975 года'],
+    ['Жилая площадь', '8 000 м² — согласовано в мае 2026 года'],
+    ['Квартир', '77'],
+    ['Средняя квартира', '≈ 104 м² — расчёт по двум цифрам выше'],
+    ['Участок', '0,3 га · монолитно-кирпичный дом'],
+    ['Этажность', 'Не раскрыта'],
+    ['Статус', 'Проектирование, показатели согласованы'],
+    ['Сдача', 'Не объявлена'],
+]
+CARD_POL = [
+    ['Адрес', 'улица Малая Полянка, владение 3'],
+    ['Район', 'ЦАО, Якиманка · м. «Полянка»'],
+    ['Что было', 'АТС'],
+    ['Площадь проекта', '7 941 м², из них квартир ≈ 4 900 м²'],
+    ['Квартир', '34'],
+    ['Средняя квартира', '≈ 144 м²'],
+    ['Этажность', '9 этажей'],
+    ['Паркинг', '36 машино-мест — 1,06 на квартиру'],
+    ['Архитектура', 'Бюро «ЭталонПроект», концепция 2025 года'],
+    ['Статус', 'Концепция, на согласование вышла в ноябре 2025'],
+]
+
 # ── цена предложения по элитным районам, NF Group, I кв. 2026, тыс. ₽/м² ───
 DISTRICTS = [
     ['Остоженка – Пречистенка', '4 798', '—'],
@@ -114,13 +152,17 @@ PPM = 3_000_000
 
 # Площадь квартир. У «Земледельческого» и «Полянки» она раскрыта прямо.
 # По «Ордынке» раскрыта только общая площадь комплекса — 17,3 тыс. м².
-# Доля квартир оценена по единственному проекту AURIX с обеими цифрами:
-# «Резиденция Омега» — 8,9 тыс. м² жилья при 18,2 тыс. м² общей, то есть 49 %.
-OMEGA_TOTAL, OMEGA_LIVING = 18_200, 8_900
-LIVING_SHARE = OMEGA_LIVING / OMEGA_TOTAL
+# Долю квартир в ней приходится оценивать, и она заметно разная у двух
+# проектов AURIX, где опубликованы обе цифры:
+#   «Резиденция Омега» — 8,9 тыс. м² жилья при 18,2 тыс. м² общей = 49 %
+#   «Малая Полянка, 3» — 4,9 тыс. м² квартир при 7,9 тыс. м² общей  = 62 %
+# Поэтому по «Ордынке» даётся не одно число, а вилка.
+SHARE_LO, SHARE_HI = 8_900 / 18_200, 4_900 / 7_941
+ORD_TOTAL = 17_300
+ORD_LO, ORD_HI = ORD_TOTAL * SHARE_LO, ORD_TOTAL * SHARE_HI
 
 AREAS = {                       # м² квартир
-    'Большая Ордынка, 25': 17_300 * LIVING_SHARE,   # оценка
+    'Большая Ордынка, 25': (ORD_LO + ORD_HI) / 2,   # оценка, см. вилку выше
     'Земледельческий, 15': 8_000,                   # раскрыто
     'Малая Полянка, 3':    4_900,                   # раскрыто
 }
@@ -134,30 +176,31 @@ d1 = lambda v: f'{v:.1f}'.replace('.', ',')
 total_area = sum(AREAS.values())
 total_rev = total_area * PPM
 
-REVENUE = []
-for name, a in AREAS.items():
-    n = FLATS[name]
-    REVENUE.append([
-        ('▶ ' if 'Ордынка' in name else '') + name,
-        ('≈ ' if 'Ордынка' in name else '') + nf(a),
-        str(n) if n else '≈ 50 – 55',
-        ('≈ ' if 'Ордынка' in name else '') + nf(a / n / 1) if n else '≈ 155',
-        nf(PPM),
-        ('≈ ' if 'Ордынка' in name else '') + d1(a * PPM / 1e9),
-        ('≈ ' if 'Ордынка' in name else '') + nf(a / n * PPM / 1e6) if n else '≈ 465',
-    ])
-REVENUE.append(['Всего по трём площадкам', f'≈ {nf(total_area)}', '≈ 160 – 165',
-                '—', nf(PPM), f'≈ {d1(total_rev / 1e9)}', '—'])
+REVENUE = [
+    ['▶ Большая Ордынка, 25', f'≈ {nf(ORD_LO)} – {nf(ORD_HI)}', 'не раскрыто', 'не раскрыто',
+     nf(PPM), f'≈ {d1(ORD_LO * PPM / 1e9)} – {d1(ORD_HI * PPM / 1e9)}', '—'],
+]
+for name in ('Земледельческий, 15', 'Малая Полянка, 3'):
+    a, n = AREAS[name], FLATS[name]
+    REVENUE.append([name, nf(a), str(n), nf(a / n), nf(PPM),
+                    d1(a * PPM / 1e9), nf(a / n * PPM / 1e6)])
+TOT_LO, TOT_HI = ORD_LO + 12_900, ORD_HI + 12_900
+REVENUE.append(['Всего по трём площадкам', f'≈ {nf(TOT_LO)} – {nf(TOT_HI)}', '—', '—',
+                nf(PPM), f'≈ {d1(TOT_LO * PPM / 1e9)} – {d1(TOT_HI * PPM / 1e9)}', '—'])
 
 stats = {
     'ppm': PPM, 'totalArea': total_area, 'totalRev': total_rev,
-    'livingShare': LIVING_SHARE,
+    'ordLo': ORD_LO, 'ordHi': ORD_HI, 'shareLo': SHARE_LO, 'shareHi': SHARE_HI,
+    'totLo': TOT_LO, 'totHi': TOT_HI,
+    'revLo': TOT_LO * PPM, 'revHi': TOT_HI * PPM,
     'dealPrice': DEAL_PRICE, 'dealObjects': DEAL_OBJECTS,
     'pipelineArea': PIPELINE_AREA, 'pipelineRevenue': PIPELINE_REVENUE,
     'pipelineN': PIPELINE_N,
-    'revVsDeal': total_rev / DEAL_PRICE,
-    'shareOfPipelineArea': total_area / PIPELINE_AREA,
-    'shareOfPipelineRev': total_rev / PIPELINE_REVENUE,
+    'revVsDealLo': TOT_LO * PPM / DEAL_PRICE,
+    'revVsDealHi': TOT_HI * PPM / DEAL_PRICE,
+    'shareAreaLo': TOT_LO / PIPELINE_AREA, 'shareAreaHi': TOT_HI / PIPELINE_AREA,
+    'shareRevLo': TOT_LO * PPM / PIPELINE_REVENUE,
+    'shareRevHi': TOT_HI * PPM / PIPELINE_REVENUE,
     'pipelinePpm': PIPELINE_REVENUE / PIPELINE_AREA,
     'vsZamosk': PPM / 2_020_000 - 1,
     'vsKham': PPM / 2_808_000 - 1,
@@ -167,17 +210,21 @@ stats = {
 
 if __name__ == '__main__':
     json.dump({'facts': FACTS, 'plots': PLOTS, 'districts': DISTRICTS,
+               'cardOrd': CARD_ORD, 'cardZem': CARD_ZEM, 'cardPol': CARD_POL,
                'near': NEAR, 'portfolio': PORTFOLIO, 'chron': CHRON,
                'revenue': REVENUE, 'stats': stats},
               open(os.path.join(HERE, 'ax_tables.json'), 'w'), ensure_ascii=False, indent=1)
-    print(f'доля квартир в общей площади (по «Омеге»): {LIVING_SHARE:.0%}')
+    print(f'доля квартир в общей площади: {SHARE_LO:.0%} («Омега») – {SHARE_HI:.0%} («Полянка»)')
+    print(f'  → по «Ордынке» это {nf(ORD_LO)} – {nf(ORD_HI)} м² квартир')
     for r in REVENUE:
         print('  ' + ' | '.join(str(c) for c in r))
     print()
-    print(f'квартир суммарно ≈ {nf(total_area)} м²; выручка при {nf(PPM)} ₽/м² ≈ {d1(total_rev/1e9)} млрд ₽')
-    print(f'  это {stats["revVsDeal"]:.1f}× от суммы сделки за все 42 объекта ({nf(DEAL_PRICE/1e9)} млрд ₽)')
-    print(f'  и {stats["shareOfPipelineRev"]:.0%} заявленной выручки до 2032 года '
-          f'при {stats["shareOfPipelineArea"]:.0%} заявленного метража')
+    print(f'квартир суммарно ≈ {nf(TOT_LO)} – {nf(TOT_HI)} м²; '
+          f'выручка при {nf(PPM)} ₽/м² ≈ {d1(TOT_LO*PPM/1e9)} – {d1(TOT_HI*PPM/1e9)} млрд ₽')
+    print(f'  это {stats["revVsDealLo"]:.1f}–{stats["revVsDealHi"]:.1f}× от суммы сделки '
+          f'за все 42 объекта ({nf(DEAL_PRICE/1e9)} млрд ₽)')
+    print(f'  и {stats["shareRevLo"]:.0%}–{stats["shareRevHi"]:.0%} заявленной выручки до 2032 года '
+          f'при {stats["shareAreaLo"]:.0%}–{stats["shareAreaHi"]:.0%} заявленного метража')
     print(f'  средний метр всей программы: {nf(stats["pipelinePpm"])} ₽')
     print(f'ориентир 3 млн ₽/м² к районам: Замоскворечье {stats["vsZamosk"]:+.0%}, '
           f'Хамовники {stats["vsKham"]:+.0%}, Якиманка {stats["vsYakim"]:+.0%}, '

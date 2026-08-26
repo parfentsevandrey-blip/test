@@ -16,8 +16,11 @@ ASSETS = os.path.join(HERE, 'assets')
 #  трёхкратный запас, поэтому качество 82 на странице неотличимо от 92,
 #  но файл легче на четверть
 CONVERT = [
-    ('ax_map.png',   'map.jpg',   82),
-    ('ax_chart.png', 'chart.jpg', 92),
+    ('ax_map.png',     'map.jpg',     82),
+    ('ax_chart.png',   'chart.jpg',   92),
+    ('ax_map_ord.png', 'map_ord.jpg', 82),
+    ('ax_map_zem.png', 'map_zem.jpg', 82),
+    ('ax_map_pol.png', 'map_pol.jpg', 82),
 ]
 
 if __name__ == '__main__':
