@@ -18,9 +18,9 @@ ASSETS = os.path.join(HERE, 'assets')
 CONVERT = [
     ('ax_map.png',     'map.jpg',     82),
     ('ax_chart.png',   'chart.jpg',   92),
-    ('ax_map_ord.png', 'map_ord.jpg', 82),
-    ('ax_map_zem.png', 'map_zem.jpg', 82),
-    ('ax_map_pol.png', 'map_pol.jpg', 82),
+    ('ax_map_ord.png', 'map_ord.jpg', 78),
+    ('ax_map_zem.png', 'map_zem.jpg', 78),
+    ('ax_map_pol.png', 'map_pol.jpg', 78),
 ]
 
 if __name__ == '__main__':

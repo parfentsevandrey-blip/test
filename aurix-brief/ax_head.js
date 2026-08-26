@@ -202,6 +202,26 @@ function factSheet(pairs) {
 }
 
 // side-by-side images
+function imageTrio(files, caps) {
+  const w = 3173, pxw = 203, pxh = Math.round(pxw * 9 / 16);
+  const cellOf = (file, cap, i) => new TableCell({
+    width: { size: w, type: WidthType.DXA },
+    margins: { top: 0, bottom: 0, left: i === 0 ? 0 : 70, right: i === 2 ? 0 : 70 },
+    borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+    children: [
+      p({
+        children: [new ImageRun({ data: IMG(file), type: 'jpg', transformation: { width: pxw, height: pxh } })],
+        spacing: { after: 50 },
+      }),
+      p({ children: [txt(cap, { size: 14, color: MUTED, italics: true })], spacing: { after: 0, line: 210, lineRule: LR } }),
+    ],
+  });
+  return new Table({
+    columnWidths: [w, w, w], width: { size: 9519, type: WidthType.DXA },
+    rows: [new TableRow({ children: files.map((f, i) => cellOf(f, caps[i], i)) })],
+  });
+}
+
 function imagePair(a, b, capA, capB) {
   const w = 4760, pxw = 310, pxh = Math.round(pxw * 9 / 16);
   const cellOf = (file, cap, left) => new TableCell({
