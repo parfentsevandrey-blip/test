@@ -866,11 +866,27 @@ def _gallery_plan(count: int) -> list[int]:
     return plan
 
 
-def photo_row(doc, paths: list[Path], cache: Path, height_mm: float) -> None:
-    """Ряд галереи: один кадр во всю ширину набора либо два-три в строку."""
+GALLERY_CAPTION_MM = 10.0    # полоса под подпись кадра: две строки 7,5/12,4
+
+
+def photo_caption(container, text: str, *, align=None) -> None:
+    """Подпись под кадром галереи."""
+    paragraph = par(container, before=2.5, after=0, lead=S.LH_SMALL, align=align)
+    txt(paragraph, text, size=S.FS_CAPTION, color=S.MUTED)
+
+
+def photo_row(doc, paths: list[Path], cache: Path, height_mm: float,
+              captions: list[str] | None = None) -> None:
+    """Ряд галереи: один кадр во всю ширину набора либо два-три в строку.
+
+    С подписями кадр перестаёт быть украшением и начинает работать
+    свидетельством: видно, что именно снято и на каком этаже.
+    """
     if len(paths) == 1:
         framed_photo(doc, paths[0], cache, width_mm=S.CONTENT_W_MM,
                      ratio=frame_ratio(S.CONTENT_W_MM, height_mm))
+        if captions and captions[0]:
+            photo_caption(doc, captions[0], align=WD_ALIGN_PARAGRAPH.CENTER)
         return
     width = row_width(len(paths))
     widths: list[float] = []
@@ -891,9 +907,12 @@ def photo_row(doc, paths: list[Path], cache: Path, height_mm: float) -> None:
         _clean(cell)
         framed_photo(cell, path, cache, width_mm=width,
                      ratio=frame_ratio(width, height_mm))
+        if captions and index < len(captions) and captions[index]:
+            photo_caption(cell, captions[index])
 
 
-def photo_pages(doc, gallery: list[Path], flow: Flow, cache: Path) -> None:
+def photo_pages(doc, gallery: list[Path], flow: Flow, cache: Path,
+                captions: dict[Path, str] | None = None) -> None:
     """Полосы иллюстраций мозаикой: крупный кадр и ряды мелких.
 
     Высоты рядов растягиваются до нижнего поля, поэтому полоса заполнена
@@ -913,14 +932,16 @@ def photo_pages(doc, gallery: list[Path], flow: Flow, cache: Path) -> None:
         rows = variants[order % len(variants)]
         budget = (S.PAGE_H_MM - S.MARGIN_TOP_MM - S.MARGIN_BOTTOM_MM
                   - (head_mm if order == 0 else 0.0) - GALLERY_SLACK_MM
-                  - GALLERY_GAP_MM * (len(rows) - 1))
+                  - GALLERY_GAP_MM * (len(rows) - 1)
+                  - (GALLERY_CAPTION_MM * len(rows) if captions else 0.0))
         natural = [NATURAL_MM[size] for size in rows]
         scale = min(budget / sum(natural), 1.45)
         for step, size in enumerate(rows):
             if step:
                 par(doc, after=0, lead=GALLERY_GAP_MM * 72 / 25.4)
-            photo_row(doc, gallery[position:position + size], cache,
-                      natural[step] * scale)
+            chunk = gallery[position:position + size]
+            photo_row(doc, chunk, cache, natural[step] * scale,
+                      [captions.get(path, "") for path in chunk] if captions else None)
             position += size
     flow.used = S.PAGE_H_MM
 
@@ -992,11 +1013,21 @@ def build(report: dict, objects: list[tuple[dict, list[Path]]], dest: Path) -> P
         for chapter in chapters:
             flow.new_page()
             object_chapter(doc, obj, chapter, cache, assets, plan.photos)
-        # кадр, уже показанный в разборе, в галерее не повторяется
-        shown = {plan.photos[index] for chapter in chapters
-                 for index in chapter.get("images", [])
-                 if 0 <= index < len(plan.photos)}
-        photo_pages(doc, [p for p in plan.gallery if p not in shown], flow, cache)
+        captions = obj.get("photo_captions") or []
+        if captions:
+            # каталог с подписями: здесь кадры не украшают полосу, а
+            # свидетельствуют, поэтому идут все и по порядку — кроме первого,
+            # который уже стоит на шмуцтитуле и на обложке
+            named = {path: captions[index]
+                     for index, path in enumerate(plan.photos)
+                     if index < len(captions)}
+            photo_pages(doc, plan.photos[1:], flow, cache, named)
+        else:
+            # кадр, уже показанный в разборе, в галерее не повторяется
+            shown = {plan.photos[index] for chapter in chapters
+                     for index in chapter.get("images", [])
+                     if 0 <= index < len(plan.photos)}
+            photo_pages(doc, [p for p in plan.gallery if p not in shown], flow, cache)
 
     dest.parent.mkdir(parents=True, exist_ok=True)
     doc.save(str(dest))
