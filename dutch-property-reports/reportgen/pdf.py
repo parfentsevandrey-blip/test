@@ -39,8 +39,12 @@ def convert(docx_path: Path, out_dir: Path | None = None, timeout: int = 600) ->
         str(docx_path),
     ]
     log.info("конвертация в PDF: %s", docx_path.name)
-    result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
     pdf_path = out_dir / (docx_path.stem + ".pdf")
+    # прошлый PDF убирается до запуска: LibreOffice умеет отказаться молча
+    # (например, без пакета libreoffice-writer), а лежащий рядом старый файл
+    # выдаёт себя за результат — и в отчёт уходит вчерашняя вёрстка
+    pdf_path.unlink(missing_ok=True)
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
     if result.returncode != 0 or not pdf_path.exists():
         raise RuntimeError(
             f"LibreOffice не смог конвертировать файл:\n{result.stdout}\n{result.stderr}"
