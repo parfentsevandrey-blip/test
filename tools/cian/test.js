@@ -5,7 +5,7 @@
 const assert = require('assert');
 const { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, archiveStat,
         completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringVerdict,
-        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, galleryGrew, parseViews, mergedPriceHistory, offersByIds, matchesQuery, expandSimilar, houseClass, profileLot, floorBand, worksScope, buildCohort, metroSummary, metroLine, metroCell, photoKinds, photoIdent, galleryKey, galleryDiff, sweepCost } = require('./cian.js');
+        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, galleryGrew, parseViews, mergedPriceHistory, offersByIds, matchesQuery, expandSimilar, houseClass, profileLot, floorBand, worksScope, buildCohort, metroSummary, metroLine, metroCell, photoKinds, photoIdent, galleryKey, galleryDiff, sweepCost, outputFile } = require('./cian.js');
 
 let passed = 0;
 const pending = [];
@@ -1375,4 +1375,26 @@ test('пачка из одного листа дороже средней: по�
 test('ужатый лист удешевляет свип примерно вдвое', () => {
   const now = sweepCost(115, 8).tokens, small = sweepCost(115, 8, 1526).tokens;
   assert.ok(small < now / 1.5, `${small} против ${now}`);
+});
+
+process.stdout.write('\nучёт в файле выдачи\n');
+
+test('search и sweep пишут одну шапку — иначе читатель видит учёт одной команды', () => {
+  // до правки sweep писал declared/collected, а search — declaredCount/
+  // enumerated/kept: любой разбор видел одну команду и был слеп ко второй
+  const q = { _type: 'flatsale' };
+  const f = outputFile(q, [{ id: 1 }, { id: 2 }], { declared: 653, aggregated: 200, enumerated: 2 });
+  assert.deepStrictEqual(Object.keys(f).sort(),
+    ['aggregated', 'declaredCount', 'enumerated', 'fetched', 'jsonQuery', 'kept', 'lots'].sort());
+  assert.strictEqual(f.declaredCount, 653);
+  assert.strictEqual(f.kept, 2);
+  assert.deepStrictEqual(f.jsonQuery, q, 'без запроса файл не говорит, чем он собран');
+  assert.ok(/^\d{4}-\d{2}-\d{2}$/.test(f.fetched), 'без даты нельзя судить о свежести');
+});
+
+test('учёт не выдумывает чисел, которых не было', () => {
+  const f = outputFile({ _type: 'flatsale' }, [{ id: 1 }]);
+  assert.strictEqual(f.declaredCount, null, 'не знаем — значит null, а не ноль');
+  assert.strictEqual(f.aggregated, null);
+  assert.strictEqual(f.enumerated, 1, 'перечислено при отсутствии счёта — то, что на руках');
 });

@@ -378,7 +378,15 @@ async function collectSorted(ctx, jsonQuery, maxPages, seen, sort) {
   let count = null, aggregated = null;
   const q = sort ? { ...jsonQuery, sort: { type: 'term', value: sort } } : jsonQuery;
   for (let p = 1; p <= maxPages; p++) {
-    const { count: c, aggregated: ag, offers } = await searchPage(ctx, q, p);
+    let c, ag, offers;
+    /* Та же причина, что и в sweep: страница, не ответившая после всех
+       попыток, не должна уносить уже собранное. Первая страница — особый
+       случай: без неё нет ни count, ни выдачи, и молчать об этом нельзя. */
+    try { ({ count: c, aggregated: ag, offers } = await searchPage(ctx, q, p)); }
+    catch (e) {
+      log(`  ${(sort || 'по умолчанию').padEnd(18)} стр ${p}: не ответила (${e.message}) — кусок пропущен`);
+      break;
+    }
     if (count === null) { count = c; aggregated = ag; }
     if (!offers.length) break;
     const before = seen.size;
@@ -445,8 +453,16 @@ async function expandSimilar(ctx, q, lots, maxPages = 4) {
      cut    — упёрлись в потолок страниц, за ним ещё есть;
      failed — ручка не ответила, группа не перечислена вовсе или наполовину;
      short  — лидер обещал similarCount, а пришло меньше. */
+  /* На больших выборках это самая долгая фаза всего движка: группы берутся
+     по одной, 185 лидеров идут около получаса. Пока она молчала, отличить
+     работу от зависания было нельзя — поэтому счётчик каждые 25 групп. */
   const cut = [], failed = [], short = [];
+  let done = 0;
   for (const l of leaders) {
+    if (done && done % 25 === 0) {
+      log(`  раскрыто групп ${done} из ${leaders.length}, добавлено ${added.length}`);
+    }
+    done++;
     const sub = { ...q, multi_id: { type: 'term', value: l.id } };
     let seen = 0, pages = 0, broke = null;
     for (let p = 1; p <= maxPages; p++) {
@@ -478,6 +494,79 @@ async function expandSimilar(ctx, q, lots, maxPages = 4) {
     await sleep(500);
   }
   return { added, dropped, leaders: leaders.length, cut, failed, short };
+}
+
+/* ---------- общий хвост сбора ----------
+   Раскрытие групп и сверка выдачи с собственным запросом нужны одинаково
+   и обычному поиску, и развёртке. Пока это жило только внутри команды
+   `search`, команда `sweep` — та самая, ради больших выборок и заведённая —
+   собирала 346 лотов из заявленных 653 и молчала об этом. Раскрытие групп
+   на том же результате добавило ровно 307, то есть недостача была вся
+   до последнего лота в нераскрытых группах. Поэтому хвост вынесен сюда:
+   разойтись двум командам больше нечем. */
+async function harvest(ctx, q, lots, opts = {}) {
+  const { similar = true, similarPages = 4, strict = true } = opts;
+  let out = lots;
+  if (similar) {
+    const r = await expandSimilar(ctx, q, out, similarPages);
+    if (r.leaders) {
+      log(`раскрыл схлопнутые группы: лидеров ${r.leaders}, добавилось ${r.added.length}` +
+          (r.dropped ? `, отброшено не подходящих под запрос ${r.dropped}` : ''));
+      out = out.concat(r.added);
+      /* Обрезка обязана быть слышной. Пока о ней молчали, «раскрыл группы»
+         читалось как «раскрыл целиком», а за потолком могло остаться
+         сколько угодно. */
+      if (r.cut.length) {
+        log(`  ! ${r.cut.length} групп упёрлись в потолок ${similarPages} страниц — за ним ещё есть:`);
+        r.cut.slice(0, 5).forEach((c) => log(`      лидер ${c.id}: прочитано ${c.seen}` +
+          (c.promised ? ` из обещанных ${c.promised}` : '')));
+        log(`      добрать: --similar-pages ${similarPages * 2}`);
+      }
+      if (r.failed.length) {
+        log(`  ! ${r.failed.length} групп не перечислены: ручка не ответила`);
+        r.failed.slice(0, 5).forEach((f) => log(`      лидер ${f.id}: прочитано ${f.seen} за ${f.pages} стр. — ${f.why}`));
+      }
+      if (r.short.length) {
+        log(`  ! ${r.short.length} групп отдали меньше обещанного (Циан считает similar по-своему):`);
+        r.short.slice(0, 5).forEach((s) => log(`      лидер ${s.id}: обещано ${s.promised}, пришло ${s.seen}`));
+      }
+    }
+  }
+  /* Фильтры Циан текут: `apartment=0` пропускает апартаменты, и чем глубже
+     пагинация, тем больше — на районном запросе 52 из 274. Ключ multi_id
+     остальные фильтры не уважает вовсе, поэтому сверка идёт ПОСЛЕ
+     раскрытия, а не вместо него. */
+  if (strict) {
+    const before = out.length;
+    const bad = out.filter((l) => !matchesQuery(l, q));
+    if (bad.length) {
+      out = out.filter((l) => matchesQuery(l, q));
+      const why = {};
+      bad.forEach((l) => {
+        if (q.apartment && q.apartment.value === false && l.isApartments) why['апартаменты'] = (why['апартаменты'] || 0) + 1;
+        else if (q.room && l.rooms != null && !q.room.value.includes(l.rooms)) why['другая комнатность'] = (why['другая комнатность'] || 0) + 1;
+        else why['вне заданных границ'] = (why['вне заданных границ'] || 0) + 1;
+      });
+      log(`фильтры Циан протекли: ${before - out.length} лотов не подходят под собственный запрос ` +
+          `(${Object.entries(why).map(([k, v]) => `${k} ${v}`).join(', ')})`);
+    }
+  }
+  return out;
+}
+
+/* Единая шапка файла выдачи. Пока `search` и `sweep` писали разные ключи,
+   любой читатель видел учёт одной команды и не видел другой; а без даты
+   сбора нельзя ни оценить свежесть, ни сравнить две выдачи между собой. */
+function outputFile(q, lots, acc = {}) {
+  return {
+    fetched: new Date().toISOString().slice(0, 10),
+    declaredCount: acc.declared ?? null,
+    aggregated: acc.aggregated ?? null,
+    enumerated: acc.enumerated ?? lots.length,
+    kept: lots.length,
+    jsonQuery: q,
+    lots,
+  };
 }
 
 /* ---------- развёртка большой выдачи ----------
@@ -648,13 +737,24 @@ async function sweep(ctx, q, limit, maxPages, allSorts) {
      мимо обычного поиска, а тот — 29 мимо развёртки. Дробление и перебор
      сортировок ловят разное, поэтому применяются вместе. */
   const sorts = allSorts ? SORTS : [null];
+  /* Страница, не ответившая после всех попыток, раньше валила исключение
+     наверх и уносила с собой весь свип: полчаса сбора превращались в ноль
+     и в стектрейс. Теперь дыра остаётся дырой в одном подзапросе, её
+     записывают и называют вслух в конце — потерять кусок молча всё равно
+     нельзя, но терять из-за него всё остальное незачем. */
+  const holes = [];
   for (const b of buckets) {
     // из какой ветки отделки пришёл лот — это и есть надёжная метка комплектности
     const dv = b.q.decorations_list && b.q.decorations_list.value[0];
     for (const sort of sorts) {
       const sq = sort ? { ...b.q, sort: { type: 'term', value: sort } } : b.q;
       for (let p = 1; p <= maxPages; p++) {
-        const { offers } = await searchPage(ctx, sq, p);
+        let offers;
+        try { ({ offers } = await searchPage(ctx, sq, p)); }
+        catch (e) {
+          holes.push({ label: b.label, sort: sort || 'по умолчанию', page: p, why: e.message });
+          break;
+        }
         if (!offers.length) break;
         offers.forEach((o) => {
           const n = normalize(o);
@@ -667,7 +767,12 @@ async function sweep(ctx, q, limit, maxPages, allSorts) {
     }
     log(`  ${b.label.padEnd(46)} ${String(b.count).padStart(5)} -> накоплено ${seen.size}`);
   }
-  return { seen, declared: top.count, aggregated: top.aggregated };
+  if (holes.length) {
+    log(`\n! ${holes.length} страниц не ответили — эти куски выдачи не прочитаны:`);
+    holes.slice(0, 8).forEach((h) => log(`    ${h.label} / ${h.sort} / стр.${h.page}: ${h.why}`));
+    if (holes.length > 8) log(`    ...и ещё ${holes.length - 8}`);
+  }
+  return { seen, declared: top.count, aggregated: top.aggregated, holes };
 }
 
 /* Фильтр decorations_list делит выдачу без остатка, поэтому прогон по каждому
@@ -2258,51 +2363,11 @@ if (require.main === module) (async () => {
       const q = loadQuery(a.query);
       const pages = parseInt(a.pages || '3', 10);
       let { count, aggregated, lots } = await collect(ctx, q, pages, !!a.all);
-      if (a.similar !== 'нет') {
-        const simPages = parseInt(a['similar-pages'] || '4', 10);
-        const { added, dropped, leaders, cut, failed, short } = await expandSimilar(ctx, q, lots, simPages);
-        if (leaders) {
-          log(`раскрыл схлопнутые группы: лидеров ${leaders}, добавилось ${added.length}` +
-              (dropped ? `, отброшено не подходящих под запрос ${dropped}` : ''));
-          lots = lots.concat(added);
-          /* Обрезка обязана быть слышной. Пока о ней молчали, «раскрыл
-             группы» читалось как «раскрыл целиком», а за потолком в четыре
-             страницы могло остаться сколько угодно. */
-          if (cut.length) {
-            log(`  ! ${cut.length} групп упёрлись в потолок ${simPages} страниц — за ним ещё есть:`);
-            cut.slice(0, 5).forEach((c) => log(`      лидер ${c.id}: прочитано ${c.seen}` +
-              (c.promised ? ` из обещанных ${c.promised}` : '')));
-            log(`      добрать: --similar-pages ${simPages * 2}`);
-          }
-          if (failed.length) {
-            log(`  ! ${failed.length} групп не перечислены: ручка не ответила`);
-            failed.slice(0, 5).forEach((f) => log(`      лидер ${f.id}: прочитано ${f.seen} за ${f.pages} стр. — ${f.why}`));
-          }
-          if (short.length) {
-            log(`  ! ${short.length} групп отдали меньше обещанного (Циан считает similar по-своему):`);
-            short.slice(0, 5).forEach((s) => log(`      лидер ${s.id}: обещано ${s.promised}, пришло ${s.seen}`));
-          }
-        }
-      }
-      /* Фильтры Циан текут: `apartment=0` пропускает апартаменты, и чем
-         глубже пагинация, тем больше — на районном запросе 52 из 274.
-         Флаги --no-apartments и --min-year были частным случаем этого;
-         теперь весь запрос сверяется со своей же выдачей. */
-      if (a.strict !== 'нет') {
-        const before = lots.length;
-        const bad = lots.filter((l) => !matchesQuery(l, q));
-        if (bad.length) {
-          lots = lots.filter((l) => matchesQuery(l, q));
-          const why = {};
-          bad.forEach((l) => {
-            if (q.apartment && q.apartment.value === false && l.isApartments) why['апартаменты'] = (why['апартаменты'] || 0) + 1;
-            else if (q.room && l.rooms != null && !q.room.value.includes(l.rooms)) why['другая комнатность'] = (why['другая комнатность'] || 0) + 1;
-            else why['вне заданных границ'] = (why['вне заданных границ'] || 0) + 1;
-          });
-          log(`фильтры Циан протекли: ${before - lots.length} лотов не подходят под собственный запрос ` +
-              `(${Object.entries(why).map(([k, v]) => `${k} ${v}`).join(', ')})`);
-        }
-      }
+      lots = await harvest(ctx, q, lots, {
+        similar: a.similar !== 'нет',
+        similarPages: parseInt(a['similar-pages'] || '4', 10),
+        strict: a.strict !== 'нет',
+      });
       const enumerated = lots.length;
       log(`Циан заявляет ${count}, перечислимо за проход ${aggregated ?? '?'}, реально перечислено ${enumerated}` +
           (count && enumerated < count ? ' — offerCount считает ДО схлопывания похожих объявлений' : ''));
@@ -2347,7 +2412,7 @@ if (require.main === module) (async () => {
           await page.waitForTimeout(2000);
         }
       }
-      const res = { fetched: new Date().toISOString().slice(0, 10), declaredCount: count, enumerated, kept: lots.length, jsonQuery: q, lots };
+      const res = outputFile(q, lots, { declared: count, aggregated, enumerated });
       if (a.out) { fs.writeFileSync(a.out, JSON.stringify(res, null, 2) + '\n'); log(`-> ${a.out}`); }
       else log(JSON.stringify(res, null, 2));
 
@@ -2358,8 +2423,23 @@ if (require.main === module) (async () => {
       // по умолчанию доопределяем комплектность фильтром: без неё сравнение цен врёт
       if (a.resolve !== '0') await resolveDecoration(ctx, q, seen, Math.min(maxPages, 6));
       let { lots } = finishSweep(seen, { count: declared });
-      log(`\nзаявлено ${declared}, за один проход перечислимо ${aggregated ?? '?'}, собрано ${lots.length}` +
-          (aggregated ? ` — против ${aggregated} без дробления` : ''));
+      const split = lots.length;
+      /* Дробление достаёт то, что обрывает пагинация, но схлопнутые группы
+         оно не трогает: за лидером прячутся объявления, которых нет ни в
+         одном подзапросе. На запросе «дома выше 80 этажей» дробление дало
+         346 из заявленных 653, а раскрытие групп добавило ровно 307 —
+         недостача была вся до последнего лота именно здесь. */
+      lots = await harvest(ctx, q, lots, {
+        similar: a.similar !== 'нет',
+        similarPages: parseInt(a['similar-pages'] || '4', 10),
+        strict: a.strict !== 'нет',
+      });
+      log(`\nзаявлено ${declared}, за один проход перечислимо ${aggregated ?? '?'}, ` +
+          `дроблением ${split}, после раскрытия групп ${lots.length}`);
+      if (declared && lots.length < declared * 0.9) {
+        log(`! собрано ${Math.round(lots.length / declared * 100)}% от заявленного — ` +
+            `${declared - lots.length} лотов не достались. Пробуйте --limit меньше и --similar-pages больше.`);
+      }
       lots = withMarket(lots);
       const { flats, loose } = dedupe(lots);
       const multi = flats.filter((f) => f.listings > 1).sort((x, y) => y.listings - x.listings);
@@ -2391,7 +2471,12 @@ if (require.main === module) (async () => {
         rated.slice(-2).forEach((f) => line(f, 'дороже '));
       }
       const out = a.dedupe ? flats.concat(loose) : lots;
-      if (a.out) { fs.writeFileSync(a.out, JSON.stringify({ declared, collected: lots.length, flats: flats.length, lots: out }, null, 2) + '\n'); log(`-> ${a.out}`); }
+      if (a.out) {
+        const res = outputFile(q, out, { declared, aggregated, enumerated: lots.length });
+        res.flats = flats.length;
+        fs.writeFileSync(a.out, JSON.stringify(res, null, 2) + '\n');
+        log(`-> ${a.out}`);
+      }
 
     } else if (cmd === 'verify') {
       const only = a.ids ? String(a.ids).split(',').map(Number) : null;
@@ -3413,7 +3498,7 @@ if (require.main === module) (async () => {
 /* Чистые функции наружу — чтобы их можно было проверить без сети. */
 module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, archiveStat, completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringMargin, ringVerdict, pointInPolygon,
   gradeLevel, gradeRecord, observedState, gradeFor, galleryGrew, parseViews, REPAIR_RU, offersByIds, mergedPriceHistory, worksScope, AGES, WORK_ITEMS,
-  expandSimilar, matchesQuery, buildCohort, finishCost, loadedPricePerM2, fairShellPrice, MARKERS, PROOFS,
+  expandSimilar, harvest, outputFile, matchesQuery, buildCohort, finishCost, loadedPricePerM2, fairShellPrice, MARKERS, PROOFS,
   houseClass, houseFor, houseRecord, profileLot, floorBand, HOUSE_MARKERS, HOUSE_CLASSES,
   metroSummary, metroLine, metroCell, RAIL_LINES, photoKinds,
   photoIdent, galleryKey, galleryDiff, sweepCost, SWEEP };
