@@ -1,0 +1,712 @@
+{
+ "facts": [
+  [
+   "Девелопер",
+   "AURIX Development · премиальный бренд Группы «Эталон»"
+  ],
+  [
+   "Проектов в продаже",
+   "4 — два в Москве и два в Санкт-Петербурге"
+  ],
+  [
+   "Проекты в справке",
+   "«Арбат 2» и «Резиденция Омега», оба в Москве"
+  ],
+  [
+   "Лотов в продаже",
+   "20 из 149 по всему портфелю бренда"
+  ],
+  [
+   "Данные",
+   "Подбор на сайте застройщика, срез 26.08.2026"
+  ],
+  [
+   "Офис продаж",
+   "Москва, Кутузовский проспект, 2/1"
+  ]
+ ],
+ "cardArbat": [
+  [
+   "Адрес",
+   "Москва, улица Новый Арбат, 2"
+  ],
+  [
+   "Класс",
+   "Deluxe"
+  ],
+  [
+   "Готовность",
+   "2025 год — дом построен"
+  ],
+  [
+   "Что было на месте",
+   "«Дом связи» 1965 года постройки"
+  ],
+  [
+   "Квартир в доме",
+   "23, из них 2 пентхауса с видом на Кремль"
+  ],
+  [
+   "Этажность",
+   "12 этажей"
+  ],
+  [
+   "Высота потолков",
+   "до 3,5 метра"
+  ],
+  [
+   "Паркинг",
+   "18 машино-мест, автоматизированный доступ"
+  ],
+  [
+   "Отделка",
+   "Авторский дизайн-проект в каждой квартире"
+  ],
+  [
+   "Лоты в продаже",
+   "17 квартир на 10-м и 11-м этажах"
+  ]
+ ],
+ "cardOmega": [
+  [
+   "Адрес",
+   "Москва, улица Фотиевой, 5 · Гагаринский район"
+  ],
+  [
+   "Класс",
+   "Премиальный клубный дом"
+  ],
+  [
+   "Срок сдачи",
+   "2030 год"
+  ],
+  [
+   "Квартир в доме",
+   "59, из них 4 пентхауса от 218 м²"
+  ],
+  [
+   "Этажность",
+   "9 этажей"
+  ],
+  [
+   "Высота потолков",
+   "3,22 м типовые, до 4,1 м на втором этаже"
+  ],
+  [
+   "Гранд-лобби",
+   "Двусветное, высота 8,45 метра"
+  ],
+  [
+   "Паркинг",
+   "66 мест на двух уровнях, есть зарядки для электрокаров"
+  ],
+  [
+   "Террасы",
+   "У пентхаусов и квартир 9-го этажа, от 22 до 89 м²"
+  ],
+  [
+   "Лоты в продаже",
+   "3 квартиры на 4-м, 5-м и 6-м этажах"
+  ]
+ ],
+ "featArbat": [
+  [
+   "Архитектура",
+   "Реконструкция «Дома связи» 1965 года. Фасады — зеркальные плоскости с наложением декоративных ламелей, геометрический рисунок."
+  ],
+  [
+   "Виды",
+   "Боковой фасад выходит на Кремль, особняк Морозова и высотку на Котельнической. Окна на Новый Арбат — на МИД, Храм Христа Спасителя и дома-книжки."
+  ],
+  [
+   "Сервис",
+   "Консьерж 24/7, горничная и прачечная, няня и репетиторы, VALET-парковка. Управляющая команда берёт на себя подбор жильцов и обслуживание — то есть дом рассчитан и на сдачу в аренду."
+  ],
+  [
+   "Общие зоны",
+   "Панорамный ресторан на 12-м этаже, лобби-бар с панорамными окнами, фитнес-зал, два конференц-зала и четыре переговорные."
+  ],
+  [
+   "Приватность",
+   "Доступ к этажам только для резидентов, через персональные лифты."
+  ]
+ ],
+ "featOmega": [
+  [
+   "Архитектура",
+   "Образ дома построен на символике буквы «омега» — последней в греческом алфавите. Фасады напоминают деления циферблата."
+  ],
+  [
+   "Расположение",
+   "Глубина Гагаринского района, вокруг научно-исследовательские и образовательные институты: МГУ, президиум РАН, институты Стеклова и Лебедева. До Воробьёвых гор около двадцати минут пешком."
+  ],
+  [
+   "Двор",
+   "Закрытый сад с многолетним озеленением, места для отдыха и огороженная детская площадка."
+  ],
+  [
+   "Общие зоны",
+   "Консьерж 24/7, коворкинг с переговорной, фитнес-зал в гранд-лобби, массажный кабинет."
+  ],
+  [
+   "Квартиры",
+   "Увеличенное остекление, выделенные зоны для работы, максимум мест для хранения. Коммерция на первых этажах — 590,7 м²."
+  ]
+ ],
+ "priceArbat": [
+  [
+   "46,6",
+   "1-комн.",
+   "127 236 390",
+   "2 730 395",
+   "10 из 12",
+   {
+    "text": "№ 1012",
+    "link": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1012-2822"
+   }
+  ],
+  [
+   "46,6",
+   "1-комн.",
+   "132 377 254",
+   "2 840 714",
+   "11 из 12",
+   {
+    "text": "№ 1110",
+    "link": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1110-2823"
+   }
+  ],
+  [
+   "51,4",
+   "1-комн.",
+   "147 004 999",
+   "2 860 019",
+   "11 из 12",
+   {
+    "text": "№ 1108",
+    "link": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1108-2828"
+   }
+  ],
+  [
+   "51,5",
+   "1-комн.",
+   "148 285 250",
+   "2 879 325",
+   "11 из 12",
+   {
+    "text": "№ 1106",
+    "link": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1106-2829"
+   }
+  ],
+  [
+   "51,8",
+   "1-комн.",
+   "143 434 525",
+   "2 769 006",
+   "10 из 12",
+   {
+    "text": "№ 1008",
+    "link": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1008-2825"
+   }
+  ],
+  [
+   "52,9",
+   "1-комн.",
+   "150 127 853",
+   "2 837 956",
+   "11 из 12",
+   {
+    "text": "№ 1104",
+    "link": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1104-2830"
+   }
+  ],
+  [
+   "53,1",
+   "1-комн.",
+   "144 837 506",
+   "2 727 637",
+   "10 из 12",
+   {
+    "text": "№ 1004",
+    "link": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1004-2826"
+   }
+  ],
+  [
+   "53,1",
+   "1-комн.",
+   "145 569 749",
+   "2 741 427",
+   "10 из 12",
+   {
+    "text": "№ 1006",
+    "link": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1006-2827"
+   }
+  ],
+  [
+   "62,2",
+   "2-комн.",
+   "176 177 748",
+   "2 832 440",
+   "10 из 12",
+   {
+    "text": "№ 1002",
+    "link": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1002-2831"
+   }
+  ],
+  [
+   "71,3",
+   "2-комн.",
+   "198 610 009",
+   "2 785 554",
+   "10 из 12",
+   {
+    "text": "№ 1003",
+    "link": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1003-2833"
+   }
+  ],
+  [
+   "71,3",
+   "2-комн.",
+   "204 509 316",
+   "2 868 293",
+   "11 из 12",
+   {
+    "text": "№ 1103",
+    "link": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1103-2836"
+   }
+  ],
+  [
+   "71,7",
+   "2-комн.",
+   "206 052 127",
+   "2 873 809",
+   "11 из 12",
+   {
+    "text": "№ 1107",
+    "link": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1107-2837"
+   }
+  ],
+  [
+   "71,8",
+   "2-комн.",
+   "198 418 605",
+   "2 763 490",
+   "10 из 12",
+   {
+    "text": "№ 1007",
+    "link": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1007-2832"
+   }
+  ],
+  [
+   "72,1",
+   "2-комн.",
+   "200 838 452",
+   "2 785 554",
+   "10 из 12",
+   {
+    "text": "№ 1005",
+    "link": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1005-2834"
+   }
+  ],
+  [
+   "73,5",
+   "2-комн.",
+   "210 819 561",
+   "2 868 293",
+   "11 из 12",
+   {
+    "text": "№ 1105",
+    "link": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1105-2838"
+   }
+  ],
+  [
+   "142,4",
+   "4-комн.",
+   "385 273 575",
+   "2 705 573",
+   "10 из 12",
+   {
+    "text": "№ 1009",
+    "link": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1009-2839"
+   }
+  ],
+  [
+   "168,7",
+   "3-комн.",
+   "500 630 818",
+   "2 967 580",
+   "10 из 12",
+   {
+    "text": "№ 1011",
+    "link": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1011-2840"
+   }
+  ]
+ ],
+ "priceOmega": [
+  [
+   "89,8",
+   "2-комн.",
+   "191 270 870",
+   "2 129 965",
+   "5 из 9",
+   {
+    "text": "№ 43",
+    "link": "https://aurix-development.ru/vybor-po-parametram/kvartiry/omega-residence-kvartira-43-2960"
+   }
+  ],
+  [
+   "121,7",
+   "3-комн.",
+   "233 629 931",
+   "1 919 720",
+   "4 из 9",
+   {
+    "text": "№ 10",
+    "link": "https://aurix-development.ru/vybor-po-parametram/kvartiry/omega-residence-kvartira-10-2961"
+   }
+  ],
+  [
+   "134,1",
+   "3-комн.",
+   "257 434 461",
+   "1 919 720",
+   "6 из 9",
+   {
+    "text": "№ 17",
+    "link": "https://aurix-development.ru/vybor-po-parametram/kvartiry/omega-residence-kvartira-17-3136"
+   }
+  ]
+ ],
+ "cardsArbat": [
+  {
+   "file": "arbat_1012.png",
+   "number": "1012",
+   "rooms": "1-комн.",
+   "area": "46,6",
+   "floor": "10 из 12",
+   "building": "1",
+   "price": "127 236 390",
+   "ppm": "2 730 395",
+   "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1012-2822"
+  },
+  {
+   "file": "arbat_1110.png",
+   "number": "1110",
+   "rooms": "1-комн.",
+   "area": "46,6",
+   "floor": "11 из 12",
+   "building": "1",
+   "price": "132 377 254",
+   "ppm": "2 840 714",
+   "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1110-2823"
+  },
+  {
+   "file": "arbat_1108.png",
+   "number": "1108",
+   "rooms": "1-комн.",
+   "area": "51,4",
+   "floor": "11 из 12",
+   "building": "1",
+   "price": "147 004 999",
+   "ppm": "2 860 019",
+   "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1108-2828"
+  },
+  {
+   "file": "arbat_1106.png",
+   "number": "1106",
+   "rooms": "1-комн.",
+   "area": "51,5",
+   "floor": "11 из 12",
+   "building": "1",
+   "price": "148 285 250",
+   "ppm": "2 879 325",
+   "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1106-2829"
+  },
+  {
+   "file": "arbat_1008.png",
+   "number": "1008",
+   "rooms": "1-комн.",
+   "area": "51,8",
+   "floor": "10 из 12",
+   "building": "1",
+   "price": "143 434 525",
+   "ppm": "2 769 006",
+   "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1008-2825"
+  },
+  {
+   "file": "arbat_1104.png",
+   "number": "1104",
+   "rooms": "1-комн.",
+   "area": "52,9",
+   "floor": "11 из 12",
+   "building": "1",
+   "price": "150 127 853",
+   "ppm": "2 837 956",
+   "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1104-2830"
+  },
+  {
+   "file": "arbat_1004.png",
+   "number": "1004",
+   "rooms": "1-комн.",
+   "area": "53,1",
+   "floor": "10 из 12",
+   "building": "1",
+   "price": "144 837 506",
+   "ppm": "2 727 637",
+   "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1004-2826"
+  },
+  {
+   "file": "arbat_1006.png",
+   "number": "1006",
+   "rooms": "1-комн.",
+   "area": "53,1",
+   "floor": "10 из 12",
+   "building": "1",
+   "price": "145 569 749",
+   "ppm": "2 741 427",
+   "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1006-2827"
+  },
+  {
+   "file": "arbat_1002.png",
+   "number": "1002",
+   "rooms": "2-комн.",
+   "area": "62,2",
+   "floor": "10 из 12",
+   "building": "1",
+   "price": "176 177 748",
+   "ppm": "2 832 440",
+   "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1002-2831"
+  },
+  {
+   "file": "arbat_1003.png",
+   "number": "1003",
+   "rooms": "2-комн.",
+   "area": "71,3",
+   "floor": "10 из 12",
+   "building": "1",
+   "price": "198 610 009",
+   "ppm": "2 785 554",
+   "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1003-2833"
+  },
+  {
+   "file": "arbat_1103.png",
+   "number": "1103",
+   "rooms": "2-комн.",
+   "area": "71,3",
+   "floor": "11 из 12",
+   "building": "1",
+   "price": "204 509 316",
+   "ppm": "2 868 293",
+   "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1103-2836"
+  },
+  {
+   "file": "arbat_1107.png",
+   "number": "1107",
+   "rooms": "2-комн.",
+   "area": "71,7",
+   "floor": "11 из 12",
+   "building": "1",
+   "price": "206 052 127",
+   "ppm": "2 873 809",
+   "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1107-2837"
+  },
+  {
+   "file": "arbat_1007.png",
+   "number": "1007",
+   "rooms": "2-комн.",
+   "area": "71,8",
+   "floor": "10 из 12",
+   "building": "1",
+   "price": "198 418 605",
+   "ppm": "2 763 490",
+   "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1007-2832"
+  },
+  {
+   "file": "arbat_1005.png",
+   "number": "1005",
+   "rooms": "2-комн.",
+   "area": "72,1",
+   "floor": "10 из 12",
+   "building": "1",
+   "price": "200 838 452",
+   "ppm": "2 785 554",
+   "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1005-2834"
+  },
+  {
+   "file": "arbat_1105.png",
+   "number": "1105",
+   "rooms": "2-комн.",
+   "area": "73,5",
+   "floor": "11 из 12",
+   "building": "1",
+   "price": "210 819 561",
+   "ppm": "2 868 293",
+   "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1105-2838"
+  },
+  {
+   "file": "arbat_1009.png",
+   "number": "1009",
+   "rooms": "4-комн.",
+   "area": "142,4",
+   "floor": "10 из 12",
+   "building": "1",
+   "price": "385 273 575",
+   "ppm": "2 705 573",
+   "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1009-2839"
+  },
+  {
+   "file": "arbat_1011.png",
+   "number": "1011",
+   "rooms": "3-комн.",
+   "area": "168,7",
+   "floor": "10 из 12",
+   "building": "1",
+   "price": "500 630 818",
+   "ppm": "2 967 580",
+   "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1011-2840"
+  }
+ ],
+ "cardsOmega": [
+  {
+   "file": "omega_43.png",
+   "number": "43",
+   "rooms": "2-комн.",
+   "area": "89,8",
+   "floor": "5 из 9",
+   "building": "1",
+   "price": "191 270 870",
+   "ppm": "2 129 965",
+   "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/omega-residence-kvartira-43-2960"
+  },
+  {
+   "file": "omega_10.png",
+   "number": "10",
+   "rooms": "3-комн.",
+   "area": "121,7",
+   "floor": "4 из 9",
+   "building": "1",
+   "price": "233 629 931",
+   "ppm": "1 919 720",
+   "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/omega-residence-kvartira-10-2961"
+  },
+  {
+   "file": "omega_17.png",
+   "number": "17",
+   "rooms": "3-комн.",
+   "area": "134,1",
+   "floor": "6 из 9",
+   "building": "1",
+   "price": "257 434 461",
+   "ppm": "1 919 720",
+   "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/omega-residence-kvartira-17-3136"
+  }
+ ],
+ "compare": [
+  [
+   "Адрес",
+   "Новый Арбат, 2",
+   "Фотиевой, 5"
+  ],
+  [
+   "Класс",
+   "Deluxe",
+   "Премиум"
+  ],
+  [
+   "Статус",
+   "Дом построен, 2025",
+   "Строится, сдача 2030"
+  ],
+  [
+   "Квартир в доме",
+   "23",
+   "59"
+  ],
+  [
+   "Этажей",
+   "12",
+   "9"
+  ],
+  [
+   "Лотов в продаже",
+   "17",
+   "3"
+  ],
+  [
+   "Площади в продаже, м²",
+   "46,6 – 168,7",
+   "89,8 – 134,1"
+  ],
+  [
+   "Цены, млн ₽",
+   "127,2 – 500,6",
+   "191,3 – 257,4"
+  ],
+  [
+   "Метр, ₽",
+   "2 705 573 – 2 967 580",
+   "1 919 720 – 2 129 965"
+  ],
+  [
+   "Средневзвешенный метр, ₽",
+   "2 821 950",
+   "1 974 350"
+  ],
+  [
+   "Паркинг",
+   "18 мест на 23 квартиры",
+   "66 мест на 59 квартир"
+  ],
+  [
+   "Потолки",
+   "до 3,5 м",
+   "до 4,1 м"
+  ],
+  [
+   "Ближайшее метро",
+   "«Арбатская», 175 м",
+   "«Воробьёвы горы», 1,2 км"
+  ]
+ ],
+ "stArbat": {
+  "n": 17,
+  "areaLo": 46.6,
+  "areaHi": 168.7,
+  "priceLo": 127236390,
+  "priceHi": 500630818,
+  "ppmLo": 2705573,
+  "ppmHi": 2967580,
+  "ppmW": 2821950.2780528055,
+  "sum": 3420203737,
+  "rooms": {
+   "1": 8,
+   "2": 7,
+   "4": 1,
+   "3": 1
+  },
+  "floors": [
+   10,
+   11
+  ]
+ },
+ "stOmega": {
+  "n": 3,
+  "areaLo": 89.8,
+  "areaHi": 134.1,
+  "priceLo": 191270870,
+  "priceHi": 257434461,
+  "ppmLo": 1919720,
+  "ppmHi": 2129965,
+  "ppmW": 1974349.7164351852,
+  "sum": 682335262,
+  "rooms": {
+   "2": 1,
+   "3": 2
+  },
+  "floors": [
+   4,
+   5,
+   6
+  ]
+ }
+}

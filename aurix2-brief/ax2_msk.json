@@ -1,0 +1,422 @@
+[
+ {
+  "project": "Арбат 2",
+  "rooms": 1,
+  "number": "1012",
+  "building": "1",
+  "floor": 10,
+  "floors": 12,
+  "area": 46.6,
+  "price": 127236390,
+  "ppm": 2730395,
+  "plan": false,
+  "id": "2822",
+  "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1012-2822",
+  "plans": {
+   "С мебелью": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274540/45000000003164878.png",
+   "Без мебели": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274540/44500000002972588.png",
+   "На этаже": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274540/43000000002774732.png"
+  },
+  "section": "127",
+  "planFile": "arbat_1012.png"
+ },
+ {
+  "project": "Арбат 2",
+  "rooms": 1,
+  "number": "1110",
+  "building": "1",
+  "floor": 11,
+  "floors": 12,
+  "area": 46.6,
+  "price": 132377254,
+  "ppm": 2840714,
+  "plan": false,
+  "id": "2823",
+  "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1110-2823",
+  "plans": {
+   "С мебелью": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274556/45000000003164889.png",
+   "Без мебели": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274556/44500000002972598.png",
+   "На этаже": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274556/43000000002774742.png"
+  },
+  "section": "132",
+  "planFile": "arbat_1110.png"
+ },
+ {
+  "project": "Арбат 2",
+  "rooms": 1,
+  "number": "1108",
+  "building": "1",
+  "floor": 11,
+  "floors": 12,
+  "area": 51.4,
+  "price": 147004999,
+  "ppm": 2860019,
+  "plan": false,
+  "id": "2828",
+  "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1108-2828",
+  "plans": {
+   "С мебелью": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274549/45000000003164887.png",
+   "Без мебели": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274549/44500000002972596.png",
+   "На этаже": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274549/43000000002774740.png"
+  },
+  "section": "147",
+  "planFile": "arbat_1108.png"
+ },
+ {
+  "project": "Арбат 2",
+  "rooms": 1,
+  "number": "1106",
+  "building": "1",
+  "floor": 11,
+  "floors": 12,
+  "area": 51.5,
+  "price": 148285250,
+  "ppm": 2879325,
+  "plan": false,
+  "id": "2829",
+  "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1106-2829",
+  "plans": {
+   "С мебелью": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274548/45000000003164885.png",
+   "Без мебели": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274548/44500000002972594.png",
+   "На этаже": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274548/43000000002774738.png"
+  },
+  "section": "148",
+  "planFile": "arbat_1106.png"
+ },
+ {
+  "project": "Арбат 2",
+  "rooms": 1,
+  "number": "1008",
+  "building": "1",
+  "floor": 10,
+  "floors": 12,
+  "area": 51.8,
+  "price": 143434525,
+  "ppm": 2769006,
+  "plan": false,
+  "id": "2825",
+  "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1008-2825",
+  "plans": {
+   "С мебелью": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274538/45000000003164871.png",
+   "Без мебели": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274538/44500000002972584.png",
+   "На этаже": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274538/43000000002774727.png"
+  },
+  "section": "143",
+  "planFile": "arbat_1008.png"
+ },
+ {
+  "project": "Арбат 2",
+  "rooms": 1,
+  "number": "1104",
+  "building": "1",
+  "floor": 11,
+  "floors": 12,
+  "area": 52.9,
+  "price": 150127853,
+  "ppm": 2837956,
+  "plan": false,
+  "id": "2830",
+  "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1104-2830",
+  "plans": {
+   "С мебелью": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274547/45000000003164883.png",
+   "Без мебели": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274547/44500000002972592.png",
+   "На этаже": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274547/43000000002774736.png"
+  },
+  "section": "150",
+  "planFile": "arbat_1104.png"
+ },
+ {
+  "project": "Арбат 2",
+  "rooms": 1,
+  "number": "1004",
+  "building": "1",
+  "floor": 10,
+  "floors": 12,
+  "area": 53.1,
+  "price": 144837506,
+  "ppm": 2727637,
+  "plan": false,
+  "id": "2826",
+  "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1004-2826",
+  "plans": {
+   "С мебелью": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274536/45000000003164867.png",
+   "Без мебели": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274536/44500000002972580.png",
+   "На этаже": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274536/43000000002774719.png"
+  },
+  "section": "144",
+  "planFile": "arbat_1004.png"
+ },
+ {
+  "project": "Арбат 2",
+  "rooms": 1,
+  "number": "1006",
+  "building": "1",
+  "floor": 10,
+  "floors": 12,
+  "area": 53.1,
+  "price": 145569749,
+  "ppm": 2741427,
+  "plan": false,
+  "id": "2827",
+  "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1006-2827",
+  "plans": {
+   "С мебелью": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274537/45000000003164869.png",
+   "Без мебели": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274537/44500000002972582.png",
+   "На этаже": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274537/43000000002774722.png"
+  },
+  "section": "145",
+  "planFile": "arbat_1006.png"
+ },
+ {
+  "project": "Арбат 2",
+  "rooms": 2,
+  "number": "1002",
+  "building": "1",
+  "floor": 10,
+  "floors": 12,
+  "area": 62.2,
+  "price": 176177748,
+  "ppm": 2832440,
+  "plan": false,
+  "id": "2831",
+  "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1002-2831",
+  "plans": {
+   "С мебелью": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274535/45000000003164864.png",
+   "Без мебели": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274535/44500000002972578.png",
+   "На этаже": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274535/43000000002774697.png"
+  },
+  "section": "176",
+  "planFile": "arbat_1002.png"
+ },
+ {
+  "project": "Арбат 2",
+  "rooms": 2,
+  "number": "1003",
+  "building": "1",
+  "floor": 10,
+  "floors": 12,
+  "area": 71.3,
+  "price": 198610009,
+  "ppm": 2785554,
+  "plan": false,
+  "id": "2833",
+  "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1003-2833",
+  "plans": {
+   "С мебелью": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274545/45000000003164866.png",
+   "Без мебели": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274545/44500000002972579.png",
+   "На этаже": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274545/43000000002774713.png"
+  },
+  "section": "198",
+  "planFile": "arbat_1003.png"
+ },
+ {
+  "project": "Арбат 2",
+  "rooms": 2,
+  "number": "1103",
+  "building": "1",
+  "floor": 11,
+  "floors": 12,
+  "area": 71.3,
+  "price": 204509316,
+  "ppm": 2868293,
+  "plan": false,
+  "id": "2836",
+  "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1103-2836",
+  "plans": {
+   "С мебелью": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274553/45000000003164882.png",
+   "Без мебели": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274553/44500000002972591.png",
+   "На этаже": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274553/43000000002774735.png"
+  },
+  "section": "204",
+  "planFile": "arbat_1103.png"
+ },
+ {
+  "project": "Арбат 2",
+  "rooms": 2,
+  "number": "1107",
+  "building": "1",
+  "floor": 11,
+  "floors": 12,
+  "area": 71.7,
+  "price": 206052127,
+  "ppm": 2873809,
+  "plan": false,
+  "id": "2837",
+  "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1107-2837",
+  "plans": {
+   "С мебелью": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274552/45000000003164886.png",
+   "Без мебели": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274552/44500000002972595.png",
+   "На этаже": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274552/43000000002774739.png"
+  },
+  "section": "206",
+  "planFile": "arbat_1107.png"
+ },
+ {
+  "project": "Арбат 2",
+  "rooms": 2,
+  "number": "1007",
+  "building": "1",
+  "floor": 10,
+  "floors": 12,
+  "area": 71.8,
+  "price": 198418605,
+  "ppm": 2763490,
+  "plan": false,
+  "id": "2832",
+  "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1007-2832",
+  "plans": {
+   "С мебелью": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274543/45000000003164870.png",
+   "Без мебели": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274543/44500000002972583.png",
+   "На этаже": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274543/43000000002774726.png"
+  },
+  "section": "198",
+  "planFile": "arbat_1007.png"
+ },
+ {
+  "project": "Арбат 2",
+  "rooms": 2,
+  "number": "1005",
+  "building": "1",
+  "floor": 10,
+  "floors": 12,
+  "area": 72.1,
+  "price": 200838452,
+  "ppm": 2785554,
+  "plan": false,
+  "id": "2834",
+  "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1005-2834",
+  "plans": {
+   "С мебелью": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274544/45000000003164868.png",
+   "Без мебели": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274544/44500000002972581.png",
+   "На этаже": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274544/43000000002774720.png"
+  },
+  "section": "200",
+  "planFile": "arbat_1005.png"
+ },
+ {
+  "project": "Арбат 2",
+  "rooms": 2,
+  "number": "1105",
+  "building": "1",
+  "floor": 11,
+  "floors": 12,
+  "area": 73.5,
+  "price": 210819561,
+  "ppm": 2868293,
+  "plan": false,
+  "id": "2838",
+  "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1105-2838",
+  "plans": {
+   "С мебелью": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274551/45000000003164884.png",
+   "Без мебели": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274551/44500000002972593.png",
+   "На этаже": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274551/43000000002774737.png"
+  },
+  "section": "210",
+  "planFile": "arbat_1105.png"
+ },
+ {
+  "project": "Резиденция Омега",
+  "rooms": 2,
+  "number": "43",
+  "building": "1",
+  "floor": 5,
+  "floors": 9,
+  "area": 89.8,
+  "price": 191270870,
+  "ppm": 2129965,
+  "plan": false,
+  "id": "2960",
+  "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/omega-residence-kvartira-43-2960",
+  "plans": {
+   "С мебелью": "https://imgs.etalongroup.ru/imgs/18500000000002189/42500000000303333/44000000002942010.png",
+   "Без мебели": "https://imgs.etalongroup.ru/imgs/18500000000002189/42500000000303333/44000000002941865.png",
+   "На этаже": "https://imgs.etalongroup.ru/imgs/18500000000002189/42500000000303333/44500000003012883.gif"
+  },
+  "section": "191",
+  "planFile": "omega_43.png"
+ },
+ {
+  "project": "Резиденция Омега",
+  "rooms": 3,
+  "number": "10",
+  "building": "1",
+  "floor": 4,
+  "floors": 9,
+  "area": 121.7,
+  "price": 233629931,
+  "ppm": 1919720,
+  "plan": false,
+  "id": "2961",
+  "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/omega-residence-kvartira-10-2961",
+  "plans": {
+   "С мебелью": "https://imgs.etalongroup.ru/imgs/18500000000002189/42500000000303303/44000000002941955.png",
+   "Без мебели": "https://imgs.etalongroup.ru/imgs/18500000000002189/42500000000303303/44000000002941829.png",
+   "На этаже": "https://imgs.etalongroup.ru/imgs/18500000000002189/42500000000303303/44500000003012847.gif"
+  },
+  "section": "233",
+  "planFile": "omega_10.png"
+ },
+ {
+  "project": "Резиденция Омега",
+  "rooms": 3,
+  "number": "17",
+  "building": "1",
+  "floor": 6,
+  "floors": 9,
+  "area": 134.1,
+  "price": 257434461,
+  "ppm": 1919720,
+  "plan": false,
+  "id": "3136",
+  "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/omega-residence-kvartira-17-3136",
+  "plans": {
+   "С мебелью": "https://imgs.etalongroup.ru/imgs/18500000000002189/42500000000303301/44000000002941965.png",
+   "Без мебели": "https://imgs.etalongroup.ru/imgs/18500000000002189/42500000000303301/44000000002941836.png",
+   "На этаже": "https://imgs.etalongroup.ru/imgs/18500000000002189/42500000000303301/44500000003012854.gif"
+  },
+  "section": "257",
+  "planFile": "omega_17.png"
+ },
+ {
+  "project": "Арбат 2",
+  "rooms": 4,
+  "number": "1009",
+  "building": "1",
+  "floor": 10,
+  "floors": 12,
+  "area": 142.4,
+  "price": 385273575,
+  "ppm": 2705573,
+  "plan": false,
+  "id": "2839",
+  "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1009-2839",
+  "plans": {
+   "С мебелью": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274542/45000000003164872.png",
+   "Без мебели": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274542/44500000002972585.png",
+   "На этаже": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274542/43000000002774729.png"
+  },
+  "section": "385",
+  "planFile": "arbat_1009.png"
+ },
+ {
+  "project": "Арбат 2",
+  "rooms": 3,
+  "number": "1011",
+  "building": "1",
+  "floor": 10,
+  "floors": 12,
+  "area": 168.7,
+  "price": 500630818,
+  "ppm": 2967580,
+  "plan": false,
+  "id": "2840",
+  "url": "https://aurix-development.ru/vybor-po-parametram/kvartiry/arbat-2-kvartira-1011-2840",
+  "plans": {
+   "С мебелью": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274541/45000000003164877.png",
+   "Без мебели": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274541/44500000002972587.png",
+   "На этаже": "https://imgs.etalongroup.ru/imgs/18500000000001893/42500000000274541/43000000002774731.png"
+  },
+  "section": "500",
+  "planFile": "arbat_1011.png"
+ }
+]
