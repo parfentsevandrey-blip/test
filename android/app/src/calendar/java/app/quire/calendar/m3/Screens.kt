@@ -533,11 +533,19 @@ private const val SOON_MILLIS = 6L * 60L * 60L * 1000L
 private const val MINUTE_MILLIS = 60_000L
 
 /**
- * The whole year, three across and four down, every date legible.
+ * The whole year, three across and four down, every date legible — and the years either side one
+ * swipe away.
  *
  * The twelve tiles are sized to fill the page rather than to fit their contents: a year that ends
  * half way down the screen reads as a list that ran out, and this is meant to read as a year you
  * can see all of at once. Below the height where that stays legible the grid scrolls instead.
+ *
+ * The pager is not decoration; it is the way out. This screen used to draw whatever year the
+ * month happened to be in and offer nothing at all for reaching another one: seeing next spring
+ * meant going back to the month, swiping it forward until the year rolled over, and opening the
+ * year again. A year you cannot leave is a dead end with twelve pictures in it. And the gesture
+ * that gets you out is the one the month already answers to, because these are the same twelve
+ * months at two sizes and they should not move by two different rules.
  */
 @Composable
 fun YearScreen(
@@ -547,8 +555,33 @@ fun YearScreen(
     visibility: AnimatedVisibilityScope? = null,
     onOpenMonth: (YearMonth) -> Unit,
 ) {
-    val year = model.month.year
-    val months = remember(year) { (1..12).map { YearMonth.of(year, it) } }
+    val anchor = remember { YearMonth.now().year }
+    val state = rememberPagerState(
+        initialPage = YEAR_ORIGIN + (model.month.year - anchor).coerceIn(-YEAR_ORIGIN, YEAR_ORIGIN),
+        pageCount = { YEAR_COUNT },
+    )
+    val haptics = LocalHapticFeedback.current
+
+    // The pager leads and the model follows, exactly as on the month — and the month it lands on
+    // is the same month of the new year, so the bar's rolling label follows the swipe and going
+    // back to the grid lands where the eye already was rather than where it started.
+    LaunchedEffect(state) {
+        snapshotFlow { state.currentPage }.collect { page ->
+            val landed = anchor + (page - YEAR_ORIGIN)
+            if (model.month.year != landed) {
+                model.showMonth(YearMonth.of(landed, model.month.monthValue))
+            }
+        }
+    }
+
+    // The same tick a settled month gets, for the same reason: a swipe that springs back to the
+    // year it came from should not feel like one that carried.
+    LaunchedEffect(state) {
+        snapshotFlow { state.settledPage }.drop(1).collect {
+            haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
+        }
+    }
+
     val initials = model.weekdayLabels().map { it.take(1) }
     val density = LocalDensity.current
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -578,35 +611,53 @@ fun YearScreen(
         }
         val disc = minOf(cell * 0.92f, MiniDiscMax)
 
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(YearColumns),
-            contentPadding = PaddingValues(
-                start = YearGridPadding,
-                end = YearGridPadding,
-                top = padding.calculateTopPadding() + YearGridPadding,
-                bottom = padding.calculateBottomPadding() + YearGridPadding,
-            ),
-            modifier = Modifier.fillMaxSize(),
-        ) {
-            gridItems(months) { month ->
-                LaunchedEffect(month) { model.request(month) }
-                MiniMonth(
-                    month = month,
-                    modifier = Modifier.height(tile)
-                        .then(sharedMonth(shared, visibility, month)),
-                    cells = model.cells(month),
-                    weekdayInitials = initials,
-                    today = model.today,
-                    loads = model.loads[month].orEmpty(),
-                    dayFont = dayFont,
-                    nameFont = nameFont,
-                    disc = disc,
-                    onOpen = onOpenMonth,
-                )
+        // The measurements are taken once, outside the pager: every year is the same twelve tiles
+        // in the same room, and a page that sized its own type would have the numbers change size
+        // half way through a swipe.
+        HorizontalPager(state = state, modifier = Modifier.fillMaxSize()) { page ->
+            val pageYear = anchor + (page - YEAR_ORIGIN)
+            val months = remember(pageYear) { (1..12).map { YearMonth.of(pageYear, it) } }
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(YearColumns),
+                contentPadding = PaddingValues(
+                    start = YearGridPadding,
+                    end = YearGridPadding,
+                    top = padding.calculateTopPadding() + YearGridPadding,
+                    bottom = padding.calculateBottomPadding() + YearGridPadding,
+                ),
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                gridItems(months) { month ->
+                    LaunchedEffect(month) { model.request(month) }
+                    MiniMonth(
+                        month = month,
+                        // Only the settled year's tiles may claim the bounds the month grows out
+                        // of. A page still sliding past is not what anybody tapped.
+                        modifier = Modifier.height(tile)
+                            .then(
+                                sharedMonth(shared, visibility, month, page == state.currentPage),
+                            ),
+                        cells = model.cells(month),
+                        weekdayInitials = initials,
+                        today = model.today,
+                        loads = model.loads[month].orEmpty(),
+                        dayFont = dayFont,
+                        nameFont = nameFont,
+                        disc = disc,
+                        onOpen = onOpenMonth,
+                    )
+                }
             }
         }
     }
 }
+
+/**
+ * A hundred and one years either side of this one, which is where a calendar stops being useful
+ * and starts being a demonstration.
+ */
+private const val YEAR_COUNT = 203
+private const val YEAR_ORIGIN = YEAR_COUNT / 2
 
 private const val YearColumns = 3
 private const val YearRows = 4
@@ -798,6 +849,22 @@ fun SettingsScreen(model: CalendarModel, padding: PaddingValues) {
                         },
                     )
                 }
+            }
+        }
+
+        item { SectionHeading(stringResource(R.string.section_gestures)) }
+        item {
+            // Its own section rather than a fifth switch under Grid: everything above changes
+            // what the month looks like, and this changes what the hand can do with the app.
+            SettingGroup {
+                SettingRow(
+                    index = 0,
+                    count = 1,
+                    title = stringResource(R.string.swipe_nav),
+                    hint = stringResource(R.string.swipe_nav_hint),
+                    checked = settings.swipeNav,
+                    onChange = { on -> model.update(settings.copy(swipeNav = on)) },
+                )
             }
         }
 

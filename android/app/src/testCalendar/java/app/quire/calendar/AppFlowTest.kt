@@ -2,6 +2,7 @@ package app.quire.calendar
 
 import android.graphics.Bitmap
 import android.os.Looper
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasContentDescription
@@ -9,6 +10,9 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeLeft
+import androidx.compose.ui.test.swipeRight
 import app.quire.calendar.m3.MainActivity
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -20,6 +24,7 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
+import java.time.LocalDate
 
 /**
  * The app driven the way it is used: the real Activity, real taps, and the clock in hand.
@@ -137,6 +142,147 @@ class AppFlowTest {
             compose.onAllNodes(hasText("Cancel")).fetchSemanticsNodes().isNotEmpty(),
         )
     }
+
+    /**
+     * The scrub, wired to the bar the app actually draws.
+     *
+     * [ScrubTest] proves the gesture against four equal boxes; this proves that the four boxes
+     * are the navigation bar — that the columns line up with the items Material lays out, that
+     * what the finger names is the destination and not some parallel number, and that having
+     * given the bar a drag has not quietly cost it its taps.
+     */
+    @Test
+    fun `one finger sliding along the bar walks the screens, and a tap still lands`() {
+        fun item(label: String) =
+            compose.onAllNodes(hasText(label))[0].fetchSemanticsNode().boundsInRoot
+
+        val year = item("Year")
+        val search = item("Search")
+        val settings = item("Settings")
+        // "Today" is on the bar and also heading the agenda under the grid, and the agenda's copy
+        // is the one higher up the tree — so the bar's own is found by the row it sits on rather
+        // than by being first. Reaching for `[0]` here is how this test spent its first run
+        // dragging a finger sideways across the agenda and reporting the gesture broken.
+        val today = compose.onAllNodes(hasText("Today")).fetchSemanticsNodes()
+            .map { it.boundsInRoot }
+            .first { it.top >= year.top }
+
+        val row = today.center.y
+        compose.onRoot().performTouchInput {
+            // Slop first, without leaving the item pressed.
+            down(Offset(today.center.x, row))
+            moveTo(Offset(today.center.x + viewConfiguration.touchSlop + 1f, row))
+        }
+        // The finger stays down across these calls — the dispatcher keeps its pointers between
+        // them — which is what lets each stop be photographed without ever letting go. The
+        // frames are the filmstrip of the gesture, and the only picture of it there can be.
+        listOf(today, year, search, settings).forEachIndexed { index, item ->
+            compose.onRoot().performTouchInput { moveTo(Offset(item.center.x, row)) }
+            settle()
+            assertTrue(
+                "the screen under the finger at stop $index did not paint",
+                colours(shoot("flow-scrub-$index")) > 8,
+            )
+        }
+        compose.onRoot().performTouchInput { up() }
+        settle()
+
+        assertTrue(
+            "the finger crossed the whole bar and the settings never arrived",
+            compose.onAllNodes(hasText("System colours")).fetchSemanticsNodes().isNotEmpty(),
+        )
+        // And the bar is still four buttons: a press that does not travel goes where it is aimed.
+        compose.onRoot().performTouchInput { down(today.center); up() }
+        settle()
+        assertTrue(
+            "a tap on the bar stopped working once the bar could be dragged",
+            compose.onAllNodes(hasContentDescription("Actions")).fetchSemanticsNodes().isNotEmpty(),
+        )
+    }
+
+    /**
+     * The year used to be a room with twelve pictures and no door. It drew whatever year the
+     * month happened to be in, and offered nothing for reaching another one — so this asserts the
+     * door, in the only terms that matter: a finger drags, and a different year is there.
+     */
+    @Test
+    fun `the year is not a dead end`() {
+        val here = LocalDate.now().year
+        tap("Year")
+        settle()
+        assertTrue(
+            "the year screen did not open on this year",
+            compose.onAllNodes(hasText(here.toString())).fetchSemanticsNodes().isNotEmpty(),
+        )
+
+        // January, in pixels, is what the claim rests on. The caption in the app bar reads the
+        // model's year and follows the pager whether or not the grid does — with that as the
+        // assertion, an implementation whose every page drew the same twelve months passed. A
+        // January is a different shape in a different year, because the first falls on a
+        // different weekday, and no caption lives inside the tile to give a false pass.
+        val before = januaryTile("flow-year-this")
+
+        compose.onRoot().performTouchInput { swipeLeft() }
+        settle()
+        assertTrue(
+            "the swipe went nowhere: ${here + 1} never arrived",
+            compose.onAllNodes(hasText((here + 1).toString())).fetchSemanticsNodes().isNotEmpty(),
+        )
+        val next = januaryTile("flow-year-next")
+        val moved = differing(before, next)
+        assertTrue(
+            "the caption changed year but the grid did not (January differs in ${percent(moved)})",
+            // A mini-month is mostly ground: the digits are a few per cent of the tile, so a
+            // year whose first of January lands on a different weekday moves about four per cent
+            // of the pixels. The same year drawn twice moves none at all, which is the whole
+            // distance this number has to tell apart.
+            moved > 0.015,
+        )
+
+        // And back, so the door swings both ways rather than only forwards.
+        compose.onRoot().performTouchInput { swipeRight() }
+        settle()
+        assertTrue(
+            "the year could be left but not returned to",
+            compose.onAllNodes(hasText(here.toString())).fetchSemanticsNodes().isNotEmpty(),
+        )
+        val returned = differing(before, januaryTile("flow-year-back"))
+        assertTrue(
+            "coming back landed on a different January (${percent(returned)} of it differs)",
+            returned < 0.005,
+        )
+    }
+
+    /** The January tile alone, cropped out of the screen it was drawn on. */
+    private fun januaryTile(name: String): Bitmap {
+        val box = compose.onAllNodes(hasText("January"))[0].fetchSemanticsNode().boundsInRoot
+        val whole = shoot(name)
+        val left = box.left.toInt().coerceIn(0, whole.width - 1)
+        val top = box.top.toInt().coerceIn(0, whole.height - 1)
+        return Bitmap.createBitmap(
+            whole,
+            left,
+            top,
+            box.width.toInt().coerceAtMost(whole.width - left),
+            box.height.toInt().coerceAtMost(whole.height - top),
+        )
+    }
+
+    /** The fraction of pixels that are not the same colour in both. */
+    private fun differing(a: Bitmap, b: Bitmap): Double {
+        if (a.width != b.width || a.height != b.height) return 1.0
+        var seen = 0
+        var apart = 0
+        for (x in 0 until a.width) {
+            for (y in 0 until a.height) {
+                seen++
+                if (a.getPixel(x, y) != b.getPixel(x, y)) apart++
+            }
+        }
+        return if (seen == 0) 0.0 else apart.toDouble() / seen
+    }
+
+    private fun percent(fraction: Double) = "%.1f%%".format(fraction * 100)
 
     @Test
     fun `settings and search are reachable and paint`() {

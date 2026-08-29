@@ -12,9 +12,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ApplicationProvider
 import app.quire.calendar.core.AgendaEntry
@@ -370,6 +372,24 @@ class AppRenderTest {
         model.refresh()
         settle()
         shoot("app-settings")
+
+        // The sections below the fold are composed only once something scrolls to them, so a
+        // screenshot of the top is not a screenshot of the screen. Gestures is the last one added
+        // and the one with nothing above it to inherit a proof from.
+        //
+        // The clock runs for the length of the scroll and is stopped again after. Scrolling to a
+        // node is an animation like any other, and against a clock that is not advancing it never
+        // arrives: the wait for idle spins, the trace buffer fills, and the run ends on a heap
+        // error rather than on an assertion. This was worth finding out the hard way once.
+        compose.mainClock.autoAdvance = true
+        compose.onNode(hasScrollAction()).performScrollToNode(hasText("Slide along the bar"))
+        compose.mainClock.autoAdvance = false
+        settle()
+        assertTrue(
+            "the gestures section never came into view",
+            compose.onAllNodes(hasText("Slide along the bar")).fetchSemanticsNodes().isNotEmpty(),
+        )
+        shoot("app-settings-gestures")
     }
 
     /**

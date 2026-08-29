@@ -188,7 +188,21 @@ private fun QuireApp(intent: Intent?) {
             bottomBar = {
                 // The short bar is Expressive's own: a shorter band, and a selection pill that
                 // grows around the icon on the same spring the rest of the theme moves on.
-                ShortNavigationBar {
+                //
+                // The four items are also one continuous control: a finger laid anywhere on the
+                // band can slide along it and the screens follow, so looking at all four costs
+                // one touch rather than four. It cannot cost a tap anything — the drag only
+                // takes the gesture over after the platform's own horizontal slop — and it is a
+                // setting, off in one switch for anyone who would rather the bar held still.
+                val order = Destination.entries
+                ShortNavigationBar(
+                    modifier = Modifier.scrubbable(
+                        enabled = model.settings.swipeNav,
+                        count = order.size,
+                        landedOn = { order.indexOf(destination) },
+                        onScrub = { destination = order[it] },
+                    ),
+                ) {
                     ShortNavigationBarItem(
                         selected = destination == Destination.MONTH,
                         onClick = {

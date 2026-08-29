@@ -24,6 +24,7 @@ class Prefs private constructor(private val sp: SharedPreferences) {
         const val KEY_COLOURED_DOTS = "coloured_dots"
         const val KEY_HIDDEN_CALENDARS = "hidden_calendars"
         const val KEY_HEAT = "heat"
+        const val KEY_SWIPE_NAV = "swipe_nav"
         const val KEY_DYNAMIC = "dynamic"
         const val KEY_PAINTED_SCHEME = "painted_scheme"
 
@@ -77,6 +78,19 @@ class Prefs private constructor(private val sp: SharedPreferences) {
     var heat: Boolean
         get() = sp.getBoolean(KEY_HEAT, false)
         set(v) = sp.edit { putBoolean(KEY_HEAT, v) }
+
+    /**
+     * Whether a finger laid on the navigation bar can slide along it, changing the screen as it
+     * passes each item, instead of having to lift and land four separate times.
+     *
+     * On by default, and it costs a tap nothing: the drag only takes over once the finger has
+     * travelled the platform's own touch slop sideways, which no tap ever does. Off is here
+     * because a bar that changes screens under a thumb resting on it is a fair thing to dislike,
+     * and because someone whose hands do not hold still should be able to say so.
+     */
+    var swipeNav: Boolean
+        get() = sp.getBoolean(KEY_SWIPE_NAV, true)
+        set(v) = sp.edit { putBoolean(KEY_SWIPE_NAV, v) }
 
     /**
      * Whether the app takes its colours from the device's own Material scheme — the one Android

@@ -25,11 +25,11 @@ off-thread loader — because that part had tests and had been debugged against 
 
 | | | |
 |---|---|---|
-| **Calendar** | [`dist/quire-calendar-9.16.apk`](dist/quire-calendar-9.16.apk) · 1.9 MB | `sha256 be6f186892e5d5fe6d4b2b8853a93eb5c64fc3ea26515fb71d131bc65aafd552` |
-| **Weather** | [`dist/quire-weather-9.16.apk`](dist/quire-weather-9.16.apk) · 1.6 MB | `sha256 58cf5143ffe6f37f16f863f2ea4e858c652c1a4eaffa2a657d28a803b55bc96e` |
-| **Quire 95** | [`dist/quire-95-9.16.apk`](dist/quire-95-9.16.apk) · 0.9 MB | `sha256 77de37f04679b470bdcae01fcf0b7d69421b8f105359ade685f598c4a75cd692` |
+| **Calendar** | [`dist/quire-calendar-9.17.apk`](dist/quire-calendar-9.17.apk) · 1.9 MB | `sha256 ed806713b035807c9de6feb370dee214f245c23853c9d252a384a025341f93e7` |
+| **Weather** | [`dist/quire-weather-9.17.apk`](dist/quire-weather-9.17.apk) · 1.6 MB | `sha256 179085198a036f6c3e2465edbadcee9001243c637f074e57c1a57f3fe16d7f14` |
+| **Quire 95** | [`dist/quire-95-9.17.apk`](dist/quire-95-9.17.apk) · 0.9 MB | `sha256 5e916684654bce6cb72831272f302e373bf97722c017ea5e0563ca5d68768af9` |
 
-Copy one to the phone and open it, or `adb install -r dist/quire-calendar-9.16.apk`. You will need
+Copy one to the phone and open it, or `adb install -r dist/quire-calendar-9.17.apk`. You will need
 to allow installing from an unknown source once — the APKs are signed with the self-signed key in
 `keystore/`, not by a store.
 
@@ -50,11 +50,27 @@ Every image is a real render of the shipping code, produced by the test suite �
 Four destinations in a `ShortNavigationBar`, which is the Expressive one: a shorter band, and a
 selection pill that grows around the icon on the theme's own spring.
 
+The four items are also one continuous control. A finger laid anywhere on the band can slide along
+it and the screens follow, so looking at all four costs one touch instead of four presses — the
+same bargain a volume slider makes, and the reason it is a scrub rather than a fling: the item
+under the thumb is the item chosen, absolutely, so backing up is the same gesture as going on and
+there is nothing to undo. It cannot cost a tap anything, because nothing is consumed until the
+finger has travelled the platform's own horizontal touch slop, which is the distance Android
+itself uses to tell a press from a drag; above it the drag consumes, which is exactly what tells a
+pressed item its press was cancelled. One `SegmentTick` per boundary crossed, the same touch the
+month pager and the segmented rows use. A right-to-left layout counts the other way. Settings →
+Gestures turns it off, for anyone whose hands do not hold still or who would simply rather the bar
+did not move.
+
 - **Today** — the month, swiped through a pager, with the selected day's entries underneath.
   Tapping Today again while you are already there returns to today rather than doing nothing.
   Pull down to ask the provider again.
 - **Year** — all twelve months at once, three across and four down, every date legible. The tiles
   take whatever height the page has, so a year fills its screen instead of ending half way down.
+  Swipe sideways for the year either side: it used to draw whichever year the month happened to be
+  in and offer nothing at all for reaching another, which made it a room with twelve pictures and
+  no door. It moves on the same pager the month does, because these are the same twelve months at
+  two sizes and they should not answer to two different rules.
 - **Search** — `AppBarWithSearch`, so the field *is* the app bar rather than a box floating over
   one. Results filter as you type and open the day they were found in.
 - **Settings** — everything the app can be told.

@@ -22,6 +22,9 @@
     <string name="permission_action">Дать доступ</string>
     <string name="section_week">Неделя</string>
     <string name="section_grid">Сетка</string>
+    <string name="section_gestures">Жесты</string>
+    <string name="swipe_nav">Свайп по панели</string>
+    <string name="swipe_nav_hint">Не отрывая пальца, вести по нижней панели — экраны листаются следом</string>
     <string name="section_calendars">Календари</string>
     <string name="section_about">О программе</string>
     <string name="first_day">Первый день</string>

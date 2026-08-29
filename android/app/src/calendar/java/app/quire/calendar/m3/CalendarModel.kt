@@ -96,6 +96,7 @@ class CalendarModel(app: Application) : AndroidViewModel(app) {
         val weekNumbers: Boolean,
         val colouredMarks: Boolean,
         val density: Boolean,
+        val swipeNav: Boolean,
         val hidden: Set<Long>,
     ) {
         companion object {
@@ -114,6 +115,7 @@ class CalendarModel(app: Application) : AndroidViewModel(app) {
                 weekNumbers = prefs.weekNumbers,
                 colouredMarks = prefs.colouredDots,
                 density = prefs.heat,
+                swipeNav = prefs.swipeNav,
                 hidden = prefs.hiddenCalendars,
             )
         }
@@ -206,6 +208,7 @@ class CalendarModel(app: Application) : AndroidViewModel(app) {
         prefs.weekNumbers = next.weekNumbers
         prefs.colouredDots = next.colouredMarks
         prefs.heat = next.density
+        prefs.swipeNav = next.swipeNav
         prefs.hiddenCalendars = next.hidden
         settings = next
         firstDayOfWeek = MonthModel.firstDayOfWeek(next.firstDay, Locale.getDefault())

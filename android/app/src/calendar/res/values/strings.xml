@@ -23,6 +23,9 @@
     <string name="permission_action">Grant access</string>
     <string name="section_week">Week</string>
     <string name="section_grid">Grid</string>
+    <string name="section_gestures">Gestures</string>
+    <string name="swipe_nav">Slide along the bar</string>
+    <string name="swipe_nav_hint">Keep a finger down and drag across the bottom bar to run through the screens</string>
     <string name="section_calendars">Calendars</string>
     <string name="section_about">About</string>
     <string name="first_day">First day</string>
