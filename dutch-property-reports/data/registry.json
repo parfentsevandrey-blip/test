@@ -102,6 +102,16 @@
       ]
     },
     {
+      "slug": "jacob-catskade-45h-amsterdam",
+      "title": "Jacob Catskade 45-H, Amsterdam",
+      "city": "Amsterdam",
+      "price": "€ 895.000",
+      "url": "https://www.fundainbusiness.nl/belegging/amsterdam/object-43325843-jacob-catskade-45-h/",
+      "reports": [
+        "report-2026-08-31-warehouses.json"
+      ]
+    },
+    {
       "slug": "koepelstraat-30-32-rotterdam",
       "title": "Koepelstraat 30-32, Rotterdam",
       "city": "Rotterdam",
@@ -152,6 +162,16 @@
       ]
     },
     {
+      "slug": "newtonstraat-67-zoetermeer",
+      "title": "Newtonstraat 67, Zoetermeer",
+      "city": "Zoetermeer",
+      "price": "€ 400.000",
+      "url": "https://www.fundainbusiness.nl/belegging/zoetermeer/object-44491089-newtonstraat-67/",
+      "reports": [
+        "report-2026-08-31-warehouses.json"
+      ]
+    },
+    {
       "slug": "nieuwe-hemweg-8-amsterdam",
       "title": "Nieuwe Hemweg 8, Amsterdam",
       "city": "Amsterdam",
@@ -198,6 +218,16 @@
       ]
     },
     {
+      "slug": "rondweg-6-ijmuiden",
+      "title": "Rondweg 6, IJmuiden",
+      "city": "IJmuiden",
+      "price": "€ 350.000",
+      "url": "https://www.fundainbusiness.nl/belegging/ijmuiden/object-44495940-rondweg-6/",
+      "reports": [
+        "report-2026-08-31-warehouses.json"
+      ]
+    },
+    {
       "slug": "st-ludgerusstraat-365-367-utrecht",
       "title": "St.-Ludgerusstraat 365-367, Utrecht",
       "city": "Utrecht",
@@ -237,5 +267,5 @@
       "source": "показан заказчику вне этого репозитория"
     }
   ],
-  "updated": "2026-08-27"
+  "updated": "2026-08-31"
 }
