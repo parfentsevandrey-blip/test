@@ -1,6 +1,8 @@
 node_modules/
 *.pdf
 preview.docx
+__pycache__/
 assets/*/grids/
 assets/*/photos_raw/
+assets/*/map_raw.png
 assets/*/page.html
