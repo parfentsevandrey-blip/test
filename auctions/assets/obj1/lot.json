@@ -1,0 +1,148 @@
+{
+ "sourceUrl": "https://investmoscow.ru/tenders/tender/20188709",
+ "title": "3-комн. квартира на продажу, 96 м²",
+ "address": "Центральный административный округ, Мещанский, Колокольников пер., д. 15, Этаж № 2, квартира 13",
+ "lot": "17002658",
+ "objectType": "Квартира",
+ "tenderType": "Продажа",
+ "area": 96,
+ "startPrice": "52 393 000,00 руб.",
+ "pricePerSqm": "545 760,42 руб. за м²",
+ "deposit": "1 047 860,00 руб.",
+ "step": "261 965,00 руб.",
+ "form": "Открытый аукцион в электронной форме",
+ "applicationStart": "31.08.2026 20:00:00",
+ "applicationDeadline": "20.10.2026 15:00:00",
+ "participantSelection": "27.10.2026 10:00",
+ "auctionDate": "29.10.2026 10:00",
+ "results": "29.10.2026 17:00",
+ "metro": "Трубная",
+ "metroWalk": 7,
+ "metroDistanceKm": 0.41,
+ "lat": 55.768071,
+ "lon": 37.628451,
+ "objectInfo": [
+  [
+   "Тип объекта",
+   "Квартира"
+  ],
+  [
+   "Кадастровый номер",
+   "77:01:0001091:1336"
+  ],
+  [
+   "Тип жилья",
+   "Вторичное жилье"
+  ],
+  [
+   "Год постройки",
+   "1917"
+  ],
+  [
+   "Парковка",
+   "Наземная"
+  ],
+  [
+   "Наличие лифта",
+   "Нет"
+  ],
+  [
+   "Наличие грузового лифта",
+   "Нет"
+  ],
+  [
+   "Площадь объекта",
+   "96 м²"
+  ],
+  [
+   "Этажность дома",
+   "3"
+  ],
+  [
+   "Этаж",
+   "2"
+  ],
+  [
+   "Номер квартиры",
+   "13"
+  ],
+  [
+   "Количество комнат",
+   "3"
+  ],
+  [
+   "Площадь жилая",
+   "96 м²"
+  ],
+  [
+   "Площадь кухни",
+   "13 м²"
+  ],
+  [
+   "Наличие балкона",
+   "Нет"
+  ],
+  [
+   "Наличие лоджии",
+   "Нет"
+  ],
+  [
+   "Высота потолков",
+   "2,68 - 2,68 м"
+  ],
+  [
+   "Количество санузлов",
+   "1 санузел"
+  ],
+  [
+   "Обременения",
+   "Нет"
+  ],
+  [
+   "Объект культурного наследия",
+   "Нет"
+  ]
+ ],
+ "visual": [
+  [
+   "Общая площадь",
+   "96 м²"
+  ],
+  [
+   "Жилая площадь",
+   "96 м²"
+  ],
+  [
+   "Площадь кухни",
+   "13 м²"
+  ],
+  [
+   "Этаж",
+   "2 из 3"
+  ],
+  [
+   "Год постройки",
+   "1917"
+  ]
+ ],
+ "images": [
+  "https://torgi.mos.ru/objectimages/Tenders/20188709/dd49d0d4e7405e44324edfff4c8f1d22.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20188709/aa5f9f0ee0f7786f4c47bd6c6360a607.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20188709/8b832dbfa0982f633994f4841836dd9a.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20188709/cf9367044e550323c74b5d6777bb3962.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20188709/3347cc8aa797f7f18f60782662e79b68.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20188709/1869ccc712b31f6a5edb7aaa6a56f154.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20188709/9d6284d199bdf93ea3d18354cbfb51d3.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20188709/b1ca5cc2426d2db266d56dece90e0632.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20188709/796b16b3ea43ca64de0ecc0deefe4562.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20188709/e69cb25e1183fb8f9c97ebd4be62ea40.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20188709/f107e8bdc192bcaef5998af408cae0b6.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20188709/54a0617b3ac00de188c14cfe9c161555.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20188709/9fc8b81936067448446fc91853c035ac.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20188709/387a1aada6dc7251db0b4ca4ebd2e8f5.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20188709/092f629ec196e68b367b3cb3b60df81a.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20188709/94c154466c6b3acaad860855ad029420.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20188709/8431c9ff0404b935e02f2e2c9575e131.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20188709/751a8c25bfa05c1145c3d1d0ac3accf3.jpg"
+ ]
+}
