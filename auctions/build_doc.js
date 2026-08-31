@@ -12,8 +12,8 @@ const fs = require('fs');
 const path = require('path');
 const {
   Document, Packer, Paragraph, TextRun, ImageRun, Table, TableRow, TableCell,
-  WidthType, AlignmentType, BorderStyle, ShadingType, PageBreak, HeightRule,
-  ExternalHyperlink, VerticalAlign,
+  WidthType, AlignmentType, BorderStyle, ShadingType, HeightRule,
+  ExternalHyperlink, VerticalAlign, LineRuleType,
 } = require('docx');
 
 const ROOT = __dirname;
@@ -41,18 +41,28 @@ const SP = 120;            // vertical rhythm unit (twips)
 /* ---- page geometry (A4, DXA) ------------------------------------------ */
 const PAGE_W = 11906;
 const PAGE_H = 16838;
-const MARGIN = 1134;                       // 2 cm
-const CONTENT_W = PAGE_W - 2 * MARGIN;     // 9638
-const CONTENT_H = PAGE_H - 2 * MARGIN;     // 14570
+const MARGIN = 1021;                       // 1.8 cm
+const CONTENT_W = PAGE_W - 2 * MARGIN;     // 9864
+const CONTENT_H = PAGE_H - 2 * MARGIN;     // 14796
 const LABEL_W = 3100;
 const VALUE_W = CONTENT_W - LABEL_W;
 
 const CELL_X = 85;                         // horizontal cell margin (photo cells)
 const CELL_Y = 100;                        // vertical cell margin (photo cells)
 const INFO_PAD = 165;                      // vertical padding inside table rows
-const SECTION_ALLOWANCE = 620;             // label paragraph above a photo sheet
-const PHOTO_BUDGET = CONTENT_H - SECTION_ALLOWANCE;
 const PX = 15;                             // DXA per pixel at 96 dpi
+
+// A photo sheet has to fit the page in Word, not just in LibreOffice, so its
+// height is pinned rather than estimated: the label paragraph is given an exact
+// line height, the rows exact heights, and a margin is left over for whatever
+// the two renderers still disagree about. Overshooting by one twip costs a whole
+// row — it drops onto the next page — so the slack is deliberately generous.
+const LABEL_LINE = 260;                    // exact line height of a section label
+const LABEL_H = LABEL_LINE + SP + 70;      // label line + spacing after + rule
+const SAFETY = 950;                        // ~1.7 cm of give per photo sheet
+const MAP_SAFETY = 700;                    // the map page has fewer moving parts
+const PHOTO_BUDGET = CONTENT_H - LABEL_H - SAFETY;
+const MIN_ROW = 3900;                      // a row worth printing a photo in
 
 const noBorder = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
 const noBorders = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder };
@@ -61,10 +71,19 @@ const boxBorders = { top: hairline, bottom: hairline, left: hairline, right: hai
 
 const run = (text, opts = {}) => new TextRun({ text, font: FONT, ...opts });
 
-/** Small uppercase section label with a rule under it. */
-function sectionLabel(text) {
+/**
+ * Small uppercase section label with a rule under it. `newPage` starts the
+ * page here instead of a separate break paragraph, which would otherwise eat
+ * a line at the top of the page and push the sheet over the page height.
+ */
+function sectionLabel(text, { newPage = false, exact = false } = {}) {
   return new Paragraph({
-    spacing: { before: SP * 2, after: SP },
+    pageBreakBefore: newPage,
+    spacing: exact
+      ? {
+        before: newPage ? 0 : SP * 2, after: SP, line: LABEL_LINE, lineRule: LineRuleType.EXACT,
+      }
+      : { before: SP * 2, after: SP },
     border: { bottom: hairline },
     children: [run(text.toUpperCase(), {
       bold: true, size: T_LABEL, color: MUTED, characterSpacing: 40,
@@ -73,9 +92,14 @@ function sectionLabel(text) {
 }
 
 function caption(text, opts = {}) {
+  const spacing = { before: opts.before ?? 0, after: opts.after ?? 0 };
+  if (opts.line) {
+    spacing.line = opts.line;
+    spacing.lineRule = LineRuleType.EXACT;
+  }
   return new Paragraph({
     alignment: opts.alignment,
-    spacing: { before: opts.before ?? 0, after: opts.after ?? 0 },
+    spacing,
     children: [run(text, { size: T_LABEL, color: MUTED })],
   });
 }
@@ -159,6 +183,7 @@ function photoSheet(group, dir, budget = PHOTO_BUDGET) {
     }
     rows.push(new TableRow({
       height: { value: rowH, rule: HeightRule.EXACT },
+      cantSplit: true,
       children: cells,
     }));
   }
@@ -183,16 +208,17 @@ function photoPages(photos, dir, tailBudget) {
 
   const sheet = (count, budget) => {
     const group = photos.slice(seen, seen + count);
-    if (!first) out.push(new Paragraph({ children: [new PageBreak()] }));
-    out.push(sectionLabel(`Фото объекта · ${seen + 1}–${seen + count} из ${total}`));
+    out.push(sectionLabel(`Фото объекта · ${seen + 1}–${seen + count} из ${total}`,
+      { newPage: !first, exact: true }));
     out.push(photoSheet(group, dir, budget));
     seen += count;
     first = false;
   };
 
-  const rowsInTail = Math.floor((tailBudget - SECTION_ALLOWANCE) / 4300);
+  const tailRoom = tailBudget - LABEL_H - SP * 2;   // the label also gets space above it here
+  const rowsInTail = Math.floor(tailRoom / MIN_ROW);
   if (rowsInTail >= 1 && total > 2 * rowsInTail) {
-    sheet(2 * rowsInTail, tailBudget - SECTION_ALLOWANCE);
+    sheet(2 * rowsInTail, tailRoom);
   }
   balancedPages(total - seen, 6).forEach((count) => sheet(count, PHOTO_BUDGET));
   return out;
@@ -204,6 +230,7 @@ function objectSection(obj, index) {
   const dir = path.join(ROOT, obj.photosDir);
 
   children.push(new Paragraph({
+    pageBreakBefore: index > 0,
     spacing: { before: SP * 2, after: SP / 2 },
     children: [run(`Объект ${index + 1}`.toUpperCase(), {
       bold: true, size: T_LABEL, color: MUTED, characterSpacing: 40,
@@ -241,20 +268,21 @@ function objectSection(obj, index) {
   }));
 
   // --- location -------------------------------------------------------
-  children.push(new Paragraph({ children: [new PageBreak()] }));
-  children.push(sectionLabel('Локация'));
-  children.push(caption(obj.address, { after: SP }));
+  children.push(sectionLabel('Локация', { newPage: true, exact: true }));
+  children.push(caption(obj.address, { after: SP, line: 240 }));
   const map = fs.readFileSync(path.join(ROOT, obj.map));
   const mapSize = fit(1160, 950, { w: (CONTENT_W - 2) / PX, h: PHOTO_BUDGET / PX });
+  // no exact line rule here: Word clips an inline image taller than its line box
   children.push(new Paragraph({
     alignment: AlignmentType.CENTER,
+    spacing: { before: 0, after: 0 },
     children: [new ImageRun({ type: 'png', data: map, transformation: mapSize })],
   }));
   children.push(caption(`Яндекс Карты · ${obj.coords} · ближайшее метро «${obj.metro}»`,
-    { alignment: AlignmentType.CENTER, before: SP }));
+    { alignment: AlignmentType.CENTER, before: SP, line: 240 }));
 
-  // label + address line + map + caption + their spacing, plus a safety margin
-  const mapPageUsed = 420 + 300 + mapSize.height * PX + 380 + 400;
+  // label + address line + map + caption, then the usual per-sheet slack
+  const mapPageUsed = LABEL_H + (240 + SP) + (mapSize.height * PX + 120) + (SP + 240) + MAP_SAFETY;
 
   // --- photos ---------------------------------------------------------
   const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'));
@@ -284,10 +312,7 @@ function build() {
       { size: T_LABEL, color: MUTED })],
   }));
 
-  DATA.objects.forEach((obj, i) => {
-    if (i > 0) children.push(new Paragraph({ children: [new PageBreak()] }));
-    children.push(...objectSection(obj, i));
-  });
+  DATA.objects.forEach((obj, i) => children.push(...objectSection(obj, i)));
 
   return new Document({
     creator: 'Еженедельный обзор торгов',
