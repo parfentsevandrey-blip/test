@@ -1,3 +1,6 @@
 node_modules/
 *.pdf
 preview.docx
+assets/*/grids/
+assets/*/photos_raw/
+assets/*/page.html
