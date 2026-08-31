@@ -1,0 +1,140 @@
+{
+ "sourceUrl": "https://investmoscow.ru/tenders/tender/20181251",
+ "title": "3-комн. квартира на продажу, 58,4 м²",
+ "address": "Центральный административный округ, Красносельский, ул. Маши Порываевой, д. 38, Этаж №4, кв. 68",
+ "lot": "17001845",
+ "objectType": "Квартира",
+ "tenderType": "Продажа",
+ "area": 58.4,
+ "startPrice": "23 925 000,00 руб.",
+ "pricePerSqm": "409 674,66 руб. за м²",
+ "deposit": "478 500,00 руб.",
+ "step": "119 625,00 руб.",
+ "form": "Открытый аукцион в электронной форме",
+ "applicationStart": "24.08.2026 20:00:00",
+ "applicationDeadline": "20.10.2026 15:00:00",
+ "participantSelection": "27.10.2026 10:00",
+ "auctionDate": "29.10.2026 10:00",
+ "results": "29.10.2026 17:00",
+ "metro": "Площадь трёх вокзалов",
+ "metroWalk": 4,
+ "metroDistanceKm": 0.21,
+ "lat": 55.77354,
+ "lon": 37.650154,
+ "objectInfo": [
+  [
+   "Тип объекта",
+   "Квартира"
+  ],
+  [
+   "Кадастровый номер",
+   "77:01:0003040:3198"
+  ],
+  [
+   "Год постройки",
+   "1927"
+  ],
+  [
+   "Парковка",
+   "Отсутствует"
+  ],
+  [
+   "Наличие лифта",
+   "Нет"
+  ],
+  [
+   "Наличие грузового лифта",
+   "Нет"
+  ],
+  [
+   "Площадь объекта",
+   "58,4 м²"
+  ],
+  [
+   "Этажность дома",
+   "8"
+  ],
+  [
+   "Этаж",
+   "4"
+  ],
+  [
+   "Номер квартиры",
+   "68"
+  ],
+  [
+   "Количество комнат",
+   "3"
+  ],
+  [
+   "Площадь жилая",
+   "37,1 м²"
+  ],
+  [
+   "Площадь кухни",
+   "7 м²"
+  ],
+  [
+   "Наличие балкона",
+   "Да"
+  ],
+  [
+   "Наличие лоджии",
+   "Нет"
+  ],
+  [
+   "Высота потолков",
+   "2,97 - 2,97 м"
+  ],
+  [
+   "Количество санузлов",
+   "1 санузел"
+  ],
+  [
+   "Обременения",
+   "Нет"
+  ],
+  [
+   "Объект культурного наследия",
+   "Нет"
+  ]
+ ],
+ "visual": [
+  [
+   "Общая площадь",
+   "58,4 м²"
+  ],
+  [
+   "Жилая площадь",
+   "37,1 м²"
+  ],
+  [
+   "Площадь кухни",
+   "7 м²"
+  ],
+  [
+   "Этаж",
+   "4 из 8"
+  ],
+  [
+   "Год постройки",
+   "1927"
+  ]
+ ],
+ "images": [
+  "https://torgi.mos.ru/objectimages/Tenders/20181251/48f75b8f56afe3e2ab62abf6b7ea37b9.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20181251/999959be1ff397e9671a14e5122b2129.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20181251/57e82c22b89e6f88c1242dcb8ea0fc86.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20181251/74bc31e6e8a935e9bfeb918daf687f8a.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20181251/21c80b0422106bd186f2c87915698e96.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20181251/21b141d0f036acae92a172524d90ae97.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20181251/72f4bcad1a6bbde8b9c7a65f6ee2cf20.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20181251/a7f8d036d10e0797976c92b31b7970e3.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20181251/88538daa839393704c6bdb61e5b89733.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20181251/a2b94a98e6ab10d71b76909646c6eafa.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20181251/f04f531fa3d852318ef1e425975996fc.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20181251/242d3c22793099034975da7a07db4e87.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20181251/649f7c70fbaf55a893c2d0d96ecec297.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20181251/7aa28820fd033909fba38b35fb15846c.jpg"
+ ]
+}

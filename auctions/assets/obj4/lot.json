@@ -1,0 +1,101 @@
+{
+ "sourceUrl": "https://investmoscow.ru/tenders/tender/20186622",
+ "title": "Нежилое помещение на продажу, 143,1 м²",
+ "address": "Центральный административный округ, Пречистенский пер., д. 20, Подвал № 0",
+ "lot": "16915508",
+ "objectType": "Нежилое помещение",
+ "tenderType": "Продажа",
+ "area": 143.1,
+ "startPrice": "25 694 000,00 руб.",
+ "pricePerSqm": "179 552,76 руб. за м²",
+ "deposit": "2 569 400,00 руб.",
+ "step": "1 284 700,00 руб.",
+ "form": "Открытый аукцион в электронной форме",
+ "applicationStart": "27.08.2026 20:00:00",
+ "applicationDeadline": "19.10.2026 15:00:00",
+ "participantSelection": "26.10.2026 10:00",
+ "auctionDate": "28.10.2026 10:00",
+ "results": "28.10.2026 17:00",
+ "metro": "Кропоткинская",
+ "metroWalk": 9,
+ "metroDistanceKm": 0.65,
+ "lat": 55.744034,
+ "lon": 37.591512,
+ "objectInfo": [
+  [
+   "Тип объекта",
+   "Нежилое помещение"
+  ],
+  [
+   "Кадастровый номер",
+   "77:01:0001049:3599"
+  ],
+  [
+   "Площадь объекта",
+   "143,1 м²"
+  ],
+  [
+   "Функциональное назначение",
+   "Свободное"
+  ],
+  [
+   "Этаж",
+   "Подвал"
+  ],
+  [
+   "Тип входа",
+   "Отдельный"
+  ],
+  [
+   "Перечень помещений",
+   "Не указано"
+  ],
+  [
+   "Наличие арендатора",
+   "Отсутствует"
+  ],
+  [
+   "Обременения",
+   "Нет"
+  ],
+  [
+   "Объект культурного наследия",
+   "Нет"
+  ]
+ ],
+ "visual": [
+  [
+   "Площадь",
+   "143,1 м²"
+  ],
+  [
+   "Этаж",
+   "Подвал"
+  ],
+  [
+   "Этажность",
+   "4"
+  ],
+  [
+   "Наличие арендатора",
+   "Отсутствует"
+  ]
+ ],
+ "images": [
+  "https://torgi.mos.ru/objectimages/Tenders/20186622/ae17cf6a88662860c955af90c907194f.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20186622/d4e5dc611fe0865f91f9abe2af6bba08.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20186622/10dd81309b4b0abca542332d34c0c1ae.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20186622/4e83ee4ce2833a053db49ded77d13559.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20186622/af19fc60594b7d32e0266061d311343d.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20186622/510fefd20c20f46b79a15d5b71cf2a99.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20186622/05f715d5cdc117f54185f68f6163fe6a.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20186622/11bd3f5471ff3671b1497cae27868873.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20186622/e98c3a276ab419e2e91e7f237fe1ef53.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20186622/ac6e74e3adbc22d0b541a8d41a4c3656.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20186622/0fef875cff6f851df98211add5882204.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20186622/1641c08a40f12d71535bf877fcde65a3.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20186622/a4ecf61ac9d09103e8a7aba3313cfb07.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20186622/1c4f63002a9d173f28d7b72a4f116bf5.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20186622/6144e63798d03c4126f194dd729b8147.jpg"
+ ]
+}

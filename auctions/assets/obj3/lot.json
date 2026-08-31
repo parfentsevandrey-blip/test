@@ -1,0 +1,105 @@
+{
+ "sourceUrl": "https://investmoscow.ru/tenders/tender/20186367",
+ "title": "Нежилое помещение на продажу, 415,9 м²",
+ "address": "ул. Радио, д. 10, стр. 2А, этаж №1, помещение 18Н, помещение 10Н, помещение 9Н, помещение 12Н, помещение 17Н, помещение 14Н, помещение 5Н, помещение 2Н, помещение 3Н, помещение 15Н, помещение 1Н, помещение 20Н",
+ "lot": "17001860",
+ "objectType": "Нежилое помещение",
+ "tenderType": "Продажа",
+ "area": 415.9,
+ "startPrice": "112 273 000,00 руб.",
+ "pricePerSqm": "269 951,91 руб. за м²",
+ "deposit": "22 454 600,00 руб.",
+ "step": "1 122 730,00 руб.",
+ "form": "Открытый аукцион в электронной форме",
+ "applicationStart": "27.08.2026 20:00:00",
+ "applicationDeadline": "15.10.2026 15:00:00",
+ "participantSelection": "22.10.2026 10:00",
+ "auctionDate": "27.10.2026 10:00",
+ "results": "27.10.2026 17:00",
+ "metro": "Курская",
+ "metroWalk": 18,
+ "metroDistanceKm": 0.96,
+ "lat": 55.763285,
+ "lon": 37.676484,
+ "objectInfo": [
+  [
+   "Тип объекта",
+   "Нежилое помещение"
+  ],
+  [
+   "Кадастровый номер",
+   "77:01:0003006:6148, 77:01:0003006:6149, 77:01:0003006:6144, 77:01:0003006:6143, 77:01:0003006:6145, 77:01:0003006:6146, 77:01:0003006:6142, 77:01:0003006:6151, 77:01:0003006:6137, 77:01:0003006:6147, 77:01:0003006:6141, 77:01:0003006:6150"
+  ],
+  [
+   "Площадь объекта",
+   "415,9 м²"
+  ],
+  [
+   "Функциональное назначение",
+   "Бытовые услуги"
+  ],
+  [
+   "Этаж",
+   "1"
+  ],
+  [
+   "Тип входа",
+   "Отдельный"
+  ],
+  [
+   "Перечень помещений",
+   "Не указано"
+  ],
+  [
+   "Наличие арендатора",
+   "Есть"
+  ],
+  [
+   "Обременения",
+   "Да"
+  ],
+  [
+   "Объект культурного наследия",
+   "Нет"
+  ]
+ ],
+ "visual": [
+  [
+   "Площадь",
+   "415,9 м²"
+  ],
+  [
+   "Этаж",
+   "1"
+  ],
+  [
+   "Этажность",
+   "1"
+  ],
+  [
+   "Наличие арендатора",
+   "Есть"
+  ]
+ ],
+ "images": [
+  "https://torgi.mos.ru/objectimages/Tenders/20186367/127a59e166f5896fce7b905973fbde3e.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20186367/3407fa6f2e3ea6ba93df8956158545bf.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20186367/c5824bff0154b09baaa326a24da19c41.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20186367/cf28514fbd5cad60690193dd9866bd3c.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20186367/a1575731eae1cddf4e420e3eec49aa04.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20186367/60a7dc3ec0825d3238307a44298bb055.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20186367/f52d2dabd704f80ec587ba1756ce50fa.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20186367/5bfac4b9622f45f50a4b477fdfae0e2e.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20186367/94a6cd86515e0be6556c2e64c18b2b62.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20186367/ce7acac5d6d6bcbfcd94d324095fd922.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20186367/a2f201ee835b06ac75aabdfbb1c69d1e.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20186367/c0cfb41907c0ac9d42326f7a08755373.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20186367/28c48d2ae6878c43e30fbb3b4178ed10.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20186367/e51ec22ab3b5e2324726c616cf0dfc4f.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20186367/9bcec6ae84dca5154c71c02796278451.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20186367/55d03995b40b879548128e31bb1aecd2.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20186367/669984e005a2bca099253f2a1754f78e.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20186367/ea5bccc6ad0f357418fa965783ae4499.jpg",
+  "https://torgi.mos.ru/objectimages/Tenders/20186367/0733cec2d32c70efd96c56ab8cfa3f70.jpg"
+ ]
+}

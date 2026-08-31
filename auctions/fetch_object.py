@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
-"""Collect one investmoscow.ru lot into assets/<id>/ + a data record.
+"""Read one investmoscow.ru lot and write its normalised record + photo list.
 
-investmoscow.ru and torgi.mos.ru refuse connections from this network, so
-everything goes through the Jina reader (r.jina.ai), which does reach them:
+investmoscow.ru refuses connections from this network, so the page is read
+through the Jina reader. The page ships its whole data model as a devalue-
+encoded array in <script id="__NUXT_DATA__">, which is parsed here rather than
+scraped: prices, dates, deposit, coordinates, metro and the gallery all come out
+of it as they were served.
 
-  * the lot page is read as HTML and the Nuxt payload is mined for the fields,
-    the gallery image URLs and the coordinates;
-  * every gallery image is captured as a full-viewport screenshot of the image
-    URL (the reader renders it in a browser, we get the picture back as PNG);
-  * the Yandex Maps widget is captured the same way and the marker is ringed.
-
-Usage:
     python3 fetch_object.py https://investmoscow.ru/tenders/tender/20188709 obj1
+
+Photos and the map are captured separately (tools/make_grid.py +
+tools/capture_grids.py, tools/capture_map.py).
 """
 import json
 import os
@@ -24,7 +23,7 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 JINA = 'https://r.jina.ai/'
 
 
-def sh(cmd, timeout=200):
+def sh(cmd, timeout=260):
     try:
         return subprocess.run(cmd, shell=True, capture_output=True, text=True,
                               timeout=timeout).stdout.strip()
@@ -32,92 +31,97 @@ def sh(cmd, timeout=200):
         return 'EXC:' + str(exc)[:100]
 
 
-def read_page(url):
-    """Return the lot page HTML (including the Nuxt payload)."""
-    for attempt in range(4):
-        html = sh('curl -sS -m 200 -H "x-timeout: 60" -H "x-return-format: html" "%s%s"'
-                  % (JINA, url), timeout=240)
-        if len(html) > 50000:
+def read_page(url, tries=5):
+    for attempt in range(tries):
+        html = sh('curl -sS -m 240 -H "x-timeout: 90" -H "x-return-format: html" "%s%s"'
+                  % (JINA, url))
+        if '__NUXT_DATA__' in html:
             return html
-        print('  page retry', attempt + 1, html[:120])
-        time.sleep(20 * (attempt + 1))
+        print('  page retry %d: %s' % (attempt + 1, html[:110].replace('\n', ' ')))
+        time.sleep(45 + 30 * attempt)
     raise SystemExit('could not read %s' % url)
 
 
-def pageshot(url, dst, tries=6):
-    """Screenshot `url` through the reader and save the PNG to `dst`."""
-    if os.path.exists(dst) and os.path.getsize(dst) > 20000:
-        return True
-    for attempt in range(tries):
-        shot = sh('curl -sS -m 150 -H "x-timeout: 60" -H "x-respond-with: pageshot" "%s%s"'
-                  % (JINA, url))
-        if shot.startswith('https'):
-            code = sh('curl -sSL -o "%s" -m 150 -w "%%{http_code}" "%s"' % (dst, shot))
-            if code == '200' and os.path.exists(dst) and os.path.getsize(dst) > 20000:
-                return True
-        print('  shot retry', attempt + 1, shot[:90].replace('\n', ' '))
-        time.sleep(45 + 30 * attempt)
-    return False
+def parse_payload(html):
+    """Resolve the devalue array the page ships its data model in."""
+    blob = re.search(r'id="__NUXT_DATA__"[^>]*>(.*?)</script>', html, re.S)
+    arr = json.loads(blob.group(1))
+
+    def deref(i, depth=0):
+        if depth > 16 or not isinstance(i, int) or i < 0 or i >= len(arr):
+            return None
+        node = arr[i]
+        if isinstance(node, dict):
+            return {k: deref(v, depth + 1) for k, v in node.items()}
+        if isinstance(node, list):
+            if len(node) == 2 and node[0] in ('ShallowReactive', 'Reactive', 'Ref', 'EmptyRef'):
+                return deref(node[1], depth + 1)
+            return [deref(v, depth + 1) for v in node]
+        return node
+
+    data = deref(1)['data']
+    for value in data.values():
+        if isinstance(value, dict) and 'headerInfo' in value:
+            return value
+    raise SystemExit('tender block not found in payload')
 
 
-def label_values(html):
-    """Pull the {"label":..,"value":..} pairs out of the flat Nuxt payload."""
-    strings = re.findall(r'"((?:[^"\\]|\\.){0,400})"', html)
-    pairs = {}
-    for label, value in re.findall(r'"label":"([^"]{2,80})","value":"([^"]{1,300})"', html):
-        pairs[label] = value
-    # the payload de-duplicates strings into an index table; resolve those too
-    table = strings
-    for label_i, value_i in re.findall(r'"label":(\d{1,5}),"value":(\d{1,5})', html):
-        li, vi = int(label_i), int(value_i)
-        if li < len(table) and vi < len(table):
-            pairs.setdefault(table[li], table[vi])
-    return pairs
+def pairs(items):
+    return [[i['label'], i['value']] for i in (items or []) if i.get('label')]
+
+
+def normalise(tender, url):
+    header = tender['headerInfo']
+    sidebar = tender['sidebar']
+    coords = (tender.get('mapInfo') or {}).get('coords') or {}
+    subway = (header.get('subway') or [{}])[0]
+    procedure = {label: value for label, value in pairs(tender.get('procedureInfo'))}
+
+    return {
+        'sourceUrl': url,
+        'title': header.get('title'),
+        'address': header.get('displayAddress') or header.get('address'),
+        'lot': header.get('investObjectId'),
+        'objectType': header.get('tenderObjectTypeName'),
+        'tenderType': header.get('tenderTypeName'),
+        'area': header.get('objectAreaInMeters'),
+        'startPrice': sidebar.get('startPrice'),
+        'pricePerSqm': sidebar.get('perPrice'),
+        'deposit': procedure.get('Размер задатка'),
+        'step': procedure.get('Шаг аукциона'),
+        'form': procedure.get('Форма проведения'),
+        'applicationStart': procedure.get('Дата начала приёма заявок'),
+        'applicationDeadline': procedure.get('Дата окончания приёма заявок'),
+        'participantSelection': procedure.get('Отбор участников'),
+        'auctionDate': procedure.get('Проведение торгов'),
+        'results': procedure.get('Подведение итогов'),
+        'metro': subway.get('subwayStationName'),
+        'metroWalk': subway.get('walkingTime'),
+        'metroDistanceKm': subway.get('distanceToObject'),
+        'lat': coords.get('lat'),
+        'lon': coords.get('long'),
+        'objectInfo': pairs(tender.get('objectInfo')),
+        'visual': pairs(tender.get('visualBlockInfo')),
+        'images': [i['url'] for i in (tender.get('imageInfo') or {}).get('attachedImages', [])],
+    }
 
 
 def main(url, obj_id):
     out_dir = os.path.join(ROOT, 'assets', obj_id)
-    photos_dir = os.path.join(out_dir, 'photos_raw')
-    os.makedirs(photos_dir, exist_ok=True)
+    os.makedirs(out_dir, exist_ok=True)
+    print('reading', url)
+    record = normalise(parse_payload(read_page(url)), url)
 
-    print('reading lot page ...')
-    html = read_page(url)
-    with open(os.path.join(out_dir, 'page.html'), 'w', encoding='utf-8') as fh:
-        fh.write(html)
-
-    tender_id = url.rstrip('/').split('/')[-1]
-    images, seen = [], set()
-    for img in re.findall(r'https://torgi\.mos\.ru/objectimages/Tenders/%s/[0-9a-f]+\.jpg' % tender_id, html):
-        if img not in seen:
-            seen.add(img)
-            images.append(img)
-
-    coords = re.search(r'"lat":(\d{2}\.\d+),?"?long"?:?(\d{2}\.\d+)', html)
-    if not coords:
-        nums = re.search(r'"coords":\d+.*?(\d{2}\.\d{4,}),(\d{2}\.\d{4,})', html, re.S)
-        coords = nums
-    lat, lon = (coords.group(1), coords.group(2)) if coords else (None, None)
-
-    fields = label_values(html)
-    meta = {'sourceUrl': url, 'images': len(images), 'lat': lat, 'lon': lon, 'fields': fields}
-    with open(os.path.join(out_dir, 'raw.json'), 'w', encoding='utf-8') as fh:
-        json.dump(meta, fh, ensure_ascii=False, indent=1)
-    print('fields:', len(fields), '| images:', len(images), '| coords:', lat, lon)
-
-    if lat and lon:
-        widget = ('https://yandex.ru/map-widget/v1/?ll=%s%%2C%s&z=17&l=map'
-                  '&pt=%s,%s,pm2rdm&lang=ru_RU' % (lon, lat, lon, lat))
-        print('capturing map ...')
-        pageshot(widget, os.path.join(out_dir, 'map_raw.png'))
-
+    with open(os.path.join(out_dir, 'lot.json'), 'w', encoding='utf-8') as fh:
+        json.dump(record, fh, ensure_ascii=False, indent=1)
     with open(os.path.join(out_dir, 'images.txt'), 'w') as fh:
-        fh.write('\n'.join(images))
-    for i, img in enumerate(images, 1):
-        dst = os.path.join(photos_dir, '%02d.png' % i)
-        print('photo %d/%d' % (i, len(images)))
-        pageshot(img, dst)
-        time.sleep(14)
-    print('done ->', out_dir)
+        fh.write('\n'.join(record['images']))
+
+    print('  %s | %s' % (record['title'], record['address']))
+    print('  %s / %s | задаток %s | метро %s (%s мин, %s км) | %s фото'
+          % (record['startPrice'], record['pricePerSqm'], record['deposit'],
+             record['metro'], record['metroWalk'], record['metroDistanceKm'],
+             len(record['images'])))
 
 
 if __name__ == '__main__':
