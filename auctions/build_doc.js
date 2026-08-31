@@ -49,7 +49,7 @@ const VALUE_W = CONTENT_W - LABEL_W;
 
 const CELL_X = 85;                         // horizontal cell margin (photo cells)
 const CELL_Y = 100;                        // vertical cell margin (photo cells)
-const INFO_PAD = 165;                      // vertical padding inside table rows
+const INFO_PAD = 100;                      // vertical padding inside table rows
 const PX = 15;                             // DXA per pixel at 96 dpi
 
 // A photo sheet has to fit the page in Word, not just in LibreOffice, so its
@@ -105,26 +105,31 @@ function caption(text, opts = {}) {
 }
 
 /* ---- key/value tables -------------------------------------------------- */
-function infoRow(name, value, opts = {}) {
-  const cell = (children, width, fill) => new TableCell({
+function kvCell(text, width, opts = {}) {
+  return new TableCell({
     width: { size: width, type: WidthType.DXA },
+    columnSpan: opts.span,
     margins: { top: INFO_PAD, bottom: INFO_PAD, left: 150, right: 150 },
-    shading: fill ? { type: ShadingType.CLEAR, fill, color: 'auto' } : undefined,
+    shading: opts.isLabel ? { type: ShadingType.CLEAR, fill: LABEL_BG, color: 'auto' } : undefined,
     verticalAlign: VerticalAlign.CENTER,
     borders: boxBorders,
-    children,
-  });
-  return new TableRow({
-    children: [
-      cell([new Paragraph({ children: [run(name, { bold: true, size: T_BODY, color: INK })] })],
-        LABEL_W, LABEL_BG),
-      cell([new Paragraph({
-        children: [run(value, {
+    children: [new Paragraph({
+      children: [run(text, opts.isLabel
+        ? { bold: true, size: T_BODY, color: INK }
+        : {
           size: opts.lead ? T_LEAD : T_BODY,
           bold: !!opts.lead,
           color: opts.lead ? ACCENT : TEXT,
         })],
-      })], VALUE_W),
+    })],
+  });
+}
+
+function infoRow(name, value, opts = {}) {
+  return new TableRow({
+    children: [
+      kvCell(name, LABEL_W, { isLabel: true }),
+      kvCell(value, VALUE_W, opts),
     ],
   });
 }
@@ -134,6 +139,47 @@ const infoTable = (rows) => new Table({
   width: { size: CONTENT_W, type: WidthType.DXA },
   rows,
 });
+
+/* Secondary details go two pairs to a row — a single column would push the
+   object's data onto a second, nearly empty page. Values too long to sit in a
+   half-width column take the whole row instead of wrapping into a tall stack. */
+const PAIR_L = 2560;
+const PAIR_V = Math.floor(CONTENT_W / 2) - PAIR_L;
+const LONG_VALUE = 32;
+
+function extrasTable(extras) {
+  const queue = extras.slice();
+  const rows = [];
+  while (queue.length) {
+    const [label, value] = queue.shift();
+    if (String(value).length > LONG_VALUE) {
+      rows.push(new TableRow({
+        children: [
+          kvCell(label, PAIR_L, { isLabel: true }),
+          kvCell(String(value), PAIR_V + PAIR_L + PAIR_V, { span: 3 }),
+        ],
+      }));
+      continue;
+    }
+    const next = queue.length && String(queue[0][1]).length <= LONG_VALUE ? queue.shift() : null;
+    rows.push(new TableRow({
+      children: next
+        ? [
+          kvCell(label, PAIR_L, { isLabel: true }), kvCell(String(value), PAIR_V),
+          kvCell(next[0], PAIR_L, { isLabel: true }), kvCell(String(next[1]), PAIR_V),
+        ]
+        : [
+          kvCell(label, PAIR_L, { isLabel: true }),
+          kvCell(String(value), PAIR_V + PAIR_L + PAIR_V, { span: 3 }),
+        ],
+    }));
+  }
+  return new Table({
+    columnWidths: [PAIR_L, PAIR_V, PAIR_L, PAIR_V],
+    width: { size: CONTENT_W, type: WidthType.DXA },
+    rows,
+  });
+}
 
 /* ---- photo sheets ------------------------------------------------------ */
 
@@ -253,11 +299,11 @@ function objectSection(obj, index) {
 
   if (obj.extras && obj.extras.length) {
     children.push(sectionLabel('Дополнительные сведения'));
-    children.push(infoTable(obj.extras.map(([k, v]) => infoRow(k, v))));
+    children.push(extrasTable(obj.extras));
   }
 
   children.push(new Paragraph({
-    spacing: { before: SP * 2 },
+    spacing: { before: SP },
     children: [
       run('Объявление: ', { size: T_LABEL, color: MUTED }),
       new ExternalHyperlink({
