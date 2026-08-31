@@ -1,0 +1,2042 @@
+<title>Кто сядет в юнит</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+/* ============================================================
+   METR PLUS · Полевой обмер
+   Ground: вторичная бумага (серо-зелёный уклон), не крем.
+   Signal: плоттерный ультрамарин — только измеренные величины.
+   Oxide:  только отрицательные значения и флаги риска.
+   Радиусы скруглений отсутствуют по всему документу.
+   ============================================================ */
+
+:root{
+  --paper:#E4E1D6;
+  --paper-2:#DAD6C9;
+  --paper-3:#CFCABA;
+  --ink:#191C18;
+  --ink-2:#5B5F55;
+  --ink-3:#83877B;
+  --rule:#B4B0A0;
+  --rule-2:#C6C2B3;
+  --signal:#1B3A8F;
+  --signal-soft:#1B3A8F1A;
+  --oxide:#9E3018;
+  --oxide-soft:#9E30181A;
+  --shot:#C9C4B4;
+
+  --f-cond:"IBM Plex Sans Condensed","Roboto Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Helvetica Neue",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono","SFMono-Regular",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#15181A;
+    --paper-2:#1D2124;
+    --paper-3:#262B2E;
+    --ink:#E3E1D7;
+    --ink-2:#94988D;
+    --ink-3:#767A70;
+    --rule:#343A3D;
+    --rule-2:#2A3033;
+    --signal:#8AABFF;
+    --signal-soft:#8AABFF1F;
+    --oxide:#E08163;
+    --oxide-soft:#E081631F;
+    --shot:#202528;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#15181A;
+  --paper-2:#1D2124;
+  --paper-3:#262B2E;
+  --ink:#E3E1D7;
+  --ink-2:#94988D;
+  --ink-3:#767A70;
+  --rule:#343A3D;
+  --rule-2:#2A3033;
+  --signal:#8AABFF;
+  --signal-soft:#8AABFF1F;
+  --oxide:#E08163;
+  --oxide-soft:#E081631F;
+  --shot:#202528;
+}
+
+*,*::before,*::after{box-sizing:border-box;border-radius:0}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--f-body);font-size:15px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;overflow:hidden;
+}
+:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+
+/* ---------- stage ---------- */
+#viewport{position:fixed;inset:0;display:grid;place-items:center;overflow:hidden}
+#stage{
+  width:1600px;height:900px;position:relative;flex:none;
+  transform-origin:center center;background:var(--paper);
+}
+.slide{
+  position:absolute;inset:0;display:none;
+  padding:46px 60px 52px 112px;
+}
+.slide.is-on{display:block}
+
+/* ---------- measurement rail ---------- */
+.rail{
+  position:absolute;left:0;top:0;bottom:0;width:64px;
+  border-right:1px solid var(--rule);
+  display:flex;flex-direction:column;justify-content:center;
+  gap:0;padding:0;background:var(--paper);z-index:4;
+}
+.rail__brand{
+  position:absolute;top:22px;left:0;width:64px;text-align:center;
+  font-family:var(--f-mono);font-size:9px;letter-spacing:.14em;color:var(--ink-3);
+}
+.rail__tick{
+  appearance:none;border:0;background:none;padding:0;margin:0;cursor:pointer;
+  height:26px;display:flex;align-items:center;gap:6px;padding-left:14px;
+  font-family:var(--f-mono);font-size:9.5px;color:var(--ink-3);
+  letter-spacing:.06em;
+}
+.rail__tick::before{
+  content:"";display:block;width:12px;height:1px;background:var(--rule);flex:none;
+  transition:width .18s ease,background .18s ease;
+}
+.rail__tick:hover::before{width:22px;background:var(--ink-2)}
+.rail__tick[aria-current="true"]{color:var(--signal)}
+.rail__tick[aria-current="true"]::before{width:30px;height:3px;background:var(--signal)}
+.rail__foot{
+  position:absolute;bottom:20px;left:0;width:64px;text-align:center;
+  font-family:var(--f-mono);font-size:9px;color:var(--ink-3);
+}
+
+/* ---------- status bar ---------- */
+.statbar{
+  position:absolute;left:112px;right:60px;bottom:20px;height:20px;
+  border-top:1px solid var(--rule);padding-top:7px;
+  display:flex;justify-content:space-between;align-items:baseline;
+  font-family:var(--f-mono);font-size:9.5px;letter-spacing:.09em;
+  color:var(--ink-3);text-transform:uppercase;z-index:3;
+}
+.statbar b{font-weight:500;color:var(--ink-2)}
+.statbar .no{color:var(--signal);font-weight:500;font-variant-numeric:tabular-nums}
+
+/* ---------- headings ---------- */
+.eyebrow{
+  font-family:var(--f-mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--signal);margin:0 0 9px;display:flex;align-items:center;gap:10px;
+}
+.eyebrow::after{content:"";flex:1;height:1px;background:var(--rule)}
+.eyebrow--plain::after{display:none}
+h1,h2,h3,h4{font-family:var(--f-cond);margin:0;text-wrap:balance;font-weight:600}
+h1{font-size:62px;line-height:1.02;letter-spacing:-.014em}
+h2{font-size:40px;line-height:1.05;letter-spacing:-.008em}
+h3{font-size:19px;line-height:1.18;letter-spacing:.002em}
+h4{font-size:14.5px;line-height:1.2;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2)}
+.lede{font-size:16.5px;line-height:1.45;color:var(--ink-2);max-width:62ch;margin:12px 0 0}
+p{margin:0 0 9px}
+.sub{color:var(--ink-2)}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.hr{height:1px;background:var(--rule);border:0;margin:0}
+.hr--heavy{height:2px;background:var(--ink)}
+
+/* ---------- generic grid ---------- */
+.g{display:grid;gap:26px}
+.g-2{grid-template-columns:1fr 1fr}
+.g-3{grid-template-columns:repeat(3,1fr)}
+.g-4{grid-template-columns:repeat(4,1fr)}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.body-sm{font-size:13.5px;line-height:1.48}
+.body-xs{font-size:12.5px;line-height:1.45}
+
+/* ---------- figures ---------- */
+.fig{display:flex;flex-direction:column;gap:6px;min-width:0}
+.fig img{display:block;width:100%;height:100%;object-fit:cover;background:var(--shot);
+  filter:saturate(.92) contrast(1.02)}
+.fig__f{border:1px solid var(--rule);overflow:hidden;background:var(--shot);min-height:0}
+.fig__cap{
+  font-family:var(--f-mono);font-size:9px;line-height:1.35;letter-spacing:.03em;
+  color:var(--ink-3);text-transform:uppercase;
+}
+.fig__cap b{color:var(--ink-2);font-weight:500}
+.fig--bleed .fig__f{border:0}
+
+/* ---------- metrics ---------- */
+.metrics{display:grid;gap:0;border-top:2px solid var(--ink);border-bottom:1px solid var(--rule)}
+.metrics--4{grid-template-columns:repeat(4,1fr)}
+.metrics--3{grid-template-columns:repeat(3,1fr)}
+.metric{padding:14px 20px 15px;border-left:1px solid var(--rule);display:flex;flex-direction:column;gap:3px}
+.metric:first-child{border-left:0;padding-left:0}
+.metric__v{
+  font-family:var(--f-mono);font-size:34px;font-weight:500;line-height:1;
+  letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:var(--signal);
+}
+.metric__v.neg{color:var(--oxide)}
+.metric__v small{font-size:16px;letter-spacing:0;font-weight:400}
+.metric__l{font-size:12px;line-height:1.3;color:var(--ink-2)}
+.metric__s{font-family:var(--f-mono);font-size:9px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink-3)}
+
+/* ---------- company block ---------- */
+.co{display:flex;flex-direction:column;gap:7px;padding-top:11px;border-top:1px solid var(--rule)}
+.co--lead{border-top:2px solid var(--ink)}
+.co__hd{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.co__nm{font-family:var(--f-cond);font-size:23px;font-weight:600;line-height:1}
+.co__meta{font-family:var(--f-mono);font-size:9.5px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink-3)}
+.co__body{font-size:13px;line-height:1.46;color:var(--ink-2)}
+.co__body b{color:var(--ink);font-weight:500}
+.spec{
+  display:flex;gap:8px;align-items:baseline;font-family:var(--f-mono);font-size:10.5px;
+  letter-spacing:.04em;color:var(--ink);padding:5px 0 0;border-top:1px dotted var(--rule);
+}
+.spec dt{color:var(--ink-3);text-transform:uppercase;font-size:9px;letter-spacing:.1em;flex:none}
+.spec dd{margin:0;font-variant-numeric:tabular-nums}
+
+/* ---------- tags ---------- */
+.tags{display:flex;flex-wrap:wrap;gap:5px}
+.tag{
+  font-family:var(--f-mono);font-size:9px;letter-spacing:.09em;text-transform:uppercase;
+  padding:3px 7px;border:1px solid var(--rule);color:var(--ink-2);white-space:nowrap;
+}
+.tag--s{border-color:var(--signal);color:var(--signal);background:var(--signal-soft)}
+.tag--o{border-color:var(--oxide);color:var(--oxide);background:var(--oxide-soft)}
+.tag--fill{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+/* ---------- numbered list ---------- */
+.nlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.nlist li{
+  display:grid;grid-template-columns:40px 1fr;gap:16px;
+  padding:12px 0;border-top:1px solid var(--rule);
+}
+.nlist li:first-child{border-top:2px solid var(--ink)}
+.nlist li:last-child{border-bottom:1px solid var(--rule)}
+.nlist .n{font-family:var(--f-mono);font-size:11px;color:var(--signal);
+  letter-spacing:.06em;padding-top:3px;font-variant-numeric:tabular-nums}
+.nlist .t{font-size:14px;line-height:1.45}
+.nlist .t b{font-weight:600}
+.nlist .t em{font-style:normal;color:var(--ink-2)}
+
+/* ---------- bar chart ---------- */
+.bars{display:flex;flex-direction:column;gap:0;margin-top:2px}
+.bar{display:grid;grid-template-columns:186px 1fr 62px;align-items:center;gap:12px;
+  padding:6px 0;border-top:1px solid var(--rule-2)}
+.bar:first-child{border-top:1px solid var(--rule)}
+.bar--gap{margin-top:11px;border-top:2px solid var(--ink)}
+.bar__l{font-size:12.5px;line-height:1.25;color:var(--ink-2)}
+.bar__t{position:relative;height:19px;background:var(--paper-2)}
+.bar__t::before{content:"";position:absolute;top:-6px;bottom:-6px;left:21.05%;
+  width:1px;background:var(--ink-3)}
+.bar__t i{position:absolute;top:0;bottom:0;background:var(--signal);display:block}
+.bar__t i.neg{background:var(--oxide)}
+.bar__n{font-family:var(--f-mono);font-size:14px;font-weight:500;text-align:right;
+  font-variant-numeric:tabular-nums;color:var(--signal)}
+.bar__n.neg{color:var(--oxide)}
+.axis{display:grid;grid-template-columns:186px 1fr 62px;gap:12px;
+  font-family:var(--f-mono);font-size:9px;color:var(--ink-3);letter-spacing:.06em;margin-top:5px}
+.axis span{position:relative;display:block}
+
+/* ---------- matrix ---------- */
+.mx-scroll{overflow-x:auto}
+.mx{position:relative;border-left:1px solid var(--ink);border-bottom:1px solid var(--ink);
+  height:398px;margin:14px 0 34px 30px}
+.mx__grid{position:absolute;inset:0;pointer-events:none}
+.mx__grid i{position:absolute;background:var(--rule-2)}
+.mx__zone{position:absolute;left:0;top:0;width:33.3%;height:46%;
+  background:var(--oxide-soft);border-right:1px dashed var(--oxide);
+  border-bottom:1px dashed var(--oxide);pointer-events:none}
+.mx__q{position:absolute;font-family:var(--f-mono);font-size:9px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--oxide);pointer-events:none}
+/* anchored by the marker, not by the block, so long labels never push past the axis */
+.pt{position:absolute;transform:translate(-5.5px,-50%);display:flex;align-items:center;gap:8px;
+  white-space:nowrap}
+.pt i{width:11px;height:11px;background:var(--signal);flex:none;display:block}
+.pt.weak i{background:var(--paper);border:2px solid var(--oxide)}
+.pt.hollow i{background:var(--paper);border:2px solid var(--signal)}
+.pt span{font-family:var(--f-cond);font-size:15.5px;font-weight:600;line-height:1.05}
+.pt small{display:block;font-family:var(--f-mono);font-size:9px;font-weight:400;
+  letter-spacing:.05em;color:var(--ink-3);text-transform:uppercase}
+.pt.left{flex-direction:row-reverse;transform:translate(calc(-100% + 5.5px),-50%)}
+.pt.left span{text-align:right}
+.ax-y,.ax-x{position:absolute;font-family:var(--f-mono);font-size:9.5px;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--ink-2)}
+.ax-y{left:-13px;top:50%;transform:translate(-100%,-50%) rotate(180deg);writing-mode:vertical-rl}
+.ax-x{bottom:-26px;left:50%;transform:translateX(-50%)}
+.mx__note{position:absolute;border:1px solid var(--oxide);padding:9px 12px;max-width:250px;
+  background:var(--paper);font-size:12px;line-height:1.4;color:var(--ink-2)}
+.mx__note b{color:var(--oxide);font-family:var(--f-mono);font-size:9.5px;letter-spacing:.09em;
+  text-transform:uppercase;display:block;margin-bottom:4px;font-weight:500}
+
+/* ---------- table ---------- */
+.tbl-wrap{overflow:auto;max-height:625px;border-bottom:1px solid var(--rule)}
+table{border-collapse:collapse;width:100%;font-size:12px}
+thead th{
+  position:sticky;top:0;background:var(--paper);z-index:2;
+  font-family:var(--f-mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-3);font-weight:500;text-align:left;padding:0 10px 7px 0;
+  border-bottom:2px solid var(--ink);white-space:nowrap;
+}
+thead th.s{cursor:pointer;user-select:none}
+thead th.s:hover{color:var(--signal)}
+thead th.s::after{content:" ↕";opacity:.35}
+thead th[data-dir="1"]::after{content:" ↑";opacity:1;color:var(--signal)}
+thead th[data-dir="-1"]::after{content:" ↓";opacity:1;color:var(--signal)}
+tbody td{padding:5px 10px 5px 0;border-bottom:1px solid var(--rule-2);vertical-align:top;
+  line-height:1.35;color:var(--ink-2)}
+tbody tr:hover td{background:var(--signal-soft)}
+tbody td.nm{font-family:var(--f-cond);font-size:15.5px;font-weight:600;color:var(--ink);
+  white-space:nowrap;padding-right:16px}
+tbody td.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap;
+  color:var(--ink)}
+tbody td.q{font-family:var(--f-mono);font-size:11px}
+tbody tr.dim td{opacity:.42}
+.wv{display:inline-block;width:17px;height:17px;line-height:17px;text-align:center;
+  font-family:var(--f-mono);font-size:10px;font-weight:500}
+.wv-1{background:var(--signal);color:var(--paper)}
+.wv-2{border:1px solid var(--signal);color:var(--signal)}
+.wv-0{color:var(--ink-3)}
+.filters{display:flex;gap:6px;align-items:center;margin:0 0 10px;flex-wrap:wrap}
+.fbtn{
+  appearance:none;background:none;border:1px solid var(--rule);color:var(--ink-2);
+  font-family:var(--f-mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
+  padding:5px 10px;cursor:pointer;transition:.15s;
+}
+.fbtn:hover{border-color:var(--ink-2);color:var(--ink)}
+.fbtn[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.fnote{font-family:var(--f-mono);font-size:9px;letter-spacing:.05em;color:var(--ink-3);
+  margin-left:auto}
+
+/* ---------- callout ---------- */
+.call{border-left:3px solid var(--signal);padding:2px 0 2px 15px;font-size:14px;
+  line-height:1.45;color:var(--ink)}
+.call--o{border-left-color:var(--oxide)}
+.call b{font-weight:600}
+.panel{background:var(--paper-2);padding:16px 18px;display:flex;flex-direction:column;gap:9px}
+.panel--o{box-shadow:inset 3px 0 0 var(--oxide)}
+.panel--s{box-shadow:inset 3px 0 0 var(--signal)}
+
+/* ---------- cover ---------- */
+.cover{display:grid;grid-template-rows:auto minmax(0,1fr) auto;height:100%;padding-bottom:8px}
+.cover__strip{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;min-height:0}
+.cover__strip .fig{min-height:0}
+.cover__strip .fig__f{height:100%}
+.cover__meta{display:flex;justify-content:space-between;align-items:flex-end;gap:40px;
+  padding-top:14px;border-top:1px solid var(--rule);margin-top:14px}
+.hrow{flex-wrap:wrap}
+
+/* ---------- contents overlay ---------- */
+#toc{
+  position:fixed;inset:0;background:var(--paper);z-index:40;display:none;
+  padding:52px 64px;overflow:auto;
+}
+#toc.is-on{display:block}
+.toc__grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0 40px;margin-top:22px}
+.toc__i{
+  display:grid;grid-template-columns:32px 1fr;gap:12px;align-items:baseline;
+  padding:10px 0;border-top:1px solid var(--rule);cursor:pointer;background:none;border-left:0;
+  border-right:0;border-bottom:0;text-align:left;width:100%;font:inherit;color:inherit;
+}
+.toc__i:hover{color:var(--signal)}
+.toc__i .n{font-family:var(--f-mono);font-size:10.5px;color:var(--signal);
+  font-variant-numeric:tabular-nums}
+.toc__i .t{font-family:var(--f-cond);font-size:17px;font-weight:600;line-height:1.15}
+.toc__i .s{font-family:var(--f-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-3);display:block;margin-top:2px}
+.toc__i[aria-current="true"] .t{color:var(--signal)}
+
+/* ---------- keyboard hint (cover status bar only) ---------- */
+.hint{display:flex;gap:12px;align-items:center;color:var(--ink-3)}
+.hint kbd{font:inherit;border:1px solid var(--rule);padding:1px 4px;color:var(--ink-2)}
+
+/* ---------- sources ---------- */
+.src{font-size:11.5px;line-height:1.5;color:var(--ink-2);column-count:2;column-gap:30px}
+.src b{color:var(--ink);font-weight:500}
+.photocred{font-family:var(--f-mono);font-size:8.5px;line-height:1.5;color:var(--ink-3);
+  column-count:3;column-gap:24px;letter-spacing:.01em}
+
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+}
+
+/* ---------- narrow screens: continuous document ---------- */
+@media (max-width:900px),(max-height:440px){
+  body{overflow:auto}
+  #viewport{position:static;display:block;overflow:visible}
+  #stage{width:100%;height:auto;transform:none!important;display:flex;
+    flex-direction:column;gap:0}
+  .slide{position:static;display:block;height:auto;min-height:0;
+    padding:34px 20px 30px;border-top:2px solid var(--ink)}
+  .slide:first-child{border-top:0}
+  .rail,.statbar{display:none}
+  /* inline grid-template-columns live on the elements, so the reset must outrank them */
+  #stage .slide{min-width:0;max-width:100%}
+  #stage .g{grid-template-columns:1fr!important}
+  #stage .metrics{grid-template-columns:1fr 1fr!important}
+  #stage .cover__strip{grid-template-columns:1fr!important}
+  #stage .bars,#stage .axis{min-width:0}
+  #stage .hrow > *{flex:1 1 100%;text-align:left!important;max-width:none!important}
+  #stage .cover__meta{flex-wrap:wrap;gap:14px}
+  #stage .cover__meta > *{text-align:left!important;max-width:none!important}
+  h1{font-size:34px}h2{font-size:26px}
+  .lede{font-size:15px}
+  .metrics--4,.metrics--3{grid-template-columns:1fr 1fr}
+  .metric{border-left:0;padding-left:0}
+  .cover{display:block}
+  .cover__strip{gap:8px}
+  .cover__strip .fig__f{height:190px!important}
+  .mx{height:420px;min-width:1120px;margin-left:30px}
+  .pt span{font-size:13px}
+  .tbl-wrap{max-height:none}
+  .src,.photocred{column-count:1}
+  #toc{display:none!important}
+  .bar{grid-template-columns:120px 1fr 48px}
+}
+@media print{
+  body{overflow:visible}
+  #viewport{position:static;display:block}
+  #stage{transform:none!important;width:100%;height:auto}
+  .slide{display:block!important;position:static;height:1000px;page-break-after:always}
+  #toc{display:none!important}
+}
+</style>
+
+<div id="viewport">
+<div id="stage">
+
+<!-- ============ 01 · ОБЛОЖКА ============ -->
+<section class="slide is-on" data-sec="Титул" data-title="Кто сядет в юнит" data-part="">
+  <div class="cover">
+    <div>
+      <p class="eyebrow eyebrow--plain">METR PLUS · Аналитический отдел · Внутренний документ</p>
+      <h1>Кто сядет<br>в юнит</h1>
+      <p class="lede">Растущие направления бизнеса в Нидерландах как потенциальные
+        арендаторы стрит-ритейла. Оценка спроса на метры, кредитного качества
+        арендатора и порядка обзвона.</p>
+    </div>
+    <div class="cover__strip" style="margin-top:26px">
+      <figure class="fig fig--bleed" style="margin:0"><div class="fig__f">
+        <img src="{{IMG:utrecht-umbrella}}" alt="Пешеходный поток на торговой улице в центре Утрехта"></div>
+        <figcaption class="fig__cap"><b>Утрехт</b> · Steenweg</figcaption></figure>
+      <figure class="fig fig--bleed" style="margin:0"><div class="fig__f">
+        <img src="{{IMG:denhaag-gms}}" alt="Grote Marktstraat в Гааге"></div>
+        <figcaption class="fig__cap"><b>Гаага</b> · Grote Marktstraat</figcaption></figure>
+      <figure class="fig fig--bleed" style="margin:0"><div class="fig__f">
+        <img src="{{IMG:beurstraverse}}" alt="Beurstraverse, заглублённая торговая улица в Роттердаме"></div>
+        <figcaption class="fig__cap"><b>Роттердам</b> · Beurstraverse</figcaption></figure>
+    </div>
+    <div class="cover__meta">
+      <div class="mono" style="font-size:11px;letter-spacing:.08em;color:var(--ink-2);
+        text-transform:uppercase;line-height:1.7">
+        Дата · 31 августа 2026<br>
+        Периметр · центральные торговые улицы, A1–A2<br>
+        Города · Утрехт, Гаага, Роттердам
+      </div>
+      <div class="mono" style="font-size:9.5px;letter-spacing:.06em;color:var(--ink-3);
+        max-width:430px;line-height:1.6;text-align:right">
+        JLL · LOCATUS · CBS · ABN AMRO · ING RESEARCH · ACHMEA REAL ESTATE · KVK ·
+        RETAILTRENDS · NIELSENIQ · RMC · NEPROFARM · THE ROCK GROUP
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 02 · РЕЗЮМЕ ============ -->
+<section class="slide" data-sec="Резюме" data-title="Шесть выводов" data-part="1">
+  <p class="eyebrow">Раздел 1 · Резюме</p>
+  <h2>Что мы знаем на 31 августа</h2>
+  <ol class="nlist" style="margin-top:22px">
+    <li><span class="n">01</span><span class="t"><b>Рынок восстанавливается, но не возвращается
+      к прежней структуре.</b> <em>Поток посетителей растёт, вакантность в крупных городах низкая,
+      при этом общее число торговых точек продолжает сокращаться. Спрос концентрируется
+      на A1-локациях.</em></span></li>
+    <li><span class="n">02</span><span class="t"><b>Состав арендаторов смещается</b> <em>от
+      классической розницы к услугам, дневному общепиту и здоровью. Именно дневная гастрономия
+      чаще всего занимает освобождающиеся торговые помещения.</em></span></li>
+    <li><span class="n">03</span><span class="t"><b>Сильнейшие направления по числу заявленных
+      открытий:</b> <em>оптика и слуховая помощь, дрогистерия и health&nbsp;&amp;&nbsp;beauty,
+      дневная гастрономия и food-to-go, value-форматы, ремонт и refurbished.</em></span></li>
+    <li><span class="n">04</span><span class="t"><b>Высокий рост при слабом кредитном качестве:</b>
+      <em>нейл-салоны, тату, инъекционная косметология, фитнес-студии. Брать можно — но на других
+      условиях: гарантия, короткий срок, capex арендатора.</em></span></li>
+    <li><span class="n">05</span><span class="t"><b>Приоритетные кандидаты под наши три города
+      прямо сейчас:</b> <em>Medi-Market, Nexeye (Hans Anders / eyes+more), Jimmy Fairly, Normal,
+      Anne&amp;Max, Teds, Poké Perfect.</em></span></li>
+    <li><span class="n">06</span><span class="t"><b>Предложенный агентом тату-салон — не отказ,</b>
+      <em>но требует короткого срока, банковской гарантии и capex за счёт арендатора. Отдельно
+      считаем эффект на арендную ставку соседних юнитов и на стоимость объекта при выходе.</em></span></li>
+  </ol>
+  <div class="call" style="margin-top:18px">Практический смысл документа: не «какой сегмент
+    растёт», а <b>под какой конкретный юнит кого звать первым</b> — и на каких условиях.</div>
+
+  <p class="eyebrow" style="margin-top:22px">Первая волна · кого набираем в первую очередь</p>
+  <div class="g" style="grid-template-columns:repeat(7,1fr);gap:8px">
+    <figure class="fig" style="margin:0"><div class="fig__f" style="height:112px">
+      <img src="{{IMG:medimarket-2@230x155}}" alt="Фасад магазина Medi-Market"></div>
+      <figcaption class="fig__cap"><b>Medi-Market</b> · 200–500 м²</figcaption></figure>
+    <figure class="fig" style="margin:0"><div class="fig__f" style="height:112px">
+      <img src="{{IMG:ha-zwolle@230x155}}" alt="Магазин Hans Anders"></div>
+      <figcaption class="fig__cap"><b>Nexeye</b> · 80–150 м²</figcaption></figure>
+    <figure class="fig" style="margin:0"><div class="fig__f" style="height:112px">
+      <img src="{{IMG:jf-hero@230x155}}" alt="Кампания Jimmy Fairly"></div>
+      <figcaption class="fig__cap"><b>Jimmy Fairly</b> · 60–120 м²</figcaption></figure>
+    <figure class="fig" style="margin:0"><div class="fig__f" style="height:112px">
+      <img src="{{IMG:normal-gron@230x155}}" alt="Магазин Normal"></div>
+      <figcaption class="fig__cap"><b>Normal</b> · 150–300 м²</figcaption></figure>
+    <figure class="fig" style="margin:0"><div class="fig__f" style="height:112px">
+      <img src="{{IMG:annemax-coffee@230x155}}" alt="Кофе в Anne&Max"></div>
+      <figcaption class="fig__cap"><b>Anne&amp;Max</b> · 120–250 м²</figcaption></figure>
+    <figure class="fig" style="margin:0"><div class="fig__f" style="height:112px">
+      <img src="{{IMG:teds-hero@230x155}}" alt="Блюдо Teds all-day brunch"></div>
+      <figcaption class="fig__cap"><b>Teds</b> · 200–350 м²</figcaption></figure>
+    <figure class="fig" style="margin:0"><div class="fig__f" style="height:112px">
+      <img src="{{IMG:pp-spread@230x155}}" alt="Поке-боулы Poké Perfect"></div>
+      <figcaption class="fig__cap"><b>Poké Perfect</b> · 60–120 м²</figcaption></figure>
+  </div>
+</section>
+
+<!-- ============ 03 · РЫНОК ============ -->
+<section class="slide" data-sec="Контекст рынка" data-title="Трафик вверх, метры вниз" data-part="2">
+  <p class="eyebrow">Раздел 2 · Контекст рынка, 2026</p>
+  <h2>Трафик растёт. Метры сокращаются.</h2>
+  <div class="metrics metrics--4" style="margin-top:20px">
+    <div class="metric"><span class="metric__v neg">−12<small>&thinsp;%</small></span>
+      <span class="metric__l">Физических точек в рознице</span>
+      <span class="metric__s">2020 → 2026</span></div>
+    <div class="metric"><span class="metric__v">+10<small>&thinsp;%</small></span>
+      <span class="metric__l">Прохожих в крупных городах</span>
+      <span class="metric__s">RMC · 2025 · по стране +3&thinsp;%</span></div>
+    <div class="metric"><span class="metric__v">&lt;6<small>&thinsp;%</small></span>
+      <span class="metric__l">Вакантность в девяти крупнейших центрах</span>
+      <span class="metric__s">после пандемии было &gt;8&thinsp;%</span></div>
+    <div class="metric"><span class="metric__v">3<small>&thinsp;года</small></span>
+      <span class="metric__l">Минимум по числу банкротств в рознице</span>
+      <span class="metric__s">оборотная динамика Q2 2026</span></div>
+  </div>
+
+  <div class="g g-2" style="margin-top:26px;grid-template-columns:1.05fr .95fr">
+    <div class="col">
+      <div class="co co--lead">
+        <h3>Разрыв, из которого всё следует</h3>
+        <p class="co__body">Количество физических точек за 2020–2026 сократилось на 12&thinsp;%,
+          при этом трафик вырос. По данным RMC, число прохожих на торговых улицах в 2025 году
+          увеличилось на 3&thinsp;%, а в крупных городах — на 10&thinsp;%. Средние и малые
+          города остались на прежнем уровне. <b>Амстердам, Роттердам, Утрехт и Гаага снова
+          привлекательны как места размещения</b> — остальная страна нет.</p>
+      </div>
+      <div class="co">
+        <h3>Вакантность и её качество</h3>
+        <p class="co__body">В девяти крупнейших центрах вакантность опустилась ниже 6&thinsp;%
+          против более 8&thinsp;% сразу после пандемии. Доля долгосрочной вакантности
+          (свыше года) снижается несколько лет подряд и составляет <b>менее половины
+          от общей</b> — то есть освобождающиеся помещения действительно переезжают,
+          а не зависают.</p>
+      </div>
+      <div class="co">
+        <h3>Функция торговых зон расширяется</h3>
+        <p class="co__body">Доля традиционной розницы постепенно падает, а общепит, услуги,
+          культура и досуг растут. Для нас это означает, что <b>шорт-лист арендаторов нельзя
+          строить только из detailhandel</b> — половина реального спроса приходит из смежных
+          категорий с другими требованиями к помещению.</p>
+      </div>
+    </div>
+    <div class="col">
+      <figure class="fig" style="margin:0">
+        <div class="fig__f" style="height:246px">
+          <img src="{{IMG:utrecht-street}}" alt="Плотный пешеходный поток на торговой улице Утрехта"></div>
+        <figcaption class="fig__cap"><b>Спрос на локацию</b> · торговая улица в центре Утрехта ·
+          Fons Heijnsbroek, CC0</figcaption>
+      </figure>
+      <figure class="fig" style="margin:0">
+        <div class="fig__f" style="height:246px">
+          <img src="{{IMG:vacant-window}}" alt="Дети смотрят в витрину пустого магазина"></div>
+        <figcaption class="fig__cap"><b>Предложение метров</b> · освободившееся помещение ·
+          Lusi Lindwurm, CC BY-SA 4.0</figcaption>
+      </figure>
+    </div>
+  </div>
+  <div class="call" style="margin-top:20px">Тот же поток на меньшем числе точек — это рост
+    выручки на метр в A1 и <b>обесценивание всего, что за пределами первой линии</b>.</div>
+</section>
+
+<!-- ============ 04 · ОБОРОТ И ЦЕНА ============ -->
+<section class="slide" data-sec="Контекст рынка" data-title="Оборот и сдвиг к цене" data-part="2">
+  <p class="eyebrow">Раздел 2 · Оборотная динамика и ценовая чувствительность</p>
+  <div class="g g-2" style="grid-template-columns:1.12fr .88fr;margin-top:4px">
+    <div class="col">
+      <h2 style="font-size:32px">Оборот, II квартал 2026</h2>
+      <div class="bars">
+        <div class="bar"><span class="bar__l">Розница в целом</span>
+          <span class="bar__t"><i style="left:21.05%;width:32.63%"></i></span>
+          <span class="bar__n">+3,1</span></div>
+        <div class="bar"><span class="bar__l">Non-food</span>
+          <span class="bar__t"><i style="left:21.05%;width:36.84%"></i></span>
+          <span class="bar__n">+3,5</span></div>
+        <div class="bar"><span class="bar__l">Продовольствие</span>
+          <span class="bar__t"><i style="left:21.05%;width:26.32%"></i></span>
+          <span class="bar__n">+2,5</span></div>
+        <div class="bar bar--gap"><span class="bar__l">Дрогистерии</span>
+          <span class="bar__t"><i style="left:21.05%;width:73.68%"></i></span>
+          <span class="bar__n">+7,0</span></div>
+        <div class="bar"><span class="bar__l">Товары для отдыха</span>
+          <span class="bar__t"><i style="left:21.05%;width:44.21%"></i></span>
+          <span class="bar__n">+4,2</span></div>
+        <div class="bar"><span class="bar__l">Электроника</span>
+          <span class="bar__t"><i style="left:21.05%;width:38.95%"></i></span>
+          <span class="bar__n">+3,7</span></div>
+        <div class="bar"><span class="bar__l">Обувь и кожгалантерея</span>
+          <span class="bar__t"><i class="neg" style="left:3.16%;width:17.89%"></i></span>
+          <span class="bar__n neg">−1,7</span></div>
+      </div>
+      <div class="axis"><span></span>
+        <span><span style="position:absolute;left:3.16%">−2</span>
+          <span style="position:absolute;left:21.05%">0</span>
+          <span style="position:absolute;left:42.1%">+2</span>
+          <span style="position:absolute;left:63.2%">+4</span>
+          <span style="position:absolute;left:84.2%">+6&thinsp;%</span></span>
+        <span></span></div>
+      <p class="body-xs sub" style="margin-top:16px">Внутри non-food лидируют дрогистерии,
+        товары для отдыха и электроника. Обувь и кожгалантерея — единственная падающая
+        категория. Число банкротств в рознице — минимум за три года.</p>
+    </div>
+
+    <div class="col">
+      <h2 style="font-size:32px">Потребитель стал чувствительнее к цене</h2>
+      <div class="panel panel--s">
+        <span class="metric__v" style="font-size:40px">725 <small>млн €</small></span>
+        <p class="body-sm" style="margin:0">супермаркетного оборота перетекло за год
+          к дискаунтерам <b>Aldi</b> и <b>Lidl</b>. <span class="sub">ING Research</span></p>
+      </div>
+      <p class="body-sm">В non-food тот же сдвиг проявился в рекордных результатах
+        <b>Action</b> и <b>Wibra</b> и во входе на рынок новых игроков — <b>Die Grenze</b>,
+        <b>KiK</b>, <b>Medi-Market</b>.</p>
+      <div class="co co--lead">
+        <h3>Банкротство Blokker освободило метры</h3>
+        <p class="co__body">Сотни помещений подходящего для этих форматов метража вышли
+          на рынок одновременно. Это и есть физическая причина, по которой value-форматы
+          сейчас расширяются так быстро: <b>дешёвое предложение готовых метров
+          совпало со спросом на низкую цену</b>.</p>
+      </div>
+      <div class="g g-2" style="gap:10px">
+        <figure class="fig" style="margin:0"><div class="fig__f" style="height:132px">
+          <img src="{{IMG:blokker-breda}}" alt="Магазин Blokker на торговой улице в Бреде"></div>
+          <figcaption class="fig__cap"><b>Blokker</b> · Бреда · G.Lanting, CC BY 4.0</figcaption></figure>
+        <figure class="fig" style="margin:0"><div class="fig__f" style="height:132px">
+          <img src="{{IMG:wibra-dev}}" alt="Магазин Wibra на Smedenstraat в Девентере"></div>
+          <figcaption class="fig__cap"><b>Wibra</b> · Девентер · D.&thinsp;Trung, CC BY-SA 4.0</figcaption></figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 05 · МАТРИЦА ============ -->
+<section class="slide" data-sec="Карта направлений" data-title="Рост × кредитное качество" data-part="3">
+  <div class="hrow" style="display:flex;justify-content:space-between;align-items:flex-start;gap:40px">
+    <div>
+      <p class="eyebrow">Раздел 3 · Карта направлений</p>
+      <h2>Чем быстрее растёт — тем хуже платит</h2>
+    </div>
+    <p class="body-xs sub" style="max-width:330px;margin:0;text-align:right">
+      Положение направлений — оценка аналитического отдела по материалам раздела 3.
+      Ось роста — темп заявленных открытий и оборота; ось кредитного качества —
+      сетевизация, наличие баланса и корпоративной гарантии.</p>
+  </div>
+
+  <div class="mx-scroll">
+  <div class="mx">
+    <div class="mx__grid">
+      <i style="left:0;right:0;top:33.3%;height:1px"></i>
+      <i style="left:0;right:0;top:66.6%;height:1px"></i>
+      <i style="top:0;bottom:0;left:33.3%;width:1px"></i>
+      <i style="top:0;bottom:0;left:66.6%;width:1px"></i>
+    </div>
+    <div class="mx__zone"></div>
+    <span class="mx__q" style="left:11px;top:41%">Зона риска · рост без баланса</span>
+
+    <div class="pt left weak" style="left:17%;top:10%"><i></i>
+      <span>Потребительские услуги<small>3.8 · нейл · тату · инъекции · фитнес</small></span></div>
+    <div class="pt left" style="left:54%;top:15%"><i></i>
+      <span>Дневная гастрономия<small>3.5 · food-to-go</small></span></div>
+    <div class="pt left" style="left:90%;top:7%"><i></i>
+      <span>Дрогистерия · health &amp; beauty<small>3.2 · сетевизация 92,5&thinsp;%</small></span></div>
+    <div class="pt left hollow" style="left:93%;top:29%"><i></i>
+      <span>Value и дискаунт<small>3.3 · формат вне A1, кроме Normal</small></span></div>
+    <div class="pt left" style="left:83%;top:45%"><i></i>
+      <span>Оптика и слуховая помощь<small>3.1 · устойчива к онлайну</small></span></div>
+    <div class="pt left" style="left:55%;top:55%"><i></i>
+      <span>Ремонт и refurbished<small>3.6 · растёт против тренда</small></span></div>
+    <div class="pt left" style="left:87%;top:71%"><i></i>
+      <span>Дом и лайфстайл<small>3.4 · JYSK, Dille &amp; Kamille</small></span></div>
+    <div class="pt left" style="left:77%;top:87%"><i></i>
+      <span>Международные новички<small>3.7 · первые точки в NL</small></span></div>
+
+    <span class="ax-y">Темп роста направления →</span>
+    <span class="ax-x">Кредитное качество арендатора →</span>
+  </div>
+  </div>
+
+  <div class="g g-4" style="margin-top:10px;gap:24px;align-items:start">
+    <div class="mx__note" style="position:static;max-width:none;grid-column:span 1">
+      <b>Общий дисконт</b>
+      28&nbsp;591 франчайзинговая точка на 1 января 2026, прирост всего 0,68&thinsp;% за год.
+      Почти 40&thinsp;% приходится на услуги, где франчайзи — ZZP или единоличные фирмы,
+      нередко работающие из дома. Рост регистраций почти не конвертируется в арендаторов
+      с балансом.
+    </div>
+    <div class="col" style="gap:5px">
+      <h4>Верхний правый угол</h4>
+      <p class="body-xs sub" style="margin:0">Дрогистерия и оптика — редкое сочетание высокого
+        роста с сетевым ковенантом. Это ядро шорт-листа: <b style="color:var(--ink)">Medi-Market,
+        Nexeye, Jimmy Fairly, Normal</b>.</p>
+    </div>
+    <div class="col" style="gap:5px">
+      <h4>Середина по горизонтали</h4>
+      <p class="body-xs sub" style="margin:0">Дневная гастрономия растёт быстрее всех после услуг,
+        но ковенант зависит от конкретного оператора: сетевой франчайзи и одиночный
+        предприниматель здесь стоят рядом. <b style="color:var(--ink)">Проверять каждого
+        отдельно.</b></p>
+    </div>
+    <div class="col" style="gap:5px">
+      <h4>Полые маркеры</h4>
+      <p class="body-xs sub" style="margin:0">Value-дискаунт растёт и платит, но его формат
+        не встаёт в центральный A1-юнит — кроме Normal. Полый маркер означает
+        <b style="color:var(--ink)">«хороший арендатор, неподходящее помещение»</b>.</p>
+    </div>
+  </div>
+
+  <div class="tags" style="margin-top:20px">
+    <span class="tag tag--s">■ Сетевой арендатор с корпоративной гарантией</span>
+    <span class="tag" style="border-color:var(--signal);color:var(--signal)">□ Сетевой, но формат вне A1</span>
+    <span class="tag tag--o">□ Индивидуальный предприниматель, ковенант слабый</span>
+  </div>
+</section>
+
+<!-- ============ 06 · ОПТИКА ============ -->
+<section class="slide" data-sec="Оптика и слуховая помощь" data-title="Оптика и слуховая помощь" data-part="3.1">
+  <p class="eyebrow">3.1 · Оптика и слуховая помощь</p>
+  <div class="g" style="grid-template-columns:1.02fr .78fr .62fr;gap:24px">
+    <div class="col">
+      <h2 style="font-size:29px">Демография, страховка и то,<br>что нельзя купить онлайн</h2>
+      <p class="body-sm sub" style="margin:0">Три драйвера. <b style="color:var(--ink)">Старение
+        населения</b> увеличивает базу клиентов и по зрению, и по слуху.
+        <b style="color:var(--ink)">Частичное финансирование через медицинское страхование</b>
+        (hoorzorg) делает выручку менее чувствительной к потребительскому циклу.
+        <b style="color:var(--ink)">Очки и слуховые аппараты требуют замера, подгонки
+        и обслуживания</b> — e-commerce не вымывает офлайн так, как в моде и электронике.
+        Сегмент дополнительно консолидируется: оптика и слуховая помощь всё чаще
+        объединяются в одной точке.</p>
+
+      <div class="co co--lead">
+        <div class="co__hd"><span class="co__nm">Nexeye</span>
+          <span class="co__meta">Hans Anders · eyes&thinsp;+&thinsp;more · Direkt Optik</span></div>
+        <p class="co__body">Нидерландская группа в сегменте value-for-money.
+          <b>Hans Anders</b> — 402 магазина в NL и BE, очки плюс слуховые аппараты, основана
+          в 1982&nbsp;году. <b>eyes&thinsp;+&thinsp;more</b> — 283 магазина в DE, AT, BE, NL;
+          фиксированная цена за оправу с линзами; по собственному заявлению — самая
+          быстрорастущая оптическая сеть Европы. <b>Direkt Optik</b> — 34 магазина в Швеции.
+          Всего <b>719 магазинов в пяти странах</b>, более 3&nbsp;500 сотрудников.
+          С 2024&nbsp;года собственник — KKR (ранее фонд 3i). В 2026&nbsp;году открыт
+          750-й магазин в Гётеборге, публичная цель — <b>1&nbsp;000 точек к концу
+          2028&nbsp;года</b>.</p>
+        <div class="panel panel--s" style="padding:11px 13px">
+          <p class="body-xs" style="margin:0"><b>Точка входа для арендодателя.</b>
+            В компании создана позиция Group Real Estate Director — <b>Roy Reubsaet</b>,
+            более 15 лет опыта, ранее HEMA, Ahold Real Estate, The Carphone Warehouse.
+            То есть по недвижимости есть централизованный переговорщик,
+            а не разрозненные франчайзи.</p>
+        </div>
+        <dl class="spec"><dt>Формат</dt><dd>80–150 м² · 1-й этаж · широкая витрина ·
+          задняя зона под кабинет замера и аудиометрию (шумоизоляция)</dd></dl>
+      </div>
+    </div>
+
+    <div class="col">
+      <figure class="fig" style="margin:0"><div class="fig__f" style="height:190px">
+        <img src="{{IMG:ha-zwolle}}" alt="Магазин Hans Anders в Зволле"></div>
+        <figcaption class="fig__cap"><b>Hans Anders</b> · Зволле ·
+          D.&thinsp;Trung, CC BY-SA 4.0</figcaption></figure>
+
+      <div class="co co--lead">
+        <div class="co__hd"><span class="co__nm">Jimmy Fairly</span>
+          <span class="co__meta">Франция · DTC · ~160 магазинов</span></div>
+        <p class="co__body">Основана в 2010 году в Париже (Antonin Chartier). Одна цена
+          за оправу с линзами, сильный дизайн-акцент, магазины оформлены как лайфстайл-
+          пространства, целевая аудитория — молодые горожане.</p>
+        <p class="co__body"><b>Вход в Нидерланды — январь 2026</b>, Амстердам, Leidsestraat 4.
+          Далее Гаага (Noordeinde), в конце июля 2026 — <b>Утрехт</b>, четвёртая точка
+          в Амстердаме до конца года. Business manager Netherlands <b>Luca Liboa</b> заявил
+          амбицию открыть ещё три магазина в важнейших городах страны в 2027 году
+          и подтвердил, что <b>переговоры по локациям идут прямо сейчас</b>.</p>
+        <dl class="spec"><dt>Формат</dt><dd>60–120 м² · A1 · высокая проходимость ·
+          молодёжное и модное окружение</dd></dl>
+      </div>
+    </div>
+
+    <div class="col">
+      <figure class="fig" style="margin:0"><div class="fig__f" style="height:198px">
+        <img src="{{IMG:jf-store}}" alt="Витрина магазина Jimmy Fairly"></div>
+        <figcaption class="fig__cap"><b>Jimmy Fairly</b> · бутичный формат витрины</figcaption></figure>
+      <figure class="fig" style="margin:0"><div class="fig__f" style="height:150px">
+        <img src="{{IMG:ha-oogmeting}}" alt="Кабинет замера зрения с фороптером"></div>
+        <figcaption class="fig__cap"><b>Замер и аудиометрия</b> · задняя зона,
+          определяющая пригодность юнита</figcaption></figure>
+      <div class="co">
+        <h4>Конкурентное поле</h4>
+        <p class="body-xs sub" style="margin:0">Specsavers — около 140 магазинов,
+          Eyewish — 142 (в процессе смены собственника), Eyelove — более 100,
+          Ace&nbsp;&amp;&nbsp;Tate — 18. Независимые консолидируются под зонтичными
+          структурами: <b style="color:var(--ink)">Optitrade</b> — более 400 оптиков
+          и 180 аудиологов, <b style="color:var(--ink)">EyeCare</b> — более 200 специалистов.
+          Спрос на метры создаёт не один игрок, а несколько параллельно.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 07 · ДРОГИСТЕРИЯ ============ -->
+<section class="slide" data-sec="Дрогистерия и health & beauty" data-title="Дрогистерия, здоровье, уход" data-part="3.2">
+  <p class="eyebrow">3.2 · Дрогистерия, здоровье и персональный уход</p>
+  <div class="g g-2" style="grid-template-columns:1fr 1fr;gap:30px">
+    <div class="col">
+      <h2 style="font-size:31px">Сильнейший non-food —<br>и почти весь сетевой</h2>
+      <div class="metrics metrics--3" style="margin-top:2px">
+        <div class="metric"><span class="metric__v">+7,0<small>&thinsp;%</small></span>
+          <span class="metric__l">Оборот, Q2 2026</span>
+          <span class="metric__s">лидер non-food</span></div>
+        <div class="metric"><span class="metric__v">92,5<small>&thinsp;%</small></span>
+          <span class="metric__l">Уровень сетевизации</span>
+          <span class="metric__s">парфюмерия 77,1 · жен. мода 23</span></div>
+        <div class="metric"><span class="metric__v">78<small>&thinsp;%</small></span>
+          <span class="metric__l">Рынка самолечения держат дрогистерии</span>
+          <span class="metric__s">Neprofarm · &gt;1 млрд €</span></div>
+      </div>
+      <p class="body-sm sub">Драйверы — самолечение лёгких недомоганий, wellness как часть
+        повседневных расходов, старение населения. Для арендодателя решающая характеристика
+        вторая: <b style="color:var(--ink)">практически любой арендатор в этой категории
+        будет сетевым, с балансом и корпоративной гарантией</b>. Это редкое сочетание
+        высокого роста и высокого кредитного качества.</p>
+
+      <div class="co co--lead">
+        <div class="co__hd"><span class="co__nm">Medi-Market</span>
+          <span class="co__meta">Бельгия · health, beauty, wellness</span>
+          <span class="tag tag--s">Очередь 1</span></div>
+        <p class="co__body">Модель ближе к парафармацевтическому дискаунту: аптечные
+          и медицинские бренды по агрессивным ценам плюс отдел с фармацевтом
+          и консультацией. После тестового магазина в Маастрихте открыли вторую
+          нидерландскую точку <b>в Гааге на Spuistraat 8 мая 2026 года</b> и заявили
+          цель — <b>минимум 80 точек в Нидерландах в горизонте трёх–пяти лет</b>.
+          На сегодня это самая агрессивная программа экспансии в сегменте.</p>
+        <dl class="spec"><dt>Формат</dt><dd>200–500 м² · центр города или сильный районный
+          центр · разгрузка</dd></dl>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="g g-2" style="gap:10px">
+        <figure class="fig" style="margin:0"><div class="fig__f" style="height:178px">
+          <img src="{{IMG:medimarket}}" alt="Вход в магазин Medi-Market в день открытия"></div>
+          <figcaption class="fig__cap"><b>Medi-Market</b> · день открытия ·
+            Alf van Beem, CC0</figcaption></figure>
+        <figure class="fig" style="margin:0"><div class="fig__f" style="height:178px">
+          <img src="{{IMG:medimarket-2}}" alt="Фасад Medi-Market с ценовым позиционированием"></div>
+          <figcaption class="fig__cap"><b>Позиционирование</b> · «prix bas · choix · conseils» ·
+            Le Sharkoïste, CC BY 4.0</figcaption></figure>
+      </div>
+
+      <div class="co co--lead">
+        <div class="co__hd"><span class="co__nm">Rituals</span>
+          <span class="co__meta">Нидерланды · 1 500 бутиков в 30+ странах</span></div>
+        <p class="co__body">Основан в 2000 году, первый магазин — на Kalverstraat в Амстердаме.
+          Собственная розница плюс wholesale, акцент на ритуал повседневного ухода и сенсорный
+          опыт в магазине. Юбилейный 1&nbsp;500-й бутик открыт в Ханчжоу; в 2025 году открыто
+          более 200 новых магазинов по миру, включая флагманы на Oxford Street в Лондоне,
+          Bahnhofstrasse в Цюрихе и в Барселоне.</p>
+        <div class="panel panel--s" style="padding:11px 13px">
+          <p class="body-xs" style="margin:0"><b>Показательный эпизод.</b> С начала августа
+            до конца сентября 2026 года Rituals переоборудует <b>все 1 500 бутиков
+            за 30 рабочих дней</b> — примерно по 40 магазинов в день силами около ста бригад,
+            с инвестицией порядка <b>40 млн €</b>. Компания делает это в момент, когда многие
+            ритейлеры смещают акцент в онлайн.</p>
+        </div>
+        <dl class="spec"><dt>Формат</dt><dd>60–120 м² · A1</dd></dl>
+      </div>
+      <figure class="fig" style="margin:0"><div class="fig__f" style="height:104px">
+        <img src="{{IMG:rituals-gouda}}" alt="Магазин Rituals в Гауде"></div>
+        <figcaption class="fig__cap"><b>Rituals</b> · Гауда · D.&thinsp;Trung, CC BY-SA 4.0</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 08 · VALUE ============ -->
+<section class="slide" data-sec="Value и дискаунт" data-title="Value и дискаунт-форматы" data-part="3.3">
+  <p class="eyebrow">3.3 · Value и дискаунт-форматы</p>
+  <div class="g" style="grid-template-columns:.72fr 1.28fr;gap:30px">
+    <div class="col">
+      <h2 style="font-size:30px">Растут все.<br>В A1 помещается один.</h2>
+      <p class="body-sm sub" style="margin:0">Прямое следствие ценовой чувствительности
+        и высвобождения метров после ухода <b style="color:var(--ink)">Blokker</b>,
+        <b style="color:var(--ink)">Big Bazar</b> и <b style="color:var(--ink)">Bristol</b>.
+        Экономика формата требует эффективных, гибко нарезаемых помещений с низкой ставкой
+        за метр, низкими эксплуатационными расходами, парковкой и простой логистикой.</p>
+      <div class="panel panel--o">
+        <p class="body-sm" style="margin:0">Для центральной торговой улицы премиального
+          сегмента подходит из этой группы, по сути, <b>только Normal</b>. Остальные
+          релевантны под другие типы юнитов — и их не следует держать в шорт-листе
+          A1-помещения.</p>
+      </div>
+      <figure class="fig" style="margin:0"><div class="fig__f" style="height:158px">
+        <img src="{{IMG:normal-gron}}" alt="Магазин Normal в Гронингене"></div>
+        <figcaption class="fig__cap"><b>Normal</b> · Гронинген ·
+          D.&thinsp;Trung, CC BY-SA 4.0</figcaption></figure>
+      <figure class="fig" style="margin:0"><div class="fig__f" style="height:150px">
+        <img src="{{IMG:sostrene}}" alt="Магазин Søstrene Grene в Гронингене"></div>
+        <figcaption class="fig__cap"><b>Søstrene Grene</b> · Гронинген ·
+          D.&thinsp;Trung, CC BY-SA 4.0</figcaption></figure>
+    </div>
+
+    <div class="col" style="gap:0">
+      <div class="co co--lead">
+        <div class="co__hd"><span class="co__nm">Normal</span>
+          <span class="co__meta">Дания · 50 точек в NL · цель 150</span>
+          <span class="tag tag--s">Очередь 1</span>
+          <span class="tag tag--fill">Единственный формат под A1</span></div>
+        <p class="co__body">Брендовая косметика, средства ухода и бытовая химия по низким
+          ценам, без собственных марок, с постоянно меняющимся ассортиментом — формат
+          «магазин-открытие», куда заходят посмотреть, что появилось. Летом 2026 года
+          открыт 50-й магазин в Нидерландах (первая точка в провинции Дренте — Эммен).
+          Сама компания оценивает ёмкость нидерландского рынка в 150 магазинов.
+          <b>Единственный из дискаунт-группы, который органично встаёт в центральную
+          торговую улицу и не портит окружение.</b></p>
+        <dl class="spec"><dt>Формат</dt><dd>150–300 м² · A1 или сильный A2</dd></dl>
+      </div>
+
+      <div class="g g-2" style="gap:0 24px;margin-top:14px">
+        <div class="col" style="gap:0">
+          <div class="co co--lead">
+            <div class="co__hd"><span class="co__nm">Wibra</span>
+              <span class="co__meta">NL · 356 → ~390</span></div>
+            <p class="co__body">Семейный дискаунтер: текстиль, товары для дома, чистящие
+              средства, СТМ Dasty. 63 открытия в 2025 году, 58 запланированных в 2026-м
+              плюс 12 переездов. Новый распределительный центр в Апелдорне рассчитан
+              на +35–40 филиалов. Выручка выросла почти на четверть до <b>286 млн €</b>,
+              операционная прибыль — 12,7 млн €, более чем на треть выше прошлогодней.
+              CEO <b>Bas Duijsens</b> заявил цель удвоиться за пять лет: у Zeeman
+              450 магазинов, у Hema — более 500, у Wibra — 280 при 2&nbsp;400 торговых
+              зонах в стране.</p>
+            <dl class="spec"><dt>Формат</dt><dd>300–600 м²</dd></dl>
+          </div>
+          <div class="co">
+            <div class="co__hd"><span class="co__nm">KiK</span>
+              <span class="co__meta">Германия · 70 в NL · цель 125</span></div>
+            <p class="co__body">Текстильный дискаунтер, цены преимущественно ниже 10&nbsp;€.
+              4&nbsp;000 магазинов по Европе, оборот 2,8 млрд € (2024). Темп — около
+              20 открытий в год. Стратегия прямая: <b>занимать освободившиеся помещения
+              обанкротившихся сетей</b> и после закрепления в малых городах выходить
+              в крупные.</p>
+            <dl class="spec"><dt>Формат</dt><dd>300–600 м²</dd></dl>
+          </div>
+        </div>
+        <div class="col" style="gap:0">
+          <div class="co co--lead">
+            <div class="co__hd"><span class="co__nm">Action</span>
+              <span class="co__meta">NL · 3 423 магазина в 15 странах</span>
+              <span class="tag tag--o">Не для A1</span></div>
+            <p class="co__body">Крупнейший в Европе по темпу открытий: +121 точка
+              за первое полугодие 2026-го, план на год — не менее 400 открытий. Выручка
+              первого полугодия <b>8,3 млрд € (+14&thinsp;%)</b>, like-for-like +3,6&thinsp;%,
+              среднее число покупателей 22,7 млн в неделю (+12&thinsp;%), создано
+              4&nbsp;464 рабочих места. CEO — <b>Hajir Hajji</b>. Стратегия: экономию
+              издержек напрямую переводить в снижение цен.</p>
+            <dl class="spec"><dt>Формат</dt><dd>750–1 000 м² · метраж и логистика
+              вне A1</dd></dl>
+          </div>
+          <div class="co">
+            <div class="co__hd"><span class="co__nm">Søstrene Grene</span>
+              <span class="co__meta">Дания · 418 магазинов · цель 500</span></div>
+            <p class="co__body">Товары для дома, интерьера и творчества, основана
+              в 1973 году в Орхусе. Отличительная черта — <b>лабиринтная планировка
+              магазина</b>, стимулирующая любопытство покупателя, и сильная дизайнерская
+              подача. Рост выручки 22&thinsp;% за год. Нидерланды были первой страной
+              за пределами Дании; распределительный центр открыт в Венло, оттуда идёт
+              экспансия в Южную Европу.</p>
+            <dl class="spec"><dt>Формат</dt><dd>250–500 м²</dd></dl>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 09 · ДОМ И ЛАЙФСТАЙЛ ============ -->
+<section class="slide" data-sec="Дом и лайфстайл" data-title="Дом и лайфстайл" data-part="3.4">
+  <p class="eyebrow">3.4 · Дом и лайфстайл</p>
+  <h2>Два арендатора с противоположными требованиями к зданию</h2>
+  <div class="g g-2" style="margin-top:24px;gap:34px">
+    <div class="col">
+      <figure class="fig" style="margin:0"><div class="fig__f" style="height:236px">
+        <img src="{{IMG:jysk-rdam}}" alt="Магазин JYSK в ретейл-парке в Роттердаме"></div>
+        <figcaption class="fig__cap"><b>JYSK</b> · IJsselmonde, Роттердам — привычный
+          периферийный формат, от которого сеть уходит · D.&thinsp;Trung, CC BY-SA 4.0</figcaption></figure>
+      <div class="co co--lead">
+        <div class="co__hd"><span class="co__nm">JYSK</span>
+          <span class="co__meta">Дания · 3 600+ в мире · 108 в NL</span></div>
+        <p class="co__body">Товары для дома и мебель. Объявленная цель по Нидерландам —
+          <b>минимум 140 точек</b>. CEO <b>Rami Jensen</b> в мае 2026 года заявил план
+          открыть 30 новых магазинов до конца августа и около 70 — до лета 2028 года,
+          подчеркнув, что на карте Европы для сети ещё много места.</p>
+        <div class="panel panel--s" style="padding:11px 13px">
+          <p class="body-xs" style="margin:0"><b>Принципиальный для нас пункт.</b>
+            Экспансия ориентирована на <b>центральные локации в крупных городах</b>,
+            а не только на периферийные ретейл-парки. В Амстердаме заявлено
+            как минимум две дополнительные точки.</p>
+        </div>
+        <dl class="spec"><dt>Формат</dt><dd>600–1 000 м²</dd></dl>
+      </div>
+    </div>
+    <div class="col">
+      <figure class="fig" style="margin:0"><div class="fig__f" style="height:236px">
+        <img src="{{IMG:dk-breda}}" alt="Историческая застройка торговой улицы в Бреде"></div>
+        <figcaption class="fig__cap"><b>Профиль Dille &amp; Kamille</b> · характерная застройка
+          исторического центра, Бреда · Ymblanter, CC BY-SA 3.0 NL</figcaption></figure>
+      <div class="co co--lead">
+        <div class="co__hd"><span class="co__nm">Dille &amp; Kamille</span>
+          <span class="co__meta">NL/BE · 30 в NL · 61 к середине 2026</span>
+          <span class="tag tag--s">Очередь 2</span></div>
+        <p class="co__body">Философия «естественной простоты»: натуральные материалы,
+          кухонная утварь, товары для дома и сада. В январе 2026 года открыт 30-й магазин
+          в Нидерландах и 57-й в мире (Венло, Klaasstraat). Директор <b>Hans Geels</b>:
+          если в начале 2025 года ориентир был пять открытий в год, то в 2026-м этот
+          показатель достигается уже к лету. Поскольку потенциал в Бенилюксе ограничен,
+          фокус смещается в Германию (11 магазинов) и Францию.</p>
+        <div class="panel panel--s" style="padding:11px 13px">
+          <p class="body-xs" style="margin:0">Характерные здания в исторических центрах —
+            их профиль. Это делает их <b>удобным арендатором для объектов
+            с ограничениями по фасаду</b>, где сетевой ритейл обычно отказывается.</p>
+        </div>
+        <dl class="spec"><dt>Формат</dt><dd>150–300 м² · исторический центр</dd></dl>
+      </div>
+    </div>
+  </div>
+
+  <div class="g g-4" style="margin-top:22px;gap:0;border-top:2px solid var(--ink)">
+    <div class="metric" style="padding:12px 20px 0 0;border-left:0">
+      <span class="metric__s">Метраж</span>
+      <p class="body-xs" style="margin:2px 0 0"><b>JYSK</b> 600–1 000 м² —
+        крупный лот, часто двухуровневый.<br><b>Dille&nbsp;&amp;&nbsp;Kamille</b> 150–300 м² —
+        стандартная нарезка исторического центра.</p></div>
+    <div class="metric" style="padding:12px 20px 0"><span class="metric__s">Тип здания</span>
+      <p class="body-xs" style="margin:2px 0 0"><b>JYSK</b> — нужен ровный пол, разгрузка,
+        простая геометрия.<br><b>Dille&nbsp;&amp;&nbsp;Kamille</b> — сознательно берут здания
+        с характером и ограничениями по фасаду.</p></div>
+    <div class="metric" style="padding:12px 20px 0"><span class="metric__s">Что это даёт объекту</span>
+      <p class="body-xs" style="margin:2px 0 0"><b>JYSK</b> закрывает большой пустующий лот
+        одним договором.<br><b>Dille&nbsp;&amp;&nbsp;Kamille</b> закрывает юнит, от которого
+        отказывается сетевой ритейл.</p></div>
+    <div class="metric" style="padding:12px 0 0 20px"><span class="metric__s">Ковенант</span>
+      <p class="body-xs" style="margin:2px 0 0">Оба — сетевые арендаторы с корпоративной
+        гарантией. По кредитному качеству <b>вопросов нет ни к одному</b>; выбор определяется
+        исключительно параметрами помещения.</p></div>
+  </div>
+</section>
+
+<!-- ============ 10 · ГАСТРОНОМИЯ 1 ============ -->
+<section class="slide" data-sec="Дневная гастрономия" data-title="Кофе, ланч, бранч" data-part="3.5">
+  <p class="eyebrow">3.5 · Дневная гастрономия и food-to-go — кофе, ланч, бранч</p>
+  <div class="g" style="grid-template-columns:.86fr 1.14fr;gap:30px">
+    <div class="col">
+      <h2 style="font-size:30px">Структурный сдвиг,<br>а не конъюнктурный</h2>
+      <div class="metrics metrics--3">
+        <div class="metric"><span class="metric__v">19 400</span>
+          <span class="metric__l">Точек фастфуда, начало 2026</span>
+          <span class="metric__s">2007 — 10 300</span></div>
+        <div class="metric"><span class="metric__v">19 200</span>
+          <span class="metric__l">Ресторанов</span>
+          <span class="metric__s">2007 — 11 100</span></div>
+        <div class="metric"><span class="metric__v">×1,9</span>
+          <span class="metric__l">Рост числа точек фастфуда</span>
+          <span class="metric__s">быстрее ресторанов</span></div>
+      </div>
+      <p class="body-sm sub" style="margin:0">Операторы уходят от больших помещений
+        с многочисленным персоналом к <b style="color:var(--ink)">компактным форматам
+        с низкими постоянными затратами и высокой маржой на посадочное место</b> —
+        кофейни, боррель-бары, гибридные форматы «день плюс вечер». Именно дневной
+        общепит чаще всего занимает освобождающиеся торговые помещения.</p>
+      <figure class="fig" style="margin:0"><div class="fig__f" style="height:196px">
+        <img src="{{IMG:annemax-utrecht}}" alt="Интерьер Anne&Max в Утрехте"></div>
+        <figcaption class="fig__cap"><b>Anne&amp;Max</b> · Утрехт, Домквартал ·
+          источник: annemax.nl</figcaption></figure>
+    </div>
+
+    <div class="col" style="gap:0">
+      <div class="g g-2" style="gap:0 24px">
+        <div class="col" style="gap:0">
+          <div class="co co--lead">
+            <div class="co__hd"><span class="co__nm">Anne&amp;Max</span>
+              <span class="co__meta">30+ точек · франчайзинг</span>
+              <span class="tag tag--s">Очередь 1</span></div>
+            <p class="co__body">Одна из крупнейших независимых франчайзинговых сетей
+              в сегменте кофеен и ланч-румов, основатель <b>Wobbe van Zoelen</b>.
+              Позиционирование — органические свежие продукты без искусственных добавок
+              и работа только с партнёрами, разделяющими эти принципы. В 2026 году
+              открываются точки в Дордрехте, Гауде, <b>Роттердаме</b>, <b>Утрехте</b>,
+              Лейдене и Амерсфорте — <b>две из наших трёх целевых географий уже
+              в плане</b>.</p>
+            <dl class="spec"><dt>Формат</dt><dd>120–250 м² · терраса даёт существенный
+              плюс</dd></dl>
+          </div>
+          <div class="co">
+            <div class="co__hd"><span class="co__nm">Bagels &amp; Beans</span>
+              <span class="co__meta">~90 точек · с 1996</span></div>
+            <p class="co__body">Основана на Ferdinand Bolstraat в Амстердаме. В 2026 году
+              запланировано <b>шесть новых локаций</b>, при этом совладелец <b>Lizan
+              van der Pol</b> подчёркивает сознательно умеренный темп: не самый быстрый
+              рост, но устойчивый. Заявлены амбиции международной экспансии.</p>
+            <dl class="spec"><dt>Формат</dt><dd>100–200 м²</dd></dl>
+          </div>
+        </div>
+        <div class="col" style="gap:0">
+          <div class="co co--lead">
+            <div class="co__hd"><span class="co__nm">Teds</span>
+              <span class="co__meta">All-day brunch · 16 точек</span>
+              <span class="tag tag--s">Очередь 1</span></div>
+            <p class="co__body">Формат без фиксированных «времён приёма пищи» —
+              от завтрака до коктейлей. Основана в 2015 году, владельцы <b>Sanne
+              и Michiel Huisman</b>. До конца 2026 года планируют выйти на 20 собственных
+              точек, к 2030 году — на 40, дальше через франшизу; в горизонте трёх лет
+              намерены открыть первую зарубежную точку.</p>
+            <dl class="spec"><dt>Формат</dt><dd>200–350 м² · полноценная кухня
+              и вытяжка</dd></dl>
+          </div>
+          <div class="co">
+            <div class="co__hd"><span class="co__nm">Wakuli</span>
+              <span class="co__meta">Кофе · 20 точек · с 2019</span></div>
+            <p class="co__body">Основана <b>Yorick Bruins</b> и <b>Lukas Grosfeld</b>,
+              выросла из онлайн-подписки на кофе в физическую розницу. Заявленная амбиция —
+              стать «новым Starbucks, но устроенным справедливо по отношению ко всей
+              цепочке». Европа рассматривается как следующий шаг.</p>
+            <dl class="spec"><dt>Формат</dt><dd>50–100 м²</dd></dl>
+          </div>
+          <div class="co">
+            <div class="co__hd"><span class="co__nm">Oliver Green</span>
+              <span class="co__meta">Здоровое питание · 4 точки</span></div>
+            <p class="co__body">Свежее приготовление, основана в 2019 году
+              (<b>Stefan Hoogeveen</b>, <b>Merel Keizers</b>). Недавно запущен
+              инвестиционный раунд: цель к 2030 году — 15 собственных точек плюс
+              франчайзинговые локации, параллельно масштабируется кейтеринг.</p>
+          </div>
+        </div>
+      </div>
+      <div class="g g-2" style="gap:10px;margin-top:14px">
+        <figure class="fig" style="margin:0"><div class="fig__f" style="height:120px">
+          <img src="{{IMG:teds-beukenplein}}" alt="Интерьер ресторана Teds"></div>
+          <figcaption class="fig__cap"><b>Teds</b> · формат all-day brunch ·
+            источник: teds-place.nl</figcaption></figure>
+        <figure class="fig" style="margin:0"><div class="fig__f" style="height:120px">
+          <img src="{{IMG:bagels-nl}}" alt="Витрина Bagels & Beans с террасой"></div>
+          <figcaption class="fig__cap"><b>Bagels &amp; Beans</b> · терраса как часть
+            экономики точки · Varnhagen12, CC BY-SA 4.0</figcaption></figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 11 · АЗИАТСКАЯ ВОЛНА ============ -->
+<section class="slide" data-sec="Дневная гастрономия" data-title="Азиатская волна и to-go" data-part="3.5">
+  <p class="eyebrow">3.5 · Азиатская волна и компактные to-go форматы</p>
+  <div class="g" style="grid-template-columns:1.16fr .84fr;gap:28px">
+    <div class="col" style="gap:0">
+      <h2 style="font-size:29px;margin-bottom:8px">Спрос, который разгоняют соцсети,
+        а забирают юниты на 30–70 м²</h2>
+      <p class="body-sm sub" style="margin:0 0 14px">NielsenIQ фиксирует устойчивый рост
+        спроса на азиатские продукты — готовая лапша, гёдза, якитори, дим-сам —
+        и вкусовые хайпы вроде матчи и фисташки, <b style="color:var(--ink)">одновременно
+        в рознице и в общепите</b>.</p>
+
+      <div class="g g-2" style="gap:0 24px">
+        <div class="col" style="gap:0">
+          <div class="co co--lead">
+            <div class="co__hd"><span class="co__nm">Poké Perfect</span>
+              <span class="co__meta">15 точек · с 2016</span>
+              <span class="tag tag--s">Очередь 1</span></div>
+            <p class="co__body">Поке-боулы, закуски и азиатские гарниры. Владельцы
+              <b>Gerrit Jan</b> и <b>Quinta Witzel</b> прямо формулируют локационную
+              стратегию: <b>A1 в городских центрах и travel-сегмент</b> — вокзалы
+              и аэропорты; открытие на Schiphol Plaza стало принципиальным шагом.
+              Формула построена на скорости и стабильном качестве — то есть именно
+              на том, что востребовано на локациях с высоким трафиком.</p>
+            <dl class="spec"><dt>Формат</dt><dd>60–120 м² · преобладает вынос</dd></dl>
+          </div>
+          <div class="co">
+            <div class="co__hd"><span class="co__nm">Sojubar</span>
+              <span class="co__meta">8 в NL + 8 в Европе</span>
+              <span class="tag tag--s">Очередь 2</span></div>
+            <p class="co__body">Старт в 2021 году как корейский ресторан в Роттердаме.
+              Korean fried chicken, соджу и K-pop-атмосфера. На 2026 год запланированы
+              точки в Амстелвене и <b>Гааге</b>. Инвестиционный партнёр — <b>Pontex
+              Investment Partners</b>. Показательно, что сеть <b>сознательно сдерживает
+              экспансию</b>, делая ставку на узнаваемость бренда, а не на число точек.</p>
+            <dl class="spec"><dt>Формат</dt><dd>150–250 м² · вытяжка и мокрая точка</dd></dl>
+          </div>
+          <div class="co">
+            <div class="co__hd"><span class="co__nm">Gangnam Bar</span>
+              <span class="co__meta">Харлем · апрель 2026</span></div>
+            <p class="co__body">Смежный сигнал: <b>Michael</b> и <b>Celine Hu</b>
+              (за ними Nomi и Ajisan Ramen) — корейская курица плюс бибимбап и кимбап,
+              с заявленной целью развернуть концепт на несколько локаций в стране.</p>
+            <dl class="spec"><dt>Формат</dt><dd>150–250 м²</dd></dl>
+          </div>
+        </div>
+        <div class="col" style="gap:0">
+          <div class="co co--lead">
+            <div class="co__hd"><span class="co__nm">Cotti Coffee</span>
+              <span class="co__meta">Китай · кофе-дискаунт</span>
+              <span class="tag tag--s">Очередь 2</span></div>
+            <p class="co__body">Основана в 2022 году бывшими основателями Luckin Coffee —
+              <b>Jenny Zhiya Qian</b> и <b>Charles Lu</b>. Компактные точки, заказ через
+              приложение или киоск, кофе <b>от 1 € при максимальной цене 4 €</b>,
+              еженедельные новинки и коллаборации, ориентация на поколение&nbsp;Z.
+              Логика бизнеса — не максимальная маржа на чашку, а максимальное число
+              проданных чашек. Первая нидерландская точка открыта <b>в Гааге
+              на Vlamingstraat 19</b>. Сеть уже работает в Германии, Франции, Испании,
+              Великобритании и Бельгии; европейская экспансия — по франшизе.</p>
+            <div class="panel panel--s" style="padding:10px 12px">
+              <p class="body-xs" style="margin:0"><b>Лучший кандидат на небольшой юнит
+                с высокой проходимостью</b>, где классическая кофейня не сойдётся
+                по экономике.</p>
+            </div>
+            <dl class="spec"><dt>Формат</dt><dd>30–70 м² · вынос · минимум посадочных
+              мест</dd></dl>
+          </div>
+          <div class="co">
+            <div class="co__hd"><span class="co__nm">CoCo Bubble Tea</span>
+              <span class="co__meta">Тайвань · 5 000+ точек в мире</span>
+              <span class="tag tag--o">Данные требуют актуализации</span></div>
+            <p class="co__body">В Нидерландах уже присутствует <b>в Роттердаме, Гааге
+              и Утрехте</b>, развивается через франшизу и заявляла дальнейшее расширение.
+              Данные относятся к середине 2025 года и требуют актуализации перед контактом.
+              Категория в целом продолжает расти на волне азиатских вкусовых трендов.</p>
+            <dl class="spec"><dt>Формат</dt><dd>30–60 м²</dd></dl>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="g g-2" style="gap:10px">
+        <figure class="fig" style="margin:0"><div class="fig__f" style="height:150px">
+          <img src="{{IMG:cotti-shinkong}}" alt="Компактная точка Cotti Coffee"></div>
+          <figcaption class="fig__cap"><b>Cotti Coffee</b> · компактная точка на потоке ·
+            Shwangtianyuan, CC BY-SA 4.0</figcaption></figure>
+        <figure class="fig" style="margin:0"><div class="fig__f" style="height:150px">
+          <img src="{{IMG:soju-ams}}" alt="Корейская еда и соджу"></div>
+          <figcaption class="fig__cap"><b>Sojubar</b> · korean fried chicken и соджу ·
+            источник: sojubar.com</figcaption></figure>
+      </div>
+      <figure class="fig" style="margin:0"><div class="fig__f" style="height:158px">
+        <img src="{{IMG:poke-rdam}}" alt="Поке-боул точка в центре Роттердама"></div>
+        <figcaption class="fig__cap"><b>Поке в центре Роттердама</b> · формат выноса
+          на первой линии · D.&thinsp;Trung, CC BY-SA 4.0</figcaption></figure>
+      <div class="g g-2" style="gap:10px">
+        <figure class="fig" style="margin:0"><div class="fig__f" style="height:118px">
+          <img src="{{IMG:pp-spread}}" alt="Поке-боулы и азиатские закуски"></div>
+          <figcaption class="fig__cap"><b>Продукт</b> · источник: pokeperfect.nl</figcaption></figure>
+        <figure class="fig" style="margin:0"><div class="fig__f" style="height:118px">
+          <img src="{{IMG:bubble-ams}}" alt="Bubble Tea Bar в Амстердаме"></div>
+          <figcaption class="fig__cap"><b>Bubble tea</b> · Амстердам ·
+            D.&thinsp;Trung, CC BY-SA 4.0</figcaption></figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 12 · РЕМОНТ И SECOND-HAND ============ -->
+<section class="slide" data-sec="Ремонт и second-hand" data-title="Ремонт, refurbished, second-hand" data-part="3.6">
+  <p class="eyebrow">3.6 · Ремонт, refurbished и second-hand</p>
+  <div class="g" style="grid-template-columns:1.1fr .9fr;gap:30px">
+    <div class="col">
+      <h2 style="font-size:30px">Единственная категория,<br>которая растёт против тренда</h2>
+      <p class="body-sm sub" style="margin:0">Пересечение трёх факторов: ценовая
+        чувствительность, устойчивое потребление и регуляторное давление
+        (<b style="color:var(--ink)">право на ремонт</b>). Категория растёт на фоне общего
+        сжатия розницы, что само по себе редкость.</p>
+
+      <div class="co co--lead">
+        <div class="co__hd"><span class="co__nm">ThePhoneLab</span>
+          <span class="co__meta">20 точек в NL · B2C и B2B</span>
+          <span class="tag tag--s">Очередь 2</span></div>
+        <p class="co__body">Ремонт смартфонов, планшетов и ноутбуков. В 2026 году открыты
+          четыре новых магазина — Ден Бос, Хилверсюм (15 мая), Амерсфорт (4 июня)
+          и Зволле, ещё минимум два запланированы до конца года. После завершения
+          национального покрытия компания рассматривает Бельгию и Германию.
+          CEO — <b>Boris Blijham</b>, Head of Partnerships — <b>Léon Bosch</b>.</p>
+        <div class="panel panel--s" style="padding:11px 13px">
+          <p class="body-xs" style="margin:0"><b>Отдельно значимо для владельца
+            исторического здания.</b> Сеть принципиально выбирает монументальные объекты
+            с характером — например, магазин в Маастрихте расположен
+            <b>в здании 1673 года</b>.</p>
+        </div>
+        <dl class="spec"><dt>Формат</dt><dd>40–100 м² · мастерская в задней зоне</dd></dl>
+      </div>
+
+      <div class="co">
+        <div class="co__hd"><span class="co__nm">Refurbished-электроника</span>
+          <span class="co__meta">Fixje · Back Market · refurbed</span></div>
+        <p class="co__body">Категория перешла из статуса дешёвой альтернативы
+          в самостоятельный розничный сегмент: устройства дорожают, дольше остаются
+          технически пригодными, растёт внимание к ремонту и повторному использованию.
+          <b>Fixje</b> (бывший FixjeiPhone) выросла в крупнейший в Бенилюксе онлайн-магазин
+          ремонта iPhone, вернув к жизни более <b>2 млн устройств</b>, и расширяется
+          в refurbished-устройства и B2B. Международные платформы формируют спрос,
+          который частично уходит в физическую розницу.</p>
+      </div>
+    </div>
+
+    <div class="col">
+      <figure class="fig" style="margin:0"><div class="fig__f" style="height:186px">
+        <img src="{{IMG:tpl-store}}" alt="Стойка ремонта ThePhoneLab"></div>
+        <figcaption class="fig__cap"><b>ThePhoneLab</b> · стойка приёма в ремонт ·
+          источник: thephonelab.nl</figcaption></figure>
+
+      <div class="co co--lead">
+        <div class="co__hd"><span class="co__nm">Секонд-хенд и винтаж</span>
+          <span class="co__meta">CBS · Locatus · The Rock Group</span>
+          <span class="tag tag--o">Ковенант слабый</span></div>
+        <div class="metrics metrics--3" style="border-top:1px solid var(--rule);margin:2px 0">
+          <div class="metric" style="padding:9px 14px 10px"><span class="metric__v"
+            style="font-size:26px">+23<small>&thinsp;%</small></span>
+            <span class="metric__l">Магазинов подержанной одежды</span>
+            <span class="metric__s">540 (2019) → 665 (2024)</span></div>
+          <div class="metric" style="padding:9px 14px 10px"><span class="metric__v"
+            style="font-size:26px">+70–80<small>&thinsp;%</small></span>
+            <span class="metric__l">Торговой площади в винтаже</span>
+            <span class="metric__s">Locatus · за десятилетие</span></div>
+          <div class="metric" style="padding:9px 14px 10px"><span class="metric__v"
+            style="font-size:26px">50</span>
+            <span class="metric__l">Точек в полевом обследовании</span>
+            <span class="metric__s">The Rock Group · 2026</span></div>
+        </div>
+        <p class="co__body">В 2026 году вышло первое системное исследование физического рынка
+          мультибрендового секонд-хенда (24 интервью, опрос владельцев, полевое обследование
+          50 винтажных точек). Выводы: спрос растёт за счёт устойчивости, доступной цены
+          и уникальности вещи.</p>
+        <div class="panel panel--o" style="padding:11px 13px">
+          <p class="body-xs" style="margin:0"><b>Оговорка для арендодателя.</b> Категория
+            растёт, но состоит в основном из независимых предпринимателей с тонкой
+            капитализацией, а не из сетей. <b>Ковенант, как правило, слабый.</b></p>
+        </div>
+      </div>
+      <div class="g g-2" style="gap:10px">
+        <figure class="fig" style="margin:0"><div class="fig__f" style="height:104px">
+          <img src="{{IMG:vintage-delft}}" alt="Винтажный магазин в Делфте"></div>
+          <figcaption class="fig__cap"><b>Винтаж</b> · Делфт ·
+            D.&thinsp;Trung, CC BY-SA 4.0</figcaption></figure>
+        <figure class="fig" style="margin:0"><div class="fig__f" style="height:104px">
+          <img src="{{IMG:kringloop}}" alt="Интерьер магазина подержанной одежды"></div>
+          <figcaption class="fig__cap"><b>Секонд-хенд</b> · интерьер ·
+            Pieter Deurne, CC BY-SA 4.0</figcaption></figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 13 · НОВИЧКИ ============ -->
+<section class="slide" data-sec="Международные новички" data-title="Международные новички" data-part="3.7">
+  <p class="eyebrow">3.7 · Международные новички и бренд-магазины</p>
+  <div class="g" style="grid-template-columns:.95fr 1.05fr;gap:32px">
+    <div class="col">
+      <h2 style="font-size:30px">Европейские хот-споты<br>снова в фокусе</h2>
+      <p class="body-sm sub" style="margin:0">Международные ритейлеры всё активнее смотрят
+        на европейские городские хот-споты, в том числе из-за экономической неопределённости
+        в США. За первое полугодие 2026 года в Нидерландах <b style="color:var(--ink)">впервые
+        открылись испанские и шведские модные марки, французская оптическая сеть
+        и китайский электронный бренд</b>.</p>
+      <figure class="fig" style="margin:0"><div class="fig__f" style="height:330px">
+        <img src="{{IMG:denhaag-spui}}" alt="Торговая улица в центре Гааги в сумерках"></div>
+        <figcaption class="fig__cap"><b>Гаага</b> · Spuistraat со стороны Lange Poten —
+          локация первой точки Medi-Market и Lager 157 · Steven Lek,
+          CC BY-SA 4.0</figcaption></figure>
+      <div class="panel panel--s">
+        <p class="body-sm" style="margin:0"><b>Что из этого следует для нас.</b>
+          Новички берут небольшие метражи на модных улицах (On — около 150 м²)
+          либо, наоборот, крупные многоуровневые лоты (Decathlon — около 3 000 м²
+          на двух этажах). Средний размер — как раз то, что чаще всего пустует.</p>
+      </div>
+    </div>
+
+    <div class="col" style="gap:0">
+      <div class="co co--lead">
+        <div class="co__hd"><span class="co__nm">On</span>
+          <span class="co__meta">Швейцария · беговая обувь и одежда · 80+ стран</span></div>
+        <p class="co__body">Основана в 2010 году. Первый магазин в Нидерландах — первый
+          квартал 2026 года, <b>Амстердам, Hartenstraat 6 в квартале 9 Straatjes,
+          около 150 м²</b>. Параллельно открылись первые точки в Испании, Мексике,
+          Саудовской Аравии и две в Южной Корее. Финансовый фон: выручка третьего квартала
+          выросла почти на 25&thinsp;% до <b>858 млн €</b>, чистая прибыль увеличилась
+          в четыре раза — с 30,5 до <b>128,5 млн €</b>.</p>
+      </div>
+      <div class="co">
+        <div class="co__hd"><span class="co__nm">Decathlon</span>
+          <span class="co__meta">Ден Бос · Pensmarkt · ~3 000 м²</span></div>
+        <p class="co__body">Конец марта 2026 года, центр Ден Боса: около 3 000 м²
+          на первом и втором этажах с отдельным входом на уровне земли —
+          <b>референс для крупных многоуровневых лотов</b>.</p>
+      </div>
+      <div class="co">
+        <div class="co__hd"><span class="co__nm">TK Maxx</span>
+          <span class="co__meta">Тилбург · Pieter Vreedeplein · ~2 000 м²</span></div>
+        <p class="co__body">Весна 2026 года. Формат off-price с постоянно меняющимся
+          ассортиментом брендовых товаров: мода, аксессуары, товары для дома.</p>
+      </div>
+      <div class="co">
+        <div class="co__hd"><span class="co__nm">Lager 157</span>
+          <span class="co__meta">Швеция · низкий ценовой сегмент</span></div>
+        <p class="co__body">Первый магазин и вебшоп в Нидерландах — конец марта 2026 года,
+          <b>Гаага</b>.</p>
+      </div>
+      <div class="co">
+        <div class="co__hd"><span class="co__nm">Riani</span>
+          <span class="co__meta">Германия · премиальная женская мода</span></div>
+        <p class="co__body">Первый brandstore в Нидерландах — март 2026 года, Ларен;
+          цель — укрепить позиции в премиум-сегменте Европы.</p>
+      </div>
+      <div class="co">
+        <div class="co__hd"><span class="co__nm">Ballpark</span>
+          <span class="co__meta">NL · streetwear</span></div>
+        <p class="co__body">Третий магазин открыт в Ден Босе; уже присутствует
+          <b>в Амстердаме и Утрехте</b>. Пример растущего локального бренда, которому
+          нужны небольшие площади на модных улицах.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 14 · УСЛУГИ ============ -->
+<section class="slide" data-sec="Потребительские услуги" data-title="Услуги: рост есть, ковенант слабый" data-part="3.8">
+  <p class="eyebrow">3.8 · Потребительские услуги — consumentverzorgende dienstverlening</p>
+  <div class="hrow" style="display:flex;justify-content:space-between;align-items:flex-end;gap:40px">
+    <h2 style="font-size:33px">Рост есть.<br>Кредитного качества нет.</h2>
+    <p class="body-xs sub" style="max-width:430px;margin:0 0 4px">Формально категория относится
+      не к рознице, а к услугам, но по внешнему виду и локации ведёт себя как магазин.
+      <b style="color:var(--ink)">Именно этот сегмент активнее всего заполняет
+      освобождающиеся витрины</b> — и именно он хуже всего проходит по ковенанту.</p>
+  </div>
+
+  <div class="metrics metrics--4" style="margin-top:20px">
+    <div class="metric"><span class="metric__v">+55<small>&thinsp;%</small></span>
+      <span class="metric__l">Нейл-салонов за пять лет</span>
+      <span class="metric__s">Locatus · рывок с 2021, крупные города</span></div>
+    <div class="metric"><span class="metric__v">29 230</span>
+      <span class="metric__l">Активных парикмахерских</span>
+      <span class="metric__s">из ~35 000 регистраций · январь 2026</span></div>
+    <div class="metric"><span class="metric__v">~14 000</span>
+      <span class="metric__l">Фитнес-центров</span>
+      <span class="metric__s">KVK · 6 738 в 2017 · в Утрехте &gt;1 200</span></div>
+    <div class="metric"><span class="metric__v">3 363</span>
+      <span class="metric__l">Тату-салонов в KVK</span>
+      <span class="metric__s">на 1 января 2026 · нужен допуск GGD</span></div>
+  </div>
+
+  <div class="g" style="grid-template-columns:1fr 1fr .8fr;gap:26px;margin-top:24px">
+    <div class="col">
+      <div class="co co--lead">
+        <h3>Инъекционная косметология</h3>
+        <p class="co__body">В 2025 году в Нидерландах выполнено около <b>1,2 млн процедур</b>
+          с инъекционными препаратами — это более 500&nbsp;000 уникальных клиентов,
+          или <b>3,8&thinsp;% совершеннолетнего населения</b>. Услуга доступна
+          в <b>1&nbsp;334 локациях</b>, объём рынка оценивается примерно в 360 млн €.
+          Число клиентов-женщин растёт примерно на 10&thinsp;% в год, мужчин —
+          на <b>38&thinsp;%</b>. Спрос смещается от увеличения объёма к биостимуляции
+          и улучшению качества кожи.</p>
+        <div class="panel panel--o" style="padding:11px 13px">
+          <p class="body-xs" style="margin:0">Регуляторная зрелость низкая: лишь
+            <b>62&thinsp;%</b> клиник указывают, выполняет ли процедуру врач
+            с BIG-регистрацией.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="co co--lead">
+        <h3>Фитнес и персональный тренинг</h3>
+        <p class="co__body">Число фитнес-центров выросло с 6&nbsp;738 в 2017 году
+          до почти 14&nbsp;000 в 2026-м. Отдельно растут студии персонального тренинга:
+          с 623 в 2017 году до <b>1&nbsp;594 в 2023-м</b>. Рост реальный, но крупные
+          города уже перегреты, а <b>витринную ценность помещения такой арендатор
+          снижает</b>.</p>
+      </div>
+      <div class="co">
+        <h3>Парикмахерские</h3>
+        <p class="co__body">На январь 2026 года в Handelsregister зарегистрировано почти
+          35&nbsp;000 предприятий с основным видом деятельности «парикмахер»,
+          из них экономически активны 29&nbsp;230; ещё более 2&nbsp;700 компаний указывают
+          уход за волосами как дополнительную деятельность. Рост продолжается,
+          но годовой темп замедлился.</p>
+      </div>
+    </div>
+    <div class="col">
+      <figure class="fig" style="margin:0"><div class="fig__f" style="height:132px">
+        <img src="{{IMG:nailsalon}}" alt="Интерьер нейл-салона"></div>
+        <figcaption class="fig__cap"><b>Нейл-салон</b> · PattayaPatrol,
+          CC BY-SA 4.0</figcaption></figure>
+      <figure class="fig" style="margin:0"><div class="fig__f" style="height:118px">
+        <img src="{{IMG:tattoo-street}}" alt="Тату-салон и барбершоп в уличной застройке"></div>
+        <figcaption class="fig__cap"><b>Тату и барбершоп</b> · уличная застройка ·
+          Kamil Czaiński, CC BY-SA 4.0</figcaption></figure>
+      <div class="panel panel--o">
+        <p class="body-xs" style="margin:0"><b>Общий дисконт к этим цифрам.</b>
+          28&nbsp;591 франчайзинговая точка на 1 января 2026, прирост <b>0,68&thinsp;%</b>
+          за год. Почти 40&thinsp;% приходится на услуги, где франчайзи чаще всего —
+          ZZP-предприниматели или единоличные фирмы, нередко работающие из дома.
+          Взрывной рост регистраций лишь частично конвертируется в спрос на витринные
+          помещения и почти не конвертируется в арендаторов с балансом.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 15 · ТАТУ ============ -->
+<section class="slide" data-sec="Оценка предложения" data-title="Тату-салон: разбор" data-part="4">
+  <p class="eyebrow">Раздел 4 · Оценка предложенного арендатора</p>
+  <div class="g" style="grid-template-columns:.82fr 1.18fr;gap:32px">
+    <div class="col">
+      <h2 style="font-size:31px">Тату-салон</h2>
+      <div class="call call--o" style="font-size:16px">Не отказ — но и <b>не тот арендатор,
+        за которого стоит держаться на A-локации</b>.</div>
+      <figure class="fig" style="margin:0"><div class="fig__f" style="height:302px">
+        <img src="{{IMG:tattoo-belfast}}" alt="Вывеска тату-салона на торговой улице"></div>
+        <figcaption class="fig__cap"><b>Эффект на фронт</b> · тату-витрина в уличной
+          застройке · Ardfern, CC BY-SA 3.0</figcaption></figure>
+      <div class="panel panel--o">
+        <h4 style="margin:0 0 2px">Практический вывод</h4>
+        <p class="body-sm" style="margin:0">Тату-салон имеет смысл рассматривать
+          как <b>временное заполнение</b>, дающее денежный поток на переходный период,
+          а не как якорного арендатора, под которого выстраивается позиционирование
+          объекта.</p>
+      </div>
+    </div>
+
+    <div class="col" style="gap:18px">
+      <div>
+        <h4 style="color:var(--oxide);margin-bottom:6px">Аргументы против</h4>
+        <ol class="nlist">
+          <li><span class="n">01</span><span class="t"><b>Рынок утроился за десять лет,
+            но с 2024 года фиксируются первые признаки насыщения.</b>
+            <em>Профессионализация — сетевизация, сертификация, обучение —
+            в отрасли практически отсутствует.</em></span></li>
+          <li><span class="n">02</span><span class="t"><b>Бизнес завязан на одного-двух
+            мастеров: уход мастера означает уход выручки.</b>
+            <em>Оборот непрозрачен, отчётности как таковой нет, ковенант слабый.</em></span></li>
+          <li><span class="n">03</span><span class="t"><b>Требуется разрешение GGD,
+            санитарные требования, мокрая точка и вентиляция.</b>
+            <em>То есть capex под конкретного арендатора, который может закрыться
+            через три года.</em></span></li>
+          <li><span class="n">04</span><span class="t"><b>Влияние на окружение.</b>
+            <em>Тату-витрина на A-локации меняет восприятие всего фронта и может
+            отразиться на ставках соседних юнитов и на мультипликаторе
+            при продаже объекта.</em></span></li>
+        </ol>
+      </div>
+      <div>
+        <h4 style="color:var(--signal);margin-bottom:6px">Если всё-таки брать — условия</h4>
+        <ol class="nlist">
+          <li><span class="n">A</span><span class="t"><b>Банковская гарантия</b>
+            <em>на 6 месяцев аренды и более.</em></span></li>
+          <li><span class="n">B</span><span class="t"><b>Короткий срок: 2+3</b>
+            <em>вместо стандартных 5+5, без автоматической опции продления.</em></span></li>
+          <li><span class="n">C</span><span class="t"><b>Всё переоборудование —
+            за счёт арендатора,</b> <em>с обязательством восстановления первоначального
+            состояния.</em></span></li>
+          <li><span class="n">D</span><span class="t"><b>Проверка разрешённой функции
+            по bestemmingsplan:</b> <em>допускается ли consumentverzorgende
+            dienstverlening, а не только detailhandel; разрешение GGD получено
+            до подписания.</em></span></li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 16 · ШОРТ-ЛИСТ ============ -->
+<section class="slide" data-sec="Шорт-лист" data-title="Шорт-лист кандидатов" data-part="5">
+  <div class="hrow" style="display:flex;justify-content:space-between;align-items:flex-end;gap:30px">
+    <div>
+      <p class="eyebrow">Раздел 5 · Шорт-лист кандидатов</p>
+      <h2 style="font-size:34px">Компании с подтверждённой публичной экспансией</h2>
+    </div>
+    <p class="body-xs sub" style="max-width:380px;margin:0 0 4px;text-align:right">
+      Приоритет расставлен исходя из совпадения формата с центральным стрит-ритейлом
+      Утрехта, Гааги и Роттердама и из кредитного качества арендатора.</p>
+  </div>
+
+  <div class="filters" style="margin-top:16px">
+    <button class="fbtn" data-f="all" aria-pressed="true">Все · 16</button>
+    <button class="fbtn" data-f="w1" aria-pressed="false">Очередь 1</button>
+    <button class="fbtn" data-f="w2" aria-pressed="false">Очередь 2</button>
+    <button class="fbtn" data-f="s" aria-pressed="false">до 150 м²</button>
+    <button class="fbtn" data-f="m" aria-pressed="false">150–500 м²</button>
+    <button class="fbtn" data-f="l" aria-pressed="false">свыше 500 м²</button>
+    <span class="fnote">Клик по заголовку — сортировка</span>
+  </div>
+
+  <div class="tbl-wrap">
+    <table id="shortlist">
+      <thead><tr>
+        <th class="s" data-k="w" data-t="n">Оч.</th>
+        <th class="s" data-k="nm" data-t="s">Компания</th>
+        <th>Направление</th>
+        <th class="s" data-k="pts" data-t="n">Точек в NL</th>
+        <th>Цель</th>
+        <th class="s" data-k="min" data-t="n">Формат, м²</th>
+        <th>Комментарий</th>
+      </tr></thead>
+      <tbody>
+        <tr data-w="1" data-pts="2" data-min="200" data-max="500" data-nm="Medi-Market">
+          <td><span class="wv wv-1">1</span></td><td class="nm">Medi-Market</td>
+          <td>Дрогистерия / health &amp; beauty</td><td class="num">2</td>
+          <td class="q">~80 за 3–5 лет</td><td class="num">200–500</td>
+          <td>Уже в Гааге. Самая агрессивная экспансия в сегменте</td></tr>
+        <tr data-w="1" data-pts="402" data-min="80" data-max="150" data-nm="Nexeye">
+          <td><span class="wv wv-1">1</span></td><td class="nm">Nexeye</td>
+          <td>Оптика и слух</td><td class="num">402 <span class="sub">NL+BE</span></td>
+          <td class="q">1 000 в Европе к 2028</td><td class="num">80–150</td>
+          <td>Собственник KKR. Есть Group Real Estate Director — единая точка входа</td></tr>
+        <tr data-w="1" data-pts="4" data-min="60" data-max="120" data-nm="Jimmy Fairly">
+          <td><span class="wv wv-1">1</span></td><td class="nm">Jimmy Fairly</td>
+          <td>Оптика (DTC)</td><td class="num">2–4</td>
+          <td class="q">+3 в 2027</td><td class="num">60–120</td>
+          <td>Открылись в Гааге, в июле — в Утрехте. Ищут дальше</td></tr>
+        <tr data-w="1" data-pts="50" data-min="150" data-max="300" data-nm="Normal">
+          <td><span class="wv wv-1">1</span></td><td class="nm">Normal</td>
+          <td>Value beauty / household</td><td class="num">50</td>
+          <td class="q">150</td><td class="num">150–300</td>
+          <td>Единственный дискаунтер, чей формат подходит A1</td></tr>
+        <tr data-w="1" data-pts="30" data-min="120" data-max="250" data-nm="Anne&amp;Max">
+          <td><span class="wv wv-1">1</span></td><td class="nm">Anne&amp;Max</td>
+          <td>Кофейни и ланч-румы</td><td class="num">30+</td>
+          <td class="q">нет публичной</td><td class="num">120–250</td>
+          <td>Новые точки в этом году в Роттердаме и Утрехте</td></tr>
+        <tr data-w="1" data-pts="16" data-min="200" data-max="350" data-nm="Teds">
+          <td><span class="wv wv-1">1</span></td><td class="nm">Teds</td>
+          <td>All-day brunch</td><td class="num">16</td>
+          <td class="q">20 в 2026, 40 к 2030</td><td class="num">200–350</td>
+          <td>Нужна полноценная кухня и вытяжка</td></tr>
+        <tr data-w="2" data-pts="15" data-min="60" data-max="120" data-nm="Poké Perfect">
+          <td><span class="wv wv-2">2</span></td><td class="nm">Poké Perfect</td>
+          <td>Fast casual (поке)</td><td class="num">15</td>
+          <td class="q">нет публичной</td><td class="num">60–120</td>
+          <td>Прямо заявляют фокус на A1 в центрах городов</td></tr>
+        <tr data-w="2" data-pts="1" data-min="30" data-max="70" data-nm="Cotti Coffee">
+          <td><span class="wv wv-2">2</span></td><td class="nm">Cotti Coffee</td>
+          <td>Кофе-дискаунт to go</td><td class="num">1</td>
+          <td class="q">экспансия по франшизе</td><td class="num">30–70</td>
+          <td>Первая точка — Гаага. Кандидат на мелкий юнит с потоком</td></tr>
+        <tr data-w="2" data-pts="8" data-min="150" data-max="250" data-nm="Sojubar">
+          <td><span class="wv wv-2">2</span></td><td class="nm">Sojubar</td>
+          <td>Корейская кухня</td><td class="num">8</td>
+          <td class="q">точка в Гааге в 2026</td><td class="num">150–250</td>
+          <td>Инвестор Pontex. Осознанно сдержанный темп</td></tr>
+        <tr data-w="2" data-pts="20" data-min="40" data-max="100" data-nm="ThePhoneLab">
+          <td><span class="wv wv-2">2</span></td><td class="nm">ThePhoneLab</td>
+          <td>Ремонт электроники</td><td class="num">20</td>
+          <td class="q">+2 и более в 2026</td><td class="num">40–100</td>
+          <td>Принципиально выбирают исторические здания</td></tr>
+        <tr data-w="2" data-pts="30" data-min="150" data-max="300" data-nm="Dille &amp; Kamille">
+          <td><span class="wv wv-2">2</span></td><td class="nm">Dille &amp; Kamille</td>
+          <td>Дом и лайфстайл</td><td class="num">30</td>
+          <td class="q">темп ускорен вдвое</td><td class="num">150–300</td>
+          <td>Их профиль — характерные здания в исторических центрах</td></tr>
+        <tr data-w="0" data-pts="108" data-min="600" data-max="1000" data-nm="JYSK">
+          <td><span class="wv wv-0">—</span></td><td class="nm">JYSK</td>
+          <td>Дом и мебель</td><td class="num">108</td>
+          <td class="q">минимум 140</td><td class="num">600–1 000</td>
+          <td>Фокус на центральные локации крупных городов</td></tr>
+        <tr data-w="0" data-pts="0" data-min="250" data-max="500" data-nm="Søstrene Grene">
+          <td><span class="wv wv-0">—</span></td><td class="nm">Søstrene Grene</td>
+          <td>Дизайн и интерьер</td><td class="num">н/д</td>
+          <td class="q">500 в Европе</td><td class="num">250–500</td>
+          <td>DC в Венло, выручка +22&thinsp;% за год</td></tr>
+        <tr data-w="0" data-pts="356" data-min="300" data-max="600" data-nm="Wibra">
+          <td><span class="wv wv-0">—</span></td><td class="nm">Wibra</td>
+          <td>Текстильный дискаунт</td><td class="num">356 <span class="sub">NL+BE</span></td>
+          <td class="q">~390 к концу 2026</td><td class="num">300–600</td>
+          <td>Заявили удвоение за пять лет</td></tr>
+        <tr data-w="0" data-pts="70" data-min="300" data-max="600" data-nm="KiK">
+          <td><span class="wv wv-0">—</span></td><td class="nm">KiK</td>
+          <td>Текстильный дискаунт</td><td class="num">70</td>
+          <td class="q">125 за 5 лет</td><td class="num">300–600</td>
+          <td>Занимают бывшие помещения Blokker</td></tr>
+        <tr data-w="0" data-pts="0" data-min="750" data-max="1000" data-nm="Action">
+          <td><span class="wv wv-0">—</span></td><td class="nm">Action</td>
+          <td>Non-food дискаунт</td><td class="num">н/д</td>
+          <td class="q">400 открытий в 2026 (мир)</td><td class="num">750–1 000</td>
+          <td>Метраж и требования к логистике — не для A1</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="body-xs sub" style="margin-top:9px;font-family:var(--f-mono);font-size:9.5px;
+    letter-spacing:.04em">Очередь — по разделу «Порядок работы». Прочерк: в волны обзвона
+    не включены; JYSK, Søstrene Grene, Wibra, KiK и Action релевантны под другие типы юнитов,
+    а не под центральный A1.</p>
+</section>
+
+<!-- ============ 17 · ВОЛНЫ ============ -->
+<section class="slide" data-sec="Порядок работы" data-title="Три волны обзвона" data-part="5">
+  <p class="eyebrow">Раздел 5 · Порядок работы</p>
+  <h2>Три волны — по готовности контрагента, а не по алфавиту</h2>
+  <div class="g g-3" style="margin-top:26px;gap:30px">
+    <div class="col">
+      <div style="border-top:3px solid var(--signal);padding-top:12px">
+        <div class="co__hd" style="margin-bottom:10px">
+          <span class="co__nm" style="font-size:27px">Первая волна</span>
+          <span class="tag tag--s">Звоним сейчас</span></div>
+        <p class="body-sm sub" style="margin:0 0 14px">Публично заявленная программа
+          экспансии, подтверждённый интерес к нашим городам, сетевой ковенант.</p>
+      </div>
+      <ol class="nlist">
+        <li><span class="n">01</span><span class="t"><b>Medi-Market</b>
+          <em>Уже в Гааге, программа на 80 точек. 200–500 м².</em></span></li>
+        <li><span class="n">02</span><span class="t"><b>Nexeye</b>
+          <em>Через Group Real Estate Director — Roy Reubsaet. 80–150 м².</em></span></li>
+        <li><span class="n">03</span><span class="t"><b>Jimmy Fairly</b>
+          <em>Luca Liboa, ищут локации прямо сейчас. 60–120 м².</em></span></li>
+        <li><span class="n">04</span><span class="t"><b>Normal</b>
+          <em>Ёмкость рынка 150 при 50 открытых. 150–300 м².</em></span></li>
+        <li><span class="n">05</span><span class="t"><b>Anne&amp;Max</b>
+          <em>Роттердам и Утрехт уже в плане 2026. 120–250 м².</em></span></li>
+        <li><span class="n">06</span><span class="t"><b>Teds</b>
+          <em>20 точек к концу 2026. Нужна кухня и вытяжка. 200–350 м².</em></span></li>
+      </ol>
+    </div>
+
+    <div class="col">
+      <div style="border-top:3px solid var(--ink-2);padding-top:12px">
+        <div class="co__hd" style="margin-bottom:10px">
+          <span class="co__nm" style="font-size:27px">Вторая волна</span>
+          <span class="tag">По совпадению параметров юнита</span></div>
+        <p class="body-sm sub" style="margin:0 0 14px">Идут, если помещение попадает
+          в их технические требования — метраж, вытяжка, мокрая точка, характер здания.</p>
+      </div>
+      <ol class="nlist">
+        <li><span class="n">07</span><span class="t"><b>Cotti Coffee · CoCo</b>
+          <em>Под компактные юниты на потоке. 30–70 м².</em></span></li>
+        <li><span class="n">08</span><span class="t"><b>Poké Perfect · Sojubar</b>
+          <em>При наличии вытяжки и мокрой точки. 60–250 м².</em></span></li>
+        <li><span class="n">09</span><span class="t"><b>ThePhoneLab</b>
+          <em>Под здания с характером. 40–100 м², мастерская сзади.</em></span></li>
+        <li><span class="n">10</span><span class="t"><b>Dille &amp; Kamille</b>
+          <em>Под исторические фасады. 150–300 м².</em></span></li>
+      </ol>
+      <div class="panel panel--s" style="margin-top:6px">
+        <p class="body-xs" style="margin:0"><b>Перед контактом с CoCo</b> — актуализировать
+          данные: имеющиеся относятся к середине 2025 года.</p>
+      </div>
+    </div>
+
+    <div class="col">
+      <div style="border-top:3px solid var(--oxide);padding-top:12px">
+        <div class="co__hd" style="margin-bottom:10px">
+          <span class="co__nm" style="font-size:27px">Третья волна</span>
+          <span class="tag tag--o">Только на защитных условиях</span></div>
+        <p class="body-sm sub" style="margin:0 0 14px">Растущий спрос, слабый ковенант.
+          Рассматриваем как временное заполнение, а не как якорь.</p>
+      </div>
+      <ol class="nlist">
+        <li><span class="n">11</span><span class="t"><b>Тату</b>
+          <em>3 363 салона в KVK, нужен допуск GGD. Мокрая точка, вентиляция.</em></span></li>
+        <li><span class="n">12</span><span class="t"><b>Нейл</b>
+          <em>+55&thinsp;% за пять лет, рывок в крупных городах.</em></span></li>
+        <li><span class="n">13</span><span class="t"><b>Фитнес</b>
+          <em>~14 000 центров, крупные города перегреты. Снижает витринную
+          ценность.</em></span></li>
+        <li><span class="n">14</span><span class="t"><b>Независимый винтаж</b>
+          <em>+23&thinsp;% магазинов, но тонкая капитализация.</em></span></li>
+      </ol>
+      <div class="panel panel--o" style="margin-top:6px">
+        <p class="body-xs" style="margin:0"><b>Пакет условий одинаков для всей волны:</b>
+          банковская гарантия от 6 месяцев, срок 2+3 без автопродления, capex за счёт
+          арендатора с обязательством восстановления, проверка bestemmingsplan
+          и разрешений до подписания.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 18 · ЧЕК-ЛИСТ ============ -->
+<section class="slide" data-sec="Чек-лист и источники" data-title="Что проверить по юниту" data-part="6">
+  <p class="eyebrow">Раздел 6 · Что проверить перед формированием шорт-листа по конкретному юниту</p>
+  <div class="g" style="grid-template-columns:1.25fr .75fr;gap:34px">
+    <div class="col">
+      <h2 style="font-size:31px">Без этих пяти параметров<br>шорт-лист остаётся теоретическим</h2>
+      <ol class="nlist">
+        <li><span class="n">01</span><span class="t"><b>Разрешённая функция
+          по bestemmingsplan.</b> <em>Detailhandel, consumentverzorgende dienstverlening
+          и horeca — три разные категории. Общепит дополнительно делится по категориям
+          и требует отдельного разрешения, а терраса — своего.</em></span></li>
+        <li><span class="n">02</span><span class="t"><b>Метраж, ширина фронта
+          и этажность.</b> <em>Разброс требований у кандидатов из этого обзора —
+          от 30 м² (Cotti) до 1 000 м² (JYSK, Action).</em></span></li>
+        <li><span class="n">03</span><span class="t"><b>Технические возможности.</b>
+          <em>Наличие или возможность устройства мокрой точки и вытяжки определяет,
+          попадает ли объект в самый быстрорастущий сегмент — дневную
+          гастрономию.</em></span></li>
+        <li><span class="n">04</span><span class="t"><b>Энергоэффективность
+          и эксплуатационные расходы.</b> <em>Ритейлеры сейчас критичны к издержкам:
+          здания с высокими сервисными расходами или низким энергетическим классом
+          теряют в ликвидности вне зависимости от локации.</em></span></li>
+        <li><span class="n">05</span><span class="t"><b>Эффект на mix и на exit.</b>
+          <em>Арендатор влияет не только на текущий денежный поток, но и на ставки соседних
+          юнитов и на мультипликатор при продаже. Разница между сетевым арендатором
+          с корпоративной гарантией и индивидуальным предпринимателем в этой части бывает
+          больше, чем разница в ставке.</em></span></li>
+      </ol>
+    </div>
+
+    <div class="col">
+      <figure class="fig" style="margin:0"><div class="fig__f" style="height:168px">
+        <img src="{{IMG:vacant-shop}}" alt="Пустое торговое помещение со стеклянным фронтом"></div>
+        <figcaption class="fig__cap"><b>Юнит до арендатора</b> · Philipe Alès,
+          CC BY-SA 4.0</figcaption></figure>
+      <div>
+        <h4 style="margin-bottom:7px">Источники</h4>
+        <div class="src">
+          <p><b>JLL Netherlands</b> — обзор рынка торговой недвижимости, четыре ключевых
+            тренда, 2026. <b>Achmea Real Estate</b> — Retail Outlook 2026–2028.
+            <b>Locatus</b> — вакантность и число точек по категориям. <b>CBS</b> —
+            квартальная статистика розничного оборота и числа предприятий.
+            <b>ABN AMRO</b> — секторный прогноз розницы, февраль 2026.
+            <b>ING Research</b> — прогноз розничных продаж 2026. <b>NielsenIQ</b> —
+            обзор супермаркетного рынка, январь 2026. <b>RMC</b> — годовой анализ
+            пешеходного трафика. <b>KVK</b> — Handelsregister. <b>NFV</b> и
+            <b>De Nationale Franchise Gids</b> — статистика франчайзинга 2026.
+            <b>RetailTrends</b>, <b>Entree Magazine</b>, <b>Vastgoedmarkt</b>,
+            <b>RetailDetail</b>, <b>MT/Sprout</b>, <b>Marketingtribune</b> — отраслевая
+            пресса и корпоративные заявления. <b>The Rock Group</b> — исследование рынка
+            физического секонд-хенда, 2026. <b>Injectablesbooking.nl</b> — рынок
+            инъекционной косметологии. <b>Fitness Sector Atlas 2025</b>,
+            <b>Structuurrapport Kappersbranche 2026</b>, <b>Neprofarm</b>.</p>
+        </div>
+      </div>
+      <div class="panel panel--o">
+        <p class="body-xs" style="margin:0"><b>Оговорка.</b> Все числовые показатели приведены
+          по состоянию на дату публикации соответствующего источника. Данные по CoCo Bubble Tea
+          относятся к середине 2025 года и требуют актуализации перед контактом.</p>
+      </div>
+      <div>
+        <h4 style="margin-bottom:6px">Фотографии</h4>
+        <p class="photocred">Викисклад, лицензии CC BY / CC BY-SA / CC0 — авторы указаны
+          в подписях к снимкам. Фотографии Anne&amp;Max, Teds, Sojubar, ThePhoneLab,
+          Poké Perfect и Jimmy Fairly — с корпоративных сайтов компаний, используются
+          для внутренней аналитической работы.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /stage -->
+</div><!-- /viewport -->
+
+<div id="toc" role="dialog" aria-modal="true" aria-label="Содержание">
+  <p class="eyebrow">Содержание · METR PLUS · 31 августа 2026</p>
+  <h2>Кто сядет в юнит</h2>
+  <div class="toc__grid" id="tocGrid"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var stage = document.getElementById("stage");
+  var view  = document.getElementById("viewport");
+  var slides = Array.prototype.slice.call(stage.querySelectorAll(".slide"));
+  var N = slides.length;
+  var cur = 0;
+  var docMode = false;
+
+  /* ---------- rail + status bar, built from slide data ---------- */
+  slides.forEach(function(sl, i){
+    var rail = document.createElement("div");
+    rail.className = "rail";
+    rail.innerHTML = '<span class="rail__brand">METR<br>PLUS</span>';
+    slides.forEach(function(s2, j){
+      var b = document.createElement("button");
+      b.className = "rail__tick";
+      b.type = "button";
+      b.textContent = String(j+1).padStart(2,"0");
+      b.setAttribute("aria-label", (j+1) + ". " + s2.dataset.title);
+      if (j === i) b.setAttribute("aria-current","true");
+      b.addEventListener("click", function(){ go(j); });
+      rail.appendChild(b);
+    });
+    var foot = document.createElement("span");
+    foot.className = "rail__foot";
+    foot.textContent = "'26";
+    rail.appendChild(foot);
+    sl.appendChild(rail);
+
+    var bar = document.createElement("div");
+    bar.className = "statbar";
+    var part = sl.dataset.part ? sl.dataset.part + " · " : "";
+    var mid = (i === 0)
+      ? '<span class="hint"><span><kbd>\u2190</kbd> <kbd>\u2192</kbd> листать</span>' +
+        '<span><kbd>O</kbd> содержание</span><span><kbd>P</kbd> печать</span></span>'
+      : '<span>METR PLUS · Аналитический отдел · 31.08.2026</span>';
+    bar.innerHTML = '<span><b>' + part + sl.dataset.sec + '</b></span>' + mid +
+      '<span class="no">' + String(i+1).padStart(2,"0") + ' / ' + String(N).padStart(2,"0") + '</span>';
+    sl.appendChild(bar);
+  });
+
+  /* ---------- contents ---------- */
+  var tocEl = document.getElementById("toc");
+  var grid = document.getElementById("tocGrid");
+  slides.forEach(function(sl, i){
+    var b = document.createElement("button");
+    b.className = "toc__i";
+    b.type = "button";
+    b.innerHTML = '<span class="n">' + String(i+1).padStart(2,"0") + '</span>' +
+      '<span><span class="t">' + sl.dataset.title + '</span>' +
+      '<span class="s">' + (sl.dataset.part ? "Раздел " + sl.dataset.part + " · " : "") +
+      sl.dataset.sec + '</span></span>';
+    b.addEventListener("click", function(){ closeToc(); go(i); });
+    grid.appendChild(b);
+  });
+  var tocItems = Array.prototype.slice.call(grid.children);
+
+  function openToc(){
+    tocEl.classList.add("is-on");
+    tocItems.forEach(function(el,i){
+      if (i===cur) el.setAttribute("aria-current","true"); else el.removeAttribute("aria-current");
+    });
+    tocItems[cur].focus();
+  }
+  function closeToc(){ tocEl.classList.remove("is-on"); }
+  function tocOpen(){ return tocEl.classList.contains("is-on"); }
+
+  /* ---------- navigation ---------- */
+  function go(i){
+    i = Math.max(0, Math.min(N-1, i));
+    if (docMode){
+      slides[i].scrollIntoView({behavior:"smooth", block:"start"});
+      cur = i; return;
+    }
+    slides[cur].classList.remove("is-on");
+    cur = i;
+    slides[cur].classList.add("is-on");
+    var ticks = slides[cur].querySelectorAll(".rail__tick");
+    for (var k=0;k<ticks.length;k++){
+      if (k===cur) ticks[k].setAttribute("aria-current","true");
+      else ticks[k].removeAttribute("aria-current");
+    }
+    if (history.replaceState) history.replaceState(null,"","#s"+(cur+1));
+  }
+
+  document.addEventListener("keydown", function(e){
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var k = e.key;
+    if (tocOpen()){
+      if (k === "Escape" || k === "o" || k === "O" || k === "щ" || k === "Щ"){
+        e.preventDefault(); closeToc();
+      }
+      return;
+    }
+    if (k === "ArrowRight" || k === "PageDown" || k === " " || k === "Enter"){
+      e.preventDefault(); go(cur+1);
+    } else if (k === "ArrowLeft" || k === "PageUp" || k === "Backspace"){
+      e.preventDefault(); go(cur-1);
+    } else if (k === "Home"){ e.preventDefault(); go(0); }
+    else if (k === "End"){ e.preventDefault(); go(N-1); }
+    else if (k === "o" || k === "O" || k === "щ" || k === "Щ" || k === "Escape"){
+      e.preventDefault(); openToc();
+    } else if (k === "p" || k === "P" || k === "з" || k === "З"){
+      e.preventDefault(); window.print();
+    }
+  });
+
+  /* wheel / trackpad, throttled */
+  var lock = false;
+  view.addEventListener("wheel", function(e){
+    if (docMode || tocOpen()) return;
+    if (Math.abs(e.deltaY) < 12 && Math.abs(e.deltaX) < 12) return;
+    e.preventDefault();
+    if (lock) return;
+    lock = true;
+    setTimeout(function(){ lock = false; }, 480);
+    go(cur + ((e.deltaY > 0 || e.deltaX > 0) ? 1 : -1));
+  }, {passive:false});
+
+  /* touch */
+  var tx = 0, ty = 0;
+  view.addEventListener("touchstart", function(e){
+    tx = e.changedTouches[0].clientX; ty = e.changedTouches[0].clientY;
+  }, {passive:true});
+  view.addEventListener("touchend", function(e){
+    if (docMode) return;
+    var dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+    if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) go(cur + (dx < 0 ? 1 : -1));
+  }, {passive:true});
+
+  /* ---------- scale to fit ---------- */
+  function fit(){
+    docMode = window.matchMedia("(max-width:900px),(max-height:440px)").matches;
+    if (docMode){
+      stage.style.transform = "";
+      slides.forEach(function(s){ s.classList.add("is-on"); });
+      return;
+    }
+    slides.forEach(function(s,i){ s.classList.toggle("is-on", i===cur); });
+    var s = Math.min(view.clientWidth / 1600, view.clientHeight / 900);
+    stage.style.transform = "scale(" + s + ")";
+  }
+  window.addEventListener("resize", fit);
+  fit();
+
+  /* ---------- deep link ---------- */
+  var m = /^#s(\d+)$/.exec(location.hash);
+  if (m) go(parseInt(m[1],10) - 1);
+
+  /* ---------- short-list: sort + filter ---------- */
+  var table = document.getElementById("shortlist");
+  var tbody = table.tBodies[0];
+  var rows = Array.prototype.slice.call(tbody.rows);
+  var sortState = {key:null, dir:0};
+
+  Array.prototype.forEach.call(table.tHead.rows[0].cells, function(th){
+    if (!th.classList.contains("s")) return;
+    th.addEventListener("click", function(){
+      var key = th.dataset.k, type = th.dataset.t;
+      var dir = (sortState.key === key && sortState.dir === 1) ? -1 : 1;
+      sortState = {key:key, dir:dir};
+      Array.prototype.forEach.call(table.tHead.rows[0].cells, function(o){
+        o.removeAttribute("data-dir");
+      });
+      th.setAttribute("data-dir", String(dir));
+      var sorted = rows.slice().sort(function(a,b){
+        var av = a.dataset[key], bv = b.dataset[key];
+        if (type === "n"){
+          av = parseFloat(av) || 0; bv = parseFloat(bv) || 0;
+          if (key === "w"){ if (av === 0) av = 99; if (bv === 0) bv = 99; }
+          return (av - bv) * dir;
+        }
+        return av.localeCompare(bv, "ru") * dir;
+      });
+      sorted.forEach(function(r){ tbody.appendChild(r); });
+    });
+  });
+
+  var fbtns = Array.prototype.slice.call(document.querySelectorAll(".fbtn"));
+  fbtns.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      fbtns.forEach(function(o){ o.setAttribute("aria-pressed", String(o === btn)); });
+      var f = btn.dataset.f;
+      rows.forEach(function(r){
+        var min = parseInt(r.dataset.min, 10), max = parseInt(r.dataset.max, 10), on = true;
+        if (f === "w1") on = r.dataset.w === "1";
+        else if (f === "w2") on = r.dataset.w === "2";
+        else if (f === "s") on = min < 150;
+        else if (f === "m") on = min >= 150 && max <= 500;
+        else if (f === "l") on = max > 500;
+        r.classList.toggle("dim", !on);
+      });
+    });
+  });
+})();
+</script>
