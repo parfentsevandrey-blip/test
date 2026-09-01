@@ -135,9 +135,13 @@ private fun StatusLine(state: TunnelState) {
     )
     val detail = when (state) {
         is TunnelState.Idle -> stringResource(R.string.home_auto_hint)
-        is TunnelState.Probing -> state.note
-        is TunnelState.Starting ->
-            "${state.transport.label}  ·  step ${state.attempt} of ${state.ladderSize}"
+        is TunnelState.Probing -> stringResource(state.noteRes)
+        is TunnelState.Starting -> stringResource(
+            R.string.home_step,
+            stringResource(state.transport.labelRes),
+            state.attempt,
+            state.ladderSize,
+        )
         is TunnelState.Bootstrapping -> state.summary
         is TunnelState.Escalating -> state.reason
         is TunnelState.Failed -> state.reason
@@ -222,7 +226,7 @@ private fun RouteCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
-                        text = state.activeTransport?.label ?: "—",
+                        text = state.activeTransport?.let { stringResource(it.labelRes) } ?: "—",
                         style = MaterialTheme.typography.titleMediumEmphasized,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
@@ -249,7 +253,7 @@ private fun RouteCard(
             if (probe.hasRun) {
                 HorizontalDivider(Modifier.padding(vertical = 14.dp))
                 Text(
-                    text = probe.summary(),
+                    text = stringResource(probe.summaryRes),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )

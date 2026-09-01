@@ -82,9 +82,7 @@ fun BridgesScreen(
             ) {
                 Column(Modifier.padding(18.dp)) {
                     Text(
-                        text = "Bridges are unlisted entry points into Tor. Veil ships the " +
-                            "public set, refreshes it from the Tor Project when it can, and " +
-                            "can ask for private ones that no blocklist has yet.",
+                        text = stringResource(R.string.bridges_intro),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -110,8 +108,8 @@ fun BridgesScreen(
                         // network that freezes connections: it terminates on a
                         // host that also serves a real website.
                         listOf(
-                            "webtunnel" to Transport.WEBTUNNEL.label,
-                            "obfs4" to Transport.OBFS4.label,
+                            "webtunnel" to stringResource(Transport.WEBTUNNEL.labelRes),
+                            "obfs4" to stringResource(Transport.OBFS4.labelRes),
                         ).forEach { (id, label) ->
                             OutlinedButton(
                                 onClick = { onRequestFromMoat(id) },
@@ -132,7 +130,7 @@ fun BridgesScreen(
             if (lines.isEmpty()) return@forEach
             item(key = "header-${transport.name}") {
                 Text(
-                    text = "${transport.label}  ·  ${lines.size}",
+                    text = "${stringResource(transport.labelRes)}  ·  ${lines.size}",
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(top = 6.dp, start = 4.dp),

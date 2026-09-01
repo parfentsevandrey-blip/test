@@ -10,6 +10,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Insights
@@ -34,6 +35,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.veil.vpn.R
 import app.veil.vpn.model.TunnelState
@@ -43,6 +46,37 @@ import app.veil.vpn.ui.screens.DiagnosticsScreen
 import app.veil.vpn.ui.screens.HomeScreen
 import app.veil.vpn.ui.screens.RoutesScreen
 import app.veil.vpn.ui.screens.SettingsScreen
+
+/**
+ * A navigation label that shrinks rather than wraps.
+ *
+ * A bottom bar divides the width into equal slots, and a word that does not fit
+ * its slot is broken across two lines and then clipped by the bar's height —
+ * which is how "Диагностика" arrived on screen as "Диагности / ка". Any label
+ * longer than about nine characters hits this, in every language: "Diagnostics"
+ * does it in English too, and a larger system font size brings the shorter ones
+ * down with it.
+ *
+ * Truncating with an ellipsis would be the usual answer and is a poor one for
+ * navigation, where the label is the only thing naming the destination. So the
+ * text is held to one line and allowed to step down a little in size until it
+ * fits. The range is narrow on purpose: most labels stay at the size Material
+ * specifies, and the one long word in a bar loses a point or two rather than
+ * losing its ending.
+ */
+@Composable
+private fun NavigationLabel(text: String) {
+    Text(
+        text = text,
+        autoSize = TextAutoSize.StepBased(
+            minFontSize = 9.sp,
+            maxFontSize = 12.sp,
+            stepSize = 0.5.sp,
+        ),
+        maxLines = 1,
+        textAlign = TextAlign.Center,
+    )
+}
 
 /** The five places the bottom bar can take you, plus one pushed screen. */
 enum class Destination(val labelRes: Int) {
@@ -119,7 +153,7 @@ fun VeilScaffold(
                             destination = entry
                         },
                         icon = { Icon(iconFor(entry), contentDescription = null) },
-                        label = { Text(stringResource(entry.labelRes)) },
+                        label = { NavigationLabel(stringResource(entry.labelRes)) },
                     )
                 }
             }
@@ -232,7 +266,7 @@ private fun subtitleFor(
     state: TunnelState,
 ): String = when {
     showBridges -> stringResource(R.string.bridges_builtin)
-    destination == Destination.TUNNEL -> state.activeTransport?.label
+    destination == Destination.TUNNEL -> state.activeTransport?.let { stringResource(it.labelRes) }
         ?: stringResource(R.string.app_tagline)
     else -> stringResource(R.string.app_tagline)
 }

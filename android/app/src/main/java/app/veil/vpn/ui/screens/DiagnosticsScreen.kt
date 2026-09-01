@@ -27,6 +27,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import app.veil.vpn.R
+import app.veil.vpn.ui.resolve
 import app.veil.vpn.core.VeilLog
 import app.veil.vpn.net.PathVerdict
 import app.veil.vpn.net.ProbeReport
@@ -73,7 +74,7 @@ fun DiagnosticsScreen(
             ) {
                 Column(Modifier.padding(18.dp)) {
                     Text(
-                        text = probe.summary(),
+                        text = stringResource(probe.summaryRes),
                         style = MaterialTheme.typography.titleMediumEmphasized,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
@@ -97,20 +98,18 @@ fun DiagnosticsScreen(
                             )
                             Column(Modifier.padding(start = 12.dp)) {
                                 Text(
-                                    text = result.name,
+                                    text = result.name.resolve(),
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = MaterialTheme.colorScheme.onSurface,
                                 )
                                 Text(
-                                    text = "${result.detail}  ·  ${result.millis} ms",
+                                    text = "${result.detail.resolve()}  ·  ${result.millis} ms",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                                 if (result.verdict == PathVerdict.TLS_FROZEN) {
                                     Text(
-                                        text = "This is the signature of a penalty rather " +
-                                            "than an outage: the connection was accepted and " +
-                                            "then quietly dropped.",
+                                        text = stringResource(R.string.diag_frozen_desc),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.error,
                                     )

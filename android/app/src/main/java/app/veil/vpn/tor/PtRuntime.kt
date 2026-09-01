@@ -6,7 +6,6 @@ import app.veil.tun.veiltun.TransportEvents
 import app.veil.tun.veiltun.Transports
 import app.veil.tun.veiltun.Veiltun
 import app.veil.vpn.core.VeilLog
-import app.veil.vpn.model.BridgeLine
 import app.veil.vpn.model.Transport
 import java.io.File
 
@@ -46,36 +45,39 @@ class PtRuntime(context: Context) {
     val snowflakeVersion: String get() = runCatching { Veiltun.snowflakeVersion() }.getOrDefault("?")
 
     /**
-     * Starts whatever the chosen transport needs and returns the local SOCKS
-     * port tor should be pointed at, or null for a direct connection.
+     * Brings up every transport that has a listener, once, and reports the
+     * ports tor should be pointed at.
      *
-     * @param bridges the bridge lines for this attempt. Snowflake takes its
-     *   broker, fronts and ICE servers from them rather than from a config file.
-     * @param ampRendezvous ask Snowflake to reach its broker through Google's
-     *   AMP cache instead of a fronted request. Slower, but it survives where
-     *   the fronted broker request does not.
+     * All of them are started together on purpose. Each is only a local SOCKS
+     * listener until a bridge line names it, so an unused one costs nothing —
+     * and having them all up front is what lets tor be configured once and
+     * switched between routes over its control port instead of restarted.
      */
-    fun start(
-        transport: Transport,
-        bridges: List<BridgeLine>,
-        ampRendezvous: Boolean = false,
-    ): Int? {
-        if (transport == Transport.DIRECT) return null
+    fun startAll(): Map<Transport, Int> {
         check(transports.ready()) { "transport controller failed to initialise" }
+        configureSnowflakeDefaults()
 
-        if (transport == Transport.SNOWFLAKE) {
-            configureSnowflake(bridges.firstOrNull(), ampRendezvous)
+        val ports = linkedMapOf<Transport, Int>()
+        for (transport in Transport.entries) {
+            if (!transport.isPluggable) continue
+            val name = transport.torName
+            val started = runCatching {
+                if (name !in running) {
+                    transports.start(name)
+                    running += name
+                }
+                transports.port(name).toInt()
+            }.getOrElse {
+                VeilLog.w("pt", "$name would not start: ${it.message}")
+                0
+            }
+            if (started > 0) {
+                ports[transport] = started
+                VeilLog.i("pt", "$name listening on 127.0.0.1:$started")
+            }
         }
-
-        val name = transport.torName
-        if (name !in running) {
-            transports.start(name)
-            running += name
-        }
-        val port = transports.port(name).toInt()
-        check(port > 0) { "${transport.label} started but is not listening" }
-        VeilLog.i("pt", "$name listening on 127.0.0.1:$port")
-        return port
+        if (ports.isEmpty()) VeilLog.e("pt", "no transport could be started")
+        return ports
     }
 
     /** The meek port, started on demand, for fronted requests to the bridge API. */
@@ -89,31 +91,23 @@ class PtRuntime(context: Context) {
         return transports.port(name).toInt()
     }
 
-    private fun configureSnowflake(bridge: BridgeLine?, ampRendezvous: Boolean) {
-        val params = bridge?.params.orEmpty()
+    /**
+     * Fallback rendezvous settings for Snowflake.
+     *
+     * These only fill gaps: anything the bridge line carries wins, and the
+     * lines the Tor Project hands out per country carry fresher broker fronts
+     * than anything that could be compiled in here.
+     */
+    private fun configureSnowflakeDefaults() {
         transports.configureSnowflake(
-            params["ice"] ?: DEFAULT_ICE,
-            params["url"] ?: DEFAULT_BROKER,
-            params["fronts"] ?: params["front"] ?: DEFAULT_FRONTS,
-            if (ampRendezvous) params["ampcache"] ?: DEFAULT_AMP_CACHE else "",
-            params["sqsqueue"].orEmpty(),
-            params["sqscreds"].orEmpty(),
+            DEFAULT_ICE,
+            DEFAULT_BROKER,
+            DEFAULT_FRONTS,
+            "",
+            "",
+            "",
             SNOWFLAKE_PEERS,
         )
-        VeilLog.i(
-            "pt",
-            "snowflake $snowflakeVersion configured for " +
-                if (ampRendezvous) "AMP cache rendezvous" else "fronted rendezvous",
-        )
-    }
-
-    /** Stops Snowflake only, so a retry can restart it with other rendezvous settings. */
-    fun stopSnowflake() {
-        val name = Transport.SNOWFLAKE.torName
-        if (running.remove(name)) {
-            runCatching { transports.stop(name) }
-            VeilLog.i("pt", "snowflake stopped")
-        }
     }
 
     fun stopAll() {
@@ -158,7 +152,6 @@ class PtRuntime(context: Context) {
     private companion object {
         const val DEFAULT_BROKER = "https://1098762253.rsc.cdn77.org/"
         const val DEFAULT_FRONTS = "app.datapacket.com,www.datapacket.com"
-        const val DEFAULT_AMP_CACHE = "https://cdn.ampproject.org/"
         const val DEFAULT_ICE =
             "stun:stun.l.google.com:19302,stun:stun.voipgate.com:3478," +
                 "stun:stun.hot-chilli.net:3478,stun:stun.m-online.net:3478"

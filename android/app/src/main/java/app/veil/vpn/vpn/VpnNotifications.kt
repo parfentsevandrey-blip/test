@@ -38,12 +38,17 @@ object VpnNotifications {
         )
 
         val detail = when (state) {
-            is TunnelState.Probing -> state.note
-            is TunnelState.Starting -> "${state.transport.label} (${state.attempt}/${state.ladderSize})"
+            is TunnelState.Probing -> context.getString(state.noteRes)
+            is TunnelState.Starting ->
+                "${context.getString(state.transport.labelRes)} " +
+                    "(${state.attempt}/${state.ladderSize})"
             is TunnelState.Bootstrapping ->
-                "${state.transport.label} — ${state.percent}% ${state.summary}"
-            is TunnelState.Connected -> state.transport.label
-            is TunnelState.Escalating -> "${state.from.label} -> ${state.to.label}"
+                "${context.getString(state.transport.labelRes)} — " +
+                    "${state.percent}% ${state.summary}"
+            is TunnelState.Connected -> context.getString(state.transport.labelRes)
+            is TunnelState.Escalating ->
+                "${context.getString(state.from.labelRes)} -> " +
+                    context.getString(state.to.labelRes)
             is TunnelState.Failed -> state.reason
             else -> null
         }

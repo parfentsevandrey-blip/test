@@ -1,6 +1,7 @@
 package app.veil.vpn.tor
 
 import android.content.Context
+import app.veil.vpn.R
 import app.veil.vpn.core.VeilLog
 import app.veil.vpn.data.BridgeRepository
 import app.veil.vpn.data.EndpointCooldown
@@ -10,11 +11,14 @@ import app.veil.vpn.model.BridgeLine
 import app.veil.vpn.model.DtlsProfile
 import app.veil.vpn.model.TlsProfile
 import app.veil.vpn.model.Transport
+import app.veil.vpn.net.CircumventionSetting
 import app.veil.vpn.net.MoatClient
+import app.veil.vpn.net.NatBehaviour
 import app.veil.vpn.net.NetworkProbe
 import app.veil.vpn.net.ProbeReport
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 /** One rung of the escalation ladder: a transport plus the bridges to try with it. */
 data class Attempt(
@@ -61,10 +65,12 @@ class StrategyPlanner(
         probeRanking: List<Pair<Transport, Float>>,
         tlsProfile: TlsProfile,
         dtlsProfile: DtlsProfile,
+        /** Transports that actually have a listener tor can be pointed at. */
+        available: Set<Transport>,
     ): List<Attempt> = withContext(Dispatchers.Default) {
         val discouraged = memory.discouraged(network.fingerprint)
         val remembered = memory.preferredFor(network.fingerprint)
-        val recommended = countryRecommendation(network.countryIso)
+        val recommended = applyCountryRecommendation(network.countryIso)
 
         val ordered = LinkedHashMap<Transport, String>()
 
@@ -86,28 +92,41 @@ class StrategyPlanner(
         // A network that accepts connections and then blackholes them has
         // already told us that anything terminating on a plain host is a waste
         // of a rung, whatever the rest of the evidence said.
-        val demoted = if (probe.freezeSuspected) {
-            setOf(Transport.DIRECT, Transport.OBFS4) + discouraged
+        val frozen = if (probe.freezeSuspected) {
+            setOf(Transport.DIRECT, Transport.OBFS4)
         } else {
-            discouraged
+            emptySet()
         }
+        // And a network that gives every destination a different public port —
+        // which is what a mobile carrier's NAT normally does — has told us that
+        // WebRTC will spend a long time failing. Snowflake stays on the ladder,
+        // because a client behind such a NAT can still be matched with an
+        // unrestricted volunteer, but it goes after the routes that do not care.
+        val natBound = when (probe.natBehaviour) {
+            NatBehaviour.SYMMETRIC, NatBehaviour.NO_UDP -> setOf(Transport.SNOWFLAKE)
+            else -> emptySet()
+        }
+        val demoted = discouraged + frozen + natBound
 
         val attempts = ordered
-            .toList()
+            .map { (transport, why) ->
+                if (transport in natBound) transport to context.getString(R.string.route_why_nat)
+                else transport to why
+            }
+            // A bridge whose plugin never started would make tor stall on a
+            // route it has no way to take.
+            .filter { (transport, _) -> transport == Transport.DIRECT || transport in available }
             .sortedBy { (transport, _) -> if (transport in demoted) 1 else 0 }
             .mapNotNull { (transport, why) ->
                 buildAttempt(transport, why, tlsProfile, dtlsProfile)
             }
             .toMutableList()
 
-        // Snowflake over an AMP cache: slow, but it survives a censor that has
-        // blocked the fronted broker request itself.
-        attempts.firstOrNull { it.transport == Transport.SNOWFLAKE }?.let { snowflake ->
-            attempts += snowflake.copy(
-                why = "last resort: broker reached through an AMP cache",
-                ampRendezvous = true,
-            )
-        }
+        // Snowflake over an AMP cache: slower, but it survives a censor that
+        // has blocked the fronted broker request itself. It is a different set
+        // of bridge lines rather than a different transport, so it costs
+        // nothing but a `SETCONF`.
+        if (Transport.SNOWFLAKE in available) ampSnowflakeAttempt()?.let { attempts += it }
 
         VeilLog.i("planner", attempts.joinToString(" -> ") { it.label })
         attempts
@@ -118,8 +137,14 @@ class StrategyPlanner(
         transport: Transport,
         tlsProfile: TlsProfile,
         dtlsProfile: DtlsProfile,
-    ): List<Attempt> =
-        listOfNotNull(buildAttempt(transport, "chosen by you", tlsProfile, dtlsProfile))
+        available: Set<Transport>,
+    ): List<Attempt> {
+        if (transport != Transport.DIRECT && transport !in available) {
+            VeilLog.e("planner", "${transport.torName} has no listener; nothing to try")
+            return emptyList()
+        }
+        return listOfNotNull(buildAttempt(transport, "chosen by you", tlsProfile, dtlsProfile))
+    }
 
     private fun buildAttempt(
         transport: Transport,
@@ -131,6 +156,8 @@ class StrategyPlanner(
 
         val candidates = bridges.forTransport(transport, bridgeBudget(transport) * 3)
             .filterNot { it.hasRoutableAddress && cooldown.isCoolingDown(it.host) }
+            // Snowflake's AMP variant is a separate rung; keep it out of this one.
+            .filterNot { transport == Transport.SNOWFLAKE && it.params.containsKey("ampcache") }
             .take(bridgeBudget(transport))
 
         if (candidates.isEmpty()) {
@@ -138,6 +165,19 @@ class StrategyPlanner(
             return null
         }
         return Attempt(transport, candidates.map { shape(it, tlsProfile, dtlsProfile) }, why)
+    }
+
+    /** The Snowflake lines that rendezvous through an AMP cache, if we have any. */
+    private fun ampSnowflakeAttempt(): Attempt? {
+        val amp = bridges.forTransport(Transport.SNOWFLAKE, limit = 6)
+            .filter { it.params.containsKey("ampcache") }
+        if (amp.isEmpty()) return null
+        return Attempt(
+            transport = Transport.SNOWFLAKE,
+            bridges = amp.take(1),
+            why = "last resort: broker reached through an AMP cache",
+            ampRendezvous = true,
+        )
     }
 
     /**
@@ -153,21 +193,51 @@ class StrategyPlanner(
         bridge: BridgeLine,
         tlsProfile: TlsProfile,
         dtlsProfile: DtlsProfile,
-    ): BridgeLine = when (bridge.transportEnum) {
-        Transport.MEEK, Transport.WEBTUNNEL ->
-            bridge.withParams(mapOf("utls" to tlsProfile.lyrebirdName))
+    ): BridgeLine {
+        val shaped = when (bridge.transportEnum) {
+            Transport.MEEK, Transport.WEBTUNNEL ->
+                bridge.withParams(mapOf("utls" to tlsProfile.lyrebirdName))
 
-        Transport.SNOWFLAKE -> bridge.withParams(
-            mapOf(
-                "utls-imitate" to tlsProfile.snowflakeName,
-                // Snowflake's data path is DTLS, which carries a fingerprint of
-                // its own that the TLS setting above does not touch.
-                "covertdtls-config" to dtlsProfile.argument,
-            ),
-        )
+            Transport.SNOWFLAKE -> bridge.withParams(
+                buildMap {
+                    put("utls-imitate", tlsProfile.snowflakeName)
+                    // Snowflake's data path is DTLS, which carries a
+                    // fingerprint of its own that the TLS setting above does
+                    // not touch.
+                    put("covertdtls-config", dtlsProfile.argument)
+                    // The published line names eight STUN servers, and WebRTC
+                    // gathers candidates from all of them before it can offer
+                    // anything to the broker — so every slow or dead one in
+                    // that list is added to how long the user waits before
+                    // Snowflake even starts looking for a proxy. Three is
+                    // enough to determine the NAT behaviour Snowflake needs.
+                    // They are still the Tor Project's own servers, kept in
+                    // their order: that list is vetted for the mapping
+                    // behaviour Snowflake depends on, so it is shortened rather
+                    // than replaced.
+                    shortenIce(bridge)?.let { put("ice", it) }
+                },
+            )
 
-        // obfs4 is not TLS at all: there is no Client Hello to shape.
-        else -> bridge
+            // obfs4 is not TLS at all: there is no Client Hello to shape.
+            else -> bridge
+        }
+        // Adding to a bridge line is not free. Everything past the fingerprint
+        // is handed to the transport through the SOCKS5 authentication fields,
+        // which hold 510 bytes between them, and tor rejects the whole line —
+        // and with it the rung — rather than truncating.
+        val fitted = shaped.withinSocksArgLimit()
+        if (fitted.raw != shaped.raw) {
+            VeilLog.w("planner", "trimmed ${bridge.transport} arguments to fit tor's SOCKS limit")
+        }
+        return fitted
+    }
+
+    /** The first few STUN servers from a Snowflake line, or null to leave it be. */
+    private fun shortenIce(bridge: BridgeLine): String? {
+        val servers = bridge.params["ice"]?.split(',')?.filter { it.isNotBlank() } ?: return null
+        if (servers.size <= ICE_SERVERS) return null
+        return servers.take(ICE_SERVERS).joinToString(",")
     }
 
     /**
@@ -185,25 +255,55 @@ class StrategyPlanner(
     }
 
     /**
-     * Asks the bridge API what works in this country, falling back to a snapshot
-     * of the same data that ships with the app.
+     * Asks the bridge API what works in this country — and keeps the bridges it
+     * hands back, not just the names of the transports.
+     *
+     * Discarding those was a real bug rather than an omission. For a censored
+     * country the API answers with working bridge lines, including ones for
+     * transports the app ships none of, and including broker fronts far fresher
+     * than anything compiled in. Keeping only the transport names meant the app
+     * would decide that WebTunnel was the right answer and then skip it for
+     * want of a single bridge it had just been given.
+     *
+     * The offline snapshot is consulted first because it is instant, and the
+     * live call refines it. A connect should not wait on the network to find
+     * out how to reach the network.
      */
-    private suspend fun countryRecommendation(countryIso: String?): List<Transport> {
+    private suspend fun applyCountryRecommendation(countryIso: String?): List<Transport> {
         if (countryIso.isNullOrBlank()) return emptyList()
 
-        val live = runCatching { moat.settingsFor(countryIso) }.getOrNull()
-        if (!live.isNullOrEmpty()) {
-            return live.mapNotNull { Transport.fromTorName(it.transport) }
-        }
-
-        return runCatching {
+        val offline = runCatching {
             val json = context.assets.open(MAP_ASSET).bufferedReader().use { it.readText() }
-            moat.parseMap(json, countryIso).mapNotNull { Transport.fromTorName(it.transport) }
+            moat.parseMap(json, countryIso)
         }.getOrDefault(emptyList())
+        keepBridges(offline)
+
+        val live = withTimeoutOrNull(LIVE_RECOMMENDATION_MILLIS) {
+            runCatching { moat.settingsFor(countryIso) }.getOrNull()
+        }
+        val chosen = if (!live.isNullOrEmpty()) live else offline
+        keepBridges(chosen)
+
+        return chosen.mapNotNull { Transport.fromTorName(it.transport) }
+    }
+
+    private fun keepBridges(settings: List<CircumventionSetting>) {
+        if (settings.isEmpty()) return
+        val byTransport = settings.mapNotNull { setting ->
+            val transport = Transport.fromTorName(setting.transport) ?: return@mapNotNull null
+            if (setting.bridges.isEmpty()) null else transport to setting.bridges
+        }.toMap()
+        bridges.setRecommended(byTransport)
     }
 
     companion object {
         const val MAP_ASSET = "circumvention_map.json"
+
+        /**
+         * How long the live country lookup may delay the first attempt. The
+         * offline snapshot already gave us an answer; this only improves it.
+         */
+        const val LIVE_RECOMMENDATION_MILLIS = 6_000L
 
         /**
          * How long a rung gets before we move on.
@@ -215,20 +315,29 @@ class StrategyPlanner(
          * classic way to conclude, wrongly, that nothing works.
          */
         fun budgetMillis(transport: Transport): Long = when (transport) {
-            Transport.DIRECT -> 45_000
-            Transport.OBFS4 -> 60_000
-            Transport.WEBTUNNEL -> 75_000
-            Transport.MEEK -> 90_000
-            Transport.SNOWFLAKE -> 120_000
+            Transport.DIRECT -> 30_000
+            Transport.OBFS4 -> 45_000
+            Transport.WEBTUNNEL -> 60_000
+            Transport.MEEK -> 75_000
+            Transport.SNOWFLAKE -> 100_000
         }
 
-        /** Abort early if bootstrap has not moved at all for this long. */
-        const val STALL_MILLIS = 35_000L
+        /**
+         * Abort early if bootstrap has not moved at all for this long.
+         *
+         * Tighter than it used to be, because switching route no longer costs a
+         * restart: giving up on a dead rung after twenty-five seconds and
+         * moving to the next one is now cheaper than waiting another ten.
+         */
+        const val STALL_MILLIS = 25_000L
+
+        /** How many STUN servers Snowflake is asked to gather from. */
+        const val ICE_SERVERS = 3
     }
 }
 
 /** Convenience: the probe, wired to the bridges we actually plan to use. */
 suspend fun NetworkProbe.runFor(
     bridges: BridgeRepository,
-    onProgress: (Int, Int, String) -> Unit,
+    onProgress: (done: Int, total: Int, noteRes: Int) -> Unit,
 ): ProbeReport = run(bridges.probeTargets(Transport.OBFS4), onProgress)

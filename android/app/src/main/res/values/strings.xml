@@ -101,4 +101,142 @@
     <string name="bridges_request_kind">Which kind to ask for</string>
     <string name="settings_bypass">Local sites skip the tunnel</string>
     <string name="settings_bypass_desc">Names ending in .ru, .рф, .su, .by or .kz are resolved and reached on the ordinary network. Banking apps and local sites start working again — and this network can see which of them you use. Off unless you turn it on.</string>
+    <string name="settings_battery">Keep running in the background</string>
+    <string name="settings_battery_desc">Android throttles background apps after the screen has been off for a while, which shows up as a tunnel that is slow or dead when you come back to it. Exempting Veil keeps the connection alive.</string>
+    <string name="settings_battery_done">Already exempt. The tunnel will not be suspended.</string>
+    <string name="settings_battery_action">Allow</string>
+
+    <!-- Transports -->
+    <string name="transport_direct">Direct</string>
+    <string name="transport_obfs4">obfs4</string>
+    <string name="transport_webtunnel">WebTunnel</string>
+    <string name="transport_meek">meek</string>
+    <string name="transport_snowflake">Snowflake</string>
+
+    <string name="route_direct_desc">Straight to the Tor network. Fastest, and obvious to anyone watching the line.</string>
+    <string name="route_obfs4_desc">Scrambles the stream so it matches no known protocol. Fast, but relies on bridge addresses that get discovered and blocked over time.</string>
+    <string name="route_webtunnel_desc">Looks like ordinary HTTPS to a site that really exists. Currently the hardest to tell apart from normal browsing.</string>
+    <string name="route_meek_desc">Hides inside traffic to a large CDN. Blocking it means blocking the CDN, which is expensive — but so is the latency you pay for it.</string>
+    <string name="route_snowflake_desc">Hops through short-lived volunteer proxies found through a broker. No fixed address to block; needs UDP and a little patience.</string>
+    <string name="route_known_bridges">%1$d known</string>
+
+    <!-- Client Hello profiles -->
+    <string name="tls_firefox">Firefox</string>
+    <string name="tls_chrome">Chrome</string>
+    <string name="tls_edge">Edge</string>
+    <string name="tls_auto">Automatic</string>
+    <string name="tls_auto_desc">Chosen once per installation, so no two devices look alike.</string>
+    <string name="tls_firefox_desc">Common, current, and not the profile proxy software defaults to.</string>
+    <string name="tls_chrome_desc">The most common browser, and for that reason the most imitated.</string>
+    <string name="tls_edge_desc">Chromium under another name; unremarkable on Windows networks.</string>
+    <string name="tls_android">Android app</string>
+    <string name="tls_android_desc">Matches what this actually is: an app, not a browser. The profile is dated.</string>
+    <string name="tls_random">Randomised</string>
+    <string name="tls_random_desc">Matches no blocklist entry, and matches no real client either.</string>
+
+    <string name="dtls_mimic">Imitate a browser</string>
+    <string name="dtls_mimic_desc">Looks like WebRTC from a real browser, which is what it is pretending to be.</string>
+    <string name="dtls_random_mimic">Imitate a random browser</string>
+    <string name="dtls_random_mimic_desc">A different browser each time: harder to blocklist, easier to notice.</string>
+    <string name="dtls_random">Randomise</string>
+    <string name="dtls_random_desc">Matches nothing, including anything real.</string>
+    <string name="dtls_off">Leave as-is</string>
+    <string name="dtls_off_desc">The library\'s own handshake. Distinctive, and the fastest to set up.</string>
+
+    <!-- Circuit isolation -->
+    <string name="isolation_shared">One shared circuit</string>
+    <string name="isolation_shared_desc">Fastest. Everything you do shares an exit, so it can all be linked together.</string>
+    <string name="isolation_per_host">A circuit per site</string>
+    <string name="isolation_per_host_desc">The balance Tor Browser strikes: separate circuits per destination, so two sites cannot see each other\'s traffic as one user.</string>
+    <string name="isolation_per_connection">A circuit per connection</string>
+    <string name="isolation_per_connection_desc">A new circuit for every connection. Hardest to correlate, and noticeably slower because each one has to be built.</string>
+
+    <!-- DNS -->
+    <string name="dns_tor">Resolve inside Tor</string>
+    <string name="dns_tor_desc">Names are resolved at the exit relay. Nothing on your network sees what you look up.</string>
+    <string name="dns_tcp">DNS over TCP through the tunnel</string>
+    <string name="dns_tcp_desc">Queries go to a public resolver as ordinary TCP, carried by the tunnel. Useful when a site behaves badly with exit-side resolution.</string>
+    <string name="dns_doh">DNS over HTTPS through the tunnel</string>
+    <string name="dns_doh_desc">Queries go to a public resolver as HTTPS, carried by the tunnel. Same privacy from your network, and the resolver sees the tunnel rather than you.</string>
+
+    <!-- Screens -->
+    <string name="settings_forget_routes">Forget what worked on every network</string>
+    <string name="settings_snowflake_served_desc">Each one is a browser somewhere that could not reach Tor without help.</string>
+    <string name="settings_about">Built on the Tor Project\'s tor daemon, lyrebird and Snowflake, with a gVisor userspace network stack. Every component is free software, and nothing here needs an account or a server you have to find for yourself.</string>
+    <string name="apps_mode_all_desc">Every app on the device is routed through Veil. Pick one of the other two modes to make exceptions.</string>
+    <string name="bridges_intro">Bridges are unlisted entry points into Tor. Veil ships the public set, refreshes it from the Tor Project when it can, and can ask for private ones that no blocklist has yet.</string>
+    <string name="diag_frozen_desc">This is the signature of a penalty rather than an outage: the connection was accepted and then quietly dropped.</string>
+
+    <!-- Connect button -->
+    <string name="a11y_connected">Connected. Tap to disconnect.</string>
+    <string name="a11y_connecting">Connecting. Tap to stop.</string>
+    <string name="a11y_idle">Not connected. Tap to connect.</string>
+
+    <!-- Progress and failures -->
+    <string name="busy_disconnecting">Disconnecting</string>
+    <string name="busy_fetching_bridges">Fetching bridges</string>
+    <string name="busy_bridge_api_silent">the bridge API did not answer</string>
+    <string name="busy_answer_rejected">the answer was rejected</string>
+    <string name="busy_cooldowns_cleared">Every endpoint is back in the rotation</string>
+    <string name="busy_routes_forgotten">Forgot what worked on every network</string>
+    <string name="step_starting">Starting</string>
+    <string name="step_starting_transports">Starting transports</string>
+    <string name="step_starting_tor">Starting Tor</string>
+    <string name="step_measuring">Measuring the network</string>
+    <string name="step_reconnecting_known">Reconnecting the way that worked</string>
+    <string name="fail_ports">Could not reserve local ports for Tor.</string>
+    <string name="fail_tor_start">Tor did not start. Diagnostics has the log.</string>
+    <string name="fail_tor_start_reason">Tor did not start: %1$s</string>
+    <string name="fail_no_route">No route to try. Add a bridge, or check that the device is online.</string>
+    <string name="fail_all_routes">Every route was tried and none held.</string>
+    <string name="fail_all_routes_reason">Every route was tried and none held. Tor said: %1$s</string>
+    <string name="escalate_reason">%1$s did not bootstrap in time</string>
+
+    <!-- Local listeners -->
+    <string name="listener_socks">Tor SOCKS</string>
+    <string name="listener_socks_note">Randomised port. Another app could route traffic through it; that traffic would still leave through Tor.</string>
+    <string name="listener_dns">Tor DNS</string>
+    <string name="listener_dns_note">Resolves names inside Tor. Needed for .onion addresses to work.</string>
+    <string name="listener_plugin">%1$s plugin</string>
+    <string name="listener_plugin_note">tor reaches its bridges through this. Randomised on every start.</string>
+    <string name="home_step">%1$s  ·  step %2$d of %3$d</string>
+
+    <!-- Network probe -->
+    <string name="probe_name_directory">Tor directory authorities</string>
+    <string name="probe_name_bridges">Published obfs4 bridges</string>
+    <string name="probe_name_cdn">Large CDNs</string>
+    <string name="probe_name_tls">TLS to %1$s</string>
+    <string name="probe_name_udp">UDP / STUN</string>
+
+    <string name="probe_detail_nothing">nothing to test</string>
+    <string name="probe_detail_none_answered">none of %1$d answered</string>
+    <string name="probe_detail_some_answered">%1$d of %2$d answered, first %3$s</string>
+    <string name="probe_detail_handshake_ok">handshake ok (%1$s), TCP %2$d ms</string>
+    <string name="probe_detail_no_tcp">no TCP connection: %1$s</string>
+    <string name="probe_detail_frozen">TCP up in %1$d ms, then nothing came back — blackholed</string>
+    <string name="probe_detail_reset">TCP up in %1$d ms, handshake torn down: %2$s</string>
+    <string name="probe_detail_other">%1$s</string>
+    <string name="probe_detail_stun_ok">%1$s answered</string>
+    <string name="probe_detail_stun_none">no STUN server answered</string>
+
+    <string name="probe_step_start">Reaching for the Tor directory</string>
+    <string name="probe_step_directory">Tor directory</string>
+    <string name="probe_step_bridges">Bridges</string>
+    <string name="probe_step_cdn">CDNs</string>
+    <string name="probe_step_tls_name">TLS by name</string>
+    <string name="probe_step_tls_control">TLS control</string>
+    <string name="probe_step_udp">UDP</string>
+
+    <string name="probe_summary_not_run">Network not measured yet</string>
+    <string name="probe_summary_frozen_cdn">Connections are being accepted and then blackholed; CDN paths still work</string>
+    <string name="probe_summary_frozen">Connections are being accepted and then blackholed</string>
+    <string name="probe_summary_open">Network looks open</string>
+    <string name="probe_summary_bridges_ok">Tor is filtered; bridges still reachable</string>
+    <string name="probe_summary_cdn_ok">Bridges blocked; large CDNs still reachable</string>
+    <string name="probe_summary_udp_ok">Heavy filtering; peer-to-peer rendezvous still possible</string>
+    <string name="probe_summary_severe">Severe filtering on every path we tested</string>
+    <string name="probe_detail_nat_open">same public address from both servers (%1$s) — WebRTC will work</string>
+    <string name="probe_detail_nat_symmetric">a different public port per destination (%1$s, then %2$s) — Snowflake will struggle here</string>
+    <string name="probe_summary_symmetric">This network gives every destination a different port, which Snowflake needs to avoid; bridges are reachable</string>
+    <string name="route_why_nat">this network changes port per destination, which Snowflake needs to avoid</string>
 </resources>

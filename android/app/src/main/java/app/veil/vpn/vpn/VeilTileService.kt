@@ -71,7 +71,7 @@ class VeilTileService : TileService() {
             state.isBusy -> Tile.STATE_UNAVAILABLE
             else -> Tile.STATE_INACTIVE
         }
-        tile.subtitle = state.activeTransport?.label
+        tile.subtitle = state.activeTransport?.let { getString(it.labelRes) }
         tile.updateTile()
     }
 }

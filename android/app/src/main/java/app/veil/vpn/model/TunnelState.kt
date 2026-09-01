@@ -1,12 +1,14 @@
 package app.veil.vpn.model
 
+import androidx.annotation.StringRes
+
 /** Everything the UI needs to know about the tunnel, and nothing more. */
 sealed interface TunnelState {
 
     data object Idle : TunnelState
 
     /** Measuring the network before committing to a transport. */
-    data class Probing(val note: String, val done: Int, val total: Int) : TunnelState
+    data class Probing(@StringRes val noteRes: Int, val done: Int, val total: Int) : TunnelState
 
     data class Starting(
         val transport: Transport,

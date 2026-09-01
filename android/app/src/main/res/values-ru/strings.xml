@@ -93,4 +93,142 @@
     <string name="bridges_request_kind">Какие именно запросить</string>
     <string name="settings_bypass">Локальные сайты мимо тоннеля</string>
     <string name="settings_bypass_desc">Имена на .ru, .рф, .su, .by и .kz резолвятся и открываются по обычной сети. Банки и локальные сайты снова начинают работать — и эта сеть видит, какими из них вы пользуетесь. По умолчанию выключено.</string>
+    <string name="settings_battery">Не засыпать в фоне</string>
+    <string name="settings_battery_desc">Через несколько минут с выключенным экраном Android начинает ограничивать фоновые приложения — со стороны это выглядит как тоннель, который «отвалился» или стал очень медленным. Исключение для Veil снимает это ограничение.</string>
+    <string name="settings_battery_done">Исключение уже выдано. Тоннель не будет засыпать.</string>
+    <string name="settings_battery_action">Разрешить</string>
+
+    <!-- Transports -->
+    <string name="transport_direct">Напрямую</string>
+    <string name="transport_obfs4">obfs4</string>
+    <string name="transport_webtunnel">WebTunnel</string>
+    <string name="transport_meek">meek</string>
+    <string name="transport_snowflake">Snowflake</string>
+
+    <string name="route_direct_desc">Прямо в сеть Tor. Самый быстрый способ — и самый заметный для того, кто смотрит на линию.</string>
+    <string name="route_obfs4_desc">Перемешивает поток так, что он не похож ни на один известный протокол. Быстро, но держится на адресах мостов, которые со временем находят и блокируют.</string>
+    <string name="route_webtunnel_desc">Выглядит как обычный HTTPS к сайту, который действительно существует. Сейчас его труднее всего отличить от обычного веб-сёрфинга.</string>
+    <string name="route_meek_desc">Прячется внутри трафика к большому CDN. Заблокировать его — значит заблокировать CDN, а это дорого; но и задержка, которой вы за это платите, тоже.</string>
+    <string name="route_snowflake_desc">Прыгает через недолговечные прокси добровольцев, найденные через брокер. Постоянного адреса для блокировки нет; нужен UDP и немного терпения.</string>
+    <string name="route_known_bridges">известно: %1$d</string>
+
+    <!-- Client Hello profiles -->
+    <string name="tls_firefox">Firefox</string>
+    <string name="tls_chrome">Chrome</string>
+    <string name="tls_edge">Edge</string>
+    <string name="tls_auto">Автоматически</string>
+    <string name="tls_auto_desc">Выбирается один раз при установке, так что никакие два устройства не выглядят одинаково.</string>
+    <string name="tls_firefox_desc">Распространённый, актуальный — и не тот, который прокси-софт берёт по умолчанию.</string>
+    <string name="tls_chrome_desc">Самый распространённый браузер и по этой же причине самый имитируемый.</string>
+    <string name="tls_edge_desc">Тот же Chromium под другим именем; ничем не выделяется в сетях с Windows.</string>
+    <string name="tls_android">Приложение Android</string>
+    <string name="tls_android_desc">Соответствует тому, чем это и является: приложению, а не браузеру. Профиль устаревший.</string>
+    <string name="tls_random">Случайный</string>
+    <string name="tls_random_desc">Не совпадает ни с одной записью в чёрном списке — и ни с одним настоящим клиентом тоже.</string>
+
+    <string name="dtls_mimic">Имитировать браузер</string>
+    <string name="dtls_mimic_desc">Выглядит как WebRTC из настоящего браузера — тем, чем и притворяется.</string>
+    <string name="dtls_random_mimic">Имитировать случайный браузер</string>
+    <string name="dtls_random_mimic_desc">Каждый раз другой браузер: сложнее занести в список, легче заметить.</string>
+    <string name="dtls_random">Случайный</string>
+    <string name="dtls_random_desc">Не совпадает ни с чем, включая всё настоящее.</string>
+    <string name="dtls_off">Оставить как есть</string>
+    <string name="dtls_off_desc">Собственное рукопожатие библиотеки. Узнаваемое и самое быстрое.</string>
+
+    <!-- Circuit isolation -->
+    <string name="isolation_shared">Одна общая цепочка</string>
+    <string name="isolation_shared_desc">Быстрее всего. Всё, что вы делаете, выходит через один узел, поэтому всё можно связать между собой.</string>
+    <string name="isolation_per_host">Цепочка на каждый сайт</string>
+    <string name="isolation_per_host_desc">Компромисс, на котором остановился Tor Browser: отдельные цепочки на каждый адрес, чтобы два сайта не видели трафик друг друга как одного пользователя.</string>
+    <string name="isolation_per_connection">Цепочка на каждое соединение</string>
+    <string name="isolation_per_connection_desc">Новая цепочка для каждого соединения. Труднее всего сопоставить — и заметно медленнее, потому что каждую нужно построить.</string>
+
+    <!-- DNS -->
+    <string name="dns_tor">Резолвить внутри Tor</string>
+    <string name="dns_tor_desc">Имена резолвятся на выходном узле. Никто в вашей сети не видит, что вы ищете.</string>
+    <string name="dns_tcp">DNS по TCP через тоннель</string>
+    <string name="dns_tcp_desc">Запросы уходят к публичному резолверу обычным TCP через тоннель. Полезно, когда сайт плохо работает с резолвингом на выходе.</string>
+    <string name="dns_doh">DNS поверх HTTPS через тоннель</string>
+    <string name="dns_doh_desc">Запросы уходят к публичному резолверу по HTTPS через тоннель. Приватность от вашей сети та же, а резолвер видит тоннель, а не вас.</string>
+
+    <!-- Screens -->
+    <string name="settings_forget_routes">Забыть, что работало в каждой сети</string>
+    <string name="settings_snowflake_served_desc">Каждый — это чей-то браузер, который не смог дотянуться до Tor без помощи.</string>
+    <string name="settings_about">Построено на демоне tor, lyrebird и Snowflake от Tor Project, со стеком gVisor в пространстве пользователя. Все компоненты — свободное ПО, и ничему здесь не нужен аккаунт или сервер, который вам пришлось бы искать самостоятельно.</string>
+    <string name="apps_mode_all_desc">Через Veil идут все приложения на устройстве. Чтобы сделать исключения, выберите один из двух других режимов.</string>
+    <string name="bridges_intro">Мосты — это точки входа в Tor, которых нет в общих списках. Veil везёт с собой публичный набор, обновляет его у Tor Project, когда может, и умеет запрашивать приватные, которых ещё нет ни в одной блокировке.</string>
+    <string name="diag_frozen_desc">Это почерк наказания, а не сбоя: соединение приняли и потом тихо оборвали.</string>
+
+    <!-- Connect button -->
+    <string name="a11y_connected">Подключено. Нажмите, чтобы отключиться.</string>
+    <string name="a11y_connecting">Подключение. Нажмите, чтобы остановить.</string>
+    <string name="a11y_idle">Не подключено. Нажмите, чтобы подключиться.</string>
+
+    <!-- Progress and failures -->
+    <string name="busy_disconnecting">Отключение</string>
+    <string name="busy_fetching_bridges">Получаем мосты</string>
+    <string name="busy_bridge_api_silent">сервис мостов не ответил</string>
+    <string name="busy_answer_rejected">ответ не принят</string>
+    <string name="busy_cooldowns_cleared">Все точки входа снова в обороте</string>
+    <string name="busy_routes_forgotten">Забыли, что работало в каждой сети</string>
+    <string name="step_starting">Запуск</string>
+    <string name="step_starting_transports">Запускаем транспорты</string>
+    <string name="step_starting_tor">Запускаем Tor</string>
+    <string name="step_measuring">Изучаем сеть</string>
+    <string name="step_reconnecting_known">Подключаемся тем способом, который сработал</string>
+    <string name="fail_ports">Не удалось занять локальные порты для Tor.</string>
+    <string name="fail_tor_start">Tor не запустился. Подробности — в «Диагностике».</string>
+    <string name="fail_tor_start_reason">Tor не запустился: %1$s</string>
+    <string name="fail_no_route">Пробовать нечего. Добавьте мост или проверьте, что устройство в сети.</string>
+    <string name="fail_all_routes">Перепробованы все маршруты, ни один не удержался.</string>
+    <string name="fail_all_routes_reason">Перепробованы все маршруты, ни один не удержался. Tor сообщает: %1$s</string>
+    <string name="escalate_reason">%1$s не успел загрузиться</string>
+
+    <!-- Local listeners -->
+    <string name="listener_socks">SOCKS от Tor</string>
+    <string name="listener_socks_note">Случайный порт. Другое приложение может пустить через него трафик; этот трафик всё равно уйдёт через Tor.</string>
+    <string name="listener_dns">DNS от Tor</string>
+    <string name="listener_dns_note">Резолвит имена внутри Tor. Без него не работают адреса .onion.</string>
+    <string name="listener_plugin">Плагин %1$s</string>
+    <string name="listener_plugin_note">Через него tor дотягивается до своих мостов. Порт случайный при каждом запуске.</string>
+    <string name="home_step">%1$s  ·  шаг %2$d из %3$d</string>
+
+    <!-- Network probe -->
+    <string name="probe_name_directory">Управляющие серверы Tor</string>
+    <string name="probe_name_bridges">Публичные мосты obfs4</string>
+    <string name="probe_name_cdn">Крупные CDN</string>
+    <string name="probe_name_tls">TLS к %1$s</string>
+    <string name="probe_name_udp">UDP / STUN</string>
+
+    <string name="probe_detail_nothing">проверять нечего</string>
+    <string name="probe_detail_none_answered">не ответил ни один из %1$d</string>
+    <string name="probe_detail_some_answered">ответили %1$d из %2$d, первым %3$s</string>
+    <string name="probe_detail_handshake_ok">рукопожатие прошло (%1$s), TCP %2$d мс</string>
+    <string name="probe_detail_no_tcp">TCP-соединения нет: %1$s</string>
+    <string name="probe_detail_frozen">TCP поднялся за %1$d мс, дальше тишина — соединение утопили</string>
+    <string name="probe_detail_reset">TCP поднялся за %1$d мс, рукопожатие оборвали: %2$s</string>
+    <string name="probe_detail_other">%1$s</string>
+    <string name="probe_detail_stun_ok">%1$s ответил</string>
+    <string name="probe_detail_stun_none">ни один STUN-сервер не ответил</string>
+
+    <string name="probe_step_start">Тянемся к каталогу Tor</string>
+    <string name="probe_step_directory">Каталог Tor</string>
+    <string name="probe_step_bridges">Мосты</string>
+    <string name="probe_step_cdn">CDN</string>
+    <string name="probe_step_tls_name">TLS по имени</string>
+    <string name="probe_step_tls_control">Контрольный TLS</string>
+    <string name="probe_step_udp">UDP</string>
+
+    <string name="probe_summary_not_run">Сеть ещё не измеряли</string>
+    <string name="probe_summary_frozen_cdn">Соединения принимают и затем топят; пути через CDN пока работают</string>
+    <string name="probe_summary_frozen">Соединения принимают и затем топят</string>
+    <string name="probe_summary_open">Сеть выглядит открытой</string>
+    <string name="probe_summary_bridges_ok">Tor фильтруют; мосты пока доступны</string>
+    <string name="probe_summary_cdn_ok">Мосты заблокированы; крупные CDN пока доступны</string>
+    <string name="probe_summary_udp_ok">Фильтрация жёсткая; встреча напрямую между узлами ещё возможна</string>
+    <string name="probe_summary_severe">Жёсткая фильтрация на всех проверенных путях</string>
+    <string name="probe_detail_nat_open">оба сервера видят один и тот же адрес (%1$s) — WebRTC заработает</string>
+    <string name="probe_detail_nat_symmetric">на каждое направление свой порт (%1$s, затем %2$s) — Snowflake здесь будет тяжело</string>
+    <string name="probe_summary_symmetric">Эта сеть даёт каждому направлению свой порт — как раз то, чего Snowflake не переносит; мосты при этом доступны</string>
+    <string name="route_why_nat">эта сеть меняет порт для каждого направления, а Snowflake этого не переносит</string>
 </resources>

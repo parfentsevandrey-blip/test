@@ -47,6 +47,18 @@ class BridgeRepository(
 
     private var failures: MutableMap<String, Int> = mutableMapOf()
 
+    /**
+     * Bridges the Tor Project currently recommends for this country.
+     *
+     * Kept separate from the stored lists and tried first. These are the
+     * freshest thing available — the built-in set is public and therefore the
+     * first to be enumerated, and the broker fronts baked into it go stale
+     * exactly when they matter most — so they are held only for the session and
+     * never allowed to age on disk.
+     */
+    @Volatile
+    private var recommended: Map<Transport, List<BridgeLine>> = emptyMap()
+
     suspend fun load() = withContext(Dispatchers.IO) {
         failures = readFailures()
         val fromCache = runCatching { readGrouped(cacheFile.readText()) }.getOrNull()
@@ -102,15 +114,34 @@ class BridgeRepository(
         return BridgeLine.parseAll(text).groupBy { it.transportEnum ?: Transport.OBFS4 }
     }
 
+    /** Replaces what the bridge API says is currently right for this country. */
+    fun setRecommended(byTransport: Map<Transport, List<BridgeLine>>) {
+        if (byTransport.isEmpty()) return
+        recommended = byTransport
+        VeilLog.i(
+            "bridges",
+            "recommended for this country: " +
+                byTransport.entries.joinToString { "${it.key.torName}=${it.value.size}" },
+        )
+    }
+
     /** Bridges for one transport, best candidates first. */
     fun forTransport(transport: Transport, limit: Int = 6): List<BridgeLine> {
-        val all = _bridges.value[transport].orEmpty()
-        return all.sortedBy { failures[it.raw] ?: 0 }.take(limit)
+        val preferred = recommended[transport].orEmpty()
+        val known = _bridges.value[transport].orEmpty()
+        return (preferred + known)
+            .distinctBy { it.raw }
+            .sortedBy { failures[it.raw] ?: 0 }
+            .take(limit)
     }
+
+    /** True when the bridge API has given us something for this transport. */
+    fun hasRecommended(transport: Transport): Boolean =
+        recommended[transport].orEmpty().isNotEmpty()
 
     /** Address and port pairs for the reachability probe. */
     fun probeTargets(transport: Transport = Transport.OBFS4): List<Pair<String, Int>> =
-        _bridges.value[transport].orEmpty()
+        forTransport(transport, limit = 6)
             .filter { it.hasRoutableAddress }
             .map { it.host to it.port }
 

@@ -9,6 +9,15 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!--
+      Android suspends background network work once the screen has been off
+      for a while. A VPN tunnel that is meant to still be there when the
+      phone is picked up cannot be suspended, and the effect of letting it
+      happen is a connection that works and then, some minutes later,
+      does not. The exemption is only ever requested by the user pressing
+      a row in Settings.
+    -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
     <!--
       Needed to render the per-app split-tunnelling list. A VPN that lets the

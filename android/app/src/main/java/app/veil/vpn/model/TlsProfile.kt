@@ -1,5 +1,8 @@
 package app.veil.vpn.model
 
+import androidx.annotation.StringRes
+import app.veil.vpn.R
+
 /**
  * Which TLS Client Hello the fronted transports imitate.
  *
@@ -22,12 +25,12 @@ package app.veil.vpn.model
  * refuse to start, so each profile declares its own fallback.
  */
 enum class TlsProfile(
-    val label: String,
+    @StringRes val labelRes: Int,
     /** Value for lyrebird's `utls=` bridge argument. */
     val lyrebirdName: String,
     /** Value for Snowflake's `utls-imitate=` argument. */
     val snowflakeName: String,
-    val rationale: String,
+    @StringRes val rationaleRes: Int,
 ) {
     /**
      * The default: pick one of the plausible profiles per installation.
@@ -42,10 +45,10 @@ enum class TlsProfile(
      * rather than shorter.
      */
     AUTO(
-        label = "Automatic",
+        labelRes = R.string.tls_auto,
         lyrebirdName = "hellofirefox_auto",
         snowflakeName = "hellofirefox_auto",
-        rationale = "Chosen once per installation, so no two devices look alike.",
+        rationaleRes = R.string.tls_auto_desc,
     ),
 
     /**
@@ -54,25 +57,25 @@ enum class TlsProfile(
      * weaker discriminator than a static Chrome one.
      */
     FIREFOX(
-        label = "Firefox",
+        labelRes = R.string.tls_firefox,
         lyrebirdName = "hellofirefox_auto",
         snowflakeName = "hellofirefox_auto",
-        rationale = "Common, current, and not the profile proxy software defaults to.",
+        rationaleRes = R.string.tls_firefox_desc,
     ),
 
     CHROME(
-        label = "Chrome",
+        labelRes = R.string.tls_chrome,
         lyrebirdName = "hellochrome_auto",
         snowflakeName = "hellochrome_auto",
-        rationale = "The most common browser, and for that reason the most imitated.",
+        rationaleRes = R.string.tls_chrome_desc,
     ),
 
     /** Snowflake has no Edge entry; Edge is Chromium, so Chrome is the honest fallback. */
     EDGE(
-        label = "Edge",
+        labelRes = R.string.tls_edge,
         lyrebirdName = "helloedge_auto",
         snowflakeName = "hellochrome_auto",
-        rationale = "Chromium under another name; unremarkable on Windows networks.",
+        rationaleRes = R.string.tls_edge_desc,
     ),
 
     /**
@@ -81,10 +84,10 @@ enum class TlsProfile(
      * Android 11 era hello, and Snowflake carries none at all.
      */
     ANDROID_APP(
-        label = "Android app",
+        labelRes = R.string.tls_android,
         lyrebirdName = "helloandroid_11",
         snowflakeName = "hellofirefox_auto",
-        rationale = "Matches what this actually is: an app, not a browser. The profile is dated.",
+        rationaleRes = R.string.tls_android_desc,
     ),
 
     /**
@@ -93,10 +96,10 @@ enum class TlsProfile(
      * hashes — no real client produces a different hello every time.
      */
     RANDOMISED(
-        label = "Randomised",
+        labelRes = R.string.tls_random,
         lyrebirdName = "hellorandomizedalpn",
         snowflakeName = "hellorandomizedalpn",
-        rationale = "Matches no blocklist entry, and matches no real client either.",
+        rationaleRes = R.string.tls_random_desc,
     );
 
     companion object {
@@ -130,29 +133,29 @@ enum class TlsProfile(
  * hello is the closer analogue of what the TLS profile does above.
  */
 enum class DtlsProfile(
-    val label: String,
+    @StringRes val labelRes: Int,
     val argument: String,
-    val rationale: String,
+    @StringRes val rationaleRes: Int,
 ) {
     MIMIC(
-        label = "Imitate a browser",
+        labelRes = R.string.dtls_mimic,
         argument = "mimic",
-        rationale = "Looks like WebRTC from a real browser, which is what it is pretending to be.",
+        rationaleRes = R.string.dtls_mimic_desc,
     ),
     RANDOMISE_MIMIC(
-        label = "Imitate a random browser",
+        labelRes = R.string.dtls_random_mimic,
         argument = "randomizemimic",
-        rationale = "A different browser each time: harder to blocklist, easier to notice.",
+        rationaleRes = R.string.dtls_random_mimic_desc,
     ),
     RANDOMISE(
-        label = "Randomise",
+        labelRes = R.string.dtls_random,
         argument = "randomize",
-        rationale = "Matches nothing, including anything real.",
+        rationaleRes = R.string.dtls_random_desc,
     ),
     OFF(
-        label = "Leave as-is",
+        labelRes = R.string.dtls_off,
         argument = "disable",
-        rationale = "The library's own handshake. Distinctive, and the fastest to set up.",
+        rationaleRes = R.string.dtls_off_desc,
     );
 
     companion object {

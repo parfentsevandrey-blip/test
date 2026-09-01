@@ -2,8 +2,10 @@ package app.veil.vpn.ui
 
 import android.app.Application
 import android.content.Intent
+import androidx.annotation.StringRes
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import app.veil.vpn.R
 import app.veil.vpn.VeilApp
 import app.veil.vpn.core.VeilLog
 import app.veil.vpn.data.AppRoutingMode
@@ -41,6 +43,11 @@ sealed interface MoatFlow {
 }
 
 class VeilViewModel(application: Application) : AndroidViewModel(application) {
+
+    /** Short-hand for a translated string; this class talks to the screen. */
+    private fun text(@StringRes id: Int, vararg args: Any): String =
+        getApplication<Application>().getString(id, *args)
+
 
     private val container = application as VeilApp
 
@@ -157,7 +164,7 @@ class VeilViewModel(application: Application) : AndroidViewModel(application) {
 
     fun refreshBridges() {
         viewModelScope.launch {
-            _busyMessage.value = "Fetching bridges"
+            _busyMessage.value = text(R.string.busy_fetching_bridges)
             val result = container.bridges.refreshFromMoat()
             _busyMessage.value = result.fold(
                 onSuccess = { "Fetched $it bridges" },
@@ -183,7 +190,7 @@ class VeilViewModel(application: Application) : AndroidViewModel(application) {
             _moat.value = MoatFlow.Loading
             _moat.value = runCatching { container.moat.requestChallenge(transport) }.fold(
                 onSuccess = { MoatFlow.Solving(it) },
-                onFailure = { MoatFlow.Error(it.message ?: "the bridge API did not answer") },
+                onFailure = { MoatFlow.Error(it.message ?: text(R.string.busy_bridge_api_silent)) },
             )
         }
     }
@@ -196,7 +203,7 @@ class VeilViewModel(application: Application) : AndroidViewModel(application) {
                 val lines = container.moat.solveChallenge(current.challenge, solution)
                 val added = container.bridges.addCustom(lines.joinToString("\n") { it.raw })
                 MoatFlow.Done(added)
-            }.getOrElse { MoatFlow.Error(it.message ?: "the answer was rejected") }
+            }.getOrElse { MoatFlow.Error(it.message ?: text(R.string.busy_answer_rejected)) }
         }
     }
 
@@ -211,7 +218,7 @@ class VeilViewModel(application: Application) : AndroidViewModel(application) {
     /** Clears the list of endpoints being rested, so everything is tried again. */
     fun clearCooldowns() {
         container.cooldown.clear()
-        _busyMessage.value = "Every endpoint is back in the rotation"
+        _busyMessage.value = text(R.string.busy_cooldowns_cleared)
     }
 
     private companion object {
@@ -221,7 +228,7 @@ class VeilViewModel(application: Application) : AndroidViewModel(application) {
     fun forgetLearnedRoutes() {
         viewModelScope.launch {
             container.memory.forget()
-            _busyMessage.value = "Forgot what worked on every network"
+            _busyMessage.value = text(R.string.busy_routes_forgotten)
         }
     }
 }

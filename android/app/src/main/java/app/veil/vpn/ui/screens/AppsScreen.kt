@@ -101,8 +101,7 @@ fun AppsScreen(
             if (mode == AppRoutingMode.ALL) {
                 SectionHeader(stringResource(R.string.apps_mode_all))
                 Text(
-                    text = "Every app on the device is routed through Veil. Pick one of the " +
-                        "other two modes to make exceptions.",
+                    text = stringResource(R.string.apps_mode_all_desc),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),

@@ -2,6 +2,9 @@ package app.veil.vpn.net
 
 import app.veil.vpn.core.VeilLog
 import app.veil.vpn.data.EndpointCooldown
+import androidx.annotation.StringRes
+import app.veil.vpn.R
+import app.veil.vpn.model.Localised
 import app.veil.vpn.model.Transport
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -64,17 +67,43 @@ enum class PathVerdict {
     UNKNOWN,
 }
 
+/**
+ * How the network in front of us translates outgoing UDP.
+ *
+ * Only two answers change what the app does. A mapping that does not depend on
+ * where the packet is going is what WebRTC needs, and Snowflake works normally
+ * behind it. One that does — symmetric, and the normal behaviour of the
+ * carrier-grade NAT a mobile subscriber sits behind — leaves Snowflake able to
+ * use only the minority of volunteer proxies that are themselves unrestricted,
+ * which in practice means it often never finds one.
+ */
+enum class NatBehaviour {
+    /** Same public address whoever we send to. Snowflake is fine here. */
+    ENDPOINT_INDEPENDENT,
+
+    /** A new port per destination. Snowflake will struggle; TCP routes will not. */
+    SYMMETRIC,
+
+    /** No UDP at all: Snowflake cannot work, and nothing else needs it. */
+    NO_UDP,
+
+    /** Not enough answers to say. Treated as "no reason to demote anything". */
+    UNKNOWN,
+}
+
 /** One measurement, in terms the diagnostics screen can print verbatim. */
 data class ProbeResult(
-    val name: String,
+    val name: Localised,
     val ok: Boolean,
-    val detail: String,
+    val detail: Localised,
     val millis: Long,
     val verdict: PathVerdict = if (ok) PathVerdict.OPEN else PathVerdict.UNKNOWN,
     /** Time to complete the TCP handshake, or -1 if it never did. */
     val connectMillis: Long = -1,
     /** Time to complete the TLS handshake, or -1 if it never did. */
     val handshakeMillis: Long = -1,
+    /** Only set by the UDP measurement. */
+    val natBehaviour: NatBehaviour = NatBehaviour.UNKNOWN,
 )
 
 /**
@@ -100,21 +129,29 @@ data class ProbeReport(
     val freezeSuspected: Boolean = false,
     val cdnReachable: Boolean = false,
     val udpUsable: Boolean = false,
+    /**
+     * What the network does to outgoing UDP mappings. This is the difference
+     * between Snowflake connecting in seconds and not connecting at all, and it
+     * is the usual reason it behaves one way on Wi-Fi and another on mobile.
+     */
+    val natBehaviour: NatBehaviour = NatBehaviour.UNKNOWN,
     val completedAtMillis: Long = 0,
 ) {
     val hasRun: Boolean get() = completedAtMillis > 0
 
     /** A one-line verdict for the home screen. */
-    fun summary(): String = when {
-        !hasRun -> "Network not measured yet"
-        freezeSuspected && cdnReachable ->
-            "Connections are being accepted and then blackholed; CDN paths still work"
-        freezeSuspected -> "Connections are being accepted and then blackholed"
-        directTorReachable && !sniFilteringSuspected -> "Network looks open"
-        publishedBridgesReachable -> "Tor is filtered; bridges still reachable"
-        cdnReachable -> "Bridges blocked; large CDNs still reachable"
-        udpUsable -> "Heavy filtering; peer-to-peer rendezvous still possible"
-        else -> "Severe filtering on every path we tested"
+    @get:StringRes
+    val summaryRes: Int get() = when {
+        !hasRun -> R.string.probe_summary_not_run
+        freezeSuspected && cdnReachable -> R.string.probe_summary_frozen_cdn
+        freezeSuspected -> R.string.probe_summary_frozen
+        directTorReachable && !sniFilteringSuspected -> R.string.probe_summary_open
+        natBehaviour == NatBehaviour.SYMMETRIC && publishedBridgesReachable ->
+            R.string.probe_summary_symmetric
+        publishedBridgesReachable -> R.string.probe_summary_bridges_ok
+        cdnReachable -> R.string.probe_summary_cdn_ok
+        udpUsable -> R.string.probe_summary_udp_ok
+        else -> R.string.probe_summary_severe
     }
 }
 
@@ -168,35 +205,46 @@ class NetworkProbe(
 
         /** A name a censor has no reason to filter, as a control. */
         const val NEUTRAL_CANARY = "cdn.jsdelivr.net"
+
+        const val STUN_READ_TIMEOUT_MILLIS = 4_000
+
+        const val XOR_MAPPED_ADDRESS = 0x0020
+
+        /** 0x2112A442, and its top half, which the port is XORed with. */
+        val MAGIC_COOKIE = intArrayOf(0x21, 0x12, 0xA4, 0x42)
+        const val MAGIC_COOKIE_HIGH = 0x2112
     }
 
     suspend fun run(
         obfs4Bridges: List<Pair<String, Int>>,
-        onProgress: (done: Int, total: Int, note: String) -> Unit = { _, _, _ -> },
+        onProgress: (done: Int, total: Int, noteRes: Int) -> Unit = { _, _, _ -> },
     ): ProbeReport = coroutineScope {
         val total = 6
         var done = 0
-        fun step(note: String) {
+        fun step(@StringRes noteRes: Int) {
             done += 1
-            onProgress(done, total, note)
+            onProgress(done, total, noteRes)
         }
 
-        onProgress(0, total, "Reaching for the Tor directory")
+        onProgress(0, total, R.string.probe_step_start)
 
         // Started together, but every TLS handshake inside them is paced.
-        val directDeferred = async { tcpAny("Tor directory authorities", DIRECTORY_AUTHORITIES) }
-        val bridgeDeferred = async { tcpAny("Published obfs4 bridges", obfs4Bridges) }
-        val cdnDeferred = async { tcpAny("Large CDNs", CDN_HOSTS) }
-        val censoredDeferred = async { tlsCanary("TLS to $CENSORED_CANARY", CENSORED_CANARY) }
-        val neutralDeferred = async { tlsCanary("TLS to $NEUTRAL_CANARY", NEUTRAL_CANARY) }
+        val directName = Localised(R.string.probe_name_directory)
+        val bridgeName = Localised(R.string.probe_name_bridges)
+        val cdnName = Localised(R.string.probe_name_cdn)
+        val directDeferred = async { tcpAny(directName, DIRECTORY_AUTHORITIES) }
+        val bridgeDeferred = async { tcpAny(bridgeName, obfs4Bridges) }
+        val cdnDeferred = async { tcpAny(cdnName, CDN_HOSTS) }
+        val censoredDeferred = async { tlsCanary(CENSORED_CANARY) }
+        val neutralDeferred = async { tlsCanary(NEUTRAL_CANARY) }
         val udpDeferred = async { stunReachable() }
 
-        val direct = directDeferred.await().also { step("Tor directory") }
-        val bridges = bridgeDeferred.await().also { step("Bridges") }
-        val cdn = cdnDeferred.await().also { step("CDNs") }
-        val censored = censoredDeferred.await().also { step("TLS by name") }
-        val neutral = neutralDeferred.await().also { step("TLS control") }
-        val udp = udpDeferred.await().also { step("UDP") }
+        val direct = directDeferred.await().also { step(R.string.probe_step_directory) }
+        val bridges = bridgeDeferred.await().also { step(R.string.probe_step_bridges) }
+        val cdn = cdnDeferred.await().also { step(R.string.probe_step_cdn) }
+        val censored = censoredDeferred.await().also { step(R.string.probe_step_tls_name) }
+        val neutral = neutralDeferred.await().also { step(R.string.probe_step_tls_control) }
+        val udp = udpDeferred.await().also { step(R.string.probe_step_udp) }
 
         val frozen = censored.verdict == PathVerdict.TLS_FROZEN ||
             neutral.verdict == PathVerdict.TLS_FROZEN
@@ -211,9 +259,14 @@ class NetworkProbe(
             freezeSuspected = frozen,
             cdnReachable = cdn.ok,
             udpUsable = udp.ok,
+            natBehaviour = udp.natBehaviour,
             completedAtMillis = System.currentTimeMillis(),
         )
-        VeilLog.i("probe", report.summary())
+        VeilLog.i(
+            "probe",
+            "direct=${direct.ok} bridges=${bridges.ok} cdn=${cdn.ok} " +
+                "udp=${udp.ok} nat=${udp.natBehaviour}",
+        )
         report
     }
 
@@ -250,6 +303,10 @@ class NetworkProbe(
 
         scores[Transport.WEBTUNNEL] = when {
             !report.hasRun -> 0.6f
+            // Nothing here needs UDP, so a carrier NAT that rules Snowflake out
+            // makes this the strongest remaining candidate rather than merely
+            // an equal one.
+            report.natBehaviour == NatBehaviour.SYMMETRIC && report.cdnReachable -> 0.85f
             // A real website on a real host, reached as ordinary HTTPS: the
             // closest thing to indistinguishable that a bridge can be.
             report.freezeSuspected && report.cdnReachable -> 0.7f
@@ -270,6 +327,13 @@ class NetworkProbe(
 
         scores[Transport.SNOWFLAKE] = when {
             !report.hasRun -> 0.55f
+            // A network that hands out a new public port per destination is the
+            // one thing WebRTC cannot work around. Snowflake is then limited to
+            // the minority of volunteer proxies that are themselves
+            // unrestricted, so it is worth trying — but only after the routes
+            // that do not care about NAT at all. This is why the same phone
+            // connects instantly on Wi-Fi and waits for ever on mobile data.
+            report.natBehaviour == NatBehaviour.SYMMETRIC -> 0.25f
             // The data path is WebRTC over UDP, so none of the TCP handshake
             // heuristics apply to it at all. When TLS is being frozen, that is
             // worth more than its latency costs.
@@ -284,8 +348,10 @@ class NetworkProbe(
         return scores.entries.sortedByDescending { it.value }.map { it.key to it.value }
     }
 
-    private suspend fun tcpAny(name: String, endpoints: List<Pair<String, Int>>): ProbeResult {
-        if (endpoints.isEmpty()) return ProbeResult(name, false, "nothing to test", 0)
+    private suspend fun tcpAny(name: Localised, endpoints: List<Pair<String, Int>>): ProbeResult {
+        if (endpoints.isEmpty()) {
+            return ProbeResult(name, false, Localised(R.string.probe_detail_nothing), 0)
+        }
         val started = System.currentTimeMillis()
         val sample = endpoints.take(4)
         val reachable = coroutineScope {
@@ -298,9 +364,14 @@ class NetworkProbe(
             name = name,
             ok = reachable.isNotEmpty(),
             detail = if (reachable.isEmpty()) {
-                "none of ${sample.size} answered"
+                Localised(R.string.probe_detail_none_answered, sample.size)
             } else {
-                "${reachable.size}/${sample.size} answered, first ${reachable.first()}"
+                Localised(
+                    R.string.probe_detail_some_answered,
+                    reachable.size,
+                    sample.size,
+                    reachable.first(),
+                )
             },
             millis = elapsed,
             verdict = if (reachable.isEmpty()) PathVerdict.TCP_BLOCKED else PathVerdict.OPEN,
@@ -326,9 +397,10 @@ class NetworkProbe(
      * during the handshake is filtering, and a handshake that is torn down is a
      * different kind of filtering with a different answer.
      */
-    private suspend fun tlsCanary(name: String, host: String): ProbeResult =
+    private suspend fun tlsCanary(host: String): ProbeResult =
         HandshakeGovernor.withSlot(host) {
             withContext(Dispatchers.IO) {
+                val name = Localised(R.string.probe_name_tls, host)
                 val started = System.currentTimeMillis()
                 var connectMillis = -1L
                 val outcome = runCatching {
@@ -355,7 +427,11 @@ class NetworkProbe(
                         ProbeResult(
                             name = name,
                             ok = true,
-                            detail = "handshake ok ($it), tcp ${connectMillis}ms",
+                            detail = Localised(
+                                R.string.probe_detail_handshake_ok,
+                                it.orEmpty(),
+                                connectMillis,
+                            ),
                             millis = elapsed,
                             verdict = PathVerdict.OPEN,
                             connectMillis = connectMillis,
@@ -389,59 +465,169 @@ class NetworkProbe(
         else -> PathVerdict.UNKNOWN
     }
 
-    private fun describe(verdict: PathVerdict, connectMillis: Long, error: Throwable): String =
-        when (verdict) {
-            PathVerdict.TCP_BLOCKED -> "no TCP connection: ${error.message.orEmpty().take(90)}"
-            PathVerdict.TLS_FROZEN ->
-                "TCP up in ${connectMillis}ms, then nothing came back — blackholed"
-            PathVerdict.TLS_RESET ->
-                "TCP up in ${connectMillis}ms, handshake torn down: ${error.message.orEmpty().take(70)}"
-            else -> error.message.orEmpty().take(110)
-        }
+    private fun describe(
+        verdict: PathVerdict,
+        connectMillis: Long,
+        error: Throwable,
+    ): Localised = when (verdict) {
+        PathVerdict.TCP_BLOCKED ->
+            Localised(R.string.probe_detail_no_tcp, error.message.orEmpty().take(90))
+        PathVerdict.TLS_FROZEN ->
+            Localised(R.string.probe_detail_frozen, connectMillis)
+        PathVerdict.TLS_RESET ->
+            Localised(R.string.probe_detail_reset, connectMillis, error.message.orEmpty().take(70))
+        else -> Localised(R.string.probe_detail_other, error.message.orEmpty().take(110))
+    }
 
-    /** A real STUN binding request: the cheapest honest test that UDP survives. */
+    /**
+     * Asks two STUN servers what address they see us coming from.
+     *
+     * This is more than a UDP liveness check, and the difference is the whole
+     * reason Snowflake behaves so differently on Wi-Fi and on a mobile network.
+     * Snowflake's data path is WebRTC, and WebRTC needs the NAT in front of the
+     * client to reuse the same public port for different destinations. Home
+     * routers do; carrier-grade NAT, which nearly every mobile network puts its
+     * subscribers behind, frequently does not — it allocates a fresh port per
+     * destination, which is called symmetric or, in Snowflake's own vocabulary,
+     * "restricted".
+     *
+     * A restricted client can only be matched with an unrestricted volunteer
+     * proxy, and most volunteers are themselves behind home routers with the
+     * same limitation. So the broker has far fewer proxies it can offer, and
+     * the experience is a Snowflake that connects in seconds on Wi-Fi and never
+     * connects at all on mobile data.
+     *
+     * Two servers are enough to tell the two apart: the same mapped address
+     * from both means the mapping does not depend on where we are sending, and
+     * a different one means it does. Knowing which it is turns "Snowflake
+     * doesn't work here" into "try WebTunnel first here", which the ladder can
+     * act on before the user has waited two minutes to find out.
+     */
     private suspend fun stunReachable(): ProbeResult = withContext(Dispatchers.IO) {
         val started = System.currentTimeMillis()
-        for ((host, port) in STUN_SERVERS) {
-            val ok = withTimeoutOrNull(5_000) {
-                runCatching {
-                    DatagramSocket().use { socket ->
-                        protector.protect(socket)
-                        socket.soTimeout = 4_000
-                        val request = ByteArray(20)
-                        request[0] = 0x00; request[1] = 0x01 // Binding request
-                        request[2] = 0x00; request[3] = 0x00 // Length 0
-                        // Magic cookie 0x2112A442
-                        request[4] = 0x21; request[5] = 0x12
-                        request[6] = 0xA4.toByte(); request[7] = 0x42
-                        val transactionId = ByteArray(12)
-                        SecureRandom().nextBytes(transactionId)
-                        transactionId.copyInto(request, 8)
+        val seen = mutableListOf<Pair<String, String>>()
 
-                        val address = InetAddress.getByName(host)
-                        socket.send(DatagramPacket(request, request.size, address, port))
-                        val reply = DatagramPacket(ByteArray(256), 256)
-                        socket.receive(reply)
-                        reply.length >= 20 && reply.data[0].toInt() == 0x01
-                    }
-                }.getOrDefault(false)
-            } ?: false
-            if (ok) {
-                return@withContext ProbeResult(
-                    name = "UDP / STUN",
-                    ok = true,
-                    detail = "$host answered",
-                    millis = System.currentTimeMillis() - started,
-                    verdict = PathVerdict.OPEN,
-                )
+        // One socket for both questions. Asking from two different local ports
+        // would produce two different mapped ports on any NAT at all, and the
+        // measurement would report every network as symmetric.
+        runCatching {
+            DatagramSocket().use { socket ->
+                protector.protect(socket)
+                socket.soTimeout = STUN_READ_TIMEOUT_MILLIS
+                for ((host, port) in STUN_SERVERS) {
+                    val mapped = runCatching { mappedAddress(socket, host, port) }.getOrNull()
+                    if (mapped != null) seen += host to mapped
+                    if (seen.size >= 2) break
+                }
             }
         }
-        ProbeResult(
-            name = "UDP / STUN",
-            ok = false,
-            detail = "no STUN server answered",
-            millis = System.currentTimeMillis() - started,
-            verdict = PathVerdict.TCP_BLOCKED,
-        )
+
+        val elapsed = System.currentTimeMillis() - started
+        val name = Localised(R.string.probe_name_udp)
+
+        when {
+            seen.isEmpty() -> ProbeResult(
+                name = name,
+                ok = false,
+                detail = Localised(R.string.probe_detail_stun_none),
+                millis = elapsed,
+                verdict = PathVerdict.TCP_BLOCKED,
+                natBehaviour = NatBehaviour.NO_UDP,
+            )
+
+            // Only one server answered, so there is nothing to compare against.
+            // UDP works; whether the mapping is stable is unknown, and guessing
+            // "restricted" would demote Snowflake on networks where it is fine.
+            seen.size == 1 -> ProbeResult(
+                name = name,
+                ok = true,
+                detail = Localised(R.string.probe_detail_stun_ok, seen[0].first),
+                millis = elapsed,
+                verdict = PathVerdict.OPEN,
+                natBehaviour = NatBehaviour.UNKNOWN,
+            )
+
+            seen[0].second == seen[1].second -> ProbeResult(
+                name = name,
+                ok = true,
+                detail = Localised(R.string.probe_detail_nat_open, seen[0].second),
+                millis = elapsed,
+                verdict = PathVerdict.OPEN,
+                natBehaviour = NatBehaviour.ENDPOINT_INDEPENDENT,
+            )
+
+            else -> ProbeResult(
+                name = name,
+                ok = true,
+                detail = Localised(
+                    R.string.probe_detail_nat_symmetric,
+                    seen[0].second,
+                    seen[1].second,
+                ),
+                millis = elapsed,
+                verdict = PathVerdict.OPEN,
+                natBehaviour = NatBehaviour.SYMMETRIC,
+            )
+        }
+    }
+
+    /**
+     * Sends one STUN binding request and returns the address the server saw, or
+     * null if it did not answer with one.
+     *
+     * Only XOR-MAPPED-ADDRESS is read. The older MAPPED-ADDRESS attribute exists
+     * for compatibility, but it is exactly the attribute middleboxes were known
+     * to rewrite — which is why the XORed one was specified in the first place,
+     * and why trusting it here would defeat the measurement.
+     */
+    private fun mappedAddress(socket: DatagramSocket, host: String, port: Int): String? {
+        val transactionId = ByteArray(12).also { SecureRandom().nextBytes(it) }
+        val request = ByteArray(20)
+        request[0] = 0x00; request[1] = 0x01 // Binding request
+        request[2] = 0x00; request[3] = 0x00 // Length 0
+        request[4] = 0x21; request[5] = 0x12 // Magic cookie 0x2112A442
+        request[6] = 0xA4.toByte(); request[7] = 0x42
+        transactionId.copyInto(request, 8)
+
+        val address = InetAddress.getByName(host)
+        socket.send(DatagramPacket(request, request.size, address, port))
+
+        val reply = DatagramPacket(ByteArray(512), 512)
+        socket.receive(reply)
+        return parseXorMappedAddress(reply.data, reply.length, transactionId)
+    }
+
+    private fun parseXorMappedAddress(
+        data: ByteArray,
+        length: Int,
+        transactionId: ByteArray,
+    ): String? {
+        // Binding success response, and the transaction has to be ours.
+        if (length < 20) return null
+        if (data[0].toInt() != 0x01 || data[1].toInt() != 0x01) return null
+        for (i in 0 until 12) if (data[8 + i] != transactionId[i]) return null
+
+        var offset = 20
+        while (offset + 4 <= length) {
+            val type = ((data[offset].toInt() and 0xFF) shl 8) or (data[offset + 1].toInt() and 0xFF)
+            val size =
+                ((data[offset + 2].toInt() and 0xFF) shl 8) or (data[offset + 3].toInt() and 0xFF)
+            val value = offset + 4
+            if (value + size > length) return null
+
+            if (type == XOR_MAPPED_ADDRESS && size >= 8 && data[value + 1].toInt() == 0x01) {
+                val port = (
+                    ((data[value + 2].toInt() and 0xFF) shl 8) or
+                        (data[value + 3].toInt() and 0xFF)
+                    ) xor MAGIC_COOKIE_HIGH
+                val octets = IntArray(4) { i ->
+                    (data[value + 4 + i].toInt() and 0xFF) xor MAGIC_COOKIE[i]
+                }
+                return octets.joinToString(".") + ":" + port
+            }
+            // Attributes are padded to a multiple of four bytes.
+            offset = value + size + ((4 - size % 4) % 4)
+        }
+        return null
     }
 }

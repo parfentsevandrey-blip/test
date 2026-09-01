@@ -36,3 +36,24 @@ gomobile bind -target=android/arm64,android/arm,android/amd64 -androidapi 24 \
 
 The resulting `veiltun.aar` is committed so the Android project builds without
 a Go toolchain.
+
+## Проверка на десктопе
+
+`cmd/ptlab` поднимает те же транспорты через тот же контроллер, но на обычном
+Linux, и печатает порты, на которых они слушают:
+
+```
+go run ./cmd/ptlab obfs4 snowflake
+# PORT obfs4 40407
+# PORT snowflake 40053
+```
+
+Дальше на них можно натравить настоящий tor с такой же строкой
+`ClientTransportPlugin <name> socks5 127.0.0.1:<порт>`, какую пишет приложение,
+и посмотреть на bootstrap через управляющий порт. Именно так проверялось, что
+внешний SOCKS5-плагин и переключение маршрута по `SETCONF` работают: без этого
+единственным способом отличить свою ошибку от блокировки остаётся телефон в
+цензурируемой сети.
+
+В сборку для Android этот пакет не попадает — `gomobile bind` собирает пакет
+`veiltun`, а не `./...`.

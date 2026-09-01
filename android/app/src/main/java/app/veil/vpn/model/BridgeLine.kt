@@ -34,6 +34,44 @@ data class BridgeLine(
         if (overrides.isEmpty()) return this
         val merged = LinkedHashMap(params)
         overrides.forEach { (key, value) -> if (value.isNotEmpty()) merged[key] = value }
+        return rebuiltWith(merged)
+    }
+
+    /**
+     * Drops optional parameters until tor will accept the line at all.
+     *
+     * The SOCKS5 authentication fields are one byte of length each, so the
+     * arguments cannot exceed 2 x 255 bytes, and tor enforces that when it
+     * parses the line: over the limit, `Bridge` is rejected outright. Because
+     * every bridge for one attempt is set in a single `SETCONF`, one over-long
+     * line takes the whole rung down with it — including `UseBridges` — and the
+     * result is a route that fails instantly and looks like censorship.
+     *
+     * Snowflake lines are the ones that get close. A published line with nine
+     * STUN servers is already around 435 bytes before this app adds a TLS and a
+     * DTLS preference to it, so the parameters are dropped in order of how
+     * little they cost: the STUN list first, because the transport carries its
+     * own, then the fingerprint preferences, then all but two rendezvous
+     * fronts. What is never touched is what identifies the bridge or tells the
+     * transport where the broker is.
+     */
+    fun withinSocksArgLimit(limit: Int = MAX_SOCKS_ARGS): BridgeLine {
+        if (argsLength(params) <= limit) return this
+        val trimmed = LinkedHashMap(params)
+
+        for (key in DROPPABLE) {
+            if (argsLength(trimmed) <= limit) break
+            trimmed.remove(key)
+        }
+        if (argsLength(trimmed) > limit) {
+            trimmed["fronts"]?.split(',')?.take(2)?.joinToString(",")?.let {
+                trimmed["fronts"] = it
+            }
+        }
+        return rebuiltWith(trimmed)
+    }
+
+    private fun rebuiltWith(fields: Map<String, String>): BridgeLine {
         val rebuilt = buildString {
             append(transport)
             append(' ')
@@ -41,13 +79,34 @@ data class BridgeLine(
             append(':')
             append(port)
             fingerprint?.let { append(' ').append(it) }
-            merged.forEach { (key, value) -> append(' ').append(key).append('=').append(value) }
+            fields.forEach { (key, value) -> append(' ').append(key).append('=').append(value) }
         }
-        return copy(params = merged, raw = rebuilt)
+        return copy(params = fields, raw = rebuilt)
     }
 
     companion object {
         private val FINGERPRINT = Regex("^[A-Fa-f0-9]{40}$")
+
+        /**
+         * Two SOCKS5 authentication fields of 255 bytes each. A little is left
+         * spare because tor escapes `;` and `\\` before measuring.
+         */
+        const val MAX_SOCKS_ARGS = 500
+
+        /** Least costly to lose, first. */
+        private val DROPPABLE =
+            listOf("ice", "covertdtls-config", "utls-imitate", "utls")
+
+        /**
+         * The size of what tor will hand the transport: every `key=value`
+         * joined with a semicolon, which is the form the SOCKS5 authentication
+         * fields carry.
+         */
+        private fun argsLength(fields: Map<String, String>): Int {
+            if (fields.isEmpty()) return 0
+            return fields.entries.sumOf { it.key.length + 1 + it.value.length } +
+                (fields.size - 1)
+        }
 
         /**
          * Accepts the forms tor accepts: an optional transport name, an

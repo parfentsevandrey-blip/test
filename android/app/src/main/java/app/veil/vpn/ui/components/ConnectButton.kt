@@ -130,9 +130,9 @@ fun ConnectButton(
     val trackColor = MaterialTheme.colorScheme.outlineVariant
 
     val description = when {
-        state.isLive -> "Connected. Tap to disconnect."
-        state.isBusy -> "Connecting. Tap to stop."
-        else -> "Not connected. Tap to connect."
+        state.isLive -> stringResource(R.string.a11y_connected)
+        state.isBusy -> stringResource(R.string.a11y_connecting)
+        else -> stringResource(R.string.a11y_idle)
     }
 
     Box(
@@ -256,11 +256,11 @@ private fun ConnectButtonLabel(state: TunnelState, bootstrapPercent: Int, tint: 
         else -> stringResource(R.string.action_cancel)
     }
     val detail = when (state) {
-        is TunnelState.Probing -> state.note
-        is TunnelState.Starting -> state.transport.label
+        is TunnelState.Probing -> stringResource(state.noteRes)
+        is TunnelState.Starting -> stringResource(state.transport.labelRes)
         is TunnelState.Bootstrapping -> "$bootstrapPercent%"
-        is TunnelState.Escalating -> state.to.label
-        is TunnelState.Connected -> state.transport.label
+        is TunnelState.Escalating -> stringResource(state.to.labelRes)
+        is TunnelState.Connected -> stringResource(state.transport.labelRes)
         else -> null
     }
 

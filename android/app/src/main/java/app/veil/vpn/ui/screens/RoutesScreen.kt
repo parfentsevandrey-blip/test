@@ -126,7 +126,7 @@ fun RoutesScreen(
         items(Transport.entries) { transport ->
             val count = bridges[transport]?.size ?: 0
             ChoiceCard(
-                title = transport.label,
+                title = stringResource(transport.labelRes),
                 subtitle = describe(transport, count),
                 selected = mode == RouteMode.MANUAL && manualTransport == transport,
                 onClick = {
@@ -212,22 +212,17 @@ private fun LadderRow(position: Int, attempt: Attempt) {
  * A user deciding between these has to understand a trade-off, not a protocol,
  * so each line says what it hides, what it costs, and when it stops working.
  */
+@Composable
 private fun describe(transport: Transport, bridgeCount: Int): String {
-    val base = when (transport) {
-        Transport.DIRECT ->
-            "Straight to the Tor network. Fastest, and obvious to anyone watching the line."
-        Transport.OBFS4 ->
-            "Scrambles the stream so it matches no known protocol. Fast, but relies on " +
-                "bridge addresses that get discovered and blocked over time."
-        Transport.WEBTUNNEL ->
-            "Looks like ordinary HTTPS to a site that really exists. Currently the hardest " +
-                "to tell apart from normal browsing."
-        Transport.MEEK ->
-            "Hides inside traffic to a large CDN. Blocking it means blocking the CDN, which " +
-                "is expensive — but so is the latency you pay for it."
-        Transport.SNOWFLAKE ->
-            "Hops through short-lived volunteer proxies found through a broker. No fixed " +
-                "address to block; needs UDP and a little patience."
-    }
-    return if (transport.needsBridges) "$base  ·  $bridgeCount known" else base
+    val base = stringResource(
+        when (transport) {
+            Transport.DIRECT -> R.string.route_direct_desc
+            Transport.OBFS4 -> R.string.route_obfs4_desc
+            Transport.WEBTUNNEL -> R.string.route_webtunnel_desc
+            Transport.MEEK -> R.string.route_meek_desc
+            Transport.SNOWFLAKE -> R.string.route_snowflake_desc
+        },
+    )
+    if (!transport.needsBridges) return base
+    return "$base  ·  " + stringResource(R.string.route_known_bridges, bridgeCount)
 }
