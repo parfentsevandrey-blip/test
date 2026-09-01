@@ -35,7 +35,9 @@ gomobile bind -target=android/arm64,android/arm,android/amd64 -androidapi 24 \
 ```
 
 The resulting `veiltun.aar` is committed so the Android project builds without
-a Go toolchain.
+a Go toolchain. `gomobile` also writes `veiltun-sources.jar` beside it; move that
+to `gen/`, because the app includes `libs/*.jar` wholesale and a sources jar has
+no business being on the compile classpath.
 
 ## Проверка на десктопе
 
@@ -43,7 +45,8 @@ a Go toolchain.
 Linux, и печатает порты, на которых они слушают:
 
 ```
-go run ./cmd/ptlab obfs4 snowflake
+go run ./cmd/ptlab conjure obfs4 snowflake
+# PORT conjure 35483
 # PORT obfs4 40407
 # PORT snowflake 40053
 ```

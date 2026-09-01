@@ -220,6 +220,7 @@ private fun describe(transport: Transport, bridgeCount: Int): String {
             Transport.OBFS4 -> R.string.route_obfs4_desc
             Transport.WEBTUNNEL -> R.string.route_webtunnel_desc
             Transport.MEEK -> R.string.route_meek_desc
+            Transport.CONJURE -> R.string.route_conjure_desc
             Transport.SNOWFLAKE -> R.string.route_snowflake_desc
         },
     )

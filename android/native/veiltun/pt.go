@@ -12,6 +12,7 @@ const (
 	TransportMeekLite  = ptbridge.MeekLite
 	TransportWebtunnel = ptbridge.Webtunnel
 	TransportSnowflake = ptbridge.Snowflake
+	TransportConjure   = ptbridge.Conjure
 )
 
 // TransportEvents is how the app learns that a transport connected, failed or
@@ -153,6 +154,7 @@ func (t *Transports) StopAll() {
 	defer t.mu.Unlock()
 	for _, name := range []string{
 		ptbridge.Snowflake,
+		ptbridge.Conjure,
 		ptbridge.Obfs4,
 		ptbridge.MeekLite,
 		ptbridge.Webtunnel,

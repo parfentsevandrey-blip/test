@@ -233,4 +233,7 @@
     <string name="route_why_nat">эта сеть меняет порт для каждого направления, а Snowflake этого не переносит</string>
     <string name="fail_no_transports">Ни один транспорт не запустился — добираться до Tor не через что. Подробности в «Диагностике».</string>
     <string name="fail_transport_unavailable">%1$s не запустился на этом устройстве. Выберите другой маршрут или верните автоматический выбор.</string>
+    <string name="transport_conjure">Conjure</string>
+    <string name="route_conjure_desc">Блокировать нечего: соединение идёт к обычному хосту, который не слушает, а маршрутизатор внутри сотрудничающей сети перехватывает его по пути. Это обычный TCP, поэтому NAT мобильного оператора ему не мешает. Долго подключается.</string>
+    <string name="route_why_conjure_dns">последний рубеж: регистрация у станции через DNS</string>
 </resources>

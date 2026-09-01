@@ -27,8 +27,15 @@ data class Attempt(
     val why: String,
     /** Snowflake only: rendezvous with the broker through an AMP cache. */
     val ampRendezvous: Boolean = false,
+    /** Conjure only: register with the station over DNS rather than HTTPS. */
+    val dnsRendezvous: Boolean = false,
 ) {
-    val label: String get() = if (ampRendezvous) "${transport.label} (AMP)" else transport.label
+    val label: String
+        get() = when {
+            ampRendezvous -> "${transport.label} (AMP)"
+            dnsRendezvous -> "${transport.label} (DNS)"
+            else -> transport.label
+        }
 }
 
 /**
@@ -128,6 +135,12 @@ class StrategyPlanner(
         // nothing but a `SETCONF`.
         if (Transport.SNOWFLAKE in available) ampSnowflakeAttempt()?.let { attempts += it }
 
+        // Conjure registered over DNS: the last thing left when even a fronted
+        // request to the registration station is stopped. It needs nothing but
+        // a working DNS-over-HTTPS resolver, which is close to the last thing a
+        // network can take away and still be a network.
+        if (Transport.CONJURE in available) dnsConjureAttempt()?.let { attempts += it }
+
         VeilLog.i("planner", attempts.joinToString(" -> ") { it.label })
         attempts
     }
@@ -158,6 +171,8 @@ class StrategyPlanner(
             .filterNot { it.hasRoutableAddress && cooldown.isCoolingDown(it.host) }
             // Snowflake's AMP variant is a separate rung; keep it out of this one.
             .filterNot { transport == Transport.SNOWFLAKE && it.params.containsKey("ampcache") }
+            // As is Conjure registered over DNS.
+            .filterNot { transport == Transport.CONJURE && it.params["registrar"] == "dns" }
             .take(bridgeBudget(transport))
 
         if (candidates.isEmpty()) {
@@ -180,6 +195,20 @@ class StrategyPlanner(
         )
     }
 
+    /** The Conjure line that registers over DNS rather than a fronted request. */
+    private fun dnsConjureAttempt(): Attempt? {
+        val overDns = bridges.forTransport(Transport.CONJURE, limit = 6)
+            .filter { it.params["registrar"] == "dns" }
+        if (overDns.isEmpty()) return null
+        return Attempt(
+            transport = Transport.CONJURE,
+            bridges = overDns.take(1),
+            why = context.getString(R.string.route_why_conjure_dns),
+            ampRendezvous = false,
+            dnsRendezvous = true,
+        )
+    }
+
     /**
      * Pins the Client Hello each transport presents.
      *
@@ -197,6 +226,11 @@ class StrategyPlanner(
         val shaped = when (bridge.transportEnum) {
             Transport.MEEK, Transport.WEBTUNNEL ->
                 bridge.withParams(mapOf("utls" to tlsProfile.lyrebirdName))
+
+            // Conjure's registration is a fronted HTTPS request, and it reads
+            // the same short table of Client Hello names Snowflake does.
+            Transport.CONJURE ->
+                bridge.withParams(mapOf("utls-imitate" to tlsProfile.snowflakeName))
 
             Transport.SNOWFLAKE -> bridge.withParams(
                 buildMap {
@@ -249,7 +283,9 @@ class StrategyPlanner(
      * because the line is configuration rather than an address.
      */
     private fun bridgeBudget(transport: Transport): Int = when (transport) {
-        Transport.MEEK, Transport.SNOWFLAKE -> 1
+        // For these the line is configuration rather than an address, so a
+        // second one buys nothing and costs a parallel handshake.
+        Transport.MEEK, Transport.SNOWFLAKE, Transport.CONJURE -> 1
         Transport.OBFS4, Transport.WEBTUNNEL -> 3
         Transport.DIRECT -> 0
     }
@@ -319,6 +355,9 @@ class StrategyPlanner(
             Transport.OBFS4 -> 45_000
             Transport.WEBTUNNEL -> 60_000
             Transport.MEEK -> 75_000
+            // Registration with the station, then a connection to the phantom.
+            // Under load the first of those alone can take most of a minute.
+            Transport.CONJURE -> 110_000
             Transport.SNOWFLAKE -> 100_000
         }
 

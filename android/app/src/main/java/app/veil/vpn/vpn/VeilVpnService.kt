@@ -465,6 +465,10 @@ class VeilVpnService : VpnService() {
      * the penalty several times longer.
      */
     private fun noteAttemptFailure(attempt: Attempt) {
+        // Conjure's bridge address is never actually dialled — the connection
+        // goes to a phantom the station picks — so cooling it down would only
+        // punish a host that had nothing to do with the failure.
+        if (attempt.transport == Transport.CONJURE) return
         val hosts = attempt.bridges.filter { it.hasRoutableAddress }.map { it.host }.distinct()
         if (hosts.isEmpty()) return
         if (lastBootstrapPercent >= FREEZE_LIKE_PROGRESS) {

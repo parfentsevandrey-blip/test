@@ -241,4 +241,7 @@
     <string name="route_why_nat">this network changes port per destination, which Snowflake needs to avoid</string>
     <string name="fail_no_transports">No transport would start, so there is nothing to reach Tor through. Diagnostics has the log.</string>
     <string name="fail_transport_unavailable">%1$s did not start on this device. Pick another route, or switch route selection back to automatic.</string>
+    <string name="transport_conjure">Conjure</string>
+    <string name="route_conjure_desc">No bridge address to block at all: the connection goes to an ordinary host that is not listening, and a router inside a cooperating network diverts it on the way past. Plain TCP, so the NAT a mobile carrier puts you behind does not affect it. Slow to start.</string>
+    <string name="route_why_conjure_dns">last resort: registered with the station over DNS</string>
 </resources>

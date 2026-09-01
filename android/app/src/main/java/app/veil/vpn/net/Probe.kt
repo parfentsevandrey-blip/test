@@ -325,6 +325,21 @@ class NetworkProbe(
             else -> 0.15f
         }
 
+        scores[Transport.CONJURE] = when {
+            !report.hasRun -> 0.55f
+            // Nothing about Conjure depends on UDP, and it has no endpoint that
+            // could be on a blocklist — so the two things that take the other
+            // routes out, a carrier NAT and a blocked bridge address, leave it
+            // standing. That makes it the strongest candidate on exactly the
+            // network where everything else has already failed.
+            report.natBehaviour == NatBehaviour.SYMMETRIC -> 0.8f
+            report.freezeSuspected && report.cdnReachable -> 0.75f
+            // Registration is a fronted request, so it needs a CDN to be
+            // reachable even though the data path does not go near one.
+            report.cdnReachable -> 0.6f
+            else -> 0.3f
+        }
+
         scores[Transport.SNOWFLAKE] = when {
             !report.hasRun -> 0.55f
             // A network that hands out a new public port per destination is the

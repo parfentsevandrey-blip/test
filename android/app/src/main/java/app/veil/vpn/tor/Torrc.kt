@@ -164,7 +164,11 @@ object Torrc {
      * the difference between a tunnel that is usable and one that is not.
      */
     fun tuning(transport: Transport): List<String> = when (transport) {
-        Transport.SNOWFLAKE, Transport.MEEK -> listOf(
+        // Conjure belongs here for a different reason from the others: its
+        // registration step is a fronted request to a station that can be under
+        // load, so the first bytes routinely take tens of seconds even when
+        // everything is working.
+        Transport.SNOWFLAKE, Transport.MEEK, Transport.CONJURE -> listOf(
             "CircuitBuildTimeout 90",
             "LearnCircuitBuildTimeout 0",
             "CircuitStreamTimeout 60",

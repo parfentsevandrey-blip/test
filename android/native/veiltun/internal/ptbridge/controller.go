@@ -13,6 +13,9 @@ package ptbridge
 //   - The dnstt transport was removed, since it is exactly what that replace
 //     directive was for. obfs4, meek_lite, webtunnel and Snowflake, which are
 //     the transports this app offers, are untouched.
+//   - Conjure was added, in conjure.go. Upstream does not carry it; the client
+//     is the Tor Project's own, wired to a SOCKS listener the same way the
+//     others are.
 
 import (
 	"errors"
@@ -388,6 +391,15 @@ func (c *Controller) Start(methodName string, proxy string) error {
 	}
 
 	switch methodName {
+	case Conjure:
+		if proxyURL != nil {
+			ptlog.Errorf("Conjure does not support proxies")
+			return fmt.Errorf("conjure does not support proxies")
+		}
+		if err := c.startConjure(); err != nil {
+			return err
+		}
+
 	case Snowflake:
 		if proxyURL != nil {
 			ptlog.Errorf("Snowflake does not support proxies")

@@ -53,6 +53,19 @@ enum class Transport(
     MEEK("meek_lite", R.string.transport_meek, "meek", true, LatencyClass.HIGH),
 
     /**
+     * Conjure has no bridge address at all. The client registers with a station
+     * inside a cooperating ISP, is given a "phantom" address in that ISP's
+     * space that nothing is listening on, and connects to it; the station
+     * recognises the connection in passing and diverts it. There is nothing to
+     * put on a blocklist short of the ISP.
+     *
+     * Unlike Snowflake it is ordinary TCP, so it does not care what the network
+     * does to UDP — which is what makes it the strongest option on a mobile
+     * network, where carrier NAT is usually what stops Snowflake working.
+     */
+    CONJURE("conjure", R.string.transport_conjure, "Conjure", true, LatencyClass.HIGH),
+
+    /**
      * Snowflake rendezvouses through a broker and then hops via short-lived
      * WebRTC proxies run by volunteers' browsers. There is no stable address to
      * block, which is what makes it the last rung of the ladder.
