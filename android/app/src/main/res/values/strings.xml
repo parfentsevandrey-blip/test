@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Veil</string>
+    <string name="app_tagline">Free-network tunnel</string>
+
+    <!-- Tunnel states -->
+    <string name="state_idle">Not connected</string>
+    <string name="state_probing">Sizing up the network</string>
+    <string name="state_starting">Starting transport</string>
+    <string name="state_bootstrapping">Building circuits</string>
+    <string name="state_connected">Connected</string>
+    <string name="state_reconfiguring">Trying another way in</string>
+    <string name="state_stopping">Disconnecting</string>
+    <string name="state_failed">Could not connect</string>
+
+    <string name="action_connect">Connect</string>
+    <string name="action_disconnect">Disconnect</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_retry">Try again</string>
+    <string name="action_new_circuit">New circuit</string>
+    <string name="action_close">Close</string>
+    <string name="action_save">Save</string>
+    <string name="action_copy">Copy</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Tunnel</string>
+    <string name="nav_transports">Routes</string>
+    <string name="nav_apps">Apps</string>
+    <string name="nav_logs">Diagnostics</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Home -->
+    <string name="home_traffic_down">Down</string>
+    <string name="home_traffic_up">Up</string>
+    <string name="home_route">Route</string>
+    <string name="home_exit">Exit node</string>
+    <string name="home_uptime">Uptime</string>
+    <string name="home_auto_hint">Veil picks a route on its own and keeps escalating until one holds.</string>
+
+    <!-- Transports -->
+    <string name="transports_title">How Veil gets out</string>
+    <string name="transports_mode_auto">Automatic</string>
+    <string name="transports_mode_manual">Manual</string>
+    <string name="transports_auto_desc">Probe the network, rank every route, and escalate through them until one connects.</string>
+    <string name="transports_ladder">Escalation order</string>
+
+    <!-- Bridges -->
+    <string name="bridges_title">Bridges</string>
+    <string name="bridges_builtin">Built-in</string>
+    <string name="bridges_custom">Your own</string>
+    <string name="bridges_refresh">Refresh from Tor Project</string>
+    <string name="bridges_request">Request new bridges</string>
+    <string name="bridges_paste_hint">Paste bridge lines, one per line</string>
+    <string name="bridges_captcha_hint">Type the characters in the image</string>
+
+    <!-- Apps -->
+    <string name="apps_title">Which apps go through Veil</string>
+    <string name="apps_mode_all">Everything</string>
+    <string name="apps_mode_allow">Only selected</string>
+    <string name="apps_mode_deny">Everything except selected</string>
+    <string name="apps_search">Search apps</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_section_privacy">Privacy</string>
+    <string name="settings_section_network">Network</string>
+    <string name="settings_section_contribute">Contribute</string>
+    <string name="settings_section_about">About</string>
+
+    <string name="settings_killswitch">Block traffic when the tunnel drops</string>
+    <string name="settings_killswitch_desc">Nothing leaves the device while Veil is reconnecting.</string>
+    <string name="settings_block_udp">Drop UDP outside the tunnel</string>
+    <string name="settings_block_udp_desc">Tor carries TCP only. Keep this on unless you know why you turned it off.</string>
+    <string name="settings_isolation">Circuit isolation</string>
+    <string name="settings_dns">DNS</string>
+    <string name="settings_autostart">Connect on boot</string>
+    <string name="settings_snowflake_proxy">Run a Snowflake proxy</string>
+    <string name="settings_snowflake_proxy_desc">Lend your connection so people behind a firewall can reach Tor through your device. Only on Wi-Fi and while charging.</string>
+
+    <string name="logs_title">Diagnostics</string>
+    <string name="logs_probe">Network report</string>
+    <string name="logs_tor">Tor log</string>
+    <string name="logs_empty">Nothing logged yet.</string>
+
+    <string name="notif_channel_tunnel">Tunnel status</string>
+    <string name="notif_channel_tunnel_desc">Shows whether Veil is connected.</string>
+    <string name="notif_action_stop">Disconnect</string>
+
+    <string name="vpn_permission_title">Veil needs the VPN slot</string>
+    <string name="vpn_permission_body">Android routes traffic through one VPN at a time. Grant the request to let Veil take it.</string>
+</resources>

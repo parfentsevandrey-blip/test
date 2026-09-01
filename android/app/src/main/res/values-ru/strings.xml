@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_tagline">Тоннель по свободным сетям</string>
+
+    <string name="state_idle">Не подключено</string>
+    <string name="state_probing">Изучаю сеть</string>
+    <string name="state_starting">Запускаю транспорт</string>
+    <string name="state_bootstrapping">Строю цепочки</string>
+    <string name="state_connected">Подключено</string>
+    <string name="state_reconfiguring">Пробую другой способ</string>
+    <string name="state_stopping">Отключаюсь</string>
+    <string name="state_failed">Не удалось подключиться</string>
+
+    <string name="action_connect">Подключить</string>
+    <string name="action_disconnect">Отключить</string>
+    <string name="action_cancel">Отмена</string>
+    <string name="action_retry">Ещё раз</string>
+    <string name="action_new_circuit">Новая цепочка</string>
+    <string name="action_close">Закрыть</string>
+    <string name="action_save">Сохранить</string>
+    <string name="action_copy">Копировать</string>
+
+    <string name="nav_home">Тоннель</string>
+    <string name="nav_transports">Маршруты</string>
+    <string name="nav_apps">Приложения</string>
+    <string name="nav_logs">Диагностика</string>
+    <string name="nav_settings">Настройки</string>
+
+    <string name="home_traffic_down">Приём</string>
+    <string name="home_traffic_up">Передача</string>
+    <string name="home_route">Маршрут</string>
+    <string name="home_exit">Выходной узел</string>
+    <string name="home_uptime">В сети</string>
+    <string name="home_auto_hint">Veil сам выбирает маршрут и повышает уровень маскировки, пока связь не встанет.</string>
+
+    <string name="transports_title">Как Veil выходит наружу</string>
+    <string name="transports_mode_auto">Автоматически</string>
+    <string name="transports_mode_manual">Вручную</string>
+    <string name="transports_auto_desc">Прощупать сеть, оценить каждый маршрут и перебирать их, пока один не заработает.</string>
+    <string name="transports_ladder">Порядок перебора</string>
+
+    <string name="bridges_title">Мосты</string>
+    <string name="bridges_builtin">Встроенные</string>
+    <string name="bridges_custom">Свои</string>
+    <string name="bridges_refresh">Обновить из Tor Project</string>
+    <string name="bridges_request">Запросить новые мосты</string>
+    <string name="bridges_paste_hint">Вставьте строки мостов, по одной в строке</string>
+    <string name="bridges_captcha_hint">Введите символы с картинки</string>
+
+    <string name="apps_title">Какие приложения идут через Veil</string>
+    <string name="apps_mode_all">Все</string>
+    <string name="apps_mode_allow">Только выбранные</string>
+    <string name="apps_mode_deny">Все, кроме выбранных</string>
+    <string name="apps_search">Поиск приложений</string>
+
+    <string name="settings_title">Настройки</string>
+    <string name="settings_section_privacy">Приватность</string>
+    <string name="settings_section_network">Сеть</string>
+    <string name="settings_section_contribute">Помочь другим</string>
+    <string name="settings_section_about">О приложении</string>
+
+    <string name="settings_killswitch">Блокировать трафик при обрыве</string>
+    <string name="settings_killswitch_desc">Пока Veil переподключается, наружу не уходит ничего.</string>
+    <string name="settings_block_udp">Отбрасывать UDP мимо тоннеля</string>
+    <string name="settings_block_udp_desc">Tor умеет только TCP. Выключайте, лишь если понимаете зачем.</string>
+    <string name="settings_isolation">Изоляция цепочек</string>
+    <string name="settings_dns">DNS</string>
+    <string name="settings_autostart">Подключаться при загрузке</string>
+    <string name="settings_snowflake_proxy">Работать прокси Snowflake</string>
+    <string name="settings_snowflake_proxy_desc">Отдайте часть канала, чтобы люди за файрволом дотягивались до Tor через ваше устройство. Только по Wi-Fi и на зарядке.</string>
+
+    <string name="logs_title">Диагностика</string>
+    <string name="logs_probe">Отчёт по сети</string>
+    <string name="logs_tor">Журнал Tor</string>
+    <string name="logs_empty">Пока пусто.</string>
+
+    <string name="notif_channel_tunnel">Состояние тоннеля</string>
+    <string name="notif_channel_tunnel_desc">Показывает, подключён ли Veil.</string>
+    <string name="notif_action_stop">Отключить</string>
+
+    <string name="vpn_permission_title">Veil нужен слот VPN</string>
+    <string name="vpn_permission_body">Android пускает трафик через один VPN за раз. Разрешите запрос, чтобы Veil занял его.</string>
+</resources>

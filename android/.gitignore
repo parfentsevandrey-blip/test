@@ -1,0 +1,16 @@
+# Local machine configuration
+local.properties
+
+# Build output
+build/
+.gradle/
+*.apk
+*.aab
+captures/
+
+# Signing material must never be committed
+*.jks
+*.keystore
+
+# Go module cache artifacts from a local gomobile build
+native/veiltun/gen/

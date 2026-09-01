@@ -121,3 +121,14 @@ skyline are parameters inside the builder functions in `js/scene.js`.
 
 *Conceptual presentation. Imagery, pricing, and contact details are
 illustrative.*
+
+---
+
+## Also in this repository: `android/`
+
+An unrelated second project lives under [`android/`](android/) — **Veil**, an
+Android VPN app that routes the device through Tor and picks its own way past
+censorship (obfs4, WebTunnel, meek, Snowflake), with a Material 3 Expressive
+interface. Nothing to configure: no server address, no key, no account. See
+[`android/README.md`](android/README.md) for the architecture and the reasoning
+behind the transport ladder.
