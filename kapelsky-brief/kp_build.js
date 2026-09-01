@@ -1,0 +1,477 @@
+const fs = require('fs');
+const path = require('path');
+const D = require('docx');
+const {
+  Document, Packer, Paragraph, TextRun, ImageRun, Table, TableRow, TableCell,
+  WidthType, AlignmentType, HeadingLevel, BorderStyle, ShadingType, VerticalAlign,
+  PageBreak, Header, Footer, PageNumber, ExternalHyperlink, convertMillimetersToTwip,
+} = D;
+const LR = D.LineRuleType.AUTO;
+
+const K  = JSON.parse(fs.readFileSync(path.join(__dirname, 'kp_tables.json'), 'utf8'));
+const IMG = (n) => {
+  for (const d of ['assets', 'out']) {
+    const p = path.join(__dirname, d, n);
+    if (fs.existsSync(p)) return fs.readFileSync(p);
+  }
+  throw new Error('не найдена картинка ' + n);
+};
+
+// ── palette ────────────────────────────────────────────────────────────────
+const INK = '1F2A44', BRONZE = 'A9762F', MUTED = '70788A',
+      LINE = 'D9D4CB', SOFT = 'F5F2ED', HEAD = '1F2A44', RED = 'B3282D';
+const CONTENT_W = 9638;            // A4 minus 20 mm side margins, in DXA
+const MEASURE = 1560;              // right indent for running text: ~14,2 cm ≈ 80 знаков
+const PX = 643;                    // same width in px @96dpi
+
+const S = { GEO: 'Georgia', SANS: 'Arial' };
+
+// ── helpers ────────────────────────────────────────────────────────────────
+const noBorder = { style: BorderStyle.NONE, size: 0, color: 'auto' };
+const hair = (color = LINE) => ({ style: BorderStyle.SINGLE, size: 4, color });
+
+const p = (opts) => new Paragraph(opts);
+
+const txt = (text, o = {}) => new TextRun({
+  text, font: o.font || S.SANS, size: o.size || 19, bold: !!o.bold,
+  italics: !!o.italics, color: o.color || '2A2E38', characterSpacing: o.spacing,
+  allCaps: o.caps,
+});
+
+const body = (text, o = {}) => p({
+  children: Array.isArray(text) ? text : [txt(text, o)],
+  spacing: { after: o.after === undefined ? 100 : o.after, line: o.line || 258, lineRule: LR },
+  alignment: o.align, indent: o.indent || { right: MEASURE },
+});
+
+const kicker = (text, color = BRONZE) => p({
+  children: [txt(text, { size: 16, bold: true, color, spacing: 60, caps: true })],
+  spacing: { after: 90 },
+});
+
+const h1 = (text, o = {}) => p({
+  children: [txt(text, { font: S.GEO, size: 36, bold: true, color: INK })],
+  spacing: { after: 160 }, pageBreakBefore: !!o.br, keepNext: true, keepLines: true,
+  border: { bottom: { style: BorderStyle.SINGLE, size: 10, color: BRONZE, space: 8 } },
+});
+
+const h2 = (text, o = {}) => p({
+  children: [txt(text, { font: S.GEO, size: 24, bold: true, color: INK })],
+  spacing: { before: o.br ? 0 : 170, after: 110 }, pageBreakBefore: !!o.br,
+  keepNext: true, keepLines: true,
+});
+
+const caption = (text) => p({
+  children: [txt(text, { size: 16, color: MUTED, italics: true })],
+  spacing: { after: 220 }, indent: { right: MEASURE },
+});
+
+const note = (text) => p({
+  children: [txt(text, { size: 15, color: MUTED })],
+  spacing: { after: 60, line: 230, lineRule: LR }, indent: { right: MEASURE },
+});
+
+const image = (file, w, h, o = {}) => p({
+  children: [new ImageRun({ data: IMG(file), type: 'jpg', transformation: { width: w, height: h } })],
+  spacing: { after: o.after === undefined ? 80 : o.after },
+  alignment: AlignmentType.CENTER,
+});
+
+const spacer = (n = 120) => p({ children: [txt('')], spacing: { after: n } });
+
+const rule = (n = 160) => p({
+  children: [txt('')],
+  spacing: { after: n },
+  border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: LINE, space: 2 } },
+});
+
+// generic data table
+function dataTable(headers, rows, widths, o = {}) {
+  const cell = (text, { bold, align, fill, color, size, w, last, first, top } = {}) =>
+    new TableCell({
+      width: { size: w, type: WidthType.DXA },
+      shading: fill ? { type: ShadingType.CLEAR, fill, color: 'auto' } : undefined,
+      margins: { top: 52, bottom: 52, left: 100, right: 100 },
+      verticalAlign: VerticalAlign.CENTER,
+      borders: {
+        top: top || hair(),
+        bottom: hair(),
+        left: noBorder, right: noBorder,
+      },
+      children: [p({
+        children: (text && typeof text === 'object' && text.link)
+          ? [new ExternalHyperlink({
+              children: [txt(text.text, { bold, size: size || 17, color: '2C5FA8' })],
+              link: text.link })]
+          : [txt(text, { bold, color: color || '2A2E38', size: size || 17 })],
+        alignment: align, spacing: { after: 0, line: 240, lineRule: LR },
+      })],
+    });
+
+  const headRow = new TableRow({
+    tableHeader: true,
+    children: headers.map((hd, i) => cell(hd, {
+      bold: true, w: widths[i], fill: HEAD, color: 'FFFFFF', size: 16,
+      align: i === 0 ? AlignmentType.LEFT : AlignmentType.CENTER,
+      top: { style: BorderStyle.SINGLE, size: 4, color: HEAD },
+    })),
+  });
+
+  const bodyRows = rows.map((r, ri) => {
+    const isTotal = o.totalLast && ri === rows.length - 1;
+    return new TableRow({
+      children: r.map((c, i) => cell(c, {
+        w: widths[i],
+        bold: isTotal || (o.boldFirstCol && i === 0),
+        fill: isTotal ? SOFT : (ri % 2 === 1 ? 'FBFAF8' : undefined),
+        align: (i === 0 || (o.leftCols || []).includes(i)) ? AlignmentType.LEFT : AlignmentType.CENTER,
+        color: isTotal ? INK : undefined,
+      })),
+    });
+  });
+
+  return new Table({
+    columnWidths: widths,
+    width: { size: widths.reduce((a, b) => a + b, 0), type: WidthType.DXA },
+    rows: [headRow, ...bodyRows],
+  });
+}
+
+// four hero stat tiles — the headline numbers of the project
+function statTiles(items) {
+  const w = Math.floor(CONTENT_W / items.length);
+  const W = items.map((_, i) => (i === items.length - 1 ? CONTENT_W - w * (items.length - 1) : w));
+  return new Table({
+    columnWidths: W,
+    width: { size: CONTENT_W, type: WidthType.DXA },
+    rows: [new TableRow({
+      cantSplit: true,
+      children: items.map(([val, lab, accent], i) => new TableCell({
+        width: { size: W[i], type: WidthType.DXA },
+        shading: { type: ShadingType.CLEAR, fill: accent ? 'F7EEEE' : SOFT, color: 'auto' },
+        margins: { top: 118, bottom: 118, left: 170, right: 110 },
+        verticalAlign: VerticalAlign.CENTER,
+        borders: {
+          top: { style: BorderStyle.SINGLE, size: 18, color: accent ? RED : BRONZE },
+          bottom: noBorder,
+          left: { style: BorderStyle.SINGLE, size: 26, color: 'FCFCFB' },
+          right: { style: BorderStyle.SINGLE, size: 26, color: 'FCFCFB' },
+        },
+        children: [
+          p({ children: [txt(val, { font: S.GEO, size: 27, bold: true, color: accent ? RED : INK })],
+              spacing: { after: 40, line: 240, lineRule: LR } }),
+          p({ children: [txt(lab, { size: 13, color: MUTED, caps: true, spacing: 24 })],
+              spacing: { after: 0, line: 200, lineRule: LR } }),
+        ],
+      })),
+    })],
+  });
+}
+
+// two-column "label / value" fact sheet (4 columns = 2 pairs per row)
+function factSheet(pairs) {
+  const W = [1900, 2919, 1900, 2919];
+  const rows = [];
+  for (let i = 0; i < pairs.length; i += 2) {
+    const cells = [];
+    const shade = (i / 2) % 2 === 0 ? 'FAF8F5' : null;
+    [pairs[i], pairs[i + 1] || ['', '']].forEach(([k, v], j) => {
+      const common = {
+        shading: shade ? { type: ShadingType.CLEAR, fill: shade, color: 'auto' } : undefined,
+        verticalAlign: VerticalAlign.CENTER,
+        borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+      };
+      cells.push(new TableCell({
+        ...common,
+        width: { size: W[j * 2], type: WidthType.DXA },
+        margins: { top: 58, bottom: 58, left: j === 0 ? 170 : 220, right: 60 },
+        children: [p({ children: [txt(k, { size: 14, color: MUTED, caps: true, spacing: 16 })],
+                       spacing: { after: 0, line: 220, lineRule: LR } })],
+      }));
+      cells.push(new TableCell({
+        ...common,
+        width: { size: W[j * 2 + 1], type: WidthType.DXA },
+        margins: { top: 58, bottom: 58, left: 60, right: j === 1 ? 170 : 60 },
+        children: [p({ children: [txt(v, { size: 17, bold: true, color: INK })],
+                       spacing: { after: 0, line: 220, lineRule: LR } })],
+      }));
+    });
+    rows.push(new TableRow({ children: cells }));
+  }
+  return new Table({ columnWidths: W, width: { size: CONTENT_W, type: WidthType.DXA }, rows });
+}
+
+
+function imageTrio(files, caps) {
+  const w = 3173, pxw = 203, pxh = Math.round(pxw * 9 / 16);
+  const cellOf = (file, cap, i) => new TableCell({
+    width: { size: w, type: WidthType.DXA },
+    margins: { top: 0, bottom: 0, left: i === 0 ? 0 : 70, right: i === 2 ? 0 : 70 },
+    borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+    children: [
+      p({
+        children: [new ImageRun({ data: IMG(file), type: 'jpg', transformation: { width: pxw, height: pxh } })],
+        spacing: { after: 50 },
+      }),
+      p({ children: [txt(cap, { size: 14, color: MUTED, italics: true })], spacing: { after: 0, line: 210, lineRule: LR } }),
+    ],
+  });
+  return new Table({
+    columnWidths: [w, w, w], width: { size: 9519, type: WidthType.DXA },
+    rows: [new TableRow({ children: files.map((f, i) => cellOf(f, caps[i], i)) })],
+  });
+}
+
+function imagePair(a, b, capA, capB) {
+  const w = 4760, pxw = 310, pxh = Math.round(pxw * 9 / 16);
+  const cellOf = (file, cap, left) => new TableCell({
+    width: { size: w, type: WidthType.DXA },
+    margins: { top: 0, bottom: 0, left: left ? 0 : 110, right: left ? 110 : 0 },
+    borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+    children: [
+      p({
+        children: [new ImageRun({ data: IMG(file), type: 'jpg', transformation: { width: pxw, height: pxh } })],
+        spacing: { after: 60 },
+      }),
+      p({ children: [txt(cap, { size: 15, color: MUTED, italics: true })], spacing: { after: 0, line: 220, lineRule: LR } }),
+    ],
+  });
+  return new Table({
+    columnWidths: [w, w], width: { size: 9520, type: WidthType.DXA },
+    rows: [new TableRow({ children: [cellOf(a, capA, true), cellOf(b, capB, false)] })],
+  });
+}
+
+
+
+const bullets = (items) => items.map((t) => p({
+  children: [txt('—   ', { color: BRONZE, bold: true }), ...(Array.isArray(t) ? t : [txt(t)])],
+  spacing: { after: 58, line: 252, lineRule: LR }, indent: { left: 170, hanging: 170, right: MEASURE },
+}));
+
+// ── content ────────────────────────────────────────────────────────────────
+const N = K.nums;
+
+const TILES = [
+  ['46', 'Резиденций'],
+  ['54 – 345 м²', 'Площади'],
+  ['≈ 1,3 млн ₽', 'Метр в закрытых продажах', true],
+  ['2029', 'Срок сдачи'],
+];
+
+const SRC = [
+  ['Параметры, визуализации и статус продаж — официальный сайт проекта', 'https://www.kapelsky5.ru/'],
+  ['Старт закрытых продаж в апреле 2026, средняя площадь резиденции и срок передачи ключей — обзор стартов продаж «Новострой-Медиа»', 'https://novostroev.ru/articles/starty-prodazh-novostroek-moskvy-v-aprele-2026/'],
+  ['Этажность, количество лотов, срок сдачи и класс — карточки проекта у брокеров', 'https://whitewill.ru/developments/kapelskiy-5'],
+  ['Планировочные параметры, паркинг и благоустройство — карточка «Новострой-М»', 'https://www.novostroy-m.ru/baza/jk_kapelskiy_5'],
+  ['Здание, которое стоит на участке сегодня: класс, площадь, год реконструкции', 'https://fortexgroup.ru/bc/kapelskiy-5/'],
+  ['АО «МАКО»: ОГРН, дата регистрации, руководитель, ОКВЭД, финансовый результат', 'https://companies.rbc.ru/id/1027739638805-ao-mako/'],
+  ['Цены элитной первички Москвы по классам, I квартал 2026 — данные NF Group', 'https://www.mirkvartir.ru/journal/news/2026/04/23/elite-novostroiki/'],
+  ['Диапазоны цены метра у сопоставимых проектов, срез 01.09.2026', 'https://mskguru.ru/metro/prospekt-mira'],
+  ['Координаты дома, станций метро и расстояния по прямой — OpenStreetMap. Картографическая основа — Яндекс Карты', 'https://yandex.ru/maps/'],
+];
+
+const doc = new Document({
+  creator: 'Информационная справка',
+  title: 'Клубный дом «Капельский, 5»',
+  description: 'Справка по проекту: параметры, локация, визуализации, цена метра и сопоставление с рынком',
+  styles: { default: { document: {
+    run: { font: S.SANS, size: 19, color: '2A2E38' },
+    paragraph: { spacing: { line: 258, lineRule: LR } } } } },
+  sections: [{
+    properties: { page: { margin: {
+      top: convertMillimetersToTwip(15), bottom: convertMillimetersToTwip(15),
+      left: convertMillimetersToTwip(20), right: convertMillimetersToTwip(20),
+      header: convertMillimetersToTwip(9), footer: convertMillimetersToTwip(9) } } },
+    footers: { default: new Footer({ children: [p({
+      children: [
+        txt('Клубный дом «Капельский, 5» · Мещанский район · срез 01.09.2026', { size: 14, color: MUTED }),
+        txt('\t', {}),
+        new TextRun({ children: [PageNumber.CURRENT], font: S.SANS, size: 14, color: MUTED }),
+      ],
+      tabStops: [{ type: D.TabStopType.RIGHT, position: CONTENT_W }],
+      border: { top: { style: BorderStyle.SINGLE, size: 4, color: LINE, space: 6 } },
+    })] }) },
+    children: [
+      // ═══════════════ СТРАНИЦА 1 ═══════════════
+      kicker('Информационная справка · Москва · 1 сентября 2026'),
+      p({ children: [txt('Капельский, 5', { font: S.GEO, size: 44, bold: true, color: INK })],
+          spacing: { after: 60 } }),
+      p({ children: [txt('Клубный дом на 46 резиденций в Мещанском районе', { size: 22, color: MUTED })],
+          spacing: { after: 260 } }),
+
+      statTiles(TILES),
+      spacer(230),
+
+      body('Дом строится в Капельском переулке — короткой улице между улицей Щепкина и проспектом Мира, в 410 метрах по прямой от станции метро «Проспект Мира». Закрытые продажи открылись в апреле 2026 года, цена метра на этом этапе — около 1,3 млн ₽. Разрешение на строительство получено, открытый старт по договорам долевого участия последует за публикацией проектной декларации.'),
+      body(`Продаваемая площадь дома — около ${N.sellable} м²: 46 резиденций средней площадью 110 м², от 54 до 345 м². По цене закрытого этапа все лоты вместе стоят примерно ${N.gross} млрд ₽. На участке сегодня стоит четырёхэтажный офисный особняк на ${N.office} м², реконструированный в 2014 году, — новый дом увеличивает площадь застройки на участке в ${N.ratio} раза.`),
+      body(`1,3 млн ₽ за метр — на ${N.toPrem} % ниже средневзвешенной цены премиум-класса Москвы и на ${N.toElite} % ниже средней по элитному сегменту. Ближайший по локации проект с открытым прайсом, «Форум» у «Сухаревской», продаёт метр за 1,79–2,38 млн ₽.`),
+      body('Лоты продаются без отделки, поквартирного прайса и планировок в открытом доступе нет. Проектной декларации на 1 сентября 2026 года тоже нет: сайт проекта по-прежнему пишет об открытии продаж во II–III квартале 2026 года — после её размещения.', { after: 220 }),
+
+      image('hero.jpg', PX, 367, { after: 40 }),
+      caption('Дом переменной этажности из двух объёмов: восемь этажей, натуральный камень на фасаде, террасы на верхних уровнях.'),
+
+      // ═══════════════ ПАРАМЕТРЫ ═══════════════
+      h1('Что известно о доме', { br: true }),
+      body('Официальный сайт проекта параметров почти не раскрывает: там есть количество резиденций, диапазон площадей и паркинг. Остальное — из карточек агрегаторов и обзора стартов продаж; расхождения между источниками отмечены отдельно.', { after: 190 }),
+      factSheet(K.card),
+      spacer(260),
+      h2('Шесть параметров, которые определяют продукт'),
+      ...bullets(K.features.map(([h, t]) => [txt(h + ' — '), txt(t, { bold: true })])),
+      spacer(50),
+      note('Проектной декларации на 1 сентября 2026 в открытом доступе нет, поэтому все цифры этой страницы — из маркетинговых материалов проекта и карточек брокеров.'),
+      spacer(150),
+      imagePair('fas_c.jpg', 'yard_d.jpg',
+        'Восемь этажей, верхний уровень отступает вглубь',
+        'Двор и террасы верхних уровней на закате'),
+
+      // ═══════════════ ВИЗУАЛИЗАЦИИ ═══════════════
+      h1('Визуализации проекта', { br: true }),
+      body('Кадры с официального сайта проекта: фасады, верхние уровни с террасами, двор, гранд-лобби и паркинг.', { after: 200 }),
+      imageTrio(['fas_a.jpg', 'fas_b.jpg', 'fas_d.jpg'],
+        ['Дом со стороны переулка', 'Ракурс снизу, вечерняя подсветка', 'Фасад и озеленение днём']),
+      spacer(36),
+      imageTrio(['top_a.jpg', 'top_b.jpg', 'top_c.jpg'],
+        ['Верхние этажи с террасами', 'Перголы на кровле', 'Терраса резиденции']),
+      spacer(36),
+      imageTrio(['yard_a.jpg', 'yard_b.jpg', 'yard_c.jpg'],
+        ['Двор вечером', 'Водная чаша во дворе', 'Детская площадка']),
+      spacer(36),
+      imageTrio(['in_a.jpg', 'in_b.jpg', 'in_c.jpg'],
+        ['Гранд-лобби', 'Подземный паркинг', 'Интерьер резиденции']),
+      spacer(46),
+      image('kvartal.jpg', 560, 243, { after: 30 }),
+      caption('Квартал с высоты: дом в глубине застройки между проспектом Мира и улицей Щепкина.'),
+      spacer(20),
+      note('Дом не построен. Всё, что на этой странице, — проектные визуализации; застройщик отдельно оговаривает на сайте, что они ориентировочные и в проект могут вноситься изменения.'),
+
+      // ═══════════════ РАСПОЛОЖЕНИЕ ═══════════════
+      h1('Расположение', { br: true }),
+      body('Капельский переулок проходит между улицей Щепкина и проспектом Мира, параллельно улице Гиляровского. Транзита через него нет, выезд на Садовое кольцо и ТТК — по проспекту Мира.', { after: 180 }),
+      image('map_area.jpg', PX, 433, { after: 30 }),
+      caption('Красное — участок, тёмное — станции метро с расстоянием по прямой.'),
+      spacer(40),
+      ...bullets([
+        [txt('410 метров до «Проспекта Мира» по прямой. '), txt('Пересадочный узел Кольцевой и Калужско-Рижской линий; застройщик и агрегаторы указывают 470–490 метров пешком, около пяти минут.', { bold: true })],
+        [txt('1,06 км до «Рижской». '), txt('Большая кольцевая, Калужско-Рижская линия и МЦД-2; до Рижского вокзала 13 минут пешком.', { bold: true })],
+        [txt('610 метров до спорткомплекса «Олимпийский», 874 метра до «Аптекарского огорода». '), txt('Ботанический сад МГУ — старейший в России, заложен в 1706 году; Дом-музей Васнецова в 920 метрах.', { bold: true })],
+        [txt('3,7 км до Кремля. '), txt('Дом стоит за Садовым кольцом, между ним и ТТК: до ТТК 821 метр.', { bold: true })],
+      ]),
+      spacer(40),
+      dataTable(
+        ['Объект', 'Что это', 'По прямой'],
+        K.nearby, [3400, 4400, 1838],
+        { boldFirstCol: true, leftCols: [1] },
+      ),
+      spacer(30),
+      note('Расстояния посчитаны по прямой от контура участка; пешеходный маршрут длиннее на 10–20 %.'),
+
+      // ═══════════════ УЧАСТОК И ЗАСТРОЙЩИК ═══════════════
+      h1('Участок и застройщик', { br: true }),
+      body(`По адресу Капельский переулок, 5 сегодня работает бизнес-центр класса B+: четыре этажа, ${N.office} м², реконструкция 2014 года, наземный охраняемый паркинг. Помещения экспонируются в аренду блоками по 2 274–2 480 м² на этажах с минус первого по третий.`),
+      body(`Клубный дом заменяет этот объём примерно ${N.sellable} м² жилья плюс два подземных уровня паркинга. Площадь, которую участок отдаёт в продажу, вырастает в ${N.ratio} раза, а назначение меняется с офисного на жилое.`),
+      body('Окружение участка офисное и институциональное: с юга примыкает территория МОНИКИ имени Владимирского, вдоль проспекта Мира стоят бизнес-центры, включая Olympic Plaza. В списках новостроек Мещанского района проекты премиального и элитного класса сосредоточены у «Сухаревской», «Трубной» и «Цветного бульвара» — в полутора-двух километрах отсюда. У «Проспекта Мира» «Капельский, 5» пока единственный.', { after: 200 }),
+
+      h2('Кто застройщик'),
+      body('Сайт kapelsky5.ru принадлежит АО «МАКО» — компания указана оператором персональных данных в документах сайта. Реквизиты: ИНН 7704198529, ОГРН 1027739638805, регистрация 12 июля 1999 года, генеральный директор Первой Илья Николаевич, уставный капитал 2 млн ₽. Основной вид деятельности по ОКВЭД — 64.99, прочие финансовые услуги; всего в выписке 26 видов деятельности, включая строительство и операции с недвижимостью. Финансовый результат 2025 года — убыток 84,6 млн ₽.'),
+      body('Публичного портфеля жилых проектов у компании нет: «Капельский, 5» — единственный объект, который связывается с этим юридическим лицом в открытых источниках. Название застройщика, который будет указан в проектной декларации, пока не опубликовано — обычно это отдельное юридическое лицо под конкретный дом.', { after: 200 }),
+      image('map_city.jpg', PX, 392, { after: 30 }),
+      caption('Дом относительно центра: между Садовым кольцом и ТТК, в створе проспекта Мира.'),
+
+      // ═══════════════ ЦЕНА ═══════════════
+      h1('Цена', { br: true }),
+      body('Поквартирного прайса у проекта нет ни на сайте, ни у брокеров: в карточках стоит «цена по запросу». Единственный публичный ориентир — цена метра закрытого этапа, около 1,3 млн ₽. Ниже — что из неё следует и как она соотносится с рынком.', { after: 190 }),
+      factSheet(K.priceFacts),
+      spacer(250),
+      body(`Разница между ценой закрытого этапа и средним метром премиум-класса на объёме дома — около ${N.gap} млрд ₽. Это и есть цена входа до получения разрешения на строительство: покупатель закрытого этапа берёт на себя риск проекта без ДДУ, эскроу и проектной декларации.`, { after: 190 }),
+
+      h2('Полный бюджет резиденции'),
+      body('Лоты идут без отделки. Ремонт в премиум-сегменте Москвы стоит 300–500 тыс. ₽ за метр; в таблице взята середина вилки — 400 тыс. ₽.', { after: 170 }),
+      dataTable(
+        ['Площадь, м²', 'Покупка, млн ₽', 'Отделка, млн ₽', 'Итого, млн ₽'],
+        K.budget, [2100, 2600, 2400, 2538],
+        { boldFirstCol: true },
+      ),
+      spacer(40),
+      note('Отделка добавляет к бюджету 31 % — при цене метра 1,3 млн ₽ и отделке 400 тыс. ₽ полная стоимость метра получается 1,7 млн ₽, то есть уровень среднего премиум-метра Москвы.'),
+
+      h2('Рынок элитной первички Москвы, I квартал 2026'),
+      dataTable(
+        ['Показатель', 'Значение', 'Комментарий'],
+        K.market, [3900, 2100, 3638],
+        { boldFirstCol: true, leftCols: [2] },
+      ),
+      spacer(40),
+      note('Данные NF Group за январь–март 2026 года. Средневзвешенная цена предложения по элитному сегменту выросла на 3 % за квартал и на 9 % за год, при этом объём сделок упал на 45 % год к году, а средняя площадь проданного лота — со 116 до 99 м².'),
+
+      // ═══════════════ КОНКУРЕНТЫ ═══════════════
+      h1('Сопоставимые проекты', { br: true }),
+      body('Восемь элитных проектов в радиусе полутора километров от станций той же ветки и соседних. Диапазон — от самого дешёвого лота в экспозиции до самого дорогого; у «Капельского» диапазона нет, есть один ориентир.', { after: 190 }),
+      dataTable(
+        ['Проект', 'Метро', 'Класс', 'Срок', 'Отделка', 'Метр, ₽'],
+        K.peers, [2200, 2300, 900, 1100, 1300, 1838],
+        { boldFirstCol: true, leftCols: [1] },
+      ),
+      spacer(46),
+      image('chart.jpg', PX, 322, { after: 30 }),
+      caption('Пунктир — средневзвешенный метр премиум-класса Москвы, 1,6 млн ₽.'),
+      spacer(46),
+      ...bullets([
+        [txt('1,3 млн ₽ попадают в нижнюю треть диапазона. '), txt('Дешевле только готовые дома дальше от центра: PRIDE у «Савёловской» (583–972 тыс. ₽), «Дом 56» у «Бауманской» (658–1 030 тыс. ₽) и апартаменты LUMIN у «Китай-города» (799–1 169 тыс. ₽).', { bold: true })],
+        [txt('Ближайший территориальный сосед стоит в 1,4–1,8 раза дороже. '), txt('«Форум» у «Сухаревской» — 1,79–2,38 млн ₽ за метр при сдаче в 2026 году и с отделкой. Разрыв частично объясняется сроком: три года до ключей против готового дома.', { bold: true })],
+        [txt('Верх рынка задают «Брюсов» и «Фон Дессин» — 3,7–5,07 и 2,23–4,43 млн ₽ за метр. '), txt('Оба стоят внутри Бульварного кольца; расстояние до Кремля у них меньше двух километров против 3,7 км у Капельского переулка.', { bold: true })],
+        [txt('«Тишинский бульвар» показывает, какой бывает разброс внутри одного дома — 1,22–3,32 млн ₽ за метр, в 2,7 раза. '), txt('Прайс «Капельского» после старта по ДДУ тоже, скорее всего, станет диапазоном: 54 м² на нижнем этаже и 345 м² с террасой продаются по разной цене метра.', { bold: true })],
+      ]),
+
+      // ═══════════════ РнС ═══════════════
+      h1('Что меняет разрешение на строительство', { br: true }),
+      body('Разрешение на строительство разделяет проект на два разных режима продаж — юридически и по цене.', { after: 190 }),
+      ...bullets(K.rns.map(([h, t]) => [txt(h + ' — '), txt(t, { bold: true })])),
+      spacer(50),
+      note('Проектная декларация публикуется в единой информационной системе жилищного строительства на наш.дом.рф. Из неё станут известны точная этажность, состав лотов, срок ввода и юридическое лицо застройщика.'),
+
+      h2('Хронология'),
+      dataTable(
+        ['Дата', 'Событие'],
+        K.timeline, [2100, 7538],
+        { boldFirstCol: true, leftCols: [1] },
+      ),
+
+      // ═══════════════ РИСКИ ═══════════════
+      h2('Открытые вопросы'),
+      body('Шесть мест, где открытые данные расходятся между собой или обрываются.', { after: 170 }),
+      ...bullets(K.risks.map(([h, t]) => [txt(h + ' — '), txt(t, { bold: true })])),
+
+      // ═══════════════ ВЫВОДЫ ═══════════════
+      h1('Выводы', { br: true }),
+      ...bullets([
+        [txt('Цена закрытого этапа на 23 % ниже среднего премиум-метра и на 43 % ниже среднего элитного. '), txt(`На объёме дома в ${N.sellable} м² это разница около ${N.gap} млрд ₽ между ${N.gross} и ${N.grossPrem} млрд ₽. Скидка оплачена риском: закрытые продажи шли без разрешения на строительство, без ДДУ и без эскроу.`, { bold: true })],
+        [txt('Получение разрешения снимает главный риск этапа. '), txt('Дальше продажи идут по 214-ФЗ, деньги лежат на эскроу до ввода дома. Цена при этом обычно пересматривается: ближайший ориентир открытого рынка в этой локации — 1,79–2,38 млн ₽ за метр.', { bold: true })],
+        [txt('Бюджет входа — около 70 млн ₽ за 54 м², 143 млн ₽ за среднюю резиденцию в 110 м². '), txt('Лоты без отделки, ремонт в этом сегменте добавляет 300–500 тыс. ₽ за метр, то есть 33–55 млн ₽ на среднюю квартиру. Полный бюджет средней резиденции получается 176–198 млн ₽.', { bold: true })],
+        [txt('46 квартир и 56 машино-мест — 1,22 места на квартиру. '), txt('Для дома внутри ТТК это высокий показатель: место в паркинге не придётся искать на стороне.', { bold: true })],
+        [txt('410 метров до пересадочного узла и 3,7 км до Кремля. '), txt('Локация даёт метро Кольцевой линии в пяти минутах пешком и при этом остаётся за Садовым кольцом, где метр стоит дешевле, чем внутри Бульварного.', { bold: true })],
+        [txt('Сроки: ключи в 2029 году, три года от разрешения до ввода. '), txt('Дом на 46 квартир строится быстрее крупного жилого комплекса, но проектной декларации с закреплённым сроком в открытом доступе пока нет.', { bold: true })],
+        [txt('Рынок сегмента за год сжался по сделкам на 45 % при росте цен на 9 %. '), txt('Средняя площадь проданного лота упала со 116 до 99 м². Диапазон «Капельского» от 54 м² попадает в ту часть спроса, которая растёт: покупатели берут компактнее.', { bold: true })],
+        [txt('Застройщик — компания без публичной девелоперской истории. '), txt('АО «МАКО» с основным ОКВЭД 64.99, уставным капиталом 2 млн ₽ и убытком 84,6 млн ₽ за 2025 год. До появления проектной декларации с названием и финансовой моделью застройщика это главный непроверяемый пункт.', { bold: true })],
+      ]),
+
+      spacer(30),
+      rule(100),
+      kicker('Источники', INK),
+      ...SRC.map(([label, url]) => p({
+        children: url
+          ? [txt('—   ', { color: BRONZE, bold: true }), txt(label + ' — ', { size: 16, color: MUTED }),
+             new ExternalHyperlink({ children: [txt(url, { size: 16, color: '2C5FA8' })], link: url })]
+          : [txt('—   ', { color: BRONZE, bold: true }), txt(label, { size: 16, color: MUTED })],
+        spacing: { after: 32, line: 206, lineRule: LR }, indent: { left: 170, hanging: 170, right: MEASURE },
+      })),
+      note('Справка составлена 01.09.2026 по открытым источникам. Поквартирного прайса и проектной декларации у проекта на эту дату нет; все ценовые ориентиры — оценочные и офертой не являются.'),
+    ],
+  }],
+});
+
+Packer.toBuffer(doc).then((buf) => {
+  const out = path.join(__dirname, 'ЖК_Капельский_5_справка.docx');
+  fs.writeFileSync(out, buf);
+  console.log('written', out, buf.length, 'bytes');
+});
