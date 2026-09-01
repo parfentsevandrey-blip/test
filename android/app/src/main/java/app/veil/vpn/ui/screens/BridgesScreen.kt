@@ -51,7 +51,7 @@ fun BridgesScreen(
     loadCustomText: ((String) -> Unit) -> Unit,
     onRefresh: () -> Unit,
     onSaveCustom: (String) -> Unit,
-    onRequestFromMoat: () -> Unit,
+    onRequestFromMoat: (String) -> Unit,
     onSubmitSolution: (String) -> Unit,
     onDismissMoat: () -> Unit,
     modifier: Modifier = Modifier,
@@ -98,13 +98,29 @@ fun BridgesScreen(
                             )
                         }
                     }
-                    Spacer(Modifier.height(8.dp))
-                    OutlinedButton(onClick = onRequestFromMoat, modifier = Modifier.fillMaxWidth()) {
-                        Icon(Icons.Filled.Key, contentDescription = null)
-                        Text(
-                            stringResource(R.string.bridges_request),
-                            modifier = Modifier.padding(start = 8.dp),
-                        )
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        text = stringResource(R.string.bridges_request_kind),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        // WebTunnel is the one worth asking for first on a
+                        // network that freezes connections: it terminates on a
+                        // host that also serves a real website.
+                        listOf(
+                            "webtunnel" to Transport.WEBTUNNEL.label,
+                            "obfs4" to Transport.OBFS4.label,
+                        ).forEach { (id, label) ->
+                            OutlinedButton(
+                                onClick = { onRequestFromMoat(id) },
+                                modifier = Modifier.weight(1f),
+                            ) {
+                                Icon(Icons.Filled.Key, contentDescription = null)
+                                Text(label, modifier = Modifier.padding(start = 8.dp))
+                            }
+                        }
                     }
                 }
             }

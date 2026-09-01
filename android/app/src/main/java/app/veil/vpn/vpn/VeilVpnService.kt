@@ -13,12 +13,15 @@ import app.veil.vpn.data.AppRoutingMode
 import app.veil.vpn.data.NetworkContext
 import app.veil.vpn.data.RouteMode
 import app.veil.vpn.data.VeilSettings
+import app.veil.vpn.model.TlsProfile
 import app.veil.vpn.model.Transport
 import app.veil.vpn.model.TunnelState
 import app.veil.vpn.model.TunnelStats
+import app.veil.vpn.net.HandshakeGovernor
 import app.veil.vpn.net.NetworkProbe
 import app.veil.vpn.net.SocketProtector
 import app.veil.vpn.tor.Attempt
+import app.veil.vpn.tor.SocksEndpoint
 import app.veil.vpn.tor.StrategyPlanner
 import app.veil.vpn.tor.Torrc
 import app.veil.vpn.tor.runFor
@@ -28,12 +31,16 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import java.net.DatagramSocket
 import java.net.Socket
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.coroutines.coroutineContext
 
 /**
  * The VPN itself.
@@ -63,6 +70,14 @@ class VeilVpnService : VpnService() {
     private var nativeTunnelRunning = false
     private var statsJob: Job? = null
 
+    /** How far the last attempt's bootstrap got, for classifying its failure. */
+    private var lastBootstrapPercent = 0
+
+    /** Guards against a second stop request piling onto a running teardown. */
+    private val stopping = AtomicBoolean(false)
+    private var teardownJob: Job? = null
+    private var lastStartId = 0
+
     private val container: VeilApp get() = application as VeilApp
 
     private val protector = object : SocketProtector {
@@ -73,7 +88,7 @@ class VeilVpnService : VpnService() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_DISCONNECT -> {
-                stopTunnel()
+                requestStop("asked to disconnect")
                 return START_NOT_STICKY
             }
             ACTION_NEW_CIRCUIT -> {
@@ -82,23 +97,36 @@ class VeilVpnService : VpnService() {
             }
         }
 
+        lastStartId = startId
         startForeground(
             VpnNotifications.ID,
             VpnNotifications.build(this, TunnelState.Probing("Starting", 0, 1)),
         )
         if (worker?.isActive != true) {
-            worker = scope.launch { runTunnel() }
+            val previousTeardown = teardownJob
+            worker = scope.launch {
+                // Connecting again while the previous session is still being
+                // torn down must not race it: wait, but never longer than the
+                // teardown is allowed to take in the first place.
+                previousTeardown?.let {
+                    withTimeoutOrNull(TEARDOWN_BUDGET_MILLIS) { it.join() }
+                }
+                stopping.set(false)
+                runTunnel()
+            }
         }
         return START_STICKY
     }
 
     override fun onRevoke() {
         VeilLog.w("vpn", "another VPN took over the slot")
-        stopTunnel()
+        requestStop("the VPN slot was taken by another app")
     }
 
     override fun onDestroy() {
-        stopTunnel()
+        // Teardown runs on a scope that outlives this service, so cancelling
+        // ours here cannot strand it half-finished.
+        requestStop("service destroyed")
         scope.cancel()
         super.onDestroy()
     }
@@ -106,9 +134,22 @@ class VeilVpnService : VpnService() {
     // --- Connection sequence ------------------------------------------------
 
     private suspend fun runTunnel() {
+        HandshakeGovernor.reset()
         val settings = container.settings.settings.first()
         container.bridges.load()
         container.memory.load()
+
+        // Read the network before raising the interface. This app is excluded
+        // from its own VPN, so the answer should be the same either way — but
+        // "should" is doing work there, and everything downstream depends on
+        // this describing the real network rather than our own tunnel: the
+        // fingerprint that per-network memory is keyed on, and the resolvers a
+        // bypassed lookup is sent to.
+        val network = NetworkContext.inspect(this)
+        VeilLog.i(
+            "vpn",
+            "network ${network.kind} ${network.countryIso ?: "??"} (${network.fingerprint})",
+        )
 
         if (settings.killSwitch) {
             // Interface up, nothing reading it: a real kill switch rather than
@@ -116,12 +157,6 @@ class VeilVpnService : VpnService() {
             establishInterface(settings)
             VeilLog.i("vpn", "kill switch active while connecting")
         }
-
-        val network = NetworkContext.inspect(this)
-        VeilLog.i(
-            "vpn",
-            "network ${network.kind} ${network.countryIso ?: "??"} (${network.fingerprint})",
-        )
 
         val ladder = buildLadder(settings, network)
         if (ladder.isEmpty()) {
@@ -132,13 +167,15 @@ class VeilVpnService : VpnService() {
 
         val tried = mutableListOf<Transport>()
         for ((index, attempt) in ladder.withIndex()) {
-            if (!scope.isActive) return
+            // The worker's own job, not the service scope: cancelling the
+            // connect has to end this loop even though the scope lives on.
+            coroutineContext.ensureActive()
             tried += attempt.transport
             update(TunnelState.Starting(attempt.transport, index + 1, ladder.size))
             VeilLog.i("vpn", "attempt ${index + 1}/${ladder.size}: ${attempt.label} (${attempt.why})")
 
             val started = System.currentTimeMillis()
-            if (tryAttempt(attempt, index, ladder.size, settings)) {
+            if (tryAttempt(attempt, index, ladder.size, settings, network)) {
                 container.memory.recordSuccess(
                     network.fingerprint,
                     attempt.transport,
@@ -150,6 +187,7 @@ class VeilVpnService : VpnService() {
 
             container.memory.recordFailure(network.fingerprint, attempt.transport)
             container.bridges.recordFailure(attempt.bridges)
+            noteAttemptFailure(attempt)
             teardownAttempt()
 
             val next = ladder.getOrNull(index + 1)
@@ -169,8 +207,17 @@ class VeilVpnService : VpnService() {
     }
 
     private suspend fun buildLadder(settings: VeilSettings, network: NetworkContext): List<Attempt> {
+        // AUTO resolves to a profile that is fixed for this installation, so
+        // the population does not all present the same Client Hello.
+        val tls = TlsProfile.resolve(settings.tlsProfile, container.settings.installSeed())
+        VeilLog.i("vpn", "client hello profile: ${tls.label}")
+
         if (settings.routeMode == RouteMode.MANUAL) {
-            return container.planner.manualPlan(settings.manualTransport)
+            return container.planner.manualPlan(
+                settings.manualTransport,
+                tls,
+                settings.dtlsProfile,
+            )
         }
 
         update(TunnelState.Probing("Measuring the network", 0, 5))
@@ -178,12 +225,19 @@ class VeilVpnService : VpnService() {
         // shipped snapshot still covers the first connect.
         container.bridges.refreshFromMoat()
 
-        val probe = NetworkProbe(protector)
+        val probe = NetworkProbe(protector, container.cooldown)
         val report = probe.runFor(container.bridges) { done, total, note ->
             update(TunnelState.Probing(note, done, total))
         }
         TunnelBus.publish(report)
-        return container.planner.plan(network, report, probe.rank(report))
+        TunnelBus.publishCooldowns(container.cooldown.describe())
+        return container.planner.plan(
+            network,
+            report,
+            probe.rank(report),
+            tls,
+            settings.dtlsProfile,
+        )
     }
 
     /** Runs one rung to a verdict. Returns true when the tunnel is carrying traffic. */
@@ -192,9 +246,12 @@ class VeilVpnService : VpnService() {
         index: Int,
         ladderSize: Int,
         settings: VeilSettings,
+        network: NetworkContext,
     ): Boolean {
         val transportPort = runCatching {
-            container.pt.start(attempt.transport, attempt.bridges, attempt.ampRendezvous)
+            withContext(Dispatchers.IO) {
+                container.pt.start(attempt.transport, attempt.bridges, attempt.ampRendezvous)
+            }
         }.getOrElse {
             VeilLog.e("vpn", "could not start ${attempt.label}", it)
             return false
@@ -209,20 +266,23 @@ class VeilVpnService : VpnService() {
         )
         if (!container.tor.start(torrc)) return false
 
+        publishLocalListeners(attempt, transportPort)
+
         if (!awaitBootstrap(attempt, index, ladderSize)) return false
 
-        val socksPort = container.tor.socksPort
-        if (socksPort <= 0) {
-            VeilLog.e("vpn", "tor bootstrapped but exposes no SOCKS port")
+        val socks = container.tor.socks
+        if (socks == null) {
+            VeilLog.e("vpn", "tor bootstrapped but exposes no SOCKS listener")
             return false
         }
+        publishLocalListeners(attempt, transportPort)
 
         val started = runCatching {
-            startNativeTunnel(settings, socksPort, container.tor.dnsPort)
+            startNativeTunnel(settings, socks, container.tor.dnsPort, network)
         }.onFailure { VeilLog.e("vpn", "could not raise the tunnel", it) }.isSuccess
         if (!started) return false
 
-        update(TunnelState.Connected(attempt.transport, System.currentTimeMillis(), socksPort))
+        update(TunnelState.Connected(attempt.transport, System.currentTimeMillis(), socks.port))
         startStatsPump()
         return true
     }
@@ -238,11 +298,13 @@ class VeilVpnService : VpnService() {
         val deadline = System.currentTimeMillis() + budget
         var lastPercent = -1
         var lastProgressAt = System.currentTimeMillis()
+        lastBootstrapPercent = 0
 
-        while (scope.isActive && System.currentTimeMillis() < deadline) {
+        while (coroutineContext.isActive && System.currentTimeMillis() < deadline) {
             val bootstrap = container.tor.bootstrap.value
             if (bootstrap.percent != lastPercent) {
                 lastPercent = bootstrap.percent
+                lastBootstrapPercent = bootstrap.percent
                 lastProgressAt = System.currentTimeMillis()
                 update(
                     TunnelState.Bootstrapping(
@@ -265,9 +327,78 @@ class VeilVpnService : VpnService() {
         return false
     }
 
+    /**
+     * Records what a failed rung tells us about its endpoints.
+     *
+     * The distinction is worth making. A bridge that never got past the first
+     * few per cent was unreachable, and is worth a short pause. A bridge that
+     * accepted the connection, let tor start talking, and then went silent
+     * matches the blackhole penalty: retrying it inside that window is wasted
+     * time, and retrying it with a different fingerprint is reported to make
+     * the penalty several times longer.
+     */
+    private fun noteAttemptFailure(attempt: Attempt) {
+        val hosts = attempt.bridges.filter { it.hasRoutableAddress }.map { it.host }.distinct()
+        if (hosts.isEmpty()) return
+        if (lastBootstrapPercent >= FREEZE_LIKE_PROGRESS) {
+            hosts.forEach {
+                container.cooldown.markFrozen(it, "answered, then stopped at $lastBootstrapPercent%")
+            }
+        } else {
+            hosts.forEach { container.cooldown.markFailed(it, "never answered") }
+        }
+        TunnelBus.publishCooldowns(container.cooldown.describe())
+    }
+
+    /**
+     * Publishes the loopback ports this app is responsible for.
+     *
+     * Any app on the device can connect to these. Nothing here can be closed
+     * off while tor needs a TCP listener for its transport plugins, so the
+     * honest thing is to show the user exactly what is open.
+     */
+    private fun publishLocalListeners(attempt: Attempt, transportPort: Int?) {
+        val listeners = buildList {
+            container.tor.socks?.let {
+                add(
+                    LocalListener(
+                        name = "Tor SOCKS",
+                        endpoint = it.toString(),
+                        note = "Randomised port. Another app could route traffic through it; " +
+                            "that traffic would still leave through Tor.",
+                    ),
+                )
+            }
+            container.tor.dnsPort.takeIf { it > 0 }?.let {
+                add(
+                    LocalListener(
+                        name = "Tor DNS",
+                        endpoint = "udp://127.0.0.1:$it",
+                        note = "Resolves names inside Tor. Needed for .onion addresses to work.",
+                    ),
+                )
+            }
+            transportPort?.let {
+                add(
+                    LocalListener(
+                        name = "${attempt.transport.label} plugin",
+                        endpoint = "tcp://127.0.0.1:$it",
+                        note = "tor reaches its bridges through this. Randomised on every start.",
+                    ),
+                )
+            }
+        }
+        TunnelBus.publishListeners(listeners)
+    }
+
     // --- Native tunnel ------------------------------------------------------
 
-    private suspend fun startNativeTunnel(settings: VeilSettings, socksPort: Int, dnsPort: Int) =
+    private suspend fun startNativeTunnel(
+        settings: VeilSettings,
+        socks: SocksEndpoint,
+        dnsPort: Int,
+        network: NetworkContext,
+    ) =
         withContext(Dispatchers.IO) {
             val descriptor = establishInterface(settings)
                 ?: error("could not establish the VPN interface")
@@ -284,13 +415,25 @@ class VeilVpnService : VpnService() {
             val config = Config()
             config.setFd(descriptor.detachFd().toLong())
             config.setMtu(MTU.toLong())
-            config.setSocksAddr("127.0.0.1:$socksPort")
+            config.setSocksAddr(socks.address)
+            config.setSocksNetwork(socks.network)
             config.setIsolateBy(settings.isolation.nativeMode)
             config.setDNSMode(settings.dnsMode.nativeMode)
             config.setDNSAddr(dnsTarget)
             config.setBlockUDP(settings.blockUdp)
             config.setUDPTimeoutSec(60)
             config.setDialTimeoutSec(30)
+            // Only meaningful together: a suffix list with nowhere to resolve
+            // it is off, which is the safe way round.
+            if (settings.bypassSuffixes.isNotBlank() && network.dnsServers.isNotEmpty()) {
+                config.setBypassSuffixes(settings.bypassSuffixes)
+                config.setBypassDNS(network.dnsServers.joinToString(","))
+                VeilLog.w(
+                    "vpn",
+                    "names ending in ${settings.bypassSuffixes} will skip the tunnel " +
+                        "and be visible to this network",
+                )
+            }
 
             // The descriptor now belongs to the native side.
             tunnelInterface = null
@@ -305,7 +448,7 @@ class VeilVpnService : VpnService() {
             }
             Veiltun.start(config)
             nativeTunnelRunning = true
-            VeilLog.i("vpn", "tunnel carrying traffic via 127.0.0.1:$socksPort, dns $dnsTarget")
+            VeilLog.i("vpn", "tunnel carrying traffic via $socks, dns $dnsTarget")
         }
 
     /**
@@ -411,7 +554,7 @@ class VeilVpnService : VpnService() {
         container.pt.stopSnowflake()
     }
 
-    private fun stopNativeTunnel() {
+    private suspend fun stopNativeTunnel() = withContext(Dispatchers.IO) {
         statsJob?.cancel()
         statsJob = null
         if (nativeTunnelRunning) {
@@ -421,21 +564,76 @@ class VeilVpnService : VpnService() {
         }
     }
 
-    private fun stopTunnel() {
-        worker?.cancel()
-        worker = null
+    /**
+     * Brings everything down, and does so within a fixed budget.
+     *
+     * Cancelling a connect is not a matter of setting a flag. tor is inside a
+     * bound service, the transports are Go code reached over JNI, and neither
+     * can be interrupted mid-call — a `cancel()` is only noticed at the next
+     * suspension point, which may be seconds away or, if something is wedged,
+     * never. Waiting for that politely is how a cancel turns into a permanent
+     * "Disconnecting" that only a force-stop clears.
+     *
+     * So the teardown is given a deadline it cannot overrun: the work runs in
+     * its own job, this waits on that job for as long as the budget allows, and
+     * then the service goes down regardless. A blocked native call is left to
+     * finish on its own thread; it no longer holds the app hostage.
+     *
+     * A second stop request while one is running is treated as "the first one
+     * is stuck": it stops immediately rather than being ignored.
+     */
+    private fun requestStop(reason: String) {
+        val stopForId = lastStartId
+        if (!stopping.compareAndSet(false, true)) {
+            VeilLog.w("vpn", "stop requested again ($reason); going down now")
+            finishStopNow(stopForId)
+            return
+        }
+        VeilLog.i("vpn", "stopping: $reason")
         update(TunnelState.Stopping)
 
-        // Tearing the native tunnel down waits briefly for in-flight relays,
-        // and this is reached from onStartCommand and onDestroy, both of which
-        // run on the main thread. Doing it inline is an ANR waiting to happen.
-        scope.launch {
-            stopNativeTunnel()
-            releaseEverything()
-            TunnelBus.reset()
-            withContext(Dispatchers.Main) {
-                stopForeground(STOP_FOREGROUND_REMOVE)
-                stopSelf()
+        val app = container
+        teardownJob = app.teardownScope.launch {
+            val work = app.teardownScope.launch {
+                // Cancel, then give the connect a moment to unwind, but never
+                // wait on it: if it is inside a native call it will not return
+                // until that call does, and the point of this whole path is
+                // that the user is not made to wait for that.
+                worker?.cancel()
+                withTimeoutOrNull(WORKER_UNWIND_MILLIS) { worker?.join() }
+                worker = null
+                runCatching { stopNativeTunnel() }
+                runCatching { releaseEverything() }
+            }
+            // join() is cancellable even when the work inside is not, which is
+            // the whole point of splitting them.
+            if (withTimeoutOrNull(TEARDOWN_BUDGET_MILLIS) { work.join() } == null) {
+                VeilLog.w(
+                    "vpn",
+                    "teardown still running after ${TEARDOWN_BUDGET_MILLIS / 1000}s; " +
+                        "shutting down anyway",
+                )
+            }
+            finishStopNow(stopForId)
+        }
+    }
+
+    /**
+     * Drops the notification and the service, and puts the UI back to idle.
+     *
+     * The start id is the one that was current when the stop was asked for, not
+     * whatever is current now: cancelling and immediately reconnecting is a
+     * normal thing to do, and the teardown of the old session must not take the
+     * new one down with it.
+     */
+    private fun finishStopNow(stopForId: Int) {
+        TunnelBus.reset()
+        runCatching {
+            android.os.Handler(mainLooper).post {
+                runCatching { stopForeground(STOP_FOREGROUND_REMOVE) }
+                // stopSelfResult ignores the request if a newer start command
+                // has arrived, so reconnecting during a teardown works.
+                runCatching { stopSelfResult(stopForId) }
             }
         }
     }
@@ -443,14 +641,23 @@ class VeilVpnService : VpnService() {
     private fun fail(reason: String, tried: List<Transport>) {
         VeilLog.e("vpn", reason)
         update(TunnelState.Failed(reason, tried))
-        stopNativeTunnel()
-        scope.launch {
-            releaseEverything()
-            withContext(Dispatchers.Main) {
-                // The interface is already down; drop the foreground state too
-                // so the notification does not claim a tunnel that is gone.
-                stopForeground(STOP_FOREGROUND_DETACH)
-                stopSelf()
+
+        val app = container
+        val stopForId = lastStartId
+        stopping.set(true)
+        teardownJob = app.teardownScope.launch {
+            val work = app.teardownScope.launch {
+                runCatching { stopNativeTunnel() }
+                runCatching { releaseEverything() }
+            }
+            withTimeoutOrNull(TEARDOWN_BUDGET_MILLIS) { work.join() }
+            // The failure itself stays on screen: the notification is detached
+            // rather than removed, and the tunnel state keeps saying why.
+            runCatching {
+                android.os.Handler(mainLooper).post {
+                    runCatching { stopForeground(STOP_FOREGROUND_DETACH) }
+                    runCatching { stopSelfResult(stopForId) }
+                }
             }
         }
     }
@@ -475,5 +682,24 @@ class VeilVpnService : VpnService() {
         private const val TUN_ADDRESS_V4 = "10.55.0.1"
         private const val TUN_DNS_V4 = "10.55.0.2"
         private const val TUN_ADDRESS_V6 = "fd00:5645:494c::1"
+
+        /**
+         * Bootstrap percentages above this mean tor had a working connection to
+         * the bridge before things went quiet.
+         */
+        private const val FREEZE_LIKE_PROGRESS = 10
+
+        /**
+         * How long a cancel may take before the service goes down regardless.
+         * Long enough for a clean shutdown, short enough that a wedged native
+         * call is never something the user has to force-stop the app to escape.
+         */
+        private const val TEARDOWN_BUDGET_MILLIS = 6_000L
+
+        /**
+         * How long the connect gets to notice it was cancelled before teardown
+         * starts anyway. Short, because teardown is what actually stops things.
+         */
+        private const val WORKER_UNWIND_MILLIS = 1_500L
     }
 }

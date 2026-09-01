@@ -28,7 +28,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import app.veil.vpn.R
 import app.veil.vpn.core.VeilLog
+import app.veil.vpn.net.PathVerdict
 import app.veil.vpn.net.ProbeReport
+import app.veil.vpn.vpn.LocalListener
 import app.veil.vpn.ui.components.SectionHeader
 
 /**
@@ -42,8 +44,11 @@ import app.veil.vpn.ui.components.SectionHeader
 fun DiagnosticsScreen(
     probe: ProbeReport,
     logs: List<VeilLog.Entry>,
+    listeners: List<LocalListener>,
+    cooldowns: List<String>,
     onClear: () -> Unit,
     onCopy: () -> String,
+    onClearCooldowns: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val clipboard = LocalClipboardManager.current
@@ -101,6 +106,15 @@ fun DiagnosticsScreen(
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
+                                if (result.verdict == PathVerdict.TLS_FROZEN) {
+                                    Text(
+                                        text = "This is the signature of a penalty rather " +
+                                            "than an outage: the connection was accepted and " +
+                                            "then quietly dropped.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.error,
+                                    )
+                                }
                             }
                         }
                     }
@@ -128,6 +142,72 @@ fun DiagnosticsScreen(
                 OutlinedButton(onClick = onClear, modifier = Modifier.weight(1f)) {
                     Icon(Icons.Filled.DeleteSweep, contentDescription = null)
                     Text("Clear", modifier = Modifier.padding(start = 8.dp))
+                }
+            }
+        }
+
+        if (cooldowns.isNotEmpty()) {
+            item { SectionHeader(stringResource(R.string.logs_cooldowns)) }
+            item {
+                Text(
+                    text = stringResource(R.string.logs_cooldowns_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 4.dp, bottom = 6.dp),
+                )
+            }
+            items(count = cooldowns.size) { index ->
+                Text(
+                    text = cooldowns[index],
+                    style = MaterialTheme.typography.bodySmall
+                        .copy(fontFamily = FontFamily.Monospace),
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+            item {
+                OutlinedButton(
+                    onClick = onClearCooldowns,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                ) {
+                    Text(stringResource(R.string.action_clear_cooldowns))
+                }
+            }
+        }
+
+        if (listeners.isNotEmpty()) {
+            item { SectionHeader(stringResource(R.string.logs_exposure)) }
+            item {
+                Text(
+                    text = stringResource(R.string.logs_exposure_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 4.dp, bottom = 6.dp),
+                )
+            }
+            items(count = listeners.size) { index ->
+                val listener = listeners[index]
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium,
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                    ),
+                ) {
+                    Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
+                        Text(
+                            text = "${listener.name}  ·  ${listener.endpoint}",
+                            style = MaterialTheme.typography.bodyMedium
+                                .copy(fontFamily = FontFamily.Monospace),
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Text(
+                            text = listener.note,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
         }

@@ -73,6 +73,8 @@ fun VeilScaffold(
     val logs by viewModel.logs.collectAsStateWithLifecycle()
     val apps by viewModel.apps.collectAsStateWithLifecycle()
     val moat by viewModel.moat.collectAsStateWithLifecycle()
+    val listeners by viewModel.localListeners.collectAsStateWithLifecycle()
+    val cooldowns by viewModel.cooldowns.collectAsStateWithLifecycle()
     val message by viewModel.busyMessage.collectAsStateWithLifecycle()
     val snowflakeServed by viewModel.snowflakeServed.collectAsStateWithLifecycle()
 
@@ -145,7 +147,7 @@ fun VeilScaffold(
                         loadCustomText = viewModel::customBridgeText,
                         onRefresh = viewModel::refreshBridges,
                         onSaveCustom = viewModel::saveCustomBridges,
-                        onRequestFromMoat = { viewModel.requestBridgesFromMoat() },
+                        onRequestFromMoat = viewModel::requestBridgesFromMoat,
                         onSubmitSolution = viewModel::submitMoatSolution,
                         onDismissMoat = viewModel::dismissMoat,
                     )
@@ -188,8 +190,11 @@ fun VeilScaffold(
                     Destination.DIAGNOSTICS -> DiagnosticsScreen(
                         probe = probe,
                         logs = logs,
+                        listeners = listeners,
+                        cooldowns = cooldowns,
                         onClear = viewModel::clearLogs,
                         onCopy = viewModel::logDump,
+                        onClearCooldowns = viewModel::clearCooldowns,
                     )
 
                     Destination.SETTINGS -> SettingsScreen(
@@ -201,6 +206,9 @@ fun VeilScaffold(
                         onSnowflakeProxy = viewModel::setSnowflakeProxy,
                         onDnsMode = viewModel::setDnsMode,
                         onIsolation = viewModel::setIsolation,
+                        onTlsProfile = viewModel::setTlsProfile,
+                        onDtlsProfile = viewModel::setDtlsProfile,
+                        onBypassLocal = viewModel::setBypassLocal,
                         onForgetRoutes = viewModel::forgetLearnedRoutes,
                     )
                 }

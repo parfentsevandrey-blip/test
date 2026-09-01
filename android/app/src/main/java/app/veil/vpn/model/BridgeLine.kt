@@ -21,6 +21,31 @@ data class BridgeLine(
 
     fun torrcLine(): String = "Bridge $raw"
 
+    /**
+     * Returns the same bridge with parameters replaced or added, rebuilding the
+     * raw line so tor sees the change.
+     *
+     * Used to pin the TLS Client Hello a transport imitates: the bridge lines
+     * the Tor Project publishes carry whatever profile was current when they
+     * were written, and that is a decision worth taking locally rather than
+     * inheriting.
+     */
+    fun withParams(overrides: Map<String, String>): BridgeLine {
+        if (overrides.isEmpty()) return this
+        val merged = LinkedHashMap(params)
+        overrides.forEach { (key, value) -> if (value.isNotEmpty()) merged[key] = value }
+        val rebuilt = buildString {
+            append(transport)
+            append(' ')
+            append(if (host.contains(':')) "[$host]" else host)
+            append(':')
+            append(port)
+            fingerprint?.let { append(' ').append(it) }
+            merged.forEach { (key, value) -> append(' ').append(key).append('=').append(value) }
+        }
+        return copy(params = merged, raw = rebuilt)
+    }
+
     companion object {
         private val FINGERPRINT = Regex("^[A-Fa-f0-9]{40}$")
 

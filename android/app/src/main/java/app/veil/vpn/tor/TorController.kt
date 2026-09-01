@@ -7,7 +7,10 @@ import android.content.ServiceConnection
 import android.os.IBinder
 import app.veil.vpn.core.VeilLog
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +24,19 @@ import org.torproject.jni.TorService
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.ServerSocket
+
+/**
+ * Where tor is listening for us.
+ *
+ * Modelled as a network plus an address rather than a port so that moving to a
+ * unix socket — which no other app on the device could reach — stays a
+ * configuration change rather than a refactor.
+ */
+data class SocksEndpoint(val network: String, val address: String) {
+    val isLoopbackTcp: Boolean get() = network == "tcp"
+    val port: Int get() = address.substringAfterLast(':').toIntOrNull() ?: 0
+    override fun toString(): String = "$network://$address"
+}
 
 /** Where tor thinks it is in the process of becoming usable. */
 data class Bootstrap(
@@ -46,11 +62,17 @@ class TorController(private val context: Context) {
     private val _bootstrap = MutableStateFlow(Bootstrap())
     val bootstrap: StateFlow<Bootstrap> = _bootstrap.asStateFlow()
 
+    /**
+     * Used to run control-port calls that can block indefinitely without
+     * letting them block the caller.
+     */
+    private val io = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     private var connection: TorControlConnection? = null
     private var binding: ServiceConnection? = null
     private var eventListener: RawEventListener? = null
 
-    var socksPort: Int = 0
+    var socks: SocksEndpoint? = null
         private set
     var dnsPort: Int = 0
         private set
@@ -62,7 +84,13 @@ class TorController(private val context: Context) {
      * answering; bootstrap progress then arrives on [bootstrap].
      */
     suspend fun start(torrc: String): Boolean = withContext(Dispatchers.IO) {
-        check(binding == null) { "tor is already running" }
+        // A previous session that was cancelled part-way can leave a binding
+        // behind. Throwing here would strand the app in a state only a restart
+        // clears, so clean up and carry on instead.
+        if (binding != null) {
+            VeilLog.w("tor", "a previous session was still bound; cleaning it up first")
+            stop()
+        }
         _bootstrap.value = Bootstrap()
 
         TorService.getTorrc(context).writeText(torrc)
@@ -113,9 +141,9 @@ class TorController(private val context: Context) {
         connection = control
         attachEvents(control)
 
-        socksPort = readPort(control, "net/listeners/socks")
+        socks = readEndpoint(control, "net/listeners/socks")
         dnsPort = readPort(control, "net/listeners/dns")
-        VeilLog.i("tor", "control port up; socks=$socksPort dns=$dnsPort")
+        VeilLog.i("tor", "control port up; socks=$socks dns=$dnsPort")
         true
     }
 
@@ -163,6 +191,21 @@ class TorController(private val context: Context) {
         }
     }
 
+    /** Parses a listener that may be a TCP address or a `unix:` path. */
+    private fun readEndpoint(control: TorControlConnection, key: String): SocksEndpoint? =
+        runCatching {
+            val raw = control.getInfo(key).orEmpty().trim().trim('"')
+            if (raw.isEmpty()) return null
+            if (raw.startsWith("unix:")) {
+                SocksEndpoint("unix", raw.removePrefix("unix:"))
+            } else {
+                SocksEndpoint("tcp", raw)
+            }
+        }.getOrElse {
+            VeilLog.w("tor", "could not read $key: $it")
+            null
+        }
+
     private fun readPort(control: TorControlConnection, key: String): Int = runCatching {
         // GETINFO returns the listener as a quoted "address:port".
         val raw = control.getInfo(key).orEmpty().trim().trim('"')
@@ -201,7 +244,12 @@ class TorController(private val context: Context) {
         eventListener = null
         connection = null
 
-        runCatching { control?.shutdownTor(TorControlCommands.SIGNAL_HALT) }
+        // A HALT on a wedged control port never returns. Ask, wait briefly,
+        // and move on: the service is being unbound either way.
+        if (control != null) {
+            val halt = io.launch { runCatching { control.shutdownTor(TorControlCommands.SIGNAL_HALT) } }
+            withTimeoutOrNull(2_000) { halt.join() }
+        }
 
         binding?.let { runCatching { context.unbindService(it) } }
         binding = null
@@ -210,15 +258,15 @@ class TorController(private val context: Context) {
         // tor releases its listeners a moment after the service goes away.
         // Starting the next attempt before that produces a port clash that
         // looks exactly like censorship, so wait for the port to come free.
-        val port = socksPort
+        val port = socks?.takeIf { it.isLoopbackTcp }?.port ?: 0
         if (port > 0) {
-            withTimeoutOrNull(8_000) {
+            withTimeoutOrNull(4_000) {
                 while (!isPortFree(port)) delay(200)
             }
         } else {
-            delay(1_000)
+            delay(500)
         }
-        socksPort = 0
+        socks = null
         dnsPort = 0
         _bootstrap.value = Bootstrap()
         VeilLog.i("tor", "stopped")

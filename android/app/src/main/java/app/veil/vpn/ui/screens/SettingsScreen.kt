@@ -20,6 +20,8 @@ import app.veil.vpn.R
 import app.veil.vpn.data.DnsMode
 import app.veil.vpn.data.IsolationMode
 import app.veil.vpn.data.VeilSettings
+import app.veil.vpn.model.DtlsProfile
+import app.veil.vpn.model.TlsProfile
 import app.veil.vpn.ui.components.ChoiceCard
 import app.veil.vpn.ui.components.SectionHeader
 import app.veil.vpn.ui.components.SwitchRow
@@ -34,6 +36,9 @@ fun SettingsScreen(
     onSnowflakeProxy: (Boolean) -> Unit,
     onDnsMode: (DnsMode) -> Unit,
     onIsolation: (IsolationMode) -> Unit,
+    onTlsProfile: (TlsProfile) -> Unit,
+    onDtlsProfile: (DtlsProfile) -> Unit,
+    onBypassLocal: (Boolean) -> Unit,
     onForgetRoutes: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -87,6 +92,42 @@ fun SettingsScreen(
             )
         }
 
+        item { SectionHeader(stringResource(R.string.settings_section_fingerprint)) }
+        item {
+            Text(
+                text = stringResource(R.string.settings_tls_profile_desc),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 4.dp, bottom = 6.dp),
+            )
+        }
+        items(count = TlsProfile.entries.size) { index ->
+            val profile = TlsProfile.entries[index]
+            ChoiceCard(
+                title = profile.label,
+                subtitle = profile.rationale,
+                selected = settings.tlsProfile == profile,
+                onClick = { onTlsProfile(profile) },
+            )
+        }
+        item {
+            Text(
+                text = stringResource(R.string.settings_dtls_profile_desc),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 4.dp, top = 14.dp, bottom = 6.dp),
+            )
+        }
+        items(count = DtlsProfile.entries.size) { index ->
+            val profile = DtlsProfile.entries[index]
+            ChoiceCard(
+                title = profile.label,
+                subtitle = profile.rationale,
+                selected = settings.dtlsProfile == profile,
+                onClick = { onDtlsProfile(profile) },
+            )
+        }
+
         item { SectionHeader(stringResource(R.string.settings_section_network)) }
         item {
             SwitchRow(
@@ -94,6 +135,14 @@ fun SettingsScreen(
                 subtitle = null,
                 checked = settings.autoStartOnBoot,
                 onCheckedChange = onAutoStart,
+            )
+        }
+        item {
+            SwitchRow(
+                title = stringResource(R.string.settings_bypass),
+                subtitle = stringResource(R.string.settings_bypass_desc),
+                checked = settings.bypassSuffixes.isNotBlank(),
+                onCheckedChange = onBypassLocal,
             )
         }
         item {

@@ -1,13 +1,13 @@
 package ptbridge
 
 import (
-	"log"
-	"runtime"
-	"time"
 	ptlog "gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird/common/log"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/covertdtls"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/event"
 	sfp "gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/proxy/lib"
+	"log"
+	"runtime"
+	"time"
 )
 
 // SnowflakeClientEvents - Interface to get information about clients connecting, disconnecting, failing to connect and

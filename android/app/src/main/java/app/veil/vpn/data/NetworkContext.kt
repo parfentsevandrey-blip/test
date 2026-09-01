@@ -22,6 +22,14 @@ data class NetworkContext(
     val kind: NetworkKind,
     val fingerprint: String,
     val countryIso: String?,
+    /**
+     * The resolvers this network hands out, as "host:port".
+     *
+     * Only used when the user has asked for some names to skip the tunnel: the
+     * point of that is to reach a destination the way the local network does,
+     * and that includes resolving it the way the local network does.
+     */
+    val dnsServers: List<String> = emptyList(),
 ) {
     val isOnline: Boolean get() = kind != NetworkKind.NONE
 
@@ -40,10 +48,16 @@ data class NetworkContext(
                 else -> NetworkKind.OTHER
             }
 
-            val linkParts = network?.let(connectivity::getLinkProperties)?.let { link ->
+            val link = network?.let(connectivity::getLinkProperties)
+            val resolvers = link?.dnsServers
+                ?.mapNotNull { it.hostAddress }
+                ?.filter { it.isNotBlank() }
+                ?.map { if (it.contains(':')) "[$it]:53" else "$it:53" }
+                .orEmpty()
+            val linkParts = link?.let {
                 buildList {
-                    add(link.domains.orEmpty())
-                    link.dnsServers.forEach { add(it.hostAddress.orEmpty()) }
+                    add(it.domains.orEmpty())
+                    addAll(resolvers)
                 }
             }.orEmpty()
 
@@ -65,7 +79,7 @@ data class NetworkContext(
                 append(linkParts.sorted().joinToString(","))
             }
 
-            return NetworkContext(kind, sha256(material).take(16), country)
+            return NetworkContext(kind, sha256(material).take(16), country, resolvers)
         }
 
         private fun sha256(value: String): String =

@@ -150,7 +150,7 @@ class MoatClient(private val proxyProvider: () -> SocksProxy? = { null }) {
      * Tries the API directly first: on an uncensored network that is one round
      * trip. Only if that fails does it pay the cost of a fronted request.
      */
-    private fun call(url: String, body: String): String {
+    private suspend fun call(url: String, body: String): String {
         val payload = body.toByteArray(Charsets.UTF_8)
         val direct = runCatching { SimpleHttp.post(url, payload, HEADERS) }
         direct.getOrNull()?.takeIf { it.isSuccess }?.let { return it.text() }

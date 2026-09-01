@@ -88,4 +88,17 @@
 
     <string name="vpn_permission_title">Veil needs the VPN slot</string>
     <string name="vpn_permission_body">Android routes traffic through one VPN at a time. Grant the request to let Veil take it.</string>
+    <string name="settings_section_fingerprint">Fingerprint</string>
+    <string name="settings_tls_profile">TLS Client Hello</string>
+    <string name="settings_tls_profile_desc">Which client the fronted transports look like. Modern filtering hashes this and asks whether the answer is plausible.</string>
+    <string name="settings_dtls_profile">Snowflake DTLS handshake</string>
+    <string name="settings_dtls_profile_desc">Snowflake carries data over WebRTC, whose own handshake has a fingerprint the setting above does not cover.</string>
+    <string name="logs_exposure">What this device exposes locally</string>
+    <string name="logs_exposure_desc">Any app on this device can reach these. They are open because tor needs them; the ports are randomised on every start.</string>
+    <string name="logs_cooldowns">Endpoints being rested</string>
+    <string name="logs_cooldowns_desc">Addresses that accepted a connection and then went silent. Retrying inside the penalty window achieves nothing and can make it longer.</string>
+    <string name="action_clear_cooldowns">Retry them anyway</string>
+    <string name="bridges_request_kind">Which kind to ask for</string>
+    <string name="settings_bypass">Local sites skip the tunnel</string>
+    <string name="settings_bypass_desc">Names ending in .ru, .рф, .su, .by or .kz are resolved and reached on the ordinary network. Banking apps and local sites start working again — and this network can see which of them you use. Off unless you turn it on.</string>
 </resources>

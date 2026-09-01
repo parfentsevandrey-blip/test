@@ -80,4 +80,17 @@
 
     <string name="vpn_permission_title">Veil нужен слот VPN</string>
     <string name="vpn_permission_body">Android пускает трафик через один VPN за раз. Разрешите запрос, чтобы Veil занял его.</string>
+    <string name="settings_section_fingerprint">Отпечаток</string>
+    <string name="settings_tls_profile">TLS Client Hello</string>
+    <string name="settings_tls_profile_desc">На какой клиент похожи фронтированные транспорты. Современная фильтрация хеширует это и оценивает, правдоподобен ли ответ.</string>
+    <string name="settings_dtls_profile">Рукопожатие DTLS у Snowflake</string>
+    <string name="settings_dtls_profile_desc">Snowflake везёт данные по WebRTC, у которого своё рукопожатие со своим отпечатком — настройка выше его не покрывает.</string>
+    <string name="logs_exposure">Что видно на этом устройстве</string>
+    <string name="logs_exposure_desc">До этих портов может достучаться любое приложение на телефоне. Они открыты, потому что их требует tor; номера случайны при каждом запуске.</string>
+    <string name="logs_cooldowns">Отложенные адреса</string>
+    <string name="logs_cooldowns_desc">Адреса, которые приняли соединение и замолчали. Повтор внутри окна штрафа бесполезен и может его продлить.</string>
+    <string name="action_clear_cooldowns">Всё равно попробовать</string>
+    <string name="bridges_request_kind">Какие именно запросить</string>
+    <string name="settings_bypass">Локальные сайты мимо тоннеля</string>
+    <string name="settings_bypass_desc">Имена на .ru, .рф, .su, .by и .kz резолвятся и открываются по обычной сети. Банки и локальные сайты снова начинают работать — и эта сеть видит, какими из них вы пользуетесь. По умолчанию выключено.</string>
 </resources>

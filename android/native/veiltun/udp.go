@@ -92,7 +92,7 @@ func (a *udpAssociation) Close() {
 // hand, because golang.org/x/net/proxy only implements CONNECT.
 func (h *handler) dialUDPAssociate(ctx context.Context) (*udpAssociation, error) {
 	d := net.Dialer{Timeout: time.Duration(h.cfg.DialTimeoutSec) * time.Second}
-	ctrl, err := d.DialContext(ctx, "tcp", h.cfg.SocksAddr)
+	ctrl, err := d.DialContext(ctx, h.cfg.socksNetwork(), h.cfg.SocksAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -164,7 +164,12 @@ func (h *handler) dialUDPAssociate(ctx context.Context) (*udpAssociation, error)
 	// If the proxy advertises an unspecified address, datagrams go back to the
 	// same host we opened the control connection to.
 	if !relayAddr.Addr().IsValid() || relayAddr.Addr().IsUnspecified() {
-		host, _, _ := net.SplitHostPort(h.cfg.SocksAddr)
+		// Over a unix socket there is no proxy host to fall back to, so the
+		// relay endpoint has to be loopback.
+		host := "127.0.0.1"
+		if h.cfg.socksNetwork() != "unix" {
+			host, _, _ = net.SplitHostPort(h.cfg.SocksAddr)
+		}
 		if a, e := netip.ParseAddr(host); e == nil {
 			relayAddr = netip.AddrPortFrom(a, relayAddr.Port())
 		}
@@ -271,4 +276,61 @@ func decapsulate(b []byte) ([]byte, netip.AddrPort, error) {
 	}
 	port := binary.BigEndian.Uint16(b[hdr-2 : hdr])
 	return b[hdr:], netip.AddrPortFrom(src, port), nil
+}
+
+// relayUDPDirect carries a UDP flow straight out on the real network.
+//
+// Only reached for an address that came from a bypassed name, so this is never
+// a path an application can take by accident: a datagram to an address nobody
+// looked up still meets the leak guard.
+func (h *handler) relayUDPDirect(conn adapter.UDPConn, dst netip.AddrPort) {
+	idle := time.Duration(h.cfg.UDPTimeoutSec) * time.Second
+
+	remote, err := net.DialUDP("udp", nil, net.UDPAddrFromAddrPort(dst))
+	if err != nil {
+		stats.blocked.Add(1)
+		logf("warn", "direct udp %s: %v", dst, err)
+		return
+	}
+	defer remote.Close()
+
+	done := make(chan struct{}, 2)
+
+	go func() {
+		buf := make([]byte, 65535)
+		for {
+			_ = remote.SetReadDeadline(time.Now().Add(idle))
+			n, err := remote.Read(buf)
+			if err != nil {
+				break
+			}
+			stats.rx.Add(int64(n))
+			_ = conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+			if _, err := conn.Write(buf[:n]); err != nil {
+				break
+			}
+		}
+		done <- struct{}{}
+	}()
+
+	go func() {
+		buf := make([]byte, 65535)
+		for {
+			_ = conn.SetReadDeadline(time.Now().Add(idle))
+			n, err := conn.Read(buf)
+			if err != nil {
+				break
+			}
+			_ = remote.SetWriteDeadline(time.Now().Add(10 * time.Second))
+			if _, err := remote.Write(buf[:n]); err != nil {
+				break
+			}
+			stats.tx.Add(int64(n))
+		}
+		done <- struct{}{}
+	}()
+
+	<-done
+	_ = remote.Close()
+	<-done
 }

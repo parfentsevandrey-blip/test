@@ -30,6 +30,7 @@ type handler struct {
 	sessionSalt string
 
 	dnsResolver dnsResolver
+	bypass      *bypass
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -54,6 +55,10 @@ func newHandler(cfg *Config) (*handler, error) {
 		return nil, err
 	}
 	h.dnsResolver = r
+	h.bypass = newBypass(cfg.BypassSuffixes, cfg.BypassDNS)
+	if h.bypass.enabled() {
+		logf("info", "bypassing the tunnel for %v via %v", h.bypass.suffixes, h.bypass.resolvers)
+	}
 	return h, nil
 }
 
@@ -97,7 +102,7 @@ func (h *handler) dialUpstream(ctx context.Context, network, addr string) (net.C
 	if user != "" || pass != "" {
 		auth = &proxy.Auth{User: user, Password: pass}
 	}
-	d, err := proxy.SOCKS5("tcp", h.cfg.SocksAddr, auth, &net.Dialer{
+	d, err := proxy.SOCKS5(h.cfg.socksNetwork(), h.cfg.SocksAddr, auth, &net.Dialer{
 		Timeout: time.Duration(h.cfg.DialTimeoutSec) * time.Second,
 	})
 	if err != nil {
@@ -128,7 +133,14 @@ func (h *handler) relayTCP(conn adapter.TCPConn) {
 	defer stats.tcpOpen.Add(-1)
 
 	ctx, cancel := context.WithTimeout(h.ctx, time.Duration(h.cfg.DialTimeoutSec)*time.Second)
-	up, err := h.dialUpstream(ctx, "tcp", dst.String())
+	var up net.Conn
+	var err error
+	if h.bypass.shouldDialDirect(dst.Addr()) {
+		// Resolved from a name the user asked to keep off the tunnel.
+		up, err = (&net.Dialer{}).DialContext(ctx, "tcp", dst.String())
+	} else {
+		up, err = h.dialUpstream(ctx, "tcp", dst.String())
+	}
 	cancel()
 	if err != nil {
 		stats.dialErrors.Add(1)
@@ -157,6 +169,10 @@ func (h *handler) serveUDP(conn adapter.UDPConn) {
 
 	if dst.Port() == 53 {
 		h.serveDNS(conn)
+		return
+	}
+	if h.bypass.shouldDialDirect(dst.Addr()) {
+		h.relayUDPDirect(conn, dst)
 		return
 	}
 	if h.cfg.BlockUDP {
@@ -193,7 +209,7 @@ func (h *handler) serveDNS(conn adapter.UDPConn) {
 			defer h.wg.Done()
 			stats.dnsQueries.Add(1)
 			ctx, cancel := context.WithTimeout(h.ctx, 20*time.Second)
-			resp, err := h.dnsResolver.Exchange(ctx, query)
+			resp, err := h.resolve(ctx, query)
 			cancel()
 			if err != nil {
 				stats.dnsErrors.Add(1)
@@ -208,6 +224,48 @@ func (h *handler) serveDNS(conn adapter.UDPConn) {
 			}
 		}()
 	}
+}
+
+// resolve answers a query, sending it around the tunnel when the name is one
+// the user asked to keep off it.
+//
+// A bypassed lookup is deliberately not routed through tor: the point is to
+// obtain the destination's real address, and tor's AutomapHostsOnResolve would
+// hand back a virtual one that only tor can reach. The addresses that come back
+// are remembered so the connection that follows can be dialled directly.
+func (h *handler) resolve(ctx context.Context, query []byte) ([]byte, error) {
+	if h.bypass.enabled() {
+		if name := queryName(query); name != "" && h.bypass.matchesName(name) {
+			resp, err := h.bypassExchange(ctx, query)
+			if err == nil {
+				for _, answer := range answerAddresses(resp) {
+					h.bypass.remember(answer.addr, answer.ttl)
+				}
+				return resp, nil
+			}
+			// A resolver on the local network that will not answer is not a
+			// reason to fail the lookup; fall back to the tunnel.
+			logf("warn", "bypass lookup for %s failed, using the tunnel: %v", name, err)
+		}
+	}
+	return h.dnsResolver.Exchange(ctx, query)
+}
+
+// bypassExchange asks a resolver on the real network, trying each in turn.
+func (h *handler) bypassExchange(ctx context.Context, query []byte) ([]byte, error) {
+	var lastErr error
+	for _, resolver := range h.bypass.resolvers {
+		r := &udpResolver{addr: resolver}
+		resp, err := r.Exchange(ctx, query)
+		if err == nil {
+			return resp, nil
+		}
+		lastErr = err
+	}
+	if lastErr == nil {
+		lastErr = errNoBypassResolver
+	}
+	return nil, lastErr
 }
 
 // servFail turns a query into a SERVFAIL response so the client fails fast
@@ -267,7 +325,10 @@ func relay(local io.ReadWriteCloser, remote net.Conn) {
 	<-done
 }
 
-var errNoUDP = errors.New("upstream proxy does not support UDP")
+var (
+	errNoUDP            = errors.New("upstream proxy does not support UDP")
+	errNoBypassResolver = errors.New("no bypass resolver answered")
+)
 
 func joinHostPort(host string, port uint16) string {
 	return net.JoinHostPort(host, strconv.Itoa(int(port)))

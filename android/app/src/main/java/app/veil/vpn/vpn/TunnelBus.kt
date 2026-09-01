@@ -9,6 +9,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /**
+ * A port this app is responsible for having open on loopback.
+ *
+ * Published so the diagnostics screen can show it. Guides for spotting
+ * circumvention software on a device work by connecting to well-known local
+ * proxy ports, and a tool that opens them should say so rather than leave the
+ * user to find out.
+ */
+data class LocalListener(val name: String, val endpoint: String, val note: String)
+
+/**
  * The one place the UI reads tunnel state from.
  *
  * The VPN service and the Activity share a process, so a plain set of
@@ -33,6 +43,12 @@ object TunnelBus {
     private val _circuit = MutableStateFlow<String?>(null)
     val circuit: StateFlow<String?> = _circuit.asStateFlow()
 
+    private val _localListeners = MutableStateFlow<List<LocalListener>>(emptyList())
+    val localListeners: StateFlow<List<LocalListener>> = _localListeners.asStateFlow()
+
+    private val _cooldowns = MutableStateFlow<List<String>>(emptyList())
+    val cooldowns: StateFlow<List<String>> = _cooldowns.asStateFlow()
+
     private val _snowflakeProxyServed = MutableStateFlow(0)
     val snowflakeProxyServed: StateFlow<Int> = _snowflakeProxyServed.asStateFlow()
 
@@ -41,11 +57,25 @@ object TunnelBus {
     internal fun publish(report: ProbeReport) { _probe.value = report }
     internal fun publishLadder(ladder: List<Attempt>) { _ladder.value = ladder }
     internal fun publishCircuit(path: String?) { _circuit.value = path }
+    internal fun publishListeners(listeners: List<LocalListener>) { _localListeners.value = listeners }
+    internal fun publishCooldowns(entries: List<String>) { _cooldowns.value = entries }
     internal fun noteSnowflakeClient() { _snowflakeProxyServed.value += 1 }
+
+    /**
+     * Last resort for a UI that has been told the tunnel is stopping and never
+     * heard otherwise. Only the state is cleared; nothing is torn down here.
+     */
+    fun forceIdle() {
+        _state.value = TunnelState.Idle
+        _stats.value = TunnelStats()
+        _circuit.value = null
+        _localListeners.value = emptyList()
+    }
 
     internal fun reset() {
         _state.value = TunnelState.Idle
         _stats.value = TunnelStats()
         _circuit.value = null
+        _localListeners.value = emptyList()
     }
 }

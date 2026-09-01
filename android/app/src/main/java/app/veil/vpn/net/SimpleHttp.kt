@@ -37,7 +37,7 @@ object SimpleHttp {
     private const val USER_AGENT = "Veil/0.1 (Android)"
 
     @Throws(IOException::class)
-    fun post(
+    suspend fun post(
         url: String,
         body: ByteArray,
         headers: Map<String, String> = emptyMap(),
@@ -46,7 +46,7 @@ object SimpleHttp {
     ): HttpResponse = request("POST", url, body, headers, proxy, timeoutMillis)
 
     @Throws(IOException::class)
-    fun get(
+    suspend fun get(
         url: String,
         headers: Map<String, String> = emptyMap(),
         proxy: SocksProxy? = null,
@@ -54,19 +54,25 @@ object SimpleHttp {
     ): HttpResponse = request("GET", url, null, headers, proxy, timeoutMillis)
 
     @Throws(IOException::class)
-    private fun request(
+    private suspend fun request(
         method: String,
         url: String,
         body: ByteArray?,
         headers: Map<String, String>,
         proxy: SocksProxy?,
         timeoutMillis: Int,
-    ): HttpResponse =
-        if (proxy == null) {
-            direct(method, url, body, headers, timeoutMillis)
-        } else {
-            throughSocks(method, url, body, headers, proxy, timeoutMillis)
+    ): HttpResponse {
+        // Paced, because a handful of near-simultaneous TLS handshakes to one
+        // name is one of the things current DPI treats as proxy behaviour.
+        val host = runCatching { URL(url).host }.getOrDefault(url)
+        return HandshakeGovernor.withSlot(host) {
+            if (proxy == null) {
+                direct(method, url, body, headers, timeoutMillis)
+            } else {
+                throughSocks(method, url, body, headers, proxy, timeoutMillis)
+            }
         }
+    }
 
     private fun direct(
         method: String,

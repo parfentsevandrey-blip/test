@@ -14,3 +14,6 @@ captures/
 
 # Go module cache artifacts from a local gomobile build
 native/veiltun/gen/
+
+# Kotlin build metadata
+.kotlin/

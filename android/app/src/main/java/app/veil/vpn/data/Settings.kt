@@ -4,10 +4,13 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import app.veil.vpn.model.DtlsProfile
+import app.veil.vpn.model.TlsProfile
 import app.veil.vpn.model.Transport
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -31,6 +34,9 @@ enum class AppRoutingMode {
  * How names are resolved. Every option keeps DNS inside the tunnel; they differ
  * in how the query is framed once it is there.
  */
+/** Domains that commonly refuse connections arriving from a Tor exit. */
+const val DEFAULT_BYPASS_SUFFIXES = ".ru,.\u0440\u0444,.su,.by,.kz"
+
 enum class DnsMode(val nativeMode: String) {
     /** tor's own DNSPort. Resolution happens at the exit relay. */
     TOR_DNS_PORT("udp"),
@@ -67,6 +73,12 @@ data class VeilSettings(
     val appRoutingMode: AppRoutingMode = AppRoutingMode.ALL,
     val selectedApps: Set<String> = emptySet(),
     val customBridges: String = "",
+    /** Which Client Hello the fronted transports imitate. */
+    val tlsProfile: TlsProfile = TlsProfile.Default,
+    /** How Snowflake shapes its DTLS Client Hello. */
+    val dtlsProfile: DtlsProfile = DtlsProfile.Default,
+    /** Route names ending in these suffixes around the tunnel. Empty is off. */
+    val bypassSuffixes: String = "",
 ) {
     companion object {
         /** Quad9 filters nothing and keeps no logs; reached only through the tunnel. */
@@ -91,6 +103,10 @@ class SettingsRepository(private val context: Context) {
         val APP_MODE = stringPreferencesKey("app_mode")
         val APP_SET = stringSetPreferencesKey("app_set")
         val CUSTOM_BRIDGES = stringPreferencesKey("custom_bridges")
+        val TLS_PROFILE = stringPreferencesKey("tls_profile")
+        val DTLS_PROFILE = stringPreferencesKey("dtls_profile")
+        val BYPASS_SUFFIXES = stringPreferencesKey("bypass_suffixes")
+        val INSTALL_SEED = intPreferencesKey("install_seed")
     }
 
     val settings: Flow<VeilSettings> = context.dataStore.data.map { it.toSettings() }
@@ -117,6 +133,9 @@ class SettingsRepository(private val context: Context) {
         appRoutingMode = enumOf(this[Keys.APP_MODE], AppRoutingMode.ALL),
         selectedApps = this[Keys.APP_SET] ?: emptySet(),
         customBridges = this[Keys.CUSTOM_BRIDGES] ?: "",
+        tlsProfile = enumOf(this[Keys.TLS_PROFILE], TlsProfile.Default),
+        dtlsProfile = enumOf(this[Keys.DTLS_PROFILE], DtlsProfile.Default),
+        bypassSuffixes = this[Keys.BYPASS_SUFFIXES] ?: "",
     )
 
     suspend fun setRouteMode(mode: RouteMode) = put(Keys.ROUTE_MODE, mode.name)
@@ -129,6 +148,24 @@ class SettingsRepository(private val context: Context) {
     suspend fun setRunSnowflakeProxy(value: Boolean) = put(Keys.SNOWFLAKE_PROXY, value)
     suspend fun setAppRoutingMode(mode: AppRoutingMode) = put(Keys.APP_MODE, mode.name)
     suspend fun setCustomBridges(text: String) = put(Keys.CUSTOM_BRIDGES, text)
+    suspend fun setTlsProfile(profile: TlsProfile) = put(Keys.TLS_PROFILE, profile.name)
+    suspend fun setDtlsProfile(profile: DtlsProfile) = put(Keys.DTLS_PROFILE, profile.name)
+    suspend fun setBypassSuffixes(value: String) = put(Keys.BYPASS_SUFFIXES, value.trim())
+
+    /**
+     * A number that is stable for this installation and meaningless anywhere
+     * else. Used only to pick a TLS profile, so that every copy of the app does
+     * not present the same fingerprint to the same front.
+     */
+    suspend fun installSeed(): Int {
+        var seed = 0
+        context.dataStore.edit { prefs ->
+            seed = prefs[Keys.INSTALL_SEED] ?: java.security.SecureRandom().nextInt().also {
+                prefs[Keys.INSTALL_SEED] = it
+            }
+        }
+        return seed
+    }
 
     suspend fun toggleApp(packageName: String) {
         context.dataStore.edit { prefs ->

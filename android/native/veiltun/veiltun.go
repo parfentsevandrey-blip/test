@@ -56,8 +56,13 @@ type Config struct {
 	// Mtu must match the value given to VpnService.Builder.setMtu().
 	Mtu int
 
-	// SocksAddr is the "host:port" of the upstream SOCKS5 proxy.
+	// SocksAddr is the upstream SOCKS5 proxy: a "host:port" when SocksNetwork
+	// is "tcp", or a filesystem path when it is "unix".
 	SocksAddr string
+	// SocksNetwork is "tcp" or "unix". A unix socket in the app's own data
+	// directory cannot be reached by other apps on the device, which closes
+	// the local-proxy hole that TCP loopback listeners leave open.
+	SocksNetwork string
 	// SocksUser/SocksPass are used when IsolateBy is IsolateNone. With the
 	// other strategies credentials are derived per flow instead.
 	SocksUser string
@@ -77,18 +82,44 @@ type Config struct {
 	UDPTimeoutSec int
 	// DialTimeoutSec bounds a single upstream TCP dial.
 	DialTimeoutSec int
+
+	// BypassSuffixes is a comma-separated list of domain suffixes whose traffic
+	// should leave the device without entering the tunnel, e.g. ".ru,.su".
+	// Empty disables the feature entirely.
+	//
+	// This exists because sites and banking apps hosted inside a user's own
+	// country routinely refuse connections arriving from a Tor exit, which
+	// makes a tunnel that carries everything worse than no tunnel at all. The
+	// cost is that those names and connections are visible to the local
+	// network, so nothing here is on unless it was asked for.
+	BypassSuffixes string
+
+	// BypassDNS is a comma-separated list of "host:port" resolvers reachable on
+	// the real network, used only to resolve bypassed names.
+	BypassDNS string
 }
 
 // NewConfig returns a Config with defaults appropriate for Tor.
 func NewConfig() *Config {
 	return &Config{
-		Mtu:            1500,
+		Mtu: 1500,
+		// TCP by default: a unix socket is the better answer, but the tor
+		// service this ships with cannot report one back to us yet.
+		SocksNetwork:   "tcp",
 		IsolateBy:      IsolateHost,
 		DNSMode:        DNSUDPLoopback,
 		BlockUDP:       true,
 		UDPTimeoutSec:  60,
 		DialTimeoutSec: 30,
 	}
+}
+
+// socksNetwork defaults to TCP so an unset field keeps the old behaviour.
+func (c *Config) socksNetwork() string {
+	if c.SocksNetwork == "" {
+		return "tcp"
+	}
+	return c.SocksNetwork
 }
 
 // Stats is an immutable snapshot of tunnel counters.
@@ -206,8 +237,9 @@ func Start(cfg *Config) error {
 	}
 
 	current = &session{stack: st, dev: dev, h: h}
-	logf("info", "tunnel up: socks=%s dns=%s/%s isolate=%s blockUDP=%v mtu=%d",
-		cfg.SocksAddr, cfg.DNSMode, cfg.DNSAddr, cfg.IsolateBy, cfg.BlockUDP, cfg.Mtu)
+	logf("info", "tunnel up: socks=%s://%s dns=%s/%s isolate=%s blockUDP=%v mtu=%d",
+		cfg.socksNetwork(), cfg.SocksAddr, cfg.DNSMode, cfg.DNSAddr,
+		cfg.IsolateBy, cfg.BlockUDP, cfg.Mtu)
 	return nil
 }
 

@@ -11,10 +11,14 @@ import app.veil.vpn.data.DnsMode
 import app.veil.vpn.data.InstalledApp
 import app.veil.vpn.data.InstalledApps
 import app.veil.vpn.data.IsolationMode
+import app.veil.vpn.data.DEFAULT_BYPASS_SUFFIXES
 import app.veil.vpn.data.RouteMode
+import app.veil.vpn.model.DtlsProfile
+import app.veil.vpn.model.TlsProfile
 import app.veil.vpn.data.VeilSettings
 import app.veil.vpn.model.BridgeLine
 import app.veil.vpn.model.Transport
+import app.veil.vpn.model.TunnelState
 import app.veil.vpn.net.MoatChallenge
 import app.veil.vpn.vpn.TunnelBus
 import app.veil.vpn.vpn.VeilVpnService
@@ -22,8 +26,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 /** What the bridge-request flow is currently doing. */
 sealed interface MoatFlow {
@@ -44,6 +50,8 @@ class VeilViewModel(application: Application) : AndroidViewModel(application) {
     val ladder = TunnelBus.ladder
     val circuit = TunnelBus.circuit
     val snowflakeServed = TunnelBus.snowflakeProxyServed
+    val localListeners = TunnelBus.localListeners
+    val cooldowns = TunnelBus.cooldowns
     val bootstrap = container.tor.bootstrap
     val logs = VeilLog.lines
     val knownBridges = container.bridges.bridges
@@ -62,6 +70,34 @@ class VeilViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         viewModelScope.launch { container.bridges.load() }
+        watchForStuckShutdown()
+    }
+
+    /**
+     * Puts the UI back to idle if a disconnect never reports finishing.
+     *
+     * The service already bounds its own teardown, but it can be killed part
+     * way through, and a screen that says "Disconnecting" for ever with no
+     * service left to answer is the worst outcome: the only escape is force
+     * stopping the app. After this long, showing idle is both more honest and
+     * more useful, because tapping connect again is then possible.
+     */
+    private fun watchForStuckShutdown() {
+        viewModelScope.launch {
+            tunnelState.collectLatest { state ->
+                if (state !is TunnelState.Stopping) return@collectLatest
+                val settled = withTimeoutOrNull(STUCK_SHUTDOWN_MILLIS) {
+                    // collectLatest cancels this the moment the state changes,
+                    // so reaching the end of the wait means it never did.
+                    kotlinx.coroutines.awaitCancellation()
+                }
+                if (settled == null) {
+                    VeilLog.w("ui", "disconnect never reported finishing; releasing the UI")
+                    stopTunnel()
+                    TunnelBus.forceIdle()
+                }
+            }
+        }
     }
 
     // --- Tunnel -------------------------------------------------------------
@@ -97,6 +133,13 @@ class VeilViewModel(application: Application) : AndroidViewModel(application) {
     fun setAutoStart(value: Boolean) = edit { container.settings.setAutoStartOnBoot(value) }
     fun setSnowflakeProxy(value: Boolean) = edit { container.settings.setRunSnowflakeProxy(value) }
     fun setAppRoutingMode(mode: AppRoutingMode) = edit { container.settings.setAppRoutingMode(mode) }
+    fun setTlsProfile(profile: TlsProfile) = edit { container.settings.setTlsProfile(profile) }
+    fun setDtlsProfile(profile: DtlsProfile) = edit { container.settings.setDtlsProfile(profile) }
+
+    /** An empty suffix list is how the bypass stays off; there is no separate flag. */
+    fun setBypassLocal(enabled: Boolean) = edit {
+        container.settings.setBypassSuffixes(if (enabled) DEFAULT_BYPASS_SUFFIXES else "")
+    }
     fun toggleApp(packageName: String) = edit { container.settings.toggleApp(packageName) }
 
     private fun edit(block: suspend () -> Unit) {
@@ -164,6 +207,16 @@ class VeilViewModel(application: Application) : AndroidViewModel(application) {
     fun clearLogs() = VeilLog.clear()
 
     fun logDump(): String = VeilLog.dump()
+
+    /** Clears the list of endpoints being rested, so everything is tried again. */
+    fun clearCooldowns() {
+        container.cooldown.clear()
+        _busyMessage.value = "Every endpoint is back in the rotation"
+    }
+
+    private companion object {
+        const val STUCK_SHUTDOWN_MILLIS = 12_000L
+    }
 
     fun forgetLearnedRoutes() {
         viewModelScope.launch {

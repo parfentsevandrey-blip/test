@@ -3,9 +3,12 @@ package app.veil.vpn.tor
 import android.content.Context
 import app.veil.vpn.core.VeilLog
 import app.veil.vpn.data.BridgeRepository
+import app.veil.vpn.data.EndpointCooldown
 import app.veil.vpn.data.NetworkContext
 import app.veil.vpn.data.StrategyMemory
 import app.veil.vpn.model.BridgeLine
+import app.veil.vpn.model.DtlsProfile
+import app.veil.vpn.model.TlsProfile
 import app.veil.vpn.model.Transport
 import app.veil.vpn.net.MoatClient
 import app.veil.vpn.net.NetworkProbe
@@ -39,21 +42,25 @@ data class Attempt(
  *  3. Live measurements of the network in front of us.
  *  4. A static fallback ladder, cheapest first, for when nothing else is known.
  *
- * The result always ends with Snowflake, because it is the only rung with no
- * fixed address for a censor to block, and a variant of it that rendezvouses
- * through an AMP cache is appended as a true last resort.
+ * The result always ends with Snowflake, because its data path is WebRTC over
+ * UDP and therefore meets none of the TCP handshake heuristics at all, and a
+ * variant of it that rendezvouses through an AMP cache is appended as a true
+ * last resort.
  */
 class StrategyPlanner(
     private val context: Context,
     private val bridges: BridgeRepository,
     private val memory: StrategyMemory,
     private val moat: MoatClient,
+    private val cooldown: EndpointCooldown,
 ) {
 
     suspend fun plan(
         network: NetworkContext,
         probe: ProbeReport,
         probeRanking: List<Pair<Transport, Float>>,
+        tlsProfile: TlsProfile,
+        dtlsProfile: DtlsProfile,
     ): List<Attempt> = withContext(Dispatchers.Default) {
         val discouraged = memory.discouraged(network.fingerprint)
         val remembered = memory.preferredFor(network.fingerprint)
@@ -76,16 +83,26 @@ class StrategyPlanner(
             ordered.putIfAbsent(transport, "fallback")
         }
 
+        // A network that accepts connections and then blackholes them has
+        // already told us that anything terminating on a plain host is a waste
+        // of a rung, whatever the rest of the evidence said.
+        val demoted = if (probe.freezeSuspected) {
+            setOf(Transport.DIRECT, Transport.OBFS4) + discouraged
+        } else {
+            discouraged
+        }
+
         val attempts = ordered
             .toList()
-            .sortedBy { (transport, _) -> if (transport in discouraged) 1 else 0 }
-            .mapNotNull { (transport, why) -> buildAttempt(transport, why) }
+            .sortedBy { (transport, _) -> if (transport in demoted) 1 else 0 }
+            .mapNotNull { (transport, why) ->
+                buildAttempt(transport, why, tlsProfile, dtlsProfile)
+            }
             .toMutableList()
 
         // Snowflake over an AMP cache: slow, but it survives a censor that has
         // blocked the fronted broker request itself.
-        if (attempts.any { it.transport == Transport.SNOWFLAKE }) {
-            val snowflake = attempts.first { it.transport == Transport.SNOWFLAKE }
+        attempts.firstOrNull { it.transport == Transport.SNOWFLAKE }?.let { snowflake ->
             attempts += snowflake.copy(
                 why = "last resort: broker reached through an AMP cache",
                 ampRendezvous = true,
@@ -97,17 +114,74 @@ class StrategyPlanner(
     }
 
     /** The ladder for a user who picked a transport by hand. */
-    fun manualPlan(transport: Transport): List<Attempt> =
-        listOfNotNull(buildAttempt(transport, "chosen by you"))
+    fun manualPlan(
+        transport: Transport,
+        tlsProfile: TlsProfile,
+        dtlsProfile: DtlsProfile,
+    ): List<Attempt> =
+        listOfNotNull(buildAttempt(transport, "chosen by you", tlsProfile, dtlsProfile))
 
-    private fun buildAttempt(transport: Transport, why: String): Attempt? {
+    private fun buildAttempt(
+        transport: Transport,
+        why: String,
+        tlsProfile: TlsProfile,
+        dtlsProfile: DtlsProfile,
+    ): Attempt? {
         if (transport == Transport.DIRECT) return Attempt(transport, emptyList(), why)
-        val lines = bridges.forTransport(transport)
-        if (lines.isEmpty()) {
-            VeilLog.d("planner", "skipping ${transport.torName}: no bridges known")
+
+        val candidates = bridges.forTransport(transport, bridgeBudget(transport) * 3)
+            .filterNot { it.hasRoutableAddress && cooldown.isCoolingDown(it.host) }
+            .take(bridgeBudget(transport))
+
+        if (candidates.isEmpty()) {
+            VeilLog.d("planner", "skipping ${transport.torName}: no usable bridges right now")
             return null
         }
-        return Attempt(transport, lines, why)
+        return Attempt(transport, candidates.map { shape(it, tlsProfile, dtlsProfile) }, why)
+    }
+
+    /**
+     * Pins the Client Hello each transport presents.
+     *
+     * Bridge lines are published with whatever fingerprint was current when
+     * they were written, and several of the built-in ones still ask for a
+     * randomised hello. Randomisation defeats an exact-hash blocklist but is
+     * itself anomalous to anything scoring plausibility, so the profile becomes
+     * a local decision rather than an inherited one.
+     */
+    private fun shape(
+        bridge: BridgeLine,
+        tlsProfile: TlsProfile,
+        dtlsProfile: DtlsProfile,
+    ): BridgeLine = when (bridge.transportEnum) {
+        Transport.MEEK, Transport.WEBTUNNEL ->
+            bridge.withParams(mapOf("utls" to tlsProfile.lyrebirdName))
+
+        Transport.SNOWFLAKE -> bridge.withParams(
+            mapOf(
+                "utls-imitate" to tlsProfile.snowflakeName,
+                // Snowflake's data path is DTLS, which carries a fingerprint of
+                // its own that the TLS setting above does not touch.
+                "covertdtls-config" to dtlsProfile.argument,
+            ),
+        )
+
+        // obfs4 is not TLS at all: there is no Client Hello to shape.
+        else -> bridge
+    }
+
+    /**
+     * How many bridges to hand tor for one attempt.
+     *
+     * More bridges is not better. tor opens a connection to each, and a fan of
+     * near-simultaneous handshakes is one of the three things current DPI is
+     * reported to look for. The broker-based transports need exactly one line,
+     * because the line is configuration rather than an address.
+     */
+    private fun bridgeBudget(transport: Transport): Int = when (transport) {
+        Transport.MEEK, Transport.SNOWFLAKE -> 1
+        Transport.OBFS4, Transport.WEBTUNNEL -> 3
+        Transport.DIRECT -> 0
     }
 
     /**

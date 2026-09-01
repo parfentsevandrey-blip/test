@@ -3,6 +3,7 @@ package app.veil.vpn
 import android.app.Application
 import app.veil.vpn.core.VeilLog
 import app.veil.vpn.data.BridgeRepository
+import app.veil.vpn.data.EndpointCooldown
 import app.veil.vpn.data.SettingsRepository
 import app.veil.vpn.data.StrategyMemory
 import app.veil.vpn.net.MoatClient
@@ -32,10 +33,27 @@ class VeilApp : Application() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
+    /**
+     * Outlives any one service.
+     *
+     * Tearing the tunnel down means calling into native code that cannot be
+     * interrupted, and a scope tied to the service is cancelled the moment the
+     * service is destroyed — which is exactly when the teardown still has work
+     * to do. Leaving that work on a process-level scope is what stops a
+     * cancelled connect from wedging the app.
+     */
+    val teardownScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     val settings by lazy { SettingsRepository(this) }
     val pt by lazy { PtRuntime(this) }
     val tor by lazy { TorController(this) }
     val memory by lazy { StrategyMemory(this) }
+
+    /**
+     * Shared between the probe, which discovers blackholed endpoints, and the
+     * planner, which has to stop proposing them.
+     */
+    val cooldown by lazy { EndpointCooldown() }
 
     /**
      * When a direct request to the bridge API fails, retry it through meek.
@@ -55,7 +73,7 @@ class VeilApp : Application() {
     }
 
     val bridges by lazy { BridgeRepository(this, moat) }
-    val planner by lazy { StrategyPlanner(this, bridges, memory, moat) }
+    val planner by lazy { StrategyPlanner(this, bridges, memory, moat, cooldown) }
 
     override fun onCreate() {
         super.onCreate()
