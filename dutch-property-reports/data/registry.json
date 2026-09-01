@@ -22,6 +22,16 @@
       ]
     },
     {
+      "slug": "agriport-9-21-middenmeer",
+      "title": "Agriport 9-21, Middenmeer",
+      "city": "Middenmeer",
+      "price": "€ 475.000",
+      "url": "https://www.fundainbusiness.nl/bedrijfshal/middenmeer/object-43145977-agriport-9-21/",
+      "reports": [
+        "report-2026-09-01-locations.json"
+      ]
+    },
+    {
       "slug": "ampereweg-17-delft",
       "title": "Ampèreweg 17, Delft",
       "city": "Delft",
@@ -42,6 +52,36 @@
       ]
     },
     {
+      "slug": "avignonlaan-47-eindhoven",
+      "title": "Avignonlaan 47, Eindhoven",
+      "city": "Eindhoven",
+      "price": "€ 485.000",
+      "url": "https://www.fundainbusiness.nl/bedrijfshal/eindhoven/object-44407317-avignonlaan-47/",
+      "reports": [
+        "report-2026-09-01-locations.json"
+      ]
+    },
+    {
+      "slug": "bijsterhuizen-1148-g5-nijmegen",
+      "title": "Bijsterhuizen 1148-G5, Nijmegen",
+      "city": "Nijmegen",
+      "price": "€ 490.000",
+      "url": "https://www.fundainbusiness.nl/bedrijfshal/nijmegen/object-43887304-bijsterhuizen-1148-g5/",
+      "reports": [
+        "report-2026-09-01-locations.json"
+      ]
+    },
+    {
+      "slug": "boeingavenue-305f-schiphol-rijk",
+      "title": "Boeingavenue 305-F, Schiphol-Rijk",
+      "city": "Schiphol-Rijk",
+      "price": "€ 425.000",
+      "url": "https://www.fundainbusiness.nl/bedrijfshal/schiphol-rijk/object-43057054-boeingavenue-305-f/",
+      "reports": [
+        "report-2026-09-01-locations.json"
+      ]
+    },
+    {
       "slug": "buys-ballotstraat-11-utrecht",
       "title": "Buys Ballotstraat 11 bs, Utrecht",
       "city": "Utrecht",
@@ -49,6 +89,16 @@
       "url": "https://www.fundainbusiness.nl/en/belegging/utrecht/object-44464482-buys-ballotstraat-11-bs/",
       "reports": [
         "report-2026-08-03.json"
+      ]
+    },
+    {
+      "slug": "cyclotronweg-27-delft",
+      "title": "Cyclotronweg 27, Delft",
+      "city": "Delft",
+      "price": "€ 449.000",
+      "url": "https://www.fundainbusiness.nl/bedrijfshal/delft/object-44455460-cyclotronweg-27/",
+      "reports": [
+        "report-2026-09-01-locations.json"
       ]
     },
     {
@@ -82,6 +132,16 @@
       ]
     },
     {
+      "slug": "grote-wade-17-19-nieuwegein",
+      "title": "Grote Wade 17-19, Nieuwegein",
+      "city": "Nieuwegein",
+      "price": "€ 1.895.000",
+      "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuwegein/object-43276397-grote-wade-17-19/",
+      "reports": [
+        "report-2026-09-01-locations.json"
+      ]
+    },
+    {
       "slug": "ijweg-459-463-boesingheliede",
       "title": "IJweg 459-463, Boesingheliede",
       "city": "Boesingheliede",
@@ -109,6 +169,16 @@
       "url": "https://www.fundainbusiness.nl/belegging/amsterdam/object-43325843-jacob-catskade-45-h/",
       "reports": [
         "report-2026-08-31-warehouses.json"
+      ]
+    },
+    {
+      "slug": "kieler-bocht-15a-groningen",
+      "title": "Kieler Bocht 15-A, Groningen",
+      "city": "Groningen",
+      "price": "€ 1.975.000",
+      "url": "https://www.fundainbusiness.nl/belegging/groningen/object-44571094-kieler-bocht-15-a/",
+      "reports": [
+        "report-2026-09-01-locations.json"
       ]
     },
     {
@@ -265,7 +335,17 @@
       "url": "",
       "reports": [],
       "source": "показан заказчику вне этого репозитория"
+    },
+    {
+      "slug": "zeppelinstraat-33-berkel-en-rodenrijs",
+      "title": "Zeppelinstraat 33, Berkel en Rodenrijs",
+      "city": "Berkel en Rodenrijs",
+      "price": "€ 739.000",
+      "url": "https://www.fundainbusiness.nl/bedrijfshal/berkel-en-rodenrijs/object-43007890-zeppelinstraat-33/",
+      "reports": [
+        "report-2026-09-01-locations.json"
+      ]
     }
   ],
-  "updated": "2026-08-31"
+  "updated": "2026-09-01"
 }
