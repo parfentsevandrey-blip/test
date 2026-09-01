@@ -65,14 +65,27 @@ data class Bootstrap(
     val isDone: Boolean get() = percent >= 100
 
     /** Tor has said, more than once, that this route is not working. */
+    /**
+     * Tor has said, repeatedly and in its own words, that this route is failing.
+     *
+     * [problems] counts only the failures reported since this route was
+     * selected. Tor's own counter runs for the life of the process, so reading
+     * it raw meant that from the second route onwards the app inherited every
+     * failure of the first and gave up within one poll — routes that had not
+     * been tried for two seconds were being written off. The baseline is taken
+     * when the route starts, which is what makes this number mean what it says.
+     *
+     * Tor's own recommendation has to agree. It says "ignore" until a failure
+     * has repeated enough to be worth mentioning, and a slow transport failing
+     * its first attempts while it looks for a proxy is completely normal.
+     */
     val isHopeless: Boolean
-        get() = problems >= HOPELESS_PROBLEM_COUNT && recommendation != "ignore"
+        get() = problems >= HOPELESS_PROBLEM_COUNT && recommendation == "warn"
 
     private companion object {
         /**
-         * Tor retries a failing bootstrap step and reports each attempt. One
-         * failure is normal — a bridge can be busy. Three in a row on the same
-         * step is the route telling us to stop.
+         * Failures on this route, after tor has already decided the situation
+         * is worth warning about.
          */
         const val HOPELESS_PROBLEM_COUNT = 3
     }
@@ -122,6 +135,17 @@ class TorController(private val context: Context) {
      */
     @Volatile
     private var acceptAnyProgress = true
+
+    /**
+     * Tor's failure count when the current route started.
+     *
+     * Tor counts bootstrap problems for the life of the process. Subtracting
+     * where this route began is the difference between "this route has failed
+     * three times" and "something has failed three times since the app
+     * started", and only the first of those is a reason to move on.
+     */
+    @Volatile
+    private var problemBaseline: Int? = null
 
     var socks: SocksEndpoint? = null
         private set
@@ -346,13 +370,16 @@ class TorController(private val context: Context) {
         }
 
         if (seen.isNullOrEmpty()) {
-            VeilLog.e("tor", "tor opened no SOCKS listener; expected 127.0.0.1:$expected")
-            // Being specific pays for itself here: the usual cause is another
-            // app holding the port between us choosing it and tor binding it.
+            // Worth saying loudly, but not worth abandoning the route over: the
+            // port is one we chose and wrote into the configuration, and tor
+            // opens its listeners on its own schedule. Treating a slow answer
+            // here as a dead route would fail every rung for a reason that is
+            // not about the network at all.
+            VeilLog.w("tor", "no SOCKS listener reported yet; expecting 127.0.0.1:$expected")
             if (!LoopbackPorts.isFree(expected)) {
-                _lastError.value = "port $expected was taken before Tor could bind it"
+                VeilLog.e("tor", "port $expected is held by something else")
             }
-            return@withContext false
+            return@withContext true
         }
         if (!seen.contains(":$expected")) {
             VeilLog.w("tor", "SOCKS listener is $seen, not the configured port $expected")
@@ -368,6 +395,9 @@ class TorController(private val context: Context) {
      */
     fun resetBootstrap() {
         acceptAnyProgress = true
+        // Cleared rather than zeroed: the baseline is whatever tor reports
+        // first for this route, which is not known until it says something.
+        problemBaseline = null
         _bootstrap.value = Bootstrap()
     }
 
@@ -464,9 +494,16 @@ class TorController(private val context: Context) {
         // percentage it is stuck at, so it must not be mistaken for progress.
         val count = field(data, "COUNT")?.toIntOrNull()
         if (count != null) {
+            // The first report after a route change only tells us where tor's
+            // counter stands; the failures that belong to this route are the
+            // ones after that.
+            val baseline = problemBaseline ?: count.also { problemBaseline = it }
+            val mine = (count - baseline).coerceAtLeast(0)
             val recommendation = field(data, "RECOMMENDATION").orEmpty()
-            _bootstrap.value = previous.copy(problems = count, recommendation = recommendation)
-            VeilLog.w("tor", "bootstrap stuck at $percent% (attempt $count): $summary")
+            _bootstrap.value = previous.copy(problems = mine, recommendation = recommendation)
+            if (mine > 0) {
+                VeilLog.w("tor", "bootstrap stuck at $percent% (failure $mine here): $summary")
+            }
             return
         }
 

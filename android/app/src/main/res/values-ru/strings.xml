@@ -231,4 +231,6 @@
     <string name="probe_detail_nat_symmetric">на каждое направление свой порт (%1$s, затем %2$s) — Snowflake здесь будет тяжело</string>
     <string name="probe_summary_symmetric">Эта сеть даёт каждому направлению свой порт — как раз то, чего Snowflake не переносит; мосты при этом доступны</string>
     <string name="route_why_nat">эта сеть меняет порт для каждого направления, а Snowflake этого не переносит</string>
+    <string name="fail_no_transports">Ни один транспорт не запустился — добираться до Tor не через что. Подробности в «Диагностике».</string>
+    <string name="fail_transport_unavailable">%1$s не запустился на этом устройстве. Выберите другой маршрут или верните автоматический выбор.</string>
 </resources>

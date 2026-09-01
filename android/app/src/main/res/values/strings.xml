@@ -239,4 +239,6 @@
     <string name="probe_detail_nat_symmetric">a different public port per destination (%1$s, then %2$s) — Snowflake will struggle here</string>
     <string name="probe_summary_symmetric">This network gives every destination a different port, which Snowflake needs to avoid; bridges are reachable</string>
     <string name="route_why_nat">this network changes port per destination, which Snowflake needs to avoid</string>
+    <string name="fail_no_transports">No transport would start, so there is nothing to reach Tor through. Diagnostics has the log.</string>
+    <string name="fail_transport_unavailable">%1$s did not start on this device. Pick another route, or switch route selection back to automatic.</string>
 </resources>

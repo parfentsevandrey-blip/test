@@ -41,8 +41,14 @@ object Torrc {
      * @param plugins every transport that has a listener, and its local port.
      * @param socksPort the port tor must publish SOCKS on.
      * @param dnsPort the port tor must answer DNS on.
-     * @param startDisabled bring tor up with its network off, so the first rung
-     *   is chosen deliberately rather than by tor trying a direct connection.
+     * @param opening the first rung, written straight into the configuration.
+     *
+     * The first rung is in the file rather than applied afterwards over the
+     * control port, and that is deliberate. Tor is at its most reliable doing
+     * what it was started to do: it reads the bridges, opens its listeners and
+     * begins, with no transition to react to and nothing that has to arrive in
+     * the right order. Only the second rung onwards is a change of mind, and
+     * only that needs the control port.
      *
      * The two ports are chosen by the app and written in, rather than left as
      * `SocksPort auto`, for a reason that took a while to find and is worth
@@ -67,7 +73,7 @@ object Torrc {
         val plugins: Map<Transport, Int>,
         val socksPort: Int,
         val dnsPort: Int,
-        val startDisabled: Boolean = true,
+        val opening: Attempt? = null,
     )
 
     fun build(session: Session): String = buildString {
@@ -87,7 +93,6 @@ object Torrc {
         appendLine("AvoidDiskWrites 1")
         appendLine("DormantCanceledByStartup 1")
         appendLine("DormantTimeoutEnabled 0")
-        appendLine("DisableNetwork ${if (session.startDisabled) 1 else 0}")
         appendLine()
 
         appendLine("# --- Names -------------------------------------------------------")
@@ -108,10 +113,20 @@ object Torrc {
         appendLine("ReducedConnectionPadding 0")
         appendLine()
 
+        appendLine("# --- Route --------------------------------------------------------")
+        val opening = session.opening
+        if (opening == null || opening.transport == Transport.DIRECT || opening.bridges.isEmpty()) {
+            appendLine("UseBridges 0")
+        } else {
+            appendLine("UseBridges 1")
+            opening.bridges.forEach { appendLine("Bridge ${it.raw}") }
+        }
+        appendLine()
+
         appendLine("# --- Circuits ----------------------------------------------------")
-        // Starting values only. The route in use decides the real ones, and
-        // they are set over the control port whenever the route changes.
-        tuning(Transport.DIRECT).forEach { appendLine(it) }
+        // Timings for the route above. A later route sets its own over the
+        // control port.
+        tuning(opening?.transport ?: Transport.DIRECT).forEach { appendLine(it) }
         appendLine()
 
         appendLine("# --- Transports ---------------------------------------------------")
@@ -187,9 +202,15 @@ object Torrc {
         appendLine("AutomapHostsOnResolve 1")
         appendLine("AutomapHostsSuffixes .")
         appendLine("VirtualAddrNetworkIPv4 $VIRTUAL_NETWORK_V4")
-        appendLine("DisableNetwork ${if (session.startDisabled) 1 else 0}")
         session.plugins.forEach { (transport, port) ->
             appendLine("ClientTransportPlugin ${transport.torName} socks5 127.0.0.1:$port")
+        }
+        val opening = session.opening
+        if (opening != null && opening.transport != Transport.DIRECT &&
+            opening.bridges.isNotEmpty()
+        ) {
+            appendLine("UseBridges 1")
+            opening.bridges.forEach { appendLine("Bridge ${it.raw}") }
         }
     }
 }

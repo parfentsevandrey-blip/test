@@ -173,11 +173,33 @@ class VeilVpnService : VpnService() {
         }
         publishLocalListeners(ports)
 
-        update(TunnelState.Probing(R.string.step_starting_tor, 1, 3))
-        // Both ports are chosen here rather than left to `SocksPort auto`.
-        // While tor's network is disabled it has no SOCKS or DNS listener at
-        // all, so there is nothing to ask it for yet, and every time the
-        // network is toggled to change route it would bind a different one.
+        // The ladder is decided before tor is started, so that tor can be
+        // started already pointed at its first rung. Tor is at its most
+        // reliable doing what it was launched to do; only changing route needs
+        // the control port, and only the second rung onwards is a change.
+        val ladder = buildLadder(settings, network, ports.keys)
+        if (ladder.isEmpty()) {
+            // "Nothing to try" has three quite different causes, and telling
+            // them apart is the difference between a user who can act on the
+            // message and one who can only reinstall.
+            fail(
+                when {
+                    ports.isEmpty() -> getString(R.string.fail_no_transports)
+                    settings.routeMode == RouteMode.MANUAL -> getString(
+                        R.string.fail_transport_unavailable,
+                        getString(settings.manualTransport.labelRes),
+                    )
+                    else -> getString(R.string.fail_no_route)
+                },
+                emptyList(),
+            )
+            return
+        }
+
+        update(TunnelState.Probing(R.string.step_starting_tor, 2, 3))
+        // Both ports are chosen here rather than left to `SocksPort auto`,
+        // which binds a different ephemeral port every time tor reopens its
+        // listeners and so cannot be read once and relied on afterwards.
         val reserved = runCatching { LoopbackPorts.reserve(2) }.getOrDefault(emptyList())
         if (reserved.size < 2) {
             fail(getString(R.string.fail_ports), emptyList())
@@ -187,7 +209,7 @@ class VeilVpnService : VpnService() {
             plugins = ports,
             socksPort = reserved[0],
             dnsPort = reserved[1],
-            startDisabled = true,
+            opening = ladder.first(),
         )
         val torUp = container.tor.start(
             torrc = Torrc.build(session),
@@ -206,11 +228,6 @@ class VeilVpnService : VpnService() {
         }
         publishLocalListeners(ports)
 
-        val ladder = buildLadder(settings, network, ports.keys)
-        if (ladder.isEmpty()) {
-            fail(getString(R.string.fail_no_route), emptyList())
-            return
-        }
         TunnelBus.publishLadder(ladder)
 
         val tried = mutableListOf<Transport>()
@@ -291,7 +308,7 @@ class VeilVpnService : VpnService() {
         val remembered = container.memory.preferredFor(network.fingerprint)
         if (remembered != null && (remembered == Transport.DIRECT || remembered in available)) {
             VeilLog.i("vpn", "skipping the probe: ${remembered.torName} worked here before")
-            update(TunnelState.Probing(R.string.step_reconnecting_known, 2, 3))
+            update(TunnelState.Probing(R.string.step_reconnecting_known, 1, 3))
             return container.planner.plan(
                 network,
                 ProbeReport(),
@@ -302,7 +319,7 @@ class VeilVpnService : VpnService() {
             )
         }
 
-        update(TunnelState.Probing(R.string.step_measuring, 2, 3))
+        update(TunnelState.Probing(R.string.step_measuring, 1, 3))
         val probe = NetworkProbe(protector, container.cooldown)
         val report = probe.runFor(container.bridges) { done, total, noteRes ->
             update(TunnelState.Probing(noteRes, done, total))
@@ -331,21 +348,22 @@ class VeilVpnService : VpnService() {
         // transport needs beyond its address travels in the bridge line, which
         // the plugin reads per connection, so nothing has to be restarted.
         container.tor.resetBootstrap()
-        if (!container.tor.applyRoute(attempt.transport, attempt.bridges)) {
-            VeilLog.e("vpn", "could not point tor at ${attempt.label}")
-            return false
+
+        // The first rung is already in the torrc, so tor has been working on it
+        // since it started. Re-applying it would mean clearing the bridges and
+        // putting the same ones straight back, which tor reacts to by dropping
+        // the connections it had already opened.
+        if (index > 0) {
+            if (!container.tor.applyRoute(attempt.transport, attempt.bridges)) {
+                VeilLog.e("vpn", "could not point tor at ${attempt.label}")
+                return false
+            }
+            if (!container.tor.setNetworkEnabled(true)) {
+                VeilLog.e("vpn", "could not enable tor's network")
+                return false
+            }
         }
-        if (!container.tor.setNetworkEnabled(true)) {
-            VeilLog.e("vpn", "could not enable tor's network")
-            return false
-        }
-        // The listeners only exist once the network is on, and this is the last
-        // point at which a port clash can be reported as a port clash rather
-        // than as a tunnel that mysteriously carries nothing.
-        if (!container.tor.awaitListeners()) {
-            container.tor.setNetworkEnabled(false)
-            return false
-        }
+        container.tor.awaitListeners()
 
         if (!awaitBootstrap(attempt, index, ladderSize)) {
             // Off, not just re-pointed: this is what closes every connection to
@@ -414,8 +432,12 @@ class VeilVpnService : VpnService() {
             // Tor knows before we do. A route that handshakes and is then cut
             // reports the same percentage with a rising failure count, and
             // waiting out a stall timer on it costs most of a minute for an
-            // answer already given.
-            if (bootstrap.isHopeless) {
+            // answer already given. It only counts once the route has also
+            // stopped moving, though: a slow transport failing its first
+            // attempts while it hunts for a proxy is ordinary, and cutting it
+            // off then would throw away the route most likely to work.
+            val quiet = System.currentTimeMillis() - lastProgressAt
+            if (bootstrap.isHopeless && quiet > HOPELESS_QUIET_MILLIS) {
                 VeilLog.w(
                     "vpn",
                     "${attempt.label} failed ${bootstrap.problems} times at $lastPercent%; moving on",
@@ -825,5 +847,11 @@ class VeilVpnService : VpnService() {
 
         /** How often to check that a circuit is standing by. */
         private const val CIRCUIT_UPKEEP_MILLIS = 60_000L
+
+        /**
+         * How long a route must have stopped moving before tor's own verdict
+         * that it is failing is acted on.
+         */
+        private const val HOPELESS_QUIET_MILLIS = 12_000L
     }
 }
