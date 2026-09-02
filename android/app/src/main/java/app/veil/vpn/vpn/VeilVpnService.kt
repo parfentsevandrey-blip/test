@@ -141,6 +141,8 @@ class VeilVpnService : VpnService() {
 
     private suspend fun runTunnel() {
         HandshakeGovernor.reset()
+        // Stop the parked engine's shutdown timer before touching it.
+        container.wakeEngine()
         val settings = container.settings.settings.first()
         container.bridges.load()
         container.memory.load()
@@ -214,27 +216,60 @@ class VeilVpnService : VpnService() {
             return
         }
 
-        update(TunnelState.Probing(R.string.step_starting_tor, 1, 2))
-        // Both ports are chosen here rather than left to `SocksPort auto`,
-        // which binds a different ephemeral port every time tor reopens its
-        // listeners and so cannot be read once and relied on afterwards.
-        val reserved = runCatching { LoopbackPorts.reserve(2) }.getOrDefault(emptyList())
-        if (reserved.size < 2) {
-            fail(getString(R.string.fail_ports), emptyList())
-            return
+        // A tor left warm by the last disconnect is reused. Everything the
+        // long part of a connect produces — the directory consensus, the
+        // descriptors, the validation of both — is still in that process, so
+        // pointing it at a route is a control-port command instead of a fresh
+        // bootstrap. The ports it already listens on are kept for the same
+        // reason: they are named in a configuration that is not being rewritten.
+        val warm = container.tor.isWarmFor(ports)
+        update(
+            TunnelState.Probing(
+                if (warm) R.string.step_resuming_tor else R.string.step_starting_tor,
+                1,
+                2,
+            ),
+        )
+
+        var torUp = false
+        if (warm) {
+            VeilLog.i("vpn", "reusing the warm tor; no bootstrap to repeat")
+            torUp = resumeWarmTor(ladder.first())
+            if (!torUp) {
+                // Most likely something else on the device took one of the
+                // loopback ports while the listeners were closed. Nothing is
+                // lost but the shortcut, so start cleanly rather than reporting
+                // a failure the user cannot act on.
+                VeilLog.w("vpn", "the warm tor would not resume; starting a fresh one")
+                container.tor.stop()
+                update(TunnelState.Probing(R.string.step_starting_tor, 1, 2))
+            }
         }
-        val session = Torrc.Session(
-            plugins = ports,
-            socksPort = reserved[0],
-            dnsPort = reserved[1],
-            opening = ladder.first(),
-        )
-        val torUp = container.tor.start(
-            torrc = Torrc.build(session),
-            fallbackTorrc = Torrc.minimal(session),
-            socksPort = reserved[0],
-            dnsPort = reserved[1],
-        )
+
+        if (!torUp) {
+            // Both ports are chosen here rather than left to `SocksPort auto`,
+            // which binds a different ephemeral port every time tor reopens its
+            // listeners and so cannot be read once and relied on afterwards.
+            val reserved = runCatching { LoopbackPorts.reserve(2) }.getOrDefault(emptyList())
+            if (reserved.size < 2) {
+                fail(getString(R.string.fail_ports), emptyList())
+                return
+            }
+            val session = Torrc.Session(
+                plugins = ports,
+                socksPort = reserved[0],
+                dnsPort = reserved[1],
+                opening = ladder.first(),
+            )
+            torUp = container.tor.start(
+                torrc = Torrc.build(session),
+                fallbackTorrc = Torrc.minimal(session),
+                socksPort = reserved[0],
+                dnsPort = reserved[1],
+                plugins = ports,
+            )
+        }
+
         if (!torUp) {
             fail(
                 container.tor.lastError.value
@@ -384,6 +419,27 @@ class VeilVpnService : VpnService() {
             },
             tried,
         )
+    }
+
+    /**
+     * Wakes a parked tor and points it at a route.
+     *
+     * Two things have to happen in order and both can fail. The route is set
+     * over the control port, then the network is turned back on — and only then
+     * do the SOCKS and DNS listeners exist again, because tor treats
+     * `DisableNetwork` as "close everything but the control port". Those two
+     * ports were free the whole time the process was parked, so it is possible
+     * for something else on the device to have taken one; if the listeners do
+     * not come back, this reports failure and the caller starts a fresh tor.
+     */
+    private suspend fun resumeWarmTor(opening: Attempt): Boolean {
+        if (!container.tor.applyRoute(opening.transport, opening.bridges)) return false
+        if (!container.tor.setNetworkEnabled(true)) return false
+        if (!container.tor.awaitListeners()) {
+            VeilLog.w("vpn", "the warm tor did not reopen its listeners")
+            return false
+        }
+        return true
     }
 
     /**
@@ -830,6 +886,9 @@ class VeilVpnService : VpnService() {
     private fun startStatsPump() {
         statsJob?.cancel()
         var lastCircuitCheck = System.currentTimeMillis()
+        var lastLivenessCheck = System.currentTimeMillis()
+        var deadSince = 0L
+        var lastRedial = 0L
         statsJob = scope.launch {
             while (isActive) {
                 runCatching { Veiltun.snapshot() }.getOrNull()?.let { snapshot ->
@@ -855,6 +914,38 @@ class VeilVpnService : VpnService() {
                 if (now - lastCircuitCheck > CIRCUIT_UPKEEP_MILLIS) {
                     lastCircuitCheck = now
                     runCatching { container.tor.ensureSpareCircuit() }
+                }
+
+                // And the question nobody was asking: is the path still there?
+                //
+                // A tunnel whose bridge has gone away keeps its interface, its
+                // counters and its bootstrap percentage. Nothing in the app
+                // noticed, so the user's phone simply stopped reaching the
+                // internet until they thought to disconnect and try again —
+                // which is what "it drops and I lose access" is, from the
+                // inside. Tor will re-dial on its own eventually; this shortens
+                // eventually to seconds, and does it without touching the
+                // interface, so applications see a pause rather than a network
+                // that went away.
+                if (now - lastLivenessCheck > LIVENESS_CHECK_MILLIS) {
+                    lastLivenessCheck = now
+                    val alive = runCatching { container.tor.hasLiveOrConnection() }
+                        .getOrDefault(true)
+                    if (alive) {
+                        deadSince = 0L
+                    } else {
+                        if (deadSince == 0L) {
+                            deadSince = now
+                            VeilLog.w("vpn", "no live connection to the bridge")
+                        } else if (now - deadSince > DEAD_PATH_MILLIS &&
+                            now - lastRedial > REDIAL_COOLDOWN_MILLIS
+                        ) {
+                            lastRedial = now
+                            deadSince = now
+                            VeilLog.w("vpn", "path has been down; re-dialling")
+                            runCatching { container.tor.reconnect() }
+                        }
+                    }
                 }
                 delay(1_500)
             }
@@ -1020,9 +1111,16 @@ class VeilVpnService : VpnService() {
         appendLine(getString(if (fresh) R.string.diag_line_api_ok else R.string.diag_line_api_none))
     }.trim()
 
+    /**
+     * Lets go of the interface and puts the engine to sleep.
+     *
+     * Not stopped. See [VeilApp.parkEngine]: tor keeps the directory consensus
+     * it just fetched, with its network off, so a reconnect within the next few
+     * minutes is a control-port command rather than the whole bootstrap again.
+     * The process is shut down for real by a timer there if nothing comes back.
+     */
     private suspend fun releaseEverything() {
-        container.tor.stop()
-        container.pt.stopAll()
+        container.parkEngine()
         runCatching { tunnelInterface?.close() }
         tunnelInterface = null
     }
@@ -1065,6 +1163,21 @@ class VeilVpnService : VpnService() {
 
         /** How often to check that a circuit is standing by. */
         private const val CIRCUIT_UPKEEP_MILLIS = 60_000L
+
+        /** How often the path underneath the tunnel is checked for life. */
+        private const val LIVENESS_CHECK_MILLIS = 5_000L
+
+        /**
+         * How long the path may be down before it is re-dialled.
+         *
+         * Long enough not to fight tor, which does its own reconnecting and is
+         * often mid-handshake when this looks; short enough that a dead tunnel
+         * is a pause rather than something the user has to notice and fix.
+         */
+        private const val DEAD_PATH_MILLIS = 12_000L
+
+        /** And no more often than this, however bad it gets. */
+        private const val REDIAL_COOLDOWN_MILLIS = 45_000L
 
         /**
          * How long a route must have stopped moving before tor's own verdict

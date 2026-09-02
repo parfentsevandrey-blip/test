@@ -15,6 +15,8 @@ import app.veil.vpn.tor.TorController
 import app.veil.vpn.vpn.TunnelBus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -76,6 +78,47 @@ class VeilApp : Application() {
     val bridges by lazy { BridgeRepository(this, moat) }
     val planner by lazy { StrategyPlanner(this, bridges, memory, moat, cooldown) }
 
+    private var parkTimer: Job? = null
+
+    /**
+     * Puts the engine to sleep on disconnect instead of destroying it.
+     *
+     * Almost none of the time a connect takes is spent starting tor or the
+     * transports. It is spent fetching and validating the directory consensus,
+     * and a process that has already done that can be pointed at a route with a
+     * single control-port command. Killing it on every disconnect meant paying
+     * that cost again every time, including when the user reconnected ten
+     * seconds later — which, on a network that keeps cutting the tunnel, is
+     * exactly what they spend their day doing.
+     *
+     * So the process is kept, with its network off and no listeners open, and
+     * torn down for real only if nothing has come back for a while. The window
+     * is short on purpose: a tor sitting idle is memory and a little battery,
+     * and a user who has disconnected and walked away should not be paying for
+     * a reconnection they are not going to make.
+     */
+    fun parkEngine() {
+        parkTimer?.cancel()
+        parkTimer = teardownScope.launch {
+            val parked = runCatching { tor.park() }.getOrDefault(false)
+            if (!parked) {
+                runCatching { tor.stop() }
+                runCatching { pt.stopAll() }
+                return@launch
+            }
+            delay(WARM_WINDOW_MILLIS)
+            VeilLog.i("app", "nothing reconnected; shutting the engine down")
+            runCatching { tor.stop() }
+            runCatching { pt.stopAll() }
+        }
+    }
+
+    /** Called when a connect starts, so a parked engine is not shut down mid-use. */
+    fun wakeEngine() {
+        parkTimer?.cancel()
+        parkTimer = null
+    }
+
     override fun onCreate() {
         super.onCreate()
         VeilLog.i("app", "Veil ${BuildConfig.VERSION_NAME} starting")
@@ -112,6 +155,16 @@ class VeilApp : Application() {
     }
 
     private companion object {
+        /**
+         * How long a parked engine is kept before it is really shut down.
+         *
+         * Long enough to cover the thing this exists for — a tunnel that drops
+         * and is reconnected, or a user who cancels and immediately tries
+         * again — and short enough that a phone put in a pocket is not running
+         * a tor process for the rest of the afternoon.
+         */
+        const val WARM_WINDOW_MILLIS = 10 * 60 * 1000L
+
         /**
          * The meek endpoint Tor Browser currently ships. Passed to lyrebird in
          * the SOCKS credential fields, exactly as tor would pass them.

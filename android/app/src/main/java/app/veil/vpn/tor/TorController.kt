@@ -177,6 +177,44 @@ class TorController(private val context: Context) {
     val isRunning: Boolean get() = binding != null && connection != null
 
     /**
+     * The plugins tor was configured with, so a warm process can be reused only
+     * when the next connect wants the same ones.
+     */
+    private var configuredPlugins: Map<Transport, Int> = emptyMap()
+
+    /**
+     * Whether this process can be reused instead of started again.
+     *
+     * The whole reason warm reuse is worth the complexity: starting tor is not
+     * the expensive part of connecting — fetching and validating the directory
+     * consensus is, and a process that has already done it can be pointed at a
+     * new route with one control-port command. That is the difference between
+     * a connect measured in tens of seconds and one measured in a few.
+     *
+     * Reuse is refused when the transports have changed, because the plugin
+     * lines are fixed at startup and a bridge naming a plugin tor was not
+     * started with is a route that silently cannot be taken.
+     */
+    fun isWarmFor(plugins: Map<Transport, Int>): Boolean =
+        isRunning && socks != null && dnsPort > 0 && configuredPlugins == plugins
+
+    /**
+     * Puts tor to sleep instead of killing it: network off, everything else
+     * intact, including the consensus it spent the last connect fetching.
+     *
+     * The alternative — the previous behaviour — was to stop the process on
+     * every disconnect and pay the whole directory fetch again on the next
+     * connect, even when the two were seconds apart.
+     */
+    suspend fun park(): Boolean {
+        if (!isRunning) return false
+        val quiet = setNetworkEnabled(false)
+        resetBootstrap()
+        VeilLog.i("tor", if (quiet) "parked: network off, process kept warm" else "could not park")
+        return quiet
+    }
+
+    /**
      * Writes the torrc and brings tor up, returning once the control port
      * answers and accepts commands.
      *
@@ -197,9 +235,11 @@ class TorController(private val context: Context) {
         fallbackTorrc: String?,
         socksPort: Int,
         dnsPort: Int,
+        plugins: Map<Transport, Int> = emptyMap(),
     ): Boolean {
         socks = SocksEndpoint("tcp", "127.0.0.1:$socksPort")
         this.dnsPort = dnsPort
+        configuredPlugins = plugins
 
         if (startOnce(torrc)) return true
         if (fallbackTorrc == null) return false
@@ -419,6 +459,38 @@ class TorController(private val context: Context) {
             .firstOrNull { it.fingerprint?.uppercase() in connected }
             ?.transportEnum
     }.getOrNull()
+
+    /**
+     * Whether tor still has a live connection to any of its bridges.
+     *
+     * The one question worth asking repeatedly while the tunnel is up. Traffic
+     * counters cannot answer it — an idle phone moves no bytes either — and
+     * neither can the bootstrap percentage, which stays at 100 long after the
+     * path underneath it has gone. This reads the connections themselves.
+     */
+    fun hasLiveOrConnection(): Boolean = runCatching {
+        connection?.getInfo("orconn-status").orEmpty()
+            .lineSequence()
+            .any { it.contains("CONNECTED") }
+    }.getOrDefault(false)
+
+    /**
+     * Asks tor to try its bridges again, without restarting anything.
+     *
+     * Turning the network off and on is a heavier hammer than SIGNAL NEWNYM and
+     * a far lighter one than a restart: it drops every connection tor is
+     * holding, including the half-open ones it is still waiting on, and lets it
+     * dial its bridges from scratch. The consensus, the descriptors and the
+     * listeners all survive, so this costs a few seconds rather than a
+     * bootstrap.
+     */
+    suspend fun reconnect(): Boolean {
+        if (!isRunning) return false
+        VeilLog.i("tor", "re-dialling the bridges")
+        if (!setNetworkEnabled(false)) return false
+        delay(500)
+        return setNetworkEnabled(true)
+    }
 
     /**
      * Turns tor's network on or off.
@@ -681,6 +753,7 @@ class TorController(private val context: Context) {
     }.getOrNull()
 
     suspend fun stop() = withContext(Dispatchers.IO) {
+        configuredPlugins = emptyMap()
         val control = connection
         eventListener?.let { runCatching { control?.removeRawEventListener(it) } }
         eventListener = null
