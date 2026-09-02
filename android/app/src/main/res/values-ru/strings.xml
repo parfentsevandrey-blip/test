@@ -242,4 +242,11 @@
     <string name="action_clear">Очистить</string>
     <string name="fail_offline">У устройства нет подключения к сети. Пока его нет, тоннелировать нечего.</string>
     <string name="fail_no_fresh_bridges">Сервис мостов недоступен, поэтому в ход шли только мосты, зашитые в приложение, — а они публичные. Откройте «Мосты» и добавьте полученные другим путём: у @GetBridgesBot в Telegram, на bridges.torproject.org или письмом на bridges@torproject.org.</string>
+    <string name="diag_line_network">сеть: %1$s %2$s</string>
+    <string name="diag_line_transports">транспорты поднялись: %1$s · не стартовали: %2$s</string>
+    <string name="diag_line_bridges">мосты: %1$s</string>
+    <string name="diag_line_api_ok">сервис мостов: ответил</string>
+    <string name="diag_line_api_none">сервис мостов: не ответил — в ход шли только зашитые мосты</string>
+    <string name="diag_line_nat">NAT: %1$s</string>
+    <string name="action_share">Поделиться</string>
 </resources>

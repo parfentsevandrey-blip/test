@@ -81,6 +81,11 @@ class VeilVpnService : VpnService() {
 
     /** The slow bridge fetch that runs alongside a connect attempt. */
     private var lateBridgeJob: Job? = null
+
+    /** What this connect found, kept so the failure can say it. */
+    private var startedPorts: Map<Transport, Int> = emptyMap()
+    private var lastProbe: ProbeReport? = null
+    private var lastNetwork: NetworkContext? = null
     private var lastStartId = 0
 
     private val container: VeilApp get() = application as VeilApp
@@ -183,6 +188,9 @@ class VeilVpnService : VpnService() {
                 emptyMap()
             }
         }
+        startedPorts = ports
+        lastNetwork = network
+        lastProbe = null
         publishLocalListeners(ports)
 
         // The ladder is decided before tor is started, so that tor can be
@@ -378,6 +386,7 @@ class VeilVpnService : VpnService() {
         val report = probe.runFor(container.bridges) { done, total, noteRes ->
             update(TunnelState.Probing(noteRes, done, total))
         }
+        lastProbe = report
         TunnelBus.publish(report)
         TunnelBus.publishCooldowns(container.cooldown.describe())
         return container.planner.plan(
@@ -924,8 +933,15 @@ class VeilVpnService : VpnService() {
     }
 
     private fun fail(reason: String, tried: List<Transport>) {
-        VeilLog.e("vpn", reason)
-        update(TunnelState.Failed(reason, tried))
+        // "Nothing worked" is the one thing a failure must not stop at. What
+        // was and was not there — which transports started, how many bridges
+        // each had, whether the bridge service answered, what the NAT does —
+        // is known at this point and is exactly what decides the fix, so it
+        // travels with the failure instead of waiting for someone to go and
+        // look for it.
+        val full = reason + "\n\n" + situation()
+        VeilLog.e("vpn", full)
+        update(TunnelState.Failed(full, tried))
 
         val app = container
         val stopForId = lastStartId
@@ -947,6 +963,40 @@ class VeilVpnService : VpnService() {
             }
         }
     }
+
+    /** The facts of this connect, in a few short lines. */
+    private fun situation(): String = buildString {
+        val network = lastNetwork
+        appendLine(
+            getString(
+                R.string.diag_line_network,
+                network?.kind?.name?.lowercase() ?: "?",
+                network?.countryIso ?: "??",
+            ),
+        )
+        val started = Transport.entries.filter { it.isPluggable && it in startedPorts.keys }
+        val missing = Transport.entries.filter { it.isPluggable && it !in startedPorts.keys }
+        appendLine(
+            getString(
+                R.string.diag_line_transports,
+                started.joinToString { it.torName }.ifEmpty { "—" },
+                missing.joinToString { it.torName }.ifEmpty { "—" },
+            ),
+        )
+        appendLine(
+            getString(
+                R.string.diag_line_bridges,
+                Transport.entries.filter { it.isPluggable }.joinToString { t ->
+                    "${t.torName}=${container.bridges.forTransport(t, 99).size}"
+                },
+            ),
+        )
+        val fresh = Transport.entries.any { it.isPluggable && container.bridges.hasRecommended(it) }
+        appendLine(getString(if (fresh) R.string.diag_line_api_ok else R.string.diag_line_api_none))
+        lastProbe?.let { probe ->
+            append(getString(R.string.diag_line_nat, probe.natBehaviour.name.lowercase()))
+        }
+    }.trim()
 
     private suspend fun releaseEverything() {
         container.tor.stop()

@@ -49,6 +49,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
+        // `adb shell am start -n app.veil.vpn/.ui.MainActivity --ez selftest true`
+        // runs the stage-by-stage check without a display. It exists so the
+        // self-test can be driven on an emulator; it does nothing a user could
+        // not do by pressing the button.
+        if (intent?.getBooleanExtra(EXTRA_SELF_TEST, false) == true) viewModel.runSelfTest()
         enableEdgeToEdge()
 
         requestNotificationPermissionIfNeeded()
@@ -86,5 +91,9 @@ class MainActivity : ComponentActivity() {
         if (!granted) {
             notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
+    }
+
+    private companion object {
+        const val EXTRA_SELF_TEST = "selftest"
     }
 }

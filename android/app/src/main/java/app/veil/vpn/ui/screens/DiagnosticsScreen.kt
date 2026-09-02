@@ -1,5 +1,7 @@
 package app.veil.vpn.ui.screens
 
+import android.content.Intent
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,6 +14,7 @@ import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -24,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
@@ -158,6 +162,21 @@ fun DiagnosticsScreen(
                         stringResource(R.string.action_copy),
                         modifier = Modifier.padding(start = 8.dp),
                     )
+                }
+                // The share sheet, because pasting a log from a phone into a
+                // chat is the step this evidence keeps failing to survive.
+                val context = LocalContext.current
+                OutlinedButton(
+                    onClick = {
+                        val send = Intent(Intent.ACTION_SEND)
+                            .setType("text/plain")
+                            .putExtra(Intent.EXTRA_TEXT, onCopy())
+                        runCatching { context.startActivity(Intent.createChooser(send, null)) }
+                    },
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Icon(Icons.Filled.Share, contentDescription = null)
+                    Text(stringResource(R.string.action_share), modifier = Modifier.padding(start = 8.dp))
                 }
                 OutlinedButton(onClick = onClear, modifier = Modifier.weight(1f)) {
                     Icon(Icons.Filled.DeleteSweep, contentDescription = null)
