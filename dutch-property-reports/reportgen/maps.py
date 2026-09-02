@@ -279,7 +279,11 @@ def for_object(obj: dict, cache_dir: Path, *, width: int = 1200,
         else:
             point = (city["lat"], city["lon"])
 
+    # в имя входит и город кадра: сменили ближайший крупный город в карточке —
+    # нужен новый снимок, а не старый из кэша
     name = f"{obj['slug']}-google-{width}x{height}"
+    if point:
+        name += f"-c{point[0]:.3f}_{point[1]:.3f}"
     if conf.get("zoom"):
         name += f"-z{conf['zoom']}"
     return render(lat, lon, cache_dir / f"{name}.png", city=point,
