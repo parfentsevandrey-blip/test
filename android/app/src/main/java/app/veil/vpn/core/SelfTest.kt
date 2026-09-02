@@ -10,6 +10,7 @@ import app.veil.vpn.net.LoopbackPorts
 import app.veil.vpn.net.NatBehaviour
 import app.veil.vpn.net.NetworkProbe
 import app.veil.vpn.net.SocksProxy
+import app.veil.vpn.net.StunSurvey
 import app.veil.vpn.tor.Bootstrap
 import app.veil.vpn.tor.StrategyPlanner
 import app.veil.vpn.tor.Torrc
@@ -110,7 +111,7 @@ object SelfTest {
             fun finish() = progress.update(total, total, app.getString(R.string.diag_stage_done))
 
             line("=== Veil deep diagnostic ===")
-            line("version 0.9.0")
+            line("version 0.9.1")
 
             val tunnelLive = runCatching { app.tor.isRunning }.getOrDefault(false)
             if (tunnelLive) {
@@ -212,6 +213,19 @@ object SelfTest {
 
             // --- 5. Reachability and NAT --------------------------------------
             stage(app.getString(R.string.diag_stage_probe))
+            // The STUN survey first, on its own line: which servers answer from
+            // here and how fast is what decides how long Snowflake spends
+            // gathering candidates before it will ask for a proxy, and the
+            // list it is handed below is built from this answer.
+            val survey = runCatching { StunSurvey.run(network.fingerprint) }.getOrNull()
+            line(
+                "stun: " + when {
+                    survey == null -> "survey failed"
+                    survey.answers.isEmpty() -> "NO server answered in ${StunSurvey.WINDOW_MILLIS}ms — Snowflake cannot gather candidates here"
+                    else -> "${survey.answers.size}/${StunSurvey.PUBLISHED_SERVERS.size} answered — " +
+                        survey.answers.joinToString { "${it.host} ${it.millis}ms" }
+                },
+            )
             val report = runCatching {
                 withTimeoutOrNull(45_000) { NetworkProbe().run(app.bridges.probeTargets()) }
             }.getOrNull()
@@ -274,7 +288,10 @@ object SelfTest {
                 // where there is one. Testing only the fronted rendezvous, as
                 // this used to, can report a method dead on a network where its
                 // other path connects in seconds, and then pick something else.
-                val attempts = app.planner.pinnedPlan(transport, tls, dtls, ports.keys)
+                val attempts = app.planner.pinnedPlan(
+                    transport, tls, dtls, ports.keys,
+                    iceServers = survey?.iceServers,
+                )
                 if (attempts.isEmpty()) {
                     line("${transport.torName}: skipped, no bridges to try")
                     continue

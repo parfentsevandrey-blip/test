@@ -193,25 +193,6 @@ class NetworkProbe(
             "cdn.jsdelivr.net" to 443,
         )
 
-        /**
-         * STUN servers Snowflake uses to discover its own address.
-         *
-         * The Tor Project's published list, in its order. All of them are asked
-         * at once and the first two answers are compared, so a long list costs
-         * nothing in time and buys the chance that two of them are reachable —
-         * which on a filtered mobile network is not a given, and is the
-         * difference between measuring the NAT and reporting UNKNOWN.
-         */
-        val STUN_SERVERS = listOf(
-            "stun.antisip.com" to 3478,
-            "stun.epygi.com" to 3478,
-            "stun.uls.co.za" to 3478,
-            "stun.voipgate.com" to 3478,
-            "stun.telnyx.com" to 3478,
-            "stun.hot-chilli.net" to 3478,
-            "stun.fitauto.ru" to 3478,
-            "stun.m-online.net" to 3478,
-        )
 
         /** A name a censor has a reason to filter. */
         const val CENSORED_CANARY = "www.torproject.org"
@@ -219,13 +200,8 @@ class NetworkProbe(
         /** A name a censor has no reason to filter, as a control. */
         const val NEUTRAL_CANARY = "cdn.jsdelivr.net"
 
-        const val STUN_READ_TIMEOUT_MILLIS = 4_000
 
-        const val XOR_MAPPED_ADDRESS = 0x0020
 
-        /** 0x2112A442, and its top half, which the port is XORed with. */
-        val MAGIC_COOKIE = intArrayOf(0x21, 0x12, 0xA4, 0x42)
-        const val MAGIC_COOKIE_HIGH = 0x2112
     }
 
     suspend fun run(
@@ -533,49 +509,12 @@ class NetworkProbe(
      */
     private suspend fun stunReachable(): ProbeResult = withContext(Dispatchers.IO) {
         val started = System.currentTimeMillis()
-        val seen = mutableListOf<Pair<String, String>>()
-
-        // One socket for every question. Asking from two different local ports
-        // would produce two different mapped ports on any NAT at all, and the
-        // measurement would report every network as symmetric.
-        //
-        // All of them asked at once, rather than one after another. Sequential
-        // asking spends the full read timeout on each server that does not
-        // answer, so on a network where the first two are unreachable — which
-        // is the ordinary case on mobile data, and the case this measurement
-        // exists for — only one reply arrives inside any sane budget, and one
-        // reply cannot be compared against anything. The result was that this
-        // returned UNKNOWN on every network it was run on, mobile and Wi-Fi
-        // alike, and the ladder's whole notion of a restricted NAT was dead
-        // code fed by a measurement that never produced an answer.
-        //
-        // Sent together and read in one window, the slow servers cost nothing:
-        // whatever answers within the timeout is compared.
-        runCatching {
-            DatagramSocket().use { socket ->
-                protector.protect(socket)
-                socket.soTimeout = STUN_READ_TIMEOUT_MILLIS
-                val pending = mutableMapOf<String, String>()
-                for ((host, port) in STUN_SERVERS) {
-                    val transaction = runCatching { askMappedAddress(socket, host, port) }.getOrNull()
-                    if (transaction != null) pending[transaction] = host
-                }
-                if (pending.isNotEmpty()) {
-                    val deadline = System.currentTimeMillis() + STUN_READ_TIMEOUT_MILLIS
-                    while (seen.size < 2 && System.currentTimeMillis() < deadline) {
-                        val remaining = (deadline - System.currentTimeMillis()).toInt()
-                        if (remaining <= 0) break
-                        socket.soTimeout = remaining
-                        val reply = DatagramPacket(ByteArray(512), 512)
-                        runCatching { socket.receive(reply) }.getOrElse { break }
-                        val key = transactionKey(reply.data, reply.length) ?: continue
-                        val host = pending.remove(key) ?: continue
-                        val mapped = parseXorMappedAddress(reply.data, reply.length, keyBytes(key))
-                        if (mapped != null) seen += host to mapped
-                    }
-                }
-            }
-        }
+        // The survey asks every server at once on one socket and keeps what
+        // answers; see [StunSurvey] for why that, and not one server after
+        // another. The probe needs two answers to compare; the connect path
+        // needs all of them, so the survey is the one that does the asking.
+        val survey = StunSurvey.run(networkFingerprint = "probe", protector = protector)
+        val seen = survey.answers.map { it.host to it.mapped }
 
         val elapsed = System.currentTimeMillis() - started
         val name = Localised(R.string.probe_name_udp)
@@ -641,61 +580,4 @@ class NetworkProbe(
      * whatever order the network delivers them, and on one socket there is
      * nothing else to tell them apart by.
      */
-    private fun askMappedAddress(socket: DatagramSocket, host: String, port: Int): String {
-        val transactionId = ByteArray(12).also { SecureRandom().nextBytes(it) }
-        val request = ByteArray(20)
-        request[0] = 0x00; request[1] = 0x01 // Binding request
-        request[2] = 0x00; request[3] = 0x00 // Length 0
-        request[4] = 0x21; request[5] = 0x12 // Magic cookie 0x2112A442
-        request[6] = 0xA4.toByte(); request[7] = 0x42
-        transactionId.copyInto(request, 8)
-
-        val address = InetAddress.getByName(host)
-        socket.send(DatagramPacket(request, request.size, address, port))
-        return transactionId.joinToString("") { "%02x".format(it) }
-    }
-
-    /** The transaction id of a binding success response, or null. */
-    private fun transactionKey(data: ByteArray, length: Int): String? {
-        if (length < 20) return null
-        if (data[0].toInt() != 0x01 || data[1].toInt() != 0x01) return null
-        return (8 until 20).joinToString("") { "%02x".format(data[it]) }
-    }
-
-    private fun keyBytes(key: String): ByteArray =
-        ByteArray(12) { key.substring(it * 2, it * 2 + 2).toInt(16).toByte() }
-
-    private fun parseXorMappedAddress(
-        data: ByteArray,
-        length: Int,
-        transactionId: ByteArray,
-    ): String? {
-        // Binding success response, and the transaction has to be ours.
-        if (length < 20) return null
-        if (data[0].toInt() != 0x01 || data[1].toInt() != 0x01) return null
-        for (i in 0 until 12) if (data[8 + i] != transactionId[i]) return null
-
-        var offset = 20
-        while (offset + 4 <= length) {
-            val type = ((data[offset].toInt() and 0xFF) shl 8) or (data[offset + 1].toInt() and 0xFF)
-            val size =
-                ((data[offset + 2].toInt() and 0xFF) shl 8) or (data[offset + 3].toInt() and 0xFF)
-            val value = offset + 4
-            if (value + size > length) return null
-
-            if (type == XOR_MAPPED_ADDRESS && size >= 8 && data[value + 1].toInt() == 0x01) {
-                val port = (
-                    ((data[value + 2].toInt() and 0xFF) shl 8) or
-                        (data[value + 3].toInt() and 0xFF)
-                    ) xor MAGIC_COOKIE_HIGH
-                val octets = IntArray(4) { i ->
-                    (data[value + 4 + i].toInt() and 0xFF) xor MAGIC_COOKIE[i]
-                }
-                return octets.joinToString(".") + ":" + port
-            }
-            // Attributes are padded to a multiple of four bytes.
-            offset = value + size + ((4 - size % 4) % 4)
-        }
-        return null
-    }
 }

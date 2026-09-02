@@ -20,6 +20,7 @@ import app.veil.vpn.model.TunnelStats
 import app.veil.vpn.net.HandshakeGovernor
 import app.veil.vpn.net.LoopbackPorts
 import app.veil.vpn.net.SocketProtector
+import app.veil.vpn.net.StunSurvey
 import app.veil.vpn.tor.Attempt
 import app.veil.vpn.tor.SocksEndpoint
 import app.veil.vpn.tor.StrategyPlanner
@@ -160,6 +161,11 @@ class VeilVpnService : VpnService() {
         return START_STICKY
     }
 
+    /** When the current connect began, for the timeline in the log. */
+    @Volatile private var connectStartedAt = 0L
+
+    private fun sinceConnect(): Long = System.currentTimeMillis() - connectStartedAt
+
     /**
      * Set when a connect arrives during a prepare, so the prepare attaches the
      * interface as soon as its route is up rather than stopping at Ready.
@@ -226,6 +232,7 @@ class VeilVpnService : VpnService() {
     private suspend fun runTunnel(attach: Boolean = true) {
         attachRequested = attach
         parkWhenReady = false
+        connectStartedAt = System.currentTimeMillis()
         HandshakeGovernor.reset()
         // Stop the parked engine's shutdown timer before touching it.
         container.wakeEngine()
@@ -275,12 +282,13 @@ class VeilVpnService : VpnService() {
         startedPorts = ports
         lastNetwork = network
         publishLocalListeners(ports)
+        VeilLog.i("vpn", "timeline: transports up (+${sinceConnect()}ms)")
 
         // The ladder is decided before tor is started, so that tor can be
         // started already pointed at its first rung. Tor is at its most
         // reliable doing what it was launched to do; only changing route needs
         // the control port, and only the second rung onwards is a change.
-        val ladder = buildLadder(settings, ports.keys)
+        val ladder = buildLadder(settings, network, ports.keys)
         if (ladder.isEmpty()) {
             // "Nothing to try" has three quite different causes, and telling
             // them apart is the difference between a user who can act on the
@@ -367,6 +375,7 @@ class VeilVpnService : VpnService() {
         }
         publishLocalListeners(ports)
 
+        VeilLog.i("vpn", "timeline: tor ready for a route (+${sinceConnect()}ms)")
         TunnelBus.publishLadder(ladder)
 
         // Bridges that arrive late still count. WebTunnel's are handed out per
@@ -540,12 +549,27 @@ class VeilVpnService : VpnService() {
      */
     private suspend fun buildLadder(
         settings: VeilSettings,
+        network: NetworkContext,
         available: Set<Transport>,
     ): List<Attempt> {
         // AUTO resolves to a profile that is fixed for this installation, so
         // the population does not all present the same Client Hello.
         val tls = TlsProfile.resolve(settings.tlsProfile, container.settings.installSeed())
         VeilLog.i("vpn", "client hello profile: ${tls.name}")
+
+        // For Snowflake, find out which STUN servers answer from here before
+        // the transport is handed a list. It waits for every server on that
+        // list to answer or time out before it will so much as ask for a
+        // proxy, so this two-and-a-half-second question saves up to five
+        // seconds per peer — and is asked once per network, not per connect.
+        val iceServers = if (settings.manualTransport == Transport.SNOWFLAKE) {
+            val survey = StunSurvey.cached(network.fingerprint)
+                ?: StunSurvey.run(network.fingerprint, protector)
+            VeilLog.i("vpn", "stun: ${survey.answers.size} answer(s), nat ${survey.natBehaviour} (+${sinceConnect()}ms)")
+            survey.iceServers
+        } else {
+            null
+        }
 
         // Refreshing the public bridge list is worth doing, but not worth
         // waiting for: on a censored network the request is exactly as likely
@@ -558,6 +582,7 @@ class VeilVpnService : VpnService() {
             tls,
             settings.dtlsProfile,
             available,
+            iceServers,
         )
     }
 
@@ -757,6 +782,14 @@ class VeilVpnService : VpnService() {
                 lastPercent = bootstrap.percent
                 lastBootstrapPercent = bootstrap.percent
                 lastProgressAt = System.currentTimeMillis()
+                // The timeline that says where a slow connect actually goes:
+                // the bridge (up to ~15%), the directory (to ~80%), the circuit
+                // (to 100%). Optimising without this is guessing.
+                VeilLog.i(
+                    "vpn",
+                    "timeline: ${attempt.label} ${bootstrap.percent}% " +
+                        "${bootstrap.summary} (+${sinceConnect()}ms)",
+                )
                 update(
                     TunnelState.Bootstrapping(
                         transport = attempt.transport,
@@ -928,7 +961,7 @@ class VeilVpnService : VpnService() {
             }
             Veiltun.start(config)
             nativeTunnelRunning = true
-            VeilLog.i("vpn", "tunnel carrying traffic via $socks, dns $dnsTarget")
+            VeilLog.i("vpn", "timeline: tunnel attached via $socks, dns $dnsTarget (+${sinceConnect()}ms)")
         }
 
     /**

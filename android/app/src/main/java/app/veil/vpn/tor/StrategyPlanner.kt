@@ -16,6 +16,7 @@ import app.veil.vpn.net.MoatClient
 import app.veil.vpn.net.NatBehaviour
 import app.veil.vpn.net.NetworkProbe
 import app.veil.vpn.net.ProbeReport
+import app.veil.vpn.net.StunSurvey
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
@@ -115,15 +116,23 @@ class StrategyPlanner(
         tlsProfile: TlsProfile,
         dtlsProfile: DtlsProfile,
         available: Set<Transport>,
+        /**
+         * STUN servers measured to answer on this network, fastest first, or
+         * null to leave the published list alone. See [StunSurvey] for why
+         * this is the difference between a Snowflake that connects in a few
+         * seconds and one that spends them waiting on servers that are not
+         * there.
+         */
+        iceServers: List<String>? = null,
     ): List<Attempt> = withContext(Dispatchers.IO) {
         if (transport != Transport.DIRECT && transport !in available) {
             VeilLog.e("planner", "${transport.torName} has no listener; nothing to try")
             return@withContext emptyList()
         }
         val why = context.getString(R.string.route_why_pinned)
-        val fronted = buildAttempt(transport, why, tlsProfile, dtlsProfile)
+        val fronted = buildAttempt(transport, why, tlsProfile, dtlsProfile, iceServers)
         val alternate = when (transport) {
-            Transport.SNOWFLAKE -> ampSnowflakeAttempt(tlsProfile, dtlsProfile)
+            Transport.SNOWFLAKE -> ampSnowflakeAttempt(tlsProfile, dtlsProfile, iceServers)
             Transport.CONJURE -> dnsConjureAttempt()
             else -> null
         }
@@ -156,6 +165,7 @@ class StrategyPlanner(
         why: String,
         tlsProfile: TlsProfile,
         dtlsProfile: DtlsProfile,
+        iceServers: List<String>? = null,
     ): Attempt? {
         if (transport == Transport.DIRECT) return Attempt(transport, emptyList(), why)
 
@@ -175,7 +185,7 @@ class StrategyPlanner(
             VeilLog.w("planner", "skipping ${transport.torName}: no bridges for it")
             return null
         }
-        return Attempt(transport, candidates.map { shape(it, tlsProfile, dtlsProfile) }, why)
+        return Attempt(transport, candidates.map { shape(it, tlsProfile, dtlsProfile, iceServers) }, why)
     }
 
     /**
@@ -202,6 +212,7 @@ class StrategyPlanner(
     private fun ampSnowflakeAttempt(
         tlsProfile: TlsProfile,
         dtlsProfile: DtlsProfile,
+        iceServers: List<String>? = null,
     ): Attempt? {
         val all = bridges.forTransport(Transport.SNOWFLAKE, limit = 8)
         val published = all.filter { it.params.containsKey("ampcache") }
@@ -233,7 +244,7 @@ class StrategyPlanner(
         // and the whole rung down with it.
         return Attempt(
             transport = Transport.SNOWFLAKE,
-            bridges = listOf(shape(line, tlsProfile, dtlsProfile)),
+            bridges = listOf(shape(line, tlsProfile, dtlsProfile, iceServers)),
             why = context.getString(R.string.route_why_snowflake_amp),
             ampRendezvous = true,
         )
@@ -266,6 +277,7 @@ class StrategyPlanner(
         bridge: BridgeLine,
         tlsProfile: TlsProfile,
         dtlsProfile: DtlsProfile,
+        iceServers: List<String>? = null,
     ): BridgeLine {
         val shaped = when (bridge.transportEnum) {
             Transport.MEEK, Transport.WEBTUNNEL ->
@@ -283,20 +295,22 @@ class StrategyPlanner(
                     // fingerprint of its own that the TLS setting above does
                     // not touch.
                     put("covertdtls-config", dtlsProfile.argument)
-                    // The STUN list is left exactly as published. It was
-                    // shortened here once, to save the seconds WebRTC spends
-                    // gathering candidates from servers that will not answer —
-                    // an optimisation made without measuring anything, and a
-                    // bad one. Keeping the first three of the published list
-                    // means keeping the three furthest from a user in Russia
-                    // and discarding the German ones and the Russian one, which
-                    // are the ones most likely to answer. Snowflake needs STUN
-                    // to learn its own NAT and to gather candidates at all, so
-                    // that is not a slower Snowflake, it is no Snowflake.
+                    // The STUN list, measured rather than guessed.
                     //
-                    // Redundancy in that list is the point of it. Whatever it
-                    // costs in connect time is the price of the transport
-                    // working on a hostile network.
+                    // Snowflake will not ask the broker for a proxy until ICE
+                    // gathering has *completed*, and gathering completes only
+                    // when every STUN server on the list has answered or timed
+                    // out at five seconds. So every unreachable server on the
+                    // list is five seconds of nothing, per peer. This app once
+                    // shortened the list by guessing which servers to keep and
+                    // guessed wrong; it now asks all of them at connect time
+                    // and hands Snowflake the ones that answered, fastest
+                    // first. Fewer than two answers means the survey did not
+                    // learn enough to override the published list — Snowflake
+                    // needs at least a pair to work out what its NAT does —
+                    // and the published list stands.
+                    val measured = iceServers?.takeIf { it.size >= 2 }
+                    if (measured != null) put("ice", measured.joinToString(","))
                 },
             )
 
