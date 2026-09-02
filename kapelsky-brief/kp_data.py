@@ -104,24 +104,121 @@ MARKET = [
     ['Средняя площадь проданного лота', '99 м²', '−15 % за год: было 116 м²'],
 ]
 
-# ── сопоставимые проекты, срез mskguru 01.09.2026 ───────────────────────────
-#  название, метро и расстояние, класс, срок, отделка, метр от, метр до
-PEERS = [
-    ('Капельский, 5',      'Проспект Мира · 0,4 км', 'премиум',  '2029',     'без отделки', 1_300_000, 1_300_000),
-    ('Брюсов',             'Александровский сад · 0,7 км', 'элит', '2026',   'с отделкой',  3_700_000, 5_070_000),
-    ('Фон Дессин',         'Чистые пруды · 0,6 км',  'элит',     'построен', 'без отделки', 2_225_000, 4_426_000),
-    ('Форум',              'Сухаревская · 0,3 км',   'элит',     '2026',     'с отделкой',  1_786_000, 2_376_000),
-    ('Тишинский бульвар',  'Белорусская · 1,0 км',   'элит',     '2028',     'без отделки', 1_216_000, 3_321_000),
-    ('Слава',              'Белорусская · 0,6 км',   'элит',     '2027',     'без отделки',   927_000, 1_890_000),
-    ('LUMIN, апартаменты', 'Китай-город · 0,6 км',   'элит',     'построен', 'без отделки',   799_000, 1_169_000),
-    ('Дом 56',             'Бауманская · 1,1 км',    'элит',     '2026',     'с отделкой',    658_000, 1_030_000),
-    ('PRIDE',              'Савёловская · 1,4 км',   'элит',     'построен', 'с отделкой',    583_000,   972_000),
+# ── когорта Циан: что продаётся вокруг участка ──────────────────────────────
+# cian/peers.json собирает kp_cian.py из четырёх выгрузок клиента Циан.
+# Номер строки совпадает с номером пина на карте конкурентов.
+PEERS = json.load(open(os.path.join(HERE, 'cian', 'peers.json'), encoding='utf-8'))
+
+QUARTER = {1: 'I', 2: 'II', 3: 'III', 4: 'IV',
+           'first': 'I', 'second': 'II', 'third': 'III', 'fourth': 'IV'}
+mln2 = lambda v: f'{v / 1e6:.2f}'.replace('.', ',')
+km = lambda m: f'{m / 1000:.2f}'.replace('.', ',') + ' км'
+band = lambda r: mln2(r['ppmLo']) if r['ppmLo'] == r['ppmHi'] else f"{mln2(r['ppmLo'])} – {mln2(r['ppmHi'])}"
+areas = lambda r: f"{r['areaLo']:.0f} – {r['areaHi']:.0f}".replace('.', ',')
+
+
+def decor_mix(r):
+    items = sorted(r['decor'].items(), key=lambda x: -x[1])
+    return ' · '.join(f'{k} {v}' for k, v in items)
+
+
+def deadline(r):
+    if not r['deadline']:
+        return '—'
+    q = QUARTER.get(r['quarter'])
+    return f"{q} кв. {r['deadline']}" if q else str(r['deadline'])
+
+
+PEER_NEW = [
+    [str(r['no']), r['name'], km(r['dist']), deadline(r), decor_mix(r),
+     str(r['n']), areas(r), band(r)]
+    for r in PEERS if r['kind'] == 'new'
+]
+PEER_RES = [
+    [str(r['no']), r['name'], km(r['dist']), str(r['year'] or '—'),
+     str(r['n']), areas(r), band(r), decor_mix(r)]
+    for r in PEERS if r['kind'] == 'resale'
 ]
 
-PEER_ROWS = [
-    [n, m, k, s, f, nf(lo) if lo == hi else f'{nf(lo)} – {nf(hi)}']
-    for n, m, k, s, f, lo, hi in PEERS
-]
+COHORT = json.load(open(os.path.join(HERE, 'cian', 'cohort.json'), encoding='utf-8'))
+CL = COHORT['lots']
+PREM_JK = ('ФАНТОМ', 'Клубный дом Форум', 'Дом Франка')
+BIZ_JK = ('Ридж', 'Мод')
+_new = [l for l in CL if l['source'].endswith('new')]
+_res = [l for l in CL if l['source'].endswith('resale')]
+_prem = [l for l in _new if l['complex'] in PREM_JK]
+_biz = [l for l in _new if l['complex'] in BIZ_JK]
+_km = [l for l in CL if l['dist'] <= 1000]
+
+from statistics import median as _med
+COH = {
+    'total': len(CL), 'new': len(_new), 'resale': len(_res),
+    'apart': sum(1 for l in CL if l['apart']),
+    'below': sum(1 for l in CL if l['ppm'] < PPM),
+    'belowPct': round(sum(1 for l in CL if l['ppm'] < PPM) / len(CL) * 100),
+    'prem': len(_prem), 'premMed': nf(round(_med(l['ppm'] for l in _prem))),
+    'biz': len(_biz), 'bizMed': nf(round(_med(l['ppm'] for l in _biz))),
+    'km': len(_km), 'kmMed': nf(round(_med(l['ppm'] for l in _km))),
+    'toPhantom': f"{2_480_000 / PPM:.1f}".replace('.', ','),
+    'toBiz': f"{PPM / 649_902:.1f}".replace('.', ','),
+}
+
+# ── сколько рынок платит за ремонт ──────────────────────────────────────────
+# repairType добран из карточек Циан: в поисковой выдаче поля нет.
+# Сравнение идёт внутри одних и тех же домов, поэтому локация, год и класс
+# у обеих групп совпадают — различается только состояние квартиры.
+_fin = [l for l in _res if l['repair'] in ('дизайнерский', 'без ремонта')]
+_design = [l['ppm'] for l in _fin if l['repair'] == 'дизайнерский']
+_shell = [l['ppm'] for l in _fin if l['repair'] == 'без ремонта']
+FIN_ROWS = []
+for name in dict.fromkeys(l['complex'] for l in _fin if l['complex']):
+    a = [l['ppm'] for l in _fin if l['complex'] == name and l['repair'] == 'дизайнерский']
+    b = [l['ppm'] for l in _fin if l['complex'] == name and l['repair'] == 'без ремонта']
+    if not a or not b:
+        continue
+    ma, mb = _med(a), _med(b)
+    FIN_ROWS.append([name.split(' (')[0], f'{len(a)}', nf(round(ma)),
+                     f'{len(b)}', nf(round(mb)), f'+{round((ma / mb - 1) * 100)} %'])
+FIN_ROWS.sort(key=lambda r: -int(r[2].replace('\u00a0', '')))
+# Складывать все дома в одну кучу нельзя: у «Мода» оболочек втрое больше, чем
+# отремонтированных лотов, и общая медиана поехала бы за счёт состава выборки,
+# а не за счёт ремонта. Итог — медиана надбавок, посчитанных внутри домов.
+_pairs = []
+for _name in dict.fromkeys(l['complex'] for l in _fin if l['complex']):
+    _a = [l['ppm'] for l in _fin if l['complex'] == _name and l['repair'] == 'дизайнерский']
+    _b = [l['ppm'] for l in _fin if l['complex'] == _name and l['repair'] == 'без ремонта']
+    if _a and _b:
+        _pairs.append((_med(_a), _med(_b)))
+_pct = _med([a / b - 1 for a, b in _pairs]) * 100
+_gap = _med([a - b for a, b in _pairs])
+FIN_ROWS.append([f'Медиана по {len(_pairs)} домам', f'{len(_design)}', '—',
+                 f'{len(_shell)}', '—', f'+{round(_pct)} %'])
+# Чем продаётся когорта: состояние лота у новостроек и у вторички.
+# У новостроек метка идёт из выдачи, у вторички — из карточек.
+_STATE_ORDER = ['без отделки', 'предчистовая', 'черновая', 'чистовая',
+                'под ключ с мебелью', 'дизайнерский', 'евроремонт',
+                'косметический', 'без ремонта']
+_cnt = lambda ls, k: sum(1 for l in ls if (l['decor'] or l['repair']) == k)
+STATE_ROWS = [[k, str(_cnt(_new, k)) if _cnt(_new, k) else '—',
+               str(_cnt(_res, k)) if _cnt(_res, k) else '—']
+              for k in _STATE_ORDER
+              if _cnt(_new, k) or _cnt(_res, k)]
+STATE_ROWS.append(['состояние не указано',
+                   str(sum(1 for l in _new if not (l['decor'] or l['repair']))),
+                   str(sum(1 for l in _res if not (l['decor'] or l['repair'])))])
+STATE_ROWS.append(['Всего лотов', str(len(_new)), str(len(_res))])
+
+FIN = {
+    'design': len(_design), 'shell': len(_shell),
+    'designMed': nf(round(_med(_design))), 'shellMed': nf(round(_med(_shell))),
+    'gap': nf(round(_gap)),
+    'pct': round(_pct),
+    'lo': round(min(a / b - 1 for a, b in _pairs) * 100),
+    'hi': round(max(a / b - 1 for a, b in _pairs) * 100),
+    'houses': len(_pairs),
+    'coverLo': round(_gap / 500_000 * 100),
+    'coverHi': round(_gap / 300_000 * 100),
+}
 
 # ── особенности проекта ─────────────────────────────────────────────────────
 FEATURES = [
@@ -157,8 +254,8 @@ RNS = [
      'формулировка на kapelsky5.ru: открытие продаж — во II–III квартале 2026 года, '
      'после размещения проектной декларации. Обновления страницы пока нет.'],
     ['Цена закрытого этапа фиксируется договором',
-     'ориентир открытого старта задают проекты той же локации: 1,79–2,38 млн ₽ за метр '
-     'в «Форуме» и 1,22–3,32 млн ₽ в «Тишинском бульваре».'],
+     'ориентир открытого старта задают премиальные проекты той же части ЦАО: '
+     '1,65–3,58 млн ₽ за метр в «ФАНТОМе» и 1,78–2,67 млн ₽ в «Форуме».'],
     ['Срок между РнС и вводом заявлен в три года',
      'ключи обещают в 2029 году. Для дома на 46 квартир в готовом квартале это '
      'спокойный график, но он же означает три года без арендного дохода.'],
@@ -191,7 +288,12 @@ if __name__ == '__main__':
         'card': CARD,
         'priceFacts': PRICE_FACTS,
         'market': MARKET,
-        'peers': PEER_ROWS,
+        'peerNew': PEER_NEW,
+        'peerRes': PEER_RES,
+        'coh': COH,
+        'fin': FIN,
+        'finRows': FIN_ROWS,
+        'stateRows': STATE_ROWS,
         'budget': BUDGET,
         'timeline': TIMELINE,
         'nearby': NEARBY,

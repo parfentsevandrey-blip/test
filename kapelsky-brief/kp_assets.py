@@ -16,6 +16,7 @@ ASSETS = os.path.join(HERE, 'assets')
 CONVERT = [
     ('kp_map_area.png', 'map_area.jpg', 80),
     ('kp_map_city.png', 'map_city.jpg', 80),
+    ('kp_map_peers.png', 'map_peers.jpg', 80),
     ('kp_chart.png',    'chart.jpg',    86),
 ]
 

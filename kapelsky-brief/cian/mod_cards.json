@@ -1,0 +1,1040 @@
+[
+  {
+    "id": 329570909,
+    "price": 54000000,
+    "priceChanges": [
+      {
+        "date": "2026-08-03",
+        "price": 54000000
+      },
+      {
+        "date": "2026-04-30",
+        "price": 52000000
+      }
+    ],
+    "viewsLine": "1216 просмотров, 10 за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": "separate",
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 0,
+    "cargoLifts": 0,
+    "editDate": "2026-09-01T18:10:22.382460Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "b1bb096f-8337-499c-8ade-131f776cb739",
+    "views": {
+      "total": 1216,
+      "today": 10
+    },
+    "estimation": null
+  },
+  {
+    "id": 333054920,
+    "price": 69000000,
+    "priceChanges": [
+      {
+        "date": "2026-08-18",
+        "price": 69000000
+      }
+    ],
+    "viewsLine": "258 просмотров, 6 за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "no",
+    "roomType": "separate",
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": null,
+    "cargoLifts": null,
+    "editDate": "2026-09-01T19:33:35.147000Z",
+    "isImported": true,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "7cacb0fe-2019-4211-a8af-cdf228dfc924",
+    "views": {
+      "total": 258,
+      "today": 6
+    },
+    "estimation": null
+  },
+  {
+    "id": 332137381,
+    "price": 36000000,
+    "priceChanges": [
+      {
+        "date": "2026-07-18",
+        "price": 36000000
+      }
+    ],
+    "viewsLine": "1272 просмотра, 5 за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": null,
+    "windowsViewType": "yard",
+    "allRoomsArea": "15-14",
+    "amenities": [],
+    "passengerLifts": 3,
+    "cargoLifts": null,
+    "editDate": "2026-09-01T14:13:03.610000Z",
+    "isImported": true,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "19316a3c-27d7-4431-a9f0-a9e9329b4dd5",
+    "views": {
+      "total": 1272,
+      "today": 5
+    },
+    "estimation": null
+  },
+  {
+    "id": 331680933,
+    "price": 24700000,
+    "priceChanges": [
+      {
+        "date": "2026-09-02",
+        "price": 24700000
+      },
+      {
+        "date": "2026-08-13",
+        "price": 25700000
+      },
+      {
+        "date": "2026-07-03",
+        "price": 26500000
+      }
+    ],
+    "viewsLine": "400 просмотров, 5 за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": null,
+    "roomType": "separate",
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [
+      "noThresholdAtEntrance"
+    ],
+    "passengerLifts": 4,
+    "cargoLifts": 0,
+    "editDate": "2026-09-02T10:07:42.493000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "2c467539-423b-49a6-939e-178aaa88fd29",
+    "views": {
+      "total": 400,
+      "today": 5
+    },
+    "estimation": null
+  },
+  {
+    "id": 324957171,
+    "price": 47990000,
+    "priceChanges": [
+      {
+        "date": "2026-08-04",
+        "price": 47990000
+      },
+      {
+        "date": "2026-05-29",
+        "price": 48490000
+      },
+      {
+        "date": "2026-04-20",
+        "price": 48990000
+      },
+      {
+        "date": "2026-04-07",
+        "price": 49990000
+      },
+      {
+        "date": "2026-02-09",
+        "price": 50990000
+      },
+      {
+        "date": "2026-02-09",
+        "price": 52090000
+      },
+      {
+        "date": "2026-02-09",
+        "price": 52090000
+      },
+      {
+        "date": "2025-12-24",
+        "price": 52090000
+      },
+      {
+        "date": "2025-12-21",
+        "price": 50190000
+      },
+      {
+        "date": "2025-12-11",
+        "price": 51990000
+      }
+    ],
+    "viewsLine": "2182 просмотра, 1 за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "no",
+    "roomType": "separate",
+    "windowsViewType": "street",
+    "allRoomsArea": "16-20-12",
+    "amenities": [],
+    "passengerLifts": 4,
+    "cargoLifts": 2,
+    "editDate": "2026-09-01T13:10:20.596198Z",
+    "isImported": true,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "b3d907d9-a8f5-433e-aa55-687eb2f458ee",
+    "views": {
+      "total": 2182,
+      "today": 1
+    },
+    "estimation": null
+  },
+  {
+    "id": 330676905,
+    "price": 31200000,
+    "priceChanges": [
+      {
+        "date": "2026-08-30",
+        "price": 31200000
+      },
+      {
+        "date": "2026-08-10",
+        "price": 32000000
+      },
+      {
+        "date": "2026-07-05",
+        "price": 33000000
+      },
+      {
+        "date": "2026-06-02",
+        "price": 33900000
+      }
+    ],
+    "viewsLine": "701 просмотр, 5 за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": null,
+    "roomType": "both",
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 4,
+    "cargoLifts": 2,
+    "editDate": "2026-08-30T13:39:40Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "c42e66a0-fe26-4bd2-af73-23bb68aaef80",
+    "views": {
+      "total": 701,
+      "today": 5
+    },
+    "estimation": null
+  },
+  {
+    "id": 331896404,
+    "price": 14990000,
+    "priceChanges": [
+      {
+        "date": "2026-08-26",
+        "price": 14990000
+      },
+      {
+        "date": "2026-08-10",
+        "price": 15290000
+      },
+      {
+        "date": "2026-07-10",
+        "price": 15500000
+      }
+    ],
+    "viewsLine": "923 просмотра, 1 за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": null,
+    "roomType": null,
+    "windowsViewType": "yard",
+    "allRoomsArea": "24",
+    "amenities": [],
+    "passengerLifts": 4,
+    "cargoLifts": 2,
+    "editDate": "2026-09-01T13:40:42.654113Z",
+    "isImported": true,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "88c5e67a-f217-4698-a669-ca9d9ed46e27",
+    "views": {
+      "total": 923,
+      "today": 1
+    },
+    "estimation": null
+  },
+  {
+    "id": 330442808,
+    "price": 46000000,
+    "priceChanges": [
+      {
+        "date": "2026-07-14",
+        "price": 46000000
+      },
+      {
+        "date": "2026-06-30",
+        "price": 48000000
+      },
+      {
+        "date": "2026-05-26",
+        "price": 49000000
+      }
+    ],
+    "viewsLine": "577 просмотров, 3 за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "no",
+    "roomType": "both",
+    "windowsViewType": "yardAndStreet",
+    "allRoomsArea": "20-15-11-11",
+    "amenities": [],
+    "passengerLifts": 4,
+    "cargoLifts": 2,
+    "editDate": "2026-08-31T15:19:40.517000Z",
+    "isImported": true,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "794caec9-b376-4900-bf9d-bec77dcbc1a5",
+    "views": {
+      "total": 577,
+      "today": 3
+    },
+    "estimation": null
+  },
+  {
+    "id": 333125886,
+    "price": 41200000,
+    "priceChanges": [
+      {
+        "date": "2026-08-20",
+        "price": 41200000
+      }
+    ],
+    "viewsLine": "135 просмотров, 1 за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "no",
+    "roomType": null,
+    "windowsViewType": "yardAndStreet",
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 0,
+    "cargoLifts": 0,
+    "editDate": "2026-08-20T16:59:41.027000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "50936e3a-4565-43f0-b9b7-b0bcd86d6e03",
+    "views": {
+      "total": 135,
+      "today": 1
+    },
+    "estimation": null
+  },
+  {
+    "id": 333138139,
+    "price": 30000000,
+    "priceChanges": [
+      {
+        "date": "2026-08-20",
+        "price": 30000000
+      }
+    ],
+    "viewsLine": "278 просмотров, 3 за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": "separate",
+    "windowsViewType": "street",
+    "allRoomsArea": "13+12",
+    "amenities": [],
+    "passengerLifts": 4,
+    "cargoLifts": 4,
+    "editDate": "2026-09-01T18:37:25.047000Z",
+    "isImported": true,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "4162612e-3ceb-4a46-9544-47f776ce9d92",
+    "views": {
+      "total": 278,
+      "today": 3
+    },
+    "estimation": null
+  },
+  {
+    "id": 325436409,
+    "price": 33900000,
+    "priceChanges": [
+      {
+        "date": "2026-08-17",
+        "price": 33900000
+      },
+      {
+        "date": "2026-08-17",
+        "price": 39900000
+      },
+      {
+        "date": "2026-06-17",
+        "price": 34100000
+      },
+      {
+        "date": "2026-05-27",
+        "price": 34900000
+      },
+      {
+        "date": "2026-05-12",
+        "price": 34500000
+      },
+      {
+        "date": "2026-04-20",
+        "price": 34800000
+      },
+      {
+        "date": "2026-04-18",
+        "price": 35500000
+      },
+      {
+        "date": "2026-02-04",
+        "price": 39900000
+      },
+      {
+        "date": "2025-12-28",
+        "price": 40500000
+      }
+    ],
+    "viewsLine": "649 просмотров, нет за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "no",
+    "roomType": "separate",
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 4,
+    "cargoLifts": 2,
+    "editDate": "2026-08-26T16:09:19.813000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "bdd58e21-8700-4558-aff6-ab507f61ea45",
+    "views": {
+      "total": 649,
+      "today": null
+    },
+    "estimation": null
+  },
+  {
+    "id": 333161130,
+    "price": 22500000,
+    "priceChanges": [
+      {
+        "date": "2026-08-21",
+        "price": 22500000
+      }
+    ],
+    "viewsLine": "121 просмотр, 2 за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "no",
+    "roomType": null,
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 4,
+    "cargoLifts": 2,
+    "editDate": "2026-08-31T14:27:53.681241Z",
+    "isImported": true,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "1ef5f85e-5e8b-4371-ab6d-cd68a92c4b30",
+    "views": {
+      "total": 121,
+      "today": 2
+    },
+    "estimation": null
+  },
+  {
+    "id": 333270618,
+    "price": 54999999,
+    "priceChanges": [
+      {
+        "date": "2026-08-25",
+        "price": 54999999
+      }
+    ],
+    "viewsLine": "19 просмотров, нет за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "no",
+    "roomType": "separate",
+    "windowsViewType": "street",
+    "allRoomsArea": "25-17",
+    "amenities": [],
+    "passengerLifts": 3,
+    "cargoLifts": 1,
+    "editDate": "2026-08-31T11:55:56.287871Z",
+    "isImported": true,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "e955431d-03ea-4109-9076-ff2f234d6df1",
+    "views": {
+      "total": 19,
+      "today": null
+    },
+    "estimation": null
+  },
+  {
+    "id": 332767232,
+    "price": 54000000,
+    "priceChanges": [
+      {
+        "date": "2026-08-09",
+        "price": 54000000
+      }
+    ],
+    "viewsLine": "371 просмотр, 1 за сегодня",
+    "bti": null,
+    "tourUrl": "https://realty.yandex.ru/d3-embedded/player/87225d61-33f9-4e7e-8735-7e47dc2d0605",
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "no",
+    "roomType": null,
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": null,
+    "cargoLifts": null,
+    "editDate": "2026-09-01T16:40:43.382037Z",
+    "isImported": true,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "e6f424eb-3e4f-44df-a7aa-4c9704acbce8",
+    "views": {
+      "total": 371,
+      "today": 1
+    },
+    "estimation": null
+  },
+  {
+    "id": 332091925,
+    "price": 34000000,
+    "priceChanges": [
+      {
+        "date": "2026-08-26",
+        "price": 34000000
+      },
+      {
+        "date": "2026-07-17",
+        "price": 33500000
+      }
+    ],
+    "viewsLine": "441 просмотр, 2 за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": null,
+    "windowsViewType": "yardAndStreet",
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": null,
+    "cargoLifts": null,
+    "editDate": "2026-08-26T12:29:36.277000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "5152f750-c931-4046-bcfc-be085d32a565",
+    "views": {
+      "total": 441,
+      "today": 2
+    },
+    "estimation": null
+  },
+  {
+    "id": 333133943,
+    "price": 35000000,
+    "priceChanges": [
+      {
+        "date": "2026-08-20",
+        "price": 35000000
+      }
+    ],
+    "viewsLine": "85 просмотров, нет за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "no",
+    "roomType": "separate",
+    "windowsViewType": "yard",
+    "allRoomsArea": null,
+    "amenities": [
+      "noThresholdAtEntrance",
+      "noThresholdAtEntranceToFlat",
+      "spaciousElevator",
+      "liftAtEntrance",
+      "wideEntranceDoor",
+      "extraWideBathroomAndToiletDoors",
+      "extraWideRoomsAndKitchenDoors"
+    ],
+    "passengerLifts": 2,
+    "cargoLifts": 2,
+    "editDate": "2026-08-20T16:47:17.110000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "ca90bfc9-acc1-489a-b61c-8b3e1069cc56",
+    "views": {
+      "total": 85,
+      "today": null
+    },
+    "estimation": null
+  },
+  {
+    "id": 328874709,
+    "price": 24990000,
+    "priceChanges": [
+      {
+        "date": "2026-08-06",
+        "price": 24990000
+      },
+      {
+        "date": "2026-05-25",
+        "price": 25490000
+      },
+      {
+        "date": "2026-04-11",
+        "price": 26790000
+      }
+    ],
+    "viewsLine": "392 просмотра, 3 за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "no",
+    "roomType": null,
+    "windowsViewType": "street",
+    "allRoomsArea": "14",
+    "amenities": [],
+    "passengerLifts": 4,
+    "cargoLifts": 2,
+    "editDate": "2026-09-01T13:25:27.588036Z",
+    "isImported": true,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "b29ca7b0-1a10-45cc-b73f-5ea80ad4baf8",
+    "views": {
+      "total": 392,
+      "today": 3
+    },
+    "estimation": null
+  },
+  {
+    "id": 329814854,
+    "price": 34990000,
+    "priceChanges": [
+      {
+        "date": "2026-08-13",
+        "price": 34990000
+      },
+      {
+        "date": "2026-05-08",
+        "price": 38000000
+      }
+    ],
+    "viewsLine": "239 просмотров, нет за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": null,
+    "roomType": null,
+    "windowsViewType": "street",
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 4,
+    "cargoLifts": 2,
+    "editDate": "2026-09-01T13:25:29.359534Z",
+    "isImported": true,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "e5021f50-a640-4010-aca8-472a47676310",
+    "views": {
+      "total": 239,
+      "today": null
+    },
+    "estimation": null
+  },
+  {
+    "id": 332660714,
+    "price": 69000000,
+    "priceChanges": [
+      {
+        "date": "2026-08-05",
+        "price": 69000000
+      }
+    ],
+    "viewsLine": "98 просмотров, 1 за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "no",
+    "roomType": "separate",
+    "windowsViewType": "street",
+    "allRoomsArea": "14.8-15.9-21.4",
+    "amenities": [],
+    "passengerLifts": 4,
+    "cargoLifts": 2,
+    "editDate": "2026-09-01T13:40:53.432864Z",
+    "isImported": true,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "37132e7e-3758-4e90-8ebf-dba4e9c1d0a3",
+    "views": {
+      "total": 98,
+      "today": 1
+    },
+    "estimation": null
+  },
+  {
+    "id": 331301327,
+    "price": 22800000,
+    "priceChanges": [
+      {
+        "date": "2026-07-21",
+        "price": 22800000
+      },
+      {
+        "date": "2026-06-22",
+        "price": 23000000
+      }
+    ],
+    "viewsLine": "269 просмотров, нет за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "no",
+    "roomType": null,
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 4,
+    "cargoLifts": 2,
+    "editDate": "2026-08-31T20:55:23.335728Z",
+    "isImported": true,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "248239b9-3678-443f-a87e-190967fa6775",
+    "views": {
+      "total": 269,
+      "today": null
+    },
+    "estimation": null
+  },
+  {
+    "id": 332435837,
+    "price": 47900000,
+    "priceChanges": [
+      {
+        "date": "2026-08-19",
+        "price": 47900000
+      },
+      {
+        "date": "2026-07-29",
+        "price": 48000000
+      },
+      {
+        "date": "2026-07-29",
+        "price": 49900000
+      }
+    ],
+    "viewsLine": "187 просмотров, нет за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "cosmetic",
+    "roomType": "separate",
+    "windowsViewType": "street",
+    "allRoomsArea": "20-20-15",
+    "amenities": [],
+    "passengerLifts": 3,
+    "cargoLifts": null,
+    "editDate": "2026-09-01T15:10:21.889898Z",
+    "isImported": true,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "91cfb127-eb42-45eb-8397-9d91f9077c56",
+    "views": {
+      "total": 187,
+      "today": null
+    },
+    "estimation": null
+  },
+  {
+    "id": 330739930,
+    "price": 54000000,
+    "priceChanges": [
+      {
+        "date": "2026-08-05",
+        "price": 54000000
+      },
+      {
+        "date": "2026-06-03",
+        "price": 52000000
+      }
+    ],
+    "viewsLine": "563 просмотра, нет за сегодня",
+    "bti": null,
+    "tourUrl": "https://realty.yandex.ru/d3-embedded/player/161e356d-210a-4aad-994d-b927d04593fc",
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": null,
+    "windowsViewType": "yardAndStreet",
+    "allRoomsArea": "12-15",
+    "amenities": [],
+    "passengerLifts": 4,
+    "cargoLifts": 2,
+    "editDate": "2026-09-01T13:25:31.903212Z",
+    "isImported": true,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "dfc05053-3d5c-46ed-9dea-2ba8494ddf60",
+    "views": {
+      "total": 563,
+      "today": null
+    },
+    "estimation": null
+  },
+  {
+    "id": 330050901,
+    "price": 26800000,
+    "priceChanges": [
+      {
+        "date": "2026-08-24",
+        "price": 26800000
+      },
+      {
+        "date": "2026-07-21",
+        "price": 27100000
+      },
+      {
+        "date": "2026-05-15",
+        "price": 27500000
+      }
+    ],
+    "viewsLine": "120 просмотров, 3 за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "no",
+    "roomType": null,
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 4,
+    "cargoLifts": 2,
+    "editDate": "2026-09-01T15:55:21.829174Z",
+    "isImported": true,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "5547fcc9-cc69-40ea-bf0e-41741dd5f6a4",
+    "views": {
+      "total": 120,
+      "today": 3
+    },
+    "estimation": null
+  },
+  {
+    "id": 331362019,
+    "price": 26500000,
+    "priceChanges": [
+      {
+        "date": "2026-07-02",
+        "price": 26500000
+      },
+      {
+        "date": "2026-06-29",
+        "price": 27000000
+      },
+      {
+        "date": "2026-06-24",
+        "price": 28000000
+      }
+    ],
+    "viewsLine": "306 просмотров, 1 за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "no",
+    "roomType": null,
+    "windowsViewType": "yardAndStreet",
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 1,
+    "cargoLifts": 0,
+    "editDate": "2026-08-31T17:25:44.719179Z",
+    "isImported": true,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "a93b136a-d9b8-43cb-9978-145adbd4edcd",
+    "views": {
+      "total": 306,
+      "today": 1
+    },
+    "estimation": null
+  },
+  {
+    "id": 332357574,
+    "price": 36500000,
+    "priceChanges": [
+      {
+        "date": "2026-07-27",
+        "price": 36500000
+      }
+    ],
+    "viewsLine": "74 просмотра, нет за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "no",
+    "roomType": "separate",
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 6,
+    "cargoLifts": 0,
+    "editDate": "2026-08-28T13:20:09.530000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "e126490b-c4a8-4aa2-af34-0d4d50b85379",
+    "views": {
+      "total": 74,
+      "today": null
+    },
+    "estimation": null
+  },
+  {
+    "id": 328068233,
+    "price": 36680000,
+    "priceChanges": [
+      {
+        "date": "2026-07-02",
+        "price": 36680000
+      },
+      {
+        "date": "2026-03-22",
+        "price": 36280000
+      }
+    ],
+    "viewsLine": "220 просмотров, нет за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "no",
+    "roomType": "separate",
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 4,
+    "cargoLifts": 2,
+    "editDate": "2026-08-25T19:28:21.893000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "d4e95ce0-1a88-4979-812b-c321d534b262",
+    "views": {
+      "total": 220,
+      "today": null
+    },
+    "estimation": null
+  },
+  {
+    "id": 326521396,
+    "price": 37890000,
+    "priceChanges": [
+      {
+        "date": "2026-02-25",
+        "price": 37890000
+      },
+      {
+        "date": "2026-02-04",
+        "price": 37500000
+      }
+    ],
+    "viewsLine": "232 просмотра, нет за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "no",
+    "roomType": "separate",
+    "windowsViewType": "street",
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 3,
+    "cargoLifts": 3,
+    "editDate": "2026-08-11T11:48:42.617000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "d210b007-b80a-432c-9ee1-6fb9f4b4c455",
+    "views": {
+      "total": 232,
+      "today": null
+    },
+    "estimation": null
+  }
+]

@@ -21,7 +21,7 @@ from ymap import render
 from markers import pin, label
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-RED, NAVY, GREEN = (179, 40, 45), (31, 42, 68), (58, 96, 62)
+RED, NAVY, BRONZE = (179, 40, 45), (31, 42, 68), (156, 106, 38)
 R_EARTH = 6371000.0
 
 HOUSE = (37.631307, 55.784482)
@@ -85,3 +85,18 @@ if __name__ == '__main__':
 
     for name, lon, lat in [(m[0], m[1], m[2]) for m in METRO] + [('Кремль', *KREML)]:
         print(f'  {name:16s} {metres(*HOUSE, lon, lat):7.0f} м')
+
+    # ── конкуренты: нумерованные пины под таблицу справки ──
+    import json
+    peers = json.load(open(os.path.join(HERE, 'cian', 'peers.json'), encoding='utf-8'))
+    base, proj = render((37.63230, 55.78200), 14, 920, 760, scale=S)
+    img = base.convert('RGBA'); dr = ImageDraw.Draw(img, 'RGBA')
+    for q in [x for x in peers if x.get('pin', True)]:
+        x, y = proj(q['lng'], q['lat'])
+        pin(dr, x, y, 21, BRONZE if q['kind'] == 'new' else NAVY, num=q['no'])
+    hx, hy = proj(*HOUSE)
+    pin(dr, hx, hy, 27, RED)
+    label(img, dr, hx + 100, hy - 34, 'Капельский, 5',
+          '≈ 1,3 млн ₽ за м²', 'left', 29, fg=RED, sfg=(120, 70, 70))
+    img.convert('RGB').save(os.path.join(HERE, 'assets', 'kp_map_peers.png'))
+    print('assets/kp_map_peers.png', img.size, f'— {len(peers)} строк')

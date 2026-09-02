@@ -1,0 +1,2708 @@
+[
+  {
+    "id": 322010624,
+    "price": 119000000,
+    "priceChanges": [
+      {
+        "date": "2026-06-21",
+        "price": 119000000
+      },
+      {
+        "date": "2025-09-19",
+        "price": 125500000
+      }
+    ],
+    "viewsLine": "1523 просмотра, нет за сегодня",
+    "bti": {
+      "yearRelease": 2013,
+      "houseMaterialType": "block",
+      "floorMax": 17,
+      "entrances": 2,
+      "flatCount": 134,
+      "isEmergency": false,
+      "demolishedInMoscowProgramm": false,
+      "houseHeatSupplyType": "central",
+      "houseOverhaulFundType": "unknown",
+      "houseGasSupplyType": "unknown",
+      "houseOverlapType": "concrete",
+      "lifts": 9,
+      "seriesName": "Индивидуальный проект"
+    },
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "no",
+    "roomType": null,
+    "windowsViewType": "yardAndStreet",
+    "allRoomsArea": "27--19-26",
+    "amenities": [],
+    "passengerLifts": 4,
+    "cargoLifts": null,
+    "editDate": "2026-09-01T13:25:23.033456Z",
+    "isImported": true,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "4cce61a9-2e58-4338-a31c-c09d45ee835a",
+    "views": {
+      "total": 1523,
+      "today": null
+    },
+    "estimation": {
+      "estimation": "98,4 млн ₽",
+      "range": "88,6—108,3 млн ₽",
+      "label": null,
+      "lowMln": 88.6,
+      "highMln": 108.3
+    }
+  },
+  {
+    "id": 330488248,
+    "price": 147000000,
+    "priceChanges": [
+      {
+        "date": "2026-05-27",
+        "price": 147000000
+      }
+    ],
+    "viewsLine": "1721 просмотр, 3 за сегодня",
+    "bti": {
+      "yearRelease": 2013,
+      "houseMaterialType": "block",
+      "floorMax": 17,
+      "entrances": 2,
+      "flatCount": 134,
+      "isEmergency": false,
+      "demolishedInMoscowProgramm": false,
+      "houseHeatSupplyType": "central",
+      "houseOverhaulFundType": "unknown",
+      "houseGasSupplyType": "unknown",
+      "houseOverlapType": "concrete",
+      "lifts": 9,
+      "seriesName": "Индивидуальный проект"
+    },
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": null,
+    "windowsViewType": "yardAndStreet",
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 1,
+    "cargoLifts": null,
+    "editDate": "2026-09-01T12:45:43.690000Z",
+    "isImported": true,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "8e294d75-8332-4dd2-94e1-4f16479e9d70",
+    "views": {
+      "total": 1721,
+      "today": 3
+    },
+    "estimation": {
+      "estimation": "147,3 млн ₽",
+      "range": "132,6—162,0 млн ₽",
+      "label": "Хорошая цена",
+      "lowMln": 132.6,
+      "highMln": 162
+    }
+  },
+  {
+    "id": 330467890,
+    "price": 147000000,
+    "priceChanges": [
+      {
+        "date": "2026-05-27",
+        "price": 147000000
+      }
+    ],
+    "viewsLine": "255 просмотров, 3 за сегодня",
+    "bti": {
+      "yearRelease": 2013,
+      "houseMaterialType": "block",
+      "floorMax": 17,
+      "entrances": 2,
+      "flatCount": 134,
+      "isEmergency": false,
+      "demolishedInMoscowProgramm": false,
+      "houseHeatSupplyType": "central",
+      "houseOverhaulFundType": "unknown",
+      "houseGasSupplyType": "unknown",
+      "houseOverlapType": "concrete",
+      "lifts": 9,
+      "seriesName": "Индивидуальный проект"
+    },
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": null,
+    "windowsViewType": "yardAndStreet",
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 4,
+    "cargoLifts": 1,
+    "editDate": "2026-08-25T12:57:08.987000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "3862aa95-4aee-45f8-93b4-721099191094",
+    "views": {
+      "total": 255,
+      "today": 3
+    },
+    "estimation": {
+      "estimation": "147,3 млн ₽",
+      "range": "132,6—162,0 млн ₽",
+      "label": "Хорошая цена",
+      "lowMln": 132.6,
+      "highMln": 162
+    }
+  },
+  {
+    "id": 188390059,
+    "price": 165000000,
+    "priceChanges": [
+      {
+        "date": "2026-07-18",
+        "price": 165000000
+      }
+    ],
+    "viewsLine": "1149 просмотров, нет за сегодня",
+    "bti": {
+      "yearRelease": 2013,
+      "houseMaterialType": "block",
+      "floorMax": 17,
+      "entrances": 2,
+      "flatCount": 134,
+      "isEmergency": false,
+      "demolishedInMoscowProgramm": false,
+      "houseHeatSupplyType": "central",
+      "houseOverhaulFundType": "unknown",
+      "houseGasSupplyType": "unknown",
+      "houseOverlapType": "concrete",
+      "lifts": 9,
+      "seriesName": "Индивидуальный проект"
+    },
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": "separate",
+    "windowsViewType": "yardAndStreet",
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 1,
+    "cargoLifts": 1,
+    "editDate": "2026-08-18T08:30:06.500000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "751ae451-8cd3-491b-9dab-475fb671c648",
+    "views": {
+      "total": 1149,
+      "today": null
+    },
+    "estimation": {
+      "estimation": "171,8 млн ₽",
+      "range": "154,6—189,0 млн ₽",
+      "label": "Хорошая цена",
+      "lowMln": 154.6,
+      "highMln": 189
+    }
+  },
+  {
+    "id": 330216711,
+    "price": 110000000,
+    "priceChanges": [
+      {
+        "date": "2026-05-20",
+        "price": 110000000
+      }
+    ],
+    "viewsLine": "488 просмотров, нет за сегодня",
+    "bti": {
+      "yearRelease": 2013,
+      "houseMaterialType": "block",
+      "floorMax": 17,
+      "entrances": 2,
+      "flatCount": 134,
+      "isEmergency": false,
+      "demolishedInMoscowProgramm": false,
+      "houseHeatSupplyType": "central",
+      "houseOverhaulFundType": "unknown",
+      "houseGasSupplyType": "unknown",
+      "houseOverlapType": "concrete",
+      "lifts": 9,
+      "seriesName": "Индивидуальный проект"
+    },
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": null,
+    "roomType": null,
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": null,
+    "cargoLifts": null,
+    "editDate": "2026-09-01T18:10:24.180842Z",
+    "isImported": true,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "f39a10fc-40ad-4552-bfd5-52f2ffb6f84c",
+    "views": {
+      "total": 488,
+      "today": null
+    },
+    "estimation": {
+      "estimation": "103,7 млн ₽",
+      "range": "93,4—114,1 млн ₽",
+      "label": "Хорошая цена",
+      "lowMln": 93.4,
+      "highMln": 114.1
+    }
+  },
+  {
+    "id": 329775876,
+    "price": 480000000,
+    "priceChanges": [
+      {
+        "date": "2026-08-17",
+        "price": 480000000
+      },
+      {
+        "date": "2026-07-09",
+        "price": 500000000
+      },
+      {
+        "date": "2026-06-08",
+        "price": 525000000
+      },
+      {
+        "date": "2026-05-14",
+        "price": 535000000
+      },
+      {
+        "date": "2026-05-07",
+        "price": 550000000
+      }
+    ],
+    "viewsLine": "367 просмотров, 1 за сегодня",
+    "bti": {
+      "yearRelease": 2013,
+      "houseMaterialType": "block",
+      "floorMax": 17,
+      "entrances": 2,
+      "flatCount": 134,
+      "isEmergency": false,
+      "demolishedInMoscowProgramm": false,
+      "houseHeatSupplyType": "central",
+      "houseOverhaulFundType": "unknown",
+      "houseGasSupplyType": "unknown",
+      "houseOverlapType": "concrete",
+      "lifts": 9,
+      "seriesName": "Индивидуальный проект"
+    },
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "no",
+    "roomType": null,
+    "windowsViewType": "yard",
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 2,
+    "cargoLifts": 1,
+    "editDate": "2026-09-02T08:40:16.451376Z",
+    "isImported": true,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "2a3022ec-5a5c-48c7-8f05-7cbad54c165b",
+    "views": {
+      "total": 367,
+      "today": 1
+    },
+    "estimation": {
+      "estimation": "447,7 млн ₽",
+      "range": "402,9—492,5 млн ₽",
+      "label": "Хорошая цена",
+      "lowMln": 402.9,
+      "highMln": 492.5
+    }
+  },
+  {
+    "id": 324752999,
+    "price": 480000000,
+    "priceChanges": [
+      {
+        "date": "2026-08-17",
+        "price": 480000000
+      },
+      {
+        "date": "2026-07-08",
+        "price": 500000000
+      },
+      {
+        "date": "2026-06-05",
+        "price": 525000000
+      },
+      {
+        "date": "2026-05-13",
+        "price": 535000000
+      },
+      {
+        "date": "2026-03-25",
+        "price": 550000000
+      },
+      {
+        "date": "2026-02-24",
+        "price": 575000000
+      },
+      {
+        "date": "2025-12-23",
+        "price": 590000000
+      },
+      {
+        "date": "2025-12-05",
+        "price": 650000000
+      }
+    ],
+    "viewsLine": "2113 просмотров, 1 за сегодня",
+    "bti": {
+      "yearRelease": 2013,
+      "houseMaterialType": "block",
+      "floorMax": 17,
+      "entrances": 2,
+      "flatCount": 134,
+      "isEmergency": false,
+      "demolishedInMoscowProgramm": false,
+      "houseHeatSupplyType": "central",
+      "houseOverhaulFundType": "unknown",
+      "houseGasSupplyType": "unknown",
+      "houseOverlapType": "concrete",
+      "lifts": 9,
+      "seriesName": "Индивидуальный проект"
+    },
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "no",
+    "roomType": null,
+    "windowsViewType": "yardAndStreet",
+    "allRoomsArea": "51.4-18.5-24.6-30.3-19.7-24.8",
+    "amenities": [],
+    "passengerLifts": 1,
+    "cargoLifts": null,
+    "editDate": "2026-09-01T18:28:51.287000Z",
+    "isImported": true,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "441c144c-b91c-4768-b6c5-cc234b223d86",
+    "views": {
+      "total": 2113,
+      "today": 1
+    },
+    "estimation": {
+      "estimation": "453,8 млн ₽",
+      "range": "408,4—499,1 млн ₽",
+      "label": "Хорошая цена",
+      "lowMln": 408.4,
+      "highMln": 499.1
+    }
+  },
+  {
+    "id": 332247874,
+    "price": 89000000,
+    "priceChanges": [
+      {
+        "date": "2026-08-25",
+        "price": 89000000
+      },
+      {
+        "date": "2026-07-22",
+        "price": 97000000
+      }
+    ],
+    "viewsLine": "614 просмотров, 12 за сегодня",
+    "bti": {
+      "yearRelease": 2013,
+      "houseMaterialType": "block",
+      "floorMax": 17,
+      "entrances": 2,
+      "flatCount": 134,
+      "isEmergency": false,
+      "demolishedInMoscowProgramm": false,
+      "houseHeatSupplyType": "central",
+      "houseOverhaulFundType": "unknown",
+      "houseGasSupplyType": "unknown",
+      "houseOverlapType": "concrete",
+      "lifts": 9,
+      "seriesName": "Индивидуальный проект"
+    },
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": null,
+    "windowsViewType": "yardAndStreet",
+    "allRoomsArea": "20-20-20",
+    "amenities": [],
+    "passengerLifts": 2,
+    "cargoLifts": null,
+    "editDate": "2026-09-01T18:03:23.877000Z",
+    "isImported": true,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "c4e60379-db9f-405d-8d2c-6f75717a1552",
+    "views": {
+      "total": 614,
+      "today": 12
+    },
+    "estimation": null
+  },
+  {
+    "id": 328268181,
+    "price": 99900000,
+    "priceChanges": [
+      {
+        "date": "2026-05-27",
+        "price": 99900000
+      },
+      {
+        "date": "2026-03-26",
+        "price": 102000000
+      }
+    ],
+    "viewsLine": "622 просмотра, 1 за сегодня",
+    "bti": {
+      "yearRelease": 2022,
+      "houseMaterialType": "monolith",
+      "floorMax": 24,
+      "entrances": 2,
+      "flatCount": 210,
+      "isEmergency": false,
+      "demolishedInMoscowProgramm": false,
+      "houseHeatSupplyType": "central",
+      "houseOverhaulFundType": "unknown",
+      "houseGasSupplyType": "unknown",
+      "houseOverlapType": "concrete",
+      "lifts": 4
+    },
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": "separate",
+    "windowsViewType": "yardAndStreet",
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 1,
+    "cargoLifts": 1,
+    "editDate": "2026-08-24T19:42:19.620000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "a612f3c3-6176-4842-9c39-f31c51b9f5d8",
+    "views": {
+      "total": 622,
+      "today": 1
+    },
+    "estimation": {
+      "estimation": "77,5 млн ₽",
+      "range": "69,7—85,2 млн ₽",
+      "label": null,
+      "lowMln": 69.7,
+      "highMln": 85.2
+    }
+  },
+  {
+    "id": 331229874,
+    "price": 140000000,
+    "priceChanges": [
+      {
+        "date": "2026-06-19",
+        "price": 140000000
+      }
+    ],
+    "viewsLine": "257 просмотров, 1 за сегодня",
+    "bti": {
+      "yearRelease": 2022,
+      "houseMaterialType": "monolith",
+      "floorMax": 24,
+      "entrances": 2,
+      "flatCount": 210,
+      "isEmergency": false,
+      "demolishedInMoscowProgramm": false,
+      "houseHeatSupplyType": "central",
+      "houseOverhaulFundType": "unknown",
+      "houseGasSupplyType": "unknown",
+      "houseOverlapType": "concrete",
+      "lifts": 4
+    },
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": "both",
+    "windowsViewType": "street",
+    "allRoomsArea": null,
+    "amenities": [
+      "notSetEntranceDoor",
+      "notSetBathroomAndToiletDoors",
+      "notSetRoomsAndKitchenDoors"
+    ],
+    "passengerLifts": 2,
+    "cargoLifts": 1,
+    "editDate": "2026-08-24T10:19:08.997000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "b354432a-e9f9-4f03-bc14-2eac54fa5a02",
+    "views": {
+      "total": 257,
+      "today": 1
+    },
+    "estimation": {
+      "estimation": "117,8 млн ₽",
+      "range": "106,0—129,5 млн ₽",
+      "label": null,
+      "lowMln": 106,
+      "highMln": 129.5
+    }
+  },
+  {
+    "id": 333494793,
+    "price": 45700000,
+    "priceChanges": [
+      {
+        "date": "2026-09-01",
+        "price": 45700000
+      }
+    ],
+    "viewsLine": "14 просмотров, 2 за сегодня",
+    "bti": {
+      "yearRelease": 2022,
+      "houseMaterialType": "monolith",
+      "floorMax": 24,
+      "entrances": 2,
+      "flatCount": 210,
+      "isEmergency": false,
+      "demolishedInMoscowProgramm": false,
+      "houseHeatSupplyType": "central",
+      "houseOverhaulFundType": "unknown",
+      "houseGasSupplyType": "unknown",
+      "houseOverlapType": "concrete",
+      "lifts": 4
+    },
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "no",
+    "roomType": null,
+    "windowsViewType": "street",
+    "allRoomsArea": "20",
+    "amenities": [],
+    "passengerLifts": 2,
+    "cargoLifts": 1,
+    "editDate": "2026-09-01T16:53:12.943000Z",
+    "isImported": true,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "5adb3711-6929-4407-a467-74c42f9ea9cf",
+    "views": {
+      "total": 14,
+      "today": 2
+    },
+    "estimation": {
+      "estimation": "35,7 млн ₽",
+      "range": "32,1—39,2 млн ₽",
+      "label": null,
+      "lowMln": 32.1,
+      "highMln": 39.2
+    }
+  },
+  {
+    "id": 333212413,
+    "price": 44625000,
+    "priceChanges": [
+      {
+        "date": "2026-08-23",
+        "price": 44625000
+      }
+    ],
+    "viewsLine": "90 просмотров, 1 за сегодня",
+    "bti": {
+      "yearRelease": 2022,
+      "houseMaterialType": "monolith",
+      "floorMax": 24,
+      "entrances": 2,
+      "flatCount": 210,
+      "isEmergency": false,
+      "demolishedInMoscowProgramm": false,
+      "houseHeatSupplyType": "central",
+      "houseOverhaulFundType": "unknown",
+      "houseGasSupplyType": "unknown",
+      "houseOverlapType": "concrete",
+      "lifts": 4
+    },
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "no",
+    "roomType": null,
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 0,
+    "cargoLifts": 0,
+    "editDate": "2026-08-30T18:01:11.760000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "c40cf8ea-5c2d-49a5-a160-dd1e22c70518",
+    "views": {
+      "total": 90,
+      "today": 1
+    },
+    "estimation": {
+      "estimation": "35,7 млн ₽",
+      "range": "32,1—39,2 млн ₽",
+      "label": null,
+      "lowMln": 32.1,
+      "highMln": 39.2
+    }
+  },
+  {
+    "id": 332396217,
+    "price": 39900000,
+    "priceChanges": [
+      {
+        "date": "2026-07-28",
+        "price": 39900000
+      }
+    ],
+    "viewsLine": "209 просмотров, 1 за сегодня",
+    "bti": {
+      "yearRelease": 2022,
+      "houseMaterialType": "monolith",
+      "floorMax": 24,
+      "entrances": 2,
+      "flatCount": 210,
+      "isEmergency": false,
+      "demolishedInMoscowProgramm": false,
+      "houseHeatSupplyType": "central",
+      "houseOverhaulFundType": "unknown",
+      "houseGasSupplyType": "unknown",
+      "houseOverlapType": "concrete",
+      "lifts": 4
+    },
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": null,
+    "windowsViewType": "yardAndStreet",
+    "allRoomsArea": "17-16.5-3.2-1.5",
+    "amenities": [],
+    "passengerLifts": 2,
+    "cargoLifts": null,
+    "editDate": "2026-08-31T13:56:40.326464Z",
+    "isImported": true,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "ba35ddb4-6a79-4197-8672-b7f1c99b460d",
+    "views": {
+      "total": 209,
+      "today": 1
+    },
+    "estimation": {
+      "estimation": "35,9 млн ₽",
+      "range": "32,3—39,5 млн ₽",
+      "label": null,
+      "lowMln": 32.3,
+      "highMln": 39.5
+    }
+  },
+  {
+    "id": 333022930,
+    "price": 49900000,
+    "priceChanges": [
+      {
+        "date": "2026-08-17",
+        "price": 49900000
+      }
+    ],
+    "viewsLine": "50 просмотров, 1 за сегодня",
+    "bti": {
+      "yearRelease": 2022,
+      "houseMaterialType": "monolith",
+      "floorMax": 24,
+      "entrances": 2,
+      "flatCount": 210,
+      "isEmergency": false,
+      "demolishedInMoscowProgramm": false,
+      "houseHeatSupplyType": "central",
+      "houseOverhaulFundType": "unknown",
+      "houseGasSupplyType": "unknown",
+      "houseOverlapType": "concrete",
+      "lifts": 4
+    },
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "euro",
+    "roomType": "separate",
+    "windowsViewType": "street",
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 1,
+    "cargoLifts": 1,
+    "editDate": "2026-08-31T19:55:18.145779Z",
+    "isImported": true,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "3fef99e6-ccc2-43c7-8778-25f52b3ca025",
+    "views": {
+      "total": 50,
+      "today": 1
+    },
+    "estimation": {
+      "estimation": "44,3 млн ₽",
+      "range": "39,9—48,7 млн ₽",
+      "label": null,
+      "lowMln": 39.9,
+      "highMln": 48.7
+    }
+  },
+  {
+    "id": 326159686,
+    "price": 83000000,
+    "priceChanges": [
+      {
+        "date": "2026-03-17",
+        "price": 83000000
+      },
+      {
+        "date": "2026-02-18",
+        "price": 79500000
+      },
+      {
+        "date": "2026-01-25",
+        "price": 81000000
+      }
+    ],
+    "viewsLine": "686 просмотров, 1 за сегодня",
+    "bti": {
+      "yearRelease": 2022,
+      "houseMaterialType": "monolith",
+      "floorMax": 24,
+      "entrances": 2,
+      "flatCount": 210,
+      "isEmergency": false,
+      "demolishedInMoscowProgramm": false,
+      "houseHeatSupplyType": "central",
+      "houseOverhaulFundType": "unknown",
+      "houseGasSupplyType": "unknown",
+      "houseOverlapType": "concrete",
+      "lifts": 4
+    },
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": "both",
+    "windowsViewType": "yardAndStreet",
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 1,
+    "cargoLifts": 1,
+    "editDate": "2026-08-04T19:44:30.133000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "3926c9e5-5804-4ae8-a894-6ef13d0511d5",
+    "views": {
+      "total": 686,
+      "today": 1
+    },
+    "estimation": {
+      "estimation": "77,8 млн ₽",
+      "range": "70,0—85,5 млн ₽",
+      "label": "Хорошая цена",
+      "lowMln": 70,
+      "highMln": 85.5
+    }
+  },
+  {
+    "id": 320499864,
+    "price": 75000000,
+    "priceChanges": [
+      {
+        "date": "2026-08-10",
+        "price": 75000000
+      },
+      {
+        "date": "2026-07-13",
+        "price": 79000000
+      },
+      {
+        "date": "2026-07-01",
+        "price": 76000000
+      },
+      {
+        "date": "2026-05-11",
+        "price": 77000000
+      },
+      {
+        "date": "2026-05-01",
+        "price": 78000000
+      },
+      {
+        "date": "2026-04-29",
+        "price": 74999999
+      },
+      {
+        "date": "2026-03-01",
+        "price": 75000000
+      },
+      {
+        "date": "2026-01-24",
+        "price": 66000000
+      },
+      {
+        "date": "2025-12-25",
+        "price": 65000000
+      },
+      {
+        "date": "2025-12-02",
+        "price": 64000000
+      },
+      {
+        "date": "2025-09-23",
+        "price": 62000000
+      },
+      {
+        "date": "2025-08-05",
+        "price": 60700000
+      }
+    ],
+    "viewsLine": "1320 просмотров, 1 за сегодня",
+    "bti": {
+      "yearRelease": 2022,
+      "houseMaterialType": "monolith",
+      "floorMax": 24,
+      "entrances": 2,
+      "flatCount": 210,
+      "isEmergency": false,
+      "demolishedInMoscowProgramm": false,
+      "houseHeatSupplyType": "central",
+      "houseOverhaulFundType": "unknown",
+      "houseGasSupplyType": "unknown",
+      "houseOverlapType": "concrete",
+      "lifts": 4
+    },
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "no",
+    "roomType": "both",
+    "windowsViewType": "yardAndStreet",
+    "allRoomsArea": null,
+    "amenities": [
+      "noThresholdAtEntrance",
+      "wideEntranceDoor",
+      "extraWideBathroomAndToiletDoors",
+      "extraWideRoomsAndKitchenDoors"
+    ],
+    "passengerLifts": 1,
+    "cargoLifts": 1,
+    "editDate": "2026-08-31T10:29:39.850000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "262ca67e-7479-4b29-b9e3-4aea1bc0a049",
+    "views": {
+      "total": 1320,
+      "today": 1
+    },
+    "estimation": {
+      "estimation": "62,6 млн ₽",
+      "range": "56,4—68,9 млн ₽",
+      "label": null,
+      "lowMln": 56.4,
+      "highMln": 68.9
+    }
+  },
+  {
+    "id": 332479143,
+    "price": 74000000,
+    "priceChanges": [
+      {
+        "date": "2026-08-19",
+        "price": 74000000
+      },
+      {
+        "date": "2026-08-11",
+        "price": 75000000
+      },
+      {
+        "date": "2026-08-10",
+        "price": 78000000
+      },
+      {
+        "date": "2026-07-30",
+        "price": 79000000
+      }
+    ],
+    "viewsLine": "133 просмотра, 1 за сегодня",
+    "bti": {
+      "yearRelease": 2022,
+      "houseMaterialType": "monolith",
+      "floorMax": 24,
+      "entrances": 2,
+      "flatCount": 210,
+      "isEmergency": false,
+      "demolishedInMoscowProgramm": false,
+      "houseHeatSupplyType": "central",
+      "houseOverhaulFundType": "unknown",
+      "houseGasSupplyType": "unknown",
+      "houseOverlapType": "concrete",
+      "lifts": 4
+    },
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "no",
+    "roomType": "separate",
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [
+      "noThresholdAtEntrance",
+      "noThresholdAtEntranceToFlat",
+      "spaciousElevator",
+      "wideEntranceDoor",
+      "extraWideBathroomAndToiletDoors",
+      "extraWideRoomsAndKitchenDoors"
+    ],
+    "passengerLifts": 1,
+    "cargoLifts": 1,
+    "editDate": "2026-09-01T11:38:40.143000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "9a0a3f28-4ec3-4aee-9d79-a57d621c4454",
+    "views": {
+      "total": 133,
+      "today": 1
+    },
+    "estimation": {
+      "estimation": "62,6 млн ₽",
+      "range": "56,4—68,9 млн ₽",
+      "label": null,
+      "lowMln": 56.4,
+      "highMln": 68.9
+    }
+  },
+  {
+    "id": 327986419,
+    "price": 84000000,
+    "priceChanges": [
+      {
+        "date": "2026-04-18",
+        "price": 84000000
+      },
+      {
+        "date": "2026-03-19",
+        "price": 83000000
+      }
+    ],
+    "viewsLine": "890 просмотров, нет за сегодня",
+    "bti": {
+      "yearRelease": 2022,
+      "houseMaterialType": "monolith",
+      "floorMax": 24,
+      "entrances": 2,
+      "flatCount": 210,
+      "isEmergency": false,
+      "demolishedInMoscowProgramm": false,
+      "houseHeatSupplyType": "central",
+      "houseOverhaulFundType": "unknown",
+      "houseGasSupplyType": "unknown",
+      "houseOverlapType": "concrete",
+      "lifts": 4
+    },
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "no",
+    "roomType": "separate",
+    "windowsViewType": "yardAndStreet",
+    "allRoomsArea": null,
+    "amenities": [
+      "noThresholdAtEntrance"
+    ],
+    "passengerLifts": 1,
+    "cargoLifts": 1,
+    "editDate": "2026-09-01T13:19:53.023000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "aaf215bf-53a2-408d-9e52-ce0356d883d9",
+    "views": {
+      "total": 890,
+      "today": null
+    },
+    "estimation": {
+      "estimation": "79,1 млн ₽",
+      "range": "71,2—87,0 млн ₽",
+      "label": "Хорошая цена",
+      "lowMln": 71.2,
+      "highMln": 87
+    }
+  },
+  {
+    "id": 326419200,
+    "price": 72680000,
+    "priceChanges": [
+      {
+        "date": "2026-06-26",
+        "price": 72680000
+      },
+      {
+        "date": "2026-06-11",
+        "price": 66360000
+      },
+      {
+        "date": "2026-06-11",
+        "price": 47000000
+      },
+      {
+        "date": "2026-04-25",
+        "price": 47000000
+      },
+      {
+        "date": "2026-04-24",
+        "price": 46725000
+      },
+      {
+        "date": "2026-04-23",
+        "price": 47000000
+      },
+      {
+        "date": "2026-04-23",
+        "price": 50720000
+      },
+      {
+        "date": "2026-04-23",
+        "price": 49600000
+      },
+      {
+        "date": "2026-04-21",
+        "price": 49600000
+      },
+      {
+        "date": "2026-04-16",
+        "price": 46500000
+      },
+      {
+        "date": "2026-04-12",
+        "price": 43200000
+      },
+      {
+        "date": "2026-04-09",
+        "price": 43000000
+      },
+      {
+        "date": "2026-04-09",
+        "price": 62000000
+      },
+      {
+        "date": "2026-04-09",
+        "price": 44450000
+      },
+      {
+        "date": "2026-03-23",
+        "price": 43950000
+      },
+      {
+        "date": "2026-03-09",
+        "price": 41925000
+      },
+      {
+        "date": "2026-02-23",
+        "price": 39225000
+      },
+      {
+        "date": "2026-02-22",
+        "price": 37000000
+      },
+      {
+        "date": "2026-02-02",
+        "price": 37730000
+      }
+    ],
+    "viewsLine": "710 просмотров, 2 за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": null,
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 3,
+    "cargoLifts": 2,
+    "editDate": "2026-08-19T21:45:53.197000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "cd1aff9a-8a3a-4867-b7ed-8a0f5fccb91b",
+    "views": {
+      "total": 710,
+      "today": 2
+    },
+    "estimation": null
+  },
+  {
+    "id": 332770622,
+    "price": 37000000,
+    "priceChanges": [
+      {
+        "date": "2026-08-09",
+        "price": 37000000
+      }
+    ],
+    "viewsLine": "83 просмотра, нет за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": null,
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 3,
+    "cargoLifts": 2,
+    "editDate": "2026-08-19T21:43:25.900000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "fd97ec80-ff05-442b-aaee-5c131cf23be5",
+    "views": {
+      "total": 83,
+      "today": null
+    },
+    "estimation": null
+  },
+  {
+    "id": 326419265,
+    "price": 30400000,
+    "priceChanges": [
+      {
+        "date": "2026-07-21",
+        "price": 30400000
+      },
+      {
+        "date": "2026-07-12",
+        "price": 38430000
+      },
+      {
+        "date": "2026-07-12",
+        "price": 30400000
+      },
+      {
+        "date": "2026-07-12",
+        "price": 30400000
+      },
+      {
+        "date": "2026-07-12",
+        "price": 30400000
+      },
+      {
+        "date": "2026-07-09",
+        "price": 30400000
+      },
+      {
+        "date": "2026-03-30",
+        "price": 28900000
+      },
+      {
+        "date": "2026-03-20",
+        "price": 33000000
+      },
+      {
+        "date": "2026-03-20",
+        "price": 38500000
+      },
+      {
+        "date": "2026-03-17",
+        "price": 33000000
+      },
+      {
+        "date": "2026-02-08",
+        "price": 37000000
+      },
+      {
+        "date": "2026-02-07",
+        "price": 39000000
+      },
+      {
+        "date": "2026-02-02",
+        "price": 39500000
+      }
+    ],
+    "viewsLine": "839 просмотров, нет за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": null,
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 3,
+    "cargoLifts": 2,
+    "editDate": "2026-08-21T15:28:01.880000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "c29a305e-2df1-4acd-bd22-e8334123ebcf",
+    "views": {
+      "total": 839,
+      "today": null
+    },
+    "estimation": {
+      "estimation": "22,5 млн ₽",
+      "range": "20,3—24,8 млн ₽",
+      "label": null,
+      "lowMln": 20.3,
+      "highMln": 24.8
+    }
+  },
+  {
+    "id": 329209144,
+    "price": 134705000,
+    "priceChanges": [
+      {
+        "date": "2026-06-26",
+        "price": 134705000
+      },
+      {
+        "date": "2026-06-11",
+        "price": 128385000
+      },
+      {
+        "date": "2026-06-11",
+        "price": 74900000
+      },
+      {
+        "date": "2026-04-22",
+        "price": 74900000
+      },
+      {
+        "date": "2026-04-22",
+        "price": 72000000
+      },
+      {
+        "date": "2026-04-21",
+        "price": 74900000
+      }
+    ],
+    "viewsLine": "205 просмотров, нет за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "no",
+    "roomType": null,
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 3,
+    "cargoLifts": 2,
+    "editDate": "2026-08-21T22:04:55.267000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "01d48590-191e-4932-b5e7-7644264350e2",
+    "views": {
+      "total": 205,
+      "today": null
+    },
+    "estimation": null
+  },
+  {
+    "id": 332770604,
+    "price": 118500000,
+    "priceChanges": [
+      {
+        "date": "2026-08-09",
+        "price": 118500000
+      }
+    ],
+    "viewsLine": "50 просмотров, нет за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": null,
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 3,
+    "cargoLifts": 2,
+    "editDate": "2026-09-02T08:08:32.187000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "3f0a6ffa-6a31-45a1-9bb5-5a48b1ce6a84",
+    "views": {
+      "total": 50,
+      "today": null
+    },
+    "estimation": null
+  },
+  {
+    "id": 326419242,
+    "price": 51750000,
+    "priceChanges": [
+      {
+        "date": "2026-07-15",
+        "price": 51750000
+      },
+      {
+        "date": "2026-07-15",
+        "price": 51930000
+      },
+      {
+        "date": "2026-06-26",
+        "price": 47900000
+      },
+      {
+        "date": "2026-06-25",
+        "price": 50000000
+      },
+      {
+        "date": "2026-04-23",
+        "price": 48000000
+      },
+      {
+        "date": "2026-04-23",
+        "price": 49000000
+      },
+      {
+        "date": "2026-04-21",
+        "price": 47450000
+      },
+      {
+        "date": "2026-04-21",
+        "price": 47500000
+      },
+      {
+        "date": "2026-04-21",
+        "price": 50720000
+      },
+      {
+        "date": "2026-04-09",
+        "price": 47550000
+      },
+      {
+        "date": "2026-03-07",
+        "price": 43000000
+      },
+      {
+        "date": "2026-03-02",
+        "price": 43750000
+      },
+      {
+        "date": "2026-03-02",
+        "price": 44000000
+      },
+      {
+        "date": "2026-02-23",
+        "price": 43750000
+      },
+      {
+        "date": "2026-02-21",
+        "price": 42987000
+      },
+      {
+        "date": "2026-02-10",
+        "price": 47925000
+      },
+      {
+        "date": "2026-02-02",
+        "price": 49500000
+      }
+    ],
+    "viewsLine": "271 просмотр, нет за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": null,
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 3,
+    "cargoLifts": 2,
+    "editDate": "2026-08-19T21:45:11.493000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "26c8c41a-71bc-43c7-bb65-3ba374ca0851",
+    "views": {
+      "total": 271,
+      "today": null
+    },
+    "estimation": {
+      "estimation": "39,9 млн ₽",
+      "range": "35,9—43,8 млн ₽",
+      "label": null,
+      "lowMln": 35.9,
+      "highMln": 43.8
+    }
+  },
+  {
+    "id": 327450012,
+    "price": 57100000,
+    "priceChanges": [
+      {
+        "date": "2026-08-30",
+        "price": 57100000
+      },
+      {
+        "date": "2026-05-25",
+        "price": 50800000
+      },
+      {
+        "date": "2026-03-31",
+        "price": 47550000
+      },
+      {
+        "date": "2026-03-03",
+        "price": 44450000
+      }
+    ],
+    "viewsLine": "248 просмотров, нет за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": null,
+    "roomType": null,
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 0,
+    "cargoLifts": 0,
+    "editDate": "2026-08-30T13:50:47.097000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "d9155843-f29a-4703-ab78-f74c8fc32481",
+    "views": {
+      "total": 248,
+      "today": null
+    },
+    "estimation": null
+  },
+  {
+    "id": 325365170,
+    "price": 159525000,
+    "priceChanges": [
+      {
+        "date": "2026-06-26",
+        "price": 159525000
+      },
+      {
+        "date": "2026-06-25",
+        "price": 153170000
+      },
+      {
+        "date": "2026-05-28",
+        "price": 159525000
+      },
+      {
+        "date": "2026-04-21",
+        "price": 153033000
+      },
+      {
+        "date": "2026-04-09",
+        "price": 151512500
+      },
+      {
+        "date": "2026-02-24",
+        "price": 149090500
+      },
+      {
+        "date": "2026-02-24",
+        "price": 149870000
+      },
+      {
+        "date": "2026-01-02",
+        "price": 149870000
+      }
+    ],
+    "viewsLine": "279 просмотров, нет за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "no",
+    "roomType": null,
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 3,
+    "cargoLifts": 2,
+    "editDate": "2026-08-19T21:46:41.227000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "acff9391-4140-4488-aa39-696a9c53062e",
+    "views": {
+      "total": 279,
+      "today": null
+    },
+    "estimation": null
+  },
+  {
+    "id": 325937542,
+    "price": 116960000,
+    "priceChanges": [
+      {
+        "date": "2026-08-13",
+        "price": 116960000
+      },
+      {
+        "date": "2026-08-13",
+        "price": 107355000
+      },
+      {
+        "date": "2026-06-11",
+        "price": 107355000
+      },
+      {
+        "date": "2026-06-09",
+        "price": 113670000
+      },
+      {
+        "date": "2026-04-21",
+        "price": 107355000
+      },
+      {
+        "date": "2026-04-09",
+        "price": 97882500
+      },
+      {
+        "date": "2026-02-26",
+        "price": 95000000
+      },
+      {
+        "date": "2026-02-23",
+        "price": 97882500
+      },
+      {
+        "date": "2026-02-22",
+        "price": 97800000
+      },
+      {
+        "date": "2026-01-27",
+        "price": 97882500
+      },
+      {
+        "date": "2026-01-19",
+        "price": 92830500
+      }
+    ],
+    "viewsLine": "328 просмотров, нет за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": null,
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 3,
+    "cargoLifts": 2,
+    "editDate": "2026-08-19T21:42:09.567000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "c67cc763-3d10-452f-82ca-654edc754b75",
+    "views": {
+      "total": 328,
+      "today": null
+    },
+    "estimation": {
+      "estimation": "83,6 млн ₽",
+      "range": "75,2—91,9 млн ₽",
+      "label": null,
+      "lowMln": 75.2,
+      "highMln": 91.9
+    }
+  },
+  {
+    "id": 332866908,
+    "price": 83895000,
+    "priceChanges": [
+      {
+        "date": "2026-08-12",
+        "price": 83895000
+      }
+    ],
+    "viewsLine": "52 просмотра, нет за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": null,
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 3,
+    "cargoLifts": 2,
+    "editDate": "2026-08-20T08:24:00.177000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "e828a4a6-cbb0-435e-b5b8-a06be825575c",
+    "views": {
+      "total": 52,
+      "today": null
+    },
+    "estimation": {
+      "estimation": "59,9 млн ₽",
+      "range": "54,0—65,9 млн ₽",
+      "label": null,
+      "lowMln": 54,
+      "highMln": 65.9
+    }
+  },
+  {
+    "id": 333469718,
+    "price": 43840000,
+    "priceChanges": [
+      {
+        "date": "2026-09-01",
+        "price": 43840000
+      }
+    ],
+    "viewsLine": "7 просмотров, 2 за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": null,
+    "windowsViewType": "yard",
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 3,
+    "cargoLifts": 2,
+    "editDate": "2026-09-01T10:04:16.203000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "bcd10a61-5241-43c4-9438-2d7a8d22b694",
+    "views": {
+      "total": 7,
+      "today": 2
+    },
+    "estimation": {
+      "estimation": "34,9 млн ₽",
+      "range": "31,4—38,3 млн ₽",
+      "label": null,
+      "lowMln": 31.4,
+      "highMln": 38.3
+    }
+  },
+  {
+    "id": 332171247,
+    "price": 64800000,
+    "priceChanges": [
+      {
+        "date": "2026-07-20",
+        "price": 64800000
+      }
+    ],
+    "viewsLine": "73 просмотра, нет за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": null,
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 3,
+    "cargoLifts": 2,
+    "editDate": "2026-09-01T11:31:59.203000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "36c73454-9e6a-46ef-99f3-d9fc00b2fe01",
+    "views": {
+      "total": 73,
+      "today": null
+    },
+    "estimation": {
+      "estimation": "51,5 млн ₽",
+      "range": "46,4—56,7 млн ₽",
+      "label": null,
+      "lowMln": 46.4,
+      "highMln": 56.7
+    }
+  },
+  {
+    "id": 330924961,
+    "price": 56472000,
+    "priceChanges": [
+      {
+        "date": "2026-07-10",
+        "price": 56472000
+      },
+      {
+        "date": "2026-06-09",
+        "price": 52852000
+      }
+    ],
+    "viewsLine": "196 просмотров, нет за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "no",
+    "roomType": null,
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 3,
+    "cargoLifts": 2,
+    "editDate": "2026-08-19T21:44:15.483000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "d0c9061f-cfff-4c8f-bc75-d3ec1b2d7f32",
+    "views": {
+      "total": 196,
+      "today": null
+    },
+    "estimation": null
+  },
+  {
+    "id": 332770577,
+    "price": 56472000,
+    "priceChanges": [
+      {
+        "date": "2026-08-10",
+        "price": 56472000
+      },
+      {
+        "date": "2026-08-10",
+        "price": 88920000
+      },
+      {
+        "date": "2026-08-10",
+        "price": 88920000
+      },
+      {
+        "date": "2026-08-10",
+        "price": 88920000
+      },
+      {
+        "date": "2026-08-09",
+        "price": 88920000
+      }
+    ],
+    "viewsLine": "35 просмотров, 1 за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "no",
+    "roomType": null,
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 3,
+    "cargoLifts": 2,
+    "editDate": "2026-08-21T22:05:41.577000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "08bedcbc-b200-4ce4-88aa-d75fc3aa9e5e",
+    "views": {
+      "total": 35,
+      "today": 1
+    },
+    "estimation": {
+      "estimation": "41,3 млн ₽",
+      "range": "37,2—45,5 млн ₽",
+      "label": null,
+      "lowMln": 37.2,
+      "highMln": 45.5
+    }
+  },
+  {
+    "id": 332867005,
+    "price": 62025000,
+    "priceChanges": [
+      {
+        "date": "2026-08-12",
+        "price": 62025000
+      }
+    ],
+    "viewsLine": "31 просмотр, нет за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "no",
+    "roomType": null,
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 3,
+    "cargoLifts": 2,
+    "editDate": "2026-08-19T21:42:50.393000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "7fad5b42-a325-4642-8938-43d315f90fd4",
+    "views": {
+      "total": 31,
+      "today": null
+    },
+    "estimation": {
+      "estimation": "47,2 млн ₽",
+      "range": "42,5—52,0 млн ₽",
+      "label": null,
+      "lowMln": 42.5,
+      "highMln": 52
+    }
+  },
+  {
+    "id": 333427836,
+    "price": 41975000,
+    "priceChanges": [
+      {
+        "date": "2026-08-31",
+        "price": 41975000
+      }
+    ],
+    "viewsLine": "28 просмотров, 8 за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "no",
+    "roomType": null,
+    "windowsViewType": "yard",
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 3,
+    "cargoLifts": 2,
+    "editDate": "2026-09-02T09:40:21.940469Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "04a2e2b6-973e-4347-98e6-a72c5ae8a150",
+    "views": {
+      "total": 28,
+      "today": 8
+    },
+    "estimation": {
+      "estimation": "32,9 млн ₽",
+      "range": "29,6—36,2 млн ₽",
+      "label": null,
+      "lowMln": 29.6,
+      "highMln": 36.2
+    }
+  },
+  {
+    "id": 332951145,
+    "price": 74900000,
+    "priceChanges": [
+      {
+        "date": "2026-08-14",
+        "price": 74900000
+      }
+    ],
+    "viewsLine": "111 просмотров, 1 за сегодня",
+    "bti": null,
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "no",
+    "roomType": null,
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 3,
+    "cargoLifts": 2,
+    "editDate": "2026-09-02T09:55:24.827457Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "2dc71a54-b7ce-454b-8926-8dd37ea725d7",
+    "views": {
+      "total": 111,
+      "today": 1
+    },
+    "estimation": {
+      "estimation": "57,8 млн ₽",
+      "range": "52,0—63,6 млн ₽",
+      "label": null,
+      "lowMln": 52,
+      "highMln": 63.6
+    }
+  },
+  {
+    "id": 313842757,
+    "price": 390000000,
+    "priceChanges": [
+      {
+        "date": "2026-04-08",
+        "price": 390000000
+      },
+      {
+        "date": "2025-02-18",
+        "price": 420000000
+      }
+    ],
+    "viewsLine": "1588 просмотров, 1 за сегодня",
+    "bti": {
+      "yearRelease": 2019,
+      "houseMaterialType": "monolith",
+      "floorMax": 14,
+      "entrances": 1,
+      "flatCount": 27,
+      "isEmergency": false,
+      "demolishedInMoscowProgramm": false,
+      "houseHeatSupplyType": "central",
+      "houseOverhaulFundType": "regionalOp",
+      "houseGasSupplyType": "without",
+      "houseOverlapType": "concrete",
+      "lifts": 2,
+      "seriesName": "Индивидуальный проект"
+    },
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": "separate",
+    "windowsViewType": "yard",
+    "allRoomsArea": null,
+    "amenities": [
+      "noThresholdAtEntrance"
+    ],
+    "passengerLifts": 1,
+    "cargoLifts": 1,
+    "editDate": "2026-08-31T13:22:16.303000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "49436d7c-bb80-48b2-9a5f-fd407d9e923c",
+    "views": {
+      "total": 1588,
+      "today": 1
+    },
+    "estimation": {
+      "estimation": "362,6 млн ₽",
+      "range": "326,3—398,8 млн ₽",
+      "label": "Хорошая цена",
+      "lowMln": 326.3,
+      "highMln": 398.8
+    }
+  },
+  {
+    "id": 332528635,
+    "price": 56000000,
+    "priceChanges": [
+      {
+        "date": "2026-08-01",
+        "price": 56000000
+      }
+    ],
+    "viewsLine": "155 просмотров, нет за сегодня",
+    "bti": {
+      "yearRelease": 2018,
+      "houseMaterialType": "monolith",
+      "floorMax": 19,
+      "isEmergency": false,
+      "demolishedInMoscowProgramm": false,
+      "houseHeatSupplyType": "none",
+      "houseOverhaulFundType": "unknown",
+      "houseGasSupplyType": "unknown",
+      "houseOverlapType": "unknown",
+      "lifts": 1
+    },
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": "both",
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 4,
+    "cargoLifts": 2,
+    "editDate": "2026-08-01T12:55:01.813000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "f2c5ac84-d5ac-4c36-966c-b80c7a848a36",
+    "views": {
+      "total": 155,
+      "today": null
+    },
+    "estimation": {
+      "estimation": "44,2 млн ₽",
+      "range": "39,7—48,6 млн ₽",
+      "label": null,
+      "lowMln": 39.7,
+      "highMln": 48.6
+    }
+  },
+  {
+    "id": 333351088,
+    "price": 63000000,
+    "priceChanges": [
+      {
+        "date": "2026-08-27",
+        "price": 63000000
+      }
+    ],
+    "viewsLine": "48 просмотров, 2 за сегодня",
+    "bti": {
+      "yearRelease": 2018,
+      "houseMaterialType": "monolith",
+      "floorMax": 19,
+      "isEmergency": false,
+      "demolishedInMoscowProgramm": false,
+      "houseHeatSupplyType": "none",
+      "houseOverhaulFundType": "unknown",
+      "houseGasSupplyType": "unknown",
+      "houseOverlapType": "unknown",
+      "lifts": 1
+    },
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": null,
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 1,
+    "cargoLifts": 0,
+    "editDate": "2026-08-27T17:52:16.817000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "e31bb4e5-9e2e-4891-8691-ab3d3798c512",
+    "views": {
+      "total": 48,
+      "today": 2
+    },
+    "estimation": {
+      "estimation": "53,0 млн ₽",
+      "range": "47,7—58,3 млн ₽",
+      "label": null,
+      "lowMln": 47.7,
+      "highMln": 58.3
+    }
+  },
+  {
+    "id": 330991729,
+    "price": 83000000,
+    "priceChanges": [
+      {
+        "date": "2026-08-28",
+        "price": 83000000
+      },
+      {
+        "date": "2026-07-12",
+        "price": 85000000
+      },
+      {
+        "date": "2026-06-11",
+        "price": 89500000
+      }
+    ],
+    "viewsLine": "839 просмотров, 1 за сегодня",
+    "bti": {
+      "yearRelease": 2011,
+      "houseMaterialType": "brick",
+      "floorMax": 5,
+      "entrances": 1,
+      "flatCount": 28,
+      "isEmergency": false,
+      "demolishedInMoscowProgramm": false,
+      "houseHeatSupplyType": "central",
+      "houseOverhaulFundType": "unknown",
+      "houseGasSupplyType": "without",
+      "houseOverlapType": "concrete",
+      "lifts": 4
+    },
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": "separate",
+    "windowsViewType": "yardAndStreet",
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 3,
+    "cargoLifts": 1,
+    "editDate": "2026-09-01T14:47:52.010000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "f1e6439b-484c-49b9-898e-3e78698930cf",
+    "views": {
+      "total": 839,
+      "today": 1
+    },
+    "estimation": null
+  },
+  {
+    "id": 329709487,
+    "price": 430000000,
+    "priceChanges": [
+      {
+        "date": "2026-05-05",
+        "price": 430000000
+      }
+    ],
+    "viewsLine": "246 просмотров, нет за сегодня",
+    "bti": {
+      "yearRelease": 2019,
+      "houseMaterialType": "monolith",
+      "floorMax": 8,
+      "isEmergency": false,
+      "demolishedInMoscowProgramm": false,
+      "houseHeatSupplyType": "none",
+      "houseOverhaulFundType": "unknown",
+      "houseGasSupplyType": "unknown",
+      "houseOverlapType": "unknown"
+    },
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": null,
+    "windowsViewType": "yardAndStreet",
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 1,
+    "cargoLifts": 1,
+    "editDate": "2026-09-01T15:55:22.730316Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "576939f8-4047-49af-a509-574f18d8a498",
+    "views": {
+      "total": 246,
+      "today": null
+    },
+    "estimation": null
+  },
+  {
+    "id": 317801090,
+    "price": 150000000,
+    "priceChanges": [
+      {
+        "date": "2026-04-14",
+        "price": 150000000
+      },
+      {
+        "date": "2025-12-29",
+        "price": 155000000
+      },
+      {
+        "date": "2025-05-21",
+        "price": 150000000
+      }
+    ],
+    "viewsLine": "14627 просмотров, нет за сегодня",
+    "bti": {
+      "yearRelease": 2019,
+      "houseMaterialType": "monolith",
+      "floorMax": 8,
+      "isEmergency": false,
+      "demolishedInMoscowProgramm": false,
+      "houseHeatSupplyType": "none",
+      "houseOverhaulFundType": "unknown",
+      "houseGasSupplyType": "unknown",
+      "houseOverlapType": "unknown"
+    },
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": "both",
+    "windowsViewType": "yardAndStreet",
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 1,
+    "cargoLifts": 1,
+    "editDate": "2026-09-01T17:31:26.657000Z",
+    "isImported": true,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "5553785f-587e-4de4-88a0-769ea57fe994",
+    "views": {
+      "total": 14627,
+      "today": null
+    },
+    "estimation": null
+  },
+  {
+    "id": 318591860,
+    "price": 150000000,
+    "priceChanges": [
+      {
+        "date": "2026-07-09",
+        "price": 150000000
+      }
+    ],
+    "viewsLine": "784 просмотра, нет за сегодня",
+    "bti": {
+      "yearRelease": 2019,
+      "houseMaterialType": "monolith",
+      "floorMax": 8,
+      "isEmergency": false,
+      "demolishedInMoscowProgramm": false,
+      "houseHeatSupplyType": "none",
+      "houseOverhaulFundType": "unknown",
+      "houseGasSupplyType": "unknown",
+      "houseOverlapType": "unknown"
+    },
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": "both",
+    "windowsViewType": "street",
+    "allRoomsArea": "23-17-24",
+    "amenities": [],
+    "passengerLifts": 2,
+    "cargoLifts": null,
+    "editDate": "2026-09-01T11:11:49.207000Z",
+    "isImported": true,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "a1404e64-0580-4b02-af39-dc004942b43c",
+    "views": {
+      "total": 784,
+      "today": null
+    },
+    "estimation": null
+  },
+  {
+    "id": 332613094,
+    "price": 66000000,
+    "priceChanges": [
+      {
+        "date": "2026-08-04",
+        "price": 66000000
+      }
+    ],
+    "viewsLine": "65 просмотров, нет за сегодня",
+    "bti": {
+      "yearRelease": 2019,
+      "houseMaterialType": "monolith",
+      "floorMax": 8,
+      "isEmergency": false,
+      "demolishedInMoscowProgramm": false,
+      "houseHeatSupplyType": "none",
+      "houseOverhaulFundType": "unknown",
+      "houseGasSupplyType": "unknown",
+      "houseOverlapType": "unknown"
+    },
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": "separate",
+    "windowsViewType": "yard",
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 0,
+    "cargoLifts": 0,
+    "editDate": "2026-08-11T17:03:45.960000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "520cfc65-1f30-4775-895f-4b8cd57c7eee",
+    "views": {
+      "total": 65,
+      "today": null
+    },
+    "estimation": null
+  },
+  {
+    "id": 327204969,
+    "price": 44000000,
+    "priceChanges": [
+      {
+        "date": "2026-06-15",
+        "price": 44000000
+      },
+      {
+        "date": "2026-06-09",
+        "price": 45000000
+      },
+      {
+        "date": "2026-05-22",
+        "price": 46000000
+      },
+      {
+        "date": "2026-03-25",
+        "price": 47000000
+      },
+      {
+        "date": "2026-03-02",
+        "price": 49900000
+      },
+      {
+        "date": "2026-02-24",
+        "price": 52000000
+      }
+    ],
+    "viewsLine": "739 просмотров, 1 за сегодня",
+    "bti": {
+      "yearRelease": 2019,
+      "houseMaterialType": "monolith",
+      "floorMax": 8,
+      "isEmergency": false,
+      "demolishedInMoscowProgramm": false,
+      "houseHeatSupplyType": "none",
+      "houseOverhaulFundType": "unknown",
+      "houseGasSupplyType": "unknown",
+      "houseOverlapType": "unknown"
+    },
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": null,
+    "windowsViewType": "yard",
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 1,
+    "cargoLifts": 1,
+    "editDate": "2026-08-31T21:55:18.012442Z",
+    "isImported": true,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "520e7364-a388-46b5-91ff-fba91433bee1",
+    "views": {
+      "total": 739,
+      "today": 1
+    },
+    "estimation": null
+  },
+  {
+    "id": 329083499,
+    "price": 65000000,
+    "priceChanges": [
+      {
+        "date": "2026-08-03",
+        "price": 65000000
+      },
+      {
+        "date": "2026-08-03",
+        "price": 675000000
+      },
+      {
+        "date": "2026-07-13",
+        "price": 67500000
+      },
+      {
+        "date": "2026-04-17",
+        "price": 69000000
+      }
+    ],
+    "viewsLine": "481 просмотр, нет за сегодня",
+    "bti": {
+      "yearRelease": 2019,
+      "houseMaterialType": "monolith",
+      "floorMax": 8,
+      "isEmergency": false,
+      "demolishedInMoscowProgramm": false,
+      "houseHeatSupplyType": "none",
+      "houseOverhaulFundType": "unknown",
+      "houseGasSupplyType": "unknown",
+      "houseOverlapType": "unknown"
+    },
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": null,
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [
+      "noThresholdAtEntrance",
+      "noThresholdAtEntranceToFlat"
+    ],
+    "passengerLifts": 1,
+    "cargoLifts": 1,
+    "editDate": "2026-08-16T16:09:24.273000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "6335b9e6-581b-4ffc-9628-8cd0a5bc9125",
+    "views": {
+      "total": 481,
+      "today": null
+    },
+    "estimation": null
+  },
+  {
+    "id": 332546164,
+    "price": 230000000,
+    "priceChanges": [
+      {
+        "date": "2026-08-05",
+        "price": 230000000
+      },
+      {
+        "date": "2026-08-04",
+        "price": 215000000
+      }
+    ],
+    "viewsLine": "383 просмотра, 6 за сегодня",
+    "bti": {
+      "yearRelease": 2010,
+      "houseMaterialType": "block",
+      "floorMax": 15,
+      "entrances": 7,
+      "flatCount": 102,
+      "isEmergency": false,
+      "demolishedInMoscowProgramm": false,
+      "houseHeatSupplyType": "central",
+      "houseOverhaulFundType": "specialOrg",
+      "houseGasSupplyType": "without",
+      "houseOverlapType": "concrete",
+      "lifts": 29,
+      "seriesName": "Индивидуальный проект"
+    },
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": "separate",
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 2,
+    "cargoLifts": 1,
+    "editDate": "2026-08-31T11:09:23.670000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "c7ed5d0c-8a94-40bb-978f-456fa2218a13",
+    "views": {
+      "total": 383,
+      "today": 6
+    },
+    "estimation": null
+  },
+  {
+    "id": 325722438,
+    "price": 270000000,
+    "priceChanges": [
+      {
+        "date": "2026-05-17",
+        "price": 270000000
+      },
+      {
+        "date": "2026-05-01",
+        "price": 315000000
+      },
+      {
+        "date": "2026-04-29",
+        "price": 330000000
+      },
+      {
+        "date": "2026-04-17",
+        "price": 350000000
+      },
+      {
+        "date": "2026-04-09",
+        "price": 300000000
+      },
+      {
+        "date": "2026-01-13",
+        "price": 330000000
+      }
+    ],
+    "viewsLine": "3293 просмотра, 5 за сегодня",
+    "bti": {
+      "yearRelease": 2010,
+      "houseMaterialType": "block",
+      "floorMax": 15,
+      "entrances": 7,
+      "flatCount": 102,
+      "isEmergency": false,
+      "demolishedInMoscowProgramm": false,
+      "houseHeatSupplyType": "central",
+      "houseOverhaulFundType": "specialOrg",
+      "houseGasSupplyType": "without",
+      "houseOverlapType": "concrete",
+      "lifts": 29,
+      "seriesName": "Индивидуальный проект"
+    },
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": "both",
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 4,
+    "cargoLifts": 5,
+    "editDate": "2026-08-22T11:47:50.097000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "c87728ed-6c33-4289-bdc5-4df88bc1a433",
+    "views": {
+      "total": 3293,
+      "today": 5
+    },
+    "estimation": null
+  },
+  {
+    "id": 323821181,
+    "price": 190000000,
+    "priceChanges": [
+      {
+        "date": "2026-04-03",
+        "price": 190000000
+      },
+      {
+        "date": "2026-03-03",
+        "price": 200000000
+      },
+      {
+        "date": "2025-11-11",
+        "price": 210000000
+      }
+    ],
+    "viewsLine": "2150 просмотров, 2 за сегодня",
+    "bti": {
+      "yearRelease": 2010,
+      "houseMaterialType": "block",
+      "floorMax": 15,
+      "entrances": 7,
+      "flatCount": 102,
+      "isEmergency": false,
+      "demolishedInMoscowProgramm": false,
+      "houseHeatSupplyType": "central",
+      "houseOverhaulFundType": "specialOrg",
+      "houseGasSupplyType": "without",
+      "houseOverlapType": "concrete",
+      "lifts": 29,
+      "seriesName": "Индивидуальный проект"
+    },
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": "separate",
+    "windowsViewType": null,
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 1,
+    "cargoLifts": 2,
+    "editDate": "2026-08-30T12:29:13.470000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "747d8fbc-1614-47bf-be2c-5632407968f6",
+    "views": {
+      "total": 2150,
+      "today": 2
+    },
+    "estimation": {
+      "estimation": "136,4 млн ₽",
+      "range": "122,8—150,1 млн ₽",
+      "label": null,
+      "lowMln": 122.8,
+      "highMln": 150.1
+    }
+  },
+  {
+    "id": 331374897,
+    "price": 160100000,
+    "priceChanges": [
+      {
+        "date": "2026-08-27",
+        "price": 160100000
+      },
+      {
+        "date": "2026-06-25",
+        "price": 160000000
+      }
+    ],
+    "viewsLine": "518 просмотров, 1 за сегодня",
+    "bti": {
+      "yearRelease": 2010,
+      "houseMaterialType": "none",
+      "floorMax": 5,
+      "entrances": 2,
+      "flatCount": 17,
+      "isEmergency": false,
+      "demolishedInMoscowProgramm": false,
+      "houseHeatSupplyType": "central",
+      "houseOverhaulFundType": "unknown",
+      "houseGasSupplyType": "central",
+      "houseOverlapType": "other",
+      "lifts": 2,
+      "seriesName": "Индивидуальный проект"
+    },
+    "tourUrl": null,
+    "decoration": null,
+    "decorationInfo": null,
+    "repairType": "design",
+    "roomType": "separate",
+    "windowsViewType": "yardAndStreet",
+    "allRoomsArea": null,
+    "amenities": [],
+    "passengerLifts": 0,
+    "cargoLifts": 1,
+    "editDate": "2026-08-27T11:16:04.577000Z",
+    "isImported": false,
+    "isFromBuilder": false,
+    "isDuplicate": false,
+    "objectGuid": "64a59660-2788-4ec6-a6df-72ab862a23ab",
+    "views": {
+      "total": 518,
+      "today": 1
+    },
+    "estimation": {
+      "estimation": "128,4 млн ₽",
+      "range": "115,5—141,2 млн ₽",
+      "label": null,
+      "lowMln": 115.5,
+      "highMln": 141.2
+    }
+  }
+]

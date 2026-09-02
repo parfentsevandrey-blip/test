@@ -90,6 +90,22 @@ def prep(lots, source):
     return out
 
 
+def cards():
+    """repairType в поисковой выдаче Циан пустой — он живёт только в карточке.
+
+    Карточки дособраны командой `card --from cian/resale_ids.json`.
+    """
+    out = {}
+    for name in ('resale_cards.json', 'mod_cards.json'):
+        path = os.path.join(CIAN, name)
+        if not os.path.exists(path):
+            continue
+        for c in json.load(open(path, encoding='utf-8')):
+            if c.get('id'):
+                out[c['id']] = c
+    return out
+
+
 def dedupe(lots):
     """Один и тот же лот приходит из районного и из метро-запроса."""
     seen = {}
@@ -121,6 +137,10 @@ def group(lots):
         rows.append({
             'name': name, 'n': len(ls),
             'dist': min(x['dist'] for x in ls),
+            'lat': round(median([x['lat'] for x in ls]), 6),
+            'lng': round(median([x['lng'] for x in ls]), 6),
+            'quarter': (dl[0].get('quarter') if dl else None),
+            'floors': max([x['floors'] for x in ls if x['floors']] or [0]) or None,
             'new': sum(1 for x in ls if x['source'].endswith('new')),
             'apart': sum(1 for x in ls if x['apart']),
             'ppmLo': ppm[0], 'ppmHi': ppm[-1], 'ppmMed': round(median(ppm)),
@@ -145,7 +165,16 @@ if __name__ == '__main__':
         print(f'{name:14s} лотов в выгрузке: {len(ls)}')
         raw += prep(ls, src)
     lots = dedupe(raw)
-    print('\nотсеяно: ' + ', '.join(f'{k} — {v}' for k, v in DROPPED.items()))
+    cd = cards()
+    filled = 0
+    for l in lots:
+        c = cd.get(l['id'])
+        if c and c.get('repairType') and not l['repair']:
+            l['repair'] = REPAIR.get(c['repairType'], c['repairType'])
+            l['bti'] = c.get('bti')
+            filled += 1
+    print(f'\nремонт добран из карточек у {filled} лотов вторички')
+    print('отсеяно: ' + ', '.join(f'{k} — {v}' for k, v in DROPPED.items()))
     print(f'в радиусе {RADIUS_M} м и дороже {nf(PPM_FLOOR)} ₽/м²: {len(lots)} лотов')
 
     news = [l for l in lots if l['source'].endswith('new')]
@@ -162,8 +191,35 @@ if __name__ == '__main__':
                   f"{nf(r['ppmLo']):>9s}–{nf(r['ppmHi']):>9s} мед {nf(r['ppmMed']):>9s}  "
                   f"{r['areaLo']:5.1f}–{r['areaHi']:6.1f} м²  {dec}")
 
+    gn, gr = group(news), group(resale)
     json.dump({'near': NEAR_M, 'radius': RADIUS_M, 'floor': PPM_FLOOR,
-               'lots': lots, 'new': group(news), 'resale': group(resale)},
+               'lots': lots, 'new': gn, 'resale': gr},
               open(os.path.join(CIAN, 'cohort.json'), 'w', encoding='utf-8'),
               ensure_ascii=False, indent=1)
     print('\n-> cian/cohort.json')
+
+    # ── отбор в справку ────────────────────────────────────────────────────
+    # Новостройки — все группы от восьми лотов; вторичка — дома, где в продаже
+    # хотя бы три лота и есть с чем сравнивать по метру. Пары «Резиденция
+    # Сокольники» и «Сокольнический вал» выпадают: 1,7–1,8 км, апартаменты
+    # и метр около 0,5 млн — ту же роль в подборке играет «Мод», который ближе.
+    PICK_NEW = ['ФАНТОМ', 'Клубный дом Форум', 'Дом Франка', 'Ридж', 'Мод']
+    PICK_RES = ['Barkli Park (Баркли Парк)', 'Sole Hill (Соле Хилл)', 'Dialog (Диалог)',
+                'Клубный дом ЦВЕТ32', 'Легенда Цветного', 'Мод']
+    # Номер закреплён за домом, а не за строкой: «Мод» попадает в обе таблицы
+    # (корпус ещё продаётся застройщиком и уже перепродаётся), но пин на карте
+    # у него один.
+    peers, nums = [], {}
+    for kind, picks, rows in (('new', PICK_NEW, gn), ('resale', PICK_RES, gr)):
+        for name in picks:
+            r = next((x for x in rows if x['name'] == name), None)
+            if not r:
+                print(f'! в когорте нет группы «{name}»')
+                continue
+            first = name not in nums
+            if first:
+                nums[name] = len(nums) + 1
+            peers.append({**r, 'no': nums[name], 'kind': kind, 'pin': first})
+    json.dump(peers, open(os.path.join(CIAN, 'peers.json'), 'w', encoding='utf-8'),
+              ensure_ascii=False, indent=1)
+    print(f'-> cian/peers.json — {len(peers)} строк, {len(nums)} пинов на карте')

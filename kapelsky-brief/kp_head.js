@@ -244,6 +244,15 @@ function imagePair(a, b, capA, capB) {
 
 
 
+// «1 лот», «2 лота», «5 лотов» — иначе в тексте попадаются «201 лотов»
+const plural = (n, [one, few, many]) => {
+  const a = Math.abs(n) % 100, b = a % 10;
+  if (a > 10 && a < 20) return `${n} ${many}`;
+  if (b > 1 && b < 5) return `${n} ${few}`;
+  if (b === 1) return `${n} ${one}`;
+  return `${n} ${many}`;
+};
+
 const bullets = (items) => items.map((t) => p({
   children: [txt('—   ', { color: BRONZE, bold: true }), ...(Array.isArray(t) ? t : [txt(t)])],
   spacing: { after: 58, line: 252, lineRule: LR }, indent: { left: 170, hanging: 170, right: MEASURE },
