@@ -278,4 +278,5 @@
     <string name="fail_transport_unavailable">%1$s не запустился на этом устройстве. Выберите другой способ на экране «Маршруты».</string>
     <string name="fail_no_bridges_for">Для %1$s нет ни одного моста. Добавьте их на экране «Мосты» или выберите другой способ.</string>
     <string name="step_resuming_tor">Возобновляем Tor</string>
+    <string name="step_checking_path">Проверяю канал</string>
 </resources>

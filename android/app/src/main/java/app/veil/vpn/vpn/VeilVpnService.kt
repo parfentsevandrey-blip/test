@@ -20,6 +20,8 @@ import app.veil.vpn.model.TunnelStats
 import app.veil.vpn.net.HandshakeGovernor
 import app.veil.vpn.net.LoopbackPorts
 import app.veil.vpn.net.SocketProtector
+import app.veil.vpn.net.Socks5
+import app.veil.vpn.net.SocksProxy
 import app.veil.vpn.net.StunSurvey
 import app.veil.vpn.tor.Attempt
 import app.veil.vpn.tor.SocksEndpoint
@@ -557,14 +559,14 @@ class VeilVpnService : VpnService() {
         }
 
         val socks = container.tor.socks ?: return false
-        if (!container.tor.awaitUsable(USABLE_WAIT_MILLIS)) {
-            VeilLog.w("vpn", "the race bootstrapped but built no circuit")
+        if (!awaitUsablePath(socks, racers.first().transport)) {
+            VeilLog.w("vpn", "the race bootstrapped but no stream got through")
             container.tor.setNetworkEnabled(false)
             racers.forEach { container.bridges.recordFailure(it.bridges) }
             teardownAttempt()
             return false
         }
-        VeilLog.i("vpn", "timeline: usable — circuit built (+${sinceConnect()}ms)")
+        VeilLog.i("vpn", "timeline: usable — a stream went through (+${sinceConnect()}ms)")
         val started = runCatching {
             startNativeTunnel(settings, socks, container.tor.dnsPort, network)
         }.onFailure { VeilLog.e("vpn", "could not raise the tunnel", it) }.isSuccess
@@ -633,15 +635,16 @@ class VeilVpnService : VpnService() {
         // Bootstrapped is not the same as usable. At 100% tor has a circuit it
         // built for itself; the first stream an application opens can still
         // wait seconds for one over a slow path, and an application that has
-        // waited seconds has already decided the network is down. So a
-        // circuit is asked for and waited on before anything is told it is
-        // connected.
-        if (!container.tor.awaitUsable(USABLE_WAIT_MILLIS)) {
-            VeilLog.w("vpn", "${attempt.label} bootstrapped but built no circuit")
+        // waited seconds has already decided the network is down. So before
+        // anything is told it is connected, a real stream is opened through
+        // the proxy — the same thing an application would do — and has to
+        // succeed.
+        if (!awaitUsablePath(socks, attempt.transport)) {
+            VeilLog.w("vpn", "${attempt.label} bootstrapped but no stream got through")
             container.tor.setNetworkEnabled(false)
             return false
         }
-        VeilLog.i("vpn", "timeline: ${attempt.label} usable — circuit built (+${sinceConnect()}ms)")
+        VeilLog.i("vpn", "timeline: ${attempt.label} usable — a stream went through (+${sinceConnect()}ms)")
 
         val started = runCatching {
             startNativeTunnel(settings, socks, container.tor.dnsPort, network)
@@ -654,6 +657,67 @@ class VeilVpnService : VpnService() {
         watchScreen()
         return true
     }
+
+    /**
+     * Waits until a stream can actually be opened through the proxy.
+     *
+     * This replaced a check that read tor's own connection and circuit lists
+     * over the control port and reasoned about them, and hung one user's phone
+     * at "100% Done" for twenty-five seconds because the reasoning was wrong
+     * somewhere nobody could see. This does not reason. It opens a SOCKS
+     * connection to an address on the internet, exactly as an application
+     * would, and waits for the proxy to say it is through. If that happens the
+     * route is usable by definition; if it does not happen in the budget, no
+     * application was going to get anywhere on it either.
+     *
+     * The destination is an address rather than a name, so no resolution is
+     * involved, and port 443, which almost every exit permits.
+     */
+    private suspend fun awaitUsablePath(socks: SocksEndpoint, transport: Transport?): Boolean =
+        withContext(Dispatchers.IO) {
+            transport?.let {
+                update(
+                    TunnelState.Bootstrapping(
+                        transport = it,
+                        percent = 100,
+                        summary = getString(R.string.step_checking_path),
+                        attempt = 1,
+                        ladderSize = 1,
+                    ),
+                )
+            }
+            val proxy = SocksProxy("127.0.0.1", socks.port)
+            val deadline = System.currentTimeMillis() + USABLE_WAIT_MILLIS
+            var lastError = "no attempt made"
+            var tries = 0
+            while (System.currentTimeMillis() < deadline) {
+                tries += 1
+                val remaining = (deadline - System.currentTimeMillis()).toInt()
+                val result = runCatching {
+                    Socks5.connect(
+                        proxy,
+                        USABLE_PROBE_HOST,
+                        USABLE_PROBE_PORT,
+                        connectTimeoutMillis = minOf(USABLE_PROBE_TIMEOUT_MILLIS, remaining),
+                        readTimeoutMillis = minOf(USABLE_PROBE_TIMEOUT_MILLIS, remaining),
+                    ).close()
+                }
+                if (result.isSuccess) {
+                    VeilLog.i("vpn", "path check: stream opened on try $tries")
+                    return@withContext true
+                }
+                lastError = result.exceptionOrNull()?.message?.take(80) ?: "?"
+                VeilLog.d("vpn", "path check $tries: $lastError")
+                delay(1_000)
+            }
+            VeilLog.w(
+                "vpn",
+                "path check gave up after $tries tries: $lastError; " +
+                    "tor says link=${container.tor.hasLiveOrConnection()} " +
+                    "circuit=${container.tor.hasBuiltCircuit()}",
+            )
+            false
+        }
 
     /**
      * Waits for tor to finish bootstrapping, giving up either when the rung's
@@ -1053,12 +1117,12 @@ class VeilVpnService : VpnService() {
             try {
                 VeilLog.w("vpn", "re-dialling: $reason")
                 if (!container.tor.reconnect()) return@launch
-                if (!container.tor.awaitUsable(USABLE_WAIT_MILLIS)) {
+                val socks = container.tor.socks ?: return@launch
+                if (!awaitUsablePath(socks, null)) {
                     VeilLog.w("vpn", "re-dial did not produce a usable link yet")
                     return@launch
                 }
                 val settings = container.settings.settings.first()
-                val socks = container.tor.socks ?: return@launch
                 val network = lastNetwork ?: return@launch
                 runCatching {
                     stopNativeTunnelOnly()
@@ -1413,6 +1477,13 @@ class VeilVpnService : VpnService() {
          * an application is going to get anywhere on.
          */
         private const val USABLE_WAIT_MILLIS = 25_000L
+
+        /** One try of the path check; the loop retries until the budget is spent. */
+        private const val USABLE_PROBE_TIMEOUT_MILLIS = 10_000
+
+        /** Somewhere on the internet that answers on 443 and is not a name. */
+        private const val USABLE_PROBE_HOST = "1.1.1.1"
+        private const val USABLE_PROBE_PORT = 443
 
         /**
          * How long a route must have stopped moving before tor's own verdict
