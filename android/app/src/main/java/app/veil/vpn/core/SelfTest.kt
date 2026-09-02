@@ -93,7 +93,7 @@ object SelfTest {
             }
 
             line("=== Veil deep diagnostic ===")
-            line("version 0.5.7")
+            line("version 0.5.8")
 
             val tunnelLive = runCatching { app.tor.isRunning }.getOrDefault(false)
             if (tunnelLive) {
@@ -126,6 +126,7 @@ object SelfTest {
 
             stage("Bridge service")
             runCatching { app.bridges.load() }
+            runCatching { app.memory.load() }
             val country = network.countryIso
             val fetched = if (country.isNullOrBlank()) null else
                 withTimeoutOrNull(45_000) { runCatching { app.bridges.refreshCountry(country) }.getOrNull() }
@@ -190,16 +191,22 @@ object SelfTest {
                     line("${transport.torName}: skipped, no bridges to try")
                     continue
                 }
-                outcomes += testRoute(app, transport, bridges).also { o ->
-                    line(
-                        "${transport.torName}: ${if (o.connected) "CONNECTED" else "failed"} " +
-                            "at ${o.reachedPercent}% in ${o.millis / 1000}s — ${o.detail}",
-                    )
-                }
-                if (outcomes.lastOrNull()?.connected == true) {
-                    // A working route is the answer; the rest is confirmation
-                    // the user does not need to wait for.
-                    line("(a working route was found; remaining transports not tested)")
+                val outcome = testRoute(app, transport, bridges)
+                outcomes += outcome
+                line(
+                    "${transport.torName}: ${if (outcome.connected) "CONNECTED" else "failed"} " +
+                        "at ${outcome.reachedPercent}% in ${outcome.millis / 1000}s — ${outcome.detail}",
+                )
+                if (outcome.connected) {
+                    // The diagnostic just proved this route works here. Record
+                    // it the same way a real connect would, so the next connect
+                    // starts with it instead of rediscovering it — which is the
+                    // difference between the diagnostic being a report and it
+                    // being a fix.
+                    runCatching {
+                        app.memory.recordSuccess(network.fingerprint, transport, outcome.millis)
+                    }
+                    line("(remembered ${transport.torName} for this network; the next connect will try it first)")
                     break
                 }
             }
