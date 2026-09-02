@@ -241,4 +241,5 @@
     <string name="diag_selftest_done">Проверка завершена — результат в журнале ниже</string>
     <string name="action_clear">Очистить</string>
     <string name="fail_offline">У устройства нет подключения к сети. Пока его нет, тоннелировать нечего.</string>
+    <string name="fail_no_fresh_bridges">Сервис мостов недоступен, поэтому в ход шли только мосты, зашитые в приложение, — а они публичные. Откройте «Мосты» и добавьте полученные другим путём: у @GetBridgesBot в Telegram, на bridges.torproject.org или письмом на bridges@torproject.org.</string>
 </resources>

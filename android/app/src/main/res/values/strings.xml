@@ -249,4 +249,5 @@
     <string name="diag_selftest_done">Test finished — the result is in the log below</string>
     <string name="action_clear">Clear</string>
     <string name="fail_offline">This device has no network connection. Nothing can be tunnelled until it does.</string>
+    <string name="fail_no_fresh_bridges">Could not reach the bridge service, so only the bridges shipped with the app were available — and those are public. Open Bridges and add some obtained elsewhere: from @GetBridgesBot on Telegram, from bridges.torproject.org, or by email to bridges@torproject.org.</string>
 </resources>

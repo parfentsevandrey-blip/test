@@ -176,7 +176,11 @@ class StrategyPlanner(
             .take(bridgeBudget(transport))
 
         if (candidates.isEmpty()) {
-            VeilLog.d("planner", "skipping ${transport.torName}: no usable bridges right now")
+            // Worth saying out loud rather than at debug level. A transport
+            // with no bridges is not tried at all, and on a network where the
+            // bridge service is unreachable that is how the route most likely
+            // to work there disappears without anyone noticing.
+            VeilLog.w("planner", "skipping ${transport.torName}: no bridges for it")
             return null
         }
         return Attempt(transport, candidates.map { shape(it, tlsProfile, dtlsProfile) }, why)
@@ -323,6 +327,47 @@ class StrategyPlanner(
         return chosen.mapNotNull { Transport.fromTorName(it.transport) }
     }
 
+    /**
+     * Asks the bridge service again, slowly, for the bridges the first attempt
+     * did not wait for.
+     *
+     * This is where WebTunnel comes from. Its bridges are not in anybody's
+     * built-in list — they are handed out per request, which is what makes them
+     * worth having and also what makes them absent when the service cannot be
+     * reached. On a censored network the request only succeeds through a
+     * fronted transport, and that takes far longer than a connect should wait,
+     * so the fast path above gives up on it.
+     *
+     * Giving up was the mistake. The answer is not to wait longer before
+     * starting, but to keep asking while the connection attempt runs and add
+     * what comes back to it — which is possible now that routes can be added to
+     * a running tor rather than only chosen before it starts.
+     */
+    suspend fun fetchLateBridges(
+        countryIso: String?,
+        tlsProfile: TlsProfile,
+        dtlsProfile: DtlsProfile,
+    ): Map<Transport, List<BridgeLine>> = withContext(Dispatchers.IO) {
+        if (countryIso.isNullOrBlank()) return@withContext emptyMap()
+        val settings = withTimeoutOrNull(LATE_RECOMMENDATION_MILLIS) {
+            runCatching { moat.settingsFor(countryIso) }.getOrNull()
+        }.orEmpty()
+        if (settings.isEmpty()) {
+            VeilLog.w("planner", "bridge service did not answer; running on what we shipped")
+            return@withContext emptyMap()
+        }
+        keepBridges(settings)
+
+        settings.mapNotNull { setting ->
+            val transport = Transport.fromTorName(setting.transport) ?: return@mapNotNull null
+            val lines = setting.bridges
+                .filterNot { it.hasRoutableAddress && cooldown.isCoolingDown(it.host) }
+                .take(bridgeBudget(transport))
+                .map { shape(it, tlsProfile, dtlsProfile) }
+            if (lines.isEmpty()) null else transport to lines
+        }.toMap()
+    }
+
     private fun keepBridges(settings: List<CircumventionSetting>) {
         if (settings.isEmpty()) return
         val byTransport = settings.mapNotNull { setting ->
@@ -339,7 +384,14 @@ class StrategyPlanner(
          * How long the live country lookup may delay the first attempt. The
          * offline snapshot already gave us an answer; this only improves it.
          */
-        const val LIVE_RECOMMENDATION_MILLIS = 6_000L
+        const val LIVE_RECOMMENDATION_MILLIS = 12_000L
+
+        /**
+         * How long the same question may take when nobody is waiting on it.
+         * On a censored network the answer only arrives through a fronted
+         * request, which is slow but is also the only one that arrives.
+         */
+        const val LATE_RECOMMENDATION_MILLIS = 90_000L
 
         /**
          * How long a rung gets before we move on.

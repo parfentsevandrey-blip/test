@@ -78,6 +78,9 @@ class VeilVpnService : VpnService() {
     /** Guards against a second stop request piling onto a running teardown. */
     private val stopping = AtomicBoolean(false)
     private var teardownJob: Job? = null
+
+    /** The slow bridge fetch that runs alongside a connect attempt. */
+    private var lateBridgeJob: Job? = null
     private var lastStartId = 0
 
     private val container: VeilApp get() = application as VeilApp
@@ -239,6 +242,29 @@ class VeilVpnService : VpnService() {
 
         TunnelBus.publishLadder(ladder)
 
+        // Bridges that arrive late still count. WebTunnel's are handed out per
+        // request and are in nobody's built-in list, so on a censored network
+        // they only turn up through a fronted request that takes longer than a
+        // connect should wait for. Rather than delay the attempt or abandon
+        // them, the request runs alongside it and whatever comes back is added
+        // to the attempt already in progress.
+        lateBridgeJob?.cancel()
+        lateBridgeJob = scope.launch {
+            val late = runCatching {
+                container.planner.fetchLateBridges(
+                    network.countryIso,
+                    TlsProfile.resolve(settings.tlsProfile, container.settings.installSeed()),
+                    settings.dtlsProfile,
+                )
+            }.getOrDefault(emptyMap())
+            late.forEach { (transport, lines) ->
+                if (transport in ports.keys) {
+                    VeilLog.i("vpn", "bridges arrived for ${transport.torName}; adding it")
+                    container.tor.addRoute(transport, lines)
+                }
+            }
+        }
+
         // Mullvad's multiplexer, adapted. Rather than walking the ladder and
         // waiting out each dead route in turn, the first few routes are started
         // a few seconds apart and whichever answers first is kept. Time spent
@@ -285,10 +311,21 @@ class VeilVpnService : VpnService() {
             }
         }
 
+        // When the bridge service could not be reached, that is the thing worth
+        // telling the user: it means the app was running on the bridges it
+        // shipped with, which are public and therefore the first ones a censor
+        // enumerates. Adding bridges by hand is then the fix, and saying
+        // "everything was tried" instead sends them nowhere.
+        val starved = Transport.entries
+            .filter { it.isPluggable }
+            .none { container.bridges.hasRecommended(it) }
         fail(
-            container.tor.lastError.value
-                ?.let { getString(R.string.fail_all_routes_reason, it) }
-                ?: getString(R.string.fail_all_routes),
+            when {
+                starved -> getString(R.string.fail_no_fresh_bridges)
+                container.tor.lastError.value != null ->
+                    getString(R.string.fail_all_routes_reason, container.tor.lastError.value)
+                else -> getString(R.string.fail_all_routes)
+            },
             tried,
         )
     }
@@ -484,7 +521,8 @@ class VeilVpnService : VpnService() {
      */
     private suspend fun awaitBootstrap(attempt: Attempt, index: Int, ladderSize: Int): Boolean {
         val budget = StrategyPlanner.budgetMillis(attempt.transport)
-        val deadline = System.currentTimeMillis() + budget
+        var deadline = System.currentTimeMillis() + budget
+        var routesSeenAt = container.tor.lastRouteAddedAtMillis
         var lastPercent = -1
         var lastProgressAt = System.currentTimeMillis()
         var lastPollAt = 0L
@@ -496,6 +534,20 @@ class VeilVpnService : VpnService() {
             // rung that resumes where the last one stopped can be working
             // perfectly while saying nothing. Ask it directly now and then.
             val now = System.currentTimeMillis()
+
+            // A route added while this was waiting — a racer starting, or
+            // bridges that arrived from the bridge service — has not had its
+            // turn yet, so the clock starts again for it. Otherwise fetching
+            // bridges during an attempt would deliver them just in time to be
+            // abandoned.
+            val routeAddedAt = container.tor.lastRouteAddedAtMillis
+            if (routeAddedAt != routesSeenAt) {
+                routesSeenAt = routeAddedAt
+                deadline = now + budget
+                lastProgressAt = now
+                VeilLog.d("vpn", "another route joined; giving it its own budget")
+            }
+
             val bootstrap = if (now - lastPollAt >= BOOTSTRAP_POLL_MILLIS) {
                 lastPollAt = now
                 container.tor.refreshBootstrap()
@@ -827,6 +879,7 @@ class VeilVpnService : VpnService() {
         val app = container
         teardownJob = app.teardownScope.launch {
             val work = app.teardownScope.launch {
+                lateBridgeJob?.cancel()
                 // Cancel, then give the connect a moment to unwind, but never
                 // wait on it: if it is inside a native call it will not return
                 // until that call does, and the point of this whole path is
@@ -879,6 +932,7 @@ class VeilVpnService : VpnService() {
         stopping.set(true)
         teardownJob = app.teardownScope.launch {
             val work = app.teardownScope.launch {
+                lateBridgeJob?.cancel()
                 runCatching { stopNativeTunnel() }
                 runCatching { releaseEverything() }
             }

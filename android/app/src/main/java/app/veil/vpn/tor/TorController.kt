@@ -159,6 +159,16 @@ class TorController(private val context: Context) {
     @Volatile
     private var activeTransport: Transport = Transport.DIRECT
 
+    /**
+     * When a route was last added to the running attempt.
+     *
+     * A route that arrives late needs its own share of patience: giving up two
+     * seconds after adding it would make adding it pointless.
+     */
+    @Volatile
+    var lastRouteAddedAtMillis: Long = 0L
+        private set
+
     var socks: SocksEndpoint? = null
         private set
     var dnsPort: Int = 0
@@ -381,6 +391,7 @@ class TorController(private val context: Context) {
                 control.setConf(lines)
                 activeBridges = merged
                 activeTransport = slowerOf(activeTransport, transport)
+                lastRouteAddedAtMillis = System.currentTimeMillis()
                 VeilLog.i("tor", "also trying ${transport.torName} (${merged.size} bridges now)")
                 true
             }.getOrElse {
@@ -692,6 +703,7 @@ class TorController(private val context: Context) {
         dnsPort = 0
         activeBridges = emptyList()
         activeTransport = Transport.DIRECT
+        lastRouteAddedAtMillis = 0L
         _bootstrap.value = Bootstrap()
         VeilLog.i("tor", "stopped")
     }

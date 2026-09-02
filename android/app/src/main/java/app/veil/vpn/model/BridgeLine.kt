@@ -15,9 +15,23 @@ data class BridgeLine(
 ) {
     val transportEnum: Transport? get() = Transport.fromTorName(transport)
 
-    /** Bridges whose address is a placeholder are reached via a broker instead. */
+    /**
+     * Bridges whose address is a placeholder are reached some other way — a
+     * broker, a station, or a URL on the line — and the address is only an
+     * identity.
+     *
+     * The IPv6 documentation prefix belongs here too: WebTunnel bridges are
+     * published as `[2001:db8:...]:443` with the real endpoint in `url=`.
+     * Treating that as a real address means probing it, timing it out, and
+     * putting it on cooldown for failing to answer something it was never
+     * going to answer.
+     */
     val hasRoutableAddress: Boolean
-        get() = !host.startsWith("192.0.2.") && !host.startsWith("198.51.100.") && host != "0.0.0.0"
+        get() = !host.startsWith("192.0.2.") &&
+            !host.startsWith("198.51.100.") &&
+            !host.startsWith("203.0.113.") &&
+            !host.lowercase().startsWith("2001:db8:") &&
+            host != "0.0.0.0"
 
     fun torrcLine(): String = "Bridge $raw"
 
