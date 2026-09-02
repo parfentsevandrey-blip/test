@@ -91,7 +91,7 @@ class VeilApp : Application() {
             val country = runCatching { NetworkContext.inspect(this@VeilApp).countryIso }.getOrNull()
             if (!country.isNullOrBlank()) {
                 runCatching { bridges.refreshCountry(country) }
-                    .onSuccess { if (it > 0) VeilLog.i("app", "prefetched $it country bridge(s)") }
+                    .onSuccess { count -> if (count != null && count > 0) VeilLog.i("app", "prefetched $count country bridge(s)") }
             }
         }
 

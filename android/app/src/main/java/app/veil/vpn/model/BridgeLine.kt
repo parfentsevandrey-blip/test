@@ -52,6 +52,29 @@ data class BridgeLine(
     }
 
     /**
+     * Returns the same bridge under a different placeholder address.
+     *
+     * Only meaningful for transports whose address is not dialled — Snowflake's
+     * is documentation space and exists so that tor has something to call the
+     * bridge. Tor keys its bridges on address and port, so two lines that
+     * differ only in their arguments are one bridge to it and the second is
+     * dropped. That is fatal for offering the same bridge two ways at once: the
+     * fronted rendezvous and the AMP one become whichever tor kept.
+     *
+     * The Tor Project's own published settings solve it exactly like this —
+     * their fronted Snowflake lines are 192.0.2.3 and .4 and their AMP lines
+     * are .5 and .6, carrying the same two fingerprints.
+     */
+    fun withPlaceholderOffset(offset: Int): BridgeLine {
+        if (hasRoutableAddress) return this
+        val parts = host.split('.')
+        if (parts.size != 4) return this
+        val last = parts[3].toIntOrNull() ?: return this
+        val moved = (parts.take(3) + (last + offset).coerceIn(1, 254).toString()).joinToString(".")
+        return copy(host = moved).let { it.copy(raw = it.rebuild()) }
+    }
+
+    /**
      * Returns the same bridge with parameters removed, rebuilding the raw line.
      *
      * Needed because some parameters are alternatives to each other rather than
@@ -106,7 +129,11 @@ data class BridgeLine(
         return rebuiltWith(trimmed)
     }
 
-    private fun rebuiltWith(fields: Map<String, String>): BridgeLine {
+    private fun rebuiltWith(fields: Map<String, String>): BridgeLine =
+        copy(params = fields).let { it.copy(raw = it.rebuild()) }
+
+    /** The `Bridge` line text for this object's current fields. */
+    private fun rebuild(): String {
         val rebuilt = buildString {
             append(transport)
             append(' ')
@@ -114,9 +141,9 @@ data class BridgeLine(
             append(':')
             append(port)
             fingerprint?.let { append(' ').append(it) }
-            fields.forEach { (key, value) -> append(' ').append(key).append('=').append(value) }
+            params.forEach { (key, value) -> append(' ').append(key).append('=').append(value) }
         }
-        return copy(params = fields, raw = rebuilt)
+        return rebuilt
     }
 
     companion object {

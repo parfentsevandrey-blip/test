@@ -220,6 +220,12 @@ class StrategyPlanner(
                         "fronts" to AMP_FRONT,
                     ),
                 )
+                // And under its own placeholder address, so that tor holds it
+                // as a second bridge rather than as a duplicate of the one it
+                // was made from. Without this the two ways cannot be offered at
+                // the same time: tor keys bridges on address and port and would
+                // keep exactly one of them.
+                ?.withPlaceholderOffset(AMP_ADDRESS_OFFSET)
         if (line == null) return null
         // Shaped and length-checked like any other rung. The second part is not
         // optional: the AMP settings make an already long Snowflake line longer,
@@ -424,6 +430,13 @@ class StrategyPlanner(
         const val AMP_FRONT = "www.google.com"
 
         /**
+         * How far the AMP line's placeholder address is moved from the fronted
+         * one's. Two, matching the Tor Project's own settings, where the
+         * fronted pair is 192.0.2.3/.4 and the AMP pair is .5/.6.
+         */
+        const val AMP_ADDRESS_OFFSET = 2
+
+        /**
          * How long the live country lookup may delay the first attempt. The
          * offline snapshot already gave us an answer; this only improves it.
          */
@@ -457,13 +470,32 @@ class StrategyPlanner(
         }
 
         /**
-         * Abort early if bootstrap has not moved at all for this long.
+         * How long a route may go without its bootstrap percentage moving
+         * before it is given up on — which depends entirely on how far it got.
          *
-         * Tighter than it used to be, because switching route no longer costs a
-         * restart: giving up on a dead rung after twenty-five seconds and
-         * moving to the next one is now cheaper than waiting another ten.
+         * A flat timer is wrong, and measurably so. Below about three quarters
+         * tor is still trying to establish a link to the bridge, and a route
+         * that is going to fail fails here; twenty-five seconds of silence is
+         * a dead route and waiting longer costs the user a minute to learn
+         * nothing. Past that point the link is up and what remains is
+         * directory material and extending a circuit through it — over a path
+         * that runs through a CDN or a volunteer's browser, in steps the
+         * percentage only reports coarsely. Silence there is what a slow link
+         * looks like, not a broken one.
+         *
+         * Measured, not guessed. On one Russian mobile network meek reached
+         * 95% and Conjure-over-DNS reached 95%, and both were killed by an
+         * eighteen-second timer for not producing a number — one step short of
+         * a working tunnel, on the two routes that had got furthest.
          */
-        const val STALL_MILLIS = 25_000L
+        fun stallMillis(percent: Int): Long = when {
+            percent >= 90 -> 60_000
+            percent >= 75 -> 45_000
+            else -> 25_000
+        }
+
+        /** Bootstrap is this far along when the link to the bridge is working. */
+        const val LATE_BOOTSTRAP_PERCENT = 75
     }
 }
 

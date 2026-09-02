@@ -97,11 +97,18 @@ class BridgeRepository(
      * The result is raw bridge lines; shaping (uTLS and the rest) is applied
      * where they are used, not where they are stored.
      */
-    suspend fun refreshCountry(countryIso: String): Int = withContext(Dispatchers.IO) {
-        if (countryIso.isBlank()) return@withContext 0
+    /**
+     * Asks the bridge service what it recommends for a country.
+     *
+     * Null means the request did not come back at all — which on a censored
+     * network is the usual answer and is worth telling apart from a service
+     * that replied with nothing. Zero means it replied and had nothing to add.
+     */
+    suspend fun refreshCountry(countryIso: String): Int? = withContext(Dispatchers.IO) {
+        if (countryIso.isBlank()) return@withContext null
         val settings = runCatching { moat.settingsFor(countryIso) }
             .onFailure { VeilLog.w("bridges", "country refresh failed: $it") }
-            .getOrNull() ?: return@withContext 0
+            .getOrNull() ?: return@withContext null
         val byTransport = settings.mapNotNull { setting ->
             val transport = Transport.fromTorName(setting.transport) ?: return@mapNotNull null
             if (setting.bridges.isEmpty()) null else transport to setting.bridges

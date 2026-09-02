@@ -300,7 +300,25 @@ class VeilVpnService : VpnService() {
         //
         // These used to be collapsed by transport before racing, which meant
         // exactly one of them ever started.
-        val racers = ladder.take(RACE_WIDTH)
+        //
+        // Not every pair can be raced, though. Tor keys a bridge on its address
+        // and port, so two lines that share one are a single bridge to it and
+        // the second is dropped — offering both at once would silently be
+        // offering whichever tor kept. Snowflake's alternative is given its own
+        // placeholder address for exactly this reason; Conjure's two registrars
+        // share a real relay address that cannot be moved, so those two are
+        // tried in turn instead. An attempt left out of the race is not lost:
+        // it is still in the ladder below.
+        val racers = buildList {
+            val claimed = mutableSetOf<String>()
+            for (attempt in ladder) {
+                if (size >= RACE_WIDTH) break
+                val endpoints = attempt.bridges.map { "${it.host}:${it.port}" }
+                if (endpoints.any { it in claimed }) continue
+                claimed += endpoints
+                add(attempt)
+            }
+        }
         if (racers.size > 1 && raceRoutes(racers, settings, network, ladder.size)) return
 
         val tried = racers.map { it.transport }.toMutableList()
@@ -522,6 +540,10 @@ class VeilVpnService : VpnService() {
     private suspend fun awaitBootstrap(attempt: Attempt, index: Int, ladderSize: Int): Boolean {
         val budget = StrategyPlanner.budgetMillis(attempt.transport)
         var deadline = System.currentTimeMillis() + budget
+        // The extensions below are bounded. A route that keeps inching forward
+        // could otherwise hold the connect for as long as it kept moving, and
+        // an attempt nobody can leave is worse than one that ends.
+        var ceiling = deadline + LATE_GRACE_CEILING_MILLIS
         var routesSeenAt = container.tor.lastRouteAddedAtMillis
         var lastPercent = -1
         var lastProgressAt = System.currentTimeMillis()
@@ -544,6 +566,7 @@ class VeilVpnService : VpnService() {
             if (routeAddedAt != routesSeenAt) {
                 routesSeenAt = routeAddedAt
                 deadline = now + budget
+                ceiling = deadline + LATE_GRACE_CEILING_MILLIS
                 lastProgressAt = now
                 VeilLog.d("vpn", "another route joined; giving it its own budget")
             }
@@ -584,9 +607,20 @@ class VeilVpnService : VpnService() {
                 )
                 return false
             }
-            if (System.currentTimeMillis() - lastProgressAt > StrategyPlanner.STALL_MILLIS) {
+            if (quiet > StrategyPlanner.stallMillis(lastPercent)) {
                 VeilLog.w("vpn", "${attempt.label} stalled at $lastPercent%")
                 return false
+            }
+            // A route that has got the link up has earned more than its
+            // opening budget. Running out of time one step from a tunnel, on
+            // the route that got furthest, is the most expensive way for this
+            // to be wrong.
+            if (lastPercent >= StrategyPlanner.LATE_BOOTSTRAP_PERCENT &&
+                System.currentTimeMillis() > deadline - LATE_GRACE_MILLIS &&
+                deadline < ceiling
+            ) {
+                deadline = minOf(System.currentTimeMillis() + LATE_GRACE_MILLIS, ceiling)
+                VeilLog.d("vpn", "${attempt.label} is at $lastPercent%; extending its time")
             }
             delay(250)
         }
@@ -1047,5 +1081,18 @@ class VeilVpnService : VpnService() {
 
         /** How far apart the racing routes are started. */
         private const val RACE_STAGGER_MILLIS = 6_000L
+
+        /**
+         * Extra time granted to a route that has the link to its bridge up.
+         *
+         * Granted repeatedly while it stays there, so the stall timer is what
+         * ends it rather than the clock: a route at 95% is either about to
+         * finish or about to stop moving, and the second of those is already
+         * detected.
+         */
+        private const val LATE_GRACE_MILLIS = 30_000L
+
+        /** The most any one route may gain from those extensions in total. */
+        private const val LATE_GRACE_CEILING_MILLIS = 60_000L
     }
 }

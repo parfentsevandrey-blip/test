@@ -11,6 +11,7 @@ import app.veil.vpn.net.NatBehaviour
 import app.veil.vpn.net.NetworkProbe
 import app.veil.vpn.net.SocksProxy
 import app.veil.vpn.tor.Bootstrap
+import app.veil.vpn.tor.StrategyPlanner
 import app.veil.vpn.tor.Torrc
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -69,8 +70,16 @@ object SelfTest {
         Transport.SNOWFLAKE -> 60_000
     }
 
-    /** No forward progress for this long means the route is not going to move. */
-    private const val STALL_MILLIS = 18_000L
+    /**
+     * Extra time for a route that has its link to the bridge up.
+     *
+     * The budgets below are opening budgets: enough to tell a dead route from
+     * a live one. A route that reached three quarters is neither, and cutting
+     * it off there reports a working method as broken — which is what this
+     * diagnostic did to meek and to Conjure-over-DNS on a Russian mobile
+     * network, both at 95%, both one step from a tunnel.
+     */
+    private const val LATE_GRACE_MILLIS = 40_000L
 
     /** How many times the steady-state probe is repeated, and how far apart. */
     private const val STEADY_SAMPLES = 6
@@ -101,7 +110,7 @@ object SelfTest {
             fun finish() = progress.update(total, total, app.getString(R.string.diag_stage_done))
 
             line("=== Veil deep diagnostic ===")
-            line("version 0.6.1")
+            line("version 0.6.2")
 
             val tunnelLive = runCatching { app.tor.isRunning }.getOrDefault(false)
             if (tunnelLive) {
@@ -172,14 +181,22 @@ object SelfTest {
             runCatching { app.bridges.load() }
             runCatching { app.memory.load() }
             val country = network.countryIso
+            // Three outcomes, and they mean different things. Nothing back
+            // inside the budget, or a request that failed, is the fronted call
+            // being blocked — the usual case on the networks this is for, and
+            // the reason the app is running on the bridges it shipped with. A
+            // reply with nothing in it is a service that simply has no advice
+            // for this country.
             val fetched = if (country.isNullOrBlank()) null else
-                withTimeoutOrNull(45_000) { runCatching { app.bridges.refreshCountry(country) }.getOrNull() }
+                withTimeoutOrNull(45_000) {
+                    runCatching { app.bridges.refreshCountry(country) }.getOrNull()
+                }
             line(
                 "bridge service: " + when {
                     country.isNullOrBlank() -> "country unknown, not asked"
-                    fetched == null -> "NO ANSWER within 45s (fronting may be blocked)"
-                    fetched > 0 -> "answered, $fetched fresh line(s)"
-                    else -> "answered but returned nothing usable"
+                    fetched == null -> "NO ANSWER within 45s (the fronted request did not get through)"
+                    fetched > 0 -> "answered, $fetched line(s) for ${country.uppercase()}"
+                    else -> "answered, but has nothing for ${country.uppercase()}"
                 },
             )
             order.filter { it.isPluggable }.forEach { t ->
@@ -430,7 +447,9 @@ object SelfTest {
         tor.awaitListeners()
 
         val started = System.currentTimeMillis()
-        val deadline = started + budgetMillis(transport)
+        var deadline = started + budgetMillis(transport)
+        // Bounded, so one creeping route cannot hold the whole diagnostic.
+        val ceiling = deadline + LATE_GRACE_MILLIS * 2
         var maxPercent = 0
         var lastMoveAt = started
         var detail = "no progress"
@@ -451,9 +470,15 @@ object SelfTest {
                 detail = failureDetail(b, tor.lastError.value)
                 break
             }
-            if (quiet > STALL_MILLIS) {
+            if (quiet > StrategyPlanner.stallMillis(maxPercent)) {
                 detail = "stalled at $maxPercent% — ${failureDetail(b, tor.lastError.value)}"
                 break
+            }
+            if (maxPercent >= StrategyPlanner.LATE_BOOTSTRAP_PERCENT &&
+                System.currentTimeMillis() > deadline - LATE_GRACE_MILLIS &&
+                deadline < ceiling
+            ) {
+                deadline = minOf(System.currentTimeMillis() + LATE_GRACE_MILLIS, ceiling)
             }
             delay(500)
         }
@@ -464,9 +489,30 @@ object SelfTest {
         return Outcome(transport, maxPercent, false, System.currentTimeMillis() - started, detail)
     }
 
+    /**
+     * Tor warnings that describe the process rather than this route.
+     *
+     * Tor's heartbeat reports totals since it started, so a line like "6
+     * connections died in state handshaking (TLS)" can be emitted during a
+     * Snowflake attempt while counting failures from the obfs4 one before it.
+     * Printing it as Snowflake's reason for failing is worse than printing
+     * nothing: it sends whoever reads the log looking at TLS on a transport
+     * that does not use it.
+     */
+    private val CUMULATIVE_WARNINGS = listOf(
+        "connections died in state",
+        "Heartbeat:",
+        "Since startup",
+        "Average packaged cell",
+        "circuit handshake",
+    )
+
     /** The most useful thing tor said about why a route did not complete. */
     private fun failureDetail(b: Bootstrap, lastError: String?): String {
-        val warning = b.lastWarning?.substringAfterLast("): ")?.take(80)
+        val warning = b.lastWarning
+            ?.takeIf { text -> CUMULATIVE_WARNINGS.none { text.contains(it, ignoreCase = true) } }
+            ?.substringAfterLast("): ")
+            ?.take(80)
         return when {
             !warning.isNullOrBlank() -> warning
             !lastError.isNullOrBlank() -> lastError.take(80)
