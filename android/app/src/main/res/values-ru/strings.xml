@@ -249,4 +249,8 @@
     <string name="diag_line_api_none">сервис мостов: не ответил — в ход шли только зашитые мосты</string>
     <string name="diag_line_nat">NAT: %1$s</string>
     <string name="action_share">Поделиться</string>
+    <string name="diag_selftest_hint">Прогоняет каждый этап по отдельности — сеть, транспорты, мосты, сервис мостов, пробу и Tor — без подключения. Запустите, когда ничего не работает, и скопируйте результат сюда.</string>
+    <string name="diag_selftest_step">%1$d%%  ·  %2$s</string>
+    <string name="diag_selftest_ready">Результат — скопируйте и пришлите обратно</string>
+    <string name="diag_selftest_again">Запустить ещё раз</string>
 </resources>

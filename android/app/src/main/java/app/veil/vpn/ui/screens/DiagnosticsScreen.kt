@@ -39,6 +39,11 @@ import app.veil.vpn.net.PathVerdict
 import app.veil.vpn.net.ProbeReport
 import app.veil.vpn.vpn.LocalListener
 import app.veil.vpn.ui.components.SectionHeader
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material3.LinearProgressIndicator
+import app.veil.vpn.ui.SelfTestUi
 
 /**
  * The screen that answers "why isn't it connecting".
@@ -57,6 +62,8 @@ fun DiagnosticsScreen(
     onCopy: () -> String,
     onClearCooldowns: () -> Unit,
     onSelfTest: () -> Unit,
+    selfTest: SelfTestUi,
+    @Suppress("UNUSED_PARAMETER") onDismissSelfTest: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val clipboard = LocalClipboardManager.current
@@ -131,20 +138,7 @@ fun DiagnosticsScreen(
         // Deliberately the first thing on the screen after the summary: when
         // nothing connects, the useful question is which stage failed, and this
         // is what answers it without needing a connection to have been made.
-        item {
-            Button(
-                onClick = onSelfTest,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 10.dp),
-            ) {
-                Icon(Icons.Filled.Bolt, contentDescription = null)
-                Text(
-                    stringResource(R.string.diag_selftest),
-                    modifier = Modifier.padding(start = 8.dp),
-                )
-            }
-        }
+        item { SelfTestCard(selfTest, onSelfTest) }
 
         item {
             Row(
@@ -269,6 +263,104 @@ fun DiagnosticsScreen(
                     VeilLog.Level.DEBUG -> MaterialTheme.colorScheme.onSurfaceVariant
                 },
             )
+        }
+    }
+}
+
+
+@Composable
+private fun SelfTestCard(
+    state: SelfTestUi,
+    onRun: () -> Unit,
+) {
+    val clipboard = LocalClipboardManager.current
+    val context = LocalContext.current
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 10.dp),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        ),
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            when (state) {
+                is SelfTestUi.Idle -> {
+                    Text(
+                        stringResource(R.string.diag_selftest_hint),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Button(onClick = onRun, modifier = Modifier.fillMaxWidth()) {
+                        Icon(Icons.Filled.Bolt, contentDescription = null)
+                        Text(
+                            stringResource(R.string.diag_selftest),
+                            modifier = Modifier.padding(start = 8.dp),
+                        )
+                    }
+                }
+
+                is SelfTestUi.Running -> {
+                    Text(
+                        stringResource(R.string.diag_selftest_step, state.percent, state.label),
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    LinearProgressIndicator(
+                        progress = { state.percent / 100f },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+
+                is SelfTestUi.Done -> {
+                    Text(
+                        stringResource(R.string.diag_selftest_ready),
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    Text(
+                        state.report,
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontFamily = FontFamily.Monospace,
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 260.dp)
+                            .verticalScroll(rememberScrollState()),
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Button(
+                            onClick = { clipboard.setText(AnnotatedString(state.report)) },
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Icon(Icons.Filled.ContentCopy, contentDescription = null)
+                            Text(
+                                stringResource(R.string.action_copy),
+                                modifier = Modifier.padding(start = 8.dp),
+                            )
+                        }
+                        OutlinedButton(
+                            onClick = {
+                                val send = Intent(Intent.ACTION_SEND)
+                                    .setType("text/plain")
+                                    .putExtra(Intent.EXTRA_TEXT, state.report)
+                                runCatching {
+                                    context.startActivity(Intent.createChooser(send, null))
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Icon(Icons.Filled.Share, contentDescription = null)
+                            Text(
+                                stringResource(R.string.action_share),
+                                modifier = Modifier.padding(start = 8.dp),
+                            )
+                        }
+                    }
+                    OutlinedButton(onClick = onRun, modifier = Modifier.fillMaxWidth()) {
+                        Text(stringResource(R.string.diag_selftest_again))
+                    }
+                }
+            }
         }
     }
 }

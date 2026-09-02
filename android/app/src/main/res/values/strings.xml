@@ -257,4 +257,8 @@
     <string name="diag_line_api_none">bridge service: no answer — only shipped bridges were used</string>
     <string name="diag_line_nat">NAT: %1$s</string>
     <string name="action_share">Share</string>
+    <string name="diag_selftest_hint">Runs every stage on its own — network, transports, bridges, the bridge service, the probe, and Tor — without connecting. Use it when nothing works and copy the result here.</string>
+    <string name="diag_selftest_step">%1$d%%  ·  %2$s</string>
+    <string name="diag_selftest_ready">Result — copy it and send it back</string>
+    <string name="diag_selftest_again">Run again</string>
 </resources>

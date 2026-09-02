@@ -76,6 +76,9 @@ class VeilViewModel(application: Application) : AndroidViewModel(application) {
     private val _busyMessage = MutableStateFlow<String?>(null)
     val busyMessage: StateFlow<String?> = _busyMessage.asStateFlow()
 
+    private val _selfTest = MutableStateFlow<SelfTestUi>(SelfTestUi.Idle)
+    val selfTest: StateFlow<SelfTestUi> = _selfTest.asStateFlow()
+
     init {
         viewModelScope.launch { container.bridges.load() }
         watchForStuckShutdown()
@@ -141,12 +144,28 @@ class VeilViewModel(application: Application) : AndroidViewModel(application) {
      * did not, which is the difference between a fix and a guess.
      */
     fun runSelfTest() {
+        // Single-flight: the run drives the shared tor and transport
+        // controllers, so a second one started by an impatient tap must not
+        // pile onto the first.
+        if (SelfTest.isRunning) return
         viewModelScope.launch {
-            _busyMessage.value = text(R.string.diag_selftest_running)
-            runCatching { SelfTest.run(getApplication()) }
-                .onFailure { VeilLog.e("selftest", "did not finish", it) }
-            _busyMessage.value = text(R.string.diag_selftest_done)
+            _selfTest.value = SelfTestUi.Running(0, "")
+            val result = runCatching {
+                SelfTest.run(getApplication()) { done, total, label ->
+                    val pct = if (total > 0) (done * 100 / total) else 0
+                    _selfTest.value = SelfTestUi.Running(pct.coerceIn(0, 100), label)
+                }
+            }.getOrElse { err ->
+                VeilLog.e("selftest", "did not finish", err)
+                "Self-test did not finish: ${err.message}"
+            }
+            _selfTest.value = SelfTestUi.Done(result)
         }
+    }
+
+    /** Dismisses the self-test result card. */
+    fun clearSelfTest() {
+        _selfTest.value = SelfTestUi.Idle
     }
     fun setManualTransport(t: Transport) = edit { container.settings.setManualTransport(t) }
     fun setBlockUdp(value: Boolean) = edit { container.settings.setBlockUdp(value) }

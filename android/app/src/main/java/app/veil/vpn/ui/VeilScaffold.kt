@@ -105,6 +105,7 @@ fun VeilScaffold(
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val bridges by viewModel.knownBridges.collectAsStateWithLifecycle()
     val logs by viewModel.logs.collectAsStateWithLifecycle()
+    val selfTest by viewModel.selfTest.collectAsStateWithLifecycle()
     val apps by viewModel.apps.collectAsStateWithLifecycle()
     val moat by viewModel.moat.collectAsStateWithLifecycle()
     val listeners by viewModel.localListeners.collectAsStateWithLifecycle()
@@ -230,6 +231,8 @@ fun VeilScaffold(
                         onCopy = viewModel::logDump,
                         onClearCooldowns = viewModel::clearCooldowns,
                         onSelfTest = viewModel::runSelfTest,
+                        selfTest = selfTest,
+                        onDismissSelfTest = viewModel::clearSelfTest,
                     )
 
                     Destination.SETTINGS -> SettingsScreen(
