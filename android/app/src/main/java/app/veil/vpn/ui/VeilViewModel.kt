@@ -13,6 +13,7 @@ import app.veil.vpn.data.AppRoutingMode
 import app.veil.vpn.data.DnsMode
 import app.veil.vpn.data.InstalledApp
 import app.veil.vpn.data.InstalledApps
+import app.veil.vpn.data.Engine
 import app.veil.vpn.data.IsolationMode
 import app.veil.vpn.data.DEFAULT_BYPASS_SUFFIXES
 import app.veil.vpn.model.DtlsProfile
@@ -63,6 +64,9 @@ class VeilViewModel(application: Application) : AndroidViewModel(application) {
     val logs = VeilLog.lines
     val knownBridges = container.bridges.bridges
 
+    /** How many volunteer VPN servers the app knows about, for the Routes card. */
+    val vpnGateServers = container.vpnGate.servers
+
     val settings: StateFlow<VeilSettings> = container.settings.settings
         .stateIn(viewModelScope, SharingStarted.Eagerly, VeilSettings())
 
@@ -80,6 +84,7 @@ class VeilViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         viewModelScope.launch { container.bridges.load() }
+        viewModelScope.launch { container.vpnGate.load() }
         watchForStuckShutdown()
     }
 
@@ -164,7 +169,21 @@ class VeilViewModel(application: Application) : AndroidViewModel(application) {
     fun clearSelfTest() {
         _selfTest.value = SelfTestUi.Idle
     }
-    fun setManualTransport(t: Transport) = edit { container.settings.setManualTransport(t) }
+    /**
+     * Choosing an obfuscation also chooses Tor, because that is what an
+     * obfuscation is for. The two settings are one decision and are written
+     * together, so the app can never be pointed at VPN Gate while showing a
+     * Tor transport as the selected one.
+     */
+    fun setManualTransport(t: Transport) = edit {
+        container.settings.setEngine(Engine.TOR)
+        container.settings.setManualTransport(t)
+    }
+
+    fun chooseVpnGate() = edit {
+        container.settings.setEngine(Engine.VPN_GATE)
+        container.vpnGate.load()
+    }
     fun setBlockUdp(value: Boolean) = edit { container.settings.setBlockUdp(value) }
     fun setDnsMode(mode: DnsMode) = edit { container.settings.setDnsMode(mode) }
     fun setIsolation(mode: IsolationMode) = edit { container.settings.setIsolation(mode) }

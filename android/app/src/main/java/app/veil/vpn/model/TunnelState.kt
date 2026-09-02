@@ -30,6 +30,31 @@ sealed interface TunnelState {
         val socksPort: Int,
     ) : TunnelState
 
+    /**
+     * Connecting to a volunteer VPN server from the VPN Gate list.
+     *
+     * Deliberately not folded into the states above. Those all carry a
+     * [Transport], which is a way of *disguising a connection to Tor*, and VPN
+     * Gate is not one — it is a different network with a different threat model,
+     * where an operator we do not know can see the traffic. Giving it its own
+     * states means the interface cannot accidentally describe it as a Tor route,
+     * and every place that shows what is carrying the traffic has to say which
+     * of the two it is.
+     */
+    data class VpnGateStarting(
+        val server: String,
+        val country: String,
+        val attempt: Int,
+        val total: Int,
+    ) : TunnelState
+
+    data class VpnGateConnected(
+        val server: String,
+        val country: String,
+        val connectedAtMillis: Long,
+        val socksPort: Int,
+    ) : TunnelState
+
     /** A rung failed; moving to the next one without dropping the VPN. */
     data class Escalating(
         val from: Transport,
@@ -43,10 +68,18 @@ sealed interface TunnelState {
 
     val isBusy: Boolean
         get() = this is Probing || this is Starting || this is Bootstrapping ||
-            this is Escalating || this is Stopping
+            this is Escalating || this is Stopping || this is VpnGateStarting
 
     val isLive: Boolean
-        get() = this is Connected
+        get() = this is Connected || this is VpnGateConnected
+
+    /** When the tunnel started carrying traffic, whatever is carrying it. */
+    val liveSinceMillis: Long?
+        get() = when (this) {
+            is Connected -> connectedAtMillis
+            is VpnGateConnected -> connectedAtMillis
+            else -> null
+        }
 
     val activeTransport: Transport?
         get() = when (this) {

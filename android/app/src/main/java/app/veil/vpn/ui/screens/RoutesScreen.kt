@@ -20,9 +20,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AcUnit
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Hub
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -38,6 +40,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.veil.vpn.R
+import app.veil.vpn.data.Engine
 import app.veil.vpn.model.BridgeLine
 import app.veil.vpn.model.LatencyClass
 import app.veil.vpn.model.Transport
@@ -61,10 +64,13 @@ import app.veil.vpn.ui.components.SectionHeader
  */
 @Composable
 fun RoutesScreen(
+    engine: Engine,
     manualTransport: Transport,
     ladder: List<Attempt>,
     bridges: Map<Transport, List<BridgeLine>>,
+    vpnGateServers: Int,
     onTransportChange: (Transport) -> Unit,
+    onChooseVpnGate: () -> Unit,
     onOpenBridges: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -105,8 +111,20 @@ fun RoutesScreen(
                     TransportCard(
                         transport = transport,
                         bridgeCount = bridges[transport]?.size ?: 0,
-                        selected = manualTransport == transport,
+                        selected = engine == Engine.TOR && manualTransport == transport,
                         onClick = { onTransportChange(transport) },
+                    )
+                }
+                // Last in the row, and visibly not one of the others. The four
+                // before it are ways of disguising a connection to Tor; this is
+                // a different network with a different bargain, and putting it
+                // in the same row without saying so would be the dishonest way
+                // to offer it.
+                item(key = "vpngate") {
+                    VpnGateCard(
+                        servers = vpnGateServers,
+                        selected = engine == Engine.VPN_GATE,
+                        onClick = onChooseVpnGate,
                     )
                 }
             }
@@ -114,8 +132,9 @@ fun RoutesScreen(
 
         // What the connect will actually do with that choice: the bridge lines
         // it will use, and — for Snowflake and Conjure, which have two ways of
-        // starting — both of them.
-        if (ladder.isNotEmpty()) {
+        // starting — both of them. There is no such thing for VPN Gate: it
+        // walks a list of servers rather than a set of bridge lines.
+        if (engine == Engine.TOR && ladder.isNotEmpty()) {
             item {
                 SectionHeader(
                     stringResource(R.string.transports_ladder),
@@ -262,6 +281,114 @@ private fun TransportCard(
                     color = MaterialTheme.colorScheme.primary,
                     maxLines = 2,
                     modifier = Modifier.padding(top = 6.dp),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * VPN Gate, told apart from the four beside it.
+ *
+ * The warning is on the card rather than behind a tap, and it stays there when
+ * the card is selected, because the thing a user most needs to know about this
+ * choice is the thing they would otherwise never find out: the server is
+ * somebody's machine and that somebody can see the traffic. A tunnel that hides
+ * you from your network while showing you to a stranger is still worth having
+ * when nothing else connects — but only if that is what was chosen.
+ */
+@Composable
+private fun VpnGateCard(
+    servers: Int,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Card(
+        modifier = Modifier
+            .width(244.dp)
+            .height(268.dp),
+        onClick = onClick,
+        shape = MaterialTheme.shapes.extraLarge,
+        colors = CardDefaults.cardColors(
+            containerColor = if (selected) {
+                MaterialTheme.colorScheme.tertiaryContainer
+            } else {
+                MaterialTheme.colorScheme.surfaceContainerHigh
+            },
+        ),
+    ) {
+        val onContainer = if (selected) {
+            MaterialTheme.colorScheme.onTertiaryContainer
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        }
+        val muted = if (selected) {
+            MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.78f)
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        }
+        Column(Modifier.padding(18.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    Icons.Filled.Groups,
+                    contentDescription = null,
+                    tint = onContainer,
+                    modifier = Modifier.size(24.dp),
+                )
+                Spacer(Modifier.weight(1f))
+                if (selected) {
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.tertiary,
+                        modifier = Modifier.size(22.dp),
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                Icons.Filled.Check,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onTertiary,
+                                modifier = Modifier.size(14.dp),
+                            )
+                        }
+                    }
+                }
+            }
+            Text(
+                text = stringResource(R.string.vpngate_title),
+                style = MaterialTheme.typography.titleMediumEmphasized,
+                color = onContainer,
+                maxLines = 1,
+                modifier = Modifier.padding(top = 10.dp),
+            )
+            Text(
+                text = stringResource(R.string.vpngate_desc),
+                style = MaterialTheme.typography.bodySmall,
+                color = muted,
+                maxLines = 6,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(top = 6.dp),
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(top = 6.dp),
+            ) {
+                Icon(
+                    Icons.Filled.Warning,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(14.dp),
+                )
+                Text(
+                    text = stringResource(R.string.vpngate_servers_known, servers),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = muted,
+                    maxLines = 1,
+                    modifier = Modifier.padding(start = 5.dp),
                 )
             }
         }

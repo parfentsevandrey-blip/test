@@ -96,9 +96,9 @@ fun HomeScreen(
             )
         }
 
-        if (state is TunnelState.Connected) {
+        state.liveSinceMillis?.let { since ->
             Spacer(Modifier.height(10.dp))
-            UptimeTile(since = state.connectedAtMillis)
+            UptimeTile(since = since)
         }
 
         Spacer(Modifier.height(10.dp))
@@ -128,6 +128,8 @@ private fun StatusLine(state: TunnelState) {
             is TunnelState.Starting -> R.string.state_starting
             is TunnelState.Bootstrapping -> R.string.state_bootstrapping
             is TunnelState.Connected -> R.string.state_connected
+            is TunnelState.VpnGateStarting -> R.string.state_starting
+            is TunnelState.VpnGateConnected -> R.string.state_connected
             is TunnelState.Escalating -> R.string.state_reconfiguring
             is TunnelState.Stopping -> R.string.state_stopping
             is TunnelState.Failed -> R.string.state_failed
@@ -143,6 +145,17 @@ private fun StatusLine(state: TunnelState) {
             state.ladderSize,
         )
         is TunnelState.Bootstrapping -> state.summary
+        is TunnelState.VpnGateStarting -> stringResource(
+            R.string.vpngate_step,
+            state.server,
+            state.attempt,
+            state.total,
+        )
+        is TunnelState.VpnGateConnected -> stringResource(
+            R.string.vpngate_via,
+            state.server,
+            state.country,
+        )
         is TunnelState.Escalating -> state.reason
         is TunnelState.Failed -> state.reason
         else -> null

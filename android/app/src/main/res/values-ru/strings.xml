@@ -277,4 +277,13 @@
     <string name="diag_stage_done">Готово</string>
     <string name="fail_transport_unavailable">%1$s не запустился на этом устройстве. Выберите другой способ на экране «Маршруты».</string>
     <string name="fail_no_bridges_for">Для %1$s нет ни одного моста. Добавьте их на экране «Мосты» или выберите другой способ.</string>
+    <!-- VPN Gate -->
+    <string name="vpngate_title">VPN Gate</string>
+    <string name="vpngate_step">%1$s (%2$d/%3$d)</string>
+    <string name="vpngate_via">через %1$s, %2$s</string>
+    <string name="vpngate_desc">Серверы добровольцев из университетского проекта. Ни аккаунта, ни оплаты, и часто это единственное, что ещё соединяется. Приватности нет: владелец сервера видит, куда вы ходите.</string>
+    <string name="vpngate_warning">Доброволец, который держит сервер, видит ваш трафик, и проект просит его вести журналы соединений. Выбирайте это, чтобы пробиться сквозь блокировку, а не чтобы остаться незамеченным.</string>
+    <string name="vpngate_servers_known">серверов: %1$d</string>
+    <string name="fail_vpngate_none">Ни один сервер VPN Gate не принял соединение. Список мог устареть, либо здесь заблокированы все.</string>
+    <string name="diag_stage_vpngate">VPN Gate</string>
 </resources>

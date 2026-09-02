@@ -132,6 +132,7 @@ fun VeilScaffold(
     val bootstrap by viewModel.bootstrap.collectAsStateWithLifecycle()
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val bridges by viewModel.knownBridges.collectAsStateWithLifecycle()
+    val vpnGateServers by viewModel.vpnGateServers.collectAsStateWithLifecycle()
     val logs by viewModel.logs.collectAsStateWithLifecycle()
     val selfTest by viewModel.selfTest.collectAsStateWithLifecycle()
     val apps by viewModel.apps.collectAsStateWithLifecycle()
@@ -264,10 +265,13 @@ fun VeilScaffold(
                     )
 
                     Destination.ROUTES -> RoutesScreen(
+                        engine = settings.engine,
                         manualTransport = settings.manualTransport,
                         ladder = ladder,
                         bridges = bridges,
+                        vpnGateServers = vpnGateServers.size,
                         onTransportChange = viewModel::setManualTransport,
+                        onChooseVpnGate = viewModel::chooseVpnGate,
                         onOpenBridges = { showBridges = true },
                     )
 
