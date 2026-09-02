@@ -111,7 +111,7 @@ object SelfTest {
             fun finish() = progress.update(total, total, app.getString(R.string.diag_stage_done))
 
             line("=== Veil deep diagnostic ===")
-            line("version 0.9.1")
+            line("version 0.10.0")
 
             val tunnelLive = runCatching { app.tor.isRunning }.getOrDefault(false)
             if (tunnelLive) {
@@ -154,6 +154,20 @@ object SelfTest {
                     line("link: MTU ${facts.mtu} is small; large TLS handshakes can fail on their own here")
                 }
             }
+
+            // Whether the system is allowed to cut this app's network while the
+            // screen is off. It is the most common reason a tunnel that worked
+            // is dead after the phone has been in a pocket, and it is not
+            // visible from anything else in this report.
+            val power = app.getSystemService(android.os.PowerManager::class.java)
+            val exempt = power?.isIgnoringBatteryOptimizations(app.packageName) == true
+            line(
+                "battery optimisation: " + if (exempt) {
+                    "off for this app (the tunnel keeps its network with the screen off)"
+                } else {
+                    "ON — the system may cut the tunnel's network when the screen is off; turn it off in Settings"
+                },
+            )
 
             // --- 2. The clock ------------------------------------------------
             stage(app.getString(R.string.diag_stage_clock))

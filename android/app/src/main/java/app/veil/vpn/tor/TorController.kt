@@ -715,6 +715,40 @@ class TorController(private val context: Context) {
         }
     }
 
+    /** Whether tor has at least one general-purpose circuit fully built. */
+    fun hasBuiltCircuit(): Boolean = runCatching {
+        connection?.getInfo("circuit-status").orEmpty()
+            .lineSequence()
+            .any { it.contains(" BUILT ") && it.contains("PURPOSE=GENERAL") }
+    }.getOrDefault(false)
+
+    /**
+     * Waits until the route can actually carry a stream: a live connection to
+     * a bridge and a built circuit through it.
+     *
+     * Neither the bootstrap percentage nor the connection alone is enough. The
+     * percentage stays at 100 across a network toggle, and a live bridge link
+     * with no circuit means the first stream pays for one — seconds, over a
+     * slow path, during which the application that opened it gives up. A
+     * circuit is asked for outright rather than waited on, since tor builds
+     * them lazily.
+     */
+    suspend fun awaitUsable(timeoutMillis: Long): Boolean {
+        val deadline = System.currentTimeMillis() + timeoutMillis
+        var asked = false
+        while (System.currentTimeMillis() < deadline) {
+            if (hasLiveOrConnection()) {
+                if (hasBuiltCircuit()) return true
+                if (!asked) {
+                    asked = true
+                    runCatching { connection?.extendCircuit("0", "") }
+                }
+            }
+            delay(400)
+        }
+        return false
+    }
+
     /** Asks tor for fresh circuits without restarting anything. */
     fun requestNewIdentity(): Boolean = runCatching {
         connection?.signal(TorControlCommands.SIGNAL_NEWNYM)

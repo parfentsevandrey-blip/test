@@ -27,7 +27,6 @@ object VpnNotifications {
         val title = context.getString(
             when (state) {
                 is TunnelState.Idle -> R.string.state_idle
-                is TunnelState.Ready -> R.string.notice_ready
                 is TunnelState.Probing -> R.string.state_probing
                 is TunnelState.Starting -> R.string.state_starting
                 is TunnelState.Bootstrapping -> R.string.state_bootstrapping

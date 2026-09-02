@@ -82,22 +82,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    /**
-     * The app being on screen is the strongest signal there is that a connect
-     * is about to be asked for, so the route is brought up now and held. When
-     * the app leaves the screen the held route is released — a tunnel that is
-     * carrying traffic is not touched by either.
-     */
-    override fun onStart() {
-        super.onStart()
-        viewModel.prepareTunnel()
-    }
-
-    override fun onStop() {
-        viewModel.parkTunnel()
-        super.onStop()
-    }
-
     private fun requestNotificationPermissionIfNeeded() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
         val granted = ContextCompat.checkSelfPermission(

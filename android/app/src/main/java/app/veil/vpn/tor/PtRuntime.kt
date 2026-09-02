@@ -29,6 +29,26 @@ class PtRuntime(context: Context) {
     private val events = object : TransportEvents {
         override fun connected(name: String) = VeilLog.i("pt", "$name connected")
         override fun failed(name: String, message: String) = VeilLog.w("pt", "$name: $message")
+
+        /**
+         * Where a Snowflake attempt spends its time, step by step.
+         *
+         * "offer" carries how long ICE gathering took (the wait on STUN
+         * servers), "rendezvous" how long the broker took to find a proxy, and
+         * "connected" how long until the data channel opened — all in
+         * milliseconds from the attempt's start. These are the numbers that
+         * decide what to optimise next; before they were logged, every
+         * judgement about a slow Snowflake was a guess.
+         */
+        override fun phase(name: String, phase: String, detail: String) {
+            val text = when (phase) {
+                "offer" -> "$name: offer ready, ICE gathering took ${detail}ms"
+                "rendezvous" -> "$name: broker answered at +${detail}ms"
+                "connected" -> "$name: data channel open at +${detail}ms"
+                else -> "$name: $phase $detail"
+            }
+            if (phase == "failed") VeilLog.w("pt", text) else VeilLog.i("pt", text)
+        }
         override fun stopped(name: String, message: String) {
             if (message.isEmpty()) {
                 VeilLog.d("pt", "$name stopped")

@@ -17,6 +17,7 @@ type events struct{}
 func (events) Stopped(name string, err error) { fmt.Println("stopped:", name, err) }
 func (events) Error(name string, err error)   { fmt.Println("error:", name, err) }
 func (events) Connected(name string)          { fmt.Println("connected:", name) }
+func (events) Phase(name, phase, detail string) { fmt.Println("phase:", name, phase, detail) }
 
 func main() {
 	dir, err := os.MkdirTemp("", "ptlab")

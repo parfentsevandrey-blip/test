@@ -18,6 +18,8 @@ package ptbridge
 //     others are.
 
 import (
+	"sync"
+	"time"
 	"errors"
 	"io"
 	"io/fs"
@@ -93,6 +95,12 @@ type OnTransportEvents interface {
 	//
 	// @param name The transport name that connected.
 	Connected(name string)
+
+	// Phase - A step inside a Snowflake connection attempt, with timing: "offer" when the WebRTC offer
+	// is ready (ICE gathering done), "rendezvous" when the broker answered, "connected" when the data
+	// channel opened, "failed" otherwise. Detail carries the elapsed milliseconds since the attempt
+	// began and, for failures, the error.
+	Phase(name string, phase string, detail string)
 }
 
 // Controller - Class to start and stop transports.
@@ -431,26 +439,69 @@ func (c *Controller) Start(methodName string, proxy string) error {
 			return err
 		}
 
+		// One clock per attempt. Snowflake's events are not tagged with the
+		// peer they belong to, and attempts overlap once a standby pool is
+		// being kept, so the clock is restarted at every offer: the timings
+		// describe the most recent attempt, which is the one being waited on.
+		var (
+			phaseMu      sync.Mutex
+			attemptStart time.Time
+		)
+		since := func() string {
+			phaseMu.Lock()
+			defer phaseMu.Unlock()
+			if attemptStart.IsZero() {
+				return "0"
+			}
+			return strconv.FormatInt(time.Since(attemptStart).Milliseconds(), 10)
+		}
+		restart := func() {
+			phaseMu.Lock()
+			attemptStart = time.Now()
+			phaseMu.Unlock()
+		}
 		f.OnEvent(func(e base.TransportEvent) {
 			switch ev := e.(type) {
 			case event.EventOnOfferCreated:
-				if ev.Error != nil && c.transportEvents != nil {
-					go c.transportEvents.Error(methodName, ev.Error)
+				if ev.Error != nil {
+					if c.transportEvents != nil {
+						go c.transportEvents.Error(methodName, ev.Error)
+						go c.transportEvents.Phase(methodName, "failed", "offer: "+ev.Error.Error())
+					}
+					return
+				}
+				// The offer exists only once ICE gathering has completed, so the
+				// time reported here is what gathering cost. It is measured from
+				// the previous attempt's end rather than from a true start,
+				// which the events do not expose; the first attempt reports 0.
+				elapsed := since()
+				restart()
+				if c.transportEvents != nil {
+					go c.transportEvents.Phase(methodName, "offer", elapsed)
 				}
 
 			case event.EventOnBrokerRendezvous:
-				if ev.Error != nil && c.transportEvents != nil {
-					go c.transportEvents.Error(methodName, ev.Error)
+				if ev.Error != nil {
+					if c.transportEvents != nil {
+						go c.transportEvents.Error(methodName, ev.Error)
+						go c.transportEvents.Phase(methodName, "failed", "rendezvous after "+since()+"ms: "+ev.Error.Error())
+					}
+					return
+				}
+				if c.transportEvents != nil {
+					go c.transportEvents.Phase(methodName, "rendezvous", since())
 				}
 
 			case event.EventOnSnowflakeConnected:
 				if c.transportEvents != nil {
+					go c.transportEvents.Phase(methodName, "connected", since())
 					go c.transportEvents.Connected(methodName)
 				}
 
 			case event.EventOnSnowflakeConnectionFailed:
 				if ev.Error != nil && c.transportEvents != nil {
 					go c.transportEvents.Error(methodName, ev.Error)
+					go c.transportEvents.Phase(methodName, "failed", "after "+since()+"ms: "+ev.Error.Error())
 				}
 
 			default:

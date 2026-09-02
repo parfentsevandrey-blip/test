@@ -286,10 +286,4 @@
     <string name="fail_transport_unavailable">%1$s did not start on this device. Choose a different method on the Routes screen.</string>
     <string name="fail_no_bridges_for">There are no bridges for %1$s to try. Add some on the Bridges screen, or choose a different method.</string>
     <string name="step_resuming_tor">Resuming Tor</string>
-    <string name="state_ready">Ready</string>
-    <string name="home_ready_hint">The route is already up. Connecting attaches the tunnel and takes about a second.</string>
-    <string name="step_preparing">Getting the route ready</string>
-    <string name="settings_keep_ready">Keep the route ready while the app is open</string>
-    <string name="settings_keep_ready_desc">Tor connects in the background as soon as the app is on screen, so the button only attaches the tunnel. Uses a little data while the app is open; nothing runs once it is closed for ten minutes.</string>
-    <string name="notice_ready">Ready to connect</string>
 </resources>

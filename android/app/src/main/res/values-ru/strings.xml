@@ -278,10 +278,4 @@
     <string name="fail_transport_unavailable">%1$s не запустился на этом устройстве. Выберите другой способ на экране «Маршруты».</string>
     <string name="fail_no_bridges_for">Для %1$s нет ни одного моста. Добавьте их на экране «Мосты» или выберите другой способ.</string>
     <string name="step_resuming_tor">Возобновляем Tor</string>
-    <string name="state_ready">Готово</string>
-    <string name="home_ready_hint">Маршрут уже поднят. Подключение просто подцепит туннель — около секунды.</string>
-    <string name="step_preparing">Готовим маршрут</string>
-    <string name="settings_keep_ready">Держать маршрут наготове, пока приложение открыто</string>
-    <string name="settings_keep_ready_desc">Tor поднимается в фоне, как только приложение на экране, и кнопка лишь подцепляет туннель. Немного трафика, пока приложение открыто; через десять минут после закрытия ничего не работает.</string>
-    <string name="notice_ready">Готово к подключению</string>
 </resources>

@@ -22,6 +22,11 @@ type TransportEvents interface {
 	Connected(name string)
 	Failed(name string, message string)
 	Stopped(name string, message string)
+	// Phase reports a step inside a connection attempt — for Snowflake: the
+	// offer created, the broker answered, the data channel opened, or a
+	// failure — with how long it took, so the app can see where a slow
+	// connect actually spends its time rather than infer it.
+	Phase(name string, phase string, detail string)
 }
 
 // Transports owns the pluggable transport clients.
@@ -58,6 +63,13 @@ func (a *eventAdapter) Connected(name string) {
 		return
 	}
 	a.events.Connected(name)
+}
+
+func (a *eventAdapter) Phase(name, phase, detail string) {
+	if a.events == nil {
+		return
+	}
+	a.events.Phase(name, phase, detail)
 }
 
 func errText(err error) string {

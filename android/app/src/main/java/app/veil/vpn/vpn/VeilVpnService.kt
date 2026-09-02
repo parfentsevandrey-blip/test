@@ -103,41 +103,12 @@ class VeilVpnService : VpnService() {
                 scope.launch { container.tor.requestNewIdentity() }
                 return START_STICKY
             }
-            ACTION_PARK -> {
-                // Only a held route is let go. A tunnel that is carrying
-                // traffic is the user's to end, never the screen's.
-                if (TunnelBus.state.value is TunnelState.Ready && worker?.isActive != true) {
-                    requestStop("the app left the screen; parking the route")
-                } else if (worker?.isActive == true && !attachRequested) {
-                    // Still preparing. Let it finish — a half-built route is
-                    // worth nothing to anyone — but let go the moment it is up,
-                    // rather than holding a route for a screen nobody is on.
-                    parkWhenReady = true
-                }
-                return START_NOT_STICKY
-            }
-        }
-        val attach = intent?.action != ACTION_PREPARE
-
-        // A held route being asked to carry traffic: the whole point of
-        // holding it. Nothing to bootstrap — attach the interface and go.
-        if (attach && TunnelBus.state.value is TunnelState.Ready && worker?.isActive != true) {
-            lastStartId = startId
-            startForeground(
-                VpnNotifications.ID,
-                VpnNotifications.build(this, TunnelState.Probing(R.string.step_starting, 0, 1)),
-            )
-            worker = scope.launch { attachHeldRoute() }
-            return START_STICKY
         }
 
         lastStartId = startId
         startForeground(
             VpnNotifications.ID,
-            VpnNotifications.build(
-                this,
-                TunnelState.Probing(if (attach) R.string.step_starting else R.string.step_preparing, 0, 1),
-            ),
+            VpnNotifications.build(this, TunnelState.Probing(R.string.step_starting, 0, 1)),
         )
         if (worker?.isActive != true) {
             val previousTeardown = teardownJob
@@ -149,14 +120,8 @@ class VeilVpnService : VpnService() {
                     withTimeoutOrNull(TEARDOWN_BUDGET_MILLIS) { it.join() }
                 }
                 stopping.set(false)
-                runTunnel(attach)
+                runTunnel()
             }
-        } else if (attach && !attachRequested) {
-            // A prepare is in flight and the user pressed connect: let it
-            // finish its bootstrap and attach at the end instead of starting
-            // over.
-            attachRequested = true
-            VeilLog.i("vpn", "connect pressed while preparing; will attach when ready")
         }
         return START_STICKY
     }
@@ -165,49 +130,6 @@ class VeilVpnService : VpnService() {
     @Volatile private var connectStartedAt = 0L
 
     private fun sinceConnect(): Long = System.currentTimeMillis() - connectStartedAt
-
-    /**
-     * Set when a connect arrives during a prepare, so the prepare attaches the
-     * interface as soon as its route is up rather than stopping at Ready.
-     */
-    @Volatile private var attachRequested = false
-
-    /** Set when the app left the screen mid-prepare; honoured by [holdRoute]. */
-    @Volatile private var parkWhenReady = false
-
-    /**
-     * Attaches the interface to a route that is already up.
-     *
-     * This is the fast path, and the reason the rest of the file exists in the
-     * shape it does. Everything slow about connecting — the bridge handshake,
-     * the directory, the circuit — was done while the route was being held. All
-     * that is left is the interface, which takes about as long as the system
-     * dialog that raises it.
-     */
-    private suspend fun attachHeldRoute() {
-        val settings = container.settings.settings.first()
-        val network = lastNetwork ?: NetworkContext.inspect(this)
-        val socks = container.tor.socks
-        val transport = container.tor.connectedTransport() ?: settings.manualTransport
-        if (socks == null || !container.tor.hasLiveOrConnection()) {
-            // The route went away while it was being held. Not a failure the
-            // user should see: just connect the long way.
-            VeilLog.w("vpn", "the held route is gone; connecting from scratch")
-            runTunnel(attach = true)
-            return
-        }
-        stopping.set(false)
-        val started = runCatching {
-            startNativeTunnel(settings, socks, container.tor.dnsPort, network)
-        }.onFailure { VeilLog.e("vpn", "could not raise the tunnel", it) }.isSuccess
-        if (!started) {
-            fail(getString(R.string.fail_tor_start), listOf(transport))
-            return
-        }
-        update(TunnelState.Connected(transport, System.currentTimeMillis(), socks.port))
-        startStatsPump()
-        watchNetwork()
-    }
 
     override fun onRevoke() {
         VeilLog.w("vpn", "another VPN took over the slot")
@@ -224,14 +146,7 @@ class VeilVpnService : VpnService() {
 
     // --- Connection sequence ------------------------------------------------
 
-    /**
-     * @param attach whether to put the interface on the route once it is up.
-     *   False holds the route at [TunnelState.Ready] instead, which is what the
-     *   app asks for while it is on screen and nothing is connected.
-     */
-    private suspend fun runTunnel(attach: Boolean = true) {
-        attachRequested = attach
-        parkWhenReady = false
+    private suspend fun runTunnel() {
         connectStartedAt = System.currentTimeMillis()
         HandshakeGovernor.reset()
         // Stop the parked engine's shutdown timer before touching it.
@@ -261,7 +176,7 @@ class VeilVpnService : VpnService() {
             return
         }
 
-        if (settings.killSwitch && attach) {
+        if (settings.killSwitch) {
             // Interface up, nothing reading it: a real kill switch rather than
             // a promise to be careful.
             establishInterface(settings)
@@ -283,6 +198,15 @@ class VeilVpnService : VpnService() {
         lastNetwork = network
         publishLocalListeners(ports)
         VeilLog.i("vpn", "timeline: transports up (+${sinceConnect()}ms)")
+        val power = getSystemService(android.os.PowerManager::class.java)
+        if (power != null && !power.isIgnoringBatteryOptimizations(packageName)) {
+            // The single most common reason a tunnel is dead after the phone
+            // has been in a pocket: the system cut this app's network while
+            // the screen was off. The setting to stop it doing that is in the
+            // app's settings, and this is the moment the user is most likely
+            // to care.
+            VeilLog.w("vpn", "battery optimisation is ON for this app: the system may cut the tunnel while the screen is off")
+        }
 
         // The ladder is decided before tor is started, so that tor can be
         // started already pointed at its first rung. Tor is at its most
@@ -534,6 +458,14 @@ class VeilVpnService : VpnService() {
             VeilLog.w("vpn", "the warm tor did not reopen its listeners")
             return false
         }
+        // The trap this used to fall into: a parked tor still reports 100%
+        // bootstrapped, because the number never goes down when the network is
+        // switched off. Reading it as "connected" put the tunnel on a process
+        // with no connection to any bridge, and the user watched a green
+        // screen over a dead link for the fifteen seconds it took Snowflake to
+        // find a proxy again. Warm means the directory is cached, not that the
+        // link exists; the link has to be waited for like any other.
+        container.tor.resetBootstrap()
         return true
     }
 
@@ -625,11 +557,14 @@ class VeilVpnService : VpnService() {
         }
 
         val socks = container.tor.socks ?: return false
-        if (!attachRequested) {
-            racers.forEach { container.bridges.recordSuccess(it.bridges) }
-            holdRoute()
-            return true
+        if (!container.tor.awaitUsable(USABLE_WAIT_MILLIS)) {
+            VeilLog.w("vpn", "the race bootstrapped but built no circuit")
+            container.tor.setNetworkEnabled(false)
+            racers.forEach { container.bridges.recordFailure(it.bridges) }
+            teardownAttempt()
+            return false
         }
+        VeilLog.i("vpn", "timeline: usable — circuit built (+${sinceConnect()}ms)")
         val started = runCatching {
             startNativeTunnel(settings, socks, container.tor.dnsPort, network)
         }.onFailure { VeilLog.e("vpn", "could not raise the tunnel", it) }.isSuccess
@@ -649,6 +584,7 @@ class VeilVpnService : VpnService() {
         update(TunnelState.Connected(winner, System.currentTimeMillis(), socks.port))
         startStatsPump()
         watchNetwork()
+        watchScreen()
         return true
     }
 
@@ -694,10 +630,18 @@ class VeilVpnService : VpnService() {
             return false
         }
 
-        if (!attachRequested) {
-            holdRoute()
-            return true
+        // Bootstrapped is not the same as usable. At 100% tor has a circuit it
+        // built for itself; the first stream an application opens can still
+        // wait seconds for one over a slow path, and an application that has
+        // waited seconds has already decided the network is down. So a
+        // circuit is asked for and waited on before anything is told it is
+        // connected.
+        if (!container.tor.awaitUsable(USABLE_WAIT_MILLIS)) {
+            VeilLog.w("vpn", "${attempt.label} bootstrapped but built no circuit")
+            container.tor.setNetworkEnabled(false)
+            return false
         }
+        VeilLog.i("vpn", "timeline: ${attempt.label} usable — circuit built (+${sinceConnect()}ms)")
 
         val started = runCatching {
             startNativeTunnel(settings, socks, container.tor.dnsPort, network)
@@ -707,29 +651,8 @@ class VeilVpnService : VpnService() {
         update(TunnelState.Connected(attempt.transport, System.currentTimeMillis(), socks.port))
         startStatsPump()
         watchNetwork()
+        watchScreen()
         return true
-    }
-
-    /**
-     * Leaves the route up and attached to nothing.
-     *
-     * The stats pump runs so the path is watched and re-dialled while held,
-     * exactly as it would be under a tunnel: a route that is allowed to die
-     * quietly while the app is open is a route that is not ready when the
-     * button is pressed.
-     */
-    private fun holdRoute() {
-        if (parkWhenReady) {
-            parkWhenReady = false
-            VeilLog.i("vpn", "route came up after the app left the screen; parking it")
-            update(TunnelState.Ready)
-            requestStop("prepared for a screen that is no longer there")
-            return
-        }
-        VeilLog.i("vpn", "route is up and held; nothing attached")
-        update(TunnelState.Ready)
-        startStatsPump()
-        watchNetwork()
     }
 
     /**
@@ -1095,14 +1018,101 @@ class VeilVpnService : VpnService() {
                         ) {
                             lastRedial = now
                             deadSince = now
-                            VeilLog.w("vpn", "path has been down; re-dialling")
-                            runCatching { container.tor.reconnect() }
+                            redial("the path has been down for ${(now - deadSince) / 1000}s")
                         }
                     }
                 }
                 delay(1_500)
             }
         }
+    }
+
+    private val redialing = AtomicBoolean(false)
+
+    /**
+     * Re-dials the bridges and, once the link is back, re-establishes the
+     * interface so applications find out.
+     *
+     * The second half is the part that was missing, and it is why a tunnel
+     * that had recovered still left Telegram saying "connecting". An
+     * application that tried while the path was down has backed off — some for
+     * a minute or more — and nothing tells it to try again. Replacing the VPN
+     * interface does: the system reports a network change to every
+     * application, and the ones with a connection to make make it now. This is
+     * what a commercial client does on every reconnect; a tunnel that comes
+     * back without saying so has not come back as far as the phone is
+     * concerned.
+     *
+     * Replacement is atomic on the system side — establishing the new
+     * interface retires the old one — so there is no moment without a VPN and
+     * nothing leaks around it.
+     */
+    private fun redial(reason: String) {
+        if (!redialing.compareAndSet(false, true)) return
+        scope.launch {
+            try {
+                VeilLog.w("vpn", "re-dialling: $reason")
+                if (!container.tor.reconnect()) return@launch
+                if (!container.tor.awaitUsable(USABLE_WAIT_MILLIS)) {
+                    VeilLog.w("vpn", "re-dial did not produce a usable link yet")
+                    return@launch
+                }
+                val settings = container.settings.settings.first()
+                val socks = container.tor.socks ?: return@launch
+                val network = lastNetwork ?: return@launch
+                runCatching {
+                    stopNativeTunnelOnly()
+                    startNativeTunnel(settings, socks, container.tor.dnsPort, network)
+                }.onFailure { VeilLog.e("vpn", "could not re-attach after the re-dial", it) }
+                    .onSuccess { VeilLog.i("vpn", "link is back; applications told") }
+            } finally {
+                redialing.set(false)
+            }
+        }
+    }
+
+    /**
+     * The screen coming on is the moment the user is about to find out whether
+     * the tunnel survived the pocket. Doze and carrier NATs both end idle
+     * connections quietly, and the five-second liveness check would take up to
+     * seventeen seconds to notice and act. Look now instead, so the recovery
+     * is under way before the first application tries.
+     */
+    private var screenReceiver: android.content.BroadcastReceiver? = null
+
+    private fun watchScreen() {
+        if (screenReceiver != null) return
+        val receiver = object : android.content.BroadcastReceiver() {
+            override fun onReceive(context: android.content.Context?, intent: Intent?) {
+                scope.launch {
+                    val alive = runCatching { container.tor.hasLiveOrConnection() }.getOrDefault(true)
+                    if (!alive) {
+                        redial("the screen came on and the link is gone")
+                    } else {
+                        runCatching { container.tor.ensureSpareCircuit() }
+                    }
+                }
+            }
+        }
+        val filter = android.content.IntentFilter().apply {
+            addAction(Intent.ACTION_SCREEN_ON)
+            addAction(Intent.ACTION_USER_PRESENT)
+        }
+        runCatching {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                registerReceiver(receiver, filter, RECEIVER_NOT_EXPORTED)
+            } else {
+                @Suppress("UnspecifiedRegisterReceiverFlag")
+                registerReceiver(receiver, filter)
+            }
+            screenReceiver = receiver
+        }.onFailure { VeilLog.w("vpn", "could not watch the screen: $it") }
+    }
+
+    private fun unwatchScreen() {
+        val receiver = screenReceiver ?: return
+        screenReceiver = null
+        runCatching { unregisterReceiver(receiver) }
     }
 
     // --- The network underneath ---------------------------------------------
@@ -1132,12 +1142,9 @@ class VeilVpnService : VpnService() {
                 val previous = watchedNetwork
                 watchedNetwork = network
                 if (previous != null && previous != network) {
-                    VeilLog.w("vpn", "the phone moved to a different network; re-dialling")
-                    scope.launch {
-                        lastNetwork = runCatching { NetworkContext.inspect(this@VeilVpnService) }
-                            .getOrNull() ?: lastNetwork
-                        container.tor.reconnect()
-                    }
+                    lastNetwork = runCatching { NetworkContext.inspect(this@VeilVpnService) }
+                        .getOrNull() ?: lastNetwork
+                    redial("the phone moved to a different network")
                 }
             }
 
@@ -1172,8 +1179,17 @@ class VeilVpnService : VpnService() {
         stopNativeTunnel()
     }
 
+    /** Stops the native side only; the watchers and the pump keep running. */
+    private fun stopNativeTunnelOnly() {
+        if (nativeTunnelRunning) {
+            runCatching { Veiltun.stop() }
+            nativeTunnelRunning = false
+        }
+    }
+
     private suspend fun stopNativeTunnel() = withContext(Dispatchers.IO) {
         unwatchNetwork()
+        unwatchScreen()
         statsJob?.cancel()
         statsJob = null
         if (nativeTunnelRunning) {
@@ -1344,11 +1360,6 @@ class VeilVpnService : VpnService() {
         const val ACTION_DISCONNECT = "app.veil.vpn.DISCONNECT"
         const val ACTION_NEW_CIRCUIT = "app.veil.vpn.NEW_CIRCUIT"
 
-        /** Bring the route up and hold it, without attaching the interface. */
-        const val ACTION_PREPARE = "app.veil.vpn.PREPARE"
-
-        /** Let a held route go, if nothing is attached to it. */
-        const val ACTION_PARK = "app.veil.vpn.PARK"
 
         private const val MTU = 1500
         private const val TUN_ADDRESS_V4 = "10.55.0.1"
@@ -1394,6 +1405,14 @@ class VeilVpnService : VpnService() {
 
         /** And no more often than this, however bad it gets. */
         private const val REDIAL_COOLDOWN_MILLIS = 45_000L
+
+        /**
+         * How long a bootstrapped tor is given to produce a built circuit
+         * before the route is judged unusable. Over Snowflake a circuit is a
+         * few seconds; a route that cannot build one in this long is not one
+         * an application is going to get anywhere on.
+         */
+        private const val USABLE_WAIT_MILLIS = 25_000L
 
         /**
          * How long a route must have stopped moving before tor's own verdict

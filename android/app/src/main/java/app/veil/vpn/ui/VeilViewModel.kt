@@ -125,35 +125,6 @@ class VeilViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
 
-    /**
-     * Brings the route up without attaching the interface, so that pressing
-     * connect is a second rather than a bootstrap. Called when the app comes
-     * on screen; a no-op when something is already connected or connecting.
-     */
-    fun prepareTunnel() {
-        if (!settings.value.keepReady) return
-        val state = tunnelState.value
-        if (state.isLive || state.isBusy || state is TunnelState.Ready) return
-        val context = getApplication<Application>()
-        runCatching {
-            context.startForegroundService(
-                Intent(context, VeilVpnService::class.java).setAction(VeilVpnService.ACTION_PREPARE),
-            )
-        }.onFailure { VeilLog.w("ui", "could not prepare the route: $it") }
-    }
-
-    /** Lets a held route go when the app leaves the screen. Never touches a live tunnel. */
-    fun parkTunnel() {
-        if (tunnelState.value !is TunnelState.Ready) return
-        val context = getApplication<Application>()
-        runCatching {
-            context.startService(
-                Intent(context, VeilVpnService::class.java).setAction(VeilVpnService.ACTION_PARK),
-            )
-        }
-    }
-
-    fun setKeepReady(value: Boolean) = edit { container.settings.setKeepReady(value) }
 
     fun requestNewCircuit() {
         val context = getApplication<Application>()

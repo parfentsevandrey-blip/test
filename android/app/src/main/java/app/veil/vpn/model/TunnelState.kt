@@ -7,16 +7,6 @@ sealed interface TunnelState {
 
     data object Idle : TunnelState
 
-    /**
-     * The engine is up and bootstrapped, and nothing is attached to it.
-     *
-     * The state a commercial VPN's daemon lives in between connections, and
-     * the reason its button feels instant: the work has been done before the
-     * press. Shown as "ready" rather than as connected, because it is not — no
-     * packet from any app is going anywhere until the tunnel is attached.
-     */
-    data object Ready : TunnelState
-
     /** Measuring the network before committing to a transport. */
     data class Probing(@StringRes val noteRes: Int, val done: Int, val total: Int) : TunnelState
 
