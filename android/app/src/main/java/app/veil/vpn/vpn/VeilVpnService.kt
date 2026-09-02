@@ -32,6 +32,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
@@ -131,6 +132,9 @@ class VeilVpnService : VpnService() {
     /** When the current connect began, for the timeline in the log. */
     @Volatile private var connectStartedAt = 0L
 
+    /** The STUN survey running alongside the connect, if one was started. */
+    private var surveyJob: kotlinx.coroutines.Deferred<StunSurvey.Result?>? = null
+
     private fun sinceConnect(): Long = System.currentTimeMillis() - connectStartedAt
 
     override fun onRevoke() {
@@ -151,6 +155,7 @@ class VeilVpnService : VpnService() {
     private suspend fun runTunnel() {
         connectStartedAt = System.currentTimeMillis()
         HandshakeGovernor.reset()
+        surveyJob = null
         // Stop the parked engine's shutdown timer before touching it.
         container.wakeEngine()
         val settings = container.settings.settings.first()
@@ -183,6 +188,15 @@ class VeilVpnService : VpnService() {
             // a promise to be careful.
             establishInterface(settings)
             VeilLog.i("vpn", "kill switch active while connecting")
+        }
+
+        // The STUN survey starts now and is collected later, so its two seconds
+        // overlap the transports and tor coming up instead of adding to them.
+        // Only for Snowflake, which is the only thing that reads the answer.
+        if (settings.manualTransport == Transport.SNOWFLAKE &&
+            StunSurvey.cached(network.fingerprint) == null
+        ) {
+            surveyJob = scope.async { runCatching { StunSurvey.run(network.fingerprint, protector) }.getOrNull() }
         }
 
         // Every transport listener first, then tor once. tor is configured for
@@ -498,6 +512,7 @@ class VeilVpnService : VpnService() {
         // seconds per peer — and is asked once per network, not per connect.
         val iceServers = if (settings.manualTransport == Transport.SNOWFLAKE) {
             val survey = StunSurvey.cached(network.fingerprint)
+                ?: surveyJob?.await()
                 ?: StunSurvey.run(network.fingerprint, protector)
             VeilLog.i("vpn", "stun: ${survey.answers.size} answer(s), nat ${survey.natBehaviour} (+${sinceConnect()}ms)")
             survey.iceServers
@@ -1027,11 +1042,16 @@ class VeilVpnService : VpnService() {
         statsJob?.cancel()
         var lastCircuitCheck = System.currentTimeMillis()
         var lastLivenessCheck = System.currentTimeMillis()
-        var deadSince = 0L
+        var lastEvidenceAt = System.currentTimeMillis()
+        var lastRx = -1L
+        var lastTx = -1L
+        var probeFailures = 0
         var lastRedial = 0L
         statsJob = scope.launch {
             while (isActive) {
                 runCatching { Veiltun.snapshot() }.getOrNull()?.let { snapshot ->
+                    snapshotRx = snapshot.rxBytes
+                    snapshotTx = snapshot.txBytes
                     TunnelBus.publish(
                         TunnelStats(
                             rxBytes = snapshot.rxBytes,
@@ -1056,33 +1076,54 @@ class VeilVpnService : VpnService() {
                     runCatching { container.tor.ensureSpareCircuit() }
                 }
 
-                // And the question nobody was asking: is the path still there?
+                // Is the path still there? Answered by evidence that cannot be
+                // misread, in this order: if bytes have moved through the tunnel
+                // since the last look, it is alive and nothing more is asked. If
+                // nothing has moved for a while — an idle phone moves nothing
+                // either — a real stream is opened through the proxy, exactly
+                // as an application would. Only when that fails twice running
+                // is the path re-dialled.
                 //
-                // A tunnel whose bridge has gone away keeps its interface, its
-                // counters and its bootstrap percentage. Nothing in the app
-                // noticed, so the user's phone simply stopped reaching the
-                // internet until they thought to disconnect and try again —
-                // which is what "it drops and I lose access" is, from the
-                // inside. Tor will re-dial on its own eventually; this shortens
-                // eventually to seconds, and does it without touching the
-                // interface, so applications see a pause rather than a network
-                // that went away.
-                if (now - lastLivenessCheck > LIVENESS_CHECK_MILLIS) {
+                // The version before this read tor's connection list over the
+                // control port, decided "dead" on any answer it did not like,
+                // and re-dialled a working tunnel every twelve seconds —
+                // tearing down the Snowflake session and replacing the
+                // interface each time. From the outside that was every
+                // application on the phone losing the network and reconnecting,
+                // over and over. A supervisor that can be wrong must not be
+                // allowed to act on its own opinion; this one acts only on a
+                // stream that would not open.
+                val rx = snapshotRx
+                val tx = snapshotTx
+                if (rx != lastRx || tx != lastTx) {
+                    lastRx = rx
+                    lastTx = tx
+                    lastEvidenceAt = now
+                    probeFailures = 0
+                }
+                if (now - lastLivenessCheck > LIVENESS_CHECK_MILLIS &&
+                    now - lastEvidenceAt > QUIET_BEFORE_PROBE_MILLIS &&
+                    !redialing.get()
+                ) {
                     lastLivenessCheck = now
-                    val alive = runCatching { container.tor.hasLiveOrConnection() }
-                        .getOrDefault(true)
-                    if (alive) {
-                        deadSince = 0L
+                    val socks = container.tor.socks
+                    val open = socks != null && probePath(socks)
+                    if (open) {
+                        lastEvidenceAt = now
+                        probeFailures = 0
                     } else {
-                        if (deadSince == 0L) {
-                            deadSince = now
-                            VeilLog.w("vpn", "no live connection to the bridge")
-                        } else if (now - deadSince > DEAD_PATH_MILLIS &&
+                        probeFailures += 1
+                        VeilLog.w(
+                            "vpn",
+                            "no traffic for ${(now - lastEvidenceAt) / 1000}s and a stream would not open " +
+                                "($probeFailures/$PROBE_FAILURES_BEFORE_REDIAL)",
+                        )
+                        if (probeFailures >= PROBE_FAILURES_BEFORE_REDIAL &&
                             now - lastRedial > REDIAL_COOLDOWN_MILLIS
                         ) {
                             lastRedial = now
-                            deadSince = now
-                            redial("the path has been down for ${(now - deadSince) / 1000}s")
+                            probeFailures = 0
+                            redial("no traffic for ${(now - lastEvidenceAt) / 1000}s and no stream would open")
                         }
                     }
                 }
@@ -1092,6 +1133,27 @@ class VeilVpnService : VpnService() {
     }
 
     private val redialing = AtomicBoolean(false)
+
+    /** The tunnel's byte counters as of the last snapshot, for the supervisor. */
+    @Volatile private var snapshotRx = 0L
+    @Volatile private var snapshotTx = 0L
+
+    /**
+     * One real stream through the proxy: the only test of a path this file
+     * trusts. Short, because it runs inside the stats pump; the budgeted,
+     * retrying version used when connecting is [awaitUsablePath].
+     */
+    private suspend fun probePath(socks: SocksEndpoint): Boolean = withContext(Dispatchers.IO) {
+        runCatching {
+            Socks5.connect(
+                SocksProxy("127.0.0.1", socks.port),
+                USABLE_PROBE_HOST,
+                USABLE_PROBE_PORT,
+                connectTimeoutMillis = PROBE_TIMEOUT_MILLIS,
+                readTimeoutMillis = PROBE_TIMEOUT_MILLIS,
+            ).close()
+        }.isSuccess
+    }
 
     /**
      * Re-dials the bridges and, once the link is back, re-establishes the
@@ -1149,11 +1211,15 @@ class VeilVpnService : VpnService() {
         val receiver = object : android.content.BroadcastReceiver() {
             override fun onReceive(context: android.content.Context?, intent: Intent?) {
                 scope.launch {
-                    val alive = runCatching { container.tor.hasLiveOrConnection() }.getOrDefault(true)
-                    if (!alive) {
-                        redial("the screen came on and the link is gone")
-                    } else {
+                    // A stream, not an opinion. If it opens, the pocket did no
+                    // harm and a spare circuit is asked for so the first
+                    // application does not wait on one; if it does not, the
+                    // re-dial starts now rather than after the pump notices.
+                    val socks = container.tor.socks ?: return@launch
+                    if (probePath(socks)) {
                         runCatching { container.tor.ensureSpareCircuit() }
+                    } else if (!redialing.get()) {
+                        redial("the screen came on and no stream would open")
                     }
                 }
             }
@@ -1455,20 +1521,33 @@ class VeilVpnService : VpnService() {
         /** How often to check that a circuit is standing by. */
         private const val CIRCUIT_UPKEEP_MILLIS = 60_000L
 
-        /** How often the path underneath the tunnel is checked for life. */
-        private const val LIVENESS_CHECK_MILLIS = 5_000L
+        /** How often, at most, a stream is opened to see whether the path is there. */
+        private const val LIVENESS_CHECK_MILLIS = 10_000L
 
         /**
-         * How long the path may be down before it is re-dialled.
-         *
-         * Long enough not to fight tor, which does its own reconnecting and is
-         * often mid-handshake when this looks; short enough that a dead tunnel
-         * is a pause rather than something the user has to notice and fix.
+         * How long the tunnel may carry nothing before a stream is tried.
+         * Traffic is evidence enough while it flows; a phone that is idle for
+         * this long gets asked, once, at the cost of one small connection.
          */
-        private const val DEAD_PATH_MILLIS = 12_000L
+        private const val QUIET_BEFORE_PROBE_MILLIS = 20_000L
 
-        /** And no more often than this, however bad it gets. */
-        private const val REDIAL_COOLDOWN_MILLIS = 45_000L
+        /**
+         * Consecutive probe failures before the path is re-dialled. Two, ten
+         * seconds apart: a single failure can be a slow circuit or a busy
+         * proxy, and re-dialling on one throws away a session that would have
+         * recovered on its own.
+         */
+        private const val PROBE_FAILURES_BEFORE_REDIAL = 2
+
+        /** One probe's budget; short, because the pump is waiting on it. */
+        private const val PROBE_TIMEOUT_MILLIS = 8_000
+
+        /**
+         * And no more often than this, however bad it gets. A Snowflake
+         * re-dial on a mobile network can itself take most of a minute, and a
+         * second re-dial in the middle of the first only starts it over.
+         */
+        private const val REDIAL_COOLDOWN_MILLIS = 90_000L
 
         /**
          * How long a bootstrapped tor is given to produce a built circuit

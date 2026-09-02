@@ -84,6 +84,13 @@ object StunSurvey {
                 }
                 val deadline = started + windowMillis
                 while (pending.isNotEmpty() && System.currentTimeMillis() < deadline) {
+                    // Enough is enough. Once a handful have answered and the
+                    // fast ones have had their say, the rest are the slow or
+                    // dead ones, and waiting on them is exactly the cost this
+                    // survey exists to remove from the connect.
+                    if (answers.size >= ENOUGH_ANSWERS &&
+                        System.currentTimeMillis() - started >= ENOUGH_AFTER_MILLIS
+                    ) break
                     val remaining = (deadline - System.currentTimeMillis()).toInt()
                     if (remaining <= 0) break
                     socket.soTimeout = remaining
@@ -169,6 +176,10 @@ object StunSurvey {
      * Cached afterwards, so it is paid once per network, not once per connect.
      */
     const val WINDOW_MILLIS = 2_500
+
+    /** Stop early once this many have answered and the fast ones have had their say. */
+    private const val ENOUGH_ANSWERS = 4
+    private const val ENOUGH_AFTER_MILLIS = 600
 
     /**
      * The Tor Project's published STUN list, in its order. This is the set the
