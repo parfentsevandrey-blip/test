@@ -147,6 +147,18 @@ class TorController(private val context: Context) {
     @Volatile
     private var problemBaseline: Int? = null
 
+    /**
+     * The bridges tor is currently configured with.
+     *
+     * Kept because `Bridge` is a list option and `SETCONF` replaces the whole
+     * list: adding one means sending all of them again.
+     */
+    @Volatile
+    private var activeBridges: List<BridgeLine> = emptyList()
+
+    @Volatile
+    private var activeTransport: Transport = Transport.DIRECT
+
     var socks: SocksEndpoint? = null
         private set
     var dnsPort: Int = 0
@@ -311,6 +323,8 @@ class TorController(private val context: Context) {
                     addAll(Torrc.tuning(transport))
                 }
                 control.setConf(lines)
+                activeBridges = bridges
+                activeTransport = transport
                 VeilLog.i(
                     "tor",
                     "route set to ${transport.torName} with ${bridges.size} bridge line(s)",
@@ -326,6 +340,74 @@ class TorController(private val context: Context) {
                 false
             }
         }
+
+    /**
+     * Adds a way in alongside the ones already configured, rather than instead
+     * of them.
+     *
+     * This is the part of Mullvad's design that transfers directly. Their
+     * client does not try one obfuscation, wait for it to fail, and then try
+     * the next: it starts them a second apart, sends the same traffic through
+     * all of them, and keeps whichever answers first. Waiting out a dead route
+     * before starting a live one is time spent for no information.
+     *
+     * Tor can be driven the same way, because bridges are a list and it tries
+     * the ones it has. Measured against tor 0.4.8: adding a second bridge while
+     * the first is still being attempted is accepted, leaves the first alone,
+     * and launches a connection to the new one straight away.
+     *
+     * The stagger matters and is not just politeness. A fan of simultaneous
+     * handshakes is one of the things current DPI is reported to score, so the
+     * routes are started a few seconds apart, and only routes that are
+     * different *in kind* are raced — one HTTPS connection, one WebRTC session
+     * and one connection to a phantom look like three unrelated things, where
+     * three obfs4 bridges at once look like exactly what they are.
+     */
+    suspend fun addRoute(transport: Transport, bridges: List<BridgeLine>): Boolean =
+        withContext(Dispatchers.IO) {
+            val control = connection ?: return@withContext false
+            if (bridges.isEmpty()) return@withContext false
+            val merged = (activeBridges + bridges).distinctBy { it.raw }
+            runCatching {
+                val lines = buildList {
+                    add("UseBridges 1")
+                    merged.forEach { add("Bridge ${it.raw}") }
+                    // The timings have to suit the most patient racer: a rung
+                    // cut off at obfs4's budget while Snowflake was still
+                    // finding a proxy is the classic way to conclude, wrongly,
+                    // that nothing works.
+                    addAll(Torrc.tuning(slowerOf(activeTransport, transport)))
+                }
+                control.setConf(lines)
+                activeBridges = merged
+                activeTransport = slowerOf(activeTransport, transport)
+                VeilLog.i("tor", "also trying ${transport.torName} (${merged.size} bridges now)")
+                true
+            }.getOrElse {
+                VeilLog.w("tor", "could not add ${transport.torName}: ${it.message}")
+                false
+            }
+        }
+
+    /**
+     * Which of the racing routes tor actually connected through.
+     *
+     * Without this the app would learn nothing from a race it won: the whole
+     * point of remembering what worked on a network is knowing which of the
+     * things tried was the one that did. Bridges are matched by the fingerprint
+     * on their line, which is the same identity tor reports for the connection.
+     */
+    fun connectedTransport(): Transport? = runCatching {
+        val connected = connection?.getInfo("orconn-status").orEmpty()
+            .lineSequence()
+            .filter { it.contains("CONNECTED") }
+            .mapNotNull { FINGERPRINT_IN_STATUS.find(it)?.groupValues?.getOrNull(1)?.uppercase() }
+            .toSet()
+        if (connected.isEmpty()) return null
+        activeBridges
+            .firstOrNull { it.fingerprint?.uppercase() in connected }
+            ?.transportEnum
+    }.getOrNull()
 
     /**
      * Turns tor's network on or off.
@@ -608,12 +690,21 @@ class TorController(private val context: Context) {
         }
         socks = null
         dnsPort = 0
+        activeBridges = emptyList()
+        activeTransport = Transport.DIRECT
         _bootstrap.value = Bootstrap()
         VeilLog.i("tor", "stopped")
     }
 
+    /** The more patient of two transports, for timings shared by a race. */
+    private fun slowerOf(a: Transport, b: Transport): Transport =
+        if (StrategyPlanner.budgetMillis(b) > StrategyPlanner.budgetMillis(a)) b else a
+
     private companion object {
         val QUOTED_SUMMARY = Regex("SUMMARY=\"([^\"]*)\"")
+
+        /** `$AAAA...AAAA~nickname` at the start of an orconn-status line. */
+        val FINGERPRINT_IN_STATUS = Regex("\\$([0-9A-Fa-f]{40})")
 
         /** Binding a service on a cold start is slow, but not this slow. */
         const val BIND_TIMEOUT_MILLIS = 20_000L

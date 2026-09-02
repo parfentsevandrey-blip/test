@@ -153,6 +153,15 @@ class VeilVpnService : VpnService() {
             "network ${network.kind} ${network.countryIso ?: "??"} (${network.fingerprint})",
         )
 
+        // Mullvad's client keeps an offline monitor for the same reason: a
+        // phone with no network at all will fail every route, and reporting
+        // that as censorship is a lie that sends the user looking in the wrong
+        // place. This is the one failure the app can be certain about.
+        if (!network.isOnline) {
+            fail(getString(R.string.fail_offline), emptyList())
+            return
+        }
+
         if (settings.killSwitch) {
             // Interface up, nothing reading it: a real kill switch rather than
             // a promise to be careful.
@@ -230,17 +239,25 @@ class VeilVpnService : VpnService() {
 
         TunnelBus.publishLadder(ladder)
 
-        val tried = mutableListOf<Transport>()
-        for ((index, attempt) in ladder.withIndex()) {
+        // Mullvad's multiplexer, adapted. Rather than walking the ladder and
+        // waiting out each dead route in turn, the first few routes are started
+        // a few seconds apart and whichever answers first is kept. Time spent
+        // waiting for a route to fail is time spent learning nothing.
+        val racers = ladder.distinctBy { it.transport }.take(RACE_WIDTH)
+        if (racers.size > 1 && raceRoutes(racers, settings, network, ladder.size)) return
+
+        val tried = racers.map { it.transport }.toMutableList()
+        val rest = if (racers.size > 1) ladder.filter { it !in racers } else ladder
+        for ((index, attempt) in rest.withIndex()) {
             // The worker's own job, not the service scope: cancelling the
             // connect has to end this loop even though the scope lives on.
             coroutineContext.ensureActive()
             tried += attempt.transport
-            update(TunnelState.Starting(attempt.transport, index + 1, ladder.size))
-            VeilLog.i("vpn", "attempt ${index + 1}/${ladder.size}: ${attempt.label} (${attempt.why})")
+            update(TunnelState.Starting(attempt.transport, index + 1, rest.size))
+            VeilLog.i("vpn", "attempt ${index + 1}/${rest.size}: ${attempt.label} (${attempt.why})")
 
             val started = System.currentTimeMillis()
-            if (tryAttempt(attempt, index, ladder.size, settings, network)) {
+            if (tryAttempt(attempt, index + racers.size, rest.size, settings, network)) {
                 container.memory.recordSuccess(
                     network.fingerprint,
                     attempt.transport,
@@ -255,7 +272,7 @@ class VeilVpnService : VpnService() {
             noteAttemptFailure(attempt)
             teardownAttempt()
 
-            val next = ladder.getOrNull(index + 1)
+            val next = rest.getOrNull(index + 1)
             if (next != null) {
                 update(
                     TunnelState.Escalating(
@@ -334,6 +351,77 @@ class VeilVpnService : VpnService() {
             settings.dtlsProfile,
             available,
         )
+    }
+
+    /**
+     * Starts several routes a few seconds apart and keeps whichever connects.
+     *
+     * The first of them is already in the torrc, so tor has been working on it
+     * since it started; the rest are added over the control port while it does.
+     * Tor tries the bridges it has, so this costs one command per route and no
+     * restarts.
+     *
+     * Only routes that differ in kind are raced. Three obfs4 bridges opened at
+     * once look like exactly what they are; an HTTPS connection, a WebRTC
+     * session and a connection to a phantom that never answers look like three
+     * unrelated things, which is the point.
+     */
+    private suspend fun raceRoutes(
+        racers: List<Attempt>,
+        settings: VeilSettings,
+        network: NetworkContext,
+        ladderSize: Int,
+    ): Boolean {
+        val slowest = racers.maxByOrNull { StrategyPlanner.budgetMillis(it.transport) }
+            ?: return false
+        VeilLog.i("vpn", "racing ${racers.joinToString(", ") { it.label }}")
+        update(TunnelState.Starting(racers.first().transport, 1, ladderSize))
+
+        container.tor.resetBootstrap()
+        container.tor.awaitListeners()
+
+        // The stagger runs alongside the wait rather than before it, so the
+        // first route gets its head start and the others arrive while it is
+        // still being tried.
+        val stagger = scope.launch {
+            racers.drop(1).forEach { attempt ->
+                delay(RACE_STAGGER_MILLIS)
+                container.tor.addRoute(attempt.transport, attempt.bridges)
+            }
+        }
+
+        val connected = awaitBootstrap(slowest, 0, ladderSize)
+        stagger.cancel()
+
+        if (!connected) {
+            container.tor.setNetworkEnabled(false)
+            racers.forEach {
+                container.memory.recordFailure(network.fingerprint, it.transport)
+                container.bridges.recordFailure(it.bridges)
+                noteAttemptFailure(it)
+            }
+            teardownAttempt()
+            return false
+        }
+
+        val socks = container.tor.socks ?: return false
+        val started = runCatching {
+            startNativeTunnel(settings, socks, container.tor.dnsPort, network)
+        }.onFailure { VeilLog.e("vpn", "could not raise the tunnel", it) }.isSuccess
+        if (!started) return false
+
+        // Which of them won is worth knowing: it is what the next connect on
+        // this network starts with.
+        val winner = container.tor.connectedTransport() ?: racers.first().transport
+        VeilLog.i("vpn", "connected through ${winner.torName}")
+        container.memory.recordSuccess(network.fingerprint, winner, 0)
+        racers.firstOrNull { it.transport == winner }?.let {
+            container.bridges.recordSuccess(it.bridges)
+        }
+
+        update(TunnelState.Connected(winner, System.currentTimeMillis(), socks.port))
+        startStatsPump()
+        return true
     }
 
     /** Runs one rung to a verdict. Returns true when the tunnel is carrying traffic. */
@@ -857,5 +945,15 @@ class VeilVpnService : VpnService() {
          * that it is failing is acted on.
          */
         private const val HOPELESS_QUIET_MILLIS = 12_000L
+
+        /**
+         * How many routes are started together. Three different kinds of
+         * connection is a plausible thing for a phone to be doing at once; more
+         * begins to look like the fan of handshakes DPI is watching for.
+         */
+        private const val RACE_WIDTH = 3
+
+        /** How far apart the racing routes are started. */
+        private const val RACE_STAGGER_MILLIS = 6_000L
     }
 }

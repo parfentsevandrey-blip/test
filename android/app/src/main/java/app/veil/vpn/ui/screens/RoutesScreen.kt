@@ -151,6 +151,15 @@ fun RoutesScreen(
             )
         }
 
+        // What automatic mode will actually do, shown as an explanation of the
+        // choice above rather than as a section competing with it.
+        if (mode == RouteMode.AUTO && ladder.isNotEmpty()) {
+            item { SectionHeader(stringResource(R.string.transports_ladder)) }
+            items(ladder.size) { index ->
+                LadderRow(position = index + 1, attempt = ladder[index])
+            }
+        }
+
         item {
             Spacer(Modifier.height(8.dp))
             Row(

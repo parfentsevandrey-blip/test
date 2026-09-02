@@ -229,6 +229,7 @@ fun VeilScaffold(
                         onClear = viewModel::clearLogs,
                         onCopy = viewModel::logDump,
                         onClearCooldowns = viewModel::clearCooldowns,
+                        onSelfTest = viewModel::runSelfTest,
                     )
 
                     Destination.SETTINGS -> SettingsScreen(

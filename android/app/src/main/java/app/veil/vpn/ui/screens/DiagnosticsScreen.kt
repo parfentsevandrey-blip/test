@@ -10,8 +10,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -50,6 +52,7 @@ fun DiagnosticsScreen(
     onClear: () -> Unit,
     onCopy: () -> String,
     onClearCooldowns: () -> Unit,
+    onSelfTest: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val clipboard = LocalClipboardManager.current
@@ -121,6 +124,24 @@ fun DiagnosticsScreen(
             }
         }
 
+        // Deliberately the first thing on the screen after the summary: when
+        // nothing connects, the useful question is which stage failed, and this
+        // is what answers it without needing a connection to have been made.
+        item {
+            Button(
+                onClick = onSelfTest,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp),
+            ) {
+                Icon(Icons.Filled.Bolt, contentDescription = null)
+                Text(
+                    stringResource(R.string.diag_selftest),
+                    modifier = Modifier.padding(start = 8.dp),
+                )
+            }
+        }
+
         item {
             Row(
                 modifier = Modifier
@@ -140,7 +161,7 @@ fun DiagnosticsScreen(
                 }
                 OutlinedButton(onClick = onClear, modifier = Modifier.weight(1f)) {
                     Icon(Icons.Filled.DeleteSweep, contentDescription = null)
-                    Text("Clear", modifier = Modifier.padding(start = 8.dp))
+                    Text(stringResource(R.string.action_clear), modifier = Modifier.padding(start = 8.dp))
                 }
             }
         }

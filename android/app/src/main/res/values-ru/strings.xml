@@ -236,4 +236,9 @@
     <string name="transport_conjure">Conjure</string>
     <string name="route_conjure_desc">Блокировать нечего: соединение идёт к обычному хосту, который не слушает, а маршрутизатор внутри сотрудничающей сети перехватывает его по пути. Это обычный TCP, поэтому NAT мобильного оператора ему не мешает. Долго подключается.</string>
     <string name="route_why_conjure_dns">последний рубеж: регистрация у станции через DNS</string>
+    <string name="diag_selftest">Проверить всё по шагам</string>
+    <string name="diag_selftest_running">Проверяем…</string>
+    <string name="diag_selftest_done">Проверка завершена — результат в журнале ниже</string>
+    <string name="action_clear">Очистить</string>
+    <string name="fail_offline">У устройства нет подключения к сети. Пока его нет, тоннелировать нечего.</string>
 </resources>

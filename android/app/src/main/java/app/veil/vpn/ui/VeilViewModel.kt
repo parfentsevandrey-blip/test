@@ -7,6 +7,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.veil.vpn.R
 import app.veil.vpn.VeilApp
+import app.veil.vpn.core.SelfTest
 import app.veil.vpn.core.VeilLog
 import app.veil.vpn.data.AppRoutingMode
 import app.veil.vpn.data.DnsMode
@@ -132,6 +133,21 @@ class VeilViewModel(application: Application) : AndroidViewModel(application) {
     // --- Settings -----------------------------------------------------------
 
     fun setRouteMode(mode: RouteMode) = edit { container.settings.setRouteMode(mode) }
+
+    /**
+     * Exercises each stage on its own and writes what it found to the log.
+     *
+     * A failed connect can only say that nothing worked. This says which stage
+     * did not, which is the difference between a fix and a guess.
+     */
+    fun runSelfTest() {
+        viewModelScope.launch {
+            _busyMessage.value = text(R.string.diag_selftest_running)
+            runCatching { SelfTest.run(getApplication()) }
+                .onFailure { VeilLog.e("selftest", "did not finish", it) }
+            _busyMessage.value = text(R.string.diag_selftest_done)
+        }
+    }
     fun setManualTransport(t: Transport) = edit { container.settings.setManualTransport(t) }
     fun setBlockUdp(value: Boolean) = edit { container.settings.setBlockUdp(value) }
     fun setDnsMode(mode: DnsMode) = edit { container.settings.setDnsMode(mode) }
