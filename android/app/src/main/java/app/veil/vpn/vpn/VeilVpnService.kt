@@ -282,11 +282,25 @@ class VeilVpnService : VpnService() {
             }
         }
 
-        // Mullvad's multiplexer, adapted. Rather than walking the ladder and
-        // waiting out each dead route in turn, the first few routes are started
-        // a few seconds apart and whichever answers first is kept. Time spent
-        // waiting for a route to fail is time spent learning nothing.
-        val racers = ladder.distinctBy { it.transport }.take(RACE_WIDTH)
+        // Mullvad's multiplexer, adapted. Rather than starting one way and
+        // waiting out its failure before trying the other, they are started a
+        // few seconds apart and whichever answers first is kept.
+        //
+        // What is being raced here is the two ways of starting one method —
+        // Snowflake's broker reached through a fronted request or through an
+        // AMP cache, Conjure's station registered with over HTTPS or over DNS —
+        // and racing them is the only honest answer to which comes first,
+        // because it is genuinely network-dependent. Measured on one user's
+        // two networks: on their mobile connection the fronted Snowflake
+        // rendezvous returns nothing while the AMP one connects in seconds, and
+        // on their Wi-Fi the fronted one connects in thirteen. Guessing an
+        // order makes one of those pay for the other. Six seconds apart, with
+        // the second added over the control port, costs a few seconds of
+        // overlap and never costs a whole failed attempt.
+        //
+        // These used to be collapsed by transport before racing, which meant
+        // exactly one of them ever started.
+        val racers = ladder.take(RACE_WIDTH)
         if (racers.size > 1 && raceRoutes(racers, settings, network, ladder.size)) return
 
         val tried = racers.map { it.transport }.toMutableList()
@@ -431,14 +445,16 @@ class VeilVpnService : VpnService() {
         }.onFailure { VeilLog.e("vpn", "could not raise the tunnel", it) }.isSuccess
         if (!started) return false
 
-        // Which of them won is worth knowing: it is what the next connect on
-        // this network starts with.
         val winner = container.tor.connectedTransport() ?: racers.first().transport
         VeilLog.i("vpn", "connected through ${winner.torName}")
         container.memory.recordSuccess(network.fingerprint, winner, 0)
-        racers.firstOrNull { it.transport == winner }?.let {
-            container.bridges.recordSuccess(it.bridges)
-        }
+        // Which of the raced ways actually carried it cannot be told apart:
+        // the two rendezvous reach the same bridge and tor reports the same
+        // fingerprint for both. So neither is blamed. Clearing both counters is
+        // the least-wrong thing to do with a race one of them won, and it keeps
+        // the ordering neutral rather than crediting whichever happened to be
+        // listed first.
+        racers.forEach { container.bridges.recordSuccess(it.bridges) }
 
         update(TunnelState.Connected(winner, System.currentTimeMillis(), socks.port))
         startStatsPump()

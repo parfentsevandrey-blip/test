@@ -121,31 +121,35 @@ class StrategyPlanner(
             return@withContext emptyList()
         }
         val why = context.getString(R.string.route_why_pinned)
-        val attempts = buildList {
-            buildAttempt(transport, why, tlsProfile, dtlsProfile)?.let { add(it) }
-            if (transport == Transport.SNOWFLAKE) {
-                ampSnowflakeAttempt(tlsProfile, dtlsProfile)?.let { add(it) }
-            }
-            if (transport == Transport.CONJURE) {
-                dnsConjureAttempt()?.let { add(it) }
-            }
+        val fronted = buildAttempt(transport, why, tlsProfile, dtlsProfile)
+        val alternate = when (transport) {
+            Transport.SNOWFLAKE -> ampSnowflakeAttempt(tlsProfile, dtlsProfile)
+            Transport.CONJURE -> dnsConjureAttempt()
+            else -> null
         }
+
+        // Both ways of starting the method, cheapest-to-block last.
+        //
+        // The first move of both Snowflake and Conjure is an ordinary fronted
+        // HTTPS request — to a broker, or to a registration station — and it is
+        // the only part of either that a censor can get at. On the networks
+        // this app is built for that request is the thing that is blocked:
+        // measured on a Russian mobile network, the fronted Snowflake
+        // rendezvous returns nothing at all while the same bridge reached
+        // through Google's AMP cache connects in seconds. Fronting through a
+        // CDN is only as strong as the list of names it borrows, and those
+        // names are enumerable; cdn.ampproject.org shares an edge with
+        // google.com, which is not. So the alternative goes first.
+        //
+        // Not hardcoded to that, though. Whichever of the two last failed is
+        // demoted by the same failure counter that already orders bridges, so
+        // a network where the reverse is true corrects itself after one
+        // connect instead of paying for this preference every time.
+        val attempts = listOfNotNull(alternate, fronted)
+            .sortedBy { bridges.failureCount(it.bridges) }
         VeilLog.i("planner", attempts.joinToString(" -> ") { it.label }.ifEmpty { "nothing to try" })
         attempts
     }
-
-    /**
-     * One shaped attempt for a single transport, for the diagnostic to try.
-     *
-     * The same shaping (uTLS and the rest) and the same bridge selection a real
-     * connect uses, so what the diagnostic tests is what the app would actually
-     * send — not an idealised version of it.
-     */
-    fun diagnosticAttempt(
-        transport: Transport,
-        tlsProfile: TlsProfile,
-        dtlsProfile: DtlsProfile,
-    ): Attempt? = buildAttempt(transport, "diagnostic", tlsProfile, dtlsProfile)
 
     private fun buildAttempt(
         transport: Transport,

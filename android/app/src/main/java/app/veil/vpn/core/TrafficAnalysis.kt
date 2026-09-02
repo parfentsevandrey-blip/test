@@ -124,21 +124,30 @@ object TrafficAnalysis {
      * The request is plain HTTP on purpose: it is only after the Date header,
      * and a TLS handshake with a badly wrong clock is exactly what would fail.
      */
-    suspend fun clockSkewSeconds(): Long? = withTimeoutOrNull(10_000) {
-        runCatching {
-            val connection = java.net.URL(CLOCK_URL).openConnection() as java.net.HttpURLConnection
-            try {
-                connection.requestMethod = "HEAD"
-                connection.connectTimeout = 8_000
-                connection.readTimeout = 8_000
-                connection.responseCode
-                val served = connection.date
-                if (served <= 0) return@runCatching null
-                (served - System.currentTimeMillis()) / 1000
-            } finally {
-                connection.disconnect()
-            }
-        }.getOrNull()
+    suspend fun clockSkewSeconds(): Long? = withTimeoutOrNull(20_000) {
+        // More than one place to ask. The first is plain HTTP, which is the
+        // right thing to try first — a badly wrong clock is exactly what makes
+        // a TLS handshake fail, so asking over TLS could not tell the two
+        // apart. But plain HTTP to a captive-portal probe is also something a
+        // filtered network drops outright, and on a network where that happens
+        // "could not be checked" is a worse answer than one taken over TLS.
+        for (url in CLOCK_URLS) {
+            val skew = runCatching {
+                val connection = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+                try {
+                    connection.requestMethod = "HEAD"
+                    connection.connectTimeout = 7_000
+                    connection.readTimeout = 7_000
+                    connection.responseCode
+                    val served = connection.date
+                    if (served <= 0) null else (served - System.currentTimeMillis()) / 1000
+                } finally {
+                    connection.disconnect()
+                }
+            }.getOrNull()
+            if (skew != null) return@withTimeoutOrNull skew
+        }
+        null
     }
 
     // --- Through the tunnel --------------------------------------------------
@@ -426,8 +435,12 @@ object TrafficAnalysis {
     private const val CONNECT_TIMEOUT = 30_000
     private const val READ_TIMEOUT = 30_000
 
-    /** Plain HTTP, because this runs before anything is known to work. */
-    private const val CLOCK_URL = "http://detectportal.firefox.com/success.txt"
+    /** Plain HTTP first, then TLS, so a filtered network still gets an answer. */
+    private val CLOCK_URLS = listOf(
+        "http://detectportal.firefox.com/success.txt",
+        "http://cp.cloudflare.com/generate_204",
+        "https://www.cloudflare.com/cdn-cgi/trace",
+    )
 
     private const val CHECK_HOST = "check.torproject.org"
     private const val CHECK_PATH = "/api/ip"

@@ -210,6 +210,16 @@ class BridgeRepository(
             .filter { it.hasRoutableAddress }
             .map { it.host to it.port }
 
+    /**
+     * How many times these lines have failed since one of them last worked.
+     *
+     * Used to order two ways of starting the same transport. The count is
+     * already kept for sorting bridges within a transport; exposing it lets a
+     * caller ask the same question about a whole attempt.
+     */
+    fun failureCount(bridges: List<BridgeLine>): Int =
+        bridges.sumOf { failures[it.raw] ?: 0 }
+
     fun recordFailure(bridges: List<BridgeLine>) {
         bridges.forEach { failures[it.raw] = (failures[it.raw] ?: 0) + 1 }
         writeFailures()

@@ -101,7 +101,7 @@ object SelfTest {
             fun finish() = progress.update(total, total, app.getString(R.string.diag_stage_done))
 
             line("=== Veil deep diagnostic ===")
-            line("version 0.6.0")
+            line("version 0.6.1")
 
             val tunnelLive = runCatching { app.tor.isRunning }.getOrDefault(false)
             if (tunnelLive) {
@@ -252,32 +252,39 @@ object SelfTest {
                     line("${transport.torName}: skipped, transport did not start")
                     continue
                 }
-                val attempt = app.planner.diagnosticAttempt(transport, tls, dtls)
-                val bridges = attempt?.bridges ?: emptyList()
-                if (transport != Transport.DIRECT && bridges.isEmpty()) {
+                // Exactly what a connect with this method chosen would try,
+                // in the same order — including the second way of starting it
+                // where there is one. Testing only the fronted rendezvous, as
+                // this used to, can report a method dead on a network where its
+                // other path connects in seconds, and then pick something else.
+                val attempts = app.planner.pinnedPlan(transport, tls, dtls, ports.keys)
+                if (attempts.isEmpty()) {
                     line("${transport.torName}: skipped, no bridges to try")
                     continue
                 }
-                val outcome = testRoute(app, transport, bridges)
-                outcomes += outcome
-                line(
-                    "${transport.torName}: ${if (outcome.connected) "CONNECTED" else "failed"} " +
-                        "at ${outcome.reachedPercent}% in ${outcome.millis / 1000}s — ${outcome.detail}",
-                )
-                if (outcome.connected) {
-                    winner = outcome
-                    // The diagnostic just proved this method works here, and
-                    // the app connects with whatever method is chosen. So it
-                    // chooses it — which is the difference between the
-                    // diagnostic being a report and it being a fix — and adds
-                    // it to the record of what has worked on this network.
-                    runCatching {
-                        app.memory.recordSuccess(network.fingerprint, transport, outcome.millis)
-                        app.settings.setManualTransport(transport)
+                for (attempt in attempts) {
+                    val outcome = testRoute(app, transport, attempt.bridges)
+                    outcomes += outcome
+                    line(
+                        "${attempt.label}: ${if (outcome.connected) "CONNECTED" else "failed"} " +
+                            "at ${outcome.reachedPercent}% in ${outcome.millis / 1000}s — ${outcome.detail}",
+                    )
+                    if (outcome.connected) {
+                        winner = outcome
+                        // The diagnostic just proved this method works here, and
+                        // the app connects with whatever method is chosen. So it
+                        // chooses it — which is the difference between the
+                        // diagnostic being a report and it being a fix — and adds
+                        // it to the record of what has worked on this network.
+                        runCatching {
+                            app.memory.recordSuccess(network.fingerprint, transport, outcome.millis)
+                            app.settings.setManualTransport(transport)
+                        }
+                        line("(set as the chosen method; the next connect will use it)")
+                        break
                     }
-                    line("(set as the chosen method; the next connect will use it)")
-                    break
                 }
+                if (winner != null) break
             }
 
             // --- What the connection is actually like -------------------------
@@ -293,10 +300,23 @@ object SelfTest {
                 line("leaving through Tor: ${TrafficAnalysis.exitCheck(socks)}")
 
                 stage(app.getString(R.string.diag_stage_dns))
+                // These come back in about a millisecond, and that number is
+                // not a measurement of anything at the far end. The torrc sets
+                // AutomapHostsOnResolve with a suffix of ".", so tor answers
+                // every name from a local table of virtual addresses and only
+                // resolves it for real at the exit, when a connection to that
+                // address is made. So this checks that the DNS port answers at
+                // all — which is worth checking, since nothing on the device
+                // resolves anything if it does not — and the round-trip
+                // numbers below are where real resolution is actually paid for.
                 listOf("torproject.org", "wikipedia.org").forEach { name ->
                     val (millis, note) = TrafficAnalysis.resolveThroughTor(dnsPort, name)
                     line(
-                        "dns $name: " + if (millis < 0) "FAILED — $note" else "${millis} ms, $note",
+                        "dns $name: " + if (millis < 0) {
+                            "FAILED — $note"
+                        } else {
+                            "answered in ${millis} ms, $note (virtual address; resolved at the exit)"
+                        },
                     )
                 }
 
