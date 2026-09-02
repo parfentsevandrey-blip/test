@@ -223,26 +223,3 @@ if __name__ == '__main__':
     json.dump(peers, open(os.path.join(CIAN, 'peers.json'), 'w', encoding='utf-8'),
               ensure_ascii=False, indent=1)
     print(f'-> cian/peers.json — {len(peers)} строк, {len(nums)} пинов на карте')
-
-    # ── поквартирно: лоты каждого дома со ссылками на объявления ────────────
-    groups = []
-    for r in peers:
-        ls = [l for l in (news if r['kind'] == 'new' else resale)
-              if key_of(l) == r['name']]
-        ls.sort(key=lambda l: (-l['ppm'], l['area']))
-        groups.append({
-            'no': r['no'], 'name': r['name'], 'kind': r['kind'], 'n': len(ls),
-            'dist': r['dist'], 'ppmMed': r['ppmMed'],
-            'rows': [[f"{l['area']:.1f}".replace('.', ','),
-                      str(l['rooms']) if l['rooms'] else '—',
-                      f"{l['floor']}" + (f" из {l['floors']}" if l['floors'] else ''),
-                      f"{l['price'] / 1e6:.1f}".replace('.', ','),
-                      nf(l['ppm']),
-                      l['decor'] or l['repair'] or '—',
-                      {'text': 'Смотреть', 'link': l['url']}]
-                     for l in ls],
-        })
-    json.dump(groups, open(os.path.join(CIAN, 'by_house.json'), 'w', encoding='utf-8'),
-              ensure_ascii=False, indent=1)
-    print(f'-> cian/by_house.json — {sum(g["n"] for g in groups)} лотов в '
-          f'{len(groups)} таблицах')
