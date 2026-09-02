@@ -44,6 +44,7 @@ fun SettingsScreen(
     onBlockUdp: (Boolean) -> Unit,
     onKillSwitch: (Boolean) -> Unit,
     onAutoStart: (Boolean) -> Unit,
+    onKeepReady: (Boolean) -> Unit,
     onSnowflakeProxy: (Boolean) -> Unit,
     onDnsMode: (DnsMode) -> Unit,
     onIsolation: (IsolationMode) -> Unit,
@@ -140,6 +141,14 @@ fun SettingsScreen(
         }
 
         item { SectionHeader(stringResource(R.string.settings_section_network)) }
+        item {
+            SwitchRow(
+                title = stringResource(R.string.settings_keep_ready),
+                subtitle = stringResource(R.string.settings_keep_ready_desc),
+                checked = settings.keepReady,
+                onCheckedChange = onKeepReady,
+            )
+        }
         item {
             SwitchRow(
                 title = stringResource(R.string.settings_autostart),

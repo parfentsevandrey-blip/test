@@ -1,6 +1,7 @@
 package app.veil.vpn.vpn
 
 import android.content.Intent
+import android.net.ConnectivityManager
 import android.net.VpnService
 import android.os.Build
 import android.os.ParcelFileDescriptor
@@ -101,12 +102,41 @@ class VeilVpnService : VpnService() {
                 scope.launch { container.tor.requestNewIdentity() }
                 return START_STICKY
             }
+            ACTION_PARK -> {
+                // Only a held route is let go. A tunnel that is carrying
+                // traffic is the user's to end, never the screen's.
+                if (TunnelBus.state.value is TunnelState.Ready && worker?.isActive != true) {
+                    requestStop("the app left the screen; parking the route")
+                } else if (worker?.isActive == true && !attachRequested) {
+                    // Still preparing. Let it finish — a half-built route is
+                    // worth nothing to anyone — but let go the moment it is up,
+                    // rather than holding a route for a screen nobody is on.
+                    parkWhenReady = true
+                }
+                return START_NOT_STICKY
+            }
+        }
+        val attach = intent?.action != ACTION_PREPARE
+
+        // A held route being asked to carry traffic: the whole point of
+        // holding it. Nothing to bootstrap — attach the interface and go.
+        if (attach && TunnelBus.state.value is TunnelState.Ready && worker?.isActive != true) {
+            lastStartId = startId
+            startForeground(
+                VpnNotifications.ID,
+                VpnNotifications.build(this, TunnelState.Probing(R.string.step_starting, 0, 1)),
+            )
+            worker = scope.launch { attachHeldRoute() }
+            return START_STICKY
         }
 
         lastStartId = startId
         startForeground(
             VpnNotifications.ID,
-            VpnNotifications.build(this, TunnelState.Probing(R.string.step_starting, 0, 1)),
+            VpnNotifications.build(
+                this,
+                TunnelState.Probing(if (attach) R.string.step_starting else R.string.step_preparing, 0, 1),
+            ),
         )
         if (worker?.isActive != true) {
             val previousTeardown = teardownJob
@@ -118,10 +148,59 @@ class VeilVpnService : VpnService() {
                     withTimeoutOrNull(TEARDOWN_BUDGET_MILLIS) { it.join() }
                 }
                 stopping.set(false)
-                runTunnel()
+                runTunnel(attach)
             }
+        } else if (attach && !attachRequested) {
+            // A prepare is in flight and the user pressed connect: let it
+            // finish its bootstrap and attach at the end instead of starting
+            // over.
+            attachRequested = true
+            VeilLog.i("vpn", "connect pressed while preparing; will attach when ready")
         }
         return START_STICKY
+    }
+
+    /**
+     * Set when a connect arrives during a prepare, so the prepare attaches the
+     * interface as soon as its route is up rather than stopping at Ready.
+     */
+    @Volatile private var attachRequested = false
+
+    /** Set when the app left the screen mid-prepare; honoured by [holdRoute]. */
+    @Volatile private var parkWhenReady = false
+
+    /**
+     * Attaches the interface to a route that is already up.
+     *
+     * This is the fast path, and the reason the rest of the file exists in the
+     * shape it does. Everything slow about connecting — the bridge handshake,
+     * the directory, the circuit — was done while the route was being held. All
+     * that is left is the interface, which takes about as long as the system
+     * dialog that raises it.
+     */
+    private suspend fun attachHeldRoute() {
+        val settings = container.settings.settings.first()
+        val network = lastNetwork ?: NetworkContext.inspect(this)
+        val socks = container.tor.socks
+        val transport = container.tor.connectedTransport() ?: settings.manualTransport
+        if (socks == null || !container.tor.hasLiveOrConnection()) {
+            // The route went away while it was being held. Not a failure the
+            // user should see: just connect the long way.
+            VeilLog.w("vpn", "the held route is gone; connecting from scratch")
+            runTunnel(attach = true)
+            return
+        }
+        stopping.set(false)
+        val started = runCatching {
+            startNativeTunnel(settings, socks, container.tor.dnsPort, network)
+        }.onFailure { VeilLog.e("vpn", "could not raise the tunnel", it) }.isSuccess
+        if (!started) {
+            fail(getString(R.string.fail_tor_start), listOf(transport))
+            return
+        }
+        update(TunnelState.Connected(transport, System.currentTimeMillis(), socks.port))
+        startStatsPump()
+        watchNetwork()
     }
 
     override fun onRevoke() {
@@ -139,7 +218,14 @@ class VeilVpnService : VpnService() {
 
     // --- Connection sequence ------------------------------------------------
 
-    private suspend fun runTunnel() {
+    /**
+     * @param attach whether to put the interface on the route once it is up.
+     *   False holds the route at [TunnelState.Ready] instead, which is what the
+     *   app asks for while it is on screen and nothing is connected.
+     */
+    private suspend fun runTunnel(attach: Boolean = true) {
+        attachRequested = attach
+        parkWhenReady = false
         HandshakeGovernor.reset()
         // Stop the parked engine's shutdown timer before touching it.
         container.wakeEngine()
@@ -168,7 +254,7 @@ class VeilVpnService : VpnService() {
             return
         }
 
-        if (settings.killSwitch) {
+        if (settings.killSwitch && attach) {
             // Interface up, nothing reading it: a real kill switch rather than
             // a promise to be careful.
             establishInterface(settings)
@@ -514,6 +600,11 @@ class VeilVpnService : VpnService() {
         }
 
         val socks = container.tor.socks ?: return false
+        if (!attachRequested) {
+            racers.forEach { container.bridges.recordSuccess(it.bridges) }
+            holdRoute()
+            return true
+        }
         val started = runCatching {
             startNativeTunnel(settings, socks, container.tor.dnsPort, network)
         }.onFailure { VeilLog.e("vpn", "could not raise the tunnel", it) }.isSuccess
@@ -532,6 +623,7 @@ class VeilVpnService : VpnService() {
 
         update(TunnelState.Connected(winner, System.currentTimeMillis(), socks.port))
         startStatsPump()
+        watchNetwork()
         return true
     }
 
@@ -577,6 +669,11 @@ class VeilVpnService : VpnService() {
             return false
         }
 
+        if (!attachRequested) {
+            holdRoute()
+            return true
+        }
+
         val started = runCatching {
             startNativeTunnel(settings, socks, container.tor.dnsPort, network)
         }.onFailure { VeilLog.e("vpn", "could not raise the tunnel", it) }.isSuccess
@@ -584,7 +681,30 @@ class VeilVpnService : VpnService() {
 
         update(TunnelState.Connected(attempt.transport, System.currentTimeMillis(), socks.port))
         startStatsPump()
+        watchNetwork()
         return true
+    }
+
+    /**
+     * Leaves the route up and attached to nothing.
+     *
+     * The stats pump runs so the path is watched and re-dialled while held,
+     * exactly as it would be under a tunnel: a route that is allowed to die
+     * quietly while the app is open is a route that is not ready when the
+     * button is pressed.
+     */
+    private fun holdRoute() {
+        if (parkWhenReady) {
+            parkWhenReady = false
+            VeilLog.i("vpn", "route came up after the app left the screen; parking it")
+            update(TunnelState.Ready)
+            requestStop("prepared for a screen that is no longer there")
+            return
+        }
+        VeilLog.i("vpn", "route is up and held; nothing attached")
+        update(TunnelState.Ready)
+        startStatsPump()
+        watchNetwork()
     }
 
     /**
@@ -952,6 +1072,62 @@ class VeilVpnService : VpnService() {
         }
     }
 
+    // --- The network underneath ---------------------------------------------
+
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
+    private var watchedNetwork: android.net.Network? = null
+
+    /**
+     * Re-dials the moment the phone changes network.
+     *
+     * The single most common way a mobile tunnel dies is not the censor: it is
+     * the phone leaving Wi-Fi for cellular, or the carrier handing it a new
+     * address, which kills every TCP connection it had. Tor finds out when its
+     * keepalives time out, minutes later. Applications find out immediately
+     * and stop working. A commercial VPN client is subscribed to exactly this
+     * event and reconnects before the user notices — and so, now, is this.
+     *
+     * The interface is not touched. It stays up with the kill switch holding
+     * it, so nothing leaks while the route is re-established underneath.
+     */
+    private fun watchNetwork() {
+        if (networkCallback != null) return
+        val connectivity = getSystemService(ConnectivityManager::class.java) ?: return
+        watchedNetwork = connectivity.activeNetwork
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: android.net.Network) {
+                val previous = watchedNetwork
+                watchedNetwork = network
+                if (previous != null && previous != network) {
+                    VeilLog.w("vpn", "the phone moved to a different network; re-dialling")
+                    scope.launch {
+                        lastNetwork = runCatching { NetworkContext.inspect(this@VeilVpnService) }
+                            .getOrNull() ?: lastNetwork
+                        container.tor.reconnect()
+                    }
+                }
+            }
+
+            override fun onLost(network: android.net.Network) {
+                if (network == watchedNetwork) {
+                    VeilLog.w("vpn", "the network went away; waiting for the next one")
+                }
+            }
+        }
+        runCatching {
+            connectivity.registerDefaultNetworkCallback(callback)
+            networkCallback = callback
+        }.onFailure { VeilLog.w("vpn", "could not watch the network: $it") }
+    }
+
+    private fun unwatchNetwork() {
+        val callback = networkCallback ?: return
+        networkCallback = null
+        runCatching {
+            getSystemService(ConnectivityManager::class.java)?.unregisterNetworkCallback(callback)
+        }
+    }
+
     // --- Teardown -----------------------------------------------------------
 
     /**
@@ -964,6 +1140,7 @@ class VeilVpnService : VpnService() {
     }
 
     private suspend fun stopNativeTunnel() = withContext(Dispatchers.IO) {
+        unwatchNetwork()
         statsJob?.cancel()
         statsJob = null
         if (nativeTunnelRunning) {
@@ -1133,6 +1310,12 @@ class VeilVpnService : VpnService() {
     companion object {
         const val ACTION_DISCONNECT = "app.veil.vpn.DISCONNECT"
         const val ACTION_NEW_CIRCUIT = "app.veil.vpn.NEW_CIRCUIT"
+
+        /** Bring the route up and hold it, without attaching the interface. */
+        const val ACTION_PREPARE = "app.veil.vpn.PREPARE"
+
+        /** Let a held route go, if nothing is attached to it. */
+        const val ACTION_PARK = "app.veil.vpn.PARK"
 
         private const val MTU = 1500
         private const val TUN_ADDRESS_V4 = "10.55.0.1"

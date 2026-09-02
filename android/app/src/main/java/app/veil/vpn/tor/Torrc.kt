@@ -90,7 +90,12 @@ object Torrc {
 
         appendLine("# --- Client role -------------------------------------------------")
         appendLine("ClientOnly 1")
-        appendLine("AvoidDiskWrites 1")
+        // AvoidDiskWrites is deliberately not set. It exists to spare media
+        // with a limited write life, and what it spares tor from writing
+        // promptly is exactly what the next connect needs: the consensus and
+        // descriptors it just fetched. A phone's storage is fine; a connect
+        // that re-downloads the directory because the last run was told to
+        // hold off writing it is not.
         appendLine("DormantCanceledByStartup 1")
         appendLine("DormantTimeoutEnabled 0")
         appendLine()

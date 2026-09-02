@@ -59,6 +59,16 @@ enum class IsolationMode(val nativeMode: String) {
 
 data class VeilSettings(
     val manualTransport: Transport = Transport.SNOWFLAKE,
+    /**
+     * Bring the engine up while the app is open, before the button is pressed.
+     *
+     * What makes a commercial VPN feel instant is not a faster protocol: its
+     * daemon is already connected when the button is touched, and the press
+     * only attaches the interface. This is the same idea, bounded to the time
+     * the app is on screen — so a user who opens it is a second away from a
+     * tunnel, and a user who does not is not running tor in their pocket.
+     */
+    val keepReady: Boolean = true,
     val blockUdp: Boolean = true,
     val dnsMode: DnsMode = DnsMode.TOR_DNS_PORT,
     val dohEndpoint: String = DEFAULT_DOH,
@@ -88,6 +98,7 @@ class SettingsRepository(private val context: Context) {
 
     private object Keys {
         val MANUAL_TRANSPORT = stringPreferencesKey("manual_transport")
+        val KEEP_READY = booleanPreferencesKey("keep_ready")
         val BLOCK_UDP = booleanPreferencesKey("block_udp")
         val DNS_MODE = stringPreferencesKey("dns_mode")
         val DOH_ENDPOINT = stringPreferencesKey("doh_endpoint")
@@ -117,6 +128,7 @@ class SettingsRepository(private val context: Context) {
 
     private fun Preferences.toSettings() = VeilSettings(
         manualTransport = enumOf(this[Keys.MANUAL_TRANSPORT], Transport.SNOWFLAKE),
+        keepReady = this[Keys.KEEP_READY] ?: true,
         blockUdp = this[Keys.BLOCK_UDP] ?: true,
         dnsMode = enumOf(this[Keys.DNS_MODE], DnsMode.TOR_DNS_PORT),
         dohEndpoint = this[Keys.DOH_ENDPOINT] ?: VeilSettings.DEFAULT_DOH,
@@ -134,6 +146,7 @@ class SettingsRepository(private val context: Context) {
     )
 
     suspend fun setManualTransport(transport: Transport) = put(Keys.MANUAL_TRANSPORT, transport.name)
+    suspend fun setKeepReady(value: Boolean) = put(Keys.KEEP_READY, value)
     suspend fun setBlockUdp(value: Boolean) = put(Keys.BLOCK_UDP, value)
     suspend fun setDnsMode(mode: DnsMode) = put(Keys.DNS_MODE, mode.name)
     suspend fun setIsolation(mode: IsolationMode) = put(Keys.ISOLATION, mode.name)

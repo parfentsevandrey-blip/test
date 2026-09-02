@@ -250,7 +250,7 @@ private class ButtonShapes {
 @Composable
 private fun ConnectButtonLabel(state: TunnelState, bootstrapPercent: Int, tint: Color) {
     val headline = when (state) {
-        is TunnelState.Idle -> stringResource(R.string.action_connect)
+        is TunnelState.Idle, is TunnelState.Ready -> stringResource(R.string.action_connect)
         is TunnelState.Connected -> stringResource(R.string.action_disconnect)
         is TunnelState.Failed -> stringResource(R.string.action_retry)
         else -> stringResource(R.string.action_cancel)

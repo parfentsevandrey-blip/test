@@ -299,6 +299,7 @@ fun VeilScaffold(
                         onBlockUdp = viewModel::setBlockUdp,
                         onKillSwitch = viewModel::setKillSwitch,
                         onAutoStart = viewModel::setAutoStart,
+                        onKeepReady = viewModel::setKeepReady,
                         onSnowflakeProxy = viewModel::setSnowflakeProxy,
                         onDnsMode = viewModel::setDnsMode,
                         onIsolation = viewModel::setIsolation,

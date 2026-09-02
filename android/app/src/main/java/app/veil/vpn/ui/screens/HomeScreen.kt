@@ -124,6 +124,7 @@ private fun StatusLine(state: TunnelState) {
     val headline = stringResource(
         when (state) {
             is TunnelState.Idle -> R.string.state_idle
+            is TunnelState.Ready -> R.string.state_ready
             is TunnelState.Probing -> R.string.state_probing
             is TunnelState.Starting -> R.string.state_starting
             is TunnelState.Bootstrapping -> R.string.state_bootstrapping
@@ -135,6 +136,7 @@ private fun StatusLine(state: TunnelState) {
     )
     val detail = when (state) {
         is TunnelState.Idle -> stringResource(R.string.home_auto_hint)
+        is TunnelState.Ready -> stringResource(R.string.home_ready_hint)
         is TunnelState.Probing -> stringResource(state.noteRes)
         is TunnelState.Starting -> stringResource(
             R.string.home_step,
