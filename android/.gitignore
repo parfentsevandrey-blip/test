@@ -17,3 +17,7 @@ native/veiltun/gen/
 
 # Kotlin build metadata
 .kotlin/
+
+# Desktop harnesses built from cmd/; useful, not artefacts to keep.
+/native/veiltun/ptlab
+/native/veiltun/vpngatelab
