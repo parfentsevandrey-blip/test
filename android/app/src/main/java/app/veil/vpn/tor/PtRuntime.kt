@@ -25,6 +25,7 @@ class PtRuntime(context: Context) {
 
     private val stateDir: File = File(context.filesDir, "pt-state").apply { mkdirs() }
 
+
     private val events = object : TransportEvents {
         override fun connected(name: String) = VeilLog.i("pt", "$name connected")
         override fun failed(name: String, message: String) = VeilLog.w("pt", "$name: $message")
@@ -152,6 +153,7 @@ class PtRuntime(context: Context) {
     private companion object {
         const val DEFAULT_BROKER = "https://1098762253.rsc.cdn77.org/"
         const val DEFAULT_FRONTS = "app.datapacket.com,www.datapacket.com"
+
         /**
          * Only used when a bridge line names none of its own.
          *
@@ -167,7 +169,30 @@ class PtRuntime(context: Context) {
                 "stun:stun.hot-chilli.net:3478,stun:stun.fitauto.ru:3478," +
                 "stun:stun.m-online.net:3478"
 
-        /** More peers means a faster but noisier connection. */
+        /**
+         * How many WebRTC peers Snowflake keeps on hand.
+         *
+         * This is not bandwidth. Only one proxy carries traffic at a time — a
+         * Tor circuit is a single stream and the client says so in as many
+         * words — so the rest are a standby pool of already-negotiated, idle
+         * data channels. What the pool buys is the recovery time when the
+         * proxy in use disappears, which on Snowflake is constant: proxies are
+         * volunteers' browser tabs, and a tab closes without warning. With one
+         * peer that is a full stop — offer, broker rendezvous, ICE, a new data
+         * channel — and it is exactly the freeze a Snowflake user learns to
+         * expect. With a standby ready, the session moves onto it and the
+         * pause is not long enough to notice.
+         *
+         * Three is the number the mechanism actually supports, and it is worth
+         * writing down why rather than picking a bigger one and hoping. An idle
+         * peer closes itself after twenty seconds without a message, and the
+         * client collects at most one replacement every ten, so the pool
+         * settles at roughly one active peer and two standbys no matter how
+         * much room it is given. A larger figure does not deepen the pool; it
+         * only removes the ceiling that stops the client rendezvousing
+         * continuously — more requests to the broker, more of a commons that
+         * other people are also queuing for, and no more resilience.
+         */
         const val SNOWFLAKE_PEERS = 3L
 
         /** How many censored users this device will carry at once. */

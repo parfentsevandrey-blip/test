@@ -17,8 +17,6 @@ import kotlinx.coroutines.flow.map
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore("veil.settings")
 
-enum class RouteMode { AUTO, MANUAL }
-
 enum class AppRoutingMode {
     /** Every app goes through the tunnel. */
     ALL,
@@ -60,7 +58,6 @@ enum class IsolationMode(val nativeMode: String) {
 }
 
 data class VeilSettings(
-    val routeMode: RouteMode = RouteMode.AUTO,
     val manualTransport: Transport = Transport.SNOWFLAKE,
     val blockUdp: Boolean = true,
     val dnsMode: DnsMode = DnsMode.TOR_DNS_PORT,
@@ -90,7 +87,6 @@ data class VeilSettings(
 class SettingsRepository(private val context: Context) {
 
     private object Keys {
-        val ROUTE_MODE = stringPreferencesKey("route_mode")
         val MANUAL_TRANSPORT = stringPreferencesKey("manual_transport")
         val BLOCK_UDP = booleanPreferencesKey("block_udp")
         val DNS_MODE = stringPreferencesKey("dns_mode")
@@ -120,7 +116,6 @@ class SettingsRepository(private val context: Context) {
     }
 
     private fun Preferences.toSettings() = VeilSettings(
-        routeMode = enumOf(this[Keys.ROUTE_MODE], RouteMode.AUTO),
         manualTransport = enumOf(this[Keys.MANUAL_TRANSPORT], Transport.SNOWFLAKE),
         blockUdp = this[Keys.BLOCK_UDP] ?: true,
         dnsMode = enumOf(this[Keys.DNS_MODE], DnsMode.TOR_DNS_PORT),
@@ -138,7 +133,6 @@ class SettingsRepository(private val context: Context) {
         bypassSuffixes = this[Keys.BYPASS_SUFFIXES] ?: "",
     )
 
-    suspend fun setRouteMode(mode: RouteMode) = put(Keys.ROUTE_MODE, mode.name)
     suspend fun setManualTransport(transport: Transport) = put(Keys.MANUAL_TRANSPORT, transport.name)
     suspend fun setBlockUdp(value: Boolean) = put(Keys.BLOCK_UDP, value)
     suspend fun setDnsMode(mode: DnsMode) = put(Keys.DNS_MODE, mode.name)

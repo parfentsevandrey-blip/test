@@ -34,9 +34,6 @@
     <string name="home_auto_hint">Veil сам выбирает маршрут и повышает уровень маскировки, пока связь не встанет.</string>
 
     <string name="transports_title">Как Veil выходит наружу</string>
-    <string name="transports_mode_auto">Автоматически</string>
-    <string name="transports_mode_manual">Вручную</string>
-    <string name="transports_auto_desc">Прощупать сеть, оценить каждый маршрут и перебирать их, пока один не заработает.</string>
     <string name="transports_ladder">Порядок перебора</string>
 
     <string name="bridges_title">Мосты</string>
@@ -232,7 +229,6 @@
     <string name="probe_summary_symmetric">Эта сеть даёт каждому направлению свой порт — как раз то, чего Snowflake не переносит; мосты при этом доступны</string>
     <string name="route_why_nat">эта сеть меняет порт для каждого направления, а Snowflake этого не переносит</string>
     <string name="fail_no_transports">Ни один транспорт не запустился — добираться до Tor не через что. Подробности в «Диагностике».</string>
-    <string name="fail_transport_unavailable">%1$s не запустился на этом устройстве. Выберите другой маршрут или верните автоматический выбор.</string>
     <string name="transport_conjure">Conjure</string>
     <string name="route_conjure_desc">Блокировать нечего: соединение идёт к обычному хосту, который не слушает, а маршрутизатор внутри сотрудничающей сети перехватывает его по пути. Это обычный TCP, поэтому NAT мобильного оператора ему не мешает. Долго подключается.</string>
     <string name="route_why_conjure_dns">последний рубеж: регистрация у станции через DNS</string>
@@ -249,8 +245,37 @@
     <string name="diag_line_api_none">сервис мостов: не ответил — в ход шли только зашитые мосты</string>
     <string name="diag_line_nat">NAT: %1$s</string>
     <string name="action_share">Поделиться</string>
-    <string name="diag_selftest_hint">Прогоняет каждый этап по отдельности — сеть, транспорты, мосты, сервис мостов, пробу и Tor — без подключения. Запустите, когда ничего не работает, и скопируйте результат сюда.</string>
+    <string name="diag_selftest_hint">Пробует каждый маршрут, пока один не дойдёт до узла, а затем измеряет то, что получилось: отклик, скорость, разрешение имён и стабильность. Занимает две-три минуты. Скопируйте результат и пришлите обратно.</string>
     <string name="diag_selftest_step">%1$d%%  ·  %2$s</string>
     <string name="diag_selftest_ready">Результат — скопируйте и пришлите обратно</string>
     <string name="diag_selftest_again">Запустить ещё раз</string>
+    <string name="route_why_pinned">ваш выбор</string>
+    <!-- Routes screen -->
+    <string name="transports_pick_hint">Выберите основной способ. Veil начинает с него при каждом подключении, в том числе после перезапуска, и переходит к остальным, если он перестал работать.</string>
+    <string name="transports_pinned_note">Сохранено. Следующее подключение начнётся с него.</string>
+    <string name="route_no_bridge_needed">нечего блокировать: адреса моста нет</string>
+    <string name="latency_low">быстро</string>
+    <string name="latency_medium">средне</string>
+    <string name="latency_high">медленнее</string>
+    <string name="route_direct_tag">Напрямую в Tor, ничего не скрыто.</string>
+    <string name="route_obfs4_tag">Шум вместо протокола, но адрес моста постоянный.</string>
+    <string name="route_webtunnel_tag">Неотличимо от захода на обычный сайт.</string>
+    <string name="route_meek_tag">Спрятано в трафике к большому CDN.</string>
+    <string name="route_conjure_tag">Обычный TCP, блокировать нечего.</string>
+    <string name="route_snowflake_tag">Прокси волонтёров, постоянного адреса нет.</string>
+    <string name="route_why_snowflake_amp">брокер через AMP-кэш Google: он блокируется отдельно от фронтингового запроса</string>
+    <!-- Diagnostic progress labels -->
+    <string name="diag_stage_network">Сеть</string>
+    <string name="diag_stage_clock">Часы</string>
+    <string name="diag_stage_transports">Транспорты</string>
+    <string name="diag_stage_bridges">Сервис мостов</string>
+    <string name="diag_stage_probe">Достижимость</string>
+    <string name="diag_stage_testing">Пробуем %1$s</string>
+    <string name="diag_stage_exit">Проверка выхода</string>
+    <string name="diag_stage_dns">Разрешение имён</string>
+    <string name="diag_stage_latency">Отклик</string>
+    <string name="diag_stage_throughput">Скорость</string>
+    <string name="diag_stage_steady">Стабильность</string>
+    <string name="diag_stage_skipped">Пропущено</string>
+    <string name="diag_stage_done">Готово</string>
 </resources>

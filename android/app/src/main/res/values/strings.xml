@@ -39,9 +39,6 @@
 
     <!-- Transports -->
     <string name="transports_title">How Veil gets out</string>
-    <string name="transports_mode_auto">Automatic</string>
-    <string name="transports_mode_manual">Manual</string>
-    <string name="transports_auto_desc">Probe the network, rank every route, and escalate through them until one connects.</string>
     <string name="transports_ladder">Escalation order</string>
 
     <!-- Bridges -->
@@ -240,7 +237,6 @@
     <string name="probe_summary_symmetric">This network gives every destination a different port, which Snowflake needs to avoid; bridges are reachable</string>
     <string name="route_why_nat">this network changes port per destination, which Snowflake needs to avoid</string>
     <string name="fail_no_transports">No transport would start, so there is nothing to reach Tor through. Diagnostics has the log.</string>
-    <string name="fail_transport_unavailable">%1$s did not start on this device. Pick another route, or switch route selection back to automatic.</string>
     <string name="transport_conjure">Conjure</string>
     <string name="route_conjure_desc">No bridge address to block at all: the connection goes to an ordinary host that is not listening, and a router inside a cooperating network diverts it on the way past. Plain TCP, so the NAT a mobile carrier puts you behind does not affect it. Slow to start.</string>
     <string name="route_why_conjure_dns">last resort: registered with the station over DNS</string>
@@ -257,8 +253,37 @@
     <string name="diag_line_api_none">bridge service: no answer — only shipped bridges were used</string>
     <string name="diag_line_nat">NAT: %1$s</string>
     <string name="action_share">Share</string>
-    <string name="diag_selftest_hint">Runs every stage on its own — network, transports, bridges, the bridge service, the probe, and Tor — without connecting. Use it when nothing works and copy the result here.</string>
+    <string name="diag_selftest_hint">Tries every route until one reaches a relay, then measures what it built: round trip, throughput, name resolution and how steady it stays. Takes two to three minutes. Copy the result and send it back.</string>
     <string name="diag_selftest_step">%1$d%%  ·  %2$s</string>
     <string name="diag_selftest_ready">Result — copy it and send it back</string>
     <string name="diag_selftest_again">Run again</string>
+    <string name="route_why_pinned">your choice</string>
+    <!-- Routes screen -->
+    <string name="transports_pick_hint">Pick the one to lead with. Veil tries it first every time, including after a restart, and falls back through the rest if it stops working.</string>
+    <string name="transports_pinned_note">Saved. This is what the next connection starts with.</string>
+    <string name="route_no_bridge_needed">no bridge address to block</string>
+    <string name="latency_low">fast</string>
+    <string name="latency_medium">moderate</string>
+    <string name="latency_high">slower</string>
+    <string name="route_direct_tag">Straight to Tor, nothing hidden.</string>
+    <string name="route_obfs4_tag">Scrambled stream, fixed bridge address.</string>
+    <string name="route_webtunnel_tag">Indistinguishable from browsing a website.</string>
+    <string name="route_meek_tag">Fronted through a large CDN.</string>
+    <string name="route_conjure_tag">Plain TCP, no address to block.</string>
+    <string name="route_snowflake_tag">Volunteer proxies, no fixed address.</string>
+    <string name="route_why_snowflake_amp">the broker asked through the Google AMP cache, which is blocked separately from the fronted request</string>
+    <!-- Diagnostic progress labels -->
+    <string name="diag_stage_network">Network</string>
+    <string name="diag_stage_clock">Clock</string>
+    <string name="diag_stage_transports">Transports</string>
+    <string name="diag_stage_bridges">Bridge service</string>
+    <string name="diag_stage_probe">Reachability</string>
+    <string name="diag_stage_testing">Trying %1$s</string>
+    <string name="diag_stage_exit">Checking the exit</string>
+    <string name="diag_stage_dns">Name resolution</string>
+    <string name="diag_stage_latency">Round trip</string>
+    <string name="diag_stage_throughput">Throughput</string>
+    <string name="diag_stage_steady">Steadiness</string>
+    <string name="diag_stage_skipped">Skipped</string>
+    <string name="diag_stage_done">Done</string>
 </resources>

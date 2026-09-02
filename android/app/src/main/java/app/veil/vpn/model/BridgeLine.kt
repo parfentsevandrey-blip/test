@@ -52,6 +52,20 @@ data class BridgeLine(
     }
 
     /**
+     * Returns the same bridge with parameters removed, rebuilding the raw line.
+     *
+     * Needed because some parameters are alternatives to each other rather than
+     * additions: a Snowflake line that names both a set of fronts and an AMP
+     * cache is not more configured, it is contradictory.
+     */
+    fun withoutParams(vararg keys: String): BridgeLine {
+        if (keys.none { params.containsKey(it) }) return this
+        val remaining = LinkedHashMap(params)
+        keys.forEach { remaining.remove(it) }
+        return rebuiltWith(remaining)
+    }
+
+    /**
      * Drops optional parameters until tor will accept the line at all.
      *
      * The SOCKS5 authentication fields are one byte of length each, so the

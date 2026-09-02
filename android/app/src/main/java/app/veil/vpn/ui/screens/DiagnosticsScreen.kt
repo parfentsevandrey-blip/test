@@ -324,7 +324,7 @@ private fun SelfTestCard(
                         ),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(max = 260.dp)
+                            .heightIn(max = 420.dp)
                             .verticalScroll(rememberScrollState()),
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {

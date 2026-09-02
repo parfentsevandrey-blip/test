@@ -15,7 +15,6 @@ import app.veil.vpn.data.InstalledApp
 import app.veil.vpn.data.InstalledApps
 import app.veil.vpn.data.IsolationMode
 import app.veil.vpn.data.DEFAULT_BYPASS_SUFFIXES
-import app.veil.vpn.data.RouteMode
 import app.veil.vpn.model.DtlsProfile
 import app.veil.vpn.model.TlsProfile
 import app.veil.vpn.data.VeilSettings
@@ -134,8 +133,6 @@ class VeilViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // --- Settings -----------------------------------------------------------
-
-    fun setRouteMode(mode: RouteMode) = edit { container.settings.setRouteMode(mode) }
 
     /**
      * Exercises each stage on its own and writes what it found to the log.

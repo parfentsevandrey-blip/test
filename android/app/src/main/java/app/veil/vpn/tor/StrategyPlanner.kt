@@ -74,6 +74,8 @@ class StrategyPlanner(
         dtlsProfile: DtlsProfile,
         /** Transports that actually have a listener tor can be pointed at. */
         available: Set<Transport>,
+        /** The method the user pinned, tried before anything else. */
+        preferred: Transport? = null,
     ): List<Attempt> = withContext(Dispatchers.Default) {
         val discouraged = memory.discouraged(network.fingerprint)
         val remembered = memory.preferredFor(network.fingerprint)
@@ -81,7 +83,10 @@ class StrategyPlanner(
 
         val ordered = LinkedHashMap<Transport, String>()
 
-        remembered?.let { ordered[it] = "worked on this network before" }
+        // The pinned choice outranks everything, including what worked here
+        // before: it is the one thing the user said out loud.
+        preferred?.takeIf { it.isOffered }?.let { ordered[it] = context.getString(R.string.route_why_pinned) }
+        remembered?.let { ordered.putIfAbsent(it, "worked on this network before") }
         recommended.forEach { transport ->
             ordered.putIfAbsent(transport, "recommended for ${network.countryIso?.uppercase()}")
         }
@@ -92,7 +97,7 @@ class StrategyPlanner(
             }
         // Everything else still gets a turn, cheapest first, so a wrong guess
         // upstream never removes a working route from the ladder.
-        Transport.entries.forEach { transport ->
+        Transport.entries.filter { it.isOffered }.forEach { transport ->
             ordered.putIfAbsent(transport, "fallback")
         }
 
@@ -122,7 +127,7 @@ class StrategyPlanner(
             }
             // A bridge whose plugin never started would make tor stall on a
             // route it has no way to take.
-            .filter { (transport, _) -> transport == Transport.DIRECT || transport in available }
+            .filter { (transport, _) -> transport.isOffered && transport in available }
             .sortedBy { (transport, _) -> if (transport in demoted) 1 else 0 }
             .mapNotNull { (transport, why) ->
                 buildAttempt(transport, why, tlsProfile, dtlsProfile)
@@ -133,7 +138,9 @@ class StrategyPlanner(
         // has blocked the fronted broker request itself. It is a different set
         // of bridge lines rather than a different transport, so it costs
         // nothing but a `SETCONF`.
-        if (Transport.SNOWFLAKE in available) ampSnowflakeAttempt()?.let { attempts += it }
+        if (Transport.SNOWFLAKE in available) {
+            ampSnowflakeAttempt(tlsProfile, dtlsProfile)?.let { attempts += it }
+        }
 
         // Conjure registered over DNS: the last thing left when even a fronted
         // request to the registration station is stopped. It needs nothing but
@@ -145,18 +152,27 @@ class StrategyPlanner(
         attempts
     }
 
-    /** The ladder for a user who picked a transport by hand. */
-    fun manualPlan(
-        transport: Transport,
-        tlsProfile: TlsProfile,
-        dtlsProfile: DtlsProfile,
-        available: Set<Transport>,
-    ): List<Attempt> {
-        if (transport != Transport.DIRECT && transport !in available) {
-            VeilLog.e("planner", "${transport.torName} has no listener; nothing to try")
-            return emptyList()
-        }
-        return listOfNotNull(buildAttempt(transport, "chosen by you", tlsProfile, dtlsProfile))
+    /**
+     * Rewrites a Snowflake line's `front` as `fronts`, which is the form that
+     * wins.
+     *
+     * Both spellings mean the same thing to the transport, but not with the
+     * same authority: it reads `fronts` if there is one and only falls back to
+     * `front`. That matters here because the app supplies a default set of
+     * fronts for lines that name none, and the transport controller fills those
+     * in per connection — so a line carrying only the singular `front` has the
+     * app's default quietly layered on top of it and loses its own.
+     *
+     * The lines this bites are exactly the ones where it does most damage: the
+     * Tor Project's AMP-cache Snowflake lines say `front=www.google.com`,
+     * because the request goes to Google's cache. Overriding that with a CDN77
+     * front sends an AMP request to a host that has never heard of it, and the
+     * rendezvous fails in a way that reads as "no proxies available".
+     */
+    private fun promoteFront(bridge: BridgeLine): BridgeLine {
+        val singular = bridge.params["front"]?.takeIf { it.isNotBlank() } ?: return bridge
+        if (!bridge.params["fronts"].isNullOrBlank()) return bridge.withoutParams("front")
+        return bridge.withoutParams("front").withParams(mapOf("fronts" to singular))
     }
 
     /**
@@ -199,15 +215,57 @@ class StrategyPlanner(
         return Attempt(transport, candidates.map { shape(it, tlsProfile, dtlsProfile) }, why)
     }
 
-    /** The Snowflake lines that rendezvous through an AMP cache, if we have any. */
-    private fun ampSnowflakeAttempt(): Attempt? {
-        val amp = bridges.forTransport(Transport.SNOWFLAKE, limit = 6)
-            .filter { it.params.containsKey("ampcache") }
-        if (amp.isEmpty()) return null
+    /**
+     * Snowflake asking the broker a different way.
+     *
+     * Everything Snowflake is famous for — no fixed address, a proxy that is
+     * someone's browser tab — begins after a rendezvous, and the rendezvous is
+     * an ordinary HTTPS request to an ordinary CDN. It is the one part of
+     * Snowflake a censor can reach, and blocking it stops Snowflake dead in a
+     * way that looks from the phone like there being no proxies in the world.
+     *
+     * So the same bridge is offered a second time, asking through Google's AMP
+     * cache instead: a different company, a different edge, a different request
+     * shape, blocked or not blocked independently of the first.
+     *
+     * The Tor Project publishes ready-made AMP lines for some countries and
+     * those are used as they are. Where it does not — which includes every
+     * network the country list has nothing to say about — one is made here from
+     * a plain line, and the three parameters are replaced together. That last
+     * part is the whole difficulty: the broker mirror, the front and the cache
+     * only work as a set, and filling in a cache while leaving a fronted line's
+     * own broker and front in place produces a request that arrives nowhere.
+     */
+    private fun ampSnowflakeAttempt(
+        tlsProfile: TlsProfile,
+        dtlsProfile: DtlsProfile,
+    ): Attempt? {
+        val all = bridges.forTransport(Transport.SNOWFLAKE, limit = 8)
+        val published = all.filter { it.params.containsKey("ampcache") }
+        val line = published.firstOrNull()
+            ?: all.firstOrNull { !it.params.containsKey("ampcache") }
+                // All three at once. The fronted line names the CDN77 broker
+                // mirror and a DataPacket front, and either of those left
+                // behind would send an AMP request to a host that has never
+                // heard of it. `front` is dropped rather than overwritten
+                // because the plural is the one the transport reads.
+                ?.withoutParams("front")
+                ?.withParams(
+                    mapOf(
+                        "url" to AMP_BROKER,
+                        "ampcache" to AMP_CACHE,
+                        "fronts" to AMP_FRONT,
+                    ),
+                )
+        if (line == null) return null
+        // Shaped and length-checked like any other rung. The second part is not
+        // optional: the AMP settings make an already long Snowflake line longer,
+        // and tor rejects an over-length `Bridge` outright — taking `UseBridges`
+        // and the whole rung down with it.
         return Attempt(
             transport = Transport.SNOWFLAKE,
-            bridges = amp.take(1),
-            why = "last resort: broker reached through an AMP cache",
+            bridges = listOf(shape(line, tlsProfile, dtlsProfile)),
+            why = context.getString(R.string.route_why_snowflake_amp),
             ampRendezvous = true,
         )
     }
@@ -249,7 +307,7 @@ class StrategyPlanner(
             Transport.CONJURE ->
                 bridge.withParams(mapOf("utls-imitate" to tlsProfile.snowflakeName))
 
-            Transport.SNOWFLAKE -> bridge.withParams(
+            Transport.SNOWFLAKE -> promoteFront(bridge).withParams(
                 buildMap {
                     put("utls-imitate", tlsProfile.snowflakeName)
                     // Snowflake's data path is DTLS, which carries a
@@ -388,6 +446,19 @@ class StrategyPlanner(
 
     companion object {
         const val MAP_ASSET = "circumvention_map.json"
+
+        /**
+         * The AMP rendezvous, as the Tor Project publishes it.
+         *
+         * These three belong together. The cache fetches the broker's own
+         * origin rather than its CDN77 mirror — there is nothing to mirror when
+         * something else is doing the fetching — and the request to the cache
+         * is fronted through www.google.com, which shares an edge with
+         * cdn.ampproject.org.
+         */
+        const val AMP_BROKER = "https://snowflake-broker.torproject.net/"
+        const val AMP_CACHE = "https://cdn.ampproject.org/"
+        const val AMP_FRONT = "www.google.com"
 
         /**
          * How long the live country lookup may delay the first attempt. The

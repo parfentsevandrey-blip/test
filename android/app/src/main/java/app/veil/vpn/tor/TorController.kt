@@ -666,6 +666,20 @@ class TorController(private val context: Context) {
             }
     }.getOrNull()
 
+    /**
+     * What tor itself says it has moved, read from its control port.
+     *
+     * Worth having next to the app's own byte counters during a diagnostic:
+     * the tunnel's counters include everything the device sent at the TUN
+     * interface, whereas these are what actually crossed a circuit. A large
+     * gap between the two is traffic being dropped rather than carried.
+     */
+    fun describeTraffic(): String? = runCatching {
+        val read = connection?.getInfo("traffic/read")?.toLongOrNull() ?: return@runCatching null
+        val written = connection?.getInfo("traffic/written")?.toLongOrNull() ?: 0L
+        "${read / 1024} KB in, ${written / 1024} KB out through tor"
+    }.getOrNull()
+
     suspend fun stop() = withContext(Dispatchers.IO) {
         val control = connection
         eventListener?.let { runCatching { control?.removeRawEventListener(it) } }

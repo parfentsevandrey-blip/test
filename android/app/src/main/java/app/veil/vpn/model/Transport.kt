@@ -74,6 +74,19 @@ enum class Transport(
 
     val isPluggable: Boolean get() = this != DIRECT
 
+    /**
+     * Whether this route is worth offering and worth spending a connect on.
+     *
+     * Measured on a Russian network rather than assumed: a plain connection is
+     * killed during the TLS handshake at 10%, and obfs4 reaches its bridge and
+     * then stalls with the circuit unbuilt. Both are dead ends there, and every
+     * second spent on them is a second before something that works is tried. So
+     * they stay in the code — the ladder logic, the diagnostic and other
+     * countries still refer to them — but they are not presented as choices and
+     * not put on the ladder.
+     */
+    val isOffered: Boolean get() = this != DIRECT && this != OBFS4
+
     companion object {
         fun fromTorName(name: String): Transport? =
             entries.firstOrNull { it.torName.equals(name, ignoreCase = true) }

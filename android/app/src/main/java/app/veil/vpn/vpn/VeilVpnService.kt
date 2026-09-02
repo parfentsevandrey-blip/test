@@ -11,7 +11,6 @@ import app.veil.vpn.VeilApp
 import app.veil.vpn.core.VeilLog
 import app.veil.vpn.data.AppRoutingMode
 import app.veil.vpn.data.NetworkContext
-import app.veil.vpn.data.RouteMode
 import app.veil.vpn.data.VeilSettings
 import app.veil.vpn.model.TlsProfile
 import app.veil.vpn.model.Transport
@@ -205,10 +204,6 @@ class VeilVpnService : VpnService() {
             fail(
                 when {
                     ports.isEmpty() -> getString(R.string.fail_no_transports)
-                    settings.routeMode == RouteMode.MANUAL -> getString(
-                        R.string.fail_transport_unavailable,
-                        getString(settings.manualTransport.labelRes),
-                    )
                     else -> getString(R.string.fail_no_route)
                 },
                 emptyList(),
@@ -274,14 +269,7 @@ class VeilVpnService : VpnService() {
                 )
             }.getOrDefault(emptyMap())
             late.forEach { (transport, lines) ->
-                // In manual mode the user asked for one specific method, so
-                // only its own fresh bridges are added — a chosen obfs4 gets
-                // fresh obfs4 rather than the dead built-in ones, but it does
-                // not silently become snowflake. In automatic mode anything
-                // that arrived is fair game.
-                val wanted = settings.routeMode != RouteMode.MANUAL ||
-                    transport == settings.manualTransport
-                if (wanted && transport in ports.keys) {
+                if (transport.isOffered && transport in ports.keys) {
                     VeilLog.i("vpn", "bridges arrived for ${transport.torName}; adding it")
                     container.tor.addRoute(transport, lines)
                 }
@@ -353,6 +341,16 @@ class VeilVpnService : VpnService() {
         )
     }
 
+    /**
+     * The order the routes will be tried in.
+     *
+     * There is no automatic-or-manual split any more, and there never really
+     * was one: "manual" built a ladder of one and then fell off the end of it,
+     * which is a worse outcome for the user than the same choice tried first.
+     * The method the user pinned goes to the front and everything else that
+     * works stays behind it, so a preference is honoured without becoming the
+     * single thing that has to succeed.
+     */
     private suspend fun buildLadder(
         settings: VeilSettings,
         network: NetworkContext,
@@ -362,15 +360,6 @@ class VeilVpnService : VpnService() {
         // the population does not all present the same Client Hello.
         val tls = TlsProfile.resolve(settings.tlsProfile, container.settings.installSeed())
         VeilLog.i("vpn", "client hello profile: ${tls.name}")
-
-        if (settings.routeMode == RouteMode.MANUAL) {
-            return container.planner.manualPlan(
-                settings.manualTransport,
-                tls,
-                settings.dtlsProfile,
-                available,
-            )
-        }
 
         // Refreshing the public bridge list is worth doing, but not worth
         // waiting for: on a censored network the request is exactly as likely
@@ -393,6 +382,7 @@ class VeilVpnService : VpnService() {
                 tls,
                 settings.dtlsProfile,
                 available,
+                settings.manualTransport,
             )
         }
 
@@ -411,6 +401,7 @@ class VeilVpnService : VpnService() {
             tls,
             settings.dtlsProfile,
             available,
+            settings.manualTransport,
         )
     }
 
