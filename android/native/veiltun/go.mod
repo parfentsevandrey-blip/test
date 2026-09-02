@@ -3,7 +3,6 @@ module veil.app/veiltun
 go 1.26.3
 
 require (
-	github.com/ooni/minivpn v0.0.7
 	github.com/pion/stun v0.6.1
 	github.com/refraction-networking/conjure v0.9.1
 	github.com/refraction-networking/gotapdance v1.7.10
@@ -24,7 +23,6 @@ require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	filippo.io/keygen v0.0.0-20240718133620-7f162efbbd87 // indirect
 	github.com/andybalholm/brotli v1.1.1 // indirect
-	github.com/apex/log v1.9.0 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.40.0 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.32.1 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.1 // indirect
@@ -96,7 +94,6 @@ require (
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	golang.org/x/crypto v0.55.0 // indirect
 	golang.org/x/exp v0.0.0-20260611194520-c48552f49976 // indirect
-	golang.org/x/mobile v0.0.0-20260821190718-4776eadac327 // indirect
 	golang.org/x/mod v0.39.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect

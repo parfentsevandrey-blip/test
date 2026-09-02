@@ -2,8 +2,6 @@ package app.veil.vpn.core
 
 import app.veil.vpn.R
 import app.veil.vpn.VeilApp
-import app.veil.tun.veiltun.Veiltun
-import app.veil.vpn.data.Engine
 import app.veil.vpn.data.NetworkContext
 import app.veil.vpn.model.BridgeLine
 import app.veil.vpn.model.TlsProfile
@@ -102,7 +100,7 @@ object SelfTest {
             // Five before the routes, four after them, so the percentage
             // reflects the work rather than the number of headings.
             val preamble = 5
-            val postamble = 5
+            val postamble = 4
             val total = preamble + order.size + postamble
             var step = 0
             fun stage(label: String) {
@@ -112,7 +110,7 @@ object SelfTest {
             fun finish() = progress.update(total, total, app.getString(R.string.diag_stage_done))
 
             line("=== Veil deep diagnostic ===")
-            line("version 0.7.0")
+            line("version 0.7.1")
 
             val tunnelLive = runCatching { app.tor.isRunning }.getOrDefault(false)
             if (tunnelLive) {
@@ -306,86 +304,19 @@ object SelfTest {
                 if (winner != null) break
             }
 
-            // --- VPN Gate, when nothing through Tor worked --------------------
-            //
-            // Tested last and only then, because it answers a different
-            // question. The routes above are ways of reaching Tor; this is a
-            // volunteer's machine that can see the traffic. It belongs in the
-            // report — on a network where nothing else connects it is the
-            // difference between a usable phone and none — but it is not an
-            // equivalent result, and putting it after everything else is how
-            // the report says so.
-            var gateWinner: String? = null
-            var gatePort = 0
-            if (winner == null) {
-                stage(app.getString(R.string.diag_stage_vpngate))
-                runCatching { app.tor.stop() }
-                line("")
-                line("--- vpn gate (volunteer servers, not Tor) ---")
-                runCatching { app.vpnGate.load() }
-                val candidates = app.vpnGate.ranked(3)
-                if (candidates.isEmpty()) {
-                    line("no servers known")
-                } else {
-                    val stateDir = java.io.File(app.filesDir, "vpngate").apply { mkdirs() }
-                    for (server in candidates) {
-                        val started = System.currentTimeMillis()
-                        val port = runCatching {
-                            Veiltun.startVpnGate(
-                                stateDir.absolutePath,
-                                server.config(),
-                                25L,
-                                null,
-                            ).toInt()
-                        }.getOrElse {
-                            line("${server.host} (${server.country}): failed — ${it.message?.take(70)}")
-                            0
-                        }
-                        if (port > 0) {
-                            val millis = System.currentTimeMillis() - started
-                            line(
-                                "${server.host} (${server.country}) ${server.endpoint}: " +
-                                    "CONNECTED in ${millis / 1000}s, address ${Veiltun.vpnGateAddress()}",
-                            )
-                            gateWinner = "${server.host} (${server.country})"
-                            gatePort = port
-                            runCatching { app.settings.setEngine(Engine.VPN_GATE) }
-                            line("(set as the chosen route; the next connect will use it)")
-                            break
-                        }
-                    }
-                    if (gateWinner == null) line("no server accepted a connection")
-                }
-            }
-
             // --- What the connection is actually like -------------------------
             var steady: TrafficAnalysis.Series? = null
             var throughput: TrafficAnalysis.Throughput? = null
-            if (winner != null || gateWinner != null) {
-                val overTor = winner != null
-                val socks = SocksProxy("127.0.0.1", if (overTor) socksPort else gatePort)
+            if (winner != null) {
+                val socks = SocksProxy("127.0.0.1", socksPort)
 
                 stage(app.getString(R.string.diag_stage_exit))
                 line("")
-                line(
-                    "--- traffic analysis over " +
-                        (winner?.transport?.torName ?: gateWinner) + " ---",
-                )
-                if (overTor) {
-                    line("circuit: ${app.tor.describeCircuit() ?: "not reported"}")
-                    line("leaving through Tor: ${TrafficAnalysis.exitCheck(socks)}")
-                } else {
-                    // The same question, and the answer must be no: traffic
-                    // through a volunteer's VPN is not going through Tor, and a
-                    // report that let the two look alike would be the most
-                    // misleading thing in it.
-                    line("leaving through Tor: no, this is a plain VPN — the operator sees the traffic")
-                }
+                line("--- traffic analysis over ${winner.transport.torName} ---")
+                line("circuit: ${app.tor.describeCircuit() ?: "not reported"}")
+                line("leaving through Tor: ${TrafficAnalysis.exitCheck(socks)}")
 
                 stage(app.getString(R.string.diag_stage_dns))
-                if (!overTor) {
-                    line("dns: resolved inside the VPN tunnel, not measurable from here")
-                }
                 // These come back in about a millisecond, and that number is
                 // not a measurement of anything at the far end. The torrc sets
                 // AutomapHostsOnResolve with a suffix of ".", so tor answers
@@ -395,7 +326,7 @@ object SelfTest {
                 // all — which is worth checking, since nothing on the device
                 // resolves anything if it does not — and the round-trip
                 // numbers below are where real resolution is actually paid for.
-                if (overTor) listOf("torproject.org", "wikipedia.org").forEach { name ->
+                listOf("torproject.org", "wikipedia.org").forEach { name ->
                     val (millis, note) = TrafficAnalysis.resolveThroughTor(dnsPort, name)
                     line(
                         "dns $name: " + if (millis < 0) {
@@ -451,16 +382,15 @@ object SelfTest {
                         "${watched.failures} failed",
                 )
                 watched.firstProblem?.let { line("first failure said: $it") }
-                if (overTor) line("bytes moved: ${app.tor.describeTraffic() ?: "not reported"}")
+                line("bytes moved: ${app.tor.describeTraffic() ?: "not reported"}")
             } else {
                 // Keep the progress bar honest: the stages that would have
                 // measured the connection are not going to run.
-                repeat(postamble - 1) { stage(app.getString(R.string.diag_stage_skipped)) }
+                repeat(postamble) { stage(app.getString(R.string.diag_stage_skipped)) }
             }
 
             runCatching { app.tor.stop() }
             runCatching { app.pt.stopAll() }
-            runCatching { Veiltun.stopVpnGate() }
 
             line("")
             line("--- verdict ---")
@@ -472,14 +402,6 @@ object SelfTest {
                     )
                 winner != null ->
                     line("${winner.transport.torName} connected, but the traffic test did not complete.")
-                gateWinner != null && steady != null && throughput != null ->
-                    line(
-                        "Nothing reached Tor, but VPN Gate did through $gateWinner. " +
-                            TrafficAnalysis.verdict(steady, throughput) +
-                            " Remember that this is not Tor: the server operator sees the traffic.",
-                    )
-                gateWinner != null ->
-                    line("Nothing reached Tor. VPN Gate connected through $gateWinner.")
                 report?.natBehaviour == NatBehaviour.SYMMETRIC ->
                     line("Nothing connected. This network's NAT is symmetric, so Snowflake is out; WebTunnel is the one to get working here.")
                 outcomes.isNotEmpty() && outcomes.all { it.reachedPercent < 15 } ->

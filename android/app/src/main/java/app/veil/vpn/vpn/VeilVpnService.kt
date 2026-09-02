@@ -6,13 +6,10 @@ import android.os.Build
 import android.os.ParcelFileDescriptor
 import app.veil.tun.veiltun.Config
 import app.veil.tun.veiltun.Veiltun
-import app.veil.tun.veiltun.VpnGateEvents
 import app.veil.vpn.R
 import app.veil.vpn.VeilApp
 import app.veil.vpn.core.VeilLog
 import app.veil.vpn.data.AppRoutingMode
-import app.veil.vpn.data.DnsMode
-import app.veil.vpn.data.Engine
 import app.veil.vpn.data.NetworkContext
 import app.veil.vpn.data.VeilSettings
 import app.veil.vpn.model.TlsProfile
@@ -39,7 +36,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
-import java.io.File
 import java.net.DatagramSocket
 import java.net.Socket
 import java.util.concurrent.atomic.AtomicBoolean
@@ -175,11 +171,6 @@ class VeilVpnService : VpnService() {
             // a promise to be careful.
             establishInterface(settings)
             VeilLog.i("vpn", "kill switch active while connecting")
-        }
-
-        if (settings.engine == Engine.VPN_GATE) {
-            runVpnGate(settings, network)
-            return
         }
 
         // Every transport listener first, then tor once. tor is configured for
@@ -393,121 +384,6 @@ class VeilVpnService : VpnService() {
             },
             tried,
         )
-    }
-
-    /**
-     * Connects through a volunteer VPN Gate server.
-     *
-     * A different network from the rest of this file, and short by comparison,
-     * because it needs none of the machinery Tor does: there is no bootstrap to
-     * watch, no bridges to shape, no circuits. An OpenVPN session either comes
-     * up in a few seconds or it does not, and the whole strategy is to walk the
-     * list until one does.
-     *
-     * The session ends at a loopback SOCKS5 proxy, which is exactly what the
-     * tunnel is already pointed at when Tor is carrying it. That is why this
-     * fits in so little code, and it is worth stating as the design rather than
-     * a coincidence: everything above the proxy — the interface, per-app
-     * routing, DNS, the kill switch — is untouched by the choice of network.
-     */
-    private suspend fun runVpnGate(settings: VeilSettings, network: NetworkContext) {
-        container.vpnGate.load()
-
-        // Refreshed alongside, never waited for. The list's own address is
-        // among the first things blocked where this matters, so the request is
-        // as likely to hang as anything else, and the servers shipped with the
-        // app are somewhere to start.
-        lateBridgeJob?.cancel()
-        lateBridgeJob = container.teardownScope.launch {
-            val meekPort = runCatching { container.pt.meekPortForFrontedRequests() }.getOrNull()
-            val fetched = runCatching { container.vpnGate.refresh(meekPort) }.getOrDefault(0)
-            if (fetched > 0) VeilLog.i("vpn", "vpn gate list refreshed: $fetched server(s)")
-        }
-
-        val candidates = container.vpnGate.ranked(VPN_GATE_ATTEMPTS)
-        if (candidates.isEmpty()) {
-            fail(getString(R.string.fail_vpngate_none), emptyList())
-            return
-        }
-
-        val stateDir = File(filesDir, "vpngate").apply { mkdirs() }.absolutePath
-        for ((index, server) in candidates.withIndex()) {
-            coroutineContext.ensureActive()
-            update(
-                TunnelState.VpnGateStarting(
-                    server = server.host,
-                    country = server.country,
-                    attempt = index + 1,
-                    total = candidates.size,
-                ),
-            )
-            VeilLog.i(
-                "vpn",
-                "vpn gate ${index + 1}/${candidates.size}: ${server.host} " +
-                    "(${server.country}) ${server.endpoint}",
-            )
-
-            val port = withContext(Dispatchers.IO) {
-                runCatching {
-                    Veiltun.startVpnGate(
-                        stateDir,
-                        server.config(),
-                        VPN_GATE_TIMEOUT_SECONDS.toLong(),
-                        object : VpnGateEvents {
-                            override fun connected(where: String, millis: Long) =
-                                VeilLog.i("vpngate", "$where up in ${millis}ms")
-
-                            override fun failed(where: String, reason: String) =
-                                VeilLog.w("vpngate", "$where: $reason")
-
-                            override fun stopped(reason: String) =
-                                VeilLog.i("vpngate", "session ended: $reason")
-                        },
-                    ).toInt()
-                }.onFailure {
-                    VeilLog.w("vpn", "${server.host} refused: ${it.message}")
-                }.getOrDefault(0)
-            }
-
-            if (port <= 0) {
-                container.vpnGate.recordFailure(server)
-                continue
-            }
-
-            // DNS goes over the tunnel as DNS-over-HTTPS through the same
-            // proxy. There is no resolver on the far side to ask for, unlike
-            // Tor's DNSPort, and a plain lookup outside the tunnel would tell
-            // the local network everything the tunnel was raised to hide.
-            val overHttps = settings.copy(dnsMode = DnsMode.DOH_THROUGH_TUNNEL)
-            val started = runCatching {
-                startNativeTunnel(
-                    settings = overHttps,
-                    socks = SocksEndpoint("tcp", "127.0.0.1:$port"),
-                    dnsPort = 0,
-                    network = network,
-                )
-            }.onFailure { VeilLog.e("vpn", "could not raise the tunnel", it) }.isSuccess
-
-            if (!started) {
-                runCatching { Veiltun.stopVpnGate() }
-                container.vpnGate.recordFailure(server)
-                continue
-            }
-
-            container.vpnGate.recordSuccess(server)
-            update(
-                TunnelState.VpnGateConnected(
-                    server = server.host,
-                    country = server.country,
-                    connectedAtMillis = System.currentTimeMillis(),
-                    socksPort = port,
-                ),
-            )
-            startStatsPump()
-            return
-        }
-
-        fail(getString(R.string.fail_vpngate_none), emptyList())
     }
 
     /**
@@ -1218,18 +1094,5 @@ class VeilVpnService : VpnService() {
 
         /** The most any one route may gain from those extensions in total. */
         private const val LATE_GRACE_CEILING_MILLIS = 60_000L
-
-        /**
-         * How many VPN Gate servers are worth walking before giving up.
-         *
-         * Each one is a whole OpenVPN handshake, so this is minutes rather than
-         * seconds if they all fail. Six is enough to get past a couple of
-         * volunteers who went offline this morning without turning a failure
-         * into something the user waits out.
-         */
-        private const val VPN_GATE_ATTEMPTS = 6
-
-        /** One server's handshake, before moving to the next. */
-        private const val VPN_GATE_TIMEOUT_SECONDS = 25
     }
 }

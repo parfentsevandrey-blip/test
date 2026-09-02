@@ -261,8 +261,6 @@ private fun ConnectButtonLabel(state: TunnelState, bootstrapPercent: Int, tint: 
         is TunnelState.Bootstrapping -> "$bootstrapPercent%"
         is TunnelState.Escalating -> stringResource(state.to.labelRes)
         is TunnelState.Connected -> stringResource(state.transport.labelRes)
-        is TunnelState.VpnGateStarting -> state.server
-        is TunnelState.VpnGateConnected -> stringResource(R.string.vpngate_title)
         else -> null
     }
 

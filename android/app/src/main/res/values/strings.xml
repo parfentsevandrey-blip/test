@@ -285,13 +285,4 @@
     <string name="diag_stage_done">Done</string>
     <string name="fail_transport_unavailable">%1$s did not start on this device. Choose a different method on the Routes screen.</string>
     <string name="fail_no_bridges_for">There are no bridges for %1$s to try. Add some on the Bridges screen, or choose a different method.</string>
-    <!-- VPN Gate -->
-    <string name="vpngate_title">VPN Gate</string>
-    <string name="vpngate_step">%1$s (%2$d/%3$d)</string>
-    <string name="vpngate_via">through %1$s, %2$s</string>
-    <string name="vpngate_desc">Volunteer VPN servers published by a university project. No account and no payment, and it is often the one thing that still connects. Not private: whoever runs the server sees where you go.</string>
-    <string name="vpngate_warning">The volunteer running the server can see your traffic and is asked to keep connection logs. Choose this to get through a block, not to be unseen.</string>
-    <string name="vpngate_servers_known">%1$d server(s)</string>
-    <string name="fail_vpngate_none">No VPN Gate server would accept a connection. The list may be out of date, or every one of them is blocked here.</string>
-    <string name="diag_stage_vpngate">VPN Gate</string>
 </resources>

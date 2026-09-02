@@ -17,17 +17,6 @@ import kotlinx.coroutines.flow.map
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore("veil.settings")
 
-/**
- * Which network carries the traffic.
- *
- * Two quite different things, and the difference is not a detail of transport.
- * Tor hides who is talking to whom from everyone, including the relays; VPN
- * Gate carries the traffic through one volunteer's machine, which can see all
- * of it. Presenting them as two entries in the same list is honest only if the
- * app says which is which wherever the choice appears.
- */
-enum class Engine { TOR, VPN_GATE }
-
 enum class AppRoutingMode {
     /** Every app goes through the tunnel. */
     ALL,
@@ -69,7 +58,6 @@ enum class IsolationMode(val nativeMode: String) {
 }
 
 data class VeilSettings(
-    val engine: Engine = Engine.TOR,
     val manualTransport: Transport = Transport.SNOWFLAKE,
     val blockUdp: Boolean = true,
     val dnsMode: DnsMode = DnsMode.TOR_DNS_PORT,
@@ -99,7 +87,6 @@ data class VeilSettings(
 class SettingsRepository(private val context: Context) {
 
     private object Keys {
-        val ENGINE = stringPreferencesKey("engine")
         val MANUAL_TRANSPORT = stringPreferencesKey("manual_transport")
         val BLOCK_UDP = booleanPreferencesKey("block_udp")
         val DNS_MODE = stringPreferencesKey("dns_mode")
@@ -129,7 +116,6 @@ class SettingsRepository(private val context: Context) {
     }
 
     private fun Preferences.toSettings() = VeilSettings(
-        engine = enumOf(this[Keys.ENGINE], Engine.TOR),
         manualTransport = enumOf(this[Keys.MANUAL_TRANSPORT], Transport.SNOWFLAKE),
         blockUdp = this[Keys.BLOCK_UDP] ?: true,
         dnsMode = enumOf(this[Keys.DNS_MODE], DnsMode.TOR_DNS_PORT),
@@ -147,7 +133,6 @@ class SettingsRepository(private val context: Context) {
         bypassSuffixes = this[Keys.BYPASS_SUFFIXES] ?: "",
     )
 
-    suspend fun setEngine(engine: Engine) = put(Keys.ENGINE, engine.name)
     suspend fun setManualTransport(transport: Transport) = put(Keys.MANUAL_TRANSPORT, transport.name)
     suspend fun setBlockUdp(value: Boolean) = put(Keys.BLOCK_UDP, value)
     suspend fun setDnsMode(mode: DnsMode) = put(Keys.DNS_MODE, mode.name)

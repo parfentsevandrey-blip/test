@@ -7,7 +7,6 @@ import app.veil.vpn.data.BridgeRepository
 import app.veil.vpn.data.EndpointCooldown
 import app.veil.vpn.data.SettingsRepository
 import app.veil.vpn.data.StrategyMemory
-import app.veil.vpn.data.VpnGateRepository
 import app.veil.vpn.net.MoatClient
 import app.veil.vpn.net.SocksProxy
 import app.veil.vpn.tor.PtRuntime
@@ -76,13 +75,6 @@ class VeilApp : Application() {
 
     val bridges by lazy { BridgeRepository(this, moat) }
     val planner by lazy { StrategyPlanner(this, bridges, memory, moat, cooldown) }
-
-    /**
-     * The VPN Gate server list. Loaded lazily like the rest: the app is a Tor
-     * client that also happens to know about volunteer VPN servers, and a user
-     * who never chooses one should never pay for the list.
-     */
-    val vpnGate by lazy { VpnGateRepository(this) }
 
     override fun onCreate() {
         super.onCreate()
