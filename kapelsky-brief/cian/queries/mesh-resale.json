@@ -1,0 +1,32 @@
+{
+ "_type": "flatsale",
+ "engine_version": {
+  "type": "term",
+  "value": 2
+ },
+ "region": {
+  "type": "terms",
+  "value": [
+   1
+  ]
+ },
+ "geo": {
+  "type": "geo",
+  "value": [
+   {
+    "type": "district",
+    "id": 17
+   }
+  ]
+ },
+ "building_status": {
+  "type": "term",
+  "value": 1
+ },
+ "house_year": {
+  "type": "range",
+  "value": {
+   "gte": 2010
+  }
+ }
+}

@@ -1,0 +1,48 @@
+{
+ "_type": "flatsale",
+ "engine_version": {
+  "type": "term",
+  "value": 2
+ },
+ "region": {
+  "type": "terms",
+  "value": [
+   1
+  ]
+ },
+ "geo": {
+  "type": "geo",
+  "value": [
+   {
+    "type": "underground",
+    "id": 103
+   },
+   {
+    "type": "underground",
+    "id": 107
+   },
+   {
+    "type": "underground",
+    "id": 384
+   },
+   {
+    "type": "underground",
+    "id": 517
+   }
+  ]
+ },
+ "building_status": {
+  "type": "term",
+  "value": 2
+ },
+ "only_foot": {
+  "type": "term",
+  "value": "2"
+ },
+ "foot_min": {
+  "type": "range",
+  "value": {
+   "lte": 15
+  }
+ }
+}
