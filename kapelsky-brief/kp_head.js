@@ -267,7 +267,10 @@ function photoCards(cards, cols = 3) {
       p({ children: [txt(c.price + ' млн ₽', { size: 19, bold: true, color: INK })],
           spacing: { after: 14, line: 212, lineRule: LR } }),
       p({ children: [txt(c.ppm + ' ₽ за м²', { size: 14, color: BRONZE })],
-          spacing: { after: 0, line: 206, lineRule: LR } }),
+          spacing: { after: 16, line: 206, lineRule: LR } }),
+      p({ children: [new ExternalHyperlink({
+            children: [txt('Объявление →', { size: 13, color: '2C5FA8' })], link: c.url })],
+          spacing: { after: 0, line: 200, lineRule: LR } }),
     ] : [p({ children: [txt('')] })],
   });
   const rows = [];
