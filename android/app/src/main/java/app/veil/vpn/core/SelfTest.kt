@@ -2,50 +2,73 @@ package app.veil.vpn.core
 
 import app.veil.vpn.VeilApp
 import app.veil.vpn.data.NetworkContext
+import app.veil.vpn.model.BridgeLine
+import app.veil.vpn.model.TlsProfile
 import app.veil.vpn.model.Transport
 import app.veil.vpn.net.LoopbackPorts
 import app.veil.vpn.net.NatBehaviour
 import app.veil.vpn.net.NetworkProbe
+import app.veil.vpn.tor.Bootstrap
 import app.veil.vpn.tor.Torrc
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * Answers "why is nothing working" without asking the user to connect first.
+ * A diagnostic that actually tries to connect through each transport.
  *
- * A failed connect can only say that every route was tried and none held, which
- * is true and useless: it does not distinguish a network that blocks everything
- * from a transport that never started, a bridge list that is empty, or a Tor
- * that refuses its own configuration. Those have completely different fixes,
- * and from a phone in another country the difference is not otherwise visible.
+ * The point is the distinction an earlier, shallow version missed. "obfs4 is
+ * listening" and "the bridge service answered" say only that things *started* —
+ * not that a single byte can leave the phone through them. The question worth
+ * answering when nothing works is which transport can carry Tor to a relay and
+ * which cannot, and why: refused, frozen mid-handshake, or stuck at a
+ * particular bootstrap percentage.
  *
- * Each stage is exercised on its own and reports what it found. Two rules keep
- * it from being a crash of its own, which an earlier version was:
+ * So this starts tor once with every plugin declared and its network off — the
+ * exact mechanism the app connects with — then, for each transport that has
+ * bridges, points tor at it, turns the network on, and watches it bootstrap
+ * against a time budget. It records how far each got, how long it took, and
+ * what tor said when it failed. That is a real end-to-end test of every route,
+ * run to a verdict, rather than a list of listeners.
  *
- *  - It is single-flight. It drives the shared tor and transport controllers,
- *    and two runs at once — a double tap — had them starting the tor service
- *    twice against its static lock. A mutex makes a second run wait rather than
- *    collide.
- *  - It never fights a live tunnel. Starting tor and then stopping it, or
- *    stopping every transport, while a connection is using them is the other
- *    way it took the process down. When the tunnel is up, the stage that would
- *    start tor is skipped and says so.
+ * It is single-flight and never runs while a real tunnel is up: it drives the
+ * shared tor and transport controllers, and two of anything touching those at
+ * once takes the process down.
  */
 object SelfTest {
 
-    /** How the caller learns where the run has got to. */
     fun interface Progress {
         fun update(done: Int, total: Int, label: String)
     }
 
-    private val mutex = Mutex()
-    private const val TOTAL_STEPS = 6
+    /** One route's verdict. */
+    private data class Outcome(
+        val transport: Transport,
+        val reachedPercent: Int,
+        val connected: Boolean,
+        val millis: Long,
+        val detail: String,
+    )
 
-    /** True while a run is in progress, so the UI can refuse to start another. */
+    private val mutex = Mutex()
     val isRunning: Boolean get() = mutex.isLocked
+
+    /** Per-transport bootstrap budgets for the test. Snowflake needs the most. */
+    private fun budgetMillis(transport: Transport): Long = when (transport) {
+        Transport.DIRECT -> 20_000
+        Transport.OBFS4 -> 30_000
+        Transport.WEBTUNNEL -> 45_000
+        Transport.MEEK -> 45_000
+        Transport.CONJURE -> 55_000
+        Transport.SNOWFLAKE -> 60_000
+    }
+
+    /** No forward progress for this long means the route is not going to move. */
+    private const val STALL_MILLIS = 18_000L
 
     suspend fun run(app: VeilApp, progress: Progress): String = mutex.withLock {
         withContext(Dispatchers.IO) {
@@ -54,129 +77,216 @@ object SelfTest {
                 out.appendLine(text)
                 VeilLog.i("selftest", text)
             }
+
+            // The routes that will actually be bootstrap-tested decide the step
+            // count, so the percentage means something.
+            val order = listOf(
+                Transport.DIRECT, Transport.OBFS4, Transport.WEBTUNNEL,
+                Transport.MEEK, Transport.CONJURE, Transport.SNOWFLAKE,
+            )
+            val preamble = 4
+            val total = preamble + order.size
             var step = 0
             fun stage(label: String) {
-                progress.update(step, TOTAL_STEPS, label)
+                progress.update(step, total, label)
                 step += 1
             }
 
-            line("--- Veil self-test ---")
-            line("version ${app.let { runCatching { it.packageManager.getPackageInfo(it.packageName, 0).versionName }.getOrNull() ?: "?" }}")
+            line("=== Veil deep diagnostic ===")
+            line("version 0.5.7")
 
-            // 1. Network.
+            val tunnelLive = runCatching { app.tor.isRunning }.getOrDefault(false)
+            if (tunnelLive) {
+                line("A tunnel is already connected. Disconnect first: this test")
+                line("drives the same Tor and would fight the live connection.")
+                progress.update(total, total, "Done")
+                return@withContext out.toString()
+            }
+
+            // --- Preamble: the cheap facts, so a deep failure has context ----
             stage("Network")
             val network = runCatching { NetworkContext.inspect(app) }.getOrNull()
             if (network == null || !network.isOnline) {
                 line("network: OFFLINE — nothing else can be tested")
-                progress.update(TOTAL_STEPS, TOTAL_STEPS, "Done")
+                progress.update(total, total, "Done")
                 return@withContext out.toString()
             }
             line("network: ${network.kind} ${network.countryIso ?: "??"} (${network.fingerprint})")
             line("resolvers: ${network.dnsServers.joinToString().ifEmpty { "none reported" }}")
 
-            // Whether a real connection is using the shared controllers. If so,
-            // the tor stage is skipped rather than allowed to collide with it.
-            val tunnelLive = runCatching { app.tor.isRunning }.getOrDefault(false)
-
-            // 2. Transports. Only started here when nothing else is using them.
             stage("Transports")
-            val ports = if (tunnelLive) {
-                line("transports: tunnel is live, leaving them as they are")
+            val ports = runCatching { app.pt.startAll() }.getOrElse {
+                line("transports: NONE STARTED — ${it.message}")
                 emptyMap()
-            } else {
-                runCatching { app.pt.startAll() }.getOrElse {
-                    line("transports: NONE STARTED — ${it.message}")
-                    emptyMap()
-                }
             }
-            if (!tunnelLive) {
-                Transport.entries.filter { it.isPluggable }.forEach { transport ->
-                    val port = ports[transport]
-                    line(
-                        "transport ${transport.torName}: " +
-                            if (port != null) "listening on 127.0.0.1:$port" else "DID NOT START",
-                    )
-                }
-                line("lyrebird ${app.pt.lyrebirdVersion}, snowflake ${app.pt.snowflakeVersion}")
+            order.filter { it.isPluggable }.forEach { t ->
+                line("transport ${t.torName}: ${ports[t]?.let { "up on 127.0.0.1:$it" } ?: "DID NOT START"}")
             }
+            line("lyrebird ${app.pt.lyrebirdVersion}, snowflake ${app.pt.snowflakeVersion}")
 
-            // 3. Bridges we hold.
-            stage("Bridges")
-            runCatching { app.bridges.load() }
-            Transport.entries.filter { it.isPluggable }.forEach { transport ->
-                line("bridges ${transport.torName}: ${app.bridges.forTransport(transport, 99).size}")
-            }
-
-            // 4. The bridge service — the only source of WebTunnel.
             stage("Bridge service")
+            runCatching { app.bridges.load() }
             val country = network.countryIso
-            val fetched = if (country.isNullOrBlank()) {
-                null
-            } else {
+            val fetched = if (country.isNullOrBlank()) null else
                 withTimeoutOrNull(45_000) { runCatching { app.bridges.refreshCountry(country) }.getOrNull() }
-            }
             line(
                 "bridge service: " + when {
                     country.isNullOrBlank() -> "country unknown, not asked"
-                    fetched == null -> "no answer within 45s"
-                    fetched > 0 -> "answered, $fetched bridge line(s) incl. any WebTunnel"
+                    fetched == null -> "NO ANSWER within 45s (fronting may be blocked)"
+                    fetched > 0 -> "answered, $fetched fresh line(s)"
                     else -> "answered but returned nothing usable"
                 },
             )
-            line("bridges webtunnel after refresh: ${app.bridges.forTransport(Transport.WEBTUNNEL, 99).size}")
+            order.filter { it.isPluggable }.forEach { t ->
+                line("bridges ${t.torName}: ${app.bridges.forTransport(t, 99).size}")
+            }
 
-            // 5. What the network does to us.
-            stage("Probe")
+            stage("Network probe")
             val report = runCatching {
-                withTimeoutOrNull(60_000) { NetworkProbe().run(app.bridges.probeTargets()) }
+                withTimeoutOrNull(45_000) { NetworkProbe().run(app.bridges.probeTargets()) }
             }.getOrNull()
             if (report == null) {
                 line("probe: did not finish")
             } else {
                 report.results.forEach { line("probe ${it.verdict}: ${it.millis} ms") }
-                line(
-                    "nat: ${report.natBehaviour}" +
-                        if (report.natBehaviour == NatBehaviour.SYMMETRIC) {
-                            " — Snowflake will struggle, WebTunnel and Conjure will not"
-                        } else {
-                            ""
-                        },
-                )
+                line("nat: ${report.natBehaviour}")
             }
 
-            // 6. Tor, network off — only that it accepts its config and answers.
-            stage("Tor")
-            if (tunnelLive) {
-                line("tor: tunnel already up, not restarting it for the test")
-            } else {
-                val reserved = runCatching { LoopbackPorts.reserve(2) }.getOrDefault(emptyList())
-                if (reserved.size < 2) {
-                    line("tor: could not reserve local ports")
-                } else {
-                    val session = Torrc.Session(ports, reserved[0], reserved[1], opening = null)
-                    val started = withTimeoutOrNull(60_000) {
-                        runCatching {
-                            app.tor.start(
-                                Torrc.build(session),
-                                Torrc.minimal(session),
-                                reserved[0],
-                                reserved[1],
-                            )
-                        }.getOrDefault(false)
-                    } ?: false
-                    if (started) {
-                        line("tor: started, control port answering, socks ${app.tor.socks}")
-                    } else {
-                        line("tor: DID NOT START — ${app.tor.lastError.value ?: "no reason reported"}")
-                    }
-                    runCatching { app.tor.stop() }
-                    runCatching { app.pt.stopAll() }
+            // --- The real test: bootstrap Tor through each route -------------
+            val reserved = runCatching { LoopbackPorts.reserve(2) }.getOrDefault(emptyList())
+            if (reserved.size < 2) {
+                line("tor: could not reserve local ports; cannot run the route tests")
+                progress.update(total, total, "Done")
+                return@withContext out.toString()
+            }
+            val session = Torrc.Session(ports, reserved[0], reserved[1], opening = null)
+            val torUp = withTimeoutOrNull(60_000) {
+                runCatching {
+                    app.tor.start(Torrc.build(session), Torrc.minimal(session), reserved[0], reserved[1])
+                }.getOrDefault(false)
+            } ?: false
+            if (!torUp) {
+                line("tor: DID NOT START — ${app.tor.lastError.value ?: "no reason"}")
+                progress.update(total, total, "Done")
+                return@withContext out.toString()
+            }
+
+            line("")
+            line("--- route tests (each tries to reach a relay) ---")
+            val current = app.settings.settings.first()
+            val tls = TlsProfile.resolve(current.tlsProfile, app.settings.installSeed())
+            val dtls = current.dtlsProfile
+
+            val outcomes = mutableListOf<Outcome>()
+            for (transport in order) {
+                stage("Testing ${transport.torName}")
+                if (transport != Transport.DIRECT && ports[transport] == null) {
+                    line("${transport.torName}: skipped, transport did not start")
+                    continue
+                }
+                val attempt = app.planner.diagnosticAttempt(transport, tls, dtls)
+                val bridges = attempt?.bridges ?: emptyList()
+                if (transport != Transport.DIRECT && bridges.isEmpty()) {
+                    line("${transport.torName}: skipped, no bridges to try")
+                    continue
+                }
+                outcomes += testRoute(app, transport, bridges).also { o ->
+                    line(
+                        "${transport.torName}: ${if (o.connected) "CONNECTED" else "failed"} " +
+                            "at ${o.reachedPercent}% in ${o.millis / 1000}s — ${o.detail}",
+                    )
+                }
+                if (outcomes.lastOrNull()?.connected == true) {
+                    // A working route is the answer; the rest is confirmation
+                    // the user does not need to wait for.
+                    line("(a working route was found; remaining transports not tested)")
+                    break
                 }
             }
 
-            progress.update(TOTAL_STEPS, TOTAL_STEPS, "Done")
-            line("--- end ---")
+            runCatching { app.tor.stop() }
+            runCatching { app.pt.stopAll() }
+
+            line("")
+            line("--- verdict ---")
+            val winner = outcomes.firstOrNull { it.connected }
+            when {
+                winner != null ->
+                    line("WORKS: ${winner.transport.torName} reached a relay in ${winner.millis / 1000}s. Use it.")
+                report?.natBehaviour == NatBehaviour.SYMMETRIC ->
+                    line("Nothing connected. This network's NAT is symmetric, so Snowflake is out; WebTunnel is the one to get working here.")
+                outcomes.all { it.reachedPercent < 15 } ->
+                    line("Nothing connected, and nothing got past the first handshake — the bridges are being blocked. Add fresh bridges in the Bridges screen.")
+                else ->
+                    line("Nothing completed. The routes reached a relay but could not finish; try again, or add fresh bridges.")
+            }
+            line("=== end ===")
+            progress.update(total, total, "Done")
             out.toString()
+        }
+    }
+
+    /**
+     * Points tor at one route, turns the network on, and watches it bootstrap
+     * to a verdict, then turns the network off again so the next route starts
+     * clean.
+     */
+    private suspend fun testRoute(
+        app: VeilApp,
+        transport: Transport,
+        bridges: List<BridgeLine>,
+    ): Outcome {
+        val tor = app.tor
+        tor.resetBootstrap()
+        if (!tor.applyRoute(transport, bridges)) {
+            return Outcome(transport, 0, false, 0, "tor rejected the route: ${tor.lastError.value ?: "?"}")
+        }
+        if (!tor.setNetworkEnabled(true)) {
+            return Outcome(transport, 0, false, 0, "could not enable the network")
+        }
+        tor.awaitListeners()
+
+        val started = System.currentTimeMillis()
+        val deadline = started + budgetMillis(transport)
+        var maxPercent = 0
+        var lastMoveAt = started
+        var detail = "no progress"
+        while (System.currentTimeMillis() < deadline) {
+            val b = tor.refreshBootstrap()
+            if (b.percent > maxPercent) {
+                maxPercent = b.percent
+                lastMoveAt = System.currentTimeMillis()
+            }
+            if (b.isDone) {
+                tor.setNetworkEnabled(false)
+                return Outcome(transport, 100, true, System.currentTimeMillis() - started, b.summary.ifEmpty { "connected" })
+            }
+            val quiet = System.currentTimeMillis() - lastMoveAt
+            if (b.isHopeless && quiet > 8_000) {
+                detail = failureDetail(b, tor.lastError.value)
+                break
+            }
+            if (quiet > STALL_MILLIS) {
+                detail = "stalled at $maxPercent% — ${failureDetail(b, tor.lastError.value)}"
+                break
+            }
+            delay(500)
+        }
+        if (System.currentTimeMillis() >= deadline && maxPercent < 100) {
+            detail = "timed out at $maxPercent% — ${failureDetail(tor.bootstrap.value, tor.lastError.value)}"
+        }
+        tor.setNetworkEnabled(false)
+        return Outcome(transport, maxPercent, false, System.currentTimeMillis() - started, detail)
+    }
+
+    /** The most useful thing tor said about why a route did not complete. */
+    private fun failureDetail(b: Bootstrap, lastError: String?): String {
+        val warning = b.lastWarning?.substringAfterLast("): ")?.take(80)
+        return when {
+            !warning.isNullOrBlank() -> warning
+            !lastError.isNullOrBlank() -> lastError.take(80)
+            b.summary.isNotBlank() -> "stuck: ${b.summary}"
+            else -> "no detail from tor"
         }
     }
 }

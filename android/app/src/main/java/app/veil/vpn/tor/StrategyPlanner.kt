@@ -159,6 +159,19 @@ class StrategyPlanner(
         return listOfNotNull(buildAttempt(transport, "chosen by you", tlsProfile, dtlsProfile))
     }
 
+    /**
+     * One shaped attempt for a single transport, for the diagnostic to try.
+     *
+     * The same shaping (uTLS and the rest) and the same bridge selection a real
+     * connect uses, so what the diagnostic tests is what the app would actually
+     * send — not an idealised version of it.
+     */
+    fun diagnosticAttempt(
+        transport: Transport,
+        tlsProfile: TlsProfile,
+        dtlsProfile: DtlsProfile,
+    ): Attempt? = buildAttempt(transport, "diagnostic", tlsProfile, dtlsProfile)
+
     private fun buildAttempt(
         transport: Transport,
         why: String,
