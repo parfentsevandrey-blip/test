@@ -243,17 +243,20 @@ class StrategyPlanner(
                     // fingerprint of its own that the TLS setting above does
                     // not touch.
                     put("covertdtls-config", dtlsProfile.argument)
-                    // The published line names eight STUN servers, and WebRTC
-                    // gathers candidates from all of them before it can offer
-                    // anything to the broker — so every slow or dead one in
-                    // that list is added to how long the user waits before
-                    // Snowflake even starts looking for a proxy. Three is
-                    // enough to determine the NAT behaviour Snowflake needs.
-                    // They are still the Tor Project's own servers, kept in
-                    // their order: that list is vetted for the mapping
-                    // behaviour Snowflake depends on, so it is shortened rather
-                    // than replaced.
-                    shortenIce(bridge)?.let { put("ice", it) }
+                    // The STUN list is left exactly as published. It was
+                    // shortened here once, to save the seconds WebRTC spends
+                    // gathering candidates from servers that will not answer —
+                    // an optimisation made without measuring anything, and a
+                    // bad one. Keeping the first three of the published list
+                    // means keeping the three furthest from a user in Russia
+                    // and discarding the German ones and the Russian one, which
+                    // are the ones most likely to answer. Snowflake needs STUN
+                    // to learn its own NAT and to gather candidates at all, so
+                    // that is not a slower Snowflake, it is no Snowflake.
+                    //
+                    // Redundancy in that list is the point of it. Whatever it
+                    // costs in connect time is the price of the transport
+                    // working on a hostile network.
                 },
             )
 
@@ -269,13 +272,6 @@ class StrategyPlanner(
             VeilLog.w("planner", "trimmed ${bridge.transport} arguments to fit tor's SOCKS limit")
         }
         return fitted
-    }
-
-    /** The first few STUN servers from a Snowflake line, or null to leave it be. */
-    private fun shortenIce(bridge: BridgeLine): String? {
-        val servers = bridge.params["ice"]?.split(',')?.filter { it.isNotBlank() } ?: return null
-        if (servers.size <= ICE_SERVERS) return null
-        return servers.take(ICE_SERVERS).joinToString(",")
     }
 
     /**
@@ -421,9 +417,6 @@ class StrategyPlanner(
          * moving to the next one is now cheaper than waiting another ten.
          */
         const val STALL_MILLIS = 25_000L
-
-        /** How many STUN servers Snowflake is asked to gather from. */
-        const val ICE_SERVERS = 3
     }
 }
 

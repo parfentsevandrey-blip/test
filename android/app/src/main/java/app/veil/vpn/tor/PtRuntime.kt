@@ -152,9 +152,20 @@ class PtRuntime(context: Context) {
     private companion object {
         const val DEFAULT_BROKER = "https://1098762253.rsc.cdn77.org/"
         const val DEFAULT_FRONTS = "app.datapacket.com,www.datapacket.com"
+        /**
+         * Only used when a bridge line names none of its own.
+         *
+         * These are the Tor Project's current published set, verbatim and in
+         * their order. Substituting a shorter or a "better" list is a mistake
+         * this app has already made once: Snowflake uses STUN both to gather
+         * candidates and to work out what the NAT in front of it does, and that
+         * list is chosen for the mapping behaviour it needs — not for latency.
+         */
         const val DEFAULT_ICE =
-            "stun:stun.l.google.com:19302,stun:stun.voipgate.com:3478," +
-                "stun:stun.hot-chilli.net:3478,stun:stun.m-online.net:3478"
+            "stun:stun.antisip.com:3478,stun:stun.epygi.com:3478," +
+                "stun:stun.uls.co.za:3478,stun:stun.telnyx.com:3478," +
+                "stun:stun.hot-chilli.net:3478,stun:stun.fitauto.ru:3478," +
+                "stun:stun.m-online.net:3478"
 
         /** More peers means a faster but noisier connection. */
         const val SNOWFLAKE_PEERS = 3L

@@ -82,6 +82,13 @@ data class BridgeLine(
                 trimmed["fronts"] = it
             }
         }
+        // Only now, and one server at a time, keeping at least a pair: two
+        // answers are what a NAT measurement needs.
+        while (argsLength(trimmed) > limit) {
+            val servers = trimmed["ice"]?.split(',')?.filter { it.isNotBlank() } ?: break
+            if (servers.size <= 2) break
+            trimmed["ice"] = servers.dropLast(1).joinToString(",")
+        }
         return rebuiltWith(trimmed)
     }
 
@@ -107,9 +114,17 @@ data class BridgeLine(
          */
         const val MAX_SOCKS_ARGS = 500
 
-        /** Least costly to lose, first. */
-        private val DROPPABLE =
-            listOf("ice", "covertdtls-config", "utls-imitate", "utls")
+        /**
+         * Least costly to lose, first — and `ice` is not on the list.
+         *
+         * The fingerprint preferences are this app's own additions and a
+         * bridge works without them. The STUN list is not decoration: without
+         * it Snowflake cannot learn its own NAT or gather a candidate, so
+         * dropping it to save bytes trades a working transport for a shorter
+         * line. If a line is still too long after these go, the list is
+         * shortened by one server at a time rather than removed.
+         */
+        private val DROPPABLE = listOf("covertdtls-config", "utls-imitate", "utls")
 
         /**
          * The size of what tor will hand the transport: every `key=value`
