@@ -246,45 +246,6 @@ function imagePair(a, b, capA, capB) {
 
 
 
-// Карточки лотов выборки: маленькая планировка и параметры, N в ряд.
-function planCards(cards, cols = 5) {
-  const w = Math.floor(9520 / cols), gap = 70;
-  const pxw = Math.floor((w - gap * 2) / 15);          // DXA -> px при 96 dpi
-  const pxh = Math.round(pxw / 1.2);                   // планировка 360 x 300
-  const cellOf = (c, i) => new TableCell({
-    width: { size: w, type: WidthType.DXA },
-    margins: { top: 0, bottom: 0, left: i === 0 ? 0 : gap, right: i === cols - 1 ? 0 : gap },
-    borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
-    children: c ? [
-      p({ children: [new ImageRun({ data: IMG(c.plan || 'plan_none.jpg'), type: 'jpg',
-            transformation: { width: pxw, height: pxh } })],
-          spacing: { after: 40 } }),
-      p({ children: [txt(`${c.area} м²  ·  ${c.rooms} комн.`, { size: 15, bold: true, color: INK })],
-          spacing: { after: 16, line: 206, lineRule: LR } }),
-      p({ children: [txt(`этаж ${c.floor}  ·  ${c.decor}`, { size: 13, color: MUTED })],
-          spacing: { after: 24, line: 200, lineRule: LR } }),
-      p({ children: [txt(c.price + ' млн ₽', { size: 17, bold: true, color: INK })],
-          spacing: { after: 12, line: 206, lineRule: LR } }),
-      p({ children: [txt(c.ppm + ' ₽ за м²', { size: 13, color: BRONZE })],
-          spacing: { after: 14, line: 200, lineRule: LR } }),
-      p({ children: [new ExternalHyperlink({
-            children: [txt('Объявление →', { size: 12, color: '2C5FA8' })], link: c.url })],
-          spacing: { after: 0, line: 196, lineRule: LR } }),
-    ] : [p({ children: [txt('')] })],
-  });
-  const rows = [];
-  for (let i = 0; i < cards.length; i += cols) {
-    const chunk = cards.slice(i, i + cols);
-    while (chunk.length < cols) chunk.push(null);
-    rows.push(new TableRow({ cantSplit: true, children: chunk.map(cellOf) }));
-  }
-  return new Table({
-    columnWidths: Array(cols).fill(w),
-    width: { size: w * cols, type: WidthType.DXA },
-    rows,
-  });
-}
-
 // Карточки квартир: кадр из объявления и параметры лота, N в ряд.
 function photoCards(cards, cols = 3) {
   const w = Math.floor(9520 / cols), gap = 90;

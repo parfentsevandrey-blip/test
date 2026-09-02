@@ -221,35 +221,33 @@ COH = {
 }
 
 
-# ── выборка лотов по домам ──────────────────────────────────────────────────
-# По каждому дому пять лотов, растянутых по цене метра (kp_plans.py), плюс
-# средние по всем лотам дома — чтобы выборка не выдавала себя за весь прайс.
-SAMPLE = json.load(open(os.path.join(HERE, 'cian', 'sample.json'), encoding='utf-8'))
+# ── средние по домам ────────────────────────────────────────────────────────
+# Одна строка на дом: сколько лотов, какая средняя площадь, средняя цена лота
+# и средний метр. Номер совпадает с пином на карте конкурентов.
 _by_key = {}
 for _l in CL:
     _by_key.setdefault(_l['complex'] or ' '.join(x for x in (_l['street'], _l['house']) if x),
                        {}).setdefault(_l['source'].split('-')[-1], []).append(_l)
 
-HOUSES = []
-for g in SAMPLE:
-    _all = _by_key.get(g['name'], {}).get(g['kind'], [])
-    HOUSES.append({
-        'no': g['no'], 'name': g['name'], 'kind': g['kind'], 'n': g['n'],
-        'dist': f"{g['dist'] / 1000:.2f}".replace('.', ','),
-        'ppmAvg': nf(round(sum(l['ppm'] for l in _all) / len(_all))) if _all else '—',
-        'priceAvg': mln(sum(l['price'] for l in _all) / len(_all)) if _all else '—',
-        'areaAvg': f"{sum(l['area'] for l in _all) / len(_all):.0f}" if _all else '—',
-        'cards': [{
-            'plan': l.get('plan'),
-            'area': f"{l['area']:.1f}".replace('.', ','),
-            'rooms': str(l['rooms']) if l['rooms'] else '—',
-            'floor': f"{l['floor']}" + (f" из {l['floors']}" if l['floors'] else ''),
-            'price': mln(l['price']),
-            'ppm': nf(l['ppm']),
-            'decor': l['decor'] or l['repair'] or '—',
-            'url': l['url'],
-        } for l in g['lots']],
+_rows = []
+for r in PEERS:
+    ls = _by_key.get(r['name'], {}).get(r['kind'], [])
+    if not ls:
+        continue
+    _rows.append({
+        'no': r['no'], 'name': r['name'],
+        'what': ('новостройка, ' + deadline(r)) if r['kind'] == 'new'
+                else f"вторичка, {r['year'] or '—'}",
+        'n': len(ls),
+        'area': round(sum(l['area'] for l in ls) / len(ls)),
+        'price': sum(l['price'] for l in ls) / len(ls),
+        'ppm': round(sum(l['ppm'] for l in ls) / len(ls)),
     })
+_rows.sort(key=lambda x: -x['ppm'])
+HOUSE_ROWS = [[str(x['no']), x['name'], x['what'], str(x['n']),
+               str(x['area']), mln(x['price']), nf(x['ppm'])] for x in _rows]
+HOUSE_ROWS.append(['—', 'Капельский, 5', 'новостройка, 2029', '46', '110',
+                   mln(AREA_AVG * PPM), nf(PPM)])
 
 # ── сколько рынок платит за ремонт ──────────────────────────────────────────
 # repairType добран из карточек Циан: в поисковой выдаче поля нет.
@@ -390,7 +388,7 @@ if __name__ == '__main__':
         'district': DISTRICT,
         'distPro': DIST_PRO,
         'distContra': DIST_CONTRA,
-        'houses': HOUSES,
+        'houseRows': HOUSE_ROWS,
         'features': FEATURES,
         'rns': RNS,
         'risks': RISKS,
