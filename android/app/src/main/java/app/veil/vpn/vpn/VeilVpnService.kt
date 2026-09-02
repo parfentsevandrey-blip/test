@@ -266,7 +266,14 @@ class VeilVpnService : VpnService() {
                 )
             }.getOrDefault(emptyMap())
             late.forEach { (transport, lines) ->
-                if (transport in ports.keys) {
+                // In manual mode the user asked for one specific method, so
+                // only its own fresh bridges are added — a chosen obfs4 gets
+                // fresh obfs4 rather than the dead built-in ones, but it does
+                // not silently become snowflake. In automatic mode anything
+                // that arrived is fair game.
+                val wanted = settings.routeMode != RouteMode.MANUAL ||
+                    transport == settings.manualTransport
+                if (wanted && transport in ports.keys) {
                     VeilLog.i("vpn", "bridges arrived for ${transport.torName}; adding it")
                     container.tor.addRoute(transport, lines)
                 }

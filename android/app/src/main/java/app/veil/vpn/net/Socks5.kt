@@ -27,8 +27,17 @@ data class SocksProxy(
         /** Encodes `k=v;k=v` transport arguments into SOCKS credentials. */
         fun withTransportArgs(host: String, port: Int, args: String): SocksProxy {
             if (args.length <= FIELD_LIMIT) {
-                // The password field may not be empty, so pad it.
-                return SocksProxy(host, port, args, " ")
+                // The whole thing fits in the username. The password may not be
+                // empty on the wire, and it must be a single NUL byte and
+                // nothing else: the transport reconstructs the argument string
+                // by concatenating username and password, and goptlib discards
+                // the password only when it is exactly one NUL. A space here —
+                // which is what this used to send — survives that check and is
+                // appended to the last argument, turning `utls=HelloRandomizedALPN`
+                // into `utls=HelloRandomizedALPN ` and making lyrebird reject
+                // the whole request. That one space was breaking every fronted
+                // call to the bridge service.
+                return SocksProxy(host, port, args, "\u0000")
             }
             return SocksProxy(
                 host,
