@@ -574,14 +574,7 @@ class VeilVpnService : VpnService() {
         }
 
         val socks = container.tor.socks ?: return false
-        if (!awaitUsablePath(socks, racers.first().transport)) {
-            VeilLog.w("vpn", "the race bootstrapped but no stream got through")
-            container.tor.setNetworkEnabled(false)
-            racers.forEach { container.bridges.recordFailure(it.bridges) }
-            teardownAttempt()
-            return false
-        }
-        VeilLog.i("vpn", "timeline: usable — a stream went through (+${sinceConnect()}ms)")
+        warmPath(socks)
         val started = runCatching {
             startNativeTunnel(settings, socks, container.tor.dnsPort, network)
         }.onFailure { VeilLog.e("vpn", "could not raise the tunnel", it) }.isSuccess
@@ -647,19 +640,17 @@ class VeilVpnService : VpnService() {
             return false
         }
 
-        // Bootstrapped is not the same as usable. At 100% tor has a circuit it
-        // built for itself; the first stream an application opens can still
-        // wait seconds for one over a slow path, and an application that has
-        // waited seconds has already decided the network is down. So before
-        // anything is told it is connected, a real stream is opened through
-        // the proxy — the same thing an application would do — and has to
-        // succeed.
-        if (!awaitUsablePath(socks, attempt.transport)) {
-            VeilLog.w("vpn", "${attempt.label} bootstrapped but no stream got through")
-            container.tor.setNetworkEnabled(false)
-            return false
-        }
-        VeilLog.i("vpn", "timeline: ${attempt.label} usable — a stream went through (+${sinceConnect()}ms)")
+        // The tunnel goes up now. A stream is opened through the proxy at the
+        // same time, but only to warm a circuit so the first application does
+        // not pay for building one — never as a condition of connecting.
+        //
+        // It was a condition for two versions, and that was a bad mistake: a
+        // first stream over Snowflake on a mobile network can take longer than
+        // any budget worth waiting, so a tor that had bootstrapped and was
+        // working got failed over and the app reported that nothing worked at
+        // all. Tor at 100% is connected by its own definition, and no
+        // heuristic of ours gets to overrule it.
+        warmPath(socks)
 
         val started = runCatching {
             startNativeTunnel(settings, socks, container.tor.dnsPort, network)
@@ -674,63 +665,38 @@ class VeilVpnService : VpnService() {
     }
 
     /**
-     * Waits until a stream can actually be opened through the proxy.
+     * Opens a stream through the proxy in the background, to warm a circuit.
      *
-     * This replaced a check that read tor's own connection and circuit lists
-     * over the control port and reasoned about them, and hung one user's phone
-     * at "100% Done" for twenty-five seconds because the reasoning was wrong
-     * somewhere nobody could see. This does not reason. It opens a SOCKS
-     * connection to an address on the internet, exactly as an application
-     * would, and waits for the proxy to say it is through. If that happens the
-     * route is usable by definition; if it does not happen in the budget, no
-     * application was going to get anywhere on it either.
-     *
-     * The destination is an address rather than a name, so no resolution is
-     * involved, and port 443, which almost every exit permits.
+     * Tor builds circuits lazily, so the first application to ask pays for one
+     * — seconds, over Snowflake — and an application that waits seconds has
+     * already decided the network is down. Doing it here means the circuit
+     * exists before anything asks. Nothing depends on the result: it is a head
+     * start, not a verdict.
      */
-    private suspend fun awaitUsablePath(socks: SocksEndpoint, transport: Transport?): Boolean =
-        withContext(Dispatchers.IO) {
-            transport?.let {
-                update(
-                    TunnelState.Bootstrapping(
-                        transport = it,
-                        percent = 100,
-                        summary = getString(R.string.step_checking_path),
-                        attempt = 1,
-                        ladderSize = 1,
-                    ),
-                )
-            }
-            val proxy = SocksProxy("127.0.0.1", socks.port)
-            val deadline = System.currentTimeMillis() + USABLE_WAIT_MILLIS
-            var lastError = "no attempt made"
-            var tries = 0
-            while (System.currentTimeMillis() < deadline) {
-                tries += 1
-                val remaining = (deadline - System.currentTimeMillis()).toInt()
-                val result = runCatching {
-                    Socks5.connect(
-                        proxy,
-                        USABLE_PROBE_HOST,
-                        USABLE_PROBE_PORT,
-                        connectTimeoutMillis = minOf(USABLE_PROBE_TIMEOUT_MILLIS, remaining),
-                        readTimeoutMillis = minOf(USABLE_PROBE_TIMEOUT_MILLIS, remaining),
-                    ).close()
-                }
-                if (result.isSuccess) {
-                    VeilLog.i("vpn", "path check: stream opened on try $tries")
-                    return@withContext true
-                }
-                lastError = result.exceptionOrNull()?.message?.take(80) ?: "?"
-                VeilLog.d("vpn", "path check $tries: $lastError")
-                delay(1_000)
-            }
-            VeilLog.w(
+    private fun warmPath(socks: SocksEndpoint) {
+        scope.launch {
+            val opened = awaitPath(socks, WARM_PATH_WAIT_MILLIS)
+            VeilLog.i(
                 "vpn",
-                "path check gave up after $tries tries: $lastError; " +
-                    "tor says link=${container.tor.hasLiveOrConnection()} " +
-                    "circuit=${container.tor.hasBuiltCircuit()}",
+                if (opened) {
+                    "timeline: a stream went through, circuit warm (+${sinceConnect()}ms)"
+                } else {
+                    "the warm-up stream did not open in ${WARM_PATH_WAIT_MILLIS / 1000}s; " +
+                        "the tunnel is up anyway (link=${container.tor.hasLiveOrConnection()} " +
+                        "circuit=${container.tor.hasBuiltCircuit()})"
+                },
             )
+        }
+    }
+
+    /** Retries a stream through the proxy until it opens or the budget runs out. */
+    private suspend fun awaitPath(socks: SocksEndpoint, budgetMillis: Long): Boolean =
+        withContext(Dispatchers.IO) {
+            val deadline = System.currentTimeMillis() + budgetMillis
+            while (System.currentTimeMillis() < deadline) {
+                if (probePath(socks)) return@withContext true
+                delay(1_500)
+            }
             false
         }
 
@@ -1141,7 +1107,7 @@ class VeilVpnService : VpnService() {
     /**
      * One real stream through the proxy: the only test of a path this file
      * trusts. Short, because it runs inside the stats pump; the budgeted,
-     * retrying version used when connecting is [awaitUsablePath].
+     * retrying version used when connecting is [awaitPath].
      */
     private suspend fun probePath(socks: SocksEndpoint): Boolean = withContext(Dispatchers.IO) {
         runCatching {
@@ -1180,10 +1146,11 @@ class VeilVpnService : VpnService() {
                 VeilLog.w("vpn", "re-dialling: $reason")
                 if (!container.tor.reconnect()) return@launch
                 val socks = container.tor.socks ?: return@launch
-                if (!awaitUsablePath(socks, null)) {
-                    VeilLog.w("vpn", "re-dial did not produce a usable link yet")
-                    return@launch
-                }
+                // Wait for the link to come back before telling applications
+                // the network changed, but do not give up on the tunnel if it
+                // is slow: the interface is replaced either way, and a slow
+                // path is still a path.
+                awaitPath(socks, REDIAL_PATH_WAIT_MILLIS)
                 val settings = container.settings.settings.first()
                 val network = lastNetwork ?: return@launch
                 runCatching {
@@ -1529,7 +1496,7 @@ class VeilVpnService : VpnService() {
          * Traffic is evidence enough while it flows; a phone that is idle for
          * this long gets asked, once, at the cost of one small connection.
          */
-        private const val QUIET_BEFORE_PROBE_MILLIS = 20_000L
+        private const val QUIET_BEFORE_PROBE_MILLIS = 45_000L
 
         /**
          * Consecutive probe failures before the path is re-dialled. Two, ten
@@ -1537,10 +1504,20 @@ class VeilVpnService : VpnService() {
          * proxy, and re-dialling on one throws away a session that would have
          * recovered on its own.
          */
-        private const val PROBE_FAILURES_BEFORE_REDIAL = 2
+        private const val PROBE_FAILURES_BEFORE_REDIAL = 3
 
-        /** One probe's budget; short, because the pump is waiting on it. */
-        private const val PROBE_TIMEOUT_MILLIS = 8_000
+        /**
+         * One probe's budget. Generous on purpose: a circuit over Snowflake on
+         * a mobile network can take this long to carry a first stream, and a
+         * probe that gives up early reports a working tunnel as dead.
+         */
+        private const val PROBE_TIMEOUT_MILLIS = 20_000
+
+        /** How long a re-dial waits for the link before replacing the interface. */
+        private const val REDIAL_PATH_WAIT_MILLIS = 45_000L
+
+        /** How long the warm-up keeps trying to open its head-start stream. */
+        private const val WARM_PATH_WAIT_MILLIS = 60_000L
 
         /**
          * And no more often than this, however bad it gets. A Snowflake
@@ -1548,14 +1525,6 @@ class VeilVpnService : VpnService() {
          * second re-dial in the middle of the first only starts it over.
          */
         private const val REDIAL_COOLDOWN_MILLIS = 90_000L
-
-        /**
-         * How long a bootstrapped tor is given to produce a built circuit
-         * before the route is judged unusable. Over Snowflake a circuit is a
-         * few seconds; a route that cannot build one in this long is not one
-         * an application is going to get anywhere on.
-         */
-        private const val USABLE_WAIT_MILLIS = 25_000L
 
         /** One try of the path check; the loop retries until the budget is spent. */
         private const val USABLE_PROBE_TIMEOUT_MILLIS = 10_000
