@@ -13,8 +13,8 @@ android {
         applicationId = "app.veil.vpn"
         minSdk = 26
         targetSdk = 37
-        versionCode = 10
-        versionName = "0.5.4"
+        versionCode = 11
+        versionName = "0.5.5"
 
         // Only ABIs for which every native dependency (tor, lyrebird/snowflake,
         // veiltun) ships a library. Shipping a mismatched set is how VPN apps

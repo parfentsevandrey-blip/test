@@ -38,6 +38,7 @@ class BridgeRepository(
     private val cacheFile = File(context.filesDir, "bridges-cache.json")
     private val customFile = File(context.filesDir, "bridges-custom.txt")
     private val failureFile = File(context.filesDir, "bridge-failures.json")
+    private val countryFile = File(context.filesDir, "bridges-country.json")
 
     private val _bridges = MutableStateFlow<Map<Transport, List<BridgeLine>>>(emptyMap())
     val bridges: StateFlow<Map<Transport, List<BridgeLine>>> = _bridges.asStateFlow()
@@ -50,11 +51,18 @@ class BridgeRepository(
     /**
      * Bridges the Tor Project currently recommends for this country.
      *
-     * Kept separate from the stored lists and tried first. These are the
-     * freshest thing available — the built-in set is public and therefore the
-     * first to be enumerated, and the broker fronts baked into it go stale
-     * exactly when they matter most — so they are held only for the session and
-     * never allowed to age on disk.
+     * Tried first, and — unlike what an earlier version of this comment
+     * claimed — persisted to disk. That claim was a mistake with a real cost:
+     * WebTunnel bridges exist nowhere else. They are not in the built-in set
+     * and not in the /circumvention/builtin list; they come only from the
+     * per-country settings, i.e. only from here. Holding them in memory only,
+     * behind a fetch that a fast-failing connect cancels before it finishes,
+     * meant WebTunnel started every attempt with zero bridges and was skipped —
+     * on exactly the networks where it is the transport most likely to work.
+     *
+     * They do go stale, so the file carries a timestamp and is ignored once it
+     * is older than [COUNTRY_FRESH_MILLIS]. A stale-ish WebTunnel bridge that
+     * can be tried beats a fresh one that was never saved.
      */
     @Volatile
     private var recommended: Map<Transport, List<BridgeLine>> = emptyMap()
@@ -66,6 +74,11 @@ class BridgeRepository(
             readGrouped(context.assets.open(BUILTIN_ASSET).bufferedReader().use { it.readText() })
         }.getOrDefault(emptyMap())
 
+        // Country bridges persisted from a previous run, if still fresh. This
+        // is what carries WebTunnel across a restart and across a failed
+        // attempt, so it is loaded into `recommended` before the first connect.
+        recommended = readCountry()
+
         val merged = merge(fromAsset, fromCache ?: emptyMap(), customBridges())
         _bridges.value = merged
         _lastRefresh.value = if (cacheFile.exists()) cacheFile.lastModified() else 0
@@ -73,6 +86,30 @@ class BridgeRepository(
             "bridges",
             "loaded " + merged.entries.joinToString { "${it.key.torName}=${it.value.size}" },
         )
+    }
+
+    /**
+     * Fetches the per-country recommendation and persists it.
+     *
+     * This is the only source of WebTunnel bridges, so it is worth doing on its
+     * own — at startup, and off the connect path — rather than only as a side
+     * effect of a connection attempt that may be cancelled before it finishes.
+     * The result is raw bridge lines; shaping (uTLS and the rest) is applied
+     * where they are used, not where they are stored.
+     */
+    suspend fun refreshCountry(countryIso: String): Int = withContext(Dispatchers.IO) {
+        if (countryIso.isBlank()) return@withContext 0
+        val settings = runCatching { moat.settingsFor(countryIso) }
+            .onFailure { VeilLog.w("bridges", "country refresh failed: $it") }
+            .getOrNull() ?: return@withContext 0
+        val byTransport = settings.mapNotNull { setting ->
+            val transport = Transport.fromTorName(setting.transport) ?: return@mapNotNull null
+            if (setting.bridges.isEmpty()) null else transport to setting.bridges
+        }.toMap()
+        if (byTransport.isEmpty()) return@withContext 0
+        setRecommended(byTransport)
+        load()
+        byTransport.values.sumOf { it.size }
     }
 
     /** Re-fetches the public bridge list. Safe to call on every connect. */
@@ -114,16 +151,44 @@ class BridgeRepository(
         return BridgeLine.parseAll(text).groupBy { it.transportEnum ?: Transport.OBFS4 }
     }
 
-    /** Replaces what the bridge API says is currently right for this country. */
+    /**
+     * Replaces what the bridge API says is currently right for this country,
+     * and writes it to disk so the next connect and the next launch still have
+     * it — WebTunnel in particular, which has no other source.
+     */
     fun setRecommended(byTransport: Map<Transport, List<BridgeLine>>) {
         if (byTransport.isEmpty()) return
         recommended = byTransport
+        writeCountry(byTransport)
         VeilLog.i(
             "bridges",
             "recommended for this country: " +
                 byTransport.entries.joinToString { "${it.key.torName}=${it.value.size}" },
         )
     }
+
+    private fun readCountry(): Map<Transport, List<BridgeLine>> = runCatching {
+        if (!countryFile.exists()) return emptyMap()
+        if (System.currentTimeMillis() - countryFile.lastModified() > COUNTRY_FRESH_MILLIS) {
+            VeilLog.i("bridges", "stored country bridges are stale; ignoring")
+            return emptyMap()
+        }
+        readGrouped(countryFile.readText()).also {
+            VeilLog.i(
+                "bridges",
+                "country bridges from disk: " +
+                    it.entries.joinToString { e -> "${e.key.torName}=${e.value.size}" },
+            )
+        }
+    }.getOrDefault(emptyMap())
+
+    private fun writeCountry(byTransport: Map<Transport, List<BridgeLine>>) = runCatching {
+        val root = JSONObject()
+        byTransport.forEach { (transport, lines) ->
+            root.put(transport.torName, JSONArray(lines.map { it.raw }))
+        }
+        countryFile.writeText(root.toString())
+    }.onFailure { VeilLog.w("bridges", "could not persist country bridges: $it") }
 
     /** Bridges for one transport, best candidates first. */
     fun forTransport(transport: Transport, limit: Int = 6): List<BridgeLine> {
@@ -207,5 +272,8 @@ class BridgeRepository(
 
     private companion object {
         const val BUILTIN_ASSET = "builtin_bridges.json"
+
+        /** How long persisted country bridges are trusted. */
+        const val COUNTRY_FRESH_MILLIS = 7L * 24 * 60 * 60 * 1000
     }
 }

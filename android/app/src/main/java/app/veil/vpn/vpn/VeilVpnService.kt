@@ -256,8 +256,16 @@ class VeilVpnService : VpnService() {
         // connect should wait for. Rather than delay the attempt or abandon
         // them, the request runs alongside it and whatever comes back is added
         // to the attempt already in progress.
+        // On the app scope, not the connect scope: fetching bridges is slow
+        // through a fronted request, and a manual attempt on a blocked
+        // transport tears down in seconds. Tying the fetch to that meant it was
+        // cancelled every time before it could finish, so WebTunnel — whose
+        // bridges have no other source — never got any. Now it runs to
+        // completion and persists (BridgeRepository.setRecommended writes them
+        // to disk), so the next attempt and the next launch have them even if
+        // this attempt has already failed.
         lateBridgeJob?.cancel()
-        lateBridgeJob = scope.launch {
+        lateBridgeJob = container.teardownScope.launch {
             val late = runCatching {
                 container.planner.fetchLateBridges(
                     network.countryIso,
@@ -895,7 +903,6 @@ class VeilVpnService : VpnService() {
         val app = container
         teardownJob = app.teardownScope.launch {
             val work = app.teardownScope.launch {
-                lateBridgeJob?.cancel()
                 // Cancel, then give the connect a moment to unwind, but never
                 // wait on it: if it is inside a native call it will not return
                 // until that call does, and the point of this whole path is
@@ -903,6 +910,8 @@ class VeilVpnService : VpnService() {
                 worker?.cancel()
                 withTimeoutOrNull(WORKER_UNWIND_MILLIS) { worker?.join() }
                 worker = null
+                // lateBridgeJob is intentionally not cancelled: it persists
+                // bridges for next time and is bounded by its own timeout.
                 runCatching { stopNativeTunnel() }
                 runCatching { releaseEverything() }
             }
@@ -955,7 +964,6 @@ class VeilVpnService : VpnService() {
         stopping.set(true)
         teardownJob = app.teardownScope.launch {
             val work = app.teardownScope.launch {
-                lateBridgeJob?.cancel()
                 runCatching { stopNativeTunnel() }
                 runCatching { releaseEverything() }
             }

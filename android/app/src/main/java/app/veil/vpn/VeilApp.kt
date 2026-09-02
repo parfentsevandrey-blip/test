@@ -2,6 +2,7 @@ package app.veil.vpn
 
 import android.app.Application
 import app.veil.vpn.core.VeilLog
+import app.veil.vpn.data.NetworkContext
 import app.veil.vpn.data.BridgeRepository
 import app.veil.vpn.data.EndpointCooldown
 import app.veil.vpn.data.SettingsRepository
@@ -82,6 +83,16 @@ class VeilApp : Application() {
         scope.launch {
             bridges.load()
             memory.load()
+            // Fetch the country recommendation once, in the background, so the
+            // first connect already has the bridges that have no other source
+            // — WebTunnel above all. It goes through a fronted request when the
+            // direct one is blocked, so it is slow; running it here, off the
+            // connect path, is what keeps that slowness from mattering.
+            val country = runCatching { NetworkContext.inspect(this@VeilApp).countryIso }.getOrNull()
+            if (!country.isNullOrBlank()) {
+                runCatching { bridges.refreshCountry(country) }
+                    .onSuccess { if (it > 0) VeilLog.i("app", "prefetched $it country bridge(s)") }
+            }
         }
 
         // The Snowflake proxy is a standing preference, not part of a session:
