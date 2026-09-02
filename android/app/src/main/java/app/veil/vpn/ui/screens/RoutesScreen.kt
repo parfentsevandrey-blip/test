@@ -35,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.veil.vpn.R
 import app.veil.vpn.model.BridgeLine
@@ -80,19 +81,21 @@ fun RoutesScreen(
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         item {
-            Column(Modifier.padding(horizontal = 20.dp)) {
-                SectionHeader(stringResource(R.string.transports_title))
-                Text(
-                    text = stringResource(R.string.transports_pick_hint),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            Text(
+                text = stringResource(R.string.transports_pick_hint),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 12.dp),
+            )
         }
 
-        // A row, not a list. These are alternatives of equal standing rather
-        // than a ranking, and a row of cards says that in a way a vertical
-        // stack cannot: a stack always reads top to bottom as best to worst.
+        // A row, and only a row. Everything about a method lives on its own
+        // card — what it hides, what it costs, how many bridges are on hand,
+        // and whether it is the one that will be used — so that comparing them
+        // is a sideways movement and nothing has to be read underneath. An
+        // earlier version put the chosen method's description in a panel below
+        // the row, and the panel was large enough that the whole screen read as
+        // a vertical list with a strip on top.
         item {
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -109,43 +112,9 @@ fun RoutesScreen(
             }
         }
 
-        // The full description of whatever is currently pinned, below the row.
-        // The cards stay short enough to compare at a glance; the paragraph
-        // that explains the trade-off belongs to the one being chosen.
-        item {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                shape = MaterialTheme.shapes.large,
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                ),
-            ) {
-                Column(Modifier.padding(18.dp)) {
-                    Text(
-                        text = stringResource(manualTransport.labelRes),
-                        style = MaterialTheme.typography.titleMediumEmphasized,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Text(
-                        text = stringResource(describeRes(manualTransport)),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 6.dp),
-                    )
-                    Text(
-                        text = stringResource(R.string.transports_pinned_note),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(top = 10.dp),
-                    )
-                }
-            }
-        }
-
-        // What the app will actually try, in order: the pinned route first and
-        // the rest behind it, so pinning reads as a preference and not a cliff.
+        // What the connect will actually do with that choice: the bridge lines
+        // it will use, and — for Snowflake and Conjure, which have two ways of
+        // starting — both of them.
         if (ladder.isNotEmpty()) {
             item {
                 SectionHeader(
@@ -179,11 +148,11 @@ fun RoutesScreen(
 }
 
 /**
- * One obfuscation as a card you can put a thumb on.
+ * One obfuscation, whole, as a card you can put a thumb on.
  *
- * Fixed width so the row scrolls in even steps and a card is never half-shown
- * in a way that hides its name. The selected one is filled rather than merely
- * outlined: at a glance across a row, colour reads faster than a border.
+ * Fixed width and height so the row scrolls in even steps and the four cards
+ * can be compared line for line rather than by size. The chosen one is filled
+ * rather than outlined: across a row, colour reads before a border does.
  */
 @Composable
 private fun TransportCard(
@@ -193,7 +162,9 @@ private fun TransportCard(
     onClick: () -> Unit,
 ) {
     Card(
-        modifier = Modifier.width(168.dp),
+        modifier = Modifier
+            .width(244.dp)
+            .height(268.dp),
         onClick = onClick,
         shape = MaterialTheme.shapes.extraLarge,
         colors = CardDefaults.cardColors(
@@ -214,7 +185,7 @@ private fun TransportCard(
         } else {
             MaterialTheme.colorScheme.onSurfaceVariant
         }
-        Column(Modifier.padding(16.dp)) {
+        Column(Modifier.padding(18.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -251,16 +222,18 @@ private fun TransportCard(
                 modifier = Modifier.padding(top = 10.dp),
             )
             Text(
-                text = stringResource(taglineRes(transport)),
+                text = stringResource(describeRes(transport)),
                 style = MaterialTheme.typography.bodySmall,
                 color = muted,
-                minLines = 2,
-                maxLines = 2,
-                modifier = Modifier.padding(top = 4.dp),
+                maxLines = 7,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(top = 6.dp),
             )
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(top = 10.dp),
+                modifier = Modifier.padding(top = 6.dp),
             ) {
                 Icon(
                     Icons.Filled.Speed,
@@ -269,23 +242,28 @@ private fun TransportCard(
                     modifier = Modifier.size(14.dp),
                 )
                 Text(
-                    text = stringResource(latencyRes(transport.latencyClass)),
+                    text = stringResource(latencyRes(transport.latencyClass)) + "  ·  " +
+                        if (transport == Transport.CONJURE) {
+                            stringResource(R.string.route_no_bridge_needed)
+                        } else {
+                            stringResource(R.string.route_known_bridges, bridgeCount)
+                        },
                     style = MaterialTheme.typography.labelSmall,
                     color = muted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(start = 5.dp),
                 )
             }
-            Text(
-                text = if (transport == Transport.CONJURE) {
-                    stringResource(R.string.route_no_bridge_needed)
-                } else {
-                    stringResource(R.string.route_known_bridges, bridgeCount)
-                },
-                style = MaterialTheme.typography.labelSmall,
-                color = muted,
-                maxLines = 1,
-                modifier = Modifier.padding(top = 3.dp),
-            )
+            if (selected) {
+                Text(
+                    text = stringResource(R.string.transports_pinned_note),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    maxLines = 2,
+                    modifier = Modifier.padding(top = 6.dp),
+                )
+            }
         }
     }
 }
@@ -337,16 +315,6 @@ private fun iconFor(transport: Transport): ImageVector = when (transport) {
     Transport.WEBTUNNEL -> Icons.Filled.Language
     Transport.CONJURE -> Icons.Filled.Hub
     else -> Icons.Filled.Check
-}
-
-/** Six words on the card. The paragraph lives under the row. */
-private fun taglineRes(transport: Transport): Int = when (transport) {
-    Transport.DIRECT -> R.string.route_direct_tag
-    Transport.OBFS4 -> R.string.route_obfs4_tag
-    Transport.WEBTUNNEL -> R.string.route_webtunnel_tag
-    Transport.MEEK -> R.string.route_meek_tag
-    Transport.CONJURE -> R.string.route_conjure_tag
-    Transport.SNOWFLAKE -> R.string.route_snowflake_tag
 }
 
 /**

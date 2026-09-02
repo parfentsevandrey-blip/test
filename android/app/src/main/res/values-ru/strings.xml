@@ -3,7 +3,7 @@
     <string name="app_tagline">Тоннель по свободным сетям</string>
 
     <string name="state_idle">Не подключено</string>
-    <string name="state_probing">Изучаю сеть</string>
+    <string name="state_probing">Готовимся</string>
     <string name="state_starting">Запускаю транспорт</string>
     <string name="state_bootstrapping">Строю цепочки</string>
     <string name="state_connected">Подключено</string>
@@ -171,8 +171,6 @@
     <string name="step_starting">Запуск</string>
     <string name="step_starting_transports">Запускаем транспорты</string>
     <string name="step_starting_tor">Запускаем Tor</string>
-    <string name="step_measuring">Изучаем сеть</string>
-    <string name="step_reconnecting_known">Подключаемся тем способом, который сработал</string>
     <string name="fail_ports">Не удалось занять локальные порты для Tor.</string>
     <string name="fail_tor_start">Tor не запустился. Подробности — в «Диагностике».</string>
     <string name="fail_tor_start_reason">Tor не запустился: %1$s</string>
@@ -243,7 +241,6 @@
     <string name="diag_line_bridges">мосты: %1$s</string>
     <string name="diag_line_api_ok">сервис мостов: ответил</string>
     <string name="diag_line_api_none">сервис мостов: не ответил — в ход шли только зашитые мосты</string>
-    <string name="diag_line_nat">NAT: %1$s</string>
     <string name="action_share">Поделиться</string>
     <string name="diag_selftest_hint">Пробует каждый маршрут, пока один не дойдёт до узла, а затем измеряет то, что получилось: отклик, скорость, разрешение имён и стабильность. Занимает две-три минуты. Скопируйте результат и пришлите обратно.</string>
     <string name="diag_selftest_step">%1$d%%  ·  %2$s</string>
@@ -251,8 +248,8 @@
     <string name="diag_selftest_again">Запустить ещё раз</string>
     <string name="route_why_pinned">ваш выбор</string>
     <!-- Routes screen -->
-    <string name="transports_pick_hint">Выберите основной способ. Veil начинает с него при каждом подключении, в том числе после перезапуска, и переходит к остальным, если он перестал работать.</string>
-    <string name="transports_pinned_note">Сохранено. Следующее подключение начнётся с него.</string>
+    <string name="transports_pick_hint">Выберите один. Veil подключается только этим способом: сеть не изучает и молча на другой не переходит.</string>
+    <string name="transports_pinned_note">Выбран — используется при каждом подключении</string>
     <string name="route_no_bridge_needed">нечего блокировать: адреса моста нет</string>
     <string name="latency_low">быстро</string>
     <string name="latency_medium">средне</string>
@@ -278,4 +275,6 @@
     <string name="diag_stage_steady">Стабильность</string>
     <string name="diag_stage_skipped">Пропущено</string>
     <string name="diag_stage_done">Готово</string>
+    <string name="fail_transport_unavailable">%1$s не запустился на этом устройстве. Выберите другой способ на экране «Маршруты».</string>
+    <string name="fail_no_bridges_for">Для %1$s нет ни одного моста. Добавьте их на экране «Мосты» или выберите другой способ.</string>
 </resources>

@@ -18,8 +18,6 @@ import app.veil.vpn.model.TunnelState
 import app.veil.vpn.model.TunnelStats
 import app.veil.vpn.net.HandshakeGovernor
 import app.veil.vpn.net.LoopbackPorts
-import app.veil.vpn.net.NetworkProbe
-import app.veil.vpn.net.ProbeReport
 import app.veil.vpn.net.SocketProtector
 import app.veil.vpn.tor.Attempt
 import app.veil.vpn.tor.SocksEndpoint
@@ -83,7 +81,6 @@ class VeilVpnService : VpnService() {
 
     /** What this connect found, kept so the failure can say it. */
     private var startedPorts: Map<Transport, Int> = emptyMap()
-    private var lastProbe: ProbeReport? = null
     private var lastNetwork: NetworkContext? = null
     private var lastStartId = 0
 
@@ -180,7 +177,7 @@ class VeilVpnService : VpnService() {
         // all of them up front so that changing route later is a control-port
         // command rather than a restart — which is what makes the second and
         // third attempts work at all.
-        update(TunnelState.Probing(R.string.step_starting_transports, 0, 3))
+        update(TunnelState.Probing(R.string.step_starting_transports, 0, 2))
         val ports = withContext(Dispatchers.IO) {
             runCatching { container.pt.startAll() }.getOrElse {
                 VeilLog.e("vpn", "no transport could be started", it)
@@ -189,14 +186,13 @@ class VeilVpnService : VpnService() {
         }
         startedPorts = ports
         lastNetwork = network
-        lastProbe = null
         publishLocalListeners(ports)
 
         // The ladder is decided before tor is started, so that tor can be
         // started already pointed at its first rung. Tor is at its most
         // reliable doing what it was launched to do; only changing route needs
         // the control port, and only the second rung onwards is a change.
-        val ladder = buildLadder(settings, network, ports.keys)
+        val ladder = buildLadder(settings, ports.keys)
         if (ladder.isEmpty()) {
             // "Nothing to try" has three quite different causes, and telling
             // them apart is the difference between a user who can act on the
@@ -204,14 +200,21 @@ class VeilVpnService : VpnService() {
             fail(
                 when {
                     ports.isEmpty() -> getString(R.string.fail_no_transports)
-                    else -> getString(R.string.fail_no_route)
+                    settings.manualTransport !in ports.keys -> getString(
+                        R.string.fail_transport_unavailable,
+                        getString(settings.manualTransport.labelRes),
+                    )
+                    else -> getString(
+                        R.string.fail_no_bridges_for,
+                        getString(settings.manualTransport.labelRes),
+                    )
                 },
                 emptyList(),
             )
             return
         }
 
-        update(TunnelState.Probing(R.string.step_starting_tor, 2, 3))
+        update(TunnelState.Probing(R.string.step_starting_tor, 1, 2))
         // Both ports are chosen here rather than left to `SocksPort auto`,
         // which binds a different ephemeral port every time tor reopens its
         // listeners and so cannot be read once and relied on afterwards.
@@ -269,7 +272,10 @@ class VeilVpnService : VpnService() {
                 )
             }.getOrDefault(emptyMap())
             late.forEach { (transport, lines) ->
-                if (transport.isOffered && transport in ports.keys) {
+                // Only the chosen method: fresh bridges for something the
+                // user did not pick would quietly widen the connect into
+                // exactly the search they asked not to have.
+                if (transport == settings.manualTransport && transport in ports.keys) {
                     VeilLog.i("vpn", "bridges arrived for ${transport.torName}; adding it")
                     container.tor.addRoute(transport, lines)
                 }
@@ -315,7 +321,14 @@ class VeilVpnService : VpnService() {
                     TunnelState.Escalating(
                         from = attempt.transport,
                         to = next.transport,
-                        reason = getString(R.string.escalate_reason, getString(attempt.transport.labelRes)),
+                        // Two attempts on one method are two ways of starting
+                        // it, not a change of method, and saying "Snowflake did
+                        // not work, trying Snowflake" would read as a bug.
+                        reason = if (next.transport == attempt.transport) {
+                            next.why
+                        } else {
+                            getString(R.string.escalate_reason, getString(attempt.transport.labelRes))
+                        },
                     ),
                 )
                 delay(600)
@@ -342,18 +355,17 @@ class VeilVpnService : VpnService() {
     }
 
     /**
-     * The order the routes will be tried in.
+     * What will be tried: the method the user chose, and only that.
      *
-     * There is no automatic-or-manual split any more, and there never really
-     * was one: "manual" built a ladder of one and then fell off the end of it,
-     * which is a worse outcome for the user than the same choice tried first.
-     * The method the user pinned goes to the front and everything else that
-     * works stays behind it, so a preference is honoured without becoming the
-     * single thing that has to succeed.
+     * There used to be a measurement step here — reachability, NAT behaviour,
+     * a ranking — and it earned its place when the app decided for itself which
+     * route to take. It does not decide any more. The obfuscation is picked on
+     * the Routes screen and remembered, so probing the network answers a
+     * question nobody is asking and costs the user half a minute of watching a
+     * progress bar before the connect it wanted even starts.
      */
     private suspend fun buildLadder(
         settings: VeilSettings,
-        network: NetworkContext,
         available: Set<Transport>,
     ): List<Attempt> {
         // AUTO resolves to a profile that is fixed for this installation, so
@@ -367,57 +379,14 @@ class VeilVpnService : VpnService() {
         // country recommendation already give us somewhere to start.
         container.teardownScope.launch { container.bridges.refreshFromMoat() }
 
-        // Measuring a network we already have a confirmed answer for is time
-        // the user spends watching a progress bar for information we are not
-        // going to act on. If something worked here recently, go straight to
-        // it; the ladder below it is still there if it has stopped working.
-        val remembered = container.memory.preferredFor(network.fingerprint)
-        if (remembered != null && (remembered == Transport.DIRECT || remembered in available)) {
-            VeilLog.i("vpn", "skipping the probe: ${remembered.torName} worked here before")
-            update(TunnelState.Probing(R.string.step_reconnecting_known, 1, 3))
-            return container.planner.plan(
-                network,
-                ProbeReport(),
-                emptyList(),
-                tls,
-                settings.dtlsProfile,
-                available,
-                settings.manualTransport,
-            )
-        }
-
-        update(TunnelState.Probing(R.string.step_measuring, 1, 3))
-        val probe = NetworkProbe(protector, container.cooldown)
-        val report = probe.runFor(container.bridges) { done, total, noteRes ->
-            update(TunnelState.Probing(noteRes, done, total))
-        }
-        lastProbe = report
-        TunnelBus.publish(report)
-        TunnelBus.publishCooldowns(container.cooldown.describe())
-        return container.planner.plan(
-            network,
-            report,
-            probe.rank(report),
+        return container.planner.pinnedPlan(
+            settings.manualTransport,
             tls,
             settings.dtlsProfile,
             available,
-            settings.manualTransport,
         )
     }
 
-    /**
-     * Starts several routes a few seconds apart and keeps whichever connects.
-     *
-     * The first of them is already in the torrc, so tor has been working on it
-     * since it started; the rest are added over the control port while it does.
-     * Tor tries the bridges it has, so this costs one command per route and no
-     * restarts.
-     *
-     * Only routes that differ in kind are raced. Three obfs4 bridges opened at
-     * once look like exactly what they are; an HTTPS connection, a WebRTC
-     * session and a connection to a phantom that never answers look like three
-     * unrelated things, which is the point.
-     */
     private suspend fun raceRoutes(
         racers: List<Attempt>,
         settings: VeilSettings,
@@ -999,9 +968,6 @@ class VeilVpnService : VpnService() {
         )
         val fresh = Transport.entries.any { it.isPluggable && container.bridges.hasRecommended(it) }
         appendLine(getString(if (fresh) R.string.diag_line_api_ok else R.string.diag_line_api_none))
-        lastProbe?.let { probe ->
-            append(getString(R.string.diag_line_nat, probe.natBehaviour.name.lowercase()))
-        }
     }.trim()
 
     private suspend fun releaseEverything() {

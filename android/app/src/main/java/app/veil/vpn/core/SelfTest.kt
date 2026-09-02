@@ -101,7 +101,7 @@ object SelfTest {
             fun finish() = progress.update(total, total, app.getString(R.string.diag_stage_done))
 
             line("=== Veil deep diagnostic ===")
-            line("version 0.5.9")
+            line("version 0.6.0")
 
             val tunnelLive = runCatching { app.tor.isRunning }.getOrDefault(false)
             if (tunnelLive) {
@@ -185,6 +185,13 @@ object SelfTest {
             order.filter { it.isPluggable }.forEach { t ->
                 line("bridges ${t.torName}: ${app.bridges.forTransport(t, 99).size}")
             }
+            val history = runCatching { app.memory.describe(network.fingerprint) }.getOrDefault(emptyList())
+            line(
+                "history on this network: " + if (history.isEmpty()) "nothing recorded yet" else
+                    history.joinToString {
+                        "${it.transport.torName} ${it.successes}/${it.successes + it.failures}"
+                    },
+            )
 
             // --- 5. Reachability and NAT --------------------------------------
             stage(app.getString(R.string.diag_stage_probe))
@@ -196,6 +203,15 @@ object SelfTest {
             } else {
                 report.results.forEach { line("probe ${it.verdict}: ${it.millis} ms") }
                 line("nat: ${report.natBehaviour}")
+                // What the measurements say each method's chances are here.
+                // Nothing acts on this any more — the method is the user's
+                // choice — but it is the number to compare against the route
+                // results below, and a disagreement between them is itself
+                // worth seeing.
+                line(
+                    "expected from the probe: " + NetworkProbe().rank(report)
+                        .joinToString { (t, score) -> "${t.torName} ${"%.2f".format(score)}" },
+                )
                 if (report.natBehaviour == NatBehaviour.SYMMETRIC) {
                     line("nat: symmetric — Snowflake needs a proxy able to work around this and often cannot")
                 }
@@ -250,15 +266,16 @@ object SelfTest {
                 )
                 if (outcome.connected) {
                     winner = outcome
-                    // The diagnostic just proved this route works here. Record
-                    // it the same way a real connect would, so the next connect
-                    // starts with it instead of rediscovering it — which is the
-                    // difference between the diagnostic being a report and it
-                    // being a fix.
+                    // The diagnostic just proved this method works here, and
+                    // the app connects with whatever method is chosen. So it
+                    // chooses it — which is the difference between the
+                    // diagnostic being a report and it being a fix — and adds
+                    // it to the record of what has worked on this network.
                     runCatching {
                         app.memory.recordSuccess(network.fingerprint, transport, outcome.millis)
+                        app.settings.setManualTransport(transport)
                     }
-                    line("(remembered ${transport.torName} for this network; the next connect will try it first)")
+                    line("(set as the chosen method; the next connect will use it)")
                     break
                 }
             }

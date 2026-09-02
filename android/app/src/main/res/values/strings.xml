@@ -5,7 +5,7 @@
 
     <!-- Tunnel states -->
     <string name="state_idle">Not connected</string>
-    <string name="state_probing">Sizing up the network</string>
+    <string name="state_probing">Getting ready</string>
     <string name="state_starting">Starting transport</string>
     <string name="state_bootstrapping">Building circuits</string>
     <string name="state_connected">Connected</string>
@@ -112,7 +112,7 @@
 
     <string name="route_direct_desc">Straight to the Tor network. Fastest, and obvious to anyone watching the line.</string>
     <string name="route_obfs4_desc">Scrambles the stream so it matches no known protocol. Fast, but relies on bridge addresses that get discovered and blocked over time.</string>
-    <string name="route_webtunnel_desc">Looks like ordinary HTTPS to a site that really exists. Currently the hardest to tell apart from normal browsing.</string>
+    <string name="route_webtunnel_desc">Looks like ordinary HTTPS to a site that really exists. The hardest to tell apart from normal browsing.</string>
     <string name="route_meek_desc">Hides inside traffic to a large CDN. Blocking it means blocking the CDN, which is expensive — but so is the latency you pay for it.</string>
     <string name="route_snowflake_desc">Hops through short-lived volunteer proxies found through a broker. No fixed address to block; needs UDP and a little patience.</string>
     <string name="route_known_bridges">%1$d known</string>
@@ -179,8 +179,6 @@
     <string name="step_starting">Starting</string>
     <string name="step_starting_transports">Starting transports</string>
     <string name="step_starting_tor">Starting Tor</string>
-    <string name="step_measuring">Measuring the network</string>
-    <string name="step_reconnecting_known">Reconnecting the way that worked</string>
     <string name="fail_ports">Could not reserve local ports for Tor.</string>
     <string name="fail_tor_start">Tor did not start. Diagnostics has the log.</string>
     <string name="fail_tor_start_reason">Tor did not start: %1$s</string>
@@ -238,7 +236,7 @@
     <string name="route_why_nat">this network changes port per destination, which Snowflake needs to avoid</string>
     <string name="fail_no_transports">No transport would start, so there is nothing to reach Tor through. Diagnostics has the log.</string>
     <string name="transport_conjure">Conjure</string>
-    <string name="route_conjure_desc">No bridge address to block at all: the connection goes to an ordinary host that is not listening, and a router inside a cooperating network diverts it on the way past. Plain TCP, so the NAT a mobile carrier puts you behind does not affect it. Slow to start.</string>
+    <string name="route_conjure_desc">No bridge address to block: the connection goes to a host that is not listening, and a router inside a cooperating network diverts it on the way past. Plain TCP, so carrier NAT does not affect it. Slow to start.</string>
     <string name="route_why_conjure_dns">last resort: registered with the station over DNS</string>
     <string name="diag_selftest">Test every stage</string>
     <string name="diag_selftest_running">Testing…</string>
@@ -251,7 +249,6 @@
     <string name="diag_line_bridges">bridges: %1$s</string>
     <string name="diag_line_api_ok">bridge service: answered</string>
     <string name="diag_line_api_none">bridge service: no answer — only shipped bridges were used</string>
-    <string name="diag_line_nat">NAT: %1$s</string>
     <string name="action_share">Share</string>
     <string name="diag_selftest_hint">Tries every route until one reaches a relay, then measures what it built: round trip, throughput, name resolution and how steady it stays. Takes two to three minutes. Copy the result and send it back.</string>
     <string name="diag_selftest_step">%1$d%%  ·  %2$s</string>
@@ -259,8 +256,8 @@
     <string name="diag_selftest_again">Run again</string>
     <string name="route_why_pinned">your choice</string>
     <!-- Routes screen -->
-    <string name="transports_pick_hint">Pick the one to lead with. Veil tries it first every time, including after a restart, and falls back through the rest if it stops working.</string>
-    <string name="transports_pinned_note">Saved. This is what the next connection starts with.</string>
+    <string name="transports_pick_hint">Pick one. Veil connects with that method and only that method — no probing first, and no quietly switching to another if it fails.</string>
+    <string name="transports_pinned_note">Chosen — used for every connection</string>
     <string name="route_no_bridge_needed">no bridge address to block</string>
     <string name="latency_low">fast</string>
     <string name="latency_medium">moderate</string>
@@ -286,4 +283,6 @@
     <string name="diag_stage_steady">Steadiness</string>
     <string name="diag_stage_skipped">Skipped</string>
     <string name="diag_stage_done">Done</string>
+    <string name="fail_transport_unavailable">%1$s did not start on this device. Choose a different method on the Routes screen.</string>
+    <string name="fail_no_bridges_for">There are no bridges for %1$s to try. Add some on the Bridges screen, or choose a different method.</string>
 </resources>

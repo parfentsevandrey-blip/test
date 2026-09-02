@@ -11,13 +11,16 @@ import java.io.File
 /**
  * What has worked on which network.
  *
- * The single biggest usability win for a circumvention tool is not needing to
- * rediscover the answer every time: a user who is on the same censored mobile
- * network every day should connect straight away on the transport that worked
- * yesterday, and only fall back to probing when that stops being true.
+ * This no longer chooses anything. The app connects with the method the user
+ * picked and only that, so the running total of what worked where is a record
+ * rather than an input: the diagnostic prints it, and it is what the settings
+ * screen forgets when asked. Kept because "meek has worked here nine times out
+ * of ten and Snowflake never" is the single most useful sentence anyone can
+ * have when deciding which method to pick, and nothing else in the app knows
+ * it.
  *
- * Records are keyed by the opaque network fingerprint and expire, so a network
- * that has since been unblocked is eventually retried on the cheaper rungs.
+ * Records are keyed by the opaque network fingerprint, which is built from the
+ * link's own properties and never identifies the user.
  */
 class StrategyMemory(context: Context) {
 
@@ -35,25 +38,6 @@ class StrategyMemory(context: Context) {
 
     suspend fun load() = withContext(Dispatchers.IO) {
         records = runCatching { parse(file.readText()) }.getOrDefault(mutableMapOf())
-    }
-
-    /** The transport to try first here, if we are confident enough about one. */
-    fun preferredFor(fingerprint: String): Transport? {
-        val forNetwork = records[fingerprint] ?: return null
-        val now = System.currentTimeMillis()
-        return forNetwork.values
-            .filter { it.successes > it.failures && now - it.lastSuccessMillis < FRESHNESS_MILLIS }
-            .maxByOrNull { it.successes - it.failures }
-            ?.transport
-    }
-
-    /** Rungs that have failed here often enough to be worth demoting. */
-    fun discouraged(fingerprint: String): Set<Transport> {
-        val forNetwork = records[fingerprint] ?: return emptySet()
-        return forNetwork.values
-            .filter { it.failures >= 3 && it.successes == 0 }
-            .map { it.transport }
-            .toSet()
     }
 
     suspend fun recordSuccess(fingerprint: String, transport: Transport, bootstrapMillis: Long) {
@@ -146,8 +130,4 @@ class StrategyMemory(context: Context) {
         return result
     }
 
-    private companion object {
-        /** Two weeks: long enough to be useful, short enough to notice a thaw. */
-        const val FRESHNESS_MILLIS = 14L * 24 * 60 * 60 * 1000
-    }
 }

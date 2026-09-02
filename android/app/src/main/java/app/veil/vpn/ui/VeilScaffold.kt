@@ -11,7 +11,9 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apps
@@ -39,6 +41,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.veil.vpn.R
@@ -76,16 +81,23 @@ import androidx.compose.material3.MaterialTheme
  * losing its ending.
  */
 @Composable
-private fun NavigationLabel(text: String) {
+private fun NavigationLabel(text: String, slotWidth: Dp) {
     Text(
         text = text,
         autoSize = TextAutoSize.StepBased(
-            minFontSize = 9.sp,
+            minFontSize = 8.sp,
             maxFontSize = 12.sp,
             stepSize = 0.5.sp,
         ),
         maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
         textAlign = TextAlign.Center,
+        // The width the label may occupy, worked out from the bar rather than
+        // left to the item. Auto-sizing only shrinks text against a bound, and
+        // without one the label is measured as wide as it likes and drawn over
+        // its neighbours — which is how "Приложения Диагностика Настройки"
+        // ended up as one run of touching words.
+        modifier = Modifier.width(slotWidth),
     )
 }
 
@@ -170,7 +182,7 @@ fun VeilScaffold(
             // A tap has to keep working, so nothing is consumed until the
             // movement passes the system's own threshold for a drag. Below it
             // the gesture is still a press and reaches the item underneath.
-            Box(
+            BoxWithConstraints(
                 Modifier.pointerInput(Destination.entries.size) {
                     val slots = Destination.entries.size
                     awaitEachGesture {
@@ -204,6 +216,9 @@ fun VeilScaffold(
                     }
                 },
             ) {
+                // Equal slots, minus the breathing room each item keeps around
+                // its own label.
+                val slot = (maxWidth / Destination.entries.size) - 8.dp
                 ShortNavigationBar {
                     Destination.entries.forEach { entry ->
                         ShortNavigationBarItem(
@@ -213,7 +228,7 @@ fun VeilScaffold(
                                 swipeScope.launch { pager.animateScrollToPage(entry.ordinal) }
                             },
                             icon = { Icon(iconFor(entry), contentDescription = null) },
-                            label = { NavigationLabel(stringResource(entry.labelRes)) },
+                            label = { NavigationLabel(stringResource(entry.labelRes), slot) },
                         )
                     }
                 }

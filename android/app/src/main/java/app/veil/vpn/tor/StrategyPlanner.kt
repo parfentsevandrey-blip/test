@@ -66,92 +66,6 @@ class StrategyPlanner(
     private val cooldown: EndpointCooldown,
 ) {
 
-    suspend fun plan(
-        network: NetworkContext,
-        probe: ProbeReport,
-        probeRanking: List<Pair<Transport, Float>>,
-        tlsProfile: TlsProfile,
-        dtlsProfile: DtlsProfile,
-        /** Transports that actually have a listener tor can be pointed at. */
-        available: Set<Transport>,
-        /** The method the user pinned, tried before anything else. */
-        preferred: Transport? = null,
-    ): List<Attempt> = withContext(Dispatchers.Default) {
-        val discouraged = memory.discouraged(network.fingerprint)
-        val remembered = memory.preferredFor(network.fingerprint)
-        val recommended = applyCountryRecommendation(network.countryIso)
-
-        val ordered = LinkedHashMap<Transport, String>()
-
-        // The pinned choice outranks everything, including what worked here
-        // before: it is the one thing the user said out loud.
-        preferred?.takeIf { it.isOffered }?.let { ordered[it] = context.getString(R.string.route_why_pinned) }
-        remembered?.let { ordered.putIfAbsent(it, "worked on this network before") }
-        recommended.forEach { transport ->
-            ordered.putIfAbsent(transport, "recommended for ${network.countryIso?.uppercase()}")
-        }
-        probeRanking
-            .filter { it.second >= 0.5f }
-            .forEach { (transport, score) ->
-                ordered.putIfAbsent(transport, "probe score ${"%.2f".format(score)}")
-            }
-        // Everything else still gets a turn, cheapest first, so a wrong guess
-        // upstream never removes a working route from the ladder.
-        Transport.entries.filter { it.isOffered }.forEach { transport ->
-            ordered.putIfAbsent(transport, "fallback")
-        }
-
-        // A network that accepts connections and then blackholes them has
-        // already told us that anything terminating on a plain host is a waste
-        // of a rung, whatever the rest of the evidence said.
-        val frozen = if (probe.freezeSuspected) {
-            setOf(Transport.DIRECT, Transport.OBFS4)
-        } else {
-            emptySet()
-        }
-        // And a network that gives every destination a different public port —
-        // which is what a mobile carrier's NAT normally does — has told us that
-        // WebRTC will spend a long time failing. Snowflake stays on the ladder,
-        // because a client behind such a NAT can still be matched with an
-        // unrestricted volunteer, but it goes after the routes that do not care.
-        val natBound = when (probe.natBehaviour) {
-            NatBehaviour.SYMMETRIC, NatBehaviour.NO_UDP -> setOf(Transport.SNOWFLAKE)
-            else -> emptySet()
-        }
-        val demoted = discouraged + frozen + natBound
-
-        val attempts = ordered
-            .map { (transport, why) ->
-                if (transport in natBound) transport to context.getString(R.string.route_why_nat)
-                else transport to why
-            }
-            // A bridge whose plugin never started would make tor stall on a
-            // route it has no way to take.
-            .filter { (transport, _) -> transport.isOffered && transport in available }
-            .sortedBy { (transport, _) -> if (transport in demoted) 1 else 0 }
-            .mapNotNull { (transport, why) ->
-                buildAttempt(transport, why, tlsProfile, dtlsProfile)
-            }
-            .toMutableList()
-
-        // Snowflake over an AMP cache: slower, but it survives a censor that
-        // has blocked the fronted broker request itself. It is a different set
-        // of bridge lines rather than a different transport, so it costs
-        // nothing but a `SETCONF`.
-        if (Transport.SNOWFLAKE in available) {
-            ampSnowflakeAttempt(tlsProfile, dtlsProfile)?.let { attempts += it }
-        }
-
-        // Conjure registered over DNS: the last thing left when even a fronted
-        // request to the registration station is stopped. It needs nothing but
-        // a working DNS-over-HTTPS resolver, which is close to the last thing a
-        // network can take away and still be a network.
-        if (Transport.CONJURE in available) dnsConjureAttempt()?.let { attempts += it }
-
-        VeilLog.i("planner", attempts.joinToString(" -> ") { it.label })
-        attempts
-    }
-
     /**
      * Rewrites a Snowflake line's `front` as `fronts`, which is the form that
      * wins.
@@ -173,6 +87,51 @@ class StrategyPlanner(
         val singular = bridge.params["front"]?.takeIf { it.isNotBlank() } ?: return bridge
         if (!bridge.params["fronts"].isNullOrBlank()) return bridge.withoutParams("front")
         return bridge.withoutParams("front").withParams(mapOf("fronts" to singular))
+    }
+
+    /**
+     * Everything for the one method the user chose, and nothing else.
+     *
+     * This is not a ladder with a preferred rung on top: it is the chosen
+     * method or nothing. Nothing is measured first either — the probe exists to
+     * decide between methods, and there is no decision left to make, so the
+     * seconds it costs buy nothing. A connect goes straight at what was asked
+     * for.
+     *
+     * That is a real trade and worth naming. Falling back would connect more
+     * often; being told plainly that the chosen method did not work is what
+     * lets someone pick a different one on purpose, instead of watching the app
+     * quietly do something else and never learning which method their network
+     * actually allows.
+     *
+     * The one thing that does produce more than a single entry is a method with
+     * more than one way of starting: Snowflake can ask the broker through a
+     * fronted request or through an AMP cache, and Conjure can register with
+     * its station over a fronted request or over DNS. Those are the same
+     * method, so both ways are tried.
+     */
+    suspend fun pinnedPlan(
+        transport: Transport,
+        tlsProfile: TlsProfile,
+        dtlsProfile: DtlsProfile,
+        available: Set<Transport>,
+    ): List<Attempt> = withContext(Dispatchers.IO) {
+        if (transport != Transport.DIRECT && transport !in available) {
+            VeilLog.e("planner", "${transport.torName} has no listener; nothing to try")
+            return@withContext emptyList()
+        }
+        val why = context.getString(R.string.route_why_pinned)
+        val attempts = buildList {
+            buildAttempt(transport, why, tlsProfile, dtlsProfile)?.let { add(it) }
+            if (transport == Transport.SNOWFLAKE) {
+                ampSnowflakeAttempt(tlsProfile, dtlsProfile)?.let { add(it) }
+            }
+            if (transport == Transport.CONJURE) {
+                dnsConjureAttempt()?.let { add(it) }
+            }
+        }
+        VeilLog.i("planner", attempts.joinToString(" -> ") { it.label }.ifEmpty { "nothing to try" })
+        attempts
     }
 
     /**
