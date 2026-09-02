@@ -86,14 +86,43 @@ if __name__ == '__main__':
     for name, lon, lat in [(m[0], m[1], m[2]) for m in METRO] + [('Кремль', *KREML)]:
         print(f'  {name:16s} {metres(*HOUSE, lon, lat):7.0f} м')
 
-    # ── конкуренты: нумерованные пины под таблицу справки ──
+    # ── конкуренты: пины с номерами и подписями комплексов ──
     import json
     peers = json.load(open(os.path.join(HERE, 'cian', 'peers.json'), encoding='utf-8'))
+
+    # Кварталы у «Сухаревской» и «Цветного» стоят кучно, поэтому сдвиг подписи
+    # и сторона выноски заданы вручную: автоматика их складывает друг на друга.
+    #  название: (dx, dy, якорь)
+    SHIFT = {
+        'ФАНТОМ':                    (40, -86, 'left'),
+        'Клубный дом Форум':        (-40, -150, 'right'),
+        'Дом Франка':                (40, -86, 'left'),
+        'Ридж':                      (44, -86, 'left'),
+        'Мод':                      (-44, -86, 'right'),
+        'Barkli Park (Баркли Парк)': (-40, -86, 'right'),
+        'Sole Hill (Соле Хилл)':    (-40, -86, 'right'),
+        'Dialog (Диалог)':           (40, -86, 'left'),
+        'Клубный дом ЦВЕТ32':       (-40, -20, 'right'),
+        'Легенда Цветного':         (-40, -86, 'right'),
+    }
+    SHORT = {
+        'Barkli Park (Баркли Парк)': 'Barkli Park',
+        'Sole Hill (Соле Хилл)': 'Sole Hill',
+        'Dialog (Диалог)': 'Dialog',
+        'Клубный дом ЦВЕТ32': 'ЦВЕТ32',
+        'Клубный дом Форум': 'Форум',
+    }
+
     base, proj = render((37.63230, 55.78200), 14, 920, 760, scale=S)
     img = base.convert('RGBA'); dr = ImageDraw.Draw(img, 'RGBA')
     for q in [x for x in peers if x.get('pin', True)]:
         x, y = proj(q['lng'], q['lat'])
-        pin(dr, x, y, 21, BRONZE if q['kind'] == 'new' else NAVY, num=q['no'])
+        col = BRONZE if q['kind'] == 'new' else NAVY
+        pin(dr, x, y, 21, col, num=q['no'])
+        dx, dy, anchor = SHIFT.get(q['name'], (40, -86, 'left'))
+        label(img, dr, x + dx, y + dy, SHORT.get(q['name'], q['name']),
+              f"{q['ppmMed'] / 1e6:.2f} млн ₽/м²".replace('.', ','), anchor, 23,
+              fg=col, sfg=(104, 110, 122))
     hx, hy = proj(*HOUSE)
     pin(dr, hx, hy, 27, RED)
     label(img, dr, hx + 100, hy - 34, 'Капельский, 5',

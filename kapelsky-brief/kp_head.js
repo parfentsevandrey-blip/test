@@ -244,6 +244,53 @@ function imagePair(a, b, capA, capB) {
 
 
 
+
+// Карточки квартир: кадр из объявления и параметры лота, N в ряд.
+function photoCards(cards, cols = 3) {
+  const w = Math.floor(9520 / cols), gap = 90;
+  const pxw = Math.floor((w - gap * 2) / 15);          // DXA -> px при 96 dpi
+  const pxh = Math.round(pxw / 1.5);
+  const cellOf = (c, i) => new TableCell({
+    width: { size: w, type: WidthType.DXA },
+    margins: { top: 0, bottom: 0, left: i === 0 ? 0 : gap, right: i === cols - 1 ? 0 : gap },
+    borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+    children: c ? [
+      p({
+        children: [new ImageRun({ data: IMG(c.file), type: 'jpg',
+          transformation: { width: pxw, height: pxh } })],
+        spacing: { after: 46 },
+      }),
+      p({ children: [txt(c.name, { size: 17, bold: true, color: INK })],
+          spacing: { after: 18, line: 212, lineRule: LR } }),
+      p({ children: [txt(`${c.area} м²  ·  этаж ${c.floor}`, { size: 14, color: MUTED })],
+          spacing: { after: 26, line: 206, lineRule: LR } }),
+      p({ children: [txt(c.price + ' млн ₽', { size: 19, bold: true, color: INK })],
+          spacing: { after: 14, line: 212, lineRule: LR } }),
+      p({ children: [txt(c.ppm + ' ₽ за м²', { size: 14, color: BRONZE })],
+          spacing: { after: 0, line: 206, lineRule: LR } }),
+    ] : [p({ children: [txt('')] })],
+  });
+  const rows = [];
+  for (let i = 0; i < cards.length; i += cols) {
+    const chunk = cards.slice(i, i + cols);
+    while (chunk.length < cols) chunk.push(null);
+    rows.push(new TableRow({ cantSplit: true, children: chunk.map(cellOf) }));
+    rows.push(new TableRow({
+      cantSplit: true,
+      children: chunk.map(() => new TableCell({
+        width: { size: w, type: WidthType.DXA },
+        borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+        children: [p({ children: [txt('')], spacing: { after: 0, line: 190, lineRule: LR } })],
+      })),
+    }));
+  }
+  return new Table({
+    columnWidths: Array(cols).fill(w),
+    width: { size: w * cols, type: WidthType.DXA },
+    rows,
+  });
+}
+
 // «1 лот», «2 лота», «5 лотов» — иначе в тексте попадаются «201 лотов»
 const plural = (n, [one, few, many]) => {
   const a = Math.abs(n) % 100, b = a % 10;
