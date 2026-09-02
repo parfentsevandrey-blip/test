@@ -28,6 +28,7 @@
       "price": "€ 475.000",
       "url": "https://www.fundainbusiness.nl/bedrijfshal/middenmeer/object-43145977-agriport-9-21/",
       "reports": [
+        "report-2026-09-01-locations-top3.json",
         "report-2026-09-01-locations.json"
       ]
     },
@@ -78,6 +79,7 @@
       "price": "€ 425.000",
       "url": "https://www.fundainbusiness.nl/bedrijfshal/schiphol-rijk/object-43057054-boeingavenue-305-f/",
       "reports": [
+        "report-2026-09-01-locations-top3.json",
         "report-2026-09-01-locations.json"
       ]
     },
@@ -178,6 +180,7 @@
       "price": "€ 1.975.000",
       "url": "https://www.fundainbusiness.nl/belegging/groningen/object-44571094-kieler-bocht-15-a/",
       "reports": [
+        "report-2026-09-01-locations-top3.json",
         "report-2026-09-01-locations.json"
       ]
     },
@@ -347,5 +350,5 @@
       ]
     }
   ],
-  "updated": "2026-09-01"
+  "updated": "2026-09-02"
 }
