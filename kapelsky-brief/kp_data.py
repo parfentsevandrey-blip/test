@@ -249,38 +249,6 @@ HOUSE_ROWS = [[str(x['no']), x['name'], x['what'], str(x['n']),
 HOUSE_ROWS.append(['—', 'Капельский, 5', 'новостройка, 2029', '46', '110',
                    mln(AREA_AVG * PPM), nf(PPM)])
 
-
-# ── экономика выхода ────────────────────────────────────────────────────────
-# Полный бюджет средней резиденции: покупка по цене закрытых продаж плюс
-# ремонт по 400 тыс. ₽ за метр. Цена продажи по каждой строке — средний метр
-# соседнего дома, умноженный на 110 м². Налоги, комиссии и срок в расчёт
-# не заложены: это сопоставление цен, а не финансовая модель.
-BUDGET_TOTAL = AREA_AVG * (PPM + FINISH)          # 187,0 млн ₽
-BREAK_EVEN = PPM + FINISH                         # 1 700 000 ₽ за метр
-
-EXIT_ROWS = []
-for x in _rows:
-    sale = AREA_AVG * x['ppm']
-    gain = sale - BUDGET_TOTAL
-    EXIT_ROWS.append([
-        str(x['no']), x['name'],
-        'новостройка' if x['what'].startswith('новостройка') else 'вторичка',
-        str(x['n']), nf(x['ppm']), mln(sale),
-        ('+' if gain > 0 else '−') + mln(abs(gain)),
-        ('+' if gain > 0 else '−') + f'{abs(gain) / BUDGET_TOTAL * 100:.0f} %',
-    ])
-
-_over = [x for x in _rows if x['ppm'] > BREAK_EVEN]
-EXIT = {
-    'buy': mln(AREA_AVG * PPM),
-    'fit': mln(AREA_AVG * FINISH),
-    'total': mln(BUDGET_TOTAL),
-    'ppmTotal': nf(BREAK_EVEN),
-    'over': len(_over), 'all': len(_rows),
-    'bandLo': f"{min((AREA_AVG * x['ppm'] - BUDGET_TOTAL) / BUDGET_TOTAL * 100 for x in _over):.0f}",
-    'bandHi': f"{max((AREA_AVG * x['ppm'] - BUDGET_TOTAL) / BUDGET_TOTAL * 100 for x in _over):.0f}",
-}
-
 # ── сколько рынок платит за ремонт ──────────────────────────────────────────
 # repairType добран из карточек Циан: в поисковой выдаче поля нет.
 # Сравнение идёт внутри одних и тех же домов, поэтому локация, год и класс
@@ -421,8 +389,6 @@ if __name__ == '__main__':
         'distPro': DIST_PRO,
         'distContra': DIST_CONTRA,
         'houseRows': HOUSE_ROWS,
-        'exitRows': EXIT_ROWS,
-        'exit': EXIT,
         'features': FEATURES,
         'rns': RNS,
         'risks': RISKS,
