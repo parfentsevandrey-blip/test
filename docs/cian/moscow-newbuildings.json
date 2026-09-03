@@ -1,0 +1,12140 @@
+{
+ "fetched": "2026-08-12",
+ "question": "ЖК Москвы, построенные после 2017 года",
+ "source": "newbuilding.id и building.buildYear из объявлений (api.cian.ru/search-offers/v2)",
+ "method": "Обход всех 149 районов двумя ветками (вторичка с домом от 2018 + новостройки), затем уточнение годов точечными запросами по ЖК.",
+ "coverage": "Только ЖК, у которых сейчас есть хотя бы одно объявление на Циан. Комплексы без активных объявлений не попадают.",
+ "usage": "Поиск по ЖК: geo = [{\"type\":\"newobject\",\"id\":<id>}]. Неверный тип не даёт ошибки — молча вернётся вся Москва.",
+ "raionsScanned": 149,
+ "totals": {
+  "найденоЖК": 784,
+  "построеныПосле2017": 597,
+  "судяПоСрокуСдачи": 174,
+  "итогоПодУсловие": 771,
+  "старше2018": 8,
+  "годНеизвестен": 5
+ },
+ "byOkrug": {
+  "СЗАО": 56,
+  "ЮВАО": 67,
+  "САО": 94,
+  "ЮЗАО": 42,
+  "ЗАО": 103,
+  "СВАО": 70,
+  "ВАО": 51,
+  "ЦАО": 132,
+  "НАО (Новомосковский)": 62,
+  "ЮАО": 75,
+  "ТАО (Троицкий)": 14,
+  "ЗелАО": 5
+ },
+ "builtAfter2017": [
+  {
+   "id": 2812286,
+   "name": "Остров",
+   "okrug": "СЗАО",
+   "raions": [
+    "Хорошево-Мневники"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2029,
+   "years": [
+    2023,
+    2024,
+    2025,
+    2026,
+    2029
+   ],
+   "deadlineMax": null,
+   "offersSeen": 80
+  },
+  {
+   "id": 4127920,
+   "name": "ПОРТЛЕНД",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Печатники"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2028,
+   "years": [
+    2025,
+    2026,
+    2028
+   ],
+   "deadlineMax": null,
+   "offersSeen": 40
+  },
+  {
+   "id": 4708643,
+   "name": "Северный порт. Береговые кварталы",
+   "okrug": "САО",
+   "raions": [
+    "Левобережный"
+   ],
+   "yearMin": 2028,
+   "yearMax": 2028,
+   "years": [
+    2028
+   ],
+   "deadlineMax": null,
+   "offersSeen": 57
+  },
+  {
+   "id": 4692425,
+   "name": "2-й Тушинский пр-д, д. 1",
+   "okrug": "СЗАО",
+   "raions": [
+    "Покровское-Стрешнево"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2026,
+   "years": [
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 9
+  },
+  {
+   "id": 2709052,
+   "name": "Ever (Эвер)",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Обручевский"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2026,
+   "years": [
+    2023,
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 35
+  },
+  {
+   "id": 4096080,
+   "name": "Авиатор",
+   "okrug": "ЗАО",
+   "raions": [
+    "Кунцево"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2026,
+   "years": [
+    2023,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 9
+  },
+  {
+   "id": 1088,
+   "name": "Академ-Палас",
+   "okrug": "ЗАО",
+   "raions": [
+    "Тропарево-Никулино"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2026,
+   "years": [
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 33
+  },
+  {
+   "id": 149382,
+   "name": "Алиа",
+   "okrug": "СЗАО",
+   "raions": [
+    "Покровское-Стрешнево"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2026,
+   "years": [
+    2022,
+    2023,
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 36
+  },
+  {
+   "id": 5656339,
+   "name": "Алтуфьевское ш., д. 53, к. 1, 2",
+   "okrug": "СВАО",
+   "raions": [
+    "Алтуфьевский"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2026,
+   "years": [
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 13
+  },
+  {
+   "id": 1736872,
+   "name": "Амурский парк",
+   "okrug": "ВАО",
+   "raions": [
+    "Гольяново"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2026,
+   "years": [
+    2019,
+    2022,
+    2023,
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 44
+  },
+  {
+   "id": 4191157,
+   "name": "Апсайд Тауэрс",
+   "okrug": "СВАО",
+   "raions": [
+    "Бутырский"
+   ],
+   "yearMin": 2026,
+   "yearMax": 2026,
+   "years": [
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 53
+  },
+  {
+   "id": 3360761,
+   "name": "Барклая 6",
+   "okrug": "ЗАО",
+   "raions": [
+    "Филевский парк"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2026,
+   "years": [
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 10
+  },
+  {
+   "id": 2029573,
+   "name": "Большая Академическая 85",
+   "okrug": "САО",
+   "raions": [
+    "Тимирязевский"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2026,
+   "years": [
+    2023,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 18
+  },
+  {
+   "id": 4202659,
+   "name": "БРЮСОВ",
+   "okrug": "ЦАО",
+   "raions": [
+    "Пресненский"
+   ],
+   "yearMin": 2026,
+   "yearMax": 2026,
+   "years": [
+    2026
+   ],
+   "deadlineMax": 2026,
+   "offersSeen": 4
+  },
+  {
+   "id": 4097572,
+   "name": "Бунинские кварталы",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Сосенское"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2026,
+   "years": [
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 24
+  },
+  {
+   "id": 3231111,
+   "name": "ВЕЙВ",
+   "okrug": "ЮАО",
+   "raions": [
+    "Москворечье-Сабурово"
+   ],
+   "yearMin": 2026,
+   "yearMax": 2026,
+   "years": [
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 53
+  },
+  {
+   "id": 3693192,
+   "name": "Воксхолл",
+   "okrug": "ЦАО",
+   "raions": [
+    "Замоскворечье"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2026,
+   "years": [
+    2025,
+    2026
+   ],
+   "deadlineMax": 2026,
+   "offersSeen": 45
+  },
+  {
+   "id": 1311961,
+   "name": "Волжский парк",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Текстильщики"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2026,
+   "years": [
+    2022,
+    2023,
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 48
+  },
+  {
+   "id": 5773957,
+   "name": "Гарибальди ул., д. 26",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Обручевский"
+   ],
+   "yearMin": 2026,
+   "yearMax": 2026,
+   "years": [
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 5772876,
+   "name": "Гарибальди ул., д. 31",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Черемушки"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2026,
+   "years": [
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 6
+  },
+  {
+   "id": 399800,
+   "name": "Гранель Тринити",
+   "okrug": "САО",
+   "raions": [
+    "Западное Дегунино"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2026,
+   "years": [
+    2021,
+    2023,
+    2024,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 35
+  },
+  {
+   "id": 4098610,
+   "name": "Движение.Говорово Апарт-комплекс",
+   "okrug": "ЗАО",
+   "raions": [
+    "Солнцево",
+    "Московский"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2026,
+   "years": [
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 45
+  },
+  {
+   "id": 4456060,
+   "name": "Деснаречье",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Десёновское"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2026,
+   "years": [
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 75
+  },
+  {
+   "id": 4115886,
+   "name": "Дзен-кварталы",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Сосенское"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2026,
+   "years": [
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 12
+  },
+  {
+   "id": 4051330,
+   "name": "Дмитровское небо",
+   "okrug": "САО",
+   "raions": [
+    "Западное Дегунино"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2026,
+   "years": [
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 21
+  },
+  {
+   "id": 4355054,
+   "name": "Дом на Зорге",
+   "okrug": "САО",
+   "raions": [
+    "Сокол"
+   ],
+   "yearMin": 2026,
+   "yearMax": 2026,
+   "years": [
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 17
+  },
+  {
+   "id": 3820477,
+   "name": "Дом на Чистых прудах «Фон Дессин»",
+   "okrug": "ЦАО",
+   "raions": [
+    "Басманный"
+   ],
+   "yearMin": 2026,
+   "yearMax": 2026,
+   "years": [
+    2026
+   ],
+   "deadlineMax": 2026,
+   "offersSeen": 15
+  },
+  {
+   "id": 7889,
+   "name": "ЗИЛАРТ",
+   "okrug": "ЮАО",
+   "raions": [
+    "Даниловский"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2026,
+   "years": [
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 40
+  },
+  {
+   "id": 3006289,
+   "name": "Инноватор",
+   "okrug": "ЗАО",
+   "raions": [
+    "Раменки"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2026,
+   "years": [
+    2025,
+    2026
+   ],
+   "deadlineMax": 2026,
+   "offersSeen": 3
+  },
+  {
+   "id": 3987004,
+   "name": "Квартал Life Time (Лайф Тайм)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Пресненский"
+   ],
+   "yearMin": 1905,
+   "yearMax": 2026,
+   "years": [
+    1905,
+    2026
+   ],
+   "deadlineMax": 2026,
+   "offersSeen": 26
+  },
+  {
+   "id": 4244731,
+   "name": "Квартал на воде",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Печатники"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2026,
+   "years": [
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 3972207,
+   "name": "Квартал Румянцево",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Мосрентген"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2026,
+   "years": [
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 9
+  },
+  {
+   "id": 4198039,
+   "name": "Клинская ул., д. 2А",
+   "okrug": "САО",
+   "raions": [
+    "Ховрино"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2026,
+   "years": [
+    2022,
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 112
+  },
+  {
+   "id": 3818961,
+   "name": "Клубный город на реке Примавера",
+   "okrug": "СЗАО",
+   "raions": [
+    "Покровское-Стрешнево"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2026,
+   "years": [
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 34
+  },
+  {
+   "id": 3928008,
+   "name": "Клубный дом CULT (Клубный дом Культ)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Якиманка"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2026,
+   "years": [
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 4115620,
+   "name": "Клубный дом ОПУС",
+   "okrug": "ЮАО",
+   "raions": [
+    "Даниловский"
+   ],
+   "yearMin": 2026,
+   "yearMax": 2026,
+   "years": [
+    2026
+   ],
+   "deadlineMax": 2026,
+   "offersSeen": 14
+  },
+  {
+   "id": 4142290,
+   "name": "Комплекс апартаментов AIST RESIDENCE (Аист Резиденс)",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Черемушки"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2026,
+   "years": [
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 12
+  },
+  {
+   "id": 4585408,
+   "name": "Куркино 15",
+   "okrug": "СЗАО",
+   "raions": [
+    "Куркино"
+   ],
+   "yearMin": 2026,
+   "yearMax": 2026,
+   "years": [
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 29
+  },
+  {
+   "id": 4714350,
+   "name": "Кусковская ул., д. 12/1",
+   "okrug": "ВАО",
+   "raions": [
+    "Новогиреево"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2026,
+   "years": [
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 30
+  },
+  {
+   "id": 4117148,
+   "name": "Левел Академическая",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Академический"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2026,
+   "years": [
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 27
+  },
+  {
+   "id": 4116768,
+   "name": "Левел Бауманская",
+   "okrug": "ЦАО",
+   "raions": [
+    "Басманный"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2026,
+   "years": [
+    2025,
+    2026
+   ],
+   "deadlineMax": 2025,
+   "offersSeen": 9
+  },
+  {
+   "id": 3422197,
+   "name": "Левел Мичуринский",
+   "okrug": "ЗАО",
+   "raions": [
+    "Очаково-Матвеевское"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2026,
+   "years": [
+    2022,
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 40
+  },
+  {
+   "id": 3914205,
+   "name": "Левел Южнопортовая",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Печатники"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2026,
+   "years": [
+    2022,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 33
+  },
+  {
+   "id": 8226,
+   "name": "Лучи",
+   "okrug": "ЗАО",
+   "raions": [
+    "Солнцево"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2026,
+   "years": [
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 69
+  },
+  {
+   "id": 49345,
+   "name": "Люблинский парк",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Люблино"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2026,
+   "years": [
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 147
+  },
+  {
+   "id": 4000515,
+   "name": "Малевич",
+   "okrug": "СВАО",
+   "raions": [
+    "Отрадное"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2026,
+   "years": [
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 37
+  },
+  {
+   "id": 1859265,
+   "name": "Митинский лес",
+   "okrug": "СЗАО",
+   "raions": [
+    "Митино"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2026,
+   "years": [
+    2022,
+    2024,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 44
+  },
+  {
+   "id": 3206223,
+   "name": "Михалковский",
+   "okrug": "САО",
+   "raions": [
+    "Головинский"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2026,
+   "years": [
+    2023,
+    2024,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 70
+  },
+  {
+   "id": 1895910,
+   "name": "Мод",
+   "okrug": "СВАО",
+   "raions": [
+    "Марьина роща"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2026,
+   "years": [
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 74
+  },
+  {
+   "id": 3890657,
+   "name": "Молжаниново",
+   "okrug": "САО",
+   "raions": [
+    "Молжаниновский"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2026,
+   "years": [
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 68
+  },
+  {
+   "id": 4127909,
+   "name": "МОМЕНТС",
+   "okrug": "СЗАО",
+   "raions": [
+    "Щукино"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2026,
+   "years": [
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 70
+  },
+  {
+   "id": 4119890,
+   "name": "МФК Варшавские ворота",
+   "okrug": "ЮАО",
+   "raions": [
+    "Чертаново Южное"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2026,
+   "years": [
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 33
+  },
+  {
+   "id": 2341810,
+   "name": "Новое Внуково",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Кокошкино"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2026,
+   "years": [
+    2023,
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 80
+  },
+  {
+   "id": 5750539,
+   "name": "Октябрьская 98",
+   "okrug": "СВАО",
+   "raions": [
+    "Марьина роща"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2026,
+   "years": [
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 8
+  },
+  {
+   "id": 4051375,
+   "name": "ОМ",
+   "okrug": "ЗАО",
+   "raions": [
+    "Очаково-Матвеевское"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2026,
+   "years": [
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 4
+  },
+  {
+   "id": 48871,
+   "name": "Остафьево",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Рязановское"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2026,
+   "years": [
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 69
+  },
+  {
+   "id": 5772883,
+   "name": "Парковая ул., д. 20 ",
+   "okrug": "СЗАО",
+   "raions": [
+    "Митино"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2026,
+   "years": [
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 7
+  },
+  {
+   "id": 3991353,
+   "name": "Первый Дубровский",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Южнопортовый"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2026,
+   "years": [
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 20
+  },
+  {
+   "id": 3975866,
+   "name": "Первый Нагатинский",
+   "okrug": "ЮАО",
+   "raions": [
+    "Нагатино-Садовники"
+   ],
+   "yearMin": 2026,
+   "yearMax": 2026,
+   "years": [
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 62
+  },
+  {
+   "id": 1179,
+   "name": "Петровский Парк",
+   "okrug": "САО",
+   "raions": [
+    "Савеловский"
+   ],
+   "yearMin": 2026,
+   "yearMax": 2026,
+   "years": [
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 4117962,
+   "name": "Петровский парк II",
+   "okrug": "САО",
+   "raions": [
+    "Савеловский"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2026,
+   "years": [
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 34
+  },
+  {
+   "id": 4296351,
+   "name": "Подольские кварталы",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Рязановское"
+   ],
+   "yearMin": 2026,
+   "yearMax": 2026,
+   "years": [
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 25
+  },
+  {
+   "id": 3961302,
+   "name": "Полар",
+   "okrug": "СВАО",
+   "raions": [
+    "Северное Медведково"
+   ],
+   "yearMin": 2026,
+   "yearMax": 2026,
+   "years": [
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 24
+  },
+  {
+   "id": 4143336,
+   "name": "ПРАЙД",
+   "okrug": "СВАО",
+   "raions": [
+    "Марьина роща"
+   ],
+   "yearMin": 2026,
+   "yearMax": 2026,
+   "years": [
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 46
+  },
+  {
+   "id": 45774,
+   "name": "Прайм Парк (Prime Park)",
+   "okrug": "САО",
+   "raions": [
+    "Хорошевский"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2026,
+   "years": [
+    2021,
+    2022,
+    2023,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 88
+  },
+  {
+   "id": 1892458,
+   "name": "Прокшино",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Сосенское"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2026,
+   "years": [
+    2022,
+    2023,
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 24
+  },
+  {
+   "id": 4033066,
+   "name": "Проспект 39",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Рязанский"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2026,
+   "years": [
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 8
+  },
+  {
+   "id": 3867641,
+   "name": "Репаблик",
+   "okrug": "ЦАО",
+   "raions": [
+    "Пресненский"
+   ],
+   "yearMin": 2026,
+   "yearMax": 2026,
+   "years": [
+    2026
+   ],
+   "deadlineMax": 2027,
+   "offersSeen": 15
+  },
+  {
+   "id": 6178,
+   "name": "Ривер Парк Коломенское",
+   "okrug": "ЮАО",
+   "raions": [
+    "Нагатинский затон"
+   ],
+   "yearMin": 2017,
+   "yearMax": 2026,
+   "years": [
+    2017,
+    2020,
+    2021,
+    2023,
+    2024,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 35
+  },
+  {
+   "id": 3709860,
+   "name": "Ривер Парк Кутузовский",
+   "okrug": "ЗАО",
+   "raions": [
+    "Дорогомилово"
+   ],
+   "yearMin": 2026,
+   "yearMax": 2026,
+   "years": [
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 27
+  },
+  {
+   "id": 3764245,
+   "name": "Роттердам",
+   "okrug": "ЮАО",
+   "raions": [
+    "Нагатино-Садовники"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2026,
+   "years": [
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 24
+  },
+  {
+   "id": 2163443,
+   "name": "Руставели 14",
+   "okrug": "СВАО",
+   "raions": [
+    "Бутырский"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2026,
+   "years": [
+    2022,
+    2023,
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 24
+  },
+  {
+   "id": 4404174,
+   "name": "Семеновский парк 2",
+   "okrug": "ВАО",
+   "raions": [
+    "Соколиная гора"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2026,
+   "years": [
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 31
+  },
+  {
+   "id": 1400247,
+   "name": "Середневский лес",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Филимонковское"
+   ],
+   "yearMin": 1930,
+   "yearMax": 2026,
+   "years": [
+    1930,
+    1935,
+    1936,
+    1960,
+    1966,
+    1968,
+    1970,
+    1983,
+    2000,
+    2013,
+    2016,
+    2017,
+    2019,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": 2029,
+   "offersSeen": 44
+  },
+  {
+   "id": "1400247",
+   "name": "Середневский лес",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Филимонковское"
+   ],
+   "yearMin": 1930,
+   "yearMax": 2026,
+   "years": [
+    1930,
+    1935,
+    1936,
+    1960,
+    1966,
+    1968,
+    1970,
+    1983,
+    2000,
+    2013,
+    2016,
+    2017,
+    2019,
+    2022,
+    2024,
+    2026
+   ],
+   "deadlineMax": 2029,
+   "offersSeen": 1
+  },
+  {
+   "id": 2171478,
+   "name": "Сигнальный 16",
+   "okrug": "СВАО",
+   "raions": [
+    "Отрадное"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2026,
+   "years": [
+    2023,
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 20
+  },
+  {
+   "id": 7231,
+   "name": "Символ",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Лефортово"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2026,
+   "years": [
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 142
+  },
+  {
+   "id": 1721051,
+   "name": "Сити Бэй",
+   "okrug": "СЗАО",
+   "raions": [
+    "Покровское-Стрешнево"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2026,
+   "years": [
+    2020,
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 34
+  },
+  {
+   "id": 100083,
+   "name": "Сказочный лес",
+   "okrug": "СВАО",
+   "raions": [
+    "Ярославский"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2026,
+   "years": [
+    2021,
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 52
+  },
+  {
+   "id": 3789720,
+   "name": "Скай Гарден",
+   "okrug": "СЗАО",
+   "raions": [
+    "Покровское-Стрешнево"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2026,
+   "years": [
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 23
+  },
+  {
+   "id": 18177,
+   "name": "Скандинавия",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Сосенское"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2026,
+   "years": [
+    2020,
+    2021,
+    2022,
+    2023,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 43
+  },
+  {
+   "id": 91700,
+   "name": "Событие",
+   "okrug": "ЗАО",
+   "raions": [
+    "Раменки"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2026,
+   "years": [
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 44
+  },
+  {
+   "id": 4183417,
+   "name": "СОУЛ",
+   "okrug": "САО",
+   "raions": [
+    "Аэропорт"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2026,
+   "years": [
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 57
+  },
+  {
+   "id": 4025502,
+   "name": "СОЮЗ",
+   "okrug": "СВАО",
+   "raions": [
+    "Ростокино"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2026,
+   "years": [
+    2022,
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 94
+  },
+  {
+   "id": 4157734,
+   "name": "СТОРИС на Мосфильмовской (Stories на Мосфильмовской)",
+   "okrug": "ЗАО",
+   "raions": [
+    "Раменки"
+   ],
+   "yearMin": 2026,
+   "yearMax": 2026,
+   "years": [
+    2026
+   ],
+   "deadlineMax": 2026,
+   "offersSeen": 7
+  },
+  {
+   "id": 4194813,
+   "name": "Страна.Озёрная",
+   "okrug": "ЗАО",
+   "raions": [
+    "Очаково-Матвеевское"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2026,
+   "years": [
+    2022,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 14
+  },
+  {
+   "id": 4429315,
+   "name": "Твелв",
+   "okrug": "ЮАО",
+   "raions": [
+    "Нагорный"
+   ],
+   "yearMin": 2026,
+   "yearMax": 2026,
+   "years": [
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 48
+  },
+  {
+   "id": 108461,
+   "name": "Театральный квартал",
+   "okrug": "СЗАО",
+   "raions": [
+    "Щукино"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2026,
+   "years": [
+    2023,
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 39
+  },
+  {
+   "id": 7155,
+   "name": "Терлецкий парк",
+   "okrug": "ВАО",
+   "raions": [
+    "Перово"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2026,
+   "years": [
+    2023,
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 71
+  },
+  {
+   "id": 3943251,
+   "name": "Феймос",
+   "okrug": "ЗАО",
+   "raions": [
+    "Филевский парк"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2026,
+   "years": [
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 24
+  },
+  {
+   "id": 5772867,
+   "name": "Феодосийская ул., д. 5",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Северное Бутово"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2026,
+   "years": [
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 9
+  },
+  {
+   "id": 4117447,
+   "name": "Хамовники 12",
+   "okrug": "ЦАО",
+   "raions": [
+    "Хамовники"
+   ],
+   "yearMin": 2026,
+   "yearMax": 2026,
+   "years": [
+    2026
+   ],
+   "deadlineMax": 2026,
+   "offersSeen": 2
+  },
+  {
+   "id": 1311715,
+   "name": "Холланд парк",
+   "okrug": "СЗАО",
+   "raions": [
+    "Покровское-Стрешнево"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2026,
+   "years": [
+    2022,
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 12
+  },
+  {
+   "id": 49331,
+   "name": "Цветочные Поляны",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Филимонковское"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2026,
+   "years": [
+    2021,
+    2022,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 27
+  },
+  {
+   "id": 4639729,
+   "name": "Чоботовская ул., д. 2А",
+   "okrug": "ЗАО",
+   "raions": [
+    "Ново-Переделкино"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2026,
+   "years": [
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 21
+  },
+  {
+   "id": 2528281,
+   "name": "Шагал",
+   "okrug": "ЮАО",
+   "raions": [
+    "Даниловский"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2026,
+   "years": [
+    2023,
+    2024,
+    2025,
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 22
+  },
+  {
+   "id": 3349284,
+   "name": "Эра",
+   "okrug": "ЮАО",
+   "raions": [
+    "Даниловский"
+   ],
+   "yearMin": 2026,
+   "yearMax": 2026,
+   "years": [
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 21
+  },
+  {
+   "id": 4168159,
+   "name": "Юнино",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Щербинка"
+   ],
+   "yearMin": 2026,
+   "yearMax": 2026,
+   "years": [
+    2026
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 3692670,
+   "name": "1-й Ленинградский",
+   "okrug": "САО",
+   "raions": [
+    "Молжаниновский"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2025,
+   "years": [
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 47
+  },
+  {
+   "id": 5772536,
+   "name": "6-я Радиальная ул., д. 7/1, к. 1",
+   "okrug": "ЮАО",
+   "raions": [
+    "Бирюлево Восточное"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2025,
+   "years": [
+    2021,
+    2023,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 27
+  },
+  {
+   "id": 36571,
+   "name": "A.Residence (А Резиденс)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Замоскворечье"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2025,
+   "years": [
+    2024,
+    2025
+   ],
+   "deadlineMax": 2025,
+   "offersSeen": 27
+  },
+  {
+   "id": 3913242,
+   "name": "Champine (Шампайн)",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Южнопортовый"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2025,
+   "years": [
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 6
+  },
+  {
+   "id": 3730636,
+   "name": "FORST (Форст)",
+   "okrug": "ЮАО",
+   "raions": [
+    "Даниловский"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2025,
+   "years": [
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 10
+  },
+  {
+   "id": 43299,
+   "name": "GloraX Premium Белорусская (Глоракс Премиум Белорусская)",
+   "okrug": "САО",
+   "raions": [
+    "Беговой"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2025,
+   "years": [
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 6
+  },
+  {
+   "id": 26654,
+   "name": "Headliner (Хедлайнер)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Пресненский"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2025,
+   "years": [
+    2019,
+    2020,
+    2023,
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 40
+  },
+  {
+   "id": 3202206,
+   "name": "HIGH LIFE (ХАЙ ЛАЙФ)",
+   "okrug": "ЮАО",
+   "raions": [
+    "Даниловский"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2025,
+   "years": [
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 36
+  },
+  {
+   "id": 3394802,
+   "name": "HighWay (ХайВей)",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Южнопортовый"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2025,
+   "years": [
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 35
+  },
+  {
+   "id": 49990,
+   "name": "iLove (АйЛав)",
+   "okrug": "СВАО",
+   "raions": [
+    "Останкинский"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2025,
+   "years": [
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 39
+  },
+  {
+   "id": 3683691,
+   "name": "Kinetik (Кинетик)",
+   "okrug": "САО",
+   "raions": [
+    "Западное Дегунино"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2025,
+   "years": [
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 3220424,
+   "name": "Lunar (Лунар)",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Гагаринский"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2025,
+   "years": [
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 42
+  },
+  {
+   "id": 3202205,
+   "name": "N’ICE LOFT (НАЙС ЛОФТ)",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Нижегородский"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2025,
+   "years": [
+    2023,
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 58
+  },
+  {
+   "id": 50424,
+   "name": "RED7 (РЕД7)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Красносельский"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2025,
+   "years": [
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "deadlineMax": 2023,
+   "offersSeen": 35
+  },
+  {
+   "id": 912499,
+   "name": "SkyView",
+   "okrug": "ЦАО",
+   "raions": [
+    "Пресненский"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2025,
+   "years": [
+    2023,
+    2024,
+    2025
+   ],
+   "deadlineMax": 2024,
+   "offersSeen": 11
+  },
+  {
+   "id": 3943101,
+   "name": "UNO.Головинские пруды (УНО.Головинские пруды)",
+   "okrug": "САО",
+   "raions": [
+    "Головинский"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2025,
+   "years": [
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 12
+  },
+  {
+   "id": 2184313,
+   "name": "Victory Park Residences (Виктори Парк Резиденсез)",
+   "okrug": "ЗАО",
+   "raions": [
+    "Дорогомилово"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2025,
+   "years": [
+    2020,
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 75
+  },
+  {
+   "id": 416192,
+   "name": "Will Towers",
+   "okrug": "ЗАО",
+   "raions": [
+    "Раменки"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2025,
+   "years": [
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 12
+  },
+  {
+   "id": 3928359,
+   "name": "WOW (ВАУ)",
+   "okrug": "ЮАО",
+   "raions": [
+    "Даниловский"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2025,
+   "years": [
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 4
+  },
+  {
+   "id": 4482950,
+   "name": "Академик",
+   "okrug": "ТАО (Троицкий)",
+   "raions": [
+    "Троицк"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2025,
+   "years": [
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 4
+  },
+  {
+   "id": 5767039,
+   "name": "Академика Дыхне ул., д. 20",
+   "okrug": "ТАО (Троицкий)",
+   "raions": [
+    "Троицк"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2025,
+   "years": [
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 16
+  },
+  {
+   "id": 4102935,
+   "name": "Алтуфьевское 53",
+   "okrug": "СВАО",
+   "raions": [
+    "Алтуфьевский"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2025,
+   "years": [
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 51
+  },
+  {
+   "id": 843339,
+   "name": "Алхимово",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Рязановское"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2025,
+   "years": [
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 31
+  },
+  {
+   "id": 2120269,
+   "name": "Архитектор",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Обручевский"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2025,
+   "years": [
+    2023,
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 41
+  },
+  {
+   "id": 3401527,
+   "name": "Басманный от Гранель",
+   "okrug": "ЦАО",
+   "raions": [
+    "Басманный"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2025,
+   "years": [
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 14
+  },
+  {
+   "id": 5772872,
+   "name": "Бегичева ул., д. 2",
+   "okrug": "СВАО",
+   "raions": [
+    "Алтуфьевский"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2025,
+   "years": [
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 46840,
+   "name": "Береговой-2",
+   "okrug": "ЗАО",
+   "raions": [
+    "Филевский парк"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2025,
+   "years": [
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 58
+  },
+  {
+   "id": 46529,
+   "name": "Большая Дмитровка IX",
+   "okrug": "ЦАО",
+   "raions": [
+    "Тверской"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2025,
+   "years": [
+    2021,
+    2024,
+    2025
+   ],
+   "deadlineMax": 2024,
+   "offersSeen": 7
+  },
+  {
+   "id": 1938730,
+   "name": "Большая Очаковская 2",
+   "okrug": "ЗАО",
+   "raions": [
+    "Очаково-Матвеевское"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2025,
+   "years": [
+    2022,
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 12
+  },
+  {
+   "id": 5772879,
+   "name": "Боровский пр-д, д. 1",
+   "okrug": "ЗАО",
+   "raions": [
+    "Солнцево"
+   ],
+   "yearMin": 1964,
+   "yearMax": 2025,
+   "years": [
+    1964,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 7
+  },
+  {
+   "id": 5684,
+   "name": "Внуково Парк",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Марушкинское"
+   ],
+   "yearMin": 2017,
+   "yearMax": 2025,
+   "years": [
+    2017,
+    2025
+   ],
+   "deadlineMax": 2027,
+   "offersSeen": 18
+  },
+  {
+   "id": 1372264,
+   "name": "Волоколамское 24",
+   "okrug": "СЗАО",
+   "raions": [
+    "Щукино"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2025,
+   "years": [
+    2022,
+    2023,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 13
+  },
+  {
+   "id": 579663,
+   "name": "Воскресенское",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Воскресенское"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2025,
+   "years": [
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 15
+  },
+  {
+   "id": 2314938,
+   "name": "Второй Нагатинский",
+   "okrug": "ЮАО",
+   "raions": [
+    "Нагатино-Садовники"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2025,
+   "years": [
+    2023,
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 17
+  },
+  {
+   "id": 2998964,
+   "name": "ВЭРИ на Ботанической",
+   "okrug": "СВАО",
+   "raions": [
+    "Марфино"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2025,
+   "years": [
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 56
+  },
+  {
+   "id": 5772880,
+   "name": "Героев Панфиловцев ул., д. 49",
+   "okrug": "СЗАО",
+   "raions": [
+    "Северное Тушино"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2025,
+   "years": [
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 1287,
+   "name": "Город-парк Переделкино Ближнее",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Внуковское"
+   ],
+   "yearMin": 2017,
+   "yearMax": 2025,
+   "years": [
+    2017,
+    2019,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 48
+  },
+  {
+   "id": 1289,
+   "name": "д. Марушкино, Северная ул., д. 21, к. 1, 2, 3, 4",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Марушкинское"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2025,
+   "years": [
+    2023,
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 18
+  },
+  {
+   "id": 48686,
+   "name": "Дом Chkalov (Чкалов)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Басманный"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2025,
+   "years": [
+    2021,
+    2023,
+    2024,
+    2025
+   ],
+   "deadlineMax": 2024,
+   "offersSeen": 21
+  },
+  {
+   "id": 1253036,
+   "name": "Дом Достижение",
+   "okrug": "СВАО",
+   "raions": [
+    "Марфино"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2025,
+   "years": [
+    2023,
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 78
+  },
+  {
+   "id": 3401216,
+   "name": "Дом Лаврушинский",
+   "okrug": "ЦАО",
+   "raions": [
+    "Якиманка"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2025,
+   "years": [
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 56
+  },
+  {
+   "id": 3401924,
+   "name": "Дубровка от Гранель",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Южнопортовый"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2025,
+   "years": [
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 29
+  },
+  {
+   "id": 146,
+   "name": "Дубровская Слобода",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Южнопортовый"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2025,
+   "years": [
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 19487,
+   "name": "Зорге 9",
+   "okrug": "САО",
+   "raions": [
+    "Хорошевский"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2025,
+   "years": [
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 11
+  },
+  {
+   "id": 49453,
+   "name": "Квартал Foriver (RiverSky) (РиверСкай)",
+   "okrug": "ЮАО",
+   "raions": [
+    "Даниловский"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2025,
+   "years": [
+    2023,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 4
+  },
+  {
+   "id": 4198129,
+   "name": "Квартал Западный",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Марушкинское"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2025,
+   "years": [
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 28
+  },
+  {
+   "id": 5927,
+   "name": "Квартал Триумфальный",
+   "okrug": "ЗАО",
+   "raions": [
+    "Фили-Давыдково"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2025,
+   "years": [
+    2022,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 4
+  },
+  {
+   "id": 3932079,
+   "name": "Клубный дом Full House",
+   "okrug": "ЗАО",
+   "raions": [
+    "Тропарево-Никулино"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2025,
+   "years": [
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 22
+  },
+  {
+   "id": 3911906,
+   "name": "Клубный дом Космо 4/22",
+   "okrug": "ЦАО",
+   "raions": [
+    "Замоскворечье"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2025,
+   "years": [
+    2025
+   ],
+   "deadlineMax": 2025,
+   "offersSeen": 17
+  },
+  {
+   "id": 3015337,
+   "name": "Кольская 8",
+   "okrug": "СВАО",
+   "raions": [
+    "Бабушкинский"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2025,
+   "years": [
+    2022,
+    2023,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 6
+  },
+  {
+   "id": 4115687,
+   "name": "Комплекс апартаментов «Wellbe» (МФК Вэллби)",
+   "okrug": "ЗелАО",
+   "raions": [
+    "Крюково"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2025,
+   "years": [
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 12
+  },
+  {
+   "id": 3930669,
+   "name": "Комплекс апартаментов Королёва 13",
+   "okrug": "СВАО",
+   "raions": [
+    "Останкинский"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2025,
+   "years": [
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 5753273,
+   "name": "Краснодонская ул., д. 50",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Люблино"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2025,
+   "years": [
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 1372209,
+   "name": "Левел Павелецкая Сити",
+   "okrug": "ЮАО",
+   "raions": [
+    "Даниловский"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2025,
+   "years": [
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 4000565,
+   "name": "Левел Селигерская",
+   "okrug": "САО",
+   "raions": [
+    "Западное Дегунино"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2025,
+   "years": [
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 26
+  },
+  {
+   "id": 3737154,
+   "name": "Легаси",
+   "okrug": "ЗАО",
+   "raions": [
+    "Раменки"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2025,
+   "years": [
+    2025
+   ],
+   "deadlineMax": 2026,
+   "offersSeen": 3
+  },
+  {
+   "id": 6294,
+   "name": "Легенда",
+   "okrug": "ТАО (Троицкий)",
+   "raions": [
+    "Троицк"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2025,
+   "years": [
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 7
+  },
+  {
+   "id": 5772884,
+   "name": "Лобачевского ул., д. 28",
+   "okrug": "ЗАО",
+   "raions": [
+    "Проспект Вернадского"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2025,
+   "years": [
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 4
+  },
+  {
+   "id": 4151172,
+   "name": "Лэйк",
+   "okrug": "СВАО",
+   "raions": [
+    "Свиблово"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2025,
+   "years": [
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 6
+  },
+  {
+   "id": 5174675,
+   "name": "Люблинская ул., д. 52, к. 1",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Люблино"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2025,
+   "years": [
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 6
+  },
+  {
+   "id": 49589,
+   "name": "Метрополия",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Южнопортовый"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2025,
+   "years": [
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 80
+  },
+  {
+   "id": 3987003,
+   "name": "Новое Очаково",
+   "okrug": "ЗАО",
+   "raions": [
+    "Очаково-Матвеевское"
+   ],
+   "yearMin": 2004,
+   "yearMax": 2025,
+   "years": [
+    2004,
+    2022,
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 13
+  },
+  {
+   "id": 4113090,
+   "name": "Новые Ватутинки, мкр. Заречный",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Десёновское"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2025,
+   "years": [
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 3984844,
+   "name": "Парксайд",
+   "okrug": "ЮАО",
+   "raions": [
+    "Чертаново Центральное"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2025,
+   "years": [
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 49
+  },
+  {
+   "id": "3984844",
+   "name": "Парксайд",
+   "okrug": "ЮАО",
+   "raions": [
+    "Чертаново Центральное"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2025,
+   "years": [
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 4125417,
+   "name": "Полярная ул., д. 3",
+   "okrug": "СВАО",
+   "raions": [
+    "Южное Медведково"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2025,
+   "years": [
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 9
+  },
+  {
+   "id": 3867553,
+   "name": "Преображенская площадь",
+   "okrug": "ВАО",
+   "raions": [
+    "Преображенское"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2025,
+   "years": [
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 73
+  },
+  {
+   "id": 3135154,
+   "name": "Пятницкое 58",
+   "okrug": "СЗАО",
+   "raions": [
+    "Митино"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2025,
+   "years": [
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 9
+  },
+  {
+   "id": 2120427,
+   "name": "Режиссёр",
+   "okrug": "СВАО",
+   "raions": [
+    "Ростокино"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2025,
+   "years": [
+    2023,
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 43
+  },
+  {
+   "id": 7480,
+   "name": "Резиденции Архитекторов",
+   "okrug": "ЦАО",
+   "raions": [
+    "Басманный"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2025,
+   "years": [
+    2020,
+    2021,
+    2025
+   ],
+   "deadlineMax": 2024,
+   "offersSeen": 14
+  },
+  {
+   "id": 5766832,
+   "name": "Ремизова ул., д. 11, к. 2",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Котловка"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2025,
+   "years": [
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 4
+  },
+  {
+   "id": 26458,
+   "name": "Римского-Корсакова 11",
+   "okrug": "СВАО",
+   "raions": [
+    "Отрадное"
+   ],
+   "yearMin": 2017,
+   "yearMax": 2025,
+   "years": [
+    2017,
+    2018,
+    2019,
+    2020,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 15
+  },
+  {
+   "id": 5766829,
+   "name": "Родниковая ул., д. 4А",
+   "okrug": "ЗАО",
+   "raions": [
+    "Солнцево"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2025,
+   "years": [
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 4020606,
+   "name": "Саввинская 17",
+   "okrug": "ЦАО",
+   "raions": [
+    "Хамовники"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2025,
+   "years": [
+    2025
+   ],
+   "deadlineMax": 2025,
+   "offersSeen": 4
+  },
+  {
+   "id": 20063,
+   "name": "Саларьево парк",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Московский",
+    "Сосенское"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2025,
+   "years": [
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 66
+  },
+  {
+   "id": 36051,
+   "name": "Селигер Сити",
+   "okrug": "САО",
+   "raions": [
+    "Западное Дегунино"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2025,
+   "years": [
+    2019,
+    2020,
+    2021,
+    2023,
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 72
+  },
+  {
+   "id": 2446053,
+   "name": "Сидней Сити",
+   "okrug": "СЗАО",
+   "raions": [
+    "Хорошево-Мневники"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2025,
+   "years": [
+    2023,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 13
+  },
+  {
+   "id": 2515016,
+   "name": "Симфония 34",
+   "okrug": "САО",
+   "raions": [
+    "Савеловский"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2025,
+   "years": [
+    2023,
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 113
+  },
+  {
+   "id": 5767163,
+   "name": "Сиреневый б-р, д. 4/12",
+   "okrug": "ВАО",
+   "raions": [
+    "Измайлово"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2025,
+   "years": [
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 35
+  },
+  {
+   "id": 3182068,
+   "name": "Тропарево Парк",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Мосрентген"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2025,
+   "years": [
+    2023,
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 53
+  },
+  {
+   "id": 8122,
+   "name": "Царская площадь",
+   "okrug": "САО",
+   "raions": [
+    "Беговой"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2025,
+   "years": [
+    2018,
+    2019,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 55
+  },
+  {
+   "id": 5773875,
+   "name": "Черепановых пр-д, д. 10",
+   "okrug": "САО",
+   "raions": [
+    "Коптево"
+   ],
+   "yearMin": 2025,
+   "yearMax": 2025,
+   "years": [
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 10
+  },
+  {
+   "id": 50743,
+   "name": "Эдельвейс",
+   "okrug": "ТАО (Троицкий)",
+   "raions": [
+    "Первомайское",
+    "Марушкинское"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2025,
+   "years": [
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 34
+  },
+  {
+   "id": 43832,
+   "name": "Эко Бунино",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Сосенское"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2025,
+   "years": [
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 16
+  },
+  {
+   "id": 3220268,
+   "name": "Южные сады",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Южное Бутово"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2025,
+   "years": [
+    2021,
+    2023,
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 59
+  },
+  {
+   "id": 5413416,
+   "name": "Яковлево",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Десёновское"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2025,
+   "years": [
+    2024,
+    2025
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 5772535,
+   "name": "5-я ул. Соколиной Горы, д. 21А",
+   "okrug": "ВАО",
+   "raions": [
+    "Соколиная гора"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 5772868,
+   "name": "6-я Радиальная ул., д. 7/1, к. 2",
+   "okrug": "ЮАО",
+   "raions": [
+    "Бирюлево Восточное"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2024,
+   "years": [
+    2021,
+    2022,
+    2023,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 47
+  },
+  {
+   "id": 2344978,
+   "name": "AFI Park «Воронцовский (АФИ Парк «Воронцовский)",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Обручевский"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2024,
+   "years": [
+    2023,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 22
+  },
+  {
+   "id": 2674035,
+   "name": "AFI Tower (АФИ Тауэр)",
+   "okrug": "СВАО",
+   "raions": [
+    "Свиблово"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2024,
+   "years": [
+    2020,
+    2023,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 25
+  },
+  {
+   "id": 3966751,
+   "name": "Clementine (Клементин)",
+   "okrug": "СВАО",
+   "raions": [
+    "Бибирево"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 6
+  },
+  {
+   "id": 843899,
+   "name": "Din Haus (Дин Хаус)",
+   "okrug": "САО",
+   "raions": [
+    "Савеловский"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2024,
+   "years": [
+    2023,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 1895918,
+   "name": "Eniteo (Энитео)",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Котловка"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2024,
+   "years": [
+    2023,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 48
+  },
+  {
+   "id": 47284,
+   "name": "Fresh (Фрэш)",
+   "okrug": "ЮАО",
+   "raions": [
+    "Зябликово"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2024,
+   "years": [
+    2021,
+    2022,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 14
+  },
+  {
+   "id": 1896273,
+   "name": "Hide («Хайд»)",
+   "okrug": "ЗАО",
+   "raions": [
+    "Раменки"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2024,
+   "years": [
+    2023,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 11
+  },
+  {
+   "id": 3872784,
+   "name": "Logos (Логос)",
+   "okrug": "ЮАО",
+   "raions": [
+    "Даниловский"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2024,
+   "years": [
+    2023,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 1327470,
+   "name": "MONODOM FAMILY (Монодом Фэмили)",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Лефортово"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 3926969,
+   "name": "Sole Hill (Соле Хилл)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Мещанский"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 18
+  },
+  {
+   "id": 48547,
+   "name": "Stella di Mosca Hotel & Residences (Стелла ди Моска Хотел энд Резиденсиз)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Пресненский"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 631708,
+   "name": "Stoleshnikov 7 (Столешников 7)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Тверской"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 3782658,
+   "name": "Woods (Вудс)",
+   "okrug": "ЗАО",
+   "raions": [
+    "Раменки"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 5774849,
+   "name": "Академика Дыхне ул., д. 18",
+   "okrug": "ТАО (Троицкий)",
+   "raions": [
+    "Троицк"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 5767040,
+   "name": "Академика Дыхне ул., д. 8",
+   "okrug": "ТАО (Троицкий)",
+   "raions": [
+    "Троицк"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 7
+  },
+  {
+   "id": 2459601,
+   "name": "Аквилон Beside (Аквилон Бисайд)",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Нижегородский"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 6
+  },
+  {
+   "id": 2511297,
+   "name": "Апарт-комплекс Monodom Lake (Монодом Лейк)",
+   "okrug": "САО",
+   "raions": [
+    "Головинский"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 2930544,
+   "name": "Апарт-комплекс Измайловский Парк",
+   "okrug": "ВАО",
+   "raions": [
+    "Соколиная гора"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 15
+  },
+  {
+   "id": 7482,
+   "name": "Апарт-комплекс Легендарный квартал",
+   "okrug": "СВАО",
+   "raions": [
+    "Останкинский"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2024,
+   "years": [
+    2020,
+    2021,
+    2022,
+    2023,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 50
+  },
+  {
+   "id": 890268,
+   "name": "Апартаментный комплекс Левел Стрешнево",
+   "okrug": "СЗАО",
+   "raions": [
+    "Покровское-Стрешнево"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2024,
+   "years": [
+    2022,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 11
+  },
+  {
+   "id": 5774953,
+   "name": "Базовская ул., д. 24Б",
+   "okrug": "САО",
+   "raions": [
+    "Западное Дегунино"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 5772046,
+   "name": "Балаклавский пр-кт, д. 17",
+   "okrug": "ЮАО",
+   "raions": [
+    "Чертаново Северное"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 7
+  },
+  {
+   "id": 15584,
+   "name": "Большая семерка",
+   "okrug": "ВАО",
+   "raions": [
+    "Богородское"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 13
+  },
+  {
+   "id": 5494,
+   "name": "Борисоглебское",
+   "okrug": "ТАО (Троицкий)",
+   "raions": [
+    "Новофёдоровское"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2024,
+   "years": [
+    2018,
+    2019,
+    2021,
+    2022,
+    2023,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 17
+  },
+  {
+   "id": 2159741,
+   "name": "Бусиновский парк",
+   "okrug": "САО",
+   "raions": [
+    "Западное Дегунино"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2024,
+   "years": [
+    2022,
+    2023,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 28
+  },
+  {
+   "id": 107161,
+   "name": "В стремлении к свету...",
+   "okrug": "СВАО",
+   "raions": [
+    "Лианозово"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 16
+  },
+  {
+   "id": 3842780,
+   "name": "Вангарден",
+   "okrug": "ЗАО",
+   "raions": [
+    "Очаково-Матвеевское"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2024,
+   "years": [
+    2023,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 4166133,
+   "name": "Волоколамское шоссе",
+   "okrug": "СЗАО",
+   "raions": [
+    "Покровское-Стрешнево"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 42691,
+   "name": "Время",
+   "okrug": "ВАО",
+   "raions": [
+    "Преображенское"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 1448,
+   "name": "Город-парк Первый Московский",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Московский"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2024,
+   "years": [
+    2019,
+    2021,
+    2023,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 42
+  },
+  {
+   "id": 49526,
+   "name": "Городские истории (Рассказовка)",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Внуковское"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2024,
+   "years": [
+    2020,
+    2021,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 26
+  },
+  {
+   "id": 7817,
+   "name": "Грин парк",
+   "okrug": "СВАО",
+   "raions": [
+    "Останкинский"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2024,
+   "years": [
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 18
+  },
+  {
+   "id": 3777055,
+   "name": "Зелёный парк",
+   "okrug": "ЗелАО",
+   "raions": [
+    "Крюково"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 61
+  },
+  {
+   "id": 3644576,
+   "name": "Интонация",
+   "okrug": "СЗАО",
+   "raions": [
+    "Щукино"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2024,
+   "years": [
+    2023,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 7
+  },
+  {
+   "id": 3804713,
+   "name": "Кавказский бульвар 51",
+   "okrug": "ЮАО",
+   "raions": [
+    "Царицыно"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 67
+  },
+  {
+   "id": 5744956,
+   "name": "Касимовская улица, 39к2",
+   "okrug": "ЮАО",
+   "raions": [
+    "Бирюлево Восточное"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 1845793,
+   "name": "Квартал Foriver (Форивер)",
+   "okrug": "ЮАО",
+   "raions": [
+    "Даниловский"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 6
+  },
+  {
+   "id": 5753271,
+   "name": "Кедрова ул., д. 16, к. 3",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Академический"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 6
+  },
+  {
+   "id": 2567913,
+   "name": "Клубный дом Рублево",
+   "okrug": "ЗАО",
+   "raions": [
+    "Кунцево"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 6
+  },
+  {
+   "id": 2430892,
+   "name": "Комплекс апартаментов B’aires (Байрес)",
+   "okrug": "СЗАО",
+   "raions": [
+    "Щукино"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2024,
+   "years": [
+    2022,
+    2023,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 5772881,
+   "name": "Коровинское ш., д. 29",
+   "okrug": "САО",
+   "raions": [
+    "Западное Дегунино"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 1872143,
+   "name": "Красноказарменная 15",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Лефортово"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2024,
+   "years": [
+    2022,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 2616170,
+   "name": "Кронштадтский 14",
+   "okrug": "САО",
+   "raions": [
+    "Головинский"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2024,
+   "years": [
+    2023,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 2251726,
+   "name": "Кронштадтский 9",
+   "okrug": "САО",
+   "raions": [
+    "Головинский"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2024,
+   "years": [
+    2023,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 29
+  },
+  {
+   "id": 5775342,
+   "name": "Лавочкина ул., д. 10А",
+   "okrug": "САО",
+   "raions": [
+    "Головинский"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 48951,
+   "name": "ЛАЙФ Варшавская",
+   "okrug": "ЮАО",
+   "raions": [
+    "Москворечье-Сабурово"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2024,
+   "years": [
+    2021,
+    2022,
+    2023,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 38
+  },
+  {
+   "id": 3401530,
+   "name": "Левел Нагатинская",
+   "okrug": "ЮАО",
+   "raions": [
+    "Нагатино-Садовники"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 25
+  },
+  {
+   "id": 1529615,
+   "name": "Левел Причальный",
+   "okrug": "СЗАО",
+   "raions": [
+    "Хорошево-Мневники"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2024,
+   "years": [
+    2023,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 9
+  },
+  {
+   "id": 3663814,
+   "name": "Лосиноостровский парк",
+   "okrug": "ВАО",
+   "raions": [
+    "Метрогородок"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2024,
+   "years": [
+    2023,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 25
+  },
+  {
+   "id": 14308,
+   "name": "Малыгина 12",
+   "okrug": "СВАО",
+   "raions": [
+    "Лосиноостровский"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2024,
+   "years": [
+    2023,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 3499138,
+   "name": "Матвеевский парк",
+   "okrug": "ЗАО",
+   "raions": [
+    "Очаково-Матвеевское"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2024,
+   "years": [
+    2023,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 20
+  },
+  {
+   "id": 2764045,
+   "name": "Мичуринский парк",
+   "okrug": "ЗАО",
+   "raions": [
+    "Очаково-Матвеевское"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2024,
+   "years": [
+    2022,
+    2023,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 15
+  },
+  {
+   "id": 5766837,
+   "name": "Нарвская ул., д. 5",
+   "okrug": "САО",
+   "raions": [
+    "Войковский"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 3727932,
+   "name": "Никольские луга",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Южное Бутово"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2024,
+   "years": [
+    2023,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 28
+  },
+  {
+   "id": 5794,
+   "name": "Новые Ватутинки, мкр. Центральный",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Десёновское"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2024,
+   "years": [
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 16
+  },
+  {
+   "id": 7914,
+   "name": "Октябрьское поле",
+   "okrug": "СЗАО",
+   "raions": [
+    "Щукино"
+   ],
+   "yearMin": 1952,
+   "yearMax": 2024,
+   "years": [
+    1952,
+    2020,
+    2021,
+    2022,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 25
+  },
+  {
+   "id": 3878522,
+   "name": "Открытый парк",
+   "okrug": "ВАО",
+   "raions": [
+    "Метрогородок"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 11
+  },
+  {
+   "id": 3683846,
+   "name": "Парковый квартал «СЕЛФ (Сэлф)",
+   "okrug": "ВАО",
+   "raions": [
+    "Богородское"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 24
+  },
+  {
+   "id": 123671,
+   "name": "Поклонная 9",
+   "okrug": "ЗАО",
+   "raions": [
+    "Дорогомилово"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2024,
+   "years": [
+    2022,
+    2023,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 41
+  },
+  {
+   "id": 6381,
+   "name": "Рассказово",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Внуковское"
+   ],
+   "yearMin": 2017,
+   "yearMax": 2024,
+   "years": [
+    2017,
+    2018,
+    2019,
+    2021,
+    2022,
+    2023,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 59
+  },
+  {
+   "id": 3401217,
+   "name": "Сенатор",
+   "okrug": "СВАО",
+   "raions": [
+    "Останкинский"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 6
+  },
+  {
+   "id": 5895,
+   "name": "Сердце Столицы",
+   "okrug": "СЗАО",
+   "raions": [
+    "Хорошево-Мневники"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2024,
+   "years": [
+    2018,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 25
+  },
+  {
+   "id": 49240,
+   "name": "Сиреневый парк",
+   "okrug": "ВАО",
+   "raions": [
+    "Метрогородок"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2024,
+   "years": [
+    2021,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 73
+  },
+  {
+   "id": 2052,
+   "name": "Слава",
+   "okrug": "САО",
+   "raions": [
+    "Беговой"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2024,
+   "years": [
+    2023,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 69
+  },
+  {
+   "id": 5772878,
+   "name": "Стартовая ул., д. 3/1",
+   "okrug": "СВАО",
+   "raions": [
+    "Лосиноостровский"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 504035,
+   "name": "Стеллар Сити",
+   "okrug": "ЗАО",
+   "raions": [
+    "Можайский"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2024,
+   "years": [
+    2021,
+    2023,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 32
+  },
+  {
+   "id": 2123793,
+   "name": "Стремянный 2",
+   "okrug": "ЦАО",
+   "raions": [
+    "Замоскворечье"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 7
+  },
+  {
+   "id": 4491789,
+   "name": "Танковый проезд",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Лефортово"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 300653,
+   "name": "Титул на Серебрянической",
+   "okrug": "ЦАО",
+   "raions": [
+    "Таганский"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2024,
+   "years": [
+    2021,
+    2024
+   ],
+   "deadlineMax": 2021,
+   "offersSeen": 12
+  },
+  {
+   "id": 6155,
+   "name": "Троицкая ривьера",
+   "okrug": "ТАО (Троицкий)",
+   "raions": [
+    "Троицк"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 10
+  },
+  {
+   "id": 38357,
+   "name": "Фестиваль Парк",
+   "okrug": "САО",
+   "raions": [
+    "Левобережный"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2024,
+   "years": [
+    2019,
+    2021,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 13
+  },
+  {
+   "id": 2144861,
+   "name": "Фестиваль парк-2",
+   "okrug": "САО",
+   "raions": [
+    "Левобережный"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2024,
+   "years": [
+    2023,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 21
+  },
+  {
+   "id": 5767037,
+   "name": "Фестивальная ул., д. 15, к. 2",
+   "okrug": "САО",
+   "raions": [
+    "Левобережный"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 7
+  },
+  {
+   "id": 3911071,
+   "name": "ФизтехСити",
+   "okrug": "СВАО",
+   "raions": [
+    "Северный"
+   ],
+   "yearMin": 2024,
+   "yearMax": 2024,
+   "years": [
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 17
+  },
+  {
+   "id": 1429,
+   "name": "Царицыно-2",
+   "okrug": "ЮАО",
+   "raions": [
+    "Бирюлево Восточное"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2024,
+   "years": [
+    2019,
+    2021,
+    2022,
+    2023,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 13
+  },
+  {
+   "id": 1938885,
+   "name": "Эко-квартал Аквилон Митино",
+   "okrug": "СЗАО",
+   "raions": [
+    "Митино"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2024,
+   "years": [
+    2023,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 8
+  },
+  {
+   "id": 3841521,
+   "name": "Ютаново",
+   "okrug": "ЮАО",
+   "raions": [
+    "Чертаново Южное"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2024,
+   "years": [
+    2023,
+    2024
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 50400,
+   "name": "Aquatoria (Акватория)",
+   "okrug": "САО",
+   "raions": [
+    "Левобережный"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2023,
+   "years": [
+    2021,
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 27
+  },
+  {
+   "id": 45865,
+   "name": "Capital Towers (Капитал Тауэрс)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Пресненский"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2023,
+   "years": [
+    2022,
+    2023
+   ],
+   "deadlineMax": 2023,
+   "offersSeen": 24
+  },
+  {
+   "id": 19492,
+   "name": "City Park (Сити Парк)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Пресненский"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2023,
+   "years": [
+    2019,
+    2020,
+    2021,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 13
+  },
+  {
+   "id": 3402470,
+   "name": "Dream Towers (Дрим Тауэрс)",
+   "okrug": "ЮАО",
+   "raions": [
+    "Нагатинский затон"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2023,
+   "years": [
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 34
+  },
+  {
+   "id": 1341314,
+   "name": "homecity (хоумсити)",
+   "okrug": "ЗАО",
+   "raions": [
+    "Солнцево",
+    "Московский"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2023,
+   "years": [
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 12
+  },
+  {
+   "id": 1312533,
+   "name": "KAZAKOV Grand Loft (КАЗАКОВ Гранд Лофт)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Басманный"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2023,
+   "years": [
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 7
+  },
+  {
+   "id": 49992,
+   "name": "Lucky (Лаки)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Пресненский"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2023,
+   "years": [
+    2022,
+    2023
+   ],
+   "deadlineMax": 2023,
+   "offersSeen": 15
+  },
+  {
+   "id": 1565486,
+   "name": "LUMIN (ЛЮМИН)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Таганский"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2023,
+   "years": [
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 49513,
+   "name": "MainStreet (Мейнстрит)",
+   "okrug": "ЗАО",
+   "raions": [
+    "Фили-Давыдково"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2023,
+   "years": [
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 24
+  },
+  {
+   "id": 2363941,
+   "name": "Profit (Профит)",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Нижегородский"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2023,
+   "years": [
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 14
+  },
+  {
+   "id": 1373416,
+   "name": "Residence Hall Шаболовский (Резиденс Холл Шаболовский)",
+   "okrug": "ЮАО",
+   "raions": [
+    "Даниловский"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2023,
+   "years": [
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 44753,
+   "name": "Roza Rossa (Роза Росса)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Хамовники"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2023,
+   "years": [
+    2020,
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 4
+  },
+  {
+   "id": 1444810,
+   "name": "Russian Design District (Рашен Дизайн Дистрикт)",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Десёновское"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2023,
+   "years": [
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 19
+  },
+  {
+   "id": 48269,
+   "name": "Tatlin Apartments (Татлин Апартментс)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Басманный"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2023,
+   "years": [
+    2021,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 6
+  },
+  {
+   "id": 1491331,
+   "name": "TopHills (ТопХиллc)",
+   "okrug": "ЮАО",
+   "raions": [
+    "Нагорный"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2023,
+   "years": [
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 23
+  },
+  {
+   "id": 2987326,
+   "name": "UNO Старокоптевский (УНО Старокоптевский)",
+   "okrug": "САО",
+   "raions": [
+    "Коптево"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2023,
+   "years": [
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 6
+  },
+  {
+   "id": 49483,
+   "name": "Villa Grace (Вилла Грейс)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Хамовники"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2023,
+   "years": [
+    2020,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 4
+  },
+  {
+   "id": 3725811,
+   "name": "West Tower (Апартаменты бизнес-класса) (Вест Тауэр)",
+   "okrug": "ЗАО",
+   "raions": [
+    "Очаково-Матвеевское"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2023,
+   "years": [
+    2020,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 7
+  },
+  {
+   "id": 111527,
+   "name": "Абрикосов",
+   "okrug": "ЦАО",
+   "raions": [
+    "Басманный"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2023,
+   "years": [
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 6
+  },
+  {
+   "id": 41881,
+   "name": "Академика Павлова",
+   "okrug": "ЗАО",
+   "raions": [
+    "Кунцево"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2023,
+   "years": [
+    2020,
+    2021,
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 12
+  },
+  {
+   "id": 7240,
+   "name": "Андерсен",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Десёновское"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2023,
+   "years": [
+    2021,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 158289,
+   "name": "Балтийский",
+   "okrug": "САО",
+   "raions": [
+    "Войковский"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2023,
+   "years": [
+    2021,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 7887,
+   "name": "Баркли Медовая долина",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Марушкинское"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2023,
+   "years": [
+    2018,
+    2020,
+    2021,
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 27
+  },
+  {
+   "id": 2531395,
+   "name": "Бристоль",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Московский"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2023,
+   "years": [
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 7228,
+   "name": "Бунинские луга",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Сосенское"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2023,
+   "years": [
+    2018,
+    2019,
+    2020,
+    2021,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 9
+  },
+  {
+   "id": 1568658,
+   "name": "Вдохновение",
+   "okrug": "ВАО",
+   "raions": [
+    "Богородское"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2023,
+   "years": [
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 7
+  },
+  {
+   "id": 1277401,
+   "name": "Вереск",
+   "okrug": "СЗАО",
+   "raions": [
+    "Хорошево-Мневники"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2023,
+   "years": [
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 50320,
+   "name": "Веспер Тверская",
+   "okrug": "ЦАО",
+   "raions": [
+    "Тверской"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2023,
+   "years": [
+    2020,
+    2021,
+    2023
+   ],
+   "deadlineMax": 2022,
+   "offersSeen": 17
+  },
+  {
+   "id": 165837,
+   "name": "Вестердам",
+   "okrug": "ЗАО",
+   "raions": [
+    "Очаково-Матвеевское"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2023,
+   "years": [
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 14
+  },
+  {
+   "id": 1967590,
+   "name": "Врубеля 4",
+   "okrug": "САО",
+   "raions": [
+    "Сокол"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2023,
+   "years": [
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 7
+  },
+  {
+   "id": 19800,
+   "name": "Династия",
+   "okrug": "САО",
+   "raions": [
+    "Хорошевский"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2023,
+   "years": [
+    2020,
+    2021,
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 14
+  },
+  {
+   "id": 50505,
+   "name": "Дмитровский парк",
+   "okrug": "САО",
+   "raions": [
+    "Дмитровский"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2023,
+   "years": [
+    2020,
+    2021,
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 18
+  },
+  {
+   "id": 7925,
+   "name": "Домашний",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Марьино"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2023,
+   "years": [
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 36
+  },
+  {
+   "id": 3481983,
+   "name": "Досфлота, 10",
+   "okrug": "СЗАО",
+   "raions": [
+    "Южное Тушино"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2023,
+   "years": [
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 2400715,
+   "name": "Зеленая Вертикаль",
+   "okrug": "ЮАО",
+   "raions": [
+    "Чертаново Южное"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2023,
+   "years": [
+    2021,
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 20
+  },
+  {
+   "id": 81377,
+   "name": "Золотой, жилой квартал",
+   "okrug": "ЦАО",
+   "raions": [
+    "Якиманка"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2023,
+   "years": [
+    2021,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 13
+  },
+  {
+   "id": 8593,
+   "name": "Ирландская ул., д. 4, к. 1, 2",
+   "okrug": "ТАО (Троицкий)",
+   "raions": [
+    "Краснопахорское"
+   ],
+   "yearMin": 2016,
+   "yearMax": 2023,
+   "years": [
+    2016,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 20
+  },
+  {
+   "id": 5744940,
+   "name": "Капотня, 1-й кв-л, д. 1",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Капотня"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2023,
+   "years": [
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 666948,
+   "name": "Квартал на набережной NOW",
+   "okrug": "ЮАО",
+   "raions": [
+    "Даниловский"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2023,
+   "years": [
+    2019,
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 8
+  },
+  {
+   "id": 51271,
+   "name": "Квартал Некрасовка",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Некрасовка"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2023,
+   "years": [
+    2020,
+    2021,
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 11
+  },
+  {
+   "id": 1252876,
+   "name": "Клубный дом TURGENEV (Тургенев)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Красносельский"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2023,
+   "years": [
+    2023
+   ],
+   "deadlineMax": 2023,
+   "offersSeen": 20
+  },
+  {
+   "id": 52705,
+   "name": "Комплекс апартаментов Alcon Tower (Алкон Тауэр)",
+   "okrug": "САО",
+   "raions": [
+    "Беговой"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2023,
+   "years": [
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 843911,
+   "name": "Комплекс апартаментов LES (Лес)",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Ясенево"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2023,
+   "years": [
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 64679,
+   "name": "Кутузов Град",
+   "okrug": "ЗАО",
+   "raions": [
+    "Можайский"
+   ],
+   "yearMin": 1912,
+   "yearMax": 2023,
+   "years": [
+    1912,
+    2018,
+    2019,
+    2021,
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 50
+  },
+  {
+   "id": 35146,
+   "name": "Левел Амурская",
+   "okrug": "ВАО",
+   "raions": [
+    "Гольяново"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2023,
+   "years": [
+    2020,
+    2021,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 38
+  },
+  {
+   "id": 47119,
+   "name": "Любовь и Голуби",
+   "okrug": "САО",
+   "raions": [
+    "Западное Дегунино"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2023,
+   "years": [
+    2020,
+    2021,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 30377,
+   "name": "Михайлова, 31",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Рязанский"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2023,
+   "years": [
+    2019,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 7
+  },
+  {
+   "id": 49347,
+   "name": "Михайловский парк",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Рязанский"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2023,
+   "years": [
+    2020,
+    2021,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 13
+  },
+  {
+   "id": 49172,
+   "name": "Мякинино парк",
+   "okrug": "ЗАО",
+   "raions": [
+    "Кунцево"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2023,
+   "years": [
+    2021,
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 40
+  },
+  {
+   "id": 7210,
+   "name": "Невский",
+   "okrug": "САО",
+   "raions": [
+    "Войковский"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2023,
+   "years": [
+    2018,
+    2019,
+    2020,
+    2021,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 22
+  },
+  {
+   "id": 1342217,
+   "name": "Новоданиловская 8",
+   "okrug": "ЮАО",
+   "raions": [
+    "Донской"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2023,
+   "years": [
+    2021,
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 7
+  },
+  {
+   "id": 2279282,
+   "name": "Новохохловская 15",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Нижегородский"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2023,
+   "years": [
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 9
+  },
+  {
+   "id": 883272,
+   "name": "Новые Ватутинки, мкр. Десна",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Десёновское"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2023,
+   "years": [
+    2021,
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 10
+  },
+  {
+   "id": 49134,
+   "name": "Огни",
+   "okrug": "ЗАО",
+   "raions": [
+    "Раменки"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2023,
+   "years": [
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 9
+  },
+  {
+   "id": 2616018,
+   "name": "Перовское 2",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Нижегородский"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2023,
+   "years": [
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 6
+  },
+  {
+   "id": 61871,
+   "name": "Пироговская 14",
+   "okrug": "ЦАО",
+   "raions": [
+    "Хамовники"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2023,
+   "years": [
+    2021,
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 43254,
+   "name": "Полярная 25",
+   "okrug": "СВАО",
+   "raions": [
+    "Южное Медведково"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2023,
+   "years": [
+    2019,
+    2020,
+    2021,
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 16
+  },
+  {
+   "id": 2498484,
+   "name": "Резиденция Сокольники",
+   "okrug": "ВАО",
+   "raions": [
+    "Сокольники"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2023,
+   "years": [
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 8
+  },
+  {
+   "id": 273519,
+   "name": "Река",
+   "okrug": "ЗАО",
+   "raions": [
+    "Раменки"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2023,
+   "years": [
+    2021,
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 35
+  },
+  {
+   "id": 4022193,
+   "name": "Ренессанс",
+   "okrug": "ВАО",
+   "raions": [
+    "Сокольники"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2023,
+   "years": [
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 7
+  },
+  {
+   "id": 5766838,
+   "name": "Родниковая, 5А",
+   "okrug": "ЗАО",
+   "raions": [
+    "Солнцево"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2023,
+   "years": [
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 9
+  },
+  {
+   "id": 727,
+   "name": "Румянцево-Парк",
+   "okrug": "ЗАО",
+   "raions": [
+    "Солнцево",
+    "Московский"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2023,
+   "years": [
+    2020,
+    2021,
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 33
+  },
+  {
+   "id": 130,
+   "name": "Садовые кварталы",
+   "okrug": "ЦАО",
+   "raions": [
+    "Хамовники"
+   ],
+   "yearMin": 2012,
+   "yearMax": 2023,
+   "years": [
+    2012,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 54
+  },
+  {
+   "id": 34893,
+   "name": "Серебряный фонтан",
+   "okrug": "СВАО",
+   "raions": [
+    "Алексеевский"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2023,
+   "years": [
+    2019,
+    2020,
+    2021,
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 38
+  },
+  {
+   "id": 1277502,
+   "name": "Сити-комплекс Мята",
+   "okrug": "САО",
+   "raions": [
+    "Хорошевский"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2023,
+   "years": [
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 165992,
+   "name": "Собрание клубных домов West Garden (Вест Гарден)",
+   "okrug": "ЗАО",
+   "raions": [
+    "Раменки"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2023,
+   "years": [
+    2022,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 7
+  },
+  {
+   "id": 3401849,
+   "name": "Сокольнический вал 1",
+   "okrug": "ВАО",
+   "raions": [
+    "Сокольники"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2023,
+   "years": [
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 9
+  },
+  {
+   "id": 1907452,
+   "name": "Талисман на Рокоссовского",
+   "okrug": "ВАО",
+   "raions": [
+    "Богородское"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2023,
+   "years": [
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 561502,
+   "name": "Текстильщиков ул., д. 3, к. 2",
+   "okrug": "ТАО (Троицкий)",
+   "raions": [
+    "Троицк"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2023,
+   "years": [
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 2234022,
+   "name": "Тессинский, 1",
+   "okrug": "ЦАО",
+   "raions": [
+    "Таганский"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2023,
+   "years": [
+    2020,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 12
+  },
+  {
+   "id": 20316,
+   "name": "Тихвинская 14",
+   "okrug": "СВАО",
+   "raions": [
+    "Марьина роща"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2023,
+   "years": [
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 47094,
+   "name": "Трилогия Кристалл",
+   "okrug": "СЗАО",
+   "raions": [
+    "Хорошево-Мневники"
+   ],
+   "yearMin": 2023,
+   "yearMax": 2023,
+   "years": [
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 14
+  },
+  {
+   "id": 49361,
+   "name": "Шереметьевский",
+   "okrug": "СВАО",
+   "raions": [
+    "Марьина роща"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2023,
+   "years": [
+    2021,
+    2023
+   ],
+   "deadlineMax": null,
+   "offersSeen": 15
+  },
+  {
+   "id": 5772874,
+   "name": "6-я Радиальная ул., д. 7/6, к. 3",
+   "okrug": "ЮАО",
+   "raions": [
+    "Бирюлево Восточное"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2022,
+   "years": [
+    2021,
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 8
+  },
+  {
+   "id": 49797,
+   "name": "Bauman House (Бауман Хаус)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Басманный"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2022,
+   "years": [
+    2020,
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 8
+  },
+  {
+   "id": 25398,
+   "name": "Cloud Nine (Клауд Найн)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Якиманка"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2022,
+   "years": [
+    2021,
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 6
+  },
+  {
+   "id": 48932,
+   "name": "D1 (Д1)",
+   "okrug": "САО",
+   "raions": [
+    "Тимирязевский"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2022,
+   "years": [
+    2021,
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 26
+  },
+  {
+   "id": 176051,
+   "name": "Dialog (Диалог)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Красносельский"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 8
+  },
+  {
+   "id": 1357608,
+   "name": "Fantastic House (Фантастик Хаус)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Пресненский"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 6356,
+   "name": "FreeDOM (Фридом)",
+   "okrug": "СЗАО",
+   "raions": [
+    "Хорошево-Мневники"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2022,
+   "years": [
+    2020,
+    2021,
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 192697,
+   "name": "L'Club (Л'Клаб)",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Люблино"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2022,
+   "years": [
+    2021,
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 7
+  },
+  {
+   "id": 45281,
+   "name": "LIFE-Кутузовский (ЛАЙФ-Кутузовский)",
+   "okrug": "ЗАО",
+   "raions": [
+    "Можайский"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2022,
+   "years": [
+    2020,
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 21
+  },
+  {
+   "id": 64769,
+   "name": "Loft FM (Лофт ФМ)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Таганский"
+   ],
+   "yearMin": 1956,
+   "yearMax": 2022,
+   "years": [
+    1956,
+    2019,
+    2020,
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 7
+  },
+  {
+   "id": 52703,
+   "name": "River Residences (Ривер Резиденсес)",
+   "okrug": "СЗАО",
+   "raions": [
+    "Хорошево-Мневники"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 50481,
+   "name": "Sinatra (Синатра)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Пресненский"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2022,
+   "years": [
+    2018,
+    2020,
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 368,
+   "name": "Sky House (Скай Хаус)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Якиманка"
+   ],
+   "yearMin": 2012,
+   "yearMax": 2022,
+   "years": [
+    2012,
+    2020,
+    2021,
+    2022
+   ],
+   "deadlineMax": 2020,
+   "offersSeen": 38
+  },
+  {
+   "id": 1290591,
+   "name": "Trend (Тренд)",
+   "okrug": "СЗАО",
+   "raions": [
+    "Щукино"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 46791,
+   "name": "Wellton Towers (Веллтон Тауэрс)",
+   "okrug": "СЗАО",
+   "raions": [
+    "Хорошево-Мневники"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 6
+  },
+  {
+   "id": 1939224,
+   "name": "Авиатика",
+   "okrug": "САО",
+   "raions": [
+    "Хорошевский"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 4
+  },
+  {
+   "id": 379209,
+   "name": "Апарт-комплекс Движение.Тушино",
+   "okrug": "СЗАО",
+   "raions": [
+    "Покровское-Стрешнево"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 4
+  },
+  {
+   "id": 6788,
+   "name": "Апарт-комплекс Нахимов",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Черемушки"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2022,
+   "years": [
+    2021,
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 7
+  },
+  {
+   "id": 890318,
+   "name": "Апартаментный комплекс Левел Донской",
+   "okrug": "ЮАО",
+   "raions": [
+    "Донской"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2022,
+   "years": [
+    2021,
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 3913150,
+   "name": "Апартаменты Берег Яузы",
+   "okrug": "ВАО",
+   "raions": [
+    "Преображенское"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 50027,
+   "name": "баланс",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Рязанский"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 47
+  },
+  {
+   "id": 20954,
+   "name": "Белые ночи",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Сосенское"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 5772877,
+   "name": "Варшавское ш., д. 100, к. 1",
+   "okrug": "ЮАО",
+   "raions": [
+    "Нагорный"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 2352,
+   "name": "Вишневый сад",
+   "okrug": "ЗАО",
+   "raions": [
+    "Раменки"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2022,
+   "years": [
+    2020,
+    2021,
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 4
+  },
+  {
+   "id": 8017,
+   "name": "Влюблино",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Люблино"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2022,
+   "years": [
+    2019,
+    2020,
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 22
+  },
+  {
+   "id": 6984,
+   "name": "Город на Реке Тушино-2018",
+   "okrug": "СЗАО",
+   "raions": [
+    "Покровское-Стрешнево"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2022,
+   "years": [
+    2018,
+    2020,
+    2021,
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 9
+  },
+  {
+   "id": 92320,
+   "name": "Дизайнерский дом Eleven (11)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Пресненский"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 2214439,
+   "name": "Дом в Газетном",
+   "okrug": "ЦАО",
+   "raions": [
+    "Пресненский"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2022,
+   "years": [
+    2021,
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 34895,
+   "name": "Западный порт",
+   "okrug": "ЗАО",
+   "raions": [
+    "Филевский парк"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2022,
+   "years": [
+    2020,
+    2021,
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 30
+  },
+  {
+   "id": 35833,
+   "name": "ИзМайЛовО",
+   "okrug": "ВАО",
+   "raions": [
+    "Измайлово"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 7
+  },
+  {
+   "id": 7874,
+   "name": "Испанские кварталы",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Сосенское"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2022,
+   "years": [
+    2019,
+    2020,
+    2021,
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 9
+  },
+  {
+   "id": 335195,
+   "name": "Исток",
+   "okrug": "САО",
+   "raions": [
+    "Войковский"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 1356482,
+   "name": "Каширка.LIKE (Каширка.Лайк)",
+   "okrug": "ЮАО",
+   "raions": [
+    "Москворечье-Сабурово"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 7
+  },
+  {
+   "id": 7897,
+   "name": "Кварталы 21/19",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Рязанский"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2022,
+   "years": [
+    2018,
+    2020,
+    2021,
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 18
+  },
+  {
+   "id": 49491,
+   "name": "Кверкус",
+   "okrug": "САО",
+   "raions": [
+    "Тимирязевский"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 44399,
+   "name": "Кленовые Аллеи",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Десёновское"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2022,
+   "years": [
+    2019,
+    2020,
+    2021,
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 16
+  },
+  {
+   "id": 46993,
+   "name": "Крылья",
+   "okrug": "ЗАО",
+   "raions": [
+    "Раменки"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 7030,
+   "name": "Лайм",
+   "okrug": "СВАО",
+   "raions": [
+    "Алексеевский"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 42
+  },
+  {
+   "id": 48502,
+   "name": "ЛЕНИНГРАDКА 58 (ЛЕНИНГРАДКА 58)",
+   "okrug": "САО",
+   "raions": [
+    "Головинский"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 7
+  },
+  {
+   "id": 5772882,
+   "name": "Ленинская Слобода ул., д. 3",
+   "okrug": "ЮАО",
+   "raions": [
+    "Даниловский"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 6,
+   "name": "Маршал",
+   "okrug": "СЗАО",
+   "raions": [
+    "Щукино"
+   ],
+   "yearMin": 2007,
+   "yearMax": 2022,
+   "years": [
+    2007,
+    2011,
+    2012,
+    2022
+   ],
+   "deadlineMax": 2011,
+   "offersSeen": 15
+  },
+  {
+   "id": 5795,
+   "name": "Марьино Град",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Филимонковское"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2022,
+   "years": [
+    2020,
+    2021,
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 30
+  },
+  {
+   "id": 4117304,
+   "name": "мой адрес На Вертолетчиков",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Некрасовка"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2022,
+   "years": [
+    2021,
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 4125406,
+   "name": "мой адрес На Салтыковской",
+   "okrug": "ВАО",
+   "raions": [
+    "Косино-Ухтомский"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 4535269,
+   "name": "на Мельникова, 2",
+   "okrug": "ЦАО",
+   "raions": [
+    "Таганский"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 54522,
+   "name": "Нагатино Ай-Лэнд",
+   "okrug": "ЮАО",
+   "raions": [
+    "Даниловский"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 8
+  },
+  {
+   "id": 8165,
+   "name": "Нагорная 7",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Котловка"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2022,
+   "years": [
+    2020,
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 1565483,
+   "name": "Настоящее",
+   "okrug": "ЗАО",
+   "raions": [
+    "Раменки"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 4
+  },
+  {
+   "id": 5274,
+   "name": "Некрасовка",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Некрасовка"
+   ],
+   "yearMin": 2017,
+   "yearMax": 2022,
+   "years": [
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 40
+  },
+  {
+   "id": 5792,
+   "name": "Новое Бутово",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Воскресенское"
+   ],
+   "yearMin": 2014,
+   "yearMax": 2022,
+   "years": [
+    2014,
+    2019,
+    2021,
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 8
+  },
+  {
+   "id": 34098,
+   "name": "Нормандия",
+   "okrug": "СВАО",
+   "raions": [
+    "Лосиноостровский"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2022,
+   "years": [
+    2020,
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 18
+  },
+  {
+   "id": 25386,
+   "name": "Премиум-квартал JAZZ (Джаз)",
+   "okrug": "СВАО",
+   "raions": [
+    "Марьина роща"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2022,
+   "years": [
+    2021,
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 18
+  },
+  {
+   "id": 1701,
+   "name": "Преображение",
+   "okrug": "ВАО",
+   "raions": [
+    "Богородское"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2022,
+   "years": [
+    2020,
+    2021,
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 19
+  },
+  {
+   "id": 228884,
+   "name": "Призма",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Обручевский"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 2028757,
+   "name": "Расцветай в Люблино",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Люблино"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 36935,
+   "name": "Резиденции Замоскворечье",
+   "okrug": "ЦАО",
+   "raions": [
+    "Замоскворечье"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": 2022,
+   "offersSeen": 12
+  },
+  {
+   "id": 6203,
+   "name": "Резиденции Композиторов",
+   "okrug": "ЮАО",
+   "raions": [
+    "Даниловский"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2022,
+   "years": [
+    2019,
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 4
+  },
+  {
+   "id": 49775,
+   "name": "Рихард",
+   "okrug": "САО",
+   "raions": [
+    "Хорошевский"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2022,
+   "years": [
+    2021,
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 9
+  },
+  {
+   "id": 5772906,
+   "name": "Салтыковская ул., д. 6/2, к. 1, 2, 3, 4",
+   "okrug": "ВАО",
+   "raions": [
+    "Косино-Ухтомский"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 328870,
+   "name": "Симфония набережных (Котельническая 21)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Таганский"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2022,
+   "years": [
+    2018,
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 5187,
+   "name": "Солнцево парк",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Внуковское"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2022,
+   "years": [
+    2020,
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 50217,
+   "name": "Талисман на Дмитровском",
+   "okrug": "САО",
+   "raions": [
+    "Западное Дегунино"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 4
+  },
+  {
+   "id": 3902601,
+   "name": "Твайс",
+   "okrug": "ЗАО",
+   "raions": [
+    "Кунцево"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 10
+  },
+  {
+   "id": 2958067,
+   "name": "Турист",
+   "okrug": "СВАО",
+   "raions": [
+    "Ростокино"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 3191343,
+   "name": "Я51",
+   "okrug": "СВАО",
+   "raions": [
+    "Ярославский"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 5767172,
+   "name": "Яворки ул., д. 1, к. 5, 6",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Десёновское"
+   ],
+   "yearMin": 2022,
+   "yearMax": 2022,
+   "years": [
+    2022
+   ],
+   "deadlineMax": null,
+   "offersSeen": 7
+  },
+  {
+   "id": 3683635,
+   "name": "Bogenhouse (Богенхаус)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Замоскворечье"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2021,
+   "years": [
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 6
+  },
+  {
+   "id": 47479,
+   "name": "Brodsky (Бродский)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Хамовники"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2021,
+   "years": [
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 4
+  },
+  {
+   "id": 236001,
+   "name": "Cameo Moscow Villas (Камео Москоу Виллас)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Тверской"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2021,
+   "years": [
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 843878,
+   "name": "Carré Blanc (Карре Бланк)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Хамовники"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2021,
+   "years": [
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 49343,
+   "name": "Discovery Park (Дискавери Парк)",
+   "okrug": "САО",
+   "raions": [
+    "Ховрино"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2021,
+   "years": [
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 21
+  },
+  {
+   "id": 46323,
+   "name": "Filicity (Фили Сити)",
+   "okrug": "ЗАО",
+   "raions": [
+    "Филевский парк"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2021,
+   "years": [
+    2020,
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 14
+  },
+  {
+   "id": 48911,
+   "name": "FoRest (Форест)",
+   "okrug": "ЗАО",
+   "raions": [
+    "Ново-Переделкино"
+   ],
+   "yearMin": 1989,
+   "yearMax": 2021,
+   "years": [
+    1989,
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 61
+  },
+  {
+   "id": 48553,
+   "name": "Hill8 (Хилл8)",
+   "okrug": "СВАО",
+   "raions": [
+    "Останкинский"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2021,
+   "years": [
+    2020,
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 48009,
+   "name": "Magnum (Магнум)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Хамовники"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2021,
+   "years": [
+    2020,
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 50384,
+   "name": "MITTE (МИТТЕ)",
+   "okrug": "ЮАО",
+   "raions": [
+    "Даниловский"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2021,
+   "years": [
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 8825,
+   "name": "NEVA TOWERS (Нева Тауэрс)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Пресненский"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2021,
+   "years": [
+    2018,
+    2019,
+    2020,
+    2021
+   ],
+   "deadlineMax": 2020,
+   "offersSeen": 23
+  },
+  {
+   "id": 3398471,
+   "name": "Noble (Нобл)",
+   "okrug": "ЗАО",
+   "raions": [
+    "Филевский парк"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2021,
+   "years": [
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 6329,
+   "name": "ONYX Deluxe (ОНИКС Делюкс)",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Черемушки"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2021,
+   "years": [
+    2019,
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 11
+  },
+  {
+   "id": 49789,
+   "name": "SAVVIN RIVER RESIDENCE (Саввин Ривер Резиденс)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Хамовники"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2021,
+   "years": [
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 6
+  },
+  {
+   "id": 566723,
+   "name": "Shome (Шоум)",
+   "okrug": "ЗАО",
+   "raions": [
+    "Фили-Давыдково"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2021,
+   "years": [
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 21
+  },
+  {
+   "id": 53279,
+   "name": "The Book (Бук)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Арбат"
+   ],
+   "yearMin": 1968,
+   "yearMax": 2021,
+   "years": [
+    1968,
+    2020,
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 10
+  },
+  {
+   "id": 50659,
+   "name": "White Khamovniki (Вайт Хамовники)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Хамовники"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2021,
+   "years": [
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 5767209,
+   "name": "Аминьевское ш., д. 4Д, к. 1",
+   "okrug": "ЗАО",
+   "raions": [
+    "Очаково-Матвеевское"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2021,
+   "years": [
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 4
+  },
+  {
+   "id": 47320,
+   "name": "Апарт-отель YE'S Botanica (YE'S Ботанический сад)",
+   "okrug": "СВАО",
+   "raions": [
+    "Ростокино"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2021,
+   "years": [
+    2020,
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 8
+  },
+  {
+   "id": 6210,
+   "name": "Балаклавский проспект, 15",
+   "okrug": "ЮАО",
+   "raions": [
+    "Чертаново Северное"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2021,
+   "years": [
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 6
+  },
+  {
+   "id": 3063009,
+   "name": "Береговой пр-д, д. 1А, 1Б",
+   "okrug": "ЗАО",
+   "raions": [
+    "Филевский парк"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2021,
+   "years": [
+    2020,
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 19
+  },
+  {
+   "id": 48023,
+   "name": "Городские резиденции SPIRES (Спайрс)",
+   "okrug": "ЗАО",
+   "raions": [
+    "Очаково-Матвеевское"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2021,
+   "years": [
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 9
+  },
+  {
+   "id": 57461,
+   "name": "Дом на Барвихинской",
+   "okrug": "ЗАО",
+   "raions": [
+    "Можайский"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2021,
+   "years": [
+    2020,
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 48505,
+   "name": "Дом на Тишинке",
+   "okrug": "ЦАО",
+   "raions": [
+    "Пресненский"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2021,
+   "years": [
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 809247,
+   "name": "Донской квартал",
+   "okrug": "ЮАО",
+   "raions": [
+    "Донской"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2021,
+   "years": [
+    2020,
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 9
+  },
+  {
+   "id": 6800,
+   "name": "Жемчужина Зеленограда",
+   "okrug": "ЗелАО",
+   "raions": [
+    "Крюково"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2021,
+   "years": [
+    2018,
+    2019,
+    2020,
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 19
+  },
+  {
+   "id": 48700,
+   "name": "Зеленоград Сити",
+   "okrug": "ЗелАО",
+   "raions": [
+    "Савёлки"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2021,
+   "years": [
+    2020,
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 644220,
+   "name": "Ильменский 17",
+   "okrug": "САО",
+   "raions": [
+    "Западное Дегунино"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2021,
+   "years": [
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 47474,
+   "name": "Квартал на Никулинской",
+   "okrug": "ЗАО",
+   "raions": [
+    "Тропарево-Никулино"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2021,
+   "years": [
+    2019,
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 9
+  },
+  {
+   "id": 90589,
+   "name": "Клубный дом Vitality (Виталити)",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Южнопортовый"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2021,
+   "years": [
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 1361819,
+   "name": "Клубный дом Солнечный",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Московский"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2021,
+   "years": [
+    2020,
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 39995,
+   "name": "Комплекс апартаментов Nord (Норд)",
+   "okrug": "СВАО",
+   "raions": [
+    "Северный"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2021,
+   "years": [
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 8561,
+   "name": "Летний сад",
+   "okrug": "САО",
+   "raions": [
+    "Дмитровский"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2021,
+   "years": [
+    2018,
+    2019,
+    2020,
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 24
+  },
+  {
+   "id": 7156,
+   "name": "Лефорт",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Лефортово"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2021,
+   "years": [
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 39739,
+   "name": "Лефортово парк",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Лефортово"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2021,
+   "years": [
+    2020,
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 5772900,
+   "name": "Люблинская ул., д. 76, к. 5",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Люблино"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2021,
+   "years": [
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 5767206,
+   "name": "Люблинская ул., д. 80, к. 7",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Люблино"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2021,
+   "years": [
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 52023,
+   "name": "Медный 3.14",
+   "okrug": "ЦАО",
+   "raions": [
+    "Якиманка"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2021,
+   "years": [
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 7483,
+   "name": "Мещерский лес",
+   "okrug": "ЗАО",
+   "raions": [
+    "Солнцево"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2021,
+   "years": [
+    2018,
+    2020,
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 16
+  },
+  {
+   "id": 5767210,
+   "name": "Михайлова ул., д. 30А, к. 1",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Рязанский"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2021,
+   "years": [
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 4
+  },
+  {
+   "id": 5765974,
+   "name": "Мой адрес на Кастанаевской",
+   "okrug": "ЗАО",
+   "raions": [
+    "Фили-Давыдково"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2021,
+   "years": [
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 50029,
+   "name": "Молодогвардейская 36",
+   "okrug": "ЗАО",
+   "raions": [
+    "Кунцево"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2021,
+   "years": [
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 49776,
+   "name": "Настроение",
+   "okrug": "СВАО",
+   "raions": [
+    "Ярославский"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2021,
+   "years": [
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 8
+  },
+  {
+   "id": 1564992,
+   "name": "Нижегородская ул., д. 74",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Нижегородский"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2021,
+   "years": [
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 6733,
+   "name": "Новая Звезда",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Сосенское"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2021,
+   "years": [
+    2018,
+    2019,
+    2020,
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 13
+  },
+  {
+   "id": 49360,
+   "name": "Петровский парк",
+   "okrug": "САО",
+   "raions": [
+    "Савеловский"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2021,
+   "years": [
+    2019,
+    2020,
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 14895,
+   "name": "Позитив",
+   "okrug": "ЗАО",
+   "raions": [
+    "Солнцево",
+    "Московский"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2021,
+   "years": [
+    2018,
+    2019,
+    2020,
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 17
+  },
+  {
+   "id": 870159,
+   "name": "Просторная 7",
+   "okrug": "ВАО",
+   "raions": [
+    "Богородское"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2021,
+   "years": [
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 6266,
+   "name": "Савеловский Сити",
+   "okrug": "СВАО",
+   "raions": [
+    "Бутырский"
+   ],
+   "yearMin": 2017,
+   "yearMax": 2021,
+   "years": [
+    2017,
+    2018,
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 17
+  },
+  {
+   "id": 8591,
+   "name": "Столичные поляны",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Южное Бутово"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2021,
+   "years": [
+    2019,
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 34
+  },
+  {
+   "id": 128519,
+   "name": "Счастье на Ломоносовском",
+   "okrug": "ЗАО",
+   "raions": [
+    "Раменки"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2021,
+   "years": [
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 49746,
+   "name": "Талисман на Водном",
+   "okrug": "САО",
+   "raions": [
+    "Головинский"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2021,
+   "years": [
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 4
+  },
+  {
+   "id": 50319,
+   "name": "Тополя",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Марьино"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2021,
+   "years": [
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 6
+  },
+  {
+   "id": 11051,
+   "name": "Троицкий берег",
+   "okrug": "ТАО (Троицкий)",
+   "raions": [
+    "Троицк"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2021,
+   "years": [
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 47003,
+   "name": "Ты и Я",
+   "okrug": "СВАО",
+   "raions": [
+    "Лосиноостровский"
+   ],
+   "yearMin": 1974,
+   "yearMax": 2021,
+   "years": [
+    1974,
+    2020,
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 7
+  },
+  {
+   "id": 46322,
+   "name": "Филатов луг",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Московский"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2021,
+   "years": [
+    2019,
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 23
+  },
+  {
+   "id": 5766850,
+   "name": "Фонвизина ул., д. 7А",
+   "okrug": "СВАО",
+   "raions": [
+    "Бутырский"
+   ],
+   "yearMin": 2021,
+   "yearMax": 2021,
+   "years": [
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 43851,
+   "name": "Ясеневая 14",
+   "okrug": "ЮАО",
+   "raions": [
+    "Орехово-Борисово Южное"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2021,
+   "years": [
+    2019,
+    2020,
+    2021
+   ],
+   "deadlineMax": null,
+   "offersSeen": 14
+  },
+  {
+   "id": 5548,
+   "name": "ApartVille Fitness & Spa (Апартвилль Фитнес и Спа)",
+   "okrug": "САО",
+   "raions": [
+    "Западное Дегунино"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2020,
+   "years": [
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 90586,
+   "name": "Artisan (Артисан)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Арбат"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2020,
+   "years": [
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 49034,
+   "name": "Discovery (Дискавери)",
+   "okrug": "САО",
+   "raions": [
+    "Ховрино"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2020,
+   "years": [
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 7183,
+   "name": "LIFE-Ботанический сад (ЛАЙФ-Ботанический сад)",
+   "okrug": "СВАО",
+   "raions": [
+    "Свиблово"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2020,
+   "years": [
+    2019,
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 11
+  },
+  {
+   "id": 18527,
+   "name": "Monodom (Монодом)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Таганский"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2020,
+   "years": [
+    2018,
+    2019,
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 1790402,
+   "name": "My Space на Фестивальной (Май Спейс на Фестивальной)",
+   "okrug": "САО",
+   "raions": [
+    "Головинский"
+   ],
+   "yearMin": 1958,
+   "yearMax": 2020,
+   "years": [
+    1958,
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 36007,
+   "name": "Silver (Сильвер)",
+   "okrug": "СВАО",
+   "raions": [
+    "Свиблово"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2020,
+   "years": [
+    2019,
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 19
+  },
+  {
+   "id": 46992,
+   "name": "Аалто",
+   "okrug": "САО",
+   "raions": [
+    "Савеловский"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2020,
+   "years": [
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 134,
+   "name": "Апарт-комплекс Флотилия",
+   "okrug": "САО",
+   "raions": [
+    "Ховрино"
+   ],
+   "yearMin": 2017,
+   "yearMax": 2020,
+   "years": [
+    2017,
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 912543,
+   "name": "Аэровилла",
+   "okrug": "ЮАО",
+   "raions": [
+    "Орехово-Борисово Северное"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2020,
+   "years": [
+    2019,
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 18289,
+   "name": "Барбарис",
+   "okrug": "СВАО",
+   "raions": [
+    "Алтуфьевский"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2020,
+   "years": [
+    2019,
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 6
+  },
+  {
+   "id": 3559337,
+   "name": "Береговой",
+   "okrug": "ЗАО",
+   "raions": [
+    "Филевский парк"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2020,
+   "years": [
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 20
+  },
+  {
+   "id": 1352,
+   "name": "Вавилова 52",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Гагаринский"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2020,
+   "years": [
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 7
+  },
+  {
+   "id": 34418,
+   "name": "Внуково Кантри Клаб",
+   "okrug": "ТАО (Троицкий)",
+   "raions": [
+    "Первомайское"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2020,
+   "years": [
+    2018,
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 27
+  },
+  {
+   "id": 5535,
+   "name": "ВТБ Арена парк",
+   "okrug": "САО",
+   "raions": [
+    "Аэропорт"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2020,
+   "years": [
+    2018,
+    2019,
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 48
+  },
+  {
+   "id": 7501,
+   "name": "Город",
+   "okrug": "САО",
+   "raions": [
+    "Дмитровский"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2020,
+   "years": [
+    2018,
+    2019,
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 17
+  },
+  {
+   "id": 49509,
+   "name": "Городской квартал BIG TIME (Городской квартал Биг Тайм)",
+   "okrug": "СЗАО",
+   "raions": [
+    "Хорошево-Мневники"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2020,
+   "years": [
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 45926,
+   "name": "Грани",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Текстильщики"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2020,
+   "years": [
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 35582,
+   "name": "Гринада",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Северное Бутово"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2020,
+   "years": [
+    2018,
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 8
+  },
+  {
+   "id": 48693,
+   "name": "Долгоруковская 25",
+   "okrug": "ЦАО",
+   "raions": [
+    "Тверской"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2020,
+   "years": [
+    2020
+   ],
+   "deadlineMax": 2021,
+   "offersSeen": 1
+  },
+  {
+   "id": 48930,
+   "name": "Измайловский 11",
+   "okrug": "ВАО",
+   "raions": [
+    "Измайлово"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2020,
+   "years": [
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 49739,
+   "name": "Клубный дом SOHO+NOHO (Сохо+Нохо)",
+   "okrug": "САО",
+   "raions": [
+    "Беговой"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2020,
+   "years": [
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 8
+  },
+  {
+   "id": 8590,
+   "name": "Комплекс апартаментов Отражение",
+   "okrug": "СВАО",
+   "raions": [
+    "Марьина роща"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2020,
+   "years": [
+    2019,
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 9
+  },
+  {
+   "id": 44404,
+   "name": "Кутузовский XII",
+   "okrug": "ЗАО",
+   "raions": [
+    "Дорогомилово"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2020,
+   "years": [
+    2019,
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 10
+  },
+  {
+   "id": 45963,
+   "name": "Лесопарковый",
+   "okrug": "ЮАО",
+   "raions": [
+    "Чертаново Южное"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2020,
+   "years": [
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 14
+  },
+  {
+   "id": 8753,
+   "name": "Лофт-квартал Studio #12 (Студио #12)",
+   "okrug": "СВАО",
+   "raions": [
+    "Марьина роща"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2020,
+   "years": [
+    2019,
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 4
+  },
+  {
+   "id": 30406,
+   "name": "Лофтек (Loftec)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Басманный"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2020,
+   "years": [
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 4096456,
+   "name": "мой адрес На Лавриненко",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Некрасовка"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2020,
+   "years": [
+    2019,
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 8
+  },
+  {
+   "id": 38266,
+   "name": "МФК СИТИМИКС",
+   "okrug": "ЗАО",
+   "raions": [
+    "Тропарево-Никулино"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2020,
+   "years": [
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 35
+  },
+  {
+   "id": 46571,
+   "name": "Небо — Небоскребы на Мичуринском, 56",
+   "okrug": "ЗАО",
+   "raions": [
+    "Раменки"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2020,
+   "years": [
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 7
+  },
+  {
+   "id": 43098,
+   "name": "Новочеремушкинская 17",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Академический"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2020,
+   "years": [
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 6
+  },
+  {
+   "id": 138182,
+   "name": "Новые Черемушки",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Академический"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2020,
+   "years": [
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 8
+  },
+  {
+   "id": 5766856,
+   "name": "Обручева ул., д. 5",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Обручевский"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2020,
+   "years": [
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 8787,
+   "name": "Парк Легенд",
+   "okrug": "ЮАО",
+   "raions": [
+    "Даниловский"
+   ],
+   "yearMin": 1985,
+   "yearMax": 2020,
+   "years": [
+    1985,
+    2018,
+    2019,
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 9
+  },
+  {
+   "id": 8716,
+   "name": "Поколение",
+   "okrug": "СВАО",
+   "raions": [
+    "Отрадное"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2020,
+   "years": [
+    2018,
+    2019,
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 14
+  },
+  {
+   "id": 14385,
+   "name": "Резиденция Тверская",
+   "okrug": "ЦАО",
+   "raions": [
+    "Тверской"
+   ],
+   "yearMin": 2017,
+   "yearMax": 2020,
+   "years": [
+    2017,
+    2018,
+    2019,
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 29
+  },
+  {
+   "id": 23425,
+   "name": "Свой",
+   "okrug": "ЗАО",
+   "raions": [
+    "Можайский"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2020,
+   "years": [
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 4
+  },
+  {
+   "id": 49524,
+   "name": "Семеновский парк",
+   "okrug": "ВАО",
+   "raions": [
+    "Соколиная гора"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2020,
+   "years": [
+    2019,
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 9
+  },
+  {
+   "id": 45317,
+   "name": "Серебряный парк",
+   "okrug": "СЗАО",
+   "raions": [
+    "Хорошево-Мневники"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2020,
+   "years": [
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 4
+  },
+  {
+   "id": 46367,
+   "name": "Собрание клубных домов ORDYNKA (Ордынка)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Замоскворечье"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2020,
+   "years": [
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 138134,
+   "name": "Спортивный квартал",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Филимонковское"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2020,
+   "years": [
+    2019,
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 33
+  },
+  {
+   "id": 36028,
+   "name": "Счастье в Садовниках",
+   "okrug": "ЮАО",
+   "raions": [
+    "Нагатино-Садовники"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2020,
+   "years": [
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 43295,
+   "name": "Счастье на Пресне",
+   "okrug": "ЦАО",
+   "raions": [
+    "Пресненский"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2020,
+   "years": [
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 21332,
+   "name": "Счастье на Соколе",
+   "okrug": "САО",
+   "raions": [
+    "Аэропорт"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2020,
+   "years": [
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 5103,
+   "name": "Татьянин Парк",
+   "okrug": "ЗАО",
+   "raions": [
+    "Солнцево",
+    "Московский"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2020,
+   "years": [
+    2019,
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 13
+  },
+  {
+   "id": 3967920,
+   "name": "Уланский, 13",
+   "okrug": "ЦАО",
+   "raions": [
+    "Красносельский"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2020,
+   "years": [
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 49359,
+   "name": "Фонвизинский",
+   "okrug": "СВАО",
+   "raions": [
+    "Бутырский"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2020,
+   "years": [
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 5744907,
+   "name": "Фрезер ш., д. 7/2",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Нижегородский"
+   ],
+   "yearMin": 2020,
+   "yearMax": 2020,
+   "years": [
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 5320,
+   "name": "Царицыно",
+   "okrug": "ЮАО",
+   "raions": [
+    "Бирюлево Восточное"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2020,
+   "years": [
+    2019,
+    2020
+   ],
+   "deadlineMax": null,
+   "offersSeen": 6
+  },
+  {
+   "id": 7000,
+   "name": "1147",
+   "okrug": "СВАО",
+   "raions": [
+    "Алексеевский"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 4
+  },
+  {
+   "id": 8770,
+   "name": "Bolshevik (Большевик)",
+   "okrug": "САО",
+   "raions": [
+    "Беговой"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2019,
+   "years": [
+    2018,
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 7197,
+   "name": "Kleinhouse (Клейн хаус)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Басманный"
+   ],
+   "yearMin": 1901,
+   "yearMax": 2019,
+   "years": [
+    1901,
+    2018,
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 7781,
+   "name": "SREDA (Среда)",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Нижегородский"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2019,
+   "years": [
+    2018,
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 9
+  },
+  {
+   "id": 30993,
+   "name": "The Mostman (Мостман)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Таганский"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 8691,
+   "name": "VAVILOVE (ВАВИЛАВ)",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Ломоносовский"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 23383,
+   "name": "Vivaldi (Вивальди)",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Черемушки"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 21149,
+   "name": "Аннино парк",
+   "okrug": "ЮАО",
+   "raions": [
+    "Чертаново Южное"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2019,
+   "years": [
+    2018,
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 6
+  },
+  {
+   "id": 793820,
+   "name": "Апарт-комплекс 16 Уровень",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Марьино"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 793967,
+   "name": "Апарт-комплекс Ботаник",
+   "okrug": "СВАО",
+   "raions": [
+    "Отрадное"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 11
+  },
+  {
+   "id": 793947,
+   "name": "Апартаменты Алтай",
+   "okrug": "СВАО",
+   "raions": [
+    "Марфино"
+   ],
+   "yearMin": 1957,
+   "yearMax": 2019,
+   "years": [
+    1957,
+    1967,
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 7
+  },
+  {
+   "id": 14734,
+   "name": "Атмосфера",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Люблино"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 8337,
+   "name": "Букинист",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Коньково"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2019,
+   "years": [
+    2018,
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 11
+  },
+  {
+   "id": 1372407,
+   "name": "В Некрасовке-2 (1 очередь)",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Некрасовка"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 10
+  },
+  {
+   "id": 1389,
+   "name": "Вавилов ДОМ",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Академический"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 8823,
+   "name": "Вавилова 4",
+   "okrug": "ЮАО",
+   "raions": [
+    "Донской"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2019,
+   "years": [
+    2018,
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 4
+  },
+  {
+   "id": 7815,
+   "name": "Вандер парк",
+   "okrug": "ЗАО",
+   "raions": [
+    "Кунцево"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2019,
+   "years": [
+    2018,
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 17
+  },
+  {
+   "id": 6786,
+   "name": "Геометрия (Душинская 16)",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Лефортово"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 1268552,
+   "name": "Дегунин",
+   "okrug": "САО",
+   "raions": [
+    "Западное Дегунино"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 48551,
+   "name": "Дмитриевский",
+   "okrug": "ВАО",
+   "raions": [
+    "Косино-Ухтомский"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2019,
+   "years": [
+    2018,
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 5767161,
+   "name": "Долгопрудная ал., д. 14, к. 1",
+   "okrug": "СВАО",
+   "raions": [
+    "Северный"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 30376,
+   "name": "Дом на Хлебном",
+   "okrug": "ЦАО",
+   "raions": [
+    "Арбат"
+   ],
+   "yearMin": 2017,
+   "yearMax": 2019,
+   "years": [
+    2017,
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 6
+  },
+  {
+   "id": 19418,
+   "name": "Дом Серебряный Бор",
+   "okrug": "СЗАО",
+   "raions": [
+    "Хорошево-Мневники"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 18135,
+   "name": "Достояние",
+   "okrug": "ЗАО",
+   "raions": [
+    "Кунцево"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2019,
+   "years": [
+    2018,
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 7
+  },
+  {
+   "id": 21233,
+   "name": "Дуэт",
+   "okrug": "САО",
+   "raions": [
+    "Западное Дегунино"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 21369,
+   "name": "Жизнь на Плющихе",
+   "okrug": "ЦАО",
+   "raions": [
+    "Хамовники"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 16
+  },
+  {
+   "id": 6789,
+   "name": "Квартал 38А",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Обручевский"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 4
+  },
+  {
+   "id": 7904,
+   "name": "Квартал апартаментов Match Point (Матч Поинт)",
+   "okrug": "ЗАО",
+   "raions": [
+    "Филевский парк"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 14
+  },
+  {
+   "id": 6190,
+   "name": "Квартал апартаментов Искра-Парк",
+   "okrug": "САО",
+   "raions": [
+    "Беговой"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 23
+  },
+  {
+   "id": 48018,
+   "name": "Клубный дом Maison Rouge (Мезон Руж)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Тверской"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 46959,
+   "name": "Клубный дом Story (Стори)",
+   "okrug": "ЮАО",
+   "raions": [
+    "Даниловский"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 43453,
+   "name": "Клубный дом ЦВЕТ32",
+   "okrug": "ЦАО",
+   "raions": [
+    "Мещанский"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 50286,
+   "name": "Красная стрела",
+   "okrug": "ЦАО",
+   "raions": [
+    "Красносельский"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 46866,
+   "name": "Левел Павелецкая",
+   "okrug": "ЮАО",
+   "raions": [
+    "Даниловский"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 38231,
+   "name": "Ленинский 38",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Гагаринский"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 13
+  },
+  {
+   "id": 32610,
+   "name": "Люблинский",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Люблино"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2019,
+   "years": [
+    2018,
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 45340,
+   "name": "Малая Бронная 15",
+   "okrug": "ЦАО",
+   "raions": [
+    "Пресненский"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 8163,
+   "name": "Маяковский",
+   "okrug": "САО",
+   "raions": [
+    "Войковский"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 11
+  },
+  {
+   "id": 50666,
+   "name": "Меценат",
+   "okrug": "ЦАО",
+   "raions": [
+    "Якиманка"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 8562,
+   "name": "Мир Митино",
+   "okrug": "СЗАО",
+   "raions": [
+    "Митино"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 25
+  },
+  {
+   "id": 1358314,
+   "name": "Мой адрес в Северном",
+   "okrug": "СВАО",
+   "raions": [
+    "Северный"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2019,
+   "years": [
+    2018,
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 1,
+   "name": "Москвичка",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Сосенское"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2019,
+   "years": [
+    2018,
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 6280,
+   "name": "На ул. Мельникова",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Южнопортовый"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 6134,
+   "name": "Наследие",
+   "okrug": "ВАО",
+   "raions": [
+    "Преображенское"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 5877,
+   "name": "Новомосковский",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Щербинка"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 44094,
+   "name": "Оливковый дом",
+   "okrug": "САО",
+   "raions": [
+    "Беговой"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 36038,
+   "name": "Орехово-Борисово",
+   "okrug": "ЮАО",
+   "raions": [
+    "Орехово-Борисово Южное"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 7475,
+   "name": "Полянка/44",
+   "okrug": "ЦАО",
+   "raions": [
+    "Якиманка"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2019,
+   "years": [
+    2018,
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 42
+  },
+  {
+   "id": 26655,
+   "name": "Пресненский вал 21",
+   "okrug": "ЦАО",
+   "raions": [
+    "Пресненский"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 9,
+   "name": "Снегири Эко",
+   "okrug": "ЗАО",
+   "raions": [
+    "Раменки"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 27696,
+   "name": "Софийский",
+   "okrug": "ЦАО",
+   "raions": [
+    "Якиманка"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2019,
+   "years": [
+    2018,
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 10
+  },
+  {
+   "id": 7230,
+   "name": "Суббота",
+   "okrug": "САО",
+   "raions": [
+    "Беговой"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2019,
+   "years": [
+    2018,
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 19
+  },
+  {
+   "id": 975,
+   "name": "Счастье в Олимпийской деревне",
+   "okrug": "ЗАО",
+   "raions": [
+    "Тропарево-Никулино"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 36020,
+   "name": "Счастье в Чертаново",
+   "okrug": "ЮАО",
+   "raions": [
+    "Чертаново Южное"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 36023,
+   "name": "Счастье на Ленинском",
+   "okrug": "ЗАО",
+   "raions": [
+    "Тропарево-Никулино"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2019,
+   "years": [
+    2018,
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 5892,
+   "name": "Утесов",
+   "okrug": "СЗАО",
+   "raions": [
+    "Хорошево-Мневники"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 20974,
+   "name": "Черняховского 19",
+   "okrug": "САО",
+   "raions": [
+    "Аэропорт"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 7
+  },
+  {
+   "id": 12567,
+   "name": "Элитный дом Реномэ",
+   "okrug": "ЦАО",
+   "raions": [
+    "Тверской"
+   ],
+   "yearMin": 2019,
+   "yearMax": 2019,
+   "years": [
+    2019
+   ],
+   "deadlineMax": null,
+   "offersSeen": 4
+  },
+  {
+   "id": 7764,
+   "name": "BALCHUG VIEWPOINT (Балчуг Вьюпоинт)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Замоскворечье"
+   ],
+   "yearMin": 2017,
+   "yearMax": 2018,
+   "years": [
+    2017,
+    2018
+   ],
+   "deadlineMax": null,
+   "offersSeen": 7
+  },
+  {
+   "id": 32337,
+   "name": "Barkli Gallery (Баркли Галлери)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Якиманка"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2018,
+   "years": [
+    2018
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 1506,
+   "name": "Edison House (Эдисон Хаус)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Пресненский"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2018,
+   "years": [
+    2018
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 6712,
+   "name": "EgoDom (ЭгоДом)",
+   "okrug": "СВАО",
+   "raions": [
+    "Алексеевский"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2018,
+   "years": [
+    2018
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 14449,
+   "name": "Only (Онли)",
+   "okrug": "ЗАО",
+   "raions": [
+    "Филевский парк"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2018,
+   "years": [
+    2018
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 8124,
+   "name": "PerovSky (Перовский)",
+   "okrug": "ВАО",
+   "raions": [
+    "Перово"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2018,
+   "years": [
+    2018
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 6370,
+   "name": "The MID (МИД)",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Обручевский"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2018,
+   "years": [
+    2018
+   ],
+   "deadlineMax": null,
+   "offersSeen": 4
+  },
+  {
+   "id": 5316,
+   "name": "Wellton park (Веллтон парк)",
+   "okrug": "СЗАО",
+   "raions": [
+    "Хорошево-Мневники"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2018,
+   "years": [
+    2018
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 7505,
+   "name": "Апарт-комплекс Cleverland (Клеверленд)",
+   "okrug": "СВАО",
+   "raions": [
+    "Марфино"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2018,
+   "years": [
+    2018
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 8754,
+   "name": "Байконур",
+   "okrug": "ЮАО",
+   "raions": [
+    "Донской"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2018,
+   "years": [
+    2018
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 7472,
+   "name": "Белая звезда",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Щербинка"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2018,
+   "years": [
+    2018
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 5495,
+   "name": "Водный",
+   "okrug": "САО",
+   "raions": [
+    "Головинский"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2018,
+   "years": [
+    2018
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 6998,
+   "name": "Волга",
+   "okrug": "ЦАО",
+   "raions": [
+    "Красносельский"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2018,
+   "years": [
+    2018
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 8704,
+   "name": "Ландыши",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Обручевский"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2018,
+   "years": [
+    2018
+   ],
+   "deadlineMax": null,
+   "offersSeen": 3
+  },
+  {
+   "id": 5693,
+   "name": "Ново-Никольское",
+   "okrug": "ТАО (Троицкий)",
+   "raions": [
+    "Первомайское"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2018,
+   "years": [
+    2018
+   ],
+   "deadlineMax": null,
+   "offersSeen": 29
+  },
+  {
+   "id": 7813,
+   "name": "Пётр I",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Лефортово"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2018,
+   "years": [
+    2018
+   ],
+   "deadlineMax": null,
+   "offersSeen": 4
+  },
+  {
+   "id": 14464,
+   "name": "Пикассо",
+   "okrug": "ЗАО",
+   "raions": [
+    "Тропарево-Никулино"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2018,
+   "years": [
+    2018
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 15245,
+   "name": "Прайм Тайм",
+   "okrug": "САО",
+   "raions": [
+    "Хорошевский"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2018,
+   "years": [
+    2018
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 6743,
+   "name": "Пресня Сити",
+   "okrug": "ЦАО",
+   "raions": [
+    "Пресненский"
+   ],
+   "yearMin": 2017,
+   "yearMax": 2018,
+   "years": [
+    2017,
+    2018
+   ],
+   "deadlineMax": null,
+   "offersSeen": 6
+  },
+  {
+   "id": 7916,
+   "name": "Родной город. Воронцовский парк",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Обручевский"
+   ],
+   "yearMin": 1961,
+   "yearMax": 2018,
+   "years": [
+    1961,
+    2018
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 7915,
+   "name": "Родной город. Каховская",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Зюзино"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2018,
+   "years": [
+    2018
+   ],
+   "deadlineMax": null,
+   "offersSeen": 2
+  },
+  {
+   "id": 15259,
+   "name": "Санрайс",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Воскресенское"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2018,
+   "years": [
+    2018
+   ],
+   "deadlineMax": null,
+   "offersSeen": 5
+  },
+  {
+   "id": 6711,
+   "name": "Северный",
+   "okrug": "СВАО",
+   "raions": [
+    "Северный"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2018,
+   "years": [
+    2018
+   ],
+   "deadlineMax": null,
+   "offersSeen": 7
+  },
+  {
+   "id": 12566,
+   "name": "Современник",
+   "okrug": "ЦАО",
+   "raions": [
+    "Басманный"
+   ],
+   "yearMin": 2017,
+   "yearMax": 2018,
+   "years": [
+    2017,
+    2018
+   ],
+   "deadlineMax": null,
+   "offersSeen": 4
+  },
+  {
+   "id": 13993,
+   "name": "Тройка",
+   "okrug": "ТАО (Троицкий)",
+   "raions": [
+    "Троицк"
+   ],
+   "yearMin": 2017,
+   "yearMax": 2018,
+   "years": [
+    2017,
+    2018
+   ],
+   "deadlineMax": null,
+   "offersSeen": 10
+  },
+  {
+   "id": 8703,
+   "name": "Фили Парк",
+   "okrug": "ЗАО",
+   "raions": [
+    "Филевский парк"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2018,
+   "years": [
+    2018
+   ],
+   "deadlineMax": null,
+   "offersSeen": 8
+  },
+  {
+   "id": 143,
+   "name": "ФилиЧета",
+   "okrug": "ЗАО",
+   "raions": [
+    "Филевский парк"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2018,
+   "years": [
+    2018
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 7151,
+   "name": "Хорошевский",
+   "okrug": "СЗАО",
+   "raions": [
+    "Хорошево-Мневники"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2018,
+   "years": [
+    2018
+   ],
+   "deadlineMax": null,
+   "offersSeen": 6
+  },
+  {
+   "id": 5631,
+   "name": "Эталон-Сити",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Южное Бутово"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2018,
+   "years": [
+    2018
+   ],
+   "deadlineMax": null,
+   "offersSeen": 11
+  },
+  {
+   "id": 7958,
+   "name": "Ясный",
+   "okrug": "ЮАО",
+   "raions": [
+    "Орехово-Борисово Южное"
+   ],
+   "yearMin": 2018,
+   "yearMax": 2018,
+   "years": [
+    2018
+   ],
+   "deadlineMax": null,
+   "offersSeen": 18
+  }
+ ],
+ "byDeadlineAfter2017": [
+  {
+   "id": 5719129,
+   "name": "Оне",
+   "okrug": "ЦАО",
+   "raions": [
+    "Пресненский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2031,
+   "offersSeen": 8
+  },
+  {
+   "id": 4958009,
+   "name": "Веер",
+   "okrug": "ЗАО",
+   "raions": [
+    "Можайский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2030,
+   "offersSeen": 26
+  },
+  {
+   "id": 4708377,
+   "name": "Веспер Кутузовский",
+   "okrug": "ЗАО",
+   "raions": [
+    "Дорогомилово"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2030,
+   "offersSeen": 10
+  },
+  {
+   "id": 5763981,
+   "name": "Дом «Палашёвский 11»",
+   "okrug": "ЦАО",
+   "raions": [
+    "Тверской"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2030,
+   "offersSeen": 12
+  },
+  {
+   "id": 4712430,
+   "name": "Квартал Издание",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Нижегородский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2030,
+   "offersSeen": 20
+  },
+  {
+   "id": 5778933,
+   "name": "Кинетик. Резиденции на Дмитровском",
+   "okrug": "САО",
+   "raions": [
+    "Западное Дегунино"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2030,
+   "offersSeen": 14
+  },
+  {
+   "id": 5726921,
+   "name": "Начало",
+   "okrug": "ЦАО",
+   "raions": [
+    "Пресненский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2030,
+   "offersSeen": 13
+  },
+  {
+   "id": 5772519,
+   "name": "С5",
+   "okrug": "САО",
+   "raions": [
+    "Аэропорт"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2030,
+   "offersSeen": 51
+  },
+  {
+   "id": 4996299,
+   "name": "Симоновский Вал",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Южнопортовый"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2030,
+   "offersSeen": 21
+  },
+  {
+   "id": 5777143,
+   "name": "СТОУН Блик",
+   "okrug": "ЮАО",
+   "raions": [
+    "Донской"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2030,
+   "offersSeen": 9
+  },
+  {
+   "id": 5777282,
+   "name": "26 Парквью",
+   "okrug": "САО",
+   "raions": [
+    "Тимирязевский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2029,
+   "offersSeen": 29
+  },
+  {
+   "id": 4362456,
+   "name": "INDY TOWERS (Инди Тауэрз)",
+   "okrug": "САО",
+   "raions": [
+    "Хорошевский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2029,
+   "offersSeen": 17
+  },
+  {
+   "id": 5750446,
+   "name": "Авторская коллекция резиденций МУЗА",
+   "okrug": "САО",
+   "raions": [
+    "Аэропорт"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2029,
+   "offersSeen": 35
+  },
+  {
+   "id": 4888961,
+   "name": "Амбер Сити",
+   "okrug": "САО",
+   "raions": [
+    "Хорошевский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2029,
+   "offersSeen": 6
+  },
+  {
+   "id": 4927826,
+   "name": "ВОЙС",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Текстильщики"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2029,
+   "offersSeen": 46
+  },
+  {
+   "id": 5269604,
+   "name": "Высотка на Жукова",
+   "okrug": "СЗАО",
+   "raions": [
+    "Хорошево-Мневники"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2029,
+   "offersSeen": 6
+  },
+  {
+   "id": 5769238,
+   "name": "Дом на Джалиля",
+   "okrug": "ЮАО",
+   "raions": [
+    "Зябликово"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2029,
+   "offersSeen": 25
+  },
+  {
+   "id": 5734549,
+   "name": "Дом Спорта",
+   "okrug": "ЦАО",
+   "raions": [
+    "Пресненский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2029,
+   "offersSeen": 11
+  },
+  {
+   "id": 5772404,
+   "name": "Казачий",
+   "okrug": "ЦАО",
+   "raions": [
+    "Якиманка"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2029,
+   "offersSeen": 16
+  },
+  {
+   "id": 4432403,
+   "name": "Квартал Домашний",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Марьино"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2029,
+   "offersSeen": 35
+  },
+  {
+   "id": 5703245,
+   "name": "Квартал Мит",
+   "okrug": "СЗАО",
+   "raions": [
+    "Митино"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2029,
+   "offersSeen": 50
+  },
+  {
+   "id": 5731421,
+   "name": "КОД Сокольники",
+   "okrug": "ВАО",
+   "raions": [
+    "Сокольники"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2029,
+   "offersSeen": 16
+  },
+  {
+   "id": 5734637,
+   "name": "ЛОТ от Аквилон",
+   "okrug": "ЮАО",
+   "raions": [
+    "Даниловский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2029,
+   "offersSeen": 8
+  },
+  {
+   "id": 5221539,
+   "name": "Мнёвники от Гранель",
+   "okrug": "СЗАО",
+   "raions": [
+    "Хорошево-Мневники"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2029,
+   "offersSeen": 13
+  },
+  {
+   "id": 5726240,
+   "name": "Нексус от Аквилон",
+   "okrug": "ЗАО",
+   "raions": [
+    "Кунцево"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2029,
+   "offersSeen": 37
+  },
+  {
+   "id": 5747793,
+   "name": "Премиальный дом МАСТЕРС",
+   "okrug": "САО",
+   "raions": [
+    "Хорошевский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2029,
+   "offersSeen": 13
+  },
+  {
+   "id": 5690388,
+   "name": "Пыжёвский",
+   "okrug": "ЦАО",
+   "raions": [
+    "Якиманка"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2029,
+   "offersSeen": 6
+  },
+  {
+   "id": 5766300,
+   "name": "Сезар Будущее",
+   "okrug": "САО",
+   "raions": [
+    "Хорошевский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2029,
+   "offersSeen": 9
+  },
+  {
+   "id": 5773358,
+   "name": "Сикрет Гарден",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Обручевский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2029,
+   "offersSeen": 38
+  },
+  {
+   "id": 4661484,
+   "name": "СИТИДЗЕН",
+   "okrug": "СЗАО",
+   "raions": [
+    "Покровское-Стрешнево"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2029,
+   "offersSeen": 6
+  },
+  {
+   "id": 5593037,
+   "name": "Солос",
+   "okrug": "ВАО",
+   "raions": [
+    "Сокольники"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2029,
+   "offersSeen": 38
+  },
+  {
+   "id": 5731207,
+   "name": "СТОУН Грэйн",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Обручевский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2029,
+   "offersSeen": 18
+  },
+  {
+   "id": 5696721,
+   "name": "СТОУН Райз",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Лефортово"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2029,
+   "offersSeen": 54
+  },
+  {
+   "id": 5751952,
+   "name": "ТАТУМ",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Обручевский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2029,
+   "offersSeen": 30
+  },
+  {
+   "id": 5766397,
+   "name": "Тессинский V",
+   "okrug": "ЦАО",
+   "raions": [
+    "Таганский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2029,
+   "offersSeen": 22
+  },
+  {
+   "id": 5659413,
+   "name": "УЛЬТИМА Сити",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Печатники"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2029,
+   "offersSeen": 30
+  },
+  {
+   "id": 5747459,
+   "name": " Клубный дом \"Магнум Соло\"",
+   "okrug": "ЦАО",
+   "raions": [
+    "Таганский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 10
+  },
+  {
+   "id": 5703570,
+   "name": " Клубный дом «Резиденции Воронцова»",
+   "okrug": "ЦАО",
+   "raions": [
+    "Таганский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 34
+  },
+  {
+   "id": 4588710,
+   "name": "1-й Измайловский",
+   "okrug": "ВАО",
+   "raions": [
+    "Гольяново"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 18
+  },
+  {
+   "id": 4726516,
+   "name": "2-й Иртышский",
+   "okrug": "ВАО",
+   "raions": [
+    "Гольяново"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 36
+  },
+  {
+   "id": 4652900,
+   "name": "SHIFT (ШИФТ)",
+   "okrug": "ЮАО",
+   "raions": [
+    "Донской"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 58
+  },
+  {
+   "id": 5305418,
+   "name": "Адмирал",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Печатники"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 16
+  },
+  {
+   "id": 5487211,
+   "name": "Айс Тауэрс (ICE Towers)",
+   "okrug": "ЗАО",
+   "raions": [
+    "Проспект Вернадского"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 67
+  },
+  {
+   "id": 4914587,
+   "name": "АУРА",
+   "okrug": "ЮАО",
+   "raions": [
+    "Даниловский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 9
+  },
+  {
+   "id": 5553299,
+   "name": "Бестселлер",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Нижегородский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 6
+  },
+  {
+   "id": 5747482,
+   "name": "Веспер Погодинская",
+   "okrug": "ЦАО",
+   "raions": [
+    "Хамовники"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 3
+  },
+  {
+   "id": 5732034,
+   "name": "Дом на Часовой",
+   "okrug": "САО",
+   "raions": [
+    "Аэропорт"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 9
+  },
+  {
+   "id": 5688213,
+   "name": "Дом Соболева",
+   "okrug": "ЦАО",
+   "raions": [
+    "Басманный"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 18
+  },
+  {
+   "id": 5706133,
+   "name": "Зиккурат Преображенский",
+   "okrug": "ВАО",
+   "raions": [
+    "Преображенское"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 4
+  },
+  {
+   "id": 4927817,
+   "name": "ИНДИВО",
+   "okrug": "ЗАО",
+   "raions": [
+    "Кунцево"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 37
+  },
+  {
+   "id": 4262586,
+   "name": "Квартал Марьино",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Филимонковское"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 5
+  },
+  {
+   "id": 5723049,
+   "name": "Климашкина 7/11",
+   "okrug": "ЦАО",
+   "raions": [
+    "Пресненский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 3
+  },
+  {
+   "id": 5713989,
+   "name": "Клубные резиденции Лёвшинский, 19",
+   "okrug": "ЦАО",
+   "raions": [
+    "Хамовники"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 1
+  },
+  {
+   "id": 4268549,
+   "name": "Клубный дом DUO (Дуо)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Якиманка"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 25
+  },
+  {
+   "id": 5741475,
+   "name": "Клубный дом Энигмия",
+   "okrug": "ЦАО",
+   "raions": [
+    "Тверской"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 26
+  },
+  {
+   "id": 5593038,
+   "name": "Крекшино Парк",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Марушкинское"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 16
+  },
+  {
+   "id": 5686112,
+   "name": "Левел Войковская",
+   "okrug": "САО",
+   "raions": [
+    "Войковский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 23
+  },
+  {
+   "id": 4597177,
+   "name": "Левел Звенигородская",
+   "okrug": "СЗАО",
+   "raions": [
+    "Хорошево-Мневники"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 21
+  },
+  {
+   "id": 5192843,
+   "name": "МИРА",
+   "okrug": "СВАО",
+   "raions": [
+    "Алексеевский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 54
+  },
+  {
+   "id": 4820085,
+   "name": "Монблан",
+   "okrug": "ЦАО",
+   "raions": [
+    "Замоскворечье"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 28
+  },
+  {
+   "id": 4958260,
+   "name": "Москворечье",
+   "okrug": "ЮАО",
+   "raions": [
+    "Москворечье-Сабурово"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 14
+  },
+  {
+   "id": 5008581,
+   "name": "НАЗАРÉ",
+   "okrug": "ВАО",
+   "raions": [
+    "Богородское"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 65
+  },
+  {
+   "id": 5686240,
+   "name": "Нарвин",
+   "okrug": "САО",
+   "raions": [
+    "Головинский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 10
+  },
+  {
+   "id": 4864118,
+   "name": "НАТИВ",
+   "okrug": "ЗАО",
+   "raions": [
+    "Очаково-Матвеевское"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 50
+  },
+  {
+   "id": 5699304,
+   "name": "Нижегородская от Гранель",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Нижегородский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 28
+  },
+  {
+   "id": 4712505,
+   "name": "Николь",
+   "okrug": "ЦАО",
+   "raions": [
+    "Тверской"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 22
+  },
+  {
+   "id": 5077128,
+   "name": "Новые Смыслы от UNIKEY",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Сосенское"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 7
+  },
+  {
+   "id": 4722969,
+   "name": "Ольховый Квартал",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Сосенское"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 1
+  },
+  {
+   "id": 5722062,
+   "name": "Онежский вал",
+   "okrug": "САО",
+   "raions": [
+    "Западное Дегунино"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 13
+  },
+  {
+   "id": 4494942,
+   "name": "Павелецкая от Гранель",
+   "okrug": "ЦАО",
+   "raions": [
+    "Замоскворечье"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 7
+  },
+  {
+   "id": 5378007,
+   "name": "ПЕЙВ",
+   "okrug": "ЮАО",
+   "raions": [
+    "Даниловский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 12
+  },
+  {
+   "id": 5149795,
+   "name": "Ракурс",
+   "okrug": "СЗАО",
+   "raions": [
+    "Щукино"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 34
+  },
+  {
+   "id": 4856397,
+   "name": "Родина Парк",
+   "okrug": "ЗАО",
+   "raions": [
+    "Можайский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 26
+  },
+  {
+   "id": 5303231,
+   "name": "РОДИНА ПЕРЕДЕЛКИНО",
+   "okrug": "ЗАО",
+   "raions": [
+    "Ново-Переделкино"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 57
+  },
+  {
+   "id": 5138735,
+   "name": "Садовническая 69",
+   "okrug": "ЦАО",
+   "raions": [
+    "Замоскворечье"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 15
+  },
+  {
+   "id": 5449798,
+   "name": "СВЕТ",
+   "okrug": "САО",
+   "raions": [
+    "Западное Дегунино"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 7
+  },
+  {
+   "id": 1528943,
+   "name": "Светлый мир Станция Л",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Люблино"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 6
+  },
+  {
+   "id": 5041186,
+   "name": "СЕТ",
+   "okrug": "ЗАО",
+   "raions": [
+    "Можайский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 27
+  },
+  {
+   "id": 5413216,
+   "name": "Соколин Парк",
+   "okrug": "ВАО",
+   "raions": [
+    "Богородское"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 1
+  },
+  {
+   "id": 5047724,
+   "name": "Страна.Заречная",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Марьино"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 46
+  },
+  {
+   "id": 5726981,
+   "name": "Строгино 360",
+   "okrug": "СЗАО",
+   "raions": [
+    "Строгино"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 62
+  },
+  {
+   "id": 5098695,
+   "name": "Татарская 35",
+   "okrug": "ЦАО",
+   "raions": [
+    "Замоскворечье"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 19
+  },
+  {
+   "id": 5537297,
+   "name": "УНО Горбунова",
+   "okrug": "ЗАО",
+   "raions": [
+    "Можайский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 5
+  },
+  {
+   "id": 4673629,
+   "name": "ХАЙДАУТ (hideOUT)",
+   "okrug": "ЗАО",
+   "raions": [
+    "Раменки"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 28
+  },
+  {
+   "id": 5772402,
+   "name": "Хольм. Эйк",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Сосенское"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 10
+  },
+  {
+   "id": 4714572,
+   "name": "Элитный квартал Тишинский бульвар",
+   "okrug": "ЦАО",
+   "raions": [
+    "Пресненский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 12
+  },
+  {
+   "id": 5682716,
+   "name": "ЮТУ",
+   "okrug": "СЗАО",
+   "raions": [
+    "Южное Тушино"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2028,
+   "offersSeen": 35
+  },
+  {
+   "id": 4886797,
+   "name": "1-й Саларьевский",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Московский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 10
+  },
+  {
+   "id": 4584311,
+   "name": "1-й Ясеневский",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Мосрентген"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 50
+  },
+  {
+   "id": 5703243,
+   "name": "3-я Прядильная ул., влд. 4",
+   "okrug": "ВАО",
+   "raions": [
+    "Измайлово"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 1
+  },
+  {
+   "id": 5767036,
+   "name": "3-я Прядильная ул., з/у 10",
+   "okrug": "ВАО",
+   "raions": [
+    "Измайлово"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 3
+  },
+  {
+   "id": 5100524,
+   "name": "Springs (Спрингс)",
+   "okrug": "ЗАО",
+   "raions": [
+    "Фили-Давыдково"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 18
+  },
+  {
+   "id": 4704846,
+   "name": "Аквилон Бисайд 2.0",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Нижегородский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 19
+  },
+  {
+   "id": 4720970,
+   "name": "АРТЕЛЬ",
+   "okrug": "ВАО",
+   "raions": [
+    "Преображенское"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 7
+  },
+  {
+   "id": 1900321,
+   "name": "Бадаевский",
+   "okrug": "ЗАО",
+   "raions": [
+    "Дорогомилово"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 33
+  },
+  {
+   "id": 5604043,
+   "name": "Бунинская набережная",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Сосенское"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 8
+  },
+  {
+   "id": 4847827,
+   "name": "Гранель Коломенское",
+   "okrug": "ЮАО",
+   "raions": [
+    "Нагатино-Садовники"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 22
+  },
+  {
+   "id": 4549579,
+   "name": "Детали",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Филимонковское"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 46
+  },
+  {
+   "id": 4513929,
+   "name": "Джойс",
+   "okrug": "СЗАО",
+   "raions": [
+    "Хорошево-Мневники"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 21
+  },
+  {
+   "id": 4510307,
+   "name": "Дмитровское ш., з/у 89 (стр. 1)",
+   "okrug": "САО",
+   "raions": [
+    "Бескудниковский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 12
+  },
+  {
+   "id": 4916303,
+   "name": "Дом «А",
+   "okrug": "ЮАО",
+   "raions": [
+    "Даниловский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 4
+  },
+  {
+   "id": 4771631,
+   "name": "Дом 7 Даниловский",
+   "okrug": "ЮАО",
+   "raions": [
+    "Даниловский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 7
+  },
+  {
+   "id": 4260360,
+   "name": "Дом Горизонтов",
+   "okrug": "ЗАО",
+   "raions": [
+    "Крылатское"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 19
+  },
+  {
+   "id": 4296442,
+   "name": "Дом Дау",
+   "okrug": "ЦАО",
+   "raions": [
+    "Пресненский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 13
+  },
+  {
+   "id": 5340468,
+   "name": "Дрим Рива",
+   "okrug": "ЮАО",
+   "raions": [
+    "Нагатинский затон"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 22
+  },
+  {
+   "id": 165772,
+   "name": "Измайловский проезд 22-1",
+   "okrug": "ВАО",
+   "raions": [
+    "Измайлово"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 2
+  },
+  {
+   "id": 4437691,
+   "name": "Инджой",
+   "okrug": "САО",
+   "raions": [
+    "Войковский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 61
+  },
+  {
+   "id": 4593444,
+   "name": "Квартал Герцена",
+   "okrug": "ЮАО",
+   "raions": [
+    "Бирюлево Восточное"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 34
+  },
+  {
+   "id": 4498888,
+   "name": "Квартал Метроном",
+   "okrug": "ВАО",
+   "raions": [
+    "Метрогородок"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 19
+  },
+  {
+   "id": 4700745,
+   "name": "Квартал МОНС",
+   "okrug": "СВАО",
+   "raions": [
+    "Бутырский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 28
+  },
+  {
+   "id": 4674874,
+   "name": "Квартал Серебряный Бор",
+   "okrug": "СЗАО",
+   "raions": [
+    "Хорошево-Мневники"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 12
+  },
+  {
+   "id": 4648486,
+   "name": "КИНГ&САНС (KING & SONS)",
+   "okrug": "ЗАО",
+   "raions": [
+    "Раменки"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 2
+  },
+  {
+   "id": 5778045,
+   "name": "Клиф",
+   "okrug": "СЗАО",
+   "raions": [
+    "Покровское-Стрешнево"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 11
+  },
+  {
+   "id": 4381065,
+   "name": "Клубный дом Левенсон",
+   "okrug": "ЦАО",
+   "raions": [
+    "Пресненский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 8
+  },
+  {
+   "id": 4708642,
+   "name": "Клубный квартал «Фрунзенский»",
+   "okrug": "ЦАО",
+   "raions": [
+    "Хамовники"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 56
+  },
+  {
+   "id": 5138871,
+   "name": "Клубный квартал Крылатская 33",
+   "okrug": "ЗАО",
+   "raions": [
+    "Крылатское"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 65
+  },
+  {
+   "id": 4118429,
+   "name": "КОЛЛЕКЦИЯ ЛУЖНИКИ",
+   "okrug": "ЦАО",
+   "raions": [
+    "Хамовники"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 54
+  },
+  {
+   "id": 5624837,
+   "name": "Кутузов Сити",
+   "okrug": "ЗАО",
+   "raions": [
+    "Можайский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 11
+  },
+  {
+   "id": 4736474,
+   "name": "Мангазея на Речном",
+   "okrug": "САО",
+   "raions": [
+    "Левобережный"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 26
+  },
+  {
+   "id": 5312302,
+   "name": "Мариин Парк",
+   "okrug": "СВАО",
+   "raions": [
+    "Марьина роща"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 2
+  },
+  {
+   "id": 4118649,
+   "name": "МИРАПОЛИС",
+   "okrug": "СВАО",
+   "raions": [
+    "Ярославский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 73
+  },
+  {
+   "id": 4553071,
+   "name": "Нова",
+   "okrug": "ЗАО",
+   "raions": [
+    "Раменки"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 4
+  },
+  {
+   "id": 5519569,
+   "name": "Новые Ватутинки. Квартал у реки",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Десёновское"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 14
+  },
+  {
+   "id": 4312264,
+   "name": "Обручева 30",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Коньково"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 84
+  },
+  {
+   "id": 5690586,
+   "name": "по ул. Оренбургская",
+   "okrug": "ВАО",
+   "raions": [
+    "Косино-Ухтомский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 1
+  },
+  {
+   "id": 4143428,
+   "name": "РУСИЧ Кантемировский",
+   "okrug": "ЮАО",
+   "raions": [
+    "Царицыно"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 18
+  },
+  {
+   "id": 4850351,
+   "name": "Сезар Сити",
+   "okrug": "САО",
+   "raions": [
+    "Хорошевский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 11
+  },
+  {
+   "id": 5005887,
+   "name": "СТОУН Сокольники",
+   "okrug": "ВАО",
+   "raions": [
+    "Сокольники"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 24
+  },
+  {
+   "id": 4590858,
+   "name": "ТАТЕ (ТЭЙТ, ТЕЙТ)",
+   "okrug": "СВАО",
+   "raions": [
+    "Марьина роща"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 15
+  },
+  {
+   "id": 5165955,
+   "name": "УНО Соколиная гора",
+   "okrug": "ВАО",
+   "raions": [
+    "Соколиная гора"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 32
+  },
+  {
+   "id": 4780951,
+   "name": "ФАНТОМ",
+   "okrug": "ЦАО",
+   "raions": [
+    "Мещанский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 46
+  },
+  {
+   "id": 4306305,
+   "name": "Форевиль",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Сосенское"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 15
+  },
+  {
+   "id": 4417906,
+   "name": "ЭМОУШН",
+   "okrug": "СЗАО",
+   "raions": [
+    "Хорошево-Мневники"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2027,
+   "offersSeen": 14
+  },
+  {
+   "id": 49514,
+   "name": "Kuznetsky Most 12 by Lalique (Кузнецкий Мост 12)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Мещанский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 1
+  },
+  {
+   "id": 3419600,
+   "name": "Vernissage (Апартаменты премиум-класса) (Вернисаж)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Замоскворечье"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 1
+  },
+  {
+   "id": 4623414,
+   "name": "Апарт-комплекс Аквилон Сигнал",
+   "okrug": "СВАО",
+   "raions": [
+    "Отрадное"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 48
+  },
+  {
+   "id": 3911074,
+   "name": "АХЕД",
+   "okrug": "ЗАО",
+   "raions": [
+    "Филевский парк"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 11
+  },
+  {
+   "id": 3887485,
+   "name": "Верейская 41",
+   "okrug": "ЗАО",
+   "raions": [
+    "Можайский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 10
+  },
+  {
+   "id": 4528503,
+   "name": "Дом 56",
+   "okrug": "ЦАО",
+   "raions": [
+    "Басманный"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 37
+  },
+  {
+   "id": 4463213,
+   "name": "ДОМ XXII",
+   "okrug": "ЦАО",
+   "raions": [
+    "Хамовники"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 9
+  },
+  {
+   "id": 4075581,
+   "name": "Дом на набережной Инсайдер",
+   "okrug": "ЮАО",
+   "raions": [
+    "Даниловский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 5
+  },
+  {
+   "id": 4186702,
+   "name": "Дом Франка",
+   "okrug": "ЦАО",
+   "raions": [
+    "Мещанский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 6
+  },
+  {
+   "id": 4682511,
+   "name": "Зеленоград Ривьера",
+   "okrug": "ЗелАО",
+   "raions": [
+    "Матушкино"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 13
+  },
+  {
+   "id": 3805106,
+   "name": "Интеллигент",
+   "okrug": "ЦАО",
+   "raions": [
+    "Басманный"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 5
+  },
+  {
+   "id": 4593451,
+   "name": "Кло 17",
+   "okrug": "ЦАО",
+   "raions": [
+    "Арбат"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 9
+  },
+  {
+   "id": 8006,
+   "name": "Клубный дом «Октябрь»",
+   "okrug": "СЗАО",
+   "raions": [
+    "Хорошево-Мневники"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 1
+  },
+  {
+   "id": 4304830,
+   "name": "Клубный дом Обыденский №1",
+   "okrug": "ЦАО",
+   "raions": [
+    "Хамовники"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 10
+  },
+  {
+   "id": 4280747,
+   "name": "Клубный дом Форум",
+   "okrug": "ЦАО",
+   "raions": [
+    "Мещанский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 14
+  },
+  {
+   "id": 4196006,
+   "name": "Красный Октябрь",
+   "okrug": "ЦАО",
+   "raions": [
+    "Якиманка"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 1
+  },
+  {
+   "id": 1656204,
+   "name": "Кутузовский квартал",
+   "okrug": "ЗАО",
+   "raions": [
+    "Кунцево"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 8
+  },
+  {
+   "id": 4446114,
+   "name": "Левел Нижегородская",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Нижегородский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 24
+  },
+  {
+   "id": 5772891,
+   "name": "Летчика Бабушкина ул., д. 29 к. 5",
+   "okrug": "СВАО",
+   "raions": [
+    "Бабушкинский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 4
+  },
+  {
+   "id": 4146634,
+   "name": "МФК СИТИМИКС Новокосино",
+   "okrug": "ВАО",
+   "raions": [
+    "Косино-Ухтомский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 11
+  },
+  {
+   "id": 3890611,
+   "name": "НАМЕТКИН ТАУЭР",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Черемушки"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 83
+  },
+  {
+   "id": 5772902,
+   "name": "Никитинская ул., д. 21, к. 3",
+   "okrug": "ВАО",
+   "raions": [
+    "Измайлово"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 14
+  },
+  {
+   "id": 4779110,
+   "name": "Никитский-6",
+   "okrug": "ЦАО",
+   "raions": [
+    "Арбат"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 12
+  },
+  {
+   "id": 3958726,
+   "name": "Особняки в неорусском стиле «Ильинка 3/8»",
+   "okrug": "ЦАО",
+   "raions": [
+    "Тверской"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 21
+  },
+  {
+   "id": 5774355,
+   "name": "Полярная ул., д. 4, к. 1",
+   "okrug": "СВАО",
+   "raions": [
+    "Южное Медведково"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 2
+  },
+  {
+   "id": 4554143,
+   "name": "Родные кварталы",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Марушкинское"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 22
+  },
+  {
+   "id": 3949610,
+   "name": "Саввинская 27",
+   "okrug": "ЦАО",
+   "raions": [
+    "Хамовники"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 4
+  },
+  {
+   "id": 4880242,
+   "name": "Смарт Гарден",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Сосенское"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 4
+  },
+  {
+   "id": 4676364,
+   "name": "Файв Тауэрс",
+   "okrug": "ЮАО",
+   "raions": [
+    "Донской"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 17
+  },
+  {
+   "id": 4481761,
+   "name": "Фамильный дом Люче",
+   "okrug": "ЦАО",
+   "raions": [
+    "Арбат"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 19
+  },
+  {
+   "id": 3829156,
+   "name": "Шелепиха",
+   "okrug": "ЦАО",
+   "raions": [
+    "Пресненский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 1
+  },
+  {
+   "id": 4705162,
+   "name": "ЭВОПАРК Измайлово",
+   "okrug": "ВАО",
+   "raions": [
+    "Перово"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 18
+  },
+  {
+   "id": 4682454,
+   "name": "ЭВОПАРК Сокольники",
+   "okrug": "ВАО",
+   "raions": [
+    "Преображенское"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2026,
+   "offersSeen": 17
+  },
+  {
+   "id": 4502847,
+   "name": "ВЭРИ на Миклухо-Маклая",
+   "okrug": "ЮЗАО",
+   "raions": [
+    "Обручевский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2025,
+   "offersSeen": 15
+  },
+  {
+   "id": 5775773,
+   "name": "Сиреневый б-р, д. 4/9",
+   "okrug": "ВАО",
+   "raions": [
+    "Измайлово"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2025,
+   "offersSeen": 23
+  },
+  {
+   "id": 5772907,
+   "name": "Славянский б-р, д. 1А",
+   "okrug": "ЗАО",
+   "raions": [
+    "Фили-Давыдково"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2025,
+   "offersSeen": 14
+  },
+  {
+   "id": 5772888,
+   "name": "Сходненская ул., д. 42 ",
+   "okrug": "СЗАО",
+   "raions": [
+    "Южное Тушино"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2025,
+   "offersSeen": 1
+  },
+  {
+   "id": 3419909,
+   "name": "Armani/Casa Moscow Residences (Армани/Каса Москоу Резиденсес)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Якиманка"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2024,
+   "offersSeen": 8
+  },
+  {
+   "id": 165687,
+   "name": "Бульвар Матроса Железняка 11",
+   "okrug": "САО",
+   "raions": [
+    "Коптево"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2024,
+   "offersSeen": 3
+  },
+  {
+   "id": 4007612,
+   "name": "Wellton SPA Residence (Веллтон СПА Резиденс)",
+   "okrug": "СЗАО",
+   "raions": [
+    "Хорошево-Мневники"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2023,
+   "offersSeen": 10
+  },
+  {
+   "id": 884420,
+   "name": "Резиденция 1864",
+   "okrug": "ЦАО",
+   "raions": [
+    "Якиманка"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": 2022,
+   "offersSeen": 2
+  }
+ ],
+ "older": [
+  {
+   "id": 7789,
+   "name": "Turandot Residences (Турандот Резиденсес)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Арбат"
+   ],
+   "yearMin": 2013,
+   "yearMax": 2015,
+   "years": [
+    2013,
+    2015
+   ],
+   "deadlineMax": 2019,
+   "offersSeen": 2
+  },
+  {
+   "id": 7778,
+   "name": "Звёзды Арбата",
+   "okrug": "ЦАО",
+   "raions": [
+    "Арбат"
+   ],
+   "yearMin": 2013,
+   "yearMax": 2013,
+   "years": [
+    2013
+   ],
+   "deadlineMax": 2013,
+   "offersSeen": 16
+  },
+  {
+   "id": 7200,
+   "name": "TriBeCa APARTMENTS (Трайбека Апартментс)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Басманный"
+   ],
+   "yearMin": 2014,
+   "yearMax": 2016,
+   "years": [
+    2014,
+    2015,
+    2016
+   ],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 5227,
+   "name": "МФК ОКО",
+   "okrug": "ЦАО",
+   "raions": [
+    "Пресненский"
+   ],
+   "yearMin": 2016,
+   "yearMax": 2016,
+   "years": [
+    2016
+   ],
+   "deadlineMax": 2016,
+   "offersSeen": 7
+  },
+  {
+   "id": 5226,
+   "name": "Триколор",
+   "okrug": "СВАО",
+   "raions": [
+    "Ростокино"
+   ],
+   "yearMin": 2014,
+   "yearMax": 2015,
+   "years": [
+    2014,
+    2015
+   ],
+   "deadlineMax": 2015,
+   "offersSeen": 2
+  },
+  {
+   "id": 5773900,
+   "name": "Полярная ул., д. 17, к. 1",
+   "okrug": "СВАО",
+   "raions": [
+    "Южное Медведково"
+   ],
+   "yearMin": 1965,
+   "yearMax": 1965,
+   "years": [
+    1965
+   ],
+   "deadlineMax": 2026,
+   "offersSeen": 13
+  },
+  {
+   "id": 4601606,
+   "name": "Плеханова 11",
+   "okrug": "ВАО",
+   "raions": [
+    "Перово"
+   ],
+   "yearMin": 1950,
+   "yearMax": 1950,
+   "years": [
+    1950
+   ],
+   "deadlineMax": 2026,
+   "offersSeen": 31
+  },
+  {
+   "id": 5905,
+   "name": "Новая звезда",
+   "okrug": "СЗАО",
+   "raions": [
+    "Щукино"
+   ],
+   "yearMin": 2000,
+   "yearMax": 2009,
+   "years": [
+    2000,
+    2009
+   ],
+   "deadlineMax": 2012,
+   "offersSeen": 1
+  }
+ ],
+ "unknownYear": [
+  {
+   "id": 2199,
+   "name": "Малая Ордынка 19",
+   "okrug": "ЦАО",
+   "raions": [
+    "Замоскворечье"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 7782,
+   "name": "Zvonarsky Deluxe (Звонарский Делюкс)",
+   "okrug": "ЦАО",
+   "raions": [
+    "Мещанский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 328992,
+   "name": "Титул на Якиманке",
+   "okrug": "ЦАО",
+   "raions": [
+    "Якиманка"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 4481762,
+   "name": "Первый Рязанский",
+   "okrug": "ЮВАО",
+   "raions": [
+    "Рязанский"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": null,
+   "offersSeen": 1
+  },
+  {
+   "id": 37306,
+   "name": "Калипсо-3",
+   "okrug": "НАО (Новомосковский)",
+   "raions": [
+    "Щербинка"
+   ],
+   "yearMin": null,
+   "yearMax": null,
+   "years": [],
+   "deadlineMax": null,
+   "offersSeen": 1
+  }
+ ]
+}
