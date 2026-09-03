@@ -296,6 +296,8 @@ function photoCards(cards, cols = 3) {
 }
 
 // «1 лот», «2 лота», «5 лотов» — иначе в тексте попадаются «201 лотов»
+const nfmt = (v) => String(v).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+
 const plural = (n, [one, few, many]) => {
   const a = Math.abs(n) % 100, b = a % 10;
   if (a > 10 && a < 20) return `${n} ${many}`;
