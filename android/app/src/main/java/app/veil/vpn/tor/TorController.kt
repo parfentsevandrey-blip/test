@@ -261,6 +261,7 @@ class TorController(private val context: Context) {
 
         TorService.getTorrc(context).writeText(torrc)
         VeilLog.d("tor", "torrc written (${torrc.lines().size} lines)")
+        DirectorySeed.plant(context)
         listenForErrors()
 
         val bound = CompletableDeferred<TorService?>()

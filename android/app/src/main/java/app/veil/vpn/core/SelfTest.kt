@@ -12,6 +12,7 @@ import app.veil.vpn.net.NetworkProbe
 import app.veil.vpn.net.SocksProxy
 import app.veil.vpn.net.StunSurvey
 import app.veil.vpn.tor.Bootstrap
+import app.veil.vpn.tor.DirectorySeed
 import app.veil.vpn.tor.StrategyPlanner
 import app.veil.vpn.tor.Torrc
 import kotlinx.coroutines.Dispatchers
@@ -111,7 +112,7 @@ object SelfTest {
             fun finish() = progress.update(total, total, app.getString(R.string.diag_stage_done))
 
             line("=== Veil deep diagnostic ===")
-            line("version 0.11.1")
+            line("version 0.12.0")
 
             val tunnelLive = runCatching { app.tor.isRunning }.getOrDefault(false)
             if (tunnelLive) {
@@ -166,6 +167,17 @@ object SelfTest {
                     "off for this app (the tunnel keeps its network with the screen off)"
                 } else {
                     "ON — the system may cut the tunnel's network when the screen is off; turn it off in Settings"
+                },
+            )
+
+            // The directory tor will start from. Present means it skips the
+            // long part of a first bootstrap; the date says how stale the
+            // consensus is, which decides whether it fetches a diff or a whole
+            // new one.
+            line(
+                "directory cache: " + when {
+                    !DirectorySeed.isPresent(app) -> "none — a first connect downloads the whole directory"
+                    else -> "present, consensus from ${DirectorySeed.consensusAge(app) ?: "unknown date"} UTC"
                 },
             )
 

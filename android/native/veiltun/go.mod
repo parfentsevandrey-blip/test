@@ -8,6 +8,7 @@ require (
 	github.com/refraction-networking/gotapdance v1.7.10
 	github.com/refraction-networking/utls v1.8.2
 	github.com/sirupsen/logrus v1.9.3
+	github.com/ulikunitz/xz v0.5.16
 	github.com/xjasonlyu/tun2socks/v2 v2.7.0
 	gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/goptlib v1.6.0
 	gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird v0.0.0-20260312101154-fc105a03c0e0
