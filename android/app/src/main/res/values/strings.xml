@@ -68,6 +68,17 @@
     <string name="settings_killswitch_desc">Nothing leaves the device while Veil is reconnecting.</string>
     <string name="settings_block_udp">Drop UDP outside the tunnel</string>
     <string name="settings_block_udp_desc">Tor carries TCP only. Keep this on unless you know why you turned it off.</string>
+    <string name="settings_block_ads">Block ads and trackers</string>
+    <string name="settings_block_ads_desc">Advertising and tracking names (Steven Black\'s list, about 80,000) are answered "no such name" before they reach the tunnel. Removes banners in apps and the browser and saves traffic on a slow path.</string>
+    <string name="settings_pulse">Link pulse</string>
+    <string name="settings_pulse_desc">A tiny request through the tunnel every 20 seconds and a speed sample every five minutes. Keeps the path alive after idle and notices a break in 40 seconds instead of two minutes. About 200 KB an hour.</string>
+    <string name="home_pulse">Pulse</string>
+    <string name="home_pulse_none">not yet</string>
+    <string name="home_pulse_value">%1$d ms · %2$d KB/s</string>
+    <string name="home_pulse_rtt">%1$d ms</string>
+    <string name="home_pulse_failing">no answer ×%1$d</string>
+    <string name="home_ads">Ads</string>
+    <string name="home_ads_off">not blocked</string>
     <string name="settings_isolation">Circuit isolation</string>
     <string name="settings_dns">DNS</string>
     <string name="settings_autostart">Connect on boot</string>

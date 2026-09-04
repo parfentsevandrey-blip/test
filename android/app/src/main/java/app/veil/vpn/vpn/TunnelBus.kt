@@ -1,5 +1,6 @@
 package app.veil.vpn.vpn
 
+import app.veil.vpn.model.PulseState
 import app.veil.vpn.model.TunnelState
 import app.veil.vpn.model.TunnelStats
 import app.veil.vpn.net.ProbeReport
@@ -52,6 +53,11 @@ object TunnelBus {
     private val _snowflakeProxyServed = MutableStateFlow(0)
     val snowflakeProxyServed: StateFlow<Int> = _snowflakeProxyServed.asStateFlow()
 
+    private val _pulse = MutableStateFlow(PulseState())
+    val pulse: StateFlow<PulseState> = _pulse.asStateFlow()
+
+    internal fun publishPulse(pulse: PulseState) { _pulse.value = pulse }
+
     internal fun publish(state: TunnelState) { _state.value = state }
     internal fun publish(stats: TunnelStats) { _stats.value = stats }
     internal fun publish(report: ProbeReport) { _probe.value = report }
@@ -70,6 +76,7 @@ object TunnelBus {
         _stats.value = TunnelStats()
         _circuit.value = null
         _localListeners.value = emptyList()
+        _pulse.value = PulseState()
     }
 
     internal fun reset() {
@@ -77,5 +84,6 @@ object TunnelBus {
         _stats.value = TunnelStats()
         _circuit.value = null
         _localListeners.value = emptyList()
+        _pulse.value = PulseState()
     }
 }

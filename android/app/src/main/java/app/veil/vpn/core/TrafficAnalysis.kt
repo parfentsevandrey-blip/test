@@ -161,13 +161,19 @@ object TrafficAnalysis {
      * exists. A large connect with a small first byte is a circuit problem; the
      * other way round is a slow path.
      */
-    private fun probe(socks: SocksProxy, host: String, secure: Boolean, path: String): Sample {
+    private fun probe(
+        socks: SocksProxy,
+        host: String,
+        secure: Boolean,
+        path: String,
+        timeoutMillis: Int = CONNECT_TIMEOUT,
+    ): Sample {
         val port = if (secure) 443 else 80
         val started = System.currentTimeMillis()
         var connectedAt = started
         var socket: Socket? = null
         return try {
-            val raw = Socks5.connect(socks, host, port, CONNECT_TIMEOUT, READ_TIMEOUT)
+            val raw = Socks5.connect(socks, host, port, timeoutMillis, timeoutMillis)
             socket = raw
             val stream: Socket = if (secure) {
                 (SSLSocketFactory.getDefault() as SSLSocketFactory)
@@ -241,6 +247,18 @@ object TrafficAnalysis {
     }
 
     suspend fun throughput(socks: SocksProxy): Throughput = download(socks, SPEED_HOST, SPEED_PATH)
+
+    /**
+     * One beat of the tunnel's pulse: a tiny request to a host that answers
+     * with nothing, timed. Short timeouts, because it runs every few seconds
+     * inside the supervisor and a beat that hangs for half a minute would
+     * hide the very break it exists to notice.
+     */
+    fun pulse(socks: SocksProxy): Sample =
+        probe(socks, PULSE_HOST, secure = true, path = PULSE_PATH, timeoutMillis = PULSE_TIMEOUT)
+
+    /** The pulse's occasional speed sample: 64 KB, small enough to repeat every few minutes. */
+    suspend fun pulseThroughput(socks: SocksProxy): Throughput = download(socks, SPEED_HOST, PULSE_SPEED_PATH)
 
     /**
      * The same measurement three times in a row, on the same endpoint.
@@ -567,6 +585,12 @@ object TrafficAnalysis {
      */
     private const val SPEED_HOST = "speed.cloudflare.com"
     private const val SPEED_PATH = "/__down?bytes=262144"
+
+    /** Where the pulse goes: a 204 with no body, on an edge that is everywhere. */
+    private const val PULSE_HOST = "www.gstatic.com"
+    private const val PULSE_PATH = "/generate_204"
+    private const val PULSE_TIMEOUT = 12_000
+    private const val PULSE_SPEED_PATH = "/__down?bytes=65536"
 
     /** Three of these back to back: just over a megabyte, enough to see a trend. */
     private const val SUSTAINED_ROUNDS = 3

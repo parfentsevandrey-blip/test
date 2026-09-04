@@ -59,6 +59,7 @@ class VeilViewModel(application: Application) : AndroidViewModel(application) {
     val snowflakeServed = TunnelBus.snowflakeProxyServed
     val localListeners = TunnelBus.localListeners
     val cooldowns = TunnelBus.cooldowns
+    val pulse = TunnelBus.pulse
     val bootstrap = container.tor.bootstrap
     val logs = VeilLog.lines
     val knownBridges = container.bridges.bridges
@@ -167,6 +168,8 @@ class VeilViewModel(application: Application) : AndroidViewModel(application) {
     }
     fun setManualTransport(t: Transport) = edit { container.settings.setManualTransport(t) }
     fun setBlockUdp(value: Boolean) = edit { container.settings.setBlockUdp(value) }
+    fun setBlockAds(value: Boolean) = edit { container.settings.setBlockAds(value) }
+    fun setPulse(value: Boolean) = edit { container.settings.setPulse(value) }
     fun setDnsMode(mode: DnsMode) = edit { container.settings.setDnsMode(mode) }
     fun setIsolation(mode: IsolationMode) = edit { container.settings.setIsolation(mode) }
     fun setKillSwitch(value: Boolean) = edit { container.settings.setKillSwitch(value) }

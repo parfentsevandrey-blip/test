@@ -9,10 +9,13 @@ import app.veil.tun.veiltun.Config
 import app.veil.tun.veiltun.Veiltun
 import app.veil.vpn.R
 import app.veil.vpn.VeilApp
+import app.veil.vpn.core.TrafficAnalysis
 import app.veil.vpn.core.VeilLog
+import app.veil.vpn.data.Blocklist
 import app.veil.vpn.data.AppRoutingMode
 import app.veil.vpn.data.NetworkContext
 import app.veil.vpn.data.VeilSettings
+import app.veil.vpn.model.PulseState
 import app.veil.vpn.model.TlsProfile
 import app.veil.vpn.model.Transport
 import app.veil.vpn.model.TunnelState
@@ -988,6 +991,13 @@ class VeilVpnService : VpnService() {
                 )
             }
 
+            // The ad blocker's list, unpacked from the APK if this version's has
+            // not been yet. Off means the native side never opens the file.
+            config.setBlockAds(settings.blockAds)
+            config.setBlocklistPath(
+                if (settings.blockAds) Blocklist.plant(this@VeilVpnService)?.absolutePath.orEmpty() else "",
+            )
+
             // The descriptor now belongs to the native side.
             tunnelInterface = null
 
@@ -1079,13 +1089,17 @@ class VeilVpnService : VpnService() {
     private fun startStatsPump() {
         statsJob?.cancel()
         var lastCircuitCheck = System.currentTimeMillis()
-        var lastLivenessCheck = System.currentTimeMillis()
         var lastEvidenceAt = System.currentTimeMillis()
+        var lastBeatAt = 0L
+        var lastSpeedAt = 0L
         var lastRx = -1L
         var lastTx = -1L
-        var probeFailures = 0
+        var failures = 0
         var lastRedial = 0L
+        var pulse = PulseState()
+        TunnelBus.publishPulse(pulse)
         statsJob = scope.launch {
+            val pulseOn = runCatching { container.settings.settings.first().pulse }.getOrDefault(true)
             while (isActive) {
                 runCatching { Veiltun.snapshot() }.getOrNull()?.let { snapshot ->
                     snapshotRx = snapshot.rxBytes
@@ -1097,6 +1111,7 @@ class VeilVpnService : VpnService() {
                             tcpOpen = snapshot.tcpOpen,
                             dnsQueries = snapshot.dnsQueries,
                             dnsErrors = snapshot.dnsErrors,
+                            dnsBlocked = snapshot.dnsBlocked,
                             blockedUdp = snapshot.blocked,
                             dialErrors = snapshot.dialErrors,
                         ),
@@ -1114,56 +1129,83 @@ class VeilVpnService : VpnService() {
                     runCatching { container.tor.ensureSpareCircuit() }
                 }
 
-                // Is the path still there? Answered by evidence that cannot be
-                // misread, in this order: if bytes have moved through the tunnel
-                // since the last look, it is alive and nothing more is asked. If
-                // nothing has moved for a while — an idle phone moves nothing
-                // either — a real stream is opened through the proxy, exactly
-                // as an application would. Only when that fails twice running
-                // is the path re-dialled.
-                //
-                // The version before this read tor's connection list over the
-                // control port, decided "dead" on any answer it did not like,
-                // and re-dialled a working tunnel every twelve seconds —
-                // tearing down the Snowflake session and replacing the
-                // interface each time. From the outside that was every
-                // application on the phone losing the network and reconnecting,
-                // over and over. A supervisor that can be wrong must not be
-                // allowed to act on its own opinion; this one acts only on a
-                // stream that would not open.
+                // Evidence first: bytes moving through the tunnel mean the
+                // path is there, and nothing more needs asking.
                 val rx = snapshotRx
                 val tx = snapshotTx
                 if (rx != lastRx || tx != lastTx) {
                     lastRx = rx
                     lastTx = tx
                     lastEvidenceAt = now
-                    probeFailures = 0
                 }
-                if (now - lastLivenessCheck > LIVENESS_CHECK_MILLIS &&
-                    now - lastEvidenceAt > QUIET_BEFORE_PROBE_MILLIS &&
-                    !redialing.get()
-                ) {
-                    lastLivenessCheck = now
-                    val socks = container.tor.socks
-                    val open = socks != null && probePath(socks)
-                    if (open) {
-                        lastEvidenceAt = now
-                        probeFailures = 0
+
+                // The pulse: a small request through the tunnel on a fixed
+                // beat, whether or not anything else is happening. It does two
+                // jobs. It is the marker the user asked for — the round trip
+                // and the rate of the path right now, on the home screen, so
+                // "is it alive" has a number for an answer. And it is the
+                // supervisor's clock: a path that has died in a pocket is
+                // noticed in two beats instead of in the forty-five seconds of
+                // silence plus three probes it used to take, and the traffic
+                // itself keeps the path warm — a Snowflake proxy, a carrier's
+                // NAT and tor's own idea of which ports are in use all forget
+                // an idle connection, and none of them forget one that is
+                // spoken to every twenty seconds.
+                //
+                // A beat that goes unanswered while bytes are moving is not a
+                // failure: the path is demonstrably there and the beat lost a
+                // race with the traffic. Only a beat unanswered on a quiet path
+                // counts, and only two of those in a row re-dial.
+                val interval = if (pulseOn) PULSE_MILLIS else LIVENESS_CHECK_MILLIS
+                val wanted = pulseOn || now - lastEvidenceAt > QUIET_BEFORE_PROBE_MILLIS
+                val socks = container.tor.socks
+                if (wanted && socks != null && now - lastBeatAt > interval && !redialing.get()) {
+                    lastBeatAt = now
+                    val proxy = SocksProxy("127.0.0.1", socks.port)
+                    val beat = withContext(Dispatchers.IO) {
+                        runCatching { TrafficAnalysis.pulse(proxy) }.getOrNull()
+                    }
+                    if (beat != null && beat.ok) {
+                        failures = 0
+                        lastEvidenceAt = System.currentTimeMillis()
+                        var rate = pulse.kbytesPerSecond
+                        if (pulseOn && now - lastSpeedAt > PULSE_SPEED_MILLIS) {
+                            lastSpeedAt = now
+                            val run = withContext(Dispatchers.IO) {
+                                runCatching { TrafficAnalysis.pulseThroughput(proxy) }.getOrNull()
+                            }
+                            if (run != null && run.ok) rate = run.kbytesPerSecond
+                        }
+                        pulse = PulseState(
+                            rttMillis = beat.ttfbMillis,
+                            kbytesPerSecond = rate,
+                            measuredAtMillis = System.currentTimeMillis(),
+                            failures = 0,
+                            ok = true,
+                        )
+                    } else if (System.currentTimeMillis() - lastEvidenceAt < interval) {
+                        VeilLog.d("vpn", "pulse: no answer, but traffic is moving; not counted")
                     } else {
-                        probeFailures += 1
+                        failures += 1
+                        pulse = pulse.copy(
+                            measuredAtMillis = System.currentTimeMillis(),
+                            failures = failures,
+                            ok = false,
+                        )
                         VeilLog.w(
                             "vpn",
-                            "no traffic for ${(now - lastEvidenceAt) / 1000}s and a stream would not open " +
-                                "($probeFailures/$PROBE_FAILURES_BEFORE_REDIAL)",
+                            "pulse: no answer ($failures/$PULSE_FAILURES_BEFORE_REDIAL; " +
+                                "${beat?.note ?: "no sample"}; quiet for ${(now - lastEvidenceAt) / 1000}s)",
                         )
-                        if (probeFailures >= PROBE_FAILURES_BEFORE_REDIAL &&
+                        if (failures >= PULSE_FAILURES_BEFORE_REDIAL &&
                             now - lastRedial > REDIAL_COOLDOWN_MILLIS
                         ) {
                             lastRedial = now
-                            probeFailures = 0
-                            redial("no traffic for ${(now - lastEvidenceAt) / 1000}s and no stream would open")
+                            failures = 0
+                            redial("the pulse went unanswered $PULSE_FAILURES_BEFORE_REDIAL times")
                         }
                     }
+                    TunnelBus.publishPulse(pulse)
                 }
                 delay(1_500)
             }
@@ -1211,26 +1253,42 @@ class VeilVpnService : VpnService() {
      * interface retires the old one — so there is no moment without a VPN and
      * nothing leaks around it.
      */
-    private fun redial(reason: String) {
+    private fun redial(reason: String, kickApplications: Boolean = false) {
         if (!redialing.compareAndSet(false, true)) return
         scope.launch {
             try {
                 VeilLog.w("vpn", "re-dialling: $reason")
+                // From here until the path is back, applications' connections
+                // are held open rather than refused. See SetRebuilding in the
+                // native module: this is the difference between a messenger
+                // that says "connecting" for the ten seconds a re-dial takes
+                // and one that says it for two minutes.
+                runCatching { Veiltun.setRebuilding(true) }
                 if (!container.tor.reconnect()) return@launch
                 val socks = container.tor.socks ?: return@launch
-                // Wait for the link to come back before telling applications
-                // the network changed, but do not give up on the tunnel if it
-                // is slow: the interface is replaced either way, and a slow
-                // path is still a path.
-                awaitPath(socks, REDIAL_PATH_WAIT_MILLIS)
-                val settings = container.settings.settings.first()
-                val network = lastNetwork ?: return@launch
-                runCatching {
-                    stopNativeTunnelOnly()
-                    startNativeTunnel(settings, socks, container.tor.dnsPort, network)
-                }.onFailure { VeilLog.e("vpn", "could not re-attach after the re-dial", it) }
-                    .onSuccess { VeilLog.i("vpn", "link is back; applications told") }
+                val back = awaitPath(socks, REDIAL_PATH_WAIT_MILLIS)
+                VeilLog.i(
+                    "vpn",
+                    if (back) "timeline: the path is back" else "the path is still down after ${REDIAL_PATH_WAIT_MILLIS / 1000}s",
+                )
+                if (kickApplications) {
+                    // The network underneath changed, and applications bound
+                    // to the tunnel cannot see that: they only ever see the
+                    // tunnel. Replacing the interface is the one signal Android
+                    // gives them, and it is only sent for a change of network —
+                    // a re-dial on the same network keeps the connections the
+                    // hold above has been keeping, which start flowing on their
+                    // own.
+                    val settings = container.settings.settings.first()
+                    val network = lastNetwork ?: return@launch
+                    runCatching {
+                        stopNativeTunnelOnly()
+                        startNativeTunnel(settings, socks, container.tor.dnsPort, network)
+                    }.onFailure { VeilLog.e("vpn", "could not re-attach after the re-dial", it) }
+                        .onSuccess { VeilLog.i("vpn", "applications told the network changed") }
+                }
             } finally {
+                runCatching { Veiltun.setRebuilding(false) }
                 redialing.set(false)
             }
         }
@@ -1288,6 +1346,7 @@ class VeilVpnService : VpnService() {
 
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
     private var watchedNetwork: android.net.Network? = null
+    private var watchedAddresses: Set<String>? = null
 
     /**
      * Re-dials the moment the phone changes network.
@@ -1311,9 +1370,28 @@ class VeilVpnService : VpnService() {
                 val previous = watchedNetwork
                 watchedNetwork = network
                 if (previous != null && previous != network) {
+                    watchedAddresses = null
                     lastNetwork = runCatching { NetworkContext.inspect(this@VeilVpnService) }
                         .getOrNull() ?: lastNetwork
-                    redial("the phone moved to a different network")
+                    redial("the phone moved to a different network", kickApplications = true)
+                }
+            }
+
+            override fun onLinkPropertiesChanged(
+                network: android.net.Network,
+                properties: android.net.LinkProperties,
+            ) {
+                if (network != watchedNetwork) return
+                val addresses = properties.linkAddresses.map { it.toString() }.toSet()
+                val previous = watchedAddresses
+                watchedAddresses = addresses
+                if (previous != null && previous != addresses) {
+                    // The same network with a new address: a Wi-Fi that
+                    // re-associated, a carrier that re-assigned. Every TCP
+                    // connection the tunnel had is dead, no callback says
+                    // "different network", and without this the only thing
+                    // that would notice is the pulse, two beats later.
+                    redial("the network's address changed", kickApplications = true)
                 }
             }
 
@@ -1571,12 +1649,17 @@ class VeilVpnService : VpnService() {
         private const val QUIET_BEFORE_PROBE_MILLIS = 45_000L
 
         /**
-         * Consecutive probe failures before the path is re-dialled. Two, ten
-         * seconds apart: a single failure can be a slow circuit or a busy
-         * proxy, and re-dialling on one throws away a session that would have
-         * recovered on its own.
+         * Consecutive unanswered beats before the path is re-dialled. Two,
+         * twenty seconds apart: one can be a slow circuit or a busy proxy, and
+         * re-dialling on one throws away a session that would have recovered.
          */
-        private const val PROBE_FAILURES_BEFORE_REDIAL = 3
+        private const val PULSE_FAILURES_BEFORE_REDIAL = 2
+
+        /** How often the pulse beats while the tunnel is up. */
+        private const val PULSE_MILLIS = 20_000L
+
+        /** How often the pulse also samples throughput: 64 KB, every five minutes. */
+        private const val PULSE_SPEED_MILLIS = 5 * 60_000L
 
         /**
          * One probe's budget. Generous on purpose: a circuit over Snowflake on

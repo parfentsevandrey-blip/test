@@ -140,6 +140,7 @@ fun VeilScaffold(
     val cooldowns by viewModel.cooldowns.collectAsStateWithLifecycle()
     val message by viewModel.busyMessage.collectAsStateWithLifecycle()
     val snowflakeServed by viewModel.snowflakeServed.collectAsStateWithLifecycle()
+    val pulse by viewModel.pulse.collectAsStateWithLifecycle()
 
     LaunchedEffect(message) {
         message?.let {
@@ -253,6 +254,8 @@ fun VeilScaffold(
                         probe = probe,
                         circuit = circuit,
                         bootstrapPercent = bootstrap.percent,
+                        pulse = pulse,
+                        adsBlocked = settings.blockAds,
                         onToggle = {
                             if (state.isLive || state.isBusy) {
                                 viewModel.stopTunnel()
@@ -297,6 +300,8 @@ fun VeilScaffold(
                         settings = settings,
                         snowflakeServed = snowflakeServed,
                         onBlockUdp = viewModel::setBlockUdp,
+                        onBlockAds = viewModel::setBlockAds,
+                        onPulse = viewModel::setPulse,
                         onKillSwitch = viewModel::setKillSwitch,
                         onAutoStart = viewModel::setAutoStart,
                         onSnowflakeProxy = viewModel::setSnowflakeProxy,

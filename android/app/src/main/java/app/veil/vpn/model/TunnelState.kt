@@ -65,6 +65,8 @@ data class TunnelStats(
     val tcpOpen: Long = 0,
     val dnsQueries: Long = 0,
     val dnsErrors: Long = 0,
+    /** Names the ad blocker answered "no such name" for. */
+    val dnsBlocked: Long = 0,
     val blockedUdp: Long = 0,
     val dialErrors: Long = 0,
 )

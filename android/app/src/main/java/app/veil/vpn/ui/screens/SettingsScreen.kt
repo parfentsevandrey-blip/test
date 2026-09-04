@@ -42,6 +42,8 @@ fun SettingsScreen(
     settings: VeilSettings,
     snowflakeServed: Int,
     onBlockUdp: (Boolean) -> Unit,
+    onBlockAds: (Boolean) -> Unit,
+    onPulse: (Boolean) -> Unit,
     onKillSwitch: (Boolean) -> Unit,
     onAutoStart: (Boolean) -> Unit,
     onSnowflakeProxy: (Boolean) -> Unit,
@@ -78,6 +80,22 @@ fun SettingsScreen(
                 subtitle = stringResource(R.string.settings_block_udp_desc),
                 checked = settings.blockUdp,
                 onCheckedChange = onBlockUdp,
+            )
+        }
+        item {
+            SwitchRow(
+                title = stringResource(R.string.settings_block_ads),
+                subtitle = stringResource(R.string.settings_block_ads_desc),
+                checked = settings.blockAds,
+                onCheckedChange = onBlockAds,
+            )
+        }
+        item {
+            SwitchRow(
+                title = stringResource(R.string.settings_pulse),
+                subtitle = stringResource(R.string.settings_pulse_desc),
+                checked = settings.pulse,
+                onCheckedChange = onPulse,
             )
         }
 

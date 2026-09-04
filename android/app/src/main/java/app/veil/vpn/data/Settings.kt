@@ -76,6 +76,10 @@ enum class IsolationMode(val nativeMode: String) {
 data class VeilSettings(
     val manualTransport: Transport = Transport.SNOWFLAKE,
     val blockUdp: Boolean = true,
+    /** Answer "no such name" for advertising and tracking names; see the blocklist in the native module. */
+    val blockAds: Boolean = true,
+    /** A small request through the tunnel every few seconds, so a dead path is noticed in under a minute. */
+    val pulse: Boolean = true,
     val dnsMode: DnsMode = DnsMode.TOR_DNS_PORT,
     val dohEndpoint: String = DEFAULT_DOH,
     val tcpDnsResolver: String = DEFAULT_TCP_DNS,
@@ -105,6 +109,8 @@ class SettingsRepository(private val context: Context) {
     private object Keys {
         val MANUAL_TRANSPORT = stringPreferencesKey("manual_transport")
         val BLOCK_UDP = booleanPreferencesKey("block_udp")
+        val BLOCK_ADS = booleanPreferencesKey("block_ads")
+        val PULSE = booleanPreferencesKey("pulse")
         val DNS_MODE = stringPreferencesKey("dns_mode")
         val DOH_ENDPOINT = stringPreferencesKey("doh_endpoint")
         val TCP_DNS = stringPreferencesKey("tcp_dns")
@@ -134,6 +140,8 @@ class SettingsRepository(private val context: Context) {
     private fun Preferences.toSettings() = VeilSettings(
         manualTransport = enumOf(this[Keys.MANUAL_TRANSPORT], Transport.SNOWFLAKE),
         blockUdp = this[Keys.BLOCK_UDP] ?: true,
+        blockAds = this[Keys.BLOCK_ADS] ?: true,
+        pulse = this[Keys.PULSE] ?: true,
         dnsMode = enumOf(this[Keys.DNS_MODE], DnsMode.TOR_DNS_PORT),
         dohEndpoint = this[Keys.DOH_ENDPOINT] ?: VeilSettings.DEFAULT_DOH,
         tcpDnsResolver = this[Keys.TCP_DNS] ?: VeilSettings.DEFAULT_TCP_DNS,
@@ -151,6 +159,8 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setManualTransport(transport: Transport) = put(Keys.MANUAL_TRANSPORT, transport.name)
     suspend fun setBlockUdp(value: Boolean) = put(Keys.BLOCK_UDP, value)
+    suspend fun setBlockAds(value: Boolean) = put(Keys.BLOCK_ADS, value)
+    suspend fun setPulse(value: Boolean) = put(Keys.PULSE, value)
     suspend fun setDnsMode(mode: DnsMode) = put(Keys.DNS_MODE, mode.name)
     suspend fun setIsolation(mode: IsolationMode) = put(Keys.ISOLATION, mode.name)
     suspend fun setKillSwitch(value: Boolean) = put(Keys.KILL_SWITCH, value)

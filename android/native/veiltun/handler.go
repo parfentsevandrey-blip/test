@@ -9,7 +9,9 @@ import (
 	"net"
 	"net/netip"
 	"strconv"
+	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/xjasonlyu/tun2socks/v2/core/adapter"
@@ -31,11 +33,24 @@ type handler struct {
 
 	dnsResolver dnsResolver
 	bypass      *bypass
+	block       *blocklist
 
 	ctx    context.Context
 	cancel context.CancelFunc
 	wg     sync.WaitGroup
 }
+
+const (
+	// How long an application's connection is held while the path is being
+	// rebuilt, before its dial failure is finally passed on.
+	holdWindow = 60 * time.Second
+	// How long between attempts while holding.
+	holdRetry = time.Second
+	// How long a connection is held when the proxy itself is unreachable and
+	// nobody has said the path is being rebuilt: long enough to ride out the
+	// half-second in which tor reopens its listeners after a network toggle.
+	holdWhenProxyDown = 8 * time.Second
+)
 
 func newHandler(cfg *Config) (*handler, error) {
 	salt := make([]byte, 8)
@@ -58,6 +73,16 @@ func newHandler(cfg *Config) (*handler, error) {
 	h.bypass = newBypass(cfg.BypassSuffixes, cfg.BypassDNS)
 	if h.bypass.enabled() {
 		logf("info", "bypassing the tunnel for %v via %v", h.bypass.suffixes, h.bypass.resolvers)
+	}
+	if cfg.BlockAds && cfg.BlocklistPath != "" {
+		block, err := loadBlocklist(cfg.BlocklistPath)
+		if err != nil {
+			// Not fatal: a tunnel without an ad blocker is still a tunnel.
+			logf("warn", "ad blocker: cannot load %s: %v", cfg.BlocklistPath, err)
+		} else {
+			h.block = block
+			logf("info", "ad blocker: %d names", block.size())
+		}
 	}
 	return h, nil
 }
@@ -132,16 +157,7 @@ func (h *handler) relayTCP(conn adapter.TCPConn) {
 	stats.tcpOpen.Add(1)
 	defer stats.tcpOpen.Add(-1)
 
-	ctx, cancel := context.WithTimeout(h.ctx, time.Duration(h.cfg.DialTimeoutSec)*time.Second)
-	var up net.Conn
-	var err error
-	if h.bypass.shouldDialDirect(dst.Addr()) {
-		// Resolved from a name the user asked to keep off the tunnel.
-		up, err = (&net.Dialer{}).DialContext(ctx, "tcp", dst.String())
-	} else {
-		up, err = h.dialUpstream(ctx, "tcp", dst.String())
-	}
-	cancel()
+	up, err := h.dialHeld(dst)
 	if err != nil {
 		stats.dialErrors.Add(1)
 		logf("warn", "tcp %s: %v", dst, err)
@@ -150,6 +166,73 @@ func (h *handler) relayTCP(conn adapter.TCPConn) {
 	defer up.Close()
 
 	relay(conn, up)
+}
+
+// dialHeld opens the upstream connection for an application's flow — and,
+// while the path is being rebuilt, keeps trying rather than failing it.
+//
+// The application's own connection is already open by the time this runs:
+// the netstack completed the handshake with it before handing the flow over.
+// So an upstream failure here has two possible outcomes, and the difference
+// between them is the whole point. Close the flow, and the application sees
+// an error and backs off — longer each time, until a re-dial of ten seconds
+// has turned into a messenger that says "connecting" for two minutes. Hold
+// it, and the application sees a connection that is slow to answer, which
+// every application already knows how to wait for; its first bytes go
+// through the moment the path is back.
+//
+// Held only when there is something to wait for: while the app has said the
+// path is being rebuilt, or while the proxy itself cannot be reached at all
+// (tor closes and reopens its listeners in the half second it takes to toggle
+// its network). A destination the proxy reports as unreachable is not held —
+// that answer is real, and the application should have it now.
+func (h *handler) dialHeld(dst netip.AddrPort) (net.Conn, error) {
+	started := time.Now()
+	for {
+		ctx, cancel := context.WithTimeout(h.ctx, time.Duration(h.cfg.DialTimeoutSec)*time.Second)
+		var up net.Conn
+		var err error
+		if h.bypass.shouldDialDirect(dst.Addr()) {
+			// Resolved from a name the user asked to keep off the tunnel.
+			up, err = (&net.Dialer{}).DialContext(ctx, "tcp", dst.String())
+		} else {
+			up, err = h.dialUpstream(ctx, "tcp", dst.String())
+		}
+		cancel()
+		if err == nil {
+			return up, nil
+		}
+		if h.ctx.Err() != nil {
+			return nil, err
+		}
+		window := time.Duration(0)
+		switch {
+		case rebuilding.Load():
+			window = holdWindow
+		case proxyDown(err):
+			window = holdWhenProxyDown
+		}
+		if time.Since(started) >= window {
+			return nil, err
+		}
+		select {
+		case <-h.ctx.Done():
+			return nil, err
+		case <-time.After(holdRetry):
+		}
+	}
+}
+
+// proxyDown reports whether a dial failed because the proxy itself was not
+// there — as opposed to the proxy answering that the destination is not.
+func proxyDown(err error) bool {
+	if errors.Is(err, syscall.ECONNREFUSED) || errors.Is(err, io.EOF) ||
+		errors.Is(err, io.ErrUnexpectedEOF) || errors.Is(err, syscall.ECONNRESET) {
+		return true
+	}
+	text := err.Error()
+	return strings.Contains(text, "connection refused") ||
+		strings.Contains(text, "general SOCKS server failure")
 }
 
 // HandleUDP is called by the netstack for every UDP flow.
@@ -234,6 +317,14 @@ func (h *handler) serveDNS(conn adapter.UDPConn) {
 // hand back a virtual one that only tor can reach. The addresses that come back
 // are remembered so the connection that follows can be dialled directly.
 func (h *handler) resolve(ctx context.Context, query []byte) ([]byte, error) {
+	if h.block != nil {
+		if name := queryName(query); name != "" && h.block.blocked(name) {
+			if resp := nxDomain(query); resp != nil {
+				stats.dnsBlocked.Add(1)
+				return resp, nil
+			}
+		}
+	}
 	if h.bypass.enabled() {
 		if name := queryName(query); name != "" && h.bypass.matchesName(name) {
 			resp, err := h.bypassExchange(ctx, query)

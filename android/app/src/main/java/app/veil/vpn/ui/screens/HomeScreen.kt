@@ -24,6 +24,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Autorenew
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.MonitorHeart
 import androidx.compose.material.icons.filled.Hub
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.Card
@@ -47,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import app.veil.vpn.R
 import app.veil.vpn.core.formatBytes
 import app.veil.vpn.core.formatDuration
+import app.veil.vpn.model.PulseState
 import app.veil.vpn.model.TunnelState
 import app.veil.vpn.model.TunnelStats
 import app.veil.vpn.net.ProbeReport
@@ -61,6 +64,8 @@ fun HomeScreen(
     probe: ProbeReport,
     circuit: String?,
     bootstrapPercent: Int,
+    pulse: PulseState,
+    adsBlocked: Boolean,
     onToggle: () -> Unit,
     onNewCircuit: () -> Unit,
     modifier: Modifier = Modifier,
@@ -101,6 +106,37 @@ fun HomeScreen(
                 modifier = Modifier.weight(1f),
                 tint = MaterialTheme.colorScheme.tertiary,
             )
+        }
+
+        // The pulse and the ad blocker, as numbers: the round trip and rate
+        // of the last beat through the tunnel, and how many advertising names
+        // were refused this session. A green screen says the tunnel is up; a
+        // round trip measured a few seconds ago says it is alive.
+        if (state.isLive) {
+            Spacer(Modifier.height(10.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                StatTile(
+                    label = stringResource(R.string.home_pulse),
+                    value = when {
+                        !pulse.hasMeasurement -> stringResource(R.string.home_pulse_none)
+                        !pulse.ok -> stringResource(R.string.home_pulse_failing, pulse.failures)
+                        pulse.kbytesPerSecond > 0 ->
+                            stringResource(R.string.home_pulse_value, pulse.rttMillis, pulse.kbytesPerSecond)
+                        else -> stringResource(R.string.home_pulse_rtt, pulse.rttMillis)
+                    },
+                    icon = Icons.Filled.MonitorHeart,
+                    modifier = Modifier.weight(1f),
+                )
+                StatTile(
+                    label = stringResource(R.string.home_ads),
+                    value = if (adsBlocked) stats.dnsBlocked.toString() else stringResource(R.string.home_ads_off),
+                    icon = Icons.Filled.Block,
+                    modifier = Modifier.weight(1f),
+                )
+            }
         }
 
         if (state is TunnelState.Connected) {
@@ -151,9 +187,7 @@ private fun BatteryNotice() {
     if (exempt) return
     Spacer(Modifier.height(10.dp))
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp),
+        modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.tertiaryContainer,

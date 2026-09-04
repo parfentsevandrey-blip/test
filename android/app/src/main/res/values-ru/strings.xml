@@ -60,6 +60,17 @@
     <string name="settings_killswitch_desc">Пока Veil переподключается, наружу не уходит ничего.</string>
     <string name="settings_block_udp">Отбрасывать UDP мимо тоннеля</string>
     <string name="settings_block_udp_desc">Tor умеет только TCP. Выключайте, лишь если понимаете зачем.</string>
+    <string name="settings_block_ads">Блокировать рекламу и трекеры</string>
+    <string name="settings_block_ads_desc">Имена рекламных и следящих доменов (список Steven Black, около 80 000) получают ответ «нет такого имени» ещё до тоннеля. Убирает баннеры в приложениях и браузере и экономит трафик на медленном пути.</string>
+    <string name="settings_pulse">Пульс канала</string>
+    <string name="settings_pulse_desc">Каждые 20 секунд через тоннель уходит крошечный запрос, раз в пять минут — замер скорости. Держит путь живым после простоя и замечает обрыв за 40 секунд, а не за две минуты. Около 200 КБ в час.</string>
+    <string name="home_pulse">Пульс</string>
+    <string name="home_pulse_none">ещё нет</string>
+    <string name="home_pulse_value">%1$d мс · %2$d КБ/с</string>
+    <string name="home_pulse_rtt">%1$d мс</string>
+    <string name="home_pulse_failing">нет ответа ×%1$d</string>
+    <string name="home_ads">Реклама</string>
+    <string name="home_ads_off">не блокируется</string>
     <string name="settings_isolation">Изоляция цепочек</string>
     <string name="settings_dns">DNS</string>
     <string name="settings_autostart">Подключаться при загрузке</string>

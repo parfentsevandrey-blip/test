@@ -97,6 +97,13 @@ type Config struct {
 	// BypassDNS is a comma-separated list of "host:port" resolvers reachable on
 	// the real network, used only to resolve bypassed names.
 	BypassDNS string
+
+	// BlockAds answers "no such name" for names on the list at BlocklistPath
+	// instead of resolving them. See blocklist.go.
+	BlockAds bool
+	// BlocklistPath is a file with one name per line (hosts-file lines are
+	// accepted too).
+	BlocklistPath string
 }
 
 // NewConfig returns a Config with defaults appropriate for Tor.
@@ -131,6 +138,7 @@ type Stats struct {
 	UDPTotal   int64
 	DNSQueries int64
 	DNSErrors  int64
+	DNSBlocked int64 // names refused by the ad blocker
 	DialErrors int64
 	Blocked    int64 // UDP datagrams dropped by the leak guard
 }
@@ -139,7 +147,28 @@ type counters struct {
 	rx, tx                      atomic.Int64
 	tcpOpen, tcpTotal, udpTotal atomic.Int64
 	dnsQueries, dnsErrors       atomic.Int64
+	dnsBlocked                  atomic.Int64
 	dialErrors, blocked         atomic.Int64
+}
+
+// rebuilding is set by the app while the path under the tunnel is being
+// re-dialled. While it is set, an application's connection whose upstream
+// dial fails is held and retried instead of being refused — see dialHeld.
+var rebuilding atomic.Bool
+
+// SetRebuilding tells the tunnel that the path underneath it is being
+// rebuilt (true) or is back (false).
+//
+// This is the difference between a messenger that says "connecting" for the
+// ten seconds a re-dial takes and one that says it for two minutes. When the
+// tunnel refused connections during a re-dial, every application that tried
+// got an error at once, and applications answer repeated errors by waiting
+// longer between attempts — a minute or more by the time the path was back,
+// with nothing to tell them it was. Holding the connection instead looks, from
+// the application's side, like a slow network: the connection is open, the
+// first bytes are just late, and they arrive the moment the path does.
+func SetRebuilding(on bool) {
+	rebuilding.Store(on)
 }
 
 type session struct {
@@ -276,6 +305,7 @@ func Snapshot() *Stats {
 		UDPTotal:   stats.udpTotal.Load(),
 		DNSQueries: stats.dnsQueries.Load(),
 		DNSErrors:  stats.dnsErrors.Load(),
+		DNSBlocked: stats.dnsBlocked.Load(),
 		DialErrors: stats.dialErrors.Load(),
 		Blocked:    stats.blocked.Load(),
 	}
@@ -290,6 +320,7 @@ func ResetStats() {
 	stats.udpTotal.Store(0)
 	stats.dnsQueries.Store(0)
 	stats.dnsErrors.Store(0)
+	stats.dnsBlocked.Store(0)
 	stats.dialErrors.Store(0)
 	stats.blocked.Store(0)
 }
