@@ -36,9 +36,9 @@ def plural(n, one='лот', few='лота', many='лотов'):
 os.makedirs(os.path.join(HERE, 'assets'), exist_ok=True)
 
 # ── когорта ────────────────────────────────────────────────────────────────
-ROWS = [r for r in COH_PINS][:16]
+ROWS = [r for r in COH_PINS][:20]
 MAXV = 6_500_000
-W, H = 1400, 820
+W, H = 1400, 980
 img = Image.new('RGB', (W * S, H * S), SURFACE)
 dr = ImageDraw.Draw(img)
 L, R, T = 40 * S, 118 * S, 118 * S
