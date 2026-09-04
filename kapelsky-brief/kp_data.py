@@ -249,6 +249,100 @@ HOUSE_ROWS = [[str(x['no']), x['name'], x['what'], str(x['n']),
 HOUSE_ROWS.append(['—', 'Капельский, 5', 'новостройка, 2029', '46', '110',
                    mln(AREA_AVG * PPM), nf(PPM)])
 
+# ── клубные дома того же формата ────────────────────────────────────────────
+# В Мещанском районе клубных домов сопоставимого масштаба в продаже нет:
+# ближайшие — «Кло 17» на Знаменке и «Фамильный дом Люче» в Крестовоздвиженском
+# переулке, оба у Кремля. Сравнение здесь идёт не по локации, а по формату:
+# камерный дом на два-четыре десятка резиденций, продажи от застройщика.
+from math import radians, cos, hypot
+
+HOUSE_LAT, HOUSE_LON = 55.784482, 37.631307   # участок, Капельский переулок, 5
+KREMLIN = (55.752000, 37.617500)              # Спасская башня
+
+
+def _km_to(lat, lng, to=KREMLIN):
+    dx = radians(lng - to[1]) * cos(radians((lat + to[0]) / 2)) * 6371
+    dy = radians(lat - to[0]) * 6371
+    return hypot(dx, dy)
+
+
+def _club(file, name, short, addr, flats, builder):
+    ls = json.load(open(os.path.join(HERE, 'cian', file), encoding='utf-8'))['lots']
+    for l in ls:
+        l['ppm'] = l['priceRub'] / l['totalArea']
+    by_area = sorted(ls, key=lambda l: l['totalArea'])
+    dl = next((l['deadline'] for l in ls if l.get('deadline')), None)
+    return {
+        'name': name, 'short': short, 'flats': flats, 'builder': builder,
+        'lots': ls, 'n': len(ls), 'byArea': by_area, 'street': addr,
+        'floors': max(l['floors'] or 0 for l in ls),
+        'areaLo': by_area[0]['totalArea'], 'areaHi': by_area[-1]['totalArea'],
+        'areaAvg': sum(l['totalArea'] for l in ls) / len(ls),
+        'priceLo': min(l['priceRub'] for l in ls), 'priceHi': max(l['priceRub'] for l in ls),
+        'ppmLo': min(l['ppm'] for l in ls), 'ppmHi': max(l['ppm'] for l in ls),
+        'ppmMed': _med(l['ppm'] for l in ls),
+        'deadline': f"{QUARTER[dl['quarter']]} кв. {dl['year']}" if dl else '—',
+        'km': _km_to(ls[0]['lat'], ls[0]['lng']),
+        'dist': _km_to(ls[0]['lat'], ls[0]['lng'], (HOUSE_LAT, HOUSE_LON)),
+    }
+
+
+QUARTER = {'first': 'I', 'second': 'II', 'third': 'III', 'fourth': 'IV'}
+CLOS = _club('clos17.json', 'Кло 17', 'Кло 17',
+             'Староваганьковский пер., 17с4', 22, 'MR Group')
+LUCE = _club('luce.json', 'Фамильный дом Люче', 'Люче',
+             'Крестовоздвиженский пер., 4', 46, 'MR Group')
+CLUBS = [CLOS, LUCE]
+
+_mn = lambda v: f'{v / 1e6:,.1f}'.replace(',', ' ').replace('.', ',')
+CLUB_ROWS = [
+    ['Адрес', 'Капельский пер., 5', *[c['street'] for c in CLUBS]],
+    ['До Кремля, км', f'{_km_to(HOUSE_LAT, HOUSE_LON):.1f}'.replace('.', ','),
+     *[f"{c['km']:.1f}".replace('.', ',') for c in CLUBS]],
+    ['Резиденций в доме', str(LOTS), *[str(c['flats']) for c in CLUBS]],
+    ['Этажей', '8', *[str(c['floors']) for c in CLUBS]],
+    ['Лотов в открытой продаже', 'нет', *[str(c['n']) for c in CLUBS]],
+    ['Площади, м²', f'{AREA_MIN:.0f} – {AREA_MAX:.0f}',
+     *[f"{c['areaLo']:.0f} – {c['areaHi']:.0f}" for c in CLUBS]],
+    ['Средняя площадь, м²', f'{AREA_AVG:.0f}', *[f"{c['areaAvg']:.0f}" for c in CLUBS]],
+    ['Бюджет лота, млн ₽', f'{_mn(AREA_MIN * PPM)} – {_mn(AREA_MAX * PPM)}',
+     *[f"{_mn(c['priceLo'])} – {_mn(c['priceHi'])}" for c in CLUBS]],
+    ['Метр, ₽', nf(PPM),
+     *[f"{nf(round(c['ppmLo'], -4))} – {nf(round(c['ppmHi'], -4))}" for c in CLUBS]],
+    ['Медиана метра, ₽', nf(PPM), *[nf(round(c['ppmMed'])) for c in CLUBS]],
+    ['Отделка в объявлениях', 'без отделки', 'без отделки', 'не заявлена'],
+    ['Срок сдачи', '2029', *[c['deadline'] for c in CLUBS]],
+    ['Застройщик', 'АО «МАКО»', *[c['builder'] for c in CLUBS]],
+]
+
+# По три лота на дом: самый компактный, средний по площади и самый крупный.
+CLUB_LOTS = []
+for _c in CLUBS:
+    _pick = [_c['byArea'][0], _c['byArea'][len(_c['byArea']) // 2], _c['byArea'][-1]]
+    for _l in _pick:
+        CLUB_LOTS.append([
+            _c['short'], f"{_l['totalArea']:.1f}".replace('.', ','),
+            f"{_l['floor']} / {_l['floors']}",
+            _mn(_l['priceRub']), nf(round(_l['ppm'], -4)),
+            {'text': 'Циан →', 'link': _l['url']},
+        ])
+
+_club_ppm = _med([l['ppm'] for c in CLUBS for l in c['lots']])
+CLUB = {
+    'ppmMed': nf(round(_club_ppm)),
+    'n': sum(c['n'] for c in CLUBS),
+    'deadline': CLOS['deadline'],
+    'toClub': f'{(1 - PPM / _club_ppm) * 100:.0f}',
+    'times': f'{_club_ppm / PPM:.1f}'.replace('.', ','),
+    'dist': f"{CLOS['dist']:.0f}",
+    'kremlin': f"{_km_to(HOUSE_LAT, HOUSE_LON):.1f}".replace('.', ','),
+    'kremlinClub': f"{min(c['km'] for c in CLUBS):.1f}".replace('.', ','),
+    'areaAvg': ' и '.join(f"{c['areaAvg']:.0f}" for c in CLUBS),
+    'top': _mn(LUCE['priceHi']),
+    'topArea': f"{LUCE['areaHi']:.0f}",
+    'topPpm': nf(round(LUCE['ppmHi'], -4)),
+}
+
 # ── сколько рынок платит за ремонт ──────────────────────────────────────────
 # repairType добран из карточек Циан: в поисковой выдаче поля нет.
 # Сравнение идёт внутри одних и тех же домов, поэтому локация, год и класс
@@ -389,6 +483,9 @@ if __name__ == '__main__':
         'distPro': DIST_PRO,
         'distContra': DIST_CONTRA,
         'houseRows': HOUSE_ROWS,
+        'clubRows': CLUB_ROWS,
+        'clubLots': CLUB_LOTS,
+        'club': CLUB,
         'features': FEATURES,
         'rns': RNS,
         'risks': RISKS,
