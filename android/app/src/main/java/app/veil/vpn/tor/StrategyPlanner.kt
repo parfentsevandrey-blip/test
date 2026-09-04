@@ -105,11 +105,12 @@ class StrategyPlanner(
      * quietly do something else and never learning which method their network
      * actually allows.
      *
-     * The one thing that does produce more than a single entry is a method with
-     * more than one way of starting: Snowflake can ask the broker through a
-     * fronted request or through an AMP cache, and Conjure can register with
-     * its station over a fronted request or over DNS. Those are the same
-     * method, so both ways are tried.
+     * The one thing that produces more than a single entry is Conjure, which
+     * can register with its station over a fronted request or over DNS; both
+     * are the same method, so both are tried, the one that last worked first.
+     * Snowflake also has two ways of starting — a fronted request to its
+     * broker or a request through Google's AMP cache — but those are raced
+     * inside the transport, on one bridge line, for reasons given below.
      */
     suspend fun pinnedPlan(
         transport: Transport,
@@ -130,32 +131,37 @@ class StrategyPlanner(
             return@withContext emptyList()
         }
         val why = context.getString(R.string.route_why_pinned)
-        val fronted = buildAttempt(transport, why, tlsProfile, dtlsProfile, iceServers)
-        val alternate = when (transport) {
-            Transport.SNOWFLAKE -> ampSnowflakeAttempt(tlsProfile, dtlsProfile, iceServers)
-            Transport.CONJURE -> dnsConjureAttempt()
-            else -> null
-        }
+        val attempts = when (transport) {
+            // One line, one bridge. Snowflake's two ways of reaching its
+            // broker — a fronted request and Google's AMP cache — are raced
+            // inside the transport, each time it needs a proxy, and tor never
+            // learns there were two.
+            //
+            // They used to be two bridge lines raced through tor, and that
+            // cannot work, however much it looked as if it did. Both lines name
+            // the same bridge, and tor keys bridges on identity: every fetch
+            // of the bridge's descriptor through one line rewrote the bridge's
+            // address to that line's placeholder, after which tor extended
+            // circuits to the rewritten address, found that its working
+            // connection was to the other one, and opened a fresh connection
+            // through the rendezvous the network was blocking. Half a minute
+            // of every connect, and sometimes the whole of it, went there.
+            // snowflake.go in the transport module has the race and the
+            // references into tor's source.
+            Transport.SNOWFLAKE -> listOfNotNull(
+                snowflakeAttempt(why, tlsProfile, dtlsProfile, iceServers),
+            )
 
-        // Both ways of starting the method, cheapest-to-block last.
-        //
-        // The first move of both Snowflake and Conjure is an ordinary fronted
-        // HTTPS request — to a broker, or to a registration station — and it is
-        // the only part of either that a censor can get at. On the networks
-        // this app is built for that request is the thing that is blocked:
-        // measured on a Russian mobile network, the fronted Snowflake
-        // rendezvous returns nothing at all while the same bridge reached
-        // through Google's AMP cache connects in seconds. Fronting through a
-        // CDN is only as strong as the list of names it borrows, and those
-        // names are enumerable; cdn.ampproject.org shares an edge with
-        // google.com, which is not. So the alternative goes first.
-        //
-        // Not hardcoded to that, though. Whichever of the two last failed is
-        // demoted by the same failure counter that already orders bridges, so
-        // a network where the reverse is true corrects itself after one
-        // connect instead of paying for this preference every time.
-        val attempts = listOfNotNull(alternate, fronted)
-            .sortedBy { bridges.failureCount(it.bridges) }
+            // Conjure's two registrars are the same method with two ways of
+            // starting, tried in turn: whichever last failed goes second, by
+            // the same failure counter that already orders bridges.
+            Transport.CONJURE -> listOfNotNull(
+                dnsConjureAttempt(),
+                buildAttempt(transport, why, tlsProfile, dtlsProfile, iceServers),
+            ).sortedBy { bridges.failureCount(it.bridges) }
+
+            else -> listOfNotNull(buildAttempt(transport, why, tlsProfile, dtlsProfile, iceServers))
+        }
         VeilLog.i("planner", attempts.joinToString(" -> ") { it.label }.ifEmpty { "nothing to try" })
         attempts
     }
@@ -189,27 +195,30 @@ class StrategyPlanner(
     }
 
     /**
-     * Snowflake asking the broker a different way.
+     * The one Snowflake line a connect uses.
      *
-     * Everything Snowflake is famous for — no fixed address, a proxy that is
-     * someone's browser tab — begins after a rendezvous, and the rendezvous is
-     * an ordinary HTTPS request to an ordinary CDN. It is the one part of
-     * Snowflake a censor can reach, and blocking it stops Snowflake dead in a
-     * way that looks from the phone like there being no proxies in the world.
-     *
-     * So the same bridge is offered a second time, asking through Google's AMP
-     * cache instead: a different company, a different edge, a different request
-     * shape, blocked or not blocked independently of the first.
+     * It names the AMP rendezvous. Everything Snowflake is known for — no
+     * fixed address, a proxy that is someone's browser tab — begins after a
+     * rendezvous with the broker, and that rendezvous is an ordinary HTTPS
+     * request: the one part of Snowflake a censor can reach. Fronting it
+     * through a CDN is only as strong as the list of names it borrows, and
+     * those names are enumerable; cdn.ampproject.org shares an edge with
+     * google.com, which is not. Measured on a Russian mobile network the
+     * fronted request got no answer at all while the AMP one found a proxy in
+     * about a second. The fronted way is not given up on: the transport races
+     * it alongside, and remembers which of the two answered.
      *
      * The Tor Project publishes ready-made AMP lines for some countries and
      * those are used as they are. Where it does not — which includes every
-     * network the country list has nothing to say about — one is made here from
-     * a plain line, and the three parameters are replaced together. That last
-     * part is the whole difficulty: the broker mirror, the front and the cache
-     * only work as a set, and filling in a cache while leaving a fronted line's
-     * own broker and front in place produces a request that arrives nowhere.
+     * network the country list has nothing to say about — one is made here
+     * from a plain line, and the three parameters are replaced together. That
+     * last part is the whole difficulty: the broker, the front and the cache
+     * only work as a set, and filling in a cache while leaving a fronted
+     * line's own broker and front in place produces a request that arrives
+     * nowhere.
      */
-    private fun ampSnowflakeAttempt(
+    private fun snowflakeAttempt(
+        why: String,
         tlsProfile: TlsProfile,
         dtlsProfile: DtlsProfile,
         iceServers: List<String>? = null,
@@ -231,13 +240,10 @@ class StrategyPlanner(
                         "fronts" to AMP_FRONT,
                     ),
                 )
-                // And under its own placeholder address, so that tor holds it
-                // as a second bridge rather than as a duplicate of the one it
-                // was made from. Without this the two ways cannot be offered at
-                // the same time: tor keys bridges on address and port and would
-                // keep exactly one of them.
-                ?.withPlaceholderOffset(AMP_ADDRESS_OFFSET)
-        if (line == null) return null
+        if (line == null) {
+            VeilLog.w("planner", "skipping snowflake: no bridges for it")
+            return null
+        }
         // Shaped and length-checked like any other rung. The second part is not
         // optional: the AMP settings make an already long Snowflake line longer,
         // and tor rejects an over-length `Bridge` outright — taking `UseBridges`
@@ -245,8 +251,7 @@ class StrategyPlanner(
         return Attempt(
             transport = Transport.SNOWFLAKE,
             bridges = listOf(shape(line, tlsProfile, dtlsProfile, iceServers)),
-            why = context.getString(R.string.route_why_snowflake_amp),
-            ampRendezvous = true,
+            why = why,
         )
     }
 
@@ -444,13 +449,6 @@ class StrategyPlanner(
         const val AMP_FRONT = "www.google.com"
 
         /**
-         * How far the AMP line's placeholder address is moved from the fronted
-         * one's. Two, matching the Tor Project's own settings, where the
-         * fronted pair is 192.0.2.3/.4 and the AMP pair is .5/.6.
-         */
-        const val AMP_ADDRESS_OFFSET = 2
-
-        /**
          * How long the live country lookup may delay the first attempt. The
          * offline snapshot already gave us an answer; this only improves it.
          */
@@ -506,6 +504,30 @@ class StrategyPlanner(
             percent >= 90 -> 60_000
             percent >= 75 -> 45_000
             else -> 25_000
+        }
+
+        /**
+         * How long to wait for a real stream to go through before declaring the
+         * tunnel connected — the gate that replaced trusting tor's bootstrap
+         * percentage.
+         *
+         * This runs after bootstrap already reads 100%, so on a genuinely live
+         * link a stream opens in under a second and this budget is never
+         * approached. It exists for the two cases where 100% is not the whole
+         * truth: a first stream over a freshly found Snowflake proxy, and — the
+         * one that matters most — a warm resume, where tor reports the 100% it
+         * reached before its network was switched off while the link underneath
+         * is only now being rebuilt. Both resolve in tens of seconds, so the
+         * budget is generous; failing the connection before it elapses is the
+         * old mistake of calling a working tunnel dead.
+         */
+        fun verifyMillis(transport: Transport): Long = when (transport) {
+            Transport.DIRECT -> 20_000
+            Transport.OBFS4 -> 30_000
+            Transport.WEBTUNNEL -> 45_000
+            Transport.MEEK -> 60_000
+            Transport.CONJURE -> 90_000
+            Transport.SNOWFLAKE -> 90_000
         }
 
         /** Bootstrap is this far along when the link to the bridge is working. */

@@ -100,6 +100,26 @@ class VeilApp : Application() {
     fun parkEngine() {
         parkTimer?.cancel()
         parkTimer = teardownScope.launch {
+            // First the link is held, not just the process. The tunnel is down
+            // — no traffic from the phone goes anywhere near tor — but tor's own
+            // connection to its bridge, and the circuit through it, are left
+            // running for a short while. A reconnect inside that window is what
+            // a commercial client's reconnect feels like, and for the first
+            // time honestly so: the circuit is already there, the very first
+            // stream goes straight through, and the green screen means it.
+            // Most reconnects are this one — a toggle off and back on, or a
+            // tunnel that dropped and is being brought back — and rebuilding a
+            // Snowflake link for each of them was half a minute every time.
+            // The window is short because a held link is a little idle traffic
+            // on a metered connection, and a user who has really left should
+            // not be paying for it.
+            if (tor.isRunning) {
+                VeilLog.i("app", "holding the link for ${LINK_HOLD_MILLIS / 1000}s in case of a reconnect")
+                delay(LINK_HOLD_MILLIS)
+            }
+            // Nothing came back: drop the link but keep the process, with the
+            // directory it fetched, so a later reconnect still skips that part
+            // even though it has to find its bridge again.
             val parked = runCatching { tor.park() }.getOrDefault(false)
             if (!parked) {
                 runCatching { tor.stop() }
@@ -164,6 +184,16 @@ class VeilApp : Application() {
          * a tor process for the rest of the afternoon.
          */
         const val WARM_WINDOW_MILLIS = 10 * 60 * 1000L
+
+        /**
+         * How long the link to the bridge stays up after a disconnect, before
+         * the process is parked with its network off.
+         *
+         * Long enough for the reconnects that actually happen — a toggle, a
+         * drop, a change of mind — and short enough that the idle padding a
+         * live Tor connection sends is a few tens of kilobytes at most.
+         */
+        const val LINK_HOLD_MILLIS = 45 * 1000L
 
         /**
          * The meek endpoint Tor Browser currently ships. Passed to lyrebird in

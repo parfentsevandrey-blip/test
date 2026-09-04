@@ -46,8 +46,24 @@ enum class DnsMode(val nativeMode: String) {
     DOH_THROUGH_TUNNEL("doh"),
 }
 
+/**
+ * How streams are spread over circuits.
+ *
+ * The default is one shared pool, which is what every VPN does and is not what
+ * Tor Browser does, and the difference matters more here than it looks. With
+ * a circuit per destination, every new host an application talks to waits for
+ * a fresh three-hop circuit — over a path that runs through a volunteer's
+ * browser at three or four hundred milliseconds a hop, that is one to two
+ * seconds per host, and a search results page talks to a dozen hosts. From the
+ * outside that was "connected, but nothing loads": a messenger cycling through
+ * its servers with each one on a circuit that was still being built, a page
+ * that arrived piecemeal over ten seconds. Tor Browser can afford per-site
+ * circuits because it is a browser on a fast link; a whole-phone tunnel over
+ * Snowflake cannot. The stricter modes are still here for anyone who wants
+ * them, with the cost stated.
+ */
 enum class IsolationMode(val nativeMode: String) {
-    /** One circuit for everything: fastest, and links all your activity. */
+    /** One pool of circuits for everything: fastest, and links all your activity. */
     SHARED("none"),
 
     /** A circuit per destination address, like Tor Browser's first-party isolation. */
@@ -63,7 +79,7 @@ data class VeilSettings(
     val dnsMode: DnsMode = DnsMode.TOR_DNS_PORT,
     val dohEndpoint: String = DEFAULT_DOH,
     val tcpDnsResolver: String = DEFAULT_TCP_DNS,
-    val isolation: IsolationMode = IsolationMode.PER_DESTINATION,
+    val isolation: IsolationMode = IsolationMode.SHARED,
     val killSwitch: Boolean = true,
     val autoStartOnBoot: Boolean = false,
     val runSnowflakeProxy: Boolean = false,
@@ -121,7 +137,7 @@ class SettingsRepository(private val context: Context) {
         dnsMode = enumOf(this[Keys.DNS_MODE], DnsMode.TOR_DNS_PORT),
         dohEndpoint = this[Keys.DOH_ENDPOINT] ?: VeilSettings.DEFAULT_DOH,
         tcpDnsResolver = this[Keys.TCP_DNS] ?: VeilSettings.DEFAULT_TCP_DNS,
-        isolation = enumOf(this[Keys.ISOLATION], IsolationMode.PER_DESTINATION),
+        isolation = enumOf(this[Keys.ISOLATION], IsolationMode.SHARED),
         killSwitch = this[Keys.KILL_SWITCH] ?: true,
         autoStartOnBoot = this[Keys.AUTO_START] ?: false,
         runSnowflakeProxy = this[Keys.SNOWFLAKE_PROXY] ?: false,

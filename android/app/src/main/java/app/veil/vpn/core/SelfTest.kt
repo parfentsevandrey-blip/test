@@ -102,7 +102,7 @@ object SelfTest {
             // Five before the routes, four after them, so the percentage
             // reflects the work rather than the number of headings.
             val preamble = 5
-            val postamble = 4
+            val postamble = 5
             val total = preamble + order.size + postamble
             var step = 0
             fun stage(label: String) {
@@ -112,7 +112,7 @@ object SelfTest {
             fun finish() = progress.update(total, total, app.getString(R.string.diag_stage_done))
 
             line("=== Veil deep diagnostic ===")
-            line("version 0.12.0")
+            line("version 0.13.0")
 
             val tunnelLive = runCatching { app.tor.isRunning }.getOrDefault(false)
             if (tunnelLive) {
@@ -350,6 +350,7 @@ object SelfTest {
             // --- What the connection is actually like -------------------------
             var steady: TrafficAnalysis.Series? = null
             var throughput: TrafficAnalysis.Throughput? = null
+            var exitVerdict: List<String> = emptyList()
             if (winner != null) {
                 val socks = SocksProxy("127.0.0.1", socksPort)
 
@@ -407,6 +408,42 @@ object SelfTest {
                     },
                 )
 
+                // The user's own test, done the user's way: a Google search
+                // and YouTube, through the exit, plus the sustained rate. A
+                // tunnel can pass every measurement above and still be
+                // useless for exactly these two sites, because Google treats
+                // Tor exits as suspects and a shaped link is fast for the first
+                // quarter megabyte. This is where "connected but nothing
+                // works" gets a specific name.
+                stage(app.getString(R.string.diag_stage_youtube))
+                line("")
+                line("--- google and youtube through the exit ---")
+                val google = TrafficAnalysis.reach(
+                    socks, TrafficAnalysis.GOOGLE_HOST, TrafficAnalysis.GOOGLE_SEARCH_PATH,
+                )
+                line("google search: ${google.describe()}")
+                val youtube = TrafficAnalysis.reach(
+                    socks, TrafficAnalysis.YOUTUBE_HOST, TrafficAnalysis.YOUTUBE_PATH,
+                )
+                line("youtube.com: ${youtube.describe()}")
+                val image = TrafficAnalysis.download(
+                    socks, TrafficAnalysis.YOUTUBE_IMAGE_HOST, TrafficAnalysis.YOUTUBE_IMAGE_PATH,
+                )
+                line(
+                    "youtube image cdn: " + if (image.ok) {
+                        "${image.bytes / 1024} KB in ${image.millis} ms = ${image.kbytesPerSecond} KB/s"
+                    } else {
+                        "FAILED — ${image.note}"
+                    },
+                )
+                val runs = TrafficAnalysis.sustained(socks)
+                line(
+                    "sustained: " + runs.joinToString(", ") {
+                        if (it.ok) "${it.bytes / 1024} KB @ ${it.kbytesPerSecond} KB/s" else "FAILED (${it.note})"
+                    },
+                )
+                exitVerdict = TrafficAnalysis.exitVerdict(google, youtube, image, runs)
+
                 stage(app.getString(R.string.diag_stage_steady))
                 val watched = TrafficAnalysis.series(
                     label = "steady",
@@ -460,6 +497,7 @@ object SelfTest {
                         "going away — over Snowflake, a volunteer proxy closing.",
                 )
             }
+            exitVerdict.forEach { line(it) }
             line("=== end ===")
             finish()
             out.toString()

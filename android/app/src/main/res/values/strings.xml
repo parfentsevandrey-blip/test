@@ -281,6 +281,7 @@
     <string name="diag_stage_latency">Round trip</string>
     <string name="diag_stage_throughput">Throughput</string>
     <string name="diag_stage_steady">Steadiness</string>
+    <string name="diag_stage_youtube">Google and YouTube</string>
     <string name="diag_stage_skipped">Skipped</string>
     <string name="diag_stage_done">Done</string>
     <string name="fail_transport_unavailable">%1$s did not start on this device. Choose a different method on the Routes screen.</string>

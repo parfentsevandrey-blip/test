@@ -127,6 +127,44 @@ func (t *Transports) ConfigureSnowflake(
 	t.ctrl.SnowflakeMaxPeers = maxPeers
 }
 
+// ConfigureSnowflakeRace sets the second way of reaching the Snowflake broker,
+// which the transport races against whichever way each bridge line names: a
+// line with an AMP cache is raced against the fronted broker given to
+// ConfigureSnowflake, and a line with a fronted broker against this AMP
+// triple. staggerMillis is how long the second way waits before starting;
+// zero means the default. See internal/ptbridge/snowflake.go for why the race
+// is inside the transport rather than in tor's bridge list.
+func (t *Transports) ConfigureSnowflakeRace(
+	ampBrokerURL string,
+	ampCacheURL string,
+	ampFrontDomains string,
+	staggerMillis int,
+) {
+	if !t.Ready() {
+		return
+	}
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.ctrl.SnowflakeAltAmpBrokerUrl = ampBrokerURL
+	t.ctrl.SnowflakeAltAmpCacheUrl = ampCacheURL
+	t.ctrl.SnowflakeAltAmpFronts = ampFrontDomains
+	t.ctrl.SnowflakeRaceStaggerMillis = staggerMillis
+}
+
+// SetSnowflakeNATType tells Snowflake what this network's NAT is —
+// "restricted", "unrestricted" or "" for not known — so its first request to
+// the broker carries the measured answer rather than a guess. Takes effect for
+// connections opened after the call, which is the moment tor is pointed at a
+// Snowflake bridge.
+func (t *Transports) SetSnowflakeNATType(natType string) {
+	if !t.Ready() {
+		return
+	}
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.ctrl.SnowflakeNATType = natType
+}
+
 // Start brings up one transport. It returns once the SOCKS listener is
 // accepting, except for Snowflake, whose proxy discovery continues afterwards.
 func (t *Transports) Start(name string) error {

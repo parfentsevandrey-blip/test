@@ -44,6 +44,10 @@ class PtRuntime(context: Context) {
             val text = when (phase) {
                 "offer" -> "$name: offer ready, ICE gathering took ${detail}ms"
                 "rendezvous" -> "$name: broker answered at +${detail}ms"
+                // Which of the two ways of asking won this time: "amp in
+                // 1200ms" or "fronted in 900ms". Over a few connects this is
+                // the map of what this network blocks.
+                "rendezvous-via" -> "$name: broker reached via $detail"
                 "connected" -> "$name: data channel open at +${detail}ms"
                 else -> "$name: $phase $detail"
             }
@@ -101,6 +105,23 @@ class PtRuntime(context: Context) {
         return ports
     }
 
+    /**
+     * Hands Snowflake the NAT behaviour the app measured, so its first request
+     * to the broker says what this network is instead of guessing. See the
+     * transport module for why the guess costs a failed first attempt behind
+     * a restricted NAT.
+     */
+    fun setSnowflakeNat(behaviour: app.veil.vpn.net.NatBehaviour) {
+        if (!transports.ready()) return
+        val natType = when (behaviour) {
+            app.veil.vpn.net.NatBehaviour.ENDPOINT_INDEPENDENT -> "unrestricted"
+            app.veil.vpn.net.NatBehaviour.SYMMETRIC -> "restricted"
+            else -> ""
+        }
+        transports.setSnowflakeNATType(natType)
+        if (natType.isNotEmpty()) VeilLog.d("pt", "snowflake told the NAT is $natType")
+    }
+
     /** The meek port, started on demand, for fronted requests to the bridge API. */
     fun meekPortForFrontedRequests(): Int {
         check(transports.ready()) { "transport controller failed to initialise" }
@@ -128,6 +149,17 @@ class PtRuntime(context: Context) {
             "",
             "",
             SNOWFLAKE_PEERS,
+        )
+        // The other way of reaching the broker, raced inside the transport
+        // against the way each bridge line names. The line the app uses names
+        // the AMP cache, so in practice this pairs it with the fronted broker
+        // above; a fronted line from anywhere else gets this AMP triple as its
+        // partner instead.
+        transports.configureSnowflakeRace(
+            StrategyPlanner.AMP_BROKER,
+            StrategyPlanner.AMP_CACHE,
+            StrategyPlanner.AMP_FRONT,
+            SNOWFLAKE_RACE_STAGGER_MILLIS,
         )
     }
 
@@ -214,6 +246,18 @@ class PtRuntime(context: Context) {
          * other people are also queuing for, and no more resilience.
          */
         const val SNOWFLAKE_PEERS = 3L
+
+        /**
+         * How long the second way of reaching the broker waits before it
+         * starts, when the first has not answered.
+         *
+         * Measured on the network this was built against, the way that works
+         * answers in one to two seconds; three is enough that it usually gets
+         * to answer alone, and short enough that a blocked first way costs
+         * three seconds rather than a timeout. A successful second way also
+         * goes first next time.
+         */
+        const val SNOWFLAKE_RACE_STAGGER_MILLIS = 3_000L
 
         /** How many censored users this device will carry at once. */
         const val SNOWFLAKE_PROXY_CAPACITY = 2L

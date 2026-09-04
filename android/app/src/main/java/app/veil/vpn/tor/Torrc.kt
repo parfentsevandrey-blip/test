@@ -173,10 +173,19 @@ object Torrc {
         // registration step is a fronted request to a station that can be under
         // load, so the first bytes routinely take tens of seconds even when
         // everything is working.
+        // Forty and twenty, not ninety and sixty as before. Those were set
+        // when a Snowflake circuit was assumed to take most of a minute to
+        // build; measured on a Russian mobile network it builds in one to two
+        // seconds and a stream attaches in under one. What the long values
+        // bought was not patience but paralysis: one circuit through a proxy
+        // that had silently gone held every application for ninety seconds
+        // before tor would try another, and a stream on a dead circuit waited
+        // a full minute. Forty seconds is still twenty times the measured
+        // build; twenty seconds is twenty round trips for a stream to attach.
         Transport.SNOWFLAKE, Transport.MEEK, Transport.CONJURE -> listOf(
-            "CircuitBuildTimeout 90",
+            "CircuitBuildTimeout 40",
             "LearnCircuitBuildTimeout 0",
-            "CircuitStreamTimeout 60",
+            "CircuitStreamTimeout 20",
             "MaxCircuitDirtiness 1800",
         )
 

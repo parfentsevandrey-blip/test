@@ -1,5 +1,10 @@
 package app.veil.vpn.ui.screens
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.PowerManager
+import android.provider.Settings
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -28,12 +33,14 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -110,8 +117,84 @@ fun HomeScreen(
             onNewCircuit = onNewCircuit,
         )
 
+        BatteryNotice()
+
         Spacer(Modifier.height(28.dp))
     }
+}
+
+/**
+ * The one thing outside this app that kills a tunnel, put where it will be
+ * seen.
+ *
+ * A few minutes after the screen goes off, Android starts cutting background
+ * applications off from the network, and a VPN service is not exempt by
+ * default. From the user's side that is a tunnel that was fine, and then
+ * after the phone sat in a pocket is dead until it is toggled off and on. The
+ * exemption is one system dialogue away; the setting for it already existed
+ * on the Settings screen, which is exactly where nobody looks while the
+ * tunnel is misbehaving. So it is offered here, once, until it is granted —
+ * the diagnostic reports this same condition, and on the phone this was
+ * measured against it was on.
+ */
+@Composable
+private fun BatteryNotice() {
+    val context = LocalContext.current
+    // Re-checked every few seconds so the card leaves on its own once the
+    // exemption has been granted in the system dialogue and the user is back.
+    val exempt by produceState(initialValue = isExemptFromBatteryOptimisation(context)) {
+        while (true) {
+            delay(3_000)
+            value = isExemptFromBatteryOptimisation(context)
+        }
+    }
+    if (exempt) return
+    Spacer(Modifier.height(10.dp))
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+        ),
+    ) {
+        Column(Modifier.padding(18.dp)) {
+            Text(
+                text = stringResource(R.string.settings_battery),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onTertiaryContainer,
+            )
+            Text(
+                text = stringResource(R.string.settings_battery_desc),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onTertiaryContainer,
+                modifier = Modifier.padding(top = 6.dp),
+            )
+            OutlinedButton(
+                onClick = { requestBatteryExemption(context) },
+                modifier = Modifier.padding(top = 10.dp),
+            ) {
+                Text(stringResource(R.string.settings_battery_action))
+            }
+        }
+    }
+}
+
+private fun isExemptFromBatteryOptimisation(context: Context): Boolean = runCatching {
+    val power = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+    power.isIgnoringBatteryOptimizations(context.packageName)
+}.getOrDefault(true)
+
+/** The direct dialogue where the device offers it, the system list otherwise. */
+private fun requestBatteryExemption(context: Context) {
+    val direct = Intent(
+        Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+        Uri.parse("package:${context.packageName}"),
+    )
+    val fallback = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+    runCatching { context.startActivity(direct) }
+        .recoverCatching { context.startActivity(fallback) }
 }
 
 /**

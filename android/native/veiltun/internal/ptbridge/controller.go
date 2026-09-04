@@ -129,6 +129,24 @@ type Controller struct {
 	// SnowflakeMaxPeers - Capacity for number of multiplexed WebRTC peers. DEFAULTs to 1 if less than that.
 	SnowflakeMaxPeers int
 
+	// The second way of reaching the broker, raced against whichever way a
+	// bridge line names. A line that names an AMP cache is raced against the
+	// fronted broker in SnowflakeBrokerUrl/SnowflakeFrontDomains; a line that
+	// names a fronted broker is raced against this AMP triple. See
+	// snowflake.go for why the race is here and not in tor.
+	SnowflakeAltAmpBrokerUrl string
+	SnowflakeAltAmpCacheUrl  string
+	SnowflakeAltAmpFronts    string
+
+	// SnowflakeRaceStaggerMillis - How long the second way waits before it
+	// starts. Zero means the default.
+	SnowflakeRaceStaggerMillis int
+
+	// SnowflakeNATType - This network's NAT as the app measured it:
+	// "restricted", "unrestricted", or "" when not known. Put in the broker
+	// request from the first attempt instead of the client's guess.
+	SnowflakeNATType string
+
 	stateDir        string
 	transportEvents OnTransportEvents
 	listeners       map[string]*pt.SocksListener
@@ -423,16 +441,17 @@ func (c *Controller) Start(methodName string, proxy string) error {
 		extraArgs.Add("sqsqueue", c.SnowflakeSqsUrl)
 		extraArgs.Add("sqscreds", c.SnowflakeSqsCreds)
 
-		t := transports.Get(methodName)
-		if t == nil {
+		if transports.Get(methodName) == nil {
 			ptlog.Errorf("Failed to initialize %s: no such method", methodName)
 			return fmt.Errorf("failed to initialize %s: no such method", methodName)
 		}
-		f, err := t.ClientFactory(c.stateDir)
-		if err != nil {
-			ptlog.Errorf("Failed to initialize %s: %s", methodName, err.Error())
-			return err
-		}
+		// Not the Tor Project's own client factory: this one races the two
+		// ways of reaching the broker inside each connection. See snowflake.go.
+		f := newSnowflakeFactory(c.snowflakeRace(), func(phase, detail string) {
+			if c.transportEvents != nil {
+				go c.transportEvents.Phase(methodName, phase, detail)
+			}
+		})
 		ln, err := pt.ListenSocks("tcp", "127.0.0.1:0")
 		if err != nil {
 			ptlog.Errorf("Failed to initialize %s: %s", methodName, err.Error())
@@ -546,6 +565,20 @@ func (c *Controller) Start(methodName string, proxy string) error {
 	ptlog.Noticef("Launched transport: %v", methodName)
 
 	return nil
+}
+
+// snowflakeRace is the race configuration for a Snowflake start, from the
+// controller's fields.
+func (c *Controller) snowflakeRace() snowflakeRace {
+	return snowflakeRace{
+		frontBroker:  c.SnowflakeBrokerUrl,
+		frontDomains: splitList(c.SnowflakeFrontDomains),
+		ampBroker:    c.SnowflakeAltAmpBrokerUrl,
+		ampCache:     c.SnowflakeAltAmpCacheUrl,
+		ampFronts:    splitList(c.SnowflakeAltAmpFronts),
+		stagger:      time.Duration(c.SnowflakeRaceStaggerMillis) * time.Millisecond,
+		natType:      c.SnowflakeNATType,
+	}
 }
 
 // Stop - Stop given transport.

@@ -273,6 +273,7 @@
     <string name="diag_stage_latency">Отклик</string>
     <string name="diag_stage_throughput">Скорость</string>
     <string name="diag_stage_steady">Стабильность</string>
+    <string name="diag_stage_youtube">Google и YouTube</string>
     <string name="diag_stage_skipped">Пропущено</string>
     <string name="diag_stage_done">Готово</string>
     <string name="fail_transport_unavailable">%1$s не запустился на этом устройстве. Выберите другой способ на экране «Маршруты».</string>

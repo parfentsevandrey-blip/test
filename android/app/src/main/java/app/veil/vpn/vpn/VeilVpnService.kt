@@ -457,30 +457,49 @@ class VeilVpnService : VpnService() {
     }
 
     /**
-     * Wakes a parked tor and points it at a route.
+     * Wakes a warm tor for another connect.
      *
-     * Two things have to happen in order and both can fail. The route is set
+     * A warm tor is in one of two states, and they are handled differently.
+     *
+     * If the last disconnect was recent, the link was held: see
+     * [VeilApp.parkEngine]. Tor's network was never switched off, its
+     * connection to the bridge and the circuit through it are still there, and
+     * the right thing to do is nothing — re-applying the route would clear the
+     * bridge list and set it again, which tor answers by dropping exactly the
+     * connection the hold was keeping, turning an instant reconnect back into a
+     * slow one. The route is what it was, because the pinned method is what it
+     * was; the caller's stream check then confirms the link still carries
+     * traffic, and if it does not, the normal rebuild follows.
+     *
+     * Otherwise the process was parked with its network off. The route is set
      * over the control port, then the network is turned back on — and only then
      * do the SOCKS and DNS listeners exist again, because tor treats
      * `DisableNetwork` as "close everything but the control port". Those two
-     * ports were free the whole time the process was parked, so it is possible
-     * for something else on the device to have taken one; if the listeners do
-     * not come back, this reports failure and the caller starts a fresh tor.
+     * ports were free the whole time the process was parked, so something else
+     * on the device may have taken one; if the listeners do not come back, this
+     * reports failure and the caller starts a fresh tor.
+     *
+     * In both cases the bootstrap state is reset locally and then, more to the
+     * point, not relied on: a warm tor reports 100% whatever the state of its
+     * link, which is why the caller waits for a stream and not for a number.
      */
     private suspend fun resumeWarmTor(opening: Attempt): Boolean {
+        // Only a link of the kind that was asked for. A user who disconnects,
+        // picks a different method on the Routes screen and reconnects within
+        // the hold window must get that method, not the one still running.
+        if (container.tor.hasLiveOrConnection() &&
+            container.tor.connectedTransport() == opening.transport
+        ) {
+            VeilLog.i("vpn", "the link was held warm; keeping it as it stands")
+            container.tor.resetBootstrap()
+            return true
+        }
         if (!container.tor.applyRoute(opening.transport, opening.bridges)) return false
         if (!container.tor.setNetworkEnabled(true)) return false
         if (!container.tor.awaitListeners()) {
             VeilLog.w("vpn", "the warm tor did not reopen its listeners")
             return false
         }
-        // The trap this used to fall into: a parked tor still reports 100%
-        // bootstrapped, because the number never goes down when the network is
-        // switched off. Reading it as "connected" put the tunnel on a process
-        // with no connection to any bridge, and the user watched a green
-        // screen over a dead link for the fifteen seconds it took Snowflake to
-        // find a proxy again. Warm means the directory is cached, not that the
-        // link exists; the link has to be waited for like any other.
         container.tor.resetBootstrap()
         return true
     }
@@ -515,6 +534,7 @@ class VeilVpnService : VpnService() {
                 ?: surveyJob?.await()
                 ?: StunSurvey.run(network.fingerprint, protector)
             VeilLog.i("vpn", "stun: ${survey.answers.size} answer(s), nat ${survey.natBehaviour} (+${sinceConnect()}ms)")
+            runCatching { container.pt.setSnowflakeNat(survey.natBehaviour) }
             survey.iceServers
         } else {
             null
@@ -560,9 +580,21 @@ class VeilVpnService : VpnService() {
         }
 
         val connected = awaitBootstrap(slowest, 0, ladderSize)
+
+        // Bootstrap at 100% is necessary and not sufficient, and treating it as
+        // sufficient was the whole of the "connected in one second but nothing
+        // works" complaint. A tor that was parked with its network off still
+        // reports 100% the instant the network comes back — the number never
+        // goes down — while the link underneath is only now being rebuilt,
+        // half a minute of it over Snowflake. So the last word is a stream that
+        // actually reached the internet, not a percentage. The stagger keeps
+        // running meanwhile: on a warm resume the wait is spent here rather
+        // than in the bootstrap, and the second racer must still get its turn.
+        val socks = container.tor.socks
+        val usable = connected && socks != null && awaitUsablePath(slowest.transport, socks)
         stagger.cancel()
 
-        if (!connected) {
+        if (!usable || socks == null) {
             container.tor.setNetworkEnabled(false)
             racers.forEach {
                 container.memory.recordFailure(network.fingerprint, it.transport)
@@ -573,8 +605,6 @@ class VeilVpnService : VpnService() {
             return false
         }
 
-        val socks = container.tor.socks ?: return false
-        warmPath(socks)
         val started = runCatching {
             startNativeTunnel(settings, socks, container.tor.dnsPort, network)
         }.onFailure { VeilLog.e("vpn", "could not raise the tunnel", it) }.isSuccess
@@ -640,17 +670,14 @@ class VeilVpnService : VpnService() {
             return false
         }
 
-        // The tunnel goes up now. A stream is opened through the proxy at the
-        // same time, but only to warm a circuit so the first application does
-        // not pay for building one — never as a condition of connecting.
-        //
-        // It was a condition for two versions, and that was a bad mistake: a
-        // first stream over Snowflake on a mobile network can take longer than
-        // any budget worth waiting, so a tor that had bootstrapped and was
-        // working got failed over and the app reported that nothing worked at
-        // all. Tor at 100% is connected by its own definition, and no
-        // heuristic of ours gets to overrule it.
-        warmPath(socks)
+        // Bootstrap says tor has a circuit; a stream that reaches the internet
+        // says the tunnel will carry traffic. Only the second earns the user a
+        // green screen. See [awaitUsablePath] for why the percentage on its own
+        // cannot be trusted, and why this waits patiently rather than failing.
+        if (!awaitUsablePath(attempt.transport, socks)) {
+            container.tor.setNetworkEnabled(false)
+            return false
+        }
 
         val started = runCatching {
             startNativeTunnel(settings, socks, container.tor.dnsPort, network)
@@ -665,28 +692,73 @@ class VeilVpnService : VpnService() {
     }
 
     /**
-     * Opens a stream through the proxy in the background, to warm a circuit.
+     * Waits until the tunnel actually carries traffic, and says so on screen.
      *
-     * Tor builds circuits lazily, so the first application to ask pays for one
-     * — seconds, over Snowflake — and an application that waits seconds has
-     * already decided the network is down. Doing it here means the circuit
-     * exists before anything asks. Nothing depends on the result: it is a head
-     * start, not a verdict.
+     * This is the gate that replaced trusting tor's bootstrap percentage, and
+     * it is worth being precise about why the percentage is not enough. Tor
+     * reports 100% the moment it has ever built a circuit, and it keeps
+     * reporting 100% after its network is switched off and back on — the
+     * number never goes down. So on a warm reconnect the app was reading
+     * "100% Done" from a process whose every connection to its bridge had been
+     * closed, attaching the tunnel within a second, and showing a green screen
+     * over a link that took another half minute to come back. Every
+     * application on the phone found out before the app did.
+     *
+     * A stream to a host on the internet is the one signal that does not lie.
+     * When it opens, the tunnel works; not one second before. It also leaves a
+     * circuit warm, so the first application does not pay for building one.
+     *
+     * Patient rather than strict, and that is deliberate. The first stream over
+     * a freshly found Snowflake proxy, and every stream after a warm resume
+     * while a proxy is found again, can take tens of seconds; failing the
+     * connection for that would repeat an earlier mistake, when a shorter gate
+     * failed a working tunnel over and reported that nothing worked. Halfway
+     * through, if nothing has opened, tor is asked for a fresh circuit once, in
+     * case the one it built runs through a proxy that has since gone. It gives
+     * up only after a budget long enough that a link which is coming up has
+     * come up — and then honestly, as a failure, never as a green screen.
      */
-    private fun warmPath(socks: SocksEndpoint) {
-        scope.launch {
-            val opened = awaitPath(socks, WARM_PATH_WAIT_MILLIS)
-            VeilLog.i(
-                "vpn",
-                if (opened) {
-                    "timeline: a stream went through, circuit warm (+${sinceConnect()}ms)"
-                } else {
-                    "the warm-up stream did not open in ${WARM_PATH_WAIT_MILLIS / 1000}s; " +
-                        "the tunnel is up anyway (link=${container.tor.hasLiveOrConnection()} " +
-                        "circuit=${container.tor.hasBuiltCircuit()})"
-                },
-            )
+    private suspend fun awaitUsablePath(transport: Transport, socks: SocksEndpoint): Boolean {
+        update(TunnelState.Probing(R.string.step_checking_path, 2, 2))
+        val budget = StrategyPlanner.verifyMillis(transport)
+        val started = System.currentTimeMillis()
+        val deadline = started + budget
+        var kicked = false
+        var tries = 0
+        while (coroutineContext.isActive && System.currentTimeMillis() < deadline) {
+            tries += 1
+            if (probePath(socks)) {
+                VeilLog.i(
+                    "vpn",
+                    "timeline: a stream reached the internet on try $tries, " +
+                        "${System.currentTimeMillis() - started}ms after bootstrap (+${sinceConnect()}ms)",
+                )
+                // Spares, now, before the first application asks. The one
+                // circuit the stream just used is about to be shared by
+                // everything on the phone; tor builds more on demand, but
+                // "on demand" over Snowflake is a second or two that the first
+                // few connections would otherwise spend waiting.
+                runCatching { container.tor.ensureSpareCircuit() }
+                return true
+            }
+            if (!kicked && System.currentTimeMillis() > started + budget / 2) {
+                kicked = true
+                VeilLog.w(
+                    "vpn",
+                    "no stream after ${(System.currentTimeMillis() - started) / 1000}s " +
+                        "(link=${container.tor.hasLiveOrConnection()} " +
+                        "circuit=${container.tor.hasBuiltCircuit()}); asking tor for a fresh circuit",
+                )
+                runCatching { container.tor.ensureSpareCircuit() }
+            }
+            delay(1_500)
         }
+        VeilLog.w(
+            "vpn",
+            "no stream reached the internet within ${budget / 1000}s of bootstrap " +
+                "(link=${container.tor.hasLiveOrConnection()} circuit=${container.tor.hasBuiltCircuit()})",
+        )
+        return false
     }
 
     /** Retries a stream through the proxy until it opens or the budget runs out. */
@@ -1515,9 +1587,6 @@ class VeilVpnService : VpnService() {
 
         /** How long a re-dial waits for the link before replacing the interface. */
         private const val REDIAL_PATH_WAIT_MILLIS = 45_000L
-
-        /** How long the warm-up keeps trying to open its head-start stream. */
-        private const val WARM_PATH_WAIT_MILLIS = 60_000L
 
         /**
          * And no more often than this, however bad it gets. A Snowflake
