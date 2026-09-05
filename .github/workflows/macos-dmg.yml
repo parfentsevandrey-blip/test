@@ -32,7 +32,8 @@ on:
       - ".github/workflows/macos-dmg.yml"
 
 permissions:
-  contents: read
+  # Needed to attach the disk image to a release.
+  contents: write
 
 jobs:
   build:
@@ -173,6 +174,47 @@ jobs:
           name: Veil-macOS-arm64
           path: macos/Veil.dmg
           if-no-files-found: error
+
+      - name: Publish the disk image to a release
+        working-directory: macos
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eu
+          # A fixed tag, so the download link never changes and never expires.
+          # An Actions artifact does neither: it needs a signed-in GitHub
+          # account to download and it is deleted after ninety days.
+          tag="macos-latest"
+          notes=$(cat <<'TEXT'
+          Veil for macOS — Apple Silicon, macOS 26 (Tahoe).
+
+          **The tunnel will not start in this build, and that is not a bug to
+          report.** A packet tunnel needs the entitlement
+          `com.apple.developer.networking.networkextension`, which Apple issues
+          only to a paid developer team, so this build is signed ad-hoc: the
+          window opens and the interface works, but macOS refuses to load the
+          network extension.
+
+          To get a build that connects, set `APPLE_TEAM_ID`, `APPLE_CERT_P12`
+          and `APPLE_CERT_PASSWORD` as repository secrets and run this workflow
+          again. The App Group `group.app.veil.mac` must also belong to your
+          team; its name is in `macos/project.yml` and in both entitlements
+          files.
+
+          Tor itself is the Tor Project's own binary, from their expert bundle.
+          No account, no subscription, and no server of ours anywhere in it.
+          TEXT
+          )
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" Veil.dmg --clobber
+          else
+            gh release create "$tag" Veil.dmg \
+              --title "Veil for macOS (Apple Silicon)" \
+              --notes "$notes" --prerelease
+          fi
+          echo
+          echo "Download without signing in:"
+          echo "  https://github.com/${GITHUB_REPOSITORY}/releases/download/$tag/Veil.dmg"
 
       - name: If the build failed, say what to look at
         if: failure()
