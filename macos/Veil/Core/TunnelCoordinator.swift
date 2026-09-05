@@ -251,7 +251,11 @@ final class TunnelCoordinator: ObservableObject {
     /// otherwise by never coming up — and that is the case the proxy exists
     /// for.
     private func attachTraffic(elapsed: () -> String) async -> Bool {
-        if await attachTunnel(elapsed: elapsed) { return true }
+        if Entitlements.hasPacketTunnel {
+            if await attachTunnel(elapsed: elapsed) { return true }
+        } else {
+            log("this build's signature carries no packet-tunnel entitlement; using the system proxy")
+        }
         return await attachProxy(elapsed: elapsed)
     }
 
@@ -600,14 +604,25 @@ struct ContainerPaths {
     let container: String
 
     init() {
-        // The group container when there is one; otherwise the app's own
-        // Application Support, which is where an unsandboxed build belongs.
-        // Never a temporary directory: tor's directory cache lives here, and
-        // a cache that vanishes is a first connect that downloads it again.
-        let url = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: Self.appGroup)
-            ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        // The group container only when the signature says this app is in
+        // the group: macOS 15 and later treat any other access to it as
+        // reading another app's data, and refuse or prompt. Otherwise the
+        // app's own Application Support, which is where an unsandboxed build
+        // belongs. A temporary directory is the last resort and a poor one —
+        // tor's directory cache lives here, and a cache that vanishes is a
+        // first connect that downloads it again — but a connect that works is
+        // better than one that fails over a directory.
+        var candidates: [URL] = []
+        if Entitlements.appGroups.contains(Self.appGroup),
+           let shared = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: Self.appGroup) {
+            candidates.append(shared)
+        }
+        candidates.append(
+            FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
                 .appendingPathComponent("Veil")
-        container = url.path
+        )
+        candidates.append(URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("Veil"))
+        container = (candidates.first(where: Self.usable) ?? candidates[candidates.count - 2]).path
         for directory in [torData, transportState, sockets] {
             try? FileManager.default.createDirectory(
                 atPath: directory, withIntermediateDirectories: true,
@@ -619,6 +634,23 @@ struct ContainerPaths {
             try? FileManager.default.setAttributes(
                 [.posixPermissions: 0o700], ofItemAtPath: directory
             )
+        }
+    }
+
+    /// Whether a directory can be made there and written to — tested, not
+    /// assumed, because that is exactly what the system refuses quietly.
+    private static func usable(_ url: URL) -> Bool {
+        do {
+            try FileManager.default.createDirectory(
+                at: url, withIntermediateDirectories: true,
+                attributes: [.posixPermissions: 0o700]
+            )
+            let probe = url.appendingPathComponent(".write-test")
+            try Data("ok".utf8).write(to: probe)
+            try? FileManager.default.removeItem(at: probe)
+            return true
+        } catch {
+            return false
         }
     }
 

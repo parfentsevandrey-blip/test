@@ -42,6 +42,7 @@ enum Core {
         }
         Self.transports = transports
         var ports: [String: Int] = [:]
+        var lastProblem = ""
         for name in ["obfs4", "webtunnel", "meek_lite", "conjure", "snowflake"] {
             do {
                 try transports.start(name)
@@ -51,10 +52,17 @@ enum Core {
                     log("\(name) listening on 127.0.0.1:\(port)")
                 }
             } catch {
-                log("\(name) would not start: \(error.localizedDescription)")
+                lastProblem = error.localizedDescription
+                log("\(name) would not start: \(lastProblem)")
             }
         }
-        guard !ports.isEmpty else { throw CoreFailure.unavailable("no transport could be started") }
+        guard !ports.isEmpty else {
+            // The reason goes into the failure the screen shows, not only
+            // into the log: a failure that names its cause is a bug report.
+            throw CoreFailure.unavailable(
+                "no transport could be started" + (lastProblem.isEmpty ? "" : " — \(lastProblem)")
+            )
+        }
         return ports
         #else
         throw CoreFailure.unavailable("the Go core is not built; run scripts/build-core.sh")

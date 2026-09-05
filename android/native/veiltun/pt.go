@@ -1,6 +1,7 @@
 package veiltun
 
 import (
+	"fmt"
 	"sync"
 
 	"veil.app/veiltun/internal/ptbridge"
@@ -40,6 +41,9 @@ type Transports struct {
 	mu     sync.Mutex
 	ctrl   *ptbridge.Controller
 	events TransportEvents
+	// Why the controller is not there, when it is not: shown by the app,
+	// because a silent nil was a connect that failed with no reason given.
+	problem string
 }
 
 type eventAdapter struct{ events TransportEvents }
@@ -84,14 +88,29 @@ func errText(err error) string {
 // Logging is off: a pluggable transport's log records which bridges were used,
 // and that file would sit in the app's data directory afterwards.
 func NewTransports(stateDir string, events TransportEvents) *Transports {
-	ctrl := ptbridge.NewController(
+	ctrl, err := ptbridge.NewController(
 		stateDir,
 		/* enableLogging = */ false,
 		/* unsafeLogging = */ false,
 		"ERROR",
 		&eventAdapter{events: events},
 	)
-	return &Transports{ctrl: ctrl, events: events}
+	t := &Transports{ctrl: ctrl, events: events}
+	if err != nil {
+		t.problem = err.Error()
+		if events != nil {
+			events.Failed("controller", t.problem)
+		}
+	}
+	return t
+}
+
+// Problem says why the controller could not be set up, or is empty.
+func (t *Transports) Problem() string {
+	if t == nil {
+		return ""
+	}
+	return t.problem
 }
 
 // Ready reports whether the controller came up. It returns false when the
@@ -169,6 +188,9 @@ func (t *Transports) SetSnowflakeNATType(natType string) {
 // accepting, except for Snowflake, whose proxy discovery continues afterwards.
 func (t *Transports) Start(name string) error {
 	if !t.Ready() {
+		if t != nil && t.problem != "" {
+			return fmt.Errorf("%w: %s", errNoController, t.problem)
+		}
 		return errNoController
 	}
 	t.mu.Lock()

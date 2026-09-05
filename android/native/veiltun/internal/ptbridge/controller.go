@@ -18,8 +18,6 @@ package ptbridge
 //     others are.
 
 import (
-	"sync"
-	"time"
 	"errors"
 	"io"
 	"io/fs"
@@ -28,6 +26,8 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"sync"
+	"time"
 
 	"fmt"
 	"strconv"
@@ -43,6 +43,17 @@ import (
 
 // LogFileName - the filename of the log residing in `StateDir`.
 const LogFileName = "ipt.log"
+
+// The transport registry is process-wide and refuses to register a name
+// twice, so it is initialised once however many controllers a process makes.
+// The macOS app makes a new one for every cold start; without this, every
+// connect after the first failed with "transport 'meek_lite' already
+// registered" — reported, several layers up, as "no transport could be
+// started".
+var (
+	transportsInitOnce sync.Once
+	transportsInitErr  error
+)
 
 //goland:noinspection GoUnusedConst
 const (
@@ -166,8 +177,12 @@ type Controller struct {
 // Will be called on its own thread! You will need to switch to your own UI thread
 // if you want to do UI stuff!
 //
+// The error says why, in words the app can show: a controller that silently
+// came back nil was a failure whose only trace was a line on stderr nobody
+// sees.
+//
 //goland:noinspection GoUnusedExportedFunction
-func NewController(stateDir string, enableLogging, unsafeLogging bool, logLevel string, transportEvents OnTransportEvents) *Controller {
+func NewController(stateDir string, enableLogging, unsafeLogging bool, logLevel string, transportEvents OnTransportEvents) (*Controller, error) {
 	c := &Controller{
 		stateDir:        stateDir,
 		transportEvents: transportEvents,
@@ -179,27 +194,28 @@ func NewController(stateDir string, enableLogging, unsafeLogging bool, logLevel 
 
 	if err := createStateDir(c.stateDir); err != nil {
 		log.Printf("Failed to set up state directory: %s", err)
-		return nil
+		return nil, fmt.Errorf("state directory %s: %w", c.stateDir, err)
 	}
 	if err := ptlog.Init(enableLogging,
 		path.Join(c.stateDir, LogFileName), unsafeLogging); err != nil {
 		log.Printf("Failed to set initialize log: %s", err.Error())
-		return nil
+		return nil, fmt.Errorf("transport log: %w", err)
 	}
 	if err := ptlog.SetLogLevel(logLevel); err != nil {
 		log.Printf("Failed to set log level: %s", err.Error())
 		ptlog.Warnf("Failed to set log level: %s", err.Error())
 	}
 
-	if err := transports.Init(); err != nil {
-		ptlog.Warnf("Failed to initialize transports: %s", err.Error())
-		return nil
+	transportsInitOnce.Do(func() { transportsInitErr = transports.Init() })
+	if transportsInitErr != nil {
+		ptlog.Warnf("Failed to initialize transports: %s", transportsInitErr.Error())
+		return nil, fmt.Errorf("transport registry: %w", transportsInitErr)
 	}
 
 	c.listeners = make(map[string]*pt.SocksListener)
 	c.shutdown = make(map[string]chan struct{})
 
-	return c
+	return c, nil
 }
 
 // StateDir - The StateDir set in the constructor.

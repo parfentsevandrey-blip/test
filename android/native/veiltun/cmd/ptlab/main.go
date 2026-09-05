@@ -14,9 +14,9 @@ import (
 
 type events struct{}
 
-func (events) Stopped(name string, err error) { fmt.Println("stopped:", name, err) }
-func (events) Error(name string, err error)   { fmt.Println("error:", name, err) }
-func (events) Connected(name string)          { fmt.Println("connected:", name) }
+func (events) Stopped(name string, err error)   { fmt.Println("stopped:", name, err) }
+func (events) Error(name string, err error)     { fmt.Println("error:", name, err) }
+func (events) Connected(name string)            { fmt.Println("connected:", name) }
 func (events) Phase(name, phase, detail string) { fmt.Println("phase:", name, phase, detail) }
 
 func main() {
@@ -24,7 +24,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	c := ptbridge.NewController(dir, true, false, "INFO", events{})
+	c, err := ptbridge.NewController(dir, true, false, "INFO", events{})
+	if err != nil {
+		panic(err)
+	}
 	c.SnowflakeIceServers = "stun:stun.l.google.com:19302,stun:stun.voipgate.com:3478"
 	c.SnowflakeBrokerUrl = "https://1098762253.rsc.cdn77.org/"
 	c.SnowflakeFrontDomains = "app.datapacket.com,www.datapacket.com"
