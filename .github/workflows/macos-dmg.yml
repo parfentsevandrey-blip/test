@@ -159,10 +159,35 @@ jobs:
 
       - name: Package the disk image
         working-directory: macos
+        env:
+          TEAM: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           set -eux
           app=$(find build/Build/Products -maxdepth 2 -name "Veil.app" -print -quit)
           test -n "$app"
+
+          # Ad-hoc signing, when there is no real identity.
+          #
+          # The build above runs with signing off, because Xcode will not
+          # sign the network extension's entitlements without a provisioning
+          # profile. But an app with no signature at all does not merely warn
+          # on launch — on Apple Silicon it does not launch, and Gatekeeper
+          # reports a quarantined unsigned app as "damaged", which sends the
+          # user to the Bin. An ad-hoc signature (identity "-") turns that into
+          # the ordinary "unidentified developer" dialogue that right-click →
+          # Open gets past. Inner code first, outer last, because a signature
+          # covers what is inside it; the loose tor binary is signed by name
+          # because --deep only descends into nested bundles.
+          if [ -z "${TEAM:-}" ]; then
+            codesign --force --sign - "$app/Contents/Resources/tor/tor"
+            find "$app/Contents/Frameworks" "$app/Contents/PlugIns" -maxdepth 1 \
+              \( -name "*.framework" -o -name "*.appex" \) -print0 2>/dev/null \
+              | xargs -0 -n1 codesign --force --deep --sign -
+            codesign --force --deep --sign - "$app"
+            codesign --verify --deep --strict --verbose=2 "$app"
+            echo "ad-hoc signed"
+          fi
+
           mkdir -p dmg && cp -R "$app" dmg/
           ln -s /Applications dmg/Applications
           hdiutil create -volname "Veil" -srcfolder dmg -ov -format UDZO Veil.dmg

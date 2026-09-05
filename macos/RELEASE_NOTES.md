@@ -4,6 +4,18 @@ Tor reached through Snowflake, meek, WebTunnel or Conjure, with no account,
 no subscription and no server of ours anywhere in it. The interface is drawn
 in Liquid Glass; the tunnel core is the same Go code as the Android build.
 
+## Opening it
+
+The app is signed ad-hoc, not by an identified developer, so the first launch
+is refused with "cannot be opened because the developer cannot be verified".
+Right-click the app → **Open** → **Open** once; after that it opens normally.
+
+If macOS instead says the app is *damaged*, the download was quarantined
+before the signature could be checked. Two commands fix it:
+
+    xattr -cr /Applications/Veil.app
+    codesign --force --deep --sign - /Applications/Veil.app
+
 ## The tunnel will not start in an unsigned build
 
 This is not a bug worth reporting. A packet tunnel needs the entitlement
