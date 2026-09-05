@@ -112,10 +112,10 @@ extension View {
     @ViewBuilder
     func veilGlass(shape: some Shape, tint: Color? = nil, interactive: Bool = false) -> some View {
         if #available(macOS 26.0, *) {
-            var glass = Glass.regular
-            if let tint { glass = glass.tint(tint) }
-            if interactive { glass = glass.interactive() }
-            self.glassEffect(glass, in: shape)
+            // Built in a plain function rather than here: inside a
+            // @ViewBuilder every statement is read as a view, so an
+            // assignment evaluates to () and () is not a View.
+            self.glassEffect(Glass.veil(tint: tint, interactive: interactive), in: shape)
         } else {
             self.background(.regularMaterial, in: shape)
                 .overlay(shape.stroke(.white.opacity(0.08), lineWidth: Metrics.hairline))
@@ -218,5 +218,20 @@ struct StatusDot: View {
             .onChange(of: animating, initial: true) { _, on in
                 wide = on
             }
+    }
+}
+
+@available(macOS 26.0, *)
+extension Glass {
+    /// The app's one material, with its two optional adjustments.
+    ///
+    /// A `tint` is reserved for the connect control, and `interactive` for
+    /// surfaces that respond to a pointer; everything else takes the plain
+    /// regular glass.
+    static func veil(tint: Color?, interactive: Bool) -> Glass {
+        var glass = Glass.regular
+        if let tint { glass = glass.tint(tint) }
+        if interactive { glass = glass.interactive() }
+        return glass
     }
 }
