@@ -112,7 +112,7 @@ object SelfTest {
             fun finish() = progress.update(total, total, app.getString(R.string.diag_stage_done))
 
             line("=== Veil deep diagnostic ===")
-            line("version 0.14.0")
+            line("version 0.14.1")
 
             val tunnelLive = runCatching { app.tor.isRunning }.getOrDefault(false)
             if (tunnelLive) {

@@ -254,8 +254,11 @@ func Start(cfg *Config) error {
 		Options: []option.Option{
 			option.WithTCPModerateReceiveBuffer(true),
 			option.WithTCPSACKEnabled(true),
-			// BBR keeps throughput sane over a high-latency, lossy overlay
-			// like Tor far better than Reno does.
+			// Cubic rather than Reno, which is the other one this stack has:
+			// gVisor implements exactly these two, and over a high-latency
+			// overlay like Tor cubic recovers its window far faster after the
+			// losses a volunteer's browser hop produces. (An earlier comment
+			// here claimed BBR; there is no BBR in this netstack to ask for.)
 			option.WithTCPCongestionControl("cubic"),
 		},
 	})

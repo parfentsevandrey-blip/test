@@ -730,7 +730,7 @@ class VeilVpnService : VpnService() {
         var tries = 0
         while (coroutineContext.isActive && System.currentTimeMillis() < deadline) {
             tries += 1
-            if (probePath(socks)) {
+            if (probePath(socks, WAITING_PROBE_TIMEOUT_MILLIS)) {
                 VeilLog.i(
                     "vpn",
                     "timeline: a stream reached the internet on try $tries, " +
@@ -754,7 +754,7 @@ class VeilVpnService : VpnService() {
                 )
                 runCatching { container.tor.ensureSpareCircuit() }
             }
-            delay(1_500)
+            delay(WAITING_PROBE_GAP_MILLIS)
         }
         VeilLog.w(
             "vpn",
@@ -769,8 +769,8 @@ class VeilVpnService : VpnService() {
         withContext(Dispatchers.IO) {
             val deadline = System.currentTimeMillis() + budgetMillis
             while (System.currentTimeMillis() < deadline) {
-                if (probePath(socks)) return@withContext true
-                delay(1_500)
+                if (probePath(socks, WAITING_PROBE_TIMEOUT_MILLIS)) return@withContext true
+                delay(WAITING_PROBE_GAP_MILLIS)
             }
             false
         }
@@ -1187,6 +1187,12 @@ class VeilVpnService : VpnService() {
                         VeilLog.d("vpn", "pulse: no answer, but traffic is moving; not counted")
                     } else {
                         failures += 1
+                        // Whatever is wrong, a circuit standing by is what
+                        // makes the recovery instant rather than another wait:
+                        // if it is this circuit that has died, the next stream
+                        // takes the spare, and if it is the path, the re-dial
+                        // below finds tor already holding one.
+                        runCatching { container.tor.ensureSpareCircuit() }
                         pulse = pulse.copy(
                             measuredAtMillis = System.currentTimeMillis(),
                             failures = failures,
@@ -1220,17 +1226,32 @@ class VeilVpnService : VpnService() {
 
     /**
      * One real stream through the proxy: the only test of a path this file
-     * trusts. Short, because it runs inside the stats pump; the budgeted,
-     * retrying version used when connecting is [awaitPath].
+     * trusts. The budgeted, retrying version used when connecting is
+     * [awaitPath].
+     *
+     * The timeout is a parameter because the right one differs by an order of
+     * magnitude between the two uses, and getting that wrong cost most of
+     * every reconnect. A single check of a tunnel believed to be up should
+     * wait a long time before calling it dead. A probe inside a retry loop,
+     * waiting for a link that is still being rebuilt, must not: a stream
+     * opened while the link is half-up hangs until its timeout, and with
+     * twenty seconds of it the loop asked four times in ninety seconds. A link
+     * that came back after twelve seconds was therefore not noticed until
+     * twenty-one — nine seconds of a connect spent waiting on a question whose
+     * answer had already changed. Short attempts, asked often, find it within
+     * one interval of it being true.
      */
-    private suspend fun probePath(socks: SocksEndpoint): Boolean = withContext(Dispatchers.IO) {
+    private suspend fun probePath(
+        socks: SocksEndpoint,
+        timeoutMillis: Int = PROBE_TIMEOUT_MILLIS,
+    ): Boolean = withContext(Dispatchers.IO) {
         runCatching {
             Socks5.connect(
                 SocksProxy("127.0.0.1", socks.port),
                 USABLE_PROBE_HOST,
                 USABLE_PROBE_PORT,
-                connectTimeoutMillis = PROBE_TIMEOUT_MILLIS,
-                readTimeoutMillis = PROBE_TIMEOUT_MILLIS,
+                connectTimeoutMillis = timeoutMillis,
+                readTimeoutMillis = timeoutMillis,
             ).close()
         }.isSuccess
     }
@@ -1662,11 +1683,22 @@ class VeilVpnService : VpnService() {
         private const val PULSE_SPEED_MILLIS = 5 * 60_000L
 
         /**
-         * One probe's budget. Generous on purpose: a circuit over Snowflake on
-         * a mobile network can take this long to carry a first stream, and a
-         * probe that gives up early reports a working tunnel as dead.
+         * One probe's budget when the answer is believed to be yes. Generous on
+         * purpose: a circuit over Snowflake on a mobile network can take this
+         * long to carry a first stream, and a probe that gives up early reports
+         * a working tunnel as dead.
          */
         private const val PROBE_TIMEOUT_MILLIS = 20_000
+
+        /**
+         * One probe's budget while waiting for a link that is still coming up,
+         * and how long before the next one. See [probePath]: in a retry loop
+         * the timeout is not patience, it is the interval at which the
+         * question gets asked, and asking it four times in ninety seconds is
+         * what made a reconnect take twice as long as the link did.
+         */
+        private const val WAITING_PROBE_TIMEOUT_MILLIS = 5_000
+        private const val WAITING_PROBE_GAP_MILLIS = 500L
 
         /** How long a re-dial waits for the link before replacing the interface. */
         private const val REDIAL_PATH_WAIT_MILLIS = 45_000L
