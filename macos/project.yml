@@ -35,9 +35,25 @@ targets:
     sources:
       - path: Veil
         excludes:
-          - "Resources/tor/**"
-      - path: Veil/Resources
+          - "Resources/**"
+      # Folder references, not groups. A group flattens the tree into
+      # Contents/Resources, and both seed/ and blocklist/ carry a file called
+      # STAMP — which Xcode refuses to build, because two copy commands would
+      # produce the same output. Keeping the directories is also what the code
+      # asks for: it looks each asset up with a `subdirectory:`.
+      - path: Veil/Resources/builtin_bridges.json
         buildPhase: resources
+      - path: Veil/Resources/seed
+        type: folder
+        buildPhase: resources
+      - path: Veil/Resources/blocklist
+        type: folder
+        buildPhase: resources
+      # Fetched by scripts/fetch-tor.sh, so absent on a fresh checkout.
+      - path: Veil/Resources/tor
+        type: folder
+        buildPhase: resources
+        optional: true
     dependencies:
       - target: VeilTunnel
         embed: true
