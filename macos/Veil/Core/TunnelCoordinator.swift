@@ -201,9 +201,9 @@ final class TunnelCoordinator: ObservableObject {
 
         // The network directory, shipped in the app. Planted only when tor has
         // no cache of its own, so a running installation is never disturbed.
-        DirectorySeed.plantIfNeeded(into: paths.torData, log: { [weak self] in
-            Task { @MainActor in self?.log($0) }
-        })
+        DirectorySeed.plantIfNeeded(into: paths.torData) { [weak self] line in
+            Task { @MainActor in self?.log(line) }
+        }
 
         state = .starting("Запускаю Tor")
         let session = Torrc.Session(

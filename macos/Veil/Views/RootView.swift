@@ -7,7 +7,9 @@ import SwiftUI
 /// under it and why nothing here draws a separator.
 struct RootView: View {
     @EnvironmentObject private var tunnel: TunnelCoordinator
-    @State private var section: Section = .tunnel
+    // Optional because that is what a List's single-selection
+    // binding is; nil simply means nothing is highlighted yet.
+    @State private var section: Section? = .tunnel
 
     enum Section: String, CaseIterable, Identifiable {
         case tunnel, routes, settings, log
@@ -42,7 +44,7 @@ struct RootView: View {
             .safeAreaInset(edge: .bottom) { SidebarStatus() }
         } detail: {
             Group {
-                switch section {
+                switch section ?? .tunnel {
                 case .tunnel: TunnelView()
                 case .routes: RoutesView()
                 case .settings: SettingsView()
@@ -52,7 +54,7 @@ struct RootView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .padding(Metrics.loose)
         }
-        .navigationTitle(section.title)
+        .navigationTitle((section ?? .tunnel).title)
     }
 }
 

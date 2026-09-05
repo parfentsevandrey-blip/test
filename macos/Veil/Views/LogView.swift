@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 /// What actually happened, in the app's own words.
