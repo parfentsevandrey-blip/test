@@ -32,6 +32,10 @@ settings:
     MACOSX_DEPLOYMENT_TARGET: "26.0"
     ARCHS: arm64
     ENABLE_HARDENED_RUNTIME: YES
+    # Go's net package resolves names through libresolv on Apple platforms,
+    # and gomobile does not link it for you: without this the link fails on
+    # _res_9_nsearch with nothing to say about where it came from.
+    OTHER_LDFLAGS: "-lresolv"
 
 packages: {}
 
@@ -94,6 +98,12 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: app.veil.mac.tunnel
         INFOPLIST_FILE: VeilTunnel/Info.plist
         CODE_SIGN_ENTITLEMENTS: VeilTunnel/VeilTunnel.entitlements
+        # The framework is embedded once, by the app. From inside
+        # Contents/PlugIns/VeilTunnel.appex/Contents/MacOS, the app's
+        # Frameworks directory is four levels up.
+        LD_RUNPATH_SEARCH_PATHS:
+          - "$(inherited)"
+          - "@executable_path/../../../../Frameworks"
         ENABLE_APP_SANDBOX: YES
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"

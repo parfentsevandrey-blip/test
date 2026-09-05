@@ -126,13 +126,13 @@ jobs:
           set -eux
           if [ -n "${TEAM:-}" ]; then
             xcodebuild -project Veil.xcodeproj -scheme Veil -configuration Release \
-              -derivedDataPath build DEVELOPMENT_TEAM="$TEAM" \
+              -derivedDataPath build -quiet DEVELOPMENT_TEAM="$TEAM" \
               CODE_SIGN_STYLE=Automatic build
           else
             # Ad-hoc: proves it compiles and packages. The tunnel will not
             # load without the network-extension entitlement.
             xcodebuild -project Veil.xcodeproj -scheme Veil -configuration Release \
-              -derivedDataPath build \
+              -derivedDataPath build -quiet \
               CODE_SIGN_IDENTITY="-" CODE_SIGNING_REQUIRED=NO \
               CODE_SIGNING_ALLOWED=NO ENABLE_HARDENED_RUNTIME=NO build
           fi
