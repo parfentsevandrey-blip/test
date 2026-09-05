@@ -67,6 +67,22 @@ For a development build the system extension needs developer mode once:
 systemextensionsctl developer on
 ```
 
+## Two ways in, and which one you get
+
+The packet tunnel carries every application's traffic and needs the
+`networkextension` entitlement, which Apple issues only to a paid developer
+team. When the build is signed by such a team, that is what runs.
+
+When it is not — the ad-hoc build the workflow produces without secrets —
+macOS refuses to load the extension, and the app falls back on its own to
+the **system proxy**: tor is an ordinary process and needs no entitlement,
+so after it has connected and a real stream has gone through, the system's
+SOCKS, HTTP and HTTPS proxies are pointed at it. That takes one
+administrator prompt (the system's own dialogue). Browsers and most
+applications follow it; Telegram has a one-click button on the tunnel
+screen. Applications with their own networking ignore the system proxy and
+stay on the open network, and the interface says so.
+
 ## How a connect goes
 
 The same sequence as Android, for the same reasons:

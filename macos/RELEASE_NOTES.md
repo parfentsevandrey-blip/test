@@ -16,12 +16,25 @@ before the signature could be checked. Two commands fix it:
     xattr -cr /Applications/Veil.app
     codesign --force --deep --sign - /Applications/Veil.app
 
-## The tunnel will not start in an unsigned build
+## Without Apple's entitlement, it works through the system proxy
 
-This is not a bug worth reporting. A packet tunnel needs the entitlement
-`com.apple.developer.networking.networkextension`, and Apple issues that only
-to a paid developer team. Without it macOS refuses to load the network
-extension, so the window opens and the interface works, but nothing connects.
+A packet tunnel — every application, nothing to configure — needs the
+entitlement `com.apple.developer.networking.networkextension`, which Apple
+issues only to a paid developer team. This build has no such signature, so
+macOS will not load the tunnel.
+
+So the app does the next best thing, by itself: after tor has connected and a
+real stream has gone through it, the system's SOCKS, HTTP and HTTPS proxies
+are pointed at tor. macOS asks for your password once (its own dialogue, not
+a terminal). Safari, Chrome, Firefox and most applications then go through
+Tor, hostnames included. Telegram does not follow the system proxy; the
+tunnel screen has a one-click button for it.
+
+**The one limitation:** an application with its own networking — most games,
+some messengers — ignores the system proxy and stays on the open network.
+The app says which mode it is in rather than pretending.
+
+## A build that tunnels everything
 
 To get a build that connects, set three repository secrets and run the
 workflow again:

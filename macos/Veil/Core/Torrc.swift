@@ -29,6 +29,10 @@ enum Torrc {
     struct Session {
         var dataDirectory: String
         var socksSocket: String
+        /// Loopback listeners for the system-proxy mode: SOCKS for what
+        /// speaks it, HTTP CONNECT for everything that honours a web proxy.
+        var socksPort: Int
+        var httpPort: Int
         var controlSocket: String
         var cookieFile: String
         var dnsPort: Int
@@ -55,10 +59,15 @@ enum Torrc {
         // A unix socket rather than a port: unreachable by other processes,
         // which a loopback listener never is.
         out.append("SocksPort unix:\(session.socksSocket) IsolateSOCKSAuth")
+        // And on loopback too, for the mode where the tunnel cannot be loaded
+        // and the system's proxies are pointed here instead. HTTP CONNECT is
+        // what most applications honour, and it always carries the hostname
+        // through, so nothing is resolved on the local network.
+        out.append("SocksPort 127.0.0.1:\(session.socksPort) IsolateSOCKSAuth")
+        out.append("HTTPTunnelPort 127.0.0.1:\(session.httpPort)")
         out.append("ControlSocket \(session.controlSocket)")
         out.append("CookieAuthentication 1")
         out.append("CookieAuthFile \(session.cookieFile)")
-        out.append("HTTPTunnelPort 0")
         out.append("")
 
         out.append("# --- Client role ---------------------------------------------------")

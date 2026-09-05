@@ -239,6 +239,12 @@ actor TorControl {
     /// Bytes tor itself says it moved, which is not the same as what the
     /// tunnel counted: a large gap between them is traffic being dropped
     /// rather than carried.
+    func trafficBytes() -> (Int64, Int64)? {
+        guard let read = try? getInfo("traffic/read"), let written = try? getInfo("traffic/written"),
+              let inBytes = Int64(read), let outBytes = Int64(written) else { return nil }
+        return (inBytes, outBytes)
+    }
+
     func trafficSummary() -> String? {
         guard let read = try? getInfo("traffic/read"), let written = try? getInfo("traffic/written"),
               let inBytes = Int64(read), let outBytes = Int64(written) else { return nil }

@@ -33,6 +33,24 @@ final class TunnelCoordinator: ObservableObject {
     @Published private(set) var lines: [String] = []
     @Published var settings = VeilSettings()
 
+    /// How the machine's traffic reaches tor once connected.
+    ///
+    /// The packet tunnel carries everything and needs an entitlement Apple
+    /// issues only to a paid team; when macOS will not load it, the system's
+    /// proxies are pointed at tor instead. See SystemProxy for what that
+    /// covers and what it does not.
+    @Published private(set) var mode: Mode?
+    /// tor's loopback listeners, for the proxy mode and for Telegram.
+    @Published private(set) var loopbackSocksPort = 0
+    @Published private(set) var loopbackHTTPPort = 0
+
+    enum Mode { case tunnel, proxy }
+
+    enum CoordinatorFailure: Error, LocalizedError {
+        case noPorts
+        var errorDescription: String? { "no free loopback port for tor to listen on" }
+    }
+
     private let tor = TorProcess()
     private let control = TorControl()
     private let vpn = VPNManager()
@@ -84,7 +102,14 @@ final class TunnelCoordinator: ObservableObject {
         supervisor?.cancel(); supervisor = nil
         state = .stopping
         Task {
-            await vpn.stop()
+            if mode == .proxy {
+                // Blocking, and it may show the password dialogue: off the
+                // main thread.
+                _ = try? await Task.detached(priority: .userInitiated) { try SystemProxy.disable() }.value
+            } else {
+                await vpn.stop()
+            }
+            mode = nil
             Core.stopTunnel()
             park()
             state = .idle
@@ -170,7 +195,32 @@ final class TunnelCoordinator: ObservableObject {
                 return
             }
 
-            // Only now does the machine's traffic move.
+            // Only now does the machine's traffic move — through the tunnel
+            // if macOS will load it, through the system proxy if it will not.
+            guard await attachTraffic(elapsed: elapsed) else { return }
+            connectedSince = Date()
+            state = .connected(transport, since: Date())
+            startSupervisor()
+
+        } catch is CancellationError {
+            log("connect cancelled")
+        } catch {
+            state = .failed(error.localizedDescription)
+            log("connect failed: \(error.localizedDescription)")
+        }
+    }
+
+    /// Routes the machine's traffic into tor, one way or the other.
+    ///
+    /// The tunnel is tried first because it is better: every application,
+    /// nothing to configure, and nothing left outside. It fails in one
+    /// particular way on a build without the entitlement — saving the VPN
+    /// configuration is refused — and that is the case the fallback exists
+    /// for. The proxy is set through the system's own password dialogue,
+    /// which runs off the main thread so the interface does not freeze while
+    /// it is up.
+    private func attachTraffic(elapsed: () -> String) async -> Bool {
+        do {
             try await vpn.start(
                 socksSocket: paths.socksSocket,
                 blockAds: settings.blockAds,
@@ -179,16 +229,25 @@ final class TunnelCoordinator: ObservableObject {
                 killSwitch: settings.killSwitch
             )
             Core.resetStats()
-            connectedSince = Date()
-            state = .connected(transport, since: Date())
+            mode = .tunnel
             log("timeline: tunnel attached (\(elapsed()))")
-            startSupervisor()
-
-        } catch is CancellationError {
-            log("connect cancelled")
+            return true
         } catch {
-            state = .failed(error.localizedDescription)
-            log("connect failed: \(error.localizedDescription)")
+            log("the packet tunnel would not start (\(error.localizedDescription)); using the system proxy")
+        }
+
+        let socks = loopbackSocksPort, http = loopbackHTTPPort
+        do {
+            try await Task.detached(priority: .userInitiated) {
+                try SystemProxy.enable(socksPort: socks, httpPort: http)
+            }.value
+            mode = .proxy
+            log("timeline: system proxy points at tor, socks \(socks) http \(http) (\(elapsed()))")
+            return true
+        } catch {
+            try? await control.setNetworkEnabled(false)
+            state = .failed("Туннель не загрузился, а системный прокси не удалось включить: \(error.localizedDescription)")
+            return false
         }
     }
 
@@ -206,9 +265,14 @@ final class TunnelCoordinator: ObservableObject {
         }
 
         state = .starting("Запускаю Tor")
+        guard let ports2 = LoopbackPort.reserve(2) else { throw CoordinatorFailure.noPorts }
+        loopbackSocksPort = ports2[0]
+        loopbackHTTPPort = ports2[1]
         let session = Torrc.Session(
             dataDirectory: paths.torData,
             socksSocket: paths.socksSocket,
+            socksPort: ports2[0],
+            httpPort: ports2[1],
             controlSocket: paths.controlSocket,
             cookieFile: paths.cookieFile,
             dnsPort: 0,
@@ -325,7 +389,16 @@ final class TunnelCoordinator: ObservableObject {
             var lastRedial = Date.distantPast
 
             while !Task.isCancelled {
-                let snapshot = Core.snapshot()
+                // With a tunnel the counters are the tunnel's own. Without
+                // one there is no tunnel to count, and tor's totals over the
+                // control port are the truth instead.
+                let snapshot: TunnelStats
+                if await MainActor.run(body: { self.mode }) == .proxy {
+                    let bytes = await self.control.trafficBytes() ?? (0, 0)
+                    snapshot = TunnelStats(rxBytes: bytes.0, txBytes: bytes.1)
+                } else {
+                    snapshot = Core.snapshot()
+                }
                 await MainActor.run { self.stats = snapshot }
 
                 // Evidence first: bytes moving mean the path is there and
@@ -459,8 +532,13 @@ struct ContainerPaths {
     let container: String
 
     init() {
+        // The group container when there is one; otherwise the app's own
+        // Application Support, which is where an unsandboxed build belongs.
+        // Never a temporary directory: tor's directory cache lives here, and
+        // a cache that vanishes is a first connect that downloads it again.
         let url = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: Self.appGroup)
-            ?? URL(fileURLWithPath: NSTemporaryDirectory())
+            ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+                .appendingPathComponent("Veil")
         container = url.path
         for directory in [torData, transportState] {
             try? FileManager.default.createDirectory(

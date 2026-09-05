@@ -20,6 +20,7 @@ struct TunnelView: View {
 
                     if tunnel.state.isLive {
                         MeasurementsPanel()
+                        ModePanel()
                         RoutePanel()
                     } else if case .failed(let reason) = tunnel.state {
                         FailurePanel(reason: reason)
@@ -192,6 +193,55 @@ private struct MeasurementsPanel: View {
 
     private func format(_ bytes: Int64) -> String {
         ByteCountFormatter.string(fromByteCount: bytes, countStyle: .binary)
+    }
+}
+
+/// Which way the machine's traffic reaches tor, said plainly.
+///
+/// In proxy mode the one honest limitation is stated rather than hidden: an
+/// application that ignores the system proxy is not protected. Telegram is
+/// the common one, and it has its own one-click way in.
+private struct ModePanel: View {
+    @EnvironmentObject private var tunnel: TunnelCoordinator
+
+    var body: some View {
+        GlassPanel {
+            VStack(alignment: .leading, spacing: Metrics.snug) {
+                switch tunnel.mode {
+                case .tunnel:
+                    Label("Системный туннель", systemImage: "shield.checkered")
+                        .font(.veilTitle)
+                    Text("Весь трафик Mac идёт через Tor — каждая программа, без настройки.")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                case .proxy:
+                    Label("Системный прокси", systemImage: "network")
+                        .font(.veilTitle)
+                    Text("macOS не загрузил сетевое расширение (для него нужна подпись платной командой Apple), поэтому через Tor направлены системные прокси. Safari, Chrome, Firefox и большинство программ идут через них. Программы со своей сетью — игры, часть мессенджеров — остаются напрямую.")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    HStack(spacing: Metrics.snug) {
+                        Button {
+                            SystemProxy.openTelegram(socksPort: tunnel.loopbackSocksPort)
+                        } label: {
+                            Label("Настроить Telegram", systemImage: "paperplane")
+                        }
+                        .buttonStyle(.bordered)
+                        Text("SOCKS5 127.0.0.1:\(String(tunnel.loopbackSocksPort))  ·  HTTP 127.0.0.1:\(String(tunnel.loopbackHTTPPort))")
+                            .font(.veilMono)
+                            .foregroundStyle(.secondary)
+                            .textSelection(.enabled)
+                    }
+                    .padding(.top, 2)
+
+                case nil:
+                    EmptyView()
+                }
+            }
+        }
     }
 }
 

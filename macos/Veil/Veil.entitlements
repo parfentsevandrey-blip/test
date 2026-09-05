@@ -17,8 +17,12 @@
 		<string>group.app.veil.mac</string>
 	</array>
 
+	<!-- Not sandboxed. The mode that works without Apple's tunnel entitlement
+	     sets the system proxy through an administrator prompt, and a
+	     sandboxed process has no way to ask for one. The extension, which
+	     must be sandboxed, still is. -->
 	<key>com.apple.security.app-sandbox</key>
-	<true/>
+	<false/>
 	<key>com.apple.security.network.client</key>
 	<true/>
 	<!-- The transports listen on loopback for tor to connect to. -->
