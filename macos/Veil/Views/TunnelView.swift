@@ -18,6 +18,10 @@ struct TunnelView: View {
                 VStack(spacing: Metrics.regular) {
                     ConnectPanel(namespace: glass)
 
+                    if tunnel.staleProxy, !tunnel.state.isLive {
+                        StaleProxyPanel()
+                    }
+
                     if tunnel.state.isLive {
                         MeasurementsPanel()
                         ModePanel()
@@ -240,6 +244,32 @@ private struct ModePanel: View {
                 case nil:
                     EmptyView()
                 }
+            }
+        }
+    }
+}
+
+/// Said first, because until it is dealt with nothing else on the machine
+/// works: the proxy is still pointed at a port from an earlier run.
+private struct StaleProxyPanel: View {
+    @EnvironmentObject private var tunnel: TunnelCoordinator
+
+    var body: some View {
+        GlassPanel {
+            VStack(alignment: .leading, spacing: Metrics.snug) {
+                Label("Прокси остался включённым", systemImage: "exclamationmark.triangle")
+                    .font(.veilTitle)
+                    .foregroundStyle(.orange)
+                Text("Системный прокси всё ещё указывает на прошлый запуск Veil — так бывает после сбоя, принудительного выхода или перезагрузки. Пока он включён, интернет без Veil не работает. Нажмите «Подключить», чтобы снова направить его через Tor, или выключите.")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button {
+                    tunnel.clearStaleProxy()
+                } label: {
+                    Label("Выключить прокси", systemImage: "network.slash")
+                }
+                .buttonStyle(.bordered)
             }
         }
     }

@@ -4,6 +4,7 @@ import SwiftUI
 @main
 struct VeilApp: App {
     @StateObject private var tunnel = TunnelCoordinator()
+    @NSApplicationDelegateAdaptor(QuitGuard.self) private var quitGuard
 
     var body: some Scene {
         Window("Veil", id: "main") {
@@ -14,6 +15,7 @@ struct VeilApp: App {
                 // over. Extending it under the sidebar is what makes the two
                 // read as one surface rather than as two panes meeting.
                 .background(WindowBackground())
+                .onAppear { quitGuard.tunnel = tunnel }
         }
         .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentMinSize)
@@ -30,6 +32,23 @@ struct VeilApp: App {
             Image(systemName: tunnel.state.isLive ? "shield.lefthalf.filled" : "shield")
         }
         .menuBarExtraStyle(.menu)
+    }
+}
+
+/// Quitting with the system proxy on would leave the Mac without internet
+/// and without the app that could explain why. So a quit first takes the
+/// traffic back out, then goes.
+@MainActor
+final class QuitGuard: NSObject, NSApplicationDelegate {
+    weak var tunnel: TunnelCoordinator?
+
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard let tunnel, tunnel.mode != nil else { return .terminateNow }
+        Task { @MainActor in
+            await tunnel.detachTraffic()
+            sender.reply(toApplicationShouldTerminate: true)
+        }
+        return .terminateLater
     }
 }
 

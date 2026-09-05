@@ -43,6 +43,10 @@ final class TunnelCoordinator: ObservableObject {
     /// tor's loopback listeners, for the proxy mode and for Telegram.
     @Published private(set) var loopbackSocksPort = 0
     @Published private(set) var loopbackHTTPPort = 0
+    /// The system proxy was left pointing at a previous run of this app —
+    /// after a crash, a forced quit or a restart — and nothing outside Veil
+    /// works until it is turned off or a new connection replaces it.
+    @Published private(set) var staleProxy = SystemProxy.isArmed
 
     enum Mode { case tunnel, proxy }
 
@@ -108,20 +112,42 @@ final class TunnelCoordinator: ObservableObject {
         supervisor?.cancel(); supervisor = nil
         state = .stopping
         Task {
-            if mode == .proxy {
-                // Blocking, and it may show the password dialogue: off the
-                // main thread.
-                _ = try? await Task.detached(priority: .userInitiated) { try SystemProxy.disable() }.value
-                Core.stopHTTPProxy()
-            } else {
-                await vpn.stop()
-            }
-            mode = nil
-            Core.stopTunnel()
+            await detachTraffic()
             park()
             state = .idle
             pulse = PulseState()
             connectedSince = nil
+        }
+    }
+
+    /// Takes the machine's traffic back out of tor, whichever way it went in.
+    ///
+    /// Also what a quit runs before the process ends: a proxy left pointing
+    /// at a port nothing listens on is a Mac with no internet, and the app
+    /// that did it would not even be running to say why.
+    func detachTraffic() async {
+        switch mode {
+        case .proxy:
+            // Blocking, and it may show the password dialogue: off the main
+            // thread.
+            _ = try? await Task.detached(priority: .userInitiated) { try SystemProxy.disable() }.value
+            Core.stopHTTPProxy()
+        case .tunnel:
+            await vpn.stop()
+        case nil:
+            break
+        }
+        mode = nil
+        staleProxy = SystemProxy.isArmed
+        Core.stopTunnel()
+    }
+
+    /// Turns off a proxy left behind by an earlier run, on request.
+    func clearStaleProxy() {
+        Task {
+            _ = try? await Task.detached(priority: .userInitiated) { try SystemProxy.disable() }.value
+            staleProxy = SystemProxy.isArmed
+            if !staleProxy { log("the system proxy left by an earlier run is off") }
         }
     }
 
@@ -281,6 +307,7 @@ final class TunnelCoordinator: ObservableObject {
                 try SystemProxy.enable(socksPort: socks, httpPort: http)
             }.value
             mode = .proxy
+            staleProxy = false
             log("timeline: system proxy points at tor — socks \(socks), http \(http) (\(elapsed()))")
             return true
         } catch {

@@ -51,6 +51,11 @@ enum SystemProxy {
     /// local network are excluded so that nothing local ends up going into
     /// tor and coming back out of an exit relay.
     static func enable(socksPort: Int, httpPort: Int) throws {
+        // Remembered before the change rather than after: if the app dies
+        // between the two, the flag errs on the side of offering a cleanup
+        // that turns out to be unnecessary, never on leaving a dead proxy
+        // in place and saying nothing.
+        UserDefaults.standard.set(true, forKey: armedKey)
         let script = """
         set -e
         /usr/sbin/networksetup -listallnetworkservices | tail -n +2 | sed 's/^\\*//' | while IFS= read -r service; do
@@ -77,7 +82,18 @@ enum SystemProxy {
         done
         """
         try runPrivileged(script, prompt: "Veil вернёт сетевые настройки Mac как были.")
+        UserDefaults.standard.set(false, forKey: armedKey)
     }
+
+    /// Whether the proxies were pointed at this app and never pointed away
+    /// again — which is what a crash, a forced quit or a restart with the
+    /// proxy on leaves behind. While that stands, the machine has no working
+    /// internet outside Veil, and the app must say so the moment it starts.
+    static var isArmed: Bool {
+        UserDefaults.standard.bool(forKey: armedKey)
+    }
+
+    private static let armedKey = "systemProxyArmed"
 
     /// Telegram's own way of taking a proxy: a link it opens and confirms with
     /// one click. It does not honour the system proxy, so without this it
