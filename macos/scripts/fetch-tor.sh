@@ -7,8 +7,11 @@
 # wanted instead: the expert bundle, which is the tor binary and its pluggable
 # transports, meant for embedding in another application.
 #
-# Only tor itself is taken. The transports in the bundle are the standard
-# executables, and this app does not use them — it runs lyrebird, Snowflake
+# tor and libevent are taken, and nothing else. tor is linked dynamically
+# against the libevent that ships beside it (@executable_path/libevent-*.dylib),
+# so the two travel together: a tor copied on its own dies in dyld before it
+# prints a line, and that was the first release's entire failure. The
+# transports in the bundle are not taken — this app runs lyrebird, Snowflake
 # and Conjure in-process from the Go core, which is what lets it race
 # Snowflake's two rendezvous inside one bridge line.
 set -eu
@@ -39,9 +42,13 @@ else
 fi
 
 tar xzf "$tmp/$archive" -C "$tmp"
+rm -rf "$dest"
 mkdir -p "$dest"
 cp "$tmp/tor/tor" "$dest/tor"
 chmod +x "$dest/tor"
+for lib in "$tmp"/tor/*.dylib; do
+    [ -f "$lib" ] && cp "$lib" "$dest/"
+done
 
 # The geoip files let tor label circuits by country, which the route view
 # shows. Nothing depends on them being present.
@@ -49,7 +56,28 @@ for f in geoip geoip6; do
     [ -f "$tmp/data/$f" ] && cp "$tmp/data/$f" "$dest/$f" || true
 done
 
-echo "tor $("$dest/tor" --version 2>/dev/null | head -1) in $dest"
-echo
-echo "Note: the binary is signed by the Tor Project, not by you. Xcode will"
-echo "re-sign it on copy; the target already sets that up."
+# On a Mac, prove that what was copied actually links and runs. The bundle's
+# binaries carry no signature, and Apple Silicon will not execute an unsigned
+# binary at all, so they are signed ad-hoc here; the app's own packaging signs
+# them again with whatever identity it has.
+if command -v otool >/dev/null 2>&1 && command -v codesign >/dev/null 2>&1; then
+    for bin in "$dest"/tor "$dest"/*.dylib; do
+        [ -f "$bin" ] && codesign --force --sign - "$bin"
+    done
+    otool -L "$dest/tor" | awk '/@executable_path/ {print $1}' | while IFS= read -r dep; do
+        name=${dep#@executable_path/}
+        if [ ! -f "$dest/$name" ]; then
+            echo "tor needs $name beside it and the bundle did not provide it" >&2
+            exit 1
+        fi
+    done
+    if ! "$dest/tor" --version >/dev/null 2>"$tmp/tor.err"; then
+        echo "the fetched tor does not run here:" >&2
+        cat "$tmp/tor.err" >&2
+        exit 1
+    fi
+    echo "tor $("$dest/tor" --version | head -1) in $dest, with:"
+else
+    echo "tor and its libraries in $dest (not a Mac: linking not checked), with:"
+fi
+ls -1 "$dest"

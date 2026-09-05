@@ -48,7 +48,13 @@ final class TunnelCoordinator: ObservableObject {
 
     enum CoordinatorFailure: Error, LocalizedError {
         case noPorts
-        var errorDescription: String? { "no free loopback port for tor to listen on" }
+        case tunnelCarriesNothing
+        var errorDescription: String? {
+            switch self {
+            case .noPorts: return "no free loopback port for tor to listen on"
+            case .tunnelCarriesNothing: return "the tunnel reported connected but carried no connection"
+            }
+        }
     }
 
     private let tor = TorProcess()
@@ -106,6 +112,7 @@ final class TunnelCoordinator: ObservableObject {
                 // Blocking, and it may show the password dialogue: off the
                 // main thread.
                 _ = try? await Task.detached(priority: .userInitiated) { try SystemProxy.disable() }.value
+                Core.stopHTTPProxy()
             } else {
                 await vpn.stop()
             }
@@ -213,13 +220,25 @@ final class TunnelCoordinator: ObservableObject {
     /// Routes the machine's traffic into tor, one way or the other.
     ///
     /// The tunnel is tried first because it is better: every application,
-    /// nothing to configure, and nothing left outside. It fails in one
-    /// particular way on a build without the entitlement — saving the VPN
-    /// configuration is refused — and that is the case the fallback exists
-    /// for. The proxy is set through the system's own password dialogue,
-    /// which runs off the main thread so the interface does not freeze while
-    /// it is up.
+    /// nothing to configure, and nothing left outside. On a build without
+    /// Apple's entitlement it fails — usually at saving the configuration,
+    /// otherwise by never coming up — and that is the case the proxy exists
+    /// for.
     private func attachTraffic(elapsed: () -> String) async -> Bool {
+        if await attachTunnel(elapsed: elapsed) { return true }
+        return await attachProxy(elapsed: elapsed)
+    }
+
+    /// The packet tunnel, if macOS will load it — and proves it, because
+    /// "started" is not "up".
+    ///
+    /// The start request being accepted says nothing about whether the
+    /// extension loaded, so the session is watched until it reports
+    /// connected, and then one plain connection with no proxy named is made
+    /// the ordinary way: the system routes it, and if the tunnel is real it
+    /// leaves through a Tor exit. A tunnel that took the default route and
+    /// forwards nothing would pass every other test.
+    private func attachTunnel(elapsed: () -> String) async -> Bool {
         do {
             try await vpn.start(
                 socksSocket: paths.socksSocket,
@@ -228,23 +247,44 @@ final class TunnelCoordinator: ObservableObject {
                 blockUDP: settings.blockUDP,
                 killSwitch: settings.killSwitch
             )
+            try await vpn.awaitConnected(within: 30)
+            log("timeline: the tunnel reports connected (\(elapsed())); checking that it carries traffic")
+            let carried = await Task.detached(priority: .userInitiated) {
+                TCPProbe.reaches("1.1.1.1", port: 443, timeout: 20)
+            }.value
+            guard carried else { throw CoordinatorFailure.tunnelCarriesNothing }
             Core.resetStats()
             mode = .tunnel
-            log("timeline: tunnel attached (\(elapsed()))")
+            log("timeline: tunnel attached and carrying traffic (\(elapsed()))")
             return true
         } catch {
-            log("the packet tunnel would not start (\(error.localizedDescription)); using the system proxy")
+            log("the packet tunnel is not available (\(error.localizedDescription)); using the system proxy")
+            await vpn.stop()
+            return false
         }
+    }
 
-        let socks = loopbackSocksPort, http = loopbackHTTPPort
+    /// The system proxy: tor's SOCKS on loopback, and the app's own HTTP
+    /// proxy in front of it for the HTTP and HTTPS settings. Set through the
+    /// system's own password dialogue, which runs off the main thread so the
+    /// interface does not freeze while it is up.
+    private func attachProxy(elapsed: () -> String) async -> Bool {
+        let socks = loopbackSocksPort
         do {
+            let http = try Core.startHTTPProxy(
+                socksNetwork: "unix",
+                socksAddress: paths.socksSocket,
+                blocklist: settings.blockAds ? Blocklist.plant(into: paths.container) : nil
+            )
+            loopbackHTTPPort = http
             try await Task.detached(priority: .userInitiated) {
                 try SystemProxy.enable(socksPort: socks, httpPort: http)
             }.value
             mode = .proxy
-            log("timeline: system proxy points at tor, socks \(socks) http \(http) (\(elapsed()))")
+            log("timeline: system proxy points at tor — socks \(socks), http \(http) (\(elapsed()))")
             return true
         } catch {
+            Core.stopHTTPProxy()
             try? await control.setNetworkEnabled(false)
             state = .failed("Туннель не загрузился, а системный прокси не удалось включить: \(error.localizedDescription)")
             return false
@@ -265,14 +305,12 @@ final class TunnelCoordinator: ObservableObject {
         }
 
         state = .starting("Запускаю Tor")
-        guard let ports2 = LoopbackPort.reserve(2) else { throw CoordinatorFailure.noPorts }
-        loopbackSocksPort = ports2[0]
-        loopbackHTTPPort = ports2[1]
+        guard let socksPort = LoopbackPort.reserve(1)?.first else { throw CoordinatorFailure.noPorts }
+        loopbackSocksPort = socksPort
         let session = Torrc.Session(
             dataDirectory: paths.torData,
             socksSocket: paths.socksSocket,
-            socksPort: ports2[0],
-            httpPort: ports2[1],
+            socksPort: socksPort,
             controlSocket: paths.controlSocket,
             cookieFile: paths.cookieFile,
             dnsPort: 0,
@@ -395,7 +433,10 @@ final class TunnelCoordinator: ObservableObject {
                 let snapshot: TunnelStats
                 if await MainActor.run(body: { self.mode }) == .proxy {
                     let bytes = await self.control.trafficBytes() ?? (0, 0)
-                    snapshot = TunnelStats(rxBytes: bytes.0, txBytes: bytes.1)
+                    snapshot = TunnelStats(
+                        rxBytes: bytes.0, txBytes: bytes.1,
+                        dnsBlocked: Core.snapshot().dnsBlocked
+                    )
                 } else {
                     snapshot = Core.snapshot()
                 }
@@ -540,10 +581,16 @@ struct ContainerPaths {
             ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
                 .appendingPathComponent("Veil")
         container = url.path
-        for directory in [torData, transportState] {
+        for directory in [torData, transportState, sockets] {
             try? FileManager.default.createDirectory(
                 atPath: directory, withIntermediateDirectories: true,
                 attributes: [.posixPermissions: 0o700]
+            )
+            // Whatever it was created with before, by an earlier build or by
+            // the system: tor refuses to put a socket in a directory anyone
+            // else can list, and a refused listener is a tor that exits.
+            try? FileManager.default.setAttributes(
+                [.posixPermissions: 0o700], ofItemAtPath: directory
             )
         }
     }
@@ -551,9 +598,12 @@ struct ContainerPaths {
     var torData: String { container + "/tor" }
     var transportState: String { container + "/pt" }
     var torrc: String { container + "/torrc" }
+    /// The sockets' own directory, mode 0700, which is what tor insists on
+    /// for the directory that holds a unix socket.
+    var sockets: String { container + "/run" }
     // Socket paths live in sockaddr_un, which is 104 bytes on darwin, so they
     // are kept short deliberately: a group container path is already long.
-    var socksSocket: String { container + "/s.sock" }
-    var controlSocket: String { container + "/c.sock" }
+    var socksSocket: String { sockets + "/s.sock" }
+    var controlSocket: String { sockets + "/c.sock" }
     var cookieFile: String { torData + "/cookie" }
 }

@@ -24,7 +24,7 @@ differently.
 |---|---|---|
 | Tunnel | `VpnService` + TUN fd | `NEPacketTunnelProvider` + utun fd |
 | Link endpoint | `fdbased` (Linux only) | `iobased` with a 4-byte utun offset |
-| tor | `tor-android` (JNI) | official `tor` binary, spawned |
+| tor | `tor-android` (JNI) | official `tor` binary + its libevent, spawned |
 | SOCKS | loopback TCP port | unix socket in the App Group |
 | UI | Compose, Material 3 Expressive | SwiftUI, Liquid Glass |
 
@@ -41,10 +41,11 @@ machine, and a socket in the container is not.
    `go install golang.org/x/mobile/cmd/gomobile@latest && gomobile init`
 3. **XcodeGen** (`brew install xcodegen`), because the project is kept as
    `project.yml` rather than a `.pbxproj` nobody can read a diff of.
-4. **An Apple Developer account.** This is the one hard requirement and it is
-   not ours: a packet tunnel needs the
-   `com.apple.developer.networking.networkextension` entitlement, which
-   Apple issues only to a paid team. Set `DEVELOPMENT_TEAM` in `project.yml`.
+4. **An Apple Developer account, for the packet tunnel only.** A packet
+   tunnel needs the `com.apple.developer.networking.networkextension`
+   entitlement, which Apple issues only to a paid team. Set
+   `DEVELOPMENT_TEAM` in `project.yml` to get it. Without one the app still
+   connects, through the system proxy — see below.
 
 ## Building
 
@@ -71,17 +72,42 @@ systemextensionsctl developer on
 
 The packet tunnel carries every application's traffic and needs the
 `networkextension` entitlement, which Apple issues only to a paid developer
-team. When the build is signed by such a team, that is what runs.
+team. When the build is signed by such a team, that is what runs — and it is
+only called attached once the session reports connected *and* a plain
+connection has gone through it, because a start request being accepted says
+nothing about whether the extension loaded.
 
 When it is not — the ad-hoc build the workflow produces without secrets —
 macOS refuses to load the extension, and the app falls back on its own to
 the **system proxy**: tor is an ordinary process and needs no entitlement,
 so after it has connected and a real stream has gone through, the system's
-SOCKS, HTTP and HTTPS proxies are pointed at it. That takes one
-administrator prompt (the system's own dialogue). Browsers and most
-applications follow it; Telegram has a one-click button on the tunnel
-screen. Applications with their own networking ignore the system proxy and
-stay on the open network, and the interface says so.
+SOCKS proxy is pointed at tor's loopback port and its HTTP and HTTPS proxies
+at a small proxy of the app's own (`httpproxy.go` in the shared module),
+which forwards CONNECT and plain-HTTP requests through tor by name and
+applies the ad blocker. tor's own HTTPTunnelPort is not used for this: it
+answers anything but CONNECT with 405, so plain http:// pages would fail.
+Setting the proxies takes one administrator prompt (the system's own
+dialogue). Browsers and most applications follow it; Telegram has a
+one-click button on the tunnel screen. Applications with their own
+networking ignore the system proxy and stay on the open network, and the
+interface says so.
+
+## Getting it onto a Mac without a Developer ID
+
+Gatekeeper on Sequoia and Tahoe reports a quarantined app without a
+Developer ID signature as *damaged*, offers no "Open Anyway" for it, and no
+longer has the right-click → Open override. So the workflow also produces
+`Veil.pkg`: Gatekeeper blocks the *package* with the ordinary
+unidentified-developer verdict, which Privacy & Security does let through,
+and the files an installer lays down carry no quarantine at all. The
+`packaging/` directory holds the distribution definition and a postinstall
+script that clears the flag once more as root.
+
+Two things about tor that cost a release each: the expert bundle's `tor` is
+linked against the `libevent` dylib beside it, so `fetch-tor.sh` copies both
+and proves they link; and tor refuses to create a unix socket in a directory
+anyone else can list, so the sockets live in a 0700 directory of their own
+and the listeners carry `RelaxDirModeCheck`.
 
 ## How a connect goes
 
@@ -107,10 +133,11 @@ on what it measures rather than on what it assumes.
 VeilCore/           Go: the darwin additions to the shared module
 Veil/               The app: UI, tor control, connection logic
   Design/           Liquid Glass tokens and components
-  Core/             TorController, TunnelCoordinator, VPNManager
+  Core/             TorControl, TunnelCoordinator, VPNManager, SystemProxy
   Model/            Transport, BridgeLine, TunnelState, Settings
   Views/            Tunnel, Routes, Diagnostics, Settings, Log
 VeilTunnel/         The network extension: utun fd in, packets out
+packaging/          Installer package: distribution, welcome text, postinstall
 scripts/            Core and tor build scripts
 project.yml         XcodeGen input
 ```

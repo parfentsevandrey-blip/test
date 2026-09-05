@@ -42,7 +42,9 @@ enum SystemProxy {
         }
     }
 
-    /// Points every network service's SOCKS, HTTP and HTTPS proxy at tor.
+    /// Points every network service's SOCKS proxy at tor, and its HTTP and
+    /// HTTPS proxies at the app's own proxy in front of tor (tor's CONNECT
+    /// port would answer a plain-HTTP fetch with 405).
     ///
     /// Everything happens inside one privileged shell script so that the
     /// password is asked for once, not once per service. Loopback and the

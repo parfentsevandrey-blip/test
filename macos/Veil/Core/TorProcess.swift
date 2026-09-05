@@ -65,6 +65,14 @@ final class TorProcess {
         // A stale cookie from a previous run would be read as this run's.
         try? FileManager.default.removeItem(atPath: session.cookieFile)
 
+        // Files copied out of a downloaded disk image are quarantined, and a
+        // quarantined executable that is not notarized is refused when
+        // spawned — with a dialogue about an unidentified developer that
+        // seems to come from nowhere, or with nothing at all. The installer
+        // package leaves nothing quarantined; this is for the disk image, and
+        // it is harmless when there is nothing to do.
+        Self.unquarantine(binary.deletingLastPathComponent())
+
         let task = Process()
         task.executableURL = binary
         task.arguments = ["-f", torrcPath, "--ignore-missing-torrc"]
@@ -92,7 +100,7 @@ final class TorProcess {
                 return
             }
             if !task.isRunning {
-                throw Failure.exited(task.terminationStatus, recentOutput.suffix(6).joined(separator: "\n"))
+                throw Failure.exited(task.terminationStatus, Self.explain(recentOutput.suffix(6)))
             }
             try await Task.sleep(for: .milliseconds(120))
         }
@@ -108,6 +116,25 @@ final class TorProcess {
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(3))
             if task.isRunning { kill(task.processIdentifier, SIGKILL) }
+        }
+    }
+
+    /// The last lines tor wrote, with the one failure that looks like nothing
+    /// translated: a dyld message means a library tor links against is not
+    /// beside it in the bundle, which is a packaging fault and not a network
+    /// one.
+    private static func explain(_ lines: ArraySlice<String>) -> String {
+        let tail = lines.joined(separator: "\n")
+        if tail.contains("Library not loaded") {
+            return "tor cannot start because a library it needs is missing from the app bundle — " + tail
+        }
+        return tail
+    }
+
+    private static func unquarantine(_ directory: URL) {
+        guard let names = try? FileManager.default.contentsOfDirectory(atPath: directory.path) else { return }
+        for name in names {
+            _ = removexattr(directory.appendingPathComponent(name).path, "com.apple.quarantine", 0)
         }
     }
 

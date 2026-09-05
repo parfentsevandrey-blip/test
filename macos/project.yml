@@ -78,7 +78,7 @@ targets:
         CODE_SIGN_ENTITLEMENTS: Veil/Veil.entitlements
         # See Veil.entitlements: the proxy mode needs an administrator prompt.
         ENABLE_APP_SANDBOX: NO
-        MARKETING_VERSION: "0.1.0"
+        MARKETING_VERSION: "0.2.0"
         CURRENT_PROJECT_VERSION: "1"
         # The tor binary is the Tor Project's, so it arrives signed by them.
         # Xcode re-signs it on copy; without this the hardened runtime refuses
@@ -106,7 +106,7 @@ targets:
           - "$(inherited)"
           - "@executable_path/../../../../Frameworks"
         ENABLE_APP_SANDBOX: YES
-        MARKETING_VERSION: "0.1.0"
+        MARKETING_VERSION: "0.2.0"
         CURRENT_PROJECT_VERSION: "1"
 
 schemes:

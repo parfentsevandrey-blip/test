@@ -11,11 +11,14 @@ name: macOS DMG
 # About signing, which decides whether the result actually runs:
 #
 #   - With no secrets set, the app is signed ad-hoc. It builds, installs and
-#     launches, and the *tunnel will not start*: a packet tunnel needs the
+#     launches, and the *packet tunnel will not start*: it needs the
 #     com.apple.developer.networking.networkextension entitlement, and macOS
 #     refuses to load a provider whose signature does not carry it. Apple
-#     issues that entitlement to paid teams only. This mode is still worth
-#     having — it proves the whole thing compiles and packages.
+#     issues that entitlement to paid teams only. The app then works through
+#     the system proxy instead, which needs no entitlement (see
+#     Veil/Core/SystemProxy.swift), and is shipped as an installer package
+#     because that is the one form Gatekeeper lets through without a
+#     Terminal command.
 #   - With APPLE_TEAM_ID, APPLE_CERT_P12 and APPLE_CERT_PASSWORD set as
 #     repository secrets, it is signed properly and the tunnel works.
 
@@ -170,34 +173,75 @@ jobs:
           #
           # The build above runs with signing off, because Xcode will not
           # sign the network extension's entitlements without a provisioning
-          # profile. But an app with no signature at all does not merely warn
-          # on launch — on Apple Silicon it does not launch, and Gatekeeper
-          # reports a quarantined unsigned app as "damaged", which sends the
-          # user to the Bin. An ad-hoc signature (identity "-") turns that into
-          # the ordinary "unidentified developer" dialogue that right-click →
-          # Open gets past. Inner code first, outer last, because a signature
-          # covers what is inside it; the loose tor binary is signed by name
-          # because --deep only descends into nested bundles.
+          # profile. But an app with no signature at all does not launch on
+          # Apple Silicon at all, so everything executable is signed ad-hoc
+          # (identity "-"): the loose binaries in Resources/tor first — tor
+          # and the libevent it links against — since --deep only descends
+          # into nested bundles; then the framework and the extension; then
+          # the app, last, because a signature covers what is inside it.
           if [ -z "${TEAM:-}" ]; then
-            codesign --force --sign - "$app/Contents/Resources/tor/tor"
+            find "$app/Contents/Resources/tor" -type f \( -name tor -o -name "*.dylib" \) -print0 \
+              | xargs -0 -n1 codesign --force --sign -
             find "$app/Contents/Frameworks" "$app/Contents/PlugIns" -maxdepth 1 \
               \( -name "*.framework" -o -name "*.appex" \) -print0 2>/dev/null \
               | xargs -0 -n1 codesign --force --deep --sign -
             codesign --force --deep --sign - "$app"
             codesign --verify --deep --strict --verbose=2 "$app"
+            # tor must run from inside the bundle, with its library beside it.
+            "$app/Contents/Resources/tor/tor" --version | head -1
             echo "ad-hoc signed"
           fi
 
+          version=$(sed -n 's/.*MARKETING_VERSION: "\(.*\)".*/\1/p' project.yml | head -1)
+
+          # The disk image, for people who do not mind a Terminal command.
           mkdir -p dmg && cp -R "$app" dmg/
           ln -s /Applications dmg/Applications
           hdiutil create -volname "Veil" -srcfolder dmg -ov -format UDZO Veil.dmg
           hdiutil imageinfo Veil.dmg | head -5
-          ls -lh Veil.dmg
+
+          # The installer package, which is the download that needs none.
+          #
+          # An ad-hoc signed app copied out of a downloaded disk image is
+          # quarantined, and Gatekeeper on Sequoia and Tahoe reports a
+          # quarantined app without a Developer ID signature as "damaged" —
+          # there is no Open Anyway for that, and right-click → Open was
+          # removed in Sequoia. The way round it that involves no commands is
+          # an installer package: Gatekeeper blocks the *package* with the
+          # ordinary unidentified-developer verdict, which Privacy & Security
+          # does offer Open Anyway for, and the files an installer lays down
+          # carry no quarantine at all. The app then launches like any other.
+          # A postinstall script clears the flag once more, as root, in case
+          # any path put it back.
+          rm -rf pkgroot && mkdir -p pkgroot && cp -R "$app" pkgroot/
+          pkgbuild --analyze --root pkgroot component.plist
+          # Not relocatable: the installer must put the app in /Applications
+          # rather than wherever it last saw a copy of it.
+          python3 - <<'PY'
+          import plistlib
+          with open("component.plist", "rb") as f:
+              components = plistlib.load(f)
+          for c in components:
+              c["BundleIsRelocatable"] = False
+          with open("component.plist", "wb") as f:
+              plistlib.dump(components, f)
+          PY
+          chmod +x packaging/scripts/postinstall
+          pkgbuild --root pkgroot --component-plist component.plist \
+            --install-location /Applications \
+            --identifier app.veil.mac.pkg --version "$version" \
+            --scripts packaging/scripts Veil-app.pkg
+          sed "s/__VERSION__/$version/g" packaging/Distribution.xml > Distribution.xml
+          productbuild --distribution Distribution.xml --package-path . \
+            --resources packaging/resources Veil.pkg
+          ls -lh Veil.dmg Veil.pkg
 
       - uses: actions/upload-artifact@v4
         with:
           name: Veil-macOS-arm64
-          path: macos/Veil.dmg
+          path: |
+            macos/Veil.pkg
+            macos/Veil.dmg
           if-no-files-found: error
 
       - name: Publish the disk image to a release
@@ -216,14 +260,15 @@ jobs:
           # enough to end the quoting early and fail the step.
           tag="macos-latest"
           if gh release view "$tag" >/dev/null 2>&1; then
-            gh release upload "$tag" Veil.dmg --clobber
+            gh release upload "$tag" Veil.pkg Veil.dmg --clobber
             gh release edit "$tag" --notes-file RELEASE_NOTES.md
           else
-            gh release create "$tag" Veil.dmg \
+            gh release create "$tag" Veil.pkg Veil.dmg \
               --title "Veil for macOS (Apple Silicon)" \
               --notes-file RELEASE_NOTES.md --prerelease
           fi
           echo "Download without signing in:"
+          echo "  https://github.com/${GITHUB_REPOSITORY}/releases/download/$tag/Veil.pkg"
           echo "  https://github.com/${GITHUB_REPOSITORY}/releases/download/$tag/Veil.dmg"
 
       - name: If the build failed, say what to look at

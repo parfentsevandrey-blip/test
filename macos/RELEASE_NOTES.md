@@ -1,57 +1,98 @@
-Veil for macOS — Apple Silicon, macOS 26 (Tahoe).
+Veil для macOS — Apple Silicon, macOS 26 Tahoe.
 
-Tor reached through Snowflake, meek, WebTunnel or Conjure, with no account,
-no subscription and no server of ours anywhere in it. The interface is drawn
-in Liquid Glass; the tunnel core is the same Go code as the Android build.
+Tor через Snowflake, meek, WebTunnel или Conjure. Без аккаунта, без подписки,
+без единого нашего сервера. Интерфейс на Liquid Glass; ядро — тот же Go-код,
+что и в Android-версии.
 
-## Opening it
+## Установка без команд: Veil.pkg
 
-The app is signed ad-hoc, not by an identified developer, so the first launch
-is refused with "cannot be opened because the developer cannot be verified".
-Right-click the app → **Open** → **Open** once; after that it opens normally.
+Скачайте **Veil.pkg** (не dmg) и откройте его.
 
-If macOS instead says the app is *damaged*, the download was quarantined
-before the signature could be checked. Two commands fix it:
+1. macOS скажет, что не может проверить, что пакет не содержит вредоносного
+   ПО. Нажмите **«Готово»** (не «Переместить в Корзину»).
+2. Откройте **Системные настройки → Конфиденциальность и безопасность** и
+   пролистайте вниз до раздела «Безопасность». Там написано, что Veil.pkg был
+   заблокирован, и рядом кнопка **«Всё равно открыть»**. Нажмите её и введите
+   пароль.
+3. Откроется установщик. Он положит Veil в «Программы» и больше ничего не
+   трогает.
+
+После этого Veil открывается как любое другое приложение: файлы, которые
+устанавливает пакет, macOS в карантин не помещает.
+
+Почему именно так: приложение подписано без сертификата Apple Developer
+(он платный). Скачанное приложение с такой подписью macOS начиная с Sequoia
+называет «повреждённым» и не даёт открыть, а правый клик → «Открыть» больше
+не работает. Пакет установщика — единственный путь без Терминала.
+
+## Если вы взяли Veil.dmg
+
+Перетащите Veil в «Программы» и один раз выполните в Терминале:
 
     xattr -cr /Applications/Veil.app
-    codesign --force --deep --sign - /Applications/Veil.app
 
-## Without Apple's entitlement, it works through the system proxy
+## Как оно подключается
 
-A packet tunnel — every application, nothing to configure — needs the
-entitlement `com.apple.developer.networking.networkextension`, which Apple
-issues only to a paid developer team. This build has no such signature, so
-macOS will not load the tunnel.
+1. Нажмите «Подключить». Поднимаются транспорты и Tor; канал строится через
+   способ, выбранный на экране «Маршруты» (по умолчанию Snowflake).
+2. «Подключено» появляется только когда через Tor прошло настоящее
+   соединение. Процент загрузки Tor доказательством не считается.
+3. Затем приложение пробует системный туннель. Без подписи Apple macOS его не
+   загрузит, и Veil сам переходит на **системный прокси**: один раз спрашивает
+   пароль администратора (стандартное окно macOS, не Терминал) и направляет
+   прокси SOCKS, HTTP и HTTPS через Tor. Имена сайтов при этом наружу не
+   утекают: их разрешает Tor.
+4. Safari, Chrome, Firefox и большинство программ идут через Tor. Telegram
+   системный прокси не читает; на экране туннеля есть кнопка «Настроить
+   Telegram», она открывает в нём готовый диалог подключения.
+5. «Отключить» возвращает сетевые настройки как были.
 
-So the app does the next best thing, by itself: after tor has connected and a
-real stream has gone through it, the system's SOCKS, HTTP and HTTPS proxies
-are pointed at tor. macOS asks for your password once (its own dialogue, not
-a terminal). Safari, Chrome, Firefox and most applications then go through
-Tor, hostnames included. Telegram does not follow the system proxy; the
-tunnel screen has a one-click button for it.
+**Единственное ограничение режима прокси.** Программы со своей сетью — игры,
+часть мессенджеров — системный прокси игнорируют и остаются напрямую.
+Приложение прямо показывает, в каком режиме оно работает, и не притворяется,
+что закрывает всё.
 
-**The one limitation:** an application with its own networking — most games,
-some messengers — ignores the system proxy and stays on the open network.
-The app says which mode it is in rather than pretending.
+## Если не подключилось
 
-## A build that tunnels everything
+Откройте раздел **«Журнал»** в приложении, нажмите «Скопировать» и пришлите
+текст. В нём видно, на каком шаге остановилось.
 
-To get a build that connects, set three repository secrets and run the
-workflow again:
+## Что исправлено в этой сборке
+
+- tor из expert bundle динамически связан с `libevent-2.1.7.dylib`, а в
+  приложение копировался только сам `tor`. Он падал при запуске, ещё до
+  первой строки, и подключение не могло состояться в принципе.
+- tor отказывается открывать unix-сокет в каталоге, который могут читать
+  другие пользователи, и завершался. Каталог сокетов теперь создаётся с
+  правами 0700, и tor получает флаг `RelaxDirModeCheck`.
+- Туннель считается подключённым только после того, как macOS сообщила
+  «connected» и сквозь него прошло реальное соединение. Раньше хватало того,
+  что запрос на запуск был принят.
+- Для настроек HTTP/HTTPS-прокси в приложении появился собственный прокси
+  перед Tor: HTTPTunnelPort самого tor отвечает 405 на всё, кроме CONNECT, и
+  обычные http-сайты через него не открывались.
+- Установщик `.pkg` вместо (точнее, вместе с) dmg.
+
+## Сборка, которая туннелирует всё
+
+Чтобы получить сборку с системным туннелем для всех программ, задайте три
+секрета репозитория и запустите workflow заново:
 
 - `APPLE_TEAM_ID`
-- `APPLE_CERT_P12` (a Developer ID certificate, base64-encoded)
+- `APPLE_CERT_P12` (сертификат Developer ID в base64)
 - `APPLE_CERT_PASSWORD`
 
-The App Group `group.app.veil.mac` must also belong to your team, since that
-is how the extension reaches tor's socket. Its name is in `macos/project.yml`
-and in both entitlements files.
+Группа приложений `group.app.veil.mac` должна принадлежать вашей команде:
+через неё расширение достаёт сокет tor. Её имя в `macos/project.yml` и в
+обоих файлах entitlements.
 
-## What is inside
+## Что внутри
 
-- tor is the Tor Project's own binary, taken from their expert bundle.
-- The pluggable transports, the userspace TCP/IP stack, the ad blocker and the
-  shipped network directory are the same Go module the Android app uses.
-- SOCKS and the control port are unix sockets inside the app's container
-  rather than loopback ports, so no other process on the machine can reach
-  them.
+- tor — собственная сборка Tor Project из expert bundle, вместе с её
+  libevent.
+- Транспорты, TCP/IP-стек в пользовательском пространстве, блокировщик
+  рекламы и встроенный каталог сети — тот же Go-модуль, что и в
+  Android-приложении.
+- SOCKS и управляющий порт tor — unix-сокеты внутри каталога приложения, а
+  не порты на loopback, так что другие процессы до них не дотянутся. Порт
+  SOCKS на loopback открывается только для режима прокси.

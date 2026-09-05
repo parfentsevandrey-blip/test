@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The installer's description of itself. productbuild turns this plus the
+     component package into Veil.pkg. __VERSION__ is filled in by the
+     workflow from project.yml. -->
+<installer-gui-script minSpecVersion="2">
+    <title>Veil</title>
+    <options customize="never" require-scripts="false" rootVolumeOnly="true" hostArchitectures="arm64"/>
+    <domains enable_localSystem="true"/>
+    <welcome file="welcome.html" mime-type="text/html"/>
+    <conclusion file="conclusion.html" mime-type="text/html"/>
+    <choices-outline>
+        <line choice="default">
+            <line choice="app.veil.mac.pkg"/>
+        </line>
+    </choices-outline>
+    <choice id="default"/>
+    <choice id="app.veil.mac.pkg" visible="false">
+        <pkg-ref id="app.veil.mac.pkg"/>
+    </choice>
+    <pkg-ref id="app.veil.mac.pkg" version="__VERSION__" onConclusion="none">Veil-app.pkg</pkg-ref>
+</installer-gui-script>

@@ -20,8 +20,18 @@ actor VPNManager {
 
     enum Failure: Error, LocalizedError {
         case notPermitted
+        case neverCameUp(String)
+        case timedOut
+
         var errorDescription: String? {
-            "macOS did not allow the VPN configuration to be added"
+            switch self {
+            case .notPermitted:
+                return "macOS did not allow the VPN configuration to be added"
+            case .neverCameUp(let status):
+                return "the tunnel did not come up (status: \(status))"
+            case .timedOut:
+                return "the tunnel did not come up in time"
+            }
         }
     }
 
@@ -82,6 +92,41 @@ actor VPNManager {
         try manager.connection.startVPNTunnel()
     }
 
+    /// Waits for the session to report connected.
+    ///
+    /// `startVPNTunnel` returning is not the tunnel being up; it means the
+    /// request was accepted. The extension may then fail to load — which is
+    /// what happens on a build without the entitlement, whenever the
+    /// configuration was allowed to be saved at all — or load and fail, and
+    /// the session's status is the only thing that says which. Calling the
+    /// tunnel attached on the strength of a request being accepted would be
+    /// the fake "connected" this app exists not to show.
+    func awaitConnected(within timeout: TimeInterval) async throws {
+        let manager = try await loadManager()
+        let began = Date()
+        var seenTrying = false
+        while Date().timeIntervalSince(began) < timeout {
+            let status = manager.connection.status
+            switch status {
+            case .connected:
+                return
+            case .connecting, .reasserting:
+                seenTrying = true
+            case .disconnected, .invalid, .disconnecting:
+                // Straight after the start request the status can still read
+                // "disconnected" for a moment. Only once it has been seen
+                // trying, or after a grace period, is that a verdict.
+                if seenTrying || Date().timeIntervalSince(began) > 3 {
+                    throw Failure.neverCameUp(Self.describe(status))
+                }
+            @unknown default:
+                break
+            }
+            try await Task.sleep(for: .milliseconds(250))
+        }
+        throw Failure.timedOut
+    }
+
     func stop() async {
         guard let manager = try? await loadManager() else { return }
         manager.isOnDemandEnabled = false
@@ -91,5 +136,17 @@ actor VPNManager {
 
     var status: NEVPNStatus {
         get async { (try? await loadManager())?.connection.status ?? .invalid }
+    }
+
+    private static func describe(_ status: NEVPNStatus) -> String {
+        switch status {
+        case .invalid: return "invalid"
+        case .disconnected: return "disconnected"
+        case .connecting: return "connecting"
+        case .connected: return "connected"
+        case .reasserting: return "reasserting"
+        case .disconnecting: return "disconnecting"
+        @unknown default: return "unknown"
+        }
     }
 }

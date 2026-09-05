@@ -131,6 +131,33 @@ enum Core {
         #endif
     }
 
+    // MARK: - The HTTP proxy, for the mode without a tunnel
+
+    /// Starts the loopback HTTP proxy that stands in front of tor's SOCKS for
+    /// the system's HTTP and HTTPS proxy settings, and returns its port.
+    ///
+    /// tor's own HTTPTunnelPort answers everything but CONNECT with 405, so a
+    /// browser's plain-HTTP fetches would fail through it. This one forwards
+    /// them, dials by name so nothing is resolved locally, and applies the ad
+    /// blocker on the way.
+    static func startHTTPProxy(socksNetwork: String, socksAddress: String, blocklist: String?) throws -> Int {
+        #if canImport(Veiltun)
+        var port: Int = 0
+        var failure: NSError?
+        VeiltunStartHTTPProxy(socksNetwork, socksAddress, blocklist ?? "", &port, &failure)
+        if let failure { throw failure }
+        return port
+        #else
+        throw CoreFailure.unavailable("the Go core is not built")
+        #endif
+    }
+
+    static func stopHTTPProxy() {
+        #if canImport(Veiltun)
+        VeiltunStopHTTPProxy()
+        #endif
+    }
+
     /// Unpacks an xz asset. Used for the directory seed and the ad blocker's
     /// name list, both of which ship compressed inside the app.
     static func extractXz(from source: String, to destination: String) throws {

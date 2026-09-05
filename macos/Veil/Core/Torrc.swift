@@ -29,10 +29,9 @@ enum Torrc {
     struct Session {
         var dataDirectory: String
         var socksSocket: String
-        /// Loopback listeners for the system-proxy mode: SOCKS for what
-        /// speaks it, HTTP CONNECT for everything that honours a web proxy.
+        /// A loopback SOCKS listener as well, for the system-proxy mode: the
+        /// system's SOCKS setting and Telegram both need a port, not a path.
         var socksPort: Int
-        var httpPort: Int
         var controlSocket: String
         var cookieFile: String
         var dnsPort: Int
@@ -58,14 +57,22 @@ enum Torrc {
         out.append("# --- Local listeners ----------------------------------------------")
         // A unix socket rather than a port: unreachable by other processes,
         // which a loopback listener never is.
-        out.append("SocksPort unix:\(session.socksSocket) IsolateSOCKSAuth")
+        //
+        // RelaxDirModeCheck, because tor otherwise insists the directory that
+        // holds a socket be mode 0700 and refuses to start when it is not —
+        // "Permissions on directory ... are too permissive", and then the
+        // listener fails to bind and tor exits. The app creates that
+        // directory 0700 anyway; the flag is so that a directory the system
+        // created with other permissions is not a connection that never
+        // starts, with nothing on screen to say why.
+        out.append("SocksPort unix:\(session.socksSocket) IsolateSOCKSAuth RelaxDirModeCheck")
         // And on loopback too, for the mode where the tunnel cannot be loaded
-        // and the system's proxies are pointed here instead. HTTP CONNECT is
-        // what most applications honour, and it always carries the hostname
-        // through, so nothing is resolved on the local network.
+        // and the system's proxies are pointed here instead. HTTP and HTTPS
+        // are served by the app's own proxy in front of this port, since
+        // tor's HTTPTunnelPort speaks only CONNECT.
         out.append("SocksPort 127.0.0.1:\(session.socksPort) IsolateSOCKSAuth")
-        out.append("HTTPTunnelPort 127.0.0.1:\(session.httpPort)")
-        out.append("ControlSocket \(session.controlSocket)")
+        out.append("HTTPTunnelPort 0")
+        out.append("ControlSocket \(session.controlSocket) RelaxDirModeCheck")
         out.append("CookieAuthentication 1")
         out.append("CookieAuthFile \(session.cookieFile)")
         out.append("")
