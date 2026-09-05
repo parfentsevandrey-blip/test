@@ -1,0 +1,87 @@
+# XcodeGen input.
+#
+# The project is kept here rather than as a .pbxproj because a pbxproj cannot
+# be reviewed: it is generated, order-dependent and merges badly, and every
+# change to it arrives as an unreadable diff. `xcodegen generate` turns this
+# into one.
+#
+# Two things must be yours before this builds: DEVELOPMENT_TEAM, and the App
+# Group. A packet tunnel needs an entitlement Apple issues only to a paid
+# team, and the group identifier has to be one your team owns.
+
+name: Veil
+options:
+  bundleIdPrefix: app.veil
+  deploymentTarget:
+    macOS: "26.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    # Set this to your team, or Xcode cannot sign a network extension.
+    DEVELOPMENT_TEAM: ""
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "26.0"
+    ARCHS: arm64
+    ENABLE_HARDENED_RUNTIME: YES
+    SWIFT_STRICT_CONCURRENCY: complete
+
+packages: {}
+
+targets:
+  Veil:
+    type: application
+    platform: macOS
+    sources:
+      - path: Veil
+        excludes:
+          - "Resources/tor/**"
+      - path: Veil/Resources
+        buildPhase: resources
+    dependencies:
+      - target: VeilTunnel
+        embed: true
+      - framework: Frameworks/Veiltun.xcframework
+        embed: true
+        codeSign: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.veil.mac
+        INFOPLIST_FILE: Veil/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Veil/Veil.entitlements
+        ENABLE_APP_SANDBOX: YES
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        # The tor binary is the Tor Project's, so it arrives signed by them.
+        # Xcode re-signs it on copy; without this the hardened runtime refuses
+        # to execute it.
+        CODE_SIGN_INJECT_BASE_ENTITLEMENTS: NO
+        OTHER_CODE_SIGN_FLAGS: "--deep"
+
+  VeilTunnel:
+    type: app-extension
+    platform: macOS
+    sources:
+      - VeilTunnel
+    dependencies:
+      - framework: Frameworks/Veiltun.xcframework
+        embed: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.veil.mac.tunnel
+        INFOPLIST_FILE: VeilTunnel/Info.plist
+        CODE_SIGN_ENTITLEMENTS: VeilTunnel/VeilTunnel.entitlements
+        ENABLE_APP_SANDBOX: YES
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+
+schemes:
+  Veil:
+    build:
+      targets:
+        Veil: all
+        VeilTunnel: all
+    run:
+      config: Debug
+    archive:
+      config: Release

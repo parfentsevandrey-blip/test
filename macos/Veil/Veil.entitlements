@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- The packet tunnel. Apple issues this to a paid team only; it is the
+	     one thing in this project that cannot be worked around. -->
+	<key>com.apple.developer.networking.networkextension</key>
+	<array>
+		<string>packet-tunnel-provider</string>
+	</array>
+
+	<!-- Shared with the extension: tor's SOCKS socket and the app's state
+	     live here, so the proxy is reachable by this app and by nothing else
+	     on the machine. A loopback port would be reachable by everything. -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.app.veil.mac</string>
+	</array>
+
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+	<key>com.apple.security.network.client</key>
+	<true/>
+	<!-- The transports listen on loopback for tor to connect to. -->
+	<key>com.apple.security.network.server</key>
+	<true/>
+	<!-- tor is spawned as a child process from the app bundle. -->
+	<key>com.apple.security.inherit</key>
+	<false/>
+	<key>com.apple.security.files.user-selected.read-only</key>
+	<true/>
+</dict>
+</plist>
