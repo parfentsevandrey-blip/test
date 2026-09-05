@@ -67,7 +67,12 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
             config?.blocklistPath = list
         }
         VeiltunSetLogger(LogBridge(log: log))
-        try VeiltunStartTunnel(config)
+        // A gomobile free function reports failure through an NSError out
+        // parameter rather than by throwing: Swift imports `BOOL f(x, NSError**)`
+        // as a throwing call only for methods, not for C functions.
+        var failure: NSError?
+        VeiltunStartTunnel(config, &failure)
+        if let failure { throw failure }
         log.info("tunnel up on fd \(fd), socks \(socksSocket, privacy: .public)")
         #else
         throw TunnelFailure.coreMissing

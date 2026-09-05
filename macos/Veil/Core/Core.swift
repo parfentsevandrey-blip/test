@@ -135,7 +135,10 @@ enum Core {
     /// name list, both of which ship compressed inside the app.
     static func extractXz(from source: String, to destination: String) throws {
         #if canImport(Veiltun)
-        try VeiltunExtractXz(source, destination)
+        // As above: an NSError out parameter, not a throwing function.
+        var failure: NSError?
+        VeiltunExtractXz(source, destination, &failure)
+        if let failure { throw failure }
         #else
         throw CoreFailure.unavailable("the Go core is not built")
         #endif
