@@ -1,0 +1,163 @@
+name: macOS DMG
+
+# Builds Veil for Apple Silicon and uploads a .dmg you can download from the
+# run's Artifacts.
+#
+# This exists because the app cannot be built anywhere but on macOS: SwiftUI,
+# AppKit and NetworkExtension live in the macOS SDK, which runs only on Apple
+# hardware. A macOS runner has all of it, so the build happens there and the
+# disk image comes back as an artifact.
+#
+# About signing, which decides whether the result actually runs:
+#
+#   - With no secrets set, the app is signed ad-hoc. It builds, installs and
+#     launches, and the *tunnel will not start*: a packet tunnel needs the
+#     com.apple.developer.networking.networkextension entitlement, and macOS
+#     refuses to load a provider whose signature does not carry it. Apple
+#     issues that entitlement to paid teams only. This mode is still worth
+#     having — it proves the whole thing compiles and packages.
+#   - With APPLE_TEAM_ID, APPLE_CERT_P12 and APPLE_CERT_PASSWORD set as
+#     repository secrets, it is signed properly and the tunnel works.
+
+on:
+  workflow_dispatch:
+    inputs:
+      xcode:
+        description: "Xcode version to select (blank picks the newest installed)"
+        required: false
+        default: ""
+  push:
+    paths:
+      - "macos/**"
+      - ".github/workflows/macos-dmg.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    # Liquid Glass needs the macOS 26 SDK, so the newest image available.
+    # If this label is not offered yet the job will not start, and the fix is
+    # to drop to macos-15 and lower the deployment target in project.yml.
+    runs-on: macos-26
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: What this runner actually has
+        run: |
+          echo "=== runner ==="
+          sw_vers
+          uname -m
+          echo "=== Xcode installs ==="
+          ls /Applications | grep -i '^Xcode' || true
+          echo "=== selected ==="
+          xcodebuild -version
+          echo "=== SDKs ==="
+          xcodebuild -showsdks | grep -i macos || true
+
+      - name: Select Xcode
+        run: |
+          set -eu
+          if [ -n "${{ inputs.xcode }}" ]; then
+            sudo xcode-select -s "/Applications/Xcode_${{ inputs.xcode }}.app"
+          else
+            # The newest installed, by version order.
+            newest=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
+            echo "selecting $newest"
+            sudo xcode-select -s "$newest"
+          fi
+          xcodebuild -version
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+          cache: false
+
+      - name: Tools
+        run: |
+          set -eu
+          go install golang.org/x/mobile/cmd/gomobile@latest
+          echo "$HOME/go/bin" >> "$GITHUB_PATH"
+          brew install xcodegen create-dmg
+
+      - name: Initialise gomobile
+        run: |
+          export PATH="$HOME/go/bin:$PATH"
+          gomobile init
+
+      - name: Fetch tor
+        working-directory: macos
+        run: ./scripts/fetch-tor.sh
+
+      - name: Build the Go core
+        working-directory: macos
+        run: |
+          export PATH="$HOME/go/bin:$PATH"
+          ./scripts/build-core.sh
+
+      - name: Generate the Xcode project
+        working-directory: macos
+        run: xcodegen generate
+
+      - name: Import the signing certificate
+        if: env.HAVE_CERT == 'true'
+        env:
+          HAVE_CERT: ${{ secrets.APPLE_CERT_P12 != '' }}
+        run: |
+          set -eu
+          keychain="$RUNNER_TEMP/build.keychain"
+          security create-keychain -p ci "$keychain"
+          security set-keychain-settings -lut 21600 "$keychain"
+          security unlock-keychain -p ci "$keychain"
+          echo "${{ secrets.APPLE_CERT_P12 }}" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" -k "$keychain" \
+            -P "${{ secrets.APPLE_CERT_PASSWORD }}" -T /usr/bin/codesign
+          security list-keychain -d user -s "$keychain" login.keychain
+          security set-key-partition-list -S apple-tool:,apple: -s -k ci "$keychain"
+          rm -f "$RUNNER_TEMP/cert.p12"
+
+      - name: Build
+        working-directory: macos
+        env:
+          TEAM: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -eux
+          if [ -n "${TEAM:-}" ]; then
+            xcodebuild -project Veil.xcodeproj -scheme Veil -configuration Release \
+              -derivedDataPath build DEVELOPMENT_TEAM="$TEAM" \
+              CODE_SIGN_STYLE=Automatic build
+          else
+            # Ad-hoc: proves it compiles and packages. The tunnel will not
+            # load without the network-extension entitlement.
+            xcodebuild -project Veil.xcodeproj -scheme Veil -configuration Release \
+              -derivedDataPath build \
+              CODE_SIGN_IDENTITY="-" CODE_SIGNING_REQUIRED=NO \
+              CODE_SIGNING_ALLOWED=NO ENABLE_HARDENED_RUNTIME=NO build
+          fi
+
+      - name: Package the disk image
+        working-directory: macos
+        run: |
+          set -eux
+          app=$(find build/Build/Products -maxdepth 2 -name "Veil.app" -print -quit)
+          test -n "$app"
+          mkdir -p dmg && cp -R "$app" dmg/
+          ln -s /Applications dmg/Applications
+          hdiutil create -volname "Veil" -srcfolder dmg -ov -format UDZO Veil.dmg
+          hdiutil imageinfo Veil.dmg | head -5
+          ls -lh Veil.dmg
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Veil-macOS-arm64
+          path: macos/Veil.dmg
+          if-no-files-found: error
+
+      - name: If the build failed, say what to look at
+        if: failure()
+        run: |
+          echo "The Swift has never been compiled before this workflow, so the"
+          echo "first failures are expected to be in it rather than in the"
+          echo "packaging. The build log above names the file and line."
