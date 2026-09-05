@@ -52,9 +52,16 @@ if 'fdbased' in src:
     print("  removed the Linux-only Start(); darwin uses StartTunnel()")
 PY
 
-echo "tidying"
-(cd "$staging" && go mod tidy >/dev/null 2>&1 || true)
-(cd "$staging" && go build ./... )
+# Deliberately NOT `go mod tidy`. Tidy removes golang.org/x/mobile, because
+# nothing in this module imports it — and gomobile needs it in the dependency
+# graph to generate the bindings, so the next step then fails with "missing
+# golang.org/x/mobile dependency". The staged go.mod is a superset of what is
+# needed, which builds perfectly well.
+echo "recording gomobile's own dependency"
+(cd "$staging" && go get -tool golang.org/x/mobile/cmd/gobind)
+
+echo "building for darwin/arm64"
+(cd "$staging" && GOOS=darwin GOARCH=arm64 go build ./... )
 
 echo "binding for macos/arm64"
 mkdir -p "$out"
