@@ -123,19 +123,38 @@ jobs:
         env:
           TEAM: ${{ secrets.APPLE_TEAM_ID }}
         run: |
-          set -eux
+          set -u
+          # The whole log goes to a file and only the diagnostics are printed.
+          # xcodebuild's output is thousands of lines of module scanning, and
+          # the four lines that matter were being lost in it.
           if [ -n "${TEAM:-}" ]; then
-            xcodebuild -project Veil.xcodeproj -scheme Veil -configuration Release \
-              -derivedDataPath build -quiet DEVELOPMENT_TEAM="$TEAM" \
-              CODE_SIGN_STYLE=Automatic build
+            set -- DEVELOPMENT_TEAM="$TEAM" CODE_SIGN_STYLE=Automatic
           else
             # Ad-hoc: proves it compiles and packages. The tunnel will not
             # load without the network-extension entitlement.
-            xcodebuild -project Veil.xcodeproj -scheme Veil -configuration Release \
-              -derivedDataPath build -quiet \
-              CODE_SIGN_IDENTITY="-" CODE_SIGNING_REQUIRED=NO \
-              CODE_SIGNING_ALLOWED=NO ENABLE_HARDENED_RUNTIME=NO build
+            set -- CODE_SIGN_IDENTITY="-" CODE_SIGNING_REQUIRED=NO \
+                   CODE_SIGNING_ALLOWED=NO ENABLE_HARDENED_RUNTIME=NO
           fi
+          if xcodebuild -project Veil.xcodeproj -scheme Veil \
+               -configuration Release -derivedDataPath build "$@" build \
+               > build.log 2>&1; then
+            echo "build succeeded"
+          else
+            echo "=== errors ==="
+            grep -E "error:" build.log \
+              | sed 's|/Users/runner/work/test/test/||g' \
+              | sort -u | head -60
+            echo "=== end of errors ==="
+            exit 1
+          fi
+
+      - name: Keep the full build log when it fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: macos/build.log
+          if-no-files-found: ignore
 
       - name: Package the disk image
         working-directory: macos
