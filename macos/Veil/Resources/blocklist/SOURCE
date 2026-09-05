@@ -1,4 +1,0 @@
-Unified hosts list by Steven Black (https://github.com/StevenBlack/hosts), MIT licence.
-Snapshot taken on the date in STAMP; reduced to one name per line. Refresh with:
-  curl -L https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts -o hosts.txt
-  python3 scripts/refresh-blocklist.py hosts.txt
