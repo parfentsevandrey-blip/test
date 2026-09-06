@@ -1,0 +1,21 @@
+import SwiftUI
+
+struct ActivityView: View {
+    @Environment(AppState.self) private var app
+
+    var body: some View {
+        VStack(spacing: 18) {
+            TrafficChart(
+                samples: app.traffic.samples,
+                downloadRate: app.traffic.downloadRate,
+                uploadRate: app.traffic.uploadRate,
+                totalDownload: app.traffic.totalDownload,
+                totalUpload: app.traffic.totalUpload
+            )
+            .frame(height: 230)
+
+            LogConsole(entries: app.logs, onClear: { app.clearLogs() }, onCopy: { app.copyLogs() })
+        }
+        .padding(28)
+    }
+}

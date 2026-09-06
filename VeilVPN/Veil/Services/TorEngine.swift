@@ -1,0 +1,62 @@
+import Foundation
+
+/// Abstraction over "something that runs Tor for us". The real implementation spawns the
+/// bundled `tor` binary; the simulated one drives the UI when no binary is available
+/// (e.g. `swift run` straight from the package, or SwiftUI previews).
+@MainActor
+protocol TorEngine: AnyObject {
+    var isSimulated: Bool { get }
+    var versionDescription: String? { get }
+
+    var onLog: (@MainActor (LogEntry) -> Void)? { get set }
+    var onBootstrap: (@MainActor (BootstrapProgress) -> Void)? { get set }
+    var onExit: (@MainActor (Int32) -> Void)? { get set }
+
+    /// Launches Tor and authenticates on the control port. Returns before bootstrap completes.
+    func start(settings: AppSettings, ports: ActivePorts) async throws
+    /// Suspends until Tor reports `Bootstrapped 100%`, the process dies, or the timeout elapses.
+    func waitForBootstrap(timeout: Duration) async throws
+    func stop() async
+    func newIdentity() async throws
+    func setExitCountry(_ code: String?) async throws
+    func circuit() async throws -> [CircuitHop]
+    func trafficCounters() async throws -> TrafficCounters
+    func check(socksPort: UInt16) async throws -> TorCheckResult
+}
+
+struct TrafficCounters: Equatable, Sendable {
+    var read: UInt64
+    var written: UInt64
+}
+
+enum TorEngineError: LocalizedError {
+    case noBridges
+    case transportUnavailable(String)
+    case controlPortUnavailable(String?)
+    case cookieUnavailable
+    case processExited(Int32, lastWarning: String?)
+    case bootstrapTimeout(lastWarning: String?)
+    case notRunning
+
+    var errorDescription: String? {
+        switch self {
+        case .noBridges:
+            return String(localized: "No bridge lines configured. Paste bridges in Settings → Bridges or choose another transport.")
+        case .transportUnavailable(let name):
+            return String(localized: "The pluggable transport ‘\(name)’ is not bundled with this build.")
+        case .controlPortUnavailable(let detail):
+            let base = String(localized: "Tor did not open its control port in time.")
+            return detail.map { "\(base) \($0)" } ?? base
+        case .cookieUnavailable:
+            return String(localized: "Could not read Tor’s control authentication cookie.")
+        case .processExited(let code, let warning):
+            let base = String(localized: "Tor exited unexpectedly (code \(String(code))).")
+            return warning.map { "\(base) \($0)" } ?? base
+        case .bootstrapTimeout(let warning):
+            let base = String(localized: "Tor could not bootstrap in time. Snowflake proxies may be scarce right now — try again or switch bridges.")
+            return warning.map { "\(base) Last warning: \($0)" } ?? base
+        case .notRunning:
+            return String(localized: "Tor is not running.")
+        }
+    }
+}

@@ -1,0 +1,1396 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "A Liquid Glass client for the Tor network with Snowflake bridges. Tor, Snowflake and Lyrebird are © The Tor Project, Inc. and distributed under their own licenses.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Клиент сети Tor с мостами Snowflake в стиле Liquid Glass. Tor, Snowflake и Lyrebird — © The Tor Project, Inc., распространяются по собственным лицензиям."
+          }
+        }
+      }
+    },
+    "About": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "О программе"
+          }
+        }
+      }
+    },
+    "Activity": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Активность"
+          }
+        }
+      }
+    },
+    "Administrator authorization was not granted.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Права администратора не были предоставлены."
+          }
+        }
+      }
+    },
+    "Application": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Приложение"
+          }
+        }
+      }
+    },
+    "Authorization was cancelled.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Авторизация отменена."
+          }
+        }
+      }
+    },
+    "Auto · %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Авто · %@"
+          }
+        }
+      }
+    },
+    "Automatic": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Автоматически"
+          }
+        }
+      }
+    },
+    "Automatic exit": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Автоматический выход"
+          }
+        }
+      }
+    },
+    "Bootstrapping": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Начальная загрузка"
+          }
+        }
+      }
+    },
+    "Bridge lines": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Строки мостов"
+          }
+        }
+      }
+    },
+    "Bridges": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мосты"
+          }
+        }
+      }
+    },
+    "Building a circuit…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Построение цепочки…"
+          }
+        }
+      }
+    },
+    "Building circuits": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Построение цепочек"
+          }
+        }
+      }
+    },
+    "Built-in obfs4 bridges from Tor Browser. Fast, but the addresses are public and may already be blocked.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Встроенные мосты obfs4 из Tor Browser. Быстро, но адреса публичны и могут быть уже заблокированы."
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отмена"
+          }
+        }
+      }
+    },
+    "Change the transport in Settings → Bridges": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сменить транспорт: Настройки → Мосты"
+          }
+        }
+      }
+    },
+    "Changes take effect on the next connection.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Изменения вступят в силу при следующем подключении."
+          }
+        }
+      }
+    },
+    "Check Tor": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверить Tor"
+          }
+        }
+      }
+    },
+    "Check Tor Connection": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверить подключение к Tor"
+          }
+        }
+      }
+    },
+    "Choose the exit country": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выбрать страну выходного узла"
+          }
+        }
+      }
+    },
+    "Clear": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Очистить"
+          }
+        }
+      }
+    },
+    "Click to connect through Tor": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нажмите, чтобы подключиться через Tor"
+          }
+        }
+      }
+    },
+    "Connect": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подключить"
+          }
+        }
+      }
+    },
+    "Connect through Tor (⌘K)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подключиться через Tor (⌘K)"
+          }
+        }
+      }
+    },
+    "Connect to public Tor relays without any bridge. Fastest, but it only works where Tor is not blocked.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подключение к публичным узлам Tor без мостов. Самый быстрый вариант, но работает только там, где Tor не заблокирован."
+          }
+        }
+      }
+    },
+    "Connect when Veil starts": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подключаться при запуске Veil"
+          }
+        }
+      }
+    },
+    "Connected": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подключено"
+          }
+        }
+      }
+    },
+    "Connecting": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подключение"
+          }
+        }
+      }
+    },
+    "Connecting to the Tor network": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подключение к сети Tor"
+          }
+        }
+      }
+    },
+    "Connection": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подключение"
+          }
+        }
+      }
+    },
+    "Connection Failed": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ошибка подключения"
+          }
+        }
+      }
+    },
+    "Copied": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скопировано"
+          }
+        }
+      }
+    },
+    "Copy": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Копировать"
+          }
+        }
+      }
+    },
+    "Could not connect": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось подключиться"
+          }
+        }
+      }
+    },
+    "Could not read Tor’s control authentication cookie.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось прочитать cookie авторизации Tor."
+          }
+        }
+      }
+    },
+    "Could not save network settings: %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось сохранить сетевые настройки: %@"
+          }
+        }
+      }
+    },
+    "Custom bridges": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Свои мосты"
+          }
+        }
+      }
+    },
+    "Demo mode": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Демо-режим"
+          }
+        }
+      }
+    },
+    "Direct (no bridges)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Напрямую (без мостов)"
+          }
+        }
+      }
+    },
+    "Disconnect": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отключить"
+          }
+        }
+      }
+    },
+    "Disconnect from Tor (⇧⌘K)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отключиться от Tor (⇧⌘K)"
+          }
+        }
+      }
+    },
+    "Disconnecting": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отключение"
+          }
+        }
+      }
+    },
+    "Dismiss": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скрыть"
+          }
+        }
+      }
+    },
+    "Done": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Готово"
+          }
+        }
+      }
+    },
+    "Download": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Загрузка"
+          }
+        }
+      }
+    },
+    "Duration": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Длительность"
+          }
+        }
+      }
+    },
+    "Establishing a circuit": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Установка цепочки"
+          }
+        }
+      }
+    },
+    "Exit": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выходной"
+          }
+        }
+      }
+    },
+    "Exit IP": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IP выхода"
+          }
+        }
+      }
+    },
+    "Exit Location": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выходной узел"
+          }
+        }
+      }
+    },
+    "Exit country": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Страна выхода"
+          }
+        }
+      }
+    },
+    "Exit relay country": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Страна выходного узла"
+          }
+        }
+      }
+    },
+    "Exit relay: %@ %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выходной узел: %@ %@"
+          }
+        }
+      }
+    },
+    "Exit: %@ %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выход: %@ %@"
+          }
+        }
+      }
+    },
+    "General": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Основные"
+          }
+        }
+      }
+    },
+    "Guard": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Входной"
+          }
+        }
+      }
+    },
+    "HTTP proxy port": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Порт HTTP-прокси"
+          }
+        }
+      }
+    },
+    "Home": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Главная"
+          }
+        }
+      }
+    },
+    "How to reach the Tor network": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Как подключаться к сети Tor"
+          }
+        }
+      }
+    },
+    "Launch at login": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запускать при входе в систему"
+          }
+        }
+      }
+    },
+    "Loading authority certificates": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Загрузка сертификатов"
+          }
+        }
+      }
+    },
+    "Loading network status": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Загрузка статуса сети"
+          }
+        }
+      }
+    },
+    "Loading relay descriptors": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Загрузка дескрипторов узлов"
+          }
+        }
+      }
+    },
+    "Local ports": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Локальные порты"
+          }
+        }
+      }
+    },
+    "Manual proxy mode": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ручной режим прокси"
+          }
+        }
+      }
+    },
+    "Middle": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Промежуточный"
+          }
+        }
+      }
+    },
+    "Network": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сеть"
+          }
+        }
+      }
+    },
+    "Network preferences are unavailable.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сетевые настройки недоступны."
+          }
+        }
+      }
+    },
+    "New Identity": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Новая личность"
+          }
+        }
+      }
+    },
+    "No bridge lines configured. Paste bridges in Settings → Bridges or choose another transport.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не указаны строки мостов. Вставьте мосты в Настройки → Мосты или выберите другой транспорт."
+          }
+        }
+      }
+    },
+    "No free local ports available.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нет свободных локальных портов."
+          }
+        }
+      }
+    },
+    "No tor binaries were found next to the app, so the connection is simulated. Build the DMG with `make dmg` or run `make tor` to bundle Tor.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Рядом с приложением нет бинарников tor, поэтому подключение имитируется. Соберите DMG командой `make dmg` или выполните `make tor`, чтобы встроить Tor."
+          }
+        }
+      }
+    },
+    "Not Connected": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не подключено"
+          }
+        }
+      }
+    },
+    "One bridge per line, e.g. “obfs4 1.2.3.4:443 FINGERPRINT cert=… iat-mode=0”. A leading “Bridge” keyword is optional.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Один мост на строку, например «obfs4 1.2.3.4:443 FINGERPRINT cert=… iat-mode=0». Слово «Bridge» в начале не обязательно."
+          }
+        }
+      }
+    },
+    "Open Log": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть журнал"
+          }
+        }
+      }
+    },
+    "Open Settings (⌘,)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть настройки (⌘,)"
+          }
+        }
+      }
+    },
+    "Open Veil": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть Veil"
+          }
+        }
+      }
+    },
+    "Open Veil to see the error": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Откройте Veil, чтобы увидеть ошибку"
+          }
+        }
+      }
+    },
+    "Paste bridge lines from bridges.torproject.org, the Telegram bot @GetBridgesBot, or email bridges@torproject.org. obfs4, webtunnel, snowflake, meek_lite and conjure are supported.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вставьте строки мостов с bridges.torproject.org, из Telegram-бота @GetBridgesBot или по почте bridges@torproject.org. Поддерживаются obfs4, webtunnel, snowflake, meek_lite и conjure."
+          }
+        }
+      }
+    },
+    "Performing TLS handshake": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TLS-рукопожатие"
+          }
+        }
+      }
+    },
+    "Pins the last relay of the circuit to one country. Automatic selection is the most private choice; changes apply immediately.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Закрепляет последний узел цепочки за одной страной. Автоматический выбор наиболее приватен; изменения применяются сразу."
+          }
+        }
+      }
+    },
+    "Ports apply on the next connection. If a port is busy, Veil picks the next free one and shows it in the log.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Порты применяются при следующем подключении. Если порт занят, Veil выберет ближайший свободный и покажет его в журнале."
+          }
+        }
+      }
+    },
+    "Preparing": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подготовка"
+          }
+        }
+      }
+    },
+    "Quit": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Завершить"
+          }
+        }
+      }
+    },
+    "Reaches Tor through volunteer proxies, even where Tor is blocked.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступ к Tor через прокси волонтёров — даже там, где Tor заблокирован."
+          }
+        }
+      }
+    },
+    "Reaching a Snowflake proxy": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поиск Snowflake-прокси"
+          }
+        }
+      }
+    },
+    "Recommended": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Рекомендуется"
+          }
+        }
+      }
+    },
+    "Restoring network settings…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Восстановление сетевых настроек…"
+          }
+        }
+      }
+    },
+    "Route system traffic through Tor automatically": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Автоматически направлять системный трафик через Tor"
+          }
+        }
+      }
+    },
+    "Routed through Tor": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Трафик идёт через Tor"
+          }
+        }
+      }
+    },
+    "SOCKS5 port": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Порт SOCKS5"
+          }
+        }
+      }
+    },
+    "Safari, browsers and most apps are switched to Tor automatically.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Safari, браузеры и большинство приложений автоматически переключаются на Tor."
+          }
+        }
+      }
+    },
+    "See the details below or open Activity for the full log.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подробности ниже, полный журнал — в разделе «Активность»."
+          }
+        }
+      }
+    },
+    "Sets the SOCKS, HTTP and HTTPS proxies of every active network service to Veil while connected and restores them afterwards. macOS asks for an administrator password the first time.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На время подключения переключает SOCKS-, HTTP- и HTTPS-прокси всех активных сетевых служб на Veil, затем возвращает настройки. В первый раз macOS запросит пароль администратора."
+          }
+        }
+      }
+    },
+    "Settings": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настройки"
+          }
+        }
+      }
+    },
+    "Settings…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настройки…"
+          }
+        }
+      }
+    },
+    "Show Veil in the menu bar": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показывать Veil в строке меню"
+          }
+        }
+      }
+    },
+    "Snowflake": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snowflake"
+          }
+        }
+      }
+    },
+    "Snowflake bridge": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мост Snowflake"
+          }
+        }
+      }
+    },
+    "Snowflake first has to find a volunteer proxy; in censored networks this can take 10–60 seconds.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snowflake сначала ищет прокси волонтёра; в сетях с цензурой это занимает 10–60 секунд."
+          }
+        }
+      }
+    },
+    "Starting Tor": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запуск Tor"
+          }
+        }
+      }
+    },
+    "System proxy": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Системный прокси"
+          }
+        }
+      }
+    },
+    "System proxy not set": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Системный прокси не настроен"
+          }
+        }
+      }
+    },
+    "System proxy off": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Системный прокси выключен"
+          }
+        }
+      }
+    },
+    "System proxy: %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Системный прокси: %@"
+          }
+        }
+      }
+    },
+    "System traffic is routed through the Tor network.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Системный трафик идёт через сеть Tor."
+          }
+        }
+      }
+    },
+    "Terminal": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Терминал"
+          }
+        }
+      }
+    },
+    "The pluggable transport ‘%@’ is not bundled with this build.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Транспорт «%@» не включён в эту сборку."
+          }
+        }
+      }
+    },
+    "The tor process exited with status %@. Open Activity for details.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Процесс tor завершился с кодом %@. Подробности — в разделе «Активность»."
+          }
+        }
+      }
+    },
+    "Three-hop circuit": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Цепочка из трёх узлов"
+          }
+        }
+      }
+    },
+    "Throughput": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скорость"
+          }
+        }
+      }
+    },
+    "Throughput appears here while you are connected.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скорость отображается здесь во время подключения."
+          }
+        }
+      }
+    },
+    "Tools such as curl, git and Homebrew ignore the system proxy; paste this into the terminal instead.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "curl, git и Homebrew игнорируют системный прокси — вставьте эту команду в терминал."
+          }
+        }
+      }
+    },
+    "Tor %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor %@"
+          }
+        }
+      }
+    },
+    "Tor could not bootstrap in time. Snowflake proxies may be scarce right now — try again or switch bridges.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor не успел подключиться. Возможно, сейчас мало Snowflake-прокси — попробуйте ещё раз или смените мосты."
+          }
+        }
+      }
+    },
+    "Tor did not open its control port in time.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor не открыл управляющий порт вовремя."
+          }
+        }
+      }
+    },
+    "Tor exit not verified yet": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выход через Tor ещё не проверен"
+          }
+        }
+      }
+    },
+    "Tor exited unexpectedly (code %@).": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor неожиданно завершился (код %@)."
+          }
+        }
+      }
+    },
+    "Tor is not running.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor не запущен."
+          }
+        }
+      }
+    },
+    "Tor log": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Журнал Tor"
+          }
+        }
+      }
+    },
+    "Tor stopped unexpectedly": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor неожиданно остановился"
+          }
+        }
+      }
+    },
+    "Tor · Snowflake": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor · Snowflake"
+          }
+        }
+      }
+    },
+    "Traffic is encrypted and relayed through three Tor relays.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Трафик шифруется и проходит через три узла Tor."
+          }
+        }
+      }
+    },
+    "Transport": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Транспорт"
+          }
+        }
+      }
+    },
+    "Try Again": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Повторить"
+          }
+        }
+      }
+    },
+    "Upload": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отдача"
+          }
+        }
+      }
+    },
+    "Uses volunteer WebRTC proxies and domain fronting to reach Tor. Works in most censored networks and is the recommended default.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Использует WebRTC-прокси волонтёров и domain fronting для доступа к Tor. Работает в большинстве сетей с цензурой; рекомендуемый вариант."
+          }
+        }
+      }
+    },
+    "Verbose Tor log": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подробный журнал Tor"
+          }
+        }
+      }
+    },
+    "Verify the exit with check.torproject.org after connecting": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверять выход через check.torproject.org после подключения"
+          }
+        }
+      }
+    },
+    "Verifying with check.torproject.org…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверка через check.torproject.org…"
+          }
+        }
+      }
+    },
+    "Version %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Версия %@"
+          }
+        }
+      }
+    },
+    "Warnings only": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Только предупреждения"
+          }
+        }
+      }
+    },
+    "Your traffic is not going through Tor.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваш трафик не идёт через Tor."
+          }
+        }
+      }
+    },
+    "check.torproject.org confirms Tor · exit IP %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "check.torproject.org подтверждает Tor · IP выхода %@"
+          }
+        }
+      }
+    },
+    "check.torproject.org returned an unexpected response.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "check.torproject.org вернул неожиданный ответ."
+          }
+        }
+      }
+    },
+    "check.torproject.org says this is NOT Tor · IP %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "check.torproject.org: это НЕ Tor · IP %@"
+          }
+        }
+      }
+    },
+    "networksetup failed: %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ошибка networksetup: %@"
+          }
+        }
+      }
+    },
+    "obfs4 bridges": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мосты obfs4"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

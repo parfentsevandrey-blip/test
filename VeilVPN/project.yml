@@ -1,0 +1,57 @@
+# XcodeGen spec — run `xcodegen generate` (or `make xcodeproj`) to produce Veil.xcodeproj.
+name: Veil
+options:
+  bundleIdPrefix: app.veilvpn
+  deploymentTarget:
+    macOS: "26.0"
+  developmentLanguage: en
+  createIntermediateGroups: true
+  generateEmptyDirectories: false
+  xcodeVersion: "26.0"
+settings:
+  base:
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "5.0"
+    SWIFT_STRICT_CONCURRENCY: minimal
+    SWIFT_EMIT_LOC_STRINGS: YES
+    ENABLE_HARDENED_RUNTIME: NO
+    ENABLE_APP_SANDBOX: NO
+    CODE_SIGN_STYLE: Automatic
+    DEAD_CODE_STRIPPING: YES
+targets:
+  Veil:
+    type: application
+    platform: macOS
+    sources:
+      - path: Veil
+    settings:
+      base:
+        PRODUCT_NAME: Veil
+        PRODUCT_BUNDLE_IDENTIFIER: app.veilvpn.mac
+        INFOPLIST_FILE: Config/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_ENTITLEMENTS: Config/Veil.entitlements
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        COMBINE_HIDPI_IMAGES: YES
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
+    dependencies:
+      - sdk: Network.framework
+      - sdk: SystemConfiguration.framework
+      - sdk: ServiceManagement.framework
+      - sdk: Security.framework
+    postBuildScripts:
+      - name: Embed Tor Expert Bundle
+        basedOnDependencyAnalysis: false
+        script: |
+          if [ -x "$SRCROOT/build/tor/tor" ]; then
+            "$SRCROOT/scripts/embed-tor.sh" "$SRCROOT/build/tor" "$TARGET_BUILD_DIR/$WRAPPER_NAME"
+          else
+            echo "warning: build/tor not found — run 'make tor' to bundle Tor; the app will start in demo mode"
+          fi
+    scheme:
+      environmentVariables:
+        - variable: VEIL_SIMULATE
+          value: "1"
+          isEnabled: false

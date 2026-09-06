@@ -1,5 +1,9 @@
 # Кутузовский 12 — Club House landing (concept)
 
+> **Также в этом репозитории:** [`VeilVPN/`](VeilVPN/README.md) — Tor-клиент со Snowflake
+> для macOS 26 Tahoe в стиле Liquid Glass (SwiftUI, встроенный Tor, системный прокси, DMG
+> собирается GitHub Actions). Готовый DMG: [Releases](https://github.com/parfentsevandrey-blip/test/releases).
+
 A premium, single-page site for the real **«Кутузовский 12»** deluxe club house
 on Kutuzovsky Prospekt, Moscow (architecture by Tsimailo, Lyashenko & Partners).
 The hero is a full-screen **Three.js** reconstruction of the actual building —

@@ -1,0 +1,45 @@
+Veil — Tor-клиент со Snowflake для macOS 26 Tahoe
+=================================================
+
+УСТАНОВКА
+1. Перетащите Veil.app в папку «Программы» (Applications).
+2. Приложение подписано без сертификата Apple Developer, поэтому при первом
+   запуске macOS скажет, что не может проверить разработчика.
+   Откройте «Системные настройки» → «Конфиденциальность и безопасность»,
+   прокрутите вниз и нажмите «Всё равно открыть» (Open Anyway).
+   Альтернатива в Терминале:  xattr -cr /Applications/Veil.app
+3. Нажмите большую кнопку питания. Tor соединится через мосты Snowflake,
+   после чего Veil переключит системный прокси на Tor (macOS один раз
+   спросит пароль администратора).
+
+ПРОВЕРКА
+Откройте https://check.torproject.org — сайт должен подтвердить, что вы в Tor.
+Кнопка «Check Tor» в приложении делает то же самое.
+
+ВАЖНО
+• Через Tor идёт трафик приложений, которые уважают системный прокси
+  (Safari, Chrome, Firefox с системными настройками, большинство программ).
+  Для терминала используйте команду из Настройки → Network.
+• Полный VPN-туннель на уровне системы требует подписанного Apple
+  Network Extension — см. README проекта.
+
+
+Veil — Tor client with Snowflake for macOS 26 Tahoe
+===================================================
+
+INSTALL
+1. Drag Veil.app into Applications.
+2. The app is signed without an Apple Developer certificate, so macOS will say it
+   cannot verify the developer. Open System Settings → Privacy & Security, scroll
+   down and click "Open Anyway". Terminal alternative:  xattr -cr /Applications/Veil.app
+3. Press the big power button. Tor bootstraps through Snowflake bridges, then Veil
+   switches the system proxy to Tor (macOS asks for an administrator password once).
+
+VERIFY
+Visit https://check.torproject.org — it should confirm you are using Tor.
+The "Check Tor" button in the app does the same.
+
+NOTES
+• Apps that honour the system proxy (Safari, Chrome, most software) go through Tor.
+  For the terminal, use the snippet from Settings → Network.
+• A full system-level VPN tunnel needs an Apple-signed Network Extension — see the README.
