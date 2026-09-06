@@ -36,6 +36,12 @@ struct AppSettings: Codable, Equatable, Sendable {
     var avoidFiveEyes: Bool = false
     /// Minutes between automatic route rotations (NEWNYM); 0 disables rotation.
     var rotateRouteMinutes: Int = 0
+    /// YouTube: through Tor, or directly with/without anti-throttling.
+    var youtubeMode: YouTubeMode = .tor
+    var dpiStrategy: DPIStrategy = .recordAndSegmentAtSNI
+    /// Extra domains that bypass Tor (one per line).
+    var customDirectDomains: String = ""
+    var customDirectAntiThrottle: Bool = true
 
     init() {}
 
@@ -45,6 +51,7 @@ struct AppSettings: Codable, Equatable, Sendable {
         case showInMenuBar, connectOnLaunch, checkAfterConnect, verboseLogs
         case paddingEnabled, paddingLevel
         case multihopEnabled, middleCountry, excludedCountries, avoidFiveEyes, rotateRouteMinutes
+        case youtubeMode, dpiStrategy, customDirectDomains, customDirectAntiThrottle
     }
 
     init(from decoder: Decoder) throws {
@@ -66,6 +73,10 @@ struct AppSettings: Codable, Equatable, Sendable {
         excludedCountries = try c.decodeIfPresent([String].self, forKey: .excludedCountries) ?? []
         avoidFiveEyes = try c.decodeIfPresent(Bool.self, forKey: .avoidFiveEyes) ?? false
         rotateRouteMinutes = try c.decodeIfPresent(Int.self, forKey: .rotateRouteMinutes) ?? 0
+        youtubeMode = try c.decodeIfPresent(YouTubeMode.self, forKey: .youtubeMode) ?? .tor
+        dpiStrategy = try c.decodeIfPresent(DPIStrategy.self, forKey: .dpiStrategy) ?? .recordAndSegmentAtSNI
+        customDirectDomains = try c.decodeIfPresent(String.self, forKey: .customDirectDomains) ?? ""
+        customDirectAntiThrottle = try c.decodeIfPresent(Bool.self, forKey: .customDirectAntiThrottle) ?? true
     }
 
     static let storageKey = "app.veilvpn.settings.v1"

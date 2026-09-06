@@ -1,6 +1,14 @@
 import AppKit
 import Foundation
+import Network
 import Observation
+
+struct YouTubeTestResult: Equatable, Sendable {
+    let success: Bool
+    let milliseconds: Int
+    let detail: String
+    let viaTor: Bool
+}
 
 /// Orchestrates the Tor engine, the local HTTP bridge and the system proxy; the single source
 /// of truth for every view.
@@ -27,6 +35,10 @@ final class AppState {
     private(set) var proxyStatus: ProxyStatus = .off
     private(set) var ports: ActivePorts?
     private(set) var torVersion: String?
+    /// YouTube Turbo: the anti-throttling proxy runs without Tor.
+    private(set) var turboActive = false
+    private(set) var youtubeTest: YouTubeTestResult?
+    private(set) var isTestingYouTube = false
     let traffic = TrafficMonitor()
     let padding = PaddingLoop()
     let isDemo: Bool
@@ -78,7 +90,9 @@ final class AppState {
     var selectedMiddle: ExitLocation? { settings.multihopEnabled ? ExitLocation.named(settings.middleCountry) : nil }
     var middleHop: CircuitHop? { circuit.first { $0.role == .middle } }
     var exitHop: CircuitHop? { circuit.last { $0.role == .exit } }
-    var needsTeardown: Bool { connection != .disconnected || proxyApplied }
+    var needsTeardown: Bool { connection != .disconnected || proxyApplied || turboActive }
+    /// True while Veil's local HTTP bridge is serving (Tor connected or YouTube Turbo).
+    var bridgeRunning: Bool { connection.isConnected || turboActive }
 
     /// Shell snippet for tools that ignore the system proxy (curl, git, Homebrew, ...).
     var terminalSnippet: String {
@@ -114,6 +128,10 @@ final class AppState {
         connectTask = Task { [weak self] in
             guard let self else { return }
             do {
+                if turboActive {
+                    await teardown()
+                    turboActive = false
+                }
                 let ports = try PortAllocator.allocate(preferredSocks: settings.socksPort, preferredHTTP: settings.httpPort)
                 self.ports = ports
                 if Int(ports.socks) != settings.socksPort || Int(ports.http) != settings.httpPort {
@@ -126,7 +144,7 @@ final class AppState {
                 try Task.checkCancellation()
                 guard attempt == generation else { return }
 
-                let bridge = HTTPProxyBridge(socksPort: ports.socks)
+                let bridge = HTTPProxyBridge(socksPort: ports.socks, policy: settings.routingPolicy)
                 try bridge.start(port: ports.http)
                 httpBridge = bridge
                 append(.veil(.info, "HTTP proxy bridge listening on 127.0.0.1:\(ports.http) → SOCKS5 127.0.0.1:\(ports.socks)"))
@@ -192,7 +210,134 @@ final class AppState {
         connectTask?.cancel()
         connectTask = nil
         await teardown()
+        turboActive = false
         connection = .disconnected
+    }
+
+    // MARK: YouTube Turbo (anti-throttling without Tor)
+
+    func toggleTurbo() {
+        if turboActive {
+            stopTurbo()
+        } else {
+            startTurbo()
+        }
+    }
+
+    func startTurbo() {
+        guard !turboActive, connection == .disconnected || connection == .failed, !isTearingDown else { return }
+        generation += 1
+        let attempt = generation
+        lastError = nil
+        youtubeTest = nil
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                let allocated = try PortAllocator.allocate(preferredSocks: settings.socksPort, preferredHTTP: settings.httpPort)
+                let bridge = HTTPProxyBridge(socksPort: nil, policy: settings.routingPolicy)
+                try bridge.start(port: allocated.http)
+                httpBridge = bridge
+                ports = allocated
+                append(.veil(.notice, "YouTube Turbo: anti-throttling proxy on 127.0.0.1:\(allocated.http); Tor is not used"))
+                if settings.configureSystemProxy {
+                    do {
+                        let services = try await SystemProxy.enable(socksPort: nil, httpPort: allocated.http)
+                        proxyApplied = true
+                        UserDefaults.standard.set(true, forKey: Self.proxyAppliedKey)
+                        proxyStatus = .configured(services)
+                    } catch {
+                        proxyStatus = .failed(error.localizedDescription)
+                        append(.veil(.warn, "System proxy was not configured: \(error.localizedDescription)"))
+                    }
+                } else {
+                    proxyStatus = .manual
+                }
+                guard attempt == generation else { return }
+                turboActive = true
+                if connection == .failed { connection = .disconnected }
+            } catch {
+                append(.veil(.error, error.localizedDescription))
+                lastError = AppError(title: String(localized: "YouTube Turbo could not start"), message: error.localizedDescription)
+                await teardown()
+            }
+        }
+    }
+
+    func stopTurbo() {
+        guard turboActive else { return }
+        generation += 1
+        Task { [weak self] in
+            guard let self else { return }
+            await teardown()
+            turboActive = false
+            youtubeTest = nil
+            append(.veil(.info, "YouTube Turbo stopped"))
+        }
+    }
+
+    // MARK: YouTube routing
+
+    func setYouTubeMode(_ mode: YouTubeMode) {
+        guard settings.youtubeMode != mode else { return }
+        settings.youtubeMode = mode
+        youtubeTest = nil
+        pushRoutingPolicy()
+    }
+
+    func setDPIStrategy(_ strategy: DPIStrategy) {
+        guard settings.dpiStrategy != strategy else { return }
+        settings.dpiStrategy = strategy
+        youtubeTest = nil
+        pushRoutingPolicy()
+    }
+
+    func setCustomDirectDomains(_ text: String) {
+        guard settings.customDirectDomains != text else { return }
+        settings.customDirectDomains = text
+        pushRoutingPolicy()
+    }
+
+    func setCustomDirectAntiThrottle(_ enabled: Bool) {
+        guard settings.customDirectAntiThrottle != enabled else { return }
+        settings.customDirectAntiThrottle = enabled
+        pushRoutingPolicy()
+    }
+
+    private func pushRoutingPolicy() {
+        httpBridge?.policy = settings.routingPolicy
+    }
+
+    /// Opens https://www.youtube.com/generate_204 through Veil's own proxy, exactly like a browser would.
+    func testYouTube() {
+        guard let bridge = httpBridge, !isTestingYouTube else { return }
+        let port = bridge.port
+        let viaTor = settings.routingPolicy.decision(for: "www.youtube.com", torAvailable: bridge.torAvailable) == .tor
+        isTestingYouTube = true
+        Task { [weak self] in
+            guard let self else { return }
+            defer { isTestingYouTube = false }
+            let started = Date.now
+            let configuration = URLSessionConfiguration.ephemeral
+            configuration.proxyConfigurations = [
+                ProxyConfiguration(httpCONNECTProxy: .hostPort(host: "127.0.0.1", port: NWEndpoint.Port(rawValue: port) ?? 8118)),
+            ]
+            configuration.timeoutIntervalForRequest = 30
+            configuration.timeoutIntervalForResource = 40
+            let session = URLSession(configuration: configuration)
+            defer { session.invalidateAndCancel() }
+            do {
+                let (_, response) = try await session.data(from: URL(string: "https://www.youtube.com/generate_204")!)
+                let elapsed = Int((Date.now.timeIntervalSince(started) * 1000).rounded())
+                let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+                let success = status == 204 || status == 200
+                youtubeTest = YouTubeTestResult(success: success, milliseconds: elapsed, detail: "HTTP \(status)", viaTor: viaTor)
+                append(.veil(success ? .notice : .warn, "YouTube check: HTTP \(status) in \(elapsed) ms (\(viaTor ? "through Tor" : "direct"))"))
+            } catch {
+                let elapsed = Int((Date.now.timeIntervalSince(started) * 1000).rounded())
+                youtubeTest = YouTubeTestResult(success: false, milliseconds: elapsed, detail: error.localizedDescription, viaTor: viaTor)
+                append(.veil(.warn, "YouTube check failed after \(elapsed) ms: \(error.localizedDescription)"))
+            }
+        }
     }
 
     private func teardown() async {

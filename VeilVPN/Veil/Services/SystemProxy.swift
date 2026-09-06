@@ -21,7 +21,8 @@ enum SystemProxyError: LocalizedError {
 }
 
 enum ProxyChange: Sendable {
-    case enabled(socks: UInt16, http: UInt16)
+    /// `socks == nil` leaves the SOCKS proxy off (YouTube Turbo: no Tor).
+    case enabled(socks: UInt16?, http: UInt16)
     case disabled
 }
 
@@ -31,7 +32,7 @@ enum ProxyChange: Sendable {
 enum SystemProxy {
     static let bypassList = ["127.0.0.1", "localhost", "*.local", "169.254/16"]
 
-    static func enable(socksPort: UInt16, httpPort: UInt16) async throws -> [String] {
+    static func enable(socksPort: UInt16?, httpPort: UInt16) async throws -> [String] {
         try await apply(.enabled(socks: socksPort, http: httpPort))
     }
 
@@ -79,9 +80,13 @@ enum SystemConfigurationProxyWriter {
             var config = (SCNetworkProtocolGetConfiguration(proxies) as? [String: Any]) ?? [:]
             switch change {
             case .enabled(let socks, let http):
-                config[kSCPropNetProxiesSOCKSEnable as String] = 1
-                config[kSCPropNetProxiesSOCKSProxy as String] = "127.0.0.1"
-                config[kSCPropNetProxiesSOCKSPort as String] = Int(socks)
+                if let socks {
+                    config[kSCPropNetProxiesSOCKSEnable as String] = 1
+                    config[kSCPropNetProxiesSOCKSProxy as String] = "127.0.0.1"
+                    config[kSCPropNetProxiesSOCKSPort as String] = Int(socks)
+                } else {
+                    config[kSCPropNetProxiesSOCKSEnable as String] = 0
+                }
                 config[kSCPropNetProxiesHTTPEnable as String] = 1
                 config[kSCPropNetProxiesHTTPProxy as String] = "127.0.0.1"
                 config[kSCPropNetProxiesHTTPPort as String] = Int(http)
@@ -146,7 +151,11 @@ enum NetworkSetupProxyWriter {
         for service in services {
             switch change {
             case .enabled(let socks, let http):
-                commands.append(["-setsocksfirewallproxy", service, "127.0.0.1", String(socks)])
+                if let socks {
+                    commands.append(["-setsocksfirewallproxy", service, "127.0.0.1", String(socks)])
+                } else {
+                    commands.append(["-setsocksfirewallproxystate", service, "off"])
+                }
                 commands.append(["-setwebproxy", service, "127.0.0.1", String(http)])
                 commands.append(["-setsecurewebproxy", service, "127.0.0.1", String(http)])
                 commands.append(["-setproxybypassdomains", service] + SystemProxy.bypassList)

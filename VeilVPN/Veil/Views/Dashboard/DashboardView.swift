@@ -39,6 +39,10 @@ struct DashboardView: View {
                                 PaddingChip(level: app.settings.paddingLevel, status: app.padding.status)
                                     .glassEffectID("padding", in: glassNamespace)
                             }
+                            if app.turboActive || app.settings.youtubeMode != .tor {
+                                YouTubeChip(mode: app.settings.youtubeMode, turbo: app.turboActive)
+                                    .glassEffectID("youtube", in: glassNamespace)
+                            }
                         }
                     }
                     .padding(.top, 12)
@@ -57,8 +61,15 @@ struct DashboardView: View {
                             .transition(.opacity)
                     }
                 case .disconnected, .disconnecting:
-                    IdleHint()
-                        .transition(.opacity)
+                    if app.turboActive {
+                        TurboActiveCard()
+                            .transition(.opacity)
+                    } else {
+                        TurboCard()
+                            .transition(.opacity)
+                        IdleHint()
+                            .transition(.opacity)
+                    }
                 }
             }
             .frame(maxWidth: 780)
@@ -67,6 +78,114 @@ struct DashboardView: View {
             .padding(.vertical, 36)
         }
         .animation(.smooth(duration: 0.55), value: app.connection)
+        .animation(.smooth(duration: 0.45), value: app.turboActive)
+    }
+}
+
+/// Offer to speed up YouTube without Tor while disconnected.
+struct TurboCard: View {
+    @Environment(AppState.self) private var app
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 16) {
+            Image(systemName: "play.rectangle.fill")
+                .font(.system(size: 30))
+                .foregroundStyle(.red)
+                .padding(.top, 2)
+            VStack(alignment: .leading, spacing: 6) {
+                Text("YouTube Turbo")
+                    .font(.headline)
+                Text("Speeds up throttled YouTube without Tor. Only YouTube traffic goes through Veil’s anti-throttling proxy, which fragments the TLS handshake so DPI throttling cannot recognise it; everything else is untouched and your IP address stays visible.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+            Button {
+                app.startTurbo()
+            } label: {
+                Label("Enable", systemImage: "bolt.fill")
+            }
+            .buttonStyle(.glassProminent)
+            .tint(.red)
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassEffect(.regular, in: .rect(cornerRadius: 22))
+    }
+}
+
+struct TurboActiveCard: View {
+    @Environment(AppState.self) private var app
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 12) {
+                Image(systemName: "bolt.fill")
+                    .font(.title2)
+                    .foregroundStyle(.red)
+                    .symbolEffect(.pulse, isActive: true)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("YouTube Turbo is active")
+                        .font(.headline)
+                    Text("YouTube is fetched directly with a fragmented TLS handshake; Tor is off and other sites are untouched.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer()
+                Button {
+                    app.stopTurbo()
+                } label: {
+                    Label("Stop", systemImage: "stop.fill")
+                }
+                .buttonStyle(.glass)
+            }
+            HStack(spacing: 12) {
+                Button {
+                    app.testYouTube()
+                } label: {
+                    Label("Test YouTube", systemImage: "checkmark.circle")
+                }
+                .buttonStyle(.glass)
+                .disabled(app.isTestingYouTube)
+                YouTubeTestLabel(result: app.youtubeTest, inProgress: app.isTestingYouTube)
+                Spacer()
+                ProxyStatusLabel(status: app.proxyStatus)
+            }
+            .font(.caption)
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassEffect(.regular.tint(.red.opacity(0.14)), in: .rect(cornerRadius: 22))
+    }
+}
+
+struct YouTubeTestLabel: View {
+    let result: YouTubeTestResult?
+    let inProgress: Bool
+
+    var body: some View {
+        if inProgress {
+            HStack(spacing: 6) {
+                ProgressView()
+                    .controlSize(.small)
+                Text("Checking youtube.com…")
+            }
+            .foregroundStyle(.secondary)
+        } else if let result {
+            if result.success {
+                Label("youtube.com reachable in \(result.milliseconds) ms (\(result.viaTor ? "via Tor" : "direct"))", systemImage: "checkmark.seal.fill")
+                    .foregroundStyle(.mint)
+            } else {
+                Label("youtube.com failed: \(result.detail)", systemImage: "xmark.seal.fill")
+                    .foregroundStyle(.red)
+                    .lineLimit(2)
+            }
+        } else {
+            Text("Not checked yet")
+                .foregroundStyle(.secondary)
+        }
     }
 }
 

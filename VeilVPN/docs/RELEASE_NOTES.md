@@ -2,6 +2,10 @@
 
 Liquid Glass UI, bundled Tor Expert Bundle (universal: Apple silicon + Intel), Snowflake / obfs4 / custom bridges, exit-country selection, live circuit and throughput, automatic system proxy.
 
+### New in 0.3.0
+- **YouTube** — choose how YouTube travels: through Tor, directly with anti-throttling (the TLS ClientHello is fragmented at the SNI so throttling DPI cannot read the host name, like GoodbyeDPI/ByeDPI), or plainly direct. Four fragmentation techniques, a list of other domains that bypass Tor, and a built-in check.
+- **YouTube Turbo** — the anti-throttling proxy without Tor at all: only YouTube goes through Veil, everything else is untouched.
+
 ### New in 0.2.0
 - **Traffic padding (DAITA-style)** — dummy traffic bounced through Tor to a private onion service on your Mac hides the shape of your real traffic from an observer on the local network: background noise, FRONT-style bursts on activity, optional constant-rate mode. Tor's own circuit/connection padding is forced on too.
 - **Multihop** — a route card with a live diagram (Mac → Snowflake → middle → exit → Internet), a middle-hop country, per-country exclusions, a "Five Eyes" preset, timed route rotation and the measured route latency.
@@ -10,6 +14,10 @@ Liquid Glass UI, bundled Tor Expert Bundle (universal: Apple silicon + Intel), S
 1. Open the DMG and drag **Veil.app** to *Applications*.
 2. The build is ad-hoc signed (no Apple Developer certificate): on first launch open **System Settings → Privacy & Security → Open Anyway**, or run `xattr -cr /Applications/Veil.app`.
 3. Press the power button. macOS asks for an administrator password once to switch the system proxy.
+
+### Новое в 0.3.0
+- **YouTube** — выбор пути для YouTube: через Tor, напрямую с обходом замедления (TLS ClientHello дробится по SNI, чтобы замедляющий DPI не прочитал имя хоста — как GoodbyeDPI/ByeDPI) или просто напрямую. Четыре техники фрагментации, список других доменов в обход Tor и встроенная проверка.
+- **YouTube Turbo** — прокси с обходом замедления вообще без Tor: через Veil идёт только YouTube, остальное не трогается.
 
 ### Новое в 0.2.0
 - **Маскировка трафика (в стиле DAITA)** — пустой трафик, проходящий через Tor до приватного onion-сервиса на вашем Mac, скрывает форму реального трафика от наблюдателя в локальной сети: фоновый шум, всплески в стиле FRONT при активности, режим постоянной скорости. Также принудительно включён circuit/connection padding самого Tor.

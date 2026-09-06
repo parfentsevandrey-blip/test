@@ -47,6 +47,63 @@ extension PaddingLevel {
     }
 }
 
+extension YouTubeMode {
+    var title: LocalizedStringKey {
+        switch self {
+        case .tor: "Through Tor"
+        case .directAntiThrottle: "Direct, anti-throttling"
+        case .direct: "Direct"
+        }
+    }
+
+    var details: LocalizedStringKey {
+        switch self {
+        case .tor: "YouTube goes through the Tor circuit like everything else. Anonymous, but slow for video and YouTube often demands a sign-in to prove you are not a bot."
+        case .directAntiThrottle: "YouTube connects directly at full speed, but Veil fragments the TLS handshake so throttling DPI cannot see the host name. YouTube sees your real IP address."
+        case .direct: "YouTube connects directly with no tricks. Use this where YouTube is not throttled."
+        }
+    }
+}
+
+extension DPIStrategy {
+    var title: LocalizedStringKey {
+        switch self {
+        case .recordAndSegmentAtSNI: "TLS record + TCP split at SNI (recommended)"
+        case .segmentAtSNI: "TCP split at SNI"
+        case .recordAtSNI: "TLS record split at SNI"
+        case .firstByte: "TCP split after the first byte"
+        }
+    }
+}
+
+struct YouTubeChip: View {
+    let mode: YouTubeMode
+    let turbo: Bool
+
+    var body: some View {
+        SettingsLink {
+            HStack(spacing: 8) {
+                Image(systemName: "play.rectangle.fill")
+                    .foregroundStyle(.red)
+                Text("YouTube")
+                if turbo {
+                    Text("Turbo")
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text(mode.title)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .font(.subheadline.weight(.medium))
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+        }
+        .buttonStyle(.plain)
+        .glassEffect(.regular.interactive(), in: .capsule)
+        .help("YouTube routing — configure it in Settings → YouTube")
+    }
+}
+
 struct PaddingChip: View {
     let level: PaddingLevel
     let status: PaddingLoop.Status

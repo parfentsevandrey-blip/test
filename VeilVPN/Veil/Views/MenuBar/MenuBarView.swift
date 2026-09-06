@@ -74,6 +74,16 @@ struct MenuBarView: View {
             .toggleStyle(.switch)
             .controlSize(.small)
 
+            Toggle(isOn: Binding(
+                get: { app.turboActive },
+                set: { _ in app.toggleTurbo() }
+            )) {
+                Label("YouTube Turbo (no Tor)", systemImage: "bolt.fill")
+            }
+            .toggleStyle(.switch)
+            .controlSize(.small)
+            .disabled(app.connection != .disconnected && app.connection != .failed)
+
             Divider()
 
             HStack {
@@ -111,7 +121,11 @@ struct MenuBarView: View {
         case .failed:
             Text("Open Veil to see the error")
         case .disconnected:
-            Text("Click to connect through Tor")
+            if app.turboActive {
+                Text("YouTube Turbo is active, Tor is off")
+            } else {
+                Text("Click to connect through Tor")
+            }
         case .disconnecting:
             Text("Restoring network settings…")
         }

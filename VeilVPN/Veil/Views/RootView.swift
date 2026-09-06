@@ -104,7 +104,11 @@ struct SidebarStatusFooter: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(app.connection.title)
                     .font(.subheadline.weight(.semibold))
-                if app.isDemo {
+                if app.turboActive, !app.connection.isActive {
+                    Text("YouTube Turbo")
+                        .font(.caption2)
+                        .foregroundStyle(.red)
+                } else if app.isDemo {
                     Text("Demo mode")
                         .font(.caption2)
                         .foregroundStyle(.secondary)

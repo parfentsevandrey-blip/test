@@ -51,6 +51,16 @@
         }
       }
     },
+    "Anti-throttling technique": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Техника обхода замедления"
+          }
+        }
+      }
+    },
     "Application": {
       "localizations": {
         "ru": {
@@ -231,6 +241,16 @@
         }
       }
     },
+    "Check": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверка"
+          }
+        }
+      }
+    },
     "Check Tor": {
       "localizations": {
         "ru": {
@@ -247,6 +267,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Проверить подключение к Tor"
+          }
+        }
+      }
+    },
+    "Checking youtube.com…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверка youtube.com…"
           }
         }
       }
@@ -297,6 +327,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Подключиться через Tor (⌘K)"
+          }
+        }
+      }
+    },
+    "Connect to Tor or enable YouTube Turbo first — the check goes through Veil’s proxy exactly like Safari would.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сначала подключитесь к Tor или включите YouTube Turbo — проверка идёт через прокси Veil точно так же, как Safari."
           }
         }
       }
@@ -431,6 +471,16 @@
         }
       }
     },
+    "Covers youtube.com, googlevideo.com, ytimg.com, ggpht.com and the other YouTube hosts. QUIC/HTTP3 is never used through the proxy, so the anti-throttling trick always applies.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Действует для youtube.com, googlevideo.com, ytimg.com, ggpht.com и остальных хостов YouTube. Через прокси QUIC/HTTP3 не используется, поэтому обход замедления применяется всегда."
+          }
+        }
+      }
+    },
     "Creating a private onion service…": {
       "localizations": {
         "ru": {
@@ -471,12 +521,32 @@
         }
       }
     },
+    "Direct": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Напрямую"
+          }
+        }
+      }
+    },
     "Direct (no bridges)": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Напрямую (без мостов)"
+          }
+        }
+      }
+    },
+    "Direct, anti-throttling": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Напрямую, с обходом замедления"
           }
         }
       }
@@ -697,6 +767,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Выход: %@ %@"
+          }
+        }
+      }
+    },
+    "Fragment the TLS handshake for these domains too": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Дробить TLS-рукопожатие и для этих доменов"
           }
         }
       }
@@ -981,6 +1061,16 @@
         }
       }
     },
+    "Not checked yet": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ещё не проверялось"
+          }
+        }
+      }
+    },
     "Off": {
       "localizations": {
         "ru": {
@@ -997,6 +1087,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Один мост на строку, например «obfs4 1.2.3.4:443 FINGERPRINT cert=… iat-mode=0». Слово «Bridge» в начале не обязательно."
+          }
+        }
+      }
+    },
+    "One domain per line, e.g. “rutube.ru”. Subdomains are included. These sites see your real IP address.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Один домен на строку, например «rutube.ru». Поддомены включаются автоматически. Эти сайты видят ваш реальный IP-адрес."
           }
         }
       }
@@ -1037,6 +1137,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Откройте Veil, чтобы увидеть ошибку"
+          }
+        }
+      }
+    },
+    "Other domains that bypass Tor": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Другие домены в обход Tor"
           }
         }
       }
@@ -1321,6 +1431,16 @@
         }
       }
     },
+    "Speeds up throttled YouTube without Tor. Only YouTube traffic goes through Veil’s anti-throttling proxy, which fragments the TLS handshake so DPI throttling cannot recognise it; everything else is untouched and your IP address stays visible.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ускоряет замедленный YouTube без Tor. Через прокси Veil с обходом замедления идёт только трафик YouTube: TLS-рукопожатие дробится, и DPI не распознаёт его. Остальной трафик не трогается, ваш IP-адрес остаётся видимым."
+          }
+        }
+      }
+    },
     "Sporadic background noise only. About 1–2 KB/s of extra traffic.": {
       "localizations": {
         "ru": {
@@ -1337,6 +1457,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Запуск Tor"
+          }
+        }
+      }
+    },
+    "Stop": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Остановить"
           }
         }
       }
@@ -1401,12 +1531,72 @@
         }
       }
     },
+    "TCP split after the first byte": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Разрез TCP-сегмента после первого байта"
+          }
+        }
+      }
+    },
+    "TCP split at SNI": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Разрез TCP-сегмента по SNI"
+          }
+        }
+      }
+    },
+    "TLS record + TCP split at SNI (recommended)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Разрез TLS-записи и TCP-сегмента по SNI (рекомендуется)"
+          }
+        }
+      }
+    },
+    "TLS record split at SNI": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Разрез TLS-записи по SNI"
+          }
+        }
+      }
+    },
+    "Technique": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Техника"
+          }
+        }
+      }
+    },
     "Terminal": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Терминал"
+          }
+        }
+      }
+    },
+    "Test YouTube": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверить YouTube"
           }
         }
       }
@@ -1457,6 +1647,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Цепочка из трёх узлов"
+          }
+        }
+      }
+    },
+    "Through Tor": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Через Tor"
           }
         }
       }
@@ -1651,6 +1851,16 @@
         }
       }
     },
+    "Turbo": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo"
+          }
+        }
+      }
+    },
     "Upload": {
       "localizations": {
         "ru": {
@@ -1731,6 +1941,146 @@
         }
       }
     },
+    "Which fragmentation defeats your provider’s DPI varies. If videos still stall, try the next technique and run the check again.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Какая фрагментация обманет DPI вашего провайдера — зависит от провайдера. Если видео всё ещё тормозит, выберите следующую технику и повторите проверку."
+          }
+        }
+      }
+    },
+    "YouTube": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube"
+          }
+        }
+      }
+    },
+    "YouTube Turbo": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube Turbo"
+          }
+        }
+      }
+    },
+    "YouTube Turbo (no Tor)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube Turbo (без Tor)"
+          }
+        }
+      }
+    },
+    "YouTube Turbo could not start": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось запустить YouTube Turbo"
+          }
+        }
+      }
+    },
+    "YouTube Turbo is active": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube Turbo включён"
+          }
+        }
+      }
+    },
+    "YouTube Turbo is active, Tor is off": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube Turbo включён, Tor выключен"
+          }
+        }
+      }
+    },
+    "YouTube connects directly at full speed, but Veil fragments the TLS handshake so throttling DPI cannot see the host name. YouTube sees your real IP address.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube подключается напрямую на полной скорости, а Veil дробит TLS-рукопожатие, чтобы замедляющий DPI не увидел имя хоста. YouTube видит ваш реальный IP-адрес."
+          }
+        }
+      }
+    },
+    "YouTube connects directly with no tricks. Use this where YouTube is not throttled.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube подключается напрямую без ухищрений. Для сетей, где YouTube не замедляют."
+          }
+        }
+      }
+    },
+    "YouTube goes through the Tor circuit like everything else. Anonymous, but slow for video and YouTube often demands a sign-in to prove you are not a bot.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube идёт через цепочку Tor, как и всё остальное. Анонимно, но видео грузится медленно, и YouTube часто требует войти в аккаунт, чтобы доказать, что вы не бот."
+          }
+        }
+      }
+    },
+    "YouTube is fetched directly with a fragmented TLS handshake; Tor is off and other sites are untouched.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube загружается напрямую с раздробленным TLS-рукопожатием; Tor выключен, остальные сайты не затронуты."
+          }
+        }
+      }
+    },
+    "YouTube routing — configure it in Settings → YouTube": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Маршрутизация YouTube — настройка в Настройки → YouTube"
+          }
+        }
+      }
+    },
+    "YouTube traffic": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Трафик YouTube"
+          }
+        }
+      }
+    },
+    "YouTube while connected to Tor": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube при подключении к Tor"
+          }
+        }
+      }
+    },
     "Your traffic is not going through Tor.": {
       "localizations": {
         "ru": {
@@ -1797,6 +2147,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Мосты obfs4"
+          }
+        }
+      }
+    },
+    "youtube.com failed: %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "youtube.com недоступен: %@"
+          }
+        }
+      }
+    },
+    "youtube.com reachable in %lld ms (%@)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "youtube.com доступен за %lld мс (%@)"
           }
         }
       }

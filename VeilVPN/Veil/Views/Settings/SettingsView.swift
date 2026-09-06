@@ -12,6 +12,8 @@ struct SettingsView: View {
                 .tabItem { Label("Bridges", systemImage: "snowflake") }
             PrivacySettingsView()
                 .tabItem { Label("Privacy", systemImage: "lock.shield") }
+            YouTubeSettingsView()
+                .tabItem { Label("YouTube", systemImage: "play.rectangle") }
             AboutView()
                 .tabItem { Label("About", systemImage: "info.circle") }
         }
@@ -204,6 +206,90 @@ struct PrivacySettingsView: View {
                     .fixedSize(horizontal: false, vertical: true)
             } header: {
                 Text("How it works")
+            }
+        }
+        .formStyle(.grouped)
+    }
+}
+
+struct YouTubeSettingsView: View {
+    @Environment(AppState.self) private var app
+
+    var body: some View {
+        Form {
+            Section {
+                Picker("YouTube traffic", selection: Binding(
+                    get: { app.settings.youtubeMode },
+                    set: { app.setYouTubeMode($0) }
+                )) {
+                    ForEach(YouTubeMode.allCases) { mode in
+                        Text(mode.title).tag(mode)
+                    }
+                }
+                .pickerStyle(.inline)
+                .labelsHidden()
+                Text(app.settings.youtubeMode.details)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } header: {
+                Text("YouTube while connected to Tor")
+            } footer: {
+                Text("Covers youtube.com, googlevideo.com, ytimg.com, ggpht.com and the other YouTube hosts. QUIC/HTTP3 is never used through the proxy, so the anti-throttling trick always applies.")
+            }
+
+            Section {
+                Picker("Technique", selection: Binding(
+                    get: { app.settings.dpiStrategy },
+                    set: { app.setDPIStrategy($0) }
+                )) {
+                    ForEach(DPIStrategy.allCases) { strategy in
+                        Text(strategy.title).tag(strategy)
+                    }
+                }
+                Text("Which fragmentation defeats your provider’s DPI varies. If videos still stall, try the next technique and run the check again.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } header: {
+                Text("Anti-throttling technique")
+            }
+
+            Section {
+                TextEditor(text: Binding(
+                    get: { app.settings.customDirectDomains },
+                    set: { app.setCustomDirectDomains($0) }
+                ))
+                .font(.system(.caption, design: .monospaced))
+                .frame(minHeight: 90)
+                Toggle("Fragment the TLS handshake for these domains too", isOn: Binding(
+                    get: { app.settings.customDirectAntiThrottle },
+                    set: { app.setCustomDirectAntiThrottle($0) }
+                ))
+            } header: {
+                Text("Other domains that bypass Tor")
+            } footer: {
+                Text("One domain per line, e.g. “rutube.ru”. Subdomains are included. These sites see your real IP address.")
+            }
+
+            Section {
+                HStack(spacing: 12) {
+                    Button {
+                        app.testYouTube()
+                    } label: {
+                        Label("Test YouTube", systemImage: "checkmark.circle")
+                    }
+                    .disabled(!app.bridgeRunning || app.isTestingYouTube)
+                    YouTubeTestLabel(result: app.youtubeTest, inProgress: app.isTestingYouTube)
+                        .font(.caption)
+                }
+                if !app.bridgeRunning {
+                    Text("Connect to Tor or enable YouTube Turbo first — the check goes through Veil’s proxy exactly like Safari would.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            } header: {
+                Text("Check")
             }
         }
         .formStyle(.grouped)
