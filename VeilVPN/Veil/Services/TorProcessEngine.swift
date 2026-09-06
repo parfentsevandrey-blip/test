@@ -147,10 +147,12 @@ final class TorProcessEngine: TorEngine {
             controller.close()
         }
         if let process, process.isRunning {
-            if await !waitForExit(process, timeout: .seconds(3)) {
+            var exited = await waitForExit(process, timeout: .seconds(3))
+            if !exited {
                 process.terminate()
+                exited = await waitForExit(process, timeout: .seconds(3))
             }
-            if await !waitForExit(process, timeout: .seconds(3)) {
+            if !exited {
                 kill(process.processIdentifier, SIGKILL)
             }
         }

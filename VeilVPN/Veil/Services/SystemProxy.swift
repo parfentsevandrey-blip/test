@@ -97,7 +97,7 @@ enum SystemConfigurationProxyWriter {
             guard SCNetworkProtocolSetConfiguration(proxies, config as CFDictionary) else {
                 throw SystemProxyError.commitFailed(String(cString: SCErrorString(SCError())))
             }
-            touched.append((SCNetworkServiceGetName(service) as String?) ?? "Network service")
+            touched.append(SCNetworkServiceGetName(service).map { $0 as String } ?? "Network service")
         }
 
         guard SCPreferencesCommitChanges(preferences) else {
