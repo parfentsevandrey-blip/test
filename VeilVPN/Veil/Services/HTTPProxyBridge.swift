@@ -223,7 +223,9 @@ final class ProxySession: @unchecked Sendable {
         }
         let parameters = NWParameters.tcp
         let socks = ProxyConfiguration(socksv5Proxy: .hostPort(host: "127.0.0.1", port: NWEndpoint.Port(rawValue: socksPort) ?? 9050))
-        parameters.proxyConfigurations = [socks]
+        let privacyContext = NWParameters.PrivacyContext(description: "app.veilvpn.tor-socks")
+        privacyContext.proxyConfigurations = [socks]
+        parameters.setPrivacyContext(privacyContext)
         let upstream = NWConnection(host: NWEndpoint.Host(host), port: nwPort, using: parameters)
         self.upstream = upstream
         var signalled = false
