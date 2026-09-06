@@ -37,6 +37,8 @@ final class AppState {
     @ObservationIgnored private var isTearingDown = false
 
     private static let maxLogEntries = 2000
+    /// Remembers that the system proxy points at Veil, so a crash or force-quit can be repaired on the next launch.
+    private static let proxyAppliedKey = "app.veilvpn.systemProxyApplied"
 
     init(engine: (any TorEngine)? = nil) {
         settings = AppSettings.load()
@@ -58,6 +60,7 @@ final class AppState {
         if isDemo {
             append(.veil(.notice, "Demo mode: tor binaries were not found next to the app, connections are simulated."))
         }
+        restoreStaleSystemProxyIfNeeded()
         if settings.connectOnLaunch {
             connect()
         }
@@ -124,6 +127,7 @@ final class AppState {
                     do {
                         let services = try await SystemProxy.enable(socksPort: ports.socks, httpPort: ports.http)
                         proxyApplied = true
+                        UserDefaults.standard.set(true, forKey: Self.proxyAppliedKey)
                         proxyStatus = .configured(services)
                         append(.veil(.notice, "System proxy enabled for \(services.joined(separator: ", "))"))
                     } catch {
@@ -193,6 +197,7 @@ final class AppState {
         if proxyApplied {
             do {
                 try await SystemProxy.disable()
+                UserDefaults.standard.set(false, forKey: Self.proxyAppliedKey)
                 append(.veil(.info, "System proxy disabled"))
             } catch {
                 append(.veil(.warn, "Could not restore the system proxy: \(error.localizedDescription)"))
@@ -206,6 +211,22 @@ final class AppState {
         connectedAt = nil
         circuit = []
         torCheck = nil
+    }
+
+    /// If the previous run ended without restoring the proxy (crash, force quit, power loss),
+    /// the Mac is left pointing at a dead local port. Repair it before doing anything else.
+    private func restoreStaleSystemProxyIfNeeded() {
+        guard UserDefaults.standard.bool(forKey: Self.proxyAppliedKey) else { return }
+        append(.veil(.warn, "The system proxy was still pointing at Veil from the previous run; restoring it."))
+        Task { [weak self] in
+            do {
+                try await SystemProxy.disable()
+                UserDefaults.standard.set(false, forKey: Self.proxyAppliedKey)
+                self?.append(.veil(.info, "System proxy restored"))
+            } catch {
+                self?.append(.veil(.warn, "Could not restore the system proxy: \(error.localizedDescription)"))
+            }
+        }
     }
 
     // MARK: Engine events
