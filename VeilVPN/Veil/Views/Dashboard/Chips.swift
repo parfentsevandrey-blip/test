@@ -29,6 +29,58 @@ extension AppSettings.Transport {
     }
 }
 
+extension PaddingLevel {
+    var title: LocalizedStringKey {
+        switch self {
+        case .light: "Light"
+        case .balanced: "Balanced"
+        case .strong: "Strong"
+        }
+    }
+
+    var details: LocalizedStringKey {
+        switch self {
+        case .light: "Sporadic background noise only. About 1–2 KB/s of extra traffic."
+        case .balanced: "Background noise plus a front-loaded burst of dummy traffic whenever real activity starts, so the shape of page loads is hidden (FRONT defence). Roughly 5–30 KB/s while you browse."
+        case .strong: "Everything in Balanced, and both directions are topped up to a constant rate (≈10 KB/s up, ≈24 KB/s down) so traffic volume reveals nothing. Uses the most bandwidth."
+        }
+    }
+}
+
+struct PaddingChip: View {
+    let level: PaddingLevel
+    let status: PaddingLoop.Status
+
+    private var dotColor: Color {
+        switch status {
+        case .active: .mint
+        case .preparing, .connecting: .orange
+        case .failed: .red
+        case .off: .secondary
+        }
+    }
+
+    var body: some View {
+        SettingsLink {
+            HStack(spacing: 8) {
+                Image(systemName: "waveform.badge.plus")
+                Text("Padding")
+                Text(level.title)
+                    .foregroundStyle(.secondary)
+                Circle()
+                    .fill(dotColor)
+                    .frame(width: 7, height: 7)
+            }
+            .font(.subheadline.weight(.medium))
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+        }
+        .buttonStyle(.plain)
+        .glassEffect(.regular.interactive(), in: .capsule)
+        .help("Traffic padding is on — configure it in Settings → Privacy")
+    }
+}
+
 struct TransportChip: View {
     let transport: AppSettings.Transport
 
@@ -48,12 +100,30 @@ struct TransportChip: View {
 struct ExitChip: View {
     let location: ExitLocation?
     let exitHop: CircuitHop?
+    var multihop: Bool = false
+    var middle: ExitLocation? = nil
+    var middleHop: CircuitHop? = nil
     let action: @MainActor () -> Void
+
+    private var middleFlag: String? {
+        if let middleHop, !middleHop.flag.isEmpty { return middleHop.flag }
+        return middle?.flag
+    }
+
+    private var exitFlag: String? {
+        if let location { return location.flag }
+        if let exitHop, !exitHop.flag.isEmpty { return exitHop.flag }
+        return nil
+    }
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 8) {
-                if let location {
+                if multihop {
+                    Image(systemName: "point.3.connected.trianglepath.dotted")
+                    Text("Multihop")
+                    Text(verbatim: "\(middleFlag ?? "🌐") → \(exitFlag ?? "🌐")")
+                } else if let location {
                     Text(location.flag)
                     Text(verbatim: location.name)
                 } else if let exitHop, !exitHop.flag.isEmpty {

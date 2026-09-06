@@ -10,7 +10,9 @@ struct ActivityView: View {
                 downloadRate: app.traffic.downloadRate,
                 uploadRate: app.traffic.uploadRate,
                 totalDownload: app.traffic.totalDownload,
-                totalUpload: app.traffic.totalUpload
+                totalUpload: app.traffic.totalUpload,
+                paddingRate: app.padding.rate,
+                showsPadding: app.settings.paddingEnabled
             )
             .frame(height: 230)
 

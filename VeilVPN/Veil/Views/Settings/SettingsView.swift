@@ -10,6 +10,8 @@ struct SettingsView: View {
                 .tabItem { Label("Network", systemImage: "network") }
             BridgesSettingsView()
                 .tabItem { Label("Bridges", systemImage: "snowflake") }
+            PrivacySettingsView()
+                .tabItem { Label("Privacy", systemImage: "lock.shield") }
             AboutView()
                 .tabItem { Label("About", systemImage: "info.circle") }
         }
@@ -150,6 +152,58 @@ struct BridgesSettingsView: View {
                 Text("Changes take effect on the next connection.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+            }
+        }
+        .formStyle(.grouped)
+    }
+}
+
+struct PrivacySettingsView: View {
+    @Environment(AppState.self) private var app
+
+    var body: some View {
+        Form {
+            Section {
+                Toggle("Traffic padding (DAITA-style)", isOn: Binding(
+                    get: { app.settings.paddingEnabled },
+                    set: { app.setPaddingEnabled($0) }
+                ))
+                Text("Injects dummy traffic into the tunnel so that an observer between this Mac and the Snowflake proxy cannot easily recognise which sites you visit from packet sizes and timing (website fingerprinting). Inspired by Mullvad’s DAITA and the Maybenot framework; unlike DAITA it never delays real packets, it only adds noise.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } header: {
+                Text("Defence against traffic analysis")
+            }
+
+            if app.settings.paddingEnabled {
+                Section {
+                    Picker("Intensity", selection: Binding(
+                        get: { app.settings.paddingLevel },
+                        set: { app.setPaddingLevel($0) }
+                    )) {
+                        ForEach(PaddingLevel.allCases) { level in
+                            Text(level.title).tag(level)
+                        }
+                    }
+                    .pickerStyle(.inline)
+                    .labelsHidden()
+                    Text(app.settings.paddingLevel.details)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                } header: {
+                    Text("Intensity")
+                }
+            }
+
+            Section {
+                Text("Dummy traffic is bounced through the Tor network to a private onion service on this Mac, so no website ever receives it. Tor’s own circuit and connection padding are forced on as well. Padding costs bandwidth — yours, the Snowflake volunteer’s and the Tor relays’ — so use the lightest level that fits.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } header: {
+                Text("How it works")
             }
         }
         .formStyle(.grouped)

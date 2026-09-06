@@ -5,6 +5,8 @@ struct TrafficSample: Identifiable, Equatable, Sendable {
     let date: Date
     let download: Double
     let upload: Double
+    /// Dummy (padding) bytes per second, both directions; already included in download/upload.
+    var padding: Double = 0
 
     var id: Date { date }
 }

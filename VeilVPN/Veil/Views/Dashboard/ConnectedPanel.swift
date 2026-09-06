@@ -17,6 +17,10 @@ struct ConnectedPanel: View {
 
             CircuitStrip(hops: app.circuit)
 
+            if app.settings.paddingEnabled {
+                PaddingStatusRow(loop: app.padding)
+            }
+
             HStack(spacing: 12) {
                 Button {
                     app.requestNewIdentity()
@@ -161,6 +165,57 @@ struct HopChip: View {
         .padding(.vertical, 7)
         .glassEffect(.regular.tint(hop.role == .exit ? Color.mint.opacity(0.25) : nil), in: .capsule)
         .help(Text(verbatim: "\(hop.nickname) \(hop.address ?? "") \(hop.fingerprint)"))
+    }
+}
+
+struct PaddingStatusRow: View {
+    let loop: PaddingLoop
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "waveform.badge.plus")
+                .foregroundStyle(loop.status.isActive ? AnyShapeStyle(.mint) : AnyShapeStyle(.secondary))
+                .symbolEffect(.variableColor.iterative, isActive: loop.status.isActive)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Traffic padding")
+                    .font(.subheadline.weight(.semibold))
+                statusText
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            if loop.status.isActive {
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(verbatim: ByteFormat.rate(loop.rate))
+                        .font(.subheadline.weight(.semibold))
+                        .monospacedDigit()
+                        .contentTransition(.numericText())
+                    Text("\(Int((loop.overheadShare * 100).rounded()))% of traffic")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .glassEffect(.regular.tint(loop.status.isActive ? Color.mint.opacity(0.18) : nil), in: .rect(cornerRadius: 18))
+    }
+
+    @ViewBuilder
+    private var statusText: some View {
+        switch loop.status {
+        case .off:
+            Text("Off")
+        case .preparing:
+            Text("Creating a private onion service…")
+        case .connecting(let attempt):
+            Text("Waiting for the loop to become reachable (attempt \(attempt))…")
+        case .active:
+            Text(loop.level.title) + Text(verbatim: " · ") + Text("dummy traffic bounces through Tor back to this Mac")
+        case .failed(let message):
+            Text(verbatim: message)
+        }
     }
 }
 

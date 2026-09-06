@@ -26,8 +26,19 @@ struct DashboardView: View {
                         HStack(spacing: 12) {
                             TransportChip(transport: app.settings.transport)
                                 .glassEffectID("transport", in: glassNamespace)
-                            ExitChip(location: app.selectedExit, exitHop: app.exitHop, action: openLocations)
-                                .glassEffectID("exit", in: glassNamespace)
+                            ExitChip(
+                                location: app.selectedExit,
+                                exitHop: app.exitHop,
+                                multihop: app.settings.multihopEnabled,
+                                middle: app.selectedMiddle,
+                                middleHop: app.middleHop,
+                                action: openLocations
+                            )
+                            .glassEffectID("exit", in: glassNamespace)
+                            if app.settings.paddingEnabled {
+                                PaddingChip(level: app.settings.paddingLevel, status: app.padding.status)
+                                    .glassEffectID("padding", in: glassNamespace)
+                            }
                         }
                     }
                     .padding(.top, 12)

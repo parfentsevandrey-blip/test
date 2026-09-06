@@ -10,7 +10,7 @@ enum SidebarItem: String, CaseIterable, Identifiable, Hashable {
     var title: LocalizedStringKey {
         switch self {
         case .home: "Home"
-        case .locations: "Exit Location"
+        case .locations: "Route"
         case .activity: "Activity"
         }
     }
@@ -18,7 +18,7 @@ enum SidebarItem: String, CaseIterable, Identifiable, Hashable {
     var symbol: String {
         switch self {
         case .home: "house.fill"
-        case .locations: "globe.europe.africa.fill"
+        case .locations: "point.3.connected.trianglepath.dotted"
         case .activity: "waveform.path.ecg"
         }
     }
@@ -59,7 +59,7 @@ struct RootView: View {
                 openLocations: { selection = .locations }
             )
         case .locations:
-            LocationsView()
+            RouteView()
         case .activity:
             ActivityView()
         }

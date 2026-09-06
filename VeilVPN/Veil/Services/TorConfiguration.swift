@@ -98,12 +98,14 @@ struct TorConfiguration {
             "DormantCanceledByStartup 1",
             "Log \(settings.verboseLogs ? "info" : "notice") stdout",
         ]
+        if settings.paddingEnabled {
+            for (key, value) in TorProcessEngine.torPaddingOptions.sorted(by: { $0.key < $1.key }) {
+                lines.append("\(key) \(value)")
+            }
+        }
         if let geoip = bundle.geoip { lines.append("GeoIPFile \(geoip.path)") }
         if let geoip6 = bundle.geoip6 { lines.append("GeoIPv6File \(geoip6.path)") }
-        if let country = settings.exitCountry?.lowercased(), Self.isValidCountryCode(country) {
-            lines.append("ExitNodes {\(country)}")
-            lines.append("StrictNodes 1")
-        }
+        lines.append(contentsOf: settings.route.torrcLines)
 
         let bridgeLines: [String]
         switch settings.transport {

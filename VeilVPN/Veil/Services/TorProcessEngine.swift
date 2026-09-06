@@ -166,12 +166,14 @@ final class TorProcessEngine: TorEngine {
         try await controller.signal("NEWNYM")
     }
 
-    func setExitCountry(_ code: String?) async throws {
+    func applyRoute(_ route: TorRoute) async throws {
         guard let controller else { throw TorEngineError.notRunning }
-        if let code = code?.lowercased(), TorConfiguration.isValidCountryCode(code) {
-            try await controller.setConf(["ExitNodes": "{\(code)}", "StrictNodes": "1"])
-        } else {
-            try await controller.resetConf(["ExitNodes", "StrictNodes"])
+        let configuration = route.configuration
+        if !configuration.reset.isEmpty {
+            try await controller.resetConf(configuration.reset)
+        }
+        if !configuration.set.isEmpty {
+            try await controller.setConf(Dictionary(uniqueKeysWithValues: configuration.set.map { ($0.key, $0.value) }))
         }
         try await controller.signal("NEWNYM")
     }
@@ -216,6 +218,38 @@ final class TorProcessEngine: TorEngine {
     func check(socksPort: UInt16) async throws -> TorCheckResult {
         try await TorCheck.run(socksPort: socksPort)
     }
+
+    func createOnionService(targetPort: UInt16) async throws -> String {
+        guard let controller else { throw TorEngineError.notRunning }
+        let lines = try await controller.send("ADD_ONION NEW:ED25519-V3 Flags=DiscardPK Port=80,127.0.0.1:\(targetPort)")
+        for line in lines where line.text.hasPrefix("ServiceID=") {
+            return String(line.text.dropFirst("ServiceID=".count))
+        }
+        throw TorEngineError.onionServiceFailed
+    }
+
+    func removeOnionService(_ serviceID: String) async {
+        guard let controller else { return }
+        _ = try? await controller.send("DEL_ONION \(serviceID)")
+    }
+
+    func setTorPadding(enabled: Bool) async {
+        guard let controller else { return }
+        if enabled {
+            try? await controller.setConf(Self.torPaddingOptions)
+        } else {
+            try? await controller.resetConf(Array(Self.torPaddingOptions.keys))
+        }
+    }
+
+    /// Tor's built-in defences: circuit padding negotiated with the middle relay and link padding
+    /// towards the bridge, with the "reduced" (battery-saving) variants switched off.
+    static let torPaddingOptions: [String: String] = [
+        "CircuitPadding": "1",
+        "ReducedCircuitPadding": "0",
+        "ConnectionPadding": "1",
+        "ReducedConnectionPadding": "0",
+    ]
 
     // MARK: Internals
 

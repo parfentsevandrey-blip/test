@@ -1,6 +1,16 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "%lld% of traffic": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld% трафика"
+          }
+        }
+      }
+    },
     "A Liquid Glass client for the Tor network with Snowflake bridges. Tor, Snowflake and Lyrebird are © The Tor Project, Inc. and distributed under their own licenses.": {
       "localizations": {
         "ru": {
@@ -91,12 +101,52 @@
         }
       }
     },
+    "Avoid Five Eyes countries (US, UK, Canada, Australia, New Zealand)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Избегать стран «Пяти глаз» (США, Великобритания, Канада, Австралия, Новая Зеландия)"
+          }
+        }
+      }
+    },
+    "Background noise plus a front-loaded burst of dummy traffic whenever real activity starts, so the shape of page loads is hidden (FRONT defence). Roughly 5–30 KB/s while you browse.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Фоновый шум плюс всплеск пустого трафика в начале каждой реальной активности, скрывающий форму загрузки страниц (защита FRONT). Примерно 5–30 КБ/с во время работы в сети."
+          }
+        }
+      }
+    },
+    "Balanced": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сбалансированная"
+          }
+        }
+      }
+    },
     "Bootstrapping": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Начальная загрузка"
+          }
+        }
+      }
+    },
+    "Bridge": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мост"
           }
         }
       }
@@ -351,6 +401,16 @@
         }
       }
     },
+    "Could not reach Veil’s private onion service through Tor.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось достучаться до приватного onion-сервиса Veil через Tor."
+          }
+        }
+      }
+    },
     "Could not read Tor’s control authentication cookie.": {
       "localizations": {
         "ru": {
@@ -371,12 +431,32 @@
         }
       }
     },
+    "Creating a private onion service…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Создание приватного onion-сервиса…"
+          }
+        }
+      }
+    },
     "Custom bridges": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Свои мосты"
+          }
+        }
+      }
+    },
+    "Defence against traffic analysis": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Защита от анализа трафика"
           }
         }
       }
@@ -461,6 +541,16 @@
         }
       }
     },
+    "Dummy traffic is bounced through the Tor network to a private onion service on this Mac, so no website ever receives it. Tor’s own circuit and connection padding are forced on as well. Padding costs bandwidth — yours, the Snowflake volunteer’s and the Tor relays’ — so use the lightest level that fits.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пустой трафик проходит через сеть Tor до приватного onion-сервиса на этом Mac, так что ни один сайт его не получает. Также принудительно включаются встроенные circuit padding и connection padding самого Tor. Маскировка расходует трафик — ваш, волонтёра Snowflake и узлов Tor, — поэтому выбирайте самый лёгкий подходящий уровень."
+          }
+        }
+      }
+    },
     "Duration": {
       "localizations": {
         "ru": {
@@ -471,12 +561,72 @@
         }
       }
     },
+    "Enable": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Включить"
+          }
+        }
+      }
+    },
     "Establishing a circuit": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Установка цепочки"
+          }
+        }
+      }
+    },
+    "Every 10 minutes": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Каждые 10 минут"
+          }
+        }
+      }
+    },
+    "Every 30 minutes": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Каждые 30 минут"
+          }
+        }
+      }
+    },
+    "Every 5 minutes": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Каждые 5 минут"
+          }
+        }
+      }
+    },
+    "Every restriction shrinks the pool of relays Tor can pick from and makes your circuits more distinctive. Choose a middle-hop country different from the exit and keep exclusions modest.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Каждое ограничение сужает выбор узлов для Tor и делает ваши цепочки более узнаваемыми. Выбирайте промежуточную страну, отличную от выходной, и не злоупотребляйте исключениями."
+          }
+        }
+      }
+    },
+    "Everything in Balanced, and both directions are topped up to a constant rate (≈10 KB/s up, ≈24 KB/s down) so traffic volume reveals nothing. Uses the most bandwidth.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Всё из «Сбалансированной», плюс оба направления дополняются до постоянной скорости (≈10 КБ/с вверх, ≈24 КБ/с вниз), чтобы объём трафика ничего не выдавал. Расходует больше всего трафика."
           }
         }
       }
@@ -591,6 +741,16 @@
         }
       }
     },
+    "How it works": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Как это работает"
+          }
+        }
+      }
+    },
     "How to reach the Tor network": {
       "localizations": {
         "ru": {
@@ -601,12 +761,52 @@
         }
       }
     },
+    "Injects dummy traffic into the tunnel so that an observer between this Mac and the Snowflake proxy cannot easily recognise which sites you visit from packet sizes and timing (website fingerprinting). Inspired by Mullvad’s DAITA and the Maybenot framework; unlike DAITA it never delays real packets, it only adds noise.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подмешивает пустой трафик в туннель, чтобы наблюдатель между этим Mac и Snowflake-прокси не мог по размерам и таймингам пакетов понять, какие сайты вы открываете (website fingerprinting). Вдохновлено DAITA от Mullvad и фреймворком Maybenot; в отличие от DAITA реальные пакеты никогда не задерживаются — только добавляется шум."
+          }
+        }
+      }
+    },
+    "Intensity": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Интенсивность"
+          }
+        }
+      }
+    },
+    "Internet": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Интернет"
+          }
+        }
+      }
+    },
     "Launch at login": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Запускать при входе в систему"
+          }
+        }
+      }
+    },
+    "Light": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Лёгкая"
           }
         }
       }
@@ -671,6 +871,36 @@
         }
       }
     },
+    "Middle hop": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Промежуточный узел"
+          }
+        }
+      }
+    },
+    "Multihop": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Многократный переход"
+          }
+        }
+      }
+    },
+    "Multihop routes your traffic through relays in the countries you choose — bridge, middle and exit hops in different jurisdictions — which makes tracking much harder. It can add latency, but improves anonymity. The route can also be excluded from chosen countries and rotated on a timer.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Функция «Многократный переход» направляет трафик через узлы в выбранных вами странах — мост, промежуточный и выходной узлы в разных юрисдикциях, — что сильно затрудняет отслеживание. Это может увеличить задержку, но повышает анонимность. Маршрут можно также увести из выбранных стран и менять по таймеру."
+          }
+        }
+      }
+    },
     "Network": {
       "localizations": {
         "ru": {
@@ -687,6 +917,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Сетевые настройки недоступны."
+          }
+        }
+      }
+    },
+    "Never route through": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Никогда не проходить через"
           }
         }
       }
@@ -741,6 +981,16 @@
         }
       }
     },
+    "Off": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выключено"
+          }
+        }
+      }
+    },
     "One bridge per line, e.g. “obfs4 1.2.3.4:443 FINGERPRINT cert=… iat-mode=0”. A leading “Bridge” keyword is optional.": {
       "localizations": {
         "ru": {
@@ -787,6 +1037,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Откройте Veil, чтобы увидеть ошибку"
+          }
+        }
+      }
+    },
+    "Padding": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Маскировка"
+          }
+        }
+      }
+    },
+    "Padding loop cancelled.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Цикл маскировки отменён."
           }
         }
       }
@@ -841,6 +1111,16 @@
         }
       }
     },
+    "Privacy": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Приватность"
+          }
+        }
+      }
+    },
     "Quit": {
       "localizations": {
         "ru": {
@@ -887,6 +1167,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Восстановление сетевых настроек…"
+          }
+        }
+      }
+    },
+    "Rotate route": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Смена маршрута"
+          }
+        }
+      }
+    },
+    "Route": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Маршрут"
+          }
+        }
+      }
+    },
+    "Route latency ≈ %lld ms": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Задержка маршрута ≈ %lld мс"
           }
         }
       }
@@ -1011,12 +1321,32 @@
         }
       }
     },
+    "Sporadic background noise only. About 1–2 KB/s of extra traffic.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Только редкий фоновый шум. Около 1–2 КБ/с дополнительного трафика."
+          }
+        }
+      }
+    },
     "Starting Tor": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Запуск Tor"
+          }
+        }
+      }
+    },
+    "Strong": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сильная"
           }
         }
       }
@@ -1081,6 +1411,16 @@
         }
       }
     },
+    "The padding loop was closed.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Цикл маскировки был закрыт."
+          }
+        }
+      }
+    },
     "The pluggable transport ‘%@’ is not bundled with this build.": {
       "localizations": {
         "ru": {
@@ -1097,6 +1437,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Процесс tor завершился с кодом %@. Подробности — в разделе «Активность»."
+          }
+        }
+      }
+    },
+    "This Mac": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Этот Mac"
           }
         }
       }
@@ -1157,6 +1507,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tor не успел подключиться. Возможно, сейчас мало Snowflake-прокси — попробуйте ещё раз или смените мосты."
+          }
+        }
+      }
+    },
+    "Tor did not create the private onion service needed for traffic padding.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor не создал приватный onion-сервис, нужный для маскировки трафика."
           }
         }
       }
@@ -1241,6 +1601,36 @@
         }
       }
     },
+    "Traffic padding": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Маскировка трафика"
+          }
+        }
+      }
+    },
+    "Traffic padding (DAITA-style)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Маскировка трафика (в стиле DAITA)"
+          }
+        }
+      }
+    },
+    "Traffic padding is on — configure it in Settings → Privacy": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Маскировка трафика включена — настройка в Настройки → Приватность"
+          }
+        }
+      }
+    },
     "Transport": {
       "localizations": {
         "ru": {
@@ -1321,6 +1711,16 @@
         }
       }
     },
+    "Waiting for the loop to become reachable (attempt %lld)…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ожидание доступности цикла (попытка %lld)…"
+          }
+        }
+      }
+    },
     "Warnings only": {
       "localizations": {
         "ru": {
@@ -1367,6 +1767,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "check.torproject.org: это НЕ Tor · IP %@"
+          }
+        }
+      }
+    },
+    "dummy traffic bounces through Tor back to this Mac": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "пустой трафик проходит через Tor и возвращается на этот Mac"
           }
         }
       }

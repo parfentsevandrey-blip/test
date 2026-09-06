@@ -65,6 +65,15 @@ struct MenuBarView: View {
             .buttonStyle(.glass)
             .disabled(!app.connection.isConnected || app.isChangingIdentity)
 
+            Toggle(isOn: Binding(
+                get: { app.settings.paddingEnabled },
+                set: { app.setPaddingEnabled($0) }
+            )) {
+                Label("Traffic padding", systemImage: "waveform.badge.plus")
+            }
+            .toggleStyle(.switch)
+            .controlSize(.small)
+
             Divider()
 
             HStack {

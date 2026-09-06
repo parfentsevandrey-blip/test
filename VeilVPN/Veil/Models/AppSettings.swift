@@ -26,6 +26,16 @@ struct AppSettings: Codable, Equatable, Sendable {
     var connectOnLaunch: Bool = false
     var checkAfterConnect: Bool = true
     var verboseLogs: Bool = false
+    /// DAITA-style traffic padding through Veil's private onion loop.
+    var paddingEnabled: Bool = false
+    var paddingLevel: PaddingLevel = .balanced
+    /// Multihop: pin the middle hop's country, exclude countries, rotate the route on a timer.
+    var multihopEnabled: Bool = false
+    var middleCountry: String? = nil
+    var excludedCountries: [String] = []
+    var avoidFiveEyes: Bool = false
+    /// Minutes between automatic route rotations (NEWNYM); 0 disables rotation.
+    var rotateRouteMinutes: Int = 0
 
     init() {}
 
@@ -33,6 +43,8 @@ struct AppSettings: Codable, Equatable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case transport, customBridges, exitCountry, socksPort, httpPort, configureSystemProxy
         case showInMenuBar, connectOnLaunch, checkAfterConnect, verboseLogs
+        case paddingEnabled, paddingLevel
+        case multihopEnabled, middleCountry, excludedCountries, avoidFiveEyes, rotateRouteMinutes
     }
 
     init(from decoder: Decoder) throws {
@@ -47,6 +59,13 @@ struct AppSettings: Codable, Equatable, Sendable {
         connectOnLaunch = try c.decodeIfPresent(Bool.self, forKey: .connectOnLaunch) ?? false
         checkAfterConnect = try c.decodeIfPresent(Bool.self, forKey: .checkAfterConnect) ?? true
         verboseLogs = try c.decodeIfPresent(Bool.self, forKey: .verboseLogs) ?? false
+        paddingEnabled = try c.decodeIfPresent(Bool.self, forKey: .paddingEnabled) ?? false
+        paddingLevel = try c.decodeIfPresent(PaddingLevel.self, forKey: .paddingLevel) ?? .balanced
+        multihopEnabled = try c.decodeIfPresent(Bool.self, forKey: .multihopEnabled) ?? false
+        middleCountry = try c.decodeIfPresent(String.self, forKey: .middleCountry)
+        excludedCountries = try c.decodeIfPresent([String].self, forKey: .excludedCountries) ?? []
+        avoidFiveEyes = try c.decodeIfPresent(Bool.self, forKey: .avoidFiveEyes) ?? false
+        rotateRouteMinutes = try c.decodeIfPresent(Int.self, forKey: .rotateRouteMinutes) ?? 0
     }
 
     static let storageKey = "app.veilvpn.settings.v1"

@@ -18,10 +18,18 @@ protocol TorEngine: AnyObject {
     func waitForBootstrap(timeout: Duration) async throws
     func stop() async
     func newIdentity() async throws
-    func setExitCountry(_ code: String?) async throws
+    /// Applies country restrictions for the hops live (SETCONF) and rebuilds circuits.
+    func applyRoute(_ route: TorRoute) async throws
     func circuit() async throws -> [CircuitHop]
     func trafficCounters() async throws -> TrafficCounters
     func check(socksPort: UInt16) async throws -> TorCheckResult
+
+    /// Creates an ephemeral v3 onion service that forwards port 80 to `targetPort` on this Mac.
+    /// Returns the service id (the part before `.onion`).
+    func createOnionService(targetPort: UInt16) async throws -> String
+    func removeOnionService(_ serviceID: String) async
+    /// Forces Tor's own circuit/connection padding on (or back to defaults) without a restart.
+    func setTorPadding(enabled: Bool) async
 }
 
 struct TrafficCounters: Equatable, Sendable {
@@ -37,6 +45,7 @@ enum TorEngineError: LocalizedError {
     case processExited(Int32, lastWarning: String?)
     case bootstrapTimeout(lastWarning: String?)
     case notRunning
+    case onionServiceFailed
 
     var errorDescription: String? {
         switch self {
@@ -57,6 +66,8 @@ enum TorEngineError: LocalizedError {
             return warning.map { "\(base) Last warning: \($0)" } ?? base
         case .notRunning:
             return String(localized: "Tor is not running.")
+        case .onionServiceFailed:
+            return String(localized: "Tor did not create the private onion service needed for traffic padding.")
         }
     }
 }

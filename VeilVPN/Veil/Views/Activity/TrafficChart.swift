@@ -7,6 +7,8 @@ struct TrafficChart: View {
     let uploadRate: Double
     let totalDownload: UInt64
     let totalUpload: UInt64
+    var paddingRate: Double = 0
+    var showsPadding: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -16,6 +18,9 @@ struct TrafficChart: View {
                 Spacer()
                 LegendItem(color: .cyan, title: "Download", rate: downloadRate, total: totalDownload)
                 LegendItem(color: .orange, title: "Upload", rate: uploadRate, total: totalUpload)
+                if showsPadding {
+                    LegendItem(color: .purple, title: "Padding", rate: paddingRate, total: nil)
+                }
             }
 
             Chart {
@@ -55,6 +60,17 @@ struct TrafficChart: View {
                     .foregroundStyle(.orange)
                     .lineStyle(StrokeStyle(lineWidth: 2))
                     .interpolationMethod(.catmullRom)
+
+                    if showsPadding {
+                        LineMark(
+                            x: .value("Time", sample.date),
+                            y: .value("Rate", sample.padding),
+                            series: .value("Direction", "Padding")
+                        )
+                        .foregroundStyle(.purple)
+                        .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [4, 4]))
+                        .interpolationMethod(.catmullRom)
+                    }
                 }
             }
             .chartXAxis(.hidden)
@@ -89,7 +105,7 @@ private struct LegendItem: View {
     let color: Color
     let title: LocalizedStringKey
     let rate: Double
-    let total: UInt64
+    let total: UInt64?
 
     var body: some View {
         HStack(spacing: 6) {
@@ -98,7 +114,7 @@ private struct LegendItem: View {
                 Text(title)
                     .font(.caption2)
                     .foregroundStyle(.secondary)
-                Text(verbatim: "\(ByteFormat.rate(rate)) · \(ByteFormat.total(total))")
+                Text(verbatim: total.map { "\(ByteFormat.rate(rate)) · \(ByteFormat.total($0))" } ?? ByteFormat.rate(rate))
                     .font(.caption.weight(.medium))
                     .monospacedDigit()
             }

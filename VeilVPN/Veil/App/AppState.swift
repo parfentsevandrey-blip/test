@@ -17,6 +17,8 @@ final class AppState {
     private(set) var bootstrap = BootstrapProgress()
     private(set) var circuit: [CircuitHop] = []
     private(set) var torCheck: TorCheckResult?
+    /// Round-trip time of the last successful Tor check — a practical measure of route latency.
+    private(set) var routeLatency: TimeInterval?
     private(set) var isCheckingTor = false
     private(set) var isChangingIdentity = false
     private(set) var logs: [LogEntry] = []
@@ -26,12 +28,14 @@ final class AppState {
     private(set) var ports: ActivePorts?
     private(set) var torVersion: String?
     let traffic = TrafficMonitor()
+    let padding = PaddingLoop()
     let isDemo: Bool
 
     @ObservationIgnored private var engine: any TorEngine
     @ObservationIgnored private var httpBridge: HTTPProxyBridge?
     @ObservationIgnored private var connectTask: Task<Void, Never>?
     @ObservationIgnored private var circuitTask: Task<Void, Never>?
+    @ObservationIgnored private var rotationTask: Task<Void, Never>?
     @ObservationIgnored private var proxyApplied = false
     @ObservationIgnored private var generation = 0
     @ObservationIgnored private var isTearingDown = false
@@ -57,6 +61,8 @@ final class AppState {
         isDemo = resolved.isSimulated
         AppState.shared = self
         wireEngine()
+        padding.onLog = { [weak self] entry in self?.append(entry) }
+        traffic.paddingRateProvider = { [weak self] in self?.padding.rate ?? 0 }
         if isDemo {
             append(.veil(.notice, "Demo mode: tor binaries were not found next to the app, connections are simulated."))
         }
@@ -69,6 +75,8 @@ final class AppState {
     // MARK: Derived
 
     var selectedExit: ExitLocation? { ExitLocation.named(settings.exitCountry) }
+    var selectedMiddle: ExitLocation? { settings.multihopEnabled ? ExitLocation.named(settings.middleCountry) : nil }
+    var middleHop: CircuitHop? { circuit.first { $0.role == .middle } }
     var exitHop: CircuitHop? { circuit.last { $0.role == .exit } }
     var needsTeardown: Bool { connection != .disconnected || proxyApplied }
 
@@ -143,6 +151,10 @@ final class AppState {
                 connection = .connected
                 traffic.start(engine: engine)
                 startCircuitUpdates()
+                if settings.paddingEnabled {
+                    padding.start(engine: engine, socksPort: ports.socks, level: settings.paddingLevel)
+                }
+                restartRouteRotation()
                 if settings.checkAfterConnect {
                     runTorCheck()
                 }
@@ -193,7 +205,10 @@ final class AppState {
 
         circuitTask?.cancel()
         circuitTask = nil
+        rotationTask?.cancel()
+        rotationTask = nil
         traffic.stop()
+        await padding.stop()
         if proxyApplied {
             do {
                 try await SystemProxy.disable()
@@ -211,6 +226,7 @@ final class AppState {
         connectedAt = nil
         circuit = []
         torCheck = nil
+        routeLatency = nil
     }
 
     /// If the previous run ended without restoring the proxy (crash, force quit, power loss),
@@ -248,6 +264,35 @@ final class AppState {
             guard let self else { return }
             await teardown()
             connection = .failed
+        }
+    }
+
+    // MARK: Traffic padding
+
+    func setPaddingEnabled(_ enabled: Bool) {
+        guard settings.paddingEnabled != enabled else { return }
+        settings.paddingEnabled = enabled
+        guard connection == .connected, let ports else { return }
+        Task { [weak self] in
+            guard let self else { return }
+            await engine.setTorPadding(enabled: enabled)
+            if enabled {
+                padding.start(engine: engine, socksPort: ports.socks, level: settings.paddingLevel)
+            } else {
+                await padding.stop()
+                append(.veil(.notice, "Traffic padding switched off"))
+            }
+        }
+    }
+
+    func setPaddingLevel(_ level: PaddingLevel) {
+        guard settings.paddingLevel != level else { return }
+        settings.paddingLevel = level
+        guard connection == .connected, settings.paddingEnabled, let ports else { return }
+        Task { [weak self] in
+            guard let self else { return }
+            await padding.stop()
+            padding.start(engine: engine, socksPort: ports.socks, level: level)
         }
     }
 
@@ -294,26 +339,88 @@ final class AppState {
         }
     }
 
+    // MARK: Route (exit country, multihop)
+
     func setExitCountry(_ code: String?) {
         let normalized = code?.lowercased()
-        guard settings.exitCountry != normalized || connection == .connected else { return }
+        guard settings.exitCountry != normalized else { return }
         settings.exitCountry = normalized
+        applyRouteIfConnected()
+    }
+
+    func setMiddleCountry(_ code: String?) {
+        let normalized = code?.lowercased()
+        guard settings.middleCountry != normalized else { return }
+        settings.middleCountry = normalized
+        applyRouteIfConnected()
+    }
+
+    func setMultihopEnabled(_ enabled: Bool) {
+        guard settings.multihopEnabled != enabled else { return }
+        settings.multihopEnabled = enabled
+        applyRouteIfConnected()
+        restartRouteRotation()
+    }
+
+    func setAvoidFiveEyes(_ avoid: Bool) {
+        guard settings.avoidFiveEyes != avoid else { return }
+        settings.avoidFiveEyes = avoid
+        applyRouteIfConnected()
+    }
+
+    func toggleExcludedCountry(_ code: String) {
+        let normalized = code.lowercased()
+        if let index = settings.excludedCountries.firstIndex(of: normalized) {
+            settings.excludedCountries.remove(at: index)
+        } else {
+            settings.excludedCountries.append(normalized)
+        }
+        applyRouteIfConnected()
+    }
+
+    func setRotateRouteMinutes(_ minutes: Int) {
+        guard settings.rotateRouteMinutes != minutes else { return }
+        settings.rotateRouteMinutes = minutes
+        restartRouteRotation()
+    }
+
+    private func applyRouteIfConnected() {
         guard connection == .connected else { return }
+        let route = settings.route
         Task { [weak self] in
             guard let self else { return }
             do {
-                try await engine.setExitCountry(normalized)
-                if let normalized {
-                    append(.veil(.notice, "Exit relays restricted to \(normalized.uppercased())"))
-                } else {
-                    append(.veil(.notice, "Exit relay selection is automatic again"))
-                }
+                try await engine.applyRoute(route)
+                let description = route.torrcLines.isEmpty ? "automatic" : route.torrcLines.joined(separator: ", ")
+                append(.veil(.notice, "Route updated: \(description)"))
                 torCheck = nil
+                routeLatency = nil
                 try? await Task.sleep(for: .seconds(2))
                 refreshCircuit()
                 if settings.checkAfterConnect { runTorCheck() }
             } catch {
-                append(.veil(.warn, "Could not change exit country: \(error.localizedDescription)"))
+                append(.veil(.warn, "Could not change the route: \(error.localizedDescription)"))
+            }
+        }
+    }
+
+    /// Periodically requests a new identity while multihop rotation is on.
+    private func restartRouteRotation() {
+        rotationTask?.cancel()
+        rotationTask = nil
+        guard connection == .connected, settings.multihopEnabled, settings.rotateRouteMinutes > 0 else { return }
+        let minutes = settings.rotateRouteMinutes
+        rotationTask = Task { [weak self] in
+            while !Task.isCancelled {
+                do {
+                    try await Task.sleep(for: .seconds(minutes * 60))
+                } catch {
+                    return
+                }
+                guard let self else { return }
+                guard connection == .connected else { return }
+                append(.veil(.info, "Multihop: rotating the route"))
+                requestNewIdentity()
             }
         }
     }
@@ -325,9 +432,11 @@ final class AppState {
             guard let self else { return }
             defer { isCheckingTor = false }
             do {
+                let started = Date.now
                 let result = try await engine.check(socksPort: ports.socks)
+                routeLatency = Date.now.timeIntervalSince(started)
                 torCheck = result
-                append(.veil(.info, "check.torproject.org: \(result.isTor ? "Tor confirmed" : "NOT using Tor"), exit IP \(result.ip)"))
+                append(.veil(.info, "check.torproject.org: \(result.isTor ? "Tor confirmed" : "NOT using Tor"), exit IP \(result.ip), round trip \(Int((routeLatency ?? 0) * 1000)) ms"))
             } catch {
                 append(.veil(.warn, "Tor check failed: \(error.localizedDescription)"))
             }

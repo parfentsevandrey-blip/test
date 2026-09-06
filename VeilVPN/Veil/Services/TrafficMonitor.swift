@@ -14,6 +14,8 @@ final class TrafficMonitor {
     @ObservationIgnored private var task: Task<Void, Never>?
     @ObservationIgnored private var baseline: TrafficCounters?
     @ObservationIgnored private var previous: (counters: TrafficCounters, date: Date)?
+    /// Supplies the current padding rate so the chart can show noise as its own series.
+    @ObservationIgnored var paddingRateProvider: (@MainActor () -> Double)?
 
     let capacity = 120
 
@@ -58,7 +60,7 @@ final class TrafficMonitor {
             let up = counters.written >= previous.counters.written ? Double(counters.written - previous.counters.written) / elapsed : 0
             downloadRate = down
             uploadRate = up
-            samples.append(TrafficSample(date: now, download: down, upload: up))
+            samples.append(TrafficSample(date: now, download: down, upload: up, padding: paddingRateProvider?() ?? 0))
             if samples.count > capacity {
                 samples.removeFirst(samples.count - capacity)
             }

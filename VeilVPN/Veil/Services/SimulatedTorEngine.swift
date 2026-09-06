@@ -15,6 +15,8 @@ final class SimulatedTorEngine: TorEngine {
     private var task: Task<Void, Never>?
     private var counters = TrafficCounters(read: 0, written: 0)
     private var exitCountry: String?
+    private var middleCountry: String?
+    private var excluded: [String] = []
     private var circuitSeed = 0
 
     private static let phases: [(Int, String, String)] = [
@@ -38,7 +40,10 @@ final class SimulatedTorEngine: TorEngine {
         running = true
         bootstrap = BootstrapProgress()
         counters = TrafficCounters(read: 0, written: 0)
-        exitCountry = settings.exitCountry
+        let route = settings.route
+        exitCountry = route.exitCountry
+        middleCountry = route.middleCountry
+        excluded = route.excludedCountries
         onLog?(.veil(.notice, "Demo mode: simulating a Snowflake connection (no tor binary bundled)."))
         task = Task { [weak self] in
             for (percent, tag, summary) in Self.phases {
@@ -75,17 +80,20 @@ final class SimulatedTorEngine: TorEngine {
         onLog?(LogEntry(level: .notice, source: .tor, message: "Received reload signal (NEWNYM); switching to new circuits."))
     }
 
-    func setExitCountry(_ code: String?) async throws {
-        exitCountry = code
+    func applyRoute(_ route: TorRoute) async throws {
+        exitCountry = route.exitCountry
+        middleCountry = route.middleCountry
+        excluded = route.excludedCountries
         circuitSeed += 1
+        onLog?(LogEntry(level: .notice, source: .tor, message: "Demo: route updated (\(route.torrcLines.joined(separator: ", ")))"))
     }
 
     func circuit() async throws -> [CircuitHop] {
         guard running, bootstrap.isDone else { return [] }
-        let middleCountries = ["de", "nl", "fr", "se", "ch", "at"]
-        let exitCountries = ["us", "de", "nl", "fi", "gb", "fr"]
-        let middle = middleCountries[circuitSeed % middleCountries.count]
-        let exit = exitCountry ?? exitCountries[(circuitSeed * 7 + 3) % exitCountries.count]
+        let middleCountries = ["de", "nl", "fr", "se", "ch", "at"].filter { !excluded.contains($0) }
+        let exitCountries = ["us", "de", "nl", "fi", "gb", "fr"].filter { !excluded.contains($0) }
+        let middle = middleCountry ?? middleCountries[circuitSeed % max(1, middleCountries.count)]
+        let exit = exitCountry ?? exitCountries[(circuitSeed * 7 + 3) % max(1, exitCountries.count)]
         return [
             CircuitHop(fingerprint: "2B280B23E1107BB62ABFC40DDCC8824814F80A72", nickname: "flakey", address: nil, countryCode: nil, role: .bridge),
             CircuitHop(fingerprint: String(repeating: "A", count: 40), nickname: "Quetzalcoatl", address: "185.220.101.\(10 + circuitSeed % 200)", countryCode: middle, role: .middle),
@@ -103,5 +111,16 @@ final class SimulatedTorEngine: TorEngine {
     func check(socksPort: UInt16) async throws -> TorCheckResult {
         try await Task.sleep(for: .milliseconds(900))
         return TorCheckResult(isTor: true, ip: "199.249.230.\(80 + circuitSeed % 100)")
+    }
+
+    func createOnionService(targetPort: UInt16) async throws -> String {
+        try await Task.sleep(for: .milliseconds(400))
+        return "demoonionservice"
+    }
+
+    func removeOnionService(_ serviceID: String) async {}
+
+    func setTorPadding(enabled: Bool) async {
+        onLog?(.veil(.info, enabled ? "Demo: Tor circuit/connection padding forced on" : "Demo: Tor padding back to defaults"))
     }
 }
