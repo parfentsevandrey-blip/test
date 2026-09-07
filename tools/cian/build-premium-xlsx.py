@@ -56,33 +56,77 @@ def floors(r):
 def per_m2_str(v):
     return None if v in (None, 0) else int(v)
 
-thin = Side(style='thin', color='BBBBBB')
+thin = Side(style='thin', color='C8C8C8')
+MED_SIDE = Side(style='medium', color='1F3864')
 border = Border(left=thin, right=thin, top=thin, bottom=thin)
-head_fill = PatternFill('solid', fgColor='FFF200')
-head_font = Font(bold=True)
-wrap = Alignment(wrap_text=True, vertical='top')
-center = Alignment(horizontal='center', vertical='top', wrap_text=True)
+HEAD_FILL = PatternFill('solid', fgColor='1F3864')
+HEAD_FONT = Font(name='Calibri', size=9, bold=True, color='FFFFFF')
+BODY_FONT = Font(name='Calibri', size=8)
+LINK_FONT = Font(name='Calibri', size=8, color='0563C1', underline='single')
+TITLE_FONT = Font(name='Calibri', size=14, bold=True, color='1F3864')
+SUB_FONT = Font(name='Calibri', size=8, italic=True, color='666666')
+ZEBRA = PatternFill('solid', fgColor='F3F6FA')
+ZONE_FILL = {'Садовое кольцо': 'FFF2CC', 'Хамовники': 'E2EFDA', 'Сити': 'DDEBF7'}
+wrap = Alignment(wrap_text=True, vertical='center')
+center = Alignment(horizontal='center', vertical='center', wrap_text=True)
+right = Alignment(horizontal='right', vertical='center')
 
-def sheet(wb, title, headers, rows, widths, note=None):
+def is_url(v): return isinstance(v, str) and v.startswith('http')
+
+def sheet(wb, title, headers, rows, widths, note=None, subtitle='', zone_col=None, orientation='portrait'):
     ws = wb.create_sheet(title)
+    ncol = len(headers)
+    ws.append([title]); ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=ncol)
+    ws['A1'].font = TITLE_FONT; ws['A1'].alignment = Alignment(vertical='center')
+    ws.row_dimensions[1].height = 24
+    ws.append([subtitle]); ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=ncol)
+    ws['A2'].font = SUB_FONT; ws.row_dimensions[2].height = 14
     ws.append(headers)
-    for c in ws[1]:
-        c.fill = head_fill; c.font = head_font; c.alignment = center; c.border = border
-    for r in rows:
+    for c in ws[3]:
+        c.fill = HEAD_FILL; c.font = HEAD_FONT; c.alignment = center
+        c.border = Border(left=thin, right=thin, top=MED_SIDE, bottom=MED_SIDE)
+    ws.row_dimensions[3].height = 34
+    for i, r in enumerate(rows):
         ws.append(r)
-    for row in ws.iter_rows(min_row=2, max_row=ws.max_row):
-        for c in row:
-            c.border = border
-            c.alignment = wrap if isinstance(c.value, str) else center
-            if isinstance(c.value, (int, float)) and not isinstance(c.value, bool):
-                c.number_format = '#,##0'
+        rr = ws.max_row
+        zone = r[zone_col] if zone_col is not None else None
+        fill = PatternFill('solid', fgColor=ZONE_FILL[zone]) if zone in ZONE_FILL else (ZEBRA if i % 2 else None)
+        for c in ws[rr]:
+            c.border = border; c.font = BODY_FONT
+            if fill and c.column != zone_col + 1 if zone_col is not None else fill: c.fill = fill
+            if zone_col is not None and c.column == zone_col + 1 and zone in ZONE_FILL:
+                c.fill = PatternFill('solid', fgColor=ZONE_FILL[zone]); c.font = Font(name='Calibri', size=8, bold=True)
+            if isinstance(c.value, bool): pass
+            elif isinstance(c.value, (int, float)):
+                c.number_format = '#,##0'; c.alignment = right
+            elif is_url(c.value):
+                c.hyperlink = c.value; c.value = 'ссылка'; c.font = LINK_FONT; c.alignment = center
+            else:
+                c.alignment = wrap if c.column in (1, 4, ncol) or (isinstance(c.value, str) and len(c.value) > 18) else center
+        ws.row_dimensions[rr].height = 24 if any(isinstance(v, str) and len(v) > 60 for v in r) else 15
     for i, w in enumerate(widths, 1):
         ws.column_dimensions[get_column_letter(i)].width = w
-    ws.freeze_panes = 'B2'
-    ws.auto_filter.ref = ws.dimensions
+    ws.freeze_panes = 'B4'
+    ws.auto_filter.ref = f"A3:{get_column_letter(ncol)}{ws.max_row}"
+    last_data = ws.max_row
     if note:
         ws.append([]); ws.append([note])
-        ws.cell(ws.max_row, 1).font = Font(italic=True, color='666666')
+        ws.merge_cells(start_row=ws.max_row, start_column=1, end_row=ws.max_row, end_column=ncol)
+        ws.cell(ws.max_row, 1).font = SUB_FONT; ws.cell(ws.max_row, 1).alignment = Alignment(wrap_text=True, vertical='top')
+        ws.row_dimensions[ws.max_row].height = 30
+    # ---- печать: один лист A3, повтор шапки ----
+    ws.page_setup.paperSize = ws.PAPERSIZE_A3
+    ws.page_setup.orientation = orientation
+    ws.page_setup.fitToWidth = 1; ws.page_setup.fitToHeight = 1
+    ws.sheet_properties.pageSetUpPr.fitToPage = True
+    ws.print_title_rows = '3:3'
+    ws.print_area = f"A1:{get_column_letter(ncol)}{ws.max_row}"
+    ws.page_margins.left = ws.page_margins.right = 0.3
+    ws.page_margins.top = ws.page_margins.bottom = 0.4
+    ws.page_margins.header = ws.page_margins.footer = 0.2
+    ws.oddFooter.center.text = '&A — стр. &P из &N'; ws.oddFooter.center.size = 8
+    ws.print_options.horizontalCentered = True
+    ws.sheet_view.showGridLines = False
     return ws
 
 wb = Workbook()
@@ -123,7 +167,8 @@ for r in complexes['complexes']:
     (rows1 if (m.get('stage', 'built' if built else 'building') == 'built') else rows2_live).append(row)
 rows1.sort(key=lambda x: (zkey(x[5]), CLASS_ORDER.get(x[14], 1), -(x[10] or 0)))
 sheet(wb, '1. Построено (вторичка)', H1, rows1,
-      [34, 22, 12, 36, 16, 16, 10, 10, 14, 14, 14, 14, 10, 14, 12, 10, 40, 40, 40],
+      [30, 18, 10, 30, 13, 14, 8, 8, 12, 11, 11, 11, 8, 10, 9, 8, 8, 8, 34],
+      subtitle=f"ЦАО, дома 2018+, активные объявления Циан на {complexes['fetched']}; зоны: Садовое кольцо / Хамовники / Сити, остальной ЦАО помечен «вне Садового»", zone_col=5,
       note=f"Источник: живая выдача Циан {complexes['fetched']} (api.cian.ru, инструмент tools/cian/cian.js), вторичка с годом дома 2018+ и новостройки по 10 районам ЦАО. Цены — ₽/м² по активным объявлениям. Застройщик и класс — по открытым данным (ручная разметка docs/premium-cao/manual.json).")
 
 # ---------- лист 2: строится ----------
@@ -156,7 +201,8 @@ for row in rows2_live:
     rows2.append([row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[11], row[12], m.get('finish', ''), row[17] or row[16], f"Циан {complexes['fetched']}", row[18]])
 rows2.sort(key=lambda x: (zkey(x[5]), str(x[2])))
 sheet(wb, '2. Строится', H2, rows2,
-      [34, 22, 12, 36, 18, 16, 9, 10, 14, 14, 14, 10, 10, 40, 24, 40],
+      [30, 20, 11, 30, 15, 14, 8, 8, 12, 11, 11, 8, 9, 8, 22, 40],
+      subtitle=f"Таблица заказчика + новостройки из выдачи Циан на {complexes['fetched']}", zone_col=5,
       note='Строки из таблицы заказчика дополнены живой выдачей Циан там, где ЖК найден в базе (цены и число лотов обновлены). Остальные строки — найдены в выдаче Циан по новостройкам ЦАО.')
 
 # ---------- лист 3: проектирование ----------
@@ -171,7 +217,8 @@ for p in planning:
                   p.get('source_url'), p.get('notes')])
 rows3.sort(key=lambda x: (zkey(x[3]), str(x[0])))
 sheet(wb, '3. Проектирование', H3, rows3,
-      [34, 34, 16, 16, 22, 26, 12, 12, 10, 8, 12, 12, 14, 12, 22, 44, 50],
+      [30, 28, 13, 14, 22, 24, 10, 10, 8, 7, 11, 11, 11, 11, 20, 8, 46],
+      subtitle='Участки (ЗУ, КРТ, ГПЗУ) и анонсированные проекты без стройки, публикации 2025–2026', zone_col=3, orientation='landscape',
       note='Источники: открытые публикации 2025–2026 (stroi.mos.ru, mos.ru, отраслевые СМИ, публичные Telegram-каналы). Закрытый канал t.me/c/3370602239 недоступен без членства — пост №1364 про ЗУ «Большой Тишинский, 8» подтверждён по открытым источникам.')
 
 out = DOCS / 'premium-zhk-cao.xlsx'
