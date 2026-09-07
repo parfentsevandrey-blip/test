@@ -26,5 +26,19 @@
   "cls": "Бизнес",
   "stage": null,
   "fetched": "2026-09-07"
+ },
+ "Меценат": {
+  "id": 50666,
+  "cianName": "Меценат",
+  "address": "Москва, 2-й Кадашёвский переулок",
+  "url": "https://www.cian.ru/zhiloy-kompleks-mecenat-moskva-50666/",
+  "status": 200,
+  "developer": "Торгпродуктсервис",
+  "finished": null,
+  "deadline": "2019",
+  "yearText": null,
+  "cls": "Бизнес",
+  "stage": null,
+  "fetched": "2026-09-07"
  }
 }
