@@ -96,7 +96,7 @@ enum SOCKS5 {
                     }
                 })
             }
-        }
+        })
     }
 
     private static func receiveExactly(_ connection: NWConnection, _ count: Int, completion: @escaping (Data?, Error?) -> Void) {
