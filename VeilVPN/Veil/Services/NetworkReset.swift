@@ -160,7 +160,7 @@ enum NetworkReset {
     /// Marks the service inactive and active again, which drops and re-acquires its DHCP lease,
     /// routes and DNS configuration — the same thing System Settings does for "Make Inactive".
     private static func cycleService(_ primary: Primary) async throws {
-        let authorization = try SystemConfigurationProxyWriter.authorization()
+        let authorization = try SystemConfigurationProxyWriter.obtainAuthorization()
         guard let preferences = SCPreferencesCreateWithAuthorization(nil, "Veil" as CFString, nil, authorization) else {
             throw SystemProxyError.preferencesUnavailable
         }
@@ -211,7 +211,7 @@ enum NetworkReset {
     /// A crash between "disable" and "enable" would leave the service inactive; repair it on launch.
     static func restoreDisabledServiceIfNeeded() throws -> String? {
         guard let identifier = UserDefaults.standard.string(forKey: disabledServiceKey) else { return nil }
-        let authorization = try SystemConfigurationProxyWriter.authorization()
+        let authorization = try SystemConfigurationProxyWriter.obtainAuthorization()
         guard let preferences = SCPreferencesCreateWithAuthorization(nil, "Veil" as CFString, nil, authorization),
               let service = SCNetworkServiceCopy(preferences, identifier as CFString) else {
             UserDefaults.standard.removeObject(forKey: disabledServiceKey)
