@@ -19,6 +19,8 @@ complexes = json.load(open(DOCS / 'complexes.json'))
 pdf = json.load(open(DOCS / 'pdf-table.json'))
 planning = json.load(open(DOCS / 'planning.json'))
 manual = json.load(open(DOCS / 'manual.json'))   # застройщик, класс, зона — ручная разметка
+devs = json.load(open(DOCS / 'developers.json'))  # веб-исследование по застройщикам, с источниками
+CLASS_ORDER = {'делюкс': 0, 'премиум': 1, 'бизнес': 2}
 
 PREMIUM_PER_M2 = 700_000   # порог ₽/м² по медиане, ниже — бизнес-класс, в подборку не идёт
 
@@ -89,7 +91,7 @@ wb.remove(wb.active)
 # ---------- лист 1: построено ----------
 H1 = ['Название ЖК', 'Застройщик', 'Год постройки', 'Адрес', 'Район', 'Зона', 'Корпусов (видно в выдаче)', 'Этажность',
       'Статус', 'Цена за метр ОТ', 'Цена за метр медиана', 'Цена за метр ДО', 'Лотов в продаже', 'Площадь лотов, м²',
-      'Класс', 'Ссылка на Циан', 'Примечание']
+      'Класс', 'Квартир в проекте', 'Ссылка на Циан', 'Сайт проекта / источник', 'Примечание']
 rows1, rows2_live = [], []
 live_targets = {v.get('live') for v in manual.values() if isinstance(v, dict) and v.get('live')}
 for r in complexes['complexes']:
@@ -106,14 +108,22 @@ for r in complexes['complexes']:
     status = 'апартаменты' if r['apartmentsShare'] >= 60 else ('квартиры + апартаменты' if r['apartmentsShare'] >= 15 else 'квартиры')
     addr = ', '.join(x for x in ['Москва', r.get('street'), r.get('house')] if x)
     link = r['urls'][0] if r.get('urls') else ''
-    row = [r['complex'], m.get('developer', ''), m.get('year') or fmt_years(r), m.get('address') or addr, r.get('district'), z,
-           r.get('housesSeen'), floors(r), status, per_m2_str(r.get('perM2Min')), per_m2_str(med), per_m2_str(r.get('perM2Max')),
+    dv = devs.get(r['complex'], {})
+    developer = m.get('developer') or dv.get('developer') or ''
+    cls = m.get('class') or dv.get('class') or 'премиум'
+    if m.get('class') and dv.get('class') and dv['class'] != m['class']: cls = dv['class'] if dv['class'] == 'бизнес' else m['class']
+    notes = '; '.join(x for x in [m.get('note', ''), dv.get('note') or ''] if x)
+    if dv.get('developer') and m.get('developer') and dv['developer'].split()[0].lower() != m['developer'].split()[0].lower():
+        notes = '; '.join(x for x in [notes, f"по другим источникам застройщик: {dv['developer']}"] if x)
+    row = [r['complex'], developer, m.get('year') or fmt_years(r), m.get('address') or addr, r.get('district'), z,
+           max(r.get('housesSeen') or 0, dv.get('buildings') or 0) or None, floors(r) or dv.get('floors') or '', status,
+           per_m2_str(r.get('perM2Min')), per_m2_str(med), per_m2_str(r.get('perM2Max')),
            r.get('declared') or r.get('lots'), f"{int(r['areaMin'])}–{int(r['areaMax'])}" if r.get('areaMin') and r['areaMin'] != math.inf else '',
-           m.get('class', 'премиум'), link, m.get('note', '')]
+           cls, dv.get('units'), link, dv.get('site') or dv.get('source') or '', notes]
     (rows1 if (m.get('stage', 'built' if built else 'building') == 'built') else rows2_live).append(row)
-rows1.sort(key=lambda x: (zkey(x[5]), -(x[10] or 0)))
+rows1.sort(key=lambda x: (zkey(x[5]), CLASS_ORDER.get(x[14], 1), -(x[10] or 0)))
 sheet(wb, '1. Построено (вторичка)', H1, rows1,
-      [34, 22, 12, 36, 16, 16, 10, 10, 14, 14, 14, 14, 10, 14, 12, 40, 40],
+      [34, 22, 12, 36, 16, 16, 10, 10, 14, 14, 14, 14, 10, 14, 12, 10, 40, 40, 40],
       note=f"Источник: живая выдача Циан {complexes['fetched']} (api.cian.ru, инструмент tools/cian/cian.js), вторичка с годом дома 2018+ и новостройки по 10 районам ЦАО. Цены — ₽/м² по активным объявлениям. Застройщик и класс — по открытым данным (ручная разметка docs/premium-cao/manual.json).")
 
 # ---------- лист 2: строится ----------
@@ -135,12 +145,15 @@ for row in pdf['rows']:
         src = f"таблица заказчика + Циан {complexes['fetched']}"
         if (lr.get('finishedShare') or 0) >= 50: note = '; '.join(x for x in [note, 'по Циан дом сдан'] if x)
         if lr.get('urls') and not m.get('url'): m = {**m, 'url': lr['urls'][0]}
-    rows2.append([name, dev, dl, addr, metro, z, b, fl, st, pf, pt, lots, fin, m.get('url', ''), src, '; '.join(x for x in [note, m.get('note')] if x)])
+    dv = devs.get(live, {}) if live else {}
+    if dv.get('developer') and dev and dv['developer'].split()[0].lower() != dev.split()[0].lower():
+        note = '; '.join(x for x in [note, f"по другим источникам застройщик: {dv['developer']}"] if x)
+    rows2.append([name, dev, dl, addr, metro, z, b, fl, st, pf, pt, lots, fin, m.get('url') or dv.get('site') or '', src, '; '.join(x for x in [note, m.get('note')] if x)])
     seen.add(live or name)
 for row in rows2_live:
     if row[0] in seen: continue
     m = manual.get(row[0], {})
-    rows2.append([row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[11], row[12], m.get('finish', ''), row[15], f"Циан {complexes['fetched']}", row[16]])
+    rows2.append([row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[11], row[12], m.get('finish', ''), row[17] or row[16], f"Циан {complexes['fetched']}", row[18]])
 rows2.sort(key=lambda x: (zkey(x[5]), str(x[2])))
 sheet(wb, '2. Строится', H2, rows2,
       [34, 22, 12, 36, 18, 16, 9, 10, 14, 14, 14, 10, 10, 40, 24, 40],
