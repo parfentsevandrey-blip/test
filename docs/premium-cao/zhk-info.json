@@ -12,5 +12,19 @@
   "cls": "Премиум",
   "stage": null,
   "fetched": "2026-09-07"
+ },
+ "Пресня Сити": {
+  "id": 6743,
+  "cianName": "Пресня Сити",
+  "address": "Москва, Ходынская улица",
+  "url": "https://www.cian.ru/zhiloy-kompleks-presnya-siti-moskva-6743/",
+  "status": 200,
+  "developer": "MR",
+  "finished": null,
+  "deadline": "2018",
+  "yearText": null,
+  "cls": "Бизнес",
+  "stage": null,
+  "fetched": "2026-09-07"
  }
 }
