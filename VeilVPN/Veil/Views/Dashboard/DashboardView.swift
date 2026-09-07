@@ -13,6 +13,12 @@ struct DashboardView: View {
                 if app.isDemo {
                     DemoBanner()
                 }
+                if app.killSwitchEngaged {
+                    KillSwitchBanner()
+                }
+                if let update = app.availableUpdate {
+                    UpdateBanner(update: update)
+                }
 
                 GlassEffectContainer(spacing: 40) {
                     VStack(spacing: 22) {
@@ -24,7 +30,7 @@ struct DashboardView: View {
                         StatusHeadline()
 
                         HStack(spacing: 12) {
-                            TransportChip(transport: app.settings.transport)
+                            TransportChip(transport: app.settings.transport, active: app.connection.isActive ? app.activeTransport : nil)
                                 .glassEffectID("transport", in: glassNamespace)
                             ExitChip(
                                 location: app.selectedExit,
@@ -79,6 +85,7 @@ struct DashboardView: View {
         }
         .animation(.smooth(duration: 0.55), value: app.connection)
         .animation(.smooth(duration: 0.45), value: app.turboActive)
+        .animation(.smooth(duration: 0.45), value: app.killSwitchEngaged)
     }
 }
 
@@ -175,8 +182,13 @@ struct YouTubeTestLabel: View {
             .foregroundStyle(.secondary)
         } else if let result {
             if result.success {
-                Label("youtube.com reachable in \(result.milliseconds) ms (\(result.viaTor ? "via Tor" : "direct"))", systemImage: "checkmark.seal.fill")
-                    .foregroundStyle(.mint)
+                Label {
+                    Text("youtube.com reachable in \(result.milliseconds) ms (\(result.viaTor ? "via Tor" : "direct"))")
+                    + Text(verbatim: result.kilobytesPerSecond.map { String(format: " · %.0f KB/s", $0) } ?? "")
+                } icon: {
+                    Image(systemName: "checkmark.seal.fill")
+                }
+                .foregroundStyle(.mint)
             } else {
                 Label("youtube.com failed: \(result.detail)", systemImage: "xmark.seal.fill")
                     .foregroundStyle(.red)

@@ -8,7 +8,7 @@ XCODEBUILD_FLAGS := -project Veil.xcodeproj -scheme Veil -configuration Release 
 	-derivedDataPath build/DerivedData ONLY_ACTIVE_ARCH=NO ARCHS="arm64 x86_64" \
 	CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
 
-.PHONY: all tor xcodeproj app dmg run icon clean
+.PHONY: all tor xcodeproj app test dmg run icon clean
 
 all: dmg
 
@@ -31,6 +31,13 @@ app: xcodeproj tor
 	rm -rf $(APP)
 	cp -R build/DerivedData/Build/Products/Release/Veil.app $(APP)
 	scripts/embed-tor.sh $(TOR_DIR) $(APP)
+
+## Run the unit tests (Debug build, hosted by the app).
+test: xcodeproj tor
+	mkdir -p build
+	set -o pipefail; xcodebuild test -project Veil.xcodeproj -scheme Veil -destination 'platform=macOS' \
+		-derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" 2>&1 \
+		| tee build/xcodebuild-test.log | grep -E --line-buffered 'error:|warning: .*Veil/|Test Case .* (passed|failed)|Executed|TEST (SUCCEEDED|FAILED)|BUILD FAILED'
 
 ## Ad-hoc sign the app and wrap it into a DMG.
 dmg: app

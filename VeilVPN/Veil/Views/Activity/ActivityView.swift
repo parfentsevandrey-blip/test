@@ -5,6 +5,9 @@ struct ActivityView: View {
 
     var body: some View {
         VStack(spacing: 18) {
+            if app.bridgeRunning {
+                RoutingStatsRow(stats: app.bridgeStats)
+            }
             TrafficChart(
                 samples: app.traffic.samples,
                 downloadRate: app.traffic.downloadRate,

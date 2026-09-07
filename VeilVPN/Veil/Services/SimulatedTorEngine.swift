@@ -57,7 +57,11 @@ final class SimulatedTorEngine: TorEngine {
         }
     }
 
-    func waitForBootstrap(timeout: Duration) async throws {
+    func isCircuitEstablished() async -> Bool {
+        running && bootstrap.isDone
+    }
+
+    func waitForBootstrap(timeout: Duration, stallTimeout: Duration) async throws {
         let started = ContinuousClock.now
         while !bootstrap.isDone {
             try Task.checkCancellation()

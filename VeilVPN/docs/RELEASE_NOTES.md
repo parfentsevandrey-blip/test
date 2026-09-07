@@ -2,6 +2,16 @@
 
 Liquid Glass UI, bundled Tor Expert Bundle (universal: Apple silicon + Intel), Snowflake / obfs4 / custom bridges, exit-country selection, live circuit and throughput, automatic system proxy.
 
+### New in 0.4.0
+- **Kill switch (fail closed)** — the system proxy is armed before Tor is up and stays pointed at Veil if Tor dies, so proxied apps are blocked instead of leaking. Reconnect or "Restore network" from the banner.
+- **Automatic transport** — checks whether Tor is reachable directly, then tries the last working transport, your bridges, Snowflake, obfs4 and meek until one bootstraps; stalled attempts are skipped.
+- **Auto-reconnect** after network changes and sleep, with a circuit health check.
+- **Bridges from the Tor Project** (Moat / rdsys), directly or through a domain-fronted CDN, and a direct-reachability probe.
+- **YouTube**: automatic selection of the fastest anti-throttling technique, homepage speed in the check, per-site presets (Discord, Telegram, Twitch, Instagram, Facebook, X, Signal, RuTube).
+- **Privacy**: separate Tor circuit per site (IsolateDestAddr), routing counters in Activity.
+- **App**: onboarding, compact mini window (⇧⌘M), route map, menu-bar sparkline, notifications, haptics and sounds, in-app update check, settings export/import, diagnostics report, Shortcuts actions, more keyboard shortcuts.
+- **Project**: unit tests run in CI before every DMG; a weekly job watches for new Tor Expert Bundle versions.
+
 ### Fixed in 0.3.1
 - **Traffic padding** could not reach its private onion service. Veil now waits for Tor's `HS_DESC UPLOADED` event before connecting, retries with realistic intervals, and speaks SOCKS5 to Tor itself so `.onion` names (and every other host name) are resolved by Tor, never locally. The HTTP bridge and the Tor check use the same path, which also rules out DNS leaks.
 
@@ -17,6 +27,16 @@ Liquid Glass UI, bundled Tor Expert Bundle (universal: Apple silicon + Intel), S
 1. Open the DMG and drag **Veil.app** to *Applications*.
 2. The build is ad-hoc signed (no Apple Developer certificate): on first launch open **System Settings → Privacy & Security → Open Anyway**, or run `xattr -cr /Applications/Veil.app`.
 3. Press the power button. macOS asks for an administrator password once to switch the system proxy.
+
+### Новое в 0.4.0
+- **Kill switch** — системный прокси включается до запуска Tor и остаётся направленным на Veil, если Tor упадёт: приложения с прокси блокируются, а не утекают. Переподключение или «Вернуть сеть» одной кнопкой.
+- **Автоматический транспорт** — проверка прямой доступности Tor, затем последний сработавший транспорт, ваши мосты, Snowflake, obfs4 и meek по очереди; зависшие попытки пропускаются.
+- **Автопереподключение** после смены сети и сна с проверкой цепочек.
+- **Мосты от Tor Project** (Moat / rdsys) напрямую или через CDN с domain fronting, проверка прямой доступности.
+- **YouTube**: автоподбор самой быстрой техники обхода, скорость в проверке, пресеты для сайтов (Discord, Telegram, Twitch, Instagram, Facebook, X, Signal, RuTube).
+- **Приватность**: отдельная цепочка на каждый сайт (IsolateDestAddr), счётчики маршрутизации в «Активности».
+- **Приложение**: онбординг, компактное мини-окно (⇧⌘M), карта маршрута, спарклайн в строке меню, уведомления, тактильный отклик и звуки, проверка обновлений, экспорт/импорт настроек, отчёт диагностики, действия для Shortcuts, новые сочетания клавиш.
+- **Проект**: юнит-тесты в CI перед каждой сборкой DMG; еженедельная проверка новой версии Tor Expert Bundle.
 
 ### Исправлено в 0.3.1
 - **Маскировка трафика** не могла достучаться до своего onion-сервиса. Теперь Veil ждёт событие Tor `HS_DESC UPLOADED` перед подключением, повторяет попытки с разумными интервалами и сам говорит с Tor по SOCKS5, поэтому `.onion`-имена (и вообще любые имена хостов) резолвит Tor, а не macOS. HTTP-мост и проверка Tor идут тем же путём — заодно исключены утечки DNS.

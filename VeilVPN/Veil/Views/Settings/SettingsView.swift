@@ -14,6 +14,8 @@ struct SettingsView: View {
                 .tabItem { Label("Privacy", systemImage: "lock.shield") }
             YouTubeSettingsView()
                 .tabItem { Label("YouTube", systemImage: "play.rectangle") }
+            SitesSettingsView()
+                .tabItem { Label("Sites", systemImage: "globe") }
             AboutView()
                 .tabItem { Label("About", systemImage: "info.circle") }
         }
@@ -53,6 +55,78 @@ struct GeneralSettingsView: View {
                 Toggle("Verify the exit with check.torproject.org after connecting", isOn: $app.settings.checkAfterConnect)
                 Toggle("Verbose Tor log", isOn: $app.settings.verboseLogs)
             }
+            Section("Feedback") {
+                Toggle("Notifications for connection events", isOn: $app.settings.notificationsEnabled)
+                Toggle("Haptic feedback on the trackpad", isOn: $app.settings.hapticFeedback)
+                Toggle("Sound effects", isOn: $app.settings.soundEffects)
+            }
+            Section {
+                Toggle("Check for updates automatically", isOn: $app.settings.checkForUpdates)
+                HStack {
+                    Button {
+                        app.checkForUpdates(manual: true)
+                    } label: {
+                        Label("Check now", systemImage: "arrow.clockwise")
+                    }
+                    .disabled(app.isCheckingUpdate)
+                    if app.isCheckingUpdate {
+                        ProgressView().controlSize(.small)
+                    } else if let message = app.updateCheckMessage {
+                        Text(verbatim: message)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                if let update = app.availableUpdate {
+                    Button {
+                        app.openAvailableUpdate()
+                    } label: {
+                        Label("Download Veil \(update.version)", systemImage: "arrow.down.circle")
+                    }
+                }
+            } header: {
+                Text("Updates")
+            } footer: {
+                Text("Updates are downloaded from the GitHub releases of this project; replace Veil in Applications and relaunch.")
+            }
+            Section {
+                HStack(spacing: 12) {
+                    Button {
+                        app.exportSettings()
+                    } label: {
+                        Label("Export…", systemImage: "square.and.arrow.up")
+                    }
+                    Button {
+                        app.importSettings()
+                    } label: {
+                        Label("Import…", systemImage: "square.and.arrow.down")
+                    }
+                }
+                Text("Bridges, routes, sites, padding and every other preference in one JSON file.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } header: {
+                Text("Settings file")
+            }
+            Section {
+                HStack(spacing: 12) {
+                    Button {
+                        app.saveDiagnostics()
+                    } label: {
+                        Label("Save report…", systemImage: "doc.text")
+                    }
+                    Button {
+                        app.copyDiagnostics()
+                    } label: {
+                        Label("Copy to clipboard", systemImage: "doc.on.doc")
+                    }
+                }
+                Text("Versions, state, settings and the last 800 log lines. Bridge lines are included; no passwords are stored anywhere.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } header: {
+                Text("Diagnostics")
+            }
         }
         .formStyle(.grouped)
     }
@@ -72,6 +146,30 @@ struct NetworkSettingsView: View {
                     .foregroundStyle(.secondary)
             } header: {
                 Text("System proxy")
+            }
+            Section {
+                Toggle("Kill switch (fail closed)", isOn: Binding(
+                    get: { app.settings.killSwitch },
+                    set: { app.setKillSwitch($0) }
+                ))
+                Text("Arms the system proxy before Tor is up and keeps it pointed at Veil if Tor dies, so apps that use the proxy are blocked instead of leaking. Apps that ignore the proxy are not covered without a system extension.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Toggle("Reconnect automatically after network changes and sleep", isOn: Binding(
+                    get: { app.settings.autoReconnect },
+                    set: { app.setAutoReconnect($0) }
+                ))
+                Toggle("Separate Tor circuit for every site", isOn: Binding(
+                    get: { app.settings.isolatePerSite },
+                    set: { app.setIsolatePerSite($0) }
+                ))
+                Text("IsolateDestAddr: sites cannot be linked through a shared exit IP. More circuits, slightly slower. Applies on the next connection.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } header: {
+                Text("Protection")
             }
             Section {
                 TextField("SOCKS5 port", value: $app.settings.socksPort, format: .number.grouping(.never))
@@ -151,12 +249,65 @@ struct BridgesSettingsView: View {
             }
 
             Section {
+                HStack(spacing: 12) {
+                    Button {
+                        app.fetchBridgesFromTorProject()
+                    } label: {
+                        Label("Get bridges from the Tor Project", systemImage: "arrow.down.doc")
+                    }
+                    .disabled(app.moatStatus == .fetching)
+                    moatStatusLabel
+                }
+                Text("Asks bridges.torproject.org (directly, then through a domain-fronted CDN) for bridges recommended for your country and switches to them.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } header: {
+                Text("Bridge service")
+            }
+            Section {
+                HStack(spacing: 12) {
+                    Button {
+                        app.probeReachability()
+                    } label: {
+                        Label("Check direct reachability", systemImage: "antenna.radiowaves.left.and.right")
+                    }
+                    if let report = app.reachability {
+                        Text("\(report.reachable) of \(report.total) Tor directory authorities reachable")
+                            .font(.caption)
+                            .foregroundStyle(report.directLooksPossible ? .mint : .orange)
+                    }
+                }
                 Text("Changes take effect on the next connection.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
+    }
+
+    @ViewBuilder
+    private var moatStatusLabel: some View {
+        switch app.moatStatus {
+        case .idle:
+            EmptyView()
+        case .fetching:
+            HStack(spacing: 6) {
+                ProgressView().controlSize(.small)
+                Text("Requesting…")
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        case .done(let count, let transport):
+            Text("Received \(count) \(transport) bridge(s); transport set to custom")
+                .font(.caption)
+                .foregroundStyle(.mint)
+        case .failed(let message):
+            Text(verbatim: message)
+                .font(.caption)
+                .foregroundStyle(.red)
+                .lineLimit(2)
+        }
     }
 }
 
@@ -220,9 +371,9 @@ struct YouTubeSettingsView: View {
             Section {
                 Picker("YouTube traffic", selection: Binding(
                     get: { app.settings.youtubeMode },
-                    set: { app.setYouTubeMode($0) }
+                    set: { app.setRouteMode($0) }
                 )) {
-                    ForEach(YouTubeMode.allCases) { mode in
+                    ForEach(RouteMode.allCases) { mode in
                         Text(mode.title).tag(mode)
                     }
                 }
@@ -251,6 +402,34 @@ struct YouTubeSettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
+                HStack(spacing: 12) {
+                    Button {
+                        app.autoSelectYouTubeTechnique()
+                    } label: {
+                        Label("Auto-select the fastest technique", systemImage: "wand.and.stars")
+                    }
+                    .disabled(!app.bridgeRunning || app.isBenchmarking)
+                    if app.isBenchmarking {
+                        ProgressView().controlSize(.small)
+                    }
+                }
+                ForEach(app.benchmarkResults) { result in
+                    HStack {
+                        Text(result.strategy.title)
+                            .font(.caption)
+                        Spacer()
+                        if let measurement = result.measurement {
+                            Text(verbatim: "\(measurement.milliseconds) ms · \(Int(measurement.kilobytesPerSecond)) KB/s")
+                                .font(.caption.monospacedDigit())
+                                .foregroundStyle(result.strategy == app.settings.dpiStrategy ? .mint : .secondary)
+                        } else {
+                            Text(verbatim: result.error ?? "—")
+                                .font(.caption)
+                                .foregroundStyle(.red)
+                                .lineLimit(1)
+                        }
+                    }
+                }
             } header: {
                 Text("Anti-throttling technique")
             }

@@ -93,12 +93,16 @@ struct MultihopCard: View {
             }
 
             RouteDiagram(
-                usesBridge: app.settings.transport != .direct,
+                usesBridge: (app.activeTransport ?? app.settings.transport) != .direct,
                 middle: middleDisplay,
                 exit: exitDisplay,
                 active: app.connection.isConnected
             )
             .frame(height: 150)
+
+            RouteMapView(hops: app.circuit)
+                .frame(height: 220)
+                .clipShape(.rect(cornerRadius: 20))
 
             Text("Multihop routes your traffic through relays in the countries you choose — bridge, middle and exit hops in different jurisdictions — which makes tracking much harder. It can add latency, but improves anonymity. The route can also be excluded from chosen countries and rotated on a timer.")
                 .font(.callout)

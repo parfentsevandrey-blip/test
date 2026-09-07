@@ -2,38 +2,64 @@ import Foundation
 import Network
 
 /// A tiny local HTTP proxy (CONNECT tunnels + absolute-URI requests). By default everything is
-/// forwarded to Tor's SOCKS5 port, with host names handed to Tor unresolved (no DNS leaks).
-/// A `RoutingPolicy` can send chosen hosts (YouTube, custom domains) directly instead, optionally
-/// fragmenting the TLS ClientHello so throttling DPI cannot read the SNI. With `socksPort == nil`
-/// (YouTube Turbo) nothing goes through Tor at all.
+/// forwarded to Tor's SOCKS5 port with a hand-made SOCKS5 CONNECT, so host names are resolved by
+/// Tor (no DNS leaks, `.onion` works). A `RoutingPolicy` can send chosen hosts (YouTube, services,
+/// custom domains) directly instead, optionally fragmenting the TLS ClientHello so throttling DPI
+/// cannot read the SNI. With `socksPort == nil` nothing goes through Tor (YouTube Turbo), and with
+/// `blockAll` every request is refused (kill switch: fail closed while Tor is down).
 final class HTTPProxyBridge: @unchecked Sendable {
-    private let socksPort: UInt16?
+    struct Stats: Equatable, Sendable {
+        var tor = 0
+        var direct = 0
+        var antiThrottle = 0
+        var blocked = 0
+    }
+
     private let queue = DispatchQueue(label: "app.veilvpn.httpbridge")
     private let lock = NSLock()
     private var listener: NWListener?
     private var sessions: [ObjectIdentifier: ProxySession] = [:]
     private var storedPolicy: RoutingPolicy
+    private var storedSocksPort: UInt16?
+    private var storedBlockAll = false
+    private var storedStats = Stats()
     private(set) var port: UInt16 = 0
+
+    init(socksPort: UInt16?, policy: RoutingPolicy) {
+        storedSocksPort = socksPort
+        storedPolicy = policy
+    }
+
+    /// Tor's SOCKS port, or nil when Tor is not available. Applies to new connections.
+    var socksPort: UInt16? {
+        get { lock.lock(); defer { lock.unlock() }; return storedSocksPort }
+        set { lock.lock(); storedSocksPort = newValue; lock.unlock() }
+    }
 
     var torAvailable: Bool { socksPort != nil }
 
-    /// Applies to connections accepted after the change.
-    var policy: RoutingPolicy {
-        get {
-            lock.lock()
-            defer { lock.unlock() }
-            return storedPolicy
-        }
-        set {
-            lock.lock()
-            storedPolicy = newValue
-            lock.unlock()
-        }
+    /// Refuse every request (kill switch). Applies to new connections.
+    var blockAll: Bool {
+        get { lock.lock(); defer { lock.unlock() }; return storedBlockAll }
+        set { lock.lock(); storedBlockAll = newValue; lock.unlock() }
     }
 
-    init(socksPort: UInt16?, policy: RoutingPolicy) {
-        self.socksPort = socksPort
-        self.storedPolicy = policy
+    /// Applies to connections accepted after the change.
+    var policy: RoutingPolicy {
+        get { lock.lock(); defer { lock.unlock() }; return storedPolicy }
+        set { lock.lock(); storedPolicy = newValue; lock.unlock() }
+    }
+
+    var stats: Stats {
+        lock.lock()
+        defer { lock.unlock() }
+        return storedStats
+    }
+
+    func resetStats() {
+        lock.lock()
+        storedStats = Stats()
+        lock.unlock()
     }
 
     func start(port: UInt16) throws {
@@ -60,16 +86,35 @@ final class HTTPProxyBridge: @unchecked Sendable {
     }
 
     private func accept(_ connection: NWConnection) {
-        let session = ProxySession(client: connection, socksPort: socksPort, policy: policy) { [weak self] finished in
+        lock.lock()
+        let socks = storedSocksPort
+        let policy = storedPolicy
+        let blocked = storedBlockAll
+        lock.unlock()
+        let session = ProxySession(client: connection, socksPort: socks, policy: policy, blocked: blocked, onDecision: { [weak self] decision in
+            self?.record(decision)
+        }, onClose: { [weak self] finished in
             guard let self else { return }
             self.lock.lock()
             self.sessions[ObjectIdentifier(finished)] = nil
             self.lock.unlock()
-        }
+        })
         lock.lock()
         sessions[ObjectIdentifier(session)] = session
         lock.unlock()
         session.start()
+    }
+
+    private func record(_ decision: RouteDecision?) {
+        lock.lock()
+        switch decision {
+        case .none: storedStats.blocked += 1
+        case .some(.tor): storedStats.tor += 1
+        case .some(.direct(let antiThrottle)):
+            storedStats.direct += 1
+            if antiThrottle { storedStats.antiThrottle += 1 }
+        }
+        lock.unlock()
     }
 }
 
@@ -78,7 +123,9 @@ final class ProxySession: @unchecked Sendable {
     private let client: NWConnection
     private let socksPort: UInt16?
     private let policy: RoutingPolicy
+    private let blocked: Bool
     private let queue = DispatchQueue(label: "app.veilvpn.httpbridge.session")
+    private let onDecision: @Sendable (RouteDecision?) -> Void
     private let onClose: (ProxySession) -> Void
     private var upstream: NWConnection?
     private var head = Data()
@@ -86,10 +133,13 @@ final class ProxySession: @unchecked Sendable {
     private var closed = false
     private var finishedDirections = 0
 
-    init(client: NWConnection, socksPort: UInt16?, policy: RoutingPolicy, onClose: @escaping (ProxySession) -> Void) {
+    init(client: NWConnection, socksPort: UInt16?, policy: RoutingPolicy, blocked: Bool,
+         onDecision: @escaping @Sendable (RouteDecision?) -> Void, onClose: @escaping (ProxySession) -> Void) {
         self.client = client
         self.socksPort = socksPort
         self.policy = policy
+        self.blocked = blocked
+        self.onDecision = onDecision
         self.onClose = onClose
     }
 
@@ -139,6 +189,12 @@ final class ProxySession: @unchecked Sendable {
         let remainder = head.subdata(in: headerEnd.upperBound..<head.endIndex)
         head = Data()
 
+        if blocked {
+            onDecision(nil)
+            respond(503, "Veil kill switch: Tor is not running")
+            return
+        }
+
         guard let headerText = String(data: headerData, encoding: .utf8) else {
             respond(400, "Bad Request")
             return
@@ -159,6 +215,7 @@ final class ProxySession: @unchecked Sendable {
                 return
             }
             let route = policy.decision(for: destination.host, torAvailable: socksPort != nil)
+            onDecision(route)
             openUpstream(host: destination.host, port: destination.port, route: route) { [weak self] in
                 guard let self else { return }
                 let established = Data("HTTP/1.1 200 Connection Established\r\nProxy-Agent: Veil\r\n\r\n".utf8)
@@ -168,11 +225,10 @@ final class ProxySession: @unchecked Sendable {
                         self.close()
                         return
                     }
+                    self.helloBuffer = remainder
                     if case .direct(antiThrottle: true) = route {
-                        self.helloBuffer = remainder
                         self.processClientHelloBuffer()
                     } else {
-                        self.helloBuffer = remainder
                         self.forwardBufferedAndPipe()
                     }
                 })
@@ -211,6 +267,7 @@ final class ProxySession: @unchecked Sendable {
         let requestHead = Data((forwarded.joined(separator: "\r\n") + "\r\n\r\n").utf8)
 
         let route = policy.decision(for: host, torAvailable: socksPort != nil)
+        onDecision(route)
         openUpstream(host: host, port: port, route: route) { [weak self] in
             guard let self, let upstream = self.upstream else { return }
             upstream.send(content: requestHead + remainder, completion: .contentProcessed { [weak self] error in
@@ -255,8 +312,6 @@ final class ProxySession: @unchecked Sendable {
                 respond(502, "Bad Gateway")
                 return
             }
-            // Plain TCP to Tor's SOCKS port; the SOCKS5 CONNECT below carries the host name so
-            // Tor resolves it (no local DNS, .onion works).
             let tcpOptions = NWProtocolTCP.Options()
             tcpOptions.connectionTimeout = 20
             upstream = NWConnection(host: "127.0.0.1", port: NWEndpoint.Port(rawValue: socksPort) ?? 9050, using: NWParameters(tls: nil, tcp: tcpOptions))
@@ -316,7 +371,7 @@ final class ProxySession: @unchecked Sendable {
     private func processClientHelloBuffer() {
         guard upstream != nil, !closed else { return }
         if helloBuffer.count >= 6, !ClientHelloSplitter.isClientHello(helloBuffer) {
-            forwardBufferedAndPipe() // not TLS (or already past the handshake): nothing to hide
+            forwardBufferedAndPipe()
             return
         }
         guard let recordLength = ClientHelloSplitter.firstRecordLength(helloBuffer), helloBuffer.count >= 6 else {

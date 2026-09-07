@@ -22,6 +22,15 @@ struct BootstrapPanel: View {
             ProgressView(value: Double(app.bootstrap.percent), total: 100)
                 .tint(.orange)
                 .animation(.smooth, value: app.bootstrap.percent)
+            if let message = app.transportAttemptMessage {
+                Label {
+                    Text(verbatim: message)
+                } icon: {
+                    Image(systemName: "wand.and.stars")
+                }
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.orange)
+            }
             if !app.bootstrap.summary.isEmpty {
                 Text(verbatim: app.bootstrap.summary)
                     .font(.caption)

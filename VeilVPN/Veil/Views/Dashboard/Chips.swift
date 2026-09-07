@@ -3,8 +3,10 @@ import SwiftUI
 extension AppSettings.Transport {
     var title: LocalizedStringKey {
         switch self {
+        case .auto: "Automatic (recommended)"
         case .snowflake: "Snowflake"
         case .obfs4: "obfs4 bridges"
+        case .meek: "meek (domain fronting)"
         case .custom: "Custom bridges"
         case .direct: "Direct (no bridges)"
         }
@@ -12,7 +14,9 @@ extension AppSettings.Transport {
 
     var details: LocalizedStringKey {
         switch self {
-        case .snowflake: "Uses volunteer WebRTC proxies and domain fronting to reach Tor. Works in most censored networks and is the recommended default."
+        case .auto: "Checks whether Tor is reachable directly, then tries the last transport that worked, your custom bridges, Snowflake, obfs4 and meek in turn until one bootstraps."
+        case .meek: "Tunnels through a large CDN with domain fronting. Slow but very hard to block; the built-in bridge comes from Tor Browser."
+        case .snowflake: "Uses volunteer WebRTC proxies and domain fronting to reach Tor. Works in most censored networks."
         case .obfs4: "Built-in obfs4 bridges from Tor Browser. Fast, but the addresses are public and may already be blocked."
         case .custom: "Paste bridge lines from bridges.torproject.org, the Telegram bot @GetBridgesBot, or email bridges@torproject.org. obfs4, webtunnel, snowflake, meek_lite and conjure are supported."
         case .direct: "Connect to public Tor relays without any bridge. Fastest, but it only works where Tor is not blocked."
@@ -21,8 +25,10 @@ extension AppSettings.Transport {
 
     var symbol: String {
         switch self {
+        case .auto: "wand.and.stars"
         case .snowflake: "snowflake"
         case .obfs4: "shuffle"
+        case .meek: "cloud.fill"
         case .custom: "doc.text"
         case .direct: "bolt.fill"
         }
@@ -47,7 +53,7 @@ extension PaddingLevel {
     }
 }
 
-extension YouTubeMode {
+extension RouteMode {
     var title: LocalizedStringKey {
         switch self {
         case .tor: "Through Tor"
@@ -77,7 +83,7 @@ extension DPIStrategy {
 }
 
 struct YouTubeChip: View {
-    let mode: YouTubeMode
+    let mode: RouteMode
     let turbo: Bool
 
     var body: some View {
@@ -140,10 +146,11 @@ struct PaddingChip: View {
 
 struct TransportChip: View {
     let transport: AppSettings.Transport
+    var active: AppSettings.Transport? = nil
 
     var body: some View {
         SettingsLink {
-            Label(transport.title, systemImage: transport.symbol)
+            Label((active ?? transport).title, systemImage: (active ?? transport).symbol)
                 .font(.subheadline.weight(.medium))
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)

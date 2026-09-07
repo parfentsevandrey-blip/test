@@ -26,11 +26,25 @@ enum SidebarItem: String, CaseIterable, Identifiable, Hashable {
 
 struct RootView: View {
     @Environment(AppState.self) private var app
-    @State private var selection: SidebarItem? = .home
+    @Environment(\.openWindow) private var openWindow
+
+    private var selection: Binding<SidebarItem?> {
+        Binding(
+            get: { app.sidebarSelection },
+            set: { app.sidebarSelection = $0 ?? .home }
+        )
+    }
+
+    private var onboardingPresented: Binding<Bool> {
+        Binding(
+            get: { !app.settings.onboardingCompleted },
+            set: { presented in if !presented { app.completeOnboarding() } }
+        )
+    }
 
     var body: some View {
         NavigationSplitView {
-            List(SidebarItem.allCases, selection: $selection) { item in
+            List(SidebarItem.allCases, selection: selection) { item in
                 Label(item.title, systemImage: item.symbol)
             }
             .navigationSplitViewColumnWidth(min: 190, ideal: 220, max: 280)
@@ -44,19 +58,23 @@ struct RootView: View {
                     .backgroundExtensionEffect()
                 detailContent
             }
-            .navigationTitle((selection ?? .home).title)
+            .navigationTitle(app.sidebarSelection.title)
             .toolbar { toolbarContent }
         }
         .frame(minWidth: 980, minHeight: 660)
+        .sheet(isPresented: onboardingPresented) {
+            OnboardingView()
+                .environment(app)
+        }
     }
 
     @ViewBuilder
     private var detailContent: some View {
-        switch selection ?? .home {
+        switch app.sidebarSelection {
         case .home:
             DashboardView(
-                openActivity: { selection = .activity },
-                openLocations: { selection = .locations }
+                openActivity: { app.sidebarSelection = .activity },
+                openLocations: { app.sidebarSelection = .locations }
             )
         case .locations:
             RouteView()
@@ -87,6 +105,14 @@ struct RootView: View {
         }
         ToolbarSpacer(.fixed)
         ToolbarItem {
+            Button {
+                openWindow(id: "mini")
+            } label: {
+                Label("Mini window", systemImage: "rectangle.portrait")
+            }
+            .help("Open the compact window (⇧⌘M)")
+        }
+        ToolbarItem {
             SettingsLink {
                 Label("Settings", systemImage: "gearshape")
             }
@@ -104,7 +130,11 @@ struct SidebarStatusFooter: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(app.connection.title)
                     .font(.subheadline.weight(.semibold))
-                if app.turboActive, !app.connection.isActive {
+                if app.killSwitchEngaged {
+                    Text("Kill switch engaged")
+                        .font(.caption2)
+                        .foregroundStyle(.red)
+                } else if app.turboActive, !app.connection.isActive {
                     Text("YouTube Turbo")
                         .font(.caption2)
                         .foregroundStyle(.red)

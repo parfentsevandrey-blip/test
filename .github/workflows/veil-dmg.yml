@@ -58,6 +58,9 @@ jobs:
       - name: Fetch Tor Expert Bundle
         run: make tor
 
+      - name: Run unit tests
+        run: make test
+
       - name: Build app
         run: make app
 
@@ -78,12 +81,14 @@ jobs:
           path: VeilVPN/build/*.dmg
           if-no-files-found: error
 
-      - name: Upload build log on failure
+      - name: Upload build logs on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: xcodebuild-log
-          path: VeilVPN/build/xcodebuild.log
+          name: xcodebuild-logs
+          path: |
+            VeilVPN/build/xcodebuild.log
+            VeilVPN/build/xcodebuild-test.log
           if-no-files-found: ignore
 
       - name: Publish release

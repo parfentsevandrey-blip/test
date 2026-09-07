@@ -14,8 +14,11 @@ protocol TorEngine: AnyObject {
 
     /// Launches Tor and authenticates on the control port. Returns before bootstrap completes.
     func start(settings: AppSettings, ports: ActivePorts) async throws
-    /// Suspends until Tor reports `Bootstrapped 100%`, the process dies, or the timeout elapses.
-    func waitForBootstrap(timeout: Duration) async throws
+    /// Suspends until Tor reports `Bootstrapped 100%`, the process dies, the timeout elapses, or
+    /// bootstrap makes no progress for `stallTimeout`.
+    func waitForBootstrap(timeout: Duration, stallTimeout: Duration) async throws
+    /// True when Tor currently has a working circuit (`status/circuit-established`).
+    func isCircuitEstablished() async -> Bool
     func stop() async
     func newIdentity() async throws
     /// Applies country restrictions for the hops live (SETCONF) and rebuilds circuits.
@@ -47,6 +50,7 @@ enum TorEngineError: LocalizedError {
     case cookieUnavailable
     case processExited(Int32, lastWarning: String?)
     case bootstrapTimeout(lastWarning: String?)
+    case bootstrapStalled(percent: Int, lastWarning: String?)
     case notRunning
     case onionServiceFailed
 
@@ -67,6 +71,9 @@ enum TorEngineError: LocalizedError {
         case .bootstrapTimeout(let warning):
             let base = String(localized: "Tor could not bootstrap in time. Snowflake proxies may be scarce right now — try again or switch bridges.")
             return warning.map { "\(base) Last warning: \($0)" } ?? base
+        case .bootstrapStalled(let percent, let warning):
+            let base = String(localized: "Tor stopped making progress at \(percent)%.")
+            return warning.map { "\(base) \($0)" } ?? base
         case .notRunning:
             return String(localized: "Tor is not running.")
         case .onionServiceFailed:

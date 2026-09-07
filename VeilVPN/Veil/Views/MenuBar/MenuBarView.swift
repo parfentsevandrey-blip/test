@@ -4,8 +4,33 @@ struct MenuBarLabel: View {
     @Environment(AppState.self) private var app
 
     var body: some View {
-        Image(systemName: app.connection.symbolName)
-            .symbolRenderingMode(.hierarchical)
+        HStack(spacing: 4) {
+            Image(systemName: app.connection.symbolName)
+                .symbolRenderingMode(.hierarchical)
+            if app.connection.isConnected, app.traffic.samples.count > 2 {
+                MenuBarSparkline(samples: app.traffic.samples.suffix(30).map { $0.download + $0.upload })
+                    .frame(width: 26, height: 12)
+            }
+        }
+    }
+}
+
+/// A tiny throughput sparkline rendered into the status item.
+struct MenuBarSparkline: View {
+    let samples: [Double]
+
+    var body: some View {
+        Canvas { context, size in
+            guard samples.count > 1 else { return }
+            let peak = max(samples.max() ?? 1, 1)
+            var path = Path()
+            for (index, value) in samples.enumerated() {
+                let x = size.width * CGFloat(index) / CGFloat(samples.count - 1)
+                let y = size.height - size.height * CGFloat(value / peak)
+                if index == 0 { path.move(to: CGPoint(x: x, y: y)) } else { path.addLine(to: CGPoint(x: x, y: y)) }
+            }
+            context.stroke(path, with: .color(.primary), lineWidth: 1.2)
+        }
     }
 }
 
@@ -83,6 +108,17 @@ struct MenuBarView: View {
             .toggleStyle(.switch)
             .controlSize(.small)
             .disabled(app.connection != .disconnected && app.connection != .failed)
+
+            if let update = app.availableUpdate {
+                Button {
+                    app.openAvailableUpdate()
+                } label: {
+                    Label("Download Veil \(update.version)", systemImage: "arrow.down.circle.fill")
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(.glass)
+                .tint(.blue)
+            }
 
             Divider()
 

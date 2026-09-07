@@ -120,16 +120,25 @@ final class TorProcessEngine: TorEngine {
         }
     }
 
-    func waitForBootstrap(timeout: Duration) async throws {
+    func waitForBootstrap(timeout: Duration, stallTimeout: Duration) async throws {
         let started = ContinuousClock.now
         var lastPoll = started
+        var lastProgressAt = started
+        var lastPercent = bootstrap.percent
         while !bootstrap.isDone {
             try Task.checkCancellation()
             if let exitStatus {
                 throw TorEngineError.processExited(exitStatus, lastWarning: lastWarning)
             }
+            if bootstrap.percent != lastPercent {
+                lastPercent = bootstrap.percent
+                lastProgressAt = ContinuousClock.now
+            }
             if ContinuousClock.now - started > timeout {
                 throw TorEngineError.bootstrapTimeout(lastWarning: lastWarning)
+            }
+            if ContinuousClock.now - lastProgressAt > stallTimeout {
+                throw TorEngineError.bootstrapStalled(percent: bootstrap.percent, lastWarning: lastWarning)
             }
             // The log is the primary source; poll the control port as a safety net.
             if ContinuousClock.now - lastPoll > .seconds(3), let controller {
@@ -172,6 +181,11 @@ final class TorProcessEngine: TorEngine {
     func newIdentity() async throws {
         guard let controller else { throw TorEngineError.notRunning }
         try await controller.signal("NEWNYM")
+    }
+
+    func isCircuitEstablished() async -> Bool {
+        guard let controller, process != nil else { return false }
+        return (try? await controller.getInfo("status/circuit-established")) == "1"
     }
 
     func applyRoute(_ route: TorRoute) async throws {
@@ -384,8 +398,9 @@ final class TorProcessEngine: TorEngine {
 
     private static func describe(_ transport: AppSettings.Transport) -> String {
         switch transport {
-        case .snowflake: "Snowflake"
+        case .auto, .snowflake: "Snowflake"
         case .obfs4: "obfs4 bridges"
+        case .meek: "meek bridge"
         case .custom: "custom bridges"
         case .direct: "no bridges"
         }

@@ -1,21 +1,28 @@
 import Foundation
 
-/// User preferences. Persisted as JSON in `UserDefaults`.
+/// User preferences. Persisted as JSON in `UserDefaults`; every field has a default so that
+/// settings written by older versions keep decoding.
 struct AppSettings: Codable, Equatable, Sendable {
     enum Transport: String, Codable, CaseIterable, Identifiable, Sendable {
-        /// Snowflake pluggable transport with the built-in broker configuration (default).
+        /// Try the transports in order until one bootstraps; remembers the winner.
+        case auto
+        /// Snowflake pluggable transport with the built-in broker configuration.
         case snowflake
         /// Built-in obfs4 bridges shipped with Tor Browser.
         case obfs4
+        /// Built-in meek (domain-fronted) bridge shipped with Tor Browser.
+        case meek
         /// Bridge lines pasted by the user (obfs4, webtunnel, snowflake, meek_lite, conjure).
         case custom
         /// No bridges: connect to public Tor relays directly.
         case direct
 
         var id: String { rawValue }
+        var isConcrete: Bool { self != .auto }
     }
 
-    var transport: Transport = .snowflake
+    var transport: Transport = .auto
+    var lastWorkingTransport: Transport? = nil
     var customBridges: String = ""
     /// ISO 3166-1 alpha-2 country code (lowercase) for `ExitNodes`, or nil for automatic.
     var exitCountry: String? = nil
@@ -37,46 +44,79 @@ struct AppSettings: Codable, Equatable, Sendable {
     /// Minutes between automatic route rotations (NEWNYM); 0 disables rotation.
     var rotateRouteMinutes: Int = 0
     /// YouTube: through Tor, or directly with/without anti-throttling.
-    var youtubeMode: YouTubeMode = .tor
+    var youtubeMode: RouteMode = .tor
     var dpiStrategy: DPIStrategy = .recordAndSegmentAtSNI
     /// Extra domains that bypass Tor (one per line).
     var customDirectDomains: String = ""
     var customDirectAntiThrottle: Bool = true
+    /// Per-service routing for the presets in `ServiceCatalog` (absent = through Tor).
+    var serviceRoutes: [String: RouteMode] = [:]
+    /// Fail closed: keep the system proxy pointed at Veil when Tor dies unexpectedly.
+    var killSwitch: Bool = true
+    var autoReconnect: Bool = true
+    /// `IsolateDestAddr`: a separate circuit per destination site.
+    var isolatePerSite: Bool = false
+    var notificationsEnabled: Bool = true
+    var soundEffects: Bool = false
+    var hapticFeedback: Bool = true
+    var checkForUpdates: Bool = true
+    var skippedUpdateVersion: String? = nil
+    var onboardingCompleted: Bool = false
 
     init() {}
 
-    // Tolerant decoding so that settings written by older versions keep working.
     private enum CodingKeys: String, CodingKey {
-        case transport, customBridges, exitCountry, socksPort, httpPort, configureSystemProxy
+        case transport, lastWorkingTransport, customBridges, exitCountry, socksPort, httpPort, configureSystemProxy
         case showInMenuBar, connectOnLaunch, checkAfterConnect, verboseLogs
         case paddingEnabled, paddingLevel
         case multihopEnabled, middleCountry, excludedCountries, avoidFiveEyes, rotateRouteMinutes
-        case youtubeMode, dpiStrategy, customDirectDomains, customDirectAntiThrottle
+        case youtubeMode, dpiStrategy, customDirectDomains, customDirectAntiThrottle, serviceRoutes
+        case killSwitch, autoReconnect, isolatePerSite, notificationsEnabled, soundEffects, hapticFeedback
+        case checkForUpdates, skippedUpdateVersion, onboardingCompleted
     }
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        transport = try c.decodeIfPresent(Transport.self, forKey: .transport) ?? .snowflake
-        customBridges = try c.decodeIfPresent(String.self, forKey: .customBridges) ?? ""
+        let d = AppSettings()
+        transport = try c.decodeIfPresent(Transport.self, forKey: .transport) ?? d.transport
+        lastWorkingTransport = try c.decodeIfPresent(Transport.self, forKey: .lastWorkingTransport)
+        customBridges = try c.decodeIfPresent(String.self, forKey: .customBridges) ?? d.customBridges
         exitCountry = try c.decodeIfPresent(String.self, forKey: .exitCountry)
-        socksPort = try c.decodeIfPresent(Int.self, forKey: .socksPort) ?? 9050
-        httpPort = try c.decodeIfPresent(Int.self, forKey: .httpPort) ?? 8118
-        configureSystemProxy = try c.decodeIfPresent(Bool.self, forKey: .configureSystemProxy) ?? true
-        showInMenuBar = try c.decodeIfPresent(Bool.self, forKey: .showInMenuBar) ?? true
-        connectOnLaunch = try c.decodeIfPresent(Bool.self, forKey: .connectOnLaunch) ?? false
-        checkAfterConnect = try c.decodeIfPresent(Bool.self, forKey: .checkAfterConnect) ?? true
-        verboseLogs = try c.decodeIfPresent(Bool.self, forKey: .verboseLogs) ?? false
-        paddingEnabled = try c.decodeIfPresent(Bool.self, forKey: .paddingEnabled) ?? false
-        paddingLevel = try c.decodeIfPresent(PaddingLevel.self, forKey: .paddingLevel) ?? .balanced
-        multihopEnabled = try c.decodeIfPresent(Bool.self, forKey: .multihopEnabled) ?? false
+        socksPort = try c.decodeIfPresent(Int.self, forKey: .socksPort) ?? d.socksPort
+        httpPort = try c.decodeIfPresent(Int.self, forKey: .httpPort) ?? d.httpPort
+        configureSystemProxy = try c.decodeIfPresent(Bool.self, forKey: .configureSystemProxy) ?? d.configureSystemProxy
+        showInMenuBar = try c.decodeIfPresent(Bool.self, forKey: .showInMenuBar) ?? d.showInMenuBar
+        connectOnLaunch = try c.decodeIfPresent(Bool.self, forKey: .connectOnLaunch) ?? d.connectOnLaunch
+        checkAfterConnect = try c.decodeIfPresent(Bool.self, forKey: .checkAfterConnect) ?? d.checkAfterConnect
+        verboseLogs = try c.decodeIfPresent(Bool.self, forKey: .verboseLogs) ?? d.verboseLogs
+        paddingEnabled = try c.decodeIfPresent(Bool.self, forKey: .paddingEnabled) ?? d.paddingEnabled
+        paddingLevel = try c.decodeIfPresent(PaddingLevel.self, forKey: .paddingLevel) ?? d.paddingLevel
+        multihopEnabled = try c.decodeIfPresent(Bool.self, forKey: .multihopEnabled) ?? d.multihopEnabled
         middleCountry = try c.decodeIfPresent(String.self, forKey: .middleCountry)
-        excludedCountries = try c.decodeIfPresent([String].self, forKey: .excludedCountries) ?? []
-        avoidFiveEyes = try c.decodeIfPresent(Bool.self, forKey: .avoidFiveEyes) ?? false
-        rotateRouteMinutes = try c.decodeIfPresent(Int.self, forKey: .rotateRouteMinutes) ?? 0
-        youtubeMode = try c.decodeIfPresent(YouTubeMode.self, forKey: .youtubeMode) ?? .tor
-        dpiStrategy = try c.decodeIfPresent(DPIStrategy.self, forKey: .dpiStrategy) ?? .recordAndSegmentAtSNI
-        customDirectDomains = try c.decodeIfPresent(String.self, forKey: .customDirectDomains) ?? ""
-        customDirectAntiThrottle = try c.decodeIfPresent(Bool.self, forKey: .customDirectAntiThrottle) ?? true
+        excludedCountries = try c.decodeIfPresent([String].self, forKey: .excludedCountries) ?? d.excludedCountries
+        avoidFiveEyes = try c.decodeIfPresent(Bool.self, forKey: .avoidFiveEyes) ?? d.avoidFiveEyes
+        rotateRouteMinutes = try c.decodeIfPresent(Int.self, forKey: .rotateRouteMinutes) ?? d.rotateRouteMinutes
+        youtubeMode = try c.decodeIfPresent(RouteMode.self, forKey: .youtubeMode) ?? d.youtubeMode
+        dpiStrategy = try c.decodeIfPresent(DPIStrategy.self, forKey: .dpiStrategy) ?? d.dpiStrategy
+        customDirectDomains = try c.decodeIfPresent(String.self, forKey: .customDirectDomains) ?? d.customDirectDomains
+        customDirectAntiThrottle = try c.decodeIfPresent(Bool.self, forKey: .customDirectAntiThrottle) ?? d.customDirectAntiThrottle
+        serviceRoutes = try c.decodeIfPresent([String: RouteMode].self, forKey: .serviceRoutes) ?? d.serviceRoutes
+        killSwitch = try c.decodeIfPresent(Bool.self, forKey: .killSwitch) ?? d.killSwitch
+        autoReconnect = try c.decodeIfPresent(Bool.self, forKey: .autoReconnect) ?? d.autoReconnect
+        isolatePerSite = try c.decodeIfPresent(Bool.self, forKey: .isolatePerSite) ?? d.isolatePerSite
+        notificationsEnabled = try c.decodeIfPresent(Bool.self, forKey: .notificationsEnabled) ?? d.notificationsEnabled
+        soundEffects = try c.decodeIfPresent(Bool.self, forKey: .soundEffects) ?? d.soundEffects
+        hapticFeedback = try c.decodeIfPresent(Bool.self, forKey: .hapticFeedback) ?? d.hapticFeedback
+        checkForUpdates = try c.decodeIfPresent(Bool.self, forKey: .checkForUpdates) ?? d.checkForUpdates
+        skippedUpdateVersion = try c.decodeIfPresent(String.self, forKey: .skippedUpdateVersion)
+        onboardingCompleted = try c.decodeIfPresent(Bool.self, forKey: .onboardingCompleted) ?? d.onboardingCompleted
+    }
+
+    /// The same settings with a concrete transport substituted (used by automatic selection).
+    func resolving(transport concrete: Transport) -> AppSettings {
+        var copy = self
+        copy.transport = concrete
+        return copy
     }
 
     static let storageKey = "app.veilvpn.settings.v1"

@@ -10,8 +10,8 @@ options:
   xcodeVersion: "26.0"
 settings:
   base:
-    MARKETING_VERSION: "0.3.1"
-    CURRENT_PROJECT_VERSION: "4"
+    MARKETING_VERSION: "0.4.0"
+    CURRENT_PROJECT_VERSION: "5"
     SWIFT_VERSION: "5.0"
     SWIFT_STRICT_CONCURRENCY: minimal
     SWIFT_EMIT_LOC_STRINGS: YES
@@ -51,7 +51,20 @@ targets:
             echo "warning: build/tor not found — run 'make tor' to bundle Tor; the app will start in demo mode"
           fi
     scheme:
+      testTargets:
+        - VeilTests
       environmentVariables:
         - variable: VEIL_SIMULATE
           value: "1"
           isEnabled: false
+  VeilTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: Tests/VeilTests
+    dependencies:
+      - target: Veil
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.veilvpn.mac.tests
+        GENERATE_INFOPLIST_FILE: YES

@@ -1,6 +1,26 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "%@ did not respond, trying %@…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ не ответил, пробую %@…"
+          }
+        }
+      }
+    },
+    "%lld of %lld Tor directory authorities reachable": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступно управляющих серверов Tor: %lld из %lld"
+          }
+        }
+      }
+    },
     "%lld% of traffic": {
       "localizations": {
         "ru": {
@@ -51,6 +71,16 @@
         }
       }
     },
+    "Anti-throttling": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обход замедления"
+          }
+        }
+      }
+    },
     "Anti-throttling technique": {
       "localizations": {
         "ru": {
@@ -67,6 +97,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Приложение"
+          }
+        }
+      }
+    },
+    "Arms the system proxy before Tor is up and keeps it pointed at Veil if Tor dies, so apps that use the proxy are blocked instead of leaking. Apps that ignore the proxy are not covered without a system extension.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Включает системный прокси ещё до запуска Tor и оставляет его направленным на Veil, если Tor упадёт: приложения с прокси блокируются, а не утекают. Приложения, игнорирующие прокси, без системного расширения не защищены."
+          }
+        }
+      }
+    },
+    "Asks bridges.torproject.org (directly, then through a domain-fronted CDN) for bridges recommended for your country and switches to them.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запрашивает у bridges.torproject.org (напрямую, затем через CDN с domain fronting) мосты, рекомендованные для вашей страны, и переключается на них."
           }
         }
       }
@@ -91,12 +141,32 @@
         }
       }
     },
+    "Auto-select the fastest technique": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подобрать самую быструю технику"
+          }
+        }
+      }
+    },
     "Automatic": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Автоматически"
+          }
+        }
+      }
+    },
+    "Automatic (recommended)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Автоматически (рекомендуется)"
           }
         }
       }
@@ -121,6 +191,16 @@
         }
       }
     },
+    "Back": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Назад"
+          }
+        }
+      }
+    },
     "Background noise plus a front-loaded burst of dummy traffic whenever real activity starts, so the shape of page loads is hidden (FRONT defence). Roughly 5–30 KB/s while you browse.": {
       "localizations": {
         "ru": {
@@ -137,6 +217,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Сбалансированная"
+          }
+        }
+      }
+    },
+    "Blocked": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Заблокировано"
           }
         }
       }
@@ -171,12 +261,32 @@
         }
       }
     },
+    "Bridge service": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Служба мостов"
+          }
+        }
+      }
+    },
     "Bridges": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Мосты"
+          }
+        }
+      }
+    },
+    "Bridges, routes, sites, padding and every other preference in one JSON file.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мосты, маршруты, сайты, маскировка и все остальные настройки в одном JSON-файле."
           }
         }
       }
@@ -271,12 +381,62 @@
         }
       }
     },
+    "Check direct reachability": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверить прямую доступность"
+          }
+        }
+      }
+    },
+    "Check for Updates…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверить обновления…"
+          }
+        }
+      }
+    },
+    "Check for updates automatically": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверять обновления автоматически"
+          }
+        }
+      }
+    },
+    "Check now": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверить сейчас"
+          }
+        }
+      }
+    },
     "Checking youtube.com…": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Проверка youtube.com…"
+          }
+        }
+      }
+    },
+    "Checks whether Tor is reachable directly, then tries the last transport that worked, your custom bridges, Snowflake, obfs4 and meek in turn until one bootstraps.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверяет, доступен ли Tor напрямую, затем по очереди пробует последний сработавший транспорт, ваши мосты, Snowflake, obfs4 и meek, пока один не подключится."
           }
         }
       }
@@ -371,6 +531,16 @@
         }
       }
     },
+    "Connected through Tor": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подключено через Tor"
+          }
+        }
+      }
+    },
     "Connecting": {
       "localizations": {
         "ru": {
@@ -421,6 +591,26 @@
         }
       }
     },
+    "Connections: %lld via Tor, %lld direct, %lld with anti-throttling, %lld blocked": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Соединения: %lld через Tor, %lld напрямую, %lld с обходом замедления, %lld заблокировано"
+          }
+        }
+      }
+    },
+    "Continue": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Далее"
+          }
+        }
+      }
+    },
     "Copied": {
       "localizations": {
         "ru": {
@@ -441,6 +631,16 @@
         }
       }
     },
+    "Copy to clipboard": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скопировать в буфер"
+          }
+        }
+      }
+    },
     "Could not connect": {
       "localizations": {
         "ru": {
@@ -457,6 +657,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Не удалось достучаться до приватного onion-сервиса Veil через Tor."
+          }
+        }
+      }
+    },
+    "Could not reach the bridge service: %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось связаться со службой мостов: %@"
           }
         }
       }
@@ -531,6 +741,16 @@
         }
       }
     },
+    "Diagnostics": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Диагностика"
+          }
+        }
+      }
+    },
     "Direct": {
       "localizations": {
         "ru": {
@@ -547,6 +767,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Напрямую (без мостов)"
+          }
+        }
+      }
+    },
+    "Direct modes are fast, but the site sees your real IP address. Everything else still goes through Tor.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прямые режимы быстрые, но сайт видит ваш реальный IP-адрес. Всё остальное по-прежнему идёт через Tor."
           }
         }
       }
@@ -616,7 +846,27 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Загрузка"
+            "value": "Скачать"
+          }
+        }
+      }
+    },
+    "Download Veil %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скачать Veil %@"
+          }
+        }
+      }
+    },
+    "Download the new DMG, replace Veil in Applications and relaunch.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скачайте новый DMG, замените Veil в «Программах» и перезапустите."
           }
         }
       }
@@ -711,6 +961,16 @@
         }
       }
     },
+    "Everything that respects the system proxy (Safari, browsers, most apps) goes through Tor. Terminal tools need the snippet from Settings → Network.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Всё, что уважает системный прокси (Safari, браузеры, большинство приложений), идёт через Tor. Утилитам терминала нужна команда из Настройки → Сеть."
+          }
+        }
+      }
+    },
     "Exit": {
       "localizations": {
         "ru": {
@@ -781,6 +1041,36 @@
         }
       }
     },
+    "Export Veil settings": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Экспорт настроек Veil"
+          }
+        }
+      }
+    },
+    "Export…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Экспорт…"
+          }
+        }
+      }
+    },
+    "Feedback": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отклик"
+          }
+        }
+      }
+    },
     "Fragment the TLS handshake for these domains too": {
       "localizations": {
         "ru": {
@@ -791,12 +1081,42 @@
         }
       }
     },
+    "Full window": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Полное окно"
+          }
+        }
+      }
+    },
     "General": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Основные"
+          }
+        }
+      }
+    },
+    "Get bridges from the Tor Project": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Получить мосты у Tor Project"
+          }
+        }
+      }
+    },
+    "Get started": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Начать"
           }
         }
       }
@@ -817,6 +1137,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Порт HTTP-прокси"
+          }
+        }
+      }
+    },
+    "Haptic feedback on the trackpad": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тактильный отклик на трекпаде"
           }
         }
       }
@@ -851,6 +1181,26 @@
         }
       }
     },
+    "Import Veil settings": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Импорт настроек Veil"
+          }
+        }
+      }
+    },
+    "Import…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Импорт…"
+          }
+        }
+      }
+    },
     "Injects dummy traffic into the tunnel so that an observer between this Mac and the Snowflake proxy cannot easily recognise which sites you visit from packet sizes and timing (website fingerprinting). Inspired by Mullvad’s DAITA and the Maybenot framework; unlike DAITA it never delays real packets, it only adds noise.": {
       "localizations": {
         "ru": {
@@ -877,6 +1227,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Интернет"
+          }
+        }
+      }
+    },
+    "IsolateDestAddr: sites cannot be linked through a shared exit IP. More circuits, slightly slower. Applies on the next connection.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IsolateDestAddr: сайты нельзя связать через общий IP выхода. Больше цепочек, чуть медленнее. Применяется при следующем подключении."
+          }
+        }
+      }
+    },
+    "Kill switch (fail closed)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kill switch (блокировать при сбое)"
+          }
+        }
+      }
+    },
+    "Kill switch engaged": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сработал kill switch"
           }
         }
       }
@@ -951,6 +1331,16 @@
         }
       }
     },
+    "Map of the Tor circuit": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Карта цепочки Tor"
+          }
+        }
+      }
+    },
     "Middle": {
       "localizations": {
         "ru": {
@@ -967,6 +1357,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Промежуточный узел"
+          }
+        }
+      }
+    },
+    "Mini Window": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мини-окно"
+          }
+        }
+      }
+    },
+    "Mini window": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мини-окно"
           }
         }
       }
@@ -1081,6 +1491,16 @@
         }
       }
     },
+    "Notifications for connection events": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Уведомления о событиях подключения"
+          }
+        }
+      }
+    },
     "Off": {
       "localizations": {
         "ru": {
@@ -1107,6 +1527,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Один домен на строку, например «rutube.ru». Поддомены включаются автоматически. Эти сайты видят ваш реальный IP-адрес."
+          }
+        }
+      }
+    },
+    "One password, once": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Один пароль, один раз"
+          }
+        }
+      }
+    },
+    "Only Telegram Web. The desktop app needs its own proxy setting: SOCKS5 127.0.0.1 with Veil's SOCKS port.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Только Telegram Web. Настольному приложению нужна своя настройка прокси: SOCKS5 127.0.0.1 с SOCKS-портом Veil."
           }
         }
       }
@@ -1141,12 +1581,32 @@
         }
       }
     },
+    "Open Veil to download the update.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Откройте Veil, чтобы скачать обновление."
+          }
+        }
+      }
+    },
     "Open Veil to see the error": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Откройте Veil, чтобы увидеть ошибку"
+          }
+        }
+      }
+    },
+    "Open the compact window (⇧⌘M)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть компактное окно (⇧⌘M)"
           }
         }
       }
@@ -1241,6 +1701,16 @@
         }
       }
     },
+    "Protection": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Защита"
+          }
+        }
+      }
+    },
     "Publishing the onion service through Tor — usually 1–3 minutes via Snowflake…": {
       "localizations": {
         "ru": {
@@ -1281,12 +1751,82 @@
         }
       }
     },
+    "Received %lld %@ bridge(s); transport set to custom": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Получено мостов: %lld (%@); транспорт переключён на «свои мосты»"
+          }
+        }
+      }
+    },
     "Recommended": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Рекомендуется"
+          }
+        }
+      }
+    },
+    "Reconnect": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Переподключить"
+          }
+        }
+      }
+    },
+    "Reconnect automatically after network changes and sleep": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Переподключаться автоматически после смены сети и сна"
+          }
+        }
+      }
+    },
+    "Reconnecting automatically…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Автоматическое переподключение…"
+          }
+        }
+      }
+    },
+    "Relay locations appear here once the circuit is built.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Расположение узлов появится здесь после построения цепочки."
+          }
+        }
+      }
+    },
+    "Requesting…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запрос…"
+          }
+        }
+      }
+    },
+    "Restore network": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вернуть сеть"
           }
         }
       }
@@ -1371,12 +1911,52 @@
         }
       }
     },
+    "Save Diagnostics Report…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохранить отчёт диагностики…"
+          }
+        }
+      }
+    },
+    "Save diagnostics report": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохранить отчёт диагностики"
+          }
+        }
+      }
+    },
+    "Save report…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохранить отчёт…"
+          }
+        }
+      }
+    },
     "See the details below or open Activity for the full log.": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Подробности ниже, полный журнал — в разделе «Активность»."
+          }
+        }
+      }
+    },
+    "Separate Tor circuit for every site": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отдельная цепочка Tor для каждого сайта"
           }
         }
       }
@@ -1401,6 +1981,16 @@
         }
       }
     },
+    "Settings file": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Файл настроек"
+          }
+        }
+      }
+    },
     "Settings…": {
       "localizations": {
         "ru": {
@@ -1417,6 +2007,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Показывать Veil в строке меню"
+          }
+        }
+      }
+    },
+    "Sites": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сайты"
+          }
+        }
+      }
+    },
+    "Skip": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пропустить"
           }
         }
       }
@@ -1447,6 +2057,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Snowflake сначала ищет прокси волонтёра; в сетях с цензурой это занимает 10–60 секунд."
+          }
+        }
+      }
+    },
+    "Sound effects": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Звуковые эффекты"
           }
         }
       }
@@ -1621,6 +2241,46 @@
         }
       }
     },
+    "The bridge service answered with HTTP %lld.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Служба мостов ответила HTTP %lld."
+          }
+        }
+      }
+    },
+    "The bridge service has no bridges for this location.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "У службы мостов нет мостов для этого региона."
+          }
+        }
+      }
+    },
+    "The desktop app uses the system proxy for HTTPS; calls use UDP.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настольное приложение использует системный прокси для HTTPS; звонки идут по UDP."
+          }
+        }
+      }
+    },
+    "The kill switch keeps proxied apps blocked whenever Tor is down, and Veil reconnects automatically when the network comes back.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kill switch блокирует приложения с прокси, пока Tor не работает, а Veil переподключается автоматически, когда сеть возвращается."
+          }
+        }
+      }
+    },
     "The padding loop was closed.": {
       "localizations": {
         "ru": {
@@ -1711,6 +2371,16 @@
         }
       }
     },
+    "To switch the system proxy macOS asks for an administrator password the first time. Veil keeps that authorization for the session, so disconnecting does not ask again.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Для переключения системного прокси macOS один раз запросит пароль администратора. Veil сохраняет разрешение на время сеанса, поэтому при отключении пароль не спрашивается снова."
+          }
+        }
+      }
+    },
     "Tools such as curl, git and Homebrew ignore the system proxy; paste this into the terminal instead.": {
       "localizations": {
         "ru": {
@@ -1781,6 +2451,26 @@
         }
       }
     },
+    "Tor is down, so apps that use the system proxy are blocked instead of leaking. Reconnect to resume, or disconnect to restore normal networking.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor не работает, поэтому приложения, использующие системный прокси, заблокированы, а не утекают в обход. Переподключитесь, чтобы продолжить, или отключитесь, чтобы вернуть обычную сеть."
+          }
+        }
+      }
+    },
+    "Tor is down; apps using the system proxy are blocked until Veil reconnects.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor не работает; приложения с системным прокси заблокированы, пока Veil не переподключится."
+          }
+        }
+      }
+    },
     "Tor is not running.": {
       "localizations": {
         "ru": {
@@ -1797,6 +2487,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Журнал Tor"
+          }
+        }
+      }
+    },
+    "Tor stopped making progress at %lld%.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor перестал продвигаться на %lld%."
           }
         }
       }
@@ -1871,6 +2571,16 @@
         }
       }
     },
+    "Transport: %@. Your traffic now goes through the Tor network.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Транспорт: %@. Ваш трафик теперь идёт через сеть Tor."
+          }
+        }
+      }
+    },
     "Try Again": {
       "localizations": {
         "ru": {
@@ -1881,12 +2591,62 @@
         }
       }
     },
+    "Trying %@…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пробую %@…"
+          }
+        }
+      }
+    },
+    "Tunnels through a large CDN with domain fronting. Slow but very hard to block; the built-in bridge comes from Tor Browser.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Туннель через крупный CDN с domain fronting. Медленно, но очень трудно заблокировать; встроенный мост взят из Tor Browser."
+          }
+        }
+      }
+    },
     "Turbo": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Turbo"
+          }
+        }
+      }
+    },
+    "Update check failed: %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось проверить обновления: %@"
+          }
+        }
+      }
+    },
+    "Updates": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обновления"
+          }
+        }
+      }
+    },
+    "Updates are downloaded from the GitHub releases of this project; replace Veil in Applications and relaunch.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обновления скачиваются из релизов проекта на GitHub; замените Veil в «Программах» и перезапустите."
           }
         }
       }
@@ -1907,6 +2667,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Использует WebRTC-прокси волонтёров и domain fronting для доступа к Tor. Работает в большинстве сетей с цензурой; рекомендуемый вариант."
+          }
+        }
+      }
+    },
+    "Uses volunteer WebRTC proxies and domain fronting to reach Tor. Works in most censored networks.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Использует WebRTC-прокси волонтёров и domain fronting для доступа к Tor. Работает в большинстве сетей с цензурой."
+          }
+        }
+      }
+    },
+    "Veil %@ is available": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступна версия Veil %@"
+          }
+        }
+      }
+    },
+    "Veil routes your Mac through the Tor network using Snowflake bridges, so it works even where Tor is blocked. Press the power button and wait for the three-hop circuit to build — the first connection can take up to a minute.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Veil направляет ваш Mac через сеть Tor с помощью мостов Snowflake, поэтому работает даже там, где Tor заблокирован. Нажмите кнопку питания и дождитесь построения цепочки из трёх узлов — первое подключение может занять до минуты."
           }
         }
       }
@@ -1951,6 +2741,46 @@
         }
       }
     },
+    "Version %@ is available.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступна версия %@."
+          }
+        }
+      }
+    },
+    "Versions, state, settings and the last 800 log lines. Bridge lines are included; no passwords are stored anywhere.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Версии, состояние, настройки и последние 800 строк журнала. Строки мостов включены; пароли нигде не хранятся."
+          }
+        }
+      }
+    },
+    "Via Tor": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Через Tor"
+          }
+        }
+      }
+    },
+    "View": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вид"
+          }
+        }
+      }
+    },
     "Waiting for the loop to become reachable (attempt %lld)…": {
       "localizations": {
         "ru": {
@@ -1971,12 +2801,42 @@
         }
       }
     },
+    "Web and the desktop app follow the system proxy; voice (UDP) never goes through a proxy.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Веб-версия и настольное приложение следуют системному прокси; голос (UDP) через прокси не идёт."
+          }
+        }
+      }
+    },
+    "Welcome to Veil": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добро пожаловать в Veil"
+          }
+        }
+      }
+    },
     "Which fragmentation defeats your provider’s DPI varies. If videos still stall, try the next technique and run the check again.": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Какая фрагментация обманет DPI вашего провайдера — зависит от провайдера. Если видео всё ещё тормозит, выберите следующую технику и повторите проверку."
+          }
+        }
+      }
+    },
+    "You are up to date (%@).": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "У вас последняя версия (%@)."
           }
         }
       }
@@ -2041,6 +2901,16 @@
         }
       }
     },
+    "YouTube and other sites": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube и другие сайты"
+          }
+        }
+      }
+    },
     "YouTube connects directly at full speed, but Veil fragments the TLS handshake so throttling DPI cannot see the host name. YouTube sees your real IP address.": {
       "localizations": {
         "ru": {
@@ -2087,6 +2957,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Маршрутизация YouTube — настройка в Настройки → YouTube"
+          }
+        }
+      }
+    },
+    "YouTube through Tor is slow and asks for sign-ins. In Settings → YouTube you can send it directly with anti-throttling instead: the TLS handshake is fragmented so DPI throttling cannot recognise it. YouTube Turbo does the same without Tor at all.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube через Tor медленный и требует входа. В Настройки → YouTube его можно пустить напрямую с обходом замедления: TLS-рукопожатие дробится, и DPI его не распознаёт. YouTube Turbo делает то же самое вообще без Tor."
           }
         }
       }
@@ -2161,6 +3041,16 @@
         }
       }
     },
+    "meek (domain fronting)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "meek (domain fronting)"
+          }
+        }
+      }
+    },
     "networksetup failed: %@": {
       "localizations": {
         "ru": {
@@ -2197,6 +3087,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "youtube.com доступен за %lld мс (%@)"
+          }
+        }
+      }
+    },
+    "“Through Tor” is the default. Direct modes are fast and bypass throttling, but the site sees your real IP address. YouTube has its own tab.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "По умолчанию «через Tor». Прямые режимы быстрые и обходят замедление, но сайт видит ваш реальный IP. У YouTube своя вкладка."
           }
         }
       }

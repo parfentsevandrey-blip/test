@@ -1,8 +1,9 @@
 import Foundation
+import SwiftUI
 
-/// How YouTube traffic leaves the Mac.
-enum YouTubeMode: String, Codable, CaseIterable, Identifiable, Sendable {
-    /// Through Tor like everything else: anonymous, but slow and often met with "confirm you're not a bot".
+/// How traffic for a site leaves the Mac.
+enum RouteMode: String, Codable, CaseIterable, Identifiable, Sendable {
+    /// Through Tor like everything else: anonymous, but slow and sometimes met with bot checks.
     case tor
     /// Directly, with the TLS ClientHello fragmented so throttling DPI cannot see the host name. Fast; not anonymous.
     case directAntiThrottle
@@ -31,9 +32,53 @@ enum RouteDecision: Equatable, Sendable {
     case direct(antiThrottle: Bool)
 }
 
+/// A well-known service with the hosts it talks to.
+struct ServicePreset: Identifiable, Sendable {
+    let id: String
+    let name: String
+    let symbol: String
+    let domains: [String]
+    /// Shown under the picker: caveats such as "the desktop app ignores proxies".
+    let note: LocalizedStringKey?
+}
+
+enum ServiceCatalog {
+    static let all: [ServicePreset] = [
+        ServicePreset(id: "discord", name: "Discord", symbol: "bubble.left.and.bubble.right.fill",
+                      domains: ["discord.com", "discordapp.com", "discord.gg", "discordapp.net", "discord.media", "discordcdn.com"],
+                      note: "Web and the desktop app follow the system proxy; voice (UDP) never goes through a proxy."),
+        ServicePreset(id: "telegram", name: "Telegram", symbol: "paperplane.fill",
+                      domains: ["telegram.org", "t.me", "telegram.me", "telesco.pe", "tdesktop.com", "telegram.dog"],
+                      note: "Only Telegram Web. The desktop app needs its own proxy setting: SOCKS5 127.0.0.1 with Veil's SOCKS port."),
+        ServicePreset(id: "twitch", name: "Twitch", symbol: "gamecontroller.fill",
+                      domains: ["twitch.tv", "ttvnw.net", "jtvnw.net", "twitchcdn.net", "twitchsvc.net"],
+                      note: nil),
+        ServicePreset(id: "instagram", name: "Instagram", symbol: "camera.fill",
+                      domains: ["instagram.com", "cdninstagram.com", "ig.me"],
+                      note: nil),
+        ServicePreset(id: "facebook", name: "Facebook", symbol: "person.2.fill",
+                      domains: ["facebook.com", "fb.com", "fbcdn.net", "fbsbx.com", "messenger.com", "facebook.net"],
+                      note: nil),
+        ServicePreset(id: "x", name: "X (Twitter)", symbol: "xmark.circle.fill",
+                      domains: ["x.com", "twitter.com", "twimg.com", "t.co", "twitter.co"],
+                      note: nil),
+        ServicePreset(id: "signal", name: "Signal", symbol: "lock.fill",
+                      domains: ["signal.org", "whispersystems.org", "signal.art"],
+                      note: "The desktop app uses the system proxy for HTTPS; calls use UDP."),
+        ServicePreset(id: "rutube", name: "RuTube", symbol: "play.circle.fill",
+                      domains: ["rutube.ru"],
+                      note: nil),
+    ]
+
+    static func preset(_ id: String) -> ServicePreset? {
+        all.first { $0.id == id }
+    }
+}
+
 /// Which hosts bypass Tor, and how. Evaluated by the HTTP bridge for every CONNECT.
 struct RoutingPolicy: Equatable, Sendable {
-    var youtubeMode: YouTubeMode = .tor
+    var youtubeMode: RouteMode = .tor
+    var serviceModes: [String: RouteMode] = [:]
     var customDirectDomains: [String] = []
     var customDirectAntiThrottle: Bool = true
     var strategy: DPIStrategy = .recordAndSegmentAtSNI
@@ -60,17 +105,26 @@ struct RoutingPolicy: Equatable, Sendable {
         return false
     }
 
+    /// The service preset a host belongs to, if any.
+    static func service(for host: String) -> ServicePreset? {
+        ServiceCatalog.all.first { matches(host, domains: $0.domains) }
+    }
+
+    private func decision(for mode: RouteMode, torAvailable: Bool) -> RouteDecision {
+        switch mode {
+        case .tor: return torAvailable ? .tor : .direct(antiThrottle: true)
+        case .directAntiThrottle: return .direct(antiThrottle: true)
+        case .direct: return .direct(antiThrottle: false)
+        }
+    }
+
     /// Where a connection to `host` should go. `torAvailable` is false in YouTube Turbo mode (no Tor running).
     func decision(for host: String, torAvailable: Bool) -> RouteDecision {
         if Self.isYouTube(host) {
-            switch youtubeMode {
-            case .tor:
-                return torAvailable ? .tor : .direct(antiThrottle: true)
-            case .directAntiThrottle:
-                return .direct(antiThrottle: true)
-            case .direct:
-                return .direct(antiThrottle: false)
-            }
+            return decision(for: youtubeMode, torAvailable: torAvailable)
+        }
+        if let service = Self.service(for: host), let mode = serviceModes[service.id] {
+            return decision(for: mode, torAvailable: torAvailable)
         }
         if !customDirectDomains.isEmpty, Self.matches(host, domains: customDirectDomains) {
             return .direct(antiThrottle: customDirectAntiThrottle)
@@ -91,6 +145,7 @@ extension AppSettings {
     var routingPolicy: RoutingPolicy {
         RoutingPolicy(
             youtubeMode: youtubeMode,
+            serviceModes: serviceRoutes,
             customDirectDomains: RoutingPolicy.parseDomains(customDirectDomains),
             customDirectAntiThrottle: customDirectAntiThrottle,
             strategy: dpiStrategy

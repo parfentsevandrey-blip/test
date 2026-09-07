@@ -1,0 +1,47 @@
+name: Veil — Tor Expert Bundle version check
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compare with archive.torproject.org
+        id: compare
+        run: |
+          set -euo pipefail
+          current="$(tr -d '[:space:]' < VeilVPN/TOR_VERSION)"
+          latest="$(curl -fsSL https://archive.torproject.org/tor-package-archive/torbrowser/ \
+            | grep -o 'href="[0-9][0-9.]*/"' | tr -d 'href="/' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1)"
+          echo "current=$current latest=$latest"
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+          # Only stable series (x.y.z); alphas carry letters and are excluded by the grep above.
+          if [ "$current" != "$latest" ] && [ "$(printf '%s\n%s\n' "$current" "$latest" | sort -V | tail -n 1)" = "$latest" ]; then
+            echo "newer=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "newer=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Open or update an issue
+        if: steps.compare.outputs.newer == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LATEST: ${{ steps.compare.outputs.latest }}
+          CURRENT: ${{ steps.compare.outputs.current }}
+        run: |
+          set -euo pipefail
+          title="Tor Expert Bundle $LATEST is available (Veil ships $CURRENT)"
+          existing="$(gh issue list --search "in:title \"Tor Expert Bundle $LATEST\"" --state open --json number --jq '.[0].number' || true)"
+          if [ -n "$existing" ]; then
+            echo "Issue #$existing already open"
+            exit 0
+          fi
+          gh issue create --title "$title" --body "A newer Tor Expert Bundle ($LATEST) is on archive.torproject.org. Update \`VeilVPN/TOR_VERSION\` to \`$LATEST\`, push, and publish a release; \`pt_config.json\` from the bundle refreshes the built-in bridges automatically."
