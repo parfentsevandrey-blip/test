@@ -25,13 +25,17 @@ PREMIUM_PER_M2 = 700_000   # порог ₽/м² по медиане, ниже �
 def zone(row):
     """Садовое кольцо / Хамовники / Сити / вне зоны — по району и координатам."""
     d = row.get('district') or ''
-    if row.get('insideRing') is True:
-        return 'Садовое кольцо'
     if d == 'Хамовники':
         return 'Хамовники'
-    if d == 'Пресненский' and row.get('lat') and row['lat'] > 55.742 and row['lat'] < 55.757 and row['lng'] and row['lng'] < 37.552:
+    if d == 'Пресненский' and row.get('lat') and 55.742 < row['lat'] < 55.757 and row.get('lng') and row['lng'] < 37.552:
         return 'Сити'
-    return None
+    if row.get('insideRing') is True:
+        return 'Садовое кольцо'
+    return f'{d} (вне Садового)' if d else None
+
+ZONE_ORDER = {'Садовое кольцо': 0, 'Хамовники': 1, 'Сити': 2}
+def zkey(z):
+    return (ZONE_ORDER.get(z, 9), str(z))
 
 def fmt_years(r):
     ys = r.get('buildYears') or []
@@ -102,7 +106,7 @@ for r in complexes['complexes']:
            r.get('lots'), f"{int(r['areaMin'])}–{int(r['areaMax'])}" if r.get('areaMin') and r['areaMin'] != math.inf else '',
            m.get('class', 'премиум'), link, m.get('note', '')]
     (rows1 if (m.get('stage', 'built' if built else 'building') == 'built') else rows2_live).append(row)
-rows1.sort(key=lambda x: (x[5], -(x[10] or 0)))
+rows1.sort(key=lambda x: (zkey(x[5]), -(x[10] or 0)))
 sheet(wb, '1. Построено (вторичка)', H1, rows1,
       [34, 22, 12, 36, 16, 16, 10, 10, 14, 14, 14, 14, 10, 14, 12, 40, 40],
       note=f"Источник: живая выдача Циан {complexes['fetched']} (api.cian.ru, инструмент tools/cian/cian.js), вторичка с годом дома 2018+ и новостройки по 10 районам ЦАО. Цены — ₽/м² по активным объявлениям. Застройщик и класс — по открытым данным (ручная разметка docs/premium-cao/manual.json).")
@@ -129,7 +133,7 @@ for row in rows2_live:
     if row[0] in seen: continue
     m = manual.get(row[0], {})
     rows2.append([row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[11], row[12], m.get('finish', ''), row[15], f"Циан {complexes['fetched']}", row[16]])
-rows2.sort(key=lambda x: (x[5], str(x[2])))
+rows2.sort(key=lambda x: (zkey(x[5]), str(x[2])))
 sheet(wb, '2. Строится', H2, rows2,
       [34, 22, 12, 36, 18, 16, 9, 10, 14, 14, 14, 10, 10, 40, 24, 40],
       note='Строки из таблицы заказчика дополнены живой выдачей Циан там, где ЖК найден в базе (цены и число лотов обновлены). Остальные строки — найдены в выдаче Циан по новостройкам ЦАО.')
@@ -143,7 +147,7 @@ for p in planning:
                   p.get('area_total_m2'), p.get('area_residential_m2'), p.get('floors'), p.get('units'), p.get('planned_start'),
                   p.get('planned_completion'), p.get('price_from_per_m2'), p.get('announced_date'), p.get('source_name'),
                   p.get('source_url'), p.get('notes')])
-rows3.sort(key=lambda x: (str(x[3]), str(x[0])))
+rows3.sort(key=lambda x: (zkey(x[3]), str(x[0])))
 sheet(wb, '3. Проектирование', H3, rows3,
       [34, 34, 16, 16, 22, 26, 12, 12, 10, 8, 12, 12, 14, 12, 22, 44, 50],
       note='Источники: открытые публикации 2025–2026 (stroi.mos.ru, mos.ru, отраслевые СМИ, публичные Telegram-каналы). Закрытый канал t.me/c/3370602239 недоступен без членства — пост №1364 про ЗУ «Большой Тишинский, 8» подтверждён по открытым источникам.')
