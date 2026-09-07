@@ -63,6 +63,16 @@
       ]
     },
     {
+      "slug": "artemisweg-173-lelystad",
+      "title": "Artemisweg 173, Lelystad",
+      "city": "Lelystad",
+      "price": "€ 1.000.000",
+      "url": "https://www.fundainbusiness.nl/bedrijfshal/lelystad/object-44453992-artemisweg-173/",
+      "reports": [
+        "report-2026-09-07-warehouses.json"
+      ]
+    },
+    {
       "slug": "avignonlaan-47-eindhoven",
       "title": "Avignonlaan 47, Eindhoven",
       "city": "Eindhoven",
@@ -295,6 +305,16 @@
       ]
     },
     {
+      "slug": "neutronweg-3-hoorn",
+      "title": "Neutronweg 3, Hoorn",
+      "city": "Hoorn",
+      "price": "€ 1.650.000",
+      "url": "https://www.fundainbusiness.nl/belegging/hoorn-nh/object-43660627-neutronweg-3/",
+      "reports": [
+        "report-2026-09-07-warehouses.json"
+      ]
+    },
+    {
       "slug": "newtonstraat-67-zoetermeer",
       "title": "Newtonstraat 67, Zoetermeer",
       "city": "Zoetermeer",
@@ -407,6 +427,16 @@
       "url": "https://www.fundainbusiness.nl/belegging/hilversum/object-89738871-wc-bradelaan-29-g1-t-m-g8/",
       "reports": [
         "report-2026-09-02-warehouses.json"
+      ]
+    },
+    {
+      "slug": "zeilweg-13-17-lelystad",
+      "title": "Zeilweg 13-17, Lelystad",
+      "city": "Lelystad",
+      "price": "€ 1.750.000",
+      "url": "https://www.fundainbusiness.nl/belegging/lelystad/object-89507071-zeilweg-13-17/",
+      "reports": [
+        "report-2026-09-07-warehouses.json"
       ]
     },
     {
