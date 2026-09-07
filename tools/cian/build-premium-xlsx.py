@@ -37,7 +37,7 @@ def card_year(c):
         m = re.search(r'(20\d\d)', v)
         if m: return m.group(1)
     return None
-CLASS_ORDER = {'делюкс': 0, 'премиум': 1, 'бизнес': 2}
+CLASS_ORDER = {'делюкс': 0, 'премиум': 1, 'бизнес': 2, 'делюкс (Циан)': 0, 'премиум (Циан)': 1}
 
 PREMIUM_PER_M2 = 700_000   # порог ₽/м² по медиане, ниже — бизнес-класс, в подборку не идёт
 
@@ -208,6 +208,10 @@ for r in complexes['complexes']:
     developer = cd.get('developer') or m.get('developer') or dv.get('developer') or ''
     cls = m.get('class') or dv.get('class') or 'премиум'
     if m.get('class') and dv.get('class') and dv['class'] != m['class']: cls = dv['class'] if dv['class'] == 'бизнес' else m['class']
+    cc = (cd.get('cls') or '').strip().lower()
+    if cc in ('делюкс', 'премиум', 'бизнес', 'комфорт', 'эконом'):
+        cls = cc + ' (Циан)'
+        if cc in ('бизнес', 'комфорт', 'эконом') and not m.get('keep'): continue   # класс по карточке Циан ниже премиума
     notes = '; '.join(x for x in [m.get('note', ''), dv.get('note') or ''] if x)
     if dv.get('developer') and m.get('developer') and dv['developer'].split()[0].lower() != m['developer'].split()[0].lower():
         notes = '; '.join(x for x in [notes, f"по другим источникам застройщик: {dv['developer']}"] if x)
