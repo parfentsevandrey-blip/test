@@ -74,7 +74,13 @@ enum ClientHelloSplitter {
 
         case .recordAtSNI, .recordAndSegmentAtSNI:
             // Split the handshake payload into two TLS records; TLS allows a handshake message to span records.
-            let position = sni.map { $0.lowerBound + $0.count / 2 } ?? 6
+            // Re-framing is only done for a ClientHello whose SNI was actually located: anything we cannot
+            // parse is forwarded byte-for-byte (segmented at the TCP level when the strategy asks for it).
+            guard let sni else {
+                if strategy == .recordAtSNI { return [record] }
+                return [Data(bytes[0..<1]), Data(bytes[1...])]
+            }
+            let position = sni.lowerBound + sni.count / 2
             guard position > 5, position < bytes.count else { return [record] }
             let version = (bytes[1], bytes[2])
             func makeRecord(_ payload: ArraySlice<UInt8>) -> Data {

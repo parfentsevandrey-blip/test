@@ -11,6 +11,7 @@ Liquid Glass UI, bundled Tor Expert Bundle (universal: Apple silicon + Intel), S
 - **Privacy**: separate Tor circuit per site (IsolateDestAddr), routing counters in Activity.
 - **App**: onboarding, compact mini window (⇧⌘M), route map, menu-bar sparkline, notifications, haptics and sounds, in-app update check, settings export/import, diagnostics report, Shortcuts actions, more keyboard shortcuts.
 - **Project**: unit tests run in CI before every DMG; a weekly job watches for new Tor Expert Bundle versions.
+- **Languages**: the interface is now available in English, Russian, Ukrainian, Persian and Simplified Chinese.
 
 ### Fixed in 0.3.1
 - **Traffic padding** could not reach its private onion service. Veil now waits for Tor's `HS_DESC UPLOADED` event before connecting, retries with realistic intervals, and speaks SOCKS5 to Tor itself so `.onion` names (and every other host name) are resolved by Tor, never locally. The HTTP bridge and the Tor check use the same path, which also rules out DNS leaks.
@@ -37,6 +38,7 @@ Liquid Glass UI, bundled Tor Expert Bundle (universal: Apple silicon + Intel), S
 - **Приватность**: отдельная цепочка на каждый сайт (IsolateDestAddr), счётчики маршрутизации в «Активности».
 - **Приложение**: онбординг, компактное мини-окно (⇧⌘M), карта маршрута, спарклайн в строке меню, уведомления, тактильный отклик и звуки, проверка обновлений, экспорт/импорт настроек, отчёт диагностики, действия для Shortcuts, новые сочетания клавиш.
 - **Проект**: юнит-тесты в CI перед каждой сборкой DMG; еженедельная проверка новой версии Tor Expert Bundle.
+- **Языки**: интерфейс на английском, русском, украинском, персидском и упрощённом китайском.
 
 ### Исправлено в 0.3.1
 - **Маскировка трафика** не могла достучаться до своего onion-сервиса. Теперь Veil ждёт событие Tor `HS_DESC UPLOADED` перед подключением, повторяет попытки с разумными интервалами и сам говорит с Tor по SOCKS5, поэтому `.onion`-имена (и вообще любые имена хостов) резолвит Tor, а не macOS. HTTP-мост и проверка Tor идут тем же путём — заодно исключены утечки DNS.
