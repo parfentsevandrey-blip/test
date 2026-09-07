@@ -12,6 +12,8 @@ final class PaddingLoop {
     enum Status: Equatable, Sendable {
         case off
         case preparing
+        /// Tor is uploading the onion descriptor to the directory; can take a few minutes via Snowflake.
+        case publishing
         case connecting(attempt: Int)
         case active
         case failed(String)
@@ -101,27 +103,38 @@ final class PaddingLoop {
             host = "\(serviceID).onion"
             port = 80
             proxyPort = socksPort
-            onLog?(.veil(.info, "Traffic padding: private onion service \(serviceID.prefix(12))… created, waiting for Tor to publish it"))
+            onLog?(.veil(.info, "Traffic padding: private onion service \(serviceID.prefix(12))… created; waiting for Tor to publish its descriptor"))
+            status = .publishing
+            let published = await engine.waitForOnionServicePublication(serviceID: serviceID, timeout: .seconds(300))
+            try Task.checkCancellation()
+            if published {
+                onLog?(.veil(.info, "Traffic padding: descriptor published, connecting to the loop"))
+                try await Task.sleep(for: .seconds(3)) // let the directory settle
+            } else {
+                onLog?(.veil(.warn, "Traffic padding: no descriptor upload reported within 5 minutes; trying to connect anyway"))
+            }
         }
 
         var connected: PaddingClient?
-        for attempt in 1...40 {
+        var lastFailure = ""
+        for attempt in 1...30 {
             try Task.checkCancellation()
             status = .connecting(attempt: attempt)
             let candidate = PaddingClient(host: host, port: port, socksPort: proxyPort)
             do {
-                try await candidate.connect()
+                try await candidate.connect(timeout: .seconds(90))
                 connected = candidate
                 break
             } catch {
                 candidate.cancel()
-                if attempt % 5 == 0 {
-                    onLog?(.veil(.info, "Traffic padding: loop not reachable yet (attempt \(attempt)): \(error.localizedDescription)"))
-                }
-                try await Task.sleep(for: .seconds(attempt < 6 ? 5 : 10))
+                lastFailure = error.localizedDescription
+                onLog?(.veil(attempt % 3 == 0 ? .info : .debug, "Traffic padding: loop attempt \(attempt) failed: \(lastFailure)"))
+                try await Task.sleep(for: .seconds(attempt < 10 ? 8 : 15))
             }
         }
-        guard let client = connected else { throw PaddingError.loopUnreachable }
+        guard let client = connected else {
+            throw PaddingError.loopUnreachable(lastFailure)
+        }
         self.client = client
         status = .active
         onLog?(.veil(.notice, "Traffic padding active (\(level.rawValue)) — dummy traffic is flowing through the tunnel"))
@@ -166,11 +179,15 @@ final class PaddingLoop {
     }
 }
 
-/// The Tor-side end of the loop.
+/// The Tor-side end of the loop: a plain TCP connection to Tor's SOCKS port with a hand-made
+/// SOCKS5 CONNECT to the onion address (or a direct connection in demo mode).
 final class PaddingClient: @unchecked Sendable {
     private let connection: NWConnection
     private let queue = DispatchQueue(label: "app.veilvpn.padding.client")
     private let lock = NSLock()
+    private let targetHost: String
+    private let targetPort: UInt16
+    private let usesSOCKS: Bool
     private var sent = 0
     private var received = 0
     private var closed = false
@@ -182,40 +199,64 @@ final class PaddingClient: @unchecked Sendable {
     }
 
     init(host: String, port: UInt16, socksPort: UInt16?) {
-        let parameters = NWParameters.tcp
+        targetHost = host
+        targetPort = port
+        usesSOCKS = socksPort != nil
+        let tcp = NWProtocolTCP.Options()
+        tcp.connectionTimeout = 30
+        let parameters = NWParameters(tls: nil, tcp: tcp)
         if let socksPort {
-            let proxy = ProxyConfiguration(socksv5Proxy: .hostPort(host: "127.0.0.1", port: NWEndpoint.Port(rawValue: socksPort) ?? 9050))
-            let context = NWParameters.PrivacyContext(description: "app.veilvpn.padding")
-            context.proxyConfigurations = [proxy]
-            parameters.setPrivacyContext(context)
+            connection = NWConnection(host: "127.0.0.1", port: NWEndpoint.Port(rawValue: socksPort) ?? 9050, using: parameters)
+        } else {
+            connection = NWConnection(host: NWEndpoint.Host(host), port: NWEndpoint.Port(rawValue: port) ?? 80, using: parameters)
         }
-        connection = NWConnection(host: NWEndpoint.Host(host), port: NWEndpoint.Port(rawValue: port) ?? 80, using: parameters)
     }
 
-    func connect() async throws {
+    func connect(timeout: Duration) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             queue.async {
                 var resumed = false
+                let finish: (Error?) -> Void = { error in
+                    guard !resumed else { return }
+                    resumed = true
+                    if let error {
+                        continuation.resume(throwing: error)
+                    } else {
+                        continuation.resume()
+                    }
+                }
+                let seconds = Double(timeout.components.seconds) + Double(timeout.components.attoseconds) / 1e18
+                self.queue.asyncAfter(deadline: .now() + seconds) { [weak self] in
+                    guard !resumed else { return }
+                    self?.markClosed()
+                    self?.connection.cancel()
+                    finish(PaddingError.timeout)
+                }
                 self.connection.stateUpdateHandler = { [weak self] state in
+                    guard let self else { return }
                     switch state {
                     case .ready:
-                        if !resumed {
-                            resumed = true
-                            continuation.resume()
+                        guard !resumed else { return }
+                        if self.usesSOCKS {
+                            SOCKS5.connect(on: self.connection, host: self.targetHost, port: self.targetPort) { error in
+                                if let error {
+                                    self.markClosed()
+                                    finish(error)
+                                } else {
+                                    self.receiveLoop()
+                                    finish(nil)
+                                }
+                            }
+                        } else {
+                            self.receiveLoop()
+                            finish(nil)
                         }
-                        self?.receiveLoop()
                     case .waiting(let error), .failed(let error):
-                        if !resumed {
-                            resumed = true
-                            continuation.resume(throwing: error)
-                        }
-                        self?.markClosed()
+                        self.markClosed()
+                        finish(error)
                     case .cancelled:
-                        if !resumed {
-                            resumed = true
-                            continuation.resume(throwing: PaddingError.cancelled)
-                        }
-                        self?.markClosed()
+                        self.markClosed()
+                        finish(PaddingError.cancelled)
                     default:
                         break
                     }

@@ -209,8 +209,10 @@ struct PaddingStatusRow: View {
             Text("Off")
         case .preparing:
             Text("Creating a private onion service…")
+        case .publishing:
+            Text("Publishing the onion service through Tor — usually 1–3 minutes via Snowflake…")
         case .connecting(let attempt):
-            Text("Waiting for the loop to become reachable (attempt \(attempt))…")
+            Text("Connecting to the loop through Tor (attempt \(attempt))…")
         case .active:
             Text(loop.level.title) + Text(verbatim: " · ") + Text("dummy traffic bounces through Tor back to this Mac")
         case .failed(let message):

@@ -22,11 +22,14 @@ protocol TorEngine: AnyObject {
     func applyRoute(_ route: TorRoute) async throws
     func circuit() async throws -> [CircuitHop]
     func trafficCounters() async throws -> TrafficCounters
-    func check(socksPort: UInt16) async throws -> TorCheckResult
+    /// Verifies the exit through Veil's local HTTP proxy (host names are passed to Tor unresolved).
+    func check(httpPort: UInt16) async throws -> TorCheckResult
 
     /// Creates an ephemeral v3 onion service that forwards port 80 to `targetPort` on this Mac.
     /// Returns the service id (the part before `.onion`).
     func createOnionService(targetPort: UInt16) async throws -> String
+    /// Waits until Tor reports the service descriptor uploaded to the directory (HS_DESC events).
+    func waitForOnionServicePublication(serviceID: String, timeout: Duration) async -> Bool
     func removeOnionService(_ serviceID: String) async
     /// Forces Tor's own circuit/connection padding on (or back to defaults) without a restart.
     func setTorPadding(enabled: Bool) async

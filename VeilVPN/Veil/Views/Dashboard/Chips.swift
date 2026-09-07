@@ -111,7 +111,7 @@ struct PaddingChip: View {
     private var dotColor: Color {
         switch status {
         case .active: .mint
-        case .preparing, .connecting: .orange
+        case .preparing, .publishing, .connecting: .orange
         case .failed: .red
         case .off: .secondary
         }

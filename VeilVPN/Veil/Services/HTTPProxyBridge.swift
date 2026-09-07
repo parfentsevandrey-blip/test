@@ -247,31 +247,43 @@ final class ProxySession: @unchecked Sendable {
             respond(400, "Bad Request")
             return
         }
-        let parameters: NWParameters
+        let upstream: NWConnection
+        var socksTarget: (host: String, port: UInt16)?
         switch route {
         case .tor:
             guard let socksPort else {
                 respond(502, "Bad Gateway")
                 return
             }
-            parameters = NWParameters.tcp
-            let socks = ProxyConfiguration(socksv5Proxy: .hostPort(host: "127.0.0.1", port: NWEndpoint.Port(rawValue: socksPort) ?? 9050))
-            let privacyContext = NWParameters.PrivacyContext(description: "app.veilvpn.tor-socks")
-            privacyContext.proxyConfigurations = [socks]
-            parameters.setPrivacyContext(privacyContext)
+            // Plain TCP to Tor's SOCKS port; the SOCKS5 CONNECT below carries the host name so
+            // Tor resolves it (no local DNS, .onion works).
+            let tcpOptions = NWProtocolTCP.Options()
+            tcpOptions.connectionTimeout = 20
+            upstream = NWConnection(host: "127.0.0.1", port: NWEndpoint.Port(rawValue: socksPort) ?? 9050, using: NWParameters(tls: nil, tcp: tcpOptions))
+            socksTarget = (host, port)
         case .direct(let antiThrottle):
             let tcpOptions = NWProtocolTCP.Options()
             tcpOptions.noDelay = antiThrottle // each write must leave as its own segment
             tcpOptions.connectionTimeout = 20
-            parameters = NWParameters(tls: nil, tcp: tcpOptions)
+            upstream = NWConnection(host: NWEndpoint.Host(host), port: nwPort, using: NWParameters(tls: nil, tcp: tcpOptions))
         }
-        let upstream = NWConnection(host: NWEndpoint.Host(host), port: nwPort, using: parameters)
         self.upstream = upstream
         var signalled = false
         upstream.stateUpdateHandler = { [weak self] state in
             switch state {
             case .ready:
-                if !signalled {
+                guard !signalled else { return }
+                if let socksTarget {
+                    SOCKS5.connect(on: upstream, host: socksTarget.host, port: socksTarget.port) { [weak self] error in
+                        guard !signalled else { return }
+                        signalled = true
+                        if error != nil {
+                            self?.respond(502, "Bad Gateway")
+                        } else {
+                            onReady()
+                        }
+                    }
+                } else {
                     signalled = true
                     onReady()
                 }

@@ -391,6 +391,16 @@
         }
       }
     },
+    "Connecting to the loop through Tor (attempt %lld)…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подключение к циклу через Tor (попытка %lld)…"
+          }
+        }
+      }
+    },
     "Connection": {
       "localizations": {
         "ru": {
@@ -1231,6 +1241,16 @@
         }
       }
     },
+    "Publishing the onion service through Tor — usually 1–3 minutes via Snowflake…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Публикация onion-сервиса через Tor — обычно 1–3 минуты через Snowflake…"
+          }
+        }
+      }
+    },
     "Quit": {
       "localizations": {
         "ru": {
@@ -1677,6 +1697,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Скорость отображается здесь во время подключения."
+          }
+        }
+      }
+    },
+    "Timed out while connecting to the padding loop.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Истекло время подключения к циклу маскировки."
           }
         }
       }

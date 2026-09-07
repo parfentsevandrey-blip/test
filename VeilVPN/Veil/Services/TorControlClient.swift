@@ -39,6 +39,9 @@ final class TorControlClient: @unchecked Sendable {
     private var readyContinuation: CheckedContinuation<Void, Error>?
     private var isReady = false
     private var isClosed = false
+    private var eventLines: [String] = []
+    private var dataBlockIsEvent = false
+    private var eventHandler: ((String) -> Void)?
 
     init(port: UInt16) {
         self.port = port
@@ -69,6 +72,13 @@ final class TorControlClient: @unchecked Sendable {
     func close() {
         queue.async {
             self.tearDown(error: ControlError.closed)
+        }
+    }
+
+    /// Receives asynchronous `650` events (after `SETEVENTS`), one call per event, without the code.
+    func setEventHandler(_ handler: ((String) -> Void)?) {
+        queue.async {
+            self.eventHandler = handler
         }
     }
 
@@ -190,9 +200,14 @@ final class TorControlClient: @unchecked Sendable {
         if dataKey != nil {
             if line == "." {
                 let text = ([dataKey ?? ""] + dataLines).joined(separator: "\n")
-                current.append(ReplyLine(code: 250, separator: "+", text: text))
+                if dataBlockIsEvent {
+                    eventLines.append(text)
+                } else {
+                    current.append(ReplyLine(code: 250, separator: "+", text: text))
+                }
                 dataKey = nil
                 dataLines = []
+                dataBlockIsEvent = false
             } else {
                 dataLines.append(line.hasPrefix("..") ? String(line.dropFirst()) : line)
             }
@@ -201,6 +216,28 @@ final class TorControlClient: @unchecked Sendable {
         guard line.count >= 4, let code = Int(line.prefix(3)) else { return }
         let separator = line[line.index(line.startIndex, offsetBy: 3)]
         let text = String(line.dropFirst(4))
+        if code == 650 {
+            // Asynchronous events never interleave with a reply's own lines, but they can arrive
+            // between a command and its reply, so keep them out of `current`.
+            switch separator {
+            case "+":
+                dataKey = text
+                dataLines = []
+                dataBlockIsEvent = true
+            case "-":
+                eventLines.append(text)
+            case " ":
+                eventLines.append(text)
+                let events = eventLines
+                eventLines = []
+                if let eventHandler {
+                    events.forEach(eventHandler)
+                }
+            default:
+                break
+            }
+            return
+        }
         switch separator {
         case "+":
             dataKey = text

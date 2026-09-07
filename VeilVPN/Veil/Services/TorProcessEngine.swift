@@ -20,6 +20,7 @@ final class TorProcessEngine: TorEngine {
     private var lastWarning: String?
     private var exitStatus: Int32?
     private var usesBridges = true
+    private var descriptorUploads: [String: Int] = [:]
 
     init(bundle: TorBundle) {
         self.bundle = bundle
@@ -99,6 +100,13 @@ final class TorProcessEngine: TorEngine {
 
         do {
             let client = try await connectControl(port: ports.control)
+            client.setEventHandler { [weak self] event in
+                DispatchQueue.main.async {
+                    MainActor.assumeIsolated {
+                        self?.handleControlEvent(event)
+                    }
+                }
+            }
             try await client.send("TAKEOWNERSHIP")
             _ = try? await client.send("SETCONF __OwningControllerProcess=\(ProcessInfo.processInfo.processIdentifier)")
             controller = client
@@ -215,8 +223,40 @@ final class TorProcessEngine: TorEngine {
         return TrafficCounters(read: UInt64(read) ?? 0, written: UInt64(written) ?? 0)
     }
 
-    func check(socksPort: UInt16) async throws -> TorCheckResult {
-        try await TorCheck.run(socksPort: socksPort)
+    func check(httpPort: UInt16) async throws -> TorCheckResult {
+        try await TorCheck.run(httpPort: httpPort)
+    }
+
+    func waitForOnionServicePublication(serviceID: String, timeout: Duration) async -> Bool {
+        guard let controller else { return false }
+        descriptorUploads[serviceID] = 0
+        _ = try? await controller.send("SETEVENTS HS_DESC")
+        let deadline = ContinuousClock.now + timeout
+        while ContinuousClock.now < deadline {
+            if (descriptorUploads[serviceID] ?? 0) >= 2 { return true }
+            do {
+                try await Task.sleep(for: .seconds(1))
+            } catch {
+                return false
+            }
+        }
+        return (descriptorUploads[serviceID] ?? 0) > 0
+    }
+
+    private func handleControlEvent(_ event: String) {
+        let parts = event.split(separator: " ")
+        guard parts.count >= 3, parts[0] == "HS_DESC" else { return }
+        let action = parts[1]
+        let service = String(parts[2])
+        if action == "UPLOADED" {
+            let count = (descriptorUploads[service] ?? 0) + 1
+            descriptorUploads[service] = count
+            if count == 1 {
+                emit(.veil(.info, "Onion descriptor for \(service.prefix(12))… published to the Tor directory"))
+            }
+        } else if action == "FAILED" {
+            emit(.veil(.debug, "Onion descriptor event: \(event)"))
+        }
     }
 
     func createOnionService(targetPort: UInt16) async throws -> String {

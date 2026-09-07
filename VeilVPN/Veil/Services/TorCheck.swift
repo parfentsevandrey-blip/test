@@ -1,16 +1,16 @@
 import Foundation
 import Network
 
-/// Asks check.torproject.org, through Tor's SOCKS port, whether we really exit via Tor.
+/// Asks check.torproject.org, through Veil's HTTP bridge (and thus Tor), whether we really exit via Tor.
 enum TorCheck {
     enum CheckError: LocalizedError {
         case badResponse
         var errorDescription: String? { String(localized: "check.torproject.org returned an unexpected response.") }
     }
 
-    static func run(socksPort: UInt16) async throws -> TorCheckResult {
+    static func run(httpPort: UInt16) async throws -> TorCheckResult {
         let configuration = URLSessionConfiguration.ephemeral
-        let proxy = ProxyConfiguration(socksv5Proxy: .hostPort(host: "127.0.0.1", port: NWEndpoint.Port(rawValue: socksPort) ?? 9050))
+        let proxy = ProxyConfiguration(httpCONNECTProxy: .hostPort(host: "127.0.0.1", port: NWEndpoint.Port(rawValue: httpPort) ?? 8118))
         configuration.proxyConfigurations = [proxy]
         configuration.timeoutIntervalForRequest = 45
         configuration.timeoutIntervalForResource = 60

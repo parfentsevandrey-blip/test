@@ -161,14 +161,18 @@ final class PaddingServer: @unchecked Sendable {
 
 enum PaddingError: LocalizedError {
     case cancelled
-    case loopUnreachable
+    case timeout
+    case loopUnreachable(String)
     case loopClosed
 
     var errorDescription: String? {
         switch self {
-        case .cancelled: String(localized: "Padding loop cancelled.")
-        case .loopUnreachable: String(localized: "Could not reach Veil’s private onion service through Tor.")
-        case .loopClosed: String(localized: "The padding loop was closed.")
+        case .cancelled: return String(localized: "Padding loop cancelled.")
+        case .timeout: return String(localized: "Timed out while connecting to the padding loop.")
+        case .loopUnreachable(let detail):
+            let base = String(localized: "Could not reach Veil’s private onion service through Tor.")
+            return detail.isEmpty ? base : "\(base) \(detail)"
+        case .loopClosed: return String(localized: "The padding loop was closed.")
         }
     }
 }

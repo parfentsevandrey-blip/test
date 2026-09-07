@@ -578,7 +578,7 @@ final class AppState {
             defer { isCheckingTor = false }
             do {
                 let started = Date.now
-                let result = try await engine.check(socksPort: ports.socks)
+                let result = try await engine.check(httpPort: ports.http)
                 routeLatency = Date.now.timeIntervalSince(started)
                 torCheck = result
                 append(.veil(.info, "check.torproject.org: \(result.isTor ? "Tor confirmed" : "NOT using Tor"), exit IP \(result.ip), round trip \(Int((routeLatency ?? 0) * 1000)) ms"))

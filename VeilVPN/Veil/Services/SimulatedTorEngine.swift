@@ -108,7 +108,7 @@ final class SimulatedTorEngine: TorEngine {
         return counters
     }
 
-    func check(socksPort: UInt16) async throws -> TorCheckResult {
+    func check(httpPort: UInt16) async throws -> TorCheckResult {
         try await Task.sleep(for: .milliseconds(900))
         return TorCheckResult(isTor: true, ip: "199.249.230.\(80 + circuitSeed % 100)")
     }
@@ -116,6 +116,11 @@ final class SimulatedTorEngine: TorEngine {
     func createOnionService(targetPort: UInt16) async throws -> String {
         try await Task.sleep(for: .milliseconds(400))
         return "demoonionservice"
+    }
+
+    func waitForOnionServicePublication(serviceID: String, timeout: Duration) async -> Bool {
+        try? await Task.sleep(for: .seconds(1))
+        return true
     }
 
     func removeOnionService(_ serviceID: String) async {}
