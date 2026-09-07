@@ -88,8 +88,10 @@ H1 = ['Название ЖК', 'Застройщик', 'Год постройк�
       'Статус', 'Цена за метр ОТ', 'Цена за метр медиана', 'Цена за метр ДО', 'Лотов в продаже', 'Площадь лотов, м²',
       'Класс', 'Ссылка на Циан', 'Примечание']
 rows1, rows2_live = [], []
+live_targets = {v.get('live') for v in manual.values() if isinstance(v, dict) and v.get('live')}
 for r in complexes['complexes']:
     m = manual.get(r['complex'], {})
+    if r['complex'] in live_targets: continue   # строка заказчика на листе 2 уже покрывает этот ЖК
     z = m.get('zone') or zone(r)
     if not z: continue
     med = r.get('perM2Median') or 0
@@ -119,6 +121,7 @@ seen = set()
 for row in pdf['rows']:
     name, dev, dl, addr, metro, b, fl, st, pf, pt, lots, fin, note = row
     m = manual.get(name, {})
+    dev = m.get('developer_override', dev)
     z = m.get('zone')
     if z is None: continue
     live = m.get('live')
@@ -127,6 +130,8 @@ for row in pdf['rows']:
     if lr:
         pf, pt, lots = lr.get('perM2Min') or pf, lr.get('perM2Max') or pt, lr.get('lots') or lots
         src = f"таблица заказчика + Циан {complexes['fetched']}"
+        if (lr.get('finishedShare') or 0) >= 50: note = '; '.join(x for x in [note, 'по Циан дом сдан'] if x)
+        if lr.get('urls') and not m.get('url'): m = {**m, 'url': lr['urls'][0]}
     rows2.append([name, dev, dl, addr, metro, z, b, fl, st, pf, pt, lots, fin, m.get('url', ''), src, '; '.join(x for x in [note, m.get('note')] if x)])
     seen.add(live or name)
 for row in rows2_live:
@@ -143,7 +148,8 @@ H3 = ['Проект / участок', 'Адрес', 'Район', 'Зона', '
       'Этажность', 'Лотов', 'Старт (план)', 'Сдача (план)', 'Цена от, ₽/м²', 'Дата новости', 'Источник', 'Ссылка', 'Примечание']
 rows3 = []
 for p in planning:
-    rows3.append([p.get('name'), p.get('address'), p.get('district'), p.get('location_zone'), p.get('developer'), p.get('stage'),
+    if p.get('name') in manual.get('_planning_drop', []): continue   # стройка уже идёт — лист 2
+    rows3.append([p.get('name'), p.get('address'), p.get('district'), manual.get('_planning_zone', {}).get(p.get('name'), p.get('location_zone')), p.get('developer'), p.get('stage'),
                   p.get('area_total_m2'), p.get('area_residential_m2'), p.get('floors'), p.get('units'), p.get('planned_start'),
                   p.get('planned_completion'), p.get('price_from_per_m2'), p.get('announced_date'), p.get('source_name'),
                   p.get('source_url'), p.get('notes')])
