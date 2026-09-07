@@ -371,7 +371,7 @@ struct YouTubeSettingsView: View {
             Section {
                 Picker("YouTube traffic", selection: Binding(
                     get: { app.settings.youtubeMode },
-                    set: { app.setRouteMode($0) }
+                    set: { app.setYouTubeMode($0) }
                 )) {
                     ForEach(RouteMode.allCases) { mode in
                         Text(mode.title).tag(mode)
