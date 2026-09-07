@@ -33,6 +33,16 @@
       ]
     },
     {
+      "slug": "ambachtshof-23-pijnacker",
+      "title": "Ambachtshof 23, Pijnacker",
+      "city": "Pijnacker",
+      "price": "€ 335.000",
+      "url": "https://www.fundainbusiness.nl/bedrijfshal/pijnacker/object-44431578-ambachtshof-23/",
+      "reports": [
+        "report-2026-09-02-locations.json"
+      ]
+    },
+    {
       "slug": "ampereweg-17-delft",
       "title": "Ampèreweg 17, Delft",
       "city": "Delft",
@@ -84,6 +94,16 @@
       ]
     },
     {
+      "slug": "boekweitstraat-82-nieuw-vennep",
+      "title": "Boekweitstraat 82, Nieuw-Vennep",
+      "city": "Nieuw-Vennep",
+      "price": "€ 847.000",
+      "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-89460128-boekweitstraat-82/",
+      "reports": [
+        "report-2026-09-02-locations.json"
+      ]
+    },
+    {
       "slug": "buys-ballotstraat-11-utrecht",
       "title": "Buys Ballotstraat 11 bs, Utrecht",
       "city": "Utrecht",
@@ -91,6 +111,16 @@
       "url": "https://www.fundainbusiness.nl/en/belegging/utrecht/object-44464482-buys-ballotstraat-11-bs/",
       "reports": [
         "report-2026-08-03.json"
+      ]
+    },
+    {
+      "slug": "computerweg-20-24-amersfoort",
+      "title": "Computerweg 20-24, Amersfoort",
+      "city": "Amersfoort",
+      "price": "€ 1.200.000",
+      "url": "https://www.fundainbusiness.nl/belegging/amersfoort/object-89735847-computerweg-22/",
+      "reports": [
+        "report-2026-09-02-warehouses.json"
       ]
     },
     {
@@ -174,6 +204,16 @@
       ]
     },
     {
+      "slug": "jacobus-van-looystraat-2a-voorburg",
+      "title": "Jacobus van Looystraat 2-A, Voorburg",
+      "city": "Voorburg",
+      "price": "€ 300.000",
+      "url": "https://www.fundainbusiness.nl/belegging/voorburg/object-43172825-jacobus-van-looystraat-2-a/",
+      "reports": [
+        "report-2026-09-02-warehouses.json"
+      ]
+    },
+    {
       "slug": "kieler-bocht-15a-groningen",
       "title": "Kieler Bocht 15-A, Groningen",
       "city": "Groningen",
@@ -232,6 +272,16 @@
       "url": "https://www.bijabram.nl/property/mercuriusweg-19-waddinxveen-216",
       "reports": [
         "report-2026-08-24-warehouses.json"
+      ]
+    },
+    {
+      "slug": "neutronstraat-7-groningen",
+      "title": "Neutronstraat 7, Groningen",
+      "city": "Groningen",
+      "price": "€ 1.500.000",
+      "url": "https://www.fundainbusiness.nl/belegging/groningen/object-43330020-neutronstraat-7-7/",
+      "reports": [
+        "report-2026-09-02-locations.json"
       ]
     },
     {
@@ -340,6 +390,16 @@
       "source": "показан заказчику вне этого репозитория"
     },
     {
+      "slug": "wc-bradelaan-29-hilversum",
+      "title": "W.C. Bradelaan 29 G1–G8, Hilversum",
+      "city": "Hilversum",
+      "price": "€ 299.000",
+      "url": "https://www.fundainbusiness.nl/belegging/hilversum/object-89738871-wc-bradelaan-29-g1-t-m-g8/",
+      "reports": [
+        "report-2026-09-02-warehouses.json"
+      ]
+    },
+    {
       "slug": "zeppelinstraat-33-berkel-en-rodenrijs",
       "title": "Zeppelinstraat 33, Berkel en Rodenrijs",
       "city": "Berkel en Rodenrijs",
@@ -350,5 +410,5 @@
       ]
     }
   ],
-  "updated": "2026-09-02"
+  "updated": "2026-09-07"
 }
