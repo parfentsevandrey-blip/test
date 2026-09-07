@@ -21,6 +21,22 @@ pdf = json.load(open(DOCS / 'pdf-table.json'))
 planning = json.load(open(DOCS / 'planning.json'))
 manual = json.load(open(DOCS / 'manual.json'))   # застройщик, класс, зона — ручная разметка
 devs = json.load(open(DOCS / 'developers.json'))  # веб-исследование по застройщикам, с источниками
+ZHK = json.load(open(DOCS / 'zhk-info.json')) if (DOCS / 'zhk-info.json').exists() else {}   # карточки ЖК Циан
+
+def card(name):
+    c = ZHK.get(name) or {}
+    return c if c.get('id') else {}
+
+def card_year(c):
+    """Год из карточки ЖК: «Сдан в 2017» / «Срок сдачи 4 кв. 2026»."""
+    for k in ('finished', 'yearText', 'deadline'):
+        v = c.get(k)
+        if not v: continue
+        m = re.search(r'(\d)\s*кв\.?\s*(\d{4})', v)
+        if m: return f'{m.group(1)} кв. {m.group(2)}'
+        m = re.search(r'(20\d\d)', v)
+        if m: return m.group(1)
+    return None
 CLASS_ORDER = {'делюкс': 0, 'премиум': 1, 'бизнес': 2}
 
 PREMIUM_PER_M2 = 700_000   # порог ₽/м² по медиане, ниже — бизнес-класс, в подборку не идёт
@@ -188,13 +204,18 @@ for r in complexes['complexes']:
     addr = ', '.join(x for x in ['Москва', r.get('street'), r.get('house')] if x)
     link = r['urls'][0] if r.get('urls') else ''
     dv = devs.get(r['complex'], {})
-    developer = m.get('developer') or dv.get('developer') or ''
+    cd = card(r['complex'])
+    developer = cd.get('developer') or m.get('developer') or dv.get('developer') or ''
     cls = m.get('class') or dv.get('class') or 'премиум'
     if m.get('class') and dv.get('class') and dv['class'] != m['class']: cls = dv['class'] if dv['class'] == 'бизнес' else m['class']
     notes = '; '.join(x for x in [m.get('note', ''), dv.get('note') or ''] if x)
     if dv.get('developer') and m.get('developer') and dv['developer'].split()[0].lower() != m['developer'].split()[0].lower():
         notes = '; '.join(x for x in [notes, f"по другим источникам застройщик: {dv['developer']}"] if x)
-    row = [r['complex'], developer, m.get('year') or fmt_years(r), m.get('address') or addr, r.get('district'), z,
+    year = card_year(cd) or m.get('year') or fmt_years(r)
+    if cd.get('url'): link = cd['url']
+    if cd and not card_year(cd): notes = '; '.join(x for x in [notes, 'год по объявлениям, в карточке ЖК не указан'] if x)
+    elif not cd: notes = '; '.join(x for x in [notes, 'карточка ЖК на Циан не найдена, год по объявлениям'] if x)
+    row = [r['complex'], developer, year, m.get('address') or addr, r.get('district'), z,
            max(r.get('housesSeen') or 0, dv.get('buildings') or 0) or None, floors(r) or dv.get('floors') or '', status,
            per_m2_str(r.get('perM2Min')), per_m2_str(med), per_m2_str(r.get('perM2Max')),
            r.get('declared') or r.get('lots'), f"{int(r['areaMin'])}–{int(r['areaMax'])}" if r.get('areaMin') and r['areaMin'] != math.inf else '',
@@ -231,7 +252,12 @@ for row in pdf['rows']:
     if dv.get('developer') and dev and dv['developer'].split()[0].lower() != dev.split()[0].lower():
         note = '; '.join(x for x in [note, f"по другим источникам застройщик: {dv['developer']}"] if x)
     if pm is None: pm = int((pf + pt) / 2) if pf and pt else (pf or None)
-    rows2.append([name, dev, dl, addr, metro, z, b, fl, st, pf, pm, pt, lots, fin, m.get('url') or dv.get('site') or '', src, '; '.join(x for x in [note, m.get('note')] if x)])
+    cd = card(live) if live else {}
+    link2 = cd.get('url') or m.get('url') or dv.get('site') or ''
+    if cd.get('developer') and dev and cd['developer'].split()[0].lower() != dev.split()[0].lower():
+        note = '; '.join(x for x in [note, f"в карточке Циан застройщик: {cd['developer']}"] if x)
+    if card_year(cd) and card_year(cd) != dl: note = '; '.join(x for x in [note, f"срок по карточке Циан: {card_year(cd)}"] if x)
+    rows2.append([name, dev, dl, addr, metro, z, b, fl, st, pf, pm, pt, lots, fin, link2, src, '; '.join(x for x in [note, m.get('note')] if x)])
     seen.add(live or name)
 for row in rows2_live:
     if row[0] in seen: continue
