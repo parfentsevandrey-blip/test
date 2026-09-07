@@ -27,6 +27,18 @@ def card(name):
     c = ZHK.get(name) or {}
     return c if c.get('id') else {}
 
+def card_year_num(c):
+    ys = []
+    for k in ('finished', 'yearText', 'deadline'):
+        ys += [int(y) for y in re.findall(r'(20\d\d)', c.get(k) or '')]
+    return max(ys) if ys else None
+
+def card_stage(c):
+    t = ' '.join(str(c.get(k) or '') for k in ('finished', 'yearText', 'deadline', 'stage'))
+    if re.search(r'Сдача|Строится', t): return 'building'
+    if re.search(r'Сдан', t) or card_year_num(c): return 'built'
+    return None
+
 def card_year(c):
     """Год из карточки ЖК: «Сдан в 2017» / «Срок сдачи 4 кв. 2026»."""
     for k in ('finished', 'yearText', 'deadline'):
@@ -34,6 +46,8 @@ def card_year(c):
         if not v: continue
         m = re.search(r'(\d)\s*кв\.?\s*(\d{4})', v)
         if m: return f'{m.group(1)} кв. {m.group(2)}'
+        m = re.search(r'(20\d\d)\s*[–-]\s*(20\d\d)', v)
+        if m: return f'{m.group(1)}–{m.group(2)}'
         m = re.search(r'(20\d\d)', v)
         if m: return m.group(1)
     return None
@@ -205,13 +219,19 @@ for r in complexes['complexes']:
     link = r['urls'][0] if r.get('urls') else ''
     dv = devs.get(r['complex'], {})
     cd = card(r['complex'])
-    developer = cd.get('developer') or m.get('developer') or dv.get('developer') or ''
+    developer = m.get('developer') or dv.get('developer') or cd.get('developer') or ''
+    if cd.get('developer') and developer and cd['developer'].split()[0].lower().strip('«»"') not in developer.lower():
+        m = {**m, 'note': '; '.join(x for x in [m.get('note', ''), f"в карточке Циан застройщик: {cd['developer']}"] if x)}
+    cy = card_year_num(cd)
+    if cy and cy < 2018 and not re.search(r'[–-]', str(cd.get('yearText') or '')): continue   # по карточке ЖК дом старше 2018
+    cst = card_stage(cd)
+    if cst: m = {**m, 'stage': cst}
     cls = m.get('class') or dv.get('class') or 'премиум'
     if m.get('class') and dv.get('class') and dv['class'] != m['class']: cls = dv['class'] if dv['class'] == 'бизнес' else m['class']
     cc = (cd.get('cls') or '').strip().lower()
     if cc in ('делюкс', 'премиум', 'бизнес', 'комфорт', 'эконом'):
         cls = cc + ' (Циан)'
-        if cc in ('бизнес', 'комфорт', 'эконом') and not m.get('keep'): continue   # класс по карточке Циан ниже премиума
+        if cc in ('бизнес', 'комфорт', 'эконом') and not m.get('keep') and med < 1_500_000: continue   # класс по карточке Циан ниже премиума
     notes = '; '.join(x for x in [m.get('note', ''), dv.get('note') or ''] if x)
     if dv.get('developer') and m.get('developer') and dv['developer'].split()[0].lower() != m['developer'].split()[0].lower():
         notes = '; '.join(x for x in [notes, f"по другим источникам застройщик: {dv['developer']}"] if x)
@@ -266,7 +286,7 @@ for row in pdf['rows']:
 for row in rows2_live:
     if row[0] in seen: continue
     m = manual.get(row[0], {})
-    rows2.append([row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10], row[11], row[12], m.get('finish', ''), row[17] or row[16], f"Циан {complexes['fetched']}", row[18]])
+    rows2.append([row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10], row[11], row[12], m.get('finish') or 'бетон', row[17] or row[16], f"Циан {complexes['fetched']}", row[18]])
 rows2.sort(key=lambda x: (x[10] is None, x[10] or 0))
 sheet(wb, '2. Строится', H2, rows2,
       [30, 20, 11, 30, 15, 14, 8, 8, 12, 11, 11, 11, 8, 9, 8, 22, 40],
