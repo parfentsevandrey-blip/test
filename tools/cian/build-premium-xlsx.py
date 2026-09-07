@@ -12,6 +12,7 @@ from pathlib import Path
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
+from openpyxl.formatting.rule import ColorScaleRule
 
 ROOT = Path(__file__).resolve().parents[2]
 DOCS = ROOT / 'docs' / 'premium-cao'
@@ -101,7 +102,7 @@ right = Alignment(horizontal='right', vertical='center')
 
 def is_url(v): return isinstance(v, str) and v.startswith('http')
 
-def sheet(wb, title, headers, rows, widths, note=None, subtitle='', zone_col=None, orientation='portrait'):
+def sheet(wb, title, headers, rows, widths, note=None, subtitle='', zone_col=None, orientation='portrait', heat_col=None):
     ws = wb.create_sheet(title)
     ncol = len(headers)
     ws.append([title]); ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=ncol)
@@ -118,10 +119,10 @@ def sheet(wb, title, headers, rows, widths, note=None, subtitle='', zone_col=Non
         ws.append(r)
         rr = ws.max_row
         zone = r[zone_col] if zone_col is not None else None
-        fill = PatternFill('solid', fgColor=ZONE_FILL[zone]) if zone in ZONE_FILL else (ZEBRA if i % 2 else None)
+        fill = ZEBRA if i % 2 else None
         for c in ws[rr]:
             c.border = border; c.font = BODY_FONT
-            if fill and c.column != zone_col + 1 if zone_col is not None else fill: c.fill = fill
+            if fill: c.fill = fill
             if zone_col is not None and c.column == zone_col + 1 and zone in ZONE_FILL:
                 c.fill = PatternFill('solid', fgColor=ZONE_FILL[zone]); c.font = Font(name='Calibri', size=8, bold=True)
             if isinstance(c.value, bool): pass
@@ -137,6 +138,12 @@ def sheet(wb, title, headers, rows, widths, note=None, subtitle='', zone_col=Non
     ws.freeze_panes = 'B4'
     ws.auto_filter.ref = f"A3:{get_column_letter(ncol)}{ws.max_row}"
     last_data = ws.max_row
+    if heat_col is not None and last_data >= 4:
+        col = get_column_letter(heat_col + 1)
+        ws.conditional_formatting.add(f"{col}4:{col}{last_data}",
+            ColorScaleRule(start_type='min', start_color='63BE7B', mid_type='percentile', mid_value=50, mid_color='FFEB84', end_type='max', end_color='F8696B'))
+        for rr in range(4, last_data + 1):
+            ws.cell(rr, heat_col + 1).font = Font(name='Calibri', size=8, bold=True)
     if note:
         ws.append([]); ws.append([note])
         ws.merge_cells(start_row=ws.max_row, start_column=1, end_row=ws.max_row, end_column=ncol)
@@ -193,15 +200,15 @@ for r in complexes['complexes']:
            r.get('declared') or r.get('lots'), f"{int(r['areaMin'])}–{int(r['areaMax'])}" if r.get('areaMin') and r['areaMin'] != math.inf else '',
            cls, dv.get('units'), link, dv.get('site') or dv.get('source') or '', notes]
     (rows1 if (m.get('stage', 'built' if built else 'building') == 'built') else rows2_live).append(row)
-rows1.sort(key=lambda x: (zkey(x[5]), CLASS_ORDER.get(x[14], 1), -(x[10] or 0)))
+rows1.sort(key=lambda x: (x[10] is None, x[10] or 0))
 sheet(wb, '1. Построено (вторичка)', H1, rows1,
       [30, 18, 10, 30, 13, 14, 8, 8, 12, 11, 11, 11, 8, 10, 9, 8, 8, 8, 34],
-      subtitle=f"ЦАО, дома 2018+, активные объявления Циан на {complexes['fetched']}; зоны: Садовое кольцо / Хамовники / Сити, остальной ЦАО помечен «вне Садового»", zone_col=5,
+      subtitle=f"ЦАО, дома 2018+, активные объявления Циан на {complexes['fetched']}; зоны: Садовое кольцо / Хамовники / Сити / Пресня / Белорусская. Сортировка по медиане ₽/м², цвет — от дешёвых (зелёный) к дорогим (красный)", zone_col=5, heat_col=10,
       note=f"Источник: живая выдача Циан {complexes['fetched']} (api.cian.ru, инструмент tools/cian/cian.js), вторичка с годом дома 2018+ и новостройки по 10 районам ЦАО. Цены — ₽/м² по активным объявлениям. Застройщик и класс — по открытым данным (ручная разметка docs/premium-cao/manual.json).")
 
 # ---------- лист 2: строится ----------
 H2 = ['Название ЖК', 'Застройщик', 'Срок сдачи', 'Адрес', 'Район / метро', 'Зона', 'Корпусов', 'Этажность', 'Статус',
-      'Цена за метр ОТ', 'Цена за метр ДО', 'Лотов в продаже', 'Отделка', 'Ссылка на проект', 'Источник', 'Примечание']
+      'Цена за метр ОТ', 'Цена за метр медиана', 'Цена за метр ДО', 'Лотов в продаже', 'Отделка', 'Ссылка на проект', 'Источник', 'Примечание']
 rows2 = []
 seen = set()
 for row in pdf['rows']:
@@ -213,24 +220,27 @@ for row in pdf['rows']:
     z = m.get('zone') if m.get('zone') in ALLOWED else (zone(lr) if lr else None)
     if z is None: continue
     src = 'таблица заказчика'
+    pm = None
     if lr:
         pf, pt, lots = lr.get('perM2Min') or pf, lr.get('perM2Max') or pt, lr.get('declared') or lr.get('lots') or lots
+        pm = per_m2_str(lr.get('perM2Median'))
         src = f"таблица заказчика + Циан {complexes['fetched']}"
         if (lr.get('finishedShare') or 0) >= 50: note = '; '.join(x for x in [note, 'по Циан дом сдан'] if x)
         if lr.get('urls') and not m.get('url'): m = {**m, 'url': lr['urls'][0]}
     dv = devs.get(live, {}) if live else {}
     if dv.get('developer') and dev and dv['developer'].split()[0].lower() != dev.split()[0].lower():
         note = '; '.join(x for x in [note, f"по другим источникам застройщик: {dv['developer']}"] if x)
-    rows2.append([name, dev, dl, addr, metro, z, b, fl, st, pf, pt, lots, fin, m.get('url') or dv.get('site') or '', src, '; '.join(x for x in [note, m.get('note')] if x)])
+    if pm is None: pm = int((pf + pt) / 2) if pf and pt else (pf or None)
+    rows2.append([name, dev, dl, addr, metro, z, b, fl, st, pf, pm, pt, lots, fin, m.get('url') or dv.get('site') or '', src, '; '.join(x for x in [note, m.get('note')] if x)])
     seen.add(live or name)
 for row in rows2_live:
     if row[0] in seen: continue
     m = manual.get(row[0], {})
-    rows2.append([row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[11], row[12], m.get('finish', ''), row[17] or row[16], f"Циан {complexes['fetched']}", row[18]])
-rows2.sort(key=lambda x: (zkey(x[5]), str(x[2])))
+    rows2.append([row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10], row[11], row[12], m.get('finish', ''), row[17] or row[16], f"Циан {complexes['fetched']}", row[18]])
+rows2.sort(key=lambda x: (x[10] is None, x[10] or 0))
 sheet(wb, '2. Строится', H2, rows2,
-      [30, 20, 11, 30, 15, 14, 8, 8, 12, 11, 11, 8, 9, 8, 22, 40],
-      subtitle=f"Таблица заказчика + новостройки из выдачи Циан на {complexes['fetched']}", zone_col=5,
+      [30, 20, 11, 30, 15, 14, 8, 8, 12, 11, 11, 11, 8, 9, 8, 22, 40],
+      subtitle=f"Таблица заказчика + новостройки из выдачи Циан на {complexes['fetched']}. Сортировка по медиане ₽/м² (где Циан не нашёл ЖК — середина диапазона от/до), цвет — от дешёвых к дорогим", zone_col=5, heat_col=10,
       note='Строки из таблицы заказчика дополнены живой выдачей Циан там, где ЖК найден в базе (цены и число лотов обновлены). Остальные строки — найдены в выдаче Циан по новостройкам ЦАО.')
 
 # ---------- лист 3: проектирование ----------
@@ -245,10 +255,10 @@ for p in planning:
                   p.get('area_total_m2'), p.get('area_residential_m2'), p.get('floors'), p.get('units'), p.get('planned_start'),
                   p.get('planned_completion'), p.get('price_from_per_m2'), p.get('announced_date'), p.get('source_name'),
                   p.get('source_url'), p.get('notes')])
-rows3.sort(key=lambda x: (zkey(x[3]), str(x[0])))
+rows3.sort(key=lambda x: (x[12] is None, x[12] or 0, str(x[0])))
 sheet(wb, '3. Проектирование', H3, rows3,
       [30, 28, 13, 14, 22, 24, 10, 10, 8, 7, 11, 11, 11, 11, 20, 8, 46],
-      subtitle='Участки (ЗУ, КРТ, ГПЗУ) и анонсированные проекты без стройки, публикации 2025–2026', zone_col=3, orientation='landscape',
+      subtitle='Участки (ЗУ, КРТ, ГПЗУ) и анонсированные проекты без стройки, публикации 2025–2026. Сортировка по заявленной цене от, ₽/м²; без цены — в конце', zone_col=3, orientation='landscape', heat_col=12,
       note='Источники: открытые публикации 2025–2026 (stroi.mos.ru, mos.ru, отраслевые СМИ, публичные Telegram-каналы). Закрытый канал t.me/c/3370602239 недоступен без членства — пост №1364 про ЗУ «Большой Тишинский, 8» подтверждён по открытым источникам.')
 
 out = DOCS / 'premium-zhk-cao.xlsx'
