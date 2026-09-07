@@ -29,6 +29,34 @@
         }
       }
     },
+    "%lld hops · click for a new identity": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld узлов · клик — новая личность"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld вузлів · клік — нова особа"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld گره · برای هویت جدید کلیک کنید"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 跳 · 点击更换身份"
+          }
+        }
+      }
+    },
     "%lld of %lld Tor directory authorities reachable": {
       "localizations": {
         "fa": {
@@ -169,6 +197,62 @@
         }
       }
     },
+    "Add Veil’s proxy to Telegram": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить прокси Veil в Telegram"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Додати проксі Veil у Telegram"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "افزودن پراکسی Veil به Telegram"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "将 Veil 的代理添加到 Telegram"
+          }
+        }
+      }
+    },
+    "Add proxy": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить прокси"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Додати проксі"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "افزودن پراکسی"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加代理"
+          }
+        }
+      }
+    },
     "Administrator authorization was not granted.": {
       "localizations": {
         "fa": {
@@ -193,6 +277,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "未授予管理员权限。"
+          }
+        }
+      }
+    },
+    "After sleep, or after another VPN disconnects, macOS often reports a working network while nothing gets through until Wi-Fi is switched off and on. Veil checks the Internet before starting Tor and after every wake, and does that switch for you — CoreWLAN first, then the network service — before trying Tor again.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "После сна или отключения другого VPN macOS часто показывает рабочую сеть, хотя ничего не проходит, пока не выключить и включить Wi-Fi. Veil проверяет интернет перед запуском Tor и после каждого пробуждения и делает это переключение за вас — сначала CoreWLAN, затем сетевую службу — прежде чем снова пробовать Tor."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Після сну або відключення іншого VPN macOS часто показує робочу мережу, хоча нічого не проходить, доки не вимкнути й увімкнути Wi-Fi. Veil перевіряє інтернет перед запуском Tor і після кожного пробудження та робить це перемикання за вас — спочатку CoreWLAN, потім мережеву службу — перш ніж знову пробувати Tor."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پس از خواب یا قطع شدن VPN دیگری، macOS اغلب شبکه را سالم نشان می‌دهد در حالی که تا خاموش و روشن کردن Wi-Fi چیزی عبور نمی‌کند. Veil پیش از شروع Tor و پس از هر بیداری اینترنت را بررسی می‌کند و این کار را برایتان انجام می‌دهد — ابتدا CoreWLAN، سپس سرویس شبکه — پیش از آنکه دوباره Tor را امتحان کند."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "睡眠后或其他 VPN 断开后，macOS 常常显示网络正常，但在关闭再打开 Wi-Fi 之前什么都不通。Veil 会在启动 Tor 前和每次唤醒后检查互联网，并替您完成这一切换——先 CoreWLAN，再网络服务——然后再重试 Tor。"
+          }
+        }
+      }
+    },
+    "Another VPN owns the connection (%@); not touching it.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Соединением владеет другой VPN (%@); не трогаю его."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "З’єднанням володіє інший VPN (%@); не чіпаю його."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتصال در اختیار VPN دیگری است (%@)؛ به آن دست نمی‌زنم."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "连接由另一个 VPN 接管（%@）；不作更改。"
           }
         }
       }
@@ -253,6 +393,62 @@
         }
       }
     },
+    "App Store & iCloud": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Store и iCloud"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Store та iCloud"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Store و iCloud"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Store 与 iCloud"
+          }
+        }
+      }
+    },
+    "App Store downloads, updates and iCloud stall or fail through Tor exits, so they go direct by default. Switch to Tor if you prefer.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Загрузки из App Store, обновления и iCloud через выходы Tor зависают или не работают, поэтому по умолчанию идут напрямую. При желании переключите на Tor."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Завантаження з App Store, оновлення та iCloud через виходи Tor зависають або не працюють, тому типово йдуть напряму. За бажанням перемкніть на Tor."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دانلودهای App Store، به‌روزرسانی‌ها و iCloud از طریق خروجی‌های Tor متوقف یا ناموفق می‌شوند، بنابراین به طور پیش‌فرض مستقیم می‌روند. در صورت تمایل به Tor تغییر دهید."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Store 下载、更新和 iCloud 经 Tor 出口会卡住或失败，因此默认直连。如需可切换为 Tor。"
+          }
+        }
+      }
+    },
     "Application": {
       "localizations": {
         "fa": {
@@ -271,6 +467,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Програма"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "应用"
+          }
+        }
+      }
+    },
+    "Apps": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Приложения"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Застосунки"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برنامه‌ها"
           }
         },
         "zh-Hans": {
@@ -1177,6 +1401,34 @@
         }
       }
     },
+    "Checking the Internet…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверка интернета…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перевірка інтернету…"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "در حال بررسی اینترنت…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在检查互联网…"
+          }
+        }
+      }
+    },
     "Checking youtube.com…": {
       "localizations": {
         "fa": {
@@ -1201,6 +1453,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "正在检查 youtube.com…"
+          }
+        }
+      }
+    },
+    "Checking…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверка…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перевірка…"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "در حال بررسی…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "检查中…"
           }
         }
       }
@@ -1261,6 +1541,62 @@
         }
       }
     },
+    "Chosen by Tor when the circuit is built.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выбирается Tor при построении цепочки."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вибирається Tor під час побудови ланцюжка."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هنگام ساخت مدار توسط Tor انتخاب می‌شود."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "由 Tor 在构建链路时选择。"
+          }
+        }
+      }
+    },
+    "Circuit per site": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Цепочка на сайт"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ланцюжок на сайт"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مدار برای هر سایت"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每站点独立链路"
+          }
+        }
+      }
+    },
     "Clear": {
       "localizations": {
         "fa": {
@@ -1289,6 +1625,118 @@
         }
       }
     },
+    "Click to change in Settings → YouTube.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Клик — изменить в Настройках → YouTube."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Клік — змінити в Налаштуваннях → YouTube."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برای تغییر در تنظیمات ← YouTube کلیک کنید."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点击在“设置 → YouTube”中更改。"
+          }
+        }
+      }
+    },
+    "Click to change the transport in Settings → Bridges.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Клик — сменить транспорт в Настройках → Мосты."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Клік — змінити транспорт у Налаштуваннях → Мости."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برای تغییر انتقال در تنظیمات ← پل‌ها کلیک کنید."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点击在“设置 → 网桥”中更改传输方式。"
+          }
+        }
+      }
+    },
+    "Click to check the Internet.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Клик — проверить интернет."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Клік — перевірити інтернет."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برای بررسی اینترنت کلیک کنید."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点击检查互联网。"
+          }
+        }
+      }
+    },
+    "Click to choose countries on the Route screen.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Клик — выбрать страны на экране «Маршрут»."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Клік — вибрати країни на екрані «Маршрут»."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برای انتخاب کشورها در صفحهٔ مسیر کلیک کنید."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点击在“路由”界面选择国家/地区。"
+          }
+        }
+      }
+    },
     "Click to connect through Tor": {
       "localizations": {
         "fa": {
@@ -1313,6 +1761,118 @@
           "stringUnit": {
             "state": "translated",
             "value": "点按以通过 Tor 连接"
+          }
+        }
+      }
+    },
+    "Click to open Settings.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Клик — открыть Настройки."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Клік — відкрити Налаштування."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برای باز کردن تنظیمات کلیک کنید."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点击打开设置。"
+          }
+        }
+      }
+    },
+    "Click to test youtube.com through Veil": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Клик — проверить youtube.com через Veil"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Клік — перевірити youtube.com через Veil"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برای آزمایش youtube.com از طریق Veil کلیک کنید"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点击通过 Veil 测试 youtube.com"
+          }
+        }
+      }
+    },
+    "Click to verify the exit with check.torproject.org": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Клик — проверить выход через check.torproject.org"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Клік — перевірити вихід через check.torproject.org"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برای بررسی خروجی با check.torproject.org کلیک کنید"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点击通过 check.torproject.org 验证出口"
+          }
+        }
+      }
+    },
+    "Click to verify the exit.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Клик — проверить выход."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Клік — перевірити вихід."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برای بررسی خروجی کلیک کنید."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点击验证出口。"
           }
         }
       }
@@ -1457,6 +2017,34 @@
         }
       }
     },
+    "Connect, or enable Turbo, to test": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подключитесь или включите Turbo для проверки"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Підключіться або увімкніть Turbo для перевірки"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برای آزمایش، متصل شوید یا Turbo را فعال کنید"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "连接或启用 Turbo 后可测试"
+          }
+        }
+      }
+    },
     "Connected": {
       "localizations": {
         "fa": {
@@ -1565,6 +2153,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "正在连接 Tor 网络"
+          }
+        }
+      }
+    },
+    "Connecting to the loop (attempt %lld)…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подключение к циклу (попытка %lld)…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Підключення до циклу (спроба %lld)…"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "در حال اتصال به حلقه (تلاش %lld)…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在连接回环（第 %lld 次尝试）…"
           }
         }
       }
@@ -1933,6 +2549,34 @@
         }
       }
     },
+    "Covers Telegram Web only. The Telegram app ignores the system proxy: add Veil as its SOCKS5 proxy with the button below and it connects through Tor.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Действует только для Telegram Web. Приложение Telegram игнорирует системный прокси: добавьте Veil как его SOCKS5-прокси кнопкой ниже, и оно подключится через Tor."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Діє лише для Telegram Web. Застосунок Telegram ігнорує системний проксі: додайте Veil як його SOCKS5-проксі кнопкою нижче, і він підключиться через Tor."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فقط Telegram Web را پوشش می‌دهد. برنامهٔ Telegram پراکسی سیستم را نادیده می‌گیرد: با دکمهٔ زیر Veil را به عنوان پراکسی SOCKS5 آن اضافه کنید تا از طریق Tor متصل شود."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "仅覆盖 Telegram 网页版。Telegram 应用会忽略系统代理：用下方按钮把 Veil 添加为其 SOCKS5 代理，它就会通过 Tor 连接。"
+          }
+        }
+      }
+    },
     "Covers youtube.com, googlevideo.com, ytimg.com, ggpht.com and the other YouTube hosts. QUIC/HTTP3 is never used through the proxy, so the anti-throttling trick always applies.": {
       "localizations": {
         "fa": {
@@ -1989,6 +2633,34 @@
         }
       }
     },
+    "Creating the onion loop…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Создание onion-цикла…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Створення onion-циклу…"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "در حال ساخت حلقهٔ onion…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在创建 onion 回环…"
+          }
+        }
+      }
+    },
     "Custom bridges": {
       "localizations": {
         "fa": {
@@ -2013,6 +2685,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "自定义网桥"
+          }
+        }
+      }
+    },
+    "DNS": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DNS"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DNS"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DNS"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DNS"
           }
         }
       }
@@ -2209,6 +2909,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "直连，反限速"
+          }
+        }
+      }
+    },
+    "Direct, so updates keep working": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Напрямую, чтобы обновления работали"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Напряму, щоб оновлення працювали"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مستقیم، تا به‌روزرسانی‌ها کار کنند"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "直连，以保证更新正常"
           }
         }
       }
@@ -2633,6 +3361,34 @@
         }
       }
     },
+    "Every reset method failed: %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Все способы сброса не сработали: %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Усі способи скидання не спрацювали: %@"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "همهٔ روش‌های بازنشانی ناموفق بود: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所有重置方法均失败：%@"
+          }
+        }
+      }
+    },
     "Every restriction shrinks the pool of relays Tor can pick from and makes your circuits more distinctive. Choose a middle-hop country different from the exit and keep exclusions modest.": {
       "localizations": {
         "fa": {
@@ -2769,6 +3525,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "出口 IP"
+          }
+        }
+      }
+    },
+    "Exit IP %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IP выхода %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IP виходу %@"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IP خروجی %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "出口 IP %@"
           }
         }
       }
@@ -3221,6 +4005,34 @@
         }
       }
     },
+    "Hides the fact that you are using Tor from the network you are on.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скрывает от вашей сети сам факт использования Tor."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Приховує від вашої мережі сам факт використання Tor."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "این واقعیت را که از Tor استفاده می‌کنید از شبکهٔ شما پنهان می‌کند."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "向所在网络隐藏您正在使用 Tor 的事实。"
+          }
+        }
+      }
+    },
     "Home": {
       "localizations": {
         "fa": {
@@ -3301,6 +4113,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "如何连接 Tor 网络"
+          }
+        }
+      }
+    },
+    "Ignores the system proxy": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Игнорирует системный прокси"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ігнорує системний проксі"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پراکسی سیستم را نادیده می‌گیرد"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "忽略系统代理"
           }
         }
       }
@@ -3389,6 +4229,34 @@
         }
       }
     },
+    "Install Telegram for macOS, then add a SOCKS5 proxy with server 127.0.0.1 and port %@ in Telegram → Settings → Data and Storage → Proxy.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Установите Telegram для macOS, затем добавьте SOCKS5-прокси с сервером 127.0.0.1 и портом %@ в Telegram → Настройки → Данные и память → Прокси."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Установіть Telegram для macOS, потім додайте SOCKS5-проксі з сервером 127.0.0.1 і портом %@ у Telegram → Налаштування → Дані та пам’ять → Проксі."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telegram برای macOS را نصب کنید، سپس در Telegram ← تنظیمات ← داده و حافظه ← پراکسی، یک پراکسی SOCKS5 با سرور 127.0.0.1 و درگاه %@ اضافه کنید."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "安装 macOS 版 Telegram，然后在 Telegram → 设置 → 数据与存储 → 代理 中添加服务器 127.0.0.1、端口 %@ 的 SOCKS5 代理。"
+          }
+        }
+      }
+    },
     "Intensity": {
       "localizations": {
         "fa": {
@@ -3469,6 +4337,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "IsolateDestAddr：站点无法通过共享的出口 IP 相互关联。链路更多，略慢。下次连接时生效。"
+          }
+        }
+      }
+    },
+    "Kill switch": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kill switch"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kill switch"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کلید قطع اضطراری"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "紧急断网开关"
           }
         }
       }
@@ -3693,6 +4589,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "本地端口"
+          }
+        }
+      }
+    },
+    "Manual proxy": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прокси вручную"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проксі вручну"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پراکسی دستی"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "手动代理"
           }
         }
       }
@@ -3949,6 +4873,34 @@
         }
       }
     },
+    "Network not responding — resetting %@, like Wi-Fi off and on…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сеть не отвечает — сбрасываю %@, как выключение и включение Wi-Fi…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мережа не відповідає — скидаю %@, як вимкнення й увімкнення Wi-Fi…"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شبکه پاسخ نمی‌دهد — بازنشانی %@، مانند خاموش و روشن کردن Wi-Fi…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "网络无响应 — 正在重置 %@，相当于关闭再打开 Wi-Fi…"
+          }
+        }
+      }
+    },
     "Network preferences are unavailable.": {
       "localizations": {
         "fa": {
@@ -3973,6 +4925,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "网络偏好设置不可用。"
+          }
+        }
+      }
+    },
+    "Network recovered after the %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сеть восстановлена после: %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мережу відновлено після: %@"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شبکه پس از %@ بازیابی شد"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "网络已恢复（%@）"
+          }
+        }
+      }
+    },
+    "Network reset": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сброс сети"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скидання мережі"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بازنشانی شبکه"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "网络重置"
           }
         }
       }
@@ -4029,6 +5037,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "新身份"
+          }
+        }
+      }
+    },
+    "No active network interface was found.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Активный сетевой интерфейс не найден."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Активний мережевий інтерфейс не знайдено."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هیچ رابط شبکهٔ فعالی پیدا نشد."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未找到活动的网络接口。"
+          }
+        }
+      }
+    },
+    "No active network interface.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нет активного сетевого интерфейса."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Немає активного мережевого інтерфейсу."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هیچ رابط شبکهٔ فعالی وجود ندارد."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有活动的网络接口。"
           }
         }
       }
@@ -4117,6 +5181,34 @@
         }
       }
     },
+    "None": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нет"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Немає"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هیچ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无"
+          }
+        }
+      }
+    },
     "Not Connected": {
       "localizations": {
         "fa": {
@@ -4173,6 +5265,90 @@
         }
       }
     },
+    "Not measured": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не измерена"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не виміряна"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اندازه‌گیری نشده"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未测量"
+          }
+        }
+      }
+    },
+    "Not responding": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не отвечает"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не відповідає"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پاسخ نمی‌دهد"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无响应"
+          }
+        }
+      }
+    },
+    "Not verified": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не проверено"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не перевірено"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تأیید نشده"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未验证"
+          }
+        }
+      }
+    },
     "Notifications for connection events": {
       "localizations": {
         "fa": {
@@ -4225,6 +5401,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "关闭"
+          }
+        }
+      }
+    },
+    "Off · click to enable": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выкл · клик — включить"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вимк · клік — увімкнути"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خاموش · برای فعال‌سازی کلیک کنید"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关闭 · 点击启用"
           }
         }
       }
@@ -4509,6 +5713,34 @@
         }
       }
     },
+    "Opens Telegram with a SOCKS5 proxy pointing at Veil; confirm it there. Switch the proxy off inside Telegram when Veil is not running.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открывает Telegram с SOCKS5-прокси, указывающим на Veil; подтвердите там. Когда Veil не запущен, отключите прокси в самом Telegram."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відкриває Telegram із SOCKS5-проксі, що вказує на Veil; підтвердьте там. Коли Veil не запущений, вимкніть проксі всередині Telegram."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telegram را با پراکسی SOCKS5 اشاره‌کننده به Veil باز می‌کند؛ آنجا تأیید کنید. وقتی Veil اجرا نیست، پراکسی را داخل Telegram خاموش کنید."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开 Telegram 并添加指向 Veil 的 SOCKS5 代理，请在那里确认。Veil 未运行时请在 Telegram 内关闭代理。"
+          }
+        }
+      }
+    },
     "Other domains that bypass Tor": {
       "localizations": {
         "fa": {
@@ -4789,6 +6021,118 @@
         }
       }
     },
+    "Proxy not set": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прокси не задан"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проксі не задано"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پراکسی تنظیم نشده"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "代理未设置"
+          }
+        }
+      }
+    },
+    "Proxy off": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прокси выкл"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проксі вимк"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پراکسی خاموش"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "代理已关"
+          }
+        }
+      }
+    },
+    "Proxy pending": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прокси ожидает"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проксі очікує"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پراکسی در انتظار"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "代理待设置"
+          }
+        }
+      }
+    },
+    "Proxy: %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прокси: %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проксі: %@"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پراکسی: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "代理：%@"
+          }
+        }
+      }
+    },
     "Publishing the onion service through Tor — usually 1–3 minutes via Snowflake…": {
       "localizations": {
         "fa": {
@@ -4817,6 +6161,34 @@
         }
       }
     },
+    "Publishing the onion service…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Публикация onion-сервиса…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Публікація onion-сервісу…"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "در حال انتشار سرویس onion…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在发布 onion 服务…"
+          }
+        }
+      }
+    },
     "Quit": {
       "localizations": {
         "fa": {
@@ -4841,6 +6213,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "退出"
+          }
+        }
+      }
+    },
+    "Reachable": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступен"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступний"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "در دسترس"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可访问"
           }
         }
       }
@@ -5097,6 +6497,146 @@
         }
       }
     },
+    "Reset Network": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сбросить сеть"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скинути мережу"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بازنشانی شبکه"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重置网络"
+          }
+        }
+      }
+    },
+    "Reset network": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сбросить сеть"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скинути мережу"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بازنشانی شبکه"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重置网络"
+          }
+        }
+      }
+    },
+    "Reset network & retry": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сбросить сеть и повторить"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скинути мережу й повторити"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بازنشانی شبکه و تلاش مجدد"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重置网络并重试"
+          }
+        }
+      }
+    },
+    "Reset network now": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сбросить сеть сейчас"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скинути мережу зараз"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اکنون شبکه را بازنشانی کن"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "立即重置网络"
+          }
+        }
+      }
+    },
+    "Reset the network automatically when it stops responding": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Автоматически сбрасывать сеть, когда она перестаёт отвечать"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Автоматично скидати мережу, коли вона перестає відповідати"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بازنشانی خودکار شبکه هنگام قطع پاسخ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "网络无响应时自动重置"
+          }
+        }
+      }
+    },
     "Restore network": {
       "localizations": {
         "fa": {
@@ -5181,6 +6721,34 @@
         }
       }
     },
+    "Round trip %@ ms": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Круговая задержка %@ мс"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Кругова затримка %@ мс"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رفت‌وبرگشت %@ میلی‌ثانیه"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "往返 %@ 毫秒"
+          }
+        }
+      }
+    },
     "Route": {
       "localizations": {
         "fa": {
@@ -5205,6 +6773,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "路由"
+          }
+        }
+      }
+    },
+    "Route diagram": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Схема маршрута"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Схема маршруту"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نمودار مسیر"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "路由示意图"
+          }
+        }
+      }
+    },
+    "Route latency": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Задержка маршрута"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Затримка маршруту"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تأخیر مسیر"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "路由延迟"
           }
         }
       }
@@ -5289,6 +6913,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "已通过 Tor 路由"
+          }
+        }
+      }
+    },
+    "Routing": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Маршрутизация"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Маршрутизація"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مسیریابی"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "路由"
+          }
+        }
+      }
+    },
+    "SOCKS5 127.0.0.1:%@ · HTTP 127.0.0.1:%@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SOCKS5 127.0.0.1:%@ · HTTP 127.0.0.1:%@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SOCKS5 127.0.0.1:%@ · HTTP 127.0.0.1:%@"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SOCKS5 127.0.0.1:%@ · HTTP 127.0.0.1:%@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SOCKS5 127.0.0.1:%@ · HTTP 127.0.0.1:%@"
           }
         }
       }
@@ -5485,6 +7165,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "为每个站点使用独立的 Tor 链路"
+          }
+        }
+      }
+    },
+    "Session": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сессия"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сесія"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نشست"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "会话"
           }
         }
       }
@@ -5881,6 +7589,62 @@
         }
       }
     },
+    "Starts with the connection": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Включится при подключении"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Увімкнеться під час підключення"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "با اتصال شروع می‌شود"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "连接后启动"
+          }
+        }
+      }
+    },
+    "Still no Internet after the reset.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "После сброса интернета по-прежнему нет."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Після скидання інтернету так само немає."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پس از بازنشانی هنوز اینترنت نیست."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重置后仍无互联网。"
+          }
+        }
+      }
+    },
     "Stop": {
       "localizations": {
         "fa": {
@@ -5933,6 +7697,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "强力"
+          }
+        }
+      }
+    },
+    "Switch Wi-Fi off and on, then reconnect": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выключить и включить Wi-Fi, затем переподключиться"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вимкнути й увімкнути Wi-Fi, потім перепідключитися"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wi-Fi را خاموش و روشن کنید، سپس دوباره متصل شوید"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关闭再打开 Wi-Fi，然后重新连接"
           }
         }
       }
@@ -6217,6 +8009,62 @@
         }
       }
     },
+    "Telegram": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telegram"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telegram"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telegram"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telegram"
+          }
+        }
+      }
+    },
+    "Telegram was not found": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telegram не найден"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telegram не знайдено"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telegram پیدا نشد"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未找到 Telegram"
+          }
+        }
+      }
+    },
     "Terminal": {
       "localizations": {
         "fa": {
@@ -6381,6 +8229,90 @@
           "stringUnit": {
             "state": "translated",
             "value": "断网保护会在 Tor 不可用时持续阻断使用代理的应用，网络恢复后 Veil 会自动重新连接。"
+          }
+        }
+      }
+    },
+    "The network did not come back after the reset.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сеть не вернулась после сброса."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мережа не повернулася після скидання."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شبکه پس از بازنشانی برنگشت."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重置后网络未恢复。"
+          }
+        }
+      }
+    },
+    "The network is not responding and automatic reset is off.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сеть не отвечает, а автоматический сброс выключен."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мережа не відповідає, а автоматичне скидання вимкнено."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شبکه پاسخ نمی‌دهد و بازنشانی خودکار خاموش است."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "网络无响应，且自动重置已关闭。"
+          }
+        }
+      }
+    },
+    "The network service for %@ was not found.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сетевая служба для %@ не найдена."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мережеву службу для %@ не знайдено."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سرویس شبکه برای %@ پیدا نشد."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未找到 %@ 的网络服务。"
           }
         }
       }
@@ -7057,6 +8989,34 @@
         }
       }
     },
+    "Total %@ down · %@ up": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Всего %@ загружено · %@ отдано"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Усього %@ завантажено · %@ віддано"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مجموع %@ دریافت · %@ ارسال"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "共下载 %@ · 上传 %@"
+          }
+        }
+      }
+    },
     "Traffic is encrypted and relayed through three Tor relays.": {
       "localizations": {
         "fa": {
@@ -7333,6 +9293,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Turbo"
+          }
+        }
+      }
+    },
+    "Turbo without Tor": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo без Tor"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo без Tor"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo بدون Tor"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无 Tor 的 Turbo"
           }
         }
       }
@@ -7645,6 +9633,34 @@
         }
       }
     },
+    "Verifying…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверка…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перевірка…"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "در حال تأیید…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在验证…"
+          }
+        }
+      }
+    },
     "Version %@": {
       "localizations": {
         "fa": {
@@ -7809,6 +9825,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "正在等待回环可达（第 %lld 次尝试）…"
+          }
+        }
+      }
+    },
+    "Waiting for the network to come back…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ожидание возвращения сети…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Очікування повернення мережі…"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "در انتظار بازگشت شبکه…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "等待网络恢复…"
           }
         }
       }
@@ -8121,6 +10165,34 @@
         }
       }
     },
+    "YouTube Turbo is on: YouTube goes direct with anti-throttling, Tor is off.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube Turbo включён: YouTube идёт напрямую с обходом замедления, Tor выключен."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube Turbo увімкнено: YouTube іде напряму з обходом сповільнення, Tor вимкнено."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube Turbo روشن است: YouTube مستقیم و با دور زدن کندسازی می‌رود، Tor خاموش است."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube Turbo 已开启：YouTube 直连并绕过限速，Tor 已关闭。"
+          }
+        }
+      }
+    },
     "YouTube and other sites": {
       "localizations": {
         "fa": {
@@ -8145,6 +10217,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "YouTube 及其他站点"
+          }
+        }
+      }
+    },
+    "YouTube bypasses Tor and connects directly; with anti-throttling the TLS handshake is fragmented so DPI cannot read the host name.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube идёт в обход Tor напрямую; при антизамедлении TLS-рукопожатие дробится, чтобы DPI не прочитал имя хоста."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube іде в обхід Tor напряму; з антисповільненням TLS-рукостискання дробиться, щоб DPI не прочитав ім’я хоста."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube از Tor عبور نمی‌کند و مستقیم وصل می‌شود؛ با ضدکندسازی، دست‌دهی TLS قطعه‌قطعه می‌شود تا DPI نام میزبان را نخواند."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube 绕过 Tor 直接连接；启用防限速时会拆分 TLS 握手，使 DPI 无法读取主机名。"
           }
         }
       }
@@ -8401,6 +10501,118 @@
         }
       }
     },
+    "Your traffic is not going through Tor. Press the button to connect.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваш трафик не идёт через Tor. Нажмите кнопку, чтобы подключиться."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваш трафік не йде через Tor. Натисніть кнопку, щоб підключитися."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ترافیک شما از Tor عبور نمی‌کند. برای اتصال دکمه را بزنید."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "您的流量未经过 Tor。按下按钮进行连接。"
+          }
+        }
+      }
+    },
+    "anti-throttling": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "антизамедление"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "антисповільнення"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ضدکندسازی"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "防限速"
+          }
+        }
+      }
+    },
+    "armed": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "включён"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "увімкнено"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آماده"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已启用"
+          }
+        }
+      }
+    },
+    "check.torproject.org confirms Tor": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "check.torproject.org подтверждает Tor"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "check.torproject.org підтверджує Tor"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "check.torproject.org استفاده از Tor را تأیید می‌کند"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "check.torproject.org 确认使用 Tor"
+          }
+        }
+      }
+    },
     "check.torproject.org confirms Tor · exit IP %@": {
       "localizations": {
         "fa": {
@@ -8485,6 +10697,90 @@
         }
       }
     },
+    "check.torproject.org: NOT Tor": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "check.torproject.org: НЕ Tor"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "check.torproject.org: НЕ Tor"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "check.torproject.org: Tor نیست"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "check.torproject.org：非 Tor"
+          }
+        }
+      }
+    },
+    "curl, git, Homebrew": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "curl, git, Homebrew"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "curl, git, Homebrew"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "curl، git، Homebrew"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "curl、git、Homebrew"
+          }
+        }
+      }
+    },
+    "direct": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "напрямую"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "напряму"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مستقیم"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "直连"
+          }
+        }
+      }
+    },
     "dummy traffic bounces through Tor back to this Mac": {
       "localizations": {
         "fa": {
@@ -8509,6 +10805,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "伪流量经 Tor 回环到这台 Mac"
+          }
+        }
+      }
+    },
+    "engaged": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "сработал"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "спрацював"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فعال شده"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已触发"
+          }
+        }
+      }
+    },
+    "manual": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "вручную"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "вручну"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دستی"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "手动"
           }
         }
       }
@@ -8569,6 +10921,34 @@
         }
       }
     },
+    "not set": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "не задан"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "не задано"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تنظیم نشده"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未设置"
+          }
+        }
+      }
+    },
     "obfs4 bridges": {
       "localizations": {
         "fa": {
@@ -8593,6 +10973,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "obfs4 网桥"
+          }
+        }
+      }
+    },
+    "off": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "выкл"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "вимк"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خاموش"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关"
+          }
+        }
+      }
+    },
+    "on": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "вкл"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "увімк"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "روشن"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开"
           }
         }
       }

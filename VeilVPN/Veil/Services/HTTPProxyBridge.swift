@@ -320,7 +320,9 @@ final class ProxySession: @unchecked Sendable {
             let tcpOptions = NWProtocolTCP.Options()
             tcpOptions.noDelay = antiThrottle // each write must leave as its own segment
             tcpOptions.connectionTimeout = 20
-            upstream = NWConnection(host: NWEndpoint.Host(host), port: nwPort, using: NWParameters(tls: nil, tcp: tcpOptions))
+            let parameters = NWParameters(tls: nil, tcp: tcpOptions)
+            parameters.preferNoProxies = true // the system proxy is Veil itself
+            upstream = NWConnection(host: NWEndpoint.Host(host), port: nwPort, using: parameters)
         }
         self.upstream = upstream
         var signalled = false

@@ -30,6 +30,16 @@ final class RoutingPolicyTests: XCTestCase {
         XCTAssertEqual(policy.decision(for: "notrutube.ru", torAvailable: true), .tor)
     }
 
+    func testAppleServicesAreDirectByDefaultAndCanBeOverridden() {
+        var settings = AppSettings()
+        XCTAssertEqual(settings.routingPolicy.decision(for: "apps.apple.com", torAvailable: true), .direct(antiThrottle: false))
+        XCTAssertEqual(settings.routingPolicy.decision(for: "gateway.icloud.com", torAvailable: true), .direct(antiThrottle: false))
+        XCTAssertEqual(settings.routingPolicy.decision(for: "web.telegram.org", torAvailable: true), .tor)
+        settings.serviceRoutes["apple"] = .tor
+        XCTAssertEqual(settings.routingPolicy.decision(for: "apps.apple.com", torAvailable: true), .tor)
+        XCTAssertEqual(ServiceCatalog.defaultModes, ["apple": .direct])
+    }
+
     func testSettingsProduceRoute() {
         var settings = AppSettings()
         settings.exitCountry = "DE"

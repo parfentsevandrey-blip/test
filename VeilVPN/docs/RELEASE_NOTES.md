@@ -2,6 +2,13 @@
 
 Liquid Glass UI, bundled Tor Expert Bundle (universal: Apple silicon + Intel), Snowflake / obfs4 / custom bridges, exit-country selection, live circuit and throughput, automatic system proxy.
 
+### New in 0.5.0
+- **Network that "works" but doesn't** — after sleep, or after another VPN disconnects, macOS keeps reporting a live network while nothing gets through until Wi-Fi is toggled. Veil now checks the Internet (TCP to public resolvers plus a name lookup) before starting Tor and after every wake; when the check fails it switches Wi-Fi off and on itself (CoreWLAN, then `networksetup`, then a network-service restart via SystemConfiguration), waits for the network, and only then starts Tor. A transport that stalls on a "working" network triggers the same reset once and is retried. Long sleeps restart Tor outright, Tor never goes dormant, and "Reset Network" (⇧⌘R) is available in the menu, the menu bar, the dashboard and Settings → Network.
+- **Dashboard** — the home screen is a live, interactive board: an animated route (Mac → bridge → relays → Internet) where particles follow the real download/upload/padding rates, nodes light up as Tor bootstraps, hover shows details and clicks jump to the right screen; a red fast lane shows YouTube bypassing Tor; the kill switch is drawn as a barrier. Tiles for throughput (live sparkline), session (new identity on click), route latency gauge (Tor check on click), protection, traffic padding (equaliser + toggle), routing donut, YouTube speed, apps and network state.
+- **Telegram** — the Telegram app ignores the system proxy and never notices Tor. One click ("Add Veil's proxy to Telegram" on the dashboard or in Settings → Sites) hands Telegram a `tg://socks` link that adds Veil as its SOCKS5 proxy, so it connects through Tor.
+- **App Store, iCloud and updates** go direct by default (new "Apple" preset in Settings → Sites) because Tor exits break them; switch it to Tor if you prefer.
+- Direct (anti-throttling) connections and reachability probes explicitly avoid the system proxy, so they can never loop back into Veil.
+
 ### New in 0.4.0
 - **Kill switch (fail closed)** — the system proxy is armed before Tor is up and stays pointed at Veil if Tor dies, so proxied apps are blocked instead of leaking. Reconnect or "Restore network" from the banner.
 - **Automatic transport** — checks whether Tor is reachable directly, then tries the last working transport, your bridges, Snowflake, obfs4 and meek until one bootstraps; stalled attempts are skipped.
@@ -28,6 +35,13 @@ Liquid Glass UI, bundled Tor Expert Bundle (universal: Apple silicon + Intel), S
 1. Open the DMG and drag **Veil.app** to *Applications*.
 2. The build is ad-hoc signed (no Apple Developer certificate): on first launch open **System Settings → Privacy & Security → Open Anyway**, or run `xattr -cr /Applications/Veil.app`.
 3. Press the power button. macOS asks for an administrator password once to switch the system proxy.
+
+### Новое в 0.5.0
+- **Сеть, которая «есть», но не работает** — после сна или после отключения другого VPN macOS показывает рабочую сеть, но ничего не проходит, пока не выключить и включить Wi-Fi. Теперь Veil проверяет интернет (TCP к публичным резолверам плюс DNS-запрос) перед запуском Tor и после каждого пробуждения; если проверка не проходит, сам выключает и включает Wi-Fi (CoreWLAN, затем `networksetup`, затем перезапуск сетевой службы через SystemConfiguration), ждёт сеть и только потом запускает Tor. Транспорт, зависший на «рабочей» сети, один раз вызывает тот же сброс и пробуется снова. После долгого сна Tor перезапускается целиком, Tor больше не уходит в спящий режим, а «Сбросить сеть» (⇧⌘R) есть в меню, строке меню, на дашборде и в Настройках → Сеть.
+- **Дашборд** — главный экран стал живой интерактивной панелью: анимированный маршрут (Mac → мост → узлы → интернет), где частицы движутся со скоростью реальной загрузки/отдачи/маскировки, узлы загораются по мере загрузки Tor, наведение показывает детали, а клик ведёт на нужный экран; красная «быстрая полоса» показывает YouTube в обход Tor; kill switch нарисован как барьер. Плитки: скорость (живой спарклайн), сессия (новая личность по клику), задержка маршрута (проверка Tor по клику), защита, маскировка трафика (эквалайзер и переключатель), маршрутизация, скорость YouTube, приложения и состояние сети.
+- **Telegram** — приложение Telegram игнорирует системный прокси и не замечает Tor. Одна кнопка («Добавить прокси Veil в Telegram» на дашборде или в Настройках → Сайты) передаёт Telegram ссылку `tg://socks`, которая добавляет Veil как SOCKS5-прокси, и Telegram работает через Tor.
+- **App Store, iCloud и обновления** по умолчанию идут напрямую (новый пресет «Apple» в Настройках → Сайты), потому что выходные узлы Tor их ломают; при желании переключите на Tor.
+- Прямые (антизамедление) соединения и проверки доступности принудительно не используют системный прокси, поэтому не могут зациклиться на самом Veil.
 
 ### Новое в 0.4.0
 - **Kill switch** — системный прокси включается до запуска Tor и остаётся направленным на Veil, если Tor упадёт: приложения с прокси блокируются, а не утекают. Переподключение или «Вернуть сеть» одной кнопкой.

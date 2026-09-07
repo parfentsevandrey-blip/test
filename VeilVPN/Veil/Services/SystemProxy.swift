@@ -60,7 +60,7 @@ enum SystemConfigurationProxyWriter {
     private static var authorization: AuthorizationRef?
 
     static func apply(_ change: ProxyChange) throws -> [String] {
-        let authorization = try obtainAuthorization()
+        let authorization = try Self.authorization()
         guard let preferences = SCPreferencesCreateWithAuthorization(nil, "Veil" as CFString, nil, authorization) else {
             throw SystemProxyError.preferencesUnavailable
         }
@@ -115,7 +115,7 @@ enum SystemConfigurationProxyWriter {
     }
 
     /// Asks for the `system.services.systemconfiguration.network` right once per app run.
-    private static func obtainAuthorization() throws -> AuthorizationRef {
+    static func authorization() throws -> AuthorizationRef {
         lock.lock()
         defer { lock.unlock() }
         if let authorization { return authorization }

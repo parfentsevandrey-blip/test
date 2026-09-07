@@ -40,32 +40,39 @@ enum ReachabilityProbe {
         return Report(reachable: results.filter { $0 }.count, total: directoryAuthorities.count)
     }
 
-    /// Plain TCP connect with a deadline; true when the handshake completes.
+    /// Plain TCP connect with a deadline; true when the handshake completes. Never goes through the
+    /// system proxy (which may be Veil itself) and gives up early when the task is cancelled.
     static func canConnect(host: String, port: UInt16, timeout: Duration) async -> Bool {
-        await withCheckedContinuation { (continuation: CheckedContinuation<Bool, Never>) in
-            let queue = DispatchQueue(label: "app.veilvpn.probe")
-            let tcp = NWProtocolTCP.Options()
-            tcp.connectionTimeout = Int(max(1, timeout.components.seconds))
-            let connection = NWConnection(host: NWEndpoint.Host(host), port: NWEndpoint.Port(rawValue: port) ?? 443, using: NWParameters(tls: nil, tcp: tcp))
-            var resumed = false
-            let finish: (Bool) -> Void = { result in
-                guard !resumed else { return }
-                resumed = true
-                connection.cancel()
-                continuation.resume(returning: result)
-            }
-            connection.stateUpdateHandler = { state in
-                switch state {
-                case .ready: finish(true)
-                case .failed, .waiting: finish(false)
-                case .cancelled: finish(false)
-                default: break
+        let seconds = Int(max(1, timeout.components.seconds))
+        let queue = DispatchQueue(label: "app.veilvpn.probe")
+        let tcp = NWProtocolTCP.Options()
+        tcp.connectionTimeout = seconds
+        let parameters = NWParameters(tls: nil, tcp: tcp)
+        parameters.preferNoProxies = true
+        let connection = NWConnection(host: NWEndpoint.Host(host), port: NWEndpoint.Port(rawValue: port) ?? 443, using: parameters)
+        return await withTaskCancellationHandler {
+            await withCheckedContinuation { (continuation: CheckedContinuation<Bool, Never>) in
+                var resumed = false
+                let finish: (Bool) -> Void = { result in
+                    guard !resumed else { return }
+                    resumed = true
+                    connection.cancel()
+                    continuation.resume(returning: result)
                 }
+                connection.stateUpdateHandler = { state in
+                    switch state {
+                    case .ready: finish(true)
+                    case .failed, .waiting, .cancelled: finish(false)
+                    default: break
+                    }
+                }
+                queue.asyncAfter(deadline: .now() + .seconds(seconds)) {
+                    finish(false)
+                }
+                connection.start(queue: queue)
             }
-            queue.asyncAfter(deadline: .now() + .seconds(Int(max(1, timeout.components.seconds)))) {
-                finish(false)
-            }
-            connection.start(queue: queue)
+        } onCancel: {
+            connection.cancel()
         }
     }
 }

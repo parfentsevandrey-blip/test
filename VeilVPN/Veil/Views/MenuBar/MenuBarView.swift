@@ -90,6 +90,16 @@ struct MenuBarView: View {
             .buttonStyle(.glass)
             .disabled(!app.connection.isConnected || app.isChangingIdentity)
 
+            Button {
+                app.resetNetwork()
+            } label: {
+                Label("Reset Network", systemImage: "wifi.exclamationmark")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .buttonStyle(.glass)
+            .disabled(app.isResettingNetwork)
+            .help("Switch Wi-Fi off and on, then reconnect")
+
             Toggle(isOn: Binding(
                 get: { app.settings.paddingEnabled },
                 set: { app.setPaddingEnabled($0) }

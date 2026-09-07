@@ -96,6 +96,7 @@ struct TorConfiguration {
             "ClientOnly 1",
             "AvoidDiskWrites 1",
             "DormantCanceledByStartup 1",
+            "DormantTimeoutEnabled 0",
             "Log \(settings.verboseLogs ? "info" : "notice") stdout",
         ]
         if settings.paddingEnabled {

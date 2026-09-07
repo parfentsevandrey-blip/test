@@ -39,6 +39,9 @@ struct VeilApp: App {
                 Button("Check Tor Connection") { appState.runTorCheck() }
                     .keyboardShortcut("t", modifiers: [.command, .shift])
                     .disabled(!appState.connection.isConnected)
+                Button("Reset Network") { appState.resetNetwork() }
+                    .keyboardShortcut("r", modifiers: [.command, .shift])
+                    .disabled(appState.isResettingNetwork)
                 Divider()
                 Button("YouTube Turbo") { appState.toggleTurbo() }
                     .keyboardShortcut("y", modifiers: [.command, .shift])

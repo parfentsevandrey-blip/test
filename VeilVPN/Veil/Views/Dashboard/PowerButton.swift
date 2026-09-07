@@ -4,6 +4,7 @@ import SwiftUI
 struct PowerButton: View {
     let state: ConnectionState
     let progress: BootstrapProgress
+    var size: CGFloat = 220
     let action: @MainActor () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -38,13 +39,13 @@ struct PowerButton: View {
                 }
 
                 Image(systemName: "power")
-                    .font(.system(size: 64, weight: .semibold, design: .rounded))
+                    .font(.system(size: size * 0.29, weight: .semibold, design: .rounded))
                     .foregroundStyle(state.isConnected ? AnyShapeStyle(tint) : AnyShapeStyle(.primary))
                     .symbolEffect(.pulse, isActive: state.isBusy)
                     .shadow(color: state.isConnected ? tint.opacity(0.6) : .clear, radius: 12)
             }
-            .padding(18)
-            .frame(width: 220, height: 220)
+            .padding(size * 0.08)
+            .frame(width: size, height: size)
             .contentShape(.circle)
         }
         .buttonStyle(.plain)

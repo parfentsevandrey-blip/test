@@ -19,6 +19,35 @@ enum MoatStatus: Equatable, Sendable {
     case failed(String)
 }
 
+/// Progress of the "is the network actually working?" check and the Wi-Fi reset it may trigger.
+enum NetworkRepairStatus: Equatable, Sendable {
+    case idle
+    case probing
+    case resetting(String)
+    case waitingForNetwork
+    case recovered(String)
+    case skipped(String)
+    case failed(String)
+
+    var isBusy: Bool {
+        switch self {
+        case .probing, .resetting, .waitingForNetwork: true
+        default: false
+        }
+    }
+}
+
+enum NetworkRepairOutcome: Equatable, Sendable {
+    /// The Internet answered without any intervention.
+    case healthy
+    /// The network was reset and answers now.
+    case recovered
+    /// Reset attempted (or not allowed) and still nothing answers.
+    case stillDown
+    /// Nothing was done: another VPN owns the route, or a reset is already running.
+    case skipped
+}
+
 /// Orchestrates the Tor engine, the local HTTP bridge and the system proxy; the single source
 /// of truth for every view.
 @MainActor
@@ -62,6 +91,13 @@ final class AppState {
     private(set) var isBenchmarking = false
     private(set) var moatStatus: MoatStatus = .idle
     private(set) var reconnectPending = false
+    /// Result of the last Internet probe (TCP to public resolvers plus one name lookup).
+    private(set) var connectivity: ConnectivityProbe.Report?
+    private(set) var networkRepair: NetworkRepairStatus = .idle
+    private(set) var isResettingNetwork = false
+    private(set) var lastNetworkReset: Date?
+    /// The interface carrying the default route (Wi-Fi, Ethernet, or another VPN's tunnel).
+    private(set) var primaryNetwork: NetworkReset.Primary?
     /// Sidebar selection, so menu commands can navigate.
     var sidebarSelection: SidebarItem = .home
     let traffic = TrafficMonitor()
@@ -80,6 +116,9 @@ final class AppState {
     @ObservationIgnored private var isTearingDown = false
     @ObservationIgnored private var userRequestedDisconnect = false
     @ObservationIgnored private let networkWatcher = NetworkWatcher()
+    @ObservationIgnored private var sleptAt: Date?
+    @ObservationIgnored private var suppressPathEvents = false
+    @ObservationIgnored private var networkRepairedThisConnect = false
 
     private static let maxLogEntries = 2000
     /// Remembers that the system proxy points at Veil, so a crash or force-quit can be repaired on the next launch.
@@ -111,6 +150,8 @@ final class AppState {
             append(.veil(.notice, "Demo mode: tor binaries were not found next to the app, connections are simulated."))
         }
         restoreStaleSystemProxyIfNeeded()
+        restoreDisabledNetworkServiceIfNeeded()
+        primaryNetwork = NetworkReset.primary()
         scheduleUpdateCheck()
         if settings.connectOnLaunch {
             connect()
@@ -217,6 +258,14 @@ final class AppState {
                     append(.veil(.info, "Kill switch armed: proxied apps are blocked until Tor is up"))
                 }
 
+                // The network often looks fine after sleep or after another VPN quits while nothing
+                // gets through. Find out now, and fix it the way people do by hand (Wi-Fi off/on).
+                networkRepairedThisConnect = false
+                let repair = await repairNetworkIfNeeded(trigger: "connect", allowReset: settings.autoResetNetwork)
+                if repair == .recovered { networkRepairedThisConnect = true }
+                try Task.checkCancellation()
+                guard attempt == generation else { return }
+
                 if settings.transport == .auto {
                     let report = await ReachabilityProbe.probeDirectTor()
                     reachability = report
@@ -225,24 +274,30 @@ final class AppState {
                 try Task.checkCancellation()
                 guard attempt == generation else { return }
 
-                let candidates = transportCandidates()
+                var queue = transportCandidates()
+                let planned = queue.count
                 var connectedTransport: AppSettings.Transport?
                 var lastFailure: Error?
-                for (index, transport) in candidates.enumerated() {
+                var previous: AppSettings.Transport?
+                var index = 0
+                while index < queue.count {
+                    let transport = queue[index]
                     try Task.checkCancellation()
                     guard attempt == generation else { return }
                     activeTransport = transport
                     bootstrap = BootstrapProgress()
-                    if candidates.count > 1 {
-                        transportAttemptMessage = index == 0
-                            ? String(localized: "Trying \(Self.name(of: transport))…")
-                            : String(localized: "\(Self.name(of: candidates[index - 1])) did not respond, trying \(Self.name(of: transport))…")
-                        append(.veil(.notice, "Automatic transport: trying \(transport.rawValue) (\(index + 1)/\(candidates.count))"))
+                    if planned > 1 || index > 0 {
+                        if let previous {
+                            transportAttemptMessage = String(localized: "\(Self.name(of: previous)) did not respond, trying \(Self.name(of: transport))…")
+                        } else {
+                            transportAttemptMessage = String(localized: "Trying \(Self.name(of: transport))…")
+                        }
+                        append(.veil(.notice, "Automatic transport: trying \(transport.rawValue) (\(index + 1)/\(queue.count))"))
                     }
                     do {
                         try await engine.start(settings: settings.resolving(transport: transport), ports: ports)
                         torVersion = engine.versionDescription
-                        let isLast = index == candidates.count - 1 || candidates.count == 1
+                        let isLast = index == queue.count - 1
                         try await engine.waitForBootstrap(
                             timeout: isLast ? .seconds(240) : .seconds(120),
                             stallTimeout: isLast ? .seconds(150) : .seconds(45)
@@ -255,7 +310,19 @@ final class AppState {
                         lastFailure = error
                         append(.veil(.warn, "\(transport.rawValue): \(error.localizedDescription)"))
                         await engine.stop()
+                        // A stall on a network that claims to work is the classic stale-Wi-Fi symptom:
+                        // reset once, and if that brought the Internet back, retry the same transport.
+                        if Self.isStall(error), !networkRepairedThisConnect, self.settings.autoResetNetwork {
+                            networkRepairedThisConnect = true
+                            let outcome = await repairNetworkIfNeeded(trigger: "stall at \(bootstrap.percent)%", allowReset: true)
+                            if outcome == .recovered {
+                                append(.veil(.notice, "Network recovered; retrying \(transport.rawValue)"))
+                                queue.insert(transport, at: index + 1)
+                            }
+                        }
                     }
+                    previous = transport
+                    index += 1
                 }
                 try Task.checkCancellation()
                 guard attempt == generation else { return }
@@ -344,12 +411,15 @@ final class AppState {
 
     /// Stops Tor and connects again without opening the network in between.
     func reconnect() {
-        guard connection == .connected || connection == .failed else { return }
+        guard connection == .connected || connection == .failed || connection == .connecting else { return }
         generation += 1
-        connectTask?.cancel()
+        let previous = connectTask
+        previous?.cancel()
         connectTask = nil
         Task { [weak self] in
             guard let self else { return }
+            // Let a cancelled attempt finish stopping its Tor before a new one is started.
+            await previous?.value
             await stopEngineSide()
             if settings.killSwitch, let bridge = httpBridge {
                 bridge.blockAll = true
@@ -486,23 +556,207 @@ final class AppState {
 
     private func handleNetworkEvent(_ event: NetworkWatcher.Event) {
         switch event {
+        case .willSleep:
+            sleptAt = .now
+            append(.veil(.info, "Mac is going to sleep"))
         case .pathLost:
+            guard !suppressPathEvents else { return }
             guard connection == .connected || connection == .connecting else { return }
             append(.veil(.warn, "Network path lost"))
             if settings.autoReconnect { reconnectPending = true }
         case .pathRestored:
-            append(.veil(.info, "Network path restored"))
+            primaryNetwork = NetworkReset.primary()
+            guard !suppressPathEvents else { return }
+            append(.veil(.info, "Network path restored" + (primaryNetwork.map { " via \($0.displayName)" } ?? "")))
             if settings.autoReconnect, reconnectPending || connection == .failed {
                 scheduleReconnect(after: .seconds(3))
             } else if connection == .connected {
                 verifyCircuitAfterDelay(.seconds(8))
             }
         case .didWake:
-            append(.veil(.info, "Mac woke from sleep"))
-            if connection == .connected {
-                verifyCircuitAfterDelay(.seconds(6))
-            } else if connection == .failed, settings.autoReconnect {
-                scheduleReconnect(after: .seconds(5))
+            let sleptFor = sleptAt.map { Date.now.timeIntervalSince($0) } ?? 0
+            sleptAt = nil
+            append(.veil(.info, sleptFor > 0 ? "Mac woke from sleep after \(Int(sleptFor / 60)) min" : "Mac woke from sleep"))
+            guard connection == .connected || connection == .connecting || connection == .failed else { return }
+            scheduleWakeRecovery(sleptFor: sleptFor)
+        }
+    }
+
+    /// After sleep the path may look satisfied while nothing works, and Tor's own connections are
+    /// dead anyway. Wait for Wi-Fi to come back, reset it when it does not, then restart Tor when
+    /// the sleep was long enough for its circuits and the Snowflake proxy to be gone.
+    private func scheduleWakeRecovery(sleptFor: TimeInterval) {
+        reconnectTask?.cancel()
+        reconnectPending = false
+        reconnectTask = Task { [weak self] in
+            guard let self else { return }
+            do { try await Task.sleep(for: .seconds(4)) } catch { return }
+            let outcome = await repairNetworkIfNeeded(trigger: "wake", allowReset: settings.autoResetNetwork, patience: .seconds(20))
+            guard !Task.isCancelled else { return }
+            switch connection {
+            case .connected:
+                let longSleep = sleptFor > 120
+                if outcome == .recovered || longSleep {
+                    guard settings.autoReconnect else { return }
+                    append(.veil(.notice, longSleep ? "Restarting Tor after a long sleep" : "Restarting Tor after the network reset"))
+                    reconnect()
+                    return
+                }
+                if await engine.isCircuitEstablished() { return }
+                do { try await Task.sleep(for: .seconds(15)) } catch { return }
+                guard connection == .connected else { return }
+                if await engine.isCircuitEstablished() { return }
+                guard settings.autoReconnect else { return }
+                append(.veil(.warn, "Tor lost its circuits after sleep; reconnecting"))
+                reconnect()
+            case .connecting:
+                guard settings.autoReconnect else { return }
+                append(.veil(.notice, "Restarting the connection attempt after sleep"))
+                reconnect()
+            case .failed:
+                guard settings.autoReconnect, !userRequestedDisconnect else { return }
+                connect()
+            default:
+                break
+            }
+        }
+    }
+
+    /// Probes the Internet; when nothing answers, waits `patience` for Wi-Fi to settle, then resets
+    /// the network (if allowed) and probes again.
+    private func repairNetworkIfNeeded(trigger: String, allowReset: Bool, patience: Duration = .seconds(3)) async -> NetworkRepairOutcome {
+        networkRepair = .probing
+        var report = await ConnectivityProbe.check()
+        connectivity = report
+        append(.veil(.info, "Connectivity (\(trigger)): \(report.summary)"))
+        let deadline = ContinuousClock.now + patience
+        while !report.isUsable, ContinuousClock.now < deadline {
+            do { try await Task.sleep(for: .seconds(3)) } catch {
+                networkRepair = .idle
+                return .skipped
+            }
+            report = await ConnectivityProbe.check()
+            connectivity = report
+            append(.veil(.info, "Connectivity (\(trigger), retry): \(report.summary)"))
+        }
+        if report.isUsable {
+            networkRepair = .idle
+            return .healthy
+        }
+        guard allowReset else {
+            networkRepair = .failed(String(localized: "The network is not responding and automatic reset is off."))
+            append(.veil(.warn, "Network is not responding (\(report.summary)); automatic reset is off"))
+            return .stillDown
+        }
+        return await performNetworkReset(reason: report.summary, manual: false)
+    }
+
+    /// Switches Wi-Fi off and on (or restarts the network service), waits for the network and
+    /// probes again. The reset itself runs detached so cancelling a connection attempt can never
+    /// leave Wi-Fi switched off.
+    private func performNetworkReset(reason: String, manual: Bool) async -> NetworkRepairOutcome {
+        guard !isResettingNetwork else { return .skipped }
+        isResettingNetwork = true
+        suppressPathEvents = true
+        defer {
+            isResettingNetwork = false
+            Task { [weak self] in
+                try? await Task.sleep(for: .seconds(3))
+                self?.suppressPathEvents = false
+            }
+        }
+        let primary = NetworkReset.primary() ?? primaryNetwork
+        primaryNetwork = primary
+        guard let primary else {
+            networkRepair = .failed(String(localized: "No active network interface."))
+            append(.veil(.warn, "Network reset skipped: no primary interface"))
+            return .skipped
+        }
+        if primary.isTunnel, !manual {
+            networkRepair = .skipped(String(localized: "Another VPN owns the connection (\(primary.interface)); not touching it."))
+            append(.veil(.warn, "Network reset skipped: another VPN owns the default route (\(primary.interface))"))
+            return .skipped
+        }
+        networkRepair = .resetting(primary.displayName)
+        append(.veil(.notice, "Network is not responding (\(reason)); resetting \(primary.displayName) — the same as switching Wi-Fi off and on"))
+        do {
+            let method = try await Task.detached(priority: .userInitiated) {
+                try await NetworkReset.perform(primary)
+            }.value
+            networkRepair = .waitingForNetwork
+            let cameBack = await NetworkReset.waitForNetwork(timeout: .seconds(25))
+            lastNetworkReset = .now
+            primaryNetwork = NetworkReset.primary() ?? primary
+            let report = await ConnectivityProbe.check()
+            connectivity = report
+            if report.isUsable {
+                networkRepair = .recovered(method.title)
+                append(.veil(.notice, "Network is back after the \(method.title): \(report.summary)"))
+                return .recovered
+            }
+            networkRepair = .failed(cameBack
+                ? String(localized: "Still no Internet after the reset.")
+                : String(localized: "The network did not come back after the reset."))
+            append(.veil(.warn, "Still no connectivity after the \(method.title): \(report.summary)"))
+            return .stillDown
+        } catch {
+            networkRepair = .failed(error.localizedDescription)
+            append(.veil(.warn, "Network reset failed: \(error.localizedDescription)"))
+            return .stillDown
+        }
+    }
+
+    /// The button: reset the network now and pick the connection up again afterwards.
+    func resetNetwork() {
+        guard !isResettingNetwork else { return }
+        Task { [weak self] in
+            guard let self else { return }
+            append(.veil(.notice, "Network reset requested"))
+            let outcome = await performNetworkReset(reason: "requested", manual: true)
+            guard outcome == .recovered else { return }
+            switch connection {
+            case .connected, .connecting:
+                reconnect()
+            case .failed:
+                connect()
+            default:
+                break
+            }
+        }
+    }
+
+    /// Just the probe, for the dashboard.
+    func probeInternet() {
+        guard !networkRepair.isBusy else { return }
+        Task { [weak self] in
+            guard let self else { return }
+            networkRepair = .probing
+            let report = await ConnectivityProbe.check()
+            connectivity = report
+            primaryNetwork = NetworkReset.primary()
+            networkRepair = .idle
+            append(.veil(.info, "Connectivity (manual): \(report.summary)"))
+        }
+    }
+
+    private static func isStall(_ error: Error) -> Bool {
+        guard let torError = error as? TorEngineError else { return false }
+        switch torError {
+        case .bootstrapStalled, .bootstrapTimeout: return true
+        default: return false
+        }
+    }
+
+    /// A crash in the middle of a service restart would leave it inactive; repair it on launch.
+    private func restoreDisabledNetworkServiceIfNeeded() {
+        guard NetworkReset.hasPendingRestore else { return }
+        append(.veil(.warn, "A network service was left disabled by the previous run; re-enabling it."))
+        Task.detached { [weak self] in
+            do {
+                let name = try NetworkReset.restoreDisabledServiceIfNeeded()
+                await self?.append(.veil(.info, "Network service \(name ?? "") re-enabled"))
+            } catch {
+                await self?.append(.veil(.warn, "Could not re-enable the network service: \(error.localizedDescription)"))
             }
         }
     }
@@ -637,7 +891,8 @@ final class AppState {
     }
 
     func setServiceRoute(_ serviceID: String, _ mode: RouteMode) {
-        if mode == .tor {
+        let preset = ServiceCatalog.preset(serviceID)?.defaultMode ?? .tor
+        if mode == preset {
             settings.serviceRoutes[serviceID] = nil
         } else {
             settings.serviceRoutes[serviceID] = mode
@@ -646,7 +901,27 @@ final class AppState {
     }
 
     func serviceRoute(_ serviceID: String) -> RouteMode {
-        settings.serviceRoutes[serviceID] ?? .tor
+        settings.serviceRoutes[serviceID] ?? ServiceCatalog.preset(serviceID)?.defaultMode ?? .tor
+    }
+
+    // MARK: Apps
+
+    /// The SOCKS5 port apps can be pointed at (the active one, or the configured one before connecting).
+    var socksPortForApps: UInt16 {
+        ports?.socks ?? UInt16(clamping: settings.socksPort)
+    }
+
+    /// Hands Telegram a `tg://socks` link so it adds Veil as its SOCKS5 proxy.
+    func addProxyToTelegram() {
+        let port = socksPortForApps
+        if TelegramIntegration.open(TelegramIntegration.proxyURL(socksPort: port)) {
+            append(.veil(.notice, "Asked Telegram to add the SOCKS5 proxy 127.0.0.1:\(port); confirm it inside Telegram"))
+        } else {
+            lastError = AppError(
+                title: String(localized: "Telegram was not found"),
+                message: String(localized: "Install Telegram for macOS, then add a SOCKS5 proxy with server 127.0.0.1 and port \(String(port)) in Telegram → Settings → Data and Storage → Proxy.")
+            )
+        }
     }
 
     func setDPIStrategy(_ strategy: DPIStrategy) {

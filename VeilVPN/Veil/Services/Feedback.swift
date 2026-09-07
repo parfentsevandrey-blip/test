@@ -21,6 +21,13 @@ enum Feedback {
         }
     }
 
+    /// A light click for interactive dashboard elements.
+    static func tap(haptic: Bool) {
+        if haptic {
+            NSHapticFeedbackManager.defaultPerformer.perform(.generic, performanceTime: .now)
+        }
+    }
+
     static func failed(sound: Bool, haptic: Bool) {
         if haptic {
             NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .default)

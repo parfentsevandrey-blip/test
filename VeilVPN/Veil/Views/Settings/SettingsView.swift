@@ -172,6 +172,27 @@ struct NetworkSettingsView: View {
                 Text("Protection")
             }
             Section {
+                Toggle("Reset the network automatically when it stops responding", isOn: $app.settings.autoResetNetwork)
+                Text("After sleep, or after another VPN disconnects, macOS often reports a working network while nothing gets through until Wi-Fi is switched off and on. Veil checks the Internet before starting Tor and after every wake, and does that switch for you — CoreWLAN first, then the network service — before trying Tor again.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                HStack(spacing: 12) {
+                    Button {
+                        app.resetNetwork()
+                    } label: {
+                        Label("Reset network now", systemImage: "wifi.exclamationmark")
+                    }
+                    .disabled(app.isResettingNetwork)
+                    NetworkRepairLabel(status: app.networkRepair, report: app.connectivity)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+            } header: {
+                Text("Network reset")
+            }
+            Section {
                 TextField("SOCKS5 port", value: $app.settings.socksPort, format: .number.grouping(.never))
                 TextField("HTTP proxy port", value: $app.settings.httpPort, format: .number.grouping(.never))
                 Text("Ports apply on the next connection. If a port is busy, Veil picks the next free one and shows it in the log.")

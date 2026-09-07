@@ -39,6 +39,21 @@ struct SitesSettingsView: View {
                             .foregroundStyle(.tertiary)
                             .lineLimit(1)
                             .padding(.leading, 34)
+                        if service.id == "telegram" {
+                            HStack(spacing: 10) {
+                                Button {
+                                    app.addProxyToTelegram()
+                                } label: {
+                                    Label("Add Veil’s proxy to Telegram", systemImage: "paperplane")
+                                }
+                                Text("Opens Telegram with a SOCKS5 proxy pointing at Veil; confirm it there. Switch the proxy off inside Telegram when Veil is not running.")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            .padding(.leading, 34)
+                            .padding(.top, 4)
+                        }
                     }
                     .padding(.vertical, 2)
                 }

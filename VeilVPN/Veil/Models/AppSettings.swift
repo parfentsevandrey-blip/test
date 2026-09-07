@@ -54,6 +54,8 @@ struct AppSettings: Codable, Equatable, Sendable {
     /// Fail closed: keep the system proxy pointed at Veil when Tor dies unexpectedly.
     var killSwitch: Bool = true
     var autoReconnect: Bool = true
+    /// Switch Wi-Fi off and on (or restart the network service) when the network stops responding.
+    var autoResetNetwork: Bool = true
     /// `IsolateDestAddr`: a separate circuit per destination site.
     var isolatePerSite: Bool = false
     var notificationsEnabled: Bool = true
@@ -71,7 +73,7 @@ struct AppSettings: Codable, Equatable, Sendable {
         case paddingEnabled, paddingLevel
         case multihopEnabled, middleCountry, excludedCountries, avoidFiveEyes, rotateRouteMinutes
         case youtubeMode, dpiStrategy, customDirectDomains, customDirectAntiThrottle, serviceRoutes
-        case killSwitch, autoReconnect, isolatePerSite, notificationsEnabled, soundEffects, hapticFeedback
+        case killSwitch, autoReconnect, autoResetNetwork, isolatePerSite, notificationsEnabled, soundEffects, hapticFeedback
         case checkForUpdates, skippedUpdateVersion, onboardingCompleted
     }
 
@@ -103,6 +105,7 @@ struct AppSettings: Codable, Equatable, Sendable {
         serviceRoutes = try c.decodeIfPresent([String: RouteMode].self, forKey: .serviceRoutes) ?? d.serviceRoutes
         killSwitch = try c.decodeIfPresent(Bool.self, forKey: .killSwitch) ?? d.killSwitch
         autoReconnect = try c.decodeIfPresent(Bool.self, forKey: .autoReconnect) ?? d.autoReconnect
+        autoResetNetwork = try c.decodeIfPresent(Bool.self, forKey: .autoResetNetwork) ?? d.autoResetNetwork
         isolatePerSite = try c.decodeIfPresent(Bool.self, forKey: .isolatePerSite) ?? d.isolatePerSite
         notificationsEnabled = try c.decodeIfPresent(Bool.self, forKey: .notificationsEnabled) ?? d.notificationsEnabled
         soundEffects = try c.decodeIfPresent(Bool.self, forKey: .soundEffects) ?? d.soundEffects

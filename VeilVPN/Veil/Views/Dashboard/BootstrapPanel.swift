@@ -22,6 +22,19 @@ struct BootstrapPanel: View {
             ProgressView(value: Double(app.bootstrap.percent), total: 100)
                 .tint(.orange)
                 .animation(.smooth, value: app.bootstrap.percent)
+            if app.networkRepair != .idle {
+                Label {
+                    NetworkRepairLabel(status: app.networkRepair, report: app.connectivity)
+                } icon: {
+                    if app.networkRepair.isBusy {
+                        ProgressView().controlSize(.mini)
+                    } else {
+                        Image(systemName: "wifi.exclamationmark")
+                    }
+                }
+                .font(.caption.weight(.medium))
+                .foregroundStyle(app.networkRepair.isBusy ? AnyShapeStyle(.orange) : AnyShapeStyle(.secondary))
+            }
             if let message = app.transportAttemptMessage {
                 Label {
                     Text(verbatim: message)

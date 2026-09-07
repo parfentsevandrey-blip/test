@@ -40,6 +40,8 @@ struct ServicePreset: Identifiable, Sendable {
     let domains: [String]
     /// Shown under the picker: caveats such as "the desktop app ignores proxies".
     let note: LocalizedStringKey?
+    /// Route used until the user picks another one (App Store and iCloud are direct out of the box).
+    var defaultMode: RouteMode = .tor
 }
 
 enum ServiceCatalog {
@@ -49,7 +51,7 @@ enum ServiceCatalog {
                       note: "Web and the desktop app follow the system proxy; voice (UDP) never goes through a proxy."),
         ServicePreset(id: "telegram", name: "Telegram", symbol: "paperplane.fill",
                       domains: ["telegram.org", "t.me", "telegram.me", "telesco.pe", "tdesktop.com", "telegram.dog"],
-                      note: "Only Telegram Web. The desktop app needs its own proxy setting: SOCKS5 127.0.0.1 with Veil's SOCKS port."),
+                      note: "Covers Telegram Web only. The Telegram app ignores the system proxy: add Veil as its SOCKS5 proxy with the button below and it connects through Tor."),
         ServicePreset(id: "twitch", name: "Twitch", symbol: "gamecontroller.fill",
                       domains: ["twitch.tv", "ttvnw.net", "jtvnw.net", "twitchcdn.net", "twitchsvc.net"],
                       note: nil),
@@ -68,7 +70,20 @@ enum ServiceCatalog {
         ServicePreset(id: "rutube", name: "RuTube", symbol: "play.circle.fill",
                       domains: ["rutube.ru"],
                       note: nil),
+        ServicePreset(id: "apple", name: "Apple (App Store, iCloud, updates)", symbol: "apple.logo",
+                      domains: ["apple.com", "icloud.com", "icloud-content.com", "apple-cloudkit.com", "mzstatic.com", "cdn-apple.com", "aaplimg.com", "apple-dns.net", "itunes.com", "apple-livephotoskit.com"],
+                      note: "App Store downloads, updates and iCloud stall or fail through Tor exits, so they go direct by default. Switch to Tor if you prefer.",
+                      defaultMode: .direct),
     ]
+
+    /// Preset routes before any user override.
+    static var defaultModes: [String: RouteMode] {
+        var modes: [String: RouteMode] = [:]
+        for preset in all where preset.defaultMode != .tor {
+            modes[preset.id] = preset.defaultMode
+        }
+        return modes
+    }
 
     static func preset(_ id: String) -> ServicePreset? {
         all.first { $0.id == id }
@@ -145,7 +160,7 @@ extension AppSettings {
     var routingPolicy: RoutingPolicy {
         RoutingPolicy(
             youtubeMode: youtubeMode,
-            serviceModes: serviceRoutes,
+            serviceModes: ServiceCatalog.defaultModes.merging(serviceRoutes) { _, user in user },
             customDirectDomains: RoutingPolicy.parseDomains(customDirectDomains),
             customDirectAntiThrottle: customDirectAntiThrottle,
             strategy: dpiStrategy

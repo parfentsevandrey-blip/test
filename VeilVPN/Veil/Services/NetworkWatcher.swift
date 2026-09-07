@@ -9,6 +9,7 @@ final class NetworkWatcher {
         case pathRestored
         case pathLost
         case didWake
+        case willSleep
     }
 
     var onEvent: (@MainActor (Event) -> Void)?
@@ -28,6 +29,11 @@ final class NetworkWatcher {
         }
         monitor.start(queue: DispatchQueue(label: "app.veilvpn.network-watcher"))
         let center = NSWorkspace.shared.notificationCenter
+        observers.append(center.addObserver(forName: NSWorkspace.willSleepNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.onEvent?(.willSleep)
+            }
+        })
         observers.append(center.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated {
                 self?.onEvent?(.didWake)
