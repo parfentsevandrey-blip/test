@@ -1,0 +1,16 @@
+{
+ "Резиденция Тверская": {
+  "id": 14385,
+  "cianName": "Резиденция Тверская",
+  "address": "Москва, 2-я Брестская улица, 6",
+  "url": "https://www.cian.ru/zhiloy-kompleks-rezidenciya-tverskaya-moskva-14385/",
+  "status": 200,
+  "developer": "Техноком Трейд",
+  "finished": null,
+  "deadline": "2019",
+  "yearText": null,
+  "cls": "Премиум",
+  "stage": null,
+  "fetched": "2026-09-07"
+ }
+}

@@ -60,13 +60,20 @@ function parse(text) {
   await page.waitForTimeout(2500);
   const out = { ...prev };
   let captcha = 0;
-  for (const { name, hint } of names) {
+  const queue = names.map((n) => ({ ...n, tries: 0 }));
+  while (queue.length) {
+    const item = queue.shift(); const { name, hint } = item;
     if (out[name] && out[name].id) continue;
     process.stdout.write(`${name} … `);
+    const backoff = async (why) => {
+      captcha++; console.log(why + (item.tries < 3 ? ', жду 2 мин и повторяю' : ', сдаюсь'));
+      if (item.tries++ < 3) queue.unshift(item);
+      await sleep(120000);
+    };
     try {
       const r = await ctx.request.get('https://api.cian.ru/geo-suggest/v1/suggest/?query=' + encodeURIComponent(name.replace(/\s*\(.*$/, '')) + '&regionId=1&offerType=flat&dealType=sale',
         { headers: { referer: 'https://www.cian.ru/', 'user-agent': UA }, timeout: 30000, maxRedirects: 0 });
-      if (r.status() !== 200) { captcha++; console.log(`suggest http ${r.status()}`); await sleep(delay * 5); if (captcha > 5) break; continue; }
+      if (r.status() !== 200) { await backoff(`suggest http ${r.status()}`); if (captcha > 12) break; continue; }
       const list = ((((await r.json()).data || {}).suggestions || {}).newbuildings || {}).items || [];
       const hit = pick(list, name, hint);
       if (!hit) { out[name] = { id: null, note: 'подсказка не нашла ЖК' }; console.log('не найден'); await sleep(delay); continue; }
@@ -74,7 +81,7 @@ function parse(text) {
       const resp = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
       await page.waitForTimeout(2500);
       const status = resp ? resp.status() : null;
-      if (page.url().includes('captcha') || status === 403) { captcha++; console.log('капча'); await sleep(delay * 5); if (captcha > 5) break; continue; }
+      if (page.url().includes('captcha') || status === 403) { await backoff('капча'); if (captcha > 12) break; continue; }
       const text = await page.evaluate(() => document.body.innerText);
       const p = parse(text);
       out[name] = { id: hit.id, cianName: hit.name, address: hit.address, url, status, ...p, fetched: new Date().toISOString().slice(0, 10) };
