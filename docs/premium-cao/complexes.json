@@ -1,7 +1,7 @@
 {
   "fetched": "2026-09-07",
-  "lots": 2291,
-  "withComplex": 2186,
+  "lots": 3137,
+  "withComplex": 3031,
   "complexes": [
     {
       "complex": "БРЮСОВ",
@@ -56,6 +56,59 @@
       ]
     },
     {
+      "complex": "Лё Дом",
+      "okrug": "ЦАО",
+      "district": "Хамовники",
+      "street": "Соймоновский",
+      "house": "3",
+      "addresses": [
+        "Соймоновский, 3"
+      ],
+      "lat": 55.7425815166732,
+      "lng": 37.605376568122,
+      "insideRing": true,
+      "ringMargin": 1002,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2026
+      ],
+      "deadline": {
+        "year": 2026,
+        "quarter": "third"
+      },
+      "finishedShare": 0,
+      "floorsMin": 5,
+      "floorsMax": 5,
+      "housesSeen": 1,
+      "lots": 8,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 100,
+      "saleTypes": [
+        "fz214"
+      ],
+      "decorations": [
+        "without"
+      ],
+      "perM2Min": 2569427,
+      "perM2Median": 4858198.5,
+      "perM2Max": 10285102,
+      "priceMin": 696013441,
+      "priceMax": 9436581085,
+      "areaMin": 153.8,
+      "areaMax": 2371,
+      "urls": [
+        "https://www.cian.ru/sale/flat/333564442/",
+        "https://www.cian.ru/sale/flat/333564420/",
+        "https://www.cian.ru/sale/flat/333564424/"
+      ],
+      "sources": [
+        "khamovniki-new"
+      ]
+    },
+    {
       "complex": "Barkli Gallery (Баркли Галлери)",
       "okrug": "ЦАО",
       "district": "Якиманка",
@@ -104,6 +157,113 @@
       ],
       "sources": [
         "yakimanka-second"
+      ]
+    },
+    {
+      "complex": "Клубный дом Обыденский №1",
+      "okrug": "ЦАО",
+      "district": "Хамовники",
+      "street": "3-й Обыденский",
+      "house": "1",
+      "addresses": [
+        "3-й Обыденский, 1"
+      ],
+      "lat": 55.742005340258,
+      "lng": 37.6042283644176,
+      "insideRing": true,
+      "ringMargin": 908,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2026
+      ],
+      "deadline": {
+        "year": 2026,
+        "quarter": "third"
+      },
+      "finishedShare": 100,
+      "floorsMin": 6,
+      "floorsMax": 6,
+      "housesSeen": 1,
+      "lots": 9,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 89,
+      "saleTypes": [
+        "fz214",
+        "dupt"
+      ],
+      "decorations": [
+        "without"
+      ],
+      "perM2Min": 2818178,
+      "perM2Median": 4239914,
+      "perM2Max": 9287270,
+      "priceMin": 650560000,
+      "priceMax": 7087510000,
+      "areaMin": 169,
+      "areaMax": 781,
+      "urls": [
+        "https://www.cian.ru/sale/flat/333380220/",
+        "https://www.cian.ru/sale/flat/333380230/",
+        "https://www.cian.ru/sale/flat/333380228/"
+      ],
+      "sources": [
+        "khamovniki-new"
+      ]
+    },
+    {
+      "complex": "Веспер Погодинская",
+      "okrug": "ЦАО",
+      "district": "Хамовники",
+      "street": "Погодинская",
+      "house": "24С1",
+      "addresses": [
+        "Погодинская, 24С1"
+      ],
+      "lat": 55.729104468923346,
+      "lng": 37.56003355323304,
+      "insideRing": false,
+      "ringMargin": 2095,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2028
+      ],
+      "deadline": {
+        "year": 2028,
+        "quarter": 4
+      },
+      "finishedShare": 0,
+      "floorsMin": 11,
+      "floorsMax": 11,
+      "housesSeen": 1,
+      "lots": 13,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 100,
+      "saleTypes": [
+        "free"
+      ],
+      "decorations": [
+        "fine"
+      ],
+      "perM2Min": 3003600,
+      "perM2Median": 3977800,
+      "perM2Max": 4855100,
+      "priceMin": 435841879,
+      "priceMax": 1598735879,
+      "areaMin": 138.49,
+      "areaMax": 329.29,
+      "urls": [
+        "https://www.cian.ru/sale/flat/332519714/",
+        "https://www.cian.ru/sale/flat/332519729/",
+        "https://www.cian.ru/sale/flat/332519719/"
+      ],
+      "sources": [
+        "khamovniki-new"
       ]
     },
     {
@@ -210,6 +370,164 @@
       ],
       "sources": [
         "presnensky-second"
+      ]
+    },
+    {
+      "complex": "Armani/Casa Moscow Residences (Армани/Каса Москоу Резиденсес)",
+      "okrug": "ЦАО",
+      "district": "Якиманка",
+      "street": "Старомонетный",
+      "house": "19/11",
+      "addresses": [
+        "Старомонетный, 19/11",
+        "Старомонетный, 19/11С1"
+      ],
+      "lat": 55.7399391314306,
+      "lng": 37.6193825889544,
+      "insideRing": true,
+      "ringMargin": 1249,
+      "ringSure": true,
+      "buildYears": [
+        2024
+      ],
+      "buildYearMin": 2024,
+      "buildYearMax": 2024,
+      "deadlineYears": [
+        2024
+      ],
+      "deadline": {
+        "year": 2024,
+        "quarter": "third"
+      },
+      "finishedShare": 100,
+      "floorsMin": 6,
+      "floorsMax": 6,
+      "housesSeen": 2,
+      "lots": 10,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 90,
+      "saleTypes": [
+        "pdkp",
+        "free"
+      ],
+      "decorations": [],
+      "perM2Min": 2750000,
+      "perM2Median": 3630000,
+      "perM2Max": 8000000,
+      "priceMin": 575360000,
+      "priceMax": 3372000000,
+      "areaMin": 176.6,
+      "areaMax": 421.5,
+      "urls": [
+        "https://www.cian.ru/sale/flat/328853365/",
+        "https://www.cian.ru/sale/flat/328853368/",
+        "https://www.cian.ru/sale/flat/328853363/"
+      ],
+      "sources": [
+        "yakimanka-new",
+        "yakimanka-second"
+      ]
+    },
+    {
+      "complex": "Аннабель",
+      "okrug": "ЦАО",
+      "district": "Хамовники",
+      "street": "Курсовой",
+      "house": "12/5С7",
+      "addresses": [
+        "Курсовой, 12/5С7"
+      ],
+      "lat": 55.73998005549,
+      "lng": 37.60470613359,
+      "insideRing": true,
+      "ringMargin": 743,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2026
+      ],
+      "deadline": {
+        "year": 2026,
+        "quarter": "third"
+      },
+      "finishedShare": 100,
+      "floorsMin": 7,
+      "floorsMax": 7,
+      "housesSeen": 1,
+      "lots": 6,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 100,
+      "saleTypes": [
+        "free"
+      ],
+      "decorations": [],
+      "perM2Min": 2900000,
+      "perM2Median": 3500141,
+      "perM2Max": 5700000,
+      "priceMin": 493290000,
+      "priceMax": 2798700000,
+      "areaMin": 170.1,
+      "areaMax": 491,
+      "urls": [
+        "https://www.cian.ru/sale/flat/332838991/",
+        "https://www.cian.ru/sale/flat/330814563/",
+        "https://www.cian.ru/sale/flat/330814559/"
+      ],
+      "sources": [
+        "khamovniki-new"
+      ]
+    },
+    {
+      "complex": "Узоры",
+      "okrug": "ЦАО",
+      "district": "Хамовники",
+      "street": "2-й Вражский",
+      "house": null,
+      "addresses": [
+        "2-й Вражский"
+      ],
+      "lat": 55.7393082371145,
+      "lng": 37.5734459828025,
+      "insideRing": false,
+      "ringMargin": 880,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2028
+      ],
+      "deadline": {
+        "year": 2028,
+        "quarter": "fourth"
+      },
+      "finishedShare": 0,
+      "floorsMin": 9,
+      "floorsMax": 10,
+      "housesSeen": 0,
+      "lots": 4,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 100,
+      "saleTypes": [
+        "fz214"
+      ],
+      "decorations": [],
+      "perM2Min": 3177900,
+      "perM2Median": 3488415,
+      "perM2Max": 4559310,
+      "priceMin": 602935883,
+      "priceMax": 755657427,
+      "areaMin": 164.9,
+      "areaMax": 207.8,
+      "urls": [
+        "https://www.cian.ru/sale/flat/333082541/",
+        "https://www.cian.ru/sale/flat/329522518/",
+        "https://www.cian.ru/sale/flat/333082534/"
+      ],
+      "sources": [
+        "khamovniki-new"
       ]
     },
     {
@@ -385,57 +703,6 @@
       ]
     },
     {
-      "complex": "Armani/Casa Moscow Residences (Армани/Каса Москоу Резиденсес)",
-      "okrug": "ЦАО",
-      "district": "Якиманка",
-      "street": "Старомонетный",
-      "house": "19/11С1",
-      "addresses": [
-        "Старомонетный, 19/11С1"
-      ],
-      "lat": 55.739919,
-      "lng": 37.619019,
-      "insideRing": true,
-      "ringMargin": 1247,
-      "ringSure": true,
-      "buildYears": [
-        2024
-      ],
-      "buildYearMin": 2024,
-      "buildYearMax": 2024,
-      "deadlineYears": [
-        2024
-      ],
-      "deadline": {
-        "year": 2024,
-        "quarter": 3
-      },
-      "finishedShare": 100,
-      "floorsMin": 6,
-      "floorsMax": 6,
-      "housesSeen": 1,
-      "lots": 1,
-      "apartmentsShare": 0,
-      "fromDeveloperShare": 0,
-      "saleTypes": [
-        "free"
-      ],
-      "decorations": [],
-      "perM2Min": 3196444,
-      "perM2Median": 3196444,
-      "perM2Max": 3196444,
-      "priceMin": 575360000,
-      "priceMax": 575360000,
-      "areaMin": 180,
-      "areaMax": 180,
-      "urls": [
-        "https://www.cian.ru/sale/flat/323682886/"
-      ],
-      "sources": [
-        "yakimanka-second"
-      ]
-    },
-    {
       "complex": "Дом на Хлебном",
       "okrug": "ЦАО",
       "district": "Арбат",
@@ -486,6 +753,229 @@
       ],
       "sources": [
         "arbat-second"
+      ]
+    },
+    {
+      "complex": "Хамовники 12",
+      "okrug": "ЦАО",
+      "district": "Хамовники",
+      "street": "1-й Тружеников",
+      "house": "12",
+      "addresses": [
+        "1-й Тружеников, 12",
+        "1-й Тружеников, 12А"
+      ],
+      "lat": 55.73776546854479,
+      "lng": 37.572766970568146,
+      "insideRing": false,
+      "ringMargin": 984,
+      "ringSure": true,
+      "buildYears": [
+        2026
+      ],
+      "buildYearMin": 2026,
+      "buildYearMax": 2026,
+      "deadlineYears": [
+        2026
+      ],
+      "deadline": {
+        "year": 2026,
+        "quarter": "first"
+      },
+      "finishedShare": 100,
+      "floorsMin": 14,
+      "floorsMax": 14,
+      "housesSeen": 2,
+      "lots": 2,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 0,
+      "saleTypes": [
+        "dupt",
+        "free"
+      ],
+      "decorations": [
+        "without"
+      ],
+      "perM2Min": 2800000,
+      "perM2Median": 3151207.5,
+      "perM2Max": 3502415,
+      "priceMin": 291200000,
+      "priceMax": 725000000,
+      "areaMin": 104,
+      "areaMax": 207,
+      "urls": [
+        "https://www.cian.ru/sale/flat/317328150/",
+        "https://www.cian.ru/sale/flat/327417697/"
+      ],
+      "sources": [
+        "khamovniki-new",
+        "khamovniki-second"
+      ]
+    },
+    {
+      "complex": "ДОМ XXII",
+      "okrug": "ЦАО",
+      "district": "Хамовники",
+      "street": "Новодевичий",
+      "house": "6С2",
+      "addresses": [
+        "Новодевичий, 6С2"
+      ],
+      "lat": 55.7297699330094,
+      "lng": 37.5591669814725,
+      "insideRing": false,
+      "ringMargin": 2111,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2026
+      ],
+      "deadline": {
+        "year": 2026,
+        "quarter": "fourth"
+      },
+      "finishedShare": 0,
+      "floorsMin": 11,
+      "floorsMax": 12,
+      "housesSeen": 1,
+      "lots": 4,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 0,
+      "saleTypes": [
+        "dupt"
+      ],
+      "decorations": [
+        "without"
+      ],
+      "perM2Min": 2479101,
+      "perM2Median": 3150000,
+      "perM2Max": 4000000,
+      "priceMin": 474500000,
+      "priceMax": 1300000000,
+      "areaMin": 159.2,
+      "areaMax": 325,
+      "urls": [
+        "https://www.cian.ru/sale/flat/332297994/",
+        "https://www.cian.ru/sale/flat/326454224/",
+        "https://www.cian.ru/sale/flat/327251852/"
+      ],
+      "sources": [
+        "khamovniki-new"
+      ]
+    },
+    {
+      "complex": "Дом Лаврушинский",
+      "okrug": "ЦАО",
+      "district": "Якиманка",
+      "street": "Большой Толмачевский",
+      "house": "5С1",
+      "addresses": [
+        "Большой Толмачевский, 5С1",
+        "Большой Толмачевский, 5с2",
+        "Большой Толмачевский, 5С9",
+        "Большой Толмачевский",
+        "Большой Толмачевский, 5С7а"
+      ],
+      "lat": 55.7394709366378,
+      "lng": 37.6198381825247,
+      "insideRing": true,
+      "ringMargin": 1196,
+      "ringSure": true,
+      "buildYears": [
+        2024,
+        2025
+      ],
+      "buildYearMin": 2024,
+      "buildYearMax": 2025,
+      "deadlineYears": [
+        2025
+      ],
+      "deadline": {
+        "year": 2025,
+        "quarter": "first"
+      },
+      "finishedShare": 100,
+      "floorsMin": 3,
+      "floorsMax": 14,
+      "housesSeen": 4,
+      "lots": 100,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 92,
+      "saleTypes": [
+        "free"
+      ],
+      "decorations": [
+        "without"
+      ],
+      "perM2Min": 1956522,
+      "perM2Median": 3118040,
+      "perM2Max": 7453392,
+      "priceMin": 193140000,
+      "priceMax": 4855170000,
+      "areaMin": 66,
+      "areaMax": 980,
+      "urls": [
+        "https://www.cian.ru/sale/flat/331610087/",
+        "https://www.cian.ru/sale/flat/331610067/",
+        "https://www.cian.ru/sale/flat/332961644/"
+      ],
+      "sources": [
+        "yakimanka-new",
+        "yakimanka-second"
+      ]
+    },
+    {
+      "complex": "Саввинская 27",
+      "okrug": "ЦАО",
+      "district": "Хамовники",
+      "street": "Саввинская",
+      "house": "27",
+      "addresses": [
+        "Саввинская, 27"
+      ],
+      "lat": 55.730669,
+      "lng": 37.557942,
+      "insideRing": false,
+      "ringMargin": 2141,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2026
+      ],
+      "deadline": {
+        "year": 2026,
+        "quarter": "second"
+      },
+      "finishedShare": 100,
+      "floorsMin": 6,
+      "floorsMax": 6,
+      "housesSeen": 1,
+      "lots": 2,
+      "apartmentsShare": 100,
+      "fromDeveloperShare": 100,
+      "saleTypes": [
+        "fz214"
+      ],
+      "decorations": [
+        "without"
+      ],
+      "perM2Min": 3060713,
+      "perM2Median": 3095494,
+      "perM2Max": 3130275,
+      "priceMin": 249448125,
+      "priceMax": 410692063,
+      "areaMin": 81.5,
+      "areaMax": 131.2,
+      "urls": [
+        "https://www.cian.ru/sale/flat/330582804/",
+        "https://www.cian.ru/sale/flat/330582806/"
+      ],
+      "sources": [
+        "khamovniki-new"
       ]
     },
     {
@@ -541,6 +1031,60 @@
       ]
     },
     {
+      "complex": "Клубный квартал «Фрунзенский»",
+      "okrug": "ЦАО",
+      "district": "Хамовники",
+      "street": "Фрунзенская",
+      "house": "30",
+      "addresses": [
+        "Фрунзенская, 30"
+      ],
+      "lat": 55.72437864670762,
+      "lng": 37.58455535591348,
+      "insideRing": false,
+      "ringMargin": 1403,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2027
+      ],
+      "deadline": {
+        "year": 2027,
+        "quarter": "third"
+      },
+      "finishedShare": 0,
+      "floorsMin": 10,
+      "floorsMax": 13,
+      "housesSeen": 1,
+      "lots": 97,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 98,
+      "saleTypes": [
+        "fz214",
+        "dupt"
+      ],
+      "decorations": [
+        "without"
+      ],
+      "perM2Min": 2180740,
+      "perM2Median": 3083973,
+      "perM2Max": 6898288,
+      "priceMin": 159200000,
+      "priceMax": 3172870000,
+      "areaMin": 58.4,
+      "areaMax": 527.8,
+      "urls": [
+        "https://www.cian.ru/sale/flat/333537451/",
+        "https://www.cian.ru/sale/flat/333537101/",
+        "https://www.cian.ru/sale/flat/333537342/"
+      ],
+      "sources": [
+        "khamovniki-new"
+      ]
+    },
+    {
       "complex": "Никитский-6",
       "okrug": "ЦАО",
       "district": "Арбат",
@@ -591,6 +1135,60 @@
       ],
       "sources": [
         "arbat-new"
+      ]
+    },
+    {
+      "complex": "Пыжёвский",
+      "okrug": "ЦАО",
+      "district": "Якиманка",
+      "street": "Пыжевский",
+      "house": null,
+      "addresses": [
+        "Пыжевский"
+      ],
+      "lat": 55.7389224895589,
+      "lng": 37.6225088908752,
+      "insideRing": true,
+      "ringMargin": 1130,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2029
+      ],
+      "deadline": {
+        "year": 2029,
+        "quarter": 2
+      },
+      "finishedShare": 0,
+      "floorsMin": 17,
+      "floorsMax": 17,
+      "housesSeen": 0,
+      "lots": 14,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 100,
+      "saleTypes": [
+        "fz214"
+      ],
+      "decorations": [
+        "without",
+        "fine"
+      ],
+      "perM2Min": 2050200,
+      "perM2Median": 3001950,
+      "perM2Max": 3322400,
+      "priceMin": 238943151,
+      "priceMax": 750125255,
+      "areaMin": 83.99,
+      "areaMax": 243.65,
+      "urls": [
+        "https://www.cian.ru/sale/flat/332074690/",
+        "https://www.cian.ru/sale/flat/332074699/",
+        "https://www.cian.ru/sale/flat/332074697/"
+      ],
+      "sources": [
+        "yakimanka-new"
       ]
     },
     {
@@ -754,6 +1352,106 @@
       ]
     },
     {
+      "complex": "Красный Октябрь",
+      "okrug": "ЦАО",
+      "district": "Якиманка",
+      "street": "Берсеневская",
+      "house": "6С5",
+      "addresses": [
+        "Берсеневская, 6С5"
+      ],
+      "lat": 55.7402857630249,
+      "lng": 37.6095958320153,
+      "insideRing": true,
+      "ringMargin": 959,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2026
+      ],
+      "deadline": {
+        "year": 2026,
+        "quarter": 3
+      },
+      "finishedShare": 0,
+      "floorsMin": 6,
+      "floorsMax": 6,
+      "housesSeen": 1,
+      "lots": 1,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 100,
+      "saleTypes": [
+        "fz214"
+      ],
+      "decorations": [],
+      "perM2Min": 2990000,
+      "perM2Median": 2990000,
+      "perM2Max": 2990000,
+      "priceMin": 309883600,
+      "priceMax": 309883600,
+      "areaMin": 103.64,
+      "areaMax": 103.64,
+      "urls": [
+        "https://www.cian.ru/sale/flat/326780795/"
+      ],
+      "sources": [
+        "yakimanka-new"
+      ]
+    },
+    {
+      "complex": "Клубные резиденции Лёвшинский, 19",
+      "okrug": "ЦАО",
+      "district": "Хамовники",
+      "street": "Большой Левшинский",
+      "house": "19",
+      "addresses": [
+        "Большой Левшинский, 19"
+      ],
+      "lat": 55.74141019821372,
+      "lng": 37.586046898147465,
+      "insideRing": false,
+      "ringMargin": 60,
+      "ringSure": false,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2028
+      ],
+      "deadline": {
+        "year": 2028,
+        "quarter": "second"
+      },
+      "finishedShare": 0,
+      "floorsMin": 8,
+      "floorsMax": 8,
+      "housesSeen": 1,
+      "lots": 1,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 100,
+      "saleTypes": [
+        "fz214"
+      ],
+      "decorations": [
+        "without"
+      ],
+      "perM2Min": 2844930,
+      "perM2Median": 2844930,
+      "perM2Max": 2844930,
+      "priceMin": 200283072,
+      "priceMax": 200283072,
+      "areaMin": 70.4,
+      "areaMax": 70.4,
+      "urls": [
+        "https://www.cian.ru/sale/flat/328904518/"
+      ],
+      "sources": [
+        "khamovniki-new"
+      ]
+    },
+    {
       "complex": "Особняки в неорусском стиле «Ильинка 3/8»",
       "okrug": "ЦАО",
       "district": "Тверской",
@@ -810,54 +1508,56 @@
       ]
     },
     {
-      "complex": "Хамовники 12",
+      "complex": "Клубный дом DUO (Дуо)",
       "okrug": "ЦАО",
-      "district": "Хамовники",
-      "street": "1-й Тружеников",
-      "house": "12А",
+      "district": "Якиманка",
+      "street": "Софийская",
+      "house": "34С3",
       "addresses": [
-        "1-й Тружеников, 12А"
+        "Софийская, 34С3"
       ],
-      "lat": 55.73776,
-      "lng": 37.5728,
-      "insideRing": false,
-      "ringMargin": 982,
+      "lat": 55.7463922322426,
+      "lng": 37.622796830688,
+      "insideRing": true,
+      "ringMargin": 1850,
       "ringSure": true,
-      "buildYears": [
-        2026
-      ],
-      "buildYearMin": 2026,
-      "buildYearMax": 2026,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
       "deadlineYears": [
-        2026
+        2028
       ],
       "deadline": {
-        "year": 2026,
+        "year": 2028,
         "quarter": 1
       },
-      "finishedShare": 100,
-      "floorsMin": 14,
-      "floorsMax": 14,
+      "finishedShare": 0,
+      "floorsMin": 6,
+      "floorsMax": 6,
       "housesSeen": 1,
-      "lots": 1,
+      "lots": 31,
       "apartmentsShare": 0,
-      "fromDeveloperShare": 0,
+      "fromDeveloperShare": 100,
       "saleTypes": [
         "free"
       ],
-      "decorations": [],
-      "perM2Min": 2800000,
-      "perM2Median": 2800000,
-      "perM2Max": 2800000,
-      "priceMin": 291200000,
-      "priceMax": 291200000,
-      "areaMin": 104,
-      "areaMax": 104,
+      "decorations": [
+        "rough"
+      ],
+      "perM2Min": 2408900,
+      "perM2Median": 2772243,
+      "perM2Max": 4300199,
+      "priceMin": 137403508,
+      "priceMax": 1837474853,
+      "areaMin": 49.6,
+      "areaMax": 427.3,
       "urls": [
-        "https://www.cian.ru/sale/flat/327417697/"
+        "https://www.cian.ru/sale/flat/329214137/",
+        "https://www.cian.ru/sale/flat/329214059/",
+        "https://www.cian.ru/sale/flat/329214083/"
       ],
       "sources": [
-        "khamovniki-second"
+        "yakimanka-new"
       ]
     },
     {
@@ -1405,6 +2105,123 @@
       ]
     },
     {
+      "complex": "Саввинская 17",
+      "okrug": "ЦАО",
+      "district": "Хамовники",
+      "street": "Саввинская",
+      "house": "17",
+      "addresses": [
+        "Саввинская, 17"
+      ],
+      "lat": 55.7346476689809,
+      "lng": 37.5656114318769,
+      "insideRing": false,
+      "ringMargin": 1529,
+      "ringSure": true,
+      "buildYears": [
+        2025
+      ],
+      "buildYearMin": 2025,
+      "buildYearMax": 2025,
+      "deadlineYears": [
+        2025
+      ],
+      "deadline": {
+        "year": 2025,
+        "quarter": "fourth"
+      },
+      "finishedShare": 100,
+      "floorsMin": 4,
+      "floorsMax": 4,
+      "housesSeen": 1,
+      "lots": 4,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 25,
+      "saleTypes": [
+        "fz214",
+        "free"
+      ],
+      "decorations": [
+        "without"
+      ],
+      "perM2Min": 2337858,
+      "perM2Median": 2453400.5,
+      "perM2Max": 2588055,
+      "priceMin": 155000000,
+      "priceMax": 210805239,
+      "areaMin": 65.3,
+      "areaMax": 82.4,
+      "urls": [
+        "https://www.cian.ru/sale/flat/330707597/",
+        "https://www.cian.ru/sale/flat/329280427/",
+        "https://www.cian.ru/sale/flat/330046532/"
+      ],
+      "sources": [
+        "khamovniki-new",
+        "khamovniki-second"
+      ]
+    },
+    {
+      "complex": "Золотой, жилой квартал",
+      "okrug": "ЦАО",
+      "district": "Якиманка",
+      "street": "Софийская",
+      "house": "18",
+      "addresses": [
+        "Софийская, 18",
+        "Софийская, 10"
+      ],
+      "lat": 55.7477401845079,
+      "lng": 37.6176859822769,
+      "insideRing": true,
+      "ringMargin": 1924,
+      "ringSure": true,
+      "buildYears": [
+        2021,
+        2023
+      ],
+      "buildYearMin": 2021,
+      "buildYearMax": 2023,
+      "deadlineYears": [
+        2021,
+        2023
+      ],
+      "deadline": {
+        "year": 2023,
+        "quarter": "first"
+      },
+      "finishedShare": 100,
+      "floorsMin": 2,
+      "floorsMax": 6,
+      "housesSeen": 2,
+      "lots": 13,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 54,
+      "saleTypes": [
+        "free",
+        "dupt"
+      ],
+      "decorations": [
+        "without"
+      ],
+      "perM2Min": 2083333,
+      "perM2Median": 2448000,
+      "perM2Max": 3200000,
+      "priceMin": 280000000,
+      "priceMax": 628024320,
+      "areaMin": 87.5,
+      "areaMax": 269,
+      "urls": [
+        "https://www.cian.ru/sale/flat/315109130/",
+        "https://www.cian.ru/sale/flat/326035617/",
+        "https://www.cian.ru/sale/flat/327080514/"
+      ],
+      "sources": [
+        "yakimanka-new",
+        "yakimanka-second"
+      ]
+    },
+    {
       "complex": "White Khamovniki (Вайт Хамовники)",
       "okrug": "ЦАО",
       "district": "Хамовники",
@@ -1458,116 +2275,6 @@
       ]
     },
     {
-      "complex": "Дом Лаврушинский",
-      "okrug": "ЦАО",
-      "district": "Якиманка",
-      "street": "Большой Толмачевский",
-      "house": "5С1",
-      "addresses": [
-        "Большой Толмачевский, 5С9",
-        "Большой Толмачевский, 5С1",
-        "Большой Толмачевский",
-        "Большой Толмачевский, 5С7а"
-      ],
-      "lat": 55.740213,
-      "lng": 37.619809,
-      "insideRing": true,
-      "ringMargin": 1278,
-      "ringSure": true,
-      "buildYears": [
-        2024,
-        2025
-      ],
-      "buildYearMin": 2024,
-      "buildYearMax": 2025,
-      "deadlineYears": [
-        2025
-      ],
-      "deadline": {
-        "year": 2025,
-        "quarter": 1
-      },
-      "finishedShare": 100,
-      "floorsMin": 3,
-      "floorsMax": 14,
-      "housesSeen": 3,
-      "lots": 8,
-      "apartmentsShare": 0,
-      "fromDeveloperShare": 0,
-      "saleTypes": [
-        "free"
-      ],
-      "decorations": [],
-      "perM2Min": 1956522,
-      "perM2Median": 2377118.5,
-      "perM2Max": 4074074,
-      "priceMin": 270000000,
-      "priceMax": 1100000000,
-      "areaMin": 113.2,
-      "areaMax": 270,
-      "urls": [
-        "https://www.cian.ru/sale/flat/327695906/",
-        "https://www.cian.ru/sale/flat/329984799/",
-        "https://www.cian.ru/sale/flat/329926066/"
-      ],
-      "sources": [
-        "yakimanka-second"
-      ]
-    },
-    {
-      "complex": "Саввинская 17",
-      "okrug": "ЦАО",
-      "district": "Хамовники",
-      "street": "Саввинская",
-      "house": "17",
-      "addresses": [
-        "Саввинская, 17"
-      ],
-      "lat": 55.734567,
-      "lng": 37.565767,
-      "insideRing": false,
-      "ringMargin": 1524,
-      "ringSure": true,
-      "buildYears": [
-        2025
-      ],
-      "buildYearMin": 2025,
-      "buildYearMax": 2025,
-      "deadlineYears": [
-        2025
-      ],
-      "deadline": {
-        "year": 2025,
-        "quarter": 4
-      },
-      "finishedShare": 100,
-      "floorsMin": 4,
-      "floorsMax": 4,
-      "housesSeen": 1,
-      "lots": 3,
-      "apartmentsShare": 0,
-      "fromDeveloperShare": 0,
-      "saleTypes": [
-        "free"
-      ],
-      "decorations": [],
-      "perM2Min": 2337858,
-      "perM2Median": 2348485,
-      "perM2Max": 2588055,
-      "priceMin": 155000000,
-      "priceMax": 169000000,
-      "areaMin": 65.3,
-      "areaMax": 66.3,
-      "urls": [
-        "https://www.cian.ru/sale/flat/329280427/",
-        "https://www.cian.ru/sale/flat/330046532/",
-        "https://www.cian.ru/sale/flat/331049615/"
-      ],
-      "sources": [
-        "khamovniki-second"
-      ]
-    },
-    {
       "complex": "Zvonarsky Deluxe (Звонарский Делюкс)",
       "okrug": "ЦАО",
       "district": "Мещанский",
@@ -1614,62 +2321,6 @@
       ],
       "sources": [
         "meshchansky-second"
-      ]
-    },
-    {
-      "complex": "Золотой, жилой квартал",
-      "okrug": "ЦАО",
-      "district": "Якиманка",
-      "street": "Софийская",
-      "house": "18",
-      "addresses": [
-        "Софийская, 18",
-        "Софийская, 10"
-      ],
-      "lat": 55.74713,
-      "lng": 37.618435,
-      "insideRing": true,
-      "ringMargin": 1900,
-      "ringSure": true,
-      "buildYears": [
-        2021,
-        2023
-      ],
-      "buildYearMin": 2021,
-      "buildYearMax": 2023,
-      "deadlineYears": [
-        2021,
-        2023
-      ],
-      "deadline": {
-        "year": 2023,
-        "quarter": 1
-      },
-      "finishedShare": 100,
-      "floorsMin": 2,
-      "floorsMax": 6,
-      "housesSeen": 2,
-      "lots": 6,
-      "apartmentsShare": 0,
-      "fromDeveloperShare": 0,
-      "saleTypes": [
-        "free"
-      ],
-      "decorations": [],
-      "perM2Min": 2083333,
-      "perM2Median": 2297951,
-      "perM2Max": 3042409,
-      "priceMin": 450000000,
-      "priceMax": 610000000,
-      "areaMin": 162.7,
-      "areaMax": 269,
-      "urls": [
-        "https://www.cian.ru/sale/flat/330217072/",
-        "https://www.cian.ru/sale/flat/309092127/",
-        "https://www.cian.ru/sale/flat/333363568/"
-      ],
-      "sources": [
-        "yakimanka-second"
       ]
     },
     {
@@ -1727,6 +2378,61 @@
       ]
     },
     {
+      "complex": "Садовническая 69",
+      "okrug": "ЦАО",
+      "district": "Замоскворечье",
+      "street": "Садовническая",
+      "house": "69",
+      "addresses": [
+        "Садовническая, 69",
+        "Садовническая, 76/71С1",
+        "Садовническая"
+      ],
+      "lat": 55.7384607498004,
+      "lng": 37.6400389298841,
+      "insideRing": true,
+      "ringMargin": 455,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2028
+      ],
+      "deadline": {
+        "year": 2028,
+        "quarter": "second"
+      },
+      "finishedShare": 0,
+      "floorsMin": 5,
+      "floorsMax": 16,
+      "housesSeen": 2,
+      "lots": 36,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 100,
+      "saleTypes": [
+        "fz214"
+      ],
+      "decorations": [
+        "without"
+      ],
+      "perM2Min": 1675161,
+      "perM2Median": 2265083.5,
+      "perM2Max": 4224652,
+      "priceMin": 100128095,
+      "priceMax": 848798198,
+      "areaMin": 55.65,
+      "areaMax": 265.16,
+      "urls": [
+        "https://www.cian.ru/sale/flat/328952148/",
+        "https://www.cian.ru/sale/flat/328952207/",
+        "https://www.cian.ru/sale/flat/328952213/"
+      ],
+      "sources": [
+        "zamoskvorechye-new"
+      ]
+    },
+    {
       "complex": "Малая Ордынка 19",
       "okrug": "ЦАО",
       "district": "Замоскворечье",
@@ -1777,6 +2483,59 @@
       ],
       "sources": [
         "zamoskvorechye-second"
+      ]
+    },
+    {
+      "complex": "Казачий",
+      "okrug": "ЦАО",
+      "district": "Якиманка",
+      "street": "1-й Казачий",
+      "house": "10С1",
+      "addresses": [
+        "1-й Казачий, 10С1"
+      ],
+      "lat": 55.73568791990935,
+      "lng": 37.62181783068835,
+      "insideRing": true,
+      "ringMargin": 772,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2029
+      ],
+      "deadline": {
+        "year": 2029,
+        "quarter": "third"
+      },
+      "finishedShare": 0,
+      "floorsMin": 9,
+      "floorsMax": 9,
+      "housesSeen": 1,
+      "lots": 26,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 100,
+      "saleTypes": [
+        "fz214"
+      ],
+      "decorations": [
+        "without"
+      ],
+      "perM2Min": 1822000,
+      "perM2Median": 2193705,
+      "perM2Max": 2752000,
+      "priceMin": 138772656,
+      "priceMax": 477582237,
+      "areaMin": 62.7,
+      "areaMax": 201.3,
+      "urls": [
+        "https://www.cian.ru/sale/flat/333664798/",
+        "https://www.cian.ru/sale/flat/333664800/",
+        "https://www.cian.ru/sale/flat/331543937/"
+      ],
+      "sources": [
+        "yakimanka-new"
       ]
     },
     {
@@ -2383,6 +3142,61 @@
       ]
     },
     {
+      "complex": "Клубный дом CULT (Клубный дом Культ)",
+      "okrug": "ЦАО",
+      "district": "Якиманка",
+      "street": "Ленинский",
+      "house": "2",
+      "addresses": [
+        "Ленинский, 2"
+      ],
+      "lat": 55.7296107564818,
+      "lng": 37.61125350678,
+      "insideRing": true,
+      "ringMargin": 90,
+      "ringSure": false,
+      "buildYears": [
+        2025,
+        2026
+      ],
+      "buildYearMin": 2025,
+      "buildYearMax": 2026,
+      "deadlineYears": [
+        2025
+      ],
+      "deadline": {
+        "year": 2025,
+        "quarter": "first"
+      },
+      "finishedShare": 100,
+      "floorsMin": 9,
+      "floorsMax": 16,
+      "housesSeen": 1,
+      "lots": 54,
+      "apartmentsShare": 100,
+      "fromDeveloperShare": 96,
+      "saleTypes": [
+        "free"
+      ],
+      "decorations": [],
+      "perM2Min": 1000000,
+      "perM2Median": 1799500,
+      "perM2Max": 3035672,
+      "priceMin": 30900000,
+      "priceMax": 910933333,
+      "areaMin": 26.8,
+      "areaMax": 336,
+      "urls": [
+        "https://www.cian.ru/sale/flat/333091841/",
+        "https://www.cian.ru/sale/flat/333091855/",
+        "https://www.cian.ru/sale/flat/333091840/"
+      ],
+      "sources": [
+        "yakimanka-new",
+        "yakimanka-second"
+      ]
+    },
+    {
       "complex": "Абрикосов",
       "okrug": "ЦАО",
       "district": "Басманный",
@@ -2434,6 +3248,60 @@
       ],
       "sources": [
         "basmanny-second"
+      ]
+    },
+    {
+      "complex": "Татарская 35",
+      "okrug": "ЦАО",
+      "district": "Замоскворечье",
+      "street": "Большая Татарская",
+      "house": null,
+      "addresses": [
+        "Большая Татарская"
+      ],
+      "lat": 55.7374107545934,
+      "lng": 37.636627507531,
+      "insideRing": true,
+      "ringMargin": 554,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2028
+      ],
+      "deadline": {
+        "year": 2028,
+        "quarter": "third"
+      },
+      "finishedShare": 0,
+      "floorsMin": 18,
+      "floorsMax": 24,
+      "housesSeen": 0,
+      "lots": 78,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 100,
+      "saleTypes": [
+        "fz214"
+      ],
+      "decorations": [
+        "without",
+        "fine"
+      ],
+      "perM2Min": 1390000,
+      "perM2Median": 1770000,
+      "perM2Max": 3481000,
+      "priceMin": 74908000,
+      "priceMax": 915019200,
+      "areaMin": 48.3,
+      "areaMax": 320.5,
+      "urls": [
+        "https://www.cian.ru/sale/flat/332376469/",
+        "https://www.cian.ru/sale/flat/332376534/",
+        "https://www.cian.ru/sale/flat/332376424/"
+      ],
+      "sources": [
+        "zamoskvorechye-new"
       ]
     },
     {
@@ -2707,6 +3575,57 @@
       ]
     },
     {
+      "complex": "Резиденция 1864",
+      "okrug": "ЦАО",
+      "district": "Якиманка",
+      "street": "Софийская",
+      "house": "36",
+      "addresses": [
+        "Софийская, 36"
+      ],
+      "lat": 55.74754,
+      "lng": 37.623968,
+      "insideRing": true,
+      "ringMargin": 1869,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2022
+      ],
+      "deadline": {
+        "year": 2022,
+        "quarter": "fourth"
+      },
+      "finishedShare": 100,
+      "floorsMin": 8,
+      "floorsMax": 8,
+      "housesSeen": 1,
+      "lots": 7,
+      "apartmentsShare": 100,
+      "fromDeveloperShare": 100,
+      "saleTypes": [
+        "free"
+      ],
+      "decorations": [],
+      "perM2Min": 1510567,
+      "perM2Median": 1617861,
+      "perM2Max": 3213511,
+      "priceMin": 473841161,
+      "priceMax": 3415319712,
+      "areaMin": 289.7,
+      "areaMax": 1062.8,
+      "urls": [
+        "https://www.cian.ru/sale/flat/325133439/",
+        "https://www.cian.ru/sale/flat/328805165/",
+        "https://www.cian.ru/sale/flat/328805157/"
+      ],
+      "sources": [
+        "yakimanka-new"
+      ]
+    },
+    {
       "complex": "Дом на Тишинке",
       "okrug": "ЦАО",
       "district": "Пресненский",
@@ -2810,6 +3729,64 @@
       ],
       "sources": [
         "tagansky-new"
+      ]
+    },
+    {
+      "complex": "КОЛЛЕКЦИЯ ЛУЖНИКИ",
+      "okrug": "ЦАО",
+      "district": "Хамовники",
+      "street": "Лужнецкая",
+      "house": "1",
+      "addresses": [
+        "Лужнецкая, 2/4",
+        "Лужнецкая, 1"
+      ],
+      "lat": 55.7143864764713,
+      "lng": 37.5721614788484,
+      "insideRing": false,
+      "ringMargin": 2758,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2026,
+        2027
+      ],
+      "deadline": {
+        "year": 2027,
+        "quarter": "fourth"
+      },
+      "finishedShare": 0,
+      "floorsMin": 12,
+      "floorsMax": 18,
+      "housesSeen": 2,
+      "lots": 59,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 51,
+      "saleTypes": [
+        "dupt",
+        "fz214"
+      ],
+      "decorations": [
+        "without",
+        "fine",
+        "rough"
+      ],
+      "perM2Min": 1218182,
+      "perM2Median": 1591320,
+      "perM2Max": 4200000,
+      "priceMin": 61900000,
+      "priceMax": 824460000,
+      "areaMin": 49.7,
+      "areaMax": 209.9,
+      "urls": [
+        "https://www.cian.ru/sale/flat/333460103/",
+        "https://www.cian.ru/sale/flat/332877652/",
+        "https://www.cian.ru/sale/flat/332826879/"
+      ],
+      "sources": [
+        "khamovniki-new"
       ]
     },
     {
@@ -3085,6 +4062,63 @@
       ]
     },
     {
+      "complex": "Клубный дом Космо 4/22",
+      "okrug": "ЦАО",
+      "district": "Замоскворечье",
+      "street": "Космодамианская",
+      "house": "4/22",
+      "addresses": [
+        "Космодамианская, 4/22",
+        "Космодамианская, 4/22С4"
+      ],
+      "lat": 55.7456006623553,
+      "lng": 37.6381874490723,
+      "insideRing": true,
+      "ringMargin": 1011,
+      "ringSure": true,
+      "buildYears": [
+        2025
+      ],
+      "buildYearMin": 2025,
+      "buildYearMax": 2025,
+      "deadlineYears": [
+        2025
+      ],
+      "deadline": {
+        "year": 2025,
+        "quarter": "second"
+      },
+      "finishedShare": 100,
+      "floorsMin": 6,
+      "floorsMax": 6,
+      "housesSeen": 2,
+      "lots": 19,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 42,
+      "saleTypes": [
+        "free"
+      ],
+      "decorations": [
+        "without"
+      ],
+      "perM2Min": 1326531,
+      "perM2Median": 1531532,
+      "perM2Max": 5300745,
+      "priceMin": 65000000,
+      "priceMax": 711890000,
+      "areaMin": 47.3,
+      "areaMax": 174.7,
+      "urls": [
+        "https://www.cian.ru/sale/flat/328309502/",
+        "https://www.cian.ru/sale/flat/327323958/",
+        "https://www.cian.ru/sale/flat/327323962/"
+      ],
+      "sources": [
+        "zamoskvorechye-new",
+        "zamoskvorechye-second"
+      ]
+    },
+    {
       "complex": "Fantastic House (Фантастик Хаус)",
       "okrug": "ЦАО",
       "district": "Пресненский",
@@ -3242,114 +4276,6 @@
       ]
     },
     {
-      "complex": "A.Residence (А Резиденс)",
-      "okrug": "ЦАО",
-      "district": "Замоскворечье",
-      "street": "Садовническая",
-      "house": "82",
-      "addresses": [
-        "Садовническая, 82"
-      ],
-      "lat": 55.736914,
-      "lng": 37.641764,
-      "insideRing": true,
-      "ringMargin": 265,
-      "ringSure": false,
-      "buildYears": [
-        2024,
-        2025
-      ],
-      "buildYearMin": 2024,
-      "buildYearMax": 2025,
-      "deadlineYears": [
-        2025
-      ],
-      "deadline": {
-        "year": 2025,
-        "quarter": 2
-      },
-      "finishedShare": 100,
-      "floorsMin": 5,
-      "floorsMax": 9,
-      "housesSeen": 1,
-      "lots": 8,
-      "apartmentsShare": 100,
-      "fromDeveloperShare": 0,
-      "saleTypes": [
-        "free"
-      ],
-      "decorations": [],
-      "perM2Min": 664234,
-      "perM2Median": 1452248.5,
-      "perM2Max": 1500000,
-      "priceMin": 77400000,
-      "priceMax": 139860000,
-      "areaMin": 60,
-      "areaMax": 137,
-      "urls": [
-        "https://www.cian.ru/sale/flat/332802762/",
-        "https://www.cian.ru/sale/flat/332719763/",
-        "https://www.cian.ru/sale/flat/332887113/"
-      ],
-      "sources": [
-        "zamoskvorechye-second"
-      ]
-    },
-    {
-      "complex": "Клубный дом Космо 4/22",
-      "okrug": "ЦАО",
-      "district": "Замоскворечье",
-      "street": "Космодамианская",
-      "house": "4/22",
-      "addresses": [
-        "Космодамианская, 4/22",
-        "Космодамианская, 4/22С4"
-      ],
-      "lat": 55.745585,
-      "lng": 37.638305,
-      "insideRing": true,
-      "ringMargin": 1003,
-      "ringSure": true,
-      "buildYears": [
-        2025
-      ],
-      "buildYearMin": 2025,
-      "buildYearMax": 2025,
-      "deadlineYears": [
-        2025
-      ],
-      "deadline": {
-        "year": 2025,
-        "quarter": 2
-      },
-      "finishedShare": 100,
-      "floorsMin": 6,
-      "floorsMax": 6,
-      "housesSeen": 2,
-      "lots": 11,
-      "apartmentsShare": 0,
-      "fromDeveloperShare": 0,
-      "saleTypes": [
-        "free"
-      ],
-      "decorations": [],
-      "perM2Min": 1326531,
-      "perM2Median": 1400000,
-      "perM2Max": 3325000,
-      "priceMin": 65000000,
-      "priceMax": 337487500,
-      "areaMin": 48,
-      "areaMax": 122.3,
-      "urls": [
-        "https://www.cian.ru/sale/flat/327263882/",
-        "https://www.cian.ru/sale/flat/328655208/",
-        "https://www.cian.ru/sale/flat/331008023/"
-      ],
-      "sources": [
-        "zamoskvorechye-second"
-      ]
-    },
-    {
       "complex": "Roza Rossa (Роза Росса)",
       "okrug": "ЦАО",
       "district": "Хамовники",
@@ -3453,6 +4379,61 @@
       ],
       "sources": [
         "presnensky-second"
+      ]
+    },
+    {
+      "complex": "A.Residence (А Резиденс)",
+      "okrug": "ЦАО",
+      "district": "Замоскворечье",
+      "street": "Садовническая",
+      "house": "82",
+      "addresses": [
+        "Садовническая, 82"
+      ],
+      "lat": 55.7364404990344,
+      "lng": 37.6412915602172,
+      "insideRing": true,
+      "ringMargin": 256,
+      "ringSure": false,
+      "buildYears": [
+        2024,
+        2025
+      ],
+      "buildYearMin": 2024,
+      "buildYearMax": 2025,
+      "deadlineYears": [
+        2025
+      ],
+      "deadline": {
+        "year": 2025,
+        "quarter": "second"
+      },
+      "finishedShare": 100,
+      "floorsMin": 5,
+      "floorsMax": 9,
+      "housesSeen": 1,
+      "lots": 36,
+      "apartmentsShare": 100,
+      "fromDeveloperShare": 78,
+      "saleTypes": [
+        "free"
+      ],
+      "decorations": [],
+      "perM2Min": 664234,
+      "perM2Median": 1365000,
+      "perM2Max": 2894000,
+      "priceMin": 51514560,
+      "priceMax": 581983400,
+      "areaMin": 47.9,
+      "areaMax": 210.8,
+      "urls": [
+        "https://www.cian.ru/sale/flat/324615659/",
+        "https://www.cian.ru/sale/flat/324615673/",
+        "https://www.cian.ru/sale/flat/324615652/"
+      ],
+      "sources": [
+        "zamoskvorechye-new",
+        "zamoskvorechye-second"
       ]
     },
     {
@@ -3880,6 +4861,63 @@
       ]
     },
     {
+      "complex": "Монблан",
+      "okrug": "ЦАО",
+      "district": "Замоскворечье",
+      "street": "Шлюзовая",
+      "house": "3",
+      "addresses": [
+        "Шлюзовая, 3",
+        "Шлюзовая, 2с1",
+        "Шлюзовая, 2/1С1"
+      ],
+      "lat": 55.73212541040906,
+      "lng": 37.64245998778826,
+      "insideRing": false,
+      "ringMargin": 93,
+      "ringSure": false,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2028
+      ],
+      "deadline": {
+        "year": 2028,
+        "quarter": "first"
+      },
+      "finishedShare": 0,
+      "floorsMin": 7,
+      "floorsMax": 27,
+      "housesSeen": 3,
+      "lots": 72,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 90,
+      "saleTypes": [
+        "fz214",
+        "dupt"
+      ],
+      "decorations": [
+        "without",
+        "rough"
+      ],
+      "perM2Min": 942551,
+      "perM2Median": 1245333.5,
+      "perM2Max": 3159585,
+      "priceMin": 53500756,
+      "priceMax": 540289000,
+      "areaMin": 47.4,
+      "areaMax": 227.2,
+      "urls": [
+        "https://www.cian.ru/sale/flat/333434926/",
+        "https://www.cian.ru/sale/flat/333434924/",
+        "https://www.cian.ru/sale/flat/333434913/"
+      ],
+      "sources": [
+        "zamoskvorechye-new"
+      ]
+    },
+    {
       "complex": "Титул на Серебрянической",
       "okrug": "ЦАО",
       "district": "Таганский",
@@ -3934,6 +4972,62 @@
       "sources": [
         "tagansky-new",
         "tagansky-second"
+      ]
+    },
+    {
+      "complex": "Полянка/44",
+      "okrug": "ЦАО",
+      "district": "Якиманка",
+      "street": "Большая Полянка",
+      "house": "44",
+      "addresses": [
+        "Большая Полянка, 44"
+      ],
+      "lat": 55.73277163638408,
+      "lng": 37.618599588774416,
+      "insideRing": true,
+      "ringMargin": 452,
+      "ringSure": true,
+      "buildYears": [
+        2019
+      ],
+      "buildYearMin": 2019,
+      "buildYearMax": 2019,
+      "deadlineYears": [
+        2019
+      ],
+      "deadline": {
+        "year": 2019,
+        "quarter": "first"
+      },
+      "finishedShare": 100,
+      "floorsMin": 6,
+      "floorsMax": 7,
+      "housesSeen": 1,
+      "lots": 50,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 6,
+      "saleTypes": [
+        "free"
+      ],
+      "decorations": [
+        "without"
+      ],
+      "perM2Min": 1135408,
+      "perM2Median": 1214499.5,
+      "perM2Max": 2109833,
+      "priceMin": 134000000,
+      "priceMax": 561300000,
+      "areaMin": 117.2,
+      "areaMax": 271,
+      "urls": [
+        "https://www.cian.ru/sale/flat/332405952/",
+        "https://www.cian.ru/sale/flat/332405949/",
+        "https://www.cian.ru/sale/flat/332405950/"
+      ],
+      "sources": [
+        "yakimanka-new",
+        "yakimanka-second"
       ]
     },
     {
@@ -4042,59 +5136,6 @@
       ],
       "sources": [
         "presnensky-second"
-      ]
-    },
-    {
-      "complex": "Полянка/44",
-      "okrug": "ЦАО",
-      "district": "Якиманка",
-      "street": "Большая Полянка",
-      "house": "44",
-      "addresses": [
-        "Большая Полянка, 44"
-      ],
-      "lat": 55.73255,
-      "lng": 37.619522,
-      "insideRing": true,
-      "ringMargin": 426,
-      "ringSure": true,
-      "buildYears": [
-        2019
-      ],
-      "buildYearMin": 2019,
-      "buildYearMax": 2019,
-      "deadlineYears": [
-        2019
-      ],
-      "deadline": {
-        "year": 2019,
-        "quarter": 1
-      },
-      "finishedShare": 100,
-      "floorsMin": 6,
-      "floorsMax": 7,
-      "housesSeen": 1,
-      "lots": 47,
-      "apartmentsShare": 0,
-      "fromDeveloperShare": 0,
-      "saleTypes": [
-        "free"
-      ],
-      "decorations": [],
-      "perM2Min": 1135408,
-      "perM2Median": 1200000,
-      "perM2Max": 2109833,
-      "priceMin": 134000000,
-      "priceMax": 561300000,
-      "areaMin": 117.2,
-      "areaMax": 271,
-      "urls": [
-        "https://www.cian.ru/sale/flat/332337813/",
-        "https://www.cian.ru/sale/flat/331646026/",
-        "https://www.cian.ru/sale/flat/332682480/"
-      ],
-      "sources": [
-        "yakimanka-second"
       ]
     },
     {
@@ -4369,59 +5410,6 @@
       ],
       "sources": [
         "tagansky-second"
-      ]
-    },
-    {
-      "complex": "Клубный дом CULT (Клубный дом Культ)",
-      "okrug": "ЦАО",
-      "district": "Якиманка",
-      "street": "Ленинский",
-      "house": "2",
-      "addresses": [
-        "Ленинский, 2"
-      ],
-      "lat": 55.72961,
-      "lng": 37.611051,
-      "insideRing": true,
-      "ringMargin": 82,
-      "ringSure": false,
-      "buildYears": [
-        2025,
-        2026
-      ],
-      "buildYearMin": 2025,
-      "buildYearMax": 2026,
-      "deadlineYears": [
-        2025
-      ],
-      "deadline": {
-        "year": 2025,
-        "quarter": 1
-      },
-      "finishedShare": 100,
-      "floorsMin": 9,
-      "floorsMax": 16,
-      "housesSeen": 1,
-      "lots": 2,
-      "apartmentsShare": 100,
-      "fromDeveloperShare": 0,
-      "saleTypes": [
-        "free"
-      ],
-      "decorations": [],
-      "perM2Min": 1000000,
-      "perM2Median": 1068014.5,
-      "perM2Max": 1136029,
-      "priceMin": 30900000,
-      "priceMax": 33000000,
-      "areaMin": 27.2,
-      "areaMax": 33,
-      "urls": [
-        "https://www.cian.ru/sale/flat/331293819/",
-        "https://www.cian.ru/sale/flat/326632749/"
-      ],
-      "sources": [
-        "yakimanka-second"
       ]
     },
     {
@@ -4819,67 +5807,6 @@
       ]
     },
     {
-      "complex": "Sky House (Скай Хаус)",
-      "okrug": "ЦАО",
-      "district": "Якиманка",
-      "street": "Мытная",
-      "house": "40к3",
-      "addresses": [
-        "Мытная, 40к3",
-        "Мытная, 40к2",
-        "Мытная, 40к1",
-        "Мытная, 40к4"
-      ],
-      "lat": 55.722776,
-      "lng": 37.61468,
-      "insideRing": false,
-      "ringMargin": 654,
-      "ringSure": true,
-      "buildYears": [
-        2020,
-        2021,
-        2022
-      ],
-      "buildYearMin": 2020,
-      "buildYearMax": 2022,
-      "deadlineYears": [
-        2020,
-        2021,
-        2022
-      ],
-      "deadline": {
-        "year": 2022,
-        "quarter": 4
-      },
-      "finishedShare": 100,
-      "floorsMin": 20,
-      "floorsMax": 30,
-      "housesSeen": 4,
-      "lots": 39,
-      "apartmentsShare": 0,
-      "fromDeveloperShare": 0,
-      "saleTypes": [
-        "free",
-        "alternative"
-      ],
-      "decorations": [],
-      "perM2Min": 469453,
-      "perM2Median": 851938,
-      "perM2Max": 1035120,
-      "priceMin": 51000000,
-      "priceMax": 258750000,
-      "areaMin": 54.1,
-      "areaMax": 287.5,
-      "urls": [
-        "https://www.cian.ru/sale/flat/332350254/",
-        "https://www.cian.ru/sale/flat/326526002/",
-        "https://www.cian.ru/sale/flat/330373436/"
-      ],
-      "sources": [
-        "yakimanka-second"
-      ]
-    },
-    {
       "complex": "Sole Hill (Соле Хилл)",
       "okrug": "ЦАО",
       "district": "Мещанский",
@@ -5037,6 +5964,68 @@
       ]
     },
     {
+      "complex": "Sky House (Скай Хаус)",
+      "okrug": "ЦАО",
+      "district": "Якиманка",
+      "street": "Мытная",
+      "house": "40к3",
+      "addresses": [
+        "Мытная, 40к3",
+        "Мытная, 40к2",
+        "Мытная, 40к1",
+        "Мытная, 40к4"
+      ],
+      "lat": 55.722776,
+      "lng": 37.61468,
+      "insideRing": false,
+      "ringMargin": 654,
+      "ringSure": true,
+      "buildYears": [
+        2020,
+        2021,
+        2022
+      ],
+      "buildYearMin": 2020,
+      "buildYearMax": 2022,
+      "deadlineYears": [
+        2020,
+        2021,
+        2022
+      ],
+      "deadline": {
+        "year": 2022,
+        "quarter": 4
+      },
+      "finishedShare": 100,
+      "floorsMin": 20,
+      "floorsMax": 30,
+      "housesSeen": 4,
+      "lots": 40,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 3,
+      "saleTypes": [
+        "free",
+        "alternative"
+      ],
+      "decorations": [],
+      "perM2Min": 469453,
+      "perM2Median": 840321,
+      "perM2Max": 1035120,
+      "priceMin": 51000000,
+      "priceMax": 258750000,
+      "areaMin": 54.1,
+      "areaMax": 287.5,
+      "urls": [
+        "https://www.cian.ru/sale/flat/333352226/",
+        "https://www.cian.ru/sale/flat/332350254/",
+        "https://www.cian.ru/sale/flat/326526002/"
+      ],
+      "sources": [
+        "yakimanka-new",
+        "yakimanka-second"
+      ]
+    },
+    {
       "complex": "The Mostman (Мостман)",
       "okrug": "ЦАО",
       "district": "Таганский",
@@ -5086,6 +6075,59 @@
       ],
       "sources": [
         "tagansky-second"
+      ]
+    },
+    {
+      "complex": "Vernissage (Апартаменты премиум-класса) (Вернисаж)",
+      "okrug": "ЦАО",
+      "district": "Замоскворечье",
+      "street": "Щипок",
+      "house": "26С2",
+      "addresses": [
+        "Щипок, 26С2"
+      ],
+      "lat": 55.7235674695166,
+      "lng": 37.6351571865079,
+      "insideRing": false,
+      "ringMargin": 680,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2026
+      ],
+      "deadline": {
+        "year": 2026,
+        "quarter": "third"
+      },
+      "finishedShare": 0,
+      "floorsMin": 5,
+      "floorsMax": 8,
+      "housesSeen": 1,
+      "lots": 2,
+      "apartmentsShare": 100,
+      "fromDeveloperShare": 0,
+      "saleTypes": [
+        "dupt"
+      ],
+      "decorations": [
+        "without",
+        "fine"
+      ],
+      "perM2Min": 696124,
+      "perM2Median": 829104.5,
+      "perM2Max": 962085,
+      "priceMin": 44900000,
+      "priceMax": 203000000,
+      "areaMin": 64.5,
+      "areaMax": 211,
+      "urls": [
+        "https://www.cian.ru/sale/flat/326325222/",
+        "https://www.cian.ru/sale/flat/327766567/"
+      ],
+      "sources": [
+        "zamoskvorechye-new"
       ]
     },
     {
@@ -5584,6 +6626,62 @@
       ]
     },
     {
+      "complex": "Павелецкая от Гранель",
+      "okrug": "ЦАО",
+      "district": "Замоскворечье",
+      "street": "Дубининская",
+      "house": "28",
+      "addresses": [
+        "Дубининская, 28",
+        "Дубининская"
+      ],
+      "lat": 55.72580063991262,
+      "lng": 37.638557348202134,
+      "insideRing": false,
+      "ringMargin": 470,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2026,
+        2028
+      ],
+      "deadline": {
+        "year": 2028,
+        "quarter": "third"
+      },
+      "finishedShare": 0,
+      "floorsMin": 24,
+      "floorsMax": 28,
+      "housesSeen": 1,
+      "lots": 143,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 91,
+      "saleTypes": [
+        "dupt",
+        "free"
+      ],
+      "decorations": [
+        "without"
+      ],
+      "perM2Min": 559900,
+      "perM2Median": 697263,
+      "perM2Max": 829193,
+      "priceMin": 21965310,
+      "priceMax": 72731321,
+      "areaMin": 26.49,
+      "areaMax": 103.92,
+      "urls": [
+        "https://www.cian.ru/sale/flat/330181060/",
+        "https://www.cian.ru/sale/flat/327954754/",
+        "https://www.cian.ru/sale/flat/333341992/"
+      ],
+      "sources": [
+        "zamoskvorechye-new"
+      ]
+    },
+    {
       "complex": "Стремянный 2",
       "okrug": "ЦАО",
       "district": "Замоскворечье",
@@ -5643,13 +6741,13 @@
       "street": "Летниковская",
       "house": "6к2",
       "addresses": [
-        "Летниковская, 6к2",
-        "Летниковская, 6к1"
+        "Летниковская, 6к1",
+        "Летниковская, 6к2"
       ],
-      "lat": 55.726801,
-      "lng": 37.643597,
+      "lat": 55.7275539261162,
+      "lng": 37.6426824943724,
       "insideRing": false,
-      "ringMargin": 513,
+      "ringMargin": 414,
       "ringSure": true,
       "buildYears": [
         2025,
@@ -5658,36 +6756,43 @@
       "buildYearMin": 2025,
       "buildYearMax": 2026,
       "deadlineYears": [
+        2025,
         2026
       ],
       "deadline": {
         "year": 2026,
-        "quarter": 2
+        "quarter": "second"
       },
       "finishedShare": 100,
       "floorsMin": 6,
       "floorsMax": 25,
       "housesSeen": 2,
-      "lots": 54,
-      "apartmentsShare": 63,
+      "lots": 79,
+      "apartmentsShare": 62,
       "fromDeveloperShare": 0,
       "saleTypes": [
+        "dupt",
+        "pdkp",
         "free"
       ],
-      "decorations": [],
+      "decorations": [
+        "without",
+        "rough"
+      ],
       "perM2Min": 510239,
-      "perM2Median": 667596,
+      "perM2Median": 674847,
       "perM2Max": 998571,
-      "priceMin": 16000000,
+      "priceMin": 15000000,
       "priceMax": 82000000,
       "areaMin": 22.6,
       "areaMax": 113.8,
       "urls": [
-        "https://www.cian.ru/sale/flat/333408694/",
-        "https://www.cian.ru/sale/flat/329631270/",
-        "https://www.cian.ru/sale/flat/333298586/"
+        "https://www.cian.ru/sale/flat/332040595/",
+        "https://www.cian.ru/sale/flat/332004051/",
+        "https://www.cian.ru/sale/flat/317879587/"
       ],
       "sources": [
+        "zamoskvorechye-new",
         "zamoskvorechye-second"
       ]
     },
@@ -5753,56 +6858,54 @@
       ]
     },
     {
-      "complex": "Резиденции Замоскворечье",
+      "complex": "MOS YARD Дубининская (МОС ЯРД Дубининская)",
       "okrug": "ЦАО",
       "district": "Замоскворечье",
-      "street": "Большой Строченовский",
-      "house": "9",
+      "street": "Дубининская",
+      "house": "17",
       "addresses": [
-        "Большой Строченовский, 9"
+        "Дубининская, 17"
       ],
-      "lat": 55.729047,
-      "lng": 37.630697,
+      "lat": 55.727754,
+      "lng": 37.63853,
       "insideRing": false,
-      "ringMargin": 32,
+      "ringMargin": 255,
       "ringSure": false,
-      "buildYears": [
-        2022
-      ],
-      "buildYearMin": 2022,
-      "buildYearMax": 2022,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
       "deadlineYears": [
-        2022
+        2027
       ],
       "deadline": {
-        "year": 2022,
-        "quarter": 2
+        "year": 2027,
+        "quarter": "second"
       },
       "finishedShare": 100,
-      "floorsMin": 14,
-      "floorsMax": 14,
+      "floorsMin": 28,
+      "floorsMax": 28,
       "housesSeen": 1,
-      "lots": 18,
-      "apartmentsShare": 100,
+      "lots": 1,
+      "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
-        "free"
+        "dupt"
       ],
-      "decorations": [],
-      "perM2Min": 445000,
-      "perM2Median": 604739,
-      "perM2Max": 680000,
-      "priceMin": 18632000,
-      "priceMax": 98554500,
-      "areaMin": 27.4,
-      "areaMax": 191.7,
+      "decorations": [
+        "without"
+      ],
+      "perM2Min": 632634,
+      "perM2Median": 632634,
+      "perM2Max": 632634,
+      "priceMin": 54900000,
+      "priceMax": 54900000,
+      "areaMin": 86.78,
+      "areaMax": 86.78,
       "urls": [
-        "https://www.cian.ru/sale/flat/329999932/",
-        "https://www.cian.ru/sale/flat/331165206/",
-        "https://www.cian.ru/sale/flat/332513018/"
+        "https://www.cian.ru/sale/flat/332741954/"
       ],
       "sources": [
-        "zamoskvorechye-second"
+        "zamoskvorechye-new"
       ]
     },
     {
@@ -6033,6 +7136,62 @@
       ],
       "sources": [
         "basmanny-second"
+      ]
+    },
+    {
+      "complex": "Резиденции Замоскворечье",
+      "okrug": "ЦАО",
+      "district": "Замоскворечье",
+      "street": "Большой Строченовский",
+      "house": "9",
+      "addresses": [
+        "Большой Строченовский, 9"
+      ],
+      "lat": 55.7289,
+      "lng": 37.63173,
+      "insideRing": false,
+      "ringMargin": 59,
+      "ringSure": false,
+      "buildYears": [
+        2022
+      ],
+      "buildYearMin": 2022,
+      "buildYearMax": 2022,
+      "deadlineYears": [
+        2022
+      ],
+      "deadline": {
+        "year": 2022,
+        "quarter": 2
+      },
+      "finishedShare": 100,
+      "floorsMin": 14,
+      "floorsMax": 14,
+      "housesSeen": 1,
+      "lots": 22,
+      "apartmentsShare": 100,
+      "fromDeveloperShare": 18,
+      "saleTypes": [
+        "free"
+      ],
+      "decorations": [
+        "without"
+      ],
+      "perM2Min": 445000,
+      "perM2Median": 562324,
+      "perM2Max": 680000,
+      "priceMin": 18632000,
+      "priceMax": 98554500,
+      "areaMin": 27.4,
+      "areaMax": 191.7,
+      "urls": [
+        "https://www.cian.ru/sale/flat/291063895/",
+        "https://www.cian.ru/sale/flat/291063894/",
+        "https://www.cian.ru/sale/flat/291063899/"
+      ],
+      "sources": [
+        "zamoskvorechye-new",
+        "zamoskvorechye-second"
       ]
     },
     {
