@@ -1,7 +1,7 @@
 {
   "fetched": "2026-09-07",
-  "lots": 3463,
-  "withComplex": 3357,
+  "lots": 5488,
+  "withComplex": 5381,
   "complexes": [
     {
       "complex": "БРЮСОВ",
@@ -3691,11 +3691,76 @@
       ]
     },
     {
+      "complex": "Элитный квартал Тишинский бульвар",
+      "okrug": "ЦАО",
+      "district": "Пресненский",
+      "street": "Электрический",
+      "house": "к4",
+      "addresses": [
+        "к4",
+        "к3",
+        "Электрический",
+        "к6",
+        "к5"
+      ],
+      "lat": 55.7721200562894,
+      "lng": 37.5746372169183,
+      "insideRing": false,
+      "ringMargin": 1133,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2027,
+        2028
+      ],
+      "deadline": {
+        "year": 2028,
+        "quarter": "second"
+      },
+      "finishedShare": 0,
+      "floorsMin": 6,
+      "floorsMax": 24,
+      "housesSeen": 4,
+      "lots": 205,
+      "declared": 229,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 96,
+      "saleTypes": [
+        "fz214",
+        "dupt"
+      ],
+      "decorations": [
+        "without"
+      ],
+      "perM2Min": 1239934,
+      "perM2Median": 1697069,
+      "perM2Max": 3044646,
+      "priceMin": 69170000,
+      "priceMax": 664010000,
+      "areaMin": 45,
+      "areaMax": 416,
+      "urls": [
+        "https://www.cian.ru/sale/flat/333476988/",
+        "https://www.cian.ru/sale/flat/328885322/",
+        "https://www.cian.ru/sale/flat/333379925/"
+      ],
+      "sources": [
+        "zhk-4714572",
+        "band04",
+        "band05",
+        "band06",
+        "band07",
+        "band08"
+      ]
+    },
+    {
       "complex": "Lucky (Лаки)",
       "okrug": "ЦАО",
       "district": "Пресненский",
       "street": "Костикова",
-      "house": "4к2",
+      "house": "4к1",
       "addresses": [
         "Костикова, 4к2",
         "Костикова, 4к1",
@@ -3725,30 +3790,33 @@
       "finishedShare": 100,
       "floorsMin": 15,
       "floorsMax": 21,
-      "housesSeen": 8,
-      "lots": 23,
+      "housesSeen": 9,
+      "lots": 28,
       "declared": null,
       "apartmentsShare": 0,
-      "fromDeveloperShare": 0,
+      "fromDeveloperShare": 14,
       "saleTypes": [
         "free",
-        "alternative"
+        "alternative",
+        "dupt"
       ],
       "decorations": [],
       "perM2Min": 1296875,
-      "perM2Median": 1694915,
+      "perM2Median": 1680791,
       "perM2Max": 2352941,
       "priceMin": 69000000,
-      "priceMax": 499000000,
+      "priceMax": 651600000,
       "areaMin": 44.8,
-      "areaMax": 253,
+      "areaMax": 434.4,
       "urls": [
         "https://www.cian.ru/sale/flat/333512309/",
         "https://www.cian.ru/sale/flat/333542367/",
         "https://www.cian.ru/sale/flat/328512831/"
       ],
       "sources": [
-        "presnensky-second"
+        "presnensky-second",
+        "band08",
+        "band09"
       ]
     },
     {
@@ -3804,66 +3872,6 @@
       ],
       "sources": [
         "tagansky-second"
-      ]
-    },
-    {
-      "complex": "Элитный квартал Тишинский бульвар",
-      "okrug": "ЦАО",
-      "district": "Пресненский",
-      "street": "Электрический",
-      "house": "к4",
-      "addresses": [
-        "к4",
-        "к3",
-        "Электрический",
-        "к6",
-        "к5"
-      ],
-      "lat": 55.7721200562894,
-      "lng": 37.5746372169183,
-      "insideRing": false,
-      "ringMargin": 1133,
-      "ringSure": true,
-      "buildYears": [],
-      "buildYearMin": null,
-      "buildYearMax": null,
-      "deadlineYears": [
-        2027,
-        2028
-      ],
-      "deadline": {
-        "year": 2028,
-        "quarter": "second"
-      },
-      "finishedShare": 0,
-      "floorsMin": 6,
-      "floorsMax": 24,
-      "housesSeen": 4,
-      "lots": 140,
-      "declared": 229,
-      "apartmentsShare": 0,
-      "fromDeveloperShare": 94,
-      "saleTypes": [
-        "fz214",
-        "dupt"
-      ],
-      "decorations": [
-        "without"
-      ],
-      "perM2Min": 1239934,
-      "perM2Median": 1646099,
-      "perM2Max": 3044646,
-      "priceMin": 69170000,
-      "priceMax": 664010000,
-      "areaMin": 45,
-      "areaMax": 416,
-      "urls": [
-        "https://www.cian.ru/sale/flat/333476988/",
-        "https://www.cian.ru/sale/flat/328885322/",
-        "https://www.cian.ru/sale/flat/333379925/"
-      ],
-      "sources": [
-        "zhk-4714572"
       ]
     },
     {
@@ -4138,6 +4146,78 @@
       ],
       "sources": [
         "tverskoy-new"
+      ]
+    },
+    {
+      "complex": "Квартал Life Time (Лайф Тайм)",
+      "okrug": "ЦАО",
+      "district": "Пресненский",
+      "street": "Сергея Макеева",
+      "house": "11",
+      "addresses": [
+        "Сергея Макеева, 11",
+        "Сергея Макеева, 11с1",
+        "Сергея Макеева",
+        "Сергея Макеева, вл11/9с1-10",
+        "2-я Черногрязская"
+      ],
+      "lat": 55.762728,
+      "lng": 37.549615,
+      "insideRing": false,
+      "ringMargin": 1954,
+      "ringSure": true,
+      "buildYears": [
+        1905,
+        2026
+      ],
+      "buildYearMin": 1905,
+      "buildYearMax": 2026,
+      "deadlineYears": [
+        2026
+      ],
+      "deadline": {
+        "year": 2026,
+        "quarter": 3
+      },
+      "finishedShare": 99,
+      "floorsMin": 10,
+      "floorsMax": 25,
+      "housesSeen": 3,
+      "lots": 165,
+      "declared": 232,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 90,
+      "saleTypes": [
+        "free",
+        "fz214",
+        "dupt"
+      ],
+      "decorations": [
+        "without"
+      ],
+      "perM2Min": 1019417,
+      "perM2Median": 1585417,
+      "perM2Max": 2290000,
+      "priceMin": 56900000,
+      "priceMax": 999860000,
+      "areaMin": 55,
+      "areaMax": 510,
+      "urls": [
+        "https://www.cian.ru/sale/flat/333570956/",
+        "https://www.cian.ru/sale/flat/333010933/",
+        "https://www.cian.ru/sale/flat/332906795/"
+      ],
+      "sources": [
+        "presnensky-second",
+        "zhk-3987004",
+        "band02",
+        "band03",
+        "band04",
+        "band05",
+        "band06",
+        "band07",
+        "band08",
+        "band09"
       ]
     },
     {
@@ -4853,69 +4933,6 @@
       ]
     },
     {
-      "complex": "Квартал Life Time (Лайф Тайм)",
-      "okrug": "ЦАО",
-      "district": "Пресненский",
-      "street": "Сергея Макеева",
-      "house": "11",
-      "addresses": [
-        "Сергея Макеева, 11",
-        "Сергея Макеева, 11с1",
-        "Сергея Макеева",
-        "Сергея Макеева, вл11/9с1-10"
-      ],
-      "lat": 55.762728,
-      "lng": 37.549615,
-      "insideRing": false,
-      "ringMargin": 1954,
-      "ringSure": true,
-      "buildYears": [
-        1905,
-        2026
-      ],
-      "buildYearMin": 1905,
-      "buildYearMax": 2026,
-      "deadlineYears": [
-        2026
-      ],
-      "deadline": {
-        "year": 2026,
-        "quarter": 3
-      },
-      "finishedShare": 100,
-      "floorsMin": 10,
-      "floorsMax": 23,
-      "housesSeen": 3,
-      "lots": 28,
-      "declared": 232,
-      "apartmentsShare": 0,
-      "fromDeveloperShare": 57,
-      "saleTypes": [
-        "free",
-        "fz214",
-        "dupt"
-      ],
-      "decorations": [
-        "without"
-      ],
-      "perM2Min": 1019417,
-      "perM2Median": 1335807.5,
-      "perM2Max": 2290000,
-      "priceMin": 56900000,
-      "priceMax": 999860000,
-      "areaMin": 55.5,
-      "areaMax": 510,
-      "urls": [
-        "https://www.cian.ru/sale/flat/333570956/",
-        "https://www.cian.ru/sale/flat/333010933/",
-        "https://www.cian.ru/sale/flat/332906795/"
-      ],
-      "sources": [
-        "presnensky-second",
-        "zhk-3987004"
-      ]
-    },
-    {
       "complex": "Титул на Якиманке",
       "okrug": "ЦАО",
       "district": "Якиманка",
@@ -4963,63 +4980,6 @@
       ],
       "sources": [
         "yakimanka-second"
-      ]
-    },
-    {
-      "complex": "Capital Towers (Капитал Тауэрс)",
-      "okrug": "ЦАО",
-      "district": "Пресненский",
-      "street": "Краснопресненская",
-      "house": "14Ак3",
-      "addresses": [
-        "Краснопресненская, 14Ак3",
-        "Краснопресненская, 14Ак1",
-        "Краснопресненская, 14Ак2"
-      ],
-      "lat": 55.75204,
-      "lng": 37.548465,
-      "insideRing": false,
-      "ringMargin": 2094,
-      "ringSure": true,
-      "buildYears": [
-        2022,
-        2023
-      ],
-      "buildYearMin": 2022,
-      "buildYearMax": 2023,
-      "deadlineYears": [
-        2023
-      ],
-      "deadline": {
-        "year": 2023,
-        "quarter": 2
-      },
-      "finishedShare": 100,
-      "floorsMin": 51,
-      "floorsMax": 72,
-      "housesSeen": 3,
-      "lots": 76,
-      "declared": null,
-      "apartmentsShare": 0,
-      "fromDeveloperShare": 0,
-      "saleTypes": [
-        "free"
-      ],
-      "decorations": [],
-      "perM2Min": 428266,
-      "perM2Median": 1269231,
-      "perM2Max": 2000000,
-      "priceMin": 44330400,
-      "priceMax": 339200000,
-      "areaMin": 28.2,
-      "areaMax": 212.5,
-      "urls": [
-        "https://www.cian.ru/sale/flat/332938835/",
-        "https://www.cian.ru/sale/flat/328476702/",
-        "https://www.cian.ru/sale/flat/331152583/"
-      ],
-      "sources": [
-        "presnensky-second"
       ]
     },
     {
@@ -5074,6 +5034,75 @@
       ],
       "sources": [
         "zamoskvorechye-second"
+      ]
+    },
+    {
+      "complex": "Capital Towers (Капитал Тауэрс)",
+      "okrug": "ЦАО",
+      "district": "Пресненский",
+      "street": "Краснопресненская",
+      "house": "14Ак3",
+      "addresses": [
+        "Краснопресненская, 14Ак3",
+        "Краснопресненская, 14Ак1",
+        "Краснопресненская, 14Ак2"
+      ],
+      "lat": 55.75204,
+      "lng": 37.548465,
+      "insideRing": false,
+      "ringMargin": 2094,
+      "ringSure": true,
+      "buildYears": [
+        2022,
+        2023
+      ],
+      "buildYearMin": 2022,
+      "buildYearMax": 2023,
+      "deadlineYears": [
+        2023
+      ],
+      "deadline": {
+        "year": 2023,
+        "quarter": 2
+      },
+      "finishedShare": 100,
+      "floorsMin": 51,
+      "floorsMax": 72,
+      "housesSeen": 3,
+      "lots": 110,
+      "declared": null,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 31,
+      "saleTypes": [
+        "free",
+        "dupt"
+      ],
+      "decorations": [
+        "fine",
+        "without"
+      ],
+      "perM2Min": 428266,
+      "perM2Median": 1267615.5,
+      "perM2Max": 2500000,
+      "priceMin": 44330400,
+      "priceMax": 1734250000,
+      "areaMin": 28.2,
+      "areaMax": 693.7,
+      "urls": [
+        "https://www.cian.ru/sale/flat/332938835/",
+        "https://www.cian.ru/sale/flat/328476702/",
+        "https://www.cian.ru/sale/flat/331152583/"
+      ],
+      "sources": [
+        "presnensky-second",
+        "band02",
+        "band03",
+        "band04",
+        "band05",
+        "band06",
+        "band07",
+        "band08",
+        "band09"
       ]
     },
     {
@@ -5244,6 +5273,68 @@
       ]
     },
     {
+      "complex": "АУРУС Резиденции",
+      "okrug": "ЦАО",
+      "district": "Пресненский",
+      "street": null,
+      "house": null,
+      "addresses": [],
+      "lat": 55.7531593314059,
+      "lng": 37.5343257053471,
+      "insideRing": false,
+      "ringMargin": 2964,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2031
+      ],
+      "deadline": {
+        "year": 2031,
+        "quarter": "fourth"
+      },
+      "finishedShare": 0,
+      "floorsMin": 82,
+      "floorsMax": 101,
+      "housesSeen": 0,
+      "lots": 203,
+      "declared": null,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 100,
+      "saleTypes": [
+        "fz214",
+        "dupt"
+      ],
+      "decorations": [
+        "without",
+        "fine"
+      ],
+      "perM2Min": 892920,
+      "perM2Median": 1237935,
+      "perM2Max": 1880116,
+      "priceMin": 39739000,
+      "priceMax": 550310000,
+      "areaMin": 31.7,
+      "areaMax": 292.7,
+      "urls": [
+        "https://www.cian.ru/sale/flat/332535357/",
+        "https://www.cian.ru/sale/flat/333496262/",
+        "https://www.cian.ru/sale/flat/333496253/"
+      ],
+      "sources": [
+        "band00",
+        "band01",
+        "band02",
+        "band03",
+        "band04",
+        "band05",
+        "band06",
+        "band07",
+        "band09"
+      ]
+    },
+    {
       "complex": "Титул на Серебрянической",
       "okrug": "ЦАО",
       "district": "Таганский",
@@ -5359,6 +5450,67 @@
       ]
     },
     {
+      "complex": "Оне",
+      "okrug": "ЦАО",
+      "district": "Пресненский",
+      "street": "1-й Красногвардейский",
+      "house": "13",
+      "addresses": [
+        "1-й Красногвардейский, 13"
+      ],
+      "lat": 55.7516098283246,
+      "lng": 37.5401708703906,
+      "insideRing": false,
+      "ringMargin": 2616,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2027,
+        2030,
+        2031
+      ],
+      "deadline": {
+        "year": 2031,
+        "quarter": 2
+      },
+      "finishedShare": 0,
+      "floorsMin": 90,
+      "floorsMax": 95,
+      "housesSeen": 1,
+      "lots": 69,
+      "declared": null,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 88,
+      "saleTypes": [
+        "fz214",
+        "dupt"
+      ],
+      "decorations": [
+        "without",
+        "rough"
+      ],
+      "perM2Min": 928571,
+      "perM2Median": 1207700,
+      "perM2Max": 1602900,
+      "priceMin": 42000000,
+      "priceMax": 127266720,
+      "areaMin": 32.6,
+      "areaMax": 102.9,
+      "urls": [
+        "https://www.cian.ru/sale/flat/328476273/",
+        "https://www.cian.ru/sale/flat/331885146/",
+        "https://www.cian.ru/sale/flat/331885145/"
+      ],
+      "sources": [
+        "band01",
+        "band02",
+        "band03",
+        "band04"
+      ]
+    },
+    {
       "complex": "Звёзды Арбата",
       "okrug": "ЦАО",
       "district": "Арбат",
@@ -5444,14 +5596,17 @@
       "floorsMin": 20,
       "floorsMax": 25,
       "housesSeen": 3,
-      "lots": 61,
+      "lots": 74,
       "declared": null,
       "apartmentsShare": 97,
-      "fromDeveloperShare": 0,
+      "fromDeveloperShare": 15,
       "saleTypes": [
-        "free"
+        "free",
+        "dupt"
       ],
-      "decorations": [],
+      "decorations": [
+        "without"
+      ],
       "perM2Min": 850000,
       "perM2Median": 1200000,
       "perM2Max": 2756939,
@@ -5465,7 +5620,14 @@
         "https://www.cian.ru/sale/flat/332502059/"
       ],
       "sources": [
-        "presnensky-second"
+        "presnensky-second",
+        "band03",
+        "band04",
+        "band05",
+        "band06",
+        "band07",
+        "band08",
+        "band09"
       ]
     },
     {
@@ -5531,6 +5693,143 @@
       ],
       "sources": [
         "presnensky-second"
+      ]
+    },
+    {
+      "complex": "Начало",
+      "okrug": "ЦАО",
+      "district": "Пресненский",
+      "street": null,
+      "house": null,
+      "addresses": [],
+      "lat": 55.7599161004126,
+      "lng": 37.5476984120223,
+      "insideRing": false,
+      "ringMargin": 2063,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2029,
+        2030
+      ],
+      "deadline": {
+        "year": 2030,
+        "quarter": "first"
+      },
+      "finishedShare": 0,
+      "floorsMin": 11,
+      "floorsMax": 48,
+      "housesSeen": 0,
+      "lots": 217,
+      "declared": 231,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 100,
+      "saleTypes": [
+        "fz214"
+      ],
+      "decorations": [
+        "without"
+      ],
+      "perM2Min": 925200,
+      "perM2Median": 1172000,
+      "perM2Max": 1884000,
+      "priceMin": 38794976,
+      "priceMax": 406296000,
+      "areaMin": 35.9,
+      "areaMax": 243,
+      "urls": [
+        "https://www.cian.ru/sale/flat/332534047/",
+        "https://www.cian.ru/sale/flat/332534059/",
+        "https://www.cian.ru/sale/flat/332534070/"
+      ],
+      "sources": [
+        "zhk-5726921",
+        "band01",
+        "band02",
+        "band03",
+        "band04",
+        "band05",
+        "band06",
+        "band07",
+        "band08"
+      ]
+    },
+    {
+      "complex": "Репаблик",
+      "okrug": "ЦАО",
+      "district": "Пресненский",
+      "street": "Пресненский Вал",
+      "house": "27к5",
+      "addresses": [
+        "Пресненский Вал, 27С1",
+        "к2.3",
+        "к2.1",
+        "Пресненский Вал, 27к3",
+        "к2.2",
+        "Пресненский Вал, 27к5"
+      ],
+      "lat": 55.772608,
+      "lng": 37.569081,
+      "insideRing": false,
+      "ringMargin": 1427,
+      "ringSure": true,
+      "buildYears": [
+        2025,
+        2026
+      ],
+      "buildYearMin": 2025,
+      "buildYearMax": 2026,
+      "deadlineYears": [
+        2025,
+        2026,
+        2027
+      ],
+      "deadline": {
+        "year": 2027,
+        "quarter": "fourth"
+      },
+      "finishedShare": 38,
+      "floorsMin": 18,
+      "floorsMax": 34,
+      "housesSeen": 7,
+      "lots": 232,
+      "declared": null,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 70,
+      "saleTypes": [
+        "free",
+        "fz214",
+        "dupt"
+      ],
+      "decorations": [
+        "without",
+        "fine",
+        "rough"
+      ],
+      "perM2Min": 633319,
+      "perM2Median": 1124794,
+      "perM2Max": 1774262,
+      "priceMin": 27990000,
+      "priceMax": 313600000,
+      "areaMin": 26.85,
+      "areaMax": 224,
+      "urls": [
+        "https://www.cian.ru/sale/flat/333504607/",
+        "https://www.cian.ru/sale/flat/333574048/",
+        "https://www.cian.ru/sale/flat/333307938/"
+      ],
+      "sources": [
+        "presnensky-second",
+        "band00",
+        "band01",
+        "band02",
+        "band03",
+        "band04",
+        "band05",
+        "band07",
+        "band08"
       ]
     },
     {
@@ -5803,59 +6102,6 @@
       ]
     },
     {
-      "complex": "Начало",
-      "okrug": "ЦАО",
-      "district": "Пресненский",
-      "street": null,
-      "house": null,
-      "addresses": [],
-      "lat": 55.7599161004126,
-      "lng": 37.5476984120223,
-      "insideRing": false,
-      "ringMargin": 2063,
-      "ringSure": true,
-      "buildYears": [],
-      "buildYearMin": null,
-      "buildYearMax": null,
-      "deadlineYears": [
-        2029,
-        2030
-      ],
-      "deadline": {
-        "year": 2030,
-        "quarter": "first"
-      },
-      "finishedShare": 0,
-      "floorsMin": 11,
-      "floorsMax": 48,
-      "housesSeen": 0,
-      "lots": 28,
-      "declared": 231,
-      "apartmentsShare": 0,
-      "fromDeveloperShare": 100,
-      "saleTypes": [
-        "fz214"
-      ],
-      "decorations": [
-        "without"
-      ],
-      "perM2Min": 925200,
-      "perM2Median": 1050200,
-      "perM2Max": 1352000,
-      "priceMin": 38794976,
-      "priceMax": 322256880,
-      "areaMin": 35.9,
-      "areaMax": 243,
-      "urls": [
-        "https://www.cian.ru/sale/flat/332534047/",
-        "https://www.cian.ru/sale/flat/332534059/",
-        "https://www.cian.ru/sale/flat/332534070/"
-      ],
-      "sources": [
-        "zhk-5726921"
-      ]
-    },
-    {
       "complex": "Дом Дау",
       "okrug": "ЦАО",
       "district": "Пресненский",
@@ -5884,10 +6130,10 @@
       "floorsMin": 85,
       "floorsMax": 91,
       "housesSeen": 2,
-      "lots": 84,
+      "lots": 265,
       "declared": 295,
       "apartmentsShare": 0,
-      "fromDeveloperShare": 87,
+      "fromDeveloperShare": 96,
       "saleTypes": [
         "fz214",
         "dupt"
@@ -5896,7 +6142,7 @@
         "without"
       ],
       "perM2Min": 807900,
-      "perM2Median": 999944,
+      "perM2Median": 1032987,
       "perM2Max": 1995800,
       "priceMin": 30000000,
       "priceMax": 497951325,
@@ -5908,7 +6154,13 @@
         "https://www.cian.ru/sale/flat/333006655/"
       ],
       "sources": [
-        "zhk-4296442"
+        "zhk-4296442",
+        "band01",
+        "band02",
+        "band03",
+        "band04",
+        "band05",
+        "band07"
       ]
     },
     {
@@ -6028,41 +6280,38 @@
       ]
     },
     {
-      "complex": "Репаблик",
-      "okrug": "ЦАО",
-      "district": "Пресненский",
-      "street": "Пресненский Вал",
-      "house": "к2.1",
+      "complex": "Прайм Тайм",
+      "okrug": "САО",
+      "district": "Хорошевский",
+      "street": "Викторенко",
+      "house": "11",
       "addresses": [
-        "Пресненский Вал, 27С1",
-        "к2.3",
-        "к2.1",
-        "Пресненский Вал, 27к3",
-        "к2.2"
+        "Викторенко, 9",
+        "Викторенко, 11"
       ],
-      "lat": 55.772608,
-      "lng": 37.569081,
+      "lat": 55.795778,
+      "lng": 37.52775,
       "insideRing": false,
-      "ringMargin": 1427,
+      "ringMargin": 5078,
       "ringSure": true,
       "buildYears": [
-        2025,
-        2026
+        2018
       ],
-      "buildYearMin": 2025,
-      "buildYearMax": 2026,
+      "buildYearMin": 2018,
+      "buildYearMax": 2018,
       "deadlineYears": [
-        2026
+        2018,
+        2021
       ],
       "deadline": {
-        "year": 2026,
-        "quarter": 3
+        "year": 2021,
+        "quarter": 4
       },
       "finishedShare": 100,
-      "floorsMin": 26,
-      "floorsMax": 34,
-      "housesSeen": 5,
-      "lots": 18,
+      "floorsMin": 15,
+      "floorsMax": 18,
+      "housesSeen": 2,
+      "lots": 4,
       "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
@@ -6070,20 +6319,20 @@
         "free"
       ],
       "decorations": [],
-      "perM2Min": 716667,
-      "perM2Median": 943141.5,
-      "perM2Max": 1570228,
-      "priceMin": 27990000,
-      "priceMax": 199999999,
-      "areaMin": 27,
-      "areaMax": 140.9,
+      "perM2Min": 559297,
+      "perM2Median": 958549,
+      "perM2Max": 1160365,
+      "priceMin": 38200000,
+      "priceMax": 370000000,
+      "areaMin": 68.3,
+      "areaMax": 386,
       "urls": [
-        "https://www.cian.ru/sale/flat/333504607/",
-        "https://www.cian.ru/sale/flat/333574048/",
-        "https://www.cian.ru/sale/flat/333307938/"
+        "https://www.cian.ru/sale/flat/333314067/",
+        "https://www.cian.ru/sale/flat/333303989/",
+        "https://www.cian.ru/sale/flat/326728138/"
       ],
       "sources": [
-        "presnensky-second"
+        "khoroshevsky-second"
       ]
     },
     {
@@ -6233,28 +6482,114 @@
       "floorsMin": 63,
       "floorsMax": 79,
       "housesSeen": 2,
-      "lots": 113,
+      "lots": 123,
       "declared": null,
       "apartmentsShare": 98,
-      "fromDeveloperShare": 0,
+      "fromDeveloperShare": 8,
       "saleTypes": [
         "free"
       ],
-      "decorations": [],
+      "decorations": [
+        "fine",
+        "without"
+      ],
       "perM2Min": 615385,
-      "perM2Median": 854530,
-      "perM2Max": 1968504,
+      "perM2Median": 880626,
+      "perM2Max": 2171244,
       "priceMin": 30500000,
-      "priceMax": 500000000,
+      "priceMax": 1105000000,
       "areaMin": 39.4,
-      "areaMax": 254,
+      "areaMax": 764.6,
       "urls": [
         "https://www.cian.ru/sale/flat/332591457/",
         "https://www.cian.ru/sale/flat/332967004/",
         "https://www.cian.ru/sale/flat/332295842/"
       ],
       "sources": [
-        "presnensky-second"
+        "presnensky-second",
+        "band01",
+        "band02",
+        "band04",
+        "band07",
+        "band08",
+        "band09"
+      ]
+    },
+    {
+      "complex": "Прайм Парк (Prime Park)",
+      "okrug": "САО",
+      "district": "Хорошевский",
+      "street": "Ленинградский",
+      "house": "37/8",
+      "addresses": [
+        "Ленинградский, 37/2",
+        "Ленинградский, 37/9",
+        "Ленинградский, 37/8",
+        "Ленинградский, 37/1",
+        "Ленинградский, 37/5",
+        "Ленинградский, 37/4"
+      ],
+      "lat": 55.792513,
+      "lng": 37.542689,
+      "insideRing": false,
+      "ringMargin": 4142,
+      "ringSure": true,
+      "buildYears": [
+        2020,
+        2021,
+        2022,
+        2023,
+        2024,
+        2025,
+        2026
+      ],
+      "buildYearMin": 2020,
+      "buildYearMax": 2026,
+      "deadlineYears": [
+        2021,
+        2022,
+        2023,
+        2025,
+        2026,
+        2027
+      ],
+      "deadline": {
+        "year": 2027,
+        "quarter": "fourth"
+      },
+      "finishedShare": 50,
+      "floorsMin": 29,
+      "floorsMax": 44,
+      "housesSeen": 10,
+      "lots": 253,
+      "declared": null,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 57,
+      "saleTypes": [
+        "free",
+        "fz214",
+        "dupt"
+      ],
+      "decorations": [
+        "fine",
+        "rough",
+        "without"
+      ],
+      "perM2Min": 674393,
+      "perM2Median": 873547,
+      "perM2Max": 1600000,
+      "priceMin": 37172515,
+      "priceMax": 919950000,
+      "areaMin": 40.5,
+      "areaMax": 613.4,
+      "urls": [
+        "https://www.cian.ru/sale/flat/330544811/",
+        "https://www.cian.ru/sale/flat/331736372/",
+        "https://www.cian.ru/sale/flat/329374743/"
+      ],
+      "sources": [
+        "khoroshevsky-new",
+        "khoroshevsky-second"
       ]
     },
     {
@@ -6588,6 +6923,62 @@
       ]
     },
     {
+      "complex": "МФК ОКО",
+      "okrug": "ЦАО",
+      "district": "Пресненский",
+      "street": "1-й Красногвардейский",
+      "house": "21с2",
+      "addresses": [
+        "1-й Красногвардейский, 21с2"
+      ],
+      "lat": 55.7496709812864,
+      "lng": 37.5340000330648,
+      "insideRing": false,
+      "ringMargin": 3021,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2016
+      ],
+      "deadline": {
+        "year": 2016,
+        "quarter": "first"
+      },
+      "finishedShare": 100,
+      "floorsMin": 85,
+      "floorsMax": 85,
+      "housesSeen": 1,
+      "lots": 21,
+      "declared": null,
+      "apartmentsShare": 100,
+      "fromDeveloperShare": 100,
+      "saleTypes": [
+        "free"
+      ],
+      "decorations": [],
+      "perM2Min": 719267,
+      "perM2Median": 807585,
+      "perM2Max": 863779,
+      "priceMin": 64763332,
+      "priceMax": 252309777,
+      "areaMin": 80.6,
+      "areaMax": 292.1,
+      "urls": [
+        "https://www.cian.ru/sale/flat/328293831/",
+        "https://www.cian.ru/sale/flat/328293865/",
+        "https://www.cian.ru/sale/flat/328293856/"
+      ],
+      "sources": [
+        "band02",
+        "band04",
+        "band05",
+        "band06",
+        "band07"
+      ]
+    },
+    {
       "complex": "Bauman House (Бауман Хаус)",
       "okrug": "ЦАО",
       "district": "Басманный",
@@ -6816,6 +7207,64 @@
       ]
     },
     {
+      "complex": "Династия",
+      "okrug": "САО",
+      "district": "Хорошевский",
+      "street": "Хорошевское",
+      "house": "25Ак3",
+      "addresses": [
+        "Хорошевское, 25Ак2",
+        "Хорошевское, 25Ак1",
+        "Хорошевское, 25Ак3"
+      ],
+      "lat": 55.775307,
+      "lng": 37.527238,
+      "insideRing": false,
+      "ringMargin": 3718,
+      "ringSure": true,
+      "buildYears": [
+        2020,
+        2023
+      ],
+      "buildYearMin": 2020,
+      "buildYearMax": 2023,
+      "deadlineYears": [
+        2020,
+        2023
+      ],
+      "deadline": {
+        "year": 2023,
+        "quarter": 1
+      },
+      "finishedShare": 100,
+      "floorsMin": 21,
+      "floorsMax": 26,
+      "housesSeen": 3,
+      "lots": 23,
+      "declared": null,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 0,
+      "saleTypes": [
+        "free"
+      ],
+      "decorations": [],
+      "perM2Min": 538462,
+      "perM2Median": 769231,
+      "perM2Max": 1408451,
+      "priceMin": 30000000,
+      "priceMax": 140000000,
+      "areaMin": 37,
+      "areaMax": 138,
+      "urls": [
+        "https://www.cian.ru/sale/flat/333644268/",
+        "https://www.cian.ru/sale/flat/333583896/",
+        "https://www.cian.ru/sale/flat/333575251/"
+      ],
+      "sources": [
+        "khoroshevsky-second"
+      ]
+    },
+    {
       "complex": "RED7 (РЕД7)",
       "okrug": "ЦАО",
       "district": "Красносельский",
@@ -6872,6 +7321,112 @@
       "sources": [
         "krasnoselsky-new",
         "krasnoselsky-second"
+      ]
+    },
+    {
+      "complex": "Сезар Будущее",
+      "okrug": "САО",
+      "district": "Хорошевский",
+      "street": "2-й Хорошевский",
+      "house": "7С3",
+      "addresses": [
+        "2-й Хорошевский, 7С3"
+      ],
+      "lat": 55.77068579347068,
+      "lng": 37.53307748346269,
+      "insideRing": false,
+      "ringMargin": 3178,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2029
+      ],
+      "deadline": {
+        "year": 2029,
+        "quarter": "fourth"
+      },
+      "finishedShare": 0,
+      "floorsMin": 6,
+      "floorsMax": 60,
+      "housesSeen": 1,
+      "lots": 153,
+      "declared": null,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 100,
+      "saleTypes": [
+        "fz214"
+      ],
+      "decorations": [
+        "without"
+      ],
+      "perM2Min": 489280,
+      "perM2Median": 756800,
+      "perM2Max": 1100000,
+      "priceMin": 22682352,
+      "priceMax": 94380000,
+      "areaMin": 30.9,
+      "areaMax": 90.5,
+      "urls": [
+        "https://www.cian.ru/sale/flat/332525681/",
+        "https://www.cian.ru/sale/flat/333011187/",
+        "https://www.cian.ru/sale/flat/332525053/"
+      ],
+      "sources": [
+        "khoroshevsky-new"
+      ]
+    },
+    {
+      "complex": "Премиальный дом МАСТЕРС",
+      "okrug": "САО",
+      "district": "Хорошевский",
+      "street": null,
+      "house": null,
+      "addresses": [],
+      "lat": 55.79434208789654,
+      "lng": 37.521679024466586,
+      "insideRing": false,
+      "ringMargin": 5251,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2029
+      ],
+      "deadline": {
+        "year": 2029,
+        "quarter": "fourth"
+      },
+      "finishedShare": 0,
+      "floorsMin": 14,
+      "floorsMax": 25,
+      "housesSeen": 0,
+      "lots": 111,
+      "declared": null,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 100,
+      "saleTypes": [
+        "fz214"
+      ],
+      "decorations": [
+        "without"
+      ],
+      "perM2Min": 582120,
+      "perM2Median": 747000,
+      "perM2Max": 1010520,
+      "priceMin": 26619570,
+      "priceMax": 102183606,
+      "areaMin": 28.5,
+      "areaMax": 137.6,
+      "urls": [
+        "https://www.cian.ru/sale/flat/330066644/",
+        "https://www.cian.ru/sale/flat/330066653/",
+        "https://www.cian.ru/sale/flat/328376532/"
+      ],
+      "sources": [
+        "khoroshevsky-new"
       ]
     },
     {
@@ -7380,6 +7935,123 @@
       ]
     },
     {
+      "complex": "Зорге 9",
+      "okrug": "САО",
+      "district": "Хорошевский",
+      "street": "Зорге",
+      "house": "9Ак7",
+      "addresses": [
+        "9Ак7",
+        "Зорге, 9Ак7",
+        "9Ак6",
+        "Зорге, 9Ак1"
+      ],
+      "lat": 55.7829190225087,
+      "lng": 37.5073884576716,
+      "insideRing": false,
+      "ringMargin": 5211,
+      "ringSure": true,
+      "buildYears": [
+        2023,
+        2024,
+        2025
+      ],
+      "buildYearMin": 2023,
+      "buildYearMax": 2025,
+      "deadlineYears": [
+        2023,
+        2024
+      ],
+      "deadline": {
+        "year": 2024,
+        "quarter": "third"
+      },
+      "finishedShare": 100,
+      "floorsMin": 21,
+      "floorsMax": 24,
+      "housesSeen": 4,
+      "lots": 19,
+      "declared": null,
+      "apartmentsShare": 100,
+      "fromDeveloperShare": 74,
+      "saleTypes": [
+        "free",
+        "fz214"
+      ],
+      "decorations": [
+        "without"
+      ],
+      "perM2Min": 500000,
+      "perM2Median": 622010,
+      "perM2Max": 772785,
+      "priceMin": 13442896,
+      "priceMax": 43800000,
+      "areaMin": 22.8,
+      "areaMax": 74.8,
+      "urls": [
+        "https://www.cian.ru/sale/flat/333495877/",
+        "https://www.cian.ru/sale/flat/331651587/",
+        "https://www.cian.ru/sale/flat/331102890/"
+      ],
+      "sources": [
+        "khoroshevsky-new",
+        "khoroshevsky-second"
+      ]
+    },
+    {
+      "complex": "Авиатика",
+      "okrug": "САО",
+      "district": "Хорошевский",
+      "street": "Маргелова",
+      "house": "3к2",
+      "addresses": [
+        "Маргелова, 3к2"
+      ],
+      "lat": 55.777079,
+      "lng": 37.541072,
+      "insideRing": false,
+      "ringMargin": 3075,
+      "ringSure": true,
+      "buildYears": [
+        2022
+      ],
+      "buildYearMin": 2022,
+      "buildYearMax": 2022,
+      "deadlineYears": [
+        2022
+      ],
+      "deadline": {
+        "year": 2022,
+        "quarter": 4
+      },
+      "finishedShare": 100,
+      "floorsMin": 25,
+      "floorsMax": 25,
+      "housesSeen": 1,
+      "lots": 2,
+      "declared": null,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 0,
+      "saleTypes": [
+        "free"
+      ],
+      "decorations": [],
+      "perM2Min": 600000,
+      "perM2Median": 620533,
+      "perM2Max": 641066,
+      "priceMin": 40900000,
+      "priceMax": 48000000,
+      "areaMin": 63.8,
+      "areaMax": 80,
+      "urls": [
+        "https://www.cian.ru/sale/flat/333664446/",
+        "https://www.cian.ru/sale/flat/333554745/"
+      ],
+      "sources": [
+        "khoroshevsky-second"
+      ]
+    },
+    {
       "complex": "Интеллигент",
       "okrug": "ЦАО",
       "district": "Басманный",
@@ -7479,17 +8151,19 @@
       "floorsMin": 6,
       "floorsMax": 54,
       "housesSeen": 7,
-      "lots": 229,
+      "lots": 234,
       "declared": null,
       "apartmentsShare": 0,
-      "fromDeveloperShare": 0,
+      "fromDeveloperShare": 2,
       "saleTypes": [
         "free",
         "alternative"
       ],
-      "decorations": [],
+      "decorations": [
+        "without"
+      ],
       "perM2Min": 373998,
-      "perM2Median": 597561,
+      "perM2Median": 597319.5,
       "perM2Max": 1028999,
       "priceMin": 18700000,
       "priceMax": 110000000,
@@ -7501,7 +8175,9 @@
         "https://www.cian.ru/sale/flat/333394902/"
       ],
       "sources": [
-        "presnensky-second"
+        "presnensky-second",
+        "band01",
+        "band02"
       ]
     },
     {
@@ -7557,6 +8233,124 @@
       ],
       "sources": [
         "basmanny-second"
+      ]
+    },
+    {
+      "complex": "Рихард",
+      "okrug": "САО",
+      "district": "Хорошевский",
+      "street": "Зорге",
+      "house": "9к1",
+      "addresses": [
+        "Зорге, 9к2",
+        "Зорге, 9к1"
+      ],
+      "lat": 55.782309,
+      "lng": 37.508598,
+      "insideRing": false,
+      "ringMargin": 5112,
+      "ringSure": true,
+      "buildYears": [
+        2022
+      ],
+      "buildYearMin": 2022,
+      "buildYearMax": 2022,
+      "deadlineYears": [
+        2022
+      ],
+      "deadline": {
+        "year": 2022,
+        "quarter": 3
+      },
+      "finishedShare": 100,
+      "floorsMin": 27,
+      "floorsMax": 27,
+      "housesSeen": 2,
+      "lots": 3,
+      "declared": null,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 0,
+      "saleTypes": [
+        "free"
+      ],
+      "decorations": [],
+      "perM2Min": 585106,
+      "perM2Median": 587649,
+      "perM2Max": 625806,
+      "priceMin": 27500000,
+      "priceMax": 59000000,
+      "areaMin": 47,
+      "areaMax": 100.4,
+      "urls": [
+        "https://www.cian.ru/sale/flat/333546536/",
+        "https://www.cian.ru/sale/flat/333299831/",
+        "https://www.cian.ru/sale/flat/332120230/"
+      ],
+      "sources": [
+        "khoroshevsky-second"
+      ]
+    },
+    {
+      "complex": "Амбер Сити",
+      "okrug": "САО",
+      "district": "Хорошевский",
+      "street": "3-й Хорошевский",
+      "house": "к5",
+      "addresses": [
+        "к5",
+        "3-й Хорошевский, 3А",
+        "к4",
+        "к6",
+        "Розанова, 6с1"
+      ],
+      "lat": 55.770712670724,
+      "lng": 37.5372336097869,
+      "insideRing": false,
+      "ringMargin": 2937,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2027,
+        2028,
+        2029
+      ],
+      "deadline": {
+        "year": 2029,
+        "quarter": "third"
+      },
+      "finishedShare": 0,
+      "floorsMin": 44,
+      "floorsMax": 58,
+      "housesSeen": 5,
+      "lots": 58,
+      "declared": null,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 81,
+      "saleTypes": [
+        "dupt",
+        "fz214"
+      ],
+      "decorations": [
+        "rough",
+        "fine",
+        "without"
+      ],
+      "perM2Min": 386007,
+      "perM2Median": 574255.5,
+      "perM2Max": 859716,
+      "priceMin": 20500000,
+      "priceMax": 81329134,
+      "areaMin": 30.5,
+      "areaMax": 103.1,
+      "urls": [
+        "https://www.cian.ru/sale/flat/332699601/",
+        "https://www.cian.ru/sale/flat/329047009/",
+        "https://www.cian.ru/sale/flat/331801252/"
+      ],
+      "sources": [
+        "khoroshevsky-new"
       ]
     },
     {
@@ -7668,6 +8462,230 @@
       "sources": [
         "zamoskvorechye-new",
         "zamoskvorechye-second"
+      ]
+    },
+    {
+      "complex": "Шелепиха",
+      "okrug": "ЦАО",
+      "district": "Пресненский",
+      "street": "Шмитовский",
+      "house": "40",
+      "addresses": [
+        "Шмитовский, 40"
+      ],
+      "lat": 55.7557272511786,
+      "lng": 37.5231695509262,
+      "insideRing": false,
+      "ringMargin": 3634,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2026
+      ],
+      "deadline": {
+        "year": 2026,
+        "quarter": "third"
+      },
+      "finishedShare": 0,
+      "floorsMin": 36,
+      "floorsMax": 36,
+      "housesSeen": 1,
+      "lots": 76,
+      "declared": null,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 97,
+      "saleTypes": [
+        "fz214",
+        "dupt"
+      ],
+      "decorations": [
+        "without"
+      ],
+      "perM2Min": 476869,
+      "perM2Median": 546371.5,
+      "perM2Max": 826347,
+      "priceMin": 19119591,
+      "priceMax": 52306214,
+      "areaMin": 23.9,
+      "areaMax": 97.9,
+      "urls": [
+        "https://www.cian.ru/sale/flat/333456107/",
+        "https://www.cian.ru/sale/flat/331960843/",
+        "https://www.cian.ru/sale/flat/326774249/"
+      ],
+      "sources": [
+        "band00",
+        "band01"
+      ]
+    },
+    {
+      "complex": "INDY TOWERS (Инди Тауэрз)",
+      "okrug": "САО",
+      "district": "Хорошевский",
+      "street": "Куусинена",
+      "house": "вл21",
+      "addresses": [
+        "Куусинена, вл21",
+        "Зорге, 24С4"
+      ],
+      "lat": 55.7914969080746,
+      "lng": 37.5091243644145,
+      "insideRing": false,
+      "ringMargin": 5640,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2026,
+        2029
+      ],
+      "deadline": {
+        "year": 2029,
+        "quarter": "third"
+      },
+      "finishedShare": 0,
+      "floorsMin": 23,
+      "floorsMax": 55,
+      "housesSeen": 2,
+      "lots": 83,
+      "declared": null,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 78,
+      "saleTypes": [
+        "fz214",
+        "dupt"
+      ],
+      "decorations": [
+        "without",
+        "rough",
+        "fine"
+      ],
+      "perM2Min": 458333,
+      "perM2Median": 539402,
+      "perM2Max": 991816,
+      "priceMin": 16960000,
+      "priceMax": 60609962,
+      "areaMin": 21.2,
+      "areaMax": 118.6,
+      "urls": [
+        "https://www.cian.ru/sale/flat/329117330/",
+        "https://www.cian.ru/sale/flat/327767898/",
+        "https://www.cian.ru/sale/flat/333093576/"
+      ],
+      "sources": [
+        "khoroshevsky-new"
+      ]
+    },
+    {
+      "complex": "Сезар Сити",
+      "okrug": "САО",
+      "district": "Хорошевский",
+      "street": null,
+      "house": "к2",
+      "addresses": [
+        "к1",
+        "к2"
+      ],
+      "lat": 55.77090391653811,
+      "lng": 37.52823126186966,
+      "insideRing": false,
+      "ringMargin": 3472,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2027
+      ],
+      "deadline": {
+        "year": 2027,
+        "quarter": "fourth"
+      },
+      "finishedShare": 0,
+      "floorsMin": 7,
+      "floorsMax": 51,
+      "housesSeen": 2,
+      "lots": 91,
+      "declared": null,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 99,
+      "saleTypes": [
+        "dupt",
+        "fz214"
+      ],
+      "decorations": [
+        "without"
+      ],
+      "perM2Min": 484000,
+      "perM2Median": 516000,
+      "perM2Max": 760000,
+      "priceMin": 23000000,
+      "priceMax": 89406400,
+      "areaMin": 40.68,
+      "areaMax": 121.08,
+      "urls": [
+        "https://www.cian.ru/sale/flat/333208089/",
+        "https://www.cian.ru/sale/flat/332524135/",
+        "https://www.cian.ru/sale/flat/332524117/"
+      ],
+      "sources": [
+        "khoroshevsky-new"
+      ]
+    },
+    {
+      "complex": "Сити-комплекс Мята",
+      "okrug": "САО",
+      "district": "Хорошевский",
+      "street": "1-я Магистральная",
+      "house": "25",
+      "addresses": [
+        "1-я Магистральная, 25"
+      ],
+      "lat": 55.770856,
+      "lng": 37.517994,
+      "insideRing": false,
+      "ringMargin": 4082,
+      "ringSure": true,
+      "buildYears": [
+        2023
+      ],
+      "buildYearMin": 2023,
+      "buildYearMax": 2023,
+      "deadlineYears": [
+        2023
+      ],
+      "deadline": {
+        "year": 2023,
+        "quarter": 1
+      },
+      "finishedShare": 100,
+      "floorsMin": 22,
+      "floorsMax": 22,
+      "housesSeen": 1,
+      "lots": 2,
+      "declared": null,
+      "apartmentsShare": 100,
+      "fromDeveloperShare": 0,
+      "saleTypes": [
+        "free"
+      ],
+      "decorations": [],
+      "perM2Min": 469428,
+      "perM2Median": 491761.5,
+      "perM2Max": 514095,
+      "priceMin": 21593700,
+      "priceMax": 26990000,
+      "areaMin": 46,
+      "areaMax": 52.5,
+      "urls": [
+        "https://www.cian.ru/sale/flat/333297845/",
+        "https://www.cian.ru/sale/flat/333198274/"
+      ],
+      "sources": [
+        "khoroshevsky-second"
       ]
     },
     {
