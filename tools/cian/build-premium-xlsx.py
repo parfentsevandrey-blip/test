@@ -105,7 +105,7 @@ for r in complexes['complexes']:
     link = r['urls'][0] if r.get('urls') else ''
     row = [r['complex'], m.get('developer', ''), m.get('year') or fmt_years(r), m.get('address') or addr, r.get('district'), z,
            r.get('housesSeen'), floors(r), status, per_m2_str(r.get('perM2Min')), per_m2_str(med), per_m2_str(r.get('perM2Max')),
-           r.get('lots'), f"{int(r['areaMin'])}–{int(r['areaMax'])}" if r.get('areaMin') and r['areaMin'] != math.inf else '',
+           r.get('declared') or r.get('lots'), f"{int(r['areaMin'])}–{int(r['areaMax'])}" if r.get('areaMin') and r['areaMin'] != math.inf else '',
            m.get('class', 'премиум'), link, m.get('note', '')]
     (rows1 if (m.get('stage', 'built' if built else 'building') == 'built') else rows2_live).append(row)
 rows1.sort(key=lambda x: (zkey(x[5]), -(x[10] or 0)))
@@ -128,7 +128,7 @@ for row in pdf['rows']:
     lr = next((c for c in complexes['complexes'] if c['complex'] == live), None) if live else None
     src = 'таблица заказчика'
     if lr:
-        pf, pt, lots = lr.get('perM2Min') or pf, lr.get('perM2Max') or pt, lr.get('lots') or lots
+        pf, pt, lots = lr.get('perM2Min') or pf, lr.get('perM2Max') or pt, lr.get('declared') or lr.get('lots') or lots
         src = f"таблица заказчика + Циан {complexes['fetched']}"
         if (lr.get('finishedShare') or 0) >= 50: note = '; '.join(x for x in [note, 'по Циан дом сдан'] if x)
         if lr.get('urls') and not m.get('url'): m = {**m, 'url': lr['urls'][0]}

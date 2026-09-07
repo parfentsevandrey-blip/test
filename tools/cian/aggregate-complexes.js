@@ -19,10 +19,18 @@ const out = outIdx >= 0 ? args[outIdx + 1] : null;
 const files = args.filter((a, i) => a !== '--out' && i !== outIdx + 1);
 
 const byId = new Map();
+const declaredByComplex = new Map();
 for (const f of files) {
   const j = JSON.parse(fs.readFileSync(f, 'utf8'));
   const tag = path.basename(f, '.json');
   for (const l of j.lots || []) if (!byId.has(l.id)) byId.set(l.id, { ...l, _src: tag });
+  /* Точечный запрос по одному ЖК: offerCount Циан — честнее, чем перечисленное,
+     потому что пагинация обрывается, а «похожие» схлопываются. */
+  const geo = (((j.jsonQuery || {}).geo || {}).value) || [];
+  if (geo.length === 1 && geo[0].type === 'newobject' && j.declaredCount && (j.lots || []).length) {
+    const name = j.lots[0].complex;
+    if (name) declaredByComplex.set(name, Math.max(declaredByComplex.get(name) || 0, j.declaredCount));
+  }
 }
 const lots = [...byId.values()];
 
@@ -69,7 +77,7 @@ for (const [name, ls] of complexes) {
     finishedShare: finished.length ? Math.round(100 * finished.filter(Boolean).length / finished.length) : null,
     floorsMin: floors[0] ?? null, floorsMax: floors[floors.length - 1] ?? null,
     housesSeen: houses.length,
-    lots: ls.length, apartmentsShare: Math.round(100 * apart / ls.length), fromDeveloperShare: Math.round(100 * fromDev / ls.length),
+    lots: ls.length, declared: declaredByComplex.get(name) ?? null, apartmentsShare: Math.round(100 * apart / ls.length), fromDeveloperShare: Math.round(100 * fromDev / ls.length),
     saleTypes: uniq(ls.map((l) => l.saleType)),
     decorations: uniq(ls.map((l) => l.decoration)),
     perM2Min: perM2[0] ?? null, perM2Median: perM2.length ? median(perM2) : null, perM2Max: perM2[perM2.length - 1] ?? null,

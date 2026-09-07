@@ -1,7 +1,7 @@
 {
   "fetched": "2026-09-07",
-  "lots": 3137,
-  "withComplex": 3031,
+  "lots": 3463,
+  "withComplex": 3357,
   "complexes": [
     {
       "complex": "БРЮСОВ",
@@ -30,29 +30,35 @@
         "quarter": 2
       },
       "finishedShare": 100,
-      "floorsMin": 8,
+      "floorsMin": 6,
       "floorsMax": 8,
       "housesSeen": 1,
-      "lots": 2,
+      "lots": 5,
+      "declared": 7,
       "apartmentsShare": 0,
-      "fromDeveloperShare": 0,
+      "fromDeveloperShare": 60,
       "saleTypes": [
-        "free"
+        "free",
+        "fz214"
       ],
-      "decorations": [],
-      "perM2Min": 5980861,
+      "decorations": [
+        "fine"
+      ],
+      "perM2Min": 4318135,
       "perM2Median": 5980861,
-      "perM2Max": 5980861,
-      "priceMin": 1250000000,
-      "priceMax": 1250000000,
-      "areaMin": 209,
-      "areaMax": 209,
+      "perM2Max": 6843436,
+      "priceMin": 1000080000,
+      "priceMax": 1810050000,
+      "areaMin": 208.7,
+      "areaMax": 329.3,
       "urls": [
         "https://www.cian.ru/sale/flat/333101630/",
-        "https://www.cian.ru/sale/flat/333091819/"
+        "https://www.cian.ru/sale/flat/333091819/",
+        "https://www.cian.ru/sale/flat/328853327/"
       ],
       "sources": [
-        "presnensky-second"
+        "presnensky-second",
+        "zhk-4202659"
       ]
     },
     {
@@ -84,6 +90,7 @@
       "floorsMax": 5,
       "housesSeen": 1,
       "lots": 8,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 100,
       "saleTypes": [
@@ -139,6 +146,7 @@
       "floorsMax": 7,
       "housesSeen": 1,
       "lots": 1,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -188,6 +196,7 @@
       "floorsMax": 6,
       "housesSeen": 1,
       "lots": 9,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 89,
       "saleTypes": [
@@ -242,6 +251,7 @@
       "floorsMax": 11,
       "housesSeen": 1,
       "lots": 13,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 100,
       "saleTypes": [
@@ -295,6 +305,7 @@
       "floorsMax": 8,
       "housesSeen": 1,
       "lots": 44,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 100,
       "saleTypes": [
@@ -350,6 +361,7 @@
       "floorsMax": 7,
       "housesSeen": 1,
       "lots": 5,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -404,6 +416,7 @@
       "floorsMax": 6,
       "housesSeen": 2,
       "lots": 10,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 90,
       "saleTypes": [
@@ -426,6 +439,61 @@
       "sources": [
         "yakimanka-new",
         "yakimanka-second"
+      ]
+    },
+    {
+      "complex": "Клубный дом Левенсон",
+      "okrug": "ЦАО",
+      "district": "Пресненский",
+      "street": "Трехпрудный",
+      "house": "9С2",
+      "addresses": [
+        "Трехпрудный, 9С2",
+        "Трехпрудный, 9",
+        "Трехпрудный, 9С1"
+      ],
+      "lat": 55.765043,
+      "lng": 37.596552,
+      "insideRing": true,
+      "ringMargin": 412,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2027
+      ],
+      "deadline": {
+        "year": 2027,
+        "quarter": 3
+      },
+      "finishedShare": 0,
+      "floorsMin": 4,
+      "floorsMax": 6,
+      "housesSeen": 3,
+      "lots": 16,
+      "declared": 16,
+      "apartmentsShare": 25,
+      "fromDeveloperShare": 88,
+      "saleTypes": [
+        "fz214",
+        "dupt"
+      ],
+      "decorations": [],
+      "perM2Min": 2800000,
+      "perM2Median": 3560820,
+      "perM2Max": 4189200,
+      "priceMin": 460320000,
+      "priceMax": 1863272376,
+      "areaMin": 164.4,
+      "areaMax": 494.2,
+      "urls": [
+        "https://www.cian.ru/sale/flat/332401547/",
+        "https://www.cian.ru/sale/flat/328082167/",
+        "https://www.cian.ru/sale/flat/332401544/"
+      ],
+      "sources": [
+        "zhk-4381065"
       ]
     },
     {
@@ -457,6 +525,7 @@
       "floorsMax": 7,
       "housesSeen": 1,
       "lots": 6,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 100,
       "saleTypes": [
@@ -508,6 +577,7 @@
       "floorsMax": 10,
       "housesSeen": 0,
       "lots": 4,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 100,
       "saleTypes": [
@@ -565,6 +635,7 @@
       "floorsMax": 6,
       "housesSeen": 3,
       "lots": 18,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 50,
       "saleTypes": [
@@ -624,6 +695,7 @@
       "floorsMax": 5,
       "housesSeen": 1,
       "lots": 4,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -677,6 +749,7 @@
       "floorsMax": 6,
       "housesSeen": 1,
       "lots": 3,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -733,6 +806,7 @@
       "floorsMax": 8,
       "housesSeen": 1,
       "lots": 6,
+      "declared": null,
       "apartmentsShare": 17,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -787,6 +861,7 @@
       "floorsMax": 14,
       "housesSeen": 2,
       "lots": 2,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -841,6 +916,7 @@
       "floorsMax": 12,
       "housesSeen": 1,
       "lots": 4,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -901,6 +977,7 @@
       "floorsMax": 14,
       "housesSeen": 4,
       "lots": 100,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 92,
       "saleTypes": [
@@ -955,6 +1032,7 @@
       "floorsMax": 6,
       "housesSeen": 1,
       "lots": 2,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 100,
       "saleTypes": [
@@ -1007,6 +1085,7 @@
       "floorsMax": 7,
       "housesSeen": 1,
       "lots": 2,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -1059,6 +1138,7 @@
       "floorsMax": 13,
       "housesSeen": 1,
       "lots": 97,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 98,
       "saleTypes": [
@@ -1113,6 +1193,7 @@
       "floorsMax": 8,
       "housesSeen": 1,
       "lots": 32,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 100,
       "saleTypes": [
@@ -1166,6 +1247,7 @@
       "floorsMax": 17,
       "housesSeen": 0,
       "lots": 14,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 100,
       "saleTypes": [
@@ -1222,6 +1304,7 @@
       "floorsMax": 13,
       "housesSeen": 1,
       "lots": 25,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -1275,6 +1358,7 @@
       "floorsMax": 5,
       "housesSeen": 1,
       "lots": 1,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -1327,6 +1411,7 @@
       "floorsMax": 7,
       "housesSeen": 3,
       "lots": 22,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 100,
       "saleTypes": [
@@ -1380,6 +1465,7 @@
       "floorsMax": 6,
       "housesSeen": 1,
       "lots": 1,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 100,
       "saleTypes": [
@@ -1429,6 +1515,7 @@
       "floorsMax": 8,
       "housesSeen": 1,
       "lots": 1,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 100,
       "saleTypes": [
@@ -1482,6 +1569,7 @@
       "floorsMax": 5,
       "housesSeen": 3,
       "lots": 28,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 100,
       "saleTypes": [
@@ -1505,6 +1593,60 @@
       ],
       "sources": [
         "tverskoy-new"
+      ]
+    },
+    {
+      "complex": "Дом Спорта",
+      "okrug": "ЦАО",
+      "district": "Пресненский",
+      "street": "Дружинниковская",
+      "house": "18",
+      "addresses": [
+        "Дружинниковская, 18"
+      ],
+      "lat": 55.7572255061087,
+      "lng": 37.5769940330644,
+      "insideRing": false,
+      "ringMargin": 261,
+      "ringSure": false,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2029
+      ],
+      "deadline": {
+        "year": 2029,
+        "quarter": "first"
+      },
+      "finishedShare": 0,
+      "floorsMin": 9,
+      "floorsMax": 9,
+      "housesSeen": 1,
+      "lots": 13,
+      "declared": 13,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 100,
+      "saleTypes": [
+        "fz214"
+      ],
+      "decorations": [
+        "without"
+      ],
+      "perM2Min": 2281650,
+      "perM2Median": 2787488,
+      "perM2Max": 3174937,
+      "priceMin": 110432290,
+      "priceMax": 398041268,
+      "areaMin": 45.81,
+      "areaMax": 158.73,
+      "urls": [
+        "https://www.cian.ru/sale/flat/333577651/",
+        "https://www.cian.ru/sale/flat/333577643/",
+        "https://www.cian.ru/sale/flat/333577661/"
+      ],
+      "sources": [
+        "zhk-5734549"
       ]
     },
     {
@@ -1536,6 +1678,7 @@
       "floorsMax": 6,
       "housesSeen": 1,
       "lots": 31,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 100,
       "saleTypes": [
@@ -1589,6 +1732,7 @@
       "floorsMax": 4,
       "housesSeen": 1,
       "lots": 9,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 100,
       "saleTypes": [
@@ -1644,6 +1788,7 @@
       "floorsMax": 16,
       "housesSeen": 1,
       "lots": 6,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -1695,6 +1840,7 @@
       "floorsMax": 7,
       "housesSeen": 1,
       "lots": 26,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 96,
       "saleTypes": [
@@ -1750,6 +1896,7 @@
       "floorsMax": 7,
       "housesSeen": 1,
       "lots": 17,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 100,
       "saleTypes": [
@@ -1807,6 +1954,7 @@
       "floorsMax": 6,
       "housesSeen": 1,
       "lots": 3,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -1860,6 +2008,7 @@
       "floorsMax": 8,
       "housesSeen": 1,
       "lots": 18,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 72,
       "saleTypes": [
@@ -1916,6 +2065,7 @@
       "floorsMax": 7,
       "housesSeen": 1,
       "lots": 11,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -1971,6 +2121,7 @@
       "floorsMax": 6,
       "housesSeen": 1,
       "lots": 8,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -2022,6 +2173,7 @@
       "floorsMax": 9,
       "housesSeen": 0,
       "lots": 51,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 100,
       "saleTypes": [
@@ -2078,6 +2230,7 @@
       "floorsMax": 6,
       "housesSeen": 1,
       "lots": 16,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 94,
       "saleTypes": [
@@ -2135,6 +2288,7 @@
       "floorsMax": 4,
       "housesSeen": 1,
       "lots": 4,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 25,
       "saleTypes": [
@@ -2195,6 +2349,7 @@
       "floorsMax": 6,
       "housesSeen": 2,
       "lots": 13,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 54,
       "saleTypes": [
@@ -2252,6 +2407,7 @@
       "floorsMax": 15,
       "housesSeen": 1,
       "lots": 3,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -2303,6 +2459,7 @@
       "floorsMax": 9,
       "housesSeen": 1,
       "lots": 1,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -2355,6 +2512,7 @@
       "floorsMax": 5,
       "housesSeen": 1,
       "lots": 15,
+      "declared": null,
       "apartmentsShare": 93,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -2408,6 +2566,7 @@
       "floorsMax": 16,
       "housesSeen": 2,
       "lots": 36,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 100,
       "saleTypes": [
@@ -2463,6 +2622,7 @@
       "floorsMax": 6,
       "housesSeen": 1,
       "lots": 3,
+      "declared": null,
       "apartmentsShare": 33,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -2514,6 +2674,7 @@
       "floorsMax": 9,
       "housesSeen": 1,
       "lots": 26,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 100,
       "saleTypes": [
@@ -2568,6 +2729,7 @@
       "floorsMax": 6,
       "housesSeen": 2,
       "lots": 32,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 100,
       "saleTypes": [
@@ -2621,6 +2783,7 @@
       "floorsMax": 13,
       "housesSeen": 1,
       "lots": 14,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 100,
       "saleTypes": [
@@ -2689,6 +2852,7 @@
       "floorsMax": 18,
       "housesSeen": 9,
       "lots": 83,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -2710,6 +2874,58 @@
       ],
       "sources": [
         "khamovniki-second"
+      ]
+    },
+    {
+      "complex": "Климашкина 7/11",
+      "okrug": "ЦАО",
+      "district": "Пресненский",
+      "street": null,
+      "house": null,
+      "addresses": [],
+      "lat": 55.7672983698639,
+      "lng": 37.5739024857739,
+      "insideRing": false,
+      "ringMargin": 805,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2028
+      ],
+      "deadline": {
+        "year": 2028,
+        "quarter": "fourth"
+      },
+      "finishedShare": 0,
+      "floorsMin": 8,
+      "floorsMax": 8,
+      "housesSeen": 0,
+      "lots": 17,
+      "declared": 17,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 100,
+      "saleTypes": [
+        "fz214"
+      ],
+      "decorations": [
+        "without"
+      ],
+      "perM2Min": 1581360,
+      "perM2Median": 2105000,
+      "perM2Max": 2550000,
+      "priceMin": 102488320,
+      "priceMax": 366078768,
+      "areaMin": 50.2,
+      "areaMax": 166.2,
+      "urls": [
+        "https://www.cian.ru/sale/flat/331232083/",
+        "https://www.cian.ru/sale/flat/323699240/",
+        "https://www.cian.ru/sale/flat/331232080/"
+      ],
+      "sources": [
+        "zhk-5723049"
       ]
     },
     {
@@ -2744,6 +2960,7 @@
       "floorsMax": 9,
       "housesSeen": 1,
       "lots": 5,
+      "declared": null,
       "apartmentsShare": 20,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -2800,6 +3017,7 @@
       "floorsMax": 7,
       "housesSeen": 3,
       "lots": 4,
+      "declared": null,
       "apartmentsShare": 25,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -2855,6 +3073,7 @@
       "floorsMax": 9,
       "housesSeen": 1,
       "lots": 9,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -2908,6 +3127,7 @@
       "floorsMax": 8,
       "housesSeen": 1,
       "lots": 1,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -2957,6 +3177,7 @@
       "floorsMax": 8,
       "housesSeen": 1,
       "lots": 28,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 100,
       "saleTypes": [
@@ -3012,6 +3233,7 @@
       "floorsMax": 9,
       "housesSeen": 1,
       "lots": 7,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -3066,6 +3288,7 @@
       "floorsMax": 6,
       "housesSeen": 2,
       "lots": 2,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 50,
       "saleTypes": [
@@ -3117,6 +3340,7 @@
       "floorsMax": 19,
       "housesSeen": 0,
       "lots": 52,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 100,
       "saleTypes": [
@@ -3173,6 +3397,7 @@
       "floorsMax": 16,
       "housesSeen": 1,
       "lots": 54,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 96,
       "saleTypes": [
@@ -3228,6 +3453,7 @@
       "floorsMax": 6,
       "housesSeen": 1,
       "lots": 6,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -3279,6 +3505,7 @@
       "floorsMax": 24,
       "housesSeen": 0,
       "lots": 78,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 100,
       "saleTypes": [
@@ -3335,6 +3562,7 @@
       "floorsMax": 4,
       "housesSeen": 1,
       "lots": 1,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -3384,6 +3612,7 @@
       "floorsMax": 8,
       "housesSeen": 1,
       "lots": 9,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 67,
       "saleTypes": [
@@ -3438,6 +3667,7 @@
       "floorsMax": 4,
       "housesSeen": 1,
       "lots": 12,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 100,
       "saleTypes": [
@@ -3497,6 +3727,7 @@
       "floorsMax": 21,
       "housesSeen": 8,
       "lots": 23,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -3552,6 +3783,7 @@
       "floorsMax": 9,
       "housesSeen": 1,
       "lots": 15,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -3572,6 +3804,66 @@
       ],
       "sources": [
         "tagansky-second"
+      ]
+    },
+    {
+      "complex": "Элитный квартал Тишинский бульвар",
+      "okrug": "ЦАО",
+      "district": "Пресненский",
+      "street": "Электрический",
+      "house": "к4",
+      "addresses": [
+        "к4",
+        "к3",
+        "Электрический",
+        "к6",
+        "к5"
+      ],
+      "lat": 55.7721200562894,
+      "lng": 37.5746372169183,
+      "insideRing": false,
+      "ringMargin": 1133,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2027,
+        2028
+      ],
+      "deadline": {
+        "year": 2028,
+        "quarter": "second"
+      },
+      "finishedShare": 0,
+      "floorsMin": 6,
+      "floorsMax": 24,
+      "housesSeen": 4,
+      "lots": 140,
+      "declared": 229,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 94,
+      "saleTypes": [
+        "fz214",
+        "dupt"
+      ],
+      "decorations": [
+        "without"
+      ],
+      "perM2Min": 1239934,
+      "perM2Median": 1646099,
+      "perM2Max": 3044646,
+      "priceMin": 69170000,
+      "priceMax": 664010000,
+      "areaMin": 45,
+      "areaMax": 416,
+      "urls": [
+        "https://www.cian.ru/sale/flat/333476988/",
+        "https://www.cian.ru/sale/flat/328885322/",
+        "https://www.cian.ru/sale/flat/333379925/"
+      ],
+      "sources": [
+        "zhk-4714572"
       ]
     },
     {
@@ -3603,6 +3895,7 @@
       "floorsMax": 8,
       "housesSeen": 1,
       "lots": 7,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 100,
       "saleTypes": [
@@ -3656,6 +3949,7 @@
       "floorsMax": 20,
       "housesSeen": 1,
       "lots": 8,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -3709,6 +4003,7 @@
       "floorsMax": 12,
       "housesSeen": 3,
       "lots": 44,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 100,
       "saleTypes": [
@@ -3762,6 +4057,7 @@
       "floorsMax": 18,
       "housesSeen": 2,
       "lots": 59,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 51,
       "saleTypes": [
@@ -3819,6 +4115,7 @@
       "floorsMax": 19,
       "housesSeen": 2,
       "lots": 50,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 100,
       "saleTypes": [
@@ -3876,6 +4173,7 @@
       "floorsMax": 8,
       "housesSeen": 2,
       "lots": 12,
+      "declared": null,
       "apartmentsShare": 92,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -3929,6 +4227,7 @@
       "floorsMax": 3,
       "housesSeen": 1,
       "lots": 1,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -3983,6 +4282,7 @@
       "floorsMax": 9,
       "housesSeen": 1,
       "lots": 15,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 27,
       "saleTypes": [
@@ -4039,6 +4339,7 @@
       "floorsMax": 10,
       "housesSeen": 2,
       "lots": 4,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -4093,6 +4394,7 @@
       "floorsMax": 6,
       "housesSeen": 2,
       "lots": 19,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 42,
       "saleTypes": [
@@ -4149,6 +4451,7 @@
       "floorsMax": 6,
       "housesSeen": 1,
       "lots": 4,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -4202,6 +4505,7 @@
       "floorsMax": 9,
       "housesSeen": 1,
       "lots": 3,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -4255,6 +4559,7 @@
       "floorsMax": 5,
       "housesSeen": 1,
       "lots": 1,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -4308,6 +4613,7 @@
       "floorsMax": 6,
       "housesSeen": 1,
       "lots": 7,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -4361,6 +4667,7 @@
       "floorsMax": 7,
       "housesSeen": 1,
       "lots": 1,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -4413,6 +4720,7 @@
       "floorsMax": 9,
       "housesSeen": 1,
       "lots": 36,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 78,
       "saleTypes": [
@@ -4467,6 +4775,7 @@
       "floorsMax": 8,
       "housesSeen": 1,
       "lots": 5,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -4520,6 +4829,7 @@
       "floorsMax": 21,
       "housesSeen": 1,
       "lots": 3,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -4549,7 +4859,10 @@
       "street": "Сергея Макеева",
       "house": "11",
       "addresses": [
-        "Сергея Макеева, 11"
+        "Сергея Макеева, 11",
+        "Сергея Макеева, 11с1",
+        "Сергея Макеева",
+        "Сергея Макеева, вл11/9с1-10"
       ],
       "lat": 55.762728,
       "lng": 37.549615,
@@ -4557,9 +4870,10 @@
       "ringMargin": 1954,
       "ringSure": true,
       "buildYears": [
+        1905,
         2026
       ],
-      "buildYearMin": 2026,
+      "buildYearMin": 1905,
       "buildYearMax": 2026,
       "deadlineYears": [
         2026
@@ -4569,30 +4883,36 @@
         "quarter": 3
       },
       "finishedShare": 100,
-      "floorsMin": 22,
+      "floorsMin": 10,
       "floorsMax": 23,
-      "housesSeen": 1,
-      "lots": 3,
+      "housesSeen": 3,
+      "lots": 28,
+      "declared": 232,
       "apartmentsShare": 0,
-      "fromDeveloperShare": 0,
+      "fromDeveloperShare": 57,
       "saleTypes": [
-        "free"
+        "free",
+        "fz214",
+        "dupt"
       ],
-      "decorations": [],
-      "perM2Min": 1025225,
-      "perM2Median": 1341190,
-      "perM2Max": 1539792,
+      "decorations": [
+        "without"
+      ],
+      "perM2Min": 1019417,
+      "perM2Median": 1335807.5,
+      "perM2Max": 2290000,
       "priceMin": 56900000,
-      "priceMax": 119500000,
+      "priceMax": 999860000,
       "areaMin": 55.5,
-      "areaMax": 89.1,
+      "areaMax": 510,
       "urls": [
         "https://www.cian.ru/sale/flat/333570956/",
         "https://www.cian.ru/sale/flat/333010933/",
         "https://www.cian.ru/sale/flat/332906795/"
       ],
       "sources": [
-        "presnensky-second"
+        "presnensky-second",
+        "zhk-3987004"
       ]
     },
     {
@@ -4624,6 +4944,7 @@
       "floorsMax": 6,
       "housesSeen": 1,
       "lots": 1,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -4678,6 +4999,7 @@
       "floorsMax": 72,
       "housesSeen": 3,
       "lots": 76,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -4731,6 +5053,7 @@
       "floorsMax": 6,
       "housesSeen": 1,
       "lots": 10,
+      "declared": null,
       "apartmentsShare": 90,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -4785,6 +5108,7 @@
       "floorsMax": 6,
       "housesSeen": 1,
       "lots": 16,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -4838,6 +5162,7 @@
       "floorsMax": 17,
       "housesSeen": 1,
       "lots": 8,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -4891,6 +5216,7 @@
       "floorsMax": 27,
       "housesSeen": 3,
       "lots": 72,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 90,
       "saleTypes": [
@@ -4950,6 +5276,7 @@
       "floorsMax": 9,
       "housesSeen": 3,
       "lots": 6,
+      "declared": null,
       "apartmentsShare": 83,
       "fromDeveloperShare": 17,
       "saleTypes": [
@@ -5005,6 +5332,7 @@
       "floorsMax": 7,
       "housesSeen": 1,
       "lots": 50,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 6,
       "saleTypes": [
@@ -5059,6 +5387,7 @@
       "floorsMax": 13,
       "housesSeen": 1,
       "lots": 17,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 100,
       "saleTypes": [
@@ -5116,6 +5445,7 @@
       "floorsMax": 25,
       "housesSeen": 3,
       "lots": 61,
+      "declared": null,
       "apartmentsShare": 97,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -5179,6 +5509,7 @@
       "floorsMax": 24,
       "housesSeen": 6,
       "lots": 58,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -5233,6 +5564,7 @@
       "floorsMax": 10,
       "housesSeen": 1,
       "lots": 3,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -5286,6 +5618,7 @@
       "floorsMax": 5,
       "housesSeen": 1,
       "lots": 2,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -5338,6 +5671,7 @@
       "floorsMax": 5,
       "housesSeen": 1,
       "lots": 2,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -5390,6 +5724,7 @@
       "floorsMax": 8,
       "housesSeen": 1,
       "lots": 7,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -5444,6 +5779,7 @@
       "floorsMax": 8,
       "housesSeen": 1,
       "lots": 3,
+      "declared": null,
       "apartmentsShare": 67,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -5464,6 +5800,115 @@
       ],
       "sources": [
         "presnensky-second"
+      ]
+    },
+    {
+      "complex": "Начало",
+      "okrug": "ЦАО",
+      "district": "Пресненский",
+      "street": null,
+      "house": null,
+      "addresses": [],
+      "lat": 55.7599161004126,
+      "lng": 37.5476984120223,
+      "insideRing": false,
+      "ringMargin": 2063,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2029,
+        2030
+      ],
+      "deadline": {
+        "year": 2030,
+        "quarter": "first"
+      },
+      "finishedShare": 0,
+      "floorsMin": 11,
+      "floorsMax": 48,
+      "housesSeen": 0,
+      "lots": 28,
+      "declared": 231,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 100,
+      "saleTypes": [
+        "fz214"
+      ],
+      "decorations": [
+        "without"
+      ],
+      "perM2Min": 925200,
+      "perM2Median": 1050200,
+      "perM2Max": 1352000,
+      "priceMin": 38794976,
+      "priceMax": 322256880,
+      "areaMin": 35.9,
+      "areaMax": 243,
+      "urls": [
+        "https://www.cian.ru/sale/flat/332534047/",
+        "https://www.cian.ru/sale/flat/332534059/",
+        "https://www.cian.ru/sale/flat/332534070/"
+      ],
+      "sources": [
+        "zhk-5726921"
+      ]
+    },
+    {
+      "complex": "Дом Дау",
+      "okrug": "ЦАО",
+      "district": "Пресненский",
+      "street": "Краснопресненская",
+      "house": "14с3",
+      "addresses": [
+        "Краснопресненская, 14с3",
+        "1-й Красногвардейский, 12с6"
+      ],
+      "lat": 55.7524451835728,
+      "lng": 37.5435080869081,
+      "insideRing": false,
+      "ringMargin": 2399,
+      "ringSure": true,
+      "buildYears": [],
+      "buildYearMin": null,
+      "buildYearMax": null,
+      "deadlineYears": [
+        2027
+      ],
+      "deadline": {
+        "year": 2027,
+        "quarter": "second"
+      },
+      "finishedShare": 0,
+      "floorsMin": 85,
+      "floorsMax": 91,
+      "housesSeen": 2,
+      "lots": 84,
+      "declared": 295,
+      "apartmentsShare": 0,
+      "fromDeveloperShare": 87,
+      "saleTypes": [
+        "fz214",
+        "dupt"
+      ],
+      "decorations": [
+        "without"
+      ],
+      "perM2Min": 807900,
+      "perM2Median": 999944,
+      "perM2Max": 1995800,
+      "priceMin": 30000000,
+      "priceMax": 497951325,
+      "areaMin": 30,
+      "areaMax": 347.61,
+      "urls": [
+        "https://www.cian.ru/sale/flat/331233664/",
+        "https://www.cian.ru/sale/flat/328465634/",
+        "https://www.cian.ru/sale/flat/333006655/"
+      ],
+      "sources": [
+        "zhk-4296442"
       ]
     },
     {
@@ -5498,6 +5943,7 @@
       "floorsMax": 24,
       "housesSeen": 1,
       "lots": 10,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -5554,6 +6000,7 @@
       "floorsMax": 22,
       "housesSeen": 1,
       "lots": 37,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 54,
       "saleTypes": [
@@ -5616,6 +6063,7 @@
       "floorsMax": 34,
       "housesSeen": 5,
       "lots": 18,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -5669,6 +6117,7 @@
       "floorsMax": 21,
       "housesSeen": 1,
       "lots": 7,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -5723,6 +6172,7 @@
       "floorsMax": 26,
       "housesSeen": 1,
       "lots": 7,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -5784,6 +6234,7 @@
       "floorsMax": 79,
       "housesSeen": 2,
       "lots": 113,
+      "declared": null,
       "apartmentsShare": 98,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -5837,6 +6288,7 @@
       "floorsMax": 4,
       "housesSeen": 1,
       "lots": 16,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -5890,6 +6342,7 @@
       "floorsMax": 3,
       "housesSeen": 1,
       "lots": 3,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -5941,6 +6394,7 @@
       "floorsMax": 15,
       "housesSeen": 1,
       "lots": 40,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 100,
       "saleTypes": [
@@ -6001,6 +6455,7 @@
       "floorsMax": 30,
       "housesSeen": 4,
       "lots": 40,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 3,
       "saleTypes": [
@@ -6056,6 +6511,7 @@
       "floorsMax": 7,
       "housesSeen": 1,
       "lots": 2,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -6106,6 +6562,7 @@
       "floorsMax": 8,
       "housesSeen": 1,
       "lots": 2,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -6163,6 +6620,7 @@
       "floorsMax": 16,
       "housesSeen": 2,
       "lots": 7,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -6217,6 +6675,7 @@
       "floorsMax": 44,
       "housesSeen": 1,
       "lots": 29,
+      "declared": null,
       "apartmentsShare": 14,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -6270,6 +6729,7 @@
       "floorsMax": 27,
       "housesSeen": 2,
       "lots": 61,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 92,
       "saleTypes": [
@@ -6329,6 +6789,7 @@
       "floorsMax": 15,
       "housesSeen": 1,
       "lots": 42,
+      "declared": null,
       "apartmentsShare": 98,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -6389,6 +6850,7 @@
       "floorsMax": 20,
       "housesSeen": 1,
       "lots": 29,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 24,
       "saleTypes": [
@@ -6444,6 +6906,7 @@
       "floorsMax": 11,
       "housesSeen": 1,
       "lots": 8,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -6497,6 +6960,7 @@
       "floorsMax": 19,
       "housesSeen": 1,
       "lots": 2,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -6550,6 +7014,7 @@
       "floorsMax": 21,
       "housesSeen": 1,
       "lots": 19,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -6603,6 +7068,7 @@
       "floorsMax": 19,
       "housesSeen": 1,
       "lots": 11,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -6656,6 +7122,7 @@
       "floorsMax": 28,
       "housesSeen": 1,
       "lots": 143,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 91,
       "saleTypes": [
@@ -6712,6 +7179,7 @@
       "floorsMax": 12,
       "housesSeen": 1,
       "lots": 8,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -6768,6 +7236,7 @@
       "floorsMax": 25,
       "housesSeen": 2,
       "lots": 79,
+      "declared": null,
       "apartmentsShare": 62,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -6831,6 +7300,7 @@
       "floorsMax": 22,
       "housesSeen": 4,
       "lots": 11,
+      "declared": null,
       "apartmentsShare": 9,
       "fromDeveloperShare": 36,
       "saleTypes": [
@@ -6886,6 +7356,7 @@
       "floorsMax": 28,
       "housesSeen": 1,
       "lots": 1,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -6937,6 +7408,7 @@
       "floorsMax": 33,
       "housesSeen": 0,
       "lots": 37,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 86,
       "saleTypes": [
@@ -7008,6 +7480,7 @@
       "floorsMax": 54,
       "housesSeen": 7,
       "lots": 229,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -7063,6 +7536,7 @@
       "floorsMax": 12,
       "housesSeen": 1,
       "lots": 7,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -7116,6 +7590,7 @@
       "floorsMax": 9,
       "housesSeen": 1,
       "lots": 3,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -7169,6 +7644,7 @@
       "floorsMax": 14,
       "housesSeen": 1,
       "lots": 22,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 18,
       "saleTypes": [
@@ -7227,6 +7703,7 @@
       "floorsMax": 7,
       "housesSeen": 2,
       "lots": 4,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -7290,6 +7767,7 @@
       "floorsMax": 14,
       "housesSeen": 7,
       "lots": 97,
+      "declared": null,
       "apartmentsShare": 92,
       "fromDeveloperShare": 89,
       "saleTypes": [
@@ -7348,6 +7826,7 @@
       "floorsMax": 20,
       "housesSeen": 1,
       "lots": 4,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -7401,6 +7880,7 @@
       "floorsMax": 16,
       "housesSeen": 1,
       "lots": 2,
+      "declared": null,
       "apartmentsShare": 0,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -7454,6 +7934,7 @@
       "floorsMax": 5,
       "housesSeen": 1,
       "lots": 1,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 0,
       "saleTypes": [
@@ -7507,6 +7988,7 @@
       "floorsMax": 8,
       "housesSeen": 1,
       "lots": 10,
+      "declared": null,
       "apartmentsShare": 100,
       "fromDeveloperShare": 0,
       "saleTypes": [
