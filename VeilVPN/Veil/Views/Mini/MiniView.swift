@@ -20,11 +20,17 @@ struct MiniView: View {
                         Text(app.connection.title)
                             .font(.system(size: 24, weight: .bold, design: .rounded))
                         if app.connection == .connecting {
-                            Text(app.transportAttemptMessage.map { Text(verbatim: $0) } ?? Text(app.bootstrap.phaseTitle))
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .lineLimit(2)
-                                .multilineTextAlignment(.center)
+                            Group {
+                                if let message = app.transportAttemptMessage {
+                                    Text(verbatim: message)
+                                } else {
+                                    Text(app.bootstrap.phaseTitle)
+                                }
+                            }
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.center)
                         } else if let exit = app.exitHop, app.connection.isConnected {
                             Text("Exit relay: \(exit.flag) \(exit.countryName ?? exit.nickname)")
                                 .font(.caption)

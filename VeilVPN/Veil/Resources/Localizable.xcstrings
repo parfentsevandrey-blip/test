@@ -8,6 +8,12 @@
             "state": "translated",
             "value": "%@ не ответил, пробую %@…"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ не відповів, пробую %@…"
+          }
         }
       }
     },
@@ -17,6 +23,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Доступно управляющих серверов Tor: %lld из %lld"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступно керівних серверів Tor: %lld із %lld"
           }
         }
       }
@@ -28,6 +40,12 @@
             "state": "translated",
             "value": "%lld% трафика"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld% трафіку"
+          }
         }
       }
     },
@@ -37,6 +55,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Клиент сети Tor с мостами Snowflake в стиле Liquid Glass. Tor, Snowflake и Lyrebird — © The Tor Project, Inc., распространяются по собственным лицензиям."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Клієнт мережі Tor з мостами Snowflake у стилі Liquid Glass. Tor, Snowflake і Lyrebird — © The Tor Project, Inc., поширюються за власними ліцензіями."
           }
         }
       }
@@ -48,6 +72,12 @@
             "state": "translated",
             "value": "О программе"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Про програму"
+          }
         }
       }
     },
@@ -57,6 +87,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Активность"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Активність"
           }
         }
       }
@@ -68,6 +104,12 @@
             "state": "translated",
             "value": "Права администратора не были предоставлены."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Права адміністратора не надано."
+          }
         }
       }
     },
@@ -77,6 +119,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Обход замедления"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обхід сповільнення"
           }
         }
       }
@@ -88,6 +136,12 @@
             "state": "translated",
             "value": "Техника обхода замедления"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Техніка обходу сповільнення"
+          }
         }
       }
     },
@@ -97,6 +151,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Приложение"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Програма"
           }
         }
       }
@@ -108,6 +168,12 @@
             "state": "translated",
             "value": "Включает системный прокси ещё до запуска Tor и оставляет его направленным на Veil, если Tor упадёт: приложения с прокси блокируются, а не утекают. Приложения, игнорирующие прокси, без системного расширения не защищены."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вмикає системний проксі ще до запуску Tor і лишає його спрямованим на Veil, якщо Tor упаде: програми з проксі блокуються, а не витікають. Програми, що ігнорують проксі, без системного розширення не захищені."
+          }
         }
       }
     },
@@ -117,6 +183,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Запрашивает у bridges.torproject.org (напрямую, затем через CDN с domain fronting) мосты, рекомендованные для вашей страны, и переключается на них."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запитує в bridges.torproject.org (напряму, потім через CDN із domain fronting) мости, рекомендовані для вашої країни, і перемикається на них."
           }
         }
       }
@@ -128,12 +200,24 @@
             "state": "translated",
             "value": "Авторизация отменена."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Авторизацію скасовано."
+          }
         }
       }
     },
     "Auto · %@": {
       "localizations": {
         "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Авто · %@"
+          }
+        },
+        "uk": {
           "stringUnit": {
             "state": "translated",
             "value": "Авто · %@"
@@ -148,6 +232,12 @@
             "state": "translated",
             "value": "Подобрать самую быструю технику"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Дібрати найшвидшу техніку"
+          }
         }
       }
     },
@@ -157,6 +247,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Автоматически"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Автоматично"
           }
         }
       }
@@ -168,6 +264,12 @@
             "state": "translated",
             "value": "Автоматически (рекомендуется)"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Автоматично (рекомендовано)"
+          }
         }
       }
     },
@@ -177,6 +279,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Автоматический выход"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Автоматичний вихід"
           }
         }
       }
@@ -188,12 +296,24 @@
             "state": "translated",
             "value": "Избегать стран «Пяти глаз» (США, Великобритания, Канада, Австралия, Новая Зеландия)"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Уникати країн «П’яти очей» (США, Велика Британія, Канада, Австралія, Нова Зеландія)"
+          }
         }
       }
     },
     "Back": {
       "localizations": {
         "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Назад"
+          }
+        },
+        "uk": {
           "stringUnit": {
             "state": "translated",
             "value": "Назад"
@@ -208,6 +328,12 @@
             "state": "translated",
             "value": "Фоновый шум плюс всплеск пустого трафика в начале каждой реальной активности, скрывающий форму загрузки страниц (защита FRONT). Примерно 5–30 КБ/с во время работы в сети."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Фоновий шум плюс сплеск порожнього трафіку на початку кожної реальної активності, що приховує форму завантаження сторінок (захист FRONT). Приблизно 5–30 КБ/с під час перегляду."
+          }
         }
       }
     },
@@ -217,6 +343,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Сбалансированная"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Збалансована"
           }
         }
       }
@@ -228,6 +360,12 @@
             "state": "translated",
             "value": "Заблокировано"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Заблоковано"
+          }
         }
       }
     },
@@ -237,6 +375,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Начальная загрузка"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Початкове завантаження"
           }
         }
       }
@@ -248,6 +392,12 @@
             "state": "translated",
             "value": "Мост"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Міст"
+          }
         }
       }
     },
@@ -257,6 +407,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Строки мостов"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Рядки мостів"
           }
         }
       }
@@ -268,6 +424,12 @@
             "state": "translated",
             "value": "Служба мостов"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Служба мостів"
+          }
         }
       }
     },
@@ -277,6 +439,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Мосты"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мости"
           }
         }
       }
@@ -288,6 +456,12 @@
             "state": "translated",
             "value": "Мосты, маршруты, сайты, маскировка и все остальные настройки в одном JSON-файле."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мости, маршрути, сайти, маскування та всі інші налаштування в одному JSON-файлі."
+          }
         }
       }
     },
@@ -297,6 +471,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Построение цепочки…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Побудова ланцюжка…"
           }
         }
       }
@@ -308,6 +488,12 @@
             "state": "translated",
             "value": "Построение цепочек"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Побудова ланцюжків"
+          }
         }
       }
     },
@@ -317,6 +503,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Встроенные мосты obfs4 из Tor Browser. Быстро, но адреса публичны и могут быть уже заблокированы."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вбудовані мости obfs4 із Tor Browser. Швидко, але адреси публічні й можуть бути вже заблоковані."
           }
         }
       }
@@ -328,6 +520,12 @@
             "state": "translated",
             "value": "Отмена"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скасувати"
+          }
         }
       }
     },
@@ -337,6 +535,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Сменить транспорт: Настройки → Мосты"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Змінити транспорт: Налаштування → Мости"
           }
         }
       }
@@ -348,6 +552,12 @@
             "state": "translated",
             "value": "Изменения вступят в силу при следующем подключении."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зміни набудуть чинності під час наступного підключення."
+          }
         }
       }
     },
@@ -357,6 +567,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Проверка"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перевірка"
           }
         }
       }
@@ -368,6 +584,12 @@
             "state": "translated",
             "value": "Проверить Tor"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перевірити Tor"
+          }
         }
       }
     },
@@ -377,6 +599,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Проверить подключение к Tor"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перевірити підключення до Tor"
           }
         }
       }
@@ -388,6 +616,12 @@
             "state": "translated",
             "value": "Проверить прямую доступность"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перевірити пряму доступність"
+          }
         }
       }
     },
@@ -397,6 +631,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Проверить обновления…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перевірити оновлення…"
           }
         }
       }
@@ -408,6 +648,12 @@
             "state": "translated",
             "value": "Проверять обновления автоматически"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перевіряти оновлення автоматично"
+          }
         }
       }
     },
@@ -417,6 +663,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Проверить сейчас"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перевірити зараз"
           }
         }
       }
@@ -428,6 +680,12 @@
             "state": "translated",
             "value": "Проверка youtube.com…"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перевірка youtube.com…"
+          }
         }
       }
     },
@@ -437,6 +695,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Проверяет, доступен ли Tor напрямую, затем по очереди пробует последний сработавший транспорт, ваши мосты, Snowflake, obfs4 и meek, пока один не подключится."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перевіряє, чи доступний Tor напряму, а потім по черзі пробує останній робочий транспорт, ваші мости, Snowflake, obfs4 і meek, доки один не підключиться."
           }
         }
       }
@@ -448,6 +712,12 @@
             "state": "translated",
             "value": "Выбрать страну выходного узла"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вибрати країну вихідного вузла"
+          }
         }
       }
     },
@@ -457,6 +727,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Очистить"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Очистити"
           }
         }
       }
@@ -468,6 +744,12 @@
             "state": "translated",
             "value": "Нажмите, чтобы подключиться через Tor"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Натисніть, щоб підключитися через Tor"
+          }
         }
       }
     },
@@ -477,6 +759,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Подключить"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Підключити"
           }
         }
       }
@@ -488,6 +776,12 @@
             "state": "translated",
             "value": "Подключиться через Tor (⌘K)"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Підключитися через Tor (⌘K)"
+          }
         }
       }
     },
@@ -497,6 +791,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Сначала подключитесь к Tor или включите YouTube Turbo — проверка идёт через прокси Veil точно так же, как Safari."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Спочатку підключіться до Tor або ввімкніть YouTube Turbo — перевірка йде через проксі Veil так само, як Safari."
           }
         }
       }
@@ -508,6 +808,12 @@
             "state": "translated",
             "value": "Подключение к публичным узлам Tor без мостов. Самый быстрый вариант, но работает только там, где Tor не заблокирован."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Підключення до публічних вузлів Tor без мостів. Найшвидше, але працює лише там, де Tor не заблоковано."
+          }
         }
       }
     },
@@ -517,6 +823,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Подключаться при запуске Veil"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Підключатися під час запуску Veil"
           }
         }
       }
@@ -528,6 +840,12 @@
             "state": "translated",
             "value": "Подключено"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Підключено"
+          }
         }
       }
     },
@@ -537,6 +855,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Подключено через Tor"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Підключено через Tor"
           }
         }
       }
@@ -548,6 +872,12 @@
             "state": "translated",
             "value": "Подключение"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Підключення"
+          }
         }
       }
     },
@@ -557,6 +887,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Подключение к сети Tor"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Підключення до мережі Tor"
           }
         }
       }
@@ -568,6 +904,12 @@
             "state": "translated",
             "value": "Подключение к циклу через Tor (попытка %lld)…"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Підключення до циклу через Tor (спроба %lld)…"
+          }
         }
       }
     },
@@ -577,6 +919,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Подключение"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Підключення"
           }
         }
       }
@@ -588,6 +936,12 @@
             "state": "translated",
             "value": "Ошибка подключения"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Помилка підключення"
+          }
         }
       }
     },
@@ -597,6 +951,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Соединения: %lld через Tor, %lld напрямую, %lld с обходом замедления, %lld заблокировано"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "З’єднання: %lld через Tor, %lld напряму, %lld з обходом сповільнення, %lld заблоковано"
           }
         }
       }
@@ -608,6 +968,12 @@
             "state": "translated",
             "value": "Далее"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Далі"
+          }
         }
       }
     },
@@ -617,6 +983,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Скопировано"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скопійовано"
           }
         }
       }
@@ -628,6 +1000,12 @@
             "state": "translated",
             "value": "Копировать"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Копіювати"
+          }
         }
       }
     },
@@ -637,6 +1015,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Скопировать в буфер"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скопіювати в буфер"
           }
         }
       }
@@ -648,6 +1032,12 @@
             "state": "translated",
             "value": "Не удалось подключиться"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не вдалося підключитися"
+          }
         }
       }
     },
@@ -657,6 +1047,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Не удалось достучаться до приватного onion-сервиса Veil через Tor."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не вдалося дістатися приватного onion-сервісу Veil через Tor."
           }
         }
       }
@@ -668,6 +1064,12 @@
             "state": "translated",
             "value": "Не удалось связаться со службой мостов: %@"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не вдалося зв’язатися зі службою мостів: %@"
+          }
         }
       }
     },
@@ -677,6 +1079,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Не удалось прочитать cookie авторизации Tor."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не вдалося прочитати cookie авторизації Tor."
           }
         }
       }
@@ -688,6 +1096,12 @@
             "state": "translated",
             "value": "Не удалось сохранить сетевые настройки: %@"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не вдалося зберегти мережеві налаштування: %@"
+          }
         }
       }
     },
@@ -697,6 +1111,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Действует для youtube.com, googlevideo.com, ytimg.com, ggpht.com и остальных хостов YouTube. Через прокси QUIC/HTTP3 не используется, поэтому обход замедления применяется всегда."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Діє для youtube.com, googlevideo.com, ytimg.com, ggpht.com та інших хостів YouTube. Через проксі QUIC/HTTP3 не використовується, тому обхід сповільнення застосовується завжди."
           }
         }
       }
@@ -708,6 +1128,12 @@
             "state": "translated",
             "value": "Создание приватного onion-сервиса…"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Створення приватного onion-сервісу…"
+          }
         }
       }
     },
@@ -717,6 +1143,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Свои мосты"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Власні мости"
           }
         }
       }
@@ -728,12 +1160,24 @@
             "state": "translated",
             "value": "Защита от анализа трафика"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Захист від аналізу трафіку"
+          }
         }
       }
     },
     "Demo mode": {
       "localizations": {
         "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Демо-режим"
+          }
+        },
+        "uk": {
           "stringUnit": {
             "state": "translated",
             "value": "Демо-режим"
@@ -748,6 +1192,12 @@
             "state": "translated",
             "value": "Диагностика"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Діагностика"
+          }
         }
       }
     },
@@ -757,6 +1207,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Напрямую"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Напряму"
           }
         }
       }
@@ -768,6 +1224,12 @@
             "state": "translated",
             "value": "Напрямую (без мостов)"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Напряму (без мостів)"
+          }
         }
       }
     },
@@ -777,6 +1239,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Прямые режимы быстрые, но сайт видит ваш реальный IP-адрес. Всё остальное по-прежнему идёт через Tor."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прямі режими швидкі, але сайт бачить вашу справжню IP-адресу. Усе інше й далі йде через Tor."
           }
         }
       }
@@ -788,6 +1256,12 @@
             "state": "translated",
             "value": "Напрямую, с обходом замедления"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Напряму, з обходом сповільнення"
+          }
         }
       }
     },
@@ -797,6 +1271,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Отключить"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відключити"
           }
         }
       }
@@ -808,6 +1288,12 @@
             "state": "translated",
             "value": "Отключиться от Tor (⇧⌘K)"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відключитися від Tor (⇧⌘K)"
+          }
         }
       }
     },
@@ -817,6 +1303,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Отключение"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відключення"
           }
         }
       }
@@ -828,12 +1320,24 @@
             "state": "translated",
             "value": "Скрыть"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сховати"
+          }
         }
       }
     },
     "Done": {
       "localizations": {
         "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Готово"
+          }
+        },
+        "uk": {
           "stringUnit": {
             "state": "translated",
             "value": "Готово"
@@ -848,6 +1352,12 @@
             "state": "translated",
             "value": "Скачать"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Завантажити"
+          }
         }
       }
     },
@@ -857,6 +1367,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Скачать Veil %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Завантажити Veil %@"
           }
         }
       }
@@ -868,6 +1384,12 @@
             "state": "translated",
             "value": "Скачайте новый DMG, замените Veil в «Программах» и перезапустите."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Завантажте новий DMG, замініть Veil у «Програмах» і перезапустіть."
+          }
         }
       }
     },
@@ -877,6 +1399,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Пустой трафик проходит через сеть Tor до приватного onion-сервиса на этом Mac, так что ни один сайт его не получает. Также принудительно включаются встроенные circuit padding и connection padding самого Tor. Маскировка расходует трафик — ваш, волонтёра Snowflake и узлов Tor, — поэтому выбирайте самый лёгкий подходящий уровень."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Порожній трафік проходить через мережу Tor до приватного onion-сервісу на цьому Mac, тож жоден сайт його не отримує. Також примусово вмикаються вбудовані circuit padding і connection padding самого Tor. Маскування витрачає трафік — ваш, волонтера Snowflake і вузлів Tor, — тому обирайте найлегший придатний рівень."
           }
         }
       }
@@ -888,6 +1416,12 @@
             "state": "translated",
             "value": "Длительность"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тривалість"
+          }
         }
       }
     },
@@ -897,6 +1431,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Включить"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Увімкнути"
           }
         }
       }
@@ -908,6 +1448,12 @@
             "state": "translated",
             "value": "Установка цепочки"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Встановлення ланцюжка"
+          }
         }
       }
     },
@@ -917,6 +1463,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Каждые 10 минут"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Кожні 10 хвилин"
           }
         }
       }
@@ -928,6 +1480,12 @@
             "state": "translated",
             "value": "Каждые 30 минут"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Кожні 30 хвилин"
+          }
         }
       }
     },
@@ -937,6 +1495,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Каждые 5 минут"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Кожні 5 хвилин"
           }
         }
       }
@@ -948,6 +1512,12 @@
             "state": "translated",
             "value": "Каждое ограничение сужает выбор узлов для Tor и делает ваши цепочки более узнаваемыми. Выбирайте промежуточную страну, отличную от выходной, и не злоупотребляйте исключениями."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Кожне обмеження звужує вибір вузлів для Tor і робить ваші ланцюжки помітнішими. Обирайте проміжну країну, відмінну від вихідної, і не зловживайте винятками."
+          }
         }
       }
     },
@@ -957,6 +1527,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Всё из «Сбалансированной», плюс оба направления дополняются до постоянной скорости (≈10 КБ/с вверх, ≈24 КБ/с вниз), чтобы объём трафика ничего не выдавал. Расходует больше всего трафика."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Усе зі «Збалансованої», плюс обидва напрямки доповнюються до сталої швидкості (≈10 КБ/с вгору, ≈24 КБ/с вниз), щоб обсяг трафіку нічого не видавав. Витрачає найбільше трафіку."
           }
         }
       }
@@ -968,6 +1544,12 @@
             "state": "translated",
             "value": "Всё, что уважает системный прокси (Safari, браузеры, большинство приложений), идёт через Tor. Утилитам терминала нужна команда из Настройки → Сеть."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Усе, що поважає системний проксі (Safari, браузери, більшість програм), іде через Tor. Утилітам термінала потрібна команда з Налаштування → Мережа."
+          }
         }
       }
     },
@@ -977,6 +1559,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Выходной"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вихідний"
           }
         }
       }
@@ -988,6 +1576,12 @@
             "state": "translated",
             "value": "IP выхода"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IP виходу"
+          }
         }
       }
     },
@@ -997,6 +1591,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Выходной узел"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вихідний вузол"
           }
         }
       }
@@ -1008,6 +1608,12 @@
             "state": "translated",
             "value": "Страна выхода"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Країна виходу"
+          }
         }
       }
     },
@@ -1017,6 +1623,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Страна выходного узла"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Країна вихідного вузла"
           }
         }
       }
@@ -1028,6 +1640,12 @@
             "state": "translated",
             "value": "Выходной узел: %@ %@"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вихідний вузол: %@ %@"
+          }
         }
       }
     },
@@ -1037,6 +1655,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Выход: %@ %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вихід: %@ %@"
           }
         }
       }
@@ -1048,6 +1672,12 @@
             "state": "translated",
             "value": "Экспорт настроек Veil"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Експорт налаштувань Veil"
+          }
         }
       }
     },
@@ -1057,6 +1687,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Экспорт…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Експорт…"
           }
         }
       }
@@ -1068,6 +1704,12 @@
             "state": "translated",
             "value": "Отклик"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відгук"
+          }
         }
       }
     },
@@ -1077,6 +1719,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Дробить TLS-рукопожатие и для этих доменов"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Дробити TLS-рукостискання і для цих доменів"
           }
         }
       }
@@ -1088,6 +1736,12 @@
             "state": "translated",
             "value": "Полное окно"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Повне вікно"
+          }
         }
       }
     },
@@ -1097,6 +1751,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Основные"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Основні"
           }
         }
       }
@@ -1108,6 +1768,12 @@
             "state": "translated",
             "value": "Получить мосты у Tor Project"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отримати мости від Tor Project"
+          }
         }
       }
     },
@@ -1117,6 +1783,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Начать"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Почати"
           }
         }
       }
@@ -1128,6 +1800,12 @@
             "state": "translated",
             "value": "Входной"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вхідний"
+          }
         }
       }
     },
@@ -1137,6 +1815,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Порт HTTP-прокси"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Порт HTTP-проксі"
           }
         }
       }
@@ -1148,6 +1832,12 @@
             "state": "translated",
             "value": "Тактильный отклик на трекпаде"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тактильний відгук на трекпаді"
+          }
         }
       }
     },
@@ -1157,6 +1847,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Главная"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Головна"
           }
         }
       }
@@ -1168,6 +1864,12 @@
             "state": "translated",
             "value": "Как это работает"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Як це працює"
+          }
         }
       }
     },
@@ -1177,6 +1879,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Как подключаться к сети Tor"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Як під’єднуватися до мережі Tor"
           }
         }
       }
@@ -1188,6 +1896,12 @@
             "state": "translated",
             "value": "Импорт настроек Veil"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Імпорт налаштувань Veil"
+          }
         }
       }
     },
@@ -1197,6 +1911,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Импорт…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Імпорт…"
           }
         }
       }
@@ -1208,6 +1928,12 @@
             "state": "translated",
             "value": "Подмешивает пустой трафик в туннель, чтобы наблюдатель между этим Mac и Snowflake-прокси не мог по размерам и таймингам пакетов понять, какие сайты вы открываете (website fingerprinting). Вдохновлено DAITA от Mullvad и фреймворком Maybenot; в отличие от DAITA реальные пакеты никогда не задерживаются — только добавляется шум."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Підмішує порожній трафік у тунель, щоб спостерігач між цим Mac і Snowflake-проксі не міг за розмірами й таймінгами пакетів зрозуміти, які сайти ви відкриваєте (website fingerprinting). Натхнено DAITA від Mullvad і фреймворком Maybenot; на відміну від DAITA справжні пакети ніколи не затримуються — лише додається шум."
+          }
         }
       }
     },
@@ -1217,6 +1943,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Интенсивность"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Інтенсивність"
           }
         }
       }
@@ -1228,6 +1960,12 @@
             "state": "translated",
             "value": "Интернет"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Інтернет"
+          }
         }
       }
     },
@@ -1237,6 +1975,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "IsolateDestAddr: сайты нельзя связать через общий IP выхода. Больше цепочек, чуть медленнее. Применяется при следующем подключении."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IsolateDestAddr: сайти не можна пов’язати через спільний IP виходу. Більше ланцюжків, трохи повільніше. Застосовується під час наступного підключення."
           }
         }
       }
@@ -1248,6 +1992,12 @@
             "state": "translated",
             "value": "Kill switch (блокировать при сбое)"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kill switch (блокувати в разі збою)"
+          }
         }
       }
     },
@@ -1257,6 +2007,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Сработал kill switch"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Спрацював kill switch"
           }
         }
       }
@@ -1268,6 +2024,12 @@
             "state": "translated",
             "value": "Запускать при входе в систему"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запускати під час входу в систему"
+          }
         }
       }
     },
@@ -1277,6 +2039,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Лёгкая"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Легка"
           }
         }
       }
@@ -1288,6 +2056,12 @@
             "state": "translated",
             "value": "Загрузка сертификатов"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Завантаження сертифікатів"
+          }
         }
       }
     },
@@ -1297,6 +2071,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Загрузка статуса сети"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Завантаження стану мережі"
           }
         }
       }
@@ -1308,6 +2088,12 @@
             "state": "translated",
             "value": "Загрузка дескрипторов узлов"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Завантаження дескрипторів вузлів"
+          }
         }
       }
     },
@@ -1317,6 +2103,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Локальные порты"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Локальні порти"
           }
         }
       }
@@ -1328,6 +2120,12 @@
             "state": "translated",
             "value": "Ручной режим прокси"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ручний режим проксі"
+          }
         }
       }
     },
@@ -1337,6 +2135,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Карта цепочки Tor"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Карта ланцюжка Tor"
           }
         }
       }
@@ -1348,6 +2152,12 @@
             "state": "translated",
             "value": "Промежуточный"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проміжний"
+          }
         }
       }
     },
@@ -1357,6 +2167,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Промежуточный узел"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проміжний вузол"
           }
         }
       }
@@ -1368,6 +2184,12 @@
             "state": "translated",
             "value": "Мини-окно"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Міні-вікно"
+          }
         }
       }
     },
@@ -1377,6 +2199,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Мини-окно"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Міні-вікно"
           }
         }
       }
@@ -1388,6 +2216,12 @@
             "state": "translated",
             "value": "Многократный переход"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Багаторазовий перехід"
+          }
         }
       }
     },
@@ -1397,6 +2231,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Функция «Многократный переход» направляет трафик через узлы в выбранных вами странах — мост, промежуточный и выходной узлы в разных юрисдикциях, — что сильно затрудняет отслеживание. Это может увеличить задержку, но повышает анонимность. Маршрут можно также увести из выбранных стран и менять по таймеру."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Функція «Багаторазовий перехід» спрямовує трафік через вузли у вибраних вами країнах — міст, проміжний і вихідний вузли в різних юрисдикціях, — що значно ускладнює відстеження. Це може збільшити затримку, але підвищує анонімність. Маршрут також можна вивести з вибраних країн і змінювати за таймером."
           }
         }
       }
@@ -1408,6 +2248,12 @@
             "state": "translated",
             "value": "Сеть"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мережа"
+          }
         }
       }
     },
@@ -1417,6 +2263,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Сетевые настройки недоступны."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мережеві налаштування недоступні."
           }
         }
       }
@@ -1428,6 +2280,12 @@
             "state": "translated",
             "value": "Никогда не проходить через"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ніколи не проходити через"
+          }
         }
       }
     },
@@ -1437,6 +2295,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Новая личность"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нова особистість"
           }
         }
       }
@@ -1448,6 +2312,12 @@
             "state": "translated",
             "value": "Не указаны строки мостов. Вставьте мосты в Настройки → Мосты или выберите другой транспорт."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не вказано рядків мостів. Вставте мости в Налаштування → Мости або виберіть інший транспорт."
+          }
         }
       }
     },
@@ -1457,6 +2327,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Нет свободных локальных портов."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Немає вільних локальних портів."
           }
         }
       }
@@ -1468,6 +2344,12 @@
             "state": "translated",
             "value": "Рядом с приложением нет бинарников tor, поэтому подключение имитируется. Соберите DMG командой `make dmg` или выполните `make tor`, чтобы встроить Tor."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поруч із програмою немає бінарників tor, тому підключення імітується. Зберіть DMG командою `make dmg` або виконайте `make tor`, щоб вбудувати Tor."
+          }
         }
       }
     },
@@ -1477,6 +2359,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Не подключено"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не підключено"
           }
         }
       }
@@ -1488,6 +2376,12 @@
             "state": "translated",
             "value": "Ещё не проверялось"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ще не перевірялося"
+          }
         }
       }
     },
@@ -1497,6 +2391,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Уведомления о событиях подключения"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сповіщення про події підключення"
           }
         }
       }
@@ -1508,6 +2408,12 @@
             "state": "translated",
             "value": "Выключено"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вимкнено"
+          }
         }
       }
     },
@@ -1517,6 +2423,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Один мост на строку, например «obfs4 1.2.3.4:443 FINGERPRINT cert=… iat-mode=0». Слово «Bridge» в начале не обязательно."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Один міст на рядок, наприклад «obfs4 1.2.3.4:443 FINGERPRINT cert=… iat-mode=0». Слово «Bridge» на початку не обов’язкове."
           }
         }
       }
@@ -1528,12 +2440,24 @@
             "state": "translated",
             "value": "Один домен на строку, например «rutube.ru». Поддомены включаются автоматически. Эти сайты видят ваш реальный IP-адрес."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Один домен на рядок, наприклад «rutube.ru». Піддомени включаються автоматично. Ці сайти бачать вашу справжню IP-адресу."
+          }
         }
       }
     },
     "One password, once": {
       "localizations": {
         "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Один пароль, один раз"
+          }
+        },
+        "uk": {
           "stringUnit": {
             "state": "translated",
             "value": "Один пароль, один раз"
@@ -1548,6 +2472,12 @@
             "state": "translated",
             "value": "Только Telegram Web. Настольному приложению нужна своя настройка прокси: SOCKS5 127.0.0.1 с SOCKS-портом Veil."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Лише Telegram Web. Настільній програмі потрібне власне налаштування проксі: SOCKS5 127.0.0.1 із SOCKS-портом Veil."
+          }
         }
       }
     },
@@ -1557,6 +2487,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Открыть журнал"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відкрити журнал"
           }
         }
       }
@@ -1568,6 +2504,12 @@
             "state": "translated",
             "value": "Открыть настройки (⌘,)"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відкрити налаштування (⌘,)"
+          }
         }
       }
     },
@@ -1577,6 +2519,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Открыть Veil"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відкрити Veil"
           }
         }
       }
@@ -1588,6 +2536,12 @@
             "state": "translated",
             "value": "Откройте Veil, чтобы скачать обновление."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відкрийте Veil, щоб завантажити оновлення."
+          }
         }
       }
     },
@@ -1597,6 +2551,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Откройте Veil, чтобы увидеть ошибку"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відкрийте Veil, щоб побачити помилку"
           }
         }
       }
@@ -1608,6 +2568,12 @@
             "state": "translated",
             "value": "Открыть компактное окно (⇧⌘M)"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відкрити компактне вікно (⇧⌘M)"
+          }
         }
       }
     },
@@ -1617,6 +2583,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Другие домены в обход Tor"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Інші домени в обхід Tor"
           }
         }
       }
@@ -1628,6 +2600,12 @@
             "state": "translated",
             "value": "Маскировка"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Маскування"
+          }
         }
       }
     },
@@ -1637,6 +2615,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Цикл маскировки отменён."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Цикл маскування скасовано."
           }
         }
       }
@@ -1648,6 +2632,12 @@
             "state": "translated",
             "value": "Вставьте строки мостов с bridges.torproject.org, из Telegram-бота @GetBridgesBot или по почте bridges@torproject.org. Поддерживаются obfs4, webtunnel, snowflake, meek_lite и conjure."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вставте рядки мостів із bridges.torproject.org, Telegram-бота @GetBridgesBot або з листа bridges@torproject.org. Підтримуються obfs4, webtunnel, snowflake, meek_lite і conjure."
+          }
         }
       }
     },
@@ -1657,6 +2647,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "TLS-рукопожатие"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TLS-рукостискання"
           }
         }
       }
@@ -1668,6 +2664,12 @@
             "state": "translated",
             "value": "Закрепляет последний узел цепочки за одной страной. Автоматический выбор наиболее приватен; изменения применяются сразу."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Закріплює останній вузол ланцюжка за однією країною. Автоматичний вибір найприватніший; зміни застосовуються одразу."
+          }
         }
       }
     },
@@ -1677,6 +2679,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Порты применяются при следующем подключении. Если порт занят, Veil выберет ближайший свободный и покажет его в журнале."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Порти застосовуються під час наступного підключення. Якщо порт зайнятий, Veil вибере найближчий вільний і покаже його в журналі."
           }
         }
       }
@@ -1688,6 +2696,12 @@
             "state": "translated",
             "value": "Подготовка"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Підготовка"
+          }
         }
       }
     },
@@ -1697,6 +2711,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Приватность"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Приватність"
           }
         }
       }
@@ -1708,6 +2728,12 @@
             "state": "translated",
             "value": "Защита"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Захист"
+          }
         }
       }
     },
@@ -1717,6 +2743,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Публикация onion-сервиса через Tor — обычно 1–3 минуты через Snowflake…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Публікація onion-сервісу через Tor — зазвичай 1–3 хвилини через Snowflake…"
           }
         }
       }
@@ -1728,6 +2760,12 @@
             "state": "translated",
             "value": "Завершить"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вийти"
+          }
         }
       }
     },
@@ -1737,6 +2775,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Доступ к Tor через прокси волонтёров — даже там, где Tor заблокирован."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступ до Tor через проксі волонтерів — навіть там, де Tor заблоковано."
           }
         }
       }
@@ -1748,6 +2792,12 @@
             "state": "translated",
             "value": "Поиск Snowflake-прокси"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пошук Snowflake-проксі"
+          }
         }
       }
     },
@@ -1757,6 +2807,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Получено мостов: %lld (%@); транспорт переключён на «свои мосты»"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отримано мостів: %lld (%@); транспорт перемкнено на «власні мости»"
           }
         }
       }
@@ -1768,6 +2824,12 @@
             "state": "translated",
             "value": "Рекомендуется"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Рекомендовано"
+          }
         }
       }
     },
@@ -1777,6 +2839,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Переподключить"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перепідключити"
           }
         }
       }
@@ -1788,6 +2856,12 @@
             "state": "translated",
             "value": "Переподключаться автоматически после смены сети и сна"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перепідключатися автоматично після зміни мережі та сну"
+          }
         }
       }
     },
@@ -1797,6 +2871,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Автоматическое переподключение…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Автоматичне перепідключення…"
           }
         }
       }
@@ -1808,6 +2888,12 @@
             "state": "translated",
             "value": "Расположение узлов появится здесь после построения цепочки."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Розташування вузлів з’явиться тут після побудови ланцюжка."
+          }
         }
       }
     },
@@ -1817,6 +2903,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Запрос…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запит…"
           }
         }
       }
@@ -1828,6 +2920,12 @@
             "state": "translated",
             "value": "Вернуть сеть"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Повернути мережу"
+          }
         }
       }
     },
@@ -1837,6 +2935,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Восстановление сетевых настроек…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відновлення мережевих налаштувань…"
           }
         }
       }
@@ -1848,12 +2952,24 @@
             "state": "translated",
             "value": "Смена маршрута"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зміна маршруту"
+          }
         }
       }
     },
     "Route": {
       "localizations": {
         "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Маршрут"
+          }
+        },
+        "uk": {
           "stringUnit": {
             "state": "translated",
             "value": "Маршрут"
@@ -1868,6 +2984,12 @@
             "state": "translated",
             "value": "Задержка маршрута ≈ %lld мс"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Затримка маршруту ≈ %lld мс"
+          }
         }
       }
     },
@@ -1877,6 +2999,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Автоматически направлять системный трафик через Tor"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Автоматично спрямовувати системний трафік через Tor"
           }
         }
       }
@@ -1888,12 +3016,24 @@
             "state": "translated",
             "value": "Трафик идёт через Tor"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Трафік іде через Tor"
+          }
         }
       }
     },
     "SOCKS5 port": {
       "localizations": {
         "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Порт SOCKS5"
+          }
+        },
+        "uk": {
           "stringUnit": {
             "state": "translated",
             "value": "Порт SOCKS5"
@@ -1908,6 +3048,12 @@
             "state": "translated",
             "value": "Safari, браузеры и большинство приложений автоматически переключаются на Tor."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Safari, браузери та більшість програм автоматично перемикаються на Tor."
+          }
         }
       }
     },
@@ -1917,6 +3063,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Сохранить отчёт диагностики…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зберегти звіт діагностики…"
           }
         }
       }
@@ -1928,6 +3080,12 @@
             "state": "translated",
             "value": "Сохранить отчёт диагностики"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зберегти звіт діагностики"
+          }
         }
       }
     },
@@ -1937,6 +3095,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Сохранить отчёт…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зберегти звіт…"
           }
         }
       }
@@ -1948,6 +3112,12 @@
             "state": "translated",
             "value": "Подробности ниже, полный журнал — в разделе «Активность»."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подробиці нижче, повний журнал — у розділі «Активність»."
+          }
         }
       }
     },
@@ -1957,6 +3127,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Отдельная цепочка Tor для каждого сайта"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Окремий ланцюжок Tor для кожного сайту"
           }
         }
       }
@@ -1968,6 +3144,12 @@
             "state": "translated",
             "value": "На время подключения переключает SOCKS-, HTTP- и HTTPS-прокси всех активных сетевых служб на Veil, затем возвращает настройки. В первый раз macOS запросит пароль администратора."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На час підключення перемикає SOCKS-, HTTP- і HTTPS-проксі всіх активних мережевих служб на Veil, а потім повертає налаштування. Першого разу macOS запитає пароль адміністратора."
+          }
         }
       }
     },
@@ -1977,6 +3159,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Настройки"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Налаштування"
           }
         }
       }
@@ -1988,6 +3176,12 @@
             "state": "translated",
             "value": "Файл настроек"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Файл налаштувань"
+          }
         }
       }
     },
@@ -1997,6 +3191,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Настройки…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Налаштування…"
           }
         }
       }
@@ -2008,6 +3208,12 @@
             "state": "translated",
             "value": "Показывать Veil в строке меню"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показувати Veil у рядку меню"
+          }
         }
       }
     },
@@ -2017,6 +3223,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Сайты"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сайти"
           }
         }
       }
@@ -2028,12 +3240,24 @@
             "state": "translated",
             "value": "Пропустить"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пропустити"
+          }
         }
       }
     },
     "Snowflake": {
       "localizations": {
         "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snowflake"
+          }
+        },
+        "uk": {
           "stringUnit": {
             "state": "translated",
             "value": "Snowflake"
@@ -2048,6 +3272,12 @@
             "state": "translated",
             "value": "Мост Snowflake"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Міст Snowflake"
+          }
         }
       }
     },
@@ -2057,6 +3287,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Snowflake сначала ищет прокси волонтёра; в сетях с цензурой это занимает 10–60 секунд."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snowflake спершу шукає проксі волонтера; у мережах із цензурою це триває 10–60 секунд."
           }
         }
       }
@@ -2068,6 +3304,12 @@
             "state": "translated",
             "value": "Звуковые эффекты"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Звукові ефекти"
+          }
         }
       }
     },
@@ -2077,6 +3319,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ускоряет замедленный YouTube без Tor. Через прокси Veil с обходом замедления идёт только трафик YouTube: TLS-рукопожатие дробится, и DPI не распознаёт его. Остальной трафик не трогается, ваш IP-адрес остаётся видимым."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пришвидшує сповільнений YouTube без Tor. Через проксі Veil з обходом сповільнення йде лише трафік YouTube: TLS-рукостискання дробиться, і DPI його не розпізнає. Решта трафіку не чіпається, ваша IP-адреса лишається видимою."
           }
         }
       }
@@ -2088,12 +3336,24 @@
             "state": "translated",
             "value": "Только редкий фоновый шум. Около 1–2 КБ/с дополнительного трафика."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Лише рідкий фоновий шум. Близько 1–2 КБ/с додаткового трафіку."
+          }
         }
       }
     },
     "Starting Tor": {
       "localizations": {
         "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запуск Tor"
+          }
+        },
+        "uk": {
           "stringUnit": {
             "state": "translated",
             "value": "Запуск Tor"
@@ -2108,6 +3368,12 @@
             "state": "translated",
             "value": "Остановить"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зупинити"
+          }
         }
       }
     },
@@ -2117,6 +3383,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Сильная"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сильна"
           }
         }
       }
@@ -2128,6 +3400,12 @@
             "state": "translated",
             "value": "Системный прокси"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Системний проксі"
+          }
         }
       }
     },
@@ -2137,6 +3415,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Системный прокси не настроен"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Системний проксі не налаштовано"
           }
         }
       }
@@ -2148,6 +3432,12 @@
             "state": "translated",
             "value": "Системный прокси выключен"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Системний проксі вимкнено"
+          }
         }
       }
     },
@@ -2157,6 +3447,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Системный прокси: %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Системний проксі: %@"
           }
         }
       }
@@ -2168,6 +3464,12 @@
             "state": "translated",
             "value": "Системный трафик идёт через сеть Tor."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Системний трафік іде через мережу Tor."
+          }
         }
       }
     },
@@ -2177,6 +3479,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Разрез TCP-сегмента после первого байта"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Розріз TCP-сегмента після першого байта"
           }
         }
       }
@@ -2188,6 +3496,12 @@
             "state": "translated",
             "value": "Разрез TCP-сегмента по SNI"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Розріз TCP-сегмента за SNI"
+          }
         }
       }
     },
@@ -2197,6 +3511,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Разрез TLS-записи и TCP-сегмента по SNI (рекомендуется)"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Розріз TLS-запису та TCP-сегмента за SNI (рекомендовано)"
           }
         }
       }
@@ -2208,6 +3528,12 @@
             "state": "translated",
             "value": "Разрез TLS-записи по SNI"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Розріз TLS-запису за SNI"
+          }
         }
       }
     },
@@ -2217,6 +3543,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Техника"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Техніка"
           }
         }
       }
@@ -2228,6 +3560,12 @@
             "state": "translated",
             "value": "Терминал"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Термінал"
+          }
         }
       }
     },
@@ -2237,6 +3575,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Проверить YouTube"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перевірити YouTube"
           }
         }
       }
@@ -2248,6 +3592,12 @@
             "state": "translated",
             "value": "Служба мостов ответила HTTP %lld."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Служба мостів відповіла HTTP %lld."
+          }
         }
       }
     },
@@ -2257,6 +3607,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "У службы мостов нет мостов для этого региона."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Служба мостів не має мостів для цього регіону."
           }
         }
       }
@@ -2268,6 +3624,12 @@
             "state": "translated",
             "value": "Настольное приложение использует системный прокси для HTTPS; звонки идут по UDP."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настільна програма використовує системний проксі для HTTPS; дзвінки йдуть через UDP."
+          }
         }
       }
     },
@@ -2277,6 +3639,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kill switch блокирует приложения с прокси, пока Tor не работает, а Veil переподключается автоматически, когда сеть возвращается."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kill switch блокує програми з проксі, доки Tor не працює, а Veil перепідключається автоматично, коли мережа повертається."
           }
         }
       }
@@ -2288,6 +3656,12 @@
             "state": "translated",
             "value": "Цикл маскировки был закрыт."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Цикл маскування закрито."
+          }
         }
       }
     },
@@ -2297,6 +3671,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Транспорт «%@» не включён в эту сборку."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Транспорт «%@» не включено в цю збірку."
           }
         }
       }
@@ -2308,6 +3688,12 @@
             "state": "translated",
             "value": "Процесс tor завершился с кодом %@. Подробности — в разделе «Активность»."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Процес tor завершився з кодом %@. Подробиці — в розділі «Активність»."
+          }
         }
       }
     },
@@ -2317,6 +3703,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Этот Mac"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Цей Mac"
           }
         }
       }
@@ -2328,12 +3720,24 @@
             "state": "translated",
             "value": "Цепочка из трёх узлов"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ланцюжок із трьох вузлів"
+          }
         }
       }
     },
     "Through Tor": {
       "localizations": {
         "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Через Tor"
+          }
+        },
+        "uk": {
           "stringUnit": {
             "state": "translated",
             "value": "Через Tor"
@@ -2348,6 +3752,12 @@
             "state": "translated",
             "value": "Скорость"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Швидкість"
+          }
         }
       }
     },
@@ -2357,6 +3767,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Скорость отображается здесь во время подключения."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Швидкість відображається тут під час підключення."
           }
         }
       }
@@ -2368,6 +3784,12 @@
             "state": "translated",
             "value": "Истекло время подключения к циклу маскировки."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вичерпано час підключення до циклу маскування."
+          }
         }
       }
     },
@@ -2377,6 +3799,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Для переключения системного прокси macOS один раз запросит пароль администратора. Veil сохраняет разрешение на время сеанса, поэтому при отключении пароль не спрашивается снова."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Для перемикання системного проксі macOS одного разу запитає пароль адміністратора. Veil зберігає дозвіл на час сеансу, тому під час відключення пароль не запитується знову."
           }
         }
       }
@@ -2388,12 +3816,24 @@
             "state": "translated",
             "value": "curl, git и Homebrew игнорируют системный прокси — вставьте эту команду в терминал."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "curl, git і Homebrew ігнорують системний проксі — вставте цю команду в термінал."
+          }
         }
       }
     },
     "Tor %@": {
       "localizations": {
         "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor %@"
+          }
+        },
+        "uk": {
           "stringUnit": {
             "state": "translated",
             "value": "Tor %@"
@@ -2408,6 +3848,12 @@
             "state": "translated",
             "value": "Tor не успел подключиться. Возможно, сейчас мало Snowflake-прокси — попробуйте ещё раз или смените мосты."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor не встиг підключитися. Можливо, зараз мало Snowflake-проксі — спробуйте ще раз або змініть мости."
+          }
         }
       }
     },
@@ -2417,6 +3863,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tor не создал приватный onion-сервис, нужный для маскировки трафика."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor не створив приватний onion-сервіс, потрібний для маскування трафіку."
           }
         }
       }
@@ -2428,6 +3880,12 @@
             "state": "translated",
             "value": "Tor не открыл управляющий порт вовремя."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor не відкрив керівний порт вчасно."
+          }
         }
       }
     },
@@ -2437,6 +3895,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Выход через Tor ещё не проверен"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вихід через Tor ще не перевірено"
           }
         }
       }
@@ -2448,6 +3912,12 @@
             "state": "translated",
             "value": "Tor неожиданно завершился (код %@)."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor несподівано завершився (код %@)."
+          }
         }
       }
     },
@@ -2457,6 +3927,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tor не работает, поэтому приложения, использующие системный прокси, заблокированы, а не утекают в обход. Переподключитесь, чтобы продолжить, или отключитесь, чтобы вернуть обычную сеть."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor не працює, тому програми із системним проксі заблоковані, а не витікають в обхід. Перепідключіться, щоб продовжити, або відключіться, щоб повернути звичайну мережу."
           }
         }
       }
@@ -2468,6 +3944,12 @@
             "state": "translated",
             "value": "Tor не работает; приложения с системным прокси заблокированы, пока Veil не переподключится."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor не працює; програми із системним проксі заблоковані, доки Veil не перепідключиться."
+          }
         }
       }
     },
@@ -2478,12 +3960,24 @@
             "state": "translated",
             "value": "Tor не запущен."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor не запущено."
+          }
         }
       }
     },
     "Tor log": {
       "localizations": {
         "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Журнал Tor"
+          }
+        },
+        "uk": {
           "stringUnit": {
             "state": "translated",
             "value": "Журнал Tor"
@@ -2498,6 +3992,12 @@
             "state": "translated",
             "value": "Tor перестал продвигаться на %lld%."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor перестав просуватися на %lld%."
+          }
         }
       }
     },
@@ -2508,12 +4008,24 @@
             "state": "translated",
             "value": "Tor неожиданно остановился"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor несподівано зупинився"
+          }
         }
       }
     },
     "Tor · Snowflake": {
       "localizations": {
         "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor · Snowflake"
+          }
+        },
+        "uk": {
           "stringUnit": {
             "state": "translated",
             "value": "Tor · Snowflake"
@@ -2528,6 +4040,12 @@
             "state": "translated",
             "value": "Трафик шифруется и проходит через три узла Tor."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Трафік шифрується й проходить через три вузли Tor."
+          }
         }
       }
     },
@@ -2537,6 +4055,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Маскировка трафика"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Маскування трафіку"
           }
         }
       }
@@ -2548,6 +4072,12 @@
             "state": "translated",
             "value": "Маскировка трафика (в стиле DAITA)"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Маскування трафіку (у стилі DAITA)"
+          }
         }
       }
     },
@@ -2558,12 +4088,24 @@
             "state": "translated",
             "value": "Маскировка трафика включена — настройка в Настройки → Приватность"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Маскування трафіку ввімкнено — налаштування в Налаштування → Приватність"
+          }
         }
       }
     },
     "Transport": {
       "localizations": {
         "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Транспорт"
+          }
+        },
+        "uk": {
           "stringUnit": {
             "state": "translated",
             "value": "Транспорт"
@@ -2578,6 +4120,12 @@
             "state": "translated",
             "value": "Транспорт: %@. Ваш трафик теперь идёт через сеть Tor."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Транспорт: %@. Ваш трафік тепер іде через мережу Tor."
+          }
         }
       }
     },
@@ -2588,12 +4136,24 @@
             "state": "translated",
             "value": "Повторить"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Повторити"
+          }
         }
       }
     },
     "Trying %@…": {
       "localizations": {
         "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пробую %@…"
+          }
+        },
+        "uk": {
           "stringUnit": {
             "state": "translated",
             "value": "Пробую %@…"
@@ -2608,12 +4168,24 @@
             "state": "translated",
             "value": "Туннель через крупный CDN с domain fronting. Медленно, но очень трудно заблокировать; встроенный мост взят из Tor Browser."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тунель через великий CDN із domain fronting. Повільно, але дуже важко заблокувати; вбудований міст узято з Tor Browser."
+          }
         }
       }
     },
     "Turbo": {
       "localizations": {
         "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo"
+          }
+        },
+        "uk": {
           "stringUnit": {
             "state": "translated",
             "value": "Turbo"
@@ -2628,6 +4200,12 @@
             "state": "translated",
             "value": "Не удалось проверить обновления: %@"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не вдалося перевірити оновлення: %@"
+          }
         }
       }
     },
@@ -2637,6 +4215,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Обновления"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Оновлення"
           }
         }
       }
@@ -2648,6 +4232,12 @@
             "state": "translated",
             "value": "Обновления скачиваются из релизов проекта на GitHub; замените Veil в «Программах» и перезапустите."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Оновлення завантажуються з релізів проєкту на GitHub; замініть Veil у «Програмах» і перезапустіть."
+          }
         }
       }
     },
@@ -2657,6 +4247,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Отдача"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Віддача"
           }
         }
       }
@@ -2668,6 +4264,12 @@
             "state": "translated",
             "value": "Использует WebRTC-прокси волонтёров и domain fronting для доступа к Tor. Работает в большинстве сетей с цензурой; рекомендуемый вариант."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Використовує WebRTC-проксі волонтерів і domain fronting для доступу до Tor. Працює в більшості мереж із цензурою; рекомендований варіант."
+          }
         }
       }
     },
@@ -2677,6 +4279,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Использует WebRTC-прокси волонтёров и domain fronting для доступа к Tor. Работает в большинстве сетей с цензурой."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Використовує WebRTC-проксі волонтерів і domain fronting для доступу до Tor. Працює в більшості мереж із цензурою."
           }
         }
       }
@@ -2688,6 +4296,12 @@
             "state": "translated",
             "value": "Доступна версия Veil %@"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступна версія Veil %@"
+          }
         }
       }
     },
@@ -2697,6 +4311,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Veil направляет ваш Mac через сеть Tor с помощью мостов Snowflake, поэтому работает даже там, где Tor заблокирован. Нажмите кнопку питания и дождитесь построения цепочки из трёх узлов — первое подключение может занять до минуты."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Veil спрямовує ваш Mac через мережу Tor за допомогою мостів Snowflake, тому працює навіть там, де Tor заблоковано. Натисніть кнопку живлення й дочекайтеся побудови ланцюжка з трьох вузлів — перше підключення може тривати до хвилини."
           }
         }
       }
@@ -2708,6 +4328,12 @@
             "state": "translated",
             "value": "Подробный журнал Tor"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Докладний журнал Tor"
+          }
         }
       }
     },
@@ -2717,6 +4343,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Проверять выход через check.torproject.org после подключения"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перевіряти вихід через check.torproject.org після підключення"
           }
         }
       }
@@ -2728,6 +4360,12 @@
             "state": "translated",
             "value": "Проверка через check.torproject.org…"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перевірка через check.torproject.org…"
+          }
         }
       }
     },
@@ -2737,6 +4375,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Версия %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Версія %@"
           }
         }
       }
@@ -2748,6 +4392,12 @@
             "state": "translated",
             "value": "Доступна версия %@."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступна версія %@."
+          }
         }
       }
     },
@@ -2758,12 +4408,24 @@
             "state": "translated",
             "value": "Версии, состояние, настройки и последние 800 строк журнала. Строки мостов включены; пароли нигде не хранятся."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Версії, стан, налаштування та останні 800 рядків журналу. Рядки мостів включено; паролі ніде не зберігаються."
+          }
         }
       }
     },
     "Via Tor": {
       "localizations": {
         "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Через Tor"
+          }
+        },
+        "uk": {
           "stringUnit": {
             "state": "translated",
             "value": "Через Tor"
@@ -2778,6 +4440,12 @@
             "state": "translated",
             "value": "Вид"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вигляд"
+          }
         }
       }
     },
@@ -2787,6 +4455,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ожидание доступности цикла (попытка %lld)…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Очікування доступності циклу (спроба %lld)…"
           }
         }
       }
@@ -2798,6 +4472,12 @@
             "state": "translated",
             "value": "Только предупреждения"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Лише попередження"
+          }
         }
       }
     },
@@ -2807,6 +4487,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Веб-версия и настольное приложение следуют системному прокси; голос (UDP) через прокси не идёт."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вебверсія та настільна програма дотримуються системного проксі; голос (UDP) через проксі не йде."
           }
         }
       }
@@ -2818,6 +4504,12 @@
             "state": "translated",
             "value": "Добро пожаловать в Veil"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ласкаво просимо до Veil"
+          }
         }
       }
     },
@@ -2827,6 +4519,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Какая фрагментация обманет DPI вашего провайдера — зависит от провайдера. Если видео всё ещё тормозит, выберите следующую технику и повторите проверку."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Яка фрагментація обдурить DPI вашого провайдера — залежить від провайдера. Якщо відео все ще гальмує, виберіть наступну техніку й повторіть перевірку."
           }
         }
       }
@@ -2838,12 +4536,24 @@
             "state": "translated",
             "value": "У вас последняя версия (%@)."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "У вас остання версія (%@)."
+          }
         }
       }
     },
     "YouTube": {
       "localizations": {
         "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube"
+          }
+        },
+        "uk": {
           "stringUnit": {
             "state": "translated",
             "value": "YouTube"
@@ -2858,12 +4568,24 @@
             "state": "translated",
             "value": "YouTube Turbo"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube Turbo"
+          }
         }
       }
     },
     "YouTube Turbo (no Tor)": {
       "localizations": {
         "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube Turbo (без Tor)"
+          }
+        },
+        "uk": {
           "stringUnit": {
             "state": "translated",
             "value": "YouTube Turbo (без Tor)"
@@ -2878,6 +4600,12 @@
             "state": "translated",
             "value": "Не удалось запустить YouTube Turbo"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не вдалося запустити YouTube Turbo"
+          }
         }
       }
     },
@@ -2887,6 +4615,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "YouTube Turbo включён"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube Turbo увімкнено"
           }
         }
       }
@@ -2898,6 +4632,12 @@
             "state": "translated",
             "value": "YouTube Turbo включён, Tor выключен"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube Turbo увімкнено, Tor вимкнено"
+          }
         }
       }
     },
@@ -2907,6 +4647,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "YouTube и другие сайты"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube та інші сайти"
           }
         }
       }
@@ -2918,6 +4664,12 @@
             "state": "translated",
             "value": "YouTube подключается напрямую на полной скорости, а Veil дробит TLS-рукопожатие, чтобы замедляющий DPI не увидел имя хоста. YouTube видит ваш реальный IP-адрес."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube підключається напряму на повній швидкості, а Veil дробить TLS-рукостискання, щоб DPI, що сповільнює, не побачив ім’я хоста. YouTube бачить вашу справжню IP-адресу."
+          }
         }
       }
     },
@@ -2927,6 +4679,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "YouTube подключается напрямую без ухищрений. Для сетей, где YouTube не замедляют."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube підключається напряму без хитрощів. Для мереж, де YouTube не сповільнюють."
           }
         }
       }
@@ -2938,6 +4696,12 @@
             "state": "translated",
             "value": "YouTube идёт через цепочку Tor, как и всё остальное. Анонимно, но видео грузится медленно, и YouTube часто требует войти в аккаунт, чтобы доказать, что вы не бот."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube іде через ланцюжок Tor, як і все інше. Анонімно, але відео вантажиться повільно, і YouTube часто вимагає ввійти в обліковий запис, щоб довести, що ви не бот."
+          }
         }
       }
     },
@@ -2947,6 +4711,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "YouTube загружается напрямую с раздробленным TLS-рукопожатием; Tor выключен, остальные сайты не затронуты."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube завантажується напряму з роздробленим TLS-рукостисканням; Tor вимкнено, інші сайти не зачеплені."
           }
         }
       }
@@ -2958,6 +4728,12 @@
             "state": "translated",
             "value": "Маршрутизация YouTube — настройка в Настройки → YouTube"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Маршрутизація YouTube — налаштування в Налаштування → YouTube"
+          }
         }
       }
     },
@@ -2967,6 +4743,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "YouTube через Tor медленный и требует входа. В Настройки → YouTube его можно пустить напрямую с обходом замедления: TLS-рукопожатие дробится, и DPI его не распознаёт. YouTube Turbo делает то же самое вообще без Tor."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube через Tor повільний і вимагає входу. У Налаштування → YouTube його можна пустити напряму з обходом сповільнення: TLS-рукостискання дробиться, і DPI його не розпізнає. YouTube Turbo робить те саме взагалі без Tor."
           }
         }
       }
@@ -2978,6 +4760,12 @@
             "state": "translated",
             "value": "Трафик YouTube"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Трафік YouTube"
+          }
         }
       }
     },
@@ -2987,6 +4775,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "YouTube при подключении к Tor"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube під час підключення до Tor"
           }
         }
       }
@@ -2998,6 +4792,12 @@
             "state": "translated",
             "value": "Ваш трафик не идёт через Tor."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваш трафік не йде через Tor."
+          }
         }
       }
     },
@@ -3007,6 +4807,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "check.torproject.org подтверждает Tor · IP выхода %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "check.torproject.org підтверджує Tor · IP виходу %@"
           }
         }
       }
@@ -3018,6 +4824,12 @@
             "state": "translated",
             "value": "check.torproject.org вернул неожиданный ответ."
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "check.torproject.org повернув неочікувану відповідь."
+          }
         }
       }
     },
@@ -3027,6 +4839,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "check.torproject.org: это НЕ Tor · IP %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "check.torproject.org: це НЕ Tor · IP %@"
           }
         }
       }
@@ -3038,12 +4856,24 @@
             "state": "translated",
             "value": "пустой трафик проходит через Tor и возвращается на этот Mac"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "порожній трафік проходить через Tor і повертається на цей Mac"
+          }
         }
       }
     },
     "meek (domain fronting)": {
       "localizations": {
         "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "meek (domain fronting)"
+          }
+        },
+        "uk": {
           "stringUnit": {
             "state": "translated",
             "value": "meek (domain fronting)"
@@ -3058,6 +4888,12 @@
             "state": "translated",
             "value": "Ошибка networksetup: %@"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Помилка networksetup: %@"
+          }
         }
       }
     },
@@ -3067,6 +4903,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Мосты obfs4"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мости obfs4"
           }
         }
       }
@@ -3078,6 +4920,12 @@
             "state": "translated",
             "value": "youtube.com недоступен: %@"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "youtube.com недоступний: %@"
+          }
         }
       }
     },
@@ -3088,6 +4936,12 @@
             "state": "translated",
             "value": "youtube.com доступен за %lld мс (%@)"
           }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "youtube.com доступний за %lld мс (%@)"
+          }
         }
       }
     },
@@ -3097,6 +4951,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "По умолчанию «через Tor». Прямые режимы быстрые и обходят замедление, но сайт видит ваш реальный IP. У YouTube своя вкладка."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Типово — «через Tor». Прямі режими швидкі й обходять сповільнення, але сайт бачить вашу справжню IP-адресу. У YouTube своя вкладка."
           }
         }
       }
