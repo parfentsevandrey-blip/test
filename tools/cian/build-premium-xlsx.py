@@ -24,21 +24,49 @@ CLASS_ORDER = {'делюкс': 0, 'премиум': 1, 'бизнес': 2}
 
 PREMIUM_PER_M2 = 700_000   # порог ₽/м² по медиане, ниже — бизнес-класс, в подборку не идёт
 
+# Жёлтый контур с карты заказчика: ТТК у Сити — Звенигородское ш. — Пресненский Вал —
+# Грузинский Вал (Белорусская) — Васильевская/Красина — Садовое до Нового Арбата — набережные до Сити.
+PRESNYA = [
+    (55.7620, 37.5450), (55.7645, 37.5610), (55.7700, 37.5700), (55.7745, 37.5790), (55.7772, 37.5850),
+    (55.7705, 37.5940), (55.7607, 37.5806), (55.7520, 37.5830), (55.7500, 37.5750), (55.7545, 37.5700),
+    (55.7470, 37.5390), (55.7500, 37.5330), (55.7560, 37.5320),
+]
+BELORUSSKAYA = (55.7770, 37.5820)   # центр, радиус 900 м
+CITY = (55.742, 55.762, 37.525, 37.552)   # lat_min, lat_max, lng_min, lng_max
+
+def in_poly(lat, lng, poly):
+    inside = False
+    for i in range(len(poly)):
+        y1, x1 = poly[i]; y2, x2 = poly[i - 1]
+        if (y1 > lat) != (y2 > lat) and lng < (x2 - x1) * (lat - y1) / (y2 - y1) + x1:
+            inside = not inside
+    return inside
+
+def near(lat, lng, c, r_m):
+    dy = (lat - c[0]) * 111320; dx = (lng - c[1]) * 111320 * math.cos(math.radians(55.76))
+    return math.hypot(dx, dy) <= r_m
+
+def geo_zone(lat, lng):
+    """Зона по координатам, без учёта района. None — вне интереса."""
+    if lat is None or lng is None: return None
+    if CITY[0] < lat < CITY[1] and CITY[2] < lng < CITY[3]: return 'Сити'
+    if in_poly(lat, lng, PRESNYA): return 'Пресня'
+    if near(lat, lng, BELORUSSKAYA, 900): return 'Белорусская'
+    return None
+
 def zone(row):
-    """Садовое кольцо / Хамовники / Сити / вне зоны — по району и координатам."""
+    """Садовое кольцо / Хамовники / Сити / Пресня / Белорусская; иначе None — строка не попадает в файл."""
     d = row.get('district') or ''
     if d == 'Хамовники':
         return 'Хамовники'
-    in_city = row.get('lat') and row.get('lng') and 55.740 < row['lat'] < 55.768 and 37.505 < row['lng'] < 37.555
-    if d in ('Пресненский', 'Хорошёвский', 'Хорошевский') and in_city:
-        return 'Сити'
-    if d in ('Хорошёвский', 'Хорошевский'):
-        return None   # САО, вне ЦАО — берём только часть у Сити
+    gz = geo_zone(row.get('lat'), row.get('lng'))
+    if gz: return gz
     if row.get('insideRing') is True:
         return 'Садовое кольцо'
-    return f'{d} (вне Садового)' if d else None
+    return None
 
-ZONE_ORDER = {'Садовое кольцо': 0, 'Хамовники': 1, 'Сити': 2}
+ZONE_ORDER = {'Садовое кольцо': 0, 'Хамовники': 1, 'Сити': 2, 'Пресня': 3, 'Белорусская': 4}
+ALLOWED = set(ZONE_ORDER)
 def zkey(z):
     return (ZONE_ORDER.get(z, 9), str(z))
 
@@ -66,7 +94,7 @@ LINK_FONT = Font(name='Calibri', size=8, color='0563C1', underline='single')
 TITLE_FONT = Font(name='Calibri', size=14, bold=True, color='1F3864')
 SUB_FONT = Font(name='Calibri', size=8, italic=True, color='666666')
 ZEBRA = PatternFill('solid', fgColor='F3F6FA')
-ZONE_FILL = {'Садовое кольцо': 'FFF2CC', 'Хамовники': 'E2EFDA', 'Сити': 'DDEBF7'}
+ZONE_FILL = {'Садовое кольцо': 'FFF2CC', 'Хамовники': 'E2EFDA', 'Сити': 'DDEBF7', 'Пресня': 'FCE4D6', 'Белорусская': 'EDEDED'}
 wrap = Alignment(wrap_text=True, vertical='center')
 center = Alignment(horizontal='center', vertical='center', wrap_text=True)
 right = Alignment(horizontal='right', vertical='center')
@@ -141,7 +169,7 @@ live_targets = {v.get('live') for v in manual.values() if isinstance(v, dict) an
 for r in complexes['complexes']:
     m = manual.get(r['complex'], {})
     if r['complex'] in live_targets: continue   # строка заказчика на листе 2 уже покрывает этот ЖК
-    z = m.get('zone') or zone(r)
+    z = m.get('zone') if m.get('zone') in ALLOWED else zone(r)
     if not z: continue
     med = r.get('perM2Median') or 0
     if m.get('class') is None and med < PREMIUM_PER_M2: continue
@@ -180,10 +208,10 @@ for row in pdf['rows']:
     name, dev, dl, addr, metro, b, fl, st, pf, pt, lots, fin, note = row
     m = manual.get(name, {})
     dev = m.get('developer_override', dev)
-    z = m.get('zone')
-    if z is None: continue
     live = m.get('live')
     lr = next((c for c in complexes['complexes'] if c['complex'] == live), None) if live else None
+    z = m.get('zone') if m.get('zone') in ALLOWED else (zone(lr) if lr else None)
+    if z is None: continue
     src = 'таблица заказчика'
     if lr:
         pf, pt, lots = lr.get('perM2Min') or pf, lr.get('perM2Max') or pt, lr.get('declared') or lr.get('lots') or lots
@@ -211,7 +239,9 @@ H3 = ['Проект / участок', 'Адрес', 'Район', 'Зона', '
 rows3 = []
 for p in planning:
     if p.get('name') in manual.get('_planning_drop', []): continue   # стройка уже идёт — лист 2
-    rows3.append([p.get('name'), p.get('address'), p.get('district'), manual.get('_planning_zone', {}).get(p.get('name'), p.get('location_zone')), p.get('developer'), p.get('stage'),
+    pz = manual.get('_planning_zone', {}).get(p.get('name'), p.get('location_zone'))
+    if pz not in ALLOWED: continue
+    rows3.append([p.get('name'), p.get('address'), p.get('district'), pz, p.get('developer'), p.get('stage'),
                   p.get('area_total_m2'), p.get('area_residential_m2'), p.get('floors'), p.get('units'), p.get('planned_start'),
                   p.get('planned_completion'), p.get('price_from_per_m2'), p.get('announced_date'), p.get('source_name'),
                   p.get('source_url'), p.get('notes')])
