@@ -27,8 +27,11 @@ def zone(row):
     d = row.get('district') or ''
     if d == 'Хамовники':
         return 'Хамовники'
-    if d == 'Пресненский' and row.get('lat') and 55.742 < row['lat'] < 55.757 and row.get('lng') and row['lng'] < 37.552:
+    in_city = row.get('lat') and row.get('lng') and 55.740 < row['lat'] < 55.768 and 37.505 < row['lng'] < 37.555
+    if d in ('Пресненский', 'Хорошёвский', 'Хорошевский') and in_city:
         return 'Сити'
+    if d in ('Хорошёвский', 'Хорошевский'):
+        return None   # САО, вне ЦАО — берём только часть у Сити
     if row.get('insideRing') is True:
         return 'Садовое кольцо'
     return f'{d} (вне Садового)' if d else None

@@ -1,0 +1,1 @@
+{"_type": "flatsale", "engine_version": {"type": "term", "value": 2}, "region": {"type": "terms", "value": [1]}, "geo": {"type": "geo", "value": [{"type": "district", "id": 18}]}, "building_status": {"type": "term", "value": 2}, "price": {"type": "range", "value": {"gte": 80000000, "lte": 100000000}}}
