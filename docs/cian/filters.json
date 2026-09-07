@@ -1,0 +1,690 @@
+{
+  "fetched": "2026-08-12",
+  "scope": "Продажа квартир (cat.php, _type=flatsale). Панель «Ещё фильтры» на десктопной выдаче Циан.",
+  "method": "Каждый параметр отправлялся в cat.php и сверялся с разобранным jsonQuery, который Циан печатает в HTML выдачи. verified=true — параметр реально попал в jsonQuery.",
+  "endpoint": "https://www.cian.ru/cat.php",
+  "groups": [
+    {
+      "group": "Базовые",
+      "params": [
+        {
+          "param": "deal_type",
+          "example": "sale",
+          "jsonQuery": "_type",
+          "note": "sale — продажа, rent — аренда",
+          "verified": true
+        },
+        {
+          "param": "engine_version",
+          "example": "2",
+          "jsonQuery": "engine_version",
+          "note": "Обязателен, иначе выдача не собирается",
+          "verified": true
+        },
+        {
+          "param": "offer_type",
+          "example": "flat",
+          "jsonQuery": "_type",
+          "note": "flat — квартиры",
+          "verified": true
+        },
+        {
+          "param": "region",
+          "example": "1",
+          "jsonQuery": "region",
+          "note": "1 — Москва",
+          "verified": true
+        },
+        {
+          "param": "district[0]",
+          "example": "4",
+          "jsonQuery": "geo.value[].district",
+          "note": "id округа ИЛИ района, см. moscow-geo.json. Можно перечислять district[0], district[1], …",
+          "verified": true
+        },
+        {
+          "param": "p",
+          "example": "2",
+          "jsonQuery": "page",
+          "note": "Номер страницы выдачи",
+          "verified": true
+        },
+        {
+          "param": "sort",
+          "example": "price_object_order",
+          "jsonQuery": "sort",
+          "note": "Порядок сортировки",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "group": "Тип объекта",
+      "params": [
+        {
+          "param": "object_type[0]",
+          "example": "1",
+          "jsonQuery": "building_status",
+          "note": "1 — вторичка, 2 — новостройка",
+          "verified": true
+        },
+        {
+          "param": "apartment",
+          "example": "0",
+          "jsonQuery": "apartment",
+          "note": "0 — без апартаментов, 1 — только апартаменты. ВНИМАНИЕ: фильтр протекает, апартаменты всё равно попадают в выдачу",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "group": "Комнатность (jsonQuery room, terms)",
+      "params": [
+        {
+          "param": "room1..room6",
+          "example": "room3=1",
+          "jsonQuery": "room",
+          "note": "Число комнат; room6 — «многокомнатная» (6+)",
+          "verified": true
+        },
+        {
+          "param": "room7",
+          "example": "1",
+          "jsonQuery": "room",
+          "note": "Свободная планировка",
+          "verified": true
+        },
+        {
+          "param": "room9",
+          "example": "1",
+          "jsonQuery": "room",
+          "note": "Студия",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "group": "Цена",
+      "params": [
+        {
+          "param": "minprice / maxprice",
+          "example": "maxprice=70000000",
+          "jsonQuery": "price (range gte/lte)",
+          "note": "Валюта проставляется сама: currency=2 (рубли)",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "group": "Площадь",
+      "params": [
+        {
+          "param": "mintarea / maxtarea",
+          "example": "maxtarea=100",
+          "jsonQuery": "total_area",
+          "note": "Общая площадь, м²",
+          "verified": true
+        },
+        {
+          "param": "minlarea / maxlarea",
+          "example": "minlarea=30",
+          "jsonQuery": "living_area",
+          "note": "Жилая площадь",
+          "verified": true
+        },
+        {
+          "param": "minkarea / maxkarea",
+          "example": "minkarea=10",
+          "jsonQuery": "kitchen",
+          "note": "Площадь кухни",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "group": "Этаж",
+      "params": [
+        {
+          "param": "minfloor / maxfloor",
+          "example": "minfloor=5",
+          "jsonQuery": "floor",
+          "note": "Этаж квартиры",
+          "verified": true
+        },
+        {
+          "param": "is_first_floor",
+          "example": "0",
+          "jsonQuery": "is_first_floor",
+          "note": "0 — «не первый этаж»",
+          "verified": true
+        },
+        {
+          "param": "minfloorn / maxfloorn",
+          "example": "minfloorn=9",
+          "jsonQuery": "floorn",
+          "note": "Этажей в доме",
+          "verified": true
+        },
+        {
+          "param": "—",
+          "example": null,
+          "jsonQuery": "floor_types",
+          "note": "«Не последний» / «Только последний». Ключ jsonQuery из бандла, имя query-параметра подобрать не удалось",
+          "verified": false
+        }
+      ]
+    },
+    {
+      "group": "Метро",
+      "params": [
+        {
+          "param": "only_foot",
+          "example": "2",
+          "jsonQuery": "only_foot",
+          "note": "2 — считать только пешую доступность",
+          "verified": true
+        },
+        {
+          "param": "foot_min",
+          "example": "10",
+          "jsonQuery": "foot_min (range lte)",
+          "note": "Минут до метро",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "group": "Дом",
+      "params": [
+        {
+          "param": "min_house_year / max_house_year",
+          "example": "min_house_year=2016",
+          "jsonQuery": "house_year",
+          "note": "ГОД ПОСТРОЙКИ. Работает по вторичке. Фильтр неточен — встречаются дома старше границы, год надо сверять на карточке",
+          "verified": true
+        },
+        {
+          "param": "house_material[0]",
+          "example": "2",
+          "jsonQuery": "house_material",
+          "note": "Тип дома (кирпич/монолит/панель/…)",
+          "verified": true
+        },
+        {
+          "param": "—",
+          "example": null,
+          "jsonQuery": "(высота потолков)",
+          "note": "Имя query-параметра подобрать не удалось",
+          "verified": false
+        }
+      ]
+    },
+    {
+      "group": "Новостройки",
+      "params": [
+        {
+          "param": "yeargte",
+          "example": "2027",
+          "jsonQuery": "yeargte",
+          "note": "ГОД СДАЧИ позднее указанного. НЕ год постройки — легко перепутать с house_year",
+          "verified": true
+        },
+        {
+          "param": "year[0]",
+          "example": "2027",
+          "jsonQuery": "year",
+          "note": "Конкретный год сдачи; ключ из бандла",
+          "verified": false
+        },
+        {
+          "param": "—",
+          "example": null,
+          "jsonQuery": "hand_over",
+          "note": "«Дом сдан»; ключ из бандла",
+          "verified": false
+        }
+      ]
+    },
+    {
+      "group": "Ремонт и отделка",
+      "params": [
+        {
+          "param": "repair[0]",
+          "example": "4",
+          "jsonQuery": "repair",
+          "note": "4 — дизайнерский (подтверждено заголовком выдачи). Остальные значения соответствуют порядку в UI: без ремонта / косметический / евроремонт / дизайнерский",
+          "verified": true
+        },
+        {
+          "param": "—",
+          "example": null,
+          "jsonQuery": "decorations_list",
+          "note": "Отделка в новостройках; ключ из бандла",
+          "verified": false
+        }
+      ]
+    },
+    {
+      "group": "Прочие условия",
+      "params": [
+        {
+          "param": "loggia",
+          "example": "1",
+          "jsonQuery": "loggia",
+          "note": "Лоджия",
+          "verified": true
+        },
+        {
+          "param": "—",
+          "example": null,
+          "jsonQuery": "balcony",
+          "note": "Балкон. Перебрал balcony/balcon/balkon/balconies/has_balcony/with_balcony — ни один не принимается",
+          "verified": false
+        },
+        {
+          "param": "windows_type",
+          "example": "1",
+          "jsonQuery": "windows_type",
+          "note": "Вид из окна (во двор / на улицу)",
+          "verified": true
+        },
+        {
+          "param": "parking_type",
+          "example": "1",
+          "jsonQuery": "parking_type",
+          "note": "Парковка",
+          "verified": true
+        },
+        {
+          "param": "offer_seller_type[0]",
+          "example": "1",
+          "jsonQuery": "offer_seller_type",
+          "note": "Продавец (собственник / агент / застройщик)",
+          "verified": true
+        },
+        {
+          "param": "sost_type[0]",
+          "example": "1",
+          "jsonQuery": "sost_type",
+          "note": "Условия продажи (свободная / альтернативная)",
+          "verified": true
+        },
+        {
+          "param": "with_layout",
+          "example": "1",
+          "jsonQuery": "with_layout",
+          "note": "Есть схема планировки",
+          "verified": true
+        },
+        {
+          "param": "flat_share",
+          "example": "1",
+          "jsonQuery": "flat_share",
+          "note": "Доли",
+          "verified": true
+        },
+        {
+          "param": "electronic_trading",
+          "example": "1",
+          "jsonQuery": "electronic_trading",
+          "note": "Торги и залоговая недвижимость",
+          "verified": true
+        },
+        {
+          "param": "demolished_in_moscow_programm",
+          "example": "1",
+          "jsonQuery": "demolished_in_moscow_programm",
+          "note": "Дома под снос",
+          "verified": true
+        },
+        {
+          "param": "publish_period",
+          "example": "-2",
+          "jsonQuery": "publish_period",
+          "note": "Дата публикации, отрицательные значения — период",
+          "verified": true
+        },
+        {
+          "param": "—",
+          "example": null,
+          "jsonQuery": "wc",
+          "note": "Санузел; ключ из бандла",
+          "verified": false
+        },
+        {
+          "param": "—",
+          "example": null,
+          "jsonQuery": "building_lift_types_type",
+          "note": "Лифт; ключ из бандла",
+          "verified": false
+        },
+        {
+          "param": "—",
+          "example": null,
+          "jsonQuery": "description_include / description_exclude",
+          "note": "Слова в объявлении; ключи из бандла",
+          "verified": false
+        }
+      ]
+    }
+  ],
+  "gotchas": [
+    "Булев параметр со значением 0 (flat_share=0, electronic_trading=0, demolished_in_moscow_programm=0) роняет страницу в «Страница не загрузилась». Передавать только 1. Исключения — apartment=0 и is_first_floor=0, они легальны.",
+    "SEO-адреса вида /kupit-kvartiru-moskva-cao-044/ игнорируют дописанные query-параметры: фильтры действуют только на /cat.php.",
+    "yeargte — год сдачи новостройки, а не год постройки. Год постройки — min_house_year.",
+    "apartment=0 и min_house_year пропускают часть несоответствующих лотов, поэтому итоговую подборку надо сверять по карточке объявления.",
+    "Неизвестные Циану параметры молча игнорируются — это и позволяет проверять имена пачками: шлём десяток кандидатов с разными значениями и смотрим, что осело в jsonQuery.",
+    "Проверять фильтр стало дёшево: node tools/cian/cian.js probe --query q.json --with '{\"ключ\":{...}}' — если счётчик не сдвинулся, Циан фильтр выбросил.",
+    "cat.php остаётся нужен только для ссылки, которую можно открыть в браузере; для сбора данных используйте API."
+  ],
+  "valueDictionaries": {
+    "source": "минифицированные enum фронтенд-бандла Циан, сверено запросами",
+    "byJsonQueryKey": {
+      "room": {
+        "1": "1 комната",
+        "2": "2 комнаты",
+        "3": "3 комнаты",
+        "4": "4 комнаты",
+        "5": "5 комнат",
+        "6": "многокомнатная (6+)",
+        "7": "свободная планировка",
+        "8": "доля",
+        "9": "студия",
+        "10": "койко-место"
+      },
+      "repair": {
+        "1": "без ремонта",
+        "2": "косметический",
+        "3": "евроремонт",
+        "4": "дизайнерский"
+      },
+      "house_material": {
+        "1": "кирпичный",
+        "2": "монолитный",
+        "3": "панельный",
+        "4": "блочный",
+        "5": "деревянный",
+        "6": "сталинский",
+        "7": "щитовой",
+        "8": "кирпично-монолитный",
+        "10": "каркасный",
+        "11": "газобетонный блок",
+        "12": "газосиликатный блок",
+        "13": "пенобетонный блок"
+      },
+      "windows_type": {
+        "0": "во двор",
+        "1": "на улицу"
+      },
+      "parking_type": {
+        "2": "подземная",
+        "3": "наземная",
+        "4": "многоуровневая"
+      },
+      "sost_type": {
+        "1": "свободная продажа",
+        "2": "альтернативная",
+        "3": "214-ФЗ",
+        "4": "переуступка",
+        "5": "договор ЖСК",
+        "6": "предварительный договор",
+        "7": "договор инвестирования"
+      },
+      "building_status": {
+        "1": "вторичка",
+        "2": "новостройка"
+      },
+      "publish_period": {
+        "3600": "за час",
+        "86400": "за сутки",
+        "604800": "за неделю"
+      },
+      "wc": {
+        "1": "совмещённый",
+        "2": "раздельный"
+      }
+    }
+  },
+  "api": {
+    "endpoint": "POST https://api.cian.ru/search-offers/v2/search-offers-desktop/",
+    "body": "{\"jsonQuery\": {...}}  — страница задаётся ключом page внутри jsonQuery",
+    "response": "data.offerCount + data.offersSerialized[] (по 28 на страницу)",
+    "why": "Принимает jsonQuery напрямую, поэтому имена query-параметров cat.php подбирать не нужно. Возвращает структурированные офферы, включая isApartments и creationDate.",
+    "limits": "Глубина выдачи обрывается после 3–4 страниц (для 88 объявлений отдаётся 80). Для полного охвата дробить запрос по районам или цене.",
+    "noViews": "Счётчика просмотров в ответе нет — он только в отрисованной карточке ([data-name=\"OfferStats\"]).",
+    "doc": "docs/cian/jsonquery.md",
+    "client": "tools/cian/cian.js",
+    "queryString": "data.queryString — сериализация запроса обратно в параметры cat.php. Даёт каноническое имя фильтра и служит признаком того, что фильтр принят.",
+    "acceptanceSignal": "Фильтр принят, если его ключ появился в data.queryString. Изменение offerCount признаком НЕ является: применённый фильтр может ничего не отсекать (is_first_floor=0 при «этаж от пятого»).",
+    "offerCountIsEstimate": "offerCount завышен. Для ЗАО-поиска заявлено 88, перечислимо 80 одной сортировкой и 84 объединением по четырём. Разбиение по цене охват не увеличивает.",
+    "stillIgnored": [
+      "balcony",
+      "wc",
+      "floor_types",
+      "is_last_floor",
+      "building_lift_types_type",
+      "lift_service"
+    ],
+    "stillIgnoredNote": "Это неверные имена — рабочие эквиваленты см. в resolved. Ключи building_lift_types_type и lift_service существуют, но на продажу квартир не влияют."
+  },
+  "allJsonQueryKeys": {
+    "source": "карта доступности фильтров из фронтенд-бандла Циан — полный перечень ключей, которые знает поиск",
+    "count": 173,
+    "note": "Часть относится к коммерческой/загородной недвижимости и на продажу квартир не влияет. Проверять конкретный ключ — командой probe.",
+    "keys": [
+      "apartment",
+      "balconies",
+      "bath",
+      "bathhouse",
+      "bbox",
+      "bedroom_total",
+      "beds_count",
+      "bs_center",
+      "bs_center_id",
+      "build_quarter",
+      "build_year",
+      "builder",
+      "building_class_type",
+      "building_class_type__warehouse",
+      "building_cranage_types_type",
+      "building_gates_type",
+      "building_heating_type",
+      "building_house_line_type",
+      "building_house_line_type__shopping_area",
+      "building_lift_types_type",
+      "building_status",
+      "building_type2",
+      "building_type__building",
+      "category",
+      "ceiling_height",
+      "commission_type",
+      "composition",
+      "condition_type",
+      "condition_type__free_appointment_object",
+      "condition_type__industry",
+      "conditioner",
+      "contact",
+      "contract",
+      "coworking_id",
+      "coworking_offer_type",
+      "currency",
+      "dates",
+      "deal_rent",
+      "decorations_list",
+      "demolished_in_moscow_programm",
+      "description_exclude",
+      "description_include",
+      "developer_sort_type",
+      "dish_washer",
+      "domrf",
+      "electricity",
+      "electronic_trading",
+      "engine_version",
+      "enter",
+      "estate_type",
+      "flat_share",
+      "floor",
+      "floorn",
+      "foot_min",
+      "for_day",
+      "from_developer",
+      "from_jk",
+      "from_mcad_km",
+      "from_offrep",
+      "garage",
+      "garage_garage_type",
+      "garage_material",
+      "garage_status",
+      "garage_type",
+      "gas",
+      "geo",
+      "hand_over",
+      "has_decoration",
+      "has_drainage",
+      "has_electricity",
+      "has_equipment",
+      "has_extinguishing_system",
+      "has_flat_tour_booking",
+      "has_fridge",
+      "has_furniture",
+      "has_heating",
+      "has_kitchen_furniture",
+      "has_light",
+      "has_profitbase_booking",
+      "has_video",
+      "has_washer",
+      "has_water",
+      "heating_source_type",
+      "house_material",
+      "house_year",
+      "id_user",
+      "identical_id",
+      "include_new_moscow",
+      "input_type",
+      "internet",
+      "ipoteka",
+      "is_basement",
+      "is_by_homeowner",
+      "is_dacha",
+      "is_early_access_enabled",
+      "is_encumbrance_realty",
+      "is_first_floor",
+      "is_in_hidden_base",
+      "is_in_kp",
+      "is_pik_promo",
+      "is_sales_leader",
+      "is_sales_start",
+      "is_semibasement",
+      "is_subsidised_mortgage",
+      "is_upcoming_sale",
+      "jk_flat_type_id",
+      "kids",
+      "kitchen",
+      "kitchen_stove",
+      "kp_id",
+      "land_status",
+      "lift_service",
+      "lifts",
+      "living_area",
+      "loggia",
+      "multi_id",
+      "navigation",
+      "not_last_floor",
+      "object_type",
+      "offer_seller_type",
+      "office_type",
+      "online_booking",
+      "only_flat",
+      "only_foot",
+      "page",
+      "params",
+      "parking_type",
+      "penthouse",
+      "pets",
+      "phone",
+      "placement_type",
+      "pool",
+      "prepay",
+      "price",
+      "price_sm",
+      "price_type",
+      "promo_search_types",
+      "property_type",
+      "publish_period",
+      "quality",
+      "ready_business_types",
+      "region",
+      "repair",
+      "room",
+      "room_area",
+      "room_type",
+      "rooms_count",
+      "rooms_for_sale",
+      "saved_search_id",
+      "security",
+      "show_hotels",
+      "shower",
+      "site",
+      "sort",
+      "sost_type",
+      "specialty_types",
+      "star_rating",
+      "status",
+      "suburban_offer_filter",
+      "total_area",
+      "tour_3d",
+      "value",
+      "village_mortgage_allowed",
+      "wc_site",
+      "wc_type",
+      "windows_type",
+      "with_layout",
+      "with_neighbors",
+      "with_newobject",
+      "workplace_count",
+      "year",
+      "yeargte",
+      "zalog"
+    ]
+  },
+  "resolved": {
+    "note": "Фильтры, имена которых сначала подобрать не удалось. Столбец «в адресе» получен из data.queryString.",
+    "items": [
+      {
+        "ui": "Балкон",
+        "jsonQuery": "balconies",
+        "shape": "range {gte:1}",
+        "queryParam": "min_balconies",
+        "check": "88 -> 7"
+      },
+      {
+        "ui": "Санузел",
+        "jsonQuery": "wc_type",
+        "shape": "term 1 совмещённый / 2 раздельный",
+        "queryParam": "minsu_s / minsu_r",
+        "check": "88 -> 66 / 40"
+      },
+      {
+        "ui": "Лифт",
+        "jsonQuery": "lifts",
+        "shape": "term N (минимум лифтов)",
+        "queryParam": "minlift",
+        "check": "88 -> 79"
+      },
+      {
+        "ui": "Не последний этаж",
+        "jsonQuery": "not_last_floor",
+        "shape": "term true",
+        "queryParam": "floornl",
+        "check": "88 -> 86"
+      },
+      {
+        "ui": "Высота потолков",
+        "jsonQuery": "ceiling_height",
+        "shape": "range {gte:3}",
+        "queryParam": "min_ceiling_height",
+        "check": "88 -> 58"
+      }
+    ]
+  }
+}

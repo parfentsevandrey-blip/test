@@ -1,0 +1,13 @@
+{
+  "note": "Запросы, за которыми следим постоянно. Снимок по одному запросу видит только свой угол рынка; ценность архива в том, чтобы одни и те же квартиры попадали в него раз за разом — тогда переразмещение, снижение цены и уход с рынка становятся видимыми. Запускать: node tools/cian/cian.js snapshot --queries docs/cian/watchlist.json --all",
+  "queries": [
+    { "name": "Кутузовский коридор, 3 комнаты 80-120", "query": "tools/cian/queries/dorogomilovo-3room.json" },
+    { "name": "Сити и Пресня, 3 комнаты 80-120", "query": "tools/cian/queries/presnensky-3room.json" },
+    { "name": "Внутри Садового, 2-3 комнаты 75-110, дом от 2017", "query": "tools/cian/queries/ring-modern.json" },
+    { "name": "ЦАО, дизайнерский ремонт, 78-100, дом от 2017", "query": "tools/cian/queries/cao-designer-2017.json" },
+    { "name": "Академический и соседи, 2-3 комнаты 70-92", "query": "tools/cian/queries/akadem-fresh.json" },
+    { "name": "ЖК Кутузовский XII", "query": "tools/cian/queries/zhk-kutuzovsky-12.json" },
+    { "name": "ЖК Золотой", "query": "tools/cian/queries/zolotoy.json" },
+    { "name": "ЖК Левел Академическая", "query": "tools/cian/queries/level-akadem.json" }
+  ]
+}

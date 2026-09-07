@@ -1,0 +1,2445 @@
+{
+ "resale": {
+  "minArea": null,
+  "showWarningMessage": false,
+  "category": "flatSale",
+  "isLayoutApproved": null,
+  "shareAmount": null,
+  "fullUrl": "https://www.cian.ru/sale/flat/330559973/?mlSearchSessionGuid=e8caf171fd4349dcaf887f0357335c55",
+  "isSubsidisedMortgage": null,
+  "allFromOffrep": null,
+  "userId": 12856048,
+  "isTop3": true,
+  "workplaceCount": null,
+  "building": {
+   "passengerLiftsCount": 4,
+   "heatingType": null,
+   "parking": {
+    "priceEntry": null,
+    "currency": null,
+    "type": "underground",
+    "isAvailable": null,
+    "locationType": null,
+    "purposeType": null,
+    "isFree": null,
+    "priceMonthly": null,
+    "placesCount": null
+   },
+   "type": null,
+   "cargoLiftsCount": 1,
+   "classType": null,
+   "deadline": null,
+   "accessType": null,
+   "floorsCount": 34,
+   "materialType": null,
+   "buildYear": 2024
+  },
+  "newbuildingCplLayer": null,
+  "readyBusinessType": null,
+  "isAuction": true,
+  "isEarlyAccessEnabled": null,
+  "garage": null,
+  "isApartments": true,
+  "added": "сегодня, 14:10",
+  "areaParts": null,
+  "isCommercialOwnershipVerified": null,
+  "coworkingOfferType": null,
+  "isByHomeowner": false,
+  "decoration": null,
+  "isNeedHideExactAddress": false,
+  "cianUserId": 12856048,
+  "specialty": {
+   "types": [],
+   "specialties": [],
+   "additionalTypes": []
+  },
+  "isPremium": false,
+  "layout": null,
+  "accessType": null,
+  "kitchenArea": "15.0",
+  "coworking": null,
+  "categoriesIds": [
+   1,
+   100,
+   110,
+   111
+  ],
+  "externalId": null,
+  "land": null,
+  "isColorized": false,
+  "villageMortgageAllowed": false,
+  "isNew": false,
+  "hasFurniture": true,
+  "publishedUserId": 12856048,
+  "monthlyIncome": null,
+  "addedTimestamp": 1786533020,
+  "formattedAdditionalInfo": "Свободная продажа, возможна ипотека",
+  "isCalltrackingEnabled": true,
+  "moderationInfo": {
+   "showContactWarningMessage": false,
+   "warningMessage": null,
+   "photoStub": null
+  },
+  "descriptionMinhash": [
+   31970375,
+   10210579,
+   11538400,
+   54954913,
+   29331269,
+   6143519,
+   23836162,
+   24441189,
+   13073084,
+   46609375,
+   92775380,
+   1006418,
+   69793274,
+   55759488,
+   46256793,
+   25394001,
+   11363328,
+   26930287,
+   75816273,
+   1376142,
+   69763797,
+   96489372,
+   34448598,
+   38907129,
+   22185587,
+   34193106,
+   52255709,
+   78207915,
+   11334613,
+   9517194,
+   14162174,
+   25429645
+  ],
+  "isInCpd": false,
+  "workTimeInfo": null,
+  "newbuildingWithExtendedFeatures": null,
+  "formattedFullPrice": "59 900 000 ₽",
+  "commercialOwnership": null,
+  "isRecidivist": false,
+  "geo": {
+   "address": [
+    {
+     "title": "Москва",
+     "id": 1,
+     "type": "location",
+     "name": "Москва",
+     "geoType": "location",
+     "locationTypeId": 1,
+     "fullName": "Москва",
+     "isFormingAddress": true,
+     "shortName": "Москва",
+     "qs": "apartment=0&currency=2&deal_type=sale&engine_version=2&maxprice=70000000&maxtarea=100&min_house_year=2016&minfloor=5&object_type%5B0%5D=1&offer_type=flat&region=1&repair%5B0%5D=4&room3=1"
+    },
+    {
+     "title": "ЗАО",
+     "id": 11,
+     "type": "okrug",
+     "name": "ЗАО",
+     "geoType": "district",
+     "locationTypeId": null,
+     "fullName": "ЗАО",
+     "isFormingAddress": null,
+     "shortName": "ЗАО",
+     "qs": "apartment=0&currency=2&deal_type=sale&district%5B0%5D=11&engine_version=2&maxprice=70000000&maxtarea=100&min_house_year=2016&minfloor=5&object_type%5B0%5D=1&offer_type=flat&repair%5B0%5D=4&room3=1"
+    },
+    {
+     "title": "р-н Дорогомилово",
+     "id": 113,
+     "type": "raion",
+     "name": "Дорогомилово",
+     "geoType": "district",
+     "locationTypeId": null,
+     "fullName": "р-н Дорогомилово",
+     "isFormingAddress": null,
+     "shortName": "р-н Дорогомилово",
+     "qs": "apartment=0&currency=2&deal_type=sale&district%5B0%5D=113&engine_version=2&maxprice=70000000&maxtarea=100&min_house_year=2016&minfloor=5&object_type%5B0%5D=1&offer_type=flat&repair%5B0%5D=4&room3=1"
+    },
+    {
+     "title": "м. Поклонная",
+     "id": 510,
+     "type": "metro",
+     "name": "Поклонная",
+     "geoType": "underground",
+     "locationTypeId": null,
+     "fullName": "м. Поклонная",
+     "isFormingAddress": null,
+     "shortName": "м. Поклонная",
+     "qs": "apartment=0&currency=2&deal_type=sale&engine_version=2&maxprice=70000000&maxtarea=100&metro%5B0%5D=510&min_house_year=2016&minfloor=5&object_type%5B0%5D=1&offer_type=flat&repair%5B0%5D=4&room3=1"
+    },
+    {
+     "title": "Поклонная улица",
+     "id": 1855,
+     "type": "street",
+     "name": "Поклонная",
+     "geoType": "street",
+     "locationTypeId": null,
+     "fullName": "Поклонная улица",
+     "isFormingAddress": true,
+     "shortName": "Поклонная ул.",
+     "qs": "apartment=0&currency=2&deal_type=sale&engine_version=2&maxprice=70000000&maxtarea=100&min_house_year=2016&minfloor=5&object_type%5B0%5D=1&offer_type=flat&repair%5B0%5D=4&room3=1&street%5B0%5D=1855"
+    },
+    {
+     "title": "9",
+     "id": 9444312,
+     "type": "house",
+     "name": "9",
+     "geoType": "house",
+     "locationTypeId": null,
+     "fullName": "9",
+     "isFormingAddress": true,
+     "shortName": "9",
+     "qs": "apartment=0&currency=2&deal_type=sale&engine_version=2&house%5B0%5D=9444312&maxprice=70000000&maxtarea=100&min_house_year=2016&minfloor=5&object_type%5B0%5D=1&offer_type=flat&repair%5B0%5D=4&room3=1"
+    }
+   ],
+   "jk": {
+    "developer": null,
+    "id": 123671,
+    "name": "Поклонная 9",
+    "fullUrl": "https://zhk-poklonnaya-9-i.cian.ru/",
+    "webSiteUrlUtm": null,
+    "displayName": "ЖК «Поклонная 9»",
+    "webSiteUrl": null,
+    "house": {
+     "name": "Поклонная, 9 (Дом 9)",
+     "id": 815851
+    },
+    "gaGeo": {
+     "oblId": 1,
+     "cityId": 1,
+     "moId": 0
+    }
+   },
+   "undergrounds": [
+    {
+     "time": 9,
+     "lineColor": "40B280",
+     "id": 510,
+     "name": "Поклонная",
+     "cianId": null,
+     "lineId": 34,
+     "transportType": "walk",
+     "underConstruction": false,
+     "isDefault": true,
+     "releaseYear": null,
+     "qs": "apartment=0&currency=2&deal_type=sale&engine_version=2&maxprice=70000000&maxtarea=100&metro%5B0%5D=510&min_house_year=2016&minfloor=5&object_type%5B0%5D=1&offer_type=flat&repair%5B0%5D=4&room3=1",
+     "lineType": "mcd4"
+    },
+    {
+     "time": 14,
+     "lineColor": "009BD5",
+     "id": 62,
+     "name": "Кутузовская",
+     "cianId": null,
+     "lineId": 12,
+     "transportType": "walk",
+     "underConstruction": false,
+     "isDefault": false,
+     "releaseYear": null,
+     "qs": "apartment=0&currency=2&deal_type=sale&engine_version=2&maxprice=70000000&maxtarea=100&metro%5B0%5D=62&min_house_year=2016&minfloor=5&object_type%5B0%5D=1&offer_type=flat&repair%5B0%5D=4&room3=1",
+     "lineType": null
+    },
+    {
+     "time": 16,
+     "lineColor": "40B280",
+     "id": 511,
+     "name": "Кутузовская",
+     "cianId": null,
+     "lineId": 34,
+     "transportType": "walk",
+     "underConstruction": false,
+     "isDefault": false,
+     "releaseYear": null,
+     "qs": "apartment=0&currency=2&deal_type=sale&engine_version=2&maxprice=70000000&maxtarea=100&metro%5B0%5D=511&min_house_year=2016&minfloor=5&object_type%5B0%5D=1&offer_type=flat&repair%5B0%5D=4&room3=1",
+     "lineType": "mcd4"
+    },
+    {
+     "time": 17,
+     "lineColor": "03238B",
+     "id": 87,
+     "name": "Парк Победы",
+     "cianId": null,
+     "lineId": 1,
+     "transportType": "walk",
+     "underConstruction": false,
+     "isDefault": false,
+     "releaseYear": null,
+     "qs": "apartment=0&currency=2&deal_type=sale&engine_version=2&maxprice=70000000&maxtarea=100&metro%5B0%5D=87&min_house_year=2016&minfloor=5&object_type%5B0%5D=1&offer_type=flat&repair%5B0%5D=4&room3=1",
+     "lineType": null
+    }
+   ],
+   "railways": [
+    {
+     "time": 15,
+     "travelType": "byFoot",
+     "id": 706,
+     "name": "Москва-Сортировочная",
+     "geoType": "railway",
+     "directionIds": [
+      14
+     ],
+     "distance": 1,
+     "qs": "apartment=0&currency=2&deal_type=sale&engine_version=2&maxprice=70000000&maxtarea=100&min_house_year=2016&minfloor=5&object_type%5B0%5D=1&offer_type=flat&railway%5B0%5D=706&repair%5B0%5D=4&room3=1"
+    },
+    {
+     "time": 4,
+     "travelType": "byCar",
+     "id": 693,
+     "name": "Москва (Киевский вокзал)",
+     "geoType": "railway",
+     "directionIds": [
+      14
+     ],
+     "distance": 3,
+     "qs": "apartment=0&currency=2&deal_type=sale&engine_version=2&maxprice=70000000&maxtarea=100&min_house_year=2016&minfloor=5&object_type%5B0%5D=1&offer_type=flat&railway%5B0%5D=693&repair%5B0%5D=4&room3=1"
+    },
+    {
+     "time": 10,
+     "travelType": "byCar",
+     "id": 708,
+     "name": "Фили",
+     "geoType": "railway",
+     "directionIds": [
+      11
+     ],
+     "distance": 6,
+     "qs": "apartment=0&currency=2&deal_type=sale&engine_version=2&maxprice=70000000&maxtarea=100&min_house_year=2016&minfloor=5&object_type%5B0%5D=1&offer_type=flat&railway%5B0%5D=708&repair%5B0%5D=4&room3=1"
+    }
+   ],
+   "buildingAddress": null,
+   "highways": [],
+   "districts": [
+    {
+     "title": "р-н Дорогомилово",
+     "parentId": 11,
+     "id": 113,
+     "type": "raion",
+     "name": "Дорогомилово",
+     "geoType": "district",
+     "locationId": 1,
+     "fullName": "р-н Дорогомилово",
+     "qs": "apartment=0&currency=2&deal_type=sale&district%5B0%5D=113&engine_version=2&maxprice=70000000&maxtarea=100&min_house_year=2016&minfloor=5&object_type%5B0%5D=1&offer_type=flat&repair%5B0%5D=4&room3=1"
+    },
+    {
+     "title": "ЗАО",
+     "parentId": null,
+     "id": 11,
+     "type": "okrug",
+     "name": "ЗАО",
+     "geoType": "district",
+     "locationId": 1,
+     "fullName": "ЗАО",
+     "qs": "apartment=0&currency=2&deal_type=sale&district%5B0%5D=11&engine_version=2&maxprice=70000000&maxtarea=100&min_house_year=2016&minfloor=5&object_type%5B0%5D=1&offer_type=flat&repair%5B0%5D=4&room3=1"
+    }
+   ],
+   "countryId": 138,
+   "userInput": "Россия, Москва, Поклонная улица, 9",
+   "coordinates": {
+    "lat": 55.734334,
+    "lng": 37.525324
+   },
+   "sortedGeoIds": [
+    {
+     "type": "underground",
+     "id": 510
+    },
+    {
+     "type": "underground",
+     "id": 62
+    },
+    {
+     "type": "underground",
+     "id": 511
+    },
+    {
+     "type": "underground",
+     "id": 87
+    },
+    {
+     "type": "railway",
+     "id": 706
+    },
+    {
+     "type": "railway",
+     "id": 693
+    },
+    {
+     "type": "railway",
+     "id": 708
+    },
+    {
+     "type": "district",
+     "id": 113
+    },
+    {
+     "type": "district",
+     "id": 11
+    }
+   ]
+  },
+  "offerFeatureLabelsV2": [],
+  "dealType": "sale",
+  "tradingLink": null,
+  "cianId": 330559973,
+  "buildersIds": [
+   15235
+  ],
+  "isByCommercialOwner": null,
+  "bedroomsCount": null,
+  "videos": [],
+  "isImported": false,
+  "fromDeveloper": false,
+  "cadastralNumber": null,
+  "buildingCadastralNumber": null,
+  "rentByPartsDescription": null,
+  "isStandard": false,
+  "isCianPartner": false,
+  "isExcludedFromAction": false,
+  "photos": [
+   {
+    "id": 2915108074,
+    "thumbnail2Url": "https://images.cdn-cian.ru/images/kvartira-moskva-poklonnaya-ulica-2915108074-4.jpg",
+    "fullUrl": "https://images.cdn-cian.ru/images/kvartira-moskva-poklonnaya-ulica-2915108074-1.jpg",
+    "thumbnailUrl": "https://images.cdn-cian.ru/images/kvartira-moskva-poklonnaya-ulica-2915108074-2.jpg",
+    "miniUrl": "https://images.cdn-cian.ru/images/kvartira-moskva-poklonnaya-ulica-2915108074-3.jpg",
+    "isDefault": false,
+    "rotateDegree": null,
+    "isLayout": true
+   },
+   {
+    "id": 2890099935,
+    "thumbnail2Url": "https://images.cdn-cian.ru/images/2890099935-4.jpg",
+    "fullUrl": "https://images.cdn-cian.ru/images/2890099935-1.jpg",
+    "thumbnailUrl": "https://images.cdn-cian.ru/images/2890099935-2.jpg",
+    "miniUrl": "https://images.cdn-cian.ru/images/2890099935-3.jpg",
+    "isDefault": false,
+    "rotateDegree": null,
+    "isLayout": false
+   }
+  ],
+  "rosreestrCheck": null,
+  "formattedShortInfo": "3-комн. апарт.  ·  9/34 этаж",
+  "permittedUseType": null,
+  "jkUrl": "https://zhk-poklonnaya-9-i.cian.ru/",
+  "offerInDeal": false,
+  "bargainTerms": {
+   "leaseType": null,
+   "priceForWorkplace": null,
+   "currency": "rur",
+   "priceRur": 59900000,
+   "clientFee": null,
+   "leaseTermType": null,
+   "bargainAllowed": null,
+   "agentFee": null,
+   "vatType": null,
+   "mortgageAllowed": true,
+   "vatPrice": null,
+   "tags": [],
+   "price": 59900000,
+   "agentBonus": null,
+   "saleType": "free",
+   "paymentPeriod": null,
+   "priceType": "all",
+   "utilitiesTerms": null,
+   "deposit": null
+  },
+  "businessShoppingCenter": null,
+  "humanizedTimedelta": "6 часов назад",
+  "phones": [
+   {
+    "number": "9862481789",
+    "countryCode": "7"
+   }
+  ],
+  "creationDate": "2026-05-29T11:13:11.343",
+  "isInHiddenBase": false,
+  "newbuilding": {
+   "isSalesLeader": null,
+   "comparisonStatus": null,
+   "id": 123671,
+   "showJkReliableFlag": false,
+   "name": "Поклонная 9",
+   "isFromBuilder": false,
+   "hasFlatTourBooking": false,
+   "isFromSeller": false,
+   "isPremium": false,
+   "isFichering": false,
+   "isFromDeveloper": false,
+   "house": {
+    "id": 815851,
+    "name": "Поклонная, 9 (Дом 9)",
+    "finishDate": {
+     "quarter": 1,
+     "year": 2024
+    },
+    "section": null,
+    "isFinished": true
+   },
+   "isFromLeadFactory": false
+  },
+  "flatType": "rooms",
+  "descriptionWordsHighlighted": [],
+  "status": "published",
+  "basicProfiScore": 1,
+  "title": "Самое выгодное предложение в ЖК!",
+  "description": "Представляем вашему вниманию апартаменты в престижном жилом комплексе \"Поклонная 9\" - новом архитектурном символе района Дорогомилово.\n\nАпартамент расположен на 9 этаже. Общая площадь - 69 м.\n\nУдобная функциональная планировка:\n светлая и просторная кухня-гостиная, объединённая в единое пространство;\n 2 изолированные спальни;\n 2 ванные комнаты с душевой кабиной;\n зона холла;\n ниша под постирочную.",
+  "balconiesCount": 0,
+  "isBookedFromDeveloper": null,
+  "roomsCount": 3,
+  "floorNumber": 9,
+  "roomsForSaleCount": null,
+  "livingArea": "40.0",
+  "promoInfo": null,
+  "formattedFullInfo": "3-комн. апарт.  ·  69 м²  ·  9/34 этаж",
+  "offerType": "flat",
+  "kp": null,
+  "auction": {},
+  "id": 330559973,
+  "loggiasCount": 0,
+  "dealRentVersion": null,
+  "officeType": null,
+  "formattedShortPrice": "59 900 000 ₽",
+  "demolishedInMoscowProgramm": null,
+  "totalArea": "69.0",
+  "isRentByParts": false,
+  "roomArea": null,
+  "booking": null,
+  "isDuplicatedDescription": false,
+  "isFavorite": false,
+  "notes": {
+   "offer": null,
+   "realtor": null
+  },
+  "user": {
+   "cianUserId": "12856048",
+   "isAgent": true,
+   "isBuilder": false,
+   "isCallbackUser": false,
+   "isCianPartner": false,
+   "isHidden": false,
+   "isPassportVerified": true,
+   "isSubAgent": false,
+   "userId": 12856048,
+   "userTrustLevel": "involved",
+   "accountType": "agency",
+   "agencyName": "AR Realty - Real Estate Agency",
+   "agentAvatarUrl": "https://www.cian.ru/api/get-avatar/?i=56330810&t=2&p=2&timestamp=1740122963",
+   "agentModerationInfo": {
+    "isUserIdentified": true,
+    "isUserIdentifiedByDocuments": true,
+    "qualityLevelInfo": {
+     "hasVerifiedDocuments": true,
+     "highResponsibility": true,
+     "isBlocked": false,
+     "isSuperAgent": true,
+     "isSuperHost": false,
+     "levelName": "Суперагент",
+     "levelOrder": 4,
+     "levelSystemName": "max",
+     "showHighResponsibility": true,
+     "showSuperAgent": true,
+     "showSuperHost": false
+    },
+    "showUserIdentifiedByDocuments": false
+   },
+   "billingInfo": {
+    "accountType": 0,
+    "packages": [
+     {
+      "countryId": 138,
+      "depositRequired": false,
+      "geoName": "Москва и ближнее Подмосковье",
+      "locationId": 1,
+      "packageTypeId": 2,
+      "packageTypeName": "Базовый"
+     }
+    ],
+    "removeCompetitor": false,
+    "replenishDisabled": false
+   },
+   "canShowOnline": false,
+   "cianProfileStatus": "approved",
+   "companyName": "AR Realty - Real Estate Agency",
+   "experience": "2005",
+   "isChatsEnabled": true,
+   "isSelfEmployed": false,
+   "phoneNumbers": [
+    {
+     "countryCode": "+7",
+     "number": "9689735393"
+    }
+   ],
+   "profileUri": "company/12856048/",
+   "userType": "realtor_based",
+   "personalRating": null,
+   "agentAvailability": {
+    "available": true,
+    "availableFrom": null,
+    "availableTo": null,
+    "message": null,
+    "title": null,
+    "userId": 12856048,
+    "vacationTo": null
+   },
+   "agentLists": []
+  },
+  "isPro": true,
+  "gaLabel": "/sale/flat/mo_id=0/obl_id=1/city_id=1/object_type=1/ga_obj_type=3/spec=company/330559973/from_developer=0/repres=0/owner=0/pod_snos=0/nv=0/",
+  "adfoxParams": {
+   "puid1": "deal_type_sale",
+   "puid2": "offer_flat",
+   "puid3": "sale_type_second",
+   "puid4": "offer_type_3",
+   "puid5": "obl_id_1",
+   "puid6": "50001_max",
+   "puid7": "2323",
+   "puid8": 59900000,
+   "puid9": 510,
+   "puid10": "no_agent",
+   "puid16": "false",
+   "puid17": "false",
+   "puid18": 123671,
+   "puid19": "not_video",
+   "puid36": 1,
+   "puid41": "premium"
+  },
+  "chatId": null,
+  "chat": {
+   "chatId": null,
+   "canSendMessage": true
+  },
+  "isUnique": false,
+  "savedSearchLabels": [],
+  "isDealRequestSubstitutionPhone": false,
+  "contextToken": null,
+  "showGalleryThumbnails": true,
+  "isNewbuildingTourAvailable": false,
+  "isExternalTourAvailable": false,
+  "comparisonStatus": {
+   "status": "available",
+   "description": "Добавить к сравнению"
+  },
+  "photoFeatureIcons": [],
+  "factoids": [
+   {
+    "type": "houseFinishDate",
+    "title": "Сдача корпуса",
+    "text": "Сдан"
+   },
+   {
+    "type": "house",
+    "title": "Корпус",
+    "text": "Поклонная, 9 (Дом 9)"
+   },
+   {
+    "type": "livingArea",
+    "title": "Жилая пл.",
+    "text": "40.0 м2"
+   }
+  ],
+  "brandingLevel": "thirdLevel",
+  "isRosreestrChecked": false,
+  "isSoldFurnished": true,
+  "newbuildingDynamicCalltracking": {
+   "siteBlockId": null,
+   "newbuildingId": null
+  },
+  "bestPlaceAnalyticsAvailable": null,
+  "mortgagePayment": null,
+  "offerFeatureLabels": [],
+  "isNewLabel": false
+ },
+ "ddu": {
+  "addedTimestamp": 1785174539,
+  "totalArea": "48.3",
+  "roomArea": null,
+  "isTop3": false,
+  "isColorized": false,
+  "isStandard": false,
+  "humanizedTimedelta": "2 недели назад",
+  "shareAmount": null,
+  "permittedUseType": null,
+  "layout": null,
+  "livingArea": "14.3",
+  "isByHomeowner": null,
+  "category": "newBuildingFlatSale",
+  "publishedUserId": 52406198,
+  "title": "Квартиры с видом на Москву-реку",
+  "tradingLink": null,
+  "bedroomsCount": null,
+  "monthlyIncome": null,
+  "formattedAdditionalInfo": "Долевое участие (214-ФЗ)",
+  "isInCpd": false,
+  "demolishedInMoscowProgramm": null,
+  "status": "published",
+  "isRecidivist": false,
+  "loggiasCount": null,
+  "specialty": {
+   "specialties": [],
+   "additionalTypes": [],
+   "types": []
+  },
+  "villageMortgageAllowed": false,
+  "newbuildingWithExtendedFeatures": true,
+  "basicProfiScore": 0,
+  "isSubsidisedMortgage": null,
+  "isPremium": false,
+  "formattedShortInfo": "1-комн.кв.  ·  11/19 этаж",
+  "officeType": null,
+  "roomsForSaleCount": null,
+  "isBookedFromDeveloper": false,
+  "isNew": false,
+  "hasFurniture": null,
+  "isLayoutApproved": null,
+  "promoInfo": {
+   "name": "Беспроцентная рассрочка",
+   "specProject": true
+  },
+  "flatType": "rooms",
+  "buildingCadastralNumber": null,
+  "isAuction": false,
+  "land": null,
+  "auction": {},
+  "kp": null,
+  "externalId": null,
+  "fullUrl": "https://www.cian.ru/sale/flat/322430221/?mlSearchSessionGuid=6c94503b054243457aec6e33e37666ce",
+  "jkUrl": "https://zhk-vesper-kutuzovskiy-i.cian.ru/",
+  "balconiesCount": null,
+  "cianId": 322430221,
+  "rosreestrCheck": null,
+  "moderationInfo": {
+   "photoStub": null,
+   "showContactWarningMessage": false,
+   "warningMessage": null
+  },
+  "businessShoppingCenter": null,
+  "isByCommercialOwner": null,
+  "formattedFullInfo": "1-комн.кв.  ·  48,3 м²  ·  11/19 этаж",
+  "added": "27 июл, 20:48",
+  "videos": [],
+  "offerType": "flat",
+  "isApartments": false,
+  "newbuilding": {
+   "hasFlatTourBooking": false,
+   "comparisonStatus": null,
+   "isFromBuilder": true,
+   "isFromDeveloper": true,
+   "isFichering": true,
+   "name": "Веспер Кутузовский",
+   "house": {
+    "section": "Секция 1",
+    "name": "Vesper Кутузовский",
+    "finishDate": {
+     "quarter": 1,
+     "year": 2028
+    },
+    "id": 9123159,
+    "isFinished": false
+   },
+   "id": 4708377,
+   "isPremium": true,
+   "isFromLeadFactory": false,
+   "showJkReliableFlag": false,
+   "isSalesLeader": null,
+   "isFromSeller": false,
+   "countPromos": 1,
+   "snippetType": "maximum"
+  },
+  "formattedFullPrice": "84 520 749 ₽",
+  "offerFeatureLabelsV2": [],
+  "commercialOwnership": null,
+  "id": 322430221,
+  "isEarlyAccessEnabled": null,
+  "isCalltrackingEnabled": true,
+  "roomsCount": 1,
+  "dealRentVersion": null,
+  "isExcludedFromAction": false,
+  "isRentByParts": false,
+  "offerInDeal": false,
+  "buildersIds": [
+   8731
+  ],
+  "coworkingOfferType": null,
+  "isNeedHideExactAddress": false,
+  "isInHiddenBase": false,
+  "userId": 52406198,
+  "floorNumber": 11,
+  "areaParts": null,
+  "isImported": true,
+  "building": {
+   "parking": {
+    "priceMonthly": null,
+    "type": "underground",
+    "isAvailable": null,
+    "isFree": null,
+    "purposeType": null,
+    "locationType": null,
+    "currency": null,
+    "placesCount": null,
+    "priceEntry": null
+   },
+   "type": null,
+   "heatingType": null,
+   "materialType": "monolithBrick",
+   "passengerLiftsCount": null,
+   "classType": null,
+   "floorsCount": 19,
+   "buildYear": null,
+   "deadline": {
+    "quarter": null,
+    "isComplete": false,
+    "quarterEnd": null,
+    "year": 2030
+   },
+   "accessType": null,
+   "cargoLiftsCount": 34
+  },
+  "isCianPartner": false,
+  "allFromOffrep": null,
+  "workplaceCount": null,
+  "garage": null,
+  "rentByPartsDescription": null,
+  "coworking": null,
+  "dealType": "sale",
+  "cadastralNumber": null,
+  "fromDeveloper": true,
+  "phones": [
+   {
+    "number": "9230749719",
+    "countryCode": "7"
+   }
+  ],
+  "kitchenArea": null,
+  "cianUserId": 52406198,
+  "description": "Продается 1-комнатная квартира без отделки, в корпусе 8.2 общей площадью 48,3 кв.м. на 11 этаже. \n  \nЗнаковый проект для ценителей комфортной городской среды от Веспер. Квартал площадью 3,7 га расположен на Кутузовском проспекте и воплощает новую концепцию идеально сбалансированного места для жизни. \n  \nБлагодаря удачному расположению и развитой транспортной инфраструктуре отсюда одинаково быстро ",
+  "isCommercialOwnershipVerified": null,
+  "newbuildingCplLayer": "premium",
+  "minArea": null,
+  "geo": {
+   "undergrounds": [
+    {
+     "lineId": 1,
+     "releaseYear": null,
+     "time": 17,
+     "lineColor": "03238B",
+     "name": "Киевская",
+     "underConstruction": false,
+     "id": 46,
+     "cianId": null,
+     "qs": "deal_type=sale&engine_version=2&metro%5B0%5D=46&offer_type=flat",
+     "isDefault": true,
+     "transportType": "walk",
+     "lineType": null
+    },
+    {
+     "lineId": 12,
+     "releaseYear": null,
+     "time": 16,
+     "lineColor": "009BD5",
+     "name": "Москва-Сити",
+     "underConstruction": false,
+     "id": 35,
+     "cianId": null,
+     "qs": "deal_type=sale&engine_version=2&metro%5B0%5D=35&offer_type=flat",
+     "isDefault": null,
+     "transportType": "walk",
+     "lineType": null
+    },
+    {
+     "lineId": 27,
+     "releaseYear": null,
+     "time": 6,
+     "lineColor": "7ACDCE",
+     "name": "Деловой центр",
+     "underConstruction": false,
+     "id": 444,
+     "cianId": null,
+     "qs": "deal_type=sale&engine_version=2&metro%5B0%5D=444&offer_type=flat",
+     "isDefault": null,
+     "transportType": "transport",
+     "lineType": null
+    }
+   ],
+   "buildingAddress": null,
+   "countryId": 138,
+   "highways": [],
+   "address": [
+    {
+     "title": "Москва",
+     "isFormingAddress": true,
+     "type": "location",
+     "locationTypeId": 1,
+     "shortName": "Москва",
+     "name": "Москва",
+     "geoType": "location",
+     "id": 1,
+     "qs": "deal_type=sale&engine_version=2&offer_type=flat&region=1",
+     "fullName": "Москва"
+    },
+    {
+     "title": "ЗАО",
+     "isFormingAddress": null,
+     "type": "okrug",
+     "locationTypeId": null,
+     "shortName": "ЗАО",
+     "name": "ЗАО",
+     "geoType": "district",
+     "id": 11,
+     "qs": "deal_type=sale&district%5B0%5D=11&engine_version=2&offer_type=flat",
+     "fullName": "ЗАО"
+    },
+    {
+     "title": "р-н Дорогомилово",
+     "isFormingAddress": null,
+     "type": "raion",
+     "locationTypeId": null,
+     "shortName": "р-н Дорогомилово",
+     "name": "Дорогомилово",
+     "geoType": "district",
+     "id": 113,
+     "qs": "deal_type=sale&district%5B0%5D=113&engine_version=2&offer_type=flat",
+     "fullName": "р-н Дорогомилово"
+    },
+    {
+     "title": "м. Москва-Сити",
+     "isFormingAddress": null,
+     "type": "metro",
+     "locationTypeId": null,
+     "shortName": "м. Москва-Сити",
+     "name": "Москва-Сити",
+     "geoType": "underground",
+     "id": 35,
+     "qs": "deal_type=sale&engine_version=2&metro%5B0%5D=35&offer_type=flat",
+     "fullName": "м. Москва-Сити"
+    },
+    {
+     "title": "Кутузовский проспект",
+     "isFormingAddress": true,
+     "type": "street",
+     "locationTypeId": null,
+     "shortName": "Кутузовский просп.",
+     "name": "Кутузовский",
+     "geoType": "street",
+     "id": 3248,
+     "qs": "deal_type=sale&engine_version=2&offer_type=flat&street%5B0%5D=3248",
+     "fullName": "Кутузовский проспект"
+    },
+    {
+     "title": "вл12",
+     "isFormingAddress": true,
+     "type": "house",
+     "locationTypeId": null,
+     "shortName": "вл12",
+     "name": "вл12",
+     "geoType": "house",
+     "id": 14429800,
+     "qs": "deal_type=sale&engine_version=2&house%5B0%5D=14429800&offer_type=flat",
+     "fullName": "вл12"
+    }
+   ],
+   "districts": [
+    {
+     "title": "р-н Дорогомилово",
+     "type": "raion",
+     "locationId": 1,
+     "name": "Дорогомилово",
+     "geoType": "district",
+     "id": 113,
+     "parentId": 11,
+     "qs": "deal_type=sale&district%5B0%5D=113&engine_version=2&offer_type=flat",
+     "fullName": "р-н Дорогомилово"
+    },
+    {
+     "title": "ЗАО",
+     "type": "okrug",
+     "locationId": 1,
+     "name": "ЗАО",
+     "geoType": "district",
+     "id": 11,
+     "parentId": null,
+     "qs": "deal_type=sale&district%5B0%5D=11&engine_version=2&offer_type=flat",
+     "fullName": "ЗАО"
+    }
+   ],
+   "userInput": "Москва, Кутузовский проспект, вл12",
+   "coordinates": {
+    "lat": 55.7499046044329,
+    "lng": 37.5576113227512
+   },
+   "jk": {
+    "developer": {
+     "id": null,
+     "name": "VESPER"
+    },
+    "gaGeo": {
+     "oblId": 1,
+     "cityId": 1,
+     "moId": 0
+    },
+    "displayName": "ЖК «Веспер Кутузовский»",
+    "webSiteUrlUtm": "https://kutuzovsky.house/?utm_source=cian&utm_medium=kartochka_cian&utm_campaign=4708377",
+    "house": {
+     "id": 9123159,
+     "name": "Vesper Кутузовский"
+    },
+    "name": "Веспер Кутузовский",
+    "id": 4708377,
+    "fullUrl": "https://zhk-vesper-kutuzovskiy-i.cian.ru/",
+    "webSiteUrl": "https://kutuzovsky.house/"
+   },
+   "railways": [
+    {
+     "directionIds": [
+      14
+     ],
+     "time": 20,
+     "name": "Москва (Киевский вокзал)",
+     "geoType": "railway",
+     "id": 693,
+     "distance": 1,
+     "travelType": "byFoot",
+     "qs": "deal_type=sale&engine_version=2&offer_type=flat&railway%5B0%5D=693"
+    },
+    {
+     "directionIds": [
+      11
+     ],
+     "time": 8,
+     "name": "Тестовская",
+     "geoType": "railway",
+     "id": 707,
+     "distance": 5,
+     "travelType": "byCar",
+     "qs": "deal_type=sale&engine_version=2&offer_type=flat&railway%5B0%5D=707"
+    },
+    {
+     "directionIds": [
+      11
+     ],
+     "time": 12,
+     "name": "Фили",
+     "geoType": "railway",
+     "id": 708,
+     "distance": 7,
+     "travelType": "byCar",
+     "qs": "deal_type=sale&engine_version=2&offer_type=flat&railway%5B0%5D=708"
+    }
+   ],
+   "sortedGeoIds": [
+    {
+     "type": "underground",
+     "id": 46
+    },
+    {
+     "type": "underground",
+     "id": 35
+    },
+    {
+     "type": "underground",
+     "id": 444
+    },
+    {
+     "type": "railway",
+     "id": 693
+    },
+    {
+     "type": "railway",
+     "id": 707
+    },
+    {
+     "type": "railway",
+     "id": 708
+    },
+    {
+     "type": "district",
+     "id": 113
+    },
+    {
+     "type": "district",
+     "id": 11
+    }
+   ]
+  },
+  "workTimeInfo": {
+   "timezoneText": "Московскому",
+   "callTo": "21:00:00",
+   "callFrom": "09:00:00",
+   "isAvailable": false
+  },
+  "formattedShortPrice": "84 520 749 ₽",
+  "decoration": "without",
+  "booking": null,
+  "descriptionWordsHighlighted": [],
+  "bargainTerms": {
+   "leaseTermType": null,
+   "utilitiesTerms": null,
+   "saleType": "fz214",
+   "agentFee": null,
+   "paymentPeriod": null,
+   "tax": null,
+   "currency": "rur",
+   "tags": [],
+   "priceType": "all",
+   "priceRur": 84520749,
+   "vatType": null,
+   "leaseType": null,
+   "bargainAllowed": null,
+   "clientFee": null,
+   "deposit": null,
+   "price": 84520749,
+   "agentBonus": null,
+   "mortgageAllowed": null,
+   "vatPrice": null,
+   "priceForWorkplace": null
+  },
+  "photos": [
+   {
+    "rotateDegree": null,
+    "thumbnail2Url": "https://images.cdn-cian.ru/images/2906759033-4.jpg",
+    "thumbnailUrl": "https://images.cdn-cian.ru/images/2906759033-2.jpg",
+    "isLayout": true,
+    "id": 2906759033,
+    "miniUrl": "https://images.cdn-cian.ru/images/2906759033-3.jpg",
+    "fullUrl": "https://images.cdn-cian.ru/images/2906759033-1.jpg",
+    "isDefault": false
+   },
+   {
+    "rotateDegree": null,
+    "thumbnail2Url": "https://images.cdn-cian.ru/images/2822690199-4.jpg",
+    "thumbnailUrl": "https://images.cdn-cian.ru/images/2822690199-2.jpg",
+    "isLayout": false,
+    "id": 2822690199,
+    "miniUrl": "https://images.cdn-cian.ru/images/2822690199-3.jpg",
+    "fullUrl": "https://images.cdn-cian.ru/images/2822690199-1.jpg",
+    "isDefault": false
+   }
+  ],
+  "showWarningMessage": false,
+  "descriptionMinhash": [
+   9077391,
+   19654669,
+   22053667,
+   2056155,
+   11856922,
+   30157444,
+   76525954,
+   66398498,
+   23936119,
+   79334296,
+   26141046,
+   1006418,
+   9048134,
+   2039279,
+   25894587,
+   13379849,
+   7465894,
+   76577294,
+   62884797,
+   6351486,
+   40632402,
+   18297510,
+   49312433,
+   38907129,
+   8998341,
+   33183868,
+   67331864,
+   17674280,
+   69663340,
+   20927724,
+   24337144,
+   30007231
+  ],
+  "readyBusinessType": null,
+  "accessType": null,
+  "categoriesIds": [
+   1,
+   100,
+   110,
+   113
+  ],
+  "creationDate": "2025-10-01T10:31:42.193",
+  "isDuplicatedDescription": false,
+  "isFavorite": false,
+  "notes": {
+   "offer": null,
+   "realtor": null
+  },
+  "user": {
+   "cianUserId": "52406198",
+   "isAgent": true,
+   "isBuilder": true,
+   "isCallbackUser": true,
+   "isCianPartner": false,
+   "isHidden": false,
+   "isPassportVerified": false,
+   "isSubAgent": false,
+   "userId": 52406198,
+   "userTrustLevel": "notInvolved",
+   "accountType": "agency",
+   "agencyName": "VESPER",
+   "agentAvatarUrl": "https://www.cian.ru/api/get-avatar/?i=27868025&t=2&p=2&timestamp=1767093360",
+   "agentModerationInfo": {
+    "isUserIdentified": false,
+    "isUserIdentifiedByDocuments": false,
+    "showUserIdentifiedByDocuments": false
+   },
+   "billingInfo": {
+    "accountType": 1,
+    "packages": [
+     {
+      "countryId": 138,
+      "depositRequired": false,
+      "geoName": "Москва и ближнее Подмосковье",
+      "locationId": 1,
+      "packageTypeId": 5,
+      "packageTypeName": "Застройщик"
+     },
+     {
+      "countryId": 138,
+      "depositRequired": false,
+      "geoName": "Дальнее Подмосковье",
+      "locationId": 4593,
+      "packageTypeId": 5,
+      "packageTypeName": "Застройщик"
+     }
+    ],
+    "removeCompetitor": false,
+    "replenishDisabled": true
+   },
+   "canShowOnline": false,
+   "cianProfileStatus": "approved",
+   "companyName": "VESPER",
+   "isChatsEnabled": false,
+   "isSelfEmployed": false,
+   "phoneNumbers": [
+    {
+     "countryCode": "+7",
+     "number": "9035072761"
+    },
+    {
+     "countryCode": "+7",
+     "number": "9964851852"
+    },
+    {
+     "countryCode": "+7",
+     "number": "9163915859"
+    },
+    {
+     "countryCode": "+7",
+     "number": "9817562535"
+    },
+    {
+     "countryCode": "+7",
+     "number": "9167420382"
+    },
+    {
+     "countryCode": "+7",
+     "number": "9776099242"
+    },
+    {
+     "countryCode": "+7",
+     "number": "9660955519"
+    },
+    {
+     "countryCode": "+7",
+     "number": "9168800839"
+    },
+    {
+     "countryCode": "+7",
+     "number": "9850289894"
+    },
+    {
+     "countryCode": "+7",
+     "number": "9055778414"
+    },
+    {
+     "countryCode": "+7",
+     "number": "9936001482"
+    },
+    {
+     "countryCode": "+7",
+     "number": "9219580219"
+    },
+    {
+     "countryCode": "+7",
+     "number": "9035326334"
+    }
+   ],
+   "userType": "developer",
+   "personalRating": null,
+   "agentAvailability": {
+    "available": true,
+    "availableFrom": null,
+    "availableTo": null,
+    "message": null,
+    "title": null,
+    "userId": 52406198,
+    "vacationTo": null
+   },
+   "agentLists": [],
+   "profileUri": "zastroishchik-vesper-8731/"
+  },
+  "isPro": true,
+  "gaLabel": "/sale/flat/mo_id=0/obl_id=1/city_id=1/object_type=2/ga_obj_type=1/spec=company/322430221/from_developer=1/repres=0/owner=0/pod_snos=0/nv=0/",
+  "adfoxParams": {
+   "puid1": "deal_type_sale",
+   "puid2": "offer_flat",
+   "puid3": "sale_type_first",
+   "puid4": "offer_type_1",
+   "puid5": "obl_id_1",
+   "puid6": "50001_max",
+   "puid7": "2323",
+   "puid8": 84520749,
+   "puid9": 46,
+   "puid10": "no_agent",
+   "puid16": "false",
+   "puid17": "false",
+   "puid18": 4708377,
+   "puid19": "not_video",
+   "puid36": 1,
+   "puid41": "premium"
+  },
+  "chatId": null,
+  "chat": {
+   "chatId": null,
+   "canSendMessage": false
+  },
+  "isUnique": false,
+  "savedSearchLabels": [],
+  "isDealRequestSubstitutionPhone": false,
+  "contextToken": null,
+  "showGalleryThumbnails": true,
+  "isNewbuildingTourAvailable": false,
+  "isExternalTourAvailable": false,
+  "comparisonStatus": {
+   "status": "available",
+   "description": "Добавить к сравнению"
+  },
+  "photoFeatureIcons": [],
+  "factoids": [
+   {
+    "type": "houseFinishDate",
+    "title": "Сдача корпуса",
+    "text": "1 кв 2028"
+   },
+   {
+    "type": "house",
+    "title": "Корпус",
+    "text": "Vesper Кутузовский"
+   },
+   {
+    "type": "livingArea",
+    "title": "Жилая пл.",
+    "text": "14.3 м2"
+   }
+  ],
+  "brandingLevel": null,
+  "isRosreestrChecked": false,
+  "newbuildingDynamicCalltracking": {
+   "siteBlockId": 65907,
+   "newbuildingId": 4708377
+  },
+  "bestPlaceAnalyticsAvailable": null,
+  "discount": null,
+  "mortgagePayment": {
+   "title": "В ипотеку от 1 067 477 ₽/мес",
+   "programTypeWithRate": "Базовая 18,9%",
+   "descriptionDialog": {
+    "title": "Базовая ипотека 18,9%"
+   }
+  },
+  "offerFeatureLabels": [],
+  "isNewLabel": false
+ },
+ "studio": {
+  "minArea": null,
+  "showWarningMessage": false,
+  "category": "newBuildingFlatSale",
+  "isLayoutApproved": null,
+  "shareAmount": null,
+  "fullUrl": "https://www.cian.ru/sale/flat/331556771/?mlSearchSessionGuid=c001e4bf91e0d91217c11dda0d660843",
+  "isSubsidisedMortgage": null,
+  "allFromOffrep": null,
+  "userId": 86808323,
+  "isTop3": false,
+  "workplaceCount": null,
+  "building": {
+   "passengerLiftsCount": 1,
+   "heatingType": null,
+   "parking": null,
+   "type": null,
+   "cargoLiftsCount": null,
+   "classType": null,
+   "deadline": {
+    "isComplete": false,
+    "quarterEnd": "2029-06-30",
+    "quarter": "second",
+    "year": 2029
+   },
+   "accessType": null,
+   "floorsCount": 19,
+   "materialType": "monolith",
+   "buildYear": null
+  },
+  "newbuildingCplLayer": "pro",
+  "readyBusinessType": null,
+  "isAuction": false,
+  "isEarlyAccessEnabled": null,
+  "garage": null,
+  "isApartments": false,
+  "added": "сегодня, 14:10",
+  "areaParts": null,
+  "isCommercialOwnershipVerified": null,
+  "coworkingOfferType": null,
+  "isByHomeowner": null,
+  "decoration": null,
+  "isNeedHideExactAddress": false,
+  "cianUserId": 86808323,
+  "specialty": {
+   "types": [],
+   "specialties": [],
+   "additionalTypes": []
+  },
+  "isPremium": false,
+  "layout": null,
+  "accessType": null,
+  "kitchenArea": "5.0",
+  "coworking": null,
+  "categoriesIds": [
+   1,
+   100,
+   110,
+   113
+  ],
+  "externalId": null,
+  "land": null,
+  "isColorized": false,
+  "villageMortgageAllowed": false,
+  "isNew": false,
+  "hasFurniture": null,
+  "publishedUserId": 86808323,
+  "monthlyIncome": null,
+  "addedTimestamp": 1786533020,
+  "formattedAdditionalInfo": "Долевое участие (214-ФЗ), возможна ипотека",
+  "isCalltrackingEnabled": true,
+  "moderationInfo": {
+   "showContactWarningMessage": false,
+   "warningMessage": null,
+   "photoStub": null
+  },
+  "descriptionMinhash": [
+   1870918,
+   66981,
+   13184479,
+   8192014,
+   14739241,
+   117965,
+   34208210,
+   46498628,
+   28300286,
+   14247278,
+   15580061,
+   39685766,
+   67166744,
+   6385508,
+   41026952,
+   360813,
+   53873302,
+   21138377,
+   6175309,
+   17996297,
+   5076834,
+   10446217,
+   17201217,
+   30817677,
+   65711153,
+   13731396,
+   9615691,
+   794253,
+   59168638,
+   35467447,
+   924793,
+   34043651
+  ],
+  "isInCpd": false,
+  "workTimeInfo": {
+   "isAvailable": true,
+   "timezoneText": "Московскому",
+   "callTo": "21:00:00",
+   "callFrom": "09:00:00"
+  },
+  "newbuildingWithExtendedFeatures": true,
+  "formattedFullPrice": "25 154 400 ₽",
+  "commercialOwnership": null,
+  "isRecidivist": false,
+  "geo": {
+   "address": [
+    {
+     "title": "Москва",
+     "id": 1,
+     "type": "location",
+     "name": "Москва",
+     "geoType": "location",
+     "locationTypeId": 1,
+     "fullName": "Москва",
+     "isFormingAddress": true,
+     "shortName": "Москва",
+     "qs": "deal_type=sale&engine_version=2&offer_type=flat&region=1"
+    },
+    {
+     "title": "СЗАО",
+     "id": 1,
+     "type": "okrug",
+     "name": "СЗАО",
+     "geoType": "district",
+     "locationTypeId": null,
+     "fullName": "СЗАО",
+     "isFormingAddress": null,
+     "shortName": "СЗАО",
+     "qs": "deal_type=sale&district%5B0%5D=1&engine_version=2&offer_type=flat"
+    },
+    {
+     "title": "р-н Хорошево-Мневники",
+     "id": 130,
+     "type": "raion",
+     "name": "Хорошево-Мневники",
+     "geoType": "district",
+     "locationTypeId": null,
+     "fullName": "р-н Хорошево-Мневники",
+     "isFormingAddress": null,
+     "shortName": "р-н Хорошево-Мневники",
+     "qs": "deal_type=sale&district%5B0%5D=130&engine_version=2&offer_type=flat"
+    },
+    {
+     "title": "м. Мнёвники",
+     "id": 395,
+     "type": "metro",
+     "name": "Мнёвники",
+     "geoType": "underground",
+     "locationTypeId": null,
+     "fullName": "м. Мнёвники",
+     "isFormingAddress": null,
+     "shortName": "м. Мнёвники",
+     "qs": "deal_type=sale&engine_version=2&metro%5B0%5D=395&offer_type=flat"
+    },
+    {
+     "title": "улица Нижние Мневники",
+     "id": 1594,
+     "type": "street",
+     "name": "Нижние Мневники",
+     "geoType": "street",
+     "locationTypeId": null,
+     "fullName": "улица Нижние Мневники",
+     "isFormingAddress": true,
+     "shortName": "ул. Нижние Мневники",
+     "qs": "deal_type=sale&engine_version=2&offer_type=flat&street%5B0%5D=1594"
+    },
+    {
+     "title": "62В",
+     "id": 12479979,
+     "type": "house",
+     "name": "62В",
+     "geoType": "house",
+     "locationTypeId": null,
+     "fullName": "62В",
+     "isFormingAddress": true,
+     "shortName": "62В",
+     "qs": "deal_type=sale&engine_version=2&house%5B0%5D=12479979&offer_type=flat"
+    }
+   ],
+   "jk": {
+    "developer": {
+     "name": "ДОНСТРОЙ",
+     "id": null
+    },
+    "id": 2812286,
+    "name": "Остров",
+    "fullUrl": "https://zhk-ostrov-i.cian.ru/",
+    "webSiteUrlUtm": null,
+    "displayName": "ЖК «Остров»",
+    "webSiteUrl": null,
+    "house": {
+     "name": "Квартал 14 - корпус 1",
+     "id": 10915873
+    },
+    "gaGeo": {
+     "oblId": 1,
+     "cityId": 1,
+     "moId": 0
+    }
+   },
+   "undergrounds": [
+    {
+     "time": 6,
+     "lineColor": "7ACDCE",
+     "id": 396,
+     "name": "Терехово ",
+     "cianId": null,
+     "lineId": 27,
+     "transportType": "transport",
+     "underConstruction": false,
+     "isDefault": true,
+     "releaseYear": null,
+     "qs": "deal_type=sale&engine_version=2&metro%5B0%5D=396&offer_type=flat",
+     "lineType": null
+    },
+    {
+     "time": 5,
+     "lineColor": "7ACDCE",
+     "id": 395,
+     "name": "Мнёвники",
+     "cianId": null,
+     "lineId": 27,
+     "transportType": "walk",
+     "underConstruction": false,
+     "isDefault": null,
+     "releaseYear": null,
+     "qs": "deal_type=sale&engine_version=2&metro%5B0%5D=395&offer_type=flat",
+     "lineType": null
+    },
+    {
+     "time": 6,
+     "lineColor": "7ACDCE",
+     "id": 440,
+     "name": "Народное Ополчение",
+     "cianId": null,
+     "lineId": 27,
+     "transportType": "transport",
+     "underConstruction": false,
+     "isDefault": null,
+     "releaseYear": null,
+     "qs": "deal_type=sale&engine_version=2&metro%5B0%5D=440&offer_type=flat",
+     "lineType": null
+    }
+   ],
+   "railways": [
+    {
+     "time": 10,
+     "travelType": "byCar",
+     "id": 733,
+     "name": "Кунцево I",
+     "geoType": "railway",
+     "directionIds": [
+      11
+     ],
+     "distance": 7,
+     "qs": "deal_type=sale&engine_version=2&offer_type=flat&railway%5B0%5D=733"
+    },
+    {
+     "time": 11,
+     "travelType": "byCar",
+     "id": 707,
+     "name": "Тестовская",
+     "geoType": "railway",
+     "directionIds": [
+      11
+     ],
+     "distance": 8,
+     "qs": "deal_type=sale&engine_version=2&offer_type=flat&railway%5B0%5D=707"
+    },
+    {
+     "time": 12,
+     "travelType": "byCar",
+     "id": 743,
+     "name": "Рабочий Посёлок",
+     "geoType": "railway",
+     "directionIds": [
+      11
+     ],
+     "distance": 8,
+     "qs": "deal_type=sale&engine_version=2&offer_type=flat&railway%5B0%5D=743"
+    }
+   ],
+   "buildingAddress": null,
+   "highways": [],
+   "districts": [
+    {
+     "title": "р-н Хорошево-Мневники",
+     "parentId": 1,
+     "id": 130,
+     "type": "raion",
+     "name": "Хорошево-Мневники",
+     "geoType": "district",
+     "locationId": 1,
+     "fullName": "р-н Хорошево-Мневники",
+     "qs": "deal_type=sale&district%5B0%5D=130&engine_version=2&offer_type=flat"
+    },
+    {
+     "title": "СЗАО",
+     "parentId": null,
+     "id": 1,
+     "type": "okrug",
+     "name": "СЗАО",
+     "geoType": "district",
+     "locationId": 1,
+     "fullName": "СЗАО",
+     "qs": "deal_type=sale&district%5B0%5D=1&engine_version=2&offer_type=flat"
+    }
+   ],
+   "countryId": 138,
+   "userInput": "Москва, улица Нижние Мнёвники, 62В",
+   "coordinates": {
+    "lat": 55.7565918244887,
+    "lng": 37.4711967752306
+   },
+   "sortedGeoIds": [
+    {
+     "type": "underground",
+     "id": 396
+    },
+    {
+     "type": "underground",
+     "id": 395
+    },
+    {
+     "type": "underground",
+     "id": 440
+    },
+    {
+     "type": "railway",
+     "id": 733
+    },
+    {
+     "type": "railway",
+     "id": 707
+    },
+    {
+     "type": "railway",
+     "id": 743
+    },
+    {
+     "type": "district",
+     "id": 130
+    },
+    {
+     "type": "district",
+     "id": 1
+    }
+   ]
+  },
+  "offerFeatureLabelsV2": [],
+  "dealType": "sale",
+  "tradingLink": null,
+  "cianId": 331556771,
+  "buildersIds": [
+   6017
+  ],
+  "isByCommercialOwner": null,
+  "bedroomsCount": null,
+  "videos": [],
+  "isImported": true,
+  "fromDeveloper": true,
+  "cadastralNumber": null,
+  "buildingCadastralNumber": null,
+  "rentByPartsDescription": null,
+  "isStandard": false,
+  "isCianPartner": false,
+  "isExcludedFromAction": false,
+  "photos": [
+   {
+    "id": 2931868893,
+    "thumbnail2Url": "https://images.cdn-cian.ru/images/2931868893-4.jpg",
+    "fullUrl": "https://images.cdn-cian.ru/images/2931868893-1.jpg",
+    "thumbnailUrl": "https://images.cdn-cian.ru/images/2931868893-2.jpg",
+    "miniUrl": "https://images.cdn-cian.ru/images/2931868893-3.jpg",
+    "isDefault": false,
+    "rotateDegree": null,
+    "isLayout": true
+   },
+   {
+    "id": 2931488459,
+    "thumbnail2Url": "https://images.cdn-cian.ru/images/2931488459-4.jpg",
+    "fullUrl": "https://images.cdn-cian.ru/images/2931488459-1.jpg",
+    "thumbnailUrl": "https://images.cdn-cian.ru/images/2931488459-2.jpg",
+    "miniUrl": "https://images.cdn-cian.ru/images/2931488459-3.jpg",
+    "isDefault": false,
+    "rotateDegree": null,
+    "isLayout": false
+   }
+  ],
+  "rosreestrCheck": null,
+  "formattedShortInfo": "Студия  ·  9/19 этаж",
+  "permittedUseType": null,
+  "jkUrl": "https://zhk-ostrov-i.cian.ru/",
+  "offerInDeal": false,
+  "bargainTerms": {
+   "leaseType": null,
+   "priceForWorkplace": null,
+   "currency": "rur",
+   "priceRur": 25154400,
+   "clientFee": null,
+   "leaseTermType": null,
+   "bargainAllowed": null,
+   "agentFee": null,
+   "vatType": null,
+   "mortgageAllowed": true,
+   "vatPrice": null,
+   "tags": [],
+   "price": 25154400,
+   "agentBonus": null,
+   "saleType": "fz214",
+   "paymentPeriod": null,
+   "priceType": "all",
+   "utilitiesTerms": null,
+   "deposit": null
+  },
+  "businessShoppingCenter": null,
+  "humanizedTimedelta": "7 часов назад",
+  "phones": [
+   {
+    "number": "9230753455",
+    "countryCode": "7"
+   }
+  ],
+  "creationDate": "2026-06-30T23:25:59.63",
+  "isInHiddenBase": false,
+  "newbuilding": {
+   "isSalesLeader": true,
+   "comparisonStatus": null,
+   "id": 2812286,
+   "showJkReliableFlag": false,
+   "name": "Остров",
+   "isFromBuilder": true,
+   "hasFlatTourBooking": false,
+   "isFromSeller": false,
+   "isPremium": false,
+   "isFichering": true,
+   "isFromDeveloper": true,
+   "house": {
+    "id": 10915873,
+    "name": "Квартал 14 - корпус 1",
+    "finishDate": {
+     "quarter": 2,
+     "year": 2029
+    },
+    "section": "Секция 2",
+    "isFinished": false
+   },
+   "isFromLeadFactory": false,
+   "countPromos": 4,
+   "snippetType": "advanced"
+  },
+  "flatType": "studio",
+  "descriptionWordsHighlighted": [],
+  "status": "published",
+  "basicProfiScore": 0,
+  "title": null,
+  "description": "Продаётся квартира от застройщика: общая площадь 28.20 м², жилая 14.60 м², кухня 5.00 м², 9-й этаж, жилой квартал \"Остров 14\", корпус 1 (секция 2).  Срок сдачи: 2 квартал 2029 года.\n1 совмещенный санузел. \n\nКвартира расположена в Доходном доме, целиком состоящем из лотов для сдачи в аренду. В квартире выполнена отделка \"под ключ\" на уровне высококлассных отелей, установлена дополнительная шумоизол",
+  "balconiesCount": null,
+  "isBookedFromDeveloper": false,
+  "roomsCount": null,
+  "floorNumber": 9,
+  "roomsForSaleCount": null,
+  "livingArea": "14.6",
+  "promoInfo": null,
+  "formattedFullInfo": "Студия  ·  28,2 м²  ·  9/19 этаж",
+  "offerType": "flat",
+  "kp": null,
+  "auction": {},
+  "id": 331556771,
+  "loggiasCount": null,
+  "dealRentVersion": null,
+  "officeType": null,
+  "formattedShortPrice": "25 154 400 ₽",
+  "demolishedInMoscowProgramm": null,
+  "totalArea": "28.2",
+  "isRentByParts": false,
+  "roomArea": null,
+  "booking": null,
+  "isDuplicatedDescription": false,
+  "isFavorite": false,
+  "notes": {
+   "offer": null,
+   "realtor": null
+  },
+  "user": {
+   "cianUserId": "86808323",
+   "isAgent": true,
+   "isBuilder": true,
+   "isCallbackUser": true,
+   "isCianPartner": false,
+   "isHidden": false,
+   "isPassportVerified": false,
+   "isSubAgent": false,
+   "userId": 86808323,
+   "userTrustLevel": "notInvolved",
+   "accountType": "agency",
+   "agencyName": "Донстрой",
+   "agentAvatarUrl": "https://www.cian.ru/api/get-avatar/?i=48362791&t=2&p=2&timestamp=1781179859",
+   "agentModerationInfo": {
+    "isUserIdentified": false,
+    "isUserIdentifiedByDocuments": false,
+    "showUserIdentifiedByDocuments": false
+   },
+   "billingInfo": {
+    "accountType": 1,
+    "packages": [
+     {
+      "countryId": 138,
+      "depositRequired": false,
+      "geoName": "Москва и ближнее Подмосковье",
+      "locationId": 1,
+      "packageTypeId": 5,
+      "packageTypeName": "Застройщик"
+     },
+     {
+      "countryId": 138,
+      "depositRequired": false,
+      "geoName": "Дальнее Подмосковье",
+      "locationId": 4593,
+      "packageTypeId": 5,
+      "packageTypeName": "Застройщик"
+     }
+    ],
+    "removeCompetitor": false,
+    "replenishDisabled": true
+   },
+   "canShowOnline": false,
+   "cianProfileStatus": "approved",
+   "companyName": "Донстрой",
+   "isChatsEnabled": false,
+   "isSelfEmployed": false,
+   "phoneNumbers": [
+    {
+     "countryCode": "+7",
+     "number": "9253532887"
+    },
+    {
+     "countryCode": "+7",
+     "number": "9263483889"
+    },
+    {
+     "countryCode": "+7",
+     "number": "9266718146"
+    }
+   ],
+   "userType": "developer",
+   "personalRating": null,
+   "agentAvailability": {
+    "available": false,
+    "availableFrom": "2026-08-13T09:00:00+03:00",
+    "availableTo": "2026-08-13T21:00:00+03:00",
+    "message": "Напишите ему или позвоните завтра.",
+    "title": "Специалист работает с 9:00 по 21:00.",
+    "userId": 86808323,
+    "vacationTo": null
+   },
+   "agentLists": [],
+   "profileUri": "zastroishchik-donstroj-6017/"
+  },
+  "isPro": true,
+  "gaLabel": "/sale/flat/mo_id=0/obl_id=1/city_id=1/object_type=2/ga_obj_type=None/spec=company/331556771/from_developer=1/repres=0/owner=0/pod_snos=0/nv=0/",
+  "adfoxParams": {
+   "puid1": "deal_type_sale",
+   "puid2": "offer_flat",
+   "puid3": "sale_type_first",
+   "puid5": "obl_id_1",
+   "puid6": "25001_30000",
+   "puid7": "2323",
+   "puid8": 25154400,
+   "puid9": 396,
+   "puid10": "no_agent",
+   "puid16": "false",
+   "puid17": "false",
+   "puid18": 2812286,
+   "puid19": "not_video",
+   "puid36": 1,
+   "puid41": "premium"
+  },
+  "chatId": null,
+  "chat": {
+   "chatId": null,
+   "canSendMessage": false
+  },
+  "isUnique": true,
+  "savedSearchLabels": [],
+  "isDealRequestSubstitutionPhone": false,
+  "contextToken": null,
+  "showGalleryThumbnails": true,
+  "isNewbuildingTourAvailable": false,
+  "isExternalTourAvailable": false,
+  "comparisonStatus": {
+   "status": "available",
+   "description": "Добавить к сравнению"
+  },
+  "photoFeatureIcons": [],
+  "factoids": [
+   {
+    "type": "houseFinishDate",
+    "title": "Сдача корпуса",
+    "text": "2 кв 2029"
+   },
+   {
+    "type": "house",
+    "title": "Корпус",
+    "text": "Квартал 14 - корпус 1"
+   },
+   {
+    "type": "livingArea",
+    "title": "Жилая пл.",
+    "text": "14.6 м2"
+   }
+  ],
+  "brandingLevel": null,
+  "isRosreestrChecked": false,
+  "newbuildingDynamicCalltracking": {
+   "siteBlockId": 3311,
+   "newbuildingId": 2812286
+  },
+  "bestPlaceAnalyticsAvailable": null,
+  "discount": null,
+  "mortgagePayment": {
+   "title": "В ипотеку от 291 437 ₽/мес",
+   "programTypeWithRate": "Базовая 17,3%",
+   "descriptionDialog": {
+    "title": "Базовая ипотека 17,3%"
+   }
+  },
+  "offerFeatureLabels": [
+   "ЖК лидер продаж",
+   "С отделкой"
+  ],
+  "isNewLabel": false
+ },
+ "card-developer": {
+  "category": "newBuildingFlatSale",
+  "status": "published",
+  "dealType": "sale",
+  "offerType": "flat",
+  "geo": {
+   "address": [
+    {
+     "fullName": "Москва",
+     "id": 1,
+     "locationTypeId": 1,
+     "name": "Москва",
+     "shortName": "Москва",
+     "type": "location",
+     "url": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&object_type%5B0%5D=2&offer_type=flat&region=1&room2=1"
+    },
+    {
+     "fullName": "ЦАО",
+     "id": 4,
+     "locationTypeId": -1,
+     "name": "ЦАО",
+     "shortName": "ЦАО",
+     "type": "okrug",
+     "url": "https://www.cian.ru/kupit-2-komnatnuyu-kvartiru-novostroyki-moskva-cao-044/"
+    },
+    {
+     "fullName": "район Якиманка",
+     "id": 22,
+     "locationTypeId": -1,
+     "name": "Якиманка",
+     "shortName": "р-н Якиманка",
+     "type": "raion",
+     "url": "https://www.cian.ru/kupit-2-komnatnuyu-kvartiru-novostroyki-moskva-yakimanka-0422/"
+    },
+    {
+     "fullName": "Софийская набережная",
+     "id": 3221,
+     "locationTypeId": -1,
+     "name": "Софийская",
+     "shortName": "Софийская наб.",
+     "type": "street",
+     "url": "https://www.cian.ru/kupit-2-komnatnuyu-kvartiru-novostroyki-moskva-sofiyskaya-naberezhnaya-023221/"
+    },
+    {
+     "fullName": "18",
+     "id": 2360048,
+     "locationTypeId": -1,
+     "name": "18",
+     "shortName": "18",
+     "type": "house",
+     "url": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&house%5B0%5D=2360048&object_type%5B0%5D=2&offer_type=flat&room2=1"
+    }
+   ],
+   "coordinates": {
+    "lat": 55.7477401845079,
+    "lng": 37.6176859822769
+   },
+   "highways": [],
+   "jk": {
+    "id": 81377,
+    "name": "Золотой, жилой квартал",
+    "developer": {
+     "name": "Capital Group"
+    },
+    "house": {
+     "id": 9161847,
+     "name": "Софийская, 18 (Дом 18-20)"
+    },
+    "gaGeo": {
+     "moId": 0,
+     "oblId": 1,
+     "cityId": 1
+    },
+    "fullUrl": "https://www.cian.ru/zhiloy-kompleks-zolotoy-zhiloy-kvartal-moskva-81377/",
+    "fullUrlTemplate": "{request_scheme}://zhk-zolotoy-zhiloy-kvartal-1-i.{host}/"
+   },
+   "railways": [
+    {
+     "id": 690,
+     "directionIds": [
+      17
+     ],
+     "distance": "3.0",
+     "time": 8,
+     "name": "Москва (Павелецкий вокзал)",
+     "travelType": "byCar"
+    },
+    {
+     "id": 690,
+     "directionIds": [
+      17
+     ],
+     "distance": "3.0",
+     "time": 37,
+     "name": "Москва (Павелецкий вокзал)",
+     "travelType": "byFoot"
+    },
+    {
+     "id": 687,
+     "directionIds": [
+      12,
+      15
+     ],
+     "distance": "3.0",
+     "time": 43,
+     "name": "Москва (Курский вокзал)",
+     "travelType": "byFoot"
+    },
+    {
+     "id": 693,
+     "directionIds": [
+      14
+     ],
+     "distance": "4.0",
+     "time": 52,
+     "name": "Москва (Киевский вокзал)",
+     "travelType": "byFoot"
+    },
+    {
+     "id": 687,
+     "directionIds": [
+      12,
+      15
+     ],
+     "distance": "5.0",
+     "time": 8,
+     "name": "Москва (Курский вокзал)",
+     "travelType": "byCar"
+    },
+    {
+     "id": 693,
+     "directionIds": [
+      14
+     ],
+     "distance": "5.0",
+     "time": 8,
+     "name": "Москва (Киевский вокзал)",
+     "travelType": "byCar"
+    }
+   ],
+   "undergrounds": [
+    {
+     "id": 20,
+     "name": "Боровицкая",
+     "lineColor": "A2A5B5",
+     "travelType": "walk",
+     "travelTime": 12,
+     "url": "https://www.cian.ru/kupit-2-komnatnuyu-kvartiru-novostroyki-moskva-metro-borovickaya-20/",
+     "underConstruction": false
+    },
+    {
+     "id": 4,
+     "name": "Александровский сад",
+     "lineColor": "009BD5",
+     "travelType": "walk",
+     "travelTime": 13,
+     "url": "https://www.cian.ru/kupit-2-komnatnuyu-kvartiru-novostroyki-moskva-metro-aleksandrovskiy-sad-4/",
+     "underConstruction": false
+    },
+    {
+     "id": 18,
+     "name": "Библиотека им. Ленина",
+     "lineColor": "CF0000",
+     "travelType": "walk",
+     "travelTime": 13,
+     "url": "https://www.cian.ru/kupit-2-komnatnuyu-kvartiru-novostroyki-moskva-metro-biblioteka-im-lenina/",
+     "underConstruction": false
+    },
+    {
+     "id": 56,
+     "name": "Кропоткинская",
+     "lineColor": "CF0000",
+     "travelType": "walk",
+     "travelTime": 14,
+     "url": "https://www.cian.ru/kupit-2-komnatnuyu-kvartiru-novostroyki-moskva-metro-kropotkinskaya/",
+     "underConstruction": false
+    },
+    {
+     "id": 129,
+     "name": "Третьяковская",
+     "lineColor": "FFDF00",
+     "travelType": "walk",
+     "travelTime": 17,
+     "url": "https://www.cian.ru/kupit-2-komnatnuyu-kvartiru-novostroyki-moskva-metro-tretyakovskaya/",
+     "underConstruction": false
+    },
+    {
+     "id": 98,
+     "name": "Полянка",
+     "lineColor": "A2A5B5",
+     "travelType": "walk",
+     "travelTime": 17,
+     "url": "https://www.cian.ru/kupit-2-komnatnuyu-kvartiru-novostroyki-moskva-metro-polyanka-98/",
+     "underConstruction": false
+    },
+    {
+     "id": 77,
+     "name": "Новокузнецкая",
+     "lineColor": "00701A",
+     "travelType": "walk",
+     "travelTime": 18,
+     "url": "https://www.cian.ru/kupit-2-komnatnuyu-kvartiru-novostroyki-moskva-metro-novokuzneckaya/",
+     "underConstruction": false
+    },
+    {
+     "id": 8,
+     "name": "Арбатская",
+     "lineColor": "03238B",
+     "travelType": "walk",
+     "travelTime": 18,
+     "url": "https://www.cian.ru/kupit-2-komnatnuyu-kvartiru-novostroyki-moskva-metro-arbatskaya-8/",
+     "underConstruction": false
+    },
+    {
+     "id": 47,
+     "name": "Китай-город",
+     "lineColor": "FF7F00",
+     "travelType": "walk",
+     "travelTime": 18,
+     "url": "https://www.cian.ru/kupit-2-komnatnuyu-kvartiru-novostroyki-moskva-metro-kitay-gorod/",
+     "underConstruction": false
+    },
+    {
+     "id": 84,
+     "name": "Охотный ряд",
+     "lineColor": "CF0000",
+     "travelType": "walk",
+     "travelTime": 19,
+     "url": "https://www.cian.ru/kupit-2-komnatnuyu-kvartiru-novostroyki-moskva-metro-ohotnyy-ryad/",
+     "underConstruction": false
+    },
+    {
+     "id": 96,
+     "name": "Площадь Революции",
+     "lineColor": "03238B",
+     "travelType": "walk",
+     "travelTime": 20,
+     "url": "https://www.cian.ru/kupit-2-komnatnuyu-kvartiru-novostroyki-moskva-metro-ploshcad-revolyucii-96/",
+     "underConstruction": false
+    }
+   ]
+  },
+  "id": 326035617,
+  "objectGuid": "fcb17446-84de-4ff3-8951-29ff0c00bc17",
+  "cianId": 326035617,
+  "userId": 16786232,
+  "publishedUserId": 16786232,
+  "cianUserId": 16786232,
+  "description": "Светлая 2-комнатная квартира площадью 87,5 кв. м, расположенная на 4 этаже в новом жилом квартале \"Золотой-2\" от Capital Group - прямо напротив Кремля. Окна шикарной кухни-гостиной площадью 31,6 кв. м, выходят в сторону Репинского сквера. Зона светлой спальни площадью 16,1 кв. м объединена с собственной ванной и гардеробной, создавая приватную зону master beedroom. Квартира предлагается к продаже ",
+  "photos": [
+   {
+    "id": 2878238150,
+    "isDefault": false,
+    "fullUrl": "https://images.cdn-cian.ru/images/2878238150-1.jpg",
+    "thumbnailUrl": "https://images.cdn-cian.ru/images/2878238150-2.jpg",
+    "thumbnail2Url": "https://images.cdn-cian.ru/images/2878238150-4.jpg",
+    "miniUrl": "https://images.cdn-cian.ru/images/2878238150-3.jpg",
+    "isLayout": true,
+    "isCianLayout": false
+   },
+   {
+    "id": 2779300376,
+    "isDefault": false,
+    "fullUrl": "https://images.cdn-cian.ru/images/2779300376-1.jpg",
+    "thumbnailUrl": "https://images.cdn-cian.ru/images/2779300376-2.jpg",
+    "thumbnail2Url": "https://images.cdn-cian.ru/images/2779300376-4.jpg",
+    "miniUrl": "https://images.cdn-cian.ru/images/2779300376-3.jpg",
+    "isLayout": false,
+    "isCianLayout": false
+   }
+  ],
+  "phones": [
+   {
+    "countryCode": "+7",
+    "number": "9230728674"
+   }
+  ],
+  "publishTerms": {
+   "terms": [
+    {
+     "services": [
+      "paid"
+     ],
+     "days": 30,
+     "type": "periodical"
+    }
+   ],
+   "autoprolong": true
+  },
+  "flatType": "rooms",
+  "isApartments": false,
+  "totalArea": "87.5",
+  "projectDeclarationUrl": "http:///1/475/Разрешение_на_ввод_в_эксплуатацию-Золотой_остров-2-1_этап.cleaned-462621-EuzeEtA4-574180-Tq23UTNf.pdf",
+  "decoration": "turnkey",
+  "flags": {
+   "isArchived": false,
+   "isCommercialOwnershipVerified": false
+  },
+  "kpnChatEnabled": true,
+  "specialty": {
+   "types": [],
+   "additionalTypes": []
+  },
+  "isNeedHideExactAddress": false,
+  "areaParts": [],
+  "roomsCount": 2,
+  "floorNumber": 4,
+  "bargainTerms": {
+   "price": 280000000,
+   "priceType": "all",
+   "currency": "rur",
+   "saleType": "free",
+   "includedOptions": [],
+   "prices": {
+    "rur": 280000000,
+    "usd": 3373588,
+    "eur": 2923388
+   },
+   "tags": []
+  },
+  "building": {
+   "materialType": "monolith",
+   "floorsCount": 4,
+   "totalArea": "87.5",
+   "liftTypes": [],
+   "cranageTypes": [],
+   "deadline": {
+    "year": 2023,
+    "quarter": "first",
+    "isComplete": true,
+    "quarterEnd": "2023-03-31"
+   },
+   "houseMaterialType": "monolith"
+  },
+  "editDate": "2026-08-12T20:40:16.202028Z",
+  "humanizedEditDate": "вчера, 20:40",
+  "isInCpd": false,
+  "isInHiddenBase": false,
+  "isObjectHidden": false,
+  "isClosedVisibility": false,
+  "videos": [
+   {
+    "id": "456239056",
+    "url": "https://vkvideo.ru/video_ext.php?oid=-227635769&id=456239056&hd=2&hash=7fc26fa04d82bc9f",
+    "type": "vk",
+    "previewUrl": "https://iv.okcdn.ru/getVideoPreview?id=9305345690286&idx=10&type=39&tkn=rrL1ZW9yTmhwTI_TOfhn36pGaJ4&fn=vid_w"
+   }
+  ],
+  "priceTotal": 280000000,
+  "priceTotalRur": 280000000,
+  "exportLinks": {
+   "pdfUrl": "/export/pdf/sale/flat/326035617/",
+   "docxUrl": "/export/docx/sale/flat/326035617/"
+  },
+  "added": "6 авг, 20:04",
+  "categoriesIds": [
+   1,
+   100,
+   110,
+   113
+  ],
+  "publicationDate": 1769002217,
+  "creationDate": "2026-01-21T16:30:17.543",
+  "recoveryLink": "/razmestit-obyavlenie/326035617/?isFromXML=1",
+  "isFromBuilder": true,
+  "isFromSeller": false,
+  "isFromLeadFactory": false,
+  "trackingData": {
+   "moId": 0,
+   "oblId": 1,
+   "cityId": 1,
+   "fbRegion": "Москва",
+   "fbCity": "Москва"
+  },
+  "editPhoto": "/realty/add2.aspx?id=326035617&isFromXML=1",
+  "newEdit": "/razmestit-obyavlenie/?realty_id=326035617&isFromXML=1",
+  "certificate": "https://www.cian.ru/newobjects/cian/certification/get?announcementId=326035617",
+  "edit": "/realty/add1.aspx?id=326035617&isFromXML=1",
+  "similarOffersLink": "",
+  "similarOffersCount": 0,
+  "buildersIds": [
+   7063
+  ],
+  "builderId": 7063,
+  "isImported": true,
+  "userConfirmedFix": false,
+  "newbuilding": {
+   "id": 81377,
+   "name": "Золотой, жилой квартал",
+   "house": {
+    "isReliable": false,
+    "isFinished": true,
+    "finishDate": {
+     "quarter": 1,
+     "year": 2023
+    },
+    "id": 9161847,
+    "name": "Софийская, 18 (Дом 18-20)"
+   },
+   "isTariffPremium": true,
+   "isFromDeveloper": true,
+   "isFromBuilder": true,
+   "isFromSeller": false,
+   "isFromLeadFactory": false,
+   "showJkReliableFlag": false,
+   "isFichering": true,
+   "isFicheringPlus": true,
+   "isPremium": true,
+   "newbuildingFeatures": {
+    "imagesCount": 21,
+    "firstImageUrl": "https://images.cdn-cian.ru/images/zolotoy-zhiloy-kvartal-1-moskva-jk-2060801128-6.jpg",
+    "videosCount": 1,
+    "deadlineInfo": "Сдан"
+   },
+   "isReliable": false
+  },
+  "timezone": 3,
+  "isEnabledCallTracking": true,
+  "isRentByParts": false,
+  "isDuplicate": false,
+  "userTrust": "notInvolved",
+  "userTrustLevel": "notInvolved",
+  "showWarningMessage": false,
+  "moderationInfo": {
+   "showContactWarningMessage": false
+  },
+  "isUnique": false,
+  "isUniqueCheckDate": "2026-08-12",
+  "isCianPartner": false,
+  "externalId": "24666923",
+  "isIllegalConstruction": false,
+  "amenities": [],
+  "isFromDeveloperBooked": false,
+  "layoutKey": "5d63e8c9-6567-4bd4-82a5-d792a81315f5",
+  "externalOfferUrl": "",
+  "cianLayouts": null,
+  "demolishedInMoscowProgramm": false
+ }
+}

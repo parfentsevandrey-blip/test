@@ -1,0 +1,16 @@
+{
+  "_type": "flatsale",
+  "engine_version": { "type": "term", "value": 2 },
+  "region": { "type": "terms", "value": [1] },
+  "geo": { "type": "geo", "value": [{ "type": "district", "id": 11 }] },
+  "building_status": { "type": "term", "value": 1 },
+  "room": { "type": "terms", "value": [3] },
+  "price": { "type": "range", "value": { "lte": 70000000 } },
+  "total_area": { "type": "range", "value": { "lte": 100 } },
+  "floor": { "type": "range", "value": { "gte": 5 } },
+  "only_foot": { "type": "term", "value": "2" },
+  "foot_min": { "type": "range", "value": { "lte": 10 } },
+  "house_year": { "type": "range", "value": { "gte": 2016 } },
+  "repair": { "type": "terms", "value": [4] },
+  "apartment": { "type": "term", "value": false }
+}
