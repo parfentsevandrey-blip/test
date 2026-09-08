@@ -360,7 +360,7 @@ sheet(wb, '2. Строится', H2, rows2,
 # ---------- лист 3: проектирование (по Telegram-каналам) ----------
 TG = json.load(open(DOCS / 'tg-sites.json')) if (DOCS / 'tg-sites.json').exists() else None
 CONF = {'high': 'высокая', 'medium': 'средняя', 'low': 'низкая'}
-H3 = ['Проект / участок', 'Адрес', 'Район', 'Зона', 'Застройщик', 'Стадия', 'Общая площадь, м²', 'Лотов', 'Этажность',
+H3 = ['Проект / участок', 'Адрес', 'Точный адрес / адреса', 'Район', 'Зона', 'Застройщик', 'Стадия', 'Общая площадь, м²', 'Лотов', 'Этажность',
       'Старт (план)', 'Сдача (план)', 'Цена от, ₽/м²', 'Первое упоминание', 'Последнее упоминание', 'Достоверность',
       'Пост 1', 'Пост 2', 'Пост 3', 'Что известно']
 rows3 = []
@@ -369,7 +369,7 @@ if TG:
         if e.get('zone') not in ALLOWED: continue
         posts = sorted(e.get('posts') or [], key=lambda x: x.get('date') or '', reverse=True)[:3]
         links = [pp['url'] for pp in posts] + [''] * (3 - len(posts))
-        rows3.append([strip_paren(e.get('name')), short_addr(e.get('address')), e.get('district'), e['zone'],
+        rows3.append([strip_paren(e.get('name')), short_addr(e.get('address')), e.get('address') or '', e.get('district'), e['zone'],
                       strip_paren(e.get('developer')) or 'не раскрыт', short_stage(e.get('stage')),
                       e.get('area_total_m2'), e.get('units'), strip_paren(e.get('floors')) or None,
                       strip_paren(e.get('planned_start')) or None, strip_paren(e.get('planned_completion')) or None,
@@ -380,16 +380,35 @@ else:
         if p.get('name') in manual.get('_planning_drop', []): continue
         pz = manual.get('_planning_zone', {}).get(p.get('name'), p.get('location_zone'))
         if pz not in ALLOWED: continue
-        rows3.append([strip_paren(p.get('name')), short_addr(p.get('address')), p.get('district'), pz,
+        rows3.append([strip_paren(p.get('name')), short_addr(p.get('address')), p.get('address') or '', p.get('district'), pz,
                       re.sub(r'\s*\(.*$', '', str(p.get('developer') or '')).strip() or 'не раскрыт', short_stage(p.get('stage')),
                       p.get('area_total_m2'), p.get('units'), strip_paren(p.get('floors')) or None, strip_paren(p.get('planned_start')) or None,
                       strip_paren(p.get('planned_completion')) or None, p.get('price_from_per_m2'), p.get('announced_date'), None, '',
                       p.get('source_url') or '', '', '', p.get('notes')])
-rows3.sort(key=lambda x: (zkey(x[3]), x[11] is None, x[11] or 0, str(x[0])))
+def nrm(x): return re.sub(r'[^а-яa-z0-9]', '', str(x or '').lower())
+sheet12 = [(nrm(r[0]), nrm(r[3])) for r in rows1] + [(nrm(r[0]), nrm(r[3])) for r in rows2]
+BUILDING_RE = re.compile(r'котлован|строительств|строится|РнС выдано|продажи откры|старт продаж состоял|монолит', re.I)
+keep3, moved, dropped = [], [], []
+for e in rows3:
+    n, a = nrm(e[0]), nrm(e[2] or e[1])
+    dup = next((x for x in sheet12 if (x[0] and (x[0] in n or n in x[0]) and len(x[0]) > 6) or (x[1] and a and x[1] == a)), None)
+    if dup: dropped.append((e[0], dup[0])); continue
+    if BUILDING_RE.search(str(e[6] or '')):
+        # проект уже строится или продаётся — его место на листе «Строится»
+        price = e[12]
+        rows2.append([e[0], e[5], e[10] or e[9] or '', e[1], e[3], e[4], None, e[8], 'квартиры',
+                      price, price, None, e[7], '', (e[16] or ''), (e[19] or '')])
+        moved.append(e[0]); continue
+    keep3.append(e)
+rows3 = keep3
+rows2.sort(key=lambda x: (x[10] is None, x[10] or 0))
+if dropped: print('лист 3 → убраны дубли листов 1–2:', '; '.join(f'{a} = {b}' for a, b in dropped))
+if moved: print('лист 3 → перенесены в «Строится»:', '; '.join(moved))
+rows3.sort(key=lambda x: (zkey(x[4]), x[12] is None, x[12] or 0, str(x[0])))
 sheet(wb, '3. Проектирование', H3, rows3,
-      [26, 24, 13, 15, 18, 22, 10, 7, 9, 11, 11, 11, 11, 11, 11, 7, 7, 7, 90],
-      subtitle='Площадки (ЗУ, КРТ, ГПЗУ, АГР, сделки с участками) и анонсированные проекты без стройки по отраслевым Telegram-каналам, июнь 2025 — сентябрь 2026. Пруфы — ссылки на посты. Сортировка: зона, затем цена от',
-      zone_col=3, heat_col=11)
+      [24, 20, 26, 12, 13, 17, 20, 9, 6, 9, 10, 10, 10, 10, 10, 10, 6, 6, 6, 80],
+      subtitle='Площадки (ЗУ, КРТ, ГПЗУ, АГР, сделки с участками) и анонсированные проекты без стройки по отраслевым Telegram-каналам, июнь 2025 — сентябрь 2026. Пруфы — ссылки на посты. Сортировка: зона, затем цена от. Часть проектов уже вышла на стройку или в продажи — см. колонку «Стадия»',
+      zone_col=4, heat_col=12)
 
 # ---------- лист: источники (Telegram-каналы) ----------
 chs = json.load(open(DOCS / 'tg-channels.json')) if (DOCS / 'tg-channels.json').exists() else []
@@ -418,7 +437,7 @@ for row in rows2:
     src = next((c for c in complexes['complexes'] if c['complex'] == live or short_name(c['complex']) == row[0]), None)
     points.append({'name': row[0], 'status': 'строится', 'zone': row[5], 'address': row[3], 'lat': src and src.get('lat'), 'lng': src and src.get('lng')})
 for row in rows3:
-    points.append({'name': row[0], 'status': 'проектирование', 'zone': row[3], 'address': row[1], 'lat': None, 'lng': None})
+    points.append({'name': row[0], 'status': 'проектирование', 'zone': row[4], 'address': row[1], 'lat': None, 'lng': None})
 json.dump(points, open(DOCS / 'points.json', 'w'), ensure_ascii=False, indent=1)
 
 # ---------- листы-карты ----------
