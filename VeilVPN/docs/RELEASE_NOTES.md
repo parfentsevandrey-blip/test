@@ -2,6 +2,11 @@
 
 Liquid Glass UI, bundled Tor Expert Bundle (universal: Apple silicon + Intel), Snowflake / obfs4 / custom bridges, exit-country selection, live circuit and throughput, automatic system proxy.
 
+### Refined in 0.5.1
+- **Calmer dashboard** — neutral glass tiles with a hairline edge and small-caps headers, no more saturated colour blocks; readouts no longer get cut off.
+- **A different traffic animation** — instead of swarms of dots, a few soft comets of light glide along the route: download toward the Mac, upload toward the Internet, at an unhurried pace (about 9–18 s per pass). Throughput changes their length and brightness, not their speed. Padding is a faint violet stipple drifting along the line, the Internet node sends out a slow ripple, and the YouTube bypass is a thin arc with drifting dashes.
+- Latency is shown as a thin scale with a knob; traffic padding as a slow layered wave instead of equaliser bars.
+
 ### New in 0.5.0
 - **Network that "works" but doesn't** — after sleep, or after another VPN disconnects, macOS keeps reporting a live network while nothing gets through until Wi-Fi is toggled. Veil now checks the Internet (TCP to public resolvers plus a name lookup) before starting Tor and after every wake; when the check fails it switches Wi-Fi off and on itself (CoreWLAN, then `networksetup`, then a network-service restart via SystemConfiguration), waits for the network, and only then starts Tor. A transport that stalls on a "working" network triggers the same reset once and is retried. Long sleeps restart Tor outright, Tor never goes dormant, and "Reset Network" (⇧⌘R) is available in the menu, the menu bar, the dashboard and Settings → Network.
 - **Dashboard** — the home screen is a live, interactive board: an animated route (Mac → bridge → relays → Internet) where particles follow the real download/upload/padding rates, nodes light up as Tor bootstraps, hover shows details and clicks jump to the right screen; a red fast lane shows YouTube bypassing Tor; the kill switch is drawn as a barrier. Tiles for throughput (live sparkline), session (new identity on click), route latency gauge (Tor check on click), protection, traffic padding (equaliser + toggle), routing donut, YouTube speed, apps and network state.
@@ -35,6 +40,11 @@ Liquid Glass UI, bundled Tor Expert Bundle (universal: Apple silicon + Intel), S
 1. Open the DMG and drag **Veil.app** to *Applications*.
 2. The build is ad-hoc signed (no Apple Developer certificate): on first launch open **System Settings → Privacy & Security → Open Anyway**, or run `xattr -cr /Applications/Veil.app`.
 3. Press the power button. macOS asks for an administrator password once to switch the system proxy.
+
+### Доработано в 0.5.1
+- **Спокойнее дашборд** — нейтральное стекло плиток с тонкой кромкой и заголовками капителью, без насыщенных цветных блоков; показания больше не обрезаются.
+- **Другая анимация трафика** — вместо роя точек по маршруту скользят несколько мягких «комет» света: загрузка к Mac, отдача к интернету, неторопливо (около 9–18 с на проход). Скорость трафика меняет их длину и яркость, а не темп. Маскировка — лёгкая фиолетовая рябь вдоль линии, узел «Интернет» изредка пускает медленную волну, обход YouTube — тонкая дуга с плывущим пунктиром.
+- Задержка показана тонкой шкалой с бегунком, маскировка трафика — медленной слоистой волной вместо эквалайзера.
 
 ### Новое в 0.5.0
 - **Сеть, которая «есть», но не работает** — после сна или после отключения другого VPN macOS показывает рабочую сеть, но ничего не проходит, пока не выключить и включить Wi-Fi. Теперь Veil проверяет интернет (TCP к публичным резолверам плюс DNS-запрос) перед запуском Tor и после каждого пробуждения; если проверка не проходит, сам выключает и включает Wi-Fi (CoreWLAN, затем `networksetup`, затем перезапуск сетевой службы через SystemConfiguration), ждёт сеть и только потом запускает Tor. Транспорт, зависший на «рабочей» сети, один раз вызывает тот же сброс и пробуется снова. После долгого сна Tor перезапускается целиком, Tor больше не уходит в спящий режим, а «Сбросить сеть» (⇧⌘R) есть в меню, строке меню, на дашборде и в Настройках → Сеть.

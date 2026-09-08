@@ -37,7 +37,7 @@ enum FlowMode: Equatable {
 struct FlowLayout {
     let size: CGSize
     let count: Int
-    let radius: CGFloat = 26
+    let radius: CGFloat = 24
 
     var margin: CGFloat { 60 }
     var railY: CGFloat { size.height * 0.5 }
@@ -54,10 +54,31 @@ struct FlowLayout {
         CGPoint(x: x(index), y: railY)
     }
 
+    /// The straight line under every node, optionally shifted up or down a little.
+    func railPath(offsetY: CGFloat = 0) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: x(0), y: railY + offsetY))
+        path.addLine(to: CGPoint(x: x(count - 1), y: railY + offsetY))
+        return path
+    }
+
+    /// A point along the rail, 0 at the Mac and 1 at the Internet.
+    func railPoint(_ fraction: CGFloat, offsetY: CGFloat = 0) -> CGPoint {
+        let clamped = min(1, max(0, fraction))
+        return CGPoint(x: x(0) + (x(count - 1) - x(0)) * clamped, y: railY + offsetY)
+    }
+
     var laneStart: CGPoint { CGPoint(x: x(0), y: railY - radius) }
     var laneEnd: CGPoint { CGPoint(x: x(count - 1), y: railY - radius) }
     /// Quadratic control point that makes the arc peak exactly at `laneTop`.
     var laneControl: CGPoint { CGPoint(x: size.width / 2, y: 2 * laneTop.y - (railY - radius)) }
+
+    func lanePath() -> Path {
+        var path = Path()
+        path.move(to: laneStart)
+        path.addQuadCurve(to: laneEnd, control: laneControl)
+        return path
+    }
 
     func lanePoint(_ t: CGFloat) -> CGPoint {
         let p0 = laneStart, p1 = laneEnd, c = laneControl
@@ -85,9 +106,10 @@ struct FlowLayout {
     }
 }
 
-/// The live route: Mac → bridge → relays → Internet, with traffic drawn as particles whose number
-/// and speed follow the real throughput. Nodes light up as Tor bootstraps, can be hovered for
-/// details and clicked to jump to the matching screen.
+/// The live route: Mac → bridge → relays → Internet. Traffic is drawn as a few soft comets of
+/// light gliding along the rail — download toward the Mac, upload toward the Internet — whose
+/// brightness and length follow the real throughput while their pace stays unhurried. Nodes light
+/// up as Tor bootstraps, can be hovered for details and clicked to jump to the matching screen.
 struct TunnelFlowView: View {
     let nodes: [FlowNode]
     let mode: FlowMode
@@ -110,7 +132,7 @@ struct TunnelFlowView: View {
         GeometryReader { geometry in
             let layout = FlowLayout(size: geometry.size, count: nodes.count)
             ZStack(alignment: .topLeading) {
-                TimelineView(.animation(minimumInterval: mode.isLive ? 1.0 / 30.0 : 1.0 / 12.0, paused: reduceMotion)) { context in
+                TimelineView(.animation(minimumInterval: mode.isLive ? 1.0 / 24.0 : 1.0 / 10.0, paused: reduceMotion)) { context in
                     Canvas { graphics, size in
                         draw(&graphics, size: size, time: context.date.timeIntervalSinceReferenceDate, layout: layout)
                     }
@@ -144,7 +166,7 @@ struct TunnelFlowView: View {
             .pointerStyle(hoveredID == nil ? .default : .link)
         }
         .animation(.snappy(duration: 0.22), value: hoveredID)
-        .animation(.smooth(duration: 0.5), value: mode)
+        .animation(.smooth(duration: 0.6), value: mode)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text("Route diagram"))
         .accessibilityValue(Text(verbatim: nodes.map(\.title).joined(separator: " → ")))
@@ -176,21 +198,21 @@ struct TunnelFlowView: View {
         return ZStack {
             if let flag = node.flag, !flag.isEmpty {
                 Text(verbatim: flag)
-                    .font(.system(size: 26))
+                    .font(.system(size: 24))
             } else {
                 Image(systemName: node.symbol)
-                    .font(.system(size: 21, weight: .medium))
+                    .font(.system(size: 19, weight: .regular))
                     .foregroundStyle(lit ? AnyShapeStyle(node.accent) : AnyShapeStyle(.secondary))
             }
         }
         .frame(width: layout.radius * 2, height: layout.radius * 2)
-        .glassEffect(.regular.tint(lit ? node.accent.opacity(0.28) : nil).interactive(), in: .circle)
+        .glassEffect(.regular.tint(lit ? node.accent.opacity(0.14) : nil).interactive(), in: .circle)
         .overlay {
             Circle()
-                .strokeBorder(lit ? node.accent.opacity(0.8) : Color.primary.opacity(0.12), lineWidth: hovered ? 2.5 : 1.5)
+                .strokeBorder(lit ? node.accent.opacity(0.55) : Color.primary.opacity(0.10), lineWidth: hovered ? 1.8 : 1)
         }
-        .shadow(color: lit ? node.accent.opacity(hovered ? 0.7 : 0.45) : .clear, radius: hovered ? 16 : 10)
-        .scaleEffect(hovered ? 1.12 : 1)
+        .shadow(color: lit ? node.accent.opacity(hovered ? 0.5 : 0.26) : .clear, radius: hovered ? 14 : 9)
+        .scaleEffect(hovered ? 1.08 : 1)
         .position(layout.center(index))
     }
 
@@ -222,7 +244,7 @@ struct TunnelFlowView: View {
         .foregroundStyle(node.accent)
         .padding(.horizontal, 11)
         .padding(.vertical, 6)
-        .glassEffect(.regular.tint(node.accent.opacity(0.2)).interactive(), in: .capsule)
+        .glassEffect(.regular.tint(node.accent.opacity(0.12)).interactive(), in: .capsule)
         .scaleEffect(hovered ? 1.06 : 1)
         .position(layout.laneTop)
     }
@@ -261,133 +283,183 @@ struct TunnelFlowView: View {
 
     private func draw(_ context: inout GraphicsContext, size: CGSize, time: TimeInterval, layout: FlowLayout) {
         guard nodes.count > 1 else { return }
-        let dashed = StrokeStyle(lineWidth: 2, lineCap: .round, dash: [3, 8])
-        let segments = nodes.count - 1
-        for index in 0..<segments {
-            let start = layout.center(index)
-            let end = layout.center(index + 1)
-            let a = CGPoint(x: start.x + layout.radius + 7, y: start.y)
-            let b = CGPoint(x: end.x - layout.radius - 7, y: end.y)
-            var rail = Path()
-            rail.move(to: a)
-            rail.addLine(to: b)
-            switch mode {
-            case .idle, .turbo:
-                context.stroke(rail, with: .color(.primary.opacity(0.16)), style: dashed)
-            case .failed:
-                context.stroke(rail, with: .color(.red.opacity(0.4)), style: dashed)
-            case .blocked:
-                context.stroke(rail, with: .color(.red.opacity(index == 0 ? 0.5 : 0.2)), style: dashed)
-            case .connecting(let progress):
-                context.stroke(rail, with: .color(.primary.opacity(0.14)), style: dashed)
-                let head = progress * Double(segments)
-                let fill = min(1, max(0, head - Double(index)))
-                if fill > 0 {
-                    let tip = CGPoint(x: a.x + (b.x - a.x) * CGFloat(fill), y: a.y)
-                    var done = Path()
-                    done.move(to: a)
-                    done.addLine(to: tip)
-                    context.stroke(
-                        done,
-                        with: .linearGradient(Gradient(colors: [.orange.opacity(0.35), .orange]), startPoint: a, endPoint: tip),
-                        style: StrokeStyle(lineWidth: 3, lineCap: .round)
-                    )
-                    if fill < 1 {
-                        let pulse = 1 + 0.3 * sin(time * 6)
-                        let halo = CGFloat(10 * pulse)
-                        context.fill(Path(ellipseIn: CGRect(x: tip.x - halo, y: tip.y - halo, width: halo * 2, height: halo * 2)), with: .color(.orange.opacity(0.22)))
-                        context.fill(Path(ellipseIn: CGRect(x: tip.x - 4, y: tip.y - 4, width: 8, height: 8)), with: .color(.orange))
-                    }
-                }
-            case .connected:
-                context.stroke(
-                    rail,
-                    with: .linearGradient(Gradient(colors: [nodes[index].accent.opacity(0.55), nodes[index + 1].accent.opacity(0.55)]), startPoint: a, endPoint: b),
-                    style: StrokeStyle(lineWidth: 2.5, lineCap: .round)
-                )
-                drawParticles(&context, from: a, to: b, segment: index, time: time)
-            }
-        }
-        if mode == .blocked {
+        let rail = layout.railPath()
+        let dashed = StrokeStyle(lineWidth: 1.5, lineCap: .round, dash: [2, 7])
+        switch mode {
+        case .idle, .turbo:
+            context.stroke(rail, with: .color(.primary.opacity(0.12)), style: dashed)
+        case .failed:
+            context.stroke(rail, with: .color(.red.opacity(0.35)), style: dashed)
+        case .blocked:
+            context.stroke(rail, with: .color(.red.opacity(0.22)), style: dashed)
             drawBarrier(&context, layout: layout, time: time)
+        case .connecting(let progress):
+            context.stroke(rail, with: .color(.primary.opacity(0.10)), style: dashed)
+            drawBootstrap(&context, rail: rail, layout: layout, progress: progress, time: time)
+        case .connected:
+            drawConnectedRail(&context, rail: rail, layout: layout)
+            drawComets(&context, layout: layout, time: time, rate: downloadRate, towardMac: true, color: .cyan, seed: 0)
+            drawComets(&context, layout: layout, time: time, rate: uploadRate, towardMac: false, color: .orange, seed: 1)
+            if paddingRate > 0 {
+                drawShimmer(&context, rail: rail, time: time)
+            }
+            drawPing(&context, layout: layout, time: time)
         }
         if fastLane != nil {
             drawFastLane(&context, layout: layout, time: time)
         }
     }
 
-    private func drawParticles(_ context: inout GraphicsContext, from a: CGPoint, to b: CGPoint, segment: Int, time: TimeInterval) {
-        let length = b.x - a.x
-        guard length > 20 else { return }
-        func dot(progress: Double, lane: Int, towardMac: Bool, color: Color, radius: CGFloat) {
-            let t = towardMac ? 1 - progress : progress
-            let x = a.x + length * CGFloat(t)
-            let spread = CGFloat(3 + lane * 2)
-            let y = a.y + (towardMac ? spread : -spread)
-            let halo = radius * 2.4
-            context.fill(Path(ellipseIn: CGRect(x: x - halo, y: y - halo, width: halo * 2, height: halo * 2)), with: .color(color.opacity(0.16)))
-            context.fill(Path(ellipseIn: CGRect(x: x - radius, y: y - radius, width: radius * 2, height: radius * 2)), with: .color(color))
+    /// A thin line whose colour drifts from one node's accent to the next, resting on a soft glow.
+    private func drawConnectedRail(_ context: inout GraphicsContext, rail: Path, layout: FlowLayout) {
+        let stops = nodes.enumerated().map { index, node in
+            Gradient.Stop(color: node.accent, location: CGFloat(index) / CGFloat(max(1, nodes.count - 1)))
         }
-        let downSpeed = Self.speed(for: downloadRate)
-        for lane in 0..<Self.lanes(for: downloadRate) {
-            dot(progress: Self.progress(time: time, speed: downSpeed, lane: lane, segment: segment, seed: 0), lane: lane, towardMac: true, color: .cyan, radius: 3.2)
+        let start = layout.railPoint(0)
+        let end = layout.railPoint(1)
+        context.drawLayer { layer in
+            layer.addFilter(.blur(radius: 5))
+            layer.opacity = 0.22
+            layer.stroke(rail, with: .linearGradient(Gradient(stops: stops), startPoint: start, endPoint: end), style: StrokeStyle(lineWidth: 6, lineCap: .round))
         }
-        let upSpeed = Self.speed(for: uploadRate)
-        for lane in 0..<Self.lanes(for: uploadRate) {
-            dot(progress: Self.progress(time: time, speed: upSpeed, lane: lane, segment: segment, seed: 1), lane: lane, towardMac: false, color: .orange, radius: 3)
+        context.drawLayer { layer in
+            layer.opacity = 0.5
+            layer.stroke(rail, with: .linearGradient(Gradient(stops: stops), startPoint: start, endPoint: end), style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
         }
-        if paddingRate > 0 {
-            let padSpeed = Self.speed(for: paddingRate) * 0.8
-            for lane in 0..<2 {
-                dot(progress: Self.progress(time: time, speed: padSpeed, lane: lane + 3, segment: segment, seed: 2), lane: lane + 3, towardMac: lane == 0, color: .purple, radius: 2.4)
+    }
+
+    /// The bootstrap: the rail fills up from the Mac with a warm gradient and a breathing head.
+    private func drawBootstrap(_ context: inout GraphicsContext, rail: Path, layout: FlowLayout, progress: Double, time: TimeInterval) {
+        let head = CGFloat(min(1, max(0.006, progress)))
+        let done = rail.trimmedPath(from: 0, to: head)
+        let start = layout.railPoint(0)
+        let tip = layout.railPoint(head)
+        let shading = GraphicsContext.Shading.linearGradient(Gradient(colors: [.orange.opacity(0.15), .orange]), startPoint: start, endPoint: tip)
+        context.drawLayer { layer in
+            layer.addFilter(.blur(radius: 5))
+            layer.opacity = 0.35
+            layer.stroke(done, with: shading, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+        }
+        context.stroke(done, with: shading, style: StrokeStyle(lineWidth: 2, lineCap: .round))
+        if head < 1 {
+            let pulse = CGFloat(0.7 + 0.3 * sin(time * 2.2))
+            context.drawLayer { layer in
+                layer.addFilter(.blur(radius: 4))
+                let halo = 8 * pulse
+                layer.fill(Path(ellipseIn: CGRect(x: tip.x - halo, y: tip.y - halo, width: halo * 2, height: halo * 2)), with: .color(.orange.opacity(0.55)))
             }
+            context.fill(Path(ellipseIn: CGRect(x: tip.x - 2.5, y: tip.y - 2.5, width: 5, height: 5)), with: .color(.orange))
         }
+    }
+
+    /// Soft comets of light gliding along the rail. Download travels toward the Mac a hair below
+    /// the line, upload toward the Internet a hair above it. Throughput sets how many, how long
+    /// and how bright; the pace stays unhurried.
+    private func drawComets(_ context: inout GraphicsContext, layout: FlowLayout, time: TimeInterval, rate: Double, towardMac: Bool, color: Color, seed: Int) {
+        let offsetY: CGFloat = towardMac ? 2.5 : -2.5
+        let path = layout.railPath(offsetY: offsetY)
+        let count = Self.cometCount(for: rate)
+        let length = CGFloat(Self.cometLength(for: rate))
+        let speed = Self.cometSpeed(for: rate)
+        let brightness = Self.cometBrightness(for: rate)
+        for index in 0..<count {
+            let travel = Self.progress(time: time, speed: speed, lane: index, segment: count, seed: seed)
+            let headFraction = towardMac ? CGFloat(1 - travel) : CGFloat(travel)
+            let tailFraction = towardMac ? min(1, headFraction + length) : max(0, headFraction - length)
+            let from = min(headFraction, tailFraction)
+            let to = max(headFraction, tailFraction)
+            guard to - from > 0.002 else { continue }
+            let comet = path.trimmedPath(from: from, to: to)
+            let headPoint = layout.railPoint(headFraction, offsetY: offsetY)
+            let tailPoint = layout.railPoint(tailFraction, offsetY: offsetY)
+            let shading = GraphicsContext.Shading.linearGradient(
+                Gradient(colors: [color.opacity(0), color.opacity(brightness)]),
+                startPoint: tailPoint, endPoint: headPoint
+            )
+            context.drawLayer { layer in
+                layer.addFilter(.blur(radius: 4))
+                layer.opacity = 0.55
+                layer.stroke(comet, with: shading, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+            }
+            context.stroke(comet, with: shading, style: StrokeStyle(lineWidth: 1.8, lineCap: .round))
+            context.fill(Path(ellipseIn: CGRect(x: headPoint.x - 2, y: headPoint.y - 2, width: 4, height: 4)), with: .color(color.opacity(brightness)))
+        }
+    }
+
+    /// Traffic padding: a faint violet stipple drifting along the rail, the noise layered on the signal.
+    private func drawShimmer(_ context: inout GraphicsContext, rail: Path, time: TimeInterval) {
+        let phase = CGFloat((time * 6).truncatingRemainder(dividingBy: 14))
+        let alpha = 0.22 + 0.10 * (0.5 + 0.5 * sin(time * 0.9))
+        context.stroke(rail, with: .color(.purple.opacity(alpha)), style: StrokeStyle(lineWidth: 1.2, lineCap: .round, dash: [1.5, 12.5], dashPhase: -phase))
+    }
+
+    /// A slow ripple leaving the Internet node every few seconds.
+    private func drawPing(_ context: inout GraphicsContext, layout: FlowLayout, time: TimeInterval) {
+        guard let last = nodes.last else { return }
+        let period = 4.5
+        let phase = CGFloat((time / period).truncatingRemainder(dividingBy: 1))
+        let center = layout.center(nodes.count - 1)
+        let radius = layout.radius + 2 + phase * 20
+        let alpha = Double(1 - phase) * 0.3
+        context.stroke(
+            Path(ellipseIn: CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2)),
+            with: .color(last.accent.opacity(alpha)),
+            lineWidth: 1
+        )
     }
 
     private func drawBarrier(_ context: inout GraphicsContext, layout: FlowLayout, time: TimeInterval) {
         guard nodes.count > 1 else { return }
         let x = (layout.x(0) + layout.x(1)) / 2
         let y = layout.railY
-        let pulse = 0.65 + 0.35 * (0.5 + 0.5 * sin(time * 3))
-        let radius: CGFloat = 13
+        let pulse = 0.6 + 0.3 * (0.5 + 0.5 * sin(time * 2.4))
+        let radius: CGFloat = 11
         context.fill(Path(ellipseIn: CGRect(x: x - radius, y: y - radius, width: radius * 2, height: radius * 2)), with: .color(.red.opacity(pulse)))
         var cross = Path()
-        cross.move(to: CGPoint(x: x - 6, y: y - 6))
-        cross.addLine(to: CGPoint(x: x + 6, y: y + 6))
-        cross.move(to: CGPoint(x: x + 6, y: y - 6))
-        cross.addLine(to: CGPoint(x: x - 6, y: y + 6))
-        context.stroke(cross, with: .color(.white), style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
+        cross.move(to: CGPoint(x: x - 5, y: y - 5))
+        cross.addLine(to: CGPoint(x: x + 5, y: y + 5))
+        cross.move(to: CGPoint(x: x + 5, y: y - 5))
+        cross.addLine(to: CGPoint(x: x - 5, y: y + 5))
+        context.stroke(cross, with: .color(.white), style: StrokeStyle(lineWidth: 2, lineCap: .round))
     }
 
+    /// The YouTube bypass: a thin dashed arc whose dashes drift toward the Internet.
     private func drawFastLane(_ context: inout GraphicsContext, layout: FlowLayout, time: TimeInterval) {
-        var lane = Path()
-        lane.move(to: layout.laneStart)
-        lane.addQuadCurve(to: layout.laneEnd, control: layout.laneControl)
-        context.stroke(lane, with: .color(.red.opacity(0.45)), style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [4, 6]))
-        for index in 0..<3 {
-            let progress = Self.progress(time: time, speed: 0.3, lane: index, segment: 0, seed: 3)
-            let t = index == 1 ? 1 - progress : progress
-            let point = layout.lanePoint(CGFloat(t))
-            context.fill(Path(ellipseIn: CGRect(x: point.x - 7, y: point.y - 7, width: 14, height: 14)), with: .color(.red.opacity(0.16)))
-            context.fill(Path(ellipseIn: CGRect(x: point.x - 3, y: point.y - 3, width: 6, height: 6)), with: .color(.red))
+        let lane = layout.lanePath()
+        let phase = CGFloat((time * 7).truncatingRemainder(dividingBy: 11))
+        context.drawLayer { layer in
+            layer.addFilter(.blur(radius: 3))
+            layer.opacity = 0.25
+            layer.stroke(lane, with: .color(.red), style: StrokeStyle(lineWidth: 4, lineCap: .round))
         }
+        context.stroke(lane, with: .color(.red.opacity(0.45)), style: StrokeStyle(lineWidth: 1.5, lineCap: .round, dash: [3, 8], dashPhase: -phase))
     }
 
-    // MARK: Particle maths
+    // MARK: Comet maths
 
-    /// How many particles a direction gets: one slow "keepalive" dot when idle, up to seven when busy.
-    static func lanes(for rate: Double) -> Int {
-        guard rate >= 512 else { return 1 }
-        return min(7, 1 + Int(log2(1 + rate / 4096)))
+    /// How many comets a direction gets: one when quiet, three when busy.
+    static func cometCount(for rate: Double) -> Int {
+        if rate < 40_000 { return 1 }
+        if rate < 800_000 { return 2 }
+        return 3
     }
 
-    /// Cycles per second along a segment.
-    static func speed(for rate: Double) -> Double {
-        0.22 + min(1.3, log10(1 + max(0, rate) / 1024) * 0.42)
+    /// Length of a comet as a fraction of the whole rail.
+    static func cometLength(for rate: Double) -> Double {
+        0.07 + min(0.10, log10(1 + max(0, rate) / 2048) * 0.028)
+    }
+
+    /// Full-rail traversals per second: roughly 18 s when idle, 9 s when busy.
+    static func cometSpeed(for rate: Double) -> Double {
+        0.055 + min(0.055, log10(1 + max(0, rate) / 4096) * 0.016)
+    }
+
+    static func cometBrightness(for rate: Double) -> Double {
+        0.55 + min(0.45, log10(1 + max(0, rate) / 2048) * 0.13)
     }
 
     static func progress(time: TimeInterval, speed: Double, lane: Int, segment: Int, seed: Int) -> Double {
-        let offset = Double(lane) * 0.618034 + Double(segment) * 0.377 + Double(seed) * 0.213
+        let offset = Double(lane) / Double(max(1, segment)) + Double(seed) * 0.37
         let value = (time * speed + offset).truncatingRemainder(dividingBy: 1)
         return value < 0 ? value + 1 : value
     }

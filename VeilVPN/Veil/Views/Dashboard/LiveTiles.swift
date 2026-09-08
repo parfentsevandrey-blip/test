@@ -3,7 +3,7 @@ import SwiftUI
 
 // MARK: - Tile chrome
 
-/// A glass tile that lifts on hover; optionally the whole tile acts as a button.
+/// A quiet glass tile with a hairline edge that lifts a little on hover; optionally the whole tile acts as a button.
 struct Tile<Content: View>: View {
     private let tint: Color?
     private let action: (@MainActor () -> Void)?
@@ -16,14 +16,21 @@ struct Tile<Content: View>: View {
         self.content = content()
     }
 
+    private var lifts: Bool { hovering && action != nil }
+
     var body: some View {
         content
-            .padding(16)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 16)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .contentShape(.rect(cornerRadius: 22))
-            .glassEffect(.regular.tint(tint?.opacity(0.16)).interactive(action != nil), in: .rect(cornerRadius: 22))
-            .scaleEffect(hovering && action != nil ? 1.015 : 1)
-            .shadow(color: .black.opacity(hovering && action != nil ? 0.14 : 0), radius: 16, y: 8)
+            .contentShape(.rect(cornerRadius: 24))
+            .glassEffect(.regular.tint(tint?.opacity(0.07)).interactive(action != nil), in: .rect(cornerRadius: 24))
+            .overlay {
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .strokeBorder(Color.primary.opacity(lifts ? 0.10 : 0.06), lineWidth: 0.6)
+            }
+            .scaleEffect(lifts ? 1.01 : 1)
+            .shadow(color: .black.opacity(lifts ? 0.10 : 0), radius: 18, y: 8)
             .onHover { hovering = $0 }
             .animation(.snappy(duration: 0.25), value: hovering)
             .onTapGesture {
@@ -32,17 +39,41 @@ struct Tile<Content: View>: View {
     }
 }
 
+/// Small-caps style caption with a coloured symbol.
 struct TileHeader: View {
     let title: LocalizedStringKey
     let symbol: String
     var tint: Color = .secondary
 
     var body: some View {
-        Label(title, systemImage: symbol)
-            .font(.caption.weight(.semibold))
+        HStack(spacing: 6) {
+            Image(systemName: symbol)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(tint)
+                .symbolRenderingMode(.hierarchical)
+            Text(title)
+                .font(.caption2.weight(.semibold))
+                .textCase(.uppercase)
+                .kerning(0.7)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+        }
+    }
+}
+
+/// The big number of a tile.
+private struct Figure: View {
+    let text: String
+    var tint: Color = .primary
+
+    var body: some View {
+        Text(verbatim: text)
+            .font(.system(.title3, design: .rounded, weight: .semibold))
+            .monospacedDigit()
+            .contentTransition(.numericText())
             .foregroundStyle(tint)
-            .symbolRenderingMode(.hierarchical)
             .lineLimit(1)
+            .minimumScaleFactor(0.75)
     }
 }
 
@@ -55,22 +86,22 @@ struct SpeedTile: View {
     var body: some View {
         let traffic = app.traffic
         Tile(tint: .cyan, action: action) {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 8) {
                 TileHeader(title: "Throughput", symbol: "waveform.path.ecg", tint: .cyan)
-                HStack(alignment: .center, spacing: 10) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        RateReadout(symbol: "arrow.down", value: traffic.downloadRate, tint: .cyan)
-                        RateReadout(symbol: "arrow.up", value: traffic.uploadRate, tint: .orange)
-                    }
-                    Spacer(minLength: 4)
-                    ThroughputSparkline(samples: Array(traffic.samples.suffix(60)))
-                        .frame(width: 92, height: 40)
+                HStack(alignment: .firstTextBaseline, spacing: 16) {
+                    RateReadout(symbol: "arrow.down", value: traffic.downloadRate, tint: .cyan)
+                    RateReadout(symbol: "arrow.up", value: traffic.uploadRate, tint: .orange)
+                    Spacer(minLength: 0)
                 }
+                ThroughputSparkline(samples: Array(traffic.samples.suffix(60)))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 30)
                 Text("Total \(ByteFormat.total(traffic.totalDownload)) down · \(ByteFormat.total(traffic.totalUpload)) up")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .monospacedDigit()
                     .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
         }
     }
@@ -82,22 +113,22 @@ private struct RateReadout: View {
     let tint: Color
 
     var body: some View {
-        HStack(spacing: 5) {
+        HStack(alignment: .firstTextBaseline, spacing: 4) {
             Image(systemName: symbol)
-                .font(.caption.weight(.bold))
+                .font(.caption2.weight(.bold))
                 .foregroundStyle(tint)
             Text(verbatim: ByteFormat.rate(value))
-                .font(.system(.title3, design: .rounded, weight: .semibold))
+                .font(.system(.body, design: .rounded, weight: .semibold))
                 .monospacedDigit()
                 .contentTransition(.numericText())
                 .lineLimit(1)
-                .minimumScaleFactor(0.7)
+                .minimumScaleFactor(0.75)
         }
         .animation(.snappy(duration: 0.3), value: value)
     }
 }
 
-/// Download and upload as two filled traces.
+/// Download and upload as two hairline traces with a faint fill.
 struct ThroughputSparkline: View {
     let samples: [TrafficSample]
 
@@ -109,7 +140,7 @@ struct ThroughputSparkline: View {
                 var path = Path()
                 for (index, sample) in samples.enumerated() {
                     let x = size.width * CGFloat(index) / CGFloat(samples.count - 1)
-                    let y = size.height - size.height * CGFloat(sample[keyPath: key] / peak)
+                    let y = size.height - 2 - (size.height - 4) * CGFloat(sample[keyPath: key] / peak)
                     if index == 0 {
                         path.move(to: CGPoint(x: x, y: y))
                     } else {
@@ -127,9 +158,9 @@ struct ThroughputSparkline: View {
                 area.closeSubpath()
                 context.fill(
                     area,
-                    with: .linearGradient(Gradient(colors: [color.opacity(0.35), color.opacity(0.02)]), startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height))
+                    with: .linearGradient(Gradient(colors: [color.opacity(0.22), color.opacity(0)]), startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height))
                 )
-                context.stroke(line, with: .color(color), lineWidth: 1.5)
+                context.stroke(line, with: .color(color.opacity(0.9)), style: StrokeStyle(lineWidth: 1.2, lineCap: .round, lineJoin: .round))
             }
         }
     }
@@ -143,30 +174,27 @@ struct SessionTile: View {
     var body: some View {
         let since = app.connectedAt
         Tile(tint: .purple, action: { app.requestNewIdentity() }) {
-            VStack(alignment: .leading, spacing: 10) {
-                TileHeader(title: "Session", symbol: "clock.fill", tint: .purple)
+            VStack(alignment: .leading, spacing: 8) {
+                TileHeader(title: "Session", symbol: "clock", tint: .purple)
                 TimelineView(.periodic(from: since ?? .now, by: 1)) { context in
                     let seconds = Int(max(0, context.date.timeIntervalSince(since ?? context.date)))
-                    HStack(spacing: 12) {
+                    HStack(spacing: 14) {
                         ZStack {
                             Circle()
-                                .stroke(Color.purple.opacity(0.18), lineWidth: 5)
+                                .stroke(Color.purple.opacity(0.14), lineWidth: 3)
                             Circle()
                                 .trim(from: 0, to: Double(seconds % 60) / 60)
-                                .stroke(Color.purple, style: StrokeStyle(lineWidth: 5, lineCap: .round))
+                                .stroke(Color.purple.opacity(0.8), style: StrokeStyle(lineWidth: 3, lineCap: .round))
                                 .rotationEffect(.degrees(-90))
                                 .animation(.linear(duration: 1), value: seconds)
                             Image(systemName: "arrow.triangle.2.circlepath")
-                                .font(.caption.weight(.bold))
+                                .font(.caption2.weight(.semibold))
                                 .foregroundStyle(.purple)
                                 .symbolEffect(.pulse, isActive: app.isChangingIdentity)
                         }
-                        .frame(width: 44, height: 44)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(verbatim: Duration.seconds(seconds).formatted(.time(pattern: .hourMinuteSecond)))
-                                .font(.system(.title3, design: .rounded, weight: .semibold))
-                                .monospacedDigit()
-                                .contentTransition(.numericText())
+                        .frame(width: 42, height: 42)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Figure(text: Duration.seconds(seconds).formatted(.time(pattern: .hourMinuteSecond)))
                             Text("\(app.circuit.count) hops · click for a new identity")
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
@@ -195,23 +223,18 @@ struct LatencyTile: View {
 
     var body: some View {
         Tile(tint: .mint, action: { app.runTorCheck() }) {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 8) {
                 TileHeader(title: "Route latency", symbol: "timer", tint: .mint)
-                HStack(spacing: 12) {
+                HStack(spacing: 14) {
                     ArcGauge(fraction: fraction, tint: gaugeColor)
-                        .frame(width: 66, height: 38)
-                    VStack(alignment: .leading, spacing: 2) {
+                        .frame(width: 64, height: 36)
+                    VStack(alignment: .leading, spacing: 3) {
                         if app.isCheckingTor {
-                            Text("Checking…")
-                                .font(.system(.title3, design: .rounded, weight: .semibold))
+                            Figure(text: String(localized: "Checking…"))
                         } else if let latency = app.routeLatency {
-                            Text(verbatim: "\(Int((latency * 1000).rounded())) ms")
-                                .font(.system(.title3, design: .rounded, weight: .semibold))
-                                .monospacedDigit()
-                                .contentTransition(.numericText())
+                            Figure(text: "\(Int((latency * 1000).rounded())) ms")
                         } else {
-                            Text("Not measured")
-                                .font(.system(.title3, design: .rounded, weight: .semibold))
+                            Figure(text: String(localized: "Not measured"))
                         }
                         Text(verbatim: app.torCheck?.ip ?? "—")
                             .font(.caption2)
@@ -229,17 +252,33 @@ struct LatencyTile: View {
     }
 }
 
+/// A half-ring scale with a small knob marking the value.
 struct ArcGauge: View {
     let fraction: Double
     let tint: Color
 
     var body: some View {
-        ZStack {
-            GaugeArc(fraction: 1)
-                .stroke(Color.primary.opacity(0.1), style: StrokeStyle(lineWidth: 6, lineCap: .round))
-            GaugeArc(fraction: max(0.02, fraction))
-                .stroke(tint, style: StrokeStyle(lineWidth: 6, lineCap: .round))
-                .animation(.spring(duration: 0.8), value: fraction)
+        GeometryReader { geometry in
+            let center = CGPoint(x: geometry.size.width / 2, y: geometry.size.height - 3)
+            let radius = min(geometry.size.width / 2, geometry.size.height) - 5
+            let angle = (180 + 180 * min(1, max(0, fraction))) * Double.pi / 180
+            ZStack {
+                GaugeArc(fraction: 1)
+                    .stroke(
+                        AngularGradient(colors: [.mint, .yellow, .orange, .red], center: .bottom, startAngle: .degrees(180), endAngle: .degrees(360)),
+                        style: StrokeStyle(lineWidth: 3.5, lineCap: .round)
+                    )
+                    .opacity(0.32)
+                GaugeArc(fraction: max(0.01, fraction))
+                    .stroke(tint.opacity(0.9), style: StrokeStyle(lineWidth: 3.5, lineCap: .round))
+                Circle()
+                    .fill(tint)
+                    .frame(width: 8, height: 8)
+                    .overlay { Circle().strokeBorder(.white.opacity(0.9), lineWidth: 1.5) }
+                    .shadow(color: tint.opacity(0.5), radius: 4)
+                    .position(x: center.x + radius * CGFloat(cos(angle)), y: center.y + radius * CGFloat(sin(angle)))
+            }
+            .animation(.spring(duration: 0.8), value: fraction)
         }
     }
 }
@@ -255,7 +294,7 @@ struct GaugeArc: Shape {
     func path(in rect: CGRect) -> Path {
         var path = Path()
         let center = CGPoint(x: rect.midX, y: rect.maxY - 3)
-        let radius = min(rect.width / 2, rect.height) - 4
+        let radius = min(rect.width / 2, rect.height) - 5
         path.addArc(center: center, radius: radius, startAngle: .degrees(180), endAngle: .degrees(180 + 180 * fraction), clockwise: false)
         return path
     }
@@ -266,18 +305,18 @@ struct GaugeArc: Shape {
 struct ShieldTile: View {
     @Environment(AppState.self) private var app
 
+    private var proxyServices: [String] {
+        if case .configured(let services) = app.proxyStatus { return services }
+        return []
+    }
+
     private var proxyText: String {
         switch app.proxyStatus {
         case .off: String(localized: "off")
-        case .configured(let services): services.joined(separator: ", ")
+        case .configured: String(localized: "on")
         case .manual: String(localized: "manual")
         case .failed: String(localized: "not set")
         }
-    }
-
-    private var proxyOK: Bool {
-        if case .configured = app.proxyStatus { return true }
-        return false
     }
 
     var body: some View {
@@ -296,22 +335,23 @@ struct ShieldTile: View {
                     .toggleStyle(.switch)
                     .controlSize(.mini)
                 }
-                statusRow("Kill switch", value: engaged ? String(localized: "engaged") : (app.settings.killSwitch ? String(localized: "armed") : String(localized: "off")), ok: app.settings.killSwitch)
-                statusRow("System proxy", value: proxyText, ok: proxyOK)
-                statusRow("Circuit per site", value: app.settings.isolatePerSite ? String(localized: "on") : String(localized: "off"), ok: app.settings.isolatePerSite)
+                statusRow("Kill switch", value: engaged ? String(localized: "engaged") : (app.settings.killSwitch ? String(localized: "armed") : String(localized: "off")), ok: app.settings.killSwitch, alert: engaged)
+                statusRow("System proxy", value: proxyText, ok: !proxyServices.isEmpty, alert: false)
+                    .help(Text(verbatim: proxyServices.joined(separator: ", ")))
+                statusRow("Circuit per site", value: app.settings.isolatePerSite ? String(localized: "on") : String(localized: "off"), ok: app.settings.isolatePerSite, alert: false)
             }
         }
     }
 
-    private func statusRow(_ title: LocalizedStringKey, value: String, ok: Bool) -> some View {
-        HStack(spacing: 6) {
+    private func statusRow(_ title: LocalizedStringKey, value: String, ok: Bool, alert: Bool) -> some View {
+        HStack(spacing: 7) {
             Circle()
-                .fill(ok ? Color.mint : Color.secondary.opacity(0.4))
-                .frame(width: 6, height: 6)
+                .fill(alert ? Color.red : (ok ? Color.mint : Color.secondary.opacity(0.35)))
+                .frame(width: 5, height: 5)
             Text(title)
                 .font(.caption2)
                 .foregroundStyle(.secondary)
-            Spacer(minLength: 4)
+            Spacer(minLength: 6)
             Text(verbatim: value)
                 .font(.caption2.weight(.medium))
                 .lineLimit(1)
@@ -328,11 +368,11 @@ struct PaddingTile: View {
     var body: some View {
         let enabled = app.settings.paddingEnabled
         let active = app.padding.status.isActive
-        let activity: Double = active ? min(1, 0.3 + app.padding.rate / 24_000) : (enabled ? 0.12 : 0.05)
+        let activity: Double = active ? min(1, 0.25 + app.padding.rate / 24_000) : (enabled ? 0.1 : 0.04)
         Tile(tint: .purple, action: { app.setPaddingEnabled(!enabled) }) {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    TileHeader(title: "Traffic padding", symbol: "waveform.badge.plus", tint: .purple)
+                    TileHeader(title: "Traffic padding", symbol: "waveform", tint: .purple)
                     Spacer()
                     Toggle("", isOn: Binding(
                         get: { app.settings.paddingEnabled },
@@ -342,8 +382,8 @@ struct PaddingTile: View {
                     .toggleStyle(.switch)
                     .controlSize(.mini)
                 }
-                NoiseBars(activity: activity, tint: .purple, paused: reduceMotion || !active)
-                    .frame(height: 34)
+                NoiseWave(activity: activity, tint: .purple, paused: reduceMotion || !active)
+                    .frame(height: 40)
                 HStack {
                     statusText
                         .font(.caption2)
@@ -384,28 +424,37 @@ struct PaddingTile: View {
     }
 }
 
-/// Equaliser-style bars that dance with the padding rate.
-struct NoiseBars: View {
+/// A slow, layered wave whose amplitude follows the padding rate.
+struct NoiseWave: View {
     let activity: Double
     let tint: Color
     let paused: Bool
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 20.0, paused: paused)) { context in
+        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: paused)) { context in
             Canvas { graphics, size in
-                let count = 26
-                let gap: CGFloat = 3
-                let width = max(1, (size.width - gap * CGFloat(count - 1)) / CGFloat(count))
                 let t = context.date.timeIntervalSinceReferenceDate
-                for index in 0..<count {
-                    let seed = Double(index)
-                    let wave = 0.5 + 0.5 * sin(t * (2.1 + seed.truncatingRemainder(dividingBy: 5) * 0.7) + seed * 1.7)
-                    let noise = 0.5 + 0.5 * sin(t * 5.3 + seed * 2.9)
-                    let level = activity * (0.25 + 0.75 * (0.6 * wave + 0.4 * noise))
-                    let height = max(2, size.height * CGFloat(level))
-                    let rect = CGRect(x: CGFloat(index) * (width + gap), y: size.height - height, width: width, height: height)
-                    graphics.fill(Path(roundedRect: rect, cornerRadius: width / 2), with: .color(tint.opacity(0.35 + 0.65 * level)))
+                let midY = size.height * 0.55
+                let amplitude = size.height * 0.4 * CGFloat(0.12 + 0.88 * min(1, max(0, activity)))
+                let steps = max(24, Int(size.width / 2))
+                var line = Path()
+                for step in 0...steps {
+                    let x = size.width * CGFloat(step) / CGFloat(steps)
+                    let u = Double(x / size.width)
+                    let wave = 0.55 * sin(u * 9.4 - t * 1.1) + 0.3 * sin(u * 17.3 + t * 0.7) + 0.15 * sin(u * 31 - t * 1.9)
+                    let y = midY - amplitude * CGFloat(wave)
+                    if step == 0 {
+                        line.move(to: CGPoint(x: x, y: y))
+                    } else {
+                        line.addLine(to: CGPoint(x: x, y: y))
+                    }
                 }
+                var area = line
+                area.addLine(to: CGPoint(x: size.width, y: size.height))
+                area.addLine(to: CGPoint(x: 0, y: size.height))
+                area.closeSubpath()
+                graphics.fill(area, with: .linearGradient(Gradient(colors: [tint.opacity(0.16), tint.opacity(0)]), startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)))
+                graphics.stroke(line, with: .color(tint.opacity(0.7)), style: StrokeStyle(lineWidth: 1.3, lineCap: .round, lineJoin: .round))
             }
         }
     }
@@ -438,35 +487,35 @@ struct RoutingTile: View {
         let slices = self.slices
         let total = slices.reduce(0) { $0 + $1.count }
         let chartData = total == 0
-            ? [RoutingSlice(id: "none", title: "None", count: 1, color: Color.secondary.opacity(0.25))]
+            ? [RoutingSlice(id: "none", title: "None", count: 1, color: Color.secondary.opacity(0.2))]
             : slices.filter { $0.count > 0 }
         Tile(tint: .orange, action: { openSettings() }) {
             VStack(alignment: .leading, spacing: 8) {
                 TileHeader(title: "Routing", symbol: "arrow.triangle.branch", tint: .orange)
-                HStack(spacing: 14) {
+                HStack(spacing: 16) {
                     Chart(chartData) { slice in
-                        SectorMark(angle: .value("Connections", slice.count), innerRadius: .ratio(0.64), angularInset: 1.5)
-                            .foregroundStyle(slice.color)
-                            .cornerRadius(3)
+                        SectorMark(angle: .value("Connections", slice.count), innerRadius: .ratio(0.74), angularInset: 1.2)
+                            .foregroundStyle(slice.color.opacity(0.85))
+                            .cornerRadius(2)
                     }
                     .chartLegend(.hidden)
-                    .frame(width: 66, height: 66)
+                    .frame(width: 62, height: 62)
                     .overlay {
                         Text(verbatim: "\(total)")
-                            .font(.caption.weight(.bold))
+                            .font(.caption.weight(.semibold))
                             .monospacedDigit()
                             .contentTransition(.numericText())
                     }
-                    VStack(alignment: .leading, spacing: 3) {
+                    VStack(alignment: .leading, spacing: 4) {
                         ForEach(slices) { slice in
-                            HStack(spacing: 6) {
+                            HStack(spacing: 7) {
                                 Circle()
-                                    .fill(slice.color)
-                                    .frame(width: 6, height: 6)
+                                    .fill(slice.color.opacity(0.85))
+                                    .frame(width: 5, height: 5)
                                 Text(slice.title)
                                     .font(.caption2)
                                     .foregroundStyle(.secondary)
-                                Spacer(minLength: 4)
+                                Spacer(minLength: 6)
                                 Text(verbatim: "\(slice.count)")
                                     .font(.caption2.weight(.medium))
                                     .monospacedDigit()
@@ -506,7 +555,7 @@ struct YouTubeTile: View {
                     .lineLimit(1)
                 }
                 SpeedBar(fraction: fraction, tint: .red)
-                    .frame(height: 8)
+                    .frame(height: 6)
                 HStack(spacing: 6) {
                     resultText
                         .font(.caption2)
@@ -555,10 +604,10 @@ struct SpeedBar: View {
         GeometryReader { geometry in
             ZStack(alignment: .leading) {
                 Capsule()
-                    .fill(Color.primary.opacity(0.08))
+                    .fill(Color.primary.opacity(0.07))
                 Capsule()
-                    .fill(LinearGradient(colors: [tint.opacity(0.6), tint], startPoint: .leading, endPoint: .trailing))
-                    .frame(width: max(8, geometry.size.width * CGFloat(fraction)))
+                    .fill(LinearGradient(colors: [tint.opacity(0.5), tint.opacity(0.9)], startPoint: .leading, endPoint: .trailing))
+                    .frame(width: max(6, geometry.size.width * CGFloat(fraction)))
                     .animation(.spring(duration: 0.8), value: fraction)
             }
         }
@@ -574,7 +623,7 @@ struct AppsTile: View {
     var body: some View {
         Tile(tint: .blue) {
             VStack(alignment: .leading, spacing: 9) {
-                TileHeader(title: "Apps", symbol: "app.badge.checkmark", tint: .blue)
+                TileHeader(title: "Apps", symbol: "square.grid.2x2", tint: .blue)
                 appRow(symbol: "paperplane.fill", title: "Telegram", detail: "Ignores the system proxy") {
                     Button {
                         app.addProxyToTelegram()
@@ -602,12 +651,12 @@ struct AppsTile: View {
     }
 
     private func appRow<Trailing: View>(symbol: String, title: LocalizedStringKey, detail: LocalizedStringKey, @ViewBuilder trailing: () -> Trailing) -> some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 9) {
             Image(systemName: symbol)
                 .font(.caption)
                 .foregroundStyle(.blue)
                 .frame(width: 16)
-            VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 1) {
                 Text(title)
                     .font(.caption.weight(.semibold))
                 Text(detail)
@@ -693,7 +742,7 @@ struct StatusPill: View {
         switch ok {
         case .some(true): .mint
         case .some(false): .red
-        case .none: Color.secondary.opacity(0.4)
+        case .none: Color.secondary.opacity(0.35)
         }
     }
 
@@ -701,7 +750,7 @@ struct StatusPill: View {
         HStack(spacing: 5) {
             Circle()
                 .fill(color)
-                .frame(width: 7, height: 7)
+                .frame(width: 6, height: 6)
             Text(title)
                 .font(.caption2.weight(.medium))
         }

@@ -49,31 +49,31 @@ struct DashboardView: View {
                 if showsLiveTiles {
                     LazyVGrid(columns: statColumns, spacing: 14) {
                         SpeedTile(action: openActivity)
-                            .frame(height: 134)
+                            .frame(height: 150)
                         SessionTile()
-                            .frame(height: 134)
+                            .frame(height: 150)
                         LatencyTile()
-                            .frame(height: 134)
+                            .frame(height: 150)
                         ShieldTile()
-                            .frame(height: 134)
+                            .frame(height: 150)
                     }
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                     HStack(alignment: .top, spacing: 14) {
                         PaddingTile()
-                            .frame(height: 138)
+                            .frame(height: 150)
                         RoutingTile()
-                            .frame(height: 138)
+                            .frame(height: 150)
                     }
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
 
                 HStack(alignment: .top, spacing: 14) {
                     YouTubeTile()
-                        .frame(height: 152)
+                        .frame(height: 160)
                     AppsTile()
-                        .frame(height: 152)
+                        .frame(height: 160)
                     NetworkTile()
-                        .frame(height: 152)
+                        .frame(height: 160)
                 }
 
                 if app.connection == .disconnected, !app.turboActive {
@@ -155,7 +155,7 @@ struct HeroSection: View {
                     fastLane: fastLaneNode,
                     onSelect: { node in select(node) }
                 )
-                .frame(height: 178)
+                .frame(height: 172)
             }
         }
         .padding(.top, 6)
@@ -281,7 +281,7 @@ struct HeroSection: View {
 
     private var macSubtitle: String {
         switch app.proxyStatus {
-        case .configured(let services): String(localized: "Proxy: \(services.joined(separator: ", "))")
+        case .configured: String(localized: "Proxy on")
         case .manual: String(localized: "Manual proxy")
         case .failed: String(localized: "Proxy not set")
         case .off: app.connection.isActive ? String(localized: "Proxy pending") : String(localized: "Proxy off")
@@ -291,10 +291,12 @@ struct HeroSection: View {
     private var macDetails: [String] {
         let socks = app.socksPortForApps
         let http = app.ports?.http ?? UInt16(clamping: app.settings.httpPort)
-        return [
-            String(localized: "SOCKS5 127.0.0.1:\(String(socks)) · HTTP 127.0.0.1:\(String(http))"),
-            String(localized: "Click to open Settings."),
-        ]
+        var lines = [String(localized: "SOCKS5 127.0.0.1:\(String(socks)) · HTTP 127.0.0.1:\(String(http))")]
+        if case .configured(let services) = app.proxyStatus {
+            lines.append(String(localized: "Proxy: \(services.joined(separator: ", "))"))
+        }
+        lines.append(String(localized: "Click to open Settings."))
+        return lines
     }
 
     private var internetSubtitle: String {

@@ -45,13 +45,17 @@ final class NetworkTests: XCTestCase {
         XCTAssertEqual(TelegramIntegration.proxyURL(socksPort: 9150).query, "server=127.0.0.1&port=9150")
     }
 
-    func testFlowParticleMathsStaysBounded() {
-        XCTAssertEqual(TunnelFlowView.lanes(for: 0), 1)
-        XCTAssertEqual(TunnelFlowView.lanes(for: 4096), 2)
-        XCTAssertLessThanOrEqual(TunnelFlowView.lanes(for: 50_000_000), 7)
-        XCTAssertGreaterThan(TunnelFlowView.speed(for: 1_000_000), TunnelFlowView.speed(for: 1_000))
+    func testFlowCometMathsStaysBounded() {
+        XCTAssertEqual(TunnelFlowView.cometCount(for: 0), 1)
+        XCTAssertEqual(TunnelFlowView.cometCount(for: 100_000), 2)
+        XCTAssertEqual(TunnelFlowView.cometCount(for: 5_000_000), 3)
+        XCTAssertGreaterThan(TunnelFlowView.cometSpeed(for: 1_000_000), TunnelFlowView.cometSpeed(for: 1_000))
+        XCTAssertLessThanOrEqual(TunnelFlowView.cometSpeed(for: 1e9), 0.12, "the flow must stay unhurried even at full speed")
+        XCTAssertLessThanOrEqual(TunnelFlowView.cometLength(for: 1e9), 0.2)
+        XCTAssertLessThanOrEqual(TunnelFlowView.cometBrightness(for: 1e9), 1.0 + 1e-9)
+        XCTAssertGreaterThanOrEqual(TunnelFlowView.cometBrightness(for: 0), 0.5)
         for time in stride(from: 0.0, through: 100.0, by: 7.3) {
-            let progress = TunnelFlowView.progress(time: time, speed: 0.7, lane: 3, segment: 2, seed: 1)
+            let progress = TunnelFlowView.progress(time: time, speed: 0.07, lane: 1, segment: 3, seed: 1)
             XCTAssertGreaterThanOrEqual(progress, 0)
             XCTAssertLessThan(progress, 1)
         }

@@ -6077,6 +6077,34 @@
         }
       }
     },
+    "Proxy on": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прокси включён"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проксі увімкнено"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پراکسی روشن"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "代理已开启"
+          }
+        }
+      }
+    },
     "Proxy pending": {
       "localizations": {
         "ru": {
