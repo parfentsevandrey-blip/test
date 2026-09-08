@@ -133,9 +133,9 @@ TITLE_FONT = Font(name='Calibri', size=14, bold=True, color='1F3864')
 SUB_FONT = Font(name='Calibri', size=9, italic=True, color='666666')
 ZEBRA = PatternFill('solid', fgColor='F3F6FA')
 ZONE_FILL = {'Садовое кольцо': 'FFF2CC', 'Хамовники': 'E2EFDA', 'Сити': 'DDEBF7', 'Пресня': 'FCE4D6', 'Белорусская': 'EDEDED'}
-wrap = Alignment(wrap_text=True, vertical='center')
+wrap = Alignment(horizontal='center', vertical='center', wrap_text=True)
 center = Alignment(horizontal='center', vertical='center', wrap_text=True)
-right = Alignment(horizontal='right', vertical='center')
+right = Alignment(horizontal='center', vertical='center')
 
 def is_url(v): return isinstance(v, str) and v.startswith('http')
 
@@ -189,15 +189,15 @@ def sheet(wb, title, headers, rows, widths, note=None, subtitle='', zone_col=Non
             else:
                 c.alignment = wrap if c.column in (1, 4, ncol) or (isinstance(c.value, str) and len(c.value) > 18) else center
         last = ws.cell(rr, ncol)
-        if isinstance(last.value, str): last.font = Font(name='Calibri', size=9); last.alignment = Alignment(wrap_text=True, vertical='center')
+        if isinstance(last.value, str): last.font = Font(name='Calibri', size=9); last.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
         # высота строки — по самой «многострочной» ячейке: длина текста / ширина колонки
         lines = 1
         for j, v in enumerate(r):
             if not isinstance(v, str) or not v or is_url(v): continue   # ссылки печатаются словом «ссылка»
             cw = widths[j] if j < len(widths) else 10
-            cpl = max(4, int(cw * (1.1 if j == ncol - 1 else 0.9)))   # кириллица 10 пт шире «0» шрифта по умолчанию; примечания 9 пт
+            cpl = max(4, int(cw * (1.0 if j == ncol - 1 else 0.82)))   # кириллица 10 пт шире «0» шрифта по умолчанию; примечания 9 пт
             lines = max(lines, math.ceil(len(v) / cpl))
-        ws.row_dimensions[rr].height = 15 if lines == 1 else 13.5 * lines + 3
+        ws.row_dimensions[rr].height = 16 if lines == 1 else 13.5 * lines + 4
     for i, w in enumerate(widths, 1):
         ws.column_dimensions[get_column_letter(i)].width = w
     ws.freeze_panes = 'B4'
@@ -322,8 +322,8 @@ for p in planning:
     if pz not in ALLOWED: continue
     dev3 = re.sub(r'\s*\(.*$', '', str(p.get('developer') or '')).strip() or 'не раскрыт'
     rows3.append([strip_paren(p.get('name')), short_addr(p.get('address')), p.get('district'), pz, dev3, short_stage(p.get('stage')),
-                  p.get('area_total_m2'), p.get('area_residential_m2'), p.get('floors'), p.get('units'), p.get('planned_start'),
-                  p.get('planned_completion'), p.get('price_from_per_m2'), p.get('announced_date'), p.get('source_url'), p.get('notes')])
+                  p.get('area_total_m2'), p.get('area_residential_m2'), strip_paren(p.get('floors')) or None, p.get('units'), strip_paren(p.get('planned_start')) or None,
+                  strip_paren(p.get('planned_completion')) or None, p.get('price_from_per_m2'), p.get('announced_date'), p.get('source_url'), p.get('notes')])
 rows3.sort(key=lambda x: (x[12] is None, x[12] or 0, str(x[0])))
 sheet(wb, '3. Проектирование', H3, rows3,
       [28, 28, 15, 16, 20, 30, 9, 9, 9, 6, 12, 13, 10, 13, 7, 90],
