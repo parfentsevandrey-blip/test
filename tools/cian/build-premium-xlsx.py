@@ -313,22 +313,53 @@ sheet(wb, '2. Строится', H2, rows2,
       [26, 18, 13, 28, 16, 16, 6, 7, 13, 10, 10, 10, 6, 8, 7, 90],
       subtitle=f"Таблица заказчика + новостройки из выдачи Циан на {complexes['fetched']}. Сортировка по медиане ₽/м² (где Циан не нашёл ЖК — середина диапазона от/до), цвет — от дешёвых к дорогим", zone_col=5, heat_col=10)
 
-# ---------- лист 3: проектирование ----------
-H3 = ['Проект / участок', 'Адрес', 'Район', 'Зона', 'Застройщик', 'Стадия', 'Общая площадь, м²', 'Жилая площадь, м²',
-      'Этажность', 'Лотов', 'Старт (план)', 'Сдача (план)', 'Цена от, ₽/м²', 'Дата новости', 'Ссылка', 'Примечание']
+# ---------- лист 3: проектирование (по Telegram-каналам) ----------
+TG = json.load(open(DOCS / 'tg-sites.json')) if (DOCS / 'tg-sites.json').exists() else None
+CONF = {'high': 'высокая', 'medium': 'средняя', 'low': 'низкая'}
+H3 = ['Проект / участок', 'Адрес', 'Район', 'Зона', 'Застройщик', 'Стадия', 'Общая площадь, м²', 'Лотов', 'Этажность',
+      'Старт (план)', 'Сдача (план)', 'Цена от, ₽/м²', 'Первое упоминание', 'Последнее упоминание', 'Достоверность',
+      'Пост 1', 'Пост 2', 'Пост 3', 'Что известно']
 rows3 = []
-for p in planning:
-    if p.get('name') in manual.get('_planning_drop', []): continue   # стройка уже идёт — лист 2
-    pz = manual.get('_planning_zone', {}).get(p.get('name'), p.get('location_zone'))
-    if pz not in ALLOWED: continue
-    dev3 = re.sub(r'\s*\(.*$', '', str(p.get('developer') or '')).strip() or 'не раскрыт'
-    rows3.append([strip_paren(p.get('name')), short_addr(p.get('address')), p.get('district'), pz, dev3, short_stage(p.get('stage')),
-                  p.get('area_total_m2'), p.get('area_residential_m2'), strip_paren(p.get('floors')) or None, p.get('units'), strip_paren(p.get('planned_start')) or None,
-                  strip_paren(p.get('planned_completion')) or None, p.get('price_from_per_m2'), p.get('announced_date'), p.get('source_url'), p.get('notes')])
-rows3.sort(key=lambda x: (x[12] is None, x[12] or 0, str(x[0])))
+if TG:
+    for e in TG:
+        if e.get('zone') not in ALLOWED: continue
+        posts = sorted(e.get('posts') or [], key=lambda x: x.get('date') or '', reverse=True)[:3]
+        links = [pp['url'] for pp in posts] + [''] * (3 - len(posts))
+        rows3.append([strip_paren(e.get('name')), short_addr(e.get('address')), e.get('district'), e['zone'],
+                      strip_paren(e.get('developer')) or 'не раскрыт', short_stage(e.get('stage')),
+                      e.get('area_total_m2'), e.get('units'), strip_paren(e.get('floors')) or None,
+                      strip_paren(e.get('planned_start')) or None, strip_paren(e.get('planned_completion')) or None,
+                      e.get('price_from_per_m2'), e.get('first_seen'), e.get('last_seen'), CONF.get(e.get('confidence'), ''),
+                      *links, e.get('what') or ''])
+else:
+    for p in planning:
+        if p.get('name') in manual.get('_planning_drop', []): continue
+        pz = manual.get('_planning_zone', {}).get(p.get('name'), p.get('location_zone'))
+        if pz not in ALLOWED: continue
+        rows3.append([strip_paren(p.get('name')), short_addr(p.get('address')), p.get('district'), pz,
+                      re.sub(r'\s*\(.*$', '', str(p.get('developer') or '')).strip() or 'не раскрыт', short_stage(p.get('stage')),
+                      p.get('area_total_m2'), p.get('units'), strip_paren(p.get('floors')) or None, strip_paren(p.get('planned_start')) or None,
+                      strip_paren(p.get('planned_completion')) or None, p.get('price_from_per_m2'), p.get('announced_date'), None, '',
+                      p.get('source_url') or '', '', '', p.get('notes')])
+rows3.sort(key=lambda x: (zkey(x[3]), x[11] is None, x[11] or 0, str(x[0])))
 sheet(wb, '3. Проектирование', H3, rows3,
-      [28, 28, 15, 16, 20, 30, 9, 9, 9, 6, 12, 13, 10, 13, 7, 90],
-      subtitle='Участки (ЗУ, КРТ, ГПЗУ) и анонсированные проекты без стройки, публикации 2025–2026. Сортировка по заявленной цене от, ₽/м²; без цены — в конце', zone_col=3, heat_col=12)
+      [26, 24, 13, 15, 18, 22, 10, 7, 9, 11, 11, 11, 11, 11, 11, 7, 7, 7, 90],
+      subtitle='Площадки (ЗУ, КРТ, ГПЗУ, АГР, сделки с участками) и анонсированные проекты без стройки по отраслевым Telegram-каналам, июнь 2025 — сентябрь 2026. Пруфы — ссылки на посты. Сортировка: зона, затем цена от',
+      zone_col=3, heat_col=11)
+
+# ---------- лист: источники (Telegram-каналы) ----------
+chs = json.load(open(DOCS / 'tg-channels.json')) if (DOCS / 'tg-channels.json').exists() else []
+if chs:
+    cnt = {}
+    for e in (TG or []):
+        for pp in e.get('posts') or []:
+            m = re.search(r't\.me/([^/]+)/', pp.get('url') or ''); h = (m.group(1) if m else '').lower()
+            cnt[h] = cnt.get(h, 0) + 1
+    HS = ['Канал', 'Хендл', 'Ссылка', 'Профиль', 'Подписчиков', 'Постов в подборке']
+    rs = [[c['title'], '@' + c['handle'], f"https://t.me/{c['handle']}", c.get('focus') or '', c.get('subscribers'), cnt.get(c['handle'].lower(), 0)] for c in chs]
+    rs.sort(key=lambda r: (-r[5], -(r[4] or 0)))
+    sheet(wb, 'Источники — TG-каналы', HS, rs, [34, 26, 8, 70, 13, 12],
+          subtitle='Отраслевые Telegram-каналы, просканированные по публичным превью t.me/s/<канал> за июнь 2025 — сентябрь 2026; отобраны посты про площадки в наших зонах', zone_col=None)
 
 # ---------- точки для карт ----------
 coord = {c['complex']: (c.get('lat'), c.get('lng')) for c in complexes['complexes']}
