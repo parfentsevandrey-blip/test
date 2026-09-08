@@ -1454,5 +1454,19 @@
   "cls": "Премиум",
   "stage": null,
   "fetched": "2026-09-08"
+ },
+ "Лё Дом": {
+  "id": 4119891,
+  "cianName": "Лё Дом",
+  "address": "Москва, Соймоновский проезд, 3",
+  "url": "https://www.cian.ru/zhiloy-kompleks-le-dom-moskva-4119891/",
+  "status": 200,
+  "developer": "Группа ЛСР",
+  "finished": null,
+  "deadline": "3 кв. 2026",
+  "yearText": "Сдача в 3 кв. 2026",
+  "cls": "Премиум",
+  "stage": null,
+  "fetched": "2026-09-08"
  }
 }

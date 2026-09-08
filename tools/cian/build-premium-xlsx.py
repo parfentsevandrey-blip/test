@@ -293,7 +293,8 @@ for p in planning:
     if p.get('name') in manual.get('_planning_drop', []): continue   # стройка уже идёт — лист 2
     pz = manual.get('_planning_zone', {}).get(p.get('name'), p.get('location_zone'))
     if pz not in ALLOWED: continue
-    rows3.append([p.get('name'), p.get('address'), p.get('district'), pz, p.get('developer'), p.get('stage'),
+    dev3 = re.sub(r'\s*\(.*$', '', str(p.get('developer') or '')).strip() or 'не раскрыт'
+    rows3.append([p.get('name'), p.get('address'), p.get('district'), pz, dev3, p.get('stage'),
                   p.get('area_total_m2'), p.get('area_residential_m2'), p.get('floors'), p.get('units'), p.get('planned_start'),
                   p.get('planned_completion'), p.get('price_from_per_m2'), p.get('announced_date'), p.get('source_url'), p.get('notes')])
 rows3.sort(key=lambda x: (x[12] is None, x[12] or 0, str(x[0])))
