@@ -172,6 +172,28 @@ struct NetworkSettingsView: View {
                 Text("Protection")
             }
             Section {
+                Toggle("Race circuits and pin the fastest relays", isOn: Binding(
+                    get: { app.settings.latencyTuning },
+                    set: { app.setLatencyTuning($0) }
+                ))
+                Text("After connecting and after every route change Veil builds a few extra circuits, times them and pins the exit relays (and the middle relay, when you chose its country) of the quickest ones. Two exits are kept so one going away does not stall you; everything is measured again every half hour.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Toggle("Keep existing connections when the route changes", isOn: $app.settings.seamlessRouteSwitch)
+                Text("Downloads and open pages stay on the old route until they finish; only new connections take the new one. Switch off to drop everything at once, as “New Identity” does.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Toggle("Conflux: send on the lowest-latency path", isOn: $app.settings.confluxLatency)
+                Text("Tor builds two legs to the exit; Veil asks it to prefer the quicker one for sending instead of the one with more throughput. Applies on the next connection.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } header: {
+                Text("Route performance")
+            }
+            Section {
                 Toggle("Reset the network automatically when it stops responding", isOn: $app.settings.autoResetNetwork)
                 Text("After sleep, or after another VPN disconnects, macOS often reports a working network while nothing gets through until Wi-Fi is switched off and on. Veil checks the Internet before starting Tor and after every wake, and does that switch for you — CoreWLAN first, then the network service — before trying Tor again.")
                     .font(.caption)
@@ -250,6 +272,24 @@ struct BridgesSettingsView: View {
                     .fixedSize(horizontal: false, vertical: true)
             } header: {
                 Text("How to reach the Tor network")
+            }
+
+            if app.settings.transport == .snowflake || app.settings.transport == .auto || app.settings.transport == .custom {
+                Section {
+                    Picker("Snowflake proxies at once", selection: $app.settings.snowflakePeers) {
+                        Text(verbatim: "1").tag(1)
+                        Text(verbatim: "2").tag(2)
+                        Text(verbatim: "3").tag(3)
+                        Text(verbatim: "4").tag(4)
+                    }
+                    .pickerStyle(.segmented)
+                    Text("Snowflake can hold several volunteer proxies at the same time, so a slow one no longer holds the whole session back. Two is a considerate default. Applies on the next connection.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                } header: {
+                    Text("Snowflake")
+                }
             }
 
             if app.settings.transport == .custom {

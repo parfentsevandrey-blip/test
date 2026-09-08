@@ -21,8 +21,19 @@ protocol TorEngine: AnyObject {
     func isCircuitEstablished() async -> Bool
     func stop() async
     func newIdentity() async throws
-    /// Applies country restrictions for the hops live (SETCONF) and rebuilds circuits.
-    func applyRoute(_ route: TorRoute) async throws
+    /// Applies the route live (SETCONF). With `dropConnections` Tor also gets NEWNYM, which
+    /// tears down every circuit; without it existing streams stay on their circuits and only
+    /// new connections use the new route.
+    func applyRoute(_ route: TorRoute, dropConnections: Bool) async throws
+    /// Asks Tor to build one more circuit for the current route; returns its circuit id.
+    func launchCircuit() async throws -> String
+    /// Waits until the circuit is BUILT, FAILED or CLOSED. Nil when unknown or on timeout.
+    func awaitCircuit(_ id: String, timeout: Duration) async -> CircuitInfo?
+    func closeCircuit(_ id: String) async
+    /// Consensus bandwidth weight of a relay (kB/s), when the directory knows it.
+    func relayBandwidth(_ fingerprint: String) async -> Int?
+    /// Lowercase country code of a relay from Tor's GeoIP database.
+    func relayCountry(_ fingerprint: String) async -> String?
     func circuit() async throws -> [CircuitHop]
     func trafficCounters() async throws -> TrafficCounters
     /// Verifies the exit through Veil's local HTTP proxy (host names are passed to Tor unresolved).
@@ -36,6 +47,13 @@ protocol TorEngine: AnyObject {
     func removeOnionService(_ serviceID: String) async
     /// Forces Tor's own circuit/connection padding on (or back to defaults) without a restart.
     func setTorPadding(enabled: Bool) async
+}
+
+extension TorEngine {
+    /// The historical behaviour: apply and rebuild everything.
+    func applyRoute(_ route: TorRoute) async throws {
+        try await applyRoute(route, dropConnections: true)
+    }
 }
 
 struct TrafficCounters: Equatable, Sendable {
@@ -53,6 +71,7 @@ enum TorEngineError: LocalizedError {
     case bootstrapStalled(percent: Int, lastWarning: String?)
     case notRunning
     case onionServiceFailed
+    case circuitLaunchFailed(String)
 
     var errorDescription: String? {
         switch self {
@@ -78,6 +97,8 @@ enum TorEngineError: LocalizedError {
             return String(localized: "Tor is not running.")
         case .onionServiceFailed:
             return String(localized: "Tor did not create the private onion service needed for traffic padding.")
+        case .circuitLaunchFailed(let detail):
+            return String(localized: "Tor could not start a circuit: \(detail)")
         }
     }
 }

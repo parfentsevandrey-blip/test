@@ -98,10 +98,15 @@ final class AppState {
     private(set) var lastNetworkReset: Date?
     /// The interface carrying the default route (Wi-Fi, Ethernet, or another VPN's tunnel).
     private(set) var primaryNetwork: NetworkReset.Primary?
+    /// Round trip measured before the route tuner pinned relays, for the before → after display.
+    private(set) var routeLatencyBeforeTuning: TimeInterval?
+    /// A route change is being applied: config pushed, first circuit being built.
+    private(set) var routeSwitching = false
     /// Sidebar selection, so menu commands can navigate.
     var sidebarSelection: SidebarItem = .home
     let traffic = TrafficMonitor()
     let padding = PaddingLoop()
+    let tuner = RouteTuner()
     let isDemo: Bool
 
     @ObservationIgnored private var engine: any TorEngine
@@ -119,6 +124,10 @@ final class AppState {
     @ObservationIgnored private var sleptAt: Date?
     @ObservationIgnored private var suppressPathEvents = false
     @ObservationIgnored private var networkRepairedThisConnect = false
+    @ObservationIgnored private var tuneTask: Task<Void, Never>?
+    @ObservationIgnored private var retuneTask: Task<Void, Never>?
+    @ObservationIgnored private var routeGeneration = 0
+    @ObservationIgnored private var checkFailures = 0
 
     private static let maxLogEntries = 2000
     /// Remembers that the system proxy points at Veil, so a crash or force-quit can be repaired on the next launch.
@@ -143,6 +152,7 @@ final class AppState {
         AppState.shared = self
         wireEngine()
         padding.onLog = { [weak self] entry in self?.append(entry) }
+        tuner.onLog = { [weak self] entry in self?.append(entry) }
         traffic.paddingRateProvider = { [weak self] in self?.padding.rate ?? 0 }
         networkWatcher.onEvent = { [weak self] event in self?.handleNetworkEvent(event) }
         networkWatcher.start()
@@ -162,6 +172,8 @@ final class AppState {
 
     var selectedExit: ExitLocation? { ExitLocation.named(settings.exitCountry) }
     var selectedMiddle: ExitLocation? { settings.multihopEnabled ? ExitLocation.named(settings.middleCountry) : nil }
+    /// The route Tor is on: the chosen countries plus the relays the tuner pinned for them.
+    var effectiveRoute: TorRoute { tuner.route(for: settings.route) }
     var exitHop: CircuitHop? { circuit.last { $0.role == .exit } }
     var middleHop: CircuitHop? { circuit.first { $0.role == .middle } }
     var needsTeardown: Bool { connection != .disconnected || proxyApplied || turboActive || killSwitchEngaged }
@@ -365,6 +377,8 @@ final class AppState {
                     padding.start(engine: engine, socksPort: ports.socks, level: self.settings.paddingLevel)
                 }
                 restartRouteRotation()
+                startRouteTuning()
+                startRetuneTimer()
                 Feedback.connected(sound: self.settings.soundEffects, haptic: self.settings.hapticFeedback)
                 notify(id: "connected", title: String(localized: "Connected through Tor"),
                        body: String(localized: "Transport: \(Self.name(of: connectedTransport)). Your traffic now goes through the Tor network."))
@@ -461,6 +475,15 @@ final class AppState {
         circuitTask = nil
         rotationTask?.cancel()
         rotationTask = nil
+        tuneTask?.cancel()
+        tuneTask = nil
+        retuneTask?.cancel()
+        retuneTask = nil
+        routeGeneration += 1
+        tuner.reset()
+        routeLatencyBeforeTuning = nil
+        routeSwitching = false
+        checkFailures = 0
         traffic.stop()
         await padding.stop()
         await engine.stop()
@@ -1114,20 +1137,144 @@ final class AppState {
 
     private func applyRouteIfConnected() {
         guard connection == .connected else { return }
-        let route = settings.route
+        let dropConnections = !settings.seamlessRouteSwitch
+        Task { [weak self] in
+            await self?.switchRoute(reason: "route changed", dropConnections: dropConnections, avoiding: [])
+        }
+    }
+
+    /// Pushes the route to Tor, pre-builds its first circuit and, when enabled, races circuits to
+    /// pin the fastest relays. Without `dropConnections` existing connections keep their old
+    /// circuits; new ones take the new route the moment its first circuit is ready.
+    private func switchRoute(reason: String, dropConnections: Bool, avoiding: [String]) async {
+        guard connection == .connected else { return }
+        routeGeneration += 1
+        let generation = routeGeneration
+        tuneTask?.cancel()
+        tuneTask = nil
+        tuner.reset()
+        routeLatencyBeforeTuning = nil
+        var base = settings.route
+        base.avoidedRelays = avoiding
+        routeSwitching = true
+        defer {
+            if generation == routeGeneration { routeSwitching = false }
+        }
+        do {
+            try await engine.applyRoute(base, dropConnections: dropConnections)
+            let description = base.torrcLines.isEmpty ? "automatic" : base.torrcLines.joined(separator: ", ")
+            append(.veil(.notice, "Route updated (\(reason)): \(description)\(dropConnections ? "; circuits rebuilt" : "; existing connections kept")"))
+        } catch {
+            append(.veil(.warn, "Could not change the route: \(error.localizedDescription)"))
+            return
+        }
+        torCheck = nil
+        routeLatency = nil
+        await prebuildCircuit()
+        guard generation == routeGeneration, connection == .connected else { return }
+        refreshCircuit()
+        if settings.latencyTuning {
+            await tune(base: base, generation: generation)
+        } else if settings.checkAfterConnect {
+            runTorCheck()
+        }
+    }
+
+    /// Builds the first circuit for the current route now, so the next connection does not wait.
+    private func prebuildCircuit() async {
+        guard let id = try? await engine.launchCircuit() else { return }
+        if let info = await engine.awaitCircuit(id, timeout: .seconds(30)), info.status == .built, let seconds = info.buildTime {
+            append(.veil(.info, "First circuit for the route built in \(Int((seconds * 1000).rounded())) ms"))
+        }
+    }
+
+    // MARK: Route tuning (circuit races)
+
+    private func startRouteTuning() {
+        guard settings.latencyTuning, connection == .connected else { return }
+        routeGeneration += 1
+        let generation = routeGeneration
+        let base = settings.route
+        tuneTask?.cancel()
+        tuneTask = Task { [weak self] in
+            guard let self else { return }
+            // Let the first check and Tor's own initial circuits settle first.
+            do { try await Task.sleep(for: .seconds(3)) } catch { return }
+            await tune(base: base, generation: generation)
+        }
+    }
+
+    private func tune(base: TorRoute, generation: Int) async {
+        guard settings.latencyTuning, connection == .connected else { return }
+        // Race on the country-level route so the candidates are not limited to old pins.
+        try? await engine.applyRoute(base, dropConnections: false)
+        guard let tuned = await tuner.tune(engine: engine, route: base, circuits: 4, pinMiddle: base.middleCountry != nil) else { return }
+        guard generation == routeGeneration, connection == .connected else { return }
+        var applied = tuned
+        applied.avoidedRelays = []
+        do {
+            try await engine.applyRoute(applied, dropConnections: false)
+        } catch {
+            append(.veil(.warn, "Could not pin the fastest relays: \(error.localizedDescription)"))
+            tuner.reset()
+            return
+        }
+        await prebuildCircuit()
+        guard generation == routeGeneration, connection == .connected else { return }
+        routeLatencyBeforeTuning = routeLatency
+        checkFailures = 0
+        refreshCircuit()
+        if settings.checkAfterConnect { runTorCheck() }
+    }
+
+    /// The button: measure again and re-pin.
+    func retuneRoute() {
+        guard connection == .connected, !tuner.status.isRacing else { return }
+        routeGeneration += 1
+        let generation = routeGeneration
+        let base = settings.route
+        tuneTask?.cancel()
+        tuneTask = Task { [weak self] in
+            await self?.tune(base: base, generation: generation)
+        }
+    }
+
+    func setLatencyTuning(_ enabled: Bool) {
+        guard settings.latencyTuning != enabled else { return }
+        settings.latencyTuning = enabled
+        guard connection == .connected else { return }
+        if enabled {
+            retuneRoute()
+        } else {
+            unpinRoute(reason: "route tuning switched off")
+        }
+    }
+
+    /// Back to Tor's own relay choice within the chosen countries.
+    private func unpinRoute(reason: String) {
+        routeGeneration += 1
+        tuneTask?.cancel()
+        tuneTask = nil
+        tuner.reset()
+        routeLatencyBeforeTuning = nil
+        let base = settings.route
         Task { [weak self] in
             guard let self else { return }
-            do {
-                try await engine.applyRoute(route)
-                let description = route.torrcLines.isEmpty ? "automatic" : route.torrcLines.joined(separator: ", ")
-                append(.veil(.notice, "Route updated: \(description)"))
-                torCheck = nil
-                routeLatency = nil
-                try? await Task.sleep(for: .seconds(2))
-                refreshCircuit()
-                if settings.checkAfterConnect { runTorCheck() }
-            } catch {
-                append(.veil(.warn, "Could not change the route: \(error.localizedDescription)"))
+            try? await engine.applyRoute(base, dropConnections: false)
+            append(.veil(.notice, "Relays unpinned (\(reason)); Tor chooses them again"))
+        }
+    }
+
+    /// Relays get busier or quieter over time; measure again every half hour.
+    private func startRetuneTimer() {
+        retuneTask?.cancel()
+        retuneTask = Task { [weak self] in
+            while !Task.isCancelled {
+                do { try await Task.sleep(for: .seconds(30 * 60)) } catch { return }
+                guard let self else { return }
+                guard connection == .connected, settings.latencyTuning, !tuner.status.isRacing, !routeSwitching else { continue }
+                append(.veil(.info, "Periodic route tuning"))
+                retuneRoute()
             }
         }
     }
@@ -1148,7 +1295,7 @@ final class AppState {
                 guard let self else { return }
                 guard connection == .connected else { return }
                 append(.veil(.info, "Multihop: rotating the route"))
-                requestNewIdentity()
+                await switchRoute(reason: "rotation", dropConnections: !settings.seamlessRouteSwitch, avoiding: tuner.pinnedExits.map(\.fingerprint))
             }
         }
     }
@@ -1197,6 +1344,11 @@ final class AppState {
         Task { [weak self] in
             guard let self else { return }
             defer { isChangingIdentity = false }
+            if settings.latencyTuning {
+                // Pinned exits would come straight back after NEWNYM: move to other relays and measure again.
+                await switchRoute(reason: "new identity", dropConnections: true, avoiding: tuner.pinnedExits.map(\.fingerprint))
+                return
+            }
             do {
                 try await engine.newIdentity()
                 append(.veil(.notice, "New identity requested — circuits will be rebuilt."))
@@ -1221,9 +1373,15 @@ final class AppState {
                 let result = try await engine.check(httpPort: ports.http)
                 routeLatency = Date.now.timeIntervalSince(started)
                 torCheck = result
+                checkFailures = 0
                 append(.veil(.info, "check.torproject.org: \(result.isTor ? "Tor confirmed" : "NOT using Tor"), exit IP \(result.ip), round trip \(Int((routeLatency ?? 0) * 1000)) ms"))
             } catch {
                 append(.veil(.warn, "Tor check failed: \(error.localizedDescription)"))
+                checkFailures += 1
+                if checkFailures >= 2, tuner.isPinned {
+                    append(.veil(.warn, "Pinned relays are not answering; back to Tor's own relay choice"))
+                    unpinRoute(reason: "pinned relays unreachable")
+                }
             }
         }
     }

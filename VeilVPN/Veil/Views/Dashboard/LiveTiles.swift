@@ -243,11 +243,31 @@ struct LatencyTile: View {
                             .lineLimit(1)
                     }
                 }
-                Text("Click to verify the exit with check.torproject.org")
+                latencyFootnote
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
             }
+        }
+    }
+
+    private static func milliseconds(_ seconds: TimeInterval) -> String {
+        "\(Int((seconds * 1000).rounded())) ms"
+    }
+
+    @ViewBuilder
+    private var latencyFootnote: some View {
+        if app.tuner.status.isRacing {
+            HStack(spacing: 6) {
+                ProgressView().controlSize(.mini)
+                Text("Racing circuits to find the fastest relays…")
+            }
+        } else if app.tuner.isPinned, let before = app.routeLatencyBeforeTuning, let after = app.routeLatency {
+            Text("Tuned: \(Self.milliseconds(before)) → \(Self.milliseconds(after)) · \(app.tuner.pinnedExits.count) fast exits pinned")
+        } else if app.tuner.isPinned {
+            Text("Fastest relays pinned · click to verify the exit")
+        } else {
+            Text("Click to verify the exit with check.torproject.org")
         }
     }
 }

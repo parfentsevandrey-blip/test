@@ -2,6 +2,12 @@
 
 Liquid Glass UI, bundled Tor Expert Bundle (universal: Apple silicon + Intel), Snowflake / obfs4 / custom bridges, exit-country selection, live circuit and throughput, automatic system proxy.
 
+### New in 0.6.0 — faster routes, seamless multihop
+- **Circuit races** — after connecting and after every route change Veil asks Tor for four extra circuits within your chosen countries, times how fast each one comes up (a circuit that builds fast runs through relays that answer fast), and pins the two quickest exits — and the quickest middle relay when you chose its country. Near-ties go to the relay with far more capacity. Relays are measured again every half hour, on "Measure again", and whenever the pinned ones stop answering (then Tor picks relays on its own again). The Route screen shows the pinned relays with their build times and the latency before → after; the dashboard latency tile shows the same.
+- **Seamless route switching** — changing the exit or middle country, the exclusions or a timed rotation no longer sends NEWNYM. Tor gets the new constraints, Veil pre-builds the first circuit of the new route and shows it as soon as it is up; connections already open keep their old circuits until they finish, new ones take the new route at once. Rotation and "New Identity" steer away from the previous relays so the route really moves. The old behaviour (drop everything) is a switch.
+- **Conflux in latency mode** — Tor builds two legs to the exit and now prefers the lower-latency leg for sending (`ConfluxClientUX latency`) instead of the higher-throughput one.
+- **Several Snowflake proxies at once** — the Snowflake client keeps two volunteer proxies (configurable 1–4) so a slow one no longer holds the session back.
+
 ### Refined in 0.5.1
 - **Calmer dashboard** — neutral glass tiles with a hairline edge and small-caps headers, no more saturated colour blocks; readouts no longer get cut off.
 - **A different traffic animation** — instead of swarms of dots, a few soft comets of light glide along the route: download toward the Mac, upload toward the Internet, at an unhurried pace (about 9–18 s per pass). Throughput changes their length and brightness, not their speed. Padding is a faint violet stipple drifting along the line, the Internet node sends out a slow ripple, and the YouTube bypass is a thin arc with drifting dashes.
@@ -40,6 +46,12 @@ Liquid Glass UI, bundled Tor Expert Bundle (universal: Apple silicon + Intel), S
 1. Open the DMG and drag **Veil.app** to *Applications*.
 2. The build is ad-hoc signed (no Apple Developer certificate): on first launch open **System Settings → Privacy & Security → Open Anyway**, or run `xattr -cr /Applications/Veil.app`.
 3. Press the power button. macOS asks for an administrator password once to switch the system proxy.
+
+### Новое в 0.6.0 — быстрее маршрут, бесшовный multihop
+- **Гонка цепочек** — после подключения и после каждой смены маршрута Veil просит Tor построить четыре дополнительные цепочки в выбранных странах, измеряет, как быстро каждая поднимается (быстро собирающаяся цепочка идёт через быстро отвечающие узлы), и закрепляет два самых быстрых выходных узла, а при выбранной стране промежуточного узла и самый быстрый промежуточный. При почти равном времени предпочтение узлу с заметно большей пропускной способностью. Узлы измеряются заново каждые полчаса, по кнопке «Измерить снова» и когда закреплённые перестают отвечать (тогда Tor снова выбирает узлы сам). На экране «Маршрут» видны закреплённые узлы с временем сборки и задержка до → после; плитка задержки на дашборде показывает то же.
+- **Бесшовное переключение маршрута** — смена выходной или промежуточной страны, исключений и ротация по таймеру больше не шлют NEWNYM. Tor получает новые ограничения, Veil заранее строит первую цепочку нового маршрута и показывает её, как только она готова; открытые соединения остаются на старых цепочках, пока не завершатся, новые сразу идут по новому маршруту. Ротация и «Новая личность» уводят от прежних узлов, чтобы маршрут действительно менялся. Старое поведение (сбросить всё) осталось переключателем.
+- **Conflux в режиме задержки** — Tor строит два плеча до выходного узла и теперь отправляет данные по плечу с меньшей задержкой (`ConfluxClientUX latency`), а не по более широкому.
+- **Несколько Snowflake-прокси одновременно** — клиент Snowflake держит два волонтёрских прокси (настраивается 1–4), чтобы медленный не тормозил сессию.
 
 ### Доработано в 0.5.1
 - **Спокойнее дашборд** — нейтральное стекло плиток с тонкой кромкой и заголовками капителью, без насыщенных цветных блоков; показания больше не обрезаются.

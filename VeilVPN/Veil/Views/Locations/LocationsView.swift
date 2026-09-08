@@ -104,6 +104,8 @@ struct MultihopCard: View {
                 .frame(height: 220)
                 .clipShape(.rect(cornerRadius: 20))
 
+            RouteTuningRow()
+
             Text("Multihop routes your traffic through relays in the countries you choose — bridge, middle and exit hops in different jurisdictions — which makes tracking much harder. It can add latency, but improves anonymity. The route can also be excluded from chosen countries and rotated on a timer.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
@@ -259,6 +261,7 @@ struct MultihopOptions: View {
     private let chipColumns = [GridItem(.adaptive(minimum: 132, maximum: 180), spacing: 8)]
 
     var body: some View {
+        @Bindable var app = app
         VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .top, spacing: 24) {
                 VStack(alignment: .leading, spacing: 6) {
@@ -299,6 +302,16 @@ struct MultihopOptions: View {
                 set: { app.setAvoidFiveEyes($0) }
             )) {
                 Text("Avoid Five Eyes countries (US, UK, Canada, Australia, New Zealand)")
+            }
+
+            Toggle(isOn: $app.settings.seamlessRouteSwitch) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Switch routes seamlessly")
+                    Text("Open connections stay on the old route until they finish; new ones take the new route as soon as its first circuit is ready.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
 
             VStack(alignment: .leading, spacing: 8) {
@@ -350,6 +363,121 @@ private struct ExcludeChip: View {
         }
         .buttonStyle(.plain)
         .animation(.smooth(duration: 0.2), value: isExcluded)
+    }
+}
+
+// MARK: - Route tuning
+
+/// Circuit races: Tor builds a few circuits for the chosen countries, Veil times them and pins
+/// the relays of the quickest ones.
+struct RouteTuningRow: View {
+    @Environment(AppState.self) private var app
+
+    private static func milliseconds(_ seconds: TimeInterval) -> String {
+        "\(Int((seconds * 1000).rounded())) ms"
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 10) {
+                Label("Fast route", systemImage: "hare")
+                    .font(.headline)
+                Spacer()
+                if app.tuner.status.isRacing {
+                    ProgressView().controlSize(.small)
+                }
+                Button {
+                    app.retuneRoute()
+                } label: {
+                    Label("Measure again", systemImage: "arrow.clockwise")
+                }
+                .buttonStyle(.glass)
+                .controlSize(.small)
+                .disabled(!app.connection.isConnected || app.tuner.status.isRacing || !app.settings.latencyTuning)
+                Toggle("", isOn: Binding(
+                    get: { app.settings.latencyTuning },
+                    set: { app.setLatencyTuning($0) }
+                ))
+                .labelsHidden()
+                .toggleStyle(.switch)
+                .controlSize(.small)
+            }
+            Text("Veil races several circuits to your chosen countries, times how fast each one comes up and pins the quickest exit relays — and the middle relay when you chose its country. Relays are measured again after every route change and every half hour.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            statusLine
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            if !app.tuner.pinnedExits.isEmpty || app.tuner.pinnedMiddle != nil {
+                HStack(spacing: 8) {
+                    ForEach(app.tuner.pinnedExits) { relay in
+                        RelayChip(relay: relay, role: "Exit")
+                    }
+                    if let middle = app.tuner.pinnedMiddle {
+                        RelayChip(relay: middle, role: "Middle")
+                    }
+                }
+            }
+        }
+        .padding(16)
+        .background(.primary.opacity(0.06), in: .rect(cornerRadius: 18))
+        .animation(.smooth(duration: 0.3), value: app.tuner.status)
+    }
+
+    @ViewBuilder
+    private var statusLine: some View {
+        if !app.settings.latencyTuning {
+            Text("Off — Tor picks relays within the chosen countries on its own.")
+        } else if !app.connection.isConnected {
+            Text("Runs after connecting.")
+        } else {
+            switch app.tuner.status {
+            case .idle:
+                Text("Waiting for the first measurement…")
+            case .racing(let launched, let built):
+                Text("Racing \(launched) circuits, \(built) built…")
+            case .pinned:
+                if let before = app.routeLatencyBeforeTuning, let after = app.routeLatency {
+                    Text("Route latency \(Self.milliseconds(before)) → \(Self.milliseconds(after))")
+                } else if let after = app.routeLatency {
+                    Text("Route latency now \(Self.milliseconds(after))")
+                } else {
+                    Text("Fastest relays pinned; verifying the exit…")
+                }
+            case .failed(let message):
+                Text(verbatim: message)
+            }
+        }
+    }
+}
+
+private struct RelayChip: View {
+    let relay: RelayCandidate
+    let role: LocalizedStringKey
+
+    var body: some View {
+        HStack(spacing: 6) {
+            if !relay.flag.isEmpty {
+                Text(verbatim: relay.flag)
+            } else {
+                Image(systemName: "server.rack")
+                    .foregroundStyle(.secondary)
+            }
+            VStack(alignment: .leading, spacing: 1) {
+                Text(role)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                Text(verbatim: "\(relay.nickname) · \(relay.buildMilliseconds) ms")
+                    .font(.caption.weight(.medium))
+                    .monospacedDigit()
+                    .lineLimit(1)
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(.primary.opacity(0.06), in: .capsule)
+        .help(Text(verbatim: relay.bandwidth.map { "\(relay.fingerprint) · \($0) kB/s" } ?? relay.fingerprint))
     }
 }
 

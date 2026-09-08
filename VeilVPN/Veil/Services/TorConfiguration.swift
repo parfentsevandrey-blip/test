@@ -104,11 +104,12 @@ struct TorConfiguration {
                 lines.append("\(key) \(value)")
             }
         }
+        lines.append(contentsOf: Self.performanceLines(for: settings))
         if let geoip = bundle.geoip { lines.append("GeoIPFile \(geoip.path)") }
         if let geoip6 = bundle.geoip6 { lines.append("GeoIPv6File \(geoip6.path)") }
         lines.append(contentsOf: settings.route.torrcLines)
 
-        let bridgeLines: [String]
+        var bridgeLines: [String]
         switch settings.transport {
         case .direct: bridgeLines = []
         case .snowflake, .auto: bridgeLines = defaults.bridges["snowflake"] ?? []
@@ -116,6 +117,7 @@ struct TorConfiguration {
         case .meek: bridgeLines = defaults.bridges["meek"] ?? []
         case .custom: bridgeLines = Self.parseBridgeLines(settings.customBridges)
         }
+        bridgeLines = bridgeLines.map { Self.snowflakeLine($0, peers: settings.snowflakePeers) }
 
         if settings.transport == .direct {
             lines.append("UseBridges 0")
@@ -127,6 +129,24 @@ struct TorConfiguration {
             for bridge in bridgeLines { lines.append("Bridge \(bridge)") }
         }
         return lines.joined(separator: "\n") + "\n"
+    }
+
+    /// Latency-oriented Tor options: Conflux sends on the lowest-latency leg, and there is room
+    /// for the tuner's circuit races next to the circuits Tor pre-builds on its own.
+    static func performanceLines(for settings: AppSettings) -> [String] {
+        var lines = ["MaxClientCircuitsPending 48"]
+        if settings.confluxLatency {
+            lines.append("ConfluxEnabled 1")
+            lines.append("ConfluxClientUX latency")
+        }
+        return lines
+    }
+
+    /// Snowflake can hold several volunteer proxies at once (`max=`): a slow one no longer
+    /// drags the whole session down, and the KCP layer picks the quickest path.
+    static func snowflakeLine(_ line: String, peers: Int) -> String {
+        guard peers > 1, line.hasPrefix("snowflake "), !line.contains(" max=") else { return line }
+        return line + " max=\(min(4, peers))"
     }
 
     static func isValidCountryCode(_ code: String) -> Bool {

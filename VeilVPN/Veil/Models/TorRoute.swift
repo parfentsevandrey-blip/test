@@ -10,31 +10,67 @@ struct TorRoute: Equatable, Sendable {
     var exitCountry: String?
     /// Lowercase ISO codes that must never appear in a circuit.
     var excludedCountries: [String]
+    /// Fingerprints of the exit relays the route tuner measured to be fastest; empty = any exit in `exitCountry`.
+    var pinnedExits: [String] = []
+    /// Fingerprint(s) of the pinned middle relay; empty = any middle in `middleCountry`.
+    var pinnedMiddles: [String] = []
+    /// Relays to keep out of the next circuits (the previous winners, so a rotation really moves).
+    var avoidedRelays: [String] = []
 
     static let fiveEyes = ["us", "gb", "ca", "au", "nz"]
 
+    init(middleCountry: String? = nil, exitCountry: String? = nil, excludedCountries: [String] = [],
+         pinnedExits: [String] = [], pinnedMiddles: [String] = [], avoidedRelays: [String] = []) {
+        self.middleCountry = middleCountry
+        self.exitCountry = exitCountry
+        self.excludedCountries = excludedCountries
+        self.pinnedExits = pinnedExits
+        self.pinnedMiddles = pinnedMiddles
+        self.avoidedRelays = avoidedRelays
+    }
+
     var isRestricted: Bool {
-        middleCountry != nil || exitCountry != nil || !excludedCountries.isEmpty
+        middleCountry != nil || exitCountry != nil || !excludedCountries.isEmpty || isPinned
+    }
+
+    var isPinned: Bool {
+        !pinnedExits.isEmpty || !pinnedMiddles.isEmpty
+    }
+
+    /// The same route without any measured pins or temporary exclusions.
+    var base: TorRoute {
+        TorRoute(middleCountry: middleCountry, exitCountry: exitCountry, excludedCountries: excludedCountries)
+    }
+
+    private static func fingerprintList(_ fingerprints: [String]) -> String {
+        fingerprints.map { "$" + $0.uppercased() }.joined(separator: ",")
     }
 
     /// `Key value` pairs for torrc / SETCONF, and keys that must be reset.
     var configuration: (set: [(key: String, value: String)], reset: [String]) {
         var set: [(key: String, value: String)] = []
         var reset: [String] = []
-        if let middle = middleCountry {
+        if !pinnedMiddles.isEmpty {
+            set.append(("MiddleNodes", Self.fingerprintList(pinnedMiddles)))
+        } else if let middle = middleCountry {
             set.append(("MiddleNodes", "{\(middle)}"))
         } else {
             reset.append("MiddleNodes")
         }
-        if let exit = exitCountry {
+        if !pinnedExits.isEmpty {
+            set.append(("ExitNodes", Self.fingerprintList(pinnedExits)))
+        } else if let exit = exitCountry {
             set.append(("ExitNodes", "{\(exit)}"))
         } else {
             reset.append("ExitNodes")
         }
         // Never exclude a country we explicitly asked for; Tor would have no relays left.
         let excluded = excludedCountries.filter { $0 != middleCountry && $0 != exitCountry }
-        if !excluded.isEmpty {
-            set.append(("ExcludeNodes", excluded.map { "{\($0)}" }.joined(separator: ",")))
+        var excludeList = excluded.map { "{\($0)}" }
+        let pinned = Set((pinnedExits + pinnedMiddles).map { $0.uppercased() })
+        excludeList += avoidedRelays.map { $0.uppercased() }.filter { !pinned.contains($0) }.map { "$" + $0 }
+        if !excludeList.isEmpty {
+            set.append(("ExcludeNodes", excludeList.joined(separator: ",")))
         } else {
             reset.append("ExcludeNodes")
         }

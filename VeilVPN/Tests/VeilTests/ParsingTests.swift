@@ -30,6 +30,24 @@ final class ParsingTests: XCTestCase {
         XCTAssertEqual(TorProcessEngine.address(fromRouterStatus: "r exit AAAA BBBB 2026-09-06 12:00:00 185.220.101.5 443 0\ns Exit Fast"), "185.220.101.5")
     }
 
+    @MainActor
+    func testCircuitEventsAndReplies() {
+        let launched = TorProcessEngine.parseCircuitEvent("CIRC 12 LAUNCHED BUILD_FLAGS=NEED_CAPACITY PURPOSE=GENERAL TIME_CREATED=2026-09-08T10:00:00.250000")
+        XCTAssertEqual(launched?.id, "12")
+        XCTAssertEqual(launched?.status, .launched)
+        XCTAssertNotNil(launched?.created)
+        let built = TorProcessEngine.parseCircuitEvent("CIRC 12 BUILT $AAAA~bridge,$BBBB=mid,$CCCC~exit BUILD_FLAGS=NEED_CAPACITY PURPOSE=GENERAL TIME_CREATED=2026-09-08T10:00:00.250000")
+        XCTAssertEqual(built?.path.map(\.fingerprint), ["AAAA", "BBBB", "CCCC"])
+        XCTAssertEqual(built?.exit?.nickname, "exit")
+        XCTAssertEqual(built?.middle?.nickname, "mid")
+        XCTAssertEqual(built?.purpose, "GENERAL")
+        XCTAssertNil(TorProcessEngine.parseCircuitEvent("STREAM 1 NEW 0 example.com:443"))
+        XCTAssertEqual(TorProcessEngine.parseExtendedReply(["EXTENDED 34"]), "34")
+        XCTAssertNil(TorProcessEngine.parseExtendedReply(["OK"]))
+        XCTAssertEqual(TorProcessEngine.parseBandwidth("r exit AAAA BBBB 2026-09-06 12:00:00 185.220.101.5 443 0\ns Exit Fast\nw Bandwidth=23400"), 23400)
+        XCTAssertNil(TorProcessEngine.parseBandwidth("r exit AAAA BBBB 2026-09-06 12:00:00 185.220.101.5 443 0"))
+    }
+
     func testSemanticVersions() {
         XCTAssertTrue(UpdateChecker.isNewer("0.4.0", than: "0.3.1"))
         XCTAssertTrue(UpdateChecker.isNewer("1.0", than: "0.9.9"))

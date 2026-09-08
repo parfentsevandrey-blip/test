@@ -21,6 +21,18 @@ final class TorProcessEngine: TorEngine {
     private var exitStatus: Int32?
     private var usesBridges = true
     private var descriptorUploads: [String: Int] = [:]
+    /// Circuits seen through `CIRC` events, by id.
+    private var circuits: [String: CircuitInfo] = [:]
+
+    private static let eventSubscription = "SETEVENTS CIRC HS_DESC"
+
+    private static let circuitTimeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS"
+        return formatter
+    }()
 
     init(bundle: TorBundle) {
         self.bundle = bundle
@@ -109,6 +121,8 @@ final class TorProcessEngine: TorEngine {
             }
             try await client.send("TAKEOWNERSHIP")
             _ = try? await client.send("SETCONF __OwningControllerProcess=\(ProcessInfo.processInfo.processIdentifier)")
+            _ = try? await client.send(Self.eventSubscription)
+            circuits = [:]
             controller = client
             if let version = try? await client.getInfo("version") {
                 versionDescription = version
@@ -188,7 +202,7 @@ final class TorProcessEngine: TorEngine {
         return (try? await controller.getInfo("status/circuit-established")) == "1"
     }
 
-    func applyRoute(_ route: TorRoute) async throws {
+    func applyRoute(_ route: TorRoute, dropConnections: Bool) async throws {
         guard let controller else { throw TorEngineError.notRunning }
         let configuration = route.configuration
         if !configuration.reset.isEmpty {
@@ -197,7 +211,58 @@ final class TorProcessEngine: TorEngine {
         if !configuration.set.isEmpty {
             try await controller.setConf(Dictionary(uniqueKeysWithValues: configuration.set.map { ($0.key, $0.value) }))
         }
-        try await controller.signal("NEWNYM")
+        // Without NEWNYM Tor abandons only its unused circuits and stops giving new streams to
+        // the old ones, so downloads in flight keep going while new connections take the new route.
+        if dropConnections {
+            try await controller.signal("NEWNYM")
+        }
+    }
+
+    func launchCircuit() async throws -> String {
+        guard let controller else { throw TorEngineError.notRunning }
+        let lines = try await controller.send("EXTENDCIRCUIT 0")
+        guard let id = Self.parseExtendedReply(lines.map(\.text)) else {
+            throw TorEngineError.circuitLaunchFailed(lines.last?.text ?? "")
+        }
+        if circuits[id] == nil {
+            circuits[id] = CircuitInfo(id: id, status: .launched, path: [], purpose: "GENERAL", created: .now)
+        }
+        return id
+    }
+
+    func awaitCircuit(_ id: String, timeout: Duration) async -> CircuitInfo? {
+        let deadline = ContinuousClock.now + timeout
+        while ContinuousClock.now < deadline {
+            if let info = circuits[id], info.status.isFinal {
+                return info
+            }
+            guard controller != nil else { return circuits[id] }
+            do {
+                try await Task.sleep(for: .milliseconds(200))
+            } catch {
+                return circuits[id]
+            }
+        }
+        return circuits[id]
+    }
+
+    func closeCircuit(_ id: String) async {
+        guard let controller else { return }
+        _ = try? await controller.send("CLOSECIRCUIT \(id)")
+    }
+
+    func relayBandwidth(_ fingerprint: String) async -> Int? {
+        guard let controller, let status = try? await controller.getInfo("ns/id/\(fingerprint)") else { return nil }
+        return Self.parseBandwidth(status)
+    }
+
+    func relayCountry(_ fingerprint: String) async -> String? {
+        guard let controller, let status = try? await controller.getInfo("ns/id/\(fingerprint)"),
+              let address = Self.address(fromRouterStatus: status),
+              let code = try? await controller.getInfo("ip-to-country/\(address)"), code.count == 2 else {
+            return nil
+        }
+        return code.lowercased()
     }
 
     func circuit() async throws -> [CircuitHop] {
@@ -244,7 +309,7 @@ final class TorProcessEngine: TorEngine {
     func waitForOnionServicePublication(serviceID: String, timeout: Duration) async -> Bool {
         guard let controller else { return false }
         descriptorUploads[serviceID] = 0
-        _ = try? await controller.send("SETEVENTS HS_DESC")
+        _ = try? await controller.send(Self.eventSubscription)
         let deadline = ContinuousClock.now + timeout
         while ContinuousClock.now < deadline {
             if (descriptorUploads[serviceID] ?? 0) >= 2 { return true }
@@ -258,6 +323,12 @@ final class TorProcessEngine: TorEngine {
     }
 
     private func handleControlEvent(_ event: String) {
+        if event.hasPrefix("CIRC ") {
+            if let update = Self.parseCircuitEvent(event) {
+                record(update)
+            }
+            return
+        }
         let parts = event.split(separator: " ")
         guard parts.count >= 3, parts[0] == "HS_DESC" else { return }
         let action = parts[1]
@@ -426,6 +497,60 @@ final class TorProcessEngine: TorEngine {
         }
         guard let percent else { return nil }
         return BootstrapProgress(percent: min(100, max(0, percent)), tag: tag, summary: summary)
+    }
+
+    /// Merges a `CIRC` event into the table, keeping the first creation time and stamping BUILT.
+    private func record(_ update: CircuitInfo) {
+        var info = circuits[update.id] ?? update
+        info.status = update.status
+        if !update.path.isEmpty { info.path = update.path }
+        if let purpose = update.purpose { info.purpose = purpose }
+        if info.created == nil { info.created = update.created ?? .now }
+        if update.status == .built, info.builtAt == nil { info.builtAt = .now }
+        if let reason = update.reason { info.reason = reason }
+        circuits[update.id] = info
+        if circuits.count > 400 {
+            let stale = circuits.values.filter { $0.status == .closed || $0.status == .failed }.sorted { ($0.created ?? .distantPast) < ($1.created ?? .distantPast) }
+            for old in stale.prefix(200) { circuits[old.id] = nil }
+        }
+    }
+
+    /// Parses `CIRC 12 BUILT $A~a,$B~b,$C~c BUILD_FLAGS=… PURPOSE=GENERAL TIME_CREATED=2026-09-08T10:00:00.123456`.
+    static func parseCircuitEvent(_ text: String) -> CircuitInfo? {
+        let parts = text.split(separator: " ")
+        guard parts.count >= 3, parts[0] == "CIRC", let status = CircuitInfo.Status(rawValue: String(parts[2])) else { return nil }
+        var info = CircuitInfo(id: String(parts[1]), status: status, path: [])
+        for token in parts.dropFirst(3) {
+            if token.hasPrefix("$") {
+                info.path = RelayRef.parsePath(token)
+            } else if token.hasPrefix("PURPOSE=") {
+                info.purpose = String(token.dropFirst("PURPOSE=".count))
+            } else if token.hasPrefix("TIME_CREATED=") {
+                info.created = circuitTimeFormatter.date(from: String(token.dropFirst("TIME_CREATED=".count)))
+            } else if token.hasPrefix("REASON=") {
+                info.reason = String(token.dropFirst("REASON=".count))
+            }
+        }
+        return info
+    }
+
+    /// Parses the `250 EXTENDED 12` reply of EXTENDCIRCUIT.
+    static func parseExtendedReply(_ lines: [String]) -> String? {
+        for line in lines where line.hasPrefix("EXTENDED ") {
+            let id = line.dropFirst("EXTENDED ".count).trimmingCharacters(in: .whitespaces)
+            if !id.isEmpty { return id }
+        }
+        return nil
+    }
+
+    /// Extracts the consensus weight from a router status entry (`w Bandwidth=12345`).
+    static func parseBandwidth(_ text: String) -> Int? {
+        for line in text.split(separator: "\n") where line.hasPrefix("w ") {
+            for token in line.split(separator: " ") where token.hasPrefix("Bandwidth=") {
+                return Int(token.dropFirst("Bandwidth=".count))
+            }
+        }
+        return nil
     }
 
     /// Chooses the most recent built general-purpose circuit from `GETINFO circuit-status`.

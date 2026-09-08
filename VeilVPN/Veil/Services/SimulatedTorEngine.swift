@@ -18,6 +18,16 @@ final class SimulatedTorEngine: TorEngine {
     private var middleCountry: String?
     private var excluded: [String] = []
     private var circuitSeed = 0
+    private var launched: [String: (info: CircuitInfo, ready: Date)] = [:]
+    private var nextCircuitID = 100
+    private var pinnedExits: [String] = []
+
+    private static let demoExits: [(fingerprint: String, nickname: String, country: String)] = [
+        (String(repeating: "B", count: 40), "niftyexit", "se"),
+        (String(repeating: "C", count: 40), "swiftrelay", "se"),
+        (String(repeating: "D", count: 40), "slowpoke", "se"),
+        (String(repeating: "E", count: 40), "northwind", "se"),
+    ]
 
     private static let phases: [(Int, String, String)] = [
         (0, "starting", "Starting"),
@@ -84,12 +94,58 @@ final class SimulatedTorEngine: TorEngine {
         onLog?(LogEntry(level: .notice, source: .tor, message: "Received reload signal (NEWNYM); switching to new circuits."))
     }
 
-    func applyRoute(_ route: TorRoute) async throws {
+    func applyRoute(_ route: TorRoute, dropConnections: Bool) async throws {
         exitCountry = route.exitCountry
         middleCountry = route.middleCountry
         excluded = route.excludedCountries
-        circuitSeed += 1
-        onLog?(LogEntry(level: .notice, source: .tor, message: "Demo: route updated (\(route.torrcLines.joined(separator: ", ")))"))
+        pinnedExits = route.pinnedExits
+        if dropConnections { circuitSeed += 1 }
+        onLog?(LogEntry(level: .notice, source: .tor, message: "Demo: route updated (\(route.torrcLines.joined(separator: ", ")))\(dropConnections ? ", circuits rebuilt" : ", existing connections kept")"))
+    }
+
+    func launchCircuit() async throws -> String {
+        guard running else { throw TorEngineError.notRunning }
+        nextCircuitID += 1
+        let id = String(nextCircuitID)
+        let exit = Self.demoExits[nextCircuitID % Self.demoExits.count]
+        let build = Double(nextCircuitID % Self.demoExits.count + 1) * 0.35 + Double.random(in: 0...0.3)
+        let created = Date.now
+        let info = CircuitInfo(
+            id: id, status: .launched,
+            path: [
+                RelayRef(fingerprint: "2B280B23E1107BB62ABFC40DDCC8824814F80A72", nickname: "flakey"),
+                RelayRef(fingerprint: String(repeating: "A", count: 40), nickname: "Quetzalcoatl"),
+                RelayRef(fingerprint: exit.fingerprint, nickname: exit.nickname),
+            ],
+            purpose: "GENERAL", created: created
+        )
+        launched[id] = (info, created.addingTimeInterval(build))
+        return id
+    }
+
+    func awaitCircuit(_ id: String, timeout: Duration) async -> CircuitInfo? {
+        guard let entry = launched[id] else { return nil }
+        let wait = max(0, entry.ready.timeIntervalSinceNow)
+        try? await Task.sleep(for: .milliseconds(Int(wait * 1000)))
+        var info = entry.info
+        info.status = .built
+        info.builtAt = entry.ready
+        launched[id] = (info, entry.ready)
+        return info
+    }
+
+    func closeCircuit(_ id: String) async {
+        launched[id] = nil
+    }
+
+    func relayBandwidth(_ fingerprint: String) async -> Int? {
+        Int.random(in: 2_000...80_000)
+    }
+
+    func relayCountry(_ fingerprint: String) async -> String? {
+        if let exit = Self.demoExits.first(where: { $0.fingerprint == fingerprint }) { return exitCountry ?? exit.country }
+        if fingerprint.hasPrefix("A") { return middleCountry ?? "de" }
+        return nil
     }
 
     func circuit() async throws -> [CircuitHop] {
@@ -98,10 +154,11 @@ final class SimulatedTorEngine: TorEngine {
         let exitCountries = ["us", "de", "nl", "fi", "gb", "fr"].filter { !excluded.contains($0) }
         let middle = middleCountry ?? middleCountries[circuitSeed % max(1, middleCountries.count)]
         let exit = exitCountry ?? exitCountries[(circuitSeed * 7 + 3) % max(1, exitCountries.count)]
+        let exitRelay = Self.demoExits.first { pinnedExits.contains($0.fingerprint) } ?? Self.demoExits[0]
         return [
             CircuitHop(fingerprint: "2B280B23E1107BB62ABFC40DDCC8824814F80A72", nickname: "flakey", address: nil, countryCode: nil, role: .bridge),
             CircuitHop(fingerprint: String(repeating: "A", count: 40), nickname: "Quetzalcoatl", address: "185.220.101.\(10 + circuitSeed % 200)", countryCode: middle, role: .middle),
-            CircuitHop(fingerprint: String(repeating: "B", count: 40), nickname: "niftyexit", address: "199.249.230.\(80 + circuitSeed % 100)", countryCode: exit, role: .exit),
+            CircuitHop(fingerprint: exitRelay.fingerprint, nickname: exitRelay.nickname, address: "199.249.230.\(80 + circuitSeed % 100)", countryCode: exit, role: .exit),
         ]
     }
 

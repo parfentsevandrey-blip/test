@@ -43,6 +43,14 @@ struct AppSettings: Codable, Equatable, Sendable {
     var avoidFiveEyes: Bool = false
     /// Minutes between automatic route rotations (NEWNYM); 0 disables rotation.
     var rotateRouteMinutes: Int = 0
+    /// Race circuits after every route change and pin the fastest relays.
+    var latencyTuning: Bool = true
+    /// Route changes keep existing connections; only new ones take the new route.
+    var seamlessRouteSwitch: Bool = true
+    /// Tor Conflux with the lowest-latency leg preferred (applies on the next connection).
+    var confluxLatency: Bool = true
+    /// Concurrent Snowflake proxies (`max=`), 1–4.
+    var snowflakePeers: Int = 2
     /// YouTube: through Tor, or directly with/without anti-throttling.
     var youtubeMode: RouteMode = .tor
     var dpiStrategy: DPIStrategy = .recordAndSegmentAtSNI
@@ -72,6 +80,7 @@ struct AppSettings: Codable, Equatable, Sendable {
         case showInMenuBar, connectOnLaunch, checkAfterConnect, verboseLogs
         case paddingEnabled, paddingLevel
         case multihopEnabled, middleCountry, excludedCountries, avoidFiveEyes, rotateRouteMinutes
+        case latencyTuning, seamlessRouteSwitch, confluxLatency, snowflakePeers
         case youtubeMode, dpiStrategy, customDirectDomains, customDirectAntiThrottle, serviceRoutes
         case killSwitch, autoReconnect, autoResetNetwork, isolatePerSite, notificationsEnabled, soundEffects, hapticFeedback
         case checkForUpdates, skippedUpdateVersion, onboardingCompleted
@@ -98,6 +107,10 @@ struct AppSettings: Codable, Equatable, Sendable {
         excludedCountries = try c.decodeIfPresent([String].self, forKey: .excludedCountries) ?? d.excludedCountries
         avoidFiveEyes = try c.decodeIfPresent(Bool.self, forKey: .avoidFiveEyes) ?? d.avoidFiveEyes
         rotateRouteMinutes = try c.decodeIfPresent(Int.self, forKey: .rotateRouteMinutes) ?? d.rotateRouteMinutes
+        latencyTuning = try c.decodeIfPresent(Bool.self, forKey: .latencyTuning) ?? d.latencyTuning
+        seamlessRouteSwitch = try c.decodeIfPresent(Bool.self, forKey: .seamlessRouteSwitch) ?? d.seamlessRouteSwitch
+        confluxLatency = try c.decodeIfPresent(Bool.self, forKey: .confluxLatency) ?? d.confluxLatency
+        snowflakePeers = min(4, max(1, try c.decodeIfPresent(Int.self, forKey: .snowflakePeers) ?? d.snowflakePeers))
         youtubeMode = try c.decodeIfPresent(RouteMode.self, forKey: .youtubeMode) ?? d.youtubeMode
         dpiStrategy = try c.decodeIfPresent(DPIStrategy.self, forKey: .dpiStrategy) ?? d.dpiStrategy
         customDirectDomains = try c.decodeIfPresent(String.self, forKey: .customDirectDomains) ?? d.customDirectDomains

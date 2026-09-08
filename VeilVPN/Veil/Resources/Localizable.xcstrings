@@ -281,6 +281,34 @@
         }
       }
     },
+    "After connecting and after every route change Veil builds a few extra circuits, times them and pins the exit relays (and the middle relay, when you chose its country) of the quickest ones. Two exits are kept so one going away does not stall you; everything is measured again every half hour.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "После подключения и после каждой смены маршрута Veil строит несколько дополнительных цепочек, измеряет их время и закрепляет выходные узлы (и промежуточный, если вы выбрали его страну) самых быстрых. Сохраняются два выходных узла, чтобы уход одного не остановил вас; всё измеряется заново каждые полчаса."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Після підключення та після кожної зміни маршруту Veil будує кілька додаткових ланцюжків, вимірює їхній час і закріплює вихідні вузли (та проміжний, якщо ви обрали його країну) найшвидших. Зберігаються два вихідні вузли, щоб зникнення одного не зупинило вас; усе вимірюється знову кожні пів години."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پس از اتصال و پس از هر تغییر مسیر، Veil چند مدار اضافی می‌سازد، زمان آن‌ها را می‌سنجد و رله‌های خروجی (و رلهٔ میانی، اگر کشورش را انتخاب کرده باشید) سریع‌ترین‌ها را سنجاق می‌کند. دو خروجی نگه داشته می‌شود تا رفتن یکی شما را متوقف نکند؛ هر نیم ساعت همه‌چیز دوباره اندازه‌گیری می‌شود."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "连接后以及每次更改路由后，Veil 会额外构建几条链路并计时，然后固定最快链路的出口中继（以及您选择了国家的中间中继）。保留两个出口，一个失效时不会卡住；每半小时重新测量一次。"
+          }
+        }
+      }
+    },
     "After sleep, or after another VPN disconnects, macOS often reports a working network while nothing gets through until Wi-Fi is switched off and on. Veil checks the Internet before starting Tor and after every wake, and does that switch for you — CoreWLAN first, then the network service — before trying Tor again.": {
       "localizations": {
         "ru": {
@@ -1877,6 +1905,34 @@
         }
       }
     },
+    "Conflux: send on the lowest-latency path": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conflux: отправлять по пути с наименьшей задержкой"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conflux: надсилати шляхом із найменшою затримкою"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conflux: ارسال از مسیر با کمترین تأخیر"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conflux：沿延迟最低的路径发送"
+          }
+        }
+      }
+    },
     "Connect": {
       "localizations": {
         "fa": {
@@ -3165,6 +3221,34 @@
         }
       }
     },
+    "Downloads and open pages stay on the old route until they finish; only new connections take the new one. Switch off to drop everything at once, as “New Identity” does.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Загрузки и открытые страницы остаются на старом маршруте, пока не завершатся; по новому идут только новые соединения. Выключите, чтобы сбрасывать всё сразу, как делает «Новая личность»."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Завантаження та відкриті сторінки залишаються на старому маршруті, доки не завершаться; новим маршрутом ідуть лише нові з’єднання. Вимкніть, щоб скидати все одразу, як робить «Нова особа»."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دانلودها و صفحات باز تا پایان روی مسیر قدیمی می‌مانند؛ فقط اتصال‌های جدید مسیر تازه را می‌گیرند. برای قطع همه‌چیز یکجا، مانند «هویت جدید»، خاموش کنید."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下载和已打开的页面会留在旧路由上直到完成；只有新连接走新路由。关闭后将像“新身份”一样立即断开全部连接。"
+          }
+        }
+      }
+    },
     "Dummy traffic is bounced through the Tor network to a private onion service on this Mac, so no website ever receives it. Tor’s own circuit and connection padding are forced on as well. Padding costs bandwidth — yours, the Snowflake volunteer’s and the Tor relays’ — so use the lightest level that fits.": {
       "localizations": {
         "fa": {
@@ -3749,6 +3833,90 @@
           "stringUnit": {
             "state": "translated",
             "value": "导出…"
+          }
+        }
+      }
+    },
+    "Fast route": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Быстрый маршрут"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Швидкий маршрут"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مسیر سریع"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快速路由"
+          }
+        }
+      }
+    },
+    "Fastest relays pinned · click to verify the exit": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Самые быстрые узлы закреплены · клик — проверить выход"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Найшвидші вузли закріплено · клік — перевірити вихід"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سریع‌ترین رله‌ها سنجاق شدند · برای بررسی خروجی کلیک کنید"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已固定最快中继 · 点击验证出口"
+          }
+        }
+      }
+    },
+    "Fastest relays pinned; verifying the exit…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Самые быстрые узлы закреплены; проверка выхода…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Найшвидші вузли закріплено; перевірка виходу…"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سریع‌ترین رله‌ها سنجاق شدند؛ در حال بررسی خروجی…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已固定最快中继；正在验证出口…"
           }
         }
       }
@@ -4341,6 +4509,34 @@
         }
       }
     },
+    "Keep existing connections when the route changes": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохранять открытые соединения при смене маршрута"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зберігати відкриті з’єднання під час зміни маршруту"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حفظ اتصال‌های موجود هنگام تغییر مسیر"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更改路由时保留现有连接"
+          }
+        }
+      }
+    },
     "Kill switch": {
       "localizations": {
         "ru": {
@@ -4673,6 +4869,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tor 链路地图"
+          }
+        }
+      }
+    },
+    "Measure again": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Измерить снова"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Виміряти знову"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اندازه‌گیری مجدد"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新测量"
           }
         }
       }
@@ -5153,6 +5377,34 @@
         }
       }
     },
+    "No test circuit was built in time.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ни одна тестовая цепочка не собралась вовремя."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Жоден тестовий ланцюжок не зібрався вчасно."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هیچ مدار آزمایشی به‌موقع ساخته نشد."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有测试链路及时建成。"
+          }
+        }
+      }
+    },
     "No tor binaries were found next to the app, so the connection is simulated. Build the DMG with `make dmg` or run `make tor` to bundle Tor.": {
       "localizations": {
         "fa": {
@@ -5433,6 +5685,34 @@
         }
       }
     },
+    "Off — Tor picks relays within the chosen countries on its own.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выкл — Tor сам выбирает узлы в выбранных странах."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вимк — Tor сам обирає вузли у вибраних країнах."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خاموش — Tor خودش رله‌ها را در کشورهای انتخابی برمی‌گزیند."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已关闭 — 由 Tor 自行在所选国家内挑选中继。"
+          }
+        }
+      }
+    },
     "One bridge per line, e.g. “obfs4 1.2.3.4:443 FINGERPRINT cert=… iat-mode=0”. A leading “Bridge” keyword is optional.": {
       "localizations": {
         "fa": {
@@ -5681,6 +5961,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "打开 Veil 查看错误"
+          }
+        }
+      }
+    },
+    "Open connections stay on the old route until they finish; new ones take the new route as soon as its first circuit is ready.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открытые соединения остаются на старом маршруте, пока не завершатся; новые идут по новому, как только готова его первая цепочка."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відкриті з’єднання залишаються на старому маршруті, доки не завершаться; нові йдуть новим маршрутом, щойно готовий його перший ланцюжок."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتصال‌های باز تا پایان روی مسیر قدیمی می‌مانند؛ اتصال‌های جدید به‌محض آماده شدن اولین مدار، مسیر تازه را می‌گیرند."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已打开的连接留在旧路由上直到完成；新连接在新路由的第一条链路就绪后立即使用它。"
           }
         }
       }
@@ -6241,6 +6549,90 @@
           "stringUnit": {
             "state": "translated",
             "value": "退出"
+          }
+        }
+      }
+    },
+    "Race circuits and pin the fastest relays": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Устраивать гонку цепочек и закреплять самые быстрые узлы"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Влаштовувати перегони ланцюжків і закріплювати найшвидші вузли"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مسابقهٔ مدارها و سنجاق کردن سریع‌ترین رله‌ها"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "链路竞速并固定最快中继"
+          }
+        }
+      }
+    },
+    "Racing %lld circuits, %lld built…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Гонка: %lld цепочек, собрано %lld…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перегони: %lld ланцюжків, зібрано %lld…"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مسابقهٔ %lld مدار، %lld ساخته شد…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在竞速 %lld 条链路，已建成 %lld 条…"
+          }
+        }
+      }
+    },
+    "Racing circuits to find the fastest relays…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Гонка цепочек: ищем самые быстрые узлы…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перегони ланцюжків: шукаємо найшвидші вузли…"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مسابقهٔ مدارها برای یافتن سریع‌ترین رله‌ها…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在链路竞速以寻找最快中继…"
           }
         }
       }
@@ -6861,6 +7253,62 @@
         }
       }
     },
+    "Route latency %@ → %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Задержка маршрута %@ → %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Затримка маршруту %@ → %@"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تأخیر مسیر %@ ← %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "路由延迟 %@ → %@"
+          }
+        }
+      }
+    },
+    "Route latency now %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Задержка маршрута сейчас %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Затримка маршруту зараз %@"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تأخیر مسیر اکنون %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前路由延迟 %@"
+          }
+        }
+      }
+    },
     "Route latency ≈ %lld ms": {
       "localizations": {
         "fa": {
@@ -6885,6 +7333,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "路由延迟 ≈ %lld 毫秒"
+          }
+        }
+      }
+    },
+    "Route performance": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скорость маршрута"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Швидкість маршруту"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کارایی مسیر"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "路由性能"
           }
         }
       }
@@ -6969,6 +7445,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "路由"
+          }
+        }
+      }
+    },
+    "Runs after connecting.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запустится после подключения."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запуститься після підключення."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پس از اتصال اجرا می‌شود."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "连接后运行。"
           }
         }
       }
@@ -7477,6 +7981,34 @@
         }
       }
     },
+    "Snowflake can hold several volunteer proxies at the same time, so a slow one no longer holds the whole session back. Two is a considerate default. Applies on the next connection.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snowflake может держать несколько волонтёрских прокси одновременно, и медленный больше не тормозит всю сессию. Два — бережное значение по умолчанию. Применяется при следующем подключении."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snowflake може тримати кілька волонтерських проксі одночасно, і повільний більше не гальмує всю сесію. Два — ощадливе значення за замовчуванням. Застосовується під час наступного підключення."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snowflake می‌تواند هم‌زمان چند پراکسی داوطلبانه را نگه دارد تا یک پراکسی کند کل نشست را عقب نیندازد. دو مقدار پیش‌فرض ملاحظه‌کارانه است. در اتصال بعدی اعمال می‌شود."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snowflake 可同时保持多个志愿者代理，慢的那个不再拖累整个会话。默认值 2 较为体贴志愿者。下次连接时生效。"
+          }
+        }
+      }
+    },
     "Snowflake first has to find a volunteer proxy; in censored networks this can take 10–60 seconds.": {
       "localizations": {
         "fa": {
@@ -7501,6 +8033,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Snowflake 需要先找到志愿者代理；在受审查的网络中可能需要 10–60 秒。"
+          }
+        }
+      }
+    },
+    "Snowflake proxies at once": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snowflake-прокси одновременно"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snowflake-проксі одночасно"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پراکسی‌های Snowflake هم‌زمان"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "同时使用的 Snowflake 代理数"
           }
         }
       }
@@ -7753,6 +8313,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "关闭再打开 Wi-Fi，然后重新连接"
+          }
+        }
+      }
+    },
+    "Switch routes seamlessly": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Переключать маршрут бесшовно"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перемикати маршрут безшовно"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعویض بی‌وقفهٔ مسیر"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无缝切换路由"
           }
         }
       }
@@ -8681,6 +9269,34 @@
         }
       }
     },
+    "Tor builds two legs to the exit; Veil asks it to prefer the quicker one for sending instead of the one with more throughput. Applies on the next connection.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor строит два плеча до выходного узла; Veil просит отправлять по более быстрому, а не по более широкому. Применяется при следующем подключении."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor будує два плеча до вихідного вузла; Veil просить надсилати швидшим, а не ширшим. Застосовується під час наступного підключення."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor دو شاخه تا خروجی می‌سازد؛ Veil از آن می‌خواهد به‌جای شاخهٔ پرظرفیت‌تر، شاخهٔ سریع‌تر را برای ارسال ترجیح دهد. در اتصال بعدی اعمال می‌شود."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor 会到出口建立两条分支；Veil 让它优先用更快的分支发送，而不是吞吐量更大的那条。下次连接时生效。"
+          }
+        }
+      }
+    },
     "Tor could not bootstrap in time. Snowflake proxies may be scarce right now — try again or switch bridges.": {
       "localizations": {
         "fa": {
@@ -8705,6 +9321,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tor 未能及时完成引导。目前 Snowflake 代理可能不足——请重试或更换网桥。"
+          }
+        }
+      }
+    },
+    "Tor could not start a circuit: %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor не смог запустить цепочку: %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor не зміг запустити ланцюжок: %@"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor نتوانست مداری را آغاز کند: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor 无法启动链路：%@"
           }
         }
       }
@@ -8929,6 +9573,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tor 日志"
+          }
+        }
+      }
+    },
+    "Tor refused to build test circuits.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor отказался строить тестовые цепочки."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor відмовився будувати тестові ланцюжки."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor از ساخت مدارهای آزمایشی خودداری کرد."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor 拒绝构建测试链路。"
           }
         }
       }
@@ -9269,6 +9941,34 @@
         }
       }
     },
+    "Tuned: %@ → %@ · %lld fast exits pinned": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настроено: %@ → %@ · закреплено быстрых выходов: %lld"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Налаштовано: %@ → %@ · закріплено швидких виходів: %lld"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تنظیم شد: %@ ← %@ · %lld خروجی سریع سنجاق شد"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已调优：%@ → %@ · 固定 %lld 个快速出口"
+          }
+        }
+      }
+    },
     "Tunnels through a large CDN with domain fronting. Slow but very hard to block; the built-in bridge comes from Tor Browser.": {
       "localizations": {
         "fa": {
@@ -9549,6 +10249,34 @@
         }
       }
     },
+    "Veil races several circuits to your chosen countries, times how fast each one comes up and pins the quickest exit relays — and the middle relay when you chose its country. Relays are measured again after every route change and every half hour.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Veil устраивает гонку нескольких цепочек в выбранные страны, измеряет, как быстро каждая поднимается, и закрепляет самые быстрые выходные узлы — и промежуточный, если вы выбрали его страну. Узлы измеряются заново после каждой смены маршрута и каждые полчаса."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Veil влаштовує перегони кількох ланцюжків до вибраних країн, вимірює, як швидко кожен піднімається, і закріплює найшвидші вихідні вузли — та проміжний, якщо ви обрали його країну. Вузли вимірюються знову після кожної зміни маршруту та кожні пів години."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Veil چند مدار را به‌سوی کشورهای انتخابی شما مسابقه می‌دهد، سرعت بالا آمدن هرکدام را می‌سنجد و سریع‌ترین رله‌های خروجی — و رلهٔ میانی، اگر کشورش را انتخاب کرده باشید — را سنجاق می‌کند. رله‌ها پس از هر تغییر مسیر و هر نیم ساعت دوباره اندازه‌گیری می‌شوند."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Veil 会向您所选国家竞速构建多条链路，测量每条链路建成的速度，并固定最快的出口中继——若您选择了中间中继的国家，也固定它。每次更改路由后以及每半小时都会重新测量。"
+          }
+        }
+      }
+    },
     "Veil routes your Mac through the Tor network using Snowflake bridges, so it works even where Tor is blocked. Press the power button and wait for the three-hop circuit to build — the first connection can take up to a minute.": {
       "localizations": {
         "fa": {
@@ -9825,6 +10553,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "显示"
+          }
+        }
+      }
+    },
+    "Waiting for the first measurement…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ожидание первого измерения…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Очікування першого вимірювання…"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "در انتظار نخستین اندازه‌گیری…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "等待首次测量…"
           }
         }
       }
