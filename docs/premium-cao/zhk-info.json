@@ -1426,5 +1426,33 @@
   "cls": "Премиум",
   "stage": null,
   "fetched": "2026-09-08"
+ },
+ "Kuznetsky Most 12 by Lalique (Кузнецкий Мост 12)": {
+  "id": 49514,
+  "cianName": "Kuznetsky Most 12 by Lalique (Кузнецкий Мост 12)",
+  "address": "Москва, улица Кузнецкий Мост, 12",
+  "url": "https://www.cian.ru/zhiloy-kompleks-kuznetsky-most-12-by-lalique-moskva-49514/",
+  "status": 200,
+  "developer": "KR Properties",
+  "finished": null,
+  "deadline": "2026",
+  "yearText": "Сдача в 4 кв. 2026",
+  "cls": "Премиум",
+  "stage": null,
+  "fetched": "2026-09-08"
+ },
+ "ДОМ XXII": {
+  "id": 4463213,
+  "cianName": "ДОМ XXII",
+  "address": "Москва, Новодевичий проезд, 6с4",
+  "url": "https://www.cian.ru/zhiloy-kompleks-dom-xxii-moskva-4463213/",
+  "status": 200,
+  "developer": "ДОНСТРОЙ",
+  "finished": null,
+  "deadline": "2026",
+  "yearText": "Сдача в 4 кв. 2026",
+  "cls": "Премиум",
+  "stage": null,
+  "fetched": "2026-09-08"
  }
 }
