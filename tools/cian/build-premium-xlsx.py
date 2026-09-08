@@ -352,11 +352,6 @@ for row in rows2_live:
     dv = devs.get(row[0], {})
     rows2.append([row[0], strip_paren(row[1]), row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10], row[11], row[12],
                   m.get('finish') or 'бетон', row[15] or m.get('url') or dv.get('site') or '', row[16]])
-rows2.sort(key=lambda x: (x[10] is None, x[10] or 0))
-sheet(wb, '2. Строится', H2, rows2,
-      [26, 18, 13, 28, 16, 16, 6, 7, 13, 10, 10, 10, 6, 8, 7, 90],
-      subtitle=f"Таблица заказчика + новостройки из выдачи Циан на {complexes['fetched']}. Сортировка по медиане ₽/м² (где Циан не нашёл ЖК — середина диапазона от/до), цвет — от дешёвых к дорогим", zone_col=5, heat_col=10)
-
 # ---------- лист 3: проектирование (по Telegram-каналам) ----------
 TG = json.load(open(DOCS / 'tg-sites.json')) if (DOCS / 'tg-sites.json').exists() else None
 CONF = {'high': 'высокая', 'medium': 'средняя', 'low': 'низкая'}
@@ -396,14 +391,20 @@ for e in rows3:
     if BUILDING_RE.search(str(e[6] or '')):
         # проект уже строится или продаётся — его место на листе «Строится»
         price = e[12]
-        rows2.append([e[0], e[5], e[10] or e[9] or '', e[1], e[3], e[4], None, e[8], 'квартиры',
-                      price, price, None, e[7], '', (e[16] or ''), (e[19] or '')])
+        rows2.append([e[0], e[5], e[11] or e[10] or '', e[1], e[3], e[4], None, e[9], 'квартиры',
+                      price, price, None, e[8], '', (e[16] or ''), (e[19] or '')])
         moved.append(e[0]); continue
     keep3.append(e)
 rows3 = keep3
 rows2.sort(key=lambda x: (x[10] is None, x[10] or 0))
 if dropped: print('лист 3 → убраны дубли листов 1–2:', '; '.join(f'{a} = {b}' for a, b in dropped))
 if moved: print('лист 3 → перенесены в «Строится»:', '; '.join(moved))
+rows2.sort(key=lambda x: (x[10] is None, x[10] or 0))
+sheet(wb, '2. Строится', H2, rows2,
+      [26, 18, 13, 28, 16, 16, 6, 7, 13, 10, 10, 10, 6, 8, 7, 90],
+      subtitle=f"Таблица заказчика + новостройки из выдачи Циан на {complexes['fetched']}. Сортировка по медиане ₽/м² (где Циан не нашёл ЖК — середина диапазона от/до), цвет — от дешёвых к дорогим", zone_col=5, heat_col=10)
+
+# ---------- лист 3 ----------
 rows3.sort(key=lambda x: (zkey(x[4]), x[12] is None, x[12] or 0, str(x[0])))
 sheet(wb, '3. Проектирование', H3, rows3,
       [24, 20, 26, 12, 13, 17, 20, 9, 6, 9, 10, 10, 10, 10, 10, 10, 6, 6, 6, 80],
