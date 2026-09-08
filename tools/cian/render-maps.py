@@ -43,8 +43,11 @@ def fetch_tile(x, y, z):
 def geocode(addr):
     key = re.sub(r'\s+', ' ', addr).strip()
     if key in geocache: return geocache[key]
-    q = re.sub(r'\s*\([^)]*\)', '', key)
+    q = re.sub(r'\s*\([^)]*\)', '', key).split(';')[0]
     q = re.sub(r'\b(вл\.?|владение)\s*', '', q)
+    q = re.sub(r',?\s*(стр\.|строение|к\.|корп\.)\s*[\w/]+(\s*,\s*\d+)*', '', q)
+    q = re.sub(r'\bпер\.', 'переулок', q); q = re.sub(r'\bул\.', 'улица', q); q = re.sub(r'\bнаб\.', 'набережная', q); q = re.sub(r'\bпл\.', 'площадь', q); q = re.sub(r'\bбул\.', 'бульвар', q)
+    q = re.sub(r'\s+и\s+\d+\b', '', q).strip(' ,')
     res = None
     for query in (f'Москва, {q}', f'Москва, {q.split(",")[0]}'):
         params = urllib.parse.urlencode({'q': query, 'format': 'json', 'limit': 1, 'countrycodes': 'ru'})
