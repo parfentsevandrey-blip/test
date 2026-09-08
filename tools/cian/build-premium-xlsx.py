@@ -169,8 +169,9 @@ def sheet(wb, title, headers, rows, widths, note=None, subtitle='', zone_col=Non
                 c.hyperlink = c.value; c.value = 'ссылка'; c.font = LINK_FONT; c.alignment = center
             else:
                 c.alignment = wrap if c.column in (1, 4, ncol) or (isinstance(c.value, str) and len(c.value) > 18) else center
-        longest = max((len(v) for v in r if isinstance(v, str)), default=0)
-        ws.row_dimensions[rr].height = 26 if longest > 66 else 15
+        last = ws.cell(rr, ncol)
+        if isinstance(last.value, str): last.font = Font(name='Calibri', size=9); last.alignment = Alignment(wrap_text=True, vertical='center')
+        ws.row_dimensions[rr].height = 24 if isinstance(last.value, str) and len(last.value) > 92 else 15
     for i, w in enumerate(widths, 1):
         ws.column_dimensions[get_column_letter(i)].width = w
     ws.freeze_panes = 'B4'
@@ -247,7 +248,7 @@ for r in complexes['complexes']:
     (rows1 if (m.get('stage', 'built' if built else 'building') == 'built') else rows2_live).append(row)
 rows1.sort(key=lambda x: (x[10] is None, x[10] or 0))
 sheet(wb, '1. Построено (вторичка)', H1, rows1,
-      [24, 15, 9, 22, 11, 11, 6, 7, 10, 10, 10, 10, 6, 9, 10, 7, 60],
+      [22, 14, 9, 20, 10, 10, 6, 7, 9, 10, 10, 10, 6, 9, 10, 7, 74],
       subtitle=f"ЦАО, дома 2018+, активные объявления Циан на {complexes['fetched']}; зоны: Садовое кольцо / Хамовники / Сити / Пресня / Белорусская. Сортировка по медиане ₽/м², цвет — от дешёвых (зелёный) к дорогим (красный)", zone_col=5, heat_col=10)
 
 # ---------- лист 2: строится ----------
@@ -282,7 +283,7 @@ for row in rows2_live:
                   m.get('finish') or 'бетон', row[15] or m.get('url') or dv.get('site') or '', row[16]])
 rows2.sort(key=lambda x: (x[10] is None, x[10] or 0))
 sheet(wb, '2. Строится', H2, rows2,
-      [24, 16, 12, 22, 13, 11, 6, 7, 10, 10, 10, 10, 6, 8, 7, 60],
+      [22, 15, 12, 20, 12, 10, 6, 7, 9, 10, 10, 10, 6, 8, 7, 74],
       subtitle=f"Таблица заказчика + новостройки из выдачи Циан на {complexes['fetched']}. Сортировка по медиане ₽/м² (где Циан не нашёл ЖК — середина диапазона от/до), цвет — от дешёвых к дорогим", zone_col=5, heat_col=10)
 
 # ---------- лист 3: проектирование ----------
@@ -299,7 +300,7 @@ for p in planning:
                   p.get('planned_completion'), p.get('price_from_per_m2'), p.get('announced_date'), p.get('source_url'), p.get('notes')])
 rows3.sort(key=lambda x: (x[12] is None, x[12] or 0, str(x[0])))
 sheet(wb, '3. Проектирование', H3, rows3,
-      [24, 20, 11, 11, 18, 22, 9, 9, 7, 6, 10, 10, 10, 10, 7, 52],
+      [22, 20, 11, 11, 17, 20, 9, 9, 7, 6, 10, 10, 10, 10, 7, 74],
       subtitle='Участки (ЗУ, КРТ, ГПЗУ) и анонсированные проекты без стройки, публикации 2025–2026. Сортировка по заявленной цене от, ₽/м²; без цены — в конце', zone_col=3, heat_col=12)
 
 out = DOCS / 'premium-zhk-cao.xlsx'
