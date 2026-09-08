@@ -1398,5 +1398,33 @@
   "cls": "Премиум",
   "stage": null,
   "fetched": "2026-09-08"
+ },
+ "Клубный дом DUO (Дуо)": {
+  "id": 4268549,
+  "cianName": "Клубный дом DUO (Дуо)",
+  "address": "Москва, Софийская набережная, 34с3",
+  "url": "https://www.cian.ru/zhiloy-kompleks-klubnyy-dom-duo-moskva-4268549/",
+  "status": 200,
+  "developer": "СЗ СУПЛЕКС ТЕХНОЛОДЖИС",
+  "finished": null,
+  "deadline": "1 кв. 2028",
+  "yearText": "Сдача в 1 кв. 2028",
+  "cls": "Премиум",
+  "stage": null,
+  "fetched": "2026-09-08"
+ },
+ "Дом Спорта": {
+  "id": 5734549,
+  "cianName": "Дом Спорта",
+  "address": "Москва, Дружинниковская улица, 18",
+  "url": "https://www.cian.ru/zhiloy-kompleks-dom-sporta-moskva-5734549/",
+  "status": 200,
+  "developer": "Capital Group",
+  "finished": null,
+  "deadline": "1 кв. 2029",
+  "yearText": "Сдача в 1 кв. 2029",
+  "cls": "Премиум",
+  "stage": null,
+  "fetched": "2026-09-08"
  }
 }

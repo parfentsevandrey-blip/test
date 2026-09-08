@@ -127,8 +127,8 @@ MED_SIDE = Side(style='medium', color='1F3864')
 border = Border(left=thin, right=thin, top=thin, bottom=thin)
 HEAD_FILL = PatternFill('solid', fgColor='1F3864')
 HEAD_FONT = Font(name='Calibri', size=10, bold=True, color='FFFFFF')
-BODY_FONT = Font(name='Calibri', size=9)
-LINK_FONT = Font(name='Calibri', size=9, color='0563C1', underline='single')
+BODY_FONT = Font(name='Calibri', size=10)
+LINK_FONT = Font(name='Calibri', size=10, color='0563C1', underline='single')
 TITLE_FONT = Font(name='Calibri', size=14, bold=True, color='1F3864')
 SUB_FONT = Font(name='Calibri', size=9, italic=True, color='666666')
 ZEBRA = PatternFill('solid', fgColor='F3F6FA')
@@ -161,7 +161,7 @@ def sheet(wb, title, headers, rows, widths, note=None, subtitle='', zone_col=Non
             c.border = border; c.font = BODY_FONT
             if fill: c.fill = fill
             if zone_col is not None and c.column == zone_col + 1 and zone in ZONE_FILL:
-                c.fill = PatternFill('solid', fgColor=ZONE_FILL[zone]); c.font = Font(name='Calibri', size=9, bold=True)
+                c.fill = PatternFill('solid', fgColor=ZONE_FILL[zone]); c.font = Font(name='Calibri', size=10, bold=True)
             if isinstance(c.value, bool): pass
             elif isinstance(c.value, (int, float)):
                 c.number_format = '#,##0'; c.alignment = right
@@ -298,7 +298,7 @@ for p in planning:
                   p.get('planned_completion'), p.get('price_from_per_m2'), p.get('announced_date'), p.get('source_url'), p.get('notes')])
 rows3.sort(key=lambda x: (x[12] is None, x[12] or 0, str(x[0])))
 sheet(wb, '3. Проектирование', H3, rows3,
-      [26, 24, 12, 12, 20, 24, 9, 9, 7, 6, 11, 11, 10, 10, 7, 60],
+      [24, 20, 11, 11, 18, 22, 9, 9, 7, 6, 10, 10, 10, 10, 7, 52],
       subtitle='Участки (ЗУ, КРТ, ГПЗУ) и анонсированные проекты без стройки, публикации 2025–2026. Сортировка по заявленной цене от, ₽/м²; без цены — в конце', zone_col=3, heat_col=12)
 
 out = DOCS / 'premium-zhk-cao.xlsx'
