@@ -174,7 +174,7 @@ def sheet(wb, title, headers, rows, widths, note=None, subtitle='', zone_col=Non
         # высота строки — по самой «многострочной» ячейке: длина текста / ширина колонки
         lines = 1
         for j, v in enumerate(r):
-            if not isinstance(v, str) or not v: continue
+            if not isinstance(v, str) or not v or is_url(v): continue   # ссылки печатаются словом «ссылка»
             cw = widths[j] if j < len(widths) else 10
             cpl = max(4, int(cw * (1.25 if j == ncol - 1 else 1.1)))   # символов в строке: 9 пт плотнее, чем 10 пт
             lines = max(lines, math.ceil(len(v) / cpl))
