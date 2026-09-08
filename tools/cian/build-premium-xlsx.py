@@ -58,7 +58,7 @@ def card_year(c):
         m = re.search(r'(20\d\d)', v)
         if m: return m.group(1)
     return None
-CLASS_ORDER = {'делюкс': 0, 'премиум': 1, 'бизнес': 2, 'делюкс (Циан)': 0, 'премиум (Циан)': 1}
+CLASS_ORDER = {'делюкс': 0, 'премиум': 1, 'бизнес': 2}
 
 PREMIUM_PER_M2 = 700_000   # порог ₽/м² по медиане, ниже — бизнес-класс, в подборку не идёт
 
@@ -171,7 +171,14 @@ def sheet(wb, title, headers, rows, widths, note=None, subtitle='', zone_col=Non
                 c.alignment = wrap if c.column in (1, 4, ncol) or (isinstance(c.value, str) and len(c.value) > 18) else center
         last = ws.cell(rr, ncol)
         if isinstance(last.value, str): last.font = Font(name='Calibri', size=9); last.alignment = Alignment(wrap_text=True, vertical='center')
-        ws.row_dimensions[rr].height = 24 if isinstance(last.value, str) and len(last.value) > 92 else 15
+        # высота строки — по самой «многострочной» ячейке: длина текста / ширина колонки
+        lines = 1
+        for j, v in enumerate(r):
+            if not isinstance(v, str) or not v: continue
+            cw = widths[j] if j < len(widths) else 10
+            cpl = max(4, int(cw * (1.25 if j == ncol - 1 else 1.1)))   # символов в строке: 9 пт плотнее, чем 10 пт
+            lines = max(lines, math.ceil(len(v) / cpl))
+        ws.row_dimensions[rr].height = 15 if lines == 1 else 12.5 * lines + 3
     for i, w in enumerate(widths, 1):
         ws.column_dimensions[get_column_letter(i)].width = w
     ws.freeze_panes = 'B4'
@@ -236,7 +243,7 @@ for r in complexes['complexes']:
     if m.get('class') and dv.get('class') and dv['class'] != m['class']: cls = dv['class'] if dv['class'] == 'бизнес' else m['class']
     cc = (cd.get('cls') or '').strip().lower()
     if cc in ('делюкс', 'премиум', 'бизнес', 'комфорт', 'эконом'):
-        cls = cc + ' (Циан)'
+        cls = cc
         if cc in ('бизнес', 'комфорт', 'эконом') and not m.get('keep') and med < 1_500_000: continue   # класс по карточке Циан ниже премиума
     year = card_year(cd) or m.get('year') or fmt_years(r)
     link = cd.get('url') or ''   # только страница ЖК на Циан; объявления не годятся
@@ -248,8 +255,8 @@ for r in complexes['complexes']:
     (rows1 if (m.get('stage', 'built' if built else 'building') == 'built') else rows2_live).append(row)
 rows1.sort(key=lambda x: (x[10] is None, x[10] or 0))
 sheet(wb, '1. Построено (вторичка)', H1, rows1,
-      [22, 14, 9, 20, 10, 10, 6, 7, 9, 10, 10, 10, 6, 9, 10, 7, 74],
-      subtitle=f"ЦАО, дома 2018+, активные объявления Циан на {complexes['fetched']}; зоны: Садовое кольцо / Хамовники / Сити / Пресня / Белорусская. Сортировка по медиане ₽/м², цвет — от дешёвых (зелёный) к дорогим (красный)", zone_col=5, heat_col=10)
+      [24, 15, 11, 26, 13, 15, 6, 7, 12, 10, 10, 10, 6, 9, 10, 7, 70],
+      subtitle=f"ЦАО, дома 2018+, активные объявления Циан на {complexes['fetched']}; зоны: Садовое кольцо / Хамовники / Сити / Пресня / Белорусская. Сортировка по медиане ₽/м², цвет — от дешёвых (зелёный) к дорогим (красный). Класс — по карточке ЖК на Циан", zone_col=5, heat_col=10)
 
 # ---------- лист 2: строится ----------
 H2 = ['Название ЖК', 'Застройщик', 'Срок сдачи', 'Адрес', 'Район / метро', 'Зона', 'Корпусов', 'Этажность', 'Статус',
@@ -283,7 +290,7 @@ for row in rows2_live:
                   m.get('finish') or 'бетон', row[15] or m.get('url') or dv.get('site') or '', row[16]])
 rows2.sort(key=lambda x: (x[10] is None, x[10] or 0))
 sheet(wb, '2. Строится', H2, rows2,
-      [22, 15, 12, 20, 12, 10, 6, 7, 9, 10, 10, 10, 6, 8, 7, 74],
+      [24, 16, 13, 26, 14, 15, 6, 7, 12, 10, 10, 10, 6, 8, 7, 70],
       subtitle=f"Таблица заказчика + новостройки из выдачи Циан на {complexes['fetched']}. Сортировка по медиане ₽/м² (где Циан не нашёл ЖК — середина диапазона от/до), цвет — от дешёвых к дорогим", zone_col=5, heat_col=10)
 
 # ---------- лист 3: проектирование ----------
@@ -300,7 +307,7 @@ for p in planning:
                   p.get('planned_completion'), p.get('price_from_per_m2'), p.get('announced_date'), p.get('source_url'), p.get('notes')])
 rows3.sort(key=lambda x: (x[12] is None, x[12] or 0, str(x[0])))
 sheet(wb, '3. Проектирование', H3, rows3,
-      [22, 20, 11, 11, 17, 20, 9, 9, 7, 6, 10, 10, 10, 10, 7, 74],
+      [24, 22, 13, 15, 18, 22, 9, 9, 8, 6, 11, 11, 10, 10, 7, 70],
       subtitle='Участки (ЗУ, КРТ, ГПЗУ) и анонсированные проекты без стройки, публикации 2025–2026. Сортировка по заявленной цене от, ₽/м²; без цены — в конце', zone_col=3, heat_col=12)
 
 out = DOCS / 'premium-zhk-cao.xlsx'
