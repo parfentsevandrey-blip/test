@@ -8,6 +8,7 @@
 Три листа: «1. Построено (вторичка)», «2. Строится», «3. Проектирование».
 """
 import json, re, sys, math
+from datetime import date
 from pathlib import Path
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
@@ -41,6 +42,24 @@ def card_year_num(c):
         ys += [int(y) for y in re.findall(r'(20\d\d)', c.get(k) or '')]
     return max(ys) if ys else None
 
+QUARTER_END = {1: (3, 31), 2: (6, 30), 3: (9, 30), 4: (12, 31)}
+
+def card_deadline_date(c):
+    """Дата, к которой карточка ЖК обещает сдачу: конец квартала или года."""
+    t = ' '.join(str(c.get(k) or '') for k in ('deadline', 'yearText'))
+    m = re.search(r'(\d)\s*кв\.?\s*(20\d\d)', t)
+    if m: q, y = int(m.group(1)), int(m.group(2)); return date(y, *QUARTER_END.get(q, (12, 31)))
+    ys = [int(y) for y in re.findall(r'(20\d\d)', t)]
+    return date(max(ys), 12, 31) if ys else None
+
+def card_says_done(c):
+    return bool(re.search(r'Сдан', ' '.join(str(c.get(k) or '') for k in ('finished', 'yearText', 'stage'))))
+
+def card_says_future(c):
+    if not re.search(r'Сдача|Строится', ' '.join(str(c.get(k) or '') for k in ('deadline', 'yearText', 'stage'))): return False
+    d = card_deadline_date(c)
+    return bool(d and d > TODAY)
+
 def card_stage(c):
     t = ' '.join(str(c.get(k) or '') for k in ('finished', 'yearText', 'deadline', 'stage'))
     if re.search(r'Сдача|Строится', t): return 'building'
@@ -61,6 +80,8 @@ def card_year(c):
     return None
 CLASS_ORDER = {'делюкс': 0, 'премиум': 1, 'бизнес': 2}
 
+TODAY = date.fromisoformat(json.load(open(DOCS / 'complexes.json'))['fetched'])
+NOW_YEAR = TODAY.year
 PREMIUM_PER_M2 = 700_000   # порог ₽/м² по медиане, ниже — бизнес-класс, в подборку не идёт
 
 # Жёлтый контур с карты заказчика: ТТК у Сити — Звенигородское ш. — Пресненский Вал —
@@ -238,11 +259,15 @@ H1 = ['Название ЖК', 'Застройщик', 'Год постройк�
       'Статус', 'Цена за метр ОТ', 'Цена за метр медиана', 'Цена за метр ДО', 'Лотов в продаже', 'Площадь лотов, м²',
       'Класс', 'Ссылка на Циан', 'Примечание']
 rows1, rows2_live = [], []
+built_live = set()   # ЖК из таблицы заказчика, которые по данным Циан уже сданы
 live_targets = {v.get('live') for v in manual.values() if isinstance(v, dict) and v.get('live')}
+# зона строки заказчика переносится на её ЖК в выдаче: у части ЖК координаты Циан
+# лежат чуть за контуром Пресни, а строка заказчика уже отнесена к зоне вручную
+live_zone = {v['live']: v['zone'] for v in manual.values()
+             if isinstance(v, dict) and v.get('live') and v.get('zone') in ALLOWED}
 for r in complexes['complexes']:
     m = manual.get(r['complex'], {})
-    if r['complex'] in live_targets: continue   # строка заказчика на листе 2 уже покрывает этот ЖК
-    z = m.get('zone') if m.get('zone') in ALLOWED else zone(r)
+    z = m.get('zone') if m.get('zone') in ALLOWED else (live_zone.get(r['complex']) or zone(r))
     if not z: continue
     med = r.get('perM2Median') or 0
     if m.get('class') is None and med < PREMIUM_PER_M2: continue
@@ -257,22 +282,40 @@ for r in complexes['complexes']:
     developer = m.get('developer') or dv.get('developer') or cd.get('developer') or ''
     cy = card_year_num(cd)
     if cy and cy < 2018 and not re.search(r'[–-]', str(cd.get('yearText') or '')): continue   # по карточке ЖК дом старше 2018
-    cst = card_stage(cd)
-    if cst: m = {**m, 'stage': cst}
+    # Стадию решают лоты, а не карточка ЖК: в карточке стоит срок ПОСЛЕДНЕЙ очереди,
+    # из-за чего сданные дома (Резиденция 1864, Armani/Casa) уезжали в «строится».
+    # У новостройки на предпродаже Циан ставит лотам «дом сдан» задолго до ввода,
+    # поэтому решают: год постройки в объявлениях, формулировка карточки ЖК и срок сдачи.
+    yrs = [y for y in (r.get('buildYears') or []) + (r.get('deadlineYears') or []) if y]
+    ymax_lots = max(yrs) if yrs else None
+    lots_finished = (r.get('finishedShare') or 0) >= 50
+    bmax = r.get('buildYearMax')
+    if lots_finished and ymax_lots and ymax_lots < NOW_YEAR: lots_built = True     # дом сдан в прошлые годы
+    elif card_says_done(cd): lots_built = True                                      # карточка ЖК: «Сдан в …»
+    elif card_says_future(cd): lots_built = False                                   # карточка ЖК: сдача впереди
+    elif bmax and bmax <= NOW_YEAR: lots_built = True                               # год постройки уже проставлен
+    else: lots_built = False
+    m = {**m, 'stage': 'built' if lots_built else 'building'}
+    phase_note = f'в карточке ЖК на Циан следующая очередь: {card_year(cd)}' if (lots_built and card_deadline_date(cd) and card_deadline_date(cd) > TODAY) else ''
     cls = m.get('class') or dv.get('class') or 'премиум'
     if m.get('class') and dv.get('class') and dv['class'] != m['class']: cls = dv['class'] if dv['class'] == 'бизнес' else m['class']
     cc = (cd.get('cls') or '').strip().lower()
     if cc in ('делюкс', 'премиум', 'бизнес', 'комфорт', 'эконом'):
         cls = cc
         if cc in ('бизнес', 'комфорт', 'эконом') and not m.get('keep') and med < 1_500_000: continue   # класс по карточке Циан ниже премиума
-    year = card_year(cd) or m.get('year') or fmt_years(r)
+    year = (fmt_years(r) if lots_built else None) or card_year(cd) or m.get('year') or fmt_years(r)
     link = cd.get('url') or ''   # только страница ЖК на Циан; объявления не годятся
     row = [short_name(r['complex']), strip_paren(developer), year, short_addr(m.get('address') or addr), r.get('district'), z,
            max(r.get('housesSeen') or 0, dv.get('buildings') or 0) or None, floors(r) or dv.get('floors') or '', status,
            per_m2_str(r.get('perM2Min')), per_m2_str(med), per_m2_str(r.get('perM2Max')),
            r.get('declared') or r.get('lots'), f"{int(r['areaMin'])}–{int(r['areaMax'])}" if r.get('areaMin') and r['areaMin'] != math.inf else '',
-           cls, link, describe(r['complex'])]
-    (rows1 if (m.get('stage', 'built' if built else 'building') == 'built') else rows2_live).append(row)
+           cls, link, ' · '.join(x for x in [describe(r['complex']), phase_note] if x)]
+    is_built = m.get('stage', 'built' if built else 'building') == 'built'
+    if r['complex'] in live_targets:
+        # строку из таблицы заказчика оставляем на листе 2, только пока дом не сдан
+        if not is_built: continue
+        built_live.add(r['complex'])
+    (rows1 if is_built else rows2_live).append(row)
 rows1.sort(key=lambda x: (x[10] is None, x[10] or 0))
 sheet(wb, '1. Построено (вторичка)', H1, rows1,
       [26, 18, 13, 28, 15, 16, 6, 7, 13, 10, 10, 10, 6, 9, 10, 7, 90],
@@ -289,6 +332,7 @@ for row in pdf['rows']:
     dev = m.get('developer_override', dev)
     live = m.get('live')
     lr = next((c for c in complexes['complexes'] if c['complex'] == live), None) if live else None
+    if live in built_live: continue   # по Циан дом сдан — строка ушла на лист 1
     z = m.get('zone') if m.get('zone') in ALLOWED else (zone(lr) if lr else None)
     if z is None: continue
     pm = None
