@@ -13,6 +13,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.formatting.rule import ColorScaleRule
+from openpyxl.drawing.image import Image as XLImage
 
 ROOT = Path(__file__).resolve().parents[2]
 DOCS = ROOT / 'docs' / 'premium-cao'
@@ -328,6 +329,60 @@ rows3.sort(key=lambda x: (x[12] is None, x[12] or 0, str(x[0])))
 sheet(wb, '3. Проектирование', H3, rows3,
       [28, 28, 15, 16, 20, 30, 9, 9, 9, 6, 12, 13, 10, 13, 7, 90],
       subtitle='Участки (ЗУ, КРТ, ГПЗУ) и анонсированные проекты без стройки, публикации 2025–2026. Сортировка по заявленной цене от, ₽/м²; без цены — в конце', zone_col=3, heat_col=12)
+
+# ---------- точки для карт ----------
+coord = {c['complex']: (c.get('lat'), c.get('lng')) for c in complexes['complexes']}
+points = []
+for row in rows1:
+    src = next((c for c in complexes['complexes'] if short_name(c['complex']) == row[0]), None)
+    points.append({'name': row[0], 'status': 'построено', 'zone': row[5], 'address': row[3], 'lat': src and src.get('lat'), 'lng': src and src.get('lng')})
+for row in rows2:
+    live = None
+    for k, v in manual.items():
+        if isinstance(v, dict) and short_name(k) == row[0] and v.get('live'): live = v['live']
+    src = next((c for c in complexes['complexes'] if c['complex'] == live or short_name(c['complex']) == row[0]), None)
+    points.append({'name': row[0], 'status': 'строится', 'zone': row[5], 'address': row[3], 'lat': src and src.get('lat'), 'lng': src and src.get('lng')})
+for row in rows3:
+    points.append({'name': row[0], 'status': 'проектирование', 'zone': row[3], 'address': row[1], 'lat': None, 'lng': None})
+json.dump(points, open(DOCS / 'points.json', 'w'), ensure_ascii=False, indent=1)
+
+# ---------- листы-карты ----------
+STATUS_FILL = {'построено': 'C6EFCE', 'строится': 'FFE0B3', 'проектирование': 'E4D5F5'}
+idx_path = DOCS / 'maps' / 'index.json'
+if idx_path.exists():
+    for mp in json.load(open(idx_path))['maps']:
+        ws = wb.create_sheet(f"Карта — {mp['title']}"[:31])
+        IMG_COLS, COLW = 14, 14.3                      # ~1400 px под картинку
+        for i in range(1, IMG_COLS + 1): ws.column_dimensions[get_column_letter(i)].width = COLW
+        ws['A1'] = f"Карта: {mp['title']} — премиум-ЖК 2018+ по статусу"; ws['A1'].font = TITLE_FONT
+        ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=IMG_COLS); ws.row_dimensions[1].height = 26
+        ws['A2'] = 'Зелёный — построено, оранжевый — строится, фиолетовый — проектирование. Номер маркера = номер в списке справа. Подложка: Яндекс Карты.'
+        ws['A2'].font = SUB_FONT; ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=IMG_COLS)
+        im = XLImage(str(DOCS / mp['file']))
+        scale = 1400 / mp['width']; im.width = int(mp['width'] * scale); im.height = int(mp['height'] * scale)
+        ws.add_image(im, 'A3')
+        # легенда справа
+        c0 = IMG_COLS + 2
+        for j, w in enumerate([5, 34, 15, 30]): ws.column_dimensions[get_column_letter(c0 + j)].width = w
+        ws.column_dimensions[get_column_letter(IMG_COLS + 1)].width = 2
+        hdr = ['№', 'ЖК', 'Статус', 'Адрес']
+        for j, h in enumerate(hdr):
+            c = ws.cell(3, c0 + j, h); c.fill = HEAD_FILL; c.font = HEAD_FONT; c.alignment = center; c.border = border
+        ws.row_dimensions[3].height = 20
+        for k, e in enumerate(mp['legend']):
+            rr = 4 + k
+            vals = [e['n'], e['name'], e['status'], e.get('address') or '']
+            for j, v in enumerate(vals):
+                c = ws.cell(rr, c0 + j, v); c.font = BODY_FONT; c.border = border
+                c.alignment = center if j != 1 and j != 3 else Alignment(vertical='center', wrap_text=True)
+                if j == 2: c.fill = PatternFill('solid', fgColor=STATUS_FILL[e['status']])
+            ws.row_dimensions[rr].height = 16 if len(vals[1]) <= 34 and len(vals[3]) <= 30 else 28
+        last_row = max(4 + len(mp['legend']), 3 + int(im.height / 20))
+        ws.page_setup.paperSize = ws.PAPERSIZE_A3; ws.page_setup.orientation = 'landscape'
+        ws.page_setup.fitToWidth = 1; ws.page_setup.fitToHeight = 1; ws.sheet_properties.pageSetUpPr.fitToPage = True
+        ws.print_area = f"A1:{get_column_letter(c0 + 3)}{last_row}"
+        ws.page_margins.left = ws.page_margins.right = 0.25; ws.page_margins.top = ws.page_margins.bottom = 0.3
+        ws.sheet_view.showGridLines = False
 
 out = DOCS / 'premium-zhk-cao.xlsx'
 wb.save(out)
