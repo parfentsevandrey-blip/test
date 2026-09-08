@@ -93,6 +93,16 @@
       ]
     },
     {
+      "slug": "blauwwater-15-belfeld",
+      "title": "Blauwwater 15, Belfeld",
+      "city": "Belfeld",
+      "price": "€ 1.500.000",
+      "url": "https://www.fundainbusiness.nl/belegging/belfeld/object-43818915-blauwwater-15/",
+      "reports": [
+        "report-2026-09-08-warehouses.json"
+      ]
+    },
+    {
       "slug": "boeingavenue-305f-schiphol-rijk",
       "title": "Boeingavenue 305-F, Schiphol-Rijk",
       "city": "Schiphol-Rijk",
@@ -311,7 +321,8 @@
       "price": "€ 1.650.000",
       "url": "https://www.fundainbusiness.nl/belegging/hoorn-nh/object-43660627-neutronweg-3/",
       "reports": [
-        "report-2026-09-07-warehouses.json"
+        "report-2026-09-07-warehouses.json",
+        "report-2026-09-08-warehouses.json"
       ]
     },
     {
@@ -436,7 +447,8 @@
       "price": "€ 1.750.000",
       "url": "https://www.fundainbusiness.nl/belegging/lelystad/object-89507071-zeilweg-13-17/",
       "reports": [
-        "report-2026-09-07-warehouses.json"
+        "report-2026-09-07-warehouses.json",
+        "report-2026-09-08-warehouses.json"
       ]
     },
     {
@@ -450,5 +462,5 @@
       ]
     }
   ],
-  "updated": "2026-09-07"
+  "updated": "2026-09-08"
 }
