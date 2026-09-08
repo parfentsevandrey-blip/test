@@ -120,7 +120,8 @@
       "price": "€ 847.000",
       "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-89460128-boekweitstraat-82/",
       "reports": [
-        "report-2026-09-02-locations.json"
+        "report-2026-09-02-locations.json",
+        "report-2026-09-08-schiphol.json"
       ]
     },
     {
@@ -357,6 +358,26 @@
         "report-2026-08-21-warehouses-dossier.json",
         "report-2026-08-21-warehouses-editorial.json",
         "report-2026-08-21-warehouses.json"
+      ]
+    },
+    {
+      "slug": "ondernemingsweg-49-57-uithoorn",
+      "title": "Ondernemingsweg 49-57, Uithoorn",
+      "city": "Uithoorn",
+      "price": "€ 1.750.000",
+      "url": "https://www.fundainbusiness.nl/bedrijfshal/uithoorn/object-80898101-ondernemingsweg-49-57/",
+      "reports": [
+        "report-2026-09-08-schiphol.json"
+      ]
+    },
+    {
+      "slug": "oosteinderweg-216-aalsmeer",
+      "title": "Oosteinderweg 216, Aalsmeer",
+      "city": "Aalsmeer",
+      "price": "€ 1.150.000",
+      "url": "https://www.fundainbusiness.nl/bedrijfshal/aalsmeer/object-44564773-oosteinderweg-216/",
+      "reports": [
+        "report-2026-09-08-schiphol.json"
       ]
     },
     {
