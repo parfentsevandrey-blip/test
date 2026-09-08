@@ -270,7 +270,7 @@ for row in pdf['rows']:
         pm = per_m2_str(lr.get('perM2Median'))
     dv = devs.get(live, {}) if live else {}
     if pm is None: pm = int((pf + pt) / 2) if pf and pt else (pf or None)
-    cd = card(live) if live else {}
+    cd = (card(live) if live else {}) or card(name)
     link2 = cd.get('url') or m.get('url') or dv.get('site') or ''
     if card_year(cd) and card_year(cd) != dl: dl = f"{dl} (Циан: {card_year(cd)})"
     rows2.append([name, dev, dl, addr, metro, z, b, fl, st, pf, pm, pt, lots, fin, link2, describe(name, live)])
