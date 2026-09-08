@@ -145,7 +145,7 @@ final class RouteTuner {
         status = .pinned
         let summary = exits.map { "\($0.nickname) \($0.buildMilliseconds) ms" }.joined(separator: ", ")
         onLog?(.veil(.notice, "Circuit race: \(built.count)/\(ids.count) built; pinned exits \(summary)\(middle.map { "; middle \($0.nickname) \($0.buildMilliseconds) ms" } ?? "")"))
-        return route(for: route)
+        return self.route(for: route)
     }
 
     /// Fastest exits and middles among built circuits, deduplicated by relay, with laggards
