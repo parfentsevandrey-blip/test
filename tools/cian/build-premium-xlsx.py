@@ -22,6 +22,13 @@ planning = json.load(open(DOCS / 'planning.json'))
 manual = json.load(open(DOCS / 'manual.json'))   # застройщик, класс, зона — ручная разметка
 devs = json.load(open(DOCS / 'developers.json'))  # веб-исследование по застройщикам, с источниками
 ZHK = json.load(open(DOCS / 'zhk-info.json')) if (DOCS / 'zhk-info.json').exists() else {}   # карточки ЖК Циан
+DESC = {}
+for f in ('desc1.json', 'desc2.json'):
+    if (DOCS / f).exists(): DESC.update(json.load(open(DOCS / f)))
+def describe(*names):
+    for n in names:
+        if n and DESC.get(n): return DESC[n]
+    return ''
 
 def card(name):
     c = ZHK.get(name) or {}
@@ -119,11 +126,11 @@ thin = Side(style='thin', color='C8C8C8')
 MED_SIDE = Side(style='medium', color='1F3864')
 border = Border(left=thin, right=thin, top=thin, bottom=thin)
 HEAD_FILL = PatternFill('solid', fgColor='1F3864')
-HEAD_FONT = Font(name='Calibri', size=9, bold=True, color='FFFFFF')
-BODY_FONT = Font(name='Calibri', size=8)
-LINK_FONT = Font(name='Calibri', size=8, color='0563C1', underline='single')
+HEAD_FONT = Font(name='Calibri', size=10, bold=True, color='FFFFFF')
+BODY_FONT = Font(name='Calibri', size=9)
+LINK_FONT = Font(name='Calibri', size=9, color='0563C1', underline='single')
 TITLE_FONT = Font(name='Calibri', size=14, bold=True, color='1F3864')
-SUB_FONT = Font(name='Calibri', size=8, italic=True, color='666666')
+SUB_FONT = Font(name='Calibri', size=9, italic=True, color='666666')
 ZEBRA = PatternFill('solid', fgColor='F3F6FA')
 ZONE_FILL = {'Садовое кольцо': 'FFF2CC', 'Хамовники': 'E2EFDA', 'Сити': 'DDEBF7', 'Пресня': 'FCE4D6', 'Белорусская': 'EDEDED'}
 wrap = Alignment(wrap_text=True, vertical='center')
@@ -132,7 +139,7 @@ right = Alignment(horizontal='right', vertical='center')
 
 def is_url(v): return isinstance(v, str) and v.startswith('http')
 
-def sheet(wb, title, headers, rows, widths, note=None, subtitle='', zone_col=None, orientation='portrait', heat_col=None):
+def sheet(wb, title, headers, rows, widths, note=None, subtitle='', zone_col=None, orientation='landscape', heat_col=None):
     ws = wb.create_sheet(title)
     ncol = len(headers)
     ws.append([title]); ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=ncol)
@@ -154,7 +161,7 @@ def sheet(wb, title, headers, rows, widths, note=None, subtitle='', zone_col=Non
             c.border = border; c.font = BODY_FONT
             if fill: c.fill = fill
             if zone_col is not None and c.column == zone_col + 1 and zone in ZONE_FILL:
-                c.fill = PatternFill('solid', fgColor=ZONE_FILL[zone]); c.font = Font(name='Calibri', size=8, bold=True)
+                c.fill = PatternFill('solid', fgColor=ZONE_FILL[zone]); c.font = Font(name='Calibri', size=9, bold=True)
             if isinstance(c.value, bool): pass
             elif isinstance(c.value, (int, float)):
                 c.number_format = '#,##0'; c.alignment = right
@@ -162,7 +169,8 @@ def sheet(wb, title, headers, rows, widths, note=None, subtitle='', zone_col=Non
                 c.hyperlink = c.value; c.value = 'ссылка'; c.font = LINK_FONT; c.alignment = center
             else:
                 c.alignment = wrap if c.column in (1, 4, ncol) or (isinstance(c.value, str) and len(c.value) > 18) else center
-        ws.row_dimensions[rr].height = 24 if any(isinstance(v, str) and len(v) > 60 for v in r) else 15
+        longest = max((len(v) for v in r if isinstance(v, str)), default=0)
+        ws.row_dimensions[rr].height = 26 if longest > 66 else 15
     for i, w in enumerate(widths, 1):
         ws.column_dimensions[get_column_letter(i)].width = w
     ws.freeze_panes = 'B4'
@@ -173,7 +181,7 @@ def sheet(wb, title, headers, rows, widths, note=None, subtitle='', zone_col=Non
         ws.conditional_formatting.add(f"{col}4:{col}{last_data}",
             ColorScaleRule(start_type='min', start_color='63BE7B', mid_type='percentile', mid_value=50, mid_color='FFEB84', end_type='max', end_color='F8696B'))
         for rr in range(4, last_data + 1):
-            ws.cell(rr, heat_col + 1).font = Font(name='Calibri', size=8, bold=True)
+            ws.cell(rr, heat_col + 1).font = Font(name='Calibri', size=9, bold=True)
     if note:
         ws.append([]); ws.append([note])
         ws.merge_cells(start_row=ws.max_row, start_column=1, end_row=ws.max_row, end_column=ncol)
@@ -186,8 +194,8 @@ def sheet(wb, title, headers, rows, widths, note=None, subtitle='', zone_col=Non
     ws.sheet_properties.pageSetUpPr.fitToPage = True
     ws.print_title_rows = '3:3'
     ws.print_area = f"A1:{get_column_letter(ncol)}{ws.max_row}"
-    ws.page_margins.left = ws.page_margins.right = 0.3
-    ws.page_margins.top = ws.page_margins.bottom = 0.4
+    ws.page_margins.left = ws.page_margins.right = 0.25
+    ws.page_margins.top = ws.page_margins.bottom = 0.35
     ws.page_margins.header = ws.page_margins.footer = 0.2
     ws.oddFooter.center.text = '&A — стр. &P из &N'; ws.oddFooter.center.size = 8
     ws.print_options.horizontalCentered = True
@@ -198,9 +206,9 @@ wb = Workbook()
 wb.remove(wb.active)
 
 # ---------- лист 1: построено ----------
-H1 = ['Название ЖК', 'Застройщик', 'Год постройки', 'Адрес', 'Район', 'Зона', 'Корпусов (видно в выдаче)', 'Этажность',
+H1 = ['Название ЖК', 'Застройщик', 'Год постройки', 'Адрес', 'Район', 'Зона', 'Корпусов', 'Этажность',
       'Статус', 'Цена за метр ОТ', 'Цена за метр медиана', 'Цена за метр ДО', 'Лотов в продаже', 'Площадь лотов, м²',
-      'Класс', 'Квартир в проекте', 'Ссылка на Циан', 'Сайт проекта / источник', 'Примечание']
+      'Класс', 'Ссылка на Циан', 'Примечание']
 rows1, rows2_live = [], []
 live_targets = {v.get('live') for v in manual.values() if isinstance(v, dict) and v.get('live')}
 for r in complexes['complexes']:
@@ -216,12 +224,9 @@ for r in complexes['complexes']:
     if 'second' in ','.join(r.get('sources', [])) and ymax and ymax < 2018 and not m.get('year'): continue
     status = 'апартаменты' if r['apartmentsShare'] >= 60 else ('квартиры + апартаменты' if r['apartmentsShare'] >= 15 else 'квартиры')
     addr = ', '.join(x for x in ['Москва', r.get('street'), r.get('house')] if x)
-    link = r['urls'][0] if r.get('urls') else ''
     dv = devs.get(r['complex'], {})
     cd = card(r['complex'])
     developer = m.get('developer') or dv.get('developer') or cd.get('developer') or ''
-    if cd.get('developer') and developer and cd['developer'].split()[0].lower().strip('«»"') not in developer.lower():
-        m = {**m, 'note': '; '.join(x for x in [m.get('note', ''), f"в карточке Циан застройщик: {cd['developer']}"] if x)}
     cy = card_year_num(cd)
     if cy and cy < 2018 and not re.search(r'[–-]', str(cd.get('yearText') or '')): continue   # по карточке ЖК дом старше 2018
     cst = card_stage(cd)
@@ -232,28 +237,22 @@ for r in complexes['complexes']:
     if cc in ('делюкс', 'премиум', 'бизнес', 'комфорт', 'эконом'):
         cls = cc + ' (Циан)'
         if cc in ('бизнес', 'комфорт', 'эконом') and not m.get('keep') and med < 1_500_000: continue   # класс по карточке Циан ниже премиума
-    notes = '; '.join(x for x in [m.get('note', ''), dv.get('note') or ''] if x)
-    if dv.get('developer') and m.get('developer') and dv['developer'].split()[0].lower() != m['developer'].split()[0].lower():
-        notes = '; '.join(x for x in [notes, f"по другим источникам застройщик: {dv['developer']}"] if x)
     year = card_year(cd) or m.get('year') or fmt_years(r)
-    if cd.get('url'): link = cd['url']
-    if cd and not card_year(cd): notes = '; '.join(x for x in [notes, 'год по объявлениям, в карточке ЖК не указан'] if x)
-    elif not cd: notes = '; '.join(x for x in [notes, 'карточка ЖК на Циан не найдена, год по объявлениям'] if x)
+    link = cd.get('url') or ''   # только страница ЖК на Циан; объявления не годятся
     row = [r['complex'], developer, year, m.get('address') or addr, r.get('district'), z,
            max(r.get('housesSeen') or 0, dv.get('buildings') or 0) or None, floors(r) or dv.get('floors') or '', status,
            per_m2_str(r.get('perM2Min')), per_m2_str(med), per_m2_str(r.get('perM2Max')),
            r.get('declared') or r.get('lots'), f"{int(r['areaMin'])}–{int(r['areaMax'])}" if r.get('areaMin') and r['areaMin'] != math.inf else '',
-           cls, dv.get('units'), link, dv.get('site') or dv.get('source') or '', notes]
+           cls, link, describe(r['complex'])]
     (rows1 if (m.get('stage', 'built' if built else 'building') == 'built') else rows2_live).append(row)
 rows1.sort(key=lambda x: (x[10] is None, x[10] or 0))
 sheet(wb, '1. Построено (вторичка)', H1, rows1,
-      [30, 18, 10, 30, 13, 14, 8, 8, 12, 11, 11, 11, 8, 10, 9, 8, 8, 8, 34],
-      subtitle=f"ЦАО, дома 2018+, активные объявления Циан на {complexes['fetched']}; зоны: Садовое кольцо / Хамовники / Сити / Пресня / Белорусская. Сортировка по медиане ₽/м², цвет — от дешёвых (зелёный) к дорогим (красный)", zone_col=5, heat_col=10,
-      note=f"Источник: живая выдача Циан {complexes['fetched']} (api.cian.ru, инструмент tools/cian/cian.js), вторичка с годом дома 2018+ и новостройки по 10 районам ЦАО. Цены — ₽/м² по активным объявлениям. Застройщик и класс — по открытым данным (ручная разметка docs/premium-cao/manual.json).")
+      [24, 15, 9, 22, 11, 11, 6, 7, 10, 10, 10, 10, 6, 9, 10, 7, 60],
+      subtitle=f"ЦАО, дома 2018+, активные объявления Циан на {complexes['fetched']}; зоны: Садовое кольцо / Хамовники / Сити / Пресня / Белорусская. Сортировка по медиане ₽/м², цвет — от дешёвых (зелёный) к дорогим (красный)", zone_col=5, heat_col=10)
 
 # ---------- лист 2: строится ----------
 H2 = ['Название ЖК', 'Застройщик', 'Срок сдачи', 'Адрес', 'Район / метро', 'Зона', 'Корпусов', 'Этажность', 'Статус',
-      'Цена за метр ОТ', 'Цена за метр медиана', 'Цена за метр ДО', 'Лотов в продаже', 'Отделка', 'Ссылка на проект', 'Источник', 'Примечание']
+      'Цена за метр ОТ', 'Цена за метр медиана', 'Цена за метр ДО', 'Лотов в продаже', 'Отделка', 'Ссылка на проект', 'Примечание']
 rows2 = []
 seen = set()
 for row in pdf['rows']:
@@ -264,38 +263,31 @@ for row in pdf['rows']:
     lr = next((c for c in complexes['complexes'] if c['complex'] == live), None) if live else None
     z = m.get('zone') if m.get('zone') in ALLOWED else (zone(lr) if lr else None)
     if z is None: continue
-    src = 'таблица заказчика'
     pm = None
     if lr:
         pf, pt, lots = lr.get('perM2Min') or pf, lr.get('perM2Max') or pt, lr.get('declared') or lr.get('lots') or lots
         pm = per_m2_str(lr.get('perM2Median'))
-        src = f"таблица заказчика + Циан {complexes['fetched']}"
-        if (lr.get('finishedShare') or 0) >= 50: note = '; '.join(x for x in [note, 'по Циан дом сдан'] if x)
-        if lr.get('urls') and not m.get('url'): m = {**m, 'url': lr['urls'][0]}
     dv = devs.get(live, {}) if live else {}
-    if dv.get('developer') and dev and dv['developer'].split()[0].lower() != dev.split()[0].lower():
-        note = '; '.join(x for x in [note, f"по другим источникам застройщик: {dv['developer']}"] if x)
     if pm is None: pm = int((pf + pt) / 2) if pf and pt else (pf or None)
     cd = card(live) if live else {}
     link2 = cd.get('url') or m.get('url') or dv.get('site') or ''
-    if cd.get('developer') and dev and cd['developer'].split()[0].lower() != dev.split()[0].lower():
-        note = '; '.join(x for x in [note, f"в карточке Циан застройщик: {cd['developer']}"] if x)
-    if card_year(cd) and card_year(cd) != dl: note = '; '.join(x for x in [note, f"срок по карточке Циан: {card_year(cd)}"] if x)
-    rows2.append([name, dev, dl, addr, metro, z, b, fl, st, pf, pm, pt, lots, fin, link2, src, '; '.join(x for x in [note, m.get('note')] if x)])
+    if card_year(cd) and card_year(cd) != dl: dl = f"{dl} (Циан: {card_year(cd)})"
+    rows2.append([name, dev, dl, addr, metro, z, b, fl, st, pf, pm, pt, lots, fin, link2, describe(name, live)])
     seen.add(live or name)
 for row in rows2_live:
     if row[0] in seen: continue
     m = manual.get(row[0], {})
-    rows2.append([row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10], row[11], row[12], m.get('finish') or 'бетон', row[17] or row[16], f"Циан {complexes['fetched']}", row[18]])
+    dv = devs.get(row[0], {})
+    rows2.append([row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10], row[11], row[12],
+                  m.get('finish') or 'бетон', row[15] or m.get('url') or dv.get('site') or '', row[16]])
 rows2.sort(key=lambda x: (x[10] is None, x[10] or 0))
 sheet(wb, '2. Строится', H2, rows2,
-      [30, 20, 11, 30, 15, 14, 8, 8, 12, 11, 11, 11, 8, 9, 8, 22, 40],
-      subtitle=f"Таблица заказчика + новостройки из выдачи Циан на {complexes['fetched']}. Сортировка по медиане ₽/м² (где Циан не нашёл ЖК — середина диапазона от/до), цвет — от дешёвых к дорогим", zone_col=5, heat_col=10,
-      note='Строки из таблицы заказчика дополнены живой выдачей Циан там, где ЖК найден в базе (цены и число лотов обновлены). Остальные строки — найдены в выдаче Циан по новостройкам ЦАО.')
+      [24, 16, 12, 22, 13, 11, 6, 7, 10, 10, 10, 10, 6, 8, 7, 60],
+      subtitle=f"Таблица заказчика + новостройки из выдачи Циан на {complexes['fetched']}. Сортировка по медиане ₽/м² (где Циан не нашёл ЖК — середина диапазона от/до), цвет — от дешёвых к дорогим", zone_col=5, heat_col=10)
 
 # ---------- лист 3: проектирование ----------
 H3 = ['Проект / участок', 'Адрес', 'Район', 'Зона', 'Застройщик', 'Стадия', 'Общая площадь, м²', 'Жилая площадь, м²',
-      'Этажность', 'Лотов', 'Старт (план)', 'Сдача (план)', 'Цена от, ₽/м²', 'Дата новости', 'Источник', 'Ссылка', 'Примечание']
+      'Этажность', 'Лотов', 'Старт (план)', 'Сдача (план)', 'Цена от, ₽/м²', 'Дата новости', 'Ссылка', 'Примечание']
 rows3 = []
 for p in planning:
     if p.get('name') in manual.get('_planning_drop', []): continue   # стройка уже идёт — лист 2
@@ -303,13 +295,11 @@ for p in planning:
     if pz not in ALLOWED: continue
     rows3.append([p.get('name'), p.get('address'), p.get('district'), pz, p.get('developer'), p.get('stage'),
                   p.get('area_total_m2'), p.get('area_residential_m2'), p.get('floors'), p.get('units'), p.get('planned_start'),
-                  p.get('planned_completion'), p.get('price_from_per_m2'), p.get('announced_date'), p.get('source_name'),
-                  p.get('source_url'), p.get('notes')])
+                  p.get('planned_completion'), p.get('price_from_per_m2'), p.get('announced_date'), p.get('source_url'), p.get('notes')])
 rows3.sort(key=lambda x: (x[12] is None, x[12] or 0, str(x[0])))
 sheet(wb, '3. Проектирование', H3, rows3,
-      [30, 28, 13, 14, 22, 24, 10, 10, 8, 7, 11, 11, 11, 11, 20, 8, 46],
-      subtitle='Участки (ЗУ, КРТ, ГПЗУ) и анонсированные проекты без стройки, публикации 2025–2026. Сортировка по заявленной цене от, ₽/м²; без цены — в конце', zone_col=3, orientation='landscape', heat_col=12,
-      note='Источники: открытые публикации 2025–2026 (stroi.mos.ru, mos.ru, отраслевые СМИ, публичные Telegram-каналы). Закрытый канал t.me/c/3370602239 недоступен без членства — пост №1364 про ЗУ «Большой Тишинский, 8» подтверждён по открытым источникам.')
+      [26, 24, 12, 12, 20, 24, 9, 9, 7, 6, 11, 11, 10, 10, 7, 60],
+      subtitle='Участки (ЗУ, КРТ, ГПЗУ) и анонсированные проекты без стройки, публикации 2025–2026. Сортировка по заявленной цене от, ₽/м²; без цены — в конце', zone_col=3, heat_col=12)
 
 out = DOCS / 'premium-zhk-cao.xlsx'
 wb.save(out)

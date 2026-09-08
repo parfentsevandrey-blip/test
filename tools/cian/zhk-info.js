@@ -71,7 +71,7 @@ function parse(text) {
       await sleep(150000);
     };
     try {
-      const r = await ctx.request.get('https://api.cian.ru/geo-suggest/v1/suggest/?query=' + encodeURIComponent(name.replace(/\s*\(.*$/, '')) + '&regionId=1&offerType=flat&dealType=sale',
+      const r = await ctx.request.get('https://api.cian.ru/geo-suggest/v1/suggest/?query=' + encodeURIComponent((item.query || name).replace(/\s*\(.*$/, '')) + '&regionId=1&offerType=flat&dealType=sale',
         { headers: { referer: 'https://www.cian.ru/', 'user-agent': UA }, timeout: 30000, maxRedirects: 0 });
       if (r.status() !== 200) { await backoff(`suggest http ${r.status()}`); if (captcha > 40) break; continue; }
       const list = ((((await r.json()).data || {}).suggestions || {}).newbuildings || {}).items || [];
