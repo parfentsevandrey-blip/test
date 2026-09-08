@@ -139,6 +139,25 @@ right = Alignment(horizontal='right', vertical='center')
 
 def is_url(v): return isinstance(v, str) and v.startswith('http')
 
+def short_name(n):
+    """«Stella di Mosca Hotel & Residences (Стелла ди Моска …)» → без транслитерации в скобках."""
+    n = (n or '').strip()
+    m = re.match(r'^(.{6,}?)\s*\(([^)]*)\)\s*$', n)
+    if m and re.search(r'[А-Яа-я]', m.group(2)) and re.search(r'[A-Za-z]', m.group(1)): return m.group(1).strip()
+    return n
+
+def short_addr(a):
+    a = re.sub(r'^Москва,\s*', '', str(a or '')).strip()
+    return re.sub(r'\s*\([^)]*\)', '', a).strip()
+
+def strip_paren(v):
+    return re.sub(r'\s*\([^)]*\)', '', str(v or '')).strip()
+
+def short_stage(v):
+    v = strip_paren(v)
+    v = re.split(r'[;—]', v)[0].strip()
+    return v[:48].rstrip(' ,') if len(v) > 48 else v
+
 def sheet(wb, title, headers, rows, widths, note=None, subtitle='', zone_col=None, orientation='landscape', heat_col=None):
     ws = wb.create_sheet(title)
     ncol = len(headers)
@@ -247,7 +266,7 @@ for r in complexes['complexes']:
         if cc in ('бизнес', 'комфорт', 'эконом') and not m.get('keep') and med < 1_500_000: continue   # класс по карточке Циан ниже премиума
     year = card_year(cd) or m.get('year') or fmt_years(r)
     link = cd.get('url') or ''   # только страница ЖК на Циан; объявления не годятся
-    row = [r['complex'], developer, year, m.get('address') or addr, r.get('district'), z,
+    row = [short_name(r['complex']), strip_paren(developer), year, short_addr(m.get('address') or addr), r.get('district'), z,
            max(r.get('housesSeen') or 0, dv.get('buildings') or 0) or None, floors(r) or dv.get('floors') or '', status,
            per_m2_str(r.get('perM2Min')), per_m2_str(med), per_m2_str(r.get('perM2Max')),
            r.get('declared') or r.get('lots'), f"{int(r['areaMin'])}–{int(r['areaMax'])}" if r.get('areaMin') and r['areaMin'] != math.inf else '',
@@ -255,7 +274,7 @@ for r in complexes['complexes']:
     (rows1 if (m.get('stage', 'built' if built else 'building') == 'built') else rows2_live).append(row)
 rows1.sort(key=lambda x: (x[10] is None, x[10] or 0))
 sheet(wb, '1. Построено (вторичка)', H1, rows1,
-      [24, 15, 11, 26, 13, 15, 6, 7, 12, 10, 10, 10, 6, 9, 10, 7, 70],
+      [26, 15, 11, 24, 13, 15, 6, 7, 12, 10, 10, 10, 6, 9, 10, 7, 84],
       subtitle=f"ЦАО, дома 2018+, активные объявления Циан на {complexes['fetched']}; зоны: Садовое кольцо / Хамовники / Сити / Пресня / Белорусская. Сортировка по медиане ₽/м², цвет — от дешёвых (зелёный) к дорогим (красный). Класс — по карточке ЖК на Циан", zone_col=5, heat_col=10)
 
 # ---------- лист 2: строится ----------
@@ -279,18 +298,18 @@ for row in pdf['rows']:
     if pm is None: pm = int((pf + pt) / 2) if pf and pt else (pf or None)
     cd = (card(live) if live else {}) or card(name)
     link2 = cd.get('url') or m.get('url') or dv.get('site') or ''
-    if card_year(cd) and card_year(cd) != dl: dl = f"{dl} (Циан: {card_year(cd)})"
-    rows2.append([name, dev, dl, addr, metro, z, b, fl, st, pf, pm, pt, lots, fin, link2, describe(name, live)])
+    if card_year(cd): dl = card_year(cd)   # срок по карточке ЖК свежее таблицы
+    rows2.append([short_name(name), strip_paren(dev), dl, short_addr(addr), metro, z, b, fl, st, pf, pm, pt, lots, fin, link2, describe(name, live)])
     seen.add(live or name)
 for row in rows2_live:
     if row[0] in seen: continue
     m = manual.get(row[0], {})
     dv = devs.get(row[0], {})
-    rows2.append([row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10], row[11], row[12],
+    rows2.append([row[0], strip_paren(row[1]), row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10], row[11], row[12],
                   m.get('finish') or 'бетон', row[15] or m.get('url') or dv.get('site') or '', row[16]])
 rows2.sort(key=lambda x: (x[10] is None, x[10] or 0))
 sheet(wb, '2. Строится', H2, rows2,
-      [24, 16, 13, 26, 14, 15, 6, 7, 12, 10, 10, 10, 6, 8, 7, 70],
+      [26, 17, 12, 24, 14, 15, 6, 7, 12, 10, 10, 10, 6, 8, 7, 84],
       subtitle=f"Таблица заказчика + новостройки из выдачи Циан на {complexes['fetched']}. Сортировка по медиане ₽/м² (где Циан не нашёл ЖК — середина диапазона от/до), цвет — от дешёвых к дорогим", zone_col=5, heat_col=10)
 
 # ---------- лист 3: проектирование ----------
@@ -302,12 +321,12 @@ for p in planning:
     pz = manual.get('_planning_zone', {}).get(p.get('name'), p.get('location_zone'))
     if pz not in ALLOWED: continue
     dev3 = re.sub(r'\s*\(.*$', '', str(p.get('developer') or '')).strip() or 'не раскрыт'
-    rows3.append([p.get('name'), p.get('address'), p.get('district'), pz, dev3, p.get('stage'),
+    rows3.append([strip_paren(p.get('name')), short_addr(p.get('address')), p.get('district'), pz, dev3, short_stage(p.get('stage')),
                   p.get('area_total_m2'), p.get('area_residential_m2'), p.get('floors'), p.get('units'), p.get('planned_start'),
                   p.get('planned_completion'), p.get('price_from_per_m2'), p.get('announced_date'), p.get('source_url'), p.get('notes')])
 rows3.sort(key=lambda x: (x[12] is None, x[12] or 0, str(x[0])))
 sheet(wb, '3. Проектирование', H3, rows3,
-      [24, 22, 13, 15, 18, 22, 9, 9, 8, 6, 11, 11, 10, 10, 7, 70],
+      [28, 26, 13, 15, 20, 30, 9, 9, 9, 6, 12, 11, 10, 10, 7, 84],
       subtitle='Участки (ЗУ, КРТ, ГПЗУ) и анонсированные проекты без стройки, публикации 2025–2026. Сортировка по заявленной цене от, ₽/м²; без цены — в конце', zone_col=3, heat_col=12)
 
 out = DOCS / 'premium-zhk-cao.xlsx'
