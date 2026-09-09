@@ -1200,7 +1200,7 @@ def main():
         'issue_line': 'Выпуск № 08 · 31 августа — 7 сентября 2026',
         'week_label': '31.08 — 07.09.2026',
         'prepared_by': 'NL Real Estate Research Desk',
-        'imprint': 'Формат: MarketBeat · даты всех сюжетов проверены по странице источника',
+        'imprint': 'Аналитика рынка Голландии · даты всех сюжетов проверены по странице источника',
         'sectors': [],
     }
     reports, problems = {}, {}

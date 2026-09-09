@@ -212,7 +212,8 @@ body {{ margin:0; background:{PALE}; font-family:'PT Serif',Georgia,serif; color
          display:flex; flex-direction:column; gap:2.5mm }}
 .top {{ height:{HEAD_MM}mm; display:grid; grid-template-columns:auto 1fr auto; align-items:end;
         column-gap:8mm; border-bottom:3px solid var(--ac); padding-bottom:2.2mm }}
-.mb {{ font-family:'PT Sans'; font-size:24px; font-weight:700; letter-spacing:.16em; line-height:1 }}
+.mb {{ font-family:'PT Sans'; font-size:19px; font-weight:700; letter-spacing:.12em; line-height:1;
+       white-space:nowrap }}
 .mb small {{ display:block; font-size:8.5px; letter-spacing:.22em; color:{GRAY}; margin-top:1.6mm;
              font-weight:400 }}
 .sec {{ font-family:'PT Serif'; font-size:27px; font-weight:700; line-height:1; color:var(--ac) }}
@@ -297,7 +298,7 @@ def page(sec, issue):
     return f"""
 <div class="page" data-sector="{esc(sec['key'])}" style="--ac:{ac}">
   <div class="top">
-    <div class="mb">MARKETBEAT<small>НИДЕРЛАНДЫ · НЕДЕЛЬНЫЙ ОБЗОР РЫНКА НЕДВИЖИМОСТИ</small></div>
+    <div class="mb">АНАЛИТИКА РЫНКА ГОЛЛАНДИИ<small>НЕДЕЛЬНЫЙ ОБЗОР РЫНКА НЕДВИЖИМОСТИ</small></div>
     <div class="sec">{esc(sec['name'])}<small>{hy(sec['tagline'])}</small></div>
     <div class="iss"><b>{esc(issue['week_label'])}</b><br>{esc(issue['issue_line'])}<br>{esc(issue['prepared_by'])}</div>
   </div>
