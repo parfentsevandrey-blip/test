@@ -47,6 +47,12 @@ BEAM = 240                 # ширина луча при поиске
 
 TIER_VALUE = {1: 1.00, 2: 0.72, 3: 0.45}
 SCOPE_VALUE = {'market': 1.00, 'policy': 0.82, 'deal': 0.58}
+# Масштаб события внутри своего класса: 3 — общенациональный показатель, закон
+# или сделка первой величины (сотни квартир, десятки тысяч кв. м, десятки
+# миллионов евро); 2 — обычный; 1 — локальная мелочь. Без этой оси движок
+# предпочитает дешёвые в описании мелкие сделки крупным сюжетам.
+IMPACT_VALUE = {1: 0.7, 2: 1.0, 3: 1.4}
+MAX_BLOCK_SHARE = 0.62  # доля одного блока среди отобранного (мягко)
 
 BLOCKS = ('investment', 'occupier')
 
@@ -84,6 +90,7 @@ def value(item):
     """
     v = TIER_VALUE.get(item.get('tier', 2), 0.6)
     v *= SCOPE_VALUE.get(item.get('scope', 'deal'), 0.58)
+    v *= IMPACT_VALUE.get(item.get('impact', 2), 1.0)
     nums = item.get('numbers') or []
     if nums:
         v *= 1.15
@@ -103,8 +110,13 @@ def skew_penalty(sel):
         return 0.0
     signs = [sign(i) for i in sel]
     worst = max(signs.count(1), signs.count(-1)) / len(sel)
-    over = worst - MAX_POLARITY_SHARE
-    return 0.0 if over <= 0 else over * len(sel) * 0.5
+    over = max(0.0, worst - MAX_POLARITY_SHARE)
+    # тот же принцип для блоков: полоса из одних сделок пользователя без
+    # инвестиционной картины (или наоборот) — перекос, а не отбор
+    blocks = [i.get('block') for i in sel]
+    bworst = max(blocks.count(b) for b in BLOCKS) / len(sel)
+    over_b = max(0.0, bworst - MAX_BLOCK_SHARE)
+    return (over + over_b) * len(sel) * 0.5
 
 
 def _feasible(sel, pool):
