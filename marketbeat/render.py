@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""HTML -> PDF альбомного формата + PNG каждой полосы для визуальной проверки."""
+"""HTML -> PDF альбомного формата + PNG каждой полосы для визуальной проверки.
+
+Заполнение полос проверяет fit.py — здесь только вывод.
+"""
 import os
 import sys
 
@@ -24,15 +27,5 @@ with sync_playwright() as pw:
     pages = p.query_selector_all('.page')
     for i, el in enumerate(pages, 1):
         el.screenshot(path=os.path.join(shots, f'p{i:02d}.png'))
-    # реальное заполнение колонок: сколько осталось пустым внизу
-    fill = p.evaluate("""() => [...document.querySelectorAll('.page')].map(pg => {
-        const main = pg.querySelector('.main');
-        const items = [...main.querySelectorAll('.item')];
-        if (!items.length) return 0;
-        const mb = main.getBoundingClientRect();
-        const low = Math.max(...items.map(e => e.getBoundingClientRect().bottom));
-        return Math.round((low - mb.top) / mb.height * 100);
-    })""")
     print('полос:', len(pages), '| PDF:', os.path.getsize(pdf), 'байт')
-    print('заполнение последней колонки по полосам, %:', fill)
     b.close()
