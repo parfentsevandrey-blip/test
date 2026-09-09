@@ -1,0 +1,16 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "torveil",
+  "outputfilename": "torveil",
+  "info": {
+    "companyName": "TorVeil",
+    "productName": "TorVeil",
+    "productVersion": "1.0.0",
+    "comments": "Tor client with Snowflake, multi-hop circuits and traffic shaping"
+  },
+  "_comment": "The frontend is plain HTML with no bundler, so there is nothing to build or install. build/build.sh and build/build.ps1 produce the same binary with go build alone; this file is only here for people who prefer the Wails CLI, which additionally packages an icon and manifest.",
+  "frontend:install": "",
+  "frontend:build": "",
+  "frontend:dir": "cmd/torveil/frontend",
+  "wailsjsdir": "./cmd/torveil/frontend"
+}

@@ -1,0 +1,14 @@
+# Build output
+/dist/
+*.exe
+*.syso
+
+# Wintun and Tor are not vendored; they are installed by the user and must
+# never end up committed here.
+wintun.dll
+/bin/
+/tor/
+
+# Go
+*.test
+*.out
