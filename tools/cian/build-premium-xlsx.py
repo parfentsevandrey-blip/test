@@ -27,13 +27,19 @@ ZHK = json.load(open(DOCS / 'zhk-info.json')) if (DOCS / 'zhk-info.json').exists
 DESC = {}
 for f in ('desc1.json', 'desc2.json', 'desc3.json'):
     if (DOCS / f).exists(): DESC.update(json.load(open(DOCS / f)))
+# Циан пишет в названиях неразрывный пробел («Клубный дом\xa0Quartier d'Or»),
+# поэтому ключи и карточек, и описаний ищем по нормализованному имени.
+def key(n): return (n or '').replace('\u00a0', ' ').strip()
+DESC = {key(k): v for k, v in DESC.items()}
+ZHK = {key(k): v for k, v in ZHK.items()}
+
 def describe(*names):
     for n in names:
-        if n and DESC.get(n): return DESC[n]
+        if n and DESC.get(key(n)): return DESC[key(n)]
     return ''
 
 def card(name):
-    c = ZHK.get(name) or {}
+    c = ZHK.get(key(name)) or {}
     return c if c.get('id') else {}
 
 def card_delivery(c):

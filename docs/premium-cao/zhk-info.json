@@ -3971,5 +3971,136 @@
   "stage": "Строится",
   "fetched": "2026-09-10",
   "badge": null
+ },
+ "Русские Сезоны": {
+  "id": 3206071,
+  "cianName": "Русские Сезоны",
+  "address": "Москва, улица Большая Ордынка, 19с9",
+  "url": "https://www.cian.ru/zhiloy-kompleks-russkie-sezony-moskva-3206071/",
+  "status": 200,
+  "developer": "СЗ Экран",
+  "badge": null,
+  "delivery": "2026",
+  "done": false,
+  "finished": null,
+  "deadline": "2026",
+  "yearText": "Сдача 2026",
+  "cls": "Премиум",
+  "floors": "3–7",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "Корпус 1",
+    "when": "Сдача в 4 кв. 2026"
+   },
+   {
+    "house": "Корпус 2",
+    "when": "Сдача в 4 кв. 2026"
+   },
+   {
+    "house": "Корпус 2а",
+    "when": "Сдача в 4 кв. 2026"
+   },
+   {
+    "house": "Корпус 3",
+    "when": "Сдача в 4 кв. 2026"
+   },
+   {
+    "house": "Корпус 4",
+    "when": "Сдача в 4 кв. 2026"
+   },
+   {
+    "house": "Корпус 5",
+    "when": "Сдача в 4 кв. 2026"
+   },
+   {
+    "house": "Корпус 6а",
+    "when": "Сдача в 4 кв. 2026"
+   },
+   {
+    "house": "Корпус 7б",
+    "when": "Сдача в 4 кв. 2026"
+   },
+   {
+    "house": "Корпус 3",
+    "when": "4 кв. 2026"
+   },
+   {
+    "house": "Корпус 6а",
+    "when": "4 кв. 2026"
+   },
+   {
+    "house": "Корпус 7б",
+    "when": "4 кв. 2026"
+   },
+   {
+    "house": "Корпус 7б",
+    "when": "4 кв. 2026"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
+ },
+ "Клубный дом Quartier d'Or (Золотой квартал)": {
+  "id": 4338410,
+  "cianName": "Клубный дом Quartier d'Or (Золотой квартал)",
+  "address": "Москва, Большая Татарская улица",
+  "url": "https://www.cian.ru/zhiloy-kompleks-klubnyy-domquartier-dor-moskva-4338410/",
+  "status": 200,
+  "developer": "RARITECO",
+  "badge": "Сдача в 1 кв. 2027",
+  "delivery": "2027",
+  "done": false,
+  "finished": null,
+  "deadline": "2027",
+  "yearText": "Сдача 2027",
+  "cls": "Премиум",
+  "floors": "1–8",
+  "buildings": "1",
+  "houses": [
+   {
+    "house": "Клубный дом Quartier d'Or (Золотой квартал)",
+    "when": "Сдача в 1 кв. 2027"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
+ },
+ "Погодинская": {
+  "id": 5747482,
+  "cianName": "Веспер Погодинская",
+  "address": "Москва, Погодинская улица",
+  "url": "https://www.cian.ru/zhiloy-kompleks-vesper-pogodinskaya-moskva-5747482/",
+  "status": 200,
+  "developer": "VESPER",
+  "badge": "Сдача в 4 кв. 2028",
+  "delivery": "2028",
+  "done": false,
+  "finished": null,
+  "deadline": "2028",
+  "yearText": "Сдача 2028",
+  "cls": "Премиум",
+  "floors": "11",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "от 500 589 501 ₽",
+    "when": "Сдача в 3 кв. 2027"
+   },
+   {
+    "house": "от 84 520 749 ₽",
+    "when": "Сдача в 1 кв. 2028"
+   },
+   {
+    "house": "От 500 589 501 ₽",
+    "when": "Сдача в 3 кв. 2027"
+   },
+   {
+    "house": "От 84 520 749 ₽",
+    "when": "Сдача в 1 кв. 2028"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  }
 }
