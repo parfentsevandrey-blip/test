@@ -91,6 +91,13 @@ index = {'maps': [], 'missing': missing}
 for md in MAPS_DEF:
     lat1, lng1, lat2, lng2 = md['bbox']; z = md['z']
     x1, y1 = tile_xy(lat2, lng1, z); x2, y2 = tile_xy(lat1, lng2, z)   # верх-лево, низ-право
+    # кадр под пропорции листа A3 (альбомная), чтобы карта занимала всю страницу
+    A3 = 420 / 297
+    w, h = x2 - x1, y2 - y1
+    if w / h < A3:
+        need = h * A3; xc = (x1 + x2) / 2; x1, x2 = xc - need / 2, xc + need / 2
+    else:
+        need = w / A3; yc = (y1 + y2) / 2; y1, y2 = yc - need / 2, yc + need / 2
     tx1, ty1, tx2, ty2 = int(x1), int(y1), int(x2), int(y2)
     W, H = (tx2 - tx1 + 1) * 256, (ty2 - ty1 + 1) * 256
     img = Image.new('RGB', (W, H), (240, 240, 240))

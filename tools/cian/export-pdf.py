@@ -55,18 +55,14 @@ for ws in wb:
     title = ws['A1'].value or ws.title
     subtitle = ws['A2'].value or ''
     if is_map:
-        mp = next((m for m in maps_idx['maps'] if m['title'] in ws.title or ws.title.endswith(m['title'][:20])), None)
+        mp = next((m for m in maps_idx['maps'] if ws.title.endswith(m['title'][:12]) or m['slug'] in ws.title.lower()
+                   or any(w in ws.title for w in m['title'].split(',')[0].split())), None)
         if not mp: continue
         img = (DOCS / mp['file']).as_uri()
-        rows = ''.join(
-            f'<tr><td class="num">{e["n"]}</td><td>{esc(e["name"])}</td>'
-            f'<td class="st st-{ {"построено":"b","строится":"c","проектирование":"p"}[e["status"]] }">{esc(e["status"])}</td>'
-            f'<td class="addr">{esc(e.get("address") or "")}</td></tr>' for e in mp['legend'])
-        parts.append(f'''<section class="page map">
+        parts.append(f"""<section class="page map">
   <h1>{esc(title)}</h1><p class="sub">{esc(subtitle)}</p>
   <div class="mapwrap"><img src="{img}"></div>
-  <table class="legend"><thead><tr><th>№</th><th>ЖК / площадка</th><th>Статус</th><th>Адрес</th></tr></thead><tbody>{rows}</tbody></table>
-</section>''')
+</section>""")
         continue
 
     ncol = ws.max_column
@@ -84,9 +80,13 @@ for ws in wb:
     lo, hi = (min(vals), max(vals)) if vals else (0, 1)
     cols = ''.join(f'<col style="width:{w / total * 100:.3f}%">' for w in widths)
     th = ''.join(f'<th>{esc(SHORT_HEAD.get(str(h).strip(), h))}</th>' for h in head)
+    STATUS_BG = {'построено': '#C6EFCE', 'строится': '#FFE0B3', 'проектирование': '#E4D5F5'}
     trs = []
-    for n, row in enumerate(body):
-        tds = []
+    n = 0
+    for row in body:
+        if all(c.value is None for c in row[1:]):        # заголовок кластера-района
+            trs.append(f'<tr class="grp"><td colspan="{ncol}">{esc(row[0].value)}</td></tr>'); n = 0; continue
+        tds = []; n += 1
         for i, c in enumerate(row):
             v = c.value; style = ''; cls = ''
             if c.hyperlink is not None or (isinstance(v, str) and v.startswith('http')):
@@ -96,10 +96,11 @@ for ws in wb:
             if i == heat_i and isinstance(v, (int, float)):
                 col = heat_color(v, lo, hi)
                 if col: style = f'background:{col};font-weight:600'
+            if isinstance(v, str) and v in STATUS_BG: style = f'background:{STATUS_BG[v]}'
             if isinstance(v, (int, float)): cls = 'num'
             elif isinstance(v, str) and len(v) > 30: cls = 'txt'
             tds.append(f'<td class="{cls}" style="{style}">{fmt(v)}</td>')
-        trs.append(f'<tr class="{ "odd" if n % 2 else "" }">' + ''.join(tds) + '</tr>')
+        trs.append(f'<tr class="{ "odd" if n % 2 == 0 else "" }">' + ''.join(tds) + '</tr>')
     parts.append(f'''<section class="page">
   <h1>{esc(title)}</h1><p class="sub">{esc(subtitle)}</p>
   <table class="grid"><colgroup>{cols}</colgroup><thead><tr>{th}</tr></thead><tbody>{''.join(trs)}</tbody></table>
@@ -128,8 +129,10 @@ tr { page-break-inside: avoid; }
 a { color: #0563C1; }
 td.lnk { font-size: 6pt; }
 section.map { display: flex; flex-direction: column; height: 100%; }
-.mapwrap { text-align: center; }
-.mapwrap img { max-width: 100%; max-height: 175mm; object-fit: contain; }
+.mapwrap { flex: 1; text-align: center; display: flex; align-items: center; justify-content: center; }
+.mapwrap img { max-width: 100%; max-height: 268mm; object-fit: contain; }
+tr.grp td { background: #D9E2F3; color: #1F3864; font-weight: 700; font-size: 8pt; text-align: left;
+  padding: 3px 6px; border: 0.5px solid #9aa8bd; }
 table.legend { font-size: 6.6pt; margin-top: 5px; }
 table.legend th { background: #1F3864; color: #fff; padding: 2px; border: 0.5px solid #9aa8bd; }
 table.legend td { border: 0.4px solid #c8c8c8; padding: 1.5px 3px; }

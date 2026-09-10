@@ -154,6 +154,9 @@ LINK_FONT = Font(name='Calibri', size=10, color='0563C1', underline='single')
 TITLE_FONT = Font(name='Calibri', size=14, bold=True, color='1F3864')
 SUB_FONT = Font(name='Calibri', size=9, italic=True, color='666666')
 ZEBRA = PatternFill('solid', fgColor='F3F6FA')
+GROUP_FILL = PatternFill('solid', fgColor='D9E2F3')
+GROUP_FONT = Font(name='Calibri', size=11, bold=True, color='1F3864')
+STATUS_FILL = {'построено': 'C6EFCE', 'строится': 'FFE0B3', 'проектирование': 'E4D5F5'}
 ZONE_FILL = {'Садовое кольцо': 'FFF2CC', 'Хамовники': 'E2EFDA', 'Сити': 'DDEBF7', 'Пресня': 'FCE4D6', 'Белорусская': 'EDEDED'}
 wrap = Alignment(horizontal='center', vertical='center', wrap_text=True)
 center = Alignment(horizontal='center', vertical='center', wrap_text=True)
@@ -175,12 +178,34 @@ def short_addr(a):
 def strip_paren(v):
     return re.sub(r'\s*\([^)]*\)', '', str(v or '')).strip()
 
+def main_district(v):
+    """«Пресненский (Патриаршие пруды)», «Тверской/Беговой» → «Пресненский», «Тверской»."""
+    d = re.sub(r'\s*\(.*$', '', str(v or '')).split('/')[0].split(' / ')[0].strip()
+    return d or '—'
+
 def short_stage(v):
     v = strip_paren(v)
     v = re.split(r'[;—]', v)[0].strip()
     return v[:48].rstrip(' ,') if len(v) > 48 else v
 
-def sheet(wb, title, headers, rows, widths, note=None, subtitle='', zone_col=None, orientation='landscape', heat_col=None):
+def plural(n, forms):
+    n10, n100 = n % 10, n % 100
+    if n10 == 1 and n100 != 11: return forms[0]
+    if 2 <= n10 <= 4 and not 12 <= n100 <= 14: return forms[1]
+    return forms[2]
+
+def cluster(rows, district_i, price_i, forms=('ЖК', 'ЖК', 'ЖК')):
+    """Строки по кластерам-районам: крупные районы выше, внутри — по возрастанию цены."""
+    groups = {}
+    for r in rows: groups.setdefault(str(r[district_i] or '—').strip() or '—', []).append(r)
+    out = []
+    for name, rs in sorted(groups.items(), key=lambda kv: (-len(kv[1]), kv[0])):
+        rs.sort(key=lambda x: (x[price_i] is None, x[price_i] or 0, str(x[0])))
+        out.append(('__GROUP__', f'{name} — {len(rs)} {plural(len(rs), forms)}'))
+        out.extend(rs)
+    return out
+
+def sheet(wb, title, headers, rows, widths, note=None, subtitle='', zone_col=None, orientation='landscape', heat_col=None, status_col=None):
     ws = wb.create_sheet(title)
     ncol = len(headers)
     ws.append([title]); ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=ncol)
@@ -193,14 +218,27 @@ def sheet(wb, title, headers, rows, widths, note=None, subtitle='', zone_col=Non
         c.fill = HEAD_FILL; c.font = HEAD_FONT; c.alignment = center
         c.border = Border(left=thin, right=thin, top=MED_SIDE, bottom=MED_SIDE)
     ws.row_dimensions[3].height = 34
-    for i, r in enumerate(rows):
+    grouped = any(r and r[0] == '__GROUP__' for r in rows)
+    i = 0
+    for r in rows:
+        if r and r[0] == '__GROUP__':          # заголовок кластера-района на всю ширину
+            ws.append([r[1]]); rr = ws.max_row
+            ws.merge_cells(start_row=rr, start_column=1, end_row=rr, end_column=ncol)
+            for cc in ws[rr]: cc.fill = GROUP_FILL; cc.border = Border(top=MED_SIDE, bottom=MED_SIDE)
+            c = ws.cell(rr, 1); c.font = GROUP_FONT
+            c.alignment = Alignment(horizontal='left', vertical='center', indent=1)
+            ws.row_dimensions[rr].height = 20; i = 0
+            continue
         ws.append(r)
         rr = ws.max_row
         zone = r[zone_col] if zone_col is not None else None
         fill = ZEBRA if i % 2 else None
+        i += 1
         for c in ws[rr]:
             c.border = border; c.font = BODY_FONT
             if fill: c.fill = fill
+            if status_col is not None and c.column == status_col + 1 and c.value in STATUS_FILL:
+                c.fill = PatternFill('solid', fgColor=STATUS_FILL[c.value])
             if zone_col is not None and c.column == zone_col + 1 and zone in ZONE_FILL:
                 c.fill = PatternFill('solid', fgColor=ZONE_FILL[zone]); c.font = Font(name='Calibri', size=10, bold=True)
             if isinstance(c.value, bool): pass
@@ -223,7 +261,7 @@ def sheet(wb, title, headers, rows, widths, note=None, subtitle='', zone_col=Non
     for i, w in enumerate(widths, 1):
         ws.column_dimensions[get_column_letter(i)].width = w
     ws.freeze_panes = 'B4'
-    ws.auto_filter.ref = f"A3:{get_column_letter(ncol)}{ws.max_row}"
+    if not grouped: ws.auto_filter.ref = f"A3:{get_column_letter(ncol)}{ws.max_row}"
     last_data = ws.max_row
     if heat_col is not None and last_data >= 4:
         col = get_column_letter(heat_col + 1)
@@ -255,7 +293,9 @@ wb = Workbook()
 wb.remove(wb.active)
 
 # ---------- лист 1: построено ----------
-H1 = ['Название ЖК', 'Застройщик', 'Год постройки', 'Адрес', 'Район', 'Зона', 'Корпусов', 'Этажность',
+BUILT_MIN_YEAR = 2022     # вторичку сдачи раньше этого года в подборку не берём
+zone_by_name = {}
+H1 = ['Название ЖК', 'Застройщик', 'Год постройки', 'Адрес', 'Район', 'Корпусов', 'Этажность',
       'Статус', 'Цена за метр ОТ', 'Цена за метр медиана', 'Цена за метр ДО', 'Лотов в продаже', 'Площадь лотов, м²',
       'Класс', 'Ссылка на Циан', 'Примечание']
 rows1, rows2_live = [], []
@@ -305,7 +345,7 @@ for r in complexes['complexes']:
         if cc in ('бизнес', 'комфорт', 'эконом') and not m.get('keep') and med < 1_500_000: continue   # класс по карточке Циан ниже премиума
     year = (fmt_years(r) if lots_built else None) or card_year(cd) or m.get('year') or fmt_years(r)
     link = cd.get('url') or ''   # только страница ЖК на Циан; объявления не годятся
-    row = [short_name(r['complex']), strip_paren(developer), year, short_addr(m.get('address') or addr), r.get('district'), z,
+    row = [short_name(r['complex']), strip_paren(developer), year, short_addr(m.get('address') or addr), main_district(r.get('district')),
            max(r.get('housesSeen') or 0, dv.get('buildings') or 0) or None, floors(r) or dv.get('floors') or '', status,
            per_m2_str(r.get('perM2Min')), per_m2_str(med), per_m2_str(r.get('perM2Max')),
            r.get('declared') or r.get('lots'), f"{int(r['areaMin'])}–{int(r['areaMax'])}" if r.get('areaMin') and r['areaMin'] != math.inf else '',
@@ -315,14 +355,17 @@ for r in complexes['complexes']:
         # строку из таблицы заказчика оставляем на листе 2, только пока дом не сдан
         if not is_built: continue
         built_live.add(r['complex'])
+    ys = [int(y) for y in re.findall(r'(20\d\d)', str(year))]
+    if is_built and ys and max(ys) < BUILT_MIN_YEAR: continue   # вторичка старше 2022 года
+    zone_by_name[row[0]] = z
     (rows1 if is_built else rows2_live).append(row)
-rows1.sort(key=lambda x: (x[10] is None, x[10] or 0))
+rows1 = cluster(rows1, 4, 9)
 sheet(wb, '1. Построено (вторичка)', H1, rows1,
-      [26, 18, 13, 28, 15, 16, 6, 7, 13, 10, 10, 10, 6, 9, 10, 7, 90],
-      subtitle=f"ЦАО, дома 2018+, активные объявления Циан на {complexes['fetched']}; зоны: Садовое кольцо / Хамовники / Сити / Пресня / Белорусская. Сортировка по медиане ₽/м², цвет — от дешёвых (зелёный) к дорогим (красный). Класс — по карточке ЖК на Циан", zone_col=5, heat_col=10)
+      [26, 18, 13, 28, 16, 6, 7, 13, 10, 10, 10, 6, 9, 10, 7, 90],
+      subtitle=f"ЦАО, дома 2018+, активные объявления Циан на {complexes['fetched']}; дома сдачи 2022+. Кластеры по районам (крупные выше), внутри — по возрастанию медианы ₽/м², цвет от дешёвых (зелёный) к дорогим (красный). Класс — по карточке ЖК на Циан", heat_col=9)
 
 # ---------- лист 2: строится ----------
-H2 = ['Название ЖК', 'Застройщик', 'Срок сдачи', 'Адрес', 'Район / метро', 'Зона', 'Корпусов', 'Этажность', 'Статус',
+H2 = ['Название ЖК', 'Застройщик', 'Срок сдачи', 'Адрес', 'Район', 'Корпусов', 'Этажность', 'Статус',
       'Цена за метр ОТ', 'Цена за метр медиана', 'Цена за метр ДО', 'Лотов в продаже', 'Отделка', 'Ссылка на проект', 'Примечание']
 rows2 = []
 seen = set()
@@ -344,18 +387,19 @@ for row in pdf['rows']:
     cd = (card(live) if live else {}) or card(name)
     link2 = cd.get('url') or m.get('url') or dv.get('site') or ''
     if card_year(cd): dl = card_year(cd)   # срок по карточке ЖК свежее таблицы
-    rows2.append([short_name(name), strip_paren(dev), dl, short_addr(addr), metro, z, b, fl, st, pf, pm, pt, lots, fin, link2, describe(name, live)])
+    zone_by_name[short_name(name)] = z
+    rows2.append([short_name(name), strip_paren(dev), dl, short_addr(addr), main_district(m.get('district') or (lr or {}).get('district') or metro), b, fl, st, pf, pm, pt, lots, fin, link2, describe(name, live)])
     seen.add(live or name)
 for row in rows2_live:
     if row[0] in seen: continue
     m = manual.get(row[0], {})
     dv = devs.get(row[0], {})
-    rows2.append([row[0], strip_paren(row[1]), row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10], row[11], row[12],
-                  m.get('finish') or 'бетон', row[15] or m.get('url') or dv.get('site') or '', row[16]])
+    rows2.append([row[0], strip_paren(row[1]), row[2], row[3], main_district(row[4]), row[5], row[6], row[7], row[8], row[9], row[10], row[11],
+                  m.get('finish') or 'бетон', row[14] or m.get('url') or dv.get('site') or '', row[15]])
 # ---------- лист 3: проектирование (по Telegram-каналам) ----------
 TG = json.load(open(DOCS / 'tg-sites.json')) if (DOCS / 'tg-sites.json').exists() else None
 CONF = {'high': 'высокая', 'medium': 'средняя', 'low': 'низкая'}
-H3 = ['Проект / участок', 'Адрес', 'Точный адрес / адреса', 'Район', 'Зона', 'Застройщик', 'Стадия', 'Общая площадь, м²', 'Лотов', 'Этажность',
+H3 = ['Проект / участок', 'Адрес', 'Точный адрес / адреса', 'Район', 'Застройщик', 'Стадия', 'Общая площадь, м²', 'Лотов', 'Этажность',
       'Старт (план)', 'Сдача (план)', 'Цена от, ₽/м²', 'Первое упоминание', 'Последнее упоминание', 'Достоверность',
       'Пост 1', 'Пост 2', 'Пост 3', 'Что известно']
 rows3 = []
@@ -364,7 +408,8 @@ if TG:
         if e.get('zone') not in ALLOWED: continue
         posts = sorted(e.get('posts') or [], key=lambda x: x.get('date') or '', reverse=True)[:3]
         links = [pp['url'] for pp in posts] + [''] * (3 - len(posts))
-        rows3.append([strip_paren(e.get('name')), short_addr(e.get('address')), e.get('address') or '', e.get('district'), e['zone'],
+        zone_by_name[strip_paren(e.get('name'))] = e['zone']
+        rows3.append([strip_paren(e.get('name')), short_addr(e.get('address')), e.get('address') or '', main_district(e.get('district')),
                       strip_paren(e.get('developer')) or 'не раскрыт', short_stage(e.get('stage')),
                       e.get('area_total_m2'), e.get('units'), strip_paren(e.get('floors')) or None,
                       strip_paren(e.get('planned_start')) or None, strip_paren(e.get('planned_completion')) or None,
@@ -375,41 +420,41 @@ else:
         if p.get('name') in manual.get('_planning_drop', []): continue
         pz = manual.get('_planning_zone', {}).get(p.get('name'), p.get('location_zone'))
         if pz not in ALLOWED: continue
-        rows3.append([strip_paren(p.get('name')), short_addr(p.get('address')), p.get('address') or '', p.get('district'), pz,
+        zone_by_name[strip_paren(p.get('name'))] = pz
+        rows3.append([strip_paren(p.get('name')), short_addr(p.get('address')), p.get('address') or '', main_district(p.get('district')),
                       re.sub(r'\s*\(.*$', '', str(p.get('developer') or '')).strip() or 'не раскрыт', short_stage(p.get('stage')),
                       p.get('area_total_m2'), p.get('units'), strip_paren(p.get('floors')) or None, strip_paren(p.get('planned_start')) or None,
                       strip_paren(p.get('planned_completion')) or None, p.get('price_from_per_m2'), p.get('announced_date'), None, '',
                       p.get('source_url') or '', '', '', p.get('notes')])
 def nrm(x): return re.sub(r'[^а-яa-z0-9]', '', str(x or '').lower())
-sheet12 = [(nrm(r[0]), nrm(r[3])) for r in rows1] + [(nrm(r[0]), nrm(r[3])) for r in rows2]
+sheet12 = [(nrm(r[0]), nrm(r[3])) for r in rows1 + rows2 if r[0] != '__GROUP__']
 BUILDING_RE = re.compile(r'котлован|строительств|строится|РнС выдано|продажи откры|старт продаж состоял|монолит', re.I)
 keep3, moved, dropped = [], [], []
 for e in rows3:
     n, a = nrm(e[0]), nrm(e[2] or e[1])
     dup = next((x for x in sheet12 if (x[0] and (x[0] in n or n in x[0]) and len(x[0]) > 6) or (x[1] and a and x[1] == a)), None)
     if dup: dropped.append((e[0], dup[0])); continue
-    if BUILDING_RE.search(str(e[6] or '')):
+    if BUILDING_RE.search(str(e[5] or '')):
         # проект уже строится или продаётся — его место на листе «Строится»
-        price = e[12]
-        rows2.append([e[0], e[5], e[11] or e[10] or '', e[1], e[3], e[4], None, e[9], 'квартиры',
-                      price, price, None, e[8], '', (e[16] or ''), (e[19] or '')])
+        price = e[11]
+        rows2.append([e[0], e[4], e[10] or e[9] or '', e[1], main_district(e[3]), None, e[8], 'квартиры',
+                      price, price, None, e[7], '', (e[15] or ''), (e[18] or '')])
         moved.append(e[0]); continue
     keep3.append(e)
 rows3 = keep3
-rows2.sort(key=lambda x: (x[10] is None, x[10] or 0))
 if dropped: print('лист 3 → убраны дубли листов 1–2:', '; '.join(f'{a} = {b}' for a, b in dropped))
 if moved: print('лист 3 → перенесены в «Строится»:', '; '.join(moved))
-rows2.sort(key=lambda x: (x[10] is None, x[10] or 0))
+rows2 = cluster(rows2, 4, 9)
 sheet(wb, '2. Строится', H2, rows2,
-      [26, 18, 13, 28, 16, 16, 6, 7, 13, 10, 10, 10, 6, 8, 7, 90],
-      subtitle=f"Таблица заказчика + новостройки из выдачи Циан на {complexes['fetched']}. Сортировка по медиане ₽/м² (где Циан не нашёл ЖК — середина диапазона от/до), цвет — от дешёвых к дорогим", zone_col=5, heat_col=10)
+      [26, 18, 13, 28, 17, 6, 7, 13, 10, 10, 10, 6, 8, 7, 90],
+      subtitle=f"Таблица заказчика + новостройки из выдачи Циан на {complexes['fetched']}. Кластеры по районам, внутри — по возрастанию медианы ₽/м² (где Циан не нашёл ЖК — середина диапазона от/до)", heat_col=9)
 
 # ---------- лист 3 ----------
-rows3.sort(key=lambda x: (zkey(x[4]), x[12] is None, x[12] or 0, str(x[0])))
+rows3 = cluster(rows3, 3, 11, ('площадка', 'площадки', 'площадок'))
 sheet(wb, '3. Проектирование', H3, rows3,
-      [24, 20, 26, 12, 13, 17, 20, 9, 6, 9, 10, 10, 10, 10, 10, 10, 6, 6, 6, 80],
-      subtitle='Площадки (ЗУ, КРТ, ГПЗУ, АГР, сделки с участками) и анонсированные проекты без стройки по отраслевым Telegram-каналам, июнь 2025 — сентябрь 2026. Пруфы — ссылки на посты. Сортировка: зона, затем цена от. Часть проектов уже вышла на стройку или в продажи — см. колонку «Стадия»',
-      zone_col=4, heat_col=12)
+      [24, 20, 26, 14, 18, 20, 9, 6, 9, 10, 10, 10, 10, 10, 10, 8, 8, 8, 72],
+      subtitle='Площадки (ЗУ, КРТ, ГПЗУ, АГР, сделки с участками) и анонсированные проекты без стройки по отраслевым Telegram-каналам, июнь 2025 — сентябрь 2026. Пруфы — ссылки на посты. Кластеры по районам, внутри — по возрастанию цены. Часть проектов уже вышла на стройку или в продажи — см. колонку «Стадия»',
+      heat_col=11)
 
 # ---------- лист: источники (Telegram-каналы) ----------
 chs = json.load(open(DOCS / 'tg-channels.json')) if (DOCS / 'tg-channels.json').exists() else []
@@ -429,56 +474,54 @@ if chs:
 coord = {c['complex']: (c.get('lat'), c.get('lng')) for c in complexes['complexes']}
 points = []
 for row in rows1:
+    if row[0] == '__GROUP__': continue
     src = next((c for c in complexes['complexes'] if short_name(c['complex']) == row[0]), None)
-    points.append({'name': row[0], 'status': 'построено', 'zone': row[5], 'address': row[3], 'lat': src and src.get('lat'), 'lng': src and src.get('lng')})
+    points.append({'name': row[0], 'status': 'построено', 'zone': zone_by_name.get(row[0]), 'address': row[3], 'lat': src and src.get('lat'), 'lng': src and src.get('lng')})
 for row in rows2:
+    if row[0] == '__GROUP__': continue
     live = None
     for k, v in manual.items():
         if isinstance(v, dict) and short_name(k) == row[0] and v.get('live'): live = v['live']
     src = next((c for c in complexes['complexes'] if c['complex'] == live or short_name(c['complex']) == row[0]), None)
-    points.append({'name': row[0], 'status': 'строится', 'zone': row[5], 'address': row[3], 'lat': src and src.get('lat'), 'lng': src and src.get('lng')})
+    points.append({'name': row[0], 'status': 'строится', 'zone': zone_by_name.get(row[0]), 'address': row[3], 'lat': src and src.get('lat'), 'lng': src and src.get('lng')})
 for row in rows3:
-    points.append({'name': row[0], 'status': 'проектирование', 'zone': row[4], 'address': row[1], 'lat': None, 'lng': None})
+    if row[0] == '__GROUP__': continue
+    points.append({'name': row[0], 'status': 'проектирование', 'zone': zone_by_name.get(row[0]), 'address': row[1], 'lat': None, 'lng': None})
 json.dump(points, open(DOCS / 'points.json', 'w'), ensure_ascii=False, indent=1)
 
-# ---------- листы-карты ----------
-STATUS_FILL = {'построено': 'C6EFCE', 'строится': 'FFE0B3', 'проектирование': 'E4D5F5'}
+# ---------- листы-карты: карта на весь лист A3, список — отдельным листом ----------
+SHORT_MAP = {'sadovoe': 'Садовое кольцо', 'khamovniki': 'Хамовники', 'presnya': 'Пресня и Сити'}
 idx_path = DOCS / 'maps' / 'index.json'
 if idx_path.exists():
     for mp in json.load(open(idx_path))['maps']:
-        ws = wb.create_sheet(f"Карта — {mp['title']}"[:31])
-        IMG_COLS, COLW = 14, 14.3                      # ~1400 px под картинку
-        for i in range(1, IMG_COLS + 1): ws.column_dimensions[get_column_letter(i)].width = COLW
+        short = SHORT_MAP.get(mp['slug'], mp['title'])
+        ws = wb.create_sheet(f'Карта · {short}'[:31])
+        IMG_W = 2000                                   # px по ширине листа A3 при вписывании в страницу
+        scale = IMG_W / mp['width']; img_h = int(mp['height'] * scale)
+        COLW, PX = 12.0, 89                            # ширина колонки в символах ≈ 89 px
+        ncols = math.ceil(IMG_W / PX)
+        for i in range(1, ncols + 1): ws.column_dimensions[get_column_letter(i)].width = COLW
         ws['A1'] = f"Карта: {mp['title']} — премиум-ЖК 2018+ по статусу"; ws['A1'].font = TITLE_FONT
-        ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=IMG_COLS); ws.row_dimensions[1].height = 26
-        ws['A2'] = 'Зелёный — построено, оранжевый — строится, фиолетовый — проектирование. Номер маркера = номер в списке справа. Подложка: Яндекс Карты.'
-        ws['A2'].font = SUB_FONT; ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=IMG_COLS)
-        im = XLImage(str(DOCS / mp['file']))
-        scale = 1400 / mp['width']; im.width = int(mp['width'] * scale); im.height = int(mp['height'] * scale)
+        ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=ncols); ws.row_dimensions[1].height = 26
+        ws['A2'] = 'Зелёный — построено, оранжевый — строится, фиолетовый — проектирование. Номер маркера = номер в списке на соседнем листе. Подложка: Яндекс Карты.'
+        ws['A2'].font = SUB_FONT; ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=ncols)
+        im = XLImage(str(DOCS / mp['file'])); im.width = IMG_W; im.height = img_h
         ws.add_image(im, 'A3')
-        # легенда справа
-        c0 = IMG_COLS + 2
-        for j, w in enumerate([5, 34, 15, 30]): ws.column_dimensions[get_column_letter(c0 + j)].width = w
-        ws.column_dimensions[get_column_letter(IMG_COLS + 1)].width = 2
-        hdr = ['№', 'ЖК', 'Статус', 'Адрес']
-        for j, h in enumerate(hdr):
-            c = ws.cell(3, c0 + j, h); c.fill = HEAD_FILL; c.font = HEAD_FONT; c.alignment = center; c.border = border
-        ws.row_dimensions[3].height = 20
-        for k, e in enumerate(mp['legend']):
-            rr = 4 + k
-            vals = [e['n'], e['name'], e['status'], e.get('address') or '']
-            for j, v in enumerate(vals):
-                c = ws.cell(rr, c0 + j, v); c.font = BODY_FONT; c.border = border
-                c.alignment = center if j != 1 and j != 3 else Alignment(vertical='center', wrap_text=True)
-                if j == 2: c.fill = PatternFill('solid', fgColor=STATUS_FILL[e['status']])
-            ws.row_dimensions[rr].height = 16 if len(vals[1]) <= 34 and len(vals[3]) <= 30 else 28
-        last_row = max(4 + len(mp['legend']), 3 + int(im.height / 20))
+        nrows = 3 + math.ceil(img_h / 20)
+        for rr in range(3, nrows + 1): ws.row_dimensions[rr].height = 20
         ws.page_setup.paperSize = ws.PAPERSIZE_A3; ws.page_setup.orientation = 'landscape'
         ws.page_setup.fitToWidth = 1; ws.page_setup.fitToHeight = 1; ws.sheet_properties.pageSetUpPr.fitToPage = True
-        ws.print_area = f"A1:{get_column_letter(c0 + 3)}{last_row}"
-        ws.page_margins.left = ws.page_margins.right = 0.25; ws.page_margins.top = ws.page_margins.bottom = 0.3
+        ws.print_area = f"A1:{get_column_letter(ncols)}{nrows}"
+        ws.page_margins.left = ws.page_margins.right = 0.2; ws.page_margins.top = ws.page_margins.bottom = 0.25
+        ws.print_options.horizontalCentered = True
         ws.sheet_view.showGridLines = False
+
+        rows_l = [[e['n'], e['name'], e['status'], e.get('address') or ''] for e in mp['legend']]
+        sheet(wb, f'Список · {short}'[:31], ['№ на карте', 'ЖК / площадка', 'Статус', 'Адрес'], rows_l,
+              [10, 52, 18, 66], status_col=2,
+              subtitle=f"Номера соответствуют маркерам на листе «Карта · {short}»: сначала построенные, затем строящиеся, затем площадки в проектировании")
 
 out = DOCS / 'premium-zhk-cao.xlsx'
 wb.save(out)
-print(f'-> {out}: {len(rows1)} / {len(rows2)} / {len(rows3)} строк')
+nz = lambda rs: sum(1 for r in rs if r[0] != '__GROUP__')
+print(f'-> {out}: {nz(rows1)} / {nz(rows2)} / {nz(rows3)} строк')
