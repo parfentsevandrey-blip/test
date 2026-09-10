@@ -11,7 +11,7 @@ import (
 // runtimeArchive is the Tor runtime, produced and signature-verified by
 // build/fetch-assets.sh. It is not committed: run that script to reproduce it.
 //
-//go:embed assets/runtime.tar.gz
+//go:embed assets/runtime.tar.zst
 var runtimeArchive []byte
 
 func archive() []byte { return runtimeArchive }

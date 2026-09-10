@@ -3,19 +3,23 @@ package bundle
 import (
 	"archive/tar"
 	"bytes"
-	"compress/gzip"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/klauspost/compress/zstd"
 )
 
-// buildArchive produces a gzipped tar from a name/content map.
+// buildArchive produces a zstd-compressed tar from a name/content map.
 func buildArchive(t *testing.T, files map[string]string) []byte {
 	t.Helper()
 	var buf bytes.Buffer
-	gz := gzip.NewWriter(&buf)
-	tw := tar.NewWriter(gz)
+	zw, err := zstd.NewWriter(&buf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tw := tar.NewWriter(zw)
 	for name, content := range files {
 		hdr := &tar.Header{
 			Name:     name,
@@ -33,7 +37,7 @@ func buildArchive(t *testing.T, files map[string]string) []byte {
 	if err := tw.Close(); err != nil {
 		t.Fatal(err)
 	}
-	if err := gz.Close(); err != nil {
+	if err := zw.Close(); err != nil {
 		t.Fatal(err)
 	}
 	return buf.Bytes()
@@ -91,8 +95,11 @@ func TestExtractRefusesPathTraversal(t *testing.T) {
 
 func TestExtractRejectsUnexpectedEntryTypes(t *testing.T) {
 	var buf bytes.Buffer
-	gz := gzip.NewWriter(&buf)
-	tw := tar.NewWriter(gz)
+	zw, err := zstd.NewWriter(&buf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tw := tar.NewWriter(zw)
 	if err := tw.WriteHeader(&tar.Header{
 		Name:     "link",
 		Linkname: "/etc/passwd",
@@ -102,7 +109,7 @@ func TestExtractRejectsUnexpectedEntryTypes(t *testing.T) {
 		t.Fatal(err)
 	}
 	tw.Close()
-	gz.Close()
+	zw.Close()
 
 	if err := extract(buf.Bytes(), t.TempDir()); err == nil {
 		t.Fatal("a symlink member should be rejected")

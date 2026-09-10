@@ -7,7 +7,7 @@
 # on every build and refuses to package anything that does not verify, so a
 # tampered or truncated download cannot end up inside the executable.
 #
-# Output: internal/bundle/assets/runtime.tar.gz, consumed by //go:embed under the
+# Output: internal/bundle/assets/runtime.tar.zst, consumed by //go:embed under the
 # "bundled" build tag. The archive is deliberately not committed: it is 15 MB
 # of third-party binaries that anyone can reproduce by running this.
 set -euo pipefail
@@ -28,7 +28,7 @@ TOR_SIGNING_KEY="EF6E286DDA85EA2A4BA7DE684E2C6E8793298290"
 WINTUN_SHA256="07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51"
 
 OUT_DIR="internal/bundle/assets"
-OUT="$OUT_DIR/runtime.tar.gz"
+OUT="$OUT_DIR/runtime.tar.zst"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
@@ -110,10 +110,10 @@ Licence texts are in docs/ and wintun/LICENSE.txt. Neither project is modified.
 EOF
 
 mkdir -p "$OUT_DIR"
-# A fixed mtime and sorted order keep the archive byte-identical across builds
-# of the same inputs, so the embedded blob can be compared between builds.
-tar --sort=name --mtime='UTC 2020-01-01' --owner=0 --group=0 --numeric-owner \
-    -czf "$OUT" -C "$R" .
+# Packed by a Go program rather than tar: the archive is zstd, and no zstd
+# command-line tool can be assumed present. It writes deterministically, so
+# the same inputs give the same bytes.
+go run ./build/packruntime "$R" "$OUT"
 
 echo
 echo "wrote $OUT ($(du -h "$OUT" | cut -f1))"

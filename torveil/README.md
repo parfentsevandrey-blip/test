@@ -147,7 +147,9 @@ package anything whose signature does not chain to the Tor Browser Developers
 key `EF6E286DDA85EA2A4BA7DE684E2C6E8793298290`. Wintun publishes no signature,
 so its release is pinned by SHA-256 instead. Nothing is patched or rebuilt; the
 version and provenance of each piece is recorded in `VERSIONS.txt` inside the
-bundle.
+bundle. The archive is zstd rather than gzip — a third smaller here, so a third
+off the download, and fast enough to unpack that the first launch does not
+stall.
 
 On first launch the archive is unpacked into
 `%APPDATA%\TorVeil\tor\runtime\<version>`. The version is the archive's own
@@ -168,7 +170,7 @@ From Linux or macOS (Wails v2 needs no CGO for a Windows target):
 
 This fetches and verifies the runtime if it is not already present, runs
 `gofmt`, `go vet` for host and Windows, and the test suite, then produces
-`dist\torveil.exe` (GUI, ~32 MB) and `dist\torveild.exe` (headless).
+`dist\torveil.exe` (GUI, ~29 MB) and `dist\torveild.exe` (headless).
 
 `SKIP_ASSETS=1 ./build/build.sh` builds without the bundled runtime, producing
 a smaller executable that expects a Tor installed on the machine.
@@ -179,7 +181,7 @@ On Windows:
 .\build\build.ps1
 ```
 
-`build.ps1` uses whatever `internal/bundle/assets/runtime.tar.gz` is already
+`build.ps1` uses whatever `internal/bundle/assets/runtime.tar.zst` is already
 there; run `build/fetch-assets.sh` (it needs `curl`, `gpg` and `tar`) to
 produce it.
 

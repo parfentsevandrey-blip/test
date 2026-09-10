@@ -3,6 +3,7 @@ module github.com/parfentsevandrey-blip/torveil
 go 1.26.3
 
 require (
+	github.com/klauspost/compress v1.20.0
 	github.com/wailsapp/wails/v2 v2.15.0
 	github.com/xjasonlyu/tun2socks/v2 v2.7.0
 	golang.org/x/sys v0.48.0

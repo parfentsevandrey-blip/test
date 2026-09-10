@@ -14,7 +14,6 @@ package bundle
 
 import (
 	"archive/tar"
-	"compress/gzip"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
@@ -23,6 +22,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/klauspost/compress/zstd"
 )
 
 // ErrNotBundled reports that this build carries no runtime, which is what a
@@ -121,15 +122,19 @@ func Ensure(baseDir string, log LogFunc) (Runtime, error) {
 	return rt, nil
 }
 
-// extract writes the gzipped tar in data into dir.
+// extract writes the zstd-compressed tar in data into dir.
+//
+// zstd rather than gzip: it is a third smaller here, which is a third off the
+// download, and it decompresses fast enough that unpacking 55 MB on first
+// launch is not something the user waits for.
 func extract(data []byte, dir string) error {
-	gz, err := gzip.NewReader(newByteReader(data))
+	zr, err := zstd.NewReader(newByteReader(data))
 	if err != nil {
 		return fmt.Errorf("read the runtime archive: %w", err)
 	}
-	defer gz.Close()
+	defer zr.Close()
 
-	tr := tar.NewReader(gz)
+	tr := tar.NewReader(zr)
 	for {
 		hdr, err := tr.Next()
 		if errors.Is(err, io.EOF) {

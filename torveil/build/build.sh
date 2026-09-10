@@ -19,7 +19,7 @@ mkdir -p "$OUT"
 # should be legible on its own, not buried in a build.
 TAGS="production"
 DAEMON_TAGS=""
-if [ -f internal/bundle/assets/runtime.tar.gz ]; then
+if [ -f internal/bundle/assets/runtime.tar.zst ]; then
   TAGS="production,bundled"
   DAEMON_TAGS="bundled"
   echo "==> runtime archive present, building a self-contained executable"
