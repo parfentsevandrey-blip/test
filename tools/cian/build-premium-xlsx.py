@@ -446,7 +446,7 @@ for e in rows3:
     if BUILDING_RE.search(str(e[5] or '')):
         # проект уже строится или продаётся — его место на листе «Строится»
         price = e[11]
-        rows2.append([e[0], e[4], e[10] or e[9] or '', e[1], main_district(e[3]), None, e[8], 'квартиры',
+        rows2.append([e[0], e[4], e[10] or e[9] or 'срок не объявлен', e[1], main_district(e[3]), None, e[8], 'квартиры',
                       price, price, None, e[7], '', (e[15] or ''), (e[18] or '')])
         moved.append(e[0]); continue
     keep3.append(e)
