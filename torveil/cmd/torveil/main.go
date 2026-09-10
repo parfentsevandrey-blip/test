@@ -11,6 +11,7 @@ import (
 	"github.com/parfentsevandrey-blip/torveil/internal/core"
 	"github.com/parfentsevandrey-blip/torveil/internal/logging"
 	"github.com/parfentsevandrey-blip/torveil/internal/tunnel"
+	"github.com/parfentsevandrey-blip/torveil/internal/winsys"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
@@ -47,7 +48,7 @@ func main() {
 		MinWidth:         940,
 		MinHeight:        620,
 		AssetServer:      &assetserver.Options{Assets: assets},
-		BackgroundColour: &options.RGBA{R: 14, G: 16, B: 22, A: 1},
+		BackgroundColour: windowBackground(cfg.Theme),
 		OnStartup:        app.startup,
 		OnShutdown:       app.shutdown,
 		Bind:             []any{app},
@@ -58,5 +59,25 @@ func main() {
 	})
 	if err != nil {
 		log.Fatalf("TorVeil failed to start: %v", err)
+	}
+}
+
+// windowBackground picks the colour the window is painted before the page
+// renders. Getting it wrong is a dark flash on every launch in light mode.
+func windowBackground(theme string) *options.RGBA {
+	light := &options.RGBA{R: 244, G: 245, B: 248, A: 1}
+	dark := &options.RGBA{R: 14, G: 16, B: 22, A: 1}
+
+	switch theme {
+	case config.ThemeLight:
+		return light
+	case config.ThemeDark:
+		return dark
+	default:
+		// "system": ask Windows, since the page will resolve it the same way.
+		if winsys.SystemPrefersLight() {
+			return light
+		}
+		return dark
 	}
 }

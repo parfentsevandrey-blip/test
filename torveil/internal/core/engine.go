@@ -298,6 +298,21 @@ func (e *Engine) Connect(ctx context.Context) error {
 func (e *Engine) connect(ctx, runCtx context.Context, cfg config.Config) error {
 	e.setState(StateStarting, "preparing the Tor runtime")
 
+	// Tor cannot open a path containing non-ASCII characters on Windows, and
+	// a Windows account named in a non-Latin script makes every per-user
+	// directory one of those. Resolving the data directory to its ASCII short
+	// name here fixes every path at once: the runtime is unpacked inside it,
+	// so tor.exe, the transports, the geoip files and the generated torrc all
+	// end up ASCII too.
+	dataDir, err := winsys.ASCIIPath(cfg.DataDir)
+	if err != nil {
+		return e.fail(errors.New(winsys.DescribeNonASCII(cfg.DataDir, err)))
+	}
+	if dataDir != cfg.DataDir {
+		e.logs.Logf("info", "using the short form of the data directory, which Tor can open: %s", dataDir)
+		cfg.DataDir = dataDir
+	}
+
 	// The bundled runtime is unpacked before anything is searched for, and
 	// its directory goes to the front of the search list, so the Tor TorVeil
 	// ships is what runs even on a machine that also has one installed.

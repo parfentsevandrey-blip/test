@@ -129,7 +129,18 @@ type Config struct {
 
 	// AutoConnect starts the tunnel as soon as the application launches.
 	AutoConnect bool `json:"autoConnect"`
+
+	// Theme is "system", "dark" or "light". "system" follows what Windows is
+	// set to and changes with it.
+	Theme string `json:"theme"`
 }
+
+// Theme values.
+const (
+	ThemeSystem = "system"
+	ThemeDark   = "dark"
+	ThemeLight  = "light"
+)
 
 // Default returns the shipped configuration.
 func Default() Config {
@@ -152,6 +163,7 @@ func Default() Config {
 			KillSwitch:  true,
 		},
 		AutoConnect: false,
+		Theme:       ThemeSystem,
 	}
 }
 
@@ -287,6 +299,14 @@ func (c Config) withDerivedDefaults() Config {
 	}
 	if c.Tunnel.MTU < 576 || c.Tunnel.MTU > 9000 {
 		c.Tunnel.MTU = d.Tunnel.MTU
+	}
+	switch strings.ToLower(strings.TrimSpace(c.Theme)) {
+	case ThemeDark:
+		c.Theme = ThemeDark
+	case ThemeLight:
+		c.Theme = ThemeLight
+	default:
+		c.Theme = ThemeSystem
 	}
 	if strings.TrimSpace(c.DataDir) == "" {
 		if dir, err := Dir(); err == nil {

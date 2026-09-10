@@ -120,6 +120,30 @@ func TestActiveBridges(t *testing.T) {
 	})
 }
 
+func TestThemeNormalization(t *testing.T) {
+	isolateConfigDir(t)
+
+	// Anything unrecognised follows the system rather than picking a side,
+	// so a hand-edited or older settings file cannot leave the interface
+	// stuck in a theme the user did not choose.
+	for in, want := range map[string]string{
+		"":         ThemeSystem,
+		"  ":       ThemeSystem,
+		"nonsense": ThemeSystem,
+		"system":   ThemeSystem,
+		"Dark":     ThemeDark,
+		"LIGHT":    ThemeLight,
+	} {
+		if got := (Config{Theme: in}).Normalized().Theme; got != want {
+			t.Errorf("theme %q normalised to %q, want %q", in, got, want)
+		}
+	}
+
+	if got := Default().Theme; got != ThemeSystem {
+		t.Errorf("default theme = %q, want %q", got, ThemeSystem)
+	}
+}
+
 func TestSaveLoadRoundTrip(t *testing.T) {
 	dir := isolateConfigDir(t)
 
@@ -130,6 +154,7 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 	c.ChaffRateOverride = 64 * 1024
 	c.PinnedGuard = "2B280B23E1107BB62ABFC40DDCC8824814F80A72"
 	c.ExtraTorrc = map[string]string{"ExcludeNodes": "{ru}"}
+	c.Theme = ThemeLight
 
 	if err := c.Save(); err != nil {
 		t.Fatalf("Save: %v", err)
@@ -150,6 +175,9 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 	}
 	if got.ExtraTorrc["ExcludeNodes"] != "{ru}" {
 		t.Errorf("extra torrc options were lost: %v", got.ExtraTorrc)
+	}
+	if got.Theme != ThemeLight {
+		t.Errorf("theme = %q, want %q", got.Theme, ThemeLight)
 	}
 
 	// The settings file records which relays you use and where you exit, so it
