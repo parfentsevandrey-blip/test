@@ -17,6 +17,16 @@ const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
 const args = process.argv.slice(2);
 const opt = (k, d) => { const i = args.indexOf('--' + k); return i >= 0 ? args[i + 1] : d; };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+/* 429 отдаёт заглушку вместо карточки — по ней срок сдачи «терялся». Она такой же
+   повод притормозить и повторить, как 403 и капча. */
+const blocked = (s) => s === 403 || s === 429 || (s !== null && s >= 500);
+/* Ждём именно блок характеристик: «Сдача|Срок сдачи → значение → Класс».
+   Верхняя плашка со словом «Сдача» появляется раньше, и ожидание по нему срывалось. */
+const waitCard = async (page) => {
+  await page.waitForFunction(
+    () => /(?:Срок сдачи|Сдача)\s*\n\s*[^\n]{2,32}\s*\n\s*Класс/.test(document.body.innerText),
+    { timeout: 25000 }).catch(() => {});
+};
 const delay = parseInt(opt('delay', '4000'), 10);
 const REFRESH = args.includes('--refresh');   // перечитать карточки, даже если они уже собраны
 
@@ -86,6 +96,22 @@ function parse(text) {
       await sleep(150000);
     };
     try {
+      const known = prev[name] && prev[name].url ? prev[name] : null;
+      if (known) {
+        const resp0 = await page.goto(known.url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+        await waitCard(page);
+        await page.waitForTimeout(1500);
+        const st0 = resp0 ? resp0.status() : null;
+        if (page.url().includes('captcha') || blocked(st0)) { await backoff('отбой http ' + st0); if (captcha > 40) break; continue; }
+        const p0 = parse(await page.evaluate(() => document.body.innerText));
+        /* Пустая карточка — почти всегда 429/заглушка, а не ЖК без характеристик:
+           на настоящей странице всегда есть «Класс». Повторяем, а не пишем пустоту. */
+        if (!p0.cls && !p0.delivery && !p0.done) { await backoff('пустая карточка'); if (captcha > 40) break; continue; }
+        out[name] = { ...known, ...p0, fetched: new Date().toISOString().slice(0, 10) };
+        console.log(`id=${known.id} ${p0.developer || '—'} | ${p0.yearText || '—'} | ${p0.cls || '—'}`);
+        fs.writeFileSync(outPath, JSON.stringify(out, null, 1) + '\n');
+        await sleep(delay); continue;
+      }
       const r = await ctx.request.get('https://api.cian.ru/geo-suggest/v1/suggest/?query=' + encodeURIComponent((item.query || name).replace(/\s*\(.*$/, '')) + '&regionId=1&offerType=flat&dealType=sale',
         { headers: { referer: 'https://www.cian.ru/', 'user-agent': UA }, timeout: 30000, maxRedirects: 0 });
       if (r.status() !== 200) { await backoff(`suggest http ${r.status()}`); if (captcha > 40) break; continue; }
@@ -94,11 +120,13 @@ function parse(text) {
       if (!hit) { out[name] = { id: null, note: 'подсказка не нашла ЖК' }; console.log('не найден'); await sleep(delay); continue; }
       const url = 'https://www.cian.ru' + hit.link;
       const resp = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
-      await page.waitForTimeout(2500);
+      await waitCard(page);
+      await page.waitForTimeout(1500);
       const status = resp ? resp.status() : null;
-      if (page.url().includes('captcha') || status === 403) { await backoff('капча'); if (captcha > 40) break; continue; }
+      if (page.url().includes('captcha') || blocked(status)) { await backoff('отбой http ' + status); if (captcha > 40) break; continue; }
       const text = await page.evaluate(() => document.body.innerText);
       const p = parse(text);
+      if (!p.cls && !p.delivery && !p.done) { await backoff('пустая карточка'); if (captcha > 40) break; continue; }
       out[name] = { id: hit.id, cianName: hit.name, address: hit.address, url, status, ...p, fetched: new Date().toISOString().slice(0, 10) };
       console.log(`id=${hit.id} ${p.developer || '—'} | ${p.yearText || '—'} | ${p.cls || '—'}`);
     } catch (e) {

@@ -338,7 +338,9 @@ for r in complexes['complexes']:
     lots_finished = (r.get('finishedShare') or 0) >= 50
     bmax = r.get('buildYearMax')
     if cd.get('done') is True: lots_built = True                                    # плашка «Сдан» на карточке ЖК
-    elif cd.get('done') is False: lots_built = False                                # карточка есть, дом ещё строится
+    elif cd.get('done') is False and (max(card_years(cd)) if card_years(cd) else NOW_YEAR) >= NOW_YEAR:
+        lots_built = False                                                          # карточка есть, срок сдачи ещё не наступил
+    elif cd.get('done') is False: lots_built = True                                 # плашки «Сдан» нет, но срок сдачи в прошлом
     elif lots_finished and ymax_lots and ymax_lots < NOW_YEAR: lots_built = True    # карточки нет — по объявлениям
     elif bmax and bmax <= NOW_YEAR: lots_built = True
     else: lots_built = False
