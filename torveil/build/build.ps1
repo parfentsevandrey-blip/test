@@ -17,14 +17,18 @@ $unformatted = & gofmt -l ./cmd ./internal
 if ($unformatted) {
     Write-Error "these files need gofmt:`n$unformatted"
 }
-go vet ./...
+# The production tag is needed here too, or vet checks the Wails stub instead
+# of the real application implementation.
+go vet -tags production ./...
 if ($LASTEXITCODE -ne 0) { Write-Error "go vet failed" }
 go test ./...
 if ($LASTEXITCODE -ne 0) { Write-Error "tests failed" }
 
 Write-Host "==> building torveil.exe (GUI)"
 $env:CGO_ENABLED = "0"
-go build -trimpath -ldflags "-s -w -H windowsgui -X main.version=$Version" -o "$Out\torveil.exe" ./cmd/torveil
+# -tags production is not optional: without it Wails links a stub that shows
+# an error dialog at start-up instead of opening a window.
+go build -trimpath -tags production -ldflags "-s -w -H windowsgui -X main.version=$Version" -o "$Out\torveil.exe" ./cmd/torveil
 if ($LASTEXITCODE -ne 0) { Write-Error "build failed" }
 
 Write-Host "==> building torveild.exe (headless)"

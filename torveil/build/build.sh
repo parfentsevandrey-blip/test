@@ -20,12 +20,16 @@ gofmt -l ./cmd ./internal | tee /dev/stderr | (! grep -q .) || {
   exit 1
 }
 go vet ./...
-GOOS=windows GOARCH="$ARCH" go vet ./...
+# The Windows vet needs the production tag too, or it checks the Wails stub
+# instead of the real application implementation.
+GOOS=windows GOARCH="$ARCH" go vet -tags production ./...
 go test ./...
 
 echo "==> building torveil.exe (GUI) for windows/$ARCH"
+# -tags production is not optional: without it Wails links a stub that shows
+# an error dialog at start-up instead of opening a window.
 GOOS=windows GOARCH="$ARCH" CGO_ENABLED=0 go build \
-  -trimpath \
+  -trimpath -tags production \
   -ldflags "-s -w -H windowsgui -X main.version=$VERSION" \
   -o "$OUT/torveil.exe" ./cmd/torveil
 
