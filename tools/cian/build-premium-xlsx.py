@@ -302,7 +302,7 @@ wb.remove(wb.active)
 # ---------- лист 1: построено ----------
 BUILT_MIN_YEAR = 2022     # вторичку сдачи раньше этого года в подборку не берём
 zone_by_name = {}
-H1 = ['Название ЖК', 'Застройщик', 'Год постройки', 'Адрес', 'Район', 'Корпусов', 'Этажность',
+H1 = ['Название ЖК', 'Застройщик', 'Год сдачи', 'Адрес', 'Район', 'Корпусов', 'Этажность',
       'Статус', 'Цена за метр ОТ', 'Цена за метр медиана', 'Цена за метр ДО', 'Лотов в продаже', 'Площадь лотов, м²',
       'Класс', 'Ссылка на Циан', 'Примечание']
 rows1, rows2_live = [], []
@@ -337,10 +337,10 @@ for r in complexes['complexes']:
     ymax_lots = max(yrs) if yrs else None
     lots_finished = (r.get('finishedShare') or 0) >= 50
     bmax = r.get('buildYearMax')
-    if cd.get('done') is True: lots_built = True                                    # плашка «Сдан» на карточке ЖК
-    elif cd.get('done') is False and (max(card_years(cd)) if card_years(cd) else NOW_YEAR) >= NOW_YEAR:
-        lots_built = False                                                          # карточка есть, срок сдачи ещё не наступил
-    elif cd.get('done') is False: lots_built = True                                 # плашки «Сдан» нет, но срок сдачи в прошлом
+    # Стадию решает карточка ЖК: плашка «Сдан» и срок сдачи. Плашка стоит и у комплексов,
+    # где сдана только первая очередь («Аннабель», срок сдачи 2026) — такие ещё строятся.
+    cy_max = max(card_years(cd)) if card_years(cd) else None
+    if cd.get('done') is not None: lots_built = bool(cd['done']) and not (cy_max and cy_max > NOW_YEAR)
     elif lots_finished and ymax_lots and ymax_lots < NOW_YEAR: lots_built = True    # карточки нет — по объявлениям
     elif bmax and bmax <= NOW_YEAR: lots_built = True
     else: lots_built = False

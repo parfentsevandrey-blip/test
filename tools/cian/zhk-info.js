@@ -29,6 +29,10 @@ const waitCard = async (page) => {
 };
 const delay = parseInt(opt('delay', '4000'), 10);
 const REFRESH = args.includes('--refresh');   // перечитать карточки, даже если они уже собраны
+const DUMP = opt('dump');                     // куда класть сырой текст карточек — правки парсера без сети
+if (DUMP) fs.mkdirSync(DUMP, { recursive: true });
+const slug = (s) => s.replace(/[^\wа-яёА-ЯЁ]+/gi, '-').slice(0, 60);
+const keep = (name, text) => { if (DUMP) fs.writeFileSync(`${DUMP}/${slug(name)}.txt`, text); };
 
 const names = JSON.parse(fs.readFileSync(opt('names'), 'utf8')).map((n) => (typeof n === 'string' ? { name: n } : n));
 const outPath = opt('out', 'zhk-info.json');
@@ -54,15 +58,23 @@ function parse(text) {
   /* Значение срока сдачи берём строго из блока характеристик — между «Сдача»/«Срок
      сдачи» и следующим полем «Класс». Иначе цепляются рекламные карточки соседних
      ЖК («Сдача в 4 кв. 2028 · ЖК Бадаевский») и срок уезжает на годы вперёд. */
-  const delivery = grab(/(?:Срок сдачи|Сдача)\s*\n\s*([^\n]{2,32})\s*\n\s*Класс/);
-  const done = /Сдача\s*\n\s*\n?\s*Сдан\s*\n/.test(t) || /^\s*Сдан\s*$/m.test(t.slice(0, 4000));
+  const delivery = (grab(/(?:Срок сдачи|Сдача)\s*\n\s*([^\n]{2,32})\s*\n\s*Класс/) || '')
+    .replace(/^Сдач[аи]\s+в?о?\s*/i, '').trim() || null;
+  /* Сдан или нет — только по плашке в шапке ЖК: она стоит вплотную над адресом
+     («Сдан\nМосква, …») или, в старом шаблоне, в строке «Сдача → Сдан → Метро».
+     Слово «Сдан» из списка квартир ниже по странице отправляло строящиеся дома
+     («Дом Франка», «Аннабель») на лист «Построено». */
+  const badge = grab(/\n(Сдан(?:[^\n]{0,30})?|Сдача[^\n]{0,40})\nМосква,/);
+  // \b здесь бесполезен: JS считает кириллицу не-словом, и «Сдан» не даёт границы
+  const done = /Сдача\s*\n\s*\n\s*Сдан\s*\n/.test(t) || /^Сдан(\s|$)/.test(badge || '');
   // сроки по корпусам: «Золотой (квартал 1)\nСдан в 4 кв. 2021»
   const houses = [...t.matchAll(/\n([^\n]{3,60})\n(Сдан[^\n]{0,30}|Сдача[^\n]{0,30}|\d кв\. 20\d\d)/g)]
     .map((m) => ({ house: m[1].trim(), when: m[2].trim() }))
     .filter((h) => /20\d\d/.test(h.when)).slice(0, 12);
   return {
     developer: grab(/Застройщики?\s*\n+\s*([^\n]{2,80})/),
-    delivery,                                  // как на карточке: «2023», «2021–2023», «4 кв. 2026»
+    badge,                                     // плашка в шапке: «Сдан» / «Сдача в 4 кв. 2026»
+    delivery,                                // как на карточке: «2023», «2021–2023», «4 кв. 2026»
     done,                                      // плашка «Сдан» в шапке
     finished: done ? (delivery || 'Сдан') : null,
     deadline: done ? null : delivery,
@@ -103,7 +115,8 @@ function parse(text) {
         await page.waitForTimeout(1500);
         const st0 = resp0 ? resp0.status() : null;
         if (page.url().includes('captcha') || blocked(st0)) { await backoff('отбой http ' + st0); if (captcha > 40) break; continue; }
-        const p0 = parse(await page.evaluate(() => document.body.innerText));
+        const t0 = await page.evaluate(() => document.body.innerText);
+        const p0 = parse(t0); keep(name, t0);
         /* Пустая карточка — почти всегда 429/заглушка, а не ЖК без характеристик:
            на настоящей странице всегда есть «Класс». Повторяем, а не пишем пустоту. */
         if (!p0.cls && !p0.delivery && !p0.done) { await backoff('пустая карточка'); if (captcha > 40) break; continue; }
@@ -125,7 +138,7 @@ function parse(text) {
       const status = resp ? resp.status() : null;
       if (page.url().includes('captcha') || blocked(status)) { await backoff('отбой http ' + status); if (captcha > 40) break; continue; }
       const text = await page.evaluate(() => document.body.innerText);
-      const p = parse(text);
+      const p = parse(text); keep(name, text);
       if (!p.cls && !p.delivery && !p.done) { await backoff('пустая карточка'); if (captcha > 40) break; continue; }
       out[name] = { id: hit.id, cianName: hit.name, address: hit.address, url, status, ...p, fetched: new Date().toISOString().slice(0, 10) };
       console.log(`id=${hit.id} ${p.developer || '—'} | ${p.yearText || '—'} | ${p.cls || '—'}`);

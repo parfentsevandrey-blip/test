@@ -6,12 +6,17 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-rezidenciya-tverskaya-moskva-14385/",
   "status": 200,
   "developer": "Техноком Трейд",
-  "finished": null,
-  "deadline": "2019",
-  "yearText": null,
+  "delivery": "2019",
+  "done": true,
+  "finished": "2019",
+  "deadline": null,
+  "yearText": "Сдан 2019",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "12–15",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Пресня Сити": {
   "id": 6743,
@@ -19,13 +24,18 @@
   "address": "Москва, Ходынская улица",
   "url": "https://www.cian.ru/zhiloy-kompleks-presnya-siti-moskva-6743/",
   "status": 200,
-  "developer": "MR",
-  "finished": null,
-  "deadline": "2018",
-  "yearText": null,
+  "developer": "MR, Коалко",
+  "delivery": "2018",
+  "done": true,
+  "finished": "2018",
+  "deadline": null,
+  "yearText": "Сдан 2018",
   "cls": "Бизнес",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "44",
+  "buildings": "3",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Меценат": {
   "id": 50666,
@@ -34,12 +44,17 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-mecenat-moskva-50666/",
   "status": 200,
   "developer": "Торгпродуктсервис",
-  "finished": null,
-  "deadline": "2019",
-  "yearText": null,
+  "delivery": "2019",
+  "done": true,
+  "finished": "2019",
+  "deadline": null,
+  "yearText": "Сдан 2019",
   "cls": "Бизнес",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "3",
+  "buildings": "7",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "NEVA TOWERS (Нева Тауэрс)": {
   "id": 8825,
@@ -48,12 +63,26 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-neva-towers-moskva-8825/",
   "status": 200,
   "developer": "СТ Тауэрс",
-  "finished": "4 кв. 2020",
+  "delivery": "2019–2020",
+  "done": true,
+  "finished": "2019–2020",
   "deadline": null,
-  "yearText": "Сдан в 4 кв. 2020",
+  "yearText": "Сдан 2019–2020",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "66–78",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "1-й Красногвардейский, 22с1 (Башня Т1)",
+    "when": "Сдан в 4 кв. 2020"
+   },
+   {
+    "house": "1-й Красногвардейский, 22с2 (Башня Т2)",
+    "when": "Сдан в 4 кв. 2019"
+   }
+  ],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "The Book (Бук)": {
   "id": 53279,
@@ -62,12 +91,17 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-the-book-moskva-53279/",
   "status": 200,
   "developer": "Capital Group",
-  "finished": null,
-  "deadline": "2020",
-  "yearText": null,
+  "delivery": "2020",
+  "done": true,
+  "finished": "2020",
+  "deadline": null,
+  "yearText": "Сдан 2020",
   "cls": "Бизнес",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "26",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Sinatra (Синатра)": {
   "id": 50481,
@@ -76,12 +110,17 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-sinatra-moskva-50481/",
   "status": 200,
   "developer": "Glincom",
-  "finished": null,
-  "deadline": "2021",
-  "yearText": null,
+  "delivery": "2021",
+  "done": true,
+  "finished": "2021",
+  "deadline": null,
+  "yearText": "Сдан 2021",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "7",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "LUMIN (ЛЮМИН)": {
   "id": 1565486,
@@ -90,12 +129,17 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-lumin-moskva-1565486/",
   "status": 200,
   "developer": "HUTTON",
-  "finished": null,
-  "deadline": "2022",
-  "yearText": null,
+  "delivery": "2022",
+  "done": true,
+  "finished": "2022",
+  "deadline": null,
+  "yearText": "Сдан 2022",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "8",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Уланский, 13": {
   "id": 3967920,
@@ -104,194 +148,426 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-ulanskiy-13-moskva-3967920/",
   "status": 200,
   "developer": "РП Проект",
-  "finished": null,
-  "deadline": "2020",
-  "yearText": null,
+  "delivery": "2020",
+  "done": true,
+  "finished": "2020",
+  "deadline": null,
+  "yearText": "Сдан 2020",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "5",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Современник": {
   "id": 12566,
   "cianName": "Современник",
   "address": "Москва, Машкова улица, 13с1",
   "url": "https://www.cian.ru/zhiloy-kompleks-sovremennik-moskva-12566/",
-  "status": 200,
+  "status": 429,
   "developer": "VESPER",
-  "finished": null,
-  "deadline": "2018",
-  "yearText": null,
+  "delivery": "2018",
+  "done": true,
+  "finished": "2018",
+  "deadline": null,
+  "yearText": "Сдан 2018",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "5",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "City Park (Сити Парк)": {
   "id": 19492,
   "cianName": "City Park (Сити Парк)",
   "address": "Москва, Мантулинская улица, вл7",
   "url": "https://www.cian.ru/zhiloy-kompleks-city-park-moskva-19492/",
-  "status": 200,
+  "status": 429,
   "developer": "МонАрх",
-  "finished": null,
-  "deadline": "2019–2021",
-  "yearText": null,
+  "delivery": "2019–2021",
+  "done": true,
+  "finished": "2019–2021",
+  "deadline": null,
+  "yearText": "Сдан 2019–2021",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "6–21",
+  "buildings": "6",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "SkyView": {
   "id": 912499,
   "cianName": "SkyView",
   "address": "Москва, Дружинниковская улица, 15А",
   "url": "https://www.cian.ru/zhiloy-kompleks-skyview-moskva-912499/",
-  "status": 200,
+  "status": 429,
   "developer": "СЗ Киноцентр",
-  "finished": "3 кв. 2024",
-  "deadline": "2024",
-  "yearText": "Сдан в 3 кв. 2024",
+  "delivery": "2024",
+  "done": true,
+  "finished": "2024",
+  "deadline": null,
+  "yearText": "Сдан 2024",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "22",
+  "buildings": "4",
+  "houses": [
+   {
+    "house": "Дружинниковская, 15А (Корпус A)",
+    "when": "Сдан в 3 кв. 2024"
+   },
+   {
+    "house": "Дружинниковская, 15А (Корпус B)",
+    "when": "Сдан в 3 кв. 2024"
+   },
+   {
+    "house": "Дружинниковская, 15А (Корпус C)",
+    "when": "Сдан в 3 кв. 2024"
+   }
+  ],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Репаблик": {
   "id": 3867641,
   "cianName": "Репаблик",
   "address": "Москва, улица Пресненский Вал",
   "url": "https://www.cian.ru/zhiloy-kompleks-repablik-moskva-3867641/",
-  "status": 200,
+  "status": 429,
   "developer": "Страна.Премиум",
-  "finished": "3 кв. 2026",
-  "deadline": "4 кв. 2027, есть сданные",
-  "yearText": "Сдан в 3 кв. 2026",
+  "delivery": "2026–2027",
+  "done": false,
+  "finished": null,
+  "deadline": "2026–2027",
+  "yearText": "Сдача 2026–2027",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "26–33",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "ГОЛД",
+    "when": "Сдача в 4 кв. 2027"
+   },
+   {
+    "house": "ГРИН",
+    "when": "Сдача в 4 кв. 2027"
+   },
+   {
+    "house": "ПЛАТИНУМ 3",
+    "when": "Сдан в 3 кв. 2026"
+   },
+   {
+    "house": "РЕДС 2",
+    "when": "Сдан в 3 кв. 2026"
+   },
+   {
+    "house": "ГОЛД",
+    "when": "4 кв. 2027"
+   },
+   {
+    "house": "ГРИН",
+    "when": "4 кв. 2027"
+   },
+   {
+    "house": "ГОЛД",
+    "when": "4 кв. 2027"
+   },
+   {
+    "house": "ГОЛД",
+    "when": "4 кв. 2027"
+   },
+   {
+    "house": "ГРИН",
+    "when": "4 кв. 2027"
+   },
+   {
+    "house": "ГРИН",
+    "when": "4 кв. 2027"
+   },
+   {
+    "house": "от 39 739 000 ₽",
+    "when": "Сдача в 4 кв. 2031"
+   },
+   {
+    "house": "от 22 368 838 ₽",
+    "when": "Сдача в 2 кв. 2030"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  "Полянка/44": {
   "id": 7475,
   "cianName": "Полянка/44",
   "address": "Москва, ЖК Полянка 44",
   "url": "https://www.cian.ru/zhiloy-kompleks-polyanka44-moskva-7475/",
-  "status": 200,
+  "status": 429,
   "developer": "ТЕЛЕКОМ",
-  "finished": "1 кв. 2019",
-  "deadline": "2019–2024",
-  "yearText": "Сдан в 1 кв. 2019",
+  "delivery": "2019–2024",
+  "done": true,
+  "finished": "2019–2024",
+  "deadline": null,
+  "yearText": "Сдан 2019–2024",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "4–7",
+  "buildings": "8",
+  "houses": [
+   {
+    "house": "ЖК «Полянка/44»",
+    "when": "Сдача в 2026, есть сданные"
+   },
+   {
+    "house": "Лотос",
+    "when": "Сдан в 1 кв. 2019"
+   },
+   {
+    "house": "Мускат",
+    "when": "Сдан в 1 кв. 2019"
+   },
+   {
+    "house": "От 159 200 000 ₽",
+    "when": "Сдача в 3 кв. 2027"
+   },
+   {
+    "house": "От 435 841 879 ₽",
+    "when": "Сдача в 4 кв. 2028"
+   },
+   {
+    "house": "От 270 452 000 ₽",
+    "when": "Сдача в 2 кв. 2027"
+   }
+  ],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Титул на Серебрянической": {
   "id": 300653,
   "cianName": "Титул на Серебрянической",
   "address": "Москва, Центральный административный округ, Таганский район, Серебряническая набережная",
   "url": "https://www.cian.ru/zhiloy-kompleks-titul-na-serebryanicheskoy-moskva-300653/",
-  "status": 200,
+  "status": 429,
   "developer": "Центр-Инвест",
-  "finished": null,
+  "delivery": "2021",
+  "done": true,
+  "finished": "2021",
   "deadline": null,
-  "yearText": null,
+  "yearText": "Сдан 2021",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "6–9",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "от 200 633 790 ₽",
+    "when": "Сдача в 3 кв. 2026"
+   }
+  ],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Bogenhouse (Богенхаус)": {
   "id": 3683635,
   "cianName": "Bogenhouse (Богенхаус)",
   "address": "Москва, Озерковская набережная, 6",
   "url": "https://www.cian.ru/zhiloy-kompleks-bogenhouse-moskva-3683635/",
-  "status": 200,
+  "status": 429,
   "developer": "Дельта",
-  "finished": null,
-  "deadline": "2021",
-  "yearText": null,
+  "delivery": "2021",
+  "done": true,
+  "finished": "2021",
+  "deadline": null,
+  "yearText": "Сдан 2021",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "2–5",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "BALCHUG VIEWPOINT (Балчуг Вьюпоинт)": {
   "id": 7764,
   "cianName": "BALCHUG VIEWPOINT (Балчуг Вьюпоинт)",
   "address": "Москва, Садовническая набережная, 7",
   "url": "https://www.cian.ru/zhiloy-kompleks-balchug-viewpoint-moskva-7764/",
-  "status": 200,
+  "status": 429,
   "developer": "ИНТЕКО",
-  "finished": null,
-  "deadline": "2018",
-  "yearText": null,
+  "delivery": "2018",
+  "done": true,
+  "finished": "2018",
+  "deadline": null,
+  "yearText": "Сдан 2018",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "6",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Capital Towers (Капитал Тауэрс)": {
   "id": 45865,
   "cianName": "Capital Towers (Капитал Тауэрс)",
   "address": "Москва, Центральный административный округ, Пресненский район, Московский международный деловой центр Москва-Сити, Краснопресненская набережная",
   "url": "https://www.cian.ru/zhiloy-kompleks-capital-towers-moskva-45865/",
-  "status": 200,
-  "developer": "Capital Group",
-  "finished": null,
-  "deadline": "1 кв. 2029",
-  "yearText": "Сдан во 2 кв. 2023",
+  "status": 429,
+  "developer": "Capital Group, Мегаполис Груп",
+  "delivery": "2023",
+  "done": true,
+  "finished": "2023",
+  "deadline": null,
+  "yearText": "Сдан 2023",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "45–69",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "Краснопресненская, 14Ак1 (Корпус А)",
+    "when": "Сдан во 2 кв. 2023"
+   },
+   {
+    "house": "Краснопресненская, 14Ак2 (Корпус Б)",
+    "when": "Сдан во 2 кв. 2023"
+   },
+   {
+    "house": "Краснопресненская, 14Ак3 (Корпус В)",
+    "when": "Сдан во 2 кв. 2023"
+   },
+   {
+    "house": "от 280 781 319 ₽",
+    "when": "Сдача в 4 кв. 2028"
+   },
+   {
+    "house": "от 77 178 101 ₽",
+    "when": "Сдача в 4 кв. 2027"
+   },
+   {
+    "house": "От 6 832 670 ₽",
+    "when": "Сдача в 1 кв. 2028"
+   },
+   {
+    "house": "От 5 550 400 ₽",
+    "when": "Сдача в 3 кв. 2027"
+   },
+   {
+    "house": "От 7 828 379 ₽",
+    "when": "Сдача в 2—3 кв. 2027"
+   },
+   {
+    "house": "От 10 043 877 ₽",
+    "when": "Сдача в 3 кв. 2026, есть сданные"
+   },
+   {
+    "house": "От 6 190 000 ₽",
+    "when": "Сдача в 2026—2027"
+   },
+   {
+    "house": "От 3 399 000 ₽",
+    "when": "Сдача в 1—3 кв. 2027, есть сданные"
+   },
+   {
+    "house": "От 10 225 800 ₽",
+    "when": "Сдача в 2026—2027"
+   }
+  ],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Титул на Якиманке": {
   "id": 328992,
   "cianName": "Титул на Якиманке",
   "address": "Москва, 2-й Хвостов переулок, 8/2",
   "url": "https://www.cian.ru/zhiloy-kompleks-titul-na-yakimanke-moskva-328992/",
-  "status": 200,
+  "status": 429,
   "developer": "Центр-Инвест",
-  "finished": null,
-  "deadline": "2022",
-  "yearText": null,
+  "delivery": "2022",
+  "done": true,
+  "finished": "2022",
+  "deadline": null,
+  "yearText": "Сдан 2022",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "6",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Клубный дом ЦВЕТ32": {
   "id": 43453,
   "cianName": "Клубный дом ЦВЕТ32",
   "address": "Москва, Цветной бульвар, 32А",
   "url": "https://www.cian.ru/zhiloy-kompleks-klubnyy-dom-cvet32-moskva-43453/",
-  "status": 200,
+  "status": 429,
   "developer": "HUTTON",
-  "finished": null,
-  "deadline": "2019",
-  "yearText": null,
+  "delivery": "2019",
+  "done": true,
+  "finished": "2019",
+  "deadline": null,
+  "yearText": "Сдан 2019",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "8",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "A.Residence (А Резиденс)": {
   "id": 36571,
   "cianName": "A.Residence (А Резиденс)",
   "address": "Москва, Садовническая улица, 82",
   "url": "https://www.cian.ru/zhiloy-kompleks-aresidence-moskva-36571/",
-  "status": 200,
+  "status": 429,
   "developer": "СЗ А-Резиденс",
-  "finished": null,
+  "delivery": "2025",
+  "done": true,
+  "finished": "2025",
   "deadline": null,
-  "yearText": "Сдан во 2 кв. 2025",
+  "yearText": "Сдан 2025",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "5–9",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "Корпус 1",
+    "when": "Сдан во 2 кв. 2025"
+   },
+   {
+    "house": "Корпус 2",
+    "when": "Сдан во 2 кв. 2025"
+   },
+   {
+    "house": "Корпус 3",
+    "when": "Сдан во 2 кв. 2025"
+   },
+   {
+    "house": "Корпус 4",
+    "when": "Сдан во 2 кв. 2025"
+   },
+   {
+    "house": "Корпус 5",
+    "when": "Сдан во 2 кв. 2025"
+   }
+  ],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Edison House (Эдисон Хаус)": {
   "id": 1506,
   "cianName": "Edison House (Эдисон Хаус)",
   "address": "Москва, Электрический переулок, 10",
   "url": "https://www.cian.ru/zhiloy-kompleks-edison-house-moskva-1506/",
-  "status": 200,
+  "status": 429,
   "developer": "Приоритет",
-  "finished": null,
-  "deadline": "2019",
-  "yearText": null,
+  "delivery": "2019",
+  "done": true,
+  "finished": "2019",
+  "deadline": null,
+  "yearText": "Сдан 2019",
   "cls": "Бизнес",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "7",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Roza Rossa (Роза Росса)": {
   "id": 44753,
@@ -299,27 +575,37 @@
   "address": "Москва, Зубовская улица, 7",
   "url": "https://www.cian.ru/zhiloy-kompleks-roza-rossa-moskva-44753/",
   "status": 200,
-  "developer": "KR Properties",
-  "finished": null,
-  "deadline": "2023",
-  "yearText": null,
+  "developer": "KR Properties, Зубовская, д.7",
+  "delivery": "2023",
+  "done": true,
+  "finished": "2023",
+  "deadline": null,
+  "yearText": "Сдан 2023",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "6",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Собрание клубных домов ORDYNKA (Ордынка)": {
   "id": 46367,
   "cianName": "Собрание клубных домов ORDYNKA (Ордынка)",
   "address": "Москва, Большой Ордынский переулок, 4с4",
   "url": "https://www.cian.ru/zhiloy-kompleks-sobranie-klubnyh-domov-ordynka-moskva-46367/",
-  "status": 200,
+  "status": 429,
   "developer": "INSIGMA",
-  "finished": null,
-  "deadline": "2020",
-  "yearText": null,
+  "delivery": "2020",
+  "done": true,
+  "finished": "2020",
+  "deadline": null,
+  "yearText": "Сдан 2020",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "5–6",
+  "buildings": "7",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Дом NV/9": {
   "id": 36056,
@@ -328,194 +614,347 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-dom-nv9-moskva-36056/",
   "status": 200,
   "developer": "Стрелецкая Слобода",
-  "finished": null,
-  "deadline": "2020",
-  "yearText": null,
+  "delivery": "2020",
+  "done": true,
+  "finished": "2020",
+  "deadline": null,
+  "yearText": "Сдан 2020",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "5–9",
+  "buildings": "2",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Fantastic House (Фантастик Хаус)": {
   "id": 1357608,
   "cianName": "Fantastic House (Фантастик Хаус)",
   "address": "Москва, Большой Тишинский переулок, 30/44с1",
   "url": "https://www.cian.ru/zhiloy-kompleks-fantastic-house-moskva-1357608/",
-  "status": 200,
+  "status": 429,
   "developer": "СЗ Полинессо",
-  "finished": null,
-  "deadline": "2022",
-  "yearText": null,
+  "delivery": "2022",
+  "done": true,
+  "finished": "2022",
+  "deadline": null,
+  "yearText": "Сдан 2022",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "5",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Клубный дом Космо 4/22": {
   "id": 3911906,
   "cianName": "Клубный дом Космо 4/22",
   "address": "Москва, Космодамианская набережная, 4/22",
   "url": "https://www.cian.ru/zhiloy-kompleks-klubnyy-dom-kosmo-422-moskva-3911906/",
-  "status": 200,
+  "status": 429,
   "developer": "Галс-Девелопмент",
-  "finished": null,
-  "deadline": "3 кв. 2028",
-  "yearText": "Сдан во 2 кв. 2025",
+  "delivery": "2025",
+  "done": true,
+  "finished": "2025",
+  "deadline": null,
+  "yearText": "Сдан 2025",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "6",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "Река",
+    "when": "Сдан во 2 кв. 2025"
+   },
+   {
+    "house": "Сад",
+    "when": "Сдан во 2 кв. 2025"
+   },
+   {
+    "house": "от 53 500 756 ₽",
+    "when": "Сдача в 1 кв. 2028"
+   },
+   {
+    "house": "от 22 716 518 ₽",
+    "when": "Сдача в 4 кв. 2026"
+   },
+   {
+    "house": "от 16 834 427 ₽",
+    "when": "Сдача в 3 кв. 2028"
+   },
+   {
+    "house": "От 22 716 518 ₽",
+    "when": "Сдача в 4 кв. 2026"
+   },
+   {
+    "house": "От 16 834 427 ₽",
+    "when": "Сдача в 3 кв. 2028"
+   },
+   {
+    "house": "От 53 500 756 ₽",
+    "when": "Сдача в 1 кв. 2028"
+   }
+  ],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Софийский": {
   "id": 27696,
   "cianName": "Софийский",
   "address": "Москва, Центральный административный округ, район Якиманка, Софийская набережная, 34",
   "url": "https://www.cian.ru/zhiloy-kompleks-sofiyskiy-moskva-27696/",
-  "status": 200,
+  "status": 429,
   "developer": "Трансстройинвест",
-  "finished": null,
-  "deadline": "2018",
-  "yearText": null,
+  "delivery": "2018",
+  "done": true,
+  "finished": "2018",
+  "deadline": null,
+  "yearText": "Сдан 2018",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "8",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Дом на Тишинке": {
   "id": 48505,
   "cianName": "Дом на Тишинке",
   "address": "Москва, Средний Тишинский переулок, 5/7с1",
   "url": "https://www.cian.ru/zhiloy-kompleks-dom-na-tishinke-moskva-48505/",
-  "status": 200,
+  "status": 429,
   "developer": "ДОНСТРОЙ",
-  "finished": null,
-  "deadline": "2021",
-  "yearText": null,
+  "delivery": "2021",
+  "done": true,
+  "finished": "2021",
+  "deadline": null,
+  "yearText": "Сдан 2021",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "7–18",
+  "buildings": "2",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Резиденция 1864": {
   "id": 884420,
   "cianName": "Резиденция 1864",
   "address": "Москва, Софийская набережная, 36",
   "url": "https://www.cian.ru/zhiloy-kompleks-rezidenciya-1864-moskva-884420/",
-  "status": 200,
+  "status": 429,
   "developer": "Сбербанк Капитал",
-  "finished": null,
-  "deadline": "3 кв. 2027",
-  "yearText": "Сдача в 3 кв. 2027",
+  "delivery": "2022",
+  "done": true,
+  "finished": "2022",
+  "deadline": null,
+  "yearText": "Сдан 2022",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "7–8",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "От 159 200 000 ₽",
+    "when": "Сдача в 3 кв. 2027"
+   },
+   {
+    "house": "От 209 250 000 ₽",
+    "when": "Сдача в 2027—2028"
+   },
+   {
+    "house": "От 500 589 501 ₽",
+    "when": "Сдача в 3 кв. 2027"
+   },
+   {
+    "house": "От 79 089 000 ₽",
+    "when": "Сдача в 4 кв. 2027"
+   }
+  ],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Тессинский, 1": {
   "id": 2234022,
   "cianName": "Тессинский, 1",
   "address": "Москва, Тессинский переулок, 1",
   "url": "https://www.cian.ru/zhiloy-kompleks-tessinskiy-1-moskva-2234022/",
-  "status": 200,
+  "status": 429,
   "developer": "Стрелецкая Слобода",
-  "finished": null,
-  "deadline": "2023",
-  "yearText": null,
+  "delivery": "2023",
+  "done": true,
+  "finished": "2023",
+  "deadline": null,
+  "yearText": "Сдан 2023",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "8",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Lucky (Лаки)": {
   "id": 49992,
   "cianName": "Lucky (Лаки)",
   "address": "Москва, 2-я Звенигородская улица",
   "url": "https://www.cian.ru/zhiloy-kompleks-lucky-moskva-49992/",
-  "status": 200,
+  "status": 429,
   "developer": "VESPER",
-  "finished": "1 кв. 2023",
-  "deadline": "4 кв. 2028",
-  "yearText": "Сдан в 1 кв. 2023",
+  "delivery": "2023",
+  "done": true,
+  "finished": "2023",
+  "deadline": null,
+  "yearText": "Сдан 2023",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "21",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "2-я Звенигородская, 14",
+    "when": "Сдан в 1 кв. 2023"
+   },
+   {
+    "house": "Костикова, 4к1",
+    "when": "Сдан в 3 кв. 2023"
+   },
+   {
+    "house": "Костикова, 4к5",
+    "when": "Сдан в 3 кв. 2023"
+   },
+   {
+    "house": "от 435 841 879 ₽",
+    "when": "Сдача в 4 кв. 2028"
+   },
+   {
+    "house": "от 84 520 749 ₽",
+    "when": "Сдача в 1 кв. 2028"
+   },
+   {
+    "house": "От 435 841 879 ₽",
+    "when": "Сдача в 4 кв. 2028"
+   },
+   {
+    "house": "От 500 589 501 ₽",
+    "when": "Сдача в 3 кв. 2027"
+   },
+   {
+    "house": "От 84 520 749 ₽",
+    "when": "Сдача в 1 кв. 2028"
+   }
+  ],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Artisan (Артисан)": {
   "id": 90586,
   "cianName": "Artisan (Артисан)",
   "address": "Москва, улица Арбат, 39",
   "url": "https://www.cian.ru/zhiloy-kompleks-artisan-moskva-90586/",
-  "status": 200,
+  "status": 429,
   "developer": "Era One Holding",
-  "finished": null,
-  "deadline": "2019",
-  "yearText": null,
+  "delivery": "2019",
+  "done": true,
+  "finished": "2019",
+  "deadline": null,
+  "yearText": "Сдан 2019",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "5",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Абрикосов": {
   "id": 111527,
   "cianName": "Абрикосов",
   "address": "Москва, Потаповский переулок, 6",
   "url": "https://www.cian.ru/zhiloy-kompleks-abrikosov-moskva-111527/",
-  "status": 200,
+  "status": 429,
   "developer": "MR",
-  "finished": null,
-  "deadline": "2023",
-  "yearText": null,
+  "delivery": "2023",
+  "done": true,
+  "finished": "2023",
+  "deadline": null,
+  "yearText": "Сдан 2023",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "5",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Клубный дом CULT (Клубный дом Культ)": {
   "id": 3928008,
   "cianName": "Клубный дом CULT (Клубный дом Культ)",
   "address": "Москва, Ленинский проспект, 2",
   "url": "https://www.cian.ru/zhiloy-kompleks-klubnyy-dom-cult-moskva-3928008/",
-  "status": 200,
+  "status": 429,
   "developer": "СЗ ВАРШАВА",
-  "finished": null,
+  "delivery": "2025",
+  "done": true,
+  "finished": "2025",
   "deadline": null,
-  "yearText": null,
+  "yearText": "Сдан 2025",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "9",
+  "buildings": null,
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "SAVVIN RIVER RESIDENCE (Саввин Ривер Резиденс)": {
   "id": 49789,
   "cianName": "SAVVIN RIVER RESIDENCE (Саввин Ривер Резиденс)",
   "address": "Москва, Центральный административный округ, район Хамовники, Саввинская набережная, 13",
   "url": "https://www.cian.ru/zhiloy-kompleks-savvin-river-residence-moskva-49789/",
-  "status": 200,
+  "status": 429,
   "developer": "Гардтекс",
-  "finished": null,
-  "deadline": "2021",
-  "yearText": null,
+  "delivery": "2021",
+  "done": true,
+  "finished": "2021",
+  "deadline": null,
+  "yearText": "Сдан 2021",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "7–9",
+  "buildings": "4",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Рахманинов": {
   "id": 7779,
   "cianName": "Рахманинов",
   "address": "Москва, Малый Кисловский переулок, 3",
   "url": "https://www.cian.ru/zhiloy-kompleks-rahmaninov-moskva-7779/",
-  "status": 200,
+  "status": 429,
   "developer": "КИТОС",
-  "finished": null,
-  "deadline": "2017",
-  "yearText": null,
+  "delivery": "2017",
+  "done": true,
+  "finished": "2017",
+  "deadline": null,
+  "yearText": "Сдан 2017",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "8",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Пироговская 14": {
   "id": 61871,
   "cianName": "Пироговская 14",
   "address": "Москва, Малая Пироговская улица, 14",
   "url": "https://www.cian.ru/zhiloy-kompleks-pirogovskaya-14-moskva-61871/",
-  "status": 200,
+  "status": 429,
   "developer": "Elbert Development Group",
-  "finished": null,
-  "deadline": "2022",
-  "yearText": null,
+  "delivery": "2022",
+  "done": true,
+  "finished": "2022",
+  "deadline": null,
+  "yearText": "Сдан 2022",
   "cls": "Бизнес",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "9",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Cloud Nine (Клауд Найн)": {
   "id": 25398,
@@ -524,12 +963,17 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-cloud-nine-moskva-25398/",
   "status": 200,
   "developer": "VESPER",
-  "finished": null,
-  "deadline": "2022",
-  "yearText": null,
+  "delivery": "2022",
+  "done": true,
+  "finished": "2022",
+  "deadline": null,
+  "yearText": "Сдан 2022",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "4–6",
+  "buildings": "4",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Симфония набережных (Котельническая 21)": {
   "id": 328870,
@@ -538,12 +982,17 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-simfoniya-naberezhnyh-moskva-328870/",
   "status": 200,
   "developer": "СК-207",
-  "finished": null,
-  "deadline": "2018",
-  "yearText": null,
+  "delivery": "2018",
+  "done": true,
+  "finished": "2018",
+  "deadline": null,
+  "yearText": "Сдан 2018",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "3–8",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Садовые кварталы": {
   "id": 130,
@@ -552,12 +1001,17 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-sadovye-kvartaly-moskva-130/",
   "status": 200,
   "developer": "ИНТЕКО",
-  "finished": null,
-  "deadline": "2014–2022",
-  "yearText": null,
+  "delivery": "2014–2022",
+  "done": true,
+  "finished": "2014–2022",
+  "deadline": null,
+  "yearText": "Сдан 2014–2022",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "5–17",
+  "buildings": "35",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Малая Ордынка 19": {
   "id": 2199,
@@ -566,12 +1020,17 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-malaya-ordynka-19-moskva-2199/",
   "status": 200,
   "developer": "Sminex",
-  "finished": null,
-  "deadline": "2019",
-  "yearText": null,
+  "delivery": "2019",
+  "done": true,
+  "finished": "2019",
+  "deadline": null,
+  "yearText": "Сдан 2019",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "6",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Дом в Газетном": {
   "id": 2214439,
@@ -580,12 +1039,17 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-dom-v-gazetnom-moskva-2214439/",
   "status": 200,
   "developer": "Актив-Центр",
-  "finished": null,
-  "deadline": "2022",
-  "yearText": null,
+  "delivery": "2022",
+  "done": true,
+  "finished": "2022",
+  "deadline": null,
+  "yearText": "Сдан 2022",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "5",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Zvonarsky Deluxe (Звонарский Делюкс)": {
   "id": 7782,
@@ -594,12 +1058,17 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-zvonarsky-deluxe-moskva-7782/",
   "status": 200,
   "developer": "АфинаСтрой",
-  "finished": null,
-  "deadline": "2019",
-  "yearText": null,
+  "delivery": "2019",
+  "done": true,
+  "finished": "2019",
+  "deadline": null,
+  "yearText": "Сдан 2019",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "10",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "White Khamovniki (Вайт Хамовники)": {
   "id": 50659,
@@ -608,12 +1077,17 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-white-khamovniki-moskva-50659/",
   "status": 200,
   "developer": "Capital Group",
-  "finished": null,
-  "deadline": "2021",
-  "yearText": null,
+  "delivery": "2021",
+  "done": true,
+  "finished": "2021",
+  "deadline": null,
+  "yearText": "Сдан 2021",
   "cls": "Бизнес",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "15",
+  "buildings": "2",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Золотой, жилой квартал": {
   "id": 81377,
@@ -622,12 +1096,30 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-zolotoy-zhiloy-kvartal-moskva-81377/",
   "status": 200,
   "developer": "Capital Group",
-  "finished": "4 кв. 2021",
-  "deadline": "4 кв. 2028",
-  "yearText": "Сдан в 4 кв. 2021",
+  "delivery": "2021–2023",
+  "done": true,
+  "finished": "2021–2023",
+  "deadline": null,
+  "yearText": "Сдан 2021–2023",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "1–6",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "Золотой (квартал 1)",
+    "when": "Сдан в 4 кв. 2021"
+   },
+   {
+    "house": "Золотой (квартал 2)",
+    "when": "Сдан в 4 кв. 2021"
+   },
+   {
+    "house": "Софийская, 18 (Дом 18-20)",
+    "when": "Сдан в 1 кв. 2023"
+   }
+  ],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Саввинская 17": {
   "id": 4020606,
@@ -636,40 +1128,97 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-savvinskaya-17-moskva-4020606/",
   "status": 200,
   "developer": "Level Group",
-  "finished": null,
-  "deadline": "1 кв. 2028",
-  "yearText": "Сдача в 2026—2029, есть сданные",
+  "delivery": "2025",
+  "done": true,
+  "finished": "2025",
+  "deadline": null,
+  "yearText": "Сдан 2025",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "4",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "от 17 509 987 ₽",
+    "when": "Сдача в 3 кв. 2027 — 4 кв. 2029"
+   },
+   {
+    "house": "от 15 841 370 ₽",
+    "when": "Сдача в 4 кв. 2026 — 2 кв. 2027"
+   },
+   {
+    "house": "От 15 429 191 ₽",
+    "when": "Сдача в 1 кв. 2028"
+   },
+   {
+    "house": "От 7 661 573 ₽",
+    "when": "Сдача в 1 кв. 2029"
+   },
+   {
+    "house": "От 16 577 488 ₽",
+    "when": "Сдача в 4 кв. 2026"
+   },
+   {
+    "house": "От 17 829 759 ₽",
+    "when": "Сдача в 3 кв. 2028"
+   }
+  ],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Клубный дом Фон Дессин": {
   "id": 3820477,
   "cianName": "Клубный дом Фон Дессин",
   "address": "Москва, Потаповский переулок, 5с4",
   "url": "https://www.cian.ru/zhiloy-kompleks-klubnyy-dom-fon-dessin-moskva-3820477/",
-  "status": 200,
+  "status": 429,
   "developer": "Sminex",
-  "finished": null,
+  "delivery": "2026",
+  "done": true,
+  "finished": "2026",
   "deadline": null,
-  "yearText": null,
+  "yearText": "Сдан 2026",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "6",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "от 261 110 000 ₽",
+    "when": "Сдача в 3 кв. 2027 — 2 кв. 2028"
+   },
+   {
+    "house": "От 226 750 000 ₽",
+    "when": "Сдача в 1 кв. 2030"
+   },
+   {
+    "house": "От 159 200 000 ₽",
+    "when": "Сдача в 3 кв. 2027"
+   },
+   {
+    "house": "От 261 110 000 ₽",
+    "when": "Сдача в 2027—2028"
+   }
+  ],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Magnum (Магнум)": {
   "id": 48009,
   "cianName": "Magnum (Магнум)",
   "address": "Москва, Усачёва улица, 9",
   "url": "https://www.cian.ru/zhiloy-kompleks-magnum-moskva-48009/",
-  "status": 200,
+  "status": 429,
   "developer": "Magnum Development",
-  "finished": null,
-  "deadline": "2021",
-  "yearText": null,
+  "delivery": "2021",
+  "done": true,
+  "finished": "2021",
+  "deadline": null,
+  "yearText": "Сдан 2021",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "6",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Дом Бакст на Патриарших": {
   "id": 38269,
@@ -678,12 +1227,17 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-dom-bakst-na-patriarshih-moskva-38269/",
   "status": 200,
   "developer": "Компания Инвестстройком",
-  "finished": null,
-  "deadline": "2020",
-  "yearText": null,
+  "delivery": "2020",
+  "done": true,
+  "finished": "2020",
+  "deadline": null,
+  "yearText": "Сдан 2020",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "5–6",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Клубный дом TURGENEV (Тургенев)": {
   "id": 1252876,
@@ -692,12 +1246,38 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-klubnyy-dom-turgenev-moskva-1252876/",
   "status": 200,
   "developer": "НеоСтрой",
-  "finished": null,
-  "deadline": "2023",
-  "yearText": "Сдача в 2026, есть сданные",
+  "delivery": "2023",
+  "done": true,
+  "finished": "2023",
+  "deadline": null,
+  "yearText": "Сдан 2023",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "8",
+  "buildings": "1",
+  "houses": [
+   {
+    "house": "От 180 427 800 ₽",
+    "when": "Сдача в 2026, есть сданные"
+   },
+   {
+    "house": "От 209 250 000 ₽",
+    "when": "Сдача в 2027—2028"
+   },
+   {
+    "house": "От 270 452 000 ₽",
+    "when": "Сдача в 2 кв. 2027"
+   },
+   {
+    "house": "От 164 428 000 ₽",
+    "when": "Сдача в 3 кв. 2026"
+   },
+   {
+    "house": "От 135 000 000 ₽",
+    "when": "Сдача в 3 кв. 2027"
+   }
+  ],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Villa Grace (Вилла Грейс)": {
   "id": 49483,
@@ -706,12 +1286,17 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-villa-grace-moskva-49483/",
   "status": 200,
   "developer": "Стройтэкс",
-  "finished": null,
-  "deadline": "2023",
-  "yearText": null,
+  "delivery": "2023",
+  "done": true,
+  "finished": "2023",
+  "deadline": null,
+  "yearText": "Сдан 2023",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "6",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Brodsky (Бродский)": {
   "id": 47479,
@@ -720,12 +1305,17 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-brodsky-moskva-47479/",
   "status": 200,
   "developer": "VESPER",
-  "finished": null,
-  "deadline": "2021",
-  "yearText": null,
+  "delivery": "2021",
+  "done": true,
+  "finished": "2021",
+  "deadline": null,
+  "yearText": "Сдан 2021",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "14",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Жизнь на Плющихе": {
   "id": 21369,
@@ -734,12 +1324,17 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-zhizn-na-plyushcihe-moskva-21369/",
   "status": 200,
   "developer": "ДОНСТРОЙ",
-  "finished": null,
-  "deadline": "2019",
-  "yearText": null,
+  "delivery": "2019",
+  "done": true,
+  "finished": "2019",
+  "deadline": null,
+  "yearText": "Сдан 2019",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "7–13",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Carré Blanc (Карре Бланк)": {
   "id": 843878,
@@ -748,12 +1343,17 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-carr-blanc-moskva-843878/",
   "status": 200,
   "developer": "Шатер Девелопмент",
-  "finished": null,
-  "deadline": "2021",
-  "yearText": null,
+  "delivery": "2021",
+  "done": true,
+  "finished": "2021",
+  "deadline": null,
+  "yearText": "Сдан 2021",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "5",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Саввинская 27": {
   "id": 3949610,
@@ -762,12 +1362,46 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-savvinskaya-27-moskva-3949610/",
   "status": 200,
   "developer": "Level Group",
-  "finished": null,
-  "deadline": "2 кв. 2027",
-  "yearText": "Сдача в 2 кв. 2027",
+  "delivery": "2026",
+  "done": true,
+  "finished": "2026",
+  "deadline": null,
+  "yearText": "Сдан 2026",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "6",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "от 18 771 643 ₽",
+    "when": "Сдача в 4 кв. 2026 — 3 кв. 2029"
+   },
+   {
+    "house": "от 17 829 759 ₽",
+    "when": "Сдача в 3 кв. 2028"
+   },
+   {
+    "house": "от 15 841 370 ₽",
+    "when": "Сдача в 4 кв. 2026 — 2 кв. 2027"
+   },
+   {
+    "house": "От 18 618 302 ₽",
+    "when": "Сдача в 2026—2029, есть сданные"
+   },
+   {
+    "house": "От 15 841 370 ₽",
+    "when": "Сдача в 2026—2027, есть сданные"
+   },
+   {
+    "house": "От 17 509 987 ₽",
+    "when": "Сдача в 2027—2029, есть сданные"
+   },
+   {
+    "house": "От 17 262 783 ₽",
+    "when": "Сдача в 4 кв. 2026, есть сданные"
+   }
+  ],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Дом Лаврушинский": {
   "id": 3401216,
@@ -776,12 +1410,58 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-dom-lavrushinskiy-moskva-3401216/",
   "status": 200,
   "developer": "Sminex",
-  "finished": "1 кв. 2025",
+  "delivery": "2025",
+  "done": true,
+  "finished": "2025",
   "deadline": null,
-  "yearText": "Сдан в 1 кв. 2025",
+  "yearText": "Сдан 2025",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "2–14",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "Большой Толмачёвский переулок, 5с1 (Строение 2)",
+    "when": "Сдан в 1 кв. 2025"
+   },
+   {
+    "house": "Вилла 1",
+    "when": "Сдан в 1 кв. 2025"
+   },
+   {
+    "house": "Вилла 2",
+    "when": "Сдан в 1 кв. 2025"
+   },
+   {
+    "house": "Строение 1",
+    "when": "Сдан в 1 кв. 2025"
+   },
+   {
+    "house": "Строение 3",
+    "when": "Сдан в 1 кв. 2025"
+   },
+   {
+    "house": "от 261 110 000 ₽",
+    "when": "Сдача в 3 кв. 2027 — 2 кв. 2028"
+   },
+   {
+    "house": "от 226 750 000 ₽",
+    "when": "Сдача в 1 кв. 2030"
+   },
+   {
+    "house": "От 226 750 000 ₽",
+    "when": "Сдача в 1 кв. 2030"
+   },
+   {
+    "house": "От 159 200 000 ₽",
+    "when": "Сдача в 3 кв. 2027"
+   },
+   {
+    "house": "От 261 110 000 ₽",
+    "when": "Сдача в 2027—2028"
+   }
+  ],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Хамовники 12": {
   "id": 4117447,
@@ -790,12 +1470,17 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-hamovniki-12-moskva-4117447/",
   "status": 200,
   "developer": "КОЛДИ",
-  "finished": null,
-  "deadline": "2026",
-  "yearText": null,
+  "delivery": "2026",
+  "done": true,
+  "finished": "2026",
+  "deadline": null,
+  "yearText": "Сдан 2026",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "14",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Дом на Хлебном": {
   "id": 30376,
@@ -804,12 +1489,17 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-dom-na-hlebnom-moskva-30376/",
   "status": 200,
   "developer": "Группа ВТБ",
-  "finished": null,
-  "deadline": "2017",
-  "yearText": null,
+  "delivery": "2017",
+  "done": true,
+  "finished": "2017",
+  "deadline": null,
+  "yearText": "Сдан 2017",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "8",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Stoleshnikov 7 (Столешников 7)": {
   "id": 631708,
@@ -818,12 +1508,22 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-stoleshnikov-7-moskva-631708/",
   "status": 200,
   "developer": "ВМС Девелопмент",
-  "finished": null,
-  "deadline": "2023",
-  "yearText": "Сдача в 3 кв. 2026",
+  "delivery": "2023",
+  "done": true,
+  "finished": "2023",
+  "deadline": null,
+  "yearText": "Сдан 2023",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "5",
+  "buildings": "1",
+  "houses": [
+   {
+    "house": "От 164 428 000 ₽",
+    "when": "Сдача в 3 кв. 2026"
+   }
+  ],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Stella di Mosca Hotel & Residences (Стелла ди Моска Хотел энд Резиденсиз)": {
   "id": 48547,
@@ -832,12 +1532,17 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-stella-di-mosca-hotelresidences-moskva-48547/",
   "status": 200,
   "developer": "Intermark Real Estate",
-  "finished": null,
-  "deadline": "2023",
-  "yearText": null,
+  "delivery": "2023",
+  "done": true,
+  "finished": "2023",
+  "deadline": null,
+  "yearText": "Сдан 2023",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "5",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Большая Дмитровка IX": {
   "id": 46529,
@@ -846,12 +1551,66 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-bolshaya-dmitrovka-ix-moskva-46529/",
   "status": 200,
   "developer": "ENGEO Development",
-  "finished": "1 кв. 2024",
-  "deadline": "2024",
-  "yearText": "Сдан в 1 кв. 2024",
+  "delivery": "2024",
+  "done": true,
+  "finished": "2024",
+  "deadline": null,
+  "yearText": "Сдан 2024",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "6",
+  "buildings": "3",
+  "houses": [
+   {
+    "house": "История",
+    "when": "Сдан в 1 кв. 2024"
+   },
+   {
+    "house": "Порода",
+    "when": "Сдан в 1 кв. 2024"
+   },
+   {
+    "house": "Свет",
+    "when": "Сдан в 1 кв. 2024"
+   },
+   {
+    "house": "от 164 428 000 ₽",
+    "when": "Сдача в 3 кв. 2026"
+   },
+   {
+    "house": "От 164 428 000 ₽",
+    "when": "Сдача в 3 кв. 2026"
+   },
+   {
+    "house": "От 261 110 000 ₽",
+    "when": "Сдача в 2027—2028"
+   },
+   {
+    "house": "От 281 295 000 ₽",
+    "when": "Сдача в 4 кв. 2026"
+   },
+   {
+    "house": "От 81 156 180 ₽",
+    "when": "Сдача в 4 кв. 2028"
+   },
+   {
+    "house": "От 270 452 000 ₽",
+    "when": "Сдача в 2 кв. 2027"
+   },
+   {
+    "house": "От 24 956 917 ₽",
+    "when": "Сдача в 2026—2028"
+   },
+   {
+    "house": "От 29 153 599 ₽",
+    "when": "Сдача в 4 кв. 2028"
+   },
+   {
+    "house": "От 209 250 000 ₽",
+    "when": "Сдача в 2027—2028"
+   }
+  ],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Armani/Casa Moscow Residences (Армани/Каса Москоу Резиденсес)": {
   "id": 3419909,
@@ -860,12 +1619,26 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-armanicasa-moscow-residences-moskva-3419909/",
   "status": 200,
   "developer": "VOS’HOD",
-  "finished": null,
-  "deadline": "4 кв. 2026",
-  "yearText": "Сдача в 4 кв. 2026",
+  "delivery": "2024",
+  "done": true,
+  "finished": "2024",
+  "deadline": null,
+  "yearText": "Сдан 2024",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "3–6",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "от 48 476 448 ₽",
+    "when": "Сдача в 4 кв. 2026"
+   },
+   {
+    "house": "От 48 476 448 ₽",
+    "when": "Сдача в 4 кв. 2026"
+   }
+  ],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Малая Бронная 15": {
   "id": 45340,
@@ -874,124 +1647,456 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-malaya-bronnaya-15-moskva-45340/",
   "status": 200,
   "developer": "R4S GROUP",
-  "finished": null,
-  "deadline": "2019",
-  "yearText": null,
+  "delivery": "2019",
+  "done": true,
+  "finished": "2019",
+  "deadline": null,
+  "yearText": "Сдан 2019",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "7",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Barkli Gallery (Баркли Галлери)": {
   "id": 32337,
   "cianName": "Barkli Gallery (Баркли Галлери)",
   "address": "Москва, Ордынский тупик, 4",
   "url": "https://www.cian.ru/zhiloy-kompleks-barkli-gallery-moskva-32337/",
-  "status": 200,
+  "status": 429,
   "developer": "Корпорация Баркли",
-  "finished": null,
-  "deadline": "2019",
-  "yearText": null,
+  "delivery": "2019",
+  "done": true,
+  "finished": "2019",
+  "deadline": null,
+  "yearText": "Сдан 2019",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "7",
+  "buildings": "1",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Дом Дау": {
   "id": 4296442,
   "cianName": "Дом Дау",
   "address": "Москва, Краснопресненская набережная",
   "url": "https://www.cian.ru/zhiloy-kompleks-dom-dau-moskva-4296442/",
-  "status": 200,
+  "status": 429,
   "developer": "1-Й КРАСНОГВАРДЕЙСКИЙ",
+  "delivery": "2027",
+  "done": false,
   "finished": null,
-  "deadline": "2 кв. 2027",
-  "yearText": "Сдача в 2 кв. 2027",
+  "deadline": "2027",
+  "yearText": "Сдача 2027",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "87",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "1-комнатная",
+    "when": "2 кв. 2027"
+   },
+   {
+    "house": "1-комнатная",
+    "when": "2 кв. 2027"
+   },
+   {
+    "house": "1-комнатная",
+    "when": "2 кв. 2027"
+   },
+   {
+    "house": "1-комнатная",
+    "when": "2 кв. 2027"
+   },
+   {
+    "house": "1-комнатная",
+    "when": "2 кв. 2027"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "2 кв. 2027"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "2 кв. 2027"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "2 кв. 2027"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "2 кв. 2027"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "2 кв. 2027"
+   },
+   {
+    "house": "3-комнатная",
+    "when": "2 кв. 2027"
+   },
+   {
+    "house": "3-комнатная",
+    "when": "2 кв. 2027"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  "Начало": {
   "id": 5726921,
   "cianName": "Начало",
   "address": "Москва, улица Сергея Макеева, 7",
   "url": "https://www.cian.ru/zhiloy-kompleks-nachalo-moskva-5726921/",
-  "status": 200,
+  "status": 429,
   "developer": "ДОНСТРОЙ",
+  "delivery": "2029–2030",
+  "done": false,
   "finished": null,
-  "deadline": "1 кв. 2029",
-  "yearText": "Сдача в 2029-2030",
+  "deadline": "2029–2030",
+  "yearText": "Сдача 2029–2030",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "11–48",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "Корпус 3",
+    "when": "Сдача в 1 кв. 2029"
+   },
+   {
+    "house": "Корпус 4",
+    "when": "Сдача в 1 кв. 2029"
+   },
+   {
+    "house": "Корпус 6",
+    "when": "Сдача в 1 кв. 2030"
+   },
+   {
+    "house": "Корпус 7",
+    "when": "Сдача в 1 кв. 2030"
+   },
+   {
+    "house": "Корпус 8",
+    "when": "Сдача в 1 кв. 2030"
+   },
+   {
+    "house": "Корпус 7",
+    "when": "1 кв. 2030"
+   },
+   {
+    "house": "Корпус 4",
+    "when": "2 кв. 2029"
+   },
+   {
+    "house": "Корпус 3",
+    "when": "2 кв. 2029"
+   },
+   {
+    "house": "Корпус 6",
+    "when": "1 кв. 2030"
+   },
+   {
+    "house": "Корпус 8",
+    "when": "1 кв. 2030"
+   },
+   {
+    "house": "Корпус 4",
+    "when": "2 кв. 2029"
+   },
+   {
+    "house": "Корпус 7",
+    "when": "1 кв. 2030"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  "Монблан": {
   "id": 4820085,
   "cianName": "Монблан",
   "address": "Москва, Шлюзовая набережная",
   "url": "https://www.cian.ru/zhiloy-kompleks-monblan-moskva-4820085/",
-  "status": 200,
+  "status": 429,
   "developer": "Галс-Девелопмент",
+  "delivery": "2028",
+  "done": false,
   "finished": null,
-  "deadline": "1 кв. 2028",
-  "yearText": "Сдача в 1 кв. 2028",
+  "deadline": "2028",
+  "yearText": "Сдача 2028",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "7–27",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "от 22 716 518 ₽",
+    "when": "Сдача в 4 кв. 2026"
+   },
+   {
+    "house": "от 16 834 427 ₽",
+    "when": "Сдача в 3 кв. 2028"
+   },
+   {
+    "house": "От 22 716 518 ₽",
+    "when": "Сдача в 4 кв. 2026"
+   },
+   {
+    "house": "От 16 834 427 ₽",
+    "when": "Сдача в 3 кв. 2028"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  "Квартал Life Time (Лайф Тайм)": {
   "id": 3987004,
   "cianName": "Квартал Life Time (Лайф Тайм)",
   "address": "Москва, улица Сергея Макеева",
   "url": "https://www.cian.ru/zhiloy-kompleks-kvartal-life-time-moskva-3987004/",
-  "status": 200,
+  "status": 429,
   "developer": "Sminex",
-  "finished": "3 кв. 2026",
-  "deadline": "1 кв. 2030",
-  "yearText": "Сдан в 3 кв. 2026",
+  "delivery": "2026",
+  "done": true,
+  "finished": "2026",
+  "deadline": null,
+  "yearText": "Сдан 2026",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "9–23",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "Корпус A",
+    "when": "Сдан в 3 кв. 2026"
+   },
+   {
+    "house": "Корпус B",
+    "when": "Сдан в 3 кв. 2026"
+   },
+   {
+    "house": "Корпус C",
+    "when": "Сдан в 3 кв. 2026"
+   },
+   {
+    "house": "Корпус D",
+    "when": "Сдан в 3 кв. 2026"
+   },
+   {
+    "house": "Корпус E",
+    "when": "Сдан в 3 кв. 2026"
+   },
+   {
+    "house": "Корпус F",
+    "when": "Сдан в 3 кв. 2026"
+   },
+   {
+    "house": "от 226 750 000 ₽",
+    "when": "Сдача в 1 кв. 2030"
+   },
+   {
+    "house": "От 226 750 000 ₽",
+    "when": "Сдача в 1 кв. 2030"
+   },
+   {
+    "house": "От 159 200 000 ₽",
+    "when": "Сдача в 3 кв. 2027"
+   },
+   {
+    "house": "От 261 110 000 ₽",
+    "when": "Сдача в 2027—2028"
+   }
+  ],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "КОЛЛЕКЦИЯ ЛУЖНИКИ": {
   "id": 4118429,
   "cianName": "КОЛЛЕКЦИЯ ЛУЖНИКИ",
   "address": "Москва, Лужнецкая набережная",
   "url": "https://www.cian.ru/zhiloy-kompleks-kollekciya-luzhniki-moskva-4118429/",
-  "status": 200,
+  "status": 429,
   "developer": "Absolute Premium",
+  "delivery": "2027",
+  "done": false,
   "finished": null,
-  "deadline": "4 кв. 2027",
-  "yearText": "Сдача в 4 кв. 2027",
+  "deadline": "2027",
+  "yearText": "Сдача 2027",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "12–18",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "HL1",
+    "when": "Сдача в 4 кв. 2027"
+   },
+   {
+    "house": "HL2",
+    "when": "Сдача в 4 кв. 2027"
+   },
+   {
+    "house": "HL3",
+    "when": "Сдача в 4 кв. 2027"
+   },
+   {
+    "house": "HL3",
+    "when": "4 кв. 2027"
+   },
+   {
+    "house": "HL2",
+    "when": "4 кв. 2027"
+   },
+   {
+    "house": "HL1",
+    "when": "4 кв. 2027"
+   },
+   {
+    "house": "HL2",
+    "when": "4 кв. 2027"
+   },
+   {
+    "house": "HL2",
+    "when": "4 кв. 2027"
+   },
+   {
+    "house": "HL2",
+    "when": "4 кв. 2027"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  "Элитный квартал Тишинский бульвар": {
   "id": 4714572,
   "cianName": "Элитный квартал Тишинский бульвар",
   "address": "Москва, Электрический переулок",
   "url": "https://www.cian.ru/zhiloy-kompleks-elitnyy-kvartal-tishinskiy-bulvar-moskva-4714572/",
-  "status": 200,
+  "status": 429,
   "developer": "Sminex",
+  "delivery": "2027–2028",
+  "done": false,
   "finished": null,
-  "deadline": "4 кв. 2027",
-  "yearText": "Сдача в 2027-2028",
+  "deadline": "2027–2028",
+  "yearText": "Сдача 2027–2028",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "3–14",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "К5С3",
+    "when": "Сдача в 4 кв. 2027"
+   },
+   {
+    "house": "К5С4",
+    "when": "Сдача в 4 кв. 2027"
+   },
+   {
+    "house": "К4С1",
+    "when": "Сдача в 4 кв. 2027"
+   },
+   {
+    "house": "К8С1",
+    "when": "Сдача в 3 кв. 2027"
+   },
+   {
+    "house": "К8С2",
+    "when": "Сдача в 3 кв. 2027"
+   },
+   {
+    "house": "К8С1",
+    "when": "3 кв. 2027"
+   },
+   {
+    "house": "К8С1",
+    "when": "3 кв. 2027"
+   },
+   {
+    "house": "К8С2",
+    "when": "3 кв. 2027"
+   },
+   {
+    "house": "К4С1",
+    "when": "4 кв. 2027"
+   },
+   {
+    "house": "от 226 750 000 ₽",
+    "when": "Сдача в 1 кв. 2030"
+   },
+   {
+    "house": "от 159 200 000 ₽",
+    "when": "Сдача в 3 кв. 2027"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  "Дом Франка": {
   "id": 4186702,
   "cianName": "Дом Франка",
   "address": "Москва, Большой Кисельный переулок, 11",
   "url": "https://www.cian.ru/zhiloy-kompleks-dom-franka-moskva-4186702/",
-  "status": 200,
+  "status": 429,
   "developer": "Трансстройинвест",
-  "finished": null,
-  "deadline": "2026",
-  "yearText": "Сдача в 4 кв. 2026",
+  "delivery": "2026",
+  "done": true,
+  "finished": "2026",
+  "deadline": null,
+  "yearText": "Сдан 2026",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "5–8",
+  "buildings": "2",
+  "houses": [
+   {
+    "house": "ЖК «Дом Франка»",
+    "when": "Сдача в 4 кв. 2026"
+   },
+   {
+    "house": "Стр. 1",
+    "when": "Сдача в 4 кв. 2026"
+   },
+   {
+    "house": "Стр. 3",
+    "when": "Сдача в 4 кв. 2026"
+   },
+   {
+    "house": "Стр. 1",
+    "when": "4 кв. 2026"
+   },
+   {
+    "house": "Стр. 1",
+    "when": "4 кв. 2026"
+   },
+   {
+    "house": "Стр. 1",
+    "when": "4 кв. 2026"
+   },
+   {
+    "house": "Стр. 3",
+    "when": "4 кв. 2026"
+   },
+   {
+    "house": "Стр. 3",
+    "when": "4 кв. 2026"
+   },
+   {
+    "house": "От 270 452 000 ₽",
+    "when": "Сдача в 2 кв. 2027"
+   },
+   {
+    "house": "От 148 270 800 ₽",
+    "when": "Сдача в 3 кв. 2029"
+   },
+   {
+    "house": "От 81 156 180 ₽",
+    "when": "Сдача в 4 кв. 2028"
+   },
+   {
+    "house": "От 209 250 000 ₽",
+    "when": "Сдача в 2027—2028"
+   }
+  ],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Татарская 35": {
   "id": 5098695,
@@ -1000,26 +2105,122 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-tatarskaya-35-moskva-5098695/",
   "status": 200,
   "developer": "ДОНСТРОЙ",
+  "delivery": "2028",
+  "done": false,
   "finished": null,
-  "deadline": "1 кв. 2028",
-  "yearText": "Сдача в 1 кв. 2028",
+  "deadline": "2028",
+  "yearText": "Сдача 2028",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "15–24",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "Корпус 1",
+    "when": "Сдача в 1 кв. 2028"
+   },
+   {
+    "house": "Корпус 2",
+    "when": "Сдача в 1 кв. 2028"
+   },
+   {
+    "house": "Корпус 3",
+    "when": "Сдача в 1 кв. 2028"
+   },
+   {
+    "house": "Корпус 2",
+    "when": "3 кв. 2028"
+   },
+   {
+    "house": "Корпус 3",
+    "when": "3 кв. 2028"
+   },
+   {
+    "house": "Корпус 2",
+    "when": "3 кв. 2028"
+   },
+   {
+    "house": "Корпус 2",
+    "when": "3 кв. 2028"
+   },
+   {
+    "house": "Корпус 3",
+    "when": "3 кв. 2028"
+   },
+   {
+    "house": "Корпус 3",
+    "when": "3 кв. 2028"
+   },
+   {
+    "house": "Корпус 3",
+    "when": "3 кв. 2028"
+   },
+   {
+    "house": "Корпус 3",
+    "when": "3 кв. 2028"
+   },
+   {
+    "house": "Корпус 3",
+    "when": "3 кв. 2028"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  "Дом Соболева": {
   "id": 5688213,
   "cianName": "Дом Соболева",
   "address": "Москва, Машкова улица, 18",
   "url": "https://www.cian.ru/zhiloy-kompleks-dom-soboleva-moskva-5688213/",
-  "status": 200,
+  "status": 429,
   "developer": "Форсайт",
+  "delivery": "2028",
+  "done": false,
   "finished": null,
   "deadline": "2028",
-  "yearText": "Сдача в 2 кв. 2028",
+  "yearText": "Сдача 2028",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "8",
+  "buildings": "2",
+  "houses": [
+   {
+    "house": "ЖК «Дом Соболева»",
+    "when": "Сдача в 2 кв. 2028"
+   },
+   {
+    "house": "Корпус 1",
+    "when": "Сдача во 2 кв. 2028"
+   },
+   {
+    "house": "Корпус 2",
+    "when": "Сдача во 2 кв. 2028"
+   },
+   {
+    "house": "От 69 884 000 ₽",
+    "when": "Сдача в 2 кв. 2028"
+   },
+   {
+    "house": "От 81 156 180 ₽",
+    "when": "Сдача в 4 кв. 2028"
+   },
+   {
+    "house": "От 281 295 000 ₽",
+    "when": "Сдача в 4 кв. 2026"
+   },
+   {
+    "house": "От 28 118 502 ₽",
+    "when": "Сдача в 2 кв. 2027, есть сданные"
+   },
+   {
+    "house": "От 200 283 072 ₽",
+    "when": "Сдача в 2 кв. 2028"
+   },
+   {
+    "house": "От 29 321 984 ₽",
+    "when": "Сдача в 2026—2027"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  "Климашкина 7/11": {
   "id": 5723049,
@@ -1028,12 +2229,66 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-klimashkina-711-moskva-5723049/",
   "status": 200,
   "developer": "MR",
+  "delivery": "2028",
+  "done": false,
   "finished": null,
-  "deadline": "4 кв. 2028",
-  "yearText": "Сдача в 4 кв. 2028",
+  "deadline": "2028",
+  "yearText": "Сдача 2028",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "7",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "1-комнатная",
+    "when": "4 кв. 2028"
+   },
+   {
+    "house": "1-комнатная",
+    "when": "4 кв. 2028"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "4 кв. 2028"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "4 кв. 2028"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "4 кв. 2028"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "4 кв. 2028"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "4 кв. 2028"
+   },
+   {
+    "house": "3-комнатная",
+    "when": "4 кв. 2028"
+   },
+   {
+    "house": "3-комнатная",
+    "when": "4 кв. 2028"
+   },
+   {
+    "house": "3-комнатная",
+    "when": "4 кв. 2028"
+   },
+   {
+    "house": "3-комнатная",
+    "when": "4 кв. 2028"
+   },
+   {
+    "house": "3-комнатная",
+    "when": "4 кв. 2028"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  "Клубный дом Форум": {
   "id": 4280747,
@@ -1042,12 +2297,54 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-klubnyy-dom-forum-moskva-4280747/",
   "status": 200,
   "developer": "MR",
-  "finished": null,
-  "deadline": "4 кв. 2027",
-  "yearText": "Сдача в 4 кв. 2027",
+  "delivery": "2026",
+  "done": true,
+  "finished": "2026",
+  "deadline": null,
+  "yearText": "Сдан 2026",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "13",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "от 43 539 020 ₽",
+    "when": "Сдача в 2 кв. 2030"
+   },
+   {
+    "house": "от 18 851 925 ₽",
+    "when": "Сдача в 3 кв. 2026"
+   },
+   {
+    "house": "от 16 065 000 ₽",
+    "when": "Сдача в 3 кв. 2028 — 4 кв. 2029"
+   },
+   {
+    "house": "от 12 031 902 ₽",
+    "when": "Сдача в 3 кв. 2028 — 2 кв. 2029"
+   },
+   {
+    "house": "От 159 200 000 ₽",
+    "when": "Сдача в 3 кв. 2027"
+   },
+   {
+    "house": "От 100 128 095 ₽",
+    "when": "Сдача в 2 кв. 2028"
+   },
+   {
+    "house": "От 180 427 800 ₽",
+    "when": "Сдача в 2026, есть сданные"
+   },
+   {
+    "house": "От 261 110 000 ₽",
+    "when": "Сдача в 2027—2028"
+   },
+   {
+    "house": "От 500 589 501 ₽",
+    "when": "Сдача в 3 кв. 2027"
+   }
+  ],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Камергер": {
   "id": 3930584,
@@ -1056,12 +2353,66 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-kamerger-moskva-3930584/",
   "status": 200,
   "developer": "ENGEO Development",
+  "delivery": "2026",
+  "done": false,
   "finished": null,
   "deadline": "2026",
-  "yearText": "Сдача в 3 кв. 2026",
+  "yearText": "Сдача 2026",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "3–6",
+  "buildings": "4",
+  "houses": [
+   {
+    "house": "ЖК «Камергер»",
+    "when": "Сдача в 3 кв. 2026"
+   },
+   {
+    "house": "Орден",
+    "when": "Сдача в 3 кв. 2026"
+   },
+   {
+    "house": "Эпоха",
+    "when": "Сдача в 3 кв. 2026"
+   },
+   {
+    "house": "Эпоха",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "Эпоха",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "Эпоха",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "Эпоха",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "Эпоха",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "Эпоха",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "Эпоха",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "Эпоха",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "Орден",
+    "when": "3 кв. 2026"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  "Садовническая 69": {
   "id": 5138735,
@@ -1070,12 +2421,66 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-sadovnicheskaya-69-moskva-5138735/",
   "status": 200,
   "developer": "ГК БАЛЧУГ ДЕВЕЛОПМЕНТ",
+  "delivery": "2028",
+  "done": false,
   "finished": null,
-  "deadline": "2 кв. 2028",
-  "yearText": "Сдача в 2 кв. 2028",
+  "deadline": "2028",
+  "yearText": "Сдача 2028",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "1–10",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "Корпус 1",
+    "when": "Сдача во 2 кв. 2028"
+   },
+   {
+    "house": "Корпус 2",
+    "when": "Сдача во 2 кв. 2028"
+   },
+   {
+    "house": "Корпус 3",
+    "when": "Сдача во 2 кв. 2028"
+   },
+   {
+    "house": "Корпус 4",
+    "when": "Сдача во 2 кв. 2028"
+   },
+   {
+    "house": "Корпус 2",
+    "when": "2 кв. 2028"
+   },
+   {
+    "house": "Корпус 1",
+    "when": "2 кв. 2028"
+   },
+   {
+    "house": "Корпус 1",
+    "when": "2 кв. 2028"
+   },
+   {
+    "house": "Корпус 1",
+    "when": "2 кв. 2028"
+   },
+   {
+    "house": "Корпус 1",
+    "when": "2 кв. 2028"
+   },
+   {
+    "house": "Корпус 2",
+    "when": "2 кв. 2028"
+   },
+   {
+    "house": "Корпус 2",
+    "when": "2 кв. 2028"
+   },
+   {
+    "house": "Корпус 4",
+    "when": "2 кв. 2028"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  "ФАНТОМ": {
   "id": 4780951,
@@ -1084,12 +2489,30 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-fantom-moskva-4780951/",
   "status": 200,
   "developer": "Sense Development",
+  "delivery": "2027",
+  "done": false,
   "finished": null,
-  "deadline": "3 кв. 2027",
-  "yearText": "Сдача в 3 кв. 2027",
+  "deadline": "2027",
+  "yearText": "Сдача 2027",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "7–9",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "Корпус восточный",
+    "when": "Сдача в 3 кв. 2027"
+   },
+   {
+    "house": "Корпус северный",
+    "when": "Сдача в 3 кв. 2027"
+   },
+   {
+    "house": "Корпус южный",
+    "when": "Сдача в 3 кв. 2027"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  "Особняки в неорусском стиле «Ильинка 3/8»": {
   "id": 3958726,
@@ -1098,12 +2521,42 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-osobnyaki-v-neorusskom-stile-ilinka-38-moskva-3958726/",
   "status": 200,
   "developer": "Sminex",
-  "finished": "3 кв. 2025",
+  "delivery": "2025–2026",
+  "done": true,
+  "finished": "2025–2026",
   "deadline": null,
-  "yearText": "Сдан в 3 кв. 2025",
+  "yearText": "Сдан 2025–2026",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "3–5",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "Блок A",
+    "when": "Сдан в 3 кв. 2025"
+   },
+   {
+    "house": "Блок B",
+    "when": "Сдан в 3 кв. 2025"
+   },
+   {
+    "house": "Блок C",
+    "when": "Сдан в 3 кв. 2025"
+   },
+   {
+    "house": "Блок D",
+    "when": "Сдан в 3 кв. 2025"
+   },
+   {
+    "house": "от 261 110 000 ₽",
+    "when": "Сдача в 3 кв. 2027 — 2 кв. 2028"
+   },
+   {
+    "house": "от 226 750 000 ₽",
+    "when": "Сдача в 1 кв. 2030"
+   }
+  ],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Красный Октябрь": {
   "id": 4196006,
@@ -1112,110 +2565,351 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-krasnyy-oktyabr-moskva-4196006/",
   "status": 200,
   "developer": "ГУТА-ДЕВЕЛОПМЕНТ",
+  "delivery": "2026",
+  "done": false,
   "finished": null,
-  "deadline": "3 кв. 2026",
-  "yearText": "Сдача в 3 кв. 2026",
+  "deadline": "2026",
+  "yearText": "Сдача 2026",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "4–5",
+  "buildings": null,
+  "houses": [],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  "Николь": {
   "id": 4712505,
   "cianName": "Николь",
   "address": "Москва, Никольская улица, 8/1с1",
   "url": "https://www.cian.ru/zhiloy-kompleks-nikol-moskva-4712505/",
-  "status": 200,
+  "status": 429,
   "developer": "MR",
+  "delivery": "2027–2028",
+  "done": false,
   "finished": null,
-  "deadline": "1 кв. 2028",
-  "yearText": "Сдача в 2027-2028",
+  "deadline": "2027–2028",
+  "yearText": "Сдача 2027–2028",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "6–7",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "Николь Клаб",
+    "when": "Сдача в 1 кв. 2028"
+   },
+   {
+    "house": "Николь Коллекшн",
+    "when": "Сдача в 3 кв. 2027"
+   },
+   {
+    "house": "Николь Резиденс",
+    "when": "Сдача в 1 кв. 2028"
+   },
+   {
+    "house": "Николь Коллекшн",
+    "when": "3 кв. 2027"
+   },
+   {
+    "house": "Николь Коллекшн",
+    "when": "3 кв. 2027"
+   },
+   {
+    "house": "Николь Коллекшн",
+    "when": "3 кв. 2027"
+   },
+   {
+    "house": "Николь Резиденс",
+    "when": "1 кв. 2028"
+   },
+   {
+    "house": "Николь Резиденс",
+    "when": "1 кв. 2028"
+   },
+   {
+    "house": "Николь Резиденс",
+    "when": "1 кв. 2028"
+   },
+   {
+    "house": "Николь Клаб",
+    "when": "1 кв. 2028"
+   },
+   {
+    "house": "Николь Коллекшн",
+    "when": "3 кв. 2027"
+   },
+   {
+    "house": "Николь Коллекшн",
+    "when": "3 кв. 2027"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  "Пыжёвский": {
   "id": 5690388,
   "cianName": "Пыжёвский",
   "address": "Москва, Пыжёвский переулок",
   "url": "https://www.cian.ru/zhiloy-kompleks-pyzhevskiy-moskva-5690388/",
-  "status": 200,
+  "status": 429,
   "developer": "ТЕКТА ГРУПП",
+  "delivery": "2029",
+  "done": false,
   "finished": null,
-  "deadline": "2 кв. 2029",
-  "yearText": "Сдача в 2 кв. 2029",
+  "deadline": "2029",
+  "yearText": "Сдача 2029",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "9–14",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "Корпус 1",
+    "when": "Сдача во 2 кв. 2029"
+   },
+   {
+    "house": "Корпус 2",
+    "when": "Сдача во 2 кв. 2029"
+   },
+   {
+    "house": "Корпус 3",
+    "when": "Сдача во 2 кв. 2029"
+   },
+   {
+    "house": "Корпус 4",
+    "when": "Сдача во 2 кв. 2029"
+   },
+   {
+    "house": "от 21 740 580 ₽",
+    "when": "Сдача в 2 кв. 2029"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  "Никитский-6": {
   "id": 4779110,
   "cianName": "Никитский-6",
   "address": "Москва, Никитский бульвар, 6/20",
   "url": "https://www.cian.ru/zhiloy-kompleks-nikitskiy6-moskva-4779110/",
-  "status": 200,
+  "status": 429,
   "developer": "СЗ Третий Рим (Москва)",
+  "delivery": "2026",
+  "done": false,
   "finished": null,
-  "deadline": "4 кв. 2026",
-  "yearText": "Сдача в 4 кв. 2026",
+  "deadline": "2026",
+  "yearText": "Сдача 2026",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "8",
+  "buildings": null,
+  "houses": [],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  "Клубный квартал «Фрунзенский»": {
   "id": 4708642,
   "cianName": "Клубный квартал «Фрунзенский»",
   "address": "Москва, Фрунзенская набережная, 30",
   "url": "https://www.cian.ru/zhiloy-kompleks-klubnyy-kvartal-frunzenskiy-moskva-4708642/",
-  "status": 200,
+  "status": 429,
   "developer": "Sminex",
+  "delivery": "2027",
+  "done": false,
   "finished": null,
-  "deadline": "3 кв. 2027",
-  "yearText": "Сдача в 3 кв. 2027",
+  "deadline": "2027",
+  "yearText": "Сдача 2027",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "4–13",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "Корпус C1",
+    "when": "Сдача в 3 кв. 2027"
+   },
+   {
+    "house": "Корпус C2",
+    "when": "Сдача в 3 кв. 2027"
+   },
+   {
+    "house": "Корпус C3",
+    "when": "Сдача в 3 кв. 2027"
+   },
+   {
+    "house": "Корпус D",
+    "when": "Сдача в 3 кв. 2027"
+   },
+   {
+    "house": "Корпус C2",
+    "when": "3 кв. 2027"
+   },
+   {
+    "house": "Корпус C3",
+    "when": "3 кв. 2027"
+   },
+   {
+    "house": "Корпус C3",
+    "when": "3 кв. 2027"
+   },
+   {
+    "house": "Корпус D",
+    "when": "3 кв. 2027"
+   },
+   {
+    "house": "Корпус D",
+    "when": "3 кв. 2027"
+   },
+   {
+    "house": "Корпус D",
+    "when": "3 кв. 2027"
+   },
+   {
+    "house": "Корпус C1",
+    "when": "3 кв. 2027"
+   },
+   {
+    "house": "Корпус D",
+    "when": "3 кв. 2027"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  "Резиденция Чистые Пруды": {
   "id": 1554,
   "cianName": "Резиденция Чистые Пруды",
   "address": "Москва, Подсосенский переулок, 3к1",
   "url": "https://www.cian.ru/zhiloy-kompleks-rezidenciya-chistye-prudy-moskva-1554/",
-  "status": 200,
+  "status": 429,
   "developer": "ФД Групп",
-  "finished": null,
-  "deadline": "2007",
-  "yearText": null,
+  "delivery": "2007",
+  "done": true,
+  "finished": "2007",
+  "deadline": null,
+  "yearText": "Сдан 2007",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "—",
+  "buildings": "2",
+  "houses": [],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Узоры": {
   "id": 5700353,
   "cianName": "Узоры",
   "address": "Москва, 2-й Вражский переулок, 8с2",
   "url": "https://www.cian.ru/zhiloy-kompleks-uzory-moskva-5700353/",
-  "status": 200,
+  "status": 429,
   "developer": "Capital Group",
+  "delivery": "2028",
+  "done": false,
   "finished": null,
   "deadline": "2028",
-  "yearText": "Сдача в 4 кв. 2028",
+  "yearText": "Сдача 2028",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "9–10",
+  "buildings": "1",
+  "houses": [
+   {
+    "house": "ЖК «Узоры»",
+    "when": "Сдача в 4 кв. 2028"
+   },
+   {
+    "house": "1-комнатная",
+    "when": "4 кв. 2028"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "4 кв. 2028"
+   },
+   {
+    "house": "3-комнатная",
+    "when": "4 кв. 2028"
+   },
+   {
+    "house": "3-комнатная",
+    "when": "4 кв. 2028"
+   },
+   {
+    "house": "3-комнатная",
+    "when": "4 кв. 2028"
+   },
+   {
+    "house": "3-комнатная",
+    "when": "4 кв. 2028"
+   },
+   {
+    "house": "4-комнатная",
+    "when": "4 кв. 2028"
+   },
+   {
+    "house": "4-комнатная",
+    "when": "4 кв. 2028"
+   },
+   {
+    "house": "4-комнатная",
+    "when": "4 кв. 2028"
+   },
+   {
+    "house": "Многокомнатная",
+    "when": "4 кв. 2028"
+   },
+   {
+    "house": "от 110 432 290 ₽",
+    "when": "Сдача в 1 кв. 2029"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  "Аннабель": {
   "id": 4115868,
   "cianName": "Аннабель",
   "address": "Москва, Курсовой переулок, д. 12/5, стр. 7",
   "url": "https://www.cian.ru/zhiloy-kompleks-annabel-moskva-4115868/",
-  "status": 200,
+  "status": 429,
   "developer": "СЗ ЮНИКС",
-  "finished": null,
-  "deadline": "2026",
-  "yearText": "Сдача в 4 кв. 2026",
+  "delivery": "2026",
+  "done": true,
+  "finished": "2026",
+  "deadline": null,
+  "yearText": "Сдан 2026",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "7",
+  "buildings": "1",
+  "houses": [
+   {
+    "house": "От 48 476 448 ₽",
+    "when": "Сдача в 4 кв. 2026"
+   },
+   {
+    "house": "От 135 000 000 ₽",
+    "when": "Сдача в 3 кв. 2027"
+   },
+   {
+    "house": "От 226 750 000 ₽",
+    "when": "Сдача в 1 кв. 2030"
+   },
+   {
+    "house": "От 281 295 000 ₽",
+    "when": "Сдача в 4 кв. 2026"
+   },
+   {
+    "house": "От 238 943 151 ₽",
+    "when": "Сдача в 2 кв. 2029"
+   },
+   {
+    "house": "От 148 270 800 ₽",
+    "when": "Сдача в 3 кв. 2029"
+   },
+   {
+    "house": "От 81 156 180 ₽",
+    "when": "Сдача в 4 кв. 2028"
+   },
+   {
+    "house": "От 29 153 599 ₽",
+    "when": "Сдача в 4 кв. 2028"
+   }
+  ],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Клубный дом Левенсон": {
   "id": 4381065,
@@ -1224,54 +2918,130 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-klubnyy-dom-levenson-moskva-4381065/",
   "status": 200,
   "developer": "VESPER",
+  "delivery": "2027",
+  "done": false,
   "finished": null,
-  "deadline": "3 кв. 2027",
-  "yearText": "Сдача в 3 кв. 2027",
+  "deadline": "2027",
+  "yearText": "Сдача 2027",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "4–6",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "Строение 1",
+    "when": "Сдача в 3 кв. 2027"
+   },
+   {
+    "house": "Строение 2",
+    "when": "Сдача в 3 кв. 2027"
+   },
+   {
+    "house": "от 435 841 879 ₽",
+    "when": "Сдача в 4 кв. 2028"
+   },
+   {
+    "house": "от 84 520 749 ₽",
+    "when": "Сдача в 1 кв. 2028"
+   },
+   {
+    "house": "От 435 841 879 ₽",
+    "when": "Сдача в 4 кв. 2028"
+   },
+   {
+    "house": "От 84 520 749 ₽",
+    "when": "Сдача в 1 кв. 2028"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  "Веспер Погодинская": {
   "id": 5747482,
   "cianName": "Веспер Погодинская",
   "address": "Москва, Погодинская улица",
   "url": "https://www.cian.ru/zhiloy-kompleks-vesper-pogodinskaya-moskva-5747482/",
-  "status": 200,
+  "status": 429,
   "developer": "VESPER",
+  "delivery": "2028",
+  "done": false,
   "finished": null,
-  "deadline": "4 кв. 2028",
-  "yearText": "Сдача в 4 кв. 2028",
+  "deadline": "2028",
+  "yearText": "Сдача 2028",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "11",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "от 500 589 501 ₽",
+    "when": "Сдача в 3 кв. 2027"
+   },
+   {
+    "house": "от 84 520 749 ₽",
+    "when": "Сдача в 1 кв. 2028"
+   },
+   {
+    "house": "От 500 589 501 ₽",
+    "when": "Сдача в 3 кв. 2027"
+   },
+   {
+    "house": "От 84 520 749 ₽",
+    "when": "Сдача в 1 кв. 2028"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  "Клубный дом Обыденский №1": {
   "id": 4304830,
   "cianName": "Клубный дом Обыденский №1",
   "address": "Москва, 3-й Обыденский переулок, 1",
   "url": "https://www.cian.ru/zhiloy-kompleks-klubnyy-dom-obydenskiy-1-moskva-4304830/",
-  "status": 200,
+  "status": 429,
   "developer": "Sminex",
-  "finished": null,
-  "deadline": "1 кв. 2030",
-  "yearText": "Сдача в 1 кв. 2030",
+  "delivery": "2026",
+  "done": true,
+  "finished": "2026",
+  "deadline": null,
+  "yearText": "Сдан 2026",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "6",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "от 261 110 000 ₽",
+    "when": "Сдача в 3 кв. 2027 — 2 кв. 2028"
+   }
+  ],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "БРЮСОВ": {
   "id": 4202659,
   "cianName": "БРЮСОВ",
   "address": "Москва, Брюсов переулок, 2",
   "url": "https://www.cian.ru/zhiloy-kompleks-bryusov-moskva-4202659/",
-  "status": 200,
+  "status": 429,
   "developer": "VOS’HOD",
-  "finished": null,
-  "deadline": "4 кв. 2026",
-  "yearText": "Сдача в 4 кв. 2026",
+  "delivery": "2026",
+  "done": true,
+  "finished": "2026",
+  "deadline": null,
+  "yearText": "Сдан 2026",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "8",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "от 48 476 448 ₽",
+    "when": "Сдача в 4 кв. 2026"
+   },
+   {
+    "house": "От 48 476 448 ₽",
+    "when": "Сдача в 4 кв. 2026"
+   }
+  ],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "АУРУС Резиденции": {
   "id": 5744974,
@@ -1280,12 +3050,66 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-aurus-rezidencii-moskva-5744974/",
   "status": 200,
   "developer": "Страна.Премиум",
+  "delivery": "2031",
+  "done": false,
   "finished": null,
-  "deadline": "4 кв. 2031",
-  "yearText": "Сдача в 4 кв. 2031",
+  "deadline": "2031",
+  "yearText": "Сдача 2031",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "82–101",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "Студия",
+    "when": "4 кв. 2031"
+   },
+   {
+    "house": "Студия",
+    "when": "4 кв. 2031"
+   },
+   {
+    "house": "Студия",
+    "when": "4 кв. 2031"
+   },
+   {
+    "house": "Студия",
+    "when": "4 кв. 2031"
+   },
+   {
+    "house": "Студия",
+    "when": "4 кв. 2031"
+   },
+   {
+    "house": "1-комнатная",
+    "when": "4 кв. 2031"
+   },
+   {
+    "house": "1-комнатная",
+    "when": "4 кв. 2031"
+   },
+   {
+    "house": "1-комнатная",
+    "when": "4 кв. 2031"
+   },
+   {
+    "house": "1-комнатная",
+    "when": "4 кв. 2031"
+   },
+   {
+    "house": "1-комнатная",
+    "when": "4 кв. 2031"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "4 кв. 2031"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "4 кв. 2031"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  "Оне": {
   "id": 5719129,
@@ -1294,12 +3118,66 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-one-moskva-5719129/",
   "status": 200,
   "developer": "MR",
+  "delivery": "2030",
+  "done": false,
   "finished": null,
-  "deadline": "2 кв. 2030",
-  "yearText": "Сдача в 2 кв. 2030",
+  "deadline": "2030",
+  "yearText": "Сдача 2030",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-07"
+  "floors": "90",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "Студия",
+    "when": "2 кв. 2030"
+   },
+   {
+    "house": "Студия",
+    "when": "2 кв. 2030"
+   },
+   {
+    "house": "Студия",
+    "when": "2 кв. 2030"
+   },
+   {
+    "house": "Студия",
+    "when": "2 кв. 2030"
+   },
+   {
+    "house": "1-комнатная",
+    "when": "2 кв. 2030"
+   },
+   {
+    "house": "1-комнатная",
+    "when": "2 кв. 2030"
+   },
+   {
+    "house": "1-комнатная",
+    "when": "2 кв. 2030"
+   },
+   {
+    "house": "1-комнатная",
+    "when": "2 кв. 2030"
+   },
+   {
+    "house": "1-комнатная",
+    "when": "2 кв. 2030"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "2 кв. 2030"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "2 кв. 2030"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "2 кв. 2030"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  "ЖК «Слава»": {
   "id": 2052,
@@ -1307,13 +3185,31 @@
   "address": "Москва, Северный административный округ, район Беговой, Ленинградский проспект, вл8",
   "url": "https://www.cian.ru/zhiloy-kompleks-slava-moskva-2052/",
   "status": 200,
-  "developer": "MR",
+  "developer": "MR, ПроГород (группа ВЭБ.РФ)",
+  "delivery": "2023–2027",
+  "done": false,
   "finished": null,
-  "deadline": "2 кв. 2027, есть сданные",
-  "yearText": "Сдача в 2 кв. 2027, есть сданные",
+  "deadline": "2023–2027",
+  "yearText": "Сдача 2023–2027",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-08"
+  "floors": "8–37",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "от 22 048 385 ₽",
+    "when": "Сдача в 4 кв. 2026"
+   },
+   {
+    "house": "от 20 022 948 ₽",
+    "when": "Сдача в 3 кв. 2027"
+   },
+   {
+    "house": "от 16 312 758 ₽",
+    "when": "Сдача в 4 кв. 2026 — 4 кв. 2028"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  "Тессинский V": {
   "id": 5766397,
@@ -1322,12 +3218,66 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-tessinskiy-v-moskva-5766397/",
   "status": 200,
   "developer": "ELEMENT",
+  "delivery": "2029",
+  "done": false,
   "finished": null,
   "deadline": "2029",
-  "yearText": "Сдача в 3 кв. 2029",
+  "yearText": "Сдача 2029",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-08"
+  "floors": "5–12",
+  "buildings": "4",
+  "houses": [
+   {
+    "house": "ЖК «Тессинский V»",
+    "when": "Сдача в 3 кв. 2029"
+   },
+   {
+    "house": "MEDIA / Полдень (Дом 1)",
+    "when": "Сдача в 3 кв. 2029"
+   },
+   {
+    "house": "AURORA / Рассвет (Дом 4)",
+    "when": "Сдача в 3 кв. 2029"
+   },
+   {
+    "house": "HESPERA / Закат (Дом 2)",
+    "when": "Сдача в 3 кв. 2029"
+   },
+   {
+    "house": "NOX / Полночь (Дом 3)",
+    "when": "Сдача в 3 кв. 2029"
+   },
+   {
+    "house": "AURORA / Рассвет (Дом 4)",
+    "when": "3 кв. 2029"
+   },
+   {
+    "house": "NOX / Полночь (Дом 3)",
+    "when": "3 кв. 2029"
+   },
+   {
+    "house": "NOX / Полночь (Дом 3)",
+    "when": "3 кв. 2029"
+   },
+   {
+    "house": "MEDIA / Полдень (Дом 1)",
+    "when": "3 кв. 2029"
+   },
+   {
+    "house": "NOX / Полночь (Дом 3)",
+    "when": "3 кв. 2029"
+   },
+   {
+    "house": "HESPERA / Закат (Дом 2)",
+    "when": "3 кв. 2029"
+   },
+   {
+    "house": "NOX / Полночь (Дом 3)",
+    "when": "3 кв. 2029"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  " Клубный дом «Резиденции Воронцова»": {
   "id": 5703570,
@@ -1336,12 +3286,66 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-klubnyy-dom-rezidencii-voroncova-moskva-5703570/",
   "status": 200,
   "developer": "ГК Развитие",
+  "delivery": "Сдача в 2 кв. 2028",
+  "done": false,
   "finished": null,
-  "deadline": "2 кв. 2028",
-  "yearText": "Сдача в 2 кв. 2028",
+  "deadline": "Сдача в 2 кв. 2028",
+  "yearText": "Сдача Сдача в 2 кв. 2028",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-08"
+  "floors": "9–16",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "Корпус 1",
+    "when": "Сдача во 2 кв. 2028"
+   },
+   {
+    "house": "Корпус 2",
+    "when": "Сдача во 2 кв. 2028"
+   },
+   {
+    "house": "Корпус 1",
+    "when": "4 кв. 2028"
+   },
+   {
+    "house": "Корпус 1",
+    "when": "4 кв. 2028"
+   },
+   {
+    "house": "Корпус 1",
+    "when": "4 кв. 2028"
+   },
+   {
+    "house": "Корпус 1",
+    "when": "4 кв. 2028"
+   },
+   {
+    "house": "Корпус 1",
+    "when": "4 кв. 2028"
+   },
+   {
+    "house": "Корпус 2",
+    "when": "4 кв. 2028"
+   },
+   {
+    "house": "Корпус 2",
+    "when": "4 кв. 2028"
+   },
+   {
+    "house": "Корпус 1",
+    "when": "4 кв. 2028"
+   },
+   {
+    "house": "Корпус 1",
+    "when": "4 кв. 2028"
+   },
+   {
+    "house": "Корпус 1",
+    "when": "4 кв. 2028"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  "Казачий": {
   "id": 5772404,
@@ -1350,12 +3354,66 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-kazachiy-moskva-5772404/",
   "status": 200,
   "developer": "MR",
+  "delivery": "2029",
+  "done": false,
   "finished": null,
-  "deadline": "3 кв. 2029",
-  "yearText": "Сдача в 3 кв. 2029",
+  "deadline": "2029",
+  "yearText": "Сдача 2029",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-08"
+  "floors": "9",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "1-комнатная",
+    "when": "3 кв. 2029"
+   },
+   {
+    "house": "1-комнатная",
+    "when": "3 кв. 2029"
+   },
+   {
+    "house": "1-комнатная",
+    "when": "3 кв. 2029"
+   },
+   {
+    "house": "1-комнатная",
+    "when": "3 кв. 2029"
+   },
+   {
+    "house": "1-комнатная",
+    "when": "3 кв. 2029"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "3 кв. 2029"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "3 кв. 2029"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "3 кв. 2029"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "3 кв. 2029"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "3 кв. 2029"
+   },
+   {
+    "house": "3-комнатная",
+    "when": "3 кв. 2029"
+   },
+   {
+    "house": "3-комнатная",
+    "when": "3 кв. 2029"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  "Фамильный дом Люче": {
   "id": 4481761,
@@ -1364,12 +3422,66 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-familnyy-dom-lyuche-moskva-4481761/",
   "status": 200,
   "developer": "MR",
+  "delivery": "2027",
+  "done": false,
   "finished": null,
-  "deadline": "2 кв. 2027",
-  "yearText": "Сдача в 2 кв. 2027",
+  "deadline": "2027",
+  "yearText": "Сдача 2027",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-08"
+  "floors": "6–7",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "1-комнатная",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "3-комнатная",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "3-комнатная",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "3-комнатная",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "3-комнатная",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "3-комнатная",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "4-комнатная",
+    "when": "3 кв. 2026"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  "Кло 17": {
   "id": 4593451,
@@ -1378,12 +3490,66 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-klo-17-moskva-4593451/",
   "status": 200,
   "developer": "MR",
+  "delivery": "2026",
+  "done": false,
   "finished": null,
-  "deadline": "3 кв. 2026",
-  "yearText": "Сдача в 3 кв. 2026",
+  "deadline": "2026",
+  "yearText": "Сдача 2026",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-08"
+  "floors": "7",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "1-комнатная",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "1-комнатная",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "1-комнатная",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "1-комнатная",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "3-комнатная",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "3-комнатная",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "от 16 065 000 ₽",
+    "when": "Сдача в 3 кв. 2028 — 4 кв. 2029"
+   },
+   {
+    "house": "от 15 312 024 ₽",
+    "when": "Сдача в 3 кв. 2027 — 3 кв. 2029"
+   },
+   {
+    "house": "от 12 031 902 ₽",
+    "when": "Сдача в 3 кв. 2028 — 2 кв. 2029"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  "ТИТУЛ Империал": {
   "id": 5777775,
@@ -1392,12 +3558,38 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-titul-imperial-moskva-5777775/",
   "status": 200,
   "developer": "Центр-Инвест",
-  "finished": null,
-  "deadline": "3 кв. 2026",
-  "yearText": "Сдача в 3 кв. 2026",
+  "delivery": "2026",
+  "done": true,
+  "finished": "2026",
+  "deadline": null,
+  "yearText": "Сдан 2026",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-08"
+  "floors": "4",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "2-комнатная",
+    "when": "1 кв. 2026"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "1 кв. 2026"
+   },
+   {
+    "house": "3-комнатная",
+    "when": "1 кв. 2026"
+   },
+   {
+    "house": "3-комнатная",
+    "when": "1 кв. 2026"
+   },
+   {
+    "house": "3-комнатная",
+    "when": "1 кв. 2026"
+   }
+  ],
+  "stage": "Сдан",
+  "fetched": "2026-09-10"
  },
  "Клубный дом DUO (Дуо)": {
   "id": 4268549,
@@ -1406,12 +3598,17 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-klubnyy-dom-duo-moskva-4268549/",
   "status": 200,
   "developer": "СЗ СУПЛЕКС ТЕХНОЛОДЖИС",
+  "delivery": "2028",
+  "done": false,
   "finished": null,
-  "deadline": "1 кв. 2028",
-  "yearText": "Сдача в 1 кв. 2028",
+  "deadline": "2028",
+  "yearText": "Сдача 2028",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-08"
+  "floors": "7",
+  "buildings": null,
+  "houses": [],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  "Дом Спорта": {
   "id": 5734549,
@@ -1420,12 +3617,66 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-dom-sporta-moskva-5734549/",
   "status": 200,
   "developer": "Capital Group",
+  "delivery": "2029",
+  "done": false,
   "finished": null,
-  "deadline": "1 кв. 2029",
-  "yearText": "Сдача в 1 кв. 2029",
+  "deadline": "2029",
+  "yearText": "Сдача 2029",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-08"
+  "floors": "7–8",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "Корпус 1",
+    "when": "Сдача в 1 кв. 2029"
+   },
+   {
+    "house": "Корпус 2",
+    "when": "Сдача в 1 кв. 2029"
+   },
+   {
+    "house": "Корпус 3",
+    "when": "Сдача в 1 кв. 2029"
+   },
+   {
+    "house": "Корпус 3",
+    "when": "1 кв. 2029"
+   },
+   {
+    "house": "Корпус 1",
+    "when": "1 кв. 2029"
+   },
+   {
+    "house": "Корпус 3",
+    "when": "1 кв. 2029"
+   },
+   {
+    "house": "Корпус 1",
+    "when": "1 кв. 2029"
+   },
+   {
+    "house": "Корпус 3",
+    "when": "1 кв. 2029"
+   },
+   {
+    "house": "Корпус 1",
+    "when": "1 кв. 2029"
+   },
+   {
+    "house": "Корпус 3",
+    "when": "1 кв. 2029"
+   },
+   {
+    "house": "Корпус 1",
+    "when": "1 кв. 2029"
+   },
+   {
+    "house": "Корпус 2",
+    "when": "1 кв. 2029"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  "Kuznetsky Most 12 by Lalique (Кузнецкий Мост 12)": {
   "id": 49514,
@@ -1434,12 +3685,22 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-kuznetsky-most-12-by-lalique-moskva-49514/",
   "status": 200,
   "developer": "KR Properties",
+  "delivery": "2026",
+  "done": false,
   "finished": null,
   "deadline": "2026",
-  "yearText": "Сдача в 4 кв. 2026",
+  "yearText": "Сдача 2026",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-08"
+  "floors": "6",
+  "buildings": "1",
+  "houses": [
+   {
+    "house": "Kuznetsky Most 12 by Lalique (Кузнецкий Мост 12)",
+    "when": "Сдача в 4 кв. 2026"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  "ДОМ XXII": {
   "id": 4463213,
@@ -1448,12 +3709,22 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-dom-xxii-moskva-4463213/",
   "status": 200,
   "developer": "ДОНСТРОЙ",
+  "delivery": "2026",
+  "done": false,
   "finished": null,
   "deadline": "2026",
-  "yearText": "Сдача в 4 кв. 2026",
+  "yearText": "Сдача 2026",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-08"
+  "floors": "9–12",
+  "buildings": "1",
+  "houses": [
+   {
+    "house": "ЖК «ДОМ XXII»",
+    "when": "Сдача в 4 кв. 2026"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  "Лё Дом": {
   "id": 4119891,
@@ -1462,12 +3733,66 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-le-dom-moskva-4119891/",
   "status": 200,
   "developer": "Группа ЛСР",
+  "delivery": "2026",
+  "done": false,
   "finished": null,
-  "deadline": "3 кв. 2026",
-  "yearText": "Сдача в 3 кв. 2026",
+  "deadline": "2026",
+  "yearText": "Сдача 2026",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-08"
+  "floors": "3–5",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "Парадный корпус",
+    "when": "Сдача в 3 кв. 2026"
+   },
+   {
+    "house": "Приватная вилла",
+    "when": "Сдача в 3 кв. 2026"
+   },
+   {
+    "house": "Парадный корпус",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "Парадный корпус",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "Парадный корпус",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "Парадный корпус",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "Парадный корпус",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "Парадный корпус",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "Парадный корпус",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "Парадный корпус",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "Приватная вилла",
+    "when": "3 кв. 2026"
+   },
+   {
+    "house": "от 18 154 844 ₽",
+    "when": "Сдача в 4 кв. 2026"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  },
  "Дом «Палашёвский 11»": {
   "id": 5763981,
@@ -1476,11 +3801,65 @@
   "url": "https://www.cian.ru/zhiloy-kompleks-dom-palashevskiy-11-moskva-5763981/",
   "status": 200,
   "developer": "Sminex",
+  "delivery": "2030",
+  "done": false,
   "finished": null,
-  "deadline": "1 кв. 2030",
-  "yearText": "Сдача в 1 кв. 2030",
+  "deadline": "2030",
+  "yearText": "Сдача 2030",
   "cls": "Премиум",
-  "stage": null,
-  "fetched": "2026-09-08"
+  "floors": "8",
+  "buildings": null,
+  "houses": [
+   {
+    "house": "1-комнатная",
+    "when": "1 кв. 2030"
+   },
+   {
+    "house": "1-комнатная",
+    "when": "1 кв. 2030"
+   },
+   {
+    "house": "1-комнатная",
+    "when": "1 кв. 2030"
+   },
+   {
+    "house": "1-комнатная",
+    "when": "1 кв. 2030"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "1 кв. 2030"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "1 кв. 2030"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "1 кв. 2030"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "1 кв. 2030"
+   },
+   {
+    "house": "2-комнатная",
+    "when": "1 кв. 2030"
+   },
+   {
+    "house": "3-комнатная",
+    "when": "1 кв. 2030"
+   },
+   {
+    "house": "3-комнатная",
+    "when": "1 кв. 2030"
+   },
+   {
+    "house": "3-комнатная",
+    "when": "1 кв. 2030"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-10"
  }
 }
