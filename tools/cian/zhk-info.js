@@ -18,6 +18,7 @@ const args = process.argv.slice(2);
 const opt = (k, d) => { const i = args.indexOf('--' + k); return i >= 0 ? args[i + 1] : d; };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const delay = parseInt(opt('delay', '4000'), 10);
+const REFRESH = args.includes('--refresh');   // перечитать карточки, даже если они уже собраны
 
 const names = JSON.parse(fs.readFileSync(opt('names'), 'utf8')).map((n) => (typeof n === 'string' ? { name: n } : n));
 const outPath = opt('out', 'zhk-info.json');
@@ -38,15 +39,29 @@ function pick(list, name, hint) {
 }
 
 function parse(text) {
-  const t = text.replace(/ /g, ' ');
+  const t = text.replace(/\u00a0/g, ' ');
   const grab = (re) => { const m = t.match(re); return m ? (m[1] || m[0]).trim() : null; };
+  /* Значение срока сдачи берём строго из блока характеристик — между «Сдача»/«Срок
+     сдачи» и следующим полем «Класс». Иначе цепляются рекламные карточки соседних
+     ЖК («Сдача в 4 кв. 2028 · ЖК Бадаевский») и срок уезжает на годы вперёд. */
+  const delivery = grab(/(?:Срок сдачи|Сдача)\s*\n\s*([^\n]{2,32})\s*\n\s*Класс/);
+  const done = /Сдача\s*\n\s*\n?\s*Сдан\s*\n/.test(t) || /^\s*Сдан\s*$/m.test(t.slice(0, 4000));
+  // сроки по корпусам: «Золотой (квартал 1)\nСдан в 4 кв. 2021»
+  const houses = [...t.matchAll(/\n([^\n]{3,60})\n(Сдан[^\n]{0,30}|Сдача[^\n]{0,30}|\d кв\. 20\d\d)/g)]
+    .map((m) => ({ house: m[1].trim(), when: m[2].trim() }))
+    .filter((h) => /20\d\d/.test(h.when)).slice(0, 12);
   return {
-    developer: grab(/Застройщик\s*\n\s*([^\n]{2,80})/) || grab(/Девелопер\s*\n\s*([^\n]{2,80})/),
-    finished: grab(/Сдан[аы]?\s+в\s+(\d(?:\s+кв\.\s+)?\d{0,4}(?:\s*\d{4})?)/) || grab(/(Дом сдан|Сдан)\b/),
-    deadline: grab(/Срок сдачи\s*\n?\s*([^\n]{4,40})/) || grab(/Сдача[^\n]{0,20}\n?\s*(\d кв\.\s*\d{4}[^\n]{0,20})/),
-    yearText: grab(/(Сдан[^\n]{0,40}\d{4}[^\n]{0,20})/) || grab(/((?:Срок сдачи|Сдача)[^\n]{0,40}\d{4}[^\n]{0,20})/),
-    cls: grab(/Класс(?: жилья| дома)?\s*\n\s*([^\n]{3,30})/),
-    stage: grab(/(Строится|Сдан|Дом сдан|Проектируется)\b/),
+    developer: grab(/Застройщики?\s*\n+\s*([^\n]{2,80})/),
+    delivery,                                  // как на карточке: «2023», «2021–2023», «4 кв. 2026»
+    done,                                      // плашка «Сдан» в шапке
+    finished: done ? (delivery || 'Сдан') : null,
+    deadline: done ? null : delivery,
+    yearText: delivery ? (done ? `Сдан ${delivery}` : `Сдача ${delivery}`) : (done ? 'Сдан' : null),
+    cls: grab(/Класс\s*\n\s*([^\n]{3,30})/),
+    floors: grab(/Этажность\s*\n\s*([^\n]{1,20})/),
+    buildings: grab(/Корпуса\s*\n\s*(\d{1,3})/),
+    houses,
+    stage: done ? 'Сдан' : (delivery ? 'Строится' : null),
   };
 }
 
@@ -63,7 +78,7 @@ function parse(text) {
   const queue = names.map((n) => ({ ...n, tries: 0 }));
   while (queue.length) {
     const item = queue.shift(); const { name, hint } = item;
-    if (out[name] && out[name].id) continue;
+    if (out[name] && out[name].id && !REFRESH) continue;
     process.stdout.write(`${name} … `);
     const backoff = async (why) => {
       captcha++; console.log(why + (item.tries < 3 ? ', жду 2 мин и повторяю' : ', сдаюсь'));
@@ -85,7 +100,7 @@ function parse(text) {
       const text = await page.evaluate(() => document.body.innerText);
       const p = parse(text);
       out[name] = { id: hit.id, cianName: hit.name, address: hit.address, url, status, ...p, fetched: new Date().toISOString().slice(0, 10) };
-      console.log(`id=${hit.id} ${p.developer || '—'} | ${p.yearText || p.deadline || p.finished || '—'} | ${p.cls || '—'}`);
+      console.log(`id=${hit.id} ${p.developer || '—'} | ${p.yearText || '—'} | ${p.cls || '—'}`);
     } catch (e) {
       out[name] = { id: null, error: e.message.split('\n')[0] };
       console.log('ошибка: ' + e.message.split('\n')[0]);

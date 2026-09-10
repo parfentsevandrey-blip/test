@@ -36,6 +36,13 @@ def card(name):
     c = ZHK.get(name) or {}
     return c if c.get('id') else {}
 
+def card_delivery(c):
+    """Срок сдачи как на карточке ЖК: «2023», «2021–2023», «4 кв. 2026»."""
+    return (c.get('delivery') or '').strip()
+
+def card_years(c):
+    return [int(y) for y in re.findall(r'(20\d\d)', card_delivery(c))]
+
 def card_year_num(c):
     ys = []
     for k in ('finished', 'yearText', 'deadline'):
@@ -330,20 +337,20 @@ for r in complexes['complexes']:
     ymax_lots = max(yrs) if yrs else None
     lots_finished = (r.get('finishedShare') or 0) >= 50
     bmax = r.get('buildYearMax')
-    if lots_finished and ymax_lots and ymax_lots < NOW_YEAR: lots_built = True     # дом сдан в прошлые годы
-    elif card_says_done(cd): lots_built = True                                      # карточка ЖК: «Сдан в …»
-    elif card_says_future(cd): lots_built = False                                   # карточка ЖК: сдача впереди
-    elif bmax and bmax <= NOW_YEAR: lots_built = True                               # год постройки уже проставлен
+    if cd.get('done') is True: lots_built = True                                    # плашка «Сдан» на карточке ЖК
+    elif cd.get('done') is False: lots_built = False                                # карточка есть, дом ещё строится
+    elif lots_finished and ymax_lots and ymax_lots < NOW_YEAR: lots_built = True    # карточки нет — по объявлениям
+    elif bmax and bmax <= NOW_YEAR: lots_built = True
     else: lots_built = False
     m = {**m, 'stage': 'built' if lots_built else 'building'}
-    phase_note = f'в карточке ЖК на Циан следующая очередь: {card_year(cd)}' if (lots_built and card_deadline_date(cd) and card_deadline_date(cd) > TODAY) else ''
+    phase_note = ''
     cls = m.get('class') or dv.get('class') or 'премиум'
     if m.get('class') and dv.get('class') and dv['class'] != m['class']: cls = dv['class'] if dv['class'] == 'бизнес' else m['class']
     cc = (cd.get('cls') or '').strip().lower()
     if cc in ('делюкс', 'премиум', 'бизнес', 'комфорт', 'эконом'):
         cls = cc
         if cc in ('бизнес', 'комфорт', 'эконом') and not m.get('keep') and med < 1_500_000: continue   # класс по карточке Циан ниже премиума
-    year = (fmt_years(r) if lots_built else None) or card_year(cd) or m.get('year') or fmt_years(r)
+    year = card_delivery(cd) or (fmt_years(r) if lots_built else None) or m.get('year') or fmt_years(r)
     link = cd.get('url') or ''   # только страница ЖК на Циан; объявления не годятся
     row = [short_name(r['complex']), strip_paren(developer), year, short_addr(m.get('address') or addr), main_district(r.get('district')),
            max(r.get('housesSeen') or 0, dv.get('buildings') or 0) or None, floors(r) or dv.get('floors') or '', status,
@@ -355,14 +362,14 @@ for r in complexes['complexes']:
         # строку из таблицы заказчика оставляем на листе 2, только пока дом не сдан
         if not is_built: continue
         built_live.add(r['complex'])
-    ys = [int(y) for y in re.findall(r'(20\d\d)', str(year))]
-    if is_built and ys and max(ys) < BUILT_MIN_YEAR: continue   # вторичка старше 2022 года
+    ys = card_years(cd) or [int(y) for y in re.findall(r'(20\d\d)', str(year))]
+    if is_built and ys and min(ys) < BUILT_MIN_YEAR: continue   # срок сдачи по карточке ЖК раньше 2022
     zone_by_name[row[0]] = z
     (rows1 if is_built else rows2_live).append(row)
 rows1 = cluster(rows1, 4, 9)
 sheet(wb, '1. Построено (вторичка)', H1, rows1,
       [26, 18, 13, 28, 16, 6, 7, 13, 10, 10, 10, 6, 9, 10, 7, 90],
-      subtitle=f"ЦАО, дома 2018+, активные объявления Циан на {complexes['fetched']}; дома сдачи 2022+. Кластеры по районам (крупные выше), внутри — по возрастанию медианы ₽/м², цвет от дешёвых (зелёный) к дорогим (красный). Класс — по карточке ЖК на Циан", heat_col=9)
+      subtitle=f"ЦАО, активные объявления Циан на {complexes['fetched']}; срок сдачи по карточке ЖК — 2022 и позже. Кластеры по районам (крупные выше), внутри — по возрастанию медианы ₽/м², цвет от дешёвых (зелёный) к дорогим (красный). Класс — по карточке ЖК на Циан", heat_col=9)
 
 # ---------- лист 2: строится ----------
 H2 = ['Название ЖК', 'Застройщик', 'Срок сдачи', 'Адрес', 'Район', 'Корпусов', 'Этажность', 'Статус',
@@ -386,7 +393,7 @@ for row in pdf['rows']:
     if pm is None: pm = int((pf + pt) / 2) if pf and pt else (pf or None)
     cd = (card(live) if live else {}) or card(name)
     link2 = cd.get('url') or m.get('url') or dv.get('site') or ''
-    if card_year(cd): dl = card_year(cd)   # срок по карточке ЖК свежее таблицы
+    if card_delivery(cd): dl = card_delivery(cd)   # срок сдачи как на карточке ЖК
     zone_by_name[short_name(name)] = z
     rows2.append([short_name(name), strip_paren(dev), dl, short_addr(addr), main_district(m.get('district') or (lr or {}).get('district') or metro), b, fl, st, pf, pm, pt, lots, fin, link2, describe(name, live)])
     seen.add(live or name)
