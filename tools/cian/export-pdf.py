@@ -98,7 +98,6 @@ for ws in wb:
                 if col: style = f'background:{col};font-weight:600'
             if isinstance(v, str) and v in STATUS_BG: style = f'background:{STATUS_BG[v]}'
             if isinstance(v, (int, float)): cls = 'num'
-            elif isinstance(v, str) and len(v) > 30: cls = 'txt'
             tds.append(f'<td class="{cls}" style="{style}">{fmt(v)}</td>')
         trs.append(f'<tr class="{ "odd" if n % 2 == 0 else "" }">' + ''.join(tds) + '</tr>')
     parts.append(f'''<section class="page">
@@ -122,7 +121,6 @@ table.grid th { background: #1F3864; color: #fff; font-size: 5.9pt; font-weight:
 table.grid td { border: 0.4px solid #c8c8c8; padding: 2px 2px; text-align: center; vertical-align: middle;
   word-wrap: break-word; overflow-wrap: anywhere; hyphens: auto; }
 table.grid td.num { text-align: center; white-space: nowrap; }
-table.grid td.txt { text-align: left; }
 table.grid tr.odd td { background: #F3F6FA; }
 thead { display: table-header-group; }
 tr { page-break-inside: avoid; }

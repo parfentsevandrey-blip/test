@@ -125,9 +125,14 @@ for md in MAPS_DEF:
         d.text((x - tw / 2, y - 21), t, fill='white', font=font_b)
         legend.append({'n': i, 'name': p['name'], 'status': p['status'], 'address': p.get('address'), 'geo': p.get('geo')})
     # заголовок и легенда статусов на самой карте
-    pad = 24; bw = 1150; bh = 270
+    pad = 24
+    head = f'Премиум-ЖК: {md["title"]}'
+    # ширина плашки — по самой длинной надписи, иначе заголовок вылезает за рамку
+    bw = int(max(d.textlength(head, font=font_t) + 48,
+                 max(d.textlength(st, font=font_l) for st in COLORS) + 140)) + 24
+    bh = 110 + 52 * len(COLORS) + 8
     d.rectangle((pad, pad, pad + bw, pad + bh), fill=(255, 255, 255), outline=(60, 60, 60), width=2)
-    d.text((pad + 24, pad + 18), f'Премиум-ЖК: {md["title"]}', fill=(31, 56, 100), font=font_t)
+    d.text((pad + 24, pad + 18), head, fill=(31, 56, 100), font=font_t)
     yy = pad + 110
     for st, c in COLORS.items():
         d.ellipse((pad + 30, yy, pad + 74, yy + 44), fill=c, outline='white', width=3)
