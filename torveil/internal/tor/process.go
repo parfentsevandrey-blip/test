@@ -1,11 +1,9 @@
 package tor
 
 import (
-	"bufio"
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"net"
 	"os"
 	"os/exec"
@@ -49,6 +47,7 @@ type Process struct {
 
 	cmd     *exec.Cmd
 	control *Conn
+	output  *outputCapture
 
 	mu        sync.RWMutex
 	bootstrap Bootstrap
@@ -123,21 +122,19 @@ func Start(ctx context.Context, opts Options) (*Process, error) {
 	cmd.Dir = filepath.Dir(opts.Binaries.Tor)
 	hideWindow(cmd)
 
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return nil, fmt.Errorf("tor stdout: %w", err)
-	}
-	cmd.Stderr = cmd.Stdout
+	p.output = newOutputCapture(opts.Log)
+	cmd.Stdout = p.output
+	cmd.Stderr = p.output
 
 	if err := cmd.Start(); err != nil {
-		return nil, fmt.Errorf("start tor: %w", err)
+		return nil, fmt.Errorf("start tor (%s): %w", opts.Binaries.Tor, err)
 	}
 	p.cmd = cmd
 	p.logf("info", "tor started (pid %d), control port %d", cmd.Process.Pid, ports.Control)
 
-	go p.pumpLogs(stdout)
 	go func() {
 		p.exitErr = cmd.Wait()
+		p.output.Flush()
 		close(p.exited)
 	}()
 
@@ -146,6 +143,22 @@ func Start(ctx context.Context, opts Options) (*Process, error) {
 		return nil, err
 	}
 	return p, nil
+}
+
+// startupFailure explains why Tor would not start, using Tor's own words.
+//
+// "exit status 1" tells the user nothing they can act on; Tor has already said
+// what it objected to, and discarding that leaves them with a dead end.
+func (p *Process) startupFailure(reason error) error {
+	explanation := ""
+	if p.output != nil {
+		explanation = p.output.Explain()
+	}
+	if explanation == "" {
+		return fmt.Errorf("%w\n\nTor produced no output, which usually means the executable "+
+			"could not run at all — antivirus or SmartScreen may have blocked it", reason)
+	}
+	return fmt.Errorf("%w\n\nTor said:\n%s", reason, explanation)
 }
 
 // connectControl dials the control port, retrying while Tor starts up, then
@@ -158,7 +171,7 @@ func (p *Process) connectControl(ctx context.Context) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-p.exited:
-			return fmt.Errorf("tor exited during startup: %w", p.exitErr)
+			return p.startupFailure(fmt.Errorf("tor exited during startup: %w", p.exitErr))
 		default:
 		}
 
@@ -194,7 +207,7 @@ func (p *Process) connectControl(ctx context.Context) error {
 	if lastErr == nil {
 		lastErr = errors.New("timeout")
 	}
-	return fmt.Errorf("connect to tor control port: %w", lastErr)
+	return p.startupFailure(fmt.Errorf("could not reach Tor's control port: %w", lastErr))
 }
 
 // onStatusClient turns Tor's STATUS_CLIENT events into Bootstrap updates.
@@ -263,33 +276,13 @@ func (p *Process) WaitBootstrapped(ctx context.Context) error {
 			b := p.Bootstrap()
 			return fmt.Errorf("tor bootstrap stalled at %d%% (%s): %w", b.Percent, b.Summary, ctx.Err())
 		case <-p.exited:
-			return fmt.Errorf("tor exited during bootstrap: %w", p.exitErr)
+			return p.startupFailure(fmt.Errorf("tor exited during bootstrap: %w", p.exitErr))
 		case <-ticker.C:
 			p.refreshBootstrap(ctx)
 			if p.Bootstrap().Done() {
 				return nil
 			}
 		}
-	}
-}
-
-// pumpLogs forwards Tor's own log lines, mapping its severities onto ours.
-func (p *Process) pumpLogs(r io.Reader) {
-	sc := bufio.NewScanner(r)
-	sc.Buffer(make([]byte, 0, 64*1024), 1024*1024)
-	for sc.Scan() {
-		line := strings.TrimSpace(sc.Text())
-		if line == "" {
-			continue
-		}
-		level := "info"
-		switch {
-		case strings.Contains(line, "[err]"):
-			level = "error"
-		case strings.Contains(line, "[warn]"):
-			level = "warn"
-		}
-		p.logf(level, "tor: %s", line)
 	}
 }
 
