@@ -5,8 +5,6 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/parfentsevandrey-blip/torveil/internal/tor"
 )
 
 // isolateConfigDir points the config package at a temporary directory so tests
@@ -87,11 +85,14 @@ func TestNormalizeLowercasesCountries(t *testing.T) {
 func TestActiveBridges(t *testing.T) {
 	isolateConfigDir(t)
 
-	t.Run("snowflake falls back to the shipped defaults", func(t *testing.T) {
+	// The config layer deliberately substitutes nothing. Bridge lines go
+	// stale — fronting domains and STUN servers get rotated — so the default
+	// comes from the pt_config.json shipped beside the transports, which the
+	// engine reads, rather than from a list frozen into the settings code.
+	t.Run("nothing configured means nothing returned", func(t *testing.T) {
 		c := Config{Transport: "snowflake"}
-		got := c.ActiveBridges()
-		if len(got) != len(tor.DefaultSnowflakeBridges) {
-			t.Fatalf("got %d bridge lines, want the %d shipped defaults", len(got), len(tor.DefaultSnowflakeBridges))
+		if got := c.ActiveBridges(); len(got) != 0 {
+			t.Fatalf("got %v, want none so the engine can supply current lines", got)
 		}
 	})
 

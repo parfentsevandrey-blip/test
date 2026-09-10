@@ -90,8 +90,8 @@ func TestLocateFindsAnExpertBundleLayout(t *testing.T) {
 		}
 	}
 	write(filepath.Join(torDir, exeName("tor")))
-	write(filepath.Join(ptDir, exeName("snowflake-client")))
 	write(filepath.Join(ptDir, exeName("lyrebird")))
+	write(filepath.Join(ptDir, "pt_config.json"))
 	write(filepath.Join(dataDir, "geoip"))
 	write(filepath.Join(dataDir, "geoip6"))
 
@@ -105,11 +105,19 @@ func TestLocateFindsAnExpertBundleLayout(t *testing.T) {
 	if filepath.Base(bins.Tor) != exeName("tor") {
 		t.Errorf("tor = %q", bins.Tor)
 	}
-	if bins.Snowflake == "" {
-		t.Error("snowflake-client was not found in tor/pluggable_transports")
-	}
 	if bins.Obfs4 == "" {
 		t.Error("lyrebird was not found in tor/pluggable_transports")
+	}
+	// Current Tor releases fold Snowflake into lyrebird; a standalone
+	// snowflake-client no longer exists, so resolving it to lyrebird is what
+	// makes the Snowflake transport work at all.
+	if bins.Snowflake != bins.Obfs4 {
+		t.Errorf("snowflake = %q, want it to resolve to lyrebird at %q", bins.Snowflake, bins.Obfs4)
+	}
+	// pt_config.json is where the current bridge lines come from. Losing it
+	// silently falls back to a compiled-in list that goes stale.
+	if bins.PTConfig == "" {
+		t.Error("pt_config.json was not found beside the transports")
 	}
 	// Without geoip there is no country selection, and the bundle puts it in a
 	// sibling of the tor directory rather than inside it.

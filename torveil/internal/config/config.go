@@ -8,8 +8,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-
-	"github.com/parfentsevandrey-blip/torveil/internal/tor"
 )
 
 // Mode selects how application traffic reaches the tunnel.
@@ -224,15 +222,17 @@ func (c Config) Save() error {
 	return nil
 }
 
-// ActiveBridges returns the bridge lines for the selected transport, falling
-// back to the shipped defaults when the user has not supplied their own.
+// ActiveBridges returns the bridge lines the user configured for the selected
+// transport, or nothing when they have configured none.
+//
+// It deliberately does not substitute a default. The engine fills that gap
+// from the pt_config.json shipped beside the pluggable transports, which
+// tracks the Tor Project's current recommendations; a list chosen here would
+// have to be a compiled-in one, and those go stale.
 func (c Config) ActiveBridges() []string {
 	switch strings.ToLower(strings.TrimSpace(c.Transport)) {
 	case "snowflake":
-		if lines := nonEmpty(c.SnowflakeBridges); len(lines) > 0 {
-			return lines
-		}
-		return tor.DefaultSnowflakeBridges
+		return nonEmpty(c.SnowflakeBridges)
 	case "obfs4":
 		return nonEmpty(c.Obfs4Bridges)
 	default:

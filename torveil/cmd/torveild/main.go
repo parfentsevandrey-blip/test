@@ -16,6 +16,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/parfentsevandrey-blip/torveil/internal/bundle"
 	"github.com/parfentsevandrey-blip/torveil/internal/config"
 	"github.com/parfentsevandrey-blip/torveil/internal/core"
 	"github.com/parfentsevandrey-blip/torveil/internal/logging"
@@ -160,15 +161,33 @@ func printProfiles() {
 }
 
 func printLocated(cfg config.Config) {
-	bins, err := tor.Locate(cfg.TorSearchDirs)
+	// Unpack the bundled runtime first, so this reports what a real
+	// connection would use rather than only what is installed on the machine.
+	dirs := cfg.TorSearchDirs
+	if bundle.Available() {
+		rt, err := bundle.Ensure(cfg.DataDir, func(level, msg string) {
+			fmt.Printf("%-18s %s\n", level+":", msg)
+		})
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "bundled runtime: %v\n", err)
+		} else {
+			dirs = append([]string{rt.SearchDir()}, dirs...)
+			fmt.Printf("%-18s %s (version %s)\n", "bundled runtime:", rt.Dir, rt.Version)
+		}
+	} else {
+		fmt.Printf("%-18s %s\n", "bundled runtime:", "not in this build (built without -tags bundled)")
+	}
+
+	bins, err := tor.Locate(dirs)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
 	}
 	for _, row := range [][2]string{
 		{"tor", bins.Tor},
-		{"snowflake-client", bins.Snowflake},
+		{"snowflake", bins.Snowflake},
 		{"obfs4 (lyrebird)", bins.Obfs4},
+		{"pt_config.json", bins.PTConfig},
 		{"geoip", bins.GeoIP},
 		{"geoip6", bins.GeoIPv6},
 	} {
@@ -177,6 +196,10 @@ func printLocated(cfg config.Config) {
 			value = "not found"
 		}
 		fmt.Printf("%-18s %s\n", row[0]+":", value)
+	}
+
+	if lines := tor.RecommendedBridges(bins.PTConfig, cfg.Transport); len(lines) > 0 {
+		fmt.Printf("%-18s %d line(s) for %s\n", "bridges:", len(lines), cfg.Transport)
 	}
 }
 

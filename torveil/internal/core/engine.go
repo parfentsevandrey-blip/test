@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/parfentsevandrey-blip/torveil/internal/bundle"
 	"github.com/parfentsevandrey-blip/torveil/internal/config"
 	"github.com/parfentsevandrey-blip/torveil/internal/logging"
 	"github.com/parfentsevandrey-blip/torveil/internal/proxy"
@@ -84,6 +85,8 @@ type Engine struct {
 	since     time.Time
 	warnings  []string
 
+	runtime  bundle.Runtime
+	bridges  []string
 	torProc  *tor.Process
 	dir      *tor.Directory
 	circuits *tor.Manager
@@ -253,7 +256,13 @@ func (e *Engine) pathPolicy(cfg config.Config) tor.PathPolicy {
 // bridgeFingerprint returns the identity of the bridge that will be the first
 // hop, or "" when connecting directly.
 func (e *Engine) bridgeFingerprint(cfg config.Config) string {
-	for _, line := range cfg.ActiveBridges() {
+	e.mu.RLock()
+	lines := e.bridges
+	e.mu.RUnlock()
+	if len(lines) == 0 {
+		lines = cfg.ActiveBridges()
+	}
+	for _, line := range lines {
 		b, err := tor.ParseBridgeLine(line)
 		if err != nil || b.Fingerprint == "" {
 			continue
@@ -287,9 +296,26 @@ func (e *Engine) Connect(ctx context.Context) error {
 }
 
 func (e *Engine) connect(ctx, runCtx context.Context, cfg config.Config) error {
-	e.setState(StateStarting, "locating Tor")
+	e.setState(StateStarting, "preparing the Tor runtime")
 
-	bins, err := tor.Locate(cfg.TorSearchDirs)
+	// The bundled runtime is unpacked before anything is searched for, and
+	// its directory goes to the front of the search list, so the Tor TorVeil
+	// ships is what runs even on a machine that also has one installed.
+	searchDirs := cfg.TorSearchDirs
+	if bundle.Available() {
+		rt, err := bundle.Ensure(cfg.DataDir, e.logs.Func())
+		if err != nil {
+			e.warn("could not unpack the bundled Tor runtime (%v); falling back to a Tor installed on this machine", err)
+		} else {
+			searchDirs = append([]string{rt.SearchDir()}, searchDirs...)
+			e.mu.Lock()
+			e.runtime = rt
+			e.mu.Unlock()
+		}
+	}
+
+	e.setState(StateStarting, "locating Tor")
+	bins, err := tor.Locate(searchDirs)
 	if err != nil {
 		return e.fail(torNotFoundMessage(err))
 	}
@@ -307,6 +333,14 @@ func (e *Engine) connect(ctx, runCtx context.Context, cfg config.Config) error {
 	if bins.GeoIP == "" {
 		e.warn("Tor's geoip database was not found, so country selection is unavailable")
 	}
+
+	bridges, err := e.resolveBridges(cfg, bins)
+	if err != nil {
+		return e.fail(err)
+	}
+	e.mu.Lock()
+	e.bridges = bridges
+	e.mu.Unlock()
 
 	profile := e.profileFor(cfg)
 	extra := map[string]string{}
@@ -330,7 +364,7 @@ func (e *Engine) connect(ctx, runCtx context.Context, cfg config.Config) error {
 		DataDir:    cfg.DataDir,
 		Binaries:   bins,
 		Transport:  transport,
-		Bridges:    cfg.ActiveBridges(),
+		Bridges:    bridges,
 		ExtraTorrc: extra,
 		Log:        e.logs.Func(),
 		OnBootstrap: func(b tor.Bootstrap) {
@@ -420,6 +454,44 @@ func (e *Engine) connect(ctx, runCtx context.Context, cfg config.Config) error {
 	e.setState(StateConnected, "")
 	e.logs.Logf("info", "connected: %s transport, %d hops, %s shaping", cfg.Transport, policy.Hops, profile.Name)
 	return nil
+}
+
+// resolveBridges decides which bridge lines this session will use.
+//
+// Lines the user typed always win. Otherwise the list comes from the
+// pt_config.json shipped beside the pluggable transports, which is the Tor
+// Project's own current recommendation and changes when they change it — a
+// list compiled into TorVeil would be stale the moment they rotate a fronting
+// domain, and Snowflake would silently fail to find a proxy.
+func (e *Engine) resolveBridges(cfg config.Config, bins tor.Binaries) ([]string, error) {
+	transport := tor.Transport(cfg.Transport)
+	if transport == tor.TransportDirect || transport == "" {
+		return nil, nil
+	}
+
+	if lines := cfg.ActiveBridges(); len(lines) > 0 {
+		e.logs.Logf("info", "using %d configured %s bridge line(s)", len(lines), transport)
+		return lines, nil
+	}
+
+	lines := tor.RecommendedBridges(bins.PTConfig, string(transport))
+	if len(lines) == 0 {
+		if transport == tor.TransportObfs4 {
+			return nil, errors.New("no obfs4 bridges are configured.\n\n" +
+				"obfs4 bridge addresses are handed out individually rather than published, " +
+				"so TorVeil cannot ship a working set. Request bridges at " +
+				"https://bridges.torproject.org and paste them into Settings, " +
+				"or use Snowflake, which needs no configuration.")
+		}
+		return nil, fmt.Errorf("no %s bridge lines are available", transport)
+	}
+
+	source := "the bundled Tor's own recommendations"
+	if bins.PTConfig == "" {
+		source = "TorVeil's built-in fallback list"
+	}
+	e.logs.Logf("info", "using %d %s bridge line(s) from %s", len(lines), transport, source)
+	return lines, nil
 }
 
 // torNotFoundMessage turns a failed lookup into instructions.
@@ -519,6 +591,19 @@ func (e *Engine) startTunnel(cfg config.Config, dialer tunnel.Dialer, proc *tor.
 			"and use proxy mode")
 	}
 
+	// The Wintun bindings only look for wintun.dll beside the executable, so
+	// the bundled copy has to be put where they will find it before the
+	// adapter is created.
+	e.mu.RLock()
+	wintunDLL := e.runtime.WintunDLL
+	e.mu.RUnlock()
+	if wintunDLL != "" {
+		if err := bundle.EnsureWintunLoadable(wintunDLL); err != nil {
+			e.warn("bundled wintun.dll could not be made available (%v); "+
+				"full-tunnel mode needs wintun.dll next to torveil.exe", err)
+		}
+	}
+
 	e.setState(StateCircuits, "bringing up the tunnel adapter")
 	t, err := tunnel.Start(tunnel.Options{
 		AdapterName:    cfg.Tunnel.AdapterName,
@@ -555,8 +640,12 @@ func (e *Engine) startTunnel(cfg config.Config, dialer tunnel.Dialer, proc *tor.
 // route. Snowflake's placeholder addresses are not real endpoints and are
 // skipped.
 func (e *Engine) bridgeBypassPrefixes(cfg config.Config) []netip.Prefix {
+	e.mu.RLock()
+	lines := e.bridges
+	e.mu.RUnlock()
+
 	var out []netip.Prefix
-	for _, line := range cfg.ActiveBridges() {
+	for _, line := range lines {
 		b, err := tor.ParseBridgeLine(line)
 		if err != nil {
 			continue

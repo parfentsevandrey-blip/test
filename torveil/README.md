@@ -4,8 +4,9 @@ A Windows privacy client that routes traffic over Tor with Snowflake
 obfuscation, user-controlled multi-hop circuits, and DAITA-style traffic
 shaping.
 
-It is a desktop application (Wails + WebView2) around a Go engine that drives a
-Tor process you install yourself. Two modes:
+One executable, nothing to install. It is a desktop application (Wails +
+WebView2) around a Go engine that drives a Tor process it carries inside
+itself. Two modes:
 
 - **Proxy mode** — loopback SOCKS5 and HTTP listeners. No driver, no
   administrator rights; you point applications at them.
@@ -29,9 +30,11 @@ runs it. The first hop is a volunteer WebRTC proxy and the broker is reached by
 domain fronting, so an observer between you and the internet sees a WebRTC
 session to a CDN rather than a connection to Tor.
 
-obfs4 and a plain direct connection are also available. Bridge lines are
-editable in Settings, because the Tor Project rotates them and a hard-coded
-list eventually stops working.
+obfs4 and a plain direct connection are also available. Bridge lines come from
+the `pt_config.json` shipped beside the transports, so they track the Tor
+Project's current recommendations rather than a list frozen into TorVeil —
+fronting domains and STUN servers get rotated, and a stale line does not fail
+loudly, Snowflake simply never finds a proxy. They stay editable in Settings.
 
 ### Multi-hop
 
@@ -119,17 +122,41 @@ end-to-end correlation by a global observer, and this does not either.
 
 ## Requirements
 
-- Windows 10 or 11 (x64). WebView2 is present by default on both.
-- **A Tor installation.** TorVeil does not bundle Tor; it drives a build you
-  install, so the binary you run stays one you can verify. Either works:
-  - [Tor Expert Bundle](https://www.torproject.org/download/tor/) — includes
-    `snowflake-client.exe` and `lyrebird.exe` under `pluggable_transports/`.
-  - Tor Browser — TorVeil finds `Browser\TorBrowser\Tor` automatically.
+Windows 10 or 11 (x64). Nothing else: `torveil.exe` carries everything it
+needs.
 
-  If it is somewhere else, set **Settings → Extra search directory**.
-- **`wintun.dll`** next to `torveil.exe`, for full-tunnel mode only. Download
-  from [wintun.net](https://www.wintun.net/) and take the DLL from `bin\amd64`.
-- Administrator rights, for full-tunnel mode only.
+Administrator rights are required for full-tunnel mode only; proxy mode runs
+as an ordinary user.
+
+## What is inside the executable
+
+TorVeil ships the Tor Project's own binaries rather than asking you to install
+them, so one file is the whole application:
+
+| | |
+|---|---|
+| `tor.exe` | Tor Expert Bundle, unmodified |
+| `lyrebird.exe` | the pluggable transports: obfs4, snowflake, meek_lite, webtunnel |
+| `pt_config.json` | the Tor Project's current bridge lines |
+| `geoip`, `geoip6` | Tor's own country database, used for entry/exit selection |
+| `wintun.dll` | the network adapter driver, for full-tunnel mode |
+
+`build/fetch-assets.sh` downloads these from the projects that publish them and
+**verifies the Tor Project's OpenPGP signature on every build**, refusing to
+package anything whose signature does not chain to the Tor Browser Developers
+key `EF6E286DDA85EA2A4BA7DE684E2C6E8793298290`. Wintun publishes no signature,
+so its release is pinned by SHA-256 instead. Nothing is patched or rebuilt; the
+version and provenance of each piece is recorded in `VERSIONS.txt` inside the
+bundle.
+
+On first launch the archive is unpacked into
+`%APPDATA%\TorVeil\tor\runtime\<version>`. The version is the archive's own
+digest, so a new build unpacks beside the old one and the stale copy is
+removed. Extraction is atomic: an interrupted first run cannot leave a
+half-written Tor that looks complete next time.
+
+A Tor you installed yourself still wins if you set **Settings → Extra search
+directory**; the bundled one is a default, not a lock-in.
 
 ## Build
 
@@ -139,24 +166,36 @@ From Linux or macOS (Wails v2 needs no CGO for a Windows target):
 ./build/build.sh
 ```
 
+This fetches and verifies the runtime if it is not already present, runs
+`gofmt`, `go vet` for host and Windows, and the test suite, then produces
+`dist\torveil.exe` (GUI, ~32 MB) and `dist\torveild.exe` (headless).
+
+`SKIP_ASSETS=1 ./build/build.sh` builds without the bundled runtime, producing
+a smaller executable that expects a Tor installed on the machine.
+
 On Windows:
 
 ```powershell
 .\build\build.ps1
 ```
 
-Both run `gofmt`, `go vet` for host and Windows, and the test suite before
-building, then produce `dist\torveil.exe` (GUI) and `dist\torveild.exe`
-(headless).
+`build.ps1` uses whatever `internal/bundle/assets/runtime.tar.gz` is already
+there; run `build/fetch-assets.sh` (it needs `curl`, `gpg` and `tar`) to
+produce it.
 
-If you have the Wails CLI, `wails build` also packages an icon and an embedded
-manifest; the scripts above ship `torveil.exe.manifest` alongside the binary to
-get DPI awareness without that dependency.
+Two build tags matter. **`production`** is not optional for the GUI: without it
+Wails links a stub that opens an error dialog instead of a window, and the
+failure only appears at run time. `cmd/torveil/buildtag_windows.go` turns that
+into a compile error. **`bundled`** embeds the runtime; without it the
+executable falls back to searching the machine for Tor.
 
 ## Running
 
-Launch `torveil.exe`. Pick a transport and mode in **Settings**, a circuit
-shape in **Route**, a profile in **Shaping**, then **Connect**.
+Launch `torveil.exe` and press **Connect**. Snowflake and a 3-hop circuit with
+balanced shaping are the defaults, and need no configuration.
+
+To change things: transport and mode in **Settings**, circuit shape in
+**Route**, shaping profile in **Shaping**.
 
 In proxy mode, point applications at the addresses shown on the Status screen
 (default `127.0.0.1:9150` for SOCKS5 and `127.0.0.1:9151` for HTTP).
@@ -212,6 +251,12 @@ concerned. The danger is the moment the adapter disappears and the routes go
 with it, so that is when lockdown engages. Rules are created through `netsh`
 and are therefore visible and removable in the Windows Firewall UI, and a
 journal file lets a crashed run be cleaned up on the next start.
+
+**Nothing is signed.** The executable carries no code-signing certificate, so
+SmartScreen will warn on first run. The bundled Tor binaries *are* verified —
+against the Tor Project's OpenPGP signature at build time — but that says
+nothing about TorVeil's own executable, which you should build yourself if that
+matters to you.
 
 **Logs are memory-only.** Circuit paths, connection errors and Tor's notices
 describe a session in enough detail to be worth protecting, so nothing is

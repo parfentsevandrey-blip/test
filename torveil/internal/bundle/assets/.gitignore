@@ -1,0 +1,3 @@
+# The runtime archive is fetched and verified by build/fetch-assets.sh.
+# It is 15 MB of third-party binaries; reproduce it rather than commit it.
+runtime.tar.gz

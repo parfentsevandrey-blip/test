@@ -15,11 +15,27 @@ import (
 // Browser) installation, so the user keeps control over which signed Tor build
 // is executed.
 type Binaries struct {
-	Tor       string // tor.exe
-	Snowflake string // snowflake-client.exe (optional)
-	Obfs4     string // lyrebird.exe / obfs4proxy.exe (optional)
-	GeoIP     string // geoip database (optional but needed for country policy)
-	GeoIPv6   string
+	Tor string // tor.exe
+
+	// Snowflake and Obfs4 are the executables implementing each transport.
+	//
+	// They are usually the same file. Snowflake used to ship as a separate
+	// snowflake-client, but current Tor releases fold it into lyrebird
+	// alongside obfs4, meek_lite and webtunnel, and a standalone
+	// snowflake-client no longer exists in the Expert Bundle. Both spellings
+	// are resolved so either layout works.
+	Snowflake string
+	Obfs4     string
+
+	GeoIP   string // geoip database, needed for country selection
+	GeoIPv6 string
+
+	// PTConfig is the pt_config.json shipped beside the transports. It
+	// carries the bridge lines the Tor Project currently recommends, which is
+	// a far better source than anything compiled into TorVeil: fronting
+	// domains and STUN servers get rotated, and a stale list simply fails to
+	// bootstrap.
+	PTConfig string
 }
 
 // ErrTorNotFound reports that no tor executable could be located.
@@ -175,8 +191,16 @@ func Locate(extraDirs []string) (Binaries, error) {
 		filepath.Join(filepath.Dir(filepath.Dir(b.Tor)), "PluggableTransports"),
 	}, roots...)
 
-	b.Snowflake = findIn(ptRoots, exeName("snowflake-client"), exeName("client"))
 	b.Obfs4 = findIn(ptRoots, exeName("lyrebird"), exeName("obfs4proxy"))
+
+	// Prefer a standalone snowflake-client where one exists, for older
+	// installations; otherwise lyrebird provides the transport itself.
+	b.Snowflake = findIn(ptRoots, exeName("snowflake-client"))
+	if b.Snowflake == "" && strings.EqualFold(filepath.Base(b.Obfs4), exeName("lyrebird")) {
+		b.Snowflake = b.Obfs4
+	}
+
+	b.PTConfig = findIn(ptRoots, "pt_config.json")
 
 	geoRoots := append(dataRoots(b.Tor), roots...)
 	b.GeoIP = findIn(geoRoots, "geoip")
