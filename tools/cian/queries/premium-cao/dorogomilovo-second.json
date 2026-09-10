@@ -26,7 +26,7 @@
  "house_year": {
   "type": "range",
   "value": {
-   "gte": 2018
+   "gte": 2022
   }
  }
 }

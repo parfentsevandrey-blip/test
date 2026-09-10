@@ -323,14 +323,14 @@ for r in complexes['complexes']:
     if m.get('exclude'): continue
     ymax = r.get('buildYearMax')
     built = (r.get('finishedShare') or 0) >= 50 or (ymax and ymax <= 2025 and (r.get('finishedShare') is None))
-    if 'second' in ','.join(r.get('sources', [])) and ymax and ymax < 2018 and not m.get('year'): continue
+    if 'second' in ','.join(r.get('sources', [])) and ymax and ymax < BUILT_MIN_YEAR and not m.get('year'): continue
     status = 'апартаменты' if r['apartmentsShare'] >= 60 else ('квартиры + апартаменты' if r['apartmentsShare'] >= 15 else 'квартиры')
     addr = ', '.join(x for x in ['Москва', r.get('street'), r.get('house')] if x)
     dv = devs.get(r['complex'], {})
     cd = card(r['complex'])
     developer = m.get('developer') or dv.get('developer') or cd.get('developer') or ''
     cy = card_year_num(cd)
-    if cy and cy < 2018 and not re.search(r'[–-]', str(cd.get('yearText') or '')): continue   # по карточке ЖК дом старше 2018
+    if cy and cy < BUILT_MIN_YEAR and not re.search(r'[–-]', str(cd.get('yearText') or '')): continue   # по карточке ЖК дом старше порога
     # Стадию решают лоты, а не карточка ЖК: в карточке стоит срок ПОСЛЕДНЕЙ очереди,
     # из-за чего сданные дома (Резиденция 1864, Armani/Casa) уезжали в «строится».
     # У новостройки на предпродаже Циан ставит лотам «дом сдан» задолго до ввода,
@@ -516,7 +516,7 @@ if idx_path.exists():
         COLW, PX = 12.0, 89                            # ширина колонки в символах ≈ 89 px
         ncols = math.ceil(IMG_W / PX)
         for i in range(1, ncols + 1): ws.column_dimensions[get_column_letter(i)].width = COLW
-        ws['A1'] = f"Карта: {mp['title']} — премиум-ЖК 2018+ по статусу"; ws['A1'].font = TITLE_FONT
+        ws['A1'] = f"Карта: {mp['title']} — премиум-ЖК по статусу"; ws['A1'].font = TITLE_FONT
         ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=ncols); ws.row_dimensions[1].height = 26
         ws['A2'] = 'Зелёный — построено, оранжевый — строится, фиолетовый — проектирование. Номер маркера = номер в списке на соседнем листе. Подложка: Яндекс Карты.'
         ws['A2'].font = SUB_FONT; ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=ncols)
