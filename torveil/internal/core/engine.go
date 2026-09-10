@@ -291,8 +291,7 @@ func (e *Engine) connect(ctx, runCtx context.Context, cfg config.Config) error {
 
 	bins, err := tor.Locate(cfg.TorSearchDirs)
 	if err != nil {
-		return e.fail(fmt.Errorf("%w\n\nTorVeil does not bundle Tor. Install the Tor Expert Bundle or Tor Browser, "+
-			"or point \"Tor directory\" in settings at a folder containing tor.exe", err))
+		return e.fail(torNotFoundMessage(err))
 	}
 	e.mu.Lock()
 	e.binaries = bins
@@ -421,6 +420,37 @@ func (e *Engine) connect(ctx, runCtx context.Context, cfg config.Config) error {
 	e.setState(StateConnected, "")
 	e.logs.Logf("info", "connected: %s transport, %d hops, %s shaping", cfg.Transport, policy.Hops, profile.Name)
 	return nil
+}
+
+// torNotFoundMessage turns a failed lookup into instructions.
+//
+// The fix is put before the evidence: someone hitting this wants to know what
+// to do, and only then which paths were tried. Extracting the Expert Bundle
+// beside the executable is recommended because its own layout — tor\tor.exe,
+// tor\pluggable_transports\, data\geoip — lands exactly where TorVeil already
+// looks, so nothing has to be configured afterwards.
+func torNotFoundMessage(err error) error {
+	var notFound *tor.NotFoundError
+	if !errors.As(err, &notFound) {
+		return err
+	}
+	return fmt.Errorf(`Tor was not found on this machine.
+
+TorVeil drives a Tor build you install rather than bundling one, so the
+binary that actually talks to the network stays one you can verify.
+
+Quickest fix: download the Tor Expert Bundle from
+https://www.torproject.org/download/tor/ and extract it into the same
+folder as torveil.exe. That gives you tor\tor.exe, the pluggable
+transports for Snowflake, and the geoip database needed for choosing
+countries — all in places TorVeil already searches.
+
+Tor Browser works too, and is found automatically if installed normally.
+Anywhere else: set "Extra search directory" in Settings to the folder
+containing tor.exe.
+
+Searched %d locations:
+%s`, len(notFound.Searched), notFound.SearchedList())
 }
 
 // pinGuard fixes the entry relay for the session and, when connecting

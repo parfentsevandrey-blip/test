@@ -132,7 +132,10 @@
   /* ---------- status hero ---------- */
   .hero { display: flex; align-items: center; gap: 18px; }
   .hero .state { font-size: 24px; font-weight: 600; }
-  .hero .detail { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .hero .detail {
+    color: var(--muted); font-size: 13px; margin-top: 2px;
+    white-space: pre-wrap; max-height: 30vh; overflow-y: auto;
+  }
   .bar { height: 5px; background: var(--panel-2); border-radius: 3px; overflow: hidden; margin-top: 12px; }
   .bar > i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .4s; }
 
@@ -175,11 +178,16 @@
   .log .warn { color: var(--warn); }
   .log .error { color: var(--err); }
 
+  /* Errors from the engine are written as several paragraphs with a path
+     list; without pre-wrap the browser collapses all of it into one run-on
+     line and the instructions become unreadable. */
   .note {
     background: rgba(251,191,36,.08); border: 1px solid rgba(251,191,36,.3);
     border-radius: 8px; padding: 10px 13px; color: #e3d5ad; font-size: 12.5px;
-    margin-bottom: 14px; line-height: 1.55;
+    margin-bottom: 14px; line-height: 1.55; white-space: pre-wrap;
+    max-height: 40vh; overflow-y: auto;
   }
+  .note b { white-space: normal; }
   .note.err { background: rgba(248,113,113,.08); border-color: rgba(248,113,113,.32); color: #f0c4c4; }
   .note b { color: #fff; }
 
@@ -491,6 +499,12 @@ function flag(cc) {
   );
 }
 
+// firstLine returns the opening line of a multi-paragraph message.
+function firstLine(s) {
+  if (!s) return "";
+  return s.split("\n")[0].trim();
+}
+
 function el(tag, cls, text) {
   const e = document.createElement(tag);
   if (cls) e.className = cls;
@@ -528,7 +542,9 @@ function renderStatus(s) {
 
   const [text, fallback] = STATE_TEXT[s.state] || [s.state, ""];
   $("stateText").textContent = text;
-  $("stateDetail").textContent = s.error || s.detail || fallback ||
+  // The banner above already carries the error in full; repeating all of it
+  // here just pushes everything else off the screen, so keep the summary line.
+  $("stateDetail").textContent = firstLine(s.error) || s.detail || fallback ||
     (s.state === "connected" ? "Traffic is going through Tor." : "");
 
   const dot = $("dot");
