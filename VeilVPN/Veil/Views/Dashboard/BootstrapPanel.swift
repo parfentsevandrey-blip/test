@@ -13,6 +13,15 @@ struct BootstrapPanel: View {
                 Label(app.bootstrap.phaseTitle, systemImage: app.settings.transport.symbol)
                     .font(.headline)
                 Spacer()
+                if let started = app.connectStartedAt {
+                    TimelineView(.periodic(from: started, by: 1)) { context in
+                        let seconds = Int(max(0, context.date.timeIntervalSince(started)))
+                        Text(verbatim: Duration.seconds(seconds).formatted(.time(pattern: .minuteSecond)))
+                            .font(.subheadline)
+                            .monospacedDigit()
+                            .foregroundStyle(.tertiary)
+                    }
+                }
                 Text(verbatim: "\(app.bootstrap.percent)%")
                     .font(.headline)
                     .monospacedDigit()

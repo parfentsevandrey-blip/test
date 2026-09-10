@@ -224,19 +224,25 @@ struct LatencyTile: View {
     var body: some View {
         Tile(tint: .mint, action: { app.runTorCheck() }) {
             VStack(alignment: .leading, spacing: 8) {
-                TileHeader(title: "Route latency", symbol: "timer", tint: .mint)
+                HStack {
+                    TileHeader(title: "Route latency", symbol: "timer", tint: .mint)
+                    Spacer()
+                    if app.latency.isMeasuring {
+                        ProgressView().controlSize(.mini)
+                    }
+                }
                 HStack(spacing: 14) {
                     ArcGauge(fraction: fraction, tint: gaugeColor)
                         .frame(width: 64, height: 36)
                     VStack(alignment: .leading, spacing: 3) {
-                        if app.isCheckingTor {
-                            Figure(text: String(localized: "Checking…"))
-                        } else if let latency = app.routeLatency {
-                            Figure(text: "\(Int((latency * 1000).rounded())) ms")
+                        if let summary = app.latency.summary {
+                            Figure(text: "\(Int((summary.median * 1000).rounded())) ms")
+                        } else if app.connection.isConnected {
+                            Figure(text: String(localized: "Measuring…"))
                         } else {
                             Figure(text: String(localized: "Not measured"))
                         }
-                        Text(verbatim: app.torCheck?.ip ?? "—")
+                        detail
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                             .monospacedDigit()
@@ -248,6 +254,20 @@ struct LatencyTile: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
             }
+        }
+    }
+
+    /// The median is the headline; how unsteady the route is belongs next to it, not inside it.
+    @ViewBuilder
+    private var detail: some View {
+        if let summary = app.latency.summary {
+            if summary.isStable {
+                Text("median of \(summary.samples) · steady")
+            } else {
+                Text("median of \(summary.samples) · ±\(Int((summary.jitter * 1000).rounded())) ms")
+            }
+        } else {
+            Text(verbatim: app.torCheck?.ip ?? "—")
         }
     }
 
@@ -264,6 +284,8 @@ struct LatencyTile: View {
             }
         } else if app.tuner.isPinned, let before = app.routeLatencyBeforeTuning, let after = app.routeLatency {
             Text("Tuned: \(Self.milliseconds(before)) → \(Self.milliseconds(after)) · \(app.tuner.pinnedExits.count) fast exits pinned")
+        } else if let summary = app.latency.summary, !summary.isStable {
+            Text("The route is unsteady: best \(Int((summary.best * 1000).rounded())) ms, occasional spikes")
         } else if app.tuner.isPinned {
             Text("Fastest relays pinned · click to verify the exit")
         } else {

@@ -4901,6 +4901,34 @@
         }
       }
     },
+    "Measuring…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Измеряется…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вимірюється…"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "در حال اندازه‌گیری…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "测量中…"
+          }
+        }
+      }
+    },
     "Middle": {
       "localizations": {
         "fa": {
@@ -8933,6 +8961,34 @@
         }
       }
     },
+    "The network was just reset and still is not responding.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сеть только что сбрасывали, и она всё ещё не отвечает."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мережу щойно скидали, і вона все ще не відповідає."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شبکه همین حالا بازنشانی شد و هنوز پاسخ نمی‌دهد."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "网络刚刚重置过，仍然没有响应。"
+          }
+        }
+      }
+    },
     "The padding loop was closed.": {
       "localizations": {
         "fa": {
@@ -8985,6 +9041,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "此构建未包含可插拔传输“%@”。"
+          }
+        }
+      }
+    },
+    "The route is unsteady: best %lld ms, occasional spikes": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Маршрут нестабилен: лучшее %lld мс, бывают всплески"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Маршрут нестабільний: найкраще %lld мс, бувають сплески"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مسیر ناپایدار است: بهترین %lld میلی‌ثانیه، گاهی جهش"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "路由不稳定：最佳 %lld 毫秒，偶有尖峰"
           }
         }
       }
@@ -11645,6 +11729,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "手动"
+          }
+        }
+      }
+    },
+    "median of %lld · steady": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "медиана из %lld · стабильно"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "медіана з %lld · стабільно"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "میانه از %lld · پایدار"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 次的中位数 · 稳定"
+          }
+        }
+      }
+    },
+    "median of %lld · ±%lld ms": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "медиана из %lld · ±%lld мс"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "медіана з %lld · ±%lld мс"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "میانه از %lld · ±%lld میلی‌ثانیه"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 次的中位数 · ±%lld 毫秒"
           }
         }
       }

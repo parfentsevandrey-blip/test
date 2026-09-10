@@ -63,8 +63,11 @@ final class AppState {
     private(set) var bootstrap = BootstrapProgress()
     private(set) var circuit: [CircuitHop] = []
     private(set) var torCheck: TorCheckResult?
-    /// Round-trip time of the last successful Tor check — a practical measure of route latency.
-    private(set) var routeLatency: TimeInterval?
+    /// Median round trip of the route, from the rolling window of latency probes. A single slow
+    /// moment shows up as jitter in the summary instead of becoming the headline figure.
+    var routeLatency: TimeInterval? { latency.summary?.median }
+    /// How long the last exit verification took end to end (a full HTTPS fetch, not route latency).
+    private(set) var torCheckSeconds: TimeInterval?
     private(set) var isCheckingTor = false
     private(set) var isChangingIdentity = false
     private(set) var logs: [LogEntry] = []
@@ -102,11 +105,14 @@ final class AppState {
     private(set) var routeLatencyBeforeTuning: TimeInterval?
     /// A route change is being applied: config pushed, first circuit being built.
     private(set) var routeSwitching = false
+    /// When the current connection attempt began, so the UI can show how long it has been going.
+    private(set) var connectStartedAt: Date?
     /// Sidebar selection, so menu commands can navigate.
     var sidebarSelection: SidebarItem = .home
     let traffic = TrafficMonitor()
     let padding = PaddingLoop()
     let tuner = RouteTuner()
+    let latency = LatencyMonitor()
     let isDemo: Bool
 
     @ObservationIgnored private var engine: any TorEngine
@@ -153,6 +159,7 @@ final class AppState {
         wireEngine()
         padding.onLog = { [weak self] entry in self?.append(entry) }
         tuner.onLog = { [weak self] entry in self?.append(entry) }
+        latency.onLog = { [weak self] entry in self?.append(entry) }
         traffic.paddingRateProvider = { [weak self] in self?.padding.rate ?? 0 }
         networkWatcher.onEvent = { [weak self] event in self?.handleNetworkEvent(event) }
         networkWatcher.start()
@@ -227,10 +234,13 @@ final class AppState {
         reconnectPending = false
         lastError = nil
         torCheck = nil
-        routeLatency = nil
+        torCheckSeconds = nil
+        latency.stop()
+        latency.reset()
         circuit = []
         bootstrap = BootstrapProgress()
         transportAttemptMessage = nil
+        connectStartedAt = .now
         connection = .connecting
         let settings = self.settings
 
@@ -288,6 +298,7 @@ final class AppState {
 
                 var queue = transportCandidates()
                 let planned = queue.count
+                let started = Date.now
                 var connectedTransport: AppSettings.Transport?
                 var lastFailure: Error?
                 var previous: AppSettings.Transport?
@@ -296,6 +307,12 @@ final class AppState {
                     let transport = queue[index]
                     try Task.checkCancellation()
                     guard attempt == generation else { return }
+                    // A bounded attempt: past this point another transport is not going to help
+                    // either, and saying so beats trying quietly for another few minutes.
+                    if Date.now.timeIntervalSince(started) > Self.connectDeadline, index > 0 {
+                        append(.veil(.warn, "Giving up after \(Int(Date.now.timeIntervalSince(started))) s of connection attempts"))
+                        break
+                    }
                     activeTransport = transport
                     bootstrap = BootstrapProgress()
                     if planned > 1 || index > 0 {
@@ -309,11 +326,12 @@ final class AppState {
                     do {
                         try await engine.start(settings: settings.resolving(transport: transport), ports: ports)
                         torVersion = engine.versionDescription
-                        let isLast = index == queue.count - 1
-                        try await engine.waitForBootstrap(
-                            timeout: isLast ? .seconds(240) : .seconds(120),
-                            stallTimeout: isLast ? .seconds(150) : .seconds(45)
+                        let budget = Self.bootstrapBudget(
+                            isLast: index == queue.count - 1,
+                            isKnownGood: index == 0 && settings.lastWorkingTransport == transport,
+                            elapsed: Date.now.timeIntervalSince(started)
                         )
+                        try await engine.waitForBootstrap(timeout: budget.timeout, stallTimeout: budget.stall)
                         connectedTransport = transport
                         break
                     } catch is CancellationError {
@@ -369,6 +387,7 @@ final class AppState {
 
                 killSwitchEngaged = false
                 connectedAt = .now
+                connectStartedAt = nil
                 connection = .connected
                 traffic.start(engine: engine)
                 startCircuitUpdates()
@@ -376,6 +395,7 @@ final class AppState {
                 if self.settings.paddingEnabled {
                     padding.start(engine: engine, socksPort: ports.socks, level: self.settings.paddingLevel)
                 }
+                latency.start(socksPort: ports.socks)
                 restartRouteRotation()
                 startRouteTuning()
                 startRetuneTimer()
@@ -393,6 +413,7 @@ final class AppState {
                 lastError = AppError(title: String(localized: "Could not connect"), message: error.localizedDescription)
                 await failClosedOrTeardown(reason: error.localizedDescription)
                 if attempt == generation {
+                    connectStartedAt = nil
                     connection = .failed
                     Feedback.failed(sound: self.settings.soundEffects, haptic: self.settings.hapticFeedback)
                     scheduleReconnectIfWanted()
@@ -485,12 +506,15 @@ final class AppState {
         routeSwitching = false
         checkFailures = 0
         traffic.stop()
+        latency.stop()
+        latency.reset()
         await padding.stop()
         await engine.stop()
         connectedAt = nil
+        connectStartedAt = nil
         circuit = []
         torCheck = nil
-        routeLatency = nil
+        torCheckSeconds = nil
     }
 
     /// On failure: keep blocking when the kill switch is on, otherwise restore the network.
@@ -605,32 +629,36 @@ final class AppState {
         }
     }
 
-    /// After sleep the path may look satisfied while nothing works, and Tor's own connections are
-    /// dead anyway. Wait for Wi-Fi to come back, reset it when it does not, then restart Tor when
-    /// the sleep was long enough for its circuits and the Snowflake proxy to be gone.
+    /// After sleep the network may look satisfied while nothing gets through. Check that first,
+    /// then ask the only question that matters for the tunnel: does traffic actually flow through
+    /// it right now? A long sleep is not by itself a reason to tear a working tunnel down — the
+    /// old code restarted Tor after every nap and paid a full bootstrap for it.
     private func scheduleWakeRecovery(sleptFor: TimeInterval) {
         reconnectTask?.cancel()
         reconnectPending = false
         reconnectTask = Task { [weak self] in
             guard let self else { return }
-            do { try await Task.sleep(for: .seconds(4)) } catch { return }
-            let outcome = await repairNetworkIfNeeded(trigger: "wake", allowReset: settings.autoResetNetwork, patience: .seconds(20))
+            do { try await Task.sleep(for: .seconds(2)) } catch { return }
+            let outcome = await repairNetworkIfNeeded(trigger: "wake", allowReset: settings.autoResetNetwork, patience: .seconds(15))
             guard !Task.isCancelled else { return }
             switch connection {
             case .connected:
-                let longSleep = sleptFor > 120
-                if outcome == .recovered || longSleep {
-                    guard settings.autoReconnect else { return }
-                    append(.veil(.notice, longSleep ? "Restarting Tor after a long sleep" : "Restarting Tor after the network reset"))
-                    reconnect()
+                if outcome == .stillDown {
+                    append(.veil(.warn, "No Internet after waking; leaving Tor alone until the network is back"))
                     return
                 }
-                if await engine.isCircuitEstablished() { return }
-                do { try await Task.sleep(for: .seconds(15)) } catch { return }
-                guard connection == .connected else { return }
-                if await engine.isCircuitEstablished() { return }
-                guard settings.autoReconnect else { return }
-                append(.veil(.warn, "Tor lost its circuits after sleep; reconnecting"))
+                if await tunnelIsHealthy(attempts: 2) {
+                    let nap = sleptFor > 60 ? " (slept \(Int(sleptFor / 60)) min)" : ""
+                    append(.veil(.info, "Tunnel still carries traffic after sleep\(nap); no restart needed"))
+                    latency.reset()
+                    latency.measureNow()
+                    return
+                }
+                guard settings.autoReconnect else {
+                    append(.veil(.warn, "Tunnel is not passing traffic after sleep; auto-reconnect is off"))
+                    return
+                }
+                append(.veil(.notice, "Tunnel is not passing traffic after sleep; restarting Tor"))
                 reconnect()
             case .connecting:
                 guard settings.autoReconnect else { return }
@@ -645,9 +673,31 @@ final class AppState {
         }
     }
 
+    /// Opens a real stream through Tor. `status/circuit-established` can still say yes while the
+    /// path is dead — after sleep it usually does — so ask the route itself.
+    private func tunnelIsHealthy(attempts: Int) async -> Bool {
+        guard let ports, connection == .connected else { return false }
+        for attempt in 0..<max(1, attempts) {
+            if await LatencyProbe.sample(socksPort: ports.socks, target: LatencyProbe.target(at: attempt), timeout: .seconds(8)) != nil {
+                return true
+            }
+            if attempt < attempts - 1 {
+                do { try await Task.sleep(for: .seconds(2)) } catch { return false }
+            }
+        }
+        return false
+    }
+
     /// Probes the Internet; when nothing answers, waits `patience` for Wi-Fi to settle, then resets
     /// the network (if allowed) and probes again.
-    private func repairNetworkIfNeeded(trigger: String, allowReset: Bool, patience: Duration = .seconds(3)) async -> NetworkRepairOutcome {
+    private func repairNetworkIfNeeded(trigger: String, allowReset: Bool, patience: Duration = .seconds(3), maxAge: TimeInterval = 20) async -> NetworkRepairOutcome {
+        // Wake recovery and the connection attempt that follows it used to probe the network twice,
+        // adding half a minute to every wake for an answer we already had.
+        if let cached = connectivity, cached.isUsable, Date.now.timeIntervalSince(cached.date) < maxAge {
+            append(.veil(.debug, "Connectivity (\(trigger)): reusing the check from \(Int(Date.now.timeIntervalSince(cached.date))) s ago"))
+            networkRepair = .idle
+            return .healthy
+        }
         networkRepair = .probing
         var report = await ConnectivityProbe.check()
         connectivity = report
@@ -687,6 +737,11 @@ final class AppState {
                 try? await Task.sleep(for: .seconds(3))
                 self?.suppressPathEvents = false
             }
+        }
+        if !manual, let last = lastNetworkReset, Date.now.timeIntervalSince(last) < 90 {
+            networkRepair = .failed(String(localized: "The network was just reset and still is not responding."))
+            append(.veil(.warn, "Network was reset \(Int(Date.now.timeIntervalSince(last))) s ago; not resetting again"))
+            return .stillDown
         }
         let primary = NetworkReset.primary() ?? primaryNetwork
         primaryNetwork = primary
@@ -790,12 +845,12 @@ final class AppState {
             guard let self else { return }
             do { try await Task.sleep(for: delay) } catch { return }
             guard connection == .connected else { return }
-            if await engine.isCircuitEstablished() { return }
-            do { try await Task.sleep(for: .seconds(20)) } catch { return }
+            if await tunnelIsHealthy(attempts: 1) { return }
+            do { try await Task.sleep(for: .seconds(12)) } catch { return }
             guard connection == .connected else { return }
-            if await engine.isCircuitEstablished() { return }
+            if await tunnelIsHealthy(attempts: 2) { return }
             guard settings.autoReconnect else { return }
-            append(.veil(.warn, "Tor lost its circuits after the network change; reconnecting"))
+            append(.veil(.warn, "Tunnel stopped carrying traffic after the network change; reconnecting"))
             reconnect()
         }
     }
@@ -1169,7 +1224,8 @@ final class AppState {
             return
         }
         torCheck = nil
-        routeLatency = nil
+        // The old samples describe a route that no longer exists.
+        latency.reset()
         await prebuildCircuit()
         guard generation == routeGeneration, connection == .connected else { return }
         refreshCircuit()
@@ -1219,9 +1275,13 @@ final class AppState {
             tuner.reset()
             return
         }
+        // Measure the route as it stands before the pins take effect, so the comparison is real.
+        let before = routeLatency
         await prebuildCircuit()
         guard generation == routeGeneration, connection == .connected else { return }
-        routeLatencyBeforeTuning = routeLatency
+        routeLatencyBeforeTuning = before
+        latency.reset()
+        latency.measureNow()
         checkFailures = 0
         refreshCircuit()
         if settings.checkAfterConnect { runTorCheck() }
@@ -1371,10 +1431,11 @@ final class AppState {
             do {
                 let started = Date.now
                 let result = try await engine.check(httpPort: ports.http)
-                routeLatency = Date.now.timeIntervalSince(started)
+                let elapsed = Date.now.timeIntervalSince(started)
+                torCheckSeconds = elapsed
                 torCheck = result
                 checkFailures = 0
-                append(.veil(.info, "check.torproject.org: \(result.isTor ? "Tor confirmed" : "NOT using Tor"), exit IP \(result.ip), round trip \(Int((routeLatency ?? 0) * 1000)) ms"))
+                append(.veil(.info, "check.torproject.org: \(result.isTor ? "Tor confirmed" : "NOT using Tor"), exit IP \(result.ip), fetched in \(Int(elapsed * 1000)) ms"))
             } catch {
                 append(.veil(.warn, "Tor check failed: \(error.localizedDescription)"))
                 checkFailures += 1
@@ -1509,6 +1570,22 @@ final class AppState {
     private func notify(id: String, title: String, body: String) {
         guard settings.notificationsEnabled else { return }
         NotificationManager.shared.post(identifier: id, title: title, body: body)
+    }
+
+    /// Stop trying new transports after this long; the attempt is reported instead of dragging on.
+    static let connectDeadline: TimeInterval = 240
+
+    /// How long one transport gets. A transport that worked last time deserves a short leash: when
+    /// it does not come up quickly something has changed, and moving on beats waiting two minutes.
+    static func bootstrapBudget(isLast: Bool, isKnownGood: Bool, elapsed: TimeInterval) -> (timeout: Duration, stall: Duration) {
+        if isLast {
+            let remaining = max(60, connectDeadline - elapsed)
+            return (.seconds(Int(remaining)), .seconds(90))
+        }
+        if isKnownGood {
+            return (.seconds(70), .seconds(28))
+        }
+        return (.seconds(100), .seconds(40))
     }
 
     static func name(of transport: AppSettings.Transport) -> String {

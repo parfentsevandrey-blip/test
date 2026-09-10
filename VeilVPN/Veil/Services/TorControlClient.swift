@@ -16,6 +16,7 @@ final class TorControlClient: @unchecked Sendable {
         case unavailable(String)
         case reply(code: Int, message: String)
         case missingValue(String)
+        case timedOut(String)
 
         var errorDescription: String? {
             switch self {
@@ -24,6 +25,7 @@ final class TorControlClient: @unchecked Sendable {
             case .unavailable(let detail): return "Control port unavailable: \(detail)"
             case .reply(let code, let message): return "Tor replied \(code): \(message)"
             case .missingValue(let key): return "Tor returned no value for \(key)."
+            case .timedOut(let command): return "Tor did not answer ‘\(command)’ in time."
             }
         }
     }
@@ -32,7 +34,8 @@ final class TorControlClient: @unchecked Sendable {
     private let queue = DispatchQueue(label: "app.veilvpn.torcontrol")
     private var connection: NWConnection?
     private var buffer = Data()
-    private var pending: [CheckedContinuation<[ReplyLine], Error>] = []
+    private var pending: [(token: Int, continuation: CheckedContinuation<[ReplyLine], Error>)] = []
+    private var nextToken = 0
     private var current: [ReplyLine] = []
     private var dataKey: String?
     private var dataLines: [String] = []
@@ -84,15 +87,25 @@ final class TorControlClient: @unchecked Sendable {
 
     // MARK: Commands
 
+    /// Replies are matched FIFO, so a command that never gets one would strand every command
+    /// behind it. When the deadline passes the connection is torn down instead: a control port
+    /// that stays silent for this long is broken, and every caller gets an error rather than a hang.
     @discardableResult
-    func send(_ command: String) async throws -> [ReplyLine] {
+    func send(_ command: String, timeout: Duration = .seconds(30)) async throws -> [ReplyLine] {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[ReplyLine], Error>) in
             queue.async {
                 guard self.isReady, let connection = self.connection else {
                     continuation.resume(throwing: ControlError.notConnected)
                     return
                 }
-                self.pending.append(continuation)
+                let token = self.nextToken
+                self.nextToken += 1
+                self.pending.append((token: token, continuation: continuation))
+                let seconds = Double(timeout.components.seconds) + Double(timeout.components.attoseconds) / 1e18
+                self.queue.asyncAfter(deadline: .now() + seconds) { [weak self] in
+                    guard let self, self.pending.contains(where: { $0.token == token }) else { return }
+                    self.tearDown(error: ControlError.timedOut(command))
+                }
                 connection.send(content: Data((command + "\r\n").utf8), completion: .contentProcessed { [weak self] error in
                     if let error {
                         self?.tearDown(error: error)
@@ -164,7 +177,7 @@ final class TorControlClient: @unchecked Sendable {
         }
         let waiting = pending
         pending = []
-        waiting.forEach { $0.resume(throwing: error) }
+        waiting.forEach { $0.continuation.resume(throwing: error) }
         if !isClosed {
             isClosed = true
             connection?.cancel()
@@ -256,7 +269,7 @@ final class TorControlClient: @unchecked Sendable {
         let lines = current
         current = []
         guard !pending.isEmpty else { return } // unsolicited (650) events are ignored
-        let continuation = pending.removeFirst()
+        let continuation = pending.removeFirst().continuation
         if let last = lines.last, (200..<300).contains(last.code) {
             continuation.resume(returning: lines)
         } else {

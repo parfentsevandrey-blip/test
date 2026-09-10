@@ -51,9 +51,18 @@ enum SOCKS5 {
                     completion(Failure.protocolError("authentication method rejected"))
                     return
                 }
-                let hostBytes = Array(host.utf8.prefix(255))
-                var request = Data([0x05, 0x01, 0x00, 0x03, UInt8(hostBytes.count)])
-                request.append(contentsOf: hostBytes)
+                var request = Data([0x05, 0x01, 0x00])
+                if let octets = ipv4Octets(host) {
+                    // An address the caller already resolved: send it as one, so the exit does not
+                    // look it up again. Host names still travel as names — Tor resolves those.
+                    request.append(0x01)
+                    request.append(contentsOf: octets)
+                } else {
+                    let hostBytes = Array(host.utf8.prefix(255))
+                    request.append(0x03)
+                    request.append(UInt8(hostBytes.count))
+                    request.append(contentsOf: hostBytes)
+                }
                 request.append(UInt8(port >> 8))
                 request.append(UInt8(port & 0xFF))
                 connection.send(content: request, completion: .contentProcessed { error in
@@ -97,6 +106,18 @@ enum SOCKS5 {
                 })
             }
         })
+    }
+
+    /// The four octets of a dotted-quad IPv4 literal, or nil for anything else.
+    static func ipv4Octets(_ host: String) -> [UInt8]? {
+        let parts = host.split(separator: ".", omittingEmptySubsequences: false)
+        guard parts.count == 4 else { return nil }
+        var octets: [UInt8] = []
+        for part in parts {
+            guard !part.isEmpty, part.count <= 3, part.allSatisfy(\.isNumber), let value = UInt8(part) else { return nil }
+            octets.append(value)
+        }
+        return octets
     }
 
     private static func receiveExactly(_ connection: NWConnection, _ count: Int, completion: @escaping (Data?, Error?) -> Void) {

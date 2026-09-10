@@ -174,7 +174,7 @@ final class TorProcessEngine: TorEngine {
         self.processID = nil
 
         if let controller {
-            _ = try? await controller.send("SIGNAL SHUTDOWN")
+            _ = try? await controller.send("SIGNAL SHUTDOWN", timeout: .seconds(3))
             controller.close()
         }
         if let process, process.isRunning {

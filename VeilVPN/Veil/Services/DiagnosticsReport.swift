@@ -21,7 +21,12 @@ enum DiagnosticsReport {
         lines.append("proxy: \(state.proxyStatus)")
         lines.append("padding: \(state.padding.status)")
         lines.append("circuit: \(state.circuit.map { "\($0.role) \($0.nickname) \($0.countryCode ?? "??")" }.joined(separator: " -> "))")
-        lines.append("torCheck: \(state.torCheck.map { "isTor=\($0.isTor) ip=\($0.ip)" } ?? "none")  latency: \(state.routeLatency.map { "\(Int($0 * 1000)) ms" } ?? "n/a")")
+        lines.append("torCheck: \(state.torCheck.map { "isTor=\($0.isTor) ip=\($0.ip)" } ?? "none")  fetch: \(state.torCheckSeconds.map { "\(Int($0 * 1000)) ms" } ?? "n/a")")
+        if let latency = state.latency.summary {
+            lines.append("routeLatency: median \(Int(latency.median * 1000)) ms  best \(Int(latency.best * 1000)) ms  jitter \(Int(latency.jitter * 1000)) ms  samples \(latency.samples)  failures \(latency.failures)")
+        } else {
+            lines.append("routeLatency: not measured")
+        }
         lines.append("youtubeTest: \(state.youtubeTest.map { "success=\($0.success) \($0.milliseconds) ms \($0.detail) viaTor=\($0.viaTor)" } ?? "none")")
         lines.append("bridge stats: \(state.bridgeStats)")
         lines.append("")
