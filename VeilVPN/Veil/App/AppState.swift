@@ -2012,7 +2012,8 @@ final class AppState {
         return (.seconds(100), .seconds(40))
     }
 
-    static func name(of transport: AppSettings.Transport) -> String {
+    /// Pure text, reachable from the diagnostic model, which is deliberately not main-actor bound.
+    nonisolated static func name(of transport: AppSettings.Transport) -> String {
         switch transport {
         case .auto: "Automatic"
         case .snowflake: "Snowflake"

@@ -18,7 +18,7 @@ extension AppState {
         input.reachability = reachability
         input.observedExitCountry = exitHop?.countryCode
         input.pinnedExitCount = tuner.pinnedExits.count
-        input.paddingActive = padding.status == .running
+        input.paddingActive = padding.status.isActive
         input.paddingFailed = padding.status.isFailed
         input.lanePoolActive = (lanes?.readyLanes ?? 0) > 0
         input.lanePoolSuspended = lanes?.suspended

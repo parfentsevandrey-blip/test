@@ -57,8 +57,8 @@ struct SecurityControls: View {
                     Text("Keeps US, UK, Canadian, Australian and New Zealand relays out of your circuits.")
                         .settingsCaption()
                 }
-                Divider()
                 Group {
+                    Divider()
                     Picker("Fast connect", selection: Binding(get: { app.settings.warmStart },
                                                               set: { app.setWarmStart($0) })) {
                         Text("Off").tag(AppSettings.WarmStart.off)
