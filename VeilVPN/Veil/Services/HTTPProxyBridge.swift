@@ -527,6 +527,12 @@ final class ProxySession: @unchecked Sendable {
         deadline = nil
         if error == nil {
             upstreamSettled = true
+            // A successful CONNECT that negotiated no-auth means Tor chose not to isolate. The
+            // connection works, so it is used — but the pool must stop claiming to measure
+            // separate circuits when it no longer has any.
+            if lease != nil, !outcome.isolationApplied {
+                pool?.suspend(reason: "Tor negotiated no SOCKS authentication, so circuits are not isolated")
+            }
             if let lease {
                 let seconds = upstreamStartedAt.map {
                     Double(DispatchTime.now().uptimeNanoseconds &- $0.uptimeNanoseconds) / 1e9

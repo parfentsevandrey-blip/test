@@ -249,7 +249,13 @@ final class WarmStartTests: XCTestCase {
                                              history: NetworkHistory(), reachability: nil)
         XCTAssertFalse(plan.ordered.contains(.direct),
                        "dialling Tor directly where bridges were needed puts recognisable traffic on the wire")
-        XCTAssertEqual(plan.ordered.first, .snowflake)
+        // Evidence raises snowflake's odds, but the queue is ordered by expected cost, and a
+        // transport that usually comes up in 14 s is worth trying before one that takes 30 —
+        // the watchdog aborts a blocked obfs4 in about ten seconds. Evidence decides which
+        // transports are worth trying at all; speed decides the order among those.
+        XCTAssertTrue(plan.ordered.contains(.snowflake))
+        XCTAssertLessThan(plan.ordered.firstIndex(of: .snowflake) ?? 99,
+                          plan.ordered.firstIndex(of: .meek) ?? 99)
 
         // A live answer outranks disk evidence: moving to an open network must not strand anyone
         // on a bridge for good.
