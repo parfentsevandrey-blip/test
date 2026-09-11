@@ -13021,6 +13021,34 @@
         }
       }
     },
+    "Tor stopped while on standby.": {
+      "localizations": {
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor در حالت آماده‌باش متوقف شد."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor остановился в тёплом резерве."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor зупинився в теплому резерві."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor 在待机状态下停止了。"
+          }
+        }
+      }
+    },
     "Tor · Snowflake": {
       "localizations": {
         "fa": {

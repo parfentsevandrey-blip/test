@@ -41,11 +41,10 @@ extension AppState {
 
     func applyPreset(_ preset: SecurityPreset) {
         let updated = preset.applied(to: settings)
-        let wasIsolated = settings.isolatePerSite
         let wasPadding = settings.paddingEnabled
         settings = updated
-        pushSecuritySideEffects(isolationChanged: wasIsolated != updated.isolatePerSite,
-                                paddingChanged: wasPadding != updated.paddingEnabled)
+        pushSecuritySideEffects(paddingChanged: wasPadding != updated.paddingEnabled)
+        applyRouteIfConnected()
         append(.veil(.notice, "Security preset applied: \(preset.title)"))
     }
 
@@ -82,6 +81,7 @@ extension AppState {
         case .clearExclusions:
             settings.excludedCountries = []
             settings.avoidFiveEyes = false
+            applyRouteIfConnected()
         case .deferUpdateCheck:
             settings.updateCheckAfterConnect = true
         case .redactDiagnostics:

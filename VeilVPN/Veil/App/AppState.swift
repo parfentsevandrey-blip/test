@@ -326,12 +326,12 @@ final class AppState {
         httpBridge?.httpsOnly = settings.httpsOnly
     }
 
-    /// Applies the machinery behind a bulk settings write.
-    func pushSecuritySideEffects(isolationChanged: Bool, paddingChanged: Bool) {
+    /// Applies the machinery behind a bulk settings write. A preset that turns the pool on must
+    /// actually start it, not merely record the preference — a control that looks applied and is
+    /// not is worse than one that is plainly unavailable.
+    func pushSecuritySideEffects(paddingChanged: Bool) {
         httpBridgePolicyChanged()
-        if isolationChanged { httpBridge?.lanePool.setSiteMode(settings.isolatePerSite) }
-        httpBridge?.lanePool.setHedging(settings.lanePoolHedging)
-        httpBridge?.lanePool.setLaneCount(settings.isolatePerSite ? 2 : settings.lanePoolSize)
+        reconcileLanePool()
         guard paddingChanged, connection == .connected, let ports else { return }
         let enabled = settings.paddingEnabled
         Task { [weak self] in
@@ -342,6 +342,26 @@ final class AppState {
             } else {
                 await padding.stop()
             }
+        }
+    }
+
+    /// Brings the running pool in line with the settings, in either direction.
+    func reconcileLanePool() {
+        guard let bridge = httpBridge else { return }
+        let running = bridge.poolPort != nil
+        if settings.lanePoolEnabled, !running {
+            guard connection == .connected, let ports else { return }
+            let transport = activeTransport ?? settings.transport
+            Task { [weak self] in await self?.startLanePool(ports: ports, transport: transport) }
+        } else if !settings.lanePoolEnabled, running {
+            bridge.lanePool.stop()
+            bridge.poolPort = nil
+            lanes = nil
+            if connection == .connected, let ports { latency.start(socksPort: ports.socks) }
+        } else if running {
+            bridge.lanePool.setSiteMode(settings.isolatePerSite)
+            bridge.lanePool.setHedging(settings.lanePoolHedging)
+            bridge.lanePool.setLaneCount(settings.isolatePerSite ? 2 : settings.lanePoolSize)
         }
     }
 
@@ -677,7 +697,7 @@ final class AppState {
     }
 
     /// Starts the measured circuits for traffic through Tor, once Tor is actually up.
-    private func startLanePool(ports: ActivePorts, transport: AppSettings.Transport) async {
+    func startLanePool(ports: ActivePorts, transport: AppSettings.Transport) async {
         guard let bridge = httpBridge else { return }
         bridge.setConnectionContext(transport: transport, connectedAt: connectedAt)
         guard settings.lanePoolEnabled, ports.pool != 0, !engine.isSimulated else {
@@ -1292,38 +1312,27 @@ final class AppState {
         settings.isolatePerSite = enabled
         // Applies to browser traffic at once; apps on Veil's SOCKS port directly pick it up on
         // their next connection.
-        httpBridge?.lanePool.setSiteMode(enabled)
+        reconcileLanePool()
     }
 
     func setLanePoolEnabled(_ enabled: Bool) {
         guard settings.lanePoolEnabled != enabled else { return }
         settings.lanePoolEnabled = enabled
         if enabled { settings.latencyTuning = false }
-        guard connection == .connected, let ports else { return }
-        Task { [weak self] in
-            guard let self else { return }
-            if enabled {
-                await startLanePool(ports: ports, transport: activeTransport ?? settings.transport)
-            } else {
-                httpBridge?.lanePool.stop()
-                httpBridge?.poolPort = nil
-                lanes = nil
-                latency.start(socksPort: ports.socks)
-            }
-        }
+        reconcileLanePool()
     }
 
     func setLanePoolSize(_ count: Int) {
         let clamped = min(6, max(2, count))
         guard settings.lanePoolSize != clamped else { return }
         settings.lanePoolSize = clamped
-        httpBridge?.lanePool.setLaneCount(clamped)
+        reconcileLanePool()
     }
 
     func setLanePoolHedging(_ enabled: Bool) {
         guard settings.lanePoolHedging != enabled else { return }
         settings.lanePoolHedging = enabled
-        httpBridge?.lanePool.setHedging(enabled)
+        reconcileLanePool()
     }
 
     // MARK: YouTube Turbo (anti-throttling without Tor)
@@ -1615,7 +1624,7 @@ final class AppState {
         restartRouteRotation()
     }
 
-    private func applyRouteIfConnected() {
+    func applyRouteIfConnected() {
         guard connection == .connected else { return }
         let dropConnections = !settings.seamlessRouteSwitch
         Task { [weak self] in
