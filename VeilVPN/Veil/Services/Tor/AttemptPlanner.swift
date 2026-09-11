@@ -32,9 +32,12 @@ enum AttemptPlanner {
             if transport == .direct, warmth.state.confirmedDefaultGuards > 0 {
                 probability = max(probability, 0.70)
             }
-            // A machine that confirmed a bridge here and never confirmed a default guard is a
-            // machine where connecting directly did not work. Trying anyway is not merely a waste:
-            // it puts recognisable Tor traffic on the wire of a network that blocks it.
+            // A machine that confirmed a bridge and never confirmed a default guard is a machine
+            // where connecting directly did not work. Trying anyway is not merely a waste: it puts
+            // recognisable Tor traffic on the wire of a network that blocks it. This is disk
+            // evidence about the installation, not about this network, so a live reachability
+            // answer overrides it below — which is why the caller waits briefly for one when the
+            // network is new.
             if transport == .direct, warmth.state.confirmedDefaultGuards == 0,
                warmth.evidencedTransports.contains(where: { $0 != .direct }) {
                 probability = 0.02
@@ -77,6 +80,16 @@ enum AttemptPlanner {
     }
 
     /// The whole connect, across every transport. A warm Mac has no business spending three minutes.
+    /// True when the disk says "bridges" but nothing says whether *this* network needs them: a
+    /// new network, bridge evidence, no confirmed default guard. Only here is it worth pausing for
+    /// the reachability probe, and only briefly.
+    static func needsReachabilityAnswer(settings: AppSettings, warmth: WarmthProfile,
+                                        history: NetworkHistory) -> Bool {
+        guard settings.transport == .auto, history.attempts == 0 else { return false }
+        return warmth.state.confirmedDefaultGuards == 0
+            && warmth.evidencedTransports.contains { $0 != .direct }
+    }
+
     static func overallDeadline(tier: WarmthProfile.Tier) -> TimeInterval {
         switch tier {
         case .hot: 90

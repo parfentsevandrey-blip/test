@@ -24,20 +24,32 @@ enum ReachabilityProbe {
         var directLooksPossible: Bool { reachable >= 2 }
     }
 
+    /// Two answers settle it — `directLooksPossible` needs two — and so do four refusals, so there
+    /// is no reason to pay the full timeout. On an open network this returns in a fraction of a
+    /// second; a censored one is the only case that waits.
+    static func conclusive(reachable: Int, failed: Int, total: Int) -> Bool {
+        reachable >= 2 || failed >= total - 1
+    }
+
     static func probeDirectTor(timeout: Duration = .seconds(4)) async -> Report {
-        let results = await withTaskGroup(of: Bool.self, returning: [Bool].self) { group in
+        let total = directoryAuthorities.count
+        return await withTaskGroup(of: Bool.self, returning: Report.self) { group in
             for target in directoryAuthorities {
                 group.addTask {
                     await canConnect(host: target.host, port: target.port, timeout: timeout)
                 }
             }
-            var collected: [Bool] = []
+            var reachable = 0
+            var failed = 0
             for await result in group {
-                collected.append(result)
+                if result { reachable += 1 } else { failed += 1 }
+                if conclusive(reachable: reachable, failed: failed, total: total) {
+                    group.cancelAll()
+                    break
+                }
             }
-            return collected
+            return Report(reachable: reachable, total: total)
         }
-        return Report(reachable: results.filter { $0 }.count, total: directoryAuthorities.count)
     }
 
     /// Plain TCP connect with a deadline; true when the handshake completes. Never goes through the

@@ -485,20 +485,33 @@ final class AppState {
 
                 // Probing runs beside the attempt rather than in front of it. Its only jobs are to
                 // abort an attempt that has no Internet under it, and to reorder what is left.
-                let probeTask = Task.detached(priority: .utility) { () -> (ConnectivityProbe.Report, ReachabilityProbe.Report) in
-                    async let network = ConnectivityProbe.check(timeout: .seconds(3))
-                    async let direct = ReachabilityProbe.probeDirectTor()
-                    return (await network, await direct)
+                let networkTask = Task.detached(priority: .utility) {
+                    await ConnectivityProbe.check(timeout: .seconds(3))
+                }
+                let reachabilityTask = Task.detached(priority: .utility) {
+                    await ReachabilityProbe.probeDirectTor()
                 }
                 let sentinel = Task { [weak self] in
-                    let result = await probeTask.value
-                    guard let self, attempt == generation, !result.0.isUsable, engine.bootstrapPercent < 10 else { return }
+                    let report = await networkTask.value
+                    guard let self, attempt == generation, !report.isUsable, engine.bootstrapPercent < 10 else { return }
                     engine.abortBootstrap(.noInternet)
                 }
                 defer { sentinel.cancel() }
 
+                // The disk knows this installation has used bridges, but says nothing about *this*
+                // network. That is the one case worth pausing for: the probe answers in a fraction
+                // of a second on an open network, and the alternative is stranding someone on a
+                // bridge every time they move somewhere Tor is not blocked.
+                var early: ReachabilityProbe.Report?
+                if AttemptPlanner.needsReachabilityAnswer(settings: settings, warmth: profile, history: history) {
+                    early = await Self.firstAnswer(from: reachabilityTask, within: .milliseconds(700))
+                    if let early {
+                        reachability = early
+                        append(.veil(.debug, "New network: \(early.reachable)/\(early.total) directory authorities answered before planning"))
+                    }
+                }
                 var plan = AttemptPlanner.candidates(settings: settings, warmth: profile,
-                                                     history: history, reachability: nil)
+                                                     history: history, reachability: early)
                 plannedQueue = plan.ordered
                 for skip in plan.skipped {
                     append(.veil(.debug, "Skipping \(skip.transport.rawValue): \(skip.reason)"))
@@ -586,11 +599,12 @@ final class AppState {
                         } else {
                             await engine.stop(grace: .milliseconds(800))
                         }
-                        let probe = await probeTask.value
-                        connectivity = probe.0
-                        reachability = probe.1
+                        let networkReport = await networkTask.value
+                        let directReport = await reachabilityTask.value
+                        connectivity = networkReport
+                        reachability = directReport
                         let failure = (error as? TorAttemptError)?.failure
-                        let firstHopOnDeadNetwork = failure.map { $0 == .noInternet || ($0.isFirstHop && !probe.0.isUsable) } ?? false
+                        let firstHopOnDeadNetwork = failure.map { $0 == .noInternet || ($0.isFirstHop && !networkReport.isUsable) } ?? false
                         if firstHopOnDeadNetwork, !networkRepairedThisConnect, self.settings.autoResetNetwork {
                             networkRepairedThisConnect = true
                             let outcome = await repairNetworkIfNeeded(trigger: "first hop", allowReset: true)
@@ -602,7 +616,7 @@ final class AppState {
                         // Reorder only what is left, now that the reachability answer is in hand.
                         let tried = Array(queue.prefix(index + 1))
                         plan = AttemptPlanner.candidates(settings: settings, warmth: profile,
-                                                         history: history, reachability: probe.1)
+                                                         history: history, reachability: directReport)
                         queue = tried + plan.ordered.filter { !tried.contains($0) }
                         plannedQueue = queue
                     }
@@ -2029,6 +2043,22 @@ final class AppState {
     private func notify(id: String, title: String, body: String) {
         guard settings.notificationsEnabled else { return }
         NotificationManager.shared.post(identifier: id, title: title, body: body)
+    }
+
+    /// The answer if it arrives within the budget, otherwise nil. The probe keeps running either
+    /// way; this only decides whether the attempt waits for it.
+    nonisolated static func firstAnswer(from task: Task<ReachabilityProbe.Report, Never>,
+                                        within budget: Duration) async -> ReachabilityProbe.Report? {
+        await withTaskGroup(of: ReachabilityProbe.Report?.self) { group in
+            group.addTask { await task.value }
+            group.addTask {
+                try? await Task.sleep(for: budget)
+                return nil
+            }
+            let first = await group.next() ?? nil
+            group.cancelAll()
+            return first
+        }
     }
 
     /// Stop trying new transports after this long; the attempt is reported instead of dragging on.

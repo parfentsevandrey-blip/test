@@ -240,6 +240,50 @@ final class WarmStartTests: XCTestCase {
         XCTAssertEqual(plan.ordered.first != .direct, true)
     }
 
+    func testDirectIsSkippedWhereTorConfirmedABridgeAndNoGuard() {
+        var warmth = WarmthProfile()
+        warmth.evidencedTransports = [.snowflake]
+        var settings = AppSettings()
+        settings.transport = .auto
+        let plan = AttemptPlanner.candidates(settings: settings, warmth: warmth,
+                                             history: NetworkHistory(), reachability: nil)
+        XCTAssertFalse(plan.ordered.contains(.direct),
+                       "dialling Tor directly where bridges were needed puts recognisable traffic on the wire")
+        XCTAssertEqual(plan.ordered.first, .snowflake)
+
+        // A live answer outranks disk evidence: moving to an open network must not strand anyone
+        // on a bridge for good.
+        let open = AttemptPlanner.candidates(settings: settings, warmth: warmth, history: NetworkHistory(),
+                                             reachability: ReachabilityProbe.Report(reachable: 4, total: 5))
+        XCTAssertEqual(open.ordered.first, .direct)
+    }
+
+    func testOnlyANewNetworkWithBridgeEvidenceIsWorthWaitingFor() {
+        var warmth = WarmthProfile()
+        var settings = AppSettings()
+        settings.transport = .auto
+        XCTAssertFalse(AttemptPlanner.needsReachabilityAnswer(settings: settings, warmth: warmth,
+                                                              history: NetworkHistory()))
+        warmth.evidencedTransports = [.obfs4]
+        XCTAssertTrue(AttemptPlanner.needsReachabilityAnswer(settings: settings, warmth: warmth,
+                                                             history: NetworkHistory()))
+        // A network we have been on before answers the question itself.
+        var seen = NetworkHistory()
+        seen.attempts = 3
+        XCTAssertFalse(AttemptPlanner.needsReachabilityAnswer(settings: settings, warmth: warmth, history: seen))
+        // A confirmed default guard says direct works for this installation.
+        warmth.state.confirmedDefaultGuards = 1
+        XCTAssertFalse(AttemptPlanner.needsReachabilityAnswer(settings: settings, warmth: warmth,
+                                                              history: NetworkHistory()))
+    }
+
+    func testTheReachabilityProbeStopsAsSoonAsItIsSure() {
+        // Two answers settle directLooksPossible; four refusals settle the opposite.
+        XCTAssertTrue(ReachabilityProbe.conclusive(reachable: 2, failed: 0, total: 5))
+        XCTAssertTrue(ReachabilityProbe.conclusive(reachable: 0, failed: 4, total: 5))
+        XCTAssertFalse(ReachabilityProbe.conclusive(reachable: 1, failed: 2, total: 5))
+    }
+
     func testAConcreteTransportIsNeverReordered() {
         var settings = AppSettings()
         settings.transport = .meek
