@@ -186,6 +186,11 @@ def short_name(n):
     if m and re.search(r'[А-Яа-я]', m.group(2)) and re.search(r'[A-Za-z]', m.group(1)): return m.group(1).strip()
     return n
 
+def pick_addr(*cands):
+    """Первый адрес с номером дома; иначе первый непустой."""
+    cands = [str(c).strip() for c in cands if c and str(c).strip()]
+    return next((c for c in cands if re.search(r'\d', c)), cands[0] if cands else '')
+
 def short_addr(a):
     a = re.sub(r'^Москва,\s*', '', str(a or '')).strip()
     return re.sub(r'\s*\([^)]*\)', '', a).strip()
@@ -331,7 +336,9 @@ for r in complexes['complexes']:
     built = (r.get('finishedShare') or 0) >= 50 or (ymax and ymax <= 2025 and (r.get('finishedShare') is None))
     if 'second' in ','.join(r.get('sources', [])) and ymax and ymax < BUILT_MIN_YEAR and not m.get('year'): continue
     status = 'апартаменты' if r['apartmentsShare'] >= 60 else ('квартиры + апартаменты' if r['apartmentsShare'] >= 15 else 'квартиры')
-    addr = ', '.join(x for x in ['Москва', r.get('street'), r.get('house')] if x)
+    # У части ЖК в объявлениях улицы нет, и адрес вырождается в номер корпуса («к3»).
+    # Тогда берём адрес с карточки ЖК — там он полный: «Большая Ордынка, 19с9».
+    addr = ', '.join(x for x in ['Москва', r.get('street'), r.get('house')] if x) if r.get('street') else ''
     dv = devs.get(r['complex'], {})
     cd = card(r['complex'])
     developer = m.get('developer') or dv.get('developer') or cd.get('developer') or ''
@@ -362,7 +369,8 @@ for r in complexes['complexes']:
         if cc in ('бизнес', 'комфорт', 'эконом') and not m.get('keep') and med < 1_500_000: continue   # класс по карточке Циан ниже премиума
     year = card_delivery(cd) or (fmt_years(r) if lots_built else None) or m.get('year') or fmt_years(r)
     link = cd.get('url') or ''   # только страница ЖК на Циан; объявления не годятся
-    row = [short_name(r['complex']), strip_paren(developer), year, short_addr(m.get('address') or addr), main_district(r.get('district')),
+    row = [short_name(r['complex']), strip_paren(developer), year,
+           short_addr(pick_addr(m.get('address'), addr, cd.get('address'))), main_district(r.get('district')),
            max(r.get('housesSeen') or 0, dv.get('buildings') or 0) or None, floors(r) or dv.get('floors') or '', status,
            per_m2_str(r.get('perM2Min')), per_m2_str(med), per_m2_str(r.get('perM2Max')),
            r.get('declared') or r.get('lots'), f"{int(r['areaMin'])}–{int(r['areaMax'])}" if r.get('areaMin') and r['areaMin'] != math.inf else '',
@@ -405,7 +413,10 @@ for row in pdf['rows']:
     link2 = cd.get('url') or m.get('url') or dv.get('site') or ''
     if card_delivery(cd): dl = card_delivery(cd)   # срок сдачи как на карточке ЖК
     zone_by_name[short_name(name)] = z
-    rows2.append([short_name(name), strip_paren(dev), dl, short_addr(addr), main_district(m.get('district') or (lr or {}).get('district') or metro), b, fl, st, pf, pm, pt, lots, fin, link2, describe(name, live)])
+    # В скане заказчика адрес часто без номера дома («Москва, Шлюзовая набережная»):
+    # номер добираем из выдачи Циан по тому же ЖК, затем с его карточки.
+    lot_addr = ', '.join(x for x in ['Москва', (lr or {}).get('street'), (lr or {}).get('house')] if x) if (lr or {}).get('street') else ''
+    rows2.append([short_name(name), strip_paren(dev), dl, short_addr(pick_addr(m.get('address'), lot_addr, cd.get('address'), addr)), main_district(m.get('district') or (lr or {}).get('district') or metro), b, fl, st, pf, pm, pt, lots, fin, link2, describe(name, live)])
     seen.add(live or name)
 for row in rows2_live:
     if row[0] in seen: continue
