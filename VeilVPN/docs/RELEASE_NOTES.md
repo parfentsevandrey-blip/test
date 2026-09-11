@@ -39,10 +39,13 @@ there is an honest fix, offers one button; the entry-guard row deliberately offe
 clearing it would be worse for anonymity, not better. Three presets show the score they would produce
 before you commit. A self-test proves the claims instead of asserting them: it opens two circuits with
 different isolation keys, resolves a name through Tor rather than on this Mac, and reads back what
-macOS actually has configured. New protective controls live here: cutting connections that are already
-open when the kill switch engages, blocking plain HTTP through Tor, deferring the update check until
-Tor is up, redacting addresses from exported diagnostics, and choosing what is forgotten when Veil
-quits. Country exclusions are no longer silently ignored when multihop is off.
+macOS actually has configured. Every protective control now has exactly one home here, multihop included:
+pinning the middle relay's country and the timed route rotation sit next to the kill switch rather
+than on the map, because they are protective choices and not place pickers — the Route screen keeps
+the map and the country pickers. New controls: cutting connections that are already open when the
+kill switch engages, blocking plain HTTP through Tor, deferring the update check until Tor is up,
+redacting addresses from exported diagnostics, and choosing what is forgotten when Veil quits.
+Country exclusions are no longer silently ignored when multihop is off.
 
 **Home is a ledger, not a diagram.** The floating waves and running dots are gone. In their place are
 twelve named stages of the path a request takes — network, Tor reachable, guard link, bootstrap,
