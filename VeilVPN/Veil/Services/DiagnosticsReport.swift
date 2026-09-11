@@ -5,6 +5,29 @@ import UniformTypeIdentifiers
 /// One text file with everything needed to debug a connection problem (no secrets beyond bridge lines).
 @MainActor
 enum DiagnosticsReport {
+    /// Replaces IPv4/IPv6 literals and host names with placeholders. Diagnostics are pasted into
+    /// bug reports and chat windows; the shape of the problem is what matters, not the addresses.
+    static func redact(_ text: String) -> String {
+        var result = text
+        let patterns = [
+            #"\b\d{1,3}(\.\d{1,3}){3}\b"#,
+            #"\b[0-9a-fA-F]{1,4}(:[0-9a-fA-F]{0,4}){3,7}\b"#,
+            #"\b[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+\.(com|org|net|io|dev|ru|ua|onion|co|app|me|tv|cn)\b"#,
+        ]
+        for pattern in patterns {
+            guard let expression = try? NSRegularExpression(pattern: pattern) else { continue }
+            result = expression.stringByReplacingMatches(
+                in: result, range: NSRange(result.startIndex..., in: result), withTemplate: "[redacted]")
+        }
+        return result
+    }
+
+    /// Loopback stays readable: 127.0.0.1 identifies nothing and the ports are the whole point.
+    private static func redactIfWanted(_ text: String, state: AppState) -> String {
+        guard state.settings.redactDiagnostics else { return text }
+        return redact(text).replacingOccurrences(of: "[redacted]:", with: "127.0.0.1:")
+    }
+
     static func generate(state: AppState) -> String {
         let formatter = ISO8601DateFormatter()
         var lines: [String] = []
@@ -29,6 +52,15 @@ enum DiagnosticsReport {
         }
         lines.append("youtubeTest: \(state.youtubeTest.map { "success=\($0.success) \($0.milliseconds) ms \($0.detail) viaTor=\($0.viaTor)" } ?? "none")")
         lines.append("bridge stats: \(state.bridgeStats)")
+        if let lanes = state.lanes {
+            lines.append("lanes: \(lanes.readyLanes)/\(lanes.rows.count) ready, best \(lanes.bestP50.map { "\(Int($0 * 1000)) ms" } ?? "n/a"), hedges \(lanes.hedgesStarted)/\(lanes.hedgesWon)")
+            for lane in lanes.rows {
+                lines.append("  lane \(lane.id) gen \(lane.generation) \(lane.state.rawValue) p50 \(lane.p50Milliseconds.map(String.init) ?? "—") ms inflight \(lane.inFlight) sites \(lane.assignedSites) fails \(lane.consecutiveFailures)")
+            }
+        }
+        lines.append("warmth: \(state.warmth?.summary ?? "unknown")  standby: \(state.standby)")
+        let posture = state.securityPosture
+        lines.append("security: \(posture.score.map(String.init) ?? "n/a")/\(SecurityPosture.absoluteMaximum) \(posture.gradeTitle), findings \(posture.findings.map(\.id).joined(separator: ", "))")
         lines.append("")
         lines.append("## Settings")
         if let data = try? JSONEncoder().encode(state.settings), let json = String(data: data, encoding: .utf8) {
@@ -40,7 +72,7 @@ enum DiagnosticsReport {
         for entry in state.logs.suffix(800) {
             lines.append("\(entry.date.formatted(timeFormat)) [\(entry.level.label)] \(entry.source == .veil ? "veil: " : "")\(entry.message)")
         }
-        return lines.joined(separator: "\n") + "\n"
+        return redactIfWanted(lines.joined(separator: "\n") + "\n", state: state)
     }
 
     static func save(state: AppState) {

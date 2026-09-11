@@ -21,6 +21,32 @@ struct AppSettings: Codable, Equatable, Sendable {
         var isConcrete: Bool { self != .auto }
     }
 
+    /// How much of the connection is paid for before the button is pressed.
+    enum WarmStart: String, Codable, CaseIterable, Identifiable, Sendable {
+        /// Tor is spawned only when you connect. Nothing runs in the background.
+        case off
+        /// One tor process is kept loaded but offline (`DisableNetwork 1`): no listener, no
+        /// packets, observationally identical to tor not running. Connecting is then one command.
+        case standby
+        /// Tor also builds circuits at launch. Faster still, but it puts Tor traffic on the wire
+        /// before you asked for it.
+        case preBootstrap
+
+        var id: String { rawValue }
+    }
+
+    /// What is removed from Tor's data directory when Veil quits.
+    enum ForgetPolicy: String, Codable, CaseIterable, Identifiable, Sendable {
+        case off
+        /// Cached directory data. Keeps `state`, so the entry guard survives.
+        case caches
+        /// The whole data directory. Discards the entry guard as well, which is a real
+        /// anonymity trade-off, not just a cleanup.
+        case everything
+
+        var id: String { rawValue }
+    }
+
     var transport: Transport = .auto
     var lastWorkingTransport: Transport? = nil
     var customBridges: String = ""
@@ -43,14 +69,23 @@ struct AppSettings: Codable, Equatable, Sendable {
     var avoidFiveEyes: Bool = false
     /// Minutes between automatic route rotations (NEWNYM); 0 disables rotation.
     var rotateRouteMinutes: Int = 0
-    /// Race circuits after every route change and pin the fastest relays.
-    var latencyTuning: Bool = true
+    /// Race circuits after every route change and pin the fastest relays. Off by default since
+    /// the lane pool arrived: pinning collapses every lane onto the same exit.
+    var latencyTuning: Bool = false
     /// Route changes keep existing connections; only new ones take the new route.
     var seamlessRouteSwitch: Bool = true
     /// Tor Conflux with the lowest-latency leg preferred (applies on the next connection).
     var confluxLatency: Bool = true
     /// Concurrent Snowflake proxies (`max=`), 1–4.
-    var snowflakePeers: Int = 2
+    var snowflakePeers: Int = 3
+    /// Keep one tor process loaded but offline, so connecting is a single command.
+    var warmStart: WarmStart = .standby
+    /// Hold several measured circuits open and send each new connection down a fast one.
+    var lanePoolEnabled: Bool = true
+    /// Parallel circuits kept alive (2–6).
+    var lanePoolSize: Int = 4
+    /// Re-try a slow connect on a second circuit.
+    var lanePoolHedging: Bool = true
     /// YouTube: through Tor, or directly with/without anti-throttling.
     var youtubeMode: RouteMode = .tor
     var dpiStrategy: DPIStrategy = .recordAndSegmentAtSNI
@@ -61,6 +96,17 @@ struct AppSettings: Codable, Equatable, Sendable {
     var serviceRoutes: [String: RouteMode] = [:]
     /// Fail closed: keep the system proxy pointed at Veil when Tor dies unexpectedly.
     var killSwitch: Bool = true
+    /// Close connections that are already open when the kill switch engages, not just refuse new ones.
+    var closeSessionsOnKillSwitch: Bool = true
+    /// Refuse plain `http://` through Tor, so an exit relay can never read or rewrite a page.
+    var httpsOnly: Bool = false
+    /// Leave IP addresses, ports and host names out of exported diagnostics.
+    var redactDiagnostics: Bool = true
+    /// Check for updates only once Tor is up, so the request does not go out in the clear.
+    var updateCheckAfterConnect: Bool = true
+    var forgetPolicy: ForgetPolicy = .off
+    /// Which security preset was last applied, for the UI only.
+    var securityPreset: String? = nil
     var autoReconnect: Bool = true
     /// Switch Wi-Fi off and on (or restart the network service) when the network stops responding.
     var autoResetNetwork: Bool = true
@@ -81,6 +127,9 @@ struct AppSettings: Codable, Equatable, Sendable {
         case paddingEnabled, paddingLevel
         case multihopEnabled, middleCountry, excludedCountries, avoidFiveEyes, rotateRouteMinutes
         case latencyTuning, seamlessRouteSwitch, confluxLatency, snowflakePeers
+        case warmStart, lanePoolEnabled, lanePoolSize, lanePoolHedging
+        case closeSessionsOnKillSwitch, httpsOnly, redactDiagnostics, updateCheckAfterConnect
+        case forgetPolicy, securityPreset
         case youtubeMode, dpiStrategy, customDirectDomains, customDirectAntiThrottle, serviceRoutes
         case killSwitch, autoReconnect, autoResetNetwork, isolatePerSite, notificationsEnabled, soundEffects, hapticFeedback
         case checkForUpdates, skippedUpdateVersion, onboardingCompleted
@@ -111,6 +160,26 @@ struct AppSettings: Codable, Equatable, Sendable {
         seamlessRouteSwitch = try c.decodeIfPresent(Bool.self, forKey: .seamlessRouteSwitch) ?? d.seamlessRouteSwitch
         confluxLatency = try c.decodeIfPresent(Bool.self, forKey: .confluxLatency) ?? d.confluxLatency
         snowflakePeers = min(4, max(1, try c.decodeIfPresent(Int.self, forKey: .snowflakePeers) ?? d.snowflakePeers))
+        warmStart = try c.decodeIfPresent(WarmStart.self, forKey: .warmStart) ?? d.warmStart
+        lanePoolSize = min(6, max(2, try c.decodeIfPresent(Int.self, forKey: .lanePoolSize) ?? d.lanePoolSize))
+        lanePoolHedging = try c.decodeIfPresent(Bool.self, forKey: .lanePoolHedging) ?? d.lanePoolHedging
+        // The lane pool and the tuner's exit pinning are mutually exclusive: with ExitNodes pinned
+        // to one or two fingerprints every lane ends at the same exit, so the pool degenerates into
+        // N redundant circuits with all of the cost and none of the spread — and a measured,
+        // stable pair of exits is itself a cross-session pseudonym.
+        if let stored = try c.decodeIfPresent(Bool.self, forKey: .lanePoolEnabled) {
+            lanePoolEnabled = stored
+            if stored { latencyTuning = false }
+        } else {
+            lanePoolEnabled = d.lanePoolEnabled
+            if d.lanePoolEnabled { latencyTuning = false }
+        }
+        closeSessionsOnKillSwitch = try c.decodeIfPresent(Bool.self, forKey: .closeSessionsOnKillSwitch) ?? d.closeSessionsOnKillSwitch
+        httpsOnly = try c.decodeIfPresent(Bool.self, forKey: .httpsOnly) ?? d.httpsOnly
+        redactDiagnostics = try c.decodeIfPresent(Bool.self, forKey: .redactDiagnostics) ?? d.redactDiagnostics
+        updateCheckAfterConnect = try c.decodeIfPresent(Bool.self, forKey: .updateCheckAfterConnect) ?? d.updateCheckAfterConnect
+        forgetPolicy = try c.decodeIfPresent(ForgetPolicy.self, forKey: .forgetPolicy) ?? d.forgetPolicy
+        securityPreset = try c.decodeIfPresent(String.self, forKey: .securityPreset)
         youtubeMode = try c.decodeIfPresent(RouteMode.self, forKey: .youtubeMode) ?? d.youtubeMode
         dpiStrategy = try c.decodeIfPresent(DPIStrategy.self, forKey: .dpiStrategy) ?? d.dpiStrategy
         customDirectDomains = try c.decodeIfPresent(String.self, forKey: .customDirectDomains) ?? d.customDirectDomains

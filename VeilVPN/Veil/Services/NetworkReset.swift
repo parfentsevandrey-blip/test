@@ -13,6 +13,10 @@ enum NetworkReset {
         let serviceID: String?
         let serviceName: String?
         let isWiFi: Bool
+        /// Default gateway and first DNS server, used only as fingerprint material for
+        /// per-network connect history. Neither is stored anywhere in the clear.
+        var router: String?
+        var firstDNS: String?
 
         /// VPN tunnels and dial-ups: resetting them would fight another VPN rather than fix Wi-Fi.
         var isTunnel: Bool { Self.isTunnelInterface(interface) }
@@ -73,7 +77,13 @@ enum NetworkReset {
             serviceName = setup["UserDefinedName"] as? String
         }
         let wifiNames = CWWiFiClient.interfaceNames() ?? []
-        return Primary(interface: interface, serviceID: serviceID, serviceName: serviceName, isWiFi: wifiNames.contains(interface))
+        let router = global["Router"] as? String
+        var dns: String?
+        if let resolver = SCDynamicStoreCopyValue(store, "State:/Network/Global/DNS" as CFString) as? [String: Any] {
+            dns = (resolver["ServerAddresses"] as? [String])?.first
+        }
+        return Primary(interface: interface, serviceID: serviceID, serviceName: serviceName,
+                       isWiFi: wifiNames.contains(interface), router: router, firstDNS: dns)
     }
 
     /// True while some interface carries an IPv4 default route.

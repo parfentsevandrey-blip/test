@@ -63,9 +63,10 @@ final class AppState {
     private(set) var bootstrap = BootstrapProgress()
     private(set) var circuit: [CircuitHop] = []
     private(set) var torCheck: TorCheckResult?
-    /// Median round trip of the route, from the rolling window of latency probes. A single slow
-    /// moment shows up as jitter in the summary instead of becoming the headline figure.
-    var routeLatency: TimeInterval? { latency.summary?.median }
+    /// Median round trip of the route. With the lane pool on this is the best measured lane — the
+    /// latency the *next* connection will actually get — rather than whichever circuit a probe
+    /// happened to land on.
+    var routeLatency: TimeInterval? { lanes?.bestP50 ?? latency.summary?.median }
     /// How long the last exit verification took end to end (a full HTTPS fetch, not route latency).
     private(set) var torCheckSeconds: TimeInterval?
     private(set) var isCheckingTor = false
@@ -107,6 +108,23 @@ final class AppState {
     private(set) var routeSwitching = false
     /// When the current connection attempt began, so the UI can show how long it has been going.
     private(set) var connectStartedAt: Date?
+    /// What Tor already had on disk when the attempt started.
+    private(set) var warmth: WarmthProfile?
+    private(set) var standby: StandbyState = .off
+    private(set) var currentStage: BootstrapStage = .launch
+    private(set) var stageEnteredAt: Date?
+    private(set) var stageBudget: Duration?
+    private(set) var plannedQueue: [AppSettings.Transport] = []
+    private(set) var attemptIndex = 0
+    private(set) var lanes: LanePoolSnapshot?
+    /// Freshness stamps, so the ledger can dim a value instead of quietly showing a stale one.
+    private(set) var circuitUpdatedAt: Date?
+    private(set) var bridgeUpdatedAt: Date?
+    private(set) var trafficUpdatedAt: Date?
+    private(set) var bridgeInFlight = 0
+    private(set) var lastAttemptFailure: AttemptFailure?
+    var selfTestReport: SelfTestReport?
+    var isSelfTesting = false
     /// Sidebar selection, so menu commands can navigate.
     var sidebarSelection: SidebarItem = .home
     let traffic = TrafficMonitor()
@@ -134,6 +152,27 @@ final class AppState {
     @ObservationIgnored private var retuneTask: Task<Void, Never>?
     @ObservationIgnored private var routeGeneration = 0
     @ObservationIgnored private var checkFailures = 0
+    @ObservationIgnored private var standbyTask: Task<Void, Never>?
+    @ObservationIgnored private var standbyFailures = 0
+    @ObservationIgnored private var proxyArmTask: Task<Void, Never>?
+    @ObservationIgnored private var networkFingerprint: NetworkFingerprint?
+
+    /// Where the warm tor stands. `ready` means loaded but held offline: no listener, no packets.
+    enum StandbyState: Equatable, Sendable {
+        case off
+        case starting
+        case ready(WarmthProfile.Tier)
+        case live
+        case failed(String)
+
+        var isReady: Bool { if case .ready = self { true } else { false } }
+    }
+
+    /// `make test` is app-hosted and the real tor binary is present, so a standby that was not
+    /// gated would spawn a tor process on every CI run.
+    static var isRunningTests: Bool {
+        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+    }
 
     private static let maxLogEntries = 2000
     /// Remembers that the system proxy points at Veil, so a crash or force-quit can be repaired on the next launch.
@@ -166,12 +205,89 @@ final class AppState {
         if isDemo {
             append(.veil(.notice, "Demo mode: tor binaries were not found next to the app, connections are simulated."))
         }
+        // A resident tor raises the stakes on orphans: sweep before anything else, and only ever
+        // signal a process whose executable and data directory are demonstrably ours.
+        TorProcessRegistry.sweepOrphans(expectedExecutable: TorBundle.locate(environment: environment)?.tor,
+                                        ownDataDirectory: StateCleaner.defaultDataDirectory)
         restoreStaleSystemProxyIfNeeded()
         restoreDisabledNetworkServiceIfNeeded()
         primaryNetwork = NetworkReset.primary()
         scheduleUpdateCheck()
         if settings.connectOnLaunch {
             connect()
+        } else {
+            scheduleStandby(after: .seconds(8))
+        }
+    }
+
+    // MARK: Warm standby
+
+    /// Keeps one tor process loaded but offline, so connecting is a single command rather than a
+    /// spawn, a handshake and a cache reload. Nothing is on the wire: `DisableNetwork 1` means no
+    /// packets and `SocksPort 0` means no listener.
+    private var standbyAllowed: Bool {
+        !isDemo && !Self.isRunningTests && settings.warmStart != .off
+            && !ProcessInfo.processInfo.isLowPowerModeEnabled
+            && connection == .disconnected && !turboActive && !killSwitchEngaged
+    }
+
+    private func scheduleStandby(after delay: Duration) {
+        guard standbyAllowed, !engine.isWarm, !engine.isLive else { return }
+        standbyTask?.cancel()
+        standbyTask = Task { [weak self] in
+            do { try await Task.sleep(for: delay) } catch { return }
+            await self?.warmStandby()
+        }
+    }
+
+    private func warmStandby() async {
+        guard standbyAllowed, !engine.isWarm, !engine.isLive else { return }
+        let control: UInt16
+        if let existing = ports?.control {
+            control = existing
+        } else if let allocated = try? PortAllocator.allocate(preferredSocks: settings.socksPort,
+                                                              preferredHTTP: settings.httpPort) {
+            ports = allocated
+            control = allocated.control
+        } else {
+            return
+        }
+        standby = .starting
+        do {
+            let profile = try await engine.warmUp(settings: settings, controlPort: control,
+                                                  mode: settings.warmStart, budget: .seconds(20))
+            warmth = profile
+            standby = .ready(profile.tier)
+            standbyFailures = 0
+        } catch {
+            standbyFailures += 1
+            standby = .failed(error.localizedDescription)
+            append(.veil(.debug, "Standby did not start: \(error.localizedDescription)"))
+            let backoff: Duration = standbyFailures == 1 ? .seconds(5) : (standbyFailures == 2 ? .seconds(30) : .seconds(300))
+            if standbyFailures <= 3 { scheduleStandby(after: backoff) }
+        }
+    }
+
+    /// Releases the standby without touching a live connection.
+    private func releaseStandby() async {
+        standbyTask?.cancel()
+        standbyTask = nil
+        guard connection == .disconnected, engine.isWarm else { return }
+        await engine.stop(grace: .seconds(3))
+        standby = .off
+        warmth = nil
+    }
+
+    func setWarmStart(_ mode: AppSettings.WarmStart) {
+        guard settings.warmStart != mode else { return }
+        settings.warmStart = mode
+        Task { [weak self] in
+            guard let self else { return }
+            if mode == .off {
+                await releaseStandby()
+            } else if connection == .disconnected {
+                await warmStandby()
+            }
         }
     }
 
@@ -186,6 +302,48 @@ final class AppState {
     var needsTeardown: Bool { connection != .disconnected || proxyApplied || turboActive || killSwitchEngaged }
     /// True while Veil's local HTTP bridge is serving (Tor connected or YouTube Turbo).
     var bridgeRunning: Bool { connection.isConnected || turboActive }
+
+    /// Where the pluggable transports were unpacked, when the bundle is present.
+    var transportDirectory: URL? {
+        guard let bundle = TorBundle.locate() else { return nil }
+        return try? PluggableTransportLocator.spaceFreeDirectory(for: bundle)
+    }
+
+    /// Whether that directory is readable only by this user.
+    var transportDirectoryIsPrivate: Bool? {
+        guard let transportDirectory,
+              let attributes = try? FileManager.default.attributesOfItem(atPath: transportDirectory.path),
+              let permissions = (attributes[.posixPermissions] as? NSNumber)?.intValue else { return nil }
+        return permissions & 0o077 == 0
+    }
+
+    /// The measured-circuit pool, when the bridge is up.
+    var httpBridgeLanePool: LanePool? { httpBridge?.lanePool }
+
+    /// Re-pushes the routing policy after the Security section changes a protective setting.
+    func httpBridgePolicyChanged() {
+        httpBridge?.policy = settings.routingPolicy
+        httpBridge?.httpsOnly = settings.httpsOnly
+    }
+
+    /// Applies the machinery behind a bulk settings write.
+    func pushSecuritySideEffects(isolationChanged: Bool, paddingChanged: Bool) {
+        httpBridgePolicyChanged()
+        if isolationChanged { httpBridge?.lanePool.setSiteMode(settings.isolatePerSite) }
+        httpBridge?.lanePool.setHedging(settings.lanePoolHedging)
+        httpBridge?.lanePool.setLaneCount(settings.isolatePerSite ? 2 : settings.lanePoolSize)
+        guard paddingChanged, connection == .connected, let ports else { return }
+        let enabled = settings.paddingEnabled
+        Task { [weak self] in
+            guard let self else { return }
+            await engine.setTorPadding(enabled: enabled)
+            if enabled {
+                padding.start(engine: engine, socksPort: ports.socks, level: settings.paddingLevel)
+            } else {
+                await padding.stop()
+            }
+        }
+    }
 
     /// Shell snippet for tools that ignore the system proxy (curl, git, Homebrew, ...).
     var terminalSnippet: String {
@@ -207,40 +365,26 @@ final class AppState {
         }
     }
 
-    /// Transports to try, in order. Automatic mode remembers the last one that worked.
-    private func transportCandidates() -> [AppSettings.Transport] {
-        guard settings.transport == .auto else { return [settings.transport] }
-        var list: [AppSettings.Transport] = []
-        if reachability?.directLooksPossible == true {
-            list.append(.direct)
-        }
-        if let last = settings.lastWorkingTransport, last.isConcrete, !list.contains(last) {
-            list.append(last)
-        }
-        if !TorConfiguration.parseBridgeLines(settings.customBridges).isEmpty, !list.contains(.custom) {
-            list.append(.custom)
-        }
-        for transport in [AppSettings.Transport.snowflake, .obfs4, .meek] where !list.contains(transport) {
-            list.append(transport)
-        }
-        return list
-    }
-
     func connect() {
         guard connection == .disconnected || connection == .failed, !isTearingDown else { return }
         generation += 1
         let attempt = generation
+        standbyTask?.cancel()
         userRequestedDisconnect = false
         reconnectPending = false
         lastError = nil
         torCheck = nil
         torCheckSeconds = nil
+        lastAttemptFailure = nil
         latency.stop()
         latency.reset()
         circuit = []
+        lanes = nil
         bootstrap = BootstrapProgress()
         transportAttemptMessage = nil
         connectStartedAt = .now
+        currentStage = .launch
+        stageEnteredAt = .now
         connection = .connecting
         let settings = self.settings
 
@@ -248,25 +392,36 @@ final class AppState {
             guard let self else { return }
             do {
                 if turboActive {
-                    await teardown()
+                    await teardown(keepWarm: false)
                     turboActive = false
                 }
-                await NotificationManager.shared.requestAuthorizationIfNeeded()
+                // Fire and forget: the answer to a system permission alert must never gate a
+                // connection attempt.
+                Task { await NotificationManager.shared.requestAuthorizationIfNeeded() }
+                let fingerprint = NetworkFingerprint.current()
+                networkFingerprint = fingerprint
 
                 // Reuse the ports and the (blocking) bridge left behind by the kill switch, so the
                 // network is never opened up between a failure and the reconnection.
-                let ports: ActivePorts
-                if let existing = self.ports, httpBridge != nil {
+                var ports: ActivePorts
+                if let existing = self.ports, httpBridge != nil || engine.isWarm {
                     ports = existing
                 } else {
                     ports = try PortAllocator.allocate(preferredSocks: settings.socksPort, preferredHTTP: settings.httpPort)
-                    self.ports = ports
                     if Int(ports.socks) != settings.socksPort || Int(ports.http) != settings.httpPort {
                         append(.veil(.warn, "Preferred ports are busy; using SOCKS \(ports.socks) and HTTP \(ports.http) instead."))
                     }
                 }
+                // Re-validate right before it is written into the system proxy: the window between
+                // "this port is free" and "tor bound it" shrinks from minutes to milliseconds.
+                if !PortAllocator.isFree(ports.socks), httpBridge == nil,
+                   let fresh = try? PortAllocator.freeSocksPort(preferred: 0, excluding: [ports.http, ports.control, ports.pool]) {
+                    ports = ActivePorts(socks: fresh, http: ports.http, control: ports.control, pool: ports.pool)
+                }
+                self.ports = ports
 
-                // Kill switch: fail closed from the very first second.
+                // Kill switch: fail closed from the very first second — but never awaited, so the
+                // administrator prompt and the SCPreferences write run alongside the attempt.
                 if settings.killSwitch, settings.configureSystemProxy {
                     if httpBridge == nil {
                         let bridge = HTTPProxyBridge(socksPort: nil, policy: settings.routingPolicy)
@@ -275,30 +430,60 @@ final class AppState {
                         httpBridge = bridge
                     }
                     if !proxyApplied {
-                        await enableSystemProxy(socks: ports.socks, http: ports.http)
+                        proxyArmTask = Task { [weak self] in
+                            await self?.enableSystemProxy(socks: ports.socks, http: ports.http)
+                        }
                     }
                     append(.veil(.info, "Kill switch armed: proxied apps are blocked until Tor is up"))
                 }
 
-                // The network often looks fine after sleep or after another VPN quits while nothing
-                // gets through. Find out now, and fix it the way people do by hand (Wi-Fi off/on).
                 networkRepairedThisConnect = false
-                let repair = await repairNetworkIfNeeded(trigger: "connect", allowReset: settings.autoResetNetwork)
-                if repair == .recovered { networkRepairedThisConnect = true }
+                let history = await ConnectHistoryStore.shared.history(for: fingerprint)
                 try Task.checkCancellation()
                 guard attempt == generation else { return }
 
-                if settings.transport == .auto {
-                    let report = await ReachabilityProbe.probeDirectTor()
-                    reachability = report
-                    append(.veil(.info, "Direct Tor reachability: \(report.reachable)/\(report.total) directory authorities answered"))
+                // Tor is loaded here: a few milliseconds when it is already warm, a spawn when not.
+                var warmEngine = engine.isWarm
+                var profile: WarmthProfile
+                if warmEngine, let existing = engine.warmth {
+                    profile = existing
+                } else if settings.warmStart != .off, !isDemo {
+                    standby = .starting
+                    profile = try await engine.warmUp(settings: settings, controlPort: ports.control,
+                                                      mode: .standby, budget: .seconds(20))
+                    warmEngine = true
+                } else {
+                    profile = WarmthProfile()
                 }
-                try Task.checkCancellation()
-                guard attempt == generation else { return }
+                warmth = profile
+                standby = .live
+                append(.veil(.info, "Tor state: \(profile.summary)"))
 
-                var queue = transportCandidates()
-                let planned = queue.count
+                // Probing runs beside the attempt rather than in front of it. Its only jobs are to
+                // abort an attempt that has no Internet under it, and to reorder what is left.
+                let probeTask = Task.detached(priority: .utility) { () -> (ConnectivityProbe.Report, ReachabilityProbe.Report) in
+                    async let network = ConnectivityProbe.check(timeout: .seconds(3))
+                    async let direct = ReachabilityProbe.probeDirectTor()
+                    return (await network, await direct)
+                }
+                let sentinel = Task { [weak self] in
+                    let result = await probeTask.value
+                    guard let self, attempt == generation, !result.0.isUsable, engine.bootstrapPercent < 10 else { return }
+                    engine.abortBootstrap(.noInternet)
+                }
+                defer { sentinel.cancel() }
+
+                var plan = AttemptPlanner.candidates(settings: settings, warmth: profile,
+                                                     history: history, reachability: nil)
+                plannedQueue = plan.ordered
+                for skip in plan.skipped {
+                    append(.veil(.debug, "Skipping \(skip.transport.rawValue): \(skip.reason)"))
+                }
+                let deadline = AttemptPlanner.overallDeadline(tier: profile.tier)
                 let started = Date.now
+                let defaults = PluggableTransportDefaults.load(from: nil)
+
+                var queue = plan.ordered
                 var connectedTransport: AppSettings.Transport?
                 var lastFailure: Error?
                 var previous: AppSettings.Transport?
@@ -307,15 +492,15 @@ final class AppState {
                     let transport = queue[index]
                     try Task.checkCancellation()
                     guard attempt == generation else { return }
-                    // A bounded attempt: past this point another transport is not going to help
-                    // either, and saying so beats trying quietly for another few minutes.
-                    if Date.now.timeIntervalSince(started) > Self.connectDeadline, index > 0 {
-                        append(.veil(.warn, "Giving up after \(Int(Date.now.timeIntervalSince(started))) s of connection attempts"))
+                    let elapsed = Date.now.timeIntervalSince(started)
+                    if elapsed > deadline, index > 0 {
+                        append(.veil(.warn, "Giving up after \(Int(elapsed)) s of connection attempts"))
                         break
                     }
                     activeTransport = transport
+                    attemptIndex = index
                     bootstrap = BootstrapProgress()
-                    if planned > 1 || index > 0 {
+                    if queue.count > 1 || index > 0 {
                         if let previous {
                             transportAttemptMessage = String(localized: "\(Self.name(of: previous)) did not respond, trying \(Self.name(of: transport))…")
                         } else {
@@ -323,33 +508,79 @@ final class AppState {
                         }
                         append(.veil(.notice, "Automatic transport: trying \(transport.rawValue) (\(index + 1)/\(queue.count))"))
                     }
+                    let attemptSettings = settings.resolving(transport: transport)
+                    let configuration = AttemptPlanner.config(
+                        transport: transport, index: index, count: queue.count, warmth: profile,
+                        history: history, marginalLink: (connectivity?.reachedByAddress ?? 2) <= 1,
+                        warmEngine: warmEngine, elapsed: elapsed, deadline: deadline,
+                        bridgeLineCount: AttemptPlanner.distinctFirstHops(transport: transport,
+                                                                          settings: settings, defaults: defaults)
+                    )
+                    currentStage = .launch
+                    stageEnteredAt = .now
+                    stageBudget = configuration.budget(for: .launch)
                     do {
-                        try await engine.start(settings: settings.resolving(transport: transport), ports: ports)
+                        if warmEngine {
+                            _ = try await engine.activate(settings: attemptSettings, ports: ports)
+                        } else {
+                            try await engine.start(settings: attemptSettings, ports: ports)
+                        }
                         torVersion = engine.versionDescription
-                        let budget = Self.bootstrapBudget(
-                            isLast: index == queue.count - 1,
-                            isKnownGood: index == 0 && settings.lastWorkingTransport == transport,
-                            elapsed: Date.now.timeIntervalSince(started)
-                        )
-                        try await engine.waitForBootstrap(timeout: budget.timeout, stallTimeout: budget.stall)
+                        let outcome = try await engine.runBootstrap(configuration) { [weak self] stage, percent in
+                            guard let self else { return }
+                            currentStage = stage
+                            stageEnteredAt = .now
+                            stageBudget = configuration.budget(for: stage)
+                            if percent > bootstrap.percent {
+                                bootstrap = BootstrapProgress(percent: percent, tag: bootstrap.tag, summary: bootstrap.summary)
+                            }
+                        }
                         connectedTransport = transport
+                        await ConnectHistoryStore.shared.record(
+                            AttemptResult(transport: transport, kind: .success(outcome)), for: fingerprint)
+                        append(.veil(.info, "Bootstrapped in \(outcome.totalMillis) ms"))
                         break
                     } catch is CancellationError {
                         throw CancellationError()
                     } catch {
                         lastFailure = error
-                        append(.veil(.warn, "\(transport.rawValue): \(error.localizedDescription)"))
-                        await engine.stop()
-                        // A stall on a network that claims to work is the classic stale-Wi-Fi symptom:
-                        // reset once, and if that brought the Internet back, retry the same transport.
-                        if Self.isStall(error), !networkRepairedThisConnect, self.settings.autoResetNetwork {
+                        if let attemptError = error as? TorAttemptError {
+                            lastAttemptFailure = attemptError.failure
+                            await ConnectHistoryStore.shared.record(
+                                AttemptResult(transport: transport,
+                                              kind: .failure(attemptError.failure, stage: attemptError.stage,
+                                                             percent: attemptError.percent)),
+                                for: fingerprint)
+                            append(.veil(.warn, "\(transport.rawValue): \(attemptError.localizedDescription)"))
+                        } else {
+                            append(.veil(.warn, "\(transport.rawValue): \(error.localizedDescription)"))
+                        }
+                        // ~2 ms, not a teardown: the consensus, descriptors, guards and the
+                        // pluggable transports all stay loaded for the next candidate.
+                        if warmEngine {
+                            await engine.holdNetwork()
+                        } else {
+                            await engine.stop(grace: .milliseconds(800))
+                        }
+                        let probe = await probeTask.value
+                        connectivity = probe.0
+                        reachability = probe.1
+                        let failure = (error as? TorAttemptError)?.failure
+                        let firstHopOnDeadNetwork = failure.map { $0 == .noInternet || ($0.isFirstHop && !probe.0.isUsable) } ?? false
+                        if firstHopOnDeadNetwork, !networkRepairedThisConnect, self.settings.autoResetNetwork {
                             networkRepairedThisConnect = true
-                            let outcome = await repairNetworkIfNeeded(trigger: "stall at \(bootstrap.percent)%", allowReset: true)
+                            let outcome = await repairNetworkIfNeeded(trigger: "first hop", allowReset: true)
                             if outcome == .recovered {
                                 append(.veil(.notice, "Network recovered; retrying \(transport.rawValue)"))
                                 queue.insert(transport, at: index + 1)
                             }
                         }
+                        // Reorder only what is left, now that the reachability answer is in hand.
+                        let tried = Array(queue.prefix(index + 1))
+                        plan = AttemptPlanner.candidates(settings: settings, warmth: profile,
+                                                         history: history, reachability: probe.1)
+                        queue = tried + plan.ordered.filter { !tried.contains($0) }
+                        plannedQueue = queue
                     }
                     previous = transport
                     index += 1
@@ -363,22 +594,32 @@ final class AppState {
                     self.settings.lastWorkingTransport = connectedTransport
                 }
                 transportAttemptMessage = nil
+                let effective = engine.activePorts ?? ports
+                self.ports = effective
 
-                // Bridge: reuse the blocking one from the kill switch, or start a fresh one.
+                // The proxy write is the only await before the flip, and the three bridge writes
+                // below have no suspension point between them: `accept` snapshots port, policy and
+                // blocked under one lock, so no session can see "unblocked" with no port.
+                await proxyArmTask?.value
+                proxyArmTask = nil
                 if let bridge = httpBridge {
+                    bridge.socksPort = effective.socks
                     bridge.policy = self.settings.routingPolicy
-                    bridge.socksPort = ports.socks
                     bridge.blockAll = false
                 } else {
-                    let bridge = HTTPProxyBridge(socksPort: ports.socks, policy: self.settings.routingPolicy)
-                    try bridge.start(port: ports.http)
+                    let bridge = HTTPProxyBridge(socksPort: effective.socks, policy: self.settings.routingPolicy)
+                    try bridge.start(port: effective.http)
                     httpBridge = bridge
                 }
-                append(.veil(.info, "HTTP proxy bridge listening on 127.0.0.1:\(ports.http) → SOCKS5 127.0.0.1:\(ports.socks)"))
+                append(.veil(.info, "HTTP proxy bridge listening on 127.0.0.1:\(effective.http) → SOCKS5 127.0.0.1:\(effective.socks)"))
 
                 if settings.configureSystemProxy {
                     if !proxyApplied {
-                        await enableSystemProxy(socks: ports.socks, http: ports.http)
+                        await enableSystemProxy(socks: effective.socks, http: effective.http)
+                    } else if effective.socks != ports.socks {
+                        Task { [weak self] in
+                            await self?.enableSystemProxy(socks: effective.socks, http: effective.http)
+                        }
                     }
                 } else {
                     proxyStatus = .manual
@@ -389,13 +630,15 @@ final class AppState {
                 connectedAt = .now
                 connectStartedAt = nil
                 connection = .connected
+                standby = .live
+                await ConnectHistoryStore.shared.flush()
                 traffic.start(engine: engine)
                 startCircuitUpdates()
                 startStatsUpdates()
                 if self.settings.paddingEnabled {
-                    padding.start(engine: engine, socksPort: ports.socks, level: self.settings.paddingLevel)
+                    padding.start(engine: engine, socksPort: effective.socks, level: self.settings.paddingLevel)
                 }
-                latency.start(socksPort: ports.socks)
+                await startLanePool(ports: effective, transport: connectedTransport)
                 restartRouteRotation()
                 startRouteTuning()
                 startRetuneTimer()
@@ -405,8 +648,16 @@ final class AppState {
                 if self.settings.checkAfterConnect {
                     runTorCheck()
                 }
+                if self.settings.checkForUpdates, self.settings.updateCheckAfterConnect {
+                    checkForUpdates(manual: false)
+                }
             } catch is CancellationError {
-                await engine.stop()
+                // Cancelling costs one command, not a teardown, so the UI is free immediately.
+                if settings.warmStart != .off {
+                    await engine.holdNetwork()
+                } else {
+                    await engine.stop(grace: .milliseconds(800))
+                }
             } catch {
                 guard attempt == generation else { return }
                 append(.veil(.error, error.localizedDescription))
@@ -422,6 +673,34 @@ final class AppState {
         }
     }
 
+    /// Starts the measured circuits for traffic through Tor, once Tor is actually up.
+    private func startLanePool(ports: ActivePorts, transport: AppSettings.Transport) async {
+        guard let bridge = httpBridge else { return }
+        bridge.setConnectionContext(transport: transport, connectedAt: connectedAt)
+        guard settings.lanePoolEnabled, ports.pool != 0, !engine.isSimulated else {
+            latency.start(socksPort: ports.socks)
+            return
+        }
+        let listeners = await engine.socksListeners()
+        let endpoint = "127.0.0.1:\(ports.pool)"
+        // An empty list means the GETINFO failed, not that the listener is missing: proceed, and
+        // the first warm-up will suspend the pool cleanly if it really is not there.
+        guard listeners.isEmpty || listeners.contains(endpoint) else {
+            append(.veil(.warn, "Tor did not open the lane listener on \(endpoint); using a single circuit"))
+            latency.start(socksPort: ports.socks)
+            return
+        }
+        bridge.lanePool.onLog = { [weak self] entry in
+            Task { @MainActor in self?.append(entry) }
+        }
+        var configuration = LanePool.Configuration()
+        configuration.laneCount = settings.isolatePerSite ? 2 : settings.lanePoolSize
+        configuration.siteMode = settings.isolatePerSite
+        configuration.hedgingEnabled = settings.lanePoolHedging
+        bridge.poolPort = ports.pool
+        bridge.lanePool.start(poolPort: ports.pool, configuration: configuration)
+    }
+
     func disconnect() {
         guard connection == .connecting || connection == .connected || killSwitchEngaged else { return }
         generation += 1
@@ -432,30 +711,38 @@ final class AppState {
         connectTask?.cancel()
         connectTask = nil
         connection = .disconnecting
+        // No await before the state change: cancelling the attempt reaches its next checkpoint in
+        // under 250 ms and holding the network is one command, so "Not connected" arrives at once.
         Task { [weak self] in
             guard let self else { return }
-            await teardown()
+            await teardown(keepWarm: settings.warmStart != .off)
             killSwitchEngaged = false
             connection = .disconnected
             bootstrap = BootstrapProgress()
             activeTransport = nil
             transportAttemptMessage = nil
             Feedback.disconnected(sound: settings.soundEffects, haptic: settings.hapticFeedback)
+            if standbyAllowed, engine.isWarm {
+                standby = .ready(engine.warmth?.tier ?? .cool)
+            }
         }
     }
 
-    /// Stops Tor and connects again without opening the network in between.
+    /// Reconnects. A live tunnel gets a soft bounce first — `DisableNetwork` off and on, which
+    /// keeps the process, the guards and the loaded directory — and only falls back to a full
+    /// restart if that does not come up.
     func reconnect() {
         guard connection == .connected || connection == .failed || connection == .connecting else { return }
         generation += 1
-        let previous = connectTask
-        previous?.cancel()
+        connectTask?.cancel()
         connectTask = nil
         Task { [weak self] in
             guard let self else { return }
-            // Let a cancelled attempt finish stopping its Tor before a new one is started.
-            await previous?.value
-            await stopEngineSide()
+            if connection == .connected {
+                let bounced = await softReconnect(reason: "reconnect")
+                if bounced { return }
+            }
+            await stopEngineSide(keepWarm: settings.warmStart != .off)
             if settings.killSwitch, let bridge = httpBridge {
                 bridge.blockAll = true
                 bridge.socksPort = nil
@@ -465,13 +752,54 @@ final class AppState {
         }
     }
 
+    /// A bounce that keeps everything expensive: same process, same guards, same cached directory.
+    /// The bridge fails closed for the whole of it, so nothing leaks through the gap.
+    private func softReconnect(reason: String) async -> Bool {
+        guard connection == .connected, engine.isLive, let ports, let bridge = httpBridge else { return false }
+        let alive = await engine.isCircuitEstablished()
+        guard alive else { return false }
+        let started = Date.now
+        bridge.socksPort = nil
+        bridge.blockAll = true
+        bridge.lanePool.retireAll(reason: .routeChanged)
+        do {
+            try await engine.refreshNetwork()
+        } catch {
+            append(.veil(.debug, "Soft reconnect could not restart the network: \(error.localizedDescription)"))
+            return false
+        }
+        var established = false
+        for _ in 0..<50 {
+            do { try await Task.sleep(for: .milliseconds(400)) } catch { return false }
+            guard connection == .connected else { return false }
+            let up = await engine.isCircuitEstablished()
+            if up {
+                established = true
+                break
+            }
+        }
+        guard established else { return false }
+        let sample = await LatencyProbe.sample(socksPort: ports.socks, target: LatencyProbe.target(at: 0),
+                                               timeout: .seconds(6))
+        guard sample != nil else { return false }
+        bridge.socksPort = ports.socks
+        bridge.blockAll = false
+        latency.reset()
+        latency.measureNow()
+        append(.veil(.notice, "Soft reconnect (\(reason)) in \(Int(Date.now.timeIntervalSince(started) * 1000)) ms"))
+        return true
+    }
+
     /// Called from the app delegate before the process exits.
     func prepareForTermination() async {
         generation += 1
         connectTask?.cancel()
         connectTask = nil
         reconnectTask?.cancel()
-        await teardown()
+        standbyTask?.cancel()
+        await ConnectHistoryStore.shared.flush()
+        await teardown(keepWarm: false)
+        StateCleaner.applyForgetPolicy(settings.forgetPolicy, dataDirectory: StateCleaner.defaultDataDirectory)
         turboActive = false
         killSwitchEngaged = false
         connection = .disconnected
@@ -490,8 +818,9 @@ final class AppState {
         }
     }
 
-    /// Everything on the Tor side, leaving the bridge and the system proxy alone.
-    private func stopEngineSide() async {
+    /// Everything on the Tor side, leaving the bridge and the system proxy alone. With `keepWarm`
+    /// the process stays loaded and offline instead of being torn down and rebuilt.
+    private func stopEngineSide(keepWarm: Bool = true) async {
         circuitTask?.cancel()
         circuitTask = nil
         rotationTask?.cancel()
@@ -508,8 +837,17 @@ final class AppState {
         traffic.stop()
         latency.stop()
         latency.reset()
+        lanes = nil
+        httpBridge?.lanePool.stop()
+        httpBridge?.poolPort = nil
         await padding.stop()
-        await engine.stop()
+        if keepWarm, settings.warmStart != .off, engine.isLive || engine.isWarm {
+            await engine.holdNetwork()
+            standby = .ready(engine.warmth?.tier ?? .cool)
+        } else {
+            await engine.stop(grace: .seconds(3))
+            standby = .off
+        }
         connectedAt = nil
         connectStartedAt = nil
         circuit = []
@@ -520,19 +858,20 @@ final class AppState {
     /// On failure: keep blocking when the kill switch is on, otherwise restore the network.
     private func failClosedOrTeardown(reason: String) async {
         if settings.killSwitch, proxyApplied, let bridge = httpBridge {
-            await stopEngineSide()
+            await stopEngineSide(keepWarm: true)
             bridge.blockAll = true
             bridge.socksPort = nil
+            if settings.closeSessionsOnKillSwitch { bridge.closeAllSessions() }
             killSwitchEngaged = true
             append(.veil(.warn, "Kill switch engaged: proxied traffic stays blocked until you reconnect or disconnect"))
             notify(id: "killswitch", title: String(localized: "Kill switch engaged"),
                    body: String(localized: "Tor is down; apps using the system proxy are blocked until Veil reconnects."))
         } else {
-            await teardown()
+            await teardown(keepWarm: settings.warmStart != .off)
         }
     }
 
-    private func teardown() async {
+    private func teardown(keepWarm: Bool = false) async {
         guard !isTearingDown else {
             while isTearingDown { try? await Task.sleep(for: .milliseconds(100)) }
             return
@@ -542,7 +881,7 @@ final class AppState {
 
         statsTask?.cancel()
         statsTask = nil
-        await stopEngineSide()
+        await stopEngineSide(keepWarm: keepWarm)
         if proxyApplied {
             do {
                 try await SystemProxy.disable()
@@ -638,22 +977,39 @@ final class AppState {
         reconnectPending = false
         reconnectTask = Task { [weak self] in
             guard let self else { return }
-            do { try await Task.sleep(for: .seconds(2)) } catch { return }
-            let outcome = await repairNetworkIfNeeded(trigger: "wake", allowReset: settings.autoResetNetwork, patience: .seconds(15))
-            guard !Task.isCancelled else { return }
+            do { try await Task.sleep(for: .seconds(1)) } catch { return }
             switch connection {
             case .connected:
-                if outcome == .stillDown {
-                    append(.veil(.warn, "No Internet after waking; leaving Tor alone until the network is back"))
-                    return
+                // A live tunnel proves the Internet is up, so the two checks race instead of
+                // queueing: on a healthy wake the repair — up to half a minute of probing plus a
+                // Wi-Fi reset — is skipped entirely.
+                let networkTask = Task.detached(priority: .utility) {
+                    await ConnectivityProbe.check(timeout: .seconds(3))
                 }
-                if await tunnelIsHealthy(attempts: 2) {
+                let healthy = await tunnelIsHealthy(timeout: .seconds(5))
+                let report = await networkTask.value
+                guard !Task.isCancelled else { return }
+                connectivity = report
+                if healthy {
                     let nap = sleptFor > 60 ? " (slept \(Int(sleptFor / 60)) min)" : ""
                     append(.veil(.info, "Tunnel still carries traffic after sleep\(nap); no restart needed"))
                     latency.reset()
                     latency.measureNow()
+                    httpBridge?.lanePool.retireAll(reason: .routeChanged)
                     return
                 }
+                if !report.isUsable {
+                    let outcome = await repairNetworkIfNeeded(trigger: "wake",
+                                                              allowReset: settings.autoResetNetwork,
+                                                              patience: .seconds(12))
+                    guard !Task.isCancelled else { return }
+                    if outcome == .stillDown {
+                        append(.veil(.warn, "No Internet after waking; leaving Tor alone until the network is back"))
+                        return
+                    }
+                }
+                let bounced = await softReconnect(reason: "wake")
+                if bounced { return }
                 guard settings.autoReconnect else {
                     append(.veil(.warn, "Tunnel is not passing traffic after sleep; auto-reconnect is off"))
                     return
@@ -674,18 +1030,26 @@ final class AppState {
     }
 
     /// Opens a real stream through Tor. `status/circuit-established` can still say yes while the
-    /// path is dead — after sleep it usually does — so ask the route itself.
-    private func tunnelIsHealthy(attempts: Int) async -> Bool {
+    /// path is dead — after sleep it usually does — so ask the route itself. Both targets are
+    /// raced and the first answer wins, so a healthy tunnel replies in about a second.
+    private func tunnelIsHealthy(timeout: Duration) async -> Bool {
         guard let ports, connection == .connected else { return false }
-        for attempt in 0..<max(1, attempts) {
-            if await LatencyProbe.sample(socksPort: ports.socks, target: LatencyProbe.target(at: attempt), timeout: .seconds(8)) != nil {
-                return true
+        let socks = ports.socks
+        return await withTaskGroup(of: Bool.self, returning: Bool.self) { group in
+            for index in 0..<2 {
+                group.addTask {
+                    await LatencyProbe.sample(socksPort: socks, target: LatencyProbe.target(at: index),
+                                              timeout: timeout) != nil
+                }
             }
-            if attempt < attempts - 1 {
-                do { try await Task.sleep(for: .seconds(2)) } catch { return false }
+            var healthy = false
+            for await result in group where result {
+                healthy = true
+                group.cancelAll()
+                break
             }
+            return healthy
         }
-        return false
     }
 
     /// Probes the Internet; when nothing answers, waits `patience` for Wi-Fi to settle, then resets
@@ -845,10 +1209,14 @@ final class AppState {
             guard let self else { return }
             do { try await Task.sleep(for: delay) } catch { return }
             guard connection == .connected else { return }
-            if await tunnelIsHealthy(attempts: 1) { return }
+            let first = await tunnelIsHealthy(timeout: .seconds(6))
+            if first { return }
             do { try await Task.sleep(for: .seconds(12)) } catch { return }
             guard connection == .connected else { return }
-            if await tunnelIsHealthy(attempts: 2) { return }
+            let second = await tunnelIsHealthy(timeout: .seconds(8))
+            if second { return }
+            let bounced = await softReconnect(reason: "network change")
+            if bounced { return }
             guard settings.autoReconnect else { return }
             append(.veil(.warn, "Tunnel stopped carrying traffic after the network change; reconnecting"))
             reconnect()
@@ -890,7 +1258,7 @@ final class AppState {
         if !enabled, killSwitchEngaged {
             Task { [weak self] in
                 guard let self else { return }
-                await teardown()
+                await teardown(keepWarm: settings.warmStart != .off)
                 killSwitchEngaged = false
                 if connection == .failed { connection = .disconnected }
             }
@@ -899,6 +1267,40 @@ final class AppState {
 
     func setIsolatePerSite(_ enabled: Bool) {
         settings.isolatePerSite = enabled
+        // Applies to browser traffic at once; apps on Veil's SOCKS port directly pick it up on
+        // their next connection.
+        httpBridge?.lanePool.setSiteMode(enabled)
+    }
+
+    func setLanePoolEnabled(_ enabled: Bool) {
+        guard settings.lanePoolEnabled != enabled else { return }
+        settings.lanePoolEnabled = enabled
+        if enabled { settings.latencyTuning = false }
+        guard connection == .connected, let ports else { return }
+        Task { [weak self] in
+            guard let self else { return }
+            if enabled {
+                await startLanePool(ports: ports, transport: activeTransport ?? settings.transport)
+            } else {
+                httpBridge?.lanePool.stop()
+                httpBridge?.poolPort = nil
+                lanes = nil
+                latency.start(socksPort: ports.socks)
+            }
+        }
+    }
+
+    func setLanePoolSize(_ count: Int) {
+        let clamped = min(6, max(2, count))
+        guard settings.lanePoolSize != clamped else { return }
+        settings.lanePoolSize = clamped
+        httpBridge?.lanePool.setLaneCount(clamped)
+    }
+
+    func setLanePoolHedging(_ enabled: Bool) {
+        guard settings.lanePoolHedging != enabled else { return }
+        settings.lanePoolHedging = enabled
+        httpBridge?.lanePool.setHedging(enabled)
     }
 
     // MARK: YouTube Turbo (anti-throttling without Tor)
@@ -1022,7 +1424,7 @@ final class AppState {
     }
 
     private func pushRoutingPolicy() {
-        httpBridge?.policy = settings.routingPolicy
+        httpBridgePolicyChanged()
     }
 
     /// Opens youtube.com through Veil's own proxy, exactly like a browser would, and measures the homepage speed.
@@ -1217,6 +1619,9 @@ final class AppState {
         }
         do {
             try await engine.applyRoute(base, dropConnections: dropConnections)
+            // Lane circuits were built under the old route: replacing their keys means new
+            // connections take the new one while in-flight sessions keep theirs.
+            httpBridge?.lanePool.retireAll(reason: .routeChanged)
             let description = base.torrcLines.isEmpty ? "automatic" : base.torrcLines.joined(separator: ", ")
             append(.veil(.notice, "Route updated (\(reason)): \(description)\(dropConnections ? "; circuits rebuilt" : "; existing connections kept")"))
         } catch {
@@ -1247,7 +1652,8 @@ final class AppState {
     // MARK: Route tuning (circuit races)
 
     private func startRouteTuning() {
-        guard settings.latencyTuning, connection == .connected else { return }
+        // Pinning collapses every lane onto the same exit, so the two are mutually exclusive.
+        guard !settings.lanePoolEnabled, settings.latencyTuning, connection == .connected else { return }
         routeGeneration += 1
         let generation = routeGeneration
         let base = settings.route
@@ -1261,7 +1667,7 @@ final class AppState {
     }
 
     private func tune(base: TorRoute, generation: Int) async {
-        guard settings.latencyTuning, connection == .connected else { return }
+        guard !settings.lanePoolEnabled, settings.latencyTuning, connection == .connected else { return }
         // Race on the country-level route so the candidates are not limited to old pins.
         try? await engine.applyRoute(base, dropConnections: false)
         guard let tuned = await tuner.tune(engine: engine, route: base, circuits: 4, pinMiddle: base.middleCountry != nil) else { return }
@@ -1289,7 +1695,7 @@ final class AppState {
 
     /// The button: measure again and re-pin.
     func retuneRoute() {
-        guard connection == .connected, !tuner.status.isRacing else { return }
+        guard !settings.lanePoolEnabled, connection == .connected, !tuner.status.isRacing else { return }
         routeGeneration += 1
         let generation = routeGeneration
         let base = settings.route
@@ -1332,7 +1738,8 @@ final class AppState {
             while !Task.isCancelled {
                 do { try await Task.sleep(for: .seconds(30 * 60)) } catch { return }
                 guard let self else { return }
-                guard connection == .connected, settings.latencyTuning, !tuner.status.isRacing, !routeSwitching else { continue }
+                guard !settings.lanePoolEnabled, connection == .connected, settings.latencyTuning,
+                      !tuner.status.isRacing, !routeSwitching else { continue }
                 append(.veil(.info, "Periodic route tuning"))
                 retuneRoute()
             }
@@ -1370,6 +1777,7 @@ final class AppState {
                 guard let self else { return }
                 if let hops = try? await self.engine.circuit(), !hops.isEmpty {
                     if hops != self.circuit { self.circuit = hops }
+                    self.circuitUpdatedAt = .now
                     delaySeconds = 20
                 } else {
                     delaySeconds = min(delaySeconds * 2, 10)
@@ -1387,6 +1795,14 @@ final class AppState {
                 if let bridge = httpBridge {
                     let stats = bridge.stats
                     if stats != bridgeStats { bridgeStats = stats }
+                    bridgeUpdatedAt = .now
+                    let open = bridge.inFlight
+                    if open != bridgeInFlight { bridgeInFlight = open }
+                    if traffic.downloadRate > 0 || traffic.uploadRate > 0 { trafficUpdatedAt = .now }
+                    let snapshot = bridge.lanePool.snapshot()
+                    if snapshot.enabled || lanes != nil {
+                        if snapshot != lanes { lanes = snapshot.enabled ? snapshot : nil }
+                    }
                 }
                 do { try await Task.sleep(for: .seconds(2)) } catch { return }
             }
@@ -1411,6 +1827,7 @@ final class AppState {
             }
             do {
                 try await engine.newIdentity()
+                httpBridge?.lanePool.retireAll(reason: .newIdentity)
                 append(.veil(.notice, "New identity requested — circuits will be rebuilt."))
                 torCheck = nil
                 try? await Task.sleep(for: .seconds(2))
@@ -1439,7 +1856,11 @@ final class AppState {
             } catch {
                 append(.veil(.warn, "Tor check failed: \(error.localizedDescription)"))
                 checkFailures += 1
-                if checkFailures >= 2, tuner.isPinned {
+                if checkFailures >= 2, settings.lanePoolEnabled {
+                    append(.veil(.warn, "The exit check keeps failing; replacing the measured circuits"))
+                    httpBridge?.lanePool.retireAll(reason: .checkFailed)
+                    checkFailures = 0
+                } else if checkFailures >= 2, tuner.isPinned {
                     append(.veil(.warn, "Pinned relays are not answering; back to Tor's own relay choice"))
                     unpinRoute(reason: "pinned relays unreachable")
                 }
@@ -1460,6 +1881,9 @@ final class AppState {
 
     private func scheduleUpdateCheck() {
         guard settings.checkForUpdates, Bundle.main.bundleIdentifier != nil else { return }
+        // Deferred by default: an update check before Tor is up goes out in the clear and tells
+        // whoever is watching that this Mac runs Veil.
+        guard !settings.updateCheckAfterConnect else { return }
         let last = UserDefaults.standard.object(forKey: Self.lastUpdateCheckKey) as? Date ?? .distantPast
         guard Date.now.timeIntervalSince(last) > 6 * 3600 else { return }
         Task { [weak self] in

@@ -7,6 +7,15 @@ struct CircuitHop: Identifiable, Equatable, Sendable {
         case entry
         case middle
         case exit
+
+        var title: String {
+            switch self {
+            case .bridge: String(localized: "Bridge")
+            case .entry: String(localized: "Guard")
+            case .middle: String(localized: "Middle")
+            case .exit: String(localized: "Exit")
+            }
+        }
     }
 
     let fingerprint: String

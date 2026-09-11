@@ -57,16 +57,35 @@ final class LatencyTests: XCTestCase {
     }
 
     @MainActor
-    func testBootstrapBudgetsStayBoundedAndFavourAKnownTransport() {
-        let known = AppState.bootstrapBudget(isLast: false, isKnownGood: true, elapsed: 0)
-        let fresh = AppState.bootstrapBudget(isLast: false, isKnownGood: false, elapsed: 0)
-        XCTAssertLessThan(known.timeout, fresh.timeout)
-        XCTAssertLessThan(known.stall, fresh.stall)
+    func testAttemptBudgetsScaleWithWhatIsAlreadyOnDisk() {
+        var hot = WarmthProfile()
+        hot.consensus = .fresh
+        hot.tier = .hot
+        var cold = WarmthProfile()
+        cold.consensus = .missing
+        cold.tier = .cold
 
-        // The final attempt gets whatever is left of the overall deadline, never less than a minute.
-        let early = AppState.bootstrapBudget(isLast: true, isKnownGood: false, elapsed: 0)
-        let late = AppState.bootstrapBudget(isLast: true, isKnownGood: false, elapsed: AppState.connectDeadline + 100)
-        XCTAssertEqual(early.timeout, .seconds(Int(AppState.connectDeadline)))
-        XCTAssertEqual(late.timeout, .seconds(60))
+        let warm = AttemptPlanner.config(transport: .snowflake, index: 0, count: 2, warmth: hot,
+                                         history: NetworkHistory(), marginalLink: false, warmEngine: true,
+                                         elapsed: 0, deadline: 90, bridgeLineCount: 2)
+        let chilly = AttemptPlanner.config(transport: .snowflake, index: 0, count: 2, warmth: cold,
+                                           history: NetworkHistory(), marginalLink: false, warmEngine: false,
+                                           elapsed: 0, deadline: 210, bridgeLineCount: 2)
+        XCTAssertLessThan(warm.budget(for: .directory), chilly.budget(for: .directory),
+                          "a fresh consensus means no directory work; a missing one means all of it")
+        XCTAssertLessThan(warm.budget(for: .launch), chilly.budget(for: .launch))
+        XCTAssertGreaterThan(AttemptPlanner.overallDeadline(tier: .cold),
+                             AttemptPlanner.overallDeadline(tier: .hot))
+    }
+
+    func testEveryStallBudgetHasAFloor() {
+        // A learned p80 may widen a budget, never narrow it into brittleness.
+        for transport in AppSettings.Transport.allCases {
+            for stage in BootstrapStage.allCases {
+                let budget = BootstrapDefaults.stall(transport: transport, stage: stage, consensus: .fresh,
+                                                     warmEngine: true, marginalLink: false, learnedP80: 0.001)
+                XCTAssertGreaterThanOrEqual(budget, .seconds(4))
+            }
+        }
     }
 }

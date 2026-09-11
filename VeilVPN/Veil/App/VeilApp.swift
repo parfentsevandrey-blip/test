@@ -17,10 +17,12 @@ struct VeilApp: App {
             CommandMenu("View") {
                 Button("Home") { appState.sidebarSelection = .home }
                     .keyboardShortcut("1", modifiers: .command)
-                Button("Route") { appState.sidebarSelection = .locations }
+                Button("Security") { appState.sidebarSelection = .security }
                     .keyboardShortcut("2", modifiers: .command)
-                Button("Activity") { appState.sidebarSelection = .activity }
+                Button("Route") { appState.sidebarSelection = .locations }
                     .keyboardShortcut("3", modifiers: .command)
+                Button("Activity") { appState.sidebarSelection = .activity }
+                    .keyboardShortcut("4", modifiers: .command)
                 Divider()
                 Button("Mini Window") { openWindow(id: "mini") }
                     .keyboardShortcut("m", modifiers: [.command, .shift])
@@ -46,6 +48,8 @@ struct VeilApp: App {
                 Button("YouTube Turbo") { appState.toggleTurbo() }
                     .keyboardShortcut("y", modifiers: [.command, .shift])
                     .disabled(appState.connection.isActive)
+                Divider()
+                Button("Run Security Self-Test") { appState.runSelfTest() }
                 Divider()
                 Button("Check for Updates…") { appState.checkForUpdates(manual: true) }
                 Button("Save Diagnostics Report…") { appState.saveDiagnostics() }

@@ -45,6 +45,17 @@ final class TorControlClient: @unchecked Sendable {
     private var eventLines: [String] = []
     private var dataBlockIsEvent = false
     private var eventHandler: ((String) -> Void)?
+    private let openLock = NSLock()
+    private var openFlag = false
+
+    /// Readable from any thread: whether the connection is still usable. Nothing else can tell a
+    /// caller that Tor's control channel died — a stalled command would simply hang until its
+    /// deadline, and under TAKEOWNERSHIP that costs the whole process.
+    var isOpen: Bool {
+        openLock.lock()
+        defer { openLock.unlock() }
+        return openFlag
+    }
 
     init(port: UInt16) {
         self.port = port
@@ -120,8 +131,8 @@ final class TorControlClient: @unchecked Sendable {
         try await send("AUTHENTICATE \(hex)")
     }
 
-    func getInfo(_ key: String) async throws -> String {
-        let lines = try await send("GETINFO \(key)")
+    func getInfo(_ key: String, timeout: Duration = .seconds(30)) async throws -> String {
+        let lines = try await send("GETINFO \(key)", timeout: timeout)
         for line in lines where line.code == 250 {
             if line.separator == "+" {
                 let parts = line.text.split(separator: "\n", maxSplits: 1, omittingEmptySubsequences: false)
@@ -139,6 +150,51 @@ final class TorControlClient: @unchecked Sendable {
         try await send("SIGNAL \(name)")
     }
 
+    /// Reads several keys in one round trip. Tor answers a multi-key GETINFO all or nothing, so a
+    /// 552 on one unknown key fails the batch — callers fall back to single keys once and remember.
+    func getInfo(keys: [String]) async throws -> [String: String] {
+        guard !keys.isEmpty else { return [:] }
+        let lines = try await send("GETINFO " + keys.joined(separator: " "))
+        var result: [String: String] = [:]
+        for line in lines where line.code == 250 {
+            if line.separator == "+" {
+                let parts = line.text.split(separator: "\n", maxSplits: 1, omittingEmptySubsequences: false)
+                guard let header = parts.first, header.hasSuffix("=") else { continue }
+                result[String(header.dropLast())] = parts.count > 1 ? String(parts[1]) : ""
+            } else if let separator = line.text.firstIndex(of: "=") {
+                result[String(line.text[..<separator])] = String(line.text[line.text.index(after: separator)...])
+            }
+        }
+        return result
+    }
+
+    /// A control-spec QuotedString: an obfs4 bridge line contains spaces and `=`, so an unquoted
+    /// SETCONF of one is a 512 syntax error.
+    static func quote(_ value: String) -> String {
+        var out = "\""
+        for character in value {
+            if character == "\\" || character == "\"" { out.append("\\") }
+            out.append(character)
+        }
+        out.append("\"")
+        return out
+    }
+
+    /// A nil value renders a bare key, which resets that option to its default. Repeated keys are
+    /// preserved, so `Bridge="a" Bridge="b"` is expressible — the dictionary overload cannot.
+    static func setConfBody(_ pairs: [(key: String, value: String?)]) -> String {
+        pairs.map { pair in
+            guard let value = pair.value else { return pair.key }
+            return "\(pair.key)=\(quote(value))"
+        }.joined(separator: " ")
+    }
+
+    /// SETCONF is all or nothing: one round trip, and a bad configuration changes nothing.
+    func setConfLines(_ pairs: [(key: String, value: String?)], timeout: Duration = .seconds(10)) async throws {
+        guard !pairs.isEmpty else { return }
+        try await send("SETCONF " + Self.setConfBody(pairs), timeout: timeout)
+    }
+
     func setConf(_ assignments: [String: String]) async throws {
         let body = assignments.map { key, value in "\(key)=\(value)" }.joined(separator: " ")
         try await send("SETCONF \(body)")
@@ -154,6 +210,9 @@ final class TorControlClient: @unchecked Sendable {
         switch state {
         case .ready:
             isReady = true
+            openLock.lock()
+            openFlag = true
+            openLock.unlock()
             readyContinuation?.resume()
             readyContinuation = nil
             receiveLoop()
@@ -171,6 +230,9 @@ final class TorControlClient: @unchecked Sendable {
 
     private func tearDown(error: Error) {
         isReady = false
+        openLock.lock()
+        openFlag = false
+        openLock.unlock()
         if let ready = readyContinuation {
             readyContinuation = nil
             ready.resume(throwing: error)

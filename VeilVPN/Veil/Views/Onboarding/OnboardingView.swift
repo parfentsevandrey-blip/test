@@ -10,7 +10,7 @@ struct OnboardingView: View {
 
     var body: some View {
         ZStack {
-            AuroraBackground(state: page == 2 ? .connected : .disconnected)
+            AuroraBackground(state: page == 2 ? .connected : .disconnected, animated: true)
                 .ignoresSafeArea()
             VStack(spacing: 24) {
                 Group {

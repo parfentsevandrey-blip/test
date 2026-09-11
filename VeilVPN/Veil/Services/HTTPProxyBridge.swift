@@ -13,6 +13,10 @@ final class HTTPProxyBridge: @unchecked Sendable {
         var direct = 0
         var antiThrottle = 0
         var blocked = 0
+        /// Outcomes, as opposed to the counters above, which record which route was chosen.
+        var torFailed = 0
+        var torRetried = 0
+        var torHedged = 0
     }
 
     private let queue = DispatchQueue(label: "app.veilvpn.httpbridge")
@@ -23,7 +27,14 @@ final class HTTPProxyBridge: @unchecked Sendable {
     private var storedSocksPort: UInt16?
     private var storedBlockAll = false
     private var storedStats = Stats()
+    private var storedPoolPort: UInt16?
+    private var storedHTTPSOnly = false
+    private var storedTransport: AppSettings.Transport = .auto
+    private var storedConnectedAt: Date?
     private(set) var port: UInt16 = 0
+
+    /// Measured circuits for traffic through Tor. Created here, started and stopped by AppState.
+    let lanePool = LanePool()
 
     init(socksPort: UInt16?, policy: RoutingPolicy) {
         storedSocksPort = socksPort
@@ -37,6 +48,42 @@ final class HTTPProxyBridge: @unchecked Sendable {
     }
 
     var torAvailable: Bool { socksPort != nil }
+
+    /// Tor's isolation-flagged SOCKS listener, or nil when the lane pool is off.
+    var poolPort: UInt16? {
+        get { lock.lock(); defer { lock.unlock() }; return storedPoolPort }
+        set { lock.lock(); storedPoolPort = newValue; lock.unlock() }
+    }
+
+    /// Refuse plain `http://` through Tor. An exit relay can read and rewrite unencrypted traffic,
+    /// and it is the one part of the path the user did not choose.
+    var httpsOnly: Bool {
+        get { lock.lock(); defer { lock.unlock() }; return storedHTTPSOnly }
+        set { lock.lock(); storedHTTPSOnly = newValue; lock.unlock() }
+    }
+
+    /// Context the hedge threshold needs: a young snowflake session is still finding proxies.
+    func setConnectionContext(transport: AppSettings.Transport, connectedAt: Date?) {
+        lock.lock()
+        storedTransport = transport
+        storedConnectedAt = connectedAt
+        lock.unlock()
+    }
+
+    var inFlight: Int {
+        lock.lock()
+        defer { lock.unlock() }
+        return sessions.count
+    }
+
+    /// Cuts every open connection. The kill switch refuses new ones on its own; this is what makes
+    /// it apply to the download that was already running.
+    func closeAllSessions() {
+        lock.lock()
+        let active = Array(sessions.values)
+        lock.unlock()
+        active.forEach { $0.close() }
+    }
 
     /// Refuse every request (kill switch). Applies to new connections.
     var blockAll: Bool {
@@ -90,9 +137,18 @@ final class HTTPProxyBridge: @unchecked Sendable {
         let socks = storedSocksPort
         let policy = storedPolicy
         let blocked = storedBlockAll
+        let pool = storedPoolPort
+        let transport = storedTransport
+        let connectedAt = storedConnectedAt
+        let httpsOnly = storedHTTPSOnly
         lock.unlock()
-        let session = ProxySession(client: connection, socksPort: socks, policy: policy, blocked: blocked, onDecision: { [weak self] decision in
+        let session = ProxySession(client: connection, socksPort: socks, policy: policy, blocked: blocked,
+                                   pool: pool == nil ? nil : lanePool, poolPort: pool,
+                                   transport: transport, connectedAt: connectedAt, httpsOnly: httpsOnly,
+                                   onDecision: { [weak self] decision in
             self?.record(decision)
+        }, onOutcome: { [weak self] outcome in
+            self?.recordOutcome(outcome)
         }, onClose: { [weak self] finished in
             guard let self else { return }
             self.lock.lock()
@@ -103,6 +159,18 @@ final class HTTPProxyBridge: @unchecked Sendable {
         sessions[ObjectIdentifier(session)] = session
         lock.unlock()
         session.start()
+    }
+
+    enum SessionOutcome: Sendable { case failed, retried, hedged }
+
+    private func recordOutcome(_ outcome: SessionOutcome) {
+        lock.lock()
+        switch outcome {
+        case .failed: storedStats.torFailed += 1
+        case .retried: storedStats.torRetried += 1
+        case .hedged: storedStats.torHedged += 1
+        }
+        lock.unlock()
     }
 
     private func record(_ decision: RouteDecision?) {
@@ -126,20 +194,47 @@ final class ProxySession: @unchecked Sendable {
     private let blocked: Bool
     private let queue = DispatchQueue(label: "app.veilvpn.httpbridge.session")
     private let onDecision: @Sendable (RouteDecision?) -> Void
+    private let onOutcome: @Sendable (HTTPProxyBridge.SessionOutcome) -> Void
     private let onClose: (ProxySession) -> Void
+    private let pool: LanePool?
+    private let poolPort: UInt16?
+    private let transport: AppSettings.Transport
+    private let connectedAt: Date?
+    private let httpsOnly: Bool
     private var upstream: NWConnection?
     private var head = Data()
     private var helloBuffer = Data()
     private var closed = false
     private var finishedDirections = 0
+    private var lease: LaneLease?
+    /// Replaces the captured local that used to live inside the state handler: a local cannot
+    /// survive a re-attempt, and a doubled `respond` is the likeliest bug in this file.
+    private var upstreamSettled = false
+    private var attempt = 0
+    private var deadline: DispatchWorkItem?
+    private var upstreamStartedAt: DispatchTime?
+    private var pendingHost = ""
+    private var pendingPort: UInt16 = 0
+    private var pendingIsOnion = false
+    private var hedgeDelay: TimeInterval?
 
     init(client: NWConnection, socksPort: UInt16?, policy: RoutingPolicy, blocked: Bool,
-         onDecision: @escaping @Sendable (RouteDecision?) -> Void, onClose: @escaping (ProxySession) -> Void) {
+         pool: LanePool?, poolPort: UInt16?, transport: AppSettings.Transport, connectedAt: Date?,
+         httpsOnly: Bool,
+         onDecision: @escaping @Sendable (RouteDecision?) -> Void,
+         onOutcome: @escaping @Sendable (HTTPProxyBridge.SessionOutcome) -> Void,
+         onClose: @escaping (ProxySession) -> Void) {
         self.client = client
         self.socksPort = socksPort
         self.policy = policy
         self.blocked = blocked
+        self.pool = pool
+        self.poolPort = poolPort
+        self.transport = transport
+        self.connectedAt = connectedAt
+        self.httpsOnly = httpsOnly
         self.onDecision = onDecision
+        self.onOutcome = onOutcome
         self.onClose = onClose
     }
 
@@ -160,8 +255,14 @@ final class ProxySession: @unchecked Sendable {
         queue.async {
             guard !self.closed else { return }
             self.closed = true
+            self.deadline?.cancel()
+            self.deadline = nil
             self.client.cancel()
             self.upstream?.cancel()
+            if let lease = self.lease {
+                self.lease = nil
+                self.pool?.release(lease)
+            }
             self.onClose(self)
         }
     }
@@ -244,6 +345,13 @@ final class ProxySession: @unchecked Sendable {
             respond(501, "Not Implemented")
             return
         }
+        // An exit relay can read and rewrite anything that is not encrypted, and it is the one hop
+        // on the path the user did not choose.
+        if httpsOnly, socksPort != nil, policy.decision(for: host, torAvailable: true) == .tor {
+            onDecision(nil)
+            respond(403, "Veil: plain HTTP is blocked through Tor")
+            return
+        }
         let port = UInt16(clamping: url.port ?? 80)
         var path = url.path(percentEncoded: true)
         if path.isEmpty { path = "/" }
@@ -300,64 +408,223 @@ final class ProxySession: @unchecked Sendable {
     // MARK: Upstream: through Tor's SOCKS5 port or directly
 
     private func openUpstream(host: String, port: UInt16, route: RouteDecision, onReady: @escaping () -> Void) {
-        guard let nwPort = NWEndpoint.Port(rawValue: port) else {
+        guard NWEndpoint.Port(rawValue: port) != nil else {
             respond(400, "Bad Request")
             return
         }
-        let upstream: NWConnection
-        var socksTarget: (host: String, port: UInt16)?
         switch route {
         case .tor:
-            guard let socksPort else {
-                respond(502, "Bad Gateway")
-                return
-            }
-            let tcpOptions = NWProtocolTCP.Options()
-            tcpOptions.connectionTimeout = 20
-            upstream = NWConnection(host: "127.0.0.1", port: NWEndpoint.Port(rawValue: socksPort) ?? 9050, using: NWParameters(tls: nil, tcp: tcpOptions))
-            socksTarget = (host, port)
+            pendingHost = host
+            pendingPort = port
+            pendingIsOnion = host.lowercased().hasSuffix(".onion")
+            let site = HostKey.site(host)
+            lease = pool?.lease(site: site, avoiding: nil)
+            let snapshot = pool?.snapshot()
+            hedgeDelay = HedgePolicy.hedgeDelay(
+                bestP50: snapshot?.bestP50,
+                isOnion: pendingIsOnion,
+                enabled: pool?.hedgingEnabled ?? false,
+                readyLanes: snapshot?.readyLanes ?? 0,
+                transport: transport,
+                secondsSinceConnect: connectedAt.map { Date.now.timeIntervalSince($0) } ?? 0
+            )
+            openTorUpstream(onReady: onReady)
         case .direct(let antiThrottle):
-            let tcpOptions = NWProtocolTCP.Options()
-            tcpOptions.noDelay = antiThrottle // each write must leave as its own segment
-            tcpOptions.connectionTimeout = 20
-            let parameters = NWParameters(tls: nil, tcp: tcpOptions)
-            parameters.preferNoProxies = true // the system proxy is Veil itself
-            upstream = NWConnection(host: NWEndpoint.Host(host), port: nwPort, using: parameters)
+            openDirectUpstream(host: host, port: port, antiThrottle: antiThrottle, onReady: onReady)
         }
+    }
+
+    /// A lease is never required: with no pool, none ready, or a suspended one, this is the plain
+    /// no-auth path against `socksPort`, byte-identical to the behaviour before lanes existed.
+    private func openTorUpstream(onReady: @escaping () -> Void) {
+        let target = lease?.port ?? socksPort
+        guard let target, let socksEndpoint = NWEndpoint.Port(rawValue: target) else {
+            respond(502, "Bad Gateway")
+            return
+        }
+        upstreamSettled = false
+        let tcpOptions = NWProtocolTCP.Options()
+        tcpOptions.connectionTimeout = 5 // loopback: 20 s was meaningless
+        let parameters = NWParameters(tls: nil, tcp: tcpOptions)
+        parameters.preferNoProxies = true
+        let upstream = NWConnection(host: "127.0.0.1", port: socksEndpoint, using: parameters)
         self.upstream = upstream
-        var signalled = false
+        upstreamStartedAt = .now()
+
+        let seconds = HedgePolicy.deadline(attempt: attempt, isOnion: pendingIsOnion, hedgeDelay: hedgeDelay)
+        let work = DispatchWorkItem { [weak self] in self?.deadlineExpired(onReady: onReady) }
+        deadline?.cancel()
+        deadline = work
+        queue.asyncAfter(deadline: .now() + seconds, execute: work)
+
+        let host = pendingHost
+        let port = pendingPort
+        let credentials = lease?.credentials
         upstream.stateUpdateHandler = { [weak self] state in
+            guard let self else { return }
             switch state {
             case .ready:
-                guard !signalled else { return }
-                if let socksTarget {
-                    SOCKS5.connect(on: upstream, host: socksTarget.host, port: socksTarget.port) { [weak self] error in
-                        guard !signalled else { return }
-                        signalled = true
-                        if error != nil {
-                            self?.respond(502, "Bad Gateway")
-                        } else {
-                            onReady()
-                        }
+                guard !self.upstreamSettled else { return }
+                SOCKS5.connect(on: upstream, host: host, port: port, credentials: credentials) { [weak self] error, outcome in
+                    self?.queue.async {
+                        self?.handleTorHandshake(error: error, outcome: outcome, onReady: onReady)
                     }
-                } else {
-                    signalled = true
-                    onReady()
                 }
             case .waiting, .failed:
-                if !signalled {
-                    signalled = true
-                    self?.respond(502, "Bad Gateway")
-                } else {
-                    self?.close()
-                }
+                self.queue.async { self.handleTorTransportFailure(onReady: onReady) }
             case .cancelled:
-                self?.close()
+                if self.upstreamSettled { self.close() }
             default:
                 break
             }
         }
         upstream.start(queue: queue)
+    }
+
+    private func openDirectUpstream(host: String, port: UInt16, antiThrottle: Bool, onReady: @escaping () -> Void) {
+        guard let nwPort = NWEndpoint.Port(rawValue: port) else {
+            respond(400, "Bad Request")
+            return
+        }
+        upstreamSettled = false
+        let tcpOptions = NWProtocolTCP.Options()
+        tcpOptions.noDelay = antiThrottle // each write must leave as its own segment
+        tcpOptions.connectionTimeout = 20
+        let parameters = NWParameters(tls: nil, tcp: tcpOptions)
+        parameters.preferNoProxies = true // the system proxy is Veil itself
+        let upstream = NWConnection(host: NWEndpoint.Host(host), port: nwPort, using: parameters)
+        self.upstream = upstream
+        upstream.stateUpdateHandler = { [weak self] state in
+            guard let self else { return }
+            switch state {
+            case .ready:
+                self.queue.async {
+                    guard !self.upstreamSettled else { return }
+                    self.upstreamSettled = true
+                    onReady()
+                }
+            case .waiting, .failed:
+                self.queue.async {
+                    if !self.upstreamSettled {
+                        self.upstreamSettled = true
+                        self.respond(502, "Bad Gateway")
+                    } else {
+                        self.close()
+                    }
+                }
+            case .cancelled:
+                self.close()
+            default:
+                break
+            }
+        }
+        upstream.start(queue: queue)
+    }
+
+    private func handleTorHandshake(error: Error?, outcome: SOCKS5.Outcome, onReady: @escaping () -> Void) {
+        guard !closed, !upstreamSettled else { return }
+        deadline?.cancel()
+        deadline = nil
+        if error == nil {
+            upstreamSettled = true
+            if let lease {
+                let seconds = upstreamStartedAt.map {
+                    Double(DispatchTime.now().uptimeNanoseconds &- $0.uptimeNanoseconds) / 1e9
+                } ?? 0
+                pool?.report(.connected(lease, seconds: seconds, isOnion: pendingIsOnion))
+                if attempt > 0 { pool?.noteHedgeWon() }
+            }
+            onReady()
+            return
+        }
+        // Isolation silently gone: Tor chose no-auth, so the pool is not measuring what it thinks.
+        if lease != nil, !outcome.isolationApplied, outcome.replyCode == nil {
+            pool?.suspend(reason: "Tor did not accept SOCKS authentication")
+        }
+        var code = outcome.replyCode
+        if code == nil, let failure = error as? SOCKS5.Failure, case .rejected(let value) = failure {
+            code = value
+        }
+        if let lease { pool?.report(.failed(lease, code: code)) }
+        // Only a reply code that blames the circuit is worth a second one.
+        if let code, !SOCKS5.laneAttributable(code) {
+            onOutcome(.failed)
+            respond(502, "Bad Gateway (\(SOCKS5.Failure.describe(code)))")
+            return
+        }
+        retryOnAnotherLane(hedged: false, onReady: onReady)
+    }
+
+    private func handleTorTransportFailure(onReady: @escaping () -> Void) {
+        guard !closed, !upstreamSettled else { return }
+        deadline?.cancel()
+        deadline = nil
+        if lease != nil, attempt == 0 {
+            // Tor's lane listener is gone; the pool steps aside and this connection retries plain.
+            pool?.suspend(reason: "the lane port stopped answering")
+            releaseLease()
+            attempt = 1
+            onOutcome(.retried)
+            openTorUpstream(onReady: onReady)
+            return
+        }
+        upstreamSettled = true
+        onOutcome(.failed)
+        respond(502, "Bad Gateway")
+    }
+
+    /// Nothing has been written upstream at this point — no byte has reached the client, the
+    /// `200 Connection Established` has not been sent and the buffered request is still buffered —
+    /// so a second attempt is safe for any HTTP method.
+    private func retryOnAnotherLane(hedged: Bool, onReady: @escaping () -> Void) {
+        guard !closed, !upstreamSettled, attempt == 0 else {
+            if !upstreamSettled {
+                upstreamSettled = true
+                onOutcome(.failed)
+                respond(hedged ? 504 : 502, hedged ? "Gateway Timeout" : "Bad Gateway")
+            }
+            return
+        }
+        let previous = lease
+        // Detach the handler first: a cancelled connection still reports state, and that report
+        // must not be mistaken for the new attempt failing.
+        upstream?.stateUpdateHandler = nil
+        upstream?.cancel()
+        upstream = nil
+        if let previous {
+            pool?.report(hedged ? .abandoned(previous) : .timedOut(previous))
+            pool?.release(previous)
+        }
+        lease = nil
+        guard let next = pool?.bestLane(avoiding: previous?.lane) else {
+            upstreamSettled = true
+            onOutcome(.failed)
+            respond(hedged ? 504 : 502, hedged ? "Gateway Timeout" : "Bad Gateway")
+            return
+        }
+        lease = next
+        attempt = 1
+        onOutcome(hedged ? .hedged : .retried)
+        openTorUpstream(onReady: onReady)
+    }
+
+    private func deadlineExpired(onReady: @escaping () -> Void) {
+        guard !closed, !upstreamSettled else { return }
+        deadline = nil
+        if attempt == 0, hedgeDelay != nil, pool != nil {
+            retryOnAnotherLane(hedged: true, onReady: onReady)
+            return
+        }
+        if let lease { pool?.report(.timedOut(lease)) }
+        upstreamSettled = true
+        onOutcome(.failed)
+        respond(504, "Gateway Timeout")
+    }
+
+    private func releaseLease() {
+        guard let lease else { return }
+        self.lease = nil
+        pool?.release(lease)
     }
 
     private func respond(_ status: Int, _ reason: String) {

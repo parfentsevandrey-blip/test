@@ -2,6 +2,7 @@ import SwiftUI
 
 enum SidebarItem: String, CaseIterable, Identifiable, Hashable {
     case home
+    case security
     case locations
     case activity
 
@@ -10,6 +11,7 @@ enum SidebarItem: String, CaseIterable, Identifiable, Hashable {
     var title: LocalizedStringKey {
         switch self {
         case .home: "Home"
+        case .security: "Security"
         case .locations: "Route"
         case .activity: "Activity"
         }
@@ -18,6 +20,7 @@ enum SidebarItem: String, CaseIterable, Identifiable, Hashable {
     var symbol: String {
         switch self {
         case .home: "house.fill"
+        case .security: "lock.shield.fill"
         case .locations: "point.3.connected.trianglepath.dotted"
         case .activity: "waveform.path.ecg"
         }
@@ -76,6 +79,8 @@ struct RootView: View {
                 openActivity: { app.sidebarSelection = .activity },
                 openLocations: { app.sidebarSelection = .locations }
             )
+        case .security:
+            SecurityView()
         case .locations:
             RouteView()
         case .activity:

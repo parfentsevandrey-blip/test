@@ -90,12 +90,11 @@ struct TorRoute: Equatable, Sendable {
 extension AppSettings {
     /// The route Tor should use given the current settings.
     var route: TorRoute {
-        var excluded: [String] = []
-        if multihopEnabled {
-            excluded = excludedCountries
-            if avoidFiveEyes {
-                excluded.append(contentsOf: TorRoute.fiveEyes)
-            }
+        // Exclusions are no longer gated on multihop: "never route through these countries" is a
+        // protective choice in its own right, and gating it silently ignored what the user asked.
+        var excluded: [String] = excludedCountries
+        if avoidFiveEyes {
+            excluded.append(contentsOf: TorRoute.fiveEyes)
         }
         let normalizedExit = exitCountry.flatMap { TorConfiguration.isValidCountryCode($0) ? $0.lowercased() : nil }
         let normalizedMiddle = multihopEnabled

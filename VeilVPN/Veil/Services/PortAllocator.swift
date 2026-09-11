@@ -13,7 +13,15 @@ enum PortAllocator {
         let socks = try pick(preferred: preferredSocks, fallback: 9050...9150, taken: &taken)
         let http = try pick(preferred: preferredHTTP, fallback: 8118...8218, taken: &taken)
         let control = try pick(preferred: Int(socks) + 1, fallback: 9151...9250, taken: &taken)
-        return ActivePorts(socks: socks, http: http, control: control)
+        let pool = try pick(preferred: Int(socks) + 10, fallback: 9251...9350, taken: &taken)
+        return ActivePorts(socks: socks, http: http, control: control, pool: pool)
+    }
+
+    /// Re-picks just the SOCKS port. Chosen at connect time rather than at warm-up time, so the
+    /// window between "this port is free" and "tor bound it" is milliseconds instead of minutes.
+    static func freeSocksPort(preferred: Int, excluding: Set<UInt16>) throws -> UInt16 {
+        var taken = excluding
+        return try pick(preferred: preferred, fallback: 9050...9150, taken: &taken)
     }
 
     private static func pick(preferred: Int, fallback: ClosedRange<Int>, taken: inout Set<UInt16>) throws -> UInt16 {

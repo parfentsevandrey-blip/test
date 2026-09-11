@@ -1,16 +1,26 @@
 import SwiftUI
 
-/// Slowly drifting mesh gradient that gives the Liquid Glass surfaces something to refract.
+/// Mesh gradient that gives the Liquid Glass surfaces something to refract. The colour is keyed to
+/// connection state, which is a real signal; the drift is not, so it is off wherever the screen is
+/// read rather than admired.
 struct AuroraBackground: View {
     let state: ConnectionState
+    var animated = false
 
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { context in
-            let t = context.date.timeIntervalSinceReferenceDate
-            MeshGradient(width: 3, height: 3, points: Self.points(at: t), colors: palette)
+        Group {
+            if animated, !reduceMotion {
+                TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { context in
+                    MeshGradient(width: 3, height: 3,
+                                 points: Self.points(at: context.date.timeIntervalSinceReferenceDate),
+                                 colors: palette)
+                }
+            } else {
+                MeshGradient(width: 3, height: 3, points: Self.points(at: 0), colors: palette)
+            }
         }
         .overlay {
             RadialGradient(

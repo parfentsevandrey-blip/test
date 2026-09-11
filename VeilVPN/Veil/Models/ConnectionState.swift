@@ -73,6 +73,9 @@ struct ActivePorts: Equatable, Sendable {
     var socks: UInt16
     var http: UInt16
     var control: UInt16
+    /// The lane pool's own SOCKS listener, which carries the isolation flags. 0 means the pool is
+    /// off. The default keeps every existing `ActivePorts(socks:http:control:)` call compiling.
+    var pool: UInt16 = 0
 }
 
 enum ProxyStatus: Equatable, Sendable {

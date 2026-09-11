@@ -47,13 +47,79 @@ protocol TorEngine: AnyObject {
     func removeOnionService(_ serviceID: String) async
     /// Forces Tor's own circuit/connection padding on (or back to defaults) without a restart.
     func setTorPadding(enabled: Bool) async
+
+    // MARK: Warm lifecycle
+
+    /// What Tor already has on disk, and whether the process is loaded.
+    var warmth: WarmthProfile? { get }
+    /// Process up, network held off (`DisableNetwork 1`).
+    var isWarm: Bool { get }
+    /// Process up, network live.
+    var isLive: Bool { get }
+    /// The ports Tor is actually listening on, once activated.
+    var activePorts: ActivePorts? { get }
+    var bootstrapPercent: Int { get }
+    /// Spawns tor with `SocksPort 0` and `DisableNetwork 1` and lets it load the consensus,
+    /// descriptors and guards. Nothing reaches the network.
+    func warmUp(settings: AppSettings, controlPort: UInt16, mode: AppSettings.WarmStart,
+                budget: Duration) async throws -> WarmthProfile
+    /// One ordered SETCONF that opens the listeners and lifts `DisableNetwork`. Returns the
+    /// bootstrap percentage Tor was already at, since its counter is monotone across attempts.
+    func activate(settings: AppSettings, ports: ActivePorts) async throws -> Int
+    /// Closes every OR connection, circuit and listener in about two milliseconds, keeping the
+    /// consensus, descriptors, guards and the pluggable transports in memory.
+    func holdNetwork() async
+    /// `DisableNetwork` off and on again: new circuits, same process, same guards.
+    func refreshNetwork() async throws
+    /// Supervises one bootstrap attempt from the events Tor pushes.
+    func runBootstrap(_ config: BootstrapWatchdog.Config,
+                      onStage: (@MainActor (BootstrapStage, Int) -> Void)?) async throws -> BootstrapOutcome
+    /// Ends the current attempt from outside (the connectivity sentinel, and nothing else).
+    func abortBootstrap(_ failure: AttemptFailure)
+    func stop(grace: Duration) async
+    /// The SOCKS listeners Tor actually opened, as "127.0.0.1:9050" strings. Empty when unknown.
+    func socksListeners() async -> [String]
 }
 
+/// Defaults for every warm-lifecycle member, so an engine that does not implement them still
+/// behaves exactly as it did before. No requirement here is a stored-property-shaped closure: a
+/// protocol extension cannot store one, which is why bootstrap progress travels as a parameter.
 extension TorEngine {
     /// The historical behaviour: apply and rebuild everything.
     func applyRoute(_ route: TorRoute) async throws {
         try await applyRoute(route, dropConnections: true)
     }
+
+    var warmth: WarmthProfile? { nil }
+    var isWarm: Bool { false }
+    var isLive: Bool { false }
+    var activePorts: ActivePorts? { nil }
+    var bootstrapPercent: Int { 0 }
+
+    func warmUp(settings: AppSettings, controlPort: UInt16, mode: AppSettings.WarmStart,
+                budget: Duration) async throws -> WarmthProfile {
+        WarmthProfile()
+    }
+
+    func activate(settings: AppSettings, ports: ActivePorts) async throws -> Int {
+        try await start(settings: settings, ports: ports)
+        return 0
+    }
+
+    func holdNetwork() async { await stop() }
+    func refreshNetwork() async throws {}
+
+    func runBootstrap(_ config: BootstrapWatchdog.Config,
+                      onStage: (@MainActor (BootstrapStage, Int) -> Void)?) async throws -> BootstrapOutcome {
+        let started = ContinuousClock.now
+        try await waitForBootstrap(timeout: config.hardTimeout, stallTimeout: config.budget(for: .directory))
+        return BootstrapOutcome(totalMillis: BootstrapWatchdog.millis(started.duration(to: .now)),
+                                firstHopMillis: nil, stageMillis: [:], peakPercent: 100, warm: false)
+    }
+
+    func abortBootstrap(_ failure: AttemptFailure) {}
+    func stop(grace: Duration) async { await stop() }
+    func socksListeners() async -> [String] { [] }
 }
 
 struct TrafficCounters: Equatable, Sendable {
@@ -72,6 +138,8 @@ enum TorEngineError: LocalizedError {
     case notRunning
     case onionServiceFailed
     case circuitLaunchFailed(String)
+    case portInUse(UInt16)
+    case dataDirectoryLocked(String)
 
     var errorDescription: String? {
         switch self {
@@ -99,6 +167,10 @@ enum TorEngineError: LocalizedError {
             return String(localized: "Tor did not create the private onion service needed for traffic padding.")
         case .circuitLaunchFailed(let detail):
             return String(localized: "Tor could not start a circuit: \(detail)")
+        case .portInUse(let port):
+            return String(localized: "Local port \(String(port)) is already in use.")
+        case .dataDirectoryLocked(let detail):
+            return String(localized: "Another Tor is using Veil’s data directory. \(detail)")
         }
     }
 }

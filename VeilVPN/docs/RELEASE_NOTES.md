@@ -2,6 +2,60 @@
 
 Liquid Glass UI, bundled Tor Expert Bundle (universal: Apple silicon + Intel), Snowflake / obfs4 / custom bridges, exit-country selection, live circuit and throughput, automatic system proxy.
 
+### New in 0.7.0 — warm start, measured circuits, a Security section, a dashboard that diagnoses
+
+**Connecting is now one command, not a rebuild.** Veil keeps a single `tor` process loaded but held
+offline — `DisableNetwork 1` and no SOCKS listener, which is observationally identical to Tor not
+running — so pressing Connect no longer pays for a process spawn, a control handshake and a reload of
+the consensus and relay descriptors. Which transport to try first comes from Tor's own `state` file
+(the guards it actually confirmed on this machine) and from what has worked on *this* network before,
+rather than from a four-second probe placed in front of everything; that probe now runs alongside the
+attempt and only reorders what is left. Each attempt is supervised per stage from the events Tor
+pushes, so a doomed one dies in seconds instead of burning a flat stall budget — while a slow but
+working one is protected by four escapes (bytes arriving, a circuit event, a relay connection
+succeeding, and a floor under every stall). Cancelling, disconnecting and switching transport now cost
+one command rather than up to nine seconds of shutdown, and `AvoidDiskWrites` is gone so the guard
+selection Tor learned actually survives to the next run. Fast connect has three settings: off,
+standby (the default), and connect at launch — the last one is labelled plainly, because it puts Tor
+traffic on the wire before you asked for it.
+
+**Latency during a session, without touching anything already open.** Veil holds several measured
+circuits open at once. Each is a stable SOCKS username/password pair, and Tor's `IsolateSOCKSAuth`
+guarantees two streams with different pairs never share a circuit — so four pairs held open *are*
+four parallel circuits, with no control-port commands at all. Every circuit is probed continuously
+against the same target, and each new connection is sent down one of the fast ones, picked at random
+among those within 25 % of the best so a single circuit never congests. Sites are pinned to their
+circuit, so an exit IP does not change under a logged-in session. A connection still slow after about
+a second is quietly raced on a second circuit; the threshold has a floor, so the common case is never
+touched. Replacing a circuit is a key change: it cannot reach a socket that is already open, which is
+why a download in flight never notices. The old exit pinning is off by default now — it collapsed
+every circuit onto the same two relays, which is both slower under load and a stable pseudonym.
+
+**Security is now its own section.** One screen answers "how protected am I right now?", scoring six
+adversaries — someone on your network, your provider, the exit relay, traffic analysis, software on
+this Mac, someone with this Mac — each capped by what a userspace proxy can structurally reach. The
+score therefore cannot reach 100, and the screen says why. Every finding names what it costs and, where
+there is an honest fix, offers one button; the entry-guard row deliberately offers none, because
+clearing it would be worse for anonymity, not better. Three presets show the score they would produce
+before you commit. A self-test proves the claims instead of asserting them: it opens two circuits with
+different isolation keys, resolves a name through Tor rather than on this Mac, and reads back what
+macOS actually has configured. New protective controls live here: cutting connections that are already
+open when the kill switch engages, blocking plain HTTP through Tor, deferring the update check until
+Tor is up, redacting addresses from exported diagnostics, and choosing what is forgotten when Veil
+quits. Country exclusions are no longer silently ignored when multihop is off.
+
+**Home is a ledger, not a diagram.** The floating waves and running dots are gone. In their place are
+twelve named stages of the path a request takes — network, Tor reachable, guard link, bootstrap,
+circuit, measured circuits, exit verified, system proxy, local proxy, throughput, latency, direct
+routing — each judged against thresholds that live in one file. Exactly one row is marked at a time:
+the bottleneck, chosen by severity and then by chain order, because a downstream number is meaningless
+when an upstream stage is broken. A failed exit verification outranks everything, since "this is not
+going through Tor" is not a slowdown. One sentence at the top states the verdict, a detail pane shows
+the facts behind the selected row and the actions that address it, and every value that is older than
+its own refresh interval says so. Idle is rendered as idle rather than as motion: at zero bytes per
+second the old animation still glided a comet. The whole screen ticks once a second on data, not
+twenty-four times a second on a clock.
+
 ### Fixed in 0.6.1 — honest latency, quick wake
 - **Latency no longer jumps at random.** The figure used to be the wall time of a full HTTPS fetch from check.torproject.org — a TLS handshake plus a slow, busy server, sampled once. One bad moment became "the" latency. Veil now measures the route itself: a SOCKS5 CONNECT through Tor to an anycast address, timed alone, three samples every 25 seconds against one target at a time, and the tile shows the **median of the last twelve**. Spikes appear as a jitter figure next to it instead of replacing the number, and the exit check goes back to being only an exit check.
 - **Waking up is quick again.** A long sleep no longer restarts Tor by itself: Veil opens one real stream through the tunnel, and if traffic flows nothing is touched at all. Only a tunnel that actually fails is restarted. The network check that the wake path just ran is reused by the connection attempt instead of being repeated (that duplicate alone cost up to half a minute), the Wi-Fi reset will not fire twice within 90 seconds, and each transport now gets a bounded budget — a transport that worked last time gets a short leash (70 s, 28 s without progress) rather than two minutes, with an overall four-minute ceiling on the whole attempt.

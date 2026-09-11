@@ -71,7 +71,12 @@ enum LatencyProbe {
     }
 
     /// One CONNECT, timed from the SOCKS greeting to Tor's reply. Nil when it fails or times out.
-    static func sample(socksPort: UInt16, target: Target, timeout: Duration = .seconds(10)) async -> TimeInterval? {
+    ///
+    /// With `credentials` the probe travels on that lane's own circuit. If Tor answers with the
+    /// no-auth method the isolation silently would not apply, so that is reported as a failure
+    /// rather than quietly ranking a circuit the pool does not actually own.
+    static func sample(socksPort: UInt16, target: Target, credentials: SOCKS5.Credentials? = nil,
+                       timeout: Duration = .seconds(10)) async -> TimeInterval? {
         let queue = DispatchQueue(label: "app.veilvpn.latency")
         let tcp = NWProtocolTCP.Options()
         tcp.connectionTimeout = Int(max(1, timeout.components.seconds))
@@ -97,8 +102,9 @@ enum LatencyProbe {
                     case .ready:
                         guard !resumed else { return }
                         let started = ContinuousClock.now
-                        SOCKS5.connect(on: connection, host: target.host, port: target.port) { error in
-                            guard error == nil else {
+                        SOCKS5.connect(on: connection, host: target.host, port: target.port,
+                                       credentials: credentials) { error, outcome in
+                            guard error == nil, credentials == nil || outcome.isolationApplied else {
                                 finish(nil)
                                 return
                             }

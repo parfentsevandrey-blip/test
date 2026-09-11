@@ -45,19 +45,54 @@ final class NetworkTests: XCTestCase {
         XCTAssertEqual(TelegramIntegration.proxyURL(socksPort: 9150).query, "server=127.0.0.1&port=9150")
     }
 
-    func testFlowCometMathsStaysBounded() {
-        XCTAssertEqual(TunnelFlowView.cometCount(for: 0), 1)
-        XCTAssertEqual(TunnelFlowView.cometCount(for: 100_000), 2)
-        XCTAssertEqual(TunnelFlowView.cometCount(for: 5_000_000), 3)
-        XCTAssertGreaterThan(TunnelFlowView.cometSpeed(for: 1_000_000), TunnelFlowView.cometSpeed(for: 1_000))
-        XCTAssertLessThanOrEqual(TunnelFlowView.cometSpeed(for: 1e9), 0.12, "the flow must stay unhurried even at full speed")
-        XCTAssertLessThanOrEqual(TunnelFlowView.cometLength(for: 1e9), 0.2)
-        XCTAssertLessThanOrEqual(TunnelFlowView.cometBrightness(for: 1e9), 1.0 + 1e-9)
-        XCTAssertGreaterThanOrEqual(TunnelFlowView.cometBrightness(for: 0), 0.5)
-        for time in stride(from: 0.0, through: 100.0, by: 7.3) {
-            let progress = TunnelFlowView.progress(time: time, speed: 0.07, lane: 1, segment: 3, seed: 1)
-            XCTAssertGreaterThanOrEqual(progress, 0)
-            XCTAssertLessThan(progress, 1)
-        }
+    func testPipelineRowsCoverEveryStageAndNameTheBottleneck() {
+        var snapshot = DiagnosticSnapshot()
+        snapshot.connection = .connected
+        snapshot.connectivity = ConnectivityProbe.Report(reachedByAddress: 0, addressTargets: 6,
+                                                         nameResolution: false, elapsed: 4, date: .now)
+        snapshot.latency = LatencySummary(median: 9, best: 9, jitter: 8, samples: 6, failures: 0)
+        let rows = DiagnosticSnapshot.rows(from: snapshot)
+        XCTAssertEqual(rows.count, PipelineStage.allCases.count, "a diagnostic must never hide a row")
+        XCTAssertEqual(DiagnosticSnapshot.bottleneck(in: rows)?.stage, .network,
+                       "a downstream number is meaningless when an upstream stage is broken")
+    }
+
+    func testFailedExitVerificationOutranksEverything() {
+        var snapshot = DiagnosticSnapshot()
+        snapshot.connection = .connected
+        snapshot.torCheck = TorCheckResult(isTor: false, ip: "203.0.113.9")
+        snapshot.connectivity = ConnectivityProbe.Report(reachedByAddress: 0, addressTargets: 6,
+                                                         nameResolution: false, elapsed: 4, date: .now)
+        let rows = DiagnosticSnapshot.rows(from: snapshot)
+        XCTAssertEqual(DiagnosticSnapshot.bottleneck(in: rows)?.stage, .verify)
+        XCTAssertTrue(DiagnosticSnapshot.headline(rows: rows, snapshot: snapshot).contains("NOT going through Tor"))
+    }
+
+    func testABypassIsNeverRenderedAsHealthy() {
+        var snapshot = DiagnosticSnapshot()
+        snapshot.connection = .connected
+        snapshot.bypassClasses = 2
+        let row = DiagnosticSnapshot.rows(from: snapshot).first { $0.stage == .bypass }
+        XCTAssertEqual(row?.state, .degraded)
+    }
+
+    func testIdleThroughputIsNotAFault() {
+        var snapshot = DiagnosticSnapshot()
+        snapshot.connection = .connected
+        snapshot.bridgeInFlight = 0
+        let idle = DiagnosticSnapshot.rows(from: snapshot).first { $0.stage == .throughput }
+        XCTAssertEqual(idle?.state, .ok)
+
+        snapshot.bridgeInFlight = 4
+        let stalled = DiagnosticSnapshot.rows(from: snapshot).first { $0.stage == .throughput }
+        XCTAssertEqual(stalled?.state, .degraded, "open connections with nothing moving is a stated fault")
+    }
+
+    func testStalenessOnlyReportedPastTheStageCadence() {
+        let now = Date.now
+        XCTAssertNil(StageThresholds.age(of: now.addingTimeInterval(-1), stage: .circuit, now: now))
+        XCTAssertNotNil(StageThresholds.age(of: now.addingTimeInterval(-120), stage: .circuit, now: now))
+        XCTAssertNil(StageThresholds.age(of: now.addingTimeInterval(-999), stage: .verify, now: now),
+                     "an on-demand check is never stale")
     }
 }

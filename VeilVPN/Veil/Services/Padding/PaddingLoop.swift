@@ -19,6 +19,7 @@ final class PaddingLoop {
         case failed(String)
 
         var isActive: Bool { self == .active }
+        var isFailed: Bool { if case .failed = self { true } else { false } }
     }
 
     private(set) var status: Status = .off
