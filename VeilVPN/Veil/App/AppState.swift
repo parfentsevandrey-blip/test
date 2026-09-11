@@ -352,7 +352,10 @@ final class AppState {
         if settings.lanePoolEnabled, !running {
             guard connection == .connected, let ports else { return }
             let transport = activeTransport ?? settings.transport
-            Task { [weak self] in await self?.startLanePool(ports: ports, transport: transport) }
+            Task { [weak self] in
+                guard let self else { return }
+                await startLanePool(ports: ports, transport: transport)
+            }
         } else if !settings.lanePoolEnabled, running {
             bridge.lanePool.stop()
             bridge.poolPort = nil
