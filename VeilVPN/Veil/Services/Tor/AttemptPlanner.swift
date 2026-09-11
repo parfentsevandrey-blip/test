@@ -32,6 +32,13 @@ enum AttemptPlanner {
             if transport == .direct, warmth.state.confirmedDefaultGuards > 0 {
                 probability = max(probability, 0.70)
             }
+            // A machine that confirmed a bridge here and never confirmed a default guard is a
+            // machine where connecting directly did not work. Trying anyway is not merely a waste:
+            // it puts recognisable Tor traffic on the wire of a network that blocks it.
+            if transport == .direct, warmth.state.confirmedDefaultGuards == 0,
+               warmth.evidencedTransports.contains(where: { $0 != .direct }) {
+                probability = 0.02
+            }
             if transport == .direct, let reachability {
                 if reachability.directLooksPossible {
                     probability = max(probability, 0.70)

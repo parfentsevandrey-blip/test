@@ -920,6 +920,15 @@ final class AppState {
         engine.onLog = { [weak self] entry in self?.append(entry) }
         engine.onBootstrap = { [weak self] progress in self?.bootstrap = progress }
         engine.onExit = { [weak self] status in self?.handleEngineExit(status) }
+        // Tor's BW event already carries the byte counters once a second; taking them from there
+        // removes two control round trips a second from the connection that owns the process.
+        if let process = engine as? TorProcessEngine {
+            process.onBandwidth = { [weak self] read, written in
+                guard let self, connection == .connected else { return }
+                traffic.ingest(read: read, written: written)
+                trafficUpdatedAt = .now
+            }
+        }
     }
 
     private func handleEngineExit(_ status: Int32) {
@@ -1798,7 +1807,7 @@ final class AppState {
                     bridgeUpdatedAt = .now
                     let open = bridge.inFlight
                     if open != bridgeInFlight { bridgeInFlight = open }
-                    if traffic.downloadRate > 0 || traffic.uploadRate > 0 { trafficUpdatedAt = .now }
+                    if let stamp = traffic.lastSampleAt { trafficUpdatedAt = stamp }
                     let snapshot = bridge.lanePool.snapshot()
                     if snapshot.enabled || lanes != nil {
                         if snapshot != lanes { lanes = snapshot.enabled ? snapshot : nil }

@@ -71,9 +71,20 @@ final class RouteTunerTests: XCTestCase {
 
     func testPerformanceTorrcLines() {
         var settings = AppSettings()
+        settings.lanePoolEnabled = false
         XCTAssertEqual(TorConfiguration.performanceLines(for: settings), ["MaxClientCircuitsPending 48", "ConfluxEnabled 1", "ConfluxClientUX latency"])
         settings.confluxLatency = false
         XCTAssertEqual(TorConfiguration.performanceLines(for: settings), ["MaxClientCircuitsPending 48"])
+        // The lane pool adds three lines and no more. MaxCircuitDirtiness stays at tor's own
+        // default on purpose: raising it would lengthen the window in which one circuit links a
+        // session together, and the pool's own lifetime is kept below it.
+        settings.lanePoolEnabled = true
+        let pooled = TorConfiguration.performanceLines(for: settings)
+        XCTAssertTrue(pooled.contains("MaxCircuitDirtiness 600"))
+        XCTAssertTrue(pooled.contains("CircuitsAvailableTimeout 3600"))
+        XCTAssertTrue(pooled.contains("NewCircuitPeriod 15"))
+        XCTAssertFalse(pooled.contains { $0.hasPrefix("NumEntryGuards") || $0.hasPrefix("GuardLifetime") },
+                       "nothing here may make Veil's directory behaviour unusual")
         let line = "snowflake 192.0.2.3:80 2B28 url=https://x fronts=a,b"
         XCTAssertEqual(TorConfiguration.snowflakeLine(line, peers: 3), line + " max=3")
         XCTAssertEqual(TorConfiguration.snowflakeLine(line, peers: 1), line)

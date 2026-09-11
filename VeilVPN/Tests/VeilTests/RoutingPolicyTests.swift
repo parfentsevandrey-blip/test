@@ -46,8 +46,12 @@ final class RoutingPolicyTests: XCTestCase {
         settings.middleCountry = "nl"
         settings.excludedCountries = ["us", "de"]
         settings.avoidFiveEyes = true
-        // Multihop off: only the exit applies.
-        XCTAssertEqual(settings.route.torrcLines, ["ExitNodes {de}", "StrictNodes 1"])
+        // Multihop off: the middle country does not apply, but an exclusion is a protective
+        // choice in its own right and is no longer silently ignored.
+        let withoutMultihop = settings.route.torrcLines
+        XCTAssertFalse(withoutMultihop.contains { $0.hasPrefix("MiddleNodes") })
+        XCTAssertTrue(withoutMultihop.contains("ExitNodes {de}"))
+        XCTAssertTrue(withoutMultihop.contains("ExcludeNodes {us},{gb},{ca},{au},{nz}"))
         settings.multihopEnabled = true
         let lines = settings.route.torrcLines
         XCTAssertTrue(lines.contains("MiddleNodes {nl}"))
