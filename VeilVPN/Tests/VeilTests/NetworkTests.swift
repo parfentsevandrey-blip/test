@@ -83,9 +83,15 @@ final class NetworkTests: XCTestCase {
         let idle = DiagnosticSnapshot.rows(from: snapshot).first { $0.stage == .throughput }
         XCTAssertEqual(idle?.state, .ok)
 
+        // A quiet second with connections open is not a fault: an idle SSH session reads zero.
         snapshot.bridgeInFlight = 4
+        let quiet = DiagnosticSnapshot.rows(from: snapshot).first { $0.stage == .throughput }
+        XCTAssertEqual(quiet?.state, .ok)
+
+        // A counter that has stopped being reported while connections are open is.
+        snapshot.trafficStalled = true
         let stalled = DiagnosticSnapshot.rows(from: snapshot).first { $0.stage == .throughput }
-        XCTAssertEqual(stalled?.state, .degraded, "open connections with nothing moving is a stated fault")
+        XCTAssertEqual(stalled?.state, .degraded, "a stopped counter with connections open is a stated fault")
     }
 
     func testStalenessOnlyReportedPastTheStageCadence() {

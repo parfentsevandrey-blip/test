@@ -18,8 +18,8 @@ struct SecurityControls: View {
                     Text("Without this the kill switch refuses new connections but a download already in flight keeps going.")
                         .settingsCaption()
                 }
-                Divider()
                 Group {
+                    Divider()
                     Toggle("Block plain HTTP through Tor", isOn: Binding(get: { app.settings.httpsOnly },
                                                                          set: { app.setHTTPSOnly($0) }))
                     Text("An exit relay can read and change anything that is not encrypted.")
@@ -29,8 +29,8 @@ struct SecurityControls: View {
                     Text("Applies to browser traffic immediately; apps using Veil’s SOCKS port directly pick it up on their next connection.")
                         .settingsCaption()
                 }
-                Divider()
                 Group {
+                    Divider()
                     Toggle("Measured circuits", isOn: Binding(get: { app.settings.lanePoolEnabled },
                                                               set: { app.setLanePoolEnabled($0) }))
                     Text("Keeps several circuits open, measures them continuously and sends each new connection down a fast one. Open connections stay where they are.")
@@ -46,19 +46,13 @@ struct SecurityControls: View {
                             .settingsCaption()
                     }
                 }
-                Divider()
+                MultihopControls()
                 Group {
+                    Divider()
                     Toggle("Traffic padding", isOn: Binding(get: { app.settings.paddingEnabled },
                                                             set: { app.setPaddingEnabled($0) }))
                     Text("Adds cover traffic through a private onion loop so the shape of your browsing is harder to read.")
                         .settingsCaption()
-                    Toggle("Avoid Five Eyes countries", isOn: Binding(get: { app.settings.avoidFiveEyes },
-                                                                      set: { app.setAvoidFiveEyes($0) }))
-                    Text("Keeps US, UK, Canadian, Australian and New Zealand relays out of your circuits.")
-                        .settingsCaption()
-                }
-                Group {
-                    Divider()
                     Picker("Fast connect", selection: Binding(get: { app.settings.warmStart },
                                                               set: { app.setWarmStart($0) })) {
                         Text("Off").tag(AppSettings.WarmStart.off)
@@ -69,8 +63,8 @@ struct SecurityControls: View {
                     Text(warmStartCaption)
                         .settingsCaption()
                 }
-                Divider()
                 Group {
+                    Divider()
                     Toggle("Check for updates only after connecting", isOn: Binding(get: { app.settings.updateCheckAfterConnect },
                                                                                      set: { app.setUpdateCheckAfterConnect($0) }))
                     Toggle("Leave addresses out of exported diagnostics", isOn: Binding(get: { app.settings.redactDiagnostics },
@@ -107,6 +101,45 @@ struct SecurityControls: View {
         case .off: "Tor keeps its cached relay data and its entry guard between runs."
         case .caches: "Cached relay data is removed; the entry guard is kept, which is better for anonymity."
         case .everything: "Everything is removed, including the entry guard. Tor will pick a new one next time, which exposes you to more relays over time."
+        }
+    }
+}
+
+/// Where the circuit goes, and how often it moves. This belongs next to the kill switch rather
+/// than on the map: it is a protective choice, not a place picker.
+struct MultihopControls: View {
+    @Environment(AppState.self) private var app
+
+    private static let rotationChoices = [0, 15, 30, 60, 180]
+
+    var body: some View {
+        Group {
+            Divider()
+            Toggle("Pin the middle relay’s country", isOn: Binding(get: { app.settings.multihopEnabled },
+                                                                   set: { app.setMultihopEnabled($0) }))
+            Text("Tor always builds three hops. This fixes where the middle one may live, so the first and last hops cannot both be chosen by one operator.")
+                .settingsCaption()
+            HStack {
+                Text("Excluded countries")
+                Spacer(minLength: 8)
+                Text(verbatim: "\(app.settings.route.excludedCountries.count)")
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+                Button("Choose on the Route screen") { app.sidebarSelection = .locations }
+                    .buttonStyle(.link)
+            }
+            Picker("Move the route every", selection: Binding(get: { app.settings.rotateRouteMinutes },
+                                                              set: { app.setRotateRouteMinutes($0) })) {
+                ForEach(Self.rotationChoices, id: \.self) { minutes in
+                    if minutes == 0 {
+                        Text("Never").tag(0)
+                    } else {
+                        Text(verbatim: "\(minutes) min").tag(minutes)
+                    }
+                }
+            }
+            Text("A timed rotation steers away from the relays it just used, so the route really moves. Existing connections keep theirs until they finish.")
+                .settingsCaption()
         }
     }
 }

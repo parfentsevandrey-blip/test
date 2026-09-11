@@ -474,7 +474,11 @@ final class LanePool: @unchecked Sendable {
     private func startTimers() {
         timer?.cancel()
         let probeTimer = DispatchSource.makeTimerSource(queue: poolQueue)
-        probeTimer.schedule(deadline: .now() + configuration.probeRound, repeating: configuration.probeRound)
+        // The first real round comes early: the warm-up sample is discarded (it measures circuit
+        // construction, not a round trip), so without this the pool has no ranking — and the
+        // dashboard no latency figure — for a full round after connecting.
+        probeTimer.schedule(deadline: .now() + min(5, configuration.probeRound),
+                            repeating: configuration.probeRound)
         probeTimer.setEventHandler { [weak self] in self?.probeRound() }
         probeTimer.resume()
         timer = probeTimer

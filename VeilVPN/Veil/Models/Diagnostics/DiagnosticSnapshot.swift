@@ -31,6 +31,8 @@ struct DiagnosticSnapshot: Sendable {
     var download: Double = 0
     var upload: Double = 0
     var trafficUpdatedAt: Date?
+    /// No byte counter has moved while connections are open — not merely a quiet second.
+    var trafficStalled = false
     var paddingRate: Double = 0
     var latency: LatencySummary?
     var lanes: LanePoolSnapshot?
@@ -246,9 +248,11 @@ struct DiagnosticSnapshot: Sendable {
         guard s.isActive else {
             return StageRow(stage: .throughput, state: .notApplicable, value: "—")
         }
-        // Idle is not a fault. The old animation glided a comet at 0 B/s; this states the difference.
+        // Idle is not a fault, and neither is a quiet second: an open SSH session at rest reads
+        // zero bytes per second and is perfectly healthy. Only a counter that has stopped being
+        // reported while connections are open is a fault.
         let idle = s.bridgeInFlight == 0
-        let stalled = !idle && s.download == 0 && s.upload == 0
+        let stalled = !idle && s.trafficStalled
         let value = "↓ \(Self.rate(s.download))  ↑ \(Self.rate(s.upload))"
         return StageRow(stage: .throughput, state: stalled ? .degraded : .ok, value: value,
                         detail: idle ? "No connections open — nothing to carry."

@@ -34,6 +34,7 @@ extension AppState {
         snapshot.download = traffic.downloadRate
         snapshot.upload = traffic.uploadRate
         snapshot.trafficUpdatedAt = trafficUpdatedAt
+        snapshot.trafficStalled = traffic.isStalled(openConnections: bridgeInFlight, now: now)
         snapshot.paddingRate = padding.status.isActive ? padding.rate : 0
         snapshot.latency = latency.summary
         snapshot.lanes = lanes

@@ -309,6 +309,34 @@
         }
       }
     },
+    "A timed rotation steers away from the relays it just used, so the route really moves. Existing connections keep theirs until they finish.": {
+      "localizations": {
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "چرخش زمان‌بندی‌شده از بازپخش‌هایی که همین حالا استفاده شده‌اند فاصله می‌گیرد تا مسیر واقعاً جابه‌جا شود. اتصال‌های باز تا پایان روی مدار خود می‌مانند."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ротация по таймеру уводит маршрут от только что использованных узлов, чтобы он действительно сменился. Уже открытые соединения остаются на своих цепочках до завершения."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ротація за таймером відводить маршрут від щойно використаних вузлів, щоб він справді змінився. Уже відкриті з’єднання лишаються на своїх ланцюжках до завершення."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "定时轮换会避开刚刚用过的中继，让线路真正改变。已打开的连接会保留原有链路直到结束。"
+          }
+        }
+      }
+    },
     "About": {
       "localizations": {
         "fa": {
@@ -2153,6 +2181,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "先检查能否直连 Tor，然后依次尝试上次成功的传输方式、你的自定义网桥、Snowflake、obfs4 和 meek，直到有一个引导成功。"
+          }
+        }
+      }
+    },
+    "Choose on the Route screen": {
+      "localizations": {
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "انتخاب در صفحهٔ مسیر"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выбрать на экране «Маршрут»"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обрати на екрані «Маршрут»"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在“路由”页面选择"
           }
         }
       }
@@ -4565,6 +4621,34 @@
         }
       }
     },
+    "Excluded countries": {
+      "localizations": {
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کشورهای حذف‌شده"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Исключённые страны"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Виключені країни"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已排除的国家"
+          }
+        }
+      }
+    },
     "Excluding this many countries leaves few relays, which makes your circuits unusual and slow.": {
       "localizations": {
         "fa": {
@@ -6665,6 +6749,34 @@
         }
       }
     },
+    "Move the route every": {
+      "localizations": {
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جابه‌جایی مسیر هر"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Менять маршрут каждые"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Змінювати маршрут кожні"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每隔一段时间更换线路"
+          }
+        }
+      }
+    },
     "Multihop": {
       "localizations": {
         "fa": {
@@ -6885,6 +6997,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "网络重置"
+          }
+        }
+      }
+    },
+    "Never": {
+      "localizations": {
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هرگز"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Никогда"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ніколи"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从不"
           }
         }
       }
@@ -8285,6 +8425,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "正在进行 TLS 握手"
+          }
+        }
+      }
+    },
+    "Pin the middle relay’s country": {
+      "localizations": {
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تثبیت کشور بازپخش میانی"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Закрепить страну промежуточного узла"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Закріпити країну проміжного вузла"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "固定中间中继的国家"
           }
         }
       }
@@ -12513,6 +12681,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tor %@"
+          }
+        }
+      }
+    },
+    "Tor always builds three hops. This fixes where the middle one may live, so the first and last hops cannot both be chosen by one operator.": {
+      "localizations": {
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor همیشه سه پرش می‌سازد. این تعیین می‌کند پرش میانی کجا باشد، تا پرش اول و آخر هر دو در اختیار یک اپراتور نباشند."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor всегда строит три хопа. Это задаёт, где может находиться средний, чтобы первый и последний не оказались у одного оператора."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor завжди будує три хопи. Це задає, де може перебувати середній, щоб перший і останній не опинилися в одного оператора."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor 始终建立三跳。这会固定中间一跳的位置，使首尾两跳不会同时落在一个运营商手中。"
           }
         }
       }
