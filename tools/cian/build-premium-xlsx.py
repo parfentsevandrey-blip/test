@@ -443,12 +443,19 @@ else:
                       p.get('area_total_m2'), p.get('units'), strip_paren(p.get('floors')) or None, strip_paren(p.get('planned_start')) or None,
                       strip_paren(p.get('planned_completion')) or None, p.get('price_from_per_m2'), p.get('announced_date'), None, '',
                       p.get('source_url') or '', '', '', p.get('notes')])
-def nrm(x): return re.sub(r'[^а-яa-z0-9]', '', str(x or '').lower())
-sheet12 = [(nrm(r[0]), nrm(r[3])) for r in rows1 + rows2 if r[0] != '__GROUP__']
+def nrm(x): return re.sub(r'[^а-яa-z0-9]', '', str(x or '').lower().replace('ё', 'е'))
+
+def addr_key(x):
+    """«Москва, Б. Левшинский, 19» и «Большой Левшинский пер., 19» — один адрес."""
+    a = str(x or '').lower().replace('ё', 'е')
+    a = re.sub(r'\bб\.|\bбол\.', 'большой', a); a = re.sub(r'\bм\.|\bмал\.', 'малый', a)
+    a = re.sub(r'\b(москва|пер|переулок|ул|улица|наб|набережная|пр|проезд|проспект|бульвар|бр|пл|площадь|ш|шоссе|стр|строение|вл|владение|корп|к|д|дом)\b\.?', ' ', a)
+    return re.sub(r'[^а-яa-z0-9]', '', a)
+sheet12 = [(nrm(r[0]), addr_key(r[3])) for r in rows1 + rows2 if r[0] != '__GROUP__']
 BUILDING_RE = re.compile(r'котлован|строительств|строится|РнС выдано|продажи откры|старт продаж состоял|монолит', re.I)
 keep3, moved, dropped = [], [], []
 for e in rows3:
-    n, a = nrm(e[0]), nrm(e[2] or e[1])
+    n, a = nrm(e[0]), addr_key(e[2] or e[1])
     dup = next((x for x in sheet12 if (x[0] and (x[0] in n or n in x[0]) and len(x[0]) > 6) or (x[1] and a and x[1] == a)), None)
     if dup: dropped.append((e[0], dup[0])); continue
     if BUILDING_RE.search(str(e[5] or '')):
