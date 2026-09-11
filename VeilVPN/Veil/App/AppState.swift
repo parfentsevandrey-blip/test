@@ -425,6 +425,7 @@ final class AppState {
                 if settings.killSwitch, settings.configureSystemProxy {
                     if httpBridge == nil {
                         let bridge = HTTPProxyBridge(socksPort: nil, policy: settings.routingPolicy)
+                        bridge.httpsOnly = settings.httpsOnly
                         bridge.blockAll = true
                         try bridge.start(port: ports.http)
                         httpBridge = bridge
@@ -605,9 +606,11 @@ final class AppState {
                 if let bridge = httpBridge {
                     bridge.socksPort = effective.socks
                     bridge.policy = self.settings.routingPolicy
+                    bridge.httpsOnly = self.settings.httpsOnly
                     bridge.blockAll = false
                 } else {
                     let bridge = HTTPProxyBridge(socksPort: effective.socks, policy: self.settings.routingPolicy)
+                    bridge.httpsOnly = self.settings.httpsOnly
                     try bridge.start(port: effective.http)
                     httpBridge = bridge
                 }
@@ -932,7 +935,18 @@ final class AppState {
     }
 
     private func handleEngineExit(_ status: Int32) {
-        guard connection == .connected else { return } // while connecting, the connect task reports it
+        guard connection == .connected else {
+            // A standby that died is not a standby. Say so, and try again with a backoff.
+            if standby.isReady || standby == .starting {
+                standby = .failed(String(localized: "Tor stopped while on standby."))
+                warmth = nil
+                standbyFailures += 1
+                if standbyFailures <= 3 {
+                    scheduleStandby(after: standbyFailures == 1 ? .seconds(5) : .seconds(30))
+                }
+            }
+            return // while connecting, the connect task reports it
+        }
         lastError = AppError(
             title: String(localized: "Tor stopped unexpectedly"),
             message: String(localized: "The tor process exited with status \(String(status)). Open Activity for details.")
