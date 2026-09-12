@@ -22,6 +22,7 @@
  *   node tools/cian/cian.js card   327985409 331215568 [--out cards.json]  — история цены и поля, которых нет в выдаче
  *   node tools/cian/cian.js stats  332550701 331961171
  *   node tools/cian/cian.js near   --lot 331539381 --from a.json,b.json [--radius 1500] — окрестная когорта с учётом отсевов
+ *   node tools/cian/cian.js view   --from lots.json [--lot 333688310] [--top 40] [--out вид.json] — адрес и вид: вода, зелень, линия крыш, эпоха дома
  *   node tools/cian/cian.js geo    [--out moscow-geo.json]
  *
  * --query принимает путь к JSON-файлу с jsonQuery или сам JSON строкой.
@@ -3397,6 +3398,120 @@ if (require.main === module) (async () => {
           clash.forEach((r) => log(`  ${r.id}  по тексту «${r.claimedState}», на кадрах «${r.observedState}»  ${r.address}`));
         }
       }
+
+    } else if (cmd === 'view') {
+      /* Разрез выдачи по адресу и виду. Живёт командой, а не разовым
+         скриптом, по той же причине, по какой контактные листы переехали в
+         `verify`: разбор, который нельзя повторить одной строкой, через
+         неделю повторяют заново и получают другие числа. */
+      if (!a.from) throw new Error('нужны файлы выдачи: --from a.json,b.json');
+      const geo = loadGeo(a.geo);
+      if (!geo) throw new Error(`геометрии нет: ${a.geo || GEO_FILE}. Собрать: node tools/cian/build-geo.js`);
+      const seen = new Map();
+      for (const f of String(a.from).split(',')) {
+        const d = JSON.parse(fs.readFileSync(f.trim(), 'utf8'));
+        for (const l of (d.lots || d.flats || (Array.isArray(d) ? d : []))) if (!seen.has(l.id)) seen.set(l.id, l);
+      }
+      const lots = [...seen.values()];
+      const yr = fillBuildYears(lots);
+      const noGeo = lots.filter((l) => l.lat == null).length;
+      log(`лотов: ${lots.length}${noGeo ? `, без координат: ${noGeo} — в разрез по виду не идут` : ''}`);
+      log(`год дома: своё поле ${yr.own}, добран у соседей ${yr.house}, по ЖК ${yr.complex}, нет ${yr.none}`);
+
+      /* Улица там, где Циан её не отдал, — с пометкой, что это догадка. */
+      let guessed = 0;
+      for (const l of lots) {
+        l.view = viewProfile(l, geo);
+        l.ppm = l.pricePerM2 || (l.priceRub && l.totalArea ? Math.round(l.priceRub / l.totalArea) : null);
+        if (l.street) { l.addr = l.street; continue; }
+        const g = nearestStreet(l.lat, l.lng, geo, 300);
+        l.addr = g ? (g.sure ? g.name : `квартал у ${g.name}`) : (l.complex ? `ЖК ${l.complex}` : null);
+        if (g) guessed++;
+      }
+      if (guessed) log(`улицы не было в выдаче у ${guessed} — подобрана по OSM (правильна в 67% случаев, см. address.md)`);
+
+      /* Дом голосует один раз: объявления в одном доме не независимы —
+         застройщик выставляет сразу этаж, и медиана по улице превращается
+         в медиану одной новостройки. См. traps.md, ловушка 36. */
+      const byHouse = new Map();
+      for (const l of lots) {
+        const k = l.houseId ? `h${l.houseId}` : `c${l.complex || l.addr}`;
+        if (!byHouse.has(k)) byHouse.set(k, []); byHouse.get(k).push(l);
+      }
+      const houses = [...byHouse.values()].map((ls) => ({
+        n: ls.length, addr: ls[0].addr, complex: ls[0].complex,
+        year: median(ls.map((l) => l.year).filter(Boolean)) || null,
+        era: houseEra(median(ls.map((l) => l.year).filter(Boolean))),
+        ppm: median(ls.map((l) => l.ppm).filter(Boolean)),
+        river: median(ls.map((l) => l.view && l.view.river).filter((x) => x != null)),
+        roof: median(ls.map((l) => l.view && l.view.skyline).filter((x) => x != null)),
+        klass: (ls.find((l) => l.view) || {}).view ? ls.find((l) => l.view).view.klass : null,
+      })).filter((h) => h.ppm);
+      houses.sort((x, y) => y.ppm - x.ppm);
+      log(`\nДОМА: ${houses.length} (дом голосует один раз — иначе меряется не улица, а то, каких домов на ней больше)`);
+      log('     ₽/м²  лотов  эпоха            вид        вода  крыши  адрес');
+      for (const h of houses.slice(0, parseInt(a.top || '40', 10))) {
+        log(`  ${String(Math.round(h.ppm).toLocaleString('ru-RU')).padStart(9)} ${String(h.n).padStart(5)}  ${h.era.padEnd(15)} `
+          + `${String(h.klass || '—').padEnd(11)}${String(h.river == null ? '—' : Math.round(h.river)).padStart(5)} `
+          + `${String(h.roof == null ? '—' : h.roof).padStart(5)}  ${h.addr || '—'}${h.complex ? ' · ' + h.complex : ''}`);
+      }
+
+      const byEra = {};
+      for (const h of houses) (byEra[h.era] = byEra[h.era] || []).push(h);
+      const eraRows = Object.entries(byEra).sort((x, y) => median(y[1].map((h) => h.ppm)) - median(x[1].map((h) => h.ppm)));
+      log('\nЭПОХА ДОМА');
+      for (const [k, hs] of eraRows) {
+        log(`  ${k.padEnd(16)} домов ${String(hs.length).padStart(3)}  медиана ${Math.round(median(hs.map((h) => h.ppm))).toLocaleString('ru-RU').padStart(10)} ₽/м²`
+          + `  разброс ${Math.round(Math.min(...hs.map((h) => h.ppm))).toLocaleString('ru-RU')} … ${Math.round(Math.max(...hs.map((h) => h.ppm))).toLocaleString('ru-RU')}`);
+      }
+
+      /* Вода — внутри эпохи. Иначе меряется не вода, а возраст дома: на
+         набережных стоят и клубные дома, и довоенный фонд. */
+      log('\nВОДА БЛИЖЕ 300 М, ВНУТРИ ЭПОХИ');
+      let same = 0, shown = 0;
+      for (const [k, hs] of eraRows) {
+        const near = hs.filter((h) => h.river != null && h.river <= 300).map((h) => h.ppm);
+        const far = hs.filter((h) => h.river != null && h.river > 300).map((h) => h.ppm);
+        if (!near.length || !far.length) continue;
+        const d = median(near) / median(far) - 1;
+        /* Группа из одного дома — не медиана, а один дом. В счёт совпадения
+           знаков такие не идут, но печатаются: скрывать их значило бы
+           подобрать выборку под нужный вывод. */
+        const counts = Math.min(near.length, far.length) >= 2;
+        if (counts) { shown++; if (d > 0) same++; }
+        log(`  ${k.padEnd(16)} ближе ${Math.round(median(near)).toLocaleString('ru-RU').padStart(10)} (n=${near.length})`
+          + `   дальше ${Math.round(median(far)).toLocaleString('ru-RU').padStart(10)} (n=${far.length})   ${(d * 100).toFixed(0)}%`
+          + (counts ? '' : '   ← в одной из групп один дом, в счёт не идёт'));
+      }
+      if (shown >= 2) {
+        log(same === shown ? `  знак одинаков во всех ${shown} эпохах, где есть что сравнивать — это и есть причина верить эффекту`
+          : `  знак совпал в ${same} эпохах из ${shown} — эффекту верить рано`);
+      }
+
+      log('\nУЛИЦА');
+      const p = streetPremium(houses, { key: (h) => h.addr, val: (h) => h.ppm, minN: 2 });
+      log(`  медиана по домам ${Math.round(p.base).toLocaleString('ru-RU')} ₽/м²; улица с одним домом — не замер улицы`);
+      for (const r of p.rows.slice(0, parseInt(a.top || '40', 10))) {
+        const hs = houses.filter((h) => h.addr === r.street);
+        const eras = [...new Set(hs.map((h) => h.era))];
+        log(`  ${String(r.street).padEnd(30)} домов ${String(r.n).padStart(2)}  ${Math.round(r.median).toLocaleString('ru-RU').padStart(10)} ₽/м²  `
+          + `${(r.premium == null ? 'мало данных' : (r.premium > 0 ? '+' : '') + r.premium + '%').padStart(11)}  ${eras.join(', ')}`
+          + (eras.length > 1 ? '  ← дома разных эпох, вклад улицы не отделить' : ''));
+      }
+
+      if (a.lot) {
+        const l = lots.find((x) => x.id === parseInt(a.lot, 10));
+        if (!l) log(`\nлота ${a.lot} в файлах нет`);
+        else {
+          const v = l.view, st = nearestStreet(l.lat, l.lng, geo, 250);
+          log(`\nЛОТ ${l.id}: ${l.totalArea} м², этаж ${l.floor}/${l.floors}, ${(l.priceRub || 0).toLocaleString('ru-RU')} ₽`);
+          log(`  адрес: ${l.street || '—'} ${l.house || ''} · ${l.complex || '—'} · ${l.year || '—'} (${l.yearFrom || '—'})`);
+          if (st) log(`  улицы рядом: ${[`${st.name} ${st.m} м`].concat(st.also.map((x) => `${x.name} ${x.m} м`)).join(', ')}${st.sure ? '' : ' — угловой адрес, уверенности нет'}`);
+          if (v) log(`  вид: ${v.klass} — ${v.why.join('; ')}${v.top ? '; последний этаж' : ''}`);
+          if (v) log(`  вода ${v.river} м, ${v.greenName || 'зелень'} ${v.green} м, линия крыш ${v.skyline} эт. (соседей ${v.skylineN}, самый высокий ${v.skylineMax})`);
+        }
+      }
+      if (a.out) fs.writeFileSync(a.out, JSON.stringify({ lots: lots.map((l) => ({ id: l.id, addr: l.addr, year: l.year, yearFrom: l.yearFrom, era: houseEra(l.year), ppm: l.ppm, view: l.view })), houses }, null, 2) + '\n');
 
     } else if (cmd === 'near') {
       /* Окрестная когорта с громким учётом отсевов. Каждый способ, которым
