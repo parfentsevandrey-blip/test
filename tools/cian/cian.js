@@ -2933,6 +2933,11 @@ if (require.main === module) (async () => {
           log(`   ОЦЕНКА ПО ФОТО (${gr.gradedAt}): отделка ${gr.level || '—'}, ${gr.state}, подтверждено: ${gr.proof || '—'}` +
               (gr.age ? `, ремонт: ${gr.age}` : '') +
               (gr.conflict ? '  ! текст объявления этому противоречит' : ''));
+          if (gr.finishState) {
+            const p = gr.stateProof || {};
+            log(`   СОСТОЯНИЕ ПО КАДРАМ И ПЛАНУ: ${gr.finishState} (уверенность ${p.confidence}, источник ${p.source})`
+              + (p.conflict ? `  ! в тексте объявления — «${p.fromText}»` : ''));
+          }
           if (gr.note) log(`   ${gr.note}`);
           if (gr.worksScope) {
             const w = Object.entries(gr.works || {}).filter(([, v]) => v === 'менять').map(([k]) => k);
@@ -3236,6 +3241,19 @@ if (require.main === module) (async () => {
             framesFull: [],
             markers: Object.fromEntries(Object.entries(MARKERS)
               .map(([k, v]) => [k, `<${v.join(' | ')} | null>`])),
+            /* Улики состояния — то, что видно, а не вывод. Состояние из них
+               считается само; писать его руками нельзя, иначе вернёмся к
+               оценке на глаз, ради ухода от которой всё и делалось. */
+            evidence: {
+              planShown: '<true | false>',
+              planWalls: '<есть | нет | частично | null — возведены ли на плане внутренние стены>',
+              roomsShown: '<число помещений САМОЙ КВАРТИРЫ на кадрах; лобби и фасад не в счёт>',
+              bareConcrete: '<true | false | null>',
+              wallsPlastered: '<true | false | null>',
+              floorFinished: '<true | false | null>',
+              furniture: '<true | false | null>',
+              renovationInProgress: '<true | false | null>',
+            },
             age: `<${AGES.join(' | ')} | null>`,
             works: Object.fromEntries(WORK_ITEMS.map((k) => [k, `<${WORK_STATES.join(' | ')} | null>`])),
             verdict: '<обязателен при возрасте: что это за товар, что его продаёт или топит, что сделает следующий владелец>',
