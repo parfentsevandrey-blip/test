@@ -6,7 +6,8 @@ const assert = require('assert');
 const { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, archiveStat,
         completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringVerdict,
         gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, galleryGrew, parseViews, mergedPriceHistory, offersByIds, matchesQuery, expandSimilar, houseClass, profileLot, floorBand, worksScope, buildCohort, metroSummary, metroLine, metroCell, photoKinds, photoIdent, galleryKey, galleryDiff, sweepCost, outputFile, STATES, stateFromEvidence, stateConfidence, mergeState,
-        distToPathM, distToRingM, skylineAround, nearestOpen, nearestStreet, viewProfile, streetPremium } = require('./cian.js');
+        distToPathM, distToRingM, skylineAround, nearestOpen, nearestStreet, viewProfile, streetPremium,
+        fillBuildYears, houseEra } = require('./cian.js');
 
 let passed = 0;
 const pending = [];
@@ -1574,4 +1575,28 @@ test('две улицы на одном расстоянии — ответ по
   assert.strictEqual(r.also.length, 1, 'соседний кандидат обязан остаться в ответе');
   const one = nearestStreet(55.7366, 37.5992, { streets: [geo.streets[0]] }, 200);
   assert.strictEqual(one.sure, true, 'когда рядом одна улица, сомневаться не в чем');
+});
+
+test('год дома добирается у соседей, и источник остаётся виден', () => {
+  const lots = [
+    { id: 1, houseId: 7, complex: 'Литератор', buildYear: 2014 },
+    { id: 2, houseId: 7, complex: 'Литератор' },
+    { id: 3, houseId: 9, complex: 'Литератор' },
+    { id: 4, houseId: 11, complex: 'Фрунзенский', deadline: { year: 2027 } },
+    { id: 5, houseId: 13 },
+  ];
+  const r = fillBuildYears(lots);
+  assert.strictEqual(lots[1].year, 2014); assert.strictEqual(lots[1].yearFrom, 'соседи по дому');
+  assert.strictEqual(lots[2].year, 2014); assert.strictEqual(lots[2].yearFrom, 'медиана по ЖК');
+  assert.strictEqual(lots[3].year, 2027); assert.strictEqual(lots[3].yearFrom, 'срок сдачи');
+  assert.strictEqual(lots[4].year, null, 'выдумывать год не из чего — значит его нет');
+  assert.deepStrictEqual(r, { own: 2, house: 1, complex: 1, none: 1 });
+});
+
+test('эпоха дома режет там, где различаются медианы, а не по круглым числам', () => {
+  assert.strictEqual(houseEra(2014), '2010-е и новее');
+  assert.strictEqual(houseEra(2009), '2000-е');
+  assert.strictEqual(houseEra(1968), 'советский');
+  assert.strictEqual(houseEra(1914), 'до 1940');
+  assert.strictEqual(houseEra(null), 'год неизвестен');
 });

@@ -2100,7 +2100,7 @@ function streetPremium(lots, opts = {}) {
 }
 
 /* ---------- паспорт лота ----------
-   Пять осей вместо одной буквы. Каждая читается своим источником, и ни одна
+   Шесть осей вместо одной буквы. Каждая читается своим источником, и ни одна
    не сводится в общий балл: складывать «отделку A» с «домом премиум» и
    «внутри Садового» в одно число значит выдумать веса, которых мы не мерили.
 
@@ -2298,6 +2298,41 @@ function buildingYear(lot) {
   if (lot.buildYear) return lot.buildYear;
   if (lot.deadline && lot.deadline.year) return lot.deadline.year;
   return null;
+}
+
+/* Возраст дома по всей выдаче разом. Поодиночке год известен плохо: в
+   когорте Хамовников он пришёл у 99 лотов из 184, а эпоха дома объясняет
+   цену метра сильнее всего остального (см. address.md) — терять её из-за
+   пустого поля значит терять главный разрез.
+   Год берётся у соседей по тому же дому, и только потом — по тому же ЖК:
+   корпуса одного комплекса сдаются с разницей в годы, и медиана по ЖК это
+   приближение, а не факт, поэтому источник помечается. */
+function fillBuildYears(lots) {
+  const byHouse = new Map(), byComplex = new Map();
+  const put = (m, k, v) => { if (k == null) return; if (!m.has(k)) m.set(k, []); m.get(k).push(v); };
+  for (const l of lots) {
+    const y = buildingYear(l);
+    if (y) { put(byHouse, l.houseId, y); put(byComplex, l.complex, y); }
+  }
+  const med = (xs) => { const s = [...xs].sort((a, b) => a - b); return s[Math.floor(s.length / 2)]; };
+  let own = 0, house = 0, complex = 0, none = 0;
+  for (const l of lots) {
+    const y = buildingYear(l);
+    if (y) { l.year = y; l.yearFrom = l.buildYear ? 'поле' : 'срок сдачи'; own++; continue; }
+    if (l.houseId && byHouse.has(l.houseId)) { l.year = med(byHouse.get(l.houseId)); l.yearFrom = 'соседи по дому'; house++; continue; }
+    if (l.complex && byComplex.has(l.complex)) { l.year = med(byComplex.get(l.complex)); l.yearFrom = 'медиана по ЖК'; complex++; continue; }
+    l.year = null; l.yearFrom = null; none++;
+  }
+  return { own, house, complex, none };
+}
+
+/* Эпоха дома. Границы не эстетические: до 1940 — дореволюционный и
+   сталинский фонд без капремонта, 1955-1999 — советский, 2000-е — первая
+   волна бизнес-класса, 2010-е и новее — нынешние клубные дома. На когорте
+   Хамовников медианы этих групп различаются в три раза. */
+function houseEra(year) {
+  if (!year) return 'год неизвестен';
+  return year >= 2010 ? '2010-е и новее' : year >= 2000 ? '2000-е' : year >= 1955 ? 'советский' : 'до 1940';
 }
 
 /* Готовность: ключи на руках или обязательство построить к сроку.
@@ -3843,4 +3878,5 @@ module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, medi
   metroSummary, metroLine, metroCell, RAIL_LINES, photoKinds,
   photoIdent, galleryKey, galleryDiff, sweepCost, SWEEP,
   distToPathM, distToRingM, skylineAround, nearestOpen, nearestStreet, viewProfile,
-  streetPremium, loadGeo, GEO_FILE, OPEN_M, GREEN_MIN_HA, MIN_STREET_N, VIEWS, mergeView };
+  streetPremium, loadGeo, GEO_FILE, OPEN_M, GREEN_MIN_HA, MIN_STREET_N, VIEWS, mergeView,
+  fillBuildYears, houseEra };
