@@ -1547,14 +1547,30 @@ test('мелкий сквер открытым пространством не �
 });
 
 test('вид: высоко и у воды — панорамный, низко в плотной застройке — закрытый', () => {
+  // дом на первой линии: до русла около 130 м
   const geo = { river: [[[55.7400, 37.6000], [55.7400, 37.6200]]], green: [], buildings: [] };
-  for (let i = 0; i < 6; i++) geo.buildings.push([55.7420 + i * 0.0001, 37.6100 + i * 0.0001, 7]);
-  const high = viewProfile({ lat: 55.7420, lng: 37.6100, floor: 18, floors: 18 }, geo);
+  for (let i = 0; i < 6; i++) geo.buildings.push([55.7412 + i * 0.0001, 37.6100 + i * 0.0001, 7]);
+  const high = viewProfile({ lat: 55.7412, lng: 37.6100, floor: 18, floors: 18 }, geo);
   assert.strictEqual(high.klass, 'панорамный');
   assert.strictEqual(high.top, true);
-  assert.ok(high.river < 250, `река должна быть рядом, получено ${high.river}`);
-  const low = viewProfile({ lat: 55.7420, lng: 37.6100, floor: 2, floors: 18 }, geo);
-  assert.strictEqual(low.klass, 'закрытый', 'второй этаж смотрит в чужой фасад');
+  assert.ok(high.river < 200, `река должна быть рядом, получено ${high.river}`);
+  // на первой линии набережной низкий этаж всё равно смотрит поверх воды
+  const low = viewProfile({ lat: 55.7412, lng: 37.6100, floor: 5, floors: 18 }, geo);
+  assert.strictEqual(low.klass, 'открытый');
+  const deep = viewProfile({ lat: 55.7412, lng: 37.6100, floor: 1, floors: 18 }, geo);
+  assert.strictEqual(deep.klass, 'локальный', 'вода рядом, но с первого этажа её не видно');
+});
+
+test('высота решает вид без всякой воды: седьмой этаж в квартале пятиэтажек', () => {
+  // четыре квартиры верхнего этажа на Остоженке: до воды 949 м, до зелени
+  // 693 м, а в окне панорама города. Первая версия правила их промахнула,
+  // потому что требовала открытого пространства ближе 400 м
+  const geo = { river: [[[55.7300, 37.6000], [55.7300, 37.6200]]], green: [], buildings: [] };
+  for (let i = 0; i < 8; i++) geo.buildings.push([55.7424 + i * 0.0001, 37.6009 + i * 0.0001, 5]);
+  const v = viewProfile({ lat: 55.7424, lng: 37.6009, floor: 7, floors: 7 }, geo);
+  assert.ok(v.river > 900, `вода должна быть далеко, получено ${v.river}`);
+  assert.strictEqual(v.openM, null, 'открытого пространства рядом нет');
+  assert.strictEqual(v.klass, 'открытый', 'и всё равно из окна видно поверх квартала');
 });
 
 test('вид без координат — null, а не «неизвестно» строкой', () => {
