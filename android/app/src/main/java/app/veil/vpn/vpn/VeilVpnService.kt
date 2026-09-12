@@ -109,6 +109,10 @@ class VeilVpnService : VpnService() {
                 scope.launch { container.tor.requestNewIdentity() }
                 return START_STICKY
             }
+            ACTION_REAPPLY -> {
+                reapplySettings()
+                return START_STICKY
+            }
         }
 
         lastStartId = startId
@@ -979,15 +983,19 @@ class VeilVpnService : VpnService() {
             config.setBlockUDP(settings.blockUdp)
             config.setUDPTimeoutSec(60)
             config.setDialTimeoutSec(30)
-            // Only meaningful together: a suffix list with nowhere to resolve
-            // it is off, which is the safe way round.
-            if (settings.bypassSuffixes.isNotBlank() && network.dnsServers.isNotEmpty()) {
+            // A suffix list needs somewhere to resolve it. This network's own
+            // resolvers first, because a bypassed name should be reached the
+            // way this network reaches it; public ones only when it reports
+            // none, which mobile networks often do and which used to turn the
+            // whole feature off without saying so.
+            if (settings.bypassSuffixes.isNotBlank()) {
+                val resolvers = network.dnsServers.ifEmpty { FALLBACK_BYPASS_DNS }
                 config.setBypassSuffixes(settings.bypassSuffixes)
-                config.setBypassDNS(network.dnsServers.joinToString(","))
+                config.setBypassDNS(resolvers.joinToString(","))
                 VeilLog.w(
                     "vpn",
                     "names ending in ${settings.bypassSuffixes} will skip the tunnel " +
-                        "and be visible to this network",
+                        "and be visible to this network (resolved by ${resolvers.joinToString(", ")})",
                 )
             }
 
@@ -1316,6 +1324,36 @@ class VeilVpnService : VpnService() {
     }
 
     /**
+     * Rebuilds the datapath with the settings as they stand now.
+     *
+     * Which names skip the tunnel is part of the tunnel's configuration, and
+     * the configuration is read once, when it starts. Without this a switch
+     * flipped while connected would do nothing until the next connect — which
+     * is indistinguishable, from the outside, from a switch that does not
+     * work.
+     *
+     * tor is not touched: its circuits, and everything the connect paid for,
+     * stay. Only the interface and the native tunnel are replaced, and that
+     * replacement is what tells applications the network changed, so the ones
+     * sitting on a failed connection try again immediately.
+     */
+    private fun reapplySettings() {
+        if (redialing.get()) return
+        scope.launch {
+            val socks = container.tor.socks ?: return@launch
+            val network = lastNetwork ?: return@launch
+            val settings = container.settings.settings.first()
+            runCatching { Veiltun.setRebuilding(true) }
+            runCatching {
+                stopNativeTunnelOnly()
+                startNativeTunnel(settings, socks, container.tor.dnsPort, network)
+            }.onFailure { VeilLog.e("vpn", "could not re-apply the settings", it) }
+                .onSuccess { VeilLog.i("vpn", "settings re-applied to the running tunnel") }
+            runCatching { Veiltun.setRebuilding(false) }
+        }
+    }
+
+    /**
      * The screen coming on is the moment the user is about to find out whether
      * the tunnel survived the pocket. Doze and carrier NATs both end idle
      * connections quietly, and the five-second liveness check would take up to
@@ -1627,6 +1665,18 @@ class VeilVpnService : VpnService() {
     companion object {
         const val ACTION_DISCONNECT = "app.veil.vpn.DISCONNECT"
         const val ACTION_NEW_CIRCUIT = "app.veil.vpn.NEW_CIRCUIT"
+        const val ACTION_REAPPLY = "app.veil.vpn.REAPPLY"
+
+        /**
+         * Resolvers for bypassed names when the network claims to have none.
+         *
+         * Mobile networks routinely report an empty resolver list to an app,
+         * and the bypass used to switch itself off when that happened —
+         * silently, so the setting simply appeared not to work. These answer
+         * from the ordinary network, which is the whole point of a bypass, and
+         * neither of them keeps logs.
+         */
+        private val FALLBACK_BYPASS_DNS = listOf("9.9.9.9:53", "1.1.1.1:53")
 
 
         private const val MTU = 1500

@@ -109,6 +109,12 @@
     <string name="bridges_request_kind">Which kind to ask for</string>
     <string name="settings_bypass">Local sites skip the tunnel</string>
     <string name="settings_bypass_desc">Names ending in .ru, .рф, .su, .by or .kz are resolved and reached on the ordinary network. Banking apps and local sites start working again — and this network can see which of them you use. Off unless you turn it on.</string>
+    <string name="settings_bypass_ai">AI services skip the tunnel</string>
+    <string name="settings_bypass_ai_desc">Grok, ChatGPT, Claude, Perplexity and their neighbours answer a Tor exit with 403 before the request reaches the service at all. That is their edge network judging the exit\'s address, and nothing in this app changes it: through Tor they do not work, around it they do — and this network sees that you use them. Off unless you turn it on.</string>
+    <string name="settings_bypass_ai_domains">These names will be resolved and reached on the ordinary network:</string>
+    <string name="home_bypass_active">Outside the tunnel: %1$s. This traffic is visible to the network.</string>
+    <string name="home_bypass_local">local sites</string>
+    <string name="home_bypass_ai">AI services</string>
     <string name="settings_battery">Keep running in the background</string>
     <string name="settings_battery_desc">Android throttles background apps after the screen has been off for a while, which shows up as a tunnel that is slow or dead when you come back to it. Exempting Veil keeps the connection alive.</string>
     <string name="settings_battery_done">Already exempt. The tunnel will not be suspended.</string>

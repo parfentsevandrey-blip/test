@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.veil.vpn.R
+import app.veil.vpn.data.BypassGroup
 import app.veil.vpn.model.TunnelState
 import app.veil.vpn.ui.screens.AppsScreen
 import app.veil.vpn.ui.screens.BridgesScreen
@@ -256,6 +257,14 @@ fun VeilScaffold(
                         bootstrapPercent = bootstrap.percent,
                         pulse = pulse,
                         adsBlocked = settings.blockAds,
+                        bypassing = settings.bypassGroups.map { group ->
+                            stringResource(
+                                when (group) {
+                                    BypassGroup.LOCAL -> R.string.home_bypass_local
+                                    BypassGroup.REFUSES_TOR -> R.string.home_bypass_ai
+                                },
+                            )
+                        },
                         onToggle = {
                             if (state.isLive || state.isBusy) {
                                 viewModel.stopTunnel()
@@ -309,7 +318,7 @@ fun VeilScaffold(
                         onIsolation = viewModel::setIsolation,
                         onTlsProfile = viewModel::setTlsProfile,
                         onDtlsProfile = viewModel::setDtlsProfile,
-                        onBypassLocal = viewModel::setBypassLocal,
+                        onBypassGroup = viewModel::setBypassGroup,
                         onForgetRoutes = viewModel::forgetLearnedRoutes,
                     )
                 }

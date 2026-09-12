@@ -28,6 +28,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.veil.vpn.BuildConfig
 import app.veil.vpn.R
+import app.veil.vpn.data.BypassGroup
 import app.veil.vpn.data.DnsMode
 import app.veil.vpn.data.IsolationMode
 import app.veil.vpn.data.VeilSettings
@@ -51,7 +52,7 @@ fun SettingsScreen(
     onIsolation: (IsolationMode) -> Unit,
     onTlsProfile: (TlsProfile) -> Unit,
     onDtlsProfile: (DtlsProfile) -> Unit,
-    onBypassLocal: (Boolean) -> Unit,
+    onBypassGroup: (BypassGroup, Boolean) -> Unit,
     onForgetRoutes: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -171,9 +172,23 @@ fun SettingsScreen(
             SwitchRow(
                 title = stringResource(R.string.settings_bypass),
                 subtitle = stringResource(R.string.settings_bypass_desc),
-                checked = settings.bypassSuffixes.isNotBlank(),
-                onCheckedChange = onBypassLocal,
+                checked = BypassGroup.LOCAL in settings.bypassGroups,
+                onCheckedChange = { onBypassGroup(BypassGroup.LOCAL, it) },
             )
+        }
+        item {
+            SwitchRow(
+                title = stringResource(R.string.settings_bypass_ai),
+                subtitle = stringResource(R.string.settings_bypass_ai_desc),
+                checked = BypassGroup.REFUSES_TOR in settings.bypassGroups,
+                onCheckedChange = { onBypassGroup(BypassGroup.REFUSES_TOR, it) },
+            )
+        }
+        // The exact names, not a description of them. A switch that sends some
+        // of your traffic out in the clear has to say which traffic, and the
+        // only honest way to say it is the list itself.
+        if (BypassGroup.REFUSES_TOR in settings.bypassGroups) {
+            item { DomainList(BypassGroup.REFUSES_TOR.suffixes) }
         }
         item {
             OutlinedButton(onClick = onForgetRoutes, modifier = Modifier.fillMaxWidth()) {
@@ -335,4 +350,37 @@ private fun dnsDescription(mode: DnsMode) = when (mode) {
     DnsMode.TOR_DNS_PORT -> stringResource(R.string.dns_tor_desc)
     DnsMode.TCP_THROUGH_TUNNEL -> stringResource(R.string.dns_tcp_desc)
     DnsMode.DOH_THROUGH_TUNNEL -> stringResource(R.string.dns_doh_desc)
+}
+
+/**
+ * The names a bypass group covers, spelled out.
+ *
+ * Shown only while the group is on, because that is when it matters: these
+ * are the names this phone will resolve and reach on the ordinary network,
+ * where the network operator can see them.
+ */
+@Composable
+private fun DomainList(suffixes: List<String>) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        ),
+    ) {
+        Column(Modifier.padding(horizontal = 18.dp, vertical = 14.dp)) {
+            Text(
+                text = stringResource(R.string.settings_bypass_ai_domains),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = suffixes.joinToString(", "),
+                style = MaterialTheme.typography.bodyMedium
+                    .copy(fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace),
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(top = 6.dp),
+            )
+        }
+    }
 }

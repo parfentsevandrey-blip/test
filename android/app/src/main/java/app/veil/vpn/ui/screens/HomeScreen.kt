@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CallSplit
 import androidx.compose.material.icons.filled.Autorenew
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
@@ -66,6 +67,8 @@ fun HomeScreen(
     bootstrapPercent: Int,
     pulse: PulseState,
     adsBlocked: Boolean,
+    /** Groups of names going around the tunnel right now, named for the user. */
+    bypassing: List<String>,
     onToggle: () -> Unit,
     onNewCircuit: () -> Unit,
     modifier: Modifier = Modifier,
@@ -87,6 +90,16 @@ fun HomeScreen(
 
         Spacer(Modifier.height(20.dp))
         StatusLine(state = state)
+
+        // Traffic leaving in the clear is never something the user has to
+        // remember having switched on. While a bypass is active it is on the
+        // first screen, above the numbers that would otherwise suggest
+        // everything is going through Tor.
+        if (state.isLive && bypassing.isNotEmpty()) {
+            Spacer(Modifier.height(14.dp))
+            BypassNotice(bypassing)
+        }
+
         Spacer(Modifier.height(24.dp))
 
         Row(
@@ -399,5 +412,34 @@ fun EmptyHint(text: String, modifier: Modifier = Modifier) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
+    }
+}
+
+/** Says, on the screen the user looks at, what is not going through Tor. */
+@Composable
+private fun BypassNotice(groups: List<String>) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+        ),
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Filled.CallSplit,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onTertiaryContainer,
+            )
+            Text(
+                text = stringResource(R.string.home_bypass_active, groups.joinToString(", ")),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onTertiaryContainer,
+                modifier = Modifier.padding(start = 12.dp),
+            )
+        }
     }
 }

@@ -29,11 +29,56 @@ enum class AppRoutingMode {
 }
 
 /**
+ * A named set of domains that leave the device without entering the tunnel.
+ *
+ * Both groups exist for the same reason and cost the same thing. Some
+ * destinations refuse a connection that arrives from a Tor exit, and a tunnel
+ * that carries them anyway makes the phone less usable than no tunnel at all.
+ * Routing them around it fixes that by showing those names, and those
+ * connections, to the local network — so every group is off until it is asked
+ * for, and the interface names what each one covers rather than saying
+ * "some sites".
+ */
+enum class BypassGroup(val suffixes: List<String>) {
+    /**
+     * Sites and banking apps hosted in the user's own country, which routinely
+     * refuse a foreign exit.
+     *
+     * Both spellings of the Cyrillic top-level domain are listed. A resolver
+     * puts names on the wire in punycode, so the tunnel only ever sees
+     * `xn--p1ai`; matching on `.\u0440\u0444` alone never matched anything at all.
+     */
+    LOCAL(listOf("ru", "xn--p1ai", "\u0440\u0444", "su", "by", "kz")),
+
+    /**
+     * The services whose edge turns Tor away.
+     *
+     * Every one of these sits behind a content network that scores a Tor exit
+     * as hostile and answers 403 before the request reaches the service. That
+     * is a decision made about the exit's address, not about this app, and no
+     * amount of work on the tunnel changes it: through Tor these do not work,
+     * and around it they do. The list is deliberately narrow — the services
+     * themselves and what they need to sign you in, and nothing else.
+     */
+    REFUSES_TOR(
+        listOf(
+            // Grok, and the accounts it signs in with.
+            "x.ai", "grok.com", "x.com", "twimg.com",
+            // ChatGPT.
+            "openai.com", "chatgpt.com", "oaistatic.com", "oaiusercontent.com",
+            // Claude.
+            "anthropic.com", "claude.ai",
+            // The rest of the ones people actually hit this with.
+            "perplexity.ai", "pplx.ai", "deepseek.com", "mistral.ai",
+            "copilot.microsoft.com",
+        ),
+    ),
+}
+
+/**
  * How names are resolved. Every option keeps DNS inside the tunnel; they differ
  * in how the query is framed once it is there.
  */
-/** Domains that commonly refuse connections arriving from a Tor exit. */
-const val DEFAULT_BYPASS_SUFFIXES = ".ru,.\u0440\u0444,.su,.by,.kz"
 
 enum class DnsMode(val nativeMode: String) {
     /** tor's own DNSPort. Resolution happens at the exit relay. */
@@ -94,9 +139,12 @@ data class VeilSettings(
     val tlsProfile: TlsProfile = TlsProfile.Default,
     /** How Snowflake shapes its DTLS Client Hello. */
     val dtlsProfile: DtlsProfile = DtlsProfile.Default,
-    /** Route names ending in these suffixes around the tunnel. Empty is off. */
-    val bypassSuffixes: String = "",
+    /** Which groups of names go around the tunnel. Empty is off. */
+    val bypassGroups: Set<BypassGroup> = emptySet(),
 ) {
+    /** What the native side takes: the suffixes of every group that is on. */
+    val bypassSuffixes: String get() = bypassGroups.flatMap { it.suffixes }.joinToString(",")
+
     companion object {
         /** Quad9 filters nothing and keeps no logs; reached only through the tunnel. */
         const val DEFAULT_DOH = "https://dns.quad9.net/dns-query"
@@ -124,6 +172,7 @@ class SettingsRepository(private val context: Context) {
         val TLS_PROFILE = stringPreferencesKey("tls_profile")
         val DTLS_PROFILE = stringPreferencesKey("dtls_profile")
         val BYPASS_SUFFIXES = stringPreferencesKey("bypass_suffixes")
+        val BYPASS_GROUPS = stringSetPreferencesKey("bypass_groups")
         val INSTALL_SEED = intPreferencesKey("install_seed")
     }
 
@@ -154,8 +203,22 @@ class SettingsRepository(private val context: Context) {
         customBridges = this[Keys.CUSTOM_BRIDGES] ?: "",
         tlsProfile = enumOf(this[Keys.TLS_PROFILE], TlsProfile.Default),
         dtlsProfile = enumOf(this[Keys.DTLS_PROFILE], DtlsProfile.Default),
-        bypassSuffixes = this[Keys.BYPASS_SUFFIXES] ?: "",
+        bypassGroups = bypassGroupsIn(this),
     )
+
+    /**
+     * The groups that are on, reading the single switch that came before them
+     * when nothing has been written since. That switch had one setting, the
+     * local list, so that is what it becomes.
+     */
+    private fun bypassGroupsIn(prefs: Preferences): Set<BypassGroup> {
+        prefs[Keys.BYPASS_GROUPS]?.let { stored ->
+            return stored.mapNotNullTo(mutableSetOf()) { name ->
+                runCatching { enumValueOf<BypassGroup>(name) }.getOrNull()
+            }
+        }
+        return if (prefs[Keys.BYPASS_SUFFIXES].isNullOrBlank()) emptySet() else setOf(BypassGroup.LOCAL)
+    }
 
     suspend fun setManualTransport(transport: Transport) = put(Keys.MANUAL_TRANSPORT, transport.name)
     suspend fun setBlockUdp(value: Boolean) = put(Keys.BLOCK_UDP, value)
@@ -170,7 +233,13 @@ class SettingsRepository(private val context: Context) {
     suspend fun setCustomBridges(text: String) = put(Keys.CUSTOM_BRIDGES, text)
     suspend fun setTlsProfile(profile: TlsProfile) = put(Keys.TLS_PROFILE, profile.name)
     suspend fun setDtlsProfile(profile: DtlsProfile) = put(Keys.DTLS_PROFILE, profile.name)
-    suspend fun setBypassSuffixes(value: String) = put(Keys.BYPASS_SUFFIXES, value.trim())
+    suspend fun setBypassGroup(group: BypassGroup, enabled: Boolean) {
+        context.dataStore.edit { prefs ->
+            val current = bypassGroupsIn(prefs)
+            val next = if (enabled) current + group else current - group
+            prefs[Keys.BYPASS_GROUPS] = next.mapTo(mutableSetOf()) { it.name }
+        }
+    }
 
     /**
      * A number that is stable for this installation and meaningless anywhere

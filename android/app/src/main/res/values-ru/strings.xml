@@ -101,6 +101,12 @@
     <string name="bridges_request_kind">Какие именно запросить</string>
     <string name="settings_bypass">Локальные сайты мимо тоннеля</string>
     <string name="settings_bypass_desc">Имена на .ru, .рф, .su, .by и .kz резолвятся и открываются по обычной сети. Банки и локальные сайты снова начинают работать — и эта сеть видит, какими из них вы пользуетесь. По умолчанию выключено.</string>
+    <string name="settings_bypass_ai">ИИ-сервисы мимо тоннеля</string>
+    <string name="settings_bypass_ai_desc">Grok, ChatGPT, Claude, Perplexity и соседи отвечают Tor-выходу «403» ещё до того, как запрос дойдёт до самого сервиса. Так их защитная сеть относится к адресу выхода, и тоннель тут ничего не меняет: через Tor они не работают, мимо — работают, и эта сеть видит, что вы ими пользуетесь. По умолчанию выключено.</string>
+    <string name="settings_bypass_ai_domains">По обычной сети пойдут имена:</string>
+    <string name="home_bypass_active">Мимо тоннеля: %1$s. Этот трафик виден сети.</string>
+    <string name="home_bypass_local">локальные сайты</string>
+    <string name="home_bypass_ai">ИИ-сервисы</string>
     <string name="settings_battery">Не засыпать в фоне</string>
     <string name="settings_battery_desc">Через несколько минут с выключенным экраном Android начинает ограничивать фоновые приложения — со стороны это выглядит как тоннель, который «отвалился» или стал очень медленным. Исключение для Veil снимает это ограничение.</string>
     <string name="settings_battery_done">Исключение уже выдано. Тоннель не будет засыпать.</string>

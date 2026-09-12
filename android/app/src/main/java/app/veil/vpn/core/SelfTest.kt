@@ -444,6 +444,15 @@ object SelfTest {
                 )
                 exitVerdict = TrafficAnalysis.exitVerdict(google, youtube, image, runs)
 
+                // The services people actually report as broken. Measured
+                // rather than assumed: a 403 here names the cause, and the
+                // cause is not something the tunnel can fix.
+                line("")
+                line("--- services that judge the exit ---")
+                val refusals = TrafficAnalysis.refusals(socks)
+                refusals.forEach { (label, answer) -> line("$label: ${answer.describe()}") }
+                exitVerdict = exitVerdict + TrafficAnalysis.refusalVerdict(refusals)
+
                 stage(app.getString(R.string.diag_stage_steady))
                 val watched = TrafficAnalysis.series(
                     label = "steady",

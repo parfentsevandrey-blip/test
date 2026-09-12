@@ -372,6 +372,59 @@ object TrafficAnalysis {
         }
     }
 
+    /**
+     * The services people report as "broken on the VPN", and the name each is
+     * known by.
+     *
+     * They have one thing in common and it is not the tunnel: every one sits
+     * behind an edge network that scores a Tor exit as hostile and answers
+     * before the request reaches the service. Measuring them is the difference
+     * between "the VPN is broken" and "this address is refused", which are
+     * fixed in opposite directions.
+     */
+    val REFUSING_SERVICES = listOf(
+        "Grok" to "grok.com",
+        "ChatGPT" to "chatgpt.com",
+        "Claude" to "claude.ai",
+    )
+
+    /**
+     * Asks each of them through the live circuit and says what it answered.
+     */
+    fun refusals(socks: SocksProxy): List<Pair<String, Reach>> =
+        REFUSING_SERVICES.map { (label, host) -> label to reach(socks, host, "/") }
+
+    /**
+     * What the measured answers mean, and the one thing that fixes them.
+     *
+     * A new circuit is worth suggesting for Google, whose verdict varies by
+     * exit. It is not worth suggesting here: these edges refuse Tor exits as a
+     * class, so the next circuit is refused too, and the only thing that works
+     * is to send those names around the tunnel.
+     */
+    fun refusalVerdict(results: List<Pair<String, Reach>>): List<String> = buildList {
+        val refused = results.filter { (_, r) -> r.status == 403 || r.status == 429 }
+        val dead = results.filter { (_, r) -> r.status == 0 }
+        if (refused.isNotEmpty()) {
+            add(
+                refused.joinToString(", ") { (label, r) -> "$label HTTP ${r.status}" } +
+                    " — refused at the edge before reaching the service. This is a judgement about " +
+                    "the exit address and every Tor exit gets it, so another circuit will not help. " +
+                    "Settings → «AI services skip the tunnel» sends exactly these names around the " +
+                    "tunnel, at the cost of showing them to this network.",
+            )
+        }
+        if (dead.isNotEmpty() && refused.isEmpty()) {
+            add(
+                dead.joinToString(", ") { (label, r) -> "$label: ${r.note}" } +
+                    " — no answer at all, which is the tunnel rather than the service.",
+            )
+        }
+        if (refused.isEmpty() && dead.isEmpty()) {
+            add("the AI services answered this exit normally; nothing to work around here.")
+        }
+    }
+
     /** Fetches one body through the tunnel and times it. */
     suspend fun download(socks: SocksProxy, host: String, path: String): Throughput = withTimeoutOrNull(90_000) {
         var socket: Socket? = null

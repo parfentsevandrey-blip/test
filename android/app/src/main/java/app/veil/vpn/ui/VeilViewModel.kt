@@ -14,7 +14,7 @@ import app.veil.vpn.data.DnsMode
 import app.veil.vpn.data.InstalledApp
 import app.veil.vpn.data.InstalledApps
 import app.veil.vpn.data.IsolationMode
-import app.veil.vpn.data.DEFAULT_BYPASS_SUFFIXES
+import app.veil.vpn.data.BypassGroup
 import app.veil.vpn.model.DtlsProfile
 import app.veil.vpn.model.TlsProfile
 import app.veil.vpn.data.VeilSettings
@@ -180,8 +180,23 @@ class VeilViewModel(application: Application) : AndroidViewModel(application) {
     fun setDtlsProfile(profile: DtlsProfile) = edit { container.settings.setDtlsProfile(profile) }
 
     /** An empty suffix list is how the bypass stays off; there is no separate flag. */
-    fun setBypassLocal(enabled: Boolean) = edit {
-        container.settings.setBypassSuffixes(if (enabled) DEFAULT_BYPASS_SUFFIXES else "")
+    /**
+     * Turns a group of names on or off, and applies it to a tunnel that is
+     * already up.
+     *
+     * The configuration is read when the tunnel starts, so without the second
+     * half the switch would do nothing until the next connect — which, from
+     * the outside, is indistinguishable from a switch that does not work.
+     */
+    fun setBypassGroup(group: BypassGroup, enabled: Boolean) = edit {
+        container.settings.setBypassGroup(group, enabled)
+        if (tunnelState.value.isLive) {
+            val context = getApplication<Application>()
+            context.startService(
+                Intent(context, VeilVpnService::class.java)
+                    .setAction(VeilVpnService.ACTION_REAPPLY),
+            )
+        }
     }
     fun toggleApp(packageName: String) = edit { container.settings.toggleApp(packageName) }
 
