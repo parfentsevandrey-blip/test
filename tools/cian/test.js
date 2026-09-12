@@ -119,10 +119,17 @@ test('когорта меньше минимума не даёт оценки в
 
 process.stdout.write('комплектность и сопоставимость\n');
 
-test('hasFurniture=false — оболочка, даже при премиальной отделке', () => {
-  // 331115316, Victory Park: мрамор, двери Barausse, но ни кухни, ни мебели
+test('hasFurniture=false сам по себе оболочки не доказывает', () => {
+  // Замерено на когорте Хамовников: 23 лота с hasFurniture=false, у 12 из них
+  // галочка была единственным основанием — и кадры показали ОБЖИТЫЕ квартиры
+  // у семи. Поле отвечает не на тот вопрос: входит ли мебель В СДЕЛКУ, а не
+  // можно ли въехать. Хозяин живёт со своей мебелью и оставлять её не намерен.
   assert.strictEqual(completeness(lot({ hasFurniture: false,
-    description: 'Дизайнерская отделка Neo-Deco, натуральный мрамор, двери Barausse' })), 'оболочка');
+    description: 'Дизайнерская отделка Neo-Deco, натуральный мрамор, двери Barausse' })), 'неизвестно');
+  // а вместе с настоящим признаком оболочки — по-прежнему оболочка
+  assert.strictEqual(completeness(lot({ hasFurniture: false, repairType: 'no' })), 'оболочка');
+  assert.strictEqual(completeness(lot({ hasFurniture: false,
+    description: 'Квартира без отделки, голые стены' })), 'оболочка');
 });
 
 test('decoration=without — оболочка', () => {
@@ -216,7 +223,9 @@ test('марка не ловится внутри чужого слова', () =
 });
 
 test('оболочку и квартиру под ключ не сравнить — разрыв назван', () => {
-  const gaps = comparabilityGaps(lot({ hasFurniture: true }), lot({ hasFurniture: false }));
+  const gaps = comparabilityGaps(
+    lot({ description: 'Полностью укомплектована мебелью и техникой' }),
+    lot({ repairType: 'no' }));
   assert.ok(gaps.some((g) => /комплектность/.test(g)), gaps.join('; '));
 });
 
@@ -316,10 +325,17 @@ test('пустое описание не выдаётся за проверен�
   assert.notStrictEqual(r.verdict, 'похоже на правду');
 });
 
-test('hasFurniture=false опровергает заявленный ремонт под ключ', () => {
-  // проверено вручную на 332342009: галочка «дизайнерский», на фото голая отделка
+test('hasFurniture=false — повод посмотреть кадры, а не приговор', () => {
+  // Было «ПРОТИВОРЕЧИЕ» — по лоту 332342009, где галочка совпала с голой
+  // отделкой на фото. Сверка по кадрам на когорте Хамовников показала, что
+  // так совпадает не всегда: из двенадцати лотов, где галочка была
+  // единственным основанием, семь оказались обжитыми квартирами.
   const r = assessRepair(lot({ description: 'Дизайнерский ремонт, мебель и техника', hasFurniture: false }));
-  assert.strictEqual(r.verdict, 'ПРОТИВОРЕЧИЕ');
+  assert.strictEqual(r.verdict, 'под вопросом');
+  assert.ok(r.yellow.some((y) => /в сделку не входит/.test(y)), r.yellow.join('; '));
+  // а настоящее противоречие в тексте вердикт по-прежнему роняет
+  const hard = assessRepair(lot({ description: 'Квартира под ключ, без отделки, голые стены', hasFurniture: null }));
+  assert.strictEqual(hard.verdict, 'ПРОТИВОРЕЧИЕ');
 });
 
 test('white box в рассказе о прошлом не считается противоречием', () => {
