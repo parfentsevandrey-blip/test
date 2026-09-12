@@ -5,7 +5,7 @@
 const assert = require('assert');
 const { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, archiveStat,
         completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringVerdict,
-        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, galleryGrew, parseViews, mergedPriceHistory, offersByIds, matchesQuery, expandSimilar, houseClass, profileLot, floorBand, worksScope, buildCohort, metroSummary, metroLine, metroCell, photoKinds, photoIdent, galleryKey, galleryDiff, sweepCost, outputFile, STATES, stateFromEvidence, stateConfidence, mergeState,
+        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, galleryGrew, parseViews, mergedPriceHistory, offersByIds, matchesQuery, expandSimilar, houseClass, profileLot, floorBand, worksScope, buildCohort, metroSummary, metroLine, metroCell, photoKinds, photoIdent, galleryKey, galleryDiff, sweepCost, outputFile, STATES, stateFromEvidence, stateConfidence, mergeState, evidenceForLot,
         distToPathM, distToRingM, skylineAround, nearestOpen, nearestStreet, viewProfile, streetPremium,
         fillBuildYears, houseEra } = require('./cian.js');
 
@@ -1627,4 +1627,23 @@ test('при рендере слово остаётся за текстом об
 
 test('рендер словом, а не булевым — ошибка', () => {
   assert.throws(() => gradeRecord({ id: 9 }, { gradedAt: 'x', evidence: { render: 'да' } }), /render/);
+});
+
+test('в недостроенном доме интерьерных кадров быть не может — решает поле, а не глаз', () => {
+  // оценщик честно назвал кадры съёмкой; дом сдаётся в 2027 по ДДУ
+  const lot = { id: 1, houseFinished: false, saleType: 'fz214', decoration: 'without',
+    fromDeveloper: true, description: '' };
+  const ev = { planShown: true, planWalls: 'есть', roomsShown: 6,
+    floorFinished: true, furniture: true, render: false };
+  assert.strictEqual(stateFromEvidence(ev), 'жилое', 'сами по себе улики читаются так');
+  const r = gradeRecord(lot, { gradedAt: '2026-09-12', evidence: ev });
+  assert.strictEqual(r.finishState, 'оболочка', 'но слово остаётся за текстом и полями');
+  assert.strictEqual(r.stateProof.fromPhotos, null);
+  assert.strictEqual(r.stateProof.renderBy, 'дом не сдан');
+});
+
+test('в сданном доме поле интерьер не обнуляет', () => {
+  const lot = { id: 2, houseFinished: true, saleType: 'free', description: '' };
+  const ev = { planShown: true, planWalls: 'есть', roomsShown: 6, floorFinished: true, furniture: true };
+  assert.strictEqual(gradeRecord(lot, { gradedAt: 'x', evidence: ev }).finishState, 'жилое');
 });

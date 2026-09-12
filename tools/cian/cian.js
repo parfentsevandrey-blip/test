@@ -1446,6 +1446,22 @@ function withoutRenders(e) {
   };
 }
 
+/* Ловить рендер глазами получается плохо, и это тоже замерено: из тридцати
+   восьми лотов строящегося Фрунзенского квартала оценщики назвали кадры
+   визуализацией у шести. Остальные тридцать два выглядят как съёмка, потому
+   что их и рисовали так, чтобы выглядели.
+
+   Но у объявления есть поле, которое не спорит: дом не сдан. Снять интерьер
+   квартиры в доме, которого нет, нельзя ни при каком старании фотографа —
+   значит любой интерьерный кадр там нарисован, и решать это должно поле, а
+   не впечатление. Планировка снова остаётся: её чертят до стройки. */
+function evidenceForLot(lot, e) {
+  if (!e) return e;
+  const unbuilt = lot && (lot.houseFinished === false
+    || (lot.saleType === 'fz214' && lot.houseFinished !== true));
+  return unbuilt ? { ...e, render: true } : e;
+}
+
 function stateFromEvidence(raw) {
   const e = withoutRenders(raw);
   if (!e || typeof e !== 'object') return null;
@@ -1716,8 +1732,9 @@ function gradeRecord(lot, g) {
      пятиступенчатое отвечает, СКОЛЬКО стоит довести, а это разные деньги:
      бетон и whitebox различаются на стоимость стяжки и штукатурки, а
      «ремонт идёт» — это чужой проект, который придётся принимать или ломать. */
-  const fine = stateFromEvidence(g.evidence);
-  const conf = g.evidence ? stateConfidence(g.evidence) : 'низкая';
+  const forLot = evidenceForLot(lot, g.evidence);
+  const fine = stateFromEvidence(forLot);
+  const conf = g.evidence ? stateConfidence(forLot) : 'низкая';
   const merged = mergeState(claimed, fine, conf);
   const gk = galleryKey(lot);
   return {
@@ -1739,6 +1756,9 @@ function gradeRecord(lot, g) {
     finishState: g.evidence ? merged.state : null,
     stateProof: g.evidence ? {
       evidence: g.evidence,
+      /* Почему интерьер не в счёт, если он не в счёт: «оценщик увидел
+         рендер» и «дома ещё нет» — разные основания, и путать их нельзя. */
+      renderBy: forLot.render && !g.evidence.render ? 'дом не сдан' : (g.evidence.render ? 'кадры' : null),
       confidence: conf,
       fromPhotos: fine,
       fromText: claimed,
@@ -4033,7 +4053,7 @@ if (require.main === module) (async () => {
 /* Чистые функции наружу — чтобы их можно было проверить без сети. */
 module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, archiveStat, completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringMargin, ringVerdict, pointInPolygon,
   gradeLevel, gradeRecord, observedState, gradeFor, galleryGrew,
-  STATES, STATE_EVIDENCE, stateFromEvidence, stateConfidence, mergeState, withoutRenders, parseViews, REPAIR_RU, offersByIds, mergedPriceHistory, worksScope, AGES, WORK_ITEMS,
+  STATES, STATE_EVIDENCE, stateFromEvidence, stateConfidence, mergeState, withoutRenders, evidenceForLot, parseViews, REPAIR_RU, offersByIds, mergedPriceHistory, worksScope, AGES, WORK_ITEMS,
   expandSimilar, harvest, outputFile, matchesQuery, buildCohort, finishCost, loadedPricePerM2, fairShellPrice, MARKERS, PROOFS,
   houseClass, houseFor, houseRecord, profileLot, floorBand, HOUSE_MARKERS, HOUSE_CLASSES,
   metroSummary, metroLine, metroCell, RAIL_LINES, photoKinds,
