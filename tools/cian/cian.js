@@ -894,17 +894,23 @@ async function fetchPhotos(ctx, lot, dir, n) {
    сотни открытий. Сборка идёт в браузере: он и декодирует JPEG, и рисует.
    Картинки подаются как data:-URL, иначе холст «портится» чужим origin
    и toDataURL запрещён. */
-async function contactSheet(ctx, page, lot, file, n, cols = 3, skipLayout = false) {
+async function contactSheet(ctx, page, lot, file, n, cols = 3, skipLayout = false, layoutFirst = false) {
   /* Номера кадров на листе обязаны совпадать с номерами в галерее: в
      framesFull записывают именно их, и сдвиг на единицу превратил бы
      ссылку на кадр в ссылку на соседний. Поэтому подпись у каждой ячейки
      своя, а планировки либо помечаются, либо выбрасываются целиком. */
   const picked = [];
+  const rooms = [], plans = [];
   lot.photos.forEach((u, i) => {
     const isLayout = (lot.layoutFrames || []).includes(i + 1);
     if (skipLayout && isLayout) return;
-    if (picked.length < n) picked.push({ u, no: i + 1, isLayout });
+    (isLayout ? plans : rooms).push({ u, no: i + 1, isLayout });
   });
+  /* Планировка идёт первой ячейкой: по ней читается, возведены ли стены, а
+     это главный вопрос о состоянии. В общей куче она тонула — на листе из
+     шестнадцати кадров её было видно последней или не видно вовсе. */
+  const order = layoutFirst ? [...plans, ...rooms] : [...rooms, ...plans];
+  for (const p of order) { if (picked.length < n) picked.push(p); }
   const imgs = [];
   for (const p of picked) {
     try {
@@ -1400,6 +1406,75 @@ function gradeLevel(m) {
    доказательной силой, и разница должна попадать в цену, а не теряться. */
 const PROOFS = ['фото', 'рендер', 'смешанное', 'интерьера нет'];
 
+/* ---------- состояние отделки по кадрам и планировке ----------
+   На вторичке Циан состояние не отдаёт. Поле repairType приходит ТОЛЬКО из
+   карточки объявления, в выдаче поиска его нет вовсе: на разборе Хамовников
+   66 квартир из 195 остались «неизвестно», и медианы по состоянию считались
+   на том, что удалось вычитать из текста продавца. Текст же пишет продавец,
+   и пишет он в свою пользу.
+
+   Планировка из объявления отвечает на главный вопрос прямо и без слов:
+   возведены внутренние стены или нет. Свободная планировка — это бетон,
+   сколько бы красивых слов ни стояло в описании; и наоборот, план с
+   комнатами не даёт соврать «предчистовая» там, где квартира обжита.
+
+   Поэтому оценка состояния строится в два шага, как и оценка отделки:
+   сначала улики, которые видно, потом состояние по механическим правилам. */
+const STATES = ['бетон', 'whitebox', 'ремонт идёт', 'под ключ', 'жилое'];
+
+/* Улики, которые агент обязан заполнять по кадрам. Каждая — то, что видно,
+   а не вывод. null означает «не видно», и это не то же самое, что «нет». */
+const STATE_EVIDENCE = ['planShown', 'planWalls', 'roomsShown', 'bareConcrete',
+  'wallsPlastered', 'floorFinished', 'furniture', 'renovationInProgress'];
+
+function stateFromEvidence(e) {
+  if (!e || typeof e !== 'object') return null;
+  const rooms = e.roomsShown == null ? null : Number(e.roomsShown);
+
+  /* План весомее кадров: контур без внутренних стен — это бетон, даже если
+     на снимках красивый холл и вид из окна. Ровно этот случай и был у
+     пентхауса на Льва Толстого: «свободная планировка, стены не возведены». */
+  if (e.planShown === true && e.planWalls === 'нет') return 'бетон';
+
+  if (e.bareConcrete === true && !e.floorFinished) return 'бетон';
+  if (e.renovationInProgress === true) return 'ремонт идёт';
+  if (e.wallsPlastered === true && e.floorFinished !== true) return 'whitebox';
+  if (e.floorFinished === true && e.furniture === true) return 'жилое';
+  if (e.floorFinished === true) return 'под ключ';
+
+  /* Интерьера не показали вовсе — состояние неизвестно, и молчать об этом
+     нельзя: «под ключ» по умолчанию был бы подарком продавцу. */
+  if (rooms === 0 || rooms == null) return null;
+  return null;
+}
+
+/* Насколько выводу можно верить. План плюс комнаты — высокая; что-то одно —
+   средняя; интерьера нет — низкая, и состояние не ставится. */
+function stateConfidence(e) {
+  if (!e) return 'низкая';
+  const plan = e.planShown === true && e.planWalls != null;
+  const rooms = Number(e.roomsShown || 0) >= 3;
+  if (plan && rooms) return 'высокая';
+  if (plan || rooms) return 'средняя';
+  return 'низкая';
+}
+
+/* Состояние, увиденное на кадрах, старше вычитанного из текста. Текстовый
+   вывод остаётся рядом: расхождение между ними — это сведение о продавце,
+   а не только о квартире, и прятать его нельзя. */
+function mergeState(fromText, fromPhotos, conf) {
+  if (!fromPhotos || conf === 'низкая') {
+    return { state: fromText || 'неизвестно', source: 'текст', conflict: false };
+  }
+  const norm = (v) => (v === 'жилое' || v === 'под ключ' ? 'под ключ'
+    : v === 'бетон' || v === 'whitebox' ? 'оболочка' : v);
+  const conflict = !!fromText && fromText !== 'неизвестно'
+    && norm(fromText) !== norm(fromPhotos);
+  return { state: fromPhotos, source: 'кадры', conflict, textSaid: fromText || null };
+}
+
+
+
 /* ---------- вторая ось: дом ----------
    Кадры лобби, фасада, двора и паркинга оценка квартиры обязана выбрасывать
    (photo.md: «признаки читаются только по квартире»), и на Космодамианской
@@ -1591,6 +1666,13 @@ function gradeRecord(lot, g) {
   if (g.age != null && !(g.verdict && String(g.verdict).trim().length >= 40)) {
     throw new Error('возраст поставлен, а вывода нет: verdict обязателен (и не короче 40 символов)');
   }
+  if (g.evidence != null) {
+    const unknown = Object.keys(g.evidence).filter((k) => !STATE_EVIDENCE.includes(k));
+    if (unknown.length) throw new Error(`улики: «${unknown.join(', ')}» не из списка ${STATE_EVIDENCE.join(' / ')}`);
+    if (g.evidence.planWalls != null && !['есть', 'нет', 'частично'].includes(g.evidence.planWalls)) {
+      throw new Error(`planWalls: «${g.evidence.planWalls}» не из списка есть / нет / частично`);
+    }
+  }
   const claimed = completeness(lot);
   const observed = observedState(g.markers);
   /* Ради этой строки всё и затевалось: продавец пишет «под ключ», на кадрах
@@ -1601,6 +1683,14 @@ function gradeRecord(lot, g) {
      Расхождение считается только между «жить можно» и «жить нельзя». */
   const rank = (s) => (s === 'под ключ' ? 1 : s === 'неизвестно' ? null : 0);
   const conflict = rank(observed) != null && rank(claimed) != null && rank(observed) !== rank(claimed);
+  /* Пятиступенчатое состояние по уликам — отдельно от двоичного «жить можно
+     или нельзя». Двоичное решает, попадает ли лот в когорту сравнения;
+     пятиступенчатое отвечает, СКОЛЬКО стоит довести, а это разные деньги:
+     бетон и whitebox различаются на стоимость стяжки и штукатурки, а
+     «ремонт идёт» — это чужой проект, который придётся принимать или ломать. */
+  const fine = stateFromEvidence(g.evidence);
+  const conf = g.evidence ? stateConfidence(g.evidence) : 'низкая';
+  const merged = mergeState(claimed, fine, conf);
   const gk = galleryKey(lot);
   return {
     id: lot.id,
@@ -1615,6 +1705,18 @@ function gradeRecord(lot, g) {
     claimedState: claimed,
     observedState: observed,
     conflict,
+    /* Состояние по кадрам и плану. Пустое, пока улик нет: отсутствие оценки
+       честнее, чем «под ключ» по умолчанию, — последнее было бы подарком
+       продавцу ровно там, где он больше всего заинтересован. */
+    finishState: g.evidence ? merged.state : null,
+    stateProof: g.evidence ? {
+      evidence: g.evidence,
+      confidence: conf,
+      fromPhotos: fine,
+      fromText: claimed,
+      source: merged.source,
+      conflict: merged.conflict,
+    } : null,
     level,
     proof: g.proof || null,
     markers: g.markers || {},
@@ -1762,6 +1864,239 @@ function ringVerdict(lot) {
   if (inside === null) return { inside: null, margin: null, sure: false };
   const margin = ringMargin(lot);
   return { inside, margin, sure: margin > RING_DOUBT_M };
+}
+
+/* ---------- третья ось: адрес и вид ----------
+   Улица в центре — не координата, а товар. Остоженка и Плющиха лежат в одном
+   районе, в пятнадцати минутах друг от друга, и метр там стоит по-разному в
+   полтора раза. Район как единица это различие стирает начисто: «Хамовники»
+   одинаково называют Золотую милю и застройку вокруг Усачёвского рынка.
+
+   Но и «понтовость улицы» как оценка на глаз никуда не годится: она
+   непроверяема и подгоняется под нужный вывод задним числом. Поэтому ось
+   собрана из двух частей, и они намеренно считаются раздельно.
+
+   Первая — наблюдаемая география. Что видно из окна, определяется не
+   названием улицы, а тремя измеримыми вещами: далеко ли открытое
+   пространство (река, парк), выше ли этаж окрестных крыш и насколько плотно
+   застроено вокруг. Всё это берётся из OSM и считается арифметикой.
+
+   Вторая — эмпирическая надбавка улицы: медиана ₽/м² по улице против медианы
+   когорты. Это не мнение, а замер; он врёт ровно там, где на улице мало
+   лотов, и поэтому число ставится только при n >= MIN_STREET_N.
+
+   Складывать их в один балл я не стал: они отвечают на разные вопросы.
+   География говорит, что покупатель увидит; надбавка — сколько за адрес уже
+   просят. Разрыв между ними и есть самое интересное место. */
+
+function segDistM(px, py, ax, ay, bx, by) {
+  const dx = bx - ax, dy = by - ay;
+  const len2 = dx * dx + dy * dy;
+  const t = len2 ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / len2)) : 0;
+  return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+}
+
+/* Расстояние до ломаной в метрах. Ломаная — [[lat,lng], ...]. */
+function distToPathM(lat, lng, path) {
+  if (!path || path.length < 2) return null;
+  const px = lng * M_PER_DEG_LNG, py = lat * M_PER_DEG_LAT;
+  let best = Infinity;
+  for (let i = 1; i < path.length; i++) {
+    best = Math.min(best, segDistM(px, py,
+      path[i - 1][1] * M_PER_DEG_LNG, path[i - 1][0] * M_PER_DEG_LAT,
+      path[i][1] * M_PER_DEG_LNG, path[i][0] * M_PER_DEG_LAT));
+  }
+  return best;
+}
+
+/* До контура — но внутри контура ноль: стоять в парке и стоять у его ограды
+   для вида одно и то же, а для расстояния нет. */
+function distToRingM(lat, lng, ring) {
+  if (pointInPolygon(lat, lng, ring)) return 0;
+  return distToPathM(lat, lng, ring.concat([ring[0]]));
+}
+
+const GEO_FILE = `${__dirname}/geo/cao.json`;
+let GEO_CACHE;
+
+/* Геометрия лежит файлом, а не в коде: её можно перекачать из OSM и сверить,
+   а нарисованная по памяти ломаная реки — это то самое «на глаз», от
+   которого вся ось и уходит. */
+function loadGeo(file = GEO_FILE) {
+  if (GEO_CACHE && GEO_CACHE.__file === file) return GEO_CACHE;
+  if (!fs.existsSync(file)) return null;
+  const g = JSON.parse(fs.readFileSync(file, 'utf8'));
+  g.__file = file;
+  GEO_CACHE = g;
+  return g;
+}
+
+/* Крыши вокруг: этажность домов в радиусе R. Именно она решает, упирается
+   вид в соседний фасад или уходит поверх квартала. Соседей меньше трёх —
+   ответа нет: по одному дому линию крыш не проводят.
+
+   Линия берётся по ВЕРХНЕЙ ЧЕТВЕРТИ, а не по медиане. Медиана в центре
+   ошибается систематически: дворы забиты одно-двухэтажными пристройками, и
+   вокруг Остоженки она давала 3 — то есть пятый этаж числился бы видовым.
+   Чтобы смотреть поверх квартала, надо перерасти не половину его, а
+   большую часть. */
+const SKYLINE_R = 250;
+
+function skylineAround(lat, lng, geo, r = SKYLINE_R) {
+  const b = (geo && geo.buildings) || [];
+  if (!b.length) return null;
+  const dLat = r / M_PER_DEG_LAT, dLng = r / M_PER_DEG_LNG;
+  const near = [];
+  for (const [blat, blng, lv] of b) {
+    if (Math.abs(blat - lat) > dLat || Math.abs(blng - lng) > dLng) continue;
+    const d = Math.hypot((blng - lng) * M_PER_DEG_LNG, (blat - lat) * M_PER_DEG_LAT);
+    if (d <= r) near.push(lv);
+  }
+  if (near.length < 3) return null;
+  near.sort((x, y) => x - y);
+  const q = (p) => near[Math.min(near.length - 1, Math.floor(near.length * p))];
+  return { roof: q(0.75), median: q(0.5), p90: q(0.9), max: near[near.length - 1], n: near.length };
+}
+
+/* Открытое пространство — то, что нельзя застроить: река и парк. Мелкий
+   сквер в счёт не идёт: вид на него закрывает первый же дом напротив,
+   поэтому порог по площади, а не просто «зелень на карте». */
+const GREEN_MIN_HA = 2;
+
+function nearestOpen(lat, lng, geo) {
+  const out = { river: null, green: null, greenName: null };
+  if (!geo) return out;
+  if (geo.river) {
+    let best = Infinity;
+    for (const seg of geo.river) best = Math.min(best, distToPathM(lat, lng, seg) ?? Infinity);
+    out.river = Number.isFinite(best) ? Math.round(best) : null;
+  }
+  for (const p of geo.green || []) {
+    if ((p.ha || 0) < GREEN_MIN_HA) continue;
+    const d = Math.round(distToRingM(lat, lng, p.ring));
+    if (out.green == null || d < out.green) { out.green = d; out.greenName = p.name; }
+  }
+  return out;
+}
+
+/* Улицы вокруг точки по OSM, по возрастанию расстояния. Нужны не для
+   красоты: у 39 лотов Фрунзенского квартала Циан не отдаёт ни улицы, ни
+   дома — адресом служит название ЖК, и без этого разбора они выпадают из
+   любого разреза по улицам.
+
+   ЗАМЕРЕНО на 144 лотах Хамовников, у которых улица известна из выдачи:
+   ближайшая улица оказывается правильной в 67% случаев, правильная входит в
+   тройку ближайших в 98%. Причина промахов понятна и неустранима: координата
+   у Циана — центр дома, а угловой дом в центре стоит ближе к боковому
+   переулку, чем к собственной улице. Пять домов на Хилковом ближе к
+   Турчанинову, и это не ошибка геометрии.
+
+   Поэтому функция отдаёт список, а не ответ, и помечает `sure` только там,
+   где второй кандидат заметно дальше. Выдавать одно имя за адрес значило бы
+   ошибаться в трети случаев молча. */
+const STREET_SURE_RATIO = 1.8;
+
+function nearestStreet(lat, lng, geo, max = 120) {
+  if (!geo || !geo.streets) return null;
+  const all = [];
+  for (const s of geo.streets) {
+    let best = Infinity;
+    for (const seg of s.paths) {
+      const d = distToPathM(lat, lng, seg);
+      if (d != null && d < best) best = d;
+    }
+    if (Number.isFinite(best)) all.push({ name: s.name, m: Math.round(best) });
+  }
+  all.sort((a, b) => a.m - b.m);
+  const near = all.filter((x) => x.m <= max);
+  if (!near.length) return null;
+  const sure = near.length === 1 || near[1].m >= Math.max(near[0].m * STREET_SURE_RATIO, near[0].m + 40);
+  return { name: near[0].name, m: near[0].m, sure, also: near.slice(1, 3) };
+}
+
+/* Порог «открытого вида». 400 м — не догма, а ширина квартала в центре:
+   дальше между окном и водой встаёт как минимум один дом. */
+const OPEN_M = 400;
+
+function viewProfile(lot, geo = loadGeo()) {
+  if (lot.lat == null || lot.lng == null) return null;
+  const open = nearestOpen(lot.lat, lot.lng, geo);
+  const sky = skylineAround(lot.lat, lot.lng, geo);
+  const floor = lot.floor, floors = lot.floors;
+  /* Насколько окно выше окрестных крыш. Ноль — вровень; отрицательное —
+     смотрим в чужой фасад. */
+  const aboveRoof = floor != null && sky ? floor - sky.roof : null;
+  const nearOpen = [open.river, open.green].filter((x) => x != null && x <= OPEN_M);
+  const openM = nearOpen.length ? Math.min(...nearOpen) : null;
+
+  /* Разряд вида. Порядок проверок — от сильного к слабому, и каждая
+     опирается на измеренное, а не на название улицы. */
+  let klass = 'неизвестно', why = [];
+  if (openM != null) why.push(openM === open.river ? `вода в ${open.river} м` : `${open.greenName} в ${open.green} м`);
+  if (aboveRoof != null) why.push(aboveRoof >= 0 ? `на ${aboveRoof} эт. выше окрестных крыш` : `на ${-aboveRoof} эт. ниже окрестных крыш`);
+
+  if (aboveRoof != null) {
+    if (aboveRoof >= 3 && openM != null) klass = 'панорамный';
+    else if (aboveRoof >= 3 || (aboveRoof >= 0 && openM != null)) klass = 'открытый';
+    else if (aboveRoof >= 0) klass = 'локальный';
+    else klass = 'закрытый';
+  } else if (openM != null) klass = 'открытый';
+
+  /* Последний этаж отдельной строкой: над головой никого — это и про вид, и
+     про шум, и про то, что сверху не зальют. */
+  const top = floor != null && floors != null && floor === floors;
+  return {
+    river: open.river, green: open.green, greenName: open.greenName,
+    openM, skyline: sky ? sky.roof : null, skylineMax: sky ? sky.max : null, skylineN: sky ? sky.n : null,
+    aboveRoof, top, klass, why,
+  };
+}
+
+/* Вид, увиденный в окне на кадрах. Геометрия отвечает, что ДОЛЖНО быть видно;
+   кадр отвечает, что видно на самом деле — и эти ответы расходятся чаще, чем
+   хотелось бы: между окном и рекой встаёт корпус, который в OSM значится
+   складом без этажности, а «панорама на парк» оказывается панорамой на
+   развязку. Поэтому улика с кадра старше расчёта, как и с состоянием. */
+const VIEWS = ['вода', 'парк', 'панорама города', 'улица', 'двор', 'глухо'];
+
+function mergeView(computed, seen) {
+  if (!seen) return { view: computed ? computed.klass : 'неизвестно', source: 'расчёт', conflict: false };
+  /* Что из увиденного считается открытым видом. «Улица» и «двор» — нет:
+     это ровно то, что видно из любого окна в центре. */
+  const openSeen = seen === 'вода' || seen === 'парк' || seen === 'панорама города';
+  const openCalc = computed && (computed.klass === 'панорамный' || computed.klass === 'открытый');
+  return {
+    view: seen, source: 'кадры',
+    conflict: computed != null && computed.klass !== 'неизвестно' && openSeen !== openCalc,
+    computed: computed ? computed.klass : null,
+  };
+}
+
+/* Эмпирическая надбавка улицы. Считается только внутри одного состояния
+   отделки: смешать бетон с готовым — значит померить не улицу, а то, каких
+   лотов на ней больше. */
+const MIN_STREET_N = 3;
+
+function streetPremium(lots, opts = {}) {
+  const key = opts.key || ((l) => l.street || l.complex || null);
+  const val = opts.val || ((l) => l.pricePerM2 || (l.priceRub && l.totalArea ? l.priceRub / l.totalArea : null));
+  const med = (xs) => { const s = [...xs].sort((a, b) => a - b);
+    return s.length ? (s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2) : null; };
+  const pool = lots.map((l) => ({ k: key(l), v: val(l) })).filter((x) => x.k && x.v);
+  const base = med(pool.map((x) => x.v));
+  const by = new Map();
+  for (const x of pool) { if (!by.has(x.k)) by.set(x.k, []); by.get(x.k).push(x.v); }
+  const rows = [];
+  for (const [k, vs] of by) {
+    const m = med(vs);
+    rows.push({ street: k, n: vs.length, median: Math.round(m),
+      /* Надбавка ставится только там, где есть на чём её мерить. null — это
+         не «ноль процентов», это «не знаем», и путать их нельзя. */
+      premium: vs.length >= (opts.minN || MIN_STREET_N) ? +((m / base - 1) * 100).toFixed(1) : null,
+      min: Math.round(Math.min(...vs)), max: Math.round(Math.max(...vs)) });
+  }
+  rows.sort((a, b) => b.median - a.median);
+  return { base: base == null ? null : Math.round(base), n: pool.length, rows };
 }
 
 /* ---------- паспорт лота ----------
@@ -2543,7 +2878,11 @@ if (require.main === module) (async () => {
         } else if (a.photos !== '0') {
           if (a.files) files = await fetchPhotos(ctx, l, `${dir}/${l.id}`, nPhoto);
           else sheet = await contactSheet(ctx, page, l, `${dir}/${l.id}.jpg`, nPhoto,
-            parseInt(a.cols || '3', 10), a['skip-layout'] === true || a['skip-layout'] === 'да');
+            parseInt(a.cols || '3', 10), a['skip-layout'] === true || a['skip-layout'] === 'да',
+            /* Планировка первой ячейкой — когда лист собирают ради состояния:
+               стены на плане отвечают на вопрос раньше и честнее, чем любой
+               интерьерный кадр. */
+            a['layout-first'] === true || a['layout-first'] === 'да');
         }
         const ev = finishEvidence(l);
         const gr = gradeFor(vGrades, l);
@@ -3497,8 +3836,11 @@ if (require.main === module) (async () => {
 
 /* Чистые функции наружу — чтобы их можно было проверить без сети. */
 module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, archiveStat, completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringMargin, ringVerdict, pointInPolygon,
-  gradeLevel, gradeRecord, observedState, gradeFor, galleryGrew, parseViews, REPAIR_RU, offersByIds, mergedPriceHistory, worksScope, AGES, WORK_ITEMS,
+  gradeLevel, gradeRecord, observedState, gradeFor, galleryGrew,
+  STATES, STATE_EVIDENCE, stateFromEvidence, stateConfidence, mergeState, parseViews, REPAIR_RU, offersByIds, mergedPriceHistory, worksScope, AGES, WORK_ITEMS,
   expandSimilar, harvest, outputFile, matchesQuery, buildCohort, finishCost, loadedPricePerM2, fairShellPrice, MARKERS, PROOFS,
   houseClass, houseFor, houseRecord, profileLot, floorBand, HOUSE_MARKERS, HOUSE_CLASSES,
   metroSummary, metroLine, metroCell, RAIL_LINES, photoKinds,
-  photoIdent, galleryKey, galleryDiff, sweepCost, SWEEP };
+  photoIdent, galleryKey, galleryDiff, sweepCost, SWEEP,
+  distToPathM, distToRingM, skylineAround, nearestOpen, nearestStreet, viewProfile,
+  streetPremium, loadGeo, GEO_FILE, OPEN_M, GREEN_MIN_HA, MIN_STREET_N, VIEWS, mergeView };

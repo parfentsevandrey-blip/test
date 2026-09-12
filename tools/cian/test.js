@@ -5,7 +5,8 @@
 const assert = require('assert');
 const { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, archiveStat,
         completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringVerdict,
-        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, galleryGrew, parseViews, mergedPriceHistory, offersByIds, matchesQuery, expandSimilar, houseClass, profileLot, floorBand, worksScope, buildCohort, metroSummary, metroLine, metroCell, photoKinds, photoIdent, galleryKey, galleryDiff, sweepCost, outputFile } = require('./cian.js');
+        gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, galleryGrew, parseViews, mergedPriceHistory, offersByIds, matchesQuery, expandSimilar, houseClass, profileLot, floorBand, worksScope, buildCohort, metroSummary, metroLine, metroCell, photoKinds, photoIdent, galleryKey, galleryDiff, sweepCost, outputFile, STATES, stateFromEvidence, stateConfidence, mergeState,
+        distToPathM, distToRingM, skylineAround, nearestOpen, nearestStreet, viewProfile, streetPremium } = require('./cian.js');
 
 let passed = 0;
 const pending = [];
@@ -1397,4 +1398,180 @@ test('учёт не выдумывает чисел, которых не был�
   assert.strictEqual(f.declaredCount, null, 'не знаем — значит null, а не ноль');
   assert.strictEqual(f.aggregated, null);
   assert.strictEqual(f.enumerated, 1, 'перечислено при отсутствии счёта — то, что на руках');
+});
+
+process.stdout.write('\nсостояние: улики с кадров и планировки\n');
+
+test('свободная планировка — это бетон, что бы ни писал продавец', () => {
+  // ровно случай пентхауса на Льва Толстого: «стены не возведены», а на
+  // кадрах панорамные окна и вид на Москву
+  const e = { planShown: true, planWalls: 'нет', roomsShown: 4,
+    bareConcrete: true, floorFinished: false, furniture: false };
+  assert.strictEqual(stateFromEvidence(e), 'бетон');
+  // и даже если кадры выглядят нарядно
+  assert.strictEqual(stateFromEvidence({ ...e, bareConcrete: false, furniture: true }), 'бетон');
+});
+
+test('план с комнатами не даёт назвать обжитую квартиру оболочкой', () => {
+  const e = { planShown: true, planWalls: 'есть', roomsShown: 6,
+    bareConcrete: false, floorFinished: true, furniture: true };
+  assert.strictEqual(stateFromEvidence(e), 'жилое');
+});
+
+test('стены есть, пола нет — whitebox, а не «под ключ»', () => {
+  assert.strictEqual(stateFromEvidence({ planShown: true, planWalls: 'есть', roomsShown: 3,
+    wallsPlastered: true, floorFinished: false }), 'whitebox');
+});
+
+test('незаконченный ремонт — своё состояние, не оболочка', () => {
+  assert.strictEqual(stateFromEvidence({ roomsShown: 4, renovationInProgress: true,
+    wallsPlastered: true, floorFinished: false }), 'ремонт идёт');
+});
+
+test('интерьера не показали — состояние не ставится', () => {
+  assert.strictEqual(stateFromEvidence({ planShown: false, roomsShown: 0 }), null);
+  assert.strictEqual(stateFromEvidence(null), null);
+  // «под ключ» по умолчанию был бы подарком продавцу
+  assert.notStrictEqual(stateFromEvidence({ roomsShown: 0 }), 'под ключ');
+});
+
+test('уверенность: план и комнаты вместе — высокая, порознь — средняя', () => {
+  assert.strictEqual(stateConfidence({ planShown: true, planWalls: 'есть', roomsShown: 5 }), 'высокая');
+  assert.strictEqual(stateConfidence({ planShown: true, planWalls: 'нет', roomsShown: 1 }), 'средняя');
+  assert.strictEqual(stateConfidence({ roomsShown: 4 }), 'средняя');
+  assert.strictEqual(stateConfidence({ roomsShown: 1 }), 'низкая');
+});
+
+test('кадры старше текста, но расхождение остаётся видимым', () => {
+  const m = mergeState('под ключ', 'бетон', 'высокая');
+  assert.strictEqual(m.state, 'бетон');
+  assert.strictEqual(m.source, 'кадры');
+  assert.strictEqual(m.conflict, true, 'текст говорил «под ключ» — это надо показать');
+  assert.strictEqual(m.textSaid, 'под ключ');
+});
+
+test('при низкой уверенности остаётся текстовый вывод', () => {
+  const m = mergeState('оболочка', 'под ключ', 'низкая');
+  assert.strictEqual(m.state, 'оболочка');
+  assert.strictEqual(m.source, 'текст');
+});
+
+test('«жилое» и «под ключ» — не конфликт с текстовым «под ключ»', () => {
+  // текст различает только оболочку и под ключ; мебель текст не отличает
+  assert.strictEqual(mergeState('под ключ', 'жилое', 'высокая').conflict, false);
+  assert.strictEqual(mergeState('оболочка', 'whitebox', 'высокая').conflict, false);
+});
+
+process.stdout.write('\nсостояние: улики попадают в запись оценки\n');
+
+test('улики с кадров перебивают текст в записи оценки', () => {
+  // объявление уверяет, что квартира меблирована; план показывает контур
+  const lot = { id: 1, totalArea: 200, priceRub: 400e6, street: 'Льва Толстого', house: '10',
+    description: 'Полностью укомплектована мебелью и техникой' };
+  assert.strictEqual(completeness(lot), 'под ключ', 'текст сам по себе читается так');
+  const r = gradeRecord(lot, { gradedAt: '2026-09-12',
+    evidence: { planShown: true, planWalls: 'нет', roomsShown: 5, bareConcrete: true, floorFinished: false } });
+  assert.strictEqual(r.finishState, 'бетон');
+  assert.strictEqual(r.stateProof.source, 'кадры');
+  assert.strictEqual(r.stateProof.conflict, true, 'расхождение с текстом обязано быть видно');
+  assert.strictEqual(r.stateProof.fromText, 'под ключ');
+});
+
+test('без улик состояние по кадрам не выдумывается', () => {
+  const r = gradeRecord({ id: 2, description: '' }, { gradedAt: '2026-09-12' });
+  assert.strictEqual(r.finishState, null, 'пусто честнее, чем «под ключ» по умолчанию');
+  assert.strictEqual(r.stateProof, null);
+});
+
+test('чужие ключи в уликах — ошибка, а не тихо проглоченное поле', () => {
+  assert.throws(() => gradeRecord({ id: 3 }, { gradedAt: 'x', evidence: { plan_shown: true } }), /не из списка/);
+  assert.throws(() => gradeRecord({ id: 3 }, { gradedAt: 'x', evidence: { planWalls: 'возведены' } }), /planWalls/);
+});
+
+process.stdout.write('\nадрес: вид, крыши и надбавка улицы\n');
+
+test('расстояние до ломаной считается в метрах и от отрезка, а не от вершин', () => {
+  // отрезок вдоль широты 55.75 от 37.60 до 37.62; точка ровно посередине севернее
+  const line = [[55.7500, 37.6000], [55.7500, 37.6200]];
+  const d = distToPathM(55.7509, 37.6100, line);
+  assert.ok(Math.abs(d - 100) < 6, `ожидалось около 100 м, получено ${Math.round(d)}`);
+  // от вершины считалось бы примерно 630 м — проверяем, что это не так
+  assert.ok(d < 200);
+});
+
+test('внутри контура расстояние ноль, снаружи — до границы', () => {
+  const ring = [[55.750, 37.600], [55.750, 37.610], [55.755, 37.610], [55.755, 37.600]];
+  assert.strictEqual(distToRingM(55.7525, 37.605, ring), 0);
+  assert.ok(distToRingM(55.7560, 37.605, ring) > 40, 'снаружи — уже не ноль');
+});
+
+test('линия крыш не проводится по одному-двум соседям', () => {
+  const geo = { buildings: [[55.7500, 37.6000, 9], [55.7501, 37.6001, 12]] };
+  assert.strictEqual(skylineAround(55.75, 37.60, geo), null, 'двух домов мало');
+  geo.buildings.push([55.7502, 37.6002, 6]);
+  assert.strictEqual(skylineAround(55.75, 37.60, geo).roof, 12, 'линия крыш — по верхней четверти');
+});
+
+test('далёкие дома в линию крыш не попадают', () => {
+  const geo = { buildings: [[55.7500, 37.6000, 5], [55.7501, 37.6001, 5], [55.7502, 37.6002, 5],
+    [55.7600, 37.6000, 40], [55.7601, 37.6001, 40], [55.7602, 37.6002, 40]] };
+  const s = skylineAround(55.75, 37.60, geo);
+  assert.strictEqual(s.n, 3, 'башни в километре — чужой квартал');
+  assert.strictEqual(s.roof, 5);
+});
+
+test('мелкий сквер открытым пространством не считается', () => {
+  const geo = { green: [
+    { name: 'сквер', ha: 0.6, ring: [[55.7505, 37.6000], [55.7505, 37.6005], [55.7508, 37.6005], [55.7508, 37.6000]] },
+    { name: 'Парк Горького', ha: 60, ring: [[55.7290, 37.6000], [55.7290, 37.6100], [55.7320, 37.6100], [55.7320, 37.6000]] },
+  ] };
+  const n = nearestOpen(55.7500, 37.6000, geo);
+  assert.strictEqual(n.greenName, 'Парк Горького', 'вид на сквер закрывает первый же дом напротив');
+});
+
+test('вид: высоко и у воды — панорамный, низко в плотной застройке — закрытый', () => {
+  const geo = { river: [[[55.7400, 37.6000], [55.7400, 37.6200]]], green: [], buildings: [] };
+  for (let i = 0; i < 6; i++) geo.buildings.push([55.7420 + i * 0.0001, 37.6100 + i * 0.0001, 7]);
+  const high = viewProfile({ lat: 55.7420, lng: 37.6100, floor: 18, floors: 18 }, geo);
+  assert.strictEqual(high.klass, 'панорамный');
+  assert.strictEqual(high.top, true);
+  assert.ok(high.river < 250, `река должна быть рядом, получено ${high.river}`);
+  const low = viewProfile({ lat: 55.7420, lng: 37.6100, floor: 2, floors: 18 }, geo);
+  assert.strictEqual(low.klass, 'закрытый', 'второй этаж смотрит в чужой фасад');
+});
+
+test('вид без координат — null, а не «неизвестно» строкой', () => {
+  assert.strictEqual(viewProfile({ floor: 5, floors: 9 }, { buildings: [] }), null);
+});
+
+test('надбавка улицы не ставится там, где её не на чем мерить', () => {
+  const lots = [
+    { street: 'Остоженка', pricePerM2: 3000000 }, { street: 'Остоженка', pricePerM2: 3200000 },
+    { street: 'Остоженка', pricePerM2: 2800000 }, { street: 'Плющиха', pricePerM2: 1500000 },
+    { street: 'Плющиха', pricePerM2: 1600000 }, { street: 'Плющиха', pricePerM2: 1400000 },
+    { street: 'Чистый', pricePerM2: 9000000 },
+  ];
+  const p = streetPremium(lots);
+  const by = Object.fromEntries(p.rows.map((r) => [r.street, r]));
+  assert.strictEqual(by['Чистый'].premium, null, 'один лот — не замер улицы, а один лот');
+  assert.ok(by['Остоженка'].premium > 0 && by['Плющиха'].premium < 0);
+  assert.strictEqual(by['Остоженка'].n, 3);
+});
+
+test('улица подбирается только если она действительно рядом', () => {
+  const geo = { streets: [{ name: 'Остоженка', paths: [[[55.7420, 37.5980], [55.7430, 37.6030]]] }] };
+  assert.strictEqual(nearestStreet(55.7424, 37.6000, geo).name, 'Остоженка');
+  assert.strictEqual(nearestStreet(55.7500, 37.6000, geo), null, 'в километре — это не адрес');
+});
+
+test('две улицы на одном расстоянии — ответ помечен неуверенным', () => {
+  const geo = { streets: [
+    { name: 'Хилков переулок', paths: [[[55.7360, 37.5980], [55.7370, 37.6000]]] },
+    { name: 'Турчанинов переулок', paths: [[[55.7362, 37.5984], [55.7372, 37.6004]]] },
+  ] };
+  const r = nearestStreet(55.7366, 37.5992, geo, 200);
+  assert.strictEqual(r.sure, false, 'угловой дом стоит между двумя переулками — так и надо сказать');
+  assert.strictEqual(r.also.length, 1, 'соседний кандидат обязан остаться в ответе');
+  const one = nearestStreet(55.7366, 37.5992, { streets: [geo.streets[0]] }, 200);
+  assert.strictEqual(one.sure, true, 'когда рядом одна улица, сомневаться не в чем');
 });
