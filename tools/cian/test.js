@@ -1600,3 +1600,31 @@ test('эпоха дома режет там, где различаются ме�
   assert.strictEqual(houseEra(1914), 'до 1940');
   assert.strictEqual(houseEra(null), 'год неизвестен');
 });
+
+test('рендер не доказывает состояния: строящийся дом не бывает «жилым»', () => {
+  // ровно случай Фрунзенского квартала: на кадрах паркет, мебель, накрытый
+  // стол; дом сдаётся в 2027, продажа по ДДУ, отделки нет
+  const e = { planShown: true, planWalls: 'есть', roomsShown: 5,
+    floorFinished: true, furniture: true, render: true };
+  assert.strictEqual(stateFromEvidence(e), null, 'по нарисованному состояние не ставится');
+  assert.strictEqual(stateConfidence(e), 'средняя', 'план остаётся, помещения — нет');
+  // та же квартира, но кадры настоящие
+  assert.strictEqual(stateFromEvidence({ ...e, render: false }), 'жилое');
+  assert.strictEqual(stateConfidence({ ...e, render: false }), 'высокая');
+});
+
+test('план читается и на рендере: чертёж остаётся чертежом', () => {
+  assert.strictEqual(stateFromEvidence({ planShown: true, planWalls: 'нет', roomsShown: 4,
+    floorFinished: true, furniture: true, render: true }), 'бетон');
+});
+
+test('при рендере слово остаётся за текстом объявления', () => {
+  const e = { planShown: true, planWalls: 'есть', roomsShown: 6, floorFinished: true, render: true };
+  const m = mergeState('оболочка', stateFromEvidence(e), stateConfidence(e));
+  assert.strictEqual(m.state, 'оболочка');
+  assert.strictEqual(m.source, 'текст');
+});
+
+test('рендер словом, а не булевым — ошибка', () => {
+  assert.throws(() => gradeRecord({ id: 9 }, { gradedAt: 'x', evidence: { render: 'да' } }), /render/);
+});

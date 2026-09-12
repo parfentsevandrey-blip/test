@@ -1426,9 +1426,28 @@ const STATES = ['бетон', 'whitebox', 'ремонт идёт', 'под кл�
 /* Улики, которые агент обязан заполнять по кадрам. Каждая — то, что видно,
    а не вывод. null означает «не видно», и это не то же самое, что «нет». */
 const STATE_EVIDENCE = ['planShown', 'planWalls', 'roomsShown', 'bareConcrete',
-  'wallsPlastered', 'floorFinished', 'furniture', 'renovationInProgress'];
+  'wallsPlastered', 'floorFinished', 'furniture', 'renovationInProgress', 'render'];
 
-function stateFromEvidence(e) {
+/* Рендер — не наблюдение, и это не придирка, а замер. На первом же прогоне
+   по Хамовникам шесть лотов Фрунзенского квартала получили от оценщиков
+   «жилое»: на кадрах уложенный паркет, расставленная мебель, накрытый стол.
+   Дом при этом сдаётся в 2027 году, продажа по ДДУ, decoration=without —
+   то есть на этих кадрах нарисовано то, чего нет и два года не будет.
+
+   Поэтому при рендере интерьерные улики обнуляются целиком: они описывают
+   намерение застройщика, а не состояние квартиры. План остаётся в силе —
+   чертёж и есть чертёж, нарисован он или отсканирован. */
+function withoutRenders(e) {
+  if (!e || e.render !== true) return e;
+  return {
+    planShown: e.planShown, planWalls: e.planWalls, roomsShown: 0, render: true,
+    bareConcrete: null, wallsPlastered: null, floorFinished: null,
+    furniture: null, renovationInProgress: null,
+  };
+}
+
+function stateFromEvidence(raw) {
+  const e = withoutRenders(raw);
   if (!e || typeof e !== 'object') return null;
   const rooms = e.roomsShown == null ? null : Number(e.roomsShown);
 
@@ -1450,8 +1469,11 @@ function stateFromEvidence(e) {
 }
 
 /* Насколько выводу можно верить. План плюс комнаты — высокая; что-то одно —
-   средняя; интерьера нет — низкая, и состояние не ставится. */
-function stateConfidence(e) {
+   средняя; интерьера нет — низкая, и состояние не ставится. Кадры-рендеры в
+   счёт помещений не идут: считать их значит мерить уверенность по картинке,
+   которой соответствует пустая плита. */
+function stateConfidence(raw) {
+  const e = withoutRenders(raw);
   if (!e) return 'низкая';
   const plan = e.planShown === true && e.planWalls != null;
   const rooms = Number(e.roomsShown || 0) >= 3;
@@ -1672,6 +1694,11 @@ function gradeRecord(lot, g) {
     if (unknown.length) throw new Error(`улики: «${unknown.join(', ')}» не из списка ${STATE_EVIDENCE.join(' / ')}`);
     if (g.evidence.planWalls != null && !['есть', 'нет', 'частично'].includes(g.evidence.planWalls)) {
       throw new Error(`planWalls: «${g.evidence.planWalls}» не из списка есть / нет / частично`);
+    }
+    /* Рендер обязан быть решён явно: молчание здесь читалось бы как «съёмка»,
+       а это ровно та ошибка, из-за которой строящийся дом получал «жилое». */
+    if (g.evidence.render != null && typeof g.evidence.render !== 'boolean') {
+      throw new Error('render: true, false или null — рендер это факт про кадр, а не описание');
     }
   }
   const claimed = completeness(lot);
@@ -3253,6 +3280,7 @@ if (require.main === module) (async () => {
               floorFinished: '<true | false | null>',
               furniture: '<true | false | null>',
               renovationInProgress: '<true | false | null>',
+              render: '<true | false — кадры интерьера это визуализация, а не съёмка>',
             },
             age: `<${AGES.join(' | ')} | null>`,
             works: Object.fromEntries(WORK_ITEMS.map((k) => [k, `<${WORK_STATES.join(' | ')} | null>`])),
@@ -4005,7 +4033,7 @@ if (require.main === module) (async () => {
 /* Чистые функции наружу — чтобы их можно было проверить без сети. */
 module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, archiveStat, completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringMargin, ringVerdict, pointInPolygon,
   gradeLevel, gradeRecord, observedState, gradeFor, galleryGrew,
-  STATES, STATE_EVIDENCE, stateFromEvidence, stateConfidence, mergeState, parseViews, REPAIR_RU, offersByIds, mergedPriceHistory, worksScope, AGES, WORK_ITEMS,
+  STATES, STATE_EVIDENCE, stateFromEvidence, stateConfidence, mergeState, withoutRenders, parseViews, REPAIR_RU, offersByIds, mergedPriceHistory, worksScope, AGES, WORK_ITEMS,
   expandSimilar, harvest, outputFile, matchesQuery, buildCohort, finishCost, loadedPricePerM2, fairShellPrice, MARKERS, PROOFS,
   houseClass, houseFor, houseRecord, profileLot, floorBand, HOUSE_MARKERS, HOUSE_CLASSES,
   metroSummary, metroLine, metroCell, RAIL_LINES, photoKinds,
