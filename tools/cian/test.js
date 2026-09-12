@@ -1647,3 +1647,23 @@ test('в сданном доме поле интерьер не обнуляет
   const ev = { planShown: true, planWalls: 'есть', roomsShown: 6, floorFinished: true, furniture: true };
   assert.strictEqual(gradeRecord(lot, { gradedAt: 'x', evidence: ev }).finishState, 'жилое');
 });
+
+test('голый бетон при идущих работах — «ремонт идёт», а не «бетон»', () => {
+  // улики целевого пентхауса на Льва Толстого: перегородки выложены
+  // наполовину, штабели газоблока, лента, часть стен уже покрашена
+  const e = { planShown: true, planWalls: 'есть', roomsShown: 3,
+    bareConcrete: true, wallsPlastered: true, floorFinished: false,
+    furniture: false, renovationInProgress: true };
+  assert.strictEqual(stateFromEvidence(e), 'ремонт идёт');
+  // без следов работ голый бетон в кадре перевешивает штукатурку: часть стен
+  // выровнена, часть нет — это ближе к бетону, чем к белой коробке
+  assert.strictEqual(stateFromEvidence({ ...e, renovationInProgress: false }), 'бетон');
+  // whitebox — когда голого бетона в кадре уже нет
+  assert.strictEqual(stateFromEvidence({ ...e, renovationInProgress: false,
+    bareConcrete: false }), 'whitebox');
+});
+
+test('план без стен сильнее следов работ: стройка на плите — всё равно бетон', () => {
+  assert.strictEqual(stateFromEvidence({ planShown: true, planWalls: 'нет', roomsShown: 2,
+    bareConcrete: true, renovationInProgress: true, floorFinished: false }), 'бетон');
+});
