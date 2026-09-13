@@ -1727,6 +1727,60 @@ function worksScope(works) {
   return 'косметика';
 }
 
+/* ---------- что покупатель сделает с чужим ремонтом ----------
+   Буква отвечает «какого уровня отделка», возраст — «какого она года»,
+   а покупателю нужен третий ответ: въезжать или ломать. Он не выводится
+   ни из буквы, ни из возраста по отдельности. Дорогой ремонт 2009 года и
+   дешёвый ремонт 2009 года ждёт одна судьба; свежий ремонт уровня C и
+   свежий уровня A оба позволяют жить.
+
+   Решают возраст и объём работ — то, что видно, а не то, что нравится. */
+const RENO_FATES = ['жить как есть', 'освежить', 'под замену'];
+
+function renoFate(age, scope) {
+  if (age == null) return null;
+  if (age === 'под ремонт') return 'под замену';
+  /* Перечень работ старше возраста: если по кадрам меняют почти всё, слово
+     «жилой» в записи ничего не спасает. */
+  if (scope === 'капитальный') return 'под замену';
+  if (age === 'устаревший') return scope === 'косметика' ? 'освежить' : 'под замену';
+  if (age === 'свежий') return scope === 'капитальный' ? 'под замену' : 'жить как есть';
+  /* «жилой» */
+  return scope === 'косметика' || scope == null ? 'жить как есть' : 'освежить';
+}
+
+/* ---------- сколько ремонта достаётся покупателю ----------
+   ДОПУЩЕНИЕ, как и FINISH_COST. Доля отвечает на вопрос «какую часть
+   отделки не придётся делать заново»: въехал и живёшь — всю; освежить —
+   половину; под замену — ничего, и сверх того платишь за демонтаж.
+
+   Демонтаж — отдельная строка, потому что он отличает чужой дорогой
+   ремонт от голой оболочки в худшую сторону: оболочку не надо вывозить. */
+const RENO_CARRY = { 'жить как есть': 1, 'освежить': 0.5, 'под замену': 0 };
+const DEMOLITION_SHARE = 0.12;   // от стоимости нового ремонта, при полной замене
+
+/* Цена въезда: сколько стоит оказаться в квартире, в которой можно жить.
+   Для оболочки это цена плюс полный ремонт, для готовой квартиры — цена
+   плюс то, что всё равно придётся доделать. Только в этих деньгах оболочку
+   и готовое можно сравнивать, а цена метра в объявлении сравнивает их
+   молча и неверно. */
+function entryPrice(lot, fate, tier = 'бизнес') {
+  if (!lot || !lot.priceRub || !lot.totalArea) return null;
+  const c = finishCost(lot.totalArea, tier);
+  const carry = fate == null ? 0 : RENO_CARRY[fate];
+  if (carry == null) throw new Error(`судьба ремонта: «${fate}» не из списка ${RENO_FATES.join(' / ')}`);
+  const demo = fate === 'под замену' ? DEMOLITION_SHARE : 0;
+  const add = (t) => Math.round(c[t] * (1 - carry) + c[t] * demo);
+  return {
+    low: lot.priceRub + add('low'),
+    mid: lot.priceRub + add('mid'),
+    high: lot.priceRub + add('high'),
+    perM2: Math.round((lot.priceRub + add('mid')) / lot.totalArea),
+    toSpend: { low: add('low'), mid: add('mid'), high: add('high') },
+    carry, demolition: demo,
+  };
+}
+
 function gradeRecord(lot, g) {
   if (g.proof && !PROOFS.includes(g.proof)) {
     throw new Error(`подтверждение: «${g.proof}» не из списка ${PROOFS.join(' / ')}`);
@@ -1831,6 +1885,9 @@ function gradeRecord(lot, g) {
     age: g.age ?? null,
     works: g.works || null,
     worksScope: worksScope(g.works),
+    /* Въезжать или ломать — ответ, который покупатель ищет первым, а в
+       записи до сих пор приходилось собирать его из буквы и возраста. */
+    renoFate: renoFate(g.age ?? null, worksScope(g.works)),
     verdict: g.verdict ? String(g.verdict).trim() : null,
     note: g.note || '',
     gradedAt: g.gradedAt,
@@ -2614,6 +2671,54 @@ function dedupe(lots, areaTol) {
    выставленная несколькими объявлениями — разными агентами или заново. */
 function findTwins(lots, areaTol) {
   return groupSameFlat(lots, areaTol).groups.filter((g) => g.length > 1);
+}
+
+/* ---------- одна квартира в нескольких объявлениях ----------
+   groupSameFlat требует, чтобы совпали дом, этаж и площадь с точностью до
+   0,6 м². Для дорогого центра этого мало: одну и ту же квартиру разные
+   агентства подают с разной площадью (в Парк Паласе — от 250 до 320 м²),
+   с разной этажностью дома (2/7 и 2/8) и с разной комнатностью (4 и 5).
+   Фотографии тоже не выручают: каждое агентство заливает свою съёмку, и
+   адреса файлов не совпадают ни одним байтом.
+
+   Здесь ключ мягче: тот же дом и близкая цена. Это НЕ доказательство —
+   в одном доме бывают две одинаково оценённые квартиры. Это список на
+   проверку глазами: совпали ли мебель, паркет, вид из окна. Поэтому
+   функция называется «подозрительные», а не «двойники», и её результат
+   нельзя молча вычитать из когорты. */
+function suspectTwins(lots, { priceTol = 0.06, areaTol = 0.3 } = {}) {
+  const byHouse = new Map();
+  for (const l of lots) {
+    if (!l.houseId || !l.priceRub || !l.totalArea) continue;
+    (byHouse.get(l.houseId) || byHouse.set(l.houseId, []).get(l.houseId)).push(l);
+  }
+  const out = [];
+  for (const [houseId, bucket] of byHouse) {
+    const rest = [...bucket].sort((a, b) => a.priceRub - b.priceRub);
+    while (rest.length) {
+      const seed = rest.shift();
+      const g = [seed];
+      for (let i = rest.length - 1; i >= 0; i--) {
+        const l = rest[i];
+        const dp = Math.abs(l.priceRub - seed.priceRub) / seed.priceRub;
+        const da = Math.abs(l.totalArea - seed.totalArea) / seed.totalArea;
+        if (dp <= priceTol && da <= areaTol) { g.push(l); rest.splice(i, 1); }
+      }
+      if (g.length > 1) {
+        out.push({
+          houseId,
+          ids: g.map((l) => l.id),
+          areas: g.map((l) => l.totalArea),
+          prices: g.map((l) => l.priceRub),
+          floors: [...new Set(g.map((l) => l.floor))],
+          /* Разные этажи внутри группы — единственный признак, который
+             умеет опровергнуть догадку без просмотра кадров. */
+          sameFloor: new Set(g.map((l) => l.floor)).size === 1,
+        });
+      }
+    }
+  }
+  return out.sort((a, b) => b.ids.length - a.ids.length);
 }
 
 /* Просмотры живут только в отрисованной карточке: кнопка статистики,
@@ -4131,6 +4236,7 @@ module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, medi
   gradeLevel, gradeRecord, observedState, gradeFor, galleryGrew,
   STATES, STATE_EVIDENCE, stateFromEvidence, stateConfidence, mergeState, withoutRenders, evidenceForLot, parseViews, REPAIR_RU, offersByIds, mergedPriceHistory, worksScope, AGES, WORK_ITEMS,
   expandSimilar, harvest, outputFile, matchesQuery, buildCohort, finishCost, loadedPricePerM2, fairShellPrice, MARKERS, PROOFS,
+  renoFate, entryPrice, suspectTwins, RENO_FATES, RENO_CARRY, DEMOLITION_SHARE,
   houseClass, houseFor, houseRecord, profileLot, floorBand, HOUSE_MARKERS, HOUSE_CLASSES,
   metroSummary, metroLine, metroCell, RAIL_LINES, photoKinds,
   photoIdent, galleryKey, galleryDiff, sweepCost, SWEEP,

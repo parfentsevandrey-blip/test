@@ -6,6 +6,7 @@ const assert = require('assert');
 const { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, archiveStat,
         completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringVerdict,
         gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, galleryGrew, parseViews, mergedPriceHistory, offersByIds, matchesQuery, expandSimilar, houseClass, profileLot, floorBand, worksScope, buildCohort, metroSummary, metroLine, metroCell, photoKinds, photoIdent, galleryKey, galleryDiff, sweepCost, outputFile, STATES, stateFromEvidence, stateConfidence, mergeState, evidenceForLot,
+        renoFate, entryPrice, suspectTwins, RENO_FATES,
         distToPathM, distToRingM, skylineAround, nearestOpen, nearestStreet, viewProfile, streetPremium,
         fillBuildYears, houseEra } = require('./cian.js');
 
@@ -1700,4 +1701,62 @@ test('завезённый материал — это не работы: гол
 test('план без стен сильнее следов работ: стройка на плите — всё равно бетон', () => {
   assert.strictEqual(stateFromEvidence({ planShown: true, planWalls: 'нет', roomsShown: 2,
     bareConcrete: false, renovationInProgress: true, floorFinished: false }), 'бетон');
+});
+
+test('судьба ремонта: возраст решает, а перечень работ может его перебить', () => {
+  // свежий и полный — въезжать
+  assert.strictEqual(renoFate('свежий', 'косметика'), 'жить как есть');
+  // жилой с частичными работами — освежить, а не «всё хорошо»
+  assert.strictEqual(renoFate('жилой', 'частичный'), 'освежить');
+  assert.strictEqual(renoFate('жилой', 'косметика'), 'жить как есть');
+  // устаревший: жить можно, продать за счёт ремонта нельзя
+  assert.strictEqual(renoFate('устаревший', 'косметика'), 'освежить');
+  assert.strictEqual(renoFate('устаревший', 'частичный'), 'под замену');
+  assert.strictEqual(renoFate('под ремонт', 'косметика'), 'под замену');
+  // перечень работ старше слова: «свежий», в котором меняют почти всё,
+  // свежим не остаётся — так ловится предпродажная косметика
+  assert.strictEqual(renoFate('свежий', 'капитальный'), 'под замену');
+  assert.strictEqual(renoFate(null, 'косметика'), null, 'без возраста судьбы нет');
+});
+
+test('цена въезда: оболочку и готовое можно сравнивать только в этих деньгах', () => {
+  const shell = { priceRub: 550e6, totalArea: 266 };
+  const ready = { priceRub: 700e6, totalArea: 266 };
+  const a = entryPrice(shell, null, 'делюкс');          // ремонта нет вовсе
+  const b = entryPrice(ready, 'жить как есть', 'делюкс');
+  assert.strictEqual(a.toSpend.mid, 400e3 * 266, 'оболочке нужен полный ремонт');
+  assert.strictEqual(b.toSpend.mid, 0, 'в готовое въезжают как есть');
+  // 550 + 106 = 656 против 700: разрыв в 150 млн по объявлению после
+  // ремонта превращается в 44 млн в пользу оболочки — ради этой строки
+  // функция и написана
+  assert.strictEqual(a.mid, 656.4e6);
+  assert.ok(a.mid < b.mid, 'оболочка с ремонтом всё ещё дешевле готового за 700');
+
+  // «под замену» хуже оболочки на стоимость демонтажа
+  const c = entryPrice({ priceRub: 550e6, totalArea: 266 }, 'под замену', 'делюкс');
+  assert.strictEqual(c.toSpend.mid, Math.round(400e3 * 266 * 1.12));
+  assert.ok(c.mid > a.mid, 'чужой ремонт под снос дороже голой оболочки');
+
+  // «освежить» — половина сметы
+  const d = entryPrice(ready, 'освежить', 'делюкс');
+  assert.strictEqual(d.toSpend.mid, Math.round(400e3 * 266 * 0.5));
+  assert.throws(() => entryPrice(ready, 'слегка подкрасить', 'делюкс'), /судьба ремонта/);
+});
+
+test('подозрительные двойники: дом и цена ловят то, что этаж и площадь упускают', () => {
+  // Парк Палас: одна квартира в объявлениях с площадью 250-320 м² и этажами 2/7 и 2/8
+  const lots = [
+    { id: 1, houseId: 7, floor: 2, floors: 7, totalArea: 255, priceRub: 500e6 },
+    { id: 2, houseId: 7, floor: 2, floors: 8, totalArea: 257, priceRub: 500e6 },
+    { id: 3, houseId: 7, floor: 2, floors: 7, totalArea: 320, priceRub: 490e6 },
+    { id: 4, houseId: 7, floor: 6, floors: 8, totalArea: 253, priceRub: 595e6 },
+    { id: 5, houseId: 9, floor: 2, floors: 8, totalArea: 256, priceRub: 500e6 },
+  ];
+  assert.strictEqual(findTwins(lots, 2.5).length, 1, 'жёсткий ключ видит только пару 255/257');
+  const s = suspectTwins(lots);
+  assert.strictEqual(s.length, 1);
+  assert.deepStrictEqual(s[0].ids.sort((a, b) => a - b), [1, 2, 3]);
+  assert.strictEqual(s[0].sameFloor, true, 'этаж один — догадка не опровергнута');
+  assert.ok(!s[0].ids.includes(4), 'цена на 19% выше — это другая квартира');
+  assert.ok(!s[0].ids.includes(5), 'другой дом — не двойник, как бы ни совпадали цифры');
 });
