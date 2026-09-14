@@ -71,12 +71,25 @@ function parse(text) {
   const badge = iAddr < 0 ? null
     : (lines.slice(Math.max(0, iAddr - 16), iAddr).filter((s) => /^(Сдан(\s.*)?|Сдача в .+)$/.test(s)).pop() || null);
   // \b здесь бесполезен: JS считает кириллицу не-словом, и «Сдан» не даёт границы
-  const done = /Сдача\s*\n\s*\n\s*Сдан\s*\n/.test(t) || /^Сдан(\s|$)/.test(badge || '');
+  let done = /Сдача\s*\n\s*\n\s*Сдан\s*\n/.test(t) || /^Сдан(\s|$)/.test(badge || '');
   /* У очередной застройки в характеристиках стоит диапазон уже сданных корпусов
      («Полянка/44»: 2019–2024), а срок оставшихся — только в плашке. Берём плашку. */
   const years = (s) => [...(s || '').matchAll(/20\d\d/g)].map((m) => +m[0]);
   if (!done && years(badge).length && Math.max(...years(delivery), 0) < Math.max(...years(badge)))
     delivery = trim(badge);
+  /* Список «Все корпуса» — самый честный источник: у «Полянки/44» плашка обещает
+     «Сдача в 2026, есть сданные», а оба корпуса сданы в 1 кв. 2019. */
+  const cm = t.match(/\nВсе корпуса\n([\s\S]{0,1500}?)\n(?:Показать планировки|Все планировки|Смотреть)/);
+  const corpus = cm ? [...cm[1].matchAll(/([^\n]{2,60})\n(Сдан[^\n]{0,30}|Сдача[^\n]{0,30})/g)]
+    .map((m) => ({ house: m[1].trim(), when: m[2].trim() })) : [];
+  if (corpus.length && corpus.every((h) => /^Сдан/.test(h.when))) {
+    done = true;
+    const ys = corpus.flatMap((h) => [...h.when.matchAll(/20\d\d/g)].map((m) => +m[0]));
+    if (ys.length) {
+      const a = Math.min(...ys), b = Math.max(...ys);
+      delivery = a === b ? String(b) : `${a}–${b}`;   // очереди сдавали не за один год
+    }
+  }
   // сроки по корпусам: «Золотой (квартал 1)\nСдан в 4 кв. 2021»
   const houses = [...t.matchAll(/\n([^\n]{3,60})\n(Сдан[^\n]{0,30}|Сдача[^\n]{0,30}|\d кв\. 20\d\d)/g)]
     .map((m) => ({ house: m[1].trim(), when: m[2].trim() }))
@@ -92,7 +105,7 @@ function parse(text) {
     cls: grab(/Класс\s*\n\s*([^\n]{3,30})/),
     floors: grab(/Этажность\s*\n\s*([^\n]{1,20})/),
     buildings: grab(/Корпуса\s*\n\s*(\d{1,3})/),
-    houses,
+    houses: corpus.length ? corpus : houses,
     stage: done ? 'Сдан' : (delivery ? 'Строится' : null),
   };
 }
