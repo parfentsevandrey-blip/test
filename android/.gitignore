@@ -21,3 +21,4 @@ native/veiltun/gen/
 # Desktop harnesses built from cmd/; useful, not artefacts to keep.
 /native/veiltun/ptlab
 /native/veiltun/vpngatelab
+app/libs/veiltun-sources.jar
