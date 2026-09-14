@@ -2154,9 +2154,15 @@ function assess(rec, opts = {}) {
 
     /* 1. чем датировано */
     if (era.sure) {
-      const others = Object.entries(era.by).filter(([e]) => e !== era.era).flatMap(([, xs]) => xs);
+      const otherEras = Object.keys(era.by).filter((e) => e !== era.era);
+      const others = otherEras.flatMap((e) => era.by[e]);
+      /* Приметы соседней эпохи — не обновление, а проект на стыке: границы
+         словаря условны, ремонт 2004 года берёт из обеих колонок. Обновляли
+         по частям — это когда между эпохами разрыв. */
+      const adjacent = otherEras.every((e) => Math.abs(ERAS.indexOf(e) - ERAS.indexOf(era.era)) === 1);
       say('датировка', `Отделка датируется ${era.era}: ${era.by[era.era].join(', ')} — ${era.n} ${plural(era.n, ['примета', 'приметы', 'примет'])} одной эпохи.` +
-        (others.length ? ` Из других лет: ${others.join(', ')} — обновляли по частям.` : ''));
+        (others.length ? (adjacent ? ` Рядом приметы соседней эпохи: ${others.join(', ')} — проект на стыке, не обновление.`
+          : ` Есть и приметы других лет: ${others.join(', ')} — в датировку не идут; если это не стилевая цитата, обновляли по частям.`) : ''));
     } else if (era.n || era.unknown.length) {
       const all = [...Object.values(era.by).flat(), ...era.unknown];
       say('датировка', `Приметы разных лет (${all.join(', ')}) — одной эпохой не датируется; возраст «${rec.age}» поставлен по общему впечатлению.`);
