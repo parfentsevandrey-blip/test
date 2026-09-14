@@ -62,6 +62,13 @@
     <string name="settings_block_udp_desc">Tor умеет только TCP. Выключайте, лишь если понимаете зачем.</string>
     <string name="settings_block_ads">Блокировать рекламу и трекеры</string>
     <string name="settings_block_ads_desc">Имена рекламных и следящих доменов (список Steven Black, около 80 000) получают ответ «нет такого имени» ещё до тоннеля. Убирает баннеры в приложениях и браузере и экономит трафик на медленном пути.</string>
+    <string name="settings_blocklist_stamp">Снимок списка: %1$s</string>
+    <string name="settings_blocklist_refresh">Обновить список через тоннель</string>
+    <string name="settings_blocklist_needs_tunnel">Обновление идёт через тоннель: сначала подключитесь.</string>
+    <string name="settings_blocklist_refreshing">Скачиваю список через Tor…</string>
+    <string name="settings_blocklist_refreshed">Список обновлён: %1$d имён, уже применён.</string>
+    <string name="settings_blocklist_failed">Не удалось обновить: %1$s</string>
+    <string name="home_private_dns">В Android включён Private DNS (%1$s). Запросы имён идут мимо резолвера тоннеля, поэтому блокировщик рекламы и обход по именам не работают. Выключите его: Настройки Android → Сеть → Частный DNS.</string>
     <string name="settings_pulse">Пульс канала</string>
     <string name="settings_pulse_desc">Каждые 20 секунд через тоннель уходит крошечный запрос, раз в пять минут — замер скорости. Держит путь живым после простоя и замечает обрыв за 40 секунд, а не за две минуты. Около 200 КБ в час.</string>
     <string name="home_pulse">Пульс</string>

@@ -22,6 +22,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CallSplit
+import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Autorenew
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
@@ -69,6 +70,8 @@ fun HomeScreen(
     adsBlocked: Boolean,
     /** Groups of names going around the tunnel right now, named for the user. */
     bypassing: List<String>,
+    /** Android's Private DNS resolver while it is on, which defeats the resolver-side features. */
+    privateDns: String?,
     onToggle: () -> Unit,
     onNewCircuit: () -> Unit,
     modifier: Modifier = Modifier,
@@ -97,7 +100,11 @@ fun HomeScreen(
         // everything is going through Tor.
         if (state.isLive && bypassing.isNotEmpty()) {
             Spacer(Modifier.height(14.dp))
-            BypassNotice(bypassing)
+            Notice(Icons.Filled.CallSplit, stringResource(R.string.home_bypass_active, bypassing.joinToString(", ")))
+        }
+        if (state.isLive && privateDns != null) {
+            Spacer(Modifier.height(14.dp))
+            Notice(Icons.Filled.Dns, stringResource(R.string.home_private_dns, privateDns))
         }
 
         Spacer(Modifier.height(24.dp))
@@ -415,9 +422,13 @@ fun EmptyHint(text: String, modifier: Modifier = Modifier) {
     }
 }
 
-/** Says, on the screen the user looks at, what is not going through Tor. */
+/**
+ * A fact the user has to see on the first screen: traffic leaving in the
+ * clear, or a system setting that is quietly defeating a feature. Both are
+ * things nobody should have to remember having switched on.
+ */
 @Composable
-private fun BypassNotice(groups: List<String>) {
+private fun Notice(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
@@ -430,12 +441,12 @@ private fun BypassNotice(groups: List<String>) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                imageVector = Icons.Filled.CallSplit,
+                imageVector = icon,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onTertiaryContainer,
             )
             Text(
-                text = stringResource(R.string.home_bypass_active, groups.joinToString(", ")),
+                text = text,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onTertiaryContainer,
                 modifier = Modifier.padding(start = 12.dp),

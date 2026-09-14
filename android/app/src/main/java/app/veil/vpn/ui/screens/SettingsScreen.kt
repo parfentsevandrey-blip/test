@@ -44,6 +44,10 @@ fun SettingsScreen(
     snowflakeServed: Int,
     onBlockUdp: (Boolean) -> Unit,
     onBlockAds: (Boolean) -> Unit,
+    blocklistStamp: String?,
+    blocklistNote: String?,
+    tunnelLive: Boolean,
+    onRefreshBlocklist: () -> Unit,
     onPulse: (Boolean) -> Unit,
     onKillSwitch: (Boolean) -> Unit,
     onAutoStart: (Boolean) -> Unit,
@@ -90,6 +94,16 @@ fun SettingsScreen(
                 checked = settings.blockAds,
                 onCheckedChange = onBlockAds,
             )
+        }
+        if (settings.blockAds) {
+            item {
+                BlocklistCard(
+                    stamp = blocklistStamp,
+                    note = blocklistNote,
+                    canRefresh = tunnelLive,
+                    onRefresh = onRefreshBlocklist,
+                )
+            }
         }
         item {
             SwitchRow(
@@ -381,6 +395,55 @@ private fun DomainList(suffixes: List<String>) {
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(top = 6.dp),
             )
+        }
+    }
+}
+
+/**
+ * Which snapshot of the ad-block list is in use, and a way to get a newer
+ * one. The button only works through the tunnel, and says so instead of
+ * being greyed out for no stated reason.
+ */
+@Composable
+private fun BlocklistCard(
+    stamp: String?,
+    note: String?,
+    canRefresh: Boolean,
+    onRefresh: () -> Unit,
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        ),
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 18.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.settings_blocklist_stamp, stamp ?: "—"),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            note?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            OutlinedButton(onClick = onRefresh, enabled = canRefresh, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.settings_blocklist_refresh))
+            }
+            if (!canRefresh) {
+                Text(
+                    text = stringResource(R.string.settings_blocklist_needs_tunnel),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }

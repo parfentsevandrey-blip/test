@@ -70,6 +70,13 @@
     <string name="settings_block_udp_desc">Tor carries TCP only. Keep this on unless you know why you turned it off.</string>
     <string name="settings_block_ads">Block ads and trackers</string>
     <string name="settings_block_ads_desc">Advertising and tracking names (Steven Black\'s list, about 80,000) are answered "no such name" before they reach the tunnel. Removes banners in apps and the browser and saves traffic on a slow path.</string>
+    <string name="settings_blocklist_stamp">List snapshot: %1$s</string>
+    <string name="settings_blocklist_refresh">Refresh the list through the tunnel</string>
+    <string name="settings_blocklist_needs_tunnel">The refresh travels through the tunnel: connect first.</string>
+    <string name="settings_blocklist_refreshing">Fetching the list through Tor…</string>
+    <string name="settings_blocklist_refreshed">List refreshed: %1$d names, in use now.</string>
+    <string name="settings_blocklist_failed">Could not refresh: %1$s</string>
+    <string name="home_private_dns">Android\'s Private DNS is on (%1$s). Lookups go past the tunnel\'s resolver, so the ad blocker and the name bypass do nothing. Turn it off in Android Settings → Network → Private DNS.</string>
     <string name="settings_pulse">Link pulse</string>
     <string name="settings_pulse_desc">A tiny request through the tunnel every 20 seconds and a speed sample every five minutes. Keeps the path alive after idle and notices a break in 40 seconds instead of two minutes. About 200 KB an hour.</string>
     <string name="home_pulse">Pulse</string>

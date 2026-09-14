@@ -999,6 +999,15 @@ class VeilVpnService : VpnService() {
                 )
             }
 
+            // Android's own Private DNS takes every lookup past the resolver
+            // below, over TLS to a resolver of its choosing. The tunnel still
+            // carries it, but the ad blocker and the name bypass never see a
+            // query. Nothing here can change that setting; saying so is all
+            // that can be done.
+            network.privateDns?.let {
+                VeilLog.w("vpn", "Android Private DNS is on ($it): lookups skip the tunnel's resolver, so the ad blocker and name bypass are inert")
+            }
+
             // The ad blocker's list, unpacked from the APK if this version's has
             // not been yet. Off means the native side never opens the file.
             config.setBlockAds(settings.blockAds)

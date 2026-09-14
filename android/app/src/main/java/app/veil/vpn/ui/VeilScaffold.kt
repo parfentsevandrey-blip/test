@@ -132,6 +132,9 @@ fun VeilScaffold(
     val circuit by viewModel.circuit.collectAsStateWithLifecycle()
     val bootstrap by viewModel.bootstrap.collectAsStateWithLifecycle()
     val settings by viewModel.settings.collectAsStateWithLifecycle()
+    val privateDns by viewModel.privateDns.collectAsStateWithLifecycle()
+    val blocklistStamp by viewModel.blocklistStamp.collectAsStateWithLifecycle()
+    val blocklistNote by viewModel.blocklistNote.collectAsStateWithLifecycle()
     val bridges by viewModel.knownBridges.collectAsStateWithLifecycle()
     val logs by viewModel.logs.collectAsStateWithLifecycle()
     val selfTest by viewModel.selfTest.collectAsStateWithLifecycle()
@@ -265,6 +268,7 @@ fun VeilScaffold(
                                 },
                             )
                         },
+                        privateDns = privateDns,
                         onToggle = {
                             if (state.isLive || state.isBusy) {
                                 viewModel.stopTunnel()
@@ -310,6 +314,10 @@ fun VeilScaffold(
                         snowflakeServed = snowflakeServed,
                         onBlockUdp = viewModel::setBlockUdp,
                         onBlockAds = viewModel::setBlockAds,
+                        blocklistStamp = blocklistStamp,
+                        blocklistNote = blocklistNote,
+                        tunnelLive = state.isLive,
+                        onRefreshBlocklist = viewModel::refreshBlocklist,
                         onPulse = viewModel::setPulse,
                         onKillSwitch = viewModel::setKillSwitch,
                         onAutoStart = viewModel::setAutoStart,

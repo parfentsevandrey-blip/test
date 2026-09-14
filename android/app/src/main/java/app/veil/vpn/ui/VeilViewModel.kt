@@ -10,6 +10,8 @@ import app.veil.vpn.VeilApp
 import app.veil.vpn.core.SelfTest
 import app.veil.vpn.core.VeilLog
 import app.veil.vpn.data.AppRoutingMode
+import app.veil.vpn.data.Blocklist
+import app.veil.vpn.data.NetworkContext
 import app.veil.vpn.data.DnsMode
 import app.veil.vpn.data.InstalledApp
 import app.veil.vpn.data.InstalledApps
@@ -22,6 +24,7 @@ import app.veil.vpn.model.BridgeLine
 import app.veil.vpn.model.Transport
 import app.veil.vpn.model.TunnelState
 import app.veil.vpn.net.MoatChallenge
+import app.veil.vpn.net.SocksProxy
 import app.veil.vpn.vpn.TunnelBus
 import app.veil.vpn.vpn.VeilVpnService
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,7 +32,9 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 
@@ -57,6 +62,24 @@ class VeilViewModel(application: Application) : AndroidViewModel(application) {
     val ladder = TunnelBus.ladder
     val circuit = TunnelBus.circuit
     val snowflakeServed = TunnelBus.snowflakeProxyServed
+
+    /**
+     * Android's Private DNS setting while the tunnel is up, or null. Read
+     * from the system each time the tunnel comes up, because it is the one
+     * network setting that quietly defeats two of this app's features.
+     */
+    val privateDns: StateFlow<String?> = TunnelBus.state
+        .map { state ->
+            if (state.isLive) runCatching { NetworkContext.inspect(getApplication()).privateDns }.getOrNull() else null
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    // The ad blocker's list: which snapshot is in use, and how the last
+    // refresh went.
+    private val _blocklistStamp = MutableStateFlow(Blocklist.stamp(getApplication()))
+    val blocklistStamp: StateFlow<String?> = _blocklistStamp.asStateFlow()
+    private val _blocklistNote = MutableStateFlow<String?>(null)
+    val blocklistNote: StateFlow<String?> = _blocklistNote.asStateFlow()
     val localListeners = TunnelBus.localListeners
     val cooldowns = TunnelBus.cooldowns
     val pulse = TunnelBus.pulse
@@ -199,6 +222,37 @@ class VeilViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
     fun toggleApp(packageName: String) = edit { container.settings.toggleApp(packageName) }
+
+    /**
+     * Fetches a fresh ad-block list through the tunnel and puts it to work.
+     *
+     * Through the tunnel on purpose: the list lives on a site that is often
+     * unreachable directly from the networks this app is for, and reachable
+     * through Tor. Once it is in place the running tunnel is rebuilt so the
+     * new names count immediately rather than after the next connect.
+     */
+    fun refreshBlocklist() {
+        val app = getApplication<Application>()
+        val endpoint = container.tor.socks
+        if (!tunnelState.value.isLive || endpoint == null) {
+            _blocklistNote.value = text(R.string.settings_blocklist_needs_tunnel)
+            return
+        }
+        _blocklistNote.value = text(R.string.settings_blocklist_refreshing)
+        viewModelScope.launch(Dispatchers.IO) {
+            val result = Blocklist.refresh(app, SocksProxy("127.0.0.1", endpoint.port))
+            _blocklistNote.value = result.fold(
+                onSuccess = { text(R.string.settings_blocklist_refreshed, it) },
+                onFailure = { text(R.string.settings_blocklist_failed, it.message ?: it.javaClass.simpleName) },
+            )
+            if (result.isSuccess) {
+                _blocklistStamp.value = Blocklist.stamp(app)
+                app.startService(
+                    Intent(app, VeilVpnService::class.java).setAction(VeilVpnService.ACTION_REAPPLY),
+                )
+            }
+        }
+    }
 
     private fun edit(block: suspend () -> Unit) {
         viewModelScope.launch { block() }

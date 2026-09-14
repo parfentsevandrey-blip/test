@@ -131,6 +131,9 @@ object SelfTest {
                 return@withContext out.toString()
             }
             line("network: ${network.kind} ${network.countryIso ?: "??"} (${network.fingerprint})")
+            network.privateDns?.let {
+                line("private dns: ON ($it) — Android resolves past the tunnel's resolver; the ad blocker and the name bypass cannot act on these lookups")
+            }
             line("resolvers: ${network.dnsServers.joinToString().ifEmpty { "none reported" }}")
 
             val facts = TrafficAnalysis.linkFacts(app)

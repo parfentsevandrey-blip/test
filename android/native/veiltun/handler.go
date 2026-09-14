@@ -259,8 +259,10 @@ func (h *handler) serveUDP(conn adapter.UDPConn) {
 		return
 	}
 	if h.cfg.BlockUDP {
-		// Tor has no UDP transport. Silently dropping is the correct and
-		// leak-free behaviour: QUIC and WebRTC fall back to TCP.
+		// Normally never reached: the gate in udpgate.go declines such a flow
+		// before an endpoint exists, so the stack answers with ICMP port
+		// unreachable and the application falls back at once. Kept so that
+		// nothing leaks if a flow ever arrives here anyway.
 		stats.blocked.Add(1)
 		return
 	}

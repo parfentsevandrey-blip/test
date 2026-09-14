@@ -1,6 +1,7 @@
 package app.veil.vpn.data
 
 import android.content.Context
+import android.os.Build
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.telephony.TelephonyManager
@@ -30,6 +31,17 @@ data class NetworkContext(
      * and that includes resolving it the way the local network does.
      */
     val dnsServers: List<String> = emptyList(),
+    /**
+     * The name of the resolver Android's own Private DNS is set to, when it is
+     * on and the mode is strict; null otherwise.
+     *
+     * It matters because Private DNS takes every application's lookups over
+     * TLS to that resolver, through the tunnel but past the tunnel's own
+     * resolver — so the ad blocker sees nothing, the names asked to skip the
+     * tunnel are never noticed, and each lookup costs a circuit round trip.
+     * Nothing here can turn it off; the user can, and has to be told why.
+     */
+    val privateDns: String? = null,
 ) {
     val isOnline: Boolean get() = kind != NetworkKind.NONE
 
@@ -54,6 +66,13 @@ data class NetworkContext(
                 ?.filter { it.isNotBlank() }
                 ?.map { if (it.contains(':')) "[$it]:53" else "$it:53" }
                 .orEmpty()
+            val privateDns = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && link != null &&
+                link.isPrivateDnsActive
+            ) {
+                link.privateDnsServerName ?: "opportunistic"
+            } else {
+                null
+            }
             val linkParts = link?.let {
                 buildList {
                     add(it.domains.orEmpty())
@@ -79,7 +98,7 @@ data class NetworkContext(
                 append(linkParts.sorted().joinToString(","))
             }
 
-            return NetworkContext(kind, sha256(material).take(16), country, resolvers)
+            return NetworkContext(kind, sha256(material).take(16), country, resolvers, privateDns)
         }
 
         private fun sha256(value: String): String =

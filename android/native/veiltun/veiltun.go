@@ -268,6 +268,11 @@ func Start(cfg *Config) error {
 		return fmt.Errorf("veiltun: create stack: %w", err)
 	}
 
+	// Blocked UDP is answered with ICMP port unreachable rather than dropped,
+	// so QUIC falls back to TCP at once instead of after a timeout. See
+	// udpgate.go.
+	installUDPGate(st, h)
+
 	current = &session{stack: st, dev: dev, h: h}
 	logf("info", "tunnel up: socks=%s://%s dns=%s/%s isolate=%s blockUDP=%v mtu=%d",
 		cfg.socksNetwork(), cfg.SocksAddr, cfg.DNSMode, cfg.DNSAddr,
