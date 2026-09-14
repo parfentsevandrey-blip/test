@@ -17,6 +17,7 @@
  *   node tools/cian/cian.js grade  --lots lots.json --marks marks.json  — записать оценку отделки
  *   node tools/cian/cian.js grade  --list | --check
  *   node tools/cian/cian.js grade  --plan --lots lots.json [--ids]  — кого пересматривать: галереи сверяются по отпечатку
+ *   node tools/cian/cian.js assess --marks marks.json --lots lots.json [--ids] [--md] [--views вид.json] [--out]  — оценка для читателя: планировка, ремонт, почему въезжать или ломать
  *   node tools/cian/cian.js report — пересобрать docs/cian/lots.md из оценок и архива
  *   node tools/cian/cian.js refresh [--limit N] [--confirm нет] — что из архива ещё продаётся, а что ушло
  *   node tools/cian/cian.js card   327985409 331215568 [--out cards.json]  — история цены и поля, которых нет в выдаче
@@ -1714,17 +1715,128 @@ const AGES = ['свежий', 'жилой', 'устаревший', 'под ре
 const WORK_ITEMS = ['окна', 'полы', 'стены', 'потолки', 'двери', 'кухня', 'санузел', 'проводка'];
 const WORK_STATES = ['менять', 'освежить', 'оставить'];
 
+/* Позиция перечня записывается либо словом, либо словом с причиной:
+     works.кухня = 'менять'
+     works.кухня = { state: 'менять', why: 'фасады венге, накладная вытяжка' }
+   Причина — то, что видно на кадре и из чего следует «менять». Без неё
+   объяснение вывода приходится сочинять задним числом, и оно перестаёт
+   быть проверяемым. */
+const workState = (v) => (v == null ? null : typeof v === 'string' ? v : v.state ?? null);
+const workWhy = (v) => (v && typeof v === 'object' && v.why ? String(v.why).trim() : null);
+
 /* Объём работ из перечня «что менять»: это не смета, а её скелет — смета
    считается через finishCost, когда известна площадь и класс. */
 function worksScope(works) {
   if (!works) return null;
-  const known = Object.entries(works).filter(([, v]) => v != null);
+  const known = Object.entries(works).map(([k, v]) => [k, workState(v)]).filter(([, v]) => v != null);
   if (!known.length) return null;
   const score = known.reduce((s, [, v]) => s + (v === 'менять' ? 1 : v === 'освежить' ? 0.5 : 0), 0);
   const share = score / known.length;
   if (share >= 0.7) return 'капитальный';
   if (share >= 0.3) return 'частичный';
   return 'косметика';
+}
+
+/* ---------- приметы: чем датируется ремонт ----------
+   Возраст ставится не впечатлением, а набором решений — как одежда на
+   старой фотографии. Датируют три и больше приметы одной эпохи; одна
+   примета не датирует: трек-споты ставят и в ремонт 2008 года при
+   обновлении. Словарь закрытый, чтобы разные оценщики называли одно и то
+   же одним словом, а объяснение вывода строилось из записанного.
+
+   Только отделка и стационарный свет. Мебель уезжает с хозяином и ремонт
+   не датирует, как бы ни выглядела. Незнакомая примета не ошибка — она
+   попадёт в объяснение словами, но в счёт эпохи не идёт. */
+const ERAS = ['1995–2005', '2005–2015', '2015–2020', '2020+'];
+const ERA_SIGNS = {
+  '1995–2005': [
+    'арки из гипсокартона', 'многоуровневые потолки', 'зеркальные шкафы-купе', 'линолеум', 'ковролин',
+    'стенки ДСП', 'цветная плитка с бордюром', 'мелкая плитка 10×10', 'шахматный пол',
+    /* дворцовая классика конца девяностых — начала двухтысячных */
+    'наборный мрамор со звездой', 'вишнёвый шпон с витражами', 'паркетная розетка-медальон',
+    'хрусталь с цветными подвесками', 'ламбрекены', 'золочёная резьба', 'красное дерево буазери',
+    'шёлк на стенах', 'бронзовые ампирные люстры',
+    /* хай-тек той же поры */
+    'стальные колонны', 'стеклянная винтовая лестница', 'душевая капсула с гидромассажем',
+    'тросовые ограждения лестницы',
+  ],
+  '2005–2015': [
+    'глянцевый натяжной потолок', 'точечные по периметру', 'венге', 'капучино', 'скинали с фотопечатью',
+    'керамогранит под камень', 'декоративный камень на углах', 'ПВХ-панели', 'бежевая крупная плитка',
+    'мозаичный бордюр', 'медная мозаика', 'зебрано', 'макассар в глянце', 'патина с золотом',
+    'подсвеченный оникс', 'кессоны из гипса', 'светящиеся потолочные панели', 'хрустальные шторы-нити',
+    'чёрный полированный гранит', 'перфорированный потолок со звёздным небом', 'рогожка на стенах',
+    'стеклянные люстры-цветы', 'золотой потолок с рисунком', 'белый глянец с хромом', 'красный глянец',
+    'тканевый балдахин на потолке', 'сиреневый натяжной глянец', 'белый керамогранит во всю площадь',
+  ],
+  '2015–2020': [
+    'серый ламинат', 'белая глянцевая кухня', 'лофт-кирпич из гипса', 'серые стены', 'трек-споты',
+    'LED-лента в нишах', 'светодиодные кольца', 'чёрный морёный паркет', 'зеркальные купе в чёрном',
+    'чёрный мрамор книжным раскроем', 'хрустальные ярусные люстры', 'хромированные подвесы',
+    'известняк с нишами', 'тёмный шпон с гранитом',
+  ],
+  '2020+': [
+    'ёлочка светлого дуба', 'шеврон', 'кабанчик', 'чёрная арматура', 'фасады без ручек', 'рейки',
+    'латте и греж', 'терраццо', 'подоконник-столешница', 'магнитные треки', 'линейный свет',
+    'мрамор книжным раскроем', 'латунный профиль', 'скрытые двери', 'стеклянные перегородки в тонком профиле',
+    'мраморный остров с водопадом', 'подсветка цоколя', 'декоративная штукатурка', 'дубовые панели',
+    'винный шкаф в чёрном стекле', 'латунные стойки', 'экзотический мрамор цельными плитами',
+    'подвесы на тканевом шнуре', 'белые панели с филёнками', 'калакатта книжным раскроем',
+  ],
+};
+const SIGN_ERA = Object.fromEntries(Object.entries(ERA_SIGNS).flatMap(([e, xs]) => xs.map((s) => [s, e])));
+
+function eraFromSigns(signs) {
+  const xs = (signs || []).map((s) => String(s).trim()).filter(Boolean);
+  const by = {}, unknown = [];
+  for (const s of xs) {
+    const e = SIGN_ERA[s];
+    if (!e) { unknown.push(s); continue; }
+    (by[e] || (by[e] = [])).push(s);
+  }
+  const rows = Object.entries(by).sort((a, b) => b[1].length - a[1].length);
+  if (!rows.length) return { era: null, n: 0, sure: false, by, unknown };
+  const [era, hits] = rows[0];
+  /* Поровну между эпохами — эпоха не выбрана, и это надо сказать, а не
+     взять первую попавшуюся. */
+  const tie = rows.length > 1 && rows[1][1].length === hits.length;
+  return { era: tie ? null : era, n: hits.length, sure: !tie && hits.length >= 3, by, unknown };
+}
+
+/* Износ и свежесть — тоже словами, и тоже по тому, что видно. Один-два
+   следа — фон жилой квартиры; след в каждом кадре — ступень вниз. */
+const WEAR_SIGNS = [
+  'затёртый пол у входа', 'затёртый пол вдоль дивана', 'пожелтевшие выключатели', 'потемневшая затирка',
+  'залоснившиеся фасады', 'сколы', 'разнотон паркета', 'царапины на полу', 'следы протечек',
+  'потёртая краска у ручек', 'пыль на стяжке',
+];
+const FRESH_SIGNS = [
+  'матрас в плёнке', 'пустые полки', 'краска без потёртостей', 'сухой санузел', 'бирки на технике',
+  'плёнка на технике', 'пустые комнаты', 'постановочные цветы',
+];
+
+/* Движок обязан возражать: возраст поставлен человеком, приметы — тоже,
+   но сходиться они обязаны. «Свежий» при трёх приметах 2005–2015 — это
+   не свежий ремонт, а свежая косметика поверх старого; «устаревший» при
+   приметах 2020+ — описка. Каждое расхождение попадает в оговорки. */
+function ageCheck(age, signs, wear, fresh) {
+  const notes = [];
+  if (!age) return notes;
+  const e = eraFromSigns(signs);
+  const old = e.sure && (e.era === '1995–2005' || e.era === '2005–2015');
+  if ((age === 'свежий' || age === 'жилой') && old) {
+    notes.push(`возраст записан «${age}», а ${e.n} приметы датируют ${e.era}: скорее косметика поверх старого ремонта`);
+  }
+  if ((age === 'устаревший' || age === 'под ремонт') && e.sure && e.era === '2020+') {
+    notes.push(`возраст записан «${age}», а ${e.n} приметы — 2020+: расхождение, проверить`);
+  }
+  if (age === 'свежий' && (wear || []).length >= 2) {
+    notes.push(`возраст записан «свежий», а износ виден: ${(wear || []).join(', ')}`);
+  }
+  if (age === 'под ремонт' && (fresh || []).length) {
+    notes.push(`возраст записан «под ремонт», а записаны приметы свежести: ${(fresh || []).join(', ')}`);
+  }
+  return notes;
 }
 
 /* ---------- что покупатель сделает с чужим ремонтом ----------
@@ -1795,7 +1907,16 @@ function gradeRecord(lot, g) {
   if (g.works != null) {
     for (const [k, v] of Object.entries(g.works)) {
       if (!WORK_ITEMS.includes(k)) throw new Error(`works: «${k}» не из списка ${WORK_ITEMS.join(' / ')}`);
-      if (v != null && !WORK_STATES.includes(v)) throw new Error(`works.${k}: «${v}» не из списка ${WORK_STATES.join(' / ')}`);
+      const st = workState(v);
+      if (v != null && !WORK_STATES.includes(st)) throw new Error(`works.${k}: «${st}» не из списка ${WORK_STATES.join(' / ')}`);
+    }
+  }
+  /* Приметы, износ и свежесть — списки слов. Незнакомое слово допустимо
+     (оно попадёт в объяснение), не-список — нет: строка через запятую
+     развалит счёт эпохи молча. */
+  for (const key of ['signs', 'wear', 'fresh']) {
+    if (g[key] != null && !(Array.isArray(g[key]) && g[key].every((s) => typeof s === 'string'))) {
+      throw new Error(`${key}: список строк, по одной примете на элемент`);
     }
   }
   /* Вывод — не пересказ признаков, а суждение: что это за товар, что его
@@ -1883,6 +2004,14 @@ function gradeRecord(lot, g) {
     framesSeen: g.framesSeen || null,
     framesFull: g.framesFull || null,
     age: g.age ?? null,
+    /* Из чего сложился возраст. Без примет «устаревший» — впечатление,
+       с приметами — датировка, которую можно оспорить по кадру. */
+    signs: g.signs || null,
+    wear: g.wear || null,
+    fresh: g.fresh || null,
+    era: eraFromSigns(g.signs).era,
+    eraSure: eraFromSigns(g.signs).sure,
+    ageNotes: ageCheck(g.age ?? null, g.signs, g.wear, g.fresh),
     works: g.works || null,
     worksScope: worksScope(g.works),
     /* Въезжать или ломать — ответ, который покупатель ищет первым, а в
@@ -1892,6 +2021,244 @@ function gradeRecord(lot, g) {
     note: g.note || '',
     gradedAt: g.gradedAt,
   };
+}
+
+/* ---------- оценка для читателя ----------
+   Запись оценки — для движка: восемь признаков, буква, улики, перечень.
+   Покупателю нужен ответ на три вопроса — что за планировка, что за
+   ремонт и что с ним делать — и объяснение, ПОЧЕМУ «въезжать» или «ломать».
+   Объяснение здесь не сочиняется, а собирается из записанного: приметы,
+   износ, перечень работ с причинами, правило, которое сработало. Если
+   чего-то в записи нет, объяснение так и говорит, а не молчит.
+
+   Внутренней кухни в тексте нет: ни имён признаков, ни букв, ни ключей.
+   То, что можно перепроверить по кадру, называется словами кадра. */
+const LEVEL_WORDS = {
+  A: 'авторский премиум', B: 'качественный полный ремонт', C: 'массовая жилая отделка',
+  D: 'отделка застройщика без кухни и мебели', E: 'бетон или белая коробка',
+};
+const ERA_WORDS = {
+  '1995–2005': 'конца 1990-х — начала 2000-х', '2005–2015': '2005–2015 годов',
+  '2015–2020': 'второй половины 2010-х', '2020+': 'последних лет',
+};
+const MARKER_WORDS = {
+  stone: { 'слэб': 'камень цельными плитами', 'керамогранит': 'плитка', 'нет': 'без камня' },
+  joinery: { 'на заказ': 'столярка в размер', 'серийная': 'серийные шкафы', 'нет': 'встроенного нет' },
+  kitchen: { 'интегрированная': 'кухня со скрытой техникой', 'встроенная': 'кухня со встроенной техникой',
+    'эконом': 'кухня эконом', 'нет': 'кухни нет' },
+  light: { 'сценарный': 'свет сценариями', 'базовый': 'свет базовый', 'нет': 'светильников нет' },
+  furniture: { 'полный': 'мебель полная', 'частичный': 'мебель частично', 'нет': 'пусто' },
+  bath: { 'камень и бренд': 'санузлы в камне с дизайнерской арматурой', 'плитка': 'санузлы в плитке',
+    'не отделан': 'санузлы не отделаны' },
+  floor: { 'массив ёлочкой': 'паркет ёлочкой', 'инженерная доска': 'доска', 'ламинат': 'ламинат', 'стяжка': 'стяжка' },
+  doors: { 'скрытые': 'двери скрытого монтажа', 'в наличнике': 'двери обычные', 'нет': 'дверей нет' },
+};
+const UNSEEN_WORDS = { kitchen: 'кухня', bath: 'санузлы', floor: 'пол', light: 'свет', furniture: 'мебель',
+  stone: 'камень', joinery: 'столярка', doors: 'двери' };
+const SCOPE_WORDS = { 'капитальный': 'капитальный ремонт', 'частичный': 'частичная переделка', 'косметика': 'косметика' };
+/* «3 приметы», «5 примет», «1 примета» — текст для человека обязан
+   склоняться, иначе он читается как выдача программы. */
+const plural = (n, [one, few, many]) => {
+  const a = Math.abs(n) % 100, b = a % 10;
+  return a > 10 && a < 20 ? many : b > 1 && b < 5 ? few : b === 1 ? one : many;
+};
+const BOTTOM = {
+  'жить как есть': 'Въезжать и жить',
+  'освежить': 'Въезжать, освежить по ходу',
+  'под замену': 'Покупать как оболочку и ломать',
+};
+
+function assess(rec, opts = {}) {
+  const { lot = null, view = null, house = null } = opts;
+  const m = rec.markers || {};
+  const ev = (rec.stateProof && rec.stateProof.evidence) || null;
+  const why = [], caveats = [];
+  const say = (point, text) => why.push({ point, text });
+
+  /* ---- планировка: только измеримое ---- */
+  const lf = [];
+  const rooms = lot ? lot.rooms : null, area = lot ? lot.totalArea : rec.area;
+  if (rooms && area) {
+    const per = Math.round(area / rooms);
+    const tag = per >= 45 ? 'крупные помещения' : per >= 30 ? 'просторно' : per >= 20 ? 'обычная нарезка' : 'мелкая нарезка';
+    lf.push(`${rooms} комн. на ${area} м² — по ${per} м² на комнату, ${tag}`);
+  } else if (area) lf.push(`${area} м²`);
+  if (lot && lot.flatType === 'openPlan') lf.push('по объявлению — свободная планировка');
+  if (lot && lot.kitchenArea) lf.push(`кухня ${lot.kitchenArea} м²`);
+  const shellNow = ev && ev.bareConcrete === true && ev.floorFinished !== true;
+  if (ev) {
+    if (ev.planShown === false) lf.push('плана в объявлении нет');
+    else if (ev.planWalls === 'нет') lf.push('план без перегородок: планировка свободная, стены — по вашему проекту');
+    else if (ev.planWalls === 'частично') lf.push('перегородки стоят частично');
+    /* План со стенами при голом бетоне — дизайн-проект продавца, а не
+       обязательство: стены на нём нарисованы, а не построены. */
+    else if (ev.planWalls === 'есть' && shellNow) lf.push('перегородки есть только на плане — это проект, а не факт: стены будут ваши');
+    else if (ev.planWalls === 'есть') lf.push('перегородки стоят: планировка задана, менять — через согласование');
+    if (ev.roomsShown != null && rooms && ev.roomsShown < rooms) {
+      lf.push(`на кадрах ${ev.roomsShown} ${plural(ev.roomsShown, ['помещение', 'помещения', 'помещений'])} из ${rooms}`);
+    }
+  }
+  if (lot && lot.floor != null) {
+    const band = floorBand(lot);
+    lf.push(`${lot.floor}-й этаж${lot.floors ? ` из ${lot.floors}` : ''}` +
+      (band === 'первый' ? ' — первый, это скидка, а не премия' : band === 'последний' ? ' — последний' : ''));
+  }
+  if (lot && lot.isApartments) lf.push('апартаменты, не жильё');
+
+  /* ---- ремонт: что видно и чего не видно ---- */
+  const seen = [], unseen = [];
+  for (const k of Object.keys(MARKER_WORDS)) {
+    if (m[k] == null) unseen.push(UNSEEN_WORDS[k]);
+    else seen.push(MARKER_WORDS[k][m[k]] || m[k]);
+  }
+  const era = eraFromSigns(rec.signs);
+  const levelWord = rec.level ? LEVEL_WORDS[rec.level] : null;
+  const eraWord = era.sure ? ERA_WORDS[era.era] : null;
+  let finishText;
+  const shell = ['бетон', 'whitebox', 'ремонт идёт'].includes(rec.finishState);
+  if (shell) {
+    finishText = rec.finishState === 'бетон' ? 'отделки нет: бетонная оболочка'
+      : rec.finishState === 'whitebox' ? 'отделки нет: стены выровнены, пол не уложен'
+      : 'ремонт начат и не закончен — чужой проект';
+  } else if (levelWord) {
+    finishText = `${levelWord}${eraWord ? ' ' + eraWord : ''}` + (seen.length ? `: ${seen.join(', ')}` : '');
+  } else {
+    finishText = seen.length ? `видно меньше четырёх признаков (${seen.join(', ')}) — уровень не ставится` : 'кадров квартиры нет';
+  }
+  if (unseen.length && !shell) caveats.push(`на кадрах нет: ${unseen.join(', ')}`);
+
+  /* ---- итог и почему ---- */
+  let headline, bottom;
+  if (shell) {
+    headline = rec.finishState; bottom = rec.finishState === 'бетон'
+      ? 'Оболочка: ремонт с нуля, ничего чужого ломать не надо'
+      : rec.finishState === 'whitebox' ? 'Оболочка под чистовую: стяжка и штукатурка уже оплачены'
+      : 'Чужой недоделанный ремонт: принимать проект или ломать';
+    if (ev && ev.planShown === true && ev.planWalls === 'нет') say('план', 'На плане нет перегородок: свободная планировка, а это бетон при любых кадрах.');
+    if (ev && ev.bareConcrete === true) say('кадры', 'На кадрах голый бетон, пол не уложен.');
+    if (ev && ev.planShown === true && ev.planWalls === 'есть' && ev.bareConcrete === true) {
+      say('план', 'Стены на плане нарисованы, на кадрах их нет: план — дизайн-проект продавца, планировку выбирает покупатель.');
+    }
+    if (rec.finishState === 'ремонт идёт') say('кадры', 'Работа уже скрыла бетон, но отделка не закончена: следующему владельцу достаётся чужой проект — принимать его или разбирать.');
+    if (rec.stateProof && rec.stateProof.renderBy) {
+      say('рендер', rec.stateProof.renderBy === 'дом не сдан'
+        ? 'Дом не сдан, интерьерных кадров быть не может — показаны визуализации.'
+        : 'Интерьер на кадрах — визуализация, не съёмка: в счёт не идёт.');
+    }
+  } else if (!rec.renoFate) {
+    headline = rec.level ? 'возраст не поставлен' : 'оценки нет';
+    bottom = rec.level ? 'Жить можно; сколько прослужит ремонт — не оценено' : 'Оценки нет: кадров квартиры не хватает';
+    if (!rec.age && rec.level) caveats.push('возраст ремонта не записан — судьба ремонта не выводится');
+  } else {
+    headline = rec.renoFate; bottom = BOTTOM[rec.renoFate];
+
+    /* 1. чем датировано */
+    if (era.sure) {
+      const others = Object.entries(era.by).filter(([e]) => e !== era.era).flatMap(([, xs]) => xs);
+      say('датировка', `Отделка датируется ${era.era}: ${era.by[era.era].join(', ')} — ${era.n} ${plural(era.n, ['примета', 'приметы', 'примет'])} одной эпохи.` +
+        (others.length ? ` Из других лет: ${others.join(', ')} — обновляли по частям.` : ''));
+    } else if (era.n || era.unknown.length) {
+      const all = [...Object.values(era.by).flat(), ...era.unknown];
+      say('датировка', `Приметы разных лет (${all.join(', ')}) — одной эпохой не датируется; возраст «${rec.age}» поставлен по общему впечатлению.`);
+    } else {
+      say('датировка', `Возраст «${rec.age}» поставлен оценщиком; датирующие приметы не записаны.`);
+      caveats.push('датирующие приметы не записаны — возраст не перепроверить по кадру');
+    }
+    if (era.unknown.length && era.n) caveats.push(`приметы вне словаря, в счёт эпохи не идут: ${era.unknown.join(', ')}`);
+
+    /* 2. износ или свежесть */
+    if ((rec.wear || []).length) say('износ', `Следы жизни: ${rec.wear.join(', ')}.`);
+    if ((rec.fresh || []).length) say('свежесть', `Жизни не было: ${rec.fresh.join(', ')}.`);
+    if (rec.age === 'свежий' && !(rec.fresh || []).length) caveats.push('приметы свежести не записаны');
+
+    /* 3. что менять, с причинами */
+    const w = rec.works || {};
+    const grp = { 'менять': [], 'освежить': [], 'оставить': [] };
+    for (const [k, v] of Object.entries(w)) {
+      const st = workState(v); if (!st) continue;
+      const r = workWhy(v);
+      grp[st].push(r ? `${k} (${r})` : k);
+    }
+    const known = grp['менять'].length + grp['освежить'].length + grp['оставить'].length;
+    if (known) {
+      const parts = [];
+      if (grp['менять'].length) parts.push(`менять: ${grp['менять'].join(', ')}`);
+      if (grp['освежить'].length) parts.push(`освежить: ${grp['освежить'].join(', ')}`);
+      if (grp['оставить'].length) parts.push(`оставить: ${grp['оставить'].join(', ')}`);
+      say('перечень', `${parts.join('; ')}. Из ${known} видимых позиций менять ${grp['менять'].length}` +
+        (grp['освежить'].length ? `, освежить ${grp['освежить'].length}` : '') +
+        ` — по объёму это ${SCOPE_WORDS[rec.worksScope] || rec.worksScope}.`);
+    } else {
+      say('перечень', 'Перечень «что менять» не записан — объём работ не оценён.');
+      caveats.push('перечень работ не записан');
+    }
+
+    /* 4. правило, которое сработало — словами */
+    const f = rec.renoFate, a = rec.age, s = rec.worksScope;
+    let rule;
+    if (f === 'под замену') {
+      rule = a === 'под ремонт' ? 'Показывать нечего — под замену.'
+        : s === 'капитальный' ? 'Когда менять приходится большую часть видимого, возраст уже не важен: под замену.'
+        : 'Устаревшую отделку не освежить точечно — потолок, кухня и стены сделаны одним языком и обновляются только целиком: под замену.';
+      rule += ' Покупатель не наследует ничего и сверху платит за демонтаж: чужой дорогой ремонт здесь хуже голой оболочки.';
+    } else if (f === 'освежить') {
+      rule = a === 'устаревший' ? 'Отделка устарела, но менять по кадрам почти нечего: освежить и жить.'
+        : 'Ремонт живой, но часть позиций просит обновления: въезжать можно, освежить по ходу.';
+      rule += ' Наследуется примерно половина, остальное — своя смета.';
+    } else {
+      rule = a === 'свежий' ? 'Ремонт свежий, в перечне нет ничего под замену: въезжать.'
+        : 'Ремонт живой, по перечню только косметика: въезжать.';
+      rule += ' Ремонт наследуется целиком.';
+    }
+    say('итог', rule);
+  }
+
+  /* ---- оговорки, общие для всех ---- */
+  (rec.ageNotes || []).forEach((n) => caveats.push(n));
+  if (rec.proof === 'рендер') caveats.push('интерьер на кадрах — визуализация, а не съёмка');
+  if (rec.proof === 'интерьера нет') caveats.push('кадров интерьера нет');
+  if (rec.conflict) caveats.push(`по тексту объявления «${rec.claimedState}», на кадрах «${rec.observedState}»`);
+  if (rec.markers && Object.keys(rec.markers).length && !(rec.framesFull || []).length && !shell) {
+    caveats.push('оригиналы кадров не открывались — оценка по контактному листу');
+  }
+
+  /* ---- дом и адрес ---- */
+  const of = [];
+  const year = lot ? (lot.year || lot.buildYear || buildingYear(lot)) : null;
+  if (year) of.push(`дом ${year} года (${houseEra(year)})`);
+  if (house && house.class) of.push(`класс дома «${house.class}»`);
+  if (view) {
+    if (view.klass) of.push(`вид ${view.klass}`);
+    if (view.river != null && view.river <= 300) of.push(`вода в ${Math.round(view.river)} м`);
+    if (view.green != null && view.green <= 300) of.push(`зелень в ${Math.round(view.green)} м`);
+    if (view.aboveRoof != null && view.aboveRoof >= 0) of.push('выше линии крыш');
+  }
+  if (rec.pricePerM2) of.push(`${rec.pricePerM2.toLocaleString('ru-RU')} ₽/м²`);
+
+  return {
+    id: rec.id, headline, bottom,
+    layout: { text: lf.join('; '), facts: lf },
+    finish: { text: finishText, level: levelWord, age: rec.age || null, era: era.sure ? era.era : null, seen, unseen },
+    other: { text: of.join('; '), facts: of },
+    why, caveats,
+  };
+}
+
+/* Текст для человека. Пять строк; «почему» — списком, по одному основанию
+   на строку, чтобы спорить можно было с конкретной строкой. */
+function assessText(a, { md = false } = {}) {
+  const b = (s) => (md ? `**${s}**` : s);
+  const L = [];
+  L.push(`${b('Итог')}: ${a.bottom}.`);
+  if (a.layout.text) L.push(`${b('Планировка')}: ${a.layout.text}.`);
+  L.push(`${b('Ремонт')}: ${a.finish.text}.`);
+  if (a.why.length) {
+    L.push(`${b('Почему')}:`);
+    a.why.forEach((w) => L.push(`  — ${w.text}`));
+  }
+  if (a.caveats.length) L.push(`${b('Оговорки')}: ${a.caveats.join('; ')}.`);
+  if (a.other.text) L.push(`${b('Дом и адрес')}: ${a.other.text}.`);
+  return L.join('\n');
 }
 
 /* ---------- сколько стоит довести до «под ключ» ----------
@@ -2861,7 +3228,46 @@ if (require.main === module) (async () => {
   const cmd = a._[0];
   if (!cmd || a.help) { log(fs.readFileSync(__filename, 'utf8').split('*/')[0]); process.exit(0); }
 
-  /* Единственная команда, которой сеть не нужна вовсе: поднимать ради неё
+  /* Оценка для читателя: из записи и полей лота, без сети. Записи берутся
+     из хранилища оценок (--store) или из файла разметки (--marks), лоты —
+     из любого файла выдачи. Печатает текст; --out пишет разбор целиком. */
+  if (cmd === 'assess') {
+    const src = a.lots ? JSON.parse(fs.readFileSync(a.lots, 'utf8')) : null;
+    const lots = src ? (src.lots || src.flats || (Array.isArray(src) ? src : [])) : [];
+    const byId = new Map(lots.map((l) => [l.id, l]));
+    let recs = [];
+    if (a.marks) {
+      const marks = JSON.parse(fs.readFileSync(a.marks, 'utf8'));
+      for (const [key, g] of Object.entries(marks)) {
+        if (key === '_' || !g || typeof g !== 'object') continue;
+        const lot = byId.get(Number(g.lotId || key));
+        if (!lot) { log(`  ! ${key}: лота нет в --lots, пропускаю`); continue; }
+        try { recs.push(gradeRecord(lot, { ...g, gradedAt: g.gradedAt || null })); }
+        catch (e) { log(`  ! ${key}: ${e.message}`); }
+      }
+    } else {
+      const store = loadGrades(a.store || 'docs/cian/grades.json');
+      recs = Object.values(store.flats);
+    }
+    if (a.ids) { const want = new Set(String(a.ids).split(',').map(Number)); recs = recs.filter((r) => want.has(r.id)); }
+    const views = a.views ? JSON.parse(fs.readFileSync(a.views, 'utf8')) : null;
+    const houses = a.houses ? loadHouses(a.houses).houses : null;
+    const out = [];
+    for (const rec of recs) {
+      const lot = byId.get(rec.id) || null;
+      const view = views ? (Array.isArray(views) ? views.find((v) => v.id === rec.id) : views[rec.id]) || null : null;
+      const house = houses && lot ? houseFor(houses, lot) : null;
+      const asm = assess(rec, { lot, view, house });
+      out.push(asm);
+      log(`\n${rec.id}  ${rec.address || ''}${lot && lot.complex ? ` (${lot.complex})` : ''}`);
+      log(assessText(asm, { md: !!a.md }).split('\n').map((s) => '  ' + s).join('\n'));
+    }
+    if (a.out) fs.writeFileSync(a.out, JSON.stringify(out, null, 2) + '\n');
+    log(`\nоценок: ${out.length}` + (a.out ? ` -> ${a.out}` : ''));
+    process.exit(0);
+  }
+
+  /* Команда, которой сеть не нужна вовсе: поднимать ради неё
      браузер и греть куки — платить полминуты ни за что. */
   if (cmd === 'archive') {
     const arc = loadArchive(a.archive || 'docs/cian/archive.json');
@@ -3484,7 +3890,16 @@ if (require.main === module) (async () => {
               render: '<true | false — кадры интерьера это визуализация, а не съёмка>',
             },
             age: `<${AGES.join(' | ')} | null>`,
-            works: Object.fromEntries(WORK_ITEMS.map((k) => [k, `<${WORK_STATES.join(' | ')} | null>`])),
+            /* Из чего сложился возраст: приметы словами словаря (ERA_SIGNS),
+               износ и свежесть — тем же способом. Три приметы одной эпохи
+               датируют; без примет возраст остаётся впечатлением. */
+            signs: ['<примета из словаря photo.md, по одной на элемент; три одной эпохи датируют>'],
+            wear: ['<следы жизни: затёртый пол у входа, потемневшая затирка, … | пусто>'],
+            fresh: ['<приметы свежести: матрас в плёнке, пустые полки, … | пусто>'],
+            /* Позиция — слово, либо слово с причиной: { state, why }. Причина
+               — то, что видно на кадре и из чего следует «менять». */
+            works: Object.fromEntries(WORK_ITEMS.map((k) => [k,
+              `<${WORK_STATES.join(' | ')} | null | {"state": "менять", "why": "что именно видно"}>`])),
             verdict: '<обязателен при возрасте: что это за товар, что его продаёт или топит, что сделает следующий владелец>',
             note: '',
           };
@@ -4237,6 +4652,7 @@ module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, medi
   STATES, STATE_EVIDENCE, stateFromEvidence, stateConfidence, mergeState, withoutRenders, evidenceForLot, parseViews, REPAIR_RU, offersByIds, mergedPriceHistory, worksScope, AGES, WORK_ITEMS,
   expandSimilar, harvest, outputFile, matchesQuery, buildCohort, finishCost, loadedPricePerM2, fairShellPrice, MARKERS, PROOFS,
   renoFate, entryPrice, suspectTwins, RENO_FATES, RENO_CARRY, DEMOLITION_SHARE,
+  assess, assessText, eraFromSigns, ageCheck, workState, workWhy, ERAS, ERA_SIGNS, WEAR_SIGNS, FRESH_SIGNS, LEVEL_WORDS,
   houseClass, houseFor, houseRecord, profileLot, floorBand, HOUSE_MARKERS, HOUSE_CLASSES,
   metroSummary, metroLine, metroCell, RAIL_LINES, photoKinds,
   photoIdent, galleryKey, galleryDiff, sweepCost, SWEEP,
