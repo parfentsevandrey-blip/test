@@ -161,32 +161,37 @@ def floors(r):
 def per_m2_str(v):
     return None if v in (None, 0) else int(v)
 
-# Одна палитра с печатной книгой: графитовый синий, тёплое золото, кремовая бумага.
-INK, GOLD, PAPER, LINE = '16243F', 'A98A4B', 'FBFAF7', 'E4DFD4'
-BODY, TITLE = 'Calibri', 'Georgia'
+# Та же сдержанная палитра, что и в PDF: графит, светлая бумага, цвет — только по делу.
+INK, ACCENT, PAPER, LINE = '1D2126', '6C7076', 'FAFAF9', 'DEDCD7'
+BODY, TITLE = 'Calibri', 'Calibri'
 thin = Side(style='thin', color=LINE)
 MED_SIDE = Side(style='medium', color=INK)
 border = Border(bottom=thin)                      # без вертикальных линий — так таблица легче читается
 HEAD_FILL = PatternFill('solid', fgColor=INK)
 HEAD_FONT = Font(name=BODY, size=9, bold=True, color='FFFFFF')
 BODY_FONT = Font(name=BODY, size=10, color='22221F')
-LINK_FONT = Font(name=BODY, size=9, bold=True, color=GOLD, underline='single')
-TITLE_FONT = Font(name=TITLE, size=18, bold=True, color=INK)
+LINK_FONT = Font(name=BODY, size=9, color='3A5A80', underline='single')
+TITLE_FONT = Font(name=TITLE, size=15, bold=True, color=INK)
 SUB_FONT = Font(name=BODY, size=9, italic=True, color='6E6E66')
 ZEBRA = PatternFill('solid', fgColor=PAPER)
 GROUP_FILL = PatternFill('solid', fgColor='FFFFFF')
-GROUP_FONT = Font(name=TITLE, size=12, bold=True, color=INK)
+GROUP_FONT = Font(name=TITLE, size=11, bold=True, color=INK)
 NAME_FONT = Font(name=BODY, size=10, bold=True, color=INK)
-STATUS_FILL = {'построено': 'E6F0E8', 'строится': 'F7EBD9', 'проектирование': 'ECE6F5',
-               'квартиры': 'EDF0F5', 'апартаменты': 'F3EDE5', 'квартиры + апартаменты': 'EDF0F5'}
-STATUS_FONT = {'построено': '2E6B46', 'строится': '8A5A16', 'проектирование': '4C3B73',
-               'квартиры': '3A4A63', 'апартаменты': '5A4636', 'квартиры + апартаменты': '3A4A63'}
+STATUS_FILL = {'построено': 'EAF1EC', 'строится': 'F7EFE1', 'проектирование': 'EEEAF4'}
+STATUS_FONT = {'построено': '3C7A56', 'строится': 'A8762A', 'проектирование': '5B4E86'}
 ZONE_FILL = {'Садовое кольцо': 'FFF2CC', 'Хамовники': 'E2EFDA', 'Сити': 'DDEBF7', 'Пресня': 'FCE4D6', 'Белорусская': 'EDEDED'}
 wrap = Alignment(horizontal='center', vertical='center', wrap_text=True)
 center = Alignment(horizontal='center', vertical='center', wrap_text=True)
 right = Alignment(horizontal='center', vertical='center')
 
 def is_url(v): return isinstance(v, str) and v.startswith('http')
+
+def link_label(url):
+    """Подпись ссылки по адресу: на листе каналов это Telegram, а не Циан."""
+    u = str(url)
+    if 't.me' in u: return 'Telegram ↗'
+    if 'cian.ru' in u: return 'Циан ↗'
+    return 'Открыть ↗'
 
 def short_name(n):
     """«Stella di Mosca Hotel & Residences (Стелла ди Моска …)» → без транслитерации в скобках."""
@@ -243,11 +248,11 @@ def sheet(wb, title, headers, rows, widths, note=None, subtitle='', zone_col=Non
     ws.append([subtitle]); ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=ncol)
     ws['A2'].font = SUB_FONT; ws.row_dimensions[2].height = 16
     ws['A2'].alignment = Alignment(vertical='center')
-    for cc in ws[2]: cc.border = Border(bottom=Side(style='medium', color=GOLD))
+    for cc in ws[2]: cc.border = Border(bottom=Side(style='thin', color=LINE))
     ws.append(headers)
     for c in ws[3]:
         c.fill = HEAD_FILL; c.font = HEAD_FONT; c.alignment = center
-        c.border = Border(bottom=Side(style='medium', color=GOLD))
+        c.border = Border(bottom=Side(style='medium', color=INK))
     ws.row_dimensions[3].height = 34
     grouped = any(r and r[0] == '__GROUP__' for r in rows)
     i = 0
@@ -278,7 +283,7 @@ def sheet(wb, title, headers, rows, widths, note=None, subtitle='', zone_col=Non
             elif isinstance(c.value, (int, float)):
                 c.number_format = '#,##0'; c.alignment = right
             elif is_url(c.value):
-                c.hyperlink = c.value; c.value = 'Циан ↗'; c.font = LINK_FONT; c.alignment = center
+                c.hyperlink = c.value; c.value = link_label(c.value); c.font = LINK_FONT; c.alignment = center
             else:
                 c.alignment = wrap if c.column in (1, 4, ncol) or (isinstance(c.value, str) and len(c.value) > 18) else center
         last = ws.cell(rr, ncol)
@@ -553,9 +558,9 @@ if idx_path.exists():
         COLW, PX = 12.0, 89                            # ширина колонки в символах ≈ 89 px
         ncols = math.ceil(IMG_W / PX)
         for i in range(1, ncols + 1): ws.column_dimensions[get_column_letter(i)].width = COLW
-        ws['A1'] = f"Карта: {mp['title']} — премиум-ЖК по статусу"; ws['A1'].font = TITLE_FONT
+        ws['A1'] = f"Карта · {mp['title']}"; ws['A1'].font = TITLE_FONT
         ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=ncols); ws.row_dimensions[1].height = 26
-        ws['A2'] = 'Зелёный — построено, оранжевый — строится, фиолетовый — проектирование. Номер маркера = номер в списке на соседнем листе. Подложка: Яндекс Карты.'
+        ws['A2'] = 'Зелёный — построено, янтарный — строится, фиолетовый — проектирование. Номер маркера = номер в списке на соседнем листе. Подложка: Яндекс Карты.'
         ws['A2'].font = SUB_FONT; ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=ncols)
         im = XLImage(str(DOCS / mp['file'])); im.width = IMG_W; im.height = img_h
         ws.add_image(im, 'A3')
