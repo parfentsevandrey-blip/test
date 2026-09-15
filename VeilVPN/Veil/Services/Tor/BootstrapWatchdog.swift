@@ -195,6 +195,9 @@ struct BootstrapWatchdog {
             lastReason = detail
             return .abort(.ptLaunchFailed)
         case .externalAbort(let failure):
+            // A probe saying "no Internet" is contradicted by a relay that has answered; the
+            // connection is the fact, the probe the guess.
+            if failure == .noInternet, firstHopReached { return .keepWaiting }
             return .abort(failure)
         case .circuitEstablished:
             // Version-independent, and true even when the percentage never moves: Tor's bootstrap

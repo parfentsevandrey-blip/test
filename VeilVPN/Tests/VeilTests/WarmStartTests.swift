@@ -173,6 +173,17 @@ final class WarmStartTests: XCTestCase {
         XCTAssertEqual(watchdog.handle(.tick, at: start.advanced(by: .seconds(13))), .abort(.controlUnavailable))
     }
 
+    func testALiveRelayOutranksAProbeThatSaysNoInternet() {
+        let start = ContinuousClock.now
+        var watchdog = BootstrapWatchdog(config: config(), startedAt: start)
+        XCTAssertEqual(watchdog.handle(.externalAbort(.noInternet), at: start), .abort(.noInternet),
+                       "before any relay answers, the probe is all there is")
+        var connected = BootstrapWatchdog(config: config(), startedAt: start)
+        connected.handle(.orConn(target: "$AAAA~a", status: "CONNECTED", reason: nil), at: start)
+        XCTAssertEqual(connected.handle(.externalAbort(.noInternet), at: start), .keepWaiting,
+                       "a relay that answered is a fact; the probe was a guess")
+    }
+
     func testFailuresThatSayNothingAboutTheTransportAreNotRecorded() {
         XCTAssertFalse(AttemptFailure.portInUse.countsAgainstTransport)
         XCTAssertFalse(AttemptFailure.dataDirectoryLocked.countsAgainstTransport)

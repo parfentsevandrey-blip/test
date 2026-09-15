@@ -493,7 +493,9 @@ final class AppState {
                 }
                 let sentinel = Task { [weak self] in
                     let report = await networkTask.value
-                    guard let self, attempt == generation, !report.isUsable, engine.bootstrapPercent < 10 else { return }
+                    guard let self, attempt == generation, !report.isUsable else { return }
+                    // The watchdog disregards this once a relay has answered — a live connection
+                    // outranks a probe — so it can never kill an attempt that is working.
                     engine.abortBootstrap(.noInternet)
                 }
                 defer { sentinel.cancel() }
@@ -635,12 +637,19 @@ final class AppState {
                         connectivity = networkReport
                         reachability = directReport
                         let failure = (error as? TorAttemptError)?.failure
-                        let firstHopOnDeadNetwork = failure.map { $0 == .noInternet || ($0.isFirstHop && !networkReport.isUsable) } ?? false
-                        if firstHopOnDeadNetwork, !networkRepairedThisConnect, self.settings.autoResetNetwork {
+                        // On a warm engine tor's counter never regresses, so a dead network does
+                        // not show up as a first-hop failure — it shows up wherever the attempt
+                        // happened to stall. The probe is the signal, not the stage.
+                        let deadNetwork = failure == .noInternet || !networkReport.isUsable
+                        if deadNetwork, !networkRepairedThisConnect {
                             networkRepairedThisConnect = true
-                            let outcome = await repairNetworkIfNeeded(trigger: "first hop", allowReset: true)
-                            if outcome == .recovered {
-                                append(.veil(.notice, "Network recovered; retrying \(transport.rawValue)"))
+                            let outcome = await repairNetworkIfNeeded(trigger: "attempt failed",
+                                                                      allowReset: self.settings.autoResetNetwork,
+                                                                      maxAge: 0)
+                            if outcome == .recovered || outcome == .healthy {
+                                // Either the reset brought the Internet back, or the probe was
+                                // wrong. Both mean the transport deserves its attempt.
+                                append(.veil(.notice, "Network answers; retrying \(transport.rawValue)"))
                                 queue.insert(transport, at: index + 1)
                             }
                         }
@@ -1050,7 +1059,9 @@ final class AppState {
             if settings.autoReconnect, reconnectPending || connection == .failed {
                 scheduleReconnect(after: .seconds(3))
             } else if connection == .connected {
-                verifyCircuitAfterDelay(.seconds(8))
+                // A new default route means the guard's TCP connection is already dead. One probe
+                // after the path settles, then the cheap bounce — not half a minute of waiting.
+                verifyCircuitAfterDelay(.seconds(2))
             }
         case .didWake:
             let sleptFor = sleptAt.map { Date.now.timeIntervalSince($0) } ?? 0
@@ -1302,12 +1313,12 @@ final class AppState {
             guard let self else { return }
             do { try await Task.sleep(for: delay) } catch { return }
             guard connection == .connected else { return }
-            let first = await tunnelIsHealthy(timeout: .seconds(6))
-            if first { return }
-            do { try await Task.sleep(for: .seconds(12)) } catch { return }
-            guard connection == .connected else { return }
-            let second = await tunnelIsHealthy(timeout: .seconds(8))
-            if second { return }
+            let healthy = await tunnelIsHealthy(timeout: .seconds(5))
+            if healthy {
+                httpBridge?.lanePool.retireAll(reason: .routeChanged)
+                return
+            }
+            append(.veil(.notice, "Tunnel is not answering after the network change; bouncing it"))
             let bounced = await softReconnect(reason: "network change")
             if bounced { return }
             guard settings.autoReconnect else { return }
