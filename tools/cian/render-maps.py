@@ -70,7 +70,8 @@ MAPS_DEF = [
     {'slug': 'khamovniki', 'title': 'Хамовники', 'zones': ['Хамовники'], 'bbox': (55.708, 37.550, 55.752, 37.615), 'z': 16},
     {'slug': 'presnya', 'title': 'Пресня, Сити, Белорусская', 'zones': ['Пресня', 'Сити', 'Белорусская'], 'bbox': (55.738, 37.515, 55.786, 37.605), 'z': 16},
 ]
-COLORS = {'построено': (46, 158, 79), 'строится': (242, 140, 40), 'проектирование': (123, 79, 191)}
+# те же цвета статусов, что в книге и в таблице
+COLORS = {'построено': (46, 107, 70), 'строится': (192, 138, 46), 'проектирование': (106, 86, 160)}
 ORDER = {'построено': 0, 'строится': 1, 'проектирование': 2}
 
 points = json.load(open(DOCS / 'points.json'))
@@ -131,8 +132,9 @@ for md in MAPS_DEF:
     bw = int(max(d.textlength(head, font=font_t) + 48,
                  max(d.textlength(st, font=font_l) for st in COLORS) + 140)) + 24
     bh = 110 + 52 * len(COLORS) + 8
-    d.rectangle((pad, pad, pad + bw, pad + bh), fill=(255, 255, 255), outline=(60, 60, 60), width=2)
-    d.text((pad + 24, pad + 18), head, fill=(31, 56, 100), font=font_t)
+    d.rectangle((pad, pad, pad + bw, pad + bh), fill=(251, 250, 247), outline=(22, 36, 63), width=3)
+    d.rectangle((pad, pad, pad + bw, pad + 8), fill=(169, 138, 75))      # золотая полоса, как в книге
+    d.text((pad + 24, pad + 22), head, fill=(22, 36, 63), font=font_t)
     yy = pad + 110
     for st, c in COLORS.items():
         d.ellipse((pad + 30, yy, pad + 74, yy + 44), fill=c, outline='white', width=3)

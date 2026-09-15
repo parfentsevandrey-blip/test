@@ -161,19 +161,26 @@ def floors(r):
 def per_m2_str(v):
     return None if v in (None, 0) else int(v)
 
-thin = Side(style='thin', color='C8C8C8')
-MED_SIDE = Side(style='medium', color='1F3864')
-border = Border(left=thin, right=thin, top=thin, bottom=thin)
-HEAD_FILL = PatternFill('solid', fgColor='1F3864')
-HEAD_FONT = Font(name='Calibri', size=10, bold=True, color='FFFFFF')
-BODY_FONT = Font(name='Calibri', size=10)
-LINK_FONT = Font(name='Calibri', size=10, color='0563C1', underline='single')
-TITLE_FONT = Font(name='Calibri', size=14, bold=True, color='1F3864')
-SUB_FONT = Font(name='Calibri', size=9, italic=True, color='666666')
-ZEBRA = PatternFill('solid', fgColor='F3F6FA')
-GROUP_FILL = PatternFill('solid', fgColor='D9E2F3')
-GROUP_FONT = Font(name='Calibri', size=11, bold=True, color='1F3864')
-STATUS_FILL = {'построено': 'C6EFCE', 'строится': 'FFE0B3', 'проектирование': 'E4D5F5'}
+# Одна палитра с печатной книгой: графитовый синий, тёплое золото, кремовая бумага.
+INK, GOLD, PAPER, LINE = '16243F', 'A98A4B', 'FBFAF7', 'E4DFD4'
+BODY, TITLE = 'Calibri', 'Georgia'
+thin = Side(style='thin', color=LINE)
+MED_SIDE = Side(style='medium', color=INK)
+border = Border(bottom=thin)                      # без вертикальных линий — так таблица легче читается
+HEAD_FILL = PatternFill('solid', fgColor=INK)
+HEAD_FONT = Font(name=BODY, size=9, bold=True, color='FFFFFF')
+BODY_FONT = Font(name=BODY, size=10, color='22221F')
+LINK_FONT = Font(name=BODY, size=9, bold=True, color=GOLD, underline='single')
+TITLE_FONT = Font(name=TITLE, size=18, bold=True, color=INK)
+SUB_FONT = Font(name=BODY, size=9, italic=True, color='6E6E66')
+ZEBRA = PatternFill('solid', fgColor=PAPER)
+GROUP_FILL = PatternFill('solid', fgColor='FFFFFF')
+GROUP_FONT = Font(name=TITLE, size=12, bold=True, color=INK)
+NAME_FONT = Font(name=BODY, size=10, bold=True, color=INK)
+STATUS_FILL = {'построено': 'E6F0E8', 'строится': 'F7EBD9', 'проектирование': 'ECE6F5',
+               'квартиры': 'EDF0F5', 'апартаменты': 'F3EDE5', 'квартиры + апартаменты': 'EDF0F5'}
+STATUS_FONT = {'построено': '2E6B46', 'строится': '8A5A16', 'проектирование': '4C3B73',
+               'квартиры': '3A4A63', 'апартаменты': '5A4636', 'квартиры + апартаменты': '3A4A63'}
 ZONE_FILL = {'Садовое кольцо': 'FFF2CC', 'Хамовники': 'E2EFDA', 'Сити': 'DDEBF7', 'Пресня': 'FCE4D6', 'Белорусская': 'EDEDED'}
 wrap = Alignment(horizontal='center', vertical='center', wrap_text=True)
 center = Alignment(horizontal='center', vertical='center', wrap_text=True)
@@ -232,13 +239,15 @@ def sheet(wb, title, headers, rows, widths, note=None, subtitle='', zone_col=Non
     ncol = len(headers)
     ws.append([title]); ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=ncol)
     ws['A1'].font = TITLE_FONT; ws['A1'].alignment = Alignment(vertical='center')
-    ws.row_dimensions[1].height = 24
+    ws.row_dimensions[1].height = 30
     ws.append([subtitle]); ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=ncol)
-    ws['A2'].font = SUB_FONT; ws.row_dimensions[2].height = 14
+    ws['A2'].font = SUB_FONT; ws.row_dimensions[2].height = 16
+    ws['A2'].alignment = Alignment(vertical='center')
+    for cc in ws[2]: cc.border = Border(bottom=Side(style='medium', color=GOLD))
     ws.append(headers)
     for c in ws[3]:
         c.fill = HEAD_FILL; c.font = HEAD_FONT; c.alignment = center
-        c.border = Border(left=thin, right=thin, top=MED_SIDE, bottom=MED_SIDE)
+        c.border = Border(bottom=Side(style='medium', color=GOLD))
     ws.row_dimensions[3].height = 34
     grouped = any(r and r[0] == '__GROUP__' for r in rows)
     i = 0
@@ -246,10 +255,10 @@ def sheet(wb, title, headers, rows, widths, note=None, subtitle='', zone_col=Non
         if r and r[0] == '__GROUP__':          # заголовок кластера-района на всю ширину
             ws.append([r[1]]); rr = ws.max_row
             ws.merge_cells(start_row=rr, start_column=1, end_row=rr, end_column=ncol)
-            for cc in ws[rr]: cc.fill = GROUP_FILL; cc.border = Border(top=MED_SIDE, bottom=MED_SIDE)
+            for cc in ws[rr]: cc.fill = GROUP_FILL; cc.border = Border(bottom=MED_SIDE)
             c = ws.cell(rr, 1); c.font = GROUP_FONT
             c.alignment = Alignment(horizontal='left', vertical='center', indent=1)
-            ws.row_dimensions[rr].height = 20; i = 0
+            ws.row_dimensions[rr].height = 26; i = 0
             continue
         ws.append(r)
         rr = ws.max_row
@@ -259,19 +268,21 @@ def sheet(wb, title, headers, rows, widths, note=None, subtitle='', zone_col=Non
         for c in ws[rr]:
             c.border = border; c.font = BODY_FONT
             if fill: c.fill = fill
-            if status_col is not None and c.column == status_col + 1 and c.value in STATUS_FILL:
+            if c.value in STATUS_FILL and (status_col is None or c.column == status_col + 1 or c.column != 1):
                 c.fill = PatternFill('solid', fgColor=STATUS_FILL[c.value])
+                c.font = Font(name=BODY, size=9, bold=True, color=STATUS_FONT[c.value])
+            if c.column == 1 and isinstance(c.value, str): c.font = NAME_FONT
             if zone_col is not None and c.column == zone_col + 1 and zone in ZONE_FILL:
-                c.fill = PatternFill('solid', fgColor=ZONE_FILL[zone]); c.font = Font(name='Calibri', size=10, bold=True)
+                c.fill = PatternFill('solid', fgColor=ZONE_FILL[zone]); c.font = Font(name=BODY, size=10, bold=True)
             if isinstance(c.value, bool): pass
             elif isinstance(c.value, (int, float)):
                 c.number_format = '#,##0'; c.alignment = right
             elif is_url(c.value):
-                c.hyperlink = c.value; c.value = 'ссылка'; c.font = LINK_FONT; c.alignment = center
+                c.hyperlink = c.value; c.value = 'Циан ↗'; c.font = LINK_FONT; c.alignment = center
             else:
                 c.alignment = wrap if c.column in (1, 4, ncol) or (isinstance(c.value, str) and len(c.value) > 18) else center
         last = ws.cell(rr, ncol)
-        if isinstance(last.value, str): last.font = Font(name='Calibri', size=9); last.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        if isinstance(last.value, str): last.font = Font(name=BODY, size=9, color='5E5E57'); last.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
         # высота строки — по самой «многострочной» ячейке: длина текста / ширина колонки
         lines = 1
         for j, v in enumerate(r):
@@ -288,9 +299,9 @@ def sheet(wb, title, headers, rows, widths, note=None, subtitle='', zone_col=Non
     if heat_col is not None and last_data >= 4:
         col = get_column_letter(heat_col + 1)
         ws.conditional_formatting.add(f"{col}4:{col}{last_data}",
-            ColorScaleRule(start_type='min', start_color='63BE7B', mid_type='percentile', mid_value=50, mid_color='FFEB84', end_type='max', end_color='F8696B'))
+            ColorScaleRule(start_type='min', start_color='CDE3C8', mid_type='percentile', mid_value=50, mid_color='F6E8BF', end_type='max', end_color='EDC9C2'))
         for rr in range(4, last_data + 1):
-            ws.cell(rr, heat_col + 1).font = Font(name='Calibri', size=9, bold=True)
+            ws.cell(rr, heat_col + 1).font = Font(name=BODY, size=10, bold=True, color=INK)
     if note:
         ws.append([]); ws.append([note])
         ws.merge_cells(start_row=ws.max_row, start_column=1, end_row=ws.max_row, end_column=ncol)
