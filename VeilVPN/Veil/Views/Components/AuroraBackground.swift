@@ -5,7 +5,7 @@ import SwiftUI
 /// read rather than admired.
 struct AuroraBackground: View {
     let state: ConnectionState
-    var animated = false
+    var animated = true
 
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion

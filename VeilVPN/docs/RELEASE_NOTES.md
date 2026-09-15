@@ -2,6 +2,9 @@
 
 Liquid Glass UI, bundled Tor Expert Bundle (universal: Apple silicon + Intel), Snowflake / obfs4 / custom bridges, exit-country selection, live circuit and throughput, automatic system proxy.
 
+### Changed in 0.7.2 — the dashboard is the 0.6.1 one again
+- **Home is back to the route diagram and the tiles.** The twelve-stage ledger that 0.7.0 introduced is gone; the dashboard is once more the power button with its status and chips, the live route (Mac → bridge → relays → Internet), and the tiles for speed, session, latency, protection, padding, routing, YouTube, apps and network. Everything under it — warm start, measured circuits, the Security section, the 0.7.1 connection fixes — is unchanged.
+
 ### Fixed in 0.7.1 — a connection that is only "connected" once a circuit exists
 - **No more "connected" with nothing behind it.** After a hold — every disconnect, every failed transport, every soft reconnect keeps Tor loaded and offline — Tor's bootstrap counter and its `status/circuit-established` flag both stay at their high-water mark and say "done" before a single circuit exists. The second connect of a session could therefore flip to green in three seconds with no route under it, then watch its first page load stall. Veil now accepts "done" from a re-activated Tor only once a circuit has actually been built (a `CIRC … BUILT` event, or an open circuit in `circuit-status`, which lists live circuits alone), polls a second after activation instead of three, and brings the poll forward the moment a circuit completes.
 - **A disconnect racing the launch standby no longer strands the next connect.** Stopping Tor while its control handshake was still in flight left that handshake retrying against nothing for fifteen seconds, and a Connect pressed meanwhile joined it and inherited its failure. A stop now ends any handshake in progress at once, and a connect that joined a warm-up which died underneath it starts its own instead of reporting someone else's error.
@@ -115,6 +118,9 @@ twenty-four times a second on a clock.
 1. Open the DMG and drag **Veil.app** to *Applications*.
 2. The build is ad-hoc signed (no Apple Developer certificate): on first launch open **System Settings → Privacy & Security → Open Anyway**, or run `xattr -cr /Applications/Veil.app`.
 3. Press the power button. macOS asks for an administrator password once to switch the system proxy.
+
+### Изменено в 0.7.2 — дашборд снова как в 0.6.1
+- **Главная — снова схема маршрута и плитки.** Ступенчатый список из двенадцати стадий, появившийся в 0.7.0, убран; дашборд — это опять кнопка питания со статусом и «чипами», живой маршрут (Mac → мост → узлы → интернет) и плитки скорости, сессии, задержки, защиты, маскировки, маршрутизации, YouTube, приложений и сети. Всё под ним — тёплый старт, измеряемые цепочки, раздел «Безопасность», исправления подключения из 0.7.1 — без изменений.
 
 ### Исправлено в 0.7.1 — «подключено» только когда цепочка действительно есть
 - **Больше нет «подключено» без маршрута.** После удержания сети — а так заканчивается каждое отключение, каждый неудавшийся транспорт и каждый мягкий реконнект: Tor остаётся загруженным, но офлайн — счётчик bootstrap и флаг `status/circuit-established` остаются на своём максимуме и говорят «готово» до того, как построена хоть одна цепочка. Второе подключение за сессию могло через три секунды стать зелёным без маршрута под ним, а первая страница — зависнуть. Теперь «готово» от повторно активированного Tor принимается только после реально построенной цепочки (событие `CIRC … BUILT` либо открытая цепочка в `circuit-status`, где перечислены только живые), первый опрос идёт через секунду после активации вместо трёх, а завершение цепочки сдвигает опрос вперёд.

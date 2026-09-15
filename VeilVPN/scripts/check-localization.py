@@ -15,33 +15,59 @@ LANGUAGES = ["ru", "uk", "fa", "zh-Hans"]
 
 # String(localized: "..."), Text("..."), Label("...", ...), Button("..."), Toggle("...", ...),
 # Picker("...", ...), .help("..."), .navigationTitle("...")
+LITERAL = r'((?:[^"\\]|\\\((?:[^()"]|"[^"]*"|\((?:[^()"]|"[^"]*")*\))*\)|\\.)*)'
 PATTERNS = [
-    re.compile(r'String\(localized:\s*"((?:[^"\\]|\\.)*)"'),
-    re.compile(r'\bText\(\s*"((?:[^"\\]|\\.)*)"\s*\)'),
-    re.compile(r'\bLabel\(\s*"((?:[^"\\]|\\.)*)"\s*,'),
-    re.compile(r'\bButton\(\s*"((?:[^"\\]|\\.)*)"\s*\)'),
-    re.compile(r'\bButton\(\s*"((?:[^"\\]|\\.)*)"\s*,'),
-    re.compile(r'\bToggle\(\s*"((?:[^"\\]|\\.)*)"\s*,'),
-    re.compile(r'\bPicker\(\s*"((?:[^"\\]|\\.)*)"\s*,'),
-    re.compile(r'\.help\(\s*"((?:[^"\\]|\\.)*)"\s*\)'),
-    re.compile(r'\.navigationTitle\(\s*"((?:[^"\\]|\\.)*)"\s*\)'),
-    re.compile(r'\bGroupBox\(\s*"((?:[^"\\]|\\.)*)"\s*\)'),
-    re.compile(r'\bSecuritySection\(title:\s*"((?:[^"\\]|\\.)*)"\s*\)'),
-    re.compile(r'\bDetailRow\(label:\s*"((?:[^"\\]|\\.)*)"\s*,'),
-    re.compile(r'\bAction\(title:\s*"((?:[^"\\]|\\.)*)"\s*\)'),
+    re.compile(r'String\(localized:\s*"' + LITERAL + '"'),
+    re.compile(r'\bText\(\s*"' + LITERAL + r'"\s*\)'),
+    re.compile(r'\bLabel\(\s*"' + LITERAL + r'"\s*,'),
+    re.compile(r'\bButton\(\s*"' + LITERAL + r'"\s*\)'),
+    re.compile(r'\bButton\(\s*"' + LITERAL + r'"\s*,'),
+    re.compile(r'\bToggle\(\s*"' + LITERAL + r'"\s*,'),
+    re.compile(r'\bPicker\(\s*"' + LITERAL + r'"\s*,'),
+    re.compile(r'\.help\(\s*"' + LITERAL + r'"\s*\)'),
+    re.compile(r'\.navigationTitle\(\s*"' + LITERAL + r'"\s*\)'),
+    re.compile(r'\bGroupBox\(\s*"' + LITERAL + r'"\s*\)'),
+    re.compile(r'\bSecuritySection\(title:\s*"' + LITERAL + r'"\s*\)'),
+    re.compile(r'\bDetailRow\(label:\s*"' + LITERAL + r'"\s*,'),
+    re.compile(r'\bAction\(title:\s*"' + LITERAL + r'"\s*\)'),
 ]
 
 # Swift interpolation -> the specifier Xcode records in the catalogue.
-INTERPOLATION = re.compile(r'\\\((?:[^()]|\((?:[^()]|\([^()]*\))*\))*\)')
 
 # Interpolations whose value is an Int, and therefore render as %lld rather than %@. Listed by
 # name because a regex cannot see Swift's types; a new Int interpolation must be added here.
 INTEGER_EXPRESSIONS = {
-    "classes", "count", "milliseconds", "open", "percent", "built", "launched",
-    "report.reachable", "report.total",
+    "classes", "count", "milliseconds", "open", "percent", "built", "launched", "attempt",
+    "report.reachable", "report.total", "summary.samples",
     "stats.tor", "stats.direct", "stats.antiThrottle", "stats.blocked",
-    "Int((latency * 1000).rounded())",
 }
+
+
+def is_integer(body):
+    """An interpolation Swift formats with %lld: an Int(...) cast, a count, or a known integer."""
+    return (body in INTEGER_EXPRESSIONS or body.startswith("Int(")
+            or body.endswith(".count") or body.endswith(".milliseconds"))
+
+
+def interpolations(raw):
+    """Yields (start, end, body) for every `\\(…)` in a Swift literal, whatever the nesting depth."""
+    index = 0
+    while True:
+        start = raw.find("\\(", index)
+        if start < 0:
+            return
+        depth = 0
+        for position in range(start + 1, len(raw)):
+            if raw[position] == "(":
+                depth += 1
+            elif raw[position] == ")":
+                depth -= 1
+                if depth == 0:
+                    yield start, position + 1, raw[start + 2:position].strip()
+                    index = position + 1
+                    break
+        else:
+            return
 
 # Names Veil never translates.
 PROPER_NOUNS = {"Veil", "Tor", "Snowflake", "YouTube", "obfs4", "meek"}
@@ -51,11 +77,10 @@ def key_for(raw):
     """Turns a Swift literal into the catalogue key: interpolations become format specifiers."""
     out = []
     last = 0
-    for match in INTERPOLATION.finditer(raw):
-        out.append(raw[last:match.start()])
-        body = match.group(0)[2:-1].strip()
-        out.append("%lld" if body in INTEGER_EXPRESSIONS else "%@")
-        last = match.end()
+    for start, end, body in interpolations(raw):
+        out.append(raw[last:start])
+        out.append("%lld" if is_integer(body) else "%@")
+        last = end
     out.append(raw[last:])
     return "".join(out).replace('\\"', '"').replace("\\n", "\n")
 
