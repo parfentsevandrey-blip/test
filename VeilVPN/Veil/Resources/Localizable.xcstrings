@@ -2745,6 +2745,62 @@
         }
       }
     },
+    "Connect first": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сначала подключитесь"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Спершу підключіться"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ابتدا متصل شوید"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请先连接"
+          }
+        }
+      }
+    },
+    "Connect first: the hardened window goes through Veil’s proxy.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сначала подключитесь: защищённое окно ходит через прокси Veil."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Спершу підключіться: захищене вікно ходить через проксі Veil."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ابتدا متصل شوید: پنجرهٔ سخت‌شده از پراکسی Veil می‌گذرد."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请先连接：强化窗口经由 Veil 的代理。"
+          }
+        }
+      }
+    },
     "Connect through Tor (⌘K)": {
       "localizations": {
         "fa": {
@@ -3441,6 +3497,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "无法连接"
+          }
+        }
+      }
+    },
+    "Could not open %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось открыть %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не вдалося відкрити %@"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "باز کردن %@ ممکن نشد"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法打开 %@"
           }
         }
       }
@@ -5517,6 +5601,34 @@
         }
       }
     },
+    "Hardened browser window": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Защищённое окно браузера"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Захищене вікно браузера"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پنجرهٔ مرورگر سخت‌شده"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "强化浏览器窗口"
+          }
+        }
+      }
+    },
     "Hides the fact that you are using Tor from the network you are on.": {
       "localizations": {
         "fa": {
@@ -7337,6 +7449,34 @@
         }
       }
     },
+    "No supported browser found. Install Firefox (best), Brave, Chrome, Edge or Vivaldi.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подходящий браузер не найден. Установите Firefox (лучший вариант), Brave, Chrome, Edge или Vivaldi."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Підтримуваний браузер не знайдено. Встановіть Firefox (найкраще), Brave, Chrome, Edge або Vivaldi."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مرورگر پشتیبانی‌شده‌ای پیدا نشد. Firefox (بهترین)، Brave، Chrome، Edge یا Vivaldi را نصب کنید."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未找到受支持的浏览器。请安装 Firefox（最佳）、Brave、Chrome、Edge 或 Vivaldi。"
+          }
+        }
+      }
+    },
     "No test circuit was built in time.": {
       "localizations": {
         "fa": {
@@ -8257,6 +8397,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "已打开的连接不受断网开关影响"
+          }
+        }
+      }
+    },
+    "Open in %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть в %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відкрити у %@"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "باز کردن در %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 %@ 中打开"
           }
         }
       }
@@ -11873,6 +12041,34 @@
         }
       }
     },
+    "The hardened window goes through Veil’s proxy, so Tor (or YouTube Turbo) has to be running.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Защищённое окно ходит через прокси Veil, поэтому Tor (или YouTube Turbo) должен быть запущен."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Захищене вікно ходить через проксі Veil, тому Tor (або YouTube Turbo) має бути запущений."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پنجرهٔ سخت‌شده از پراکسی Veil می‌گذرد، پس Tor (یا YouTube Turbo) باید در حال اجرا باشد."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "强化窗口经由 Veil 的代理，因此 Tor（或 YouTube Turbo）必须处于运行状态。"
+          }
+        }
+      }
+    },
     "The kill switch cannot block anything": {
       "localizations": {
         "fa": {
@@ -14865,6 +15061,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Veil 做不到的事"
+          }
+        }
+      }
+    },
+    "What a site sees inside HTTPS — the browser, its version, the operating system, WebRTC’s view of your address — is decided by the browser, not by the proxy. This opens a separate profile that goes through Veil only, keeps WebRTC off your real address, disables QUIC and presents a generic Windows browser: Firefox through its own fingerprinting resistance, Chromium browsers through a fixed user agent without client hints. Your address will still be a Tor exit, and any site can tell that it is one.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "То, что сайт видит внутри HTTPS — браузер, его версию, операционную систему, ваш адрес глазами WebRTC, — решает браузер, а не прокси. Эта кнопка открывает отдельный профиль, который ходит только через Veil, не даёт WebRTC выдать настоящий адрес, отключает QUIC и показывает сайтам обычный браузер под Windows: Firefox — своей встроенной защитой от снятия отпечатка, браузеры на Chromium — фиксированным user agent без client hints. Ваш адрес по-прежнему будет выходным узлом Tor, и любой сайт может это определить."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Те, що сайт бачить усередині HTTPS — браузер, його версію, операційну систему, вашу адресу очима WebRTC, — вирішує браузер, а не проксі. Ця кнопка відкриває окремий профіль, який ходить лише через Veil, не дає WebRTC видати справжню адресу, вимикає QUIC і показує сайтам звичайний браузер під Windows: Firefox — своїм вбудованим захистом від зняття відбитка, браузери на Chromium — фіксованим user agent без client hints. Ваша адреса й далі буде вихідним вузлом Tor, і будь-який сайт може це визначити."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آنچه سایت درون HTTPS می‌بیند — مرورگر، نسخه‌اش، سیستم‌عامل، نشانی شما از دید WebRTC — را مرورگر تعیین می‌کند نه پراکسی. این گزینه نمایه‌ای جداگانه باز می‌کند که فقط از Veil می‌گذرد، WebRTC را از نشانی واقعی شما دور نگه می‌دارد، QUIC را خاموش می‌کند و مرورگری عمومی روی Windows نشان می‌دهد: Firefox با مقاومت داخلی خود در برابر انگشت‌نگاری، مرورگرهای Chromium با user agent ثابت و بدون client hints. نشانی شما همچنان یک خروجی Tor خواهد بود و هر سایتی می‌تواند این را تشخیص دهد."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "站点在 HTTPS 内部看到的内容——浏览器及其版本、操作系统、WebRTC 眼中的你的地址——由浏览器决定，而非代理。此功能会打开一个仅经由 Veil 的独立配置文件，让 WebRTC 远离你的真实地址、禁用 QUIC，并向站点呈现一个普通的 Windows 浏览器：Firefox 依靠其内置的抗指纹功能，Chromium 系浏览器则使用固定的 user agent 且不发送 client hints。你的地址仍将是 Tor 出口，任何站点都能识别这一点。"
           }
         }
       }

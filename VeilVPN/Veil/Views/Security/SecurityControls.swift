@@ -47,6 +47,7 @@ struct SecurityControls: View {
                     }
                 }
                 MultihopControls()
+                BrowserControls()
                 Group {
                     Divider()
                     Toggle("Traffic padding", isOn: Binding(get: { app.settings.paddingEnabled },
@@ -140,6 +141,42 @@ struct MultihopControls: View {
             }
             Text("A timed rotation steers away from the relays it just used, so the route really moves. Existing connections keep theirs until they finish.")
                 .settingsCaption()
+        }
+    }
+}
+
+/// The browser reveals what no proxy can hide; this hands the user one that reveals less.
+struct BrowserControls: View {
+    @Environment(AppState.self) private var app
+
+    var body: some View {
+        Group {
+            Divider()
+            Text("Hardened browser window")
+                .font(.subheadline.weight(.semibold))
+            Text("What a site sees inside HTTPS — the browser, its version, the operating system, WebRTC’s view of your address — is decided by the browser, not by the proxy. This opens a separate profile that goes through Veil only, keeps WebRTC off your real address, disables QUIC and presents a generic Windows browser: Firefox through its own fingerprinting resistance, Chromium browsers through a fixed user agent without client hints. Your address will still be a Tor exit, and any site can tell that it is one.")
+                .settingsCaption()
+            let browsers = app.hardenedBrowsers
+            if browsers.isEmpty {
+                Text("No supported browser found. Install Firefox (best), Brave, Chrome, Edge or Vivaldi.")
+                    .settingsCaption()
+            } else {
+                HStack(spacing: 8) {
+                    ForEach(browsers.prefix(4)) { browser in
+                        Button {
+                            app.openHardenedBrowser(browser)
+                        } label: {
+                            Text("Open in \(browser.name)")
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                    }
+                }
+                if !app.canOpenHardenedBrowser {
+                    Text("Connect first: the hardened window goes through Veil’s proxy.")
+                        .settingsCaption()
+                }
+            }
         }
     }
 }
