@@ -95,7 +95,8 @@ for ws in wb:
     lo, hi = (min(vals), max(vals)) if vals else (0, 1)
 
     # сводка раздела в шапке
-    unit = 'ЖК' if sec in ('1', '2') else ('площадок' if sec == '3' else 'строк')
+    unit = ('ЖК' if sec in ('1', '2') else 'площадок' if sec == '3'
+            else 'объектов' if ws.title.startswith('Список') else 'каналов' if ws.title.startswith('Источники') else 'строк')
     metrics = [metric('Всего', f'{len(data)} <small>{unit}</small>')]
     if vals:
         metrics.append(metric('Медиана, ₽/м²', num(median(vals))))
@@ -104,7 +105,7 @@ for ws in wb:
 
     cols = ''.join(f'<col style="width:{w / total * 100:.3f}%">' for w in widths)
     th = ''.join(f'<th>{esc(SHORT_HEAD.get(h, h))}</th>' for h in head)
-    trs = []
+    groups = [[None, []]]        # [заголовок кластера, строки]
     i = n = 0
     while i < len(body):
         row = body[i]
@@ -119,8 +120,8 @@ for ws in wb:
                 if isinstance(v, (int, float)): block.append(v)
                 j += 1
             extra = f'<span class="g-m">медиана {num(median(block))} ₽/м²</span>' if block else ''
-            trs.append(f'<tr class="grp"><td colspan="{ncol}"><span class="g-bar" style="background:{color}"></span>'
-                       f'<span class="g-n">{esc(lbl)}</span><span class="g-c">{esc(cnt)}</span>{extra}</td></tr>')
+            groups.append([f'<tr class="grp"><td colspan="{ncol}"><span class="g-bar" style="background:{color}"></span>'
+                           f'<span class="g-n">{esc(lbl)}</span><span class="g-c">{esc(cnt)}</span>{extra}</td></tr>', []])
             i += 1; n = 0
             continue
         n += 1
@@ -138,14 +139,21 @@ for ws in wb:
                 tds.append(f'<td class="st"><i style="background:{STATUS[v]}"></i>{esc(v)}</td>'); continue
             cls = 'nm' if k == 0 else ('num' if isinstance(v, (int, float)) else ('note' if k == ncol - 1 else ''))
             tds.append(f'<td class="{cls}">{fmt(v)}</td>')
-        trs.append(f'<tr class="{"odd" if n % 2 == 0 else ""}">' + ''.join(tds) + '</tr>')
+        groups[-1][1].append(f'<tr class="{"odd" if n % 2 == 0 else ""}">' + ''.join(tds) + '</tr>')
         i += 1
+    KEEP = 6           # кластер до 6 строк печатается целиком; у больших с заголовком держатся первые 2 строки
+    tbodies = []
+    for hdr, rows in groups:
+        if not hdr and not rows: continue
+        if not hdr: tbodies.append('<tbody>' + ''.join(rows) + '</tbody>'); continue
+        if len(rows) <= KEEP: tbodies.append('<tbody class="keep">' + hdr + ''.join(rows) + '</tbody>')
+        else: tbodies.append('<tbody class="keep">' + hdr + ''.join(rows[:2]) + '</tbody><tbody>' + ''.join(rows[2:]) + '</tbody>')
 
     parts.append(f'''<section class="page">
   <header class="ph" style="--c:{color}"><div class="ph-l"><div class="kicker">{esc(kicker)}</div>
     <h2>{esc(name)}</h2><p class="sub">{esc(subtitle)}</p></div>
     <div class="ph-r">{''.join(metrics)}</div></header>
-  <table class="grid"><colgroup>{cols}</colgroup><thead><tr>{th}</tr></thead><tbody>{''.join(trs)}</tbody></table>
+  <table class="grid"><colgroup>{cols}</colgroup><thead><tr>{th}</tr></thead>{''.join(tbodies)}</table>
 </section>''')
 
 fonts = FONTS.read_text(encoding='utf-8') if FONTS.exists() else ''
@@ -159,7 +167,7 @@ section.page:last-child {{ page-break-after: auto; }}
 
 /* ---- шапка раздела: слева название, справа сводка ---- */
 .ph {{ display: flex; justify-content: space-between; align-items: flex-end; gap: 12mm;
-  border-bottom: 2px solid {INK}; padding-bottom: 7px; margin-bottom: 8px; }}
+  border-bottom: 2px solid {INK}; padding-bottom: 6px; margin-bottom: 7px; }}
 .ph-l {{ flex: 1; min-width: 0; }}
 .kicker {{ font-size: 7pt; font-weight: 600; color: var(--c, {INK}); margin-bottom: 3px; }}
 .kicker::before {{ content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%;
@@ -177,7 +185,7 @@ table.grid {{ font-size: 6.6pt; }}
 table.grid th {{ background: {INK}; color: #fff; font-size: 5.9pt; font-weight: 600; padding: 4.5px 3px;
   text-align: center; vertical-align: middle; line-height: 1.15; letter-spacing: .01em;
   word-wrap: break-word; overflow-wrap: anywhere; hyphens: auto; }}
-table.grid td {{ border-bottom: .5px solid {LINE}; padding: 3.6px 3px; text-align: center; vertical-align: middle;
+table.grid td {{ border-bottom: .5px solid {LINE}; padding: 3px 3px; text-align: center; vertical-align: middle;
   line-height: 1.3; word-wrap: break-word; overflow-wrap: anywhere; hyphens: auto; }}
 table.grid td.num {{ white-space: nowrap; }}
 table.grid td.nm {{ font-weight: 600; font-size: 6.9pt; color: {INK}; }}
@@ -193,19 +201,23 @@ td.st {{ white-space: nowrap; }}
 td.st i {{ display: inline-block; width: 5px; height: 5px; border-radius: 50%; margin-right: 4px; vertical-align: 1px; }}
 td.lnk a {{ color: {INK}; font-size: 6pt; text-decoration: none; border-bottom: .5px solid #AEB4BD; }}
 
-tr.grp td {{ background: #fff; border-bottom: 1px solid {INK}; border-top: 6px solid #fff;
-  padding: 7px 0 3px; text-align: left; }}
+tr.grp td {{ background: #fff; border-bottom: 1px solid {INK}; border-top: 4px solid #fff;
+  padding: 5px 0 2px; text-align: left; }}
+tbody.keep {{ break-inside: avoid; page-break-inside: avoid; }}
+section.compact table.grid td {{ padding: 1.6px 3px; }}
+section.compact tr.grp td {{ border-top: 2px solid #fff; padding: 3px 0 1px; }}
+section.compact .ph {{ margin-bottom: 5px; }}
 .g-bar {{ display: inline-block; width: 3px; height: 9px; margin: 0 6px 0 1px; vertical-align: -1px; }}
 .g-n {{ font-size: 8.6pt; font-weight: 600; color: {INK}; }}
 .g-c {{ font-size: 6.8pt; color: {MUTED}; margin-left: 7px; }}
 .g-m {{ font-size: 6.8pt; color: {MUTED}; margin-left: 12px; }}
 
 /* ---- карта ---- */
-section.map {{ display: flex; flex-direction: column; height: 278mm; }}
+section.map img {{ display: block; margin: 0 auto; break-inside: avoid; }}
 .lg {{ font-size: 7pt; color: {TEXT}; margin-left: 9px; }}
 .lg i {{ display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; }}
-.mapwrap {{ flex: 1; display: flex; align-items: center; justify-content: center; margin-top: 3px; }}
-.mapwrap img {{ max-width: 100%; max-height: 258mm; object-fit: contain; border: .5px solid {LINE}; }}
+.mapwrap {{ margin-top: 3px; }}
+.mapwrap img {{ max-width: 100%; max-height: 240mm; object-fit: contain; border: .5px solid {LINE}; }}
 '''
 HTML.write_text(f'<!doctype html><html lang="ru"><head><meta charset="utf-8"><style>{css}</style></head>'
                 f'<body>{"".join(parts)}</body></html>', encoding='utf-8')
@@ -219,8 +231,37 @@ const {{ chromium }} = require('/opt/node22/lib/node_modules/playwright');
 (async () => {{
   const b = await chromium.launch({{ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome', headless: true, args: ['--no-sandbox'] }});
   const p = await (await b.newContext()).newPage();
+  p.on('console', (m) => console.log('  ' + m.text()));
   await p.goto('file://{HTML}', {{ waitUntil: 'networkidle', timeout: 240000 }});
   await p.evaluate(() => document.fonts.ready);
+  await p.emulateMedia({{ media: 'print' }});
+  await p.setViewportSize({{ width: 1528, height: 1051 }});   // печатная полоса A3: 404 × 278 мм
+  await p.evaluate(() => {{
+    const PAGE = 278 * 96 / 25.4;
+    for (const s of document.querySelectorAll('section.page')) {{
+      const head = s.querySelector('.ph');
+      const used = head.getBoundingClientRect().height + parseFloat(getComputedStyle(head).marginBottom);
+      if (s.classList.contains('map')) {{
+        s.querySelector('img').style.maxHeight = Math.floor(PAGE - used - 14) + 'px';
+        continue;
+      }}
+      /* Порядок попыток: как есть → плотные строки → плотные строки и лёгкое ужатие (до 6%).
+         Раздел, который всё равно не влезает в лист, печатается плотно, только если это
+         убирает страницу: повтор шапки и неделимые строки съедают часть каждой следующей. */
+      const H = () => s.getBoundingClientRect().height;
+      const pages = () => H() <= PAGE - 8 ? 1 : 1 + Math.ceil((H() - (PAGE - 8)) / (PAGE - 40));
+      if (H() > PAGE - 8) {{
+        const before = pages();
+        s.classList.add('compact');
+        if (H() <= PAGE - 8) {{}}                                    // влезло плотными строками
+        else if (H() <= PAGE * 1.06) s.style.zoom = ((PAGE - 3) / H()).toFixed(4);
+        else if (pages() >= before) s.classList.remove('compact');   // многостраничный: плотно не помогло
+      }}
+      const h = H();
+      console.log(`${{s.querySelector('h2').textContent}}: ${{(h / PAGE).toFixed(2)}} стр.` +
+                  (s.classList.contains('compact') ? ' плотно' : '') + (s.style.zoom ? ' zoom ' + s.style.zoom : ''));
+    }}
+  }});
   await p.pdf({{ path: '{OUT}', format: 'A3', landscape: true, printBackground: true,
     displayHeaderFooter: true, headerTemplate: '<div></div>', footerTemplate: {json.dumps(foot)},
     margin: {{ top: '8mm', bottom: '11mm', left: '8mm', right: '8mm' }} }});
