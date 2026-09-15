@@ -216,7 +216,9 @@ final class AppState {
         if settings.connectOnLaunch {
             connect()
         } else {
-            scheduleStandby(after: .seconds(8))
+            // Soon after the window paints: the sooner tor is loaded, the more often the first
+            // Connect finds it ready rather than paying for the spawn itself.
+            scheduleStandby(after: .seconds(3))
         }
     }
 
@@ -472,9 +474,11 @@ final class AppState {
                 if warmEngine, let existing = engine.warmth {
                     profile = existing
                 } else if settings.warmStart != .off, !isDemo {
+                    // A short settle: the attempt that follows bootstraps anyway, so anything the
+                    // loaded consensus does not give tor in a few seconds it will fetch live.
                     standby = .starting
                     profile = try await engine.warmUp(settings: settings, controlPort: ports.control,
-                                                      mode: .standby, budget: .seconds(20))
+                                                      mode: .standby, budget: .seconds(4))
                     warmEngine = true
                 } else {
                     profile = WarmthProfile()
@@ -733,6 +737,10 @@ final class AppState {
                 }
             } catch is CancellationError {
                 // Cancelling costs one command, not a teardown, so the UI is free immediately.
+                // A newer attempt (reconnect, disconnect) bumps the generation before cancelling
+                // this one and owns the engine from then on; a late hold from here would land
+                // after its activation and stall it.
+                guard attempt == generation else { return }
                 if settings.warmStart != .off {
                     await engine.holdNetwork()
                 } else {

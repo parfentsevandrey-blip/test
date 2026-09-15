@@ -235,6 +235,16 @@ final class TorProcessEngine: TorEngine {
     private func settle(client: TorControlClient, budget: Duration, disk: WarmthProfile) async -> WarmthProfile {
         var profile = disk
         profile.processWarm = true
+        // With the network held off, tor can only ever report enough directory information if
+        // it was on disk to begin with. On a fresh install, or with an expired consensus, waiting
+        // for that flag would burn the whole budget for nothing — twenty seconds in front of the
+        // first Connect on a new Mac.
+        guard disk.consensus == .fresh || disk.consensus == .live || disk.consensus == .stale else {
+            profile.tier = WarmthProfile.tier(consensus: profile.consensus, microdescsUsable: profile.microdescsUsable,
+                                              hasCerts: profile.hasCerts, guardsKnown: profile.guardsKnown,
+                                              processWarm: true)
+            return profile
+        }
         let deadline = ContinuousClock.now + budget
         var supported = true
         while ContinuousClock.now < deadline {
