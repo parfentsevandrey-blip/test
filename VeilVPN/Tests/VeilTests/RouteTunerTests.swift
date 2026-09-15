@@ -72,9 +72,9 @@ final class RouteTunerTests: XCTestCase {
     func testPerformanceTorrcLines() {
         var settings = AppSettings()
         settings.lanePoolEnabled = false
+        XCTAssertEqual(TorConfiguration.performanceLines(for: settings), ["MaxClientCircuitsPending 48", "ConfluxEnabled 1", "ConfluxClientUX throughput"])
+        settings.confluxLatency = true
         XCTAssertEqual(TorConfiguration.performanceLines(for: settings), ["MaxClientCircuitsPending 48", "ConfluxEnabled 1", "ConfluxClientUX latency"])
-        settings.confluxLatency = false
-        XCTAssertEqual(TorConfiguration.performanceLines(for: settings), ["MaxClientCircuitsPending 48"])
         // The lane pool adds three lines and no more. MaxCircuitDirtiness stays at tor's own
         // default on purpose: raising it would lengthen the window in which one circuit links a
         // session together, and the pool's own lifetime is kept below it.

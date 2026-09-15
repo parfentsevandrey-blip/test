@@ -533,6 +533,34 @@
         }
       }
     },
+    "After connecting, Veil picks one of the highest-capacity exit relays and sends every YouTube host through it, so the page and the video share one exit and a wide pipe. Only YouTube is affected; every other site keeps Tor's own exit choice.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "После подключения Veil выбирает один из самых ёмких выходных узлов и пускает через него все хосты YouTube: страница и видео идут через один выход и широкий канал. Затрагивается только YouTube; остальные сайты остаются на выборе выхода самим Tor."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Після підключення Veil обирає один із найпотужніших вихідних вузлів і пускає через нього всі хости YouTube: сторінка й відео йдуть через один вихід і широкий канал. Стосується лише YouTube; решта сайтів лишається на виборі виходу самим Tor."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پس از اتصال، Veil یکی از پرظرفیت‌ترین رله‌های خروجی را برمی‌گزیند و همهٔ میزبان‌های YouTube را از آن عبور می‌دهد تا صفحه و ویدیو از یک خروجی و یک لولهٔ پهن بگذرند. فقط YouTube تحت تأثیر است؛ سایت‌های دیگر با انتخاب خروجی خود Tor می‌مانند."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "连接后，Veil 会选择一个容量最大的出口节点，并让所有 YouTube 主机都经由它，这样页面与视频共用同一出口和一条宽通道。仅影响 YouTube；其他站点仍由 Tor 自行选择出口。"
+          }
+        }
+      }
+    },
     "After sleep, or after another VPN disconnects, macOS often reports a working network while nothing gets through until Wi-Fi is switched off and on. Veil checks the Internet before starting Tor and after every wake, and does that switch for you — CoreWLAN first, then the network service — before trying Tor again.": {
       "localizations": {
         "fa": {
@@ -2237,6 +2265,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "选择出口国家/地区"
+          }
+        }
+      }
+    },
+    "Choosing a wide exit for video…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выбираем широкий выход для видео…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обираємо широкий вихід для відео…"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "در حال انتخاب خروجی پهن برای ویدیو…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在为视频选择宽带出口…"
           }
         }
       }
@@ -7333,6 +7389,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "应用旁未找到 tor 二进制文件，因此连接为模拟状态。请用 `make dmg` 构建 DMG，或运行 `make tor` 以打包 Tor。"
+          }
+        }
+      }
+    },
+    "No wide exit could be verified; YouTube uses Tor's usual exits.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Широкий выход подтвердить не удалось; YouTube идёт через обычные выходы Tor."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Широкий вихід підтвердити не вдалося; YouTube іде через звичайні виходи Tor."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هیچ خروجی پهنی تأیید نشد؛ YouTube از خروجی‌های معمول Tor استفاده می‌کند."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未能验证任何宽带出口；YouTube 使用 Tor 的常规出口。"
           }
         }
       }
@@ -14533,6 +14617,34 @@
         }
       }
     },
+    "Video exit: %@ %@ · %@ MB/s consensus weight": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выход для видео: %@ %@ · вес консенсуса %@ МБ/с"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вихід для відео: %@ %@ · вага консенсусу %@ МБ/с"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خروجی ویدیو: %@ %@ · وزن اجماع %@ مگابایت/ثانیه"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "视频出口：%@ %@ · 共识权重 %@ MB/s"
+          }
+        }
+      }
+    },
     "View": {
       "localizations": {
         "fa": {
@@ -14977,6 +15089,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "你获取过哪些中继的记录在退出后仍可被读取。"
+          }
+        }
+      }
+    },
+    "Wide exit for video": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Широкий выход для видео"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Широкий вихід для відео"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خروجی پهن برای ویدیو"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "视频使用宽带出口"
           }
         }
       }
@@ -15457,34 +15597,6 @@
         }
       }
     },
-    "YouTube goes directly with anti-throttling by default: the TLS handshake is fragmented so DPI throttling cannot recognise it, and video plays at full quality. YouTube sees your real IP address; in Settings → YouTube you can send it through Tor instead. YouTube Turbo does the same without Tor at all.": {
-      "localizations": {
-        "fa": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YouTube به‌طور پیش‌فرض مستقیم و با ضد کندسازی می‌رود: دست‌دهی TLS قطعه‌قطعه می‌شود تا کندسازی DPI آن را تشخیص ندهد و ویدیو با کیفیت کامل پخش شود. YouTube نشانی IP واقعی شما را می‌بیند؛ در تنظیمات ← YouTube می‌توانید آن را از طریق Tor بفرستید. YouTube Turbo همین کار را بدون Tor انجام می‌دهد."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YouTube по умолчанию идёт напрямую с обходом замедления: TLS-рукопожатие дробится, DPI его не распознаёт, и видео играет в полном качестве. YouTube видит ваш настоящий IP-адрес; в Настройки → YouTube его можно пустить через Tor. YouTube Turbo делает то же самое вообще без Tor."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YouTube за замовчуванням іде напряму з обходом сповільнення: TLS-рукостискання дробиться, DPI його не розпізнає, і відео грає в повній якості. YouTube бачить вашу справжню IP-адресу; у Налаштування → YouTube його можна пустити через Tor. YouTube Turbo робить те саме взагалі без Tor."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YouTube 默认使用反限速直连：TLS 握手被分片，DPI 限速无法识别，视频以完整画质播放。YouTube 会看到你的真实 IP 地址；在“设置 → YouTube”中可以改为经 Tor 访问。YouTube Turbo 则完全不使用 Tor 实现同样效果。"
-          }
-        }
-      }
-    },
     "YouTube goes through the Tor circuit like everything else. Anonymous, but slow for video and YouTube often demands a sign-in to prove you are not a bot.": {
       "localizations": {
         "fa": {
@@ -15565,6 +15677,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "YouTube 路由——在“设置 → YouTube”中配置"
+          }
+        }
+      }
+    },
+    "YouTube through Tor is slow and asks for sign-ins. In Settings → YouTube you can send it directly with anti-throttling instead: the TLS handshake is fragmented so DPI throttling cannot recognise it. YouTube Turbo does the same without Tor at all.": {
+      "localizations": {
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube از طریق Tor کند است و ورود می‌خواهد. در تنظیمات ← YouTube می‌توانید آن را مستقیم و با ضد کندسازی بفرستید: دست‌دهی TLS قطعه‌قطعه می‌شود تا کندسازی DPI آن را تشخیص ندهد. YouTube Turbo همین کار را بدون Tor انجام می‌دهد."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube через Tor медленный и требует входа. В Настройки → YouTube его можно пустить напрямую с обходом замедления: TLS-рукопожатие дробится, и DPI его не распознаёт. YouTube Turbo делает то же самое вообще без Tor."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube через Tor повільний і вимагає входу. У Налаштування → YouTube його можна пустити напряму з обходом сповільнення: TLS-рукостискання дробиться, і DPI його не розпізнає. YouTube Turbo робить те саме взагалі без Tor."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "经 Tor 访问 YouTube 很慢且常要求登录。在“设置 → YouTube”中可以改为使用反限速直连：TLS 握手被分片，DPI 限速无法识别。YouTube Turbo 则完全不使用 Tor 实现同样效果。"
           }
         }
       }

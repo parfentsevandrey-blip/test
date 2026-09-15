@@ -80,6 +80,8 @@ final class AppState {
     /// YouTube Turbo: the anti-throttling proxy runs without Tor.
     private(set) var turboActive = false
     private(set) var youtubeTest: YouTubeTestResult?
+    var videoExit: VideoExitState = .off
+    @ObservationIgnored var videoExitTask: Task<Void, Never>?
     private(set) var isTestingYouTube = false
     /// Tor died (or never bootstrapped) and the proxy is deliberately left pointing at Veil.
     private(set) var killSwitchEngaged = false
@@ -133,8 +135,8 @@ final class AppState {
     let latency = LatencyMonitor()
     let isDemo: Bool
 
-    @ObservationIgnored private var engine: any TorEngine
-    @ObservationIgnored private var httpBridge: HTTPProxyBridge?
+    @ObservationIgnored var engine: any TorEngine
+    @ObservationIgnored var httpBridge: HTTPProxyBridge?
     @ObservationIgnored private var connectTask: Task<Void, Never>?
     @ObservationIgnored private var circuitTask: Task<Void, Never>?
     @ObservationIgnored private var rotationTask: Task<Void, Never>?
@@ -729,6 +731,7 @@ final class AppState {
                     padding.start(engine: engine, socksPort: effective.socks, level: self.settings.paddingLevel)
                 }
                 await startLanePool(ports: effective, transport: connectedTransport)
+                startVideoExitSelection(after: .seconds(4))
                 restartRouteRotation()
                 startRouteTuning()
                 startRetuneTimer()
@@ -947,6 +950,7 @@ final class AppState {
         httpBridge?.lanePool.stop()
         httpBridge?.poolPort = nil
         await padding.stop()
+        await clearVideoExit()
         if keepWarm, settings.warmStart != .off, engine.isLive || engine.isWarm {
             await engine.holdNetwork()
             standby = .ready(engine.warmth?.tier ?? .cool)
@@ -1496,6 +1500,11 @@ final class AppState {
         guard settings.youtubeMode != mode else { return }
         settings.youtubeMode = mode
         youtubeTest = nil
+        if mode == .tor {
+            startVideoExitSelection(after: .seconds(1))
+        } else {
+            Task { [weak self] in await self?.clearVideoExit() }
+        }
         pushRoutingPolicy()
     }
 
@@ -1760,6 +1769,8 @@ final class AppState {
         torCheck = nil
         // The old samples describe a route that no longer exists.
         latency.reset()
+        // The video exit was chosen under the old country rules.
+        startVideoExitSelection(after: .seconds(2))
         await prebuildCircuit()
         guard generation == routeGeneration, connection == .connected else { return }
         refreshCircuit()
@@ -1839,9 +1850,12 @@ final class AppState {
         settings.latencyTuning = enabled
         guard connection == .connected else { return }
         if enabled {
+            // Global pins and a per-site exit would contradict each other.
+            Task { [weak self] in await self?.clearVideoExit() }
             retuneRoute()
         } else {
             unpinRoute(reason: "route tuning switched off")
+            startVideoExitSelection(after: .seconds(2))
         }
     }
 

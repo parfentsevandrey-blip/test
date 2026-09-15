@@ -14,6 +14,10 @@ enum HostKey {
         if value.hasPrefix("[") { return value }                       // IPv6 literal
         if SOCKS5.ipv4Octets(value) != nil { return value }            // IPv4 literal
         if value.hasSuffix(".onion") { return value }                  // the whole address matters
+        // YouTube binds its media URLs to the address that fetched the page: the player on
+        // youtube.com and the video on googlevideo.com must leave through the same exit, so the
+        // whole family is one site here — as Tor Browser's first-party isolation would have it.
+        if RoutingPolicy.isYouTube(value) { return "youtube.com" }
         let labels = value.split(separator: ".", omittingEmptySubsequences: false).map(String.init)
         guard labels.count > 2 else { return value }
         let lastTwo = labels.suffix(2).joined(separator: ".")

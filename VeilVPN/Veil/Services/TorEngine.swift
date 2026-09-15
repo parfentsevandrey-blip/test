@@ -79,6 +79,17 @@ protocol TorEngine: AnyObject {
     func stop(grace: Duration) async
     /// The SOCKS listeners Tor actually opened, as "127.0.0.1:9050" strings. Empty when unknown.
     func socksListeners() async -> [String]
+
+    // MARK: Video exit
+
+    /// Every exit the consensus lists. Empty when Tor has no consensus or is not running.
+    func consensusExits() async -> [ExitRelay]
+    /// Replaces Tor's address mappings (`MapAddress`) with `pairs`.
+    func setAddressMappings(_ pairs: [(key: String, value: String?)]) async throws
+    /// Removes every address mapping.
+    func clearAddressMappings() async
+    /// The last hop of every circuit currently BUILT, as uppercase fingerprints.
+    func builtCircuitExits() async -> [String]
 }
 
 /// Defaults for every warm-lifecycle member, so an engine that does not implement them still
@@ -120,6 +131,10 @@ extension TorEngine {
     func abortBootstrap(_ failure: AttemptFailure) {}
     func stop(grace: Duration) async { await stop() }
     func socksListeners() async -> [String] { [] }
+    func consensusExits() async -> [ExitRelay] { [] }
+    func setAddressMappings(_ pairs: [(key: String, value: String?)]) async throws {}
+    func clearAddressMappings() async {}
+    func builtCircuitExits() async -> [String] { [] }
 }
 
 struct TrafficCounters: Equatable, Sendable {

@@ -424,6 +424,33 @@ struct PrivacySettingsView: View {
     }
 }
 
+struct VideoExitLabel: View {
+    let state: AppState.VideoExitState
+
+    var body: some View {
+        switch state {
+        case .off:
+            EmptyView()
+        case .choosing:
+            HStack(spacing: 6) {
+                ProgressView().controlSize(.small)
+                Text("Choosing a wide exit for video…")
+            }
+            .foregroundStyle(.secondary)
+        case .active(let relay):
+            Label {
+                Text("Video exit: \(relay.flag) \(relay.nickname) · \(String((relay.bandwidth ?? 0) / 1000)) MB/s consensus weight")
+            } icon: {
+                Image(systemName: "checkmark.seal.fill")
+            }
+            .foregroundStyle(.mint)
+        case .failed:
+            Label("No wide exit could be verified; YouTube uses Tor's usual exits.", systemImage: "info.circle")
+                .foregroundStyle(.secondary)
+        }
+    }
+}
+
 struct YouTubeSettingsView: View {
     @Environment(AppState.self) private var app
 
@@ -444,6 +471,18 @@ struct YouTubeSettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
+                if app.settings.youtubeMode == .tor {
+                    Toggle("Wide exit for video", isOn: Binding(
+                        get: { app.settings.videoExitEnabled },
+                        set: { app.setVideoExitEnabled($0) }
+                    ))
+                    Text("After connecting, Veil picks one of the highest-capacity exit relays and sends every YouTube host through it, so the page and the video share one exit and a wide pipe. Only YouTube is affected; every other site keeps Tor's own exit choice.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    VideoExitLabel(state: app.videoExit)
+                        .font(.caption)
+                }
             } header: {
                 Text("YouTube while connected to Tor")
             } footer: {

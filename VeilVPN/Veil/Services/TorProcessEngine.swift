@@ -382,6 +382,32 @@ final class TorProcessEngine: TorEngine {
         return TorControlEvents.parseListeners(value)
     }
 
+    // MARK: Video exit
+
+    func consensusExits() async -> [ExitRelay] {
+        guard let controller, controller.isOpen,
+              let text = try? await controller.getInfo("ns/all", timeout: .seconds(30)) else { return [] }
+        // A megabyte or two of consensus: parsed off the main actor.
+        return await Task.detached(priority: .userInitiated) { ExitCatalog.parse(text) }.value
+    }
+
+    func setAddressMappings(_ pairs: [(key: String, value: String?)]) async throws {
+        guard let controller, controller.isOpen else { throw TorEngineError.notRunning }
+        // One SETCONF replaces the whole list, so a bare key is never needed first.
+        try await controller.setConfLines(pairs, timeout: .seconds(10))
+    }
+
+    func clearAddressMappings() async {
+        guard let controller, controller.isOpen else { return }
+        _ = try? await controller.setConfLines([("MapAddress", nil)], timeout: .seconds(5))
+    }
+
+    func builtCircuitExits() async -> [String] {
+        guard let controller, controller.isOpen,
+              let status = try? await controller.getInfo("circuit-status", timeout: .seconds(5)) else { return [] }
+        return Self.builtPaths(in: status).compactMap { $0.last?.fingerprint.uppercased() }
+    }
+
     /// Supervises one attempt from the events Tor pushes, so a doomed attempt dies in seconds
     /// instead of burning a flat stall budget.
     func runBootstrap(_ config: BootstrapWatchdog.Config,
@@ -1024,6 +1050,30 @@ final class TorProcessEngine: TorEngine {
         return nil
     }
 
+    /// Every BUILT circuit's path from `GETINFO circuit-status`.
+    static func builtPaths(in status: String) -> [[(fingerprint: String, nickname: String)]] {
+        status.split(separator: "\n").compactMap { line in
+            let parts = line.split(separator: " ")
+            guard parts.count >= 3, parts[1] == "BUILT" else { return nil }
+            return parsePath(String(parts[2]))
+        }
+    }
+
+    private static func parsePath(_ path: String) -> [(fingerprint: String, nickname: String)] {
+        path.split(separator: ",").map { hop -> (fingerprint: String, nickname: String) in
+            var fingerprint = String(hop)
+            var nickname = ""
+            if let separator = fingerprint.firstIndex(where: { $0 == "~" || $0 == "=" }) {
+                nickname = String(fingerprint[fingerprint.index(after: separator)...])
+                fingerprint = String(fingerprint[..<separator])
+            }
+            if fingerprint.hasPrefix("$") {
+                fingerprint.removeFirst()
+            }
+            return (fingerprint: fingerprint, nickname: nickname)
+        }
+    }
+
     /// Chooses the most recent built general-purpose circuit from `GETINFO circuit-status`.
     static func bestCircuitPath(in status: String) -> [(fingerprint: String, nickname: String)]? {
         var best: (id: Int, path: String, general: Bool)?
@@ -1041,18 +1091,7 @@ final class TorProcessEngine: TorEngine {
             }
         }
         guard let best else { return nil }
-        return best.path.split(separator: ",").map { hop -> (fingerprint: String, nickname: String) in
-            var fingerprint = String(hop)
-            var nickname = ""
-            if let separator = fingerprint.firstIndex(where: { $0 == "~" || $0 == "=" }) {
-                nickname = String(fingerprint[fingerprint.index(after: separator)...])
-                fingerprint = String(fingerprint[..<separator])
-            }
-            if fingerprint.hasPrefix("$") {
-                fingerprint.removeFirst()
-            }
-            return (fingerprint: fingerprint, nickname: nickname)
-        }
+        return parsePath(best.path)
     }
 
     /// Extracts the IP address from a router status entry (`r nick id digest date time IP ORPort DirPort`).

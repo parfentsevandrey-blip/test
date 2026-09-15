@@ -136,11 +136,11 @@ struct TorConfiguration {
     /// Latency-oriented Tor options: Conflux sends on the lowest-latency leg, and there is room
     /// for the lane pool's circuits next to the ones Tor pre-builds on its own.
     static func performanceLines(for settings: AppSettings) -> [String] {
-        var lines = ["MaxClientCircuitsPending 48"]
-        if settings.confluxLatency {
-            lines.append("ConfluxEnabled 1")
-            lines.append("ConfluxClientUX latency")
-        }
+        // Conflux is always on: two legs to the exit, and with the throughput preference the
+        // exit spreads a single stream over both, which is the one way one TLS connection —
+        // a video player's, say — gets more than one circuit's share.
+        var lines = ["MaxClientCircuitsPending 48", "ConfluxEnabled 1",
+                     "ConfluxClientUX \(settings.confluxLatency ? "latency" : "throughput")"]
         if settings.lanePoolEnabled {
             // Pinned to tor's own default on purpose: raising it would lengthen the window in
             // which one circuit links a user's activity. The pool's lane lifetime stays below it,
@@ -285,8 +285,8 @@ struct TorConfiguration {
     /// limited to options known to be settable live.
     static func optionalAssignments(settings: AppSettings) -> [(key: String, value: String?)] {
         var pairs: [(key: String, value: String?)] = []
-        pairs.append(("ConfluxEnabled", settings.confluxLatency ? "1" : "0"))
-        if settings.confluxLatency { pairs.append(("ConfluxClientUX", "latency")) }
+        pairs.append(("ConfluxEnabled", "1"))
+        pairs.append(("ConfluxClientUX", settings.confluxLatency ? "latency" : "throughput"))
         if settings.paddingEnabled {
             for (key, value) in TorProcessEngine.torPaddingOptions.sorted(by: { $0.key < $1.key }) {
                 pairs.append((key, value))

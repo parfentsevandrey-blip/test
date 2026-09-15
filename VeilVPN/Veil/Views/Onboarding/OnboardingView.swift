@@ -69,7 +69,7 @@ struct OnboardingView: View {
 
     private var routingPage: some View {
         OnboardingCard(symbol: "play.rectangle.fill", tint: .red, title: "YouTube and other sites") {
-            Text("YouTube goes directly with anti-throttling by default: the TLS handshake is fragmented so DPI throttling cannot recognise it, and video plays at full quality. YouTube sees your real IP address; in Settings → YouTube you can send it through Tor instead. YouTube Turbo does the same without Tor at all.")
+            Text("YouTube through Tor is slow and asks for sign-ins. In Settings → YouTube you can send it directly with anti-throttling instead: the TLS handshake is fragmented so DPI throttling cannot recognise it. YouTube Turbo does the same without Tor at all.")
             Text("Direct modes are fast, but the site sees your real IP address. Everything else still goes through Tor.")
         }
     }

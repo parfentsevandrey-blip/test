@@ -73,17 +73,15 @@ final class SecurityTests: XCTestCase {
         XCTAssertEqual(worse.findings.first { $0.id == "shared-exit" }?.penalty, 55)
     }
 
-    func testStockSettingsShipWithTwoBypassClasses() {
-        // The catalogue ships Apple direct, because App Store downloads stall through exits, and
-        // YouTube direct with anti-throttling, because video through Tor never reaches HD.
-        XCTAssertEqual(SecurityPostureEvaluator.bypassClasses(SecurityInput()), 2)
+    func testStockSettingsShipWithOneBypassClass() {
+        // The catalogue ships Apple direct, because App Store downloads stall through exits.
+        XCTAssertEqual(SecurityPostureEvaluator.bypassClasses(SecurityInput()), 1)
     }
 
     func testClearingBypassesMustWriteExplicitTorRoutes() {
         // Emptying the dictionary would put Apple straight back to direct, because the policy
         // merges over the catalogue's own defaults.
         var settings = AppSettings()
-        settings.youtubeMode = .tor
         settings.serviceRoutes = [:]
         XCTAssertEqual(SecurityPostureEvaluator.bypassClasses(SecurityInput(settings: settings)), 1)
         settings.serviceRoutes = SecurityPreset.allServicesThroughTor

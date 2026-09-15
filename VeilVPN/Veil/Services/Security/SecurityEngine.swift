@@ -69,9 +69,8 @@ enum SecurityPostureEvaluator {
         return posture
     }
 
-    /// With stock settings this is 2: the catalogue ships Apple's services direct, because App
-    /// Store downloads and iCloud stall through exits, and YouTube direct with anti-throttling,
-    /// because video through Tor never reaches HD.
+    /// With stock settings this is 1: the catalogue ships Apple's services direct, because App
+    /// Store downloads and iCloud stall through exits.
     static func bypassClasses(_ input: SecurityInput) -> Int {
         let policy = input.settings.routingPolicy
         var classes = input.settings.youtubeMode == .tor ? 0 : 1
