@@ -245,6 +245,16 @@
       ]
     },
     {
+      "slug": "keurenplein-51-53-amsterdam",
+      "title": "Keurenplein 51-53, Amsterdam",
+      "city": "Amsterdam",
+      "price": "€ 725.000",
+      "url": "https://www.fundainbusiness.nl/kantoor/amsterdam/object-80815192-keurenplein-51-53/",
+      "reports": [
+        "report-2026-09-15-schiphol.json"
+      ]
+    },
+    {
       "slug": "kieler-bocht-15a-groningen",
       "title": "Kieler Bocht 15-A, Groningen",
       "city": "Groningen",
@@ -413,6 +423,16 @@
       ]
     },
     {
+      "slug": "satellietbaan-29a-hillegom",
+      "title": "Satellietbaan 29-A, Hillegom",
+      "city": "Hillegom",
+      "price": "€ 435.000",
+      "url": "https://www.fundainbusiness.nl/bedrijfshal/hillegom/object-80942479-satellietbaan-29-a/",
+      "reports": [
+        "report-2026-09-15-schiphol.json"
+      ]
+    },
+    {
       "slug": "st-ludgerusstraat-365-367-utrecht",
       "title": "St.-Ludgerusstraat 365-367, Utrecht",
       "city": "Utrecht",
@@ -430,6 +450,16 @@
       "url": "https://www.fundainbusiness.nl/en/belegging/montfoort/object-44425433-steenovenweg-11-13/",
       "reports": [
         "report-2026-07-27.json"
+      ]
+    },
+    {
+      "slug": "tijnmuiden-18a-amsterdam",
+      "title": "Tijnmuiden 18-A и 20, Amsterdam",
+      "city": "Amsterdam",
+      "price": "€ 3.650.000",
+      "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-43300269-tijnmuiden-18-a/",
+      "reports": [
+        "report-2026-09-15-schiphol.json"
       ]
     },
     {
@@ -483,5 +513,5 @@
       ]
     }
   ],
-  "updated": "2026-09-08"
+  "updated": "2026-09-15"
 }
