@@ -94,7 +94,7 @@ def indicators(title, rows, source):
         f'<div class="ind-lab">{esc(r["label"])}</div></div>'
         f'<div class="c">{arrow(r.get("yoy"))}</div><div class="c">{arrow(r.get("fc"))}</div></div>'
         for r in rows)
-    return (f'<div class="ind"><div class="ind-head"><div class="sc">{esc(title)}</div>'
+    return (f'<div class="ind"><div class="ind-head"><div class="lab">{esc(title)}</div>'
             f'<div class="c">г/г</div><div class="c">12 мес.</div></div>{body}'
             f'<div class="src">{esc(source)}</div></div>')
 
@@ -166,7 +166,7 @@ def chart(spec, accent):
         if p.get('k'):
             g.append(f'<text x="{L + i*step + step/2:.1f}" y="{H-7}" text-anchor="middle" '
                      f'font-size="8.3" fill="{GRAY}">{esc(p["k"])}</text>')
-    return (f'<div class="chart"><div class="h sc">{esc(spec["title"])}</div>'
+    return (f'<div class="chart"><div class="h">{esc(spec["title"])}</div>'
             f'<div class="sub">{esc(spec.get("subtitle", ""))}</div>'
             f'<svg viewBox="0 0 {W} {H}" width="100%">{"".join(g)}</svg>'
             f'<div class="src">{esc(spec.get("source", ""))}</div></div>')
@@ -176,7 +176,7 @@ def stats_table(spec):
     rows = ''.join(
         f'<div class="st-row"><div>{esc(r[0])}</div><div class="v">{esc(r[1])}</div>'
         f'<div class="v">{esc(r[2])}</div></div>' for r in spec['rows'])
-    return (f'<div class="st"><div class="h sc">{esc(spec["title"])}</div>'
+    return (f'<div class="st"><div class="h">{esc(spec["title"])}</div>'
             f'<div class="st-row st-h"><div></div><div class="v">{esc(spec["c1"])}</div>'
             f'<div class="v">{esc(spec["c2"])}</div></div>{rows}'
             f'<div class="src">{esc(spec.get("source", ""))}</div></div>')
@@ -226,96 +226,89 @@ def css():
 * {{ box-sizing: border-box }}
 body {{ margin:0; background:{DESK}; font-family:'PT Serif',Georgia,serif; color:{INK};
         -webkit-font-smoothing:antialiased }}
-.sc {{ font-family:'PT Sans',Arial,sans-serif; font-size:7.6px; letter-spacing:.14em;
+.sc {{ font-family:'PT Sans',Arial,sans-serif; font-size:7.4px; letter-spacing:.16em;
        text-transform:uppercase; color:{GRAY} }}
+.lab {{ font-family:'PT Sans',Arial,sans-serif; font-size:7.4px; letter-spacing:.16em; text-transform:uppercase;
+        color:{GRAY}; display:flex; align-items:center; gap:2mm }}
+.lab:before {{ content:''; width:6mm; border-top:1px solid {GOLD} }}
 .page {{ position:relative; width:{PAGE_W_MM}mm; height:{PAGE_H_MM}mm; background:{PAPER};
          padding:{PAD_MM}mm; overflow:hidden; page-break-after:always;
          display:flex; flex-direction:column; gap:2.5mm }}
 .top {{ height:{HEAD_MM}mm; display:grid; grid-template-columns:auto 1fr auto; align-items:end;
-        column-gap:9mm; border-top:1px solid {GOLD}; padding-top:2.4mm; position:relative }}
-.top:after {{ content:''; position:absolute; left:0; right:0; bottom:0; height:0;
-              border-top:2.2px solid {INK}; border-bottom:.7px solid {GOLD}; padding-bottom:1.1mm }}
-.top > * {{ padding-bottom:3mm }}
-.mb {{ font-family:'Playfair'; font-size:21px; font-weight:800; letter-spacing:.05em; line-height:1;
-       white-space:nowrap }}
-.mb small {{ display:block; margin-top:1.8mm }}
-.sec {{ font-family:'Playfair'; font-size:31px; font-weight:800; line-height:.95; color:var(--ac);
-        letter-spacing:-.005em }}
+        column-gap:10mm; border-bottom:.6px solid {HAIR}; padding-bottom:2.6mm }}
+.mb {{ line-height:1.5; padding-bottom:1mm }}
+.mb b {{ display:block; font-family:'PT Sans'; font-weight:700; font-size:9.5px; letter-spacing:.2em;
+         text-transform:uppercase; color:{INK} }}
+.mb span {{ display:block; font-family:'PT Sans'; font-size:7.4px; letter-spacing:.16em; text-transform:uppercase;
+            color:{GRAY} }}
+.sec {{ font-family:'Playfair'; font-size:40px; font-weight:900; line-height:.9; color:var(--ac);
+        letter-spacing:-.012em }}
 .sec small {{ display:block; font-family:'Playfair'; font-style:italic; font-weight:400; font-size:12.5px;
-              color:{INK}; margin-top:1.9mm; letter-spacing:0; line-height:1.2 }}
-.iss {{ text-align:right; line-height:1.55 }}
-.iss b {{ display:block; font-family:'Playfair'; font-weight:700; font-size:12.5px; color:{INK};
-          letter-spacing:.02em; font-feature-settings:'lnum' 1 }}
-.keys {{ height:{KEY_MM}mm; display:grid; grid-template-columns:repeat(3,1fr); border-bottom:.7px solid {GOLD} }}
-.key {{ padding:1.6mm 3.4mm 1.6mm 0; display:grid; grid-template-columns:auto 1fr; column-gap:3.6mm;
-        align-items:center; border-left:.7px solid {GOLD}; padding-left:3.4mm }}
-.key:first-child {{ border-left:none; padding-left:0 }}
+              color:{INK}; margin-top:2.2mm; letter-spacing:0; line-height:1.2 }}
+.iss {{ text-align:right; line-height:1.55; padding-bottom:1mm }}
+.iss b {{ display:block; font-family:'Playfair'; font-weight:700; font-size:13px; color:{INK};
+          letter-spacing:.01em; font-feature-settings:'lnum' 1; margin-bottom:.6mm }}
+.keys {{ height:{KEY_MM}mm; display:grid; grid-template-columns:repeat(3,1fr); column-gap:9mm }}
+.key {{ padding:1.4mm 0; display:grid; grid-template-columns:auto 1fr; column-gap:4mm; align-items:center }}
 .key-num {{ font-family:'Playfair'; font-size:27px; font-weight:800; color:var(--ac);
             font-variant-numeric:lining-nums tabular-nums; font-feature-settings:'lnum' 1,'tnum' 1;
-            white-space:nowrap; letter-spacing:-.01em }}
+            white-space:nowrap; letter-spacing:-.01em; padding-bottom:1.2mm; border-bottom:1px solid {GOLD} }}
 .key-txt {{ font-size:9.7px; line-height:1.3 }}
-.key-src {{ margin-top:.8mm; font-size:7px }}
+.key-src {{ margin-top:.8mm; font-size:6.9px }}
 .body {{ height:{BODY_MM}mm; display:grid; grid-template-columns:{LEFT_MM}mm {RIGHT_MM}mm;
-         column-gap:{GAP_MM}mm }}
+         column-gap:{GAP_MM}mm; border-top:.6px solid {HAIR}; padding-top:2.5mm }}
 .left {{ display:flex; flex-direction:column; justify-content:space-between; min-height:0;
-         border-right:.7px solid {HAIR}; padding-right:{GAP_MM/2}mm; margin-right:-{GAP_MM/2}mm }}
-.h {{ font-size:8.2px; color:{INK}; font-weight:700 }}
+         border-right:.6px solid {HAIR}; padding-right:{GAP_MM/2}mm; margin-right:-{GAP_MM/2}mm }}
+.left > * + * {{ border-top:.6px solid {HAIR}; padding-top:2mm }}
+.h {{ font-family:'Playfair'; font-size:10.5px; font-weight:700; color:{INK}; line-height:1.15 }}
 .sub {{ font-family:'PT Sans'; font-size:7.9px; color:{GRAY}; margin:.5mm 0 .8mm }}
-.src {{ font-family:'PT Sans'; font-size:7.3px; color:{GRAY}; margin-top:1mm; font-style:normal }}
+.src {{ font-family:'PT Sans'; font-size:7.2px; color:{GRAY}; margin-top:1mm }}
 .c {{ text-align:center }}
 .ar {{ font-size:10px }}
-.inds {{ display:grid; grid-template-columns:1fr 1fr; column-gap:5mm }}
-.ind {{ border-top:1.6px solid {INK}; padding-top:1.4mm; position:relative }}
-.ind:before {{ content:''; position:absolute; left:0; right:0; top:2.2px; border-top:.6px solid {GOLD} }}
-.ind-head {{ display:grid; grid-template-columns:1fr 22px 34px; padding:1.4mm 0 .8mm; white-space:nowrap;
-             font-family:'PT Sans'; font-size:7.3px; letter-spacing:.12em; text-transform:uppercase; color:{GRAY} }}
+.inds {{ display:grid; grid-template-columns:1fr 1fr; column-gap:6mm }}
+.ind-head {{ display:grid; grid-template-columns:1fr 22px 34px; padding:0 0 1mm; white-space:nowrap;
+             font-family:'PT Sans'; font-size:7.1px; letter-spacing:.14em; text-transform:uppercase; color:{GRAY} }}
 .ind-row {{ display:grid; grid-template-columns:1fr 22px 34px; align-items:center;
-            border-top:.7px solid {HAIR}; padding:1.0mm 0 }}
+            border-top:.6px solid {HAIR}; padding:1.0mm 0 }}
 .ind-val {{ font-family:'Playfair'; font-size:16.5px; font-weight:800; line-height:1.05;
             font-variant-numeric:lining-nums tabular-nums; font-feature-settings:'lnum' 1,'tnum' 1 }}
 .ind-lab {{ font-family:'PT Sans'; font-size:7.7px; color:{GRAY}; line-height:1.2; margin-top:.4mm }}
-.chart {{ border-top:1.6px solid {INK}; padding-top:1.4mm; position:relative }}
-.chart:before, .st:before {{ content:''; position:absolute; left:0; right:0; top:2.2px; border-top:.6px solid {GOLD} }}
-.chart .h {{ font-family:'Playfair'; font-size:10.5px; font-weight:700; letter-spacing:0; text-transform:none;
-             color:{INK} }}
-.st {{ border-top:1.6px solid {INK}; padding-top:1.4mm; position:relative }}
-.st .h {{ font-family:'Playfair'; font-size:10.5px; font-weight:700; letter-spacing:0; text-transform:none;
-          color:{INK}; margin-bottom:.6mm }}
+.st .h {{ margin-bottom:.6mm }}
 .st-row {{ display:grid; grid-template-columns:1fr 66px 62px; font-family:'PT Sans'; font-size:8.5px;
-           border-top:.7px solid {HAIR}; padding:1.05mm 0; line-height:1.2 }}
-.st-h {{ border-top:none; font-size:7.1px; letter-spacing:.12em; text-transform:uppercase; color:{GRAY} }}
+           border-top:.6px solid {HAIR}; padding:1.05mm 0; line-height:1.2 }}
+.st-h {{ border-top:none; font-size:7px; letter-spacing:.14em; text-transform:uppercase; color:{GRAY} }}
 .v {{ text-align:right; font-weight:700; font-variant-numeric:lining-nums tabular-nums }}
 .right {{ display:flex; flex-direction:column; gap:3mm; min-height:0 }}
 .pcols {{ flex:1; display:grid; grid-template-columns:1fr 1fr; column-gap:8mm; min-height:0 }}
 .pcol {{ overflow:hidden }}
-.pcol + .pcol {{ border-left:.7px solid {HAIR}; padding-left:8mm; margin-left:-8mm }}
+.pcol + .pcol {{ border-left:.6px solid {HAIR}; padding-left:8mm; margin-left:-8mm }}
 .bottom {{ height:{BOTTOM_MM}mm; display:grid; grid-template-columns:1.25fr 1.3fr .95fr; column-gap:6mm;
-           border-top:1.6px solid {INK}; padding-top:2mm; position:relative }}
-.bottom:before {{ content:''; position:absolute; left:0; right:0; top:2.2px; border-top:.6px solid {GOLD} }}
+           border-top:.6px solid {HAIR}; padding-top:2.4mm }}
 .cell {{ overflow:hidden }}
-.pb-h {{ font-family:'Playfair'; font-size:12.5px; font-weight:800; letter-spacing:.005em; color:{INK};
-         border-bottom:.7px solid {INK}; padding-bottom:1.1mm; margin-bottom:1.7mm; line-height:1.15 }}
+.pb-h {{ font-family:'Playfair'; font-size:13px; font-weight:800; letter-spacing:.005em; color:{INK};
+         margin-bottom:1.9mm; line-height:1.15 }}
 .pb-h .num {{ color:{GOLD}; margin-right:2mm; font-weight:700 }}
 .pb-h em {{ display:block; font-family:'Playfair'; font-style:italic; font-weight:400; font-size:10.5px;
-            color:var(--ac); margin-top:.7mm; letter-spacing:0 }}
+            color:var(--ac); margin-top:.8mm; letter-spacing:0 }}
 .pb p {{ font-size:10.6px; line-height:1.48; margin:0 0 1.8mm; text-align:justify; hyphens:manual }}
-.pb.dc p:first-of-type::first-letter {{ font-family:'Playfair'; font-weight:800; font-size:33px; line-height:.78;
+.pb.dc p:first-of-type::first-letter {{ font-family:'Playfair'; font-weight:800; font-size:34px; line-height:.78;
         float:left; margin:2.5px 4px 0 0; color:var(--ac) }}
 .outlook p {{ font-size:9.7px; line-height:1.4 }}
-.bsrc {{ font-family:'PT Sans'; font-size:7.3px; color:{GRAY}; margin-top:-.4mm }}
+.bsrc {{ font-family:'PT Sans'; font-size:7.2px; color:{GRAY}; margin-top:-.4mm }}
 .dl-row {{ display:grid; grid-template-columns:30px 1.35fr 1.1fr 58px; column-gap:2mm;
-           font-family:'PT Sans'; font-size:8.2px; line-height:1.22; border-top:.7px solid {HAIR};
+           font-family:'PT Sans'; font-size:8.2px; line-height:1.22; border-top:.6px solid {HAIR};
            padding:.85mm 0 }}
-.dl-h {{ border-top:none; padding-top:0; font-size:7.1px }}
+.dl-h {{ border-top:none; padding-top:0; font-size:7px }}
 .dl-d {{ color:{GRAY}; font-variant-numeric:tabular-nums }}
 .dl-w {{ color:{GRAY} }}
 .dl-s {{ text-align:right; font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap }}
 .gl {{ font-size:8.6px; line-height:1.36; margin-bottom:1.3mm; text-align:justify; hyphens:manual }}
 .gl b {{ font-family:'Playfair'; font-weight:700; color:var(--ac) }}
-.foot {{ height:{FOOT_MM}mm; border-top:.7px solid {GOLD}; padding-top:1.5mm; display:flex;
-         justify-content:space-between; gap:8mm; font-family:'PT Sans'; font-size:7.3px; color:{GRAY};
+.foot {{ height:{FOOT_MM}mm; border-top:.6px solid {HAIR}; padding-top:1.6mm; display:flex;
+         justify-content:space-between; gap:8mm; font-family:'PT Sans'; font-size:7.2px; color:{GRAY};
          line-height:1.35 }}
-.foot .r {{ text-align:right; white-space:nowrap; letter-spacing:.08em; text-transform:uppercase; font-size:7px }}
+.foot .r {{ text-align:right; white-space:nowrap; letter-spacing:.14em; text-transform:uppercase; font-size:6.9px }}
+.foot .r i {{ font-style:normal; color:{GOLD}; margin:0 2mm; font-size:5px; vertical-align:1px }}
 """
 
 
@@ -332,9 +325,9 @@ def page(sec, issue, n, total):
     return f"""
 <div class="page" data-sector="{esc(sec['key'])}" style="--ac:{ac}">
   <div class="top">
-    <div class="mb">АНАЛИТИКА РЫНКА ГОЛЛАНДИИ<small class="sc">Недельный обзор рынка недвижимости</small></div>
+    <div class="mb"><b>Аналитика рынка Голландии</b><span>Недельный обзор рынка недвижимости</span></div>
     <div class="sec">{esc(sec['name'])}<small>{hy(sec['tagline'])}</small></div>
-    <div class="iss sc"><b>{esc(issue['week_label'])}</b>{esc(issue['issue_line'])}<br>{esc(issue['prepared_by'])}</div>
+    <div class="iss"><b>{esc(issue['week_label'])}</b><span class="sc">{esc(issue['issue_line'])}<br>{esc(issue['prepared_by'])}</span></div>
   </div>
   <div class="keys">{takeaways(sec['takeaways'])}</div>
   <div class="body">
@@ -345,7 +338,7 @@ def page(sec, issue, n, total):
     </div>
   </div>
   <div class="foot"><div>{esc(sec.get('sources_line', ''))}</div>
-    <div class="r">{esc(issue['imprint'])} · полоса {n} из {total}</div></div>
+    <div class="r">{esc(issue['imprint'])}<i>◆</i>полоса {n} из {total}</div></div>
 </div>"""
 
 
