@@ -17,6 +17,7 @@ UA = (
     "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
 )
 TIMEOUT = 40
+ROOT = Path(__file__).resolve().parent.parent
 
 
 def cache_path(url: str, cache_dir: Path) -> Path:
@@ -24,8 +25,27 @@ def cache_path(url: str, cache_dir: Path) -> Path:
     return cache_dir / f"{digest}.jpg"
 
 
+def _read(source: str) -> bytes:
+    """Содержимое кадра: по ссылке из сети или из файла в репозитории.
+
+    Кадры листинга лежат на стороне брокера, но иногда в карточку нужен
+    снимок, которого в объявлении нет, — например фасад памятника со
+    свободной лицензией. Такой файл кладётся в ``assets/photos`` и пишется
+    в ``photos`` путём от корня репозитория, чтобы сборка не зависела от
+    чужого сайта.
+    """
+    if source.startswith(("http://", "https://")):
+        resp = requests.get(source, headers={"User-Agent": UA}, timeout=TIMEOUT)
+        resp.raise_for_status()
+        return resp.content
+    path = Path(source)
+    if not path.is_absolute():
+        path = ROOT / path
+    return path.read_bytes()
+
+
 def fetch(url: str, cache_dir: Path) -> Path:
-    """Скачивает изображение (с кэшем на диске) и возвращает путь к файлу.
+    """Готовит изображение (с кэшем на диске) и возвращает путь к файлу.
 
     Сайты брокеров отдают галереи в WebP, который python-docx вставить не
     умеет, поэтому всё приводится к JPEG сразу при загрузке.
@@ -35,9 +55,7 @@ def fetch(url: str, cache_dir: Path) -> Path:
     if dest.exists() and dest.stat().st_size > 0:
         return dest
     log.info("загрузка изображения %s", url)
-    resp = requests.get(url, headers={"User-Agent": UA}, timeout=TIMEOUT)
-    resp.raise_for_status()
-    with Image.open(BytesIO(resp.content)) as img:
+    with Image.open(BytesIO(_read(url))) as img:
         img.convert("RGB").save(dest, "JPEG", quality=92, subsampling=1)
     return dest
 
