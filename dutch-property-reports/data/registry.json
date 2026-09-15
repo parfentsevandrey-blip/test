@@ -245,6 +245,16 @@
       ]
     },
     {
+      "slug": "jan-rebelstraat-24-amsterdam",
+      "title": "Jan Rebelstraat 24, Amsterdam",
+      "city": "Amsterdam",
+      "price": "€ 3.850.000",
+      "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-89686354-jan-rebelstraat-24/",
+      "reports": [
+        "report-2026-09-15-amsterdam.json"
+      ]
+    },
+    {
       "slug": "keurenplein-51-53-amsterdam",
       "title": "Keurenplein 51-53, Amsterdam",
       "city": "Amsterdam",
@@ -459,6 +469,7 @@
       "price": "€ 3.650.000",
       "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-43300269-tijnmuiden-18-a/",
       "reports": [
+        "report-2026-09-15-amsterdam.json",
         "report-2026-09-15-schiphol.json"
       ]
     },
@@ -480,6 +491,16 @@
       "url": "",
       "reports": [],
       "source": "показан заказчику вне этого репозитория"
+    },
+    {
+      "slug": "verrijn-stuartweg-12-diemen",
+      "title": "Verrijn Stuartweg 12, Diemen",
+      "city": "Diemen",
+      "price": "€ 2.495.000",
+      "url": "https://www.fundainbusiness.nl/bedrijfshal/diemen/object-44554856-verrijn-stuartweg-12/",
+      "reports": [
+        "report-2026-09-15-amsterdam.json"
+      ]
     },
     {
       "slug": "wc-bradelaan-29-hilversum",
