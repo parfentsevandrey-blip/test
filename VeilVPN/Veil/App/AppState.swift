@@ -646,8 +646,11 @@ final class AppState {
                         let failure = (error as? TorAttemptError)?.failure
                         // On a warm engine tor's counter never regresses, so a dead network does
                         // not show up as a first-hop failure — it shows up wherever the attempt
-                        // happened to stall. The probe is the signal, not the stage.
-                        let deadNetwork = failure == .noInternet || !networkReport.isUsable
+                        // happened to stall. The probe is the signal, not the stage — unless a
+                        // relay answered, which proves the link and makes the probe the one
+                        // that is wrong; resetting Wi-Fi then would cut a working network.
+                        let reached = (error as? TorAttemptError)?.reachedNetwork ?? false
+                        let deadNetwork = failure == .noInternet || (!networkReport.isUsable && !reached)
                         if deadNetwork, !networkRepairedThisConnect {
                             networkRepairedThisConnect = true
                             let outcome = await repairNetworkIfNeeded(trigger: "attempt failed",
@@ -1130,6 +1133,17 @@ final class AppState {
                     guard !Task.isCancelled else { return }
                     if outcome == .stillDown {
                         append(.veil(.warn, "No Internet after waking; leaving Tor alone until the network is back"))
+                        return
+                    }
+                    // Wi-Fi took a few seconds to come back, which is why the first probe failed.
+                    // Now that it is up, ask the tunnel again before bouncing it: the guard's
+                    // connection often survives a short nap, and a bounce costs new circuits.
+                    if await tunnelIsHealthy(timeout: .seconds(5)) {
+                        guard !Task.isCancelled else { return }
+                        append(.veil(.info, "Tunnel carries traffic again now that the network is back; no restart needed"))
+                        latency.reset()
+                        latency.measureNow()
+                        httpBridge?.lanePool.retireAll(reason: .routeChanged)
                         return
                     }
                 }

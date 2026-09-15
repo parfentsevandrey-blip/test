@@ -176,12 +176,36 @@ final class WarmStartTests: XCTestCase {
     func testALiveRelayOutranksAProbeThatSaysNoInternet() {
         let start = ContinuousClock.now
         var watchdog = BootstrapWatchdog(config: config(), startedAt: start)
-        XCTAssertEqual(watchdog.handle(.externalAbort(.noInternet), at: start), .abort(.noInternet),
-                       "before any relay answers, the probe is all there is")
+        watchdog.handle(.transportLaunched("snowflake"), at: start)
+        XCTAssertEqual(watchdog.handle(.externalAbort(.noInternet), at: start), .keepWaiting,
+                       "the probe shortens the leash; it does not cut it on the spot")
+        XCTAssertEqual(watchdog.handle(.tick, at: start.advanced(by: .seconds(3))), .keepWaiting)
+        XCTAssertEqual(watchdog.handle(.tick, at: start.advanced(by: .seconds(7))), .abort(.noInternet),
+                       "nothing answered within the grace: the probe was right")
+        XCTAssertFalse(watchdog.reachedNetwork)
+
+        var rendezvous = BootstrapWatchdog(config: config(), startedAt: start)
+        rendezvous.handle(.transportLaunched("snowflake"), at: start)
+        rendezvous.handle(.externalAbort(.noInternet), at: start)
+        // A Snowflake proxy answered after the probe gave up on the resolvers it could not reach.
+        rendezvous.handle(.orConn(target: "$AAAA~a", status: "CONNECTED", reason: nil), at: start.advanced(by: .seconds(5)))
+        XCTAssertEqual(rendezvous.handle(.tick, at: start.advanced(by: .seconds(7))), .keepWaiting,
+                       "a relay that answered is a fact; the probe was a guess")
+        XCTAssertTrue(rendezvous.reachedNetwork)
+
         var connected = BootstrapWatchdog(config: config(), startedAt: start)
         connected.handle(.orConn(target: "$AAAA~a", status: "CONNECTED", reason: nil), at: start)
-        XCTAssertEqual(connected.handle(.externalAbort(.noInternet), at: start), .keepWaiting,
-                       "a relay that answered is a fact; the probe was a guess")
+        XCTAssertEqual(connected.handle(.externalAbort(.noInternet), at: start), .keepWaiting)
+    }
+
+    func testARelayAnsweringCountsAsProgress() {
+        // A guard that answered while the percentage stood still must not read as a stall.
+        let start = ContinuousClock.now
+        var watchdog = BootstrapWatchdog(config: config(stall: 10), startedAt: start)
+        watchdog.handle(.transportLaunched("obfs4"), at: start)
+        watchdog.handle(.orConn(target: "$AAAA~a", status: "CONNECTED", reason: nil), at: start.advanced(by: .seconds(8)))
+        XCTAssertEqual(watchdog.handle(.tick, at: start.advanced(by: .seconds(12))), .keepWaiting)
+        XCTAssertEqual(watchdog.handle(.tick, at: start.advanced(by: .seconds(19))), .abort(.firstHopTimeout))
     }
 
     func testFailuresThatSayNothingAboutTheTransportAreNotRecorded() {

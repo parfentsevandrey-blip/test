@@ -76,6 +76,9 @@ struct TorAttemptError: Error {
     let percent: Int
     let lastWarning: String?
     let lastReason: String?
+    /// A relay answered or real bytes arrived: whatever killed this attempt, the network under
+    /// it was alive, and resetting Wi-Fi for it would only cut a link that works.
+    var reachedNetwork = false
 
     var localizedDescription: String {
         var text = "\(failure.summary) at \(stage.title) (\(percent)%)"
@@ -101,6 +104,11 @@ struct BootstrapWatchdog {
         /// BW ticks once a second whether or not traffic flows, so a long gap means a dead
         /// connection. Generous, because a busy main thread must not read as a dead tor.
         var controlSilenceLimit: Duration = .seconds(12)
+        /// How long an attempt may go on after the probe says "no Internet" before that verdict
+        /// is trusted. A probe reaches public resolvers; a censored network that blocks them can
+        /// still carry Snowflake, whose rendezvous takes longer than the probe does — so the
+        /// probe only shortens the attempt's leash, it never cuts it on the spot.
+        var noInternetGrace: Duration = .seconds(6)
 
         func budget(for stage: BootstrapStage) -> Duration { stall[stage] ?? .seconds(20) }
     }
@@ -153,6 +161,10 @@ struct BootstrapWatchdog {
     private var warnStreak = 0
     private var warnPercent = -1
     private var lastWarnCount = 0
+    private var noInternetDeadline: ContinuousClock.Instant?
+
+    /// A relay answered, or enough bytes arrived to be more than this controller's own commands.
+    var reachedNetwork: Bool { orConnected > 0 || bytesEscapes > 0 }
 
     init(config: Config, startedAt: ContinuousClock.Instant) {
         self.config = config
@@ -196,8 +208,13 @@ struct BootstrapWatchdog {
             return .abort(.ptLaunchFailed)
         case .externalAbort(let failure):
             // A probe saying "no Internet" is contradicted by a relay that has answered; the
-            // connection is the fact, the probe the guess.
-            if failure == .noInternet, firstHopReached { return .keepWaiting }
+            // connection is the fact, the probe the guess. Before any relay has, the probe is
+            // only a reason to stop waiting sooner.
+            if failure == .noInternet {
+                if reachedNetwork { return .keepWaiting }
+                if noInternetDeadline == nil { noInternetDeadline = now + config.noInternetGrace }
+                return .keepWaiting
+            }
             return .abort(failure)
         case .circuitEstablished:
             // Version-independent, and true even when the percentage never moves: Tor's bootstrap
@@ -226,7 +243,7 @@ struct BootstrapWatchdog {
             return handleBootstrap(value, warning: warning, reason: reason, count: count,
                                    recommendation: recommendation, at: now)
         case .orConn(let target, let status, let reason):
-            return handleORConn(target: target, status: status, reason: reason)
+            return handleORConn(target: target, status: status, reason: reason, at: now)
         case .tick:
             return handleTick(now)
         }
@@ -276,7 +293,8 @@ struct BootstrapWatchdog {
         return .keepWaiting
     }
 
-    private mutating func handleORConn(target: String, status: String, reason: String?) -> Verdict {
+    private mutating func handleORConn(target: String, status: String, reason: String?,
+                                       at now: ContinuousClock.Instant) -> Verdict {
         let relay = TorControlEvents.normalizeORTarget(target)
         switch status {
         case "LAUNCHED":
@@ -284,6 +302,9 @@ struct BootstrapWatchdog {
         case "CONNECTED":
             firstHopReached = true
             orConnected += 1
+            // A relay answering is progress even while the percentage stands still: the guard's
+            // TLS handshake and the first circuit come after it, not before.
+            lastProgressAt = now
             hardFailures.removeAll()
             softFailures.removeAll()
             unclassifiedFailures = 0
@@ -307,6 +328,13 @@ struct BootstrapWatchdog {
     }
 
     private mutating func handleTick(_ now: ContinuousClock.Instant) -> Verdict {
+        if let noInternetDeadline, now >= noInternetDeadline {
+            if reachedNetwork {
+                self.noInternetDeadline = nil
+            } else {
+                return .abort(.noInternet)
+            }
+        }
         if !sawLaunch, startedAt.duration(to: now) > config.firstHopDeadline {
             return .abort(.ptLaunchFailed)
         }

@@ -2,6 +2,12 @@
 
 Liquid Glass UI, bundled Tor Expert Bundle (universal: Apple silicon + Intel), Snowflake / obfs4 / custom bridges, exit-country selection, live circuit and throughput, automatic system proxy.
 
+### Fixed in 0.7.3 — the probe advises, the relay decides
+- **A censored network no longer gets its Wi-Fi reset for working.** The connectivity probe reaches public resolvers and a few well-known hosts; a network that blocks those can still carry Snowflake, whose rendezvous takes longer than the probe does. A "no Internet" verdict used to cut the attempt on the spot and then reset Wi-Fi. It now only shortens the attempt's leash — six seconds for a relay to answer — and a relay that answers, or real bytes arriving, overrules it: no abort, no Wi-Fi reset. The reset still fires where it belongs, on an attempt that reached nothing at all.
+- **A relay answering counts as progress.** After a network hold the percentage stands still while tor talks to the guard; that conversation is now progress for the watchdog, so a slow guard is no longer mistaken for a stall.
+- **Waking up asks the tunnel again once Wi-Fi is back.** After sleep the first health probe runs while Wi-Fi is still reassociating and fails for that reason alone. Once the network repair reports the Internet back, the tunnel is asked once more, and a guard connection that survived the nap is left alone instead of being bounced.
+- **A tor that is still releasing its data-directory lock no longer fails the launch.** The cold path waits for a killed process to be gone before spawning, and retries once, a second later, if the lock is still held.
+
 ### Changed in 0.7.2 — the dashboard is the 0.6.1 one again
 - **Home is back to the route diagram and the tiles.** The twelve-stage ledger that 0.7.0 introduced is gone; the dashboard is once more the power button with its status and chips, the live route (Mac → bridge → relays → Internet), and the tiles for speed, session, latency, protection, padding, routing, YouTube, apps and network. Everything under it — warm start, measured circuits, the Security section, the 0.7.1 connection fixes — is unchanged.
 
@@ -118,6 +124,12 @@ twenty-four times a second on a clock.
 1. Open the DMG and drag **Veil.app** to *Applications*.
 2. The build is ad-hoc signed (no Apple Developer certificate): on first launch open **System Settings → Privacy & Security → Open Anyway**, or run `xattr -cr /Applications/Veil.app`.
 3. Press the power button. macOS asks for an administrator password once to switch the system proxy.
+
+### Исправлено в 0.7.3 — проба советует, узел решает
+- **Цензурируемой сети больше не сбрасывают Wi-Fi за то, что она работает.** Проба связности стучится к публичным резолверам и паре известных хостов; сеть, которая их блокирует, всё равно может нести Snowflake, чьё рандеву длится дольше пробы. Вердикт «нет интернета» раньше обрывал попытку на месте и затем сбрасывал Wi-Fi. Теперь он лишь укорачивает поводок — шесть секунд, чтобы узел ответил, — а ответивший узел или пришедшие байты отменяют его: ни обрыва, ни сброса Wi-Fi. Сброс по-прежнему срабатывает там, где нужен: на попытке, которая не достучалась ни до чего.
+- **Ответ узла считается прогрессом.** После удержания сети проценты стоят на месте, пока tor разговаривает со сторожевым узлом; теперь этот разговор — прогресс для сторожа попытки, и медленный узел больше не принимается за зависание.
+- **После пробуждения туннель проверяется повторно, когда Wi-Fi уже вернулся.** Первая проверка после сна идёт, пока Wi-Fi ещё переподключается, и падает только поэтому. Как только ремонт сети сообщает, что интернет есть, туннель спрашивается ещё раз — и соединение со сторожевым узлом, пережившее короткий сон, остаётся нетронутым вместо перезапуска.
+- **Tor, ещё не отпустивший блокировку каталога данных, больше не срывает запуск.** Холодный путь ждёт, пока убитый процесс действительно исчезнет, и один раз повторяет запуск секундой позже, если блокировка ещё держится.
 
 ### Изменено в 0.7.2 — дашборд снова как в 0.6.1
 - **Главная — снова схема маршрута и плитки.** Ступенчатый список из двенадцати стадий, появившийся в 0.7.0, убран; дашборд — это опять кнопка питания со статусом и «чипами», живой маршрут (Mac → мост → узлы → интернет) и плитки скорости, сессии, задержки, защиты, маскировки, маршрутизации, YouTube, приложений и сети. Всё под ним — тёплый старт, измеряемые цепочки, раздел «Безопасность», исправления подключения из 0.7.1 — без изменений.

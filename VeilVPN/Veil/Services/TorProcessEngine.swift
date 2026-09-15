@@ -123,7 +123,21 @@ final class TorProcessEngine: TorEngine {
         try spawn()
 
         do {
-            let client = try await connectControl(port: ports.control)
+            var client: TorControlClient
+            do {
+                client = try await connectControl(port: ports.control)
+            } catch TorEngineError.dataDirectoryLocked {
+                // The tor just stopped can hold the lock for a moment after its exit; a second
+                // spawn a second later finds it free. One retry, never a loop.
+                emit(.veil(.debug, "Data directory still locked; retrying the launch in a second"))
+                await stop(grace: .milliseconds(500))
+                try await Task.sleep(for: .seconds(1))
+                lockFailure = false
+                exitStatus = nil
+                lineBuffer = ""
+                try spawn()
+                client = try await connectControl(port: ports.control)
+            }
             client.setEventHandler { [weak self] event in
                 DispatchQueue.main.async {
                     MainActor.assumeIsolated {
@@ -445,7 +459,8 @@ final class TorProcessEngine: TorEngine {
     private func attemptError(_ watchdog: BootstrapWatchdog, failure: AttemptFailure) -> TorAttemptError {
         emit(.veil(.warn, "attempt failed: \(failure.rawValue) at \(watchdog.stage.rawValue) \(watchdog.percent)% after \(watchdog.elapsedMillis / 1000) s (\(watchdog.escapeSummary))"))
         return TorAttemptError(failure: failure, stage: watchdog.stage, percent: watchdog.percent,
-                               lastWarning: watchdog.lastWarning ?? lastWarning, lastReason: watchdog.lastReason)
+                               lastWarning: watchdog.lastWarning ?? lastWarning, lastReason: watchdog.lastReason,
+                               reachedNetwork: watchdog.reachedNetwork)
     }
 
     func waitForBootstrap(timeout: Duration, stallTimeout: Duration) async throws {
@@ -526,6 +541,9 @@ final class TorProcessEngine: TorEngine {
             }
             if !exited {
                 kill(process.processIdentifier, SIGKILL)
+                // The kernel releases the data-directory lock only once the process is gone; a
+                // spawn in the same millisecond would find it still held.
+                _ = await waitForExit(process, timeout: .seconds(1))
             }
             TorProcessRegistry.unregister(pid: process.processIdentifier)
         }
