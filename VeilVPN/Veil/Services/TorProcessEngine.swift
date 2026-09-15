@@ -39,8 +39,19 @@ final class TorProcessEngine: TorEngine {
     private var cachedTransportDirectory: URL?
     private var cachedDefaults: PluggableTransportDefaults?
     private var warmUpTask: Task<WarmthProfile, Error>?
-    /// Set by STATUS_CLIENT CIRCUIT_ESTABLISHED; the only proof a stale 100 % is worth anything.
+    private var warmUpSerial = 0
+    /// Bumped by every stop, so a control handshake still in flight against a process that was
+    /// just killed gives up at once instead of retrying against nothing for its whole deadline.
+    private var lifecycleEpoch = 0
+    /// Set by STATUS_CLIENT CIRCUIT_ESTABLISHED, which tor emits only when a circuit completes.
     private var circuitEstablishedSeen = false
+    /// A `CIRC … BUILT` since the last activation. Holding the network closes every circuit, so
+    /// any circuit built afterwards is proof the new configuration reaches the network — which
+    /// tor's bootstrap counter, `status/circuit-established` included, no longer is: both stay at
+    /// their high-water mark across a hold and say "done" before a single cell has moved.
+    private var circuitBuiltSinceActivation = false
+    /// Asks the bootstrap loop for a control-port poll now rather than at its next 3 s mark.
+    private var pollRequested = false
 
     /// `BW` is the free liveness heartbeat: tor emits it once a second from its second-elapsed
     /// callback whether or not traffic flows, and it keeps ticking under `DisableNetwork 1`. A gap
@@ -87,6 +98,8 @@ final class TorProcessEngine: TorEngine {
         pendingSignals = []
         launchedTransports = []
         standbyTorrc = nil
+        circuitEstablishedSeen = false
+        circuitBuiltSinceActivation = false
         usesBridges = settings.transport != .direct
 
         let fileManager = FileManager.default
@@ -149,13 +162,18 @@ final class TorProcessEngine: TorEngine {
         // each spawn a tor and each TAKEOWNERSHIP the survivor; the loser's connection closing then
         // makes tor exit under the winner. A second caller joins the first instead.
         if let inFlight = warmUpTask {
-            return try await inFlight.value
+            if let profile = try? await inFlight.value { return profile }
+            // The one we joined died underneath us — a stop in between, a port taken, a process
+            // that exited. Its error belongs to its caller; this caller gets its own attempt.
+            try Task.checkCancellation()
         }
+        warmUpSerial += 1
+        let serial = warmUpSerial
         let task = Task<WarmthProfile, Error> { [self] in
             try await performWarmUp(settings: settings, controlPort: controlPort, mode: mode, budget: budget)
         }
         warmUpTask = task
-        defer { warmUpTask = nil }
+        defer { if warmUpSerial == serial { warmUpTask = nil } }
         return try await task.value
     }
 
@@ -195,6 +213,8 @@ final class TorProcessEngine: TorEngine {
         launchedTransports = []
         circuits = [:]
         boundPorts = nil
+        circuitEstablishedSeen = false
+        circuitBuiltSinceActivation = false
         disableNetwork = mode != .preBootstrap
 
         try FileManager.default.createDirectory(at: dataDirectory, withIntermediateDirectories: true,
@@ -283,11 +303,11 @@ final class TorProcessEngine: TorEngine {
         guard let controller, process != nil, controller.isOpen else { throw TorEngineError.notRunning }
         let defaults = cachedDefaults ?? PluggableTransportDefaults.load(from: bundle.ptConfig)
         cachedDefaults = defaults
-        let baseline = (try? await controller.getInfo("status/bootstrap-phase", timeout: .seconds(5)))
-            .flatMap { Self.parseBootstrapPhase($0)?.percent } ?? 0
+        let baseline = bootstrap.percent
         var pairs = try TorConfiguration.activationAssignments(settings: settings, ports: ports, defaults: defaults)
         var effective = ports
         circuitEstablishedSeen = false
+        circuitBuiltSinceActivation = false
         do {
             try await controller.setConfLines(pairs, timeout: .seconds(10))
         } catch let error as TorControlClient.ControlError {
@@ -354,6 +374,7 @@ final class TorProcessEngine: TorEngine {
                       onStage: (@MainActor (BootstrapStage, Int) -> Void)?) async throws -> BootstrapOutcome {
         var watchdog = BootstrapWatchdog(config: config, startedAt: .now)
         pendingSignals = []
+        pollRequested = false
         var tick = 0
         var lastStage: BootstrapStage?
         while true {
@@ -375,16 +396,24 @@ final class TorProcessEngine: TorEngine {
             }
             tick += 1
             // A 3 s safety net: the stdout log stays the primary source, this only fills gaps.
-            if tick % 12 == 0, watchdog.percent < 100, let controller, controller.isOpen {
+            // On a re-activated engine it is the *only* source — tor re-emits nothing for a
+            // counter already at its high-water mark — so the first poll comes after a second,
+            // and a circuit completing brings one forward.
+            if tick == 4 || tick % 12 == 0 || pollRequested, watchdog.percent < 100, let controller, controller.isOpen {
+                pollRequested = false
                 if let phase = try? await controller.getInfo("status/bootstrap-phase", timeout: .seconds(5)),
                    let progress = Self.parseBootstrapPhase(phase) {
                     var percent = progress.percent
-                    if percent >= 100, !circuitEstablishedSeen {
+                    if percent >= 100, !circuitEstablishedSeen, !circuitBuiltSinceActivation {
                         // Tor's counter never regresses: after a hold it says 100 before any
-                        // circuit exists. Ask for the circuit itself before calling this done.
-                        let established = (try? await controller.getInfo("status/circuit-established",
-                                                                          timeout: .seconds(5))) == "1"
-                        if !established { percent = 99 }
+                        // circuit exists, and so does `status/circuit-established`. Only an open
+                        // circuit is proof, and `circuit-status` lists open circuits alone.
+                        let status = (try? await controller.getInfo("circuit-status", timeout: .seconds(5))) ?? ""
+                        if Self.bestCircuitPath(in: status) != nil {
+                            circuitBuiltSinceActivation = true
+                        } else {
+                            percent = 99
+                        }
                     }
                     updateBootstrap(BootstrapProgress(percent: percent, tag: progress.tag, summary: progress.summary))
                     pendingSignals.append(.bootstrap(percent: percent, tag: progress.tag, warning: nil,
@@ -465,11 +494,14 @@ final class TorProcessEngine: TorEngine {
         self.process = nil
         self.processID = nil
         stopping = true
+        lifecycleEpoch += 1
         disableNetwork = true
         boundPorts = nil
         warmthProfile = nil
         standbyTorrc = nil
         pendingSignals = []
+        circuitEstablishedSeen = false
+        circuitBuiltSinceActivation = false
 
         let short = min(grace, .seconds(2))
         if let controller {
@@ -693,6 +725,10 @@ final class TorProcessEngine: TorEngine {
         if event.hasPrefix("CIRC ") {
             if let update = Self.parseCircuitEvent(event) {
                 record(update)
+                if update.status == .built {
+                    circuitBuiltSinceActivation = true
+                    pollRequested = true
+                }
                 if update.status == .extended || update.status == .built {
                     pendingSignals.append(.circuitEvent)
                 }
@@ -773,9 +809,14 @@ final class TorProcessEngine: TorEngine {
     /// so 15 s is generous; the bind and lock checks turn the two common failures into ~200 ms.
     private func connectControl(port: UInt16) async throws -> TorControlClient {
         let deadline = ContinuousClock.now + .seconds(15)
+        let epoch = lifecycleEpoch
         var lastError: Error?
         while ContinuousClock.now < deadline {
             try Task.checkCancellation()
+            // A stop from elsewhere (a disconnect racing the launch standby) already killed the
+            // process this handshake is for; its exit is not reported here because the stop
+            // replaced the process identity first.
+            if epoch != lifecycleEpoch { throw TorEngineError.notRunning }
             if let exitStatus {
                 throw TorEngineError.processExited(exitStatus, lastWarning: lastWarning)
             }

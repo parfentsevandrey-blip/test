@@ -127,8 +127,7 @@ enum AttemptPlanner {
                 remaining: deadline - elapsed
             ),
             firstHopDeadline: .seconds(firstHop),
-            distinctFailuresToAbort: min(6, max(1, bridgeLineCount)),
-            controlSilenceLimit: .seconds(6)
+            distinctFailuresToAbort: min(6, max(1, bridgeLineCount))
         )
     }
 

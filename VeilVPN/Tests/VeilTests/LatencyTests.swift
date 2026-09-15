@@ -76,6 +76,9 @@ final class LatencyTests: XCTestCase {
         XCTAssertLessThan(warm.budget(for: .launch), chilly.budget(for: .launch))
         XCTAssertGreaterThan(AttemptPlanner.overallDeadline(tier: .cold),
                              AttemptPlanner.overallDeadline(tier: .hot))
+        // A busy main thread delaying BW delivery must never read as a dead tor.
+        XCTAssertGreaterThanOrEqual(warm.controlSilenceLimit, .seconds(12))
+        XCTAssertGreaterThanOrEqual(chilly.controlSilenceLimit, .seconds(12))
     }
 
     func testEveryStallBudgetHasAFloor() {

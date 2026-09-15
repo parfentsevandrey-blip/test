@@ -230,7 +230,7 @@ final class AppState {
     private var standbyAllowed: Bool {
         !isDemo && !Self.isRunningTests && settings.warmStart != .off
             && !ProcessInfo.processInfo.isLowPowerModeEnabled
-            && connection == .disconnected && !turboActive && !killSwitchEngaged
+            && (connection == .disconnected || connection == .failed) && !turboActive && !killSwitchEngaged
     }
 
     private func scheduleStandby(after delay: Duration) {
@@ -258,9 +258,12 @@ final class AppState {
         do {
             let profile = try await engine.warmUp(settings: settings, controlPort: control,
                                                   mode: settings.warmStart, budget: .seconds(20))
+            standbyFailures = 0
+            // Connect may have joined this warm-up and gone live while it settled; its word
+            // on the state stands.
+            guard connection == .disconnected || connection == .failed else { return }
             warmth = profile
             standby = .ready(profile.tier)
-            standbyFailures = 0
         } catch {
             standbyFailures += 1
             standby = .failed(error.localizedDescription)
@@ -274,7 +277,7 @@ final class AppState {
     private func releaseStandby() async {
         standbyTask?.cancel()
         standbyTask = nil
-        guard connection == .disconnected, engine.isWarm else { return }
+        guard connection == .disconnected || connection == .failed, engine.isWarm else { return }
         await engine.stop(grace: .seconds(3))
         standby = .off
         warmth = nil
@@ -756,6 +759,9 @@ final class AppState {
                     connection = .failed
                     Feedback.failed(sound: self.settings.soundEffects, haptic: self.settings.hapticFeedback)
                     scheduleReconnectIfWanted()
+                    // The cold path leaves nothing loaded. The next Connect — the button, or the
+                    // auto-reconnect in fifteen seconds — should find tor warm again, not spawn it.
+                    if !engine.isWarm { scheduleStandby(after: .seconds(2)) }
                 }
             }
         }
@@ -782,7 +788,12 @@ final class AppState {
             Task { @MainActor in self?.append(entry) }
         }
         var configuration = LanePool.Configuration()
-        configuration.laneCount = settings.isolatePerSite ? 2 : settings.lanePoolSize
+        // Snowflake and meek funnel every circuit through one volunteer proxy or one CDN front;
+        // four warm-up probes there compete with the first page load for a link that is already
+        // the bottleneck. Two lanes keep the measurement without the burst.
+        let sharedFirstHop = transport == .snowflake || transport == .meek
+        configuration.laneCount = settings.isolatePerSite ? 2
+            : (sharedFirstHop ? min(2, settings.lanePoolSize) : settings.lanePoolSize)
         configuration.siteMode = settings.isolatePerSite
         configuration.hedgingEnabled = settings.lanePoolHedging
         bridge.poolPort = ports.pool
@@ -812,6 +823,8 @@ final class AppState {
             Feedback.disconnected(sound: settings.soundEffects, haptic: settings.hapticFeedback)
             if standbyAllowed, engine.isWarm {
                 standby = .ready(engine.warmth?.tier ?? .cool)
+            } else if !engine.isWarm {
+                scheduleStandby(after: .seconds(2))
             }
         }
     }
