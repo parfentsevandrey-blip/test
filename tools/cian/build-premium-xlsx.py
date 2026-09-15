@@ -13,7 +13,7 @@ from pathlib import Path
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
-from openpyxl.formatting.rule import ColorScaleRule
+from openpyxl.formatting.rule import DataBarRule
 from openpyxl.drawing.image import Image as XLImage
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -162,7 +162,7 @@ def per_m2_str(v):
     return None if v in (None, 0) else int(v)
 
 # Та же сдержанная палитра, что и в PDF: графит, светлая бумага, цвет — только по делу.
-INK, ACCENT, PAPER, LINE = '1D2126', '6C7076', 'FAFAF9', 'DEDCD7'
+INK, ACCENT, PAPER, LINE = '0F1F3D', '6B7280', 'F5F6F8', 'D9DDE3'
 BODY, TITLE = 'Calibri', 'Calibri'
 thin = Side(style='thin', color=LINE)
 MED_SIDE = Side(style='medium', color=INK)
@@ -170,15 +170,15 @@ border = Border(bottom=thin)                      # без вертикальн�
 HEAD_FILL = PatternFill('solid', fgColor=INK)
 HEAD_FONT = Font(name=BODY, size=9, bold=True, color='FFFFFF')
 BODY_FONT = Font(name=BODY, size=10, color='22221F')
-LINK_FONT = Font(name=BODY, size=9, color='3A5A80', underline='single')
+LINK_FONT = Font(name=BODY, size=9, color='0F1F3D', underline='single')
 TITLE_FONT = Font(name=TITLE, size=15, bold=True, color=INK)
 SUB_FONT = Font(name=BODY, size=9, italic=True, color='6E6E66')
 ZEBRA = PatternFill('solid', fgColor=PAPER)
 GROUP_FILL = PatternFill('solid', fgColor='FFFFFF')
 GROUP_FONT = Font(name=TITLE, size=11, bold=True, color=INK)
 NAME_FONT = Font(name=BODY, size=10, bold=True, color=INK)
-STATUS_FILL = {'построено': 'EAF1EC', 'строится': 'F7EFE1', 'проектирование': 'EEEAF4'}
-STATUS_FONT = {'построено': '3C7A56', 'строится': 'A8762A', 'проектирование': '5B4E86'}
+STATUS_FILL = {'построено': 'E8F2ED', 'строится': 'FAF0DF', 'проектирование': 'E9EEF6'}
+STATUS_FONT = {'построено': '2E7D5B', 'строится': 'A8721F', 'проектирование': '4A6FA5'}
 ZONE_FILL = {'Садовое кольцо': 'FFF2CC', 'Хамовники': 'E2EFDA', 'Сити': 'DDEBF7', 'Пресня': 'FCE4D6', 'Белорусская': 'EDEDED'}
 wrap = Alignment(horizontal='center', vertical='center', wrap_text=True)
 center = Alignment(horizontal='center', vertical='center', wrap_text=True)
@@ -304,7 +304,7 @@ def sheet(wb, title, headers, rows, widths, note=None, subtitle='', zone_col=Non
     if heat_col is not None and last_data >= 4:
         col = get_column_letter(heat_col + 1)
         ws.conditional_formatting.add(f"{col}4:{col}{last_data}",
-            ColorScaleRule(start_type='min', start_color='CDE3C8', mid_type='percentile', mid_value=50, mid_color='F6E8BF', end_type='max', end_color='EDC9C2'))
+            DataBarRule(start_type='min', end_type='max', color='9DB3D6', showValue=True))
         for rr in range(4, last_data + 1):
             ws.cell(rr, heat_col + 1).font = Font(name=BODY, size=10, bold=True, color=INK)
     if note:
@@ -560,7 +560,7 @@ if idx_path.exists():
         for i in range(1, ncols + 1): ws.column_dimensions[get_column_letter(i)].width = COLW
         ws['A1'] = f"Карта · {mp['title']}"; ws['A1'].font = TITLE_FONT
         ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=ncols); ws.row_dimensions[1].height = 26
-        ws['A2'] = 'Зелёный — построено, янтарный — строится, фиолетовый — проектирование. Номер маркера = номер в списке на соседнем листе. Подложка: Яндекс Карты.'
+        ws['A2'] = 'Зелёный — построено, янтарный — строится, синий — проектирование. Номер маркера = номер в списке на соседнем листе. Подложка: Яндекс Карты.'
         ws['A2'].font = SUB_FONT; ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=ncols)
         im = XLImage(str(DOCS / mp['file'])); im.width = IMG_W; im.height = img_h
         ws.add_image(im, 'A3')

@@ -71,7 +71,7 @@ MAPS_DEF = [
     {'slug': 'presnya', 'title': 'Пресня, Сити, Белорусская', 'zones': ['Пресня', 'Сити', 'Белорусская'], 'bbox': (55.738, 37.515, 55.786, 37.605), 'z': 16},
 ]
 # те же цвета статусов, что в книге и в таблице
-COLORS = {'построено': (46, 107, 70), 'строится': (192, 138, 46), 'проектирование': (106, 86, 160)}
+COLORS = {'построено': (46, 125, 91), 'строится': (201, 138, 43), 'проектирование': (74, 111, 165)}
 ORDER = {'построено': 0, 'строится': 1, 'проектирование': 2}
 
 points = json.load(open(DOCS / 'points.json'))
@@ -132,13 +132,14 @@ for md in MAPS_DEF:
     bw = int(max(d.textlength(head, font=font_t) + 48,
                  max(d.textlength(st, font=font_l) for st in COLORS) + 140)) + 24
     bh = 110 + 52 * len(COLORS) + 8
-    d.rectangle((pad, pad, pad + bw, pad + bh), fill=(251, 250, 247), outline=(22, 36, 63), width=3)
-    d.rectangle((pad, pad, pad + bw, pad + 8), fill=(169, 138, 75))      # золотая полоса, как в книге
-    d.text((pad + 24, pad + 22), head, fill=(22, 36, 63), font=font_t)
-    yy = pad + 110
+    # плашка в цвет документа: тёмно-синяя шапка с названием, ниже легенда на белом
+    d.rectangle((pad, pad, pad + bw, pad + bh), fill=(255, 255, 255), outline=(15, 31, 61), width=2)
+    d.rectangle((pad, pad, pad + bw, pad + 96), fill=(15, 31, 61))
+    d.text((pad + 24, pad + 16), head, fill=(255, 255, 255), font=font_t)
+    yy = pad + 112
     for st, c in COLORS.items():
         d.ellipse((pad + 30, yy, pad + 74, yy + 44), fill=c, outline='white', width=3)
-        d.text((pad + 92, yy - 2), st, fill=(30, 30, 30), font=font_l); yy += 52
+        d.text((pad + 92, yy - 2), st, fill=(30, 36, 48), font=font_l); yy += 52
     d.text((img.width - 900, img.height - 50), '© Яндекс Карты · номера — см. список на листе', fill=(60, 60, 60), font=ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 28))
     out = MAPS / f'{md["slug"]}.jpg'
     img.save(out, 'JPEG', quality=86, optimize=True)
