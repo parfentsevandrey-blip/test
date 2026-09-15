@@ -525,6 +525,12 @@ final class AppState {
                 var lastFailure: Error?
                 var previous: AppSettings.Transport?
                 var index = 0
+                // The warm path is new; the cold path is the one that shipped in 0.6.1 and is known
+                // to work. A failure that says the *engine* is wrong — a dead control connection, a
+                // process that exited, an activation tor refused — hands the same transport to the
+                // cold path once rather than moving on. The warm path can therefore never connect
+                // worse than the old one did; at worst it costs one restart.
+                var coldRetryUsed = false
                 while index < queue.count {
                     let transport = queue[index]
                     try Task.checkCancellation()
@@ -558,7 +564,19 @@ final class AppState {
                     stageBudget = configuration.budget(for: .launch)
                     do {
                         if warmEngine {
-                            _ = try await engine.activate(settings: attemptSettings, ports: ports)
+                            do {
+                                _ = try await engine.activate(settings: attemptSettings, ports: ports)
+                            } catch is CancellationError {
+                                throw CancellationError()
+                            } catch {
+                                // Activation is the one step with no 0.6.1 precedent. If tor refuses
+                                // it, stop pretending to be warm and take the proven path.
+                                append(.veil(.warn, "Activation failed (\(error.localizedDescription)); starting tor the plain way"))
+                                await engine.stop(grace: .milliseconds(800))
+                                warmEngine = false
+                                standby = .failed(error.localizedDescription)
+                                try await engine.start(settings: attemptSettings, ports: ports)
+                            }
                         } else {
                             try await engine.start(settings: attemptSettings, ports: ports)
                         }
@@ -592,12 +610,25 @@ final class AppState {
                         } else {
                             append(.veil(.warn, "\(transport.rawValue): \(error.localizedDescription)"))
                         }
-                        // ~2 ms, not a teardown: the consensus, descriptors, guards and the
-                        // pluggable transports all stay loaded for the next candidate.
-                        if warmEngine {
-                            await engine.holdNetwork()
-                        } else {
+                        let engineFailure = (error as? TorAttemptError).map {
+                            $0.failure == .controlUnavailable || $0.failure == .processExited
+                        } ?? false
+                        if engineFailure || !warmEngine {
+                            // The process or its control connection is gone: nothing to keep warm.
                             await engine.stop(grace: .milliseconds(800))
+                            if warmEngine {
+                                warmEngine = false
+                                standby = .failed(error.localizedDescription)
+                            }
+                            if engineFailure, !coldRetryUsed {
+                                coldRetryUsed = true
+                                append(.veil(.notice, "Retrying \(transport.rawValue) with a fresh tor process"))
+                                queue.insert(transport, at: index + 1)
+                            }
+                        } else {
+                            // ~2 ms, not a teardown: the consensus, descriptors, guards and the
+                            // pluggable transports all stay loaded for the next candidate.
+                            await engine.holdNetwork()
                         }
                         let networkReport = await networkTask.value
                         let directReport = await reachabilityTask.value
@@ -808,19 +839,21 @@ final class AppState {
             append(.veil(.debug, "Soft reconnect could not restart the network: \(error.localizedDescription)"))
             return false
         }
-        var established = false
-        for _ in 0..<50 {
-            do { try await Task.sleep(for: .milliseconds(400)) } catch { return false }
+        // `status/circuit-established` does not reset when the network is held, so it says yes
+        // long before a circuit exists. Ask the route itself, and keep asking: the first stream
+        // after a bounce needs a circuit built, which takes a few seconds on a healthy link.
+        var sample: TimeInterval?
+        let deadline = ContinuousClock.now + .seconds(20)
+        var round = 0
+        while sample == nil, ContinuousClock.now < deadline {
             guard connection == .connected else { return false }
-            let up = await engine.isCircuitEstablished()
-            if up {
-                established = true
-                break
+            sample = await LatencyProbe.sample(socksPort: ports.socks, target: LatencyProbe.target(at: round),
+                                               timeout: .seconds(4))
+            round += 1
+            if sample == nil {
+                do { try await Task.sleep(for: .milliseconds(800)) } catch { return false }
             }
         }
-        guard established else { return false }
-        let sample = await LatencyProbe.sample(socksPort: ports.socks, target: LatencyProbe.target(at: 0),
-                                               timeout: .seconds(6))
         guard sample != nil else { return false }
         bridge.socksPort = ports.socks
         bridge.blockAll = false

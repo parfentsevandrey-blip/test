@@ -93,12 +93,14 @@ struct BootstrapWatchdog {
         var stall: [BootstrapStage: Duration]
         var hardTimeout: Duration
         var firstHopDeadline: Duration
-        var bytesProgressThreshold: UInt64 = 16_384
-        var bytesWindow: Duration = .seconds(5)
+        /// Bytes that count as progress. Small on purpose: a Snowflake link fetching descriptors at
+        /// a few KB/s is slow, not dead, and must never be killed for being slow.
+        var bytesProgressThreshold: UInt64 = 4_096
         var distinctFailuresToAbort: Int = 3
-        var warnCountToAbort: Int = 3
-        /// BW ticks once a second whether or not traffic flows, so a gap means a dead connection.
-        var controlSilenceLimit: Duration = .seconds(6)
+        var warnCountToAbort: Int = 5
+        /// BW ticks once a second whether or not traffic flows, so a long gap means a dead
+        /// connection. Generous, because a busy main thread must not read as a dead tor.
+        var controlSilenceLimit: Duration = .seconds(12)
 
         func budget(for stage: BootstrapStage) -> Duration { stall[stage] ?? .seconds(20) }
     }
@@ -141,7 +143,6 @@ struct BootstrapWatchdog {
 
     private var lastProgressAt: ContinuousClock.Instant
     private var lastBandwidthAt: ContinuousClock.Instant?
-    private var windowStartedAt: ContinuousClock.Instant
     private var windowStartRead: UInt64 = 0
     private var totalRead: UInt64 = 0
     private var sawLaunch = false
@@ -158,7 +159,6 @@ struct BootstrapWatchdog {
         self.startedAt = startedAt
         stageEnteredAt = startedAt
         lastProgressAt = startedAt
-        windowStartedAt = startedAt
     }
 
     var elapsedMillis: Int { Self.millis(startedAt.duration(to: .now)) }
@@ -210,14 +210,13 @@ struct BootstrapWatchdog {
         case .bytes(let read, _):
             totalRead &+= read
             lastBandwidthAt = now
-            if totalRead >= windowStartRead &+ config.bytesProgressThreshold {
+            // Accumulated since the last escape, with no window that could forget a trickle:
+            // a link moving real bytes, however slowly, is making progress. The hard timeout
+            // still bounds it.
+            if totalRead &- windowStartRead >= config.bytesProgressThreshold {
                 bytesEscapes += 1
                 lastProgressAt = now
                 windowStartRead = totalRead
-                windowStartedAt = now
-            } else if windowStartedAt.duration(to: now) > config.bytesWindow {
-                windowStartRead = totalRead
-                windowStartedAt = now
             }
             return .keepWaiting
         case .bootstrap(let value, _, let warning, let reason, let count, let recommendation, _):

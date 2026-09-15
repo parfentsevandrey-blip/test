@@ -38,6 +38,9 @@ final class TorProcessEngine: TorEngine {
     private var stopping = false
     private var cachedTransportDirectory: URL?
     private var cachedDefaults: PluggableTransportDefaults?
+    private var warmUpTask: Task<WarmthProfile, Error>?
+    /// Set by STATUS_CLIENT CIRCUIT_ESTABLISHED; the only proof a stale 100 % is worth anything.
+    private var circuitEstablishedSeen = false
 
     /// `BW` is the free liveness heartbeat: tor emits it once a second from its second-elapsed
     /// callback whether or not traffic flows, and it keeps ticking under `DisableNetwork 1`. A gap
@@ -142,6 +145,22 @@ final class TorProcessEngine: TorEngine {
     /// which is observationally identical to tor not running.
     func warmUp(settings: AppSettings, controlPort: UInt16, mode: AppSettings.WarmStart,
                 budget: Duration) async throws -> WarmthProfile {
+        // Two warm-ups at once — the launch standby still starting when Connect is pressed — would
+        // each spawn a tor and each TAKEOWNERSHIP the survivor; the loser's connection closing then
+        // makes tor exit under the winner. A second caller joins the first instead.
+        if let inFlight = warmUpTask {
+            return try await inFlight.value
+        }
+        let task = Task<WarmthProfile, Error> { [self] in
+            try await performWarmUp(settings: settings, controlPort: controlPort, mode: mode, budget: budget)
+        }
+        warmUpTask = task
+        defer { warmUpTask = nil }
+        return try await task.value
+    }
+
+    private func performWarmUp(settings: AppSettings, controlPort: UInt16, mode: AppSettings.WarmStart,
+                               budget: Duration) async throws -> WarmthProfile {
         let transportDirectory = try cachedTransportDirectory ?? PluggableTransportLocator.spaceFreeDirectory(for: bundle)
         cachedTransportDirectory = transportDirectory
         let defaults = cachedDefaults ?? PluggableTransportDefaults.load(from: bundle.ptConfig)
@@ -258,6 +277,7 @@ final class TorProcessEngine: TorEngine {
             .flatMap { Self.parseBootstrapPhase($0)?.percent } ?? 0
         var pairs = try TorConfiguration.activationAssignments(settings: settings, ports: ports, defaults: defaults)
         var effective = ports
+        circuitEstablishedSeen = false
         do {
             try await controller.setConfLines(pairs, timeout: .seconds(10))
         } catch let error as TorControlClient.ControlError {
@@ -277,6 +297,16 @@ final class TorProcessEngine: TorEngine {
         usesBridges = settings.transport != .direct
         disableNetwork = false
         pendingSignals = []
+        // Nice-to-have options ride separately: a value this tor rejects at runtime costs a log
+        // line, not the connection.
+        let optional = TorConfiguration.optionalAssignments(settings: settings)
+        if !optional.isEmpty {
+            do {
+                try await controller.setConfLines(optional, timeout: .seconds(5))
+            } catch {
+                emit(.veil(.debug, "Optional options were not applied live: \(error.localizedDescription)"))
+            }
+        }
         return baseline
     }
 
@@ -338,8 +368,16 @@ final class TorProcessEngine: TorEngine {
             if tick % 12 == 0, watchdog.percent < 100, let controller, controller.isOpen {
                 if let phase = try? await controller.getInfo("status/bootstrap-phase", timeout: .seconds(5)),
                    let progress = Self.parseBootstrapPhase(phase) {
-                    updateBootstrap(progress)
-                    pendingSignals.append(.bootstrap(percent: progress.percent, tag: progress.tag, warning: nil,
+                    var percent = progress.percent
+                    if percent >= 100, !circuitEstablishedSeen {
+                        // Tor's counter never regresses: after a hold it says 100 before any
+                        // circuit exists. Ask for the circuit itself before calling this done.
+                        let established = (try? await controller.getInfo("status/circuit-established",
+                                                                          timeout: .seconds(5))) == "1"
+                        if !established { percent = 99 }
+                    }
+                    updateBootstrap(BootstrapProgress(percent: percent, tag: progress.tag, summary: progress.summary))
+                    pendingSignals.append(.bootstrap(percent: percent, tag: progress.tag, warning: nil,
                                                      reason: nil, count: nil, recommendation: nil, hostAddress: nil))
                 }
             }
@@ -678,6 +716,7 @@ final class TorProcessEngine: TorEngine {
             launchedTransports.insert(name)
             pendingSignals.append(.transportLaunched(name))
         case .circuitEstablished:
+            circuitEstablishedSeen = true
             pendingSignals.append(.circuitEstablished)
         case .circuitNotEstablished(let reason):
             if let reason { lastWarning = reason }

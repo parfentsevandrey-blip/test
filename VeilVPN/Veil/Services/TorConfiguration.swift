@@ -263,7 +263,6 @@ struct TorConfiguration {
         for line in socksPortLines(settings: settings, ports: ports) {
             pairs.append(("SocksPort", String(line.dropFirst("SocksPort ".count))))
         }
-        pairs.append(("Log", settings.verboseLogs ? "info stdout" : "notice stdout"))
         if settings.transport == .direct {
             pairs.append(("Bridge", nil))          // a bare key resets the list
             pairs.append(("UseBridges", "0"))
@@ -276,6 +275,16 @@ struct TorConfiguration {
         let configuration = settings.route.configuration
         for key in configuration.reset { pairs.append((key, nil)) }
         for assignment in configuration.set { pairs.append((assignment.key, assignment.value)) }
+        pairs.append(("DisableNetwork", "0"))
+        return pairs
+    }
+
+    /// Everything that improves a connection but is not needed to make one. Applied in its own
+    /// SETCONF after activation, so a value this tor refuses at runtime costs a log line rather
+    /// than the whole attempt — SETCONF is all or nothing, and the activation set must stay
+    /// limited to options known to be settable live.
+    static func optionalAssignments(settings: AppSettings) -> [(key: String, value: String?)] {
+        var pairs: [(key: String, value: String?)] = []
         pairs.append(("ConfluxEnabled", settings.confluxLatency ? "1" : "0"))
         if settings.confluxLatency { pairs.append(("ConfluxClientUX", "latency")) }
         if settings.paddingEnabled {
@@ -283,7 +292,6 @@ struct TorConfiguration {
                 pairs.append((key, value))
             }
         }
-        pairs.append(("DisableNetwork", "0"))
         return pairs
     }
 

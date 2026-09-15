@@ -123,6 +123,40 @@ final class WarmStartTests: XCTestCase {
         XCTAssertGreaterThan(watchdog.bytesEscapes, 0)
     }
 
+    func testATrickleOfBytesIsProgressHoweverSlow() {
+        // A Snowflake link fetching descriptors at 1 KB/s is slow, not dead. The old rule needed
+        // 16 KB inside a five-second window and forgot everything between windows, so a link
+        // moving 5 KB per window was killed at the stall budget while plainly working.
+        let start = ContinuousClock.now
+        var watchdog = BootstrapWatchdog(config: config(stall: 10), startedAt: start)
+        watchdog.handle(.transportLaunched("snowflake"), at: start)
+        var now = start
+        for _ in 0..<30 {
+            now = now.advanced(by: .seconds(1))
+            XCTAssertEqual(watchdog.handle(.bytes(read: 1_000, written: 0), at: now), .keepWaiting)
+            XCTAssertEqual(watchdog.handle(.tick, at: now), .keepWaiting, "1 KB/s must never read as a stall")
+        }
+        XCTAssertGreaterThanOrEqual(watchdog.bytesEscapes, 6)
+    }
+
+    func testTheCriticalActivationCarriesOnlyWhatMustSucceed() throws {
+        var settings = AppSettings()
+        settings.transport = .obfs4
+        settings.paddingEnabled = true
+        settings.confluxLatency = true
+        let critical = try TorConfiguration.activationAssignments(
+            settings: settings, ports: ActivePorts(socks: 9050, http: 8118, control: 9051, pool: 9060),
+            defaults: .builtin)
+        // SETCONF is all or nothing: an option tor refuses at runtime here would fail every attempt.
+        for key in ["ConfluxEnabled", "ConfluxClientUX", "CircuitPadding", "ConnectionPadding", "Log"] {
+            XCTAssertFalse(critical.contains { $0.key == key }, "\(key) belongs in the optional set")
+        }
+        XCTAssertEqual(critical.last?.key, "DisableNetwork")
+        let optional = TorConfiguration.optionalAssignments(settings: settings)
+        XCTAssertTrue(optional.contains { $0.key == "ConfluxClientUX" })
+        XCTAssertTrue(optional.contains { $0.key == "CircuitPadding" })
+    }
+
     func testAProcessThatNeverLaunchesItsTransportAborts() {
         let start = ContinuousClock.now
         var watchdog = BootstrapWatchdog(config: config(firstHop: 5), startedAt: start)
@@ -134,7 +168,9 @@ final class WarmStartTests: XCTestCase {
         var watchdog = BootstrapWatchdog(config: config(), startedAt: start)
         watchdog.handle(.transportLaunched("obfs4"), at: start)
         watchdog.handle(.bytes(read: 1, written: 1), at: start)
-        XCTAssertEqual(watchdog.handle(.tick, at: start.advanced(by: .seconds(7))), .abort(.controlUnavailable))
+        // Generous on purpose: a busy main thread delaying event delivery must not read as a dead tor.
+        XCTAssertEqual(watchdog.handle(.tick, at: start.advanced(by: .seconds(8))), .keepWaiting)
+        XCTAssertEqual(watchdog.handle(.tick, at: start.advanced(by: .seconds(13))), .abort(.controlUnavailable))
     }
 
     func testFailuresThatSayNothingAboutTheTransportAreNotRecorded() {
