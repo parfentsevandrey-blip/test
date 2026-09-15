@@ -78,8 +78,25 @@ final class ParsingTests: XCTestCase {
         XCTAssertEqual(settings.transport, .snowflake)
         XCTAssertEqual(settings.socksPort, 9150)
         XCTAssertTrue(settings.killSwitch)
-        XCTAssertEqual(settings.youtubeMode, .tor)
+        XCTAssertEqual(settings.youtubeMode, .directAntiThrottle)
+        XCTAssertFalse(settings.youtubeModeChosen)
         XCTAssertTrue(settings.serviceRoutes.isEmpty)
+    }
+
+    func testYouTubeModeMigrationKeepsADeliberateChoiceOnly() throws {
+        // An old install that never touched the setting stored the old default: it moves.
+        let untouched = Data("{\"youtubeMode\":\"tor\"}".utf8)
+        XCTAssertEqual(try JSONDecoder().decode(AppSettings.self, from: untouched).youtubeMode, .directAntiThrottle)
+        // The same value chosen on purpose stays.
+        let chosen = Data("{\"youtubeMode\":\"tor\",\"youtubeModeChosen\":true}".utf8)
+        XCTAssertEqual(try JSONDecoder().decode(AppSettings.self, from: chosen).youtubeMode, .tor)
+        // A round trip through the encoder records the choice.
+        var settings = AppSettings()
+        settings.youtubeMode = .tor
+        settings.youtubeModeChosen = true
+        let again = try JSONDecoder().decode(AppSettings.self, from: JSONEncoder().encode(settings))
+        XCTAssertEqual(again.youtubeMode, .tor)
+        XCTAssertTrue(again.youtubeModeChosen)
     }
 
     func testBridgeLinesAndTransports() {

@@ -87,7 +87,12 @@ struct AppSettings: Codable, Equatable, Sendable {
     /// Re-try a slow connect on a second circuit.
     var lanePoolHedging: Bool = true
     /// YouTube: through Tor, or directly with/without anti-throttling.
-    var youtubeMode: RouteMode = .tor
+    /// Direct by default: through Tor, video tops out far below HD and YouTube demands sign-ins.
+    /// The Security screen counts it as a bypass, and the Strict and Balanced presets put it back.
+    var youtubeMode: RouteMode = .directAntiThrottle
+    /// Set once the user (or a preset they picked) chose the YouTube mode, so a later change of
+    /// the default never overrides a deliberate choice.
+    var youtubeModeChosen: Bool = false
     var dpiStrategy: DPIStrategy = .recordAndSegmentAtSNI
     /// Extra domains that bypass Tor (one per line).
     var customDirectDomains: String = ""
@@ -130,7 +135,7 @@ struct AppSettings: Codable, Equatable, Sendable {
         case warmStart, lanePoolEnabled, lanePoolSize, lanePoolHedging
         case closeSessionsOnKillSwitch, httpsOnly, redactDiagnostics, updateCheckAfterConnect
         case forgetPolicy, securityPreset
-        case youtubeMode, dpiStrategy, customDirectDomains, customDirectAntiThrottle, serviceRoutes
+        case youtubeMode, youtubeModeChosen, dpiStrategy, customDirectDomains, customDirectAntiThrottle, serviceRoutes
         case killSwitch, autoReconnect, autoResetNetwork, isolatePerSite, notificationsEnabled, soundEffects, hapticFeedback
         case checkForUpdates, skippedUpdateVersion, onboardingCompleted
     }
@@ -180,7 +185,15 @@ struct AppSettings: Codable, Equatable, Sendable {
         updateCheckAfterConnect = try c.decodeIfPresent(Bool.self, forKey: .updateCheckAfterConnect) ?? d.updateCheckAfterConnect
         forgetPolicy = try c.decodeIfPresent(ForgetPolicy.self, forKey: .forgetPolicy) ?? d.forgetPolicy
         securityPreset = try c.decodeIfPresent(String.self, forKey: .securityPreset)
-        youtubeMode = try c.decodeIfPresent(RouteMode.self, forKey: .youtubeMode) ?? d.youtubeMode
+        youtubeModeChosen = try c.decodeIfPresent(Bool.self, forKey: .youtubeModeChosen) ?? false
+        if let stored = try c.decodeIfPresent(RouteMode.self, forKey: .youtubeMode) {
+            // Up to 0.7.3 the default was "through Tor" and nothing recorded whether the user had
+            // asked for it. A stored "through Tor" with no record of a choice is that old default,
+            // not a decision, and takes the new default; a mode the user picked stays.
+            youtubeMode = (stored == .tor && !youtubeModeChosen) ? d.youtubeMode : stored
+        } else {
+            youtubeMode = d.youtubeMode
+        }
         dpiStrategy = try c.decodeIfPresent(DPIStrategy.self, forKey: .dpiStrategy) ?? d.dpiStrategy
         customDirectDomains = try c.decodeIfPresent(String.self, forKey: .customDirectDomains) ?? d.customDirectDomains
         customDirectAntiThrottle = try c.decodeIfPresent(Bool.self, forKey: .customDirectAntiThrottle) ?? d.customDirectAntiThrottle

@@ -1492,6 +1492,7 @@ final class AppState {
     // MARK: Routing (YouTube, services, custom domains)
 
     func setYouTubeMode(_ mode: RouteMode) {
+        settings.youtubeModeChosen = true
         guard settings.youtubeMode != mode else { return }
         settings.youtubeMode = mode
         youtubeTest = nil

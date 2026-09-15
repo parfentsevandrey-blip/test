@@ -45,6 +45,7 @@ enum SecurityPreset: String, CaseIterable, Codable, Identifiable, Sendable {
             settings.paddingLevel = .balanced
             settings.httpsOnly = true
             settings.youtubeMode = .tor
+            settings.youtubeModeChosen = true
             settings.serviceRoutes = Self.allServicesThroughTor
             settings.customDirectDomains = ""
             settings.updateCheckAfterConnect = true
@@ -60,6 +61,7 @@ enum SecurityPreset: String, CaseIterable, Codable, Identifiable, Sendable {
             settings.lanePoolEnabled = true
             settings.httpsOnly = true
             settings.youtubeMode = .tor
+            settings.youtubeModeChosen = true
             settings.serviceRoutes = [:]
             settings.updateCheckAfterConnect = true
             settings.redactDiagnostics = true
@@ -74,6 +76,7 @@ enum SecurityPreset: String, CaseIterable, Codable, Identifiable, Sendable {
             settings.paddingEnabled = false
             settings.httpsOnly = false
             settings.youtubeMode = .directAntiThrottle
+            settings.youtubeModeChosen = true
             settings.serviceRoutes = ["apple": .direct]
             settings.forgetPolicy = .off
         }

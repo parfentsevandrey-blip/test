@@ -15457,6 +15457,34 @@
         }
       }
     },
+    "YouTube goes directly with anti-throttling by default: the TLS handshake is fragmented so DPI throttling cannot recognise it, and video plays at full quality. YouTube sees your real IP address; in Settings → YouTube you can send it through Tor instead. YouTube Turbo does the same without Tor at all.": {
+      "localizations": {
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube به‌طور پیش‌فرض مستقیم و با ضد کندسازی می‌رود: دست‌دهی TLS قطعه‌قطعه می‌شود تا کندسازی DPI آن را تشخیص ندهد و ویدیو با کیفیت کامل پخش شود. YouTube نشانی IP واقعی شما را می‌بیند؛ در تنظیمات ← YouTube می‌توانید آن را از طریق Tor بفرستید. YouTube Turbo همین کار را بدون Tor انجام می‌دهد."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube по умолчанию идёт напрямую с обходом замедления: TLS-рукопожатие дробится, DPI его не распознаёт, и видео играет в полном качестве. YouTube видит ваш настоящий IP-адрес; в Настройки → YouTube его можно пустить через Tor. YouTube Turbo делает то же самое вообще без Tor."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube за замовчуванням іде напряму з обходом сповільнення: TLS-рукостискання дробиться, DPI його не розпізнає, і відео грає в повній якості. YouTube бачить вашу справжню IP-адресу; у Налаштування → YouTube його можна пустити через Tor. YouTube Turbo робить те саме взагалі без Tor."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube 默认使用反限速直连：TLS 握手被分片，DPI 限速无法识别，视频以完整画质播放。YouTube 会看到你的真实 IP 地址；在“设置 → YouTube”中可以改为经 Tor 访问。YouTube Turbo 则完全不使用 Tor 实现同样效果。"
+          }
+        }
+      }
+    },
     "YouTube goes through the Tor circuit like everything else. Anonymous, but slow for video and YouTube often demands a sign-in to prove you are not a bot.": {
       "localizations": {
         "fa": {
@@ -15537,34 +15565,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "YouTube 路由——在“设置 → YouTube”中配置"
-          }
-        }
-      }
-    },
-    "YouTube through Tor is slow and asks for sign-ins. In Settings → YouTube you can send it directly with anti-throttling instead: the TLS handshake is fragmented so DPI throttling cannot recognise it. YouTube Turbo does the same without Tor at all.": {
-      "localizations": {
-        "fa": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YouTube از طریق Tor کند است و ورود می‌خواهد. در تنظیمات ← YouTube می‌توانید آن را مستقیم و با ضد کندسازی بفرستید: دست‌دهی TLS قطعه‌قطعه می‌شود تا کندسازی DPI آن را تشخیص ندهد. YouTube Turbo همین کار را بدون Tor انجام می‌دهد."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YouTube через Tor медленный и требует входа. В Настройки → YouTube его можно пустить напрямую с обходом замедления: TLS-рукопожатие дробится, и DPI его не распознаёт. YouTube Turbo делает то же самое вообще без Tor."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YouTube через Tor повільний і вимагає входу. У Налаштування → YouTube його можна пустити напряму з обходом сповільнення: TLS-рукостискання дробиться, і DPI його не розпізнає. YouTube Turbo робить те саме взагалі без Tor."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "经 Tor 访问 YouTube 很慢且常要求登录。在“设置 → YouTube”中可以改为使用反限速直连：TLS 握手被分片，DPI 限速无法识别。YouTube Turbo 则完全不使用 Tor 实现同样效果。"
           }
         }
       }

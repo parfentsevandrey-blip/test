@@ -2,6 +2,9 @@
 
 Liquid Glass UI, bundled Tor Expert Bundle (universal: Apple silicon + Intel), Snowflake / obfs4 / custom bridges, exit-country selection, live circuit and throughput, automatic system proxy.
 
+### Changed in 0.7.4 — YouTube plays at full quality out of the box
+- **YouTube goes direct with anti-throttling by default.** Through Tor, video tops out far below HD — a Tor circuit carries a few megabits at best, and 4K needs twenty or more — and YouTube keeps demanding sign-ins. The default is now the direct path with the fragmented TLS handshake, which is what YouTube Turbo already did; the Security screen counts it as a bypass, and the Strict and Balanced presets put YouTube back through Tor. An install that never touched the setting takes the new default; a mode chosen on purpose, or set by a preset, stays as it was.
+
 ### Fixed in 0.7.3 — the probe advises, the relay decides
 - **A censored network no longer gets its Wi-Fi reset for working.** The connectivity probe reaches public resolvers and a few well-known hosts; a network that blocks those can still carry Snowflake, whose rendezvous takes longer than the probe does. A "no Internet" verdict used to cut the attempt on the spot and then reset Wi-Fi. It now only shortens the attempt's leash — six seconds for a relay to answer — and a relay that answers, or real bytes arriving, overrules it: no abort, no Wi-Fi reset. The reset still fires where it belongs, on an attempt that reached nothing at all.
 - **A relay answering counts as progress.** After a network hold the percentage stands still while tor talks to the guard; that conversation is now progress for the watchdog, so a slow guard is no longer mistaken for a stall.
@@ -124,6 +127,9 @@ twenty-four times a second on a clock.
 1. Open the DMG and drag **Veil.app** to *Applications*.
 2. The build is ad-hoc signed (no Apple Developer certificate): on first launch open **System Settings → Privacy & Security → Open Anyway**, or run `xattr -cr /Applications/Veil.app`.
 3. Press the power button. macOS asks for an administrator password once to switch the system proxy.
+
+### Изменено в 0.7.4 — YouTube в полном качестве сразу после подключения
+- **YouTube по умолчанию идёт напрямую с обходом замедления.** Через Tor видео упирается далеко ниже HD — цепочка Tor даёт в лучшем случае несколько мегабит, а 4K нужно двадцать и больше — и YouTube постоянно требует входа. Теперь по умолчанию прямой путь с раздроблённым TLS-рукопожатием, то есть то, что уже делал YouTube Turbo; экран «Безопасность» считает это обходом, а пресеты «Строгий» и «Сбалансированный» возвращают YouTube в Tor. Установка, где настройку не трогали, получает новое умолчание; режим, выбранный сознательно или пресетом, остаётся.
 
 ### Исправлено в 0.7.3 — проба советует, узел решает
 - **Цензурируемой сети больше не сбрасывают Wi-Fi за то, что она работает.** Проба связности стучится к публичным резолверам и паре известных хостов; сеть, которая их блокирует, всё равно может нести Snowflake, чьё рандеву длится дольше пробы. Вердикт «нет интернета» раньше обрывал попытку на месте и затем сбрасывал Wi-Fi. Теперь он лишь укорачивает поводок — шесть секунд, чтобы узел ответил, — а ответивший узел или пришедшие байты отменяют его: ни обрыва, ни сброса Wi-Fi. Сброс по-прежнему срабатывает там, где нужен: на попытке, которая не достучалась ни до чего.

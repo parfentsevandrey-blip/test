@@ -73,6 +73,7 @@ extension AppState {
             // merges over the catalogue's own defaults — so write an explicit `.tor` for each.
             settings.serviceRoutes = SecurityPreset.allServicesThroughTor
             settings.youtubeMode = .tor
+            settings.youtubeModeChosen = true
             settings.customDirectDomains = ""
             httpBridgePolicyChanged()
             append(.veil(.notice, "Every bypass removed; all traffic goes through Tor"))
