@@ -350,6 +350,16 @@ def rounded_photo(dest: Path, source: Path, *, width_mm: float, ratio: float,
     return dest
 
 
+def _objects_word(count: int) -> str:
+    """Форма слова «объект» при числе: 1 объект, 2 объекта, 5 объектов."""
+    tail, hundred = count % 10, count % 100
+    if tail == 1 and hundred != 11:
+        return "объект"
+    if 2 <= tail <= 4 and not 12 <= hundred <= 14:
+        return "объекта"
+    return "объектов"
+
+
 def contents_cover(dest: Path, *, kicker: str, title: str, subtitle: str,
                    items: list[tuple[str, str, str, Path]], meta: str,
                    page: tuple[float, float] = PAGE,
@@ -436,7 +446,7 @@ def contents_cover(dest: Path, *, kicker: str, title: str, subtitle: str,
     y = height_px - 20 * MM
     hairline(draw, left, y, right, y, GREY_SOFT, 0.25)
     draw.text((left, y + 3.4 * MM), meta, font=font(SANS, 7), fill=GREY)
-    count = f"{len(items)} объекта"
+    count = f"{len(items)} {_objects_word(len(items))}"
     w = tracked_width(draw, count.upper(), font(SANS_MED, 7))
     tracked(draw, (right - w, y + 3.4 * MM), count.upper(), font(SANS_MED, 7), GOLD)
 

@@ -114,6 +114,16 @@
       ]
     },
     {
+      "slug": "boekhorststraat-42-den-haag",
+      "title": "Boekhorststraat 42, Den Haag",
+      "city": "Den Haag",
+      "price": "€ 699.000",
+      "url": "https://www.funda.nl/detail/koop/den-haag/huis-boekhorststraat-42/80840311/",
+      "reports": [
+        "report-2026-09-15-prime.json"
+      ]
+    },
+    {
       "slug": "boekweitstraat-82-nieuw-vennep",
       "title": "Boekweitstraat 82, Nieuw-Vennep",
       "city": "Nieuw-Vennep",
@@ -296,6 +306,16 @@
       ]
     },
     {
+      "slug": "lange-voorhout-70-den-haag",
+      "title": "Lange Voorhout 70–72, Den Haag",
+      "city": "Den Haag",
+      "price": "€ 2.750.000",
+      "url": "https://www.funda.nl/detail/koop/den-haag/huis-lange-voorhout-70/44491454/",
+      "reports": [
+        "report-2026-09-15-prime.json"
+      ]
+    },
+    {
       "slug": "lireweg-42-50-nieuw-vennep",
       "title": "Lireweg 42-50, Nieuw-Vennep",
       "city": "Nieuw-Vennep",
@@ -369,6 +389,26 @@
       ]
     },
     {
+      "slug": "nieuwegracht-67-utrecht",
+      "title": "Nieuwegracht 67, Utrecht",
+      "city": "Utrecht",
+      "price": "€ 4.700.000",
+      "url": "https://www.funda.nl/detail/koop/utrecht/huis-nieuwegracht-67/43332541/",
+      "reports": [
+        "report-2026-09-15-prime.json"
+      ]
+    },
+    {
+      "slug": "nieuwegracht-88-utrecht",
+      "title": "Nieuwegracht 88, Utrecht",
+      "city": "Utrecht",
+      "price": "€ 2.250.000",
+      "url": "https://www.funda.nl/detail/koop/utrecht/huis-nieuwegracht-88/43157384/",
+      "reports": [
+        "report-2026-09-15-prime.json"
+      ]
+    },
+    {
       "slug": "nijverheidscentrum-26-zevenhuizen",
       "title": "Nijverheidscentrum 26, Zevenhuizen",
       "city": "Zevenhuizen",
@@ -398,6 +438,16 @@
       "url": "https://www.fundainbusiness.nl/bedrijfshal/aalsmeer/object-44564773-oosteinderweg-216/",
       "reports": [
         "report-2026-09-08-schiphol.json"
+      ]
+    },
+    {
+      "slug": "oudegracht-278-utrecht",
+      "title": "Oudegracht 278, Utrecht",
+      "city": "Utrecht",
+      "price": "€ 1.295.000",
+      "url": "https://www.funda.nl/detail/koop/utrecht/huis-oudegracht-278/44584085/",
+      "reports": [
+        "report-2026-09-15-prime.json"
       ]
     },
     {
@@ -500,6 +550,16 @@
       "url": "https://www.fundainbusiness.nl/bedrijfshal/diemen/object-44554856-verrijn-stuartweg-12/",
       "reports": [
         "report-2026-09-15-amsterdam.json"
+      ]
+    },
+    {
+      "slug": "wagenstraat-175-den-haag",
+      "title": "Wagenstraat 175, Den Haag",
+      "city": "Den Haag",
+      "price": "€ 925.000",
+      "url": "https://www.funda.nl/detail/koop/den-haag/huis-wagenstraat-175/44445830/",
+      "reports": [
+        "report-2026-09-15-prime.json"
       ]
     },
     {
