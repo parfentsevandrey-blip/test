@@ -72,7 +72,7 @@ final class AppState {
     private(set) var isCheckingTor = false
     private(set) var isChangingIdentity = false
     private(set) var logs: [LogEntry] = []
-    private(set) var lastError: AppError?
+    var lastError: AppError?
     private(set) var connectedAt: Date?
     private(set) var proxyStatus: ProxyStatus = .off
     private(set) var ports: ActivePorts?
