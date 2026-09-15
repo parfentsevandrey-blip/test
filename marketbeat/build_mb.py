@@ -13,11 +13,6 @@
                 словарь терминов
   подвал        источники и колонцифра
 
-Вокруг полос секторов — аппарат коммерческого отчёта: обложка (тема недели,
-график, макроцифры, оглавление, плитки секторов), резюме недели (экономика,
-крупнейшие сделки, карточки секторов) и методология (как собран выпуск, пул в
-цифрах, хроника недели, сводный словарь, источники).
-
 Внешний вид — печатное финансовое исследование, а не экранный дашборд: кремовая
 бумага, одиночные волосяные линейки и золото в акцентах, высококонтрастный
 заголовочный серифный шрифт (Playfair Display), буквицы, римская нумерация
@@ -299,7 +294,7 @@ body {{ margin:0; background:{DESK}; font-family:'PT Serif',Georgia,serif; color
 .right {{ display:flex; flex-direction:column; gap:3mm; min-height:0 }}
 .pcols {{ flex:1; display:grid; grid-template-columns:1fr 1fr; column-gap:8mm; min-height:0 }}
 .pcol {{ overflow:hidden }}
-.pcol + .pcol {{ border-left:.6px solid {HAIR}; padding-left:8mm; margin-left:-8mm }}
+.pcol + .pcol {{ border-left:.6px solid {HAIR}; padding-left:4mm; margin-left:-4mm }}
 .bottom {{ height:{BOTTOM_MM}mm; display:grid; grid-template-columns:1.25fr 1.3fr .95fr; column-gap:6mm;
            border-top:.6px solid {HAIR}; padding-top:2.4mm }}
 .cell {{ overflow:hidden }}
@@ -334,110 +329,6 @@ body {{ margin:0; background:{DESK}; font-family:'PT Serif',Georgia,serif; color
 .tab {{ position:absolute; right:0; width:6.4mm; height:34mm; background:var(--ac); color:{PAPER};
         writing-mode:vertical-rl; transform:rotate(180deg); display:flex; align-items:center; justify-content:center;
         font-family:'PT Sans'; font-size:7.2px; letter-spacing:.22em; text-transform:uppercase }}
-/* обложка */
-.cover {{ padding:{PAD_MM + 3}mm {PAD_MM + 3}mm {PAD_MM}mm; gap:0 }}
-.cv-top {{ display:flex; justify-content:space-between; align-items:flex-end; border-bottom:.6px solid {HAIR};
-           padding-bottom:3mm }}
-.cv-body {{ flex:1; display:grid; grid-template-columns:1.05fr 1fr; column-gap:16mm; padding-top:8mm; min-height:0 }}
-.cv-left {{ display:flex; flex-direction:column; min-height:0 }}
-.cv-title {{ font-family:'Playfair'; font-weight:900; font-size:56px; line-height:.94; letter-spacing:-.015em;
-             color:{INK}; margin:3mm 0 5.5mm }}
-.cv-lead {{ font-size:12.4px; line-height:1.5; margin:0 0 4mm; max-width:150mm }}
-.cv-hero {{ max-width:150mm; margin-bottom:4mm }}
-.cv-hero .h {{ font-size:11.5px }}
-.cv-strip {{ display:grid; grid-template-columns:repeat(5,1fr); column-gap:4mm; max-width:150mm;
-             border-top:.6px solid {HAIR}; border-bottom:.6px solid {HAIR}; padding:2.6mm 0 2.4mm }}
-.cv-m b {{ display:block; font-family:'Playfair'; font-weight:800; font-size:19px; line-height:1; color:{INK};
-           font-feature-settings:'lnum' 1,'tnum' 1; margin-bottom:1.1mm; letter-spacing:-.01em }}
-.cv-m span {{ display:block; font-family:'PT Sans'; font-size:7.3px; line-height:1.25; color:{GRAY} }}
-.cv-toc {{ margin-top:auto; max-width:150mm; padding-top:4mm }}
-.cv-tr {{ display:grid; grid-template-columns:8mm 1fr; align-items:baseline; padding:1.3mm 0;
-          border-top:.6px solid {HAIR} }}
-.cv-tr:nth-child(2) {{ border-top:none; margin-top:1.5mm }}
-.cv-tr b {{ font-family:'Playfair'; font-weight:700; font-size:13px; color:{GOLD}; font-feature-settings:'lnum' 1 }}
-.cv-tr span {{ font-family:'Playfair'; font-weight:700; font-size:11px; color:{INK} }}
-.cv-tr em {{ display:block; font-style:italic; font-size:8.9px; color:{GRAY}; margin-top:.3mm; line-height:1.3 }}
-.cv-grid {{ display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:0; min-height:0;
-            border-top:.6px solid {HAIR}; border-left:.6px solid {HAIR} }}
-.cv-tile {{ border-right:.6px solid {HAIR}; border-bottom:.6px solid {HAIR}; padding:4.5mm 6mm 4mm; display:flex;
-            flex-direction:column; min-height:0; overflow:hidden }}
-.cv-tile .lab {{ color:var(--ac) }}
-.cv-tile .lab i {{ font-style:normal; margin-left:auto; color:{GRAY}; letter-spacing:0 }}
-.cv-num {{ font-family:'Playfair'; font-weight:800; font-size:34px; color:var(--ac); line-height:1; margin:3.2mm 0 2mm;
-           font-feature-settings:'lnum' 1,'tnum' 1; letter-spacing:-.01em }}
-.cv-txt {{ font-size:10px; line-height:1.4 }}
-.cv-mores {{ display:grid; grid-template-columns:1fr 1fr; column-gap:5mm; margin-top:3.2mm; padding-top:2.6mm;
-             border-top:.6px solid {HAIR} }}
-.cv-more b {{ display:block; font-family:'Playfair'; font-weight:800; font-size:18px; color:var(--ac); line-height:1;
-              font-feature-settings:'lnum' 1,'tnum' 1; margin-bottom:1.2mm }}
-.cv-more span {{ font-family:'PT Sans'; font-size:7.8px; line-height:1.3; color:{GRAY}; display:block }}
-.cv-ind {{ margin-top:3.2mm; padding-top:2.4mm; border-top:.6px solid {HAIR} }}
-.cv-ind .ind-val {{ font-size:13.5px }}
-.cv-ind .ind-row {{ padding:.75mm 0 }}
-.cv-ind .ind-lab {{ font-size:7.3px; margin-top:.2mm }}
-.cv-ind .src {{ margin-top:.6mm }}
-.cv-tag {{ font-family:'Playfair'; font-style:italic; font-size:9.6px; color:{GRAY}; line-height:1.3; margin-top:auto;
-           border-top:.6px solid {HAIR}; padding-top:2mm }}
-/* резюме */
-.sm-body {{ flex:1; display:grid; grid-template-columns:118mm 1fr; column-gap:10mm; min-height:0;
-            border-top:.6px solid {HAIR}; padding-top:3mm }}
-.sm-left {{ display:flex; flex-direction:column; min-height:0 }}
-.sm-left .st {{ margin-top:2mm }}
-.sm-left .st-row {{ grid-template-columns:1fr 46px 1fr }}
-.sm-left .td-row {{ grid-template-columns:24px 42px 1fr 58px; column-gap:2mm; font-size:8px }}
-.td-sec {{ font-family:'PT Sans'; font-size:6.8px; letter-spacing:.1em; text-transform:uppercase; color:{GRAY};
-           align-self:center }}
-.mc-src {{ font-family:'PT Sans'; font-size:7.3px; color:{GRAY}; text-align:right; align-self:center }}
-.sm-lead {{ font-size:10.4px; line-height:1.5; margin:2mm 0 0; text-align:justify; hyphens:manual }}
-.sm-how {{ margin-top:auto; padding-top:4mm }}
-.sm-note {{ font-size:9.2px; line-height:1.45; margin:2mm 0 0; color:{GRAY}; text-align:justify; hyphens:manual }}
-.sm-grid {{ display:grid; grid-template-columns:1fr; grid-template-rows:repeat(4,1fr); min-height:0;
-            border-left:.6px solid {HAIR}; padding-left:8mm }}
-.sm-card {{ padding:2.6mm 0; border-top:.6px solid {HAIR}; display:flex; flex-direction:column; min-height:0;
-            overflow:hidden }}
-.sm-card:first-child {{ border-top:none; padding-top:0 }}
-.sm-h {{ font-family:'Playfair'; font-size:15px; font-weight:800; color:var(--ac); line-height:1.1 }}
-.sm-h .num {{ color:{GOLD}; margin-right:2mm; font-weight:700 }}
-.sm-h em {{ display:block; font-style:italic; font-weight:400; font-size:9.8px; color:{INK}; margin-top:1mm }}
-.sm-row {{ display:grid; grid-template-columns:54mm 1fr 66mm; column-gap:6mm; margin-top:2.4mm; flex:1; min-height:0 }}
-.sm-base {{ border-left:.6px solid {HAIR}; padding-left:6mm }}
-.sm-base .h {{ font-size:9.8px }}
-.sm-base .st-row {{ font-size:7.9px; padding:.8mm 0; grid-template-columns:1fr 54px 50px }}
-.sm-base .src {{ font-size:6.8px; margin-top:.6mm }}
-.sm-keys {{ display:flex; flex-direction:column; gap:1.8mm; border-right:.6px solid {HAIR}; padding-right:5mm }}
-.sm-key {{ display:grid; grid-template-columns:auto 1fr; column-gap:3mm; align-items:baseline }}
-.sm-key b {{ font-family:'Playfair'; font-weight:800; font-size:15px; color:var(--ac); line-height:1;
-             font-feature-settings:'lnum' 1,'tnum' 1; white-space:nowrap }}
-.sm-key span {{ font-family:'PT Sans'; font-size:7.5px; line-height:1.3; color:{GRAY}; display:block }}
-.sm-decks {{ border-bottom:.6px solid {HAIR}; padding-bottom:1.4mm; margin-bottom:1.6mm }}
-.sm-deck {{ font-family:'Playfair'; font-size:9.8px; font-weight:700; line-height:1.4; color:{INK} }}
-.sm-deck .num, .sm-p .num {{ color:{GOLD}; margin-right:1.6mm; font-weight:700 }}
-.sm-deck em {{ font-weight:400; font-style:italic; color:var(--ac); margin-left:1.6mm }}
-.sm-p {{ font-size:9.9px; line-height:1.46; margin:0; text-align:justify; hyphens:manual }}
-.sm-p b {{ font-family:'Playfair'; font-size:9.8px; font-weight:700 }}
-/* методология */
-.co-body {{ display:grid; grid-template-columns:repeat(5,1fr); column-gap:9mm; border-top:.6px solid {HAIR};
-            padding:3mm 0 3mm }}
-.co-col p {{ font-size:9.8px; line-height:1.48; margin:1.6mm 0 0; text-align:justify; hyphens:manual }}
-.co-col + .co-col {{ border-left:.6px solid {HAIR}; padding-left:9mm; margin-left:-9mm }}
-.co-disc {{ font-family:'PT Sans'; font-size:8px; color:{GRAY}; margin-top:4mm }}
-.co-st {{ grid-template-columns:1fr 34px 38px 34px 38px; font-size:8.2px }}
-.co-st.st-h {{ font-size:6.8px }}
-.co-tot {{ font-weight:700; border-top:1px solid {INK} }}
-.co-note {{ font-family:'PT Sans'; font-size:7.6px; color:{GRAY}; line-height:1.4; margin-top:2mm }}
-.co-glrow {{ display:grid; grid-template-columns:1fr 72mm; column-gap:8mm }}
-.co-chart {{ border-left:.6px solid {HAIR}; padding-left:8mm; margin-left:-8mm }}
-.co-low {{ flex:1; min-height:0; overflow:hidden; border-top:.6px solid {HAIR}; padding-top:3mm }}
-.co-ch {{ column-count:5; column-gap:8mm; column-rule:.6px solid {HAIR}; margin:2mm 0 4mm }}
-.ch {{ font-size:8.7px; line-height:1.38; break-inside:avoid; margin-bottom:1.2mm; text-align:justify; hyphens:manual }}
-.ch-d {{ font-family:'PT Sans'; font-weight:700; font-size:8px; color:{INK}; margin-right:1.6mm;
-         font-variant-numeric:tabular-nums }}
-.ch-s {{ font-family:'PT Sans'; font-size:6.6px; letter-spacing:.12em; text-transform:uppercase; margin-right:1.6mm }}
-.ch-o {{ font-family:'PT Sans'; font-size:7.4px; color:{GRAY} }}
-.co-gl {{ column-count:4; column-gap:8mm; column-rule:.6px solid {HAIR}; margin-top:2mm }}
-.co-gl .gl {{ font-size:8.8px; line-height:1.4; break-inside:avoid; margin-bottom:1.2mm }}
-.co-srcline {{ font-family:'PT Sans'; font-size:7.8px; line-height:1.5; color:{GRAY}; margin:3.5mm 0 0; border-top:.6px solid {HAIR}; padding-top:2mm }}
-.co-srcline b {{ letter-spacing:.14em; text-transform:uppercase; font-size:7px; color:{GRAY}; margin-right:2mm }}
 """
 
 
@@ -472,153 +363,10 @@ def page(sec, issue, n, total, k, nsec):
 </div>"""
 
 
-def cover(issue, total):
-    """Обложка: тема недели, график к ней, макроцифры, оглавление с тезисами и
-    четыре плитки — по сектору: три факта недели и квартальная база."""
-    cv = issue['cover']
-    def tile(s, i):
-        t = s['takeaways']
-        more = ''.join(f'<div class="cv-more"><b>{esc(x["num"])}</b><span>{hy(x["text"])}</span></div>'
-                       for x in t[1:3])
-        base = indicators('Квартальная база', s['fundamentals'], s['fundamentals_source'])
-        return (f'<div class="cv-tile" data-fill="плитка {esc(s["name"])}" style="--ac:{ACCENTS[s["key"]]}">'
-                f'<div class="lab">{esc(s["name"])}<i>{i + 3}</i></div>'
-                f'<div class="cv-num">{esc(t[0]["num"])}</div>'
-                f'<div class="cv-txt">{hy(t[0]["text"])}</div>'
-                f'<div class="cv-mores">{more}</div>'
-                f'<div class="cv-ind">{base}</div>'
-                f'<div class="cv-tag">{hy(s["tagline"])}</div></div>')
-    tiles = ''.join(tile(s, i) for i, s in enumerate(issue['sectors']))
-    hero = chart(cv['chart'], INK, H=180) if cv.get('chart') else ''
-    strip = ''.join(f'<div class="cv-m"><b>{esc(v)}</b><span>{esc(n)}</span></div>'
-                    for n, v, _ in (issue['macro'][k] for k in (0, 1, 2, 3, 7)))
-    rows = []
-    for idx, e in enumerate(issue['toc']):
-        if e is None:
-            s = issue['sectors'][idx - 1]
-            e = (s['name'], s['tagline'])
-        rows.append(f'<div class="cv-tr"><b>{idx + 2}</b><div><span>{esc(e[0])}</span><em>{hy(e[1])}</em></div></div>')
-    return f"""
-<div class="page cover" data-kind="cover">
-  <div class="cv-top"><div class="mb">{emblem(6.5)}<div><b>Аналитика рынка Голландии</b><span>Недельный обзор рынка недвижимости</span></div></div>
-    <div class="iss"><b>{esc(issue['week_label'])}</b><span class="sc">{esc(issue['issue_line'])}</span></div></div>
-  <div class="cv-body">
-    <div class="cv-left" data-fill="обложка слева">
-      <div class="lab">{esc(cv['kicker'])}</div>
-      <div class="cv-title">{hy(cv['title'])}</div>
-      <p class="cv-lead">{hy(cv['lead'])}</p>
-      <div class="cv-hero">{hero}</div>
-      <div class="cv-strip">{strip}</div>
-      <div class="cv-toc"><div class="lab">В этом выпуске</div>{''.join(rows)}</div>
-    </div>
-    <div class="cv-grid">{tiles}</div>
-  </div>
-  <div class="foot"><div>{esc(issue['disclaimer'])}</div><div class="r">{esc(issue['prepared_by'])}<i>◆</i>1 / {total}</div></div>
-</div>"""
-
-
-def summary(issue, total):
-    """Резюме: экономика недели одной таблицей и четыре сектора по три цифры и прогнозу."""
-    macro = ''.join(f'<div class="st-row"><div>{esc(r[0])}</div><div class="v">{esc(r[1])}</div>'
-                    f'<div class="mc-src">{esc(r[2])}</div></div>' for r in issue['macro'])
-    deals = ''.join(f'<div class="st-row td-row"><div class="dl-d">{esc(r[0])}</div><div class="td-sec">{esc(r[1])}</div>'
-                    f'<div>{hy(r[2])}</div><div class="dl-s">{esc(r[4])}</div></div>' for r in issue['top_deals'])
-    cards = []
-    for i, s in enumerate(issue['sectors']):
-        blocks = {b['key']: b for b in s['blocks']}
-        keys = ''.join(f'<div class="sm-key"><b>{esc(t["num"])}</b><span>{hy(t["text"])}</span></div>'
-                       for t in s['takeaways'])
-        decks = ''.join(f'<div class="sm-deck"><span class="num">{ROMAN[k]}</span>{esc(blocks[k]["title"])}'
-                        f'<em>{hy(blocks[k]["subtitle"])}</em></div>' for k in ('investment', 'occupier'))
-        cards.append(
-            f'<div class="sm-card" data-fill="карточка {esc(s["name"])}" style="--ac:{ACCENTS[s["key"]]}">'
-            f'<div class="sm-h"><span class="num">{i + 3}</span>{esc(s["name"])}<em>{hy(s["tagline"])}</em></div>'
-            f'<div class="sm-row"><div class="sm-keys">{keys}</div><div class="sm-txt">'
-            f'<div class="sm-decks">{decks}</div>'
-            f'<p class="sm-p"><b><span class="num">{ROMAN["outlook"]}</span>Прогноз.</b> {hy(blocks["outlook"]["paras"][0])}</p>'
-            f'</div><div class="sm-base">{stats_table(s["stats"])}</div></div></div>')
-    return f"""
-<div class="page" data-kind="summary">
-  <div class="top">
-    <div class="mb">{emblem()}<div><b>Аналитика рынка Голландии</b><span>Недельный обзор рынка недвижимости</span></div></div>
-    <div class="sec" style="--ac:{INK}">Резюме недели<small>{hy(issue['cover']['title'])}</small></div>
-    <div class="iss"><b>{esc(issue['week_label'])}</b><span class="sc">{esc(issue['issue_line'])}<br>{esc(issue['prepared_by'])}</span></div>
-  </div>
-  <div class="sm-body">
-    <div class="sm-left" data-fill="резюме слева">
-      <div class="lab">Экономика недели</div>
-      <div class="st"><div class="st-row st-h"><div>показатель</div><div class="v">значение</div><div class="mc-src">источник</div></div>{macro}</div>
-      <div class="lab" style="margin-top:5mm">Главное</div>
-      <p class="sm-lead">{hy(issue['cover']['lead'])}</p>
-      <p class="sm-lead">{hy(issue['cover']['lead2'])}</p>
-      <div class="lab" style="margin-top:5mm">Крупнейшие сделки недели</div>
-      <div class="st">{deals}</div>
-      <div class="sm-how"><div class="lab">Как читать полосу</div>
-      <p class="sm-note">Стрелки у показателей на полосах: <span style="color:{UP}">&#9650;</span> рост, <span style="color:{DOWN}">&#9660;</span> снижение, <span style="color:{FLAT}">&#9654;</span> без изменений; первая — за год, вторая — ожидание редакции на 12 месяцев. Квартальная база (Cushman &amp; Wakefield, II квартал 2026) в тексте помечена явно. Три цифры недели в шапке каждой полосы — факты, отобранные движком; сделки, не попавшие в текст, вынесены в таблицу.</p></div>
-    </div>
-    <div class="sm-grid">{''.join(cards)}</div>
-  </div>
-  <div class="foot"><div>{esc(issue['disclaimer'])}</div><div class="r">{esc(issue['imprint'])}<i>◆</i>2 / {total}</div></div>
-</div>"""
-
-
-def colophon(issue, total):
-    """Методология и источники: как собран пул, как отбирались факты, откуда база."""
-    srcs = sorted({x.strip() for s in issue['sectors']
-                   for x in re.sub(r'^Источники:\s*', '', s.get('sources_line', '')).split(',') if x.strip()})
-    cols = issue['method']
-    body = ''.join(
-        f'<div class="co-col"><div class="lab">{esc(c["title"])}</div>' +
-        ''.join(f'<p>{hy(pp)}</p>' for pp in c['paras']) + '</div>' for c in cols)
-    st = issue.get('stats', [])
-    stats = ''.join(f'<div class="st-row co-st"><div>{esc(r[0])}</div><div class="v">{r[1]}</div><div class="v">{r[2]}</div>'
-                    f'<div class="v">{r[3]}</div><div class="v">{r[4]}</div></div>' for r in st)
-    if st:
-        stats += (f'<div class="st-row co-st co-tot"><div>Всего</div><div class="v">{sum(r[1] for r in st)}</div>'
-                  f'<div class="v">{sum(r[2] for r in st)}</div><div class="v">{sum(r[3] for r in st)}</div><div class="v">—</div></div>')
-    seen, gl = set(), []
-    for s in issue['sectors']:
-        for t, x in s['glossary']:
-            if t not in seen:
-                seen.add(t); gl.append(f'<div class="gl"><b style="--ac:{ACCENTS[s["key"]]}">{esc(t)}</b> — {hy(x)}</div>')
-    glos = ''.join(gl)
-    chron = ''.join(
-        f'<div class="ch"><span class="ch-d">{esc(d)}</span><span class="ch-s" style="color:{ACCENTS[k]}">{esc(nm)}</span>'
-        f'{hy(lead)} <span class="ch-o">{esc(outlet)}</span></div>' for d, k, nm, outlet, lead in issue.get('chronicle', []))
-    byday = chart(issue['by_day'], INK, H=130, W=340) if issue.get('by_day') else ''
-    return f"""
-<div class="page" data-kind="colophon">
-  <div class="top">
-    <div class="mb">{emblem()}<div><b>Аналитика рынка Голландии</b><span>Недельный обзор рынка недвижимости</span></div></div>
-    <div class="sec" style="--ac:{INK}">Методология и источники<small>как собран этот выпуск</small></div>
-    <div class="iss"><b>{esc(issue['week_label'])}</b><span class="sc">{esc(issue['issue_line'])}<br>{esc(issue['prepared_by'])}</span></div>
-  </div>
-  <div class="co-body">{body}
-    <div class="co-col"><div class="lab">Пул недели в цифрах</div>
-      <div class="st"><div class="st-row st-h co-st"><div>сектор</div><div class="v">в пуле</div><div class="v">в тексте</div><div class="v">сделок</div><div class="v">источн.</div></div>{stats}</div>
-      <p class="co-note">«В пуле» — проверенные по дате факты; «в тексте» — отобранные движком; остальные сделки — в таблицах полос.</p></div>
-    <div class="co-col"><div class="lab">Выходные данные</div>
-      <p>{esc(issue['issue_line'])}. Подготовлено {esc(issue['prepared_by'])}. Формат полосы заимствован у квартальных MarketBeat Cushman &amp; Wakefield; содержание и оценки — редакции. Шрифты PT Serif, PT Sans, Playfair Display (OFL).</p>
-      <div class="lab" style="margin-top:4mm">Периодичность</div>
-      <p>{hy(issue['periodicity'])}</p>
-      <p class="co-disc">{esc(issue['disclaimer'])}</p></div>
-  </div>
-  <div class="co-low" data-fill="хроника и словарь">
-    <div class="lab">Хроника недели · сюжеты первой величины, вошедшие в текст</div><div class="co-ch">{chron}</div>
-    <div class="co-glrow"><div><div class="lab">Словарь выпуска</div><div class="co-gl">{glos}</div></div>
-      <div class="co-chart">{byday}</div></div>
-    <p class="co-srcline"><b>Источники выпуска</b> {esc(' · '.join(srcs))}</p>
-  </div>
-  <div class="foot"><div>{esc(issue['imprint'])}</div><div class="r">{esc(issue['prepared_by'])}<i>◆</i>{total} / {total}</div></div>
-</div>"""
-
-
 def build(issue, out):
     secs = issue['sectors']
-    total = len(secs) + 3                      # обложка, резюме, сектора, методология
-    pages = ([cover(issue, total), summary(issue, total)]
-             + [page(s, issue, i + 3, total, i, len(secs)) for i, s in enumerate(secs)]
-             + [colophon(issue, total)])
+    total = len(secs)
+    pages = [page(s, issue, i + 1, total, i, len(secs)) for i, s in enumerate(secs)]
     doc = ('<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8">'
            f'<title>{esc(issue["issue_line"])}</title><style>{css()}</style></head><body>'
            + ''.join(pages) + '</body></html>')
