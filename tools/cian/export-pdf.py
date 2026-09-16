@@ -161,37 +161,36 @@ css = fonts + f'''
 * {{ box-sizing: border-box; }}
 html, body {{ margin: 0; }}
 body {{ font-family: 'IBM Plex Sans', 'Liberation Sans', Arial, sans-serif; color: {TEXT}; background: #fff;
-  -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums; }}
+  -webkit-font-smoothing: antialiased; font-variant-numeric: lining-nums tabular-nums; }}
 section.page {{ page-break-after: always; }}
 section.page:last-child {{ page-break-after: auto; }}
 
 /* ---- шапка раздела: слева название, справа сводка ---- */
 .ph {{ display: flex; justify-content: space-between; align-items: flex-end; gap: 12mm;
-  border-bottom: 1px solid {INK}; padding-bottom: 8px; margin-bottom: 10px; position: relative; }}
-.ph::after {{ content: ''; position: absolute; left: 0; right: 0; bottom: -3px; border-bottom: .5px solid {INK}; }}
+  border-bottom: .6px solid {INK}; padding-bottom: 8px; margin-bottom: 10px; }}
 .ph-l {{ flex: 1; min-width: 0; }}
-.kicker {{ font-size: 7pt; font-weight: 600; color: var(--c, {INK}); margin-bottom: 4px; letter-spacing: .02em; }}
-.kicker::before {{ content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%;
-  background: var(--c, {INK}); margin-right: 5px; }}
-h2 {{ font-family: 'Cormorant Garamond', 'Liberation Serif', Georgia, serif; font-size: 30pt; font-weight: 600;
-  margin: 0; letter-spacing: -.01em; line-height: .95; color: {INK}; }}
+.kicker {{ font-size: 6.8pt; font-weight: 500; color: var(--c, {INK}); margin-bottom: 5px; letter-spacing: .06em; }}
+.kicker::before {{ content: ''; display: inline-block; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--c, {INK}); margin-right: 6px; vertical-align: 1px; }}
+h2 {{ font-family: Spectral, 'Liberation Serif', Georgia, serif; font-size: 24pt; font-weight: 500;
+  margin: 0; letter-spacing: -.005em; line-height: 1; color: {INK}; }}
 .sub {{ font-size: 7.4pt; color: {MUTED}; margin: 6px 0 0; line-height: 1.4; max-width: 190mm; }}
 .ph-r {{ display: flex; gap: 10mm; flex-shrink: 0; align-items: flex-end; }}
-.m-l {{ font-size: 6.4pt; color: {MUTED}; font-weight: 500; }}
-.m-v {{ font-family: 'Cormorant Garamond', 'Liberation Serif', Georgia, serif; font-size: 17pt; font-weight: 600;
-  color: {INK}; white-space: nowrap; margin-top: 1px; line-height: 1.05; }}
+.m-l {{ font-size: 6.2pt; color: {MUTED}; font-weight: 400; letter-spacing: .04em; }}
+.m-v {{ font-family: Spectral, 'Liberation Serif', Georgia, serif; font-size: 14pt; font-weight: 500;
+  color: {INK}; white-space: nowrap; margin-top: 2px; line-height: 1.05; letter-spacing: .01em; }}
 .m-v small {{ font-family: 'IBM Plex Sans', sans-serif; font-size: 7pt; font-weight: 500; color: {MUTED}; }}
 
 /* ---- таблица ---- */
 table {{ width: 100%; border-collapse: collapse; table-layout: fixed; }}
 table.grid {{ font-size: 6.6pt; }}
-table.grid th {{ color: {INK}; font-size: 5.9pt; font-weight: 600; padding: 4px 3px 5px; background: #fff;
-  border-bottom: 1.2px solid {INK}; text-align: center; vertical-align: bottom; line-height: 1.15;
+table.grid th {{ color: {MUTED}; font-size: 5.8pt; font-weight: 500; padding: 4px 3px 5px; background: #fff;
+  border-bottom: .6px solid {INK}; letter-spacing: .02em; text-align: center; vertical-align: bottom; line-height: 1.15;
   word-wrap: break-word; overflow-wrap: anywhere; hyphens: auto; }}
 table.grid td {{ border-bottom: .5px solid {LINE}; padding: 3px 3px; text-align: center; vertical-align: middle;
   line-height: 1.3; word-wrap: break-word; overflow-wrap: anywhere; hyphens: auto; }}
 table.grid td.num {{ white-space: nowrap; }}
-table.grid td.nm {{ font-weight: 600; font-size: 6.9pt; color: {INK}; }}
+table.grid td.nm {{ font-weight: 500; font-size: 6.9pt; color: {INK}; }}
 table.grid td.note {{ color: #3F4652; font-size: 6.1pt; line-height: 1.32; }}
 table.grid tr.odd td {{ background: {PAPER}; }}
 thead {{ display: table-header-group; }}
@@ -199,7 +198,7 @@ tr {{ page-break-inside: avoid; }}
 
 td.bar {{ position: relative; padding: 0 3px; }}
 td.bar i {{ position: absolute; left: 4%; top: 20%; height: 60%; opacity: .2; border-radius: 1px; }}
-td.bar b {{ position: relative; font-weight: 600; color: {INK}; white-space: nowrap; }}
+td.bar b {{ position: relative; font-weight: 500; color: {INK}; white-space: nowrap; }}
 td.st {{ white-space: nowrap; }}
 td.st i {{ display: inline-block; width: 5px; height: 5px; border-radius: 50%; margin-right: 4px; vertical-align: 1px; }}
 td.lnk a {{ color: {INK}; font-size: 6pt; text-decoration: none; border-bottom: .5px solid #B5B0A6; }}
@@ -207,10 +206,10 @@ td.lnk a {{ color: {INK}; font-size: 6pt; text-decoration: none; border-bottom: 
 /* район — тёмная полоса во всю ширину, отделённая воздухом от предыдущего блока */
 tr.grp td {{ background: #fff; border: 0; padding: 9px 0 0; text-align: left; }}
 tbody.keep + tbody tr:first-child td, tbody + tbody.keep tr.grp td {{ }}
-.gb {{ background: {INK}; color: #fff; padding: 4px 9px 4px 10px; border-left: 4px solid; display: flex;
+.gb {{ background: {INK}; color: #fff; padding: 3.5px 10px 3.5px 11px; border-left: 3px solid; display: flex;
   align-items: baseline; gap: 10px; }}
-.g-n {{ font-family: 'Cormorant Garamond', 'Liberation Serif', Georgia, serif; font-size: 12.5pt; font-weight: 600;
-  letter-spacing: .01em; }}
+.g-n {{ font-family: Spectral, 'Liberation Serif', Georgia, serif; font-size: 11pt; font-weight: 500;
+  letter-spacing: .02em; }}
 .g-c {{ font-size: 6.6pt; color: #C9D1E0; }}
 .g-m {{ font-size: 6.6pt; color: #C9D1E0; margin-left: auto; }}
 .g-m b {{ color: #fff; font-weight: 600; }}
@@ -218,7 +217,7 @@ tbody.keep {{ break-inside: avoid; page-break-inside: avoid; }}
 section.compact table.grid td {{ padding: 1.6px 3px; }}
 section.compact tr.grp td {{ padding-top: 4px; }}
 section.compact .gb {{ padding: 1.5px 9px 1.5px 10px; }}
-section.compact .g-n {{ font-size: 11pt; }}
+section.compact .g-n {{ font-size: 10pt; }}
 section.compact .ph {{ margin-bottom: 7px; }}
 
 /* ---- карта ---- */
