@@ -99,6 +99,22 @@ enum ExitCatalog {
             .map { $0 }
     }
 
+    /// The widest entry guards: capacity first, among stable relays with the Guard flag. On a
+    /// direct connection the first hop is often the ceiling, and this is the ceiling's list.
+    static func rankGuards(_ relays: [ExitRelay], count: Int = 10, excluding: Set<String> = []) -> [ExitRelay] {
+        relays
+            .filter {
+                $0.flags.contains("Guard") && $0.flags.contains("Fast") && $0.flags.contains("Stable")
+                    && $0.flags.contains("Running") && $0.flags.contains("Valid") && !excluding.contains($0.fingerprint)
+            }
+            .sorted { left, right in
+                if left.bandwidth != right.bandwidth { return left.bandwidth > right.bandwidth }
+                return left.fingerprint < right.fingerprint
+            }
+            .prefix(count)
+            .map { $0 }
+    }
+
     /// `MapAddress *.youtube.com *.youtube.com.$FP.exit` for every domain: tor keeps the host and
     /// takes the suffix as the exit to use. The `.exit` notation is refused on a SOCKS request
     /// but honoured from MapAddress, which is exactly why it goes in through the configuration.

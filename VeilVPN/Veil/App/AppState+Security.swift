@@ -18,6 +18,7 @@ extension AppState {
         input.reachability = reachability
         input.observedExitCountry = exitHop?.countryCode
         input.pinnedExitCount = tuner.pinnedExits.count
+        input.videoGuard = videoGuard?.nickname
         input.paddingActive = padding.status.isActive
         input.paddingFailed = padding.status.isFailed
         input.lanePoolActive = (lanes?.readyLanes ?? 0) > 0
@@ -65,6 +66,8 @@ extension AppState {
             setIsolatePerSite(true)
         case .disableRelayPinning:
             setLatencyTuning(false)
+        case .disableGuardPinning:
+            setVideoGuardPinning(false)
         case .enablePadding:
             setPaddingEnabled(false)
             setPaddingEnabled(true)

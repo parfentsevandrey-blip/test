@@ -63,7 +63,7 @@ struct SecurityFinding: Identifiable, Equatable, Sendable {
     enum Fix: Equatable, Sendable {
         case none
         case apply(SecurityPreset)
-        case enableKillSwitch, enableSystemProxy, enableIsolation, disableRelayPinning
+        case enableKillSwitch, enableSystemProxy, enableIsolation, disableRelayPinning, disableGuardPinning
         case enablePadding, clearBypasses, enableHTTPSOnly
         case clearExclusions, deferUpdateCheck, redactDiagnostics, disableVerboseLogs
         case setForgetPolicy(AppSettings.ForgetPolicy)

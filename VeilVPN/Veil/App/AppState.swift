@@ -83,6 +83,12 @@ final class AppState {
     private(set) var turboActive = false
     private(set) var youtubeTest: YouTubeTestResult?
     var videoExit: VideoExitState = .off
+    /// The entry guard 8K mode pinned, once a circuit through it was proven.
+    var videoGuard: RelayCandidate?
+    /// The last measured rate of the video path, in megabits a second.
+    var videoPathMegabits: Double?
+    var videoPathMeasuredAt: Date?
+    var videoPathMeasuring = false
     @ObservationIgnored var videoExitTask: Task<Void, Never>?
     private(set) var isTestingYouTube = false
     /// Tor died (or never bootstrapped) and the proxy is deliberately left pointing at Veil.
@@ -814,17 +820,17 @@ final class AppState {
     func startLanePool(ports: ActivePorts, transport: AppSettings.Transport) async {
         guard let bridge = httpBridge else { return }
         bridge.setConnectionContext(transport: transport, connectedAt: connectedAt)
-        guard settings.lanePoolEnabled, ports.pool != 0, !engine.isSimulated else {
-            latency.start(socksPort: ports.socks)
-            return
-        }
+        // The route latency is measured whether or not the pool runs: the pool ranks its own
+        // lanes, the monitor describes the route, and the dashboard reads the monitor. (With the
+        // pool on it used to start nothing, and the latency tile said "Measuring…" for ever.)
+        latency.start(socksPort: ports.socks)
+        guard settings.lanePoolEnabled, ports.pool != 0, !engine.isSimulated else { return }
         let listeners = await engine.socksListeners()
         let endpoint = "127.0.0.1:\(ports.pool)"
         // An empty list means the GETINFO failed, not that the listener is missing: proceed, and
         // the first warm-up will suspend the pool cleanly if it really is not there.
         guard listeners.isEmpty || listeners.contains(endpoint) else {
             append(.veil(.warn, "Tor did not open the lane listener on \(endpoint); using a single circuit"))
-            latency.start(socksPort: ports.socks)
             return
         }
         bridge.lanePool.onLog = { [weak self] entry in

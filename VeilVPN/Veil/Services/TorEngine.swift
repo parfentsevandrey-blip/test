@@ -90,6 +90,10 @@ protocol TorEngine: AnyObject {
     func clearAddressMappings() async
     /// The last hop of every circuit currently BUILT, as uppercase fingerprints.
     func builtCircuitExits() async -> [String]
+    /// Restricts the entry guard to `fingerprints` (`EntryNodes`); tor picks among them.
+    func setEntryGuards(_ fingerprints: [String]) async throws
+    /// Lifts the restriction; tor returns to the guards it chose itself.
+    func clearEntryGuards() async
 }
 
 /// Defaults for every warm-lifecycle member, so an engine that does not implement them still
@@ -135,6 +139,8 @@ extension TorEngine {
     func setAddressMappings(_ pairs: [(key: String, value: String?)]) async throws {}
     func clearAddressMappings() async {}
     func builtCircuitExits() async -> [String] { [] }
+    func setEntryGuards(_ fingerprints: [String]) async throws {}
+    func clearEntryGuards() async {}
 }
 
 struct TrafficCounters: Equatable, Sendable {

@@ -30,6 +30,7 @@ PATTERNS = [
     re.compile(r'\bSecuritySection\(title:\s*"' + LITERAL + r'"\s*\)'),
     re.compile(r'\bDetailRow\(label:\s*"' + LITERAL + r'"\s*,'),
     re.compile(r'\bAction\(title:\s*"' + LITERAL + r'"\s*\)'),
+    re.compile(r'\bPaddingStat\(label:\s*"' + LITERAL + r'"\s*,'),
 ]
 
 # Swift interpolation -> the specifier Xcode records in the catalogue.

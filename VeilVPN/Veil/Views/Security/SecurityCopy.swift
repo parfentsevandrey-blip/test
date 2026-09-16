@@ -19,6 +19,7 @@ enum SecurityCopy {
         case "transport-fingerprintable": String(localized: "A direct Tor connection is recognisable")
         case "update-check-direct": String(localized: "Update checks go out before Tor is up")
         case "shared-exit": String(localized: "Every site shares the same pinned exit")
+        case "pinned-guard": String(localized: "The entry guard is chosen by capacity (8K mode)")
         case "no-isolation": String(localized: "One circuit carries every site")
         case "partial-isolation": String(localized: "Sites share a small set of circuits")
         case "plain-http-allowed": String(localized: "Plain HTTP is allowed through Tor")
@@ -67,6 +68,8 @@ enum SecurityCopy {
             String(localized: "The request goes out in the clear and tells whoever is watching that this Mac runs Veil.")
         case "shared-exit":
             String(localized: "Measured relays are pinned, so every circuit ends at the same one or two exits and one relay sees your whole session.")
+        case "pinned-guard":
+            String(localized: "Tor picks the entry guard at random and keeps it for months, so nobody can steer you onto a relay they watch. 8K mode replaces it with one of the few widest guards — a small, predictable set that every user of the mode shares. Worth it for the bandwidth, and only for that.")
         case "no-isolation":
             String(localized: "Without isolation one exit relay sees every site you visit in this session.")
         case "partial-isolation":

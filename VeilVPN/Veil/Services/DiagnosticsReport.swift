@@ -59,6 +59,19 @@ enum DiagnosticsReport {
             }
         }
         lines.append("warmth: \(state.warmth?.summary ?? "unknown")  standby: \(state.standby)")
+        if state.settings.youtubeMode == .tor {
+            let exit: String
+            switch state.videoExit {
+            case .off: exit = "off"
+            case .choosing: exit = "choosing"
+            case .active(let relay, let megabits):
+                exit = "\(relay.nickname) \(megabits.map { String(format: "%.1f Mbit/s", $0) } ?? "unmeasured")"
+            case .unpinned(let megabits): exit = String(format: "unpinned, tor's own exit %.1f Mbit/s", megabits)
+            case .failed(let reason): exit = "failed: \(reason)"
+            }
+            let path = state.videoPathMegabits.map { String(format: "%.1f Mbit/s", $0) } ?? "unmeasured"
+            lines.append("video exit: \(exit)  guard: \(state.videoGuard?.nickname ?? "tor's own")  path: \(path)")
+        }
         let posture = state.securityPosture
         lines.append("security: \(posture.score.map(String.init) ?? "n/a")/\(SecurityPosture.absoluteMaximum) \(posture.gradeTitle), findings \(posture.findings.map(\.id).joined(separator: ", "))")
         lines.append("")

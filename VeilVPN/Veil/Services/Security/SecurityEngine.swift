@@ -15,6 +15,8 @@ struct SecurityInput: Equatable, Sendable {
     var reachability: ReachabilityProbe.Report?
     var observedExitCountry: String?
     var pinnedExitCount = 0
+    /// The guard 8K mode pinned, by nickname, when it did.
+    var videoGuard: String?
     var paddingActive = false
     var paddingFailed = false
     var lanePoolActive = false
@@ -186,6 +188,13 @@ enum SecurityPostureEvaluator {
         if !settings.httpsOnly {
             findings.append(SecurityFinding(id: "plain-http-allowed", adversary: .exitRelay, severity: .warning,
                                             penalty: 15, detail: nil, fix: .enableHTTPSOnly))
+        }
+        if settings.videoGuardPinning {
+            // Tor's guard is random and kept for months precisely so that nobody can steer a
+            // client onto a relay they watch; a guard chosen by capacity is a small, predictable
+            // set that every user of the mode shares.
+            findings.append(SecurityFinding(id: "pinned-guard", adversary: .trafficAnalysis, severity: .warning,
+                                            penalty: 60, detail: input.videoGuard, fix: .disableGuardPinning))
         }
         if live, let wanted = settings.exitCountry, let observed = input.observedExitCountry,
            wanted.lowercased() != observed.lowercased() {

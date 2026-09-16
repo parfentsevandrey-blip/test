@@ -418,6 +418,17 @@ final class TorProcessEngine: TorEngine {
         return Self.builtPaths(in: status).compactMap { $0.last?.fingerprint.uppercased() }
     }
 
+    func setEntryGuards(_ fingerprints: [String]) async throws {
+        guard let controller, controller.isOpen else { throw TorEngineError.notRunning }
+        let value = fingerprints.map { "$" + $0 }.joined(separator: ",")
+        try await controller.setConfLines([("EntryNodes", value)], timeout: .seconds(10))
+    }
+
+    func clearEntryGuards() async {
+        guard let controller, controller.isOpen else { return }
+        _ = try? await controller.setConfLines([("EntryNodes", nil)], timeout: .seconds(5))
+    }
+
     /// Supervises one attempt from the events Tor pushes, so a doomed attempt dies in seconds
     /// instead of burning a flat stall budget.
     func runBootstrap(_ config: BootstrapWatchdog.Config,

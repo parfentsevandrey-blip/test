@@ -412,7 +412,7 @@ struct PaddingTile: View {
         let active = app.padding.status.isActive
         let activity: Double = active ? min(1, 0.25 + app.padding.rate / 24_000) : (enabled ? 0.1 : 0.04)
         Tile(tint: .purple, action: { app.setPaddingEnabled(!enabled) }) {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 6) {
                 HStack {
                     TileHeader(title: "Traffic padding", symbol: "waveform", tint: .purple)
                     Spacer()
@@ -425,18 +425,21 @@ struct PaddingTile: View {
                     .controlSize(.mini)
                 }
                 NoiseWave(activity: activity, tint: .purple, paused: reduceMotion || !active)
-                    .frame(height: 40)
-                HStack {
-                    statusText
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                    Spacer(minLength: 4)
-                    if active {
-                        Text(verbatim: ByteFormat.rate(app.padding.rate))
-                            .font(.caption2.weight(.semibold))
-                            .monospacedDigit()
-                            .contentTransition(.numericText())
+                    .frame(height: 20)
+                statusText
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(2)
+                if active {
+                    // The numbers that say what the cover traffic is doing: how much of it there
+                    // is, what share of everything on the wire it makes up, and how much has gone
+                    // through the loop — instead of one rate under a wave.
+                    HStack(alignment: .firstTextBaseline, spacing: 14) {
+                        PaddingStat(label: "Cover traffic", value: ByteFormat.rate(app.padding.rate))
+                        PaddingStat(label: "Of everything", value: "\(Int((app.padding.overheadShare * 100).rounded()))%")
+                        PaddingStat(label: "Sent · received",
+                                    value: "\(ByteFormat.total(app.padding.sentBytes)) · \(ByteFormat.total(app.padding.receivedBytes))")
                     }
                 }
             }
@@ -459,9 +462,36 @@ struct PaddingTile: View {
         case .connecting(let attempt):
             Text("Connecting to the loop (attempt \(attempt))…")
         case .active:
-            Text(app.settings.paddingLevel.title)
+            Text(levelSummary)
         case .failed(let message):
             Text(verbatim: message)
+        }
+    }
+
+    /// What the level actually does, in one line — the name alone said nothing.
+    private var levelSummary: LocalizedStringKey {
+        switch app.settings.paddingLevel {
+        case .light: "Light · sporadic noise through the onion loop; the shape of page loads stays visible"
+        case .balanced: "Balanced · noise plus a burst at every page load, so its shape is hidden"
+        case .strong: "Strong · both directions topped up to a constant rate, so volume reveals nothing"
+        }
+    }
+}
+
+private struct PaddingStat: View {
+    let label: LocalizedStringKey
+    let value: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 1) {
+            Text(label)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+            Text(verbatim: value)
+                .font(.caption2.weight(.semibold))
+                .monospacedDigit()
+                .lineLimit(1)
         }
     }
 }

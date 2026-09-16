@@ -169,6 +169,34 @@
         }
       }
     },
+    "8K mode: pin a high-capacity entry guard": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Режим 8K: закрепить сторожевой узел с большой ёмкостью"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Режим 8K: закріпити сторожовий вузол з великою ємністю"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حالت 8K: ثابت کردن نگهبان ورودی پرظرفیت"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "8K 模式：固定高容量入口守卫节点"
+          }
+        }
+      }
+    },
     "A Liquid Glass client for the Tor network with Snowflake bridges. Tor, Snowflake and Lyrebird are © The Tor Project, Inc. and distributed under their own licenses.": {
       "localizations": {
         "fa": {
@@ -1397,6 +1425,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "均衡"
+          }
+        }
+      }
+    },
+    "Balanced · noise plus a burst at every page load, so its shape is hidden": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сбалансированная · шум плюс всплеск при каждой загрузке страницы, её форма скрыта"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Збалансована · шум плюс сплеск при кожному завантаженні сторінки, її форма прихована"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متعادل · نویز به‌علاوهٔ یک انفجار در هر بارگذاری صفحه تا شکل آن پنهان بماند"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "均衡 · 噪声加上每次页面加载时的突发，从而隐藏其形状"
           }
         }
       }
@@ -3641,6 +3697,34 @@
         }
       }
     },
+    "Cover traffic": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Покрывающий трафик"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Покривальний трафік"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ترافیک پوششی"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "掩护流量"
+          }
+        }
+      }
+    },
     "Covers Telegram Web only. The Telegram app ignores the system proxy: add Veil as its SOCKS5 proxy with the button below and it connects through Tor.": {
       "localizations": {
         "fa": {
@@ -4505,6 +4589,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "启用"
+          }
+        }
+      }
+    },
+    "Entry guard (8K mode): %@ %@ · %@ MB/s consensus weight": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сторожевой узел (режим 8K): %@ %@ · вес консенсуса %@ МБ/с"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сторожовий вузол (режим 8K): %@ %@ · вага консенсусу %@ МБ/с"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نگهبان ورودی (حالت 8K): %@ %@ · وزن اجماع %@ مگابایت/ثانیه"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "入口守卫（8K 模式）：%@ %@ · 共识权重 %@ MB/s"
           }
         }
       }
@@ -6413,6 +6525,34 @@
         }
       }
     },
+    "Light · sporadic noise through the onion loop; the shape of page loads stays visible": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Лёгкая · редкий шум через onion-петлю; форма загрузок страниц остаётся видна"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Легка · рідкий шум через onion-петлю; форма завантажень сторінок лишається видимою"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سبک · نویز پراکنده از حلقهٔ onion؛ شکل بارگذاری صفحات دیده می‌ماند"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "轻度 · 经 onion 回环发送零星噪声；页面加载的形状仍可见"
+          }
+        }
+      }
+    },
     "Loading authority certificates": {
       "localizations": {
         "fa": {
@@ -6721,6 +6861,34 @@
         }
       }
     },
+    "Measure the video path": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Измерить путь видео"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Виміряти шлях відео"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اندازه‌گیری مسیر ویدیو"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "测量视频路径"
+          }
+        }
+      }
+    },
     "Measured circuits": {
       "localizations": {
         "fa": {
@@ -6801,6 +6969,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "已测量的中继被固定，因此所有链路都终结于同样的一两个出口，一个中继就能看到你的整个会话。"
+          }
+        }
+      }
+    },
+    "Measuring the video path…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Измеряем путь видео…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вимірюємо шлях відео…"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "در حال اندازه‌گیری مسیر ویدیو…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在测量视频路径…"
           }
         }
       }
@@ -7925,6 +8121,34 @@
         }
       }
     },
+    "Of everything": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "От всего трафика"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Від усього трафіку"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "از کل ترافیک"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "占总流量"
+          }
+        }
+      }
+    },
     "Off": {
       "localizations": {
         "fa": {
@@ -8005,6 +8229,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "已关闭 — 由 Tor 自行在所选国家内挑选中继。"
+          }
+        }
+      }
+    },
+    "On a direct connection the first hop caps everything. With this on, Veil restricts Tor's entry guard to the three widest guards in the consensus and keeps the restriction only once a circuit through one of them has been built. Every site then goes through that guard, not only YouTube, and the Security screen counts it. Bridges keep their own first hop, so behind Snowflake, obfs4 or meek this does nothing.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "При прямом подключении первый хоп ограничивает всё. С этим переключателем Veil ограничивает сторожевой узел Tor тремя самыми ёмкими guard-узлами консенсуса и оставляет ограничение, только когда цепочка через один из них действительно построена. Через этот узел затем идут все сайты, не только YouTube, и экран «Безопасность» это учитывает. Мосты сохраняют свой первый хоп, так что за Snowflake, obfs4 или meek это ничего не делает."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "За прямого підключення перший хоп обмежує все. З цим перемикачем Veil обмежує сторожовий вузол Tor трьома найємнішими guard-вузлами консенсусу й лишає обмеження лише коли ланцюжок через один із них справді збудовано. Через цей вузол далі йдуть усі сайти, не лише YouTube, і екран «Безпека» це враховує. Мости зберігають свій перший хоп, тож за Snowflake, obfs4 чи meek це нічого не робить."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "در اتصال مستقیم، گام اول سقف همه‌چیز است. با روشن بودن این گزینه، Veil نگهبان ورودی Tor را به سه نگهبان پرظرفیت اجماع محدود می‌کند و این محدودیت را فقط وقتی نگه می‌دارد که مداری از یکی از آن‌ها ساخته شده باشد. سپس همهٔ سایت‌ها، نه فقط YouTube، از آن نگهبان می‌گذرند و صفحهٔ امنیت آن را به حساب می‌آورد. پل‌ها گام اول خود را دارند، پس پشت Snowflake، obfs4 یا meek این کاری نمی‌کند."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "直连时第一跳限制一切。开启后，Veil 会将 Tor 的入口守卫限制为共识中容量最大的三个守卫节点，并且只有在经其中之一成功建立链路后才保留该限制。之后所有站点（不仅是 YouTube）都经该守卫，安全页面会计入此项。网桥保留自己的第一跳，因此在 Snowflake、obfs4 或 meek 之后此选项不起作用。"
           }
         }
       }
@@ -10613,6 +10865,34 @@
         }
       }
     },
+    "Sent · received": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отправлено · получено"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Надіслано · отримано"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ارسال · دریافت"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已发送 · 已接收"
+          }
+        }
+      }
+    },
     "Separate Tor circuit for every site": {
       "localizations": {
         "fa": {
@@ -11369,6 +11649,34 @@
         }
       }
     },
+    "Strong · both directions topped up to a constant rate, so volume reveals nothing": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сильная · оба направления дополняются до постоянной скорости, объём ничего не выдаёт"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сильна · обидва напрямки доповнюються до сталої швидкості, обсяг нічого не видає"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قوی · هر دو جهت تا نرخی ثابت پر می‌شود تا حجم چیزی را لو ندهد"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "强 · 双向都补足到恒定速率，流量大小不泄露任何信息"
+          }
+        }
+      }
+    },
     "Stuck at %lld per cent — %@.": {
       "localizations": {
         "fa": {
@@ -12065,6 +12373,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "桌面应用的 HTTPS 使用系统代理；通话使用 UDP。"
+          }
+        }
+      }
+    },
+    "The entry guard is chosen by capacity (8K mode)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сторожевой узел выбран по ёмкости (режим 8K)"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сторожовий вузол обрано за ємністю (режим 8K)"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نگهبان ورودی بر اساس ظرفیت انتخاب شده (حالت 8K)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "入口守卫按容量选择（8K 模式）"
           }
         }
       }
@@ -13497,6 +13833,34 @@
         }
       }
     },
+    "Tor picks the entry guard at random and keeps it for months, so nobody can steer you onto a relay they watch. 8K mode replaces it with one of the few widest guards — a small, predictable set that every user of the mode shares. Worth it for the bandwidth, and only for that.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor выбирает сторожевой узел случайно и держит его месяцами, чтобы никто не мог направить вас на узел, за которым следит. Режим 8K заменяет его одним из немногих самых ёмких guard-узлов — маленьким предсказуемым набором, общим для всех пользователей режима. Оправдано ради полосы, и только ради неё."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor обирає сторожовий вузол випадково й тримає його місяцями, щоб ніхто не міг спрямувати вас на вузол, за яким стежить. Режим 8K замінює його одним із небагатьох найємніших guard-вузлів — малим передбачуваним набором, спільним для всіх користувачів режиму. Виправдано заради смуги, і лише заради неї."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor نگهبان ورودی را تصادفی برمی‌گزیند و ماه‌ها نگه می‌دارد تا کسی نتواند شما را به رله‌ای که زیر نظر دارد هدایت کند. حالت 8K آن را با یکی از معدود نگهبانان پرظرفیت جایگزین می‌کند — مجموعه‌ای کوچک و قابل پیش‌بینی که همهٔ کاربران این حالت در آن شریک‌اند. به خاطر پهنای باند می‌ارزد، و فقط به همین خاطر."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor 随机选择入口守卫并保持数月，这样没人能把你引导到他们监视的中继上。8K 模式则用少数几个容量最大的守卫之一取代它——一个小而可预测的集合，该模式的所有用户共用。为了带宽值得如此，也仅仅为了带宽。"
+          }
+        }
+      }
+    },
     "Tor refused to build test circuits.": {
       "localizations": {
         "fa": {
@@ -13689,6 +14053,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tor 的入口守卫仍留在磁盘上"
+          }
+        }
+      }
+    },
+    "Tor’s own exits carry %@ Mbit/s (enough for %@); no wide exit was faster, so none is pinned.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Собственные выходы Tor дают %@ Мбит/с (хватает на %@); ни один широкий выход не был быстрее, поэтому ничего не закреплено."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Власні виходи Tor дають %@ Мбіт/с (вистачає на %@); жоден широкий вихід не був швидшим, тому нічого не закріплено."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خروجی‌های خود Tor %@ مگابیت/ثانیه می‌دهند (کافی برای %@)؛ هیچ خروجی پهنی سریع‌تر نبود، پس چیزی ثابت نشد."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor 自身的出口可达 %@ Mbit/s（足以支持 %@）；没有更快的宽带出口，因此未固定任何出口。"
           }
         }
       }
@@ -14949,6 +15341,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "视频出口：%@ %@ · 共识权重 %@ MB/s"
+          }
+        }
+      }
+    },
+    "Video exit: %@ %@ · %@ Mbit/s measured · enough for %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выход для видео: %@ %@ · измерено %@ Мбит/с · хватает на %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вихід для відео: %@ %@ · виміряно %@ Мбіт/с · вистачає на %@"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خروجی ویدیو: %@ %@ · اندازه‌گیری‌شده %@ مگابیت/ثانیه · کافی برای %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "视频出口：%@ %@ · 实测 %@ Mbit/s · 足以支持 %@"
+          }
+        }
+      }
+    },
+    "Video path: %@ Mbit/s — enough for %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Путь видео: %@ Мбит/с — хватает на %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Шлях відео: %@ Мбіт/с — вистачає на %@"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مسیر ویدیو: %@ مگابیت/ثانیه — کافی برای %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "视频路径：%@ Mbit/s — 足以支持 %@"
           }
         }
       }

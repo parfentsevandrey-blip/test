@@ -453,13 +453,20 @@ struct VideoExitLabel: View {
                 Text("Choosing a wide exit for video…")
             }
             .foregroundStyle(.secondary)
-        case .active(let relay):
+        case .active(let relay, let megabits):
             Label {
-                Text("Video exit: \(relay.flag) \(relay.nickname) · \(String((relay.bandwidth ?? 0) / 1000)) MB/s consensus weight")
+                if let megabits {
+                    Text("Video exit: \(relay.flag) \(relay.nickname) · \(AppState.megabits(megabits)) Mbit/s measured · enough for \(ThroughputProbe.quality(forMegabits: megabits))")
+                } else {
+                    Text("Video exit: \(relay.flag) \(relay.nickname) · \(String((relay.bandwidth ?? 0) / 1000)) MB/s consensus weight")
+                }
             } icon: {
                 Image(systemName: "checkmark.seal.fill")
             }
             .foregroundStyle(.mint)
+        case .unpinned(let megabits):
+            Label("Tor’s own exits carry \(AppState.megabits(megabits)) Mbit/s (enough for \(ThroughputProbe.quality(forMegabits: megabits))); no wide exit was faster, so none is pinned.", systemImage: "info.circle")
+                .foregroundStyle(.secondary)
         case .failed:
             Label("No wide exit could be verified; YouTube uses Tor's usual exits.", systemImage: "info.circle")
                 .foregroundStyle(.secondary)
@@ -498,6 +505,39 @@ struct YouTubeSettingsView: View {
                         .fixedSize(horizontal: false, vertical: true)
                     VideoExitLabel(state: app.videoExit)
                         .font(.caption)
+                    HStack(spacing: 12) {
+                        Button {
+                            app.measureVideoPath()
+                        } label: {
+                            Label("Measure the video path", systemImage: "speedometer")
+                        }
+                        .disabled(!app.connection.isConnected || app.videoPathMeasuring)
+                        if app.videoPathMeasuring {
+                            HStack(spacing: 6) {
+                                ProgressView().controlSize(.small)
+                                Text("Measuring the video path…")
+                            }
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        } else if let megabits = app.videoPathMegabits {
+                            Text("Video path: \(AppState.megabits(megabits)) Mbit/s — enough for \(ThroughputProbe.quality(forMegabits: megabits))")
+                                .font(.caption)
+                                .foregroundStyle(.mint)
+                        }
+                    }
+                    Toggle("8K mode: pin a high-capacity entry guard", isOn: Binding(
+                        get: { app.settings.videoGuardPinning },
+                        set: { app.setVideoGuardPinning($0) }
+                    ))
+                    Text("On a direct connection the first hop caps everything. With this on, Veil restricts Tor's entry guard to the three widest guards in the consensus and keeps the restriction only once a circuit through one of them has been built. Every site then goes through that guard, not only YouTube, and the Security screen counts it. Bridges keep their own first hop, so behind Snowflake, obfs4 or meek this does nothing.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    if let guardRelay = app.videoGuard {
+                        Text("Entry guard (8K mode): \(guardRelay.flag) \(guardRelay.nickname) · \(String((guardRelay.bandwidth ?? 0) / 1000)) MB/s consensus weight")
+                            .font(.caption)
+                            .foregroundStyle(.mint)
+                    }
                 }
             } header: {
                 Text("YouTube while connected to Tor")

@@ -97,6 +97,8 @@ struct AppSettings: Codable, Equatable, Sendable {
     var youtubeModeChosen: Bool = false
     /// With YouTube through Tor: send every YouTube host through one of the widest exits.
     var videoExitEnabled: Bool = true
+    /// 8K mode: restrict Tor's entry guard to the widest guards. Every site goes through it.
+    var videoGuardPinning: Bool = false
     var dpiStrategy: DPIStrategy = .recordAndSegmentAtSNI
     /// Extra domains that bypass Tor (one per line).
     var customDirectDomains: String = ""
@@ -140,7 +142,8 @@ struct AppSettings: Codable, Equatable, Sendable {
         case warmStart, lanePoolEnabled, lanePoolSize, lanePoolHedging
         case closeSessionsOnKillSwitch, httpsOnly, redactDiagnostics, updateCheckAfterConnect
         case forgetPolicy, securityPreset
-        case youtubeMode, youtubeModeChosen, videoExitEnabled, dpiStrategy, customDirectDomains, customDirectAntiThrottle, serviceRoutes
+        case youtubeMode, youtubeModeChosen, videoExitEnabled, videoGuardPinning
+        case dpiStrategy, customDirectDomains, customDirectAntiThrottle, serviceRoutes
         case killSwitch, autoReconnect, autoResetNetwork, isolatePerSite, notificationsEnabled, soundEffects, hapticFeedback
         case checkForUpdates, skippedUpdateVersion, onboardingCompleted
     }
@@ -195,6 +198,7 @@ struct AppSettings: Codable, Equatable, Sendable {
         youtubeModeChosen = try c.decodeIfPresent(Bool.self, forKey: .youtubeModeChosen) ?? false
         youtubeMode = try c.decodeIfPresent(RouteMode.self, forKey: .youtubeMode) ?? d.youtubeMode
         videoExitEnabled = try c.decodeIfPresent(Bool.self, forKey: .videoExitEnabled) ?? d.videoExitEnabled
+        videoGuardPinning = try c.decodeIfPresent(Bool.self, forKey: .videoGuardPinning) ?? d.videoGuardPinning
         dpiStrategy = try c.decodeIfPresent(DPIStrategy.self, forKey: .dpiStrategy) ?? d.dpiStrategy
         customDirectDomains = try c.decodeIfPresent(String.self, forKey: .customDirectDomains) ?? d.customDirectDomains
         customDirectAntiThrottle = try c.decodeIfPresent(Bool.self, forKey: .customDirectAntiThrottle) ?? d.customDirectAntiThrottle
