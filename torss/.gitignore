@@ -1,0 +1,10 @@
+# downloaded binaries (scripts/fetch-deps.ps1) and build output
+bin/
+dist/
+*.exe
+*.log
+# packed bundle (go run ./tools/pack); only the README is tracked
+cmd/torss/bundle/*
+!cmd/torss/bundle/README.txt
+# the ready-to-run build is tracked on purpose
+!release/TorSS.exe

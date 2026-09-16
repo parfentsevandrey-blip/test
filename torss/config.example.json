@@ -1,0 +1,49 @@
+{
+  "mode": "auto",
+  "mode_order": ["ss-tor", "tor-webtunnel", "tor-snowflake", "tor-obfs4", "tor-meek", "ss-only"],
+  "allow_ss_only": true,
+  "autoconnect": true,
+
+  "tun": true,
+  "system_proxy": true,
+  "kill_switch": false,
+
+  "ports": {
+    "mixed": 2080,
+    "ss_entry": 2081,
+    "tor_socks": 9050,
+    "tor_control": 9051,
+    "tor_dns": 9053
+  },
+
+  "server": {
+    "address": "203.0.113.10",
+    "port": 443,
+    "method": "2022-blake3-aes-128-gcm",
+    "password": "ПАРОЛЬ_ИЗ_ВЫВОДА_install-server.sh",
+    "shadowtls": {
+      "enabled": true,
+      "password": "ПАРОЛЬ_SHADOWTLS_ИЗ_ВЫВОДА_install-server.sh",
+      "sni": "gateway.icloud.com"
+    }
+  },
+
+  "bridges": {
+    "use_builtin": true,
+    "lines": [
+      "# сюда вставляйте мосты из @GetBridgesBot / bridges.torproject.org, по одной строке:",
+      "# webtunnel [2001:db8::1]:443 0123456789ABCDEF0123456789ABCDEF01234567 url=https://example.com/xyz ver=0.0.1",
+      "# obfs4 198.51.100.7:443 0123456789ABCDEF0123456789ABCDEF01234567 cert=... iat-mode=0"
+    ]
+  },
+
+  "probe": {
+    "tor_urls": ["https://check.torproject.org/api/ip", "https://www.cloudflare.com/cdn-cgi/trace"],
+    "plain_urls": ["https://www.cloudflare.com/cdn-cgi/trace", "https://www.google.com/generate_204"],
+    "timeout_sec": 25,
+    "interval_sec": 20,
+    "failures_before_reconnect": 3
+  },
+
+  "log_level": "info"
+}

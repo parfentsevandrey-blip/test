@@ -1,0 +1,8 @@
+//go:build !windows
+
+package proc
+
+import "os/exec"
+
+func prepare(cmd *exec.Cmd)           {}
+func attachToJob(cmd *exec.Cmd) error { return nil }
