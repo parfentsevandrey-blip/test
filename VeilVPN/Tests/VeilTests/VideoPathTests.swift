@@ -39,19 +39,18 @@ final class VideoPathTests: XCTestCase {
                       "an exit list is an exit list: guards without the Exit flag stay out of it")
     }
 
-    func testTheWarmerPacesRequestsToTheRateAndNeverIdlesLong() {
-        // 30 KB at 128 KB/s is a 234 ms budget; a 50 ms response leaves 184 ms of pause.
-        XCTAssertEqual(VideoWarmer.pause(afterBytes: 30_000, took: 0.05, kilobytesPerSecond: 128), 30_000.0 / (128 * 1024) - 0.05, accuracy: 0.001)
-        // A slow response already spent the budget: the floor keeps the loop from spinning.
-        XCTAssertEqual(VideoWarmer.pause(afterBytes: 30_000, took: 0.9, kilobytesPerSecond: 128), 0.05)
-        // A huge response at a tiny rate would mean minutes of idle, which is the very thing
-        // the trickle exists to prevent: one second at most.
-        XCTAssertEqual(VideoWarmer.pause(afterBytes: 2_000_000, took: 0.1, kilobytesPerSecond: 64), 1.0)
-        XCTAssertEqual(VideoWarmer.assetPath(forKilobytes: 64), VideoWarmer.assetPath(forKilobytes: 128))
-        XCTAssertNotEqual(VideoWarmer.assetPath(forKilobytes: 128), VideoWarmer.assetPath(forKilobytes: 512))
+    func testTheTonusStreamIsReadInSlicesThatLandOnTheRate() {
+        // 512 KB/s in ten slices a second is 51 KB a slice; the window then holds the sender there.
+        XCTAssertEqual(VideoWarmer.slice(forKilobytes: 512), 512 * 1024 / 10)
+        XCTAssertEqual(VideoWarmer.slice(forKilobytes: 128), 128 * 1024 / 10)
+        XCTAssertEqual(VideoWarmer.slice(forKilobytes: 1), 4096, "never a slice so small the loop spins")
+        XCTAssertEqual(VideoWarmer.contentLength(in: "HTTP/1.1 200 OK\r\nContent-Length: 1048576\r\nServer: x\r\n"), 1_048_576)
+        XCTAssertEqual(VideoWarmer.contentLength(in: "HTTP/1.1 200 OK\r\ncontent-length:  42 \r\n"), 42)
+        XCTAssertNil(VideoWarmer.contentLength(in: "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n"))
         XCTAssertEqual(AppSettings().videoKeepWarmKilobytes, 512)
         XCTAssertTrue(AppSettings().videoKeepWarmAlways)
         XCTAssertTrue(VideoWarmer.rates.contains(512))
+        XCTAssertFalse(VideoWarmer.sources.isEmpty)
     }
 
     func testMeasurementHostsAreMappedNextToTheVideoHosts() {

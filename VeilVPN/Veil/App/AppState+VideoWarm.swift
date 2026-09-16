@@ -39,8 +39,7 @@ extension AppState {
                     leasedAt = nil
                     reachedTarget = false
                     lowSince = nil
-                } else if !videoWarmer.isRunning || mode != preferred
-                            || (preferred == .lane && leasedAt.map { Date.now.timeIntervalSince($0) > 60 } ?? false) {
+                } else if !videoWarmer.isRunning || mode != preferred || laneMoved(since: leasedAt) {
                     releaseWarm()
                     mode = warm(preferred) ? preferred : nil
                     leasedAt = mode == nil ? nil : .now
@@ -98,6 +97,17 @@ extension AppState {
         guard settings.videoKeepWarmKilobytes != clamped else { return }
         settings.videoKeepWarmKilobytes = clamped
         if videoWarmer.isRunning { releaseWarm() } // the supervisor restarts it at the new rate
+    }
+
+    /// Once a minute: has the browser's YouTube lane been replaced since the stream leased it?
+    /// Only then is the stream moved — a restart is a gap, and a gap is what this exists to avoid.
+    private func laneMoved(since leasedAt: Date?) -> Bool {
+        guard let current = videoWarmLease, let leasedAt, Date.now.timeIntervalSince(leasedAt) > 60,
+              let bridge = httpBridge, let probe = bridge.lanePool.lease(site: Self.warmSite, avoiding: nil) else {
+            return false
+        }
+        bridge.lanePool.release(probe)
+        return probe.lane != current.lane || probe.generation != current.generation
     }
 
     /// The lane the browser uses for YouTube is the one with the site's affinity; leasing the same
