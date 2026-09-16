@@ -24,6 +24,16 @@ enum PortAllocator {
         return try pick(preferred: preferred, fallback: 9050...9150, taken: &taken)
     }
 
+    static func freeHTTPPort(preferred: Int, excluding: Set<UInt16>) throws -> UInt16 {
+        var taken = excluding
+        return try pick(preferred: preferred, fallback: 8118...8218, taken: &taken)
+    }
+
+    static func freePoolPort(preferred: Int, excluding: Set<UInt16>) throws -> UInt16 {
+        var taken = excluding
+        return try pick(preferred: preferred, fallback: 9251...9350, taken: &taken)
+    }
+
     private static func pick(preferred: Int, fallback: ClosedRange<Int>, taken: inout Set<UInt16>) throws -> UInt16 {
         var candidates: [Int] = []
         if (1024...65535).contains(preferred) { candidates.append(preferred) }

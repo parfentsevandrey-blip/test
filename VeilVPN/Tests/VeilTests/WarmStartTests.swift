@@ -198,6 +198,59 @@ final class WarmStartTests: XCTestCase {
         XCTAssertEqual(connected.handle(.externalAbort(.noInternet), at: start), .keepWaiting)
     }
 
+    func testBootstrapProgressIsProofOfALaunch() {
+        // A slow disk can hold the consensus parse past the launch deadline on the cold path;
+        // tor saying "connecting" is as good as the ORCONN event that may follow it.
+        let start = ContinuousClock.now
+        var watchdog = BootstrapWatchdog(config: config(firstHop: 5), startedAt: start)
+        watchdog.handle(.bootstrap(percent: 5, tag: "conn", warning: nil, reason: nil, count: nil,
+                                   recommendation: nil, hostAddress: nil), at: start.advanced(by: .seconds(1)))
+        XCTAssertEqual(watchdog.handle(.tick, at: start.advanced(by: .seconds(6))), .keepWaiting)
+    }
+
+    func testTheHardTimeoutSparesAnAttemptStillMoving() {
+        // A directory fetch over a slow bridge outlives the budget while still moving bytes; the
+        // budget is for an attempt going nowhere. Twice the budget is the end regardless.
+        let start = ContinuousClock.now
+        var watchdog = BootstrapWatchdog(config: config(stall: 60, hard: 30), startedAt: start)
+        watchdog.handle(.transportLaunched("snowflake"), at: start)
+        watchdog.handle(.bytes(read: 5_000, written: 0), at: start.advanced(by: .seconds(29)))
+        XCTAssertEqual(watchdog.handle(.tick, at: start.advanced(by: .seconds(31))), .keepWaiting,
+                       "bytes two seconds ago: still moving")
+        watchdog.handle(.bytes(read: 5_000, written: 0), at: start.advanced(by: .seconds(40)))
+        XCTAssertEqual(watchdog.handle(.tick, at: start.advanced(by: .seconds(45))), .keepWaiting)
+        XCTAssertEqual(watchdog.handle(.tick, at: start.advanced(by: .seconds(61))), .abort(.firstHopTimeout),
+                       "twenty seconds without a byte past the budget is the end")
+        var doubled = BootstrapWatchdog(config: config(stall: 60, hard: 30), startedAt: start)
+        doubled.handle(.transportLaunched("snowflake"), at: start)
+        doubled.handle(.bytes(read: 5_000, written: 0), at: start.advanced(by: .seconds(59)))
+        XCTAssertEqual(doubled.handle(.tick, at: start.advanced(by: .seconds(61))), .abort(.firstHopTimeout),
+                       "twice the budget ends it however lively")
+    }
+
+    func testWarmthFollowsTheClock() throws {
+        let header = """
+        network-status-version 3 microdesc
+        vote-status consensus
+        valid-after 2026-09-10 18:00:00
+        fresh-until 2026-09-10 19:00:00
+        valid-until 2026-09-10 21:00:00
+        """
+        let info = try XCTUnwrap(ConsensusInfo.parse(header))
+        var profile = WarmthProfile()
+        profile.consensusInfo = info
+        profile.consensus = .fresh
+        profile.microdescsUsable = true
+        profile.hasCerts = true
+        profile.processWarm = true
+        profile.tier = .warm
+        let later = try XCTUnwrap(ISO8601DateFormatter().date(from: "2026-09-12T09:00:00Z"))
+        let refreshed = profile.refreshed(now: later)
+        XCTAssertEqual(refreshed.consensus, .expired, "a standby that sat for a day and a half has no live directory")
+        XCTAssertEqual(refreshed.tier, .cool)
+        XCTAssertEqual(profile.consensus, .fresh, "the original is left alone")
+    }
+
     func testARelayAnsweringCountsAsProgress() {
         // A guard that answered while the percentage stood still must not read as a stall.
         let start = ContinuousClock.now

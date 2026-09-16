@@ -131,6 +131,8 @@ struct WarmthProfile: Equatable, Sendable {
     var tier: Tier = .cold
     var consensus: ConsensusInfo.Freshness = .missing
     var consensusAge: TimeInterval?
+    /// The consensus timestamps, kept so freshness can be re-read from the clock later.
+    var consensusInfo: ConsensusInfo?
     var microdescBytes = 0
     var microdescsUsable = false
     var hasCerts = false
@@ -164,6 +166,19 @@ struct WarmthProfile: Equatable, Sendable {
         return parts.joined(separator: " · ")
     }
 
+    /// The same profile as the clock sees it now. A standby can sit for hours; the consensus
+    /// that was fresh when it started has a fixed lifetime, and every budget set from the old
+    /// freshness would be too tight for the directory fetch the attempt is about to make.
+    func refreshed(now: Date) -> WarmthProfile {
+        guard let consensusInfo else { return self }
+        var copy = self
+        copy.consensus = consensusInfo.freshness(now: now)
+        copy.consensusAge = now.timeIntervalSince(consensusInfo.validAfter)
+        copy.tier = Self.tier(consensus: copy.consensus, microdescsUsable: microdescsUsable,
+                              hasCerts: hasCerts, guardsKnown: guardsKnown, processWarm: processWarm)
+        return copy
+    }
+
     /// Monotone by construction: turning any input on never lowers the tier.
     static func tier(consensus: ConsensusInfo.Freshness, microdescsUsable: Bool, hasCerts: Bool,
                      guardsKnown: Bool, processWarm: Bool) -> Tier {
@@ -191,6 +206,7 @@ enum TorStateStore {
            let info = ConsensusInfo.parse(header) {
             profile.consensus = info.freshness(now: now)
             profile.consensusAge = now.timeIntervalSince(info.validAfter)
+            profile.consensusInfo = info
             validAfter = info.validAfter
         }
 

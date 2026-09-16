@@ -109,6 +109,10 @@ struct BootstrapWatchdog {
         /// still carry Snowflake, whose rendezvous takes longer than the probe does — so the
         /// probe only shortens the attempt's leash, it never cuts it on the spot.
         var noInternetGrace: Duration = .seconds(6)
+        /// Past the hard timeout an attempt is abandoned only once it has also stopped moving for
+        /// this long, or has run twice the budget: the budget is for an attempt going nowhere,
+        /// and one still fetching a directory over a slow link is merely slow.
+        var hardTimeoutStallGrace: Duration = .seconds(20)
 
         func budget(for stage: BootstrapStage) -> Duration { stall[stage] ?? .seconds(20) }
     }
@@ -259,6 +263,9 @@ struct BootstrapWatchdog {
             return .succeeded
         }
         if value > percent {
+            // "Connecting to a relay" (5 %, or 1–4 % through a pluggable transport) is tor's own
+            // word that the launch phase is behind it, whether or not the ORCONN event arrived.
+            if value >= 1 { sawLaunch = true }
             let previous = stage
             percent = value
             peakPercent = max(peakPercent, value)
@@ -345,7 +352,10 @@ struct BootstrapWatchdog {
             return .abort(Self.failure(for: stage))
         }
         if startedAt.duration(to: now) > config.hardTimeout {
-            return .abort(Self.failure(for: stage))
+            let stalled = lastProgressAt.duration(to: now) > config.hardTimeoutStallGrace
+            if stalled || startedAt.duration(to: now) > config.hardTimeout * 2 {
+                return .abort(Self.failure(for: stage))
+            }
         }
         return .keepWaiting
     }
@@ -380,7 +390,7 @@ enum BootstrapDefaults {
     ]
 
     static let firstHopDeadlineSeconds: [AppSettings.Transport: Double] = [
-        .direct: 6, .obfs4: 9, .custom: 12, .meek: 11, .snowflake: 22, .auto: 22,
+        .direct: 8, .obfs4: 9, .custom: 12, .meek: 11, .snowflake: 22, .auto: 22,
     ]
 
     static let priorSuccess: [AppSettings.Transport: Double] = [

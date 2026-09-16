@@ -58,7 +58,9 @@ final class TorProcessEngine: TorEngine {
     /// means the control connection is dead — which nothing else here can detect.
     private static let eventSubscription = "SETEVENTS CIRC HS_DESC STATUS_CLIENT ORCONN BW"
 
-    var warmth: WarmthProfile? { warmthProfile }
+    /// As the clock sees it now: a consensus that was fresh when tor was warmed may have
+    /// expired since, and the budgets set from it would be wrong.
+    var warmth: WarmthProfile? { warmthProfile?.refreshed(now: .now) }
     var isWarm: Bool { process != nil && controller?.isOpen == true && disableNetwork }
     var isLive: Bool { process != nil && controller?.isOpen == true && !disableNetwork }
     var activePorts: ActivePorts? { boundPorts }
@@ -326,12 +328,20 @@ final class TorProcessEngine: TorEngine {
             try await controller.setConfLines(pairs, timeout: .seconds(10))
         } catch let error as TorControlClient.ControlError {
             guard case .reply(let code, _) = error, code == 553 || code == 551 else { throw error }
-            // The SOCKS port was taken in the millisecond between allocation and SETCONF.
-            let fresh = try PortAllocator.freeSocksPort(preferred: 0, excluding: [ports.http, ports.control, ports.pool])
-            pairs = TorConfiguration.replacingSocksPort(pairs, socks: fresh, settings: settings, pool: ports.pool)
+            // A listener could not bind: one of the two ports was taken between allocation and
+            // SETCONF. Re-pick whichever is gone and try once more.
+            var socks = ports.socks
+            var pool = ports.pool
+            if !PortAllocator.isFree(socks) {
+                socks = try PortAllocator.freeSocksPort(preferred: 0, excluding: [ports.http, ports.control, pool])
+            }
+            if pool != 0, !PortAllocator.isFree(pool) {
+                pool = try PortAllocator.freePoolPort(preferred: 0, excluding: [ports.http, ports.control, socks])
+            }
+            pairs = TorConfiguration.replacingSocksPort(pairs, socks: socks, settings: settings, pool: pool)
             try await controller.setConfLines(pairs, timeout: .seconds(10))
-            effective = ActivePorts(socks: fresh, http: ports.http, control: ports.control, pool: ports.pool)
-            emit(.veil(.warn, "SOCKS port \(ports.socks) was taken; tor is listening on \(fresh) instead"))
+            effective = ActivePorts(socks: socks, http: ports.http, control: ports.control, pool: pool)
+            emit(.veil(.warn, "A listener port was taken; tor is listening on SOCKS \(socks), lanes \(pool) instead"))
         }
         if let bound = try? await controller.getInfo("net/listeners/socks", timeout: .seconds(5)),
            !bound.isEmpty, !bound.contains(":\(effective.socks)") {

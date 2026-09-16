@@ -182,9 +182,9 @@ final class LaneTests: XCTestCase {
 
     func testDeadlinesAreBoundedOnEveryPath() {
         XCTAssertEqual(HedgePolicy.deadline(attempt: 0, isOnion: false, hedgeDelay: 1.2), 1.2)
-        XCTAssertEqual(HedgePolicy.deadline(attempt: 0, isOnion: false, hedgeDelay: nil), 10)
-        XCTAssertEqual(HedgePolicy.deadline(attempt: 1, isOnion: false, hedgeDelay: 1.2), 10)
-        XCTAssertEqual(HedgePolicy.deadline(attempt: 0, isOnion: true, hedgeDelay: 1.2), 30)
+        XCTAssertEqual(HedgePolicy.deadline(attempt: 0, isOnion: false, hedgeDelay: nil), 25)
+        XCTAssertEqual(HedgePolicy.deadline(attempt: 1, isOnion: false, hedgeDelay: 1.2), 25)
+        XCTAssertEqual(HedgePolicy.deadline(attempt: 0, isOnion: true, hedgeDelay: 1.2), 45)
     }
 
     // MARK: Credentials and torrc

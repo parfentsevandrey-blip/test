@@ -8,8 +8,11 @@ enum HedgePolicy {
     /// Everything above it was already in the tail.
     static let floorSeconds: TimeInterval = 1.2
     static let ceilingSeconds: TimeInterval = 3.0
-    static let defaultDeadline: TimeInterval = 10
-    static let onionDeadline: TimeInterval = 30
+    /// A first connect to a site can need a circuit built, a remote resolve and a slow server in
+    /// a row; tor's own stream timeout is longer than this used to be, and a browser waits
+    /// longer still. The deadline is for a stream going nowhere, not for one that is slow.
+    static let defaultDeadline: TimeInterval = 25
+    static let onionDeadline: TimeInterval = 45
 
     static func hedgeDelay(bestP50: TimeInterval?, isOnion: Bool, enabled: Bool, readyLanes: Int,
                            transport: AppSettings.Transport, secondsSinceConnect: TimeInterval) -> TimeInterval? {

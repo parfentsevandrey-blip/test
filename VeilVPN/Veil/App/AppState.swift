@@ -442,11 +442,24 @@ final class AppState {
                         append(.veil(.warn, "Preferred ports are busy; using SOCKS \(ports.socks) and HTTP \(ports.http) instead."))
                     }
                 }
-                // Re-validate right before it is written into the system proxy: the window between
-                // "this port is free" and "tor bound it" shrinks from minutes to milliseconds.
-                if !PortAllocator.isFree(ports.socks), httpBridge == nil,
+                // Re-validate every port that is not bound yet, right before use: they were picked
+                // when the standby started, possibly hours ago, and anything on this Mac may have
+                // taken one since. The control port is bound by tor and stays. The window between
+                // "this port is free" and "bound" shrinks from hours to milliseconds.
+                if httpBridge == nil, !PortAllocator.isFree(ports.socks),
                    let fresh = try? PortAllocator.freeSocksPort(preferred: 0, excluding: [ports.http, ports.control, ports.pool]) {
+                    append(.veil(.notice, "SOCKS port \(ports.socks) was taken meanwhile; using \(fresh)"))
                     ports = ActivePorts(socks: fresh, http: ports.http, control: ports.control, pool: ports.pool)
+                }
+                if httpBridge == nil, !PortAllocator.isFree(ports.http),
+                   let fresh = try? PortAllocator.freeHTTPPort(preferred: 0, excluding: [ports.socks, ports.control, ports.pool]) {
+                    append(.veil(.notice, "HTTP port \(ports.http) was taken meanwhile; using \(fresh)"))
+                    ports = ActivePorts(socks: ports.socks, http: fresh, control: ports.control, pool: ports.pool)
+                }
+                if ports.pool != 0, !PortAllocator.isFree(ports.pool),
+                   let fresh = try? PortAllocator.freePoolPort(preferred: 0, excluding: [ports.socks, ports.http, ports.control]) {
+                    append(.veil(.notice, "Lane port \(ports.pool) was taken meanwhile; using \(fresh)"))
+                    ports = ActivePorts(socks: ports.socks, http: ports.http, control: ports.control, pool: fresh)
                 }
                 self.ports = ports
 
@@ -1084,12 +1097,16 @@ final class AppState {
             primaryNetwork = NetworkReset.primary()
             guard !suppressPathEvents else { return }
             append(.veil(.info, "Network path restored" + (primaryNetwork.map { " via \($0.displayName)" } ?? "")))
-            if settings.autoReconnect, reconnectPending || connection == .failed {
-                scheduleReconnect(after: .seconds(3))
-            } else if connection == .connected {
-                // A new default route means the guard's TCP connection is already dead. One probe
-                // after the path settles, then the cheap bounce — not half a minute of waiting.
+            if connection == .connected {
+                // A path that went and came back may or may not have killed the guard's TCP
+                // connection: a Wi-Fi roam usually does, an interface flap often does not. One
+                // probe after the path settles decides, and only a tunnel that fails is bounced.
+                // (A lost path used to schedule a full reconnect regardless, cutting every
+                // circuit for a flap that had cost nothing.)
+                reconnectPending = false
                 verifyCircuitAfterDelay(.seconds(2))
+            } else if settings.autoReconnect, reconnectPending || connection == .failed {
+                scheduleReconnect(after: .seconds(3))
             }
         case .didWake:
             let sleptFor = sleptAt.map { Date.now.timeIntervalSince($0) } ?? 0
