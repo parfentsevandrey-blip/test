@@ -36,8 +36,10 @@
 
 ### 0. Готовый файл: `release/TorSS.exe`
 
-Один самодостаточный exe (~39 МБ): внутри уже лежат sing-box 1.14.1, Tor Expert
-Bundle 15.0.23 (tor, lyrebird, conjure) и wintun 0.14.1. Ничего ставить не нужно:
+Один самодостаточный exe (~32 МБ): внутри уже лежат sing-box 1.14.1, Tor Expert
+Bundle 15.0.23 (tor, lyrebird) и wintun 0.14.1. Ничего ставить не нужно
+(режим `tor-conjure` в готовый файл не включён ради размера: при желании положите
+`conjure-client.exe` из Tor Expert Bundle в `%LOCALAPPDATA%\TorSS\bin\tor\pluggable_transports\`):
 
 1. Скопируйте `TorSS.exe` в любую папку и запустите. SmartScreen покажет
    «Неизвестный издатель» (файл не подписан) → «Подробнее» → «Выполнить в любом случае».
