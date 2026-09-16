@@ -26,7 +26,7 @@ final class VideoWarmer {
     /// Thumbnails of one long-lived public video: a few tens of kilobytes to a few hundred, on the
     /// YouTube image CDN, cache-neutral and meaningless. The asset grows with the rate so the
     /// request interval stays a few hundred milliseconds — under one round trip — either way.
-    static func assetPath(forKilobytes rate: Int) -> String {
+    nonisolated static func assetPath(forKilobytes rate: Int) -> String {
         switch rate {
         case ..<200: "/vi/dQw4w9WgXcQ/hqdefault.jpg"
         case ..<400: "/vi/dQw4w9WgXcQ/sddefault.jpg"
@@ -40,7 +40,7 @@ final class VideoWarmer {
     /// How long to wait after a response of `bytes` so the average lands on `kilobytesPerSecond`,
     /// never more than a second (a longer gap is exactly the idle this exists to prevent) and
     /// never under 100 ms.
-    static func pause(afterBytes bytes: Int, took seconds: TimeInterval, kilobytesPerSecond rate: Int) -> TimeInterval {
+    nonisolated static func pause(afterBytes bytes: Int, took seconds: TimeInterval, kilobytesPerSecond rate: Int) -> TimeInterval {
         let budget = Double(bytes) / Double(max(1, rate) * 1024)
         return min(1.0, max(0.1, budget - seconds))
     }
