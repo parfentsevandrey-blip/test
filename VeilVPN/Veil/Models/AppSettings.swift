@@ -99,10 +99,13 @@ struct AppSettings: Codable, Equatable, Sendable {
     var videoExitEnabled: Bool = true
     /// 8K mode: restrict Tor's entry guard to the widest guards. Every site goes through it.
     var videoGuardPinning: Bool = false
-    /// A steady trickle on the video circuit while a video plays, so no hop's TCP window idles
-    /// back to slow start between the player's bursts.
+    /// A steady stream through the tunnel — on the video circuit while a video plays, on the
+    /// main route the rest of the time — so no hop's TCP window, and no bridge link, ever idles
+    /// back to slow start.
     var videoKeepWarm: Bool = true
-    var videoKeepWarmKilobytes: Int = 128
+    var videoKeepWarmKilobytes: Int = 512
+    /// The whole time the tunnel is up, not only while a video plays.
+    var videoKeepWarmAlways: Bool = true
     var dpiStrategy: DPIStrategy = .recordAndSegmentAtSNI
     /// Extra domains that bypass Tor (one per line).
     var customDirectDomains: String = ""
@@ -146,7 +149,8 @@ struct AppSettings: Codable, Equatable, Sendable {
         case warmStart, lanePoolEnabled, lanePoolSize, lanePoolHedging
         case closeSessionsOnKillSwitch, httpsOnly, redactDiagnostics, updateCheckAfterConnect
         case forgetPolicy, securityPreset
-        case youtubeMode, youtubeModeChosen, videoExitEnabled, videoGuardPinning, videoKeepWarm, videoKeepWarmKilobytes
+        case youtubeMode, youtubeModeChosen, videoExitEnabled, videoGuardPinning
+        case videoKeepWarm, videoKeepWarmKilobytes, videoKeepWarmAlways
         case dpiStrategy, customDirectDomains, customDirectAntiThrottle, serviceRoutes
         case killSwitch, autoReconnect, autoResetNetwork, isolatePerSite, notificationsEnabled, soundEffects, hapticFeedback
         case checkForUpdates, skippedUpdateVersion, onboardingCompleted
@@ -204,7 +208,8 @@ struct AppSettings: Codable, Equatable, Sendable {
         videoExitEnabled = try c.decodeIfPresent(Bool.self, forKey: .videoExitEnabled) ?? d.videoExitEnabled
         videoGuardPinning = try c.decodeIfPresent(Bool.self, forKey: .videoGuardPinning) ?? d.videoGuardPinning
         videoKeepWarm = try c.decodeIfPresent(Bool.self, forKey: .videoKeepWarm) ?? d.videoKeepWarm
-        videoKeepWarmKilobytes = min(512, max(64, try c.decodeIfPresent(Int.self, forKey: .videoKeepWarmKilobytes) ?? d.videoKeepWarmKilobytes))
+        videoKeepWarmKilobytes = min(1024, max(64, try c.decodeIfPresent(Int.self, forKey: .videoKeepWarmKilobytes) ?? d.videoKeepWarmKilobytes))
+        videoKeepWarmAlways = try c.decodeIfPresent(Bool.self, forKey: .videoKeepWarmAlways) ?? d.videoKeepWarmAlways
         dpiStrategy = try c.decodeIfPresent(DPIStrategy.self, forKey: .dpiStrategy) ?? d.dpiStrategy
         customDirectDomains = try c.decodeIfPresent(String.self, forKey: .customDirectDomains) ?? d.customDirectDomains
         customDirectAntiThrottle = try c.decodeIfPresent(Bool.self, forKey: .customDirectAntiThrottle) ?? d.customDirectAntiThrottle

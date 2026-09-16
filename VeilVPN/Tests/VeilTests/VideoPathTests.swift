@@ -43,12 +43,15 @@ final class VideoPathTests: XCTestCase {
         // 30 KB at 128 KB/s is a 234 ms budget; a 50 ms response leaves 184 ms of pause.
         XCTAssertEqual(VideoWarmer.pause(afterBytes: 30_000, took: 0.05, kilobytesPerSecond: 128), 30_000.0 / (128 * 1024) - 0.05, accuracy: 0.001)
         // A slow response already spent the budget: the floor keeps the loop from spinning.
-        XCTAssertEqual(VideoWarmer.pause(afterBytes: 30_000, took: 0.9, kilobytesPerSecond: 128), 0.1)
+        XCTAssertEqual(VideoWarmer.pause(afterBytes: 30_000, took: 0.9, kilobytesPerSecond: 128), 0.05)
         // A huge response at a tiny rate would mean minutes of idle, which is the very thing
         // the trickle exists to prevent: one second at most.
         XCTAssertEqual(VideoWarmer.pause(afterBytes: 2_000_000, took: 0.1, kilobytesPerSecond: 64), 1.0)
         XCTAssertEqual(VideoWarmer.assetPath(forKilobytes: 64), VideoWarmer.assetPath(forKilobytes: 128))
         XCTAssertNotEqual(VideoWarmer.assetPath(forKilobytes: 128), VideoWarmer.assetPath(forKilobytes: 512))
+        XCTAssertEqual(AppSettings().videoKeepWarmKilobytes, 512)
+        XCTAssertTrue(AppSettings().videoKeepWarmAlways)
+        XCTAssertTrue(VideoWarmer.rates.contains(512))
     }
 
     func testMeasurementHostsAreMappedNextToTheVideoHosts() {

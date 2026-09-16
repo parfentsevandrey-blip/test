@@ -525,11 +525,11 @@ struct YouTubeSettingsView: View {
                                 .foregroundStyle(.mint)
                         }
                     }
-                    Toggle("Keep the video circuit warm while a video plays", isOn: Binding(
+                    Toggle("Keep the tunnel in tone", isOn: Binding(
                         get: { app.settings.videoKeepWarm },
                         set: { app.setVideoKeepWarm($0) }
                     ))
-                    Picker("Warming rate", selection: Binding(
+                    Picker("Tonus rate", selection: Binding(
                         get: { app.settings.videoKeepWarmKilobytes },
                         set: { app.setVideoKeepWarmRate($0) }
                     )) {
@@ -539,14 +539,29 @@ struct YouTubeSettingsView: View {
                     }
                     .pickerStyle(.segmented)
                     .disabled(!app.settings.videoKeepWarm)
-                    Text("A player fetches a chunk, waits, fetches again; in between, every hop's TCP window falls back to slow start, and the next burst ramps up slowly — the sawtooth on the speed graph, and the stall when a burst is too slow for the buffer. While a YouTube connection is open, Veil keeps a small steady stream on the same circuit — small requests to YouTube's image CDN a few times a second — so every hop stays at full window. The rate is bandwidth spent on relays and on your link; 128 KB/s is enough for the window, more only competes with the video.")
+                    Picker("When", selection: Binding(
+                        get: { app.settings.videoKeepWarmAlways },
+                        set: { app.setVideoKeepWarmAlways($0) }
+                    )) {
+                        Text("The whole time the tunnel is up").tag(true)
+                        Text("Only while a video plays").tag(false)
+                    }
+                    .pickerStyle(.segmented)
+                    .disabled(!app.settings.videoKeepWarm)
+                    Text("A steady stream of small requests to YouTube's image CDN, several times a second, at the rate you set. It keeps every hop's TCP window open and the first link busy, so a burst never starts from a cold pipe — the sawtooth on the speed graph and the stall behind it. While a YouTube connection is open it rides the video's own circuit; otherwise the main route, which shares the guard or bridge link with everything. When the stream itself collapses, the circuits are retired and the video exit is re-checked. The rate is bandwidth spent on relays and on your link the whole time it runs.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                     if app.videoWarmer.isRunning {
-                        Text("Warming the video circuit: \(ByteFormat.rate(app.videoWarmer.bytesPerSecond)) over \(app.videoWarmer.requests) requests")
-                            .font(.caption)
-                            .foregroundStyle(.mint)
+                        if app.videoWarmer.stalled {
+                            Label("Tonus stalled: the path is not carrying the stream; still trying", systemImage: "exclamationmark.triangle")
+                                .font(.caption)
+                                .foregroundStyle(.orange)
+                        } else {
+                            Text("Tonus: \(ByteFormat.rate(app.videoWarmer.bytesPerSecond)) of \(app.videoWarmer.targetKilobytes) KB/s over \(app.videoWarmer.requests) requests")
+                                .font(.caption)
+                                .foregroundStyle(.mint)
+                        }
                     }
                     Toggle("8K mode: pin a high-capacity entry guard", isOn: Binding(
                         get: { app.settings.videoGuardPinning },

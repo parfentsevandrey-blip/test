@@ -47,7 +47,8 @@ INTEGER_EXPRESSIONS = {
 def is_integer(body):
     """An interpolation Swift formats with %lld: an Int(...) cast, a count, or a known integer."""
     return (body in INTEGER_EXPRESSIONS or body.startswith("Int(")
-            or body.endswith(".count") or body.endswith(".milliseconds") or body.endswith(".requests"))
+            or body.endswith(".count") or body.endswith(".milliseconds") or body.endswith(".requests")
+            or body.endswith(".targetKilobytes"))
 
 
 def interpolations(raw):

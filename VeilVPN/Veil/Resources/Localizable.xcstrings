@@ -365,6 +365,34 @@
         }
       }
     },
+    "A steady stream of small requests to YouTube's image CDN, several times a second, at the rate you set. It keeps every hop's TCP window open and the first link busy, so a burst never starts from a cold pipe — the sawtooth on the speed graph and the stall behind it. While a YouTube connection is open it rides the video's own circuit; otherwise the main route, which shares the guard or bridge link with everything. When the stream itself collapses, the circuits are retired and the video exit is re-checked. The rate is bandwidth spent on relays and on your link the whole time it runs.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ровный поток маленьких запросов к CDN картинок YouTube, несколько раз в секунду, на заданной вами скорости. Он держит TCP-окно на каждом хопе открытым, а первое звено — занятым, так что порция никогда не стартует из холодной трубы — та самая «пила» на графике скорости и подвисание за ней. Пока открыто соединение с YouTube, поток идёт по цепочке самого видео; иначе — по основному маршруту, который делит звено guard или моста со всем остальным. Когда сам поток проваливается, цепочки заменяются, а выход для видео перепроверяется. Скорость — это полоса, которая тратится на узлах и на вашем канале всё время, пока поток идёт."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Рівний потік маленьких запитів до CDN картинок YouTube, кілька разів на секунду, на заданій вами швидкості. Він тримає TCP-вікно на кожному хопі відкритим, а першу ланку — зайнятою, тож порція ніколи не стартує з холодної труби — та сама «пилка» на графіку швидкості й підвисання за нею. Поки відкрито з'єднання з YouTube, потік іде ланцюжком самого відео; інакше — основним маршрутом, який ділить ланку guard чи моста з усім іншим. Коли сам потік провалюється, ланцюжки замінюються, а вихід для відео перевіряється знову. Швидкість — це смуга, що витрачається на вузлах і на вашому каналі весь час, поки потік іде."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جریانی پیوسته از درخواست‌های کوچک به CDN تصاویر YouTube، چند بار در ثانیه، با نرخی که تعیین می‌کنید. پنجرهٔ TCP هر گام را باز و پیوند اول را مشغول نگه می‌دارد تا هیچ انفجاری از لولهٔ سرد شروع نشود — همان دندانه‌اره روی نمودار سرعت و توقف پشت آن. تا وقتی اتصالی به YouTube باز است روی مدار خود ویدیو می‌رود؛ در غیر این صورت روی مسیر اصلی که پیوند نگهبان یا پل را با همه‌چیز شریک است. وقتی خود جریان فرو می‌ریزد، مدارها بازنشسته و خروجی ویدیو دوباره بررسی می‌شود. این نرخ پهنای باندی است که در تمام مدت اجرا روی رله‌ها و پیوند شما خرج می‌شود."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以你设定的速率，每秒数次向 YouTube 图片 CDN 发送小请求的稳定流。它让每一跳的 TCP 窗口保持打开、首段链路保持忙碌，突发永远不会从冷管道起步——这就是速度图上的锯齿及其背后的卡顿。YouTube 连接打开时它走视频自身的链路；否则走主路由，该路由与一切共用守卫或网桥链路。当流本身崩塌时，链路会被更换，视频出口会被重新检查。该速率是流运行全程消耗在中继和你线路上的带宽。"
+          }
+        }
+      }
+    },
     "A timed rotation steers away from the relays it just used, so the route really moves. Existing connections keep theirs until they finish.": {
       "localizations": {
         "fa": {
@@ -6245,6 +6273,34 @@
         }
       }
     },
+    "Keep the tunnel in tone": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Держать канал в тонусе"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тримати канал у тонусі"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تونل را در آمادگی نگه دار"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保持隧道活跃"
+          }
+        }
+      }
+    },
     "Keep the video circuit warm while a video plays": {
       "localizations": {
         "ru": {
@@ -8509,6 +8565,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "只有当前用户可以替换可插拔传输的可执行文件。"
+          }
+        }
+      }
+    },
+    "Only while a video plays": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Только пока идёт видео"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Лише поки йде відео"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فقط هنگام پخش ویدیو"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "仅在播放视频时"
           }
         }
       }
@@ -13077,6 +13161,34 @@
         }
       }
     },
+    "The whole time the tunnel is up": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Всё время, пока туннель поднят"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Увесь час, поки тунель піднято"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تمام مدتی که تونل برقرار است"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隧道在线的全程"
+          }
+        }
+      }
+    },
     "These destinations are sent outside Tor on purpose. They see your real IP address, and your provider sees which ones you visit.": {
       "localizations": {
         "fa": {
@@ -13353,6 +13465,90 @@
           "stringUnit": {
             "state": "translated",
             "value": "切换系统代理时 macOS 首次会要求输入管理员密码。Veil 会在本次会话中保留该授权，断开时不会再次询问。"
+          }
+        }
+      }
+    },
+    "Tonus rate": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скорость тонуса"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Швидкість тонусу"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نرخ آمادگی"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保活速率"
+          }
+        }
+      }
+    },
+    "Tonus stalled: the path is not carrying the stream; still trying": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тонус остановился: путь не несёт поток; продолжаем попытки"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тонус зупинився: шлях не несе потік; продовжуємо спроби"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آمادگی متوقف شد: مسیر جریان را حمل نمی‌کند؛ همچنان در تلاش"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保活停滞：路径无法承载该流；仍在重试"
+          }
+        }
+      }
+    },
+    "Tonus: %@ of %lld KB/s over %lld requests": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тонус: %@ из %lld КБ/с, запросов: %lld"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тонус: %@ із %lld КБ/с, запитів: %lld"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آمادگی: %@ از %lld کیلوبایت/ثانیه در %lld درخواست"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保活：%@ / %lld KB/s，共 %lld 次请求"
           }
         }
       }
@@ -15845,6 +16041,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "你受到哪些保护"
+          }
+        }
+      }
+    },
+    "When": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Когда"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Коли"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "چه زمانی"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "何时"
           }
         }
       }
