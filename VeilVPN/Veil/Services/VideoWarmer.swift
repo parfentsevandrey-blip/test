@@ -135,7 +135,10 @@ final class VideoWarmer {
         if let credentials {
             proxy.applyCredential(username: credentials.username, password: credentials.password)
         }
-        parameters.setProxyConfigurations([proxy])
+        // Proxies live on the privacy context in Network.framework, not on the parameters.
+        let privacy = NWParameters.PrivacyContext(description: "app.veilvpn.tonus")
+        privacy.proxyConfigurations = [proxy]
+        parameters.setPrivacyContext(privacy)
         let connection = NWConnection(host: NWEndpoint.Host(source.host), port: 443, using: parameters)
         self.connection = connection
         defer {
