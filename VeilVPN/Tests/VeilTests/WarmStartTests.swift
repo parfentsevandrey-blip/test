@@ -219,6 +219,9 @@ final class WarmStartTests: XCTestCase {
                        "bytes two seconds ago: still moving")
         watchdog.handle(.bytes(read: 5_000, written: 0), at: start.advanced(by: .seconds(40)))
         XCTAssertEqual(watchdog.handle(.tick, at: start.advanced(by: .seconds(45))), .keepWaiting)
+        // BW keeps ticking once a second whether or not bytes flow: the control connection is
+        // alive, the transfer is not.
+        watchdog.handle(.bytes(read: 0, written: 0), at: start.advanced(by: .seconds(60)))
         XCTAssertEqual(watchdog.handle(.tick, at: start.advanced(by: .seconds(61))), .abort(.firstHopTimeout),
                        "twenty seconds without a byte past the budget is the end")
         var doubled = BootstrapWatchdog(config: config(stall: 60, hard: 30), startedAt: start)
