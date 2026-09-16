@@ -50,6 +50,10 @@ struct AppSettings: Codable, Equatable, Sendable {
     var transport: Transport = .auto
     var lastWorkingTransport: Transport? = nil
     var customBridges: String = ""
+    /// Bridge lines the Tor Project handed Veil when every transport had failed on a live
+    /// network; tried automatically as the custom transport when the user has none of their own.
+    var assistBridges: String = ""
+    var assistBridgesFetchedAt: Date?
     /// ISO 3166-1 alpha-2 country code (lowercase) for `ExitNodes`, or nil for automatic.
     var exitCountry: String? = nil
     var socksPort: Int = 9050
@@ -127,7 +131,8 @@ struct AppSettings: Codable, Equatable, Sendable {
     init() {}
 
     private enum CodingKeys: String, CodingKey {
-        case transport, lastWorkingTransport, customBridges, exitCountry, socksPort, httpPort, configureSystemProxy
+        case transport, lastWorkingTransport, customBridges, assistBridges, assistBridgesFetchedAt
+        case exitCountry, socksPort, httpPort, configureSystemProxy
         case showInMenuBar, connectOnLaunch, checkAfterConnect, verboseLogs
         case paddingEnabled, paddingLevel
         case multihopEnabled, middleCountry, excludedCountries, avoidFiveEyes, rotateRouteMinutes
@@ -146,6 +151,8 @@ struct AppSettings: Codable, Equatable, Sendable {
         transport = try c.decodeIfPresent(Transport.self, forKey: .transport) ?? d.transport
         lastWorkingTransport = try c.decodeIfPresent(Transport.self, forKey: .lastWorkingTransport)
         customBridges = try c.decodeIfPresent(String.self, forKey: .customBridges) ?? d.customBridges
+        assistBridges = try c.decodeIfPresent(String.self, forKey: .assistBridges) ?? d.assistBridges
+        assistBridgesFetchedAt = try c.decodeIfPresent(Date.self, forKey: .assistBridgesFetchedAt)
         exitCountry = try c.decodeIfPresent(String.self, forKey: .exitCountry)
         socksPort = try c.decodeIfPresent(Int.self, forKey: .socksPort) ?? d.socksPort
         httpPort = try c.decodeIfPresent(Int.self, forKey: .httpPort) ?? d.httpPort
@@ -202,6 +209,12 @@ struct AppSettings: Codable, Equatable, Sendable {
         checkForUpdates = try c.decodeIfPresent(Bool.self, forKey: .checkForUpdates) ?? d.checkForUpdates
         skippedUpdateVersion = try c.decodeIfPresent(String.self, forKey: .skippedUpdateVersion)
         onboardingCompleted = try c.decodeIfPresent(Bool.self, forKey: .onboardingCompleted) ?? d.onboardingCompleted
+    }
+
+    /// The lines the custom transport uses: the user's own, or, when there are none, the ones the
+    /// Tor Project handed Veil.
+    var effectiveCustomBridges: String {
+        TorConfiguration.parseBridgeLines(customBridges).isEmpty ? assistBridges : customBridges
     }
 
     /// The same settings with a concrete transport substituted (used by automatic selection).

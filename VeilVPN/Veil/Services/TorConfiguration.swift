@@ -222,7 +222,7 @@ struct TorConfiguration {
             }
         }
         if bundle.conjure != nil, let template = defaults.plugins["conjure"],
-           parseBridgeLines(settings.customBridges).contains(where: { $0.hasPrefix("conjure ") }) {
+           parseBridgeLines(settings.effectiveCustomBridges).contains(where: { $0.hasPrefix("conjure ") }) {
             lines.append(template.replacingOccurrences(of: "${pt_path}", with: ptPath))
         }
         let bridges = bridgeLines(for: predicted, settings: settings, defaults: defaults)
@@ -248,7 +248,7 @@ struct TorConfiguration {
         case .snowflake, .auto: raw = defaults.bridges["snowflake"] ?? []
         case .obfs4: raw = defaults.bridges["obfs4"] ?? []
         case .meek: raw = defaults.bridges["meek"] ?? []
-        case .custom: raw = parseBridgeLines(settings.customBridges)
+        case .custom: raw = parseBridgeLines(settings.effectiveCustomBridges)
         }
         return raw.map { snowflakeLine($0, peers: settings.snowflakePeers) }
     }

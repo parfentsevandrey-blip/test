@@ -21,7 +21,7 @@ enum AttemptPlanner {
             return Plan(ordered: [settings.transport], skipped: [])
         }
         var pool: [AppSettings.Transport] = [.direct, .snowflake, .obfs4, .meek]
-        if !TorConfiguration.parseBridgeLines(settings.customBridges).isEmpty { pool.append(.custom) }
+        if !TorConfiguration.parseBridgeLines(settings.effectiveCustomBridges).isEmpty { pool.append(.custom) }
 
         var scored: [(transport: AppSettings.Transport, probability: Double, expected: Double)] = []
         for transport in pool {
@@ -151,7 +151,7 @@ enum AttemptPlanner {
         case .meek: 1
         case .snowflake: 1
         case .obfs4: max(1, (defaults.bridges["obfs4"] ?? []).count)
-        case .custom: max(1, TorConfiguration.parseBridgeLines(settings.customBridges).count)
+        case .custom: max(1, TorConfiguration.parseBridgeLines(settings.effectiveCustomBridges).count)
         }
     }
 }

@@ -323,6 +323,18 @@ struct BridgesSettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
+                let count = TorConfiguration.parseBridgeLines(app.settings.assistBridges).count
+                if count > 0 {
+                    HStack(alignment: .firstTextBaseline, spacing: 12) {
+                        Text("Veil keeps \(count) bridge(s) the Tor Project handed it when every transport had failed; they are tried automatically before giving up.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Button("Forget these bridges") { app.forgetAssistBridges() }
+                            .buttonStyle(.link)
+                            .font(.caption)
+                    }
+                }
             } header: {
                 Text("Bridge service")
             }
@@ -361,6 +373,10 @@ struct BridgesSettingsView: View {
             .foregroundStyle(.secondary)
         case .done(let count, let transport):
             Text("Received \(count) \(transport) bridge(s); transport set to custom")
+                .font(.caption)
+                .foregroundStyle(.mint)
+        case .kept(let count):
+            Text("Received \(count) bridge(s); kept for automatic connection")
                 .font(.caption)
                 .foregroundStyle(.mint)
         case .failed(let message):

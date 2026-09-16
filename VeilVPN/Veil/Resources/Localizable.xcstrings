@@ -5349,6 +5349,34 @@
         }
       }
     },
+    "Forget these bridges": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Забыть эти мосты"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Забути ці мости"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فراموش کردن این پل‌ها"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "忘记这些网桥"
+          }
+        }
+      }
+    },
     "Forget which networks this Mac has used": {
       "localizations": {
         "fa": {
@@ -9381,6 +9409,34 @@
         }
       }
     },
+    "Received %lld bridge(s); kept for automatic connection": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Получено мостов: %lld; сохранены для автоматического подключения"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отримано мостів: %lld; збережено для автоматичного підключення"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld پل دریافت شد؛ برای اتصال خودکار نگه داشته شد"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已收到 %lld 个网桥；已保留用于自动连接"
+          }
+        }
+      }
+    },
     "Recommended": {
       "localizations": {
         "fa": {
@@ -11841,6 +11897,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mac 已指向 Veil"
+          }
+        }
+      }
+    },
+    "The Tor Project has no bridges for this country right now.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "У Tor Project сейчас нет мостов для этой страны."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "У Tor Project зараз немає мостів для цієї країни."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor Project در حال حاضر پلی برای این کشور ندارد."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tor Project 目前没有适用于该国家/地区的网桥。"
           }
         }
       }
@@ -14445,6 +14529,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Veil 持有其本地 SOCKS、HTTP 和控制端口。"
+          }
+        }
+      }
+    },
+    "Veil keeps %lld bridge(s) the Tor Project handed it when every transport had failed; they are tried automatically before giving up.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Veil хранит %lld мост(ов), выданных Tor Project, когда все транспорты отказали; они пробуются автоматически, прежде чем сдаться."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Veil зберігає %lld міст(ів), які видав Tor Project, коли всі транспорти відмовили; вони пробуються автоматично, перш ніж здатися."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Veil %lld پل را که Tor Project هنگام شکست همهٔ حمل‌ونقل‌ها داده نگه می‌دارد؛ پیش از تسلیم شدن به‌طور خودکار امتحان می‌شوند."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Veil 保留了 Tor Project 在所有传输均失败时提供的 %lld 个网桥；放弃之前会自动尝试它们。"
           }
         }
       }

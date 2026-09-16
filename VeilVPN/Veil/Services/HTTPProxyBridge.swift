@@ -85,6 +85,10 @@ final class HTTPProxyBridge: @unchecked Sendable {
         active.forEach { $0.close() }
     }
 
+    private var storedHolding = false
+    private var heldConnections: [NWConnection] = []
+    private var holdRelease: DispatchWorkItem?
+
     /// Refuse every request (kill switch). Applies to new connections.
     var blockAll: Bool {
         get { lock.lock(); defer { lock.unlock() }; return storedBlockAll }
@@ -128,12 +132,59 @@ final class HTTPProxyBridge: @unchecked Sendable {
         lock.lock()
         let active = Array(sessions.values)
         sessions = [:]
+        let held = heldConnections
+        heldConnections = []
+        storedHolding = false
+        holdRelease?.cancel()
+        holdRelease = nil
         lock.unlock()
         active.forEach { $0.close() }
+        held.forEach { $0.cancel() }
+    }
+
+    /// Queues new connections instead of routing or refusing them, for at most `seconds`: the gap
+    /// of a soft reconnect or a wake, while the tunnel is verified or rebuilt. Nothing is routed
+    /// and nothing is answered, so nothing leaks; a browser's own connect timeout is far longer,
+    /// so a page requested in the gap loads a few seconds later instead of failing.
+    func hold(for seconds: TimeInterval) {
+        lock.lock()
+        storedHolding = true
+        holdRelease?.cancel()
+        let work = DispatchWorkItem { [weak self] in self?.releaseHold() }
+        holdRelease = work
+        lock.unlock()
+        queue.asyncAfter(deadline: .now() + seconds, execute: work)
+    }
+
+    /// Lets the held connections through under the bridge's state as it is now.
+    func releaseHold() {
+        lock.lock()
+        guard storedHolding else {
+            lock.unlock()
+            return
+        }
+        storedHolding = false
+        holdRelease?.cancel()
+        holdRelease = nil
+        let held = heldConnections
+        heldConnections = []
+        lock.unlock()
+        held.forEach { accept($0) }
+    }
+
+    var isHolding: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return storedHolding
     }
 
     private func accept(_ connection: NWConnection) {
         lock.lock()
+        if storedHolding {
+            heldConnections.append(connection)
+            lock.unlock()
+            return
+        }
         let socks = storedSocksPort
         let policy = storedPolicy
         let blocked = storedBlockAll

@@ -259,7 +259,7 @@ final class TorProcessEngine: TorEngine {
 
         var profile = await settle(client: client, budget: budget, disk: disk)
         profile.evidencedTransports = TorStateStore.evidencedTransports(
-            profile.state, defaults: defaults, customBridges: settings.customBridges)
+            profile.state, defaults: defaults, customBridges: settings.effectiveCustomBridges)
         profile.launchedTransports = launchedTransports
         warmthProfile = profile
         emit(.veil(.info, "Tor is warm (\(profile.tier)) · \(profile.summary)"))

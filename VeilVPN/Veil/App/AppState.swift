@@ -16,6 +16,8 @@ enum MoatStatus: Equatable, Sendable {
     case idle
     case fetching
     case done(bridges: Int, transport: String)
+    /// Fetched by the connection assist and kept for automatic use; the transport stays Automatic.
+    case kept(bridges: Int)
     case failed(String)
 }
 
@@ -146,6 +148,7 @@ final class AppState {
     @ObservationIgnored private var generation = 0
     @ObservationIgnored private var isTearingDown = false
     @ObservationIgnored private var userRequestedDisconnect = false
+    @ObservationIgnored private var reconnectFailures = 0
     @ObservationIgnored private let networkWatcher = NetworkWatcher()
     @ObservationIgnored private var sleptAt: Date?
     @ObservationIgnored private var suppressPathEvents = false
@@ -540,7 +543,7 @@ final class AppState {
                 for skip in plan.skipped {
                     append(.veil(.debug, "Skipping \(skip.transport.rawValue): \(skip.reason)"))
                 }
-                let deadline = AttemptPlanner.overallDeadline(tier: profile.tier)
+                var deadline = AttemptPlanner.overallDeadline(tier: profile.tier)
                 let started = Date.now
                 let defaults = PluggableTransportDefaults.load(from: nil)
 
@@ -555,6 +558,11 @@ final class AppState {
                 // cold path once rather than moving on. The warm path can therefore never connect
                 // worse than the old one did; at worst it costs one restart.
                 var coldRetryUsed = false
+                // Tor Browser's connection assist, automated: once every transport has failed on
+                // a network that is otherwise alive, the bridges the Tor Project recommends for
+                // this country are fetched and tried, and kept for the next connect here.
+                var assistTried = false
+                var assistLines: [String]?
                 while index < queue.count {
                     let transport = queue[index]
                     try Task.checkCancellation()
@@ -575,13 +583,16 @@ final class AppState {
                         }
                         append(.veil(.notice, "Automatic transport: trying \(transport.rawValue) (\(index + 1)/\(queue.count))"))
                     }
-                    let attemptSettings = settings.resolving(transport: transport)
+                    var attemptSettings = settings.resolving(transport: transport)
+                    if transport == .custom, let assistLines {
+                        attemptSettings.customBridges = assistLines.joined(separator: "\n")
+                    }
                     let configuration = AttemptPlanner.config(
                         transport: transport, index: index, count: queue.count, warmth: profile,
                         history: history, marginalLink: (connectivity?.reachedByAddress ?? 2) <= 1,
                         warmEngine: warmEngine, elapsed: elapsed, deadline: deadline,
                         bridgeLineCount: AttemptPlanner.distinctFirstHops(transport: transport,
-                                                                          settings: settings, defaults: defaults)
+                                                                          settings: attemptSettings, defaults: defaults)
                     )
                     currentStage = .launch
                     stageEnteredAt = .now
@@ -684,6 +695,15 @@ final class AppState {
                                                          history: history, reachability: directReport)
                         queue = tried + plan.ordered.filter { !tried.contains($0) }
                         plannedQueue = queue
+                        if index == queue.count - 1, settings.transport == .auto, !assistTried, !deadNetwork {
+                            assistTried = true
+                            if let lines = await fetchAssistBridges(), attempt == generation {
+                                assistLines = lines
+                                queue.append(.custom)
+                                plannedQueue = queue
+                                deadline += 90
+                            }
+                        }
                     }
                     previous = transport
                     index += 1
@@ -710,6 +730,9 @@ final class AppState {
                     bridge.policy = self.settings.routingPolicy
                     bridge.httpsOnly = self.settings.httpsOnly
                     bridge.blockAll = false
+                    // Connections held through a bounce that turned into a full reconnect go
+                    // through now, on the new tunnel, rather than when their timer runs out.
+                    bridge.releaseHold()
                 } else {
                     let bridge = HTTPProxyBridge(socksPort: effective.socks, policy: self.settings.routingPolicy)
                     bridge.httpsOnly = self.settings.httpsOnly
@@ -732,6 +755,7 @@ final class AppState {
                 guard attempt == generation else { return }
 
                 killSwitchEngaged = false
+                reconnectFailures = 0
                 connectedAt = .now
                 connectStartedAt = nil
                 connection = .connected
@@ -879,8 +903,10 @@ final class AppState {
         let alive = await engine.isCircuitEstablished()
         guard alive else { return false }
         let started = Date.now
-        bridge.socksPort = nil
-        bridge.blockAll = true
+        // Connections arriving during the bounce wait for it instead of failing: nothing is
+        // routed and nothing is answered while the tunnel is down, and a page requested in the
+        // gap loads a few seconds later rather than showing an error.
+        bridge.hold(for: 25)
         bridge.lanePool.retireAll(reason: .routeChanged)
         do {
             try await engine.refreshNetwork()
@@ -906,6 +932,7 @@ final class AppState {
         guard sample != nil else { return false }
         bridge.socksPort = ports.socks
         bridge.blockAll = false
+        bridge.releaseHold()
         latency.reset()
         latency.measureNow()
         append(.veil(.notice, "Soft reconnect (\(reason)) in \(Int(Date.now.timeIntervalSince(started) * 1000)) ms"))
@@ -1093,10 +1120,24 @@ final class AppState {
             guard connection == .connected || connection == .connecting else { return }
             append(.veil(.warn, "Network path lost"))
             if settings.autoReconnect { reconnectPending = true }
+        case .pathChanged:
+            primaryNetwork = NetworkReset.primary()
+            guard !suppressPathEvents else { return }
+            append(.veil(.info, "Network path changed" + (primaryNetwork.map { " — now via \($0.displayName)" } ?? "")))
+            reconnectFailures = 0
+            if connection == .connected {
+                // A different network under a live tunnel: the guard's connection is usually
+                // dead and macOS said nothing. Ask the tunnel, bounce it only if it fails.
+                verifyCircuitAfterDelay(.seconds(2))
+            } else if connection == .failed, settings.autoReconnect, !userRequestedDisconnect {
+                // A new network is a new chance; the backoff belonged to the old one.
+                scheduleReconnect(after: .seconds(3))
+            }
         case .pathRestored:
             primaryNetwork = NetworkReset.primary()
             guard !suppressPathEvents else { return }
             append(.veil(.info, "Network path restored" + (primaryNetwork.map { " via \($0.displayName)" } ?? "")))
+            reconnectFailures = 0
             if connection == .connected {
                 // A path that went and came back may or may not have killed the guard's TCP
                 // connection: a Wi-Fi roam usually does, an interface flap often does not. One
@@ -1129,6 +1170,10 @@ final class AppState {
             do { try await Task.sleep(for: .seconds(1)) } catch { return }
             switch connection {
             case .connected:
+                // Requests made in the first seconds after a wake wait for the verdict instead of
+                // running into a tunnel that may be dead; the hold ends with whichever outcome
+                // comes first, and on its own after half a minute.
+                httpBridge?.hold(for: 30)
                 // A live tunnel proves the Internet is up, so the two checks race instead of
                 // queueing: on a healthy wake the repair — up to half a minute of probing plus a
                 // Wi-Fi reset — is skipped entirely.
@@ -1140,6 +1185,7 @@ final class AppState {
                 guard !Task.isCancelled else { return }
                 connectivity = report
                 if healthy {
+                    httpBridge?.releaseHold()
                     let nap = sleptFor > 60 ? " (slept \(Int(sleptFor / 60)) min)" : ""
                     append(.veil(.info, "Tunnel still carries traffic after sleep\(nap); no restart needed"))
                     latency.reset()
@@ -1154,6 +1200,7 @@ final class AppState {
                     guard !Task.isCancelled else { return }
                     if outcome == .stillDown {
                         append(.veil(.warn, "No Internet after waking; leaving Tor alone until the network is back"))
+                        httpBridge?.releaseHold()
                         return
                     }
                     // Wi-Fi took a few seconds to come back, which is why the first probe failed.
@@ -1162,6 +1209,7 @@ final class AppState {
                     if await tunnelIsHealthy(timeout: .seconds(5)) {
                         guard !Task.isCancelled else { return }
                         append(.veil(.info, "Tunnel carries traffic again now that the network is back; no restart needed"))
+                        httpBridge?.releaseHold()
                         latency.reset()
                         latency.measureNow()
                         httpBridge?.lanePool.retireAll(reason: .routeChanged)
@@ -1385,7 +1433,16 @@ final class AppState {
 
     private func scheduleReconnectIfWanted() {
         guard settings.autoReconnect, !userRequestedDisconnect else { return }
-        scheduleReconnect(after: .seconds(15))
+        // No path at all is waited out, not retried: the path coming back schedules the retry.
+        guard networkWatcher.isSatisfied else {
+            reconnectPending = true
+            append(.veil(.notice, "No network path; auto-reconnect waits for it to come back"))
+            return
+        }
+        let delay = ReconnectBackoff.delay(afterFailures: reconnectFailures)
+        reconnectFailures += 1
+        append(.veil(.notice, "Auto-reconnect in \(delay.components.seconds) s"))
+        scheduleReconnect(after: delay)
     }
 
     private func scheduleReconnect(after delay: Duration) {
@@ -1651,6 +1708,45 @@ final class AppState {
     }
 
     // MARK: Bridges from the Tor Project (Moat)
+
+    /// The assist: bridges the Tor Project recommends for this country, fetched when every
+    /// transport failed on a live network. Direct first, then through a domain-fronted CDN, which
+    /// is what a network that blocks bridges.torproject.org needs. obfs4 and webtunnel lines
+    /// only — Snowflake is built in already and has just failed. Kept across runs, so the next
+    /// connect on this network has them from the start.
+    private func fetchAssistBridges() async -> [String]? {
+        append(.veil(.notice, "Every transport failed; asking the Tor Project for bridges for this country"))
+        moatStatus = .fetching
+        let country = Locale.current.region?.identifier
+        do {
+            let sets = try await MoatClient.fetchCircumventionSettings(country: country)
+            var lines: [String] = []
+            for set in sets where set.transport == "obfs4" || set.transport == "webtunnel" {
+                for line in set.bridges where !lines.contains(line) { lines.append(line) }
+            }
+            guard !lines.isEmpty else {
+                moatStatus = .failed(String(localized: "The Tor Project has no bridges for this country right now."))
+                append(.veil(.warn, "The Tor Project answered with no obfs4 or webtunnel bridges for this country"))
+                return nil
+            }
+            settings.assistBridges = lines.joined(separator: "\n")
+            settings.assistBridgesFetchedAt = .now
+            moatStatus = .kept(bridges: lines.count)
+            append(.veil(.notice, "Received \(lines.count) bridge(s) from the Tor Project; trying them now and keeping them for this network"))
+            return lines
+        } catch {
+            moatStatus = .failed(error.localizedDescription)
+            append(.veil(.warn, "Bridge request failed: \(error.localizedDescription)"))
+            return nil
+        }
+    }
+
+    func forgetAssistBridges() {
+        settings.assistBridges = ""
+        settings.assistBridgesFetchedAt = nil
+        if case .kept = moatStatus { moatStatus = .idle }
+        append(.veil(.info, "Forgot the bridges the Tor Project handed Veil"))
+    }
 
     func fetchBridgesFromTorProject() {
         guard moatStatus != .fetching else { return }
