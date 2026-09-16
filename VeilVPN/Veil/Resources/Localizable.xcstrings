@@ -337,6 +337,34 @@
         }
       }
     },
+    "A player fetches a chunk, waits, fetches again; in between, every hop's TCP window falls back to slow start, and the next burst ramps up slowly — the sawtooth on the speed graph, and the stall when a burst is too slow for the buffer. While a YouTube connection is open, Veil keeps a small steady stream on the same circuit — small requests to YouTube's image CDN a few times a second — so every hop stays at full window. The rate is bandwidth spent on relays and on your link; 128 KB/s is enough for the window, more only competes with the video.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Плеер забирает порцию, ждёт, забирает снова; в паузах TCP-окно на каждом хопе откатывается в slow start, и следующая порция разгоняется медленно — та самая «пила» на графике скорости и подвисание, когда порция не успевает за буфером. Пока открыто соединение с YouTube, Veil держит по той же цепочке небольшой ровный поток — маленькие запросы к CDN картинок YouTube несколько раз в секунду, — чтобы окно на каждом хопе оставалось полным. Скорость — это полоса, потраченная на узлах и на вашем канале; 128 КБ/с окну достаточно, больше только конкурирует с видео."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Плеєр забирає порцію, чекає, забирає знову; в паузах TCP-вікно на кожному хопі відкочується в slow start, і наступна порція розганяється повільно — та сама «пилка» на графіку швидкості й підвисання, коли порція не встигає за буфером. Поки відкрито з'єднання з YouTube, Veil тримає тим самим ланцюжком невеликий рівний потік — маленькі запити до CDN картинок YouTube кілька разів на секунду, — щоб вікно на кожному хопі лишалося повним. Швидкість — це смуга, витрачена на вузлах і на вашому каналі; 128 КБ/с вікну достатньо, більше лише конкурує з відео."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پخش‌کننده یک تکه می‌گیرد، صبر می‌کند، دوباره می‌گیرد؛ در این میان پنجرهٔ TCP هر گام به slow start برمی‌گردد و انفجار بعدی آهسته اوج می‌گیرد — همان دندانه‌اره روی نمودار سرعت و توقف وقتی انفجار برای بافر کند است. تا زمانی که اتصالی به YouTube باز است، Veil جریانی کوچک و پیوسته روی همان مدار نگه می‌دارد — درخواست‌های کوچک به CDN تصاویر YouTube چند بار در ثانیه — تا پنجرهٔ هر گام پر بماند. این نرخ پهنای باندی است که روی رله‌ها و پیوند شما خرج می‌شود؛ ۱۲۸ کیلوبایت/ثانیه برای پنجره کافی است، بیشتر فقط با ویدیو رقابت می‌کند."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "播放器取一段、等待、再取一段；间隙里每一跳的 TCP 窗口都退回慢启动，下一次突发只能慢慢爬升——这就是速度图上的锯齿，以及突发赶不上缓冲时的卡顿。只要有 YouTube 连接打开，Veil 就在同一条链路上维持一股小而稳定的流——每秒几次向 YouTube 图片 CDN 发出小请求——让每一跳都保持满窗口。该速率是消耗在中继和你线路上的带宽；128 KB/s 足以维持窗口，更高只会与视频争抢。"
+          }
+        }
+      }
+    },
     "A timed rotation steers away from the relays it just used, so the route really moves. Existing connections keep theirs until they finish.": {
       "localizations": {
         "fa": {
@@ -6213,6 +6241,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "更改路由时保留现有连接"
+          }
+        }
+      }
+    },
+    "Keep the video circuit warm while a video plays": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Держать цепочку видео в тонусе, пока идёт видео"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тримати ланцюжок відео в тонусі, поки йде відео"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "گرم نگه داشتن مدار ویدیو هنگام پخش"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "播放视频时保持视频链路活跃"
           }
         }
       }
@@ -15509,6 +15565,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "等待网络恢复…"
+          }
+        }
+      }
+    },
+    "Warming rate": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скорость подогрева"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Швидкість підігріву"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نرخ گرم‌سازی"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保活速率"
+          }
+        }
+      }
+    },
+    "Warming the video circuit: %@ over %lld requests": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подогрев цепочки видео: %@, запросов: %lld"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Підігрів ланцюжка відео: %@, запитів: %lld"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "گرم‌سازی مدار ویدیو: %@ در %lld درخواست"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "视频链路保活：%@，共 %lld 次请求"
           }
         }
       }

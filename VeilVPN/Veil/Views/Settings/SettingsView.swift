@@ -525,6 +525,29 @@ struct YouTubeSettingsView: View {
                                 .foregroundStyle(.mint)
                         }
                     }
+                    Toggle("Keep the video circuit warm while a video plays", isOn: Binding(
+                        get: { app.settings.videoKeepWarm },
+                        set: { app.setVideoKeepWarm($0) }
+                    ))
+                    Picker("Warming rate", selection: Binding(
+                        get: { app.settings.videoKeepWarmKilobytes },
+                        set: { app.setVideoKeepWarmRate($0) }
+                    )) {
+                        ForEach(VideoWarmer.rates, id: \.self) { rate in
+                            Text(verbatim: "\(rate) KB/s").tag(rate)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .disabled(!app.settings.videoKeepWarm)
+                    Text("A player fetches a chunk, waits, fetches again; in between, every hop's TCP window falls back to slow start, and the next burst ramps up slowly — the sawtooth on the speed graph, and the stall when a burst is too slow for the buffer. While a YouTube connection is open, Veil keeps a small steady stream on the same circuit — small requests to YouTube's image CDN a few times a second — so every hop stays at full window. The rate is bandwidth spent on relays and on your link; 128 KB/s is enough for the window, more only competes with the video.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    if app.videoWarmer.isRunning {
+                        Text("Warming the video circuit: \(ByteFormat.rate(app.videoWarmer.bytesPerSecond)) over \(app.videoWarmer.requests) requests")
+                            .font(.caption)
+                            .foregroundStyle(.mint)
+                    }
                     Toggle("8K mode: pin a high-capacity entry guard", isOn: Binding(
                         get: { app.settings.videoGuardPinning },
                         set: { app.setVideoGuardPinning($0) }

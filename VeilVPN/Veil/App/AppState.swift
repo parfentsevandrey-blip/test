@@ -141,6 +141,9 @@ final class AppState {
     let padding = PaddingLoop()
     let tuner = RouteTuner()
     let latency = LatencyMonitor()
+    let videoWarmer = VideoWarmer()
+    @ObservationIgnored var videoWarmTask: Task<Void, Never>?
+    @ObservationIgnored var videoWarmLease: LaneLease?
     let isDemo: Bool
 
     @ObservationIgnored var engine: any TorEngine
@@ -210,6 +213,7 @@ final class AppState {
         padding.onLog = { [weak self] entry in self?.append(entry) }
         tuner.onLog = { [weak self] entry in self?.append(entry) }
         latency.onLog = { [weak self] entry in self?.append(entry) }
+        videoWarmer.onLog = { [weak self] entry in self?.append(entry) }
         traffic.paddingRateProvider = { [weak self] in self?.padding.rate ?? 0 }
         networkWatcher.onEvent = { [weak self] event in self?.handleNetworkEvent(event) }
         networkWatcher.start()
@@ -775,6 +779,7 @@ final class AppState {
                 }
                 await startLanePool(ports: effective, transport: connectedTransport)
                 startVideoExitSelection(after: .seconds(4))
+                startVideoWarmSupervision()
                 restartRouteRotation()
                 startRouteTuning()
                 startRetuneTimer()
@@ -993,6 +998,7 @@ final class AppState {
         latency.stop()
         latency.reset()
         lanes = nil
+        stopVideoWarmSupervision()
         httpBridge?.lanePool.stop()
         httpBridge?.poolPort = nil
         await padding.stop()

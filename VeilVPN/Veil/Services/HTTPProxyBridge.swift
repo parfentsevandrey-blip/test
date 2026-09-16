@@ -23,6 +23,8 @@ final class HTTPProxyBridge: @unchecked Sendable {
     private let lock = NSLock()
     private var listener: NWListener?
     private var sessions: [ObjectIdentifier: ProxySession] = [:]
+    /// The destination each open session is for, once it has asked for one.
+    private var hostsInFlight: [ObjectIdentifier: String] = [:]
     private var storedPolicy: RoutingPolicy
     private var storedSocksPort: UInt16?
     private var storedBlockAll = false
@@ -74,6 +76,13 @@ final class HTTPProxyBridge: @unchecked Sendable {
         lock.lock()
         defer { lock.unlock() }
         return sessions.count
+    }
+
+    /// Open connections to YouTube hosts: a video is playing, or about to.
+    var youtubeSessionsInFlight: Int {
+        lock.lock()
+        defer { lock.unlock() }
+        return hostsInFlight.values.filter { RoutingPolicy.isYouTube($0) }.count
     }
 
     /// Cuts every open connection. The kill switch refuses new ones on its own; this is what makes
@@ -196,14 +205,21 @@ final class HTTPProxyBridge: @unchecked Sendable {
         let session = ProxySession(client: connection, socksPort: socks, policy: policy, blocked: blocked,
                                    pool: pool == nil ? nil : lanePool, poolPort: pool,
                                    transport: transport, connectedAt: connectedAt, httpsOnly: httpsOnly,
-                                   onDecision: { [weak self] decision in
-            self?.record(decision)
+                                   onDecision: { [weak self] session, host, decision in
+            guard let self else { return }
+            self.record(decision)
+            if decision != nil, !host.isEmpty {
+                self.lock.lock()
+                self.hostsInFlight[ObjectIdentifier(session)] = host
+                self.lock.unlock()
+            }
         }, onOutcome: { [weak self] outcome in
             self?.recordOutcome(outcome)
         }, onClose: { [weak self] finished in
             guard let self else { return }
             self.lock.lock()
             self.sessions[ObjectIdentifier(finished)] = nil
+            self.hostsInFlight[ObjectIdentifier(finished)] = nil
             self.lock.unlock()
         })
         lock.lock()
@@ -244,7 +260,7 @@ final class ProxySession: @unchecked Sendable {
     private let policy: RoutingPolicy
     private let blocked: Bool
     private let queue = DispatchQueue(label: "app.veilvpn.httpbridge.session")
-    private let onDecision: @Sendable (RouteDecision?) -> Void
+    private let onDecision: @Sendable (ProxySession, String, RouteDecision?) -> Void
     private let onOutcome: @Sendable (HTTPProxyBridge.SessionOutcome) -> Void
     private let onClose: (ProxySession) -> Void
     private let pool: LanePool?
@@ -272,7 +288,7 @@ final class ProxySession: @unchecked Sendable {
     init(client: NWConnection, socksPort: UInt16?, policy: RoutingPolicy, blocked: Bool,
          pool: LanePool?, poolPort: UInt16?, transport: AppSettings.Transport, connectedAt: Date?,
          httpsOnly: Bool,
-         onDecision: @escaping @Sendable (RouteDecision?) -> Void,
+         onDecision: @escaping @Sendable (ProxySession, String, RouteDecision?) -> Void,
          onOutcome: @escaping @Sendable (HTTPProxyBridge.SessionOutcome) -> Void,
          onClose: @escaping (ProxySession) -> Void) {
         self.client = client
@@ -342,7 +358,7 @@ final class ProxySession: @unchecked Sendable {
         head = Data()
 
         if blocked {
-            onDecision(nil)
+            onDecision(self, "", nil)
             respond(503, "Veil kill switch: Tor is not running")
             return
         }
@@ -367,7 +383,7 @@ final class ProxySession: @unchecked Sendable {
                 return
             }
             let route = policy.decision(for: destination.host, torAvailable: socksPort != nil)
-            onDecision(route)
+            onDecision(self, destination.host, route)
             openUpstream(host: destination.host, port: destination.port, route: route) { [weak self] in
                 guard let self else { return }
                 let established = Data("HTTP/1.1 200 Connection Established\r\nProxy-Agent: Veil\r\n\r\n".utf8)
@@ -399,7 +415,7 @@ final class ProxySession: @unchecked Sendable {
         // An exit relay can read and rewrite anything that is not encrypted, and it is the one hop
         // on the path the user did not choose.
         if httpsOnly, socksPort != nil, policy.decision(for: host, torAvailable: true) == .tor {
-            onDecision(nil)
+            onDecision(self, host, nil)
             respond(403, "Veil: plain HTTP is blocked through Tor")
             return
         }
@@ -426,7 +442,7 @@ final class ProxySession: @unchecked Sendable {
         let requestHead = Data((forwarded.joined(separator: "\r\n") + "\r\n\r\n").utf8)
 
         let route = policy.decision(for: host, torAvailable: socksPort != nil)
-        onDecision(route)
+        onDecision(self, host, route)
         openUpstream(host: host, port: port, route: route) { [weak self] in
             guard let self, let upstream = self.upstream else { return }
             upstream.send(content: requestHead + remainder, completion: .contentProcessed { [weak self] error in

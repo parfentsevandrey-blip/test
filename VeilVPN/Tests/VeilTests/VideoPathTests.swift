@@ -39,6 +39,18 @@ final class VideoPathTests: XCTestCase {
                       "an exit list is an exit list: guards without the Exit flag stay out of it")
     }
 
+    func testTheWarmerPacesRequestsToTheRateAndNeverIdlesLong() {
+        // 30 KB at 128 KB/s is a 234 ms budget; a 50 ms response leaves 184 ms of pause.
+        XCTAssertEqual(VideoWarmer.pause(afterBytes: 30_000, took: 0.05, kilobytesPerSecond: 128), 30_000.0 / (128 * 1024) - 0.05, accuracy: 0.001)
+        // A slow response already spent the budget: the floor keeps the loop from spinning.
+        XCTAssertEqual(VideoWarmer.pause(afterBytes: 30_000, took: 0.9, kilobytesPerSecond: 128), 0.1)
+        // A huge response at a tiny rate would mean minutes of idle, which is the very thing
+        // the trickle exists to prevent: one second at most.
+        XCTAssertEqual(VideoWarmer.pause(afterBytes: 2_000_000, took: 0.1, kilobytesPerSecond: 64), 1.0)
+        XCTAssertEqual(VideoWarmer.assetPath(forKilobytes: 64), VideoWarmer.assetPath(forKilobytes: 128))
+        XCTAssertNotEqual(VideoWarmer.assetPath(forKilobytes: 128), VideoWarmer.assetPath(forKilobytes: 512))
+    }
+
     func testMeasurementHostsAreMappedNextToTheVideoHosts() {
         let pairs = ExitCatalog.mapAddressPairs(exit: "F" + String(repeating: "0", count: 39),
                                                 domains: ThroughputProbe.measurementHosts)
