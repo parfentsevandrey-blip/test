@@ -162,8 +162,8 @@ def per_m2_str(v):
     return None if v in (None, 0) else int(v)
 
 # Та же сдержанная палитра, что и в PDF: графит, светлая бумага, цвет — только по делу.
-INK, ACCENT, PAPER, LINE = '0F1F3D', '6B7280', 'F5F6F8', 'D9DDE3'
-BODY, TITLE = 'Calibri', 'Calibri'
+INK, ACCENT, PAPER, LINE = '0B1A33', '6B7280', 'F7F4EE', 'DAD6CE'
+BODY, TITLE = 'Calibri', 'Georgia'
 thin = Side(style='thin', color=LINE)
 MED_SIDE = Side(style='medium', color=INK)
 border = Border(bottom=thin)                      # без вертикальных линий — так таблица легче читается
@@ -174,11 +174,11 @@ LINK_FONT = Font(name=BODY, size=9, color='0F1F3D', underline='single')
 TITLE_FONT = Font(name=TITLE, size=15, bold=True, color=INK)
 SUB_FONT = Font(name=BODY, size=9, italic=True, color='6E6E66')
 ZEBRA = PatternFill('solid', fgColor=PAPER)
-GROUP_FILL = PatternFill('solid', fgColor='FFFFFF')
-GROUP_FONT = Font(name=TITLE, size=11, bold=True, color=INK)
+GROUP_FILL = PatternFill('solid', fgColor=INK)          # район — тёмная полоса, как в PDF
+GROUP_FONT = Font(name=TITLE, size=12, bold=True, color='FFFFFF')
 NAME_FONT = Font(name=BODY, size=10, bold=True, color=INK)
-STATUS_FILL = {'построено': 'E8F2ED', 'строится': 'FAF0DF', 'проектирование': 'E9EEF6'}
-STATUS_FONT = {'построено': '2E7D5B', 'строится': 'A8721F', 'проектирование': '4A6FA5'}
+STATUS_FILL = {'построено': 'E6EFEA', 'строится': 'F6EAE0', 'проектирование': 'E6ECF4'}
+STATUS_FONT = {'построено': '1F5C46', 'строится': 'B0642B', 'проектирование': '3D5A80'}
 ZONE_FILL = {'Садовое кольцо': 'FFF2CC', 'Хамовники': 'E2EFDA', 'Сити': 'DDEBF7', 'Пресня': 'FCE4D6', 'Белорусская': 'EDEDED'}
 wrap = Alignment(horizontal='center', vertical='center', wrap_text=True)
 center = Alignment(horizontal='center', vertical='center', wrap_text=True)
@@ -260,7 +260,7 @@ def sheet(wb, title, headers, rows, widths, note=None, subtitle='', zone_col=Non
         if r and r[0] == '__GROUP__':          # заголовок кластера-района на всю ширину
             ws.append([r[1]]); rr = ws.max_row
             ws.merge_cells(start_row=rr, start_column=1, end_row=rr, end_column=ncol)
-            for cc in ws[rr]: cc.fill = GROUP_FILL; cc.border = Border(bottom=MED_SIDE)
+            for cc in ws[rr]: cc.fill = GROUP_FILL; cc.border = Border(top=Side(style='medium', color='FFFFFF'))
             c = ws.cell(rr, 1); c.font = GROUP_FONT
             c.alignment = Alignment(horizontal='left', vertical='center', indent=1)
             ws.row_dimensions[rr].height = 26; i = 0

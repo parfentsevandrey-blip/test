@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Собрать docs/premium-cao/fonts.css — шрифт документа, вшитый в CSS как data: URI.
+"""Собрать docs/premium-cao/fonts.css — шрифты документа, вшитые в CSS как data: URI.
 
   python3 tools/cian/fetch-fonts.py
 
@@ -12,7 +12,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / 'docs' / 'premium-cao' / 'fonts.css'
 UA = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36'
-API = 'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap'
+API = ('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700'
+       '&family=Cormorant+Garamond:wght@500;600;700&display=swap')
 KEEP = ('cyrillic', 'latin')     # остальные срезы (греческий, вьетнамский) документу не нужны
 
 

@@ -71,7 +71,7 @@ MAPS_DEF = [
     {'slug': 'presnya', 'title': 'Пресня, Сити, Белорусская', 'zones': ['Пресня', 'Сити', 'Белорусская'], 'bbox': (55.738, 37.515, 55.786, 37.605), 'z': 16},
 ]
 # те же цвета статусов, что в книге и в таблице
-COLORS = {'построено': (46, 125, 91), 'строится': (201, 138, 43), 'проектирование': (74, 111, 165)}
+COLORS = {'построено': (31, 92, 70), 'строится': (176, 100, 43), 'проектирование': (61, 90, 128)}
 ORDER = {'построено': 0, 'строится': 1, 'проектирование': 2}
 
 points = json.load(open(DOCS / 'points.json'))
@@ -133,8 +133,8 @@ for md in MAPS_DEF:
                  max(d.textlength(st, font=font_l) for st in COLORS) + 140)) + 24
     bh = 110 + 52 * len(COLORS) + 8
     # плашка в цвет документа: тёмно-синяя шапка с названием, ниже легенда на белом
-    d.rectangle((pad, pad, pad + bw, pad + bh), fill=(255, 255, 255), outline=(15, 31, 61), width=2)
-    d.rectangle((pad, pad, pad + bw, pad + 96), fill=(15, 31, 61))
+    d.rectangle((pad, pad, pad + bw, pad + bh), fill=(255, 255, 255), outline=(11, 26, 51), width=2)
+    d.rectangle((pad, pad, pad + bw, pad + 96), fill=(11, 26, 51))
     d.text((pad + 24, pad + 16), head, fill=(255, 255, 255), font=font_t)
     yy = pad + 112
     for st, c in COLORS.items():

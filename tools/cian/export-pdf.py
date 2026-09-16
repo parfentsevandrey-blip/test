@@ -22,9 +22,9 @@ HTML = Path('/tmp/claude-0/-home-user-test/5ef931c1-a5eb-584d-bea4-9b195abd4240/
 
 # Основа — глубокий синий и графит; у каждого раздела свой цвет, и он же
 # метит статус на картах и в списках. Всё остальное — оттенки серого.
-INK, TEXT, MUTED, LINE, PAPER = '#0F1F3D', '#1E2430', '#6B7280', '#D9DDE3', '#F5F6F8'
-SECTION = {'1': ('#2E7D5B', 'Построено'), '2': ('#C98A2B', 'Строится'), '3': ('#4A6FA5', 'Проектирование')}
-STATUS = {'построено': '#2E7D5B', 'строится': '#C98A2B', 'проектирование': '#4A6FA5'}
+INK, TEXT, MUTED, LINE, PAPER = '#0B1A33', '#1E2430', '#6B7280', '#DAD6CE', '#F7F4EE'
+SECTION = {'1': ('#1F5C46', 'Построено'), '2': ('#B0642B', 'Строится'), '3': ('#3D5A80', 'Проектирование')}
+STATUS = {'построено': '#1F5C46', 'строится': '#B0642B', 'проектирование': '#3D5A80'}
 
 SHORT_HEAD = {'Корпусов': 'Корп.', 'Этажность': 'Этажей', 'Лотов в продаже': 'Лотов',
               'Площадь лотов, м²': 'Площадь, м²', 'Ссылка на Циан': 'Циан', 'Ссылка на проект': 'Проект',
@@ -119,9 +119,9 @@ for ws in wb:
                 v = body[j][heat_i].value if heat_i is not None else None
                 if isinstance(v, (int, float)): block.append(v)
                 j += 1
-            extra = f'<span class="g-m">медиана {num(median(block))} ₽/м²</span>' if block else ''
-            groups.append([f'<tr class="grp"><td colspan="{ncol}"><span class="g-bar" style="background:{color}"></span>'
-                           f'<span class="g-n">{esc(lbl)}</span><span class="g-c">{esc(cnt)}</span>{extra}</td></tr>', []])
+            extra = f'<span class="g-m">медиана <b>{num(median(block))}</b> ₽/м²</span>' if block else ''
+            groups.append([f'<tr class="grp"><td colspan="{ncol}"><div class="gb" style="border-left-color:{color}">'
+                           f'<span class="g-n">{esc(lbl)}</span><span class="g-c">{esc(cnt)}</span>{extra}</div></td></tr>', []])
             i += 1; n = 0
             continue
         n += 1
@@ -167,23 +167,26 @@ section.page:last-child {{ page-break-after: auto; }}
 
 /* ---- шапка раздела: слева название, справа сводка ---- */
 .ph {{ display: flex; justify-content: space-between; align-items: flex-end; gap: 12mm;
-  border-bottom: 2px solid {INK}; padding-bottom: 6px; margin-bottom: 7px; }}
+  border-bottom: 1px solid {INK}; padding-bottom: 8px; margin-bottom: 10px; position: relative; }}
+.ph::after {{ content: ''; position: absolute; left: 0; right: 0; bottom: -3px; border-bottom: .5px solid {INK}; }}
 .ph-l {{ flex: 1; min-width: 0; }}
-.kicker {{ font-size: 7pt; font-weight: 600; color: var(--c, {INK}); margin-bottom: 3px; }}
+.kicker {{ font-size: 7pt; font-weight: 600; color: var(--c, {INK}); margin-bottom: 4px; letter-spacing: .02em; }}
 .kicker::before {{ content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%;
   background: var(--c, {INK}); margin-right: 5px; }}
-h2 {{ font-size: 21pt; font-weight: 600; margin: 0; letter-spacing: -.015em; line-height: 1.05; color: {INK}; }}
-.sub {{ font-size: 7.4pt; color: {MUTED}; margin: 4px 0 0; line-height: 1.4; max-width: 190mm; }}
-.ph-r {{ display: flex; gap: 9mm; flex-shrink: 0; align-items: flex-end; }}
+h2 {{ font-family: 'Cormorant Garamond', 'Liberation Serif', Georgia, serif; font-size: 30pt; font-weight: 600;
+  margin: 0; letter-spacing: -.01em; line-height: .95; color: {INK}; }}
+.sub {{ font-size: 7.4pt; color: {MUTED}; margin: 6px 0 0; line-height: 1.4; max-width: 190mm; }}
+.ph-r {{ display: flex; gap: 10mm; flex-shrink: 0; align-items: flex-end; }}
 .m-l {{ font-size: 6.4pt; color: {MUTED}; font-weight: 500; }}
-.m-v {{ font-size: 13pt; font-weight: 600; color: {INK}; letter-spacing: -.01em; white-space: nowrap; margin-top: 1px; }}
-.m-v small {{ font-size: 7pt; font-weight: 500; color: {MUTED}; }}
+.m-v {{ font-family: 'Cormorant Garamond', 'Liberation Serif', Georgia, serif; font-size: 17pt; font-weight: 600;
+  color: {INK}; white-space: nowrap; margin-top: 1px; line-height: 1.05; }}
+.m-v small {{ font-family: 'IBM Plex Sans', sans-serif; font-size: 7pt; font-weight: 500; color: {MUTED}; }}
 
 /* ---- таблица ---- */
 table {{ width: 100%; border-collapse: collapse; table-layout: fixed; }}
 table.grid {{ font-size: 6.6pt; }}
-table.grid th {{ background: {INK}; color: #fff; font-size: 5.9pt; font-weight: 600; padding: 4.5px 3px;
-  text-align: center; vertical-align: middle; line-height: 1.15; letter-spacing: .01em;
+table.grid th {{ color: {INK}; font-size: 5.9pt; font-weight: 600; padding: 4px 3px 5px; background: #fff;
+  border-bottom: 1.2px solid {INK}; text-align: center; vertical-align: bottom; line-height: 1.15;
   word-wrap: break-word; overflow-wrap: anywhere; hyphens: auto; }}
 table.grid td {{ border-bottom: .5px solid {LINE}; padding: 3px 3px; text-align: center; vertical-align: middle;
   line-height: 1.3; word-wrap: break-word; overflow-wrap: anywhere; hyphens: auto; }}
@@ -195,22 +198,28 @@ thead {{ display: table-header-group; }}
 tr {{ page-break-inside: avoid; }}
 
 td.bar {{ position: relative; padding: 0 3px; }}
-td.bar i {{ position: absolute; left: 4%; top: 20%; height: 60%; opacity: .22; border-radius: 1px; }}
+td.bar i {{ position: absolute; left: 4%; top: 20%; height: 60%; opacity: .2; border-radius: 1px; }}
 td.bar b {{ position: relative; font-weight: 600; color: {INK}; white-space: nowrap; }}
 td.st {{ white-space: nowrap; }}
 td.st i {{ display: inline-block; width: 5px; height: 5px; border-radius: 50%; margin-right: 4px; vertical-align: 1px; }}
-td.lnk a {{ color: {INK}; font-size: 6pt; text-decoration: none; border-bottom: .5px solid #AEB4BD; }}
+td.lnk a {{ color: {INK}; font-size: 6pt; text-decoration: none; border-bottom: .5px solid #B5B0A6; }}
 
-tr.grp td {{ background: #fff; border-bottom: 1px solid {INK}; border-top: 4px solid #fff;
-  padding: 5px 0 2px; text-align: left; }}
+/* район — тёмная полоса во всю ширину, отделённая воздухом от предыдущего блока */
+tr.grp td {{ background: #fff; border: 0; padding: 9px 0 0; text-align: left; }}
+tbody.keep + tbody tr:first-child td, tbody + tbody.keep tr.grp td {{ }}
+.gb {{ background: {INK}; color: #fff; padding: 4px 9px 4px 10px; border-left: 4px solid; display: flex;
+  align-items: baseline; gap: 10px; }}
+.g-n {{ font-family: 'Cormorant Garamond', 'Liberation Serif', Georgia, serif; font-size: 12.5pt; font-weight: 600;
+  letter-spacing: .01em; }}
+.g-c {{ font-size: 6.6pt; color: #C9D1E0; }}
+.g-m {{ font-size: 6.6pt; color: #C9D1E0; margin-left: auto; }}
+.g-m b {{ color: #fff; font-weight: 600; }}
 tbody.keep {{ break-inside: avoid; page-break-inside: avoid; }}
 section.compact table.grid td {{ padding: 1.6px 3px; }}
-section.compact tr.grp td {{ border-top: 2px solid #fff; padding: 3px 0 1px; }}
-section.compact .ph {{ margin-bottom: 5px; }}
-.g-bar {{ display: inline-block; width: 3px; height: 9px; margin: 0 6px 0 1px; vertical-align: -1px; }}
-.g-n {{ font-size: 8.6pt; font-weight: 600; color: {INK}; }}
-.g-c {{ font-size: 6.8pt; color: {MUTED}; margin-left: 7px; }}
-.g-m {{ font-size: 6.8pt; color: {MUTED}; margin-left: 12px; }}
+section.compact tr.grp td {{ padding-top: 4px; }}
+section.compact .gb {{ padding: 1.5px 9px 1.5px 10px; }}
+section.compact .g-n {{ font-size: 11pt; }}
+section.compact .ph {{ margin-bottom: 7px; }}
 
 /* ---- карта ---- */
 section.map img {{ display: block; margin: 0 auto; break-inside: avoid; }}
@@ -245,7 +254,7 @@ const {{ chromium }} = require('/opt/node22/lib/node_modules/playwright');
         s.querySelector('img').style.maxHeight = Math.floor(PAGE - used - 14) + 'px';
         continue;
       }}
-      /* Порядок попыток: как есть → плотные строки → плотные строки и лёгкое ужатие (до 6%).
+      /* Порядок попыток: как есть → плотные строки → плотные строки и лёгкое ужатие (до 12%).
          Раздел, который всё равно не влезает в лист, печатается плотно, только если это
          убирает страницу: повтор шапки и неделимые строки съедают часть каждой следующей. */
       const H = () => s.getBoundingClientRect().height;
@@ -254,7 +263,7 @@ const {{ chromium }} = require('/opt/node22/lib/node_modules/playwright');
         const before = pages();
         s.classList.add('compact');
         if (H() <= PAGE - 8) {{}}                                    // влезло плотными строками
-        else if (H() <= PAGE * 1.06) s.style.zoom = ((PAGE - 3) / H()).toFixed(4);
+        else if (H() <= PAGE * 1.12) s.style.zoom = ((PAGE - 3) / H()).toFixed(4);
         else if (pages() >= before) s.classList.remove('compact');   // многостраничный: плотно не помогло
       }}
       const h = H();
