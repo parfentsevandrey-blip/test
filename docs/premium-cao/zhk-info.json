@@ -3503,5 +3503,30 @@
   ],
   "stage": "Строится",
   "fetched": "2026-09-11"
+ },
+ "Пушкарев 12": {
+  "id": 5782129,
+  "cianName": "Пушкарев 12",
+  "address": "Москва, Пушкарёв переулок, 12",
+  "url": "https://www.cian.ru/zhiloy-kompleks-pushkarev-12-moskva-5782129/",
+  "status": 200,
+  "developer": "СЗ Пушкарев,12",
+  "badge": "Сдача в 3 кв. 2028",
+  "delivery": "2028",
+  "done": false,
+  "finished": null,
+  "deadline": "2028",
+  "yearText": "Сдача 2028",
+  "cls": "Премиум",
+  "floors": "8",
+  "buildings": "1",
+  "houses": [
+   {
+    "house": "ЖК «Пушкарев 12»",
+    "when": "Сдача в 3 кв. 2028"
+   }
+  ],
+  "stage": "Строится",
+  "fetched": "2026-09-17"
  }
 }

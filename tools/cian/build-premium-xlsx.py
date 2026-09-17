@@ -428,6 +428,8 @@ for row in pdf['rows']:
     dv = devs.get(live, {}) if live else {}
     if pm is None: pm = int((pf + pt) / 2) if pf and pt else (pf or None)
     cd = (card(live) if live else {}) or card(name)
+    # застройщик по карточке ЖК точнее скана: у «Люче» в скане стоял Sminex, а строит MR
+    if cd.get('developer') and not m.get('developer_override'): dev = cd['developer']
     link2 = cd.get('url') or m.get('url') or dv.get('site') or ''
     if card_delivery(cd): dl = card_delivery(cd)   # срок сдачи как на карточке ЖК
     zone_by_name[short_name(name)] = z
