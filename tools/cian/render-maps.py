@@ -124,7 +124,7 @@ for md in MAPS_DEF:
         d.ellipse((x - r, y - r, x + r, y + r), fill=c, outline='white', width=5)
         t = str(i); tw = d.textlength(t, font=font_b)
         d.text((x - tw / 2, y - 21), t, fill='white', font=font_b)
-        legend.append({'n': i, 'name': p['name'], 'status': p['status'], 'address': p.get('address'), 'geo': p.get('geo')})
+        legend.append({'n': i, 'name': p['name'], 'status': p['status'], 'developer': p.get('developer'), 'address': p.get('address'), 'geo': p.get('geo')})
     # заголовок и легенда статусов на самой карте
     pad = 24
     head = f'Премиум-ЖК: {md["title"]}'

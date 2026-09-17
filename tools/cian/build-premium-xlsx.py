@@ -533,17 +533,17 @@ points = []
 for row in rows1:
     if row[0] == '__GROUP__': continue
     src = next((c for c in complexes['complexes'] if short_name(c['complex']) == row[0]), None)
-    points.append({'name': row[0], 'status': 'построено', 'zone': zone_by_name.get(row[0]), 'address': row[3], 'lat': src and src.get('lat'), 'lng': src and src.get('lng')})
+    points.append({'name': row[0], 'status': 'построено', 'zone': zone_by_name.get(row[0]), 'address': row[3], 'developer': row[1], 'lat': src and src.get('lat'), 'lng': src and src.get('lng')})
 for row in rows2:
     if row[0] == '__GROUP__': continue
     live = None
     for k, v in manual.items():
         if isinstance(v, dict) and short_name(k) == row[0] and v.get('live'): live = v['live']
     src = next((c for c in complexes['complexes'] if c['complex'] == live or short_name(c['complex']) == row[0]), None)
-    points.append({'name': row[0], 'status': 'строится', 'zone': zone_by_name.get(row[0]), 'address': row[3], 'lat': src and src.get('lat'), 'lng': src and src.get('lng')})
+    points.append({'name': row[0], 'status': 'строится', 'zone': zone_by_name.get(row[0]), 'address': row[3], 'developer': row[1], 'lat': src and src.get('lat'), 'lng': src and src.get('lng')})
 for row in rows3:
     if row[0] == '__GROUP__': continue
-    points.append({'name': row[0], 'status': 'проектирование', 'zone': zone_by_name.get(row[0]), 'address': row[1], 'lat': None, 'lng': None})
+    points.append({'name': row[0], 'status': 'проектирование', 'zone': zone_by_name.get(row[0]), 'address': row[1], 'developer': row[4], 'lat': None, 'lng': None})
 json.dump(points, open(DOCS / 'points.json', 'w'), ensure_ascii=False, indent=1)
 
 # ---------- листы-карты: карта на весь лист A3, список — отдельным листом ----------
@@ -573,9 +573,9 @@ if idx_path.exists():
         ws.print_options.horizontalCentered = True
         ws.sheet_view.showGridLines = False
 
-        rows_l = [[e['n'], e['name'], e['status'], e.get('address') or ''] for e in mp['legend']]
-        sheet(wb, f'Список · {short}'[:31], ['№ на карте', 'ЖК / площадка', 'Статус', 'Адрес'], rows_l,
-              [10, 52, 18, 66], status_col=2,
+        rows_l = [[e['n'], e['name'], e.get('developer') or '—', e['status'], e.get('address') or ''] for e in mp['legend']]
+        sheet(wb, f'Список · {short}'[:31], ['№ на карте', 'ЖК / площадка', 'Девелопер', 'Статус', 'Адрес'], rows_l,
+              [10, 46, 30, 18, 56], status_col=3,
               subtitle=f'Номера соответствуют маркерам на карте: сначала построенные, затем строящиеся, затем проектируемые')
 
 out = DOCS / 'premium-zhk-cao.xlsx'
