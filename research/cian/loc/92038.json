@@ -1,0 +1,22 @@
+{
+  "fetched": "2026-09-18",
+  "declaredCount": 0,
+  "aggregated": 0,
+  "enumerated": 0,
+  "kept": 0,
+  "jsonQuery": {
+    "_type": "commercialrent",
+    "engine_version": {
+      "type": "term",
+      "value": 2
+    },
+    "region": {
+      "type": "terms",
+      "value": [
+        92038
+      ]
+    }
+  },
+  "lots": [],
+  "flats": 0
+}

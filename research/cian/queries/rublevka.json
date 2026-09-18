@@ -1,0 +1,2 @@
+{ "_type": "commercialrent", "engine_version": { "type": "term", "value": 2 },
+  "region": { "type": "terms", "value": [21503, 55627, 338640, 30779, 385122, 60255, 44049, 92038, 142572, 127988] } }

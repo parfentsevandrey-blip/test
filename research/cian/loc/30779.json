@@ -1,0 +1,118 @@
+{
+  "fetched": "2026-09-18",
+  "declaredCount": 1,
+  "aggregated": 1,
+  "enumerated": 1,
+  "kept": 1,
+  "jsonQuery": {
+    "_type": "commercialrent",
+    "engine_version": {
+      "type": "term",
+      "value": 2
+    },
+    "region": {
+      "type": "terms",
+      "value": [
+        30779
+      ]
+    }
+  },
+  "lots": [
+    {
+      "id": 333014437,
+      "fingerprint": "4387633|1|300.0|null",
+      "houseId": 4387633,
+      "url": "https://zvenigorod.cian.ru/rent/commercial/333014437/",
+      "rooms": null,
+      "isApartments": false,
+      "totalArea": 300,
+      "livingArea": null,
+      "kitchenArea": null,
+      "floor": 1,
+      "floors": 1,
+      "buildYear": null,
+      "material": null,
+      "priceRub": 1100000,
+      "okrug": null,
+      "district": null,
+      "street": null,
+      "house": "4",
+      "metro": {
+        "name": "Одинцово",
+        "minutes": 21,
+        "byFoot": false,
+        "walkStations": 0,
+        "walkLines": 0,
+        "rail": [],
+        "planned": []
+      },
+      "complex": null,
+      "lat": 55.716701,
+      "lng": 37.115387,
+      "created": "2026-08-17",
+      "daysOnMarket": 33,
+      "bumped": "сегодня, 14:26",
+      "title": null,
+      "hasFurniture": null,
+      "decoration": null,
+      "repairType": null,
+      "flatType": null,
+      "saleType": null,
+      "deadline": null,
+      "houseFinished": null,
+      "mortgageAllowed": null,
+      "sellerType": "realtor_based",
+      "isSubAgent": true,
+      "fromDeveloper": null,
+      "parkingType": null,
+      "similarCount": 0,
+      "promoted": false,
+      "photosCount": 15,
+      "photos": [
+        "https://images.cdn-cian.ru/images/2945306132-1.jpg",
+        "https://images.cdn-cian.ru/images/2945306146-1.jpg",
+        "https://images.cdn-cian.ru/images/2945306163-1.jpg",
+        "https://images.cdn-cian.ru/images/2945306178-1.jpg",
+        "https://images.cdn-cian.ru/images/2945306190-1.jpg",
+        "https://images.cdn-cian.ru/images/2945306204-1.jpg",
+        "https://images.cdn-cian.ru/images/2945306213-1.jpg",
+        "https://images.cdn-cian.ru/images/2945306269-1.jpg",
+        "https://images.cdn-cian.ru/images/2945306287-1.jpg",
+        "https://images.cdn-cian.ru/images/2945306299-1.jpg",
+        "https://images.cdn-cian.ru/images/2945306311-1.jpg",
+        "https://images.cdn-cian.ru/images/2945306258-1.jpg",
+        "https://images.cdn-cian.ru/images/2945306333-1.jpg",
+        "https://images.cdn-cian.ru/images/2945306369-1.jpg",
+        "https://images.cdn-cian.ru/images/2945306395-1.jpg"
+      ],
+      "photosRooms": null,
+      "layoutFrames": [],
+      "photosClassified": false,
+      "description": "Код объекта: 2299913.\nСвободное коммерческое помещение 300 м² с отдельным входом в деревне Бузаево — пространство с четкой логистикой и готовой инженерией, которое легко адаптируется под разные задачи. Высота потолков 4 м создает ощущение простора и упрощает организацию хранения, стеллажей или выделение рабочих зон.\n\nПомещение одноэтажное, строение 2023 года из сэндвич-панелей — тёплое, с современными системами: кондиционирование, вентиляция, пожарная сигнализация и охрана уже подключены. Центральное отопление обеспечивает стабильный микроклимат в холодный сезон. Два раздельных санузла и свободный доступ делают эксплуатацию удобной для сотрудников и посетителей.\n\nУчасток 11 соток и наземная парковка упрощают разгрузку, приём грузов и организацию дополнительной зоны хранения или стоянки. Отдельный вход и свободный доступ повышают удобство приема клиентов и сотрудников, а косметический ремонт оставляет свободу для быстрой адаптации пространства под нужды арендатора.\n\nРасположение в Одинцовском округе обеспечивает спокойную инфраструктуру и простую подъездную часть. Готовность объекта и полноценная техническая база сокращают сроки запуска деятельности — минимальные подготовительные работы и быстрый старт эксплуатации.\n\nГотовы показать объект в удобное для вас время. Мы гарантируем безопасную сделку и юридическую поддержку нашим Клиентам.",
+      "completeness": "неизвестно",
+      "readiness": "неизвестно",
+      "features": {
+        "parkingMentioned": false,
+        "parkingSeparate": false,
+        "euroLayout": false,
+        "viewClaimed": false
+      },
+      "pricePerM2": 3667,
+      "vsBuildingPct": null,
+      "vsCohortPct": null,
+      "comparedWith": {
+        "completeness": "неизвестно",
+        "readiness": "неизвестно",
+        "inBuilding": 1,
+        "inCohort": 1
+      },
+      "listings": 1,
+      "priceMin": 1100000,
+      "priceMax": 1100000,
+      "overpay": 0,
+      "alsoListedAs": [],
+      "earliestCreated": "2026-08-17"
+    }
+  ],
+  "flats": 1
+}

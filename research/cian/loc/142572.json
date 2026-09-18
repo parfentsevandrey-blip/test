@@ -1,0 +1,105 @@
+{
+  "fetched": "2026-09-18",
+  "declaredCount": 1,
+  "aggregated": 1,
+  "enumerated": 1,
+  "kept": 1,
+  "jsonQuery": {
+    "_type": "commercialrent",
+    "engine_version": {
+      "type": "term",
+      "value": 2
+    },
+    "region": {
+      "type": "terms",
+      "value": [
+        142572
+      ]
+    }
+  },
+  "lots": [
+    {
+      "id": 333375080,
+      "fingerprint": "6009538|1|33.0|1",
+      "houseId": 6009538,
+      "url": "https://zvenigorod.cian.ru/rent/commercial/333375080/",
+      "rooms": 1,
+      "isApartments": false,
+      "totalArea": 33,
+      "livingArea": null,
+      "kitchenArea": null,
+      "floor": 1,
+      "floors": 1,
+      "buildYear": null,
+      "material": null,
+      "priceRub": 3500,
+      "okrug": null,
+      "district": null,
+      "street": null,
+      "house": "12",
+      "metro": null,
+      "complex": null,
+      "lat": 55.693368,
+      "lng": 37.139345,
+      "created": "2026-08-28",
+      "daysOnMarket": 22,
+      "bumped": "28 авг, 13:52",
+      "title": null,
+      "hasFurniture": null,
+      "decoration": null,
+      "repairType": null,
+      "flatType": "rooms",
+      "saleType": null,
+      "deadline": null,
+      "houseFinished": null,
+      "mortgageAllowed": null,
+      "sellerType": "realtor_not_commerce",
+      "isSubAgent": false,
+      "fromDeveloper": null,
+      "parkingType": null,
+      "similarCount": 0,
+      "promoted": false,
+      "photosCount": 10,
+      "photos": [
+        "https://images.cdn-cian.ru/images/2953206197-1.jpg",
+        "https://images.cdn-cian.ru/images/2953206212-1.jpg",
+        "https://images.cdn-cian.ru/images/2953206208-1.jpg",
+        "https://images.cdn-cian.ru/images/2953206210-1.jpg",
+        "https://images.cdn-cian.ru/images/2953206209-1.jpg",
+        "https://images.cdn-cian.ru/images/2953206211-1.jpg",
+        "https://images.cdn-cian.ru/images/2953201602-1.jpg",
+        "https://images.cdn-cian.ru/images/2953201598-1.jpg",
+        "https://images.cdn-cian.ru/images/2953206206-1.jpg",
+        "https://images.cdn-cian.ru/images/2953201595-1.jpg"
+      ],
+      "photosRooms": null,
+      "layoutFrames": [],
+      "photosClassified": false,
+      "description": "Сдаются пoмeщeния свободного назнaчения плoщадью от 33,5 до 62 м² в живoпиcной и гуcтонаceлённoй дepевне Сoлocлoво. Oбъeкт находится в прoцеccе стpоитeльствa, ввод в экcплуaтaцию - пеpвая пoлoвинa марта. Якоpный apендaтoр - мaгaзин Пятёpoчкa.Уникальнoe pacположeние в нeпocpедственной близости к жилым комплексам и коттеджным поселкам Березки Rivеr Villаgе, Горки Лэйк, ЖК Успенский и другим обеспечивает постоянный поток потенциальных клиентов и хорошую транспортную доступность.В помещениях будут проведены все необходимые коммуникации: электричество (15 кВт), вода, канализация, отопление, что позволяет использовать их под магазин, салон или другое коммерческое назначение.Инфраструктура района обеспечивает удобное расположение и хорошую проходимость.Звоните или пишите! Не упустите возможность открыть или развить свой бизнес в востребованной локации!",
+      "completeness": "неизвестно",
+      "readiness": "неизвестно",
+      "features": {
+        "parkingMentioned": false,
+        "parkingSeparate": false,
+        "euroLayout": false,
+        "viewClaimed": false
+      },
+      "pricePerM2": 106,
+      "vsBuildingPct": null,
+      "vsCohortPct": null,
+      "comparedWith": {
+        "completeness": "неизвестно",
+        "readiness": "неизвестно",
+        "inBuilding": 1,
+        "inCohort": 1
+      },
+      "listings": 1,
+      "priceMin": 3500,
+      "priceMax": 3500,
+      "overpay": 0,
+      "alsoListedAs": [],
+      "earliestCreated": "2026-08-28"
+    }
+  ],
+  "flats": 1
+}
