@@ -19,7 +19,8 @@ final class LanePool: @unchecked Sendable {
         var warmupTimeout: TimeInterval = 15
         var scoreWindow = 6
         var liveWindow = 16
-        /// Always below `MaxCircuitDirtiness 600`, so measured replacement always fires first.
+        /// Always below `MaxCircuitDirtiness` (600, or Turbo 4K's 1800), so measured replacement
+        /// always fires first.
         var laneLifetime: TimeInterval = 480
         var lifetimeJitter = 0.15
         var evaluateInterval: TimeInterval = 30
@@ -182,6 +183,13 @@ final class LanePool: @unchecked Sendable {
     func setHedging(_ on: Bool) {
         lock.lock()
         configuration.hedgingEnabled = on
+        lock.unlock()
+    }
+
+    /// How long a lane lives from here on; the lanes already open keep their deadlines.
+    func setLaneLifetime(_ seconds: TimeInterval) {
+        lock.lock()
+        configuration.laneLifetime = seconds
         lock.unlock()
     }
 

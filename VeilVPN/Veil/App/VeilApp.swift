@@ -45,6 +45,11 @@ struct VeilApp: App {
                     .keyboardShortcut("r", modifiers: [.command, .shift])
                     .disabled(appState.isResettingNetwork)
                 Divider()
+                Toggle("Turbo 4K", isOn: Binding(
+                    get: { appState.settings.videoTurbo },
+                    set: { appState.setVideoTurbo($0) }
+                ))
+                    .keyboardShortcut("4", modifiers: [.command, .shift])
                 Button("YouTube Turbo") { appState.toggleTurbo() }
                     .keyboardShortcut("y", modifiers: [.command, .shift])
                     .disabled(appState.connection.isActive)

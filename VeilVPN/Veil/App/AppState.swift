@@ -58,7 +58,11 @@ final class AppState {
     private(set) static weak var shared: AppState?
 
     var settings: AppSettings {
-        didSet { settings.save() }
+        didSet {
+            settings.save()
+            // Turbo 4K says what runs: a value it manages changed by hand switches it off.
+            if settings.videoTurbo, !VideoTurbo.holds(in: settings) { videoTurboBroken() }
+        }
     }
 
     private(set) var connection: ConnectionState = .disconnected
@@ -850,6 +854,7 @@ final class AppState {
             : (sharedFirstHop ? min(2, settings.lanePoolSize) : settings.lanePoolSize)
         configuration.siteMode = settings.isolatePerSite
         configuration.hedgingEnabled = settings.lanePoolHedging
+        if settings.videoTurbo { configuration.laneLifetime = VideoTurbo.laneLifetime }
         bridge.poolPort = ports.pool
         bridge.lanePool.start(poolPort: ports.pool, configuration: configuration)
     }

@@ -85,6 +85,7 @@ final class RouteTunerTests: XCTestCase {
         XCTAssertTrue(pooled.contains("NewCircuitPeriod 15"))
         XCTAssertFalse(pooled.contains { $0.hasPrefix("NumEntryGuards") || $0.hasPrefix("GuardLifetime") },
                        "nothing here may make Veil's directory behaviour unusual")
+        XCTAssertFalse(pooled.contains("MaxCircuitDirtiness 1800"), "the longer lifetime is Turbo 4K's alone")
         let line = "snowflake 192.0.2.3:80 2B28 url=https://x fronts=a,b"
         XCTAssertEqual(TorConfiguration.snowflakeLine(line, peers: 3), line + " max=3")
         XCTAssertEqual(TorConfiguration.snowflakeLine(line, peers: 1), line)

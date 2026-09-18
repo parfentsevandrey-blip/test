@@ -618,12 +618,16 @@ struct YouTubeTile: View {
                     Group {
                         if app.turboActive {
                             Text("Turbo")
+                                .foregroundStyle(.secondary)
+                        } else if app.settings.videoTurbo {
+                            Text("Turbo 4K")
+                                .foregroundStyle(.red)
                         } else {
                             Text(app.settings.youtubeMode.title)
+                                .foregroundStyle(.secondary)
                         }
                     }
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
                     .lineLimit(1)
                 }
                 SpeedBar(fraction: fraction, tint: .red)
@@ -638,14 +642,17 @@ struct YouTubeTile: View {
                         ProgressView().controlSize(.mini)
                     }
                 }
-                if !app.bridgeRunning {
-                    Button {
-                        app.startTurbo()
-                    } label: {
-                        Label("Turbo without Tor", systemImage: "bolt.fill")
+                HStack(spacing: 8) {
+                    VideoTurboButton()
+                    if !app.bridgeRunning {
+                        Button {
+                            app.startTurbo()
+                        } label: {
+                            Label("Turbo without Tor", systemImage: "bolt.fill")
+                        }
+                        .buttonStyle(.glass)
+                        .controlSize(.small)
                     }
-                    .buttonStyle(.glass)
-                    .controlSize(.small)
                 }
             }
         }
@@ -660,10 +667,64 @@ struct YouTubeTile: View {
             } else {
                 Text(verbatim: result.detail)
             }
+        } else if app.settings.videoTurbo, !app.turboActive {
+            VideoTurboStatusText(status: app.videoTurboStatus)
         } else if app.bridgeRunning {
             Text("Click to test youtube.com through Veil")
         } else {
             Text("Connect, or enable Turbo, to test")
+        }
+    }
+}
+
+/// The one button: maximum speed for YouTube through Tor, on or off.
+struct VideoTurboButton: View {
+    @Environment(AppState.self) private var app
+
+    var body: some View {
+        Group {
+            if app.settings.videoTurbo {
+                Button {
+                    app.setVideoTurbo(false)
+                } label: {
+                    Label("Turbo 4K", systemImage: "4k.tv.fill")
+                }
+                .buttonStyle(.glassProminent)
+                .tint(.red)
+            } else {
+                Button {
+                    app.setVideoTurbo(true)
+                } label: {
+                    Label("Turbo 4K", systemImage: "4k.tv")
+                }
+                .buttonStyle(.glass)
+            }
+        }
+        .controlSize(.small)
+        .help("Maximum speed for YouTube through Tor: the widest measured exit and guard, the tunnel in tone, conflux in throughput mode, no padding, no multihop. Everything stays through Tor.")
+    }
+}
+
+/// What Turbo 4K is doing right now, in one line.
+struct VideoTurboStatusText: View {
+    let status: AppState.VideoTurboStatus
+
+    var body: some View {
+        switch status {
+        case .off:
+            EmptyView()
+        case .idle:
+            Text("Turbo 4K is on; connect to use it")
+        case .capped(let transport):
+            Text("Turbo 4K: \(AppState.name(of: transport)) is the ceiling; 4K needs a direct connection or obfs4")
+        case .choosing:
+            Text("Turbo 4K: choosing the widest exit…")
+        case .running(let megabits):
+            if let megabits {
+                Text("Turbo 4K: \(AppState.megabits(megabits)) Mbit/s · enough for \(ThroughputProbe.quality(forMegabits: megabits))")
+            } else {
+                Text("Turbo 4K: measuring the video path…")
+            }
         }
     }
 }

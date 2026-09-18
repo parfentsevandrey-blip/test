@@ -85,6 +85,7 @@ extension DPIStrategy {
 struct YouTubeChip: View {
     let mode: RouteMode
     let turbo: Bool
+    var turbo4K = false
 
     var body: some View {
         SettingsLink {
@@ -95,6 +96,9 @@ struct YouTubeChip: View {
                 if turbo {
                     Text("Turbo")
                         .foregroundStyle(.secondary)
+                } else if turbo4K {
+                    Text("Turbo 4K")
+                        .foregroundStyle(.red)
                 } else {
                     Text(mode.title)
                         .foregroundStyle(.secondary)

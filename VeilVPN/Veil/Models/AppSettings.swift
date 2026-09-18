@@ -106,6 +106,10 @@ struct AppSettings: Codable, Equatable, Sendable {
     var videoKeepWarmKilobytes: Int = 512
     /// The whole time the tunnel is up, not only while a video plays.
     var videoKeepWarmAlways: Bool = true
+    /// Turbo 4K: one switch for everything that makes YouTube fast through Tor (`VideoTurbo`).
+    var videoTurbo: Bool = false
+    /// What Turbo changed, so that switching it off restores the user's own choices.
+    var videoTurboRestore: VideoTurbo.Snapshot? = nil
     var dpiStrategy: DPIStrategy = .recordAndSegmentAtSNI
     /// Extra domains that bypass Tor (one per line).
     var customDirectDomains: String = ""
@@ -150,7 +154,7 @@ struct AppSettings: Codable, Equatable, Sendable {
         case closeSessionsOnKillSwitch, httpsOnly, redactDiagnostics, updateCheckAfterConnect
         case forgetPolicy, securityPreset
         case youtubeMode, youtubeModeChosen, videoExitEnabled, videoGuardPinning
-        case videoKeepWarm, videoKeepWarmKilobytes, videoKeepWarmAlways
+        case videoKeepWarm, videoKeepWarmKilobytes, videoKeepWarmAlways, videoTurbo, videoTurboRestore
         case dpiStrategy, customDirectDomains, customDirectAntiThrottle, serviceRoutes
         case killSwitch, autoReconnect, autoResetNetwork, isolatePerSite, notificationsEnabled, soundEffects, hapticFeedback
         case checkForUpdates, skippedUpdateVersion, onboardingCompleted
@@ -210,6 +214,8 @@ struct AppSettings: Codable, Equatable, Sendable {
         videoKeepWarm = try c.decodeIfPresent(Bool.self, forKey: .videoKeepWarm) ?? d.videoKeepWarm
         videoKeepWarmKilobytes = min(1024, max(64, try c.decodeIfPresent(Int.self, forKey: .videoKeepWarmKilobytes) ?? d.videoKeepWarmKilobytes))
         videoKeepWarmAlways = try c.decodeIfPresent(Bool.self, forKey: .videoKeepWarmAlways) ?? d.videoKeepWarmAlways
+        videoTurbo = try c.decodeIfPresent(Bool.self, forKey: .videoTurbo) ?? d.videoTurbo
+        videoTurboRestore = try c.decodeIfPresent(VideoTurbo.Snapshot.self, forKey: .videoTurboRestore)
         dpiStrategy = try c.decodeIfPresent(DPIStrategy.self, forKey: .dpiStrategy) ?? d.dpiStrategy
         customDirectDomains = try c.decodeIfPresent(String.self, forKey: .customDirectDomains) ?? d.customDirectDomains
         customDirectAntiThrottle = try c.decodeIfPresent(Bool.self, forKey: .customDirectAntiThrottle) ?? d.customDirectAntiThrottle

@@ -429,6 +429,15 @@ final class TorProcessEngine: TorEngine {
         _ = try? await controller.setConfLines([("EntryNodes", nil)], timeout: .seconds(5))
     }
 
+    func applyPerformanceOptions(settings: AppSettings) async {
+        guard let controller, controller.isOpen else { return }
+        do {
+            try await controller.setConfLines(TorConfiguration.optionalAssignments(settings: settings), timeout: .seconds(5))
+        } catch {
+            emit(.veil(.debug, "Performance options were not applied live: \(error.localizedDescription)"))
+        }
+    }
+
     /// Supervises one attempt from the events Tor pushes, so a doomed attempt dies in seconds
     /// instead of burning a flat stall budget.
     func runBootstrap(_ config: BootstrapWatchdog.Config,

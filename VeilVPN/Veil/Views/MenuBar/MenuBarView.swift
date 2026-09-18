@@ -110,6 +110,15 @@ struct MenuBarView: View {
             .controlSize(.small)
 
             Toggle(isOn: Binding(
+                get: { app.settings.videoTurbo },
+                set: { app.setVideoTurbo($0) }
+            )) {
+                Label("Turbo 4K (through Tor)", systemImage: "4k.tv")
+            }
+            .toggleStyle(.switch)
+            .controlSize(.small)
+
+            Toggle(isOn: Binding(
                 get: { app.turboActive },
                 set: { _ in app.toggleTurbo() }
             )) {

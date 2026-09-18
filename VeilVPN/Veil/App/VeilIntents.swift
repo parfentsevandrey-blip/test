@@ -48,11 +48,24 @@ struct ToggleTurboIntent: AppIntent {
     }
 }
 
+struct ToggleVideoTurboIntent: AppIntent {
+    static var title: LocalizedStringResource = "Toggle Turbo 4K"
+    static var description = IntentDescription("Switches Turbo 4K — maximum speed for YouTube through Tor — on or off.")
+    static var openAppWhenRun = false
+
+    @MainActor
+    func perform() async throws -> some IntentResult {
+        AppState.shared?.toggleVideoTurbo()
+        return .result()
+    }
+}
+
 struct VeilShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(intent: ConnectIntent(), phrases: ["Connect \(.applicationName)"], shortTitle: "Connect", systemImageName: "power")
         AppShortcut(intent: DisconnectIntent(), phrases: ["Disconnect \(.applicationName)"], shortTitle: "Disconnect", systemImageName: "stop.fill")
         AppShortcut(intent: NewIdentityIntent(), phrases: ["New identity in \(.applicationName)"], shortTitle: "New Identity", systemImageName: "arrow.triangle.2.circlepath")
         AppShortcut(intent: ToggleTurboIntent(), phrases: ["Toggle YouTube Turbo in \(.applicationName)"], shortTitle: "YouTube Turbo", systemImageName: "bolt.fill")
+        AppShortcut(intent: ToggleVideoTurboIntent(), phrases: ["Toggle Turbo 4K in \(.applicationName)"], shortTitle: "Turbo 4K", systemImageName: "4k.tv")
     }
 }

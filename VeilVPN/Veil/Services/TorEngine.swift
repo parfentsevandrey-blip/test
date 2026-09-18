@@ -94,6 +94,8 @@ protocol TorEngine: AnyObject {
     func setEntryGuards(_ fingerprints: [String]) async throws
     /// Lifts the restriction; tor returns to the guards it chose itself.
     func clearEntryGuards() async
+    /// Pushes the optional performance options (conflux preference, circuit lifetime) live.
+    func applyPerformanceOptions(settings: AppSettings) async
 }
 
 /// Defaults for every warm-lifecycle member, so an engine that does not implement them still
@@ -141,6 +143,7 @@ extension TorEngine {
     func builtCircuitExits() async -> [String] { [] }
     func setEntryGuards(_ fingerprints: [String]) async throws {}
     func clearEntryGuards() async {}
+    func applyPerformanceOptions(settings: AppSettings) async {}
 }
 
 struct TrafficCounters: Equatable, Sendable {

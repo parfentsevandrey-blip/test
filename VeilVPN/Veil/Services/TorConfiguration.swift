@@ -141,11 +141,17 @@ struct TorConfiguration {
         // a video player's, say — gets more than one circuit's share.
         var lines = ["MaxClientCircuitsPending 48", "ConfluxEnabled 1",
                      "ConfluxClientUX \(settings.confluxLatency ? "latency" : "throughput")"]
-        if settings.lanePoolEnabled {
+        if settings.videoTurbo {
+            // Turbo 4K: a video is one long session, and every move to a fresh circuit is a cold
+            // start. Half an hour, by the user's choice; the lanes stay below it.
+            lines.append("MaxCircuitDirtiness \(VideoTurbo.circuitLifetimeSeconds)")
+        } else if settings.lanePoolEnabled {
             // Pinned to tor's own default on purpose: raising it would lengthen the window in
             // which one circuit links a user's activity. The pool's lane lifetime stays below it,
             // so measured, app-controlled replacement always fires first.
             lines.append("MaxCircuitDirtiness 600")
+        }
+        if settings.lanePoolEnabled {
             // Keep the stock of clean pre-built circuits alive through idle spells, so the first
             // connection after a coffee break still lands on one instead of waiting for a build.
             lines.append("CircuitsAvailableTimeout 3600")
@@ -287,6 +293,8 @@ struct TorConfiguration {
         var pairs: [(key: String, value: String?)] = []
         pairs.append(("ConfluxEnabled", "1"))
         pairs.append(("ConfluxClientUX", settings.confluxLatency ? "latency" : "throughput"))
+        // 600 is tor's own default, so this is a no-op outside Turbo and the way back out of it.
+        pairs.append(("MaxCircuitDirtiness", settings.videoTurbo ? String(VideoTurbo.circuitLifetimeSeconds) : "600"))
         if settings.paddingEnabled {
             for (key, value) in TorProcessEngine.torPaddingOptions.sorted(by: { $0.key < $1.key }) {
                 pairs.append((key, value))

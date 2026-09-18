@@ -41,6 +41,15 @@ extension AppState {
     }
 
     func applyPreset(_ preset: SecurityPreset) {
+        if settings.videoTurbo {
+            if VideoTurbo.tolerates(preset, over: settings) {
+                // The preset lands on top of Turbo, and what it set is what Turbo restores later.
+                settings.videoTurboRestore = VideoTurbo.snapshot(of: preset.applied(to: VideoTurbo.restored(settings)))
+            } else {
+                setVideoTurbo(false)
+                append(.veil(.notice, "Turbo 4K off: the \(preset.title) preset sets what it manages the other way"))
+            }
+        }
         let updated = preset.applied(to: settings)
         let wasPadding = settings.paddingEnabled
         settings = updated

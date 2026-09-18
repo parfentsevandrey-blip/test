@@ -138,7 +138,7 @@ struct HeroSection: View {
                                     .glassEffectID("padding", in: glassNamespace)
                             }
                             if app.turboActive || app.settings.youtubeMode != .tor {
-                                YouTubeChip(mode: app.settings.youtubeMode, turbo: app.turboActive)
+                                YouTubeChip(mode: app.settings.youtubeMode, turbo: app.turboActive, turbo4K: app.settings.videoTurbo)
                                     .glassEffectID("youtube", in: glassNamespace)
                             }
                         }

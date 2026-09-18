@@ -6917,6 +6917,34 @@
         }
       }
     },
+    "Maximum speed for YouTube through Tor: the widest measured exit and guard, the tunnel in tone, conflux in throughput mode, no padding, no multihop. Everything stays through Tor.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Максимальная скорость для YouTube через Tor: самые ёмкие измеренные выход и сторожевой узел, канал в тонусе, conflux в режиме пропускной способности, без маскировки и multihop. Всё остаётся через Tor."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Максимальна швидкість для YouTube через Tor: найємніші виміряні вихід і сторожовий вузол, канал у тонусі, conflux у режимі пропускної здатності, без маскування та multihop. Усе залишається через Tor."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بیشترین سرعت برای YouTube از طریق Tor: پرظرفیت‌ترین خروجی و نگهبان اندازه‌گیری‌شده، تونل در آمادگی، conflux در حالت توان عبوری، بدون لایه‌گذاری، بدون چندگام. همه چیز از طریق Tor می‌ماند."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通过 Tor 观看 YouTube 的最高速度：测量出最宽的出口和入口守卫、保持隧道活跃、conflux 吞吐量模式、无流量填充、无多跳。一切仍经由 Tor。"
+          }
+        }
+      }
+    },
     "Measure again": {
       "localizations": {
         "fa": {
@@ -8481,6 +8509,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "一个密码，只需一次"
+          }
+        }
+      }
+    },
+    "One switch for everything below that makes YouTube fast, all of it through Tor: YouTube through Tor, the widest measured exit, the widest entry guard (8K mode), the tunnel in tone at 512 KB/s or more the whole time, conflux in throughput mode, traffic padding, multihop and relay pinning off, and circuits that take new streams for half an hour instead of ten minutes. Switching it off puts each of these back as it was; changing one of them by hand switches Turbo off and puts the rest back. Behind Snowflake or meek the bridge is the ceiling and no mode lifts it: 4K needs a direct connection or obfs4.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Один переключатель для всего ниже, что делает YouTube быстрым, и всё это через Tor: YouTube через Tor, самый ёмкий измеренный выход, самый ёмкий сторожевой узел (режим 8K), канал в тонусе на 512 КБ/с и выше всё время, conflux в режиме пропускной способности, маскировка трафика, multihop и закрепление узлов выключены, а цепочки принимают новые потоки полчаса вместо десяти минут. Выключение возвращает каждую из этих настроек как было; изменение любой из них вручную выключает Turbo и возвращает остальные. За Snowflake или meek потолок — мост, и никакой режим его не поднимет: для 4K нужно прямое подключение или obfs4."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Один перемикач для всього нижче, що робить YouTube швидким, і все це через Tor: YouTube через Tor, найємніший виміряний вихід, найємніший сторожовий вузол (режим 8K), канал у тонусі на 512 КБ/с і вище весь час, conflux у режимі пропускної здатності, маскування трафіку, multihop і закріплення вузлів вимкнено, а ланцюжки приймають нові потоки півгодини замість десяти хвилин. Вимкнення повертає кожне з цих налаштувань як було; зміна будь-якого з них вручну вимикає Turbo і повертає решту. За Snowflake або meek стеля — міст, і жоден режим її не підніме: для 4K потрібне пряме підключення або obfs4."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "یک کلید برای همهٔ آنچه در زیر YouTube را سریع می‌کند، و همه‌اش از طریق Tor: YouTube از طریق Tor، پرظرفیت‌ترین خروجی اندازه‌گیری‌شده، پرظرفیت‌ترین نگهبان ورودی (حالت 8K)، تونل در آمادگی با ۵۱۲ کیلوبایت/ثانیه یا بیشتر در تمام مدت، conflux در حالت توان عبوری، لایه‌گذاری ترافیک، چندگام و ثابت کردن رله خاموش، و مدارهایی که به جای ده دقیقه نیم ساعت جریان‌های تازه می‌پذیرند. خاموش کردنش هر یک از این‌ها را به حالت قبل برمی‌گرداند؛ تغییر دستی یکی از آن‌ها Turbo را خاموش می‌کند و بقیه را برمی‌گرداند. پشت Snowflake یا meek سقفْ پل است و هیچ حالتی آن را بالا نمی‌برد: 4K به اتصال مستقیم یا obfs4 نیاز دارد."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一个开关，涵盖下方所有让 YouTube 变快的设置，且全部经由 Tor：YouTube 通过 Tor、测量出的最宽出口、最宽的入口守卫（8K 模式）、全程以 512 KB/s 或更高保持隧道活跃、conflux 吞吐量模式、关闭流量填充、多跳和中继固定，以及电路接收新流的时间从十分钟延长到半小时。关闭它会把每项设置恢复原样；手动更改其中任何一项都会关闭 Turbo 并恢复其余设置。在 Snowflake 或 meek 之后，网桥就是上限，任何模式都无法突破：4K 需要直接连接或 obfs4。"
           }
         }
       }
@@ -14781,6 +14837,230 @@
           "stringUnit": {
             "state": "translated",
             "value": "Turbo"
+          }
+        }
+      }
+    },
+    "Turbo 4K": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo 4K"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo 4K"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo 4K"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo 4K"
+          }
+        }
+      }
+    },
+    "Turbo 4K (through Tor)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo 4K (через Tor)"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo 4K (через Tor)"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo 4K (از طریق Tor)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo 4K（通过 Tor）"
+          }
+        }
+      }
+    },
+    "Turbo 4K is on; connect to use it": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo 4K включён; подключитесь, чтобы им пользоваться"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo 4K увімкнено; підключіться, щоб ним користуватися"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo 4K روشن است؛ برای استفاده متصل شوید"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo 4K 已开启；连接后即可使用"
+          }
+        }
+      }
+    },
+    "Turbo 4K: %@ Mbit/s · enough for %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo 4K: %@ Мбит/с · хватает на %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo 4K: %@ Мбіт/с · вистачає на %@"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo 4K: %@ مگابیت/ثانیه · کافی برای %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo 4K：%@ Mbit/s · 足以播放 %@"
+          }
+        }
+      }
+    },
+    "Turbo 4K: %@ is the ceiling; 4K needs a direct connection or obfs4": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo 4K: потолок — %@; для 4K нужно прямое подключение или obfs4"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo 4K: стеля — %@; для 4K потрібне пряме підключення або obfs4"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo 4K: سقف %@ است؛ 4K به اتصال مستقیم یا obfs4 نیاز دارد"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo 4K：%@ 是上限；4K 需要直接连接或 obfs4"
+          }
+        }
+      }
+    },
+    "Turbo 4K: choosing the widest exit…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo 4K: выбираем самый ёмкий выход…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo 4K: обираємо найємніший вихід…"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo 4K: در حال انتخاب پرظرفیت‌ترین خروجی…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo 4K：正在选择最宽的出口…"
+          }
+        }
+      }
+    },
+    "Turbo 4K: maximum speed for YouTube through Tor": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo 4K: максимальная скорость для YouTube через Tor"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo 4K: максимальна швидкість для YouTube через Tor"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo 4K: بیشترین سرعت برای YouTube از طریق Tor"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo 4K：通过 Tor 观看 YouTube 的最高速度"
+          }
+        }
+      }
+    },
+    "Turbo 4K: measuring the video path…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo 4K: измеряем путь видео…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo 4K: вимірюємо шлях відео…"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo 4K: در حال اندازه‌گیری مسیر ویدیو…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turbo 4K：正在测量视频路径…"
           }
         }
       }

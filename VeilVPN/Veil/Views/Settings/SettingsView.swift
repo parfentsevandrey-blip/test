@@ -185,7 +185,10 @@ struct NetworkSettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
-                Toggle("Conflux: send on the lowest-latency path", isOn: $app.settings.confluxLatency)
+                Toggle("Conflux: send on the lowest-latency path", isOn: Binding(
+                    get: { app.settings.confluxLatency },
+                    set: { app.setConfluxLatency($0) }
+                ))
                 Text("Tor builds two legs to the exit; Veil asks it to prefer the quicker one for sending instead of the one with more throughput. Applies on the next connection.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -479,6 +482,24 @@ struct YouTubeSettingsView: View {
 
     var body: some View {
         Form {
+            Section {
+                Toggle("Turbo 4K: maximum speed for YouTube through Tor", isOn: Binding(
+                    get: { app.settings.videoTurbo },
+                    set: { app.setVideoTurbo($0) }
+                ))
+                Text("One switch for everything below that makes YouTube fast, all of it through Tor: YouTube through Tor, the widest measured exit, the widest entry guard (8K mode), the tunnel in tone at 512 KB/s or more the whole time, conflux in throughput mode, traffic padding, multihop and relay pinning off, and circuits that take new streams for half an hour instead of ten minutes. Switching it off puts each of these back as it was; changing one of them by hand switches Turbo off and puts the rest back. Behind Snowflake or meek the bridge is the ceiling and no mode lifts it: 4K needs a direct connection or obfs4.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                if app.settings.videoTurbo {
+                    VideoTurboStatusText(status: app.videoTurboStatus)
+                        .font(.caption)
+                        .foregroundStyle(.mint)
+                }
+            } header: {
+                Text("Turbo 4K")
+            }
+
             Section {
                 Picker("YouTube traffic", selection: Binding(
                     get: { app.settings.youtubeMode },
