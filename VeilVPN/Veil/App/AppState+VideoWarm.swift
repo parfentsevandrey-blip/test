@@ -1,48 +1,32 @@
 import Foundation
 
 /// Drives the tonus stream: the whole time the tunnel is up (or only while a video plays, by
-/// choice), on the YouTube lane while a YouTube connection is open — so it shares the video's
-/// circuit — and on the main route otherwise. Re-leased every minute so it follows the lane the
-/// browser is actually on after a retirement. When the stream itself collapses, the path under
+/// choice), on a circuit of its own. The link it warms is the one every circuit shares — the TCP
+/// connection to the guard or the bridge, the one whose window collapses after an idle — and
+/// that link warms from any circuit through it; riding the video's own circuit, as it once did,
+/// only took its rate out of the video's share. When the stream itself collapses, the path under
 /// it has: the lanes are retired so the next connections get fresh circuits, and the video exit
 /// is asked to prove itself again.
 extension AppState {
-    private static let warmSite = "youtube.com"
-
-    private enum WarmMode: Equatable { case lane, route }
-
     var tunnelTonusWanted: Bool {
         guard connection == .connected, settings.videoKeepWarm, !engine.isSimulated else { return false }
         return settings.videoKeepWarmAlways || (httpBridge?.youtubeSessionsInFlight ?? 0) > 0
     }
 
-    private var preferredWarmMode: WarmMode {
-        settings.youtubeMode == .tor && (httpBridge?.youtubeSessionsInFlight ?? 0) > 0 && httpBridge?.poolPort != nil
-            ? .lane : .route
-    }
-
     func startVideoWarmSupervision() {
         videoWarmTask?.cancel()
         videoWarmTask = Task { [weak self] in
-            var mode: WarmMode?
-            var leasedAt: Date?
             var reachedTarget = false
             var lowSince: Date?
             var lastAction: Date?
             while !Task.isCancelled {
                 guard let self else { return }
-                let wanted = tunnelTonusWanted
-                let preferred = preferredWarmMode
-                if !wanted {
-                    if videoWarmer.isRunning || videoWarmLease != nil { releaseWarm() }
-                    mode = nil
-                    leasedAt = nil
+                if !tunnelTonusWanted {
+                    if videoWarmer.isRunning { videoWarmer.stop() }
                     reachedTarget = false
                     lowSince = nil
-                } else if !videoWarmer.isRunning || mode != preferred || laneMoved(since: leasedAt) {
-                    releaseWarm()
-                    mode = warm(preferred) ? preferred : nil
-                    leasedAt = mode == nil ? nil : .now
+                } else if !videoWarmer.isRunning {
+                    warm()
                     reachedTarget = false
                     lowSince = nil
                 } else {
@@ -65,9 +49,8 @@ extension AppState {
                         httpBridge?.lanePool.retireAll(reason: .routeChanged)
                         latency.measureNow()
                         if videoExit.isActive { startVideoExitSelection(after: .seconds(1)) }
-                        releaseWarm()
-                        mode = warm(preferred) ? preferred : nil
-                        leasedAt = mode == nil ? nil : .now
+                        videoWarmer.stop()
+                        warm()
                     }
                 }
                 do { try await Task.sleep(for: .seconds(2)) } catch { return }
@@ -78,13 +61,13 @@ extension AppState {
     func stopVideoWarmSupervision() {
         videoWarmTask?.cancel()
         videoWarmTask = nil
-        releaseWarm()
+        videoWarmer.stop()
     }
 
     func setVideoKeepWarm(_ enabled: Bool) {
         guard settings.videoKeepWarm != enabled else { return }
         settings.videoKeepWarm = enabled
-        if !enabled { releaseWarm() }
+        if !enabled { videoWarmer.stop() }
     }
 
     func setVideoKeepWarmAlways(_ always: Bool) {
@@ -96,45 +79,16 @@ extension AppState {
         let clamped = VideoWarmer.rates.min { abs($0 - kilobytes) < abs($1 - kilobytes) } ?? 512
         guard settings.videoKeepWarmKilobytes != clamped else { return }
         settings.videoKeepWarmKilobytes = clamped
-        if videoWarmer.isRunning { releaseWarm() } // the supervisor restarts it at the new rate
+        if videoWarmer.isRunning { videoWarmer.stop() } // the supervisor restarts it at the new rate
     }
 
-    /// Once a minute: has the browser's YouTube lane been replaced since the stream leased it?
-    /// Only then is the stream moved — a restart is a gap, and a gap is what this exists to avoid.
-    private func laneMoved(since leasedAt: Date?) -> Bool {
-        guard let current = videoWarmLease, let leasedAt, Date.now.timeIntervalSince(leasedAt) > 60,
-              let bridge = httpBridge, let probe = bridge.lanePool.lease(site: Self.warmSite, avoiding: nil) else {
-            return false
-        }
-        bridge.lanePool.release(probe)
-        return probe.lane != current.lane || probe.generation != current.generation
-    }
-
-    /// The lane the browser uses for YouTube is the one with the site's affinity; leasing the same
-    /// site returns it — or binds the site to a lane now, which the browser then follows too.
-    private func warm(_ mode: WarmMode) -> Bool {
-        guard let ports else { return false }
-        switch mode {
-        case .lane:
-            guard let bridge = httpBridge, let poolPort = bridge.poolPort,
-                  let lease = bridge.lanePool.lease(site: Self.warmSite, avoiding: nil) else {
-                return warm(.route)
-            }
-            videoWarmLease = lease
-            videoWarmer.start(socksPort: poolPort, credentials: lease.credentials,
-                              kilobytesPerSecond: settings.videoKeepWarmKilobytes)
-        case .route:
-            videoWarmer.start(socksPort: ports.socks, credentials: nil,
-                              kilobytesPerSecond: settings.videoKeepWarmKilobytes)
-        }
-        return true
-    }
-
-    private func releaseWarm() {
-        videoWarmer.stop()
-        if let lease = videoWarmLease {
-            videoWarmLease = nil
-            httpBridge?.lanePool.release(lease)
-        }
+    /// Credentials of its own on the plain port, so tor isolates the stream on a circuit of its
+    /// own: through the same guard as everything, which is the link it is there to warm, and on
+    /// no circuit that carries anything else — the video's, or a measurement's.
+    private func warm() {
+        guard let ports else { return }
+        let credentials = SOCKS5.Credentials(username: "veil-tonus", password: Self.randomPassword())
+        videoWarmer.start(socksPort: ports.socks, credentials: credentials,
+                          kilobytesPerSecond: settings.videoKeepWarmKilobytes)
     }
 }

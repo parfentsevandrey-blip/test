@@ -44,7 +44,7 @@ extension AppState {
             settings.videoTurboRestore = target.videoTurboRestore
             settings.videoTurbo = true
             pushVideoTurboLiveOptions()
-            append(.veil(.notice, "Turbo 4K on: YouTube through Tor by the widest measured exit and the widest guard, the tunnel in tone at \(settings.videoKeepWarmKilobytes) KB/s the whole time, conflux in throughput mode, no padding, no multihop, no relay pinning; circuits take new streams for \(VideoTurbo.circuitLifetimeSeconds / 60) minutes"))
+            append(.veil(.notice, "Turbo 4K on: YouTube through Tor by the widest measured exit, guard and lane, the tunnel in tone at \(settings.videoKeepWarmKilobytes) KB/s the whole time on a circuit of its own, conflux in throughput mode, no padding, no multihop, no relay pinning, no per-site isolation; circuits take new streams for \(VideoTurbo.circuitLifetimeSeconds / 60) minutes"))
             if connection == .connected { startVideoExitSelection(after: .seconds(1)) }
         } else {
             settings.videoTurbo = false
@@ -76,6 +76,8 @@ extension AppState {
         setPaddingEnabled(target.paddingEnabled)
         setMultihopEnabled(target.multihopEnabled)
         setConfluxLatency(target.confluxLatency)
+        if settings.isolatePerSite != target.isolatePerSite { setIsolatePerSite(target.isolatePerSite) }
+        if settings.snowflakePeers != target.snowflakePeers { settings.snowflakePeers = target.snowflakePeers }
         setYouTubeMode(target.youtubeMode)
         settings.youtubeModeChosen = target.youtubeModeChosen
         setVideoExitEnabled(target.videoExitEnabled)

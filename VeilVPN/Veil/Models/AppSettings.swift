@@ -110,6 +110,10 @@ struct AppSettings: Codable, Equatable, Sendable {
     var videoTurbo: Bool = false
     /// What Turbo changed, so that switching it off restores the user's own choices.
     var videoTurboRestore: VideoTurbo.Snapshot? = nil
+    /// The exit and guard that carried video last time, pinned again at the next connection.
+    var videoPathMemory: VideoPathMemory? = nil
+    /// Exits the video CDN turned away, by fingerprint and when: not chosen again for a week.
+    var videoExitsRefused: [String: Date] = [:]
     var dpiStrategy: DPIStrategy = .recordAndSegmentAtSNI
     /// Extra domains that bypass Tor (one per line).
     var customDirectDomains: String = ""
@@ -154,7 +158,8 @@ struct AppSettings: Codable, Equatable, Sendable {
         case closeSessionsOnKillSwitch, httpsOnly, redactDiagnostics, updateCheckAfterConnect
         case forgetPolicy, securityPreset
         case youtubeMode, youtubeModeChosen, videoExitEnabled, videoGuardPinning
-        case videoKeepWarm, videoKeepWarmKilobytes, videoKeepWarmAlways, videoTurbo, videoTurboRestore
+        case videoKeepWarm, videoKeepWarmKilobytes, videoKeepWarmAlways, videoTurbo, videoTurboRestore, videoPathMemory
+        case videoExitsRefused
         case dpiStrategy, customDirectDomains, customDirectAntiThrottle, serviceRoutes
         case killSwitch, autoReconnect, autoResetNetwork, isolatePerSite, notificationsEnabled, soundEffects, hapticFeedback
         case checkForUpdates, skippedUpdateVersion, onboardingCompleted
@@ -216,6 +221,8 @@ struct AppSettings: Codable, Equatable, Sendable {
         videoKeepWarmAlways = try c.decodeIfPresent(Bool.self, forKey: .videoKeepWarmAlways) ?? d.videoKeepWarmAlways
         videoTurbo = try c.decodeIfPresent(Bool.self, forKey: .videoTurbo) ?? d.videoTurbo
         videoTurboRestore = try c.decodeIfPresent(VideoTurbo.Snapshot.self, forKey: .videoTurboRestore)
+        videoPathMemory = try c.decodeIfPresent(VideoPathMemory.self, forKey: .videoPathMemory)
+        videoExitsRefused = try c.decodeIfPresent([String: Date].self, forKey: .videoExitsRefused) ?? d.videoExitsRefused
         dpiStrategy = try c.decodeIfPresent(DPIStrategy.self, forKey: .dpiStrategy) ?? d.dpiStrategy
         customDirectDomains = try c.decodeIfPresent(String.self, forKey: .customDirectDomains) ?? d.customDirectDomains
         customDirectAntiThrottle = try c.decodeIfPresent(Bool.self, forKey: .customDirectAntiThrottle) ?? d.customDirectAntiThrottle

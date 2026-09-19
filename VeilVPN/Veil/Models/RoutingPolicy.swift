@@ -109,6 +109,11 @@ struct RoutingPolicy: Equatable, Sendable {
         matches(host, domains: youtubeDomains)
     }
 
+    /// The media servers: what a player fetches the video itself from.
+    static func isVideoCDN(_ host: String) -> Bool {
+        matches(host, domains: ["googlevideo.com"])
+    }
+
     static func matches(_ host: String, domains: [String]) -> Bool {
         let lowered = host.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: "."))
         for domain in domains {

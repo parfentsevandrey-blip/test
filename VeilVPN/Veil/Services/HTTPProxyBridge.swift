@@ -85,6 +85,46 @@ final class HTTPProxyBridge: @unchecked Sendable {
         return hostsInFlight.values.filter { RoutingPolicy.isYouTube($0) }.count
     }
 
+    // MARK: The video CDN's verdict on the exit
+
+    /// Connections to the video CDN through Tor. An exit the CDN turns away answers every request
+    /// in a few hundred bytes, and the player opens connection after connection to get nothing —
+    /// the video that never buffers ahead and hangs. A connection that carried a megabyte says
+    /// the opposite.
+    private var videoCDNSessions: Set<ObjectIdentifier> = []
+    private var videoCDNShort: [Date] = []
+    private var videoCDNLastGoodAt: Date?
+
+    /// True when the video CDN has answered several connections in the last minute with next to
+    /// nothing and none has carried a video.
+    var videoCDNRefusing: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        let now = Date.now
+        let short = videoCDNShort.filter { now.timeIntervalSince($0) < 60 }.count
+        let good = videoCDNLastGoodAt.map { now.timeIntervalSince($0) < 60 } ?? false
+        return short >= 4 && !good
+    }
+
+    /// After the exit was changed: the new exit starts with a clean slate.
+    func resetVideoCDNSignal() {
+        lock.lock()
+        videoCDNShort = []
+        videoCDNLastGoodAt = nil
+        lock.unlock()
+    }
+
+    /// Lock held.
+    private func noteVideoCDNSession(_ summary: ProxySession.Summary) {
+        let now = Date.now
+        if summary.bytesFromUpstream >= 1_000_000 {
+            videoCDNLastGoodAt = now
+        } else if summary.bytesToUpstream >= 200, summary.bytesFromUpstream < 32_768, summary.seconds < 8 {
+            videoCDNShort.append(now)
+        }
+        videoCDNShort = videoCDNShort.filter { now.timeIntervalSince($0) < 60 }
+    }
+
     /// Cuts every open connection. The kill switch refuses new ones on its own; this is what makes
     /// it apply to the download that was already running.
     func closeAllSessions() {
@@ -211,6 +251,9 @@ final class HTTPProxyBridge: @unchecked Sendable {
             if decision != nil, !host.isEmpty {
                 self.lock.lock()
                 self.hostsInFlight[ObjectIdentifier(session)] = host
+                if case .some(.tor) = decision, RoutingPolicy.isVideoCDN(host) {
+                    self.videoCDNSessions.insert(ObjectIdentifier(session))
+                }
                 self.lock.unlock()
             }
         }, onOutcome: { [weak self] outcome in
@@ -220,6 +263,9 @@ final class HTTPProxyBridge: @unchecked Sendable {
             self.lock.lock()
             self.sessions[ObjectIdentifier(finished)] = nil
             self.hostsInFlight[ObjectIdentifier(finished)] = nil
+            if self.videoCDNSessions.remove(ObjectIdentifier(finished)) != nil {
+                self.noteVideoCDNSession(finished.summary)
+            }
             self.lock.unlock()
         })
         lock.lock()
@@ -284,6 +330,21 @@ final class ProxySession: @unchecked Sendable {
     private var pendingPort: UInt16 = 0
     private var pendingIsOnion = false
     private var hedgeDelay: TimeInterval?
+    private var bytesFromUpstream = 0
+    private var bytesToUpstream = 0
+    private var pipingStartedAt: DispatchTime?
+
+    /// What the connection carried. Read on the session's queue, where the counters live.
+    struct Summary: Sendable {
+        let bytesFromUpstream: Int
+        let bytesToUpstream: Int
+        let seconds: TimeInterval
+    }
+
+    var summary: Summary {
+        let seconds = pipingStartedAt.map { Double(DispatchTime.now().uptimeNanoseconds &- $0.uptimeNanoseconds) / 1e9 } ?? 0
+        return Summary(bytesFromUpstream: bytesFromUpstream, bytesToUpstream: bytesToUpstream, seconds: seconds)
+    }
 
     init(client: NWConnection, socksPort: UInt16?, policy: RoutingPolicy, blocked: Bool,
          pool: LanePool?, poolPort: UInt16?, transport: AppSettings.Transport, connectedAt: Date?,
@@ -810,6 +871,7 @@ final class ProxySession: @unchecked Sendable {
             close()
             return
         }
+        pipingStartedAt = .now()
         pipe(from: client, to: upstream)
         pipe(from: upstream, to: client)
     }
@@ -818,6 +880,11 @@ final class ProxySession: @unchecked Sendable {
         source.receive(minimumIncompleteLength: 1, maximumLength: 65536) { [weak self] data, _, isComplete, error in
             guard let self, !self.closed else { return }
             if let data, !data.isEmpty {
+                if source === self.upstream {
+                    self.bytesFromUpstream += data.count
+                } else {
+                    self.bytesToUpstream += data.count
+                }
                 destination.send(content: data, completion: .contentProcessed { [weak self] sendError in
                     guard let self, !self.closed else { return }
                     if sendError != nil {

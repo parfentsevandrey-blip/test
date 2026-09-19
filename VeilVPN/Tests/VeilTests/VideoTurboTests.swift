@@ -16,6 +16,8 @@ final class VideoTurboTests: XCTestCase {
         settings.paddingEnabled = true
         settings.multihopEnabled = true
         settings.latencyTuning = true
+        settings.isolatePerSite = true
+        settings.snowflakePeers = 2
         return settings
     }
 
@@ -34,12 +36,14 @@ final class VideoTurboTests: XCTestCase {
         XCTAssertFalse(on.paddingEnabled)
         XCTAssertFalse(on.multihopEnabled)
         XCTAssertFalse(on.latencyTuning)
+        XCTAssertFalse(on.isolatePerSite, "the lane race needs the pool's lanes")
+        XCTAssertEqual(on.snowflakePeers, VideoTurbo.snowflakePeers)
         XCTAssertEqual(on.videoTurboRestore, VideoTurbo.snapshot(of: base))
         // Nothing outside its remit moves.
         XCTAssertEqual(on.transport, base.transport)
         XCTAssertEqual(on.lanePoolEnabled, base.lanePoolEnabled)
-        XCTAssertEqual(on.isolatePerSite, base.isolatePerSite)
         XCTAssertEqual(on.excludedCountries, base.excludedCountries)
+        XCTAssertEqual(on.killSwitch, base.killSwitch)
     }
 
     func testSwitchingOffPutsTheUsersOwnChoicesBack() {
@@ -71,6 +75,8 @@ final class VideoTurboTests: XCTestCase {
         XCTAssertTrue(off.confluxLatency)
         XCTAssertTrue(off.multihopEnabled)
         XCTAssertTrue(off.latencyTuning)
+        XCTAssertTrue(off.isolatePerSite)
+        XCTAssertEqual(off.snowflakePeers, 2)
         XCTAssertEqual(off.videoKeepWarmKilobytes, 128)
         var lowered = VideoTurbo.applied(to: base)
         lowered.videoKeepWarmKilobytes = 256
@@ -126,8 +132,12 @@ final class VideoTurboTests: XCTestCase {
 
     func testAPresetIsToleratedOnlyWhenItSetsNothingTheOtherWay() {
         let base = AppSettings()
-        XCTAssertTrue(VideoTurbo.tolerates(.balanced, over: base))
+        XCTAssertFalse(VideoTurbo.tolerates(.balanced, over: base), "per-site isolation contradicts the lane race")
         XCTAssertFalse(VideoTurbo.tolerates(.privacyFirst, over: base), "padding on contradicts Turbo")
         XCTAssertFalse(VideoTurbo.tolerates(.speedFirst, over: base), "YouTube outside Tor contradicts Turbo")
+        // A preset that leaves Turbo's remit alone lands on top of it.
+        var tolerant = VideoTurbo.applied(to: base)
+        tolerant.killSwitch = false
+        XCTAssertTrue(VideoTurbo.holds(in: tolerant))
     }
 }

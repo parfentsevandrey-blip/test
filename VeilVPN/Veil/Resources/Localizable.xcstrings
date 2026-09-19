@@ -169,6 +169,34 @@
         }
       }
     },
+    ", guard %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ", сторожевой узел %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ", сторожовий вузол %@"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "، نگهبان %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "，守卫 %@"
+          }
+        }
+      }
+    },
     "8K mode: pin a high-capacity entry guard": {
       "localizations": {
         "ru": {
@@ -361,34 +389,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "播放器取一段、等待、再取一段；间隙里每一跳的 TCP 窗口都退回慢启动，下一次突发只能慢慢爬升——这就是速度图上的锯齿，以及突发赶不上缓冲时的卡顿。只要有 YouTube 连接打开，Veil 就在同一条链路上维持一股小而稳定的流——每秒几次向 YouTube 图片 CDN 发出小请求——让每一跳都保持满窗口。该速率是消耗在中继和你线路上的带宽；128 KB/s 足以维持窗口，更高只会与视频争抢。"
-          }
-        }
-      }
-    },
-    "A steady stream of small requests to YouTube's image CDN, several times a second, at the rate you set. It keeps every hop's TCP window open and the first link busy, so a burst never starts from a cold pipe — the sawtooth on the speed graph and the stall behind it. While a YouTube connection is open it rides the video's own circuit; otherwise the main route, which shares the guard or bridge link with everything. When the stream itself collapses, the circuits are retired and the video exit is re-checked. The rate is bandwidth spent on relays and on your link the whole time it runs.": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ровный поток маленьких запросов к CDN картинок YouTube, несколько раз в секунду, на заданной вами скорости. Он держит TCP-окно на каждом хопе открытым, а первое звено — занятым, так что порция никогда не стартует из холодной трубы — та самая «пила» на графике скорости и подвисание за ней. Пока открыто соединение с YouTube, поток идёт по цепочке самого видео; иначе — по основному маршруту, который делит звено guard или моста со всем остальным. Когда сам поток проваливается, цепочки заменяются, а выход для видео перепроверяется. Скорость — это полоса, которая тратится на узлах и на вашем канале всё время, пока поток идёт."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Рівний потік маленьких запитів до CDN картинок YouTube, кілька разів на секунду, на заданій вами швидкості. Він тримає TCP-вікно на кожному хопі відкритим, а першу ланку — зайнятою, тож порція ніколи не стартує з холодної труби — та сама «пилка» на графіку швидкості й підвисання за нею. Поки відкрито з'єднання з YouTube, потік іде ланцюжком самого відео; інакше — основним маршрутом, який ділить ланку guard чи моста з усім іншим. Коли сам потік провалюється, ланцюжки замінюються, а вихід для відео перевіряється знову. Швидкість — це смуга, що витрачається на вузлах і на вашому каналі весь час, поки потік іде."
-          }
-        },
-        "fa": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "جریانی پیوسته از درخواست‌های کوچک به CDN تصاویر YouTube، چند بار در ثانیه، با نرخی که تعیین می‌کنید. پنجرهٔ TCP هر گام را باز و پیوند اول را مشغول نگه می‌دارد تا هیچ انفجاری از لولهٔ سرد شروع نشود — همان دندانه‌اره روی نمودار سرعت و توقف پشت آن. تا وقتی اتصالی به YouTube باز است روی مدار خود ویدیو می‌رود؛ در غیر این صورت روی مسیر اصلی که پیوند نگهبان یا پل را با همه‌چیز شریک است. وقتی خود جریان فرو می‌ریزد، مدارها بازنشسته و خروجی ویدیو دوباره بررسی می‌شود. این نرخ پهنای باندی است که در تمام مدت اجرا روی رله‌ها و پیوند شما خرج می‌شود."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "以你设定的速率，每秒数次向 YouTube 图片 CDN 发送小请求的稳定流。它让每一跳的 TCP 窗口保持打开、首段链路保持忙碌，突发永远不会从冷管道起步——这就是速度图上的锯齿及其背后的卡顿。YouTube 连接打开时它走视频自身的链路；否则走主路由，该路由与一切共用守卫或网桥链路。当流本身崩塌时，链路会被更换，视频出口会被重新检查。该速率是流运行全程消耗在中继和你线路上的带宽。"
           }
         }
       }
@@ -617,30 +617,30 @@
         }
       }
     },
-    "After connecting, Veil picks one of the highest-capacity exit relays and sends every YouTube host through it, so the page and the video share one exit and a wide pipe. Only YouTube is affected; every other site keeps Tor's own exit choice.": {
+    "After connecting, Veil picks one of the highest-capacity exit relays and sends every YouTube host through it, so the page and the video share one exit and a wide pipe. Only YouTube is affected; every other site keeps Tor's own exit choice. Candidates must offer conflux and congestion control. The exit that carried video last time is pinned again within seconds of the next connection and kept while it carries most of what it did; an exit the video CDN turns away is dropped for a week and another chosen at once.": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "После подключения Veil выбирает один из самых ёмких выходных узлов и пускает через него все хосты YouTube: страница и видео идут через один выход и широкий канал. Затрагивается только YouTube; остальные сайты остаются на выборе выхода самим Tor."
+            "value": "После подключения Veil выбирает один из самых ёмких выходных узлов и направляет через него все хосты YouTube, так что страница и видео делят один выход и широкий канал. Затрагивается только YouTube; остальные сайты сохраняют собственный выбор выхода Tor. Кандидаты обязаны поддерживать conflux и управление перегрузкой. Выход, который нёс видео в прошлый раз, закрепляется снова через секунды после следующего подключения и остаётся, пока несёт большую часть прежнего; выход, который отвергает CDN видео, отбрасывается на неделю, и тут же выбирается другой."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Після підключення Veil обирає один із найпотужніших вихідних вузлів і пускає через нього всі хости YouTube: сторінка й відео йдуть через один вихід і широкий канал. Стосується лише YouTube; решта сайтів лишається на виборі виходу самим Tor."
+            "value": "Після підключення Veil обирає один із найємніших вихідних вузлів і спрямовує через нього всі хости YouTube, тож сторінка й відео ділять один вихід і широкий канал. Зачіпається лише YouTube; решта сайтів зберігає власний вибір виходу Tor. Кандидати мусять підтримувати conflux і керування перевантаженням. Вихід, який ніс відео минулого разу, закріплюється знову за секунди після наступного підключення й залишається, поки несе більшу частину колишнього; вихід, який відкидає CDN відео, відкидається на тиждень, і одразу обирається інший."
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "پس از اتصال، Veil یکی از پرظرفیت‌ترین رله‌های خروجی را برمی‌گزیند و همهٔ میزبان‌های YouTube را از آن عبور می‌دهد تا صفحه و ویدیو از یک خروجی و یک لولهٔ پهن بگذرند. فقط YouTube تحت تأثیر است؛ سایت‌های دیگر با انتخاب خروجی خود Tor می‌مانند."
+            "value": "پس از اتصال، Veil یکی از پرظرفیت‌ترین رله‌های خروجی را برمی‌گزیند و همهٔ میزبان‌های YouTube را از آن عبور می‌دهد تا صفحه و ویدیو یک خروجی و یک مسیر پهن مشترک داشته باشند. فقط YouTube تحت تأثیر است؛ سایت‌های دیگر انتخاب خروجی خود Tor را نگه می‌دارند. نامزدها باید conflux و کنترل ازدحام را عرضه کنند. خروجی‌ای که بار قبل ویدیو را حمل کرد، چند ثانیه پس از اتصال بعدی دوباره ثابت می‌شود و تا وقتی بیشتر آنچه حمل می‌کرد را حمل کند می‌ماند؛ خروجی‌ای که CDN ویدیو آن را رد کند یک هفته کنار گذاشته می‌شود و بلافاصله دیگری انتخاب می‌شود."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "连接后，Veil 会选择一个容量最大的出口节点，并让所有 YouTube 主机都经由它，这样页面与视频共用同一出口和一条宽通道。仅影响 YouTube；其他站点仍由 Tor 自行选择出口。"
+            "value": "连接后，Veil 会选择容量最高的出口中继之一，并让所有 YouTube 主机经由它，使页面与视频共用一个出口和一条宽管道。仅影响 YouTube；其他站点保留 Tor 自己的出口选择。候选出口必须支持 conflux 和拥塞控制。上次承载视频的出口会在下次连接后的几秒内再次固定，只要它仍承载大部分先前的速率就保留；被视频 CDN 拒绝的出口会被排除一周，并立即改选另一个。"
           }
         }
       }
@@ -8373,30 +8373,30 @@
         }
       }
     },
-    "On a direct connection the first hop caps everything. With this on, Veil restricts Tor's entry guard to the three widest guards in the consensus and keeps the restriction only once a circuit through one of them has been built. Every site then goes through that guard, not only YouTube, and the Security screen counts it. Bridges keep their own first hop, so behind Snowflake, obfs4 or meek this does nothing.": {
+    "On a direct connection the first hop caps everything. With this on, Veil restricts Tor's entry guard to the three widest guards in the consensus and keeps the restriction only once a circuit through one of them has been built. Under Turbo 4K the three are timed one at a time through one wide exit and the winner is pinned alone; a guard with no circuit for half a minute is let go, and the guard that carried the video last time is remembered. Every site then goes through that guard, not only YouTube, and the Security screen counts it. Bridges keep their own first hop, so behind Snowflake, obfs4 or meek this does nothing.": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "При прямом подключении первый хоп ограничивает всё. С этим переключателем Veil ограничивает сторожевой узел Tor тремя самыми ёмкими guard-узлами консенсуса и оставляет ограничение, только когда цепочка через один из них действительно построена. Через этот узел затем идут все сайты, не только YouTube, и экран «Безопасность» это учитывает. Мосты сохраняют свой первый хоп, так что за Snowflake, obfs4 или meek это ничего не делает."
+            "value": "При прямом подключении первый хоп ограничивает всё. С этой опцией Veil ограничивает сторожевой узел Tor тремя самыми ёмкими guard-узлами консенсуса и оставляет ограничение, только когда цепочка через один из них построена. Под Turbo 4K эти три замеряются по очереди через один широкий выход, и победитель закрепляется в одиночку; узел, через который полминуты нет цепочек, отпускается, а узел, нёсший видео в прошлый раз, запоминается. Все сайты тогда идут через этот узел, не только YouTube, и экран «Безопасность» это учитывает. Мосты сохраняют свой первый хоп, так что за Snowflake, obfs4 или meek это ничего не делает."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "За прямого підключення перший хоп обмежує все. З цим перемикачем Veil обмежує сторожовий вузол Tor трьома найємнішими guard-вузлами консенсусу й лишає обмеження лише коли ланцюжок через один із них справді збудовано. Через цей вузол далі йдуть усі сайти, не лише YouTube, і екран «Безпека» це враховує. Мости зберігають свій перший хоп, тож за Snowflake, obfs4 чи meek це нічого не робить."
+            "value": "За прямого підключення перший хоп обмежує все. З цією опцією Veil обмежує сторожовий вузол Tor трьома найємнішими guard-вузлами консенсусу й лишає обмеження, лише коли ланцюжок через один із них побудовано. Під Turbo 4K ці три вимірюються по черзі через один широкий вихід, і переможець закріплюється сам; вузол, через який півхвилини немає ланцюжків, відпускається, а вузол, що ніс відео минулого разу, запам'ятовується. Усі сайти тоді йдуть через цей вузол, не лише YouTube, і екран «Безпека» це враховує. Мости зберігають свій перший хоп, тож за Snowflake, obfs4 чи meek це нічого не робить."
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "در اتصال مستقیم، گام اول سقف همه‌چیز است. با روشن بودن این گزینه، Veil نگهبان ورودی Tor را به سه نگهبان پرظرفیت اجماع محدود می‌کند و این محدودیت را فقط وقتی نگه می‌دارد که مداری از یکی از آن‌ها ساخته شده باشد. سپس همهٔ سایت‌ها، نه فقط YouTube، از آن نگهبان می‌گذرند و صفحهٔ امنیت آن را به حساب می‌آورد. پل‌ها گام اول خود را دارند، پس پشت Snowflake، obfs4 یا meek این کاری نمی‌کند."
+            "value": "در اتصال مستقیم، گام اول همه چیز را محدود می‌کند. با این گزینه، Veil نگهبان ورودی Tor را به سه نگهبان پرظرفیت اجماع محدود می‌کند و محدودیت را فقط وقتی نگه می‌دارد که مداری از یکی از آن‌ها ساخته شده باشد. زیر Turbo 4K این سه یکی‌یکی از طریق یک خروجی پهن زمان‌سنجی می‌شوند و برنده به‌تنهایی ثابت می‌شود؛ نگهبانی که نیم دقیقه مداری ندارد رها می‌شود و نگهبانی که بار قبل ویدیو را حمل کرد به خاطر سپرده می‌شود. آنگاه همهٔ سایت‌ها، نه فقط YouTube، از آن نگهبان می‌گذرند و صفحهٔ امنیت آن را می‌شمارد. پل‌ها گام اول خودشان را نگه می‌دارند، پس پشت Snowflake، obfs4 یا meek این کاری نمی‌کند."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "直连时第一跳限制一切。开启后，Veil 会将 Tor 的入口守卫限制为共识中容量最大的三个守卫节点，并且只有在经其中之一成功建立链路后才保留该限制。之后所有站点（不仅是 YouTube）都经该守卫，安全页面会计入此项。网桥保留自己的第一跳，因此在 Snowflake、obfs4 或 meek 之后此选项不起作用。"
+            "value": "在直接连接中，第一跳限制着一切。开启后，Veil 会把 Tor 的入口守卫限制为共识中最宽的三个守卫，并且只有在经由其中之一建立了电路后才保留该限制。在 Turbo 4K 下，这三个守卫会经由同一个宽出口逐一计时，胜者被单独固定；半分钟内没有任何电路的守卫会被放弃，上次承载视频的守卫会被记住。之后所有站点（不仅是 YouTube）都经由该守卫，安全页面会计入这一点。网桥保留自己的第一跳，因此在 Snowflake、obfs4 或 meek 之后此项无效。"
           }
         }
       }
@@ -8453,6 +8453,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "一条链路承载所有站点"
+          }
+        }
+      }
+    },
+    "One continuous download of a large public file at the rate you set, read in fixed slices ten times a second, on a circuit of its own through the same guard. The link it warms is the one every circuit shares — the TCP connection to the guard or the bridge, whose window collapses after an idle and makes every burst start from a cold pipe: the sawtooth on the speed graph and the stall behind it. On its own circuit it competes with the video nowhere. When the stream itself collapses, the circuits are retired and the video exit is re-checked. The rate is bandwidth spent on relays and on your link the whole time it runs.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Одна непрерывная загрузка большого публичного файла на заданной скорости, читаемая фиксированными кусками десять раз в секунду, по собственной цепочке через тот же guard. Звено, которое она греет, — то, что делят все цепочки: TCP-соединение с guard или мостом, чьё окно схлопывается после простоя и заставляет каждую порцию стартовать с холодного канала — та самая «пила» на графике скорости и подвисание за ней. На собственной цепочке она нигде не конкурирует с видео. Когда сам поток обрывается, цепочки заменяются, а выход для видео проверяется заново. Скорость — это трафик, расходуемый на узлах и вашем канале всё время работы."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Одне безперервне завантаження великого публічного файлу на заданій швидкості, що читається фіксованими шматками десять разів на секунду, власним ланцюжком через той самий guard. Ланка, яку воно гріє, — та, що її ділять усі ланцюжки: TCP-з'єднання з guard або мостом, чиє вікно згортається після простою і змушує кожну порцію стартувати з холодного каналу — та сама «пилка» на графіку швидкості й зависання за нею. На власному ланцюжку воно ніде не конкурує з відео. Коли сам потік обривається, ланцюжки замінюються, а вихід для відео перевіряється знову. Швидкість — це трафік, що витрачається на вузлах і вашому каналі весь час роботи."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "یک دانلود پیوسته از یک فایل عمومی بزرگ با نرخی که تعیین کرده‌اید، ده بار در ثانیه در برش‌های ثابت خوانده می‌شود، روی مداری از آن خودش از همان نگهبان. پیوندی که گرم می‌کند همان است که همهٔ مدارها در آن شریک‌اند — اتصال TCP به نگهبان یا پل، که پنجره‌اش پس از بیکاری فرو می‌ریزد و هر انفجار داده را از لولهٔ سرد آغاز می‌کند: همان دندانه‌اره در نمودار سرعت و توقف پشت آن. روی مدار خودش هیچ‌جا با ویدیو رقابت نمی‌کند. وقتی خود جریان فرو می‌ریزد، مدارها بازنشسته می‌شوند و خروجی ویدیو دوباره بررسی می‌شود. این نرخ پهنای باندی است که در تمام مدت اجرا روی رله‌ها و پیوند شما خرج می‌شود."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以你设定的速率持续下载一个大型公共文件，每秒十次按固定切片读取，走经由同一守卫的独立电路。它保暖的链路正是所有电路共享的那一条：到守卫或网桥的 TCP 连接，其窗口会在空闲后收缩，使每次突发都从冷管道起步——速度图上的锯齿和随之而来的卡顿。在独立电路上，它不会在任何地方与视频竞争。当流本身中断时，电路会被更换，视频出口会被重新检查。该速率是整个运行期间在中继和你的链路上消耗的带宽。"
           }
         }
       }
@@ -10021,6 +10049,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "链路建立后，中继位置会显示在这里。"
+          }
+        }
+      }
+    },
+    "Remembered path: exit %@%@ · %@ Mbit/s · %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запомненный путь: выход %@%@ · %@ Мбит/с · %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запам'ятований шлях: вихід %@%@ · %@ Мбіт/с · %@"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مسیر به‌خاطرسپرده: خروجی %@%@ · %@ مگابیت/ثانیه · %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "记住的路径：出口 %@%@ · %@ Mbit/s · %@"
           }
         }
       }
@@ -15901,6 +15957,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "视频出口：%@ %@ · 实测 %@ Mbit/s · 足以支持 %@"
+          }
+        }
+      }
+    },
+    "Video lane %@: %@ Mbit/s, the widest of %lld circuits through the video exit": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Полоса видео %@: %@ Мбит/с, самая широкая из %lld цепочек через выход для видео"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Смуга відео %@: %@ Мбіт/с, найширша з %lld ланцюжків через вихід для відео"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خط ویدیو %@: %@ مگابیت/ثانیه، پهن‌ترین از %lld مدار از طریق خروجی ویدیو"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "视频通道 %@：%@ Mbit/s，是经由视频出口的 %lld 条电路中最宽的"
           }
         }
       }

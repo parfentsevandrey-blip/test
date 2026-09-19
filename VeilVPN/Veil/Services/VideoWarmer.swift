@@ -12,9 +12,9 @@ import Observation
 /// This pulls a large public file through the tunnel and reads it in fixed slices, ten times a
 /// second: the receive window does the pacing, so the sender delivers a steady stream at the set
 /// rate with no request/response gaps at all. When the file ends the next one starts at once;
-/// when a source fails the next source is tried; it never gives up while wanted. On the YouTube
-/// lane's own credentials it rides the video's circuit and exit; on the plain SOCKS port it
-/// rides the main route, which shares the guard or bridge link with everything.
+/// when a source fails the next source is tried; it never gives up while wanted. With credentials
+/// of its own it rides a circuit of its own through the same guard — the link it is there to
+/// warm — and competes with nothing else on any circuit.
 @MainActor
 @Observable
 final class VideoWarmer {
@@ -75,7 +75,7 @@ final class VideoWarmer {
         requests = 0
         failures = 0
         targetKilobytes = rate
-        onLog?(.veil(.info, "Tunnel tonus: \(rate) KB/s \(credentials == nil ? "on the main route" : "on the YouTube lane"), continuous"))
+        onLog?(.veil(.info, "Tunnel tonus: \(rate) KB/s \(credentials == nil ? "on the main route" : "on a circuit of its own"), continuous"))
         task = Task { [weak self] in
             await self?.run(socksPort: socksPort, credentials: credentials, rate: rate)
         }

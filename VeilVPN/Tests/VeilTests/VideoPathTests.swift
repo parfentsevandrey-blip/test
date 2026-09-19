@@ -28,6 +28,65 @@ final class VideoPathTests: XCTestCase {
         XCTAssertEqual(ThroughputProbe.quality(forMegabits: 1), "480p")
     }
 
+    func testProtocolLinesSayWhetherARelayIsModern() throws {
+        let text = """
+        r Old AAAAAAAAAAAAAAAAAAAAAAAAAAA BBBBBBBBBBBBBBBBBBBBBBBBBBB 2026-09-01 00:00:00 192.0.2.1 9001 0
+        s Exit Fast Running Stable Valid
+        v Tor 0.4.5.7
+        pr Cons=1-2 Desc=1-2 DirCache=2 FlowCtrl=1 HSDir=2 Link=1-5 Microdesc=1-2 Relay=1-3
+        w Bandwidth=90000
+        p accept 80,443
+        r New AQEBAQEBAQEBAQEBAQEBAQEBAQE BBBBBBBBBBBBBBBBBBBBBBBBBBB 2026-09-01 00:00:00 192.0.2.2 9001 0
+        s Exit Fast Running Stable Valid
+        v Tor 0.4.8.10
+        pr Conflux=1 Cons=1-2 Desc=1-2 DirCache=2 FlowCtrl=1-2 HSDir=2 Link=1-5 Microdesc=1-2 Relay=1-4
+        w Bandwidth=50000
+        p accept 80,443
+        r Mute AgICAgICAgICAgICAgICAgICAgI BBBBBBBBBBBBBBBBBBBBBBBBBBB 2026-09-01 00:00:00 192.0.2.3 9001 0
+        s Exit Fast Running Stable Valid
+        w Bandwidth=40000
+        p accept 443
+        """
+        let relays = ExitCatalog.parse(text)
+        XCTAssertEqual(relays.map(\.nickname), ["Old", "New", "Mute"])
+        let old = try XCTUnwrap(relays.first { $0.nickname == "Old" })
+        XCTAssertFalse(old.supportsConflux)
+        XCTAssertFalse(old.supportsCongestionControl, "FlowCtrl=1 is the old window, not congestion control")
+        XCTAssertFalse(old.isModern)
+        XCTAssertTrue(old.allows80)
+        let new = try XCTUnwrap(relays.first { $0.nickname == "New" })
+        XCTAssertTrue(new.isModern)
+        let mute = try XCTUnwrap(relays.first { $0.nickname == "Mute" })
+        XCTAssertTrue(mute.isModern, "no pr line is taken as capable, like no policy summary")
+        XCTAssertFalse(mute.allows80, "the measurement stream is plain HTTP")
+        XCTAssertEqual(ExitCatalog.rank(relays).map(\.nickname), ["Old", "New", "Mute"])
+        XCTAssertEqual(ExitCatalog.rank(relays, modernOnly: true).map(\.nickname), ["New"],
+                       "a video exit needs two legs, congestion control and port 80")
+        XCTAssertTrue(ExitCatalog.protocolIncludes(["FlowCtrl=1-2"], name: "FlowCtrl", version: 2))
+        XCTAssertFalse(ExitCatalog.protocolIncludes(["FlowCtrl=1"], name: "FlowCtrl", version: 2))
+        XCTAssertFalse(ExitCatalog.protocolIncludes(["Relay=1-4"], name: "Conflux", version: 1))
+    }
+
+    func testTheRememberedPathIsFreshForAWeekOnTheSameTransport() throws {
+        var memory = VideoPathMemory(exitFingerprint: String(repeating: "A", count: 40), exitNickname: "wide",
+                                     exitCountry: "de", exitBandwidth: 90_000, guardFingerprint: nil, guardNickname: nil,
+                                     megabits: 30, measuredAt: .now, transport: .direct)
+        XCTAssertTrue(memory.isFresh(transport: .direct))
+        XCTAssertFalse(memory.isFresh(transport: .snowflake), "a different first hop says nothing about the numbers")
+        memory.measuredAt = Date.now.addingTimeInterval(-8 * 24 * 3600)
+        XCTAssertFalse(memory.isFresh(transport: .direct))
+        var settings = AppSettings()
+        settings.videoPathMemory = memory
+        settings.videoExitsRefused = [String(repeating: "B", count: 40): .now]
+        let decoded = try JSONDecoder().decode(AppSettings.self, from: JSONEncoder().encode(settings))
+        XCTAssertEqual(decoded.videoPathMemory?.exitFingerprint, memory.exitFingerprint)
+        XCTAssertEqual(decoded.videoPathMemory?.megabits, 30)
+        XCTAssertEqual(decoded.videoExitsRefused.count, 1)
+        let old = try JSONDecoder().decode(AppSettings.self, from: Data("{}".utf8))
+        XCTAssertNil(old.videoPathMemory)
+        XCTAssertTrue(old.videoExitsRefused.isEmpty)
+    }
+
     func testGuardsAreRankedByCapacityAmongStableGuards() {
         let a = relay("A", flags: ["Guard", "Fast", "Stable", "Running", "Valid"], bandwidth: 50_000)
         let b = relay("B", flags: ["Guard", "Fast", "Stable", "Running", "Valid"], bandwidth: 90_000)

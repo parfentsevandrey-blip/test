@@ -495,6 +495,17 @@ struct YouTubeSettingsView: View {
                     VideoTurboStatusText(status: app.videoTurboStatus)
                         .font(.caption)
                         .foregroundStyle(.mint)
+                    if let lane = app.videoLane {
+                        Text("Video lane \(String(lane.lane)): \(AppState.megabits(lane.megabits)) Mbit/s, the widest of \(lane.field.count) circuits through the video exit")
+                            .font(.caption)
+                            .foregroundStyle(.mint)
+                    }
+                    if let memory = app.settings.videoPathMemory {
+                        let guardPart = memory.guardNickname.map { String(localized: ", guard \($0)") } ?? ""
+                        Text("Remembered path: exit \(memory.exitNickname)\(guardPart) · \(AppState.megabits(memory.megabits)) Mbit/s · \(memory.measuredAt.formatted(.relative(presentation: .named)))")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             } header: {
                 Text("Turbo 4K")
@@ -520,7 +531,7 @@ struct YouTubeSettingsView: View {
                         get: { app.settings.videoExitEnabled },
                         set: { app.setVideoExitEnabled($0) }
                     ))
-                    Text("After connecting, Veil picks one of the highest-capacity exit relays and sends every YouTube host through it, so the page and the video share one exit and a wide pipe. Only YouTube is affected; every other site keeps Tor's own exit choice.")
+                    Text("After connecting, Veil picks one of the highest-capacity exit relays and sends every YouTube host through it, so the page and the video share one exit and a wide pipe. Only YouTube is affected; every other site keeps Tor's own exit choice. Candidates must offer conflux and congestion control. The exit that carried video last time is pinned again within seconds of the next connection and kept while it carries most of what it did; an exit the video CDN turns away is dropped for a week and another chosen at once.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -569,7 +580,7 @@ struct YouTubeSettingsView: View {
                     }
                     .pickerStyle(.segmented)
                     .disabled(!app.settings.videoKeepWarm)
-                    Text("A steady stream of small requests to YouTube's image CDN, several times a second, at the rate you set. It keeps every hop's TCP window open and the first link busy, so a burst never starts from a cold pipe — the sawtooth on the speed graph and the stall behind it. While a YouTube connection is open it rides the video's own circuit; otherwise the main route, which shares the guard or bridge link with everything. When the stream itself collapses, the circuits are retired and the video exit is re-checked. The rate is bandwidth spent on relays and on your link the whole time it runs.")
+                    Text("One continuous download of a large public file at the rate you set, read in fixed slices ten times a second, on a circuit of its own through the same guard. The link it warms is the one every circuit shares — the TCP connection to the guard or the bridge, whose window collapses after an idle and makes every burst start from a cold pipe: the sawtooth on the speed graph and the stall behind it. On its own circuit it competes with the video nowhere. When the stream itself collapses, the circuits are retired and the video exit is re-checked. The rate is bandwidth spent on relays and on your link the whole time it runs.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -588,7 +599,7 @@ struct YouTubeSettingsView: View {
                         get: { app.settings.videoGuardPinning },
                         set: { app.setVideoGuardPinning($0) }
                     ))
-                    Text("On a direct connection the first hop caps everything. With this on, Veil restricts Tor's entry guard to the three widest guards in the consensus and keeps the restriction only once a circuit through one of them has been built. Every site then goes through that guard, not only YouTube, and the Security screen counts it. Bridges keep their own first hop, so behind Snowflake, obfs4 or meek this does nothing.")
+                    Text("On a direct connection the first hop caps everything. With this on, Veil restricts Tor's entry guard to the three widest guards in the consensus and keeps the restriction only once a circuit through one of them has been built. Under Turbo 4K the three are timed one at a time through one wide exit and the winner is pinned alone; a guard with no circuit for half a minute is let go, and the guard that carried the video last time is remembered. Every site then goes through that guard, not only YouTube, and the Security screen counts it. Bridges keep their own first hop, so behind Snowflake, obfs4 or meek this does nothing.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)

@@ -59,6 +59,9 @@ final class LanePool: @unchecked Sendable {
         var lane: Int
         var generation: UInt32
         var lastUsed: Date
+        /// Bound by a measurement rather than by use: kept for the lane's whole generation, never
+        /// aged out.
+        var pinned = false
     }
 
     private let poolQueue = DispatchQueue(label: "app.veilvpn.lanepool")
@@ -248,7 +251,8 @@ final class LanePool: @unchecked Sendable {
         entry.inFlight += 1
         entries[choice.lane] = entry
         if !site.isEmpty {
-            affinity[site] = Affinity(lane: choice.lane, generation: entry.generation, lastUsed: .now)
+            let pinned = (affinity[site]?.pinned ?? false) && choice.lane == bound
+            affinity[site] = Affinity(lane: choice.lane, generation: entry.generation, lastUsed: .now, pinned: pinned)
             _trimAffinity()
         }
         switch choice.reason {
@@ -260,6 +264,37 @@ final class LanePool: @unchecked Sendable {
                               credentials: entry.credentials, port: poolPort, reason: choice.reason)
         lock.unlock()
         return lease
+    }
+
+    /// The pool lanes that are ready, for a measurement that wants one stream on each circuit.
+    func readyLanes() -> [LaneHandle] {
+        lock.lock()
+        defer { lock.unlock() }
+        guard running, suspendedReason == nil else { return [] }
+        return entries.keys.sorted().compactMap { key in
+            guard let entry = entries[key], !entry.scope.isSite, entry.state == .ready else { return nil }
+            return LaneHandle(lane: key, generation: entry.generation, credentials: entry.credentials)
+        }
+    }
+
+    /// Binds `site` to a measured lane for that lane's whole generation: the scheduler honours the
+    /// affinity and it is never aged out. False when the lane has already moved on.
+    func bind(site: String, to handle: LaneHandle) -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        guard running, let entry = entries[handle.lane], entry.generation == handle.generation,
+              entry.state == .ready else { return false }
+        affinity[site] = Affinity(lane: handle.lane, generation: entry.generation, lastUsed: .now, pinned: true)
+        return true
+    }
+
+    /// The lane `site` is bound to, while that binding still points at a live generation.
+    func binding(for site: String) -> LaneHandle? {
+        lock.lock()
+        defer { lock.unlock() }
+        guard let stored = affinity[site], let entry = entries[stored.lane],
+              entry.generation == stored.generation else { return nil }
+        return LaneHandle(lane: stored.lane, generation: entry.generation, credentials: entry.credentials)
     }
 
     /// The hedge target: strictly the lowest measured p50 that is not the lane we are abandoning.
@@ -438,9 +473,14 @@ final class LanePool: @unchecked Sendable {
 
     private func _trimAffinity() {
         let cutoff = Date.now.addingTimeInterval(-configuration.affinityTTL)
-        affinity = affinity.filter { $0.value.lastUsed > cutoff }
+        affinity = affinity.filter { $0.value.pinned || $0.value.lastUsed > cutoff }
         guard affinity.count > configuration.affinityCapacity else { return }
-        let keep = affinity.sorted { $0.value.lastUsed > $1.value.lastUsed }.prefix(configuration.affinityCapacity)
+        let keep = affinity
+            .sorted { left, right in
+                if left.value.pinned != right.value.pinned { return left.value.pinned }
+                return left.value.lastUsed > right.value.lastUsed
+            }
+            .prefix(configuration.affinityCapacity)
         affinity = Dictionary(uniqueKeysWithValues: keep.map { ($0.key, $0.value) })
     }
 

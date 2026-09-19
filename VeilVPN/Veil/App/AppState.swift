@@ -94,6 +94,11 @@ final class AppState {
     var videoPathMeasuredAt: Date?
     var videoPathMeasuring = false
     @ObservationIgnored var videoExitTask: Task<Void, Never>?
+    /// The pool lane YouTube is bound to after a race, with what it carried.
+    var videoLane: VideoLaneState?
+    @ObservationIgnored var videoLaneTask: Task<Void, Never>?
+    /// A measurement, a selection or a race holds the address mappings; the others wait.
+    @ObservationIgnored var videoPathBusy = false
     private(set) var isTestingYouTube = false
     /// Tor died (or never bootstrapped) and the proxy is deliberately left pointing at Veil.
     private(set) var killSwitchEngaged = false
@@ -147,7 +152,6 @@ final class AppState {
     let latency = LatencyMonitor()
     let videoWarmer = VideoWarmer()
     @ObservationIgnored var videoWarmTask: Task<Void, Never>?
-    @ObservationIgnored var videoWarmLease: LaneLease?
     let isDemo: Bool
 
     @ObservationIgnored var engine: any TorEngine
@@ -783,6 +787,7 @@ final class AppState {
                 }
                 await startLanePool(ports: effective, transport: connectedTransport)
                 startVideoExitSelection(after: .seconds(4))
+                startVideoLaneSupervision()
                 startVideoWarmSupervision()
                 restartRouteRotation()
                 startRouteTuning()
@@ -1004,6 +1009,7 @@ final class AppState {
         latency.reset()
         lanes = nil
         stopVideoWarmSupervision()
+        stopVideoLaneSupervision()
         httpBridge?.lanePool.stop()
         httpBridge?.poolPort = nil
         await padding.stop()

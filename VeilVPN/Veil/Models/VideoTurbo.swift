@@ -21,6 +21,8 @@ enum VideoTurbo {
         var paddingEnabled: Bool
         var multihopEnabled: Bool
         var latencyTuning: Bool
+        var isolatePerSite: Bool
+        var snowflakePeers: Int
     }
 
     /// The least the tonus runs at under Turbo: 4 Mbit/s keeps every hop's window open and is a
@@ -33,6 +35,9 @@ enum VideoTurbo {
     /// The lane pool's lifetime under Turbo, below the circuit lifetime so that measured
     /// replacement still fires first.
     static let laneLifetime: TimeInterval = 1500
+    /// Snowflake proxies at once under Turbo: the most the client takes. Applies at the next
+    /// connection, and only behind Snowflake.
+    static let snowflakePeers = 4
 
     static func snapshot(of settings: AppSettings) -> Snapshot {
         Snapshot(youtubeMode: settings.youtubeMode, youtubeModeChosen: settings.youtubeModeChosen,
@@ -40,7 +45,8 @@ enum VideoTurbo {
                  videoKeepWarm: settings.videoKeepWarm, videoKeepWarmAlways: settings.videoKeepWarmAlways,
                  videoKeepWarmKilobytes: settings.videoKeepWarmKilobytes, confluxLatency: settings.confluxLatency,
                  paddingEnabled: settings.paddingEnabled, multihopEnabled: settings.multihopEnabled,
-                 latencyTuning: settings.latencyTuning)
+                 latencyTuning: settings.latencyTuning, isolatePerSite: settings.isolatePerSite,
+                 snowflakePeers: settings.snowflakePeers)
     }
 
     /// `settings` with Turbo on. A snapshot already held is kept: the first one is the user's own.
@@ -59,6 +65,10 @@ enum VideoTurbo {
         settings.paddingEnabled = false
         settings.multihopEnabled = false
         settings.latencyTuning = false
+        // Per-site isolation gives YouTube one circuit tor picked at random; the pool's lanes are
+        // what the video lane is raced across.
+        settings.isolatePerSite = false
+        settings.snowflakePeers = snowflakePeers
         return settings
     }
 
@@ -83,6 +93,8 @@ enum VideoTurbo {
         if !base.paddingEnabled { settings.paddingEnabled = saved.paddingEnabled }
         if !base.multihopEnabled { settings.multihopEnabled = saved.multihopEnabled }
         if !base.latencyTuning { settings.latencyTuning = saved.latencyTuning }
+        if !base.isolatePerSite { settings.isolatePerSite = saved.isolatePerSite }
+        if base.snowflakePeers == snowflakePeers { settings.snowflakePeers = saved.snowflakePeers }
         return settings
     }
 
@@ -92,7 +104,7 @@ enum VideoTurbo {
             && settings.videoKeepWarm && settings.videoKeepWarmAlways
             && settings.videoKeepWarmKilobytes >= minimumTonusKilobytes
             && !settings.confluxLatency && !settings.paddingEnabled && !settings.multihopEnabled
-            && !settings.latencyTuning
+            && !settings.latencyTuning && !settings.isolatePerSite && settings.snowflakePeers == snowflakePeers
     }
 
     /// Whether a security preset can land on top of Turbo without undoing it: true when the

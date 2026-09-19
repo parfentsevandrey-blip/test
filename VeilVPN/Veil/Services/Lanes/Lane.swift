@@ -32,6 +32,13 @@ struct LaneLease: Equatable, Sendable {
     let reason: AssignmentReason
 }
 
+/// A lane as a measurement sees it: its credentials open a stream on that lane's own circuit.
+struct LaneHandle: Equatable, Sendable {
+    let lane: Int
+    let generation: UInt32
+    let credentials: SOCKS5.Credentials
+}
+
 /// An immutable view of one lane; the only thing the scheduler, the policy and the UI ever see.
 struct LaneRow: Equatable, Sendable, Identifiable {
     let id: Int

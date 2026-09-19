@@ -418,6 +418,12 @@ final class TorProcessEngine: TorEngine {
         return Self.builtPaths(in: status).compactMap { $0.last?.fingerprint.uppercased() }
     }
 
+    func builtCircuitPaths() async -> [[String]] {
+        guard let controller, controller.isOpen,
+              let status = try? await controller.getInfo("circuit-status", timeout: .seconds(5)) else { return [] }
+        return Self.builtPaths(in: status).map { $0.map { $0.fingerprint.uppercased() } }
+    }
+
     func setEntryGuards(_ fingerprints: [String]) async throws {
         guard let controller, controller.isOpen else { throw TorEngineError.notRunning }
         let value = fingerprints.map { "$" + $0 }.joined(separator: ",")
