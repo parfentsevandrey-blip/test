@@ -66,6 +66,17 @@ final class LaneTests: XCTestCase {
         XCTAssertEqual(HostKey.site("localhost"), "localhost")
     }
 
+    func testTheVideoCDNFansAcrossLanesOnlyWhenAnExitIsPinned() {
+        // The exit is pinned by MapAddress, so every lane leaves through one IP; the video CDN
+        // then spreads over all of them (empty key), while the page keeps its sticky lane.
+        XCTAssertEqual(HTTPProxyBridge.leaseSite(forHost: "rr3---sn-abc.googlevideo.com", fanningVideo: true), "")
+        XCTAssertEqual(HTTPProxyBridge.leaseSite(forHost: "rr3---sn-abc.googlevideo.com", fanningVideo: false), "youtube.com",
+                       "without a pinned exit the family shares one circuit, as before")
+        XCTAssertEqual(HTTPProxyBridge.leaseSite(forHost: "www.youtube.com", fanningVideo: true), "youtube.com",
+                       "the page and API stay on one lane; only the heavy media fans out")
+        XCTAssertEqual(HTTPProxyBridge.leaseSite(forHost: "example.com", fanningVideo: true), "example.com")
+    }
+
     // MARK: Scheduling
 
     func testAffinityWinsAndIgnoresTheStreamCap() {

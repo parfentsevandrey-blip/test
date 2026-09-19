@@ -19,6 +19,13 @@ extension AppState {
 
     static let videoSite = "youtube.com"
 
+    /// How many circuits the video is being spread over right now: the ready lanes when the fan is
+    /// on, otherwise one.
+    var videoFanCircuits: Int {
+        guard let bridge = httpBridge, bridge.videoFanActive else { return 1 }
+        return max(1, bridge.lanePool.snapshot().readyLanes)
+    }
+
     var videoLaneRacingWanted: Bool {
         settings.videoTurbo && connection == .connected && !engine.isSimulated && videoExit.isActive
             && !settings.isolatePerSite && httpBridge?.poolPort != nil
@@ -42,6 +49,7 @@ extension AppState {
                 } else if !videoLaneRacingWanted, videoLane != nil {
                     videoLane = nil
                 }
+                updateVideoFan()
                 // The CDN's verdict beats every measurement: an exit it turns away carries no
                 // video however wide it is. Dropped for a week, and another chosen at once.
                 if videoExitWanted, !videoPathBusy, let bridge = httpBridge, bridge.videoCDNRefusing {
@@ -84,6 +92,28 @@ extension AppState {
         videoLaneTask?.cancel()
         videoLaneTask = nil
         videoLane = nil
+        httpBridge?.videoFanExit = ""
+    }
+
+    /// Turns the video fan on or off to match the state. The exit IP is fixed by MapAddress
+    /// whenever an exit is pinned, so every lane is one more circuit to the same address: the
+    /// video runs over all of them. Off without a pinned exit (nothing fixes the IP), without a
+    /// lane pool (nothing to spread over), or under per-site isolation (one circuit per site by
+    /// the user's choice).
+    func updateVideoFan() {
+        guard let bridge = httpBridge else { return }
+        let wanted = connection == .connected && !engine.isSimulated && !settings.isolatePerSite
+            && bridge.poolPort != nil
+        let fingerprint = (wanted ? videoExit.relay?.fingerprint : nil) ?? ""
+        if bridge.videoFanExit != fingerprint {
+            bridge.videoFanExit = fingerprint
+            if fingerprint.isEmpty {
+                append(.veil(.info, "Video fan off: YouTube media back on one circuit"))
+            } else {
+                let lanes = bridge.lanePool.snapshot().readyLanes
+                append(.veil(.notice, "Video fan on: YouTube media spread over \(max(1, lanes)) circuits to one exit"))
+            }
+        }
     }
 
     /// One stream on each ready lane through the pinned exit, three seconds each, and YouTube

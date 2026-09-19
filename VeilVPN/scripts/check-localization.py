@@ -39,7 +39,7 @@ PATTERNS = [
 # name because a regex cannot see Swift's types; a new Int interpolation must be added here.
 INTEGER_EXPRESSIONS = {
     "classes", "count", "milliseconds", "open", "percent", "built", "launched", "attempt",
-    "report.reachable", "report.total", "summary.samples",
+    "report.reachable", "report.total", "summary.samples", "app.videoFanCircuits",
     "stats.tor", "stats.direct", "stats.antiThrottle", "stats.blocked",
 }
 

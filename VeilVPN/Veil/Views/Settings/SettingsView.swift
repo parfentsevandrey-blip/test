@@ -500,6 +500,11 @@ struct YouTubeSettingsView: View {
                             .font(.caption)
                             .foregroundStyle(.mint)
                     }
+                    if app.videoFanCircuits > 1 {
+                        Label("The video runs over \(app.videoFanCircuits) circuits to one exit at once", systemImage: "arrow.triangle.branch")
+                            .font(.caption)
+                            .foregroundStyle(.mint)
+                    }
                     if let memory = app.settings.videoPathMemory {
                         let guardPart = memory.guardNickname.map { String(localized: ", guard \($0)") } ?? ""
                         Text("Remembered path: exit \(memory.exitNickname)\(guardPart) · \(AppState.megabits(memory.megabits)) Mbit/s · \(memory.measuredAt.formatted(.relative(presentation: .named)))")

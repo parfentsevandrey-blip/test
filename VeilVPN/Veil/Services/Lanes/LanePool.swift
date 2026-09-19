@@ -297,6 +297,38 @@ final class LanePool: @unchecked Sendable {
         return LaneHandle(lane: stored.lane, generation: entry.generation, credentials: entry.credentials)
     }
 
+    /// A lease that spreads across the fast set and records no affinity: every call may land on a
+    /// different lane. For the video CDN behind a pinned exit — the exit is fixed by MapAddress,
+    /// so each lane is one more circuit to the same IP, and the video runs over all of them.
+    func spreadLease(avoiding: Int?) -> LaneLease? {
+        lock.lock()
+        guard running, suspendedReason == nil, let poolPort else {
+            counters.assignmentsLegacy += 1
+            lock.unlock()
+            return nil
+        }
+        let choice = LaneScheduler.pick(rows: _rows(), affinity: nil, avoiding: avoiding,
+                                        maxStreamsPerLane: configuration.maxStreamsPerLane,
+                                        fastSetFactor: configuration.fastSetFactor,
+                                        randomValue: Double.random(in: 0..<1))
+        guard let choice, var entry = entries[choice.lane] else {
+            counters.assignmentsLegacy += 1
+            lock.unlock()
+            return nil
+        }
+        entry.inFlight += 1
+        entries[choice.lane] = entry
+        switch choice.reason {
+        case .affinity: counters.assignmentsByAffinity += 1
+        case .best: counters.assignmentsByScore += 1
+        case .fallback: counters.assignmentsFallback += 1
+        }
+        let lease = LaneLease(lane: choice.lane, generation: entry.generation,
+                              credentials: entry.credentials, port: poolPort, reason: choice.reason)
+        lock.unlock()
+        return lease
+    }
+
     /// The hedge target: strictly the lowest measured p50 that is not the lane we are abandoning.
     func bestLane(avoiding: Int?) -> LaneLease? {
         lock.lock()

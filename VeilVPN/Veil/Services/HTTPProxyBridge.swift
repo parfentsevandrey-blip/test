@@ -33,6 +33,11 @@ final class HTTPProxyBridge: @unchecked Sendable {
     private var storedHTTPSOnly = false
     private var storedTransport: AppSettings.Transport = .auto
     private var storedConnectedAt: Date?
+    /// When set, connections to the video CDN are spread across every lane instead of pinned to
+    /// one: the exit is fixed by MapAddress, so all lanes leave through the same IP, and the video
+    /// runs over as many circuits as the pool holds — YouTube sees one address, the throughput is
+    /// the sum. Empty means the fan is off.
+    private var storedVideoFanExit: String = ""
     private(set) var port: UInt16 = 0
 
     /// Measured circuits for traffic through Tor. Created here, started and stopped by AppState.
@@ -50,6 +55,25 @@ final class HTTPProxyBridge: @unchecked Sendable {
     }
 
     var torAvailable: Bool { socksPort != nil }
+
+    /// Set to the pinned video-exit fingerprint to fan the video CDN across every lane; "" is off.
+    /// Applies to connections opened after the change.
+    var videoFanExit: String {
+        get { lock.lock(); defer { lock.unlock() }; return storedVideoFanExit }
+        set { lock.lock(); storedVideoFanExit = newValue; lock.unlock() }
+    }
+
+    var videoFanActive: Bool {
+        lock.lock(); defer { lock.unlock() }; return !storedVideoFanExit.isEmpty
+    }
+
+    /// The lane-affinity key for a host: empty for the video CDN when fanning (spread across every
+    /// lane, since the pinned exit already fixes the IP), the registrable site otherwise. Pure, so
+    /// the fan decision is testable without a live connection.
+    static func leaseSite(forHost host: String, fanningVideo: Bool) -> String {
+        if fanningVideo, RoutingPolicy.isVideoCDN(host) { return "" }
+        return HostKey.site(host)
+    }
 
     /// Tor's isolation-flagged SOCKS listener, or nil when the lane pool is off.
     var poolPort: UInt16? {
@@ -241,10 +265,12 @@ final class HTTPProxyBridge: @unchecked Sendable {
         let transport = storedTransport
         let connectedAt = storedConnectedAt
         let httpsOnly = storedHTTPSOnly
+        let fanVideo = !storedVideoFanExit.isEmpty
         lock.unlock()
         let session = ProxySession(client: connection, socksPort: socks, policy: policy, blocked: blocked,
                                    pool: pool == nil ? nil : lanePool, poolPort: pool,
                                    transport: transport, connectedAt: connectedAt, httpsOnly: httpsOnly,
+                                   fanVideoAcrossLanes: fanVideo,
                                    onDecision: { [weak self] session, host, decision in
             guard let self else { return }
             self.record(decision)
@@ -314,6 +340,10 @@ final class ProxySession: @unchecked Sendable {
     private let transport: AppSettings.Transport
     private let connectedAt: Date?
     private let httpsOnly: Bool
+    /// Spread the video CDN across every lane (the exit is pinned, so all lanes share one IP).
+    private let fanVideoAcrossLanes: Bool
+    /// This connection is to the video CDN: read upstream in larger slices, and fan it out.
+    private var isVideoCDN = false
     private var upstream: NWConnection?
     private var head = Data()
     private var helloBuffer = Data()
@@ -348,7 +378,7 @@ final class ProxySession: @unchecked Sendable {
 
     init(client: NWConnection, socksPort: UInt16?, policy: RoutingPolicy, blocked: Bool,
          pool: LanePool?, poolPort: UInt16?, transport: AppSettings.Transport, connectedAt: Date?,
-         httpsOnly: Bool,
+         httpsOnly: Bool, fanVideoAcrossLanes: Bool,
          onDecision: @escaping @Sendable (ProxySession, String, RouteDecision?) -> Void,
          onOutcome: @escaping @Sendable (HTTPProxyBridge.SessionOutcome) -> Void,
          onClose: @escaping (ProxySession) -> Void) {
@@ -361,6 +391,7 @@ final class ProxySession: @unchecked Sendable {
         self.transport = transport
         self.connectedAt = connectedAt
         self.httpsOnly = httpsOnly
+        self.fanVideoAcrossLanes = fanVideoAcrossLanes
         self.onDecision = onDecision
         self.onOutcome = onOutcome
         self.onClose = onClose
@@ -545,8 +576,14 @@ final class ProxySession: @unchecked Sendable {
             pendingHost = host
             pendingPort = port
             pendingIsOnion = host.lowercased().hasSuffix(".onion")
-            let site = HostKey.site(host)
-            lease = pool?.lease(site: site, avoiding: nil)
+            isVideoCDN = RoutingPolicy.isVideoCDN(host)
+            // The video CDN, when the exit is pinned, spreads across every lane — same exit IP,
+            // one circuit's throughput per lane, summed. Everything else keeps its sticky lane so
+            // a page's subresources share one circuit.
+            let site = HTTPProxyBridge.leaseSite(forHost: host, fanningVideo: fanVideoAcrossLanes)
+            lease = site.isEmpty && isVideoCDN
+                ? pool?.spreadLease(avoiding: nil)
+                : pool?.lease(site: site, avoiding: nil)
             let snapshot = pool?.snapshot()
             hedgeDelay = HedgePolicy.hedgeDelay(
                 bestP50: snapshot?.bestP50,
@@ -877,7 +914,10 @@ final class ProxySession: @unchecked Sendable {
     }
 
     private func pipe(from source: NWConnection, to destination: NWConnection) {
-        source.receive(minimumIncompleteLength: 1, maximumLength: 65536) { [weak self] data, _, isComplete, error in
+        // The video CDN reads from Tor in larger slices: a wide circuit fills 256 KB between
+        // localhost sends instead of stalling on 64 KB. Only upstream→client, only for video.
+        let maxLength = (isVideoCDN && source === upstream) ? 262144 : 65536
+        source.receive(minimumIncompleteLength: 1, maximumLength: maxLength) { [weak self] data, _, isComplete, error in
             guard let self, !self.closed else { return }
             if let data, !data.isEmpty {
                 if source === self.upstream {

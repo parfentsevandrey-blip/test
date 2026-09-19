@@ -95,6 +95,7 @@ extension AppState {
         let wasActive = videoExit.isActive
         videoExit = .off
         videoLane = nil
+        httpBridge?.videoFanExit = ""
         if engine.isLive || engine.isWarm {
             await engine.clearAddressMappings()
         }
@@ -478,6 +479,7 @@ extension AppState {
                                                    transport: activeTransport ?? settings.transport)
         let rate = megabits.map { " · \(Self.megabits($0)) Mbit/s, enough for \(ThroughputProbe.quality(forMegabits: $0))" } ?? ""
         append(.veil(.notice, "Video exit: \(chosen.nickname) \(chosen.flag) — \((chosen.bandwidth ?? 0) / 1000) MB/s consensus weight\(rate)"))
+        updateVideoFan()
     }
 
     private func countryAllowed(_ country: String?) -> Bool {

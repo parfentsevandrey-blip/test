@@ -13273,6 +13273,34 @@
         }
       }
     },
+    "The video runs over %lld circuits to one exit at once": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Видео идёт сразу по %lld цепочкам к одному выходу"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відео йде одразу по %lld ланцюжках до одного виходу"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ویدیو هم‌زمان روی %lld مدار به یک خروجی جریان دارد"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "视频同时经由 %lld 条电路汇向一个出口"
+          }
+        }
+      }
+    },
     "The whole time the tunnel is up": {
       "localizations": {
         "ru": {
