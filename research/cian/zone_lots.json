@@ -5,6 +5,8 @@
   "floor": 2,
   "floors": 2,
   "rate": 18072,
+  "kind": "мес",
+  "sure": false,
   "days": 542,
   "created": "2025-03-25",
   "km": 5.0,
@@ -12,9 +14,10 @@
   "price": 125000,
   "lat": 55.787902,
   "lng": 37.298069,
+  "addr": null,
   "near": "Архангельское",
-  "rent": 125000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 124998
  },
  {
   "id": 333983497,
@@ -22,6 +25,8 @@
   "floor": 5,
   "floors": 6,
   "rate": 22245,
+  "kind": "мес",
+  "sure": false,
   "days": 2,
   "created": "2026-09-16",
   "km": 5.6,
@@ -29,9 +34,10 @@
   "price": 850000,
   "lat": 55.79595,
   "lng": 37.297053,
+  "addr": "Ильинское шоссе, 4-й, с8",
   "near": "Архангельское",
-  "rent": 850000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 849981
  },
  {
   "id": 320581965,
@@ -39,6 +45,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 23684,
+  "kind": "мес",
+  "sure": true,
   "days": 407,
   "created": "2025-08-07",
   "km": 1.7,
@@ -46,9 +54,10 @@
   "price": 150000,
   "lat": 55.770244,
   "lng": 37.22349,
+  "addr": "Заповедная, 24",
   "near": "Ильинское-Усово",
-  "rent": 150000,
-  "per_m2_card": false
+  "vat": "usn",
+  "rent": 149999
  },
  {
   "id": 329868661,
@@ -56,6 +65,8 @@
   "floor": 1,
   "floors": 4,
   "rate": 36750,
+  "kind": "мес",
+  "sure": true,
   "days": 130,
   "created": "2026-05-11",
   "km": 0.0,
@@ -63,9 +74,10 @@
   "price": 245000,
   "lat": 55.75742,
   "lng": 37.238906,
+  "addr": null,
   "near": "Ильинское",
-  "rent": 245000,
-  "per_m2_card": false
+  "vat": "notIncluded",
+  "rent": 245000
  },
  {
   "id": 333546762,
@@ -73,6 +85,8 @@
   "floor": 1,
   "floors": 5,
   "rate": 17857,
+  "kind": "мес",
+  "sure": true,
   "days": 16,
   "created": "2026-09-02",
   "km": 1.5,
@@ -80,16 +94,19 @@
   "price": 150000,
   "lat": 55.77,
   "lng": 37.247413,
+  "addr": "Рублевское Предместье, 7к2",
   "near": "Глухово",
-  "rent": 150000,
-  "per_m2_card": false
+  "vat": "usn",
+  "rent": 149999
  },
  {
   "id": 326181813,
   "area": 98.7,
   "floor": 1,
   "floors": 9,
-  "rate": 2217,
+  "rate": 18237,
+  "kind": "м²/год",
+  "sure": false,
   "days": 235,
   "created": "2026-01-26",
   "km": 1.8,
@@ -97,9 +114,10 @@
   "price": 18237,
   "lat": 55.77352,
   "lng": 37.2416,
-  "near": "Глухово",
-  "rent": 18237,
-  "per_m2_card": false
+  "addr": "Архангельская, 3",
+  "near": "Ильинское-Усово",
+  "vat": null,
+  "rent": 149999
  },
  {
   "id": 283508170,
@@ -107,6 +125,8 @@
   "floor": 1,
   "floors": 1,
   "rate": 30000,
+  "kind": "мес",
+  "sure": true,
   "days": 1317,
   "created": "2023-02-09",
   "km": 1.4,
@@ -114,9 +134,10 @@
   "price": 75000,
   "lat": 55.768051,
   "lng": 37.250377,
+  "addr": "Центральная, 83",
   "near": "Глухово",
-  "rent": 75000,
-  "per_m2_card": false
+  "vat": "included",
+  "rent": 75000
  },
  {
   "id": 333953930,
@@ -124,6 +145,8 @@
   "floor": 1,
   "floors": 1,
   "rate": 51195,
+  "kind": "мес",
+  "sure": true,
   "days": 3,
   "created": "2026-09-15",
   "km": 1.7,
@@ -131,9 +154,10 @@
   "price": 375000,
   "lat": 55.772421,
   "lng": 37.233749,
+  "addr": "Заповедная, 15",
   "near": "Ильинское-Усово",
-  "rent": 375000,
-  "per_m2_card": false
+  "vat": "notIncluded",
+  "rent": 375003
  },
  {
   "id": 333822157,
@@ -141,6 +165,8 @@
   "floor": 1,
   "floors": 2,
   "rate": 36750,
+  "kind": "мес",
+  "sure": true,
   "days": 7,
   "created": "2026-09-11",
   "km": 0.2,
@@ -148,9 +174,10 @@
   "price": 245000,
   "lat": 55.758828,
   "lng": 37.239642,
+  "addr": "Ленина, 10с1",
   "near": "Ильинское",
-  "rent": 245000,
-  "per_m2_card": false
+  "vat": "usn",
+  "rent": 245000
  },
  {
   "id": 333943686,
@@ -158,6 +185,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 44444,
+  "kind": "мес",
+  "sure": true,
   "days": 3,
   "created": "2026-09-15",
   "km": 1.5,
@@ -165,9 +194,10 @@
   "price": 200000,
   "lat": 55.768345,
   "lng": 37.225718,
+  "addr": "Архангельская, 19",
   "near": "Ильинское-Усово",
-  "rent": 200000,
-  "per_m2_card": false
+  "vat": "usn",
+  "rent": 199998
  },
  {
   "id": 333311589,
@@ -175,6 +205,8 @@
   "floor": 2,
   "floors": 2,
   "rate": 24286,
+  "kind": "мес",
+  "sure": true,
   "days": 23,
   "created": "2026-08-26",
   "km": 0.5,
@@ -182,9 +214,10 @@
   "price": 68000,
   "lat": 55.761284,
   "lng": 37.243271,
+  "addr": "Ленина, 30с1",
   "near": "Ильинское",
-  "rent": 68000,
-  "per_m2_card": false
+  "vat": "usn",
+  "rent": 68001
  },
  {
   "id": 333940025,
@@ -192,6 +225,8 @@
   "floor": null,
   "floors": 1,
   "rate": 13600,
+  "kind": "мес",
+  "sure": false,
   "days": 3,
   "created": "2026-09-15",
   "km": 5.3,
@@ -199,9 +234,10 @@
   "price": 170000,
   "lat": 55.778466,
   "lng": 37.315496,
+  "addr": null,
   "near": "Архангельское",
-  "rent": 170000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 170000
  },
  {
   "id": 333953929,
@@ -209,6 +245,8 @@
   "floor": 1,
   "floors": 1,
   "rate": 50241,
+  "kind": "мес",
+  "sure": true,
   "days": 3,
   "created": "2026-09-15",
   "km": 1.7,
@@ -216,9 +254,10 @@
   "price": 695000,
   "lat": 55.772421,
   "lng": 37.233749,
+  "addr": "Заповедная, 15",
   "near": "Ильинское-Усово",
-  "rent": 695000,
-  "per_m2_card": false
+  "vat": "notIncluded",
+  "rent": 695000
  },
  {
   "id": 331957732,
@@ -226,6 +265,8 @@
   "floor": 1,
   "floors": 2,
   "rate": 36000,
+  "kind": "м²/мес",
+  "sure": true,
   "days": 67,
   "created": "2026-07-13",
   "km": 0.2,
@@ -233,9 +274,10 @@
   "price": 3000,
   "lat": 55.758808,
   "lng": 37.236453,
+  "addr": "Ленина, 11",
   "near": "Ильинское",
-  "rent": 525000,
-  "per_m2_card": true
+  "vat": "included",
+  "rent": 525000
  },
  {
   "id": 333953928,
@@ -243,6 +285,8 @@
   "floor": 1,
   "floors": 1,
   "rate": 50467,
+  "kind": "мес",
+  "sure": true,
   "days": 3,
   "created": "2026-09-15",
   "km": 1.7,
@@ -250,9 +294,10 @@
   "price": 1350000,
   "lat": 55.772421,
   "lng": 37.233749,
+  "addr": "Заповедная, 15",
   "near": "Ильинское-Усово",
-  "rent": 1350000,
-  "per_m2_card": false
+  "vat": "notIncluded",
+  "rent": 1349992
  },
  {
   "id": 333942109,
@@ -260,6 +305,8 @@
   "floor": 1,
   "floors": 10,
   "rate": 36000,
+  "kind": "мес",
+  "sure": true,
   "days": 3,
   "created": "2026-09-15",
   "km": 1.7,
@@ -267,9 +314,10 @@
   "price": 90000,
   "lat": 55.770244,
   "lng": 37.22349,
+  "addr": "Заповедная, 24",
   "near": "Ильинское-Усово",
-  "rent": 90000,
-  "per_m2_card": false
+  "vat": "included",
+  "rent": 90000
  },
  {
   "id": 326463844,
@@ -277,6 +325,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 36923,
+  "kind": "мес",
+  "sure": true,
   "days": 227,
   "created": "2026-02-03",
   "km": 2.1,
@@ -284,43 +334,30 @@
   "price": 40000,
   "lat": 55.77595,
   "lng": 37.243514,
-  "near": "Глухово",
-  "rent": 40000,
-  "per_m2_card": false
+  "addr": "Заповедная, 4",
+  "near": "Ильинское-Усово",
+  "vat": "usn",
+  "rent": 40000
  },
  {
   "id": 331946855,
   "area": 23,
   "floor": 1,
   "floors": 9,
-  "rate": 26087,
+  "rate": 23478,
+  "kind": "мес",
+  "sure": true,
   "days": 67,
   "created": "2026-07-13",
   "km": 1.8,
   "url": "https://krasnogorsk.cian.ru/rent/commercial/331946855/",
-  "price": 50000,
+  "price": 45000,
   "lat": 55.771003,
   "lng": 37.224604,
+  "addr": "Заповедная, 22",
   "near": "Ильинское-Усово",
-  "rent": 50000,
-  "per_m2_card": false
- },
- {
-  "id": 331636078,
-  "area": 120,
-  "floor": 1,
-  "floors": 1,
-  "rate": 31200,
-  "days": 78,
-  "created": "2026-07-02",
-  "km": 1.5,
-  "url": "https://krasnogorsk.cian.ru/rent/commercial/331636078/",
-  "price": 2600,
-  "lat": 55.76919,
-  "lng": 37.227506,
-  "near": "Ильинское-Усово",
-  "rent": 312000,
-  "per_m2_card": true
+  "vat": "included",
+  "rent": 45000
  },
  {
   "id": 333616923,
@@ -328,6 +365,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 27907,
+  "kind": "мес",
+  "sure": true,
   "days": 14,
   "created": "2026-09-04",
   "km": 1.6,
@@ -335,9 +374,10 @@
   "price": 100000,
   "lat": 55.771808,
   "lng": 37.238573,
-  "near": "Глухово",
-  "rent": 100000,
-  "per_m2_card": false
+  "addr": "Архангельская, 7",
+  "near": "Ильинское-Усово",
+  "vat": "notIncluded",
+  "rent": 100000
  },
  {
   "id": 333560586,
@@ -345,6 +385,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 39600,
+  "kind": "мес",
+  "sure": false,
   "days": 15,
   "created": "2026-09-03",
   "km": 2.5,
@@ -352,9 +394,30 @@
   "price": 458700,
   "lat": 55.773064,
   "lng": 37.210698,
+  "addr": "ЖК «Рига Хиллс», к2",
   "near": "Бузланово",
-  "rent": 458700,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 458700
+ },
+ {
+  "id": 324728283,
+  "area": 182.6,
+  "floor": 6,
+  "floors": 7,
+  "rate": 13935,
+  "kind": "м²/год",
+  "sure": false,
+  "days": 287,
+  "created": "2025-12-05",
+  "km": 3.1,
+  "url": "https://krasnogorsk.cian.ru/rent/commercial/324728283/",
+  "price": 13935,
+  "lat": 55.785103,
+  "lng": 37.241295,
+  "addr": null,
+  "near": "Глухово",
+  "vat": null,
+  "rent": 212044
  },
  {
   "id": 333942092,
@@ -362,6 +425,8 @@
   "floor": 1,
   "floors": 10,
   "rate": 38400,
+  "kind": "мес",
+  "sure": true,
   "days": 3,
   "created": "2026-09-15",
   "km": 1.5,
@@ -369,9 +434,10 @@
   "price": 80000,
   "lat": 55.768345,
   "lng": 37.225718,
+  "addr": "Архангельская, 19",
   "near": "Ильинское-Усово",
-  "rent": 80000,
-  "per_m2_card": false
+  "vat": "included",
+  "rent": 80000
  },
  {
   "id": 324834779,
@@ -379,6 +445,8 @@
   "floor": 1,
   "floors": 12,
   "rate": 36585,
+  "kind": "мес",
+  "sure": false,
   "days": 284,
   "created": "2025-12-08",
   "km": 1.8,
@@ -386,9 +454,10 @@
   "price": 225000,
   "lat": 55.771003,
   "lng": 37.224604,
+  "addr": "Заповедная, 22",
   "near": "Ильинское-Усово",
-  "rent": 225000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 224998
  },
  {
   "id": 277458208,
@@ -396,6 +465,8 @@
   "floor": 2,
   "floors": 2,
   "rate": 30000,
+  "kind": "м²/мес",
+  "sure": true,
   "days": 1486,
   "created": "2022-08-24",
   "km": 0.0,
@@ -403,16 +474,19 @@
   "price": 2500,
   "lat": 55.75742,
   "lng": 37.238906,
+  "addr": null,
   "near": "Ильинское",
-  "rent": 100000,
-  "per_m2_card": true
+  "vat": "included",
+  "rent": 100000
  },
  {
   "id": 333341406,
   "area": 123,
   "floor": 1,
   "floors": 9,
-  "rate": 3863,
+  "rate": 39600,
+  "kind": "м²/год",
+  "sure": false,
   "days": 22,
   "created": "2026-08-27",
   "km": 2.5,
@@ -420,9 +494,10 @@
   "price": 39600,
   "lat": 55.773064,
   "lng": 37.210698,
+  "addr": "ЖК «Рига Хиллс», к2",
   "near": "Бузланово",
-  "rent": 39600,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 405900
  },
  {
   "id": 333685077,
@@ -430,6 +505,8 @@
   "floor": 1,
   "floors": 1,
   "rate": 22000,
+  "kind": "мес",
+  "sure": false,
   "days": 11,
   "created": "2026-09-07",
   "km": 2.9,
@@ -437,9 +514,30 @@
   "price": 225500,
   "lat": 55.775302,
   "lng": 37.205569,
+  "addr": "Новый поселок, 9",
   "near": "Бузланово",
-  "rent": 225500,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 225500
+ },
+ {
+  "id": 332934081,
+  "area": 3000,
+  "floor": 1,
+  "floors": 1,
+  "rate": 27670,
+  "kind": "м²/год",
+  "sure": false,
+  "days": 35,
+  "created": "2026-08-14",
+  "km": 3.7,
+  "url": "https://krasnogorsk.cian.ru/rent/commercial/332934081/",
+  "price": 27670,
+  "lat": 55.789851,
+  "lng": 37.251895,
+  "addr": null,
+  "near": "Глухово",
+  "vat": null,
+  "rent": 6917500
  },
  {
   "id": 330684655,
@@ -447,6 +545,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 19200,
+  "kind": "мес",
+  "sure": true,
   "days": 108,
   "created": "2026-06-02",
   "km": 1.6,
@@ -454,9 +554,10 @@
   "price": 216000,
   "lat": 55.769894,
   "lng": 37.22667,
+  "addr": "Заповедная, 23",
   "near": "Ильинское-Усово",
-  "rent": 216000,
-  "per_m2_card": false
+  "vat": "usn",
+  "rent": 216000
  },
  {
   "id": 332816556,
@@ -464,6 +565,8 @@
   "floor": 1,
   "floors": 5,
   "rate": 31884,
+  "kind": "мес",
+  "sure": false,
   "days": 38,
   "created": "2026-08-11",
   "km": 5.1,
@@ -471,9 +574,10 @@
   "price": 55000,
   "lat": 55.788606,
   "lng": 37.29894,
+  "addr": null,
   "near": "Архангельское",
-  "rent": 55000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 55000
  },
  {
   "id": 325457202,
@@ -481,6 +585,8 @@
   "floor": 4,
   "floors": 4,
   "rate": 24000,
+  "kind": "мес",
+  "sure": true,
   "days": 263,
   "created": "2025-12-29",
   "km": 0.6,
@@ -488,9 +594,10 @@
   "price": 600000,
   "lat": 55.760818,
   "lng": 37.230857,
+  "addr": "Экспериментальная, 10",
   "near": "Ильинское",
-  "rent": 600000,
-  "per_m2_card": false
+  "vat": "included",
+  "rent": 600000
  },
  {
   "id": 328135352,
@@ -498,6 +605,8 @@
   "floor": -1,
   "floors": 5,
   "rate": 7077,
+  "kind": "мес",
+  "sure": false,
   "days": 179,
   "created": "2026-03-23",
   "km": 1.5,
@@ -505,9 +614,10 @@
   "price": 70000,
   "lat": 55.77,
   "lng": 37.247413,
+  "addr": "Рублевское Предместье, 7к2",
   "near": "Глухово",
-  "rent": 70000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 70003
  },
  {
   "id": 331344662,
@@ -515,6 +625,8 @@
   "floor": 1,
   "floors": 5,
   "rate": 26902,
+  "kind": "мес",
+  "sure": false,
   "days": 86,
   "created": "2026-06-24",
   "km": 5.1,
@@ -522,9 +634,10 @@
   "price": 280000,
   "lat": 55.788606,
   "lng": 37.29894,
+  "addr": null,
   "near": "Архангельское",
-  "rent": 280000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 280005
  },
  {
   "id": 333731876,
@@ -532,6 +645,8 @@
   "floor": null,
   "floors": 3,
   "rate": 25000,
+  "kind": "мес",
+  "sure": true,
   "days": 10,
   "created": "2026-09-08",
   "km": 0.6,
@@ -539,9 +654,30 @@
   "price": 2500000,
   "lat": 55.760818,
   "lng": 37.230857,
+  "addr": "Экспериментальная, 10",
   "near": "Ильинское",
-  "rent": 2500000,
-  "per_m2_card": false
+  "vat": "usn",
+  "rent": 2500000
+ },
+ {
+  "id": 315802301,
+  "area": 311.3,
+  "floor": 4,
+  "floors": 7,
+  "rate": 13935,
+  "kind": "м²/год",
+  "sure": false,
+  "days": 533,
+  "created": "2025-04-03",
+  "km": 3.1,
+  "url": "https://krasnogorsk.cian.ru/rent/commercial/315802301/",
+  "price": 13935,
+  "lat": 55.785103,
+  "lng": 37.241295,
+  "addr": null,
+  "near": "Глухово",
+  "vat": null,
+  "rent": 361497
  },
  {
   "id": 325457203,
@@ -549,6 +685,8 @@
   "floor": 4,
   "floors": 4,
   "rate": 24635,
+  "kind": "мес",
+  "sure": true,
   "days": 263,
   "created": "2025-12-29",
   "km": 0.6,
@@ -556,9 +694,10 @@
   "price": 3490000,
   "lat": 55.760818,
   "lng": 37.230857,
+  "addr": "Экспериментальная, 10",
   "near": "Ильинское",
-  "rent": 3490000,
-  "per_m2_card": false
+  "vat": "included",
+  "rent": 3489958
  },
  {
   "id": 332310503,
@@ -566,6 +705,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 26382,
+  "kind": "мес",
+  "sure": true,
   "days": 56,
   "created": "2026-07-24",
   "km": 1.5,
@@ -573,9 +714,10 @@
   "price": 175000,
   "lat": 55.768345,
   "lng": 37.225718,
+  "addr": "Архангельская, 19",
   "near": "Ильинское-Усово",
-  "rent": 175000,
-  "per_m2_card": false
+  "vat": "included",
+  "rent": 175001
  },
  {
   "id": 328211746,
@@ -583,6 +725,8 @@
   "floor": 1,
   "floors": 10,
   "rate": 30088,
+  "kind": "мес",
+  "sure": true,
   "days": 177,
   "created": "2026-03-25",
   "km": 1.8,
@@ -590,9 +734,10 @@
   "price": 170000,
   "lat": 55.771003,
   "lng": 37.224604,
+  "addr": "Заповедная, 22",
   "near": "Ильинское-Усово",
-  "rent": 170000,
-  "per_m2_card": false
+  "vat": "notIncluded",
+  "rent": 169997
  },
  {
   "id": 332867952,
@@ -600,6 +745,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 42188,
+  "kind": "мес",
+  "sure": true,
   "days": 37,
   "created": "2026-08-12",
   "km": 1.5,
@@ -607,9 +754,10 @@
   "price": 450000,
   "lat": 55.76919,
   "lng": 37.227506,
+  "addr": "Архангельская, 17",
   "near": "Ильинское-Усово",
-  "rent": 450000,
-  "per_m2_card": false
+  "vat": "usn",
+  "rent": 450005
  },
  {
   "id": 332867946,
@@ -617,6 +765,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 38049,
+  "kind": "мес",
+  "sure": true,
   "days": 37,
   "created": "2026-08-12",
   "km": 1.9,
@@ -624,9 +774,10 @@
   "price": 650000,
   "lat": 55.774694,
   "lng": 37.237558,
-  "near": "Глухово",
-  "rent": 650000,
-  "per_m2_card": false
+  "addr": "Заповедная, 9",
+  "near": "Ильинское-Усово",
+  "vat": "included",
+  "rent": 650004
  },
  {
   "id": 333708487,
@@ -634,6 +785,8 @@
   "floor": 2,
   "floors": 2,
   "rate": 12000,
+  "kind": "мес",
+  "sure": false,
   "days": 10,
   "created": "2026-09-08",
   "km": 2.9,
@@ -641,16 +794,19 @@
   "price": 750000,
   "lat": 55.775302,
   "lng": 37.205569,
+  "addr": "Новый поселок, 9",
   "near": "Бузланово",
-  "rent": 750000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 750000
  },
  {
   "id": 333495746,
   "area": 73.4,
   "floor": 1,
   "floors": 10,
-  "rate": 3924,
+  "rate": 24000,
+  "kind": "м²/год",
+  "sure": true,
   "days": 17,
   "created": "2026-09-01",
   "km": 1.8,
@@ -658,9 +814,10 @@
   "price": 24000,
   "lat": 55.771003,
   "lng": 37.224604,
+  "addr": "Заповедная, 22",
   "near": "Ильинское-Усово",
-  "rent": 24000,
-  "per_m2_card": false
+  "vat": "usn",
+  "rent": 146800
  },
  {
   "id": 290241753,
@@ -668,6 +825,8 @@
   "floor": 2,
   "floors": 3,
   "rate": 30000,
+  "kind": "м²/мес",
+  "sure": true,
   "days": 1157,
   "created": "2023-07-19",
   "km": 0.2,
@@ -675,9 +834,10 @@
   "price": 2500,
   "lat": 55.758808,
   "lng": 37.236453,
+  "addr": "Ленина, 11",
   "near": "Ильинское",
-  "rent": 95000,
-  "per_m2_card": true
+  "vat": "included",
+  "rent": 95000
  },
  {
   "id": 327894962,
@@ -685,6 +845,8 @@
   "floor": 1,
   "floors": 2,
   "rate": 42000,
+  "kind": "м²/мес",
+  "sure": true,
   "days": 185,
   "created": "2026-03-17",
   "km": 0.2,
@@ -692,9 +854,10 @@
   "price": 3500,
   "lat": 55.758808,
   "lng": 37.236453,
+  "addr": "Ленина, 11",
   "near": "Ильинское",
-  "rent": 147000,
-  "per_m2_card": true
+  "vat": "included",
+  "rent": 147000
  },
  {
   "id": 331968329,
@@ -702,6 +865,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 36101,
+  "kind": "мес",
+  "sure": true,
   "days": 67,
   "created": "2026-07-13",
   "km": 1.6,
@@ -709,9 +874,30 @@
   "price": 250000,
   "lat": 55.769251,
   "lng": 37.224479,
+  "addr": "Заповедная, 25",
   "near": "Ильинское-Усово",
-  "rent": 250000,
-  "per_m2_card": false
+  "vat": "usn",
+  "rent": 249999
+ },
+ {
+  "id": 325069017,
+  "area": 1000,
+  "floor": 1,
+  "floors": 1,
+  "rate": 27670,
+  "kind": "м²/год",
+  "sure": false,
+  "days": 277,
+  "created": "2025-12-15",
+  "km": 3.7,
+  "url": "https://krasnogorsk.cian.ru/rent/commercial/325069017/",
+  "price": 27670,
+  "lat": 55.789851,
+  "lng": 37.251895,
+  "addr": null,
+  "near": "Глухово",
+  "vat": null,
+  "rent": 2305833
  },
  {
   "id": 332816562,
@@ -719,6 +905,8 @@
   "floor": 1,
   "floors": 5,
   "rate": 35000,
+  "kind": "мес",
+  "sure": false,
   "days": 38,
   "created": "2026-08-11",
   "km": 5.1,
@@ -726,9 +914,10 @@
   "price": 28000,
   "lat": 55.788606,
   "lng": 37.29894,
+  "addr": null,
   "near": "Архангельское",
-  "rent": 28000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 28000
  },
  {
   "id": 331968259,
@@ -736,6 +925,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 35394,
+  "kind": "мес",
+  "sure": true,
   "days": 67,
   "created": "2026-07-13",
   "km": 1.6,
@@ -743,9 +934,10 @@
   "price": 520000,
   "lat": 55.769251,
   "lng": 37.224479,
+  "addr": "Заповедная, 25",
   "near": "Ильинское-Усово",
-  "rent": 520000,
-  "per_m2_card": false
+  "vat": "usn",
+  "rent": 519997
  },
  {
   "id": 332681922,
@@ -753,6 +945,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 31818,
+  "kind": "мес",
+  "sure": false,
   "days": 43,
   "created": "2026-08-06",
   "km": 1.7,
@@ -760,9 +954,30 @@
   "price": 140000,
   "lat": 55.770244,
   "lng": 37.22349,
+  "addr": "Заповедная, 24",
   "near": "Ильинское-Усово",
-  "rent": 140000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 139999
+ },
+ {
+  "id": 332934083,
+  "area": 5000,
+  "floor": 1,
+  "floors": 1,
+  "rate": 27670,
+  "kind": "м²/год",
+  "sure": false,
+  "days": 35,
+  "created": "2026-08-14",
+  "km": 3.7,
+  "url": "https://krasnogorsk.cian.ru/rent/commercial/332934083/",
+  "price": 27670,
+  "lat": 55.789851,
+  "lng": 37.251895,
+  "addr": null,
+  "near": "Глухово",
+  "vat": null,
+  "rent": 11529167
  },
  {
   "id": 332681937,
@@ -770,6 +985,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 23816,
+  "kind": "мес",
+  "sure": false,
   "days": 43,
   "created": "2026-08-06",
   "km": 1.7,
@@ -777,9 +994,10 @@
   "price": 285000,
   "lat": 55.770244,
   "lng": 37.22349,
+  "addr": "Заповедная, 24",
   "near": "Ильинское-Усово",
-  "rent": 285000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 284998
  },
  {
   "id": 331968354,
@@ -787,6 +1005,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 35408,
+  "kind": "мес",
+  "sure": true,
   "days": 67,
   "created": "2026-07-13",
   "km": 1.6,
@@ -794,9 +1014,10 @@
   "price": 275000,
   "lat": 55.769251,
   "lng": 37.224479,
+  "addr": "Заповедная, 25",
   "near": "Ильинское-Усово",
-  "rent": 275000,
-  "per_m2_card": false
+  "vat": "usn",
+  "rent": 275002
  },
  {
   "id": 313072137,
@@ -804,6 +1025,8 @@
   "floor": -1,
   "floors": 2,
   "rate": 16800,
+  "kind": "м²/мес",
+  "sure": true,
   "days": 595,
   "created": "2025-01-31",
   "km": 0.2,
@@ -811,9 +1034,10 @@
   "price": 1400,
   "lat": 55.758808,
   "lng": 37.236453,
+  "addr": "Ленина, 11",
   "near": "Ильинское",
-  "rent": 107800,
-  "per_m2_card": true
+  "vat": "included",
+  "rent": 107800
  },
  {
   "id": 325457201,
@@ -821,6 +1045,8 @@
   "floor": 4,
   "floors": 4,
   "rate": 30000,
+  "kind": "мес",
+  "sure": true,
   "days": 263,
   "created": "2025-12-29",
   "km": 0.6,
@@ -828,9 +1054,10 @@
   "price": 1250000,
   "lat": 55.760818,
   "lng": 37.230857,
+  "addr": "Экспериментальная, 10",
   "near": "Ильинское",
-  "rent": 1250000,
-  "per_m2_card": false
+  "vat": "included",
+  "rent": 1250000
  },
  {
   "id": 331865747,
@@ -838,6 +1065,8 @@
   "floor": 1,
   "floors": 5,
   "rate": 32956,
+  "kind": "мес",
+  "sure": false,
   "days": 70,
   "created": "2026-07-10",
   "km": 5.1,
@@ -845,9 +1074,10 @@
   "price": 170000,
   "lat": 55.788606,
   "lng": 37.29894,
+  "addr": null,
   "near": "Архангельское",
-  "rent": 170000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 169998
  },
  {
   "id": 331968103,
@@ -855,6 +1085,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 35004,
+  "kind": "мес",
+  "sure": true,
   "days": 67,
   "created": "2026-07-13",
   "km": 1.6,
@@ -862,9 +1094,10 @@
   "price": 390000,
   "lat": 55.769251,
   "lng": 37.224479,
+  "addr": "Заповедная, 25",
   "near": "Ильинское-Усово",
-  "rent": 390000,
-  "per_m2_card": false
+  "vat": "usn",
+  "rent": 390003
  },
  {
   "id": 332867937,
@@ -872,6 +1105,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 41769,
+  "kind": "мес",
+  "sure": true,
   "days": 37,
   "created": "2026-08-12",
   "km": 1.9,
@@ -879,9 +1114,10 @@
   "price": 362000,
   "lat": 55.774694,
   "lng": 37.237558,
-  "near": "Глухово",
-  "rent": 362000,
-  "per_m2_card": false
+  "addr": "Заповедная, 9",
+  "near": "Ильинское-Усово",
+  "vat": "included",
+  "rent": 361998
  },
  {
   "id": 331865748,
@@ -889,6 +1125,8 @@
   "floor": 1,
   "floors": 5,
   "rate": 36818,
+  "kind": "мес",
+  "sure": false,
   "days": 70,
   "created": "2026-07-10",
   "km": 5.1,
@@ -896,9 +1134,10 @@
   "price": 54000,
   "lat": 55.788606,
   "lng": 37.29894,
+  "addr": null,
   "near": "Архангельское",
-  "rent": 54000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 54000
  },
  {
   "id": 333043114,
@@ -906,6 +1145,8 @@
   "floor": 1,
   "floors": 5,
   "rate": 39000,
+  "kind": "мес",
+  "sure": false,
   "days": 31,
   "created": "2026-08-18",
   "km": 5.1,
@@ -913,9 +1154,10 @@
   "price": 26000,
   "lat": 55.788606,
   "lng": 37.29894,
+  "addr": null,
   "near": "Архангельское",
-  "rent": 26000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 26000
  },
  {
   "id": 332681968,
@@ -923,6 +1165,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 27115,
+  "kind": "мес",
+  "sure": false,
   "days": 43,
   "created": "2026-08-06",
   "km": 1.7,
@@ -930,9 +1174,10 @@
   "price": 195000,
   "lat": 55.770244,
   "lng": 37.22349,
+  "addr": "Заповедная, 24",
   "near": "Ильинское-Усово",
-  "rent": 195000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 195002
  },
  {
   "id": 330605809,
@@ -940,6 +1185,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 21750,
+  "kind": "мес",
+  "sure": true,
   "days": 111,
   "created": "2026-05-30",
   "km": 1.6,
@@ -947,9 +1194,10 @@
   "price": 145000,
   "lat": 55.771591,
   "lng": 37.236525,
-  "near": "Глухово",
-  "rent": 145000,
-  "per_m2_card": false
+  "addr": "Архангельская, 9",
+  "near": "Ильинское-Усово",
+  "vat": "notIncluded",
+  "rent": 145000
  },
  {
   "id": 327319412,
@@ -957,6 +1205,8 @@
   "floor": 1,
   "floors": 8,
   "rate": 16800,
+  "kind": "мес",
+  "sure": true,
   "days": 203,
   "created": "2026-02-27",
   "km": 1.0,
@@ -964,9 +1214,10 @@
   "price": 88620,
   "lat": 55.765635,
   "lng": 37.244197,
+  "addr": "Романовская, 21",
   "near": "Глухово",
-  "rent": 88620,
-  "per_m2_card": false
+  "vat": "included",
+  "rent": 88620
  },
  {
   "id": 328207266,
@@ -974,6 +1225,8 @@
   "floor": 1,
   "floors": 8,
   "rate": 16800,
+  "kind": "мес",
+  "sure": true,
   "days": 177,
   "created": "2026-03-25",
   "km": 1.0,
@@ -981,9 +1234,10 @@
   "price": 130480,
   "lat": 55.765635,
   "lng": 37.244197,
+  "addr": "Романовская, 21",
   "near": "Глухово",
-  "rent": 130480,
-  "per_m2_card": false
+  "vat": "included",
+  "rent": 130480
  },
  {
   "id": 327319385,
@@ -991,6 +1245,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 15000,
+  "kind": "мес",
+  "sure": true,
   "days": 203,
   "created": "2026-02-27",
   "km": 1.2,
@@ -998,9 +1254,10 @@
   "price": 96500,
   "lat": 55.767666,
   "lng": 37.245203,
+  "addr": "Романовская, 23",
   "near": "Глухово",
-  "rent": 96500,
-  "per_m2_card": false
+  "vat": "included",
+  "rent": 96500
  },
  {
   "id": 333350445,
@@ -1008,6 +1265,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 18000,
+  "kind": "мес",
+  "sure": true,
   "days": 22,
   "created": "2026-08-27",
   "km": 1.2,
@@ -1015,9 +1274,10 @@
   "price": 81150,
   "lat": 55.768279,
   "lng": 37.238906,
+  "addr": "Романовская, 7",
   "near": "Глухово",
-  "rent": 81150,
-  "per_m2_card": false
+  "vat": "included",
+  "rent": 81150
  },
  {
   "id": 320553651,
@@ -1025,6 +1285,8 @@
   "floor": 2,
   "floors": 2,
   "rate": 18072,
+  "kind": "мес",
+  "sure": false,
   "days": 408,
   "created": "2025-08-06",
   "km": 5.0,
@@ -1032,9 +1294,10 @@
   "price": 125000,
   "lat": 55.787902,
   "lng": 37.298069,
+  "addr": null,
   "near": "Архангельское",
-  "rent": 125000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 124998
  },
  {
   "id": 333276228,
@@ -1042,6 +1305,8 @@
   "floor": 3,
   "floors": 8,
   "rate": 17000,
+  "kind": "мес",
+  "sure": false,
   "days": 24,
   "created": "2026-08-25",
   "km": 3.1,
@@ -1049,9 +1314,10 @@
   "price": 2211417,
   "lat": 55.785432,
   "lng": 37.243181,
+  "addr": null,
   "near": "Глухово",
-  "rent": 2211417,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 2211417
  },
  {
   "id": 332688764,
@@ -1059,6 +1325,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 19200,
+  "kind": "м²/мес",
+  "sure": true,
   "days": 43,
   "created": "2026-08-06",
   "km": 1.9,
@@ -1066,9 +1334,10 @@
   "price": 1600,
   "lat": 55.774416,
   "lng": 37.2356,
-  "near": "Глухово",
-  "rent": 140160,
-  "per_m2_card": true
+  "addr": "Заповедная, 10",
+  "near": "Ильинское-Усово",
+  "vat": "notIncluded",
+  "rent": 140160
  },
  {
   "id": 331507639,
@@ -1076,6 +1345,8 @@
   "floor": 1,
   "floors": 2,
   "rate": 46154,
+  "kind": "мес",
+  "sure": true,
   "days": 81,
   "created": "2026-06-29",
   "km": 0.4,
@@ -1083,9 +1354,10 @@
   "price": 310000,
   "lat": 55.760611,
   "lng": 37.242274,
+  "addr": "Ленина, 26",
   "near": "Ильинское",
-  "rent": 310000,
-  "per_m2_card": false
+  "vat": "included",
+  "rent": 310001
  },
  {
   "id": 333240022,
@@ -1093,6 +1365,8 @@
   "floor": 1,
   "floors": 1,
   "rate": 45000,
+  "kind": "мес",
+  "sure": false,
   "days": 25,
   "created": "2026-08-24",
   "km": 5.8,
@@ -1100,9 +1374,10 @@
   "price": 150000,
   "lat": 55.785397,
   "lng": 37.160087,
+  "addr": "Лесная Сторожка, 25",
   "near": "пос. Истра",
-  "rent": 150000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 150000
  },
  {
   "id": 328054792,
@@ -1110,6 +1385,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 32697,
+  "kind": "мес",
+  "sure": false,
   "days": 181,
   "created": "2026-03-21",
   "km": 1.8,
@@ -1117,9 +1394,10 @@
   "price": 199999,
   "lat": 55.771003,
   "lng": 37.224604,
+  "addr": "Заповедная, 22",
   "near": "Ильинское-Усово",
-  "rent": 199999,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 199997
  },
  {
   "id": 327319350,
@@ -1127,6 +1405,8 @@
   "floor": 1,
   "floors": 8,
   "rate": 24600,
+  "kind": "мес",
+  "sure": true,
   "days": 203,
   "created": "2026-02-27",
   "km": 1.0,
@@ -1134,9 +1414,10 @@
   "price": 227755,
   "lat": 55.766319,
   "lng": 37.242616,
+  "addr": "Романовская, 17",
   "near": "Глухово",
-  "rent": 227755,
-  "per_m2_card": false
+  "vat": "included",
+  "rent": 227755
  },
  {
   "id": 333437804,
@@ -1144,6 +1425,8 @@
   "floor": 1,
   "floors": 1,
   "rate": 26301,
+  "kind": "мес",
+  "sure": true,
   "days": 18,
   "created": "2026-08-31",
   "km": 1.9,
@@ -1151,9 +1434,10 @@
   "price": 160000,
   "lat": 55.774694,
   "lng": 37.237558,
-  "near": "Глухово",
-  "rent": 160000,
-  "per_m2_card": false
+  "addr": "Заповедная, 9",
+  "near": "Ильинское-Усово",
+  "vat": "included",
+  "rent": 159998
  },
  {
   "id": 332411100,
@@ -1161,6 +1445,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 18000,
+  "kind": "мес",
+  "sure": true,
   "days": 52,
   "created": "2026-07-28",
   "km": 1.2,
@@ -1168,9 +1454,10 @@
   "price": 46500,
   "lat": 55.767884,
   "lng": 37.243244,
+  "addr": "Романовская, 19",
   "near": "Глухово",
-  "rent": 46500,
-  "per_m2_card": false
+  "vat": "included",
+  "rent": 46500
  },
  {
   "id": 333083003,
@@ -1178,6 +1465,8 @@
   "floor": null,
   "floors": 1,
   "rate": 16000,
+  "kind": "мес",
+  "sure": false,
   "days": 30,
   "created": "2026-08-19",
   "km": 3.8,
@@ -1185,9 +1474,10 @@
   "price": 120000,
   "lat": 55.789644,
   "lng": 37.219125,
+  "addr": null,
   "near": "Бузланово",
-  "rent": 120000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 120000
  },
  {
   "id": 332604608,
@@ -1195,6 +1485,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 28831,
+  "kind": "мес",
+  "sure": true,
   "days": 45,
   "created": "2026-08-04",
   "km": 1.5,
@@ -1202,9 +1494,10 @@
   "price": 185000,
   "lat": 55.770203,
   "lng": 37.230057,
+  "addr": "Архангельская, 15",
   "near": "Ильинское-Усово",
-  "rent": 185000,
-  "per_m2_card": false
+  "vat": "usn",
+  "rent": 184999
  },
  {
   "id": 327252455,
@@ -1212,6 +1505,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 30060,
+  "kind": "мес",
+  "sure": true,
   "days": 204,
   "created": "2026-02-26",
   "km": 1.8,
@@ -1219,9 +1514,10 @@
   "price": 250000,
   "lat": 55.773089,
   "lng": 37.232276,
+  "addr": "Заповедная, 14",
   "near": "Ильинское-Усово",
-  "rent": 250000,
-  "per_m2_card": false
+  "vat": "usn",
+  "rent": 249999
  },
  {
   "id": 333670293,
@@ -1229,6 +1525,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 48649,
+  "kind": "мес",
+  "sure": true,
   "days": 11,
   "created": "2026-09-07",
   "km": 1.6,
@@ -1236,9 +1534,10 @@
   "price": 300000,
   "lat": 55.769251,
   "lng": 37.224479,
+  "addr": "Заповедная, 25",
   "near": "Ильинское-Усово",
-  "rent": 300000,
-  "per_m2_card": false
+  "vat": "usn",
+  "rent": 300002
  },
  {
   "id": 327319387,
@@ -1246,6 +1545,8 @@
   "floor": -1,
   "floors": 9,
   "rate": 12000,
+  "kind": "мес",
+  "sure": true,
   "days": 203,
   "created": "2026-02-27",
   "km": 1.2,
@@ -1253,9 +1554,10 @@
   "price": 261600,
   "lat": 55.767666,
   "lng": 37.245203,
+  "addr": "Романовская, 23",
   "near": "Глухово",
-  "rent": 261600,
-  "per_m2_card": false
+  "vat": "included",
+  "rent": 261600
  },
  {
   "id": 332604619,
@@ -1263,6 +1565,8 @@
   "floor": 1,
   "floors": 10,
   "rate": 32400,
+  "kind": "мес",
+  "sure": true,
   "days": 45,
   "created": "2026-08-04",
   "km": 1.5,
@@ -1270,9 +1574,10 @@
   "price": 352350,
   "lat": 55.770203,
   "lng": 37.230057,
+  "addr": "Архангельская, 15",
   "near": "Ильинское-Усово",
-  "rent": 352350,
-  "per_m2_card": false
+  "vat": "included",
+  "rent": 352350
  },
  {
   "id": 329962592,
@@ -1280,6 +1585,8 @@
   "floor": 1,
   "floors": 1,
   "rate": 58800,
+  "kind": "м²/мес",
+  "sure": false,
   "days": 128,
   "created": "2026-05-13",
   "km": 5.9,
@@ -1287,9 +1594,10 @@
   "price": 4900,
   "lat": 55.786303,
   "lng": 37.159593,
+  "addr": "Лесная Сторожка, 13",
   "near": "пос. Истра",
-  "rent": 490000,
-  "per_m2_card": true
+  "vat": null,
+  "rent": 490000
  },
  {
   "id": 332604660,
@@ -1297,6 +1605,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 34441,
+  "kind": "мес",
+  "sure": true,
   "days": 45,
   "created": "2026-08-04",
   "km": 1.6,
@@ -1304,9 +1614,10 @@
   "price": 190000,
   "lat": 55.770861,
   "lng": 37.228557,
+  "addr": "Заповедная, 21",
   "near": "Ильинское-Усово",
-  "rent": 190000,
-  "per_m2_card": false
+  "vat": "included",
+  "rent": 190000
  },
  {
   "id": 328226996,
@@ -1314,6 +1625,8 @@
   "floor": 1,
   "floors": 10,
   "rate": 26782,
+  "kind": "мес",
+  "sure": true,
   "days": 177,
   "created": "2026-03-25",
   "km": 1.8,
@@ -1321,9 +1634,10 @@
   "price": 670000,
   "lat": 55.771003,
   "lng": 37.224604,
+  "addr": "Заповедная, 22",
   "near": "Ильинское-Усово",
-  "rent": 670000,
-  "per_m2_card": false
+  "vat": "usn",
+  "rent": 669996
  },
  {
   "id": 332411093,
@@ -1331,6 +1645,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 16800,
+  "kind": "мес",
+  "sure": true,
   "days": 52,
   "created": "2026-07-28",
   "km": 1.1,
@@ -1338,9 +1654,10 @@
   "price": 31220,
   "lat": 55.766962,
   "lng": 37.236651,
-  "near": "Ильинское-Усово",
-  "rent": 31220,
-  "per_m2_card": false
+  "addr": "Романовская, 5",
+  "near": "Глухово",
+  "vat": "included",
+  "rent": 31220
  },
  {
   "id": 333809670,
@@ -1348,6 +1665,8 @@
   "floor": 1,
   "floors": 2,
   "rate": 42000,
+  "kind": "м²/мес",
+  "sure": true,
   "days": 8,
   "created": "2026-09-10",
   "km": 1.7,
@@ -1355,9 +1674,10 @@
   "price": 3500,
   "lat": 55.771241,
   "lng": 37.248778,
+  "addr": "Рублевское Предместье, 1с4",
   "near": "Глухово",
-  "rent": 1295000,
-  "per_m2_card": true
+  "vat": "usn",
+  "rent": 1295000
  },
  {
   "id": 333961008,
@@ -1365,6 +1685,8 @@
   "floor": null,
   "floors": null,
   "rate": 11025,
+  "kind": "мес",
+  "sure": false,
   "days": 3,
   "created": "2026-09-15",
   "km": 5.4,
@@ -1372,9 +1694,10 @@
   "price": 216548,
   "lat": 55.793394,
   "lng": 37.297116,
+  "addr": null,
   "near": "Архангельское",
-  "rent": 216548,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 216549
  },
  {
   "id": 331786589,
@@ -1382,6 +1705,8 @@
   "floor": 1,
   "floors": 5,
   "rate": 21600,
+  "kind": "м²/мес",
+  "sure": true,
   "days": 73,
   "created": "2026-07-07",
   "km": 1.4,
@@ -1389,9 +1714,10 @@
   "price": 1800,
   "lat": 55.769661,
   "lng": 37.245912,
+  "addr": "Рублевское Предместье, 11к1",
   "near": "Глухово",
-  "rent": 100800,
-  "per_m2_card": true
+  "vat": "usn",
+  "rent": 100800
  },
  {
   "id": 319810794,
@@ -1399,6 +1725,8 @@
   "floor": 1,
   "floors": 8,
   "rate": 11170,
+  "kind": "мес",
+  "sure": true,
   "days": 429,
   "created": "2025-07-16",
   "km": 1.2,
@@ -1406,9 +1734,10 @@
   "price": 35000,
   "lat": 55.768279,
   "lng": 37.238906,
+  "addr": "Романовская, 7",
   "near": "Глухово",
-  "rent": 35000,
-  "per_m2_card": false
+  "vat": "notIncluded",
+  "rent": 34999
  },
  {
   "id": 329026279,
@@ -1416,6 +1745,8 @@
   "floor": 1,
   "floors": 10,
   "rate": 35714,
+  "kind": "мес",
+  "sure": true,
   "days": 156,
   "created": "2026-04-15",
   "km": 1.8,
@@ -1423,9 +1754,10 @@
   "price": 50000,
   "lat": 55.77352,
   "lng": 37.2416,
-  "near": "Глухово",
-  "rent": 50000,
-  "per_m2_card": false
+  "addr": "Архангельская, 3",
+  "near": "Ильинское-Усово",
+  "vat": "usn",
+  "rent": 50000
  },
  {
   "id": 325682607,
@@ -1433,6 +1765,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 24000,
+  "kind": "мес",
+  "sure": true,
   "days": 249,
   "created": "2026-01-12",
   "km": 1.2,
@@ -1440,9 +1774,10 @@
   "price": 50000,
   "lat": 55.768279,
   "lng": 37.238906,
+  "addr": "Романовская, 7",
   "near": "Глухово",
-  "rent": 50000,
-  "per_m2_card": false
+  "vat": "included",
+  "rent": 50000
  },
  {
   "id": 284412431,
@@ -1450,6 +1785,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 22843,
+  "kind": "мес",
+  "sure": true,
   "days": 1295,
   "created": "2023-03-03",
   "km": 1.9,
@@ -1457,9 +1794,10 @@
   "price": 150000,
   "lat": 55.774148,
   "lng": 37.244969,
+  "addr": null,
   "near": "Глухово",
-  "rent": 150000,
-  "per_m2_card": false
+  "vat": "notIncluded",
+  "rent": 150002
  },
  {
   "id": 333960746,
@@ -1467,6 +1805,8 @@
   "floor": null,
   "floors": null,
   "rate": 9288,
+  "kind": "мес",
+  "sure": false,
   "days": 3,
   "created": "2026-09-15",
   "km": 5.6,
@@ -1474,9 +1814,10 @@
   "price": 360000,
   "lat": 55.795064,
   "lng": 37.299739,
+  "addr": null,
   "near": "Архангельское",
-  "rent": 360000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 359987
  },
  {
   "id": 332447123,
@@ -1484,6 +1825,8 @@
   "floor": 1,
   "floors": 4,
   "rate": 36279,
+  "kind": "мес",
+  "sure": false,
   "days": 51,
   "created": "2026-07-29",
   "km": 5.2,
@@ -1491,9 +1834,10 @@
   "price": 650000,
   "lat": 55.799699,
   "lng": 37.273967,
+  "addr": "Новорижское шоссе, 23-й, вл2с1",
   "near": "Архангельское",
-  "rent": 650000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 649999
  },
  {
   "id": 333594237,
@@ -1501,6 +1845,8 @@
   "floor": 1,
   "floors": 2,
   "rate": 24000,
+  "kind": "мес",
+  "sure": false,
   "days": 14,
   "created": "2026-09-04",
   "km": 2.3,
@@ -1508,9 +1854,10 @@
   "price": 120000,
   "lat": 55.776715,
   "lng": 37.226078,
+  "addr": "Новорижское шоссе, 27-й, с1",
   "near": "Ильинское-Усово",
-  "rent": 120000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 120000
  },
  {
   "id": 331190255,
@@ -1518,6 +1865,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 34286,
+  "kind": "мес",
+  "sure": true,
   "days": 92,
   "created": "2026-06-18",
   "km": 1.7,
@@ -1525,9 +1874,10 @@
   "price": 180000,
   "lat": 55.770244,
   "lng": 37.22349,
+  "addr": "Заповедная, 24",
   "near": "Ильинское-Усово",
-  "rent": 180000,
-  "per_m2_card": false
+  "vat": "usn",
+  "rent": 180002
  },
  {
   "id": 333593299,
@@ -1535,6 +1885,8 @@
   "floor": 2,
   "floors": 2,
   "rate": 28000,
+  "kind": "мес",
+  "sure": false,
   "days": 14,
   "created": "2026-09-04",
   "km": 2.3,
@@ -1542,9 +1894,10 @@
   "price": 70000,
   "lat": 55.776715,
   "lng": 37.226078,
+  "addr": "Новорижское шоссе, 27-й, с1",
   "near": "Ильинское-Усово",
-  "rent": 70000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 70000
  },
  {
   "id": 303876473,
@@ -1552,6 +1905,8 @@
   "floor": 1,
   "floors": 2,
   "rate": 21600,
+  "kind": "м²/мес",
+  "sure": false,
   "days": 814,
   "created": "2024-06-26",
   "km": 2.5,
@@ -1559,9 +1914,10 @@
   "price": 1800,
   "lat": 55.779413,
   "lng": 37.227713,
+  "addr": "Лесная, 141",
   "near": "Ильинское-Усово",
-  "rent": 63000,
-  "per_m2_card": true
+  "vat": null,
+  "rent": 63000
  },
  {
   "id": 332447122,
@@ -1569,6 +1925,8 @@
   "floor": 3,
   "floors": 4,
   "rate": 19643,
+  "kind": "мес",
+  "sure": false,
   "days": 51,
   "created": "2026-07-29",
   "km": 5.2,
@@ -1576,9 +1934,10 @@
   "price": 1100000,
   "lat": 55.799699,
   "lng": 37.273967,
+  "addr": "Новорижское шоссе, 23-й, вл2с1",
   "near": "Архангельское",
-  "rent": 1100000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 1100008
  },
  {
   "id": 333248259,
@@ -1586,6 +1945,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 22248,
+  "kind": "мес",
+  "sure": true,
   "days": 25,
   "created": "2026-08-24",
   "km": 1.7,
@@ -1593,9 +1954,10 @@
   "price": 160000,
   "lat": 55.770244,
   "lng": 37.22349,
+  "addr": "Заповедная, 24",
   "near": "Ильинское-Усово",
-  "rent": 160000,
-  "per_m2_card": false
+  "vat": "notIncluded",
+  "rent": 160000
  },
  {
   "id": 333084996,
@@ -1603,6 +1965,8 @@
   "floor": 1,
   "floors": 6,
   "rate": 16552,
+  "kind": "мес",
+  "sure": false,
   "days": 30,
   "created": "2026-08-19",
   "km": 1.4,
@@ -1610,9 +1974,10 @@
   "price": 40000,
   "lat": 55.769717,
   "lng": 37.241115,
+  "addr": "Рублевское Предместье",
   "near": "Глухово",
-  "rent": 40000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 40001
  },
  {
   "id": 332623732,
@@ -1620,6 +1985,8 @@
   "floor": 1,
   "floors": 9,
   "rate": 35377,
+  "kind": "мес",
+  "sure": false,
   "days": 45,
   "created": "2026-08-04",
   "km": 1.8,
@@ -1627,9 +1994,10 @@
   "price": 250000,
   "lat": 55.771003,
   "lng": 37.224604,
+  "addr": "Заповедная, 22",
   "near": "Ильинское-Усово",
-  "rent": 250000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 249997
  },
  {
   "id": 332447124,
@@ -1637,6 +2005,8 @@
   "floor": 1,
   "floors": 4,
   "rate": 39086,
+  "kind": "мес",
+  "sure": false,
   "days": 51,
   "created": "2026-07-29",
   "km": 5.2,
@@ -1644,9 +2014,10 @@
   "price": 570000,
   "lat": 55.799699,
   "lng": 37.273967,
+  "addr": "Новорижское шоссе, 23-й, вл2с1",
   "near": "Архангельское",
-  "rent": 570000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 570004
  },
  {
   "id": 319821445,
@@ -1654,6 +2025,8 @@
   "floor": 1,
   "floors": 22,
   "rate": 30035,
+  "kind": "мес",
+  "sure": true,
   "days": 429,
   "created": "2025-07-16",
   "km": 1.8,
@@ -1661,9 +2034,10 @@
   "price": 213000,
   "lat": 55.771003,
   "lng": 37.224604,
+  "addr": "Заповедная, 22",
   "near": "Ильинское-Усово",
-  "rent": 213000,
-  "per_m2_card": false
+  "vat": "usn",
+  "rent": 212998
  },
  {
   "id": 333014437,
@@ -1671,16 +2045,19 @@
   "floor": 1,
   "floors": 1,
   "rate": 44000,
-  "days": 33,
+  "kind": "мес",
+  "sure": false,
+  "days": 32,
   "created": "2026-08-17",
   "km": 8.9,
   "url": "https://zvenigorod.cian.ru/rent/commercial/333014437/",
   "price": 1100000,
   "lat": 55.716701,
   "lng": 37.115387,
+  "addr": null,
   "near": "Горки-2",
-  "rent": 1100000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 1100000
  },
  {
   "id": 322849091,
@@ -1688,16 +2065,19 @@
   "floor": 3,
   "floors": 3,
   "rate": 23333,
-  "days": 341,
+  "kind": "мес",
+  "sure": false,
+  "days": 340,
   "created": "2025-10-13",
   "km": 5.9,
   "url": "https://zvenigorod.cian.ru/rent/commercial/322849091/",
   "price": 350000,
   "lat": 55.723759,
   "lng": 37.166052,
+  "addr": "Рублево-Успенское, 17",
   "near": "Горки-2",
-  "rent": 350000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 349995
  },
  {
   "id": 321164596,
@@ -1705,16 +2085,19 @@
   "floor": 1,
   "floors": 2,
   "rate": 24000,
-  "days": 389,
+  "kind": "мес",
+  "sure": false,
+  "days": 388,
   "created": "2025-08-26",
-  "km": 6.0,
+  "km": 6.1,
   "url": "https://zvenigorod.cian.ru/rent/commercial/321164596/",
   "price": 960000,
   "lat": 55.724883,
   "lng": 37.161204,
+  "addr": null,
   "near": "Горки-2",
-  "rent": 960000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 960000
  },
  {
   "id": 333543801,
@@ -1722,16 +2105,19 @@
   "floor": 1,
   "floors": 4,
   "rate": 17073,
-  "days": 17,
+  "kind": "мес",
+  "sure": false,
+  "days": 16,
   "created": "2026-09-02",
   "km": 2.4,
   "url": "https://zvenigorod.cian.ru/rent/commercial/333543801/",
   "price": 350000,
   "lat": 55.735971,
   "lng": 37.24752,
+  "addr": null,
   "near": "Жуковка",
-  "rent": 350000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 349996
  },
  {
   "id": 333543804,
@@ -1739,33 +2125,19 @@
   "floor": 1,
   "floors": 4,
   "rate": 36000,
-  "days": 17,
+  "kind": "мес",
+  "sure": false,
+  "days": 16,
   "created": "2026-09-02",
   "km": 2.4,
   "url": "https://zvenigorod.cian.ru/rent/commercial/333543804/",
   "price": 750000,
   "lat": 55.735971,
   "lng": 37.24752,
+  "addr": null,
   "near": "Жуковка",
-  "rent": 750000,
-  "per_m2_card": false
- },
- {
-  "id": 284370519,
-  "area": 1000,
-  "floor": 1,
-  "floors": 6,
-  "rate": 2400,
-  "days": 1297,
-  "created": "2023-03-02",
-  "km": 2.4,
-  "url": "https://zvenigorod.cian.ru/rent/commercial/284370519/",
-  "price": 200000,
-  "lat": 55.735971,
-  "lng": 37.24752,
-  "near": "Жуковка",
-  "rent": 200000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 750000
  },
  {
   "id": 333543808,
@@ -1773,16 +2145,19 @@
   "floor": 1,
   "floors": 4,
   "rate": 24000,
-  "days": 17,
+  "kind": "мес",
+  "sure": false,
+  "days": 16,
   "created": "2026-09-02",
   "km": 2.4,
   "url": "https://zvenigorod.cian.ru/rent/commercial/333543808/",
   "price": 2034000,
   "lat": 55.735971,
   "lng": 37.24752,
+  "addr": null,
   "near": "Жуковка",
-  "rent": 2034000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 2034000
  },
  {
   "id": 332954310,
@@ -1790,16 +2165,19 @@
   "floor": 3,
   "floors": 4,
   "rate": 50000,
-  "days": 36,
+  "kind": "мес",
+  "sure": false,
+  "days": 35,
   "created": "2026-08-14",
   "km": 2.4,
   "url": "https://zvenigorod.cian.ru/rent/commercial/332954310/",
   "price": 172917,
   "lat": 55.736534,
   "lng": 37.246451,
+  "addr": null,
   "near": "Жуковка",
-  "rent": 172917,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 172917
  },
  {
   "id": 332276656,
@@ -1807,16 +2185,19 @@
   "floor": 3,
   "floors": 4,
   "rate": 47094,
-  "days": 58,
+  "kind": "мес",
+  "sure": false,
+  "days": 57,
   "created": "2026-07-23",
   "km": 2.4,
   "url": "https://zvenigorod.cian.ru/rent/commercial/332276656/",
   "price": 208000,
   "lat": 55.736534,
   "lng": 37.246451,
+  "addr": null,
   "near": "Жуковка",
-  "rent": 208000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 207998
  },
  {
   "id": 332954531,
@@ -1824,16 +2205,19 @@
   "floor": 3,
   "floors": 4,
   "rate": 50000,
-  "days": 36,
+  "kind": "мес",
+  "sure": false,
+  "days": 35,
   "created": "2026-08-14",
   "km": 2.4,
   "url": "https://zvenigorod.cian.ru/rent/commercial/332954531/",
   "price": 237917,
   "lat": 55.736534,
   "lng": 37.246451,
+  "addr": null,
   "near": "Жуковка",
-  "rent": 237917,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 237917
  },
  {
   "id": 332954861,
@@ -1841,16 +2225,19 @@
   "floor": 3,
   "floors": 3,
   "rate": 50000,
-  "days": 36,
+  "kind": "мес",
+  "sure": false,
+  "days": 35,
   "created": "2026-08-14",
   "km": 2.4,
   "url": "https://zvenigorod.cian.ru/rent/commercial/332954861/",
   "price": 950000,
   "lat": 55.736534,
   "lng": 37.246451,
+  "addr": null,
   "near": "Жуковка",
-  "rent": 950000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 950000
  },
  {
   "id": 331164405,
@@ -1858,16 +2245,19 @@
   "floor": 1,
   "floors": 2,
   "rate": 73492,
-  "days": 94,
+  "kind": "мес",
+  "sure": false,
+  "days": 93,
   "created": "2026-06-17",
   "km": 2.4,
   "url": "https://zvenigorod.cian.ru/rent/commercial/331164405/",
   "price": 7600000,
   "lat": 55.736184,
   "lng": 37.24461,
+  "addr": null,
   "near": "Жуковка",
-  "rent": 7600000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 7599991
  },
  {
   "id": 314353642,
@@ -1875,16 +2265,19 @@
   "floor": 2,
   "floors": 4,
   "rate": 26732,
-  "days": 567,
+  "kind": "мес",
+  "sure": false,
+  "days": 566,
   "created": "2025-03-01",
   "km": 2.4,
   "url": "https://zvenigorod.cian.ru/rent/commercial/314353642/",
   "price": 499000,
   "lat": 55.736534,
   "lng": 37.246451,
+  "addr": null,
   "near": "Жуковка",
-  "rent": 499000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 498997
  },
  {
   "id": 333568687,
@@ -1892,16 +2285,19 @@
   "floor": null,
   "floors": 2,
   "rate": 73489,
-  "days": 16,
+  "kind": "мес",
+  "sure": false,
+  "days": 15,
   "created": "2026-09-03",
   "km": 2.4,
   "url": "https://zvenigorod.cian.ru/rent/commercial/333568687/",
   "price": 7600000,
   "lat": 55.736184,
   "lng": 37.24461,
+  "addr": null,
   "near": "Жуковка",
-  "rent": 7600000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 7599987
  },
  {
   "id": 330575706,
@@ -1909,15 +2305,198 @@
   "floor": null,
   "floors": 2,
   "rate": 73489,
-  "days": 113,
+  "kind": "мес",
+  "sure": false,
+  "days": 112,
   "created": "2026-05-29",
   "km": 2.4,
   "url": "https://zvenigorod.cian.ru/rent/commercial/330575706/",
   "price": 7600000,
   "lat": 55.736184,
   "lng": 37.24461,
+  "addr": null,
   "near": "Жуковка",
-  "rent": 7600000,
-  "per_m2_card": false
+  "vat": null,
+  "rent": 7599987
+ },
+ {
+  "id": 334096897,
+  "area": 143.6,
+  "floor": 1,
+  "floors": 9,
+  "rate": 23816,
+  "kind": "мес",
+  "sure": true,
+  "days": 0,
+  "created": "2026-09-20",
+  "km": 1.7,
+  "url": "https://krasnogorsk.cian.ru/rent/commercial/334096897/",
+  "price": 285000,
+  "lat": 55.770244,
+  "lng": 37.22349,
+  "addr": "Заповедная, 24",
+  "near": "Ильинское-Усово",
+  "vat": "notIncluded",
+  "rent": 284998
+ },
+ {
+  "id": 334096625,
+  "area": 124,
+  "floor": 1,
+  "floors": 9,
+  "rate": 19355,
+  "kind": "мес",
+  "sure": true,
+  "days": 0,
+  "created": "2026-09-20",
+  "km": 1.6,
+  "url": "https://krasnogorsk.cian.ru/rent/commercial/334096625/",
+  "price": 200000,
+  "lat": 55.769251,
+  "lng": 37.224479,
+  "addr": "Заповедная, 25",
+  "near": "Ильинское-Усово",
+  "vat": "notIncluded",
+  "rent": 200002
+ },
+ {
+  "id": 334096839,
+  "area": 70.7,
+  "floor": 1,
+  "floors": 10,
+  "rate": 21216,
+  "kind": "мес",
+  "sure": true,
+  "days": 0,
+  "created": "2026-09-20",
+  "km": 1.8,
+  "url": "https://krasnogorsk.cian.ru/rent/commercial/334096839/",
+  "price": 125000,
+  "lat": 55.773251,
+  "lng": 37.234585,
+  "addr": "Заповедная, 13",
+  "near": "Ильинское-Усово",
+  "vat": "notIncluded",
+  "rent": 124998
+ },
+ {
+  "id": 334096509,
+  "area": 4,
+  "floor": -1,
+  "floors": 9,
+  "rate": 13500,
+  "kind": "мес",
+  "sure": true,
+  "days": 0,
+  "created": "2026-09-20",
+  "km": 1.8,
+  "url": "https://krasnogorsk.cian.ru/rent/commercial/334096509/",
+  "price": 4500,
+  "lat": 55.771003,
+  "lng": 37.224604,
+  "addr": "Заповедная, 22",
+  "near": "Ильинское-Усово",
+  "vat": "notIncluded",
+  "rent": 4500
+ },
+ {
+  "id": 329804298,
+  "area": 900,
+  "floor": 1,
+  "floors": 9,
+  "rate": 18000,
+  "kind": "м²/мес",
+  "sure": true,
+  "days": 133,
+  "created": "2026-05-08",
+  "km": 2.2,
+  "url": "https://krasnogorsk.cian.ru/rent/commercial/329804298/",
+  "price": 1500,
+  "lat": 55.773717,
+  "lng": 37.218586,
+  "addr": null,
+  "near": "Ильинское-Усово",
+  "vat": "notIncluded",
+  "rent": 1350000
+ },
+ {
+  "id": 329803342,
+  "area": 100,
+  "floor": 1,
+  "floors": 9,
+  "rate": 18000,
+  "kind": "м²/мес",
+  "sure": true,
+  "days": 133,
+  "created": "2026-05-08",
+  "km": 2.2,
+  "url": "https://krasnogorsk.cian.ru/rent/commercial/329803342/",
+  "price": 1500,
+  "lat": 55.773717,
+  "lng": 37.218586,
+  "addr": null,
+  "near": "Ильинское-Усово",
+  "vat": "notIncluded",
+  "rent": 150000
+ },
+ {
+  "id": 329788014,
+  "area": 22,
+  "floor": 2,
+  "floors": 9,
+  "rate": 24000,
+  "kind": "м²/мес",
+  "sure": true,
+  "days": 134,
+  "created": "2026-05-07",
+  "km": 2.2,
+  "url": "https://krasnogorsk.cian.ru/rent/commercial/329788014/",
+  "price": 2000,
+  "lat": 55.773717,
+  "lng": 37.218586,
+  "addr": null,
+  "near": "Ильинское-Усово",
+  "vat": "notIncluded",
+  "rent": 44000
+ },
+ {
+  "id": 329788329,
+  "area": 29,
+  "floor": 2,
+  "floors": 9,
+  "rate": 24000,
+  "kind": "м²/мес",
+  "sure": true,
+  "days": 134,
+  "created": "2026-05-07",
+  "km": 2.2,
+  "url": "https://krasnogorsk.cian.ru/rent/commercial/329788329/",
+  "price": 2000,
+  "lat": 55.773717,
+  "lng": 37.218586,
+  "addr": null,
+  "near": "Ильинское-Усово",
+  "vat": "notIncluded",
+  "rent": 58000
+ },
+ {
+  "id": 329787507,
+  "area": 20,
+  "floor": 2,
+  "floors": 9,
+  "rate": 24000,
+  "kind": "м²/мес",
+  "sure": true,
+  "days": 134,
+  "created": "2026-05-07",
+  "km": 2.2,
+  "url": "https://krasnogorsk.cian.ru/rent/commercial/329787507/",
+  "price": 2000,
+  "lat": 55.773717,
+  "lng": 37.218586,
+  "addr": null,
+  "near": "Ильинское-Усово",
+  "vat": "notIncluded",
+  "rent": 40000
  }
 ]
