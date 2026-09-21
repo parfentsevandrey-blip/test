@@ -620,6 +620,26 @@ module.exports = {
    "lng": 37.236453,
    "url": "https://krasnogorsk.cian.ru/rent/commercial/327894962/"
   },
+  "cheapest": {
+   "id": 322849091,
+   "addr": "Рублево-Успенское 17",
+   "area": 180,
+   "floor": 3,
+   "floors": 3,
+   "rate": 23333,
+   "rate_m": 1944,
+   "rent": 350000,
+   "kind": "за месяц",
+   "sure": false,
+   "days": 343,
+   "created": "2025-10-13",
+   "vat": null,
+   "km": 5.9,
+   "map": 1,
+   "lat": 55.723759,
+   "lng": 37.166052,
+   "url": "https://zvenigorod.cian.ru/rent/commercial/322849091/"
+  },
   "ours": {
    "№1": {
     "area": 430.5,

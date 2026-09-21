@@ -112,6 +112,9 @@ def stats(sel):
          'big_up': f3[0],
          'gf_cheapest': min(f1, key=lambda x: x['rate']),
          'gf_dearest': max(f1, key=lambda x: x['rate']),
+         # самый дешёвый метр выборки — чтобы в тексте не рассуждать о престиже
+         # локаций там, где цену можно просто сравнить
+         'cheapest': min(sel, key=lambda x: x['rate_m']),
          }
     S['ours'] = {name: {'area': a, 'floor': fl, 'rent': r, 'rate': round(r*12/a),
                         'rate_m': round(r/a)}
