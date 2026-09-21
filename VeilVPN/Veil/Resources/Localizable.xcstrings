@@ -421,6 +421,34 @@
         }
       }
     },
+    "A volunteer proxy or a domain front carries everything through one link, usually about a megabit a second — far under the 22 that 4K needs, and nothing inside Tor can widen it. obfs4 bridges are ordinary relays and are typically many times wider, while resisting censorship just as well. If obfs4 cannot connect on this network, switch back under Bridges.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прокси-волонтёр или домен-фронт проводит всё через одно звено, обычно около мегабита в секунду — это далеко от 22, нужных для 4K, и никакими средствами внутри Tor это звено не расширить. Мосты obfs4 — это обычные узлы, они, как правило, в разы шире и при этом так же устойчивы к цензуре. Если obfs4 в этой сети не подключается, вернитесь обратно в разделе «Мосты»."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проксі-волонтер або домен-фронт проводить усе через одну ланку, зазвичай близько мегабіта на секунду — це далеко від 22, потрібних для 4K, і жодними засобами всередині Tor цю ланку не розширити. Мости obfs4 — це звичайні вузли, вони зазвичай у рази ширші й при цьому так само стійкі до цензури. Якщо obfs4 у цій мережі не підключається, поверніться назад у розділі «Мости»."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "یک پراکسی داوطلبانه یا نمای دامنه همه چیز را از یک پیوند عبور می‌دهد، معمولاً حدود یک مگابیت بر ثانیه — بسیار کمتر از ۲۲ که 4K نیاز دارد، و هیچ چیز درون Tor نمی‌تواند آن را پهن‌تر کند. پل‌های obfs4 رله‌های معمولی‌اند و معمولاً چندین برابر پهن‌ترند، در حالی که به همان اندازه در برابر سانسور مقاوم‌اند. اگر obfs4 در این شبکه متصل نشد، در بخش پل‌ها به حالت قبل برگردید."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "志愿者代理或域前置会把所有流量挤进一条链路，通常约每秒一兆比特——远低于 4K 所需的 22，而且 Tor 内部的任何手段都无法把它拓宽。obfs4 网桥是普通中继，通常宽出数倍，同时抗审查能力毫不逊色。若 obfs4 在此网络无法连接，可在“网桥”中切回。"
+          }
+        }
+      }
+    },
     "About": {
       "localizations": {
         "fa": {
@@ -12037,6 +12065,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "无缝切换路由"
+          }
+        }
+      }
+    },
+    "Switch to obfs4 and reconnect": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Переключиться на obfs4 и переподключиться"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перемкнутися на obfs4 і перепідключитися"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تغییر به obfs4 و اتصال دوباره"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "切换到 obfs4 并重新连接"
           }
         }
       }

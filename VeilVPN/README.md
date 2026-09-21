@@ -9,7 +9,7 @@ Veil — нативное SwiftUI-приложение для macOS 26 Tahoe. О
 плитки статистики и «чипы» цепочки, плавающий сайдбар над живым mesh-градиентом,
 окно в строке меню.
 
-> **Готовый DMG:** <https://github.com/parfentsevandrey-blip/test/releases/tag/veil-v0.8.5>
+> **Готовый DMG:** <https://github.com/parfentsevandrey-blip/test/releases/tag/veil-v0.8.6>
 > Сборка универсальная (Apple silicon + Intel), собирается автоматически
 > GitHub Actions на macOS-раннере из этого каталога.
 

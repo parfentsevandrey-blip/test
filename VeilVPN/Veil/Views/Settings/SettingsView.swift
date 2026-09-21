@@ -495,6 +495,17 @@ struct YouTubeSettingsView: View {
                     VideoTurboStatusText(status: app.videoTurboStatus)
                         .font(.caption)
                         .foregroundStyle(.mint)
+                    if case .capped = app.videoTurboStatus {
+                        Button {
+                            app.switchTransport(to: .obfs4)
+                        } label: {
+                            Label("Switch to obfs4 and reconnect", systemImage: "arrow.triangle.2.circlepath")
+                        }
+                        Text("A volunteer proxy or a domain front carries everything through one link, usually about a megabit a second — far under the 22 that 4K needs, and nothing inside Tor can widen it. obfs4 bridges are ordinary relays and are typically many times wider, while resisting censorship just as well. If obfs4 cannot connect on this network, switch back under Bridges.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                     if let lane = app.videoLane {
                         Text("Video lane \(String(lane.lane)): \(AppState.megabits(lane.megabits)) Mbit/s, the widest of \(lane.field.count) circuits through the video exit")
                             .font(.caption)

@@ -2,6 +2,9 @@
 
 Liquid Glass UI, bundled Tor Expert Bundle (universal: Apple silicon + Intel), Snowflake / obfs4 / custom bridges, exit-country selection, live circuit and throughput, automatic system proxy.
 
+### New in 0.8.6 — one click off the transport that caps everything
+- **Switch to obfs4 and reconnect**, in Settings → YouTube, shown exactly when Turbo has nothing left to give: the first hop is Snowflake or meek, everything is going through one volunteer proxy or one domain front, and the measured path sits around a megabit a second against the 22 that 4K needs. No choice of exit, guard or lane can widen that link — this is the only control that moves the ceiling, so it now sits next to the reading that proves it. It is a full reconnect, not a bounce, because a new first hop means a new configuration and new bridge lines; if obfs4 cannot connect on the network, the transport picker under Bridges switches back.
+
 ### Fixed in 0.8.5 — the tonus stops owning a narrow path
 - **The keep-warm stream was taking the whole tunnel.** Holding a congestion window open needs a trickle, but the tonus ran at a fixed rate — 128 KB/s behind a bridge, which is almost exactly 1 Mbit/s. On a Snowflake path that carries about 1 Mbit/s in total, that *was* the path, and what reached the video was what the tonus left over. It is now capped at a quarter of what the path has actually been measured to carry, with a floor of 32 KB/s, and the stream is restarted whenever a new measurement moves that number. On a wide path the rate you set is untouched.
 - **A slow path is no longer mistaken for an exit being refused.** The video-CDN detector looks for connections that close almost empty; on a path of one or two Mbit/s that is simply what a slow connection looks like, so a perfectly good exit was blamed and banned. The verdict is now only trusted once the path has measured at least 3 Mbit/s, the signal itself is stricter (under 8 KB in under 4 seconds, five of them), and a refused exit is set aside for six hours instead of a week — a country with a handful of exits was otherwise emptied by a single mistake.
@@ -198,6 +201,9 @@ twenty-four times a second on a clock.
 1. Open the DMG and drag **Veil.app** to *Applications*.
 2. The build is ad-hoc signed (no Apple Developer certificate): on first launch open **System Settings → Privacy & Security → Open Anyway**, or run `xattr -cr /Applications/Veil.app`.
 3. Press the power button. macOS asks for an administrator password once to switch the system proxy.
+
+### Новое в 0.8.6 — один клик, чтобы уйти с транспорта, который всё ограничивает
+- **«Переключиться на obfs4 и переподключиться»** в Настройки → YouTube, и показывается ровно тогда, когда Turbo больше нечего дать: первый хоп — Snowflake или meek, всё идёт через один прокси-волонтёра или один домен-фронт, а измеренный путь держится около мегабита в секунду против 22, нужных для 4K. Ни выбор выхода, ни выбор сторожевого узла, ни гонка полос это звено не расширят — эта кнопка единственное, что двигает потолок, поэтому она стоит рядом с тем самым замером, который это доказывает. Переподключение полное, а не мягкое, потому что новый первый хоп означает новую конфигурацию и новые строки мостов; если obfs4 в сети не поднимется, вернуть прежний транспорт можно в разделе «Мосты».
 
 ### Исправлено в 0.8.5 — тонус перестал забирать узкий канал себе
 - **Поток прогрева забирал весь туннель.** Чтобы держать окно перегрузки открытым, хватает тонкой струйки, но тонус шёл с фиксированной скоростью — 128 КБ/с за мостом, а это почти ровно 1 Мбит/с. На пути через Snowflake, который несёт около 1 Мбит/с целиком, это **и был** весь путь, и видео доставалось то, что тонус не забрал. Теперь он ограничен четвертью от реально измеренной ёмкости пути, с нижней границей 32 КБ/с, и поток перезапускается, когда новое измерение сдвигает это число. На широком канале заданная вами скорость не трогается.
