@@ -322,36 +322,52 @@ extension AppState {
         }
         let excludedCountries = Set(route.excludedCountries.map { $0.lowercased() })
         let wanted = route.exitCountry?.lowercased()
-        // With an exit country pinned, the widest exits in the world are almost never inside it,
-        // so the top handful is the wrong place to look: the search goes down the whole ranked
-        // list until it has enough candidates in that country. The country of a relay is a local
-        // geoip lookup on the address the consensus already carries, so depth costs no network.
-        let depth = wanted == nil ? (settings.videoTurbo ? 24 : 12) : 400
-        // Two legs and congestion control are what a video path needs from its exit; only when
-        // no such exit is listed does the plain ranking stand in.
-        var ranked = ExitCatalog.rank(relays, count: depth, excluding: avoided, modernOnly: true)
-        if ranked.isEmpty { ranked = ExitCatalog.rank(relays, count: depth, excluding: avoided) }
-        if heldFromMemory, let memory = settings.videoPathMemory,
-           let held = relays.first(where: { $0.fingerprint == memory.exitFingerprint }) {
-            ranked.removeAll { $0.fingerprint == held.fingerprint }
-            ranked.insert(held, at: 0)
-        }
         let limit = capped ? 2 : (settings.videoTurbo ? 5 : 3)
+        let hasCountryRule = wanted != nil || !excludedCountries.isEmpty
+        // Without a country rule the widest handful is the right place to look. With one it is
+        // not: the widest exits in the world are almost never inside one chosen country, so a
+        // wide slice is taken, the country of every relay in it is resolved in batched lookups —
+        // dozens per control round trip — and the rule is applied before the list is cut instead
+        // of after, which is what used to leave a pinned country with no candidate at all.
+        let sliceSize = hasCountryRule ? 800 : (settings.videoTurbo ? 24 : 12)
 
-        // Country rules are the user's, so they hold here too: the widest exit in the chosen
-        // country, never one in an excluded country.
         var candidates: [(relay: ExitRelay, country: String?)] = []
-        for relay in ranked where candidates.count < limit {
+        var scanned = 0
+        var located = 0
+        // Two legs and congestion control are what a video path needs from its exit — but a
+        // country whose exits are all older should still get the one it has rather than nothing.
+        for modernOnly in [true, false] {
             guard !Task.isCancelled else { return }
-            let country = await engine.relayCountry(address: relay.address)
-            if let wanted, country != wanted { continue }
-            if let country, excludedCountries.contains(country) { continue }
-            candidates.append((relay, country))
+            var slice = ExitCatalog.rank(relays, count: sliceSize, excluding: avoided, modernOnly: modernOnly)
+            if heldFromMemory, let memory = settings.videoPathMemory,
+               let held = relays.first(where: { $0.fingerprint == memory.exitFingerprint }) {
+                slice.removeAll { $0.fingerprint == held.fingerprint }
+                slice.insert(held, at: 0)
+            }
+            scanned = slice.count
+            if hasCountryRule {
+                let countries = await engine.relayCountries(addresses: slice.map(\.address))
+                located = countries.count
+                for relay in slice where candidates.count < limit {
+                    let country = countries[relay.address]
+                    if let wanted, country != wanted { continue }
+                    if let country, excludedCountries.contains(country) { continue }
+                    candidates.append((relay, country))
+                }
+            } else {
+                for relay in slice where candidates.count < limit {
+                    candidates.append((relay, nil))
+                }
+            }
+            if !candidates.isEmpty { break }
         }
         guard !candidates.isEmpty else {
             videoExit = .failed("no exit matches the route")
-            let where_ = wanted.map { "in \($0.uppercased())" } ?? "outside the excluded countries"
-            append(.veil(.notice, "Video exit: none of the \(ranked.count) widest exits sits \(where_); YouTube uses Tor's usual exits"))
+            if let wanted {
+                append(.veil(.notice, "Video exit: none of the \(scanned) widest exits is in \(wanted.uppercased()) — tor could place \(located) of them; YouTube uses Tor's usual exits. Clearing the exit country in Locations lets Veil pin the widest exit there is."))
+            } else {
+                append(.veil(.notice, "Video exit: all \(scanned) of the widest exits are in excluded countries; YouTube uses Tor's usual exits"))
+            }
             return
         }
 

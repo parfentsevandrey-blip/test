@@ -35,12 +35,17 @@ final class LatencyTests: XCTestCase {
         XCTAssertEqual(LatencySummary.percentile([0.1, 0.2, 0.3], 0.5), 0.2, accuracy: 0.0001)
     }
 
-    func testProbeTargetsRotateAndAreAddressLiterals() {
+    func testProbeTargetsRotateAndAreNames() {
         XCTAssertEqual(LatencyProbe.target(at: 0).host, LatencyProbe.targets[0].host)
         XCTAssertEqual(LatencyProbe.target(at: LatencyProbe.targets.count).host, LatencyProbe.targets[0].host)
         XCTAssertEqual(LatencyProbe.target(at: -1).host, LatencyProbe.targets[LatencyProbe.targets.count - 1].host)
         for target in LatencyProbe.targets {
-            XCTAssertNotNil(SOCKS5.ipv4Octets(target.host), "probe targets must be literals so no exit DNS enters the measurement")
+            // Names, not literals. A literal address in a SOCKS request is indistinguishable to
+            // tor from an application that resolved the name itself and leaked the lookup, so it
+            // warned on every probe — and WarnUnsafeSocks, which used to silence that, was
+            // removed in tor 0.4.9. The exit's own DNS cache answers the repeats.
+            XCTAssertNil(SOCKS5.ipv4Octets(target.host), "a literal makes tor warn on every probe")
+            XCTAssertTrue(target.host.contains("."), "a resolvable name")
             XCTAssertEqual(target.port, 443)
         }
     }

@@ -101,12 +101,6 @@ struct TorConfiguration {
             "DormantOnFirstStartup 0",
             "LearnCircuitBuildTimeout 1",
             "Log \(settings.verboseLogs ? "info" : "notice") stdout",
-            // Veil's own latency probes connect to 1.1.1.1, 8.8.8.8 and 9.9.9.9 by address on
-            // purpose: those are constants in the source, nothing was ever resolved, and a name
-            // would put the exit's DNS round trip inside the number the probe exists to measure.
-            // Tor cannot tell that apart from an application that leaked a lookup, so it warned
-            // on every probe — dozens a minute, burying the log it shares with everything else.
-            "WarnUnsafeSocks 0",
         ]
         lines.append(contentsOf: Self.socksPortLines(settings: settings, ports: ports))
         if settings.paddingEnabled {
@@ -222,12 +216,6 @@ struct TorConfiguration {
             "LearnCircuitBuildTimeout 1",
             "MaxClientCircuitsPending 48",
             "Log \(settings.verboseLogs ? "info" : "notice") stdout",
-            // Veil's own latency probes connect to 1.1.1.1, 8.8.8.8 and 9.9.9.9 by address on
-            // purpose: those are constants in the source, nothing was ever resolved, and a name
-            // would put the exit's DNS round trip inside the number the probe exists to measure.
-            // Tor cannot tell that apart from an application that leaked a lookup, so it warned
-            // on every probe — dozens a minute, burying the log it shares with everything else.
-            "WarnUnsafeSocks 0",
         ]
         if let geoip = bundle.geoip { lines.append("GeoIPFile \(geoip.path)") }
         if let geoip6 = bundle.geoip6 { lines.append("GeoIPv6File \(geoip6.path)") }

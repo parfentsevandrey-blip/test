@@ -734,6 +734,26 @@ final class TorProcessEngine: TorEngine {
         return code.lowercased()
     }
 
+    func relayCountries(addresses: [String]) async -> [String: String] {
+        guard let controller, controller.isOpen else { return [:] }
+        let prefix = "ip-to-country/"
+        var result: [String: String] = [:]
+        let unique = Array(Set(addresses.filter { !$0.isEmpty }))
+        var index = 0
+        while index < unique.count {
+            if Task.isCancelled { break }
+            let chunk = Array(unique[index..<min(index + 64, unique.count)])
+            index += chunk.count
+            // All or nothing per batch: one unknown key would fail the whole request, so a batch
+            // that fails is skipped rather than retried key by key.
+            guard let answers = try? await controller.getInfo(keys: chunk.map { prefix + $0 }) else { continue }
+            for (key, value) in answers where value.count == 2 && value != "??" {
+                result[String(key.dropFirst(prefix.count))] = value.lowercased()
+            }
+        }
+        return result
+    }
+
     func circuit() async throws -> [CircuitHop] {
         guard let controller else { throw TorEngineError.notRunning }
         let status = try await controller.getInfo("circuit-status")

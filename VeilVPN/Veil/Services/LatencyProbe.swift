@@ -60,10 +60,18 @@ enum LatencyProbe {
 
     /// Anycast resolvers: every exit has one close by, they answer TCP on 443 from anywhere, and
     /// rotating between them keeps one busy host from colouring the result.
+    ///
+    /// By name, never by address. A SOCKS request carrying a literal address is indistinguishable
+    /// to tor from an application that resolved the name itself and leaked the lookup, so it
+    /// warned on every single probe — dozens a minute, burying the log everything else shares.
+    /// (`WarnUnsafeSocks`, which used to turn that off, was removed in tor 0.4.9.) A name costs
+    /// one resolve at the exit on the first probe of a circuit and is answered from the exit's
+    /// own cache afterwards, and the warm-up sample — the one that pays it — is discarded before
+    /// a lane is ranked.
     static let targets: [Target] = [
-        Target(name: "1.1.1.1", host: "1.1.1.1", port: 443),
-        Target(name: "8.8.8.8", host: "8.8.8.8", port: 443),
-        Target(name: "9.9.9.9", host: "9.9.9.9", port: 443),
+        Target(name: "one.one.one.one", host: "one.one.one.one", port: 443),
+        Target(name: "dns.google", host: "dns.google", port: 443),
+        Target(name: "dns.quad9.net", host: "dns.quad9.net", port: 443),
     ]
 
     static func target(at index: Int) -> Target {
