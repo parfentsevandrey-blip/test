@@ -69,6 +69,25 @@ final class RouteTunerTests: XCTestCase {
         await engine.stop()
     }
 
+    func testConfluxIsOffWhenBothLegsWouldShareOneFirstHop() {
+        var settings = AppSettings()
+        settings.lanePoolEnabled = false
+        for transport in [AppSettings.Transport.snowflake, .meek] {
+            settings.transport = transport
+            // Both legs would ride the one volunteer proxy or CDN front: no second path to spread
+            // a stream over, only twice the circuits through the link that is already the ceiling.
+            XCTAssertTrue(TorConfiguration.performanceLines(for: settings).contains("ConfluxEnabled 0"))
+            XCTAssertTrue(TorConfiguration.optionalAssignments(settings: settings)
+                .contains { $0.key == "ConfluxEnabled" && $0.value == "0" })
+        }
+        for transport in [AppSettings.Transport.direct, .obfs4, .custom] {
+            settings.transport = transport
+            XCTAssertTrue(TorConfiguration.performanceLines(for: settings).contains("ConfluxEnabled 1"))
+            XCTAssertTrue(TorConfiguration.optionalAssignments(settings: settings)
+                .contains { $0.key == "ConfluxEnabled" && $0.value == "1" })
+        }
+    }
+
     func testPerformanceTorrcLines() {
         var settings = AppSettings()
         settings.lanePoolEnabled = false

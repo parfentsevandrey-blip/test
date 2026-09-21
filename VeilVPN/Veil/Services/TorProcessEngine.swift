@@ -726,6 +726,14 @@ final class TorProcessEngine: TorEngine {
         return code.lowercased()
     }
 
+    func relayCountry(address: String) async -> String? {
+        guard let controller, !address.isEmpty,
+              let code = try? await controller.getInfo("ip-to-country/\(address)"), code.count == 2 else {
+            return nil
+        }
+        return code.lowercased()
+    }
+
     func circuit() async throws -> [CircuitHop] {
         guard let controller else { throw TorEngineError.notRunning }
         let status = try await controller.getInfo("circuit-status")

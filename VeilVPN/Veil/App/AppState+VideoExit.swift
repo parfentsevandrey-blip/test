@@ -150,7 +150,7 @@ extension AppState {
         var chosen: [(relay: ExitRelay, country: String?)] = []
         for relay in ranked where chosen.count < 3 {
             guard !Task.isCancelled else { return }
-            let country = await engine.relayCountry(relay.fingerprint)
+            let country = await engine.relayCountry(address: relay.address)
             if let country, excluded.contains(country) { continue }
             chosen.append((relay, country))
         }
@@ -320,17 +320,22 @@ extension AppState {
             append(.veil(.debug, "Video exit: tor answered ns/all with nothing"))
             return
         }
+        let excludedCountries = Set(route.excludedCountries.map { $0.lowercased() })
+        let wanted = route.exitCountry?.lowercased()
+        // With an exit country pinned, the widest exits in the world are almost never inside it,
+        // so the top handful is the wrong place to look: the search goes down the whole ranked
+        // list until it has enough candidates in that country. The country of a relay is a local
+        // geoip lookup on the address the consensus already carries, so depth costs no network.
+        let depth = wanted == nil ? (settings.videoTurbo ? 24 : 12) : 400
         // Two legs and congestion control are what a video path needs from its exit; only when
         // no such exit is listed does the plain ranking stand in.
-        var ranked = ExitCatalog.rank(relays, count: settings.videoTurbo ? 24 : 12, excluding: avoided, modernOnly: true)
-        if ranked.isEmpty { ranked = ExitCatalog.rank(relays, count: 12, excluding: avoided) }
+        var ranked = ExitCatalog.rank(relays, count: depth, excluding: avoided, modernOnly: true)
+        if ranked.isEmpty { ranked = ExitCatalog.rank(relays, count: depth, excluding: avoided) }
         if heldFromMemory, let memory = settings.videoPathMemory,
            let held = relays.first(where: { $0.fingerprint == memory.exitFingerprint }) {
             ranked.removeAll { $0.fingerprint == held.fingerprint }
             ranked.insert(held, at: 0)
         }
-        let excludedCountries = Set(route.excludedCountries.map { $0.lowercased() })
-        let wanted = route.exitCountry?.lowercased()
         let limit = capped ? 2 : (settings.videoTurbo ? 5 : 3)
 
         // Country rules are the user's, so they hold here too: the widest exit in the chosen
@@ -338,14 +343,15 @@ extension AppState {
         var candidates: [(relay: ExitRelay, country: String?)] = []
         for relay in ranked where candidates.count < limit {
             guard !Task.isCancelled else { return }
-            let country = await engine.relayCountry(relay.fingerprint)
+            let country = await engine.relayCountry(address: relay.address)
             if let wanted, country != wanted { continue }
             if let country, excludedCountries.contains(country) { continue }
             candidates.append((relay, country))
         }
         guard !candidates.isEmpty else {
             videoExit = .failed("no exit matches the route")
-            append(.veil(.notice, "Video exit: none of the widest exits fits the route's country rules; YouTube uses Tor's usual exits"))
+            let where_ = wanted.map { "in \($0.uppercased())" } ?? "outside the excluded countries"
+            append(.veil(.notice, "Video exit: none of the \(ranked.count) widest exits sits \(where_); YouTube uses Tor's usual exits"))
             return
         }
 

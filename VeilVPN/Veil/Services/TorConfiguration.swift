@@ -101,6 +101,12 @@ struct TorConfiguration {
             "DormantOnFirstStartup 0",
             "LearnCircuitBuildTimeout 1",
             "Log \(settings.verboseLogs ? "info" : "notice") stdout",
+            // Veil's own latency probes connect to 1.1.1.1, 8.8.8.8 and 9.9.9.9 by address on
+            // purpose: those are constants in the source, nothing was ever resolved, and a name
+            // would put the exit's DNS round trip inside the number the probe exists to measure.
+            // Tor cannot tell that apart from an application that leaked a lookup, so it warned
+            // on every probe — dozens a minute, burying the log it shares with everything else.
+            "WarnUnsafeSocks 0",
         ]
         lines.append(contentsOf: Self.socksPortLines(settings: settings, ports: ports))
         if settings.paddingEnabled {
@@ -136,11 +142,20 @@ struct TorConfiguration {
 
     /// Latency-oriented Tor options: Conflux sends on the lowest-latency leg, and there is room
     /// for the lane pool's circuits next to the ones Tor pre-builds on its own.
+    /// Snowflake and meek funnel every circuit through one volunteer proxy or one CDN front.
+    /// Conflux's whole point is a second leg to the exit; when both legs share that one link
+    /// there is no second path to spread a stream over, only twice the circuits to build through
+    /// the bottleneck — which is where "Unlinked conflux circuit … invalid selected path" in the
+    /// log comes from, on a link that is already dropping and reconnecting.
+    static func sharesFirstHop(_ settings: AppSettings) -> Bool {
+        settings.transport == .snowflake || settings.transport == .meek
+    }
+
     static func performanceLines(for settings: AppSettings) -> [String] {
         // Conflux is always on: two legs to the exit, and with the throughput preference the
         // exit spreads a single stream over both, which is the one way one TLS connection —
         // a video player's, say — gets more than one circuit's share.
-        var lines = ["MaxClientCircuitsPending 48", "ConfluxEnabled 1",
+        var lines = ["MaxClientCircuitsPending 48", "ConfluxEnabled \(sharesFirstHop(settings) ? "0" : "1")",
                      "ConfluxClientUX \(settings.confluxLatency ? "latency" : "throughput")"]
         if settings.videoTurbo {
             // Turbo 4K: a video is one long session, and every move to a fresh circuit is a cold
@@ -207,6 +222,12 @@ struct TorConfiguration {
             "LearnCircuitBuildTimeout 1",
             "MaxClientCircuitsPending 48",
             "Log \(settings.verboseLogs ? "info" : "notice") stdout",
+            // Veil's own latency probes connect to 1.1.1.1, 8.8.8.8 and 9.9.9.9 by address on
+            // purpose: those are constants in the source, nothing was ever resolved, and a name
+            // would put the exit's DNS round trip inside the number the probe exists to measure.
+            // Tor cannot tell that apart from an application that leaked a lookup, so it warned
+            // on every probe — dozens a minute, burying the log it shares with everything else.
+            "WarnUnsafeSocks 0",
         ]
         if let geoip = bundle.geoip { lines.append("GeoIPFile \(geoip.path)") }
         if let geoip6 = bundle.geoip6 { lines.append("GeoIPv6File \(geoip6.path)") }
@@ -292,7 +313,7 @@ struct TorConfiguration {
     /// limited to options known to be settable live.
     static func optionalAssignments(settings: AppSettings) -> [(key: String, value: String?)] {
         var pairs: [(key: String, value: String?)] = []
-        pairs.append(("ConfluxEnabled", "1"))
+        pairs.append(("ConfluxEnabled", sharesFirstHop(settings) ? "0" : "1"))
         pairs.append(("ConfluxClientUX", settings.confluxLatency ? "latency" : "throughput"))
         // 600 is tor's own default, so this is a no-op outside Turbo and the way back out of it.
         pairs.append(("MaxCircuitDirtiness", settings.videoTurbo ? String(VideoTurbo.circuitLifetimeSeconds) : "600"))

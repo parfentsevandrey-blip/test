@@ -92,6 +92,9 @@ protocol TorEngine: AnyObject {
     func builtCircuitExits() async -> [String]
     /// Every circuit currently BUILT, hop by hop, as uppercase fingerprints.
     func builtCircuitPaths() async -> [[String]]
+    /// The country of an address the consensus already gave us: one local geoip lookup, without
+    /// the `ns/id` round trip `relayCountry(_:)` needs to find the address first.
+    func relayCountry(address: String) async -> String?
     /// Restricts the entry guard to `fingerprints` (`EntryNodes`); tor picks among them.
     func setEntryGuards(_ fingerprints: [String]) async throws
     /// Lifts the restriction; tor returns to the guards it chose itself.
@@ -144,6 +147,7 @@ extension TorEngine {
     func clearAddressMappings() async {}
     func builtCircuitExits() async -> [String] { [] }
     func builtCircuitPaths() async -> [[String]] { [] }
+    func relayCountry(address: String) async -> String? { nil }
     func setEntryGuards(_ fingerprints: [String]) async throws {}
     func clearEntryGuards() async {}
     func applyPerformanceOptions(settings: AppSettings) async {}

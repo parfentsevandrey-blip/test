@@ -8,6 +8,17 @@ import Foundation
 /// it has: the lanes are retired so the next connections get fresh circuits, and the video exit
 /// is asked to prove itself again.
 extension AppState {
+    /// The rate the tonus actually runs at. Behind Snowflake or meek the whole tunnel is one
+    /// volunteer proxy or one CDN front, often only a few hundred KB/s in total: 512 KB/s of
+    /// tonus would take all of it and leave the video nothing — which is the stream failing four
+    /// times in a row in the log while the browser waits. It still runs, at the lowest rate that
+    /// keeps the link from idling back to slow start.
+    var effectiveTonusKilobytes: Int {
+        let transport = activeTransport ?? settings.transport
+        guard transport == .snowflake || transport == .meek else { return settings.videoKeepWarmKilobytes }
+        return min(settings.videoKeepWarmKilobytes, VideoWarmer.rates.first ?? 128)
+    }
+
     var tunnelTonusWanted: Bool {
         guard connection == .connected, settings.videoKeepWarm, !engine.isSimulated else { return false }
         return settings.videoKeepWarmAlways || (httpBridge?.youtubeSessionsInFlight ?? 0) > 0
@@ -34,7 +45,7 @@ extension AppState {
                     // the target held for half a minute (or a stall) means the path under it
                     // dropped: retire the lanes so new connections get fresh circuits, and have
                     // the video exit prove itself again. At most once every three minutes.
-                    let target = Double(settings.videoKeepWarmKilobytes * 1024)
+                    let target = Double(effectiveTonusKilobytes * 1024)
                     let rate = videoWarmer.bytesPerSecond
                     if rate >= target * 0.5 { reachedTarget = true; lowSince = nil }
                     let low = videoWarmer.stalled || (reachedTarget && rate < target * 0.25)
@@ -45,7 +56,7 @@ extension AppState {
                         lastAction = .now
                         lowSince = nil
                         reachedTarget = false
-                        append(.veil(.warn, "Tunnel tonus fell to \(ByteFormat.rate(rate)) against \(settings.videoKeepWarmKilobytes) KB/s: retiring the circuits and re-checking the video exit"))
+                        append(.veil(.warn, "Tunnel tonus fell to \(ByteFormat.rate(rate)) against \(effectiveTonusKilobytes) KB/s: retiring the circuits and re-checking the video exit"))
                         httpBridge?.lanePool.retireAll(reason: .routeChanged)
                         latency.measureNow()
                         if videoExit.isActive { startVideoExitSelection(after: .seconds(1)) }
@@ -89,6 +100,6 @@ extension AppState {
         guard let ports else { return }
         let credentials = SOCKS5.Credentials(username: "veil-tonus", password: Self.randomPassword())
         videoWarmer.start(socksPort: ports.socks, credentials: credentials,
-                          kilobytesPerSecond: settings.videoKeepWarmKilobytes)
+                          kilobytesPerSecond: effectiveTonusKilobytes)
     }
 }
