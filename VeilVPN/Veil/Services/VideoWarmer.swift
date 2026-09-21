@@ -48,6 +48,9 @@ final class VideoWarmer {
     ]
 
     static let rates = [128, 256, 512, 1024]
+    /// The floor the tonus is never taken below: enough to keep a congestion window from
+    /// collapsing, small enough to be invisible next to a video.
+    static let minimumKilobytes = 32
     /// Ten slices a second: far under one round trip through Tor, so the pipe never drains.
     static let tick: TimeInterval = 0.1
 

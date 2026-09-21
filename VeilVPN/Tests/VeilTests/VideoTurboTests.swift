@@ -130,6 +130,26 @@ final class VideoTurboTests: XCTestCase {
                       "the lifetime is Turbo's whether or not the pool runs")
     }
 
+    func testTheRefusalBanIsShortAndOnlyTrustedOnACapablePath() {
+        // A country may hold only a handful of exits; a week-long ban on each mistake empties it.
+        XCTAssertLessThan(VideoPathMemory.refusalLifetime, VideoPathMemory.lifetime)
+        XCTAssertEqual(VideoPathMemory.refusalLifetime, 6 * 3600)
+        // Under a few Mbit/s a connection closing with little in it is slowness, not a refusal.
+        XCTAssertGreaterThan(VideoPathMemory.refusalFloorMegabits, 1)
+        XCTAssertLessThan(VideoPathMemory.refusalFloorMegabits, 22)
+    }
+
+    func testTheTonusNeverTakesMoreThanAQuarterOfThePath() {
+        // The rule the supervisor applies: a quarter of what the path carries, never below the
+        // floor. On a 1 Mbit/s path a 128 KB/s tonus would be the whole path.
+        let onePath = 1.0 * 1000 / 8                      // 125 KB/s of capacity
+        XCTAssertEqual(max(VideoWarmer.minimumKilobytes, Int(onePath / 4)), VideoWarmer.minimumKilobytes)
+        let fastPath = 40.0 * 1000 / 8                    // 5000 KB/s of capacity
+        XCTAssertEqual(min(512, max(VideoWarmer.minimumKilobytes, Int(fastPath / 4))), 512,
+                       "a wide path leaves the user's own rate alone")
+        XCTAssertLessThan(VideoWarmer.minimumKilobytes, VideoWarmer.rates[0])
+    }
+
     func testAPresetIsToleratedOnlyWhenItSetsNothingTheOtherWay() {
         let base = AppSettings()
         XCTAssertFalse(VideoTurbo.tolerates(.balanced, over: base), "per-site isolation contradicts the lane race")

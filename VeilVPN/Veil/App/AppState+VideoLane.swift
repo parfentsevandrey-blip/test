@@ -52,10 +52,15 @@ extension AppState {
                 updateVideoFan()
                 // The CDN's verdict beats every measurement: an exit it turns away carries no
                 // video however wide it is. Dropped for a week, and another chosen at once.
-                if videoExitWanted, !videoPathBusy, let bridge = httpBridge, bridge.videoCDNRefusing {
+                // Only where the path has shown it can carry video: under a few Mbit/s a
+                // connection that closes with little in it is what slowness looks like, not what
+                // a refusal looks like, and acting on it would ban a good exit for nothing.
+                let carries = videoLane?.megabits ?? videoPathMegabits ?? 0
+                if videoExitWanted, !videoPathBusy, carries >= VideoPathMemory.refusalFloorMegabits,
+                   let bridge = httpBridge, bridge.videoCDNRefusing {
                     bridge.resetVideoCDNSignal()
                     let now = Date.now
-                    settings.videoExitsRefused = settings.videoExitsRefused.filter { now.timeIntervalSince($0.value) < VideoPathMemory.lifetime }
+                    settings.videoExitsRefused = settings.videoExitsRefused.filter { now.timeIntervalSince($0.value) < VideoPathMemory.refusalLifetime }
                     if let relay = videoExit.relay {
                         settings.videoExitsRefused[relay.fingerprint] = now
                         if settings.videoPathMemory?.exitFingerprint == relay.fingerprint { settings.videoPathMemory = nil }
@@ -110,8 +115,10 @@ extension AppState {
             if fingerprint.isEmpty {
                 append(.veil(.info, "Video fan off: YouTube media back on one circuit"))
             } else {
-                let lanes = bridge.lanePool.snapshot().readyLanes
-                append(.veil(.notice, "Video fan on: YouTube media spread over \(max(1, lanes)) circuits to one exit"))
+                let lanes = max(1, bridge.lanePool.snapshot().readyLanes)
+                append(.veil(.notice, lanes == 1
+                    ? "Video exit pinned; one circuit is ready, so the media rides that one for now"
+                    : "Video fan on: YouTube media spread over \(lanes) circuits to one exit"))
             }
         }
     }
@@ -164,5 +171,18 @@ extension AppState {
         let field = results.sorted { $0.handle.lane < $1.handle.lane }
             .map { "\($0.handle.lane): \(Self.megabits($0.megabits))" }.joined(separator: ", ")
         append(.veil(.notice, "Video lane: lane \(best.handle.lane) carries \(Self.megabits(best.megabits)) Mbit/s, enough for \(ThroughputProbe.quality(forMegabits: best.megabits)) (lanes \(field))"))
+        adviseOnTheCeiling(measured: best.megabits)
+    }
+
+    /// When the measured path cannot reach 4K and the first hop is what caps it, say so once in a
+    /// while and name the one thing that would change it. No mode lifts a bridge's own ceiling,
+    /// and silently racing lanes inside it looks like Veil trying and failing.
+    private func adviseOnTheCeiling(measured: Double) {
+        guard measured < 22 else { return }
+        let transport = activeTransport ?? settings.transport
+        guard transport == .snowflake || transport == .meek else { return }
+        if let last = videoCeilingAdvisedAt, Date.now.timeIntervalSince(last) < 1800 { return }
+        videoCeilingAdvisedAt = .now
+        append(.veil(.notice, "\(AppState.name(of: transport)) is the ceiling here, not the exit: the path carries \(Self.megabits(measured)) Mbit/s and 4K needs about 22. A direct connection or obfs4 in Settings → Bridges is the only thing that lifts it."))
     }
 }

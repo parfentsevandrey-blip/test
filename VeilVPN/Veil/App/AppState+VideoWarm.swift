@@ -14,9 +14,20 @@ extension AppState {
     /// times in a row in the log while the browser waits. It still runs, at the lowest rate that
     /// keeps the link from idling back to slow start.
     var effectiveTonusKilobytes: Int {
+        var rate = settings.videoKeepWarmKilobytes
         let transport = activeTransport ?? settings.transport
-        guard transport == .snowflake || transport == .meek else { return settings.videoKeepWarmKilobytes }
-        return min(settings.videoKeepWarmKilobytes, VideoWarmer.rates.first ?? 128)
+        if transport == .snowflake || transport == .meek {
+            rate = min(rate, VideoWarmer.rates.first ?? 128)
+        }
+        // Never more than a quarter of what the path was actually measured to carry. Holding a
+        // congestion window open takes a trickle; on a path that carries 1 Mbit/s in total — a
+        // Snowflake proxy, say — a 128 KB/s tonus *is* the whole path, and what is left for the
+        // video is nothing. This is the difference between keeping the pipe warm and owning it.
+        if let megabits = videoLane?.megabits ?? videoPathMegabits, megabits > 0 {
+            let kilobytesPerSecond = megabits * 1000 / 8
+            rate = min(rate, max(VideoWarmer.minimumKilobytes, Int(kilobytesPerSecond / 4)))
+        }
+        return max(VideoWarmer.minimumKilobytes, rate)
     }
 
     var tunnelTonusWanted: Bool {
@@ -36,7 +47,10 @@ extension AppState {
                     if videoWarmer.isRunning { videoWarmer.stop() }
                     reachedTarget = false
                     lowSince = nil
-                } else if !videoWarmer.isRunning {
+                } else if !videoWarmer.isRunning || tonusRateDrifted {
+                    // A measurement that changes what the path can carry changes the tonus with
+                    // it: the stream is restarted at the new rate rather than holding the old one.
+                    videoWarmer.stop()
                     warm()
                     reachedTarget = false
                     lowSince = nil
@@ -91,6 +105,13 @@ extension AppState {
         guard settings.videoKeepWarmKilobytes != clamped else { return }
         settings.videoKeepWarmKilobytes = clamped
         if videoWarmer.isRunning { videoWarmer.stop() } // the supervisor restarts it at the new rate
+    }
+
+    /// The running stream is more than a quarter off the rate the path now justifies.
+    private var tonusRateDrifted: Bool {
+        let running = videoWarmer.targetKilobytes
+        guard running > 0 else { return false }
+        return abs(running - effectiveTonusKilobytes) * 4 > running
     }
 
     /// Credentials of its own on the plain port, so tor isolates the stream on a circuit of its

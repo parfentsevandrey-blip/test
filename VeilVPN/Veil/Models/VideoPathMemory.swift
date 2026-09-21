@@ -18,6 +18,13 @@ struct VideoPathMemory: Codable, Equatable, Sendable {
 
     /// A week: relays come and go, and a path that old is worth measuring from scratch.
     static let lifetime: TimeInterval = 7 * 24 * 3600
+    /// How long an exit the video CDN turned away stays out of the running. Hours, not the week
+    /// the path memory keeps: a country may hold only a handful of exits, and a week-long ban on
+    /// each mistake would empty it.
+    static let refusalLifetime: TimeInterval = 6 * 3600
+    /// Below this the path is too slow for the CDN's verdict to mean anything: a connection that
+    /// closes with little in it is what a slow path looks like, not what a refusal looks like.
+    static let refusalFloorMegabits = 3.0
     /// The share of the remembered rate a re-measurement has to reach for the memory to stand.
     static let keepShare = 0.6
 

@@ -97,6 +97,8 @@ final class AppState {
     /// The pool lane YouTube is bound to after a race, with what it carried.
     var videoLane: VideoLaneState?
     @ObservationIgnored var videoLaneTask: Task<Void, Never>?
+    /// When the "the bridge is the ceiling" advice was last given, so it is said but not repeated.
+    @ObservationIgnored var videoCeilingAdvisedAt: Date?
     /// A measurement, a selection or a race holds the address mappings; the others wait.
     @ObservationIgnored var videoPathBusy = false
     private(set) var isTestingYouTube = false

@@ -127,7 +127,7 @@ final class HTTPProxyBridge: @unchecked Sendable {
         let now = Date.now
         let short = videoCDNShort.filter { now.timeIntervalSince($0) < 60 }.count
         let good = videoCDNLastGoodAt.map { now.timeIntervalSince($0) < 60 } ?? false
-        return short >= 4 && !good
+        return short >= 5 && !good
     }
 
     /// After the exit was changed: the new exit starts with a clean slate.
@@ -143,7 +143,7 @@ final class HTTPProxyBridge: @unchecked Sendable {
         let now = Date.now
         if summary.bytesFromUpstream >= 1_000_000 {
             videoCDNLastGoodAt = now
-        } else if summary.bytesToUpstream >= 200, summary.bytesFromUpstream < 32_768, summary.seconds < 8 {
+        } else if summary.bytesToUpstream >= 200, summary.bytesFromUpstream < 8_192, summary.seconds < 4 {
             videoCDNShort.append(now)
         }
         videoCDNShort = videoCDNShort.filter { now.timeIntervalSince($0) < 60 }
