@@ -901,6 +901,31 @@ final class AppState {
     /// Reconnects. A live tunnel gets a soft bounce first — `DisableNetwork` off and on, which
     /// keeps the process, the guards and the loaded directory — and only falls back to a full
     /// restart if that does not come up.
+    /// Changes the first hop and reconnects in full. Turbo's promise stops at the bridge: no
+    /// choice of exit, guard or lane can widen a path that one volunteer proxy caps at a megabit,
+    /// and this is the only control that moves that ceiling. A full reconnect, never the soft
+    /// bounce — a new first hop means a new torrc and new bridge lines, and a bounce keeps the
+    /// old ones.
+    func switchTransport(to transport: AppSettings.Transport) {
+        guard settings.transport != transport else { return }
+        settings.transport = transport
+        append(.veil(.notice, "First hop switched to \(Self.name(of: transport)); reconnecting"))
+        guard connection == .connected || connection == .connecting || connection == .failed else { return }
+        generation += 1
+        connectTask?.cancel()
+        connectTask = nil
+        Task { [weak self] in
+            guard let self else { return }
+            await stopEngineSide(keepWarm: false)
+            if settings.killSwitch, let bridge = httpBridge {
+                bridge.blockAll = true
+                bridge.socksPort = nil
+            }
+            connection = .disconnected
+            connect()
+        }
+    }
+
     func reconnect() {
         guard connection == .connected || connection == .failed || connection == .connecting else { return }
         generation += 1
