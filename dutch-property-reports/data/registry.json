@@ -83,6 +83,16 @@
       ]
     },
     {
+      "slug": "baarnsche-dijk-12-baarn",
+      "title": "Baarnsche Dijk 12-A, Baarn",
+      "city": "Baarn",
+      "price": "€ 3.400.000",
+      "url": "https://www.fundainbusiness.nl/belegging/baarn/object-89117068-baarnsche-dijk-12-a/",
+      "reports": [
+        "report-2026-09-21-corridor.json"
+      ]
+    },
+    {
       "slug": "bijsterhuizen-1148-g5-nijmegen",
       "title": "Bijsterhuizen 1148-G5, Nijmegen",
       "city": "Nijmegen",
@@ -327,6 +337,16 @@
       ]
     },
     {
+      "slug": "mariaplaats-10-utrecht",
+      "title": "Mariaplaats 10, Utrecht",
+      "city": "Utrecht",
+      "price": "€ 1.350.000",
+      "url": "https://www.funda.nl/detail/koop/utrecht/huis-mariaplaats-10/44426549/",
+      "reports": [
+        "report-2026-09-21-corridor.json"
+      ]
+    },
+    {
       "slug": "mercuriusstraat-40-vlaardingen",
       "title": "Mercuriusstraat 40, Vlaardingen",
       "city": "Vlaardingen",
@@ -553,6 +573,16 @@
       ]
     },
     {
+      "slug": "vlierberg-4-01-eemnes",
+      "title": "Vlierberg 4-01, Eemnes",
+      "city": "Eemnes",
+      "price": "€ 3.550.000",
+      "url": "https://www.fundainbusiness.nl/belegging/eemnes/object-89799508-vlierberg-4-01/",
+      "reports": [
+        "report-2026-09-21-corridor.json"
+      ]
+    },
+    {
       "slug": "wagenstraat-175-den-haag",
       "title": "Wagenstraat 175, Den Haag",
       "city": "Den Haag",
@@ -594,5 +624,5 @@
       ]
     }
   ],
-  "updated": "2026-09-15"
+  "updated": "2026-09-21"
 }
