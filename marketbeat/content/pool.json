@@ -1,1005 +1,665 @@
 {
  "window": [
-  "2026-09-08",
-  "2026-09-15"
+  "2026-09-16",
+  "2026-09-21"
  ],
  "items": [
   {
-   "id": "l-ecb",
+   "id": "l-nos",
    "sector": "living",
    "block": "investment",
-   "date": "2026-09-10",
-   "outlet": "ЕЦБ",
-   "url": "https://vastgoedjournaal.nl/news/74259",
-   "tier": 1,
-   "scope": "market",
-   "polarity": -1,
-   "numbers": [
-    "2,5%"
-   ],
-   "lead": "ЕЦБ поднял ключевую ставку с 2,25% до 2,5% — второе повышение в этом году; цель — сбить инфляцию.",
-   "deal": null,
-   "height": 250,
-   "impact": 3
-  },
-  {
-   "id": "l-rente",
-   "sector": "living",
-   "block": "investment",
-   "date": "2026-09-14",
-   "outlet": "обзор ипотечных ставок",
-   "url": "https://vastgoedjournaal.nl/news/74291",
+   "date": "2026-09-18",
+   "outlet": "обзор экспертов (NOS)",
+   "url": "https://nos.nl/l/2631538",
    "tier": 2,
    "scope": "market",
    "polarity": -1,
    "numbers": [
-    "0,05"
+    "22 000"
    ],
-   "lead": "Средняя фиксированная ипотечная ставка растёт две недели подряд примерно на 0,05 процентного пункта в неделю; на следующей неделе о новых повышениях объявляет большинство банков.",
+   "lead": "Цели по строительству арендного жилья на основе Miljoenennota не будут достигнуты ни сейчас, ни в будущем, говорят эксперты и отрасль. Кабинет ждёт от частных инвесторов 16 000 квартир в год; корпорации довольны — отмена налоговой меры даст им, по оценке Aedes, 22 000 дополнительных домов; налог на передачу недвижимости снижается до 7%, каждая новая квартира среднего сегмента получает €10 000 субсидии.",
    "deal": null,
    "height": 250,
    "impact": 3
   },
   {
-   "id": "l-subsidie",
+   "id": "l-feilzer",
    "sector": "living",
    "block": "investment",
-   "date": "2026-09-12",
-   "outlet": "утечка Налогового плана",
-   "url": "https://vastgoedjournaal.nl/news/74283",
-   "tier": 1,
+   "date": "2026-09-16",
+   "outlet": "Министерство финансов (через Vastgoedmarkt)",
+   "url": "https://www.vastgoedmarkt.nl/211038",
+   "tier": 2,
    "scope": "policy",
    "polarity": 1,
    "numbers": [
-    "€10 000"
+    "вычет процентов"
    ],
-   "lead": "Из утёкшего Налогового плана: арендодатели получат объектную субсидию €10 000 на квартиру среднего ценового сегмента, а на жилищное строительство пойдёт €1 млрд в год.",
+   "lead": "Министерство финансов ошиблось, ограничив вычет процентов для жилищного строительства, и косвенно признаёт это, отменяя меру для жилищных корпораций.",
    "deal": null,
    "height": 250,
+   "impact": 2
+  },
+  {
+   "id": "l-blackrock",
+   "sector": "living",
+   "block": "investment",
+   "date": "2026-09-17",
+   "outlet": "BpfBouw",
+   "url": "https://vastgoedjournaal.nl/news/74343",
+   "tier": 1,
+   "scope": "deal",
+   "polarity": 0,
+   "numbers": [
+    "€70 млрд"
+   ],
+   "lead": "Пенсионный фонд строителей BpfBouw, владелец инвестора Bouwinvest, выбрал BlackRock фидуциарным управляющим пенсионным капиталом почти €70 млрд; американец обошёл Achmea IM и с 2030 года будет определять инвестиционную политику фонда.",
+   "deal": [
+    "BpfBouw: фидуциарное управление пенсионным капиталом",
+    "BlackRock (вместо Achmea IM)",
+    "€70 млрд"
+   ],
+   "height": 175,
    "impact": 3
   },
   {
-   "id": "l-ivbn",
+   "id": "l-lokerse",
    "sector": "living",
    "block": "investment",
-   "date": "2026-09-14",
-   "outlet": "IVBN, Neprom",
-   "url": "https://vastgoedjournaal.nl/news/74294",
-   "tier": 1,
+   "date": "2026-09-18",
+   "outlet": "Colliers (Йерун Локерсе)",
+   "url": "https://www.vastgoedmarkt.nl/211076",
+   "tier": 2,
    "scope": "market",
    "polarity": -1,
    "numbers": [
-    "недостаточ"
+    "Локерсе"
    ],
-   "lead": "IVBN и Neprom о мерах Prinsjesdag: «совершенно недостаточно» — субсидия не сводит экономику проектов, говорят Вим Венсинг (IVBN) и Фахид Минхас (Neprom).",
+   "lead": "Главный риск рынка арендного жилья — не снижение цен, а волна распродажи квартир институциональными инвесторами поштучно, говорит глава Colliers Йерун Локерсе.",
    "deal": null,
    "height": 250,
-   "impact": 3
+   "impact": 2
   },
   {
-   "id": "l-box3",
+   "id": "l-christenunie",
    "sector": "living",
    "block": "investment",
-   "date": "2026-09-12",
-   "outlet": "утечка Налогового плана",
-   "url": "https://vastgoedjournaal.nl/news/74283",
-   "tier": 1,
-   "scope": "policy",
-   "polarity": -1,
-   "numbers": [
-    "весну"
-   ],
-   "lead": "Решение по закону о налоге с фактической доходности (box 3) кабинет сдвинул на весну — третья отсрочка подряд.",
-   "deal": null,
-   "height": 250,
-   "impact": 3
-  },
-  {
-   "id": "l-motie",
-   "sector": "living",
-   "block": "investment",
-   "date": "2026-09-09",
-   "outlet": "Вторая палата (резолюция)",
-   "url": "https://vastgoedjournaal.nl/news/74229",
-   "tier": 1,
+   "date": "2026-09-18",
+   "outlet": "ChristenUnie (Питер Гринвис)",
+   "url": "https://www.vastgoedmarkt.nl/211058",
+   "tier": 2,
    "scope": "policy",
    "polarity": 0,
    "numbers": [
-    "отдельный"
+    "1,5%"
    ],
-   "lead": "Вторая палата приняла резолюцию: держать наготове отдельный налоговый режим для недвижимости в box 3, чтобы внести его законом, если общий закон провалится.",
+   "lead": "Если box 3 заменить простым налогом на имущество в 1–1,5%, жаловаться почти никто не будет, а налоговая справится с ним «полутора работниками», говорит депутат Питер Гринвис.",
+   "deal": null,
+   "height": 250,
+   "impact": 2
+  },
+  {
+   "id": "l-ovb",
+   "sector": "living",
+   "block": "investment",
+   "date": "2026-09-18",
+   "outlet": "Miljoenennota (через NOS)",
+   "url": "https://nos.nl/l/2631538",
+   "tier": 2,
+   "scope": "policy",
+   "polarity": 1,
+   "numbers": [
+    "7%"
+   ],
+   "lead": "Налог на передачу недвижимости для инвесторов в жильё снижается до 7%; каждый год на жилищное строительство идёт €1 млрд.",
    "deal": null,
    "height": 250,
    "impact": 3
   },
   {
-   "id": "l-kok",
+   "id": "l-achmea-sustay",
    "sector": "living",
    "block": "investment",
-   "date": "2026-09-14",
-   "outlet": "Нилс Кок (профессор)",
-   "url": "https://www.vastgoedmarkt.nl/210984",
-   "tier": 2,
-   "scope": "market",
-   "polarity": -1,
-   "numbers": [
-    "снижение стоимости"
-   ],
-   "lead": "Профессор Нилс Кок: рост ставок после начала войны с Ираном может дать только одно следствие — постепенное снижение стоимости арендного жилья как объекта вложений.",
-   "deal": null,
-   "height": 250,
-   "impact": 2
-  },
-  {
-   "id": "l-aghion",
-   "sector": "living",
-   "block": "investment",
-   "date": "2026-09-10",
-   "outlet": "Филипп Агийон (EPRA, Милан)",
-   "url": "https://www.vastgoedmarkt.nl/210898",
-   "tier": 2,
-   "scope": "market",
-   "polarity": 0,
-   "numbers": [
-    "Агийон"
-   ],
-   "lead": "Нобелевский лауреат Филипп Агийон на конференции EPRA: нехватка доступного арендного жилья тормозит экономический рост — без неё города не удержат молодых новаторов.",
-   "deal": null,
-   "height": 250,
-   "impact": 2
-  },
-  {
-   "id": "l-3w",
-   "sector": "living",
-   "block": "investment",
-   "date": "2026-09-14",
-   "outlet": "3W",
-   "url": "https://vastgoedjournaal.nl/news/74292",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": 1,
-   "numbers": [
-    "VodafoneZiggo"
-   ],
-   "lead": "3W вместе с Tenzin Vastgoed, AT Capital и частными инвесторами купил бывший офис VodafoneZiggo на Avenue Ceramique 300 в Маастрихте под перевод в жильё.",
-   "deal": [
-    "Маастрихт: офис VodafoneZiggo → жильё",
-    "3W, Tenzin, AT Capital",
-    "н/д"
-   ],
-   "height": 175,
-   "impact": 2
-  },
-  {
-   "id": "l-wire",
-   "sector": "living",
-   "block": "investment",
-   "date": "2026-09-10",
-   "outlet": "Wire, Steengoed",
-   "url": "https://www.vastgoedmarkt.nl/210889",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": 1,
-   "numbers": [
-    "Haven-Stad"
-   ],
-   "lead": "Застройщики Wire и Steengoed вошли в долю в проекте Blok II Zuid на Turbinestraat 2 в амстердамском Haven-Stad.",
-   "deal": [
-    "Амстердам, Haven-Stad: доля в Blok II Zuid",
-    "Wire + Steengoed",
-    "н/д"
-   ],
-   "height": 175,
-   "impact": 2
-  },
-  {
-   "id": "l-achmea",
-   "sector": "living",
-   "block": "investment",
-   "date": "2026-09-10",
+   "date": "2026-09-17",
    "outlet": "Achmea Real Estate",
-   "url": "https://www.vastgoedmarkt.nl/210902",
+   "url": "https://vastgoedjournaal.nl/news/74332",
    "tier": 1,
    "scope": "deal",
    "polarity": 1,
    "numbers": [
-    "54"
+    "110"
    ],
-   "lead": "Achmea Real Estate купила для своего фонда жилья с уходом 54 квартиры в новостройке Deepshof в Дипенхейме.",
+   "lead": "Achmea Real Estate для фонда медицинской недвижимости покупает у Sustay 110 арендных квартир для пожилых и 724 кв. м общественных помещений в проекте Nieuw Oden в роттердамском Хогвлите.",
    "deal": [
-    "Дипенхейм, Deepshof: жильё с уходом",
-    "Achmea Real Estate",
-    "54 кв."
-   ],
-   "height": 175,
-   "impact": 1
-  },
-  {
-   "id": "l-nlv",
-   "sector": "living",
-   "block": "investment",
-   "date": "2026-09-11",
-   "outlet": "NLV",
-   "url": "https://vastgoedjournaal.nl/news/74270",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": -1,
-   "numbers": [
-    "70"
-   ],
-   "lead": "NLV продал портфель из 70 квартир средней площадью 98 кв. м в Ньив-Веннепе, Лиссе и Вестерворте.",
-   "deal": [
-    "Ньив-Веннеп, Лиссе, Вестерворт: 70 квартир",
-    "NLV (продавец)",
-    "70 кв."
+    "Роттердам, Хогвлит, Nieuw Oden: квартиры для пожилых",
+    "Achmea ← Sustay",
+    "110 кв."
    ],
    "height": 175,
    "impact": 2
   },
   {
-   "id": "l-groningen",
+   "id": "l-achmea-bpd",
    "sector": "living",
    "block": "investment",
-   "date": "2026-09-10",
-   "outlet": "частный инвестор",
-   "url": "https://vastgoedjournaal.nl/news/74245",
-   "tier": 3,
+   "date": "2026-09-18",
+   "outlet": "Achmea Real Estate",
+   "url": "https://vastgoedjournaal.nl/news/74350",
+   "tier": 1,
    "scope": "deal",
    "polarity": 1,
    "numbers": [
-    "Ubbo"
+    "Wielewaal"
    ],
-   "lead": "Частный инвестор купил жилой комплекс на Ubbo Emmiusstraat в центре Гронингена.",
+   "lead": "Achmea Real Estate для жилого фонда ADRF покупает у BPD новый общественный центр с двадцатью квартирами над ним в роттердамском районе Wielewaal; фонд уже владеет там 57 домами.",
    "deal": [
-    "Гронинген, Ubbo Emmiusstraat: жилой комплекс",
-    "частный инвестор",
+    "Роттердам, Wielewaal: общественный центр и 20 квартир",
+    "Achmea ← BPD",
+    "20 кв."
+   ],
+   "height": 175,
+   "impact": 2
+  },
+  {
+   "id": "l-rochdale",
+   "sector": "living",
+   "block": "investment",
+   "date": "2026-09-17",
+   "outlet": "Rochdale и Eigen Haard",
+   "url": "https://www.vastgoedmarkt.nl/211040",
+   "tier": 1,
+   "scope": "deal",
+   "polarity": 0,
+   "numbers": [
+    "Zaanstad"
+   ],
+   "lead": "Корпорации Rochdale и Eigen Haard обмениваются фондами: Rochdale берёт дома Eigen Haard в Zaanstad, Eigen Haard — дома и землю Rochdale в Ландсмере и Харлеммермере.",
+   "deal": [
+    "Обмен жилым фондом: Zaanstad ↔ Ландсмер, Харлеммермер",
+    "Rochdale ↔ Eigen Haard",
+    "н/д"
+   ],
+   "height": 175,
+   "impact": 2
+  },
+  {
+   "id": "l-rijksbouwmeester",
+   "sector": "living",
+   "block": "investment",
+   "date": "2026-09-17",
+   "outlet": "Rijksbouwmeester (Сесилия Гросс)",
+   "url": "https://vastgoedjournaal.nl/news/74337",
+   "tier": 1,
+   "scope": "policy",
+   "polarity": 0,
+   "numbers": [
+    "Гросс"
+   ],
+   "lead": "Новый главный государственный архитектор Сесилия Гросс призывает закрепить долгосрочное видение и делать жёсткий выбор: высотность и уплотнение нужны, но важнее вопрос, для кого строим и захотят ли там жить через 50 лет.",
+   "deal": null,
+   "height": 250,
+   "impact": 1
+  },
+  {
+   "id": "l-actieplan",
+   "sector": "living",
+   "block": "occupier",
+   "date": "2026-09-21",
+   "outlet": "кабинет министров (Actieplan Versnelling Woningbouw)",
+   "url": "https://www.cobouw.nl/339438",
+   "tier": 1,
+   "scope": "policy",
+   "polarity": 1,
+   "numbers": [
+    "вдвое"
+   ],
+   "lead": "Кабинет хочет сократить срок строительства дома вдвое, довести долю промышленного (заводского) домостроения до 50% и дать налоговые льготы инвесторам и строителям доступного жилья; план также обещает меры по перегрузке сети, среднему сегменту аренды и временным договорам и изучение национальной компании по развитию территорий.",
+   "deal": null,
+   "height": 250,
+   "impact": 3
+  },
+  {
+   "id": "l-net",
+   "sector": "living",
+   "block": "occupier",
+   "date": "2026-09-18",
+   "outlet": "Netbeheer Nederland",
+   "url": "https://vastgoedjournaal.nl/news/74347",
+   "tier": 1,
+   "scope": "market",
+   "polarity": -1,
+   "numbers": [
+    "600 000"
+   ],
+   "lead": "На подключение к сети подано заявок примерно для 600 000 новостроек, которые должны быть построены в ближайшие три года; почти для половины из них места на сети сейчас нет.",
+   "deal": null,
+   "height": 250,
+   "impact": 3
+  },
+  {
+   "id": "l-enexis",
+   "sector": "living",
+   "block": "occupier",
+   "date": "2026-09-17",
+   "outlet": "Enexis",
+   "url": "https://www.vastgoedmarkt.nl/211053",
+   "tier": 1,
+   "scope": "market",
+   "polarity": -1,
+   "numbers": [
+    "86 000"
+   ],
+   "lead": "Сетевой оператор Enexis не имеет мощности примерно для 86 000 домов, строительство которых должно начаться в ближайшие три года.",
+   "deal": null,
+   "height": 250,
+   "impact": 2
+  },
+  {
+   "id": "l-deadline",
+   "sector": "living",
+   "block": "occupier",
+   "date": "2026-09-16",
+   "outlet": "Cobouw (разбор)",
+   "url": "https://www.cobouw.nl/339336",
+   "tier": 3,
+   "scope": "policy",
+   "polarity": 0,
+   "numbers": [
+    "1 октября"
+   ],
+   "lead": "1 октября — крайний срок подачи заявок на подключение жилищных проектов к электросети; муниципалитеты торопятся успеть до него.",
+   "deal": null,
+   "height": 250,
+   "impact": 2
+  },
+  {
+   "id": "l-ai",
+   "sector": "living",
+   "block": "occupier",
+   "date": "2026-09-16",
+   "outlet": "муниципалитеты (опрос Cobouw)",
+   "url": "https://www.cobouw.nl/339270",
+   "tier": 2,
+   "scope": "market",
+   "polarity": -1,
+   "numbers": [
+    "возражени"
+   ],
+   "lead": "Возражения против жилищных проектов всё чаще составляются с помощью искусственного интеллекта; их стало настолько много, что процедуры обжалования тянутся ещё дольше.",
+   "deal": null,
+   "height": 250,
+   "impact": 2
+  },
+  {
+   "id": "l-shortstay",
+   "sector": "living",
+   "block": "occupier",
+   "date": "2026-09-18",
+   "outlet": "вузы (консультация по закону о договорах найма)",
+   "url": "https://www.vastgoedmarkt.nl/211061",
+   "tier": 2,
+   "scope": "policy",
+   "polarity": -1,
+   "numbers": [
+    "тридцат"
+   ],
+   "lead": "Университеты и высшие школы предупреждают: тридцатидневный порог для краткосрочной аренды из законопроекта о подходящих договорах найма ударит по жилью иностранных студентов; на консультацию по закону пришло 122 отзыва.",
+   "deal": null,
+   "height": 250,
+   "impact": 2
+  },
+  {
+   "id": "l-corp",
+   "sector": "living",
+   "block": "occupier",
+   "date": "2026-09-16",
+   "outlet": "CBS и Kadaster",
+   "url": "https://www.cbs.nl/nl-nl/maatwerk/2026/38/nieuwbouwwoningen-woningcorporaties-eerste-halfjaar-2026",
+   "tier": 1,
+   "scope": "market",
+   "polarity": -1,
+   "numbers": [
+    "8 940"
+   ],
+   "lead": "За первое полугодие 2026 года сдано 30 185 новых домов, из них 8 940 (30%) — жилищными корпорациями; годом ранее было 31 550 и 9 125.",
+   "deal": null,
+   "height": 250,
+   "impact": 3
+  },
+  {
+   "id": "l-woonopp",
+   "sector": "living",
+   "block": "occupier",
+   "date": "2026-09-21",
+   "outlet": "CBS",
+   "url": "https://www.cbs.nl/nl-nl/nieuws/2026/39/gemiddelde-woonoppervlakte-neemt-toe-met-2-m-in-10-jaar",
+   "tier": 1,
+   "scope": "market",
+   "polarity": 0,
+   "numbers": [
+    "55 кв. м"
+   ],
+   "lead": "На 1 января 2026 года на одного жителя приходилось в среднем 55 кв. м жилья — на 2 кв. м больше, чем десять лет назад; у пожилых площади больше, чем у молодых.",
+   "deal": null,
+   "height": 250,
+   "impact": 2
+  },
+  {
+   "id": "l-nvm",
+   "sector": "living",
+   "block": "occupier",
+   "date": "2026-09-17",
+   "outlet": "NVM",
+   "url": "https://vastgoedactueel.nl/optimisme-over-plan-versnelde-woningbouw-maar-helder-woningmarktbeleid-ontbreekt/",
+   "tier": 1,
+   "scope": "policy",
+   "polarity": 0,
+   "numbers": [
+    "NVM"
+   ],
+   "lead": "Объединение риелторов NVM осторожно позитивно оценивает планы ускоренного строительства, но требует предсказуемой жилищной политики: строить не просто больше, а то, что нужно, и проверять планы не только в Гааге, но и на месте.",
+   "deal": null,
+   "height": 250,
+   "impact": 1
+  },
+  {
+   "id": "l-zuiderhage",
+   "sector": "living",
+   "block": "occupier",
+   "date": "2026-09-18",
+   "outlet": "муниципалитет Лелистада",
+   "url": "https://vastgoedjournaal.nl/news/74349",
+   "tier": 2,
+   "scope": "deal",
+   "polarity": 1,
+   "numbers": [
+    "2 400"
+   ],
+   "lead": "Первая фаза района Zuiderhage в Лелистаде — около 2 400 домов — может продолжаться: изменение плана территории вступило в силу 7 сентября.",
+   "deal": [
+    "Лелистад, Zuiderhage: первая фаза, план вступил в силу",
+    "муниципалитет",
+    "2 400 кв."
+   ],
+   "height": 175,
+   "impact": 3
+  },
+  {
+   "id": "l-plaspoelpolder",
+   "sector": "living",
+   "block": "occupier",
+   "date": "2026-09-16",
+   "outlet": "муниципалитет Лейдсендам-Ворбург",
+   "url": "https://vastgoedjournaal.nl/news/74327",
+   "tier": 2,
+   "scope": "deal",
+   "polarity": 1,
+   "numbers": [
+    "653"
+   ],
+   "lead": "Программа застройки Klein Plaspoelpolder выросла с примерно 250 до 653 домов.",
+   "deal": [
+    "Лейдсендам-Ворбург, Klein Plaspoelpolder: программа расширена",
+    "муниципалитет",
+    "653 кв."
+   ],
+   "height": 175,
+   "impact": 2
+  },
+  {
+   "id": "l-haarlem",
+   "sector": "living",
+   "block": "occupier",
+   "date": "2026-09-17",
+   "outlet": "муниципалитет Харлема",
+   "url": "https://vastgoedjournaal.nl/news/74335",
+   "tier": 2,
+   "scope": "deal",
+   "polarity": 1,
+   "numbers": [
+    "Korte Verspronckweg"
+   ],
+   "lead": "Харлем развивает участок Korte Verspronckweg: около 200 домов, школа, спортзал, общественные функции и общая парковка.",
+   "deal": [
+    "Харлем, Korte Verspronckweg: жильё, школа, спортзал",
+    "муниципалитет",
+    "≈200 кв."
+   ],
+   "height": 175,
+   "impact": 1
+  },
+  {
+   "id": "l-gouda",
+   "sector": "living",
+   "block": "occupier",
+   "date": "2026-09-17",
+   "outlet": "Woonzorg Nederland",
+   "url": "https://vastgoedjournaal.nl/news/74334",
+   "tier": 1,
+   "scope": "deal",
+   "polarity": 1,
+   "numbers": [
+    "80"
+   ],
+   "lead": "Woonzorg Nederland и строитель Radix & Veerman подписали договоры на 80 квартир в районе Westergouwe в Гауде; 50 из них — для пожилых, в том числе 40 социальных.",
+   "deal": [
+    "Гауда, Westergouwe: квартиры, из них 50 для пожилых",
+    "Woonzorg + Radix & Veerman",
+    "80 кв."
+   ],
+   "height": 175,
+   "impact": 1
+  },
+  {
+   "id": "l-badhoevedorp",
+   "sector": "living",
+   "block": "occupier",
+   "date": "2026-09-18",
+   "outlet": "Hoorne Vastgoed",
+   "url": "https://vastgoedjournaal.nl/news/74348",
+   "tier": 1,
+   "scope": "deal",
+   "polarity": 1,
+   "numbers": [
+    "Badhoevedorp"
+   ],
+   "lead": "Hoorne Vastgoed и муниципалитет Харлеммермер подписали два соглашения об обновлении центра Badhoevedorp: жильё, магазины и парковка у Lorentzplein и постоянный супермаркет Vomar.",
+   "deal": [
+    "Badhoevedorp, Lorentzplein: жильё, магазины, парковка",
+    "Hoorne + Haarlemmermeer",
     "н/д"
    ],
    "height": 175,
    "impact": 1
   },
   {
-   "id": "l-kopers",
+   "id": "l-gelderland",
    "sector": "living",
    "block": "occupier",
-   "date": "2026-09-15",
-   "outlet": "исследование покупателей",
-   "url": "https://vastgoedjournaal.nl/news/74301",
-   "tier": 1,
-   "scope": "market",
-   "polarity": -1,
-   "numbers": [
-    "63%"
-   ],
-   "lead": "63% тех, кто подбирает жильё, отложили или изменили важные жизненные решения, потому что не могут найти подходящий дом; уверенность этой группы очень низкая.",
-   "deal": null,
-   "height": 250,
-   "impact": 3
-  },
-  {
-   "id": "l-infl",
-   "sector": "living",
-   "block": "occupier",
-   "date": "2026-09-08",
-   "outlet": "CBS",
-   "url": "https://www.cbs.nl/nl-nl/nieuws/2026/37/inflatie-stijgt-naar-3-3-procent-in-augustus",
-   "tier": 1,
-   "scope": "market",
-   "polarity": -1,
-   "numbers": [
-    "3,3%"
-   ],
-   "lead": "Окончательная оценка CBS: инфляция в августе 3,3% против 3,2% в июле; по европейской методике (HICP) 2,8%.",
-   "deal": null,
-   "height": 250,
-   "impact": 3
-  },
-  {
-   "id": "l-pijplijn",
-   "sector": "living",
-   "block": "occupier",
-   "date": "2026-09-10",
-   "outlet": "Bouwberichten",
-   "url": "https://www.cobouw.nl/339212",
-   "tier": 1,
-   "scope": "market",
-   "polarity": 1,
-   "numbers": [
-    "720 732"
-   ],
-   "lead": "Число домов в проектах выросло за август на 17 734 — до 720 732; за год к пайплайну добавилось более 69 000 домов.",
-   "deal": null,
-   "height": 250,
-   "impact": 3
-  },
-  {
-   "id": "l-volkshuis",
-   "sector": "living",
-   "block": "occupier",
-   "date": "2026-09-12",
-   "outlet": "Cobouw (анализ планов)",
-   "url": "https://www.cobouw.nl/339202",
-   "tier": 1,
-   "scope": "policy",
-   "polarity": -1,
-   "numbers": [
-    "четыре из десяти"
-   ],
-   "lead": "Только четыре из десяти муниципалитетов имеют планы, нужные по новому закону о жилищном обеспечении: требования и реальность расходятся.",
-   "deal": null,
-   "height": 250,
-   "impact": 3
-  },
-  {
-   "id": "l-borger2",
-   "sector": "living",
-   "block": "occupier",
-   "date": "2026-09-08",
-   "outlet": "надзор за контролёрами качества",
-   "url": "https://www.cobouw.nl/339162",
-   "tier": 1,
-   "scope": "policy",
-   "polarity": -1,
-   "numbers": [
-    "четвёртый"
-   ],
-   "lead": "Через неделю после отстранения трёх контролёров качества строительства отстранён четвёртый.",
-   "deal": null,
-   "height": 250,
-   "impact": 2
-  },
-  {
-   "id": "l-stroomnet",
-   "sector": "living",
-   "block": "occupier",
-   "date": "2026-09-11",
-   "outlet": "Госсекретарь по климату (Йо-Аннес де Бат)",
-   "url": "https://www.vastgoedmarkt.nl/210941",
+   "date": "2026-09-16",
+   "outlet": "провинция Гелдерланд",
+   "url": "https://vastgoedjournaal.nl/news/74326",
    "tier": 1,
    "scope": "policy",
    "polarity": 1,
    "numbers": [
-    "процедур"
+    "€50 млн"
    ],
-   "lead": "Кабинет резко сокращает сроки расширения электросети: часть разрешительных процедур отменяется или упрощается — ответ на перегрузку сети.",
-   "deal": null,
-   "height": 250,
-   "impact": 3
-  },
-  {
-   "id": "l-energie",
-   "sector": "living",
-   "block": "occupier",
-   "date": "2026-09-14",
-   "outlet": "ACM (прогноз тарифов)",
-   "url": "https://nos.nl/l/2630915",
-   "tier": 1,
-   "scope": "market",
-   "polarity": -1,
-   "numbers": [
-    "€89"
-   ],
-   "lead": "По прогнозу регулятора ACM, сетевые тарифы вырастут: средняя семья заплатит за год на €89 больше за электричество и на €52 за газ — почти на 20%.",
-   "deal": null,
-   "height": 250,
-   "impact": 3
-  },
-  {
-   "id": "l-fnv",
-   "sector": "living",
-   "block": "occupier",
-   "date": "2026-09-14",
-   "outlet": "FNV",
-   "url": "https://nos.nl/l/2630964",
-   "tier": 1,
-   "scope": "market",
-   "polarity": 0,
-   "numbers": [
-    "5,5%"
-   ],
-   "lead": "Профсоюз FNV требует на будущий год 5,5% прибавки к зарплате с автоматической индексацией по инфляции плюс €80 в месяц; CNV просит от 3 до 5,5%.",
-   "deal": null,
-   "height": 250,
-   "impact": 2
-  },
-  {
-   "id": "l-arbeidsmigrant",
-   "sector": "living",
-   "block": "occupier",
-   "date": "2026-09-11",
-   "outlet": "Министр соцдел (Ян Вейлбриф)",
-   "url": "https://vastgoedjournaal.nl/news/74281",
-   "tier": 1,
-   "scope": "policy",
-   "polarity": 0,
-   "numbers": [
-    "2028"
-   ],
-   "lead": "С 1 июля 2028 года работодателям запретят вычитать плату за жильё из минимальной зарплаты трудового мигранта: министр не хочет, чтобы на жилье работников зарабатывали.",
-   "deal": null,
-   "height": 250,
-   "impact": 2
-  },
-  {
-   "id": "l-oss",
-   "sector": "living",
-   "block": "occupier",
-   "date": "2026-09-11",
-   "outlet": "муниципалитет Осса",
-   "url": "https://vastgoedjournaal.nl/news/74282",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": 1,
-   "numbers": [
-    "800"
-   ],
-   "lead": "Осс утвердил программу застройки Raadhuiskwartier в привокзальной зоне: 800 квартир, культура, сервисы и зелень.",
-   "deal": [
-    "Осс, Raadhuiskwartier: программа застройки",
-    "муниципалитет Осса",
-    "800 кв."
-   ],
-   "height": 175,
-   "impact": 3
-  },
-  {
-   "id": "l-spaarneboog",
-   "sector": "living",
-   "block": "occupier",
-   "date": "2026-09-11",
-   "outlet": "Hoorne Vastgoed",
-   "url": "https://vastgoedjournaal.nl/news/74277",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": 1,
-   "numbers": [
-    "750"
-   ],
-   "lead": "Hoorne Vastgoed и Харлем перестраивают район торгового центра Spaarneboog: от 450 до 750 квартир, магазины, кафе и социальные сервисы.",
-   "deal": [
-    "Харлем, Spaarneboog: редевелопмент",
-    "Hoorne Vastgoed + Харлем",
-    "до 750 кв."
-   ],
-   "height": 175,
-   "impact": 3
-  },
-  {
-   "id": "l-bpd",
-   "sector": "living",
-   "block": "occupier",
-   "date": "2026-09-14",
-   "outlet": "BPD, Stayinc.",
-   "url": "https://vastgoedjournaal.nl/news/74295",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": 1,
-   "numbers": [
-    "485"
-   ],
-   "lead": "Stayinc. и BPD перестраивают Montgomerylaan в Эйндховене: существующие квартиры уступят место примерно 485 социальным, среднеценовым и продаваемым.",
-   "deal": [
-    "Эйндховен, Montgomerylaan: редевелопмент",
-    "BPD + Stayinc.",
-    "485 кв."
-   ],
-   "height": 175,
-   "impact": 3
-  },
-  {
-   "id": "l-almere",
-   "sector": "living",
-   "block": "occupier",
-   "date": "2026-09-09",
-   "outlet": "GoedeStede",
-   "url": "https://vastgoedjournaal.nl/news/74241",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": 1,
-   "numbers": [
-    "145"
-   ],
-   "lead": "Корпорация GoedeStede и строитель Hillen & Roosen подписали договор о совместной доработке проекта 145 социальных квартир в Muziekwijk-Noord в Алмере.",
-   "deal": [
-    "Алмере, Muziekwijk-Noord: социальное жильё",
-    "GoedeStede + Hillen & Roosen",
-    "145 кв."
-   ],
-   "height": 175,
-   "impact": 1
-  },
-  {
-   "id": "l-weesp",
-   "sector": "living",
-   "block": "occupier",
-   "date": "2026-09-11",
-   "outlet": "Ten Brinke",
-   "url": "https://vastgoedjournaal.nl/news/74269",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": 1,
-   "numbers": [
-    "62"
-   ],
-   "lead": "Ten Brinke строит в Веспе проект PAM на 62 квартиры в продажу — часть перевода бывшей офисной зоны Amstellandlaan в жильё.",
-   "deal": [
-    "Весп, PAM: бывшая офисная зона → жильё",
-    "Ten Brinke",
-    "62 кв."
-   ],
-   "height": 175,
-   "impact": 1
-  },
-  {
-   "id": "l-boskoop",
-   "sector": "living",
-   "block": "occupier",
-   "date": "2026-09-09",
-   "outlet": "Woonforte",
-   "url": "https://vastgoedjournaal.nl/news/74240",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": 1,
-   "numbers": [
-    "64"
-   ],
-   "lead": "Корпорация Woonforte и Kroon & de Koning (VolkerWessels) договорились о 64 арендных квартирах в проекте Wonen op de Tuin в Боскопе.",
-   "deal": [
-    "Боскоп, Wonen op de Tuin: арендное жильё",
-    "Woonforte + Kroon & de Koning",
-    "64 кв."
-   ],
-   "height": 175,
-   "impact": 1
-  },
-  {
-   "id": "l-waddinxveen",
-   "sector": "living",
-   "block": "occupier",
-   "date": "2026-09-14",
-   "outlet": "Woonpartners Midden-Holland",
-   "url": "https://vastgoedjournaal.nl/news/74297",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": 1,
-   "numbers": [
-    "50"
-   ],
-   "lead": "Woonpartners и Ваддинксвен хотят построить до 50 социальных квартир на месте бывшей фабрики Oude Spijsfabriek; 16 из них — для молодых людей с инвалидностью.",
-   "deal": [
-    "Ваддинксвен, Oude Spijsfabriek: соцжильё",
-    "Woonpartners Midden-Holland",
-    "до 50 кв."
-   ],
-   "height": 175,
-   "impact": 1
-  },
-  {
-   "id": "l-berkel",
-   "sector": "living",
-   "block": "occupier",
-   "date": "2026-09-14",
-   "outlet": "Amvest, Kavel Vastgoed",
-   "url": "https://vastgoedjournaal.nl/news/74287",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": -1,
-   "numbers": [
-    "94"
-   ],
-   "lead": "Возражение против разрешения задержало последние 94 дома квартала De Gouden Buurten в Беркел-эн-Роденрейсе; дело в суде, Amvest и Kavel Vastgoed отложили продажи.",
-   "deal": [
-    "Беркел-эн-Роденрейс: 94 дома отложены судом",
-    "Amvest + Kavel Vastgoed",
-    "94 дом."
-   ],
-   "height": 175,
-   "impact": 1
-  },
-  {
-   "id": "l-anthonis",
-   "sector": "living",
-   "block": "occupier",
-   "date": "2026-09-08",
-   "outlet": "Mooiland, Zenzo",
-   "url": "https://vastgoedjournaal.nl/news/74208",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": -1,
-   "numbers": [
-    "32"
-   ],
-   "lead": "Бывшую мэрию Синт-Антониса переделывают минимум в 32 квартиры, но начало стройки отложено из-за перегрузки электросети.",
-   "deal": [
-    "Синт-Антонис: мэрия → 32 квартиры, стройка отложена",
-    "Mooiland + Zenzo",
-    "32 кв."
-   ],
-   "height": 175,
-   "impact": 1
-  },
-  {
-   "id": "l-ens",
-   "sector": "living",
-   "block": "occupier",
-   "date": "2026-09-11",
-   "outlet": "Raad van State",
-   "url": "https://vastgoedjournaal.nl/news/74274",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": 1,
-   "numbers": [
-    "26"
-   ],
-   "lead": "Госсовет отклонил возражения трёх соседей: комплекс на 26 квартир с уходом в Энсе можно строить.",
-   "deal": [
-    "Энс: комплекс на 26 квартир с уходом",
-    "муниципалитет Нордостполдер",
-    "26 кв."
-   ],
-   "height": 175,
-   "impact": 1
-  },
-  {
-   "id": "l-ballast",
-   "sector": "living",
-   "block": "occupier",
-   "date": "2026-09-08",
-   "outlet": "Ballast Nedam",
-   "url": "https://www.cobouw.nl/339156",
-   "tier": 1,
-   "scope": "market",
-   "polarity": 1,
-   "numbers": [
-    "€991 млн"
-   ],
-   "lead": "Выручка Ballast Nedam за первое полугодие — €991 млн; строитель снова идёт на рекорд года.",
-   "deal": null,
-   "height": 250,
-   "impact": 2
-  },
-  {
-   "id": "l-kosten",
-   "sector": "living",
-   "block": "occupier",
-   "date": "2026-09-10",
-   "outlet": "Cobouw (анализ)",
-   "url": "https://www.cobouw.nl/339192",
-   "tier": 2,
-   "scope": "policy",
-   "polarity": 0,
-   "numbers": [
-    "переложить"
-   ],
-   "lead": "Муниципалитеты плохо понимают, какие расходы на общественную инфраструктуру нового квартала можно переложить на застройщика, и часто не перекладывают.",
+   "lead": "Гелдерланд выделяет в 2027 году дополнительно €50 млн на энергомодернизацию домов в зонах, где важно снижение выбросов азота.",
    "deal": null,
    "height": 250,
    "impact": 1
-  },
-  {
-   "id": "l-dorp",
-   "sector": "living",
-   "block": "occupier",
-   "date": "2026-09-10",
-   "outlet": "анализ предложения",
-   "url": "https://vastgoedjournaal.nl/news/74258",
-   "tier": 3,
-   "scope": "market",
-   "polarity": 0,
-   "numbers": [
-    "деревне"
-   ],
-   "lead": "Жильё в деревне не дешевле городского: сопоставимые типы домов стоят меньше, но в предложении преобладают крупные и дорогие дома.",
-   "deal": null,
-   "height": 250,
-   "impact": 1
-  },
-  {
-   "id": "r-alternatief",
-   "sector": "retail",
-   "block": "investment",
-   "date": "2026-09-11",
-   "outlet": "Vastgoedmarkt (аналитика рынка)",
-   "url": "https://www.vastgoedmarkt.nl/210936",
-   "tier": 2,
-   "scope": "market",
-   "polarity": 1,
-   "numbers": [
-    "альтернатив"
-   ],
-   "lead": "Американский аппетит к мегадата-центрам вывел альтернативную недвижимость в поле зрения инвесторов, но предложения нет — и на быстро восстанавливающемся рынке снова популярны классические офисы и магазины.",
-   "deal": null,
-   "height": 250,
-   "impact": 3
-  },
-  {
-   "id": "r-faill-cbs",
-   "sector": "retail",
-   "block": "investment",
-   "date": "2026-09-11",
-   "outlet": "CBS",
-   "url": "https://www.cbs.nl/nl-nl/nieuws/2026/37/in-augustus-9-procent-meer-faillissementen-dan-een-jaar-eerder",
-   "tier": 1,
-   "scope": "market",
-   "polarity": -1,
-   "numbers": [
-    "304"
-   ],
-   "lead": "CBS: в августе обанкротились 304 компании — на 24 больше, чем годом ранее (+9%), и на 38 больше, чем в июле.",
-   "deal": null,
-   "height": 250,
-   "impact": 3
   },
   {
    "id": "r-wereldhave",
    "sector": "retail",
    "block": "investment",
-   "date": "2026-09-08",
+   "date": "2026-09-17",
    "outlet": "Wereldhave",
-   "url": "https://vastgoedjournaal.nl/news/74219",
+   "url": "https://vastgoedjournaal.nl/news/74330",
    "tier": 1,
    "scope": "deal",
    "polarity": 1,
    "numbers": [
-    "три"
+    "€50 млн"
    ],
-   "lead": "Wereldhave подписала три договора для Stadshart Zoetermeer — ToastUp, Wurstkönig и JOJI All-Inclusive Korean BBQ: торговый центр добирает общепитом.",
+   "lead": "Wereldhave продал ритейл-парк De Mael в Брюгге консорциуму частных инвесторов почти за €50 млн: фонд снижает долг и сосредотачивается на своих торговых центрах полного цикла.",
    "deal": [
-    "Зутермер, Stadshart: три концепции общепита",
-    "Wereldhave (арендодатель)",
-    "3 договора"
+    "Брюгге (Бельгия), ритейл-парк De Mael — продажа",
+    "Wereldhave → частные инвесторы",
+    "≈€50 млн"
    ],
    "height": 175,
    "impact": 2
   },
   {
-   "id": "r-palazzo",
+   "id": "r-xenos",
    "sector": "retail",
    "block": "investment",
-   "date": "2026-09-14",
-   "outlet": "Van Herk Groep",
-   "url": "https://vastgoedjournaal.nl/news/74298",
+   "date": "2026-09-21",
+   "outlet": "Xenos (годовой отчёт)",
+   "url": "https://retailtrends.nl/news/80109",
    "tier": 1,
-   "scope": "deal",
-   "polarity": 1,
-   "numbers": [
-    "1 150 кв. м"
-   ],
-   "lead": "Van Herk Groep сдала Floors & Living последнее свободное помещение на Palazzo в Лелистаде — 1 150 кв. м на двух уровнях.",
-   "deal": [
-    "Лелистад, Palazzo: последнее помещение сдано",
-    "Van Herk Groep → Floors & Living",
-    "1 150 кв. м"
-   ],
-   "height": 175,
-   "impact": 1
-  },
-  {
-   "id": "r-hoorn",
-   "sector": "retail",
-   "block": "investment",
-   "date": "2026-09-09",
-   "outlet": "муниципалитет Хорна",
-   "url": "https://vastgoedjournaal.nl/news/74242",
-   "tier": 1,
-   "scope": "deal",
+   "scope": "market",
    "polarity": 0,
    "numbers": [
-    "BuitenStad"
+    "€170,5 млн"
    ],
-   "lead": "Хорн, Albert Heijn и застройщики Sted и De Nijs договорились о возможном переезде супермаркета на BuitenStad — тогда его нынешний участок освободится под развитие привокзальной зоны Poort van Hoorn.",
-   "deal": [
-    "Хорн: AH может уйти с участка у вокзала",
-    "муниципалитет + AH + Sted/De Nijs",
-    "н/д"
-   ],
-   "height": 175,
+   "lead": "Сеть товаров для дома Xenos увеличила выручку за 2025 год на 7,9% до €170,5 млн, но снова закончила год с убытком более €5 млн (годом ранее — почти €6 млн); 162 магазина, два открыты, один закрыт.",
+   "deal": null,
+   "height": 250,
    "impact": 2
-  },
-  {
-   "id": "r-propina",
-   "sector": "retail",
-   "block": "investment",
-   "date": "2026-09-09",
-   "outlet": "Propina",
-   "url": "https://vastgoedjournaal.nl/news/74232",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": 1,
-   "numbers": [
-    "Lichttoren"
-   ],
-   "lead": "Propina сделала первую покупку в Эйндховене — Grand Café de Lichttoren в здании бывшей ламповой фабрики Philips; продавец — RvR Onroerend Goed.",
-   "deal": [
-    "Эйндховен, de Lichttoren: кафе в здании Philips",
-    "Propina ← RvR Onroerend Goed",
-    "н/д"
-   ],
-   "height": 175,
-   "impact": 1
-  },
-  {
-   "id": "r-zilch",
-   "sector": "retail",
-   "block": "investment",
-   "date": "2026-09-15",
-   "outlet": "конкурсный управляющий",
-   "url": "https://retailtrends.nl/news/80059",
-   "tier": 2,
-   "scope": "deal",
-   "polarity": 0,
-   "numbers": [
-    "Zilch"
-   ],
-   "lead": "К управляющему обанкротившейся женской марки Zilch обратились несколько желающих перезапустить бизнес; шансы на перезапуск считают реальными.",
-   "deal": [
-    "Zilch: переговоры о перезапуске после банкротства",
-    "конкурсный управляющий",
-    "—"
-   ],
-   "height": 175,
-   "impact": 1
-  },
-  {
-   "id": "r-selected",
-   "sector": "retail",
-   "block": "occupier",
-   "date": "2026-09-08",
-   "outlet": "Bestseller",
-   "url": "https://retailtrends.nl/news/80001",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": -1,
-   "numbers": [
-    "Selected"
-   ],
-   "lead": "Сеть Selected закрыла все магазины в Нидерландах: датская Bestseller оставляет для этой марки только оптовые продажи и интернет.",
-   "deal": [
-    "Selected: закрыты все магазины в Нидерландах",
-    "Bestseller (уход в онлайн)",
-    "вся сеть"
-   ],
-   "height": 175,
-   "impact": 3
-  },
-  {
-   "id": "r-faill",
-   "sector": "retail",
-   "block": "occupier",
-   "date": "2026-09-11",
-   "outlet": "RetailTrends (подсчёт банкротств)",
-   "url": "https://retailtrends.nl/news/80041",
-   "tier": 1,
-   "scope": "market",
-   "polarity": 1,
-   "numbers": [
-    "10"
-   ],
-   "lead": "Банкротств в рознице меньше всего за четыре с половиной года: в августе — 10 против 25 годом ранее; с начала года 155, пик был в марте (27).",
-   "deal": null,
-   "height": 250,
-   "impact": 3
-  },
-  {
-   "id": "r-jumbo",
-   "sector": "retail",
-   "block": "occupier",
-   "date": "2026-09-09",
-   "outlet": "Jumbo",
-   "url": "https://retailtrends.nl/news/80013",
-   "tier": 1,
-   "scope": "market",
-   "polarity": 1,
-   "numbers": [
-    "4%"
-   ],
-   "lead": "Jumbo за первое полугодие нарастила выручку у покупателей на 4% — примерно до €6 млрд — и увеличила долю рынка.",
-   "deal": null,
-   "height": 250,
-   "impact": 3
-  },
-  {
-   "id": "r-consumptie",
-   "sector": "retail",
-   "block": "occupier",
-   "date": "2026-09-09",
-   "outlet": "CBS",
-   "url": "https://www.cbs.nl/nl-nl/nieuws/2026/37/consumptie-huishoudens-groeit-met-ruim-1-procent-in-juli",
-   "tier": 1,
-   "scope": "market",
-   "polarity": 0,
-   "numbers": [
-    "1,2%"
-   ],
-   "lead": "CBS: потребление домохозяйств в июле выросло на 1,2% за год против 1,7% в июне; больше всего прибавили покупки товаров для дома.",
-   "deal": null,
-   "height": 250,
-   "impact": 3
-  },
-  {
-   "id": "r-ugg",
-   "sector": "retail",
-   "block": "occupier",
-   "date": "2026-09-08",
-   "outlet": "Ugg",
-   "url": "https://retailtrends.nl/news/80003",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": 1,
-   "numbers": [
-    "Ugg"
-   ],
-   "lead": "Ugg открыл первый собственный магазин в Нидерландах — на Heiligeweg в Амстердаме.",
-   "deal": [
-    "Амстердам, Heiligeweg: первый магазин Ugg",
-    "аренда",
-    "—"
-   ],
-   "height": 175,
-   "impact": 2
-  },
-  {
-   "id": "r-takko",
-   "sector": "retail",
-   "block": "occupier",
-   "date": "2026-09-09",
-   "outlet": "Takko Fashion",
-   "url": "https://vastgoedjournaal.nl/news/74235",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": 1,
-   "numbers": [
-    "477 кв. м"
-   ],
-   "lead": "Takko Fashion открыла магазин 477 кв. м на Wenenpromenade в торговом центре Leidsche Rijn в Утрехте.",
-   "deal": [
-    "Утрехт, Leidsche Rijn Centrum: Takko",
-    "аренда",
-    "477 кв. м"
-   ],
-   "height": 175,
-   "impact": 1
   },
   {
    "id": "r-wibra",
    "sector": "retail",
-   "block": "occupier",
-   "date": "2026-09-11",
-   "outlet": "Wibra",
-   "url": "https://vastgoedjournaal.nl/news/74275",
+   "block": "investment",
+   "date": "2026-09-17",
+   "outlet": "Wibra (годовой отчёт)",
+   "url": "https://retailtrends.nl/news/80085",
    "tier": 1,
-   "scope": "deal",
-   "polarity": 1,
+   "scope": "market",
+   "polarity": -1,
    "numbers": [
-    "Элбург"
+    "€4,1 млн"
    ],
-   "lead": "Wibra к концу 2026 года откроет магазин в исторической крепости Элбурга — под новый формат сети.",
-   "deal": [
-    "Элбург, Jufferenstraat: новый формат Wibra",
-    "аренда",
-    "—"
-   ],
-   "height": 175,
+   "lead": "Дискаунтеру Wibra спустя шесть лет после банкротства бельгийского подразделения, возможно, придётся заплатить ещё около €4,1 млн, следует из отчёта за 2025 год.",
+   "deal": null,
+   "height": 250,
    "impact": 1
   },
   {
-   "id": "r-petsplace",
+   "id": "r-takko",
+   "sector": "retail",
+   "block": "investment",
+   "date": "2026-09-16",
+   "outlet": "Takko Fashion",
+   "url": "https://retailtrends.nl/news/80076",
+   "tier": 1,
+   "scope": "market",
+   "polarity": 1,
+   "numbers": [
+    "Takko"
+   ],
+   "lead": "Takko Fashion во втором квартале финансового года 2026/27 показал рекордную квартальную выручку за свою историю.",
+   "deal": null,
+   "height": 250,
+   "impact": 1
+  },
+  {
+   "id": "r-inretail",
+   "sector": "retail",
+   "block": "investment",
+   "date": "2026-09-16",
+   "outlet": "INretail и Vakcentrum",
+   "url": "https://retailtrends.nl/news/80073",
+   "tier": 1,
+   "scope": "policy",
+   "polarity": -1,
+   "numbers": [
+    "INretail"
+   ],
+   "lead": "Отраслевые объединения INretail и Vakcentrum критикуют бюджет: нагрузка на владельцев магазинов накапливается, а настоящих мер для торговли в Miljoenennota нет.",
+   "deal": null,
+   "height": 250,
+   "impact": 2
+  },
+  {
+   "id": "r-koopkracht",
    "sector": "retail",
    "block": "occupier",
-   "date": "2026-09-10",
-   "outlet": "Pets Place",
-   "url": "https://vastgoedjournaal.nl/news/74260",
+   "date": "2026-09-18",
+   "outlet": "CBS",
+   "url": "https://www.cbs.nl/nl-nl/nieuws/2026/38/koopkracht-stijgt-met-1-2-procent-in-2025-werknemers-zien-sterkste-toename",
+   "tier": 1,
+   "scope": "market",
+   "polarity": 1,
+   "numbers": [
+    "1,2%"
+   ],
+   "lead": "Покупательная способность в 2025 году выросла в медиане на 1,2% — третий год роста подряд, но после +3,8% в 2024-м; главный фактор — рост зарплат по коллективным договорам на 5,0%; у наёмных работников +2,2%, у пенсионеров +0,3%, у самозанятых +0,1%.",
+   "deal": null,
+   "height": 250,
+   "impact": 3
+  },
+  {
+   "id": "r-sting",
+   "sector": "retail",
+   "block": "occupier",
+   "date": "2026-09-16",
+   "outlet": "Kroonenberg Groep и The Sting Companies",
+   "url": "https://vastgoedjournaal.nl/news/74322",
    "tier": 1,
    "scope": "deal",
    "polarity": 1,
    "numbers": [
-    "третий"
+    "7 000 кв. м"
    ],
-   "lead": "Pets Place открыл третий магазин в Утрехте — в бывшем помещении Kroon Schoenen на Nachtegaalstraat.",
+   "lead": "Kroonenberg Groep подписал долгосрочный договор с The Sting Companies: The Sting, Costes и Cotton Club займут около 7 000 кв. м в амстердамской Kalverpassage — подвал, первый и второй этажи.",
    "deal": [
-    "Утрехт-Ост, Nachtegaalstraat: третий Pets Place",
-    "аренда",
-    "—"
+    "Амстердам, Kalverpassage: универмаг The Sting, Costes, Cotton Club",
+    "The Sting Companies ← Kroonenberg",
+    "7 000 кв. м"
+   ],
+   "height": 175,
+   "impact": 3
+  },
+  {
+   "id": "r-jysk",
+   "sector": "retail",
+   "block": "occupier",
+   "date": "2026-09-17",
+   "outlet": "Jysk",
+   "url": "https://vastgoedjournaal.nl/news/74331",
+   "tier": 1,
+   "scope": "market",
+   "polarity": 1,
+   "numbers": [
+    "€220,2 млн"
+   ],
+   "lead": "Jysk за финансовый год увеличил выручку в Нидерландах на 8,7% до рекордных €220,2 млн (по сопоставимым магазинам +6,3%), открыл 7 магазинов, в том числе 5 на бывших площадках Leen Bakker, довёл сеть до 110 точек и целится минимум в 140.",
+   "deal": null,
+   "height": 250,
+   "impact": 3
+  },
+  {
+   "id": "r-ahxl",
+   "sector": "retail",
+   "block": "occupier",
+   "date": "2026-09-18",
+   "outlet": "Albert Heijn Jan Linders",
+   "url": "https://retailtrends.nl/news/80102",
+   "tier": 1,
+   "scope": "deal",
+   "polarity": 1,
+   "numbers": [
+    "Sittard"
+   ],
+   "lead": "Albert Heijn Jan Linders открывает первый супермаркет формата XL: магазин на Brugstraat в Sittard расширяют и обновляют.",
+   "deal": [
+    "Sittard, Brugstraat: первый супермаркет формата XL",
+    "Albert Heijn Jan Linders",
+    "н/д"
    ],
    "height": 175,
    "impact": 1
@@ -1008,787 +668,725 @@
    "id": "r-upfront",
    "sector": "retail",
    "block": "occupier",
-   "date": "2026-09-11",
+   "date": "2026-09-18",
    "outlet": "Upfront",
-   "url": "https://vastgoedjournaal.nl/news/74267",
+   "url": "https://retailtrends.nl/news/80101",
+   "tier": 1,
+   "scope": "market",
+   "polarity": 1,
+   "numbers": [
+    "€27,5 млн"
+   ],
+   "lead": "Продовольственная марка Upfront ждёт за 2026 год розничной выручки €27,5 млн против примерно €1 млн у офлайн-направления на конец 2024 года.",
+   "deal": null,
+   "height": 250,
+   "impact": 1
+  },
+  {
+   "id": "r-joshv",
+   "sector": "retail",
+   "block": "occupier",
+   "date": "2026-09-18",
+   "outlet": "Josh V",
+   "url": "https://retailtrends.nl/news/80100",
    "tier": 1,
    "scope": "deal",
-   "polarity": 0,
+   "polarity": 1,
    "numbers": [
-    "девяти"
+    "Josh V"
    ],
-   "lead": "Upfront откроет в октябре третий продуктовый магазин, снова в Роттердаме: в начале года основатель обещал до конца 2026 года девять новых точек.",
+   "lead": "Модная марка Josh V открыла третий магазин в Нидерландах — на Bakkerstraat в Арнеме — и планирует международный рост вплоть до США.",
    "deal": [
-    "Роттердам: третий магазин Upfront",
-    "аренда",
-    "—"
+    "Арнем, Bakkerstraat: третий магазин марки",
+    "Josh V",
+    "3-й магазин"
    ],
    "height": 175,
+   "impact": 1
+  },
+  {
+   "id": "r-lecreuset",
+   "sector": "retail",
+   "block": "occupier",
+   "date": "2026-09-17",
+   "outlet": "Le Creuset",
+   "url": "https://vastgoedjournaal.nl/news/74339",
+   "tier": 1,
+   "scope": "deal",
+   "polarity": 1,
+   "numbers": [
+    "65 кв. м"
+   ],
+   "lead": "Le Creuset снял на долгий срок 65 кв. м торговой площади и 60 кв. м подвала на Akerkhof 35 в Гронингене, в бывшем помещении Bartogi.",
+   "deal": [
+    "Гронинген, Akerkhof 35",
+    "Le Creuset",
+    "65 кв. м"
+   ],
+   "height": 175,
+   "impact": 1
+  },
+  {
+   "id": "r-ilt",
+   "sector": "retail",
+   "block": "occupier",
+   "date": "2026-09-16",
+   "outlet": "ILT (инспекция)",
+   "url": "https://retailtrends.nl/news/80079",
+   "tier": 1,
+   "scope": "policy",
+   "polarity": 0,
+   "numbers": [
+    "ILT"
+   ],
+   "lead": "Инспекция ILT в следующем году будет чаще проверять на границе посылки из азиатских интернет-магазинов.",
+   "deal": null,
+   "height": 250,
    "impact": 2
   },
   {
-   "id": "r-xandres",
+   "id": "r-action",
    "sector": "retail",
    "block": "occupier",
-   "date": "2026-09-11",
-   "outlet": "Xandres",
-   "url": "https://retailtrends.nl/news/80047",
+   "date": "2026-09-17",
+   "outlet": "Action",
+   "url": "https://retailtrends.nl/news/80092",
    "tier": 1,
    "scope": "deal",
    "polarity": 1,
    "numbers": [
-    "пятый"
+    "Швейцари"
    ],
-   "lead": "Бельгийская Xandres скоро откроет пятый магазин в Нидерландах — на Zijlstraat в Харлеме.",
+   "lead": "Action открыл 20-й магазин в Швейцарии — через полтора с небольшим года после выхода на этот рынок.",
    "deal": [
-    "Харлем, Zijlstraat: пятый магазин Xandres",
-    "аренда",
-    "—"
+    "Швейцария: 20-й магазин за полтора года",
+    "Action",
+    "н/д"
    ],
    "height": 175,
    "impact": 1
   },
   {
-   "id": "r-madaq",
+   "id": "r-soeur",
    "sector": "retail",
    "block": "occupier",
-   "date": "2026-09-09",
-   "outlet": "Madaq",
-   "url": "https://retailtrends.nl/news/80021",
+   "date": "2026-09-18",
+   "outlet": "Soeur",
+   "url": "https://retailtrends.nl/news/80093",
    "tier": 1,
    "scope": "deal",
    "polarity": 1,
    "numbers": [
-    "15-й"
+    "Berenstraat"
    ],
-   "lead": "Madaq открыл 15-й бутик — в Mall of the Netherlands.",
+   "lead": "Французская модная марка Soeur открыла первый магазин в Нидерландах — бутик около 100 кв. м на Berenstraat 18 в амстердамских «Девяти улочках».",
    "deal": [
-    "Лейдсендам, Mall of the Netherlands: 15-й Madaq",
-    "аренда",
-    "—"
+    "Амстердам, Berenstraat 18 («Девять улочек»): первый бутик в стране",
+    "Soeur",
+    "≈100 кв. м"
    ],
    "height": 175,
    "impact": 1
   },
   {
-   "id": "r-youtube",
-   "sector": "retail",
-   "block": "occupier",
-   "date": "2026-09-11",
-   "outlet": "YouTube",
-   "url": "https://retailtrends.nl/news/80042",
+   "id": "i-btt",
+   "sector": "industrial",
+   "block": "investment",
+   "date": "2026-09-16",
+   "outlet": "BTT Real Estate",
+   "url": "https://www.logistiek.nl/211584",
+   "tier": 1,
+   "scope": "deal",
+   "polarity": 1,
+   "numbers": [
+    "97 000 кв. м"
+   ],
+   "lead": "BTT Real Estate купил участок около 97 000 кв. м в промзоне Weststad в Остерхауте; на части участка построят логистический комплекс примерно на 45 000 кв. м.",
+   "deal": [
+    "Остерхаут, Weststad: участок под комплекс 45 000 кв. м",
+    "BTT Real Estate",
+    "97 000 кв. м"
+   ],
+   "height": 175,
+   "impact": 3
+  },
+  {
+   "id": "i-cdc",
+   "sector": "industrial",
+   "block": "investment",
+   "date": "2026-09-16",
+   "outlet": "CDC Investissement Immobilier",
+   "url": "https://vastgoedjournaal.nl/news/74323",
+   "tier": 1,
+   "scope": "deal",
+   "polarity": 1,
+   "numbers": [
+    "37 300 кв. м"
+   ],
+   "lead": "Французский CDC Investissement Immobilier сделал первую покупку в Нидерландах — логистический комплекс 37 300 кв. м в Блейсвейке у Next Level Development и Wijnen Bouwgroep.",
+   "deal": [
+    "Блейсвейк: логистический комплекс, первая покупка CDC в стране",
+    "CDC ← Next Level, Wijnen",
+    "37 300 кв. м"
+   ],
+   "height": 175,
+   "impact": 3
+  },
+  {
+   "id": "i-vankrimpen",
+   "sector": "industrial",
+   "block": "investment",
+   "date": "2026-09-17",
+   "outlet": "Van Krimpen",
+   "url": "https://vastgoedjournaal.nl/news/74341",
+   "tier": 1,
+   "scope": "deal",
+   "polarity": 1,
+   "numbers": [
+    "12 000 кв. м"
+   ],
+   "lead": "Van Krimpen купил производственный комплекс 12 000 кв. м на участке 3 га на Veerstraat 24 в Стандардбёйтене и соседний гектар земли под застройку.",
+   "deal": [
+    "Стандардбёйтен, Veerstraat 24: комплекс и 1 га земли",
+    "Van Krimpen",
+    "12 000 кв. м"
+   ],
+   "height": 175,
+   "impact": 1
+  },
+  {
+   "id": "i-investeringen",
+   "sector": "industrial",
+   "block": "investment",
+   "date": "2026-09-21",
+   "outlet": "CBS",
+   "url": "https://www.cbs.nl/nl-nl/nieuws/2026/39/investeringen-in-juli-vrijwel-even-groot-als-een-jaar-eerder",
    "tier": 1,
    "scope": "market",
    "polarity": -1,
    "numbers": [
-    "YouTube"
+    "0,1%"
    ],
-   "lead": "YouTube запустил в Нидерландах партнёрскую программу Shopping; первым крупным нидерландским партнёром стал Bol.",
+   "lead": "Объём инвестиций в основной капитал в июле был лишь на 0,1% больше, чем годом ранее (в июне +2,8%): вложения в машины выросли, а в здания, инфраструктуру, самолёты и автомобили упали; в августе условия были чуть хуже.",
    "deal": null,
    "height": 250,
-   "impact": 2
+   "impact": 3
   },
   {
-   "id": "r-dm",
-   "sector": "retail",
-   "block": "occupier",
-   "date": "2026-09-11",
-   "outlet": "dm",
-   "url": "https://retailtrends.nl/news/80045",
+   "id": "i-clusters",
+   "sector": "industrial",
+   "block": "investment",
+   "date": "2026-09-17",
+   "outlet": "логистическая отрасль (обзор Vastgoedmarkt)",
+   "url": "https://www.vastgoedmarkt.nl/211042",
    "tier": 2,
-   "scope": "market",
-   "polarity": 0,
-   "numbers": [
-    "дрогери"
-   ],
-   "lead": "Немецкая дрогери-сеть dm начала рекламную кампанию в Нидерландах, но открывать магазины пока не планирует.",
-   "deal": null,
-   "height": 250,
-   "impact": 1
-  },
-  {
-   "id": "i-greenib",
-   "sector": "industrial",
-   "block": "investment",
-   "date": "2026-09-14",
-   "outlet": "три частных инвестора",
-   "url": "https://vastgoedjournaal.nl/news/74285",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": 1,
-   "numbers": [
-    "116 000 кв. м"
-   ],
-   "lead": "Три частных инвестора вместе купили бизнес-парк GreenIB в Сассенхейме и Вармонде — 116 000 кв. м.",
-   "deal": [
-    "Сассенхейм и Вармонд: бизнес-парк GreenIB",
-    "три частных инвестора",
-    "116 000 кв. м"
-   ],
-   "height": 175,
-   "impact": 3
-  },
-  {
-   "id": "i-delhaize",
-   "sector": "industrial",
-   "block": "investment",
-   "date": "2026-09-08",
-   "outlet": "Delhaize, WDP",
-   "url": "https://www.logistiek.nl/211377",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": 1,
-   "numbers": [
-    "€175 млн"
-   ],
-   "lead": "Delhaize и WDP вкладывают €120 млн и €55 млн в распределительный центр для свежих продуктов в Зеллике под Брюсселем; стройка начнётся в 2027 году.",
-   "deal": [
-    "Зеллик (Бельгия): РЦ для свежих продуктов",
-    "Delhaize + WDP",
-    "€175 млн"
-   ],
-   "height": 175,
-   "impact": 3
-  },
-  {
-   "id": "i-park15",
-   "sector": "industrial",
-   "block": "investment",
-   "date": "2026-09-10",
-   "outlet": "VGP",
-   "url": "https://www.logistiek.nl/211367",
-   "tier": 1,
-   "scope": "market",
-   "polarity": 1,
-   "numbers": [
-    "200 000 кв. м"
-   ],
-   "lead": "На VGP Park Nijmegen у трассы A15 строятся четыре новых центра — 200 000 кв. м; застраиваются последние участки.",
-   "deal": null,
-   "height": 250,
-   "impact": 3
-  },
-  {
-   "id": "i-datacenter",
-   "sector": "industrial",
-   "block": "investment",
-   "date": "2026-09-08",
-   "outlet": "Провинция Северная Голландия",
-   "url": "https://vastgoedjournaal.nl/news/74227",
-   "tier": 1,
    "scope": "policy",
    "polarity": -1,
    "numbers": [
-    "1,1 млрд литров"
+    "кластер"
    ],
-   "lead": "Депутаты Северной Голландии приняли резолюцию об ужесточении политики по дата-центрам: поводом стал новый центр Equinix в Амстердаме, которому нужно 1,1 млрд литров питьевой воды в год.",
+   "lead": "Логистике не обойти растущую общественную критику: отрасли хватит 20–25 логистических кластеров, надо сосредоточиться на существующих площадках и использовать их эффективнее — «нужно не больше складов, а лучше».",
+   "deal": null,
+   "height": 250,
+   "impact": 2
+  },
+  {
+   "id": "i-staal",
+   "sector": "industrial",
+   "block": "investment",
+   "date": "2026-09-18",
+   "outlet": "CBS",
+   "url": "https://www.cbs.nl/nl-nl/nieuws/2026/38/staalimport-van-buiten-eu-gehalveerd-sinds-beschermingsmaatregelen",
+   "tier": 1,
+   "scope": "market",
+   "polarity": 0,
+   "numbers": [
+    "546 млн кг"
+   ],
+   "lead": "Импорт стали из-за пределов ЕС, подпадающей под защитные меры, в 2025 году составил 546 млн кг — вдвое меньше, чем в 2018-м; с июля 2026 года под меры подпадает 52% видов ввозимой стали.",
+   "deal": null,
+   "height": 250,
+   "impact": 1
+  },
+  {
+   "id": "i-fokker",
+   "sector": "industrial",
+   "block": "occupier",
+   "date": "2026-09-18",
+   "outlet": "Fokker Services Group",
+   "url": "https://vastgoedjournaal.nl/news/74345",
+   "tier": 1,
+   "scope": "deal",
+   "polarity": 1,
+   "numbers": [
+    "8 200 кв. м"
+   ],
+   "lead": "Fokker Services Group снял склад 8 200 кв. м на Contouravenue 71-77 в Хофддорпе.",
+   "deal": [
+    "Хофддорп, Contouravenue 71-77: склад",
+    "Fokker Services Group",
+    "8 200 кв. м"
+   ],
+   "height": 175,
+   "impact": 2
+  },
+  {
+   "id": "i-msi",
+   "sector": "industrial",
+   "block": "occupier",
+   "date": "2026-09-17",
+   "outlet": "Heembouw и MSI Computer Europe",
+   "url": "https://www.logistiek.nl/211618",
+   "tier": 1,
+   "scope": "deal",
+   "polarity": 1,
+   "numbers": [
+    "Ekkersrijt"
+   ],
+   "lead": "Heembouw начал строить для MSI Computer Europe распределительный центр с офисом в бизнес-парке Ekkersrijt в Сон-эн-Брёгеле.",
+   "deal": [
+    "Сон-эн-Брёгел, Ekkersrijt: РЦ и офис под заказчика",
+    "MSI + Heembouw",
+    "н/д"
+   ],
+   "height": 175,
+   "impact": 1
+  },
+  {
+   "id": "i-gxo",
+   "sector": "industrial",
+   "block": "occupier",
+   "date": "2026-09-16",
+   "outlet": "GXO",
+   "url": "https://www.logistiek.nl/211582",
+   "tier": 1,
+   "scope": "deal",
+   "polarity": 1,
+   "numbers": [
+    "70 000"
+   ],
+   "lead": "GXO сделал следующий шаг в автоматизации центра Guess в Венло: теперь он обрабатывает до 70 000 артикулов в день.",
+   "deal": [
+    "Венло: роботизация РЦ Guess",
+    "GXO + Guess",
+    "70 000 шт./день"
+   ],
+   "height": 175,
+   "impact": 1
+  },
+  {
+   "id": "i-hollandpharma",
+   "sector": "industrial",
+   "block": "occupier",
+   "date": "2026-09-18",
+   "outlet": "Holland Pharma",
+   "url": "https://www.logistiek.nl/211639",
+   "tier": 1,
+   "scope": "deal",
+   "polarity": -1,
+   "numbers": [
+    "153"
+   ],
+   "lead": "Оптовик Holland Pharma закроет в 2029 году склад в Боркуло; исчезнут как минимум 153 рабочих места.",
+   "deal": [
+    "Боркуло: закрытие склада в 2029 году, минус 153 рабочих места",
+    "Holland Pharma",
+    "−153 мест"
+   ],
+   "height": 175,
+   "impact": 2
+  },
+  {
+   "id": "i-aarts",
+   "sector": "industrial",
+   "block": "occupier",
+   "date": "2026-09-18",
+   "outlet": "конкурсный управляющий",
+   "url": "https://www.logistiek.nl/211643",
+   "tier": 1,
+   "scope": "deal",
+   "polarity": -1,
+   "numbers": [
+    "Aarts"
+   ],
+   "lead": "Перевозчик Aarts Transport из Сона объявлен банкротом: по словам управляющего, компанию подкосили низкие маржи в доставке посылок.",
+   "deal": [
+    "Сон: банкротство перевозчика посылок",
+    "Aarts Transport",
+    "н/д"
+   ],
+   "height": 175,
+   "impact": 1
+  },
+  {
+   "id": "i-droogte",
+   "sector": "industrial",
+   "block": "occupier",
+   "date": "2026-09-18",
+   "outlet": "North Sea Port (Кас Кёниг)",
+   "url": "https://nos.nl/l/2631488",
+   "tier": 1,
+   "scope": "market",
+   "polarity": -1,
+   "numbers": [
+    "Тернёзен"
+   ],
+   "lead": "Компании, водившие суда по каналу Гент — Тернёзен, потеряли из-за летней засухи миллионы евро: один из двух морских шлюзов был закрыт полностью, второй работал 4 часа на прилив, суда шли с недогрузом, часть грузов ушла на грузовики.",
+   "deal": null,
+   "height": 250,
+   "impact": 2
+  },
+  {
+   "id": "i-willems",
+   "sector": "industrial",
+   "block": "occupier",
+   "date": "2026-09-18",
+   "outlet": "Willems Logistics и Greenchoice",
+   "url": "https://www.vastgoedmarkt.nl/210804",
+   "tier": 2,
+   "scope": "deal",
+   "polarity": 1,
+   "numbers": [
+    "2,2 МВт"
+   ],
+   "lead": "Распределительный центр 60 000 кв. м в Хапсе у A73 работает на солнце, батарее и быстрых зарядках: усилить подключение к сети было нельзя, на крыше поместилось бы 8–9 МВт панелей, но из-за перегрузки сети окупаются только 2,2 МВт.",
+   "deal": [
+    "Хапс, A73: энергоплощадка на РЦ 60 000 кв. м",
+    "Willems Logistics + Greenchoice",
+    "2,2 МВт"
+   ],
+   "height": 175,
+   "impact": 2
+  },
+  {
+   "id": "i-tata",
+   "sector": "industrial",
+   "block": "occupier",
+   "date": "2026-09-20",
+   "outlet": "Tata Steel и кабинет (обзор NOS)",
+   "url": "https://nos.nl/l/2631739",
+   "tier": 2,
+   "scope": "market",
+   "polarity": -1,
+   "numbers": [
+    "€2 млрд"
+   ],
+   "lead": "Tata Steel в Эймёйдене торгуется с кабинетом о €2 млрд господдержки на экологическую перестройку комбината; срок — 30 сентября, но уложиться почти невозможно: мешают уголовное расследование и угроза отзыва разрешений на части завода.",
+   "deal": null,
+   "height": 250,
+   "impact": 2
+  },
+  {
+   "id": "i-silk",
+   "sector": "industrial",
+   "block": "occupier",
+   "date": "2026-09-17",
+   "outlet": "программа SiLK (Министерство инфраструктуры)",
+   "url": "https://www.logistiek.nl/211613",
+   "tier": 2,
+   "scope": "policy",
+   "polarity": 1,
+   "numbers": [
+    "SiLK"
+   ],
+   "lead": "Субсидия SiLK снова открыта; цель — меньше грузовых километров по дорогам.",
+   "deal": null,
+   "height": 250,
+   "impact": 1
+  },
+  {
+   "id": "i-grens",
+   "sector": "industrial",
+   "block": "occupier",
+   "date": "2026-09-18",
+   "outlet": "полиция Германии",
+   "url": "https://www.logistiek.nl/211647",
+   "tier": 2,
+   "scope": "policy",
+   "polarity": 0,
+   "numbers": [
+    "A12"
+   ],
+   "lead": "Немецкая полиция заменяет стационарные проверки на границе, в том числе у нидерландских A12, A7 и A37, мобильными патрулями.",
+   "deal": null,
+   "height": 250,
+   "impact": 1
+  },
+  {
+   "id": "i-brug",
+   "sector": "industrial",
+   "block": "occupier",
+   "date": "2026-09-16",
+   "outlet": "Rijkswaterstaat",
+   "url": "https://www.cobouw.nl/339366",
+   "tier": 1,
+   "scope": "market",
+   "polarity": -1,
+   "numbers": [
+    "Suurhoff"
+   ],
+   "lead": "В западной Suurhoffbrug в сторону Маасвлакте нашли трещины в одной из главных балок; Rijkswaterstaat закрыл две обычные полосы, движение идёт по обочине.",
+   "deal": null,
+   "height": 250,
+   "impact": 2
+  },
+  {
+   "id": "o-fed",
+   "sector": "offices",
+   "block": "investment",
+   "date": "2026-09-16",
+   "outlet": "ФРС США",
+   "url": "https://nos.nl/l/2631301",
+   "tier": 1,
+   "scope": "market",
+   "polarity": -1,
+   "numbers": [
+    "3,75"
+   ],
+   "lead": "Федеральная резервная система США подняла ставку с 3,5–3,75% до 3,75–4% — первое повышение за три с лишним года, чтобы обуздать инфляцию; президент Трамп назвал решение враждебным.",
    "deal": null,
    "height": 250,
    "impact": 3
   },
   {
-   "id": "i-ai",
-   "sector": "industrial",
+   "id": "o-vwpon",
+   "sector": "offices",
    "block": "investment",
-   "date": "2026-09-10",
-   "outlet": "Volt Datacenters",
-   "url": "https://www.vastgoedmarkt.nl/210895",
+   "date": "2026-09-17",
+   "outlet": "M-Tower Netherlands и Kadaster",
+   "url": "https://vastgoedjournaal.nl/news/74336",
+   "tier": 1,
+   "scope": "deal",
+   "polarity": 1,
+   "numbers": [
+    "€14,83 млн"
+   ],
+   "lead": "Volkswagen Pon Financial Services купил офис Saturnus 1 в Амерсфорте — около 7 500 кв. м, класс энергоэффективности A, участок 7 600 кв. м — за €14,83 млн по данным Kadaster.",
+   "deal": [
+    "Амерсфорт, Saturnus 1: офис 7 500 кв. м, класс A",
+    "Volkswagen Pon FS ← M-Tower",
+    "€14,83 млн"
+   ],
+   "height": 175,
+   "impact": 2
+  },
+  {
+   "id": "o-highbrook",
+   "sector": "offices",
+   "block": "investment",
+   "date": "2026-09-17",
+   "outlet": "Highbrook Investors",
+   "url": "https://vastgoedjournaal.nl/news/74329",
+   "tier": 1,
+   "scope": "deal",
+   "polarity": 1,
+   "numbers": [
+    "10 000 кв. м"
+   ],
+   "lead": "Highbrook Investors завершил продажу Pand Noord — офисного здания около 10 000 кв. м в Амстердам-Норде — крупному нидерландскому инвестору.",
+   "deal": [
+    "Амстердам-Норд, Pand Noord",
+    "Highbrook → крупный нидерландский инвестор",
+    "10 000 кв. м"
+   ],
+   "height": 175,
+   "impact": 2
+  },
+  {
+   "id": "o-novaxia",
+   "sector": "offices",
+   "block": "investment",
+   "date": "2026-09-16",
+   "outlet": "F.F.I. Beheer, DBN Groep, Hansell",
+   "url": "https://vastgoedjournaal.nl/news/74325",
+   "tier": 1,
+   "scope": "deal",
+   "polarity": 1,
+   "numbers": [
+    "2 886 кв. м"
+   ],
+   "lead": "Консорциум F.F.I. Beheer, DBN Groep и Hansell купил у французского фонда Novaxia NEO SCPI офисное здание 2 886 кв. м на Neuhuyskade 40 в Гааге; его занимает школа HML.",
+   "deal": [
+    "Гаага, Neuhuyskade 40 (арендатор — школа HML)",
+    "консорциум ← Novaxia NEO SCPI",
+    "2 886 кв. м"
+   ],
+   "height": 175,
+   "impact": 1
+  },
+  {
+   "id": "o-werkenden",
+   "sector": "offices",
+   "block": "occupier",
+   "date": "2026-09-17",
+   "outlet": "CBS",
+   "url": "https://www.cbs.nl/nl-nl/nieuws/2026/38/aantal-werkenden-tot-aow-leeftijd-tweede-jaar-op-rij-niet-meer-toegenomen",
+   "tier": 1,
+   "scope": "market",
+   "polarity": -1,
+   "numbers": [
+    "9,6 млн"
+   ],
+   "lead": "Во втором квартале работало 9,6 млн человек от 15 лет до пенсионного возраста — второй год подряд число не растёт после почти непрерывного роста прежде; остальная часть населения выросла до 8,5 млн, а рабочая неделя стала чуть короче.",
+   "deal": null,
+   "height": 250,
+   "impact": 3
+  },
+  {
+   "id": "o-werkloos",
+   "sector": "offices",
+   "block": "occupier",
+   "date": "2026-09-17",
+   "outlet": "CBS",
+   "url": "https://www.cbs.nl/nl-nl/nieuws/2026/38/iets-meer-mensen-werkloos-in-augustus",
+   "tier": 1,
+   "scope": "market",
+   "polarity": -1,
+   "numbers": [
+    "408"
+   ],
+   "lead": "В августе безработных было 408 тысяч; за три месяца их число росло в среднем на 3 тысячи в месяц, а занятых становилось на тысячу меньше; пособий по безработице — 195 тысяч.",
+   "deal": null,
+   "height": 250,
+   "impact": 2
+  },
+  {
+   "id": "o-deloitte",
+   "sector": "offices",
+   "block": "occupier",
+   "date": "2026-09-18",
+   "outlet": "Deloitte (годовой отчёт)",
+   "url": "https://nos.nl/l/2631541",
+   "tier": 1,
+   "scope": "market",
+   "polarity": -1,
+   "numbers": [
+    "900"
+   ],
+   "lead": "Крупнейшая аудиторско-консалтинговая фирма страны сокращается: в Deloitte работает на 900 человек меньше, чем два года назад; ушло на 260 больше сотрудников младше 30, чем нанято; причины — ИИ, перенос работы в Индию и Египет и меньше заказов у консультантов.",
+   "deal": null,
+   "height": 250,
+   "impact": 3
+  },
+  {
+   "id": "o-baker",
+   "sector": "offices",
+   "block": "occupier",
+   "date": "2026-09-16",
+   "outlet": "Baker McKenzie и Zadelhoff",
+   "url": "https://www.vastgoedmarkt.nl/211028",
+   "tier": 1,
+   "scope": "deal",
+   "polarity": 1,
+   "numbers": [
+    "The Canyon"
+   ],
+   "lead": "Юридическая фирма Baker McKenzie снимает у Zadelhoff офис в The Canyon на Beethovenstraat на Зёйдасе; переезд из Baker House запланирован на апрель 2030 года.",
+   "deal": [
+    "Амстердам, Zuidas, The Canyon: переезд из Baker House к 2030 году",
+    "Baker McKenzie ← Zadelhoff",
+    "н/д"
+   ],
+   "height": 175,
+   "impact": 2
+  },
+  {
+   "id": "o-fyeo",
+   "sector": "offices",
+   "block": "occupier",
+   "date": "2026-09-16",
+   "outlet": "Fyeo",
+   "url": "https://vastgoedjournaal.nl/news/74324",
+   "tier": 1,
+   "scope": "deal",
+   "polarity": 1,
+   "numbers": [
+    "2 000 кв. м"
+   ],
+   "lead": "Глазная клиника Fyeo снимает около 2 000 кв. м на первом и втором этажах Hoge Erasmus Offices на Willemsplein в Роттердаме плюс 37 парковочных мест.",
+   "deal": [
+    "Роттердам, Hoge Erasmus Offices: глазная клиника",
+    "Fyeo",
+    "2 000 кв. м"
+   ],
+   "height": 175,
+   "impact": 1
+  },
+  {
+   "id": "o-bnd",
+   "sector": "offices",
+   "block": "occupier",
+   "date": "2026-09-21",
+   "outlet": "Brand New Day",
+   "url": "https://vastgoedjournaal.nl/news/74358",
+   "tier": 1,
+   "scope": "deal",
+   "polarity": 1,
+   "numbers": [
+    "2 500 кв. м"
+   ],
+   "lead": "Финансовая компания Brand New Day продлила аренду около 2 500 кв. м в здании Amerika (Atlas Arena) на Hoogoorddreef 15 в Амстердам-Зёйдосте.",
+   "deal": [
+    "Амстердам-Зёйдост, Amerika (Atlas Arena): продление",
+    "Brand New Day",
+    "2 500 кв. м"
+   ],
+   "height": 175,
+   "impact": 1
+  },
+  {
+   "id": "o-toeristen",
+   "sector": "offices",
+   "block": "occupier",
+   "date": "2026-09-18",
+   "outlet": "CBS (через NOS)",
+   "url": "https://nos.nl/l/2631485",
    "tier": 2,
    "scope": "market",
    "polarity": 0,
    "numbers": [
-    "гигафабрик"
+    "21%"
    ],
-   "lead": "Основатель Volt Datacenters о проекте ИИ-гигафабрики в Роттердаме: объект по карману только крупнейшим мировым инвесторам — «начинается как сегмент недвижимости, а становится технологическим продуктом».",
+   "lead": "Туристов за первые семь месяцев стало больше, чем годом ранее, но ночёвок в отелях и парках отдыха — чуть меньше; с 1 января НДС на ночёвку вырос с 9 до 21%, и отели, по словам экономиста Rabobank, берут часть повышения на себя.",
    "deal": null,
    "height": 250,
    "impact": 2
   },
   {
-   "id": "i-stroomnet",
-   "sector": "industrial",
+   "id": "o-economen",
+   "sector": "offices",
    "block": "investment",
-   "date": "2026-09-11",
-   "outlet": "Госсекретарь по климату (Йо-Аннес де Бат)",
-   "url": "https://www.cobouw.nl/339261",
-   "tier": 1,
+   "date": "2026-09-17",
+   "outlet": "экономисты (обзор NOS)",
+   "url": "https://nos.nl/l/2631331",
+   "tier": 2,
    "scope": "policy",
-   "polarity": 1,
-   "numbers": [
-    "разрешительных"
-   ],
-   "lead": "Кабинет сокращает разрешительные процедуры для расширения электросети, чтобы ускорить борьбу с перегрузкой.",
-   "deal": null,
-   "height": 250,
-   "impact": 2
-  },
-  {
-   "id": "i-prologis",
-   "sector": "industrial",
-   "block": "investment",
-   "date": "2026-09-08",
-   "outlet": "Prologis, SADC",
-   "url": "https://vastgoedjournaal.nl/news/74205",
-   "tier": 1,
-   "scope": "market",
-   "polarity": 1,
-   "numbers": [
-    "Prologis"
-   ],
-   "lead": "Prologis и SADC показывают, что строить можно и без сетевой мощности: «нет электричества не значит, что нельзя развивать», говорит Мелхерт Дёйве из Prologis.",
-   "deal": null,
-   "height": 250,
-   "impact": 3
-  },
-  {
-   "id": "i-storage",
-   "sector": "industrial",
-   "block": "investment",
-   "date": "2026-09-11",
-   "outlet": "Storage Share",
-   "url": "https://vastgoedjournaal.nl/news/74268",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": 1,
-   "numbers": [
-    "Match Boxx"
-   ],
-   "lead": "Storage Share забирает управление складами самообслуживания Match Boxx в Эммене.",
-   "deal": [
-    "Эммен, Paganelstraat: склады Match Boxx",
-    "Storage Share (поглощение)",
-    "н/д"
-   ],
-   "height": 175,
-   "impact": 1
-  },
-  {
-   "id": "i-lelystad",
-   "sector": "industrial",
-   "block": "occupier",
-   "date": "2026-09-08",
-   "outlet": "DHG",
-   "url": "https://vastgoedjournaal.nl/news/74228",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": 1,
-   "numbers": [
-    "160 000 кв. м"
-   ],
-   "lead": "DHG сдала всю логистическую площадку Smartlog Lelystad — 160 000 кв. м — одной международной технологической компании.",
-   "deal": [
-    "Лелистад, Smartlog: вся площадка одному арендатору",
-    "DHG → технологическая компания",
-    "160 000 кв. м"
-   ],
-   "height": 175,
-   "impact": 3
-  },
-  {
-   "id": "i-bakker",
-   "sector": "industrial",
-   "block": "occupier",
-   "date": "2026-09-10",
-   "outlet": "Bakker Barendrecht",
-   "url": "https://www.logistiek.nl/211425",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": 1,
-   "numbers": [
-    "53 000 кв. м"
-   ],
-   "lead": "Сдан распределительный центр для овощей и фруктов на Laurierweg в Риддеркерке: Bakker Barendrecht, поставщик Albert Heijn и Delhaize, занимает более 53 000 кв. м.",
-   "deal": [
-    "Риддеркерк, Nieuw Reijerwaard: РЦ сдан",
-    "Bakker Barendrecht",
-    "53 000 кв. м"
-   ],
-   "height": 175,
-   "impact": 3
-  },
-  {
-   "id": "i-roosendaal",
-   "sector": "industrial",
-   "block": "occupier",
-   "date": "2026-09-14",
-   "outlet": "DHG",
-   "url": "https://vastgoedjournaal.nl/news/74288",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": 1,
-   "numbers": [
-    "16 500 кв. м"
-   ],
-   "lead": "DHG сдала крупному международному поставщику услуг 16 500 кв. м в строящемся Smartlog Roosendaal II; сдача объекта — в конце года.",
-   "deal": [
-    "Розендал, Smartlog II: аренда в стройке",
-    "DHG → международный оператор",
-    "16 500 кв. м"
-   ],
-   "height": 175,
-   "impact": 2
-  },
-  {
-   "id": "i-ah",
-   "sector": "industrial",
-   "block": "occupier",
-   "date": "2026-09-11",
-   "outlet": "Albert Heijn",
-   "url": "https://www.logistiek.nl/211442",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": 1,
-   "numbers": [
-    "Гелдермалсен"
-   ],
-   "lead": "Национальный распределительный центр Albert Heijn в Гелдермалсене расширят ещё раз: муниципалитет Вест-Бетюве не видит причин мешать.",
-   "deal": [
-    "Гелдермалсен: расширение РЦ Albert Heijn",
-    "Albert Heijn",
-    "н/д"
-   ],
-   "height": 175,
-   "impact": 2
-  },
-  {
-   "id": "i-enexis",
-   "sector": "industrial",
-   "block": "occupier",
-   "date": "2026-09-10",
-   "outlet": "Enexis",
-   "url": "https://www.logistiek.nl/211427",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": 1,
-   "numbers": [
-    "Хогевен"
-   ],
-   "lead": "В Хогевене забита первая свая распределительного центра сетевой компании Enexis.",
-   "deal": [
-    "Хогевен, Riegmeer: начало стройки РЦ Enexis",
-    "Enexis Netbeheer",
-    "н/д"
-   ],
-   "height": 175,
-   "impact": 1
-  },
-  {
-   "id": "i-ipco",
-   "sector": "industrial",
-   "block": "occupier",
-   "date": "2026-09-10",
-   "outlet": "Ipco Process Systems",
-   "url": "https://www.vastgoedmarkt.nl/210909",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": 1,
-   "numbers": [
-    "Minervum"
-   ],
-   "lead": "Ipco Process Systems арендовала производственное здание на Minervum 7250 в промзоне Hoogeind в Бреде.",
-   "deal": [
-    "Бреда, Minervum 7250: производственное здание",
-    "Ipco Process Systems (аренда)",
-    "н/д"
-   ],
-   "height": 175,
-   "impact": 1
-  },
-  {
-   "id": "i-kosten",
-   "sector": "industrial",
-   "block": "occupier",
-   "date": "2026-09-14",
-   "outlet": "Vastgoedmarkt (опрос логистов)",
-   "url": "https://www.vastgoedmarkt.nl/210970",
-   "tier": 2,
-   "scope": "market",
    "polarity": -1,
    "numbers": [
-    "шок"
+    "Арнауд"
    ],
-   "lead": "Логисты переживают ценовой шок: к росту зарплат и плате за проезд грузовиков добавилось топливо — и это уже меняет то, какие здания они ищут. «Аренда пока не проблема».",
+   "lead": "Экономистов раздражает бюджет «на квадратный сантиметр»: вместо долгосрочных решений — ремонт покупательной способности на год; профессор Арнауд Бот называет продление скидки на топливные акцизы выброшенными деньгами, которые стоило вложить в утепление домов.",
    "deal": null,
    "height": 250,
-   "impact": 3
+   "impact": 2
   },
   {
-   "id": "i-binnenvaart",
-   "sector": "industrial",
-   "block": "occupier",
-   "date": "2026-09-09",
-   "outlet": "CBS",
-   "url": "https://www.logistiek.nl/211391",
-   "tier": 1,
-   "scope": "market",
-   "polarity": -1,
-   "numbers": [
-    "18,8%"
-   ],
-   "lead": "Из-за низкой воды речной транспорт перевёз в августе на 18,8% меньше грузов, чем годом ранее, — наименьший вес за пятнадцать лет.",
-   "deal": null,
-   "height": 250,
-   "impact": 3
-  },
-  {
-   "id": "i-productie",
-   "sector": "industrial",
-   "block": "occupier",
-   "date": "2026-09-10",
-   "outlet": "CBS",
-   "url": "https://www.cbs.nl/nl-nl/nieuws/2026/37/productie-industrie-in-juli-9-procent-hoger-dan-jaar-eerder",
+   "id": "o-cbre",
+   "sector": "offices",
+   "block": "investment",
+   "date": "2026-09-17",
+   "outlet": "CBRE",
+   "url": "https://www.vastgoedmarkt.nl/211044",
    "tier": 1,
    "scope": "market",
    "polarity": 1,
    "numbers": [
-    "9,0%"
+    "CBRE"
    ],
-   "lead": "Промышленное производство в июле было на 9,0% выше прошлогоднего — сильнейший рост за полтора года.",
+   "lead": "CBRE Nederland усилил команду капитальных рынков офисов двумя специалистами из JLL — Раймондом ван Колленбургом и Даном де Блоком.",
    "deal": null,
    "height": 250,
-   "impact": 3
-  },
-  {
-   "id": "i-arvato",
-   "sector": "industrial",
-   "block": "occupier",
-   "date": "2026-09-09",
-   "outlet": "Arvato",
-   "url": "https://www.logistiek.nl/211394",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": 1,
-   "numbers": [
-    "Arvato"
-   ],
-   "lead": "Arvato открыла логистический кампус с собственной энергетикой, роботами и домиками на деревьях — «не типовая коробка».",
-   "deal": [
-    "Логистический кампус Arvato открыт",
-    "Arvato",
-    "н/д"
-   ],
-   "height": 175,
    "impact": 1
-  },
-  {
-   "id": "o-epra",
-   "sector": "offices",
-   "block": "investment",
-   "date": "2026-09-08",
-   "outlet": "FTSE EPRA Nareit (индекс)",
-   "url": "https://www.vastgoedmarkt.nl/210825",
-   "tier": 1,
-   "scope": "market",
-   "polarity": -1,
-   "numbers": [
-    "3,9%"
-   ],
-   "lead": "Глобальный индекс акций недвижимости FTSE EPRA Nareit упал в августе на 3,9%, оборвав рост предыдущих месяцев: госбумаги дешевеют второй месяц, доходности 10 и 30 лет растут.",
-   "deal": null,
-   "height": 250,
-   "impact": 3
-  },
-  {
-   "id": "o-family",
-   "sector": "offices",
-   "block": "investment",
-   "date": "2026-09-11",
-   "outlet": "Vastgoedmarkt (обзор инвесторов)",
-   "url": "https://www.vastgoedmarkt.nl/210869",
-   "tier": 2,
-   "scope": "market",
-   "polarity": 1,
-   "numbers": [
-    "семейные"
-   ],
-   "lead": "Семейные офисы — управляющие капиталом одной богатой семьи — несколько лет наступают на нидерландский рынок и всё чаще всплывают в сделках: «они готовы брать больше риска».",
-   "deal": null,
-   "height": 250,
-   "impact": 3
-  },
-  {
-   "id": "o-alternatief",
-   "sector": "offices",
-   "block": "investment",
-   "date": "2026-09-11",
-   "outlet": "Vastgoedmarkt (аналитика рынка)",
-   "url": "https://www.vastgoedmarkt.nl/210936",
-   "tier": 2,
-   "scope": "market",
-   "polarity": 1,
-   "numbers": [
-    "классическ"
-   ],
-   "lead": "При нехватке альтернативных объектов инвесторы возвращаются к классическим сегментам — офисам и магазинам — на быстро восстанавливающемся рынке.",
-   "deal": null,
-   "height": 250,
-   "impact": 3
-  },
-  {
-   "id": "o-rabo",
-   "sector": "offices",
-   "block": "investment",
-   "date": "2026-09-08",
-   "outlet": "Rabobank",
-   "url": "https://www.vastgoedmarkt.nl/210845",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": 1,
-   "numbers": [
-    "€4,65 млн"
-   ],
-   "lead": "Rabobank продала офисное здание на Wielingenstraat 2 в Пурмеренде за €4,65 млн.",
-   "deal": [
-    "Пурмеренд, Wielingenstraat 2: офис Rabobank",
-    "Rabobank (продавец)",
-    "€4,65 млн"
-   ],
-   "height": 175,
-   "impact": 2
-  },
-  {
-   "id": "o-3w",
-   "sector": "offices",
-   "block": "investment",
-   "date": "2026-09-14",
-   "outlet": "3W",
-   "url": "https://vastgoedjournaal.nl/news/74292",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": -1,
-   "numbers": [
-    "Ceramique"
-   ],
-   "lead": "Офис VodafoneZiggo на Avenue Ceramique в Маастрихте куплен под перевод в жильё — ещё один объект уходит из офисного фонда.",
-   "deal": [
-    "Маастрихт, Avenue Ceramique 300: офис уходит в жильё",
-    "3W с партнёрами",
-    "н/д"
-   ],
-   "height": 175,
-   "impact": 2
-  },
-  {
-   "id": "o-hotel",
-   "sector": "offices",
-   "block": "investment",
-   "date": "2026-09-08",
-   "outlet": "Vastgoedmarkt (данные по Амстердаму)",
-   "url": "https://www.vastgoedmarkt.nl/210843",
-   "tier": 2,
-   "scope": "market",
-   "polarity": -1,
-   "numbers": [
-    "38%"
-   ],
-   "lead": "Число деловых ночёвок в амстердамских отелях с 2019 по 2025 год упало на 38% — прямое следствие того, что командировок стало меньше.",
-   "deal": null,
-   "height": 250,
-   "impact": 3
-  },
-  {
-   "id": "o-winst",
-   "sector": "offices",
-   "block": "investment",
-   "date": "2026-09-08",
-   "outlet": "отраслевой обзор отелей",
-   "url": "https://vastgoedjournaal.nl/news/74213",
-   "tier": 1,
-   "scope": "market",
-   "polarity": -1,
-   "numbers": [
-    "12%"
-   ],
-   "lead": "Валовая прибыль на номер в нидерландских отелях упала более чем на 12%: расходы растут, выручка под давлением; на 2027 год большинство отельеров тоже ждёт снижения.",
-   "deal": null,
-   "height": 250,
-   "impact": 3
-  },
-  {
-   "id": "o-mkb",
-   "sector": "offices",
-   "block": "occupier",
-   "date": "2026-09-10",
-   "outlet": "исследование спроса на офисы",
-   "url": "https://vastgoedjournaal.nl/news/74247",
-   "tier": 1,
-   "scope": "market",
-   "polarity": 1,
-   "numbers": [
-    "треть"
-   ],
-   "lead": "Рост спроса на офисы в ближайшие годы даст малый и средний бизнес: почти треть таких компаний ждёт, что метров понадобится больше, тогда как корпорации портфели сокращают или держат.",
-   "deal": null,
-   "height": 250,
-   "impact": 3
-  },
-  {
-   "id": "o-producent",
-   "sector": "offices",
-   "block": "occupier",
-   "date": "2026-09-10",
-   "outlet": "CBS",
-   "url": "https://www.cbs.nl/nl-nl/nieuws/2026/37/productie-industrie-in-juli-9-procent-hoger-dan-jaar-eerder",
-   "tier": 1,
-   "scope": "market",
-   "polarity": 1,
-   "numbers": [
-    "3,7"
-   ],
-   "lead": "Доверие производителей в августе +3,7 пункта — максимум с начала 2025 года и четвёртый положительный месяц подряд.",
-   "deal": null,
-   "height": 250,
-   "impact": 2
-  },
-  {
-   "id": "o-creative",
-   "sector": "offices",
-   "block": "occupier",
-   "date": "2026-09-14",
-   "outlet": "Creative Valley",
-   "url": "https://vastgoedjournaal.nl/news/74299",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": 1,
-   "numbers": [
-    "Smakkelaarsveld"
-   ],
-   "lead": "Первые два арендатора подписали договоры на строящийся офис Creative Valley at the Park на Smakkelaarsveld — вплотную к вокзалу Утрехт-Центральный.",
-   "deal": [
-    "Утрехт, Smakkelaarsveld: первые арендаторы",
-    "Creative Valley at the Park",
-    "2 договора"
-   ],
-   "height": 175,
-   "impact": 2
-  },
-  {
-   "id": "o-juridisch",
-   "sector": "offices",
-   "block": "occupier",
-   "date": "2026-09-14",
-   "outlet": "Het Juridisch Loket",
-   "url": "https://vastgoedjournaal.nl/news/74296",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": 1,
-   "numbers": [
-    "712 кв. м"
-   ],
-   "lead": "Het Juridisch Loket продлил аренду в роттердамском Groot Handelsgebouw и добавил соседнее помещение — офис вырос до 712 кв. м.",
-   "deal": [
-    "Роттердам, Groot Handelsgebouw: продление и расширение",
-    "Het Juridisch Loket",
-    "712 кв. м"
-   ],
-   "height": 175,
-   "impact": 1
-  },
-  {
-   "id": "o-billy",
-   "sector": "offices",
-   "block": "occupier",
-   "date": "2026-09-10",
-   "outlet": "PingProperties",
-   "url": "https://vastgoedjournaal.nl/news/74261",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": 1,
-   "numbers": [
-    "914 кв. м"
-   ],
-   "lead": "ИИ-разработчик Billy Grace заключил долгосрочную аренду 914 кв. м в здании Metropool на Weesperstraat 61 в Амстердаме у PingProperties.",
-   "deal": [
-    "Амстердам, Metropool: ИИ-разработчик Billy Grace",
-    "PingProperties (арендодатель)",
-    "914 кв. м"
-   ],
-   "height": 175,
-   "impact": 2
-  },
-  {
-   "id": "o-eyescan",
-   "sector": "offices",
-   "block": "occupier",
-   "date": "2026-09-08",
-   "outlet": "Eyescan",
-   "url": "https://vastgoedjournaal.nl/news/74206",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": 1,
-   "numbers": [
-    "1 533 кв. м"
-   ],
-   "lead": "Eyescan арендовал 1 533 кв. м в здании The One в Амстелвене.",
-   "deal": [
-    "Амстелвен, The One: Eyescan",
-    "аренда",
-    "1 533 кв. м"
-   ],
-   "height": 175,
-   "impact": 1
-  },
-  {
-   "id": "o-roxit",
-   "sector": "offices",
-   "block": "occupier",
-   "date": "2026-09-08",
-   "outlet": "Roxit",
-   "url": "https://vastgoedjournaal.nl/news/74223",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": 1,
-   "numbers": [
-    "650 кв. м"
-   ],
-   "lead": "Разработчик Roxit арендовал около 650 кв. м в The City Post Oost в Зволле.",
-   "deal": [
-    "Зволле, The City Post Oost: Roxit",
-    "аренда",
-    "650 кв. м"
-   ],
-   "height": 175,
-   "impact": 1
-  },
-  {
-   "id": "o-novar",
-   "sector": "offices",
-   "block": "occupier",
-   "date": "2026-09-08",
-   "outlet": "Novar",
-   "url": "https://vastgoedjournaal.nl/news/74210",
-   "tier": 1,
-   "scope": "deal",
-   "polarity": 1,
-   "numbers": [
-    "Novar"
-   ],
-   "lead": "Novar Nederland подписал долгосрочную аренду офиса на Arthur van Schendelstraat 650 в Утрехте.",
-   "deal": [
-    "Утрехт, Arthur van Schendelstraat: Novar",
-    "аренда",
-    "н/д"
-   ],
-   "height": 175,
-   "impact": 1
-  },
-  {
-   "id": "o-energie",
-   "sector": "offices",
-   "block": "occupier",
-   "date": "2026-09-14",
-   "outlet": "ACM (прогноз тарифов)",
-   "url": "https://nos.nl/l/2630915",
-   "tier": 1,
-   "scope": "market",
-   "polarity": -1,
-   "numbers": [
-    "20%"
-   ],
-   "lead": "Сетевые тарифы вырастут почти на 20%: перестройка электросети ложится в счета пользователей зданий.",
-   "deal": null,
-   "height": 250,
-   "impact": 2
   }
  ]
 }
