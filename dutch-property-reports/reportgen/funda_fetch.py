@@ -8,8 +8,15 @@ pagina die je zoekt»). Проходит только reader-прокси ``r.ji
 Чего прокси **не** отдаёт: на funda in business описание обрывается на
 «Het object …» с кнопкой «Lees de volledige omschrijving» — остаток подгружает
 скрипт, и ни один из адресов (``/print/``, ``/omschrijving/``, английская
-версия) полного текста не даёт. Годовую аренду и разбор договоров по таким
-объявлениям берут у брокера или из текста, скопированного из браузера.
+версия) полного текста не даёт. А в этом остатке лежит самое нужное: годовая
+аренда, кадастровые номера, срок энергетической метки и условия сделки.
+
+За полным текстом ходит ``full_description()`` — настоящий Chromium через
+Playwright. Стену он проходит, и решает это **одна строка**: переход с
+``wait_until="networkidle"``. С ``domcontentloaded`` страница снимается до того,
+как отработает сенсор Akamai, и в руках остаётся «Je bent bijna op de pagina die
+je zoekt»; с ожиданием тишины в сети проверка успевает пройти сама. Дальше
+нажимается кнопка раскрытия, и описание читается целиком.
 
 Галерея снимается по-разному на двух площадках, и это главное, ради чего
 модуль существует.
@@ -179,6 +186,105 @@ def plain_text(html: str) -> str:
     return "\n".join(line.strip() for line in body.split("\n") if line.strip())
 
 
+CHROMIUM = "/opt/pw-browsers/chromium-1194/chrome-linux/chrome"
+PROXY_CA = "/root/.ccr/agent-proxy-ca.crt"
+EXPAND = (
+    "[data-object-description-expand-handle]",
+    "button:has-text('volledige omschrijving')",
+    "button:has-text('full description')",
+)
+CONSENT = (
+    "#didomi-notice-agree-button",
+    "button:has-text('Alles accepteren')",
+    "button:has-text('Agree and close')",
+)
+
+
+def _spki_pin(path: str = PROXY_CA) -> str | None:
+    """Отпечаток открытого ключа CA агентского прокси для Chromium.
+
+    Прокси перешифровывает TLS, и браузер без этого отпечатка ругается на
+    самоподписанный сертификат. Пин прикалывает ровно этот CA — проверка
+    сертификатов остаётся включённой.
+    """
+    import base64
+    import subprocess
+
+    if not Path(path).exists():
+        return None
+    try:
+        der = subprocess.run(["openssl", "x509", "-in", path, "-pubkey", "-noout"],
+                             capture_output=True, check=True).stdout
+        pub = subprocess.run(["openssl", "pkey", "-pubin", "-outform", "der"],
+                             input=der, capture_output=True, check=True).stdout
+        sha = subprocess.run(["openssl", "dgst", "-sha256", "-binary"],
+                             input=pub, capture_output=True, check=True).stdout
+    except (OSError, subprocess.CalledProcessError) as exc:
+        log.warning("не посчитать отпечаток CA прокси: %s", exc)
+        return None
+    return base64.b64encode(sha).decode()
+
+
+def browser_html(url: str, *, timeout: int = 180_000) -> str:
+    """Страница настоящим браузером, с раскрытым описанием.
+
+    Запускать под Xvfb: ``xvfb-run -a python -m reportgen.funda_fetch …``.
+    Головной режим держится намеренно — headless стену не проходит.
+    """
+    import os
+
+    from playwright.sync_api import sync_playwright
+
+    args = []
+    pin = _spki_pin()
+    if pin:
+        args.append(f"--ignore-certificate-errors-spki-list={pin}")
+    with sync_playwright() as play:
+        browser = play.chromium.launch(
+            headless=False,
+            executable_path=CHROMIUM if Path(CHROMIUM).exists() else None,
+            proxy={"server": os.environ["HTTPS_PROXY"]} if os.environ.get("HTTPS_PROXY") else None,
+            args=args,
+        )
+        context = browser.new_context(locale="nl-NL", timezone_id="Europe/Amsterdam",
+                                      viewport={"width": 1440, "height": 1200})
+        page = context.new_page()
+        # именно networkidle: сенсор Akamai должен успеть отработать
+        page.goto(url, wait_until="networkidle", timeout=timeout)
+        page.wait_for_timeout(4000)
+        for group, once in ((CONSENT, True), (EXPAND, False)):
+            for selector in group:
+                try:
+                    page.click(selector, timeout=5000)
+                    page.wait_for_timeout(1500)
+                    if once:
+                        break
+                except Exception:          # кнопки может не быть — это не сбой
+                    continue
+        page.wait_for_timeout(2000)
+        if WALL in page.title():
+            raise RuntimeError("браузер тоже получил страницу проверки")
+        html = page.content()
+        context.close()
+        browser.close()
+        return html
+
+
+def full_description(url: str, html: str | None = None) -> str:
+    """Полный текст блока «Omschrijving» — тот, что прокси обрезает."""
+    if html is None:
+        html = browser_html(url)
+    text = plain_text(html)
+    start = text.find("Omschrijving")
+    if start < 0:
+        return ""
+    for marker in ("\nKenmerken", "\nFeatures", "Lees de volledige omschrijving"):
+        end = text.find(marker, start + 1)
+        if end > start:
+            return text[start:end].strip()
+    return text[start:start + 12000].strip()
+
+
 def features(html: str) -> str:
     """Блок характеристик: от «Overdracht» до сведений о районе."""
     text = plain_text(html)
@@ -200,18 +306,24 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("urls", nargs="+", help="адреса объявлений funda")
     parser.add_argument("--html-dir", type=Path,
                         help="куда складывать снятые страницы")
+    parser.add_argument("--browser", action="store_true",
+                        help="снять настоящим браузером и показать полное описание "
+                             "(запускать под xvfb-run)")
     args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     for url in args.urls:
-        page = fetch(url, as_html=True)
+        page = browser_html(url) if args.browser else fetch(url, as_html=True)
         name = re.sub(r"\W+", "-", url).strip("-")[-80:]
         if args.html_dir:
             args.html_dir.mkdir(parents=True, exist_ok=True)
             (args.html_dir / f"{name}.html").write_text(page, encoding="utf-8")
-        photos = gallery(url)
         print(f"\n=== {url}")
+        if args.browser:
+            print(full_description(url, page) or "описание не нашлось")
+            print()
         print(features(page) or "характеристики не нашлись")
+        photos = business_gallery(page) if "fundainbusiness.nl" in url else gallery(url)
         print(f"\nкадров: {len(photos)}")
         for photo in photos:
             print(" ", photo)
