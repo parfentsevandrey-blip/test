@@ -301,7 +301,13 @@ struct MultihopOptions: View {
                 get: { app.settings.avoidFiveEyes },
                 set: { app.setAvoidFiveEyes($0) }
             )) {
-                Text("Avoid Five Eyes countries (US, UK, Canada, Australia, New Zealand)")
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Avoid Five Eyes countries (US, UK, Canada, Australia, New Zealand)")
+                    Text("Behind a bridge these exclusions apply to the exit only: tor checks the list against the bridges themselves, and a bridge in an excluded country is refused — with every bridge refused there would be nothing left to connect through. The bridge is the hop you chose by hand in any case.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
 
             Toggle(isOn: $app.settings.seamlessRouteSwitch) {

@@ -665,7 +665,7 @@ final class TorProcessEngine: TorEngine {
 
     func applyRoute(_ route: TorRoute, dropConnections: Bool) async throws {
         guard let controller else { throw TorEngineError.notRunning }
-        let configuration = route.configuration
+        let configuration = route.configuration(usingBridges: usesBridges)
         if !configuration.reset.isEmpty {
             try await controller.resetConf(configuration.reset)
         }

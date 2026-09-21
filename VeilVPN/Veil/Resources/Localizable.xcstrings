@@ -1513,6 +1513,34 @@
         }
       }
     },
+    "Behind a bridge these exclusions apply to the exit only: tor checks the list against the bridges themselves, and a bridge in an excluded country is refused — with every bridge refused there would be nothing left to connect through. The bridge is the hop you chose by hand in any case.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "За мостом эти исключения действуют только на выход: tor сверяет список с самими мостами, и мост в исключённой стране отвергается — а когда отвергнуты все мосты, подключаться становится не через что. Мост в любом случае тот узел, который вы выбрали вручную."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "За мостом ці винятки діють лише на вихід: tor звіряє список із самими мостами, і міст у виключеній країні відхиляється — а коли відхилено всі мости, підключатися стає нічим. Міст у будь-якому разі є вузлом, який ви обрали вручну."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پشت یک پل، این استثناها فقط بر خروجی اعمال می‌شوند: tor فهرست را با خودِ پل‌ها می‌سنجد و پلی که در کشوری کنارگذاشته باشد رد می‌شود — و وقتی همهٔ پل‌ها رد شوند، چیزی برای اتصال نمی‌ماند. پل در هر حال همان گامی است که خودتان دستی انتخاب کرده‌اید."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在网桥之后，这些排除仅作用于出口：tor 会用该列表比对网桥本身，位于被排除国家的网桥会被拒绝——当所有网桥都被拒绝时，就没有任何可用于连接的通道了。况且网桥本就是你亲手选定的那一跳。"
+          }
+        }
+      }
+    },
     "Block plain HTTP through Tor": {
       "localizations": {
         "fa": {

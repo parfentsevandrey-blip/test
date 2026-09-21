@@ -60,4 +60,46 @@ final class RoutingPolicyTests: XCTestCase {
         XCTAssertTrue(lines.contains("ExcludeNodes {us},{gb},{ca},{au},{nz}"))
         XCTAssertTrue(lines.contains("StrictNodes 1"))
     }
+
+    func testExclusionsNeverReachTheBridgesThemselves() {
+        var settings = AppSettings()
+        settings.avoidFiveEyes = true
+        let route = settings.route
+
+        // Direct: the exclusion covers every hop, as before.
+        let direct = route.configuration(usingBridges: false)
+        XCTAssertTrue(direct.set.contains { $0.key == "ExcludeNodes" && $0.value == "{us},{gb},{ca},{au},{nz}" })
+        XCTAssertTrue(direct.reset.contains("ExcludeExitNodes"))
+
+        // Behind a bridge: never ExcludeNodes. Tor matches it against the bridges and refuses
+        // every one in an excluded country — "Not using bridge at …: it is in ExcludeNodes" —
+        // which leaves nothing to bootstrap through.
+        let bridged = route.configuration(usingBridges: true)
+        XCTAssertFalse(bridged.set.contains { $0.key == "ExcludeNodes" })
+        XCTAssertTrue(bridged.set.contains { $0.key == "ExcludeExitNodes" && $0.value == "{us},{gb},{ca},{au},{nz}" })
+        XCTAssertTrue(bridged.reset.contains("ExcludeNodes"),
+                      "a switch from a direct connection has to clear it, or the bridges stay refused")
+        XCTAssertTrue(bridged.set.contains { $0.key == "StrictNodes" && $0.value == "1" })
+    }
+
+    func testWithoutExclusionsBothFormsAreCleared() {
+        let route = AppSettings().route
+        for usingBridges in [false, true] {
+            let configuration = route.configuration(usingBridges: usingBridges)
+            XCTAssertTrue(configuration.reset.contains("ExcludeNodes"))
+            XCTAssertTrue(configuration.reset.contains("ExcludeExitNodes"))
+            XCTAssertTrue(configuration.reset.contains("StrictNodes"))
+            XCTAssertTrue(configuration.set.isEmpty)
+        }
+    }
+
+    func testAnExcludedExitCountryStillHoldsBehindABridge() {
+        var settings = AppSettings()
+        settings.exitCountry = "de"
+        settings.excludedCountries = ["us", "de"]
+        let bridged = settings.route.configuration(usingBridges: true)
+        // The country we asked to exit in is never excluded, whichever key carries the list.
+        XCTAssertTrue(bridged.set.contains { $0.key == "ExcludeExitNodes" && $0.value == "{us}" })
+        XCTAssertTrue(bridged.set.contains { $0.key == "ExitNodes" && $0.value == "{de}" })
+    }
 }

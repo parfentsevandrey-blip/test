@@ -561,6 +561,9 @@ final class AppState {
                 for skip in plan.skipped {
                     append(.veil(.debug, "Skipping \(skip.transport.rawValue): \(skip.reason)"))
                 }
+                if !settings.route.excludedCountries.isEmpty, plan.ordered.contains(where: { $0 != .direct }) {
+                    append(.veil(.notice, "Excluded countries apply to the exit only behind a bridge: tor checks the exclusion list against the bridges themselves and would refuse every bridge that falls in one, leaving nothing to connect through"))
+                }
                 var deadline = AttemptPlanner.overallDeadline(tier: profile.tier)
                 let started = Date.now
                 let defaults = PluggableTransportDefaults.load(from: nil)

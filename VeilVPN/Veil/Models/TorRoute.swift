@@ -47,7 +47,14 @@ struct TorRoute: Equatable, Sendable {
     }
 
     /// `Key value` pairs for torrc / SETCONF, and keys that must be reset.
-    var configuration: (set: [(key: String, value: String)], reset: [String]) {
+    ///
+    /// With bridges in use the exclusions go to `ExcludeExitNodes` rather than `ExcludeNodes`.
+    /// Tor matches `ExcludeNodes` against the bridges themselves and refuses every one that falls
+    /// in an excluded country — "Not using bridge at […]: it is in ExcludeNodes" — and with every
+    /// bridge refused the tunnel never comes up at all. The bridge is the one hop the user chose
+    /// by hand, so excluding countries there says nothing anyway; where the traffic *leaves* is
+    /// what the choice is about, and that still holds.
+    func configuration(usingBridges: Bool) -> (set: [(key: String, value: String)], reset: [String]) {
         var set: [(key: String, value: String)] = []
         var reset: [String] = []
         if !pinnedMiddles.isEmpty {
@@ -69,11 +76,15 @@ struct TorRoute: Equatable, Sendable {
         var excludeList = excluded.map { "{\($0)}" }
         let pinned = Set((pinnedExits + pinnedMiddles).map { $0.uppercased() })
         excludeList += avoidedRelays.map { $0.uppercased() }.filter { !pinned.contains($0) }.map { "$" + $0 }
+        let excludeKey = usingBridges ? "ExcludeExitNodes" : "ExcludeNodes"
         if !excludeList.isEmpty {
-            set.append(("ExcludeNodes", excludeList.joined(separator: ",")))
+            set.append((excludeKey, excludeList.joined(separator: ",")))
         } else {
-            reset.append("ExcludeNodes")
+            reset.append(excludeKey)
         }
+        // The other form is always cleared, so a switch between a bridge and a direct connection
+        // never leaves the previous one behind — a stale `ExcludeNodes` would refuse the bridges.
+        reset.append(usingBridges ? "ExcludeNodes" : "ExcludeExitNodes")
         if set.isEmpty {
             reset.append("StrictNodes")
         } else {
@@ -82,8 +93,9 @@ struct TorRoute: Equatable, Sendable {
         return (set, reset)
     }
 
+    /// How the route reads on a direct connection; the display and diagnostics form.
     var torrcLines: [String] {
-        configuration.set.map { "\($0.key) \($0.value)" }
+        configuration(usingBridges: false).set.map { "\($0.key) \($0.value)" }
     }
 }
 

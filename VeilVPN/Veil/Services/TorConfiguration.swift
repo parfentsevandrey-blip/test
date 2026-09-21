@@ -111,7 +111,8 @@ struct TorConfiguration {
         lines.append(contentsOf: Self.performanceLines(for: settings))
         if let geoip = bundle.geoip { lines.append("GeoIPFile \(geoip.path)") }
         if let geoip6 = bundle.geoip6 { lines.append("GeoIPv6File \(geoip6.path)") }
-        lines.append(contentsOf: settings.route.torrcLines)
+        lines.append(contentsOf: settings.route.configuration(usingBridges: settings.transport != .direct)
+            .set.map { "\($0.key) \($0.value)" })
 
         let bridgeLines = Self.bridgeLines(for: settings.transport, settings: settings, defaults: defaults)
 
@@ -278,7 +279,7 @@ struct TorConfiguration {
             pairs.append(("UseBridges", "1"))
             for bridge in bridges.prefix(maxBridgeLines) { pairs.append(("Bridge", bridge)) }
         }
-        let configuration = settings.route.configuration
+        let configuration = settings.route.configuration(usingBridges: settings.transport != .direct)
         for key in configuration.reset { pairs.append((key, nil)) }
         for assignment in configuration.set { pairs.append((assignment.key, assignment.value)) }
         pairs.append(("DisableNetwork", "0"))
