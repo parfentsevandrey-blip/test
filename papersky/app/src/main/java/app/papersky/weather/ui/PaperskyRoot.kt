@@ -131,22 +131,23 @@ fun PaperskyRoot(container: AppContainer, pendingPlace: StateFlow<String?>, onPl
 
     PaperskyChrome(state.settings, scene) {
         val backStack = rememberNavBackStack(HomeRoute)
-        val paperSpring = spring<androidx.compose.ui.unit.IntOffset>(dampingRatio = 0.86f, stiffness = 420f)
+        val sheet = spring<androidx.compose.ui.unit.IntOffset>(dampingRatio = 0.88f, stiffness = 360f)
+        val settle = spring<Float>(dampingRatio = 0.9f, stiffness = 360f)
         NavDisplay(
             backStack = backStack,
             onBack = { backStack.removeLastOrNull() },
             entryDecorators = listOf(rememberSaveableStateHolderNavEntryDecorator(), rememberViewModelStoreNavEntryDecorator()),
-            // A new sheet of paper is laid on top; going back lifts it away.
+            // A new sheet of paper slides over; the one beneath sinks back and dims.
             transitionSpec = {
-                (slideInVertically(paperSpring) { it / 7 } + fadeIn(tween(220)) + scaleIn(initialScale = 0.97f)) togetherWith
-                    (fadeOut(tween(260)) + scaleOut(targetScale = 0.94f))
+                (slideInVertically(sheet) { it / 4 } + fadeIn(tween(220)) + scaleIn(settle, initialScale = 0.985f)) togetherWith
+                    (scaleOut(tween(420), targetScale = 0.93f) + fadeOut(tween(420), targetAlpha = 0.3f))
             },
             popTransitionSpec = {
-                (fadeIn(tween(260)) + scaleIn(initialScale = 0.94f)) togetherWith
-                    (slideOutVertically(paperSpring) { it / 6 } + fadeOut(tween(200)))
+                (scaleIn(tween(380), initialScale = 0.93f) + fadeIn(tween(320), initialAlpha = 0.3f)) togetherWith
+                    (slideOutVertically(spring(dampingRatio = 1f, stiffness = 420f)) { it / 3 } + fadeOut(tween(240)))
             },
             predictivePopTransitionSpec = {
-                (fadeIn() + scaleIn(initialScale = 0.92f)) togetherWith (scaleOut(targetScale = 0.86f) + fadeOut())
+                (scaleIn(initialScale = 0.92f) + fadeIn(initialAlpha = 0.35f)) togetherWith (scaleOut(targetScale = 0.9f) + fadeOut())
             },
             entryProvider = entryProvider {
                 entry<HomeRoute> {

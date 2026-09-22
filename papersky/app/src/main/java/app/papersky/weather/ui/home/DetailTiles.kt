@@ -28,6 +28,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -58,7 +59,9 @@ import app.papersky.weather.design.Label
 import app.papersky.weather.design.LocalSceneClock
 import app.papersky.weather.design.Paper
 import app.papersky.weather.design.PaperCard
+import app.papersky.weather.design.TileShape
 import app.papersky.weather.design.rememberHaptics
+import kotlinx.coroutines.delay
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
@@ -95,48 +98,58 @@ private fun FlipTile(
     caption: String,
     explanation: String,
     modifier: Modifier = Modifier,
-    art: @Composable (appear: Float) -> Unit,
+    art: @Composable (appear: () -> Float) -> Unit,
 ) {
     var flipped by rememberSaveable { mutableStateOf(false) }
-    val rotation by animateFloatAsState(if (flipped) 180f else 0f, spring(dampingRatio = 0.72f, stiffness = 190f), label = "flip")
+    val rotation = animateFloatAsState(if (flipped) 180f else 0f, spring(dampingRatio = 0.74f, stiffness = 170f), label = "flip")
     val appear = remember { Animatable(0f) }
-    LaunchedEffect(Unit) { appear.animateTo(1f, tween(1100)) }
+    LaunchedEffect(Unit) {
+        delay(seed * 60L)
+        appear.animateTo(1f, spring(dampingRatio = 0.7f, stiffness = 60f))
+    }
     val h = rememberHaptics()
     val density = LocalDensity.current.density
+    val showBack = rotation.value > 90f
     Box(
         modifier
-            .height(184.dp)
+            .height(186.dp)
             .semantics { contentDescription = "$title: $value. $caption" }
             .graphicsLayer {
-                rotationY = rotation
-                cameraDistance = 16f * density
+                rotationY = rotation.value
+                cameraDistance = 18f * density
             },
     ) {
-        val tilt = if (seed % 2 == 0) -0.8f else 0.7f
-        if (rotation <= 90f) {
-            PaperCard(Modifier.fillMaxSize(), seed = seed, tilt = tilt, onClick = { h.softTick(); flipped = true }, contentPadding = PaddingValues(16.dp)) {
+        if (!showBack) {
+            PaperCard(Modifier.fillMaxSize(), shape = TileShape, onClick = { h.softTick(); flipped = true }, contentPadding = PaddingValues(16.dp)) {
                 Label(title)
                 Spacer(Modifier.height(4.dp))
-                Box(Modifier.fillMaxWidth().weight(1f)) { art(appear.value) }
+                Box(Modifier.fillMaxWidth().weight(1f)) { art { appear.value } }
                 BasicText(
                     value,
-                    style = Paper.type.title.copy(color = Paper.colors.paperInk),
+                    style = Paper.type.numberLight.copy(color = Paper.colors.paperInk),
                     maxLines = 1,
-                    autoSize = TextAutoSize.StepBased(minFontSize = 13.sp, maxFontSize = 22.sp, stepSize = 1.sp),
+                    autoSize = TextAutoSize.StepBased(minFontSize = 14.sp, maxFontSize = 26.sp, stepSize = 1.sp),
                 )
                 BasicText(caption, style = Paper.type.caption.copy(color = Paper.colors.paperInkSoft), maxLines = 2)
             }
         } else {
             PaperCard(
                 Modifier.fillMaxSize().graphicsLayer { rotationY = 180f },
-                seed = seed + 7, tilt = -tilt, color = Paper.colors.paper,
+                shape = TileShape,
                 onClick = { h.softTick(); flipped = false }, contentPadding = PaddingValues(16.dp),
             ) {
                 Label(title)
                 Spacer(Modifier.height(8.dp))
-                BasicText(explanation, style = Paper.type.hand.copy(color = Paper.colors.paperInk, fontSize = 19.sp))
+                BasicText(explanation, style = Paper.type.quote.copy(color = Paper.colors.paperInk, fontSize = 14.5.sp))
             }
         }
+        // The sheet darkens as it turns edge-on, like paper away from the light.
+        Box(
+            Modifier.fillMaxSize().drawBehind {
+                val edge = 1f - kotlin.math.abs(90f - rotation.value % 180f) / 90f
+                if (edge > 0.01f) drawRoundRect(Color.Black.copy(alpha = edge * 0.22f), cornerRadius = CornerRadius(24.dp.toPx()))
+            },
+        )
     }
 }
 
@@ -152,8 +165,9 @@ private fun WindTile(m: WeatherMoment, fmt: WeatherFormat, modifier: Modifier) {
         1, stringResource(R.string.tile_wind), fmt.wind(m.windSpeed),
         stringResource(R.string.tile_wind_caption, fmt.compass(m.windDirection), fmt.wind(m.windGusts)),
         stringResource(R.string.tile_wind_back), modifier,
-    ) { appear ->
+    ) { appearOf ->
         Canvas(Modifier.fillMaxSize()) {
+            val appear = appearOf()
             val c = Offset(size.width / 2, size.height / 2)
             val r = size.minDimension / 2 - 4.dp.toPx()
             drawCircle(colors.paperInk.copy(alpha = 0.12f), r, c, style = Stroke(1.5.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(3.dp.toPx(), 4.dp.toPx()))))
@@ -198,8 +212,9 @@ private fun HumidityTile(m: WeatherMoment, fmt: WeatherFormat, modifier: Modifie
         2, stringResource(R.string.tile_humidity), fmt.percent(m.humidity),
         m.dewPoint?.let { stringResource(R.string.tile_dew_point, fmt.temp(it)) } ?: stringResource(R.string.tile_humidity_caption),
         stringResource(R.string.tile_humidity_back), modifier,
-    ) { appear ->
+    ) { appearOf ->
         Canvas(Modifier.fillMaxSize()) {
+            val appear = appearOf()
             val w = size.minDimension * 0.62f
             val left = (size.width - w) / 2
             val top = 6.dp.toPx()
@@ -244,8 +259,9 @@ private fun UvTile(f: Forecast, m: WeatherMoment, nowSec: Long, modifier: Modifi
     FlipTile(
         3, stringResource(R.string.tile_uv), "${uv.roundToInt()} · ${stringResource(level)}",
         stringResource(R.string.tile_uv_caption, max.roundToInt().toString()), stringResource(R.string.tile_uv_back), modifier,
-    ) { appear ->
+    ) { appearOf ->
         Canvas(Modifier.fillMaxSize()) {
+            val appear = appearOf()
             val r = minOf(size.width / 2, size.height) - 8.dp.toPx()
             val c = Offset(size.width / 2, size.height - 4.dp.toPx())
             val stops = listOf(Color(0xFF8CC7B5), Color(0xFFE9C46A), Color(0xFFEF8F4E), Color(0xFFD9483B), Color(0xFF9B6BC3))
@@ -275,8 +291,9 @@ private fun PressureTile(f: Forecast, m: WeatherMoment, fmt: WeatherFormat, nowS
             else -> R.string.pressure_steady
         },
     )
-    FlipTile(4, stringResource(R.string.tile_pressure), fmt.pressure(m.pressure), trendText, stringResource(R.string.tile_pressure_back), modifier) { appear ->
+    FlipTile(4, stringResource(R.string.tile_pressure), fmt.pressure(m.pressure), trendText, stringResource(R.string.tile_pressure_back), modifier) { appearOf ->
         Canvas(Modifier.fillMaxSize()) {
+            val appear = appearOf()
             val c = Offset(size.width / 2, size.height * 0.62f)
             val r = minOf(size.width / 2, size.height * 0.6f) - 4.dp.toPx()
             for (k in 0..16) {
@@ -305,8 +322,9 @@ private fun SunTile(f: Forecast, fmt: WeatherFormat, nowSec: Long, modifier: Mod
     val isDay = progress in 0f..1f
     val value = if (isDay) fmt.time(day.sunset) else fmt.time(if (nowSec < day.sunrise) day.sunrise else next?.sunrise ?: day.sunrise)
     val caption = stringResource(if (isDay) R.string.tile_sun_sets else R.string.tile_sun_rises) + " · " + fmt.duration(day.daylightSeconds.toLong())
-    FlipTile(5, stringResource(R.string.tile_sun), value, caption, stringResource(R.string.tile_sun_back), modifier) { appear ->
+    FlipTile(5, stringResource(R.string.tile_sun), value, caption, stringResource(R.string.tile_sun_back), modifier) { appearOf ->
         Canvas(Modifier.fillMaxSize()) {
+            val appear = appearOf()
             val left = 8.dp.toPx()
             val right = size.width - 8.dp.toPx()
             val base = size.height - 10.dp.toPx()
@@ -341,8 +359,9 @@ private fun PrecipTile(f: Forecast, fmt: WeatherFormat, nowSec: Long, modifier: 
     FlipTile(
         6, stringResource(R.string.tile_precip), fmt.precip(next.sumOf { it.precipitation }),
         stringResource(R.string.tile_precip_caption, fmt.precip(today?.precipSum ?: 0.0)), stringResource(R.string.tile_precip_back), modifier,
-    ) { appear ->
+    ) { appearOf ->
         Canvas(Modifier.fillMaxSize()) {
+            val appear = appearOf()
             if (next.isEmpty()) return@Canvas
             val w = size.width / next.size
             next.forEachIndexed { i, h ->
@@ -367,8 +386,9 @@ private fun FeelsTile(m: WeatherMoment, fmt: WeatherFormat, modifier: Modifier) 
             else -> R.string.feels_same
         },
     )
-    FlipTile(7, stringResource(R.string.tile_feels), fmt.temp(m.feelsLike), reason, stringResource(R.string.tile_feels_back), modifier) { appear ->
+    FlipTile(7, stringResource(R.string.tile_feels), fmt.temp(m.feelsLike), reason, stringResource(R.string.tile_feels_back), modifier) { appearOf ->
         Canvas(Modifier.fillMaxSize()) {
+            val appear = appearOf()
             val cx = size.width / 2
             val tubeW = 12.dp.toPx()
             val top = 6.dp.toPx()
@@ -394,8 +414,9 @@ private fun MoonTile(fmt: WeatherFormat, nowSec: Long, modifier: Modifier) {
     val colors = Paper.colors
     val phase = Astro.moonPhase(nowSec)
     val lit = (Astro.moonIllumination(phase) * 100).roundToInt()
-    FlipTile(8, stringResource(R.string.tile_moon), fmt.moonPhase(phase), stringResource(R.string.tile_moon_caption, lit), stringResource(R.string.tile_moon_back), modifier) { appear ->
+    FlipTile(8, stringResource(R.string.tile_moon), fmt.moonPhase(phase), stringResource(R.string.tile_moon_caption, lit), stringResource(R.string.tile_moon_back), modifier) { appearOf ->
         Canvas(Modifier.fillMaxSize()) {
+            val appear = appearOf()
             val c = Offset(size.width / 2, size.height / 2)
             val r = size.minDimension / 2 - 6.dp.toPx()
             // On dark (night) paper the shadow must be darker than the paper, not the light ink.

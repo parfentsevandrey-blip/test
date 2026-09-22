@@ -1,12 +1,12 @@
 package app.papersky.weather.scene
 
 import android.graphics.Bitmap
-import android.graphics.BlendMode
 import android.graphics.Canvas
 import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RadialGradient
+import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.Shader
 import kotlin.math.PI
@@ -21,16 +21,18 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 /**
- * Paints the Papersky diorama — layered cut-paper hills, a village, drifting clouds, sun or moon
- * and weather — onto a plain [android.graphics.Canvas].
+ * Paints the Papersky diorama: a watercolour sky, sun or moon, paper clouds, five layers of cut
+ * paper landscape (misty mountains, forested ridges, meadows) and the weather moving through it.
  *
- * The same renderer draws the living scene in the app (hardware canvas, every frame, with
- * [Options.time] advancing) and the frozen frame behind every widget (software bitmap canvas).
- * It therefore sticks to primitives that behave identically in both pipelines.
+ * The scene is split into layers so the app can cache the expensive, static ones on the GPU and
+ * only redraw what moves ([drawParticles], [drawSkyFx]) each frame. Widgets and thumbnails use
+ * [draw], which paints everything in one pass onto a software canvas.
+ *
+ * Nothing on a per-frame path allocates, blurs or builds geometry.
  */
 class PaperSceneRenderer(private val density: Float) {
 
-    data class Panel(val rect: RectF, val tape: Boolean = false, val alpha: Float = 0.9f, val radius: Float = 12f)
+    data class Panel(val rect: RectF, val alpha: Float = 0.72f, val radius: Float = 18f)
 
     /** A soft temperature line (and optional precipitation bars) printed on a widget panel. */
     class Chart(
@@ -45,6 +47,8 @@ class PaperSceneRenderer(private val density: Float) {
         val time: Float = 0f,
         /** Horizon as a fraction of height; NaN picks one from the aspect ratio. */
         val horizon: Float = Float.NaN,
+        /** Vertical extent of the landscape in px; NaN fits it to the space below the horizon. */
+        val depth: Float = Float.NaN,
         val parallaxX: Float = 0f,
         val parallaxY: Float = 0f,
         val grain: Float = 1f,
@@ -56,328 +60,267 @@ class PaperSceneRenderer(private val density: Float) {
         val sunSpin: Float = 0f,
         /** Extra wind from a user swipe, m/s. */
         val gust: Float = 0f,
-        val skyShader: Shader? = null,
         val panels: List<Panel> = emptyList(),
         val charts: List<Chart> = emptyList(),
         /** Fewer, bolder details for tiny scenes, 0..1. */
         val detail: Float = 1f,
         val vignette: Float = 1f,
-        /** Draw the landscape (hills, village, trees). Tiny widgets may drop it. */
+        /** Draw the landscape. Tiny widgets may drop it. */
         val landscape: Boolean = true,
+        /** Precipitation, stars and other moving bits. Animated widgets leave them to the launcher. */
+        val particles: Boolean = true,
+        /** Horizontal lane (fractions of width) the sun and moon travel along. */
+        val laneStart: Float = 0.12f,
+        val laneEnd: Float = 0.88f,
+        /** Areas that clouds keep out of in static frames (widget text). */
+        val keepClear: List<RectF> = emptyList(),
+        /** A soft wash behind this area so text stays legible. */
+        val scrim: RectF? = null,
+        val scrimDark: Boolean = true,
+        /** Raindrops resting on the glass in front of the scene. */
+        val glass: Boolean = false,
+        /** Slowly turning rays around the sun (animated widgets draw their own). */
+        val rays: Boolean = true,
+        /** Offset of the nearest ridge relative to the particle layer (app parallax). */
+        val groundDx: Float = 0f,
+        val groundDy: Float = 0f,
     )
 
     private val dp = density
+    internal val layout = SceneLayout(dp)
 
     private val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
-    private val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND; strokeJoin = Paint.Join.ROUND }
-    private val shadowed = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
-    private val rainBack = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND }
-    private val rainFront = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND }
-    private val gradient = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val grainPaint = Paint().apply { shader = PaperGrain.shader(); blendMode = BlendMode.OVERLAY }
+    private val shaded = Paint(Paint.ANTI_ALIAS_FLAG or Paint.DITHER_FLAG).apply { style = Paint.Style.FILL }
+    private val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND; strokeJoin = Paint.Join.ROUND
+    }
+    private val lines = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND }
+    private val grainPaint = Paint(Paint.FILTER_BITMAP_FLAG).apply { shader = PaperGrain.shader() }
+    private val bitmapPaint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG)
+    private val sprite = SpritePaint()
     private val tmpPath = Path()
     private val tmpRect = RectF()
-
-    private var rainPoints = FloatArray(0)
-
-    // --- Layout cache, rebuilt when size or seed changes -------------------------------------
-    private var cacheW = -1f
-    private var cacheH = -1f
-    private var cacheSeed = Int.MIN_VALUE
-    private var cacheHorizon = -1f
-    private var horizonY = 0f
-    private val hills = Array(3) { Path() }
-    private val caps = Array(3) { Path() }
-    private var clouds: List<CloudShape> = emptyList()
-    private var houses: List<House> = emptyList()
-    private var trees: List<Tree> = emptyList()
-    private val blanket = Path()
-    private var blanketPeriod = 1f
-
-    private class CloudShape(val path: Path, val width: Float, val height: Float, val x0: Float, val y: Float, val depth: Float)
-    private class House(val x: Float, val w: Float, val h: Float, val roofH: Float, val twoWindows: Boolean, val chimney: Boolean)
-    private class Tree(val x: Float, val h: Float, val pine: Boolean, val tone: Float)
-
-    private fun wDp(w: Float) = w / dp
-    private fun sizeScale(w: Float, h: Float) = (min(w, h) / (dp * 220f)).coerceIn(0.62f, 1.25f)
+    private val srcRect = Rect()
+    private val pos = FloatArray(2)
+    private val buf = Array(4) { FloatArray(256) }
 
     fun horizonFor(w: Float, h: Float, o: Options): Float = when {
         !o.horizon.isNaN() -> o.horizon
-        h > w * 1.5f -> 0.7f
-        w > h * 2.4f -> 0.6f
-        else -> 0.64f
+        h > w * 1.5f -> 0.66f
+        w > h * 2.4f -> 0.58f
+        else -> 0.62f
     }
 
-    private fun ensureLayout(w: Float, h: Float, seed: Int, horizonFrac: Float, detail: Float) {
-        if (w == cacheW && h == cacheH && seed == cacheSeed && horizonFrac == cacheHorizon) return
-        cacheW = w; cacheH = h; cacheSeed = seed; cacheHorizon = horizonFrac
-        horizonY = h * horizonFrac
-        val margin = 28 * dp
-        for (layer in 0..2) {
-            val path = hills[layer]
-            path.reset()
-            path.moveTo(-margin, h + 20 * dp)
-            var x = -margin
-            val step = 3 * dp
-            while (x <= w + margin) {
-                path.lineTo(x, ridge(layer, x, w, h, seed))
-                x += step
-            }
-            path.lineTo(w + margin, ridge(layer, w + margin, w, h, seed))
-            path.lineTo(w + margin, h + 20 * dp)
-            path.close()
-
-            // "Icing" snow cap following the ridge with little drips.
-            val cap = caps[layer]
-            cap.reset()
-            val capH = (5f + layer * 1.5f) * dp * sizeScale(w, h)
-            x = -margin
-            cap.moveTo(x, ridge(layer, x, w, h, seed) - 0.5f * dp)
-            while (x <= w + margin) {
-                cap.lineTo(x, ridge(layer, x, w, h, seed) - 0.5f * dp)
-                x += step
-            }
-            x = w + margin
-            while (x >= -margin) {
-                val drip = max(0f, sin(x / (6.5f * dp) + seed % 7)).let { it * it * it }
-                cap.lineTo(x, ridge(layer, x, w, h, seed) + capH * (0.45f + 0.9f * drip))
-                x -= step
-            }
-            cap.close()
-        }
-
-        val s = sizeScale(w, h)
-        val widthDp = wDp(w)
-
-        val maxClouds = (widthDp / 64f).roundToInt().coerceIn(3, 12)
-        clouds = List(maxClouds) { i ->
-            val depth = 0.3f + rand(i, seed + 101) * 0.7f
-            val cw = (48f + rand(i, seed + 103) * 62f) * dp * s * (0.7f + 0.45f * depth)
-            val ch = cw * (0.36f + rand(i, seed + 107) * 0.12f)
-            val y = (0.1f + rand(i, seed + 109) * 0.42f) * horizonY
-            CloudShape(cloudPath(cw, ch, i + seed), cw, ch, rand(i, seed + 113) * (w + cw), y, depth)
-        }.sortedBy { it.depth }
-
-        val nHouses = (widthDp / 92f * detail).roundToInt().coerceIn(1, 7)
-        houses = List(nHouses) { i ->
-            val slot = (i + 0.5f + (rand(i, seed + 201) - 0.5f) * 0.55f) / nHouses
-            val hw = (14f + rand(i, seed + 203) * 9f) * dp * s
-            House(
-                x = slot * w,
-                w = hw,
-                h = hw * (0.72f + rand(i, seed + 205) * 0.25f),
-                roofH = hw * (0.48f + rand(i, seed + 207) * 0.2f),
-                twoWindows = hw > 18 * dp && rand(i, seed + 209) > 0.4f,
-                chimney = rand(i, seed + 211) > 0.25f,
-            )
-        }
-
-        val nTrees = (widthDp / 34f * detail).roundToInt().coerceIn(2, 26)
-        trees = List(nTrees) { i ->
-            val slot = (i + 0.5f + (rand(i, seed + 301) - 0.5f) * 0.8f) / nTrees
-            Tree(
-                x = slot * w,
-                h = (15f + rand(i, seed + 303) * 16f) * dp * s,
-                pine = rand(i, seed + 305) < 0.62f,
-                tone = rand(i, seed + 307),
-            )
-        }
-
-        // Overcast blanket: a scalloped band across the top of the sky.
-        blanket.reset()
-        val scallop = 30 * dp * s
-        blanketPeriod = scallop * 2
-        val bottom = horizonY * 0.2f
-        blanket.moveTo(-blanketPeriod, -10 * dp)
-        var bx = -blanketPeriod
-        var k = 0
-        blanket.lineTo(bx, bottom)
-        while (bx < w + blanketPeriod * 2) {
-            val r = scallop * (0.75f + 0.5f * rand(k++, seed + 401))
-            blanket.quadTo(bx + r * 0.5f, bottom + r * 0.9f, bx + r, bottom)
-            bx += r
-        }
-        blanket.lineTo(bx, -10 * dp)
-        blanket.close()
+    /** Lays the scene out for this size; cheap when nothing changed. */
+    fun prepare(w: Float, h: Float, s: SceneState, o: Options) {
+        layout.ensure(w, h, s.seed, horizonFor(w, h, o), o.detail, o.depth)
     }
 
-    /** Ridge height of hill [layer] at x; smooth sum of seeded sines, wavelength in dp. */
-    private fun ridge(layer: Int, x: Float, w: Float, h: Float, seed: Int): Float {
-        val below = h - horizonY
-        val base = when (layer) {
-            0 -> horizonY - min(h * 0.075f, 46 * dp)
-            1 -> horizonY
-            else -> horizonY + below * 0.42f
-        }
-        val amp = when (layer) {
-            0 -> min(h * 0.06f, 34 * dp)
-            1 -> min(h * 0.045f, 26 * dp)
-            else -> min(h * 0.038f, 20 * dp)
-        }
-        val xd = x / (dp * 150f)
-        val f = 1f + layer * 0.35f
-        val p1 = rand(seed, layer * 3 + 1) * 6.283f
-        val p2 = rand(seed, layer * 3 + 2) * 6.283f
-        val p3 = rand(seed, layer * 3 + 3) * 6.283f
-        val n = sin(xd * 0.8f * f + p1) * 0.55f + sin(xd * 1.9f * f + p2) * 0.3f + sin(xd * 4.3f * f + p3) * 0.15f
-        return base - n * amp
-    }
+    // ============================================================================================
+    // One pass (widgets, thumbnails, tests)
+    // ============================================================================================
 
-    private fun cloudPath(cw: Float, ch: Float, salt: Int): Path {
-        val bumps = Path()
-        val n = 3 + (rand(salt, 17) * 2).toInt()
-        for (i in 0 until n) {
-            val t = (i + 0.5f) / n
-            val r = ch * (0.42f + 0.5f * sin(t * PI.toFloat()) * (0.75f + 0.5f * rand(salt + i, 19)))
-            bumps.addCircle(cw * (0.12f + t * 0.76f), -r * 0.62f, r, Path.Direction.CW)
-        }
-        val base = Path().apply { addRoundRect(RectF(0f, -ch * 0.5f, cw, 0f), ch * 0.25f, ch * 0.25f, Path.Direction.CW) }
-        base.op(bumps, Path.Op.UNION)
-        // Flat paper-cut bottom.
-        val clip = Path().apply { addRect(-cw, -ch * 3, cw * 2, 0f, Path.Direction.CW) }
-        base.op(clip, Path.Op.INTERSECT)
-        return base
-    }
-
-    // ------------------------------------------------------------------------------------------
-
-    fun draw(canvas: Canvas, w: Float, h: Float, s: SceneState, p: ScenePalette, o: Options = Options()) {
+    fun draw(canvas: Canvas, w: Float, h: Float, s: SceneState, p: ScenePalette, o: Options = Options(), backdrop: Bitmap? = null) {
         if (w <= 1f || h <= 1f) return
-        val horizonFrac = horizonFor(w, h, o)
-        ensureLayout(w, h, s.seed, horizonFrac, o.detail)
-        val t = o.time
-        val wind = s.windX + o.gust
-
-        drawSky(canvas, w, h, s, p, o)
-        drawStars(canvas, w, s, p, t)
-        if (s.rainbow > 0.01f) drawRainbow(canvas, w, h, s.rainbow)
-        drawSunAndMoon(canvas, w, h, s, p, o)
-        drawClouds(canvas, w, h, s, p, t, wind)
-        if (o.flash > 0f || o.staticBolt) drawBolt(canvas, w, h, o)
-
+        prepare(w, h, s, o)
+        drawSky(canvas, s, p, o)
+        drawSkyFx(canvas, s, p, o)
+        for (i in layout.clouds.indices) {
+            val a = cloudAlpha(i, s)
+            if (a <= 0.01f) continue
+            val c = layout.clouds[i]
+            val x = cloudX(i, s, o)
+            if (!c.ceiling && o.keepClear.isNotEmpty()) {
+                tmpRect.set(x, c.y, x + c.width, c.y + c.height)
+                if (o.keepClear.any { RectF.intersects(it, tmpRect) }) continue
+            }
+            canvas.save()
+            canvas.translate(x, c.y)
+            drawCloud(canvas, i, s, p, a)
+            canvas.restore()
+        }
         if (o.landscape) {
-            val px = o.parallaxX * 10 * dp
-            val py = o.parallaxY * 6 * dp
-            drawHill(canvas, 0, p.hillFar, p, s, px * 0.3f, py * 0.3f, h)
-            canvas.save()
-            canvas.translate(px * 0.6f, py * 0.6f)
-            drawHill(canvas, 1, p.hillMid, p, s, 0f, 0f, h)
-            drawVillage(canvas, w, h, s, p, t, wind)
-            canvas.restore()
-            drawPrecipitation(canvas, w, h, s, p, t, wind, front = false)
-            canvas.save()
-            canvas.translate(px, py)
-            drawHill(canvas, 2, p.hillNear, p, s, 0f, 0f, h)
-            drawTrees(canvas, w, h, s, p, t, wind)
-            if (s.rain > 0.25f && t > 0f) drawSplashes(canvas, w, h, s, p, t)
-            canvas.restore()
-        } else {
-            drawPrecipitation(canvas, w, h, s, p, t, wind, front = false)
+            for (b in layout.bands.indices) {
+                val band = layout.bands[b]
+                canvas.save()
+                canvas.translate(o.parallaxX * 10 * dp * band.depth, o.parallaxY * 6 * dp * band.depth)
+                drawBand(canvas, b, s, p)
+                if (b == layout.bands.lastIndex) {
+                    fill.color = bandBodyColor(p)
+                    canvas.drawRect(-layout.margin, band.bottom - 1, w + layout.margin, h + 20 * dp, fill)
+                    if (o.grain > 0f) {
+                        grainPaint.alpha = (o.grain * 70).roundToInt().coerceIn(0, 255)
+                        canvas.drawRect(-layout.margin, band.bottom - 1, w + layout.margin, h + 20 * dp, grainPaint)
+                    }
+                }
+                canvas.restore()
+            }
         }
-        drawPrecipitation(canvas, w, h, s, p, t, wind, front = true)
-        if (s.fog > 0.02f) drawFog(canvas, w, h, s, p, t)
-        if (o.flash > 0f) canvas.drawColor(ColorMath.withAlpha(0xFFFFFBEA.toInt(), o.flash * 0.33f))
-
-        for (panel in o.panels) drawPanel(canvas, panel, p)
+        drawParticles(canvas, s, p, o.copy(vignette = 0f))
+        o.scrim?.let { drawScrim(canvas, it, o.scrimDark) }
+        for (panel in o.panels) drawPanel(canvas, panel, p, backdrop)
         for (chart in o.charts) drawChart(canvas, chart, p)
-
-        if (o.vignette > 0f) drawVignette(canvas, w, h, p, o.vignette)
-        if (o.grain > 0f) {
-            grainPaint.alpha = (o.grain * 70).roundToInt().coerceIn(0, 255)
-            canvas.drawRect(0f, 0f, w, h, grainPaint)
-        }
+        if (o.vignette > 0f) drawVignette(canvas, p, o.vignette)
     }
 
-    private fun drawSky(canvas: Canvas, w: Float, h: Float, s: SceneState, p: ScenePalette, o: Options) {
-        gradient.shader = o.skyShader ?: LinearGradient(
-            0f, 0f, 0f, horizonY * 1.08f,
-            intArrayOf(p.skyTop, ColorMath.lerp(p.skyTop, p.skyBottom, 0.55f), p.skyBottom),
+    // ============================================================================================
+    // Sky: gradient, watercolour wash, glows, rainbow, sun and moon discs. Static per state.
+    // ============================================================================================
+
+    fun drawSky(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options) {
+        val w = layout.w
+        val h = layout.h
+        val hy = layout.horizonY
+        val bottom = h + 20 * dp
+        shaded.shader = LinearGradient(
+            0f, -20 * dp, 0f, hy + layout.depthD * 0.2f,
+            intArrayOf(p.skyTop, ColorMath.lerp(p.skyTop, p.skyBottom, 0.5f), p.skyBottom),
             floatArrayOf(0f, 0.55f, 1f), Shader.TileMode.CLAMP,
         )
-        canvas.drawRect(0f, 0f, w, h, gradient)
-        gradient.shader = null
+        canvas.drawRect(-layout.margin, -20 * dp, w + layout.margin, bottom, shaded)
+
+        // Warm band along the horizon at dawn and dusk.
+        val golden = Palettes.timeWeights(s.daylight, s.sunProgress).let { it[1] + it[2] * 0.8f }.coerceIn(0f, 1f) * (1f - s.cloudCover * 0.6f)
+        if (golden > 0.02f) {
+            shaded.shader = LinearGradient(
+                0f, hy - layout.depthD * 1.4f, 0f, hy + layout.depthD * 0.3f,
+                intArrayOf(0, ColorMath.scaleAlpha(p.glow, golden * 1.2f)), null, Shader.TileMode.CLAMP,
+            )
+            canvas.drawRect(-layout.margin, hy - layout.depthD * 1.4f, w + layout.margin, hy + layout.depthD * 0.3f, shaded)
+        }
+
+        // Watercolour blooms, stretched from a tiny texture.
+        srcRect.set(0, 0, PaperGrain.wash.width, PaperGrain.wash.height)
+        tmpRect.set(-layout.margin, -20 * dp, w + layout.margin, hy + layout.depthD * 0.4f)
+        bitmapPaint.alpha = 255
+        canvas.drawBitmap(PaperGrain.wash, srcRect, tmpRect, bitmapPaint)
+
+        if (s.rainbow > 0.01f) drawRainbow(canvas, s.rainbow)
+        drawCelestial(canvas, s, p, o)
+
+        if (o.grain > 0f) {
+            grainPaint.alpha = (o.grain * 55).roundToInt().coerceIn(0, 255)
+            canvas.drawRect(-layout.margin, -20 * dp, w + layout.margin, bottom, grainPaint)
+        }
+        shaded.shader = null
     }
 
-    private fun celestialRadius(w: Float, h: Float) = (min(w, h) * 0.085f).coerceIn(9 * dp, 30 * dp)
-
-    private fun sunPosition(w: Float, h: Float, progress: Float, out: FloatArray) {
-        val pr = progress.coerceIn(-0.08f, 1.08f)
-        val arcH = min(horizonY * 0.72f, w * 0.55f)
-        out[0] = w * (0.1f + 0.8f * pr)
-        out[1] = horizonY - arcH * sin(PI.toFloat() * pr.coerceIn(0f, 1f)) + (if (pr < 0f || pr > 1f) abs(pr - pr.coerceIn(0f, 1f)) * arcH else 0f)
+    private fun drawRainbow(canvas: Canvas, amount: Float) {
+        val colors = intArrayOf(0xFFE8766B.toInt(), 0xFFF2A65E.toInt(), 0xFFF2D56B.toInt(), 0xFF8FC38B.toInt(), 0xFF7BA7D6.toInt(), 0xFF9C88C9.toInt())
+        val hy = layout.horizonY
+        val cx = layout.w * 0.3f
+        val radius = min(layout.w * 0.44f, hy * 0.9f)
+        val band = radius * 0.04f
+        stroke.strokeCap = Paint.Cap.BUTT
+        stroke.strokeWidth = band * 0.94f
+        colors.forEachIndexed { i, c ->
+            stroke.color = ColorMath.withAlpha(c, 0.45f * amount)
+            val r = radius - i * band
+            tmpRect.set(cx - r, hy - r, cx + r, hy + r)
+            canvas.drawArc(tmpRect, 180f, 180f, false, stroke)
+        }
+        stroke.strokeCap = Paint.Cap.ROUND
     }
 
-    private val pos = FloatArray(2)
+    private fun celestialRadius(): Float = (min(layout.w, layout.h) * 0.075f).coerceIn(9 * dp, 30 * dp)
 
-    /**
-     * Where the visible sun (or, at night, the moon) is: [x, y, radius], or null. Lets the app
-     * hit-test taps on it.
-     */
+    private fun arcPosition(progress: Float, o: Options, out: FloatArray) {
+        val pr = progress.coerceIn(-0.1f, 1.1f)
+        val w = layout.w
+        val hy = layout.horizonY
+        val arcH = min(hy * 0.72f, w * 0.6f)
+        out[0] = w * (o.laneStart + (o.laneEnd - o.laneStart) * pr)
+        val clamped = pr.coerceIn(0f, 1f)
+        out[1] = hy - arcH * sin(PI.toFloat() * clamped) + abs(pr - clamped) * arcH * 1.2f
+    }
+
+    /** How much of the sky is open: thick cloud, rain or fog hide the sun and moon. */
+    private fun openSky(s: SceneState) =
+        (1f - smoothstep(0.55f, 1f, s.cloudCover) * 0.75f - s.fog * 0.45f - (s.rain + s.snow + s.drizzle).coerceIn(0f, 1f) * 0.7f).coerceIn(0f, 1f)
+
+    private fun sunAlpha(s: SceneState) = smoothstep(0.05f, 0.45f, s.daylight) * openSky(s) *
+        (if (s.sunProgress > -0.12f && s.sunProgress < 1.12f) 1f else 0f)
+
+    private fun moonAlpha(s: SceneState) = (1f - s.daylight * 1.7f).coerceIn(0f, 1f) * openSky(s)
+
+    /** True when a body at (x, y, r) would sit on text the scene must keep clear. */
+    private fun blocked(o: Options, x: Float, y: Float, r: Float): Boolean {
+        if (o.keepClear.isEmpty()) return false
+        tmpRect.set(x - r * 1.3f, y - r * 1.3f, x + r * 1.3f, y + r * 1.3f)
+        return o.keepClear.any { RectF.intersects(it, tmpRect) }
+    }
+
+    /** Where the visible sun (or moon) is: [x, y, radius], or null. For hit-testing taps. */
     fun celestialAt(w: Float, h: Float, s: SceneState, o: Options = Options()): FloatArray? {
-        ensureLayout(w, h, s.seed, horizonFor(w, h, o), o.detail)
-        val r = celestialRadius(w, h)
+        prepare(w, h, s, o)
+        val r = celestialRadius()
         val out = FloatArray(2)
-        return when {
-            s.daylight > 0.35f && s.sunProgress in -0.05f..1.05f -> { sunPosition(w, h, s.sunProgress, out); floatArrayOf(out[0], out[1], r) }
-            s.daylight < 0.6f -> { sunPosition(w, h, s.nightProgress.coerceIn(0.05f, 0.95f), out); floatArrayOf(out[0], out[1], r * 0.86f) }
+        val body = when {
+            sunAlpha(s) > 0.2f -> { arcPosition(s.sunProgress, o, out); floatArrayOf(out[0], out[1], r) }
+            moonAlpha(s) > 0.2f -> { arcPosition(s.nightProgress.coerceIn(0.05f, 0.95f), o, out); floatArrayOf(out[0], out[1], r * 0.86f) }
             else -> null
         }
+        return body?.takeUnless { blocked(o, it[0], it[1], it[2]) }
     }
 
-    private fun drawSunAndMoon(canvas: Canvas, w: Float, h: Float, s: SceneState, p: ScenePalette, o: Options) {
-        val r = celestialRadius(w, h)
-        val visibility = 1f - s.cloudCover * 0.55f - s.fog * 0.3f
+    private fun drawCelestial(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options) {
+        val r = celestialRadius()
+        val big = min(layout.w, layout.h)
 
-        // Moon rides across the night.
-        val moonAlpha = (1f - s.daylight * 1.7f).coerceIn(0f, 1f) * visibility.coerceIn(0.18f, 1f)
-        if (moonAlpha > 0.01f) {
-            sunPosition(w, h, s.nightProgress.coerceIn(0.05f, 0.95f), pos)
-            drawGlow(canvas, pos[0], pos[1], r * 3.4f, ColorMath.scaleAlpha(p.glow, moonAlpha * 1.6f))
-            drawMoon(canvas, pos[0], pos[1], r * 0.86f, s.moonPhase, p, moonAlpha)
+        val moonA = moonAlpha(s)
+        if (moonA > 0.01f && !arcPosition(s.nightProgress.coerceIn(0.05f, 0.95f), o, pos).let { blocked(o, pos[0], pos[1], r) }) {
+            glow(canvas, pos[0], pos[1], big * 0.42f, ColorMath.scaleAlpha(p.glow, moonA * 1.4f))
+            drawMoon(canvas, pos[0], pos[1], r * 0.86f, s.moonPhase, p, moonA)
         }
 
-        val sunAlpha = smoothstep(0.05f, 0.45f, s.daylight) * visibility.coerceIn(0.3f, 1f)
-        if (sunAlpha > 0.01f && s.sunProgress > -0.1f && s.sunProgress < 1.1f) {
-            sunPosition(w, h, s.sunProgress, pos)
-            val (x, y) = pos[0] to pos[1]
-            drawGlow(canvas, x, y, r * 4.2f, ColorMath.scaleAlpha(p.glow, sunAlpha))
-            // Rotating paper petals.
-            val rot = o.time * 6f + o.sunSpin
-            fill.color = ColorMath.scaleAlpha(p.sunRay, sunAlpha)
-            val petals = 12
-            canvas.save()
-            canvas.translate(x, y)
-            canvas.rotate(rot)
-            for (i in 0 until petals) {
-                val long = i % 2 == 0
-                val inner = r * 1.22f
-                val outer = r * if (long) 1.78f else 1.52f
-                val half = r * if (long) 0.17f else 0.13f
-                tmpRect.set(-half, -outer, half, -inner)
-                canvas.drawRoundRect(tmpRect, half, half, fill)
-                canvas.rotate(360f / petals)
-            }
-            canvas.restore()
-            shadowed.color = ColorMath.scaleAlpha(p.sun, sunAlpha)
-            shadowed.setShadowLayer(5 * dp, 0f, 2 * dp, ColorMath.scaleAlpha(p.shadow, sunAlpha * 0.8f))
-            canvas.drawCircle(x, y, r, shadowed)
-            shadowed.clearShadowLayer()
-            fill.color = ColorMath.withAlpha(ColorMath.lighten(p.sun, 0.35f), 0.55f * sunAlpha)
-            canvas.drawCircle(x - r * 0.12f, y - r * 0.12f, r * 0.66f, fill)
+        val sunA = sunAlpha(s)
+        if (sunA > 0.01f && !arcPosition(s.sunProgress, o, pos).let { blocked(o, pos[0], pos[1], r) }) {
+            val x = pos[0]
+            val y = pos[1]
+            glow(canvas, x, y, big * 0.62f, ColorMath.scaleAlpha(p.glow, sunA * 1.1f))
+            glow(canvas, x, y, r * 3.2f, ColorMath.withAlpha(p.sunRay, 0.35f * sunA))
+            // Halo rings, like circles of tracing paper.
+            stroke.strokeWidth = 1.1f * dp
+            stroke.color = ColorMath.withAlpha(p.sunRay, 0.2f * sunA)
+            canvas.drawCircle(x, y, r * 1.75f, stroke)
+            stroke.color = ColorMath.withAlpha(p.sunRay, 0.11f * sunA)
+            canvas.drawCircle(x, y, r * 2.5f, stroke)
+            // Layered paper discs.
+            fill.color = ColorMath.withAlpha(p.sunRay, 0.55f * sunA)
+            canvas.drawCircle(x, y, r * 1.16f, fill)
+            shaded.shader = RadialGradient(
+                x - r * 0.3f, y - r * 0.35f, r * 1.4f,
+                intArrayOf(ColorMath.lighten(p.sun, 0.35f), p.sun, ColorMath.darken(p.sun, 0.06f)),
+                floatArrayOf(0f, 0.55f, 1f), Shader.TileMode.CLAMP,
+            )
+            shaded.alpha = (sunA * 255).roundToInt()
+            canvas.drawCircle(x, y, r, shaded)
+            shaded.shader = null
+            shaded.alpha = 255
         }
     }
 
     private fun drawMoon(canvas: Canvas, x: Float, y: Float, r: Float, phase: Float, p: ScenePalette, alpha: Float) {
-        shadowed.color = ColorMath.scaleAlpha(p.moon, alpha)
-        shadowed.setShadowLayer(6 * dp, 0f, 2 * dp, ColorMath.scaleAlpha(p.shadow, alpha))
-        canvas.drawCircle(x, y, r, shadowed)
-        shadowed.clearShadowLayer()
+        // Soft paper shadow below the disc.
+        for (k in 3 downTo 1) {
+            fill.color = ColorMath.scaleAlpha(p.shadow, 0.12f * alpha)
+            canvas.drawCircle(x, y + k * 0.9f * dp, r + k * 0.6f * dp, fill)
+        }
+        shaded.shader = RadialGradient(
+            x - r * 0.3f, y - r * 0.3f, r * 1.3f,
+            intArrayOf(ColorMath.lighten(p.moon, 0.3f), p.moon, ColorMath.darken(p.moon, 0.08f)),
+            null, Shader.TileMode.CLAMP,
+        )
+        shaded.alpha = (alpha * 255).roundToInt()
+        canvas.drawCircle(x, y, r, shaded)
+        shaded.shader = null
+        shaded.alpha = 255
 
-        // Craters.
-        fill.color = ColorMath.withAlpha(ColorMath.darken(p.moon, 0.25f), 0.18f * alpha)
-        canvas.drawCircle(x - r * 0.3f, y - r * 0.2f, r * 0.2f, fill)
-        canvas.drawCircle(x + r * 0.25f, y + r * 0.3f, r * 0.14f, fill)
-        canvas.drawCircle(x + r * 0.1f, y - r * 0.45f, r * 0.09f, fill)
+        fill.color = ColorMath.withAlpha(ColorMath.darken(p.moon, 0.3f), 0.14f * alpha)
+        canvas.drawCircle(x - r * 0.3f, y - r * 0.18f, r * 0.2f, fill)
+        canvas.drawCircle(x + r * 0.28f, y + r * 0.3f, r * 0.14f, fill)
+        canvas.drawCircle(x + r * 0.05f, y - r * 0.48f, r * 0.09f, fill)
+        canvas.drawCircle(x - r * 0.05f, y + r * 0.55f, r * 0.07f, fill)
 
         // Terminator: dark side as half-disc plus a half-ellipse.
         val k = cos(2 * PI * phase).toFloat() // 1 new, 0 quarter, -1 full
@@ -385,454 +328,844 @@ class PaperSceneRenderer(private val density: Float) {
             val waxing = phase < 0.5f
             tmpPath.reset()
             tmpRect.set(x - r, y - r, x + r, y + r)
-            // Dark half: left when waxing, right when waning.
             tmpPath.arcTo(tmpRect, -90f, if (waxing) -180f else 180f, true)
             val ex = r * abs(k)
             tmpRect.set(x - ex, y - r, x + ex, y + r)
-            // Crescent (k > 0): the shadow ellipse bulges into the lit side.
             val sweep = if (waxing) (if (k > 0) -180f else 180f) else (if (k > 0) 180f else -180f)
             tmpPath.arcTo(tmpRect, 90f, sweep, false)
             tmpPath.close()
-            fill.color = ColorMath.withAlpha(ColorMath.lerp(p.skyTop, p.moon, 0.22f), 0.86f * alpha)
+            fill.color = ColorMath.withAlpha(ColorMath.lerp(p.skyTop, p.moon, 0.18f), 0.84f * alpha)
             canvas.drawPath(tmpPath, fill)
         }
     }
 
-    private fun drawGlow(canvas: Canvas, x: Float, y: Float, radius: Float, color: Int) {
+    private fun glow(canvas: Canvas, x: Float, y: Float, radius: Float, color: Int) {
         if (ColorMath.a(color) == 0) return
-        gradient.shader = RadialGradient(x, y, radius, intArrayOf(color, ColorMath.withAlpha(color, 0f)), null, Shader.TileMode.CLAMP)
-        canvas.drawCircle(x, y, radius, gradient)
-        gradient.shader = null
+        shaded.shader = RadialGradient(
+            x, y, radius,
+            intArrayOf(color, ColorMath.scaleAlpha(color, 0.35f), ColorMath.withAlpha(color, 0f)),
+            floatArrayOf(0f, 0.35f, 1f), Shader.TileMode.CLAMP,
+        )
+        canvas.drawCircle(x, y, radius, shaded)
+        shaded.shader = null
     }
 
-    private fun drawStars(canvas: Canvas, w: Float, s: SceneState, p: ScenePalette, t: Float) {
-        val alpha = (1f - s.daylight * 1.6f).coerceIn(0f, 1f) * (1f - s.cloudCover * 0.85f) * (1f - s.fog)
-        if (alpha < 0.02f) return
-        val n = ((w * horizonY) / (dp * dp * 950f)).roundToInt().coerceIn(6, 90)
-        for (i in 0 until n) {
-            val x = rand(i, 501) * w
-            val y = rand(i, 503) * horizonY * 0.86f
-            val tw = 0.55f + 0.45f * sin(t * (1.2f + rand(i, 505) * 2.4f) + i)
-            val bright = rand(i, 507) > 0.84f
-            fill.color = ColorMath.withAlpha(p.star, alpha * tw * if (bright) 1f else 0.7f)
-            if (bright) {
-                val r = 2.6f * dp
-                tmpPath.reset()
-                tmpPath.moveTo(x, y - r * 1.6f)
-                tmpPath.quadTo(x, y, x + r * 1.6f, y)
-                tmpPath.quadTo(x, y, x, y + r * 1.6f)
-                tmpPath.quadTo(x, y, x - r * 1.6f, y)
-                tmpPath.quadTo(x, y, x, y - r * 1.6f)
-                canvas.drawPath(tmpPath, fill)
-            } else {
-                canvas.drawCircle(x, y, (0.7f + rand(i, 509) * 0.9f) * dp, fill)
-            }
-        }
+    // ============================================================================================
+    // Sky effects: twinkling stars, shooting stars, turning sun rays. Cheap; redrawn per frame.
+    // ============================================================================================
+
+    fun drawSkyFx(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options) {
+        if (o.particles) drawStars(canvas, s, p, o)
+        if (o.rays) drawSunRays(canvas, s, p, o)
     }
 
-    private fun drawRainbow(canvas: Canvas, w: Float, h: Float, amount: Float) {
-        val colors = intArrayOf(0xFFE8766B.toInt(), 0xFFF2A65E.toInt(), 0xFFF2D56B.toInt(), 0xFF8FC38B.toInt(), 0xFF7BA7D6.toInt(), 0xFF9C88C9.toInt())
-        val cx = w * 0.32f
-        val radius = min(w * 0.42f, horizonY * 0.95f)
-        val band = radius * 0.045f
-        stroke.strokeCap = Paint.Cap.BUTT
-        stroke.strokeWidth = band * 0.92f
-        colors.forEachIndexed { i, c ->
-            stroke.color = ColorMath.withAlpha(c, 0.62f * amount)
-            val r = radius - i * band
-            tmpRect.set(cx - r, horizonY - r, cx + r, horizonY + r)
-            canvas.drawArc(tmpRect, 180f, 180f, false, stroke)
-        }
-        stroke.strokeCap = Paint.Cap.ROUND
-    }
+    private fun starVisibility(s: SceneState) = (1f - s.daylight * 1.6f).coerceIn(0f, 1f) * (1f - s.cloudCover * 0.9f) * (1f - s.fog)
 
-    private fun drawClouds(canvas: Canvas, w: Float, h: Float, s: SceneState, p: ScenePalette, t: Float, wind: Float) {
-        val cover = s.cloudCover
-        val count = cover * clouds.size * 1.1f + if (s.rain + s.snow + s.drizzle > 0.05f) 1.5f else 0f
-        val dir = if (wind < 0) -1f else 1f
-        val speedBase = (3f + abs(wind) * 1.3f) * dp
-
-        if (cover > 0.72f) {
-            val a = smoothstep(0.72f, 1f, cover)
-            val offset = (t * speedBase * 0.4f * dir) % blanketPeriod
-            canvas.save()
-            canvas.translate(offset, 0f)
-            fill.color = ColorMath.withAlpha(p.cloudShade, a)
-            canvas.save(); canvas.translate(blanketPeriod * 0.5f, horizonY * 0.08f); canvas.drawPath(blanket, fill); canvas.restore()
-            shadowed.color = ColorMath.withAlpha(ColorMath.lerp(p.cloudShade, p.cloud, 0.6f), a)
-            shadowed.setShadowLayer(6 * dp, 0f, 3 * dp, ColorMath.scaleAlpha(p.shadow, a * 0.8f))
-            canvas.drawPath(blanket, shadowed)
-            shadowed.clearShadowLayer()
-            canvas.restore()
-        }
-
-        for ((i, c) in clouds.withIndex()) {
-            val presence = (count - i).coerceIn(0f, 1f)
-            if (presence <= 0.01f) continue
-            val span = w + c.width * 2
-            val x = ((c.x0 + t * speedBase * (0.35f + c.depth) * dir) % span + span) % span - c.width
-            canvas.save()
-            canvas.translate(x, c.y)
-            fill.color = ColorMath.withAlpha(p.cloudShade, presence)
-            canvas.save(); canvas.translate(c.width * 0.04f, c.height * 0.1f); canvas.drawPath(c.path, fill); canvas.restore()
-            shadowed.color = ColorMath.withAlpha(ColorMath.lerp(p.cloudShade, p.cloud, 0.45f + 0.55f * c.depth), presence)
-            shadowed.setShadowLayer(5 * dp, 0f, 2.5f * dp, ColorMath.scaleAlpha(p.shadow, presence * 0.7f))
-            canvas.drawPath(c.path, shadowed)
-            shadowed.clearShadowLayer()
-            canvas.restore()
-        }
-    }
-
-    private fun drawHill(canvas: Canvas, layer: Int, color: Int, p: ScenePalette, s: SceneState, dx: Float, dy: Float, h: Float) {
-        canvas.save()
-        canvas.translate(dx, dy)
-        shadowed.color = color
-        shadowed.setShadowLayer((7 + layer * 2) * dp, 0f, -1.2f * dp, p.shadow)
-        canvas.drawPath(hills[layer], shadowed)
-        shadowed.clearShadowLayer()
-        // Soft light along the ridge, like a paper edge catching light.
-        stroke.strokeWidth = 1.2f * dp
-        stroke.color = ColorMath.withAlpha(0xFFFFFFFF.toInt(), 0.12f)
-        canvas.drawPath(hills[layer], stroke)
-        if (s.snowGround > 0.02f && layer >= 0) {
-            fill.color = ColorMath.withAlpha(p.snowCap, s.snowGround * (0.8f + 0.2f * layer / 2f))
-            canvas.drawPath(caps[layer], fill)
-        }
-        canvas.restore()
-    }
-
-    private fun drawVillage(canvas: Canvas, w: Float, h: Float, s: SceneState, p: ScenePalette, t: Float, wind: Float) {
-        val lit = (1f - s.daylight * 1.25f + s.cloudCover * 0.35f + (s.rain + s.snow) * 0.4f).coerceIn(0f, 1f)
-        for ((i, house) in houses.withIndex()) {
-            val gy = ridge(1, house.x, w, h, cacheSeed) + 3 * dp
-            val left = house.x - house.w / 2
-            val right = house.x + house.w / 2
-            val top = gy - house.h
-            // Walls.
-            shadowed.color = p.house
-            shadowed.setShadowLayer(4 * dp, 0f, 1.5f * dp, p.shadow)
-            canvas.drawRect(left, top, right, gy + 6 * dp, shadowed)
-            // Chimney behind the roof.
-            val chX = left + house.w * 0.68f
-            val chTop = top - house.roofH * 0.95f
-            if (house.chimney) {
-                fill.color = ColorMath.darken(p.roof, 0.18f)
-                canvas.drawRect(chX, chTop, chX + house.w * 0.14f, top - house.roofH * 0.3f, fill)
-            }
-            // Roof.
-            tmpPath.reset()
-            tmpPath.moveTo(left - 2.5f * dp, top + 0.5f * dp)
-            tmpPath.lineTo(house.x, top - house.roofH)
-            tmpPath.lineTo(right + 2.5f * dp, top + 0.5f * dp)
-            tmpPath.close()
-            shadowed.color = p.roof
-            canvas.drawPath(tmpPath, shadowed)
-            shadowed.clearShadowLayer()
-            if (s.snowGround > 0.05f) {
-                tmpPath.reset()
-                val sx = house.w * 0.36f
-                tmpPath.moveTo(house.x - sx - 2 * dp, top - house.roofH * 0.42f)
-                tmpPath.lineTo(house.x, top - house.roofH - 1 * dp)
-                tmpPath.lineTo(house.x + sx + 2 * dp, top - house.roofH * 0.42f)
-                tmpPath.quadTo(house.x, top - house.roofH * 0.55f, house.x - sx - 2 * dp, top - house.roofH * 0.42f)
-                fill.color = ColorMath.withAlpha(p.snowCap, s.snowGround)
-                canvas.drawPath(tmpPath, fill)
-            }
-            // Windows, glowing when it's dark or dreary.
-            val ws = house.w * 0.22f
-            val wy = top + house.h * 0.3f
-            val windowsX = if (house.twoWindows) floatArrayOf(house.x - house.w * 0.22f, house.x + house.w * 0.22f) else floatArrayOf(house.x)
-            val flicker = 0.88f + 0.12f * sin(t * 2.7f + i * 1.3f)
-            for (wx in windowsX) {
-                if (lit > 0.05f) drawGlow(canvas, wx, wy + ws / 2, ws * 2.6f, ColorMath.withAlpha(p.window, 0.35f * lit * flicker))
-                fill.color = ColorMath.lerp(ColorMath.darken(p.house, 0.45f), p.window, lit * flicker)
-                canvas.drawRect(wx - ws / 2, wy, wx + ws / 2, wy + ws, fill)
-            }
-            // Smoke puffs on cold days.
-            if (house.chimney && s.temperature < 14f) {
-                val puffs = 5
-                for (k in 0 until puffs) {
-                    val ph = fract(t * 0.22f + k / puffs.toFloat() + i * 0.37f)
-                    val px = chX + house.w * 0.07f + wind.coerceIn(-12f, 12f) * ph * 2.4f * dp + sin(ph * 7f + i) * 2 * dp
-                    val py = chTop - ph * 34 * dp
-                    fill.color = ColorMath.withAlpha(ColorMath.lerp(p.cloud, p.cloudShade, 0.3f), (1f - ph) * 0.55f)
-                    canvas.drawCircle(px, py, (2.2f + ph * 6f) * dp * sizeScale(w, h), fill)
-                }
-            }
-        }
-    }
-
-    private fun drawTrees(canvas: Canvas, w: Float, h: Float, s: SceneState, p: ScenePalette, t: Float, wind: Float) {
-        val swayBase = (1.2f + abs(wind) * 0.8f).coerceAtMost(11f)
-        for ((i, tree) in trees.withIndex()) {
-            val gy = ridge(2, tree.x, w, h, cacheSeed) + 4 * dp
-            val sway = sin(t * (1.3f + (i % 5) * 0.12f) + i * 0.9f) * swayBase * 0.5f + wind.coerceIn(-14f, 14f) * 0.35f
-            val color = ColorMath.lerp(p.tree, p.hillNear, 0.12f + tree.tone * 0.3f)
-            canvas.save()
-            canvas.rotate(sway, tree.x, gy)
-            shadowed.color = color
-            shadowed.setShadowLayer(3 * dp, 0f, 1.2f * dp, p.shadow)
-            if (tree.pine) {
-                val tw = tree.h * 0.52f
-                for (tier in 0..2) {
-                    val tierTop = gy - tree.h + tier * tree.h * 0.24f
-                    val tierW = tw * (0.55f + tier * 0.22f)
-                    tmpPath.reset()
-                    tmpPath.moveTo(tree.x, tierTop)
-                    tmpPath.lineTo(tree.x + tierW / 2, tierTop + tree.h * 0.42f)
-                    tmpPath.lineTo(tree.x - tierW / 2, tierTop + tree.h * 0.42f)
-                    tmpPath.close()
-                    canvas.drawPath(tmpPath, shadowed)
-                    if (s.snowGround > 0.3f) {
-                        fill.color = ColorMath.withAlpha(p.snowCap, s.snowGround * 0.9f)
-                        tmpPath.reset()
-                        tmpPath.moveTo(tree.x, tierTop)
-                        tmpPath.lineTo(tree.x + tierW * 0.22f, tierTop + tree.h * 0.16f)
-                        tmpPath.lineTo(tree.x - tierW * 0.22f, tierTop + tree.h * 0.16f)
-                        tmpPath.close()
-                        canvas.drawPath(tmpPath, fill)
-                    }
-                }
-            } else {
-                fill.color = ColorMath.darken(p.tree, 0.35f)
-                canvas.drawRect(tree.x - tree.h * 0.05f, gy - tree.h * 0.45f, tree.x + tree.h * 0.05f, gy, fill)
-                val cr = tree.h * 0.3f
-                canvas.drawCircle(tree.x, gy - tree.h * 0.62f, cr, shadowed)
-                canvas.drawCircle(tree.x - cr * 0.55f, gy - tree.h * 0.5f, cr * 0.72f, shadowed)
-                if (s.snowGround > 0.3f) {
-                    fill.color = ColorMath.withAlpha(p.snowCap, s.snowGround * 0.85f)
-                    tmpRect.set(tree.x - cr * 0.8f, gy - tree.h * 0.62f - cr, tree.x + cr * 0.8f, gy - tree.h * 0.62f - cr * 0.2f)
-                    canvas.drawArc(tmpRect, 180f, 180f, true, fill)
-                }
-            }
-            shadowed.clearShadowLayer()
-            canvas.restore()
-        }
-    }
-
-    private fun drawPrecipitation(canvas: Canvas, w: Float, h: Float, s: SceneState, p: ScenePalette, t: Float, wind: Float, front: Boolean) {
-        val areaDp = (w / dp) * (h / dp)
-        val slant = (wind / 22f).coerceIn(-0.65f, 0.65f)
-
-        // Rain and drizzle as paper strokes, batched into one drawLines call per layer.
-        val rainN = ((areaDp / 520f).coerceIn(24f, 460f) * s.rain).toInt()
-        val drizzleN = ((areaDp / 380f).coerceIn(24f, 560f) * s.drizzle).toInt()
-        val hailN = ((areaDp / 1500f).coerceIn(8f, 120f) * s.hail).toInt()
-        val total = rainN + drizzleN
-        if (total > 0) {
-            if (rainPoints.size < total * 4) rainPoints = FloatArray(total * 4 + 64)
+    private fun drawStars(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options) {
+        val vis = starVisibility(s)
+        if (vis < 0.02f) return
+        val t = o.time
+        // Keep stars off the moon.
+        val moon = if (moonAlpha(s) > 0.05f) {
+            arcPosition(s.nightProgress.coerceIn(0.05f, 0.95f), o, pos); celestialRadius() * 1.5f
+        } else 0f
+        for (g in 0..2) {
+            val src = layout.stars[g]
+            val out = ensureBuf(3, src.size)
             var n = 0
-            for (i in 0 until total) {
-                val drizzle = i >= rainN
-                val depth = rand(i, 601)
-                if ((depth >= 0.5f) != front) continue
-                val len = (if (drizzle) 6f else 13f + 9f * depth) * dp
-                val speed = (if (drizzle) 260f else 480f + 260f * depth) * dp
-                val span = h + len
-                val y = ((rand(i, 603) * span + t * speed) % span + span) % span - len
-                val x0 = rand(i, 605) * (w + abs(slant) * h) - if (slant > 0) slant * h else 0f
-                val x = x0 + y * slant
-                rainPoints[n++] = x; rainPoints[n++] = y
-                rainPoints[n++] = x + len * slant; rainPoints[n++] = y + len
+            var i = 0
+            while (i < src.size) {
+                val x = src[i]; val y = src[i + 1]
+                if (moon == 0f || hypot(x - pos[0], y - pos[1]) > moon) { out[n++] = x; out[n++] = y }
+                i += 2
             }
-            val paint = if (front) rainFront else rainBack
-            paint.color = ColorMath.withAlpha(p.precip, if (front) 0.8f else 0.5f)
-            paint.strokeWidth = (if (front) 2.1f else 1.4f) * dp
-            if (n > 0) canvas.drawLines(rainPoints, 0, n, paint)
+            val tw = 0.5f + 0.5f * sin(t * (0.9f + g * 0.55f) + g * 2.1f)
+            lines.color = ColorMath.withAlpha(p.star, vis * (0.35f + 0.55f * tw))
+            lines.strokeWidth = (1.1f + g * 0.45f) * dp
+            if (n > 0) canvas.drawPoints(out, 0, n, lines)
         }
-
-        for (i in 0 until hailN) {
-            val depth = rand(i, 701)
-            if ((depth >= 0.5f) != front) continue
-            val speed = (380f + 200f * depth) * dp
-            val y = ((rand(i, 703) * h + t * speed) % (h + 8 * dp)) - 4 * dp
-            val x = rand(i, 705) * w + y * slant
-            fill.color = ColorMath.withAlpha(0xFFF4F8FF.toInt(), 0.9f)
-            canvas.drawCircle(x, y, (1.4f + depth * 1.4f) * dp, fill)
+        val b = layout.bright
+        var k = 0
+        while (k < b.size) {
+            val i = k / 3
+            val tw = 0.55f + 0.45f * sin(t * (1.3f + rand(i, 77) * 1.6f) + i * 1.7f)
+            sprite.tint(p.star, vis * tw)
+            sprite.draw(canvas, SceneSprites.glint, b[k], b[k + 1], b[k + 2] * (0.8f + 0.3f * tw))
+            k += 3
         }
-
-        val flakes = ((areaDp / 820f).coerceIn(16f, 280f) * s.snow).toInt()
-        for (i in 0 until flakes) {
-            val depth = rand(i, 801)
-            if ((depth >= 0.5f) != front) continue
-            val r = (1.2f + depth * 2.3f) * dp
-            val speed = (26f + depth * 42f) * dp
-            val span = h + r * 4
-            val y = ((rand(i, 803) * span + t * speed) % span + span) % span - r * 2
-            val amp = (5f + rand(i, 805) * 10f) * dp
-            val drift = wind * 3f * dp * t * (0.4f + depth)
-            val xw = w + 20 * dp
-            val x = ((rand(i, 807) * xw + drift + sin(t * (0.6f + rand(i, 809) * 0.8f) + i) * amp) % xw + xw) % xw - 10 * dp
-            if (i % 6 == 0 && r > 2.4f * dp) {
-                drawSnowStar(canvas, x, y, r * 1.9f, t * (20f + depth * 40f) + i * 17f, p)
-            } else {
-                fill.color = ColorMath.withAlpha(ColorMath.darken(p.cloudShade, 0.15f), 0.35f)
-                canvas.drawCircle(x, y + 0.8f * dp, r, fill)
-                fill.color = ColorMath.withAlpha(p.precip, 0.95f)
-                canvas.drawCircle(x, y, r, fill)
+        // A shooting star every so often on clear nights.
+        if (s.cloudCover < 0.4f && o.particles) {
+            val period = 13f
+            val cycle = floor(t / period).toInt()
+            val ph = (t - cycle * period) / 0.9f
+            if (ph in 0f..1f) {
+                val sx = layout.w * (0.15f + 0.7f * rand(cycle, 41))
+                val sy = layout.horizonY * (0.08f + 0.3f * rand(cycle, 43))
+                val ang = (if (rand(cycle, 45) > 0.5f) 0.42f else PI.toFloat() - 0.42f)
+                val len = min(layout.w, layout.h) * 0.3f
+                val hx = sx + cos(ang) * len * ph
+                val hy = sy + sin(ang) * len * ph
+                val tail = len * 0.35f * sin(ph * PI.toFloat())
+                shaded.shader = LinearGradient(hx, hy, hx - cos(ang) * tail, hy - sin(ang) * tail, ColorMath.withAlpha(p.star, vis), 0, Shader.TileMode.CLAMP)
+                stroke.strokeWidth = 1.6f * dp
+                stroke.shader = shaded.shader
+                canvas.drawLine(hx, hy, hx - cos(ang) * tail, hy - sin(ang) * tail, stroke)
+                stroke.shader = null
+                shaded.shader = null
             }
         }
     }
 
-    private fun drawSnowStar(canvas: Canvas, x: Float, y: Float, r: Float, rotation: Float, p: ScenePalette) {
-        stroke.strokeWidth = r * 0.22f
+    private var raysRadius = -1f
+    private val raysPath = Path()
+    private var raysShaderColor = 0
+    private var raysShader: Shader? = null
+
+    private fun drawSunRays(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options) {
+        val a = sunAlpha(s) * (1f - s.cloudCover * 0.8f).coerceIn(0f, 1f)
+        if (a < 0.03f) return
+        arcPosition(s.sunProgress, o, pos)
+        if (blocked(o, pos[0], pos[1], celestialRadius())) return
+        val r = celestialRadius()
+        if (r != raysRadius) {
+            raysRadius = r
+            raysPath.reset()
+            val n = 16
+            for (i in 0 until n) {
+                val ang = (i * 2 * PI / n).toFloat()
+                val long = i % 2 == 0
+                val inner = r * 1.34f
+                val outer = r * (if (long) 2.9f else 2.2f)
+                val half = (if (long) 0.085f else 0.065f)
+                raysPath.moveTo(cos(ang - half) * inner, sin(ang - half) * inner)
+                raysPath.lineTo(cos(ang) * outer, sin(ang) * outer)
+                raysPath.lineTo(cos(ang + half) * inner, sin(ang + half) * inner)
+                raysPath.close()
+            }
+        }
+        if (raysShader == null || raysShaderColor != p.sunRay) {
+            raysShaderColor = p.sunRay
+            raysShader = RadialGradient(0f, 0f, r * 3f, intArrayOf(p.sunRay, ColorMath.withAlpha(p.sunRay, 0f)), floatArrayOf(0.4f, 1f), Shader.TileMode.CLAMP)
+        }
+        arcPosition(s.sunProgress, o, pos)
         canvas.save()
-        canvas.translate(x, y)
-        canvas.rotate(rotation)
-        for (pass in 0..1) {
-            stroke.color = if (pass == 0) ColorMath.withAlpha(ColorMath.darken(p.cloudShade, 0.2f), 0.35f) else p.precip
-            val off = if (pass == 0) 0.8f * dp else 0f
-            for (k in 0 until 3) {
-                canvas.drawLine(-r, off, r, off, stroke)
-                canvas.rotate(60f)
+        canvas.translate(pos[0], pos[1])
+        canvas.rotate(o.time * 3.5f + o.sunSpin)
+        shaded.shader = raysShader
+        shaded.alpha = (a * 0.8f * 255).roundToInt()
+        canvas.drawPath(raysPath, shaded)
+        shaded.shader = null
+        shaded.alpha = 255
+        canvas.restore()
+    }
+
+    // ============================================================================================
+    // Clouds: each is a small, separately cached sprite that the app slides across the sky.
+    // ============================================================================================
+
+    val cloudCount: Int get() = layout.clouds.size
+
+    fun cloudIsCeiling(i: Int) = layout.clouds[i].ceiling
+
+    /** Local box a cloud's drawing covers, relative to its top-left, shadows included. */
+    fun cloudBounds(i: Int, out: RectF) {
+        val c = layout.clouds[i]
+        out.set(-6 * dp, -c.height * 0.34f - 4 * dp, c.width + 6 * dp, c.height * 1.12f + 8 * dp)
+    }
+
+    fun cloudTop(i: Int) = layout.clouds[i].y
+
+    /** Left edge of cloud [i] at [Options.time]: drifting with the wind and wrapping around. */
+    fun cloudX(i: Int, s: SceneState, o: Options): Float = cloudX(i, s, o.time, o.gust)
+
+    fun cloudX(i: Int, s: SceneState, time: Float, gust: Float): Float {
+        val c = layout.clouds[i]
+        val wind = s.windX + gust
+        val dir = if (wind < 0) -1f else 1f
+        val speed = (3.2f + abs(wind) * 1.1f) * dp * (if (c.ceiling) 0.3f else 0.4f + 0.8f * c.depth)
+        val span = layout.w + c.width * 1.4f
+        val x = ((c.x0 + time * speed * dir) % span + span) % span
+        return x - c.width * 1.2f
+    }
+
+    fun cloudAlpha(i: Int, s: SceneState): Float {
+        val c = layout.clouds[i]
+        val wet = (s.rain + s.drizzle + s.snow + s.thunder).coerceIn(0f, 1f)
+        return if (c.ceiling) {
+            (smoothstep(0.62f, 0.95f, s.cloudCover) + wet * 0.6f).coerceIn(0f, 1f)
+        } else {
+            val normal = layout.clouds.count { !it.ceiling }
+            val count = s.cloudCover * normal * 1.1f + wet * 1.5f + 0.3f
+            (count - c.rank).coerceIn(0f, 1f)
+        }
+    }
+
+    /** Draws cloud [i] with its top-left at the canvas origin. */
+    fun drawCloud(canvas: Canvas, i: Int, s: SceneState, p: ScenePalette, alpha: Float = 1f) {
+        val c = layout.clouds[i]
+        val air = (1f - c.depth) * 0.25f
+        val heavy = (s.rain + s.thunder + s.drizzle * 0.5f).coerceIn(0f, 1f) * 0.35f
+        val body = if (c.ceiling) ColorMath.lerp(p.cloudShade, p.cloud, 0.45f - heavy) else ColorMath.lerp(ColorMath.lerp(p.cloud, p.skyBottom, air), p.cloudShade, heavy)
+        val back = ColorMath.lerp(ColorMath.lerp(p.cloudShade, p.skyTop, air * 0.8f), p.cloudShade, heavy)
+
+        // Back sheet peeking out above, with its own faint shadow.
+        fill.color = ColorMath.withAlpha(back, alpha)
+        canvas.drawPath(c.back, fill)
+
+        // Soft shadow cast downward by the front sheet.
+        for (k in 4 downTo 1) {
+            fill.color = ColorMath.scaleAlpha(p.shadow, 0.09f * alpha)
+            canvas.save()
+            canvas.translate(0f, k * 1.3f * dp)
+            canvas.drawPath(c.front, fill)
+            canvas.restore()
+        }
+        shaded.shader = LinearGradient(
+            0f, 0f, 0f, c.height,
+            ColorMath.lighten(body, 0.07f), ColorMath.lerp(body, p.cloudShade, 0.3f), Shader.TileMode.CLAMP,
+        )
+        shaded.alpha = (alpha * 255).roundToInt()
+        canvas.drawPath(c.front, shaded)
+        shaded.shader = null
+        shaded.alpha = 255
+        // Light catching the paper edge.
+        stroke.strokeWidth = 1f * dp
+        stroke.color = ColorMath.withAlpha(0xFFFFFFFF.toInt(), 0.16f * alpha)
+        canvas.drawPath(c.front, stroke)
+    }
+
+    // ============================================================================================
+    // Landscape bands: cached layers of paper ridges.
+    // ============================================================================================
+
+    val bandCount: Int get() = layout.bands.size
+    fun bandTop(b: Int) = layout.bands[b].top
+    fun bandBottom(b: Int) = layout.bands[b].bottom
+    fun bandDepth(b: Int) = layout.bands[b].depth
+    val sceneMargin: Float get() = layout.margin
+
+    /** Colour of the nearest ridge below its band; the app fills the rest of the screen with it. */
+    fun bandBodyColor(p: ScenePalette): Int = ColorMath.darken(ridgeColor(layout.ridges.last(), p), 0.07f)
+
+    private fun ridgeColor(r: SceneLayout.Ridge, p: ScenePalette): Int {
+        val d = r.depth
+        val base = if (d < 0.5f) ColorMath.lerp(p.hillFar, p.hillMid, d / 0.5f) else ColorMath.lerp(p.hillMid, p.hillNear, (d - 0.5f) / 0.5f)
+        // Aerial perspective: distance shifts colours toward the (cooler) upper sky.
+        val air = ColorMath.lerp(p.skyTop, p.skyBottom, 0.55f)
+        return ColorMath.lerp(base, air, (1f - d) * (1f - d) * 0.42f)
+    }
+
+    private fun hazeColor(p: ScenePalette) = ColorMath.lerp(p.skyBottom, p.cloud, 0.25f)
+
+    /** Draws band [b] in scene coordinates. */
+    fun drawBand(canvas: Canvas, b: Int, s: SceneState, p: ScenePalette) {
+        val band = layout.bands[b]
+        for (i in band.first..band.last) {
+            val r = layout.ridges[i]
+            val next = layout.ridges.getOrNull(i + 1)
+            drawRidge(canvas, r, next, s, p, clipBottom = band.bottom)
+        }
+    }
+
+    private fun drawRidge(canvas: Canvas, r: SceneLayout.Ridge, next: SceneLayout.Ridge?, s: SceneState, p: ScenePalette, clipBottom: Float) {
+        val left = -layout.margin
+        val right = layout.w + layout.margin
+        val color = ridgeColor(r, p)
+        canvas.save()
+        canvas.clipRect(left, r.top - 20 * dp, right, clipBottom)
+
+        // Ambient shadow on the sheet behind, just above this sheet's edge.
+        val step = (1.2f + 1.1f * r.depth) * dp
+        for (k in 6 downTo 1) {
+            fill.color = ColorMath.withAlpha(p.shadow, 0.045f)
+            canvas.save()
+            canvas.translate(0f, -k * step)
+            canvas.drawPath(r.path, fill)
+            r.forest?.let { canvas.drawPath(it, fill) }
+            canvas.restore()
+        }
+
+        // Trees first, so the hill's own edge overlaps their trunks.
+        r.forest?.let {
+            fill.color = ColorMath.darken(ColorMath.lerp(color, p.tree, 0.3f), 0.06f)
+            canvas.drawPath(it, fill)
+            stroke.strokeWidth = 0.8f * dp
+            stroke.color = ColorMath.withAlpha(0xFFFFFFFF.toInt(), 0.1f)
+            canvas.drawPath(it, stroke)
+        }
+
+        // The sheet: lighter along the top where light grazes it.
+        shaded.shader = LinearGradient(
+            0f, r.top, 0f, r.bottom + r.amp * 0.6f,
+            intArrayOf(ColorMath.lerp(color, p.skyBottom, 0.1f), color, ColorMath.darken(color, 0.07f)),
+            floatArrayOf(0f, 0.45f, 1f), Shader.TileMode.CLAMP,
+        )
+        canvas.drawPath(r.path, shaded)
+        shaded.shader = null
+
+        // Paper edge catching the light.
+        stroke.strokeWidth = 1.1f * dp
+        stroke.color = ColorMath.withAlpha(0xFFFFFFFF.toInt(), 0.13f + 0.07f * r.depth)
+        canvas.drawPath(r.path, stroke)
+
+        // Snow: caps on the peaks always (they're mountains), on everything after snowfall.
+        val snow = if (r.kind == SceneLayout.Kind.Peaks) max(s.snowGround, 0.5f + 0.5f * smoothstep(8f, -2f, s.temperature)) else s.snowGround
+        if (snow > 0.02f) drawSnow(canvas, r, p, snow)
+
+        // Paper texture within the sheet.
+        canvas.save()
+        canvas.clipPath(r.path)
+        grainPaint.alpha = 70
+        canvas.drawRect(left, r.top - 4 * dp, right, clipBottom, grainPaint)
+        canvas.restore()
+
+        // Mist pooling at the foot of the sheet, so the next one stands out.
+        if (next != null) {
+            val hazeA = (0.08f + 0.2f * (1f - r.depth) + s.fog * 0.5f).coerceAtMost(0.85f)
+            val y0 = r.base
+            val y1 = next.bottom
+            if (y1 > y0) {
+                val haze = hazeColor(p)
+                shaded.shader = LinearGradient(0f, y0, 0f, y1, ColorMath.withAlpha(haze, 0f), ColorMath.withAlpha(haze, hazeA), Shader.TileMode.CLAMP)
+                canvas.drawRect(left, y0, right, clipBottom, shaded)
+                shaded.shader = null
             }
         }
         canvas.restore()
     }
 
-    private fun drawSplashes(canvas: Canvas, w: Float, h: Float, s: SceneState, p: ScenePalette, t: Float) {
-        val n = (18 * s.rain).toInt()
-        stroke.strokeWidth = 1.1f * dp
-        for (i in 0 until n) {
-            val ph = fract(t * 1.8f + rand(i, 901))
-            val cycle = floor(t * 1.8f + rand(i, 901)).toInt()
-            val x = rand(i * 31 + cycle, 903) * w
-            val y = ridge(2, x, w, h, cacheSeed) + 1.5f * dp
-            stroke.color = ColorMath.withAlpha(p.precip, (1f - ph) * 0.6f)
-            val r = (1f + ph * 5f) * dp
-            tmpRect.set(x - r, y - r * 0.45f, x + r, y + r * 0.45f)
-            canvas.drawArc(tmpRect, 180f, 180f, false, stroke)
+    private fun drawSnow(canvas: Canvas, r: SceneLayout.Ridge, p: ScenePalette, amount: Float) {
+        fill.color = ColorMath.withAlpha(p.snowCap, amount.coerceIn(0f, 1f) * 0.92f)
+        if (r.kind == SceneLayout.Kind.Peaks) {
+            // White above a wavy snow line.
+            canvas.save()
+            canvas.clipPath(r.path)
+            tmpPath.reset()
+            val line = r.base - r.amp * 0.18f
+            var x = -layout.margin
+            tmpPath.moveTo(x, r.top - 10 * dp)
+            while (x <= layout.w + layout.margin) {
+                tmpPath.lineTo(x, line + sin(x / (9 * dp)) * 3 * dp + sin(x / (23 * dp) + 1.3f) * 5 * dp)
+                x += 4 * dp
+            }
+            tmpPath.lineTo(layout.w + layout.margin, r.top - 10 * dp)
+            tmpPath.close()
+            canvas.drawPath(tmpPath, fill)
+            canvas.restore()
+            return
+        }
+        // A blanket following the ridge: dense along the crest, thinning downhill.
+        val capH = (6f + 8f * r.depth) * dp
+        val step = 3 * dp
+        val a = amount.coerceIn(0f, 1f)
+        for (pass in 0..1) {
+            tmpPath.reset()
+            var x = -layout.margin
+            tmpPath.moveTo(x, layout.edge(r, x) - 0.6f * dp)
+            while (x <= layout.w + layout.margin) {
+                tmpPath.lineTo(x, layout.edge(r, x) - 0.6f * dp)
+                x += step
+            }
+            x = layout.w + layout.margin
+            val reach = if (pass == 0) 1f else 2.6f
+            while (x >= -layout.margin) {
+                val drift = 0.55f + 0.3f * sin(x / (31 * dp) + r.index * 1.7f) + 0.15f * sin(x / (11 * dp) + r.index)
+                tmpPath.lineTo(x, layout.edge(r, x) + capH * drift * reach)
+                x -= step
+            }
+            tmpPath.close()
+            fill.color = ColorMath.withAlpha(p.snowCap, a * if (pass == 0) 0.9f else 0.3f)
+            canvas.drawPath(tmpPath, fill)
         }
     }
 
-    private fun drawFog(canvas: Canvas, w: Float, h: Float, s: SceneState, p: ScenePalette, t: Float) {
+    // ============================================================================================
+    // Particles: everything that moves in front of the landscape. Redrawn every frame.
+    // ============================================================================================
+
+    fun drawParticles(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options) {
+        val wind = s.windX + o.gust
+        if (s.fog > 0.03f) drawFog(canvas, s, p, o)
+        if (o.particles) {
+            drawBirds(canvas, s, p, o, wind)
+            drawMotes(canvas, s, p, o)
+            if (s.drizzle > 0.01f) drawDrizzle(canvas, s, p, o, wind)
+            if (s.rain > 0.01f) drawRain(canvas, s, p, o, wind)
+            if (s.hail > 0.01f) drawHail(canvas, s, p, o, wind)
+            if (s.snow > 0.01f) drawSnowfall(canvas, s, p, o, wind)
+            if (s.rain > 0.15f && o.landscape) drawSplashes(canvas, s, p, o)
+            drawFireflies(canvas, s, p, o)
+            if (abs(wind) > 6.5f && s.snow < 0.2f) drawWind(canvas, s, p, o, wind)
+        }
+        if (o.flash > 0.12f || o.staticBolt) drawBolt(canvas, o)
+        if (o.flash > 0f) canvas.drawColor(ColorMath.withAlpha(0xFFF4F2FF.toInt(), o.flash * 0.32f))
+        if (o.glass && (s.rain + s.drizzle) > 0.2f) drawGlass(canvas, s, o)
+        if (o.vignette > 0f) drawVignette(canvas, p, o.vignette)
+    }
+
+    private fun area() = (layout.w / dp) * (layout.h / dp)
+
+    private fun ensureBuf(i: Int, size: Int): FloatArray {
+        if (buf[i].size < size) buf[i] = FloatArray(size + 64)
+        return buf[i]
+    }
+
+    private fun wrap(v: Float, span: Float): Float = ((v % span) + span) % span
+
+    private val rainLen = floatArrayOf(9f, 15f, 24f)
+    private val rainSpeed = floatArrayOf(430f, 660f, 950f)
+    private val rainWidth = floatArrayOf(0.8f, 1.15f, 1.6f)
+    private val rainAlpha = floatArrayOf(0.26f, 0.4f, 0.6f)
+    private val layerShare = floatArrayOf(0.45f, 0.33f, 0.22f)
+
+    private fun drawRain(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options, wind: Float) {
+        val n = ((area() / 900f).coerceIn(40f, 440f) * s.rain.coerceIn(0f, 1.2f)).toInt()
+        if (n <= 0) return
+        val w = layout.w
+        val h = layout.h
+        val slant = (wind / 20f).coerceIn(-0.7f, 0.7f)
+        for (layer in 0..2) {
+            val count = (n * layerShare[layer]).toInt()
+            val out = ensureBuf(layer, count * 4)
+            val len = rainLen[layer] * dp * (0.8f + 0.4f * s.rain.coerceAtMost(1f))
+            val speed = rainSpeed[layer] * dp
+            val span = h + len * 2
+            val spread = w + abs(slant) * h
+            var k = 0
+            for (j in 0 until count) {
+                val i = layer * 1000 + j
+                val y = wrap(rand(i, 603) * span + o.time * speed, span) - len
+                val x0 = rand(i, 605) * spread - (if (slant > 0) slant * h else 0f)
+                val x = x0 + y * slant
+                out[k++] = x; out[k++] = y
+                out[k++] = x + len * slant; out[k++] = y + len
+            }
+            lines.strokeWidth = rainWidth[layer] * dp
+            lines.color = ColorMath.withAlpha(p.precip, rainAlpha[layer] * (0.75f + 0.25f * s.rain.coerceAtMost(1f)))
+            if (k > 0) canvas.drawLines(out, 0, k, lines)
+        }
+    }
+
+    private fun drawDrizzle(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options, wind: Float) {
+        val n = ((area() / 650f).coerceIn(30f, 400f) * s.drizzle).toInt()
+        if (n <= 0) return
+        val out = ensureBuf(3, n * 4)
+        val h = layout.h
+        val slant = (wind / 24f).coerceIn(-0.5f, 0.5f)
+        val len = 5 * dp
+        val span = h + len * 2
+        var k = 0
+        for (j in 0 until n) {
+            val depth = rand(j, 611)
+            val y = wrap(rand(j, 613) * span + o.time * (220f + 140f * depth) * dp, span) - len
+            val x = rand(j, 615) * (layout.w + abs(slant) * h) - (if (slant > 0) slant * h else 0f) + y * slant
+            out[k++] = x; out[k++] = y; out[k++] = x + len * slant; out[k++] = y + len
+        }
+        lines.strokeWidth = 0.9f * dp
+        lines.color = ColorMath.withAlpha(p.precip, 0.4f)
+        canvas.drawLines(out, 0, k, lines)
+    }
+
+    private fun drawHail(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options, wind: Float) {
+        val n = ((area() / 2400f).coerceIn(10f, 120f) * s.hail).toInt()
+        if (n <= 0) return
+        val out = ensureBuf(3, n * 2)
+        val span = layout.h + 10 * dp
+        val slant = (wind / 26f).coerceIn(-0.5f, 0.5f)
+        var k = 0
+        for (j in 0 until n) {
+            val y = wrap(rand(j, 703) * span + o.time * (560f + 240f * rand(j, 701)) * dp, span) - 5 * dp
+            out[k++] = rand(j, 705) * layout.w + y * slant
+            out[k++] = y
+        }
+        lines.strokeWidth = 2.6f * dp
+        lines.color = ColorMath.withAlpha(0xFFF4F8FF.toInt(), 0.92f)
+        canvas.drawPoints(out, 0, k, lines)
+    }
+
+    private val snowSize = floatArrayOf(1.4f, 2.4f, 0f)
+    private val snowSpeed = floatArrayOf(20f, 34f, 56f)
+    private val snowAlpha = floatArrayOf(0.55f, 0.8f, 0.92f)
+
+    private fun drawSnowfall(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options, wind: Float) {
+        val n = ((area() / 1300f).coerceIn(30f, 280f) * s.snow.coerceIn(0f, 1.2f)).toInt()
+        if (n <= 0) return
+        val t = o.time
+        val xw = layout.w + 24 * dp
+        for (layer in 0..2) {
+            val count = (n * layerShare[layer]).toInt()
+            val speed = snowSpeed[layer] * dp
+            val span = layout.h + 16 * dp
+            val drift = wind * (1.2f + layer) * dp
+            val out = ensureBuf(layer, count * 2)
+            var k = 0
+            for (j in 0 until count) {
+                val i = layer * 1000 + j
+                val y = wrap(rand(i, 803) * span + t * speed * (0.8f + 0.4f * rand(i, 801)), span) - 8 * dp
+                val amp = (5f + rand(i, 805) * 10f) * dp
+                val x = wrap(rand(i, 807) * xw + drift * t + sin(t * (0.5f + rand(i, 809) * 0.8f) + i) * amp, xw) - 12 * dp
+                if (layer < 2) {
+                    out[k++] = x; out[k++] = y
+                } else {
+                    sprite.tint(p.precip, snowAlpha[2])
+                    sprite.draw(canvas, SceneSprites.soft, x, y, (3.2f + rand(i, 811) * 3f) * dp)
+                }
+            }
+            if (layer < 2 && k > 0) {
+                lines.strokeWidth = snowSize[layer] * dp
+                lines.color = ColorMath.withAlpha(p.precip, snowAlpha[layer])
+                canvas.drawPoints(out, 0, k, lines)
+            }
+        }
+    }
+
+    private fun drawSplashes(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options) {
+        val ground = layout.ridges.last()
+        val n = ((layout.w / dp / 20f) * s.rain.coerceAtMost(1f)).toInt().coerceIn(0, 30)
+        if (n == 0) return
+        val out = ensureBuf(3, n * 8)
+        val period = 0.5f
+        var k = 0
+        for (i in 0 until n) {
+            val phase = o.time / period + rand(i, 901)
+            val cycle = floor(phase).toInt()
+            val ph = phase - cycle
+            val x = rand(i * 31 + cycle, 903) * layout.w
+            val y = layout.edge(ground, x - o.groundDx) + o.groundDy + 1.5f * dp
+            val sz = (1.5f + ph * 4.5f) * dp
+            out[k++] = x; out[k++] = y; out[k++] = x - sz * 0.9f; out[k++] = y - sz * (1.1f - ph * 0.6f)
+            out[k++] = x; out[k++] = y; out[k++] = x + sz * 0.9f; out[k++] = y - sz * (1.1f - ph * 0.6f)
+        }
+        lines.strokeWidth = 1.1f * dp
+        lines.color = ColorMath.withAlpha(p.precip, 0.5f)
+        canvas.drawLines(out, 0, k, lines)
+    }
+
+    private fun drawFog(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options) {
         val color = ColorMath.lerp(p.cloud, p.skyBottom, 0.35f)
+        val hy = layout.horizonY
         for (i in 0 until 4) {
-            val cy = horizonY + (i - 1.3f) * h * 0.085f
-            val bandH = h * (0.09f + 0.03f * rand(i, 1001))
-            val cx = w * 0.5f + sin(t * 0.05f + i * 1.7f) * w * 0.12f
-            val rw = w * (0.75f + 0.2f * rand(i, 1003))
+            val cy = hy + (i - 1.6f) * layout.depthD * 0.32f
+            val bandH = layout.depthD * (0.34f + 0.12f * rand(i, 1001))
+            val cx = layout.w * (0.5f + 0.35f * sin(o.time * 0.03f * (1 + i * 0.4f) + i * 1.7f))
+            val rw = layout.w * (0.8f + 0.25f * rand(i, 1003))
             canvas.save()
             canvas.translate(cx, cy)
             canvas.scale(rw / bandH, 1f)
-            gradient.shader = RadialGradient(0f, 0f, bandH, intArrayOf(ColorMath.withAlpha(color, 0.75f * s.fog), ColorMath.withAlpha(color, 0f)), null, Shader.TileMode.CLAMP)
-            canvas.drawCircle(0f, 0f, bandH, gradient)
+            shaded.shader = fogShader(color)
+            shaded.alpha = (s.fog * 0.8f * 255).roundToInt().coerceIn(0, 255)
+            canvas.drawCircle(0f, 0f, bandH, shaded)
             canvas.restore()
         }
-        gradient.shader = LinearGradient(0f, horizonY * 0.3f, 0f, h, ColorMath.withAlpha(color, 0f), ColorMath.withAlpha(color, 0.5f * s.fog), Shader.TileMode.CLAMP)
-        canvas.drawRect(0f, 0f, w, h, gradient)
-        gradient.shader = null
+        shaded.shader = null
+        shaded.alpha = 255
     }
 
-    private fun drawBolt(canvas: Canvas, w: Float, h: Float, o: Options) {
-        val strength = if (o.staticBolt) 1f else o.flash
-        if (strength < 0.15f) return
-        val seed = o.boltSeed
-        val startX = w * (0.25f + rand(seed, 1101) * 0.5f)
-        var x = startX
-        var y = horizonY * 0.18f
-        val endY = horizonY * 0.95f
-        val seg = 6
+    private var fogColor = 0
+    private var fogUnit = 0f
+    private var fogShaderCache: Shader? = null
+
+    /** Radial fog puff of unit radius scaled at draw time; rebuilt only when the colour changes. */
+    private fun fogShader(color: Int): Shader {
+        val unit = layout.depthD * 0.46f
+        if (fogShaderCache == null || fogColor != color || fogUnit != unit) {
+            fogColor = color
+            fogUnit = unit
+            fogShaderCache = RadialGradient(0f, 0f, unit, intArrayOf(color, ColorMath.withAlpha(color, 0.5f), ColorMath.withAlpha(color, 0f)), floatArrayOf(0f, 0.45f, 1f), Shader.TileMode.CLAMP)
+        }
+        return fogShaderCache!!
+    }
+
+    private fun drawBirds(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options, wind: Float) {
+        if (s.daylight < 0.55f || s.rain + s.snow + s.drizzle + s.thunder > 0.1f || abs(wind) > 10f || s.fog > 0.4f) return
+        val period = 36f
+        val cycle = floor(o.time / period).toInt()
+        val ph = (o.time - cycle * period) / 17f
+        if (ph !in 0f..1f) return
+        val flock = 3 + (rand(cycle, 61) * 4).toInt()
+        val dir = if (rand(cycle, 63) > 0.5f) 1f else -1f
+        val span = layout.w + 160 * dp
+        val headX = if (dir > 0) -80 * dp + span * ph else layout.w + 80 * dp - span * ph
+        val headY = layout.horizonY * (0.18f + 0.32f * rand(cycle, 65)) + sin(o.time * 0.7f) * 6 * dp
+        val size = (5f + 2.5f * rand(cycle, 67)) * dp
+        val out = ensureBuf(3, flock * 8)
+        var k = 0
+        for (b in 0 until flock) {
+            val side = if (b % 2 == 0) 1f else -1f
+            val rank = (b + 1) / 2
+            val bx = headX - dir * rank * 15 * dp + (rand(b, cycle + 69) - 0.5f) * 6 * dp
+            val by = headY + side * rank * 8 * dp + sin(o.time * 1.3f + b) * 2 * dp
+            val flap = sin(o.time * (7.5f + b * 0.4f) + b * 1.1f)
+            val sz = size * (1f - rank * 0.07f)
+            val tipY = by - sz * (0.2f + 0.5f * flap)
+            out[k++] = bx; out[k++] = by; out[k++] = bx - sz; out[k++] = tipY
+            out[k++] = bx; out[k++] = by; out[k++] = bx + sz; out[k++] = tipY
+        }
+        lines.strokeWidth = 1.4f * dp
+        lines.color = ColorMath.withAlpha(ColorMath.darken(p.hillNear, 0.35f), 0.55f)
+        canvas.drawLines(out, 0, k, lines)
+    }
+
+    private fun drawMotes(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options) {
+        val a = smoothstep(0.5f, 0.9f, s.daylight) * (1f - s.cloudCover).coerceIn(0f, 1f) * (1f - (s.rain + s.snow + s.drizzle).coerceIn(0f, 1f))
+        if (a < 0.05f) return
+        val n = (area() / 9000f).toInt().coerceIn(6, 26)
+        val t = o.time
+        val top = layout.horizonY + layout.depthD * 0.3f
+        for (i in 0 until n) {
+            val x = wrap(rand(i, 1201) * layout.w + t * (4f + 6f * rand(i, 1203)) * dp + sin(t * 0.3f + i) * 14 * dp, layout.w)
+            val y = wrap(rand(i, 1205) * top - t * (5f + 5f * rand(i, 1207)) * dp, top)
+            val tw = sin(t * (0.6f + rand(i, 1209)) + i * 2.3f)
+            sprite.tint(p.sunRay, a * (0.18f + 0.3f * tw * tw))
+            sprite.draw(canvas, SceneSprites.soft, x, y, (2.5f + 3.5f * rand(i, 1211)) * dp)
+        }
+    }
+
+    private fun drawFireflies(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options) {
+        val a = (1f - s.daylight * 2f).coerceIn(0f, 1f) * smoothstep(12f, 17f, s.temperature) *
+            (1f - (s.rain + s.snow + s.drizzle + s.fog).coerceIn(0f, 1f)) * (1f - smoothstep(4f, 8f, abs(s.windX)))
+        if (a < 0.05f || !o.landscape) return
+        val n = (layout.w / dp / 28f).toInt().coerceIn(5, 16)
+        val t = o.time
+        val r3 = layout.ridges[3]
+        val r4 = layout.ridges[4]
+        val y0 = r3.base - r3.amp
+        val y1 = r4.bottom + 10 * dp
+        for (i in 0 until n) {
+            val fx = rand(i, 1301) * layout.w + sin(t * (0.17f + 0.1f * rand(i, 1303)) + i) * 30 * dp
+            val fy = y0 + rand(i, 1305) * (y1 - y0) + sin(t * (0.23f + 0.1f * rand(i, 1307)) + i * 2f) * 12 * dp
+            val pulse = max(0f, sin(t * (1.1f + rand(i, 1309) * 0.8f) + i * 1.9f))
+            sprite.tint(p.window, a * pulse * pulse)
+            sprite.draw(canvas, SceneSprites.glow, fx + o.groundDx, fy + o.groundDy, 7 * dp)
+        }
+    }
+
+    private val leafPath = Path().apply {
+        moveTo(0f, -1f)
+        quadTo(0.75f, -0.2f, 0f, 1f)
+        quadTo(-0.75f, -0.2f, 0f, -1f)
+        close()
+    }
+
+    private fun drawWind(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options, wind: Float) {
+        val t = o.time
+        val dir = if (wind < 0) -1f else 1f
+        val strength = smoothstep(6.5f, 14f, abs(wind))
+        // Streaks of moving air.
+        val period = 1.7f
+        stroke.strokeWidth = 1.2f * dp
+        for (i in 0 until 4) {
+            val phase = t / period + rand(i, 1401)
+            val cycle = floor(phase).toInt()
+            val ph = phase - cycle
+            val y = layout.horizonY * (0.2f + 0.7f * rand(i * 13 + cycle, 1403))
+            val len = (60f + 70f * rand(i, 1405)) * dp
+            val x = if (dir > 0) -len + ph * (layout.w + len * 2) else layout.w + len - ph * (layout.w + len * 2)
+            stroke.color = ColorMath.withAlpha(0xFFFFFFFF.toInt(), 0.28f * strength * sin(ph * PI.toFloat()))
+            tmpPath.reset()
+            tmpPath.moveTo(x, y)
+            tmpPath.cubicTo(x + dir * len * 0.33f, y - 5 * dp, x + dir * len * 0.66f, y + 5 * dp, x + dir * len, y)
+            canvas.drawPath(tmpPath, stroke)
+        }
+        // Tumbling leaves when it isn't freezing.
+        if (s.temperature < 2f) return
+        val n = (layout.w / dp / 45f).toInt().coerceIn(4, 10)
+        val autumn = ColorMath.lerp(p.accent, p.sunRay, 0.3f)
+        for (i in 0 until n) {
+            val speed = (40f + abs(wind) * 9f) * dp * (0.7f + 0.6f * rand(i, 1411))
+            val xw = layout.w + 60 * dp
+            val x = wrap(rand(i, 1413) * xw + dir * t * speed, xw) - 30 * dp
+            val y = layout.horizonY + layout.depthD * (-0.4f + rand(i, 1415) * 0.9f) + sin(t * (1.1f + rand(i, 1417)) + i) * 18 * dp
+            val size = (3.2f + 2f * rand(i, 1419)) * dp
+            canvas.save()
+            canvas.translate(x, y)
+            canvas.rotate(t * (160f + 200f * rand(i, 1421)) * dir + i * 40f)
+            canvas.scale(size, size * (0.55f + 0.45f * abs(sin(t * 3f + i))))
+            fill.color = ColorMath.withAlpha(if (i % 3 == 0) p.tree else autumn, 0.85f * strength)
+            canvas.drawPath(leafPath, fill)
+            canvas.restore()
+        }
+    }
+
+    private var boltSeedCached = Int.MIN_VALUE
+    private var boltW = -1f
+    private val boltPath = Path()
+
+    private fun buildBolt(seed: Int) {
+        boltSeedCached = seed
+        boltW = layout.w
+        boltPath.reset()
+        val x0 = layout.w * (0.2f + rand(seed, 1101) * 0.6f)
+        val y0 = layout.horizonY * 0.1f
+        val y1 = layout.ridges.getOrNull(1)?.let { layout.edge(it, x0) } ?: layout.horizonY
+        val seg = 10
+        var x = x0
+        var y = y0
+        boltPath.moveTo(x, y)
         val xs = FloatArray(seg + 1)
         val ys = FloatArray(seg + 1)
         xs[0] = x; ys[0] = y
         for (i in 1..seg) {
-            y += (endY - horizonY * 0.18f) / seg
-            x += (rand(seed + i, 1103) - 0.5f) * 26 * dp
+            y += (y1 - y0) / seg
+            x += (rand(seed + i, 1103) - 0.5f) * 30 * dp
+            boltPath.lineTo(x, y)
             xs[i] = x; ys[i] = y
         }
-        val half = 3.2f * dp * sizeScale(w, h)
-        tmpPath.reset()
-        tmpPath.moveTo(xs[0] - half, ys[0])
-        for (i in 1..seg) tmpPath.lineTo(xs[i] - half * (1f - i / (seg + 1f)), ys[i])
-        for (i in seg downTo 0) tmpPath.lineTo(xs[i] + half * (1f - i / (seg + 1f)) + (if (i % 2 == 0) half else 0f), ys[i])
-        tmpPath.close()
-        shadowed.color = ColorMath.withAlpha(0xFFFFF0A0.toInt(), strength)
-        shadowed.setShadowLayer(9 * dp, 0f, 0f, ColorMath.withAlpha(0xFFFFE27A.toInt(), strength))
-        canvas.drawPath(tmpPath, shadowed)
-        shadowed.clearShadowLayer()
+        repeat(2) { b ->
+            val from = 2 + (rand(seed + b, 1105) * (seg - 5)).toInt()
+            var bx = xs[from]
+            var by = ys[from]
+            val dir = if (rand(seed + b, 1107) > 0.5f) 1f else -1f
+            boltPath.moveTo(bx, by)
+            for (i in 0 until 4) {
+                bx += dir * (8f + rand(seed + b * 5 + i, 1109) * 14f) * dp
+                by += (y1 - y0) / seg * 0.8f
+                boltPath.lineTo(bx, by)
+            }
+        }
     }
 
-    private fun drawVignette(canvas: Canvas, w: Float, h: Float, p: ScenePalette, strength: Float) {
-        val r = hypot(w, h) * 0.62f
-        gradient.shader = RadialGradient(
-            w / 2, h * 0.45f, r,
-            intArrayOf(0, 0, ColorMath.scaleAlpha(p.shadow, 0.55f * strength)),
-            floatArrayOf(0f, 0.62f, 1f), Shader.TileMode.CLAMP,
-        )
-        canvas.drawRect(0f, 0f, w, h, gradient)
-        gradient.shader = null
+    private fun drawBolt(canvas: Canvas, o: Options) {
+        val strength = if (o.staticBolt) 1f else o.flash
+        if (strength < 0.12f) return
+        if (boltSeedCached != o.boltSeed || boltW != layout.w) buildBolt(o.boltSeed)
+        stroke.color = ColorMath.withAlpha(0xFFB9C4FF.toInt(), 0.16f * strength)
+        stroke.strokeWidth = 11 * dp
+        canvas.drawPath(boltPath, stroke)
+        stroke.color = ColorMath.withAlpha(0xFFE4E8FF.toInt(), 0.4f * strength)
+        stroke.strokeWidth = 4.5f * dp
+        canvas.drawPath(boltPath, stroke)
+        stroke.color = ColorMath.withAlpha(0xFFFFFFFF.toInt(), strength)
+        stroke.strokeWidth = 1.8f * dp
+        canvas.drawPath(boltPath, stroke)
     }
 
-    // --- Widget overlays ---------------------------------------------------------------------
+    /** Raindrops on the glass: they bead, sit a while, then run down and re-form elsewhere. */
+    private fun drawGlass(canvas: Canvas, s: SceneState, o: Options) {
+        val wet = (s.rain + s.drizzle * 0.6f).coerceIn(0f, 1f)
+        val n = (4 + wet * 8).toInt()
+        val t = o.time
+        for (i in 0 until n) {
+            val life = 6f + 5f * rand(i, 1501)
+            val phase = t / life + rand(i, 1503)
+            val cycle = floor(phase).toInt()
+            val ph = phase - cycle
+            val x = rand(i * 17 + cycle, 1505) * layout.w
+            val y0 = rand(i * 17 + cycle, 1507) * layout.horizonY * 0.95f
+            val r = (3.5f + 4.5f * rand(i * 17 + cycle, 1509)) * dp
+            val grow = smoothstep(0f, 0.08f, ph)
+            val slide = smoothstep(0.72f, 1f, ph)
+            val y = y0 + slide * slide * layout.h * 0.35f
+            val a = grow * (1f - smoothstep(0.9f, 1f, ph))
+            if (slide > 0.01f) {
+                lines.strokeWidth = r * 0.5f
+                lines.color = ColorMath.withAlpha(0xFFFFFFFF.toInt(), 0.1f * a)
+                canvas.drawLine(x, y0, x, y - r, lines)
+            }
+            bitmapPaint.alpha = (a * 255).roundToInt()
+            srcRect.set(0, 0, SceneSprites.drop.width, SceneSprites.drop.height)
+            tmpRect.set(x - r, y - r * 1.05f, x + r, y + r * (1.05f + slide * 0.3f))
+            canvas.drawBitmap(SceneSprites.drop, srcRect, tmpRect, bitmapPaint)
+        }
+        bitmapPaint.alpha = 255
+    }
 
-    private fun deckledRect(rect: RectF, radius: Float, salt: Int, out: Path) {
-        out.reset()
-        val r = radius.coerceAtMost(min(rect.width(), rect.height()) / 2)
-        val jitter = 0.7f * dp
-        val step = 7 * dp
-        // Walk the perimeter clockwise with a tiny seeded wobble — torn/deckled paper.
-        fun wob(i: Int) = (rand(i, salt) - 0.5f) * jitter * 2
-        var i = 0
-        out.moveTo(rect.left + r, rect.top + wob(i++))
-        var x = rect.left + r
-        while (x < rect.right - r) { x += step; out.lineTo(min(x, rect.right - r), rect.top + wob(i++)) }
-        out.quadTo(rect.right, rect.top, rect.right, rect.top + r)
-        var y = rect.top + r
-        while (y < rect.bottom - r) { y += step; out.lineTo(rect.right + wob(i++), min(y, rect.bottom - r)) }
-        out.quadTo(rect.right, rect.bottom, rect.right - r, rect.bottom)
-        x = rect.right - r
-        while (x > rect.left + r) { x -= step; out.lineTo(max(x, rect.left + r), rect.bottom + wob(i++)) }
-        out.quadTo(rect.left, rect.bottom, rect.left, rect.bottom - r)
-        y = rect.bottom - r
-        while (y > rect.top + r) { y -= step; out.lineTo(rect.left + wob(i++), max(y, rect.top + r)) }
-        out.quadTo(rect.left, rect.top, rect.left + r, rect.top)
-        out.close()
+    private var vignetteKey = 0L
+    private var vignetteShader: Shader? = null
+
+    fun drawVignette(canvas: Canvas, p: ScenePalette, strength: Float) {
+        val w = layout.w
+        val h = layout.h
+        val key = (w.toLong() shl 32) xor h.toLong() xor (p.shadow.toLong() shl 7)
+        if (vignetteShader == null || key != vignetteKey) {
+            vignetteKey = key
+            vignetteShader = RadialGradient(
+                w / 2, h * 0.42f, hypot(w, h) * 0.62f,
+                intArrayOf(0, 0, ColorMath.scaleAlpha(p.shadow, 0.5f)),
+                floatArrayOf(0f, 0.6f, 1f), Shader.TileMode.CLAMP,
+            )
+        }
+        shaded.shader = vignetteShader
+        shaded.alpha = (strength.coerceIn(0f, 1f) * 255).roundToInt()
+        canvas.drawRect(0f, 0f, w, h, shaded)
+        shaded.shader = null
+        shaded.alpha = 255
+    }
+
+    // ============================================================================================
+    // Widget overlays
+    // ============================================================================================
+
+    /** A soft oval wash behind text: darker for light ink, paler for dark ink. */
+    fun drawScrim(canvas: Canvas, rect: RectF, dark: Boolean) {
+        val color = if (dark) 0x66101420 else 0x80FFFFFF.toInt()
+        val cx = rect.centerX()
+        val cy = rect.centerY()
+        val rx = rect.width() * 0.75f + 24 * dp
+        val ry = rect.height() * 0.8f + 18 * dp
+        canvas.save()
+        canvas.translate(cx, cy)
+        canvas.scale(rx / ry, 1f)
+        shaded.shader = RadialGradient(0f, 0f, ry, intArrayOf(color, ColorMath.scaleAlpha(color, 0.55f), ColorMath.withAlpha(color, 0f)), floatArrayOf(0f, 0.5f, 1f), Shader.TileMode.CLAMP)
+        canvas.drawCircle(0f, 0f, ry, shaded)
+        shaded.shader = null
+        canvas.restore()
     }
 
     private val panelPath = Path()
 
-    fun drawPanel(canvas: Canvas, panel: Panel, p: ScenePalette) {
+    /**
+     * A sheet of vellum: frosted over the scene (a real blur of the pixels beneath it when
+     * [backdrop] is given), lightly tinted, with a hairline edge catching the light.
+     */
+    fun drawPanel(canvas: Canvas, panel: Panel, p: ScenePalette, backdrop: Bitmap? = null) {
         val rect = panel.rect
-        deckledRect(rect, panel.radius * dp, (rect.left + rect.top * 3).toInt(), panelPath)
-        shadowed.color = ColorMath.withAlpha(p.paper, panel.alpha)
-        shadowed.setShadowLayer(7 * dp, 0f, 2.5f * dp, ColorMath.scaleAlpha(p.shadow, 0.9f))
-        canvas.drawPath(panelPath, shadowed)
-        shadowed.clearShadowLayer()
+        val r = (panel.radius * dp).coerceAtMost(min(rect.width(), rect.height()) / 2)
+        panelPath.reset()
+        panelPath.addRoundRect(rect, r, r, Path.Direction.CW)
+
+        for (k in 4 downTo 1) {
+            fill.color = ColorMath.scaleAlpha(p.shadow, 0.08f)
+            tmpRect.set(rect.left, rect.top + k * 1.1f * dp, rect.right, rect.bottom + k * 1.4f * dp)
+            canvas.drawRoundRect(tmpRect, r, r, fill)
+        }
         canvas.save()
         canvas.clipPath(panelPath)
-        grainPaint.alpha = 90
+        if (backdrop != null) frost(backdrop, rect)?.let { frosted ->
+            canvas.drawBitmap(frosted, null, rect, bitmapPaint)
+            frosted.recycle()
+        }
+        fill.color = ColorMath.withAlpha(p.paper, panel.alpha)
+        canvas.drawRect(rect, fill)
+        grainPaint.alpha = 110
         canvas.drawRect(rect, grainPaint)
         canvas.restore()
-        if (panel.tape) drawTape(canvas, rect.left + min(rect.width() * 0.12f, 30 * dp), rect.top, -7f, p)
+
+        stroke.strokeWidth = 1f * dp
+        stroke.color = ColorMath.withAlpha(p.paperInk, 0.07f)
+        canvas.drawPath(panelPath, stroke)
+        // Light along the top edge.
+        canvas.save()
+        canvas.clipRect(rect.left, rect.top - dp, rect.right, rect.top + r)
+        stroke.color = ColorMath.withAlpha(0xFFFFFFFF.toInt(), if (p.isDarkPaper) 0.14f else 0.5f)
+        tmpRect.set(rect.left + 0.5f * dp, rect.top + 0.5f * dp, rect.right - 0.5f * dp, rect.bottom)
+        canvas.drawRoundRect(tmpRect, r, r, stroke)
+        canvas.restore()
     }
 
-    /** A strip of washi tape holding a paper note; dotted pattern, torn ends. */
-    fun drawTape(canvas: Canvas, cx: Float, cy: Float, angle: Float, p: ScenePalette, lengthDp: Float = 38f) {
-        val len = lengthDp * dp
-        val th = 11 * dp
-        canvas.save()
-        canvas.translate(cx, cy)
-        canvas.rotate(angle)
-        tmpPath.reset()
-        tmpPath.moveTo(-len / 2, -th / 2)
-        tmpPath.lineTo(len / 2, -th / 2)
-        var yy = -th / 2
-        var k = 0
-        while (yy < th / 2) { yy += th / 5; tmpPath.lineTo(len / 2 + if (k++ % 2 == 0) 1.6f * dp else 0f, min(yy, th / 2)) }
-        tmpPath.lineTo(-len / 2, th / 2)
-        while (yy > -th / 2) { yy -= th / 5; tmpPath.lineTo(-len / 2 - if (k++ % 2 == 0) 1.6f * dp else 0f, max(yy, -th / 2)) }
-        tmpPath.close()
-        fill.color = ColorMath.withAlpha(p.tape, 0.82f)
-        canvas.drawPath(tmpPath, fill)
-        fill.color = ColorMath.withAlpha(0xFFFFFFFF.toInt(), 0.35f)
-        var dx = -len / 2 + 4 * dp
-        while (dx < len / 2 - 2 * dp) {
-            canvas.drawCircle(dx, -th * 0.18f, 1.1f * dp, fill)
-            canvas.drawCircle(dx + 3 * dp, th * 0.2f, 1.1f * dp, fill)
-            dx += 6 * dp
-        }
-        canvas.restore()
+    /** Heavily blurred copy of the backdrop under [rect] (downscale, then let bilinear do the rest). */
+    private fun frost(backdrop: Bitmap, rect: RectF): Bitmap? {
+        val l = rect.left.roundToInt().coerceIn(0, backdrop.width - 1)
+        val t = rect.top.roundToInt().coerceIn(0, backdrop.height - 1)
+        val rr = rect.right.roundToInt().coerceIn(l + 1, backdrop.width)
+        val b = rect.bottom.roundToInt().coerceIn(t + 1, backdrop.height)
+        if (rr - l < 4 || b - t < 4) return null
+        val crop = Bitmap.createBitmap(backdrop, l, t, rr - l, b - t)
+        val mid = Bitmap.createScaledBitmap(crop, max(1, (rr - l) / 4), max(1, (b - t) / 4), true)
+        val small = Bitmap.createScaledBitmap(mid, max(1, (rr - l) / 14), max(1, (b - t) / 14), true)
+        if (crop !== backdrop) crop.recycle()
+        if (mid !== small) mid.recycle()
+        return small
     }
 
     fun drawChart(canvas: Canvas, chart: Chart, p: ScenePalette) {
@@ -846,10 +1179,10 @@ class PaperSceneRenderer(private val density: Float) {
                 val v = bars[i].coerceIn(0f, 1f)
                 if (v < 0.3f) continue
                 val cx = rect.left + colW * (i + 0.5f)
-                val bw = min(colW * 0.34f, 9 * dp)
+                val bw = min(colW * 0.3f, 7 * dp)
                 val bh = max(3 * dp, maxH * v)
                 tmpRect.set(cx - bw / 2, rect.bottom - bh, cx + bw / 2, rect.bottom)
-                fill.color = ColorMath.withAlpha(p.precip, 0.22f + 0.4f * v)
+                fill.color = ColorMath.withAlpha(p.precip, 0.25f + 0.4f * v)
                 canvas.drawRoundRect(tmpRect, bw / 2, bw / 2, fill)
             }
         }
@@ -859,21 +1192,30 @@ class PaperSceneRenderer(private val density: Float) {
         val ys = chart.pointsY
         tmpPath.moveTo(xs[0], ys[0])
         for (i in 0 until n - 1) {
-            // Catmull-Rom → cubic Bézier for a hand-drawn smooth line.
+            // Catmull-Rom → cubic Bézier for a smooth line through every point.
             val x0 = xs[max(i - 1, 0)]; val y0 = ys[max(i - 1, 0)]
             val x3 = xs[min(i + 2, n - 1)]; val y3 = ys[min(i + 2, n - 1)]
             val c1x = xs[i] + (xs[i + 1] - x0) / 6f; val c1y = ys[i] + (ys[i + 1] - y0) / 6f
             val c2x = xs[i + 1] - (x3 - xs[i]) / 6f; val c2y = ys[i + 1] - (y3 - ys[i]) / 6f
             tmpPath.cubicTo(c1x, c1y, c2x, c2y, xs[i + 1], ys[i + 1])
         }
-        stroke.strokeWidth = 2.2f * dp
-        stroke.color = ColorMath.withAlpha(p.accent, 0.85f)
+        val lowest = ys.max()
+        val washPath = Path(tmpPath).apply {
+            lineTo(xs.last(), lowest + 14 * dp)
+            lineTo(xs.first(), lowest + 14 * dp)
+            close()
+        }
+        shaded.shader = LinearGradient(0f, ys.min(), 0f, lowest + 14 * dp, ColorMath.withAlpha(p.accent, 0.2f), ColorMath.withAlpha(p.accent, 0f), Shader.TileMode.CLAMP)
+        canvas.drawPath(washPath, shaded)
+        shaded.shader = null
+        stroke.strokeWidth = 2f * dp
+        stroke.color = ColorMath.withAlpha(p.accent, 0.9f)
         canvas.drawPath(tmpPath, stroke)
         for (i in 0 until n) {
             fill.color = p.paper
-            canvas.drawCircle(xs[i], ys[i], 2.8f * dp, fill)
-            stroke.strokeWidth = 1.6f * dp
-            canvas.drawCircle(xs[i], ys[i], 2.8f * dp, stroke)
+            canvas.drawCircle(xs[i], ys[i], 2.6f * dp, fill)
+            stroke.strokeWidth = 1.5f * dp
+            canvas.drawCircle(xs[i], ys[i], 2.6f * dp, stroke)
         }
     }
 
@@ -891,7 +1233,7 @@ class PaperSceneRenderer(private val density: Float) {
             val h = (heightDp * scale).roundToInt().coerceAtLeast(1)
             val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
             val renderer = PaperSceneRenderer(scale)
-            renderer.draw(Canvas(bmp), w.toFloat(), h.toFloat(), state, palette, options(scale))
+            renderer.draw(Canvas(bmp), w.toFloat(), h.toFloat(), state, palette, options(scale), backdrop = bmp)
             return bmp
         }
 

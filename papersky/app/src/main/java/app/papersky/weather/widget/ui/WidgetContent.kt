@@ -202,6 +202,8 @@ fun WidgetContent(config: WidgetConfig, data: WidgetData, nowMillis: Long, openA
             clockSample = fmt.time(nowSec),
             hourLabelSample = hours.drop(1).maxByOrNull { fmt.hour(it.time).length }?.let { fmt.hour(it.time) } ?: "22",
             nowLabel = context.getString(R.string.widget_now),
+            dayLabelSample = days.take(10).map { fmt.dayName(it.date + 43_200, nowSec, short = true) }
+                .maxByOrNull { PaintMeasure.get(context).width(it, WFont.BodyBold, 12f) } ?: "Tmrw",
             hourlyAvailable = hours.size,
             dailyAvailable = days.size,
             fontScale = context.resources.configuration.fontScale,
@@ -217,8 +219,12 @@ fun WidgetContent(config: WidgetConfig, data: WidgetData, nowMillis: Long, openA
 
     val ctx = Ctx(context, config, plan, look, fmt, forecast, moment, nowSec, placeName, hours, days, whisper, data.refreshing, stale)
     val charts = chartsFor(plan, hours)
+    val fx = if (config.animate && config.background == WidgetBackground.Scene && plan.mode != Mode.Micro) {
+        val hero = plan.heroRect()?.let { android.graphics.RectF(it.left, it.top, it.right, it.bottom) }
+        WidgetFx.plan(scene, palette, plan, WidgetFx.sunDp(scene, plan, WidgetArt.sceneOptions(plan, scene, nowSec).copy(keepClear = listOfNotNull(hero))))
+    } else FxPlan.None
     val art = remember(plan, config, scene, palette, charts.size, nowSec / 60) {
-        WidgetArt.background(context, plan, config, scene, palette, charts, nowSec)
+        WidgetArt.background(context, plan, config, scene, palette, charts, nowSec, fx)
     }
 
     var root = GlanceModifier.fillMaxSize().appWidgetBackground()
@@ -232,6 +238,8 @@ fun WidgetContent(config: WidgetConfig, data: WidgetData, nowMillis: Long, openA
     root = root.clickable(tap).semantics { contentDescription = a11y }
 
     Box(root) {
+        // Moving weather sits between the painted scene and the text.
+        fx.layers.forEach { FxIsland(it) }
         when (plan.mode) {
             Mode.Strip -> StripLayout(ctx, plan.strip!!)
             else -> Row(GlanceModifier.fillMaxSize()) {
@@ -511,16 +519,16 @@ private fun DailyRows(ctx: Ctx, b: DailyBlock, top: Float) {
     Column(blockMod(top, b.height).padding(horizontal = b.innerPad.dp, vertical = pv.dp)) {
         shown.forEach { d ->
             Row(GlanceModifier.fillMaxWidth().height(b.rowHeight.dp), verticalAlignment = Alignment.CenterVertically) {
-                val dayName = ctx.fmt.dayName(d.date + 43_200, ctx.nowSec, short = true)
+                val dayName = if (b.shortDays) ctx.fmt.weekdayShort(d.date + 43_200) else ctx.fmt.dayName(d.date + 43_200, ctx.nowSec, short = true)
                 if (b.compact) {
-                    WText(dayName, WFont.Hand, b.textSize * 1.25f, look.ink(onPanel), GlanceModifier.defaultWeight().height(b.rowHeight.dp), shadow = look.shadow(onPanel))
+                    WText(dayName, WFont.BodyBold, b.textSize * 1.05f, look.ink(onPanel), GlanceModifier.defaultWeight().height(b.rowHeight.dp), shadow = look.shadow(onPanel))
                     if (b.showGlyph) Image(ctx.glyph(ctx.conditionGlyph(d.code, true), b.glyphSize, onPanel), null, GlanceModifier.size(b.glyphSize.dp))
                     WText(
                         if (b.showMin) "${ctx.fmt.temp(d.tempMax)} ${ctx.fmt.temp(d.tempMin)}" else ctx.fmt.temp(d.tempMax),
                         WFont.Display, b.textSize, look.ink(onPanel), GlanceModifier.height(b.rowHeight.dp), TextAlign.End, shadow = look.shadow(onPanel), fill = false,
                     )
                 } else {
-                    WText(dayName, WFont.Hand, b.textSize * 1.3f, look.ink(onPanel), GlanceModifier.width(b.dayWidth.dp).height(b.rowHeight.dp), shadow = look.shadow(onPanel))
+                    WText(dayName, WFont.BodyBold, b.textSize * 1.05f, look.ink(onPanel), GlanceModifier.width(b.dayWidth.dp).height(b.rowHeight.dp), shadow = look.shadow(onPanel))
                     Image(ctx.glyph(ctx.conditionGlyph(d.code, true), b.glyphSize, onPanel), null, GlanceModifier.size(b.glyphSize.dp))
                     Spacer(GlanceModifier.width(6.dp))
                     if (b.precipWidth > 0) {
@@ -644,7 +652,7 @@ private fun EmptyWidget(config: WidgetConfig, data: WidgetData, tap: Action) {
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalAlignment = Alignment.CenterVertically) {
             Image(ImageProvider(WidgetArt.glyph(context, Glyph.SunCloud, if (small) 26f else 40f, GlyphColors.from(p, onPaper = true))), null, GlanceModifier.size((if (small) 26 else 40).dp))
-            WText(title, WFont.Hand, if (small) 14f else 19f, ink, GlanceModifier.fillMaxWidth().height((if (small) 20 else 26).dp), TextAlign.Center)
+            WText(title, WFont.BodyBold, if (small) 12f else 15f, ink, GlanceModifier.fillMaxWidth().height((if (small) 20 else 26).dp), TextAlign.Center)
             if (!small) {
                 WText(context.getString(R.string.widget_empty_body), WFont.Body, 11f, ColorMath.withAlpha(ink, 0.65f), GlanceModifier.fillMaxWidth().height(16.dp), TextAlign.Center)
             }

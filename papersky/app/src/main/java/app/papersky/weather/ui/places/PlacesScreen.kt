@@ -56,7 +56,8 @@ import app.papersky.weather.core.model.Place
 import app.papersky.weather.core.model.Units
 import app.papersky.weather.core.model.momentAt
 import app.papersky.weather.core.text.WeatherFormat
-import app.papersky.weather.design.DeckleShape
+import app.papersky.weather.design.CardShape
+import app.papersky.weather.design.SmoothShape
 import app.papersky.weather.design.GlyphIcon
 import app.papersky.weather.design.LocalHaptics
 import app.papersky.weather.design.LocalSceneClock
@@ -74,6 +75,7 @@ import app.papersky.weather.ui.common.PaperIcon
 import app.papersky.weather.ui.common.PaperIconView
 import app.papersky.weather.ui.common.PaperPage
 import app.papersky.weather.ui.common.SectionTitle
+import app.papersky.weather.ui.scene.SceneThumbnail
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -106,8 +108,8 @@ fun PlacesScreen(vm: PlacesViewModel, scene: SceneState, units: Units, motion: M
         if (search !is SearchState.Results) {
             if (rows.none { it.place.id == Place.HERE }) {
                 item("locate") {
-                    PaperCard(seed = 3, tape = true) {
-                        BasicText(stringResource(R.string.places_locate_title), style = Paper.type.hand.copy(color = Paper.colors.paperInk))
+                    PaperCard {
+                        BasicText(stringResource(R.string.places_locate_title), style = Paper.type.lead.copy(color = Paper.colors.paperInk))
                         Spacer(Modifier.height(10.dp))
                         PaperButton(stringResource(R.string.welcome_locate), { launcher.launch(Manifest.permission.ACCESS_COARSE_LOCATION) }, Modifier.fillMaxWidth(), glyph = Glyph.Pin)
                     }
@@ -137,7 +139,7 @@ private fun SearchField(state: androidx.compose.foundation.text.input.TextFieldS
     Row(
         Modifier
             .fillMaxWidth()
-            .paperSheet(colors.paperInk.copy(alpha = 0.05f).compositeOver(colors.paper), DeckleShape(seed = 77, corner = 20.dp), colors.shadow, lift = 3.dp)
+            .paperSheet(colors.paperInk.copy(alpha = 0.05f).compositeOver(colors.paper), SmoothShape(20.dp), colors.shadow, lift = 3.dp, night = colors.isNight)
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -190,7 +192,7 @@ private fun SearchResult(place: Place, modifier: Modifier, onPick: () -> Unit) {
 
 @Composable
 private fun Hint(text: String) {
-    BasicText(text, Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp), style = Paper.type.hand.copy(color = Paper.colors.paperInkSoft))
+    BasicText(text, Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp), style = Paper.type.caption.copy(color = Paper.colors.paperInkSoft))
 }
 
 @Composable
@@ -202,24 +204,16 @@ private fun PlaceCard(row: PlaceRow, units: Units, onClick: () -> Unit) {
     val moment = f?.momentAt(now)
     val scene = moment?.let { SceneState.from(it, SceneState.seedFor(f.placeId), f) }
     val fmt = remember(f?.timezone, units) { WeatherFormat(context, units, f?.zone ?: java.time.ZoneId.systemDefault()) }
-    val density = LocalDensity.current.density
-    val renderer = remember(density) { PaperSceneRenderer(density) }
-    val clock = LocalSceneClock.current
     Row(
         Modifier
             .fillMaxWidth()
             .pressable(onClick, pressed = 0.97f)
-            .paperSheet(colors.paper, DeckleShape(seed = row.place.id.hashCode(), corner = 22.dp), colors.shadow, lift = if (row.selected) 12.dp else 6.dp)
+            .paperSheet(colors.paper, CardShape, colors.shadow, lift = if (row.selected) 12.dp else 6.dp, night = colors.isNight)
             .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.size(width = 104.dp, height = 84.dp).clip(RoundedCornerShape(16.dp))) {
-            if (scene != null) {
-                Canvas(Modifier.matchParentSize()) {
-                    val p = Palettes.forState(scene)
-                    drawIntoCanvas { renderer.draw(it.nativeCanvas, size.width, size.height, scene, p, PaperSceneRenderer.Options(time = clock.seconds.floatValue, detail = 0.5f, vignette = 0.4f, horizon = 0.62f)) }
-                }
-            }
+        Box(Modifier.size(width = 104.dp, height = 84.dp).clip(RoundedCornerShape(18.dp))) {
+            if (scene != null) SceneThumbnail(scene, Modifier.matchParentSize())
         }
         Spacer(Modifier.width(14.dp))
         Column(Modifier.weight(1f)) {
@@ -233,7 +227,7 @@ private fun PlaceCard(row: PlaceRow, units: Units, onClick: () -> Unit) {
             row.place.subtitle?.let { BasicText(it, style = Paper.type.caption.copy(color = colors.paperInkSoft), maxLines = 1) }
             if (moment != null) {
                 Spacer(Modifier.height(2.dp))
-                BasicText(fmt.condition(moment.condition), style = Paper.type.hand.copy(color = colors.paperInkSoft))
+                BasicText(fmt.condition(moment.condition), style = Paper.type.caption.copy(color = colors.paperInkSoft))
             }
         }
         if (moment != null) {
@@ -261,7 +255,7 @@ private fun SwipeToTear(onRemove: () -> Unit, content: @Composable () -> Unit) {
         Row(Modifier.matchParentSize().padding(end = 22.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = androidx.compose.foundation.layout.Arrangement.End) {
             PaperIconView(PaperIcon.Trash, if (armed) Paper.colors.accent else Paper.colors.paperInkSoft, size = 22.dp)
             Spacer(Modifier.width(6.dp))
-            BasicText(removeLabel, style = Paper.type.hand.copy(color = if (armed) Paper.colors.accent else Paper.colors.paperInkSoft))
+            BasicText(removeLabel, style = Paper.type.caption.copy(color = if (armed) Paper.colors.accent else Paper.colors.paperInkSoft))
         }
         Box(
             Modifier

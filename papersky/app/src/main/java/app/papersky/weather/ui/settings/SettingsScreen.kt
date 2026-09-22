@@ -44,6 +44,7 @@ import app.papersky.weather.design.PaperSlider
 import app.papersky.weather.design.PaperSwitch
 import app.papersky.weather.design.SettingRow
 import app.papersky.weather.design.pressable
+import app.papersky.weather.design.reveal
 import app.papersky.weather.scene.Glyph
 import app.papersky.weather.scene.SceneState
 import app.papersky.weather.ui.common.PaperIcon
@@ -79,7 +80,7 @@ fun SettingsScreen(vm: SettingsViewModel, scene: SceneState, onBack: () -> Unit)
 
     PaperPage(stringResource(R.string.settings_title), scene, s.motion, onBack) {
         item("units") {
-            PaperCard(seed = 41, tape = true) {
+            PaperCard(Modifier.reveal(0)) {
                 Label(stringResource(R.string.settings_units))
                 Spacer(Modifier.height(12.dp))
                 BasicText(stringResource(R.string.settings_temperature), style = Paper.type.caption.copy(color = Paper.colors.paperInkSoft))
@@ -109,7 +110,7 @@ fun SettingsScreen(vm: SettingsViewModel, scene: SceneState, onBack: () -> Unit)
             }
         }
         item("updates") {
-            PaperCard(seed = 42, tilt = 0.4f) {
+            PaperCard(Modifier.reveal(1)) {
                 Label(stringResource(R.string.settings_updates))
                 Spacer(Modifier.height(8.dp))
                 BasicText(stringResource(R.string.settings_interval), style = Paper.type.body.copy(color = Paper.colors.paperInk))
@@ -141,12 +142,12 @@ fun SettingsScreen(vm: SettingsViewModel, scene: SceneState, onBack: () -> Unit)
                 BasicText(
                     stringResource(R.string.settings_refresh_now),
                     Modifier.pressable({ SyncScheduler.refreshNow(context) }).padding(vertical = 6.dp),
-                    style = Paper.type.hand.copy(color = Paper.colors.accent),
+                    style = Paper.type.bodyStrong.copy(color = Paper.colors.accent),
                 )
             }
         }
         item("feel") {
-            PaperCard(seed = 43, tilt = -0.5f) {
+            PaperCard(Modifier.reveal(2)) {
                 Label(stringResource(R.string.settings_feel))
                 SettingRow(stringResource(R.string.settings_haptics), subtitle = stringResource(R.string.settings_haptics_body)) {
                     PaperSwitch(s.haptics, { on -> vm.update { it.copy(haptics = on) } })
@@ -167,7 +168,7 @@ fun SettingsScreen(vm: SettingsViewModel, scene: SceneState, onBack: () -> Unit)
             }
         }
         item("about") {
-            PaperCard(seed = 44, tilt = 0.3f) {
+            PaperCard(Modifier.reveal(3)) {
                 Label(stringResource(R.string.settings_about))
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     LinkRow(PaperIcon.Language, stringResource(R.string.settings_language)) {

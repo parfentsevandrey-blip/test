@@ -65,55 +65,51 @@ data class PaperColors(
 }
 
 object PaperFonts {
-    private fun unbounded(weight: Int) = Font(
-        R.font.unbounded, FontWeight(weight),
-        variationSettings = FontVariation.Settings(FontVariation.weight(weight)),
-    )
-
     private fun manrope(weight: Int) = Font(
         R.font.manrope, FontWeight(weight),
         variationSettings = FontVariation.Settings(FontVariation.weight(weight)),
     )
 
-    private fun caveat(weight: Int) = Font(
-        R.font.caveat, FontWeight(weight),
-        variationSettings = FontVariation.Settings(FontVariation.weight(weight)),
-    )
-
-    val Display = FontFamily(unbounded(250), unbounded(300), unbounded(400), unbounded(500), unbounded(600), unbounded(700), unbounded(800))
-    val Body = FontFamily(manrope(400), manrope(500), manrope(600), manrope(700), manrope(800))
-    val Hand = FontFamily(caveat(400), caveat(500), caveat(600), caveat(700))
+    /** One family carries the whole product; hierarchy comes from weight, size and spacing. */
+    val Manrope = FontFamily(manrope(200), manrope(300), manrope(400), manrope(500), manrope(600), manrope(700), manrope(800))
 }
 
 @Immutable
 data class PaperType(
+    /** The big temperature: ExtraLight, tight, tabular. */
     val hero: TextStyle,
     val display: TextStyle,
     val title: TextStyle,
+    /** Line under the hero (the condition) and note headlines. */
+    val lead: TextStyle,
     val heading: TextStyle,
     val body: TextStyle,
     val bodyStrong: TextStyle,
+    /** Longer observational sentences. */
+    val quote: TextStyle,
     val label: TextStyle,
     val caption: TextStyle,
     val number: TextStyle,
-    val hand: TextStyle,
-    val handLarge: TextStyle,
+    /** Values on detail tiles. */
+    val numberLight: TextStyle,
 ) {
     companion object {
         private val tight = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.Both)
+        private val F = PaperFonts.Manrope
 
         val Default = PaperType(
-            hero = TextStyle(fontFamily = PaperFonts.Display, fontWeight = FontWeight(300), fontSize = 112.sp, letterSpacing = (-0.04).em, lineHeight = 1.0.em, lineHeightStyle = tight),
-            display = TextStyle(fontFamily = PaperFonts.Display, fontWeight = FontWeight(500), fontSize = 34.sp, letterSpacing = (-0.02).em, lineHeight = 1.1.em),
-            title = TextStyle(fontFamily = PaperFonts.Display, fontWeight = FontWeight(600), fontSize = 22.sp, letterSpacing = (-0.01).em, lineHeight = 1.2.em),
-            heading = TextStyle(fontFamily = PaperFonts.Display, fontWeight = FontWeight(500), fontSize = 15.sp, lineHeight = 1.3.em),
-            body = TextStyle(fontFamily = PaperFonts.Body, fontWeight = FontWeight(500), fontSize = 15.sp, lineHeight = 1.45.em),
-            bodyStrong = TextStyle(fontFamily = PaperFonts.Body, fontWeight = FontWeight(700), fontSize = 15.sp, lineHeight = 1.4.em),
-            label = TextStyle(fontFamily = PaperFonts.Body, fontWeight = FontWeight(800), fontSize = 11.sp, letterSpacing = 0.12.em),
-            caption = TextStyle(fontFamily = PaperFonts.Body, fontWeight = FontWeight(600), fontSize = 12.sp, lineHeight = 1.35.em),
-            number = TextStyle(fontFamily = PaperFonts.Display, fontWeight = FontWeight(500), fontSize = 16.sp, fontFeatureSettings = "tnum"),
-            hand = TextStyle(fontFamily = PaperFonts.Hand, fontWeight = FontWeight(600), fontSize = 22.sp, lineHeight = 1.15.em),
-            handLarge = TextStyle(fontFamily = PaperFonts.Hand, fontWeight = FontWeight(600), fontSize = 30.sp, lineHeight = 1.1.em),
+            hero = TextStyle(fontFamily = F, fontWeight = FontWeight(200), fontSize = 128.sp, letterSpacing = (-0.06).em, lineHeight = 1.0.em, lineHeightStyle = tight, fontFeatureSettings = "tnum"),
+            display = TextStyle(fontFamily = F, fontWeight = FontWeight(300), fontSize = 34.sp, letterSpacing = (-0.03).em, lineHeight = 1.1.em),
+            title = TextStyle(fontFamily = F, fontWeight = FontWeight(600), fontSize = 22.sp, letterSpacing = (-0.015).em, lineHeight = 1.2.em),
+            lead = TextStyle(fontFamily = F, fontWeight = FontWeight(500), fontSize = 21.sp, letterSpacing = (-0.01).em, lineHeight = 1.25.em),
+            heading = TextStyle(fontFamily = F, fontWeight = FontWeight(700), fontSize = 16.sp, letterSpacing = (-0.005).em, lineHeight = 1.3.em),
+            body = TextStyle(fontFamily = F, fontWeight = FontWeight(500), fontSize = 15.sp, lineHeight = 1.45.em),
+            bodyStrong = TextStyle(fontFamily = F, fontWeight = FontWeight(700), fontSize = 15.sp, lineHeight = 1.4.em),
+            quote = TextStyle(fontFamily = F, fontWeight = FontWeight(500), fontSize = 16.sp, letterSpacing = (-0.005).em, lineHeight = 1.42.em),
+            label = TextStyle(fontFamily = F, fontWeight = FontWeight(700), fontSize = 11.sp, letterSpacing = 0.14.em),
+            caption = TextStyle(fontFamily = F, fontWeight = FontWeight(500), fontSize = 12.5.sp, lineHeight = 1.35.em),
+            number = TextStyle(fontFamily = F, fontWeight = FontWeight(600), fontSize = 16.sp, fontFeatureSettings = "tnum"),
+            numberLight = TextStyle(fontFamily = F, fontWeight = FontWeight(300), fontSize = 28.sp, letterSpacing = (-0.03).em, fontFeatureSettings = "tnum"),
         )
     }
 }

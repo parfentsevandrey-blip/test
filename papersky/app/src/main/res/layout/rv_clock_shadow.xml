@@ -12,7 +12,7 @@
     android:includeFontPadding="false"
     android:letterSpacing="-0.03"
     android:maxLines="1"
-    android:shadowColor="#8C000000"
-    android:shadowDy="1.5"
-    android:shadowRadius="4"
+    android:shadowColor="#80000000"
+    android:shadowDy="1"
+    android:shadowRadius="7"
     android:textColor="#FF1F2530" />

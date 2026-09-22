@@ -34,7 +34,6 @@ private fun layoutFor(font: WFont, shadow: Boolean): Int = when (font) {
     WFont.Display -> if (shadow) R.layout.rv_text_display_shadow else R.layout.rv_text_display
     WFont.Body -> if (shadow) R.layout.rv_text_body_shadow else R.layout.rv_text_body
     WFont.BodyBold -> if (shadow) R.layout.rv_text_body_bold_shadow else R.layout.rv_text_body_bold
-    WFont.Hand -> if (shadow) R.layout.rv_text_hand_shadow else R.layout.rv_text_hand
 }
 
 @Composable
@@ -104,7 +103,6 @@ class PaintMeasure private constructor(context: Context) : TextMeasure {
             WFont.Display -> R.font.display_medium
             WFont.Body -> R.font.body_medium
             WFont.BodyBold -> R.font.body_bold
-            WFont.Hand -> R.font.hand
         }
         Paint(Paint.ANTI_ALIAS_FLAG).apply {
             typeface = runCatching { ResourcesCompat.getFont(context, id) }.getOrNull() ?: Typeface.DEFAULT

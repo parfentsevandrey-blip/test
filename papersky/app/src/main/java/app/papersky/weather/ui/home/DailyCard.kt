@@ -1,6 +1,8 @@
 package app.papersky.weather.ui.home
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterExitState
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
@@ -8,6 +10,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -25,16 +28,20 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import app.papersky.weather.R
@@ -43,9 +50,11 @@ import app.papersky.weather.core.model.Day
 import app.papersky.weather.core.model.Forecast
 import app.papersky.weather.core.text.WeatherFormat
 import app.papersky.weather.design.GlyphIcon
+import app.papersky.weather.design.Hairline
 import app.papersky.weather.design.Label
 import app.papersky.weather.design.Paper
 import app.papersky.weather.design.PaperCard
+import app.papersky.weather.design.PillShape
 import app.papersky.weather.design.pressable
 import app.papersky.weather.design.rememberHaptics
 import app.papersky.weather.scene.Glyph
@@ -86,13 +95,14 @@ fun DailyCard(
     val hi = days.maxOf { it.tempMax }
     var expanded by rememberSaveable { mutableLongStateOf(-1L) }
     val h = rememberHaptics()
+    val rain = if (colors.isNight) Color(0xFF9CC4EC) else Color(0xFF3F77B3)
 
-    PaperCard(modifier, seed = 34, tilt = 0.5f, tape = true) {
+    PaperCard(modifier) {
         Label(stringResource(R.string.daily_title))
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(8.dp))
         days.forEachIndexed { index, day ->
             val open = expanded == day.date
-            val arrow by animateFloatAsState(if (open) 180f else 0f, spring(stiffness = 500f), label = "arrow")
+            val arrow = animateFloatAsState(if (open) 180f else 0f, spring(dampingRatio = 0.6f, stiffness = 400f), label = "arrow")
             Column(
                 Modifier
                     .fillMaxWidth()
@@ -102,35 +112,52 @@ fun DailyCard(
                         expanded = if (open) -1L else day.date
                     }, haptic = false, pressed = 0.985f),
             ) {
-                Row(Modifier.fillMaxWidth().height(50.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.width(96.dp)) {
-                        BasicText(fmt.dayName(day.date + 43_200, nowSec), style = Paper.type.hand.copy(color = colors.paperInk), maxLines = 1)
+                Row(Modifier.fillMaxWidth().height(54.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.width(92.dp)) {
+                        BasicText(
+                            fmt.dayName(day.date + 43_200, nowSec),
+                            style = Paper.type.bodyStrong.copy(color = colors.paperInk, fontWeight = FontWeight(if (index == 0) 800 else 700)),
+                            maxLines = 1,
+                        )
                         BasicText(fmt.date(day.date + 43_200), style = Paper.type.caption.copy(color = colors.paperInkSoft), maxLines = 1)
                     }
                     GlyphIcon(Glyph.of(Condition.fromWmo(day.code), true), size = 30.dp)
                     BasicText(
                         if (day.precipProbability >= 20) "${day.precipProbability}%" else "",
-                        Modifier.width(44.dp).padding(start = 4.dp),
-                        style = Paper.type.caption.copy(color = if (colors.isNight) Color(0xFF9CC4EC) else Color(0xFF3F77B3)),
+                        Modifier.width(42.dp).padding(start = 4.dp),
+                        style = Paper.type.caption.copy(color = rain, fontWeight = FontWeight(700)),
                     )
-                    BasicText(fmt.temp(day.tempMin), Modifier.width(40.dp), style = Paper.type.number.copy(color = colors.paperInkSoft, textAlign = TextAlign.End))
-                    RangeStrip(day, lo, hi, if (index == 0) currentTemp else null, Modifier.weight(1f).padding(horizontal = 10.dp).height(10.dp))
-                    BasicText(fmt.temp(day.tempMax), Modifier.width(40.dp), style = Paper.type.number.copy(color = colors.paperInk))
-                    Canvas(Modifier.width(14.dp).height(14.dp).graphicsLayer { rotationZ = arrow }) {
+                    BasicText(fmt.temp(day.tempMin), Modifier.width(38.dp), style = Paper.type.number.copy(color = colors.paperInkSoft, textAlign = TextAlign.End))
+                    RangeStrip(day, lo, hi, if (index == 0) currentTemp else null, Modifier.weight(1f).padding(horizontal = 10.dp).height(8.dp))
+                    BasicText(fmt.temp(day.tempMax), Modifier.width(38.dp), style = Paper.type.number.copy(color = colors.paperInk))
+                    Canvas(Modifier.width(14.dp).height(14.dp).graphicsLayer { rotationZ = arrow.value }) {
                         val c = colors.paperInkSoft
-                        drawLine(c, Offset(size.width * 0.2f, size.height * 0.4f), Offset(size.width / 2, size.height * 0.65f), 1.6.dp.toPx())
-                        drawLine(c, Offset(size.width / 2, size.height * 0.65f), Offset(size.width * 0.8f, size.height * 0.4f), 1.6.dp.toPx())
+                        drawLine(c, Offset(size.width * 0.2f, size.height * 0.38f), Offset(size.width / 2, size.height * 0.64f), 1.6.dp.toPx(), StrokeCap.Round)
+                        drawLine(c, Offset(size.width / 2, size.height * 0.64f), Offset(size.width * 0.8f, size.height * 0.38f), 1.6.dp.toPx(), StrokeCap.Round)
                     }
                 }
-                AnimatedVisibility(open, enter = expandVertically(spring(dampingRatio = 0.8f, stiffness = 380f)) + fadeIn(), exit = shrinkVertically() + fadeOut()) {
-                    DayDetails(day, fmt, onPreview = { onPreviewDay(day.date + 13 * 3600) })
+                AnimatedVisibility(
+                    open,
+                    enter = expandVertically(spring(dampingRatio = 0.86f, stiffness = 320f)) + fadeIn(),
+                    exit = shrinkVertically(spring(dampingRatio = 1f, stiffness = 500f)) + fadeOut(),
+                ) {
+                    // Unfolds like a folded note: hinged at the top edge.
+                    val fold by transition.animateFloat(
+                        transitionSpec = { spring(dampingRatio = 0.62f, stiffness = 170f) },
+                        label = "fold",
+                    ) { if (it == EnterExitState.Visible) 0f else -88f }
+                    DayDetails(
+                        day, fmt,
+                        onPreview = { onPreviewDay(day.date + 13 * 3600) },
+                        modifier = Modifier.graphicsLayer {
+                            rotationX = fold
+                            transformOrigin = TransformOrigin(0.5f, 0f)
+                            cameraDistance = 18f * density
+                        },
+                    )
                 }
             }
-            if (index < days.lastIndex) {
-                Canvas(Modifier.fillMaxWidth().height(1.dp)) {
-                    drawLine(colors.paperInk.copy(alpha = 0.08f), Offset.Zero, Offset(size.width, 0f), 1.dp.toPx())
-                }
-            }
+            if (index < days.lastIndex) Hairline()
         }
     }
 }
@@ -141,7 +168,7 @@ private fun RangeStrip(day: Day, lo: Double, hi: Double, current: Double?, modif
     val span = (hi - lo).coerceAtLeast(1.0)
     Canvas(modifier.semantics { contentDescription = "" }) {
         val r = size.height / 2
-        drawRoundRect(colors.paperInk.copy(alpha = 0.08f), cornerRadius = CornerRadius(r))
+        drawRoundRect(colors.paperInk.copy(alpha = 0.07f), cornerRadius = CornerRadius(r))
         val x0 = ((day.tempMin - lo) / span * size.width).toFloat()
         val x1 = ((day.tempMax - lo) / span * size.width).toFloat().coerceAtLeast(x0 + size.height)
         drawRoundRect(
@@ -150,17 +177,17 @@ private fun RangeStrip(day: Day, lo: Double, hi: Double, current: Double?, modif
         )
         if (current != null) {
             val cx = ((current - lo) / span * size.width).toFloat().coerceIn(x0 + r, x1 - r)
-            drawCircle(colors.paper, r * 1.25f, Offset(cx, r))
-            drawCircle(colors.paperInk, r * 0.6f, Offset(cx, r))
+            drawCircle(colors.paper, r * 1.45f, Offset(cx, r))
+            drawCircle(colors.paperInk, r * 0.7f, Offset(cx, r))
         }
     }
 }
 
 @Composable
-private fun DayDetails(day: Day, fmt: WeatherFormat, onPreview: () -> Unit) {
+private fun DayDetails(day: Day, fmt: WeatherFormat, onPreview: () -> Unit, modifier: Modifier = Modifier) {
     val colors = Paper.colors
-    Column(Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(modifier.fillMaxWidth().padding(top = 2.dp, bottom = 14.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             if (day.sunrise > 0) Stat(Glyph.Sunrise, fmt.time(day.sunrise))
             if (day.sunset > 0) Stat(Glyph.Sunset, fmt.time(day.sunset))
             Stat(Glyph.Wind, "${fmt.wind(day.windMax)} · ${fmt.compass(day.windDirection)}", rotation = (day.windDirection + 180f) % 360f)
@@ -168,20 +195,32 @@ private fun DayDetails(day: Day, fmt: WeatherFormat, onPreview: () -> Unit) {
             if (day.uvMax >= 1) Stat(Glyph.Uv, "UV ${day.uvMax.roundToInt()}")
             if (day.daylightSeconds > 0) Stat(Glyph.Sun, fmt.duration(day.daylightSeconds.toLong()))
         }
-        Spacer(Modifier.height(10.dp))
-        BasicText(
-            stringResource(R.string.show_in_sky),
-            Modifier.pressable(onPreview).padding(vertical = 4.dp),
-            style = Paper.type.hand.copy(color = colors.accent),
-        )
+        Spacer(Modifier.height(12.dp))
+        Row(
+            Modifier
+                .pressable(onPreview)
+                .clip(PillShape)
+                .background(colors.accent.copy(alpha = 0.12f))
+                .padding(horizontal = 14.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            BasicText(stringResource(R.string.show_in_sky), style = Paper.type.caption.copy(color = colors.accent, fontWeight = FontWeight(700)))
+        }
     }
 }
 
 @Composable
 private fun Stat(glyph: Glyph, text: String, rotation: Float = 0f) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        GlyphIcon(glyph, size = 20.dp, animate = false, rotation = rotation)
-        Spacer(Modifier.width(4.dp))
-        BasicText(text, style = Paper.type.caption.copy(color = Paper.colors.paperInk))
+    val colors = Paper.colors
+    Row(
+        Modifier
+            .clip(PillShape)
+            .background(colors.paperInk.copy(alpha = 0.05f))
+            .padding(start = 8.dp, end = 12.dp, top = 6.dp, bottom = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        GlyphIcon(glyph, size = 18.dp, rotation = rotation)
+        Spacer(Modifier.width(6.dp))
+        BasicText(text, style = Paper.type.caption.copy(color = colors.paperInk, fontWeight = FontWeight(600)))
     }
 }

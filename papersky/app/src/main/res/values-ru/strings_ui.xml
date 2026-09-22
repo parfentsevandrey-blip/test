@@ -94,7 +94,7 @@
     <string name="settings_tilt_body">Бумажные слои смещаются при наклоне телефона</string>
     <string name="settings_about">О приложении</string>
     <string name="settings_language">Язык приложения</string>
-    <string name="settings_fonts">Шрифты: Unbounded, Manrope, Caveat — SIL Open Font License.</string>
+    <string name="settings_fonts">Шрифт: Manrope — SIL Open Font License.</string>
 
     <string name="widgets_title">Виджеты</string>
     <string name="widgets_intro">Каждый виджет — маленькая диорама. Растяните его от одной клетки до целого экрана: он перестроится и использует каждый миллиметр.</string>
@@ -119,6 +119,7 @@
     <string name="editor_corners">Углы</string>
     <string name="editor_corners_system">как в системе</string>
     <string name="editor_content">Что показывать</string>
+    <string name="show_animate">Живая погода (дождь, снег и звёзды движутся)</string>
     <string name="show_location">Название места</string>
     <string name="show_condition">Погодные условия</string>
     <string name="show_hilo">Максимум и минимум</string>

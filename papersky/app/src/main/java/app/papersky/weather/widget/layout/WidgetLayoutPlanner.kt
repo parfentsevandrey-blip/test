@@ -9,7 +9,7 @@ import kotlin.math.min
 import kotlin.math.sqrt
 
 /** Fonts available to widget text (each backed by a RemoteViews layout). */
-enum class WFont { DisplayLight, Display, Body, BodyBold, Hand }
+enum class WFont { DisplayLight, Display, Body, BodyBold }
 
 fun interface TextMeasure {
     /** Width in dp of [text] set in [font] at [sizeDp]. */
@@ -24,7 +24,6 @@ object EstimateMeasure : TextMeasure {
             WFont.Display -> 0.74f
             WFont.Body -> 0.56f
             WFont.BodyBold -> 0.6f
-            WFont.Hand -> 0.46f
         }
         return text.length * sizeDp * k
     }
@@ -46,6 +45,8 @@ data class PlanInput(
     val hourLabelSample: String = "22",
     /** First hourly label ("Now"), usually the widest. */
     val nowLabel: String = "Now",
+    /** Widest day label ("Today", "Tomorrow", weekdays) as it will be shown. */
+    val dayLabelSample: String = "Tmrw",
     val hourlyAvailable: Int = 24,
     val dailyAvailable: Int = 10,
     val fontScale: Float = 1f,
@@ -142,6 +143,8 @@ data class DailyBlock(
     val compact: Boolean,
     val showGlyph: Boolean = true,
     val showMin: Boolean = true,
+    /** Day names don't fit: use two-letter weekdays instead of ellipsising "Tod…". */
+    val shortDays: Boolean = false,
 ) : Block
 
 data class ColumnPlan(val x: Float, val y: Float, val width: Float, val height: Float, val blocks: List<Block>)
@@ -179,6 +182,32 @@ data class WidgetPlan(
     /** Paper sheets to print behind dense sections (Scene background only). */
     val panels: List<RectDp>,
 ) {
+    /** Union of the blocks that put text straight onto the sky (header, hero, lines). */
+    fun textRect(): RectDp? {
+        if (strip != null) return RectDp(pad, pad, width * 0.62f, height - 2 * pad)
+        return unionOf { it is HeaderBlock || it is HeroBlock || it is InfoBlock || it is WhisperBlock }
+    }
+
+    /** Where the big temperature sits. */
+    fun heroRect(): RectDp? = if (strip != null) textRect() else unionOf { it is HeroBlock }
+
+    private fun unionOf(pick: (Block) -> Boolean): RectDp? {
+        var l = Float.MAX_VALUE
+        var t = Float.MAX_VALUE
+        var r = -Float.MAX_VALUE
+        var b = -Float.MAX_VALUE
+        for (c in columns) {
+            var y = c.y
+            for (block in c.blocks) {
+                if (pick(block)) {
+                    l = minOf(l, c.x); t = minOf(t, y); r = maxOf(r, c.x + c.width); b = maxOf(b, y + block.height)
+                }
+                y += block.height
+            }
+        }
+        return if (r > l && b > t) RectDp(l, t, r - l, b - t) else null
+    }
+
     /** Top of [block] inside its column, in widget coordinates. */
     fun topOf(block: Block): Float? {
         for (c in columns) {
@@ -491,7 +520,8 @@ object WidgetLayoutPlanner {
         val daily = if (dailyRows > 0) {
             val text = (11.5f * s).coerceIn(9f, 15f)
             val glyph = (rowH * 0.78f).coerceAtMost(24f)
-            val dayW = max(m.width("Mon", WFont.Hand, text * 1.25f), 40f * s).coerceAtMost(cw * 0.3f)
+            val dayNeed = m.width(input.dayLabelSample, WFont.BodyBold, text * 1.05f) + 6
+            val dayW = max(dayNeed, 34f * s).coerceAtMost(cw * 0.42f)
             val tempW = m.width("−22°", WFont.Display, text) + 4
             val usable = cw - 2 * innerPad
             val compact = tower || usable < dayW + glyph + tempW * 2 + 20
@@ -511,6 +541,10 @@ object WidgetLayoutPlanner {
                 compact = compact,
                 showGlyph = !compact || cw >= 96,
                 showMin = !compact || cw >= 112,
+                shortDays = if (compact) {
+                    val room = usable - (if (cw >= 96) glyph else 0f) - (if (cw >= 112) tempW * 2 else tempW) - 4
+                    room < dayNeed
+                } else dayW < dayNeed,
             )
         } else null
 

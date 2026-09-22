@@ -1,0 +1,13 @@
+# Baseline profile for Papersky.
+#
+# ProfileInstaller writes these rules on first launch, so ART compiles Papersky's own hot
+# paths ahead of time instead of running them in the interpreter: the first frames of the
+# living scene, the first scroll of the forecast and the widget renderer are smooth even on a
+# fresh install. Compose, Glance and friends ship their own rules, merged in by AGP.
+HSPLapp/papersky/weather/scene/**->**(**)**
+HSPLapp/papersky/weather/ui/**->**(**)**
+HSPLapp/papersky/weather/design/**->**(**)**
+HSPLapp/papersky/weather/widget/**->**(**)**
+HSPLapp/papersky/weather/core/**->**(**)**
+HSPLapp/papersky/weather/*->**(**)**
+Lapp/papersky/weather/**;

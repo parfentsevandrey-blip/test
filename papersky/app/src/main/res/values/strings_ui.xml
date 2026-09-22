@@ -94,7 +94,7 @@
     <string name="settings_tilt_body">Paper layers shift as you tilt the phone</string>
     <string name="settings_about">About</string>
     <string name="settings_language">App language</string>
-    <string name="settings_fonts">Fonts: Unbounded, Manrope, Caveat — SIL Open Font License.</string>
+    <string name="settings_fonts">Font: Manrope — SIL Open Font License.</string>
 
     <string name="widgets_title">Widgets</string>
     <string name="widgets_intro">Every widget is a little diorama. Stretch it from one cell to the whole screen — it rearranges itself to use every millimetre.</string>
@@ -119,6 +119,7 @@
     <string name="editor_corners">Corners</string>
     <string name="editor_corners_system">system</string>
     <string name="editor_content">What to show</string>
+    <string name="show_animate">Living weather (rain, snow and stars move)</string>
     <string name="show_location">Place name</string>
     <string name="show_condition">Conditions</string>
     <string name="show_hilo">Highs and lows</string>

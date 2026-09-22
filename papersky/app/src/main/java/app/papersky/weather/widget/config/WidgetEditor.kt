@@ -173,6 +173,7 @@ fun WidgetEditor(
             }
             item("content") {
                 Section(stringResource(R.string.editor_content)) {
+                    Toggle(stringResource(R.string.show_animate), config.animate) { v -> edit { it.copy(animate = v) } }
                     Toggle(stringResource(R.string.show_location), config.showLocation) { v -> edit { it.copy(showLocation = v) } }
                     Toggle(stringResource(R.string.show_condition), config.showCondition) { v -> edit { it.copy(showCondition = v) } }
                     Toggle(stringResource(R.string.show_hilo), config.showHiLo) { v -> edit { it.copy(showHiLo = v) } }
@@ -285,7 +286,7 @@ private fun Desk(config: WidgetConfig, widgetSize: DpSize, onResize: (DpSize) ->
 
 @Composable
 private fun Section(title: String, content: @Composable () -> Unit) {
-    PaperCard(seed = title.hashCode(), color = Paper.colors.paper) {
+    PaperCard(color = Paper.colors.paper) {
         Label(title)
         Spacer(Modifier.height(10.dp))
         content()

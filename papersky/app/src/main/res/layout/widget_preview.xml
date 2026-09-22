@@ -35,7 +35,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:fontFamily="@font/hand"
+            android:fontFamily="@font/body_medium"
             android:text="@string/cond_partly_cloudy"
             android:textColor="#FF1F2530"
             android:textSize="17sp" />

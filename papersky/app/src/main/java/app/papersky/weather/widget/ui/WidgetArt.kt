@@ -20,6 +20,7 @@ import app.papersky.weather.scene.ScenePalette
 import app.papersky.weather.widget.WidgetBackground
 import app.papersky.weather.widget.WidgetConfig
 import app.papersky.weather.widget.layout.Mode
+import app.papersky.weather.widget.layout.RectDp
 import app.papersky.weather.widget.layout.WidgetPlan
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -46,6 +47,22 @@ object WidgetArt {
         return glyphs.get(key) ?: GlyphRenderer.bitmap(glyph, px, colors, rotation).also { glyphs.put(key, it) }
     }
 
+    /** Options for the static frame, in dp (scale with [scaled]). */
+    fun sceneOptions(plan: WidgetPlan, scene: SceneState, clockSeconds: Long): PaperSceneRenderer.Options {
+        val textOnLeft = plan.mode == Mode.Card || plan.mode == Mode.Panorama || plan.mode == Mode.Strip
+        return PaperSceneRenderer.Options(
+            // A slowly advancing "time" so clouds sit somewhere new after each refresh.
+            time = ((clockSeconds / 60) % 997).toFloat() * 3.1f,
+            detail = if (plan.mode == Mode.Micro) 0.6f else 1f,
+            vignette = 0.5f,
+            landscape = plan.height >= 40,
+            grain = 0.85f,
+            laneStart = if (textOnLeft) 0.56f else 0.12f,
+            laneEnd = if (textOnLeft) 0.93f else 0.88f,
+            staticBolt = scene.thunder > 0.5f,
+        )
+    }
+
     fun background(
         context: Context,
         plan: WidgetPlan,
@@ -54,6 +71,7 @@ object WidgetArt {
         palette: ScenePalette,
         charts: List<ChartSpec>,
         clockSeconds: Long,
+        fx: FxPlan = FxPlan.None,
     ): Bitmap? {
         val density = context.resources.displayMetrics.density
         val scale = PaperSceneRenderer.scaleFor(plan.width, plan.height, density, MAX_SCENE_PIXELS)
@@ -61,12 +79,10 @@ object WidgetArt {
             WidgetBackground.Clear -> null
             WidgetBackground.Paper -> paper(plan, palette, scale, scene.seed)
             WidgetBackground.Scene -> PaperSceneRenderer.renderBitmap(plan.width, plan.height, scale, scene, palette) { k ->
-                PaperSceneRenderer.Options(
-                    // A slowly advancing "time" so clouds sit somewhere new after each refresh.
-                    time = ((clockSeconds / 60) % 997).toFloat() * 3.1f,
-                    panels = plan.panels.mapIndexed { i, r ->
-                        PaperSceneRenderer.Panel(RectF(r.left * k, r.top * k, r.right * k, r.bottom * k), tape = i == 0, alpha = 0.9f)
-                    },
+                fun RectDp.px() = RectF(left * k, top * k, right * k, bottom * k)
+                val base = sceneOptions(plan, scene, clockSeconds)
+                base.copy(
+                    panels = plan.panels.map { PaperSceneRenderer.Panel(it.px(), alpha = if (palette.isDarkPaper) 0.62f else 0.68f) },
                     charts = charts.map { c ->
                         PaperSceneRenderer.Chart(
                             RectF(c.left * k, c.top * k, (c.left + c.width) * k, (c.top + c.height) * k),
@@ -75,11 +91,13 @@ object WidgetArt {
                             c.barsTop * k,
                         )
                     },
-                    staticBolt = scene.thunder > 0.5f,
-                    detail = if (plan.mode == Mode.Micro) 0.6f else 1f,
-                    vignette = 0.55f,
-                    landscape = plan.height >= 40,
-                    grain = 0.85f,
+                    // What the launcher animates must not also be painted still.
+                    particles = fx.layers.isEmpty(),
+                    rays = !fx.hasRays,
+                    staticBolt = base.staticBolt && fx.layers.none { it.layout == app.papersky.weather.R.layout.rv_wfx_flash },
+                    keepClear = listOfNotNull(plan.heroRect()?.px()),
+                    scrim = plan.textRect()?.px(),
+                    scrimDark = palette.isDarkSky,
                 )
             }
         }
@@ -118,7 +136,6 @@ object WidgetArt {
         paint.shader = null
         paint.blendMode = null
 
-        PaperSceneRenderer(scale).drawTape(canvas, w - 30 * scale, 6 * scale, 9f, p, lengthDp = 34f)
         return bmp
     }
 }

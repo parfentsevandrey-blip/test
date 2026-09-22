@@ -36,6 +36,7 @@ import app.papersky.weather.design.Paper
 import app.papersky.weather.design.PaperButton
 import app.papersky.weather.design.PaperCard
 import app.papersky.weather.design.rememberHaptics
+import app.papersky.weather.design.reveal
 import app.papersky.weather.scene.SceneState
 import app.papersky.weather.ui.common.PaperPage
 import app.papersky.weather.ui.common.SectionTitle
@@ -99,13 +100,13 @@ fun WidgetStudioScreen(vm: WidgetStudioViewModel, scene: SceneState, motion: Mot
     }
     PaperPage(stringResource(R.string.widgets_title), scene, motion, onBack) {
         item("intro") {
-            BasicText(stringResource(R.string.widgets_intro), Modifier.padding(horizontal = 4.dp), style = Paper.type.hand.copy(color = Paper.colors.paperInk))
+            BasicText(stringResource(R.string.widgets_intro), Modifier.padding(horizontal = 4.dp), style = Paper.type.quote.copy(color = Paper.colors.paperInk))
         }
         if (placed.isNotEmpty()) {
             item("placed-title") { SectionTitle(stringResource(R.string.widgets_on_home)) }
             placed.forEach { w ->
                 item("w-${w.appWidgetId}") {
-                    PaperCard(seed = w.appWidgetId, onClick = { onEdit(w.appWidgetId) }) {
+                    PaperCard(onClick = { onEdit(w.appWidgetId) }) {
                         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                             val shown = DpSize(w.size.width.coerceAtMost(320.dp), w.size.height.coerceAtMost(260.dp))
                             WidgetPreview(w.config, shown)
@@ -119,7 +120,7 @@ fun WidgetStudioScreen(vm: WidgetStudioViewModel, scene: SceneState, motion: Mot
         item("presets-title") { SectionTitle(stringResource(R.string.widgets_add)) }
         WidgetPreset.entries.forEach { preset ->
             item("p-${preset.name}") {
-                PaperCard(seed = preset.ordinal * 13 + 5, tilt = if (preset.ordinal % 2 == 0) -0.5f else 0.5f) {
+                PaperCard(Modifier.reveal(preset.ordinal)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             BasicText(presetName(preset), style = Paper.type.heading.copy(color = Paper.colors.paperInk))

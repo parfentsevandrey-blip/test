@@ -41,6 +41,8 @@ data class WidgetConfig(
     val showUpdated: Boolean = false,
     val hourStep: Int = 1,
     val tap: TapAction = TapAction.OpenApp,
+    /** Rain, snow, stars and fog move on the home screen (played by the launcher itself). */
+    val animate: Boolean = true,
 ) {
     fun toPreferences(): Preferences = mutablePreferencesOf(KEY to AppJson.encodeToString(serializer(), this))
 

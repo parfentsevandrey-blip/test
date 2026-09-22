@@ -1,5 +1,12 @@
 package app.papersky.weather.ui.common
 
+import androidx.compose.foundation.background
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import app.papersky.weather.design.Choreography
+import app.papersky.weather.design.LocalChoreography
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -57,10 +64,10 @@ fun PaperPage(
     content: LazyListScope.() -> Unit,
 ) {
     val colors = Paper.colors
-    Box(modifier.fillMaxSize()) {
-        LivingScene(scene, Modifier.fillMaxWidth().height(300.dp), horizon = 0.72f, motion = motion, tilt = false, detail = 0.7f)
+    Box(modifier.fillMaxSize().background(colors.sky)) {
+        LivingScene(scene, Modifier.fillMaxWidth().height(280.dp), horizon = 0.7f, motion = motion, tilt = false, detail = 0.7f, laneStart = 0.6f, laneEnd = 0.94f)
         Row(
-            Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 12.dp, vertical = 8.dp),
+            Modifier.fillMaxWidth().statusBarsPadding().padding(start = 12.dp, end = 12.dp, top = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (onBack != null) {
@@ -69,38 +76,50 @@ fun PaperPage(
                         .semantics { contentDescription = "back" }
                         .pressable(onBack, pressed = 0.88f)
                         .size(44.dp)
-                        .paperSheet(colors.paper, CircleShape, colors.shadow, lift = 5.dp),
+                        .paperSheet(colors.paper, CircleShape, colors.shadow, lift = 5.dp, night = colors.isNight),
                     contentAlignment = Alignment.Center,
                 ) { PaperIconView(PaperIcon.Back, colors.paperInk, size = 22.dp) }
-                Spacer(Modifier.width(12.dp))
             }
-            BasicText(title, Modifier.weight(1f).semantics { heading() }, style = Paper.type.display.copy(color = colors.onSky), maxLines = 1)
+            Spacer(Modifier.weight(1f))
             actions()
         }
+        BasicText(
+            title,
+            Modifier
+                .statusBarsPadding()
+                .padding(start = 24.dp, end = 24.dp, top = 66.dp)
+                .semantics { heading() },
+            style = Paper.type.display.copy(color = colors.onSky, fontSize = 38.sp, fontWeight = FontWeight(300)),
+            maxLines = 1,
+        )
         Box(
             Modifier
                 .fillMaxSize()
-                .padding(top = 118.dp)
+                .padding(top = 128.dp)
                 .statusBarsPadding()
-                .paperSheet(colors.paper, RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp), colors.shadow, lift = 16.dp),
+                .paperSheet(colors.paper, SheetShape, colors.shadow, lift = 16.dp, night = colors.isNight),
         ) {
-            LazyColumn(
-                state = listState,
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(
-                    start = 18.dp, end = 18.dp, top = 22.dp,
-                    bottom = WindowInsets.navigationBars.union(WindowInsets.ime).asPaddingValues().calculateBottomPadding() + 28.dp,
-                ),
-                verticalArrangement = Arrangement.spacedBy(14.dp),
-                content = content,
-            )
+            CompositionLocalProvider(LocalChoreography provides remember { Choreography() }) {
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(
+                        start = 16.dp, end = 16.dp, top = 22.dp,
+                        bottom = WindowInsets.navigationBars.union(WindowInsets.ime).asPaddingValues().calculateBottomPadding() + 28.dp,
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                    content = content,
+                )
+            }
         }
     }
 }
 
+private val SheetShape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
+
 @Composable
 fun SectionTitle(text: String, modifier: Modifier = Modifier) {
-    BasicText(text, modifier.padding(top = 10.dp, start = 4.dp).semantics { heading() }, style = Paper.type.hand.copy(color = Paper.colors.accent))
+    BasicText(text.uppercase(), modifier.padding(top = 12.dp, start = 6.dp, bottom = 2.dp).semantics { heading() }, style = Paper.type.label.copy(color = Paper.colors.accent))
 }
 
 @Composable

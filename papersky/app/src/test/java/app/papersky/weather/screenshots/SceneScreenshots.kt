@@ -42,4 +42,19 @@ class SceneScreenshots {
             Shots.save("scene_$name", bmp)
         }
     }
+
+    /** The phone hero: tall canvas, horizon high, sun kept to the right of the temperature. */
+    @Test
+    fun renderAppHero() {
+        Shots.assumeEnabled()
+        val density = 2f
+        for ((name, s) in states) {
+            val w = (412 * density).toInt()
+            val h = (900 * density).toInt()
+            val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+            val o = PaperSceneRenderer.Options(time = 21f, horizon = 0.42f, laneStart = 0.5f, laneEnd = 0.92f, glass = true, staticBolt = s.thunder > 0.5f, vignette = 0.7f)
+            PaperSceneRenderer(density).draw(Canvas(bmp), w.toFloat(), h.toFloat(), s, Palettes.forState(s), o)
+            Shots.save("hero_$name", bmp)
+        }
+    }
 }
